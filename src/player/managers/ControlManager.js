@@ -1,8 +1,6 @@
 /**
  * 控制管理器类 - 负责播放器控制按钮和相关功能
  */
-import { I18n } from '../../constants/i18n.js';
-
 export class ControlManager {
     constructor(playerCore, uiElements) {
         // 核心引用
@@ -950,15 +948,19 @@ export class ControlManager {
     updatePlayPauseButton() {
         if (!this.playPauseButton) return;
         
+        // 根据当前视频状态更新图标
         if (this.targetVideo.paused) {
-            this.playPauseButton.querySelector('span').textContent = I18n.translate('play');
-            this.playPauseButton.querySelector('svg').innerHTML = `
-                <path d="M8 5v14l11-7z" fill="white"></path>
+            this.playPauseButton.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 12L7 5V19L18 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             `;
         } else {
-            this.playPauseButton.querySelector('span').textContent = I18n.translate('pause');
-            this.playPauseButton.querySelector('svg').innerHTML = `
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="white"></path>
+            this.playPauseButton.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 4H6V20H10V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M18 4H14V20H18V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             `;
         }
     }
@@ -969,15 +971,24 @@ export class ControlManager {
     updateMuteButton() {
         if (!this.muteButton) return;
         
-        const volume = this.targetVideo.volume;
-        const isMuted = this.targetVideo.muted || volume === 0;
-        
-        this.muteButton.querySelector('span').textContent = isMuted ? 
-            I18n.translate('unmute') : 
-            I18n.translate('mute');
-            
-        // 更新图标
-        this.muteButton.querySelector('svg').innerHTML = this.getVolumeIcon(isMuted ? 0 : volume);
+        // 根据当前视频状态更新图标
+        if (this.targetVideo.muted) {
+            this.muteButton.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            `;
+        } else {
+            this.muteButton.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            `;
+        }
     }
 
     /**
@@ -1036,51 +1047,84 @@ export class ControlManager {
      * @returns {HTMLElement} 创建的按钮元素
      */
     addTimeControlButton(container, text, callback) {
-        // 解析时间文本
+        // 计算透明度：根据跳转时间计算透明度
         const calculateOpacity = (text) => {
-            // 根据时间长度计算透明度，使长时间的按钮不那么突出
-            const timeMatch = text.match(/([+-])(\d+)([sm])/);
-            if (timeMatch) {
-                const value = parseInt(timeMatch[2]);
-                const unit = timeMatch[3];
-                // 转换为秒数
-                const seconds = unit === 'm' ? value * 60 : value;
-                // 计算透明度：5秒为基准为0.9，最大时间600秒为0.5
-                return Math.max(0.5, 0.9 - (seconds - 5) / 660 * 0.4);
+            // 提取时间值和单位
+            const value = parseInt(text.replace(/[+-]/g, ''));
+            const unit = text.includes('m') ? 'm' : 's';
+            
+            // 定义透明度区间
+            let opacity = 0.5; // 默认透明度
+            
+            // 秒级跳转按钮透明度较低
+            if (unit === 's') {
+                if (value <= 5) opacity = 0.5;
+                else if (value <= 10) opacity = 0.6;
+                else opacity = 0.7; // 30s
+            } 
+            // 分钟级跳转按钮透明度较高
+            else if (unit === 'm') {
+                if (value === 1) opacity = 0.8;
+                else if (value === 5) opacity = 0.9;
+                else opacity = 1.0; // 10m
             }
-            return 0.9; // 默认透明度
+            
+            return opacity;
         };
-
+        
+        const opacity = calculateOpacity(text);
+        
         const button = document.createElement('button');
         button.className = 'tm-time-control-button';
+        button.style.backgroundColor = `hsl(var(--shadcn-secondary) / ${opacity})`;
+
+        // 检查文本是否包含时间指示
+        const isRewind = text.includes('-');
+        const isForward = text.includes('+');
+        const pureText = text.replace(/[+-]/g, ''); // 移除加减号
+
+        // 创建SVG图标
+        const rewindSvg = `<svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>
+        </svg>`;
         
-        // 解析显示的文本
-        const timeMatch = text.match(/([+-])(\d+)([sm])/);
-        if (timeMatch) {
-            const direction = timeMatch[1] === '+' ? '' : '-'; // 去掉+号，只保留-号
-            const value = timeMatch[2];
-            const unit = timeMatch[3];
-            
-            // 国际化单位文本
-            const unitText = unit === 's' ? I18n.translate('seconds') : I18n.translate('minutes');
-            button.textContent = `${direction}${value}${unitText}`;
-            
-            // 设置数据属性，用于语言切换时更新
-            button.dataset.time = text;
-            button.dataset.i18nKey = unit === 's' ? 'seconds' : 'minutes';
+        const forwardSvg = `<svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>
+        </svg>`;
+        
+        // 设置按钮内容
+        if (isRewind) {
+            button.innerHTML = `<div class="tm-time-control-button-inner">${rewindSvg}<span class="tm-time-text-margin-left">${pureText}</span></div>`;
+        } else if (isForward) {
+            button.innerHTML = `<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">${pureText}</span>${forwardSvg}</div>`;
         } else {
             button.textContent = text;
         }
         
-        // 根据时间长度设置透明度
-        button.style.opacity = calculateOpacity(text);
-        
-        // 添加点击事件
-        button.addEventListener('click', (e) => {
-            e.stopPropagation(); // 防止事件冒泡
-            callback();
+        button.addEventListener('click', callback);
+
+        // 添加悬停效果
+        button.addEventListener('mouseover', () => {
+            button.classList.add('tm-time-control-button-hover');
+            button.classList.remove('tm-time-control-button-default');
         });
-        
+
+        button.addEventListener('mouseout', () => {
+            button.classList.add('tm-time-control-button-default');
+            button.classList.remove('tm-time-control-button-hover', 'tm-time-control-button-active', 'tm-time-control-button-after-active');
+        });
+
+        // 点击效果
+        button.addEventListener('mousedown', () => {
+            button.classList.add('tm-time-control-button-active');
+            button.classList.remove('tm-time-control-button-hover', 'tm-time-control-button-default', 'tm-time-control-button-after-active');
+        });
+
+        button.addEventListener('mouseup', () => {
+            button.classList.add('tm-time-control-button-after-active');
+            button.classList.remove('tm-time-control-button-active', 'tm-time-control-button-hover', 'tm-time-control-button-default');
+        });
+
         container.appendChild(button);
         return button;
     }
@@ -1248,40 +1292,5 @@ export class ControlManager {
                 }, 300); // 过渡效果持续时间
             }
         }, 1500);
-    }
-
-    /**
-     * 更新UI翻译
-     */
-    updateUITranslations() {
-        // 更新循环按钮文本
-        const loopToggleLabel = this.controlButtonsContainer?.querySelector('.tm-loop-toggle-label');
-        if (loopToggleLabel) {
-            loopToggleLabel.textContent = I18n.translate('loop');
-        }
-        
-        // 更新时间控制按钮
-        const timeButtons = this.controlButtonsContainer?.querySelectorAll('.tm-time-control-button');
-        if (timeButtons) {
-            timeButtons.forEach(button => {
-                const timeText = button.dataset.time;
-                const i18nKey = button.dataset.i18nKey;
-                
-                if (timeText && i18nKey) {
-                    const timeMatch = timeText.match(/([+-])(\d+)([sm])/);
-                    if (timeMatch) {
-                        const direction = timeMatch[1] === '+' ? '' : '-';
-                        const value = timeMatch[2];
-                        button.textContent = `${direction}${value}${I18n.translate(i18nKey)}`;
-                    }
-                }
-            });
-        }
-        
-        // 更新播放/暂停按钮文本
-        this.updatePlayPauseButton();
-        
-        // 更新静音按钮文本
-        this.updateMuteButton();
     }
 } 

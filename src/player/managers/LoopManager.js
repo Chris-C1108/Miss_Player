@@ -1,8 +1,6 @@
 /**
  * 循环管理器类 - 负责循环播放功能
  */
-import { I18n } from '../../constants/i18n.js';
-
 export class LoopManager {
 	constructor(playerCore, uiElements) {
 		// 核心引用
@@ -25,16 +23,6 @@ export class LoopManager {
 
 		// 时间更新处理器
 		this._handleLoopTimeUpdate = this._handleLoopTimeUpdate.bind(this);
-
-		// 循环保护（防止短间隔连续触发多次）
-		this.enableLoopProtection = true;
-		this.lastLoopCheckTime = 0;
-		this.loopProtectionGapTime = 300; // 毫秒
-
-		// 错误处理状态
-		this.errorOccurred = false;
-		this.retryAttempts = 0;
-		this.maxRetryAttempts = 3;
 	}
 
 	/**
@@ -649,33 +637,5 @@ export class LoopManager {
 		const seconds = totalSeconds % 60;
 
 		return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-	}
-
-	/**
-	 * 更新UI文本翻译
-	 */
-	updateUITranslations() {
-		// 更新循环按钮文本
-		if (this.loopToggleButton) {
-			const loopLabel = this.loopToggleButton.querySelector('.tm-loop-toggle-label');
-			if (loopLabel) {
-				loopLabel.textContent = I18n.translate('loop');
-			}
-		}
-		
-		// 更新A/B点文本
-		if (this.currentPositionDisplay) {
-			const loopStartLabel = this.currentPositionDisplay.querySelector('.tm-set-loop-start-label');
-			if (loopStartLabel) {
-				loopStartLabel.setAttribute('title', I18n.translate('loopStart'));
-			}
-		}
-		
-		if (this.durationDisplay) {
-			const loopEndLabel = this.durationDisplay.querySelector('.tm-set-loop-end-label');
-			if (loopEndLabel) {
-				loopEndLabel.setAttribute('title', I18n.translate('loopEnd'));
-			}
-		}
 	}
 }

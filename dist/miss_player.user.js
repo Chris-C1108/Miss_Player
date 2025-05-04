@@ -11,7 +11,7 @@
 // @description:vi MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @description:zh-CN MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:zh-TW MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器|多語言支持 支持 jable po*nhub 等通用
-// @version 5.1.5
+// @version 5.1.6
 // @author Chris_C
 // @match *://*.missav.ws/*
 // @match *://*.missav.ai/*
@@ -317,7 +317,7 @@
     "964": (r, o, a) => {
       a.r(o);
       a.d(o, {
-        "default": () => B
+        "default": () => V
       });
       var l = a(72);
       var u = a.n(l);
@@ -339,7 +339,7 @@
       L.domAPI = v();
       L.insertStyleElement = P();
       var T = u()(M.A, L);
-      const B = M.A && M.A.locals ? M.A.locals : void 0;
+      const V = M.A && M.A.locals ? M.A.locals : void 0;
     }
   };
   var o = {};
@@ -1521,243 +1521,6 @@
       }
     } ]);
   }();
-  function i18n_typeof(r) {
-    return i18n_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
-      return typeof r;
-    } : function(r) {
-      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
-    }, i18n_typeof(r);
-  }
-  function i18n_classCallCheck(r, o) {
-    if (!(r instanceof o)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-  function i18n_defineProperties(r, o) {
-    for (var a = 0; a < o.length; a++) {
-      var l = o[a];
-      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
-      Object.defineProperty(r, i18n_toPropertyKey(l.key), l);
-    }
-  }
-  function i18n_createClass(r, o, a) {
-    return o && i18n_defineProperties(r.prototype, o), a && i18n_defineProperties(r, a), 
-    Object.defineProperty(r, "prototype", {
-      "writable": !1
-    }), r;
-  }
-  function i18n_defineProperty(r, o, a) {
-    return (o = i18n_toPropertyKey(o)) in r ? Object.defineProperty(r, o, {
-      "value": a,
-      "enumerable": !0,
-      "configurable": !0,
-      "writable": !0
-    }) : r[o] = a, r;
-  }
-  function i18n_toPropertyKey(r) {
-    var o = i18n_toPrimitive(r, "string");
-    return "symbol" == i18n_typeof(o) ? o : o + "";
-  }
-  function i18n_toPrimitive(r, o) {
-    if ("object" != i18n_typeof(r) || !r) {
-      return r;
-    }
-    var a = r[Symbol.toPrimitive];
-    if (void 0 !== a) {
-      var l = a.call(r, o || "default");
-      if ("object" != i18n_typeof(l)) {
-        return l;
-      }
-      throw new TypeError("@@toPrimitive must return a primitive value.");
-    }
-    return ("string" === o ? String : Number)(r);
-  }
-  var p = function() {
-    function I18n() {
-      i18n_classCallCheck(this, I18n);
-    }
-    return i18n_createClass(I18n, null, [ {
-      "key": "userLang",
-      "get": function get() {
-        var r = localStorage.getItem("missplayer_language");
-        if (r) {
-          return r;
-        }
-        return navigator.languages && navigator.languages[0] || navigator.language || "en";
-      }
-    }, {
-      "key": "setUserLang",
-      "value": function setUserLang(r) {
-        if (this.supportedLanguages.includes(r)) {
-          localStorage.setItem("missplayer_language", r);
-          window.dispatchEvent(new CustomEvent("missplayer_language_changed", {
-            "detail": {
-              "lang": r
-            }
-          }));
-          return true;
-        }
-        return false;
-      }
-    }, {
-      "key": "translate",
-      "value": function translate(r) {
-        var o;
-        var a = (arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "") || this.userLang;
-        var l;
-        return (this.strings[a] || this.strings.en)[r] || this.strings.en[r] || r;
-      }
-    } ]);
-  }();
-  i18n_defineProperty(p, "supportedLanguages", [ "en", "zh-CN", "zh-TW", "ja", "vi" ]);
-  i18n_defineProperty(p, "languageNames", {
-    "en": "English",
-    "zh-CN": "简体中文",
-    "zh-TW": "繁體中文",
-    "ja": "日本語",
-    "vi": "Tiếng Việt"
-  });
-  i18n_defineProperty(p, "strings", {
-    "en": {
-      "play": "Play",
-      "pause": "Pause",
-      "mute": "Mute",
-      "unmute": "Unmute",
-      "fullscreen": "Fullscreen",
-      "exitFullscreen": "Exit Fullscreen",
-      "settings": "Settings",
-      "close": "Close",
-      "loop": "Loop",
-      "loopStart": "Loop Start",
-      "loopEnd": "Loop End",
-      "seconds": "s",
-      "minutes": "m",
-      "language": "Language",
-      "showSeekButtons": "Show Seek Buttons",
-      "showLoopControls": "Show Loop Controls",
-      "showPlaybackControls": "Show Playback Controls",
-      "showProgressBar": "Show Progress Bar",
-      "speed": "Speed",
-      "normal": "Normal",
-      "accountNull": "Error: Email or password is empty.",
-      "loginSuccess": "Login successful, refreshing the page.",
-      "networkFailed": "Status code error.",
-      "loginFailed": "Login failed, incorrect email or password. Check console for error details.",
-      "autoLogin": "Auto Login"
-    },
-    "zh-CN": {
-      "play": "播放",
-      "pause": "暂停",
-      "mute": "静音",
-      "unmute": "取消静音",
-      "fullscreen": "全屏",
-      "exitFullscreen": "退出全屏",
-      "settings": "设置",
-      "close": "关闭",
-      "loop": "循环",
-      "loopStart": "循环开始",
-      "loopEnd": "循环结束",
-      "seconds": "秒",
-      "minutes": "分",
-      "language": "语言",
-      "showSeekButtons": "显示快进快退按钮",
-      "showLoopControls": "显示循环控制",
-      "showPlaybackControls": "显示播放控制",
-      "showProgressBar": "显示进度条",
-      "speed": "速度",
-      "normal": "正常",
-      "accountNull": "邮箱或密码为空",
-      "loginSuccess": "登录成功，即将刷新页面。",
-      "networkFailed": "状态码错误",
-      "loginFailed": "登录失败，邮箱或密码错误，可以在控制台查看错误信息。",
-      "autoLogin": "自动登录"
-    },
-    "zh-TW": {
-      "play": "播放",
-      "pause": "暫停",
-      "mute": "靜音",
-      "unmute": "取消靜音",
-      "fullscreen": "全屏",
-      "exitFullscreen": "退出全屏",
-      "settings": "設置",
-      "close": "關閉",
-      "loop": "循環",
-      "loopStart": "循環開始",
-      "loopEnd": "循環結束",
-      "seconds": "秒",
-      "minutes": "分",
-      "language": "語言",
-      "showSeekButtons": "顯示快進快退按鈕",
-      "showLoopControls": "顯示循環控制",
-      "showPlaybackControls": "顯示播放控制",
-      "showProgressBar": "顯示進度條",
-      "speed": "速度",
-      "normal": "正常",
-      "accountNull": "郵箱或密碼為空",
-      "loginSuccess": "登錄成功，即將刷新頁面。",
-      "networkFailed": "狀態碼錯誤",
-      "loginFailed": "登錄失敗，郵箱或密碼錯誤，可以在控制台查看錯誤信息。",
-      "autoLogin": "自動登錄"
-    },
-    "ja": {
-      "play": "再生",
-      "pause": "一時停止",
-      "mute": "ミュート",
-      "unmute": "ミュート解除",
-      "fullscreen": "全画面",
-      "exitFullscreen": "全画面終了",
-      "settings": "設定",
-      "close": "閉じる",
-      "loop": "ループ",
-      "loopStart": "ループ開始",
-      "loopEnd": "ループ終了",
-      "seconds": "秒",
-      "minutes": "分",
-      "language": "言語",
-      "showSeekButtons": "早送り・巻き戻しボタンを表示",
-      "showLoopControls": "ループコントロールを表示",
-      "showPlaybackControls": "再生コントロールを表示",
-      "showProgressBar": "プログレスバーを表示",
-      "speed": "速度",
-      "normal": "標準",
-      "accountNull": "エラー：メールアドレスまたはパスワードが空です。",
-      "loginSuccess": "ログイン成功、ページを更新します。",
-      "networkFailed": "ステータスコードエラー",
-      "loginFailed": "ログインに失敗しました。メールアドレスまたはパスワードが間違っています。エラーの詳細はコンソールで確認できます。",
-      "autoLogin": "自動ログイン"
-    },
-    "vi": {
-      "play": "Phát",
-      "pause": "Tạm dừng",
-      "mute": "Tắt tiếng",
-      "unmute": "Bật tiếng",
-      "fullscreen": "Toàn màn hình",
-      "exitFullscreen": "Thoát toàn màn hình",
-      "settings": "Cài đặt",
-      "close": "Đóng",
-      "loop": "Lặp lại",
-      "loopStart": "Bắt đầu lặp lại",
-      "loopEnd": "Kết thúc lặp lại",
-      "seconds": "giây",
-      "minutes": "phút",
-      "language": "Ngôn ngữ",
-      "showSeekButtons": "Hiển thị nút tua nhanh",
-      "showLoopControls": "Hiển thị điều khiển lặp lại",
-      "showPlaybackControls": "Hiển thị điều khiển phát",
-      "showProgressBar": "Hiển thị thanh tiến trình",
-      "speed": "Tốc độ",
-      "normal": "Bình thường",
-      "accountNull": "Lỗi: Email hoặc mật khẩu trống.",
-      "loginSuccess": "Đăng nhập thành công, đang làm mới trang.",
-      "networkFailed": "Lỗi mã trạng thái.",
-      "loginFailed": "Đăng nhập không thành công, email hoặc mật khẩu không chính xác. Xem chi tiết lỗi trên bảng điều khiển.",
-      "autoLogin": "Đăng nhập tự động"
-    }
-  });
-  function __(r) {
-    var o = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "";
-    return p.translate(r, o);
-  }
   function ControlManager_typeof(r) {
     return ControlManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
       return typeof r;
@@ -1864,7 +1627,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var v = function() {
+  var p = function() {
     function ControlManager(r, o) {
       ControlManager_classCallCheck(this, ControlManager);
       this.playerCore = r;
@@ -2267,13 +2030,13 @@
             }
           }
         };
-        var B = function drag(r) {
+        var V = function drag(r) {
           if (!v) {
             return;
           }
           D(r);
         };
-        var V = function startDrag(r) {
+        var B = function startDrag(r) {
           v = true;
           a.classList.add("dragging");
           a.classList.add("tm-playback-slider-dragging");
@@ -2328,16 +2091,16 @@
             T(r);
           }));
         };
-        C.addEventListener("mousedown", V, {
+        C.addEventListener("mousedown", B, {
           "passive": false
         });
-        C.addEventListener("touchstart", V, {
+        C.addEventListener("touchstart", B, {
           "passive": false
         });
-        window.addEventListener("mousemove", B, {
+        window.addEventListener("mousemove", V, {
           "passive": false
         });
-        window.addEventListener("touchmove", B, {
+        window.addEventListener("touchmove", V, {
           "passive": false
         });
         window.addEventListener("mouseup", I);
@@ -2542,11 +2305,9 @@
           return;
         }
         if (this.targetVideo.paused) {
-          this.playPauseButton.querySelector("span").textContent = p.translate("play");
-          this.playPauseButton.querySelector("svg").innerHTML = '\n                <path d="M8 5v14l11-7z" fill="white"></path>\n            ';
+          this.playPauseButton.innerHTML = '\n                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n                    <path d="M18 12L7 5V19L18 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n                </svg>\n            ';
         } else {
-          this.playPauseButton.querySelector("span").textContent = p.translate("pause");
-          this.playPauseButton.querySelector("svg").innerHTML = '\n                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="white"></path>\n            ';
+          this.playPauseButton.innerHTML = '\n                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n                    <path d="M10 4H6V20H10V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n                    <path d="M18 4H14V20H18V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n                </svg>\n            ';
         }
       }
     }, {
@@ -2555,10 +2316,11 @@
         if (!this.muteButton) {
           return;
         }
-        var r = this.targetVideo.volume;
-        var o = this.targetVideo.muted || 0 === r;
-        this.muteButton.querySelector("span").textContent = o ? p.translate("unmute") : p.translate("mute");
-        this.muteButton.querySelector("svg").innerHTML = this.getVolumeIcon(o ? 0 : r);
+        if (this.targetVideo.muted) {
+          this.muteButton.innerHTML = '\n                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n                    <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n                    <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n                    <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n                </svg>\n            ';
+        } else {
+          this.muteButton.innerHTML = '\n                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n                    <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n                    <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n                    <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n                </svg>\n            ';
+        }
       }
     }, {
       "key": "updateProgressBar",
@@ -2599,36 +2361,63 @@
       "key": "addTimeControlButton",
       "value": function addTimeControlButton(r, o, a) {
         var l = function calculateOpacity(r) {
-          var o = r.match(/([+-])(\d+)([sm])/);
-          if (o) {
-            var a = parseInt(o[2]);
-            var l;
-            var u = "m" === o[3] ? 60 * a : a;
-            return Math.max(.5, .9 - (u - 5) / 660 * .4);
+          var o = parseInt(r.replace(/[+-]/g, ""));
+          var a = r.includes("m") ? "m" : "s";
+          var l = .5;
+          if ("s" === a) {
+            if (o <= 5) {
+              l = .5;
+            } else if (o <= 10) {
+              l = .6;
+            } else {
+              l = .7;
+            }
+          } else if ("m" === a) {
+            if (1 === o) {
+              l = .8;
+            } else if (5 === o) {
+              l = .9;
+            } else {
+              l = 1;
+            }
           }
-          return .9;
+          return l;
         };
-        var u = document.createElement("button");
-        u.className = "tm-time-control-button";
-        var v = o.match(/([+-])(\d+)([sm])/);
+        var u = l(o);
+        var p = document.createElement("button");
+        p.className = "tm-time-control-button";
+        p.style.backgroundColor = "hsl(var(--shadcn-secondary) / ".concat(u, ")");
+        var v = o.includes("-");
+        var y = o.includes("+");
+        var b = o.replace(/[+-]/g, "");
+        var k = '<svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">\n            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>\n        </svg>';
+        var C = '<svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n            <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n        </svg>';
         if (v) {
-          var y = "+" === v[1] ? "" : "-";
-          var b = v[2];
-          var k = v[3];
-          var C = "s" === k ? p.translate("seconds") : p.translate("minutes");
-          u.textContent = "".concat(y).concat(b).concat(C);
-          u.dataset.time = o;
-          u.dataset.i18nKey = "s" === k ? "seconds" : "minutes";
+          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(k, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
+        } else if (y) {
+          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(C, "</div>");
         } else {
-          u.textContent = o;
+          p.textContent = o;
         }
-        u.style.opacity = l(o);
-        u.addEventListener("click", (function(r) {
-          r.stopPropagation();
-          a();
+        p.addEventListener("click", a);
+        p.addEventListener("mouseover", (function() {
+          p.classList.add("tm-time-control-button-hover");
+          p.classList.remove("tm-time-control-button-default");
         }));
-        r.appendChild(u);
-        return u;
+        p.addEventListener("mouseout", (function() {
+          p.classList.add("tm-time-control-button-default");
+          p.classList.remove("tm-time-control-button-hover", "tm-time-control-button-active", "tm-time-control-button-after-active");
+        }));
+        p.addEventListener("mousedown", (function() {
+          p.classList.add("tm-time-control-button-active");
+          p.classList.remove("tm-time-control-button-hover", "tm-time-control-button-default", "tm-time-control-button-after-active");
+        }));
+        p.addEventListener("mouseup", (function() {
+          p.classList.add("tm-time-control-button-after-active");
+          p.classList.remove("tm-time-control-button-active", "tm-time-control-button-hover", "tm-time-control-button-default");
+        }));
+        r.appendChild(p);
+        return p;
       }
     }, {
       "key": "seekRelative",
@@ -2740,32 +2529,6 @@
           }
         }), 1500);
       }
-    }, {
-      "key": "updateUITranslations",
-      "value": function updateUITranslations() {
-        var r, o;
-        var a = null === (r = this.controlButtonsContainer) || void 0 === r ? void 0 : r.querySelector(".tm-loop-toggle-label");
-        if (a) {
-          a.textContent = p.translate("loop");
-        }
-        var l = null === (o = this.controlButtonsContainer) || void 0 === o ? void 0 : o.querySelectorAll(".tm-time-control-button");
-        if (l) {
-          l.forEach((function(r) {
-            var o = r.dataset.time;
-            var a = r.dataset.i18nKey;
-            if (o && a) {
-              var l = o.match(/([+-])(\d+)([sm])/);
-              if (l) {
-                var u = "+" === l[1] ? "" : "-";
-                var v = l[2];
-                r.textContent = "".concat(u).concat(v).concat(p.translate(a));
-              }
-            }
-          }));
-        }
-        this.updatePlayPauseButton();
-        this.updateMuteButton();
-      }
     } ]);
   }();
   function DragManager_typeof(r) {
@@ -2811,7 +2574,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var y = function() {
+  var v = function() {
     function DragManager(r, o) {
       DragManager_classCallCheck(this, DragManager);
       this.playerCore = r;
@@ -3049,7 +2812,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var b = function() {
+  var y = function() {
     function LoopManager(r, o) {
       LoopManager_classCallCheck(this, LoopManager);
       this.playerCore = r;
@@ -3065,12 +2828,6 @@
       this.durationDisplay = null;
       this.loopToggleButton = null;
       this._handleLoopTimeUpdate = this._handleLoopTimeUpdate.bind(this);
-      this.enableLoopProtection = true;
-      this.lastLoopCheckTime = 0;
-      this.loopProtectionGapTime = 300;
-      this.errorOccurred = false;
-      this.retryAttempts = 0;
-      this.maxRetryAttempts = 3;
     }
     return LoopManager_createClass(LoopManager, [ {
       "key": "init",
@@ -3494,28 +3251,6 @@
         var u = o % 60;
         return "".concat(a.toString().padStart(2, "0"), ":").concat(l.toString().padStart(2, "0"), ":").concat(u.toString().padStart(2, "0"));
       }
-    }, {
-      "key": "updateUITranslations",
-      "value": function updateUITranslations() {
-        if (this.loopToggleButton) {
-          var r = this.loopToggleButton.querySelector(".tm-loop-toggle-label");
-          if (r) {
-            r.textContent = p.translate("loop");
-          }
-        }
-        if (this.currentPositionDisplay) {
-          var o = this.currentPositionDisplay.querySelector(".tm-set-loop-start-label");
-          if (o) {
-            o.setAttribute("title", p.translate("loopStart"));
-          }
-        }
-        if (this.durationDisplay) {
-          var a = this.durationDisplay.querySelector(".tm-set-loop-end-label");
-          if (a) {
-            a.setAttribute("title", p.translate("loopEnd"));
-          }
-        }
-      }
     } ]);
   }();
   function ProgressManager_typeof(r) {
@@ -3561,7 +3296,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var k = function() {
+  var b = function() {
     function ProgressManager(r, o) {
       ProgressManager_classCallCheck(this, ProgressManager);
       this.playerCore = r;
@@ -3846,7 +3581,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var C = function() {
+  var k = function() {
     function EventManager(r, o, a) {
       EventManager_classCallCheck(this, EventManager);
       this.playerCore = r;
@@ -4084,7 +3819,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var _ = function() {
+  var C = function() {
     function SettingsManager(r, o) {
       SettingsManager_classCallCheck(this, SettingsManager);
       this.playerCore = r;
@@ -4096,10 +3831,8 @@
         "showSeekControlRow": true,
         "showLoopControlRow": true,
         "showPlaybackControlRow": true,
-        "showProgressBar": true,
-        "language": p.userLang
+        "showProgressBar": true
       };
-      this.setupLanguageChangeListener();
     }
     return SettingsManager_createClass(SettingsManager, [ {
       "key": "init",
@@ -4244,7 +3977,6 @@
           this.settings.showSeekControlRow = r("showSeekControlRow", true);
           this.settings.showLoopControlRow = r("showLoopControlRow", true);
           this.settings.showPlaybackControlRow = r("showPlaybackControlRow", true);
-          this.settings.language = r("language", p.userLang);
         } catch (r) {}
       }
     }, {
@@ -4268,7 +4000,6 @@
           r("showSeekControlRow", this.settings.showSeekControlRow);
           r("showLoopControlRow", this.settings.showLoopControlRow);
           r("showPlaybackControlRow", this.settings.showPlaybackControlRow);
-          r("language", this.settings.language);
         } catch (r) {}
       }
     }, {
@@ -4304,81 +4035,6 @@
           if (r.startsWith("show") && r.endsWith("Row")) {
             this.updateControlRowsVisibility();
           }
-        }
-      }
-    }, {
-      "key": "setupLanguageChangeListener",
-      "value": function setupLanguageChangeListener() {
-        var r = this;
-        window.addEventListener("missplayer_language_changed", (function(o) {
-          var a;
-          var l = o.detail.lang;
-          r.settings.language = l;
-          var u = null === (a = r.settingsPanel) || void 0 === a ? void 0 : a.querySelector(".tm-language-select");
-          if (u) {
-            u.value = l;
-          }
-          r.updateUITranslations();
-        }));
-      }
-    }, {
-      "key": "updateUITranslations",
-      "value": function updateUITranslations() {
-        var r, o;
-        var a = null === (r = this.settingsPanel) || void 0 === r ? void 0 : r.querySelector(".tm-settings-title");
-        if (a) {
-          a.textContent = p.translate("settings");
-        }
-        var l = null === (o = this.settingsPanel) || void 0 === o ? void 0 : o.querySelectorAll(".tm-setting-label");
-        if (l) {
-          l.forEach((function(r) {
-            var o = r.dataset.i18nKey;
-            if (o) {
-              r.textContent = p.translate(o);
-            }
-          }));
-        }
-        if (this.playerCore.controlManager) {
-          this.playerCore.controlManager.updateUITranslations();
-        }
-        if (this.playerCore.loopManager) {
-          this.playerCore.loopManager.updateUITranslations();
-        }
-      }
-    }, {
-      "key": "createSettingsPanelContent",
-      "value": function createSettingsPanelContent() {
-        var r = this;
-        var o = document.createElement("div");
-        o.className = "tm-setting-container";
-        var a = document.createElement("span");
-        a.className = "tm-setting-label";
-        a.dataset.i18nKey = "language";
-        a.textContent = p.translate("language");
-        var l = document.createElement("select");
-        l.className = "tm-language-select";
-        p.supportedLanguages.forEach((function(o) {
-          var a = document.createElement("option");
-          a.value = o;
-          a.textContent = p.languageNames[o];
-          if (o === r.settings.language) {
-            a.selected = true;
-          }
-          l.appendChild(a);
-        }));
-        l.addEventListener("change", (function() {
-          var o = l.value;
-          p.setUserLang(o);
-          r.settings.language = o;
-          r.saveSettings();
-        }));
-        o.appendChild(a);
-        o.appendChild(l);
-        var u = this.settingsPanel.querySelector(".tm-settings-content");
-        if (u && u.firstChild) {
-          u.insertBefore(o, u.firstChild);
-        } else if (u) {
-          u.appendChild(o);
         }
       }
     } ]);
@@ -4426,7 +4082,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var P = function() {
+  var _ = function() {
     function VideoSwipeManager(r, o, a) {
       videoSwipeManager_classCallCheck(this, VideoSwipeManager);
       this.video = r;
@@ -4887,21 +4543,21 @@
         var E = Number.MAX_VALUE;
         for (var M = 0, L = _; M < L.length; M++) {
           var T = L[M];
-          var B = Math.abs(C - T);
-          if (B < P && B < E) {
+          var V = Math.abs(C - T);
+          if (V < P && V < E) {
             S = T;
-            E = B;
+            E = V;
           }
         }
         if (E < Number.MAX_VALUE) {
           C = S;
         }
-        var V = C / o * 100;
+        var B = C / o * 100;
         var I;
         var D = 2 * (1 - (l > 0 ? C / l : 0)) * this.maxOffset - this.maxOffset;
         this.handle.style.transition = "left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
         this.video.style.transition = "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-        this.handle.style.left = "".concat(V, "%");
+        this.handle.style.left = "".concat(B, "%");
         this.video.style.transform = "translateX(".concat(D, "px)");
         this.offset = D;
         if (E < Number.MAX_VALUE && window.navigator.vibrate) {
@@ -5017,7 +4673,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var S = function() {
+  var P = function() {
     function CustomVideoPlayer() {
       var r = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {};
       CustomVideoPlayer_classCallCheck(this, CustomVideoPlayer);
@@ -5046,17 +4702,17 @@
           return;
         }
         var o = new u(this.playerCore);
-        var p = o.createUI();
+        var P = o.createUI();
         this.managers.uiManager = o;
-        var S = new _(this.playerCore, p);
+        var S = new C(this.playerCore, P);
         S.init();
         this.managers.settingsManager = S;
-        var E = new v(this.playerCore, p);
+        var E = new p(this.playerCore, P);
         var M = E.createProgressControls();
         var L = E.createControlButtonsContainer();
         this.managers.controlManager = E;
         this.playerCore.controlManager = E;
-        var T = new k(this.playerCore, p);
+        var T = new b(this.playerCore, P);
         T.init({
           "progressBarElement": E.progressBarElement,
           "progressIndicator": E.progressIndicator,
@@ -5065,8 +4721,8 @@
           "timeIndicator": E.timeIndicator
         });
         this.managers.progressManager = T;
-        var B = new b(this.playerCore, p);
-        B.init({
+        var V = new y(this.playerCore, P);
+        V.init({
           "loopStartMarker": E.loopStartMarker,
           "loopEndMarker": E.loopEndMarker,
           "loopRangeElement": E.loopRangeElement,
@@ -5074,16 +4730,16 @@
           "durationDisplay": E.durationDisplay,
           "loopToggleButton": E.loopToggleButton
         });
-        this.managers.loopManager = B;
-        E.setLoopManager(B);
-        var V = new y(this.playerCore, p);
-        V.init();
-        this.managers.dragManager = V;
-        if (this.playerCore.targetVideo && p.videoWrapper && p.handle) {
-          this.swipeManager = new P(this.playerCore.targetVideo, p.videoWrapper, p.handle);
+        this.managers.loopManager = V;
+        E.setLoopManager(V);
+        var B = new v(this.playerCore, P);
+        B.init();
+        this.managers.dragManager = B;
+        if (this.playerCore.targetVideo && P.videoWrapper && P.handle) {
+          this.swipeManager = new _(this.playerCore.targetVideo, P.videoWrapper, P.handle);
           this.managers.swipeManager = this.swipeManager;
         }
-        var I = new C(this.playerCore, p, this.managers);
+        var I = new k(this.playerCore, P, this.managers);
         I.init();
         this.managers.eventManager = I;
         o.assembleDOM();
@@ -5096,13 +4752,13 @@
           if (r.swipeManager) {
             r.swipeManager.updateSize();
           }
-          V.updateHandlePosition();
+          B.updateHandlePosition();
         }), 100);
         setTimeout((function() {
-          if (B) {
-            B._updateUI();
-            B.updateLoopTimeDisplay();
-            B.updateLoopMarkers();
+          if (V) {
+            V._updateUI();
+            V.updateLoopTimeDisplay();
+            V.updateLoopMarkers();
           }
           if (T) {
             T.updateProgressBar();
@@ -5177,7 +4833,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var E = function() {
+  var S = function() {
     function FloatingButton() {
       var r = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {};
       FloatingButton_classCallCheck(this, FloatingButton);
@@ -5323,7 +4979,7 @@
       "key": "handleButtonClick",
       "value": function handleButtonClick() {
         this.button.style.display = "none";
-        this.videoPlayer = new S({
+        this.videoPlayer = new P({
           "playerState": this.playerState,
           "callingButton": this.button
         });
@@ -5391,7 +5047,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var M = function() {
+  var E = function() {
     function PlayerState() {
       PlayerState_classCallCheck(this, PlayerState);
       this.settings = {
@@ -5506,7 +5162,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var L = function() {
+  var M = function() {
     function LoginUtils() {
       utils_classCallCheck(this, LoginUtils);
     }
@@ -5603,6 +5259,112 @@
       }
     } ]);
   }();
+  function i18n_typeof(r) {
+    return i18n_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
+      return typeof r;
+    } : function(r) {
+      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
+    }, i18n_typeof(r);
+  }
+  function i18n_classCallCheck(r, o) {
+    if (!(r instanceof o)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+  function i18n_defineProperties(r, o) {
+    for (var a = 0; a < o.length; a++) {
+      var l = o[a];
+      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
+      Object.defineProperty(r, i18n_toPropertyKey(l.key), l);
+    }
+  }
+  function i18n_createClass(r, o, a) {
+    return o && i18n_defineProperties(r.prototype, o), a && i18n_defineProperties(r, a), 
+    Object.defineProperty(r, "prototype", {
+      "writable": !1
+    }), r;
+  }
+  function i18n_defineProperty(r, o, a) {
+    return (o = i18n_toPropertyKey(o)) in r ? Object.defineProperty(r, o, {
+      "value": a,
+      "enumerable": !0,
+      "configurable": !0,
+      "writable": !0
+    }) : r[o] = a, r;
+  }
+  function i18n_toPropertyKey(r) {
+    var o = i18n_toPrimitive(r, "string");
+    return "symbol" == i18n_typeof(o) ? o : o + "";
+  }
+  function i18n_toPrimitive(r, o) {
+    if ("object" != i18n_typeof(r) || !r) {
+      return r;
+    }
+    var a = r[Symbol.toPrimitive];
+    if (void 0 !== a) {
+      var l = a.call(r, o || "default");
+      if ("object" != i18n_typeof(l)) {
+        return l;
+      }
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === o ? String : Number)(r);
+  }
+  var L = function() {
+    function I18n() {
+      i18n_classCallCheck(this, I18n);
+    }
+    return i18n_createClass(I18n, null, [ {
+      "key": "userLang",
+      "get": function get() {
+        return navigator.languages && navigator.languages[0] || navigator.language || "en";
+      }
+    }, {
+      "key": "translate",
+      "value": function translate(r) {
+        var o;
+        var a = (arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "") || this.userLang;
+        return (this.strings[a] || this.strings.en)[r] || this.strings.en[r];
+      }
+    } ]);
+  }();
+  i18n_defineProperty(L, "strings", {
+    "en": {
+      "accountNull": "Error: Email or password is empty.",
+      "loginSuccess": "Login successful, refreshing the page.",
+      "networkFailed": "Status code error.",
+      "loginFailed": "Login failed, incorrect email or password. Check console for error details.",
+      "autoLogin": "Auto Login"
+    },
+    "zh-CN": {
+      "accountNull": "邮箱或密码为空",
+      "loginSuccess": "登录成功，即将刷新页面。",
+      "networkFailed": "状态码错误",
+      "loginFailed": "登录失败，邮箱或密码错误，可以在控制台查看错误信息。",
+      "autoLogin": "自动登录"
+    },
+    "zh-TW": {
+      "accountNull": "郵箱或密碼為空",
+      "loginSuccess": "登錄成功，即將刷新頁面。",
+      "networkFailed": "狀態碼錯誤",
+      "loginFailed": "登錄失敗，郵箱或密碼錯誤，可以在控制台查看錯誤信息。",
+      "autoLogin": "自動登錄"
+    },
+    "ja": {
+      "accountNull": "エラー：メールアドレスまたはパスワードが空です。",
+      "loginSuccess": "ログイン成功、ページを更新します。",
+      "networkFailed": "ステータスコードエラー",
+      "loginFailed": "ログインに失敗しました。メールアドレスまたはパスワードが間違っています。エラーの詳細はコンソールで確認できます。",
+      "autoLogin": "自動ログイン"
+    },
+    "vi": {
+      "accountNull": "Lỗi: Email hoặc mật khẩu trống.",
+      "loginSuccess": "Đăng nhập thành công, đang làm mới trang.",
+      "networkFailed": "Lỗi mã trạng thái.",
+      "loginFailed": "Đăng nhập không thành công, email hoặc mật khẩu không chính xác. Xem chi tiết lỗi trên bảng điều khiển.",
+      "autoLogin": "Đăng nhập tự động"
+    }
+  });
   function MissavLoginProvider_typeof(r) {
     return MissavLoginProvider_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
       return typeof r;
@@ -6000,21 +5762,21 @@
       "key": "login",
       "value": function() {
         var r = _asyncToGenerator(_regeneratorRuntime().mark((function _callee(r, o) {
-          var a, l, u, v, y;
-          return _regeneratorRuntime().wrap((function _callee$(b) {
+          var a, l, u, p, v;
+          return _regeneratorRuntime().wrap((function _callee$(y) {
             while (1) {
-              switch (b.prev = b.next) {
+              switch (y.prev = y.next) {
                case 0:
                 if (!(!r || !o)) {
-                  b.next = 3;
+                  y.next = 3;
                   break;
                 }
-                L.toast(p.translate("accountNull"), 2e3, "#FF0000", "#ffffff", "top");
-                return b.abrupt("return", false);
+                M.toast(L.translate("accountNull"), 2e3, "#FF0000", "#ffffff", "top");
+                return y.abrupt("return", false);
 
                case 3:
-                b.prev = 3;
-                b.next = 6;
+                y.prev = 3;
+                y.next = 6;
                 return fetch("https://missav.ws/cn/api/login", {
                   "method": "POST",
                   "headers": {
@@ -6028,56 +5790,56 @@
                 });
 
                case 6:
-                if ((l = b.sent).ok) {
-                  b.next = 13;
+                if ((l = y.sent).ok) {
+                  y.next = 13;
                   break;
                 }
-                b.next = 10;
+                y.next = 10;
                 return l.text();
 
                case 10:
-                u = b.sent;
-                L.toast("登录失败: ".concat(u), 2e3, "#FF0000", "#ffffff", "top");
-                throw new Error(p.translate("networkFailed"));
+                u = y.sent;
+                M.toast("登录失败: ".concat(u), 2e3, "#FF0000", "#ffffff", "top");
+                throw new Error(L.translate("networkFailed"));
 
                case 13:
                 if (!(null !== (a = l.headers.get("Content-Type")) && void 0 !== a && a.includes("application/json"))) {
-                  b.next = 19;
+                  y.next = 19;
                   break;
                 }
-                b.next = 16;
+                y.next = 16;
                 return l.json();
 
                case 16:
-                v = b.sent;
-                b.next = 24;
+                p = y.sent;
+                y.next = 24;
                 break;
 
                case 19:
-                b.next = 21;
+                y.next = 21;
                 return l.text();
 
                case 21:
-                y = b.sent;
-                L.toast(p.translate("loginFailed"), 2e3, "#FF0000", "#ffffff", "top");
-                throw new Error(p.translate("loginFailed"));
+                v = y.sent;
+                M.toast(L.translate("loginFailed"), 2e3, "#FF0000", "#ffffff", "top");
+                throw new Error(L.translate("loginFailed"));
 
                case 24:
-                L.toast(p.translate("loginSuccess"), 2e3, "rgb(18, 187, 2)", "#ffffff", "top");
+                M.toast(L.translate("loginSuccess"), 2e3, "rgb(18, 187, 2)", "#ffffff", "top");
                 setTimeout((function() {
                   location.reload();
                 }), 1e3);
-                return b.abrupt("return", true);
+                return y.abrupt("return", true);
 
                case 29:
-                b.prev = 29;
-                b.t0 = b["catch"](3);
-                L.toast("错误发生: ".concat(b.t0.message), 2e3, "#FF0000", "#ffffff", "top");
-                return b.abrupt("return", false);
+                y.prev = 29;
+                y.t0 = y["catch"](3);
+                M.toast("错误发生: ".concat(y.t0.message), 2e3, "#FF0000", "#ffffff", "top");
+                return y.abrupt("return", false);
 
                case 33:
                case "end":
-                return b.stop();
+                return y.stop();
               }
             }
           }), _callee, null, [ [ 3, 29 ] ]);
@@ -6192,34 +5954,34 @@
       "key": "addAutoLoginOption",
       "value": function() {
         var r = _asyncToGenerator(_regeneratorRuntime().mark((function _callee4(r) {
-          var o, a, l, u, v, y;
-          return _regeneratorRuntime().wrap((function _callee4$(b) {
+          var o, a, l, u, p, v;
+          return _regeneratorRuntime().wrap((function _callee4$(y) {
             while (1) {
-              switch (b.prev = b.next) {
+              switch (y.prev = y.next) {
                case 0:
-                b.prev = 0;
-                b.next = 3;
-                return L.waitForElement("form[x-show=\"currentPage === 'login'\"] .relative.flex.items-start.justify-between");
+                y.prev = 0;
+                y.next = 3;
+                return M.waitForElement("form[x-show=\"currentPage === 'login'\"] .relative.flex.items-start.justify-between");
 
                case 3:
-                o = b.sent;
+                o = y.sent;
                 (a = document.createElement("div")).className = "flex";
-                a.innerHTML = '\n                <div class="flex items-center h-5">\n                    <input id="auto_login" type="checkbox" class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded __text_mode_custom_bg__">\n                </div>\n                <div class="ml-3 text-sm">\n                    <label for="auto_login" class="font-medium text-nord4">'.concat(p.translate("autoLogin"), "</label>\n                </div>\n            ");
+                a.innerHTML = '\n                <div class="flex items-center h-5">\n                    <input id="auto_login" type="checkbox" class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded __text_mode_custom_bg__">\n                </div>\n                <div class="ml-3 text-sm">\n                    <label for="auto_login" class="font-medium text-nord4">'.concat(L.translate("autoLogin"), "</label>\n                </div>\n            ");
                 (l = o.querySelector(".flex")).parentNode.insertBefore(a, l.nextSibling);
-                u = L.getValue("autoLogin", true);
+                u = M.getValue("autoLogin", true);
                 document.getElementById("auto_login").checked = u;
                 document.getElementById("auto_login").addEventListener("change", (function() {
                   var o = document.getElementById("auto_login").checked;
-                  L.setValue("autoLogin", o);
+                  M.setValue("autoLogin", o);
                   if (r) {
                     r({
                       "autoLogin": o
                     });
                   }
                 }));
-                if (v = document.querySelector("form[x-show=\"currentPage === 'login'\"]")) {
-                  if (y = v.querySelector('button[type="submit"]')) {
-                    y.addEventListener("click", (function() {
+                if (p = document.querySelector("form[x-show=\"currentPage === 'login'\"]")) {
+                  if (v = p.querySelector('button[type="submit"]')) {
+                    v.addEventListener("click", (function() {
                       setTimeout((function() {
                         var o = document.getElementById("login_email");
                         var a = document.getElementById("login_password");
@@ -6227,8 +5989,8 @@
                         if (o && a && l && l.checked) {
                           var u = o.value;
                           var p = a.value;
-                          L.setValue("userEmail", u);
-                          L.setValue("userPassword", p);
+                          M.setValue("userEmail", u);
+                          M.setValue("userPassword", p);
                           if (r) {
                             r({
                               "email": u,
@@ -6241,16 +6003,16 @@
                     }));
                   }
                 }
-                b.next = 18;
+                y.next = 18;
                 break;
 
                case 16:
-                b.prev = 16;
-                b.t0 = b["catch"](0);
+                y.prev = 16;
+                y.t0 = y["catch"](0);
 
                case 18:
                case "end":
-                return b.stop();
+                return y.stop();
               }
             }
           }), _callee4, null, [ [ 0, 16 ] ]);
@@ -6705,7 +6467,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var B = function() {
+  var V = function() {
     function LoginManager() {
       LoginManager_classCallCheck(this, LoginManager);
       this.userEmail = "";
@@ -6755,23 +6517,23 @@
       "value": function handleLoginInfoChange(r) {
         if (void 0 !== r.email) {
           this.userEmail = r.email;
-          L.setValue("userEmail", r.email);
+          M.setValue("userEmail", r.email);
         }
         if (void 0 !== r.password) {
           this.userPassword = r.password;
-          L.setValue("userPassword", r.password);
+          M.setValue("userPassword", r.password);
         }
         if (void 0 !== r.autoLogin) {
           this.autoLogin = r.autoLogin;
-          L.setValue("autoLogin", r.autoLogin);
+          M.setValue("autoLogin", r.autoLogin);
         }
       }
     }, {
       "key": "loadLoginInfo",
       "value": function loadLoginInfo() {
-        this.userEmail = L.getValue("userEmail", "");
-        this.userPassword = L.getValue("userPassword", "");
-        this.autoLogin = L.getValue("autoLogin", true);
+        this.userEmail = M.getValue("userEmail", "");
+        this.userPassword = M.getValue("userPassword", "");
+        this.autoLogin = M.getValue("autoLogin", true);
       }
     }, {
       "key": "getMatchingProvider",
@@ -7233,7 +6995,7 @@
           switch (o.prev = o.next) {
            case 0:
             o.prev = 0;
-            r = new B;
+            r = new V;
             o.next = 4;
             return r.init();
 
@@ -7253,7 +7015,7 @@
       }), _callee, null, [ [ 0, 7 ] ]);
     })))).apply(this, arguments);
   }
-  var V = function Toast(r) {
+  var B = function Toast(r) {
     var o = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 3e3;
     var a = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : "rgba(0, 0, 0, 0.8)";
     var l = arguments.length > 3 && void 0 !== arguments[3] ? arguments[3] : "#fff";
@@ -7322,10 +7084,10 @@
       };
       document.head.appendChild(l);
     }));
-  }, R = function isInViewport(r) {
+  }, A = function isInViewport(r) {
     var o = r.getBoundingClientRect();
     return o.top >= 0 && o.left >= 0 && o.bottom <= (window.innerHeight || document.documentElement.clientHeight) && o.right <= (window.innerWidth || document.documentElement.clientWidth);
-  }, H = function formatTime(r) {
+  }, R = function formatTime(r) {
     var o = Math.floor(r / 3600);
     var a = Math.floor(r % 3600 / 60);
     var l = Math.floor(r % 60);
@@ -7440,7 +7202,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var A;
+  var H;
   const j = function() {
     function AdBlockConfig() {
       var r = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {};
@@ -7525,7 +7287,7 @@
     return ("string" === o ? String : Number)(r);
   }
   var N;
-  const U = function() {
+  const z = function() {
     function StyleManager(r) {
       StyleManager_classCallCheck(this, StyleManager);
       this.config = r;
@@ -7596,7 +7358,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var z;
+  var U;
   const G = function() {
     function DOMCleaner(r) {
       DOMCleaner_classCallCheck(this, DOMCleaner);
@@ -7902,12 +7664,12 @@
     };
   }
   var $;
-  const J = function() {
+  const Z = function() {
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = getSiteConfig(window.location.href);
       this.config = new j(r);
-      this.styleManager = new U(this.config);
+      this.styleManager = new z(this.config);
       this.domCleaner = new G(this.config);
       this.requestBlocker = new W(this.config);
     }
@@ -8000,7 +7762,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Z = function() {
+  var J = function() {
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
@@ -8353,7 +8115,7 @@
   var nt = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
-      this.detailExpander = new Z;
+      this.detailExpander = new J;
       this.qualityManager = new tt;
       this.urlRedirector = new et;
     }
@@ -8390,6 +8152,212 @@
     var o = new nt;
     o.init(r);
     return o;
+  }
+  function constants_i18n_typeof(r) {
+    return constants_i18n_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
+      return typeof r;
+    } : function(r) {
+      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
+    }, constants_i18n_typeof(r);
+  }
+  function constants_i18n_classCallCheck(r, o) {
+    if (!(r instanceof o)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+  function constants_i18n_defineProperties(r, o) {
+    for (var a = 0; a < o.length; a++) {
+      var l = o[a];
+      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
+      Object.defineProperty(r, constants_i18n_toPropertyKey(l.key), l);
+    }
+  }
+  function constants_i18n_createClass(r, o, a) {
+    return o && constants_i18n_defineProperties(r.prototype, o), a && constants_i18n_defineProperties(r, a), 
+    Object.defineProperty(r, "prototype", {
+      "writable": !1
+    }), r;
+  }
+  function constants_i18n_defineProperty(r, o, a) {
+    return (o = constants_i18n_toPropertyKey(o)) in r ? Object.defineProperty(r, o, {
+      "value": a,
+      "enumerable": !0,
+      "configurable": !0,
+      "writable": !0
+    }) : r[o] = a, r;
+  }
+  function constants_i18n_toPropertyKey(r) {
+    var o = constants_i18n_toPrimitive(r, "string");
+    return "symbol" == constants_i18n_typeof(o) ? o : o + "";
+  }
+  function constants_i18n_toPrimitive(r, o) {
+    if ("object" != constants_i18n_typeof(r) || !r) {
+      return r;
+    }
+    var a = r[Symbol.toPrimitive];
+    if (void 0 !== a) {
+      var l = a.call(r, o || "default");
+      if ("object" != constants_i18n_typeof(l)) {
+        return l;
+      }
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === o ? String : Number)(r);
+  }
+  var rt = function() {
+    function I18n() {
+      constants_i18n_classCallCheck(this, I18n);
+    }
+    return constants_i18n_createClass(I18n, null, [ {
+      "key": "userLang",
+      "get": function get() {
+        return navigator.languages && navigator.languages[0] || navigator.language || "en";
+      }
+    }, {
+      "key": "translate",
+      "value": function translate(r) {
+        var o;
+        var a = (arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "") || this.userLang;
+        var l;
+        return (this.strings[a] || this.strings[a.split("-")[0]] || this.strings.en)[r] || this.strings.en[r];
+      }
+    } ]);
+  }();
+  constants_i18n_defineProperty(rt, "strings", {
+    "en": {
+      "scriptName": "Miss Player | Cinema Mode (One-handed Player)",
+      "scriptDescription": "MissAV ad-free|One-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|Custom player supporting jable po*nhub etc",
+      "viewportConfigured": "Viewport configured to support safe area",
+      "stylesInjected": "Styles injected",
+      "enhancerInitialized": "User experience enhancer module initialized",
+      "loginModuleInitialized": "Auto login module initialized",
+      "initializationComplete": "Initialization complete",
+      "initializationFailed": "Initialization failed",
+      "play": "Play",
+      "pause": "Pause",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit Fullscreen",
+      "settings": "Settings",
+      "quality": "Quality",
+      "speed": "Speed",
+      "autoplay": "Auto Play",
+      "loop": "Loop",
+      "autoQuality": "Auto Quality",
+      "loadingError": "Failed to load video",
+      "networkError": "Network error",
+      "loginSuccess": "Login successful",
+      "loginFailed": "Login failed"
+    },
+    "zh-CN": {
+      "scriptName": "Miss Player | 影院模式 (单手播放器)",
+      "scriptDescription": "MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器 支持 jable po*nhub 等通用",
+      "viewportConfigured": "已配置viewport以支持安全区域",
+      "stylesInjected": "样式注入完成",
+      "enhancerInitialized": "用户体验增强模块已初始化",
+      "loginModuleInitialized": "自动登录模块已初始化",
+      "initializationComplete": "初始化完成",
+      "initializationFailed": "初始化失败",
+      "play": "播放",
+      "pause": "暂停",
+      "mute": "静音",
+      "unmute": "取消静音",
+      "fullscreen": "全屏",
+      "exitFullscreen": "退出全屏",
+      "settings": "设置",
+      "quality": "画质",
+      "speed": "速度",
+      "autoplay": "自动播放",
+      "loop": "循环播放",
+      "autoQuality": "自动画质",
+      "loadingError": "视频加载失败",
+      "networkError": "网络错误",
+      "loginSuccess": "登录成功",
+      "loginFailed": "登录失败"
+    },
+    "zh-TW": {
+      "scriptName": "Miss Player | 影院模式 (單手播放器)",
+      "scriptDescription": "MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器 支持 jable po*nhub 等通用",
+      "viewportConfigured": "已配置viewport以支持安全區域",
+      "stylesInjected": "樣式注入完成",
+      "enhancerInitialized": "用戶體驗增強模塊已初始化",
+      "loginModuleInitialized": "自動登錄模塊已初始化",
+      "initializationComplete": "初始化完成",
+      "initializationFailed": "初始化失敗",
+      "play": "播放",
+      "pause": "暫停",
+      "mute": "靜音",
+      "unmute": "取消靜音",
+      "fullscreen": "全屏",
+      "exitFullscreen": "退出全屏",
+      "settings": "設置",
+      "quality": "畫質",
+      "speed": "速度",
+      "autoplay": "自動播放",
+      "loop": "循環播放",
+      "autoQuality": "自動畫質",
+      "loadingError": "視頻加載失敗",
+      "networkError": "網絡錯誤",
+      "loginSuccess": "登錄成功",
+      "loginFailed": "登錄失敗"
+    },
+    "ja": {
+      "scriptName": "Miss Player | シネマモード (片手プレーヤー)",
+      "scriptDescription": "MissAV広告なし|片手モード|MissAV自動詳細展開|MissAV自動高画質|MissAVリダイレクトサポート|MissAV自動ログイン|jable po*nhub などをサポートするカスタムプレーヤー",
+      "viewportConfigured": "セーフエリアをサポートするためにビューポートを設定しました",
+      "stylesInjected": "スタイルが注入されました",
+      "enhancerInitialized": "ユーザー体験向上モジュールが初期化されました",
+      "loginModuleInitialized": "自動ログインモジュールが初期化されました",
+      "initializationComplete": "初期化が完了しました",
+      "initializationFailed": "初期化に失敗しました",
+      "play": "再生",
+      "pause": "一時停止",
+      "mute": "ミュート",
+      "unmute": "ミュート解除",
+      "fullscreen": "全画面",
+      "exitFullscreen": "全画面解除",
+      "settings": "設定",
+      "quality": "画質",
+      "speed": "速度",
+      "autoplay": "自動再生",
+      "loop": "ループ再生",
+      "autoQuality": "自動画質",
+      "loadingError": "動画の読み込みに失敗しました",
+      "networkError": "ネットワークエラー",
+      "loginSuccess": "ログイン成功",
+      "loginFailed": "ログイン失敗"
+    },
+    "vi": {
+      "scriptName": "Miss Player | Chế độ Rạp chiếu phim (Trình phát một tay)",
+      "scriptDescription": "MissAV không quảng cáo|Chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|Đăng nhập tự động MissAV|Trình phát tùy chỉnh hỗ trợ jable po*nhub v.v.",
+      "viewportConfigured": "Đã cấu hình viewport để hỗ trợ vùng an toàn",
+      "stylesInjected": "Đã tiêm CSS",
+      "enhancerInitialized": "Đã khởi tạo mô-đun nâng cao trải nghiệm người dùng",
+      "loginModuleInitialized": "Đã khởi tạo mô-đun đăng nhập tự động",
+      "initializationComplete": "Khởi tạo hoàn tất",
+      "initializationFailed": "Khởi tạo thất bại",
+      "play": "Phát",
+      "pause": "Tạm dừng",
+      "mute": "Tắt tiếng",
+      "unmute": "Bật tiếng",
+      "fullscreen": "Toàn màn hình",
+      "exitFullscreen": "Thoát toàn màn hình",
+      "settings": "Cài đặt",
+      "quality": "Chất lượng",
+      "speed": "Tốc độ",
+      "autoplay": "Tự động phát",
+      "loop": "Lặp lại",
+      "autoQuality": "Chất lượng tự động",
+      "loadingError": "Không thể tải video",
+      "networkError": "Lỗi mạng",
+      "loginSuccess": "Đăng nhập thành công",
+      "loginFailed": "Đăng nhập thất bại"
+    }
+  });
+  function __(r) {
+    var o = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "";
+    return rt.translate(r, o);
   }
   function src_typeof(r) {
     return src_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -8735,11 +8703,6 @@
       }));
     };
   }
-  !function checkRedirect() {
-    var r;
-    var o;
-    if ((new et).checkAndRedirect()) {}
-  }();
   function setupViewport() {
     var r = document.querySelector('meta[name="viewport"]');
     if (!r) {
@@ -8758,51 +8721,42 @@
       setupViewport();
       initCSSVariables();
     }
-    function initI18n() {
-      var r = localStorage.getItem("missplayer_language");
-      if (r && p.supportedLanguages.includes(r)) {} else {
-        var o = p.userLang;
-      }
-      window.addEventListener("missplayer_language_changed", (function(r) {}));
-      return p.userLang;
-    }
     function startScript() {
       return _startScript.apply(this, arguments);
     }
     function _startScript() {
       return (_startScript = src_asyncToGenerator(src_regeneratorRuntime().mark((function _callee() {
-        var o, a, l, u, p;
-        return src_regeneratorRuntime().wrap((function _callee$(v) {
+        var o, a, l, u;
+        return src_regeneratorRuntime().wrap((function _callee$(p) {
           while (1) {
-            switch (v.prev = v.next) {
+            switch (p.prev = p.next) {
              case 0:
-              v.prev = 0;
+              p.prev = 0;
               injectStyles();
-              o = initI18n();
-              a = initUserExperienceEnhancer(true);
-              (r = new M).loadSettings();
-              (l = new E({
+              o = initUserExperienceEnhancer();
+              (r = new E).loadSettings();
+              (a = new S({
                 "playerState": r
               })).init();
-              v.next = 10;
+              p.next = 9;
               return initAutoLogin();
 
-             case 10:
-              if (u = v.sent) {}
-              (p = new J).init();
-              v.next = 18;
+             case 9:
+              if (l = p.sent) {}
+              (u = new Z).init();
+              p.next = 17;
               break;
 
-             case 16:
-              v.prev = 16;
-              v.t0 = v["catch"](0);
+             case 15:
+              p.prev = 15;
+              p.t0 = p["catch"](0);
 
-             case 18:
+             case 17:
              case "end":
-              return v.stop();
+              return p.stop();
             }
           }
-        }), _callee, null, [ [ 0, 16 ] ]);
+        }), _callee, null, [ [ 0, 15 ] ]);
       })))).apply(this, arguments);
     }
     if ("complete" === document.readyState || "interactive" === document.readyState) {

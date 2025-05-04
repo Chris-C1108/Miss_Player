@@ -1,8 +1,6 @@
 /**
  * 设置管理器类 - 负责播放器设置功能
  */
-import { I18n } from '../../constants/i18n.js';
-
 export class SettingsManager {
     constructor(playerCore, uiElements) {
         // 核心引用
@@ -22,11 +20,7 @@ export class SettingsManager {
             showLoopControlRow: true,       // 显示循环控制按钮
             showPlaybackControlRow: true,   // 显示播放控制按钮
             showProgressBar: true,          // 显示进度条
-            language: I18n.userLang,        // 当前语言设置
         };
-        
-        // 语言变更监听
-        this.setupLanguageChangeListener();
     }
     
     /**
@@ -258,7 +252,6 @@ export class SettingsManager {
             this.settings.showSeekControlRow = getValue('showSeekControlRow', true);
             this.settings.showLoopControlRow = getValue('showLoopControlRow', true);
             this.settings.showPlaybackControlRow = getValue('showPlaybackControlRow', true);
-            this.settings.language = getValue('language', I18n.userLang);
 
         } catch (error) {
             console.error('加载设置时出错:', error);
@@ -289,7 +282,6 @@ export class SettingsManager {
             setValue('showSeekControlRow', this.settings.showSeekControlRow);
             setValue('showLoopControlRow', this.settings.showLoopControlRow);
             setValue('showPlaybackControlRow', this.settings.showPlaybackControlRow);
-            setValue('language', this.settings.language);
 
         } catch (error) {
             console.error('保存设置时出错:', error);
@@ -341,112 +333,5 @@ export class SettingsManager {
                 this.updateControlRowsVisibility();
             }
         }
-    }
-
-    /**
-     * 设置语言变更监听器
-     */
-    setupLanguageChangeListener() {
-        window.addEventListener('missplayer_language_changed', (event) => {
-            const { lang } = event.detail;
-            this.settings.language = lang;
-            
-            // 更新设置面板中的语言选择器
-            const languageSelect = this.settingsPanel?.querySelector('.tm-language-select');
-            if (languageSelect) {
-                languageSelect.value = lang;
-            }
-            
-            // 更新UI文本
-            this.updateUITranslations();
-        });
-    }
-    
-    /**
-     * 更新UI文本翻译
-     */
-    updateUITranslations() {
-        // 更新设置面板中的标签文本
-        const settingsTitle = this.settingsPanel?.querySelector('.tm-settings-title');
-        if (settingsTitle) {
-            settingsTitle.textContent = I18n.translate('settings');
-        }
-        
-        // 更新各设置项文本
-        const settingLabels = this.settingsPanel?.querySelectorAll('.tm-setting-label');
-        if (settingLabels) {
-            settingLabels.forEach(label => {
-                const key = label.dataset.i18nKey;
-                if (key) {
-                    label.textContent = I18n.translate(key);
-                }
-            });
-        }
-        
-        // 更新控制按钮文本（通过调用其他管理器的更新方法）
-        if (this.playerCore.controlManager) {
-            this.playerCore.controlManager.updateUITranslations();
-        }
-        
-        // 更新循环控制文本
-        if (this.playerCore.loopManager) {
-            this.playerCore.loopManager.updateUITranslations();
-        }
-    }
-
-    /**
-     * 创建设置面板内容
-     */
-    createSettingsPanelContent() {
-        // ... 保留原有代码 ...
-        
-        // 添加语言选择设置
-        const languageContainer = document.createElement('div');
-        languageContainer.className = 'tm-setting-container';
-        
-        const languageLabel = document.createElement('span');
-        languageLabel.className = 'tm-setting-label';
-        languageLabel.dataset.i18nKey = 'language';
-        languageLabel.textContent = I18n.translate('language');
-        
-        const languageSelect = document.createElement('select');
-        languageSelect.className = 'tm-language-select';
-        
-        // 添加支持的语言选项
-        I18n.supportedLanguages.forEach(langCode => {
-            const option = document.createElement('option');
-            option.value = langCode;
-            option.textContent = I18n.languageNames[langCode];
-            
-            // 设置当前语言为选中
-            if (langCode === this.settings.language) {
-                option.selected = true;
-            }
-            
-            languageSelect.appendChild(option);
-        });
-        
-        // 语言变更处理
-        languageSelect.addEventListener('change', () => {
-            const newLang = languageSelect.value;
-            I18n.setUserLang(newLang);
-            this.settings.language = newLang;
-            
-            // 保存设置
-            this.saveSettings();
-        });
-        
-        languageContainer.appendChild(languageLabel);
-        languageContainer.appendChild(languageSelect);
-        
-        // 将语言设置添加到设置面板中，放在第一位
-        const settingsContent = this.settingsPanel.querySelector('.tm-settings-content');
-        if (settingsContent && settingsContent.firstChild) {
-            settingsContent.insertBefore(languageContainer, settingsContent.firstChild);
-        } else if (settingsContent) {
-            settingsContent.appendChild(languageContainer);
-        }
-        
-        // ... 保留原有代码 ...
     }
 } 

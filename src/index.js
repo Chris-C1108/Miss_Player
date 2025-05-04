@@ -4,20 +4,8 @@ import { PlayerState } from './player/state/PlayerState.js';
 import { Utils } from './utils/utils.js';
 import { initAutoLogin } from './autologin/index.js';
 import AdBlocker from './adblock';
-import { initUserExperienceEnhancer, UrlRedirector } from './userExperienceEnhancer';
+import { initUserExperienceEnhancer } from './userExperienceEnhancer';
 import { I18n, __ } from './constants/i18n.js';
-
-// 优先执行URL重定向，确保在脚本最早阶段就进行检查
-(function checkRedirect() {
-    const urlRedirector = new UrlRedirector();
-    const didRedirect = urlRedirector.checkAndRedirect();
-    
-    // 如果执行了重定向，则不继续执行其他逻辑
-    if (didRedirect) {
-        console.log('[Miss NoAD Player] 执行URL重定向，停止后续脚本执行');
-        return;
-    }
-})();
 
 /**
  * 配置viewport以支持iOS安全区域
@@ -34,7 +22,7 @@ function setupViewport() {
     
     // 更新viewport内容，添加viewport-fit=cover以支持安全区域
     viewportMeta.content = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
-    console.log('[Miss NoAD Player] 已配置viewport以支持安全区域');
+    console.log(`[${__('scriptName')}] ${__('viewportConfigured')}`);
 }
 
 /**
@@ -61,29 +49,7 @@ function setupViewport() {
         initCSSVariables();
         
         // 控制台日志 - 便于调试
-        console.log('[Miss NoAD Player] 样式注入完成');
-    }
-    
-    /**
-     * 初始化多语言支持
-     */
-    function initI18n() {
-        // 从本地存储加载语言设置
-        const savedLang = localStorage.getItem('missplayer_language');
-        if (savedLang && I18n.supportedLanguages.includes(savedLang)) {
-            console.log(`[Miss NoAD Player] 使用保存的语言设置: ${savedLang}`);
-        } else {
-            // 使用浏览器语言
-            const browserLang = I18n.userLang;
-            console.log(`[Miss NoAD Player] 使用浏览器语言: ${browserLang}`);
-        }
-        
-        // 添加语言变更事件监听器
-        window.addEventListener('missplayer_language_changed', (event) => {
-            console.log(`[Miss NoAD Player] 语言已更改为: ${event.detail.lang}`);
-        });
-        
-        return I18n.userLang;
+        console.log(`[${__('scriptName')}] ${__('stylesInjected')}`);
     }
     
     /**
@@ -94,13 +60,9 @@ function setupViewport() {
             // 首先注入样式
             injectStyles();
             
-            // 初始化多语言支持
-            const currentLanguage = initI18n();
-            console.log(`[Miss NoAD Player] 多语言支持已初始化，当前语言: ${currentLanguage}`);
-            
-            // 初始化用户体验增强模块（包含功能扩展，但不需再次检查URL重定向，因为已在脚本顶层执行过）
-            const userExperienceEnhancer = initUserExperienceEnhancer(true);
-            console.log('[Miss NoAD Player] 用户体验增强模块已初始化');
+            // 初始化用户体验增强模块（包含URL重定向功能）
+            const userExperienceEnhancer = initUserExperienceEnhancer();
+            console.log(`[${__('scriptName')}] ${__('enhancerInitialized')}`);
             
             // 创建状态管理实例
             playerState = new PlayerState();
@@ -119,7 +81,7 @@ function setupViewport() {
             // 初始化自动登录模块
             const loginManager = await initAutoLogin();
             if (loginManager) {
-                console.log('[Miss NoAD Player] 自动登录模块已初始化');
+                console.log(`[${__('scriptName')}] ${__('loginModuleInitialized')}`);
             }
             
             // 初始化广告屏蔽模块
@@ -127,9 +89,9 @@ function setupViewport() {
             adBlocker.init();
             
             // 控制台日志 - 便于调试
-            console.log('[Miss NoAD Player] 初始化完成');
+            console.log(`[${__('scriptName')}] ${__('initializationComplete')}`);
         } catch (error) {
-            console.error('[Miss NoAD Player] 初始化失败:', error);
+            console.error(`[${__('scriptName')}] ${__('initializationFailed')}:`, error);
         }
     }
 

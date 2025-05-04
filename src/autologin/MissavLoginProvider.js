@@ -2,7 +2,7 @@
  * MissAV网站登录提供程序
  */
 import { LoginUtils } from './utils.js';
-import { I18n } from '../constants/i18n.js';
+import { I18n } from './i18n.js';
 
 export class MissavLoginProvider {
     /**

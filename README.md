@@ -1,52 +1,107 @@
-# 涩涩是第一生产力，油猴脚本，看片新姿势
+# Miss NoAD Player v2.2
 
-「MissPlayer」小工具，主要解决竖屏看网页视频时画面面积小、跳转不方便、循环播放问题。顺便去除 missav 站的广告
+一个模块化的自定义视频播放器，支持多种功能和自定义控制。
 
-## 它能干啥？
+## 项目结构
 
-### 网站体验优化（目前只针对 missav 将来可能扩展到其他网站）
-- 干掉烦人广告（告别弹窗）
-- 自动登录（再也不用重复输密码啦）
-- 自动切换高画质（眼睛舒服多了）
-- 自动展开视频详情
-- 视频列表标题展开，省的只看开头几个字云里雾里
+```
+miss_noad_ver2.2
+  ├── src/                  # 源代码目录
+  │   ├── player/           # 模块化播放器组件
+  │   │   ├── core/         # 核心功能模块
+  │   │   ├── managers/     # 各种管理器
+  │   │   ├── ui/           # UI组件
+  │   │   └── utils/        # 播放器特定工具
+  │   ├── constants/        # 常量定义
+  │   ├── state/            # 状态管理
+  │   ├── ui/               # 通用UI组件
+  │   └── utils/            # 通用工具函数
+  ├── dist/                 # 构建输出目录
+  └── ref/                  # 参考资料
+```
 
-### 单手播放器 （适用于大部分网页视频）
-- 点击页面底部粉色按钮进入播放器
-- 单手模式超爽（特别适合手机竖屏单手握持）
-- 想看哪就放大哪（上下左右 拖一下视频下面的小白条就行）
-- 快速跳转（5秒、10秒、30秒、1分钟、5分钟、10分钟.想跳哪跳哪）
-- 还能循环播放你喜欢的片段（反复学习 嘿嘿嘿~）
+## 模块说明
 
-### ToDo
-- 兼容纵向视频
-- 横屏模式与竖屏模式设置分别存储、持久化
-- 兼容更多视频网站
+### player/core
+- `PlayerCore.js` - 播放器核心类，负责基本播放功能和状态管理
 
-## 最近更新
-- 5.1.5版：针对 iOS Safari 浏览器不支持音量调节的特性，优化了在 iPhone 和 iPad 设备上的体验（隐藏音量控制滑杆）;同时完善了网站重定向功能,现在会自动跳转到 missav.ai 域名; 油猴元数据国际化多语言支持。
-- 5.1.4版：增加音量滑杆控制，增加视频长按倍速播放，优化横屏时控制面板自动隐藏逻辑。
-- 5.1.3版：横屏模式下只有在控制面板显示的情况下才可以点击视频进行暂停。
-- 5.1.2版：把浮动按钮移到底部中间了，避免与其他插件位置干扰，还加了个呼吸灯效果
+### player/managers
+- `ControlManager.js` - 控制管理器，处理播放器控制逻辑
+- `DragManager.js` - 拖拽管理器，处理拖拽相关功能
+- `EventManager.js` - 事件管理器，处理事件监听和分发
+- `LoopManager.js` - 循环管理器，处理视频循环播放功能
+- `ProgressManager.js` - 进度管理器，处理播放进度
+- `SettingsManager.js` - 设置管理器，处理播放器设置
 
-## 怎么安装？
+### player/ui
+- `UIManager.js` - UI管理器，处理播放器界面元素
 
-### 苹果机（iOS）
-- **推荐方法1**：
- 👉 用[「Stay for Safari」（App Store 免费版就够用）](https://apps.apple.com/cn/app/stay-for-safari-%E6%B5%8F%E8%A7%88%E5%99%A8%E4%BC%B4%E4%BE%A3/id1591620171)
-安装后去脚本页面，点右下角stay按钮就能装上
-  
-- **推荐方法2**：
- 👉 用[「Userscript」（App Store有）](https://apps.apple.com/cn/app/userscripts/id1463298887)
+## 使用方法
 
-### 安卓/Windows/Mac
-- 装个「Tampermonkey」就行了
-  👉 https://www.tampermonkey.net/
-- Edge Android 版 似乎支持装插件了，各位可以试试
+### 基本使用
 
-## 脚本下载地址
-- [**GreasyFork**](https://greasyfork.org/zh-CN/scripts/453300-missav-%E5%8E%BB%E5%B9%BF%E5%91%8A-%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F-%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8)
+```javascript
+// 导入播放器
+import { CustomVideoPlayer } from './src/player/index.js';
 
-- [**OpenUserJs**](https://openuserjs.org/scripts/loadingi/MissAV_%E5%8E%BB%E5%B9%BF%E5%91%8A_%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F_(%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8))
+// 创建播放器实例
+const player = new CustomVideoPlayer({
+    containerId: 'video-container', // 容器ID
+    startLooped: false,            // 是否循环播放
+    startMuted: false             // 是否静音
+});
 
-有啥问题或建议都可以在评论区说哦！用得开心~
+// 初始化播放器
+player.initialize();
+```
+
+### 高级使用
+
+```javascript
+// 导入模块化版本
+import { ModularVideoPlayer } from './src/index.js';
+
+// 创建播放器实例
+const player = new ModularVideoPlayer({
+    containerId: 'video-container',
+    startLooped: true,
+    startMuted: false,
+    // 其他自定义选项...
+});
+
+// 初始化播放器
+player.initialize();
+
+// 使用播放器API
+player.play();                 // 播放
+player.pause();                // 暂停
+player.setVolume(0.5);         // 设置音量
+player.setPlaybackRate(1.5);   // 设置播放速度
+player.toggleLoop();           // 切换循环播放
+player.seekTo(120);            // 跳转到特定时间（秒）
+```
+
+## 构建项目
+
+```bash
+# 安装依赖
+npm install
+
+# 开发模式
+npm run dev
+
+# 构建生产版本
+npm run build
+```
+
+## 特性
+
+- 🎮 自定义控制界面
+- 🔄 视频循环播放
+- ⏩ 可调整播放速度
+- 🎚️ 音量控制
+- 📊 进度条跳转
+- 📱 响应式设计，支持移动端
+- ��️ 拖拽控制
+- ⌨️ 键盘快捷键支持 
+
