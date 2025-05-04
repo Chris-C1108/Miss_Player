@@ -12,10 +12,21 @@ export class UrlRedirector {
         this.redirectRules = [
             {   
                 // 匹配missav.com和thisav.com和 missav.ws 和 missav123.com 和 missav.live
-                pattern: /^https?:\/\/(www\.)?(missav|thisav|missav\.ws|missav123)\.com\/|^https?:\/\/(www\.)?missav\.live\//i,
+                pattern: /^https?:\/\/(www\.)?(missav|thisav|missav123)\.com\/?|^https?:\/\/(www\.)?missav\.ws\/?|^https?:\/\/(www\.)?missav\.live\/?/i,
                 targetDomain: 'missav.ai'
             }
         ];
+        
+        // 立即执行重定向检查
+        this.immediateRedirect();
+    }
+    
+    /**
+     * 立即执行重定向检查，在页面加载最早时执行
+     */
+    immediateRedirect() {
+        // 立即检查当前URL
+        this.checkAndRedirect();
     }
 
     /**
@@ -34,7 +45,8 @@ export class UrlRedirector {
                 const newUrl = this.applyRedirect(currentUrl, rule);
                 if (newUrl !== currentUrl) {
                     console.log('[UrlRedirector] 重定向到:', newUrl);
-                    window.location.href = newUrl;
+                    // 使用replace而不是href赋值，避免在浏览历史中留下记录
+                    window.location.replace(newUrl);
                     return true;
                 }
             }
@@ -53,18 +65,24 @@ export class UrlRedirector {
     applyRedirect(url, rule) {
         // 替换域名部分
         if (rule.targetDomain) {
-            // 处理.com后缀的域名
-            let newUrl = url.replace(/^(https?:\/\/)(www\.)?(missav|thisav|missav\.ws|missav123)\.com\//i, `$1${rule.targetDomain}/`);
+            // 处理各种域名情况
+            let newUrl = url;
             
-            // 如果URL未变化，则尝试替换.live后缀的域名
+            // 处理.com域名
+            newUrl = newUrl.replace(/^(https?:\/\/)(www\.)?(missav|thisav|missav123)\.com\/?/i, `$1${rule.targetDomain}/`);
+            
+            // 如果URL未变化，则尝试替换.ws域名
             if (newUrl === url) {
-                newUrl = url.replace(/^(https?:\/\/)(www\.)?missav\.live\//i, `$1${rule.targetDomain}/`);
+                newUrl = url.replace(/^(https?:\/\/)(www\.)?missav\.ws\/?/i, `$1${rule.targetDomain}/`);
+            }
+            
+            // 如果URL还未变化，则尝试替换.live域名
+            if (newUrl === url) {
+                newUrl = url.replace(/^(https?:\/\/)(www\.)?missav\.live\/?/i, `$1${rule.targetDomain}/`);
             }
             
             return newUrl;
         }
-        
-        // 如果有自定义替换逻辑，可以在这里添加
         
         return url;
     }

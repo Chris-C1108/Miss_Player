@@ -4,8 +4,11 @@ import { PlayerState } from './player/state/PlayerState.js';
 import { Utils } from './utils/utils.js';
 import { initAutoLogin } from './autologin/index.js';
 import AdBlocker from './adblock';
-import { initUserExperienceEnhancer } from './userExperienceEnhancer';
+import { initUserExperienceEnhancer, earlyUrlRedirector } from './userExperienceEnhancer';
 import { I18n, __ } from './constants/i18n.js';
+
+// 确保最早执行URL重定向检查
+earlyUrlRedirector.checkAndRedirect();
 
 /**
  * 配置viewport以支持iOS安全区域
@@ -61,7 +64,8 @@ function setupViewport() {
             injectStyles();
             
             // 初始化用户体验增强模块（包含URL重定向功能）
-            const userExperienceEnhancer = initUserExperienceEnhancer();
+            // 传递true以跳过重定向检查，因为已经在前面执行过了
+            const userExperienceEnhancer = initUserExperienceEnhancer(true);
             console.log(`[${__('scriptName')}] ${__('enhancerInitialized')}`);
             
             // 创建状态管理实例
