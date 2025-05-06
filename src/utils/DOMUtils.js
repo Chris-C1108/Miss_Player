@@ -39,4 +39,21 @@ export class DOMUtils {
         
         return svg;
     }
+    
+    /**
+     * 为元素添加事件委托
+     * @param {HTMLElement} element - 父元素
+     * @param {string} eventType - 事件类型
+     * @param {string} selector - CSS选择器
+     * @param {Function} handler - 处理函数
+     * @param {Object} options - 事件选项
+     */
+    static delegateEvent(element, eventType, selector, handler, options) {
+        element.addEventListener(eventType, (event) => {
+            const target = event.target.closest(selector);
+            if (target && element.contains(target)) {
+                handler.call(target, event);
+            }
+        }, options);
+    }
 } 

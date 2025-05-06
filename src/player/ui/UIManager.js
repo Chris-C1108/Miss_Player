@@ -1,6 +1,10 @@
 /**
  * UI管理器类 - 负责创建和管理播放器UI元素
  */
+import { DOMUtils } from '../../utils/DOMUtils.js';
+import { performanceMonitor } from '../../utils/PerformanceMonitor.js';
+import { animationTimer } from '../../utils/AnimationTimer.js';
+
 export class UIManager {
     constructor(playerCore) {
         // 核心播放器引用
@@ -27,7 +31,7 @@ export class UIManager {
         
         // 控制界面状态
         this.controlsVisible = true;
-        this.controlsHideTimeout = null;
+        this.controlsHideTimerId = null; // 使用ID代替timeout引用
         this.isMouseOverControls = false; // 鼠标是否在控制面板上
         
         // 导入样式
@@ -496,7 +500,10 @@ export class UIManager {
         // 确保overlay已创建
         if (!this.overlay) return;
         
-        // 添加鼠标移动和触摸移动监听，用于在横屏模式下保持控制界面可见
+        // 开始测量事件设置时间
+        performanceMonitor.startMeasure('setupEvents');
+        
+        // 使用事件委托处理鼠标移动和触摸移动
         this.overlay.addEventListener('mousemove', () => {
             if (this.isLandscape) {
                 this.showControls();
@@ -511,7 +518,7 @@ export class UIManager {
             }
         }, { passive: true });
         
-        // 为控制按钮添加触摸开始事件，防止点击控制按钮时隐藏控制界面
+        // 使用事件委托处理触摸事件
         this.overlay.addEventListener('touchstart', (e) => {
             if (this.isLandscape && e.target.closest('.tm-control-button, .tm-time-control-button, .tm-close-button')) {
                 // 触摸控制按钮时重置自动隐藏计时器
@@ -521,80 +528,26 @@ export class UIManager {
             }
         }, { passive: false });
         
-        // 为控制面板添加鼠标进入和离开事件
-        if (this.playerCore.controlManager && this.playerCore.controlManager.controlButtonsContainer) {
-            const controlButtons = this.playerCore.controlManager.controlButtonsContainer;
-            
-            controlButtons.addEventListener('mouseenter', () => {
-                this.isMouseOverControls = true;
-                // 鼠标进入控制面板时，清除隐藏定时器
-                if (this.controlsHideTimeout) {
-                    clearTimeout(this.controlsHideTimeout);
-                    this.controlsHideTimeout = null;
-                }
-            });
-            
-            controlButtons.addEventListener('mouseleave', () => {
-                this.isMouseOverControls = false;
-                // 鼠标离开控制面板时，重新设置自动隐藏
-                if (this.isLandscape) {
-                    this.autoHideControls();
-                }
-            });
-        }
+        // 使用事件委托处理mouseenter事件
+        DOMUtils.delegateEvent(this.playerContainer, 'mouseenter', '.tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
+            this.isMouseOverControls = true;
+            if (this.controlsHideTimerId) {
+                animationTimer.clearTimeout(this.controlsHideTimerId);
+                this.controlsHideTimerId = null;
+            }
+        });
         
-        // 为设置按钮和按钮容器添加鼠标进入和离开事件
-        if (this.settingsBtn) {
-            this.settingsBtn.addEventListener('mouseenter', () => {
-                this.isMouseOverControls = true;
-                if (this.controlsHideTimeout) {
-                    clearTimeout(this.controlsHideTimeout);
-                    this.controlsHideTimeout = null;
-                }
-            });
-            
-            this.settingsBtn.addEventListener('mouseleave', () => {
-                this.isMouseOverControls = false;
-                if (this.isLandscape) {
-                    this.autoHideControls();
-                }
-            });
-        }
+        // 使用事件委托处理mouseleave事件
+        DOMUtils.delegateEvent(this.playerContainer, 'mouseleave', '.tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
+            this.isMouseOverControls = false;
+            if (this.isLandscape) {
+                this.autoHideControls();
+            }
+        });
         
-        if (this.buttonContainer) {
-            this.buttonContainer.addEventListener('mouseenter', () => {
-                this.isMouseOverControls = true;
-                if (this.controlsHideTimeout) {
-                    clearTimeout(this.controlsHideTimeout);
-                    this.controlsHideTimeout = null;
-                }
-            });
-            
-            this.buttonContainer.addEventListener('mouseleave', () => {
-                this.isMouseOverControls = false;
-                if (this.isLandscape) {
-                    this.autoHideControls();
-                }
-            });
-        }
-        
-        // 为设置面板添加鼠标进入和离开事件
-        if (this.settingsPanel) {
-            this.settingsPanel.addEventListener('mouseenter', () => {
-                this.isMouseOverControls = true;
-                if (this.controlsHideTimeout) {
-                    clearTimeout(this.controlsHideTimeout);
-                    this.controlsHideTimeout = null;
-                }
-            });
-            
-            this.settingsPanel.addEventListener('mouseleave', () => {
-                this.isMouseOverControls = false;
-                if (this.isLandscape) {
-                    this.autoHideControls();
-                }
-            });
-        }
+        // 结束测量并记录结果
+        const setupTime = performanceMonitor.endMeasure('setupEvents');
+        console.log(`[Performance] 事件监听器设置用时: ${setupTime.toFixed(2)}ms`);
     }
     
     /**
@@ -645,9 +598,9 @@ export class UIManager {
             // 竖屏模式下始终显示控制界面
             this.showControls();
             // 清除任何可能存在的定时器
-            if (this.controlsHideTimeout) {
-                clearTimeout(this.controlsHideTimeout);
-                this.controlsHideTimeout = null;
+            if (this.controlsHideTimerId) {
+                animationTimer.clearTimeout(this.controlsHideTimerId);
+                this.controlsHideTimerId = null;
             }
         }
     }
@@ -778,9 +731,9 @@ export class UIManager {
         this.controlsVisible = true;
         
         // 清除可能存在的隐藏定时器
-        if (this.controlsHideTimeout) {
-            clearTimeout(this.controlsHideTimeout);
-            this.controlsHideTimeout = null;
+        if (this.controlsHideTimerId) {
+            animationTimer.clearTimeout(this.controlsHideTimerId);
+            this.controlsHideTimerId = null;
         }
     }
     
@@ -812,21 +765,33 @@ export class UIManager {
      * 设置自动隐藏控制界面
      */
     autoHideControls() {
+        // 开始测量性能
+        performanceMonitor.startMeasure('autoHideControls');
+        
         // 只在横屏模式下设置自动隐藏
-        if (!this.isLandscape) return;
-        
-        // 如果鼠标在控制面板上，不设置自动隐藏
-        if (this.isMouseOverControls) return;
-        
-        // 清除可能存在的定时器
-        if (this.controlsHideTimeout) {
-            clearTimeout(this.controlsHideTimeout);
+        if (!this.isLandscape) {
+            performanceMonitor.endMeasure('autoHideControls');
+            return;
         }
         
-        // 设置3秒后自动隐藏
-        this.controlsHideTimeout = setTimeout(() => {
+        // 如果鼠标在控制面板上，不设置自动隐藏
+        if (this.isMouseOverControls) {
+            performanceMonitor.endMeasure('autoHideControls');
+            return;
+        }
+        
+        // 使用animationTimer代替setTimeout
+        if (this.controlsHideTimerId) {
+            animationTimer.clearTimeout(this.controlsHideTimerId);
+        }
+        
+        // 设置3秒后自动隐藏，使用固定ID便于管理
+        this.controlsHideTimerId = animationTimer.setTimeout(() => {
             this.hideControls();
-        }, 3000);
+        }, 3000, 'controlsHide');
+        
+        // 结束测量
+        performanceMonitor.endMeasure('autoHideControls');
     }
 
     /**
