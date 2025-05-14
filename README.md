@@ -53,5 +53,3 @@
 
 有啥问题或建议都可以在评论区说哦！用得开心~
 
-
-![单手播放器](https://img.sobot.com/5a7dd98d6c124e0f9dd1fed01a2024f5/chatres/5a7dd98d6c124e0f9dd1fed01a2024f5/ticket/20250427/9701839e8b1ffa09717462a296b04b00/xtyrk1a2yr7emwrdpz5zcc3d1lnc_1745731129456.jpg "单手播放器")
