@@ -1127,39 +1127,102 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container {
     margin: 0;
 }
 
-/* 
- * 静态样式迁移总结：
- * 1. 已将进度条高度变化从行内样式转为CSS类：tm-progress-bar-expanded, tm-progress-bar-normal
- * 2. 已将循环标记点样式从行内样式转为CSS类：tm-loop-marker-point等
- * 3. 已将时间容器交互状态从行内样式转为CSS类：tm-start-time-container-hover等
- * 4. 已将循环按钮交互状态从行内样式转为CSS类：tm-loop-button-hover等
- * 5. 已将倍速滑块交互状态从行内样式转为CSS类：tm-playback-slider-hover等
- * 6. 已将控制按钮交互状态从行内样式转为CSS类：tm-control-button-hover等
- * 7. 已将时间控制按钮交互状态从行内样式转为CSS类：tm-time-control-button-hover等
- * 
- * 注意：某些动态计算的样式值（如宽度百分比）仍使用行内样式直接设置
- */
-
-/* 时间控制按钮状态 */
-.tm-time-control-button-hover {
-    background-color: hsl(var(--shadcn-accent) / 0.6);
-    transform: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* 评论区样式 */
+.tm-comment-row {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+    border-bottom: 1px solid hsla(var(--shadcn-border) / 0.2);
+    padding-bottom: 10px;
 }
 
-.tm-time-control-button-active {
+.tm-comment-container {
+    width: 100%;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tm-comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 500;
+    color: hsl(var(--shadcn-foreground));
+}
+
+.tm-comment-left {
+    display: flex;
+    align-items: center;
+}
+
+.tm-comment-title {
+    margin-right: 5px;
+}
+
+.tm-comment-count {
+    color: hsl(var(--shadcn-muted-foreground));
+    font-size: 12px;
+}
+
+.tm-comment-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.tm-comment-button {
+    border: none;
+    background-color: hsla(var(--shadcn-secondary) / 0.5);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tm-comment-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.6);
+    transform: translateY(-1px);
+}
+
+.tm-comment-button:active {
     transform: scale(0.95);
-    box-shadow: none;
 }
 
-.tm-time-control-button-default {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+.tm-comment-write {
+    background-color: hsla(var(--shadcn-blue) / 0.7);
+    color: hsl(var(--shadcn-blue-foreground));
 }
 
-.tm-time-control-button-after-active {
-    transform: none;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+.tm-comment-write:hover {
+    background-color: hsla(var(--shadcn-blue) / 0.8);
+}
+
+.tm-comment-placeholder {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    color: hsl(var(--shadcn-muted-foreground));
+    font-size: 13px;
+    background-color: hsla(var(--shadcn-muted) / 0.1);
+    border-radius: 6px;
+}
+
+/* 横屏模式下的评论区样式 */
+@media screen and (orientation: landscape) {
+    .tm-comment-container {
+        min-height: 50px;
+    }
+    
+    .tm-comment-placeholder {
+        padding: 8px;
+    }
 }
 
 /* =========== 横屏模式样式 =========== */
@@ -1771,6 +1834,391 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container {
 /* 暗色主题适配 */
 @media (prefers-color-scheme: dark) {
     .tm-playback-control-row button svg {
-        stroke: hsl(var(--shadcn-primary));
+        stroke: hsl(var(--shadcn-secondary-foreground));
     }
-} 
+}
+
+/* 时间控制按钮状态 */
+.tm-time-control-button-hover {
+    background-color: hsl(var(--shadcn-accent) / 0.6);
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tm-time-control-button-active {
+    transform: scale(0.95);
+    box-shadow: none;
+}
+
+.tm-time-control-button-default {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.tm-time-control-button-after-active {
+    transform: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+/* 评论浮窗样式 */
+.tm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: hsla(var(--shadcn-background) / 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 9997;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.tm-modal-overlay.visible {
+    opacity: 1;
+}
+
+.tm-comment-modal {
+    width: 100%;
+    max-width: 420px;
+    background-color: hsla(var(--shadcn-card) / 0.95);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    transform: scale(0.95) translateY(10px);
+    opacity: 0;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid hsla(var(--shadcn-border) / 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.tm-comment-modal.visible {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+.tm-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid hsla(var(--shadcn-border) / 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tm-modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: hsl(var(--shadcn-foreground));
+}
+
+.tm-modal-close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: hsl(var(--shadcn-muted-foreground));
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tm-modal-close:hover {
+    background-color: hsla(var(--shadcn-muted) / 0.1);
+    color: hsl(var(--shadcn-foreground));
+}
+
+.tm-modal-content {
+    padding: 16px 20px;
+    flex: 1;
+}
+
+.tm-comment-textarea {
+    width: 100%;
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    resize: none;
+    height: 120px;
+    box-sizing: border-box;
+    background-color: hsla(var(--shadcn-secondary) / 0.2);
+    color: hsl(var(--shadcn-foreground));
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.tm-comment-textarea:focus {
+    outline: none;
+    border-color: hsl(var(--shadcn-blue));
+    box-shadow: 0 0 0 2px hsla(var(--shadcn-blue) / 0.2);
+}
+
+.tm-comment-textarea::placeholder {
+    color: hsl(var(--shadcn-muted-foreground));
+}
+
+.tm-comment-textarea.error {
+    border-color: hsl(var(--shadcn-destructive));
+    animation: shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shake {
+    10%, 90% {
+        transform: translateX(-1px);
+    }
+    20%, 80% {
+        transform: translateX(2px);
+    }
+    30%, 50%, 70% {
+        transform: translateX(-3px);
+    }
+    40%, 60% {
+        transform: translateX(3px);
+    }
+}
+
+.tm-modal-footer {
+    padding: 12px 20px 16px;
+    border-top: 1px solid hsla(var(--shadcn-border) / 0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.tm-modal-button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tm-modal-cancel {
+    background-color: hsla(var(--shadcn-secondary) / 0.5);
+    color: hsl(var(--shadcn-secondary-foreground));
+}
+
+.tm-modal-cancel:hover {
+    background-color: hsla(var(--shadcn-secondary) / 0.7);
+    transform: translateY(-1px);
+}
+
+.tm-modal-submit {
+    background-color: hsl(var(--shadcn-blue));
+    color: hsl(var(--shadcn-blue-foreground));
+}
+
+.tm-modal-submit:hover {
+    background-color: hsl(var(--shadcn-blue) / 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px hsla(var(--shadcn-blue) / 0.3);
+}
+
+.tm-modal-button:active {
+    transform: scale(0.97);
+}
+
+@media (max-width: 480px) {
+    .tm-comment-modal {
+        max-width: 100%;
+    }
+    
+    .tm-modal-header,
+    .tm-modal-content,
+    .tm-modal-footer {
+        padding: 12px 16px;
+    }
+}
+
+/* 横屏模式下的评论浮窗样式 */
+@media screen and (orientation: landscape) {
+    .tm-comment-modal {
+        max-width: 500px;
+        max-height: 90vh;
+    }
+    
+    .tm-comment-textarea {
+        height: 100px;
+    }
+}
+
+/* 浮动评论面板样式 */
+.tm-floating-comment-panel {
+    position: fixed;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%) translateY(100%);
+    width: 90%;
+    max-width: 700px;
+    background-color: hsla(var(--shadcn-card) / 0.95);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
+    z-index: 9996;
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid hsla(var(--shadcn-border) / 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    overflow: hidden;
+}
+
+.tm-floating-comment-panel.visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.tm-floating-panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid hsla(var(--shadcn-border) / 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: hsla(var(--shadcn-card) / 0.98);
+}
+
+.tm-floating-panel-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: hsl(var(--shadcn-foreground));
+}
+
+.tm-floating-panel-close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: hsl(var(--shadcn-muted-foreground));
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tm-floating-panel-close:hover {
+    background-color: hsla(var(--shadcn-muted) / 0.1);
+    color: hsl(var(--shadcn-foreground));
+}
+
+.tm-floating-panel-content {
+    padding: 16px 20px;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tm-floating-panel-content .tm-comment-placeholder {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+/* 横屏模式下的浮动评论面板样式 */
+@media screen and (orientation: landscape) {
+    .tm-floating-comment-panel {
+        max-width: 500px;
+        max-height: 80vh;
+        border-radius: 12px;
+        bottom: 20px;
+    }
+}
+
+/* 浮动评论面板输入区域 */
+.tm-floating-panel-input-area {
+    padding: 12px 16px;
+    border-top: 1px solid hsla(var(--shadcn-border) / 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: hsla(var(--shadcn-card) / 0.98);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.tm-floating-panel-input {
+    flex: 1;
+    height: 40px;
+    border-radius: 20px;
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+    background-color: hsla(var(--shadcn-secondary) / 0.2);
+    padding: 0 16px;
+    font-size: 14px;
+    color: hsl(var(--shadcn-foreground));
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.tm-floating-panel-input:focus {
+    outline: none;
+    border-color: hsl(var(--shadcn-blue));
+    box-shadow: 0 0 0 2px hsla(var(--shadcn-blue) / 0.2);
+}
+
+.tm-floating-panel-input::placeholder {
+    color: hsl(var(--shadcn-muted-foreground));
+}
+
+.tm-floating-panel-input.error {
+    border-color: hsl(var(--shadcn-destructive));
+    animation: shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.tm-floating-panel-submit {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background-color: hsl(var(--shadcn-blue));
+    color: hsl(var(--shadcn-blue-foreground));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.tm-floating-panel-submit:hover {
+    background-color: hsl(var(--shadcn-blue) / 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px hsla(var(--shadcn-blue) / 0.3);
+}
+
+.tm-floating-panel-submit:active {
+    transform: scale(0.95);
+}
+
+.tm-floating-panel-submit svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+/* 横屏模式下的输入区样式调整 */
+@media screen and (orientation: landscape) {
+    .tm-floating-panel-input-area {
+        padding: 10px 16px;
+    }
+}

@@ -83,7 +83,12 @@ module.exports = {
         ],
         icon: 'https://missav.ws/img/favicon.ico',
         grant: [
-          'none'
+          'GM_xmlhttpRequest',
+          'GM_setClipboard',
+          'GM_notification',
+          'GM_setValue',
+          'GM_getValue',
+          'GM_deleteValue'
         ],
         'run-at': 'document-start',
         noframes: true,

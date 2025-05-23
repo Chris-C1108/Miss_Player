@@ -7,7 +7,12 @@
 // @match *://*.missav.ai/*
 // @match *://*.jable.tv/*
 // @match *://*/*
-// @grant none
+// @grant GM_xmlhttpRequest
+// @grant GM_setClipboard
+// @grant GM_notification
+// @grant GM_setValue
+// @grant GM_getValue
+// @grant GM_deleteValue
 // @icon https://missav.ws/img/favicon.ico
 // @license MIT
 // @namespace loadingi.local

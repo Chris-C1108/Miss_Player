@@ -242,14 +242,83 @@ export class ControlManager {
         this.controlButtonsContainer = document.createElement('div');
         this.controlButtonsContainer.className = 'tm-control-buttons';
 
-        // 创建进度条行作为第一行
+        // 创建评论区行作为第一个row
+        const commentRow = document.createElement('div');
+        commentRow.className = 'tm-comment-row';
+        
+        // 创建评论区容器
+        const commentContainer = document.createElement('div');
+        commentContainer.className = 'tm-comment-container';
+        commentContainer.innerHTML = `
+            <div class="tm-comment-header">
+                <div class="tm-comment-left">
+                    <span class="tm-comment-title">评论区</span>
+                    <span class="tm-comment-count">(0)</span>
+                </div>
+                <div class="tm-comment-actions">
+                    <button class="tm-comment-button tm-comment-write">留言</button>
+                    <button class="tm-comment-button tm-comment-expand">展开</button>
+                </div>
+            </div>
+            <div class="tm-comment-placeholder">暂无评论，功能开发中...</div>
+        `;
+        
+        // 将评论区容器添加到评论区行
+        commentRow.appendChild(commentContainer);
+        
+        // 添加评论区按钮事件
+        setTimeout(() => {
+            const commentWriteButton = commentContainer.querySelector('.tm-comment-write');
+            const commentExpandButton = commentContainer.querySelector('.tm-comment-expand');
+            
+            if (commentWriteButton) {
+                commentWriteButton.addEventListener('click', () => {
+                    // 创建并显示留言浮窗
+                    this.showCommentModal();
+                });
+            }
+            
+            if (commentExpandButton) {
+                commentExpandButton.addEventListener('click', () => {
+                    // 展开按钮点击处理
+                    const commentContainer = commentRow.querySelector('.tm-comment-container');
+                    if (!commentContainer) return;
+                    
+                    if (commentExpandButton.textContent === '展开') {
+                        // 计算浮窗高度
+                        const handleContainer = this.uiElements.playerContainer.querySelector('.tm-handle-container');
+                        const bottomDistance = window.innerHeight;
+                        let floatingHeight = '70vh';  // 默认高度
+                        
+                        if (handleContainer) {
+                            const handleRect = handleContainer.getBoundingClientRect();
+                            const handleBottom = handleRect.bottom;
+                            floatingHeight = `${bottomDistance - handleBottom - 20}px`;  // 20px 作为底部间距
+                        }
+                        
+                        // 创建浮窗版本的评论容器
+                        this.showFloatingCommentPanel(commentContainer, floatingHeight);
+                        commentExpandButton.textContent = '收起';
+                    } else {
+                        // 关闭浮窗
+                        this.closeFloatingCommentPanel();
+                        commentExpandButton.textContent = '展开';
+                    }
+                });
+            }
+        }, 0);
+        
+        // 添加评论区行作为第一个row
+        this.controlButtonsContainer.appendChild(commentRow);
+
+        // 创建进度条行作为第二个row
         const progressRow = document.createElement('div');
         progressRow.className = 'tm-progress-row';
 
         // 添加进度控制区到进度条行
         progressRow.appendChild(this.progressControlsContainer);
         
-        // 添加进度条行作为第一行
+        // 添加进度条行
         this.controlButtonsContainer.appendChild(progressRow);
 
         // 创建第一行：快退和快进按钮
@@ -1231,7 +1300,7 @@ export class ControlManager {
                         this.pauseIndicator.parentNode.removeChild(this.pauseIndicator);
                         this.pauseIndicator = null;
                     }
-                }, 300); // 过渡效果持续时间
+                }, 300);
             }
         }, 1000);
     }
@@ -1289,8 +1358,283 @@ export class ControlManager {
                         this.playbackRateIndicator.parentNode.removeChild(this.playbackRateIndicator);
                         this.playbackRateIndicator = null;
                     }
-                }, 300); // 过渡效果持续时间
+                }, 300);
             }
         }, 1500);
+    }
+
+    /**
+     * 显示评论输入浮窗
+     */
+    showCommentModal() {
+        // 检查是否已存在评论浮窗
+        let commentModal = document.querySelector('.tm-comment-modal');
+        if (commentModal) {
+            commentModal.classList.add('visible');
+            return;
+        }
+        
+        // 创建背景遮罩
+        const modalOverlay = document.createElement('div');
+        modalOverlay.className = 'tm-modal-overlay';
+        
+        // 创建评论浮窗
+        commentModal = document.createElement('div');
+        commentModal.className = 'tm-comment-modal';
+        
+        // 创建浮窗头部
+        const modalHeader = document.createElement('div');
+        modalHeader.className = 'tm-modal-header';
+        
+        const modalTitle = document.createElement('h3');
+        modalTitle.className = 'tm-modal-title';
+        modalTitle.textContent = '发表评论';
+        
+        const closeButton = document.createElement('button');
+        closeButton.className = 'tm-modal-close';
+        closeButton.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        `;
+        
+        modalHeader.appendChild(modalTitle);
+        modalHeader.appendChild(closeButton);
+        
+        // 创建浮窗内容
+        const modalContent = document.createElement('div');
+        modalContent.className = 'tm-modal-content';
+        
+        const textarea = document.createElement('textarea');
+        textarea.className = 'tm-comment-textarea';
+        textarea.placeholder = '写下你的评论...';
+        textarea.rows = 4;
+        
+        modalContent.appendChild(textarea);
+        
+        // 创建浮窗底部
+        const modalFooter = document.createElement('div');
+        modalFooter.className = 'tm-modal-footer';
+        
+        const cancelButton = document.createElement('button');
+        cancelButton.className = 'tm-modal-button tm-modal-cancel';
+        cancelButton.textContent = '取消';
+        
+        const submitButton = document.createElement('button');
+        submitButton.className = 'tm-modal-button tm-modal-submit';
+        submitButton.textContent = '发布';
+        
+        modalFooter.appendChild(cancelButton);
+        modalFooter.appendChild(submitButton);
+        
+        // 组装浮窗
+        commentModal.appendChild(modalHeader);
+        commentModal.appendChild(modalContent);
+        commentModal.appendChild(modalFooter);
+        
+        modalOverlay.appendChild(commentModal);
+        
+        // 添加到播放器容器
+        this.uiElements.playerContainer.appendChild(modalOverlay);
+        
+        // 延迟一帧显示浮窗，以启用过渡动画
+        requestAnimationFrame(() => {
+            modalOverlay.classList.add('visible');
+            commentModal.classList.add('visible');
+            // 自动聚焦文本框
+            textarea.focus();
+        });
+        
+        // 添加关闭事件
+        const closeModal = () => {
+            modalOverlay.classList.remove('visible');
+            commentModal.classList.remove('visible');
+            
+            // 等待过渡动画完成后移除DOM
+            setTimeout(() => {
+                if (modalOverlay.parentNode) {
+                    modalOverlay.parentNode.removeChild(modalOverlay);
+                }
+            }, 300);
+        };
+        
+        // 点击关闭按钮关闭浮窗
+        closeButton.addEventListener('click', closeModal);
+        
+        // 点击取消按钮关闭浮窗
+        cancelButton.addEventListener('click', closeModal);
+        
+        // 点击提交按钮
+        submitButton.addEventListener('click', () => {
+            const commentText = textarea.value.trim();
+            if (commentText) {
+                // 这里只是模拟发布成功，实际应该提交到服务器
+                alert('评论已发布');
+                closeModal();
+            } else {
+                // 如果评论为空，提示用户
+                textarea.classList.add('error');
+                setTimeout(() => {
+                    textarea.classList.remove('error');
+                }, 500);
+            }
+        });
+        
+        // 点击背景遮罩关闭浮窗
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeModal();
+            }
+        });
+        
+        // 按ESC键关闭浮窗
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escHandler);
+            }
+        });
+    }
+
+    /**
+     * 显示浮动评论面板
+     * @param {HTMLElement} originalContainer 原始评论容器的引用
+     * @param {string} height 浮窗高度
+     */
+    showFloatingCommentPanel(originalContainer, height) {
+        // 关闭已存在的浮窗
+        this.closeFloatingCommentPanel();
+        
+        // 创建浮窗容器
+        const floatingPanel = document.createElement('div');
+        floatingPanel.className = 'tm-floating-comment-panel';
+        floatingPanel.id = 'tm-floating-comment-panel';
+        
+        // 创建浮窗头部
+        const panelHeader = document.createElement('div');
+        panelHeader.className = 'tm-floating-panel-header';
+        
+        const panelTitle = document.createElement('h3');
+        panelTitle.className = 'tm-floating-panel-title';
+        panelTitle.textContent = '评论区';
+        
+        const closeButton = document.createElement('button');
+        closeButton.className = 'tm-floating-panel-close';
+        closeButton.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        `;
+        
+        panelHeader.appendChild(panelTitle);
+        panelHeader.appendChild(closeButton);
+        
+        // 创建浮窗内容区
+        const panelContent = document.createElement('div');
+        panelContent.className = 'tm-floating-panel-content';
+        
+        // 克隆原始评论占位符内容
+        const placeholder = originalContainer.querySelector('.tm-comment-placeholder');
+        if (placeholder) {
+            const clonedPlaceholder = placeholder.cloneNode(true);
+            panelContent.appendChild(clonedPlaceholder);
+        } else {
+            // 如果没有占位符，创建一个默认内容
+            const defaultContent = document.createElement('div');
+            defaultContent.className = 'tm-comment-placeholder';
+            defaultContent.textContent = '暂无评论，功能开发中...';
+            panelContent.appendChild(defaultContent);
+        }
+        
+        // 创建底部留言区域
+        const commentInputArea = document.createElement('div');
+        commentInputArea.className = 'tm-floating-panel-input-area';
+        
+        // 创建输入框
+        const commentInput = document.createElement('input');
+        commentInput.type = 'text';
+        commentInput.className = 'tm-floating-panel-input';
+        commentInput.placeholder = '写下你的留言...';
+        
+        // 创建提交按钮
+        const submitButton = document.createElement('button');
+        submitButton.className = 'tm-floating-panel-submit';
+        submitButton.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        `;
+        
+        // 添加提交按钮点击事件
+        submitButton.addEventListener('click', () => {
+            const commentText = commentInput.value.trim();
+            if (commentText) {
+                // 这里只是模拟发布成功，实际应该提交到服务器
+                alert('评论已发布');
+                commentInput.value = '';  // 清空输入框
+            } else {
+                // 如果评论为空，高亮输入框
+                commentInput.classList.add('error');
+                setTimeout(() => {
+                    commentInput.classList.remove('error');
+                }, 500);
+            }
+        });
+        
+        // 添加输入框回车键提交功能
+        commentInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitButton.click();
+            }
+        });
+        
+        // 组装留言区域
+        commentInputArea.appendChild(commentInput);
+        commentInputArea.appendChild(submitButton);
+        
+        // 组装浮窗
+        floatingPanel.appendChild(panelHeader);
+        floatingPanel.appendChild(panelContent);
+        floatingPanel.appendChild(commentInputArea);
+        
+        // 设置浮窗高度
+        floatingPanel.style.height = height;
+        
+        // 添加到播放器容器
+        this.uiElements.playerContainer.appendChild(floatingPanel);
+        
+        // 延迟一帧显示浮窗，以启用过渡动画
+        requestAnimationFrame(() => {
+            floatingPanel.classList.add('visible');
+        });
+        
+        // 添加关闭事件
+        closeButton.addEventListener('click', () => {
+            this.closeFloatingCommentPanel();
+            // 同时将展开按钮文本改回"展开"
+            const expandButton = document.querySelector('.tm-comment-expand');
+            if (expandButton) {
+                expandButton.textContent = '展开';
+            }
+        });
+    }
+    
+    /**
+     * 关闭浮动评论面板
+     */
+    closeFloatingCommentPanel() {
+        const floatingPanel = document.getElementById('tm-floating-comment-panel');
+        if (floatingPanel) {
+            floatingPanel.classList.remove('visible');
+            // 等待动画完成后移除DOM
+            setTimeout(() => {
+                if (floatingPanel.parentNode) {
+                    floatingPanel.parentNode.removeChild(floatingPanel);
+                }
+            }, 300);
+        }
     }
 } 
