@@ -60,7 +60,7 @@
         bottom: 0 !important;
         left: 0 !important;
         right: 0 !important;
-        z-index: 9991 !important;
+        z-index: 2000000001 !important;
     }
 
     /* 评论区内的按钮栏样式 */
