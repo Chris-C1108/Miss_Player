@@ -1,0 +1,77 @@
+/* =========== 基础变量定义 =========== */
+:root {
+    /* 品牌色 */
+    --brand-pink: rgb(254, 98, 142);
+    --brand-pink-rgb: 254, 98, 142;
+
+    /* 颜色系统 - 符合Apple Dark Mode设计规范 */
+    --shadcn-background: 0 0% 0%; /* 纯黑色背景 */
+    --shadcn-foreground: 0 0% 100%; /* 纯白色前景 */
+    --shadcn-card: 0 0% 5%; /* 深灰色卡片背景 */
+    --shadcn-card-foreground: 0 0% 95%; /* 淡灰白色卡片前景 */
+    --shadcn-popover: 0 0% 10%; /* 深灰色弹出层背景 */
+    --shadcn-popover-foreground: 0 0% 95%; /* 淡灰白色弹出层前景 */
+    --shadcn-primary: 210 10% 90%; /* 淡蓝灰色主色 */
+    --shadcn-primary-foreground: 210 20% 10%; /* 深蓝灰色主色前景 */
+    --shadcn-secondary: 0 0% 15%; /* 次要颜色为深灰色 */
+    --shadcn-secondary-foreground: 0 0% 95%; /* 淡灰白色次要前景 */
+    --shadcn-muted: 0 0% 30%; /* 柔和的深灰色 */
+    --shadcn-muted-foreground: 0 0% 70%; /* 柔和的浅灰色前景 */
+    --shadcn-accent: 212 40% 30%; /* 柔和的蓝灰色强调色 */
+    --shadcn-accent-foreground: 0 0% 95%; /* 淡灰白色强调前景 */
+    --shadcn-destructive: 0 50% 40%; /* 柔和的红色 */
+    --shadcn-destructive-foreground: 0 0% 95%; /* 淡灰白色破坏性操作前景 */
+    --shadcn-border: 0 0% 30%; /* 深灰色边框 */
+    --shadcn-input: 0 0% 15%; /* 深灰色输入框 */
+    --shadcn-ring: 212 70% 45%; /* 蓝色环 */
+    
+    /* 状态颜色 - 符合Apple设计规范的柔和色调 */
+    --shadcn-green: 142 50% 45%; /* 柔和的绿色 */
+    --shadcn-green-foreground: 0 0% 95%; /* 淡灰白色绿色前景 */
+    --shadcn-blue: 211 70% 55%; /* 柔和的蓝色 */
+    --shadcn-blue-foreground: 0 0% 95%; /* 淡灰白色蓝色前景 */
+    --shadcn-red: 0 60% 50%; /* 柔和的红色 */
+    --shadcn-red-foreground: 0 0% 95%; /* 淡灰白色红色前景 */
+    --shadcn-orange: 25 80% 50%; /* 柔和的橙色 */
+    --shadcn-orange-foreground: 0 0% 95%; /* 淡灰白色橙色前景 */
+    --shadcn-purple: 262 60% 60%; /* 柔和的紫色 */
+    --shadcn-purple-foreground: 0 0% 95%; /* 淡灰白色紫色前景 */
+    
+    /* 圆角 */
+    --shadcn-radius: 0.5rem;
+    --shadcn-radius-sm: 0.3rem;
+    --shadcn-radius-lg: 0.8rem;
+    
+    /* 按钮尺寸 */
+    --button-sm: 20px;
+    --button-md: 32px;
+    --button-lg: 40px;
+    --button-xl: 48px;
+    
+    /* 常用动画 */
+    --anim-quick: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --anim-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    --anim-bounce: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    
+    /* 阴影 - Apple风格阴影更柔和 */
+    --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.3);
+    
+    /* 字体 */
+    --font-sans: "SF Pro Display", "SF Pro", "Segoe UI", "Microsoft YaHei", "微软雅黑", "PingFang SC", "苹方", "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+/* 全局字体设置 */
+html, body, button, input, select, textarea {
+    font-family: var(--font-sans);
+}
+
+/* 确保所有元素都使用全局字体 */
+*, *::before, *::after {
+    font-family: inherit;
+}
+
+.tm-video-overlay * {
+    font-family: var(--font-sans);
+}

@@ -42,13 +42,38 @@ export class I18n {
             // 设置选项
             autoplay: 'Auto Play',
             loop: 'Loop',
+            loopStart: 'Loop Start',
+            loopEnd: 'Loop End',
+            commentsTitle: 'Comments',
+            commentsCount: '{n} Comments',
+            commentsLeave: 'Leave Comment',
+            commentsExpand: 'Expand',
+            commentsCollapse: 'Collapse',
+            commentsPlaceholder: 'Write a comment...',
+            commentsFilterSpam: 'Filter Spam',
+            commentsCopyAll: 'Copy All',
+            commentsLoadMore: 'Load More',
+            commentsLoading: 'Loading comments...',
+            commentsNoComments: 'No comments yet',
+            commentsError: 'Failed to load comments',
+            tabJable: 'Jable.tv Comments',
+            tabJavlibComment: 'JAVLib Comments',
+            tabJavlibReview: 'JAVLib Reviews',
+            tabComments: 'Comments',
             autoQuality: 'Auto Quality',
             
             // 消息提示
             loadingError: 'Failed to load video',
             networkError: 'Network error',
             loginSuccess: 'Login successful',
-            loginFailed: 'Login failed'
+            loginFailed: 'Login failed',
+            
+            // 登录模块
+            login_accountNull: 'Error: Email or password is empty.',
+            login_success: 'Login successful, refreshing the page.',
+            login_networkFailed: 'Status code error.',
+            login_failed: 'Login failed, incorrect email or password. Check console for error details.',
+            login_autoLogin: 'Auto Login'
         },
         'zh-CN': {
             // 元数据
@@ -77,13 +102,38 @@ export class I18n {
             // 设置选项
             autoplay: '自动播放',
             loop: '循环播放',
+            loopStart: '循环起点',
+            loopEnd: '循环终点',
+            commentsTitle: '评论区',
+            commentsCount: '共 {n} 条评论',
+            commentsLeave: '留言',
+            commentsExpand: '展开',
+            commentsCollapse: '收起',
+            commentsPlaceholder: '说点什么吧...',
+            commentsFilterSpam: '过滤灌水',
+            commentsCopyAll: '复制全部',
+            commentsLoadMore: '加载更多',
+            commentsLoading: '正在采集评论...',
+            commentsNoComments: '暂无评论',
+            commentsError: '评论采集失败',
+            tabJable: 'Jable.tv 评论',
+            tabJavlibComment: 'JAVLib 评论',
+            tabJavlibReview: 'JAVLib 文章',
+            tabComments: '评论',
             autoQuality: '自动画质',
             
             // 消息提示
             loadingError: '视频加载失败',
             networkError: '网络错误',
             loginSuccess: '登录成功',
-            loginFailed: '登录失败'
+            loginFailed: '登录失败',
+            
+            // 登录模块
+            login_accountNull: '邮箱或密码为空',
+            login_success: '登录成功，即将刷新页面。',
+            login_networkFailed: '状态码错误',
+            login_failed: '登录失败，邮箱或密码错误，可以在控制台查看错误信息。',
+            login_autoLogin: '自动登录'
         },
         'zh-TW': {
             // 元数据
@@ -112,13 +162,38 @@ export class I18n {
             // 设置选项
             autoplay: '自動播放',
             loop: '循環播放',
+            loopStart: '循環起點',
+            loopEnd: '循環終點',
+            commentsTitle: '評論區',
+            commentsCount: '共 {n} 條評論',
+            commentsLeave: '留言',
+            commentsExpand: '展開',
+            commentsCollapse: '收起',
+            commentsPlaceholder: '說點什麼吧...',
+            commentsFilterSpam: '過濾灌水',
+            commentsCopyAll: '複製全部',
+            commentsLoadMore: '載入更多',
+            commentsLoading: '正在採集評論...',
+            commentsNoComments: '暫無評論',
+            commentsError: '評論採集失敗',
+            tabJable: 'Jable.tv 評論',
+            tabJavlibComment: 'JAVLib 評論',
+            tabJavlibReview: 'JAVLib 文章',
+            tabComments: '評論',
             autoQuality: '自動畫質',
             
             // 消息提示
             loadingError: '視頻加載失敗',
             networkError: '網絡錯誤',
             loginSuccess: '登錄成功',
-            loginFailed: '登錄失敗'
+            loginFailed: '登錄失敗',
+            
+            // 登录模块
+            login_accountNull: '郵箱或密碼為空',
+            login_success: '登錄成功，即將刷新頁面。',
+            login_networkFailed: '狀態碼錯誤',
+            login_failed: '登錄失敗，郵箱或密碼錯誤，可以在控制台查看錯誤信息。',
+            login_autoLogin: '自動登錄'
         },
         'ja': {
             // 元数据
@@ -147,13 +222,38 @@ export class I18n {
             // 设置选项
             autoplay: '自動再生',
             loop: 'ループ再生',
-            autoQuality: '自動画質',
+            loopStart: 'ループ開始点',
+            loopEnd: 'ループ終了点',
+            commentsTitle: 'コメント欄',
+            commentsCount: '{n} 件のコメント',
+            commentsLeave: 'コメント',
+            commentsExpand: '展開',
+            commentsCollapse: '折りたたむ',
+            commentsPlaceholder: 'コメントを書く...',
+            commentsFilterSpam: 'スパムを除外',
+            commentsCopyAll: 'すべてコピー',
+            commentsLoadMore: 'もっと読み込む',
+            commentsLoading: 'コメントを読み込み中...',
+            commentsNoComments: 'コメントはまだありません',
+            commentsError: 'コメントの読み込みに失敗しました',
+            tabJable: 'Jable.tv コメント',
+            tabJavlibComment: 'JAVLib コメント',
+            tabJavlibReview: 'JAVLib レビュー',
+            tabComments: 'コメント',
+            autoQuality: '自動画质',
             
             // 消息提示
             loadingError: '動画の読み込みに失敗しました',
             networkError: 'ネットワークエラー',
             loginSuccess: 'ログイン成功',
-            loginFailed: 'ログイン失敗'
+            loginFailed: 'ログイン失敗',
+            
+            // 登录模块
+            login_accountNull: 'エラー：メールアドレスまたはパスワードが空です。',
+            login_success: 'ログイン成功、ページを更新します。',
+            login_networkFailed: 'ステータスコードエラー',
+            login_failed: 'ログインに失敗しました。メールアドレスまたはパスワードが間違っています。エラーの詳細はコンソールで確認できます。',
+            login_autoLogin: '自動ログイン'
         },
         'vi': {
             // 元数据
@@ -182,13 +282,38 @@ export class I18n {
             // 设置选项
             autoplay: 'Tự động phát',
             loop: 'Lặp lại',
+            loopStart: 'Điểm bắt đầu lặp',
+            loopEnd: 'Điểm kết thúc lặp',
+            commentsTitle: 'Bình luận',
+            commentsCount: '{n} bình luận',
+            commentsLeave: 'Bình luận',
+            commentsExpand: 'Mở rộng',
+            commentsCollapse: 'Thu gọn',
+            commentsPlaceholder: 'Viết bình luận...',
+            commentsFilterSpam: 'Lọc rác',
+            commentsCopyAll: 'Sao chép tất cả',
+            commentsLoadMore: 'Tải thêm',
+            commentsLoading: 'Đang tải bình luận...',
+            commentsNoComments: 'Chưa có bình luận nào',
+            commentsError: 'Không thể tải bình luận',
+            tabJable: 'Bình luận Jable.tv',
+            tabJavlibComment: 'Bình luận JAVLib',
+            tabJavlibReview: 'Bài viết JAVLib',
+            tabComments: 'Bình luận',
             autoQuality: 'Chất lượng tự động',
             
             // 消息提示
             loadingError: 'Không thể tải video',
             networkError: 'Lỗi mạng',
             loginSuccess: 'Đăng nhập thành công',
-            loginFailed: 'Đăng nhập thất bại'
+            loginFailed: 'Đăng nhập thất bại',
+            
+            // 登录模块
+            login_accountNull: 'Lỗi: Email hoặc mật khẩu trống.',
+            login_success: 'Đăng nhập thành công, đang làm mới trang.',
+            login_networkFailed: 'Lỗi mã trạng thái.',
+            login_failed: 'Đăng nhập không thành công, email hoặc mật khẩu không chính xác. Xem chi tiết lỗi trên bảng điều khiển.',
+            login_autoLogin: 'Đăng nhập tự động'
         }
     };
     

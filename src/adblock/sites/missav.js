@@ -79,6 +79,8 @@ const blockedUrlPatterns = [
   'doubleclick.net'
 ];
 
+import { getSiteDomains } from '../../constants/domains.js';
+
 // 导出missav配置
 export default {
   adSelectors,
@@ -86,5 +88,5 @@ export default {
   blockedUrlPatterns,
   // 未来可以添加网站特有的配置
   isVideoSite: true,
-  domains: ['missav.ws', 'missav.ai', 'missav.com', 'thisav.com']
+  domains: getSiteDomains('MISSAV')
 }; 

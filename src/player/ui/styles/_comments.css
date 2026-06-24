@@ -1,0 +1,844 @@
+/* =====================================================================
+   统一全屏评论面板样式 (Comments UI Redesign)
+   ===================================================================== */
+
+.tm-comments-panel {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    min-height: 0; /* 允许 Flexbox 子元素收缩并正常触发 overflow-y 滚动 */
+    background-color: transparent;
+    z-index: 9990; /* 坐落在控制面板（9991）的 Z 轴下方 */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+    pointer-events: none; /* 让点击穿透视频区域 */
+}
+
+/* 评论区遮罩变暗效果，突出控制面板 */
+.tm-comments-panel::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.45); /* 遮罩暗度 */
+    pointer-events: none; /* 允许点击与滑动穿透 */
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 9993; /* 盖在评论列表和输入框上方，但在控制面板下方 */
+}
+
+.tm-comments-panel.is-dimmed {
+    pointer-events: auto !important;
+}
+
+.tm-comments-panel.is-dimmed::after {
+    opacity: 1;
+    pointer-events: auto; /* 拦截交互事件以防误触，或者用于点击/触碰激活 */
+}
+
+/* 评论面板底部功能栏 (代替原有头部) */
+.tm-comments-panel-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 16px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); /* 考虑安全区域 */
+    box-sizing: border-box;
+    background-color: hsla(var(--shadcn-card) / 0.65); /* 半透明高质质感 */
+    border-top: 1px solid hsla(var(--shadcn-border) / 0.1);
+    backdrop-filter: blur(12px); /* 强化磨砂玻璃效果 */
+    -webkit-backdrop-filter: blur(12px);
+    pointer-events: auto; /* 恢复交互 */
+    font-size: 11px;
+    color: hsl(var(--shadcn-muted-foreground));
+}
+
+.tm-comments-panel-action-bar .tm-action-bar-left {
+    display: flex;
+    align-items: center;
+}
+
+.tm-comments-panel-action-bar .tm-comment-count {
+    font-weight: 500;
+}
+
+.tm-comments-panel-action-bar .tm-action-bar-right {
+    display: flex;
+    align-items: center;
+}
+
+.tm-comments-panel-action-bar .tm-comment-filter-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* 列表滑动区域 */
+.tm-comments-panel-list.tm-comments-list {
+    flex: 1;
+    width: 100%;
+    max-height: none; /* 取消之前的 120px 限高 */
+    overflow: hidden; /* 防止外层容器整体滚动 */
+    box-sizing: border-box;
+    padding: 12px 16px 8px 16px; /* 减少底部 padding，使板块靠近底部操作栏 */
+    mask-image: linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px; /* 适当增加两个 site 板块之间的间距 */
+    -webkit-overflow-scrolling: touch; /* 保证 iOS 滚动流畅 */
+    pointer-events: auto; /* 恢复交互 */
+    background-color: transparent; /* 透明背景 */
+    overscroll-behavior-y: contain; /* 阻止背景页面穿透滚动 */
+}
+
+/* 隐藏滚动条 */
+.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar-thumb {
+    background: hsla(var(--shadcn-muted-foreground) / 0.25);
+    border-radius: 2px;
+}
+
+/* 发表评论居中胶囊按钮 */
+.tm-comments-panel-publish-btn {
+    position: absolute;
+    bottom: calc(52px + env(safe-area-inset-bottom, 0px)); /* 悬浮于底部操作栏上方 */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: hsl(var(--shadcn-blue));
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 24px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px hsla(var(--shadcn-blue) / 0.4);
+    pointer-events: auto; /* 恢复点击 */
+    transition: all var(--anim-quick);
+    z-index: 9995; /* 置于滚动列表上方 */
+    outline: none;
+}
+
+.tm-comments-panel-publish-btn:hover {
+    background-color: hsl(var(--shadcn-blue) / 0.9);
+    transform: translateX(-50%) translateY(-1px);
+    box-shadow: 0 6px 16px hsla(var(--shadcn-blue) / 0.5);
+}
+
+.tm-comments-panel-publish-btn:active {
+    transform: translateX(-50%) scale(0.95);
+    box-shadow: 0 2px 6px hsla(var(--shadcn-blue) / 0.3);
+}
+
+/* 自定义气泡/拟态模态框 */
+.tm-custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100000;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: auto;
+}
+
+.tm-custom-modal-overlay.active {
+    opacity: 1;
+}
+
+.tm-custom-modal-content {
+    background-color: hsl(var(--shadcn-card));
+    border: 1px solid hsla(var(--shadcn-border) / 0.15);
+    border-radius: 16px;
+    padding: 24px;
+    width: 85%;
+    max-width: 280px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transform: scale(0.9);
+    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: hsl(var(--shadcn-foreground));
+}
+
+.tm-custom-modal-overlay.active .tm-custom-modal-content {
+    transform: scale(1);
+}
+
+.tm-custom-modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.tm-custom-modal-message {
+    font-size: 13px;
+    color: hsl(var(--shadcn-muted-foreground));
+    margin-bottom: 18px;
+    line-height: 1.4;
+}
+
+.tm-custom-modal-close-btn {
+    background-color: hsl(var(--shadcn-blue));
+    color: #ffffff;
+    border: none;
+    border-radius: 18px;
+    padding: 7px 28px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3);
+    transition: all 0.2s;
+}
+
+.tm-custom-modal-close-btn:hover {
+    background-color: hsl(var(--shadcn-blue) / 0.9);
+    transform: translateY(-1px);
+}
+
+.tm-custom-modal-close-btn:active {
+    transform: scale(0.95);
+}
+
+/* 评论头部布局 (Row-based Chat Flow) */
+.jc-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 3px;
+    box-sizing: border-box;
+}
+
+.jc-hdr-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.jc-hdr-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+/* 视频来源站点标签 */
+.jc-site {
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background-color: hsla(var(--shadcn-blue) / 0.1);
+    color: hsl(var(--shadcn-blue));
+    font-weight: 700;
+    border: 1px solid hsla(var(--shadcn-blue) / 0.25);
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.jc-site-jable {
+    background-color: hsla(340, 82%, 52%, 0.1);
+    color: hsl(340, 82%, 52%);
+    border: 1px solid hsla(340, 82%, 52%, 0.25);
+}
+
+.jc-site-javlib {
+    background-color: hsla(210, 100%, 50%, 0.1);
+    color: hsl(210, 100%, 50%);
+    border: 1px solid hsla(210, 100%, 50%, 0.25);
+}
+
+/* 骨架屏占位样式 (Skeleton Loading placeholders) */
+.jc-skeleton {
+    pointer-events: none;
+}
+
+.jc-skeleton .skeleton-block {
+    background: hsla(var(--shadcn-muted-foreground) / 0.15);
+    border-radius: 4px;
+    animation: skeleton-loading 1.5s infinite ease-in-out;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        opacity: 0.55;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.55;
+    }
+}
+
+/* 评论卡片样式 */
+.jc-card {
+    display: flex;
+    flex-direction: column;
+    padding: 3px 0; /* 仅保留上下间隙，移除左右内边距、背景与边框 */
+    background-color: transparent;
+    border: none;
+    transition: opacity 0.2s;
+    margin-bottom: 2px; /* 缩小间距 */
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.jc-card .jc-bd {
+    width: 100%;
+}
+
+.jc-card .jc-u {
+    font-weight: 500;
+    color: hsla(var(--shadcn-muted-foreground) / 0.85);
+    text-decoration: none;
+    max-width: 130px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11.5px;
+    display: inline-block;
+    vertical-align: middle;
+    transition: color var(--anim-quick);
+}
+
+.jc-card a.jc-u:hover {
+    text-decoration: underline;
+    color: hsl(var(--shadcn-blue));
+}
+
+.jc-card .jc-t {
+    color: hsla(var(--shadcn-muted-foreground) / 0.55);
+    font-size: 9.5px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.jc-card .jc-body-text {
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: hsl(var(--shadcn-foreground));
+    word-break: break-word;
+    margin-top: 3px;
+}
+
+/* 分隔符样式 */
+.jc-c-sep {
+    color: hsla(var(--shadcn-muted-foreground) / 0.5);
+    margin: 0 4px;
+    font-weight: normal;
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+/* 灌水/Spam状态 */
+.jc-card.jc-spam {
+    opacity: 0.35;
+    background-color: transparent;
+}
+
+.jc-card.jc-spam:hover {
+    opacity: 0.75;
+}
+
+.jc-spam-badge {
+    background-color: hsla(var(--shadcn-destructive) / 0.8);
+    color: hsl(var(--shadcn-destructive-foreground));
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+    margin-left: 4px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* 时间跳转与番号关联链接 */
+.jc-time-link {
+    color: hsl(142.1 70.6% 45.3%);
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    padding: 2px 6px;
+    background-color: hsla(142.1 70.6% 45.3% / 0.16);
+    border: 1px solid hsla(142.1 70.6% 45.3% / 0.25);
+    border-radius: 4px;
+    display: inline-block;
+    margin: 0 2px;
+    font-family: monospace;
+    font-size: 12.5px;
+}
+
+.jc-time-link:hover {
+    background-color: hsla(142.1 70.6% 45.3% / 0.25);
+    color: hsl(142.1 76.2% 36.3%);
+    box-shadow: 0 1px 4px hsla(142.1 70.6% 45.3% / 0.15);
+}
+
+.jc-code-link {
+    display: inline-block;
+    padding: 2px 6px;
+    margin: 0 2px;
+    background-color: hsla(var(--shadcn-blue) / 0.16);
+    border: 1px solid hsla(var(--shadcn-blue) / 0.35);
+    color: hsl(var(--shadcn-blue));
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: monospace;
+    transition: all 0.2s ease;
+}
+
+.jc-code-link:hover {
+    background-color: hsl(var(--shadcn-blue));
+    color: hsl(var(--shadcn-blue-foreground));
+    box-shadow: 0 2px 6px hsla(var(--shadcn-blue) / 0.3);
+}
+
+.jc-emoji {
+    height: 16px;
+    width: 16px;
+    vertical-align: middle;
+    display: inline-block;
+    margin: 0 1px;
+}
+
+/* 状态提示与动画 */
+.tm-comment-loading,
+.tm-comment-error {
+    width: 100%;
+    padding: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: hsl(var(--shadcn-muted-foreground));
+    box-sizing: border-box;
+    pointer-events: auto; /* 恢复交互 */
+    background-color: transparent; /* 透明背景 */
+    flex: 1; /* 撑开容器 */
+}
+
+.tm-comment-error {
+    color: hsl(var(--shadcn-destructive));
+}
+
+.tm-comment-loader-graphic {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    padding: 16px;
+    width: 100%;
+}
+
+.tm-comment-loader-graphic .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: hsl(var(--shadcn-blue));
+    animation: tmDotPulse 1.4s infinite ease-in-out both;
+}
+
+.tm-comment-loader-graphic .dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.tm-comment-loader-graphic .dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes tmDotPulse {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.3;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes tmShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+
+/* 评论源选项卡 (Comments Tab Bar) */
+.tm-comments-tabs {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: hsla(var(--shadcn-card) / 0.65);
+    border-bottom: 1px solid hsla(var(--shadcn-border) / 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    pointer-events: auto; /* 允许点击 */
+    z-index: 9994;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+}
+.tm-comments-tabs::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.tm-comments-tab-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: hsl(var(--shadcn-muted-foreground));
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    outline: none;
+    transition: all var(--anim-quick);
+}
+
+.tm-comments-tab-btn:hover {
+    color: hsl(var(--shadcn-foreground));
+    background-color: hsla(var(--shadcn-muted) / 0.15);
+}
+
+.tm-comments-tab-btn.active {
+    color: #ffffff;
+    background-color: hsl(var(--shadcn-blue));
+    border-color: hsl(var(--shadcn-blue));
+    box-shadow: 0 2px 8px hsla(var(--shadcn-blue) / 0.3);
+    font-weight: 600;
+}
+
+/* 评分角标 (Score Badge) */
+.jc-score-badge {
+    display: inline-block;
+    font-size: 10px;
+    color: hsl(var(--shadcn-blue));
+    background-color: hsla(var(--shadcn-blue) / 0.1);
+    border: 1px solid hsla(var(--shadcn-blue) / 0.3);
+    border-radius: 4px;
+    padding: 0 4px;
+    margin-left: 6px;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+/* =====================================================================
+   横屏媒介查询：横屏模式下完全隐藏评论面板，保障沉浸式观影
+   ===================================================================== */
+@media (orientation: landscape) {
+    .tm-comments-panel {
+        display: none !important;
+    }
+}
+
+/* 评论展开/折叠样式 */
+.jc-body-text--collapsible {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.jc-body-text--collapsible[data-collapsed="true"] {
+    cursor: pointer;
+}
+
+.jc-body-text--collapsible[data-collapsed="true"] .jc-body-text-content {
+    max-height: 80px;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+}
+
+.jc-toggle-expand-btn {
+    align-self: flex-start;
+    background: transparent;
+    border: none;
+    color: hsl(var(--shadcn-blue));
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 0;
+    cursor: pointer;
+    outline: none;
+    transition: opacity 0.2s;
+    pointer-events: auto; /* Ensure it is clickable */
+}
+
+.jc-toggle-expand-btn:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.jc-site-javlib-review {
+    background-color: hsla(270, 100%, 60%, 0.1);
+    color: hsl(270, 100%, 60%);
+    border: 1px solid hsla(270, 100%, 60%, 0.25);
+}
+
+/* =====================================================================
+   分区评论与状态徽章样式
+   ===================================================================== */
+.tm-comment-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 6px;
+    box-sizing: border-box;
+    min-height: 0;
+    flex: 0 0 auto; /* 折叠状态下采用自适应高度，不强行伸展 */
+    transition: flex 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.tm-comment-section:not(.is-collapsed) {
+    flex: 1; /* 展开状态下伸展占据剩余高度 */
+}
+
+.tm-comment-section-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    padding-right: 4px;
+    padding-bottom: 56px; /* 预留高度，防止底部的“发表”悬浮按钮遮挡最下方的评论 */
+}
+
+/* 隐藏外层但为板块内部显示精细滚动条 */
+.tm-comment-section-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tm-comment-section-body::-webkit-scrollbar-thumb {
+    background: hsla(var(--shadcn-muted-foreground) / 0.25);
+    border-radius: 2px;
+}
+
+#tm-comment-section-jable {
+    border-left: 3px solid hsl(var(--shadcn-red));
+    background: linear-gradient(to right, hsla(var(--shadcn-red) / 0.05), transparent);
+    padding-left: 6px;
+    padding-right: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    border-radius: var(--shadcn-radius-sm);
+}
+#tm-comment-section-jable .tm-comment-section-title {
+    color: hsl(var(--shadcn-red)) !important;
+}
+
+#tm-comment-section-javlib {
+    border-left: 3px solid hsl(var(--shadcn-purple));
+    background: linear-gradient(to right, hsla(var(--shadcn-purple) / 0.05), transparent);
+    padding-left: 6px;
+    padding-right: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    border-radius: var(--shadcn-radius-sm);
+}
+#tm-comment-section-javlib .tm-comment-section-title {
+    color: hsl(var(--shadcn-purple)) !important;
+}
+
+.tm-comment-section-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 1px 0;
+    margin-bottom: 4px;
+    border-bottom: 1px solid hsla(var(--shadcn-border) / 0.1);
+    box-sizing: border-box;
+    cursor: pointer;
+    user-select: none;
+}
+
+.tm-comment-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: hsl(var(--shadcn-foreground));
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tm-comment-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+/* 各状态颜色 */
+.tm-status-badge-loading {
+    color: hsl(var(--shadcn-blue));
+    background-color: hsla(var(--shadcn-blue) / 0.1);
+    border: 1px solid hsla(var(--shadcn-blue) / 0.2);
+    animation: tmPulse 2s infinite ease-in-out;
+}
+
+.tm-status-badge-unreachable {
+    color: hsl(var(--shadcn-destructive));
+    background-color: hsla(var(--shadcn-destructive) / 0.1);
+    border: 1px solid hsla(var(--shadcn-destructive) / 0.2);
+}
+
+.tm-status-badge-not_found {
+    color: hsl(var(--shadcn-muted-foreground));
+    background-color: hsla(var(--shadcn-muted) / 0.15);
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+}
+
+.tm-status-badge-empty {
+    color: hsl(var(--shadcn-muted-foreground));
+    background-color: hsla(var(--shadcn-muted) / 0.15);
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+}
+
+.tm-status-badge-cf_shield {
+    color: hsl(30 100% 50%);
+    background-color: hsla(30 100% 50% / 0.1);
+    border: 1px solid hsla(30 100% 50% / 0.2);
+}
+
+.tm-status-badge-loaded {
+    color: hsl(142.1 70.6% 45.3%);
+    background-color: hsla(142.1 70.6% 45.3% / 0.1);
+    border: 1px solid hsla(142.1 70.6% 45.3% / 0.2);
+}
+
+@keyframes tmPulse {
+    0% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.7;
+    }
+}
+
+.jc-comment-link {
+    color: hsl(var(--shadcn-blue));
+    text-decoration: underline;
+}
+.jc-comment-link:hover {
+    color: hsl(var(--shadcn-blue) / 0.8);
+}
+
+.tm-comment-copy-all-btn {
+    margin-left: 10px;
+    cursor: pointer;
+    background-color: hsla(var(--shadcn-muted) / 0.15);
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: hsl(var(--shadcn-muted-foreground));
+    outline: none;
+    transition: all var(--anim-quick);
+}
+.tm-comment-copy-all-btn:hover {
+    color: hsl(var(--shadcn-foreground));
+    background-color: hsla(var(--shadcn-muted) / 0.3);
+    border-color: hsla(var(--shadcn-border) / 0.4);
+}
+.tm-comment-copy-all-btn:active {
+    transform: scale(0.95);
+}
+
+/* 新增加载评论高亮闪烁效果 */
+@keyframes jcCardHighlightFlash {
+    0% {
+        background-color: hsla(var(--shadcn-blue) / 0.22);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+.jc-card-highlight-flash {
+    animation: jcCardHighlightFlash 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* PC 端鼠标悬浮评论区时强制变亮 */
+@media screen and (min-width: 930px) and (orientation: landscape) {
+    .tm-comments-panel:hover::after {
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+}
+
+/* 手机端右下角唤起控制面板的浮动按钮 */
+.tm-show-controls-float-btn {
+    position: absolute;
+    bottom: calc(52px + env(safe-area-inset-bottom, 0px)); /* 悬浮于底部操作栏上方，与“发表”按钮同一水平线 */
+    right: 16px;
+    width: 34px; /* 触控热区宽度为 34px */
+    height: 34px; /* 与“发表”按钮高度一致 (34px) */
+    background: transparent; /* 无背景 */
+    color: hsl(var(--shadcn-muted-foreground)); /* 中性灰 */
+    border: none; /* 无边框 */
+    display: none; /* 默认隐藏 */
+    align-items: center;
+    justify-content: center;
+    box-shadow: none; /* 无阴影 */
+    z-index: 9995;
+    cursor: pointer;
+    transition: all var(--anim-quick);
+    padding: 0;
+    outline: none;
+    box-sizing: border-box;
+    pointer-events: auto; /* 恢复点击与触摸交互 */
+}
+.tm-show-controls-float-btn:hover {
+    color: hsl(var(--shadcn-foreground)); /* 悬浮高亮 */
+}
+.tm-show-controls-float-btn:active {
+    transform: scale(0.9);
+}
+.tm-show-controls-float-btn svg {
+    height: 18px; /* 视觉高度适中，防止太大 */
+    width: auto;
+    display: block;
+    fill: none !important;
+}
+.tm-show-controls-float-btn svg path {
+    fill: currentColor !important;
+    stroke: none !important;
+}
+
+/* 仅在手机端（非PC、非iPad竖屏模式）且控制面板隐藏时展示 */
+body.controls-hidden:not(.tm-mode-pc):not(.tm-mode-ipad-portrait) .tm-show-controls-float-btn {
+    display: flex;
+}
+
+
+

@@ -3,7 +3,7 @@
  * 负责自动展开视频的详细信息
  */
 
-import { Utils } from '../utils/utils.js';
+
 
 /**
  * 详情展开器类

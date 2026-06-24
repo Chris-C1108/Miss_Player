@@ -1,3 +1,5 @@
+import { getValue, setValue } from '../../utils/index.js';
+
 /**
  * 设置管理器类 - 负责播放器设置功能
  */
@@ -185,12 +187,7 @@ export class SettingsManager {
         if (isVisible) {
             this.closeSettingsPanel();
         } else {
-            this.settingsPanel.style.display = 'block';
-            
-            // 使用动画淡入
-            setTimeout(() => {
-                this.settingsPanel.classList.add('active');
-            }, 10);
+            this.settingsPanel.classList.add('active');
             
             // 添加点击overlay背景关闭设置面板的事件
             this.overlayClickHandler = (e) => {
@@ -220,11 +217,6 @@ export class SettingsManager {
             this.uiElements.overlay.removeEventListener('click', this.overlayClickHandler);
             this.overlayClickHandler = null;
         }
-        
-        // 等待动画完成后隐藏
-        setTimeout(() => {
-            this.settingsPanel.style.display = 'none';
-        }, 300);
     }
     
     /**
@@ -232,21 +224,6 @@ export class SettingsManager {
      */
     loadSettings() {
         try {
-            // 创建临时函数来获取设置
-            const getValue = (key, defaultValue) => {
-                try {
-                    if (typeof GM_getValue === 'function') {
-                        return GM_getValue(key, defaultValue);
-                    } else {
-                        const value = localStorage.getItem(`missNoAD_${key}`);
-                        return value !== null ? JSON.parse(value) : defaultValue;
-                    }
-                } catch (e) {
-                    console.debug(`获取${key}设置失败:`, e);
-                    return defaultValue;
-                }
-            };
-            
             // 加载设置，如果不存在则使用默认值
             this.settings.showProgressBar = getValue('showProgressBar', true);
             this.settings.showSeekControlRow = getValue('showSeekControlRow', true);
@@ -263,21 +240,6 @@ export class SettingsManager {
      */
     saveSettings() {
         try {
-            // 创建临时函数来保存设置
-            const setValue = (key, value) => {
-                try {
-                    if (typeof GM_setValue === 'function') {
-                        GM_setValue(key, value);
-                        return true;
-                    } else {
-                        localStorage.setItem(`missNoAD_${key}`, JSON.stringify(value));
-                        return true;
-                    }
-                } catch (e) {
-                    console.debug(`保存${key}设置失败:`, e);
-                    return false;
-                }
-            };
             setValue('showProgressBar', this.settings.showProgressBar);
             setValue('showSeekControlRow', this.settings.showSeekControlRow);
             setValue('showLoopControlRow', this.settings.showLoopControlRow);

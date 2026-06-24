@@ -1,4 +1,4 @@
-import { Utils } from '../../utils/utils.js';
+import { getValue, setValue } from '../../utils/index.js';
 
 /**
  * 播放器状态管理类
@@ -9,20 +9,10 @@ export class PlayerState {
         this.settings = {
             showSeekControlRow: true,    // 显示快进快退控制行
             showLoopControlRow: true,    // 显示循环控制行
-            showPlaybackControlRow: true // 显示播放控制行
+            showPlaybackControlRow: true, // 显示播放控制行
+            sidebarPosition: 'right',    // 评论侧边栏位置 ('left' | 'right')
+            sidebarHidden: false         // 评论侧边栏是否隐藏 (true | false)
         };
-
-        // 添加存储方法
-        this._setupStorageMethods();
-    }
-    
-    /**
-     * 设置存储方法
-     * @private
-     */
-    _setupStorageMethods() {
-        // 检查是否有油猴API可用
-        this.hasGMAPI = typeof GM_getValue === 'function' && typeof GM_setValue === 'function';
     }
 
     /**
@@ -32,17 +22,7 @@ export class PlayerState {
      * @returns {any} - 存储的值或默认值
      */
     getValue(key, defaultValue) {
-        try {
-            if (this.hasGMAPI) {
-                return GM_getValue(key, defaultValue);
-            } else {
-                const value = localStorage.getItem(`missNoAD_${key}`);
-                return value !== null ? JSON.parse(value) : defaultValue;
-            }
-        } catch (e) {
-            console.debug('获取存储值失败:', e);
-            return defaultValue;
-        }
+        return getValue(key, defaultValue);
     }
 
     /**
@@ -52,18 +32,8 @@ export class PlayerState {
      * @returns {boolean} - 是否成功存储
      */
     setValue(key, value) {
-        try {
-            if (this.hasGMAPI) {
-                GM_setValue(key, value);
-                return true;
-            } else {
-                localStorage.setItem(`missNoAD_${key}`, JSON.stringify(value));
-                return true;
-            }
-        } catch (e) {
-            console.debug('存储值失败:', e);
-            return false;
-        }
+        setValue(key, value);
+        return true;
     }
     
     /**
@@ -74,6 +44,8 @@ export class PlayerState {
             this.settings.showSeekControlRow = this.getValue('showSeekControlRow', true);
             this.settings.showLoopControlRow = this.getValue('showLoopControlRow', true);
             this.settings.showPlaybackControlRow = this.getValue('showPlaybackControlRow', true);
+            this.settings.sidebarPosition = this.getValue('sidebarPosition', 'right');
+            this.settings.sidebarHidden = this.getValue('sidebarHidden', false);
         } catch (error) {
             console.error('[PlayerState] 加载设置失败:', error);
         }
@@ -87,6 +59,8 @@ export class PlayerState {
             this.setValue('showSeekControlRow', this.settings.showSeekControlRow);
             this.setValue('showLoopControlRow', this.settings.showLoopControlRow);
             this.setValue('showPlaybackControlRow', this.settings.showPlaybackControlRow);
+            this.setValue('sidebarPosition', this.settings.sidebarPosition);
+            this.setValue('sidebarHidden', this.settings.sidebarHidden);
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }

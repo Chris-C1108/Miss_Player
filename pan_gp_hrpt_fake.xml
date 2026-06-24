@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<hip-report>
+	<md5-sum>9fed2d5c68e2da45644f78c4004b5992</md5-sum>
+	<user-name>chenahao</user-name>
+	<domain>ivisionsh.com</domain>
+	<host-name>IVPC1035</host-name>
+	<host-id>db342a00-af44-4e10-9cdf-7b23835cb1d8</host-id>
+	<ip-address>192.168.80.98</ip-address>
+	<ipv6-address></ipv6-address>
+	<generate-time>06/18/2026 15:22:43</generate-time>
+	<hip-report-version>4</hip-report-version>
+	<categories>
+		<entry name="host-info">
+			<client-version>6.1.1-5</client-version>
+			<os>Microsoft Windows 11 Enterprise , 64-bit</os>
+			<os-vendor>Microsoft</os-vendor>
+			<domain>ivisionsh.com</domain>
+			<host-name>IVPC1035</host-name>
+			<host-id>db342a00-af44-4e10-9cdf-7b23835cb1d8</host-id>
+			<network-interface>
+				<entry name="{5F29C064-E071-46AD-B07F-7D36D12ABED0}">
+					<description>PANGP Virtual Ethernet Adapter Secure #2</description>
+					<mac-address>02-50-41-00-00-01</mac-address>
+					<ip-address>
+						<entry name="192.168.80.98"/>
+					</ip-address>
+				</entry>
+				<entry name="{70469AC2-A6B5-4FFC-8FDD-EF854FA91DBA}">
+					<description>Intel(R) Wi-Fi 6 AX201 160MHz</description>
+					<mac-address>CC-D9-AC-E1-47-D6</mac-address>
+					<ip-address>
+						<entry name="192.168.1.88"/>
+					</ip-address>
+				</entry>
+			</network-interface>
+		</entry>
+		<entry name="anti-malware">
+			<list>
+				<entry>
+					<ProductInfo>
+						<Prod vendor="Symantec Corporation" name="Symantec Endpoint Protection" version="14.4.2036.1100" defver="6/17/2026 rev.2" engver="16.2.0.46" datemon="6" dateday="17" dateyear="2026" prodType="3" osType="1"/>
+						<real-time-protection>yes</real-time-protection>
+						<last-full-scan-time>06/17/2026 07:40:35</last-full-scan-time>
+					</ProductInfo>
+				</entry>
+				<entry>
+					<ProductInfo>
+						<Prod vendor="Microsoft Corporation" name="Windows Defender" version="4.18.25070.5" defver="1.435.524.0" engver="1.1.25070.4" datemon="6" dateday="17" dateyear="2026" prodType="3" osType="1"/>
+						<real-time-protection>yes</real-time-protection>
+						<last-full-scan-time>06/17/2026 07:40:35</last-full-scan-time>
+					</ProductInfo>
+				</entry>
+			</list>
+		</entry>
+		<entry name="disk-backup">
+			<list>
+				<entry>
+					<ProductInfo>
+						<Prod vendor="Microsoft Corporation" name="Microsoft OneDrive" version="25.137.0715.0001"/>
+						<last-backup-time>n/a</last-backup-time>
+					</ProductInfo>
+				</entry>
+				<entry>
+					<ProductInfo>
+						<Prod vendor="Microsoft Corporation" name="Windows File History" version="10.0.26100.2308"/>
+						<last-backup-time>n/a</last-backup-time>
+					</ProductInfo>
+				</entry>
+				<entry>
+					<ProductInfo>
+						<Prod vendor="Microsoft Corporation" name="Windows Backup and Restore" version="10.0.26100.4484"/>
+						<last-backup-time>n/a</last-backup-time>
+					</ProductInfo>
+				</entry>
+			</list>
+		</entry>
+		<entry name="disk-encryption">
+			<list>
+				<entry>
+					<ProductInfo>
+						<Prod vendor="Microsoft Corporation" name="BitLocker Drive Encryption" version="10.0.26100.4484"/>
+						<drives>
+							<entry>
+								<drive-name>C:\</drive-name>
+								<enc-state>encrypted</enc-state>
+							</entry>
+							<entry>
+								<drive-name>D:\</drive-name>
+								<enc-state>encrypted</enc-state>
+							</entry>
+							<entry>
+								<drive-name>E:\</drive-name>
+								<enc-state>encrypted</enc-state>
+							</entry>
+							<entry>
+								<drive-name>All</drive-name>
+								<enc-state>encrypted</enc-state>
+							</entry>
+						</drives>
+					</ProductInfo>
+				</entry>
+			</list>
+		</entry>
+		<entry name="firewall">
+			<list>
+				<entry>
+					<ProductInfo>
+						<Prod vendor="Symantec Corporation" name="Symantec Endpoint Protection" version="14.4.2036.1100"/>
+						<is-enabled>yes</is-enabled>
+					</ProductInfo>
+				</entry>
+				<entry>
+					<ProductInfo>
+						<Prod vendor="Microsoft Corporation" name="Windows Firewall" version="10.0.26100.4768"/>
+						<is-enabled>yes</is-enabled>
+					</ProductInfo>
+				</entry>
+			</list>
+		</entry>
+		<entry name="patch-management">
+			<list>
+				<entry>
+					<ProductInfo>
+						<Prod vendor="Microsoft Corporation" name="Windows Update Agent" version="1350.2506.29012.0"/>
+						<is-enabled>yes</is-enabled>
+					</ProductInfo>
+				</entry>
+			</list>
+			<missing-patches>
+			</missing-patches>
+		</entry>
+		<entry name="data-loss-prevention">
+			<list>
+			</list>
+		</entry>
+	</categories>
+	<custom-checks>
+		<process-list>
+			<entry name="Weixin.exe">
+				<value>no</value>
+			</entry>
+			<entry name="remediation-needed">
+				<value>yes</value>
+			</entry>
+		</process-list>
+		<registry-key>
+			<entry name="HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\TEC\Ocular.3\Agent">
+				<exist>yes</exist>
+				<value></value>
+				<registry-value>
+					<entry name="InstallSetup">
+						<exist>yes</exist>
+						<value>Success</value>
+					</entry>
+					<entry name="_version">
+						<exist>yes</exist>
+						<value>4.83.913.0</value>
+					</entry>
+				</registry-value>
+			</entry>
+			<entry name="HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\NRI SecureTechnologies\SecureCube_Mail_Adviser">
+				<exist>yes</exist>
+				<value></value>
+				<registry-value>
+					<entry name="Version">
+						<exist>yes</exist>
+						<value>3.40R05</value>
+					</entry>
+				</registry-value>
+			</entry>
+		</registry-key>
+	</custom-checks>
+</hip-report>

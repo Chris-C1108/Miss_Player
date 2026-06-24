@@ -1,4 +1,4 @@
-import { Utils } from '../../utils/utils.js';
+import { restoreSafariThemeColor } from '../../utils/index.js';
 
 /**
  * 播放器核心类 - 负责播放器的基本功能和状态管理
@@ -249,7 +249,7 @@ export class PlayerCore {
         this.initialized = false;
         
         // 恢复Safari主题色
-        Utils.restoreSafariThemeColor();
+        restoreSafariThemeColor();
         
         // 如果是从浮动按钮调用的，则重新显示按钮
         if (this.callingButton) {

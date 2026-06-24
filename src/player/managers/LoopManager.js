@@ -1,3 +1,6 @@
+import { formatTimeWithHours } from '../../utils/index.js';
+import { __ } from '../../constants/i18n.js';
+
 /**
  * 循环管理器类 - 负责循环播放功能
  */
@@ -88,14 +91,14 @@ export class LoopManager {
 				const handleMetadata = () => {
 					// 直接更新时间显示，避免时序问题
 					if (this.currentPositionDisplay) {
-						this.currentPositionDisplay.textContent = this.formatTimeWithHours(startSeconds);
+						this.currentPositionDisplay.textContent = formatTimeWithHours(startSeconds);
 						this.currentPositionDisplay.classList.add('active');
 						const startContainer = document.querySelector('.tm-start-time-container');
 						if (startContainer) startContainer.classList.add('active');
 					}
 					
 					if (this.durationDisplay) {
-						this.durationDisplay.textContent = this.formatTimeWithHours(endSeconds);
+						this.durationDisplay.textContent = formatTimeWithHours(endSeconds);
 						this.durationDisplay.classList.add('active');
 						const endContainer = document.querySelector('.tm-end-time-container');
 						if (endContainer) endContainer.classList.add('active');
@@ -155,7 +158,7 @@ export class LoopManager {
 				const handleMetadata = () => {
 					// 直接更新时间显示，避免时序问题
 					if (this.currentPositionDisplay) {
-						this.currentPositionDisplay.textContent = this.formatTimeWithHours(startSeconds);
+						this.currentPositionDisplay.textContent = formatTimeWithHours(startSeconds);
 						this.currentPositionDisplay.classList.add('active');
 						const startContainer = document.querySelector('.tm-start-time-container');
 						if (startContainer) startContainer.classList.add('active');
@@ -208,10 +211,10 @@ export class LoopManager {
 		let hash = '';
 
 		if (this.loopStartTime !== null) {
-			hash = this.formatTimeWithHours(this.loopStartTime);
+			hash = formatTimeWithHours(this.loopStartTime);
 
 			if (this.loopEndTime !== null) {
-				hash += `-${this.formatTimeWithHours(this.loopEndTime)}`;
+				hash += `-${formatTimeWithHours(this.loopEndTime)}`;
 			}
 		}
 
@@ -263,7 +266,7 @@ export class LoopManager {
 
 			// 使用setState更新状态
 			this.setState({ loopEndTime: currentTime });
-			console.log(`[LoopManager] 设置循环结束点: ${this.formatTimeWithHours(currentTime)}`);
+			console.log(`[LoopManager] 设置循环结束点: ${formatTimeWithHours(currentTime)}`);
 
 			// 更新URL
 			this._updateUrlHash();
@@ -297,7 +300,7 @@ export class LoopManager {
 
 			// 使用setState更新状态
 			this.setState({ loopStartTime: currentTime });
-			console.log(`[LoopManager] 设置循环开始点: ${this.formatTimeWithHours(currentTime)}`);
+			console.log(`[LoopManager] 设置循环开始点: ${formatTimeWithHours(currentTime)}`);
 
 			// 更新URL
 			this._updateUrlHash();
@@ -343,7 +346,7 @@ export class LoopManager {
 			return;
 		}
 
-		console.log(`[LoopManager] 启用循环播放: ${this.formatTimeWithHours(this.loopStartTime)} - ${this.formatTimeWithHours(this.loopEndTime)}`);
+		console.log(`[LoopManager] 启用循环播放: ${formatTimeWithHours(this.loopStartTime)} - ${formatTimeWithHours(this.loopEndTime)}`);
 
 		// 更新状态
 		this.setState({ loopActive: true });
@@ -409,8 +412,8 @@ export class LoopManager {
 	_updateUI() {
 		console.log('[LoopManager] 更新UI元素 - 循环状态:', 
 			this.loopActive ? '激活' : '未激活', 
-			'开始点:', this.loopStartTime !== null ? this.formatTimeWithHours(this.loopStartTime) : '未设置', 
-			'结束点:', this.loopEndTime !== null ? this.formatTimeWithHours(this.loopEndTime) : '未设置');
+			'开始点:', this.loopStartTime !== null ? formatTimeWithHours(this.loopStartTime) : '未设置', 
+			'结束点:', this.loopEndTime !== null ? formatTimeWithHours(this.loopEndTime) : '未设置');
 			
 		// 更新循环时间显示（A和B按钮）
 		this.updateLoopTimeDisplay();
@@ -470,7 +473,7 @@ export class LoopManager {
 
 		if (this.loopStartTime !== null) {
 			// 更新时间文本
-			this.currentPositionDisplay.textContent = this.formatTimeWithHours(this.loopStartTime);
+			this.currentPositionDisplay.textContent = formatTimeWithHours(this.loopStartTime);
 			
 			// 添加激活样式
 			this.currentPositionDisplay.classList.add('active');
@@ -506,7 +509,7 @@ export class LoopManager {
 
 		if (this.loopEndTime !== null) {
 			// 更新时间文本
-			this.durationDisplay.textContent = this.formatTimeWithHours(this.loopEndTime);
+			this.durationDisplay.textContent = formatTimeWithHours(this.loopEndTime);
 			
 			// 添加激活样式
 			this.durationDisplay.classList.add('active');
@@ -576,11 +579,12 @@ export class LoopManager {
 
 				// 添加悬停提示
 				marker.setAttribute('title', isStart ?
-					`循环起点: ${this.formatTimeWithHours(time)}` :
-					`循环终点: ${this.formatTimeWithHours(time)}`);
+					`${__('loopStart')}: ${formatTimeWithHours(time)}` :
+					`${__('loopEnd')}: ${formatTimeWithHours(time)}`);
 				
 				// 设置额外的数据属性用于显示标签
-				marker.setAttribute('data-time', this.formatTimeWithHours(time));
+				marker.setAttribute('data-time', formatTimeWithHours(time));
+				marker.setAttribute('data-label', isStart ? __('loopStart') : __('loopEnd'));
 			} else {
 				marker.style.display = 'none';
 			}
@@ -624,18 +628,5 @@ export class LoopManager {
 		}
 	}
 
-	/**
-	 * 格式化时间（含小时）
-	 */
-	formatTimeWithHours(timeInSeconds) {
-		if (isNaN(timeInSeconds) || timeInSeconds < 0) {
-			return '00:00:00';
-		}
-		const totalSeconds = Math.floor(timeInSeconds);
-		const hours = Math.floor(totalSeconds / 3600);
-		const minutes = Math.floor((totalSeconds % 3600) / 60);
-		const seconds = totalSeconds % 60;
 
-		return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-	}
 }

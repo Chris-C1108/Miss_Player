@@ -88,10 +88,24 @@ module.exports = {
           'GM_notification',
           'GM_setValue',
           'GM_getValue',
-          'GM_deleteValue'
+          'GM_deleteValue',
+          'GM_addValueChangeListener',
+          'GM_removeValueChangeListener',
+          'GM_openInTab'
+        ],
+        connect: [
+          'jable.tv',
+          'www.jable.tv',
+          'fs1.app',
+          'www.fs1.app',
+          'javdb.com',
+          'www.javlibrary.com',
+          'javlib.com',
+          'www.javlib.com',
+          'c97k.com',
+          'www.c97k.com'
         ],
         'run-at': 'document-start',
-        noframes: true,
         license: package.license
       },
       proxyScript: {

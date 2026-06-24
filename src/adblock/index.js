@@ -3,7 +3,7 @@
  * 此模块负责屏蔽网站上的广告内容，提供更好的用户体验
  */
 
-import { Utils } from '../utils';
+
 import AdBlockConfig from './AdBlockConfig';
 import StyleManager from './StyleManager';
 import DOMCleaner from './DOMCleaner';

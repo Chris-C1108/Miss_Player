@@ -1,0 +1,1156 @@
+/* =========== 视频播放器样式 =========== */
+
+/* 整体布局 */
+.tm-video-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    background-color: rgba(35, 17, 29, 0.8); /* 更深的背景色 */
+    z-index: 9990;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    backdrop-filter: blur(30px); /* 增加模糊效果，符合iOS风格 */
+    -webkit-backdrop-filter: blur(30px);
+    padding: 0; /* 移除默认padding */
+}
+
+/* 播放器容器 - 现在与视频覆盖层同级 */
+.tm-player-container {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    z-index: 9991;
+    /* 确保能完全包含所有子元素 */
+    height: 100%;
+    overflow: visible;
+    pointer-events: auto;
+}
+
+/* 按钮容器 - 放置在视频容器顶部外面 */
+.tm-button-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+    z-index: 99999;
+    /* 保持在顶部 */
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tm-video-container {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+    margin-top: 44px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background-color: hsl(var(--shadcn-card));
+    border-radius: var(--shadcn-radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 9992;
+}
+
+.tm-video-wrapper {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    will-change: transform;
+    border-radius: var(--shadcn-radius) var(--shadcn-radius) 0 0;
+    touch-action: none; /* 禁用默认的下拉刷新与页面手势 */
+}
+
+/* 确保视频元素随容器高度变化 */
+.tm-video-wrapper video {
+    width: auto !important; 
+    height: 100% !important; 
+    max-width: none !important; 
+    object-fit: contain !important; 
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    touch-action: none; /* 禁用默认的页面下拉刷新与移动，改用自定义滑动手势 */
+    cursor: grab; 
+}
+
+/* 调整手柄 */
+.tm-handle-container {
+    position: relative;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9992;
+    width: 100%;
+    flex-shrink: 0; /* 防止 Flex 布局下高度被压缩 */
+}
+
+.tm-resize-handle {
+    position: absolute;
+    height: 5px;
+    width: 134px;
+    max-width: 134px;
+    background-color: hsla(var(--shadcn-foreground) / 0.6);
+    border-radius: 2.5px;
+    cursor: grab;
+    touch-action: none;
+    opacity: 0.5;
+    will-change: transform;
+    transition: all var(--anim-quick);
+    box-shadow: none;
+}
+
+.tm-resize-handle::after {
+    content: '';
+    position: absolute;
+    left: -10px;
+    right: -10px;
+    top: -15px;
+    bottom: -15px;
+    background: transparent;
+}
+
+.tm-resize-handle:hover,
+.tm-resize-handle.dragging {
+    opacity: 1;
+    background-color: hsla(var(--shadcn-foreground) / 0.8);
+}
+
+.tm-resize-handle.dragging {
+    cursor: grabbing;
+}
+
+/* 控制按钮基础样式 */
+.tm-control-button-base {
+    color: hsl(var(--shadcn-secondary-foreground));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--anim-quick);
+    backdrop-filter: blur(12px); /* 增加模糊效果 */
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* 关闭按钮 */
+.tm-close-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.5); /* 更透明的背景 */
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.1); /* 减少边框强度 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--anim-smooth);
+    z-index: 9994;
+}
+
+.tm-close-button:hover {
+    background-color: hsl(var(--shadcn-destructive));
+    transform: scale(1.1);
+    box-shadow: var(--shadow-md);
+}
+
+.tm-close-button:active {
+    transform: scale(0.9);
+}
+
+/* 设置按钮 */
+.tm-settings-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.7);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9993;
+    cursor: pointer;
+    transition: all var(--anim-quick);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-sm);
+}
+
+.tm-settings-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.9);
+    transform: scale(1.1) rotate(30deg);
+    box-shadow: var(--shadow-md);
+}
+
+.tm-settings-button:active {
+    transform: scale(0.9);
+}
+
+/* 设置面板 */
+.tm-settings-panel {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 8px) + 60px);
+    right: 16px;
+    background-color: hsla(var(--shadcn-card) / 0.7);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: var(--shadcn-radius);
+    border: 1px solid hsla(var(--shadcn-border) / 0.1); /* 淡化边框 */
+    padding: 12px;
+    box-shadow: var(--shadow-md);
+    z-index: 9996;
+    min-width: 200px;
+    transform: translateY(-10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform var(--anim-smooth), opacity var(--anim-smooth);
+}
+
+.tm-settings-panel.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 设置选项 */
+.tm-settings-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-radius: var(--shadcn-radius-sm);
+    margin-bottom: 8px;
+    transition: background-color var(--anim-quick);
+}
+
+.tm-settings-option:hover {
+    background-color: hsla(var(--shadcn-muted) / 0.5); /* 半透明悬停效果 */
+}
+
+.tm-settings-option:last-child {
+    margin-bottom: 0;
+}
+
+/* 设置标签样式 */
+.tm-settings-label {
+    cursor: pointer;
+    flex: 1;
+}
+
+/* 切换开关输入框样式 */
+.tm-toggle-input {
+    position: absolute;
+    left: -9999px;
+}
+
+/* 循环时间容器状态样式 - 优化版 */
+/* A按钮容器 - 两种状态 */
+.tm-start-time-container.active {
+    background-color: hsl(var(--shadcn-green) / 0.15);
+    border-color: hsl(var(--shadcn-green) / 0.4);
+}
+
+.tm-start-time-container:not(.active) {
+    background-color: hsl(var(--shadcn-secondary) / 0.5);
+    border-color: hsl(var(--shadcn-border) / 0.1);
+}
+
+/* B按钮容器 - 两种状态 */
+.tm-end-time-container.active {
+    background-color: hsl(var(--shadcn-orange) / 0.15);
+    border-color: hsl(var(--shadcn-orange) / 0.4);
+}
+
+.tm-end-time-container:not(.active) {
+    background-color: hsl(var(--shadcn-secondary) / 0.5);
+    border-color: hsl(var(--shadcn-border) / 0.1);
+}
+
+/* A按钮标签 - 两种状态 */
+.tm-set-loop-start-label.active {
+    color: hsl(var(--shadcn-green));
+    opacity: 1;
+}
+
+.tm-set-loop-start-label:not(.active) {
+    opacity: 0.9;
+}
+
+/* B按钮标签 - 两种状态 */
+.tm-set-loop-end-label.active {
+    color: hsl(var(--shadcn-orange));
+    opacity: 1;
+}
+
+.tm-set-loop-end-label:not(.active) {
+    opacity: 0.9;
+}
+
+/* 循环时间文本 - 两种状态 */
+.tm-loop-start-position.active, .tm-loop-end-position.active {
+    color: hsl(var(--shadcn-foreground));
+    opacity: 1;
+}
+
+.tm-loop-start-position:not(.active), .tm-loop-end-position:not(.active) {
+    color: hsl(var(--shadcn-muted-foreground));
+    opacity: 0.9;
+}
+
+/* 循环按钮 - 两种状态 */
+.tm-loop-toggle-button.active {
+    background-color: hsl(var(--shadcn-red) / 0.1);
+    border-color: hsl(var(--shadcn-red) / 0.3);
+}
+
+.tm-loop-toggle-button:active {
+    transform: scale(0.98);
+}
+
+/* 循环区间连接效果 */
+.tm-loop-range {
+    position: absolute;
+    height: 4px;
+    background: linear-gradient(90deg, 
+        hsla(var(--shadcn-green) / 0.3) 0%, 
+        hsla(var(--shadcn-orange) / 0.3) 100%);
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.tm-loop-range.active {
+    opacity: 0.7;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 循环区间悬停效果 */
+.tm-progress-bar-container:hover .tm-loop-range.active {
+    opacity: 0.9;
+    height: 6px;
+}
+
+/* 循环标记 - Apple Design风格优化 */
+.tm-loop-marker {
+    position: absolute;
+    width: 4px;
+    height: 100%; /* 与进度条等高 */
+    top: 0; /* 位于进度条上方，不是突出来的 */
+    transform: translateX(-50%);
+    z-index: 3;
+    transition: opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), 
+                transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                box-shadow 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* 循环开始标记(A) */
+.tm-loop-start-marker {
+    background-color: hsla(var(--shadcn-green) / 0.5);
+    border-radius: 2px;
+    box-shadow: 0 0 6px hsla(var(--shadcn-green) / 0.3);
+}
+
+/* 循环结束标记(B) */
+.tm-loop-end-marker {
+    background-color: hsla(var(--shadcn-orange) / 0.5);
+    border-radius: 2px;
+    box-shadow: 0 0 6px hsla(var(--shadcn-orange) / 0.3);
+}
+
+/* 循环标记悬停效果 */
+.tm-loop-marker:hover {
+    cursor: pointer;
+    z-index: 4;
+}
+
+.tm-loop-start-marker:hover {
+    background-color: hsla(var(--shadcn-green) / 0.7);
+    box-shadow: 0 0 10px hsla(var(--shadcn-green) / 0.5);
+}
+
+.tm-loop-end-marker:hover {
+    background-color: hsla(var(--shadcn-orange) / 0.7);
+    box-shadow: 0 0 10px hsla(var(--shadcn-orange) / 0.5);
+}
+
+/* 循环激活时的标记样式 */
+.tm-loop-marker.active {
+    opacity: 1;
+}
+
+.tm-loop-marker:not(.active) {
+    opacity: 0.7;
+}
+
+/* 添加标记的文本标签 */
+.tm-loop-marker::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: hsla(var(--shadcn-card) / 0.7);
+    color: hsl(var(--shadcn-card-foreground));
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsla(var(--shadcn-border) / 0.1);
+    white-space: nowrap;
+    z-index: 5;
+}
+
+.tm-loop-marker:hover::before {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
+}
+
+/* 时间容器状态样式 */
+.tm-start-time-container-hover {
+    background-color: hsl(var(--shadcn-green) / 0.1);
+    border-color: hsl(var(--shadcn-green) / 0.3);
+}
+
+.tm-start-time-container-default {
+    background-color: hsl(var(--shadcn-secondary) / 0.5);
+    border-color: hsl(var(--shadcn-border) / 0.1);
+}
+
+.tm-end-time-container-hover {
+    background-color: hsl(var(--shadcn-orange) / 0.1);
+    border-color: hsl(var(--shadcn-orange) / 0.3);
+}
+
+.tm-end-time-container-default {
+    background-color: hsl(var(--shadcn-secondary) / 0.5);
+    border-color: hsl(var(--shadcn-border) / 0.1);
+}
+
+/* 循环按钮状态 */
+.tm-loop-button-hover {
+    background-color: hsl(var(--shadcn-accent) / 0.3);
+    transform: translateY(-1px);
+}
+
+.tm-loop-button-active {
+    background-color: hsl(var(--shadcn-muted) / 0.7);
+}
+
+.tm-loop-button-default {
+    background-color: hsl(var(--shadcn-secondary) / 0.5);
+    transform: translateY(0);
+}
+
+/* 暂停/播放速度指示器 */
+.tm-indicator-base {
+    position: absolute;
+    padding: 8px 16px;
+    background-color: hsla(var(--shadcn-card) / 0.6); /* 更透明 */
+    color: hsl(var(--shadcn-card-foreground));
+    border-radius: var(--shadcn-radius);
+    opacity: 0;
+    backdrop-filter: blur(15px); /* 增强模糊效果 */
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: var(--shadow-md);
+    border: 1px solid hsla(var(--shadcn-border) / 0.1); /* 淡化边框 */
+    transform: translateY(20px);
+    transition: opacity var(--anim-smooth), transform var(--anim-smooth);
+    pointer-events: none;
+    z-index: 9994;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.tm-indicator-base.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* 暂停指示器 */
+.tm-pause-indicator {
+    width: 80px;
+    height: 80px;
+}
+
+
+/* 进度条相关布局样式 */
+.tm-progress-row {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tm-seek-control-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tm-loop-control-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.tm-playback-control-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    max-height: 45px;
+    height: 45px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+/* 播放控制区域相关样式 */
+.tm-left-controls, .tm-center-controls, .tm-right-controls {
+    flex: 1;
+    display: flex;
+    height: 100%;
+    align-items: center;
+}
+
+.tm-left-controls {
+    justify-content: flex-start;
+}
+
+.tm-center-controls {
+    justify-content: center;
+}
+
+.tm-right-controls {
+    justify-content: flex-end;
+}
+
+/* 时间显示 */
+.tm-time-display {
+    display: flex;
+    justify-content: space-between;
+    color: hsl(var(--shadcn-foreground) / 0.9);
+    font-size: 12px;
+    margin-top: -2px;
+    font-variant-numeric: tabular-nums;
+    gap: 8px;
+}
+
+.tm-time-display-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0px 1px;
+    margin-bottom: 4px;
+}
+
+.tm-current-time, .tm-total-duration {
+    color: hsl(var(--shadcn-card-foreground) / 0.9);
+    font-size: 0.8rem;
+    min-width: 60px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 400;
+    line-height: 1;
+}
+
+.tm-current-time {
+    text-align: left;
+}
+
+.tm-total-duration {
+    text-align: right;
+}
+
+.tm-loop-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tm-start-time-container, .tm-end-time-container {
+    display: flex;
+    align-items: center;
+    background-color: hsl(var(--shadcn-secondary) / 0.5);
+    border: 1px solid hsl(var(--shadcn-border) / 0.1);
+    border-radius: 6px;
+    padding: 4px 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* 添加悬停效果 */
+.tm-start-time-container:hover {
+    background-color: hsl(var(--shadcn-green) / 0.1);
+    border-color: hsl(var(--shadcn-green) / 0.3);
+    transform: translateY(-1px);
+}
+
+.tm-end-time-container:hover {
+    background-color: hsl(var(--shadcn-orange) / 0.1);
+    border-color: hsl(var(--shadcn-orange) / 0.3);
+    transform: translateY(-1px);
+}
+
+.tm-set-loop-start-label, .tm-set-loop-end-label {
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* A按钮标签 - 始终保持绿色 */
+.tm-set-loop-start-label {
+    color: hsl(var(--shadcn-green));
+}
+
+/* B按钮标签 - 始终保持橙色 */
+.tm-set-loop-end-label {
+    color: hsl(var(--shadcn-orange));
+}
+
+.tm-loop-toggle-button {
+    display: flex;
+    align-items: center;
+    background-color: hsl(var(--shadcn-secondary) / 0.5);
+    border: 1px solid hsl(var(--shadcn-border) / 0.1);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    gap: 6px;
+    color: hsl(var(--shadcn-foreground));
+}
+
+/* Loop按钮标签样式 */
+.tm-loop-toggle-label {
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: hsl(var(--shadcn-muted-foreground) / 0.9);
+    transition: color 0.2s ease;
+}
+
+/* 添加标签激活状态 */
+.tm-loop-toggle-label.active {
+    color: hsl(var(--shadcn-red));
+}
+
+/* 循环按钮 - 两种状态 */
+.tm-loop-toggle-button.active {
+    background-color: hsl(var(--shadcn-red) / 0.1);
+    border-color: hsl(var(--shadcn-red) / 0.3);
+}
+
+.tm-loop-toggle-button:not(.active) {
+    background-color: hsl(var(--shadcn-secondary) / 0.5);
+    border-color: hsl(var(--shadcn-border) / 0.1);
+}
+
+.tm-loop-toggle-button:active {
+    transform: scale(0.98);
+}
+
+.tm-loop-indicator-circle {
+    transition: fill 0.2s ease;
+}
+
+.tm-loop-toggle-button.active .tm-loop-indicator-circle {
+    fill: hsl(var(--shadcn-red));
+}
+
+/* 添加新的样式 */
+/* 快进/快退按钮组样式 */
+.tm-rewind-group, .tm-forward-group {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    gap: 8px;
+    align-items: center;
+}
+
+.tm-rewind-buttons-container {
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-end;
+    align-content: flex-start;
+    gap: 6px;
+}
+
+.tm-forward-buttons-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-end;
+    align-content: flex-start;
+    gap: 6px;
+}
+
+/* 循环时间显示样式 */
+.tm-loop-start-position, .tm-loop-end-position {
+    color: hsl(var(--shadcn-muted-foreground));
+    font-size: 0.875rem;
+    min-width: 70px;
+    text-align: center;
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+}
+
+/* 时间控制按钮基础样式 */
+.tm-time-control-button {
+    background-color: hsl(var(--shadcn-secondary) / 0.5);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsl(var(--shadcn-border) / 0.1);
+    border-radius: var(--shadcn-radius-sm);
+    padding: 0;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(.25,.8,.25,1);
+    white-space: nowrap;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    width: var(--button-xl);
+    height: var(--button-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.tm-time-control-button:hover {
+    background-color: hsl(var(--shadcn-accent) / 0.6);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tm-time-control-button:active {
+    transform: scale(0.95);
+    box-shadow: none;
+}
+
+.tm-time-control-button-active {
+    transform: scale(0.95);
+    box-shadow: none;
+}
+
+.tm-time-control-button-after-active {
+    transform: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.tm-time-control-button-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-rewind-icon {
+    margin-right: -2px;
+}
+
+.tm-forward-icon {
+    margin-left: -2px;
+}
+
+.tm-time-text-margin-left {
+    margin-left: 2px;
+}
+
+.tm-time-text-margin-right {
+    margin-right: 2px;
+}
+
+/* 控制按钮状态 */
+.tm-control-button-hover {
+    background-color: hsl(var(--shadcn-accent) / 0.3);
+    transform: none;
+}
+
+.tm-control-button-default {
+    background-color: hsl(var(--shadcn-secondary) / 0.5);
+    transform: none;
+}
+
+/* 控制面板容器 */
+.tm-control-buttons {
+    position: absolute;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)); /* 保持距离底部10px，同时考虑iOS安全区域 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    max-width: 700px;
+    min-width: 350px; /* 与竖屏模式保持一致 */
+    background-color: hsla(var(--shadcn-card) / 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9991;
+    padding: 12px;
+    padding-bottom: 12px;
+    border-radius: 12px;
+    border: 1px solid hsla(var(--shadcn-border) / 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    gap: 10px;
+    
+    /* 添加 flex 布局属性 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 控制界面隐藏时的动画效果 - 更新选择器 */
+body.controls-hidden .tm-player-container .tm-control-buttons {
+    opacity: 0;
+    transform: translateX(-50%) translateY(calc(100% + 30px));
+    pointer-events: none;
+}
+
+/* 控制界面显示时的动画效果 - 更新选择器 */
+body:not(.controls-hidden) .tm-player-container .tm-control-buttons {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+/* 控制界面隐藏时的动画效果 - 更新选择器 */
+body.controls-hidden .tm-player-container .tm-button-container {
+    opacity: 0;
+    transform: translateY(-60px);
+    pointer-events: none;
+}
+
+/* 控制界面显示时的动画效果 - 更新选择器 */
+body:not(.controls-hidden) .tm-player-container .tm-button-container {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* 控制按钮 */
+.tm-control-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.6);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--anim-quick);
+}
+
+.tm-control-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.7);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.tm-control-button:active {
+    transform: scale(0.95);
+    box-shadow: none;
+}
+
+.tm-control-button.active {
+    background-color: hsla(var(--shadcn-blue) / 0.7);
+    color: hsl(var(--shadcn-blue-foreground));
+    box-shadow: 0 0 0 2px hsla(var(--shadcn-blue) / 0.3);
+}
+
+.tm-control-button svg,
+.tm-control-button img {
+    width: 16px;
+    height: 16px;
+}
+
+/* 控制行 */
+.tm-control-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    opacity: 1;
+    transition: opacity var(--anim-quick), height var(--anim-quick);
+    height: auto;
+    overflow: hidden;
+}
+
+.tm-control-row.hidden {
+    opacity: 0;
+    height: 0;
+    margin: 0;
+}
+
+/* 评论区样式 */
+.tm-comment-row {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+    border-bottom: 1px solid hsla(var(--shadcn-border) / 0.2);
+    padding-bottom: 10px;
+}
+
+.tm-comment-container {
+    width: 100%;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tm-comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 500;
+    color: hsl(var(--shadcn-foreground));
+}
+
+.tm-comment-left {
+    display: flex;
+    align-items: center;
+}
+
+.tm-comment-title {
+    margin-right: 5px;
+}
+
+.tm-comment-count {
+    color: hsl(var(--shadcn-muted-foreground));
+    font-size: 12px;
+}
+
+.tm-comment-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.tm-comment-button {
+    border: none;
+    background-color: hsla(var(--shadcn-secondary) / 0.5);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tm-comment-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.6);
+    transform: translateY(-1px);
+}
+
+.tm-comment-button:active {
+    transform: scale(0.95);
+}
+
+.tm-comment-write {
+    background-color: hsla(var(--shadcn-blue) / 0.7);
+    color: hsl(var(--shadcn-blue-foreground));
+}
+
+.tm-comment-write:hover {
+    background-color: hsla(var(--shadcn-blue) / 0.8);
+}
+
+.tm-comment-placeholder {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    color: hsl(var(--shadcn-muted-foreground));
+    font-size: 13px;
+    background-color: hsla(var(--shadcn-muted) / 0.1);
+    border-radius: 6px;
+}
+
+/* 横屏模式下的评论区样式 */
+@media screen and (orientation: landscape) {
+    .tm-comment-container {
+        min-height: 50px;
+    }
+    
+    .tm-comment-placeholder {
+        padding: 8px;
+    }
+}
+
+.tm-player-title {
+    position: absolute !important;
+    top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    max-width: calc(100% - 110px) !important;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    z-index: 9998 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;
+    pointer-events: none !important;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.controls-hidden .tm-player-title {
+    opacity: 0 !important;
+    transform: translate(-50%, -20px) !important;
+    pointer-events: none !important;
+}
+
+/* 下滑手势拖动时，隐藏所有播放器控制和面板组件，实现极致沉浸感 */
+body.tm-swiping-down .tm-button-container,
+body.tm-swiping-down .tm-handle-container,
+body.tm-swiping-down .tm-comments-panel,
+body.tm-swiping-down .tm-control-buttons,
+body.tm-swiping-down .tm-settings-panel {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* ==========================================================================
+   时间戳跳转视觉提示样式 (Timestamp Jump Visual Cue)
+   ========================================================================== */
+
+/* 时间跳转指示标记 (类似 tm-loop-start-marker，但闪烁高亮 3 秒后消失) */
+.tm-jump-active {
+    position: absolute;
+    width: 4px;
+    height: 100%;
+    top: 0;
+    transform: translateX(-50%);
+    z-index: 5;
+    background-color: hsla(var(--shadcn-green) / 0.8);
+    border-radius: 2px;
+    box-shadow: 0 0 8px hsla(var(--shadcn-green) / 0.5);
+    pointer-events: none;
+    animation: tm-jump-flash-fade 3.0s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes tm-jump-flash-fade {
+    0%, 20%, 40%, 60%, 80% {
+        opacity: 1;
+        background-color: hsl(var(--shadcn-green));
+        box-shadow: 0 0 16px 4px hsl(var(--shadcn-green));
+        transform: translateX(-50%) scaleX(1.6);
+    }
+    10%, 30%, 50%, 70% {
+        opacity: 0.3;
+        background-color: hsla(var(--shadcn-green) / 0.4);
+        box-shadow: 0 0 4px hsla(var(--shadcn-green) / 0.2);
+        transform: translateX(-50%) scaleX(1.0);
+    }
+    90% {
+        opacity: 0.5;
+        background-color: hsla(var(--shadcn-green) / 0.5);
+        box-shadow: 0 0 6px hsla(var(--shadcn-green) / 0.3);
+        transform: translateX(-50%) scaleX(0.8);
+    }
+    100% {
+        opacity: 0;
+        background-color: transparent;
+        box-shadow: none;
+        transform: translateX(-50%) scaleX(0);
+    }
+}
+
+/* 侧栏控制按钮 */
+.tm-sidebar-pos-button,
+.tm-sidebar-toggle-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.7);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+    display: none !important; /* 移动端默认隐藏 */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--anim-quick);
+}
+
+.tm-sidebar-pos-button:hover,
+.tm-sidebar-toggle-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.9);
+    transform: scale(1.1);
+}
+
+.tm-sidebar-pos-button:active,
+.tm-sidebar-toggle-button:active {
+    transform: scale(0.9);
+}
+
+/* 隐藏评论区后，位置按钮隐藏 */
+.tm-sidebar-hidden .tm-sidebar-pos-button {
+    display: none !important;
+}
+
+
+

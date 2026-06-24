@@ -6,7 +6,7 @@
 import { DetailExpander } from './DetailExpander.js';
 import { QualityManager } from './QualityManager.js';
 import { UrlRedirector } from './UrlRedirector.js';
-import { Utils } from '../utils/utils.js';
+
 
 // 立即创建并执行URL重定向检查，确保在页面加载最早阶段执行
 const earlyUrlRedirector = new UrlRedirector();

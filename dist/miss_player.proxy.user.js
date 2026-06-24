@@ -7,16 +7,28 @@
 // @match *://*.missav.ai/*
 // @match *://*.jable.tv/*
 // @match *://*/*
+// @connect jable.tv
+// @connect www.jable.tv
+// @connect fs1.app
+// @connect www.fs1.app
+// @connect javdb.com
+// @connect www.javlibrary.com
+// @connect javlib.com
+// @connect www.javlib.com
+// @connect c97k.com
+// @connect www.c97k.com
 // @grant GM_xmlhttpRequest
 // @grant GM_setClipboard
 // @grant GM_notification
 // @grant GM_setValue
 // @grant GM_getValue
 // @grant GM_deleteValue
+// @grant GM_addValueChangeListener
+// @grant GM_removeValueChangeListener
+// @grant GM_openInTab
 // @icon https://missav.ws/img/favicon.ico
 // @license MIT
 // @namespace loadingi.local
-// @noframes 
 // @require http://localhost:8080/miss_player.user.js
 // @run-at document-start
 // ==/UserScript==

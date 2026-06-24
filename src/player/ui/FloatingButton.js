@@ -1,5 +1,6 @@
-import { Utils } from '../../utils/utils.js';
+import { findVideoElement, createElementWithStyle, getSafeAreaInsets, isPortrait } from '../../utils/index.js';
 import { CustomVideoPlayer } from '../index.js';
+import { FLOATING_PLAY } from '../../constants/icons.js';
 
 /**
  * 浮动按钮类
@@ -22,7 +23,7 @@ export class FloatingButton {
         this.cleanupExistingButtons();
         
         // 检查页面是否存在视频元素
-        if (Utils.findVideoElement()) {
+        if (findVideoElement()) {
             // 创建新按钮
             this.createButton();
             
@@ -74,7 +75,7 @@ export class FloatingButton {
         if (this.mutationTimeout) clearTimeout(this.mutationTimeout);
         
         this.mutationTimeout = setTimeout(() => {
-            const hasVideo = Utils.findVideoElement();
+            const hasVideo = findVideoElement();
             
             // 如果有视频元素但没有按钮，创建按钮
             if (hasVideo && !this.button) {
@@ -113,7 +114,7 @@ export class FloatingButton {
         
         // 设置新计时器，每2秒检查一次
         this.videoCheckInterval = setInterval(() => {
-            if (Utils.findVideoElement()) {
+            if (findVideoElement()) {
                 // 只有当按钮不存在时才创建
                 if (!this.button) {
                     // 找到视频元素，创建按钮
@@ -166,7 +167,7 @@ export class FloatingButton {
         
         this.resizeTimeout = setTimeout(() => {
             // 检查页面是否存在视频元素
-            if (Utils.findVideoElement()) {
+            if (findVideoElement()) {
                 // 无论横屏还是竖屏都显示按钮
                 this.button.style.display = 'flex';
                 
@@ -184,16 +185,9 @@ export class FloatingButton {
      */
     createButton() {
         // 创建浮动按钮 - 使用CSS类而不是内联样式
-        this.button = Utils.createElementWithStyle('button', 'tm-floating-button');
+        this.button = createElementWithStyle('button', 'tm-floating-button');
 
-        // 使用更简洁的播放按钮SVG图标
-        const icon = `
-            <svg width="48" height="48" viewBox="0 0 68 48" fill="none">
-                <path class="tm-play-button-bg" d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="rgb(254, 98, 142)"></path>
-                <path d="M 45,24 27,14 27,34" fill="#fff"></path>
-            </svg>
-        `;
-        this.button.innerHTML = icon;
+        this.button.innerHTML = FLOATING_PLAY;
 
         // 添加点击事件处理器
         this.button.addEventListener('click', () => {
@@ -218,12 +212,12 @@ export class FloatingButton {
     updateButtonPosition() {
         if (!this.button) return;
         
-        const safeArea = Utils.getSafeAreaInsets();
+        const safeArea = getSafeAreaInsets();
         
         // 获取当前屏幕方向
-        const isPortrait = Utils.isPortrait();
+        const isPortraitValue = isPortrait();
         
-        if (isPortrait) {
+        if (isPortraitValue) {
             // 竖屏模式 - 按钮在底部居中
             this.button.style.bottom = `${Math.max(20, safeArea.bottom)}px`;
             this.button.style.right = 'auto';

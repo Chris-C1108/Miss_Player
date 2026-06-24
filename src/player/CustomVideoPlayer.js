@@ -7,7 +7,8 @@ import { ProgressManager } from './managers/ProgressManager.js';
 import { EventManager } from './managers/EventManager.js';
 import { SettingsManager } from './managers/SettingsManager.js';
 import { VideoSwipeManager } from './managers/videoSwipeManager.js';
-import { Utils } from '../utils/utils.js';
+import { updateSafariThemeColor, Toast } from '../utils/index.js';
+import { __ } from '../constants/i18n.js';
 
 /**
  * 自定义视频播放器控制器 - 模块化重构版本
@@ -35,6 +36,20 @@ export class CustomVideoPlayer {
     init() {
         if (this.initialized) return;
         
+        // 保存并隐藏网页浏览器滚动条
+        this._scrollbarStyle = document.createElement('style');
+        this._scrollbarStyle.id = 'tm-hide-scrollbar-style';
+        this._scrollbarStyle.innerHTML = `
+            html::-webkit-scrollbar, body::-webkit-scrollbar {
+                display: none !important;
+            }
+            html, body {
+                scrollbar-width: none !important;
+                -ms-overflow-style: none !important;
+            }
+        `;
+        document.head.appendChild(this._scrollbarStyle);
+        
         // 如果PlayerCore不存在，重新创建
         if (!this.playerCore) {
             this.playerCore = new PlayerCore({
@@ -47,6 +62,7 @@ export class CustomVideoPlayer {
         
         if (!this.playerCore.targetVideo) {
             console.error('[CustomVideoPlayer] 核心初始化失败: 未找到视频元素');
+            Toast(__('loadingError') || 'Failed to load video', 3000, 'error');
             // 如果是从浮动按钮调用的，则重新显示按钮
             if (this.callingButton) {
                 this.callingButton.style.display = 'flex';
@@ -58,6 +74,7 @@ export class CustomVideoPlayer {
         const uiManager = new UIManager(this.playerCore);
         const uiElements = uiManager.createUI();
         this.managers.uiManager = uiManager;
+        this.playerCore.uiManager = uiManager; // 注册到 playerCore 以供全局访问
         
         // 创建设置管理器
         const settingsManager = new SettingsManager(this.playerCore, uiElements);
@@ -66,8 +83,7 @@ export class CustomVideoPlayer {
         
         // 创建控制管理器
         const controlManager = new ControlManager(this.playerCore, uiElements);
-        const progressControls = controlManager.createProgressControls();
-        const controlButtons = controlManager.createControlButtonsContainer();
+        controlManager.init();
         this.managers.controlManager = controlManager;
         
         // 将控制管理器设置到playerCore上，以便UIManager可以访问到它
@@ -75,6 +91,7 @@ export class CustomVideoPlayer {
         
         // 创建进度管理器
         const progressManager = new ProgressManager(this.playerCore, uiElements);
+        this.playerCore.progressManager = progressManager;
         progressManager.init({
             progressBarElement: controlManager.progressBarElement,
             progressIndicator: controlManager.progressIndicator,
@@ -103,6 +120,7 @@ export class CustomVideoPlayer {
         const dragManager = new DragManager(this.playerCore, uiElements);
         dragManager.init();
         this.managers.dragManager = dragManager;
+        this.playerCore.dragManager = dragManager; // 注册到 playerCore 以供全局访问
         
         // 初始化VideoSwipeManager
         if (this.playerCore.targetVideo && uiElements.videoWrapper && uiElements.handle) {
@@ -110,8 +128,12 @@ export class CustomVideoPlayer {
             this.swipeManager = new VideoSwipeManager(
                 this.playerCore.targetVideo,
                 uiElements.videoWrapper,
-                uiElements.handle
+                uiElements.handle,
+                uiElements,
+                () => this.close()
             );
+            this.swipeManager.playerCore = this.playerCore; // 关联 playerCore 到 swipeManager
+            this.playerCore.swipeManager = this.swipeManager; // 注册到 playerCore 以供全局访问
             this.managers.swipeManager = this.swipeManager;
         }
         
@@ -135,33 +157,33 @@ export class CustomVideoPlayer {
         // 更新当前时间显示
         progressManager.updateCurrentTimeDisplay();
         
-        // 为iOS设备的Safari浏览器设置统一的safe area背景色
-        Utils.updateSafariThemeColor('#000000', true);
+        // 为iOS设备的Safari浏览器设置统一 of safe area背景色
+        updateSafariThemeColor('#000000', true);
         
-        // 立即更新视频大小和各UI元素位置
-        setTimeout(() => {
+        // 视频元数据就绪后统一更新 UI 和位置
+        const runUIUpdates = () => {
             if (this.swipeManager) {
                 this.swipeManager.updateSize();
             }
             dragManager.updateHandlePosition();
-        }, 100);
-        
-        // 额外的延迟检查，确保URL参数相关的UI元素都被正确更新
-        setTimeout(() => {
-            console.log('[CustomVideoPlayer] 执行URL参数相关UI二次检查');
-            // 强制再次更新循环点时间显示
             if (loopManager) {
                 loopManager._updateUI();
                 loopManager.updateLoopTimeDisplay();
                 loopManager.updateLoopMarkers();
             }
-            
-            // 强制更新进度条和时间显示
             if (progressManager) {
                 progressManager.updateProgressBar();
                 progressManager.updateCurrentTimeDisplay();
             }
-        }, 500);
+        };
+
+        if (this.playerCore.targetVideo.readyState >= 1) { // HAVE_METADATA
+            requestAnimationFrame(() => {
+                setTimeout(runUIUpdates, 50); // 极小延迟确保 DOM 尺寸布局渲染完毕
+            });
+        } else {
+            this.playerCore.targetVideo.addEventListener('loadedmetadata', runUIUpdates, { once: true });
+        }
         
         this.initialized = true;
         console.log('[CustomVideoPlayer] 初始化完成');
@@ -171,6 +193,12 @@ export class CustomVideoPlayer {
      * 关闭播放器
      */
     close() {
+        // 恢复网页浏览器滚动条
+        if (this._scrollbarStyle) {
+            this._scrollbarStyle.remove();
+            this._scrollbarStyle = null;
+        }
+
         // 调用PlayerCore的close方法
         this.playerCore.close(
             this.managers.uiManager.overlay, 

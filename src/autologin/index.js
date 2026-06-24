@@ -3,16 +3,20 @@
  * 支持多个网站的自动登录功能
  */
 import { LoginManager } from './LoginManager.js';
-import { LoginUtils } from './utils.js';
-import { I18n } from './i18n.js';
+import { BaseLoginProvider } from './BaseLoginProvider.js';
 import { MissavLoginProvider } from './MissavLoginProvider.js';
+import { JableLoginProvider } from './JableLoginProvider.js';
+import { CredentialManager } from './CredentialManager.js';
+import { CrossDomainBridge } from './CrossDomainBridge.js';
 
-// 导出所有模块，方便其他模块使用
+// 导出所有模块，方便外部调用或定制扩展
 export {
     LoginManager,
-    LoginUtils,
-    I18n,
-    MissavLoginProvider
+    BaseLoginProvider,
+    MissavLoginProvider,
+    JableLoginProvider,
+    CredentialManager,
+    CrossDomainBridge
 };
 
 /**
@@ -21,7 +25,6 @@ export {
  */
 export async function initAutoLogin() {
     try {
-        // 创建并初始化登录管理器
         const loginManager = new LoginManager();
         await loginManager.init();
         return loginManager;
@@ -29,4 +32,4 @@ export async function initAutoLogin() {
         console.error('自动登录模块初始化失败:', error);
         return null;
     }
-} 
+}

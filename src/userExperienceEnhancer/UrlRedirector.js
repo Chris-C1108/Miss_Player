@@ -3,19 +3,26 @@
  * 负责将特定域名重定向到目标域名
  */
 
+import { SITE_DOMAINS } from '../constants/domains.js';
+
 /**
  * URL重定向器类
  */
 export class UrlRedirector {
     constructor() {
-        // 配置重定向规则
-        this.redirectRules = [
-            {   
-                // 匹配missav.com和thisav.com和 missav.ws 和 missav123.com 和 missav.live
-                pattern: /^https?:\/\/(www\.)?(missav|thisav|missav123)\.com\/?|^https?:\/\/(www\.)?missav\.ws\/?|^https?:\/\/(www\.)?missav\.live\/?/i,
-                targetDomain: 'missav.ai'
-            }
-        ];
+        const missavPrimary = SITE_DOMAINS.MISSAV.primary;
+        const missavBackups = SITE_DOMAINS.MISSAV.backups;
+
+        // 动态构建重定向规则
+        this.redirectRules = [];
+        for (const backup of missavBackups) {
+            const escaped = backup.replace(/\./g, '\\.');
+            this.redirectRules.push({
+                pattern: new RegExp(`^https?:\\/\\/(www\\.)?${escaped}\\/?`, 'i'),
+                targetDomain: missavPrimary,
+                backupDomain: backup
+            });
+        }
         
         // 立即执行重定向检查
         this.immediateRedirect();
@@ -63,27 +70,11 @@ export class UrlRedirector {
      * @returns {string} 重定向后的URL
      */
     applyRedirect(url, rule) {
-        // 替换域名部分
-        if (rule.targetDomain) {
-            // 处理各种域名情况
-            let newUrl = url;
-            
-            // 处理.com域名
-            newUrl = newUrl.replace(/^(https?:\/\/)(www\.)?(missav|thisav|missav123)\.com\/?/i, `$1${rule.targetDomain}/`);
-            
-            // 如果URL未变化，则尝试替换.ws域名
-            if (newUrl === url) {
-                newUrl = url.replace(/^(https?:\/\/)(www\.)?missav\.ws\/?/i, `$1${rule.targetDomain}/`);
-            }
-            
-            // 如果URL还未变化，则尝试替换.live域名
-            if (newUrl === url) {
-                newUrl = url.replace(/^(https?:\/\/)(www\.)?missav\.live\/?/i, `$1${rule.targetDomain}/`);
-            }
-            
-            return newUrl;
+        if (rule.targetDomain && rule.backupDomain) {
+            const escaped = rule.backupDomain.replace(/\./g, '\\.');
+            const regex = new RegExp(`^(https?:\\/\\/)(www\\.)?${escaped}\\/?`, 'i');
+            return url.replace(regex, `$1${rule.targetDomain}/`);
         }
-        
         return url;
     }
 } 

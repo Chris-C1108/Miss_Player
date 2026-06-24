@@ -1,9 +1,10 @@
 /**
  * UI管理器类 - 负责创建和管理播放器UI元素
  */
-import { DOMUtils } from '../../utils/DOMUtils.js';
+import { delegateEvent } from '../../utils/index.js';
 import { performanceMonitor } from '../../utils/PerformanceMonitor.js';
 import { animationTimer } from '../../utils/AnimationTimer.js';
+import { LAYOUT_LEFT, LAYOUT_RIGHT, COMMENTS_SHOW, COMMENTS_HIDE } from '../../constants/icons.js';
 
 export class UIManager {
     constructor(playerCore) {
@@ -22,6 +23,14 @@ export class UIManager {
         this.settingsBtn = null;         // 设置按钮
         this.settingsPanel = null;       // 设置面板
         this.buttonContainer = null;     // 按钮容器
+        this.titleEl = null;             // 播放器顶部标题
+        this.sidebarPosBtn = null;       // 侧栏位置切换按钮
+        this.sidebarToggleBtn = null;    // 侧栏显示隐藏按钮
+        
+        // 侧边栏布局状态
+        const state = this.playerCore.options.playerState;
+        this.isSidebarHidden = state ? state.getValue('sidebarHidden', false) : false;
+        this.sidebarPosition = state ? state.getValue('sidebarPosition', 'right') : 'right';
         
         // 窗口和安全区
         this.safeArea = { top: 44, bottom: 34 };  // 默认安全区域值
@@ -33,9 +42,17 @@ export class UIManager {
         this.controlsVisible = true;
         this.controlsHideTimerId = null; // 使用ID代替timeout引用
         this.isMouseOverControls = false; // 鼠标是否在控制面板上
+        this.isCustomResized = false;     // 是否手动调整过高度
         
         // 导入样式
         this.loadStyles();
+    }
+
+    /**
+     * 判断当前是否为悬浮控制面板模式（PC横屏或iPad竖屏及以上）
+     */
+    get isFloatingControlPanel() {
+        return window.innerWidth >= 480;
     }
 
     /**
@@ -66,8 +83,14 @@ export class UIManager {
         // 创建关闭按钮
         this.createCloseButton();
 
+        // 创建顶部标题
+        this.createTitle();
+
         // 创建设置按钮
         this.createSettingsButton();
+        
+        // 创建侧边栏控制按钮
+        this.createSidebarControls();
         
         // 创建按钮容器
         this.createButtonContainer();
@@ -88,6 +111,9 @@ export class UIManager {
             handleContainer: this.handleContainer,
             handle: this.handle,
             closeBtn: this.closeBtn,
+            titleEl: this.titleEl,
+            sidebarPosBtn: this.sidebarPosBtn,
+            sidebarToggleBtn: this.sidebarToggleBtn,
             settingsBtn: this.settingsBtn,
             settingsPanel: this.settingsPanel,
             buttonContainer: this.buttonContainer
@@ -127,6 +153,15 @@ export class UIManager {
     createPlayerContainer() {
         this.playerContainer = document.createElement('div');
         this.playerContainer.className = 'tm-player-container';
+        
+        // 应用初始侧边栏状态类名
+        if (this.isSidebarHidden) {
+            this.playerContainer.classList.add('tm-sidebar-hidden');
+        }
+        if (this.sidebarPosition === 'left') {
+            this.playerContainer.classList.add('tm-sidebar-left');
+        }
+        
         console.log('[UIManager] Player container created:', this.playerContainer);
     }
 
@@ -157,6 +192,9 @@ export class UIManager {
         let longPressTimer = null;
         let isLongPress = false;
         let originalPlaybackRate = 1.0;
+        this.isLongPress = false; // 挂载到实例上，暴露给外部模块如 VideoSwipeManager
+        this.longPressStartX = 0;
+        this.longPressStartY = 0;
         
         // 鼠标/触摸按下事件 - 开始检测长按
         const handlePointerDown = (e) => {
@@ -173,11 +211,19 @@ export class UIManager {
             // 记录原始播放速度
             originalPlaybackRate = this.playerCore.targetVideo.playbackRate;
             isLongPress = false;
+            this.isLongPress = false;
+            
+            // 记录初始触摸/指针位置
+            const touch = e.type.includes('touch');
+            const touchObj = touch && e.touches ? e.touches[0] : null;
+            this.longPressStartX = touchObj ? touchObj.clientX : e.clientX;
+            this.longPressStartY = touchObj ? touchObj.clientY : e.clientY;
             
             // 设置长按定时器 (3秒)
             longPressTimer = setTimeout(() => {
                 // 触发长按事件
                 isLongPress = true;
+                this.isLongPress = true;
                 // 保存当前播放速度
                 originalPlaybackRate = this.playerCore.targetVideo.playbackRate;
                 // 设置为3倍速
@@ -212,6 +258,28 @@ export class UIManager {
             }, 800); // 800ms的长按时间，减少等待感
         };
         
+        // 指针/触摸移动事件 - 解决与拖拽/滑动的冲突
+        const handlePointerMove = (e) => {
+            if (longPressTimer && !isLongPress) {
+                const touch = e.type.includes('touch');
+                const touchObj = touch && e.touches ? e.touches[0] : null;
+                if (touch && !touchObj) return;
+                
+                const currentX = touchObj ? touchObj.clientX : e.clientX;
+                const currentY = touchObj ? touchObj.clientY : e.clientY;
+                
+                const deltaX = currentX - this.longPressStartX;
+                const deltaY = currentY - this.longPressStartY;
+                const dist = Math.hypot(deltaX, deltaY);
+                
+                if (dist > 10) {
+                    // 滑动距离大于 10px，取消长按 3 倍速检测，防止与左右拖拽/向下滑动冲突
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }
+        };
+
         // 鼠标/触摸释放事件 - 结束长按
         const handlePointerUp = (e) => {
             // 清除长按定时器
@@ -235,6 +303,7 @@ export class UIManager {
                 e.preventDefault();
                 e.stopPropagation();
                 isLongPress = false;
+                this.isLongPress = false;
                 return;
             }
         };
@@ -258,23 +327,32 @@ export class UIManager {
                 }
                 
                 isLongPress = false;
+                this.isLongPress = false;
             }
         };
         
         // 添加鼠标事件监听
         this.videoWrapper.addEventListener('mousedown', handlePointerDown);
         this.videoWrapper.addEventListener('mouseup', handlePointerUp);
+        this.videoWrapper.addEventListener('mousemove', handlePointerMove);
         this.videoWrapper.addEventListener('mouseleave', handlePointerLeave);
         
         // 添加触摸事件监听
         this.videoWrapper.addEventListener('touchstart', handlePointerDown, { passive: true });
         this.videoWrapper.addEventListener('touchend', handlePointerUp);
+        this.videoWrapper.addEventListener('touchmove', handlePointerMove, { passive: true });
         this.videoWrapper.addEventListener('touchcancel', handlePointerLeave);
         
         // 添加点击事件用于显示/隐藏控制界面（横竖屏均有效）
         this.videoWrapper.addEventListener('click', (e) => {
             // 如果是长按触发的，不执行点击操作
             if (isLongPress) {
+                return;
+            }
+            
+            // 检查是否刚完成拖动/左右滑动操作，如果是则不触发暂停/播放或控制栏切换
+            if (this.playerCore.swipeManager && typeof this.playerCore.swipeManager.wasRecentlyDragging === 'function' 
+                && this.playerCore.swipeManager.wasRecentlyDragging()) {
                 return;
             }
             
@@ -301,20 +379,17 @@ export class UIManager {
                 }
             };
             
-            if (this.isLandscape) {
-                // 横屏模式下，如果控制界面当前是隐藏状态，则只显示控制界面而不触发暂停
-                if (!this.controlsVisible) {
-                    this.showControls();
+            // 如果控制界面当前是隐藏状态，则只显示控制界面而不触发暂停（横竖屏一致）
+            if (!this.controlsVisible) {
+                this.showControls();
+                if (this.isLandscape) {
                     this.autoHideControls();
-                    return;
                 }
-                
-                // 横屏模式下，如果控制界面已显示，则切换播放/暂停状态
-                togglePlayPause();
-            } else {
-                // 竖屏模式下，直接触发暂停/播放功能
-                togglePlayPause();
+                return;
             }
+            
+            // 如果控制界面已显示，则切换播放/暂停状态
+            togglePlayPause();
         });
     }
 
@@ -448,6 +523,214 @@ export class UIManager {
             this.settingsBtn.style.transform = 'rotate(0deg)';
         });
     }
+
+    /**
+     * 获取视频标题
+     */
+    getVideoTitle() {
+        // 尝试从 Jable.tv 的 h4 获取标题
+        const h4 = document.querySelector('h4');
+        if (h4 && h4.textContent) {
+            return h4.textContent.trim();
+        }
+        
+        // 尝试从 h1 获取
+        const h1 = document.querySelector('h1');
+        if (h1 && h1.textContent) {
+            return h1.textContent.trim();
+        }
+        
+        // 兜底使用页面 document.title 并且清洗掉后缀
+        let title = document.title || '';
+        title = title.replace(/\s*-\s*Jable\.tv.*$/i, '');
+        title = title.replace(/\s*-\s*JAVLibrary.*$/i, '');
+        return title.trim();
+    }
+
+    /**
+     * 创建播放器顶部标题
+     */
+    createTitle() {
+        this.titleEl = document.createElement('span');
+        this.titleEl.className = 'tm-player-title';
+        this.titleEl.textContent = this.getVideoTitle();
+    }
+    
+    /**
+     * 创建侧边栏控制按钮
+     */
+    createSidebarControls() {
+        // 1. 位置切换按钮
+        this.sidebarPosBtn = document.createElement('button');
+        this.sidebarPosBtn.className = 'tm-sidebar-pos-button tm-control-button-base';
+        this.sidebarPosBtn.style.display = 'flex';
+        this.updateSidebarPosButtonIcon();
+        this.sidebarPosBtn.title = this.sidebarPosition === 'right' ? '切换侧边栏到左侧' : '切换侧边栏到右侧';
+
+        this.sidebarPosBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleSidebarPosition();
+        });
+
+        // 2. 显示/隐藏切换按钮
+        this.sidebarToggleBtn = document.createElement('button');
+        this.sidebarToggleBtn.className = 'tm-sidebar-toggle-button tm-control-button-base';
+        this.sidebarToggleBtn.style.display = 'flex';
+        this.updateSidebarToggleButtonIcon();
+        this.sidebarToggleBtn.title = this.isSidebarHidden ? '显示评论区' : '隐藏评论区';
+
+        this.sidebarToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleSidebarVisibility();
+        });
+    }
+
+    /**
+     * 更新侧栏位置按钮的图标
+     */
+    updateSidebarPosButtonIcon() {
+        if (!this.sidebarPosBtn) return;
+        this.sidebarPosBtn.innerHTML = this.sidebarPosition === 'right' ? LAYOUT_LEFT : LAYOUT_RIGHT;
+    }
+
+    /**
+     * 更新侧栏隐藏按钮的图标
+     */
+    updateSidebarToggleButtonIcon() {
+        if (!this.sidebarToggleBtn) return;
+        this.sidebarToggleBtn.innerHTML = this.isSidebarHidden ? COMMENTS_SHOW : COMMENTS_HIDE;
+    }
+
+    /**
+     * 切换侧栏位置 (Left/Right)
+     */
+    toggleSidebarPosition() {
+        this.sidebarPosition = this.sidebarPosition === 'right' ? 'left' : 'right';
+        
+        // 更新容器类名
+        if (this.sidebarPosition === 'left') {
+            this.playerContainer.classList.add('tm-sidebar-left');
+        } else {
+            this.playerContainer.classList.remove('tm-sidebar-left');
+        }
+        
+        // 更新图标与 title
+        this.updateSidebarPosButtonIcon();
+        this.sidebarPosBtn.title = this.sidebarPosition === 'right' ? '切换侧边栏到左侧' : '切换侧边栏到右侧';
+        
+        // 保存状态
+        const state = this.playerCore.options.playerState;
+        if (state) {
+            state.updateSetting('sidebarPosition', this.sidebarPosition);
+        }
+
+        // 如果当前控制面板是吸附停靠状态，则自动变换吸附锚点（TL <-> TR, BL <-> BR），携带其一同切换
+        const dragManager = this.playerCore.dragManager;
+        if (dragManager) {
+            const saved = localStorage.getItem('tm-control-panel-pos');
+            if (saved) {
+                try {
+                    const savedData = JSON.parse(saved);
+                    if (savedData.didSnap && savedData.anchorName) {
+                        let newAnchor = savedData.anchorName;
+                        if (this.sidebarPosition === 'left') {
+                            if (newAnchor === 'TR') newAnchor = 'TL';
+                            if (newAnchor === 'BR') newAnchor = 'BL';
+                        } else {
+                            if (newAnchor === 'TL') newAnchor = 'TR';
+                            if (newAnchor === 'BL') newAnchor = 'BR';
+                        }
+                        
+                        if (newAnchor !== savedData.anchorName) {
+                            savedData.anchorName = newAnchor;
+                            localStorage.setItem('tm-control-panel-pos', JSON.stringify(savedData));
+                            dragManager.restoreControlPanelPosition();
+                        }
+                    }
+                } catch (e) {
+                    console.error('[UIManager] 切换侧栏位置连动控制面板吸附出错:', e);
+                }
+            }
+        }
+        
+        console.log('[UIManager] 切换侧栏位置:', this.sidebarPosition);
+    }
+
+    /**
+     * 切换侧栏显示/隐藏
+     */
+    toggleSidebarVisibility() {
+        this.isSidebarHidden = !this.isSidebarHidden;
+        
+        // 更新容器类名
+        if (this.isSidebarHidden) {
+            this.playerContainer.classList.add('tm-sidebar-hidden');
+            // 隐藏评论区时，如果之前是吸附状态，需要清理吸附高度排版影响
+            this.playerContainer.classList.remove('tm-controls-docked-tr', 'tm-controls-docked-br');
+            this.playerContainer.style.removeProperty('--docked-controls-height');
+            
+            // 图标与 title 更新
+            this.updateSidebarToggleButtonIcon();
+            this.sidebarToggleBtn.title = '显示评论区';
+            
+            // 连动：开启 3 秒自动隐藏控制面板计时器
+            this.autoHideControls();
+        } else {
+            this.playerContainer.classList.remove('tm-sidebar-hidden');
+            
+            // 图标与 title 更新
+            this.updateSidebarToggleButtonIcon();
+            this.sidebarToggleBtn.title = '隐藏评论区';
+            
+            // 连动：强制显示控制栏 (阻止自动隐藏)
+            this.showControls();
+            
+            // 连动：重新应用吸附排版状态
+            if (this.playerCore.dragManager) {
+                this.playerCore.dragManager.reapplyDockedState();
+            }
+        }
+        
+        // 动态调换按钮容器的挂载父节点，确保隐藏侧栏后按钮依然可用
+        this.updateButtonContainerParent();
+        
+        // 保存状态
+        const state = this.playerCore.options.playerState;
+        if (state) {
+            state.updateSetting('sidebarHidden', this.isSidebarHidden);
+        }
+        
+        console.log('[UIManager] 切换侧栏显示状态:', this.isSidebarHidden ? '隐藏' : '显示');
+    }
+
+    /**
+     * 动态调换按钮容器的挂载父节点，确保隐藏侧栏后按钮依然可见并可被点击
+     */
+    updateButtonContainerParent() {
+        if (!this.buttonContainer) return;
+        const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+        const commentsPanelEl = commentPanel && commentPanel.commentsPanel;
+        
+        // 我们在 PC 横屏分栏模式，且评论区未隐藏时，才将按钮栏放入评论区顶部以满足布局需要
+        const isPcLandscape = this.isLandscape && window.innerWidth >= 930;
+        
+        if (commentsPanelEl && isPcLandscape && !this.isSidebarHidden) {
+            if (this.buttonContainer.parentNode !== commentsPanelEl) {
+                commentsPanelEl.insertBefore(this.buttonContainer, commentsPanelEl.firstChild);
+                console.log('[UIManager] 按钮容器挂载到评论区顶部');
+            }
+        } else {
+            if (this.buttonContainer.parentNode !== this.playerContainer) {
+                // 挂载到 playerContainer 上，并确保在 commentsPanel 之前
+                if (commentsPanelEl && commentsPanelEl.parentNode === this.playerContainer) {
+                    this.playerContainer.insertBefore(this.buttonContainer, commentsPanelEl);
+                } else {
+                    this.playerContainer.appendChild(this.buttonContainer);
+                }
+                console.log('[UIManager] 按钮容器挂载到主容器');
+            }
+        }
+    }
     
     /**
      * 创建设置面板
@@ -477,17 +760,32 @@ export class UIManager {
         // 检测当前屏幕方向
         this.checkOrientation();
         
+        // 定义强制布局更新辅助函数，确保任何方向/大小变化时 UI 不错位
+        const triggerLayoutUpdate = () => {
+            this.checkOrientation();
+            // 无论 orientation 状态是否改变，都强制刷新关键布局和高度，防止 iOS Safari 延迟获取尺寸导致布局失效
+            this.updateContainerMinHeight();
+            this.updateVideoAspectRatio();
+            if (this.playerCore.progressManager) {
+                this.playerCore.progressManager.updateProgressBar();
+                this.playerCore.progressManager.updateCurrentTimeDisplay();
+            }
+            this.updateButtonContainerParent();
+        };
+        
         // 添加屏幕方向变化监听
         window.addEventListener('orientationchange', () => {
-            // 等待方向变化完成后再判断屏幕方向
-            setTimeout(() => {
-                this.checkOrientation();
-            }, 300);
+            // 在旋转过程中和完成后多次触发，确保能捕获到 iOS Safari 最终稳定的尺寸
+            setTimeout(triggerLayoutUpdate, 100);
+            setTimeout(triggerLayoutUpdate, 300);
+            setTimeout(triggerLayoutUpdate, 600);
         });
         
         // 添加窗口大小变化监听（用于桌面端模拟和某些不支持orientationchange的设备）
         window.addEventListener('resize', () => {
-            this.checkOrientation();
+            triggerLayoutUpdate();
+            // resize 时也进行一次延迟更新，以防尺寸未就绪
+            setTimeout(triggerLayoutUpdate, 150);
         });
     }
     
@@ -504,32 +802,41 @@ export class UIManager {
         performanceMonitor.startMeasure('setupEvents');
         
         // 使用事件委托处理鼠标移动和触摸移动
-        this.overlay.addEventListener('mousemove', () => {
+        // 使用事件委托处理鼠标移动和触摸移动，绑定到整个 playerContainer 以支持隐藏侧栏或竖屏模式下的控制恢复
+        this.playerContainer.addEventListener('mousemove', (e) => {
+            if (e && e.target && e.target.closest && e.target.closest('.tm-comments-panel')) {
+                return;
+            }
+            this.showControls();
             if (this.isLandscape) {
-                this.showControls();
                 this.autoHideControls();
             }
         });
         
-        this.overlay.addEventListener('touchmove', () => {
+        this.playerContainer.addEventListener('touchmove', (e) => {
+            if (e && e.target && e.target.closest && e.target.closest('.tm-comments-panel')) {
+                return;
+            }
+            this.showControls();
             if (this.isLandscape) {
-                this.showControls();
                 this.autoHideControls();
             }
         }, { passive: true });
         
         // 使用事件委托处理触摸事件
-        this.overlay.addEventListener('touchstart', (e) => {
-            if (this.isLandscape && e.target.closest('.tm-control-button, .tm-time-control-button, .tm-close-button')) {
+        this.playerContainer.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.tm-control-button, .tm-time-control-button, .tm-close-button, .tm-settings-button, .tm-sidebar-toggle-button')) {
                 // 触摸控制按钮时重置自动隐藏计时器
                 this.showControls();
-                this.autoHideControls();
+                if (this.isLandscape) {
+                    this.autoHideControls();
+                }
                 e.stopPropagation(); // 阻止冒泡到视频包装器
             }
         }, { passive: false });
         
         // 使用事件委托处理mouseenter事件
-        DOMUtils.delegateEvent(this.playerContainer, 'mouseenter', '.tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
+        delegateEvent(this.playerContainer, 'mouseenter', '.tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
             this.isMouseOverControls = true;
             if (this.controlsHideTimerId) {
                 animationTimer.clearTimeout(this.controlsHideTimerId);
@@ -538,7 +845,7 @@ export class UIManager {
         });
         
         // 使用事件委托处理mouseleave事件
-        DOMUtils.delegateEvent(this.playerContainer, 'mouseleave', '.tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
+        delegateEvent(this.playerContainer, 'mouseleave', '.tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
             this.isMouseOverControls = false;
             if (this.isLandscape) {
                 this.autoHideControls();
@@ -570,17 +877,23 @@ export class UIManager {
     handleOrientationChange() {
         console.log('[UIManager] 屏幕方向变化:', this.isLandscape ? '横屏' : '竖屏');
         
+        // 屏幕方向变化时，重置用户手动调整的大小标记，以允许根据新方向自适应尺寸
+        this.isCustomResized = false;
+        
         // 方向变化时更新容器最小高度
         this.updateContainerMinHeight();
         
         // 更新视频比例相关样式
         this.updateVideoAspectRatio();
         
+        // 如果存在进度管理器，通知其刷新UI
+        if (this.playerCore.progressManager) {
+            this.playerCore.progressManager.updateProgressBar();
+            this.playerCore.progressManager.updateCurrentTimeDisplay();
+        }
+        
         // 如果存在控制管理器，通知其刷新UI
         if (this.playerCore.controlManager) {
-            this.playerCore.controlManager.updateProgressBar();
-            this.playerCore.controlManager.updateCurrentTimeDisplay();
-            
             // 更新控制面板显示
             this.updateControlPanelVisibility();
         }
@@ -590,10 +903,14 @@ export class UIManager {
             this.handleContainer.style.display = this.isLandscape ? 'none' : 'flex';
         }
         
-        // 横屏模式下自动显示控制界面，并设置定时隐藏
+        // 横屏模式下自动隐藏控制界面（如果宽度在930px以下），或显示并定时隐藏（930px以上）
         if (this.isLandscape) {
-            this.showControls();
-            this.autoHideControls();
+            if (window.innerWidth < 930) {
+                this.hideControls(true);
+            } else {
+                this.showControls();
+                this.autoHideControls();
+            }
         } else {
             // 竖屏模式下始终显示控制界面
             this.showControls();
@@ -603,6 +920,9 @@ export class UIManager {
                 this.controlsHideTimerId = null;
             }
         }
+        
+        // 屏幕方向改变时同步调整按钮栏的挂载位置
+        this.updateButtonContainerParent();
     }
     
     /**
@@ -629,9 +949,6 @@ export class UIManager {
             
             if (seekControlRow) {
                 seekControlRow.style.display = 'flex';
-                seekControlRow.style.justifyContent = 'center';
-                seekControlRow.style.alignItems = 'center';
-                seekControlRow.style.gap = '20px';
                 seekControlRow.style.backgroundColor = 'transparent';
             }
             
@@ -651,26 +968,11 @@ export class UIManager {
                 this.settingsBtn.style.backgroundColor = 'hsla(var(--shadcn-secondary) / 0.3)';
                 this.settingsBtn.style.backdropFilter = 'blur(4px)';
             }
-            
-            // 调整快退快进按钮组的布局
-            const rewindGroup = controlButtons.querySelector('.tm-rewind-group');
-            const forwardGroup = controlButtons.querySelector('.tm-forward-group');
-            if (rewindGroup) {
-                rewindGroup.style.width = 'auto';
-                rewindGroup.style.flex = '0 1 auto';
-            }
-            if (forwardGroup) {
-                forwardGroup.style.width = 'auto';
-                forwardGroup.style.flex = '0 1 auto';
-            }
         } else {
             // 竖屏模式下恢复默认显示
             if (progressRow) progressRow.style.display = '';
             if (seekControlRow) {
                 seekControlRow.style.display = '';
-                seekControlRow.style.justifyContent = '';
-                seekControlRow.style.alignItems = '';
-                seekControlRow.style.gap = '';
             }
             if (loopControlRow) loopControlRow.style.display = '';
             if (playbackControlRow) playbackControlRow.style.display = '';
@@ -680,18 +982,6 @@ export class UIManager {
                 this.settingsBtn.style.display = '';
                 this.settingsBtn.style.backgroundColor = '';
                 this.settingsBtn.style.backdropFilter = '';
-            }
-            
-            // 恢复快退快进按钮组的布局
-            const rewindGroup = controlButtons.querySelector('.tm-rewind-group');
-            const forwardGroup = controlButtons.querySelector('.tm-forward-group');
-            if (rewindGroup) {
-                rewindGroup.style.width = '';
-                rewindGroup.style.flex = '';
-            }
-            if (forwardGroup) {
-                forwardGroup.style.width = '';
-                forwardGroup.style.flex = '';
             }
         }
     }
@@ -739,9 +1029,16 @@ export class UIManager {
     
     /**
      * 隐藏控制界面
+     * @param {boolean} force - 是否强制隐藏 (绕过横屏/评论区显示状态判断)
      */
-    hideControls() {
-        if (!this.overlay || !this.isLandscape) return;
+    hideControls(force = false) {
+        if (!this.overlay) return;
+        if (!this.isLandscape && !force) return;
+        
+        // 如果评论区显示且不是强制隐藏，则不隐藏控制面板
+        if (!this.isSidebarHidden && !force) {
+            return;
+        }
         
         this.overlay.classList.add('controls-hidden');
         document.body.classList.add('controls-hidden');
@@ -770,6 +1067,12 @@ export class UIManager {
         
         // 只在横屏模式下设置自动隐藏
         if (!this.isLandscape) {
+            performanceMonitor.endMeasure('autoHideControls');
+            return;
+        }
+        
+        // 如果评论区处于显示状态，不设置自动隐藏
+        if (!this.isSidebarHidden) {
             performanceMonitor.endMeasure('autoHideControls');
             return;
         }
@@ -809,12 +1112,20 @@ export class UIManager {
         const videoWidth = this.targetVideo.videoWidth || this.targetVideo.naturalWidth;
         const videoHeight = this.targetVideo.videoHeight || this.targetVideo.naturalHeight;
         
+        let minHeight = window.innerWidth * (9/16); // 默认16:9比例
         if (videoWidth && videoHeight) {
-            // 使用视频原始比例计算最小高度
-            const minHeight = window.innerWidth * (videoHeight / videoWidth);
-            this.container.style.minHeight = `${minHeight}px`;
-            console.log('[UIManager] 更新容器最小高度:', minHeight);
+            minHeight = window.innerWidth * (videoHeight / videoWidth);
         }
+        
+        this.container.style.minHeight = `${minHeight}px`;
+        
+        if (!this.isCustomResized) {
+            const defaultHeight = window.innerWidth * (4/5);
+            this.container.style.height = `${defaultHeight}px`;
+            console.log('[UIManager] 自动更新容器高度为默认比例高度:', defaultHeight);
+        }
+        
+        console.log('[UIManager] 更新容器高度和最小高度:', this.container.style.height, minHeight);
     }
 
     /**
@@ -824,18 +1135,33 @@ export class UIManager {
         // 确保先将视频包装器添加到容器
         this.container.appendChild(this.videoWrapper);
         
-        // 将关闭按钮和设置按钮添加到按钮容器
-        this.buttonContainer.appendChild(this.closeBtn);
-        this.buttonContainer.appendChild(this.settingsBtn);
+        // 将标题加到播放器容器中 (居中置顶，防止在竖屏下被视频遮挡)
+        if (this.titleEl) {
+            this.playerContainer.appendChild(this.titleEl);
+        }
         
-        // 将按钮容器添加到播放器容器
-        this.playerContainer.appendChild(this.buttonContainer);
+        // 将控制/侧栏按钮组装到按钮容器中 (除了标题)
+        this.buttonContainer.appendChild(this.closeBtn);
+        if (this.sidebarPosBtn) {
+            this.buttonContainer.appendChild(this.sidebarPosBtn);
+        }
+        if (this.sidebarToggleBtn) {
+            this.buttonContainer.appendChild(this.sidebarToggleBtn);
+        }
+        this.buttonContainer.appendChild(this.settingsBtn);
         
         // 将容器添加到播放器容器
         this.playerContainer.appendChild(this.container);
         
         // 将手柄容器添加到播放器容器
         this.playerContainer.appendChild(this.handleContainer);
+        
+        // 将评论区挂载到播放器容器，并动态挂载按钮容器到正确的位置
+        const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+        if (commentPanel && commentPanel.commentsPanel) {
+            this.playerContainer.appendChild(commentPanel.commentsPanel);
+        }
+        this.updateButtonContainerParent();
         
         // 添加设置面板到播放器容器
         this.playerContainer.appendChild(this.settingsPanel);

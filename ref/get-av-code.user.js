@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         AV番号提取器
+// @name         CODE提取器
 // @namespace    http://tampermonkey.net/
 // @version      0.1
 // @description  从missav.ws和jable.tv网站解析当前页面的AV番号

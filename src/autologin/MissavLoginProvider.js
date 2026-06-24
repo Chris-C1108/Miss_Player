@@ -1,51 +1,75 @@
 /**
- * MissAV网站登录提供程序
+ * MissAV 网站登录提供程序
  */
-import { LoginUtils } from './utils.js';
-import { I18n } from './i18n.js';
+import { BaseLoginProvider } from './BaseLoginProvider.js';
+import { getSiteDomains } from '../constants/domains.js';
+import { Toast } from '../utils/index.js';
+import { __ } from '../constants/i18n.js';
 
-export class MissavLoginProvider {
-    /**
-     * 构造函数
-     */
+/**
+ * 获取 Cookie
+ * @param {string} name - Cookie 键名
+ * @returns {string|null} Cookie 值
+ */
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+        return decodeURIComponent(parts.pop().split(';').shift());
+    }
+    return null;
+}
+
+export class MissavLoginProvider extends BaseLoginProvider {
     constructor() {
-        // 域名列表 - 支持多个平行域名
-        this.domains = [
-            'missav.ws',
-            'missav.ai',
-            'missav.com',
-            'thisav.com'
-        ];
+        super({
+            siteKey: 'MISSAV',
+            domains: getSiteDomains('MISSAV'),
+            selectors: {
+                loginForm: 'form[x-show="currentPage === \'login\'"]',
+                usernameInput: 'input[id="login_email"]',
+                passwordInput: 'input[id="login_password"]',
+                submitBtn: 'button[type="submit"]',
+                avatar: '.relative.ml-3 img.h-8.w-8.rounded-full',
+                userMenu: '[x-data="{userDropdownOpen: false}"]',
+                loginBtn: 'button[x-on\\:click="currentPage = \'login\'"]'
+            },
+            apis: {
+                checkStatus: '/api/actresses/1016525/view',
+                login: '/api/login'
+            }
+        });
     }
 
     /**
-     * 检查当前网站是否由本提供程序支持
-     * @returns {boolean} 是否支持当前网站
+     * 实现 MissAV 的具体登录行为
      */
-    isSupportedSite() {
-        const currentDomain = window.location.hostname;
-        return this.domains.some(domain => currentDomain.includes(domain));
-    }
-
-    /**
-     * 登录处理函数
-     * @param {string} email - 用户邮箱
-     * @param {string} password - 用户密码
-     * @returns {Promise<boolean>} 登录是否成功
-     */
-    async login(email, password) {
+    async login(email, password, options = {}) {
+        const { reload = true, silent = false } = options;
         if (!email || !password) {
-            LoginUtils.toast(I18n.translate('accountNull'), 2000, '#FF0000', '#ffffff', 'top');
+            if (!silent) Toast(__('login_accountNull') || '账号和密码不能为空', 2000, 'error');
             return false;
         }
-        
+
         try {
-            // 使用MissAV的登录API
-            const response = await fetch('https://missav.ws/cn/api/login', {
+            // 获取 XSRF-TOKEN Cookie 用于跨域 CSRF 验证
+            const xsrfCookie = getCookie('XSRF-TOKEN');
+            const activeOrigin = this.getMissavOrigin();
+            const apiUrl = `${activeOrigin}/api/login`;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json, text/plain, */*'
+            };
+
+            if (xsrfCookie) {
+                headers['x-xsrf-token'] = xsrfCookie;
+            }
+
+            // 使用基类的统一请求方法 (处理同源 fetch 和跨域 GM)
+            const response = await this._request(apiUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers,
                 body: JSON.stringify({
                     email: email,
                     password: password,
@@ -55,184 +79,57 @@ export class MissavLoginProvider {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('登录错误:', {
+                console.error('[MissavLoginProvider] 登录返回错误:', {
                     status: response.status,
                     statusText: response.statusText,
                     responseText: errorText
                 });
-                LoginUtils.toast(`登录失败: ${errorText}`, 2000, '#FF0000', '#ffffff', 'top');
-                throw new Error(I18n.translate('networkFailed'));
+                if (!silent) Toast(`登录失败: ${errorText}`, 2000, 'error');
+                throw new Error(__('login_networkFailed') || '网络请求失败');
             }
 
-            // 处理响应
-            let data;
-            if (response.headers.get('Content-Type')?.includes('application/json')) {
-                data = await response.json();
-            } else {
-                const text = await response.text();
-                console.error(I18n.translate('loginFailed'), {
-                    status: response.status,
-                    statusText: response.statusText,
-                    responseText: text
-                });
-                LoginUtils.toast(I18n.translate('loginFailed'), 2000, '#FF0000', '#ffffff', 'top');
-                throw new Error(I18n.translate('loginFailed'));
+            const data = await response.json();
+            console.log('[MissavLoginProvider] 登录成功:', data);
+            if (!silent) Toast(__('login_success') || '登录成功', 2000, 'success');
+
+            if (reload) {
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
             }
 
-            console.log('登录成功:', data);
-            LoginUtils.toast(I18n.translate('loginSuccess'), 2000, 'rgb(18, 187, 2)', '#ffffff', 'top');
-            
-            // 登录成功后刷新页面
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-            
             return true;
         } catch (error) {
-            LoginUtils.toast(`错误发生: ${error.message}`, 2000, '#FF0000', '#ffffff', 'top');
+            if (!silent) Toast(`错误发生: ${error.message}`, 2000, 'error');
             return false;
         }
     }
 
     /**
-     * 检查登录状态
-     * @returns {Promise<boolean>} 是否已登录
+     * 辅助获取 Missav 活动源域名 (向下兼容原本实现)
      */
-    async checkLoginStatus() {
-        try {
-            // 尝试使用API检测登录状态
-            const isLoggedIn = await this.checkLoginByAPI();
-            if (isLoggedIn !== null) {
-                return isLoggedIn;
-            }
-            
-            // API检测失败时，尝试DOM检测
-            return this.checkLoginByDOM();
-        } catch (error) {
-            console.error('检查登录状态时出错:', error);
-            return false;
-        }
+    getMissavOrigin() {
+        return this.getActiveDomain();
     }
-    
+
     /**
-     * 使用API检测登录状态
-     * @returns {Promise<boolean|null>} 登录状态或null(检测失败)
+     * 实现 MissAV 重定向登录行为
      */
-    async checkLoginByAPI() {
-        try {
-            const url = 'https://missav.ws/api/actresses/1016525/view';
-            
-            const response = await fetch(url, {
-                method: 'GET',
-                credentials: 'include' // 确保发送cookies
-            });
-            
-            if (!response.ok) {
-                return null; // API检测失败
+    redirectLogin(domain) {
+        const activeDomain = this.getActiveDomain(domain);
+        const loginButton = document.querySelector('button[x-on\\:click="currentPage = \'login\'"]') || 
+                            document.querySelector('button[x-on\\:click*="login"]') || 
+                            document.querySelector('a[href*="login"]');
+        if (loginButton) {
+            loginButton.click();
+            Toast('请在页面登录窗口中完成登录', 3000, 'info');
+        } else {
+            const redirectUrl = `${activeDomain}/cn/login`;
+            if (typeof GM_openInTab === 'function') {
+                GM_openInTab(redirectUrl, { active: true, insert: true, setParent: true });
+            } else {
+                window.open(redirectUrl, '_blank');
             }
-            
-            const data = await response.json();
-            return data.user !== null; // 用户不为null则已登录
-        } catch (error) {
-            console.debug('API登录状态检查出错:', error.message);
-            return null; // 检测过程出错
         }
     }
-    
-    /**
-     * 使用DOM元素检测登录状态
-     * @returns {boolean} 是否已登录
-     */
-    checkLoginByDOM() {
-        try {
-            // 检查页面上的各种可能表明登录状态的元素
-            const loginButton = document.querySelector('button[x-on\\:click="currentPage = \'login\'"]');
-            const userAvatar = document.querySelector('.relative.ml-3 img.h-8.w-8.rounded-full');
-            const userMenu = document.querySelector('[x-data="{userDropdownOpen: false}"]');
-            
-            // 如果没有登录按钮或有用户相关元素，说明可能已登录
-            return !loginButton || userAvatar || userMenu;
-        } catch (error) {
-            console.debug('DOM检测登录状态时出错:', error.message);
-            return false;
-        }
-    }
-    
-    /**
-     * 添加自动登录选项到登录表单
-     * @param {Function} onLoginInfoChange - 登录信息变更回调
-     * @returns {Promise<void>}
-     */
-    async addAutoLoginOption(onLoginInfoChange) {
-        try {
-            // 等待登录表单加载完成
-            const loginRememberContainer = await LoginUtils.waitForElement('form[x-show="currentPage === \'login\'"] .relative.flex.items-start.justify-between');
-            
-            // 创建自动登录选项
-            const autoLoginDiv = document.createElement('div');
-            autoLoginDiv.className = 'flex';
-            autoLoginDiv.innerHTML = `
-                <div class="flex items-center h-5">
-                    <input id="auto_login" type="checkbox" class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded __text_mode_custom_bg__">
-                </div>
-                <div class="ml-3 text-sm">
-                    <label for="auto_login" class="font-medium text-nord4">${I18n.translate('autoLogin')}</label>
-                </div>
-            `;
-            
-            // 获取"记住我"元素
-            const rememberMeDiv = loginRememberContainer.querySelector('.flex');
-            
-            // 在记住我和忘记密码之间插入自动登录选项
-            rememberMeDiv.parentNode.insertBefore(autoLoginDiv, rememberMeDiv.nextSibling);
-            
-            // 加载自动登录设置状态，默认为勾选状态
-            const autoLogin = LoginUtils.getValue('autoLogin', true);
-            document.getElementById('auto_login').checked = autoLogin;
-            
-            // 监听自动登录复选框变化
-            document.getElementById('auto_login').addEventListener('change', () => {
-                const isAutoLogin = document.getElementById('auto_login').checked;
-                LoginUtils.setValue('autoLogin', isAutoLogin);
-                if (onLoginInfoChange) {
-                    onLoginInfoChange({ autoLogin: isAutoLogin });
-                }
-            });
-            
-            // 监听登录表单提交
-            const loginForm = document.querySelector('form[x-show="currentPage === \'login\'"]');
-            if (loginForm) {
-                // 监听登录按钮点击
-                const loginButton = loginForm.querySelector('button[type="submit"]');
-                if (loginButton) {
-                    loginButton.addEventListener('click', () => {
-                        setTimeout(() => {
-                            const emailInput = document.getElementById('login_email');
-                            const passwordInput = document.getElementById('login_password');
-                            const autoLoginCheckbox = document.getElementById('auto_login');
-                            
-                            if (emailInput && passwordInput && autoLoginCheckbox && autoLoginCheckbox.checked) {
-                                const email = emailInput.value;
-                                const password = passwordInput.value;
-                                
-                                // 保存登录信息
-                                LoginUtils.setValue('userEmail', email);
-                                LoginUtils.setValue('userPassword', password);
-                                
-                                if (onLoginInfoChange) {
-                                    onLoginInfoChange({
-                                        email,
-                                        password,
-                                        autoLogin: true
-                                    });
-                                }
-                            }
-                        }, 100);
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('添加自动登录选项时出错:', error);
-        }
-    }
-} 
+}

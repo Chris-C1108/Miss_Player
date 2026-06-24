@@ -1,3 +1,5 @@
+import { formatTime } from '../../utils/index.js';
+
 /**
  * 进度管理器类 - 负责进度条和时间显示功能
  */
@@ -82,27 +84,14 @@ export class ProgressManager {
         if (isNaN(duration)) return;
         
         // 更新当前时间显示
-        this.currentTimeDisplay.textContent = this.formatTime(currentTime);
+        this.currentTimeDisplay.textContent = formatTime(currentTime);
         
         // 计算并显示剩余时长，而不是总时长
         const remainingTime = duration - currentTime;
-        this.totalDurationDisplay.textContent = `-${this.formatTime(remainingTime)}`;
+        this.totalDurationDisplay.textContent = `-${formatTime(remainingTime)}`;
     }
     
-    /**
-     * 格式化时间
-     */
-    formatTime(seconds) {
-        if (isNaN(seconds) || seconds < 0) {
-            return '00:00:00';
-        }
-        const totalSeconds = Math.floor(seconds);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const remainingSeconds = totalSeconds % 60;
-        
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    }
+
     
     /**
      * 处理进度条点击
@@ -243,9 +232,9 @@ export class ProgressManager {
         this.targetVideo.currentTime = newTime;
         
         // 更新时间显示
-        this.currentTimeDisplay.textContent = this.formatTime(newTime);
+        this.currentTimeDisplay.textContent = formatTime(newTime);
         const remainingTime = duration - newTime;
-        this.totalDurationDisplay.textContent = `-${this.formatTime(remainingTime)}`;
+        this.totalDurationDisplay.textContent = `-${formatTime(remainingTime)}`;
         
         // 更新最后拖动位置
         this.lastDragX = clientX;
@@ -349,6 +338,6 @@ export class ProgressManager {
         const time = duration * boundedPos;
         
         // 更新指示器内容
-        this.timeIndicator.textContent = `${this.formatTime(time)} / ${this.formatTime(duration)}`;
+        this.timeIndicator.textContent = `${formatTime(time)} / ${formatTime(duration)}`;
     }
 } 
