@@ -521,8 +521,8 @@ export class DragManager {
     updateDockedState(anchorName, didSnap) {
         if (!this.controlButtonsContainer) return;
         
-        // 确保只在 PC 宽屏及大屏设备自适应环境下应用（min-width: 930px, min-height: 500px 且 landscape）
-        const isPC = window.innerWidth >= 930 && window.innerHeight >= 500 && window.matchMedia('(orientation: landscape)').matches;
+        // 确保只在 PC 宽屏及大屏设备自适应环境下应用（min-width: 930px, min-height: 400px 且 landscape）
+        const isPC = window.innerWidth >= 930 && window.innerHeight >= 400 && window.matchMedia('(orientation: landscape)').matches;
         
         const playerContainer = this.controlButtonsContainer.closest('.tm-player-container');
         if (!playerContainer) return;

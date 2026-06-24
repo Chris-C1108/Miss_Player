@@ -798,7 +798,7 @@
 }
 
 /* PC 端鼠标悬浮评论区时强制变亮 */
-@media screen and (min-width: 930px) and (min-height: 500px) and (orientation: landscape) {
+@media screen and (min-width: 930px) and (min-height: 400px) and (orientation: landscape) {
     .tm-comments-panel:hover::after {
         opacity: 0 !important;
         pointer-events: none !important;

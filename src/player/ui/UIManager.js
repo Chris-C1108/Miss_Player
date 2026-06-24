@@ -733,7 +733,7 @@ export class UIManager {
         
         const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
         const commentsPanelEl = commentPanel && commentPanel.commentsPanel;
-        const isPcLandscape = this.isLandscape && window.innerWidth >= 930 && window.innerHeight >= 500;
+        const isPcLandscape = this.isLandscape && window.innerWidth >= 930 && window.innerHeight >= 400;
         
         const targetParent = (commentsPanelEl && isPcLandscape && !this.isSidebarHidden)
             ? commentsPanelEl
@@ -1056,9 +1056,9 @@ export class UIManager {
             this.playerCore.dragManager.restoreControlPanelPosition();
         }
         
-        // 横屏模式下自动隐藏控制界面（如果是手机横屏，即宽 < 930px 或高 < 500px），或显示并定时隐藏（PC大屏 >= 930px 且高 >= 500px）
+        // 横屏模式下自动隐藏控制界面（如果是手机横屏，即宽 < 930px 或高 < 400px），或显示并定时隐藏（PC大屏 >= 930px 且高 >= 400px）
         if (this.isLandscape) {
-            if (window.innerWidth < 930 || window.innerHeight < 500) {
+            if (window.innerWidth < 930 || window.innerHeight < 400) {
                 this.hideControls(true);
             } else {
                 this.showControls();
