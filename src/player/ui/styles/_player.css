@@ -8,7 +8,7 @@
     right: 0;
     height: 100vh;
     background-color: rgba(35, 17, 29, 0.8); /* 更深的背景色 */
-    z-index: 9990;
+    z-index: 2000000000 !important;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -31,7 +31,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    z-index: 9991;
+    z-index: 2000000001 !important;
     /* 确保能完全包含所有子元素 */
     height: 100%;
     overflow: visible;
@@ -1184,4 +1184,16 @@ body.tm-swiping-down .tm-settings-panel {
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         background-color: hsla(var(--shadcn-card) / 0.02);
     }
+}
+
+/* 激活播放器时，隐藏宿主页面中可能存在的头部、导航条等高z-index干扰组件 */
+body.tm-player-active header,
+body.tm-player-active .header,
+body.tm-player-active navbar,
+body.tm-player-active .navbar,
+body.tm-player-active #header-top,
+body.tm-player-active .top-nav,
+body.tm-player-active [class*="header--sticky"],
+body.tm-player-active [class*="navbar-fixed"] {
+    display: none !important;
 }

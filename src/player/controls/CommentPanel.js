@@ -1752,7 +1752,7 @@ export class CommentPanel {
         if (!this.commentsPanel) return;
 
         const isLandscape = window.innerWidth > window.innerHeight;
-        const isPcLandscape = isLandscape && window.innerWidth >= 930;
+        const isPcLandscape = isLandscape && window.innerWidth >= 930 && window.innerHeight >= 500;
         if (isLandscape && !isPcLandscape) {
             this.commentsPanel.style.display = 'none';
             return;

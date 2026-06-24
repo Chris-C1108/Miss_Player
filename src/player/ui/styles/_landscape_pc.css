@@ -31,7 +31,7 @@
 }
 
 /* 1. 响应式布局参数定义 */
-@media screen and (min-width: 930px) and (orientation: landscape) {
+@media screen and (min-width: 930px) and (min-height: 500px) and (orientation: landscape) {
     :root {
         --sidebar-width: clamp(320px, 25vw, 420px);
     }
@@ -43,7 +43,7 @@
 }
 
 /* 2. PC 横屏分栏基础样式 */
-@media screen and (min-width: 930px) and (orientation: landscape) {
+@media screen and (min-width: 930px) and (min-height: 500px) and (orientation: landscape) {
     /* 调整播放器容器为 Grid 双分栏布局 */
     .tm-player-container {
         display: grid !important;
@@ -434,7 +434,7 @@
 }
 
 /* 3. 针对 930px - 1023px 窄屏分栏环境的微调 */
-@media screen and (min-width: 930px) and (max-width: 1023px) and (orientation: landscape) {
+@media screen and (min-width: 930px) and (max-width: 1023px) and (min-height: 500px) and (orientation: landscape) {
     .tm-control-buttons {
         padding: 6px 8px 10px 8px !important;
         gap: 6px !important;

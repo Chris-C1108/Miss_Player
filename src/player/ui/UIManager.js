@@ -149,8 +149,8 @@ export class UIManager {
         this.overlay = document.createElement('div');
         this.overlay.className = 'tm-video-overlay';
         
-        // 显式设置z-index，确保在任何情况下都高于浮动按钮
-        this.overlay.style.zIndex = '9990';
+        // 显式设置z-index，确保在任何情况下都高于浮动按钮与宿主顶栏
+        this.overlay.style.zIndex = '2000000000';
         
         // 不再手动添加paddingTop和paddingBottom，使用CSS的safe-area-inset变量
 
@@ -174,6 +174,7 @@ export class UIManager {
     createPlayerContainer() {
         this.playerContainer = document.createElement('div');
         this.playerContainer.className = 'tm-player-container';
+        this.playerContainer.style.zIndex = '2000000001';
         
         // 应用初始侧边栏状态类名
         if (this.isSidebarHidden) {
@@ -732,7 +733,7 @@ export class UIManager {
         
         const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
         const commentsPanelEl = commentPanel && commentPanel.commentsPanel;
-        const isPcLandscape = this.isLandscape && window.innerWidth >= 930;
+        const isPcLandscape = this.isLandscape && window.innerWidth >= 930 && window.innerHeight >= 500;
         
         const targetParent = (commentsPanelEl && isPcLandscape && !this.isSidebarHidden)
             ? commentsPanelEl
@@ -1055,9 +1056,9 @@ export class UIManager {
             this.playerCore.dragManager.restoreControlPanelPosition();
         }
         
-        // 横屏模式下自动隐藏控制界面（如果宽度在930px以下），或显示并定时隐藏（930px以上）
+        // 横屏模式下自动隐藏控制界面（如果是手机横屏，即宽 < 930px 或高 < 500px），或显示并定时隐藏（PC大屏 >= 930px 且高 >= 500px）
         if (this.isLandscape) {
-            if (window.innerWidth < 930) {
+            if (window.innerWidth < 930 || window.innerHeight < 500) {
                 this.hideControls(true);
             } else {
                 this.showControls();

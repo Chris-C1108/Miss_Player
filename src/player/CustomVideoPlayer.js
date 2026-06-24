@@ -36,6 +36,9 @@ export class CustomVideoPlayer {
     init() {
         if (this.initialized) return;
         
+        // 标记播放器激活状态，以便 CSS 隐藏宿主干扰元素
+        document.body.classList.add('tm-player-active');
+        
         // 保存并隐藏网页浏览器滚动条
         this._scrollbarStyle = document.createElement('style');
         this._scrollbarStyle.id = 'tm-hide-scrollbar-style';
@@ -198,6 +201,9 @@ export class CustomVideoPlayer {
             this._scrollbarStyle.remove();
             this._scrollbarStyle = null;
         }
+        
+        // 移除播放器激活状态标记
+        document.body.classList.remove('tm-player-active');
 
         // 调用PlayerCore的close方法
         this.playerCore.close(

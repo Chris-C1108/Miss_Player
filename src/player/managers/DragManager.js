@@ -447,6 +447,12 @@ export class DragManager {
     restoreControlPanelPosition() {
         if (!this.controlButtonsContainer) return;
         
+        // 如果当前非悬浮控制面板模式（例如手机竖屏下），则直接清理所有行内样式以将控制权交还给 CSS
+        if (this.playerCore.uiManager && !this.playerCore.uiManager.isFloatingControlPanel) {
+            this.clearControlPanelInlineStyles();
+            return;
+        }
+        
         const key = this.getControlPanelStorageKey();
         let saved = localStorage.getItem(key);
         if (!saved) {
@@ -515,8 +521,8 @@ export class DragManager {
     updateDockedState(anchorName, didSnap) {
         if (!this.controlButtonsContainer) return;
         
-        // 确保只在 PC 宽屏及大屏设备自适应环境下应用（min-width: 930px 且 landscape）
-        const isPC = window.innerWidth >= 930 && window.matchMedia('(orientation: landscape)').matches;
+        // 确保只在 PC 宽屏及大屏设备自适应环境下应用（min-width: 930px, min-height: 500px 且 landscape）
+        const isPC = window.innerWidth >= 930 && window.innerHeight >= 500 && window.matchMedia('(orientation: landscape)').matches;
         
         const playerContainer = this.controlButtonsContainer.closest('.tm-player-container');
         if (!playerContainer) return;
