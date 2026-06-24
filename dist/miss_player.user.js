@@ -2089,6 +2089,9 @@
         var r = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
         if (r && r.commentsPanel) {
           this.playerContainer.appendChild(r.commentsPanel);
+          if (!this.isLandscape && this.controlsVisible) {
+            r.commentsPanel.classList.add("is-dimmed");
+          }
         }
         this.updateButtonContainerParent();
         this.playerContainer.appendChild(this.settingsPanel);

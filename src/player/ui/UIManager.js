@@ -1327,6 +1327,11 @@ export class UIManager {
         const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
         if (commentPanel && commentPanel.commentsPanel) {
             this.playerContainer.appendChild(commentPanel.commentsPanel);
+            
+            // 手机竖屏场景下，初始化且控制面板显示时，评论区应是变暗的
+            if (!this.isLandscape && this.controlsVisible) {
+                commentPanel.commentsPanel.classList.add('is-dimmed');
+            }
         }
         this.updateButtonContainerParent();
         
