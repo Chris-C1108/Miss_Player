@@ -26,6 +26,7 @@ export class UIManager {
         this.sidebarToggleBtn = null;    // 侧栏显示隐藏按钮
         
         // 侧边栏布局状态
+        const state = this.playerCore.options.playerState;
         this.isSidebarHidden = state ? state.settings.sidebarHidden : false;
         this.sidebarPosition = state ? state.settings.sidebarPosition : 'right';
         

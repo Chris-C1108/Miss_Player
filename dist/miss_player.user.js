@@ -1141,8 +1141,9 @@
       this.titleEl = null;
       this.sidebarPosBtn = null;
       this.sidebarToggleBtn = null;
-      this.isSidebarHidden = state ? state.settings.sidebarHidden : false;
-      this.sidebarPosition = state ? state.settings.sidebarPosition : "right";
+      var o = this.playerCore.options.playerState;
+      this.isSidebarHidden = o ? o.settings.sidebarHidden : false;
+      this.sidebarPosition = o ? o.settings.sidebarPosition : "right";
       this.safeArea = {
         "top": 44,
         "bottom": 34
