@@ -33,12 +33,12 @@
 /* 1. 响应式布局参数定义 */
 @media screen and (min-width: 930px) and (orientation: landscape) {
     :root {
-        --sidebar-width: 320px;
+        --sidebar-width: clamp(320px, 25vw, 420px);
     }
 }
-@media screen and (min-width: 1024px) and (orientation: landscape) {
+@media screen and (min-width: 1440px) and (orientation: landscape) {
     :root {
-        --sidebar-width: 380px;
+        --sidebar-width: clamp(380px, 22vw, 560px);
     }
 }
 

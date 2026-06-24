@@ -145,3 +145,16 @@
         display: none !important;
     }
 }
+
+/* 针对小屏或矮屏幕横屏（如手机横屏）的控制栏紧凑布局优化 */
+@media screen and (orientation: landscape) and (max-height: 480px) {
+    .tm-control-buttons {
+        padding: 6px 12px !important;
+        gap: 6px !important;
+    }
+    .tm-control-buttons .tm-seek-control-row,
+    .tm-control-buttons .tm-loop-control-row,
+    .tm-control-buttons .tm-playback-control-row {
+        gap: 6px !important;
+    }
+}

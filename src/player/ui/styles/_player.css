@@ -842,7 +842,14 @@
     border-radius: 12px;
     border: 1px solid hsla(var(--shadcn-border) / 0.1);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: 
+        opacity 0.3s ease, 
+        transform 0.3s ease, 
+        width 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
+        left 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
+        bottom 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
+        right 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
+        border-radius 0.3s ease;
     gap: 10px;
     
     /* 添加 flex 布局属性 */
@@ -850,6 +857,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+.tm-control-buttons.dragging {
+    transition: none !important;
 }
 
 /* 控制界面隐藏时的动画效果 - 更新选择器 */
@@ -1152,5 +1163,25 @@ body.tm-swiping-down .tm-settings-panel {
     display: none !important;
 }
 
+/* 中大屏竖屏及折叠屏优化 */
+@media screen and (min-width: 480px) and (orientation: portrait) {
+    .tm-control-buttons {
+        max-width: 520px;
+    }
+}
 
-
+@media screen and (min-width: 768px) and (orientation: portrait) {
+    .tm-control-buttons {
+        max-width: 640px;
+    }
+    
+    /* 大屏竖屏限制评论区宽度并居中，防止文字过宽影响排版 */
+    .tm-comments-panel {
+        max-width: 720px;
+        margin: 0 auto;
+        border-left: 1px solid hsla(var(--shadcn-border) / 0.1);
+        border-right: 1px solid hsla(var(--shadcn-border) / 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        background-color: hsla(var(--shadcn-card) / 0.02);
+    }
+}

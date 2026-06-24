@@ -74,26 +74,6 @@
     .tm-floating-button:active {
         transform: translateX(0) scale(0.95);
     }
-    
-    .tm-floating-button svg {
-        animation: breathing-glow-landscape 3s infinite ease-in-out;
-    }
-}
-
-/* 横屏模式下的呼吸动画 */
-@keyframes breathing-glow-landscape {
-    0% {
-        filter: drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7));
-        transform: scale(0.97);
-    }
-    50% {
-        filter: drop-shadow(0 0 25px rgba(var(--brand-pink-rgb), 1.0));
-        transform: scale(1.03);
-    }
-    100% {
-        filter: drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7));
-        transform: scale(0.97);
-    }
 }
 
 /* Toast 消息提示 */
