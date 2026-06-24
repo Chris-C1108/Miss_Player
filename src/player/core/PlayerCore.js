@@ -1,4 +1,4 @@
-import { restoreSafariThemeColor } from '../../utils/index.js';
+import { restoreSafariThemeColor, findVideoElement } from '../../utils/index.js';
 
 /**
  * 播放器核心类 - 负责播放器的基本功能和状态管理
@@ -87,62 +87,7 @@ export class PlayerCore {
      * @returns {HTMLVideoElement|null} 找到的视频元素或null
      */
     findTargetVideo() {
-        let potentialVideo = null;
-
-        // --- Strategy 1: Specific known selectors ---
-        const specificSelectors = [
-            '#player video',          // Common ID
-            '#video video',           // Common ID
-            'div.plyr__video-wrapper video', // Plyr
-            '.video-js video',        // Video.js
-            '#player > video',        // Direct child
-            '#video-player > video',  // Another common ID
-            'video[preload]:not([muted])' // Videos likely to be main content
-        ];
-
-        for (const selector of specificSelectors) {
-            potentialVideo = document.querySelector(selector);
-            if (potentialVideo) {
-                console.log('[PlayerCore] 通过选择器找到视频:', selector);
-                return potentialVideo;
-            }
-        }
-
-        // --- Strategy 2: Find all videos and prioritize ---
-        const allVideos = Array.from(document.querySelectorAll('video'));
-        console.log('[PlayerCore] 找到视频元素数量:', allVideos.length);
-
-        if (allVideos.length === 0) {
-            console.log('[PlayerCore] 未找到视频元素');
-            return null;
-        }
-
-        if (allVideos.length === 1) {
-            console.log('[PlayerCore] 找到单个视频元素');
-            return allVideos[0];
-        }
-
-        // Filter out potentially hidden or invalid videos and calculate area
-        const visibleVideos = allVideos
-            .map(video => ({
-                element: video,
-                rect: video.getBoundingClientRect(),
-            }))
-            .filter(item => item.rect.width > 50 && item.rect.height > 50) // Basic visibility/size check
-            .map(item => ({
-                ...item,
-                area: item.rect.width * item.rect.height
-            }))
-            .sort((a, b) => b.area - a.area); // Sort by area descending
-
-        if (visibleVideos.length > 0) {
-            console.log('[PlayerCore] 选择最大的可见视频');
-            return visibleVideos[0].element;
-        }
-
-        // --- Strategy 3: Fallback to first video if filtering fails ---
-        console.log('[PlayerCore] 回退到第一个视频元素');
-        return allVideos[0];
+        return findVideoElement();
     }
 
     /**

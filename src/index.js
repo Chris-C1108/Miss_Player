@@ -1,4 +1,4 @@
-import { initCSSVariables } from './constants/index.js';
+
 import { FloatingButton } from './player/ui/FloatingButton.js';
 import { PlayerState } from './player/state/PlayerState.js';
 import { initAutoLogin, CrossDomainBridge } from './autologin/index.js';
@@ -62,7 +62,7 @@ function setupViewport() {
         setupViewport();
         
         // 注入CSS变量和样式
-        initCSSVariables();
+        require('./player/ui/style.css');
         
         // 控制台日志 - 便于调试
         console.log(`[${__('scriptName')}] ${__('stylesInjected')}`);

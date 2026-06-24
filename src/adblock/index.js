@@ -11,30 +11,12 @@ import RequestBlocker from './RequestBlocker';
 import missavConfig from './sites/missav';
 
 /**
- * 根据网站URL获取适合的配置
- * @param {string} url - 当前网站URL
- * @returns {Object} 站点特定配置
- */
-function getSiteConfig(url) {
-  // 目前只支持missav，未来可以扩展
-  if (/^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(url)) {
-    return missavConfig;
-  }
-  
-  // 返回默认空配置
-  return {
-    adSelectors: [],
-    customStyles: [],
-    blockedUrlPatterns: []
-  };
-}
-
-/**
  * 广告屏蔽器类
  */
 class AdBlocker {
   constructor() {
-    const siteConfig = getSiteConfig(window.location.href);
+    const isMissav = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(window.location.href);
+    const siteConfig = isMissav ? missavConfig : {};
     this.config = new AdBlockConfig(siteConfig);
     this.styleManager = new StyleManager(this.config);
     this.domCleaner = new DOMCleaner(this.config);

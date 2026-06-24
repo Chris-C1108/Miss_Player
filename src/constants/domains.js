@@ -69,19 +69,6 @@ export function isSiteDomain(siteKey, hostname = window.location.hostname) {
     return domains.some(domain => hostname.includes(domain));
 }
 
-/**
- * 获取当前页面所属的站点 Key
- * @param {string} [hostname] - 默认当前 window.location.hostname
- * @returns {string|null} 匹配的站点 Key 或 null
- */
-export function getCurrentSiteKey(hostname = window.location.hostname) {
-    for (const siteKey of Object.keys(SITE_DOMAINS)) {
-        if (isSiteDomain(siteKey, hostname)) {
-            return siteKey;
-        }
-    }
-    return null;
-}
 
 const reachabilityCache = new Map();
 

@@ -15,37 +15,17 @@ export class PlayerState {
         };
     }
 
-    /**
-     * 安全获取存储的值
-     * @param {string} key - 键名
-     * @param {any} defaultValue - 默认值
-     * @returns {any} - 存储的值或默认值
-     */
-    getValue(key, defaultValue) {
-        return getValue(key, defaultValue);
-    }
 
-    /**
-     * 安全存储值
-     * @param {string} key - 键名
-     * @param {any} value - 要存储的值
-     * @returns {boolean} - 是否成功存储
-     */
-    setValue(key, value) {
-        setValue(key, value);
-        return true;
-    }
-    
     /**
      * 加载保存的设置
      */
     loadSettings() {
         try {
-            this.settings.showSeekControlRow = this.getValue('showSeekControlRow', true);
-            this.settings.showLoopControlRow = this.getValue('showLoopControlRow', true);
-            this.settings.showPlaybackControlRow = this.getValue('showPlaybackControlRow', true);
-            this.settings.sidebarPosition = this.getValue('sidebarPosition', 'right');
-            this.settings.sidebarHidden = this.getValue('sidebarHidden', false);
+            this.settings.showSeekControlRow = getValue('showSeekControlRow', true);
+            this.settings.showLoopControlRow = getValue('showLoopControlRow', true);
+            this.settings.showPlaybackControlRow = getValue('showPlaybackControlRow', true);
+            this.settings.sidebarPosition = getValue('sidebarPosition', 'right');
+            this.settings.sidebarHidden = getValue('sidebarHidden', false);
         } catch (error) {
             console.error('[PlayerState] 加载设置失败:', error);
         }
@@ -56,11 +36,11 @@ export class PlayerState {
      */
     saveSettings() {
         try {
-            this.setValue('showSeekControlRow', this.settings.showSeekControlRow);
-            this.setValue('showLoopControlRow', this.settings.showLoopControlRow);
-            this.setValue('showPlaybackControlRow', this.settings.showPlaybackControlRow);
-            this.setValue('sidebarPosition', this.settings.sidebarPosition);
-            this.setValue('sidebarHidden', this.settings.sidebarHidden);
+            setValue('showSeekControlRow', this.settings.showSeekControlRow);
+            setValue('showLoopControlRow', this.settings.showLoopControlRow);
+            setValue('showPlaybackControlRow', this.settings.showPlaybackControlRow);
+            setValue('sidebarPosition', this.settings.sidebarPosition);
+            setValue('sidebarHidden', this.settings.sidebarHidden);
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }

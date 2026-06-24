@@ -13,7 +13,6 @@ class DOMCleaner {
    */
   constructor(config) {
     this.config = config;
-    this.CLEANUP_THROTTLE = 500; // 节流时间：500ms
     this.observer = null; // MutationObserver实例
   }
   

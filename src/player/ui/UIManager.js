@@ -2,8 +2,6 @@
  * UI管理器类 - 负责创建和管理播放器UI元素
  */
 import { delegateEvent } from '../../utils/index.js';
-import { performanceMonitor } from '../../utils/PerformanceMonitor.js';
-import { animationTimer } from '../../utils/AnimationTimer.js';
 import { LAYOUT_LEFT, LAYOUT_RIGHT, COMMENTS_SHOW, COMMENTS_HIDE } from '../../constants/icons.js';
 
 export class UIManager {
@@ -28,9 +26,8 @@ export class UIManager {
         this.sidebarToggleBtn = null;    // 侧栏显示隐藏按钮
         
         // 侧边栏布局状态
-        const state = this.playerCore.options.playerState;
-        this.isSidebarHidden = state ? state.getValue('sidebarHidden', false) : false;
-        this.sidebarPosition = state ? state.getValue('sidebarPosition', 'right') : 'right';
+        this.isSidebarHidden = state ? state.settings.sidebarHidden : false;
+        this.sidebarPosition = state ? state.settings.sidebarPosition : 'right';
         
         // 窗口和安全区
         this.safeArea = { top: 44, bottom: 34 };  // 默认安全区域值
@@ -798,9 +795,6 @@ export class UIManager {
         // 确保overlay已创建
         if (!this.overlay) return;
         
-        // 开始测量事件设置时间
-        performanceMonitor.startMeasure('setupEvents');
-        
         // 使用事件委托处理鼠标移动和触摸移动
         // 使用事件委托处理鼠标移动和触摸移动，绑定到整个 playerContainer 以支持隐藏侧栏或竖屏模式下的控制恢复
         this.playerContainer.addEventListener('mousemove', (e) => {
@@ -839,7 +833,7 @@ export class UIManager {
         delegateEvent(this.playerContainer, 'mouseenter', '.tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
             this.isMouseOverControls = true;
             if (this.controlsHideTimerId) {
-                animationTimer.clearTimeout(this.controlsHideTimerId);
+                clearTimeout(this.controlsHideTimerId);
                 this.controlsHideTimerId = null;
             }
         });
@@ -852,9 +846,6 @@ export class UIManager {
             }
         });
         
-        // 结束测量并记录结果
-        const setupTime = performanceMonitor.endMeasure('setupEvents');
-        console.log(`[Performance] 事件监听器设置用时: ${setupTime.toFixed(2)}ms`);
     }
     
     /**
@@ -916,7 +907,7 @@ export class UIManager {
             this.showControls();
             // 清除任何可能存在的定时器
             if (this.controlsHideTimerId) {
-                animationTimer.clearTimeout(this.controlsHideTimerId);
+                clearTimeout(this.controlsHideTimerId);
                 this.controlsHideTimerId = null;
             }
         }
@@ -1022,7 +1013,7 @@ export class UIManager {
         
         // 清除可能存在的隐藏定时器
         if (this.controlsHideTimerId) {
-            animationTimer.clearTimeout(this.controlsHideTimerId);
+            clearTimeout(this.controlsHideTimerId);
             this.controlsHideTimerId = null;
         }
     }
@@ -1062,39 +1053,29 @@ export class UIManager {
      * 设置自动隐藏控制界面
      */
     autoHideControls() {
-        // 开始测量性能
-        performanceMonitor.startMeasure('autoHideControls');
-        
         // 只在横屏模式下设置自动隐藏
         if (!this.isLandscape) {
-            performanceMonitor.endMeasure('autoHideControls');
             return;
         }
         
         // 如果评论区处于显示状态，不设置自动隐藏
         if (!this.isSidebarHidden) {
-            performanceMonitor.endMeasure('autoHideControls');
             return;
         }
         
         // 如果鼠标在控制面板上，不设置自动隐藏
         if (this.isMouseOverControls) {
-            performanceMonitor.endMeasure('autoHideControls');
             return;
         }
         
-        // 使用animationTimer代替setTimeout
         if (this.controlsHideTimerId) {
-            animationTimer.clearTimeout(this.controlsHideTimerId);
+            clearTimeout(this.controlsHideTimerId);
         }
         
-        // 设置3秒后自动隐藏，使用固定ID便于管理
-        this.controlsHideTimerId = animationTimer.setTimeout(() => {
+        // 设置3秒后自动隐藏
+        this.controlsHideTimerId = setTimeout(() => {
             this.hideControls();
-        }, 3000, 'controlsHide');
-        
-        // 结束测量
-        performanceMonitor.endMeasure('autoHideControls');
+        }, 3000);
     }
 
     /**

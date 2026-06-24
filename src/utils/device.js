@@ -23,20 +23,10 @@ export function isIOS() {
  * 检测是否为Safari浏览器
  * @returns {boolean} - 是否为Safari浏览器
  */
-export function isSafari() {
+function isSafari() {
     return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 }
 
-/**
- * 检测是否为移动设备
- * @returns {boolean} 是否为移动设备
- */
-export function isMobileDevice() {
-    if (_cache.isMobile === null) {
-        _cache.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    }
-    return _cache.isMobile;
-}
 
 /**
  * 检测是否为竖屏模式
@@ -46,13 +36,6 @@ export function isPortrait() {
     return window.innerHeight > window.innerWidth;
 }
 
-/**
- * 检查设备和屏幕方向
- * @returns {boolean} - 当前是否为竖屏状态
- */
-export function checkDeviceAndOrientation() {
-    return isPortrait();
-}
 
 /**
  * 获取设备安全区域尺寸

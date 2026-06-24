@@ -16,29 +16,6 @@ export function createElementWithStyle(tag, className, styleCSS) {
     return element;
 }
 
-/**
- * 创建SVG图标
- * @param {string} path - SVG路径
- * @param {number} size - 图标大小
- * @returns {SVGElement} 创建的SVG元素
- */
-export function createSVGIcon(path, size = 24) {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', size);
-    svg.setAttribute('height', size);
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('fill', 'none');
-    svg.setAttribute('stroke', 'currentColor');
-    svg.setAttribute('stroke-width', '2');
-    svg.setAttribute('stroke-linecap', 'round');
-    svg.setAttribute('stroke-linejoin', 'round');
-    
-    const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    pathElement.setAttribute('d', path);
-    svg.appendChild(pathElement);
-    
-    return svg;
-}
 
 /**
  * 为元素添加事件委托
@@ -88,63 +65,63 @@ export function waitForElement(selector, timeout = 10000, interval = 100) {
 }
 
 /**
- * 检测页面中是否存在视频元素
+ * 查找并检测页面中的视频元素（按优先级和尺寸大小筛选）
  * @returns {HTMLVideoElement|null} - 找到的视频元素或null
  */
 export function findVideoElement() {
-    // 常见视频选择器
+    let potentialVideo = null;
+
+    // --- Strategy 1: Specific known selectors ---
     const specificSelectors = [
-        '#player video',          // 常见ID
-        '#video video',           // 常见ID
+        '#player video',          // Common ID
+        '#video video',           // Common ID
         'div.plyr__video-wrapper video', // Plyr
         '.video-js video',        // Video.js
-        '#player > video',        // 直接子元素
-        '#video-player > video',  // 另一个常见ID
-        'video[preload]:not([muted])', // 可能是主要内容的视频
-        'video[src]',             // 带有src属性的视频
-        'video.video-main',       // 主视频类
-        'main video',             // 主要内容区域中的视频
-        'video',                  // 所有视频（最低优先级）
+        '#player > video',        // Direct child
+        '#video-player > video',  // Another common ID
+        'video[preload]:not([muted])' // Videos likely to be main content
     ];
 
-    // 按优先级顺序查找视频元素
     for (const selector of specificSelectors) {
-        const videos = document.querySelectorAll(selector);
-        if (videos.length > 0) {
-            console.log(`[Utils] 找到视频元素：${selector}`);
-            return videos[0]; // 返回第一个匹配的视频元素
+        potentialVideo = document.querySelector(selector);
+        if (potentialVideo) {
+            console.log('[Utils] 通过选择器找到视频:', selector);
+            return potentialVideo;
         }
     }
 
-    return null; // 未找到视频元素
+    // --- Strategy 2: Find all videos and prioritize ---
+    const allVideos = Array.from(document.querySelectorAll('video'));
+
+    if (allVideos.length === 0) {
+        return null;
+    }
+
+    if (allVideos.length === 1) {
+        return allVideos[0];
+    }
+
+    // Filter out potentially hidden or invalid videos and calculate area
+    const visibleVideos = allVideos
+        .map(video => ({
+            element: video,
+            rect: video.getBoundingClientRect(),
+        }))
+        .filter(item => item.rect.width > 50 && item.rect.height > 50) // Basic visibility/size check
+        .map(item => ({
+            ...item,
+            area: item.rect.width * item.rect.height
+        }))
+        .sort((a, b) => b.area - a.area); // Sort by area descending
+
+    if (visibleVideos.length > 0) {
+        return visibleVideos[0].element;
+    }
+
+    // --- Strategy 3: Fallback to first video if filtering fails ---
+    return allVideos[0];
 }
 
-/**
- * 检查元素是否在视口中
- * @param {Element} element - 要检查的元素
- * @returns {boolean} 是否在视口中
- */
-export function isInViewport(element) {
-    const rect = element.getBoundingClientRect();
-    return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-    );
-}
 
-/**
- * 动态加载脚本
- * @param {string} url - 脚本URL
- * @returns {Promise<void>} 加载完成的Promise
- */
-export function loadScript(url) {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = url;
-        script.onload = () => resolve();
-        script.onerror = (e) => reject(new Error(`脚本加载失败: ${url}`));
-        document.head.appendChild(script);
-    });
-}
+
+

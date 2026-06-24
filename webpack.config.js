@@ -146,21 +146,10 @@ module.exports = {
           ecma: 5,
           parse: {},
           compress: {
+            defaults: false,
             drop_console: true,
             drop_debugger: true,
-            pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
-            // 以下选项设置为 false 可以减少代码压缩，保留更多原始结构
-            sequences: false,
-            conditionals: false,
-            comparisons: false,
-            evaluate: false,
-            booleans: false,
-            loops: false,
-            unused: false,
-            toplevel: false,
-            if_return: false,
-            inline: false,
-            join_vars: false
+            pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
           },
           mangle: {
             keep_classnames: true,

@@ -2,39 +2,6 @@
  * 时间与节流防抖相关工具函数
  */
 
-/**
- * 节流函数 - 限制函数执行频率
- * @param {Function} fn - 要执行的函数
- * @param {number} delay - 延迟时间(ms)
- * @returns {Function} - 节流后的函数
- */
-export function throttle(fn, delay = 200) {
-    let lastCall = 0;
-    return function(...args) {
-        const now = Date.now();
-        if (now - lastCall < delay) return;
-        lastCall = now;
-        return fn.apply(this, args);
-    };
-}
-
-/**
- * 防抖函数 - 延迟执行直到操作停止
- * @param {Function} fn - 要执行的函数
- * @param {number} delay - 延迟时间(ms)
- * @returns {Function} - 防抖后的函数
- */
-export function debounce(fn, delay = 200) {
-    let timer = null;
-    return function(...args) {
-        const context = this;
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => {
-            fn.apply(context, args);
-            timer = null;
-        }, delay);
-    };
-}
 
 /**
  * 格式化时间为 mm:ss 或 hh:mm:ss

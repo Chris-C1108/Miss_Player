@@ -510,7 +510,7 @@ export class DragManager {
         
         // 检查评论区侧边栏是否被隐藏了
         const isSidebarHidden = playerContainer.classList.contains('tm-sidebar-hidden');
-        const sidebarPosition = this.playerCore.options.playerState ? this.playerCore.options.playerState.getValue('sidebarPosition', 'right') : 'right';
+        const sidebarPosition = this.playerCore.options.playerState ? this.playerCore.options.playerState.settings.sidebarPosition : 'right';
         
         // 判定吸附是否属于 docked (侧边栏吸附)
         const isRightDock = sidebarPosition === 'right' && (anchorName === 'TR' || anchorName === 'BR');
