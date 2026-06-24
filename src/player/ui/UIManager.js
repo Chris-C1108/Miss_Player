@@ -1178,6 +1178,14 @@ export class UIManager {
             clearTimeout(this.controlsHideTimerId);
             this.controlsHideTimerId = null;
         }
+
+        // 手机竖屏场景下：控制面板显示时 评论区变暗
+        if (!this.isLandscape) {
+            const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+            if (commentPanel && commentPanel.commentsPanel) {
+                commentPanel.commentsPanel.classList.add('is-dimmed');
+            }
+        }
     }
     
     /**
@@ -1196,6 +1204,14 @@ export class UIManager {
         this.overlay.classList.add('controls-hidden');
         document.body.classList.add('controls-hidden');
         this.controlsVisible = false;
+
+        // 手机竖屏场景下：控制面板隐藏时评论区自动变亮 (解除变暗)
+        if (!this.isLandscape) {
+            const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+            if (commentPanel && commentPanel.commentsPanel) {
+                commentPanel.commentsPanel.classList.remove('is-dimmed');
+            }
+        }
     }
     
     /**

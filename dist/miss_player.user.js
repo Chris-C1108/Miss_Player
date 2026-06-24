@@ -1980,6 +1980,12 @@
           clearTimeout(this.controlsHideTimerId);
           this.controlsHideTimerId = null;
         }
+        if (!this.isLandscape) {
+          var r = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+          if (r && r.commentsPanel) {
+            r.commentsPanel.classList.add("is-dimmed");
+          }
+        }
       }
     }, {
       "key": "hideControls",
@@ -1997,6 +2003,12 @@
         this.overlay.classList.add("controls-hidden");
         document.body.classList.add("controls-hidden");
         this.controlsVisible = false;
+        if (!this.isLandscape) {
+          var o = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+          if (o && o.commentsPanel) {
+            o.commentsPanel.classList.remove("is-dimmed");
+          }
+        }
       }
     }, {
       "key": "toggleControlsVisibility",
@@ -7603,6 +7615,9 @@
           }
           if (r.commentsPanel.classList.contains("is-dimmed")) {
             r.commentsPanel.classList.remove("is-dimmed");
+            if (!r.playerCore.uiManager.isLandscape) {
+              r.playerCore.uiManager.hideControls(true);
+            }
             if (o.cancelable) {
               o.preventDefault();
             }

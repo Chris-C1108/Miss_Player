@@ -1213,6 +1213,10 @@ export class CommentPanel {
             // 只要评论区是变暗状态，任何触摸或点击都应立即激活它并移除 is-dimmed
             if (this.commentsPanel.classList.contains('is-dimmed')) {
                 this.commentsPanel.classList.remove('is-dimmed');
+                // 手机竖屏模式下，激活评论区的同时隐藏控制面板
+                if (!this.playerCore.uiManager.isLandscape) {
+                    this.playerCore.uiManager.hideControls(true);
+                }
                 if (e.cancelable) e.preventDefault();
                 e.stopPropagation(); // 阻止事件传给视频区
                 return;
