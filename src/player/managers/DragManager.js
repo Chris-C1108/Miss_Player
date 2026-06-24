@@ -102,9 +102,14 @@ export class DragManager {
         const newHeight = Math.max(minHeight, this.startHeight + deltaY);
         this.container.style.height = newHeight + 'px';
 
-        // 标记用户手动调整了高度，防止被 resize 事件重置
+        // 标记用户手动调整了高度，防止被 resize 事件重置，同时保存对应方向的高数值
         if (this.playerCore.uiManager) {
             this.playerCore.uiManager.isCustomResized = true;
+            if (!this.playerCore.uiManager.isLandscape) {
+                this.playerCore.uiManager.customHeightPortrait = newHeight + 'px';
+            } else {
+                this.playerCore.uiManager.customHeightLandscape = newHeight + 'px';
+            }
         }
 
         // updateHandlePosition会被ResizeObserver自动调用
@@ -415,6 +420,8 @@ export class DragManager {
             anchorName: didSnap ? closestAnchor.name : null,
             didSnap: didSnap
         };
+        const key = this.getControlPanelStorageKey();
+        localStorage.setItem(key, JSON.stringify(position));
         localStorage.setItem('tm-control-panel-pos', JSON.stringify(position));
         
         // 更新 docking 状态
@@ -425,6 +432,14 @@ export class DragManager {
         }
         e.stopPropagation();
     }
+
+    /**
+     * 获取当前屏幕方向对应的位置存储键
+     */
+    getControlPanelStorageKey() {
+        const isLandscape = this.playerCore.uiManager ? this.playerCore.uiManager.isLandscape : (window.innerWidth > window.innerHeight);
+        return isLandscape ? 'tm-control-panel-pos-landscape' : 'tm-control-panel-pos-portrait';
+    }
     
     /**
      * 恢复控制面板已存储的位置
@@ -432,7 +447,11 @@ export class DragManager {
     restoreControlPanelPosition() {
         if (!this.controlButtonsContainer) return;
         
-        const saved = localStorage.getItem('tm-control-panel-pos');
+        const key = this.getControlPanelStorageKey();
+        let saved = localStorage.getItem(key);
+        if (!saved) {
+            saved = localStorage.getItem('tm-control-panel-pos');
+        }
         if (saved) {
             try {
                 const savedData = JSON.parse(saved);
@@ -532,7 +551,11 @@ export class DragManager {
      * 重新应用当前的吸附排版状态
      */
     reapplyDockedState() {
-        const saved = localStorage.getItem('tm-control-panel-pos');
+        const key = this.getControlPanelStorageKey();
+        let saved = localStorage.getItem(key);
+        if (!saved) {
+            saved = localStorage.getItem('tm-control-panel-pos');
+        }
         if (saved) {
             try {
                 const savedData = JSON.parse(saved);
@@ -568,6 +591,8 @@ export class DragManager {
      */
     resetControlPanelPosition() {
         localStorage.removeItem('tm-control-panel-pos');
+        localStorage.removeItem('tm-control-panel-pos-portrait');
+        localStorage.removeItem('tm-control-panel-pos-landscape');
         this.clearControlPanelInlineStyles();
         console.log('[DragManager] 悬浮窗位置已重置并清除本地记忆');
     }

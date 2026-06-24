@@ -40,10 +40,33 @@ export class UIManager {
         this.controlsVisible = true;
         this.controlsHideTimerId = null; // 使用ID代替timeout引用
         this.isMouseOverControls = false; // 鼠标是否在控制面板上
-        this.isCustomResized = false;     // 是否手动调整过高度
+        
+        // 方向感知的手动调整高度标记及数值
+        this.isCustomResizedPortrait = false;
+        this.isCustomResizedLandscape = false;
+        this.customHeightPortrait = null;
+        this.customHeightLandscape = null;
         
         // 导入样式
         this.loadStyles();
+    }
+
+    /**
+     * 手动调整高度标记的方向感知获取器
+     */
+    get isCustomResized() {
+        return this.isLandscape ? this.isCustomResizedLandscape : this.isCustomResizedPortrait;
+    }
+
+    /**
+     * 手动调整高度标记的方向感知设置器
+     */
+    set isCustomResized(val) {
+        if (this.isLandscape) {
+            this.isCustomResizedLandscape = val;
+        } else {
+            this.isCustomResizedPortrait = val;
+        }
     }
 
     /**
@@ -706,20 +729,30 @@ export class UIManager {
      */
     updateButtonContainerParent() {
         if (!this.buttonContainer) return;
+        
         const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
         const commentsPanelEl = commentPanel && commentPanel.commentsPanel;
-        
-        // 我们在 PC 横屏分栏模式，且评论区未隐藏时，才将按钮栏放入评论区顶部以满足布局需要
         const isPcLandscape = this.isLandscape && window.innerWidth >= 930;
         
-        if (commentsPanelEl && isPcLandscape && !this.isSidebarHidden) {
-            if (this.buttonContainer.parentNode !== commentsPanelEl) {
+        const targetParent = (commentsPanelEl && isPcLandscape && !this.isSidebarHidden)
+            ? commentsPanelEl
+            : this.playerContainer;
+        
+        // 如果目标父节点相同，跳过
+        if (this.buttonContainer.parentNode === targetParent) return;
+        
+        // 先淡出
+        this.buttonContainer.style.opacity = '0';
+        this.buttonContainer.style.transition = 'opacity 0.15s ease';
+        
+        // 在下一帧执行迁移
+        requestAnimationFrame(() => {
+            if (!this.buttonContainer) return;
+            
+            if (targetParent === commentsPanelEl) {
                 commentsPanelEl.insertBefore(this.buttonContainer, commentsPanelEl.firstChild);
                 console.log('[UIManager] 按钮容器挂载到评论区顶部');
-            }
-        } else {
-            if (this.buttonContainer.parentNode !== this.playerContainer) {
-                // 挂载到 playerContainer 上，并确保在 commentsPanel 之前
+            } else {
                 if (commentsPanelEl && commentsPanelEl.parentNode === this.playerContainer) {
                     this.playerContainer.insertBefore(this.buttonContainer, commentsPanelEl);
                 } else {
@@ -727,7 +760,19 @@ export class UIManager {
                 }
                 console.log('[UIManager] 按钮容器挂载到主容器');
             }
-        }
+            
+            // 迁移后在下一帧淡入
+            requestAnimationFrame(() => {
+                if (!this.buttonContainer) return;
+                this.buttonContainer.style.opacity = '1';
+                // 清理过渡样式
+                setTimeout(() => {
+                    if (this.buttonContainer) {
+                        this.buttonContainer.style.transition = '';
+                    }
+                }, 200);
+            });
+        });
     }
     
     /**
@@ -770,21 +815,91 @@ export class UIManager {
             }
             this.updateButtonContainerParent();
         };
+
+        // 使用 requestAnimationFrame 和 debounce 合并/去重更新请求
+        let pendingUpdate = false;
+        let rafId = null;
+        let resizeTimer = null;
+
+        const scheduleLayoutUpdate = (delay = 0) => {
+            if (delay > 0) {
+                setTimeout(() => scheduleLayoutUpdate(0), delay);
+                return;
+            }
+            if (pendingUpdate) return;
+            pendingUpdate = true;
+            rafId = requestAnimationFrame(() => {
+                pendingUpdate = false;
+                triggerLayoutUpdate();
+            });
+        };
+
+        // 1. screen.orientation API (现代浏览器优先)
+        if (screen && screen.orientation) {
+            this.screenOrientationListener = () => {
+                scheduleLayoutUpdate(0);
+            };
+            screen.orientation.addEventListener('change', this.screenOrientationListener);
+        }
         
-        // 添加屏幕方向变化监听
-        window.addEventListener('orientationchange', () => {
-            // 在旋转过程中和完成后多次触发，确保能捕获到 iOS Safari 最终稳定的尺寸
-            setTimeout(triggerLayoutUpdate, 100);
-            setTimeout(triggerLayoutUpdate, 300);
-            setTimeout(triggerLayoutUpdate, 600);
-        });
+        // 2. orientationchange 监听 (iOS Safari 兼容)
+        this.orientationListener = () => {
+            // 在旋转完成后单次延迟更新，确保能捕获到 iOS Safari 最终稳定的尺寸
+            scheduleLayoutUpdate(200);
+        };
+        window.addEventListener('orientationchange', this.orientationListener);
         
-        // 添加窗口大小变化监听（用于桌面端模拟和某些不支持orientationchange的设备）
-        window.addEventListener('resize', () => {
-            triggerLayoutUpdate();
-            // resize 时也进行一次延迟更新，以防尺寸未就绪
-            setTimeout(triggerLayoutUpdate, 150);
-        });
+        // 3. ResizeObserver 监听容器尺寸 (更精准，替代一般的 resize 乱发事件)
+        if (typeof ResizeObserver !== 'undefined') {
+            this.resizeObserver = new ResizeObserver(() => {
+                scheduleLayoutUpdate(0);
+            });
+            this.resizeObserver.observe(document.documentElement);
+        }
+        
+        // 4. window resize 监听 (最后兜底 + 100ms debounce)
+        this.resizeListener = () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                scheduleLayoutUpdate(0);
+            }, 100);
+        };
+        window.addEventListener('resize', this.resizeListener);
+        
+        // 存储清理引用，以防多次初始化或在 cleanup() 中调用
+        this._cleanupLayoutSchedulers = () => {
+            if (rafId) cancelAnimationFrame(rafId);
+            if (resizeTimer) clearTimeout(resizeTimer);
+        };
+    }
+
+    /**
+     * 清理所有屏幕/大小监听器和定时器
+     */
+    cleanup() {
+        if (this._cleanupLayoutSchedulers) {
+            this._cleanupLayoutSchedulers();
+        }
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
+        }
+        if (this.orientationListener) {
+            window.removeEventListener('orientationchange', this.orientationListener);
+            this.orientationListener = null;
+        }
+        if (this.resizeListener) {
+            window.removeEventListener('resize', this.resizeListener);
+            this.resizeListener = null;
+        }
+        if (this.screenOrientationListener && screen && screen.orientation) {
+            screen.orientation.removeEventListener('change', this.screenOrientationListener);
+            this.screenOrientationListener = null;
+        }
+        if (this.controlsHideTimerId) {
+            clearTimeout(this.controlsHideTimerId);
+            this.controlsHideTimerId = null;
+        }
     }
     
     /**
@@ -853,8 +968,45 @@ export class UIManager {
      * 检测并处理屏幕方向
      */
     checkOrientation() {
-        // 通过窗口宽高比判断屏幕方向
-        const isLandscapeNow = window.innerWidth > window.innerHeight;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        
+        // 1. 虚拟键盘激活状态下，忽略方向变更（防止键盘弹起高度骤降误判为横屏）
+        const isKeyboardActive = () => {
+            const el = document.activeElement;
+            if (!el) return false;
+            const tagName = el.tagName.toLowerCase();
+            return tagName === 'textarea' || (tagName === 'input' && ['text', 'search', 'url', 'email', 'number'].includes(el.type));
+        };
+        
+        if (isKeyboardActive()) {
+            console.log('[UIManager] 键盘激活中，忽略屏幕方向检测');
+            return;
+        }
+
+        // 2. 宽高比死区保护（防止在 1:1 分屏等临界比例下快速抖动）
+        const ratio = w / h;
+        const PORTRAIT_THRESHOLD = 0.85;
+        const LANDSCAPE_THRESHOLD = 1.18;
+        
+        let isLandscapeNow = this.isLandscape;
+        if (ratio < PORTRAIT_THRESHOLD) {
+            isLandscapeNow = false;
+        } else if (ratio > LANDSCAPE_THRESHOLD) {
+            isLandscapeNow = true;
+        }
+        
+        // 3. 移动端环境下，如果 screen.orientation 存在，与其物理方向保持一致（除非在分屏等极大冲突情况）
+        const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (hasTouch && screen && screen.orientation && screen.orientation.type) {
+            const screenType = screen.orientation.type;
+            const screenIsLandscape = screenType.includes('landscape');
+            if (ratio < PORTRAIT_THRESHOLD && screenIsLandscape) {
+                isLandscapeNow = false; // 分屏模式尊重窗口比例
+            } else if (ratio > LANDSCAPE_THRESHOLD && !screenIsLandscape) {
+                isLandscapeNow = true;
+            }
+        }
         
         // 方向发生变化时处理
         if (this.isLandscape !== isLandscapeNow) {
@@ -869,8 +1021,16 @@ export class UIManager {
     handleOrientationChange() {
         console.log('[UIManager] 屏幕方向变化:', this.isLandscape ? '横屏' : '竖屏');
         
-        // 屏幕方向变化时，重置用户手动调整的大小标记，以允许根据新方向自适应尺寸
-        this.isCustomResized = false;
+        // 恢复或清除对应方向下的高度
+        if (!this.isLandscape) {
+            if (this.isCustomResizedPortrait && this.customHeightPortrait) {
+                this.container.style.height = this.customHeightPortrait;
+                console.log('[UIManager] 恢复用户手动调整的竖屏高度:', this.customHeightPortrait);
+            }
+        } else {
+            // 横屏高度由 CSS 样式控制，移除行内 height
+            this.container.style.height = '';
+        }
         
         // 方向变化时更新容器最小高度
         this.updateContainerMinHeight();
@@ -890,9 +1050,9 @@ export class UIManager {
             this.updateControlPanelVisibility();
         }
         
-        // 横屏时隐藏调整手柄
-        if (this.handleContainer) {
-            this.handleContainer.style.display = this.isLandscape ? 'none' : 'flex';
+        // 旋转后控制面板重新计算并恢复位置，防止超出视口边界
+        if (this.playerCore.dragManager) {
+            this.playerCore.dragManager.restoreControlPanelPosition();
         }
         
         // 横屏模式下自动隐藏控制界面（如果宽度在930px以下），或显示并定时隐藏（930px以上）
@@ -1105,6 +1265,14 @@ export class UIManager {
             const defaultHeight = window.innerWidth * (4/5);
             this.container.style.height = `${defaultHeight}px`;
             console.log('[UIManager] 自动更新容器高度为默认比例高度:', defaultHeight);
+        } else if (this.customHeightPortrait) {
+            const currentHeight = parseFloat(this.customHeightPortrait);
+            if (currentHeight < minHeight) {
+                this.container.style.height = `${minHeight}px`;
+                this.customHeightPortrait = `${minHeight}px`;
+            } else {
+                this.container.style.height = this.customHeightPortrait;
+            }
         }
         
         console.log('[UIManager] 更新容器高度和最小高度:', this.container.style.height, minHeight);

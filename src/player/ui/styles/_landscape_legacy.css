@@ -139,4 +139,9 @@
         width: calc(var(--button-xl));
         height: calc(var(--button-xl));
     }
+
+    /* 隐藏原有的竖屏垂直手柄容器 */
+    .tm-handle-container {
+        display: none !important;
+    }
 }
