@@ -218,6 +218,51 @@ export class LoopManager {
         return pill;
     }
 
+    /**
+     * 统一创建 AB 时间点按钮容器 DOM
+     * @private
+     */
+    _createABTimeContainer(labelChar, timeVal, isDisabled, onClick) {
+        const container = document.createElement('span');
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.gap = '3px';
+        container.style.padding = '2px 5px';
+        container.style.borderRadius = '4px';
+        container.style.backgroundColor = 'rgba(0, 0, 0, 0.25)';
+        container.style.fontSize = '11px';
+
+        if (isDisabled) {
+            container.style.opacity = '0.4';
+            container.style.cursor = 'not-allowed';
+            container.style.pointerEvents = 'none';
+        } else {
+            container.style.opacity = '1';
+            container.style.cursor = 'pointer';
+            container.style.pointerEvents = 'auto';
+        }
+
+        const label = document.createElement('span');
+        label.className = `tm-draft-label ${labelChar.toLowerCase()}`;
+        label.style.color = 'white';
+        label.style.fontWeight = '600';
+        label.textContent = labelChar;
+
+        const time = document.createElement('span');
+        time.className = `tm-draft-time${timeVal === null ? ' placeholder' : ''}`;
+        time.style.color = timeVal !== null ? '#fff' : 'rgba(255,255,255,0.3)';
+        time.textContent = timeVal !== null ? formatTimeWithHours(timeVal) : '--:--:--';
+
+        container.appendChild(label);
+        container.appendChild(time);
+        container.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (onClick) onClick();
+        });
+
+        return container;
+    }
+
     _createDraftPill() {
         const isPlaceholder = (this.draftTab.startTime === null && this.draftTab.endTime === null);
         const color = isPlaceholder 
@@ -248,82 +293,22 @@ export class LoopManager {
             });
         }
 
-        // A container
-        const aContainer = document.createElement('span');
-        aContainer.style.cursor = 'pointer';
-        aContainer.style.display = 'flex';
-        aContainer.style.alignItems = 'center';
-        aContainer.style.gap = '3px';
-        aContainer.style.padding = '2px 5px';
-        aContainer.style.borderRadius = '4px';
-        aContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.25)';
-        aContainer.style.fontSize = '11px';
-
-        const aLabel = document.createElement('span');
-        aLabel.className = 'tm-draft-label a';
-        aLabel.style.color = 'white';
-        aLabel.style.fontWeight = '600';
-        aLabel.textContent = 'A';
-        const aTime = document.createElement('span');
-        aTime.className = `tm-draft-time${this.draftTab.startTime === null ? ' placeholder' : ''}`;
-        aTime.style.color = this.draftTab.startTime !== null ? '#fff' : 'rgba(255,255,255,0.3)';
-        aTime.textContent = this.draftTab.startTime !== null
-            ? formatTimeWithHours(this.draftTab.startTime)
-            : '--:--:--';
-        
-        aContainer.appendChild(aLabel);
-        aContainer.appendChild(aTime);
-        aContainer.addEventListener('click', (e) => {
-            e.stopPropagation();
+        // A & B containers
+        const aContainer = this._createABTimeContainer('A', this.draftTab.startTime, false, () => {
             if (!this.targetVideo) return;
             this.draftTab.startTime = this.targetVideo.currentTime;
             this.renderTabs();
             if (window.navigator.vibrate) window.navigator.vibrate(10);
         });
-        pill.appendChild(aContainer);
 
-        // B container
-        const bContainer = document.createElement('span');
-        bContainer.style.display = 'flex';
-        bContainer.style.alignItems = 'center';
-        bContainer.style.gap = '3px';
-        bContainer.style.padding = '2px 5px';
-        bContainer.style.borderRadius = '4px';
-        bContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.25)';
-        bContainer.style.fontSize = '11px';
-
-        if (this.draftTab.startTime === null) {
-            bContainer.style.opacity = '0.4';
-            bContainer.style.cursor = 'not-allowed';
-            bContainer.style.pointerEvents = 'none';
-        } else {
-            bContainer.style.opacity = '1';
-            bContainer.style.cursor = 'pointer';
-            bContainer.style.pointerEvents = 'auto';
-        }
-
-        const bLabel = document.createElement('span');
-        bLabel.className = 'tm-draft-label b';
-        bLabel.style.color = 'white';
-        bLabel.style.fontWeight = '600';
-        bLabel.textContent = 'B';
-        const bTime = document.createElement('span');
-        bTime.className = `tm-draft-time${this.draftTab.endTime === null ? ' placeholder' : ''}`;
-        bTime.style.color = this.draftTab.endTime !== null ? '#fff' : 'rgba(255,255,255,0.3)';
-        bTime.textContent = this.draftTab.endTime !== null
-            ? formatTimeWithHours(this.draftTab.endTime)
-            : '--:--:--';
-        
-        bContainer.appendChild(bLabel);
-        bContainer.appendChild(bTime);
-        bContainer.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (this.draftTab.startTime === null) return;
+        const bContainer = this._createABTimeContainer('B', this.draftTab.endTime, this.draftTab.startTime === null, () => {
             if (!this.targetVideo) return;
             this.draftTab.endTime = this.targetVideo.currentTime;
             this.renderTabs();
             if (window.navigator.vibrate) window.navigator.vibrate(10);
         });
+
+        pill.appendChild(aContainer);
         pill.appendChild(bContainer);
 
         // SVGs
@@ -389,82 +374,22 @@ export class LoopManager {
 
         const copy = this.editingTabCopy;
 
-        // A container
-        const aContainer = document.createElement('span');
-        aContainer.style.cursor = 'pointer';
-        aContainer.style.display = 'flex';
-        aContainer.style.alignItems = 'center';
-        aContainer.style.gap = '3px';
-        aContainer.style.padding = '2px 5px';
-        aContainer.style.borderRadius = '4px';
-        aContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.25)';
-        aContainer.style.fontSize = '11px';
-
-        const aLabel = document.createElement('span');
-        aLabel.className = 'tm-draft-label a';
-        aLabel.style.color = 'white';
-        aLabel.style.fontWeight = '600';
-        aLabel.textContent = 'A';
-        const aTime = document.createElement('span');
-        aTime.className = `tm-draft-time${copy.startTime === null ? ' placeholder' : ''}`;
-        aTime.style.color = copy.startTime !== null ? '#fff' : 'rgba(255,255,255,0.3)';
-        aTime.textContent = copy.startTime !== null
-            ? formatTimeWithHours(copy.startTime)
-            : '--:--:--';
-        
-        aContainer.appendChild(aLabel);
-        aContainer.appendChild(aTime);
-        aContainer.addEventListener('click', (e) => {
-            e.stopPropagation();
+        // A & B containers
+        const aContainer = this._createABTimeContainer('A', copy.startTime, false, () => {
             if (!this.targetVideo) return;
             copy.startTime = this.targetVideo.currentTime;
             this.renderTabs();
             if (window.navigator.vibrate) window.navigator.vibrate(10);
         });
-        pill.appendChild(aContainer);
 
-        // B container
-        const bContainer = document.createElement('span');
-        bContainer.style.display = 'flex';
-        bContainer.style.alignItems = 'center';
-        bContainer.style.gap = '3px';
-        bContainer.style.padding = '2px 5px';
-        bContainer.style.borderRadius = '4px';
-        bContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.25)';
-        bContainer.style.fontSize = '11px';
-
-        if (copy.startTime === null) {
-            bContainer.style.opacity = '0.4';
-            bContainer.style.cursor = 'not-allowed';
-            bContainer.style.pointerEvents = 'none';
-        } else {
-            bContainer.style.opacity = '1';
-            bContainer.style.cursor = 'pointer';
-            bContainer.style.pointerEvents = 'auto';
-        }
-
-        const bLabel = document.createElement('span');
-        bLabel.className = 'tm-draft-label b';
-        bLabel.style.color = 'white';
-        bLabel.style.fontWeight = '600';
-        bLabel.textContent = 'B';
-        const bTime = document.createElement('span');
-        bTime.className = `tm-draft-time${copy.endTime === null ? ' placeholder' : ''}`;
-        bTime.style.color = copy.endTime !== null ? '#fff' : 'rgba(255,255,255,0.3)';
-        bTime.textContent = copy.endTime !== null
-            ? formatTimeWithHours(copy.endTime)
-            : '--:--:--';
-        
-        bContainer.appendChild(bLabel);
-        bContainer.appendChild(bTime);
-        bContainer.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (copy.startTime === null) return;
-            if (!this.targetVideo) return;
+        const bContainer = this._createABTimeContainer('B', copy.endTime, copy.startTime === null, () => {
+            if (!this.targetVideo || copy.startTime === null) return;
             copy.endTime = this.targetVideo.currentTime;
             this.renderTabs();
             if (window.navigator.vibrate) window.navigator.vibrate(10);
         });
+
+        pill.appendChild(aContainer);
         pill.appendChild(bContainer);
 
         // SVGs

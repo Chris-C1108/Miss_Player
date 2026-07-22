@@ -49,15 +49,15 @@
   var r = {
     "12": (r, o, a) => {
       a.d(o, {
-        "A": () => b
+        "A": () => y
       });
       var l = a(601);
       var u = a.n(l);
       var p = a(314);
       var v = a.n(p);
-      var y = v()(u());
-      y.push([ r.id, `.tm-comments-panel{\n    position:relative;\n    width:100%;\n    flex:1;\n    min-height:0;\n    background-color:transparent;\n    z-index:9990;\n    display:flex;\n    flex-direction:column;\n    box-sizing:border-box;\n    overflow:hidden;\n    pointer-events:none;\n    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;\n}\n.tm-comments-panel::after{\n    content:'';\n    position:absolute;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.45);\n    pointer-events:none;\n    opacity:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n    z-index:9993;\n}\n.tm-handle-container::after{\n    content:'';\n    position:absolute;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.45);\n    pointer-events:none;\n    opacity:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n    z-index:9993;\n}\n\n.tm-handle-container.is-dimmed::after,\n.tm-player-container:has(.tm-comments-panel.is-dimmed) .tm-handle-container::after{\n    opacity:1;\n}\n\n.tm-comments-panel.is-dimmed::after{\n    opacity:1;\n    pointer-events:auto;\n}\n.tm-comments-panel-action-bar{\n    position:relative;\n    flex:0 0 auto;\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    width:100%;\n    height:calc(26px + env(safe-area-inset-bottom, 0px));\n    padding:0 16px calc(0px + env(safe-area-inset-bottom, 0px)) 16px;\n    box-sizing:border-box;\n    background-color:rgba(10, 10, 12, 0.98);\n    border-top:1px solid rgba(255, 255, 255, 0.05);\n    pointer-events:auto;\n    font-size:0.72rem;\n    line-height:1;\n    color:rgba(255, 255, 255, 0.45);\n    z-index:9995;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-action-bar-left{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:100%;\n    flex:1;\n    min-width:0;\n    overflow:hidden;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-action-bar-right{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:100%;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-comment-count{\n    font-weight:400;\n    color:rgba(255, 255, 255, 0.45);\n    line-height:1;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    min-width:0;\n}\n\n.tm-comment-copy-all-btn{\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:10px;\n    color:rgba(255, 255, 255, 0.55);\n    font-size:0.7rem;\n    padding:2px 8px;\n    cursor:pointer;\n    transition:all 0.15s;\n    outline:none;\n    line-height:1;\n    display:inline-flex;\n    align-items:center;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n.tm-comment-copy-all-btn:hover{\n    color:#ffffff;\n    background:rgba(255, 255, 255, 0.12);\n}\n\n.tm-comments-panel-action-bar .tm-comment-filter-label{\n    display:flex;\n    align-items:center;\n    gap:5px;\n    cursor:pointer;\n    user-select:none;\n    color:rgba(255, 255, 255, 0.55);\n    font-size:0.7rem;\n    line-height:1;\n    transition:color 0.15s;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n.tm-comments-panel-action-bar .tm-comment-filter-label:hover{\n    color:#ffffff;\n}\n.tm-tag-checkbox,\n.tm-comment-filter-checkbox{\n    appearance:none;\n    -webkit-appearance:none;\n    width:18px;\n    height:18px;\n    border-radius:50%;\n    border:1.5px solid rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.06);\n    cursor:pointer;\n    flex-shrink:0;\n    position:relative;\n    outline:none;\n    transition:background 0.15s, border-color 0.15s, transform 0.12s;\n    margin:0;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-tag-checkbox:hover,\n.tm-comment-filter-checkbox:hover{\n    border-color:rgba(255, 255, 255, 0.6);\n}\n\n.tm-tag-checkbox:checked,\n.tm-comment-filter-checkbox:checked{\n    background:hsl(var(--shadcn-blue));\n    border-color:hsl(var(--shadcn-blue));\n}\n\n.tm-tag-checkbox:checked::after,\n.tm-comment-filter-checkbox:checked::after{\n    content:'';\n    width:4px;\n    height:8px;\n    border:solid #ffffff;\n    border-width:0 2px 2px 0;\n    transform:rotate(45deg) translate(-0.5px, -1px);\n    display:block;\n}\n.tm-comments-panel-list.tm-comments-list{\n    flex:1;\n    min-height:0;\n    width:100%;\n    max-height:none;\n    overflow-y:auto;\n    box-sizing:border-box;\n    padding:8px 16px 0px 16px;\n    mask-image:linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);\n    -webkit-mask-image:linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);\n    display:flex;\n    flex-direction:column;\n    align-items:stretch;\n    gap:8px;\n    -webkit-overflow-scrolling:touch;\n    pointer-events:auto;\n    background-color:transparent;\n    overscroll-behavior-y:contain;\n}\n.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.25);\n    border-radius:2px;\n}\n.tm-comment-submit-bar-wrapper{\n    position:relative;\n    flex:0 0 auto;\n    width:100%;\n    padding:8px 16px 8px 16px;\n    box-sizing:border-box;\n    background:linear-gradient(to top, rgba(10, 10, 12, 0.98) 0%, rgba(10, 10, 12, 0.85) 60%, rgba(10, 10, 12, 0) 100%);\n    border-top:none;\n    z-index:9996;\n    .tm-floating-comment-panel{\n    z-index:9999;\n}\n.tm-custom-modal-cancel-btn{\n    background-color:hsla(var(--shadcn-muted)/0.2);\n    color:hsl(var(--shadcn-foreground));\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-cancel-btn:hover{\n    background-color:hsla(var(--shadcn-muted)/0.3);\n}\n\n.tm-custom-modal-submit-btn,\n.tm-custom-modal-login-btn{\n    background-color:hsl(var(--shadcn-blue));\n    color:#ffffff;\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    box-shadow:0 4px 10px hsla(var(--shadcn-blue) / 0.3);\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-submit-btn:hover,\n.tm-custom-modal-login-btn:hover{\n    background-color:hsl(var(--shadcn-blue)/0.9);\n}\n\n.tm-comment-input-textarea{\n    width:100%;\n    height:90px;\n    margin:12px 0;\n    padding:10px;\n    border-radius:8px;\n    border:1px solid hsla(var(--shadcn-border) / 0.3);\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n    font-size:13px;\n    resize:none;\n    box-sizing:border-box;\n    outline:none;\n    transition:border-color 0.2s;\n}    pointer-events:auto;\n}\n\n.tm-comment-submit-bar{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    background:transparent;\n    border:none;\n    padding:0;\n    box-sizing:border-box;\n    width:100%;\n    max-width:650px;\n    margin:0 auto;\n}\n\n.tm-comment-add-tag-btn{\n    width:34px;\n    height:34px;\n    border-radius:50%;\n    border:1px solid rgba(255, 255, 255, 0.15);\n    background:rgba(255, 255, 255, 0.08);\n    color:rgba(255, 255, 255, 0.85);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s, color 0.2s;\n    outline:none;\n    padding:0;\n    margin:0;\n    box-sizing:border-box;\n}\n.tm-comment-add-tag-btn:hover{\n    background:rgba(255, 255, 255, 0.18);\n    color:#ffffff;\n    transform:scale(1.05);\n}\n.tm-comment-add-tag-btn svg{\n    width:14px;\n    height:14px;\n    display:block;\n}\n\n.tm-comment-text-input{\n    flex:1;\n    min-width:0;\n    height:34px;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.08);\n    border-radius:17px;\n    padding:0 14px;\n    color:#ffffff;\n    font-size:0.85rem;\n    outline:none;\n    box-sizing:border-box;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-comment-text-input:focus{\n    border-color:rgba(255, 255, 255, 0.25);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-comment-text-input::placeholder{\n    color:rgba(255, 255, 255, 0.35);\n}\n\n.tm-comment-send-btn{\n    height:34px;\n    padding:0 18px;\n    border-radius:17px;\n    border:1px solid rgba(255, 255, 255, 0.2);\n    background:rgba(255, 255, 255, 0.12);\n    color:#ffffff;\n    font-size:0.85rem;\n    font-weight:600;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s;\n    outline:none;\n}\n.tm-comment-send-btn:hover{\n    background:rgba(255, 255, 255, 0.22);\n    transform:scale(1.03);\n}\n.tm-comment-tag-select-modal{\n    position:absolute;\n    bottom:calc(100% + 4px);\n    left:16px;\n    right:16px;\n    width:calc(100% - 32px);\n    max-width:650px;\n    margin:0 auto;\n    max-height:280px;\n    background:rgba(18, 18, 20, 0.96);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border-radius:16px;\n    border:1px solid rgba(255, 255, 255, 0.12);\n    box-shadow:0 -8px 32px rgba(0, 0, 0, 0.6);\n    padding:10px 14px;\n    box-sizing:border-box;\n    display:flex;\n    flex-direction:column;\n    z-index:9996;\n    opacity:0;\n    pointer-events:none;\n    transform:translateY(16px);\n    transition:opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.tm-comment-tag-select-modal.visible{\n    opacity:1;\n    pointer-events:auto;\n    transform:translateY(0);\n}\n\n.tm-tag-select-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    padding-bottom:8px;\n    margin-bottom:6px;\n    border-bottom:1px solid rgba(255, 255, 255, 0.08);\n    flex-shrink:0;\n}\n\n.tm-tag-select-btn-group{\n    display:flex;\n    align-items:center;\n    gap:8px;\n}\n\n.tm-tag-select-all-btn{\n    padding:3px 12px;\n    border-radius:12px;\n    background:rgba(255, 80, 80, 0.18);\n    border:1px solid rgba(255, 80, 80, 0.45);\n    color:#ff6b6b;\n    font-size:0.78rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.15s;\n}\n.tm-tag-select-all-btn:hover{\n    background:rgba(255, 80, 80, 0.3);\n}\n\n.tm-tag-deselect-all-btn{\n    padding:3px 12px;\n    border-radius:12px;\n    background:rgba(255, 255, 255, 0.08);\n    border:1px solid rgba(255, 255, 255, 0.18);\n    color:rgba(255, 255, 255, 0.8);\n    font-size:0.78rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.15s;\n}\n.tm-tag-deselect-all-btn:hover{\n    background:rgba(255, 255, 255, 0.15);\n}\n\n.tm-tag-select-close-btn{\n    background:transparent;\n    border:none;\n    color:rgba(255, 255, 255, 0.5);\n    font-size:0.95rem;\n    cursor:pointer;\n    padding:0 4px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    transition:color 0.15s;\n}\n.tm-tag-select-close-btn:hover{\n    color:#ffffff;\n}\n\n.tm-tag-select-list{\n    flex:1;\n    overflow-y:auto;\n    display:flex;\n    flex-direction:column;\n    gap:6px;\n    padding-right:2px;\n}\n.tm-tag-select-list::-webkit-scrollbar{\n    width:4px;\n}\n.tm-tag-select-list::-webkit-scrollbar-thumb{\n    background:rgba(255, 255, 255, 0.2);\n    border-radius:2px;\n}\n\n.tm-tag-select-item{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:32px;\n    box-sizing:border-box;\n}\n\n.tm-tag-checkbox{\n    width:18px;\n    height:18px;\n    accent-color:#ff5252;\n    cursor:pointer;\n    flex-shrink:0;\n}\n\n.tm-tag-remark-input{\n    flex:1;\n    min-width:0;\n    height:32px;\n    box-sizing:border-box;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:8px;\n    padding:0 10px;\n    color:#ffffff;\n    font-size:0.82rem;\n    outline:none;\n    display:inline-flex;\n    align-items:center;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-tag-remark-input:focus{\n    border-color:rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-tag-remark-input::placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n\n.tm-tag-select-empty{\n    padding:16px;\n    text-align:center;\n    font-size:0.82rem;\n    color:rgba(255, 255, 255, 0.35);\n}\n.tm-custom-modal-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.4);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    z-index:2000000020 !important;\n    opacity:0;\n    transition:opacity 0.25s ease;\n    pointer-events:auto;\n}\n\n.tm-custom-modal-overlay.active{\n    opacity:1;\n}\n\n.tm-custom-modal-content{\n    background-color:hsl(var(--shadcn-card));\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    border-radius:16px;\n    padding:24px;\n    width:85%;\n    max-width:280px;\n    text-align:center;\n    box-shadow:0 10px 30px rgba(0, 0, 0, 0.3);\n    transform:scale(0.9);\n    transition:transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-custom-modal-overlay.active .tm-custom-modal-content{\n    transform:scale(1);\n}\n\n.tm-custom-modal-title{\n    font-size:15px;\n    font-weight:700;\n    margin-bottom:6px;\n}\n\n.tm-custom-modal-message{\n    font-size:13px;\n    color:hsl(var(--shadcn-muted-foreground));\n    margin-bottom:18px;\n    line-height:1.4;\n}\n\n.tm-custom-modal-close-btn{\n    background-color:hsl(var(--shadcn-blue));\n    color:#ffffff;\n    border:none;\n    border-radius:18px;\n    padding:7px 28px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    box-shadow:0 4px 10px hsla(var(--shadcn-blue) / 0.3);\n    transition:all 0.2s;\n}\n\n.tm-custom-modal-close-btn:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-1px);\n}\n\n.tm-custom-modal-close-btn:active{\n    transform:scale(0.95);\n}\n.jc-hdr{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    width:100%;\n    margin-bottom:3px;\n    box-sizing:border-box;\n}\n\n.jc-hdr-left{\n    display:flex;\n    align-items:center;\n    gap:6px;\n    flex-shrink:0;\n}\n\n.jc-hdr-right{\n    display:flex;\n    align-items:center;\n    gap:6px;\n    min-width:0;\n}\n.jc-site{\n    font-size:8px;\n    padding:1px 4px;\n    border-radius:4px;\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    color:hsl(var(--shadcn-blue));\n    font-weight:700;\n    border:1px solid hsla(var(--shadcn-blue) / 0.25);\n    text-transform:uppercase;\n    line-height:1;\n}\n\n.jc-site-jable{\n    background-color:hsla(340, 82%, 52%, 0.1);\n    color:hsl(340, 82%, 52%);\n    border:1px solid hsla(340, 82%, 52%, 0.25);\n}\n\n.jc-site-javlib{\n    background-color:hsla(210, 100%, 50%, 0.1);\n    color:hsl(210, 100%, 50%);\n    border:1px solid hsla(210, 100%, 50%, 0.25);\n}\n.jc-skeleton{\n    pointer-events:none;\n}\n\n.jc-skeleton .skeleton-block{\n    background:hsla(var(--shadcn-muted-foreground) / 0.15);\n    border-radius:4px;\n    animation:skeleton-loading 1.5s infinite ease-in-out;\n}\n\n@keyframes skeleton-loading{\n    0%{\n        opacity:0.55;\n    }\n    50%{\n        opacity:1;\n    }\n    100%{\n        opacity:0.55;\n    }\n}\n.jc-card{\n    display:flex;\n    flex-direction:column;\n    padding:5px 0;\n    background-color:transparent;\n    border:none;\n    border-bottom:1px solid rgba(255, 255, 255, 0.04);\n    transition:opacity 0.2s;\n    margin-bottom:6px;\n    text-align:left;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.jc-card .jc-bd{\n    width:100%;\n}\n\n.jc-card .jc-u{\n    font-weight:500;\n    color:rgba(255, 255, 255, 0.65);\n    text-decoration:none;\n    max-width:140px;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    font-size:12.5px;\n    display:inline-block;\n    vertical-align:middle;\n    transition:color var(--anim-quick);\n}\n\n.jc-card a.jc-u:hover{\n    text-decoration:underline;\n    color:hsl(var(--shadcn-blue));\n}\n\n.jc-card .jc-t{\n    color:rgba(255, 255, 255, 0.4);\n    font-size:11px;\n    display:inline-block;\n    vertical-align:middle;\n}\n\n.jc-card .jc-body-text{\n    font-size:14.5px;\n    line-height:1.55;\n    letter-spacing:0.01em;\n    color:rgba(255, 255, 255, 0.88);\n    overflow-wrap:anywhere;\n    word-break:break-word;\n    margin-top:4px;\n}\n.jc-c-sep{\n    color:rgba(255, 255, 255, 0.25);\n    margin:0 4px;\n    font-weight:normal;\n    display:inline-block;\n    vertical-align:middle;\n}\n.jc-card.jc-spam{\n    opacity:0.35;\n    background-color:transparent;\n}\n\n.jc-card.jc-spam:hover{\n    opacity:0.75;\n}\n\n.jc-spam-badge{\n    background-color:hsla(var(--shadcn-destructive) / 0.8);\n    color:hsl(var(--shadcn-destructive-foreground));\n    font-size:8px;\n    padding:1px 4px;\n    border-radius:3px;\n    font-weight:600;\n    margin-left:4px;\n    display:inline-block;\n    vertical-align:middle;\n}\n.jc-time-link{\n    color:hsl(142.1 70.6% 45.3%);\n    font-weight:700;\n    cursor:pointer;\n    text-decoration:none;\n    transition:all 0.2s ease;\n    padding:2px 6px;\n    background-color:hsla(142.1 70.6% 45.3% / 0.16);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.25);\n    border-radius:4px;\n    display:inline-block;\n    margin:0 2px;\n    font-family:monospace;\n    font-size:12.5px;\n}\n\n.jc-time-link:hover{\n    background-color:hsla(142.1 70.6% 45.3% / 0.25);\n    color:hsl(142.1 76.2% 36.3%);\n    box-shadow:0 1px 4px hsla(142.1 70.6% 45.3% / 0.15);\n}\n\n.jc-code-link{\n    display:inline-block;\n    padding:2px 6px;\n    margin:0 2px;\n    background-color:hsla(var(--shadcn-blue) / 0.16);\n    border:1px solid hsla(var(--shadcn-blue) / 0.35);\n    color:hsl(var(--shadcn-blue));\n    border-radius:4px;\n    font-weight:700;\n    cursor:pointer;\n    font-size:12px;\n    font-family:monospace;\n    transition:all 0.2s ease;\n}\n\n.jc-code-link:hover{\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n    box-shadow:0 2px 6px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.jc-emoji{\n    height:16px;\n    width:16px;\n    vertical-align:middle;\n    display:inline-block;\n    margin:0 1px;\n}\n.tm-comment-loading,\n.tm-comment-error{\n    width:100%;\n    padding:24px;\n    text-align:center;\n    font-size:12px;\n    color:hsl(var(--shadcn-muted-foreground));\n    box-sizing:border-box;\n    pointer-events:auto;\n    background-color:transparent;\n    flex:1;\n}\n\n.tm-comment-error{\n    color:hsl(var(--shadcn-destructive));\n}\n\n.tm-comment-loader-graphic{\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    gap:5px;\n    padding:16px;\n    width:100%;\n}\n\n.tm-comment-loader-graphic .dot{\n    width:6px;\n    height:6px;\n    border-radius:50%;\n    background-color:hsl(var(--shadcn-blue));\n    animation:tmDotPulse 1.4s infinite ease-in-out both;\n}\n\n.tm-comment-loader-graphic .dot:nth-child(1){\n    animation-delay:-0.32s;\n}\n\n.tm-comment-loader-graphic .dot:nth-child(2){\n    animation-delay:-0.16s;\n}\n\n@keyframes tmDotPulse{\n    0%, 80%, 100%{\n        transform:scale(0);\n        opacity:0.3;\n    }\n    40%{\n        transform:scale(1);\n        opacity:1;\n    }\n}\n\n@keyframes tmShake{\n    0%, 100%{ transform:translateX(0); }\n    20%, 60%{ transform:translateX(-4px); }\n    40%, 80%{ transform:translateX(4px); }\n}\n.tm-comments-tabs{\n    display:flex;\n    align-items:center;\n    justify-content:flex-start;\n    gap:8px;\n    padding:8px 16px;\n    background-color:hsla(var(--shadcn-card) / 0.65);\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    pointer-events:auto;\n    z-index:9994;\n    overflow-x:auto;\n    scrollbar-width:none;\n    overscroll-behavior:contain;\n    touch-action:pan-x;\n}\n.tm-comments-tabs::-webkit-scrollbar{\n    display:none;\n}\n\n.tm-comments-tab-btn{\n    padding:6px 14px;\n    font-size:12px;\n    font-weight:500;\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:transparent;\n    border:1px solid transparent;\n    border-radius:16px;\n    cursor:pointer;\n    white-space:nowrap;\n    outline:none;\n    transition:all var(--anim-quick);\n}\n\n.tm-comments-tab-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n}\n\n.tm-comments-tab-btn.active{\n    color:#ffffff;\n    background-color:hsl(var(--shadcn-blue));\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 2px 8px hsla(var(--shadcn-blue) / 0.3);\n    font-weight:600;\n}\n.jc-score-badge{\n    display:inline-block;\n    font-size:10px;\n    color:hsl(var(--shadcn-blue));\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    border:1px solid hsla(var(--shadcn-blue) / 0.3);\n    border-radius:4px;\n    padding:0 4px;\n    margin-left:6px;\n    font-weight:600;\n    vertical-align:middle;\n}\n@media (orientation: landscape){\n    .tm-comments-panel{\n        position:absolute !important;\n        width:0 !important;\n        height:0 !important;\n        overflow:hidden !important;\n        visibility:hidden !important;\n        pointer-events:none !important;\n        opacity:0 !important;\n        border:none !important;\n        margin:0 !important;\n        padding:0 !important;\n    }\n}\n.jc-body-text--collapsible{\n    position:relative;\n    display:flex;\n    flex-direction:column;\n}\n.jc-body-text--collapsible[data-collapsed="true"]{\n    cursor:pointer;\n}\n\n.jc-body-text--collapsible[data-collapsed="true"] .jc-body-text-content{\n    max-height:80px;\n    overflow:hidden;\n    mask-image:linear-gradient(to bottom, black 50%, transparent 100%);\n    -webkit-mask-image:linear-gradient(to bottom, black 50%, transparent 100%);\n}\n\n.jc-toggle-expand-btn{\n    align-self:flex-start;\n    background:transparent;\n    border:none;\n    color:hsl(var(--shadcn-blue));\n    font-size:11px;\n    font-weight:600;\n    padding:4px 0;\n    cursor:pointer;\n    outline:none;\n    transition:opacity 0.2s;\n    pointer-events:auto;\n}\n\n.jc-toggle-expand-btn:hover{\n    opacity:0.8;\n    text-decoration:underline;\n}\n\n.jc-site-javlib-review{\n    background-color:hsla(270, 100%, 60%, 0.1);\n    color:hsl(270, 100%, 60%);\n    border:1px solid hsla(270, 100%, 60%, 0.25);\n}\n.tm-comment-section{\n    display:flex;\n    flex-direction:column;\n    width:100%;\n    margin-bottom:6px;\n    box-sizing:border-box;\n    min-height:0;\n    flex:0 0 auto;\n    transition:flex 0.25s cubic-bezier(0.25, 1, 0.5, 1);\n}\n\n.tm-comment-section:not(.is-collapsed){\n    flex:1;\n}\n\n.tm-comment-section-body{\n    flex:1;\n    min-height:0;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n    overscroll-behavior-y:contain;\n    padding-right:4px;\n    padding-bottom:56px;\n}\n.tm-comment-section-body::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-comment-section-body::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.25);\n    border-radius:2px;\n}\n\n#tm-comment-section-jable{\n    border-left:3px solid hsl(var(--shadcn-red));\n    background:linear-gradient(to right, hsla(var(--shadcn-red) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-jable .tm-comment-section-title{\n    color:hsl(var(--shadcn-red)) !important;\n}\n\n#tm-comment-section-javlib{\n    border-left:3px solid hsl(var(--shadcn-purple));\n    background:linear-gradient(to right, hsla(var(--shadcn-purple) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-javlib .tm-comment-section-title{\n    color:hsl(var(--shadcn-purple)) !important;\n}\n\n#tm-comment-section-javdb{\n    border-left:3px solid hsl(var(--shadcn-blue));\n    background:linear-gradient(to right, hsla(var(--shadcn-blue) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-javdb .tm-comment-section-title{\n    color:hsl(var(--shadcn-blue)) !important;\n}\n\n.tm-comment-section-hdr{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    width:100%;\n    padding:1px 0;\n    margin-bottom:4px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    box-sizing:border-box;\n    cursor:pointer;\n    user-select:none;\n}\n\n.tm-comment-section-title{\n    font-size:13px;\n    font-weight:600;\n    color:hsl(var(--shadcn-foreground));\n    display:flex;\n    align-items:center;\n    gap:6px;\n}\n\n.tm-comment-login-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 8px;\n    border-radius:12px;\n    font-size:10px;\n    font-weight:600;\n    line-height:1;\n    transition:all 0.2s ease;\n}\n\n.tm-comment-login-badge.is-logged-in{\n    color:hsl(142.1 70.6% 45.3%);\n    background-color:hsla(142.1 70.6% 45.3% / 0.1);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.2);\n    cursor:default;\n}\n\n.tm-comment-login-badge.is-not-logged-in{\n    color:hsl(30 100% 50%);\n    background-color:hsla(30 100% 50% / 0.1);\n    border:1px solid hsla(30 100% 50% / 0.25);\n    cursor:pointer;\n}\n\n.tm-comment-login-badge.is-not-logged-in:hover{\n    background-color:hsla(30 100% 50% / 0.2);\n    transform:translateY(-0.5px);\n    box-shadow:0 2px 6px hsla(30 100% 50% / 0.15);\n}\n\n.tm-comment-login-badge.is-not-logged-in:active{\n    transform:scale(0.95);\n}\n\n.tm-comment-login-badge.is-checking{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    cursor:default;\n}\n\n.tm-comment-status-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 8px;\n    border-radius:12px;\n    font-size:10px;\n    font-weight:600;\n    line-height:1;\n}\n.tm-status-badge-loading{\n    color:hsl(var(--shadcn-blue));\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    border:1px solid hsla(var(--shadcn-blue) / 0.2);\n    animation:tmPulse 2s infinite ease-in-out;\n}\n\n.tm-status-badge-unreachable{\n    color:hsl(var(--shadcn-destructive));\n    background-color:hsla(var(--shadcn-destructive) / 0.1);\n    border:1px solid hsla(var(--shadcn-destructive) / 0.2);\n}\n\n.tm-status-badge-not_found{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-mobile_unsupported{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-empty{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-cf_shield{\n    color:hsl(30 100% 50%);\n    background-color:hsla(30 100% 50% / 0.1);\n    border:1px solid hsla(30 100% 50% / 0.2);\n}\n\n.tm-status-badge-loaded{\n    color:hsl(142.1 70.6% 45.3%);\n    background-color:hsla(142.1 70.6% 45.3% / 0.1);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.2);\n}\n\n@keyframes tmPulse{\n    0%{\n        opacity:0.7;\n    }\n    50%{\n        opacity:1;\n    }\n    100%{\n        opacity:0.7;\n    }\n}\n\n.jc-comment-link{\n    color:hsl(var(--shadcn-blue));\n    text-decoration:underline;\n}\n.jc-comment-link:hover{\n    color:hsl(var(--shadcn-blue) / 0.8);\n}\n\n.tm-comment-copy-all-btn{\n    margin-left:10px;\n    cursor:pointer;\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    border-radius:4px;\n    padding:2px 8px;\n    font-size:10px;\n    font-weight:600;\n    color:hsl(var(--shadcn-muted-foreground));\n    outline:none;\n    transition:all var(--anim-quick);\n}\n.tm-comment-copy-all-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.3);\n    border-color:hsla(var(--shadcn-border) / 0.4);\n}\n.tm-comment-copy-all-btn:active{\n    transform:scale(0.95);\n}\n@keyframes jcCardHighlightFlash{\n    0%{\n        background-color:hsla(var(--shadcn-blue) / 0.22);\n    }\n    100%{\n        background-color:transparent;\n    }\n}\n.jc-card-highlight-flash{\n    animation:jcCardHighlightFlash 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;\n}\n@media screen and (min-width: 930px) and (orientation: landscape){\n    .tm-comments-panel:hover::after{\n        opacity:0 !important;\n        pointer-events:none !important;\n    }\n}\n.tm-show-controls-float-btn{\n    position:absolute;\n    bottom:calc(96px + env(safe-area-inset-bottom, 0px));\n    right:16px;\n    width:36px;\n    height:36px;\n    border-radius:50%;\n    background:rgba(18, 18, 20, 0.85);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    color:rgba(255, 255, 255, 0.85);\n    display:none;\n    align-items:center;\n    justify-content:center;\n    box-shadow:0 4px 12px rgba(0, 0, 0, 0.4);\n    z-index:9997;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    padding:0;\n    outline:none;\n    box-sizing:border-box;\n    pointer-events:auto;\n}\n.tm-show-controls-float-btn:hover{\n    color:#ffffff;\n    background:rgba(255, 255, 255, 0.2);\n    transform:scale(1.06);\n}\n.tm-show-controls-float-btn:active{\n    transform:scale(0.92);\n}\n.tm-show-controls-float-btn svg{\n    height:18px;\n    width:auto;\n    display:block;\n    fill:none !important;\n}\n.tm-show-controls-float-btn svg path{\n    fill:currentColor !important;\n    stroke:none !important;\n}\nbody.controls-hidden:not(.tm-mode-pc):not(.tm-mode-ipad-portrait) .tm-show-controls-float-btn{\n    display:flex;\n}\n.tm-custom-modal-cancel-btn{\n    background-color:hsla(var(--shadcn-muted)/0.2);\n    color:hsl(var(--shadcn-foreground));\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-cancel-btn:hover{\n    background-color:hsla(var(--shadcn-muted)/0.3);\n}\n\n.tm-custom-modal-submit-btn,\n.tm-custom-modal-login-btn{\n    background-color:hsl(var(--shadcn-blue));\n    color:#ffffff;\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    box-shadow:0 4px 10px hsla(var(--shadcn-blue) / 0.3);\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-submit-btn:hover,\n.tm-custom-modal-login-btn:hover{\n    background-color:hsl(var(--shadcn-blue)/0.9);\n}\n\n.tm-comment-input-textarea{\n    width:100%;\n    height:90px;\n    margin:12px 0;\n    padding:10px;\n    border-radius:8px;\n    border:1px solid hsla(var(--shadcn-border) / 0.3);\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n    font-size:13px;\n    resize:none;\n    box-sizing:border-box;\n    outline:none;\n    transition:border-color 0.2s;\n}\n\n\n\n`, "" ]);
-      const b = y;
+      var b = v()(u());
+      b.push([ r.id, `.tm-comments-panel{\n    position:relative;\n    width:100%;\n    flex:1;\n    min-height:0;\n    background-color:transparent;\n    z-index:9990;\n    display:flex;\n    flex-direction:column;\n    box-sizing:border-box;\n    overflow:hidden;\n    pointer-events:none;\n    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;\n}\n.tm-comments-panel::after{\n    content:'';\n    position:absolute;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.45);\n    pointer-events:none;\n    opacity:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n    z-index:9993;\n}\n.tm-handle-container::after{\n    content:'';\n    position:absolute;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.45);\n    pointer-events:none;\n    opacity:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n    z-index:9993;\n}\n\n.tm-handle-container.is-dimmed::after,\n.tm-player-container:has(.tm-comments-panel.is-dimmed) .tm-handle-container::after{\n    opacity:1;\n}\n\n.tm-comments-panel.is-dimmed::after{\n    opacity:1;\n    pointer-events:auto;\n}\n.tm-comments-panel-action-bar{\n    position:relative;\n    flex:0 0 auto;\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    width:100%;\n    height:calc(26px + env(safe-area-inset-bottom, 0px));\n    padding:0 16px calc(0px + env(safe-area-inset-bottom, 0px)) 16px;\n    box-sizing:border-box;\n    background-color:rgba(10, 10, 12, 0.98);\n    border-top:1px solid rgba(255, 255, 255, 0.05);\n    pointer-events:auto;\n    font-size:0.72rem;\n    line-height:1;\n    color:rgba(255, 255, 255, 0.45);\n    z-index:9995;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-action-bar-left{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:100%;\n    flex:1;\n    min-width:0;\n    overflow:hidden;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-action-bar-right{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:100%;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-comment-count{\n    font-weight:400;\n    color:rgba(255, 255, 255, 0.45);\n    line-height:1;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    min-width:0;\n}\n\n.tm-comment-copy-all-btn{\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:10px;\n    color:rgba(255, 255, 255, 0.55);\n    font-size:0.7rem;\n    padding:2px 8px;\n    cursor:pointer;\n    transition:all 0.15s;\n    outline:none;\n    line-height:1;\n    display:inline-flex;\n    align-items:center;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n.tm-comment-copy-all-btn:hover{\n    color:#ffffff;\n    background:rgba(255, 255, 255, 0.12);\n}\n\n.tm-comments-panel-action-bar .tm-comment-filter-label{\n    display:flex;\n    align-items:center;\n    gap:5px;\n    cursor:pointer;\n    user-select:none;\n    color:rgba(255, 255, 255, 0.55);\n    font-size:0.7rem;\n    line-height:1;\n    transition:color 0.15s;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n.tm-comments-panel-action-bar .tm-comment-filter-label:hover{\n    color:#ffffff;\n}\n.tm-tag-checkbox,\n.tm-comment-filter-checkbox{\n    appearance:none;\n    -webkit-appearance:none;\n    width:18px;\n    height:18px;\n    border-radius:50%;\n    border:1.5px solid rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.06);\n    cursor:pointer;\n    flex-shrink:0;\n    position:relative;\n    outline:none;\n    transition:background 0.15s, border-color 0.15s, transform 0.12s;\n    margin:0;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-tag-checkbox:hover,\n.tm-comment-filter-checkbox:hover{\n    border-color:rgba(255, 255, 255, 0.6);\n}\n\n.tm-tag-checkbox:checked,\n.tm-comment-filter-checkbox:checked{\n    background:hsl(var(--shadcn-blue));\n    border-color:hsl(var(--shadcn-blue));\n}\n\n.tm-tag-checkbox:checked::after,\n.tm-comment-filter-checkbox:checked::after{\n    content:'';\n    width:4px;\n    height:8px;\n    border:solid #ffffff;\n    border-width:0 2px 2px 0;\n    transform:rotate(45deg) translate(-0.5px, -1px);\n    display:block;\n}\n.tm-comments-panel-list.tm-comments-list{\n    flex:1;\n    min-height:0;\n    width:100%;\n    max-height:none;\n    overflow-y:auto;\n    box-sizing:border-box;\n    padding:8px 16px 0px 16px;\n    mask-image:linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);\n    -webkit-mask-image:linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);\n    display:flex;\n    flex-direction:column;\n    align-items:stretch;\n    gap:8px;\n    -webkit-overflow-scrolling:touch;\n    pointer-events:auto;\n    background-color:transparent;\n    overscroll-behavior-y:contain;\n}\n.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.25);\n    border-radius:2px;\n}\n.tm-comment-submit-bar-wrapper{\n    position:relative;\n    flex:0 0 auto;\n    width:100%;\n    padding:8px 16px 8px 16px;\n    box-sizing:border-box;\n    background:linear-gradient(to top, rgba(10, 10, 12, 0.98) 0%, rgba(10, 10, 12, 0.85) 60%, rgba(10, 10, 12, 0) 100%);\n    border-top:none;\n    z-index:9996;\n    .tm-floating-comment-panel{\n    z-index:9999;\n}\n.tm-custom-modal-cancel-btn{\n    background-color:hsla(var(--shadcn-muted)/0.2);\n    color:hsl(var(--shadcn-foreground));\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-cancel-btn:hover{\n    background-color:hsla(var(--shadcn-muted)/0.3);\n}\n\n.tm-custom-modal-submit-btn,\n.tm-custom-modal-login-btn{\n    background-color:hsl(var(--shadcn-blue));\n    color:#ffffff;\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    box-shadow:0 4px 10px hsla(var(--shadcn-blue) / 0.3);\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-submit-btn:hover,\n.tm-custom-modal-login-btn:hover{\n    background-color:hsl(var(--shadcn-blue)/0.9);\n}\n\n.tm-comment-input-textarea{\n    width:100%;\n    height:90px;\n    margin:12px 0;\n    padding:10px;\n    border-radius:8px;\n    border:1px solid hsla(var(--shadcn-border) / 0.3);\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n    font-size:13px;\n    resize:none;\n    box-sizing:border-box;\n    outline:none;\n    transition:border-color 0.2s;\n}    pointer-events:auto;\n}\n\n.tm-comment-submit-bar{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    background:transparent;\n    border:none;\n    padding:0;\n    box-sizing:border-box;\n    width:100%;\n    max-width:650px;\n    margin:0 auto;\n}\n\n.tm-comment-add-tag-btn{\n    width:34px;\n    height:34px;\n    border-radius:50%;\n    border:1px solid rgba(255, 255, 255, 0.15);\n    background:rgba(255, 255, 255, 0.08);\n    color:rgba(255, 255, 255, 0.85);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s, color 0.2s;\n    outline:none;\n    padding:0;\n    margin:0;\n    box-sizing:border-box;\n}\n.tm-comment-add-tag-btn:hover{\n    background:rgba(255, 255, 255, 0.18);\n    color:#ffffff;\n    transform:scale(1.05);\n}\n.tm-comment-add-tag-btn svg{\n    width:14px;\n    height:14px;\n    display:block;\n}\n\n.tm-comment-text-input{\n    flex:1;\n    min-width:0;\n    height:34px;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.08);\n    border-radius:17px;\n    padding:0 14px;\n    color:#ffffff;\n    font-size:0.85rem;\n    outline:none;\n    box-sizing:border-box;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-comment-text-input:focus{\n    border-color:rgba(255, 255, 255, 0.25);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-comment-text-input::placeholder{\n    color:rgba(255, 255, 255, 0.35);\n}\n\n.tm-comment-send-btn{\n    height:34px;\n    padding:0 18px;\n    border-radius:17px;\n    border:1px solid rgba(255, 255, 255, 0.2);\n    background:rgba(255, 255, 255, 0.12);\n    color:#ffffff;\n    font-size:0.85rem;\n    font-weight:600;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s;\n    outline:none;\n}\n.tm-comment-send-btn:hover{\n    background:rgba(255, 255, 255, 0.22);\n    transform:scale(1.03);\n}\n.tm-comment-tag-select-modal{\n    position:absolute;\n    bottom:calc(100% + 4px);\n    left:16px;\n    right:16px;\n    width:calc(100% - 32px);\n    max-width:650px;\n    margin:0 auto;\n    max-height:280px;\n    background:rgba(18, 18, 20, 0.96);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border-radius:16px;\n    border:1px solid rgba(255, 255, 255, 0.12);\n    box-shadow:0 -8px 32px rgba(0, 0, 0, 0.6);\n    padding:10px 14px;\n    box-sizing:border-box;\n    display:flex;\n    flex-direction:column;\n    z-index:9996;\n    opacity:0;\n    pointer-events:none;\n    transform:translateY(16px);\n    transition:opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.tm-comment-tag-select-modal.visible{\n    opacity:1;\n    pointer-events:auto;\n    transform:translateY(0);\n}\n\n.tm-tag-select-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    padding-bottom:8px;\n    margin-bottom:6px;\n    border-bottom:1px solid rgba(255, 255, 255, 0.08);\n    flex-shrink:0;\n}\n\n.tm-tag-select-btn-group{\n    display:flex;\n    align-items:center;\n    gap:8px;\n}\n\n.tm-tag-select-all-btn{\n    padding:3px 12px;\n    border-radius:12px;\n    background:rgba(255, 80, 80, 0.18);\n    border:1px solid rgba(255, 80, 80, 0.45);\n    color:#ff6b6b;\n    font-size:0.78rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.15s;\n}\n.tm-tag-select-all-btn:hover{\n    background:rgba(255, 80, 80, 0.3);\n}\n\n.tm-tag-deselect-all-btn{\n    padding:3px 12px;\n    border-radius:12px;\n    background:rgba(255, 255, 255, 0.08);\n    border:1px solid rgba(255, 255, 255, 0.18);\n    color:rgba(255, 255, 255, 0.8);\n    font-size:0.78rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.15s;\n}\n.tm-tag-deselect-all-btn:hover{\n    background:rgba(255, 255, 255, 0.15);\n}\n\n.tm-tag-select-close-btn{\n    background:transparent;\n    border:none;\n    color:rgba(255, 255, 255, 0.5);\n    font-size:0.95rem;\n    cursor:pointer;\n    padding:0 4px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    transition:color 0.15s;\n}\n.tm-tag-select-close-btn:hover{\n    color:#ffffff;\n}\n\n.tm-tag-select-list{\n    flex:1;\n    overflow-y:auto;\n    display:flex;\n    flex-direction:column;\n    gap:6px;\n    padding-right:2px;\n}\n.tm-tag-select-list::-webkit-scrollbar{\n    width:4px;\n}\n.tm-tag-select-list::-webkit-scrollbar-thumb{\n    background:rgba(255, 255, 255, 0.2);\n    border-radius:2px;\n}\n\n.tm-tag-select-item{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:32px;\n    box-sizing:border-box;\n}\n\n.tm-tag-checkbox{\n    width:18px;\n    height:18px;\n    accent-color:#ff5252;\n    cursor:pointer;\n    flex-shrink:0;\n}\n\n.tm-tag-remark-input{\n    flex:1;\n    min-width:0;\n    height:32px;\n    box-sizing:border-box;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:8px;\n    padding:0 10px;\n    color:#ffffff;\n    font-size:0.82rem;\n    outline:none;\n    display:inline-flex;\n    align-items:center;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-tag-remark-input:focus{\n    border-color:rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-tag-remark-input::placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n\n.tm-tag-select-empty{\n    padding:16px;\n    text-align:center;\n    font-size:0.82rem;\n    color:rgba(255, 255, 255, 0.35);\n}\n.tm-custom-modal-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.4);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    z-index:2000000020 !important;\n    opacity:0;\n    transition:opacity 0.25s ease;\n    pointer-events:auto;\n}\n\n.tm-custom-modal-overlay.active{\n    opacity:1;\n}\n\n.tm-custom-modal-content{\n    background-color:hsl(var(--shadcn-card));\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    border-radius:16px;\n    padding:24px;\n    width:85%;\n    max-width:280px;\n    text-align:center;\n    box-shadow:0 10px 30px rgba(0, 0, 0, 0.3);\n    transform:scale(0.9);\n    transition:transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-custom-modal-overlay.active .tm-custom-modal-content{\n    transform:scale(1);\n}\n\n.tm-custom-modal-title{\n    font-size:15px;\n    font-weight:700;\n    margin-bottom:6px;\n}\n\n.tm-custom-modal-message{\n    font-size:13px;\n    color:hsl(var(--shadcn-muted-foreground));\n    margin-bottom:18px;\n    line-height:1.4;\n}\n\n.tm-custom-modal-close-btn{\n    background-color:hsl(var(--shadcn-blue));\n    color:#ffffff;\n    border:none;\n    border-radius:18px;\n    padding:7px 28px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    box-shadow:0 4px 10px hsla(var(--shadcn-blue) / 0.3);\n    transition:all 0.2s;\n}\n\n.tm-custom-modal-close-btn:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-1px);\n}\n\n.tm-custom-modal-close-btn:active{\n    transform:scale(0.95);\n}\n.jc-hdr{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    width:100%;\n    margin-bottom:3px;\n    box-sizing:border-box;\n}\n\n.jc-hdr-left{\n    display:flex;\n    align-items:center;\n    gap:6px;\n    flex-shrink:0;\n}\n\n.jc-hdr-right{\n    display:flex;\n    align-items:center;\n    gap:6px;\n    min-width:0;\n}\n.jc-site{\n    font-size:8px;\n    padding:1px 4px;\n    border-radius:4px;\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    color:hsl(var(--shadcn-blue));\n    font-weight:700;\n    border:1px solid hsla(var(--shadcn-blue) / 0.25);\n    text-transform:uppercase;\n    line-height:1;\n}\n\n.jc-site-jable{\n    background-color:hsla(340, 82%, 52%, 0.1);\n    color:hsl(340, 82%, 52%);\n    border:1px solid hsla(340, 82%, 52%, 0.25);\n}\n\n.jc-site-javlib{\n    background-color:hsla(210, 100%, 50%, 0.1);\n    color:hsl(210, 100%, 50%);\n    border:1px solid hsla(210, 100%, 50%, 0.25);\n}\n.jc-skeleton{\n    pointer-events:none;\n}\n\n.jc-skeleton .skeleton-block{\n    background:hsla(var(--shadcn-muted-foreground) / 0.15);\n    border-radius:4px;\n    animation:skeleton-loading 1.5s infinite ease-in-out;\n}\n\n@keyframes skeleton-loading{\n    0%{\n        opacity:0.55;\n    }\n    50%{\n        opacity:1;\n    }\n    100%{\n        opacity:0.55;\n    }\n}\n.jc-card{\n    display:flex;\n    flex-direction:column;\n    padding:5px 0;\n    background-color:transparent;\n    border:none;\n    border-bottom:1px solid rgba(255, 255, 255, 0.04);\n    transition:opacity 0.2s;\n    margin-bottom:6px;\n    text-align:left;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.jc-card .jc-bd{\n    width:100%;\n}\n\n.jc-card .jc-u{\n    font-weight:500;\n    color:rgba(255, 255, 255, 0.65);\n    text-decoration:none;\n    max-width:140px;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    font-size:12.5px;\n    display:inline-block;\n    vertical-align:middle;\n    transition:color var(--anim-quick);\n}\n\n.jc-card a.jc-u:hover{\n    text-decoration:underline;\n    color:hsl(var(--shadcn-blue));\n}\n\n.jc-card .jc-t{\n    color:rgba(255, 255, 255, 0.4);\n    font-size:11px;\n    display:inline-block;\n    vertical-align:middle;\n}\n\n.jc-card .jc-body-text{\n    font-size:14.5px;\n    line-height:1.55;\n    letter-spacing:0.01em;\n    color:rgba(255, 255, 255, 0.88);\n    overflow-wrap:anywhere;\n    word-break:break-word;\n    margin-top:4px;\n}\n.jc-c-sep{\n    color:rgba(255, 255, 255, 0.25);\n    margin:0 4px;\n    font-weight:normal;\n    display:inline-block;\n    vertical-align:middle;\n}\n.jc-card.jc-spam{\n    opacity:0.35;\n    background-color:transparent;\n}\n\n.jc-card.jc-spam:hover{\n    opacity:0.75;\n}\n\n.jc-spam-badge{\n    background-color:hsla(var(--shadcn-destructive) / 0.8);\n    color:hsl(var(--shadcn-destructive-foreground));\n    font-size:8px;\n    padding:1px 4px;\n    border-radius:3px;\n    font-weight:600;\n    margin-left:4px;\n    display:inline-block;\n    vertical-align:middle;\n}\n.jc-time-link{\n    color:hsl(142.1 70.6% 45.3%);\n    font-weight:700;\n    cursor:pointer;\n    text-decoration:none;\n    transition:all 0.2s ease;\n    padding:2px 6px;\n    background-color:hsla(142.1 70.6% 45.3% / 0.16);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.25);\n    border-radius:4px;\n    display:inline-block;\n    margin:0 2px;\n    font-family:monospace;\n    font-size:12.5px;\n}\n\n.jc-time-link:hover{\n    background-color:hsla(142.1 70.6% 45.3% / 0.25);\n    color:hsl(142.1 76.2% 36.3%);\n    box-shadow:0 1px 4px hsla(142.1 70.6% 45.3% / 0.15);\n}\n\n.jc-code-link{\n    display:inline-block;\n    padding:2px 6px;\n    margin:0 2px;\n    background-color:hsla(var(--shadcn-blue) / 0.16);\n    border:1px solid hsla(var(--shadcn-blue) / 0.35);\n    color:hsl(var(--shadcn-blue));\n    border-radius:4px;\n    font-weight:700;\n    cursor:pointer;\n    font-size:12px;\n    font-family:monospace;\n    transition:all 0.2s ease;\n}\n\n.jc-code-link:hover{\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n    box-shadow:0 2px 6px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.jc-emoji{\n    height:16px;\n    width:16px;\n    vertical-align:middle;\n    display:inline-block;\n    margin:0 1px;\n}\n.tm-comment-loading,\n.tm-comment-error{\n    width:100%;\n    padding:24px;\n    text-align:center;\n    font-size:12px;\n    color:hsl(var(--shadcn-muted-foreground));\n    box-sizing:border-box;\n    pointer-events:auto;\n    background-color:transparent;\n    flex:1;\n}\n\n.tm-comment-error{\n    color:hsl(var(--shadcn-destructive));\n}\n\n.tm-comment-loader-graphic{\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    gap:5px;\n    padding:16px;\n    width:100%;\n}\n\n.tm-comment-loader-graphic .dot{\n    width:6px;\n    height:6px;\n    border-radius:50%;\n    background-color:hsl(var(--shadcn-blue));\n    animation:tmDotPulse 1.4s infinite ease-in-out both;\n}\n\n.tm-comment-loader-graphic .dot:nth-child(1){\n    animation-delay:-0.32s;\n}\n\n.tm-comment-loader-graphic .dot:nth-child(2){\n    animation-delay:-0.16s;\n}\n\n@keyframes tmDotPulse{\n    0%, 80%, 100%{\n        transform:scale(0);\n        opacity:0.3;\n    }\n    40%{\n        transform:scale(1);\n        opacity:1;\n    }\n}\n\n@keyframes tmShake{\n    0%, 100%{ transform:translateX(0); }\n    20%, 60%{ transform:translateX(-4px); }\n    40%, 80%{ transform:translateX(4px); }\n}\n.tm-comments-tabs{\n    display:flex;\n    align-items:center;\n    justify-content:flex-start;\n    gap:8px;\n    padding:8px 16px;\n    background-color:hsla(var(--shadcn-card) / 0.65);\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    pointer-events:auto;\n    z-index:9994;\n    overflow-x:auto;\n    scrollbar-width:none;\n    overscroll-behavior:contain;\n    touch-action:pan-x;\n}\n.tm-comments-tabs::-webkit-scrollbar{\n    display:none;\n}\n\n.tm-comments-tab-btn{\n    padding:6px 14px;\n    font-size:12px;\n    font-weight:500;\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:transparent;\n    border:1px solid transparent;\n    border-radius:16px;\n    cursor:pointer;\n    white-space:nowrap;\n    outline:none;\n    transition:all var(--anim-quick);\n}\n\n.tm-comments-tab-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n}\n\n.tm-comments-tab-btn.active{\n    color:#ffffff;\n    background-color:hsl(var(--shadcn-blue));\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 2px 8px hsla(var(--shadcn-blue) / 0.3);\n    font-weight:600;\n}\n.jc-score-badge{\n    display:inline-block;\n    font-size:10px;\n    color:hsl(var(--shadcn-blue));\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    border:1px solid hsla(var(--shadcn-blue) / 0.3);\n    border-radius:4px;\n    padding:0 4px;\n    margin-left:6px;\n    font-weight:600;\n    vertical-align:middle;\n}\n@media (orientation: landscape){\n    .tm-comments-panel{\n        position:absolute !important;\n        width:0 !important;\n        height:0 !important;\n        overflow:hidden !important;\n        visibility:hidden !important;\n        pointer-events:none !important;\n        opacity:0 !important;\n        border:none !important;\n        margin:0 !important;\n        padding:0 !important;\n    }\n}\n.jc-body-text--collapsible{\n    position:relative;\n    display:flex;\n    flex-direction:column;\n}\n.jc-body-text--collapsible[data-collapsed="true"]{\n    cursor:pointer;\n}\n\n.jc-body-text--collapsible[data-collapsed="true"] .jc-body-text-content{\n    max-height:80px;\n    overflow:hidden;\n    mask-image:linear-gradient(to bottom, black 50%, transparent 100%);\n    -webkit-mask-image:linear-gradient(to bottom, black 50%, transparent 100%);\n}\n\n.jc-toggle-expand-btn{\n    align-self:flex-start;\n    background:transparent;\n    border:none;\n    color:hsl(var(--shadcn-blue));\n    font-size:11px;\n    font-weight:600;\n    padding:4px 0;\n    cursor:pointer;\n    outline:none;\n    transition:opacity 0.2s;\n    pointer-events:auto;\n}\n\n.jc-toggle-expand-btn:hover{\n    opacity:0.8;\n    text-decoration:underline;\n}\n\n.jc-site-javlib-review{\n    background-color:hsla(270, 100%, 60%, 0.1);\n    color:hsl(270, 100%, 60%);\n    border:1px solid hsla(270, 100%, 60%, 0.25);\n}\n.tm-comment-section{\n    display:flex;\n    flex-direction:column;\n    width:100%;\n    margin-bottom:6px;\n    box-sizing:border-box;\n    min-height:0;\n    flex:0 0 auto;\n    transition:flex 0.25s cubic-bezier(0.25, 1, 0.5, 1);\n}\n\n.tm-comment-section:not(.is-collapsed){\n    flex:1;\n}\n\n.tm-comment-section-body{\n    flex:1;\n    min-height:0;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n    overscroll-behavior-y:contain;\n    padding-right:4px;\n    padding-bottom:56px;\n}\n.tm-comment-section-body::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-comment-section-body::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.25);\n    border-radius:2px;\n}\n\n#tm-comment-section-jable{\n    border-left:3px solid hsl(var(--shadcn-red));\n    background:linear-gradient(to right, hsla(var(--shadcn-red) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-jable .tm-comment-section-title{\n    color:hsl(var(--shadcn-red)) !important;\n}\n\n#tm-comment-section-javlib{\n    border-left:3px solid hsl(var(--shadcn-purple));\n    background:linear-gradient(to right, hsla(var(--shadcn-purple) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-javlib .tm-comment-section-title{\n    color:hsl(var(--shadcn-purple)) !important;\n}\n\n#tm-comment-section-javdb{\n    border-left:3px solid hsl(var(--shadcn-blue));\n    background:linear-gradient(to right, hsla(var(--shadcn-blue) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-javdb .tm-comment-section-title{\n    color:hsl(var(--shadcn-blue)) !important;\n}\n\n.tm-comment-section-hdr{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    width:100%;\n    padding:1px 0;\n    margin-bottom:4px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    box-sizing:border-box;\n    cursor:pointer;\n    user-select:none;\n}\n\n.tm-comment-section-title{\n    font-size:13px;\n    font-weight:600;\n    color:hsl(var(--shadcn-foreground));\n    display:flex;\n    align-items:center;\n    gap:6px;\n}\n\n.tm-comment-login-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 8px;\n    border-radius:12px;\n    font-size:10px;\n    font-weight:600;\n    line-height:1;\n    transition:all 0.2s ease;\n}\n\n.tm-comment-login-badge.is-logged-in{\n    color:hsl(142.1 70.6% 45.3%);\n    background-color:hsla(142.1 70.6% 45.3% / 0.1);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.2);\n    cursor:default;\n}\n\n.tm-comment-login-badge.is-not-logged-in{\n    color:hsl(30 100% 50%);\n    background-color:hsla(30 100% 50% / 0.1);\n    border:1px solid hsla(30 100% 50% / 0.25);\n    cursor:pointer;\n}\n\n.tm-comment-login-badge.is-not-logged-in:hover{\n    background-color:hsla(30 100% 50% / 0.2);\n    transform:translateY(-0.5px);\n    box-shadow:0 2px 6px hsla(30 100% 50% / 0.15);\n}\n\n.tm-comment-login-badge.is-not-logged-in:active{\n    transform:scale(0.95);\n}\n\n.tm-comment-login-badge.is-checking{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    cursor:default;\n}\n\n.tm-comment-status-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 8px;\n    border-radius:12px;\n    font-size:10px;\n    font-weight:600;\n    line-height:1;\n}\n.tm-status-badge-loading{\n    color:hsl(var(--shadcn-blue));\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    border:1px solid hsla(var(--shadcn-blue) / 0.2);\n    animation:tmPulse 2s infinite ease-in-out;\n}\n\n.tm-status-badge-unreachable{\n    color:hsl(var(--shadcn-destructive));\n    background-color:hsla(var(--shadcn-destructive) / 0.1);\n    border:1px solid hsla(var(--shadcn-destructive) / 0.2);\n}\n\n.tm-status-badge-not_found{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-mobile_unsupported{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-empty{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-cf_shield{\n    color:hsl(30 100% 50%);\n    background-color:hsla(30 100% 50% / 0.1);\n    border:1px solid hsla(30 100% 50% / 0.2);\n}\n\n.tm-status-badge-loaded{\n    color:hsl(142.1 70.6% 45.3%);\n    background-color:hsla(142.1 70.6% 45.3% / 0.1);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.2);\n}\n\n@keyframes tmPulse{\n    0%{\n        opacity:0.7;\n    }\n    50%{\n        opacity:1;\n    }\n    100%{\n        opacity:0.7;\n    }\n}\n\n.jc-comment-link{\n    color:hsl(var(--shadcn-blue));\n    text-decoration:underline;\n}\n.jc-comment-link:hover{\n    color:hsl(var(--shadcn-blue) / 0.8);\n}\n\n.tm-comment-copy-all-btn{\n    margin-left:10px;\n    cursor:pointer;\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    border-radius:4px;\n    padding:2px 8px;\n    font-size:10px;\n    font-weight:600;\n    color:hsl(var(--shadcn-muted-foreground));\n    outline:none;\n    transition:all var(--anim-quick);\n}\n.tm-comment-copy-all-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.3);\n    border-color:hsla(var(--shadcn-border) / 0.4);\n}\n.tm-comment-copy-all-btn:active{\n    transform:scale(0.95);\n}\n@keyframes jcCardHighlightFlash{\n    0%{\n        background-color:hsla(var(--shadcn-blue) / 0.22);\n    }\n    100%{\n        background-color:transparent;\n    }\n}\n.jc-card-highlight-flash{\n    animation:jcCardHighlightFlash 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;\n}\n@media screen and (min-width: 930px) and (orientation: landscape){\n    .tm-comments-panel:hover::after{\n        opacity:0 !important;\n        pointer-events:none !important;\n    }\n}\n.tm-show-controls-float-btn{\n    position:absolute;\n    bottom:calc(96px + env(safe-area-inset-bottom, 0px));\n    right:16px;\n    width:36px;\n    height:36px;\n    border-radius:50%;\n    background:rgba(18, 18, 20, 0.85);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    color:rgba(255, 255, 255, 0.85);\n    display:none;\n    align-items:center;\n    justify-content:center;\n    box-shadow:0 4px 12px rgba(0, 0, 0, 0.4);\n    z-index:9997;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    padding:0;\n    outline:none;\n    box-sizing:border-box;\n    pointer-events:auto;\n}\n.tm-show-controls-float-btn:hover{\n    color:#ffffff;\n    background:rgba(255, 255, 255, 0.2);\n    transform:scale(1.06);\n}\n.tm-show-controls-float-btn:active{\n    transform:scale(0.92);\n}\n.tm-show-controls-float-btn svg{\n    height:18px;\n    width:auto;\n    display:block;\n    fill:none !important;\n}\n.tm-show-controls-float-btn svg path{\n    fill:currentColor !important;\n    stroke:none !important;\n}\nbody.controls-hidden:not(.tm-mode-pc):not(.tm-mode-ipad-portrait) .tm-show-controls-float-btn{\n    display:flex;\n}\n.tm-custom-modal-cancel-btn{\n    background-color:hsla(var(--shadcn-muted)/0.2);\n    color:hsl(var(--shadcn-foreground));\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-cancel-btn:hover{\n    background-color:hsla(var(--shadcn-muted)/0.3);\n}\n\n.tm-custom-modal-submit-btn,\n.tm-custom-modal-login-btn{\n    background-color:hsl(var(--shadcn-blue));\n    color:#ffffff;\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    box-shadow:0 4px 10px hsla(var(--shadcn-blue) / 0.3);\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-submit-btn:hover,\n.tm-custom-modal-login-btn:hover{\n    background-color:hsl(var(--shadcn-blue)/0.9);\n}\n\n.tm-comment-input-textarea{\n    width:100%;\n    height:90px;\n    margin:12px 0;\n    padding:10px;\n    border-radius:8px;\n    border:1px solid hsla(var(--shadcn-border) / 0.3);\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n    font-size:13px;\n    resize:none;\n    box-sizing:border-box;\n    outline:none;\n    transition:border-color 0.2s;\n}\n\n\n\n`, "" ]);
+      const y = b;
     },
     "56": (r, o, a) => {
       function setAttributesWithoutAttributes(r) {
@@ -85,10 +85,10 @@
         var u = [];
         for (var p = 0; p < r.length; p++) {
           var v = r[p];
-          var y = a.base ? v[0] + a.base : v[0];
-          var b = l[y] || 0;
-          var C = "".concat(y, " ").concat(b);
-          l[y] = b + 1;
+          var b = a.base ? v[0] + a.base : v[0];
+          var y = l[b] || 0;
+          var C = "".concat(b, " ").concat(y);
+          l[b] = y + 1;
           var k = getIndexByIdentifier(C);
           var _ = {
             "css": v[1],
@@ -139,16 +139,16 @@
             var v = getIndexByIdentifier(p);
             o[v].references--;
           }
-          var y = modulesToDom(r, a);
-          for (var b = 0; b < l.length; b++) {
-            var C = l[b];
+          var b = modulesToDom(r, a);
+          for (var y = 0; y < l.length; y++) {
+            var C = l[y];
             var k = getIndexByIdentifier(C);
             if (o[k].references === 0) {
               o[k].updater();
               o.splice(k, 1);
             }
           }
-          l = y;
+          l = b;
         };
       };
     },
@@ -167,15 +167,15 @@
     },
     "140": (r, o, a) => {
       a.d(o, {
-        "A": () => b
+        "A": () => y
       });
       var l = a(601);
       var u = a.n(l);
       var p = a(314);
       var v = a.n(p);
-      var y = v()(u());
-      y.push([ r.id, `.tm-time-indicator{\n    position:absolute;\n    background-color:hsla(var(--shadcn-card) / 0.8);\n    color:hsl(var(--shadcn-card-foreground));\n    padding:4px 8px;\n    border-radius:4px;\n    font-size:12px;\n    font-weight:500;\n    pointer-events:none;\n    z-index:9995;\n    opacity:0;\n    transform:translateY(-8px);\n    transition:opacity 0.2s, transform 0.2s;\n    box-shadow:0 2px 8px rgba(0, 0, 0, 0.2);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n}\n.tm-volume-control{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:40px;\n    padding:0 8px;\n    background-color:transparent;\n    transition:opacity 0.3s ease;\n}\n.tm-volume-control-no-slider{\n    width:auto;\n    padding:0;\n}\n\n.tm-volume-control-no-slider .tm-volume-button{\n    margin:0 8px;\n}\n.tm-volume-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    width:32px;\n    height:32px;\n    padding:4px;\n    border:none;\n    border-radius:50%;\n    background:transparent;\n    color:#fff;\n    cursor:pointer;\n    transition:background-color 0.2s ease;\n}\n\n.tm-volume-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n}\n\n.tm-volume-button svg{\n    width:20px;\n    height:20px;\n}\n.tm-volume-slider-container{\n    position:relative;\n    width:0;\n    height:40px;\n    display:flex;\n    align-items:center;\n    overflow:hidden;\n    transition:width 0.3s ease;\n    opacity:0;\n}\n@media (hover: hover){\n    .tm-volume-control:hover .tm-volume-slider-container{\n        width:80px;\n        opacity:1;\n    }\n}\n.tm-volume-control.dragging .tm-volume-slider-container{\n    width:80px;\n    opacity:1;\n}\n.tm-volume-slider-track{\n    position:relative;\n    width:100%;\n    height:4px;\n    background-color:hsla(var(--shadcn-secondary) / 0.3);\n    border-radius:2px;\n    cursor:pointer;\n}\n.tm-volume-slider-level{\n    position:absolute;\n    left:0;\n    top:0;\n    height:100%;\n    background-color:#fff;\n    border-radius:2px;\n    pointer-events:none;\n    transition:width 0.1s ease;\n}\n.tm-volume-value{\n    position:absolute;\n    top:-24px;\n    left:50%;\n    transform:translateX(-50%);\n    background-color:hsla(var(--shadcn-secondary) / 0.8);\n    color:#fff;\n    padding:2px 6px;\n    border-radius:4px;\n    font-size:12px;\n    opacity:0;\n    transition:opacity 0.2s ease;\n    pointer-events:none;\n    backdrop-filter:blur(4px);\n}\n.tm-volume-control.dragging .tm-volume-value{\n    opacity:1;\n}\n@media (hover: none){\n    .tm-volume-control{\n        touch-action:none;\n    }\n    \n    .tm-volume-slider-track{\n        height:6px;\n    }\n    \n    .tm-volume-button{\n        width:40px;\n        height:40px;\n    }\n}\n@media (prefers-color-scheme: dark){\n    .tm-volume-slider-level{\n        background-color:hsl(var(--shadcn-primary));\n    }\n    \n    .tm-volume-button svg{\n        stroke:hsl(var(--shadcn-primary));\n    }\n}\n.tm-toggle-switch{\n    position:relative;\n    display:inline-block;\n    width:40px;\n    height:24px;\n}\n\n.tm-toggle-switch input{\n    opacity:0;\n    width:0;\n    height:0;\n}\n\n.tm-toggle-slider{\n    position:absolute;\n    cursor:pointer;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:hsla(var(--shadcn-muted) / 0.7);\n    border-radius:12px;\n    transition:var(--anim-quick);\n}\n\n.tm-toggle-slider:before{\n    position:absolute;\n    content:"";\n    height:20px;\n    width:20px;\n    left:2px;\n    bottom:2px;\n    background-color:hsl(var(--shadcn-foreground));\n    border-radius:50%;\n    transition:var(--anim-quick);\n    box-shadow:0 2px 4px rgba(0, 0, 0, 0.1);\n}\n\n.tm-toggle-slider.checked{\n    background-color:hsl(var(--shadcn-blue));\n}\n\n.tm-toggle-slider.checked:before{\n    transform:translateX(16px);\n}\n.tm-playback-rate-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    margin-left:0;\n    height:32px;\n    width:80px;\n    background:hsla(var(--shadcn-secondary) / 0.5);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    color:hsl(var(--shadcn-foreground));\n    font-size:15px;\n    font-weight:600;\n    letter-spacing:-0.1px;\n    border-radius:9999px;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:0 1px 3px rgba(0, 0, 0, 0.08);\n    transition:all var(--anim-quick);\n    cursor:pointer;\n    text-align:center;\n    box-sizing:border-box;\n    padding:0;\n}\n\n.tm-playback-rate-button:hover{\n    background:hsla(var(--shadcn-secondary) / 0.8);\n    border-color:hsla(var(--shadcn-border) / 0.3);\n    transform:translateY(-1px);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-playback-rate-button:active{\n    transform:scale(0.95);\n    background:hsla(var(--shadcn-secondary) / 0.9);\n}\n.tm-playback-rate-button.fast{\n    color:hsl(var(--shadcn-orange));\n    border-color:hsla(var(--shadcn-orange) / 0.3);\n    background:hsla(var(--shadcn-orange) / 0.1);\n}\n\n.tm-playback-rate-button.medium{\n    color:hsl(var(--shadcn-blue));\n    border-color:hsla(var(--shadcn-blue) / 0.3);\n    background:hsla(var(--shadcn-blue) / 0.1);\n}\n\n.tm-playback-rate-button.normal{\n    color:hsl(var(--shadcn-foreground));\n}\n.tm-progress-controls{\n    position:relative;\n    width:100%;\n    bottom:0;\n    left:0;\n    right:0;\n    display:flex;\n    flex-direction:column;\n    z-index:9991;\n    border-radius:0 0 var(--shadcn-radius-lg) var(--shadcn-radius-lg);\n    font-family:var(--font-sans);\n    transition:opacity var(--anim-smooth);\n}\n.tm-progress-bar-container{\n    position:relative;\n    height:12px;\n    display:flex;\n    align-items:center;\n    cursor:pointer;\n    user-select:none;\n    -webkit-user-select:none;\n    -moz-user-select:none;\n    -ms-user-select:none;\n    touch-action:none;\n}\n.tm-progress-bar{\n    width:100%;\n    height:8px;\n    background-color:hsla(var(--shadcn-muted) / 0.5);\n    border-radius:8px;\n    overflow:hidden;\n    position:relative;\n    transition:height 0.15s;\n}\n\n.tm-progress-bar:hover{\n    height:6px;\n}\n.tm-progress-bar-expanded{\n    height:16px !important;\n}\n\n.tm-progress-bar-normal{\n    height:8px !important;\n}\n.tm-progress-bar.tm-dragging{\n    height:16px !important;\n    background-color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    cursor:grabbing;\n}\n.tm-progress-bar-container:has(.tm-dragging){\n    cursor:grabbing;\n}\n.tm-progress-indicator{\n    height:100%;\n    width:0%;\n    background-color:hsla(var(--shadcn-muted) / 0.8);\n    border-radius:0;\n    position:absolute;\n    left:0;\n    top:0;\n    transition:width 0.1s linear;\n    overflow:hidden;\n}\n.tm-dragging .tm-progress-indicator{\n    background-color:hsl(var(--shadcn-card-foreground));\n    box-shadow:none;\n    transition:none;\n}\n.tm-progress-handle{\n    width:12px;\n    height:12px;\n    background-color:hsl(var(--shadcn-blue));\n    border:2px solid hsl(var(--shadcn-card));\n    border-radius:50%;\n    position:absolute;\n    top:50%;\n    left:0%;\n    transform:translate(0, -50%);\n    z-index:2;\n    opacity:1;\n    transition:opacity 0.15s, width 0.15s, height 0.15s, box-shadow 0.15s;\n    box-shadow:0 0 0 4px hsl(var(--shadcn-blue) / 0.2);\n    cursor:grab;\n}\n\n.tm-progress-handle:hover,\n.tm-progress-handle.dragging{\n    transform:translate(0, -50%) scale(1.1);\n    box-shadow:0 0 0 6px hsl(var(--shadcn-blue) / 0.3);\n}\n.tm-settings-label{\n    cursor:pointer;\n    flex:1;\n    font-family:var(--font-sans);\n    font-size:14px;\n    color:hsl(var(--shadcn-foreground));\n}\n.tm-playback-control-row .tm-control-button,\n.tm-playback-control-row .tm-volume-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:0px;\n    border:none;\n    border-radius:50%;\n    background-color:transparent;\n    color:#fff;\n    cursor:pointer;\n    transition:all 0.15s ease;\n    -webkit-tap-highlight-color:transparent;\n}\n\n.tm-playback-control-row .tm-control-button{\n    width:42px;\n    height:42px;\n}\n\n.tm-playback-control-row .tm-volume-button{\n    width:36px;\n    height:36px;\n}\n\n.tm-playback-control-row .tm-control-button:hover,\n.tm-playback-control-row .tm-volume-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    transform:scale(1.05);\n}\n\n.tm-playback-control-row .tm-control-button:active,\n.tm-playback-control-row .tm-volume-button:active{\n    transform:scale(0.95);\n}\n\n.tm-playback-control-row .tm-control-button svg{\n    width:24px;\n    height:24px;\n    stroke:currentColor;\n    stroke-width:2;\n    fill:none;\n}\n\n.tm-playback-control-row .tm-volume-button svg{\n    width:20px;\n    height:20px;\n    stroke:currentColor;\n    stroke-width:2;\n    fill:none;\n}\n@media (hover: none){\n    .tm-playback-control-row .tm-control-button{\n        width:44px;\n        height:44px;\n    }\n    .tm-playback-control-row .tm-volume-button{\n        width:40px;\n        height:40px;\n    }\n}\n@media (prefers-color-scheme: dark){\n    .tm-playback-control-row .tm-control-button svg,\n    .tm-playback-control-row .tm-volume-button svg{\n        stroke:hsl(var(--shadcn-secondary-foreground));\n    }\n}\n.tm-time-control-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.6);\n    transform:none;\n    box-shadow:0 2px 4px rgba(0,0,0,0.1);\n}\n\n.tm-time-control-button-active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-time-control-button-default{\n    transform:translateY(0);\n    box-shadow:0 1px 2px rgba(0,0,0,0.05);\n}\n\n.tm-time-control-button-after-active{\n    transform:none;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.15);\n}\n.tm-modal-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:hsla(var(--shadcn-background) / 0.7);\n    backdrop-filter:blur(6px);\n    -webkit-backdrop-filter:blur(6px);\n    z-index:2000000010 !important;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    opacity:0;\n    transition:opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    padding:20px;\n    box-sizing:border-box;\n}\n\n.tm-modal-overlay.visible{\n    opacity:1;\n}\n\n.tm-comment-modal{\n    width:100%;\n    max-width:420px;\n    background-color:hsla(var(--shadcn-card) / 0.95);\n    border-radius:12px;\n    box-shadow:0 10px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.12);\n    overflow:hidden;\n    transform:scale(0.95) translateY(10px);\n    opacity:0;\n    transition:transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    flex-direction:column;\n}\n\n.tm-comment-modal.visible{\n    transform:scale(1) translateY(0);\n    opacity:1;\n}\n\n.tm-modal-header{\n    padding:16px 20px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n}\n\n.tm-modal-title{\n    font-size:16px;\n    font-weight:600;\n    margin:0;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-modal-close{\n    background:transparent;\n    border:none;\n    cursor:pointer;\n    width:28px;\n    height:28px;\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    color:hsl(var(--shadcn-muted-foreground));\n    transition:background-color 0.2s, color 0.2s;\n}\n\n.tm-modal-close:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-modal-content{\n    padding:16px 20px;\n    flex:1;\n}\n\n.tm-comment-textarea{\n    width:100%;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    border-radius:8px;\n    padding:12px;\n    font-family:var(--font-sans);\n    font-size:14px;\n    line-height:1.5;\n    resize:none;\n    height:120px;\n    box-sizing:border-box;\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    color:hsl(var(--shadcn-foreground));\n    transition:border-color 0.2s, box-shadow 0.2s;\n}\n\n.tm-comment-textarea:focus{\n    outline:none;\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.2);\n}\n\n.tm-comment-textarea::placeholder{\n    color:hsl(var(--shadcn-muted-foreground));\n}\n\n.tm-comment-textarea.error{\n    border-color:hsl(var(--shadcn-destructive));\n    animation:shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;\n}\n\n.tm-modal-footer{\n    padding:12px 20px 16px;\n    border-top:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    justify-content:flex-end;\n    gap:12px;\n}\n\n.tm-modal-button{\n    padding:8px 16px;\n    border-radius:8px;\n    font-size:14px;\n    font-weight:500;\n    border:none;\n    cursor:pointer;\n    transition:all 0.2s;\n}\n\n.tm-modal-cancel{\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n}\n\n.tm-modal-cancel:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    transform:translateY(-1px);\n}\n\n.tm-modal-submit{\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n}\n\n.tm-modal-submit:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-1px);\n    box-shadow:0 2px 5px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-modal-button:active{\n    transform:scale(0.97);\n}\n\n@media (max-width: 480px){\n    .tm-comment-modal{\n        max-width:100%;\n    }\n    \n    .tm-modal-header,\n    .tm-modal-content,\n    .tm-modal-footer{\n        padding:12px 16px;\n    }\n}\n@media screen and (orientation: landscape){\n    .tm-comment-modal{\n        max-width:500px;\n        max-height:90vh;\n    }\n    \n    .tm-comment-textarea{\n        height:100px;\n    }\n}\n.tm-video-minimap{\n    position:absolute !important;\n    bottom:20px !important;\n    left:20px !important;\n    top:auto !important;\n    right:auto !important;\n    margin:0 !important;\n    transform:none !important;\n    width:80px;\n    height:45px;\n    background-color:rgba(0, 0, 0, 0.65) !important;\n    border:1px solid rgba(255, 255, 255, 0.3) !important;\n    border-radius:4px !important;\n    overflow:hidden !important;\n    z-index:9998 !important;\n    pointer-events:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    transition:opacity 0.3s ease, visibility 0.3s ease !important;\n    backdrop-filter:blur(6px) !important;\n    -webkit-backdrop-filter:blur(6px) !important;\n    box-shadow:0 4px 12px rgba(0, 0, 0, 0.4) !important;\n}\n\n.tm-video-minimap-viewport{\n    position:absolute !important;\n    top:0 !important;\n    bottom:0 !important;\n    left:0 !important;\n    width:100%;\n    height:100% !important;\n    box-sizing:border-box !important;\n    border:1.5px solid hsl(var(--shadcn-blue)) !important;\n    background-color:hsla(var(--shadcn-blue) / 0.15) !important;\n    border-radius:2px !important;\n    will-change:transform;\n    transition:none !important;\n}\n.tm-video-wrapper.is-swiping .tm-video-minimap{\n    opacity:1 !important;\n    visibility:visible !important;\n    border-color:rgba(255, 255, 255, 0.45) !important;\n}\n.tm-floating-comment-panel{\n    position:fixed;\n    left:50%;\n    bottom:10px;\n    transform:translateX(-50%) translateY(100%);\n    width:90%;\n    max-width:700px;\n    background-color:hsla(var(--shadcn-card) / 0.95);\n    border-radius:12px 12px 0 0;\n    box-shadow:0 -5px 25px rgba(0, 0, 0, 0.2);\n    z-index:9996;\n    opacity:0;\n    transition:transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n    display:flex;\n    flex-direction:column;\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    overflow:hidden;\n}\n\n.tm-floating-comment-panel.visible{\n    transform:translateX(-50%) translateY(0);\n    opacity:1;\n}\n\n.tm-floating-panel-header{\n    padding:16px 20px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    background-color:hsla(var(--shadcn-card) / 0.98);\n}\n\n.tm-floating-panel-title{\n    font-size:16px;\n    font-weight:600;\n    margin:0;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-floating-panel-close{\n    background:transparent;\n    border:none;\n    cursor:pointer;\n    width:28px;\n    height:28px;\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    color:hsl(var(--shadcn-muted-foreground));\n    transition:background-color 0.2s, color 0.2s;\n}\n\n.tm-floating-panel-close:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-floating-panel-content{\n    padding:16px 20px;\n    flex:1;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n}\n\n.tm-floating-panel-content .tm-comment-placeholder{\n    min-height:200px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    font-size:14px;\n}\n@media screen and (orientation: landscape){\n    .tm-floating-comment-panel{\n        max-width:500px;\n        max-height:80vh;\n        border-radius:12px;\n        bottom:20px;\n    }\n}\n.tm-floating-panel-input-area{\n    padding:12px 16px;\n    border-top:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    gap:8px;\n    background-color:hsla(var(--shadcn-card) / 0.98);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n}\n\n.tm-floating-panel-input{\n    flex:1;\n    height:40px;\n    border-radius:20px;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    padding:0 16px;\n    font-size:14px;\n    color:hsl(var(--shadcn-foreground));\n    transition:border-color 0.2s, box-shadow 0.2s;\n}\n\n.tm-floating-panel-input:focus{\n    outline:none;\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.2);\n}\n\n.tm-floating-panel-input::placeholder{\n    color:hsl(var(--shadcn-muted-foreground));\n}\n\n.tm-floating-panel-input.error{\n    border-color:hsl(var(--shadcn-destructive));\n    animation:shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;\n}\n\n.tm-floating-panel-submit{\n    width:40px;\n    height:40px;\n    border-radius:50%;\n    border:none;\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all 0.2s;\n    flex-shrink:0;\n}\n\n.tm-floating-panel-submit:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-2px);\n    box-shadow:0 2px 5px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-floating-panel-submit:active{\n    transform:scale(0.95);\n}\n\n.tm-floating-panel-submit svg{\n    width:18px;\n    height:18px;\n    stroke:currentColor;\n    stroke-width:2;\n}\n@media screen and (orientation: landscape){\n    .tm-floating-panel-input-area{\n        padding:10px 16px;\n    }\n}\n.tm-speed-indicator{\n    position:absolute;\n    top:50%;\n    left:50%;\n    transform:translate(-50%, -50%);\n    background-color:rgba(0, 0, 0, 0.7);\n    color:white;\n    padding:8px 16px;\n    border-radius:4px;\n    font-size:24px;\n    font-weight:bold;\n    z-index:9999;\n}\n`, "" ]);
-      const b = y;
+      var b = v()(u());
+      b.push([ r.id, `.tm-time-indicator{\n    position:absolute;\n    background-color:hsla(var(--shadcn-card) / 0.8);\n    color:hsl(var(--shadcn-card-foreground));\n    padding:4px 8px;\n    border-radius:4px;\n    font-size:12px;\n    font-weight:500;\n    pointer-events:none;\n    z-index:9995;\n    opacity:0;\n    transform:translateY(-8px);\n    transition:opacity 0.2s, transform 0.2s;\n    box-shadow:0 2px 8px rgba(0, 0, 0, 0.2);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n}\n.tm-volume-control{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:40px;\n    padding:0 8px;\n    background-color:transparent;\n    transition:opacity 0.3s ease;\n}\n.tm-volume-control-no-slider{\n    width:auto;\n    padding:0;\n}\n\n.tm-volume-control-no-slider .tm-volume-button{\n    margin:0 8px;\n}\n.tm-volume-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    width:32px;\n    height:32px;\n    padding:4px;\n    border:none;\n    border-radius:50%;\n    background:transparent;\n    color:#fff;\n    cursor:pointer;\n    transition:background-color 0.2s ease;\n}\n\n.tm-volume-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n}\n\n.tm-volume-button svg{\n    width:20px;\n    height:20px;\n}\n.tm-volume-slider-container{\n    position:relative;\n    width:0;\n    height:40px;\n    display:flex;\n    align-items:center;\n    overflow:hidden;\n    transition:width 0.3s ease;\n    opacity:0;\n}\n@media (hover: hover){\n    .tm-volume-control:hover .tm-volume-slider-container{\n        width:80px;\n        opacity:1;\n    }\n}\n.tm-volume-control.dragging .tm-volume-slider-container{\n    width:80px;\n    opacity:1;\n}\n.tm-volume-slider-track{\n    position:relative;\n    width:100%;\n    height:4px;\n    background-color:hsla(var(--shadcn-secondary) / 0.3);\n    border-radius:2px;\n    cursor:pointer;\n}\n.tm-volume-slider-level{\n    position:absolute;\n    left:0;\n    top:0;\n    height:100%;\n    background-color:#fff;\n    border-radius:2px;\n    pointer-events:none;\n    transition:width 0.1s ease;\n}\n.tm-volume-value{\n    position:absolute;\n    top:-24px;\n    left:50%;\n    transform:translateX(-50%);\n    background-color:hsla(var(--shadcn-secondary) / 0.8);\n    color:#fff;\n    padding:2px 6px;\n    border-radius:4px;\n    font-size:12px;\n    opacity:0;\n    transition:opacity 0.2s ease;\n    pointer-events:none;\n    backdrop-filter:blur(4px);\n}\n.tm-volume-control.dragging .tm-volume-value{\n    opacity:1;\n}\n@media (hover: none){\n    .tm-volume-control{\n        touch-action:none;\n    }\n    \n    .tm-volume-slider-track{\n        height:6px;\n    }\n    \n    .tm-volume-button{\n        width:40px;\n        height:40px;\n    }\n}\n@media (prefers-color-scheme: dark){\n    .tm-volume-slider-level{\n        background-color:hsl(var(--shadcn-primary));\n    }\n    \n    .tm-volume-button svg{\n        stroke:hsl(var(--shadcn-primary));\n    }\n}\n.tm-toggle-switch{\n    position:relative;\n    display:inline-block;\n    width:40px;\n    height:24px;\n}\n\n.tm-toggle-switch input{\n    opacity:0;\n    width:0;\n    height:0;\n}\n\n.tm-toggle-slider{\n    position:absolute;\n    cursor:pointer;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:hsla(var(--shadcn-muted) / 0.7);\n    border-radius:12px;\n    transition:var(--anim-quick);\n}\n\n.tm-toggle-slider:before{\n    position:absolute;\n    content:"";\n    height:20px;\n    width:20px;\n    left:2px;\n    bottom:2px;\n    background-color:hsl(var(--shadcn-foreground));\n    border-radius:50%;\n    transition:var(--anim-quick);\n    box-shadow:0 2px 4px rgba(0, 0, 0, 0.1);\n}\n\n.tm-toggle-slider.checked{\n    background-color:hsl(var(--shadcn-blue));\n}\n\n.tm-toggle-slider.checked:before{\n    transform:translateX(16px);\n}\n.tm-playback-rate-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    margin-left:0;\n    height:32px;\n    width:80px;\n    background:hsla(var(--shadcn-secondary) / 0.5);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    color:hsl(var(--shadcn-foreground));\n    font-size:15px;\n    font-weight:600;\n    letter-spacing:-0.1px;\n    border-radius:9999px;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:0 1px 3px rgba(0, 0, 0, 0.08);\n    transition:all var(--anim-quick);\n    cursor:pointer;\n    text-align:center;\n    box-sizing:border-box;\n    padding:0;\n}\n\n.tm-playback-rate-button:hover{\n    background:hsla(var(--shadcn-secondary) / 0.8);\n    border-color:hsla(var(--shadcn-border) / 0.3);\n    transform:translateY(-1px);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-playback-rate-button:active{\n    transform:scale(0.95);\n    background:hsla(var(--shadcn-secondary) / 0.9);\n}\n.tm-playback-rate-button.fast{\n    color:hsl(var(--shadcn-orange));\n    border-color:hsla(var(--shadcn-orange) / 0.3);\n    background:hsla(var(--shadcn-orange) / 0.1);\n}\n\n.tm-playback-rate-button.medium{\n    color:hsl(var(--shadcn-blue));\n    border-color:hsla(var(--shadcn-blue) / 0.3);\n    background:hsla(var(--shadcn-blue) / 0.1);\n}\n\n.tm-playback-rate-button.normal{\n    color:hsl(var(--shadcn-foreground));\n}\n.tm-progress-controls{\n    position:relative;\n    width:100%;\n    bottom:0;\n    left:0;\n    right:0;\n    display:flex;\n    flex-direction:column;\n    z-index:9991;\n    border-radius:0 0 var(--shadcn-radius-lg) var(--shadcn-radius-lg);\n    font-family:var(--font-sans);\n    transition:opacity var(--anim-smooth);\n}\n.tm-progress-bar-container{\n    position:relative;\n    height:12px;\n    display:flex;\n    align-items:center;\n    cursor:pointer;\n    user-select:none;\n    -webkit-user-select:none;\n    -moz-user-select:none;\n    -ms-user-select:none;\n    touch-action:none;\n}\n.tm-progress-bar{\n    width:100%;\n    height:8px;\n    background-color:hsla(var(--shadcn-muted) / 0.5);\n    border-radius:8px;\n    overflow:hidden;\n    position:relative;\n    transition:height 0.15s;\n}\n\n.tm-progress-bar:hover{\n    height:6px;\n}\n.tm-progress-bar-expanded{\n    height:16px !important;\n}\n\n.tm-progress-bar-normal{\n    height:8px !important;\n}\n.tm-progress-bar.tm-dragging{\n    height:16px !important;\n    background-color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    cursor:grabbing;\n}\n.tm-progress-bar-container:has(.tm-dragging){\n    cursor:grabbing;\n}\n.tm-progress-indicator{\n    height:100%;\n    width:0%;\n    background-color:hsla(var(--shadcn-muted) / 0.8);\n    border-radius:0;\n    position:absolute;\n    left:0;\n    top:0;\n    transition:width 0.1s linear;\n    overflow:hidden;\n}\n.tm-dragging .tm-progress-indicator{\n    background-color:hsl(var(--shadcn-card-foreground));\n    box-shadow:none;\n    transition:none;\n}\n.tm-progress-handle{\n    width:12px;\n    height:12px;\n    background-color:hsl(var(--shadcn-blue));\n    border:2px solid hsl(var(--shadcn-card));\n    border-radius:50%;\n    position:absolute;\n    top:50%;\n    left:0%;\n    transform:translate(0, -50%);\n    z-index:2;\n    opacity:1;\n    transition:opacity 0.15s, width 0.15s, height 0.15s, box-shadow 0.15s;\n    box-shadow:0 0 0 4px hsl(var(--shadcn-blue) / 0.2);\n    cursor:grab;\n}\n\n.tm-progress-handle:hover,\n.tm-progress-handle.dragging{\n    transform:translate(0, -50%) scale(1.1);\n    box-shadow:0 0 0 6px hsl(var(--shadcn-blue) / 0.3);\n}\n.tm-settings-label{\n    cursor:pointer;\n    flex:1;\n    font-family:var(--font-sans);\n    font-size:14px;\n    color:hsl(var(--shadcn-foreground));\n}\n.tm-playback-control-row .tm-control-button,\n.tm-playback-control-row .tm-volume-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:0px;\n    border:none;\n    border-radius:50%;\n    background-color:transparent;\n    color:#fff;\n    cursor:pointer;\n    transition:all 0.15s ease;\n    -webkit-tap-highlight-color:transparent;\n}\n\n.tm-playback-control-row .tm-control-button{\n    width:42px;\n    height:42px;\n}\n\n.tm-playback-control-row .tm-volume-button{\n    width:36px;\n    height:36px;\n}\n\n.tm-playback-control-row .tm-control-button:hover,\n.tm-playback-control-row .tm-volume-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    transform:scale(1.05);\n}\n\n.tm-playback-control-row .tm-control-button:active,\n.tm-playback-control-row .tm-volume-button:active{\n    transform:scale(0.95);\n}\n\n.tm-playback-control-row .tm-control-button svg{\n    width:24px;\n    height:24px;\n    stroke:currentColor;\n    stroke-width:2;\n    fill:none;\n}\n\n.tm-playback-control-row .tm-volume-button svg{\n    width:20px;\n    height:20px;\n    stroke:currentColor;\n    stroke-width:2;\n    fill:none;\n}\n@media (hover: none){\n    .tm-playback-control-row .tm-control-button{\n        width:44px;\n        height:44px;\n    }\n    .tm-playback-control-row .tm-volume-button{\n        width:40px;\n        height:40px;\n    }\n}\n@media (prefers-color-scheme: dark){\n    .tm-playback-control-row .tm-control-button svg,\n    .tm-playback-control-row .tm-volume-button svg{\n        stroke:hsl(var(--shadcn-secondary-foreground));\n    }\n}\n.tm-time-control-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.6);\n    transform:none;\n    box-shadow:0 2px 4px rgba(0,0,0,0.1);\n}\n\n.tm-time-control-button-active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-time-control-button-default{\n    transform:translateY(0);\n    box-shadow:0 1px 2px rgba(0,0,0,0.05);\n}\n\n.tm-time-control-button-after-active{\n    transform:none;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.15);\n}\n.tm-modal-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:hsla(var(--shadcn-background) / 0.7);\n    backdrop-filter:blur(6px);\n    -webkit-backdrop-filter:blur(6px);\n    z-index:2000000010 !important;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    opacity:0;\n    transition:opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    padding:20px;\n    box-sizing:border-box;\n}\n\n.tm-modal-overlay.visible{\n    opacity:1;\n}\n\n.tm-comment-modal{\n    width:100%;\n    max-width:420px;\n    background-color:hsla(var(--shadcn-card) / 0.95);\n    border-radius:12px;\n    box-shadow:0 10px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.12);\n    overflow:hidden;\n    transform:scale(0.95) translateY(10px);\n    opacity:0;\n    transition:transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    flex-direction:column;\n}\n\n.tm-comment-modal.visible{\n    transform:scale(1) translateY(0);\n    opacity:1;\n}\n\n.tm-modal-header{\n    padding:16px 20px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n}\n\n.tm-modal-title{\n    font-size:16px;\n    font-weight:600;\n    margin:0;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-modal-close{\n    background:transparent;\n    border:none;\n    cursor:pointer;\n    width:28px;\n    height:28px;\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    color:hsl(var(--shadcn-muted-foreground));\n    transition:background-color 0.2s, color 0.2s;\n}\n\n.tm-modal-close:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-modal-content{\n    padding:16px 20px;\n    flex:1;\n}\n\n.tm-comment-textarea{\n    width:100%;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    border-radius:8px;\n    padding:12px;\n    font-family:var(--font-sans);\n    font-size:14px;\n    line-height:1.5;\n    resize:none;\n    height:120px;\n    box-sizing:border-box;\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    color:hsl(var(--shadcn-foreground));\n    transition:border-color 0.2s, box-shadow 0.2s;\n}\n\n.tm-comment-textarea:focus{\n    outline:none;\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.2);\n}\n\n.tm-comment-textarea::placeholder{\n    color:hsl(var(--shadcn-muted-foreground));\n}\n\n.tm-comment-textarea.error{\n    border-color:hsl(var(--shadcn-destructive));\n    animation:shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;\n}\n\n.tm-modal-footer{\n    padding:12px 20px 16px;\n    border-top:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    justify-content:flex-end;\n    gap:12px;\n}\n\n.tm-modal-button{\n    padding:8px 16px;\n    border-radius:8px;\n    font-size:14px;\n    font-weight:500;\n    border:none;\n    cursor:pointer;\n    transition:all 0.2s;\n}\n\n.tm-modal-cancel{\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n}\n\n.tm-modal-cancel:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    transform:translateY(-1px);\n}\n\n.tm-modal-submit{\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n}\n\n.tm-modal-submit:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-1px);\n    box-shadow:0 2px 5px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-modal-button:active{\n    transform:scale(0.97);\n}\n\n@media (max-width: 480px){\n    .tm-comment-modal{\n        max-width:100%;\n    }\n    \n    .tm-modal-header,\n    .tm-modal-content,\n    .tm-modal-footer{\n        padding:12px 16px;\n    }\n}\n@media screen and (orientation: landscape){\n    .tm-comment-modal{\n        max-width:500px;\n        max-height:90vh;\n    }\n    \n    .tm-comment-textarea{\n        height:100px;\n    }\n}\n.tm-video-minimap{\n    position:absolute !important;\n    bottom:20px !important;\n    left:20px !important;\n    top:auto !important;\n    right:auto !important;\n    margin:0 !important;\n    transform:none !important;\n    width:80px;\n    height:45px;\n    background-color:rgba(0, 0, 0, 0.65) !important;\n    border:1px solid rgba(255, 255, 255, 0.3) !important;\n    border-radius:4px !important;\n    overflow:hidden !important;\n    z-index:9998 !important;\n    pointer-events:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    transition:opacity 0.3s ease, visibility 0.3s ease !important;\n    backdrop-filter:blur(6px) !important;\n    -webkit-backdrop-filter:blur(6px) !important;\n    box-shadow:0 4px 12px rgba(0, 0, 0, 0.4) !important;\n}\n\n.tm-video-minimap-viewport{\n    position:absolute !important;\n    top:0 !important;\n    bottom:0 !important;\n    left:0 !important;\n    width:100%;\n    height:100% !important;\n    box-sizing:border-box !important;\n    border:1.5px solid hsl(var(--shadcn-blue)) !important;\n    background-color:hsla(var(--shadcn-blue) / 0.15) !important;\n    border-radius:2px !important;\n    will-change:transform;\n    transition:none !important;\n}\n.tm-video-wrapper.is-swiping .tm-video-minimap{\n    opacity:1 !important;\n    visibility:visible !important;\n    border-color:rgba(255, 255, 255, 0.45) !important;\n}\n.tm-floating-comment-panel{\n    position:fixed;\n    left:50%;\n    bottom:10px;\n    transform:translateX(-50%) translateY(100%);\n    width:90%;\n    max-width:700px;\n    background-color:hsla(var(--shadcn-card) / 0.95);\n    border-radius:12px 12px 0 0;\n    box-shadow:0 -5px 25px rgba(0, 0, 0, 0.2);\n    z-index:9996;\n    opacity:0;\n    transition:transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n    display:flex;\n    flex-direction:column;\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    overflow:hidden;\n}\n\n.tm-floating-comment-panel.visible{\n    transform:translateX(-50%) translateY(0);\n    opacity:1;\n}\n\n.tm-floating-panel-header{\n    padding:16px 20px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    background-color:hsla(var(--shadcn-card) / 0.98);\n}\n\n.tm-floating-panel-title{\n    font-size:16px;\n    font-weight:600;\n    margin:0;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-floating-panel-close{\n    background:transparent;\n    border:none;\n    cursor:pointer;\n    width:28px;\n    height:28px;\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    color:hsl(var(--shadcn-muted-foreground));\n    transition:background-color 0.2s, color 0.2s;\n}\n\n.tm-floating-panel-close:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-floating-panel-content{\n    padding:16px 20px;\n    flex:1;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n}\n\n.tm-floating-panel-content .tm-comment-placeholder{\n    min-height:200px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    font-size:14px;\n}\n@media screen and (orientation: landscape){\n    .tm-floating-comment-panel{\n        max-width:500px;\n        max-height:80vh;\n        border-radius:12px;\n        bottom:20px;\n    }\n}\n.tm-floating-panel-input-area{\n    padding:12px 16px;\n    border-top:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    gap:8px;\n    background-color:hsla(var(--shadcn-card) / 0.98);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n}\n\n.tm-floating-panel-input{\n    flex:1;\n    height:40px;\n    border-radius:20px;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    padding:0 16px;\n    font-size:14px;\n    color:hsl(var(--shadcn-foreground));\n    transition:border-color 0.2s, box-shadow 0.2s;\n}\n\n.tm-floating-panel-input:focus{\n    outline:none;\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.2);\n}\n\n.tm-floating-panel-input::placeholder{\n    color:hsl(var(--shadcn-muted-foreground));\n}\n\n.tm-floating-panel-input.error{\n    border-color:hsl(var(--shadcn-destructive));\n    animation:shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;\n}\n\n.tm-floating-panel-submit{\n    width:40px;\n    height:40px;\n    border-radius:50%;\n    border:none;\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all 0.2s;\n    flex-shrink:0;\n}\n\n.tm-floating-panel-submit:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-2px);\n    box-shadow:0 2px 5px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-floating-panel-submit:active{\n    transform:scale(0.95);\n}\n\n.tm-floating-panel-submit svg{\n    width:18px;\n    height:18px;\n    stroke:currentColor;\n    stroke-width:2;\n}\n@media screen and (orientation: landscape){\n    .tm-floating-panel-input-area{\n        padding:10px 16px;\n    }\n}\n.tm-speed-indicator{\n    position:absolute;\n    top:50%;\n    left:50%;\n    transform:translate(-50%, -50%);\n    background-color:rgba(0, 0, 0, 0.7);\n    color:white;\n    padding:8px 16px;\n    border-radius:4px;\n    font-size:24px;\n    font-weight:bold;\n    z-index:9999;\n}\n`, "" ]);
+      const y = b;
     },
     "314": r => {
       r.exports = function(r) {
@@ -212,10 +212,10 @@
           }
           var v = {};
           if (l) {
-            for (var y = 0; y < this.length; y++) {
-              var b = this[y][0];
-              if (b != null) {
-                v[b] = true;
+            for (var b = 0; b < this.length; b++) {
+              var y = this[b][0];
+              if (y != null) {
+                v[y] = true;
               }
             }
           }
@@ -256,39 +256,39 @@
     },
     "401": (r, o, a) => {
       a.d(o, {
-        "A": () => b
+        "A": () => y
       });
       var l = a(601);
       var u = a.n(l);
       var p = a(314);
       var v = a.n(p);
-      var y = v()(u());
-      y.push([ r.id, `.tm-floating-button{\n    position:fixed;\n    bottom:30px;\n    left:50%;\n    transform:translateX(-50%);\n    padding:0;\n    width:56px;\n    height:56px;\n    border-radius:50%;\n    background-color:transparent;\n    color:var(--brand-pink);\n    border:none;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    z-index:9980;\n    cursor:pointer;\n    transition:all var(--anim-smooth);\n    overflow:visible;\n}\n\n.tm-floating-button svg{\n    width:48px;\n    height:48px;\n    filter:drop-shadow(0 0 10px rgba(var(--brand-pink-rgb), 0.9));\n    transition:all var(--anim-smooth);\n    animation:breathing-glow 3s infinite ease-in-out;\n}\n\n.tm-floating-button:hover{\n    transform:translateX(-50%) scale(1.1);\n}\n\n.tm-floating-button:hover svg{\n    animation-play-state:paused;\n    filter:drop-shadow(0 0 20px rgba(var(--brand-pink-rgb), 1.0));\n}\n\n.tm-floating-button:active{\n    transform:translateX(-50%) scale(0.95);\n}\n@keyframes breathing-glow{\n    0%{\n        filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7));\n        transform:scale(0.97);\n    }\n    50%{\n        filter:drop-shadow(0 0 25px rgba(var(--brand-pink-rgb), 1.0));\n        transform:scale(1.03);\n    }\n    100%{\n        filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7));\n        transform:scale(0.97);\n    }\n}\n@media screen and (orientation: landscape){\n    .tm-floating-button{\n        left:auto;\n        right:20px;\n        transform:translateX(0);\n    }\n    \n    .tm-floating-button:hover{\n        transform:translateX(0) scale(1.1);\n    }\n    \n    .tm-floating-button:active{\n        transform:translateX(0) scale(0.95);\n    }\n}\n.tm-toast{\n    position:fixed;\n    z-index:100000;\n    left:50%;\n    padding:10px 20px;\n    border-radius:var(--shadcn-radius);\n    color:hsl(var(--shadcn-foreground));\n    background:hsla(var(--shadcn-card) / 0.85);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    font-size:14px;\n    font-weight:500;\n    max-width:80%;\n    text-align:center;\n    word-break:break-all;\n    box-shadow:var(--shadow-lg);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    opacity:0;\n    transition:opacity var(--anim-smooth), transform var(--anim-smooth);\n    font-family:var(--font-sans);\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    gap:8px;\n}\n\n.tm-toast.visible{\n    opacity:1;\n}\n\n.tm-toast-icon{\n    flex-shrink:0;\n    width:15px;\n    height:15px;\n    opacity:0.95;\n}\n\n.tm-toast-content{\n    display:inline-block;\n}\n\n.tm-toast--top{\n    top:10%;\n    transform:translateX(-50%) translateY(-10px);\n}\n.tm-toast--top.visible{\n    transform:translateX(-50%) translateY(0);\n}\n\n.tm-toast--bottom{\n    bottom:10%;\n    transform:translateX(-50%) translateY(10px);\n}\n.tm-toast--bottom.visible{\n    transform:translateX(-50%) translateY(0);\n}\n\n.tm-toast--center{\n    top:50%;\n    transform:translate(-50%, -40%);\n}\n.tm-toast--center.visible{\n    transform:translate(-50%, -50%);\n}\n\n.tm-toast--error{\n    background:hsla(var(--shadcn-destructive) / 0.85);\n    border-color:hsla(var(--shadcn-destructive) / 0.3);\n    color:#fff;\n}\n\n.tm-toast--success{\n    background:hsla(var(--shadcn-green) / 0.85);\n    border-color:hsla(var(--shadcn-green) / 0.3);\n    color:#fff;\n}\n\n.tm-toast--info{\n    background:hsla(var(--shadcn-blue) / 0.85);\n    border-color:hsla(var(--shadcn-blue) / 0.3);\n    color:#fff;\n}\n`, "" ]);
-      const b = y;
+      var b = v()(u());
+      b.push([ r.id, `.tm-floating-button{\n    position:fixed;\n    bottom:30px;\n    left:50%;\n    transform:translateX(-50%);\n    padding:0;\n    width:56px;\n    height:56px;\n    border-radius:50%;\n    background-color:transparent;\n    color:var(--brand-pink);\n    border:none;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    z-index:9980;\n    cursor:pointer;\n    transition:all var(--anim-smooth);\n    overflow:visible;\n}\n\n.tm-floating-button svg{\n    width:48px;\n    height:48px;\n    filter:drop-shadow(0 0 10px rgba(var(--brand-pink-rgb), 0.9));\n    transition:all var(--anim-smooth);\n    animation:breathing-glow 3s infinite ease-in-out;\n}\n\n.tm-floating-button:hover{\n    transform:translateX(-50%) scale(1.1);\n}\n\n.tm-floating-button:hover svg{\n    animation-play-state:paused;\n    filter:drop-shadow(0 0 20px rgba(var(--brand-pink-rgb), 1.0));\n}\n\n.tm-floating-button:active{\n    transform:translateX(-50%) scale(0.95);\n}\n@keyframes breathing-glow{\n    0%{\n        filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7));\n        transform:scale(0.97);\n    }\n    50%{\n        filter:drop-shadow(0 0 25px rgba(var(--brand-pink-rgb), 1.0));\n        transform:scale(1.03);\n    }\n    100%{\n        filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7));\n        transform:scale(0.97);\n    }\n}\n@media screen and (orientation: landscape){\n    .tm-floating-button{\n        left:auto;\n        right:20px;\n        transform:translateX(0);\n    }\n    \n    .tm-floating-button:hover{\n        transform:translateX(0) scale(1.1);\n    }\n    \n    .tm-floating-button:active{\n        transform:translateX(0) scale(0.95);\n    }\n}\n.tm-toast{\n    position:fixed;\n    z-index:100000;\n    left:50%;\n    padding:10px 20px;\n    border-radius:var(--shadcn-radius);\n    color:hsl(var(--shadcn-foreground));\n    background:hsla(var(--shadcn-card) / 0.85);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    font-size:14px;\n    font-weight:500;\n    max-width:80%;\n    text-align:center;\n    word-break:break-all;\n    box-shadow:var(--shadow-lg);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    opacity:0;\n    transition:opacity var(--anim-smooth), transform var(--anim-smooth);\n    font-family:var(--font-sans);\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    gap:8px;\n}\n\n.tm-toast.visible{\n    opacity:1;\n}\n\n.tm-toast-icon{\n    flex-shrink:0;\n    width:15px;\n    height:15px;\n    opacity:0.95;\n}\n\n.tm-toast-content{\n    display:inline-block;\n}\n\n.tm-toast--top{\n    top:10%;\n    transform:translateX(-50%) translateY(-10px);\n}\n.tm-toast--top.visible{\n    transform:translateX(-50%) translateY(0);\n}\n\n.tm-toast--bottom{\n    bottom:10%;\n    transform:translateX(-50%) translateY(10px);\n}\n.tm-toast--bottom.visible{\n    transform:translateX(-50%) translateY(0);\n}\n\n.tm-toast--center{\n    top:50%;\n    transform:translate(-50%, -40%);\n}\n.tm-toast--center.visible{\n    transform:translate(-50%, -50%);\n}\n\n.tm-toast--error{\n    background:hsla(var(--shadcn-destructive) / 0.85);\n    border-color:hsla(var(--shadcn-destructive) / 0.3);\n    color:#fff;\n}\n\n.tm-toast--success{\n    background:hsla(var(--shadcn-green) / 0.85);\n    border-color:hsla(var(--shadcn-green) / 0.3);\n    color:#fff;\n}\n\n.tm-toast--info{\n    background:hsla(var(--shadcn-blue) / 0.85);\n    border-color:hsla(var(--shadcn-blue) / 0.3);\n    color:#fff;\n}\n`, "" ]);
+      const y = b;
     },
     "465": (r, o, a) => {
       a.d(o, {
-        "A": () => b
+        "A": () => y
       });
       var l = a(601);
       var u = a.n(l);
       var p = a(314);
       var v = a.n(p);
-      var y = v()(u());
-      y.push([ r.id, `.tm-video-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    height:100vh;\n    background-color:rgba(35, 17, 29, 0.8);\n    z-index:2000000000 !important;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    backdrop-filter:blur(30px);\n    -webkit-backdrop-filter:blur(30px);\n    padding:0;\n    touch-action:none;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-player-container{\n    position:fixed;\n    top:0;\n    bottom:0;\n    left:0;\n    right:0;\n    width:100%;\n    background-color:transparent;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    z-index:2000000001 !important;\n    height:100%;\n    overflow:visible;\n    pointer-events:auto;\n    touch-action:pan-y;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-button-container{\n    width:100%;\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    gap:10px;\n    padding:6px 10px;\n    box-sizing:border-box;\n    z-index:99999;\n    position:absolute;\n    top:0;\n    left:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);\n    touch-action:none;\n}\n\n.tm-video-container{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:auto;\n    max-height:80vh;\n    margin-top:44px;\n    display:flex;\n    align-items:flex-start;\n    justify-content:center;\n    background-color:hsl(var(--shadcn-card));\n    border-radius:var(--shadcn-radius-lg);\n    box-shadow:var(--shadow-lg);\n    z-index:9992;\n    touch-action:pan-y;\n}\n\n.tm-video-wrapper{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:100%;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    will-change:transform;\n    border-radius:var(--shadcn-radius) var(--shadcn-radius) 0 0;\n    touch-action:pan-y;\n}\n.tm-video-wrapper > *:not(video):not(.tm-speed-indicator):not(.tm-video-minimap):not(.tm-inline-remark-popover){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video > *:not(track):not(source){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video{\n    width:auto !important; \n    height:100% !important; \n    max-height:100% !important; \n    max-width:none !important; \n    object-fit:contain !important; \n    transition:transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n    touch-action:pan-y;\n    cursor:grab; \n}\n.tm-handle-container{\n    position:relative;\n    height:30px;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    z-index:9992;\n    width:100%;\n    flex-shrink:0;\n    touch-action:none;\n}\n\n.tm-resize-handle{\n    position:absolute;\n    height:5px;\n    width:134px;\n    max-width:134px;\n    background-color:hsla(var(--shadcn-foreground) / 0.6);\n    border-radius:2.5px;\n    cursor:grab;\n    touch-action:none;\n    opacity:0.5;\n    will-change:transform;\n    transition:all var(--anim-quick);\n    box-shadow:none;\n}\n\n.tm-resize-handle::after{\n    content:'';\n    position:absolute;\n    left:-10px;\n    right:-10px;\n    top:-15px;\n    bottom:-15px;\n    background:transparent;\n}\n\n.tm-resize-handle:hover,\n.tm-resize-handle.dragging{\n    opacity:1;\n    background-color:hsla(var(--shadcn-foreground) / 0.8);\n}\n\n.tm-resize-handle.dragging{\n    cursor:grabbing;\n}\n.tm-control-button-base{\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    box-shadow:var(--shadow-sm);\n}\n.tm-close-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-smooth);\n    z-index:9994;\n}\n\n.tm-close-button:hover{\n    background-color:hsl(var(--shadcn-destructive));\n    transform:scale(1.1);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-close-button:active{\n    transform:scale(0.9);\n}\n.tm-settings-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    z-index:9993;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-settings-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.1) rotate(30deg);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-settings-button:active{\n    transform:scale(0.9);\n}\n.tm-settings-panel{\n    position:absolute;\n    top:calc(env(safe-area-inset-top, 8px) + 60px);\n    right:16px;\n    background-color:hsla(var(--shadcn-card) / 0.9);\n    backdrop-filter:blur(20px);\n    -webkit-backdrop-filter:blur(20px);\n    border-radius:14px;\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    box-shadow:0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px hsla(0, 0%, 100%, 0.05);\n    padding:16px 18px;\n    z-index:9996;\n    min-width:270px;\n    max-width:320px;\n    transform:translateY(-10px);\n    opacity:0;\n    pointer-events:none;\n    transition:transform var(--anim-smooth), opacity var(--anim-smooth);\n    touch-action:none;\n}\n\n.tm-settings-panel.active{\n    transform:translateY(0);\n    opacity:1;\n    pointer-events:auto;\n}\n.tm-settings-menu-container{\n    display:flex;\n    flex-direction:column;\n    gap:16px;\n    color:hsl(var(--shadcn-foreground));\n    user-select:none;\n    font-size:13.5px;\n}\n.tm-settings-section{\n    display:flex;\n    flex-direction:column;\n    gap:4px;\n}\n.tm-settings-section-header{\n    font-size:11px;\n    font-weight:700;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    letter-spacing:0.8px;\n    text-transform:uppercase;\n    padding-left:2px;\n}\n.tm-settings-section-divider{\n    height:1px;\n    background:linear-gradient(90deg, hsla(var(--shadcn-border) / 0.3) 0%, hsla(var(--shadcn-border) / 0.05) 100%);\n    margin:4px 0 8px 0;\n    border-radius:1px;\n}\n.tm-settings-option-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    padding:6px 4px;\n    border-radius:8px;\n    cursor:pointer;\n    transition:background 0.15s ease;\n}\n\n.tm-settings-option-row:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.3);\n}\n\n.tm-settings-label-wrapper{\n    display:flex;\n    align-items:center;\n    gap:8px;\n}\n\n.tm-settings-label{\n    font-size:13.5px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n.tm-settings-seek-steps-subpanel{\n    display:flex;\n    flex-wrap:nowrap;\n    gap:6px;\n    align-items:center;\n    overflow-x:auto;\n    overflow-y:hidden;\n    white-space:nowrap;\n    padding:6px 2px 4px 2px;\n    margin-top:2px;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    -ms-overflow-style:none;\n}\n\n.tm-settings-seek-steps-subpanel::-webkit-scrollbar{\n    display:none;\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    flex-wrap:wrap;\n    gap:8px;\n    align-items:center;\n    justify-content:flex-start;\n    padding:6px 2px 2px 2px;\n    margin-top:2px;\n}\n.tm-seek-step-badge,\n.tm-source-badge{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    font-size:11.5px;\n    font-weight:500;\n    padding:0 12px;\n    height:28px;\n    line-height:1;\n    border-radius:6px;\n    box-sizing:border-box;\n    border:1px solid transparent;\n    cursor:pointer;\n    user-select:none;\n    flex-shrink:0;\n    transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-seek-step-badge.enabled,\n.tm-source-badge.enabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    border-color:hsla(var(--shadcn-border) / 0.35);\n    color:#ffffff;\n    font-weight:600;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.2);\n}\n.tm-seek-step-badge.disabled,\n.tm-source-badge.disabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.15);\n    border-color:hsla(var(--shadcn-border) / 0.08);\n    color:hsla(var(--shadcn-muted-foreground) / 0.4);\n    font-weight:400;\n}\n.tm-seek-step-badge:hover,\n.tm-source-badge:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n.tm-seek-step-badge:active,\n.tm-source-badge:active{\n    transform:scale(0.94);\n    box-shadow:none;\n}\n.tm-seek-step-add-btn{\n    font-size:14px;\n    font-weight:600;\n    width:32px;\n    height:28px;\n    border-radius:6px;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    border:1px dashed hsla(var(--shadcn-border) / 0.35);\n    color:hsla(var(--shadcn-foreground) / 0.75);\n    cursor:pointer;\n    flex-shrink:0;\n    transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-seek-step-add-btn:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.5);\n    border-style:solid;\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n\n.tm-seek-step-add-btn:active{\n    transform:scale(0.94);\n}\n.tm-seek-step-input{\n    width:60px;\n    height:28px;\n    font-size:11.5px;\n    font-weight:500;\n    text-align:center;\n    border-radius:6px;\n    border:1px solid hsla(var(--shadcn-accent) / 0.8);\n    background-color:hsla(var(--shadcn-background) / 0.85);\n    color:#ffffff;\n    outline:none;\n    box-sizing:border-box;\n    flex-shrink:0;\n    box-shadow:0 0 8px hsla(var(--shadcn-accent) / 0.4);\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    gap:8px;\n    padding:6px 2px 2px 2px;\n}\n\n.tm-source-badge{\n    font-size:11px;\n    padding:4px 10px;\n    border-radius:12px;\n    border:1px solid transparent;\n    cursor:pointer;\n    font-weight:500;\n    transition:all 0.15s ease;\n}\n\n.tm-source-badge.enabled{\n    background:rgba(239, 68, 68, 0.2);\n    border-color:rgba(239, 68, 68, 0.6);\n    color:#fca5a5;\n}\n\n.tm-source-badge.disabled{\n    background:rgba(255, 255, 255, 0.06);\n    border-color:rgba(255, 255, 255, 0.1);\n    color:rgba(255, 255, 255, 0.4);\n}\n.tm-toggle-input{\n    position:absolute;\n    left:-9999px;\n}\n.tm-start-time-container.active{\n    background-color:hsl(var(--shadcn-green) / 0.15);\n    border-color:hsl(var(--shadcn-green) / 0.4);\n}\n\n.tm-start-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-end-time-container.active{\n    background-color:hsl(var(--shadcn-orange) / 0.15);\n    border-color:hsl(var(--shadcn-orange) / 0.4);\n}\n\n.tm-end-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-set-loop-start-label.active{\n    color:hsl(var(--shadcn-green));\n    opacity:1;\n}\n\n.tm-set-loop-start-label:not(.active){\n    opacity:0.9;\n}\n.tm-set-loop-end-label.active{\n    color:hsl(var(--shadcn-orange));\n    opacity:1;\n}\n\n.tm-set-loop-end-label:not(.active){\n    opacity:0.9;\n}\n.tm-loop-start-position.active, .tm-loop-end-position.active{\n    color:hsl(var(--shadcn-foreground));\n    opacity:1;\n}\n\n.tm-loop-start-position:not(.active), .tm-loop-end-position:not(.active){\n    color:hsl(var(--shadcn-muted-foreground));\n    opacity:0.9;\n}\n.tm-loop-toggle-button.active{\n    background-color:hsl(var(--shadcn-red) / 0.1);\n    border-color:hsl(var(--shadcn-red) / 0.3);\n}\n\n.tm-loop-toggle-button:active{\n    transform:scale(0.98);\n}\n.tm-loop-range{\n    position:absolute;\n    height:4px;\n    background:linear-gradient(90deg, \n        hsla(var(--shadcn-green) / 0.3) 0%, \n        hsla(var(--shadcn-orange) / 0.3) 100%);\n    top:50%;\n    transform:translateY(-50%);\n    border-radius:2px;\n    opacity:0;\n    transition:opacity 0.3s ease;\n    z-index:1;\n    pointer-events:none;\n}\n\n.tm-loop-range.active{\n    opacity:0.7;\n    box-shadow:0 0 8px rgba(0, 0, 0, 0.1);\n}\n.tm-progress-bar-container:hover .tm-loop-range.active{\n    opacity:0.9;\n    height:6px;\n}\n.tm-loop-marker{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:3;\n    transition:opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),  transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);\n    backdrop-filter:blur(4px);\n    -webkit-backdrop-filter:blur(4px);\n}\n.tm-loop-start-marker{\n    background-color:hsla(var(--shadcn-green) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n}\n.tm-loop-end-marker{\n    background-color:hsla(var(--shadcn-orange) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-orange) / 0.3);\n}\n.tm-loop-marker:hover{\n    cursor:pointer;\n    z-index:4;\n}\n\n.tm-loop-start-marker:hover{\n    background-color:hsla(var(--shadcn-green) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-green) / 0.5);\n}\n\n.tm-loop-end-marker:hover{\n    background-color:hsla(var(--shadcn-orange) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-orange) / 0.5);\n}\n.tm-loop-marker.active{\n    opacity:1;\n}\n\n.tm-loop-marker:not(.active){\n    opacity:0.7;\n}\n.tm-loop-marker::before{\n    content:attr(data-label);\n    position:absolute;\n    top:-24px;\n    left:50%;\n    transform:translateX(-50%);\n    background-color:hsla(var(--shadcn-card) / 0.7);\n    color:hsl(var(--shadcn-card-foreground));\n    font-size:10px;\n    font-weight:600;\n    padding:2px 8px;\n    border-radius:10px;\n    opacity:0;\n    transition:opacity 0.2s ease, transform 0.2s ease;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:0 2px 4px rgba(0, 0, 0, 0.1);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    white-space:nowrap;\n    z-index:5;\n}\n\n.tm-loop-marker:hover::before{\n    opacity:1;\n    transform:translateX(-50%) translateY(-4px);\n}\n.tm-start-time-container-hover{\n    background-color:hsl(var(--shadcn-green) / 0.1);\n    border-color:hsl(var(--shadcn-green) / 0.3);\n}\n\n.tm-start-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n\n.tm-end-time-container-hover{\n    background-color:hsl(var(--shadcn-orange) / 0.1);\n    border-color:hsl(var(--shadcn-orange) / 0.3);\n}\n\n.tm-end-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-loop-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:translateY(-1px);\n}\n\n.tm-loop-button-active{\n    background-color:hsl(var(--shadcn-muted) / 0.7);\n}\n\n.tm-loop-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:translateY(0);\n}\n.tm-indicator-base{\n    position:absolute;\n    padding:8px 16px;\n    background-color:hsla(var(--shadcn-card) / 0.6);\n    color:hsl(var(--shadcn-card-foreground));\n    border-radius:var(--shadcn-radius);\n    opacity:0;\n    backdrop-filter:blur(15px);\n    -webkit-backdrop-filter:blur(15px);\n    box-shadow:var(--shadow-md);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    transform:translateY(20px);\n    transition:opacity var(--anim-smooth), transform var(--anim-smooth);\n    pointer-events:none;\n    z-index:9994;\n    font-size:15px;\n    font-weight:500;\n}\n\n.tm-indicator-base.visible{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-pause-indicator{\n    width:80px;\n    height:80px;\n}\n.tm-progress-row{\n    display:flex;\n    flex-direction:column;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-seek-control-row{\n    display:flex;\n    flex-direction:row;\n    justify-content:space-between;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-loop-control-row{\n    display:flex;\n    align-items:center;\n    width:100%;\n    box-sizing:border-box;\n    position:relative;\n    gap:8px;\n}\n.tm-inline-remark-popover{\n    position:absolute;\n    bottom:calc(45px + 42px + 10px);\n    left:12px;\n    right:12px;\n    width:calc(100% - 24px);\n    margin:0 auto;\n    background:rgba(18, 18, 20, 0.96);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:16px;\n    padding:12px;\n    box-shadow:0 10px 30px rgba(0, 0, 0, 0.7);\n    z-index:9998;\n    pointer-events:auto;\n    opacity:0;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n    box-sizing:border-box;\n}\n\n.tm-inline-remark-popover.visible{\n    opacity:1;\n    transform:translateY(0) scale(1);\n}\n\n.tm-inline-remark-body{\n    display:flex;\n    flex-direction:column;\n    gap:10px;\n    width:100%;\n}\n\n.tm-inline-remark-input{\n    width:100%;\n    height:38px;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:12px;\n    padding:0 14px;\n    color:#ffffff;\n    font-size:0.85rem;\n    outline:none;\n    box-sizing:border-box;\n    transition:border-color 0.2s, background 0.2s;\n}\n\n.tm-inline-remark-input:focus{\n    border-color:rgba(255, 255, 255, 0.35);\n    background:rgba(255, 255, 255, 0.1);\n}\n\n.tm-inline-remark-input::placeholder{\n    color:rgba(255, 255, 255, 0.35);\n}\n\n.tm-inline-remark-footer{\n    display:flex;\n    justify-content:flex-end;\n    gap:10px;\n}\n\n.tm-inline-remark-btn{\n    height:32px;\n    padding:0 20px;\n    border-radius:14px;\n    font-size:0.82rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.18s, transform 0.12s;\n    box-sizing:border-box;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-inline-remark-btn.cancel{\n    background:rgba(255, 255, 255, 0.08);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    color:rgba(255, 255, 255, 0.8);\n}\n\n.tm-inline-remark-btn.cancel:hover{\n    background:rgba(255, 255, 255, 0.16);\n    color:#ffffff;\n}\n\n.tm-inline-remark-btn.submit{\n    background:hsl(var(--shadcn-blue));\n    border:none;\n    color:#ffffff;\n    box-shadow:0 4px 12px hsla(var(--shadcn-blue) / 0.4);\n}\n\n.tm-inline-remark-btn.submit:hover{\n    background:hsl(var(--shadcn-blue) / 0.9);\n    transform:scale(1.03);\n}\n\n.tm-playback-control-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    position:relative;\n    width:100%;\n    max-height:45px;\n    height:45px;\n    border-radius:8px;\n    box-sizing:border-box;\n}\n.tm-left-controls, .tm-center-controls, .tm-right-controls{\n    flex:1;\n    display:flex;\n    height:100%;\n    align-items:center;\n}\n\n.tm-left-controls{\n    justify-content:flex-start;\n}\n\n.tm-center-controls{\n    justify-content:center;\n}\n\n.tm-right-controls{\n    justify-content:flex-end;\n}\n.tm-time-display{\n    display:flex;\n    justify-content:space-between;\n    color:hsl(var(--shadcn-foreground) / 0.9);\n    font-size:12px;\n    margin-top:-2px;\n    font-variant-numeric:tabular-nums;\n    gap:8px;\n}\n\n.tm-time-display-container{\n    display:flex;\n    justify-content:space-between;\n    width:100%;\n    padding:0px 1px;\n    margin-bottom:6px;\n}\n\n.tm-current-time, .tm-total-duration{\n    color:hsla(var(--shadcn-foreground) / 0.55);\n    font-size:12px;\n    min-width:60px;\n    font-variant-numeric:tabular-nums;\n    font-weight:500;\n    line-height:1;\n}\n\n.tm-current-time{\n    text-align:left;\n}\n\n.tm-total-duration{\n    text-align:right;\n}\n.tm-tab-scroll-container{\n    display:flex;\n    flex:1;\n    gap:8px;\n    overflow-x:auto;\n    overflow-y:hidden;\n    overscroll-behavior:contain;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    height:38px;\n    padding:0 44px 0 0;\n    margin:0;\n    box-sizing:border-box;\n    align-items:center;\n    mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    -webkit-mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    touch-action:pan-x;\n}\n.tm-tab-scroll-container::-webkit-scrollbar{ display:none; }\n.tm-tab-pill{\n    display:flex;\n    align-items:center;\n    gap:4px;\n    height:38px;\n    padding:0 12px;\n    box-sizing:border-box;\n    border-radius:9999px;\n    background-color:hsla(0, 0%, 15%, 0.12);\n    border:1px solid hsla(0, 0%, 20%, 0.35);\n    color:hsl(var(--shadcn-foreground));\n    font-size:0.8rem;\n    font-variant-numeric:tabular-nums;\n    white-space:nowrap;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:all var(--anim-quick);\n    user-select:none;\n    -webkit-user-select:none;\n    -webkit-tap-highlight-color:transparent;\n    pointer-events:auto;\n}\n.tm-tab-pill{\n    background-color:hsla(var(--tab-color), 0.12);\n    border-color:hsla(var(--tab-color), 0.35);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill:active{ transform:scale(0.95); }\n.tm-tab-pill.active{\n    background-color:hsla(var(--tab-color), 0.25);\n    border-color:hsla(var(--tab-color), 0.6);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill.draft{\n    background-color:hsla(var(--tab-color), 0.08);\n    border-color:hsla(var(--tab-color), 0.45);\n    border-style:dashed;\n    gap:5px;\n    padding:0 8px;\n}\n.tm-tab-pill.draft.editing,\n.tm-tab-pill.draft:not(.placeholder){\n    background-color:hsla(var(--tab-color), 0.22);\n    border-color:hsla(var(--tab-color), 0.75);\n}\n.tm-tab-pill.draft .tm-draft-label{\n    font-weight:600;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-label.a{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-label.b{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-time{\n    color:#fff;\n    font-variant-numeric:tabular-nums;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-time.placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-draft-action{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    height:24px;\n    width:32px;\n    border-radius:6px;\n    border:none;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    -webkit-tap-highlight-color:transparent;\n    box-sizing:border-box;\n}\n.tm-draft-action:active{\n    transform:scale(0.88);\n}\n.tm-draft-action.save{\n    background-color:hsla(var(--tab-color), 0.18);\n    color:hsl(var(--tab-color));\n}\n.tm-draft-action.save:hover{\n    background-color:hsla(var(--tab-color), 0.28);\n}\n.tm-draft-action.cancel{\n    background-color:rgba(239, 68, 68, 0.15);\n    color:#ef4444;\n}\n.tm-draft-action.cancel:hover{\n    background-color:rgba(239, 68, 68, 0.25);\n}\n.tm-draft-action.edit-comment{\n    background-color:rgba(245, 158, 11, 0.15);\n    color:#f59e0b;\n}\n.tm-draft-action.edit-comment:hover{\n    background-color:rgba(245, 158, 11, 0.25);\n}\n.tm-tab-list-btn{\n    flex-shrink:0;\n    width:38px;\n    height:38px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    border-radius:50%;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    color:hsl(var(--shadcn-foreground));\n    font-size:1.1rem;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-tab-list-btn:active{ transform:scale(0.88); }\n.tm-tab-list-btn:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.8);\n    border-color:hsla(var(--shadcn-border) / 0.3);\n}\n.tm-bottom-sheet-overlay{\n    position:fixed;\n    inset:0;\n    background-color:rgba(0, 0, 0, 0.35);\n    backdrop-filter:blur(4px);\n    -webkit-backdrop-filter:blur(4px);\n    z-index:9990 !important;\n    opacity:0;\n    pointer-events:none;\n    transition:opacity var(--anim-smooth);\n\n    touch-action:none;\n    user-select:none;\n    -webkit-user-select:none;\n    overscroll-behavior:none;\n}\n.tm-bottom-sheet-overlay.visible{\n    opacity:1;\n    pointer-events:auto;\n}\n\n.tm-bottom-sheet-panel{\n    position:absolute;\n    bottom:0;\n    left:0;\n    right:0;\n    width:100%;\n    max-height:calc(100vh - 120px);\n    background-color:rgba(18, 18, 20, 0.94);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.6);\n    border-radius:16px;\n    border:1px solid rgba(255, 255, 255, 0.1);\n    z-index:9995 !important;\n    opacity:0;\n    pointer-events:none;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    display:flex;\n    flex-direction:column;\n    overflow:hidden;\n    box-sizing:border-box;\n    padding:10px 14px 12px;\n}\n.tm-bottom-sheet-panel.visible{\n    opacity:1;\n    pointer-events:auto;\n    transform:translateY(0) scale(1);\n}\n.tm-sheet-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    padding:2px 2px 6px 2px;\n    margin-bottom:6px;\n    border-bottom:1px solid rgba(255, 255, 255, 0.06);\n    flex-shrink:0;\n}\n\n.tm-bottom-sheet-title{\n    font-size:0.82rem;\n    font-weight:600;\n    color:rgba(255, 255, 255, 0.88);\n    letter-spacing:0.2px;\n}\n\n.tm-sheet-count-badge{\n    font-size:0.7rem;\n    color:rgba(255, 255, 255, 0.45);\n    background:rgba(255, 255, 255, 0.08);\n    padding:1px 6px;\n    border-radius:8px;\n}\n\n.tm-sheet-close-btn{\n    background:transparent;\n    border:none;\n    color:rgba(255, 255, 255, 0.45);\n    font-size:0.95rem;\n    cursor:pointer;\n    padding:0 4px;\n    border-radius:4px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    transition:color 0.2s;\n}\n.tm-sheet-close-btn:hover{\n    color:#ffffff;\n}\n.tm-bottom-sheet-list{\n    flex:1;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n    display:flex;\n    flex-direction:column;\n    gap:6px;\n    padding-right:2px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar{\n    width:4px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar-thumb{\n    background:rgba(255, 255, 255, 0.2);\n    border-radius:2px;\n}\n.tm-sheet-item{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    padding:2px 0;\n    background:transparent;\n    border:none;\n    height:32px;\n    box-sizing:border-box;\n}\n\n.tm-sheet-item-time-container{\n    display:flex;\n    align-items:center;\n    flex-shrink:0;\n    height:32px;\n}\n.tm-sheet-time-pill{\n    height:32px;\n    box-sizing:border-box;\n    padding:0 12px;\n    border-radius:16px;\n    background:hsla(var(--tab-color, 200 100% 55%), 0.15);\n    border:1px solid hsla(var(--tab-color, 200 100% 55%), 0.4);\n    color:#ffffff;\n    font-size:0.8rem;\n    font-family:inherit;\n    font-weight:500;\n    cursor:pointer;\n    white-space:nowrap;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    transition:transform 0.15s ease, background-color 0.2s;\n}\n.tm-sheet-time-pill:hover{\n    transform:scale(1.02);\n    background:hsla(var(--tab-color, 200 100% 55%), 0.28);\n}\n.tm-sheet-time-pill.interval{\n    padding:0 10px;\n    gap:4px;\n}\n.tm-sheet-time-pill.interval .tm-time-part{\n    cursor:pointer;\n    padding:2px 4px;\n    border-radius:4px;\n    transition:background-color 0.15s, color 0.15s;\n}\n.tm-sheet-time-pill.interval .tm-time-part:hover{\n    background-color:rgba(255, 255, 255, 0.25);\n    color:#ffffff;\n}\n.tm-sheet-time-pill.interval .tm-time-sep{\n    opacity:0.6;\n    font-weight:400;\n    user-select:none;\n    padding:0 1px;\n}\n.tm-sheet-item-comment-input{\n    flex:1;\n    min-width:0;\n    height:32px;\n    box-sizing:border-box;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:8px;\n    padding:0 10px;\n    color:#ffffff;\n    font-size:0.82rem;\n    outline:none;\n    display:inline-flex;\n    align-items:center;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-sheet-item-comment-input:focus{\n    border-color:rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-sheet-item-comment-input::placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-sheet-delete-btn{\n    width:32px;\n    height:32px;\n    box-sizing:border-box;\n    border-radius:8px;\n    border:1px solid rgba(255, 60, 60, 0.25);\n    background:rgba(255, 60, 60, 0.12);\n    color:#ff5252;\n    font-size:0.85rem;\n    font-weight:bold;\n    cursor:pointer;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s;\n}\n.tm-sheet-delete-btn:hover{\n    background:rgba(255, 60, 60, 0.28);\n    transform:scale(1.05);\n}\n\n.tm-bottom-sheet-empty{\n    padding:16px;\n    text-align:center;\n    font-size:0.82rem;\n    color:rgba(255, 255, 255, 0.35);\n}\n.tm-rewind-group, .tm-forward-group{\n    display:flex;\n    flex-direction:column;\n    width:50%;\n    gap:8px;\n    align-items:center;\n}\n\n.tm-rewind-buttons-container{\n    display:flex;\n    flex-direction:row-reverse;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n\n.tm-forward-buttons-container{\n    display:flex;\n    flex-direction:row;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n.tm-time-control-button{\n    background-color:hsla(var(--shadcn-secondary) / var(--btn-opacity, 0.5));\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsl(var(--shadcn-border) / 0.1);\n    border-radius:8px;\n    padding:0;\n    font-size:0.75rem;\n    cursor:pointer;\n    transition:all 0.2s cubic-bezier(.25,.8,.25,1);\n    white-space:nowrap;\n    font-weight:500;\n    box-shadow:0 1px 2px rgba(0,0,0,0.05);\n    width:var(--button-xl);\n    height:var(--button-lg);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    flex:0 0 auto;\n}\n\n.tm-time-control-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.15));\n    border-color:hsla(var(--shadcn-border) / 0.3);\n    transform:translateY(-1.5px);\n    box-shadow:0 4px 8px rgba(0,0,0,0.2);\n}\n\n.tm-time-control-button:active{\n    transform:scale(0.96);\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.25));\n    box-shadow:none;\n}\n\n.tm-time-control-button-active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-time-control-button-after-active{\n    transform:none;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.15);\n}\n\n.tm-time-control-button-inner{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-rewind-icon{\n    margin-right:-2px;\n}\n\n.tm-forward-icon{\n    margin-left:-2px;\n}\n\n.tm-time-text-margin-left{\n    margin-left:2px;\n}\n\n.tm-time-text-margin-right{\n    margin-right:2px;\n}\n.tm-control-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:none;\n}\n\n.tm-control-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:none;\n}\n.tm-control-buttons{\n    position:absolute;\n    bottom:calc(10px + env(safe-area-inset-bottom, 0px));\n    left:50%;\n    transform:translateX(-50%);\n    width:95%;\n    max-width:700px;\n    min-width:350px;\n    z-index:9991;\n    padding:16px 16px 14px;\n    border-radius:16px;\n    background-color:rgba(10, 10, 10, 0.52);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 12px 32px rgba(0, 0, 0, 0.45);\n    border:none;\n    transition: opacity 0.3s ease,  transform 0.3s ease,  width 0.35s cubic-bezier(0.25, 1, 0.5, 1),  left 0.35s cubic-bezier(0.25, 1, 0.5, 1),  bottom 0.35s cubic-bezier(0.25, 1, 0.5, 1),  right 0.35s cubic-bezier(0.25, 1, 0.5, 1),  border-radius 0.3s ease;\n    gap:10px;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:center;\n    overflow:visible !important;\n    touch-action:none;\n}\n\n.tm-control-buttons.dragging{\n    transition:none !important;\n}\nbody.controls-hidden .tm-player-container .tm-control-buttons{\n    opacity:0;\n    transform:translateX(-50%) translateY(calc(100% + 30px));\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-control-buttons{\n    opacity:1;\n    transform:translateX(-50%) translateY(0);\n    pointer-events:auto;\n}\nbody.controls-hidden .tm-player-container .tm-button-container{\n    opacity:0;\n    transform:translateY(-60px);\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-button-container{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-control-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.6);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n}\n\n.tm-control-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    transform:translateY(-2px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-control-button:active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-control-button.active{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-control-button svg,\n.tm-control-button img{\n    width:16px;\n    height:16px;\n}\n.tm-control-row{\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    gap:8px;\n    margin-top:4px;\n    opacity:1;\n    transition:opacity var(--anim-quick), height var(--anim-quick);\n    height:auto;\n    overflow:hidden;\n}\n\n.tm-control-row.hidden{\n    opacity:0;\n    height:0;\n    margin:0;\n}\n.tm-comment-row{\n    width:100%;\n    display:flex;\n    flex-direction:column;\n    margin-bottom:10px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.2);\n    padding-bottom:10px;\n}\n\n.tm-comment-container{\n    width:100%;\n    min-height:60px;\n    display:flex;\n    flex-direction:column;\n    gap:8px;\n}\n\n.tm-comment-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    font-size:14px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-comment-left{\n    display:flex;\n    align-items:center;\n}\n\n.tm-comment-title{\n    margin-right:5px;\n}\n\n.tm-comment-count{\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:12px;\n}\n\n.tm-comment-actions{\n    display:flex;\n    gap:8px;\n}\n\n.tm-comment-button{\n    border:none;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:4px;\n    padding:4px 8px;\n    font-size:12px;\n    cursor:pointer;\n    transition:all 0.2s ease;\n}\n\n.tm-comment-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.6);\n    transform:translateY(-1px);\n}\n\n.tm-comment-button:active{\n    transform:scale(0.95);\n}\n\n.tm-comment-write{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n}\n\n.tm-comment-write:hover{\n    background-color:hsla(var(--shadcn-blue) / 0.8);\n}\n\n.tm-comment-placeholder{\n    width:100%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:10px;\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:13px;\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    border-radius:6px;\n}\n@media screen and (orientation: landscape){\n    .tm-comment-container{\n        min-height:50px;\n    }\n    \n    .tm-comment-placeholder{\n        padding:8px;\n    }\n}\n\n.tm-player-title{\n    position:absolute !important;\n    top:calc(env(safe-area-inset-top, 0px) + 12px) !important;\n    left:50% !important;\n    transform:translateX(-50%) !important;\n    max-width:calc(100% - 110px) !important;\n    text-align:center;\n    font-size:14px;\n    font-weight:600;\n    color:#ffffff;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    user-select:none;\n    z-index:9998 !important;\n    text-shadow:0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;\n    pointer-events:none !important;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n\nbody.controls-hidden .tm-player-title{\n    opacity:0 !important;\n    transform:translate(-50%, -20px) !important;\n    pointer-events:none !important;\n}\nbody.tm-swiping-down .tm-button-container,\nbody.tm-swiping-down .tm-handle-container,\nbody.tm-swiping-down .tm-comments-panel,\nbody.tm-swiping-down .tm-control-buttons,\nbody.tm-swiping-down .tm-settings-panel{\n    opacity:0 !important;\n    pointer-events:none !important;\n    transition:opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n.tm-jump-active{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:5;\n    background-color:hsla(var(--shadcn-green) / 0.8);\n    border-radius:2px;\n    box-shadow:0 0 8px hsla(var(--shadcn-green) / 0.5);\n    pointer-events:none;\n    animation:tm-jump-flash-fade 3.0s cubic-bezier(0.25, 1, 0.5, 1) forwards;\n}\n\n@keyframes tm-jump-flash-fade{\n    0%, 20%, 40%, 60%, 80%{\n        opacity:1;\n        background-color:hsl(var(--shadcn-green));\n        box-shadow:0 0 16px 4px hsl(var(--shadcn-green));\n        transform:translateX(-50%) scaleX(1.6);\n    }\n    10%, 30%, 50%, 70%{\n        opacity:0.3;\n        background-color:hsla(var(--shadcn-green) / 0.4);\n        box-shadow:0 0 4px hsla(var(--shadcn-green) / 0.2);\n        transform:translateX(-50%) scaleX(1.0);\n    }\n    90%{\n        opacity:0.5;\n        background-color:hsla(var(--shadcn-green) / 0.5);\n        box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n        transform:translateX(-50%) scaleX(0.8);\n    }\n    100%{\n        opacity:0;\n        background-color:transparent;\n        box-shadow:none;\n        transform:translateX(-50%) scaleX(0);\n    }\n}\n.tm-sidebar-pos-button,\n.tm-sidebar-toggle-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:none !important;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n}\n\n.tm-sidebar-pos-button:hover,\n.tm-sidebar-toggle-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.1);\n}\n\n.tm-sidebar-pos-button:active,\n.tm-sidebar-toggle-button:active{\n    transform:scale(0.9);\n}\n.tm-sidebar-hidden .tm-sidebar-pos-button{\n    display:none !important;\n}\n@media screen and (min-width: 480px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:520px;\n    }\n}\n\n@media screen and (min-width: 768px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:640px;\n    }\n    .tm-comments-panel{\n        max-width:720px;\n        margin:0 auto;\n        border-left:1px solid hsla(var(--shadcn-border) / 0.1);\n        border-right:1px solid hsla(var(--shadcn-border) / 0.1);\n        box-shadow:0 4px 20px rgba(0, 0, 0, 0.08);\n        background-color:hsla(var(--shadcn-card) / 0.02);\n    }\n}\nbody.tm-player-active header,\nbody.tm-player-active .header,\nbody.tm-player-active navbar,\nbody.tm-player-active .navbar,\nbody.tm-player-active #header-top,\nbody.tm-player-active .top-nav,\nbody.tm-player-active [class*="header--sticky"],\nbody.tm-player-active [class*="navbar-fixed"]{\n    display:none !important;\n}\n\n.tm-progress-markers-container{\n    position:absolute;\n    top:0;\n    left:0;\n    width:100%;\n    height:100%;\n    pointer-events:none;\n    z-index:5;\n}\n.tm-progress-marker-tick{\n    position:absolute;\n    width:6px;\n    height:3px;\n    bottom:-4px;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:10;\n    pointer-events:auto;\n    transition:all var(--anim-quick);\n}\n.tm-progress-marker-tick:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n    transform:translateX(-50%) scale(1.1);\n}\n.tm-progress-marker-range{\n    position:absolute;\n    height:3px;\n    bottom:-4px;\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:9;\n    pointer-events:auto;\n    transition:all var(--anim-quick);\n}\n.tm-progress-marker-range:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n}\n\n.tm-active-loop-played{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.45);\n    z-index:8;\n    pointer-events:none;\n    box-shadow:0 0 4px hsla(var(--tab-color), 0.15);\n}\n\n.tm-active-loop-unplayed{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.15);\n    z-index:7;\n    pointer-events:none;\n}\n\n.tm-active-loop-boundary{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.75);\n    z-index:9;\n    pointer-events:none;\n    box-shadow:0 0 3px rgba(0, 0, 0, 0.3);\n}\n.tm-active-loop-boundary.start{\n    border-radius:2px 0 0 2px;\n}\n.tm-active-loop-boundary.end{\n    border-radius:0 2px 2px 0;\n}\n`, "" ]);
-      const b = y;
+      var b = v()(u());
+      b.push([ r.id, `.tm-video-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    height:100vh;\n    background-color:rgba(35, 17, 29, 0.8);\n    z-index:2000000000 !important;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    backdrop-filter:blur(30px);\n    -webkit-backdrop-filter:blur(30px);\n    padding:0;\n    touch-action:none;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-player-container{\n    position:fixed;\n    top:0;\n    bottom:0;\n    left:0;\n    right:0;\n    width:100%;\n    background-color:transparent;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    z-index:2000000001 !important;\n    height:100%;\n    overflow:visible;\n    pointer-events:auto;\n    touch-action:pan-y;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-button-container{\n    width:100%;\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    gap:10px;\n    padding:6px 10px;\n    box-sizing:border-box;\n    z-index:99999;\n    position:absolute;\n    top:0;\n    left:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);\n    touch-action:none;\n}\n\n.tm-video-container{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:auto;\n    max-height:80vh;\n    margin-top:44px;\n    display:flex;\n    align-items:flex-start;\n    justify-content:center;\n    background-color:hsl(var(--shadcn-card));\n    border-radius:var(--shadcn-radius-lg);\n    box-shadow:var(--shadow-lg);\n    z-index:9992;\n    touch-action:pan-y;\n}\n\n.tm-video-wrapper{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:100%;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    will-change:transform;\n    border-radius:var(--shadcn-radius) var(--shadcn-radius) 0 0;\n    touch-action:pan-y;\n}\n.tm-video-wrapper > *:not(video):not(.tm-speed-indicator):not(.tm-video-minimap):not(.tm-inline-remark-popover){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video > *:not(track):not(source){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video{\n    width:auto !important; \n    height:100% !important; \n    max-height:100% !important; \n    max-width:none !important; \n    object-fit:contain !important; \n    transition:transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n    touch-action:pan-y;\n    cursor:grab; \n}\n.tm-handle-container{\n    position:relative;\n    height:30px;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    z-index:9992;\n    width:100%;\n    flex-shrink:0;\n    touch-action:none;\n}\n\n.tm-resize-handle{\n    position:absolute;\n    height:5px;\n    width:134px;\n    max-width:134px;\n    background-color:hsla(var(--shadcn-foreground) / 0.6);\n    border-radius:2.5px;\n    cursor:grab;\n    touch-action:none;\n    opacity:0.5;\n    will-change:transform;\n    transition:all var(--anim-quick);\n    box-shadow:none;\n}\n\n.tm-resize-handle::after{\n    content:'';\n    position:absolute;\n    left:-10px;\n    right:-10px;\n    top:-15px;\n    bottom:-15px;\n    background:transparent;\n}\n\n.tm-resize-handle:hover,\n.tm-resize-handle.dragging{\n    opacity:1;\n    background-color:hsla(var(--shadcn-foreground) / 0.8);\n}\n\n.tm-resize-handle.dragging{\n    cursor:grabbing;\n}\n.tm-control-button-base{\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    box-shadow:var(--shadow-sm);\n}\n.tm-close-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-smooth);\n    z-index:9994;\n}\n\n.tm-close-button:hover{\n    background-color:hsl(var(--shadcn-destructive));\n    transform:scale(1.1);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-close-button:active{\n    transform:scale(0.9);\n}\n.tm-settings-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    z-index:9993;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-settings-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.1) rotate(30deg);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-settings-button:active{\n    transform:scale(0.9);\n}\n.tm-settings-panel{\n    position:absolute;\n    top:calc(env(safe-area-inset-top, 8px) + 60px);\n    right:16px;\n    background-color:hsla(var(--shadcn-card) / 0.9);\n    backdrop-filter:blur(20px);\n    -webkit-backdrop-filter:blur(20px);\n    border-radius:14px;\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    box-shadow:0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px hsla(0, 0%, 100%, 0.05);\n    padding:16px 18px;\n    z-index:9996;\n    min-width:270px;\n    max-width:320px;\n    transform:translateY(-10px);\n    opacity:0;\n    pointer-events:none;\n    transition:transform var(--anim-smooth), opacity var(--anim-smooth);\n    touch-action:none;\n}\n\n.tm-settings-panel.active{\n    transform:translateY(0);\n    opacity:1;\n    pointer-events:auto;\n}\n.tm-settings-menu-container{\n    display:flex;\n    flex-direction:column;\n    gap:16px;\n    color:hsl(var(--shadcn-foreground));\n    user-select:none;\n    font-size:13.5px;\n}\n.tm-settings-section{\n    display:flex;\n    flex-direction:column;\n    gap:4px;\n}\n.tm-settings-section-header{\n    font-size:11px;\n    font-weight:700;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    letter-spacing:0.8px;\n    text-transform:uppercase;\n    padding-left:2px;\n}\n.tm-settings-section-divider{\n    height:1px;\n    background:linear-gradient(90deg, hsla(var(--shadcn-border) / 0.3) 0%, hsla(var(--shadcn-border) / 0.05) 100%);\n    margin:4px 0 8px 0;\n    border-radius:1px;\n}\n.tm-settings-option-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    padding:6px 4px;\n    border-radius:8px;\n    cursor:pointer;\n    transition:background 0.15s ease;\n}\n\n.tm-settings-option-row:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.3);\n}\n\n.tm-settings-label-wrapper{\n    display:flex;\n    align-items:center;\n    gap:8px;\n}\n\n.tm-settings-label{\n    font-size:13.5px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n.tm-settings-seek-steps-subpanel{\n    display:flex;\n    flex-wrap:nowrap;\n    gap:6px;\n    align-items:center;\n    overflow-x:auto;\n    overflow-y:hidden;\n    white-space:nowrap;\n    padding:6px 2px 4px 2px;\n    margin-top:2px;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    -ms-overflow-style:none;\n}\n\n.tm-settings-seek-steps-subpanel::-webkit-scrollbar{\n    display:none;\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    flex-wrap:wrap;\n    gap:8px;\n    align-items:center;\n    justify-content:flex-start;\n    padding:6px 2px 2px 2px;\n    margin-top:2px;\n}\n.tm-seek-step-badge,\n.tm-source-badge{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    font-size:11.5px;\n    font-weight:500;\n    padding:0 12px;\n    height:28px;\n    line-height:1;\n    border-radius:6px;\n    box-sizing:border-box;\n    border:1px solid transparent;\n    cursor:pointer;\n    user-select:none;\n    flex-shrink:0;\n    transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-seek-step-badge.enabled,\n.tm-source-badge.enabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    border-color:hsla(var(--shadcn-border) / 0.35);\n    color:#ffffff;\n    font-weight:600;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.2);\n}\n.tm-seek-step-badge.disabled,\n.tm-source-badge.disabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.15);\n    border-color:hsla(var(--shadcn-border) / 0.08);\n    color:hsla(var(--shadcn-muted-foreground) / 0.4);\n    font-weight:400;\n}\n.tm-seek-step-badge:hover,\n.tm-source-badge:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n.tm-seek-step-badge:active,\n.tm-source-badge:active{\n    transform:scale(0.94);\n    box-shadow:none;\n}\n.tm-seek-step-add-btn{\n    font-size:14px;\n    font-weight:600;\n    width:32px;\n    height:28px;\n    border-radius:6px;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    border:1px dashed hsla(var(--shadcn-border) / 0.35);\n    color:hsla(var(--shadcn-foreground) / 0.75);\n    cursor:pointer;\n    flex-shrink:0;\n    transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-seek-step-add-btn:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.5);\n    border-style:solid;\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n\n.tm-seek-step-add-btn:active{\n    transform:scale(0.94);\n}\n.tm-seek-step-input{\n    width:60px;\n    height:28px;\n    font-size:11.5px;\n    font-weight:500;\n    text-align:center;\n    border-radius:6px;\n    border:1px solid hsla(var(--shadcn-accent) / 0.8);\n    background-color:hsla(var(--shadcn-background) / 0.85);\n    color:#ffffff;\n    outline:none;\n    box-sizing:border-box;\n    flex-shrink:0;\n    box-shadow:0 0 8px hsla(var(--shadcn-accent) / 0.4);\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    gap:8px;\n    padding:6px 2px 2px 2px;\n}\n\n.tm-source-badge{\n    font-size:11px;\n    padding:4px 10px;\n    border-radius:12px;\n    border:1px solid transparent;\n    cursor:pointer;\n    font-weight:500;\n    transition:all 0.15s ease;\n}\n\n.tm-source-badge.enabled{\n    background:rgba(239, 68, 68, 0.2);\n    border-color:rgba(239, 68, 68, 0.6);\n    color:#fca5a5;\n}\n\n.tm-source-badge.disabled{\n    background:rgba(255, 255, 255, 0.06);\n    border-color:rgba(255, 255, 255, 0.1);\n    color:rgba(255, 255, 255, 0.4);\n}\n.tm-toggle-input{\n    position:absolute;\n    left:-9999px;\n}\n.tm-start-time-container.active{\n    background-color:hsl(var(--shadcn-green) / 0.15);\n    border-color:hsl(var(--shadcn-green) / 0.4);\n}\n\n.tm-start-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-end-time-container.active{\n    background-color:hsl(var(--shadcn-orange) / 0.15);\n    border-color:hsl(var(--shadcn-orange) / 0.4);\n}\n\n.tm-end-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-set-loop-start-label.active{\n    color:hsl(var(--shadcn-green));\n    opacity:1;\n}\n\n.tm-set-loop-start-label:not(.active){\n    opacity:0.9;\n}\n.tm-set-loop-end-label.active{\n    color:hsl(var(--shadcn-orange));\n    opacity:1;\n}\n\n.tm-set-loop-end-label:not(.active){\n    opacity:0.9;\n}\n.tm-loop-start-position.active, .tm-loop-end-position.active{\n    color:hsl(var(--shadcn-foreground));\n    opacity:1;\n}\n\n.tm-loop-start-position:not(.active), .tm-loop-end-position:not(.active){\n    color:hsl(var(--shadcn-muted-foreground));\n    opacity:0.9;\n}\n.tm-loop-toggle-button.active{\n    background-color:hsl(var(--shadcn-red) / 0.1);\n    border-color:hsl(var(--shadcn-red) / 0.3);\n}\n\n.tm-loop-toggle-button:active{\n    transform:scale(0.98);\n}\n.tm-loop-range{\n    position:absolute;\n    height:4px;\n    background:linear-gradient(90deg, \n        hsla(var(--shadcn-green) / 0.3) 0%, \n        hsla(var(--shadcn-orange) / 0.3) 100%);\n    top:50%;\n    transform:translateY(-50%);\n    border-radius:2px;\n    opacity:0;\n    transition:opacity 0.3s ease;\n    z-index:1;\n    pointer-events:none;\n}\n\n.tm-loop-range.active{\n    opacity:0.7;\n    box-shadow:0 0 8px rgba(0, 0, 0, 0.1);\n}\n.tm-progress-bar-container:hover .tm-loop-range.active{\n    opacity:0.9;\n    height:6px;\n}\n.tm-loop-marker{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:3;\n    transition:opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),  transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);\n    backdrop-filter:blur(4px);\n    -webkit-backdrop-filter:blur(4px);\n}\n.tm-loop-start-marker{\n    background-color:hsla(var(--shadcn-green) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n}\n.tm-loop-end-marker{\n    background-color:hsla(var(--shadcn-orange) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-orange) / 0.3);\n}\n.tm-loop-marker:hover{\n    cursor:pointer;\n    z-index:4;\n}\n\n.tm-loop-start-marker:hover{\n    background-color:hsla(var(--shadcn-green) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-green) / 0.5);\n}\n\n.tm-loop-end-marker:hover{\n    background-color:hsla(var(--shadcn-orange) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-orange) / 0.5);\n}\n.tm-loop-marker.active{\n    opacity:1;\n}\n\n.tm-loop-marker:not(.active){\n    opacity:0.7;\n}\n.tm-loop-marker::before{\n    content:attr(data-label);\n    position:absolute;\n    top:-24px;\n    left:50%;\n    transform:translateX(-50%);\n    background-color:hsla(var(--shadcn-card) / 0.7);\n    color:hsl(var(--shadcn-card-foreground));\n    font-size:10px;\n    font-weight:600;\n    padding:2px 8px;\n    border-radius:10px;\n    opacity:0;\n    transition:opacity 0.2s ease, transform 0.2s ease;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:0 2px 4px rgba(0, 0, 0, 0.1);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    white-space:nowrap;\n    z-index:5;\n}\n\n.tm-loop-marker:hover::before{\n    opacity:1;\n    transform:translateX(-50%) translateY(-4px);\n}\n.tm-start-time-container-hover{\n    background-color:hsl(var(--shadcn-green) / 0.1);\n    border-color:hsl(var(--shadcn-green) / 0.3);\n}\n\n.tm-start-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n\n.tm-end-time-container-hover{\n    background-color:hsl(var(--shadcn-orange) / 0.1);\n    border-color:hsl(var(--shadcn-orange) / 0.3);\n}\n\n.tm-end-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-loop-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:translateY(-1px);\n}\n\n.tm-loop-button-active{\n    background-color:hsl(var(--shadcn-muted) / 0.7);\n}\n\n.tm-loop-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:translateY(0);\n}\n.tm-indicator-base{\n    position:absolute;\n    padding:8px 16px;\n    background-color:hsla(var(--shadcn-card) / 0.6);\n    color:hsl(var(--shadcn-card-foreground));\n    border-radius:var(--shadcn-radius);\n    opacity:0;\n    backdrop-filter:blur(15px);\n    -webkit-backdrop-filter:blur(15px);\n    box-shadow:var(--shadow-md);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    transform:translateY(20px);\n    transition:opacity var(--anim-smooth), transform var(--anim-smooth);\n    pointer-events:none;\n    z-index:9994;\n    font-size:15px;\n    font-weight:500;\n}\n\n.tm-indicator-base.visible{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-pause-indicator{\n    width:80px;\n    height:80px;\n}\n.tm-progress-row{\n    display:flex;\n    flex-direction:column;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-seek-control-row{\n    display:flex;\n    flex-direction:row;\n    justify-content:space-between;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-loop-control-row{\n    display:flex;\n    align-items:center;\n    width:100%;\n    box-sizing:border-box;\n    position:relative;\n    gap:8px;\n}\n.tm-inline-remark-popover{\n    position:absolute;\n    bottom:calc(45px + 42px + 10px);\n    left:12px;\n    right:12px;\n    width:calc(100% - 24px);\n    margin:0 auto;\n    background:rgba(18, 18, 20, 0.96);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:16px;\n    padding:12px;\n    box-shadow:0 10px 30px rgba(0, 0, 0, 0.7);\n    z-index:9998;\n    pointer-events:auto;\n    opacity:0;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n    box-sizing:border-box;\n}\n\n.tm-inline-remark-popover.visible{\n    opacity:1;\n    transform:translateY(0) scale(1);\n}\n\n.tm-inline-remark-body{\n    display:flex;\n    flex-direction:column;\n    gap:10px;\n    width:100%;\n}\n\n.tm-inline-remark-input{\n    width:100%;\n    height:38px;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:12px;\n    padding:0 14px;\n    color:#ffffff;\n    font-size:0.85rem;\n    outline:none;\n    box-sizing:border-box;\n    transition:border-color 0.2s, background 0.2s;\n}\n\n.tm-inline-remark-input:focus{\n    border-color:rgba(255, 255, 255, 0.35);\n    background:rgba(255, 255, 255, 0.1);\n}\n\n.tm-inline-remark-input::placeholder{\n    color:rgba(255, 255, 255, 0.35);\n}\n\n.tm-inline-remark-footer{\n    display:flex;\n    justify-content:flex-end;\n    gap:10px;\n}\n\n.tm-inline-remark-btn{\n    height:32px;\n    padding:0 20px;\n    border-radius:14px;\n    font-size:0.82rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.18s, transform 0.12s;\n    box-sizing:border-box;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-inline-remark-btn.cancel{\n    background:rgba(255, 255, 255, 0.08);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    color:rgba(255, 255, 255, 0.8);\n}\n\n.tm-inline-remark-btn.cancel:hover{\n    background:rgba(255, 255, 255, 0.16);\n    color:#ffffff;\n}\n\n.tm-inline-remark-btn.submit{\n    background:hsl(var(--shadcn-blue));\n    border:none;\n    color:#ffffff;\n    box-shadow:0 4px 12px hsla(var(--shadcn-blue) / 0.4);\n}\n\n.tm-inline-remark-btn.submit:hover{\n    background:hsl(var(--shadcn-blue) / 0.9);\n    transform:scale(1.03);\n}\n\n.tm-playback-control-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    position:relative;\n    width:100%;\n    max-height:45px;\n    height:45px;\n    border-radius:8px;\n    box-sizing:border-box;\n}\n.tm-left-controls, .tm-center-controls, .tm-right-controls{\n    flex:1;\n    display:flex;\n    height:100%;\n    align-items:center;\n}\n\n.tm-left-controls{\n    justify-content:flex-start;\n}\n\n.tm-center-controls{\n    justify-content:center;\n}\n\n.tm-right-controls{\n    justify-content:flex-end;\n}\n.tm-time-display{\n    display:flex;\n    justify-content:space-between;\n    color:hsl(var(--shadcn-foreground) / 0.9);\n    font-size:12px;\n    margin-top:-2px;\n    font-variant-numeric:tabular-nums;\n    gap:8px;\n}\n\n.tm-time-display-container{\n    display:flex;\n    justify-content:space-between;\n    width:100%;\n    padding:0px 1px;\n    margin-bottom:6px;\n}\n\n.tm-current-time, .tm-total-duration{\n    color:hsla(var(--shadcn-foreground) / 0.55);\n    font-size:12px;\n    min-width:60px;\n    font-variant-numeric:tabular-nums;\n    font-weight:500;\n    line-height:1;\n}\n\n.tm-current-time{\n    text-align:left;\n}\n\n.tm-total-duration{\n    text-align:right;\n}\n.tm-tab-scroll-container{\n    display:flex;\n    flex:1;\n    gap:8px;\n    overflow-x:auto;\n    overflow-y:hidden;\n    overscroll-behavior:contain;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    height:38px;\n    padding:0 44px 0 0;\n    margin:0;\n    box-sizing:border-box;\n    align-items:center;\n    mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    -webkit-mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    touch-action:pan-x;\n}\n.tm-tab-scroll-container::-webkit-scrollbar{ display:none; }\n.tm-tab-pill{\n    display:flex;\n    align-items:center;\n    gap:4px;\n    height:38px;\n    padding:0 12px;\n    box-sizing:border-box;\n    border-radius:9999px;\n    background-color:hsla(0, 0%, 15%, 0.12);\n    border:1px solid hsla(0, 0%, 20%, 0.35);\n    color:hsl(var(--shadcn-foreground));\n    font-size:0.8rem;\n    font-variant-numeric:tabular-nums;\n    white-space:nowrap;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:all var(--anim-quick);\n    user-select:none;\n    -webkit-user-select:none;\n    -webkit-tap-highlight-color:transparent;\n    pointer-events:auto;\n}\n.tm-tab-pill{\n    background-color:hsla(var(--tab-color), 0.12);\n    border-color:hsla(var(--tab-color), 0.35);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill:active{ transform:scale(0.95); }\n.tm-tab-pill.active{\n    background-color:hsla(var(--tab-color), 0.25);\n    border-color:hsla(var(--tab-color), 0.6);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill.draft{\n    background-color:hsla(var(--tab-color), 0.08);\n    border-color:hsla(var(--tab-color), 0.45);\n    border-style:dashed;\n    gap:5px;\n    padding:0 8px;\n}\n.tm-tab-pill.draft.editing,\n.tm-tab-pill.draft:not(.placeholder){\n    background-color:hsla(var(--tab-color), 0.22);\n    border-color:hsla(var(--tab-color), 0.75);\n}\n.tm-tab-pill.draft .tm-draft-label{\n    font-weight:600;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-label.a{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-label.b{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-time{\n    color:#fff;\n    font-variant-numeric:tabular-nums;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-time.placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-draft-action{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    height:24px;\n    width:32px;\n    border-radius:6px;\n    border:none;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    -webkit-tap-highlight-color:transparent;\n    box-sizing:border-box;\n}\n.tm-draft-action:active{\n    transform:scale(0.88);\n}\n.tm-draft-action.save{\n    background-color:hsla(var(--tab-color), 0.18);\n    color:hsl(var(--tab-color));\n}\n.tm-draft-action.save:hover{\n    background-color:hsla(var(--tab-color), 0.28);\n}\n.tm-draft-action.cancel{\n    background-color:rgba(239, 68, 68, 0.15);\n    color:#ef4444;\n}\n.tm-draft-action.cancel:hover{\n    background-color:rgba(239, 68, 68, 0.25);\n}\n.tm-draft-action.edit-comment{\n    background-color:rgba(245, 158, 11, 0.15);\n    color:#f59e0b;\n}\n.tm-draft-action.edit-comment:hover{\n    background-color:rgba(245, 158, 11, 0.25);\n}\n.tm-tab-list-btn{\n    flex-shrink:0;\n    width:38px;\n    height:38px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    border-radius:50%;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    color:hsl(var(--shadcn-foreground));\n    font-size:1.1rem;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-tab-list-btn:active{ transform:scale(0.88); }\n.tm-tab-list-btn:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.8);\n    border-color:hsla(var(--shadcn-border) / 0.3);\n}\n.tm-bottom-sheet-overlay{\n    position:fixed;\n    inset:0;\n    background-color:rgba(0, 0, 0, 0.35);\n    backdrop-filter:blur(4px);\n    -webkit-backdrop-filter:blur(4px);\n    z-index:9990 !important;\n    opacity:0;\n    pointer-events:none;\n    transition:opacity var(--anim-smooth);\n\n    touch-action:none;\n    user-select:none;\n    -webkit-user-select:none;\n    overscroll-behavior:none;\n}\n.tm-bottom-sheet-overlay.visible{\n    opacity:1;\n    pointer-events:auto;\n}\n\n.tm-bottom-sheet-panel{\n    position:absolute;\n    bottom:0;\n    left:0;\n    right:0;\n    width:100%;\n    max-height:calc(100vh - 120px);\n    background-color:rgba(18, 18, 20, 0.94);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.6);\n    border-radius:16px;\n    border:1px solid rgba(255, 255, 255, 0.1);\n    z-index:9995 !important;\n    opacity:0;\n    pointer-events:none;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    display:flex;\n    flex-direction:column;\n    overflow:hidden;\n    box-sizing:border-box;\n    padding:10px 14px 12px;\n}\n.tm-bottom-sheet-panel.visible{\n    opacity:1;\n    pointer-events:auto;\n    transform:translateY(0) scale(1);\n}\n.tm-sheet-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    padding:2px 2px 6px 2px;\n    margin-bottom:6px;\n    border-bottom:1px solid rgba(255, 255, 255, 0.06);\n    flex-shrink:0;\n}\n\n.tm-bottom-sheet-title{\n    font-size:0.82rem;\n    font-weight:600;\n    color:rgba(255, 255, 255, 0.88);\n    letter-spacing:0.2px;\n}\n\n.tm-sheet-count-badge{\n    font-size:0.7rem;\n    color:rgba(255, 255, 255, 0.45);\n    background:rgba(255, 255, 255, 0.08);\n    padding:1px 6px;\n    border-radius:8px;\n}\n\n.tm-sheet-close-btn{\n    background:transparent;\n    border:none;\n    color:rgba(255, 255, 255, 0.45);\n    font-size:0.95rem;\n    cursor:pointer;\n    padding:0 4px;\n    border-radius:4px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    transition:color 0.2s;\n}\n.tm-sheet-close-btn:hover{\n    color:#ffffff;\n}\n.tm-bottom-sheet-list{\n    flex:1;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n    display:flex;\n    flex-direction:column;\n    gap:6px;\n    padding-right:2px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar{\n    width:4px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar-thumb{\n    background:rgba(255, 255, 255, 0.2);\n    border-radius:2px;\n}\n.tm-sheet-item{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    padding:2px 0;\n    background:transparent;\n    border:none;\n    height:32px;\n    box-sizing:border-box;\n}\n\n.tm-sheet-item-time-container{\n    display:flex;\n    align-items:center;\n    flex-shrink:0;\n    height:32px;\n}\n.tm-sheet-time-pill{\n    height:32px;\n    box-sizing:border-box;\n    padding:0 12px;\n    border-radius:16px;\n    background:hsla(var(--tab-color, 200 100% 55%), 0.15);\n    border:1px solid hsla(var(--tab-color, 200 100% 55%), 0.4);\n    color:#ffffff;\n    font-size:0.8rem;\n    font-family:inherit;\n    font-weight:500;\n    cursor:pointer;\n    white-space:nowrap;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    transition:transform 0.15s ease, background-color 0.2s;\n}\n.tm-sheet-time-pill:hover{\n    transform:scale(1.02);\n    background:hsla(var(--tab-color, 200 100% 55%), 0.28);\n}\n.tm-sheet-time-pill.interval{\n    padding:0 10px;\n    gap:4px;\n}\n.tm-sheet-time-pill.interval .tm-time-part{\n    cursor:pointer;\n    padding:2px 4px;\n    border-radius:4px;\n    transition:background-color 0.15s, color 0.15s;\n}\n.tm-sheet-time-pill.interval .tm-time-part:hover{\n    background-color:rgba(255, 255, 255, 0.25);\n    color:#ffffff;\n}\n.tm-sheet-time-pill.interval .tm-time-sep{\n    opacity:0.6;\n    font-weight:400;\n    user-select:none;\n    padding:0 1px;\n}\n.tm-sheet-item-comment-input{\n    flex:1;\n    min-width:0;\n    height:32px;\n    box-sizing:border-box;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:8px;\n    padding:0 10px;\n    color:#ffffff;\n    font-size:0.82rem;\n    outline:none;\n    display:inline-flex;\n    align-items:center;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-sheet-item-comment-input:focus{\n    border-color:rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-sheet-item-comment-input::placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-sheet-delete-btn{\n    width:32px;\n    height:32px;\n    box-sizing:border-box;\n    border-radius:8px;\n    border:1px solid rgba(255, 60, 60, 0.25);\n    background:rgba(255, 60, 60, 0.12);\n    color:#ff5252;\n    font-size:0.85rem;\n    font-weight:bold;\n    cursor:pointer;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s;\n}\n.tm-sheet-delete-btn:hover{\n    background:rgba(255, 60, 60, 0.28);\n    transform:scale(1.05);\n}\n\n.tm-bottom-sheet-empty{\n    padding:16px;\n    text-align:center;\n    font-size:0.82rem;\n    color:rgba(255, 255, 255, 0.35);\n}\n.tm-rewind-group, .tm-forward-group{\n    display:flex;\n    flex-direction:column;\n    width:50%;\n    gap:8px;\n    align-items:center;\n}\n\n.tm-rewind-buttons-container{\n    display:flex;\n    flex-direction:row-reverse;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n\n.tm-forward-buttons-container{\n    display:flex;\n    flex-direction:row;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n.tm-time-control-button{\n    background-color:hsla(var(--shadcn-secondary) / var(--btn-opacity, 0.5));\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsl(var(--shadcn-border) / 0.1);\n    border-radius:8px;\n    padding:0;\n    font-size:0.75rem;\n    cursor:pointer;\n    transition:all 0.2s cubic-bezier(.25,.8,.25,1);\n    white-space:nowrap;\n    font-weight:500;\n    box-shadow:0 1px 2px rgba(0,0,0,0.05);\n    width:var(--button-xl);\n    height:var(--button-lg);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    flex:0 0 auto;\n}\n\n.tm-time-control-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.15));\n    border-color:hsla(var(--shadcn-border) / 0.3);\n    transform:translateY(-1.5px);\n    box-shadow:0 4px 8px rgba(0,0,0,0.2);\n}\n\n.tm-time-control-button:active{\n    transform:scale(0.96);\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.25));\n    box-shadow:none;\n}\n\n.tm-time-control-button-active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-time-control-button-after-active{\n    transform:none;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.15);\n}\n\n.tm-time-control-button-inner{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-rewind-icon{\n    margin-right:-2px;\n}\n\n.tm-forward-icon{\n    margin-left:-2px;\n}\n\n.tm-time-text-margin-left{\n    margin-left:2px;\n}\n\n.tm-time-text-margin-right{\n    margin-right:2px;\n}\n.tm-control-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:none;\n}\n\n.tm-control-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:none;\n}\n.tm-control-buttons{\n    position:absolute;\n    bottom:calc(10px + env(safe-area-inset-bottom, 0px));\n    left:50%;\n    transform:translateX(-50%);\n    width:95%;\n    max-width:700px;\n    min-width:350px;\n    z-index:9991;\n    padding:16px 16px 14px;\n    border-radius:16px;\n    background-color:rgba(10, 10, 10, 0.52);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 12px 32px rgba(0, 0, 0, 0.45);\n    border:none;\n    transition: opacity 0.3s ease,  transform 0.3s ease,  width 0.35s cubic-bezier(0.25, 1, 0.5, 1),  left 0.35s cubic-bezier(0.25, 1, 0.5, 1),  bottom 0.35s cubic-bezier(0.25, 1, 0.5, 1),  right 0.35s cubic-bezier(0.25, 1, 0.5, 1),  border-radius 0.3s ease;\n    gap:10px;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:center;\n    overflow:visible !important;\n    touch-action:none;\n}\n\n.tm-control-buttons.dragging{\n    transition:none !important;\n}\nbody.controls-hidden .tm-player-container .tm-control-buttons{\n    opacity:0;\n    transform:translateX(-50%) translateY(calc(100% + 30px));\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-control-buttons{\n    opacity:1;\n    transform:translateX(-50%) translateY(0);\n    pointer-events:auto;\n}\nbody.controls-hidden .tm-player-container .tm-button-container{\n    opacity:0;\n    transform:translateY(-60px);\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-button-container{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-control-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.6);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n}\n\n.tm-control-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    transform:translateY(-2px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-control-button:active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-control-button.active{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-control-button svg,\n.tm-control-button img{\n    width:16px;\n    height:16px;\n}\n.tm-control-row{\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    gap:8px;\n    margin-top:4px;\n    opacity:1;\n    transition:opacity var(--anim-quick), height var(--anim-quick);\n    height:auto;\n    overflow:hidden;\n}\n\n.tm-control-row.hidden{\n    opacity:0;\n    height:0;\n    margin:0;\n}\n.tm-comment-row{\n    width:100%;\n    display:flex;\n    flex-direction:column;\n    margin-bottom:10px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.2);\n    padding-bottom:10px;\n}\n\n.tm-comment-container{\n    width:100%;\n    min-height:60px;\n    display:flex;\n    flex-direction:column;\n    gap:8px;\n}\n\n.tm-comment-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    font-size:14px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-comment-left{\n    display:flex;\n    align-items:center;\n}\n\n.tm-comment-title{\n    margin-right:5px;\n}\n\n.tm-comment-count{\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:12px;\n}\n\n.tm-comment-actions{\n    display:flex;\n    gap:8px;\n}\n\n.tm-comment-button{\n    border:none;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:4px;\n    padding:4px 8px;\n    font-size:12px;\n    cursor:pointer;\n    transition:all 0.2s ease;\n}\n\n.tm-comment-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.6);\n    transform:translateY(-1px);\n}\n\n.tm-comment-button:active{\n    transform:scale(0.95);\n}\n\n.tm-comment-write{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n}\n\n.tm-comment-write:hover{\n    background-color:hsla(var(--shadcn-blue) / 0.8);\n}\n\n.tm-comment-placeholder{\n    width:100%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:10px;\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:13px;\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    border-radius:6px;\n}\n@media screen and (orientation: landscape){\n    .tm-comment-container{\n        min-height:50px;\n    }\n    \n    .tm-comment-placeholder{\n        padding:8px;\n    }\n}\n\n.tm-player-title{\n    position:absolute !important;\n    top:calc(env(safe-area-inset-top, 0px) + 12px) !important;\n    left:50% !important;\n    transform:translateX(-50%) !important;\n    max-width:calc(100% - 110px) !important;\n    text-align:center;\n    font-size:14px;\n    font-weight:600;\n    color:#ffffff;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    user-select:none;\n    z-index:9998 !important;\n    text-shadow:0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;\n    pointer-events:none !important;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n\nbody.controls-hidden .tm-player-title{\n    opacity:0 !important;\n    transform:translate(-50%, -20px) !important;\n    pointer-events:none !important;\n}\nbody.tm-swiping-down .tm-button-container,\nbody.tm-swiping-down .tm-handle-container,\nbody.tm-swiping-down .tm-comments-panel,\nbody.tm-swiping-down .tm-control-buttons,\nbody.tm-swiping-down .tm-settings-panel{\n    opacity:0 !important;\n    pointer-events:none !important;\n    transition:opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n.tm-jump-active{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:5;\n    background-color:hsla(var(--shadcn-green) / 0.8);\n    border-radius:2px;\n    box-shadow:0 0 8px hsla(var(--shadcn-green) / 0.5);\n    pointer-events:none;\n    animation:tm-jump-flash-fade 3.0s cubic-bezier(0.25, 1, 0.5, 1) forwards;\n}\n\n@keyframes tm-jump-flash-fade{\n    0%, 20%, 40%, 60%, 80%{\n        opacity:1;\n        background-color:hsl(var(--shadcn-green));\n        box-shadow:0 0 16px 4px hsl(var(--shadcn-green));\n        transform:translateX(-50%) scaleX(1.6);\n    }\n    10%, 30%, 50%, 70%{\n        opacity:0.3;\n        background-color:hsla(var(--shadcn-green) / 0.4);\n        box-shadow:0 0 4px hsla(var(--shadcn-green) / 0.2);\n        transform:translateX(-50%) scaleX(1.0);\n    }\n    90%{\n        opacity:0.5;\n        background-color:hsla(var(--shadcn-green) / 0.5);\n        box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n        transform:translateX(-50%) scaleX(0.8);\n    }\n    100%{\n        opacity:0;\n        background-color:transparent;\n        box-shadow:none;\n        transform:translateX(-50%) scaleX(0);\n    }\n}\n.tm-sidebar-pos-button,\n.tm-sidebar-toggle-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:none !important;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n}\n\n.tm-sidebar-pos-button:hover,\n.tm-sidebar-toggle-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.1);\n}\n\n.tm-sidebar-pos-button:active,\n.tm-sidebar-toggle-button:active{\n    transform:scale(0.9);\n}\n.tm-sidebar-hidden .tm-sidebar-pos-button{\n    display:none !important;\n}\n@media screen and (min-width: 480px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:520px;\n    }\n}\n\n@media screen and (min-width: 768px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:640px;\n    }\n    .tm-comments-panel{\n        max-width:720px;\n        margin:0 auto;\n        border-left:1px solid hsla(var(--shadcn-border) / 0.1);\n        border-right:1px solid hsla(var(--shadcn-border) / 0.1);\n        box-shadow:0 4px 20px rgba(0, 0, 0, 0.08);\n        background-color:hsla(var(--shadcn-card) / 0.02);\n    }\n}\nbody.tm-player-active header,\nbody.tm-player-active .header,\nbody.tm-player-active navbar,\nbody.tm-player-active .navbar,\nbody.tm-player-active #header-top,\nbody.tm-player-active .top-nav,\nbody.tm-player-active [class*="header--sticky"],\nbody.tm-player-active [class*="navbar-fixed"]{\n    display:none !important;\n}\n\n.tm-progress-markers-container{\n    position:absolute;\n    top:0;\n    left:0;\n    width:100%;\n    height:100%;\n    pointer-events:none;\n    z-index:5;\n}\n.tm-progress-marker-tick{\n    position:absolute;\n    width:6px;\n    height:3px;\n    bottom:-4px;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:10;\n    pointer-events:auto;\n    transition:all var(--anim-quick);\n}\n.tm-progress-marker-tick:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n    transform:translateX(-50%) scale(1.1);\n}\n.tm-progress-marker-range{\n    position:absolute;\n    height:3px;\n    bottom:-4px;\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:9;\n    pointer-events:auto;\n    transition:all var(--anim-quick);\n}\n.tm-progress-marker-range:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n}\n\n.tm-active-loop-played{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.45);\n    z-index:8;\n    pointer-events:none;\n    box-shadow:0 0 4px hsla(var(--tab-color), 0.15);\n}\n\n.tm-active-loop-unplayed{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.15);\n    z-index:7;\n    pointer-events:none;\n}\n\n.tm-active-loop-boundary{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.75);\n    z-index:9;\n    pointer-events:none;\n    box-shadow:0 0 3px rgba(0, 0, 0, 0.3);\n}\n.tm-active-loop-boundary.start{\n    border-radius:2px 0 0 2px;\n}\n.tm-active-loop-boundary.end{\n    border-radius:0 2px 2px 0;\n}\n`, "" ]);
+      const y = b;
     },
     "479": (r, o, a) => {
       a.d(o, {
-        "A": () => b
+        "A": () => y
       });
       var l = a(601);
       var u = a.n(l);
       var p = a(314);
       var v = a.n(p);
-      var y = v()(u());
-      y.push([ r.id, `:root{\n    --brand-pink:rgb(254, 98, 142);\n    --brand-pink-rgb:254, 98, 142;\n    --shadcn-background:0 0% 0%;\n    --shadcn-foreground:0 0% 100%;\n    --shadcn-card:0 0% 5%;\n    --shadcn-card-foreground:0 0% 95%;\n    --shadcn-popover:0 0% 10%;\n    --shadcn-popover-foreground:0 0% 95%;\n    --shadcn-primary:210 10% 90%;\n    --shadcn-primary-foreground:210 20% 10%;\n    --shadcn-secondary:0 0% 15%;\n    --shadcn-secondary-foreground:0 0% 95%;\n    --shadcn-muted:0 0% 30%;\n    --shadcn-muted-foreground:0 0% 70%;\n    --shadcn-accent:212 40% 30%;\n    --shadcn-accent-foreground:0 0% 95%;\n    --shadcn-destructive:0 50% 40%;\n    --shadcn-destructive-foreground:0 0% 95%;\n    --shadcn-border:0 0% 30%;\n    --shadcn-input:0 0% 15%;\n    --shadcn-ring:212 70% 45%;\n    --shadcn-green:142 50% 45%;\n    --shadcn-green-foreground:0 0% 95%;\n    --shadcn-blue:211 70% 55%;\n    --shadcn-blue-foreground:0 0% 95%;\n    --shadcn-red:0 60% 50%;\n    --shadcn-red-foreground:0 0% 95%;\n    --shadcn-orange:25 80% 50%;\n    --shadcn-orange-foreground:0 0% 95%;\n    --shadcn-purple:262 60% 60%;\n    --shadcn-purple-foreground:0 0% 95%;\n    --shadcn-radius:0.5rem;\n    --shadcn-radius-sm:0.3rem;\n    --shadcn-radius-lg:0.8rem;\n    --button-sm:20px;\n    --button-md:32px;\n    --button-lg:40px;\n    --button-xl:48px;\n    --anim-quick:0.2s cubic-bezier(0.4, 0, 0.2, 1);\n    --anim-smooth:0.3s cubic-bezier(0.16, 1, 0.3, 1);\n    --anim-bounce:0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);\n    --shadow-sm:0 2px 5px rgba(0, 0, 0, 0.2);\n    --shadow-md:0 4px 10px rgba(0, 0, 0, 0.25);\n    --shadow-lg:0 8px 20px rgba(0, 0, 0, 0.3);\n    --font-sans:"SF Pro Display", "SF Pro", "Segoe UI", "Microsoft YaHei", "微软雅黑", "PingFang SC", "苹方", "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";\n}\nhtml, body, button, input, select, textarea{\n    font-family:var(--font-sans);\n}\n*, *::before, *::after{\n    font-family:inherit;\n}\n\n.tm-video-overlay *{\n    font-family:var(--font-sans);\n}\n`, "" ]);
-      const b = y;
+      var b = v()(u());
+      b.push([ r.id, `:root{\n    --brand-pink:rgb(254, 98, 142);\n    --brand-pink-rgb:254, 98, 142;\n    --shadcn-background:0 0% 0%;\n    --shadcn-foreground:0 0% 100%;\n    --shadcn-card:0 0% 5%;\n    --shadcn-card-foreground:0 0% 95%;\n    --shadcn-popover:0 0% 10%;\n    --shadcn-popover-foreground:0 0% 95%;\n    --shadcn-primary:210 10% 90%;\n    --shadcn-primary-foreground:210 20% 10%;\n    --shadcn-secondary:0 0% 15%;\n    --shadcn-secondary-foreground:0 0% 95%;\n    --shadcn-muted:0 0% 30%;\n    --shadcn-muted-foreground:0 0% 70%;\n    --shadcn-accent:212 40% 30%;\n    --shadcn-accent-foreground:0 0% 95%;\n    --shadcn-destructive:0 50% 40%;\n    --shadcn-destructive-foreground:0 0% 95%;\n    --shadcn-border:0 0% 30%;\n    --shadcn-input:0 0% 15%;\n    --shadcn-ring:212 70% 45%;\n    --shadcn-green:142 50% 45%;\n    --shadcn-green-foreground:0 0% 95%;\n    --shadcn-blue:211 70% 55%;\n    --shadcn-blue-foreground:0 0% 95%;\n    --shadcn-red:0 60% 50%;\n    --shadcn-red-foreground:0 0% 95%;\n    --shadcn-orange:25 80% 50%;\n    --shadcn-orange-foreground:0 0% 95%;\n    --shadcn-purple:262 60% 60%;\n    --shadcn-purple-foreground:0 0% 95%;\n    --shadcn-radius:0.5rem;\n    --shadcn-radius-sm:0.3rem;\n    --shadcn-radius-lg:0.8rem;\n    --button-sm:20px;\n    --button-md:32px;\n    --button-lg:40px;\n    --button-xl:48px;\n    --anim-quick:0.2s cubic-bezier(0.4, 0, 0.2, 1);\n    --anim-smooth:0.3s cubic-bezier(0.16, 1, 0.3, 1);\n    --anim-bounce:0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);\n    --shadow-sm:0 2px 5px rgba(0, 0, 0, 0.2);\n    --shadow-md:0 4px 10px rgba(0, 0, 0, 0.25);\n    --shadow-lg:0 8px 20px rgba(0, 0, 0, 0.3);\n    --font-sans:"SF Pro Display", "SF Pro", "Segoe UI", "Microsoft YaHei", "微软雅黑", "PingFang SC", "苹方", "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";\n}\nhtml, body, button, input, select, textarea{\n    font-family:var(--font-sans);\n}\n*, *::before, *::after{\n    font-family:inherit;\n}\n\n.tm-video-overlay *{\n    font-family:var(--font-sans);\n}\n`, "" ]);
+      const y = b;
     },
     "540": r => {
       function insertStyleElement(r) {
@@ -337,16 +337,16 @@
       var u = a.n(l);
       var p = a(314);
       var v = a.n(p);
-      var y = a(479);
-      var b = a(401);
+      var b = a(479);
+      var y = a(401);
       var C = a(465);
       var k = a(140);
       var _ = a(12);
       var E = a(725);
       var S = a(919);
       var P = v()(u());
-      P.i(y.A);
       P.i(b.A);
+      P.i(y.A);
       P.i(C.A);
       P.i(k.A);
       P.i(_.A);
@@ -357,15 +357,15 @@
     },
     "725": (r, o, a) => {
       a.d(o, {
-        "A": () => b
+        "A": () => y
       });
       var l = a(601);
       var u = a.n(l);
       var p = a(314);
       var v = a.n(p);
-      var y = v()(u());
-      y.push([ r.id, `@media screen and (max-width: 929px) and (orientation: landscape){\n    .tm-video-container{\n        width:100% !important;\n        height:100vh !important;\n        max-height:100vh !important;\n        min-height:auto !important;\n        margin:0 !important;\n        padding:0 !important;\n        border-radius:0 !important;\n        box-shadow:none !important;\n        display:flex !important;\n        justify-content:center !important;\n        align-items:center !important;\n        background-color:black !important;\n    }\n    .tm-video-wrapper{\n        position:relative !important;\n        width:100% !important;\n        height:100% !important;\n        border-radius:0 !important;\n        display:flex !important;\n        justify-content:center !important;\n        align-items:center !important;\n        overflow:hidden !important;\n    }\n    .tm-video-wrapper video{\n        width:100% !important;\n        height:auto !important;\n        max-height:100vh !important;\n        object-fit:contain !important;\n    }\n    .tm-video-wrapper.video-portrait video{\n        width:auto !important;\n        height:100% !important;\n        max-width:100% !important;\n    }\n    .tm-button-container{\n        position:absolute;\n        top:0;\n        left:0;\n        right:0;\n        z-index:9995;\n        background-color:transparent;\n        padding:16px;\n        padding-top:calc(env(safe-area-inset-top, 8px) + 8px);\n        padding-left:calc(env(safe-area-inset-left, 16px) + 16px);\n        padding-right:calc(env(safe-area-inset-right, 16px) + 16px);\n        display:flex;\n        justify-content:space-between;\n        transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);\n    }\n    .tm-video-overlay.controls-hidden .tm-button-container{\n        opacity:0;\n        transform:translateY(-60px);\n        pointer-events:none;\n    }\n    .tm-video-overlay .tm-button-container{\n        opacity:1;\n        transform:translateY(0);\n        pointer-events:auto;\n    }\n    .tm-settings-button{\n        display:flex;\n        background-color:hsla(var(--shadcn-secondary) / 0.3);\n        backdrop-filter:blur(4px);\n        -webkit-backdrop-filter:blur(4px);\n    }\n    .tm-close-button{\n        background-color:hsla(var(--shadcn-secondary) / 0.3);\n        backdrop-filter:blur(4px);\n        -webkit-backdrop-filter:blur(4px);\n    }\n    .tm-control-buttons{\n        position:absolute;\n        bottom:calc(10px + env(safe-area-inset-bottom, 0px));\n        left:50%;\n        transform:translateX(-50%);\n        width:90%;\n        max-width:700px;\n        min-width:350px;\n        background-color:transparent;\n        backdrop-filter:none;\n        -webkit-backdrop-filter:none;\n        z-index:9994;\n        padding:16px 16px 14px;\n        border-radius:16px;\n        border:none;\n        box-shadow:none;\n        transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);\n    }\n    .tm-video-overlay.controls-hidden .tm-control-buttons{\n        opacity:0;\n        transform:translateX(-50%) translateY(calc(100% + 30px));\n        pointer-events:none;\n    }\n    .tm-video-overlay .tm-control-buttons{\n        opacity:1;\n        transform:translateX(-50%) translateY(0);\n        pointer-events:auto;\n    }\n    .tm-video-overlay{\n        background-color:black;\n        backdrop-filter:none;\n        -webkit-backdrop-filter:none;\n    }\n    .tm-floating-button{\n        bottom:30px;\n        left:50%;\n        transform:translateX(-50%);\n        padding:0;\n        width:calc(var(--button-xl));\n        height:calc(var(--button-xl));\n    }\n    .tm-handle-container{\n        display:none !important;\n    }\n}\n@media screen and (orientation: landscape) and (max-height: 480px){\n    .tm-control-buttons{\n        padding:6px 12px !important;\n        gap:6px !important;\n    }\n    .tm-control-buttons .tm-seek-control-row,\n    .tm-control-buttons .tm-loop-control-row,\n    .tm-control-buttons .tm-playback-control-row{\n        gap:6px !important;\n    }\n    .tm-control-buttons .tm-tab-pill{\n        padding:3px 8px !important;\n        font-size:0.75rem !important;\n    }\n}\n`, "" ]);
-      const b = y;
+      var b = v()(u());
+      b.push([ r.id, `@media screen and (max-width: 929px) and (orientation: landscape){\n    .tm-video-container{\n        width:100% !important;\n        height:100vh !important;\n        max-height:100vh !important;\n        min-height:auto !important;\n        margin:0 !important;\n        padding:0 !important;\n        border-radius:0 !important;\n        box-shadow:none !important;\n        display:flex !important;\n        justify-content:center !important;\n        align-items:center !important;\n        background-color:black !important;\n    }\n    .tm-video-wrapper{\n        position:relative !important;\n        width:100% !important;\n        height:100% !important;\n        border-radius:0 !important;\n        display:flex !important;\n        justify-content:center !important;\n        align-items:center !important;\n        overflow:hidden !important;\n    }\n    .tm-video-wrapper video{\n        width:100% !important;\n        height:auto !important;\n        max-height:100vh !important;\n        object-fit:contain !important;\n    }\n    .tm-video-wrapper.video-portrait video{\n        width:auto !important;\n        height:100% !important;\n        max-width:100% !important;\n    }\n    .tm-button-container{\n        position:absolute;\n        top:0;\n        left:0;\n        right:0;\n        z-index:9995;\n        background-color:transparent;\n        padding:16px;\n        padding-top:calc(env(safe-area-inset-top, 8px) + 8px);\n        padding-left:calc(env(safe-area-inset-left, 16px) + 16px);\n        padding-right:calc(env(safe-area-inset-right, 16px) + 16px);\n        display:flex;\n        justify-content:space-between;\n        transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);\n    }\n    .tm-video-overlay.controls-hidden .tm-button-container{\n        opacity:0;\n        transform:translateY(-60px);\n        pointer-events:none;\n    }\n    .tm-video-overlay .tm-button-container{\n        opacity:1;\n        transform:translateY(0);\n        pointer-events:auto;\n    }\n    .tm-settings-button{\n        display:flex;\n        background-color:hsla(var(--shadcn-secondary) / 0.3);\n        backdrop-filter:blur(4px);\n        -webkit-backdrop-filter:blur(4px);\n    }\n    .tm-close-button{\n        background-color:hsla(var(--shadcn-secondary) / 0.3);\n        backdrop-filter:blur(4px);\n        -webkit-backdrop-filter:blur(4px);\n    }\n    .tm-control-buttons{\n        position:absolute;\n        bottom:calc(10px + env(safe-area-inset-bottom, 0px));\n        left:50%;\n        transform:translateX(-50%);\n        width:90%;\n        max-width:700px;\n        min-width:350px;\n        background-color:transparent;\n        backdrop-filter:none;\n        -webkit-backdrop-filter:none;\n        z-index:9994;\n        padding:16px 16px 14px;\n        border-radius:16px;\n        border:none;\n        box-shadow:none;\n        transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);\n    }\n    .tm-video-overlay.controls-hidden .tm-control-buttons{\n        opacity:0;\n        transform:translateX(-50%) translateY(calc(100% + 30px));\n        pointer-events:none;\n    }\n    .tm-video-overlay .tm-control-buttons{\n        opacity:1;\n        transform:translateX(-50%) translateY(0);\n        pointer-events:auto;\n    }\n    .tm-video-overlay{\n        background-color:black;\n        backdrop-filter:none;\n        -webkit-backdrop-filter:none;\n    }\n    .tm-floating-button{\n        bottom:30px;\n        left:50%;\n        transform:translateX(-50%);\n        padding:0;\n        width:calc(var(--button-xl));\n        height:calc(var(--button-xl));\n    }\n    .tm-handle-container{\n        display:none !important;\n    }\n}\n@media screen and (orientation: landscape) and (max-height: 480px){\n    .tm-control-buttons{\n        padding:6px 12px !important;\n        gap:6px !important;\n    }\n    .tm-control-buttons .tm-seek-control-row,\n    .tm-control-buttons .tm-loop-control-row,\n    .tm-control-buttons .tm-playback-control-row{\n        gap:6px !important;\n    }\n    .tm-control-buttons .tm-tab-pill{\n        padding:3px 8px !important;\n        font-size:0.75rem !important;\n    }\n}\n`, "" ]);
+      const y = b;
     },
     "825": r => {
       function apply(r, o, a) {
@@ -423,15 +423,15 @@
     },
     "919": (r, o, a) => {
       a.d(o, {
-        "A": () => b
+        "A": () => y
       });
       var l = a(601);
       var u = a.n(l);
       var p = a(314);
       var v = a.n(p);
-      var y = v()(u());
-      y.push([ r.id, `.tm-control-drag-handle{\n    display:none;\n    width:100%;\n    height:14px;\n    justify-content:center;\n    align-items:center;\n    cursor:grab;\n    user-select:none;\n    margin-bottom:2px;\n    position:relative;\n}\n\n.tm-control-drag-handle:active{\n    cursor:grabbing;\n}\n\n.tm-control-drag-handle::before{\n    content:"";\n    width:36px;\n    height:4px;\n    background-color:hsla(var(--shadcn-foreground) / 0.3);\n    border-radius:2px;\n    transition:background-color 0.2s ease;\n}\n\n.tm-control-drag-handle:hover::before{\n    background-color:hsla(var(--shadcn-foreground) / 0.6);\n}\n@media screen and (min-width: 930px) and (orientation: landscape){\n    :root{\n        --sidebar-width:clamp(350px, 25vw, 420px);\n    }\n}\n@media screen and (min-width: 1440px) and (orientation: landscape){\n    :root{\n        --sidebar-width:clamp(380px, 22vw, 560px);\n    }\n}\n@media screen and (min-width: 930px) and (orientation: landscape){\n    .tm-player-container{\n        display:grid !important;\n        grid-template-columns:1fr var(--sidebar-width) !important;\n        grid-template-rows:minmax(0, 1fr) !important;\n        grid-template-areas:"video sidebar" !important;\n        height:100% !important;\n        height:100dvh !important;\n        max-height:100dvh !important;\n        width:100vw !important;\n        overflow:hidden !important;\n        background-color:#000 !important;\n        position:fixed !important;\n        top:0 !important;\n        bottom:0 !important;\n        left:0 !important;\n        right:0 !important;\n        z-index:2000000001 !important;\n    }\n    .tm-comments-panel .tm-button-container{\n        grid-area:auto !important;\n        position:relative !important;\n        width:100% !important;\n        height:44px !important;\n        padding:0 16px !important;\n        display:flex !important;\n        align-items:center !important;\n        justify-content:space-between !important;\n        background-color:transparent !important;\n        border-bottom:1px solid hsla(var(--shadcn-border) / 0.1) !important;\n        backdrop-filter:none !important;\n        -webkit-backdrop-filter:none !important;\n        box-shadow:none !important;\n        z-index:10000 !important;\n        transform:none !important;\n        opacity:1 !important;\n        pointer-events:auto !important;\n        box-sizing:border-box !important;\n    }\n    .tm-player-container.tm-sidebar-hidden .tm-button-container{\n        position:fixed !important;\n        top:16px !important;\n        left:16px !important;\n        right:16px !important;\n        width:calc(100% - 32px) !important;\n        height:44px !important;\n        padding:0 !important;\n        display:flex !important;\n        align-items:center !important;\n        justify-content:flex-start !important;\n        gap:8px !important;\n        background:transparent !important;\n        border:none !important;\n        box-shadow:none !important;\n        backdrop-filter:none !important;\n        -webkit-backdrop-filter:none !important;\n        z-index:10000 !important;\n        transform:none !important;\n        opacity:1 !important;\n        pointer-events:none !important;\n    }\n\n    .tm-player-container.tm-sidebar-hidden .tm-button-container > *{\n        pointer-events:auto !important;\n        background-color:hsla(var(--shadcn-card) / 0.8) !important;\n        border:1px solid hsla(var(--shadcn-border) / 0.2) !important;\n        box-shadow:0 2px 8px rgba(0, 0, 0, 0.3) !important;\n        border-radius:50% !important;\n        display:flex !important;\n        align-items:center !important;\n        justify-content:center !important;\n        width:var(--button-md) !important;\n        height:var(--button-md) !important;\n    }\n    .tm-player-container.tm-sidebar-hidden:not(.tm-sidebar-left) .tm-sidebar-toggle-button{\n        margin-left:auto !important;\n    }\n    .tm-player-container.tm-sidebar-hidden.tm-sidebar-left .tm-close-button{\n        margin-left:auto !important;\n    }\n    .tm-video-container{\n        grid-area:video;\n        width:100% !important;\n        height:100% !important;\n        max-height:none !important;\n        margin-top:0 !important;\n        border-radius:0 !important;\n        box-shadow:none !important;\n        background-color:#000 !important;\n        display:flex !important;\n        justify-content:center !important;\n        align-items:center !important;\n        padding:0 !important;\n        overflow:hidden !important;\n    }\n    .tm-video-wrapper{\n        position:relative !important;\n        width:100% !important;\n        height:100% !important;\n        border-radius:0 !important;\n        display:flex !important;\n        justify-content:center !important;\n        align-items:center !important;\n        overflow:hidden !important;\n    }\n    .tm-video-minimap{\n        bottom:calc(36px + env(safe-area-inset-bottom, 0px)) !important;\n        left:calc(24px + env(safe-area-inset-left, 0px)) !important;\n    }\n    .tm-video-wrapper video{\n        width:auto !important;\n        height:100% !important;\n        max-height:100% !important;\n        max-width:none !important;\n        min-width:0 !important;\n        flex-shrink:0 !important;\n        object-fit:contain !important;\n    }\n    .tm-video-wrapper.video-portrait video{\n        width:auto !important;\n        height:100% !important;\n        max-width:100% !important;\n    }\n    .tm-comments-panel{\n        display:flex !important;\n        grid-area:sidebar;\n        position:relative !important;\n        width:100% !important;\n        height:100% !important;\n        max-height:100% !important;\n        min-height:0 !important;\n        background-color:hsla(var(--shadcn-card) / 0.95) !important;\n        border-left:1px solid hsla(var(--shadcn-border) / 0.15) !important;\n        backdrop-filter:blur(20px) !important;\n        -webkit-backdrop-filter:blur(20px) !important;\n        box-sizing:border-box !important;\n        z-index:9990 !important;\n        pointer-events:auto !important;\n        flex-direction:column !important;\n        overflow:hidden !important;\n        visibility:visible !important;\n        opacity:1 !important;\n    }\n    .tm-comments-panel::after{\n        display:none !important;\n    }\n    .tm-comments-panel-list.tm-comments-list{\n        flex:1 1 0% !important;\n        height:0 !important;\n        min-height:0 !important;\n        max-height:100% !important;\n        width:100% !important;\n        display:flex !important;\n        flex-direction:column !important;\n        overflow-y:auto !important;\n        box-sizing:border-box !important;\n        padding:8px 16px 0px 16px !important;\n        pointer-events:auto !important;\n    }\n\n    .tm-comment-section{\n        min-height:0 !important;\n        flex-shrink:1 !important;\n        display:flex !important;\n        flex-direction:column !important;\n        overflow:hidden !important;\n    }\n\n    .tm-comment-section:not(.is-collapsed){\n        flex:1 1 0% !important;\n        height:0 !important;\n        min-height:0 !important;\n        overflow:hidden !important;\n    }\n    .tm-comment-section-body{\n        flex:1 1 0% !important;\n        height:0 !important;\n        min-height:0 !important;\n        overflow-y:auto !important;\n        padding-bottom:4px !important;\n    }\n    .tm-comments-panel-action-bar{\n        position:relative !important;\n        bottom:auto !important;\n        left:auto !important;\n        right:auto !important;\n        flex:0 0 auto !important;\n        flex-shrink:0 !important;\n        z-index:9995 !important;\n    }\n\n    .tm-comment-submit-bar-wrapper{\n        position:relative !important;\n        bottom:auto !important;\n        left:auto !important;\n        right:auto !important;\n        flex:0 0 auto !important;\n        flex-shrink:0 !important;\n        z-index:9996 !important;\n    }\n    .tm-comments-panel-publish-btn{\n        bottom:56px !important;\n        left:50% !important;\n        transform:translateX(-50%) !important;\n        z-index:9995 !important;\n    }\n    .tm-handle-container{\n        display:none !important;\n    }\n    .tm-control-buttons{\n        position:fixed !important;\n        bottom:16px;\n        right:16px;\n        left:auto;\n        transform:none;\n        width:calc(var(--sidebar-width) - 32px) !important;\n        max-width:calc(var(--sidebar-width) - 32px) !important;\n        min-width:348px !important;\n        background-color:rgba(10, 10, 10, 0.52) !important;\n        border:none !important;\n        border-radius:16px !important;\n        backdrop-filter:blur(24px) !important;\n        -webkit-backdrop-filter:blur(24px) !important;\n        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 12px 32px rgba(0, 0, 0, 0.45) !important;\n        z-index:10001 !important;\n        padding:8px 12px 12px 12px !important;\n        transition:opacity 0.3s ease, transform 0.3s ease !important;\n        display:flex !important;\n        flex-direction:column !important;\n        gap:8px !important;\n    }\n    .tm-control-drag-handle{\n        display:flex !important;\n    }\n    .tm-control-buttons.dragging{\n        transition:none !important;\n        cursor:grabbing;\n        box-shadow:0 15px 40px rgba(0, 0, 0, 0.6) !important;\n        border:none !important;\n    }\n    body.controls-hidden .tm-control-buttons{\n        opacity:0 !important;\n        transform:translateY(20px) !important;\n        pointer-events:none !important;\n    }\n\n    body:not(.controls-hidden) .tm-control-buttons{\n        opacity:1 !important;\n        transform:none !important;\n        pointer-events:auto !important;\n    }\n    .tm-video-overlay{\n        background-color:rgba(0, 0, 0, 0.75) !important;\n        backdrop-filter:blur(10px) !important;\n        -webkit-backdrop-filter:blur(10px) !important;\n    }\n    .tm-settings-panel{\n        z-index:10002 !important;\n    }\n    .tm-comments-panel{\n        transition:margin-top 0.25s cubic-bezier(0.25, 1, 0.5, 1), margin-bottom 0.25s cubic-bezier(0.25, 1, 0.5, 1), height 0.25s cubic-bezier(0.25, 1, 0.5, 1) !important;\n    }\n    .tm-player-container.tm-controls-docked-br .tm-comments-panel,\n    .tm-player-container.tm-controls-docked-bl .tm-comments-panel{\n        margin-bottom:var(--docked-controls-height) !important;\n        height:calc(100% - var(--docked-controls-height)) !important;\n    }\n    .tm-player-container.tm-controls-docked-tr .tm-comments-panel,\n    .tm-player-container.tm-controls-docked-tl .tm-comments-panel{\n        margin-top:var(--docked-controls-height) !important;\n        height:calc(100% - var(--docked-controls-height)) !important;\n    }\n    .tm-player-container.tm-controls-docked-br .tm-comments-panel-list.tm-comments-list,\n    .tm-player-container.tm-controls-docked-bl .tm-comments-panel-list.tm-comments-list,\n    .tm-player-container.tm-controls-docked-tr .tm-comments-panel-list.tm-comments-list,\n    .tm-player-container.tm-controls-docked-tl .tm-comments-panel-list.tm-comments-list{\n        padding-bottom:8px !important;\n    }\n    .tm-player-container[class*="tm-controls-docked-"] .tm-control-buttons,\n    body.controls-hidden .tm-player-container[class*="tm-controls-docked-"] .tm-control-buttons{\n        position:fixed !important;\n        width:var(--sidebar-width) !important;\n        max-width:var(--sidebar-width) !important;\n        border-radius:0 !important;\n        border:none !important;\n        box-shadow:none !important;\n        padding:12px 16px 12px 16px !important;\n        background-color:hsla(var(--shadcn-card) / 0.65) !important;\n        backdrop-filter:blur(24px) !important;\n        -webkit-backdrop-filter:blur(24px) !important;\n        opacity:1 !important;\n        transform:none !important;\n        pointer-events:auto !important;\n    }\n    \n    .tm-player-container.tm-controls-docked-br .tm-control-buttons,\n    .tm-player-container.tm-controls-docked-bl .tm-control-buttons{\n        bottom:0 !important;\n        top:auto !important;\n    }\n    .tm-player-container.tm-controls-docked-tr .tm-control-buttons,\n    .tm-player-container.tm-controls-docked-tl .tm-control-buttons{\n        top:0 !important;\n        bottom:auto !important;\n    }\n    \n    .tm-player-container.tm-controls-docked-br .tm-control-buttons,\n    .tm-player-container.tm-controls-docked-tr .tm-control-buttons{\n        right:0 !important;\n        left:auto !important;\n    }\n    .tm-player-container.tm-controls-docked-bl .tm-control-buttons,\n    .tm-player-container.tm-controls-docked-tl .tm-control-buttons{\n        left:0 !important;\n        right:auto !important;\n    }\n    .tm-player-container.tm-sidebar-left{\n        grid-template-columns:var(--sidebar-width) 1fr !important;\n        grid-template-areas:"sidebar video" !important;\n    }\n    .tm-player-container.tm-sidebar-left .tm-comments-panel{\n        border-left:none !important;\n        border-right:1px solid hsla(var(--shadcn-border) / 0.15) !important;\n    }\n    .tm-player-container.tm-sidebar-left .tm-settings-panel{\n        right:auto !important;\n        left:16px !important;\n    }\n    .tm-player-container.tm-sidebar-hidden{\n        grid-template-columns:1fr !important;\n        grid-template-areas:"video" !important;\n    }\n    .tm-player-container.tm-sidebar-hidden .tm-comments-panel{\n        position:absolute !important;\n        width:0 !important;\n        height:0 !important;\n        border:none !important;\n        overflow:visible !important;\n        background:transparent !important;\n        backdrop-filter:none !important;\n        -webkit-backdrop-filter:none !important;\n        pointer-events:none !important;\n        visibility:hidden !important;\n        opacity:0 !important;\n    }\n    .tm-sidebar-pos-button,\n    .tm-sidebar-toggle-button{\n        display:flex !important;\n    }\n    .tm-player-container[class*="tm-controls-docked-"] .tm-settings-panel{\n        padding:0px !important;\n    }\n    .tm-player-container[class*="tm-controls-docked-"] .tm-settings-panel .tm-settings-options{\n        padding:12px !important;\n    }\n    .tm-player-title{\n        top:16px !important;\n        left:calc((100% - var(--sidebar-width)) / 2) !important;\n        transform:translateX(-50%) !important;\n        max-width:calc(100% - var(--sidebar-width) - 40px) !important;\n    }\n    \n    .tm-player-container.tm-sidebar-left .tm-player-title{\n        left:calc((100% + var(--sidebar-width)) / 2) !important;\n    }\n\n    .tm-player-container.tm-sidebar-hidden .tm-player-title{\n        left:50% !important;\n        max-width:calc(100% - 200px) !important;\n    }\n}\n@media screen and (min-width: 930px) and (max-width: 1023px) and (orientation: landscape){\n    .tm-control-buttons{\n        padding:6px 8px 10px 8px !important;\n        gap:6px !important;\n        border-radius:12px !important;\n    }\n    .tm-control-drag-handle{\n        height:10px !important;\n    }\n    .tm-time-display{\n        font-size:11px !important;\n    }\n    .tm-tab-pill{\n        padding:3px 8px !important;\n        font-size:0.7rem !important;\n    }\n}\n@media screen and (min-width: 480px) and (orientation: portrait),\n       screen and (min-width: 480px) and (max-width: 929px) and (orientation: landscape){\n    .tm-control-buttons{\n        position:fixed !important;\n        bottom:16px;\n        right:16px;\n        left:auto;\n        transform:none;\n        width:348px !important;\n        max-width:348px !important;\n        min-width:320px !important;\n        background-color:hsla(var(--shadcn-card) / 0.85) !important;\n        border:1px solid hsla(var(--shadcn-border) / 0.2) !important;\n        border-radius:16px !important;\n        backdrop-filter:blur(16px) !important;\n        -webkit-backdrop-filter:blur(16px) !important;\n        box-shadow:0 10px 30px rgba(0, 0, 0, 0.5) !important;\n        z-index:10001 !important;\n        padding:8px 12px 12px 12px !important;\n        transition:opacity 0.3s ease, transform 0.3s ease !important;\n        display:flex !important;\n        flex-direction:column !important;\n        gap:8px !important;\n    }\n    .tm-control-drag-handle{\n        display:flex !important;\n    }\n    body.controls-hidden .tm-control-buttons{\n        opacity:0 !important;\n        transform:translateY(20px) !important;\n        pointer-events:none !important;\n    }\n\n    body:not(.controls-hidden) .tm-control-buttons{\n        opacity:1 !important;\n        transform:none !important;\n        pointer-events:auto !important;\n    }\n\n\n}\n`, "" ]);
-      const b = y;
+      var b = v()(u());
+      b.push([ r.id, `.tm-control-drag-handle{\n    display:none;\n    width:100%;\n    height:14px;\n    justify-content:center;\n    align-items:center;\n    cursor:grab;\n    user-select:none;\n    margin-bottom:2px;\n    position:relative;\n}\n\n.tm-control-drag-handle:active{\n    cursor:grabbing;\n}\n\n.tm-control-drag-handle::before{\n    content:"";\n    width:36px;\n    height:4px;\n    background-color:hsla(var(--shadcn-foreground) / 0.3);\n    border-radius:2px;\n    transition:background-color 0.2s ease;\n}\n\n.tm-control-drag-handle:hover::before{\n    background-color:hsla(var(--shadcn-foreground) / 0.6);\n}\n@media screen and (min-width: 930px) and (orientation: landscape){\n    :root{\n        --sidebar-width:clamp(350px, 25vw, 420px);\n    }\n}\n@media screen and (min-width: 1440px) and (orientation: landscape){\n    :root{\n        --sidebar-width:clamp(380px, 22vw, 560px);\n    }\n}\n@media screen and (min-width: 930px) and (orientation: landscape){\n    .tm-player-container{\n        display:grid !important;\n        grid-template-columns:1fr var(--sidebar-width) !important;\n        grid-template-rows:minmax(0, 1fr) !important;\n        grid-template-areas:"video sidebar" !important;\n        height:100% !important;\n        height:100dvh !important;\n        max-height:100dvh !important;\n        width:100vw !important;\n        overflow:hidden !important;\n        background-color:#000 !important;\n        position:fixed !important;\n        top:0 !important;\n        bottom:0 !important;\n        left:0 !important;\n        right:0 !important;\n        z-index:2000000001 !important;\n    }\n    .tm-comments-panel .tm-button-container{\n        grid-area:auto !important;\n        position:relative !important;\n        width:100% !important;\n        height:44px !important;\n        padding:0 16px !important;\n        display:flex !important;\n        align-items:center !important;\n        justify-content:space-between !important;\n        background-color:transparent !important;\n        border-bottom:1px solid hsla(var(--shadcn-border) / 0.1) !important;\n        backdrop-filter:none !important;\n        -webkit-backdrop-filter:none !important;\n        box-shadow:none !important;\n        z-index:10000 !important;\n        transform:none !important;\n        opacity:1 !important;\n        pointer-events:auto !important;\n        box-sizing:border-box !important;\n    }\n    .tm-player-container.tm-sidebar-hidden .tm-button-container{\n        position:fixed !important;\n        top:16px !important;\n        left:16px !important;\n        right:16px !important;\n        width:calc(100% - 32px) !important;\n        height:44px !important;\n        padding:0 !important;\n        display:flex !important;\n        align-items:center !important;\n        justify-content:flex-start !important;\n        gap:8px !important;\n        background:transparent !important;\n        border:none !important;\n        box-shadow:none !important;\n        backdrop-filter:none !important;\n        -webkit-backdrop-filter:none !important;\n        z-index:10000 !important;\n        transform:none !important;\n        opacity:1 !important;\n        pointer-events:none !important;\n    }\n\n    .tm-player-container.tm-sidebar-hidden .tm-button-container > *{\n        pointer-events:auto !important;\n        background-color:hsla(var(--shadcn-card) / 0.8) !important;\n        border:1px solid hsla(var(--shadcn-border) / 0.2) !important;\n        box-shadow:0 2px 8px rgba(0, 0, 0, 0.3) !important;\n        border-radius:50% !important;\n        display:flex !important;\n        align-items:center !important;\n        justify-content:center !important;\n        width:var(--button-md) !important;\n        height:var(--button-md) !important;\n    }\n    .tm-player-container.tm-sidebar-hidden:not(.tm-sidebar-left) .tm-sidebar-toggle-button{\n        margin-left:auto !important;\n    }\n    .tm-player-container.tm-sidebar-hidden.tm-sidebar-left .tm-close-button{\n        margin-left:auto !important;\n    }\n    .tm-video-container{\n        grid-area:video;\n        width:100% !important;\n        height:100% !important;\n        max-height:none !important;\n        margin-top:0 !important;\n        border-radius:0 !important;\n        box-shadow:none !important;\n        background-color:#000 !important;\n        display:flex !important;\n        justify-content:center !important;\n        align-items:center !important;\n        padding:0 !important;\n        overflow:hidden !important;\n    }\n    .tm-video-wrapper{\n        position:relative !important;\n        width:100% !important;\n        height:100% !important;\n        border-radius:0 !important;\n        display:flex !important;\n        justify-content:center !important;\n        align-items:center !important;\n        overflow:hidden !important;\n    }\n    .tm-video-minimap{\n        bottom:calc(36px + env(safe-area-inset-bottom, 0px)) !important;\n        left:calc(24px + env(safe-area-inset-left, 0px)) !important;\n    }\n    .tm-video-wrapper video{\n        width:auto !important;\n        height:100% !important;\n        max-height:100% !important;\n        max-width:none !important;\n        min-width:0 !important;\n        flex-shrink:0 !important;\n        object-fit:contain !important;\n    }\n    .tm-video-wrapper.video-portrait video{\n        width:auto !important;\n        height:100% !important;\n        max-width:100% !important;\n    }\n    .tm-comments-panel{\n        display:flex !important;\n        grid-area:sidebar;\n        position:relative !important;\n        width:100% !important;\n        height:100% !important;\n        max-height:100% !important;\n        min-height:0 !important;\n        background-color:hsla(var(--shadcn-card) / 0.95) !important;\n        border-left:1px solid hsla(var(--shadcn-border) / 0.15) !important;\n        backdrop-filter:blur(20px) !important;\n        -webkit-backdrop-filter:blur(20px) !important;\n        box-sizing:border-box !important;\n        z-index:9990 !important;\n        pointer-events:auto !important;\n        flex-direction:column !important;\n        overflow:hidden !important;\n        visibility:visible !important;\n        opacity:1 !important;\n    }\n    .tm-comments-panel::after{\n        display:none !important;\n    }\n    .tm-comments-panel-list.tm-comments-list{\n        flex:1 1 0% !important;\n        height:0 !important;\n        min-height:0 !important;\n        max-height:100% !important;\n        width:100% !important;\n        display:flex !important;\n        flex-direction:column !important;\n        overflow-y:auto !important;\n        box-sizing:border-box !important;\n        padding:8px 16px 0px 16px !important;\n        pointer-events:auto !important;\n    }\n\n    .tm-comment-section{\n        min-height:0 !important;\n        flex-shrink:1 !important;\n        display:flex !important;\n        flex-direction:column !important;\n        overflow:hidden !important;\n    }\n\n    .tm-comment-section:not(.is-collapsed){\n        flex:1 1 0% !important;\n        height:0 !important;\n        min-height:0 !important;\n        overflow:hidden !important;\n    }\n    .tm-comment-section-body{\n        flex:1 1 0% !important;\n        height:0 !important;\n        min-height:0 !important;\n        overflow-y:auto !important;\n        padding-bottom:4px !important;\n    }\n    .tm-comments-panel-action-bar{\n        position:relative !important;\n        bottom:auto !important;\n        left:auto !important;\n        right:auto !important;\n        flex:0 0 auto !important;\n        flex-shrink:0 !important;\n        z-index:9995 !important;\n    }\n\n    .tm-comment-submit-bar-wrapper{\n        position:relative !important;\n        bottom:auto !important;\n        left:auto !important;\n        right:auto !important;\n        flex:0 0 auto !important;\n        flex-shrink:0 !important;\n        z-index:9996 !important;\n    }\n    .tm-comments-panel-publish-btn{\n        bottom:56px !important;\n        left:50% !important;\n        transform:translateX(-50%) !important;\n        z-index:9995 !important;\n    }\n    .tm-handle-container{\n        display:none !important;\n    }\n    .tm-control-buttons{\n        position:fixed !important;\n        bottom:16px;\n        right:16px;\n        left:auto;\n        transform:none;\n        width:calc(var(--sidebar-width) - 32px) !important;\n        max-width:calc(var(--sidebar-width) - 32px) !important;\n        min-width:348px !important;\n        background-color:rgba(10, 10, 10, 0.52) !important;\n        border:none !important;\n        border-radius:16px !important;\n        backdrop-filter:blur(24px) !important;\n        -webkit-backdrop-filter:blur(24px) !important;\n        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 12px 32px rgba(0, 0, 0, 0.45) !important;\n        z-index:10001 !important;\n        padding:8px 12px 12px 12px !important;\n        transition:opacity 0.3s ease, transform 0.3s ease !important;\n        display:flex !important;\n        flex-direction:column !important;\n        gap:8px !important;\n    }\n    .tm-control-drag-handle{\n        display:flex !important;\n    }\n    .tm-control-buttons.dragging{\n        transition:none !important;\n        cursor:grabbing;\n        box-shadow:0 15px 40px rgba(0, 0, 0, 0.6) !important;\n        border:none !important;\n    }\n    body.controls-hidden .tm-control-buttons{\n        opacity:0 !important;\n        transform:translateY(20px) !important;\n        pointer-events:none !important;\n    }\n\n    body:not(.controls-hidden) .tm-control-buttons{\n        opacity:1 !important;\n        transform:none !important;\n        pointer-events:auto !important;\n    }\n    .tm-video-overlay{\n        background-color:rgba(0, 0, 0, 0.75) !important;\n        backdrop-filter:blur(10px) !important;\n        -webkit-backdrop-filter:blur(10px) !important;\n    }\n    .tm-settings-panel{\n        z-index:10002 !important;\n    }\n    .tm-comments-panel{\n        transition:margin-top 0.25s cubic-bezier(0.25, 1, 0.5, 1), margin-bottom 0.25s cubic-bezier(0.25, 1, 0.5, 1), height 0.25s cubic-bezier(0.25, 1, 0.5, 1) !important;\n    }\n    .tm-player-container.tm-controls-docked-br .tm-comments-panel,\n    .tm-player-container.tm-controls-docked-bl .tm-comments-panel{\n        margin-bottom:var(--docked-controls-height) !important;\n        height:calc(100% - var(--docked-controls-height)) !important;\n    }\n    .tm-player-container.tm-controls-docked-tr .tm-comments-panel,\n    .tm-player-container.tm-controls-docked-tl .tm-comments-panel{\n        margin-top:var(--docked-controls-height) !important;\n        height:calc(100% - var(--docked-controls-height)) !important;\n    }\n    .tm-player-container.tm-controls-docked-br .tm-comments-panel-list.tm-comments-list,\n    .tm-player-container.tm-controls-docked-bl .tm-comments-panel-list.tm-comments-list,\n    .tm-player-container.tm-controls-docked-tr .tm-comments-panel-list.tm-comments-list,\n    .tm-player-container.tm-controls-docked-tl .tm-comments-panel-list.tm-comments-list{\n        padding-bottom:8px !important;\n    }\n    .tm-player-container[class*="tm-controls-docked-"] .tm-control-buttons,\n    body.controls-hidden .tm-player-container[class*="tm-controls-docked-"] .tm-control-buttons{\n        position:fixed !important;\n        width:var(--sidebar-width) !important;\n        max-width:var(--sidebar-width) !important;\n        border-radius:0 !important;\n        border:none !important;\n        box-shadow:none !important;\n        padding:12px 16px 12px 16px !important;\n        background-color:hsla(var(--shadcn-card) / 0.65) !important;\n        backdrop-filter:blur(24px) !important;\n        -webkit-backdrop-filter:blur(24px) !important;\n        opacity:1 !important;\n        transform:none !important;\n        pointer-events:auto !important;\n    }\n    \n    .tm-player-container.tm-controls-docked-br .tm-control-buttons,\n    .tm-player-container.tm-controls-docked-bl .tm-control-buttons{\n        bottom:0 !important;\n        top:auto !important;\n    }\n    .tm-player-container.tm-controls-docked-tr .tm-control-buttons,\n    .tm-player-container.tm-controls-docked-tl .tm-control-buttons{\n        top:0 !important;\n        bottom:auto !important;\n    }\n    \n    .tm-player-container.tm-controls-docked-br .tm-control-buttons,\n    .tm-player-container.tm-controls-docked-tr .tm-control-buttons{\n        right:0 !important;\n        left:auto !important;\n    }\n    .tm-player-container.tm-controls-docked-bl .tm-control-buttons,\n    .tm-player-container.tm-controls-docked-tl .tm-control-buttons{\n        left:0 !important;\n        right:auto !important;\n    }\n    .tm-player-container.tm-sidebar-left{\n        grid-template-columns:var(--sidebar-width) 1fr !important;\n        grid-template-areas:"sidebar video" !important;\n    }\n    .tm-player-container.tm-sidebar-left .tm-comments-panel{\n        border-left:none !important;\n        border-right:1px solid hsla(var(--shadcn-border) / 0.15) !important;\n    }\n    .tm-player-container.tm-sidebar-left .tm-settings-panel{\n        right:auto !important;\n        left:16px !important;\n    }\n    .tm-player-container.tm-sidebar-hidden{\n        grid-template-columns:1fr !important;\n        grid-template-areas:"video" !important;\n    }\n    .tm-player-container.tm-sidebar-hidden .tm-comments-panel{\n        position:absolute !important;\n        width:0 !important;\n        height:0 !important;\n        border:none !important;\n        overflow:visible !important;\n        background:transparent !important;\n        backdrop-filter:none !important;\n        -webkit-backdrop-filter:none !important;\n        pointer-events:none !important;\n        visibility:hidden !important;\n        opacity:0 !important;\n    }\n    .tm-sidebar-pos-button,\n    .tm-sidebar-toggle-button{\n        display:flex !important;\n    }\n    .tm-player-container[class*="tm-controls-docked-"] .tm-settings-panel{\n        padding:0px !important;\n    }\n    .tm-player-container[class*="tm-controls-docked-"] .tm-settings-panel .tm-settings-options{\n        padding:12px !important;\n    }\n    .tm-player-title{\n        top:16px !important;\n        left:calc((100% - var(--sidebar-width)) / 2) !important;\n        transform:translateX(-50%) !important;\n        max-width:calc(100% - var(--sidebar-width) - 40px) !important;\n    }\n    \n    .tm-player-container.tm-sidebar-left .tm-player-title{\n        left:calc((100% + var(--sidebar-width)) / 2) !important;\n    }\n\n    .tm-player-container.tm-sidebar-hidden .tm-player-title{\n        left:50% !important;\n        max-width:calc(100% - 200px) !important;\n    }\n}\n@media screen and (min-width: 930px) and (max-width: 1023px) and (orientation: landscape){\n    .tm-control-buttons{\n        padding:6px 8px 10px 8px !important;\n        gap:6px !important;\n        border-radius:12px !important;\n    }\n    .tm-control-drag-handle{\n        height:10px !important;\n    }\n    .tm-time-display{\n        font-size:11px !important;\n    }\n    .tm-tab-pill{\n        padding:3px 8px !important;\n        font-size:0.7rem !important;\n    }\n}\n@media screen and (min-width: 480px) and (orientation: portrait),\n       screen and (min-width: 480px) and (max-width: 929px) and (orientation: landscape){\n    .tm-control-buttons{\n        position:fixed !important;\n        bottom:16px;\n        right:16px;\n        left:auto;\n        transform:none;\n        width:348px !important;\n        max-width:348px !important;\n        min-width:320px !important;\n        background-color:hsla(var(--shadcn-card) / 0.85) !important;\n        border:1px solid hsla(var(--shadcn-border) / 0.2) !important;\n        border-radius:16px !important;\n        backdrop-filter:blur(16px) !important;\n        -webkit-backdrop-filter:blur(16px) !important;\n        box-shadow:0 10px 30px rgba(0, 0, 0, 0.5) !important;\n        z-index:10001 !important;\n        padding:8px 12px 12px 12px !important;\n        transition:opacity 0.3s ease, transform 0.3s ease !important;\n        display:flex !important;\n        flex-direction:column !important;\n        gap:8px !important;\n    }\n    .tm-control-drag-handle{\n        display:flex !important;\n    }\n    body.controls-hidden .tm-control-buttons{\n        opacity:0 !important;\n        transform:translateY(20px) !important;\n        pointer-events:none !important;\n    }\n\n    body:not(.controls-hidden) .tm-control-buttons{\n        opacity:1 !important;\n        transform:none !important;\n        pointer-events:auto !important;\n    }\n\n\n}\n`, "" ]);
+      const y = b;
     },
     "964": (r, o, a) => {
       a.r(o);
@@ -442,8 +442,8 @@
       var u = a.n(l);
       var p = a(825);
       var v = a.n(p);
-      var y = a(659);
-      var b = a.n(y);
+      var b = a(659);
+      var y = a.n(b);
       var C = a(56);
       var k = a.n(C);
       var _ = a(540);
@@ -454,7 +454,7 @@
       var L = {};
       L.styleTagTransform = P();
       L.setAttributes = k();
-      L.insert = b().bind(null, "head");
+      L.insert = y().bind(null, "head");
       L.domAPI = v();
       L.insertStyleElement = E();
       var M = u()(D.A, L);
@@ -684,14 +684,14 @@
         return l(p);
       }
       var v = Date.now();
-      var y = setInterval((function() {
+      var b = setInterval((function() {
         var a = document.querySelector(r);
         if (a) {
-          clearInterval(y);
+          clearInterval(b);
           return l(a);
         }
         if (Date.now() - v > o) {
-          clearInterval(y);
+          clearInterval(b);
           u(new Error("等待元素 ".concat(r, " 超时")));
         }
       }), a);
@@ -849,8 +849,8 @@
     var p = document.createElement("div");
     p.className = "tm-toast tm-toast--".concat(u);
     var v = "normal";
-    var y = "";
     var b = "";
+    var y = "";
     if (a) {
       var C = a.toLowerCase().trim();
       if (C === "success" || C === "rgb(18, 187, 2)" || C.includes("green") || C.includes("50% 45%")) {
@@ -861,8 +861,8 @@
         v = "info";
       } else {
         v = "custom";
-        y = a;
-        b = l;
+        b = a;
+        y = l;
       }
     }
     var k = "";
@@ -876,9 +876,9 @@
       p.classList.add("tm-toast--info");
       k = '\n            <svg class="tm-toast-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">\n                <circle cx="12" cy="12" r="10"></circle>\n                <line x1="12" y1="16" x2="12" y2="12"></line>\n                <line x1="12" y1="8" x2="12.01" y2="8"></line>\n            </svg>\n        ';
     } else if (v === "custom") {
-      p.style.background = y;
-      if (b) {
-        p.style.color = b;
+      p.style.background = b;
+      if (y) {
+        p.style.color = y;
       }
     }
     p.innerHTML = "".concat(k, '<span class="tm-toast-content">').concat(r, "</span>");
@@ -908,7 +908,7 @@
     _regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -942,11 +942,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -965,7 +965,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -992,7 +992,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -1012,20 +1012,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == domains_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -1042,16 +1042,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -1087,13 +1087,13 @@
       throw new TypeError(domains_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -1106,7 +1106,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -1150,19 +1150,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -1177,7 +1177,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -1185,13 +1185,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -1214,17 +1214,17 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
   function asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function _asyncToGenerator(r) {
     return function() {
@@ -1319,7 +1319,7 @@
       return o.includes(r);
     }));
   }
-  var y = new Map;
+  var b = new Map;
   function checkSiteReachability(r) {
     return _checkSiteReachability.apply(this, arguments);
   }
@@ -1331,11 +1331,11 @@
           switch (v.prev = v.next) {
            case 0:
             o = p.length > 1 && p[1] !== void 0 ? p[1] : false;
-            if (!(!o && y.has(r))) {
+            if (!(!o && b.has(r))) {
               v.next = 3;
               break;
             }
-            return v.abrupt("return", y.get(r));
+            return v.abrupt("return", b.get(r));
 
            case 3:
             a = getSiteDomains(r);
@@ -1397,7 +1397,7 @@
 
            case 9:
             u = v.sent;
-            y.set(r, u);
+            b.set(r, u);
             return v.abrupt("return", u);
 
            case 12:
@@ -1433,7 +1433,7 @@
       }
       throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
-    var p, v = !0, y = !1;
+    var p, v = !0, b = !1;
     return {
       "s": function s() {
         a = a.call(r);
@@ -1443,13 +1443,13 @@
         return v = r.done, r;
       },
       "e": function e(r) {
-        y = !0, p = r;
+        b = !0, p = r;
       },
       "f": function f() {
         try {
           v || null == a["return"] || a["return"]();
         } finally {
-          if (y) {
+          if (b) {
             throw p;
           }
         }
@@ -1497,9 +1497,9 @@
         u.f();
       }
     }
-    var y = o.match(/^([a-z]+)-?(\d+)$/i);
-    if (y) {
-      return "".concat(y[1], "-").concat(y[2]).toLowerCase();
+    var b = o.match(/^([a-z]+)-?(\d+)$/i);
+    if (b) {
+      return "".concat(b[1], "-").concat(b[2]).toLowerCase();
     }
     return o;
   }
@@ -1528,9 +1528,9 @@
         }
       }
       if (!l) {
-        var y = a.split("/").filter(Boolean);
-        if (y.length > 0) {
-          l = y[y.length - 1];
+        var b = a.split("/").filter(Boolean);
+        if (b.length > 0) {
+          l = b[b.length - 1];
         }
       }
       if (l) {
@@ -1618,7 +1618,7 @@
       }
       throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
-    var p, v = !0, y = !1;
+    var p, v = !0, b = !1;
     return {
       "s": function s() {
         a = a.call(r);
@@ -1628,13 +1628,13 @@
         return v = r.done, r;
       },
       "e": function e(r) {
-        y = !0, p = r;
+        b = !0, p = r;
       },
       "f": function f() {
         try {
           v || null == a["return"] || a["return"]();
         } finally {
-          if (y) {
+          if (b) {
             throw p;
           }
         }
@@ -1662,7 +1662,7 @@
     http_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -1696,11 +1696,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -1719,7 +1719,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -1746,7 +1746,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -1766,20 +1766,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == http_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -1796,16 +1796,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -1841,13 +1841,13 @@
       throw new TypeError(http_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -1860,7 +1860,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -1904,19 +1904,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -1931,7 +1931,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -1939,13 +1939,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -1968,17 +1968,17 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
   function http_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function http_asyncToGenerator(r) {
     return function() {
@@ -1997,7 +1997,7 @@
   }
   function fetchWithTransport(r) {
     var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
-    var a = o.method, l = a === void 0 ? "GET" : a, u = o.headers, p = u === void 0 ? {} : u, v = o.timeout, y = v === void 0 ? 8e3 : v, b = o.body, C = b === void 0 ? null : b;
+    var a = o.method, l = a === void 0 ? "GET" : a, u = o.headers, p = u === void 0 ? {} : u, v = o.timeout, b = v === void 0 ? 8e3 : v, y = o.body, C = y === void 0 ? null : y;
     var k = function() {
       try {
         var o = new URL(r).hostname;
@@ -2050,18 +2050,18 @@
       var v = setTimeout((function() {
         if (!u) {
           u = true;
-          if (b && b.abort) {
-            b.abort();
+          if (y && y.abort) {
+            y.abort();
           }
           a(new Error("NETWORK_TIMEOUT"));
         }
-      }), y);
-      var b = GM_xmlhttpRequest({
+      }), b);
+      var y = GM_xmlhttpRequest({
         "method": l,
         "url": r,
         "headers": p,
         "data": C,
-        "timeout": y,
+        "timeout": b,
         "onload": function onload(a) {
           if (u) {
             return;
@@ -2109,7 +2109,7 @@
   }
   function _fetchWithDomainRotation() {
     _fetchWithDomainRotation = http_asyncToGenerator(http_regeneratorRuntime().mark((function _callee2(r, o) {
-      var a, l, u, p, v, y, b, C = arguments;
+      var a, l, u, p, v, b, y, C = arguments;
       return http_regeneratorRuntime().wrap((function _callee2$(k) {
         while (1) {
           switch (k.prev = k.next) {
@@ -2127,29 +2127,29 @@
             }
             v = p.value;
             k.prev = 7;
-            y = o(v);
+            b = o(v);
             k.next = 11;
-            return fetchWithTransport(y, a);
+            return fetchWithTransport(b, a);
 
            case 11:
-            b = k.sent;
-            if (!detectCloudflare(b.status, b.html)) {
+            y = k.sent;
+            if (!detectCloudflare(y.status, y.html)) {
               k.next = 14;
               break;
             }
             throw new Error("CF_SHIELD_ON_".concat(v));
 
            case 14:
-            if (!(b.status >= 200 && b.status < 400)) {
+            if (!(y.status >= 200 && y.status < 400)) {
               k.next = 16;
               break;
             }
-            return k.abrupt("return", http_objectSpread(http_objectSpread({}, b), {}, {
+            return k.abrupt("return", http_objectSpread(http_objectSpread({}, y), {}, {
               "domain": v
             }));
 
            case 16:
-            throw new Error("HTTP_".concat(b.status));
+            throw new Error("HTTP_".concat(y.status));
 
            case 19:
             k.prev = 19;
@@ -2235,7 +2235,7 @@
     clipboard_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -2269,11 +2269,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -2292,7 +2292,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -2319,7 +2319,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -2339,20 +2339,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == clipboard_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -2369,16 +2369,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -2414,13 +2414,13 @@
       throw new TypeError(clipboard_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -2433,7 +2433,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -2477,19 +2477,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -2504,7 +2504,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -2512,13 +2512,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -2541,17 +2541,17 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
   function clipboard_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function clipboard_asyncToGenerator(r) {
     return function() {
@@ -2678,7 +2678,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var b = function() {
+  var y = function() {
     function PlayerCore() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       _classCallCheck(this, PlayerCore);
@@ -2821,8 +2821,8 @@
           v.parentNode.removeChild(v);
         }
         try {
-          var y = document.querySelectorAll('header, .site-header, .header, #site-header, navbar, .navbar, .top-nav, [class*="site-header"]');
-          y.forEach((function(r) {
+          var b = document.querySelectorAll('header, .site-header, .header, #site-header, navbar, .navbar, .top-nav, [class*="site-header"]');
+          b.forEach((function(r) {
             if (r) {
               r.style.display = "";
               r.style.transform = "";
@@ -3103,10 +3103,10 @@
               return;
             }
             var v = p ? p.clientX : l.clientX;
-            var y = p ? p.clientY : l.clientY;
-            var b = v - r.longPressStartX;
-            var C = y - r.longPressStartY;
-            var k = Math.hypot(b, C);
+            var b = p ? p.clientY : l.clientY;
+            var y = v - r.longPressStartX;
+            var C = b - r.longPressStartY;
+            var k = Math.hypot(y, C);
             if (k > 10) {
               clearTimeout(o);
               o = null;
@@ -3131,7 +3131,7 @@
             return;
           }
         };
-        var y = function handlePointerLeave(u) {
+        var b = function handlePointerLeave(u) {
           if (o) {
             clearTimeout(o);
             o = null;
@@ -3149,7 +3149,7 @@
         this.videoWrapper.addEventListener("mousedown", u);
         this.videoWrapper.addEventListener("mouseup", v);
         this.videoWrapper.addEventListener("mousemove", p);
-        this.videoWrapper.addEventListener("mouseleave", y);
+        this.videoWrapper.addEventListener("mouseleave", b);
         this.videoWrapper.addEventListener("touchstart", u, {
           "passive": true
         });
@@ -3157,7 +3157,7 @@
         this.videoWrapper.addEventListener("touchmove", p, {
           "passive": true
         });
-        this.videoWrapper.addEventListener("touchcancel", y);
+        this.videoWrapper.addEventListener("touchcancel", b);
         this.videoWrapper.addEventListener("click", (function(o) {
           if (a) {
             return;
@@ -3666,10 +3666,10 @@
         } else if (l > p) {
           v = true;
         }
-        var y = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-        if (y && screen && screen.orientation && screen.orientation.type) {
-          var b = screen.orientation.type;
-          var C = b.includes("landscape");
+        var b = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+        if (b && screen && screen.orientation && screen.orientation.type) {
+          var y = screen.orientation.type;
+          var C = y.includes("landscape");
           if (l < u && C) {
             v = false;
           } else if (l > p && !C) {
@@ -4439,7 +4439,7 @@
     CrossDomainBridge_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -4473,11 +4473,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -4496,7 +4496,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -4523,7 +4523,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -4543,20 +4543,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == CrossDomainBridge_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -4573,16 +4573,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -4618,13 +4618,13 @@
       throw new TypeError(CrossDomainBridge_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -4637,7 +4637,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -4681,19 +4681,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -4708,7 +4708,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -4716,13 +4716,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -4745,17 +4745,17 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
   function CrossDomainBridge_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function CrossDomainBridge_asyncToGenerator(r) {
     return function() {
@@ -4872,53 +4872,53 @@
         setInterval(l, 2e3);
         var u = function() {
           var a = CrossDomainBridge_asyncToGenerator(CrossDomainBridge_regeneratorRuntime().mark((function _callee2(a) {
-            var l, u, p, v, y;
-            return CrossDomainBridge_regeneratorRuntime().wrap((function _callee2$(b) {
+            var l, u, p, v, b;
+            return CrossDomainBridge_regeneratorRuntime().wrap((function _callee2$(y) {
               while (1) {
-                switch (b.prev = b.next) {
+                switch (y.prev = y.next) {
                  case 0:
                   l = a.txId, u = a.action, p = a.payload;
                   v = o[u];
                   if (!v) {
-                    b.next = 15;
+                    y.next = 15;
                     break;
                   }
-                  b.prev = 3;
-                  b.next = 6;
+                  y.prev = 3;
+                  y.next = 6;
                   return v(p);
 
                  case 6:
-                  y = b.sent;
+                  b = y.sent;
                   if (typeof GM_setValue === "function") {
                     GM_setValue("".concat(r, "_RES_BRIDGE"), {
                       "txId": l,
                       "status": "SUCCESS",
-                      "result": y,
+                      "result": b,
                       "timestamp": Date.now()
                     });
                   }
-                  b.next = 13;
+                  y.next = 13;
                   break;
 
                  case 10:
-                  b.prev = 10;
-                  b.t0 = b["catch"](3);
+                  y.prev = 10;
+                  y.t0 = y["catch"](3);
                   if (typeof GM_setValue === "function") {
                     GM_setValue("".concat(r, "_RES_BRIDGE"), {
                       "txId": l,
                       "status": "ERROR",
-                      "error": b.t0.message || "执行异常",
+                      "error": y.t0.message || "执行异常",
                       "timestamp": Date.now()
                     });
                   }
 
                  case 13:
-                  b.next = 15;
+                  y.next = 15;
                   break;
 
                  case 15:
                  case "end":
-                  return b.stop();
+                  return y.stop();
                 }
               }
             }), _callee2, null, [ [ 3, 10 ] ]);
@@ -5030,23 +5030,23 @@
                 u = "tx_".concat(Date.now(), "_").concat(Math.random().toString(36).substring(2, 11));
                 return v.abrupt("return", new Promise((function(p) {
                   var v = null;
-                  var y = null;
-                  var b = function cleanUp() {
+                  var b = null;
+                  var y = function cleanUp() {
                     clearTimeout(C);
                     if (v && typeof GM_removeValueChangeListener === "function") {
                       GM_removeValueChangeListener(v);
                     }
-                    if (y) {
-                      clearInterval(y);
+                    if (b) {
+                      clearInterval(b);
                     }
                   };
                   var C = setTimeout((function() {
-                    b();
+                    y();
                     Toast("影子通道 [".concat(r, "] 操作超时，请检查该站点的标签页是否开启"), 3e3, "error");
                     p(false);
                   }), l);
                   var k = function handleResponse(r) {
-                    b();
+                    y();
                     if (r.status === "SUCCESS") {
                       p(r.result !== void 0 ? r.result : true);
                     } else {
@@ -5062,7 +5062,7 @@
                       }
                     }));
                   } else {
-                    y = setInterval(CrossDomainBridge_asyncToGenerator(CrossDomainBridge_regeneratorRuntime().mark((function _callee5() {
+                    b = setInterval(CrossDomainBridge_asyncToGenerator(CrossDomainBridge_regeneratorRuntime().mark((function _callee5() {
                       var o;
                       return CrossDomainBridge_regeneratorRuntime().wrap((function _callee5$(a) {
                         while (1) {
@@ -5111,7 +5111,7 @@
                       throw new Error("GM_setValue is not available");
                     }
                   } catch (r) {
-                    b();
+                    y();
                     p(false);
                   }
                 })));
@@ -5221,26 +5221,26 @@
         var u = "".concat(o, "_autologin_autoLogin");
         var p = "";
         var v = "";
-        var y = true;
+        var b = true;
         if (typeof GM_getValue === "function") {
           try {
             p = GM_getValue(a, "");
             v = GM_getValue(l, "");
-            y = GM_getValue(u, true);
+            b = GM_getValue(u, true);
           } catch (r) {}
         }
         if (!p) {
           p = getLocalStorage(a, "");
           v = getLocalStorage(l, "");
-          y = getLocalStorage(u, true);
+          b = getLocalStorage(u, true);
           if (!p) {
-            var b = "".concat(o, "_autologin_username");
-            var C = getLocalStorage("autologin_userEmail", "") || getLocalStorage(b, "");
+            var y = "".concat(o, "_autologin_username");
+            var C = getLocalStorage("autologin_userEmail", "") || getLocalStorage(y, "");
             if (C) {
               p = C;
               v = getLocalStorage("autologin_userPassword", "");
-              y = getLocalStorage("autologin_autoLogin", true);
-              this.save(r, p, xorDeobfuscate(v), y);
+              b = getLocalStorage("autologin_autoLogin", true);
+              this.save(r, p, xorDeobfuscate(v), b);
             }
           }
         }
@@ -5248,13 +5248,13 @@
         if (v) {
           k = xorDeobfuscate(v);
           if (!v.startsWith(X) && p) {
-            this.save(r, p, k, y);
+            this.save(r, p, k, b);
           }
         }
         return {
           "email": p,
           "password": k,
-          "autoLogin": !!y
+          "autoLogin": !!b
         };
       }
     }, {
@@ -5266,18 +5266,18 @@
         var u = r;
         var p = "".concat(u, "_autologin_userEmail");
         var v = "".concat(u, "_autologin_userPassword");
-        var y = "".concat(u, "_autologin_autoLogin");
-        var b = a ? xorObfuscate(a) : "";
+        var b = "".concat(u, "_autologin_autoLogin");
+        var y = a ? xorObfuscate(a) : "";
         if (typeof GM_setValue === "function") {
           try {
             GM_setValue(p, o);
-            GM_setValue(v, b);
-            GM_setValue(y, l);
+            GM_setValue(v, y);
+            GM_setValue(b, l);
           } catch (r) {}
         }
         setLocalStorage(p, o);
-        setLocalStorage(v, b);
-        setLocalStorage(y, l);
+        setLocalStorage(v, y);
+        setLocalStorage(b, l);
       }
     }, {
       "key": "clear",
@@ -5317,7 +5317,7 @@
     BaseLoginProvider_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -5351,11 +5351,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -5374,7 +5374,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -5401,7 +5401,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -5421,20 +5421,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == BaseLoginProvider_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -5451,16 +5451,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -5496,13 +5496,13 @@
       throw new TypeError(BaseLoginProvider_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -5515,7 +5515,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -5559,19 +5559,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -5586,7 +5586,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -5594,13 +5594,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -5623,17 +5623,17 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
   function BaseLoginProvider_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function BaseLoginProvider_asyncToGenerator(r) {
     return function() {
@@ -5718,14 +5718,14 @@
       "key": "_request",
       "value": function() {
         var r = BaseLoginProvider_asyncToGenerator(BaseLoginProvider_regeneratorRuntime().mark((function _callee3(r) {
-          var o, a, l, u, p, v, y, b, C, k, _, E, S, P = arguments;
+          var o, a, l, u, p, v, b, y, C, k, _, E, S, P = arguments;
           return BaseLoginProvider_regeneratorRuntime().wrap((function _callee3$(D) {
             while (1) {
               switch (D.prev = D.next) {
                case 0:
                 o = P.length > 1 && P[1] !== void 0 ? P[1] : {};
                 a = o.method, l = a === void 0 ? "GET" : a, u = o.headers, p = u === void 0 ? {} : u, 
-                v = o.body, y = v === void 0 ? null : v, b = o.responseType, C = b === void 0 ? "json" : b;
+                v = o.body, b = v === void 0 ? null : v, y = o.responseType, C = y === void 0 ? "json" : y;
                 k = r.startsWith(window.location.origin);
                 if (!k) {
                   D.next = 17;
@@ -5742,8 +5742,8 @@
                   "headers": p,
                   "credentials": "same-origin"
                 };
-                if (y) {
-                  E.body = y;
+                if (b) {
+                  E.body = b;
                 }
                 D.next = 11;
                 return _(r, E);
@@ -5777,7 +5777,7 @@
                     "method": l,
                     "url": r,
                     "headers": p,
-                    "data": y,
+                    "data": b,
                     "withCredentials": true,
                     "onload": function onload(r) {
                       o({
@@ -5942,56 +5942,56 @@
       "value": function() {
         var r = BaseLoginProvider_asyncToGenerator(BaseLoginProvider_regeneratorRuntime().mark((function _callee5(r) {
           var o, a, l, u, p, v;
-          return BaseLoginProvider_regeneratorRuntime().wrap((function _callee5$(y) {
+          return BaseLoginProvider_regeneratorRuntime().wrap((function _callee5$(b) {
             while (1) {
-              switch (y.prev = y.next) {
+              switch (b.prev = b.next) {
                case 0:
                 o = this.config.apis;
                 if (!(!o || !o.checkStatus)) {
-                  y.next = 3;
+                  b.next = 3;
                   break;
                 }
-                return y.abrupt("return", null);
+                return b.abrupt("return", null);
 
                case 3:
-                y.prev = 3;
+                b.prev = 3;
                 a = this.getActiveDomain(r);
                 l = "".concat(a).concat(o.checkStatus);
-                y.next = 8;
+                b.next = 8;
                 return this._request(l);
 
                case 8:
-                u = y.sent;
+                u = b.sent;
                 if (u.ok) {
-                  y.next = 11;
+                  b.next = 11;
                   break;
                 }
-                return y.abrupt("return", null);
+                return b.abrupt("return", null);
 
                case 11:
                 if (!(typeof this.isLoggedInByAPIResponse === "function")) {
-                  y.next = 13;
+                  b.next = 13;
                   break;
                 }
-                return y.abrupt("return", this.isLoggedInByAPIResponse(u));
+                return b.abrupt("return", this.isLoggedInByAPIResponse(u));
 
                case 13:
-                y.next = 15;
+                b.next = 15;
                 return u.json();
 
                case 15:
-                p = y.sent;
+                p = b.sent;
                 v = p.data || p;
-                return y.abrupt("return", v && v.user !== null && v.user !== void 0);
+                return b.abrupt("return", v && v.user !== null && v.user !== void 0);
 
                case 20:
-                y.prev = 20;
-                y.t0 = y["catch"](3);
-                return y.abrupt("return", null);
+                b.prev = 20;
+                b.t0 = b["catch"](3);
+                return b.abrupt("return", null);
 
                case 23:
                case "end":
-                return y.stop();
+                return b.stop();
               }
             }
           }), _callee5, this, [ [ 3, 20 ] ]);
@@ -6031,7 +6031,7 @@
       "value": function() {
         var r = BaseLoginProvider_asyncToGenerator(BaseLoginProvider_regeneratorRuntime().mark((function _callee6(r) {
           var o = this;
-          var a, l, u, p, v, y, b;
+          var a, l, u, p, v, b, y;
           return BaseLoginProvider_regeneratorRuntime().wrap((function _callee6$(C) {
             while (1) {
               switch (C.prev = C.next) {
@@ -6078,11 +6078,11 @@
                   l.appendChild(u);
                 }
                 v = $.get(this.siteKey);
-                y = document.getElementById("mp_auto_login");
-                if (y) {
-                  y.checked = v.autoLogin;
-                  y.addEventListener("change", (function() {
-                    var a = y.checked;
+                b = document.getElementById("mp_auto_login");
+                if (b) {
+                  b.checked = v.autoLogin;
+                  b.addEventListener("change", (function() {
+                    var a = b.checked;
                     $.save(o.siteKey, v.email, v.password, a);
                     if (r) {
                       r({
@@ -6091,19 +6091,19 @@
                     }
                   }));
                 }
-                b = function captureCredentials() {
+                y = function captureCredentials() {
                   setTimeout((function() {
                     var u = l.querySelector(a.usernameInput);
                     var p = l.querySelector(a.passwordInput);
-                    var v = y ? y.checked : false;
+                    var v = b ? b.checked : false;
                     if (u && p && v) {
-                      var b = u.value;
+                      var y = u.value;
                       var C = p.value;
-                      if (b && C) {
-                        $.save(o.siteKey, b, C, true);
+                      if (y && C) {
+                        $.save(o.siteKey, y, C, true);
                         if (r) {
                           r({
-                            "email": b,
+                            "email": y,
                             "password": C,
                             "autoLogin": true
                           });
@@ -6112,9 +6112,9 @@
                     }
                   }), 100);
                 };
-                l.addEventListener("submit", b);
+                l.addEventListener("submit", y);
                 if (p) {
-                  p.addEventListener("click", b);
+                  p.addEventListener("click", y);
                 }
                 C.next = 30;
                 break;
@@ -6229,7 +6229,7 @@
     JableLoginProvider_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -6263,11 +6263,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -6286,7 +6286,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -6313,7 +6313,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -6333,20 +6333,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == JableLoginProvider_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -6363,16 +6363,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -6408,13 +6408,13 @@
       throw new TypeError(JableLoginProvider_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -6427,7 +6427,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -6471,19 +6471,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -6498,7 +6498,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -6506,13 +6506,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -6535,17 +6535,17 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
   function JableLoginProvider_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function JableLoginProvider_asyncToGenerator(r) {
     return function() {
@@ -6721,22 +6721,22 @@
         Y.startBroker(this.siteKey, {
           "PUBLISH_COMMENT": function() {
             var o = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee(o) {
-              var a, l, u, p, v, y, b;
+              var a, l, u, p, v, b, y;
               return JableLoginProvider_regeneratorRuntime().wrap((function _callee$(C) {
                 while (1) {
                   switch (C.prev = C.next) {
                    case 0:
                     a = o.commentText, l = o.videoCode, u = o.videoId, p = o.commentFormHtml, v = o.targetUrl;
-                    y = null;
+                    b = null;
                     if (p) {
-                      b = (new DOMParser).parseFromString(p, "text/html");
-                      y = b.querySelector("form");
+                      y = (new DOMParser).parseFromString(p, "text/html");
+                      b = y.querySelector("form");
                     }
                     C.next = 5;
                     return r.publishComment(a, {
                       "videoCode": l,
                       "videoId": u,
-                      "commentForm": y,
+                      "commentForm": b,
                       "targetUrl": v,
                       "domain": "https://".concat(window.location.hostname)
                     });
@@ -6762,7 +6762,7 @@
       "key": "checkLoginStatus",
       "value": function() {
         var r = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee2(r) {
-          var o, a, l, u, p, v, y, b;
+          var o, a, l, u, p, v, b, y;
           return JableLoginProvider_regeneratorRuntime().wrap((function _callee2$(C) {
             while (1) {
               switch (C.prev = C.next) {
@@ -6802,14 +6802,14 @@
                 return C.abrupt("return", (v = this.getCachedLoginStatus()) !== null && v !== void 0 ? v : false);
 
                case 16:
-                y = p.includes("/logout/") || p.includes("user-avatar") || !p.includes("/login/") && p.includes("member");
-                this.cacheLoginStatus(y);
-                return C.abrupt("return", y);
+                b = p.includes("/logout/") || p.includes("user-avatar") || !p.includes("/login/") && p.includes("member");
+                this.cacheLoginStatus(b);
+                return C.abrupt("return", b);
 
                case 21:
                 C.prev = 21;
                 C.t0 = C["catch"](5);
-                return C.abrupt("return", (b = this.getCachedLoginStatus()) !== null && b !== void 0 ? b : false);
+                return C.abrupt("return", (y = this.getCachedLoginStatus()) !== null && y !== void 0 ? y : false);
 
                case 24:
                case "end":
@@ -6841,7 +6841,7 @@
       "key": "login",
       "value": function() {
         var r = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee3(r, o) {
-          var a, l, u, p, v, y, b, C, k = arguments;
+          var a, l, u, p, v, b, y, C, k = arguments;
           return JableLoginProvider_regeneratorRuntime().wrap((function _callee3$(_) {
             while (1) {
               switch (_.prev = _.next) {
@@ -6888,20 +6888,20 @@
                 });
 
                case 19:
-                y = _.sent;
-                if (y.ok) {
+                b = _.sent;
+                if (b.ok) {
                   _.next = 22;
                   break;
                 }
-                throw new Error("HTTP ".concat(y.status));
+                throw new Error("HTTP ".concat(b.status));
 
                case 22:
                 _.next = 24;
-                return y.json();
+                return b.json();
 
                case 24:
-                b = _.sent;
-                if (!(b.status === "success" || b.html && !b.html.includes("error-field"))) {
+                y = _.sent;
+                if (!(y.status === "success" || y.html && !y.html.includes("error-field"))) {
                   _.next = 31;
                   break;
                 }
@@ -6912,11 +6912,11 @@
                 return _.abrupt("return", true);
 
                case 31:
-                if (!b.errors) {
+                if (!y.errors) {
                   _.next = 37;
                   break;
                 }
-                C = formatErrorMessage(b.errors, "登录失败");
+                C = formatErrorMessage(y.errors, "登录失败");
                 if (!u) {
                   Toast("登录失败: ".concat(C), 3e3, "error");
                 }
@@ -6970,24 +6970,24 @@
       "key": "publishCommentViaShadow",
       "value": function() {
         var r = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee4(r, o) {
-          var a, l, u, p, v, y, b;
+          var a, l, u, p, v, b, y;
           return JableLoginProvider_regeneratorRuntime().wrap((function _callee4$(C) {
             while (1) {
               switch (C.prev = C.next) {
                case 0:
                 a = o.videoCode, l = o.videoId, u = o.commentForm, p = o.targetUrl, v = o.domain;
-                y = "";
+                b = "";
                 if (u) {
-                  b = document.createElement("div");
-                  b.appendChild(u.cloneNode(true));
-                  y = b.innerHTML;
+                  y = document.createElement("div");
+                  y.appendChild(u.cloneNode(true));
+                  b = y.innerHTML;
                 }
                 C.next = 5;
                 return Y.sendCommand(this.siteKey, "PUBLISH_COMMENT", {
                   "commentText": r,
                   "videoCode": a,
                   "videoId": l,
-                  "commentFormHtml": y,
+                  "commentFormHtml": b,
                   "targetUrl": p
                 });
 
@@ -7010,7 +7010,7 @@
       "key": "publishComment",
       "value": function() {
         var r = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee5(r, o) {
-          var a, l, u, p, v, y, b, C, k, _, E, S, P, D, L, M, A, T, j, B, I;
+          var a, l, u, p, v, b, y, C, k, _, E, S, P, D, L, M, A, T, j, B, I;
           return JableLoginProvider_regeneratorRuntime().wrap((function _callee5$(V) {
             while (1) {
               switch (V.prev = V.next) {
@@ -7032,8 +7032,8 @@
                 return V.abrupt("return", false);
 
                case 7:
-                y = this.isSupportedSite();
-                if (y) {
+                b = this.isSupportedSite();
+                if (b) {
                   V.next = 20;
                   break;
                 }
@@ -7041,8 +7041,8 @@
                 return Y.checkShadowActive(this.siteKey);
 
                case 11:
-                b = V.sent;
-                if (!b) {
+                y = V.sent;
+                if (!y) {
                   V.next = 20;
                   break;
                 }
@@ -7211,7 +7211,7 @@
     MissavLoginProvider_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -7245,11 +7245,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -7268,7 +7268,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -7295,7 +7295,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -7315,20 +7315,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == MissavLoginProvider_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -7345,16 +7345,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -7390,13 +7390,13 @@
       throw new TypeError(MissavLoginProvider_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -7409,7 +7409,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -7453,19 +7453,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -7480,7 +7480,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -7488,13 +7488,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -7517,17 +7517,17 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
   function MissavLoginProvider_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function MissavLoginProvider_asyncToGenerator(r) {
     return function() {
@@ -7664,7 +7664,7 @@
       "key": "login",
       "value": function() {
         var r = MissavLoginProvider_asyncToGenerator(MissavLoginProvider_regeneratorRuntime().mark((function _callee(r, o) {
-          var a, l, u, p, v, y, b, C, k, _, E, S, P = arguments;
+          var a, l, u, p, v, b, y, C, k, _, E, S, P = arguments;
           return MissavLoginProvider_regeneratorRuntime().wrap((function _callee$(D) {
             while (1) {
               switch (D.prev = D.next) {
@@ -7682,15 +7682,15 @@
 
                case 5:
                 D.prev = 5;
-                y = getCookie("XSRF-TOKEN");
-                b = this.getMissavOrigin();
-                C = "".concat(b, "/api/login");
+                b = getCookie("XSRF-TOKEN");
+                y = this.getMissavOrigin();
+                C = "".concat(y, "/api/login");
                 k = {
                   "Content-Type": "application/json",
                   "Accept": "application/json, text/plain, */*"
                 };
-                if (y) {
-                  k["x-xsrf-token"] = y;
+                if (b) {
+                  k["x-xsrf-token"] = b;
                 }
                 D.next = 13;
                 return this._request(C, {
@@ -7977,7 +7977,7 @@
     CommentScraper_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -8011,11 +8011,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -8034,7 +8034,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -8061,7 +8061,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -8081,20 +8081,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == CommentScraper_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -8111,16 +8111,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -8156,13 +8156,13 @@
       throw new TypeError(CommentScraper_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -8175,7 +8175,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -8219,19 +8219,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -8246,7 +8246,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -8254,13 +8254,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -8283,7 +8283,7 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
@@ -8296,21 +8296,21 @@
   function _iterableToArrayLimit(r, o) {
     var a = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
     if (null != a) {
-      var l, u, p, v, y = [], b = !0, C = !1;
+      var l, u, p, v, b = [], y = !0, C = !1;
       try {
         if (p = (a = a.call(r)).next, 0 === o) {
           if (Object(a) !== a) {
             return;
           }
-          b = !1;
+          y = !1;
         } else {
-          for (;!(b = (l = p.call(a)).done) && (y.push(l.value), y.length !== o); b = !0) {}
+          for (;!(y = (l = p.call(a)).done) && (b.push(l.value), b.length !== o); y = !0) {}
         }
       } catch (r) {
         C = !0, u = r;
       } finally {
         try {
-          if (!b && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
+          if (!y && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
             return;
           }
         } finally {
@@ -8319,7 +8319,7 @@
           }
         }
       }
-      return y;
+      return b;
     }
   }
   function _arrayWithHoles(r) {
@@ -8367,7 +8367,7 @@
       }
       throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
-    var p, v = !0, y = !1;
+    var p, v = !0, b = !1;
     return {
       "s": function s() {
         a = a.call(r);
@@ -8377,13 +8377,13 @@
         return v = r.done, r;
       },
       "e": function e(r) {
-        y = !0, p = r;
+        b = !0, p = r;
       },
       "f": function f() {
         try {
           v || null == a["return"] || a["return"]();
         } finally {
-          if (y) {
+          if (b) {
             throw p;
           }
         }
@@ -8408,11 +8408,11 @@
   }
   function CommentScraper_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function CommentScraper_asyncToGenerator(r) {
     return function() {
@@ -8458,15 +8458,15 @@
   function _fetchJableComments() {
     _fetchJableComments = CommentScraper_asyncToGenerator(CommentScraper_regeneratorRuntime().mark((function _callee3(r) {
       var o, a, l, u, p, v = arguments;
-      return CommentScraper_regeneratorRuntime().wrap((function _callee3$(y) {
+      return CommentScraper_regeneratorRuntime().wrap((function _callee3$(b) {
         while (1) {
-          switch (y.prev = y.next) {
+          switch (b.prev = b.next) {
            case 0:
             o = v.length > 1 && v[1] !== void 0 ? v[1] : 1;
             a = r.toLowerCase().trim();
             U.log("[CommentScraper] 开始采集 Jable 评论，番号: ".concat(a, ", 页码: ").concat(o));
-            y.prev = 3;
-            y.next = 6;
+            b.prev = 3;
+            b.next = 6;
             return fetchWithDomainRotation(ne, (function(r) {
               return "".concat(r, "/videos/").concat(a, "/?mode=async&function=get_block&block_id=video_comments_video_comments&sort_by=&from=").concat(o, "&ipp=10&_=").concat(Date.now());
             }), {
@@ -8478,18 +8478,18 @@
             });
 
            case 6:
-            l = y.sent;
+            l = b.sent;
             u = parseCommentsHtml(l.html, l.domain);
             U.log("[CommentScraper] 成功采集到 Jable 评论，共 ".concat(u.comments.length, " 条 (总数: ").concat(u.totalCount, ")"));
-            return y.abrupt("return", CommentScraper_objectSpread(CommentScraper_objectSpread({}, u), {}, {
+            return b.abrupt("return", CommentScraper_objectSpread(CommentScraper_objectSpread({}, u), {}, {
               "domain": l.domain
             }));
 
            case 12:
-            y.prev = 12;
-            y.t0 = y["catch"](3);
-            if (!(y.t0.message && y.t0.message.includes("CF_SHIELD"))) {
-              y.next = 18;
+            b.prev = 12;
+            b.t0 = b["catch"](3);
+            if (!(b.t0.message && b.t0.message.includes("CF_SHIELD"))) {
+              b.next = 18;
               break;
             }
             p = new Error("触发人机验证");
@@ -8497,11 +8497,11 @@
             throw p;
 
            case 18:
-            throw y.t0;
+            throw b.t0;
 
            case 19:
            case "end":
-            return y.stop();
+            return b.stop();
           }
         }
       }), _callee3, null, [ [ 3, 12 ] ]);
@@ -8523,11 +8523,11 @@
     if (!v) {
       throw new Error("未能获取有效的评论数据 (可能因 Safari 跨域权限拦截，请在浏览器中直接打开并验证 ".concat(new URL(o).hostname, ")"));
     }
-    var y = l.querySelector("h6.sub-title");
-    if (y) {
-      var b = y.textContent.match(/\((\d+)\)/);
-      if (b) {
-        p = parseInt(b[1], 10);
+    var b = l.querySelector("h6.sub-title");
+    if (b) {
+      var y = b.textContent.match(/\((\d+)\)/);
+      if (y) {
+        p = parseInt(y[1], 10);
       }
     }
     var C = r.includes("載入更多") || r.includes("载入更多");
@@ -8539,8 +8539,8 @@
       if (v && v.startsWith("/")) {
         v = "".concat(o).concat(v);
       }
-      var y = r.querySelector(".title .inactive-color");
-      var b = y ? y.textContent.trim() : "";
+      var b = r.querySelector(".title .inactive-color");
+      var y = b ? b.textContent.trim() : "";
       var C = r.querySelector(".comment-text .original-text");
       var k = "", _ = false;
       if (C) {
@@ -8561,7 +8561,7 @@
           "id": a,
           "user": p,
           "userUrl": v,
-          "time": b,
+          "time": y,
           "text": k,
           "isPending": _,
           "site": "jable"
@@ -8793,12 +8793,12 @@
     "reason": "辱骂词后跟人名"
   } ];
   var ge = /想(?:这样|這麼|这么|那樣|那样)?(?:干|肏|操|日|弄|草|幹)\s*([a-zA-Z\\u4e00-\\u9fa5]{2,4})/i;
-  var ye = new RegExp("(".concat(se, "[\\u4e00-\\u9fa5]{1,2})好[骚騷]啊"), "i");
-  var be = [ {
+  var be = new RegExp("(".concat(se, "[\\u4e00-\\u9fa5]{1,2})好[骚騷]啊"), "i");
+  var ye = [ {
     "regex": /(?:卡(?:的要死|死了|极了|爆了|的不行|得一比|的一比|了|得)|点解咁卡|怎么(?:那么|這麼|这么|這么)?卡)/i,
     "reason": "网站卡顿疑问"
   } ];
-  var Ce = [ {
+  var xe = [ {
     "regex": /(?:^|[^a-zA-Z0-9])(?:xo|xoxo)\s*(?:你(?:妈|媽|马)死了|是不是|老母|全家|你老味)/i,
     "reason": "评论区XO骂战"
   }, {
@@ -8821,15 +8821,15 @@
     var l = a.replace(/\s+/g, "");
     var u = l.replace(/(?:[\t-\r -\/:-@\[-`\{-~\xA0-\xA9\xAB\xAC\xAE-\xB1\xB4\xB6-\xB8\xBB\xBF\xD7\xF7\u02C2-\u02C5\u02D2-\u02DF\u02E5-\u02EB\u02ED\u02EF-\u02FF\u0375\u037E\u0384\u0385\u0387\u03F6\u0482\u055A-\u055F\u0589\u058A\u058D-\u058F\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0606-\u060F\u061B\u061D-\u061F\u066A-\u066D\u06D4\u06DE\u06E9\u06FD\u06FE\u0700-\u070D\u07F6-\u07F9\u07FE\u07FF\u0830-\u083E\u085E\u0888\u0964\u0965\u0970\u09F2\u09F3\u09FA\u09FB\u09FD\u0A76\u0AF0\u0AF1\u0B70\u0BF3-\u0BFA\u0C77\u0C7F\u0C84\u0D4F\u0D79\u0DF4\u0E3F\u0E4F\u0E5A\u0E5B\u0F01-\u0F17\u0F1A-\u0F1F\u0F34\u0F36\u0F38\u0F3A-\u0F3D\u0F85\u0FBE-\u0FC5\u0FC7-\u0FCC\u0FCE-\u0FDA\u104A-\u104F\u109E\u109F\u10FB\u1360-\u1368\u1390-\u1399\u1400\u166D\u166E\u1680\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DB\u1800-\u180A\u1940\u1944\u1945\u19DE-\u19FF\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B4E\u1B4F\u1B5A-\u1B6A\u1B74-\u1B7F\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u1FBD\u1FBF-\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED-\u1FEF\u1FFD\u1FFE\u2000-\u200A\u2010-\u2029\u202F-\u205F\u207A-\u207E\u208A-\u208E\u20A0-\u20C0\u2100\u2101\u2103-\u2106\u2108\u2109\u2114\u2116-\u2118\u211E-\u2123\u2125\u2127\u2129\u212E\u213A\u213B\u2140-\u2144\u214A-\u214D\u214F\u218A\u218B\u2190-\u2429\u2440-\u244A\u249C-\u24E9\u2500-\u2775\u2794-\u2B73\u2B76-\u2B95\u2B97-\u2BFF\u2CE5-\u2CEA\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E5D\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u2FF0-\u3004\u3008-\u3020\u3030\u3036\u3037\u303D-\u303F\u309B\u309C\u30A0\u30FB\u3190\u3191\u3196-\u319F\u31C0-\u31E5\u31EF\u3200-\u321E\u322A-\u3247\u3250\u3260-\u327F\u328A-\u32B0\u32C0-\u33FF\u4DC0-\u4DFF\uA490-\uA4C6\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA700-\uA716\uA720\uA721\uA789\uA78A\uA828-\uA82B\uA836-\uA839\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAA77-\uAA79\uAADE\uAADF\uAAF0\uAAF1\uAB5B\uAB6A\uAB6B\uABEB\uFB29\uFBB2-\uFBC2\uFD3E-\uFD4F\uFDCF\uFDFC-\uFDFF\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE66\uFE68-\uFE6B\uFEFF\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFE6\uFFE8-\uFFEE\uFFFC\uFFFD]|\uD800[\uDD00-\uDD02\uDD37-\uDD3F\uDD79-\uDD89\uDD8C-\uDD8E\uDD90-\uDD9C\uDDA0\uDDD0-\uDDFC\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDC77\uDC78\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEC8\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD803[\uDD6E\uDD8E\uDD8F\uDEAD\uDF55-\uDF59\uDF86-\uDF89]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC8\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9\uDFD4\uDFD5\uDFD7\uDFD8]|\uD805[\uDC4B-\uDC4F\uDC5A\uDC5B\uDC5D\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDE60-\uDE6C\uDEB9\uDF3C-\uDF3F]|\uD806[\uDC3B\uDD44-\uDD46\uDDE2\uDE3F-\uDE46\uDE9A-\uDE9C\uDE9E-\uDEA2\uDF00-\uDF09\uDFE1]|\uD807[\uDC41-\uDC45\uDC70\uDC71\uDEF7\uDEF8\uDF43-\uDF4F\uDFD5-\uDFF1\uDFFF]|\uD809[\uDC70-\uDC74]|\uD80B[\uDFF1\uDFF2]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3F\uDF44\uDF45]|\uD81B[\uDD6D-\uDD6F\uDE97-\uDE9A\uDFE2]|\uD82F[\uDC9C\uDC9F]|\uD833[\uDC00-\uDCEF\uDD00-\uDEB3\uDF50-\uDFC3]|\uD834[\uDC00-\uDCF5\uDD00-\uDD26\uDD29-\uDD64\uDD6A-\uDD6C\uDD83\uDD84\uDD8C-\uDDA9\uDDAE-\uDDEA\uDE00-\uDE41\uDE45\uDF00-\uDF56]|\uD835[\uDEC1\uDEDB\uDEFB\uDF15\uDF35\uDF4F\uDF6F\uDF89\uDFA9\uDFC3]|\uD836[\uDC00-\uDDFF\uDE37-\uDE3A\uDE6D-\uDE74\uDE76-\uDE83\uDE85-\uDE8B]|\uD838[\uDD4F\uDEFF]|\uD839\uDDFF|\uD83A[\uDD5E\uDD5F]|\uD83B[\uDCAC\uDCB0\uDD2E\uDEF0\uDEF1]|\uD83C[\uDC00-\uDC2B\uDC30-\uDC93\uDCA0-\uDCAE\uDCB1-\uDCBF\uDCC1-\uDCCF\uDCD1-\uDCF5\uDD0D-\uDDAD\uDDE6-\uDE02\uDE10-\uDE3B\uDE40-\uDE48\uDE50\uDE51\uDE60-\uDE65\uDF00-\uDFFF]|\uD83D[\uDC00-\uDED7\uDEDC-\uDEEC\uDEF0-\uDEFC\uDF00-\uDF76\uDF7B-\uDFD9\uDFE0-\uDFEB\uDFF0]|\uD83E[\uDC00-\uDC0B\uDC10-\uDC47\uDC50-\uDC59\uDC60-\uDC87\uDC90-\uDCAD\uDCB0-\uDCBB\uDCC0\uDCC1\uDD00-\uDE53\uDE60-\uDE6D\uDE70-\uDE7C\uDE80-\uDE89\uDE8F-\uDEC6\uDECE-\uDEDC\uDEDF-\uDEE9\uDEF0-\uDEF8\uDF00-\uDF92\uDF94-\uDFEF])+/g, "");
     var p = /[\u4e00-\u9fa5]/.test(l);
-    var v = CommentScraper_createForOfIteratorHelper(he), y;
+    var v = CommentScraper_createForOfIteratorHelper(he), b;
     try {
-      for (v.s(); !(y = v.n()).done; ) {
-        var b = y.value;
-        if (b.regex.test(o)) {
+      for (v.s(); !(b = v.n()).done; ) {
+        var y = b.value;
+        if (y.regex.test(o)) {
           return {
             "label": "SPAM",
             "category": "COPYPASTA",
-            "reason": b.reason
+            "reason": y.reason
           };
         }
       }
@@ -8944,7 +8944,7 @@
         };
       }
     }
-    var R = ye.exec(o);
+    var R = be.exec(o);
     if (R) {
       return {
         "label": "SPAM",
@@ -8952,7 +8952,7 @@
         "reason": '针对同学人身的性调侃: "'.concat(R[1], '好骚啊"')
       };
     }
-    var H = CommentScraper_createForOfIteratorHelper(be), G;
+    var H = CommentScraper_createForOfIteratorHelper(ye), G;
     try {
       for (H.s(); !(G = H.n()).done; ) {
         var z = G.value;
@@ -9010,7 +9010,7 @@
         };
       }
     }
-    var W = CommentScraper_createForOfIteratorHelper(Ce), Y;
+    var W = CommentScraper_createForOfIteratorHelper(xe), Y;
     try {
       for (W.s(); !(Y = W.n()).done; ) {
         var K = Y.value;
@@ -9097,27 +9097,27 @@
     while ((u = l.exec(r)) !== null) {
       var p = u[0];
       var v = p.startsWith("-");
-      var y = [ parseInt(u[1], 10), parseInt(u[2], 10), u[3] ? parseInt(u[3], 10) : null ];
-      if (y[1] >= 60 || y[2] !== null && y[2] >= 60) {
+      var b = [ parseInt(u[1], 10), parseInt(u[2], 10), u[3] ? parseInt(u[3], 10) : null ];
+      if (b[1] >= 60 || b[2] !== null && b[2] >= 60) {
         continue;
       }
-      var b = 0;
-      var C = y.map((function(r) {
+      var y = 0;
+      var C = b.map((function(r) {
         return r !== null ? Math.abs(r) : null;
       }));
       if (C[2] !== null) {
-        b = C[0] * 3600 + C[1] * 60 + C[2];
+        y = C[0] * 3600 + C[1] * 60 + C[2];
       } else if (v) {
-        b = C[0] * 60 + C[1];
+        y = C[0] * 60 + C[1];
       } else {
-        b = parseTwoPartTime(C[0], u[2], false, o);
+        y = parseTwoPartTime(C[0], u[2], false, o);
       }
       a.push({
         "raw": p,
         "index": u.index,
         "end": u.index + p.length,
         "level": "L1",
-        "seconds": v ? -b : b,
+        "seconds": v ? -y : y,
         "isNegative": v
       });
     }
@@ -9294,8 +9294,8 @@
       var p = r[u];
       var v = r[u + 1];
       if (v) {
-        var y = o.slice(p.end, v.index).trim();
-        if (l.includes(y)) {
+        var b = o.slice(p.end, v.index).trim();
+        if (l.includes(b)) {
           a.push({
             "raw": o.slice(p.index, v.end),
             "index": p.index,
@@ -9327,8 +9327,8 @@
         };
       }
       if (!/[分秒时時hmsmHMS]/i.test(r.raw)) {
-        var y = a.slice(r.end, Math.min(a.length, r.end + 5)).trim();
-        if (/^[xX倍]/i.test(y)) {
+        var b = a.slice(r.end, Math.min(a.length, r.end + 5)).trim();
+        if (/^[xX倍]/i.test(b)) {
           return {
             "isValid": false,
             "reason": "检测到播放速度/倍率语义"
@@ -9337,15 +9337,15 @@
       }
     }
     if (r.isRange) {
-      var b = validateMatch(r.start, o, a, l, true);
+      var y = validateMatch(r.start, o, a, l, true);
       var C = validateMatch(r.endMatch, o, a, l, true);
-      if (!b.isValid || !C.isValid) {
+      if (!y.isValid || !C.isValid) {
         return {
           "isValid": false,
           "reason": "范围边界无效"
         };
       }
-      var k = b.seconds;
+      var k = y.seconds;
       var _ = C.seconds;
       var E = false;
       if (k > _) {
@@ -9367,7 +9367,7 @@
         "level": "L4",
         "confidence": "High",
         "isCountdown": E,
-        "countdownOffsets": E ? [ b.seconds, C.seconds ] : null
+        "countdownOffsets": E ? [ y.seconds, C.seconds ] : null
       };
     }
     var D = Math.max(l, 28800);
@@ -9508,16 +9508,16 @@
     }
     var p = extractCandidates(l, u);
     var v = resolveOverlaps(p);
-    var y = mergeRanges(v, l);
-    var b = [];
+    var b = mergeRanges(v, l);
+    var y = [];
     var C = [];
-    var k = CommentScraper_createForOfIteratorHelper(y), _;
+    var k = CommentScraper_createForOfIteratorHelper(b), _;
     try {
       for (k.s(); !(_ = k.n()).done; ) {
         var E = _.value;
         var S = validateMatch(E, v, l, o);
         if (S.isValid) {
-          b.push({
+          y.push({
             "raw": E.raw,
             "seconds": S.seconds,
             "level": E.level,
@@ -9538,14 +9538,14 @@
       k.f();
     }
     var P = "None";
-    if (b.length > 0) {
+    if (y.length > 0) {
       var D = {
         "High": 3,
         "Medium": 2,
         "Low": 1
       };
       var L = 0;
-      var M = CommentScraper_createForOfIteratorHelper(b), A;
+      var M = CommentScraper_createForOfIteratorHelper(y), A;
       try {
         for (M.s(); !(A = M.n()).done; ) {
           var T = A.value;
@@ -9562,13 +9562,13 @@
       }
     }
     return {
-      "isValid": b.length > 0,
-      "validTimestamps": b,
+      "isValid": y.length > 0,
+      "validTimestamps": y,
       "invalidTimestamps": C,
       "confidence": P
     };
   }
-  var xe = /(?<!\w|\/|www\.|=|col-|\d-|>|Jukujo-)(?!heyzo|SHINKI|JPNXXX|carib|vps)[a-zA-Z]{2,6}-\d{2,5}(?:-c|_c|-4k)?(?!\d|[A-Za-z]{2,}|-\d|\.com|\.\d)|(?<!\w|\/|\\|\.|【|-|#|@|=|www\.)(?!heyzo|SHINKI|JPNXXX|carib|and|vps|dvd)[a-zA-Z]{2,6}\s{0,2}\d{3,4}(?:-c|_c)?(?!\w|-|\.|\/|×|％|%|@|\s?天| 于| 发表| 發表|歳| 歲|小时|分|系列| Min| day|ml| time|cm| ppi|\.com)|(?<!\w)(?:PARATHD|3DSVR|STARSBD)[-\s]?\d{3,4}(?!\w)|(?<!\w)(?:HIMEMIX|CASMANI|MGSSLND)[-\s]?\d{3}(?!\w)|(?<!\w)(?:k|n)[01]\d{3}(?!\w|-)|(?<!\w|\d-|\/)[01]\d{5}[-_](?:1)?\d{2,3}(?!\w|-\d)|(?<!\w)(?:carib|1pondo)[-_]\d{6}[-_]\d{2,3}(?!\w)|(?<!\w|\d-)\d{6}[-_]\d{2,3}(?:-1pon|-carib|-paco)(?!\w)|(?<!\w|\d-)\d{6}_(1)?\d{3}_0[12](?!\w|-\d)|HEYZO[_-\s]?(?:hd_)?\d{4}/gi;
+  var Ce = /(?<!\w|\/|www\.|=|col-|\d-|>|Jukujo-)(?!heyzo|SHINKI|JPNXXX|carib|vps)[a-zA-Z]{2,6}-\d{2,5}(?:-c|_c|-4k)?(?!\d|[A-Za-z]{2,}|-\d|\.com|\.\d)|(?<!\w|\/|\\|\.|【|-|#|@|=|www\.)(?!heyzo|SHINKI|JPNXXX|carib|and|vps|dvd)[a-zA-Z]{2,6}\s{0,2}\d{3,4}(?:-c|_c)?(?!\w|-|\.|\/|×|％|%|@|\s?天| 于| 发表| 發表|歳| 歲|小时|分|系列| Min| day|ml| time|cm| ppi|\.com)|(?<!\w)(?:PARATHD|3DSVR|STARSBD)[-\s]?\d{3,4}(?!\w)|(?<!\w)(?:HIMEMIX|CASMANI|MGSSLND)[-\s]?\d{3}(?!\w)|(?<!\w)(?:k|n)[01]\d{3}(?!\w|-)|(?<!\w|\d-|\/)[01]\d{5}[-_](?:1)?\d{2,3}(?!\w|-\d)|(?<!\w)(?:carib|1pondo)[-_]\d{6}[-_]\d{2,3}(?!\w)|(?<!\w|\d-)\d{6}[-_]\d{2,3}(?:-1pon|-carib|-paco)(?!\w)|(?<!\w|\d-)\d{6}_(1)?\d{3}_0[12](?!\w|-\d)|HEYZO[_-\s]?(?:hd_)?\d{4}/gi;
   var we = /(?<!\w|-|\/)\d{3}[a-zA-Z]{2,5}[-\s]?\d{3,4}(?!\w|-|.torrent|年)|(?<!\w|\/)FC2[^\d]{0,5}\d{6,7}|HEYDOUGA[_-\s]?\d{4}-\d{3,5}|(?<!\w)T28-\d{3}|(?<!\w)T-2\d{4,5}(?!\w|-)|(?<!\w|-|\/)[01]\d{5}-[a-zA-Z]{2,7}(?!\w|-)|(?<!\w)MK(?:B)?D-S\d{2,3}(?!\w|-)|(?:SHINKI|KITAIKE)[-\s]?\d{3}(?!\w|-)|JPNXXX[-\s]?\d{5}(?!\w|-)|xxx-av[-\s]\d{4,5}(?!\w|-)|(?<!\w)crazyasia\d{5}(?!\w|-)|(?<!\w)PEWORLD\d{5}(?!\w|-)|(?<!\w)[01]\d{5}[-_]?_01(?=-10mu)?|Jukujo-Club-\d{3}/gi;
   var ke = /(?<=(?<!\w|\d-)([a-zA-Z]{2,6})(?:[\s,，、-]?(?!2022|2021|2020|2019)\d{3,4})+(?!\d)[\s,、，和跟]{0,2})\d{3,4}(?!\w|％|%|人|年|歳|万|の|发)/gim;
   var _e = /(?<=(FC2[^\d]{0,5})(?:[\s,、-]?\d{6,7})+[\s,、]?)\d{6,7}/gim;
@@ -9645,8 +9645,8 @@
     var a = new Set;
     var l = normalizeText(r);
     var u;
-    xe.lastIndex = 0;
-    while ((u = xe.exec(l)) !== null) {
+    Ce.lastIndex = 0;
+    while ((u = Ce.exec(l)) !== null) {
       var p = u[0].trim();
       if (!IDcheck(p)) {
         a.add(formatAVID(p));
@@ -9656,19 +9656,19 @@
     while ((u = we.exec(l)) !== null) {
       var v = u[0].trim();
       if (!IDcheckWuma(v)) {
-        var y = formatWuma(v);
-        if (y.match(/^\d{3}[a-zA-Z]{2,5}[-\s]?\d{3,4}$/)) {
-          y = formatAVID(y.slice(3));
+        var b = formatWuma(v);
+        if (b.match(/^\d{3}[a-zA-Z]{2,5}[-\s]?\d{3,4}$/)) {
+          b = formatAVID(b.slice(3));
         }
-        a.add(y);
+        a.add(b);
       }
     }
     ke.lastIndex = 0;
     while ((u = ke.exec(l)) !== null) {
       if (u[1]) {
-        var b = u[1] + " " + u[0];
-        if (!IDcheck(b)) {
-          a.add(formatAVID(b));
+        var y = u[1] + " " + u[0];
+        if (!IDcheck(y)) {
+          a.add(formatAVID(y));
         }
       }
     }
@@ -9729,11 +9729,11 @@
         var u = l.toUpperCase();
         var p = l.toLowerCase();
         var v = String.fromCharCode(u.charCodeAt(0) + 65248);
-        var y = String.fromCharCode(p.charCodeAt(0) + 65248);
-        o += "[".concat(u).concat(p).concat(v).concat(y, "]");
+        var b = String.fromCharCode(p.charCodeAt(0) + 65248);
+        o += "[".concat(u).concat(p).concat(v).concat(b, "]");
       } else if (/\d/.test(l)) {
-        var b = String.fromCharCode(l.charCodeAt(0) + 65248);
-        o += "[".concat(l).concat(b, "]");
+        var y = String.fromCharCode(l.charCodeAt(0) + 65248);
+        o += "[".concat(l).concat(y, "]");
       } else if (l === "-" || l === "_") {
         o += "[-_－—\\s]?";
       } else {
@@ -9798,21 +9798,21 @@
         var a = "___TS_".concat(p++, "___");
         var l = Array.isArray(r.seconds) ? r.seconds.map(Math.round) : Math.round(r.seconds);
         var v = Array.isArray(l) ? JSON.stringify(l) : l;
-        var y = "跳转至此时间";
-        var b = o;
+        var b = "跳转至此时间";
+        var y = o;
         if (r.isCountdown) {
-          b = formatSeconds(r.seconds);
+          y = formatSeconds(r.seconds);
           if (Array.isArray(r.countdownOffsets)) {
-            y = "原倒计时: -".concat(formatSeconds(r.countdownOffsets[0]), " ~ -").concat(formatSeconds(r.countdownOffsets[1]), " (已转换为绝对时间)");
+            b = "原倒计时: -".concat(formatSeconds(r.countdownOffsets[0]), " ~ -").concat(formatSeconds(r.countdownOffsets[1]), " (已转换为绝对时间)");
           } else {
-            y = "原倒计时: -".concat(formatSeconds(r.countdownOffsets), " (已转换为绝对时间)");
+            b = "原倒计时: -".concat(formatSeconds(r.countdownOffsets), " (已转换为绝对时间)");
           }
         } else if (Array.isArray(r.seconds)) {
-          y = "跳转至区间 ".concat(formatSeconds(r.seconds));
+          b = "跳转至区间 ".concat(formatSeconds(r.seconds));
         } else {
-          y = "跳转至 ".concat(formatSeconds(r.seconds));
+          b = "跳转至 ".concat(formatSeconds(r.seconds));
         }
-        u[a] = '<span class="jc-time-link" data-secs=\''.concat(v, "' title=\"").concat(ie(y), '">').concat(b, "</span>");
+        u[a] = '<span class="jc-time-link" data-secs=\''.concat(v, "' title=\"").concat(ie(b), '">').concat(y, "</span>");
         return a;
       }));
     }));
@@ -9824,7 +9824,7 @@
         return a;
       }));
     }));
-    var y = {
+    var b = {
       "love": "😍",
       "hungry": "😋",
       "tongue": "😛",
@@ -9837,13 +9837,13 @@
     };
     l = l.replace(/:([a-zA-Z]{2,15}):/g, (function(r, o) {
       var a = o.toLowerCase();
-      if (y[a]) {
-        return y[a];
+      if (b[a]) {
+        return b[a];
       }
       return r;
     }));
-    for (var b = 0, C = Object.entries(u); b < C.length; b++) {
-      var k = _slicedToArray(C[b], 2), _ = k[0], E = k[1];
+    for (var y = 0, C = Object.entries(u); y < C.length; y++) {
+      var k = _slicedToArray(C[y], 2), _ = k[0], E = k[1];
       l = l.replace(_, E);
     }
     return l;
@@ -9858,18 +9858,18 @@
     var p = [];
     var v = [];
     if (u.label !== "SPAM") {
-      var y = parseTimestamps(l, a);
-      if (y.isValid) {
-        p = y.validTimestamps;
+      var b = parseTimestamps(l, a);
+      if (b.isValid) {
+        p = b.validTimestamps;
       }
       v = extractAVCodes(l, o);
     }
-    var b = highlightCommentText(l, p, v);
+    var y = highlightCommentText(l, p, v);
     return {
       "spam": u,
       "timestamps": p,
       "avcodes": v,
-      "textHtml": b
+      "textHtml": y
     };
   }
   function matchAvCode(r, o) {
@@ -9981,15 +9981,15 @@
     var l = (new DOMParser).parseFromString(r, "text/html");
     var u = l.querySelectorAll(".videos .video a");
     var p = "";
-    var v = CommentScraper_createForOfIteratorHelper(u), y;
+    var v = CommentScraper_createForOfIteratorHelper(u), b;
     try {
-      for (v.s(); !(y = v.n()).done; ) {
-        var b = y.value;
-        var C = b.querySelector(".id");
+      for (v.s(); !(b = v.n()).done; ) {
+        var y = b.value;
+        var C = y.querySelector(".id");
         if (C) {
           var k = C.textContent.trim();
           if (matchAvCode(k, o)) {
-            var _ = b.getAttribute("href") || "";
+            var _ = y.getAttribute("href") || "";
             var E = _.match(/v=([^&]+)/);
             if (E) {
               p = E[1];
@@ -10031,19 +10031,19 @@
     var u = o === "reviews";
     var p = (new DOMParser).parseFromString(r, "text/html");
     var v = u ? "table.review" : "table.comment";
-    var y = p.querySelectorAll(v);
-    var b = [];
-    y.forEach((function(r, u) {
+    var b = p.querySelectorAll(v);
+    var y = [];
+    b.forEach((function(r, u) {
       var p = r.querySelector(".userid a");
       var v = p ? p.textContent.trim() : "Anonymous";
-      var y = p ? p.getAttribute("href") : "";
-      if (y) {
-        if (y.startsWith(".")) {
-          y = "".concat(l, "/cn").concat(y.substring(1));
-        } else if (y.startsWith("/")) {
-          y = "".concat(l, "/cn").concat(y);
-        } else if (!y.startsWith("http")) {
-          y = "".concat(l, "/cn/").concat(y);
+      var b = p ? p.getAttribute("href") : "";
+      if (b) {
+        if (b.startsWith(".")) {
+          b = "".concat(l, "/cn").concat(b.substring(1));
+        } else if (b.startsWith("/")) {
+          b = "".concat(l, "/cn").concat(b);
+        } else if (!b.startsWith("http")) {
+          b = "".concat(l, "/cn/").concat(b);
         }
       }
       var C = r.querySelector(".date");
@@ -10053,10 +10053,10 @@
       var S = r.querySelector('[class^="rating"]');
       var P = S ? S.getAttribute("title") : null;
       if (E || v !== "Anonymous") {
-        b.push({
+        y.push({
           "id": "javlib-".concat(o, "-").concat(a, "-").concat(u),
           "user": v,
-          "userUrl": y,
+          "userUrl": b,
           "time": k,
           "text": E,
           "score": P,
@@ -10067,7 +10067,7 @@
     }));
     var C = p.querySelector(".page_selector");
     var k = false;
-    var _ = b.length;
+    var _ = y.length;
     if (C) {
       var E = new RegExp("[\\?&]page=".concat(a + 1, "(?:&|$)"));
       var S = C.querySelectorAll("a");
@@ -10087,7 +10087,7 @@
       }
     }
     return {
-      "comments": b,
+      "comments": y,
       "totalCount": _,
       "hasMore": k
     };
@@ -10097,7 +10097,7 @@
   }
   function _fetchJavLibraryData() {
     _fetchJavLibraryData = CommentScraper_asyncToGenerator(CommentScraper_regeneratorRuntime().mark((function _callee5(r) {
-      var o, a, l, u, p, v, y, b, C = arguments;
+      var o, a, l, u, p, v, b, y, C = arguments;
       return CommentScraper_regeneratorRuntime().wrap((function _callee5$(k) {
         while (1) {
           switch (k.prev = k.next) {
@@ -10115,10 +10115,10 @@
             u = o === "reviews";
             p = u ? "videoreviews.php" : "videocomments.php";
             v = l || re[0];
-            y = "".concat(v, "/cn/").concat(p, "?v=").concat(r, "&page=").concat(a);
-            U.log("[CommentScraper] 采集 JAVLibrary ".concat(o, " (Page ").concat(a, "): ").concat(y));
+            b = "".concat(v, "/cn/").concat(p, "?v=").concat(r, "&page=").concat(a);
+            U.log("[CommentScraper] 采集 JAVLibrary ".concat(o, " (Page ").concat(a, "): ").concat(b));
             k.next = 12;
-            return fetchWithTransport(y, {
+            return fetchWithTransport(b, {
               "headers": {
                 "accept": "text/html,application/xhtml+xml,*/*",
                 "referer": "".concat(v, "/cn/?v=").concat(r)
@@ -10127,15 +10127,15 @@
             });
 
            case 12:
-            b = k.sent;
-            if (!detectCloudflare(b.status, b.html)) {
+            y = k.sent;
+            if (!detectCloudflare(y.status, y.html)) {
               k.next = 15;
               break;
             }
             throw new Error("CF_SHIELD_ON_".concat(v));
 
            case 15:
-            return k.abrupt("return", parseJavLibraryDataHtml(b.html, o, a, v));
+            return k.abrupt("return", parseJavLibraryDataHtml(y.html, o, a, v));
 
            case 16:
            case "end":
@@ -10254,9 +10254,9 @@
             }
             try {
               var v = (new DOMParser).parseFromString(u.responseText, "text/html");
-              var y = v.querySelectorAll('.movie-list .item a[href^="/v/"], .grid-item a[href^="/v/"], a[href^="/v/"]');
-              var b = "";
-              var C = CommentScraper_createForOfIteratorHelper(y), k;
+              var b = v.querySelectorAll('.movie-list .item a[href^="/v/"], .grid-item a[href^="/v/"], a[href^="/v/"]');
+              var y = "";
+              var C = CommentScraper_createForOfIteratorHelper(b), k;
               try {
                 for (C.s(); !(k = C.n()).done; ) {
                   var _ = k.value;
@@ -10265,11 +10265,11 @@
                   if (S) {
                     var P = _.getAttribute("title") || _.textContent || "";
                     if (!a || matchAvCode(P, a)) {
-                      b = S[1];
+                      y = S[1];
                       break;
                     }
-                    if (!b) {
-                      b = S[1];
+                    if (!y) {
+                      y = S[1];
                     }
                   }
                 }
@@ -10278,9 +10278,9 @@
               } finally {
                 C.f();
               }
-              if (b) {
+              if (y) {
                 r({
-                  "movieId": b,
+                  "movieId": y,
                   "domain": l,
                   "source": "html"
                 });
@@ -10299,16 +10299,16 @@
       });
     }))["catch"](function() {
       var r = CommentScraper_asyncToGenerator(CommentScraper_regeneratorRuntime().mark((function _callee(r) {
-        var o, u, p, v, y;
-        return CommentScraper_regeneratorRuntime().wrap((function _callee$(b) {
+        var o, u, p, v, b;
+        return CommentScraper_regeneratorRuntime().wrap((function _callee$(y) {
           while (1) {
-            switch (b.prev = b.next) {
+            switch (y.prev = y.next) {
              case 0:
               U.warn("[CommentScraper] JavDB 主线搜索失败 (".concat(r.message, ")，正在尝试第三方 API 备用线路..."));
-              b.prev = 1;
+              y.prev = 1;
               u = jbBuildSignature();
               p = "".concat(Me, "/v2/search");
-              b.next = 6;
+              y.next = 6;
               return jbApiGetOnce(p, {
                 "q": a,
                 "page": 1,
@@ -10326,34 +10326,34 @@
               });
 
              case 6:
-              v = b.sent;
-              y = (v === null || v === void 0 || (o = v.data) === null || o === void 0 ? void 0 : o.movies) || [];
-              if (!(y.length > 0 && y[0].id)) {
-                b.next = 11;
+              v = y.sent;
+              b = (v === null || v === void 0 || (o = v.data) === null || o === void 0 ? void 0 : o.movies) || [];
+              if (!(b.length > 0 && b[0].id)) {
+                y.next = 11;
                 break;
               }
-              U.log("[CommentScraper] 备用线路获取 JavDB movieId 成功: ".concat(y[0].id));
-              return b.abrupt("return", {
-                "movieId": y[0].id,
+              U.log("[CommentScraper] 备用线路获取 JavDB movieId 成功: ".concat(b[0].id));
+              return y.abrupt("return", {
+                "movieId": b[0].id,
                 "domain": l,
                 "source": "api"
               });
 
              case 11:
-              b.next = 16;
+              y.next = 16;
               break;
 
              case 13:
-              b.prev = 13;
-              b.t0 = b["catch"](1);
-              U.error("[CommentScraper] JavDB 备用线路搜索亦失败:", b.t0);
+              y.prev = 13;
+              y.t0 = y["catch"](1);
+              U.error("[CommentScraper] JavDB 备用线路搜索亦失败:", y.t0);
 
              case 16:
               throw r;
 
              case 17:
              case "end":
-              return b.stop();
+              return y.stop();
             }
           }
         }), _callee, null, [ [ 1, 13 ] ]);
@@ -10398,7 +10398,7 @@
             if (u.status >= 200 && u.status < 300) {
               var p = (new DOMParser).parseFromString(u.responseText, "text/html");
               var v = p.querySelectorAll("dt.review-item");
-              var y = [];
+              var b = [];
               v.forEach((function(r, a) {
                 if (r.classList.contains("more")) {
                   return;
@@ -10411,9 +10411,9 @@
                 var p = CommentScraper_createForOfIteratorHelper(l.childNodes), v;
                 try {
                   for (p.s(); !(v = p.n()).done; ) {
-                    var b = v.value;
-                    if (b.nodeType === 3) {
-                      var C = b.textContent.trim();
+                    var y = v.value;
+                    if (y.nodeType === 3) {
+                      var C = y.textContent.trim();
                       if (C.length > 0 && C.length < 30) {
                         u = C;
                         break;
@@ -10435,7 +10435,7 @@
                 var P = r.querySelector(".content p, .content");
                 var D = P ? P.textContent.trim() : "";
                 if (D) {
-                  y.push({
+                  b.push({
                     "id": "javdb-html-".concat(o, "-").concat(a),
                     "user": u,
                     "time": _,
@@ -10446,20 +10446,20 @@
                   });
                 }
               }));
-              var b = false;
+              var y = false;
               var C = p.querySelector(".pagination");
               if (C) {
                 var k = C.querySelector('a.pagination-next, a[rel="next"], a.pagination-link[href*="page="]');
                 if (k) {
-                  b = true;
+                  y = true;
                 }
-              } else if (y.length >= 20) {
-                b = true;
+              } else if (b.length >= 20) {
+                y = true;
               }
               r({
-                "comments": y,
-                "totalCount": y.length,
-                "hasMore": b,
+                "comments": b,
+                "totalCount": b.length,
+                "hasMore": y,
                 "source": "html"
               });
               return;
@@ -10478,7 +10478,7 @@
     var v = function() {
       var a = CommentScraper_asyncToGenerator(CommentScraper_regeneratorRuntime().mark((function _callee2() {
         var a;
-        var l, u, p, v, y, b;
+        var l, u, p, v, b, y;
         return CommentScraper_regeneratorRuntime().wrap((function _callee2$(C) {
           while (1) {
             switch (C.prev = C.next) {
@@ -10498,7 +10498,7 @@
              case 5:
               p = C.sent;
               v = (p === null || p === void 0 || (a = p.data) === null || a === void 0 ? void 0 : a.reviews) || [];
-              y = v.map((function(r, a) {
+              b = v.map((function(r, a) {
                 var l = r.created_at ? new Date(r.created_at * 1e3).toLocaleDateString("zh-CN") : "";
                 return {
                   "id": "javdb-api-".concat(o, "-").concat(r.id || a),
@@ -10511,11 +10511,11 @@
                   "site": "javdb"
                 };
               }));
-              b = v.length >= 20;
+              y = v.length >= 20;
               return C.abrupt("return", {
-                "comments": y,
-                "totalCount": y.length,
-                "hasMore": b,
+                "comments": b,
+                "totalCount": b.length,
+                "hasMore": y,
                 "source": "api"
               });
 
@@ -10571,7 +10571,7 @@
       }
       throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
-    var p, v = !0, y = !1;
+    var p, v = !0, b = !1;
     return {
       "s": function s() {
         a = a.call(r);
@@ -10581,13 +10581,13 @@
         return v = r.done, r;
       },
       "e": function e(r) {
-        y = !0, p = r;
+        b = !0, p = r;
       },
       "f": function f() {
         try {
           v || null == a["return"] || a["return"]();
         } finally {
-          if (y) {
+          if (b) {
             throw p;
           }
         }
@@ -10636,7 +10636,7 @@
     CommentPanel_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -10670,11 +10670,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -10693,7 +10693,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -10720,7 +10720,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -10740,20 +10740,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == CommentPanel_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -10770,16 +10770,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -10815,13 +10815,13 @@
       throw new TypeError(CommentPanel_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -10834,7 +10834,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -10878,19 +10878,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -10905,7 +10905,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -10913,13 +10913,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -10942,7 +10942,7 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
@@ -10971,21 +10971,21 @@
   function CommentPanel_iterableToArrayLimit(r, o) {
     var a = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
     if (null != a) {
-      var l, u, p, v, y = [], b = !0, C = !1;
+      var l, u, p, v, b = [], y = !0, C = !1;
       try {
         if (p = (a = a.call(r)).next, 0 === o) {
           if (Object(a) !== a) {
             return;
           }
-          b = !1;
+          y = !1;
         } else {
-          for (;!(b = (l = p.call(a)).done) && (y.push(l.value), y.length !== o); b = !0) {}
+          for (;!(y = (l = p.call(a)).done) && (b.push(l.value), b.length !== o); y = !0) {}
         }
       } catch (r) {
         C = !0, u = r;
       } finally {
         try {
-          if (!b && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
+          if (!y && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
             return;
           }
         } finally {
@@ -10994,7 +10994,7 @@
           }
         }
       }
-      return y;
+      return b;
     }
   }
   function CommentPanel_arrayWithHoles(r) {
@@ -11004,11 +11004,11 @@
   }
   function CommentPanel_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function CommentPanel_asyncToGenerator(r) {
     return function() {
@@ -11334,9 +11334,9 @@
             p.classList.add("tm-sidebar-hidden");
             this.commentsPanel.style.display = "none";
           } else {
-            var y;
+            var b;
             this.commentsPanel.style.display = "flex";
-            if (!(u !== null && u !== void 0 && (y = u.settings) !== null && y !== void 0 && y.sidebarHidden)) {
+            if (!(u !== null && u !== void 0 && (b = u.settings) !== null && b !== void 0 && b.sidebarHidden)) {
               p.classList.remove("tm-sidebar-hidden");
             }
           }
@@ -11358,12 +11358,12 @@
         };
         [ "jable", "javlib", "javdb" ].forEach((function(r) {
           var o, l, p, v;
-          var y = r === "javlib" ? u.javlib !== false && u.javlibrary !== false : u[r] !== false;
-          var b = (o = a.commentsList) === null || o === void 0 ? void 0 : o.querySelector("#tm-comment-section-".concat(r));
-          if (b) {
-            b.style.display = y ? "block" : "none";
+          var b = r === "javlib" ? u.javlib !== false && u.javlibrary !== false : u[r] !== false;
+          var y = (o = a.commentsList) === null || o === void 0 ? void 0 : o.querySelector("#tm-comment-section-".concat(r));
+          if (y) {
+            y.style.display = b ? "block" : "none";
           }
-          if (y && ((l = a.sites[r]) === null || l === void 0 || (l = l.comments) === null || l === void 0 ? void 0 : l.length) === 0 && ((p = a.sites[r]) === null || p === void 0 ? void 0 : p.status) !== "loading" && ((v = a.sites[r]) === null || v === void 0 ? void 0 : v.status) !== "loaded") {
+          if (b && ((l = a.sites[r]) === null || l === void 0 || (l = l.comments) === null || l === void 0 ? void 0 : l.length) === 0 && ((p = a.sites[r]) === null || p === void 0 ? void 0 : p.status) !== "loading" && ((v = a.sites[r]) === null || v === void 0 ? void 0 : v.status) !== "loaded") {
             a.loadSiteComments(r, 1);
           }
         }));
@@ -11386,11 +11386,11 @@
             var v = a.getAttribute("data-secs");
             if (v) {
               try {
-                var y = JSON.parse(v);
-                r.handleTimeClick(y);
-              } catch (o) {
-                var b = parseFloat(v);
+                var b = JSON.parse(v);
                 r.handleTimeClick(b);
+              } catch (o) {
+                var y = parseFloat(v);
+                r.handleTimeClick(y);
               }
             }
           } else if (l) {
@@ -11436,12 +11436,12 @@
       "value": function() {
         var r = CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee2() {
           var r = this;
-          var o, a, l, u, p, v, y, b = arguments;
+          var o, a, l, u, p, v, b, y = arguments;
           return CommentPanel_regeneratorRuntime().wrap((function _callee2$(C) {
             while (1) {
               switch (C.prev = C.next) {
                case 0:
-                o = b.length > 0 && b[0] !== void 0 ? b[0] : 1;
+                o = y.length > 0 && y[0] !== void 0 ? y[0] : 1;
                 if (this.videoCode) {
                   C.next = 3;
                   break;
@@ -11500,22 +11500,22 @@
                 break;
 
                case 22:
-                y = [];
+                b = [];
                 if (this.jableHasMore && !this.jableCollapsed) {
-                  y.push(this.loadJableComments(this.jableCurrentPage + 1));
+                  b.push(this.loadJableComments(this.jableCurrentPage + 1));
                 }
                 if (this.javlibHasMore && !this.javlibCollapsed) {
-                  y.push(this.loadJavlibComments(this.javlibCurrentPage + 1));
+                  b.push(this.loadJavlibComments(this.javlibCurrentPage + 1));
                 }
                 if (this.javdbHasMore && !this.javdbCollapsed) {
-                  y.push(this.loadJavdbComments(this.javdbCurrentPage + 1));
+                  b.push(this.loadJavdbComments(this.javdbCurrentPage + 1));
                 }
-                if (!(y.length > 0)) {
+                if (!(b.length > 0)) {
                   C.next = 30;
                   break;
                 }
                 C.next = 29;
-                return Promise.allSettled(y);
+                return Promise.allSettled(b);
 
                case 29:
                 this.currentPage = Math.max(this.jableCurrentPage, this.javlibCurrentPage, this.javdbCurrentPage);
@@ -11540,7 +11540,7 @@
       "value": function() {
         var r = CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee3(r) {
           var o, a, l = this;
-          var u, p, v, y, b, C, k, _, E, S, P, D, L, M, A, T, j, B, I, V, O, R, H, G, z, N, J, q, W, K, X, $, Q, Z, ee, te, ae, ie, se = arguments;
+          var u, p, v, b, y, C, k, _, E, S, P, D, L, M, A, T, j, B, I, V, O, R, H, G, z, N, J, q, W, K, X, $, Q, Z, ee, te, ae, ie, se = arguments;
           return CommentPanel_regeneratorRuntime().wrap((function _callee3$(le) {
             while (1) {
               switch (le.prev = le.next) {
@@ -11562,13 +11562,13 @@
 
                case 6:
                 v = (o = this.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState;
-                y = (v === null || v === void 0 || (a = v.settings) === null || a === void 0 ? void 0 : a.enabledCommentSources) || {
+                b = (v === null || v === void 0 || (a = v.settings) === null || a === void 0 ? void 0 : a.enabledCommentSources) || {
                   "jable": true,
                   "javdb": true,
                   "javlibrary": false
                 };
-                b = r === "javlib" ? y.javlib !== false && y.javlibrary !== false : y[r] !== false;
-                if (b) {
+                y = r === "javlib" ? b.javlib !== false && b.javlibrary !== false : b[r] !== false;
+                if (y) {
                   le.next = 13;
                   break;
                 }
@@ -12035,8 +12035,8 @@
         var l = "".concat(a, "/cn/?cf_verify=1");
         var u = Date.now();
         var p = (typeof GM_getValue === "function" ? GM_getValue("javlib_verifying_start_time") : 0) || 0;
-        var y = typeof GM_getValue === "function" && GM_getValue("javlib_verifying") === true && u - p < 15e3;
-        if (y) {
+        var b = typeof GM_getValue === "function" && GM_getValue("javlib_verifying") === true && u - p < 15e3;
+        if (b) {
           U.log("监测到其他标签页已经在进行 JAVLibrary 验证，本标签页仅挂载监听器。");
         } else {
           U.log("无其他活跃验证标签页，尝试启动后台验证标签页。");
@@ -12053,19 +12053,19 @@
               });
               U.log("已通过 GM_openInTab 打开后台静默验证标签页。");
             } else if (typeof GM !== "undefined" && typeof GM.openInTab === "function") {
-              var b = GM.openInTab(l, {
+              var y = GM.openInTab(l, {
                 "active": false,
                 "insert": true,
                 "pinned": true
               });
-              if (b && typeof b.then === "function") {
-                b.then((function(r) {
+              if (y && typeof y.then === "function") {
+                y.then((function(r) {
                   o.javlibVerificationTab = r;
                 }))["catch"]((function(r) {
                   U.error("GM.openInTab 异步启动失败:", r);
                 }));
               } else {
-                this.javlibVerificationTab = b;
+                this.javlibVerificationTab = y;
               }
               U.log("已通过 GM.openInTab 打开后台静默验证标签页。");
             } else {
@@ -12269,20 +12269,20 @@
           var l = p - a;
           var u = o.target.closest(".tm-comment-section-body");
           var v = u ? u.scrollHeight - u.scrollTop - u.clientHeight < 500 : false;
-          var y = u ? u.scrollTop <= 5 : true;
+          var b = u ? u.scrollTop <= 5 : true;
           if (l > 15 && v && u) {
-            var b = u.closest(".tm-comment-section");
-            if (b) {
-              if (b.id === "tm-comment-section-jable") {
+            var y = u.closest(".tm-comment-section");
+            if (y) {
+              if (y.id === "tm-comment-section-jable") {
                 r.triggerLoadMoreJable();
-              } else if (b.id === "tm-comment-section-javlib") {
+              } else if (y.id === "tm-comment-section-javlib") {
                 r.triggerLoadMoreJavlib();
-              } else if (b.id === "tm-comment-section-javdb") {
+              } else if (y.id === "tm-comment-section-javdb") {
                 r.triggerLoadMoreJavdb();
               }
             }
           }
-          if (l < -15 && y) {
+          if (l < -15 && b) {
             r.updatePosition();
           }
         }), {
@@ -12312,9 +12312,9 @@
             if (v) {
               o.stopPropagation();
               u.setAttribute("data-collapsed", "false");
-              var y = u.querySelector(".jc-toggle-expand-btn");
-              if (y) {
-                y.textContent = __("commentsCollapse") || "收起";
+              var b = u.querySelector(".jc-toggle-expand-btn");
+              if (b) {
+                b.textContent = __("commentsCollapse") || "收起";
               }
               return;
             }
@@ -12333,7 +12333,7 @@
             }
           }
         }));
-        var y = function handleCommentTouchStart(o) {
+        var b = function handleCommentTouchStart(o) {
           if (!r.playerCore.uiManager) {
             return;
           }
@@ -12344,8 +12344,8 @@
               var u = l.getBoundingClientRect();
               var p = o.touches && o.touches[0] || o.changedTouches && o.changedTouches[0];
               var v = p ? p.clientX : o.clientX;
-              var y = p ? p.clientY : o.clientY;
-              if (v >= u.left && v <= u.right && y >= u.top && y <= u.bottom) {
+              var b = p ? p.clientY : o.clientY;
+              if (v >= u.left && v <= u.right && b >= u.top && b <= u.bottom) {
                 a = l;
               }
             }
@@ -12371,9 +12371,9 @@
             o.stopPropagation();
             return;
           }
-          var b = r.playerCore.uiManager.isFloatingControlPanel;
+          var y = r.playerCore.uiManager.isFloatingControlPanel;
           var C = r.playerCore.uiManager.controlsVisible;
-          if (b) {
+          if (y) {
             r.setDimmed(false);
           } else if (C) {
             if (!o.target.closest(".jc-time-link")) {
@@ -12381,10 +12381,10 @@
             }
           }
         };
-        this.commentsPanel.addEventListener("touchstart", y, {
+        this.commentsPanel.addEventListener("touchstart", b, {
           "passive": false
         });
-        this.commentsPanel.addEventListener("mousedown", y, {
+        this.commentsPanel.addEventListener("mousedown", b, {
           "passive": false
         });
         this.commentsPanel.addEventListener("mouseenter", (function() {
@@ -12419,7 +12419,7 @@
           }
         }
         if (typeof ResizeObserver !== "undefined" && this.commentsPanel) {
-          var b = new ResizeObserver((function(o) {
+          var y = new ResizeObserver((function(o) {
             var a = CommentPanel_createForOfIteratorHelper(o), l;
             try {
               for (a.s(); !(l = a.n()).done; ) {
@@ -12434,8 +12434,8 @@
               a.f();
             }
           }));
-          b.observe(this.commentsPanel);
-          this.commentsPanelResizeObserver = b;
+          y.observe(this.commentsPanel);
+          this.commentsPanelResizeObserver = y;
         }
         var C = document.createElement("div");
         C.className = "tm-comment-row-placeholder";
@@ -12516,11 +12516,11 @@
                       }
                       if (v.status >= 200 && v.status < 300) {
                         r.jableVideoExists = true;
-                        var y = v.responseText;
-                        var b = (new DOMParser).parseFromString(y, "text/html");
-                        var C = Array.from(b.querySelectorAll("form")).find((function(r) {
+                        var b = v.responseText;
+                        var y = (new DOMParser).parseFromString(b, "text/html");
+                        var C = Array.from(y.querySelectorAll("form")).find((function(r) {
                           return r.querySelector('input[name="action"][value="add_comment"]') || r.querySelector('input[name="action"][value="add_comment_video"]');
-                        })) || b.querySelector('form[id*="comment"]') || b.querySelector('form[action*="comment"]');
+                        })) || y.querySelector('form[id*="comment"]') || y.querySelector('form[action*="comment"]');
                         if (!C) {
                           r.showLoginPromptModal(o);
                           l(null);
@@ -12584,11 +12584,11 @@
         var u = this.commentsPanel.querySelector(".tm-comment-tag-select-modal");
         var p = this.commentsPanel.querySelector(".tm-tag-select-all-btn");
         var v = this.commentsPanel.querySelector(".tm-tag-deselect-all-btn");
-        var y = this.commentsPanel.querySelector(".tm-tag-select-close-btn");
-        var b = this.commentsPanel.querySelector(".tm-tag-select-list");
+        var b = this.commentsPanel.querySelector(".tm-tag-select-close-btn");
+        var y = this.commentsPanel.querySelector(".tm-tag-select-list");
         this.commentInput = a;
         this.tagSelectModal = u;
-        this.tagSelectList = b;
+        this.tagSelectList = y;
         if (a) {
           var C = function stopProp(r) {
             return r.stopPropagation();
@@ -12668,8 +12668,8 @@
             r.renderTagSelectList();
           }));
         }
-        if (y) {
-          y.addEventListener("click", (function(o) {
+        if (b) {
+          b.addEventListener("click", (function(o) {
             o.stopPropagation();
             r.closeTagSelectModal();
           }));
@@ -12743,15 +12743,15 @@
               r.selectedTagIds["delete"](o.id);
             }
           }));
-          var y = document.createElement("div");
-          y.className = "tm-sheet-item-time-container";
+          var b = document.createElement("div");
+          b.className = "tm-sheet-item-time-container";
           if (o.type === "highlight") {
-            var b = document.createElement("button");
-            b.type = "button";
-            b.className = "tm-sheet-time-pill";
-            b.style.setProperty("--tab-color", u);
-            b.textContent = formatSeconds(o.startTime);
-            y.appendChild(b);
+            var y = document.createElement("button");
+            y.type = "button";
+            y.className = "tm-sheet-time-pill";
+            y.style.setProperty("--tab-color", u);
+            y.textContent = formatSeconds(o.startTime);
+            b.appendChild(y);
           } else {
             var C = document.createElement("div");
             C.className = "tm-sheet-time-pill interval";
@@ -12768,7 +12768,7 @@
             C.appendChild(k);
             C.appendChild(_);
             C.appendChild(E);
-            y.appendChild(C);
+            b.appendChild(C);
           }
           var S = document.createElement("input");
           S.type = "text";
@@ -12797,7 +12797,7 @@
             }
           }));
           p.appendChild(v);
-          p.appendChild(y);
+          p.appendChild(b);
           p.appendChild(S);
           r.tagSelectList.appendChild(p);
         }));
@@ -12862,7 +12862,7 @@
       "value": function() {
         var r = CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee7(r) {
           var o = this;
-          var a, l, u, p, v, y, b, C;
+          var a, l, u, p, v, b, y, C;
           return CommentPanel_regeneratorRuntime().wrap((function _callee7$(k) {
             while (1) {
               switch (k.prev = k.next) {
@@ -12885,25 +12885,25 @@
                   v.disabled = true;
                   v.textContent = "Sending...";
                 }
-                y = function resetBtn() {
+                b = function resetBtn() {
                   if (v) {
                     v.disabled = false;
                     v.textContent = __("send");
                   }
                 };
-                b = window.loginManager && window.loginManager.providers.find((function(r) {
+                y = window.loginManager && window.loginManager.providers.find((function(r) {
                   return r.domains.some((function(r) {
                     return p.includes(r);
                   }));
                 }));
                 k.prev = 10;
                 C = false;
-                if (!(b && typeof b.publishComment === "function")) {
+                if (!(y && typeof y.publishComment === "function")) {
                   k.next = 18;
                   break;
                 }
                 k.next = 15;
-                return b.publishComment(r, {
+                return y.publishComment(r, {
                   "videoCode": this.videoCode,
                   "commentForm": l,
                   "targetUrl": u,
@@ -12925,18 +12925,18 @@
                     }
                   }));
                   var v = l.querySelector("textarea");
-                  var y = v ? v.name : "comment";
-                  a.append(y, r);
-                  var b = l.getAttribute("action") || "";
-                  if (b.startsWith("/")) {
-                    b = "".concat(p).concat(b);
-                  } else if (!b.startsWith("http")) {
-                    b = u;
+                  var b = v ? v.name : "comment";
+                  a.append(b, r);
+                  var y = l.getAttribute("action") || "";
+                  if (y.startsWith("/")) {
+                    y = "".concat(p).concat(y);
+                  } else if (!y.startsWith("http")) {
+                    y = u;
                   }
-                  U.log("[CommentPanel] 正在提交评论: ".concat(b));
+                  U.log("[CommentPanel] 正在提交评论: ".concat(y));
                   GM_xmlhttpRequest({
                     "method": "POST",
-                    "url": b,
+                    "url": y,
                     "headers": {
                       "Content-Type": "application/x-www-form-urlencoded",
                       "referer": u,
@@ -12975,7 +12975,7 @@
                 C = k.sent;
 
                case 21:
-                y();
+                b();
                 if (C) {
                   if (this.commentInput) {
                     this.commentInput.value = "";
@@ -12992,7 +12992,7 @@
                case 25:
                 k.prev = 25;
                 k.t0 = k["catch"](10);
-                y();
+                b();
                 U.error("[CommentPanel] 发表评论过程出现异常:", k.t0);
                 Toast("发表评论失败", 2e3, "error");
 
@@ -13013,7 +13013,7 @@
       "value": function() {
         var r = CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee8() {
           var r = this;
-          var o, a, l, u, p, v, y, b;
+          var o, a, l, u, p, v, b, y;
           return CommentPanel_regeneratorRuntime().wrap((function _callee8$(C) {
             while (1) {
               switch (C.prev = C.next) {
@@ -13044,20 +13044,20 @@
                 };
                 U.log("[CommentPanel] 正在检测 Jable 页面与登录态: ".concat(a));
                 v = false;
-                y = setTimeout((function() {
+                b = setTimeout((function() {
                   if (!v) {
                     v = true;
                     p();
-                    if (b && typeof b.abort === "function") {
+                    if (y && typeof y.abort === "function") {
                       try {
-                        b.abort();
+                        y.abort();
                       } catch (r) {}
                     }
                     U.error("[CommentPanel] 检测 Jable 页面超时");
                     Toast("网络请求超时，请稍后重试", 2e3, "error");
                   }
                 }), 6e3);
-                b = GM_xmlhttpRequest({
+                y = GM_xmlhttpRequest({
                   "method": "GET",
                   "url": a,
                   "timeout": 6e3,
@@ -13071,7 +13071,7 @@
                       return;
                     }
                     v = true;
-                    clearTimeout(y);
+                    clearTimeout(b);
                     p();
                     if (l.status === 404) {
                       r.jableVideoExists = false;
@@ -13081,10 +13081,10 @@
                     if (l.status >= 200 && l.status < 300) {
                       r.jableVideoExists = true;
                       var u = l.responseText;
-                      var b = (new DOMParser).parseFromString(u, "text/html");
-                      var C = Array.from(b.querySelectorAll("form")).find((function(r) {
+                      var y = (new DOMParser).parseFromString(u, "text/html");
+                      var C = Array.from(y.querySelectorAll("form")).find((function(r) {
                         return r.querySelector('input[name="action"][value="add_comment"]') || r.querySelector('input[name="action"][value="add_comment_video"]');
-                      })) || b.querySelector('form[id*="comment"]') || b.querySelector('form[action*="comment"]');
+                      })) || y.querySelector('form[id*="comment"]') || y.querySelector('form[action*="comment"]');
                       if (!C) {
                         r.showLoginPromptModal(o);
                       } else {
@@ -13099,7 +13099,7 @@
                       return;
                     }
                     v = true;
-                    clearTimeout(y);
+                    clearTimeout(b);
                     p();
                     U.error("[CommentPanel] 检测 Jable 失败:", r);
                     Toast("网络请求失败，请稍后重试", 2e3, "error");
@@ -13109,7 +13109,7 @@
                       return;
                     }
                     v = true;
-                    clearTimeout(y);
+                    clearTimeout(b);
                     p();
                     U.error("[CommentPanel] 检测 Jable 超时");
                     Toast("网络请求超时，请稍后重试", 2e3, "error");
@@ -13161,9 +13161,9 @@
           l = window.loginManager.getMatchingProvider();
         }
         var u = l ? l.siteKey === "JABLE" ? "Jable.tv" : l.siteKey === "MISSAV" ? "MissAV" : l.siteKey : "Jable.tv";
-        var p = createModal('\n            <div class="tm-custom-modal-title" style="margin-bottom: 15px;">登录 '.concat(u, '</div>\n            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; text-align: left; box-sizing: border-box;">\n                <div style="display: flex; flex-direction: column; gap: 4px;">\n                    <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">用户名 / 邮箱</label>\n                    <input type="text" class="tm-login-username" placeholder="请输入用户名或邮箱" />\n                </div>\n                <div style="display: flex; flex-direction: column; gap: 4px;">\n                    <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">密码</label>\n                    <input type="password" class="tm-login-password" placeholder="请输入密码" />\n                </div>\n                <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">\n                    <input type="checkbox" id="tm-login-remember" checked style="cursor: pointer;" />\n                    <label for="tm-login-remember" style="font-size: 12px; color: hsl(var(--shadcn-muted-foreground)); cursor: pointer; user-select: none;">记住密码并开启自动登录</label>\n                </div>\n            </div>\n            <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 20px;">\n                <button class="tm-custom-modal-cancel-btn">取消</button>\n                <button class="tm-custom-modal-submit-btn">登录</button>\n            </div>\n        ')), v = p.modal, y = p.close;
-        var b = v.querySelector(".tm-custom-modal-cancel-btn");
-        b.addEventListener("click", y);
+        var p = createModal('\n            <div class="tm-custom-modal-title" style="margin-bottom: 15px;">登录 '.concat(u, '</div>\n            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; text-align: left; box-sizing: border-box;">\n                <div style="display: flex; flex-direction: column; gap: 4px;">\n                    <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">用户名 / 邮箱</label>\n                    <input type="text" class="tm-login-username" placeholder="请输入用户名或邮箱" />\n                </div>\n                <div style="display: flex; flex-direction: column; gap: 4px;">\n                    <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">密码</label>\n                    <input type="password" class="tm-login-password" placeholder="请输入密码" />\n                </div>\n                <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">\n                    <input type="checkbox" id="tm-login-remember" checked style="cursor: pointer;" />\n                    <label for="tm-login-remember" style="font-size: 12px; color: hsl(var(--shadcn-muted-foreground)); cursor: pointer; user-select: none;">记住密码并开启自动登录</label>\n                </div>\n            </div>\n            <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 20px;">\n                <button class="tm-custom-modal-cancel-btn">取消</button>\n                <button class="tm-custom-modal-submit-btn">登录</button>\n            </div>\n        ')), v = p.modal, b = p.close;
+        var y = v.querySelector(".tm-custom-modal-cancel-btn");
+        y.addEventListener("click", b);
         var C = v.querySelector(".tm-custom-modal-submit-btn");
         var k = v.querySelector(".tm-login-username");
         var _ = v.querySelector(".tm-login-password");
@@ -13192,7 +13192,7 @@
                 _.disabled = true;
                 C.disabled = true;
                 C.textContent = "登录中...";
-                b.disabled = true;
+                y.disabled = true;
                 P.prev = 11;
                 if (!l && window.loginManager && r) {
                   l = window.loginManager.providers.find((function(o) {
@@ -13227,7 +13227,7 @@
                     });
                   }
                   a.updateAllSiteLoginStatuses(true);
-                  y();
+                  b();
                   if (typeof o === "function") {
                     o();
                   } else {
@@ -13240,7 +13240,7 @@
                   _.disabled = false;
                   C.disabled = false;
                   C.textContent = "登录";
-                  b.disabled = false;
+                  y.disabled = false;
                 }
                 P.next = 32;
                 break;
@@ -13253,7 +13253,7 @@
                 _.disabled = false;
                 C.disabled = false;
                 C.textContent = "登录";
-                b.disabled = false;
+                y.disabled = false;
 
                case 32:
                case "end":
@@ -13274,13 +13274,13 @@
       "value": function showCommentInputModal(r, o, a) {
         var l = this;
         var u = createModal('\n            <div class="tm-custom-modal-title">发表评论</div>\n            <textarea class="tm-comment-input-textarea" placeholder="写下你的精彩评论..." maxlength="1000"></textarea>\n            <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%;">\n                <button class="tm-custom-modal-cancel-btn">取消</button>\n                <button class="tm-custom-modal-submit-btn">提交</button>\n            </div>\n        '), p = u.modal, v = u.close;
-        var y = p.querySelector(".tm-comment-input-textarea");
-        y.focus();
-        var b = p.querySelector(".tm-custom-modal-cancel-btn");
-        b.addEventListener("click", v);
+        var b = p.querySelector(".tm-comment-input-textarea");
+        b.focus();
+        var y = p.querySelector(".tm-custom-modal-cancel-btn");
+        y.addEventListener("click", v);
         var C = p.querySelector(".tm-custom-modal-submit-btn");
         C.addEventListener("click", (function() {
-          var u = y.value.trim();
+          var u = b.value.trim();
           if (!u) {
             Toast("评论内容不能为空", 2e3, "warning");
             return;
@@ -13289,10 +13289,10 @@
             Toast("评论内容太少，至少输入3个字", 2e3, "warning");
             return;
           }
-          y.disabled = true;
+          b.disabled = true;
           C.disabled = true;
           C.textContent = "提交中...";
-          b.disabled = true;
+          y.disabled = true;
           var p = window.loginManager && window.loginManager.providers.find((function(r) {
             return r.domains.some((function(r) {
               return a.includes(r);
@@ -13333,18 +13333,18 @@
                       }
                     }));
                     var v = r.querySelector("textarea");
-                    var y = v ? v.name : "comment";
-                    p.append(y, u);
-                    var b = r.getAttribute("action") || "";
-                    if (b.startsWith("/")) {
-                      b = "".concat(a).concat(b);
-                    } else if (!b.startsWith("http")) {
-                      b = o;
+                    var b = v ? v.name : "comment";
+                    p.append(b, u);
+                    var y = r.getAttribute("action") || "";
+                    if (y.startsWith("/")) {
+                      y = "".concat(a).concat(y);
+                    } else if (!y.startsWith("http")) {
+                      y = o;
                     }
-                    U.log("[CommentPanel] 正在向 Jable 提交评论: ".concat(b));
+                    U.log("[CommentPanel] 正在向 Jable 提交评论: ".concat(y));
                     GM_xmlhttpRequest({
                       "method": "POST",
-                      "url": b,
+                      "url": y,
                       "headers": {
                         "Content-Type": "application/x-www-form-urlencoded",
                         "referer": o,
@@ -13389,10 +13389,10 @@
                       return l.handleRetry();
                     }), 500);
                   } else {
-                    y.disabled = false;
+                    b.disabled = false;
                     C.disabled = false;
                     C.textContent = "提交";
-                    b.disabled = false;
+                    y.disabled = false;
                   }
                   _.next = 21;
                   break;
@@ -13401,10 +13401,10 @@
                   _.prev = 14;
                   _.t0 = _["catch"](0);
                   U.error("[CommentPanel] 发表评论失败:", _.t0);
-                  y.disabled = false;
+                  b.disabled = false;
                   C.disabled = false;
                   C.textContent = "提交";
-                  b.disabled = false;
+                  y.disabled = false;
 
                  case 21:
                  case "end":
@@ -13414,7 +13414,7 @@
             }), _callee0, null, [ [ 0, 14 ] ]);
           })))();
         }));
-        y.addEventListener("keydown", (function(r) {
+        b.addEventListener("keydown", (function(r) {
           if (r.key === "Enter" && !r.shiftKey) {
             r.preventDefault();
             C.click();
@@ -13535,13 +13535,13 @@
           return "";
         }
         var p = (o = this.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState;
-        var y = (p === null || p === void 0 || (a = p.settings) === null || a === void 0 ? void 0 : a.enabledCommentSources) || {
+        var b = (p === null || p === void 0 || (a = p.settings) === null || a === void 0 ? void 0 : a.enabledCommentSources) || {
           "jable": true,
           "javdb": true,
           "javlibrary": false
         };
-        var b = r === "javlib" ? y.javlib !== false && y.javlibrary !== false : y[r] !== false;
-        if (!b) {
+        var y = r === "javlib" ? b.javlib !== false && b.javlibrary !== false : b[r] !== false;
+        if (!y) {
           return "";
         }
         var C = "";
@@ -13739,9 +13739,9 @@
               r.startSignalListener();
             }));
           }));
-          var y = this.commentsList.querySelector(".tm-comments-verify-retry-btn, .tm-comment-retry-btn");
-          if (y) {
-            y.addEventListener("click", (function(o) {
+          var b = this.commentsList.querySelector(".tm-comments-verify-retry-btn, .tm-comment-retry-btn");
+          if (b) {
+            b.addEventListener("click", (function(o) {
               o.stopPropagation();
               U.log("用户手动点击 JAVLibrary 重试，清除历史验证状态并重载...");
               r.javlibAutoVerifyAttempted = false;
@@ -13750,9 +13750,9 @@
               r.handleRetry("javlib");
             }));
           }
-          var b = this.commentsList.querySelector(".tm-jable-verify-retry-btn");
-          if (b) {
-            b.addEventListener("click", (function(o) {
+          var y = this.commentsList.querySelector(".tm-jable-verify-retry-btn");
+          if (y) {
+            y.addEventListener("click", (function(o) {
               o.stopPropagation();
               U.log("用户手动点击 Jable.tv 重试，清除历史验证状态并重载...");
               r.jableStatus = "loading";
@@ -14024,11 +14024,11 @@
           l.replaceWith(v);
           this.bindLoginBadgeEvents(v);
         } else {
-          var y = document.createElement("div");
-          y.innerHTML = u;
-          var b = y.firstElementChild;
-          a.insertBefore(b, a.firstChild);
-          this.bindLoginBadgeEvents(b);
+          var b = document.createElement("div");
+          b.innerHTML = u;
+          var y = b.firstElementChild;
+          a.insertBefore(y, a.firstChild);
+          this.bindLoginBadgeEvents(y);
         }
       }
     }, {
@@ -14245,14 +14245,14 @@
               v = GM_getValue("mp_jable_working_domain", "");
             } catch (r) {}
           }
-          var y = 0;
+          var b = 0;
           if (v) {
-            var b = ne.indexOf(v);
-            if (b !== -1) {
-              y = b;
+            var y = ne.indexOf(v);
+            if (y !== -1) {
+              b = y;
             }
           }
-          CommentPanel.preloadCache.jableCommentsPromise = fetchJableComments(r, 1, y).then((function(r) {
+          CommentPanel.preloadCache.jableCommentsPromise = fetchJableComments(r, 1, b).then((function(r) {
             U.log("[CommentPanel] 预加载 Jable 评论成功，共 ".concat(r.comments.length, " 条 (域名: ").concat(r.domain || "default", ")"));
             return r;
           }))["catch"]((function(o) {
@@ -14417,8 +14417,8 @@
         }
         this.volumeSlider = a;
         var v = false;
-        var y = false;
-        var b = null;
+        var b = false;
+        var y = null;
         var C = function updateVolume(r) {
           if (!o.supportsVolumeControl) {
             return;
@@ -14435,11 +14435,11 @@
           if (!o.supportsVolumeControl) {
             return;
           }
-          if (b) {
-            clearTimeout(b);
+          if (y) {
+            clearTimeout(y);
           }
           a.classList.add("expanded");
-          y = true;
+          b = true;
         };
         var _ = function collapseSlider() {
           if (!o.supportsVolumeControl) {
@@ -14447,14 +14447,14 @@
           }
           if (!v) {
             a.classList.remove("expanded");
-            y = false;
+            b = false;
           }
         };
         l.addEventListener("click", (function(r) {
           r.stopPropagation();
-          if (o.supportsVolumeControl && !y) {
+          if (o.supportsVolumeControl && !b) {
             k();
-            b = setTimeout(_, 3e3);
+            y = setTimeout(_, 3e3);
           } else {
             if (o.targetVideo.volume === 0 || o.targetVideo.muted) {
               o.targetVideo.muted = false;
@@ -14696,19 +14696,19 @@
         o.appendChild(a);
         o.appendChild(l);
         var v = this.playerCore.options ? this.playerCore.options.playerState : null;
-        var y = v && v.settings && Array.isArray(v.settings.enabledSeekSteps) ? v.settings.enabledSeekSteps : [ "5s", "10s", "30s", "1m", "5m", "10m" ];
-        var b = function parseStepToSeconds(r) {
+        var b = v && v.settings && Array.isArray(v.settings.enabledSeekSteps) ? v.settings.enabledSeekSteps : [ "5s", "10s", "30s", "1m", "5m", "10m" ];
+        var y = function parseStepToSeconds(r) {
           var o = parseInt(r, 10) || 0;
           if (r.toLowerCase().endsWith("m")) {
             return o * 60;
           }
           return o;
         };
-        var C = SeekController_toConsumableArray(y).sort((function(r, o) {
-          return b(r) - b(o);
+        var C = SeekController_toConsumableArray(b).sort((function(r, o) {
+          return y(r) - y(o);
         }));
         C.forEach((function(o) {
-          var a = b(o);
+          var a = y(o);
           if (a > 0) {
             r.addTimeControlButton(u, "-".concat(o), (function() {
               return r.seekRelative(-a);
@@ -14716,7 +14716,7 @@
           }
         }));
         C.forEach((function(o) {
-          var a = b(o);
+          var a = y(o);
           if (a > 0) {
             r.addTimeControlButton(p, "+".concat(o), (function() {
               return r.seekRelative(a);
@@ -14756,12 +14756,12 @@
         p.className = "tm-time-control-button";
         p.style.setProperty("--btn-opacity", u);
         var v = o.includes("-");
-        var y = o.includes("+");
-        var b = o.replace(/[+-]/g, "");
+        var b = o.includes("+");
+        var y = o.replace(/[+-]/g, "");
         if (v) {
-          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(L, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
-        } else if (y) {
-          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(M, "</div>");
+          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(L, '<span class="tm-time-text-margin-left">').concat(y, "</span></div>");
+        } else if (b) {
+          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(y, "</span>").concat(M, "</div>");
         } else {
           p.textContent = o;
         }
@@ -15223,24 +15223,24 @@
         v.style.gap = "6px";
         v.style.flex = "1";
         this.volumeController.createVolumeSlider(v);
-        var y = document.createElement("div");
-        y.className = "tm-center-controls";
-        y.style.display = "flex";
-        y.style.alignItems = "center";
-        y.style.justifyContent = "center";
-        y.style.flex = "1";
-        this.playbackController.createPlayPauseButton(y);
         var b = document.createElement("div");
-        b.className = "tm-right-controls";
+        b.className = "tm-center-controls";
         b.style.display = "flex";
         b.style.alignItems = "center";
-        b.style.justifyContent = "flex-end";
+        b.style.justifyContent = "center";
         b.style.flex = "1";
-        b.style.gap = "6px";
-        this.playbackController.createPlaybackRateSlider(b);
+        this.playbackController.createPlayPauseButton(b);
+        var y = document.createElement("div");
+        y.className = "tm-right-controls";
+        y.style.display = "flex";
+        y.style.alignItems = "center";
+        y.style.justifyContent = "flex-end";
+        y.style.flex = "1";
+        y.style.gap = "6px";
+        this.playbackController.createPlaybackRateSlider(y);
         p.appendChild(v);
-        p.appendChild(y);
         p.appendChild(b);
+        p.appendChild(y);
         this.controlButtonsContainer.appendChild(p);
         var C = function dimCommentsOnControlInteract() {
           if (r.commentPanel && r.commentPanel.commentsPanel) {
@@ -15531,18 +15531,18 @@
         var u = a - this.ctrlStartX;
         var p = l - this.ctrlStartY;
         var v = this.ctrlStartLeft + u;
-        var y = this.ctrlStartTop + p;
-        var b = this.controlButtonsContainer.getBoundingClientRect();
+        var b = this.ctrlStartTop + p;
+        var y = this.controlButtonsContainer.getBoundingClientRect();
         var C = 16;
         var k = 44;
         var _ = C;
-        var E = window.innerWidth - b.width - C;
+        var E = window.innerWidth - y.width - C;
         var S = k + C;
-        var P = window.innerHeight - b.height - C;
+        var P = window.innerHeight - y.height - C;
         v = Math.max(_ - 10, Math.min(v, E + 10));
-        y = Math.max(S - 10, Math.min(y, P + 10));
+        b = Math.max(S - 10, Math.min(b, P + 10));
         this.controlButtonsContainer.style.left = v + "px";
-        this.controlButtonsContainer.style.top = y + "px";
+        this.controlButtonsContainer.style.top = b + "px";
         this.controlButtonsContainer.style.bottom = "auto";
         this.controlButtonsContainer.style.right = "auto";
         this.controlButtonsContainer.style.transform = "none";
@@ -15571,43 +15571,43 @@
         var u = l.width;
         var p = l.height;
         var v = window.innerWidth;
-        var y = window.innerHeight;
-        var b = 16;
+        var b = window.innerHeight;
+        var y = 16;
         var C = 44;
         var k = l.left;
         var _ = l.top;
         var E = [ {
           "name": "TL",
-          "x": b,
-          "y": C + b
+          "x": y,
+          "y": C + y
         }, {
           "name": "TC",
           "x": (v - u) / 2,
-          "y": C + b
+          "y": C + y
         }, {
           "name": "TR",
-          "x": v - u - b,
-          "y": C + b
+          "x": v - u - y,
+          "y": C + y
         }, {
           "name": "LC",
-          "x": b,
-          "y": (y - p) / 2
+          "x": y,
+          "y": (b - p) / 2
         }, {
           "name": "RC",
-          "x": v - u - b,
-          "y": (y - p) / 2
+          "x": v - u - y,
+          "y": (b - p) / 2
         }, {
           "name": "BL",
-          "x": b,
-          "y": y - p - b
+          "x": y,
+          "y": b - p - y
         }, {
           "name": "BC",
           "x": (v - u) / 2,
-          "y": y - p - b
+          "y": b - p - y
         }, {
           "name": "BR",
-          "x": v - u - b,
-          "y": y - p - b
+          "x": v - u - y,
+          "y": b - p - y
         } ];
         var S = E[0];
         var P = Math.hypot(k - S.x, _ - S.y);
@@ -15625,10 +15625,10 @@
           _ = S.y;
           A = true;
         } else {
-          var T = b;
-          var j = v - u - b;
-          var B = C + b;
-          var I = y - p - b;
+          var T = y;
+          var j = v - u - y;
+          var B = C + y;
+          var I = b - p - y;
           k = Math.max(T, Math.min(k, j));
           _ = Math.max(B, Math.min(_, I));
         }
@@ -15691,9 +15691,9 @@
             var u = a.top;
             var p = a.anchorName;
             var v = a.didSnap;
-            var y = this.controlButtonsContainer.getBoundingClientRect();
-            var b = y.width || 348;
-            var C = y.height || 180;
+            var b = this.controlButtonsContainer.getBoundingClientRect();
+            var y = b.width || 348;
+            var C = b.height || 180;
             var k = window.innerWidth;
             var _ = window.innerHeight;
             var E = 16;
@@ -15705,11 +15705,11 @@
                   "y": S + E
                 },
                 "TC": {
-                  "x": (k - b) / 2,
+                  "x": (k - y) / 2,
                   "y": S + E
                 },
                 "TR": {
-                  "x": k - b - E,
+                  "x": k - y - E,
                   "y": S + E
                 },
                 "LC": {
@@ -15717,7 +15717,7 @@
                   "y": (_ - C) / 2
                 },
                 "RC": {
-                  "x": k - b - E,
+                  "x": k - y - E,
                   "y": (_ - C) / 2
                 },
                 "BL": {
@@ -15725,11 +15725,11 @@
                   "y": _ - C - E
                 },
                 "BC": {
-                  "x": (k - b) / 2,
+                  "x": (k - y) / 2,
                   "y": _ - C - E
                 },
                 "BR": {
-                  "x": k - b - E,
+                  "x": k - y - E,
                   "y": _ - C - E
                 }
               };
@@ -15739,7 +15739,7 @@
               }
             }
             var D = E;
-            var L = k - b - E;
+            var L = k - y - E;
             var M = S + E;
             var A = _ - C - E;
             var T = Math.max(D, Math.min(l, L));
@@ -15768,9 +15768,9 @@
         var u = l.classList.contains("tm-sidebar-hidden");
         var p = this.playerCore.options.playerState ? this.playerCore.options.playerState.settings.sidebarPosition : "right";
         var v = p === "right" && (r === "TR" || r === "BR");
-        var y = p === "left" && (r === "TL" || r === "BL");
-        var b = a && o && (v || y) && !u;
-        if (b) {
+        var b = p === "left" && (r === "TL" || r === "BL");
+        var y = a && o && (v || b) && !u;
+        if (y) {
           var C = this.controlButtonsContainer.getBoundingClientRect();
           var k = C.height || 180;
           l.style.setProperty("--docked-controls-height", k + "px");
@@ -15838,21 +15838,21 @@
   function LoopManager_iterableToArrayLimit(r, o) {
     var a = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
     if (null != a) {
-      var l, u, p, v, y = [], b = !0, C = !1;
+      var l, u, p, v, b = [], y = !0, C = !1;
       try {
         if (p = (a = a.call(r)).next, 0 === o) {
           if (Object(a) !== a) {
             return;
           }
-          b = !1;
+          y = !1;
         } else {
-          for (;!(b = (l = p.call(a)).done) && (y.push(l.value), y.length !== o); b = !0) {}
+          for (;!(y = (l = p.call(a)).done) && (b.push(l.value), b.length !== o); y = !0) {}
         }
       } catch (r) {
         C = !0, u = r;
       } finally {
         try {
-          if (!b && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
+          if (!y && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
             return;
           }
         } finally {
@@ -15861,7 +15861,7 @@
           }
         }
       }
-      return y;
+      return b;
     }
   }
   function LoopManager_arrayWithHoles(r) {
@@ -16089,7 +16089,7 @@
         }));
         var p = 0;
         var v = 0;
-        var y = function startLongPress(a) {
+        var b = function startLongPress(a) {
           o._longPressTriggered = false;
           var l = a.touches ? a.touches[0] : a;
           p = l.clientX;
@@ -16102,7 +16102,7 @@
             }
           }), 500);
         };
-        var b = function cancelLongPress() {
+        var y = function cancelLongPress() {
           if (o._longPressTimer) {
             clearTimeout(o._longPressTimer);
             o._longPressTimer = null;
@@ -16113,21 +16113,60 @@
           var a = o.clientX - p;
           var l = o.clientY - v;
           if (Math.hypot(a, l) > 8) {
-            b();
+            y();
           }
         };
-        u.addEventListener("mousedown", y);
-        u.addEventListener("touchstart", y, {
+        u.addEventListener("mousedown", b);
+        u.addEventListener("touchstart", b, {
           "passive": true
         });
         u.addEventListener("mousemove", C);
         u.addEventListener("touchmove", C, {
           "passive": true
         });
-        u.addEventListener("mouseup", b);
-        u.addEventListener("mouseleave", b);
-        u.addEventListener("touchend", b);
-        u.addEventListener("touchcancel", b);
+        u.addEventListener("mouseup", y);
+        u.addEventListener("mouseleave", y);
+        u.addEventListener("touchend", y);
+        u.addEventListener("touchcancel", y);
+        return u;
+      }
+    }, {
+      "key": "_createABTimeContainer",
+      "value": function _createABTimeContainer(r, o, a, l) {
+        var u = document.createElement("span");
+        u.style.display = "flex";
+        u.style.alignItems = "center";
+        u.style.gap = "3px";
+        u.style.padding = "2px 5px";
+        u.style.borderRadius = "4px";
+        u.style.backgroundColor = "rgba(0, 0, 0, 0.25)";
+        u.style.fontSize = "11px";
+        if (a) {
+          u.style.opacity = "0.4";
+          u.style.cursor = "not-allowed";
+          u.style.pointerEvents = "none";
+        } else {
+          u.style.opacity = "1";
+          u.style.cursor = "pointer";
+          u.style.pointerEvents = "auto";
+        }
+        var p = document.createElement("span");
+        p.className = "tm-draft-label ".concat(r.toLowerCase());
+        p.style.color = "white";
+        p.style.fontWeight = "600";
+        p.textContent = r;
+        var v = document.createElement("span");
+        v.className = "tm-draft-time".concat(o === null ? " placeholder" : "");
+        v.style.color = o !== null ? "#fff" : "rgba(255,255,255,0.3)";
+        v.textContent = o !== null ? formatTimeWithHours(o) : "--:--:--";
+        u.appendChild(p);
+        u.appendChild(v);
+        u.addEventListener("click", (function(r) {
+          r.stopPropagation();
+          if (l) {
+            l();
+          }
+        }));
         return u;
       }
     }, {
@@ -16157,28 +16196,7 @@
             }
           }));
         }
-        var u = document.createElement("span");
-        u.style.cursor = "pointer";
-        u.style.display = "flex";
-        u.style.alignItems = "center";
-        u.style.gap = "3px";
-        u.style.padding = "2px 5px";
-        u.style.borderRadius = "4px";
-        u.style.backgroundColor = "rgba(0, 0, 0, 0.25)";
-        u.style.fontSize = "11px";
-        var p = document.createElement("span");
-        p.className = "tm-draft-label a";
-        p.style.color = "white";
-        p.style.fontWeight = "600";
-        p.textContent = "A";
-        var v = document.createElement("span");
-        v.className = "tm-draft-time".concat(this.draftTab.startTime === null ? " placeholder" : "");
-        v.style.color = this.draftTab.startTime !== null ? "#fff" : "rgba(255,255,255,0.3)";
-        v.textContent = this.draftTab.startTime !== null ? formatTimeWithHours(this.draftTab.startTime) : "--:--:--";
-        u.appendChild(p);
-        u.appendChild(v);
-        u.addEventListener("click", (function(o) {
-          o.stopPropagation();
+        var u = this._createABTimeContainer("A", this.draftTab.startTime, false, (function() {
           if (!r.targetVideo) {
             return;
           }
@@ -16188,40 +16206,7 @@
             window.navigator.vibrate(10);
           }
         }));
-        l.appendChild(u);
-        var y = document.createElement("span");
-        y.style.display = "flex";
-        y.style.alignItems = "center";
-        y.style.gap = "3px";
-        y.style.padding = "2px 5px";
-        y.style.borderRadius = "4px";
-        y.style.backgroundColor = "rgba(0, 0, 0, 0.25)";
-        y.style.fontSize = "11px";
-        if (this.draftTab.startTime === null) {
-          y.style.opacity = "0.4";
-          y.style.cursor = "not-allowed";
-          y.style.pointerEvents = "none";
-        } else {
-          y.style.opacity = "1";
-          y.style.cursor = "pointer";
-          y.style.pointerEvents = "auto";
-        }
-        var b = document.createElement("span");
-        b.className = "tm-draft-label b";
-        b.style.color = "white";
-        b.style.fontWeight = "600";
-        b.textContent = "B";
-        var C = document.createElement("span");
-        C.className = "tm-draft-time".concat(this.draftTab.endTime === null ? " placeholder" : "");
-        C.style.color = this.draftTab.endTime !== null ? "#fff" : "rgba(255,255,255,0.3)";
-        C.textContent = this.draftTab.endTime !== null ? formatTimeWithHours(this.draftTab.endTime) : "--:--:--";
-        y.appendChild(b);
-        y.appendChild(C);
-        y.addEventListener("click", (function(o) {
-          o.stopPropagation();
-          if (r.draftTab.startTime === null) {
-            return;
-          }
+        var p = this._createABTimeContainer("B", this.draftTab.endTime, this.draftTab.startTime === null, (function() {
           if (!r.targetVideo) {
             return;
           }
@@ -16231,14 +16216,15 @@
             window.navigator.vibrate(10);
           }
         }));
-        l.appendChild(y);
-        var k = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-        var _ = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-        var E = document.createElement("button");
-        E.className = "tm-draft-action save";
-        E.innerHTML = k;
-        E.title = "保存标签";
-        E.addEventListener("click", (function(o) {
+        l.appendChild(u);
+        l.appendChild(p);
+        var v = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        var b = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        var y = document.createElement("button");
+        y.className = "tm-draft-action save";
+        y.innerHTML = v;
+        y.title = "保存标签";
+        y.addEventListener("click", (function(o) {
           o.stopPropagation();
           if (r.draftTab.startTime === null && r.draftTab.endTime === null) {
             Toast("请至少设置一个时间点", 2e3, "error");
@@ -16259,17 +16245,17 @@
           }
           r._showCommentDialog();
         }));
-        l.appendChild(E);
-        var S = document.createElement("button");
-        S.className = "tm-draft-action cancel";
-        S.innerHTML = _;
-        S.title = "取消草稿";
-        S.addEventListener("click", (function(o) {
+        l.appendChild(y);
+        var C = document.createElement("button");
+        C.className = "tm-draft-action cancel";
+        C.innerHTML = b;
+        C.title = "取消草稿";
+        C.addEventListener("click", (function(o) {
           o.stopPropagation();
           r._resetDraftTab();
           r.renderTabs();
         }));
-        l.appendChild(S);
+        l.appendChild(C);
         return l;
       }
     }, {
@@ -16286,28 +16272,7 @@
         u.style.setProperty("--tab-color", l);
         u.style.gap = "5px";
         var p = this.editingTabCopy;
-        var v = document.createElement("span");
-        v.style.cursor = "pointer";
-        v.style.display = "flex";
-        v.style.alignItems = "center";
-        v.style.gap = "3px";
-        v.style.padding = "2px 5px";
-        v.style.borderRadius = "4px";
-        v.style.backgroundColor = "rgba(0, 0, 0, 0.25)";
-        v.style.fontSize = "11px";
-        var y = document.createElement("span");
-        y.className = "tm-draft-label a";
-        y.style.color = "white";
-        y.style.fontWeight = "600";
-        y.textContent = "A";
-        var b = document.createElement("span");
-        b.className = "tm-draft-time".concat(p.startTime === null ? " placeholder" : "");
-        b.style.color = p.startTime !== null ? "#fff" : "rgba(255,255,255,0.3)";
-        b.textContent = p.startTime !== null ? formatTimeWithHours(p.startTime) : "--:--:--";
-        v.appendChild(y);
-        v.appendChild(b);
-        v.addEventListener("click", (function(r) {
-          r.stopPropagation();
+        var v = this._createABTimeContainer("A", p.startTime, false, (function() {
           if (!o.targetVideo) {
             return;
           }
@@ -16317,41 +16282,8 @@
             window.navigator.vibrate(10);
           }
         }));
-        u.appendChild(v);
-        var C = document.createElement("span");
-        C.style.display = "flex";
-        C.style.alignItems = "center";
-        C.style.gap = "3px";
-        C.style.padding = "2px 5px";
-        C.style.borderRadius = "4px";
-        C.style.backgroundColor = "rgba(0, 0, 0, 0.25)";
-        C.style.fontSize = "11px";
-        if (p.startTime === null) {
-          C.style.opacity = "0.4";
-          C.style.cursor = "not-allowed";
-          C.style.pointerEvents = "none";
-        } else {
-          C.style.opacity = "1";
-          C.style.cursor = "pointer";
-          C.style.pointerEvents = "auto";
-        }
-        var k = document.createElement("span");
-        k.className = "tm-draft-label b";
-        k.style.color = "white";
-        k.style.fontWeight = "600";
-        k.textContent = "B";
-        var _ = document.createElement("span");
-        _.className = "tm-draft-time".concat(p.endTime === null ? " placeholder" : "");
-        _.style.color = p.endTime !== null ? "#fff" : "rgba(255,255,255,0.3)";
-        _.textContent = p.endTime !== null ? formatTimeWithHours(p.endTime) : "--:--:--";
-        C.appendChild(k);
-        C.appendChild(_);
-        C.addEventListener("click", (function(r) {
-          r.stopPropagation();
-          if (p.startTime === null) {
-            return;
-          }
-          if (!o.targetVideo) {
+        var b = this._createABTimeContainer("B", p.endTime, p.startTime === null, (function() {
+          if (!o.targetVideo || p.startTime === null) {
             return;
           }
           p.endTime = o.targetVideo.currentTime;
@@ -16360,24 +16292,25 @@
             window.navigator.vibrate(10);
           }
         }));
-        u.appendChild(C);
-        var E = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-        var S = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-        var P = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-        var D = document.createElement("button");
-        D.className = "tm-draft-action edit-comment";
-        D.innerHTML = E;
-        D.title = "编辑备注";
-        D.addEventListener("click", (function(r) {
+        u.appendChild(v);
+        u.appendChild(b);
+        var y = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+        var C = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        var k = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        var _ = document.createElement("button");
+        _.className = "tm-draft-action edit-comment";
+        _.innerHTML = y;
+        _.title = "编辑备注";
+        _.addEventListener("click", (function(r) {
           r.stopPropagation();
           o._showCommentDialog(p);
         }));
-        u.appendChild(D);
-        var L = document.createElement("button");
-        L.className = "tm-draft-action save";
-        L.innerHTML = S;
-        L.title = "保存修改";
-        L.addEventListener("click", (function(a) {
+        u.appendChild(_);
+        var E = document.createElement("button");
+        E.className = "tm-draft-action save";
+        E.innerHTML = C;
+        E.title = "保存修改";
+        E.addEventListener("click", (function(a) {
           a.stopPropagation();
           if (p.startTime === null && p.endTime === null) {
             Toast("请至少设置一个时间点", 2e3, "error");
@@ -16405,12 +16338,12 @@
           }
           o._exitEditMode();
         }));
-        u.appendChild(L);
-        var M = document.createElement("button");
-        M.className = "tm-draft-action cancel";
-        M.innerHTML = P;
-        M.title = "删除标签";
-        M.addEventListener("click", (function(a) {
+        u.appendChild(E);
+        var S = document.createElement("button");
+        S.className = "tm-draft-action cancel";
+        S.innerHTML = k;
+        S.title = "删除标签";
+        S.addEventListener("click", (function(a) {
           a.stopPropagation();
           o.tabs = o.tabs.filter((function(o) {
             return o.id !== r.id;
@@ -16422,7 +16355,7 @@
           o._saveTabs();
           o._exitEditMode();
         }));
-        u.appendChild(M);
+        u.appendChild(S);
         return u;
       }
     }, {
@@ -16529,16 +16462,16 @@
         if (!v) {
           return;
         }
-        var y = v.querySelector(".tm-inline-remark-popover");
-        if (y) {
-          y.remove();
+        var b = v.querySelector(".tm-inline-remark-popover");
+        if (b) {
+          b.remove();
         }
-        var b = document.createElement("div");
-        b.className = "tm-inline-remark-popover";
-        b.innerHTML = '\n            <div class="tm-inline-remark-body">\n                <input type="text" class="tm-inline-remark-input" placeholder="输入高光或区间备注..." value="'.concat(p.comment || "", '" />\n                <div class="tm-inline-remark-footer">\n                    <button type="button" class="tm-inline-remark-btn cancel">SKIP</button>\n                    <button type="button" class="tm-inline-remark-btn submit">SAVE</button>\n                </div>\n            </div>\n        ');
-        var C = b.querySelector(".tm-inline-remark-input");
-        var k = b.querySelector(".tm-inline-remark-btn.cancel");
-        var _ = b.querySelector(".tm-inline-remark-btn.submit");
+        var y = document.createElement("div");
+        y.className = "tm-inline-remark-popover";
+        y.innerHTML = '\n            <div class="tm-inline-remark-body">\n                <input type="text" class="tm-inline-remark-input" placeholder="输入高光或区间备注..." value="'.concat(p.comment || "", '" />\n                <div class="tm-inline-remark-footer">\n                    <button type="button" class="tm-inline-remark-btn cancel">SKIP</button>\n                    <button type="button" class="tm-inline-remark-btn submit">SAVE</button>\n                </div>\n            </div>\n        ');
+        var C = y.querySelector(".tm-inline-remark-input");
+        var k = y.querySelector(".tm-inline-remark-btn.cancel");
+        var _ = y.querySelector(".tm-inline-remark-btn.submit");
         var E = function stopProp(r) {
           return r.stopPropagation();
         };
@@ -16547,19 +16480,19 @@
         C.addEventListener("keypress", E);
         C.addEventListener("mousedown", E);
         C.addEventListener("touchstart", E);
-        b.addEventListener("click", (function(r) {
+        y.addEventListener("click", (function(r) {
           return r.stopPropagation();
         }));
-        v.appendChild(b);
+        v.appendChild(y);
         requestAnimationFrame((function() {
-          b.classList.add("visible");
+          y.classList.add("visible");
           C.focus();
           C.select();
         }));
         var S = function close() {
-          b.classList.remove("visible");
-          b.addEventListener("transitionend", (function() {
-            return b.remove();
+          y.classList.remove("visible");
+          y.addEventListener("transitionend", (function() {
+            return y.remove();
           }), {
             "once": true
           });
@@ -16792,13 +16725,13 @@
             })).filter(Boolean);
             o.push.apply(o, LoopManager_toConsumableArray(v));
           }
-          var y = u.get("start");
-          var b = u.get("end");
-          if (y) {
-            if (b) {
-              o.push("".concat(y, "-").concat(b));
+          var b = u.get("start");
+          var y = u.get("end");
+          if (b) {
+            if (y) {
+              o.push("".concat(b, "-").concat(y));
             } else {
-              o.push(y);
+              o.push(b);
             }
           }
         }
@@ -16836,18 +16769,18 @@
           o.forEach((function(o) {
             if (o.includes("-")) {
               var l = o.split("-"), u = LoopManager_slicedToArray(l, 2), p = u[0], v = u[1];
-              var y = r._parseTimeString(p);
-              var b = r._parseTimeString(v);
-              if (y !== null && b !== null) {
+              var b = r._parseTimeString(p);
+              var y = r._parseTimeString(v);
+              if (b !== null && y !== null) {
                 var C = r.tabs.find((function(r) {
-                  return r.type === "interval" && Math.abs(r.startTime - y) < 1 && Math.abs(r.endTime - b) < 1;
+                  return r.type === "interval" && Math.abs(r.startTime - b) < 1 && Math.abs(r.endTime - y) < 1;
                 }));
                 if (!C) {
                   C = {
                     "id": r._generateId(),
                     "type": "interval",
-                    "startTime": y,
-                    "endTime": b,
+                    "startTime": b,
+                    "endTime": y,
                     "comment": "From URL"
                   };
                   r.tabs.push(C);
@@ -16953,8 +16886,8 @@
           p = false;
           var a = r.changedTouches[0];
           var v = a.clientY - l;
-          var y = Math.abs(a.clientX - u);
-          if (v < -40 && Math.abs(v) > y) {
+          var b = Math.abs(a.clientX - u);
+          if (v < -40 && Math.abs(v) > b) {
             r.stopPropagation();
             o._openBottomSheet();
           }
@@ -16981,12 +16914,12 @@
         var p = document.querySelector(".tm-handle-container");
         if (l && u) {
           var v = l.getBoundingClientRect();
-          var y = u.getBoundingClientRect();
-          var b = Math.max(0, v.bottom - y.bottom);
-          this._sheetPanel.style.bottom = "".concat(b, "px");
+          var b = u.getBoundingClientRect();
+          var y = Math.max(0, v.bottom - b.bottom);
+          this._sheetPanel.style.bottom = "".concat(y, "px");
           if (p) {
             var C = p.getBoundingClientRect();
-            var k = y.bottom - C.bottom - 10;
+            var k = b.bottom - C.bottom - 10;
             if (k > 80) {
               this._sheetPanel.style.maxHeight = "".concat(k, "px");
               return;
@@ -17065,21 +16998,21 @@
         this._sheetCountBadge = v;
         u.appendChild(p);
         u.appendChild(v);
-        var y = document.createElement("button");
-        y.className = "tm-sheet-close-btn";
-        y.innerHTML = "✕";
-        y.title = "关闭";
-        y.addEventListener("click", (function() {
+        var b = document.createElement("button");
+        b.className = "tm-sheet-close-btn";
+        b.innerHTML = "✕";
+        b.title = "关闭";
+        b.addEventListener("click", (function() {
           return o._closeBottomSheet();
         }));
         l.appendChild(u);
-        l.appendChild(y);
+        l.appendChild(b);
         this._sheetList = document.createElement("div");
         this._sheetList.className = "tm-bottom-sheet-list";
         this._sheetPanel.appendChild(l);
         this._sheetPanel.appendChild(this._sheetList);
-        var b = document.querySelector(".tm-player-container") || document.body;
-        b.appendChild(this._sheetOverlay);
+        var y = document.querySelector(".tm-player-container") || document.body;
+        y.appendChild(this._sheetOverlay);
         a.appendChild(this._sheetPanel);
       }
     }, {
@@ -17120,14 +17053,14 @@
             }));
             p.appendChild(v);
           } else {
-            var y = document.createElement("div");
-            y.className = "tm-sheet-time-pill interval";
-            y.style.setProperty("--tab-color", l);
-            var b = document.createElement("span");
-            b.className = "tm-time-part start";
-            b.textContent = formatTimeWithHours(o.startTime);
-            b.title = "跳转到起点并开始循环";
-            b.addEventListener("click", (function(a) {
+            var b = document.createElement("div");
+            b.className = "tm-sheet-time-pill interval";
+            b.style.setProperty("--tab-color", l);
+            var y = document.createElement("span");
+            y.className = "tm-time-part start";
+            y.textContent = formatTimeWithHours(o.startTime);
+            y.title = "跳转到起点并开始循环";
+            y.addEventListener("click", (function(a) {
               a.stopPropagation();
               r._handleTabClick(o);
             }));
@@ -17144,13 +17077,13 @@
                 r.targetVideo.currentTime = o.endTime;
               }
             }));
-            y.appendChild(b);
-            y.appendChild(C);
-            y.appendChild(k);
-            y.addEventListener("click", (function() {
+            b.appendChild(y);
+            b.appendChild(C);
+            b.appendChild(k);
+            b.addEventListener("click", (function() {
               r._handleTabClick(o);
             }));
-            p.appendChild(y);
+            p.appendChild(b);
           }
           var _ = document.createElement("input");
           _.type = "text";
@@ -17248,16 +17181,16 @@
             }));
             r.progressMarkersContainer.appendChild(v);
           } else if (a.type === "interval") {
-            var y = a.endTime / o * 100;
-            var b = y - p;
-            if (b <= 0) {
+            var b = a.endTime / o * 100;
+            var y = b - p;
+            if (y <= 0) {
               return;
             }
             if (r.loopActive && r.activeTabId === a.id) {
               var C = document.createElement("div");
               C.className = "tm-active-loop-unplayed";
               C.style.left = "".concat(p, "%");
-              C.style.width = "".concat(b, "%");
+              C.style.width = "".concat(y, "%");
               C.style.setProperty("--tab-color", u);
               r.progressMarkersContainer.appendChild(C);
               var k = Math.max(a.startTime, Math.min(a.endTime, r.targetVideo.currentTime));
@@ -17277,14 +17210,14 @@
               r.progressMarkersContainer.appendChild(S);
               var P = document.createElement("div");
               P.className = "tm-active-loop-boundary end";
-              P.style.left = "".concat(y, "%");
+              P.style.left = "".concat(b, "%");
               P.style.setProperty("--tab-color", u);
               r.progressMarkersContainer.appendChild(P);
             } else {
               var D = document.createElement("div");
               D.className = "tm-progress-marker-range";
               D.style.left = "".concat(p, "%");
-              D.style.width = "".concat(b, "%");
+              D.style.width = "".concat(y, "%");
               D.style.setProperty("--tab-color", u);
               D.addEventListener("click", (function(o) {
                 o.stopPropagation();
@@ -17523,8 +17456,8 @@
         p = Math.max(0, Math.min(1, p));
         var v = this.targetVideo.duration;
         if (!isNaN(v)) {
-          var y = v * p;
-          this.targetVideo.currentTime = y;
+          var b = v * p;
+          this.targetVideo.currentTime = b;
           this.progressIndicator.style.width = "".concat(p * 100, "%");
           this.updateCurrentTimeDisplay();
         }
@@ -17612,13 +17545,13 @@
         var v = u.top - 20;
         this.timeIndicator.style.left = "".concat(p, "px");
         this.timeIndicator.style.top = "".concat(v, "px");
-        var y = (o - u.left) / u.width;
-        var b = Math.max(0, Math.min(1, y));
+        var b = (o - u.left) / u.width;
+        var y = Math.max(0, Math.min(1, b));
         var C = this.targetVideo.duration;
         if (isNaN(C)) {
           return;
         }
-        var k = C * b;
+        var k = C * y;
         this.timeIndicator.textContent = "".concat(formatTime(k), " / ").concat(formatTime(C));
       }
     } ]);
@@ -17738,9 +17671,9 @@
               if (o.touches && o.touches.length > 0) {
                 var p = o.touches[0].clientX;
                 var v = o.touches[0].clientY;
-                var y = Math.abs(p - r._touchStartX);
-                var b = Math.abs(v - r._touchStartY);
-                if (b > y) {
+                var b = Math.abs(p - r._touchStartX);
+                var y = Math.abs(v - r._touchStartY);
+                if (y > b) {
                   if (o.cancelable) {
                     o.preventDefault();
                   }
@@ -18131,16 +18064,16 @@
         }));
         p.appendChild(v);
         if (this.settings.showSeekControlRow) {
-          var y = this._createSeekStepsSubPanel();
-          p.appendChild(y);
+          var b = this._createSeekStepsSubPanel();
+          p.appendChild(b);
         }
-        var b = this._createToggleOption("跳转/循环栏", "showLoopControlRow", this.settings.showLoopControlRow, (function(o) {
+        var y = this._createToggleOption("跳转/循环栏", "showLoopControlRow", this.settings.showLoopControlRow, (function(o) {
           r.updateSetting("showLoopControlRow", o);
           r.updateControlRowsVisibility();
         }));
         l.appendChild(u);
         l.appendChild(p);
-        l.appendChild(b);
+        l.appendChild(y);
         o.appendChild(l);
         var C = this._createSectionHeader("评论区 :");
         var k = document.createElement("div");
@@ -18202,23 +18135,23 @@
         p.id = "tm-setting-".concat(o);
         var v = document.createElement("div");
         v.className = "tm-settings-label-wrapper";
-        var y = document.createElement("span");
-        y.className = "tm-settings-label";
-        y.textContent = r;
-        v.appendChild(y);
+        var b = document.createElement("span");
+        b.className = "tm-settings-label";
+        b.textContent = r;
+        v.appendChild(b);
         if (u) {
           v.appendChild(u);
         }
-        var b = document.createElement("div");
-        b.className = "tm-toggle-switch";
+        var y = document.createElement("div");
+        y.className = "tm-toggle-switch";
         var C = document.createElement("input");
         C.type = "checkbox";
         C.checked = a;
         C.className = "tm-toggle-input";
         var k = document.createElement("span");
         k.className = a ? "tm-toggle-slider checked" : "tm-toggle-slider";
-        b.appendChild(C);
-        b.appendChild(k);
+        y.appendChild(C);
+        y.appendChild(k);
         var _ = function toggleSwitch(r) {
           r.preventDefault();
           r.stopPropagation();
@@ -18231,7 +18164,7 @@
         };
         p.addEventListener("click", _);
         p.appendChild(v);
-        p.appendChild(b);
+        p.appendChild(y);
         return p;
       }
     }, {
@@ -18260,16 +18193,16 @@
         p.forEach((function(l) {
           var p = a.includes(l);
           var v = u.includes(l);
-          var y = document.createElement("button");
-          y.type = "button";
-          y.className = "tm-seek-step-badge".concat(v ? " enabled" : " disabled");
-          y.textContent = l;
-          var b = false;
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "tm-seek-step-badge".concat(v ? " enabled" : " disabled");
+          b.textContent = l;
+          var y = false;
           var C = null;
           var k = function startLongPress(o) {
-            b = false;
+            y = false;
             C = setTimeout((function() {
-              b = true;
+              y = true;
               if (p) {
                 Toast("默认 6 个预设步进不支持删除", 2e3, "warning");
               } else {
@@ -18283,17 +18216,17 @@
               C = null;
             }
           };
-          y.addEventListener("mousedown", k);
-          y.addEventListener("mouseup", _);
-          y.addEventListener("mouseleave", _);
-          y.addEventListener("touchstart", k, {
+          b.addEventListener("mousedown", k);
+          b.addEventListener("mouseup", _);
+          b.addEventListener("mouseleave", _);
+          b.addEventListener("touchstart", k, {
             "passive": true
           });
-          y.addEventListener("touchend", _);
-          y.addEventListener("touchcancel", _);
-          y.addEventListener("click", (function(o) {
+          b.addEventListener("touchend", _);
+          b.addEventListener("touchcancel", _);
+          b.addEventListener("click", (function(o) {
             o.stopPropagation();
-            if (b) {
+            if (y) {
               return;
             }
             var a = SettingsManager_toConsumableArray(u);
@@ -18308,7 +18241,7 @@
             r.rebuildControlPanelSeekRow();
             r.createSettingsPanel();
           }));
-          o.appendChild(y);
+          o.appendChild(b);
         }));
         var v = document.createElement("button");
         v.type = "button";
@@ -18769,9 +18702,9 @@
             this.minimap.style.height = "".concat(p, "px");
             var v = this.videoWidth * this.videoScale || this.containerWidth;
             if (v > 0 && this.minimapViewport) {
-              var y = Math.min(u, this.containerWidth / v * u);
-              this.minimapViewport.style.width = "".concat(y, "px");
-              this.minimapMaxTravel = u - y;
+              var b = Math.min(u, this.containerWidth / v * u);
+              this.minimapViewport.style.width = "".concat(b, "px");
+              this.minimapMaxTravel = u - b;
             }
           }
         }
@@ -18960,9 +18893,9 @@
         var p = r.clientY - this.startY;
         if (this.dragDirection === null) {
           var v = Math.abs(u);
-          var y = Math.abs(p);
-          if (v > 5 || y > 5) {
-            if (y > v) {
+          var b = Math.abs(p);
+          if (v > 5 || b > 5) {
+            if (b > v) {
               this.dragDirection = "vertical";
             } else {
               this.dragDirection = "horizontal";
@@ -18970,9 +18903,9 @@
           }
         }
         if (this.dragDirection === "horizontal") {
-          var b = this.uiElements && this.uiElements.videoWrapper ? this.uiElements.videoWrapper : this.video;
-          if (b && b.classList) {
-            b.classList.add("is-swiping");
+          var y = this.uiElements && this.uiElements.videoWrapper ? this.uiElements.videoWrapper : this.video;
+          if (y && y.classList) {
+            y.classList.add("is-swiping");
           }
           if (this.maxOffset > 0) {
             this.dragDistance = Math.max(this.dragDistance, Math.abs(u));
@@ -19143,12 +19076,12 @@
         var v = a - l;
         p = Math.max(0, Math.min(p, v));
         this._trackHandleVelocity(p);
-        var y = [ 0, v / 2, v ];
-        var b = 15;
+        var b = [ 0, v / 2, v ];
+        var y = 15;
         var C = false;
-        for (var k = 0, _ = y; k < _.length; k++) {
+        for (var k = 0, _ = b; k < _.length; k++) {
           var E = _[k];
-          if (Math.abs(p - E) < b) {
+          if (Math.abs(p - E) < y) {
             p = E;
             C = true;
             if (window.navigator.vibrate && (!this.lastSnapPosition || this.lastSnapPosition !== E)) {
@@ -19215,9 +19148,9 @@
         var u = this.handle.getBoundingClientRect();
         var p = r.getBoundingClientRect();
         var v = u.left - p.left;
-        var y = this.handleVelocityTracker.currentVelocity;
-        var b = .002;
-        var C = y * y / (2 * b) * Math.sign(y);
+        var b = this.handleVelocityTracker.currentVelocity;
+        var y = .002;
+        var C = b * b / (2 * y) * Math.sign(b);
         var k = v + C;
         k = Math.max(0, Math.min(k, l));
         var _ = [ 0, l / 2, l ];
@@ -19374,7 +19307,7 @@
     function CustomVideoPlayer() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       CustomVideoPlayer_classCallCheck(this, CustomVideoPlayer);
-      this.playerCore = new b(r);
+      this.playerCore = new y(r);
       this.callingButton = r.callingButton || null;
       this.managers = {};
       this.initialized = false;
@@ -19393,7 +19326,7 @@
         this._scrollbarStyle.innerHTML = "\n            html::-webkit-scrollbar, body::-webkit-scrollbar {\n                display: none !important;\n            }\n            html, body {\n                scrollbar-width: none !important;\n                -ms-overflow-style: none !important;\n                overscroll-behavior: none !important;\n                overscroll-behavior-y: none !important;\n            }\n        ";
         document.head.appendChild(this._scrollbarStyle);
         if (!this.playerCore) {
-          this.playerCore = new b({
+          this.playerCore = new y({
             "callingButton": this.callingButton
           });
         }
@@ -19437,10 +19370,10 @@
         });
         this.managers.loopManager = v;
         u.setLoopManager(v);
-        var y = new Ie(this.playerCore, a);
-        y.init();
-        this.managers.dragManager = y;
-        this.playerCore.dragManager = y;
+        var b = new Ie(this.playerCore, a);
+        b.init();
+        this.managers.dragManager = b;
+        this.playerCore.dragManager = b;
         if (this.playerCore.targetVideo && a.videoWrapper && a.handle) {
           this.swipeManager = new Ge(this.playerCore.targetVideo, a.videoWrapper, a.handle, a, (function() {
             return r.close();
@@ -19462,7 +19395,7 @@
           if (r.swipeManager) {
             r.swipeManager.updateSize();
           }
-          y.updateHandlePosition();
+          b.updateHandlePosition();
           if (v) {
             v._updateUI();
             v.updateLoopTimeDisplay();
@@ -19872,7 +19805,7 @@
       }
       throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
-    var p, v = !0, y = !1;
+    var p, v = !0, b = !1;
     return {
       "s": function s() {
         a = a.call(r);
@@ -19882,13 +19815,13 @@
         return v = r.done, r;
       },
       "e": function e(r) {
-        y = !0, p = r;
+        b = !0, p = r;
       },
       "f": function f() {
         try {
           v || null == a["return"] || a["return"]();
         } finally {
-          if (y) {
+          if (b) {
             throw p;
           }
         }
@@ -19916,7 +19849,7 @@
     LoginManager_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -19950,11 +19883,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -19973,7 +19906,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -20000,7 +19933,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -20020,20 +19953,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == LoginManager_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -20050,16 +19983,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -20095,13 +20028,13 @@
       throw new TypeError(LoginManager_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -20114,7 +20047,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -20158,19 +20091,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -20185,7 +20118,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -20193,13 +20126,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -20222,17 +20155,17 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
   function LoginManager_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function LoginManager_asyncToGenerator(r) {
     return function() {
@@ -20652,7 +20585,7 @@
     autologin_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -20686,11 +20619,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -20709,7 +20642,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -20736,7 +20669,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -20756,20 +20689,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == autologin_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -20786,16 +20719,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -20831,13 +20764,13 @@
       throw new TypeError(autologin_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -20850,7 +20783,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -20894,19 +20827,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -20921,7 +20854,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -20929,13 +20862,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -20958,17 +20891,17 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
   function autologin_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function autologin_asyncToGenerator(r) {
     return function() {
@@ -21017,18 +20950,37 @@
     })));
     return _initAutoLogin.apply(this, arguments);
   }
-  function AdBlockConfig_typeof(r) {
+  var Ye = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
+  var Ke = [ {
+    "selector": 'div[class="my-2 text-sm text-nord4 truncate"]',
+    "styles": "white-space: normal !important;"
+  }, {
+    "selector": "body",
+    "styles": "background-color: #000000 !important;"
+  }, {
+    "selector": 'div[class*="z-max"]',
+    "styles": "z-index: 9000 !important;"
+  } ];
+  var Xe = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
+  const $e = {
+    "adSelectors": Ye,
+    "customStyles": Ke,
+    "blockedUrlPatterns": Xe,
+    "isVideoSite": true,
+    "domains": getSiteDomains("MISSAV")
+  };
+  function adblock_typeof(r) {
     "@babel/helpers - typeof";
-    return AdBlockConfig_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
+    return adblock_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
       return typeof r;
     } : function(r) {
       return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
-    }, AdBlockConfig_typeof(r);
+    }, adblock_typeof(r);
   }
-  function AdBlockConfig_createForOfIteratorHelper(r, o) {
+  function adblock_createForOfIteratorHelper(r, o) {
     var a = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
     if (!a) {
-      if (Array.isArray(r) || (a = AdBlockConfig_unsupportedIterableToArray(r)) || o && r && "number" == typeof r.length) {
+      if (Array.isArray(r) || (a = adblock_unsupportedIterableToArray(r)) || o && r && "number" == typeof r.length) {
         a && (r = a);
         var l = 0, u = function F() {};
         return {
@@ -21049,7 +21001,7 @@
       }
       throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
-    var p, v = !0, y = !1;
+    var p, v = !0, b = !1;
     return {
       "s": function s() {
         a = a.call(r);
@@ -21059,81 +21011,81 @@
         return v = r.done, r;
       },
       "e": function e(r) {
-        y = !0, p = r;
+        b = !0, p = r;
       },
       "f": function f() {
         try {
           v || null == a["return"] || a["return"]();
         } finally {
-          if (y) {
+          if (b) {
             throw p;
           }
         }
       }
     };
   }
-  function AdBlockConfig_unsupportedIterableToArray(r, o) {
+  function adblock_unsupportedIterableToArray(r, o) {
     if (r) {
       if ("string" == typeof r) {
-        return AdBlockConfig_arrayLikeToArray(r, o);
+        return adblock_arrayLikeToArray(r, o);
       }
       var a = {}.toString.call(r).slice(8, -1);
-      return "Object" === a && r.constructor && (a = r.constructor.name), "Map" === a || "Set" === a ? Array.from(r) : "Arguments" === a || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(a) ? AdBlockConfig_arrayLikeToArray(r, o) : void 0;
+      return "Object" === a && r.constructor && (a = r.constructor.name), "Map" === a || "Set" === a ? Array.from(r) : "Arguments" === a || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(a) ? adblock_arrayLikeToArray(r, o) : void 0;
     }
   }
-  function AdBlockConfig_arrayLikeToArray(r, o) {
+  function adblock_arrayLikeToArray(r, o) {
     (null == o || o > r.length) && (o = r.length);
     for (var a = 0, l = Array(o); a < o; a++) {
       l[a] = r[a];
     }
     return l;
   }
-  function AdBlockConfig_classCallCheck(r, o) {
+  function adblock_classCallCheck(r, o) {
     if (!(r instanceof o)) {
       throw new TypeError("Cannot call a class as a function");
     }
   }
-  function AdBlockConfig_defineProperties(r, o) {
+  function adblock_defineProperties(r, o) {
     for (var a = 0; a < o.length; a++) {
       var l = o[a];
       l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
-      Object.defineProperty(r, AdBlockConfig_toPropertyKey(l.key), l);
+      Object.defineProperty(r, adblock_toPropertyKey(l.key), l);
     }
   }
-  function AdBlockConfig_createClass(r, o, a) {
-    return o && AdBlockConfig_defineProperties(r.prototype, o), a && AdBlockConfig_defineProperties(r, a), 
+  function adblock_createClass(r, o, a) {
+    return o && adblock_defineProperties(r.prototype, o), a && adblock_defineProperties(r, a), 
     Object.defineProperty(r, "prototype", {
       "writable": !1
     }), r;
   }
-  function AdBlockConfig_toPropertyKey(r) {
-    var o = AdBlockConfig_toPrimitive(r, "string");
-    return "symbol" == AdBlockConfig_typeof(o) ? o : o + "";
+  function adblock_toPropertyKey(r) {
+    var o = adblock_toPrimitive(r, "string");
+    return "symbol" == adblock_typeof(o) ? o : o + "";
   }
-  function AdBlockConfig_toPrimitive(r, o) {
-    if ("object" != AdBlockConfig_typeof(r) || !r) {
+  function adblock_toPrimitive(r, o) {
+    if ("object" != adblock_typeof(r) || !r) {
       return r;
     }
     var a = r[Symbol.toPrimitive];
     if (void 0 !== a) {
       var l = a.call(r, o || "default");
-      if ("object" != AdBlockConfig_typeof(l)) {
+      if ("object" != adblock_typeof(l)) {
         return l;
       }
       throw new TypeError("@@toPrimitive must return a primitive value.");
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ye = function() {
+  var Qe = function() {
     function AdBlockConfig() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
-      AdBlockConfig_classCallCheck(this, AdBlockConfig);
+      adblock_classCallCheck(this, AdBlockConfig);
       this.adSelectors = r.adSelectors || [];
       this.customStyles = r.customStyles || [];
       this.blockedUrlPatternsSet = new Set(r.blockedUrlPatterns || []);
       this.adKeywordsRegex = /ads|analytics|tracker|affiliate|stat|pixel|banner|pop|click|outstream\.video|vast|vmap|preroll|midroll|postroll|adserve/i;
     }
-    return AdBlockConfig_createClass(AdBlockConfig, [ {
+    return adblock_createClass(AdBlockConfig, [ {
       "key": "isEmpty",
       "value": function isEmpty() {
         return this.adSelectors.length === 0 && this.customStyles.length === 0 && this.blockedUrlPatternsSet.size === 0;
@@ -21147,7 +21099,7 @@
         if (this.adKeywordsRegex.test(r)) {
           return true;
         }
-        var o = AdBlockConfig_createForOfIteratorHelper(this.blockedUrlPatternsSet), a;
+        var o = adblock_createForOfIteratorHelper(this.blockedUrlPatternsSet), a;
         try {
           for (o.s(); !(a = o.n()).done; ) {
             var l = a.value;
@@ -21164,57 +21116,12 @@
       }
     } ]);
   }();
-  const Ke = Ye;
-  function StyleManager_typeof(r) {
-    "@babel/helpers - typeof";
-    return StyleManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
-      return typeof r;
-    } : function(r) {
-      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
-    }, StyleManager_typeof(r);
-  }
-  function StyleManager_classCallCheck(r, o) {
-    if (!(r instanceof o)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-  function StyleManager_defineProperties(r, o) {
-    for (var a = 0; a < o.length; a++) {
-      var l = o[a];
-      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
-      Object.defineProperty(r, StyleManager_toPropertyKey(l.key), l);
-    }
-  }
-  function StyleManager_createClass(r, o, a) {
-    return o && StyleManager_defineProperties(r.prototype, o), a && StyleManager_defineProperties(r, a), 
-    Object.defineProperty(r, "prototype", {
-      "writable": !1
-    }), r;
-  }
-  function StyleManager_toPropertyKey(r) {
-    var o = StyleManager_toPrimitive(r, "string");
-    return "symbol" == StyleManager_typeof(o) ? o : o + "";
-  }
-  function StyleManager_toPrimitive(r, o) {
-    if ("object" != StyleManager_typeof(r) || !r) {
-      return r;
-    }
-    var a = r[Symbol.toPrimitive];
-    if (void 0 !== a) {
-      var l = a.call(r, o || "default");
-      if ("object" != StyleManager_typeof(l)) {
-        return l;
-      }
-      throw new TypeError("@@toPrimitive must return a primitive value.");
-    }
-    return ("string" === o ? String : Number)(r);
-  }
-  var Xe = function() {
+  var Ze = function() {
     function StyleManager(r) {
-      StyleManager_classCallCheck(this, StyleManager);
+      adblock_classCallCheck(this, StyleManager);
       this.config = r;
     }
-    return StyleManager_createClass(StyleManager, [ {
+    return adblock_createClass(StyleManager, [ {
       "key": "applyAdBlockStyles",
       "value": function applyAdBlockStyles() {
         if (this.config.adSelectors.length === 0 && this.config.customStyles.length === 0) {
@@ -21237,58 +21144,13 @@
       }
     } ]);
   }();
-  const $e = Xe;
-  function DOMCleaner_typeof(r) {
-    "@babel/helpers - typeof";
-    return DOMCleaner_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
-      return typeof r;
-    } : function(r) {
-      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
-    }, DOMCleaner_typeof(r);
-  }
-  function DOMCleaner_classCallCheck(r, o) {
-    if (!(r instanceof o)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-  function DOMCleaner_defineProperties(r, o) {
-    for (var a = 0; a < o.length; a++) {
-      var l = o[a];
-      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
-      Object.defineProperty(r, DOMCleaner_toPropertyKey(l.key), l);
-    }
-  }
-  function DOMCleaner_createClass(r, o, a) {
-    return o && DOMCleaner_defineProperties(r.prototype, o), a && DOMCleaner_defineProperties(r, a), 
-    Object.defineProperty(r, "prototype", {
-      "writable": !1
-    }), r;
-  }
-  function DOMCleaner_toPropertyKey(r) {
-    var o = DOMCleaner_toPrimitive(r, "string");
-    return "symbol" == DOMCleaner_typeof(o) ? o : o + "";
-  }
-  function DOMCleaner_toPrimitive(r, o) {
-    if ("object" != DOMCleaner_typeof(r) || !r) {
-      return r;
-    }
-    var a = r[Symbol.toPrimitive];
-    if (void 0 !== a) {
-      var l = a.call(r, o || "default");
-      if ("object" != DOMCleaner_typeof(l)) {
-        return l;
-      }
-      throw new TypeError("@@toPrimitive must return a primitive value.");
-    }
-    return ("string" === o ? String : Number)(r);
-  }
-  var Qe = function() {
+  var et = function() {
     function DOMCleaner(r) {
-      DOMCleaner_classCallCheck(this, DOMCleaner);
+      adblock_classCallCheck(this, DOMCleaner);
       this.config = r;
       this.observer = null;
     }
-    return DOMCleaner_createClass(DOMCleaner, [ {
+    return adblock_createClass(DOMCleaner, [ {
       "key": "cleanIframes",
       "value": function cleanIframes() {
         var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : null;
@@ -21303,15 +21165,14 @@
     }, {
       "key": "removeAdElements",
       "value": function removeAdElements() {
-        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
         if (this.config.adSelectors.length === 0) {
           return;
         }
-        for (var o = 0; o < this.config.adSelectors.length; o++) {
+        for (var r = 0; r < this.config.adSelectors.length; r++) {
           try {
-            var a = document.querySelectorAll(this.config.adSelectors[o]);
-            for (var l = 0; l < a.length; l++) {
-              a[l].remove();
+            var o = document.querySelectorAll(this.config.adSelectors[r]);
+            for (var a = 0; a < o.length; a++) {
+              o[a].remove();
             }
           } catch (r) {}
         }
@@ -21340,13 +21201,12 @@
         this.observer = new MutationObserver((function(r) {
           var p = false;
           var v = false;
-          for (var y = 0; y < r.length; y++) {
-            var b = r[y];
-            if (b.addedNodes.length) {
+          for (var b = 0; b < r.length; b++) {
+            var y = r[b];
+            if (y.addedNodes.length) {
               p = true;
-              for (var C = 0; C < b.addedNodes.length; C++) {
-                var k = b.addedNodes[C];
-                if (k.nodeName === "IFRAME") {
+              for (var C = 0; C < y.addedNodes.length; C++) {
+                if (y.addedNodes[C].nodeName === "IFRAME") {
                   v = true;
                   break;
                 }
@@ -21371,67 +21231,14 @@
           "subtree": true
         });
       }
-    }, {
-      "key": "disconnect",
-      "value": function disconnect() {
-        if (this.observer) {
-          this.observer.disconnect();
-          this.observer = null;
-        }
-      }
     } ]);
   }();
-  const Ze = Qe;
-  function RequestBlocker_typeof(r) {
-    "@babel/helpers - typeof";
-    return RequestBlocker_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
-      return typeof r;
-    } : function(r) {
-      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
-    }, RequestBlocker_typeof(r);
-  }
-  function RequestBlocker_classCallCheck(r, o) {
-    if (!(r instanceof o)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-  function RequestBlocker_defineProperties(r, o) {
-    for (var a = 0; a < o.length; a++) {
-      var l = o[a];
-      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
-      Object.defineProperty(r, RequestBlocker_toPropertyKey(l.key), l);
-    }
-  }
-  function RequestBlocker_createClass(r, o, a) {
-    return o && RequestBlocker_defineProperties(r.prototype, o), a && RequestBlocker_defineProperties(r, a), 
-    Object.defineProperty(r, "prototype", {
-      "writable": !1
-    }), r;
-  }
-  function RequestBlocker_toPropertyKey(r) {
-    var o = RequestBlocker_toPrimitive(r, "string");
-    return "symbol" == RequestBlocker_typeof(o) ? o : o + "";
-  }
-  function RequestBlocker_toPrimitive(r, o) {
-    if ("object" != RequestBlocker_typeof(r) || !r) {
-      return r;
-    }
-    var a = r[Symbol.toPrimitive];
-    if (void 0 !== a) {
-      var l = a.call(r, o || "default");
-      if ("object" != RequestBlocker_typeof(l)) {
-        return l;
-      }
-      throw new TypeError("@@toPrimitive must return a primitive value.");
-    }
-    return ("string" === o ? String : Number)(r);
-  }
-  var et = function() {
+  var tt = function() {
     function RequestBlocker(r) {
-      RequestBlocker_classCallCheck(this, RequestBlocker);
+      adblock_classCallCheck(this, RequestBlocker);
       this.config = r;
     }
-    return RequestBlocker_createClass(RequestBlocker, [ {
+    return adblock_createClass(RequestBlocker, [ {
       "key": "blockTrackingRequests",
       "value": function blockTrackingRequests() {
         var r = XMLHttpRequest.prototype.open;
@@ -21447,10 +21254,7 @@
         };
         var a = window.fetch;
         window.fetch = function(r, l) {
-          var u = r;
-          if (r instanceof Request) {
-            u = r.url;
-          }
+          var u = r instanceof Request ? r.url : r;
           if (typeof u === "string" && o.shouldBlockUrl(u)) {
             return Promise.resolve(new Response("", {
               "status": 200,
@@ -21514,78 +21318,14 @@
       }
     } ]);
   }();
-  const tt = et;
-  var nt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
-  var rt = [ {
-    "selector": 'div[class="my-2 text-sm text-nord4 truncate"]',
-    "styles": "white-space: normal !important;"
-  }, {
-    "selector": "body",
-    "styles": "background-color: #000000 !important;"
-  }, {
-    "selector": 'div[class*="z-max"]',
-    "styles": "z-index: 9000 !important;"
-  } ];
-  var ot = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
-  const at = {
-    "adSelectors": nt,
-    "customStyles": rt,
-    "blockedUrlPatterns": ot,
-    "isVideoSite": true,
-    "domains": getSiteDomains("MISSAV")
-  };
-  function adblock_typeof(r) {
-    "@babel/helpers - typeof";
-    return adblock_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
-      return typeof r;
-    } : function(r) {
-      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
-    }, adblock_typeof(r);
-  }
-  function adblock_classCallCheck(r, o) {
-    if (!(r instanceof o)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-  function adblock_defineProperties(r, o) {
-    for (var a = 0; a < o.length; a++) {
-      var l = o[a];
-      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
-      Object.defineProperty(r, adblock_toPropertyKey(l.key), l);
-    }
-  }
-  function adblock_createClass(r, o, a) {
-    return o && adblock_defineProperties(r.prototype, o), a && adblock_defineProperties(r, a), 
-    Object.defineProperty(r, "prototype", {
-      "writable": !1
-    }), r;
-  }
-  function adblock_toPropertyKey(r) {
-    var o = adblock_toPrimitive(r, "string");
-    return "symbol" == adblock_typeof(o) ? o : o + "";
-  }
-  function adblock_toPrimitive(r, o) {
-    if ("object" != adblock_typeof(r) || !r) {
-      return r;
-    }
-    var a = r[Symbol.toPrimitive];
-    if (void 0 !== a) {
-      var l = a.call(r, o || "default");
-      if ("object" != adblock_typeof(l)) {
-        return l;
-      }
-      throw new TypeError("@@toPrimitive must return a primitive value.");
-    }
-    return ("string" === o ? String : Number)(r);
-  }
-  var it = function() {
+  var nt = function() {
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(window.location.href);
-      var o = r ? at : {};
-      this.config = new Ke(o);
-      this.styleManager = new $e(this.config);
-      this.domCleaner = new Ze(this.config);
+      var o = r ? $e : {};
+      this.config = new Qe(o);
+      this.styleManager = new Ze(this.config);
+      this.domCleaner = new et(this.config);
       this.requestBlocker = new tt(this.config);
     }
     return adblock_createClass(AdBlocker, [ {
@@ -21608,7 +21348,7 @@
       "key": "setupPeriodicCleaning",
       "value": function setupPeriodicCleaning() {
         var r = this;
-        this.domCleaner.removeAdElements(true);
+        this.domCleaner.removeAdElements();
         this.domCleaner.observeDOMChanges();
         setInterval((function() {
           return r.domCleaner.removeAdElements();
@@ -21634,7 +21374,7 @@
       }
     } ]);
   }();
-  const st = it;
+  const rt = nt;
   function DetailExpander_typeof(r) {
     "@babel/helpers - typeof";
     return DetailExpander_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -21679,7 +21419,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var lt = function() {
+  var ot = function() {
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
@@ -21792,7 +21532,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ct = function() {
+  var at = function() {
     function QualityManager() {
       QualityManager_classCallCheck(this, QualityManager);
       this.maxAttempts = 20;
@@ -21868,7 +21608,7 @@
       }
       throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
-    var p, v = !0, y = !1;
+    var p, v = !0, b = !1;
     return {
       "s": function s() {
         a = a.call(r);
@@ -21878,13 +21618,13 @@
         return v = r.done, r;
       },
       "e": function e(r) {
-        y = !0, p = r;
+        b = !0, p = r;
       },
       "f": function f() {
         try {
           v || null == a["return"] || a["return"]();
         } finally {
-          if (y) {
+          if (b) {
             throw p;
           }
         }
@@ -21943,7 +21683,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ut = function() {
+  var it = function() {
     function UrlRedirector() {
       UrlRedirector_classCallCheck(this, UrlRedirector);
       var r = v.MISSAV.primary;
@@ -22051,13 +21791,13 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var dt = new ut;
-  var pt = function() {
+  var st = new it;
+  var lt = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
-      this.detailExpander = new lt;
-      this.qualityManager = new ct;
-      this.urlRedirector = dt;
+      this.detailExpander = new ot;
+      this.qualityManager = new at;
+      this.urlRedirector = st;
     }
     return userExperienceEnhancer_createClass(UserExperienceEnhancer, [ {
       "key": "init",
@@ -22089,7 +21829,7 @@
   }();
   function initUserExperienceEnhancer() {
     var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
-    var o = new pt;
+    var o = new lt;
     o.init(r);
     return o;
   }
@@ -22106,7 +21846,7 @@
     src_regeneratorRuntime = function _regeneratorRuntime() {
       return o;
     };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
     function c(r, o, a, l) {
       return Object.defineProperty(r, o, {
         "value": a,
@@ -22140,11 +21880,11 @@
             };
           }
           for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
               if (C) {
-                if (C === b) {
+                if (C === y) {
                   continue;
                 }
                 return C;
@@ -22163,7 +21903,7 @@
             u = 3;
             var k = s(o, a, l);
             if ("normal" === k.type) {
-              if (u = l.done ? 4 : 2, k.arg === b) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
                 continue;
               }
               return {
@@ -22190,7 +21930,7 @@
       }
     }
     o.wrap = h;
-    var b = {};
+    var y = {};
     function Generator() {}
     function GeneratorFunction() {}
     function GeneratorFunctionPrototype() {}
@@ -22210,20 +21950,20 @@
     }
     function AsyncIterator(r, o) {
       function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
           return C && "object" == src_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
             e("next", r, p, v);
           }), (function(r) {
             e("throw", r, p, v);
           })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
+            y.value = r, p(y);
           }), (function(r) {
             return e("throw", r, p, v);
           }));
         }
-        v(y.arg);
+        v(b.arg);
       }
       var a;
       c(this, "_invoke", (function(r, l) {
@@ -22240,16 +21980,16 @@
       if (u === r) {
         return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
         a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
       }
       var p = s(u, o.i, a.arg);
       if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
       }
       var v = p.arg;
       return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
     }
     function w(r) {
       this.tryEntries.push(r);
@@ -22285,13 +22025,13 @@
       throw new TypeError(src_typeof(o) + " is not iterable");
     }
     return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(E), r;
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -22304,7 +22044,7 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(E), c(E, y, "Generator"), c(E, p, (function() {
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
       return this;
     })), c(E, "toString", (function() {
       return "[object Generator]";
@@ -22348,19 +22088,19 @@
           p.type = "throw", p.arg = o, a.next = r;
         }
         for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
           if (-1 === u[0]) {
             return n("end"), !1;
           }
-          if (!y && !b) {
+          if (!b && !y) {
             throw Error("try statement without catch or finally");
           }
           if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
             if (v < b) {
-              return n(b), !1;
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
             }
           }
         }
@@ -22375,7 +22115,7 @@
         }
         u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
         var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
       },
       "complete": function complete(r, o) {
         if ("throw" === r.type) {
@@ -22383,13 +22123,13 @@
         }
         return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
         this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
+        y;
       },
       "finish": function finish(r) {
         for (var o = this.tryEntries.length - 1; o >= 0; --o) {
           var a = this.tryEntries[o];
           if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
+            return this.complete(a[4], a[3]), m(a), y;
           }
         }
       },
@@ -22412,7 +22152,7 @@
           "i": x(o),
           "r": a,
           "n": l
-        }, "next" === this.method && (this.arg = r), b;
+        }, "next" === this.method && (this.arg = r), y;
       }
     }, o;
   }
@@ -22441,21 +22181,21 @@
   function src_iterableToArrayLimit(r, o) {
     var a = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
     if (null != a) {
-      var l, u, p, v, y = [], b = !0, C = !1;
+      var l, u, p, v, b = [], y = !0, C = !1;
       try {
         if (p = (a = a.call(r)).next, 0 === o) {
           if (Object(a) !== a) {
             return;
           }
-          b = !1;
+          y = !1;
         } else {
-          for (;!(b = (l = p.call(a)).done) && (y.push(l.value), y.length !== o); b = !0) {}
+          for (;!(y = (l = p.call(a)).done) && (b.push(l.value), b.length !== o); y = !0) {}
         }
       } catch (r) {
         C = !0, u = r;
       } finally {
         try {
-          if (!b && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
+          if (!y && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
             return;
           }
         } finally {
@@ -22464,7 +22204,7 @@
           }
         }
       }
-      return y;
+      return b;
     }
   }
   function src_arrayWithHoles(r) {
@@ -22474,11 +22214,11 @@
   }
   function src_asyncGeneratorStep(r, o, a, l, u, p, v) {
     try {
-      var y = r[p](v), b = y.value;
+      var b = r[p](v), y = b.value;
     } catch (r) {
       return void a(r);
     }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
   }
   function src_asyncToGenerator(r) {
     return function() {
@@ -22495,7 +22235,7 @@
       }));
     };
   }
-  dt.checkAndRedirect();
+  st.checkAndRedirect();
   function setupViewport() {
     var r = document.querySelector('meta[name="viewport"]');
     if (!r) {
@@ -22559,7 +22299,7 @@
               if (u) {
                 window.loginManager = u;
               }
-              p = new st;
+              p = new rt;
               p.init();
               v.next = 22;
               break;
@@ -22583,7 +22323,7 @@
       Y.startBroker("JAVLIBRARY", {
         "FETCH_JAVLIB_DATA": function() {
           var r = src_asyncToGenerator(src_regeneratorRuntime().mark((function _callee(r) {
-            var o, a, l, u, p, v, y, b, C;
+            var o, a, l, u, p, v, b, y, C;
             return src_regeneratorRuntime().wrap((function _callee$(k) {
               while (1) {
                 switch (k.prev = k.next) {
@@ -22601,12 +22341,12 @@
 
                  case 8:
                   v = k.sent;
-                  y = src_slicedToArray(v, 2);
-                  b = y[0];
-                  C = y[1];
+                  b = src_slicedToArray(v, 2);
+                  y = b[0];
+                  C = b[1];
                   return k.abrupt("return", {
                     "idResult": l,
-                    "cRes": b,
+                    "cRes": y,
                     "rRes": C
                   });
 
