@@ -6,6 +6,7 @@
 import { getSiteUrls, isSiteDomain } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { md5 } from '../../utils/md5.js';
+import { fetchWithTransport, fetchWithDomainRotation, detectCloudflare } from '../../utils/index.js';
 
 export const JABLE_DOMAINS = getSiteUrls('JABLE');
 export const JAVLIB_DOMAINS = getSiteUrls('JAVLIBRARY');
@@ -57,162 +58,28 @@ export { cleanAvCode, getVideoCodeFromUrl } from '../../utils/videoCode.js';
 // =====================================================================
 //  2. NETWORK FETCH & HTML PARSING
 // =====================================================================
-export function fetchJableComments(code, page = 1, domainIndex = 0) {
-    if (domainIndex >= JABLE_DOMAINS.length) {
-        return Promise.reject(new Error('All Jable domains failed'));
-    }
-    const domain = JABLE_DOMAINS[domainIndex];
+export async function fetchJableComments(code, page = 1) {
     const slug = code.toLowerCase().trim();
-    const url = `${domain}/videos/${slug}/?mode=async&function=get_block&block_id=video_comments_video_comments&sort_by=&from=${page}&ipp=10&_=${Date.now()}`;
-
-    logger.log(`[CommentScraper] 开始采集 Jable 评论，番号: ${slug}, 页码: ${page}, 域名: ${domain}`);
-
-    const tryNext = (err) => {
-        if (domainIndex < JABLE_DOMAINS.length - 1) {
-            logger.log(`[CommentScraper] Jable 域名 ${domain} 获取评论失败: ${err ? err.message : '空响应'}，正在尝试备用域名...`);
-            return fetchJableComments(code, page, domainIndex + 1);
-        } else {
-            return Promise.reject(err || new Error('All Jable domains failed'));
+    logger.log(`[CommentScraper] 开始采集 Jable 评论，番号: ${slug}, 页码: ${page}`);
+    try {
+        const res = await fetchWithDomainRotation(
+            JABLE_DOMAINS,
+            domain => `${domain}/videos/${slug}/?mode=async&function=get_block&block_id=video_comments_video_comments&sort_by=&from=${page}&ipp=10&_=${Date.now()}`,
+            { headers: { 'accept': '*/*', 'x-requested-with': 'XMLHttpRequest' }, timeout: 6000 }
+        );
+        const parsed = parseCommentsHtml(res.html, res.domain);
+        logger.log(`[CommentScraper] 成功采集到 Jable 评论，共 ${parsed.comments.length} 条 (总数: ${parsed.totalCount})`);
+        return { ...parsed, domain: res.domain };
+    } catch (err) {
+        if (err.message && err.message.includes('CF_SHIELD')) {
+            const cfErr = new Error('触发人机验证');
+            cfErr.status = 403;
+            throw cfErr;
         }
-    };
-
-    const urlObj = new URL(url);
-    const isSameOrigin = window.location.hostname.includes(urlObj.hostname);
-    if (isSameOrigin || typeof GM_xmlhttpRequest === 'undefined') {
-        const sameOriginUrl = url.replace(urlObj.origin, window.location.origin);
-        const fetchFn = (typeof unsafeWindow !== 'undefined' && unsafeWindow.fetch) ? unsafeWindow.fetch.bind(unsafeWindow) : fetch;
-        return fetchFn(sameOriginUrl, {
-            headers: {
-                'accept': '*/*',
-                'x-requested-with': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            if (response.status === 404) {
-                const err = new Error('HTTP 404');
-                err.status = 404;
-                throw err;
-            }
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            return response.text();
-        })
-        .then(text => {
-            if (!text || text.trim() === '') {
-                throw new Error('响应数据为空 (可能遭受到跨域阻止或隐私插件拦截)');
-            }
-            const parsed = parseCommentsHtml(text, domain);
-            logger.log(`[CommentScraper] 成功采集到 Jable 评论，共 ${parsed.comments.length} 条 (总数: ${parsed.totalCount})`);
-            return { ...parsed, domain };
-        })
-        .catch(err => {
-            if (err.status === 404 || (err.message && err.message.includes('404'))) {
-                return Promise.reject(err);
-            }
-            if (err.message === '触发人机验证') {
-                return Promise.reject(err);
-            }
-            return tryNext(err);
-        });
+        throw err;
     }
-
-    // 非同源环境且支持 GM_xmlhttpRequest，则通过扩展特权发送跨域请求
-    return new Promise((resolve, reject) => {
-        logger.log(`[CommentScraper] 开始通过 GM_xmlhttpRequest 发起跨域请求: ${url}`);
-        let completed = false;
-        
-        const safeResolve = (val) => {
-            if (!completed) {
-                completed = true;
-                clearTimeout(timer);
-                resolve(val);
-            }
-        };
-
-        const safeReject = (err) => {
-            if (!completed) {
-                completed = true;
-                clearTimeout(timer);
-                reject(err);
-            }
-        };
-
-        const timer = setTimeout(() => {
-            if (!completed) {
-                logger.warn(`[CommentScraper] Jable 采集超时 (已达到 6000ms 限制，手动中止): ${url}`);
-                if (req && typeof req.abort === 'function') {
-                    try { req.abort(); } catch (e) {}
-                }
-                tryNext(new Error('请求超时')).then(safeResolve).catch(safeReject);
-            }
-        }, 6000);
-
-        const req = GM_xmlhttpRequest({
-            method: 'GET',
-            url: url,
-            timeout: 6000,
-            headers: {
-                'accept': '*/*',
-                'x-requested-with': 'XMLHttpRequest',
-                'referer': `${domain}/`,
-                'origin': domain
-            },
-            withCredentials: true,
-            onload(r) {
-                if (completed) return;
-                logger.log(`[CommentScraper] GM_xmlhttpRequest 响应状态码: ${r.status}`);
-                if (r.status === 403 || r.status === 503) {
-                    const cfError = new Error('触发人机验证');
-                    cfError.status = 403;
-                    cfError.domain = domain;
-                    safeReject(cfError);
-                    return;
-                }
-                if (r.status === 404) {
-                    const notFoundErr = new Error('HTTP 404');
-                    notFoundErr.status = 404;
-                    safeReject(notFoundErr);
-                    return;
-                }
-                if (r.status >= 200 && r.status < 300) {
-                    const text = r.responseText;
-                    // iOS Safari 或部分插件在未被授权访问目标域名时，会返回空数据或被静默拦截，此处显式检查并报错以引导用户授权
-                    if (!text || text.trim() === '') {
-                        logger.error('[CommentScraper] 收到空响应数据，可能被脚本管理器或 Safari 权限拦截。');
-                        tryNext(new Error('响应为空')).then(safeResolve).catch(safeReject);
-                        return;
-                    }
-                    try {
-                        const parsed = parseCommentsHtml(text, domain);
-                        logger.log(`[CommentScraper] 成功采集到 Jable 评论，共 ${parsed.comments.length} 条 (总数: ${parsed.totalCount})`);
-                        safeResolve({ ...parsed, domain });
-                    } catch (err) {
-                        if (err.message === '触发人机验证') {
-                            safeReject(err);
-                        } else {
-                            logger.error('[CommentScraper] 解析 HTML 时出错:', err);
-                            tryNext(err).then(safeResolve).catch(safeReject);
-                        }
-                    }
-                } else {
-                    logger.error(`[CommentScraper] 请求失败，HTTP 状态码: ${r.status}`, r);
-                    tryNext(new Error(`HTTP ${r.status}`)).then(safeResolve).catch(safeReject);
-                }
-            },
-            onerror(e) {
-                if (completed) return;
-                logger.error('[CommentScraper] GM_xmlhttpRequest onerror 触发:', e);
-                tryNext(new Error('跨域请求网络出错')).then(safeResolve).catch(safeReject);
-            },
-            ontimeout() {
-                if (completed) return;
-                logger.warn('[CommentScraper] GM_xmlhttpRequest 请求超时');
-                tryNext(new Error('请求超时')).then(safeResolve).catch(safeReject);
-            }
-        });
-    });
 }
+
 
 export function parseCommentsHtml(html, domain = JABLE_DOMAINS[0]) {
     if (html.includes('cf-challenge') || html.includes('Turnstile') || html.includes('Checking your browser') || html.includes('cloudflare')) {
@@ -1319,186 +1186,29 @@ function getJavLibCookie(targetDomain) {
     return '';
 }
 
-export function fetchJavLibraryVideoId(avcode, domainIndex = 0, lastError = null) {
-    if (!avcode) return Promise.reject(new Error('Invalid AVCode'));
-    if (domainIndex >= JAVLIB_DOMAINS.length) {
-        return Promise.reject(lastError || new Error('All JAVLibrary domains failed'));
-    }
-    const domain = JAVLIB_DOMAINS[domainIndex];
+export async function fetchJavLibraryVideoId(avcode) {
+    if (!avcode) throw new Error('Invalid AVCode');
     const cleanCode = avcode.toLowerCase().trim();
-    const url = `${domain}/cn/vl_searchbyid.php?keyword=${encodeURIComponent(cleanCode)}`;
-
-    const tryNext = (err) => {
-        // 判断当前错误和前一个错误是否属于 Cloudflare 人机验证拦截
-        const isCurrentCf = err && (err.message === 'CLOUDFLARE_SHIELD' || err.message.includes('CF_SHIELD'));
-        const isPrevCf = lastError && (lastError.message === 'CLOUDFLARE_SHIELD' || lastError.message.includes('CF_SHIELD'));
-        
-        let nextErr = err;
-        if (isPrevCf && !isCurrentCf) {
-            nextErr = lastError;
-        } else if (isCurrentCf && !err.message.includes('CF_SHIELD_ON_')) {
-            nextErr = new Error(`CF_SHIELD_ON_${domain}`);
+    try {
+        const res = await fetchWithDomainRotation(
+            JAVLIB_DOMAINS,
+            domain => `${domain}/cn/vl_searchbyid.php?keyword=${encodeURIComponent(cleanCode)}`,
+            { headers: { 'accept': 'text/html,application/xhtml+xml,*/*' }, timeout: 8000 }
+        );
+        let workingDomain = res.domain;
+        if (res.finalUrl && res.finalUrl.startsWith('http')) {
+            try { workingDomain = new URL(res.finalUrl).origin; } catch (e) {}
         }
-
-        if (domainIndex < JAVLIB_DOMAINS.length - 1) {
-            logger.log(`JAVLibrary 域名 ${domain} 搜索失败，尝试下一个备用域名...`);
-            return fetchJavLibraryVideoId(avcode, domainIndex + 1, nextErr);
-        } else {
-            const finalErr = (nextErr && (nextErr.message === 'CLOUDFLARE_SHIELD' || nextErr.message.includes('CF_SHIELD')))
-                ? nextErr
-                : (err || new Error('All JAVLibrary domains failed'));
-            return Promise.reject(finalErr);
+        const videoId = extractVideoIdFromUrl(res.finalUrl) || parseJavLibraryVideoIdHtml(res.html, cleanCode, workingDomain);
+        return { videoId, domain: workingDomain };
+    } catch (err) {
+        if (err.message && err.message.includes('CF_SHIELD')) {
+            throw new Error(err.message);
         }
-    };
-
-    const isSameOrigin = (() => {
-        try {
-            if (typeof window === 'undefined' || !window.location || !window.location.hostname) return false;
-            const targetHost = new URL(domain).hostname.replace(/^www\./, '');
-            const currentHost = window.location.hostname.replace(/^www\./, '');
-            return targetHost === currentHost;
-        } catch (e) {
-            return false;
-        }
-    })();
-
-    if (isSameOrigin) {
-        const sameOriginUrl = url.replace(domain, window.location.origin);
-        logger.log(`[CommentScraper] 搜索 JAVLibrary 番号 (同源 fetch): ${cleanCode} (URL: ${sameOriginUrl})`);
-        const fetchFn = (typeof unsafeWindow !== 'undefined' && unsafeWindow.fetch) ? unsafeWindow.fetch.bind(unsafeWindow) : fetch;
-        return fetchFn(sameOriginUrl, {
-            headers: {
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'referer': `${window.location.origin}/cn/`
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (response.status === 403 || response.status === 503) {
-                throw new Error('CLOUDFLARE_SHIELD');
-            }
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            return Promise.all([response.text(), response.url]);
-        })
-        .then(([text, finalUrl]) => {
-            let workingDomain = domain;
-            if (finalUrl && finalUrl.startsWith('http')) {
-                try {
-                    workingDomain = new URL(finalUrl).origin;
-                } catch (e) {}
-            }
-
-            const videoId = extractVideoIdFromUrl(finalUrl);
-            if (videoId) {
-                logger.log(`找到 JAVLibrary ID (重定向): ${videoId} (工作域名: ${workingDomain})`);
-                return { videoId, domain: workingDomain };
-            }
-
-            const foundId = parseJavLibraryVideoIdHtml(text, cleanCode, workingDomain);
-            return { videoId: foundId, domain: workingDomain };
-        })
-        .catch(err => {
-            return tryNext(err);
-        });
+        throw err;
     }
-
-    // 非同源跨域，使用 GM_xmlhttpRequest
-    const headers = {
-        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'referer': `${domain}/cn/`
-    };
-
-    return new Promise((resolve, reject) => {
-        logger.log(`搜索 JAVLibrary 番号: ${cleanCode} (域名: ${domain})`);
-        
-        let completed = false;
-        const safeResolve = (val) => {
-            if (!completed) {
-                completed = true;
-                clearTimeout(timer);
-                resolve(val);
-            }
-        };
-        const safeReject = (err) => {
-            if (!completed) {
-                completed = true;
-                clearTimeout(timer);
-                reject(err);
-            }
-        };
-
-        const handleTryNext = (err) => {
-            if (!completed) {
-                completed = true;
-                clearTimeout(timer);
-            }
-            tryNext(err).then(resolve).catch(reject);
-        };
-
-        const timer = setTimeout(() => {
-            if (!completed) {
-                logger.warn(`JAVLibrary 搜索超时 (已达到 10000ms 限制，手动中止): ${url}`);
-                if (req && typeof req.abort === 'function') {
-                    try { req.abort(); } catch (e) {}
-                }
-                handleTryNext(new Error('Timeout'));
-            }
-        }, 10000);
-
-        const req = GM_xmlhttpRequest({
-            method: 'GET',
-            url: url,
-            anonymous: false,
-            timeout: 10000,
-            headers: headers,
-            withCredentials: true,
-            onload(r) {
-                if (completed) return;
-                logger.log(`JAVLibrary 搜索响应状态码: ${r.status}`);
-                if (r.status === 403 || r.status === 503) {
-                    handleTryNext(new Error('CLOUDFLARE_SHIELD'));
-                    return;
-                }
-                
-                let workingDomain = domain;
-                const finalUrl = r.finalUrl || '';
-                if (finalUrl.startsWith('http')) {
-                    try {
-                        workingDomain = new URL(finalUrl).origin;
-                    } catch (e) {}
-                }
-
-                // 1. 检查是否发生重定向到详情页 (e.g. https://www.javlibrary.com/cn/?v=javliXXXXX)
-                const videoId = extractVideoIdFromUrl(finalUrl);
-                if (videoId) {
-                    logger.log(`找到 JAVLibrary ID (重定向): ${videoId} (工作域名: ${workingDomain})`);
-                    safeResolve({ videoId, domain: workingDomain });
-                    return;
-                }
-
-                // 2. 如果没有重定向，解析搜索结果 HTML 匹配番号
-                try {
-                    const text = r.responseText;
-                    const foundId = parseJavLibraryVideoIdHtml(text, cleanCode, workingDomain);
-                    safeResolve({ videoId: foundId, domain: workingDomain });
-                } catch (err) {
-                    handleTryNext(err);
-                }
-            },
-            onerror(e) {
-                if (completed) return;
-                logger.error('JAVLibrary 搜索失败:', e);
-                handleTryNext(new Error('Network error or blocked'));
-            },
-            ontimeout() {
-                if (completed) return;
-                handleTryNext(new Error('Timeout'));
-            }
-        });
-    });
 }
+
 
 /**
  * Helper to extract video ID from redirected JAVLibrary URL
@@ -1642,118 +1352,31 @@ function parseJavLibraryDataHtml(text, type, page, activeDomain) {
  * @param {string} domain - The working domain resolved from ID fetching
  * @returns {Promise<Object>}
  */
-export function fetchJavLibraryData(videoId, type = 'comments', page = 1, domain) {
-    if (!videoId) return Promise.reject(new Error('Invalid VideoId'));
+export async function fetchJavLibraryData(videoId, type = 'comments', page = 1, domain) {
+    if (!videoId) throw new Error('Invalid VideoId');
     const isReviews = type === 'reviews';
     const endpoint = isReviews ? 'videoreviews.php' : 'videocomments.php';
     const activeDomain = domain || JAVLIB_DOMAINS[0];
     const url = `${activeDomain}/cn/${endpoint}?v=${videoId}&page=${page}`;
 
-    const isSameOrigin = (() => {
-        try {
-            if (typeof window === 'undefined' || !window.location || !window.location.hostname) return false;
-            const targetHost = new URL(activeDomain).hostname.replace(/^www\./, '');
-            const currentHost = window.location.hostname.replace(/^www\./, '');
-            return targetHost === currentHost;
-        } catch (e) {
-            return false;
-        }
-    })();
-
-    if (isSameOrigin) {
-        const sameOriginUrl = url.replace(activeDomain, window.location.origin);
-        logger.log(`[CommentScraper] 采集 JAVLibrary ${type} (同源 fetch, Page ${page}): ${sameOriginUrl}`);
-        const fetchFn = (typeof unsafeWindow !== 'undefined' && unsafeWindow.fetch) ? unsafeWindow.fetch.bind(unsafeWindow) : fetch;
-        return fetchFn(sameOriginUrl, {
-            headers: {
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'referer': `${window.location.origin}/cn/?v=${videoId}`
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (response.status === 403 || response.status === 503) {
-                throw new Error(`CF_SHIELD_ON_${activeDomain}`);
-            }
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            return response.text();
-        })
-        .then(text => {
-            return parseJavLibraryDataHtml(text, type, page, activeDomain);
-        });
-    }
-
-    const headers = {
-        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'referer': `${activeDomain}/cn/?v=${videoId}`
-    };
-
-    return new Promise((resolve, reject) => {
-        logger.log(`采集 JAVLibrary ${type} (Page ${page}): ${url}`);
-        
-        let completed = false;
-        const safeResolve = (val) => {
-            if (!completed) {
-                completed = true;
-                clearTimeout(timer);
-                resolve(val);
-            }
-        };
-        const safeReject = (err) => {
-            if (!completed) {
-                completed = true;
-                clearTimeout(timer);
-                reject(err);
-            }
-        };
-
-        const timer = setTimeout(() => {
-            if (!completed) {
-                logger.warn(`JAVLibrary 采集超时 (已达到 10000ms 限制，手动中止): ${url}`);
-                if (req && typeof req.abort === 'function') {
-                    try { req.abort(); } catch (e) {}
-                }
-                safeReject(new Error('Timeout'));
-            }
-        }, 10000);
-
-        const req = GM_xmlhttpRequest({
-            method: 'GET',
-            url: url,
-            anonymous: false,
-            timeout: 10000,
-            headers: headers,
-            withCredentials: true,
-            onload(r) {
-                if (completed) return;
-                if (r.status === 403 || r.status === 503) {
-                    safeReject(new Error(`CF_SHIELD_ON_${activeDomain}`));
-                    return;
-                }
-
-                try {
-                    const text = r.responseText;
-                    const res = parseJavLibraryDataHtml(text, type, page, activeDomain);
-                    safeResolve(res);
-                } catch (err) {
-                    safeReject(err);
-                }
-            },
-            onerror(e) {
-                if (completed) return;
-                logger.error(`JAVLibrary ${type} 采集失败:`, e);
-                safeReject(new Error('Network error or blocked'));
-            },
-            ontimeout() {
-                if (completed) return;
-                logger.error(`JAVLibrary ${type} 采集超时`);
-                safeReject(new Error('Timeout'));
-            }
-        });
+    logger.log(`[CommentScraper] 采集 JAVLibrary ${type} (Page ${page}): ${url}`);
+    const res = await fetchWithTransport(url, {
+        headers: {
+            'accept': 'text/html,application/xhtml+xml,*/*',
+            'referer': `${activeDomain}/cn/?v=${videoId}`
+        },
+        timeout: 10000
     });
+
+    if (detectCloudflare(res.status, res.html)) {
+        throw new Error(`CF_SHIELD_ON_${activeDomain}`);
+    }
+    return parseJavLibraryDataHtml(res.html, type, page, activeDomain);
 }
+
+
+
+
 
 // =====================================================================
 //  JAVDB SCRAPER & FALLBACK API (jdforrepam.com)
