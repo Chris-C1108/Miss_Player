@@ -365,39 +365,32 @@ export class VideoSwipeManager {
     }
 
     /**
-     * 记录速度数据
-     * @param {number} x - 当前x坐标
+     * 辅助方法：更新速度跟踪器
+     * @private
      */
-    _trackVelocity(x) {
+    _updateVelocityTracker(tracker, val) {
         const now = Date.now();
-        const tracker = this.velocityTracker;
-
-        // 添加新位置记录
-        tracker.positions.push({
-            x: x,
-            time: now
-        });
-
-        // 只保留最近100ms内的记录
-        while (
-            tracker.positions.length > 1 &&
-            now - tracker.positions[0].time > 100
-        ) {
+        tracker.positions.push({ val, time: now });
+        while (tracker.positions.length > 1 && now - tracker.positions[0].time > 100) {
             tracker.positions.shift();
         }
-
-        // 计算当前速度 (像素/毫秒)
         if (tracker.positions.length > 1) {
             const first = tracker.positions[0];
             const last = tracker.positions[tracker.positions.length - 1];
             const deltaTime = last.time - first.time;
-
             if (deltaTime > 0) {
-                tracker.currentVelocity = (last.x - first.x) / deltaTime;
+                tracker.currentVelocity = (last.val - first.val) / deltaTime;
             }
         }
-
         tracker.lastTimestamp = now;
+    }
+
+    /**
+     * 记录速度数据
+     * @param {number} x - 当前x坐标
+     */
+    _trackVelocity(x) {
+        this._updateVelocityTracker(this.velocityTracker, x);
     }
 
     /**
@@ -426,43 +419,16 @@ export class VideoSwipeManager {
     }
 
     /**
-     * 动画滚动到指定偏移量
+     * 动画滚动到指定偏移量 (使用 CSS 原生 Transition 替代 rAF 手写帧动画，降低 CPU/GPU 功耗)
      * @param {number} targetOffset - 目标偏移量
      * @param {number} duration - 动画持续时间(毫秒)
      */
     _animateTo(targetOffset, duration = 300) {
-        // 取消可能正在进行的动画
-        if (this.animation.active) {
+        if (this.animation.rafId) {
             cancelAnimationFrame(this.animation.rafId);
+            this.animation.rafId = null;
         }
-        
-        // 更新动画状态
-        this.animation.active = true;
-        this.animation.targetOffset = targetOffset;
-        this.animation.startTime = Date.now();
-        this.animation.duration = duration;
-        
-        // 开始动画帧循环
-        const animate = () => {
-            const now = Date.now();
-            const elapsed = now - this.animation.startTime;
-
-            if (elapsed >= duration) {
-                // 动画结束
-                this._applyOffset(targetOffset, false);
-                this.animation.active = false;
-                return;
-            }
-
-            // 使用easeOutCubic缓动函数计算当前位置
-            const progress = 1 - Math.pow(1 - elapsed / duration, 3);
-            const currentOffset = this.offset + (targetOffset - this.offset) * progress;
-            
-            this._applyOffset(currentOffset, false);
-            this.animation.rafId = requestAnimationFrame(animate);
-        };
-        
-        this.animation.rafId = requestAnimationFrame(animate);
+        this._applyOffset(targetOffset, true);
     }
 
     /**
@@ -917,35 +883,7 @@ export class VideoSwipeManager {
      * @param {number} position - 当前手柄位置
      */
     _trackHandleVelocity(position) {
-        const now = Date.now();
-        const tracker = this.handleVelocityTracker;
-
-        // 添加新位置记录
-        tracker.positions.push({
-            position: position,
-            time: now
-        });
-
-        // 只保留最近100ms内的记录
-        while (
-            tracker.positions.length > 1 &&
-            now - tracker.positions[0].time > 100
-        ) {
-            tracker.positions.shift();
-        }
-
-        // 计算当前速度 (像素/毫秒)
-        if (tracker.positions.length > 1) {
-            const first = tracker.positions[0];
-            const last = tracker.positions[tracker.positions.length - 1];
-            const deltaTime = last.time - first.time;
-
-            if (deltaTime > 0) {
-                tracker.currentVelocity = (last.position - first.position) / deltaTime;
-            }
-        }
-
-        tracker.lastTimestamp = now;
+        this._updateVelocityTracker(this.handleVelocityTracker, position);
     }
 
     /**

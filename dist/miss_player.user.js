@@ -18194,26 +18194,30 @@
         this.handle.style.transform = "";
       }
     }, {
-      "key": "_trackVelocity",
-      "value": function _trackVelocity(r) {
-        var o = Date.now();
-        var a = this.velocityTracker;
-        a.positions.push({
-          "x": r,
-          "time": o
+      "key": "_updateVelocityTracker",
+      "value": function _updateVelocityTracker(r, o) {
+        var a = Date.now();
+        r.positions.push({
+          "val": o,
+          "time": a
         });
-        while (a.positions.length > 1 && o - a.positions[0].time > 100) {
-          a.positions.shift();
+        while (r.positions.length > 1 && a - r.positions[0].time > 100) {
+          r.positions.shift();
         }
-        if (a.positions.length > 1) {
-          var l = a.positions[0];
-          var u = a.positions[a.positions.length - 1];
+        if (r.positions.length > 1) {
+          var l = r.positions[0];
+          var u = r.positions[r.positions.length - 1];
           var p = u.time - l.time;
           if (p > 0) {
-            a.currentVelocity = (u.x - l.x) / p;
+            r.currentVelocity = (u.val - l.val) / p;
           }
         }
-        a.lastTimestamp = o;
+        r.lastTimestamp = a;
+      }
+    }, {
+      "key": "_trackVelocity",
+      "value": function _trackVelocity(r) {
+        this._updateVelocityTracker(this.velocityTracker, r);
       }
     }, {
       "key": "_applyInertia",
@@ -18232,29 +18236,12 @@
     }, {
       "key": "_animateTo",
       "value": function _animateTo(r) {
-        var o = this;
-        var a = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 300;
-        if (this.animation.active) {
+        var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 300;
+        if (this.animation.rafId) {
           cancelAnimationFrame(this.animation.rafId);
+          this.animation.rafId = null;
         }
-        this.animation.active = true;
-        this.animation.targetOffset = r;
-        this.animation.startTime = Date.now();
-        this.animation.duration = a;
-        var l = function animate() {
-          var u = Date.now();
-          var p = u - o.animation.startTime;
-          if (p >= a) {
-            o._applyOffset(r, false);
-            o.animation.active = false;
-            return;
-          }
-          var v = 1 - Math.pow(1 - p / a, 3);
-          var b = o.offset + (r - o.offset) * v;
-          o._applyOffset(b, false);
-          o.animation.rafId = requestAnimationFrame(l);
-        };
-        this.animation.rafId = requestAnimationFrame(l);
+        this._applyOffset(r, true);
       }
     }, {
       "key": "_handlePointerDown",
@@ -18548,24 +18535,7 @@
     }, {
       "key": "_trackHandleVelocity",
       "value": function _trackHandleVelocity(r) {
-        var o = Date.now();
-        var a = this.handleVelocityTracker;
-        a.positions.push({
-          "position": r,
-          "time": o
-        });
-        while (a.positions.length > 1 && o - a.positions[0].time > 100) {
-          a.positions.shift();
-        }
-        if (a.positions.length > 1) {
-          var l = a.positions[0];
-          var u = a.positions[a.positions.length - 1];
-          var p = u.time - l.time;
-          if (p > 0) {
-            a.currentVelocity = (u.position - l.position) / p;
-          }
-        }
-        a.lastTimestamp = o;
+        this._updateVelocityTracker(this.handleVelocityTracker, r);
       }
     }, {
       "key": "_applyHandleInertia",
