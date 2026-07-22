@@ -139,68 +139,7 @@ export class DragManager {
         }
     }
 
-    /**
-     * 处理鼠标按下事件
-     */
-    handleMouseDown(event) {
-        if (event.button !== 0) return; // 只处理左键点击
 
-        this.isDraggingHandle = true;
-        this.startY = event.clientY;
-        this.startHeight = this.uiElements.handleContainer.offsetHeight;
-        this.handleMoveHandler = this.handleMouseMove.bind(this);
-        this.handleEndHandler = this.handleMouseUp.bind(this);
-
-        // 添加事件监听器
-        document.addEventListener('mousemove', this.handleMoveHandler);
-        document.addEventListener('mouseup', this.handleEndHandler);
-
-        // 更新手柄位置
-        this.updateHandlePosition();
-    }
-
-    /**
-     * 处理鼠标移动事件
-     */
-    handleMouseMove(event) {
-        if (!this.isDraggingHandle) return;
-
-        const deltaY = event.clientY - this.startY;
-        const newHeight = this.startHeight + deltaY;
-
-        if (newHeight < 50 || newHeight > 200) return; // 限制手柄高度范围
-
-        this.uiElements.handleContainer.style.height = `${newHeight}px`;
-        this.updateHandlePosition();
-    }
-
-    /**
-     * 处理鼠标释放事件
-     */
-    handleMouseUp(event) {
-        this.isDraggingHandle = false;
-
-        // 移除事件监听器
-        document.removeEventListener('mousemove', this.handleMoveHandler);
-        document.removeEventListener('mouseup', this.handleEndHandler);
-
-        // 更新手柄位置
-        this.updateHandlePosition();
-    }
-
-    /**
-     * 处理鼠标离开事件
-     */
-    handleMouseLeave(event) {
-        this.isDraggingHandle = false;
-
-        // 移除事件监听器
-        document.removeEventListener('mousemove', this.handleMoveHandler);
-        document.removeEventListener('mouseup', this.handleEndHandler);
-
-        // 更新手柄位置
-        this.updateHandlePosition();
-    }
 
     /**
      * 初始化悬浮控制面板拖拽逻辑

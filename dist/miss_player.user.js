@@ -14788,51 +14788,6 @@
         }
       }
     }, {
-      "key": "handleMouseDown",
-      "value": function handleMouseDown(r) {
-        if (r.button !== 0) {
-          return;
-        }
-        this.isDraggingHandle = true;
-        this.startY = r.clientY;
-        this.startHeight = this.uiElements.handleContainer.offsetHeight;
-        this.handleMoveHandler = this.handleMouseMove.bind(this);
-        this.handleEndHandler = this.handleMouseUp.bind(this);
-        document.addEventListener("mousemove", this.handleMoveHandler);
-        document.addEventListener("mouseup", this.handleEndHandler);
-        this.updateHandlePosition();
-      }
-    }, {
-      "key": "handleMouseMove",
-      "value": function handleMouseMove(r) {
-        if (!this.isDraggingHandle) {
-          return;
-        }
-        var o = r.clientY - this.startY;
-        var a = this.startHeight + o;
-        if (a < 50 || a > 200) {
-          return;
-        }
-        this.uiElements.handleContainer.style.height = "".concat(a, "px");
-        this.updateHandlePosition();
-      }
-    }, {
-      "key": "handleMouseUp",
-      "value": function handleMouseUp(r) {
-        this.isDraggingHandle = false;
-        document.removeEventListener("mousemove", this.handleMoveHandler);
-        document.removeEventListener("mouseup", this.handleEndHandler);
-        this.updateHandlePosition();
-      }
-    }, {
-      "key": "handleMouseLeave",
-      "value": function handleMouseLeave(r) {
-        this.isDraggingHandle = false;
-        document.removeEventListener("mousemove", this.handleMoveHandler);
-        document.removeEventListener("mouseup", this.handleEndHandler);
-        this.updateHandlePosition();
-      }
-    }, {
       "key": "initControlPanelDrag",
       "value": function initControlPanelDrag() {
         var r = this;
@@ -17039,119 +16994,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Re = null && function() {
-    function DebugLogger() {
-      EventManager_classCallCheck(this, DebugLogger);
-      this.logs = [];
-      this.el = null;
-      this.logContainer = null;
-      this.maxLogs = 50;
-    }
-    return EventManager_createClass(DebugLogger, [ {
-      "key": "init",
-      "value": function init() {
-        var r = this;
-        this.el = document.createElement("div");
-        this.el.id = "tm-debug-log-panel";
-        this.el.style.cssText = "\n            position: fixed;\n            top: 60px;\n            right: 10px;\n            width: 280px;\n            max-height: 200px;\n            background: rgba(0, 0, 0, 0.85);\n            color: #00ff00;\n            font-family: monospace;\n            font-size: 10px;\n            padding: 8px;\n            border-radius: 8px;\n            z-index: 2000000020;\n            overflow-y: auto;\n            border: 1px solid #00ff00;\n            box-shadow: 0 4px 12px rgba(0,0,0,0.5);\n            pointer-events: auto;\n            -webkit-user-select: text;\n            user-select: text;\n        ";
-        var o = document.createElement("div");
-        o.style.cssText = "display:flex; justify-content:space-between; margin-bottom:5px; border-bottom:1px solid #00ff00; padding-bottom:3px; font-weight:bold;";
-        o.innerHTML = "<span>DEBUG Logs</span>";
-        var a = document.createElement("button");
-        a.textContent = "Copy";
-        a.style.cssText = "background:#00ff00; color:#000; border:none; padding:2px 6px; font-size:9px; border-radius:3px; cursor:pointer; font-weight:bold;";
-        a.addEventListener("click", (function(o) {
-          o.stopPropagation();
-          var l = r.logs.join("\n");
-          if (navigator.clipboard) {
-            navigator.clipboard.writeText(l).then((function() {
-              a.textContent = "Copied!";
-              setTimeout((function() {
-                return a.textContent = "Copy";
-              }), 1500);
-            }))["catch"]((function() {
-              r._fallbackCopy(l, a);
-            }));
-          } else {
-            r._fallbackCopy(l, a);
-          }
-        }));
-        var l = document.createElement("button");
-        l.textContent = "Clear";
-        l.style.cssText = "background:#ff5555; color:#fff; border:none; padding:2px 6px; font-size:9px; border-radius:3px; cursor:pointer; font-weight:bold; margin-left:5px;";
-        l.addEventListener("click", (function(o) {
-          o.stopPropagation();
-          r.clear();
-        }));
-        var u = document.createElement("div");
-        u.appendChild(a);
-        u.appendChild(l);
-        o.appendChild(u);
-        this.el.appendChild(o);
-        this.logContainer = document.createElement("div");
-        this.logContainer.id = "tm-debug-log-list";
-        this.logContainer.style.cssText = "overflow-y:auto; max-height:160px;";
-        this.el.appendChild(this.logContainer);
-        document.body.appendChild(this.el);
-        this.log("Debugger Initialized.");
-      }
-    }, {
-      "key": "_fallbackCopy",
-      "value": function _fallbackCopy(r, o) {
-        try {
-          var a = document.createElement("textarea");
-          a.value = r;
-          a.style.position = "fixed";
-          a.style.opacity = "0";
-          document.body.appendChild(a);
-          a.select();
-          document.execCommand("copy");
-          document.body.removeChild(a);
-          o.textContent = "Copied (F)!";
-          setTimeout((function() {
-            return o.textContent = "Copy";
-          }), 1500);
-        } catch (r) {
-          alert("Failed to copy. Please copy manually.");
-        }
-      }
-    }, {
-      "key": "log",
-      "value": function log(r) {
-        var o = (new Date).toLocaleTimeString() + "." + String((new Date).getMilliseconds()).padStart(3, "0");
-        var a = "[".concat(o, "] ").concat(r);
-        this.logs.push(a);
-        if (this.logs.length > this.maxLogs) {
-          this.logs.shift();
-        }
-        if (this.logContainer) {
-          var l = document.createElement("div");
-          l.style.borderBottom = "1px solid rgba(0, 255, 0, 0.1)";
-          l.style.padding = "2px 0";
-          l.style.wordBreak = "break-all";
-          l.textContent = a;
-          this.logContainer.appendChild(l);
-          this.el.scrollTop = this.el.scrollHeight;
-        }
-      }
-    }, {
-      "key": "clear",
-      "value": function clear() {
-        this.logs = [];
-        if (this.logContainer) {
-          this.logContainer.innerHTML = "";
-        }
-      }
-    }, {
-      "key": "destroy",
-      "value": function destroy() {
-        if (this.el && this.el.parentNode) {
-          this.el.parentNode.removeChild(this.el);
-        }
-      }
-    } ]);
-  }();
-  var He = function() {
+  var Re = function() {
     function EventManager(r, o, a) {
       EventManager_classCallCheck(this, EventManager);
       this.playerCore = r;
@@ -17361,38 +17204,6 @@
         this.targetVideo.addEventListener("pause", this.handlePauseBound);
       }
     }, {
-      "key": "handleVideoWrapperClick",
-      "value": function handleVideoWrapperClick(r) {
-        var o = this;
-        if (r.target === this.uiElements.videoWrapper || r.target === this.targetVideo) {
-          if (this.clickLock) {
-            return;
-          }
-          if (this.managers.swipeManager && typeof this.managers.swipeManager.wasRecentlyDragging === "function" && this.managers.swipeManager.wasRecentlyDragging()) {
-            return;
-          }
-          this.clickLock = true;
-          if (this.clickLockTimeout) {
-            clearTimeout(this.clickLockTimeout);
-          }
-          this.clickLockTimeout = setTimeout((function() {
-            o.clickLock = false;
-            o.clickLockTimeout = null;
-          }), 500);
-          if (this.targetVideo.paused) {
-            this.targetVideo.play();
-          } else {
-            this.targetVideo.pause();
-            if (this.managers.controlManager) {
-              this.managers.controlManager.showPauseIndicator();
-            }
-          }
-          if (this.managers.controlManager) {
-            this.managers.controlManager.updatePlayPauseButton();
-          }
-        }
-      }
-    }, {
       "key": "handleCloseButtonClick",
       "value": function handleCloseButtonClick() {
         this.cleanup();
@@ -17584,7 +17395,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ge = function() {
+  var He = function() {
     function SettingsManager(r, o) {
       SettingsManager_classCallCheck(this, SettingsManager);
       this.playerCore = r;
@@ -18137,7 +17948,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ze = function() {
+  var Ge = function() {
     function VideoSwipeManager(r, o, a) {
       var l = this;
       var u = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -18927,7 +18738,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ne = function() {
+  var ze = function() {
     function CustomVideoPlayer() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       CustomVideoPlayer_classCallCheck(this, CustomVideoPlayer);
@@ -18966,7 +18777,7 @@
         var a = o.createUI();
         this.managers.uiManager = o;
         this.playerCore.uiManager = o;
-        var l = new Ge(this.playerCore, a);
+        var l = new He(this.playerCore, a);
         l.init();
         this.managers.settingsManager = l;
         var u = new Be(this.playerCore, a);
@@ -18999,14 +18810,14 @@
         this.managers.dragManager = b;
         this.playerCore.dragManager = b;
         if (this.playerCore.targetVideo && a.videoWrapper && a.handle) {
-          this.swipeManager = new ze(this.playerCore.targetVideo, a.videoWrapper, a.handle, a, (function() {
+          this.swipeManager = new Ge(this.playerCore.targetVideo, a.videoWrapper, a.handle, a, (function() {
             return r.close();
           }));
           this.swipeManager.playerCore = this.playerCore;
           this.playerCore.swipeManager = this.swipeManager;
           this.managers.swipeManager = this.swipeManager;
         }
-        var C = new He(this.playerCore, a, this.managers);
+        var C = new Re(this.playerCore, a, this.managers);
         C.init();
         this.managers.eventManager = C;
         o.assembleDOM();
@@ -19114,7 +18925,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Je = function() {
+  var Ne = function() {
     function FloatingButton() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       FloatingButton_classCallCheck(this, FloatingButton);
@@ -19259,7 +19070,7 @@
       "key": "handleButtonClick",
       "value": function handleButtonClick() {
         this.button.style.display = "none";
-        this.videoPlayer = new Ne({
+        this.videoPlayer = new ze({
           "playerState": this.playerState,
           "callingButton": this.button
         });
@@ -19328,7 +19139,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var qe = function() {
+  var Je = function() {
     function PlayerState() {
       PlayerState_classCallCheck(this, PlayerState);
       this.settings = {
@@ -19842,9 +19653,9 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ue = 30 * 60 * 1e3;
-  var We = 3;
-  var Ye = function() {
+  var qe = 30 * 60 * 1e3;
+  var Ue = 3;
+  var We = function() {
     function LoginManager() {
       LoginManager_classCallCheck(this, LoginManager);
       this.userEmail = "";
@@ -20046,12 +19857,12 @@
       "value": function isCircuitBroken(r) {
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0);
         var a = getLocalStorage("mp_circuit_last_fail_".concat(r), 0);
-        if (o >= We) {
+        if (o >= Ue) {
           var l = Date.now() - a;
-          if (l < Ue) {
+          if (l < qe) {
             return true;
           }
-          setLocalStorage("mp_circuit_fail_".concat(r), We - 1);
+          setLocalStorage("mp_circuit_fail_".concat(r), Ue - 1);
         }
         return false;
       }
@@ -20061,7 +19872,7 @@
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0) + 1;
         setLocalStorage("mp_circuit_fail_".concat(r), o);
         setLocalStorage("mp_circuit_last_fail_".concat(r), Date.now());
-        if (o >= We) {}
+        if (o >= Ue) {}
       }
     }, {
       "key": "resetCircuitBreaker",
@@ -20553,7 +20364,7 @@
           switch (o.prev = o.next) {
            case 0:
             o.prev = 0;
-            r = new Ye;
+            r = new We;
             o.next = 4;
             return r.init();
 
@@ -20681,7 +20492,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ke = function() {
+  var Ye = function() {
     function AdBlockConfig() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       AdBlockConfig_classCallCheck(this, AdBlockConfig);
@@ -20721,7 +20532,7 @@
       }
     } ]);
   }();
-  const Xe = Ke;
+  const Ke = Ye;
   function StyleManager_typeof(r) {
     "@babel/helpers - typeof";
     return StyleManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -20766,7 +20577,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var $e = function() {
+  var Xe = function() {
     function StyleManager(r) {
       StyleManager_classCallCheck(this, StyleManager);
       this.config = r;
@@ -20794,7 +20605,7 @@
       }
     } ]);
   }();
-  const Qe = $e;
+  const $e = Xe;
   function DOMCleaner_typeof(r) {
     "@babel/helpers - typeof";
     return DOMCleaner_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -20839,7 +20650,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ze = function() {
+  var Qe = function() {
     function DOMCleaner(r) {
       DOMCleaner_classCallCheck(this, DOMCleaner);
       this.config = r;
@@ -20938,7 +20749,7 @@
       }
     } ]);
   }();
-  const et = Ze;
+  const Ze = Qe;
   function RequestBlocker_typeof(r) {
     "@babel/helpers - typeof";
     return RequestBlocker_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -20983,7 +20794,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var tt = function() {
+  var et = function() {
     function RequestBlocker(r) {
       RequestBlocker_classCallCheck(this, RequestBlocker);
       this.config = r;
@@ -21071,9 +20882,9 @@
       }
     } ]);
   }();
-  const nt = tt;
-  var rt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
-  var ot = [ {
+  const tt = et;
+  var nt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
+  var rt = [ {
     "selector": 'div[class="my-2 text-sm text-nord4 truncate"]',
     "styles": "white-space: normal !important;"
   }, {
@@ -21083,11 +20894,11 @@
     "selector": 'div[class*="z-max"]',
     "styles": "z-index: 9000 !important;"
   } ];
-  var at = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
-  const it = {
-    "adSelectors": rt,
-    "customStyles": ot,
-    "blockedUrlPatterns": at,
+  var ot = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
+  const at = {
+    "adSelectors": nt,
+    "customStyles": rt,
+    "blockedUrlPatterns": ot,
     "isVideoSite": true,
     "domains": getSiteDomains("MISSAV")
   };
@@ -21135,15 +20946,15 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var st = function() {
+  var it = function() {
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(window.location.href);
-      var o = r ? it : {};
-      this.config = new Xe(o);
-      this.styleManager = new Qe(this.config);
-      this.domCleaner = new et(this.config);
-      this.requestBlocker = new nt(this.config);
+      var o = r ? at : {};
+      this.config = new Ke(o);
+      this.styleManager = new $e(this.config);
+      this.domCleaner = new Ze(this.config);
+      this.requestBlocker = new tt(this.config);
     }
     return adblock_createClass(AdBlocker, [ {
       "key": "preventDetection",
@@ -21191,7 +21002,7 @@
       }
     } ]);
   }();
-  const lt = st;
+  const st = it;
   function DetailExpander_typeof(r) {
     "@babel/helpers - typeof";
     return DetailExpander_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -21236,7 +21047,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ct = function() {
+  var lt = function() {
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
@@ -21349,7 +21160,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ut = function() {
+  var ct = function() {
     function QualityManager() {
       QualityManager_classCallCheck(this, QualityManager);
       this.maxAttempts = 20;
@@ -21500,7 +21311,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var dt = function() {
+  var ut = function() {
     function UrlRedirector() {
       UrlRedirector_classCallCheck(this, UrlRedirector);
       var r = v.MISSAV.primary;
@@ -21608,13 +21419,13 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var mt = new dt;
-  var pt = function() {
+  var dt = new ut;
+  var mt = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
-      this.detailExpander = new ct;
-      this.qualityManager = new ut;
-      this.urlRedirector = mt;
+      this.detailExpander = new lt;
+      this.qualityManager = new ct;
+      this.urlRedirector = dt;
     }
     return userExperienceEnhancer_createClass(UserExperienceEnhancer, [ {
       "key": "init",
@@ -21646,7 +21457,7 @@
   }();
   function initUserExperienceEnhancer() {
     var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
-    var o = new pt;
+    var o = new mt;
     o.init(r);
     return o;
   }
@@ -22052,7 +21863,7 @@
       }));
     };
   }
-  mt.checkAndRedirect();
+  dt.checkAndRedirect();
   function setupViewport() {
     var r = document.querySelector('meta[name="viewport"]');
     if (!r) {
@@ -22102,9 +21913,9 @@
               }
               injectStyles();
               a = initUserExperienceEnhancer(true);
-              o = new qe;
+              o = new Je;
               o.loadSettings();
-              l = new Je({
+              l = new Ne({
                 "playerState": o
               });
               l.init();
@@ -22116,7 +21927,7 @@
               if (u) {
                 window.loginManager = u;
               }
-              p = new lt;
+              p = new st;
               p.init();
               v.next = 22;
               break;
