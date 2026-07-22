@@ -230,7 +230,61 @@
     background: linear-gradient(to top, rgba(10, 10, 12, 0.98) 0%, rgba(10, 10, 12, 0.85) 60%, rgba(10, 10, 12, 0) 100%);
     border-top: none;
     z-index: 9996;
-    pointer-events: auto;
+    .tm-floating-comment-panel {
+    z-index: 9999;
+}
+
+/* 模态框通用按键与表单控件样式 */
+.tm-custom-modal-cancel-btn {
+    background-color: hsla(var(--shadcn-muted)/0.2);
+    color: hsl(var(--shadcn-foreground));
+    border: none;
+    border-radius: 18px;
+    padding: 7px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.2s;
+}
+.tm-custom-modal-cancel-btn:hover {
+    background-color: hsla(var(--shadcn-muted)/0.3);
+}
+
+.tm-custom-modal-submit-btn,
+.tm-custom-modal-login-btn {
+    background-color: hsl(var(--shadcn-blue));
+    color: #ffffff;
+    border: none;
+    border-radius: 18px;
+    padding: 7px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3);
+    transition: background-color 0.2s;
+}
+.tm-custom-modal-submit-btn:hover,
+.tm-custom-modal-login-btn:hover {
+    background-color: hsl(var(--shadcn-blue)/0.9);
+}
+
+.tm-comment-input-textarea {
+    width: 100%;
+    height: 90px;
+    margin: 12px 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid hsla(var(--shadcn-border) / 0.3);
+    background-color: hsla(var(--shadcn-muted) / 0.1);
+    color: hsl(var(--shadcn-foreground));
+    font-size: 13px;
+    resize: none;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}    pointer-events: auto;
 }
 
 .tm-comment-submit-bar {
@@ -1252,6 +1306,58 @@
 /* 仅在手机端（非PC、非iPad竖屏模式）且控制面板隐藏时展示 */
 body.controls-hidden:not(.tm-mode-pc):not(.tm-mode-ipad-portrait) .tm-show-controls-float-btn {
     display: flex;
+}
+
+/* 模态框通用按键与表单控件样式 */
+.tm-custom-modal-cancel-btn {
+    background-color: hsla(var(--shadcn-muted)/0.2);
+    color: hsl(var(--shadcn-foreground));
+    border: none;
+    border-radius: 18px;
+    padding: 7px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.2s;
+}
+.tm-custom-modal-cancel-btn:hover {
+    background-color: hsla(var(--shadcn-muted)/0.3);
+}
+
+.tm-custom-modal-submit-btn,
+.tm-custom-modal-login-btn {
+    background-color: hsl(var(--shadcn-blue));
+    color: #ffffff;
+    border: none;
+    border-radius: 18px;
+    padding: 7px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3);
+    transition: background-color 0.2s;
+}
+.tm-custom-modal-submit-btn:hover,
+.tm-custom-modal-login-btn:hover {
+    background-color: hsl(var(--shadcn-blue)/0.9);
+}
+
+.tm-comment-input-textarea {
+    width: 100%;
+    height: 90px;
+    margin: 12px 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid hsla(var(--shadcn-border) / 0.3);
+    background-color: hsla(var(--shadcn-muted) / 0.1);
+    color: hsl(var(--shadcn-foreground));
+    font-size: 13px;
+    resize: none;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
 }
 
 

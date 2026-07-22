@@ -56,7 +56,7 @@
       var p = a(314);
       var v = a.n(p);
       var b = v()(u());
-      b.push([ r.id, `.tm-comments-panel{\n    position:relative;\n    width:100%;\n    flex:1;\n    min-height:0;\n    background-color:transparent;\n    z-index:9990;\n    display:flex;\n    flex-direction:column;\n    box-sizing:border-box;\n    overflow:hidden;\n    pointer-events:none;\n    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;\n}\n.tm-comments-panel::after{\n    content:'';\n    position:absolute;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.45);\n    pointer-events:none;\n    opacity:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n    z-index:9993;\n}\n.tm-handle-container::after{\n    content:'';\n    position:absolute;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.45);\n    pointer-events:none;\n    opacity:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n    z-index:9993;\n}\n\n.tm-handle-container.is-dimmed::after,\n.tm-player-container:has(.tm-comments-panel.is-dimmed) .tm-handle-container::after{\n    opacity:1;\n}\n\n.tm-comments-panel.is-dimmed::after{\n    opacity:1;\n    pointer-events:auto;\n}\n.tm-comments-panel-action-bar{\n    position:relative;\n    flex:0 0 auto;\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    width:100%;\n    height:calc(26px + env(safe-area-inset-bottom, 0px));\n    padding:0 16px calc(0px + env(safe-area-inset-bottom, 0px)) 16px;\n    box-sizing:border-box;\n    background-color:rgba(10, 10, 12, 0.98);\n    border-top:1px solid rgba(255, 255, 255, 0.05);\n    pointer-events:auto;\n    font-size:0.72rem;\n    line-height:1;\n    color:rgba(255, 255, 255, 0.45);\n    z-index:9995;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-action-bar-left{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:100%;\n    flex:1;\n    min-width:0;\n    overflow:hidden;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-action-bar-right{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:100%;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-comment-count{\n    font-weight:400;\n    color:rgba(255, 255, 255, 0.45);\n    line-height:1;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    min-width:0;\n}\n\n.tm-comment-copy-all-btn{\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:10px;\n    color:rgba(255, 255, 255, 0.55);\n    font-size:0.7rem;\n    padding:2px 8px;\n    cursor:pointer;\n    transition:all 0.15s;\n    outline:none;\n    line-height:1;\n    display:inline-flex;\n    align-items:center;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n.tm-comment-copy-all-btn:hover{\n    color:#ffffff;\n    background:rgba(255, 255, 255, 0.12);\n}\n\n.tm-comments-panel-action-bar .tm-comment-filter-label{\n    display:flex;\n    align-items:center;\n    gap:5px;\n    cursor:pointer;\n    user-select:none;\n    color:rgba(255, 255, 255, 0.55);\n    font-size:0.7rem;\n    line-height:1;\n    transition:color 0.15s;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n.tm-comments-panel-action-bar .tm-comment-filter-label:hover{\n    color:#ffffff;\n}\n.tm-tag-checkbox,\n.tm-comment-filter-checkbox{\n    appearance:none;\n    -webkit-appearance:none;\n    width:18px;\n    height:18px;\n    border-radius:50%;\n    border:1.5px solid rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.06);\n    cursor:pointer;\n    flex-shrink:0;\n    position:relative;\n    outline:none;\n    transition:background 0.15s, border-color 0.15s, transform 0.12s;\n    margin:0;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-tag-checkbox:hover,\n.tm-comment-filter-checkbox:hover{\n    border-color:rgba(255, 255, 255, 0.6);\n}\n\n.tm-tag-checkbox:checked,\n.tm-comment-filter-checkbox:checked{\n    background:hsl(var(--shadcn-blue));\n    border-color:hsl(var(--shadcn-blue));\n}\n\n.tm-tag-checkbox:checked::after,\n.tm-comment-filter-checkbox:checked::after{\n    content:'';\n    width:4px;\n    height:8px;\n    border:solid #ffffff;\n    border-width:0 2px 2px 0;\n    transform:rotate(45deg) translate(-0.5px, -1px);\n    display:block;\n}\n.tm-comments-panel-list.tm-comments-list{\n    flex:1;\n    min-height:0;\n    width:100%;\n    max-height:none;\n    overflow-y:auto;\n    box-sizing:border-box;\n    padding:8px 16px 0px 16px;\n    mask-image:linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);\n    -webkit-mask-image:linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);\n    display:flex;\n    flex-direction:column;\n    align-items:stretch;\n    gap:8px;\n    -webkit-overflow-scrolling:touch;\n    pointer-events:auto;\n    background-color:transparent;\n    overscroll-behavior-y:contain;\n}\n.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.25);\n    border-radius:2px;\n}\n.tm-comment-submit-bar-wrapper{\n    position:relative;\n    flex:0 0 auto;\n    width:100%;\n    padding:8px 16px 8px 16px;\n    box-sizing:border-box;\n    background:linear-gradient(to top, rgba(10, 10, 12, 0.98) 0%, rgba(10, 10, 12, 0.85) 60%, rgba(10, 10, 12, 0) 100%);\n    border-top:none;\n    z-index:9996;\n    pointer-events:auto;\n}\n\n.tm-comment-submit-bar{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    background:transparent;\n    border:none;\n    padding:0;\n    box-sizing:border-box;\n    width:100%;\n    max-width:650px;\n    margin:0 auto;\n}\n\n.tm-comment-add-tag-btn{\n    width:34px;\n    height:34px;\n    border-radius:50%;\n    border:1px solid rgba(255, 255, 255, 0.15);\n    background:rgba(255, 255, 255, 0.08);\n    color:rgba(255, 255, 255, 0.85);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s, color 0.2s;\n    outline:none;\n    padding:0;\n    margin:0;\n    box-sizing:border-box;\n}\n.tm-comment-add-tag-btn:hover{\n    background:rgba(255, 255, 255, 0.18);\n    color:#ffffff;\n    transform:scale(1.05);\n}\n.tm-comment-add-tag-btn svg{\n    width:14px;\n    height:14px;\n    display:block;\n}\n\n.tm-comment-text-input{\n    flex:1;\n    min-width:0;\n    height:34px;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.08);\n    border-radius:17px;\n    padding:0 14px;\n    color:#ffffff;\n    font-size:0.85rem;\n    outline:none;\n    box-sizing:border-box;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-comment-text-input:focus{\n    border-color:rgba(255, 255, 255, 0.25);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-comment-text-input::placeholder{\n    color:rgba(255, 255, 255, 0.35);\n}\n\n.tm-comment-send-btn{\n    height:34px;\n    padding:0 18px;\n    border-radius:17px;\n    border:1px solid rgba(255, 255, 255, 0.2);\n    background:rgba(255, 255, 255, 0.12);\n    color:#ffffff;\n    font-size:0.85rem;\n    font-weight:600;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s;\n    outline:none;\n}\n.tm-comment-send-btn:hover{\n    background:rgba(255, 255, 255, 0.22);\n    transform:scale(1.03);\n}\n.tm-comment-tag-select-modal{\n    position:absolute;\n    bottom:calc(100% + 4px);\n    left:16px;\n    right:16px;\n    width:calc(100% - 32px);\n    max-width:650px;\n    margin:0 auto;\n    max-height:280px;\n    background:rgba(18, 18, 20, 0.96);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border-radius:16px;\n    border:1px solid rgba(255, 255, 255, 0.12);\n    box-shadow:0 -8px 32px rgba(0, 0, 0, 0.6);\n    padding:10px 14px;\n    box-sizing:border-box;\n    display:flex;\n    flex-direction:column;\n    z-index:9996;\n    opacity:0;\n    pointer-events:none;\n    transform:translateY(16px);\n    transition:opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.tm-comment-tag-select-modal.visible{\n    opacity:1;\n    pointer-events:auto;\n    transform:translateY(0);\n}\n\n.tm-tag-select-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    padding-bottom:8px;\n    margin-bottom:6px;\n    border-bottom:1px solid rgba(255, 255, 255, 0.08);\n    flex-shrink:0;\n}\n\n.tm-tag-select-btn-group{\n    display:flex;\n    align-items:center;\n    gap:8px;\n}\n\n.tm-tag-select-all-btn{\n    padding:3px 12px;\n    border-radius:12px;\n    background:rgba(255, 80, 80, 0.18);\n    border:1px solid rgba(255, 80, 80, 0.45);\n    color:#ff6b6b;\n    font-size:0.78rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.15s;\n}\n.tm-tag-select-all-btn:hover{\n    background:rgba(255, 80, 80, 0.3);\n}\n\n.tm-tag-deselect-all-btn{\n    padding:3px 12px;\n    border-radius:12px;\n    background:rgba(255, 255, 255, 0.08);\n    border:1px solid rgba(255, 255, 255, 0.18);\n    color:rgba(255, 255, 255, 0.8);\n    font-size:0.78rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.15s;\n}\n.tm-tag-deselect-all-btn:hover{\n    background:rgba(255, 255, 255, 0.15);\n}\n\n.tm-tag-select-close-btn{\n    background:transparent;\n    border:none;\n    color:rgba(255, 255, 255, 0.5);\n    font-size:0.95rem;\n    cursor:pointer;\n    padding:0 4px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    transition:color 0.15s;\n}\n.tm-tag-select-close-btn:hover{\n    color:#ffffff;\n}\n\n.tm-tag-select-list{\n    flex:1;\n    overflow-y:auto;\n    display:flex;\n    flex-direction:column;\n    gap:6px;\n    padding-right:2px;\n}\n.tm-tag-select-list::-webkit-scrollbar{\n    width:4px;\n}\n.tm-tag-select-list::-webkit-scrollbar-thumb{\n    background:rgba(255, 255, 255, 0.2);\n    border-radius:2px;\n}\n\n.tm-tag-select-item{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:32px;\n    box-sizing:border-box;\n}\n\n.tm-tag-checkbox{\n    width:18px;\n    height:18px;\n    accent-color:#ff5252;\n    cursor:pointer;\n    flex-shrink:0;\n}\n\n.tm-tag-remark-input{\n    flex:1;\n    min-width:0;\n    height:32px;\n    box-sizing:border-box;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:8px;\n    padding:0 10px;\n    color:#ffffff;\n    font-size:0.82rem;\n    outline:none;\n    display:inline-flex;\n    align-items:center;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-tag-remark-input:focus{\n    border-color:rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-tag-remark-input::placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n\n.tm-tag-select-empty{\n    padding:16px;\n    text-align:center;\n    font-size:0.82rem;\n    color:rgba(255, 255, 255, 0.35);\n}\n.tm-custom-modal-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.4);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    z-index:2000000020 !important;\n    opacity:0;\n    transition:opacity 0.25s ease;\n    pointer-events:auto;\n}\n\n.tm-custom-modal-overlay.active{\n    opacity:1;\n}\n\n.tm-custom-modal-content{\n    background-color:hsl(var(--shadcn-card));\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    border-radius:16px;\n    padding:24px;\n    width:85%;\n    max-width:280px;\n    text-align:center;\n    box-shadow:0 10px 30px rgba(0, 0, 0, 0.3);\n    transform:scale(0.9);\n    transition:transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-custom-modal-overlay.active .tm-custom-modal-content{\n    transform:scale(1);\n}\n\n.tm-custom-modal-title{\n    font-size:15px;\n    font-weight:700;\n    margin-bottom:6px;\n}\n\n.tm-custom-modal-message{\n    font-size:13px;\n    color:hsl(var(--shadcn-muted-foreground));\n    margin-bottom:18px;\n    line-height:1.4;\n}\n\n.tm-custom-modal-close-btn{\n    background-color:hsl(var(--shadcn-blue));\n    color:#ffffff;\n    border:none;\n    border-radius:18px;\n    padding:7px 28px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    box-shadow:0 4px 10px hsla(var(--shadcn-blue) / 0.3);\n    transition:all 0.2s;\n}\n\n.tm-custom-modal-close-btn:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-1px);\n}\n\n.tm-custom-modal-close-btn:active{\n    transform:scale(0.95);\n}\n.jc-hdr{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    width:100%;\n    margin-bottom:3px;\n    box-sizing:border-box;\n}\n\n.jc-hdr-left{\n    display:flex;\n    align-items:center;\n    gap:6px;\n    flex-shrink:0;\n}\n\n.jc-hdr-right{\n    display:flex;\n    align-items:center;\n    gap:6px;\n    min-width:0;\n}\n.jc-site{\n    font-size:8px;\n    padding:1px 4px;\n    border-radius:4px;\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    color:hsl(var(--shadcn-blue));\n    font-weight:700;\n    border:1px solid hsla(var(--shadcn-blue) / 0.25);\n    text-transform:uppercase;\n    line-height:1;\n}\n\n.jc-site-jable{\n    background-color:hsla(340, 82%, 52%, 0.1);\n    color:hsl(340, 82%, 52%);\n    border:1px solid hsla(340, 82%, 52%, 0.25);\n}\n\n.jc-site-javlib{\n    background-color:hsla(210, 100%, 50%, 0.1);\n    color:hsl(210, 100%, 50%);\n    border:1px solid hsla(210, 100%, 50%, 0.25);\n}\n.jc-skeleton{\n    pointer-events:none;\n}\n\n.jc-skeleton .skeleton-block{\n    background:hsla(var(--shadcn-muted-foreground) / 0.15);\n    border-radius:4px;\n    animation:skeleton-loading 1.5s infinite ease-in-out;\n}\n\n@keyframes skeleton-loading{\n    0%{\n        opacity:0.55;\n    }\n    50%{\n        opacity:1;\n    }\n    100%{\n        opacity:0.55;\n    }\n}\n.jc-card{\n    display:flex;\n    flex-direction:column;\n    padding:5px 0;\n    background-color:transparent;\n    border:none;\n    border-bottom:1px solid rgba(255, 255, 255, 0.04);\n    transition:opacity 0.2s;\n    margin-bottom:6px;\n    text-align:left;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.jc-card .jc-bd{\n    width:100%;\n}\n\n.jc-card .jc-u{\n    font-weight:500;\n    color:rgba(255, 255, 255, 0.65);\n    text-decoration:none;\n    max-width:140px;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    font-size:12.5px;\n    display:inline-block;\n    vertical-align:middle;\n    transition:color var(--anim-quick);\n}\n\n.jc-card a.jc-u:hover{\n    text-decoration:underline;\n    color:hsl(var(--shadcn-blue));\n}\n\n.jc-card .jc-t{\n    color:rgba(255, 255, 255, 0.4);\n    font-size:11px;\n    display:inline-block;\n    vertical-align:middle;\n}\n\n.jc-card .jc-body-text{\n    font-size:14.5px;\n    line-height:1.55;\n    letter-spacing:0.01em;\n    color:rgba(255, 255, 255, 0.88);\n    overflow-wrap:anywhere;\n    word-break:break-word;\n    margin-top:4px;\n}\n.jc-c-sep{\n    color:rgba(255, 255, 255, 0.25);\n    margin:0 4px;\n    font-weight:normal;\n    display:inline-block;\n    vertical-align:middle;\n}\n.jc-card.jc-spam{\n    opacity:0.35;\n    background-color:transparent;\n}\n\n.jc-card.jc-spam:hover{\n    opacity:0.75;\n}\n\n.jc-spam-badge{\n    background-color:hsla(var(--shadcn-destructive) / 0.8);\n    color:hsl(var(--shadcn-destructive-foreground));\n    font-size:8px;\n    padding:1px 4px;\n    border-radius:3px;\n    font-weight:600;\n    margin-left:4px;\n    display:inline-block;\n    vertical-align:middle;\n}\n.jc-time-link{\n    color:hsl(142.1 70.6% 45.3%);\n    font-weight:700;\n    cursor:pointer;\n    text-decoration:none;\n    transition:all 0.2s ease;\n    padding:2px 6px;\n    background-color:hsla(142.1 70.6% 45.3% / 0.16);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.25);\n    border-radius:4px;\n    display:inline-block;\n    margin:0 2px;\n    font-family:monospace;\n    font-size:12.5px;\n}\n\n.jc-time-link:hover{\n    background-color:hsla(142.1 70.6% 45.3% / 0.25);\n    color:hsl(142.1 76.2% 36.3%);\n    box-shadow:0 1px 4px hsla(142.1 70.6% 45.3% / 0.15);\n}\n\n.jc-code-link{\n    display:inline-block;\n    padding:2px 6px;\n    margin:0 2px;\n    background-color:hsla(var(--shadcn-blue) / 0.16);\n    border:1px solid hsla(var(--shadcn-blue) / 0.35);\n    color:hsl(var(--shadcn-blue));\n    border-radius:4px;\n    font-weight:700;\n    cursor:pointer;\n    font-size:12px;\n    font-family:monospace;\n    transition:all 0.2s ease;\n}\n\n.jc-code-link:hover{\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n    box-shadow:0 2px 6px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.jc-emoji{\n    height:16px;\n    width:16px;\n    vertical-align:middle;\n    display:inline-block;\n    margin:0 1px;\n}\n.tm-comment-loading,\n.tm-comment-error{\n    width:100%;\n    padding:24px;\n    text-align:center;\n    font-size:12px;\n    color:hsl(var(--shadcn-muted-foreground));\n    box-sizing:border-box;\n    pointer-events:auto;\n    background-color:transparent;\n    flex:1;\n}\n\n.tm-comment-error{\n    color:hsl(var(--shadcn-destructive));\n}\n\n.tm-comment-loader-graphic{\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    gap:5px;\n    padding:16px;\n    width:100%;\n}\n\n.tm-comment-loader-graphic .dot{\n    width:6px;\n    height:6px;\n    border-radius:50%;\n    background-color:hsl(var(--shadcn-blue));\n    animation:tmDotPulse 1.4s infinite ease-in-out both;\n}\n\n.tm-comment-loader-graphic .dot:nth-child(1){\n    animation-delay:-0.32s;\n}\n\n.tm-comment-loader-graphic .dot:nth-child(2){\n    animation-delay:-0.16s;\n}\n\n@keyframes tmDotPulse{\n    0%, 80%, 100%{\n        transform:scale(0);\n        opacity:0.3;\n    }\n    40%{\n        transform:scale(1);\n        opacity:1;\n    }\n}\n\n@keyframes tmShake{\n    0%, 100%{ transform:translateX(0); }\n    20%, 60%{ transform:translateX(-4px); }\n    40%, 80%{ transform:translateX(4px); }\n}\n.tm-comments-tabs{\n    display:flex;\n    align-items:center;\n    justify-content:flex-start;\n    gap:8px;\n    padding:8px 16px;\n    background-color:hsla(var(--shadcn-card) / 0.65);\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    pointer-events:auto;\n    z-index:9994;\n    overflow-x:auto;\n    scrollbar-width:none;\n    overscroll-behavior:contain;\n    touch-action:pan-x;\n}\n.tm-comments-tabs::-webkit-scrollbar{\n    display:none;\n}\n\n.tm-comments-tab-btn{\n    padding:6px 14px;\n    font-size:12px;\n    font-weight:500;\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:transparent;\n    border:1px solid transparent;\n    border-radius:16px;\n    cursor:pointer;\n    white-space:nowrap;\n    outline:none;\n    transition:all var(--anim-quick);\n}\n\n.tm-comments-tab-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n}\n\n.tm-comments-tab-btn.active{\n    color:#ffffff;\n    background-color:hsl(var(--shadcn-blue));\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 2px 8px hsla(var(--shadcn-blue) / 0.3);\n    font-weight:600;\n}\n.jc-score-badge{\n    display:inline-block;\n    font-size:10px;\n    color:hsl(var(--shadcn-blue));\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    border:1px solid hsla(var(--shadcn-blue) / 0.3);\n    border-radius:4px;\n    padding:0 4px;\n    margin-left:6px;\n    font-weight:600;\n    vertical-align:middle;\n}\n@media (orientation: landscape){\n    .tm-comments-panel{\n        position:absolute !important;\n        width:0 !important;\n        height:0 !important;\n        overflow:hidden !important;\n        visibility:hidden !important;\n        pointer-events:none !important;\n        opacity:0 !important;\n        border:none !important;\n        margin:0 !important;\n        padding:0 !important;\n    }\n}\n.jc-body-text--collapsible{\n    position:relative;\n    display:flex;\n    flex-direction:column;\n}\n.jc-body-text--collapsible[data-collapsed="true"]{\n    cursor:pointer;\n}\n\n.jc-body-text--collapsible[data-collapsed="true"] .jc-body-text-content{\n    max-height:80px;\n    overflow:hidden;\n    mask-image:linear-gradient(to bottom, black 50%, transparent 100%);\n    -webkit-mask-image:linear-gradient(to bottom, black 50%, transparent 100%);\n}\n\n.jc-toggle-expand-btn{\n    align-self:flex-start;\n    background:transparent;\n    border:none;\n    color:hsl(var(--shadcn-blue));\n    font-size:11px;\n    font-weight:600;\n    padding:4px 0;\n    cursor:pointer;\n    outline:none;\n    transition:opacity 0.2s;\n    pointer-events:auto;\n}\n\n.jc-toggle-expand-btn:hover{\n    opacity:0.8;\n    text-decoration:underline;\n}\n\n.jc-site-javlib-review{\n    background-color:hsla(270, 100%, 60%, 0.1);\n    color:hsl(270, 100%, 60%);\n    border:1px solid hsla(270, 100%, 60%, 0.25);\n}\n.tm-comment-section{\n    display:flex;\n    flex-direction:column;\n    width:100%;\n    margin-bottom:6px;\n    box-sizing:border-box;\n    min-height:0;\n    flex:0 0 auto;\n    transition:flex 0.25s cubic-bezier(0.25, 1, 0.5, 1);\n}\n\n.tm-comment-section:not(.is-collapsed){\n    flex:1;\n}\n\n.tm-comment-section-body{\n    flex:1;\n    min-height:0;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n    overscroll-behavior-y:contain;\n    padding-right:4px;\n    padding-bottom:56px;\n}\n.tm-comment-section-body::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-comment-section-body::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.25);\n    border-radius:2px;\n}\n\n#tm-comment-section-jable{\n    border-left:3px solid hsl(var(--shadcn-red));\n    background:linear-gradient(to right, hsla(var(--shadcn-red) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-jable .tm-comment-section-title{\n    color:hsl(var(--shadcn-red)) !important;\n}\n\n#tm-comment-section-javlib{\n    border-left:3px solid hsl(var(--shadcn-purple));\n    background:linear-gradient(to right, hsla(var(--shadcn-purple) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-javlib .tm-comment-section-title{\n    color:hsl(var(--shadcn-purple)) !important;\n}\n\n#tm-comment-section-javdb{\n    border-left:3px solid hsl(var(--shadcn-blue));\n    background:linear-gradient(to right, hsla(var(--shadcn-blue) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-javdb .tm-comment-section-title{\n    color:hsl(var(--shadcn-blue)) !important;\n}\n\n.tm-comment-section-hdr{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    width:100%;\n    padding:1px 0;\n    margin-bottom:4px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    box-sizing:border-box;\n    cursor:pointer;\n    user-select:none;\n}\n\n.tm-comment-section-title{\n    font-size:13px;\n    font-weight:600;\n    color:hsl(var(--shadcn-foreground));\n    display:flex;\n    align-items:center;\n    gap:6px;\n}\n\n.tm-comment-login-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 8px;\n    border-radius:12px;\n    font-size:10px;\n    font-weight:600;\n    line-height:1;\n    transition:all 0.2s ease;\n}\n\n.tm-comment-login-badge.is-logged-in{\n    color:hsl(142.1 70.6% 45.3%);\n    background-color:hsla(142.1 70.6% 45.3% / 0.1);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.2);\n    cursor:default;\n}\n\n.tm-comment-login-badge.is-not-logged-in{\n    color:hsl(30 100% 50%);\n    background-color:hsla(30 100% 50% / 0.1);\n    border:1px solid hsla(30 100% 50% / 0.25);\n    cursor:pointer;\n}\n\n.tm-comment-login-badge.is-not-logged-in:hover{\n    background-color:hsla(30 100% 50% / 0.2);\n    transform:translateY(-0.5px);\n    box-shadow:0 2px 6px hsla(30 100% 50% / 0.15);\n}\n\n.tm-comment-login-badge.is-not-logged-in:active{\n    transform:scale(0.95);\n}\n\n.tm-comment-login-badge.is-checking{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    cursor:default;\n}\n\n.tm-comment-status-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 8px;\n    border-radius:12px;\n    font-size:10px;\n    font-weight:600;\n    line-height:1;\n}\n.tm-status-badge-loading{\n    color:hsl(var(--shadcn-blue));\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    border:1px solid hsla(var(--shadcn-blue) / 0.2);\n    animation:tmPulse 2s infinite ease-in-out;\n}\n\n.tm-status-badge-unreachable{\n    color:hsl(var(--shadcn-destructive));\n    background-color:hsla(var(--shadcn-destructive) / 0.1);\n    border:1px solid hsla(var(--shadcn-destructive) / 0.2);\n}\n\n.tm-status-badge-not_found{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-mobile_unsupported{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-empty{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-cf_shield{\n    color:hsl(30 100% 50%);\n    background-color:hsla(30 100% 50% / 0.1);\n    border:1px solid hsla(30 100% 50% / 0.2);\n}\n\n.tm-status-badge-loaded{\n    color:hsl(142.1 70.6% 45.3%);\n    background-color:hsla(142.1 70.6% 45.3% / 0.1);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.2);\n}\n\n@keyframes tmPulse{\n    0%{\n        opacity:0.7;\n    }\n    50%{\n        opacity:1;\n    }\n    100%{\n        opacity:0.7;\n    }\n}\n\n.jc-comment-link{\n    color:hsl(var(--shadcn-blue));\n    text-decoration:underline;\n}\n.jc-comment-link:hover{\n    color:hsl(var(--shadcn-blue) / 0.8);\n}\n\n.tm-comment-copy-all-btn{\n    margin-left:10px;\n    cursor:pointer;\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    border-radius:4px;\n    padding:2px 8px;\n    font-size:10px;\n    font-weight:600;\n    color:hsl(var(--shadcn-muted-foreground));\n    outline:none;\n    transition:all var(--anim-quick);\n}\n.tm-comment-copy-all-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.3);\n    border-color:hsla(var(--shadcn-border) / 0.4);\n}\n.tm-comment-copy-all-btn:active{\n    transform:scale(0.95);\n}\n@keyframes jcCardHighlightFlash{\n    0%{\n        background-color:hsla(var(--shadcn-blue) / 0.22);\n    }\n    100%{\n        background-color:transparent;\n    }\n}\n.jc-card-highlight-flash{\n    animation:jcCardHighlightFlash 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;\n}\n@media screen and (min-width: 930px) and (orientation: landscape){\n    .tm-comments-panel:hover::after{\n        opacity:0 !important;\n        pointer-events:none !important;\n    }\n}\n.tm-show-controls-float-btn{\n    position:absolute;\n    bottom:calc(96px + env(safe-area-inset-bottom, 0px));\n    right:16px;\n    width:36px;\n    height:36px;\n    border-radius:50%;\n    background:rgba(18, 18, 20, 0.85);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    color:rgba(255, 255, 255, 0.85);\n    display:none;\n    align-items:center;\n    justify-content:center;\n    box-shadow:0 4px 12px rgba(0, 0, 0, 0.4);\n    z-index:9997;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    padding:0;\n    outline:none;\n    box-sizing:border-box;\n    pointer-events:auto;\n}\n.tm-show-controls-float-btn:hover{\n    color:#ffffff;\n    background:rgba(255, 255, 255, 0.2);\n    transform:scale(1.06);\n}\n.tm-show-controls-float-btn:active{\n    transform:scale(0.92);\n}\n.tm-show-controls-float-btn svg{\n    height:18px;\n    width:auto;\n    display:block;\n    fill:none !important;\n}\n.tm-show-controls-float-btn svg path{\n    fill:currentColor !important;\n    stroke:none !important;\n}\nbody.controls-hidden:not(.tm-mode-pc):not(.tm-mode-ipad-portrait) .tm-show-controls-float-btn{\n    display:flex;\n}\n\n\n\n`, "" ]);
+      b.push([ r.id, `.tm-comments-panel{\n    position:relative;\n    width:100%;\n    flex:1;\n    min-height:0;\n    background-color:transparent;\n    z-index:9990;\n    display:flex;\n    flex-direction:column;\n    box-sizing:border-box;\n    overflow:hidden;\n    pointer-events:none;\n    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;\n}\n.tm-comments-panel::after{\n    content:'';\n    position:absolute;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.45);\n    pointer-events:none;\n    opacity:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n    z-index:9993;\n}\n.tm-handle-container::after{\n    content:'';\n    position:absolute;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.45);\n    pointer-events:none;\n    opacity:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);\n    z-index:9993;\n}\n\n.tm-handle-container.is-dimmed::after,\n.tm-player-container:has(.tm-comments-panel.is-dimmed) .tm-handle-container::after{\n    opacity:1;\n}\n\n.tm-comments-panel.is-dimmed::after{\n    opacity:1;\n    pointer-events:auto;\n}\n.tm-comments-panel-action-bar{\n    position:relative;\n    flex:0 0 auto;\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    width:100%;\n    height:calc(26px + env(safe-area-inset-bottom, 0px));\n    padding:0 16px calc(0px + env(safe-area-inset-bottom, 0px)) 16px;\n    box-sizing:border-box;\n    background-color:rgba(10, 10, 12, 0.98);\n    border-top:1px solid rgba(255, 255, 255, 0.05);\n    pointer-events:auto;\n    font-size:0.72rem;\n    line-height:1;\n    color:rgba(255, 255, 255, 0.45);\n    z-index:9995;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-action-bar-left{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:100%;\n    flex:1;\n    min-width:0;\n    overflow:hidden;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-action-bar-right{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:100%;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n\n.tm-comments-panel-action-bar .tm-comment-count{\n    font-weight:400;\n    color:rgba(255, 255, 255, 0.45);\n    line-height:1;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    min-width:0;\n}\n\n.tm-comment-copy-all-btn{\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:10px;\n    color:rgba(255, 255, 255, 0.55);\n    font-size:0.7rem;\n    padding:2px 8px;\n    cursor:pointer;\n    transition:all 0.15s;\n    outline:none;\n    line-height:1;\n    display:inline-flex;\n    align-items:center;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n.tm-comment-copy-all-btn:hover{\n    color:#ffffff;\n    background:rgba(255, 255, 255, 0.12);\n}\n\n.tm-comments-panel-action-bar .tm-comment-filter-label{\n    display:flex;\n    align-items:center;\n    gap:5px;\n    cursor:pointer;\n    user-select:none;\n    color:rgba(255, 255, 255, 0.55);\n    font-size:0.7rem;\n    line-height:1;\n    transition:color 0.15s;\n    flex-shrink:0;\n    white-space:nowrap;\n}\n.tm-comments-panel-action-bar .tm-comment-filter-label:hover{\n    color:#ffffff;\n}\n.tm-tag-checkbox,\n.tm-comment-filter-checkbox{\n    appearance:none;\n    -webkit-appearance:none;\n    width:18px;\n    height:18px;\n    border-radius:50%;\n    border:1.5px solid rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.06);\n    cursor:pointer;\n    flex-shrink:0;\n    position:relative;\n    outline:none;\n    transition:background 0.15s, border-color 0.15s, transform 0.12s;\n    margin:0;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-tag-checkbox:hover,\n.tm-comment-filter-checkbox:hover{\n    border-color:rgba(255, 255, 255, 0.6);\n}\n\n.tm-tag-checkbox:checked,\n.tm-comment-filter-checkbox:checked{\n    background:hsl(var(--shadcn-blue));\n    border-color:hsl(var(--shadcn-blue));\n}\n\n.tm-tag-checkbox:checked::after,\n.tm-comment-filter-checkbox:checked::after{\n    content:'';\n    width:4px;\n    height:8px;\n    border:solid #ffffff;\n    border-width:0 2px 2px 0;\n    transform:rotate(45deg) translate(-0.5px, -1px);\n    display:block;\n}\n.tm-comments-panel-list.tm-comments-list{\n    flex:1;\n    min-height:0;\n    width:100%;\n    max-height:none;\n    overflow-y:auto;\n    box-sizing:border-box;\n    padding:8px 16px 0px 16px;\n    mask-image:linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);\n    -webkit-mask-image:linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);\n    display:flex;\n    flex-direction:column;\n    align-items:stretch;\n    gap:8px;\n    -webkit-overflow-scrolling:touch;\n    pointer-events:auto;\n    background-color:transparent;\n    overscroll-behavior-y:contain;\n}\n.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.25);\n    border-radius:2px;\n}\n.tm-comment-submit-bar-wrapper{\n    position:relative;\n    flex:0 0 auto;\n    width:100%;\n    padding:8px 16px 8px 16px;\n    box-sizing:border-box;\n    background:linear-gradient(to top, rgba(10, 10, 12, 0.98) 0%, rgba(10, 10, 12, 0.85) 60%, rgba(10, 10, 12, 0) 100%);\n    border-top:none;\n    z-index:9996;\n    .tm-floating-comment-panel{\n    z-index:9999;\n}\n.tm-custom-modal-cancel-btn{\n    background-color:hsla(var(--shadcn-muted)/0.2);\n    color:hsl(var(--shadcn-foreground));\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-cancel-btn:hover{\n    background-color:hsla(var(--shadcn-muted)/0.3);\n}\n\n.tm-custom-modal-submit-btn,\n.tm-custom-modal-login-btn{\n    background-color:hsl(var(--shadcn-blue));\n    color:#ffffff;\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    box-shadow:0 4px 10px hsla(var(--shadcn-blue) / 0.3);\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-submit-btn:hover,\n.tm-custom-modal-login-btn:hover{\n    background-color:hsl(var(--shadcn-blue)/0.9);\n}\n\n.tm-comment-input-textarea{\n    width:100%;\n    height:90px;\n    margin:12px 0;\n    padding:10px;\n    border-radius:8px;\n    border:1px solid hsla(var(--shadcn-border) / 0.3);\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n    font-size:13px;\n    resize:none;\n    box-sizing:border-box;\n    outline:none;\n    transition:border-color 0.2s;\n}    pointer-events:auto;\n}\n\n.tm-comment-submit-bar{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    background:transparent;\n    border:none;\n    padding:0;\n    box-sizing:border-box;\n    width:100%;\n    max-width:650px;\n    margin:0 auto;\n}\n\n.tm-comment-add-tag-btn{\n    width:34px;\n    height:34px;\n    border-radius:50%;\n    border:1px solid rgba(255, 255, 255, 0.15);\n    background:rgba(255, 255, 255, 0.08);\n    color:rgba(255, 255, 255, 0.85);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s, color 0.2s;\n    outline:none;\n    padding:0;\n    margin:0;\n    box-sizing:border-box;\n}\n.tm-comment-add-tag-btn:hover{\n    background:rgba(255, 255, 255, 0.18);\n    color:#ffffff;\n    transform:scale(1.05);\n}\n.tm-comment-add-tag-btn svg{\n    width:14px;\n    height:14px;\n    display:block;\n}\n\n.tm-comment-text-input{\n    flex:1;\n    min-width:0;\n    height:34px;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.08);\n    border-radius:17px;\n    padding:0 14px;\n    color:#ffffff;\n    font-size:0.85rem;\n    outline:none;\n    box-sizing:border-box;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-comment-text-input:focus{\n    border-color:rgba(255, 255, 255, 0.25);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-comment-text-input::placeholder{\n    color:rgba(255, 255, 255, 0.35);\n}\n\n.tm-comment-send-btn{\n    height:34px;\n    padding:0 18px;\n    border-radius:17px;\n    border:1px solid rgba(255, 255, 255, 0.2);\n    background:rgba(255, 255, 255, 0.12);\n    color:#ffffff;\n    font-size:0.85rem;\n    font-weight:600;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s;\n    outline:none;\n}\n.tm-comment-send-btn:hover{\n    background:rgba(255, 255, 255, 0.22);\n    transform:scale(1.03);\n}\n.tm-comment-tag-select-modal{\n    position:absolute;\n    bottom:calc(100% + 4px);\n    left:16px;\n    right:16px;\n    width:calc(100% - 32px);\n    max-width:650px;\n    margin:0 auto;\n    max-height:280px;\n    background:rgba(18, 18, 20, 0.96);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border-radius:16px;\n    border:1px solid rgba(255, 255, 255, 0.12);\n    box-shadow:0 -8px 32px rgba(0, 0, 0, 0.6);\n    padding:10px 14px;\n    box-sizing:border-box;\n    display:flex;\n    flex-direction:column;\n    z-index:9996;\n    opacity:0;\n    pointer-events:none;\n    transform:translateY(16px);\n    transition:opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n}\n.tm-comment-tag-select-modal.visible{\n    opacity:1;\n    pointer-events:auto;\n    transform:translateY(0);\n}\n\n.tm-tag-select-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    padding-bottom:8px;\n    margin-bottom:6px;\n    border-bottom:1px solid rgba(255, 255, 255, 0.08);\n    flex-shrink:0;\n}\n\n.tm-tag-select-btn-group{\n    display:flex;\n    align-items:center;\n    gap:8px;\n}\n\n.tm-tag-select-all-btn{\n    padding:3px 12px;\n    border-radius:12px;\n    background:rgba(255, 80, 80, 0.18);\n    border:1px solid rgba(255, 80, 80, 0.45);\n    color:#ff6b6b;\n    font-size:0.78rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.15s;\n}\n.tm-tag-select-all-btn:hover{\n    background:rgba(255, 80, 80, 0.3);\n}\n\n.tm-tag-deselect-all-btn{\n    padding:3px 12px;\n    border-radius:12px;\n    background:rgba(255, 255, 255, 0.08);\n    border:1px solid rgba(255, 255, 255, 0.18);\n    color:rgba(255, 255, 255, 0.8);\n    font-size:0.78rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.15s;\n}\n.tm-tag-deselect-all-btn:hover{\n    background:rgba(255, 255, 255, 0.15);\n}\n\n.tm-tag-select-close-btn{\n    background:transparent;\n    border:none;\n    color:rgba(255, 255, 255, 0.5);\n    font-size:0.95rem;\n    cursor:pointer;\n    padding:0 4px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    transition:color 0.15s;\n}\n.tm-tag-select-close-btn:hover{\n    color:#ffffff;\n}\n\n.tm-tag-select-list{\n    flex:1;\n    overflow-y:auto;\n    display:flex;\n    flex-direction:column;\n    gap:6px;\n    padding-right:2px;\n}\n.tm-tag-select-list::-webkit-scrollbar{\n    width:4px;\n}\n.tm-tag-select-list::-webkit-scrollbar-thumb{\n    background:rgba(255, 255, 255, 0.2);\n    border-radius:2px;\n}\n\n.tm-tag-select-item{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:32px;\n    box-sizing:border-box;\n}\n\n.tm-tag-checkbox{\n    width:18px;\n    height:18px;\n    accent-color:#ff5252;\n    cursor:pointer;\n    flex-shrink:0;\n}\n\n.tm-tag-remark-input{\n    flex:1;\n    min-width:0;\n    height:32px;\n    box-sizing:border-box;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:8px;\n    padding:0 10px;\n    color:#ffffff;\n    font-size:0.82rem;\n    outline:none;\n    display:inline-flex;\n    align-items:center;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-tag-remark-input:focus{\n    border-color:rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-tag-remark-input::placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n\n.tm-tag-select-empty{\n    padding:16px;\n    text-align:center;\n    font-size:0.82rem;\n    color:rgba(255, 255, 255, 0.35);\n}\n.tm-custom-modal-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:rgba(0, 0, 0, 0.4);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    z-index:2000000020 !important;\n    opacity:0;\n    transition:opacity 0.25s ease;\n    pointer-events:auto;\n}\n\n.tm-custom-modal-overlay.active{\n    opacity:1;\n}\n\n.tm-custom-modal-content{\n    background-color:hsl(var(--shadcn-card));\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    border-radius:16px;\n    padding:24px;\n    width:85%;\n    max-width:280px;\n    text-align:center;\n    box-shadow:0 10px 30px rgba(0, 0, 0, 0.3);\n    transform:scale(0.9);\n    transition:transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-custom-modal-overlay.active .tm-custom-modal-content{\n    transform:scale(1);\n}\n\n.tm-custom-modal-title{\n    font-size:15px;\n    font-weight:700;\n    margin-bottom:6px;\n}\n\n.tm-custom-modal-message{\n    font-size:13px;\n    color:hsl(var(--shadcn-muted-foreground));\n    margin-bottom:18px;\n    line-height:1.4;\n}\n\n.tm-custom-modal-close-btn{\n    background-color:hsl(var(--shadcn-blue));\n    color:#ffffff;\n    border:none;\n    border-radius:18px;\n    padding:7px 28px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    box-shadow:0 4px 10px hsla(var(--shadcn-blue) / 0.3);\n    transition:all 0.2s;\n}\n\n.tm-custom-modal-close-btn:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-1px);\n}\n\n.tm-custom-modal-close-btn:active{\n    transform:scale(0.95);\n}\n.jc-hdr{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    width:100%;\n    margin-bottom:3px;\n    box-sizing:border-box;\n}\n\n.jc-hdr-left{\n    display:flex;\n    align-items:center;\n    gap:6px;\n    flex-shrink:0;\n}\n\n.jc-hdr-right{\n    display:flex;\n    align-items:center;\n    gap:6px;\n    min-width:0;\n}\n.jc-site{\n    font-size:8px;\n    padding:1px 4px;\n    border-radius:4px;\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    color:hsl(var(--shadcn-blue));\n    font-weight:700;\n    border:1px solid hsla(var(--shadcn-blue) / 0.25);\n    text-transform:uppercase;\n    line-height:1;\n}\n\n.jc-site-jable{\n    background-color:hsla(340, 82%, 52%, 0.1);\n    color:hsl(340, 82%, 52%);\n    border:1px solid hsla(340, 82%, 52%, 0.25);\n}\n\n.jc-site-javlib{\n    background-color:hsla(210, 100%, 50%, 0.1);\n    color:hsl(210, 100%, 50%);\n    border:1px solid hsla(210, 100%, 50%, 0.25);\n}\n.jc-skeleton{\n    pointer-events:none;\n}\n\n.jc-skeleton .skeleton-block{\n    background:hsla(var(--shadcn-muted-foreground) / 0.15);\n    border-radius:4px;\n    animation:skeleton-loading 1.5s infinite ease-in-out;\n}\n\n@keyframes skeleton-loading{\n    0%{\n        opacity:0.55;\n    }\n    50%{\n        opacity:1;\n    }\n    100%{\n        opacity:0.55;\n    }\n}\n.jc-card{\n    display:flex;\n    flex-direction:column;\n    padding:5px 0;\n    background-color:transparent;\n    border:none;\n    border-bottom:1px solid rgba(255, 255, 255, 0.04);\n    transition:opacity 0.2s;\n    margin-bottom:6px;\n    text-align:left;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.jc-card .jc-bd{\n    width:100%;\n}\n\n.jc-card .jc-u{\n    font-weight:500;\n    color:rgba(255, 255, 255, 0.65);\n    text-decoration:none;\n    max-width:140px;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    font-size:12.5px;\n    display:inline-block;\n    vertical-align:middle;\n    transition:color var(--anim-quick);\n}\n\n.jc-card a.jc-u:hover{\n    text-decoration:underline;\n    color:hsl(var(--shadcn-blue));\n}\n\n.jc-card .jc-t{\n    color:rgba(255, 255, 255, 0.4);\n    font-size:11px;\n    display:inline-block;\n    vertical-align:middle;\n}\n\n.jc-card .jc-body-text{\n    font-size:14.5px;\n    line-height:1.55;\n    letter-spacing:0.01em;\n    color:rgba(255, 255, 255, 0.88);\n    overflow-wrap:anywhere;\n    word-break:break-word;\n    margin-top:4px;\n}\n.jc-c-sep{\n    color:rgba(255, 255, 255, 0.25);\n    margin:0 4px;\n    font-weight:normal;\n    display:inline-block;\n    vertical-align:middle;\n}\n.jc-card.jc-spam{\n    opacity:0.35;\n    background-color:transparent;\n}\n\n.jc-card.jc-spam:hover{\n    opacity:0.75;\n}\n\n.jc-spam-badge{\n    background-color:hsla(var(--shadcn-destructive) / 0.8);\n    color:hsl(var(--shadcn-destructive-foreground));\n    font-size:8px;\n    padding:1px 4px;\n    border-radius:3px;\n    font-weight:600;\n    margin-left:4px;\n    display:inline-block;\n    vertical-align:middle;\n}\n.jc-time-link{\n    color:hsl(142.1 70.6% 45.3%);\n    font-weight:700;\n    cursor:pointer;\n    text-decoration:none;\n    transition:all 0.2s ease;\n    padding:2px 6px;\n    background-color:hsla(142.1 70.6% 45.3% / 0.16);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.25);\n    border-radius:4px;\n    display:inline-block;\n    margin:0 2px;\n    font-family:monospace;\n    font-size:12.5px;\n}\n\n.jc-time-link:hover{\n    background-color:hsla(142.1 70.6% 45.3% / 0.25);\n    color:hsl(142.1 76.2% 36.3%);\n    box-shadow:0 1px 4px hsla(142.1 70.6% 45.3% / 0.15);\n}\n\n.jc-code-link{\n    display:inline-block;\n    padding:2px 6px;\n    margin:0 2px;\n    background-color:hsla(var(--shadcn-blue) / 0.16);\n    border:1px solid hsla(var(--shadcn-blue) / 0.35);\n    color:hsl(var(--shadcn-blue));\n    border-radius:4px;\n    font-weight:700;\n    cursor:pointer;\n    font-size:12px;\n    font-family:monospace;\n    transition:all 0.2s ease;\n}\n\n.jc-code-link:hover{\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n    box-shadow:0 2px 6px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.jc-emoji{\n    height:16px;\n    width:16px;\n    vertical-align:middle;\n    display:inline-block;\n    margin:0 1px;\n}\n.tm-comment-loading,\n.tm-comment-error{\n    width:100%;\n    padding:24px;\n    text-align:center;\n    font-size:12px;\n    color:hsl(var(--shadcn-muted-foreground));\n    box-sizing:border-box;\n    pointer-events:auto;\n    background-color:transparent;\n    flex:1;\n}\n\n.tm-comment-error{\n    color:hsl(var(--shadcn-destructive));\n}\n\n.tm-comment-loader-graphic{\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    gap:5px;\n    padding:16px;\n    width:100%;\n}\n\n.tm-comment-loader-graphic .dot{\n    width:6px;\n    height:6px;\n    border-radius:50%;\n    background-color:hsl(var(--shadcn-blue));\n    animation:tmDotPulse 1.4s infinite ease-in-out both;\n}\n\n.tm-comment-loader-graphic .dot:nth-child(1){\n    animation-delay:-0.32s;\n}\n\n.tm-comment-loader-graphic .dot:nth-child(2){\n    animation-delay:-0.16s;\n}\n\n@keyframes tmDotPulse{\n    0%, 80%, 100%{\n        transform:scale(0);\n        opacity:0.3;\n    }\n    40%{\n        transform:scale(1);\n        opacity:1;\n    }\n}\n\n@keyframes tmShake{\n    0%, 100%{ transform:translateX(0); }\n    20%, 60%{ transform:translateX(-4px); }\n    40%, 80%{ transform:translateX(4px); }\n}\n.tm-comments-tabs{\n    display:flex;\n    align-items:center;\n    justify-content:flex-start;\n    gap:8px;\n    padding:8px 16px;\n    background-color:hsla(var(--shadcn-card) / 0.65);\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    pointer-events:auto;\n    z-index:9994;\n    overflow-x:auto;\n    scrollbar-width:none;\n    overscroll-behavior:contain;\n    touch-action:pan-x;\n}\n.tm-comments-tabs::-webkit-scrollbar{\n    display:none;\n}\n\n.tm-comments-tab-btn{\n    padding:6px 14px;\n    font-size:12px;\n    font-weight:500;\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:transparent;\n    border:1px solid transparent;\n    border-radius:16px;\n    cursor:pointer;\n    white-space:nowrap;\n    outline:none;\n    transition:all var(--anim-quick);\n}\n\n.tm-comments-tab-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n}\n\n.tm-comments-tab-btn.active{\n    color:#ffffff;\n    background-color:hsl(var(--shadcn-blue));\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 2px 8px hsla(var(--shadcn-blue) / 0.3);\n    font-weight:600;\n}\n.jc-score-badge{\n    display:inline-block;\n    font-size:10px;\n    color:hsl(var(--shadcn-blue));\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    border:1px solid hsla(var(--shadcn-blue) / 0.3);\n    border-radius:4px;\n    padding:0 4px;\n    margin-left:6px;\n    font-weight:600;\n    vertical-align:middle;\n}\n@media (orientation: landscape){\n    .tm-comments-panel{\n        position:absolute !important;\n        width:0 !important;\n        height:0 !important;\n        overflow:hidden !important;\n        visibility:hidden !important;\n        pointer-events:none !important;\n        opacity:0 !important;\n        border:none !important;\n        margin:0 !important;\n        padding:0 !important;\n    }\n}\n.jc-body-text--collapsible{\n    position:relative;\n    display:flex;\n    flex-direction:column;\n}\n.jc-body-text--collapsible[data-collapsed="true"]{\n    cursor:pointer;\n}\n\n.jc-body-text--collapsible[data-collapsed="true"] .jc-body-text-content{\n    max-height:80px;\n    overflow:hidden;\n    mask-image:linear-gradient(to bottom, black 50%, transparent 100%);\n    -webkit-mask-image:linear-gradient(to bottom, black 50%, transparent 100%);\n}\n\n.jc-toggle-expand-btn{\n    align-self:flex-start;\n    background:transparent;\n    border:none;\n    color:hsl(var(--shadcn-blue));\n    font-size:11px;\n    font-weight:600;\n    padding:4px 0;\n    cursor:pointer;\n    outline:none;\n    transition:opacity 0.2s;\n    pointer-events:auto;\n}\n\n.jc-toggle-expand-btn:hover{\n    opacity:0.8;\n    text-decoration:underline;\n}\n\n.jc-site-javlib-review{\n    background-color:hsla(270, 100%, 60%, 0.1);\n    color:hsl(270, 100%, 60%);\n    border:1px solid hsla(270, 100%, 60%, 0.25);\n}\n.tm-comment-section{\n    display:flex;\n    flex-direction:column;\n    width:100%;\n    margin-bottom:6px;\n    box-sizing:border-box;\n    min-height:0;\n    flex:0 0 auto;\n    transition:flex 0.25s cubic-bezier(0.25, 1, 0.5, 1);\n}\n\n.tm-comment-section:not(.is-collapsed){\n    flex:1;\n}\n\n.tm-comment-section-body{\n    flex:1;\n    min-height:0;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n    overscroll-behavior-y:contain;\n    padding-right:4px;\n    padding-bottom:56px;\n}\n.tm-comment-section-body::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-comment-section-body::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.25);\n    border-radius:2px;\n}\n\n#tm-comment-section-jable{\n    border-left:3px solid hsl(var(--shadcn-red));\n    background:linear-gradient(to right, hsla(var(--shadcn-red) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-jable .tm-comment-section-title{\n    color:hsl(var(--shadcn-red)) !important;\n}\n\n#tm-comment-section-javlib{\n    border-left:3px solid hsl(var(--shadcn-purple));\n    background:linear-gradient(to right, hsla(var(--shadcn-purple) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-javlib .tm-comment-section-title{\n    color:hsl(var(--shadcn-purple)) !important;\n}\n\n#tm-comment-section-javdb{\n    border-left:3px solid hsl(var(--shadcn-blue));\n    background:linear-gradient(to right, hsla(var(--shadcn-blue) / 0.05), transparent);\n    padding-left:6px;\n    padding-right:4px;\n    padding-top:2px;\n    padding-bottom:2px;\n    border-radius:var(--shadcn-radius-sm);\n}\n#tm-comment-section-javdb .tm-comment-section-title{\n    color:hsl(var(--shadcn-blue)) !important;\n}\n\n.tm-comment-section-hdr{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    width:100%;\n    padding:1px 0;\n    margin-bottom:4px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    box-sizing:border-box;\n    cursor:pointer;\n    user-select:none;\n}\n\n.tm-comment-section-title{\n    font-size:13px;\n    font-weight:600;\n    color:hsl(var(--shadcn-foreground));\n    display:flex;\n    align-items:center;\n    gap:6px;\n}\n\n.tm-comment-login-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 8px;\n    border-radius:12px;\n    font-size:10px;\n    font-weight:600;\n    line-height:1;\n    transition:all 0.2s ease;\n}\n\n.tm-comment-login-badge.is-logged-in{\n    color:hsl(142.1 70.6% 45.3%);\n    background-color:hsla(142.1 70.6% 45.3% / 0.1);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.2);\n    cursor:default;\n}\n\n.tm-comment-login-badge.is-not-logged-in{\n    color:hsl(30 100% 50%);\n    background-color:hsla(30 100% 50% / 0.1);\n    border:1px solid hsla(30 100% 50% / 0.25);\n    cursor:pointer;\n}\n\n.tm-comment-login-badge.is-not-logged-in:hover{\n    background-color:hsla(30 100% 50% / 0.2);\n    transform:translateY(-0.5px);\n    box-shadow:0 2px 6px hsla(30 100% 50% / 0.15);\n}\n\n.tm-comment-login-badge.is-not-logged-in:active{\n    transform:scale(0.95);\n}\n\n.tm-comment-login-badge.is-checking{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    cursor:default;\n}\n\n.tm-comment-status-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 8px;\n    border-radius:12px;\n    font-size:10px;\n    font-weight:600;\n    line-height:1;\n}\n.tm-status-badge-loading{\n    color:hsl(var(--shadcn-blue));\n    background-color:hsla(var(--shadcn-blue) / 0.1);\n    border:1px solid hsla(var(--shadcn-blue) / 0.2);\n    animation:tmPulse 2s infinite ease-in-out;\n}\n\n.tm-status-badge-unreachable{\n    color:hsl(var(--shadcn-destructive));\n    background-color:hsla(var(--shadcn-destructive) / 0.1);\n    border:1px solid hsla(var(--shadcn-destructive) / 0.2);\n}\n\n.tm-status-badge-not_found{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-mobile_unsupported{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-empty{\n    color:hsl(var(--shadcn-muted-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n}\n\n.tm-status-badge-cf_shield{\n    color:hsl(30 100% 50%);\n    background-color:hsla(30 100% 50% / 0.1);\n    border:1px solid hsla(30 100% 50% / 0.2);\n}\n\n.tm-status-badge-loaded{\n    color:hsl(142.1 70.6% 45.3%);\n    background-color:hsla(142.1 70.6% 45.3% / 0.1);\n    border:1px solid hsla(142.1 70.6% 45.3% / 0.2);\n}\n\n@keyframes tmPulse{\n    0%{\n        opacity:0.7;\n    }\n    50%{\n        opacity:1;\n    }\n    100%{\n        opacity:0.7;\n    }\n}\n\n.jc-comment-link{\n    color:hsl(var(--shadcn-blue));\n    text-decoration:underline;\n}\n.jc-comment-link:hover{\n    color:hsl(var(--shadcn-blue) / 0.8);\n}\n\n.tm-comment-copy-all-btn{\n    margin-left:10px;\n    cursor:pointer;\n    background-color:hsla(var(--shadcn-muted) / 0.15);\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    border-radius:4px;\n    padding:2px 8px;\n    font-size:10px;\n    font-weight:600;\n    color:hsl(var(--shadcn-muted-foreground));\n    outline:none;\n    transition:all var(--anim-quick);\n}\n.tm-comment-copy-all-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background-color:hsla(var(--shadcn-muted) / 0.3);\n    border-color:hsla(var(--shadcn-border) / 0.4);\n}\n.tm-comment-copy-all-btn:active{\n    transform:scale(0.95);\n}\n@keyframes jcCardHighlightFlash{\n    0%{\n        background-color:hsla(var(--shadcn-blue) / 0.22);\n    }\n    100%{\n        background-color:transparent;\n    }\n}\n.jc-card-highlight-flash{\n    animation:jcCardHighlightFlash 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;\n}\n@media screen and (min-width: 930px) and (orientation: landscape){\n    .tm-comments-panel:hover::after{\n        opacity:0 !important;\n        pointer-events:none !important;\n    }\n}\n.tm-show-controls-float-btn{\n    position:absolute;\n    bottom:calc(96px + env(safe-area-inset-bottom, 0px));\n    right:16px;\n    width:36px;\n    height:36px;\n    border-radius:50%;\n    background:rgba(18, 18, 20, 0.85);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    color:rgba(255, 255, 255, 0.85);\n    display:none;\n    align-items:center;\n    justify-content:center;\n    box-shadow:0 4px 12px rgba(0, 0, 0, 0.4);\n    z-index:9997;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    padding:0;\n    outline:none;\n    box-sizing:border-box;\n    pointer-events:auto;\n}\n.tm-show-controls-float-btn:hover{\n    color:#ffffff;\n    background:rgba(255, 255, 255, 0.2);\n    transform:scale(1.06);\n}\n.tm-show-controls-float-btn:active{\n    transform:scale(0.92);\n}\n.tm-show-controls-float-btn svg{\n    height:18px;\n    width:auto;\n    display:block;\n    fill:none !important;\n}\n.tm-show-controls-float-btn svg path{\n    fill:currentColor !important;\n    stroke:none !important;\n}\nbody.controls-hidden:not(.tm-mode-pc):not(.tm-mode-ipad-portrait) .tm-show-controls-float-btn{\n    display:flex;\n}\n.tm-custom-modal-cancel-btn{\n    background-color:hsla(var(--shadcn-muted)/0.2);\n    color:hsl(var(--shadcn-foreground));\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-cancel-btn:hover{\n    background-color:hsla(var(--shadcn-muted)/0.3);\n}\n\n.tm-custom-modal-submit-btn,\n.tm-custom-modal-login-btn{\n    background-color:hsl(var(--shadcn-blue));\n    color:#ffffff;\n    border:none;\n    border-radius:18px;\n    padding:7px 20px;\n    font-size:12px;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    box-shadow:0 4px 10px hsla(var(--shadcn-blue) / 0.3);\n    transition:background-color 0.2s;\n}\n.tm-custom-modal-submit-btn:hover,\n.tm-custom-modal-login-btn:hover{\n    background-color:hsl(var(--shadcn-blue)/0.9);\n}\n\n.tm-comment-input-textarea{\n    width:100%;\n    height:90px;\n    margin:12px 0;\n    padding:10px;\n    border-radius:8px;\n    border:1px solid hsla(var(--shadcn-border) / 0.3);\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n    font-size:13px;\n    resize:none;\n    box-sizing:border-box;\n    outline:none;\n    transition:border-color 0.2s;\n}\n\n\n\n`, "" ]);
       const y = b;
     },
     "56": (r, o, a) => {
@@ -1538,6 +1538,455 @@
       }
     } catch (r) {}
     return "";
+  }
+  function createModal(r) {
+    var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
+    var a = o.onClose, l = o.extraClass, u = l === void 0 ? "" : l;
+    var p = document.createElement("div");
+    p.className = "tm-custom-modal-overlay ".concat(u).trim();
+    p.innerHTML = r;
+    var v = function close() {
+      p.classList.remove("active");
+      var r = function removeModal() {
+        if (p.parentNode) {
+          p.parentNode.removeChild(p);
+        }
+        p.removeEventListener("transitionend", r);
+        if (typeof a === "function") {
+          a();
+        }
+      };
+      p.addEventListener("transitionend", r, {
+        "once": true
+      });
+      setTimeout(r, 350);
+    };
+    p.addEventListener("click", (function(r) {
+      if (r.target === p) {
+        v();
+      }
+    }));
+    document.body.appendChild(p);
+    requestAnimationFrame((function() {
+      p.classList.add("active");
+    }));
+    return {
+      "modal": p,
+      "close": v
+    };
+  }
+  function clipboard_typeof(r) {
+    "@babel/helpers - typeof";
+    return clipboard_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
+      return typeof r;
+    } : function(r) {
+      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
+    }, clipboard_typeof(r);
+  }
+  function clipboard_regeneratorRuntime() {
+    "use strict";
+    clipboard_regeneratorRuntime = function _regeneratorRuntime() {
+      return o;
+    };
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", b = u.toStringTag || "@@toStringTag";
+    function c(r, o, a, l) {
+      return Object.defineProperty(r, o, {
+        "value": a,
+        "enumerable": !l,
+        "configurable": !l,
+        "writable": !l
+      });
+    }
+    try {
+      c({}, "");
+    } catch (r) {
+      c = function c(r, o, a) {
+        return r[o] = a;
+      };
+    }
+    function h(o, a, l, u) {
+      var p = a && a.prototype instanceof Generator ? a : Generator, v = Object.create(p.prototype);
+      return c(v, "_invoke", function(o, a, l) {
+        var u = 1;
+        return function(p, v) {
+          if (3 === u) {
+            throw Error("Generator is already running");
+          }
+          if (4 === u) {
+            if ("throw" === p) {
+              throw v;
+            }
+            return {
+              "value": r,
+              "done": !0
+            };
+          }
+          for (l.method = p, l.arg = v; ;) {
+            var b = l.delegate;
+            if (b) {
+              var C = d(b, l);
+              if (C) {
+                if (C === y) {
+                  continue;
+                }
+                return C;
+              }
+            }
+            if ("next" === l.method) {
+              l.sent = l._sent = l.arg;
+            } else if ("throw" === l.method) {
+              if (1 === u) {
+                throw u = 4, l.arg;
+              }
+              l.dispatchException(l.arg);
+            } else {
+              "return" === l.method && l.abrupt("return", l.arg);
+            }
+            u = 3;
+            var k = s(o, a, l);
+            if ("normal" === k.type) {
+              if (u = l.done ? 4 : 2, k.arg === y) {
+                continue;
+              }
+              return {
+                "value": k.arg,
+                "done": l.done
+              };
+            }
+            "throw" === k.type && (u = 4, l.method = "throw", l.arg = k.arg);
+          }
+        };
+      }(o, l, new Context(u || [])), !0), v;
+    }
+    function s(r, o, a) {
+      try {
+        return {
+          "type": "normal",
+          "arg": r.call(o, a)
+        };
+      } catch (r) {
+        return {
+          "type": "throw",
+          "arg": r
+        };
+      }
+    }
+    o.wrap = h;
+    var y = {};
+    function Generator() {}
+    function GeneratorFunction() {}
+    function GeneratorFunctionPrototype() {}
+    var C = {};
+    c(C, p, (function() {
+      return this;
+    }));
+    var k = Object.getPrototypeOf, _ = k && k(k(x([])));
+    _ && _ !== a && l.call(_, p) && (C = _);
+    var E = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    function g(r) {
+      [ "next", "throw", "return" ].forEach((function(o) {
+        c(r, o, (function(r) {
+          return this._invoke(o, r);
+        }));
+      }));
+    }
+    function AsyncIterator(r, o) {
+      function e(a, u, p, v) {
+        var b = s(r[a], r, u);
+        if ("throw" !== b.type) {
+          var y = b.arg, C = y.value;
+          return C && "object" == clipboard_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
+            e("next", r, p, v);
+          }), (function(r) {
+            e("throw", r, p, v);
+          })) : o.resolve(C).then((function(r) {
+            y.value = r, p(y);
+          }), (function(r) {
+            return e("throw", r, p, v);
+          }));
+        }
+        v(b.arg);
+      }
+      var a;
+      c(this, "_invoke", (function(r, l) {
+        function i() {
+          return new o((function(o, a) {
+            e(r, l, o, a);
+          }));
+        }
+        return a = a ? a.then(i, i) : i();
+      }), !0);
+    }
+    function d(o, a) {
+      var l = a.method, u = o.i[l];
+      if (u === r) {
+        return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
+        a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), y;
+      }
+      var p = s(u, o.i, a.arg);
+      if ("throw" === p.type) {
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, y;
+      }
+      var v = p.arg;
+      return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
+      a.arg = r), a.delegate = null, y) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, y);
+    }
+    function w(r) {
+      this.tryEntries.push(r);
+    }
+    function m(o) {
+      var a = o[4] || {};
+      a.type = "normal", a.arg = r, o[4] = a;
+    }
+    function Context(r) {
+      this.tryEntries = [ [ -1 ] ], r.forEach(w, this), this.reset(!0);
+    }
+    function x(o) {
+      if (null != o) {
+        var a = o[p];
+        if (a) {
+          return a.call(o);
+        }
+        if ("function" == typeof o.next) {
+          return o;
+        }
+        if (!isNaN(o.length)) {
+          var u = -1, v = function e() {
+            for (;++u < o.length; ) {
+              if (l.call(o, u)) {
+                return e.value = o[u], e.done = !1, e;
+              }
+            }
+            return e.value = r, e.done = !0, e;
+          };
+          return v.next = v;
+        }
+      }
+      throw new TypeError(clipboard_typeof(o) + " is not iterable");
+    }
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(E, "constructor", GeneratorFunctionPrototype), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, b, "GeneratorFunction"), 
+    o.isGeneratorFunction = function(r) {
+      var o = "function" == typeof r && r.constructor;
+      return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
+    }, o.mark = function(r) {
+      return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
+      c(r, b, "GeneratorFunction")), r.prototype = Object.create(E), r;
+    }, o.awrap = function(r) {
+      return {
+        "__await": r
+      };
+    }, g(AsyncIterator.prototype), c(AsyncIterator.prototype, v, (function() {
+      return this;
+    })), o.AsyncIterator = AsyncIterator, o.async = function(r, a, l, u, p) {
+      void 0 === p && (p = Promise);
+      var v = new AsyncIterator(h(r, a, l, u), p);
+      return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
+        return r.done ? r.value : v.next();
+      }));
+    }, g(E), c(E, b, "Generator"), c(E, p, (function() {
+      return this;
+    })), c(E, "toString", (function() {
+      return "[object Generator]";
+    })), o.keys = function(r) {
+      var o = Object(r), a = [];
+      for (var l in o) {
+        a.unshift(l);
+      }
+      return function t() {
+        for (;a.length; ) {
+          if ((l = a.pop()) in o) {
+            return t.value = l, t.done = !1, t;
+          }
+        }
+        return t.done = !0, t;
+      };
+    }, o.values = x, Context.prototype = {
+      "constructor": Context,
+      "reset": function reset(o) {
+        if (this.prev = this.next = 0, this.sent = this._sent = r, this.done = !1, this.delegate = null, 
+        this.method = "next", this.arg = r, this.tryEntries.forEach(m), !o) {
+          for (var a in this) {
+            "t" === a.charAt(0) && l.call(this, a) && !isNaN(+a.slice(1)) && (this[a] = r);
+          }
+        }
+      },
+      "stop": function stop() {
+        this.done = !0;
+        var r = this.tryEntries[0][4];
+        if ("throw" === r.type) {
+          throw r.arg;
+        }
+        return this.rval;
+      },
+      "dispatchException": function dispatchException(o) {
+        if (this.done) {
+          throw o;
+        }
+        var a = this;
+        function n(r) {
+          p.type = "throw", p.arg = o, a.next = r;
+        }
+        for (var l = a.tryEntries.length - 1; l >= 0; --l) {
+          var u = this.tryEntries[l], p = u[4], v = this.prev, b = u[1], y = u[2];
+          if (-1 === u[0]) {
+            return n("end"), !1;
+          }
+          if (!b && !y) {
+            throw Error("try statement without catch or finally");
+          }
+          if (null != u[0] && u[0] <= v) {
+            if (v < b) {
+              return this.method = "next", this.arg = r, n(b), !0;
+            }
+            if (v < y) {
+              return n(y), !1;
+            }
+          }
+        }
+      },
+      "abrupt": function abrupt(r, o) {
+        for (var a = this.tryEntries.length - 1; a >= 0; --a) {
+          var l = this.tryEntries[a];
+          if (l[0] > -1 && l[0] <= this.prev && this.prev < l[2]) {
+            var u = l;
+            break;
+          }
+        }
+        u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
+        var p = u ? u[4] : {};
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], y) : this.complete(p);
+      },
+      "complete": function complete(r, o) {
+        if ("throw" === r.type) {
+          throw r.arg;
+        }
+        return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
+        this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
+        y;
+      },
+      "finish": function finish(r) {
+        for (var o = this.tryEntries.length - 1; o >= 0; --o) {
+          var a = this.tryEntries[o];
+          if (a[2] === r) {
+            return this.complete(a[4], a[3]), m(a), y;
+          }
+        }
+      },
+      "catch": function _catch(r) {
+        for (var o = this.tryEntries.length - 1; o >= 0; --o) {
+          var a = this.tryEntries[o];
+          if (a[0] === r) {
+            var l = a[4];
+            if ("throw" === l.type) {
+              var u = l.arg;
+              m(a);
+            }
+            return u;
+          }
+        }
+        throw Error("illegal catch attempt");
+      },
+      "delegateYield": function delegateYield(o, a, l) {
+        return this.delegate = {
+          "i": x(o),
+          "r": a,
+          "n": l
+        }, "next" === this.method && (this.arg = r), y;
+      }
+    }, o;
+  }
+  function clipboard_asyncGeneratorStep(r, o, a, l, u, p, v) {
+    try {
+      var b = r[p](v), y = b.value;
+    } catch (r) {
+      return void a(r);
+    }
+    b.done ? o(y) : Promise.resolve(y).then(l, u);
+  }
+  function clipboard_asyncToGenerator(r) {
+    return function() {
+      var o = this, a = arguments;
+      return new Promise((function(l, u) {
+        var p = r.apply(o, a);
+        function _next(r) {
+          clipboard_asyncGeneratorStep(p, l, u, _next, _throw, "next", r);
+        }
+        function _throw(r) {
+          clipboard_asyncGeneratorStep(p, l, u, _next, _throw, "throw", r);
+        }
+        _next(void 0);
+      }));
+    };
+  }
+  function copyToClipboard(r) {
+    return _copyToClipboard.apply(this, arguments);
+  }
+  function _copyToClipboard() {
+    _copyToClipboard = clipboard_asyncToGenerator(clipboard_regeneratorRuntime().mark((function _callee(r) {
+      var o, a;
+      return clipboard_regeneratorRuntime().wrap((function _callee$(l) {
+        while (1) {
+          switch (l.prev = l.next) {
+           case 0:
+            if (!(typeof GM_setClipboard === "function")) {
+              l.next = 8;
+              break;
+            }
+            l.prev = 1;
+            GM_setClipboard(r);
+            return l.abrupt("return", true);
+
+           case 6:
+            l.prev = 6;
+            l.t0 = l["catch"](1);
+
+           case 8:
+            if (!(navigator.clipboard && typeof navigator.clipboard.writeText === "function")) {
+              l.next = 17;
+              break;
+            }
+            l.prev = 9;
+            l.next = 12;
+            return navigator.clipboard.writeText(r);
+
+           case 12:
+            return l.abrupt("return", true);
+
+           case 15:
+            l.prev = 15;
+            l.t1 = l["catch"](9);
+
+           case 17:
+            l.prev = 17;
+            o = document.createElement("textarea");
+            o.value = r;
+            o.style.position = "fixed";
+            o.style.left = "-9999px";
+            o.style.top = "-9999px";
+            o.style.opacity = "0";
+            document.body.appendChild(o);
+            o.focus();
+            o.select();
+            a = document.execCommand("copy");
+            document.body.removeChild(o);
+            return l.abrupt("return", a);
+
+           case 32:
+            l.prev = 32;
+            l.t2 = l["catch"](17);
+            return l.abrupt("return", false);
+
+           case 35:
+           case "end":
+            return l.stop();
+          }
+        }
+      }), _callee, null, [ [ 1, 6 ], [ 9, 15 ], [ 17, 32 ] ]);
+    })));
+    return _copyToClipboard.apply(this, arguments);
   }
   function PlayerCore_typeof(r) {
     "@babel/helpers - typeof";
@@ -7606,8 +8055,8 @@
   var ce = /(?:不要?(?:再|在)?\s*(?:自己)?\s*尻|不要?(?:再|在)?\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|別(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|别(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|唔好(?:再|在)?\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|咪撚\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|不要一直\s*(?:自己)?\s*尻|不要一直\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|别一直\s*(?:自己)?\s*尻|别在尻|别在打|别在尻|别再打了|別再打了|别打了|別打了|別擼了|别撸了|別J了|别J了|别打飞机|別打飛機|別打手槍|别打手枪|玩手槍|玩手枪|實名(?:開導|觀看|推薦|观看|开导|推荐)|实名(?:开导|观看|推荐)|又射了|縱慾過度|纵欲过度|著返條褲|別在射精|别在射精|别射精|別射精|別打手槍|别打手枪|會破皮|会破皮|别冲了|別衝了|别冲|別衝)/i;
   var ue = /^(?:的(?:女神|女友|女朋友|男友|男朋友|时候|時候|回忆|回憶|时代|時代|样子|樣子|日子|故事|剧情|劇情|感觉|感覺|妹子|女孩|女生|男生|学妹|學妹|学姐|學姐|美女|老师|老師|同学|同學)|生|JK|jk|制服|校校服|学生|學生|女优|女優|演员|演員|少女|美少女|辣妹|熟女|人妻)/i;
   var de = new RegExp("(?:".concat(se, "[\\u4e00-\\u9fa5]{1,2})(?:[我你他她]|同學|同学|同事|老師|老师|醫生|医生|老闆|老板|只有|说明|是|有|沒|没|在|別|别|不|好|快|整天|到此|生日|畢業|毕业|求求|這|气|那|大|小|長|长|屁股|逆天|牛逼|牛b|神人|實名|实名|太神|太牛|就|被|也|跟|說|说|講|讲|超|愛|爱|想|本|人|雞|鸡|的|都|要|去|戴|拿|看|打|尻|撸|擼|射|叫|做|操|肏|草|干|幹|一定|真的|早就|一直|天天|已|给|給|和|与|與|同|学|學|唱|跳|写|寫|读|讀|听|聽|走|跑|吃|喝|玩|笑|哭|买|買|卖|賣|住|用|到|来|來)"), "i");
-  var me = new RegExp("(?:不如|比|像|叫|是)\\s*(?:[\\u4e00-\\u9fa5]{1,4}\\s*)?(?:".concat(se, "[\\u4e00-\\u9fa5]{1,2})"), "i");
-  var pe = [ {
+  var pe = new RegExp("(?:不如|比|像|叫|是)\\s*(?:[\\u4e00-\\u9fa5]{1,4}\\s*)?(?:".concat(se, "[\\u4e00-\\u9fa5]{1,2})"), "i");
+  var me = [ {
     "regex": /(?:火影策划|削弱(?:黑土|通灵兽|青年|大野木|忍战|秽土)|加强(?:秽土|白面具|秽土二代|青年|水门))/i,
     "reason": "火影平衡小作文"
   }, {
@@ -7826,7 +8275,7 @@
     var l = a.replace(/\s+/g, "");
     var u = l.replace(/(?:[\t-\r -\/:-@\[-`\{-~\xA0-\xA9\xAB\xAC\xAE-\xB1\xB4\xB6-\xB8\xBB\xBF\xD7\xF7\u02C2-\u02C5\u02D2-\u02DF\u02E5-\u02EB\u02ED\u02EF-\u02FF\u0375\u037E\u0384\u0385\u0387\u03F6\u0482\u055A-\u055F\u0589\u058A\u058D-\u058F\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0606-\u060F\u061B\u061D-\u061F\u066A-\u066D\u06D4\u06DE\u06E9\u06FD\u06FE\u0700-\u070D\u07F6-\u07F9\u07FE\u07FF\u0830-\u083E\u085E\u0888\u0964\u0965\u0970\u09F2\u09F3\u09FA\u09FB\u09FD\u0A76\u0AF0\u0AF1\u0B70\u0BF3-\u0BFA\u0C77\u0C7F\u0C84\u0D4F\u0D79\u0DF4\u0E3F\u0E4F\u0E5A\u0E5B\u0F01-\u0F17\u0F1A-\u0F1F\u0F34\u0F36\u0F38\u0F3A-\u0F3D\u0F85\u0FBE-\u0FC5\u0FC7-\u0FCC\u0FCE-\u0FDA\u104A-\u104F\u109E\u109F\u10FB\u1360-\u1368\u1390-\u1399\u1400\u166D\u166E\u1680\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DB\u1800-\u180A\u1940\u1944\u1945\u19DE-\u19FF\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B4E\u1B4F\u1B5A-\u1B6A\u1B74-\u1B7F\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u1FBD\u1FBF-\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED-\u1FEF\u1FFD\u1FFE\u2000-\u200A\u2010-\u2029\u202F-\u205F\u207A-\u207E\u208A-\u208E\u20A0-\u20C0\u2100\u2101\u2103-\u2106\u2108\u2109\u2114\u2116-\u2118\u211E-\u2123\u2125\u2127\u2129\u212E\u213A\u213B\u2140-\u2144\u214A-\u214D\u214F\u218A\u218B\u2190-\u2429\u2440-\u244A\u249C-\u24E9\u2500-\u2775\u2794-\u2B73\u2B76-\u2B95\u2B97-\u2BFF\u2CE5-\u2CEA\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E5D\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u2FF0-\u3004\u3008-\u3020\u3030\u3036\u3037\u303D-\u303F\u309B\u309C\u30A0\u30FB\u3190\u3191\u3196-\u319F\u31C0-\u31E5\u31EF\u3200-\u321E\u322A-\u3247\u3250\u3260-\u327F\u328A-\u32B0\u32C0-\u33FF\u4DC0-\u4DFF\uA490-\uA4C6\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA700-\uA716\uA720\uA721\uA789\uA78A\uA828-\uA82B\uA836-\uA839\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAA77-\uAA79\uAADE\uAADF\uAAF0\uAAF1\uAB5B\uAB6A\uAB6B\uABEB\uFB29\uFBB2-\uFBC2\uFD3E-\uFD4F\uFDCF\uFDFC-\uFDFF\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE66\uFE68-\uFE6B\uFEFF\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFE6\uFFE8-\uFFEE\uFFFC\uFFFD]|\uD800[\uDD00-\uDD02\uDD37-\uDD3F\uDD79-\uDD89\uDD8C-\uDD8E\uDD90-\uDD9C\uDDA0\uDDD0-\uDDFC\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDC77\uDC78\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEC8\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD803[\uDD6E\uDD8E\uDD8F\uDEAD\uDF55-\uDF59\uDF86-\uDF89]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC8\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9\uDFD4\uDFD5\uDFD7\uDFD8]|\uD805[\uDC4B-\uDC4F\uDC5A\uDC5B\uDC5D\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDE60-\uDE6C\uDEB9\uDF3C-\uDF3F]|\uD806[\uDC3B\uDD44-\uDD46\uDDE2\uDE3F-\uDE46\uDE9A-\uDE9C\uDE9E-\uDEA2\uDF00-\uDF09\uDFE1]|\uD807[\uDC41-\uDC45\uDC70\uDC71\uDEF7\uDEF8\uDF43-\uDF4F\uDFD5-\uDFF1\uDFFF]|\uD809[\uDC70-\uDC74]|\uD80B[\uDFF1\uDFF2]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3F\uDF44\uDF45]|\uD81B[\uDD6D-\uDD6F\uDE97-\uDE9A\uDFE2]|\uD82F[\uDC9C\uDC9F]|\uD833[\uDC00-\uDCEF\uDD00-\uDEB3\uDF50-\uDFC3]|\uD834[\uDC00-\uDCF5\uDD00-\uDD26\uDD29-\uDD64\uDD6A-\uDD6C\uDD83\uDD84\uDD8C-\uDDA9\uDDAE-\uDDEA\uDE00-\uDE41\uDE45\uDF00-\uDF56]|\uD835[\uDEC1\uDEDB\uDEFB\uDF15\uDF35\uDF4F\uDF6F\uDF89\uDFA9\uDFC3]|\uD836[\uDC00-\uDDFF\uDE37-\uDE3A\uDE6D-\uDE74\uDE76-\uDE83\uDE85-\uDE8B]|\uD838[\uDD4F\uDEFF]|\uD839\uDDFF|\uD83A[\uDD5E\uDD5F]|\uD83B[\uDCAC\uDCB0\uDD2E\uDEF0\uDEF1]|\uD83C[\uDC00-\uDC2B\uDC30-\uDC93\uDCA0-\uDCAE\uDCB1-\uDCBF\uDCC1-\uDCCF\uDCD1-\uDCF5\uDD0D-\uDDAD\uDDE6-\uDE02\uDE10-\uDE3B\uDE40-\uDE48\uDE50\uDE51\uDE60-\uDE65\uDF00-\uDFFF]|\uD83D[\uDC00-\uDED7\uDEDC-\uDEEC\uDEF0-\uDEFC\uDF00-\uDF76\uDF7B-\uDFD9\uDFE0-\uDFEB\uDFF0]|\uD83E[\uDC00-\uDC0B\uDC10-\uDC47\uDC50-\uDC59\uDC60-\uDC87\uDC90-\uDCAD\uDCB0-\uDCBB\uDCC0\uDCC1\uDD00-\uDE53\uDE60-\uDE6D\uDE70-\uDE7C\uDE80-\uDE89\uDE8F-\uDEC6\uDECE-\uDEDC\uDEDF-\uDEE9\uDEF0-\uDEF8\uDF00-\uDF92\uDF94-\uDFEF])+/g, "");
     var p = /[\u4e00-\u9fa5]/.test(l);
-    var v = CommentScraper_createForOfIteratorHelper(pe), b;
+    var v = CommentScraper_createForOfIteratorHelper(me), b;
     try {
       for (v.s(); !(b = v.n()).done; ) {
         var y = b.value;
@@ -7879,7 +8328,7 @@
         };
       }
     }
-    if (me.test(o)) {
+    if (pe.test(o)) {
       return {
         "label": "SPAM",
         "category": "FRIEND_TAG_MEME",
@@ -10305,7 +10754,7 @@
     }
     return 0;
   }
-  var Ae = function() {
+  var Fe = function() {
     function CommentPanel(r, o) {
       var a = this;
       CommentPanel_classCallCheck(this, CommentPanel);
@@ -11099,19 +11548,13 @@
     }, {
       "key": "fallbackCopyText",
       "value": function fallbackCopyText(r) {
-        try {
-          var o = document.createElement("textarea");
-          o.value = r;
-          o.style.position = "fixed";
-          o.style.opacity = "0";
-          document.body.appendChild(o);
-          o.select();
-          document.execCommand("copy");
-          document.body.removeChild(o);
-          Toast("番号已复制: ".concat(r), 2e3, "success");
-        } catch (o) {
-          Toast("复制失败，请手动复制: ".concat(r), 3e3, "warning");
-        }
+        copyToClipboard(r).then((function(o) {
+          if (o) {
+            Toast("番号已复制: ".concat(r), 2e3, "success");
+          } else {
+            Toast("复制失败，请手动复制: ".concat(r), 3e3, "warning");
+          }
+        }));
       }
     }, {
       "key": "handleCopyAllComments",
@@ -11637,28 +12080,7 @@
     }, {
       "key": "showDevelopmentModal",
       "value": function showDevelopmentModal() {
-        var r = document.createElement("div");
-        r.className = "tm-custom-modal-overlay";
-        r.innerHTML = '\n            <div class="tm-custom-modal-content">\n                <div class="tm-custom-modal-title">提示</div>\n                <div class="tm-custom-modal-message">评论功能开发中</div>\n                <button class="tm-custom-modal-close-btn">确定</button>\n            </div>\n        ';
-        document.body.appendChild(r);
-        requestAnimationFrame((function() {
-          r.classList.add("active");
-        }));
-        var o = r.querySelector(".tm-custom-modal-close-btn");
-        var a = function closeModal() {
-          r.classList.remove("active");
-          r.addEventListener("transitionend", (function() {
-            r.remove();
-          }), {
-            "once": true
-          });
-        };
-        o.addEventListener("click", a);
-        r.addEventListener("click", (function(o) {
-          if (o.target === r) {
-            a();
-          }
-        }));
+        this.showTipModal("提示", "评论功能开发中");
       }
     }, {
       "key": "getLoopManager",
@@ -12344,70 +12766,18 @@
     }, {
       "key": "showTipModal",
       "value": function showTipModal(r, o) {
-        var a = document.createElement("div");
-        a.className = "tm-custom-modal-overlay";
-        a.innerHTML = '\n            <div class="tm-custom-modal-content">\n                <div class="tm-custom-modal-title">'.concat(r, '</div>\n                <div class="tm-custom-modal-message">').concat(o, '</div>\n                <button class="tm-custom-modal-close-btn">确定</button>\n            </div>\n        ');
-        document.body.appendChild(a);
-        requestAnimationFrame((function() {
-          return a.classList.add("active");
-        }));
-        var l = function close() {
-          a.classList.remove("active");
-          a.addEventListener("transitionend", (function() {
-            return a.remove();
-          }), {
-            "once": true
-          });
-        };
-        a.querySelector(".tm-custom-modal-close-btn").addEventListener("click", l);
-        a.addEventListener("click", (function(r) {
-          if (r.target === a) {
-            l();
-          }
-        }));
+        var a = createModal('\n            <div class="tm-custom-modal-title">'.concat(r, '</div>\n            <div class="tm-custom-modal-message">').concat(o, '</div>\n            <button class="tm-custom-modal-close-btn">确定</button>\n        ')), l = a.modal, u = a.close;
+        l.querySelector(".tm-custom-modal-close-btn").addEventListener("click", u);
       }
     }, {
       "key": "showLoginPromptModal",
       "value": function showLoginPromptModal(r) {
         var o = this;
-        var a = document.createElement("div");
-        a.className = "tm-custom-modal-overlay";
-        a.innerHTML = '\n            <div class="tm-custom-modal-content" style="max-width: 280px; width: 85%;">\n                <div class="tm-custom-modal-title">发表评论</div>\n                <div class="tm-custom-modal-message">需要有 Jable 登录态才能发表评论，请先登录。</div>\n                <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%;">\n                    <button class="tm-custom-modal-cancel-btn" style="background-color: hsla(var(--shadcn-muted)/0.2); color: hsl(var(--shadcn-foreground)); border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; transition: background-color 0.2s;">取消</button>\n                    <button class="tm-custom-modal-login-btn" style="background-color: hsl(var(--shadcn-blue)); color: #ffffff; border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3); transition: background-color 0.2s;">去登录</button>\n                </div>\n            </div>\n        ';
-        document.body.appendChild(a);
-        requestAnimationFrame((function() {
-          return a.classList.add("active");
-        }));
-        var l = function close() {
-          a.classList.remove("active");
-          a.addEventListener("transitionend", (function() {
-            return a.remove();
-          }), {
-            "once": true
-          });
-        };
-        a.querySelector(".tm-custom-modal-cancel-btn").addEventListener("click", l);
-        var u = a.querySelector(".tm-custom-modal-login-btn");
-        u.addEventListener("click", (function() {
-          l();
+        var a = createModal('\n            <div class="tm-custom-modal-title">发表评论</div>\n            <div class="tm-custom-modal-message">需要有 Jable 登录态才能发表评论，请先登录。</div>\n            <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%;">\n                <button class="tm-custom-modal-cancel-btn">取消</button>\n                <button class="tm-custom-modal-login-btn">去登录</button>\n            </div>\n        '), l = a.modal, u = a.close;
+        l.querySelector(".tm-custom-modal-cancel-btn").addEventListener("click", u);
+        l.querySelector(".tm-custom-modal-login-btn").addEventListener("click", (function() {
+          u();
           o.showLoginModal(r);
-        }));
-        var p = a.querySelector(".tm-custom-modal-cancel-btn");
-        p.addEventListener("mouseenter", (function() {
-          return p.style.backgroundColor = "hsla(var(--shadcn-muted)/0.3)";
-        }));
-        p.addEventListener("mouseleave", (function() {
-          return p.style.backgroundColor = "hsla(var(--shadcn-muted)/0.2)";
-        }));
-        u.addEventListener("mouseenter", (function() {
-          return u.style.backgroundColor = "hsl(var(--shadcn-blue)/0.9)";
-        }));
-        u.addEventListener("mouseleave", (function() {
-          return u.style.backgroundColor = "hsl(var(--shadcn-blue))";
-        }));
-        a.addEventListener("click", (function(r) {
-          if (r.target === a) {
-            l();
-          }
         }));
       }
     }, {
@@ -12426,52 +12796,26 @@
           l = window.loginManager.getMatchingProvider();
         }
         var u = l ? l.siteKey === "JABLE" ? "Jable.tv" : l.siteKey === "MISSAV" ? "MissAV" : l.siteKey : "Jable.tv";
-        var p = document.createElement("div");
-        p.className = "tm-custom-modal-overlay";
-        p.innerHTML = '\n            <div class="tm-custom-modal-content" style="max-width: 300px; width: 85%; box-sizing: border-box; padding: 20px;">\n                <div class="tm-custom-modal-title" style="margin-bottom: 15px;">登录 '.concat(u, '</div>\n                <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; text-align: left; box-sizing: border-box;">\n                    <div style="display: flex; flex-direction: column; gap: 4px;">\n                        <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">用户名 / 邮箱</label>\n                        <input type="text" class="tm-login-username" placeholder="请输入用户名或邮箱" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid hsla(var(--shadcn-border) / 0.3); background-color: hsla(var(--shadcn-muted) / 0.1); color: hsl(var(--shadcn-foreground)); font-size: 13px; outline: none; box-sizing: border-box;" />\n                    </div>\n                    <div style="display: flex; flex-direction: column; gap: 4px;">\n                        <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">密码</label>\n                        <input type="password" class="tm-login-password" placeholder="请输入密码" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid hsla(var(--shadcn-border) / 0.3); background-color: hsla(var(--shadcn-muted) / 0.1); color: hsl(var(--shadcn-foreground)); font-size: 13px; outline: none; box-sizing: border-box;" />\n                    </div>\n                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">\n                        <input type="checkbox" id="tm-login-remember" checked style="cursor: pointer;" />\n                        <label for="tm-login-remember" style="font-size: 12px; color: hsl(var(--shadcn-muted-foreground)); cursor: pointer; user-select: none;">记住密码并开启自动登录</label>\n                    </div>\n                </div>\n                <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 20px;">\n                    <button class="tm-custom-modal-cancel-btn" style="background-color: hsla(var(--shadcn-muted)/0.2); color: hsl(var(--shadcn-foreground)); border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; transition: background-color 0.2s;">取消</button>\n                    <button class="tm-custom-modal-submit-btn" style="background-color: hsl(var(--shadcn-blue)); color: #ffffff; border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3); transition: background-color 0.2s;">登录</button>\n                </div>\n            </div>\n        ');
-        document.body.appendChild(p);
-        requestAnimationFrame((function() {
-          return p.classList.add("active");
-        }));
-        var v = function close() {
-          p.classList.remove("active");
-          p.addEventListener("transitionend", (function() {
-            return p.remove();
-          }), {
-            "once": true
-          });
-        };
-        var b = p.querySelector(".tm-custom-modal-cancel-btn");
-        b.addEventListener("click", v);
-        b.addEventListener("mouseenter", (function() {
-          return b.style.backgroundColor = "hsla(var(--shadcn-muted)/0.3)";
-        }));
-        b.addEventListener("mouseleave", (function() {
-          return b.style.backgroundColor = "hsla(var(--shadcn-muted)/0.2)";
-        }));
-        var y = p.querySelector(".tm-custom-modal-submit-btn");
-        y.addEventListener("mouseenter", (function() {
-          return y.style.backgroundColor = "hsl(var(--shadcn-blue)/0.9)";
-        }));
-        y.addEventListener("mouseleave", (function() {
-          return y.style.backgroundColor = "hsl(var(--shadcn-blue))";
-        }));
-        var C = p.querySelector(".tm-login-username");
-        var k = p.querySelector(".tm-login-password");
+        var p = createModal('\n            <div class="tm-custom-modal-title" style="margin-bottom: 15px;">登录 '.concat(u, '</div>\n            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; text-align: left; box-sizing: border-box;">\n                <div style="display: flex; flex-direction: column; gap: 4px;">\n                    <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">用户名 / 邮箱</label>\n                    <input type="text" class="tm-login-username" placeholder="请输入用户名或邮箱" />\n                </div>\n                <div style="display: flex; flex-direction: column; gap: 4px;">\n                    <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">密码</label>\n                    <input type="password" class="tm-login-password" placeholder="请输入密码" />\n                </div>\n                <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">\n                    <input type="checkbox" id="tm-login-remember" checked style="cursor: pointer;" />\n                    <label for="tm-login-remember" style="font-size: 12px; color: hsl(var(--shadcn-muted-foreground)); cursor: pointer; user-select: none;">记住密码并开启自动登录</label>\n                </div>\n            </div>\n            <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 20px;">\n                <button class="tm-custom-modal-cancel-btn">取消</button>\n                <button class="tm-custom-modal-submit-btn">登录</button>\n            </div>\n        ')), v = p.modal, b = p.close;
+        var y = v.querySelector(".tm-custom-modal-cancel-btn");
+        y.addEventListener("click", b);
+        var C = v.querySelector(".tm-custom-modal-submit-btn");
+        var k = v.querySelector(".tm-login-username");
+        var _ = v.querySelector(".tm-login-password");
         if (window.loginManager) {
-          C.value = window.loginManager.userEmail || "";
-          k.value = window.loginManager.userPassword || "";
+          k.value = window.loginManager.userEmail || "";
+          _.value = window.loginManager.userPassword || "";
         }
-        y.addEventListener("click", CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee9() {
-          var u, _, E, S;
+        C.addEventListener("click", CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee9() {
+          var u, p, E, S;
           return CommentPanel_regeneratorRuntime().wrap((function _callee9$(P) {
             while (1) {
               switch (P.prev = P.next) {
                case 0:
-                u = C.value.trim();
-                _ = k.value.trim();
-                E = p.querySelector("#tm-login-remember").checked;
-                if (!(!u || !_)) {
+                u = k.value.trim();
+                p = _.value.trim();
+                E = v.querySelector("#tm-login-remember").checked;
+                if (!(!u || !p)) {
                   P.next = 6;
                   break;
                 }
@@ -12479,11 +12823,11 @@
                 return P.abrupt("return");
 
                case 6:
-                C.disabled = true;
                 k.disabled = true;
+                _.disabled = true;
+                C.disabled = true;
+                C.textContent = "登录中...";
                 y.disabled = true;
-                y.textContent = "登录中...";
-                b.disabled = true;
                 P.prev = 11;
                 if (!l && window.loginManager && r) {
                   l = window.loginManager.providers.find((function(o) {
@@ -12497,7 +12841,7 @@
                   break;
                 }
                 P.next = 16;
-                return l.login(u, _, r);
+                return l.login(u, p, r);
 
                case 16:
                 P.t0 = P.sent;
@@ -12513,25 +12857,25 @@
                   if (window.loginManager) {
                     window.loginManager.handleLoginInfoChange({
                       "email": u,
-                      "password": _,
+                      "password": p,
                       "autoLogin": E
                     });
                   }
                   a.updateAllSiteLoginStatuses(true);
-                  v();
+                  b();
                   if (typeof o === "function") {
                     o();
                   } else {
                     setTimeout((function() {
-                      a.handlePublishComment();
+                      return a.handlePublishComment();
                     }), 500);
                   }
                 } else {
-                  C.disabled = false;
                   k.disabled = false;
+                  _.disabled = false;
+                  C.disabled = false;
+                  C.textContent = "登录";
                   y.disabled = false;
-                  y.textContent = "登录";
-                  b.disabled = false;
                 }
                 P.next = 32;
                 break;
@@ -12540,11 +12884,11 @@
                 P.prev = 24;
                 P.t1 = P["catch"](11);
                 Toast("登录失败，请重试", 2e3, "error");
-                C.disabled = false;
                 k.disabled = false;
+                _.disabled = false;
+                C.disabled = false;
+                C.textContent = "登录";
                 y.disabled = false;
-                y.textContent = "登录";
-                b.disabled = false;
 
                case 32:
                case "end":
@@ -12553,15 +12897,10 @@
             }
           }), _callee9, null, [ [ 11, 24 ] ]);
         }))));
-        k.addEventListener("keydown", (function(r) {
+        _.addEventListener("keydown", (function(r) {
           if (r.key === "Enter") {
             r.preventDefault();
-            y.click();
-          }
-        }));
-        p.addEventListener("click", (function(r) {
-          if (r.target === p) {
-            v();
+            C.click();
           }
         }));
       }
@@ -12569,40 +12908,14 @@
       "key": "showCommentInputModal",
       "value": function showCommentInputModal(r, o, a) {
         var l = this;
-        var u = document.createElement("div");
-        u.className = "tm-custom-modal-overlay";
-        u.innerHTML = '\n            <div class="tm-custom-modal-content" style="max-width: 320px; width: 90%;">\n                <div class="tm-custom-modal-title">发表评论</div>\n                <textarea class="tm-comment-input-textarea" placeholder="写下你的精彩评论..." style="width: 100%; height: 90px; margin: 12px 0; padding: 10px; border-radius: 8px; border: 1px solid hsla(var(--shadcn-border) / 0.3); background-color: hsla(var(--shadcn-muted) / 0.1); color: hsl(var(--shadcn-foreground)); font-size: 13px; resize: none; box-sizing: border-box; outline: none; transition: border-color 0.2s;" maxlength="1000"></textarea>\n                <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%;">\n                    <button class="tm-custom-modal-cancel-btn" style="background-color: hsla(var(--shadcn-muted)/0.2); color: hsl(var(--shadcn-foreground)); border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; transition: background-color 0.2s;">取消</button>\n                    <button class="tm-custom-modal-submit-btn" style="background-color: hsl(var(--shadcn-blue)); color: #ffffff; border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3); transition: background-color 0.2s;">提交</button>\n                </div>\n            </div>\n        ';
-        document.body.appendChild(u);
-        requestAnimationFrame((function() {
-          return u.classList.add("active");
-        }));
-        var p = u.querySelector(".tm-comment-input-textarea");
-        p.focus();
-        var v = function close() {
-          u.classList.remove("active");
-          u.addEventListener("transitionend", (function() {
-            return u.remove();
-          }), {
-            "once": true
-          });
-        };
-        var b = u.querySelector(".tm-custom-modal-cancel-btn");
-        b.addEventListener("click", v);
-        b.addEventListener("mouseenter", (function() {
-          return b.style.backgroundColor = "hsla(var(--shadcn-muted)/0.3)";
-        }));
-        b.addEventListener("mouseleave", (function() {
-          return b.style.backgroundColor = "hsla(var(--shadcn-muted)/0.2)";
-        }));
-        var y = u.querySelector(".tm-custom-modal-submit-btn");
-        y.addEventListener("mouseenter", (function() {
-          return y.style.backgroundColor = "hsl(var(--shadcn-blue)/0.9)";
-        }));
-        y.addEventListener("mouseleave", (function() {
-          return y.style.backgroundColor = "hsl(var(--shadcn-blue))";
-        }));
-        y.addEventListener("click", (function() {
-          var u = p.value.trim();
+        var u = createModal('\n            <div class="tm-custom-modal-title">发表评论</div>\n            <textarea class="tm-comment-input-textarea" placeholder="写下你的精彩评论..." maxlength="1000"></textarea>\n            <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%;">\n                <button class="tm-custom-modal-cancel-btn">取消</button>\n                <button class="tm-custom-modal-submit-btn">提交</button>\n            </div>\n        '), p = u.modal, v = u.close;
+        var b = p.querySelector(".tm-comment-input-textarea");
+        b.focus();
+        var y = p.querySelector(".tm-custom-modal-cancel-btn");
+        y.addEventListener("click", v);
+        var C = p.querySelector(".tm-custom-modal-submit-btn");
+        C.addEventListener("click", (function() {
+          var u = b.value.trim();
           if (!u) {
             Toast("评论内容不能为空", 2e3, "warning");
             return;
@@ -12611,11 +12924,11 @@
             Toast("评论内容太少，至少输入3个字", 2e3, "warning");
             return;
           }
-          p.disabled = true;
-          y.disabled = true;
-          y.textContent = "提交中...";
           b.disabled = true;
-          var C = window.loginManager && window.loginManager.providers.find((function(r) {
+          C.disabled = true;
+          C.textContent = "提交中...";
+          y.disabled = true;
+          var p = window.loginManager && window.loginManager.providers.find((function(r) {
             return r.domains.some((function(r) {
               return a.includes(r);
             }));
@@ -12628,12 +12941,12 @@
                  case 0:
                   _.prev = 0;
                   k = false;
-                  if (!(C && typeof C.publishComment === "function")) {
+                  if (!(p && typeof p.publishComment === "function")) {
                     _.next = 8;
                     break;
                   }
                   _.next = 5;
-                  return C.publishComment(u, {
+                  return p.publishComment(u, {
                     "videoCode": l.videoCode,
                     "commentForm": r,
                     "targetUrl": o,
@@ -12711,10 +13024,10 @@
                       return l.handleRetry();
                     }), 500);
                   } else {
-                    p.disabled = false;
-                    y.disabled = false;
-                    y.textContent = "提交";
                     b.disabled = false;
+                    C.disabled = false;
+                    C.textContent = "提交";
+                    y.disabled = false;
                   }
                   _.next = 21;
                   break;
@@ -12723,10 +13036,10 @@
                   _.prev = 14;
                   _.t0 = _["catch"](0);
                   U.error("[CommentPanel] 发表评论失败:", _.t0);
-                  p.disabled = false;
-                  y.disabled = false;
-                  y.textContent = "提交";
                   b.disabled = false;
+                  C.disabled = false;
+                  C.textContent = "提交";
+                  y.disabled = false;
 
                  case 21:
                  case "end":
@@ -12736,15 +13049,10 @@
             }), _callee0, null, [ [ 0, 14 ] ]);
           })))();
         }));
-        p.addEventListener("keydown", (function(r) {
+        b.addEventListener("keydown", (function(r) {
           if (r.key === "Enter" && !r.shiftKey) {
             r.preventDefault();
-            y.click();
-          }
-        }));
-        u.addEventListener("click", (function(r) {
-          if (r.target === u) {
-            v();
+            C.click();
           }
         }));
       }
@@ -13640,7 +13948,7 @@
       }
     } ]);
   }();
-  CommentPanel_defineProperty(Ae, "preloadCache", {
+  CommentPanel_defineProperty(Fe, "preloadCache", {
     "videoCode": "",
     "jableCommentsPromise": null,
     "javlibVideoIdPromise": null,
@@ -13693,7 +14001,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Fe = function() {
+  var Ae = function() {
     function VolumeController(r, o) {
       VolumeController_classCallCheck(this, VolumeController);
       this.playerCore = r;
@@ -14360,8 +14668,8 @@
       this.playerCore = r;
       this.targetVideo = r.targetVideo;
       this.uiElements = o;
-      this.commentPanel = new Ae(r, this);
-      this.volumeController = new Fe(r, this);
+      this.commentPanel = new Fe(r, this);
+      this.volumeController = new Ae(r, this);
       this.seekController = new Te(r, this);
       this.playbackController = new je(r, this);
       this.controlButtonsContainer = null;
@@ -21379,7 +21687,7 @@
     return ("string" === o ? String : Number)(r);
   }
   var dt = new ut;
-  var mt = function() {
+  var pt = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
       this.detailExpander = new lt;
@@ -21416,7 +21724,7 @@
   }();
   function initUserExperienceEnhancer() {
     var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
-    var o = new mt;
+    var o = new pt;
     o.init(r);
     return o;
   }
@@ -21868,7 +22176,7 @@
              case 4:
               r = getVideoCodeFromUrl();
               if (r) {
-                Ae.preload(r);
+                Fe.preload(r);
               }
               injectStyles();
               a = initUserExperienceEnhancer(true);

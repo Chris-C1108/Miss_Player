@@ -1,6 +1,6 @@
 import { __ } from '../../constants/i18n.js';
 import { CLOSE_LINE, SEND, KEYBOARD } from '../../constants/icons.js';
-import { Toast, isMobile } from '../../utils/index.js';
+import { Toast, isMobile, createModal, copyToClipboard } from '../../utils/index.js';
 import { isSiteDomain, SITE_DOMAINS, checkSiteReachability } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { CrossDomainBridge } from '../../autologin/CrossDomainBridge.js';
@@ -842,20 +842,10 @@ export class CommentPanel {
     }
 
     fallbackCopyText(text) {
-        try {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            Toast(`番号已复制: ${text}`, 2000, 'success');
-        } catch (err) {
-            console.error('Fallback copy failed:', err);
-            Toast(`复制失败，请手动复制: ${text}`, 3000, 'warning');
-        }
+        copyToClipboard(text).then(success => {
+            if (success) Toast(`番号已复制: ${text}`, 2000, 'success');
+            else Toast(`复制失败，请手动复制: ${text}`, 3000, 'warning');
+        });
     }
 
     handleCopyAllComments() {
@@ -1482,34 +1472,7 @@ export class CommentPanel {
      * 弹出“评论功能开发中”的模态框 (保留备用)
      */
     showDevelopmentModal() {
-        const modal = document.createElement('div');
-        modal.className = 'tm-custom-modal-overlay';
-        modal.innerHTML = `
-            <div class="tm-custom-modal-content">
-                <div class="tm-custom-modal-title">提示</div>
-                <div class="tm-custom-modal-message">评论功能开发中</div>
-                <button class="tm-custom-modal-close-btn">确定</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-
-        // 触发过渡动画
-        requestAnimationFrame(() => {
-            modal.classList.add('active');
-        });
-
-        const closeBtn = modal.querySelector('.tm-custom-modal-close-btn');
-        const closeModal = () => {
-            modal.classList.remove('active');
-            modal.addEventListener('transitionend', () => {
-                modal.remove();
-            }, { once: true });
-        };
-
-        closeBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
+        this.showTipModal('提示', '评论功能开发中');
     }
 
     getLoopManager() {
@@ -2060,66 +2023,29 @@ export class CommentPanel {
     }
 
     showTipModal(title, message) {
-        const modal = document.createElement('div');
-        modal.className = 'tm-custom-modal-overlay';
-        modal.innerHTML = `
-            <div class="tm-custom-modal-content">
-                <div class="tm-custom-modal-title">${title}</div>
-                <div class="tm-custom-modal-message">${message}</div>
-                <button class="tm-custom-modal-close-btn">确定</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-
-        requestAnimationFrame(() => modal.classList.add('active'));
-
-        const close = () => {
-            modal.classList.remove('active');
-            modal.addEventListener('transitionend', () => modal.remove(), { once: true });
-        };
+        const { modal, close } = createModal(`
+            <div class="tm-custom-modal-title">${title}</div>
+            <div class="tm-custom-modal-message">${message}</div>
+            <button class="tm-custom-modal-close-btn">确定</button>
+        `);
         modal.querySelector('.tm-custom-modal-close-btn').addEventListener('click', close);
-        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
     }
 
     showLoginPromptModal(domain) {
-        const modal = document.createElement('div');
-        modal.className = 'tm-custom-modal-overlay';
-        modal.innerHTML = `
-            <div class="tm-custom-modal-content" style="max-width: 280px; width: 85%;">
-                <div class="tm-custom-modal-title">发表评论</div>
-                <div class="tm-custom-modal-message">需要有 Jable 登录态才能发表评论，请先登录。</div>
-                <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%;">
-                    <button class="tm-custom-modal-cancel-btn" style="background-color: hsla(var(--shadcn-muted)/0.2); color: hsl(var(--shadcn-foreground)); border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; transition: background-color 0.2s;">取消</button>
-                    <button class="tm-custom-modal-login-btn" style="background-color: hsl(var(--shadcn-blue)); color: #ffffff; border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3); transition: background-color 0.2s;">去登录</button>
-                </div>
+        const { modal, close } = createModal(`
+            <div class="tm-custom-modal-title">发表评论</div>
+            <div class="tm-custom-modal-message">需要有 Jable 登录态才能发表评论，请先登录。</div>
+            <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                <button class="tm-custom-modal-cancel-btn">取消</button>
+                <button class="tm-custom-modal-login-btn">去登录</button>
             </div>
-        `;
-        document.body.appendChild(modal);
-
-        requestAnimationFrame(() => modal.classList.add('active'));
-
-        const close = () => {
-            modal.classList.remove('active');
-            modal.addEventListener('transitionend', () => modal.remove(), { once: true });
-        };
+        `);
 
         modal.querySelector('.tm-custom-modal-cancel-btn').addEventListener('click', close);
-
-        const loginBtn = modal.querySelector('.tm-custom-modal-login-btn');
-        loginBtn.addEventListener('click', () => {
+        modal.querySelector('.tm-custom-modal-login-btn').addEventListener('click', () => {
             close();
             this.showLoginModal(domain);
         });
-
-        // Hover effects
-        const cancelBtn = modal.querySelector('.tm-custom-modal-cancel-btn');
-        cancelBtn.addEventListener('mouseenter', () => cancelBtn.style.backgroundColor = 'hsla(var(--shadcn-muted)/0.3)');
-        cancelBtn.addEventListener('mouseleave', () => cancelBtn.style.backgroundColor = 'hsla(var(--shadcn-muted)/0.2)');
-
-        loginBtn.addEventListener('mouseenter', () => loginBtn.style.backgroundColor = 'hsl(var(--shadcn-blue)/0.9)');
-        loginBtn.addEventListener('mouseleave', () => loginBtn.style.backgroundColor = 'hsl(var(--shadcn-blue))');
-
-        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
     }
 
     showLoginModal(domain, onSuccess) {
@@ -2132,52 +2058,35 @@ export class CommentPanel {
         }
         const siteTitle = provider ? (provider.siteKey === 'JABLE' ? 'Jable.tv' : provider.siteKey === 'MISSAV' ? 'MissAV' : provider.siteKey) : 'Jable.tv';
 
-        const modal = document.createElement('div');
-        modal.className = 'tm-custom-modal-overlay';
-        modal.innerHTML = `
-            <div class="tm-custom-modal-content" style="max-width: 300px; width: 85%; box-sizing: border-box; padding: 20px;">
-                <div class="tm-custom-modal-title" style="margin-bottom: 15px;">登录 ${siteTitle}</div>
-                <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; text-align: left; box-sizing: border-box;">
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">用户名 / 邮箱</label>
-                        <input type="text" class="tm-login-username" placeholder="请输入用户名或邮箱" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid hsla(var(--shadcn-border) / 0.3); background-color: hsla(var(--shadcn-muted) / 0.1); color: hsl(var(--shadcn-foreground)); font-size: 13px; outline: none; box-sizing: border-box;" />
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">密码</label>
-                        <input type="password" class="tm-login-password" placeholder="请输入密码" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid hsla(var(--shadcn-border) / 0.3); background-color: hsla(var(--shadcn-muted) / 0.1); color: hsl(var(--shadcn-foreground)); font-size: 13px; outline: none; box-sizing: border-box;" />
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-                        <input type="checkbox" id="tm-login-remember" checked style="cursor: pointer;" />
-                        <label for="tm-login-remember" style="font-size: 12px; color: hsl(var(--shadcn-muted-foreground)); cursor: pointer; user-select: none;">记住密码并开启自动登录</label>
-                    </div>
+        const { modal, close } = createModal(`
+            <div class="tm-custom-modal-title" style="margin-bottom: 15px;">登录 ${siteTitle}</div>
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; text-align: left; box-sizing: border-box;">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">用户名 / 邮箱</label>
+                    <input type="text" class="tm-login-username" placeholder="请输入用户名或邮箱" />
                 </div>
-                <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 20px;">
-                    <button class="tm-custom-modal-cancel-btn" style="background-color: hsla(var(--shadcn-muted)/0.2); color: hsl(var(--shadcn-foreground)); border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; transition: background-color 0.2s;">取消</button>
-                    <button class="tm-custom-modal-submit-btn" style="background-color: hsl(var(--shadcn-blue)); color: #ffffff; border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3); transition: background-color 0.2s;">登录</button>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">密码</label>
+                    <input type="password" class="tm-login-password" placeholder="请输入密码" />
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                    <input type="checkbox" id="tm-login-remember" checked style="cursor: pointer;" />
+                    <label for="tm-login-remember" style="font-size: 12px; color: hsl(var(--shadcn-muted-foreground)); cursor: pointer; user-select: none;">记住密码并开启自动登录</label>
                 </div>
             </div>
-        `;
-        document.body.appendChild(modal);
-
-        requestAnimationFrame(() => modal.classList.add('active'));
-
-        const close = () => {
-            modal.classList.remove('active');
-            modal.addEventListener('transitionend', () => modal.remove(), { once: true });
-        };
+            <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 20px;">
+                <button class="tm-custom-modal-cancel-btn">取消</button>
+                <button class="tm-custom-modal-submit-btn">登录</button>
+            </div>
+        `);
 
         const cancelBtn = modal.querySelector('.tm-custom-modal-cancel-btn');
         cancelBtn.addEventListener('click', close);
-        cancelBtn.addEventListener('mouseenter', () => cancelBtn.style.backgroundColor = 'hsla(var(--shadcn-muted)/0.3)');
-        cancelBtn.addEventListener('mouseleave', () => cancelBtn.style.backgroundColor = 'hsla(var(--shadcn-muted)/0.2)');
 
         const submitBtn = modal.querySelector('.tm-custom-modal-submit-btn');
-        submitBtn.addEventListener('mouseenter', () => submitBtn.style.backgroundColor = 'hsl(var(--shadcn-blue)/0.9)');
-        submitBtn.addEventListener('mouseleave', () => submitBtn.style.backgroundColor = 'hsl(var(--shadcn-blue))');
-
-        // Autofill if credentials already exist
         const usernameInput = modal.querySelector('.tm-login-username');
         const passwordInput = modal.querySelector('.tm-login-password');
+
         if (window.loginManager) {
             usernameInput.value = window.loginManager.userEmail || '';
             passwordInput.value = window.loginManager.userPassword || '';
@@ -2209,7 +2118,6 @@ export class CommentPanel {
                     : false;
 
                 if (loginSuccess) {
-                    // Save credentials globally if remember checkbox is checked
                     if (window.loginManager) {
                         window.loginManager.handleLoginInfoChange({
                             email: username,
@@ -2222,13 +2130,9 @@ export class CommentPanel {
                     if (typeof onSuccess === 'function') {
                         onSuccess();
                     } else {
-                        // Successfully logged in, retry comment detection/posting trigger
-                        setTimeout(() => {
-                            this.handlePublishComment();
-                        }, 500);
+                        setTimeout(() => this.handlePublishComment(), 500);
                     }
                 } else {
-                    // Enable fields to retry
                     usernameInput.disabled = false;
                     passwordInput.disabled = false;
                     submitBtn.disabled = false;
@@ -2246,50 +2150,31 @@ export class CommentPanel {
             }
         });
 
-        // Add Enter key listener
         passwordInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 submitBtn.click();
             }
         });
-
-        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
     }
 
     showCommentInputModal(commentForm, targetUrl, domain) {
-        const modal = document.createElement('div');
-        modal.className = 'tm-custom-modal-overlay';
-        modal.innerHTML = `
-            <div class="tm-custom-modal-content" style="max-width: 320px; width: 90%;">
-                <div class="tm-custom-modal-title">发表评论</div>
-                <textarea class="tm-comment-input-textarea" placeholder="写下你的精彩评论..." style="width: 100%; height: 90px; margin: 12px 0; padding: 10px; border-radius: 8px; border: 1px solid hsla(var(--shadcn-border) / 0.3); background-color: hsla(var(--shadcn-muted) / 0.1); color: hsl(var(--shadcn-foreground)); font-size: 13px; resize: none; box-sizing: border-box; outline: none; transition: border-color 0.2s;" maxlength="1000"></textarea>
-                <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%;">
-                    <button class="tm-custom-modal-cancel-btn" style="background-color: hsla(var(--shadcn-muted)/0.2); color: hsl(var(--shadcn-foreground)); border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; transition: background-color 0.2s;">取消</button>
-                    <button class="tm-custom-modal-submit-btn" style="background-color: hsl(var(--shadcn-blue)); color: #ffffff; border: none; border-radius: 18px; padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3); transition: background-color 0.2s;">提交</button>
-                </div>
+        const { modal, close } = createModal(`
+            <div class="tm-custom-modal-title">发表评论</div>
+            <textarea class="tm-comment-input-textarea" placeholder="写下你的精彩评论..." maxlength="1000"></textarea>
+            <div class="tm-modal-buttons" style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                <button class="tm-custom-modal-cancel-btn">取消</button>
+                <button class="tm-custom-modal-submit-btn">提交</button>
             </div>
-        `;
-        document.body.appendChild(modal);
-
-        requestAnimationFrame(() => modal.classList.add('active'));
+        `);
 
         const textarea = modal.querySelector('.tm-comment-input-textarea');
         textarea.focus();
 
-        const close = () => {
-            modal.classList.remove('active');
-            modal.addEventListener('transitionend', () => modal.remove(), { once: true });
-        };
-
         const cancelBtn = modal.querySelector('.tm-custom-modal-cancel-btn');
         cancelBtn.addEventListener('click', close);
-        cancelBtn.addEventListener('mouseenter', () => cancelBtn.style.backgroundColor = 'hsla(var(--shadcn-muted)/0.3)');
-        cancelBtn.addEventListener('mouseleave', () => cancelBtn.style.backgroundColor = 'hsla(var(--shadcn-muted)/0.2)');
 
         const submitBtn = modal.querySelector('.tm-custom-modal-submit-btn');
-        submitBtn.addEventListener('mouseenter', () => submitBtn.style.backgroundColor = 'hsl(var(--shadcn-blue)/0.9)');
-        submitBtn.addEventListener('mouseleave', () => submitBtn.style.backgroundColor = 'hsl(var(--shadcn-blue))');
 
         submitBtn.addEventListener('click', () => {
             const commentText = textarea.value.trim();
@@ -2399,8 +2284,6 @@ export class CommentPanel {
                 submitBtn.click();
             }
         });
-
-        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
     }
 
     updatePosition() {
