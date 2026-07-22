@@ -199,8 +199,26 @@ export class UIManager {
             this.targetVideo.parentNode.removeChild(this.targetVideo);
         }
 
-        // 禁用原生视频控件
-        this.targetVideo.controls = false;
+        // 禁用原生视频控件并移除 controls 属性
+        if (this.targetVideo) {
+            this.targetVideo.controls = false;
+            this.targetVideo.removeAttribute('controls');
+
+            // 移除非标准子节点 (如原站播放器注入在 video 内部的 div 控制/封面节点)
+            Array.from(this.targetVideo.children).forEach(child => {
+                const tag = child.tagName ? child.tagName.toLowerCase() : '';
+                if (tag !== 'track' && tag !== 'source') {
+                    try { child.remove(); } catch (e) {}
+                }
+            });
+        }
+
+        // 强制使用内联播放，防止 iOS Safari/微信等自动进入系统全屏播放器
+        this.targetVideo.setAttribute('playsinline', 'true');
+        this.targetVideo.setAttribute('webkit-playsinline', 'true');
+        this.targetVideo.setAttribute('x5-playsinline', 'true');
+        this.targetVideo.playsInline = true;
+        this.targetVideo.webkitPlaysInline = true;
 
         // 添加视频到包装器
         this.videoWrapper.appendChild(this.targetVideo);
@@ -383,7 +401,23 @@ export class UIManager {
                 return;
             }
             
-            // 播放/暂停切换函数
+            // 在横屏模式下且控制面板悬浮时，点击视频画面直接切换控制面板显示/隐藏状态
+            if (this.isLandscape) {
+                const isDocked = !!(this.playerContainer && this.playerContainer.className.match(/tm-controls-docked-/));
+                const isFloating = this.isSidebarHidden || !isDocked;
+                
+                if (isFloating) {
+                    if (this.controlsVisible) {
+                        this.hideControls();
+                    } else {
+                        this.showControls();
+                        this.autoHideControls();
+                    }
+                    return;
+                }
+            }
+            
+            // 播放/暂停切换函数 (竖屏或吸附模式)
             const togglePlayPause = () => {
                 if (!this.playerCore.targetVideo) return;
                 
@@ -401,12 +435,9 @@ export class UIManager {
                 }
             };
             
-            // 如果控制界面当前是隐藏状态，则只显示控制界面而不触发暂停（横竖屏一致）
+            // 如果控制界面当前是隐藏状态，则只显示控制界面而不触发暂停
             if (!this.controlsVisible) {
                 this.showControls();
-                if (this.isLandscape) {
-                    this.autoHideControls();
-                }
                 return;
             }
             
@@ -496,10 +527,10 @@ export class UIManager {
         this.closeBtn = document.createElement('button');
         this.closeBtn.className = 'tm-close-button tm-control-button-base';
 
-        // 现代化的关闭图标
+        // 现代化的向左箭头关闭图标
         const closeIcon = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         `;
 
@@ -605,6 +636,25 @@ export class UIManager {
             e.stopPropagation();
             this.toggleSidebarVisibility();
         });
+
+        // 根据 showCommentsSection 设置状态初始化按钮可见性
+        this.updateSidebarButtonsVisibility();
+    }
+
+    /**
+     * 更新侧栏控制按钮 (位置与显隐按钮) 的可见性 (当 showCommentsSection 为 false 时完全隐藏)
+     */
+    updateSidebarButtonsVisibility() {
+        const state = this.playerCore?.options?.playerState;
+        const showCommentsSection = state?.settings?.showCommentsSection ?? true;
+        const displayVal = showCommentsSection ? 'flex' : 'none';
+
+        if (this.sidebarPosBtn) {
+            this.sidebarPosBtn.style.display = displayVal;
+        }
+        if (this.sidebarToggleBtn) {
+            this.sidebarToggleBtn.style.display = displayVal;
+        }
     }
 
     /**
@@ -704,8 +754,11 @@ export class UIManager {
             this.updateSidebarToggleButtonIcon();
             this.sidebarToggleBtn.title = '隐藏评论区';
             
-            // 连动：强制显示控制栏 (阻止自动隐藏)
+            // 连动：开启 3 秒自动隐藏控制面板计时器 (若属于横屏悬浮面板)
             this.showControls();
+            if (this.isLandscape) {
+                this.autoHideControls();
+            }
             
             // 连动：重新应用吸附排版状态
             if (this.playerCore.dragManager) {
@@ -733,7 +786,7 @@ export class UIManager {
         
         const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
         const commentsPanelEl = commentPanel && commentPanel.commentsPanel;
-        const isPcLandscape = this.isLandscape && window.innerWidth >= 930 && window.innerHeight >= 400;
+        const isPcLandscape = this.isLandscape && window.innerWidth >= 930;
         
         const targetParent = (commentsPanelEl && isPcLandscape && !this.isSidebarHidden)
             ? commentsPanelEl
@@ -782,7 +835,6 @@ export class UIManager {
     createSettingsPanel() {
         this.settingsPanel = document.createElement('div');
         this.settingsPanel.className = 'tm-settings-panel';
-        this.settingsPanel.style.display = 'none';
     }
     
     /**
@@ -1056,9 +1108,9 @@ export class UIManager {
             this.playerCore.dragManager.restoreControlPanelPosition();
         }
         
-        // 横屏模式下自动隐藏控制界面（如果是手机横屏，即宽 < 930px 或高 < 400px），或显示并定时隐藏（PC大屏 >= 930px 且高 >= 400px）
+        // 横屏模式下自动隐藏控制界面（如果是手机横屏，即宽 < 930px），或显示并定时隐藏（PC大屏 >= 930px）
         if (this.isLandscape) {
-            if (window.innerWidth < 930 || window.innerHeight < 400) {
+            if (window.innerWidth < 930) {
                 this.hideControls(true);
             } else {
                 this.showControls();
@@ -1179,37 +1231,38 @@ export class UIManager {
             this.controlsHideTimerId = null;
         }
 
-        // 手机竖屏场景下：控制面板显示时 评论区变暗
+        // 手机竖屏场景下：控制面板显示时 评论区与拖动手柄同步变暗
         if (!this.isLandscape) {
             const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
             if (commentPanel && commentPanel.commentsPanel) {
                 commentPanel.commentsPanel.classList.add('is-dimmed');
+            }
+            if (this.handleContainer) {
+                this.handleContainer.classList.add('is-dimmed');
             }
         }
     }
     
     /**
      * 隐藏控制界面
-     * @param {boolean} force - 是否强制隐藏 (绕过横屏/评论区显示状态判断)
+     * @param {boolean} force - 是否强制隐藏 (绕过横屏/吸附状态判断)
      */
     hideControls(force = false) {
         if (!this.overlay) return;
         if (!this.isLandscape && !force) return;
         
-        // 如果评论区显示且不是强制隐藏，则不隐藏控制面板
-        if (!this.isSidebarHidden && !force) {
-            return;
-        }
-        
         this.overlay.classList.add('controls-hidden');
         document.body.classList.add('controls-hidden');
         this.controlsVisible = false;
 
-        // 手机竖屏场景下：控制面板隐藏时评论区自动变亮 (解除变暗)
+        // 手机竖屏场景下：控制面板隐藏时评论区与手柄同步变亮 (解除变暗)
         if (!this.isLandscape) {
             const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
             if (commentPanel && commentPanel.commentsPanel) {
                 commentPanel.commentsPanel.classList.remove('is-dimmed');
+            }
+            if (this.handleContainer) {
+                this.handleContainer.classList.remove('is-dimmed');
             }
         }
     }
@@ -1233,11 +1286,6 @@ export class UIManager {
     autoHideControls() {
         // 只在横屏模式下设置自动隐藏
         if (!this.isLandscape) {
-            return;
-        }
-        
-        // 如果评论区处于显示状态，不设置自动隐藏
-        if (!this.isSidebarHidden) {
             return;
         }
         

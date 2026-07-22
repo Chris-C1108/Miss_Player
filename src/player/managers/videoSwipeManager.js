@@ -12,11 +12,25 @@ export class VideoSwipeManager {
         this._touchPreventDefault = (e) => {
             // 只有当拖动方向为 vertical 且向下滑动时，阻止默认行为（用于下拉退出播放器）
             // 如果是向上滑动，则不阻止，允许事件穿透到原始网页以滚动触发 iOS 工具栏隐藏
-            if (this.isDragging && this.dragDirection === 'vertical') {
-                if (this.deltaY < 0) {
-                    return;
+            if (this.isDragging && e.touches && e.touches.length > 0) {
+                const currentY = e.touches[0].clientY;
+                const currentDeltaY = currentY - this.startY;
+                
+                if (this.dragDirection === 'vertical') {
+                    if (currentDeltaY < 0) {
+                        if (window.tmDebugLogger) {
+                            window.tmDebugLogger.log(`[_touchPreventDefault] Video swipe UP. deltaY: ${currentDeltaY}. Allowing penetration.`);
+                        }
+                        return;
+                    }
+                    
+                    if (window.tmDebugLogger) {
+                        window.tmDebugLogger.log(`[_touchPreventDefault] Video swipe DOWN. deltaY: ${currentDeltaY}. Preventing default!`);
+                    }
+                    if (e.cancelable) {
+                        e.preventDefault();
+                    }
                 }
-                e.preventDefault();
             }
         };
 
@@ -122,6 +136,13 @@ export class VideoSwipeManager {
             console.log('[VideoSwipeManager] 视频可播放，更新约束');
             this._updateConstraints();
         });
+
+        // 窗口尺寸变化与屏幕翻转时重新更新拖动约束
+        this._windowResizeHandler = () => {
+            this._updateConstraints();
+        };
+        window.addEventListener('resize', this._windowResizeHandler);
+        window.addEventListener('orientationchange', this._windowResizeHandler);
     }
 
     /**
@@ -173,10 +194,8 @@ export class VideoSwipeManager {
             this._applyOffset(0, false);
             // 更新手柄状态为禁用移动，但宽度相应设置
             this._updateHandleState(false);
-            
-            // 隐藏并隐藏微缩地图
             if (this.minimap) {
-                this.minimap.style.display = 'none';
+                this.minimap.style.visibility = '';
             }
             return false;
         }
@@ -190,12 +209,29 @@ export class VideoSwipeManager {
         // 更新手柄状态为可用
         this._updateHandleState(true);
 
-        // 显示并计算微缩地图比例
+        // 计算微缩地图尺寸比例
         if (this.minimap) {
-            this.minimap.style.display = 'block';
+            this.minimap.style.visibility = '';
             const ratio = this.videoWidth / this.videoHeight;
             if (ratio > 0) {
-                this.minimap.style.height = `${80 / ratio}px`;
+                const maxW = 80;
+                const maxH = 45;
+                let miniW = maxW;
+                let miniH = Math.round(maxW / ratio);
+                if (miniH > maxH) {
+                    miniH = maxH;
+                    miniW = Math.round(maxH * ratio);
+                }
+                this.minimap.style.width = `${miniW}px`;
+                this.minimap.style.height = `${miniH}px`;
+
+                // 预先计算并固化 Minimap Viewport 的像素尺寸与可滑动区间，避免在 pointermove 中调用 getBoundingClientRect 触发重排
+                const videoRenderedWidth = (this.videoWidth * this.videoScale) || this.containerWidth;
+                if (videoRenderedWidth > 0 && this.minimapViewport) {
+                    const viewportW = Math.min(miniW, (this.containerWidth / videoRenderedWidth) * miniW);
+                    this.minimapViewport.style.width = `${viewportW}px`;
+                    this.minimapMaxTravel = miniW - viewportW;
+                }
             }
         }
         this._updateMinimapViewport();
@@ -231,20 +267,15 @@ export class VideoSwipeManager {
     }
 
     /**
-     * 更新微缩地图中的视口高亮框位置和宽度百分比
+     * 更新微缩地图中的视口高亮框位置 (使用 GPU transform 零延迟跟手)
      * @private
      */
     _updateMinimapViewport() {
-        if (!this.minimapViewport || this.videoWidth <= 0) return;
+        if (!this.minimapViewport || this.maxOffset <= 0) return;
         
-        const videoRenderedWidth = this.video.getBoundingClientRect().width || (this.videoWidth * this.videoScale);
-        if (videoRenderedWidth <= 0) return;
-        
-        const leftPercent = ((this.maxOffset - this.offset) / videoRenderedWidth) * 100;
-        const widthPercent = (this.containerWidth / videoRenderedWidth) * 100;
-        
-        this.minimapViewport.style.left = `${leftPercent}%`;
-        this.minimapViewport.style.width = `${widthPercent}%`;
+        // 映射 offset 到 minimapMaxTravel (GPU 加速 transform 替代 left，实现 100% 实时跟手)
+        const miniX = ((this.maxOffset - this.offset) / (2 * this.maxOffset)) * (this.minimapMaxTravel || 0);
+        this.minimapViewport.style.transform = `translateX(${miniX}px)`;
     }
 
     /**
@@ -471,15 +502,15 @@ export class VideoSwipeManager {
 
         const dragTarget = this.uiElements && this.uiElements.videoWrapper ? this.uiElements.videoWrapper : this.video;
 
-        // 如果支持指针捕获，捕获指针
-        if (dragTarget.setPointerCapture) {
-            dragTarget.setPointerCapture(e.pointerId);
-        }
+        // 如果支持指针捕获，捕获指针。此处注释以防止 Safari 自动滚动原始网页以对齐固定元素
+        // if (dragTarget.setPointerCapture) {
+        //     dragTarget.setPointerCapture(e.pointerId);
+        // }
 
-        // 添加事件监听
-        dragTarget.addEventListener('pointermove', this._pointerMoveHandler);
-        dragTarget.addEventListener('pointerup', this._pointerUpHandler);
-        dragTarget.addEventListener('pointercancel', this._pointerUpHandler);
+        // 添加事件监听 (绑定到 window 确保拖拽不从元素上滑落，且规避 Safari setPointerCapture 带来的副作用)
+        window.addEventListener('pointermove', this._pointerMoveHandler);
+        window.addEventListener('pointerup', this._pointerUpHandler);
+        window.addEventListener('pointercancel', this._pointerUpHandler);
         
         // 动态绑定 touchmove 并设置为非 passive，以强制阻止浏览器默认的下拉刷新手势
         dragTarget.addEventListener('touchmove', this._touchPreventDefault, { passive: false });
@@ -489,8 +520,8 @@ export class VideoSwipeManager {
             window.navigator.vibrate(5);
         }
 
-        // 阻止默认行为，如文本选择
-        e.preventDefault();
+        // 阻止默认行为，如文本选择 (此处注释以允许原生滚动穿透开始)
+        // e.preventDefault();
     }
 
     /**
@@ -503,6 +534,16 @@ export class VideoSwipeManager {
         // 如果当前处于 3 倍速长按状态下，不响应任何滑动拖拽操作
         if (this.playerCore && this.playerCore.uiManager && this.playerCore.uiManager.isLongPress) {
             return;
+        }
+        
+        // 处于横屏模式且控制面板悬浮时，滑动/拖拽视频立即隐藏控制面板
+        if (this.playerCore && this.playerCore.uiManager && this.playerCore.uiManager.isLandscape) {
+            const ui = this.playerCore.uiManager;
+            const isDocked = !!(ui.playerContainer && ui.playerContainer.className.match(/tm-controls-docked-/));
+            const isFloating = ui.isSidebarHidden || !isDocked;
+            if (isFloating && ui.controlsVisible) {
+                ui.hideControls();
+            }
         }
         
         // 计算位移
@@ -523,6 +564,12 @@ export class VideoSwipeManager {
         }
         
         if (this.dragDirection === 'horizontal') {
+            // 标记正在左右滑动画面，供 CSS 高亮/显示 Minimap
+            const dragTarget = this.uiElements && this.uiElements.videoWrapper ? this.uiElements.videoWrapper : this.video;
+            if (dragTarget && dragTarget.classList) {
+                dragTarget.classList.add('is-swiping');
+            }
+            
             // 水平移动：只有在视频宽度超过容器时才进行位移
             if (this.maxOffset > 0) {
                 this.dragDistance = Math.max(this.dragDistance, Math.abs(deltaX));  // 更新最大拖动距离
@@ -559,10 +606,9 @@ export class VideoSwipeManager {
                 // 向上滑动/拉回：移除正在下滑的标志 class
                 document.body.classList.remove('tm-swiping-down');
                 
-                // 向上滑动：应用阻尼系数，限制过度向上拖动
-                const dampedY = deltaY * 0.15;
+                // 向上滑动：不允许整体播放器向上拉起位移，直接归零以防止破坏与视口的视觉对齐
                 if (this.uiElements && this.uiElements.playerContainer) {
-                    this.uiElements.playerContainer.style.transform = `translateY(${dampedY}px)`;
+                    this.uiElements.playerContainer.style.transform = 'translateY(0)';
                     this.uiElements.playerContainer.style.opacity = '1';
                     this.uiElements.playerContainer.style.transition = 'none';
                 }
@@ -573,8 +619,15 @@ export class VideoSwipeManager {
             }
         }
         
-        // 阻止默认行为，如页面滚动
-        e.preventDefault();
+        // 阻止默认行为，如页面滚动 (仅在非上滑穿透时阻止，以允许原生向上滚动冒泡)
+        const isUpwardSwipe = this.dragDirection === 'vertical' && deltaY < 0;
+        const isUndeterminedUpward = this.dragDirection === null && deltaY < -2;
+        
+        if (!isUpwardSwipe && !isUndeterminedUpward) {
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+        }
     }
 
     /**
@@ -595,17 +648,30 @@ export class VideoSwipeManager {
             this.wasDragging = false;
         }
         
+        // 拖动结束时在横屏模式下触发自动隐藏
+        if (this.playerCore && this.playerCore.uiManager && this.playerCore.uiManager.isLandscape) {
+            this.playerCore.uiManager.autoHideControls();
+        }
+        
         const dragTarget = this.uiElements && this.uiElements.videoWrapper ? this.uiElements.videoWrapper : this.video;
-
-        // 释放指针捕获
-        if (dragTarget.releasePointerCapture) {
-            dragTarget.releasePointerCapture(e.pointerId);
+        if (dragTarget && dragTarget.classList) {
+            // 延迟 600ms 移除 is-swiping 类，让 Minimap 在手势/滑动停止后平滑淡出隐藏，而不是立即消失
+            setTimeout(() => {
+                if (!this.isDragging && dragTarget && dragTarget.classList) {
+                    dragTarget.classList.remove('is-swiping');
+                }
+            }, 600);
         }
 
+        // 释放指针捕获
+        // if (dragTarget.releasePointerCapture) {
+        //     dragTarget.releasePointerCapture(e.pointerId);
+        // }
+
         // 移除事件监听
-        dragTarget.removeEventListener('pointermove', this._pointerMoveHandler);
-        dragTarget.removeEventListener('pointerup', this._pointerUpHandler);
-        dragTarget.removeEventListener('pointercancel', this._pointerUpHandler);
+        window.removeEventListener('pointermove', this._pointerMoveHandler);
+        window.removeEventListener('pointerup', this._pointerUpHandler);
+        window.removeEventListener('pointercancel', this._pointerUpHandler);
         
         // 移除 touchmove 阻止默认事件的监听器
         dragTarget.removeEventListener('touchmove', this._touchPreventDefault);
@@ -1007,6 +1073,12 @@ export class VideoSwipeManager {
      */
     destroy() {
         // 移除事件监听
+        if (this._windowResizeHandler) {
+            window.removeEventListener('resize', this._windowResizeHandler);
+            window.removeEventListener('orientationchange', this._windowResizeHandler);
+            this._windowResizeHandler = null;
+        }
+
         const dragTarget = this.uiElements && this.uiElements.videoWrapper ? this.uiElements.videoWrapper : this.video;
         if (dragTarget) {
             dragTarget.removeEventListener('pointerdown', this._pointerDownHandler);

@@ -31,9 +31,9 @@
 }
 
 /* 1. 响应式布局参数定义 */
-@media screen and (min-width: 930px) and (min-height: 400px) and (orientation: landscape) {
+@media screen and (min-width: 930px) and (orientation: landscape) {
     :root {
-        --sidebar-width: clamp(320px, 25vw, 420px);
+        --sidebar-width: clamp(350px, 25vw, 420px);
     }
 }
 @media screen and (min-width: 1440px) and (orientation: landscape) {
@@ -43,15 +43,17 @@
 }
 
 /* 2. PC 横屏分栏基础样式 */
-@media screen and (min-width: 930px) and (min-height: 400px) and (orientation: landscape) {
+@media screen and (min-width: 930px) and (orientation: landscape) {
     /* 调整播放器容器为 Grid 双分栏布局 */
     .tm-player-container {
         display: grid !important;
         grid-template-columns: 1fr var(--sidebar-width) !important;
-        grid-template-rows: 1fr !important;
+        grid-template-rows: minmax(0, 1fr) !important;
         grid-template-areas:
             "video sidebar" !important;
-        height: 100vh !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
         width: 100vw !important;
         overflow: hidden !important;
         background-color: #000 !important;
@@ -152,6 +154,7 @@
 
     /* 视频包装器 */
     .tm-video-wrapper {
+        position: relative !important;
         width: 100% !important;
         height: 100% !important;
         border-radius: 0 !important;
@@ -161,12 +164,20 @@
         overflow: hidden !important;
     }
 
+    /* 移动端横屏下向上抬高 Minimap 避开底部安全区与边缘遮挡 */
+    .tm-video-minimap {
+        bottom: calc(36px + env(safe-area-inset-bottom, 0px)) !important;
+        left: calc(24px + env(safe-area-inset-left, 0px)) !important;
+    }
+
     /* 视频元素 - 高度填满，宽度自适应且解除最大限制以溢出，从而支持水平拖动 */
     .tm-video-wrapper video {
         width: auto !important;
         height: 100% !important;
         max-height: 100% !important;
         max-width: none !important;
+        min-width: 0 !important;
+        flex-shrink: 0 !important;
         object-fit: contain !important;
     }
 
@@ -184,6 +195,8 @@
         position: relative !important;
         width: 100% !important; /* 由 Grid 的 var(--sidebar-width) 宽度决定 */
         height: 100% !important;
+        max-height: 100% !important;
+        min-height: 0 !important;
         background-color: hsla(var(--shadcn-card) / 0.95) !important;
         border-left: 1px solid hsla(var(--shadcn-border) / 0.15) !important;
         backdrop-filter: blur(20px) !important;
@@ -202,26 +215,64 @@
         display: none !important;
     }
 
-    /* 评论列表区域 */
+    /* 评论列表区域：在 PC 端作为 Flex 容器独立滚动，确保底部 JAVLibrary 不被遮盖 */
     .tm-comments-panel-list.tm-comments-list {
-        flex: 1 !important;
+        flex: 1 1 0% !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
         width: 100% !important;
-        overflow-y: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow-y: auto !important;
         box-sizing: border-box !important;
-        padding-bottom: 8px !important; /* 减少外层底部留白，使板块自然伸展到最下方 */
+        padding: 8px 16px 0px 16px !important;
         pointer-events: auto !important;
     }
 
-    /* PC 横屏默认悬浮控制面板时，在板块内部预留高度，防止遮挡最下方的评论 (控制面板高度约 180px + 间距) */
-    .tm-comment-section-body {
-        padding-bottom: 220px !important;
-        transition: padding-bottom 0.3s ease !important;
+    .tm-comment-section {
+        min-height: 0 !important;
+        flex-shrink: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
     }
 
-    /* 当控制面板隐藏、或者已吸附（docked）时，恢复小留白，最大化评论区可视高度 */
-    body.controls-hidden .tm-comment-section-body,
-    .tm-player-container[class*="tm-controls-docked-"] .tm-comment-section-body {
-        padding-bottom: 16px !important;
+    .tm-comment-section:not(.is-collapsed) {
+        flex: 1 1 0% !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* 板块内部留白与滚动约束 */
+    .tm-comment-section-body {
+        flex: 1 1 0% !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        padding-bottom: 4px !important;
+    }
+
+    /* 桌面端发表栏与功能栏按 Flex 布局自然贴合在右侧评论区边栏最底部 */
+    .tm-comments-panel-action-bar {
+        position: relative !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: auto !important;
+        flex: 0 0 auto !important;
+        flex-shrink: 0 !important;
+        z-index: 9995 !important;
+    }
+
+    .tm-comment-submit-bar-wrapper {
+        position: relative !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: auto !important;
+        flex: 0 0 auto !important;
+        flex-shrink: 0 !important;
+        z-index: 9996 !important;
     }
 
     /* PC 端全屏评论面板发布按钮微调 */
@@ -246,13 +297,15 @@
         transform: none;
         width: calc(var(--sidebar-width) - 32px) !important; /* 对齐评论区安全宽度 */
         max-width: calc(var(--sidebar-width) - 32px) !important;
-        min-width: 280px !important;
-        background-color: hsla(var(--shadcn-card) / 0.85) !important;
-        border: 1px solid hsla(var(--shadcn-border) / 0.2) !important;
+        min-width: 348px !important;
+        background-color: rgba(10, 10, 10, 0.52) !important; /* 统一使用低透明度背景以自然融合 */
+        border: none !important; /* 彻底移除硬描边 */
         border-radius: 16px !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        box-shadow: 
+            inset 0 0 0 1px rgba(255, 255, 255, 0.05), /* 极薄微量内描边，防黑背景融合 */
+            0 12px 32px rgba(0, 0, 0, 0.45) !important; /* 外围弥散阴影 */
         z-index: 10001 !important;
         padding: 8px 12px 12px 12px !important;
         transition: opacity 0.3s ease, transform 0.3s ease !important;
@@ -271,7 +324,7 @@
         transition: none !important;
         cursor: grabbing;
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6) !important;
-        border-color: hsla(var(--shadcn-blue) / 0.5) !important;
+        border: none !important;
     }
 
     /* PC 端控制栏隐藏时的动画过渡 */
@@ -299,51 +352,6 @@
         z-index: 10002 !important;
     }
 
-    /* 视频当前画面显示区域微缩指示器 (Minimap) */
-    .tm-video-minimap {
-        position: absolute !important;
-        bottom: 16px !important;
-        left: 16px !important;
-        top: auto !important;
-        width: 80px !important;
-        height: 45px; /* 默认，将由 JS 根据视频比例覆盖 */
-        background-color: rgba(0, 0, 0, 0.45) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 4px !important;
-        overflow: hidden !important;
-        z-index: 9998 !important;
-        pointer-events: none !important;
-        opacity: 0.8 !important;
-        transition: opacity 0.3s ease !important;
-        backdrop-filter: blur(4px) !important;
-        -webkit-backdrop-filter: blur(4px) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-    }
-
-    /* 当控制界面隐藏时，微缩指示器也隐藏，保持大片式沉浸观影 */
-    body.controls-hidden .tm-video-minimap {
-        opacity: 0 !important;
-    }
-
-    .tm-video-minimap-viewport {
-        position: absolute !important;
-        top: 0 !important;
-        bottom: 0 !important;
-        left: 0;
-        width: 100%;
-        height: 100% !important;
-        box-sizing: border-box !important;
-        border: 1.5px solid hsl(var(--shadcn-blue)) !important;
-        background-color: hsla(var(--shadcn-blue) / 0.15) !important;
-        border-radius: 2px !important;
-        transition: left 0.1s ease, width 0.1s ease !important;
-    }
-
-    /* 拖拽视频时，微缩指示器加亮 */
-    .tm-video-wrapper:active .tm-video-minimap {
-        opacity: 1 !important;
-        border-color: rgba(255, 255, 255, 0.4) !important;
-    }
 
     /* 控制栏吸附在评论区角落（TR/BR/TL/BL）时的防遮挡双容器排版 */
     .tm-comments-panel {
@@ -364,6 +372,46 @@
     .tm-player-container.tm-controls-docked-tr .tm-comments-panel-list.tm-comments-list,
     .tm-player-container.tm-controls-docked-tl .tm-comments-panel-list.tm-comments-list {
         padding-bottom: 8px !important;
+    }
+
+    /* 控制栏吸附在侧边栏（docked）时，100% 填满停靠区域，并去除外边距、圆角与阴影；即使画面顶栏隐藏，侧边栏底部的控制面板也保持常驻显示 */
+    .tm-player-container[class*="tm-controls-docked-"] .tm-control-buttons,
+    body.controls-hidden .tm-player-container[class*="tm-controls-docked-"] .tm-control-buttons {
+        position: fixed !important;
+        width: var(--sidebar-width) !important;
+        max-width: var(--sidebar-width) !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 12px 16px 12px 16px !important;
+        background-color: hsla(var(--shadcn-card) / 0.65) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        opacity: 1 !important;
+        transform: none !important;
+        pointer-events: auto !important;
+    }
+    
+    .tm-player-container.tm-controls-docked-br .tm-control-buttons,
+    .tm-player-container.tm-controls-docked-bl .tm-control-buttons {
+        bottom: 0 !important;
+        top: auto !important;
+    }
+    .tm-player-container.tm-controls-docked-tr .tm-control-buttons,
+    .tm-player-container.tm-controls-docked-tl .tm-control-buttons {
+        top: 0 !important;
+        bottom: auto !important;
+    }
+    
+    .tm-player-container.tm-controls-docked-br .tm-control-buttons,
+    .tm-player-container.tm-controls-docked-tr .tm-control-buttons {
+        right: 0 !important;
+        left: auto !important;
+    }
+    .tm-player-container.tm-controls-docked-bl .tm-control-buttons,
+    .tm-player-container.tm-controls-docked-tl .tm-control-buttons {
+        left: 0 !important;
+        right: auto !important;
     }
 
     /* 侧边栏居左 */
@@ -434,7 +482,7 @@
 }
 
 /* 3. 针对 930px - 1023px 窄屏分栏环境的微调 */
-@media screen and (min-width: 930px) and (max-width: 1023px) and (min-height: 400px) and (orientation: landscape) {
+@media screen and (min-width: 930px) and (max-width: 1023px) and (orientation: landscape) {
     .tm-control-buttons {
         padding: 6px 8px 10px 8px !important;
         gap: 6px !important;
@@ -446,9 +494,9 @@
     .tm-time-display {
         font-size: 11px !important;
     }
-    .tm-loop-toggle-button {
-        padding: 2px 6px !important;
-        font-size: 11px !important;
+    .tm-tab-pill {
+        padding: 3px 8px !important;
+        font-size: 0.7rem !important;
     }
 }
 

@@ -67,7 +67,7 @@ export const FORWARD = `
 
 export const CLOSE = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
 `;
 
@@ -106,17 +106,17 @@ export const KEYBOARD = `
 
 export const LAYOUT_LEFT = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"/>
-        <line x1="9" y1="3" x2="9" y2="21"/>
-        <path d="M6 9l-2 3 2 3"/>
+        <rect x="3" y="3" width="18" height="18" rx="5"/>
+        <line x1="7.5" y1="3" x2="7.5" y2="21"/>
+        <path d="M15.5 9l-3 3 3 3"/>
     </svg>
 `;
 
 export const LAYOUT_RIGHT = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2"/>
-        <line x1="15" y1="3" x2="15" y2="21"/>
-        <path d="M18 9l2 3-2 3"/>
+        <rect x="3" y="3" width="18" height="18" rx="5"/>
+        <line x1="16.5" y1="3" x2="16.5" y2="21"/>
+        <path d="M8.5 9l3 3-3 3"/>
     </svg>
 `;
 

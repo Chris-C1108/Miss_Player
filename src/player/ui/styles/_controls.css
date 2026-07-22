@@ -221,9 +221,10 @@
     background: hsla(var(--shadcn-secondary) / 0.5);
     border: 1px solid hsla(var(--shadcn-border) / 0.15);
     color: hsl(var(--shadcn-foreground));
-    font-size: 18px;
-    font-weight: 800;
-    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+    border-radius: 9999px;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -383,12 +384,11 @@
 
 /* =========== 播放控制行按钮样式 =========== */
 /* 播放控制行按钮基础样式 */
-.tm-playback-control-row button {
+.tm-playback-control-row .tm-control-button,
+.tm-playback-control-row .tm-volume-button {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
     padding: 0px;
     border: none;
     border-radius: 50%;
@@ -399,18 +399,38 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-.tm-playback-control-row button:hover {
-    background-color: hsla(var(--shadcn-secondary) / 0.15);
+.tm-playback-control-row .tm-control-button {
+    width: 42px;
+    height: 42px;
+}
+
+.tm-playback-control-row .tm-volume-button {
+    width: 36px;
+    height: 36px;
+}
+
+.tm-playback-control-row .tm-control-button:hover,
+.tm-playback-control-row .tm-volume-button:hover {
+    background-color: hsla(var(--shadcn-secondary) / 0.2);
     transform: scale(1.05);
 }
 
-.tm-playback-control-row button:active {
+.tm-playback-control-row .tm-control-button:active,
+.tm-playback-control-row .tm-volume-button:active {
     transform: scale(0.95);
 }
 
-.tm-playback-control-row button svg {
-    width: 22px;
-    height: 22px;
+.tm-playback-control-row .tm-control-button svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+.tm-playback-control-row .tm-volume-button svg {
+    width: 20px;
+    height: 20px;
     stroke: currentColor;
     stroke-width: 2;
     fill: none;
@@ -418,15 +438,20 @@
 
 /* 移动端适配 */
 @media (hover: none) {
-    .tm-playback-control-row button {
-        width: 36px;
-        height: 36px;
+    .tm-playback-control-row .tm-control-button {
+        width: 44px;
+        height: 44px;
+    }
+    .tm-playback-control-row .tm-volume-button {
+        width: 40px;
+        height: 40px;
     }
 }
 
 /* 暗色主题适配 */
 @media (prefers-color-scheme: dark) {
-    .tm-playback-control-row button svg {
+    .tm-playback-control-row .tm-control-button svg,
+    .tm-playback-control-row .tm-volume-button svg {
         stroke: hsl(var(--shadcn-secondary-foreground));
     }
 }
@@ -463,7 +488,7 @@
     background-color: hsla(var(--shadcn-background) / 0.7);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    z-index: 9997;
+    z-index: 2000000010 !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -623,7 +648,7 @@
     }
 }
 
-/* 横屏模式下的评论浮窗样式 */
+/* 横屏模式下的通用交互元素样式 */
 @media screen and (orientation: landscape) {
     .tm-comment-modal {
         max-width: 500px;
@@ -633,6 +658,53 @@
     .tm-comment-textarea {
         height: 100px;
     }
+}
+
+/* 视频当前画面显示区域微缩指示器 (Minimap) - 默认彻底隐藏，仅在拖拽/平移画面时临时淡入显示 */
+.tm-video-minimap {
+    position: absolute !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    top: auto !important;
+    right: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    width: 80px;
+    height: 45px; /* JS 结合视频宽高比例在 80x45 范围内自适应计算 */
+    background-color: rgba(0, 0, 0, 0.65) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+    z-index: 9998 !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.3s ease, visibility 0.3s ease !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.tm-video-minimap-viewport {
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100%;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    border: 1.5px solid hsl(var(--shadcn-blue)) !important;
+    background-color: hsla(var(--shadcn-blue) / 0.15) !important;
+    border-radius: 2px !important;
+    will-change: transform;
+    transition: none !important; /* 拖拽过程中无延迟，实现 100% 实时跟手 */
+}
+
+/* 仅在画面正在拖拽/平移 (.is-swiping) 状态下临时淡入显示 Minimap */
+.tm-video-wrapper.is-swiping .tm-video-minimap {
+    opacity: 1 !important;
+    visibility: visible !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
 }
 
 /* 浮动评论面板样式 */

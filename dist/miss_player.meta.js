@@ -22,6 +22,8 @@
 // @connect fs1.app
 // @connect www.fs1.app
 // @connect javdb.com
+// @connect www.javdb.com
+// @connect jdforrepam.com
 // @connect www.javlibrary.com
 // @connect javlib.com
 // @connect www.javlib.com

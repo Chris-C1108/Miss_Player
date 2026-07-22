@@ -1,632 +1,1502 @@
-import { formatTimeWithHours } from '../../utils/index.js';
+import { formatTimeWithHours, getValue, setValue, Toast } from '../../utils/index.js';
+import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { __ } from '../../constants/i18n.js';
 
 /**
- * 循环管理器类 - 负责循环播放功能
+ * LoopManager — Tab-Style Marker & AB Loop controller
  */
 export class LoopManager {
-	constructor(playerCore, uiElements) {
-		// 核心引用
-		this.playerCore = playerCore;
-		this.targetVideo = playerCore.targetVideo;
+    constructor(playerCore, uiElements) {
+        this.playerCore = playerCore;
+        this.targetVideo = playerCore.targetVideo;
+        this.uiElements = uiElements;
 
-		// UI元素引用
-		this.uiElements = uiElements;
+        // Progress bar markers (unchanged)
+        this.loopStartMarker = null;
+        this.loopEndMarker = null;
+        this.loopRangeElement = null;
 
-		// 循环控制相关
-		this.loopStartTime = null;
-		this.loopEndTime = null;
-		this.loopActive = false;
-		this.loopStartMarker = null;
-		this.loopEndMarker = null;
-		this.loopRangeElement = null;
-		this.currentPositionDisplay = null;
-		this.durationDisplay = null;
-		this.loopToggleButton = null;
+        // Tab bar DOM refs
+        this.tabScrollContainer = null;
+        this.tabAddBtn = null;
+        this.progressMarkersContainer = null;
 
-		// 时间更新处理器
-		this._handleLoopTimeUpdate = this._handleLoopTimeUpdate.bind(this);
-	}
+        // State
+        this.tabs = [];             // Array<{id, type, startTime, endTime?, comment}>
+        this.activeTabId = null;    // Currently looping/highlighted tab
+        this.draftTab = null;       // In-progress draft
+        this.loopActive = false;
+        this.loopStartTime = null;
+        this.loopEndTime = null;
 
-	/**
-	 * 初始化循环管理器
-	 */
-	init(loopElements) {
-		this.loopStartMarker = loopElements.loopStartMarker;
-		this.loopEndMarker = loopElements.loopEndMarker;
-		this.loopRangeElement = loopElements.loopRangeElement;
-		this.currentPositionDisplay = loopElements.currentPositionDisplay;
-		this.durationDisplay = loopElements.durationDisplay;
-		this.loopToggleButton = loopElements.loopToggleButton;
+        // Long-press state
+        this._longPressTimer = null;
+        this._longPressTriggered = false;
 
-		// 解析URL参数设置循环点
-		this._parseUrlHashParams();
+        // Storage
+        this.storageKey = null;
 
-		return this;
-	}
+        // Bottom sheet DOM
+        this._sheetOverlay = null;
+        this._sheetPanel = null;
+        this._sheetList = null;
 
-	/**
-	 * 状态管理方法 - 统一更新状态并触发UI更新
-	 * @param {Object} newState - 要更新的状态对象
-	 */
-	setState(newState) {
-		// 记录状态变化的日志（便于调试）
-		console.log('[LoopManager] 状态更新:', 
-			Object.keys(newState).map(key => `${key}: ${newState[key]}`).join(', '));
-		
-		// 更新状态
-		Object.assign(this, newState);
-		
-		// 触发UI更新
-		this._updateUI();
-		
-		// 返回this以支持链式调用
-		return this;
-	}
+        this.editingTabId = null;   // ID of the tab currently being edited inline
+        this.editingTabCopy = null; // Copy of the tab data being edited inline
+        this._durationFallbackBound = null;
 
-	/**
-	 * 解析URL hash参数并设置循环点
-	 */
-	_parseUrlHashParams() {
-		if (!window.location.hash) return;
+        this.tabColors = [
+            '200, 100%, 55%', // Sky Blue
+            '145, 80%, 48%', // Emerald Green
+            '260, 85%, 62%',  // Purple-Indigo
+            '15, 95%, 58%',   // Vibrant Coral
+            '330, 90%, 60%',  // Rose Pink
+            '170, 85%, 42%'   // Mint/Teal
+        ];
 
-		const hash = window.location.hash.substring(1); // 去掉#
+        // Bound handlers
+        this._handleLoopTimeUpdate = this._handleLoopTimeUpdate.bind(this);
+        this._handleOutsideClickForEdit = this._handleOutsideClickForEdit.bind(this);
+    }
 
-		// 检查是否有时间区间 (格式: 00:00:09-00:00:13)
-		if (hash.includes('-')) {
-			const [startTime, endTime] = hash.split('-');
-			const startSeconds = this._parseTimeString(startTime);
-			const endSeconds = this._parseTimeString(endTime);
+    /**
+     * Initialize with DOM refs from ControlManager
+     */
+    init(elements) {
+        this.loopStartMarker = elements.loopStartMarker;
+        this.loopEndMarker = elements.loopEndMarker;
+        this.loopRangeElement = elements.loopRangeElement;
+        this.progressMarkersContainer = elements.progressMarkersContainer;
+        this.tabScrollContainer = elements.tabScrollContainer;
+        this.tabAddBtn = elements.tabAddBtn;
 
-			if (startSeconds !== null && endSeconds !== null) {
-				console.log(`[LoopManager] 从URL解析循环区间: ${startTime}-${endTime}`);
+        // Resolve storage key from video code
+        const videoCode = getVideoCodeFromUrl();
+        this.storageKey = videoCode ? `tabs_${videoCode}` : null;
 
-				// 设置循环点（不使用setState避免提前更新UI）
-				const newState = {
-					loopStartTime: startSeconds,
-					loopEndTime: endSeconds
-				};
+        // Load saved tabs
+        this._loadTabs();
 
-				// 等视频元数据加载完成后再跳转和启用循环
-				const handleMetadata = () => {
-					// 直接更新时间显示，避免时序问题
-					if (this.currentPositionDisplay) {
-						this.currentPositionDisplay.textContent = formatTimeWithHours(startSeconds);
-						this.currentPositionDisplay.classList.add('active');
-						const startContainer = document.querySelector('.tm-start-time-container');
-						if (startContainer) startContainer.classList.add('active');
-					}
-					
-					if (this.durationDisplay) {
-						this.durationDisplay.textContent = formatTimeWithHours(endSeconds);
-						this.durationDisplay.classList.add('active');
-						const endContainer = document.querySelector('.tm-end-time-container');
-						if (endContainer) endContainer.classList.add('active');
-					}
-					
-					// 跳转到开始点
-					this.targetVideo.currentTime = startSeconds;
+        // Initialize empty draft tab
+        this._resetDraftTab();
 
-					// 保留对missav网站的特殊检查
-					if (window.location.hostname.includes('missav')) {
-						// 在missav网站上，循环播放是默认启用的
-						newState.loopActive = true;
-						console.log('[LoopManager] 在missav网站上设置循环状态');
-					} else {
-						// 在其他网站上，也需要启用循环
-						newState.loopActive = true;
-						console.log('[LoopManager] 在其他网站上设置循环状态');
-					}
-					
-					// 统一更新状态和UI（将触发_updateUI，更新所有按钮状态）
-					this.setState(newState);
-					
-					// 强制更新标记点和进度条
-					this.updateLoopMarkers();
-					
-					// 添加事件监听器
-					this.targetVideo.removeEventListener('timeupdate', this._handleLoopTimeUpdate);
-					this.targetVideo.addEventListener('timeupdate', this._handleLoopTimeUpdate);
-					
-					// 自动播放视频
-					if (this.targetVideo.paused) {
-						this.targetVideo.play().catch(error => {
-							console.log('视频自动播放被阻止: ', error);
-							// 不再尝试静音播放，保持暂停状态
-						});
-					}
+        // Render tab bar
+        this.renderTabs();
 
-					// 移除监听器
-					this.targetVideo.removeEventListener('loadedmetadata', handleMetadata);
-				};
+        // Bind list button
+        if (this.tabAddBtn) {
+            this.tabAddBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this._toggleBottomSheet();
+            });
+        }
 
-				if (this.targetVideo.readyState >= 1) {
-					handleMetadata();
-				} else {
-					this.targetVideo.addEventListener('loadedmetadata', handleMetadata);
-				}
-			}
-		}
-		// 检查是否只有单个时间点 (格式: 00:00:09)
-		else if (hash.match(/^\d{2}:\d{2}:\d{2}$/)) {
-			const startSeconds = this._parseTimeString(hash);
+        // Translate vertical scroll wheel into horizontal scroll on the tab bar
+        if (this.tabScrollContainer) {
+            this.tabScrollContainer.addEventListener('wheel', (e) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    this.tabScrollContainer.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
+        }
 
-			if (startSeconds !== null) {
-				console.log(`[LoopManager] 从URL解析时间点: ${hash}`);
+        // Bind swipe-up gesture on tab row
+        this._bindSwipeUpGesture();
 
-				// 等视频元数据加载完成后再跳转
-				const handleMetadata = () => {
-					// 直接更新时间显示，避免时序问题
-					if (this.currentPositionDisplay) {
-						this.currentPositionDisplay.textContent = formatTimeWithHours(startSeconds);
-						this.currentPositionDisplay.classList.add('active');
-						const startContainer = document.querySelector('.tm-start-time-container');
-						if (startContainer) startContainer.classList.add('active');
-					}
-					
-					// 跳转到指定时间点并更新状态
-					this.targetVideo.currentTime = startSeconds;
-					
-					// 更新状态（将触发_updateUI，更新A按钮样式）
-					this.setState({ loopStartTime: startSeconds });
-					
-					// 强制更新标记点
-					this.updateLoopMarkers();
-					
-					// 移除监听器
-					this.targetVideo.removeEventListener('loadedmetadata', handleMetadata);
-				};
+        // Listen for metadata or duration change to render markers
+        if (this.targetVideo) {
+            this.targetVideo.addEventListener('durationchange', () => this.renderProgressMarkers());
+            this.targetVideo.addEventListener('loadedmetadata', () => this.renderProgressMarkers());
+        }
 
-				if (this.targetVideo.readyState >= 1) {
-					handleMetadata();
-				} else {
-					this.targetVideo.addEventListener('loadedmetadata', handleMetadata);
-				}
-			}
-		}
-	}
+        // Parse URL hash for backward compatibility and multi-tabs support
+        this._parseUrlHashParams();
 
-	/**
-	 * 将时间字符串解析为秒数
-	 * @param {string} timeString - 格式为 "HH:MM:SS" 的时间字符串
-	 * @returns {number|null} - 解析出的秒数，或null（如果解析失败）
-	 */
-	_parseTimeString(timeString) {
-		if (!timeString) return null;
+        return this;
+    }
 
-		const match = timeString.match(/^(\d{2}):(\d{2}):(\d{2})$/);
-		if (!match) return null;
+    // =====================================================================
+    //  Tab Rendering
+    // =====================================================================
+    renderTabs() {
+        if (!this.tabScrollContainer) return;
+        this.tabScrollContainer.innerHTML = '';
 
-		const hours = parseInt(match[1], 10);
-		const minutes = parseInt(match[2], 10);
-		const seconds = parseInt(match[3], 10);
+        // Render progress markers too
+        this.renderProgressMarkers();
 
-		return hours * 3600 + minutes * 60 + seconds;
-	}
+        // 1. Render all saved tabs (or their inline edit pills if currently editing)
+        this.tabs.forEach(tab => {
+            const pill = (this.editingTabId === tab.id)
+                ? this._createEditPill(tab)
+                : this._createTabPill(tab);
+            this.tabScrollContainer.appendChild(pill);
+        });
 
-	/**
-	 * 更新URL，添加循环点信息
-	 */
-	_updateUrlHash() {
-		let hash = '';
+        // 2. Make sure draftTab is initialized
+        if (!this.draftTab) {
+            this._resetDraftTab();
+        }
 
-		if (this.loopStartTime !== null) {
-			hash = formatTimeWithHours(this.loopStartTime);
+        // 3. Always append the draft tab (which is either a gray placeholder or an active draft capsule) at the end
+        const draftPill = this._createDraftPill();
+        this.tabScrollContainer.appendChild(draftPill);
 
-			if (this.loopEndTime !== null) {
-				hash += `-${formatTimeWithHours(this.loopEndTime)}`;
-			}
-		}
+        this._updateActiveTabProgress();
+    }
 
-		// 使用history.replaceState更新URL而不添加历史记录
-		if (hash) {
-			const newUrl = window.location.pathname + window.location.search + '#' + hash;
-			window.history.replaceState(null, '', newUrl);
-			console.log(`[LoopManager] 更新URL: ${newUrl}`);
-		}
-	}
+    _createTabPill(tab) {
+        const index = this.tabs.findIndex(t => t.id === tab.id);
+        const color = index !== -1 ? this.tabColors[index % this.tabColors.length] : this.tabColors[0];
 
-	// 模拟点击-复制开始时间
-	_clickCopyStartTime() {
-		const startTimeButton = document.querySelector('input#clip-start-time + a');
-		startTimeButton.click();
-	}
+        const pill = document.createElement('div');
+        pill.className = 'tm-tab-pill';
+        pill.dataset.tabId = tab.id;
+        pill.style.setProperty('--tab-color', color);
 
-	// 模拟点击-复制结束时间
-	_clickCopyEndTime() {
-		const endTimeButton = document.querySelector('input#clip-end-time + a');
-		endTimeButton.click();
-	}
+        if (tab.type === 'highlight') {
+            pill.textContent = formatTimeWithHours(tab.startTime);
+        } else {
+            pill.textContent = `${formatTimeWithHours(tab.startTime)} ~ ${formatTimeWithHours(tab.endTime)}`;
+        }
 
-	// 模拟点击-切换循环播放
-	_toggleLooping() {
-		const loopButton = document.querySelector('.sm\\:ml-6 button');
-		loopButton.click();
-	}
+        // Active state
+        if (this.activeTabId === tab.id) {
+            pill.classList.add('active');
+        }
 
-	/**
-	 * 设置循环结束点 - 复制当前播放时间
-	 */
-	setLoopEnd() {
-		if (!this.targetVideo) return;
+        // Click handler
+        pill.addEventListener('click', (e) => {
+            if (this._longPressTriggered) {
+                this._longPressTriggered = false;
+                return;
+            }
+            this._handleTabClick(tab);
+        });
 
-        const currentTime = this.targetVideo.currentTime;
+        // Long-press handlers with horizontal swipe distance threshold to avoid conflict
+        let startX = 0;
+        let startY = 0;
+        const startLongPress = (e) => {
+            this._longPressTriggered = false;
+            const touch = e.touches ? e.touches[0] : e;
+            startX = touch.clientX;
+            startY = touch.clientY;
+            
+            this._longPressTimer = setTimeout(() => {
+                this._longPressTriggered = true;
+                this._handleTabLongPress(tab);
+                // Haptic feedback
+                if (window.navigator.vibrate) window.navigator.vibrate(15);
+            }, 500);
+        };
+        const cancelLongPress = () => {
+            if (this._longPressTimer) {
+                clearTimeout(this._longPressTimer);
+                this._longPressTimer = null;
+            }
+        };
+        const moveLongPress = (e) => {
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            if (Math.hypot(dx, dy) > 8) {
+                cancelLongPress();
+            }
+        };
 
-		if (window.location.hostname.includes('missav')) {
-			this._clickCopyEndTime();
-            // 使用setState更新状态
-            this.setState({ loopEndTime: currentTime });
-		} else {
-			
-			// 如果开始点已设置，确保结束点在开始点之后
-			if (this.loopStartTime !== null && currentTime <= this.loopStartTime) {
-				console.log('[LoopManager] 循环结束点必须在开始点之后');
-				return;
-			}
+        pill.addEventListener('mousedown', startLongPress);
+        pill.addEventListener('touchstart', startLongPress, { passive: true });
+        pill.addEventListener('mousemove', moveLongPress);
+        pill.addEventListener('touchmove', moveLongPress, { passive: true });
+        pill.addEventListener('mouseup', cancelLongPress);
+        pill.addEventListener('mouseleave', cancelLongPress);
+        pill.addEventListener('touchend', cancelLongPress);
+        pill.addEventListener('touchcancel', cancelLongPress);
 
-			// 使用setState更新状态
-			this.setState({ loopEndTime: currentTime });
-			console.log(`[LoopManager] 设置循环结束点: ${formatTimeWithHours(currentTime)}`);
+        return pill;
+    }
 
-			// 更新URL
-			this._updateUrlHash();
-		}
+    _createDraftPill() {
+        const isPlaceholder = (this.draftTab.startTime === null && this.draftTab.endTime === null);
+        const color = isPlaceholder 
+            ? '0, 0%, 55%' 
+            : this.tabColors[this.tabs.length % this.tabColors.length];
 
-		// 触觉反馈
-		if (window.navigator.vibrate) {
-			window.navigator.vibrate(10);
-		}
-	}
+        const pill = document.createElement('div');
+        pill.className = 'tm-tab-pill draft';
+        if (isPlaceholder) {
+            pill.classList.add('placeholder');
+        }
+        pill.style.setProperty('--tab-color', color);
+        pill.style.gap = '5px';
 
-	/**
-	 * 设置循环开始点 - 复制当前播放时间
-	 */
-	setLoopStart() {
-		if (!this.targetVideo) return;
+        // Clicking anywhere on the empty placeholder pill sets start time (A)
+        if (isPlaceholder) {
+            pill.style.cursor = 'pointer';
+            pill.addEventListener('click', () => {
+                if (this.targetVideo) {
+                    // Cancel active loop when starting a new draft
+                    this.disableLoop();
+                    this.activeTabId = null;
 
-        const currentTime = this.targetVideo.currentTime;
+                    this.draftTab.startTime = this.targetVideo.currentTime;
+                    this.renderTabs();
+                    if (window.navigator.vibrate) window.navigator.vibrate(10);
+                }
+            });
+        }
+
+        // A container
+        const aContainer = document.createElement('span');
+        aContainer.style.cursor = 'pointer';
+        aContainer.style.display = 'flex';
+        aContainer.style.alignItems = 'center';
+        aContainer.style.gap = '3px';
+        aContainer.style.padding = '2px 5px';
+        aContainer.style.borderRadius = '4px';
+        aContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.25)';
+        aContainer.style.fontSize = '11px';
+
+        const aLabel = document.createElement('span');
+        aLabel.className = 'tm-draft-label a';
+        aLabel.style.color = 'white';
+        aLabel.style.fontWeight = '600';
+        aLabel.textContent = 'A';
+        const aTime = document.createElement('span');
+        aTime.className = `tm-draft-time${this.draftTab.startTime === null ? ' placeholder' : ''}`;
+        aTime.style.color = this.draftTab.startTime !== null ? '#fff' : 'rgba(255,255,255,0.3)';
+        aTime.textContent = this.draftTab.startTime !== null
+            ? formatTimeWithHours(this.draftTab.startTime)
+            : '--:--:--';
         
-		if (window.location.hostname.includes('missav')) {
-			this._clickCopyStartTime();
-            // 使用setState更新状态
-            this.setState({ loopStartTime: currentTime });
-		} else {
+        aContainer.appendChild(aLabel);
+        aContainer.appendChild(aTime);
+        aContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!this.targetVideo) return;
+            this.draftTab.startTime = this.targetVideo.currentTime;
+            this.renderTabs();
+            if (window.navigator.vibrate) window.navigator.vibrate(10);
+        });
+        pill.appendChild(aContainer);
 
-			// 如果结束点已设置，确保开始点在结束点之前
-			if (this.loopEndTime !== null && currentTime >= this.loopEndTime) {
-				console.log('[LoopManager] 循环开始点必须在结束点之前');
-				return;
-			}
+        // B container
+        const bContainer = document.createElement('span');
+        bContainer.style.display = 'flex';
+        bContainer.style.alignItems = 'center';
+        bContainer.style.gap = '3px';
+        bContainer.style.padding = '2px 5px';
+        bContainer.style.borderRadius = '4px';
+        bContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.25)';
+        bContainer.style.fontSize = '11px';
 
-			// 使用setState更新状态
-			this.setState({ loopStartTime: currentTime });
-			console.log(`[LoopManager] 设置循环开始点: ${formatTimeWithHours(currentTime)}`);
+        if (this.draftTab.startTime === null) {
+            bContainer.style.opacity = '0.4';
+            bContainer.style.cursor = 'not-allowed';
+            bContainer.style.pointerEvents = 'none';
+        } else {
+            bContainer.style.opacity = '1';
+            bContainer.style.cursor = 'pointer';
+            bContainer.style.pointerEvents = 'auto';
+        }
 
-			// 更新URL
-			this._updateUrlHash();
-		}
+        const bLabel = document.createElement('span');
+        bLabel.className = 'tm-draft-label b';
+        bLabel.style.color = 'white';
+        bLabel.style.fontWeight = '600';
+        bLabel.textContent = 'B';
+        const bTime = document.createElement('span');
+        bTime.className = `tm-draft-time${this.draftTab.endTime === null ? ' placeholder' : ''}`;
+        bTime.style.color = this.draftTab.endTime !== null ? '#fff' : 'rgba(255,255,255,0.3)';
+        bTime.textContent = this.draftTab.endTime !== null
+            ? formatTimeWithHours(this.draftTab.endTime)
+            : '--:--:--';
+        
+        bContainer.appendChild(bLabel);
+        bContainer.appendChild(bTime);
+        bContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (this.draftTab.startTime === null) return;
+            if (!this.targetVideo) return;
+            this.draftTab.endTime = this.targetVideo.currentTime;
+            this.renderTabs();
+            if (window.navigator.vibrate) window.navigator.vibrate(10);
+        });
+        pill.appendChild(bContainer);
 
-		// 触觉反馈
-		if (window.navigator.vibrate) {
-			window.navigator.vibrate(10);
-		}
-	}
+        // SVGs
+        const SVG_CHECK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        const SVG_CROSS = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
-	/**
-	 * 启用/禁用循环播放 - 切换循环状态
-	 */
-	toggleLoop() {
-		if (window.location.hostname.includes('missav')) {
-			this._toggleLooping();
-		} else {
-			// 检查是否已设置开始和结束时间
-			if (this.loopStartTime === null || this.loopEndTime === null) {
-				console.log("请先使用 A 和 B 按钮记录循环的开始和结束时间。");
-				return;
-			}
+        // Save button
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'tm-draft-action save';
+        saveBtn.innerHTML = SVG_CHECK;
+        saveBtn.title = '保存标签';
+        saveBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
 
-			// 切换循环状态
-			const newLoopActive = !this.loopActive;
-			
-			// 根据新状态执行相应操作
-			if (newLoopActive) {
-				this.enableLoop();
-			} else {
-				this.disableLoop();
-			}
-		}
-	}
+            if (this.draftTab.startTime === null && this.draftTab.endTime === null) {
+                Toast('请至少设置一个时间点', 2000, 'error');
+                return;
+            }
 
-	/**
-	 * 启用循环播放
-	 */
-	enableLoop() {
-		if (!this.targetVideo || this.loopStartTime === null || this.loopEndTime === null) {
-			console.log('[LoopManager] 无法启用循环: 循环点未设置');
-			return;
-		}
+            // Normalise the draft tab configuration
+            if (this.draftTab.startTime !== null && this.draftTab.endTime !== null) {
+                if (this.draftTab.endTime <= this.draftTab.startTime) {
+                    Toast('结束点 (B) 必须大于开始点 (A)', 2000, 'error');
+                    return;
+                }
+                this.draftTab.type = 'interval';
+            } else {
+                this.draftTab.type = 'highlight';
+                if (this.draftTab.startTime === null) {
+                    this.draftTab.startTime = this.draftTab.endTime;
+                    this.draftTab.endTime = null;
+                }
+            }
 
-		console.log(`[LoopManager] 启用循环播放: ${formatTimeWithHours(this.loopStartTime)} - ${formatTimeWithHours(this.loopEndTime)}`);
+            this._showCommentDialog();
+        });
+        pill.appendChild(saveBtn);
 
-		// 更新状态
-		this.setState({ loopActive: true });
+        // Cancel button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'tm-draft-action cancel';
+        cancelBtn.innerHTML = SVG_CROSS;
+        cancelBtn.title = '取消草稿';
+        cancelBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._resetDraftTab();
+            this.renderTabs();
+        });
+        pill.appendChild(cancelBtn);
 
-		// 移除原有监听器，确保不重复添加
-		this.targetVideo.removeEventListener('timeupdate', this._handleLoopTimeUpdate);
+        return pill;
+    }
 
-		// 添加时间更新监听器
-		this.targetVideo.addEventListener('timeupdate', this._handleLoopTimeUpdate);
+    _createEditPill(tab) {
+        const index = this.tabs.findIndex(t => t.id === tab.id);
+        const color = index !== -1 ? this.tabColors[index % this.tabColors.length] : this.tabColors[0];
 
-		// 如果当前时间不在循环范围内，跳转到循环起始点
-		if (this.targetVideo.currentTime < this.loopStartTime || this.targetVideo.currentTime > this.loopEndTime) {
-			this.targetVideo.currentTime = this.loopStartTime;
-		}
+        const pill = document.createElement('div');
+        pill.className = 'tm-tab-pill draft editing';
+        pill.dataset.tabId = tab.id;
+        pill.style.setProperty('--tab-color', color);
+        pill.style.gap = '5px';
 
-		// 无论视频是否暂停，都开始播放
-		if (this.targetVideo.paused) {
-			this.targetVideo.play().catch(error => {
-				console.log('视频自动播放被阻止: ', error);
-				// 不再尝试静音播放，保持暂停状态
-			});
-		}
+        const copy = this.editingTabCopy;
 
-		// 触觉反馈
-		if (window.navigator.vibrate) {
-			window.navigator.vibrate([10, 30, 10]);
-		}
-	}
+        // A container
+        const aContainer = document.createElement('span');
+        aContainer.style.cursor = 'pointer';
+        aContainer.style.display = 'flex';
+        aContainer.style.alignItems = 'center';
+        aContainer.style.gap = '3px';
+        aContainer.style.padding = '2px 5px';
+        aContainer.style.borderRadius = '4px';
+        aContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.25)';
+        aContainer.style.fontSize = '11px';
 
-	/**
-	 * 禁用循环播放
-	 */
-	disableLoop() {
-		if (!this.loopActive) return;
+        const aLabel = document.createElement('span');
+        aLabel.className = 'tm-draft-label a';
+        aLabel.style.color = 'white';
+        aLabel.style.fontWeight = '600';
+        aLabel.textContent = 'A';
+        const aTime = document.createElement('span');
+        aTime.className = `tm-draft-time${copy.startTime === null ? ' placeholder' : ''}`;
+        aTime.style.color = copy.startTime !== null ? '#fff' : 'rgba(255,255,255,0.3)';
+        aTime.textContent = copy.startTime !== null
+            ? formatTimeWithHours(copy.startTime)
+            : '--:--:--';
+        
+        aContainer.appendChild(aLabel);
+        aContainer.appendChild(aTime);
+        aContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!this.targetVideo) return;
+            copy.startTime = this.targetVideo.currentTime;
+            this.renderTabs();
+            if (window.navigator.vibrate) window.navigator.vibrate(10);
+        });
+        pill.appendChild(aContainer);
 
-		console.log('[LoopManager] 禁用循环播放');
+        // B container
+        const bContainer = document.createElement('span');
+        bContainer.style.display = 'flex';
+        bContainer.style.alignItems = 'center';
+        bContainer.style.gap = '3px';
+        bContainer.style.padding = '2px 5px';
+        bContainer.style.borderRadius = '4px';
+        bContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.25)';
+        bContainer.style.fontSize = '11px';
 
-		// 移除事件监听器
-		this.targetVideo.removeEventListener('timeupdate', this._handleLoopTimeUpdate);
+        if (copy.startTime === null) {
+            bContainer.style.opacity = '0.4';
+            bContainer.style.cursor = 'not-allowed';
+            bContainer.style.pointerEvents = 'none';
+        } else {
+            bContainer.style.opacity = '1';
+            bContainer.style.cursor = 'pointer';
+            bContainer.style.pointerEvents = 'auto';
+        }
 
-		// 更新状态
-		this.setState({ loopActive: false });
-	}
+        const bLabel = document.createElement('span');
+        bLabel.className = 'tm-draft-label b';
+        bLabel.style.color = 'white';
+        bLabel.style.fontWeight = '600';
+        bLabel.textContent = 'B';
+        const bTime = document.createElement('span');
+        bTime.className = `tm-draft-time${copy.endTime === null ? ' placeholder' : ''}`;
+        bTime.style.color = copy.endTime !== null ? '#fff' : 'rgba(255,255,255,0.3)';
+        bTime.textContent = copy.endTime !== null
+            ? formatTimeWithHours(copy.endTime)
+            : '--:--:--';
+        
+        bContainer.appendChild(bLabel);
+        bContainer.appendChild(bTime);
+        bContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (copy.startTime === null) return;
+            if (!this.targetVideo) return;
+            copy.endTime = this.targetVideo.currentTime;
+            this.renderTabs();
+            if (window.navigator.vibrate) window.navigator.vibrate(10);
+        });
+        pill.appendChild(bContainer);
 
-	/**
-	 * 循环播放时间更新处理器
-	 * 在播放到结束点时自动跳回开始点
-	 */
-	_handleLoopTimeUpdate() {
-		if (!this.loopActive || this.loopStartTime === null || this.loopEndTime === null) return;
+        // SVGs
+        const SVG_EDIT = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+        const SVG_CHECK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        const SVG_CROSS = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
-		const currentTime = this.targetVideo.currentTime;
+        // Edit Comment button (✏️)
+        const editCommentBtn = document.createElement('button');
+        editCommentBtn.className = 'tm-draft-action edit-comment';
+        editCommentBtn.innerHTML = SVG_EDIT;
+        editCommentBtn.title = '编辑备注';
+        editCommentBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._showCommentDialog(copy);
+        });
+        pill.appendChild(editCommentBtn);
 
-		// 如果当前时间超过了循环结束点或小于开始点，跳回循环开始点
-		if (currentTime >= this.loopEndTime || currentTime < this.loopStartTime) {
-			this.targetVideo.currentTime = this.loopStartTime;
-		}
-	}
+        // Save button (✔)
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'tm-draft-action save';
+        saveBtn.innerHTML = SVG_CHECK;
+        saveBtn.title = '保存修改';
+        saveBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
 
-	/**
-	 * 更新所有UI元素
-	 */
-	_updateUI() {
-		console.log('[LoopManager] 更新UI元素 - 循环状态:', 
-			this.loopActive ? '激活' : '未激活', 
-			'开始点:', this.loopStartTime !== null ? formatTimeWithHours(this.loopStartTime) : '未设置', 
-			'结束点:', this.loopEndTime !== null ? formatTimeWithHours(this.loopEndTime) : '未设置');
-			
-		// 更新循环时间显示（A和B按钮）
-		this.updateLoopTimeDisplay();
-		
-		// 更新循环标记点
-		this.updateLoopMarkers();
-		
-		// 更新循环按钮样式
-		this._updateLoopButtonStyle();
-	}
+            if (copy.startTime === null && copy.endTime === null) {
+                Toast('请至少设置一个时间点', 2000, 'error');
+                return;
+            }
 
-	/**
-	 * 更新循环开关按钮状态
-	 */
-	_updateLoopButtonStyle() {
-		if (!this.loopToggleButton) return;
+            if (copy.startTime !== null && copy.endTime !== null) {
+                if (copy.endTime <= copy.startTime) {
+                    Toast('结束点 (B) 必须大于开始点 (A)', 2000, 'error');
+                    return;
+                }
+                copy.type = 'interval';
+            } else {
+                copy.type = 'highlight';
+                if (copy.startTime === null) {
+                    copy.startTime = copy.endTime;
+                    copy.endTime = null;
+                }
+            }
 
-		if (this.loopActive) {
-			// 激活状态 - 使用CSS类控制样式
-			this.loopToggleButton.classList.add('active');
-			
-			// 更新指示器圆圈颜色 - 通过CSS类控制
-			const indicator = this.loopToggleButton.querySelector('.tm-loop-indicator-circle');
-			if (indicator) {
-				indicator.setAttribute('fill', 'hsl(var(--shadcn-red))');
-			}
-			
-			// 更新标签样式 - 通过CSS类控制
-			const label = this.loopToggleButton.querySelector('.tm-loop-toggle-label');
-			if (label) {
-				label.classList.add('active'); // 添加.active类
-			}
-		} else {
-			// 非激活状态 - 移除CSS类
-			this.loopToggleButton.classList.remove('active');
-			
-			// 更新指示器圆圈颜色
-			const indicator = this.loopToggleButton.querySelector('.tm-loop-indicator-circle');
-			if (indicator) {
-				indicator.setAttribute('fill', 'hsl(var(--shadcn-muted-foreground) / 0.5)');
-			}
-			
-			// 更新标签样式
-			const label = this.loopToggleButton.querySelector('.tm-loop-toggle-label');
-			if (label) {
-				label.classList.remove('active'); // 移除.active类
-			}
-		}
-	}
+            // Save changes
+            const idx = this.tabs.findIndex(t => t.id === tab.id);
+            if (idx !== -1) {
+                this.tabs[idx] = { ...copy };
+                this._saveTabs();
+            }
+            this._exitEditMode();
+        });
+        pill.appendChild(saveBtn);
 
-	/**
-	 * 更新开始时间容器样式
-	 */
-	_updateStartTimeContainerStyle() {
-		const startContainer = document.querySelector('.tm-start-time-container');
-		if (!startContainer) return;
+        // Delete button (✕)
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'tm-draft-action cancel';
+        deleteBtn.innerHTML = SVG_CROSS;
+        deleteBtn.title = '删除标签';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.tabs = this.tabs.filter(t => t.id !== tab.id);
+            if (this.activeTabId === tab.id) {
+                this.disableLoop();
+                this.activeTabId = null;
+            }
+            this._saveTabs();
+            this._exitEditMode();
+        });
+        pill.appendChild(deleteBtn);
 
-		if (this.loopStartTime !== null) {
-			// 更新时间文本
-			this.currentPositionDisplay.textContent = formatTimeWithHours(this.loopStartTime);
-			
-			// 添加激活样式
-			this.currentPositionDisplay.classList.add('active');
-			startContainer.classList.add('active');
-			
-			// 确保A按钮的样式已应用
-			const aButton = startContainer.querySelector('.tm-loop-start-button');
-			if (aButton) {
-				aButton.classList.add('active');
-			}
-		} else {
-			// 未设置开始时间的默认样式
-			this.currentPositionDisplay.textContent = '00:00:00';
-			
-			// 移除激活样式
-			this.currentPositionDisplay.classList.remove('active');
-			startContainer.classList.remove('active');
-			
-			// 重置A按钮样式
-			const aButton = startContainer.querySelector('.tm-loop-start-button');
-			if (aButton) {
-				aButton.classList.remove('active');
-			}
-		}
-	}
+        return pill;
+    }
 
-	/**
-	 * 更新结束时间容器样式
-	 */
-	_updateEndTimeContainerStyle() {
-		const endContainer = document.querySelector('.tm-end-time-container');
-		if (!endContainer) return;
+    _enterEditMode(tab) {
+        this.editingTabId = tab.id;
+        this.editingTabCopy = { ...tab };
+        this._resetDraftTab(); // Reset draft back to empty placeholder
+        
+        // Cancel active loop when entering edit mode
+        this.disableLoop();
+        this.activeTabId = null;
+        
+        this.renderTabs();
 
-		if (this.loopEndTime !== null) {
-			// 更新时间文本
-			this.durationDisplay.textContent = formatTimeWithHours(this.loopEndTime);
-			
-			// 添加激活样式
-			this.durationDisplay.classList.add('active');
-			endContainer.classList.add('active');
-			
-			// 确保B按钮的样式已应用
-			const bButton = endContainer.querySelector('.tm-loop-end-button');
-			if (bButton) {
-				bButton.classList.add('active');
-			}
-		} else {
-			// 未设置结束时间的默认样式
-			this.durationDisplay.textContent = '00:00:00';
-			
-			// 移除激活样式
-			this.durationDisplay.classList.remove('active');
-			endContainer.classList.remove('active');
-			
-			// 重置B按钮样式
-			const bButton = endContainer.querySelector('.tm-loop-end-button');
-			if (bButton) {
-				bButton.classList.remove('active');
-			}
-		}
-	}
+        // Bind outside click listener to close edit mode
+        setTimeout(() => {
+            document.addEventListener('click', this._handleOutsideClickForEdit);
+        }, 0);
+    }
 
-	/**
-	 * 更新循环时间显示
-	 */
-	updateLoopTimeDisplay() {
-		// 更新开始时间显示
-		this._updateStartTimeContainerStyle();
+    _exitEditMode() {
+        this.editingTabId = null;
+        this.editingTabCopy = null;
+        document.removeEventListener('click', this._handleOutsideClickForEdit);
+        this.renderTabs();
+    }
 
-		// 更新结束时间显示
-		this._updateEndTimeContainerStyle();
-	}
+    _handleOutsideClickForEdit(e) {
+        const editingPill = this.tabScrollContainer?.querySelector('.tm-tab-pill.draft.editing');
+        if (editingPill && !editingPill.contains(e.target)) {
+            // Check if clicking inside player container, comment modal, overlays, bottom sheet, etc.
+            if (e.target.closest('.tm-player-container, .tm-modal-overlay, .tm-comment-modal, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay')) {
+                return; // don't close if interacting with player controls/video/dialogs
+            }
+            this._exitEditMode();
+        }
+    }
 
-	/**
-	 * 创建和更新循环标记点
-	 */
-	updateLoopMarkers() {
-		if (!this.targetVideo || !this.loopStartMarker || !this.loopEndMarker) return;
+    // =====================================================================
+    //  Tab Interactions
+    // =====================================================================
+    _handleTabClick(tab) {
+        if (tab.type === 'highlight') {
+            // Trigger flashing hint on the progress bar
+            if (this.playerCore.controlManager && typeof this.playerCore.controlManager.showJumpHint === 'function') {
+                this.playerCore.controlManager.showJumpHint(tab.startTime);
+            }
+            // Jump to timestamp
+            this.targetVideo.currentTime = tab.startTime;
+            if (this.targetVideo.paused) {
+                this.targetVideo.play().catch(() => {});
+            }
+            // Deactivate any current loop
+            this.disableLoop();
+            this.activeTabId = tab.id;
+            this.renderTabs();
+        } else {
+            // Interval tab: toggle / switch loop
+            if (this.activeTabId === tab.id && this.loopActive) {
+                // 3. 若当前片段正在循环播放，则取消循环
+                this.disableLoop();
+                this.activeTabId = null;
+                this.renderTabs();
+            } else {
+                // 1. 若有其他片段正在循环播放，终止那个循环，切换到当前tab循环
+                this.disableLoop(); // 清除之前的循环状态
 
-		const progressBarElement = document.querySelector('.tm-progress-bar');
-		if (!progressBarElement) return;
+                this.activeTabId = tab.id;
+                this.loopStartTime = tab.startTime;
+                this.loopEndTime = tab.endTime;
 
-		const progressWidth = progressBarElement.offsetWidth;
-		const duration = this.targetVideo.duration;
+                const ct = this.targetVideo ? this.targetVideo.currentTime : 0;
+                const isInRange = ct >= tab.startTime && ct < tab.endTime;
 
-		if (duration <= 0 || !progressWidth) return;
+                // 2. 若当前进度不在当前时间片段内，跳转到片段起点并显示提示；
+                //    若在片段内，则启用循环播放，但不打断当前进度（不跳转到起点）
+                if (!isInRange) {
+                    if (this.playerCore.controlManager && typeof this.playerCore.controlManager.showJumpHint === 'function') {
+                        this.playerCore.controlManager.showJumpHint(tab.startTime);
+                    }
+                    if (this.targetVideo) {
+                        this.targetVideo.currentTime = tab.startTime;
+                    }
+                }
 
-		// 创建标记点辅助函数
-		const createMarker = (time, isStart) => {
-			const marker = isStart ? this.loopStartMarker : this.loopEndMarker;
+                this.enableLoop();
 
-			if (time !== null && !isNaN(time) && time >= 0 && time <= duration) {
-				const position = (time / duration) * 100;
-				marker.style.left = `${position}%`;
-				marker.style.display = 'block';
+                if (this.targetVideo && this.targetVideo.paused) {
+                    this.targetVideo.play().catch(() => {});
+                }
+                this.renderTabs();
+            }
+        }
+    }
 
-				// 更新标记状态 - 循环激活时应用active类
-				if (this.loopActive) {
-					marker.classList.add('active');
-				} else {
-					marker.classList.remove('active');
-				}
+    _handleTabLongPress(tab) {
+        this._enterEditMode(tab);
+    }
 
-				// 添加悬停提示
-				marker.setAttribute('title', isStart ?
-					`${__('loopStart')}: ${formatTimeWithHours(time)}` :
-					`${__('loopEnd')}: ${formatTimeWithHours(time)}`);
-				
-				// 设置额外的数据属性用于显示标签
-				marker.setAttribute('data-time', formatTimeWithHours(time));
-				marker.setAttribute('data-label', isStart ? __('loopStart') : __('loopEnd'));
-			} else {
-				marker.style.display = 'none';
-			}
-		};
+    // =====================================================================
+    //  Draft Mode
+    // =====================================================================
+    _resetDraftTab() {
+        this.draftTab = {
+            id: this._generateId(),
+            type: 'interval',
+            startTime: null,
+            endTime: null,
+            comment: ''
+        };
+    }
 
-		// 更新 A 和 B 点位置
-		createMarker(this.loopStartTime, true);
-		createMarker(this.loopEndTime, false);
+    // =====================================================================
+    //  Comment Dialog
+    // =====================================================================
+    _showCommentDialog(existingTab = null) {
+        const isEdit = existingTab !== null;
+        const tab = isEdit ? existingTab : this.draftTab;
+        if (!tab) return;
 
-		// 如果循环已激活且两个标记点都存在，创建视觉连接效果
-		if (this.loopActive && this.loopStartTime !== null && this.loopEndTime !== null) {
-			// 使用CSS类管理状态
-			this.loopStartMarker.classList.add('active');
-			this.loopEndMarker.classList.add('active');
-			
-			// 更新循环区间连接元素
-			if (this.loopRangeElement) {
-				const startPosition = (this.loopStartTime / duration) * 100;
-				const endPosition = (this.loopEndTime / duration) * 100;
-				
-				// 计算宽度和位置
-				const width = endPosition - startPosition;
-				if (width > 0) {
-					this.loopRangeElement.style.left = `${startPosition}%`;
-					this.loopRangeElement.style.width = `${width}%`;
-					this.loopRangeElement.style.display = 'block';
-					this.loopRangeElement.classList.add('active');
-				} else {
-					this.loopRangeElement.style.display = 'none';
-				}
-			}
-		} else {
-			this.loopStartMarker.classList.remove('active');
-			this.loopEndMarker.classList.remove('active');
-			
-			// 隐藏循环区间连接元素
-			if (this.loopRangeElement) {
-				this.loopRangeElement.classList.remove('active');
-				this.loopRangeElement.style.display = 'none';
-			}
-		}
-	}
+        // 获取控制面板容器 (.tm-control-buttons)
+        const parentContainer = this.uiElements?.controlButtonsContainer || 
+                                this.uiElements?.controlPanel || 
+                                document.querySelector('.tm-control-buttons');
+        if (!parentContainer) return;
+
+        // 移除已存在的嵌入式弹窗
+        const existingPopover = parentContainer.querySelector('.tm-inline-remark-popover');
+        if (existingPopover) existingPopover.remove();
+
+        const popover = document.createElement('div');
+        popover.className = 'tm-inline-remark-popover';
+
+        popover.innerHTML = `
+            <div class="tm-inline-remark-body">
+                <input type="text" class="tm-inline-remark-input" placeholder="输入高光或区间备注..." value="${tab.comment || ''}" />
+                <div class="tm-inline-remark-footer">
+                    <button type="button" class="tm-inline-remark-btn cancel">SKIP</button>
+                    <button type="button" class="tm-inline-remark-btn submit">SAVE</button>
+                </div>
+            </div>
+        `;
+
+        const input = popover.querySelector('.tm-inline-remark-input');
+        const skipBtn = popover.querySelector('.tm-inline-remark-btn.cancel');
+        const saveBtn = popover.querySelector('.tm-inline-remark-btn.submit');
+
+        // 阻止快捷键与摸碰冒泡
+        const stopProp = (e) => e.stopPropagation();
+        input.addEventListener('keydown', stopProp);
+        input.addEventListener('keyup', stopProp);
+        input.addEventListener('keypress', stopProp);
+        input.addEventListener('mousedown', stopProp);
+        input.addEventListener('touchstart', stopProp);
+
+        popover.addEventListener('click', (e) => e.stopPropagation());
+
+        parentContainer.appendChild(popover);
+
+        requestAnimationFrame(() => {
+            popover.classList.add('visible');
+            input.focus();
+            input.select();
+        });
+
+        const close = () => {
+            popover.classList.remove('visible');
+            popover.addEventListener('transitionend', () => popover.remove(), { once: true });
+        };
+
+        const save = (comment) => {
+            tab.comment = comment;
+            if (isEdit) {
+                if (existingTab === this.editingTabCopy) {
+                    this.renderTabs();
+                } else {
+                    this._saveTabs();
+                    this.renderTabs();
+                    this._updateBottomSheet();
+                }
+            } else {
+                this.tabs.push({ ...this.draftTab, comment });
+                this._resetDraftTab();
+                this._saveTabs();
+                this._sortTabs();
+                this.renderTabs();
+            }
+            close();
+        };
+
+        saveBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            save(input.value.trim());
+        });
+
+        skipBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!isEdit) {
+                // 跳过备注：直接保存新标签
+                save('');
+            } else {
+                // 取消修改
+                close();
+            }
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                save(input.value.trim());
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isEdit) {
+                    this._resetDraftTab();
+                    this.renderTabs();
+                }
+                close();
+            }
+        });
+    }
+
+    // =====================================================================
+    //  Loop Engine (reused from original)
+    // =====================================================================
+    enableLoop() {
+        if (!this.targetVideo || this.loopStartTime === null || this.loopEndTime === null) return;
+
+        this.loopActive = true;
+
+        this.targetVideo.removeEventListener('timeupdate', this._handleLoopTimeUpdate);
+        this.targetVideo.addEventListener('timeupdate', this._handleLoopTimeUpdate);
+
+        if (this.targetVideo.currentTime < this.loopStartTime || this.targetVideo.currentTime > this.loopEndTime) {
+            this.targetVideo.currentTime = this.loopStartTime;
+        }
+
+        if (this.targetVideo.paused) {
+            this.targetVideo.play().catch(() => {});
+        }
+
+        this.updateLoopMarkers();
+        this.renderProgressMarkers();
+
+        if (window.navigator.vibrate) window.navigator.vibrate([10, 30, 10]);
+    }
+
+    disableLoop() {
+        if (!this.loopActive) return;
+        this.targetVideo.removeEventListener('timeupdate', this._handleLoopTimeUpdate);
+        this.loopActive = false;
+        this.loopStartTime = null;
+        this.loopEndTime = null;
+        this._clearAllTabProgress();
+        this.updateLoopMarkers();
+        this.renderProgressMarkers();
+    }
+
+    _handleLoopTimeUpdate() {
+        if (!this.loopActive || this.loopStartTime === null || this.loopEndTime === null) return;
+        const ct = this.targetVideo.currentTime;
+        if (ct >= this.loopEndTime || ct < this.loopStartTime) {
+            this.targetVideo.currentTime = this.loopStartTime;
+        }
+        this.renderProgressMarkers();
+        this._updateActiveTabProgress();
+    }
+
+    _clearAllTabProgress() {
+        if (!this.tabScrollContainer) return;
+        const pills = this.tabScrollContainer.querySelectorAll('.tm-tab-pill');
+        pills.forEach(p => p.style.background = '');
+    }
+
+    _updateActiveTabProgress() {
+        if (!this.targetVideo || !this.tabScrollContainer) return;
+        
+        if (!this.loopActive || !this.activeTabId) {
+            this._clearAllTabProgress();
+            return;
+        }
+
+        const activeTab = this.tabs.find(t => t.id === this.activeTabId);
+        if (!activeTab || activeTab.type !== 'interval') {
+            this._clearAllTabProgress();
+            return;
+        }
+
+        const pill = this.tabScrollContainer.querySelector(`.tm-tab-pill[data-tab-id="${this.activeTabId}"]`);
+        if (!pill) return;
+
+        const duration = activeTab.endTime - activeTab.startTime;
+        if (duration <= 0) return;
+
+        const ct = this.targetVideo.currentTime;
+        const pct = Math.max(0, Math.min(100, ((ct - activeTab.startTime) / duration) * 100));
+
+        pill.style.background = `linear-gradient(to right, hsla(var(--tab-color), 0.38) ${pct}%, hsla(var(--tab-color), 0.15) ${pct}%)`;
+    }
 
 
+
+    // =====================================================================
+    //  Progress Bar Markers (preserved)
+    // =====================================================================
+    updateLoopMarkers() {
+        if (!this.targetVideo || !this.loopStartMarker || !this.loopEndMarker) return;
+
+        const progressBarElement = document.querySelector('.tm-progress-bar');
+        if (!progressBarElement) return;
+
+        const duration = this.targetVideo.duration;
+        if (duration <= 0) return;
+
+        const updateMarker = (time, marker, isActive) => {
+            if (time !== null && !isNaN(time) && time >= 0 && time <= duration) {
+                marker.style.left = `${(time / duration) * 100}%`;
+                marker.style.display = 'block';
+                if (isActive) marker.classList.add('active');
+                else marker.classList.remove('active');
+            } else {
+                marker.style.display = 'none';
+                marker.classList.remove('active');
+            }
+        };
+
+        updateMarker(this.loopStartTime, this.loopStartMarker, this.loopActive);
+        updateMarker(this.loopEndTime, this.loopEndMarker, this.loopActive);
+
+        if (this.loopRangeElement) {
+            if (this.loopActive && this.loopStartTime !== null && this.loopEndTime !== null) {
+                const startPos = (this.loopStartTime / duration) * 100;
+                const endPos = (this.loopEndTime / duration) * 100;
+                const width = endPos - startPos;
+                if (width > 0) {
+                    this.loopRangeElement.style.left = `${startPos}%`;
+                    this.loopRangeElement.style.width = `${width}%`;
+                    this.loopRangeElement.style.display = 'block';
+                    this.loopRangeElement.classList.add('active');
+                } else {
+                    this.loopRangeElement.style.display = 'none';
+                }
+            } else {
+                this.loopRangeElement.classList.remove('active');
+                this.loopRangeElement.style.display = 'none';
+            }
+        }
+    }
+
+    // Compat shim: called by EventManager on metadata load
+    updateLoopTimeDisplay() {
+        // No-op: tab pills show the times directly
+    }
+
+    // Compat shim: called by CustomVideoPlayer
+    _updateUI() {
+        this.renderTabs();
+        this.updateLoopMarkers();
+    }
+
+    // =====================================================================
+    //  URL Hash Backward Compat & Multi-Tabs Parsing
+    // =====================================================================
+    _parseUrlHashParams() {
+        let paramsToParse = [];
+
+        // 1. Parse window.location.hash
+        if (window.location.hash) {
+            let hash = window.location.hash.substring(1);
+            if (hash.startsWith('t=')) hash = hash.substring(2);
+            const segments = hash.split(',').map(s => {
+                let clean = s.trim();
+                if (clean.startsWith('t=')) clean = clean.substring(2);
+                return clean;
+            }).filter(Boolean);
+            paramsToParse.push(...segments);
+        }
+
+        // 2. Parse query parameters in window.location.search (e.g. ?t=75-90 or ?start=10&end=20)
+        if (window.location.search) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tParam = urlParams.get('t');
+            if (tParam) {
+                const segments = tParam.split(',').map(s => {
+                    let clean = s.trim();
+                    if (clean.startsWith('t=')) clean = clean.substring(2);
+                    return clean;
+                }).filter(Boolean);
+                paramsToParse.push(...segments);
+            }
+            const startParam = urlParams.get('start');
+            const endParam = urlParams.get('end');
+            if (startParam) {
+                if (endParam) {
+                    paramsToParse.push(`${startParam}-${endParam}`);
+                } else {
+                    paramsToParse.push(startParam);
+                }
+            }
+        }
+
+        if (paramsToParse.length === 0) return;
+
+        // 3. 清理 URL 中的时间戳/参数，避免 missav 站自带的循环播放与脚本冲突
+        try {
+            const url = new URL(window.location.href);
+            let urlChanged = false;
+            if (url.hash) {
+                url.hash = '';
+                urlChanged = true;
+            }
+            if (url.searchParams.has('t')) {
+                url.searchParams.delete('t');
+                urlChanged = true;
+            }
+            if (url.searchParams.has('start')) {
+                url.searchParams.delete('start');
+                urlChanged = true;
+            }
+            if (url.searchParams.has('end')) {
+                url.searchParams.delete('end');
+                urlChanged = true;
+            }
+            if (urlChanged) {
+                window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+            }
+        } catch (e) {
+            console.error('[MissPlayer] Failed to clear URL query/hash params:', e);
+        }
+
+        const handleMeta = () => {
+            if (!this.targetVideo) return;
+            let firstTabToActivate = null;
+
+            paramsToParse.forEach(segment => {
+                if (segment.includes('-')) {
+                    const [startStr, endStr] = segment.split('-');
+                    const startSec = this._parseTimeString(startStr);
+                    const endSec = this._parseTimeString(endStr);
+                    if (startSec !== null && endSec !== null) {
+                        let existingTab = this.tabs.find(t =>
+                            t.type === 'interval' &&
+                            Math.abs(t.startTime - startSec) < 1 &&
+                            Math.abs(t.endTime - endSec) < 1
+                        );
+                        if (!existingTab) {
+                            existingTab = {
+                                id: this._generateId(),
+                                type: 'interval',
+                                startTime: startSec,
+                                endTime: endSec,
+                                comment: 'From URL'
+                            };
+                            this.tabs.push(existingTab);
+                        }
+                        if (!firstTabToActivate) {
+                            firstTabToActivate = existingTab;
+                        }
+                    }
+                } else {
+                    const sec = this._parseTimeString(segment);
+                    if (sec !== null) {
+                        let existingTab = this.tabs.find(t =>
+                            t.type === 'highlight' && Math.abs(t.startTime - sec) < 1
+                        );
+                        if (!existingTab) {
+                            existingTab = {
+                                id: this._generateId(),
+                                type: 'highlight',
+                                startTime: sec,
+                                comment: 'From URL'
+                            };
+                            this.tabs.push(existingTab);
+                        }
+                        if (!firstTabToActivate) {
+                            firstTabToActivate = existingTab;
+                        }
+                    }
+                }
+            });
+
+            // Save, sort, and render all converted tabs
+            this._saveTabs();
+            this._sortTabs();
+            this.renderTabs();
+
+            // Activate the first tab
+            if (firstTabToActivate) {
+                if (firstTabToActivate.type === 'highlight') {
+                    this.targetVideo.currentTime = firstTabToActivate.startTime;
+                    if (this.targetVideo.paused) {
+                        this.targetVideo.play().catch(() => {});
+                    }
+                    this.disableLoop();
+                    this.activeTabId = firstTabToActivate.id;
+                } else {
+                    this.disableLoop();
+                    this.activeTabId = firstTabToActivate.id;
+                    this.loopStartTime = firstTabToActivate.startTime;
+                    this.loopEndTime = firstTabToActivate.endTime;
+                    this.enableLoop();
+                }
+                this.renderTabs();
+            }
+
+            if (this.targetVideo) {
+                this.targetVideo.removeEventListener('loadedmetadata', handleMeta);
+            }
+        };
+
+        if (this.targetVideo.readyState >= 1) handleMeta();
+        else this.targetVideo.addEventListener('loadedmetadata', handleMeta);
+    }
+
+    _parseTimeString(timeString) {
+        if (!timeString) return null;
+        const clean = timeString.trim();
+
+        // 1. Check hh:mm:ss
+        const matchHms = clean.match(/^(\d{2}):(\d{2}):(\d{2})$/);
+        if (matchHms) {
+            return parseInt(matchHms[1], 10) * 3600 + parseInt(matchHms[2], 10) * 60 + parseInt(matchHms[3], 10);
+        }
+
+        // 2. Check mm:ss
+        const matchMs = clean.match(/^(\d{1,2}):(\d{2})$/);
+        if (matchMs) {
+            return parseInt(matchMs[1], 10) * 60 + parseInt(matchMs[2], 10);
+        }
+
+        // 3. Check pure number (seconds)
+        if (clean.match(/^\d+(\.\d+)?$/)) {
+            return parseFloat(clean);
+        }
+
+        return null;
+    }
+
+    // =====================================================================
+    //  Bottom Sheet
+    // =====================================================================
+    _bindSwipeUpGesture() {
+        const el = this.tabScrollContainer?.parentElement; // .tm-loop-control-row
+        if (!el) return;
+
+        let startY = 0;
+        let startX = 0;
+        let tracking = false;
+
+        el.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            startY = touch.clientY;
+            startX = touch.clientX;
+            tracking = true;
+        }, { passive: true });
+
+        el.addEventListener('touchend', (e) => {
+            if (!tracking) return;
+            tracking = false;
+            const touch = e.changedTouches[0];
+            const dy = touch.clientY - startY;
+            const dx = Math.abs(touch.clientX - startX);
+            // Swipe up: dy < -40 and more vertical than horizontal
+            if (dy < -40 && Math.abs(dy) > dx) {
+                e.stopPropagation();
+                this._openBottomSheet();
+            }
+        });
+    }
+
+    _toggleBottomSheet() {
+        if (this._sheetPanel && this._sheetPanel.classList.contains('visible')) {
+            this._closeBottomSheet();
+        } else {
+            this._openBottomSheet();
+        }
+    }
+
+    _updatePanelPosition() {
+        if (!this._sheetPanel) return;
+        const parentContainer = this.tabAddBtn?.closest('.tm-control-buttons') || document.querySelector('.tm-control-buttons');
+        const loopRow = this.tabAddBtn?.closest('.tm-loop-control-row') || this.tabAddBtn?.parentElement;
+        const handleContainer = document.querySelector('.tm-handle-container');
+        
+        if (parentContainer && loopRow) {
+            const parentRect = parentContainer.getBoundingClientRect();
+            const loopRect = loopRow.getBoundingClientRect();
+            // 计算从 parentContainer 底部到 loopRow 底部的距离，作为 bottom 偏移量
+            const bottomOffset = Math.max(0, parentRect.bottom - loopRect.bottom);
+            this._sheetPanel.style.bottom = `${bottomOffset}px`;
+
+            if (handleContainer) {
+                const handleRect = handleContainer.getBoundingClientRect();
+                // 顶部低于 handleContainer
+                const availableHeight = loopRect.bottom - handleRect.bottom - 10;
+                if (availableHeight > 80) {
+                    this._sheetPanel.style.maxHeight = `${availableHeight}px`;
+                    return;
+                }
+            }
+        }
+        this._sheetPanel.style.maxHeight = 'calc(100vh - 120px)';
+    }
+
+    _openBottomSheet() {
+        if (!this._sheetOverlay || !this._sheetPanel) this._createBottomSheet();
+        this._updateBottomSheet();
+        this._updatePanelPosition();
+        if (this._sheetOverlay) this._sheetOverlay.classList.add('visible');
+        if (this._sheetPanel) this._sheetPanel.classList.add('visible');
+    }
+
+    _closeBottomSheet() {
+        if (this._sheetOverlay) this._sheetOverlay.classList.remove('visible');
+        if (this._sheetPanel) this._sheetPanel.classList.remove('visible');
+    }
+
+    _createBottomSheet() {
+        const parentContainer = this.tabAddBtn?.closest('.tm-control-buttons') || document.querySelector('.tm-control-buttons');
+        if (!parentContainer) return;
+
+        if (this._sheetOverlay) this._sheetOverlay.remove();
+        if (this._sheetPanel) this._sheetPanel.remove();
+
+        // 蒙版背景
+        this._sheetOverlay = document.createElement('div');
+        this._sheetOverlay.className = 'tm-bottom-sheet-overlay';
+        this._sheetOverlay.addEventListener('click', () => this._closeBottomSheet());
+
+        this._sheetOverlay.addEventListener('touchmove', (e) => {
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // 模态框面板 (挂载于控制面板容器内，宽度与控制面板一致，底部与 tm-loop-control-row 对齐)
+        this._sheetPanel = document.createElement('div');
+        this._sheetPanel.className = 'tm-bottom-sheet-panel';
+        this._sheetPanel.addEventListener('click', (e) => e.stopPropagation());
+
+        // 头部标题与关闭按钮
+        const header = document.createElement('div');
+        header.className = 'tm-sheet-header';
+
+        const titleWrapper = document.createElement('div');
+        titleWrapper.style.display = 'flex';
+        titleWrapper.style.alignItems = 'center';
+        titleWrapper.style.gap = '8px';
+
+        const title = document.createElement('div');
+        title.className = 'tm-bottom-sheet-title';
+        title.textContent = '标签管理';
+
+        const countBadge = document.createElement('span');
+        countBadge.className = 'tm-sheet-count-badge';
+        this._sheetCountBadge = countBadge;
+
+        titleWrapper.appendChild(title);
+        titleWrapper.appendChild(countBadge);
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'tm-sheet-close-btn';
+        closeBtn.innerHTML = '✕';
+        closeBtn.title = '关闭';
+        closeBtn.addEventListener('click', () => this._closeBottomSheet());
+
+        header.appendChild(titleWrapper);
+        header.appendChild(closeBtn);
+
+        // 滚动列表容器
+        this._sheetList = document.createElement('div');
+        this._sheetList.className = 'tm-bottom-sheet-list';
+
+        this._sheetPanel.appendChild(header);
+        this._sheetPanel.appendChild(this._sheetList);
+
+        const playerContainer = document.querySelector('.tm-player-container') || document.body;
+        playerContainer.appendChild(this._sheetOverlay);
+
+        // 挂载到控制面板容器中，保证宽度 100% 与控制面板完全对齐
+        parentContainer.appendChild(this._sheetPanel);
+    }
+
+    _updateBottomSheet() {
+        if (!this._sheetList) return;
+        this._sheetList.innerHTML = '';
+
+        if (this._sheetCountBadge) {
+            this._sheetCountBadge.textContent = `共 ${this.tabs.length} 条`;
+        }
+
+        if (this.tabs.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'tm-bottom-sheet-empty';
+            empty.textContent = '暂无标签';
+            this._sheetList.appendChild(empty);
+            return;
+        }
+
+        this.tabs.forEach((tab, index) => {
+            const color = this.tabColors[index % this.tabColors.length];
+            const row = document.createElement('div');
+            row.className = 'tm-sheet-item';
+            if (this.activeTabId === tab.id) {
+                row.classList.add('active');
+            }
+
+            // 1. 时间胶囊按钮容器
+            const timeContainer = document.createElement('div');
+            timeContainer.className = 'tm-sheet-item-time-container';
+
+            if (tab.type === 'highlight') {
+                const pill = document.createElement('button');
+                pill.className = 'tm-sheet-time-pill';
+                pill.style.setProperty('--tab-color', color);
+                pill.textContent = formatTimeWithHours(tab.startTime);
+                pill.title = '跳转到此时间';
+                pill.addEventListener('click', () => {
+                    this._handleTabClick(tab);
+                });
+                timeContainer.appendChild(pill);
+            } else {
+                // AB 时间片段在一个宽胶囊内显示
+                const pill = document.createElement('div');
+                pill.className = 'tm-sheet-time-pill interval';
+                pill.style.setProperty('--tab-color', color);
+
+                const startSpan = document.createElement('span');
+                startSpan.className = 'tm-time-part start';
+                startSpan.textContent = formatTimeWithHours(tab.startTime);
+                startSpan.title = '跳转到起点并开始循环';
+                startSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this._handleTabClick(tab);
+                });
+
+                const sepSpan = document.createElement('span');
+                sepSpan.className = 'tm-time-sep';
+                sepSpan.textContent = '~';
+
+                const endSpan = document.createElement('span');
+                endSpan.className = 'tm-time-part end';
+                endSpan.textContent = formatTimeWithHours(tab.endTime);
+                endSpan.title = '跳转到终点';
+                endSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (this.targetVideo) {
+                        this.targetVideo.currentTime = tab.endTime;
+                    }
+                });
+
+                pill.appendChild(startSpan);
+                pill.appendChild(sepSpan);
+                pill.appendChild(endSpan);
+
+                pill.addEventListener('click', () => {
+                    this._handleTabClick(tab);
+                });
+
+                timeContainer.appendChild(pill);
+            }
+
+            // 2. 备注文本框 (可以直接手动修改)
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'tm-sheet-item-comment-input';
+            input.placeholder = '添加备注...';
+            input.value = tab.comment || '';
+
+            // 阻止按键冒泡，防止触发视频播放快捷键
+            const stopProp = (e) => e.stopPropagation();
+            input.addEventListener('keydown', stopProp);
+            input.addEventListener('keyup', stopProp);
+            input.addEventListener('keypress', stopProp);
+            input.addEventListener('mousedown', stopProp);
+            input.addEventListener('touchstart', stopProp);
+
+            // 直接修改备注
+            input.addEventListener('input', (e) => {
+                tab.comment = e.target.value;
+                this._saveTabs();
+                this.renderTabs();
+            });
+
+            input.addEventListener('change', () => {
+                this._saveTabs();
+                this.renderTabs();
+            });
+
+            // 3. 删除按钮 (❌)
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'tm-sheet-delete-btn';
+            deleteBtn.innerHTML = '❌';
+            deleteBtn.title = '删除标签';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.tabs = this.tabs.filter(t => t.id !== tab.id);
+                if (this.activeTabId === tab.id) {
+                    this.disableLoop();
+                    this.activeTabId = null;
+                }
+                this._saveTabs();
+                this.renderTabs();
+                this._updateBottomSheet();
+            });
+
+            row.appendChild(timeContainer);
+            row.appendChild(input);
+            row.appendChild(deleteBtn);
+            this._sheetList.appendChild(row);
+        });
+    }
+
+    renderProgressMarkers() {
+        if (!this.progressMarkersContainer || !this.targetVideo) return;
+        this.progressMarkersContainer.innerHTML = '';
+
+        // Hide legacy markers so they don't interfere
+        if (this.loopStartMarker) this.loopStartMarker.style.display = 'none';
+        if (this.loopEndMarker) this.loopEndMarker.style.display = 'none';
+        if (this.loopRangeElement) this.loopRangeElement.style.display = 'none';
+
+        const duration = this.targetVideo.duration;
+        if (duration <= 0 || isNaN(duration)) {
+            // Robust retry fallback: if duration is not loaded yet, listen to timeupdate to render when ready
+            if (!this._durationFallbackBound) {
+                this._durationFallbackBound = () => {
+                    if (!this.targetVideo) return;
+                    const dur = this.targetVideo.duration;
+                    if (dur > 0 && !isNaN(dur)) {
+                        this.renderProgressMarkers();
+                        if (this.targetVideo) {
+                            this.targetVideo.removeEventListener('timeupdate', this._durationFallbackBound);
+                        }
+                        this._durationFallbackBound = null;
+                    }
+                };
+                this.targetVideo.addEventListener('timeupdate', this._durationFallbackBound);
+            }
+            return;
+        }
+
+        this.tabs.forEach((tab, index) => {
+            const color = this.tabColors[index % this.tabColors.length];
+            const startPct = (tab.startTime / duration) * 100;
+
+            if (tab.type === 'highlight') {
+                // Highlight point: little vertical tick directly inside the progress bar
+                const tick = document.createElement('div');
+                tick.className = 'tm-progress-marker-tick';
+                tick.style.left = `${startPct}%`;
+                tick.style.setProperty('--tab-color', color);
+                tick.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this._handleTabClick(tab);
+                });
+                this.progressMarkersContainer.appendChild(tick);
+            } else if (tab.type === 'interval') {
+                const endPct = (tab.endTime / duration) * 100;
+                const widthPct = endPct - startPct;
+                if (widthPct <= 0) return;
+
+                if (this.loopActive && this.activeTabId === tab.id) {
+                    // 1. Base active loop range (full width from start to end, light color)
+                    const baseRange = document.createElement('div');
+                    baseRange.className = 'tm-active-loop-unplayed';
+                    baseRange.style.left = `${startPct}%`;
+                    baseRange.style.width = `${widthPct}%`;
+                    baseRange.style.setProperty('--tab-color', color);
+                    this.progressMarkersContainer.appendChild(baseRange);
+
+                    // 2. Played active loop progress (from start to current time, darker color)
+                    const clampedCurrent = Math.max(tab.startTime, Math.min(tab.endTime, this.targetVideo.currentTime));
+                    const playedPct = ((clampedCurrent - tab.startTime) / duration) * 100;
+                    if (playedPct > 0) {
+                        const played = document.createElement('div');
+                        played.className = 'tm-active-loop-played';
+                        played.style.left = `${startPct}%`;
+                        played.style.width = `${playedPct}%`;
+                        played.style.setProperty('--tab-color', color);
+                        this.progressMarkersContainer.appendChild(played);
+                    }
+
+                    // Start boundary tick
+                    const startTick = document.createElement('div');
+                    startTick.className = 'tm-active-loop-boundary start';
+                    startTick.style.left = `${startPct}%`;
+                    startTick.style.setProperty('--tab-color', color);
+                    this.progressMarkersContainer.appendChild(startTick);
+
+                    // End boundary tick
+                    const endTick = document.createElement('div');
+                    endTick.className = 'tm-active-loop-boundary end';
+                    endTick.style.left = `${endPct}%`;
+                    endTick.style.setProperty('--tab-color', color);
+                    this.progressMarkersContainer.appendChild(endTick);
+                } else {
+                    // Inactive loop range: thin translucent bar below bottom edge
+                    const range = document.createElement('div');
+                    range.className = 'tm-progress-marker-range';
+                    range.style.left = `${startPct}%`;
+                    range.style.width = `${widthPct}%`;
+                    range.style.setProperty('--tab-color', color);
+                    range.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this._handleTabClick(tab);
+                    });
+                    this.progressMarkersContainer.appendChild(range);
+                }
+            }
+        });
+    }
+
+    // =====================================================================
+    //  Persistence
+    // =====================================================================
+    _sortTabs() {
+        this.tabs.sort((a, b) => a.startTime - b.startTime);
+    }
+
+    _saveTabs() {
+        if (!this.storageKey) return;
+        this._sortTabs();
+        setValue(this.storageKey, this.tabs);
+    }
+
+    _loadTabs() {
+        if (!this.storageKey) {
+            this.tabs = [];
+            return;
+        }
+        const saved = getValue(this.storageKey, []);
+        this.tabs = Array.isArray(saved) ? saved : [];
+        this._sortTabs();
+    }
+
+    _generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
+
+    // =====================================================================
+    //  Lifecycle
+    // =====================================================================
+    cleanup() {
+        this.disableLoop();
+        document.removeEventListener('click', this._handleOutsideClickForEdit);
+        if (this.targetVideo && this._durationFallbackBound) {
+            this.targetVideo.removeEventListener('timeupdate', this._durationFallbackBound);
+            this._durationFallbackBound = null;
+        }
+        if (this._sheetOverlay) {
+            this._sheetOverlay.remove();
+            this._sheetOverlay = null;
+            this._sheetPanel = null;
+            this._sheetList = null;
+        }
+        if (this._longPressTimer) {
+            clearTimeout(this._longPressTimer);
+            this._longPressTimer = null;
+        }
+    }
 }

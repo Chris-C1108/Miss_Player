@@ -521,8 +521,8 @@ export class DragManager {
     updateDockedState(anchorName, didSnap) {
         if (!this.controlButtonsContainer) return;
         
-        // 确保只在 PC 宽屏及大屏设备自适应环境下应用（min-width: 930px, min-height: 400px 且 landscape）
-        const isPC = window.innerWidth >= 930 && window.innerHeight >= 400 && window.matchMedia('(orientation: landscape)').matches;
+        // 确保只在 PC 宽屏及大屏设备自适应环境下应用（min-width: 930px 且 landscape）
+        const isPC = window.innerWidth >= 930 && window.matchMedia('(orientation: landscape)').matches;
         
         const playerContainer = this.controlButtonsContainer.closest('.tm-player-container');
         if (!playerContainer) return;
@@ -545,8 +545,8 @@ export class DragManager {
         if (isDocked) {
             const rect = this.controlButtonsContainer.getBoundingClientRect();
             const h = rect.height || 180;
-            // 间距包含控制面板高度 + 32px (16px bottom margin + 16px gap)
-            playerContainer.style.setProperty('--docked-controls-height', (h + 32) + 'px');
+            // 停靠后100%填满无边距，因此间距仅为控制面板高度本身
+            playerContainer.style.setProperty('--docked-controls-height', h + 'px');
             playerContainer.classList.add(`tm-controls-docked-${anchorName.toLowerCase()}`);
         } else {
             playerContainer.style.removeProperty('--docked-controls-height');

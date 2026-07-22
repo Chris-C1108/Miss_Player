@@ -117,6 +117,52 @@ export class BaseLoginProvider {
     }
 
     /**
+     * 持久化缓存站点的登录状态
+     * @param {boolean} isLogged 
+     */
+    cacheLoginStatus(isLogged) {
+        if (!this.siteKey) return;
+        const key = `mp_login_status_${this.siteKey}`;
+        const timeKey = `mp_login_status_time_${this.siteKey}`;
+        if (typeof GM_setValue === 'function') {
+            try {
+                GM_setValue(key, isLogged);
+                GM_setValue(timeKey, Date.now());
+            } catch (e) {}
+        }
+        setLocalStorage(key, isLogged);
+        setLocalStorage(timeKey, Date.now());
+    }
+
+    /**
+     * 读取持久化的缓存登录状态
+     * @returns {boolean|null}
+     */
+    getCachedLoginStatus() {
+        if (!this.siteKey) return null;
+        const key = `mp_login_status_${this.siteKey}`;
+        let val = null;
+        if (typeof GM_getValue === 'function') {
+            try {
+                val = GM_getValue(key, null);
+            } catch (e) {}
+        }
+        if (val === null) {
+            val = getLocalStorage(key, null);
+        }
+        if (typeof val === 'boolean') return val;
+        
+        // 兜底策略：如果不存在缓存，但存在已保存的有效凭据和自动登录标志，乐观假定为已登录
+        try {
+            const creds = CredentialManager.get(this.siteKey);
+            if (creds && creds.email && creds.password && creds.autoLogin) {
+                return true;
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    /**
      * 检查登录状态 (API + DOM 双重判定)
      * @param {string} [domain] - 指定域名
      * @returns {Promise<boolean>} 是否已登录
@@ -126,11 +172,14 @@ export class BaseLoginProvider {
             // 1. 尝试使用 API 探测
             const isLoggedIn = await this.checkLoginByAPI(domain);
             if (isLoggedIn !== null) {
+                this.cacheLoginStatus(isLoggedIn);
                 return isLoggedIn;
             }
 
             // 2. API 探测失败/不支持，降级使用 DOM 检测
-            return this.checkLoginByDOM();
+            const domLogged = this.checkLoginByDOM();
+            this.cacheLoginStatus(domLogged);
+            return domLogged;
         } catch (error) {
             console.error(`[BaseLoginProvider] 检查登录状态出错 (${this.siteKey}):`, error);
             return false;

@@ -5,9 +5,11 @@
 
 import { getSiteUrls, isSiteDomain } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
+import { md5 } from '../../utils/md5.js';
 
 export const JABLE_DOMAINS = getSiteUrls('JABLE');
 export const JAVLIB_DOMAINS = getSiteUrls('JAVLIBRARY');
+export const JAVDB_DOMAINS = getSiteUrls('JAVDB');
 
 // =====================================================================
 //  0. CONFIG & CONSTANTS
@@ -50,87 +52,7 @@ const esc = s => {
 // =====================================================================
 //  1. URL DETECTION
 // =====================================================================
-export function cleanAvCode(code) {
-    if (!code) return '';
-    let result = code.toLowerCase().trim();
-
-    // 1. 剥离已知的 MissAV 等站点的后缀
-    const suffixes = [
-        '-uncensored-leak',
-        '-uncensored',
-        '-english-subtitle',
-        '-chinese-subtitle',
-        '-subtitle',
-        '-leak',
-        '-c'
-    ];
-
-    let changed = true;
-    while (changed) {
-        changed = false;
-        for (const suffix of suffixes) {
-            if (result.endsWith(suffix)) {
-                result = result.slice(0, -suffix.length);
-                changed = true;
-                break;
-            }
-        }
-    }
-
-    // 2. 如果符合标准字母-数字格式，进行规范化 (例如将没有连字符的 "mimk138" 规范化为 "mimk-138")
-    const stdMatch = result.match(/^([a-z]+)-?(\d+)$/i);
-    if (stdMatch) {
-        return `${stdMatch[1]}-${stdMatch[2]}`.toLowerCase();
-    }
-
-    return result;
-}
-
-export function getVideoCodeFromUrl(url = window.location.href) {
-    try {
-        const urlObj = new URL(url);
-        const path = urlObj.pathname;
-
-        let code = '';
-
-        // Jable.tv: /videos/miaa-598/
-        if (isSiteDomain('JABLE', urlObj.hostname)) {
-            const match = path.match(/\/videos\/([^/]+)/i);
-            if (match) code = match[1];
-        }
-
-        // MissAV: /cn/miaa-598 or /miaa-598
-        if (!code && isSiteDomain('MISSAV', urlObj.hostname)) {
-            const segments = path.split('/').filter(Boolean);
-            if (segments.length > 0) {
-                code = segments[segments.length - 1];
-            }
-        }
-
-        // Generic fallback: match alphanumeric hyphen alphanumeric
-        if (!code) {
-            const genericMatch = path.match(/\/([a-z0-9]+-[a-z0-9]+)/i);
-            if (genericMatch) {
-                code = genericMatch[1];
-            }
-        }
-
-        // Last fallback: last segment of path
-        if (!code) {
-            const segments = path.split('/').filter(Boolean);
-            if (segments.length > 0) {
-                code = segments[segments.length - 1];
-            }
-        }
-
-        if (code) {
-            return cleanAvCode(code);
-        }
-    } catch (e) {
-        console.error('[CommentScraper] Failed to parse video code from URL:', e);
-    }
-    return '';
-}
+export { cleanAvCode, getVideoCodeFromUrl } from '../../utils/videoCode.js';
 
 // =====================================================================
 //  2. NETWORK FETCH & HTML PARSING
@@ -141,7 +63,7 @@ export function fetchJableComments(code, page = 1, domainIndex = 0) {
     }
     const domain = JABLE_DOMAINS[domainIndex];
     const slug = code.toLowerCase().trim();
-    const url = `${domain}/videos/${slug}/?mode=async&function=get_block&block_id=video_comments_video_comments&sort_by=&from=${page}&ipp=5&_=${Date.now()}`;
+    const url = `${domain}/videos/${slug}/?mode=async&function=get_block&block_id=video_comments_video_comments&sort_by=&from=${page}&ipp=10&_=${Date.now()}`;
 
     logger.log(`[CommentScraper] 开始采集 Jable 评论，番号: ${slug}, 页码: ${page}, 域名: ${domain}`);
 
@@ -315,7 +237,7 @@ export function parseCommentsHtml(html, domain = JABLE_DOMAINS[0]) {
         if (m) totalCount = parseInt(m[1], 10);
     }
     
-    const hasMore = html.includes('載入更多') || html.includes('载入更多');
+    let hasMore = html.includes('載入更多') || html.includes('载入更多');
 
     doc.querySelectorAll('div.item[data-comment-id]').forEach(item => {
         const id = item.getAttribute('data-comment-id') || '';
@@ -357,6 +279,10 @@ export function parseCommentsHtml(html, domain = JABLE_DOMAINS[0]) {
         }
     });
 
+    if (comments.length >= 10) {
+        hasMore = true;
+    }
+
     return { comments, totalCount, hasMore };
 }
 
@@ -385,8 +311,8 @@ function normalizeText(text) {
     str = str.replace(/:[a-zA-Z]{2,15}:/g, '');
     str = str.replace(/(\d+)\s*分\s*([-~～到])\s*(\d+)/g, '$1$2$3');
     str = str.replace(/(\d+)\s*秒\s*([-~～到])\s*(\d+)/g, '$1$2$3');
-    str = str.replace(/(\d+)\s*:\s*(\d+)/g, '$1:$2');
-    str = str.replace(/(\d+)\s*\.\s*(\d+)/g, '$1.$2');
+    str = str.replace(/(\d+)\s*:\s*(?=\d)/g, '$1:');
+    str = str.replace(/(\d+)\s*\.\s*(?=\d)/g, '$1.');
 
     return str;
 }
@@ -484,7 +410,10 @@ const adContactRules = [
     { regex: /(?:点击|點擊|click)\s*(?:此处|此處|進入|进入)?\s*(?:下载|下載|download|观看|觀看)/i, reason: '下载引流推广' },
     { regex: /(?:下载|下載|download)\s*(?:网址|網址|链接|鏈接|地址|更多|资源|資源|torrent)/i, reason: '下载引流推广' },
     { regex: /(?:\.torrent|AI破解版|超清AI|破解版资源|破解版資源)/i, reason: '资源推广广告' },
-    { regex: /(?:116pan|windfiles|seekplayer|116pan\.xyz|windfiles\.com)/i, reason: '网盘推广链接' }
+    { regex: /(?:116pan|windfiles|seekplayer|116pan\.xyz|windfiles\.com)/i, reason: '网盘推广链接' },
+    // 磁力、电驴、迅雷、快车、旋风等资源链接与哈希
+    { regex: /(?:magnet:\?|ed2k:\/\/|thunder:\/\/|flashget:\/\/|qqdl:\/\/)/i, reason: '磁力/电驴/迅雷等资源链接' },
+    { regex: /(?:xt=urn:btih:|urn:btih:|file\|[\s\S]+\|\d+\|[a-f0-9]{32})/i, reason: 'BT/ED2K哈希与特征码' }
 ];
 
 const harassmentRules = [
@@ -695,11 +624,7 @@ function extractCandidates(normalizedText, hourLimit = 3) {
         let seconds = 0;
         const absParts = parts.map(p => p !== null ? Math.abs(p) : null);
         if (absParts[2] !== null) {
-            if (absParts[0] > hourLimit) {
-                seconds = absParts[0] * 60 + absParts[1];
-            } else {
-                seconds = absParts[0] * 3600 + absParts[1] * 60 + absParts[2];
-            }
+            seconds = absParts[0] * 3600 + absParts[1] * 60 + absParts[2];
         } else {
             if (isNegative) {
                 seconds = absParts[0] * 60 + absParts[1];
@@ -734,11 +659,7 @@ function extractCandidates(normalizedText, hourLimit = 3) {
         let seconds = 0;
         const absPart0 = Math.abs(parts[0]);
         if (parts[2] !== null) {
-            if (absPart0 > hourLimit) {
-                seconds = absPart0 * 60 + parseInt(parts[1], 10);
-            } else {
-                seconds = absPart0 * 3600 + parseInt(parts[1], 10) * 60 + parts[2];
-            }
+            seconds = absPart0 * 3600 + parseInt(parts[1], 10) * 60 + parts[2];
         } else {
             if (isNegative) {
                 let bVal = parseInt(parts[1], 10);
@@ -905,7 +826,27 @@ function validateMatch(match, allResolvedMatches, normalizedText, videoDuration,
         if (!startVal.isValid || !endVal.isValid) {
             return { isValid: false, reason: '范围边界无效' };
         }
-        return { isValid: true, seconds: [startVal.seconds, endVal.seconds], level: 'L4', confidence: 'High' };
+        let startSecs = startVal.seconds;
+        let endSecs = endVal.seconds;
+        let isCountdown = false;
+        if (startSecs > endSecs) {
+            isCountdown = true;
+            const startOffset = startSecs;
+            const endOffset = endSecs;
+            startSecs = videoDuration - startOffset;
+            endSecs = videoDuration - endOffset;
+            if (startSecs < 0 || endSecs < 0) {
+                return { isValid: false, reason: '倒计时超出总时长' };
+            }
+        }
+        return {
+            isValid: true,
+            seconds: [startSecs, endSecs],
+            level: 'L4',
+            confidence: 'High',
+            isCountdown,
+            countdownOffsets: isCountdown ? [startVal.seconds, endVal.seconds] : null
+        };
     }
 
     const validationDuration = Math.max(videoDuration, 28800);
@@ -962,13 +903,24 @@ function validateMatch(match, allResolvedMatches, normalizedText, videoDuration,
     }
 
     let secs = match.seconds;
+    let isCountdown = false;
+    let countdownOffsets = null;
     if (match.isNegative) {
+        isCountdown = true;
         const offset = Math.abs(secs);
         if (offset > validationDuration) return { isValid: false, reason: '倒计时超出总时长' };
         secs = videoDuration - offset;
+        countdownOffsets = offset;
     }
     if (secs > validationDuration) return { isValid: false, reason: '时间点超出视频时长' };
-    return { isValid: true, seconds: secs, level: match.level, confidence: 'High' };
+    return {
+        isValid: true,
+        seconds: secs,
+        level: match.level,
+        confidence: 'High',
+        isCountdown,
+        countdownOffsets
+    };
 }
 
 export function parseTimestamps(rawComment, videoDuration = 10800) {
@@ -995,7 +947,9 @@ export function parseTimestamps(rawComment, videoDuration = 10800) {
                 raw: match.raw,
                 seconds: valResult.seconds,
                 level: match.level,
-                confidence: valResult.confidence
+                confidence: valResult.confidence,
+                isCountdown: valResult.isCountdown,
+                countdownOffsets: valResult.countdownOffsets
             });
         } else {
             invalid.push({ raw: match.raw, reason: valResult.reason });
@@ -1184,10 +1138,11 @@ function buildAvcodeRegex(code) {
 
 export function formatSeconds(sec) {
     if (Array.isArray(sec)) return sec.map(formatSeconds).join(' ~ ');
-    if (sec < 0) return sec.toString();
-    const hrs = Math.floor(sec / 3600);
-    const mins = Math.floor((sec % 3600) / 60);
-    const secs = sec % 60;
+    const rounded = Math.round(sec);
+    if (rounded < 0) return rounded.toString();
+    const hrs = Math.floor(rounded / 3600);
+    const mins = Math.floor((rounded % 3600) / 60);
+    const secs = rounded % 60;
     const pad = (num) => String(num).padStart(2, '0');
     return hrs > 0 ? `${pad(hrs)}:${pad(mins)}:${pad(secs)}` : `${pad(mins)}:${pad(secs)}`;
 }
@@ -1238,8 +1193,23 @@ export function highlightCommentText(text, timestamps, avcodes) {
         const regex = makeHighlightRegex(ts.raw);
         html = html.replace(regex, (match) => {
             const tokenId = `___TS_${idCounter++}___`;
-            const secsAttr = Array.isArray(ts.seconds) ? JSON.stringify(ts.seconds) : ts.seconds;
-            replacements[tokenId] = `<span class="jc-time-link" data-secs='${secsAttr}' title="跳转至此时间">${match}</span>`;
+            const roundedSecs = Array.isArray(ts.seconds) ? ts.seconds.map(Math.round) : Math.round(ts.seconds);
+            const secsAttr = Array.isArray(roundedSecs) ? JSON.stringify(roundedSecs) : roundedSecs;
+            let tooltip = '跳转至此时间';
+            let displayText = match;
+            if (ts.isCountdown) {
+                displayText = formatSeconds(ts.seconds);
+                if (Array.isArray(ts.countdownOffsets)) {
+                    tooltip = `原倒计时: -${formatSeconds(ts.countdownOffsets[0])} ~ -${formatSeconds(ts.countdownOffsets[1])} (已转换为绝对时间)`;
+                } else {
+                    tooltip = `原倒计时: -${formatSeconds(ts.countdownOffsets)} (已转换为绝对时间)`;
+                }
+            } else if (Array.isArray(ts.seconds)) {
+                tooltip = `跳转至区间 ${formatSeconds(ts.seconds)}`;
+            } else {
+                tooltip = `跳转至 ${formatSeconds(ts.seconds)}`;
+            }
+            replacements[tokenId] = `<span class="jc-time-link" data-secs='${secsAttr}' title="${esc(tooltip)}">${displayText}</span>`;
             return tokenId;
         });
     });
@@ -1254,13 +1224,13 @@ export function highlightCommentText(text, timestamps, avcodes) {
     });
 
     const jableEmojis = {
-        love: 1, hungry: 2, tongue: 3, skr: 4, cool: 5,
-        funny: 6, sad: 7, devil: 8, angry: 9
+        love: '😍', hungry: '😋', tongue: '😛', skr: '🤙', cool: '😎',
+        funny: '😂', sad: '😥', devil: '😈', angry: '😡'
     };
     html = html.replace(/:([a-zA-Z]{2,15}):/g, (match, name) => {
         const lowerName = name.toLowerCase();
         if (jableEmojis[lowerName]) {
-            return `<img class="jc-emoji" src="https://assets-cdn.jable.tv/assets/images/emoji/${jableEmojis[lowerName]}.svg" alt=":${name}:" title=":${name}:" />`;
+            return jableEmojis[lowerName];
         }
         return match;
     });
@@ -1434,21 +1404,11 @@ export function fetchJavLibraryVideoId(avcode, domainIndex = 0, lastError = null
         });
     }
 
-    // 非同源跨域，使用 GM_xmlhttpRequest 并可能加上缓存 Cookie/UA
-    const cookie = getJavLibCookie(domain);
-    const ua = typeof GM_getValue === 'function' ? GM_getValue('javlib_user_agent') : '';
-
+    // 非同源跨域，使用 GM_xmlhttpRequest
     const headers = {
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'referer': `${domain}/cn/`
     };
-
-    if (cookie) {
-        headers['Cookie'] = cookie;
-    }
-    if (ua) {
-        headers['User-Agent'] = ua;
-    }
 
     return new Promise((resolve, reject) => {
         logger.log(`搜索 JAVLibrary 番号: ${cleanCode} (域名: ${domain})`);
@@ -1725,20 +1685,10 @@ export function fetchJavLibraryData(videoId, type = 'comments', page = 1, domain
         });
     }
 
-    const cookie = getJavLibCookie(activeDomain);
-    const ua = typeof GM_getValue === 'function' ? GM_getValue('javlib_user_agent') : '';
-
     const headers = {
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'referer': `${activeDomain}/cn/?v=${videoId}`
     };
-
-    if (cookie) {
-        headers['Cookie'] = cookie;
-    }
-    if (ua) {
-        headers['User-Agent'] = ua;
-    }
 
     return new Promise((resolve, reject) => {
         logger.log(`采集 JAVLibrary ${type} (Page ${page}): ${url}`);
@@ -1804,4 +1754,318 @@ export function fetchJavLibraryData(videoId, type = 'comments', page = 1, domain
         });
     });
 }
+
+// =====================================================================
+//  JAVDB SCRAPER & FALLBACK API (jdforrepam.com)
+// =====================================================================
+const JB_API_BASE = 'https://jdforrepam.com/api';
+
+/**
+ * Build JavDB signature for jdforrepam.com API requests
+ */
+function jbBuildSignature() {
+    const curr = Math.floor(Date.now() / 1000);
+    try {
+        const stored = localStorage.getItem('jb_jdsignature');
+        if (stored) {
+            const parts = stored.split('.');
+            if (parts.length === 3 && (curr - parseInt(parts[0], 10)) <= 300) {
+                return stored;
+            }
+        }
+    } catch (e) {}
+    
+    const sign = `${curr}.lpw6vgqzsp.${md5(`${curr}71cf27bb3c0bcdf207b64abecddc970098c7421ee7203b9cdae54478478a199e7d5a6e1a57691123c1a931c057842fb73ba3b3c83bcd69c17ccf174081e3d8aa`)}`;
+    try {
+        localStorage.setItem('jb_jdsignature', sign);
+    } catch (e) {}
+    return sign;
+}
+
+/**
+ * Helper to execute GM_xmlhttpRequest for JSON API
+ */
+function jbApiGetOnce(url, params, headers) {
+    return new Promise((resolve, reject) => {
+        let fullUrl = url;
+        if (params && Object.keys(params).length) {
+            const qs = new URLSearchParams(params).toString();
+            fullUrl += (url.includes('?') ? '&' : '?') + qs;
+        }
+        if (typeof GM_xmlhttpRequest === 'undefined') {
+            reject(new Error('GM_xmlhttpRequest unavailable'));
+            return;
+        }
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: fullUrl,
+            headers: headers || {},
+            timeout: 8000,
+            onload: (resp) => {
+                try {
+                    if (resp.status >= 200 && resp.status < 300) {
+                        if (resp.responseText) {
+                            try {
+                                resolve(JSON.parse(resp.responseText));
+                            } catch (e) {
+                                resolve(resp.responseText);
+                            }
+                        } else {
+                            resolve(resp.responseText || resp);
+                        }
+                    } else {
+                        try {
+                            const errorData = JSON.parse(resp.responseText);
+                            reject(errorData);
+                        } catch (e) {
+                            reject(new Error(resp.responseText || `HTTP ${resp.status}`));
+                        }
+                    }
+                } catch (e) {
+                    reject(e);
+                }
+            },
+            onerror: () => reject(new Error('API 请求失败')),
+            ontimeout: () => reject(new Error('API 请求超时'))
+        });
+    });
+}
+
+/**
+ * Search JavDB for movie ID by avcode
+ * Primary: HTML search on javdb.com
+ * Backup: Unofficial API search on jdforrepam.com
+ */
+export function fetchJavdbMovieId(avcode, domainIndex = 0) {
+    if (!avcode) return Promise.reject(new Error('Invalid AVCode'));
+    const cleanCode = avcode.trim();
+    const activeDomain = JAVDB_DOMAINS[domainIndex] || JAVDB_DOMAINS[0] || 'https://javdb.com';
+    const url = `${activeDomain}/search?q=${encodeURIComponent(cleanCode)}&f=all`;
+
+    logger.log(`[CommentScraper] 开始获取 JavDB 影片 ID，番号: ${cleanCode}, 域名: ${activeDomain}`);
+
+    return new Promise((resolve, reject) => {
+        if (typeof GM_xmlhttpRequest === 'undefined') {
+            reject(new Error('GM_xmlhttpRequest unavailable'));
+            return;
+        }
+
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: url,
+            timeout: 8000,
+            headers: {
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            onload(r) {
+                if (r.status === 403 || r.status === 503 || (r.responseText && (r.responseText.includes('cf-challenge') || r.responseText.includes('Turnstile')))) {
+                    reject(new Error(`CF_SHIELD_ON_${activeDomain}`));
+                    return;
+                }
+                if (r.status >= 200 && r.status < 300) {
+                    if (r.finalUrl && r.finalUrl.includes('/v/')) {
+                        const m = r.finalUrl.match(/\/v\/([a-zA-Z0-9]+)/);
+                        if (m) {
+                            resolve({ movieId: m[1], domain: activeDomain, source: 'html' });
+                            return;
+                        }
+                    }
+                    try {
+                        const doc = new DOMParser().parseFromString(r.responseText, 'text/html');
+                        const items = doc.querySelectorAll('.movie-list .item a[href^="/v/"], .grid-item a[href^="/v/"], a[href^="/v/"]');
+                        let foundId = '';
+                        for (const a of items) {
+                            const href = a.getAttribute('href') || '';
+                            const m = href.match(/\/v\/([a-zA-Z0-9]+)/);
+                            if (m) {
+                                const titleText = a.getAttribute('title') || a.textContent || '';
+                                if (!cleanCode || matchAvCode(titleText, cleanCode)) {
+                                    foundId = m[1];
+                                    break;
+                                }
+                                if (!foundId) foundId = m[1];
+                            }
+                        }
+                        if (foundId) {
+                            resolve({ movieId: foundId, domain: activeDomain, source: 'html' });
+                            return;
+                        }
+                    } catch (e) {}
+                }
+                reject(new Error(`HTML search failed HTTP ${r.status}`));
+            },
+            onerror() {
+                reject(new Error('Network error'));
+            },
+            ontimeout() {
+                reject(new Error('Timeout'));
+            }
+        });
+    }).catch(async (htmlErr) => {
+        logger.warn(`[CommentScraper] JavDB 主线搜索失败 (${htmlErr.message})，正在尝试第三方 API 备用线路...`);
+        try {
+            const sign = jbBuildSignature();
+            const apiUrl = `${JB_API_BASE}/v2/search`;
+            const apiRes = await jbApiGetOnce(apiUrl, {
+                q: cleanCode,
+                page: 1,
+                type: 'movie',
+                limit: 1,
+                movie_type: 'all',
+                from_recent: 'false',
+                movie_filter_by: 'all',
+                movie_sort_by: 'relevance'
+            }, {
+                'user-agent': 'Dart/3.5 (dart:io)',
+                'accept-language': 'zh-TW',
+                'host': 'jdforrepam.com',
+                'jdsignature': sign
+            });
+            const movies = apiRes?.data?.movies || [];
+            if (movies.length > 0 && movies[0].id) {
+                logger.log(`[CommentScraper] 备用线路获取 JavDB movieId 成功: ${movies[0].id}`);
+                return { movieId: movies[0].id, domain: activeDomain, source: 'api' };
+            }
+        } catch (apiErr) {
+            logger.error(`[CommentScraper] JavDB 备用线路搜索亦失败:`, apiErr);
+        }
+        throw htmlErr;
+    });
+}
+
+/**
+ * Fetch JavDB short reviews
+ * Primary: Direct webpage HTML parsing
+ * Backup: Unofficial API JSON
+ */
+export function fetchJavdbData(movieId, page = 1, domain) {
+    if (!movieId) return Promise.reject(new Error('Invalid MovieId'));
+    const activeDomain = domain || JAVDB_DOMAINS[0] || 'https://javdb.com';
+    const reviewUrl = `${activeDomain}/v/${movieId}/reviews?page=${page}`;
+
+    logger.log(`[CommentScraper] 尝试 JavDB 主线获取短评 (Page ${page}): ${reviewUrl}`);
+
+    const fetchMainLine = () => new Promise((resolve, reject) => {
+        if (typeof GM_xmlhttpRequest === 'undefined') {
+            reject(new Error('GM_xmlhttpRequest unavailable'));
+            return;
+        }
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: reviewUrl,
+            timeout: 10000,
+            headers: {
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            onload(r) {
+                if (r.status === 403 || r.status === 503 || (r.responseText && (r.responseText.includes('cf-challenge') || r.responseText.includes('Turnstile')))) {
+                    reject(new Error(`CF_SHIELD_ON_${activeDomain}`));
+                    return;
+                }
+                if (r.status === 404) {
+                    reject(new Error('HTTP 404'));
+                    return;
+                }
+                if (r.status >= 200 && r.status < 300) {
+                    const doc = new DOMParser().parseFromString(r.responseText, 'text/html');
+                    const items = doc.querySelectorAll('dt.review-item');
+                    const comments = [];
+                    items.forEach((item, index) => {
+                        if (item.classList.contains('more')) return;
+                        const titleEl = item.querySelector('.review-title');
+                        if (!titleEl) return;
+                        
+                        let userName = '匿名用户';
+                        for (let child of titleEl.childNodes) {
+                            if (child.nodeType === 3) {
+                                const t = child.textContent.trim();
+                                if (t.length > 0 && t.length < 30) {
+                                    userName = t;
+                                    break;
+                                }
+                            }
+                        }
+                        const timeEl = titleEl.querySelector('.time');
+                        const date = timeEl ? timeEl.textContent.trim() : '';
+
+                        const starsEl = titleEl.querySelector('.score-stars');
+                        let goldCount = 0;
+                        if (starsEl) {
+                            goldCount = starsEl.querySelectorAll('i.icon-star:not(.gray)').length;
+                        }
+
+                        const contentEl = item.querySelector('.content p, .content');
+                        const text = contentEl ? contentEl.textContent.trim() : '';
+
+                        if (text) {
+                            comments.push({
+                                id: `javdb-html-${page}-${index}`,
+                                user: userName,
+                                time: date,
+                                text: text,
+                                score: goldCount,
+                                isPending: false,
+                                site: 'javdb'
+                            });
+                        }
+                    });
+
+                    let hasMore = false;
+                    const pagination = doc.querySelector('.pagination');
+                    if (pagination) {
+                        const nextBtn = pagination.querySelector('a.pagination-next, a[rel="next"], a.pagination-link[href*="page="]');
+                        if (nextBtn) hasMore = true;
+                    } else if (comments.length >= 20) {
+                        hasMore = true;
+                    }
+
+                    resolve({ comments, totalCount: comments.length, hasMore, source: 'html' });
+                    return;
+                }
+                reject(new Error(`HTTP ${r.status}`));
+            },
+            onerror() {
+                reject(new Error('Network error'));
+            },
+            ontimeout() {
+                reject(new Error('Timeout'));
+            }
+        });
+    });
+
+    const fetchFallbackLine = async () => {
+        logger.log(`[CommentScraper] 自动无缝切换至 JavDB 备用 API (jdforrepam.com) 抓取短评...`);
+        const sign = jbBuildSignature();
+        const apiUrl = `${JB_API_BASE}/v1/movies/${movieId}/reviews`;
+        const res = await jbApiGetOnce(apiUrl, { page: page, sort_by: 'hotly', limit: 20 }, {
+            jdSignature: sign
+        });
+        const reviews = res?.data?.reviews || [];
+        const comments = reviews.map((item, index) => {
+            const dateStr = item.created_at ? new Date(item.created_at * 1000).toLocaleDateString('zh-CN') : '';
+            return {
+                id: `javdb-api-${page}-${item.id || index}`,
+                user: item.username || '匿名用户',
+                time: dateStr,
+                text: item.content || '',
+                score: item.score || 0,
+                likes: item.likes_count || 0,
+                isPending: false,
+                site: 'javdb'
+            };
+        });
+        const hasMore = reviews.length >= 20;
+        return { comments, totalCount: comments.length, hasMore, source: 'api' };
+    };
+
+    return fetchMainLine().catch(err => {
+        if (err.message && err.message.startsWith('CF_SHIELD_ON_')) {
+            return fetchFallbackLine().catch(() => Promise.reject(err));
+        }
+        return fetchFallbackLine();
+    });
+}
+
 

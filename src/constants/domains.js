@@ -23,6 +23,17 @@ export const SITE_DOMAINS = {
             'www.javlib.com',
             'www.c97k.com'
         ]
+    },
+    JAVDB: {
+        primary: 'javdb.com',
+        backups: [
+            'javdb36.com'
+        ],
+        aliases: [
+            'javdb.com',
+            'www.javdb.com',
+            'javdb.net'
+        ]
     }
 };
 

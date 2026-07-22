@@ -99,6 +99,8 @@ module.exports = {
           'fs1.app',
           'www.fs1.app',
           'javdb.com',
+          'www.javdb.com',
+          'jdforrepam.com',
           'www.javlibrary.com',
           'javlib.com',
           'www.javlib.com',

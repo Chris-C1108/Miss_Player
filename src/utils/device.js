@@ -108,3 +108,15 @@ export function restoreSafariThemeColor() {
         }
     }
 }
+
+/**
+ * 检测是否为移动设备
+ * @returns {boolean} - 是否为移动设备
+ */
+export function isMobile() {
+    if (_cache.isMobile === null) {
+        _cache.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+    return _cache.isMobile;
+}
+

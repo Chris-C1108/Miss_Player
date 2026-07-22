@@ -1,4 +1,136 @@
 /**
+ * 调试日志记录器 - 用于记录和拷贝调试日志
+ */
+class DebugLogger {
+    constructor() {
+        this.logs = [];
+        this.el = null;
+        this.logContainer = null;
+        this.maxLogs = 50;
+    }
+    
+    init() {
+        this.el = document.createElement('div');
+        this.el.id = 'tm-debug-log-panel';
+        this.el.style.cssText = `
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            width: 280px;
+            max-height: 200px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            z-index: 2000000020;
+            overflow-y: auto;
+            border: 1px solid #00ff00;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            pointer-events: auto;
+            -webkit-user-select: text;
+            user-select: text;
+        `;
+        
+        const header = document.createElement('div');
+        header.style.cssText = 'display:flex; justify-content:space-between; margin-bottom:5px; border-bottom:1px solid #00ff00; padding-bottom:3px; font-weight:bold;';
+        header.innerHTML = '<span>DEBUG Logs</span>';
+        
+        const copyBtn = document.createElement('button');
+        copyBtn.textContent = 'Copy';
+        copyBtn.style.cssText = 'background:#00ff00; color:#000; border:none; padding:2px 6px; font-size:9px; border-radius:3px; cursor:pointer; font-weight:bold;';
+        copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const text = this.logs.join('\n');
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => copyBtn.textContent = 'Copy', 1500);
+                }).catch(() => {
+                    this._fallbackCopy(text, copyBtn);
+                });
+            } else {
+                this._fallbackCopy(text, copyBtn);
+            }
+        });
+        
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = 'Clear';
+        clearBtn.style.cssText = 'background:#ff5555; color:#fff; border:none; padding:2px 6px; font-size:9px; border-radius:3px; cursor:pointer; font-weight:bold; margin-left:5px;';
+        clearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.clear();
+        });
+        
+        const btns = document.createElement('div');
+        btns.appendChild(copyBtn);
+        btns.appendChild(clearBtn);
+        header.appendChild(btns);
+        
+        this.el.appendChild(header);
+        
+        this.logContainer = document.createElement('div');
+        this.logContainer.id = 'tm-debug-log-list';
+        this.logContainer.style.cssText = 'overflow-y:auto; max-height:160px;';
+        this.el.appendChild(this.logContainer);
+        
+        document.body.appendChild(this.el);
+        this.log('Debugger Initialized.');
+    }
+    
+    _fallbackCopy(text, btn) {
+        try {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            btn.textContent = 'Copied (F)!';
+            setTimeout(() => btn.textContent = 'Copy', 1500);
+        } catch (err) {
+            alert('Failed to copy. Please copy manually.');
+        }
+    }
+    
+    log(msg) {
+        const time = new Date().toLocaleTimeString() + '.' + String(new Date().getMilliseconds()).padStart(3, '0');
+        const formatted = `[${time}] ${msg}`;
+        this.logs.push(formatted);
+        if (this.logs.length > this.maxLogs) {
+            this.logs.shift();
+        }
+        
+        if (this.logContainer) {
+            const line = document.createElement('div');
+            line.style.borderBottom = '1px solid rgba(0, 255, 0, 0.1)';
+            line.style.padding = '2px 0';
+            line.style.wordBreak = 'break-all';
+            line.textContent = formatted;
+            this.logContainer.appendChild(line);
+            this.el.scrollTop = this.el.scrollHeight;
+        }
+        console.log(formatted);
+    }
+    
+    clear() {
+        this.logs = [];
+        if (this.logContainer) {
+            this.logContainer.innerHTML = '';
+        }
+    }
+    
+    destroy() {
+        if (this.el && this.el.parentNode) {
+            this.el.parentNode.removeChild(this.el);
+        }
+    }
+}
+
+/**
  * 事件管理器类 - 负责事件监听和处理
  */
 export class EventManager {
@@ -25,20 +157,112 @@ export class EventManager {
     init() {
         console.log('[EventManager] 初始化事件管理器');
         
+        // 初始化调试日志窗口并挂载到 window 上 (已关闭)
+        // window.tmDebugLogger = new DebugLogger();
+        // window.tmDebugLogger.init();
+        
         // 绑定基本方法
         this.handleWindowResizeBound = this.handleWindowResize.bind(this);
         this.handleContainerResizeBound = this.handleContainerResize.bind(this);
         
-        // 阻止穿透滚动逻辑：除视频画面区域和可滚动评论内容外，阻止默认的 touchmove/wheel 事件
+        // 调试窗口滚动事件 (已关闭，不绑定以优化滚动性能)
+        this.handleWindowScrollDebugBound = null;
+
+        // 追踪触碰起始坐标
+        this._touchStartX = 0;
+        this._touchStartY = 0;
+        this.handleTouchStartBound = (e) => {
+            if (e.touches && e.touches.length > 0) {
+                this._touchStartX = e.touches[0].clientX;
+                this._touchStartY = e.touches[0].clientY;
+                if (e.target.closest('.tm-video-container')) {
+                    if (window.tmDebugLogger) {
+                        window.tmDebugLogger.log(`touchStart video. Y: ${this._touchStartY}, scrollY: ${window.scrollY}`);
+                    }
+                }
+            }
+        };
+
+        // 阻止右键/长按菜单
+        this.handleContextMenuBound = (e) => {
+            e.preventDefault();
+        };
+
+        // 阻止穿透滚动逻辑：除视频画面区域和可滚动评论内容外，阻止默认的 touchmove/wheel 事件以防止穿透到原始网页
         this.handleScrollPreventionBound = (e) => {
-            // 允许视频画面区域穿透（上滑触发底层网页滚动，下滑用于推出播放器）
+            // 允许视频画面区域穿透（唯独上滑触发底层网页滚动，下滑用于推出播放器）
             if (e.target.closest('.tm-video-container')) {
+                if (e.type === 'touchmove') {
+                    if (e.touches && e.touches.length > 0) {
+                        const currentY = e.touches[0].clientY;
+                        const diffY = currentY - this._touchStartY;
+                        this._lastTouchY = currentY;
+
+                        // diffY < -5 表示手指向上滑动（Swiping Up），即网页向下滚动
+                        if (diffY < -5) {
+                            if (window.tmDebugLogger) {
+                                window.tmDebugLogger.log(`touchmove video [SWIPE UP]. diffY: ${diffY}, scrollY: ${window.scrollY}. Allow!`);
+                            }
+                            return; // 允许原生滚动穿透，获得完全丝滑的系统原生滚动体验且无任何闪跳！
+                        } else {
+                            if (window.tmDebugLogger) {
+                                window.tmDebugLogger.log(`touchmove video [SWIPE DOWN/OTHER]. diffY: ${diffY}, scrollY: ${window.scrollY}. Block!`);
+                            }
+                        }
+                    }
+                } else if (e.type === 'wheel') {
+                    // deltaY > 0 表示滚轮向下滚动，即页面向下移动（相当于上滑手势）
+                    if (e.deltaY > 0) {
+                        if (window.tmDebugLogger) {
+                            window.tmDebugLogger.log(`wheel video [DOWN]. delta: ${e.deltaY}, scrollY: ${window.scrollY}. Allow!`);
+                        }
+                        return; // 允许原生滚动穿透
+                    } else {
+                        if (window.tmDebugLogger) {
+                            window.tmDebugLogger.log(`wheel video [UP/OTHER]. delta: ${e.deltaY}, scrollY: ${window.scrollY}. Block!`);
+                        }
+                    }
+                }
+                
+                // 其他滑动方向（如向下滑动或向上滚轮）在视频区域被拦截，阻止穿透
+                if (e.cancelable) {
+                    e.preventDefault();
+                }
                 return;
             }
-            // 允许评论区内部滚动容器和标签页正常工作
-            if (e.target.closest('.tm-comment-section-body, .tm-comments-tabs')) {
+
+            // 针对水平滚动容器（标签页栏与评论源选项卡），只允许水平滑动，阻止垂直滑动以防穿透
+            const horizontalScrollContainer = e.target.closest('.tm-tab-scroll-container, .tm-comments-tabs');
+            if (horizontalScrollContainer) {
+                if (e.type === 'touchmove') {
+                    if (e.touches && e.touches.length > 0) {
+                        const currentX = e.touches[0].clientX;
+                        const currentY = e.touches[0].clientY;
+                        const diffX = Math.abs(currentX - this._touchStartX);
+                        const diffY = Math.abs(currentY - this._touchStartY);
+                        
+                        if (diffY > diffX) {
+                            if (e.cancelable) {
+                                e.preventDefault();
+                            }
+                            if (window.tmDebugLogger) {
+                                window.tmDebugLogger.log(`horizontal touchmove vertical block. diffY: ${currentY - this._touchStartY}`);
+                            }
+                        } else {
+                            if (window.tmDebugLogger) {
+                                window.tmDebugLogger.log(`horizontal touchmove allow. diffX: ${currentX - this._touchStartX}`);
+                            }
+                        }
+                    }
+                }
                 return;
             }
+            
+            // 允许评论区内部滚动容器正常在组件内滚动，配合 overscroll-behavior: contain 防止边界穿透
+            if (e.target.closest('.tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list')) {
+                return;
+            }
+            
             // 阻止其他所有组件的穿透滚动
             if (e.cancelable) {
                 e.preventDefault();
@@ -75,12 +299,16 @@ export class EventManager {
         
         // 阻止穿透滚动：除视频画面区域和可滚动评论内容外，阻止默认的 touchmove/wheel 事件以防止穿透到原始网页
         if (this.uiElements.playerContainer) {
+            this.uiElements.playerContainer.addEventListener('touchstart', this.handleTouchStartBound, { passive: true });
             this.uiElements.playerContainer.addEventListener('touchmove', this.handleScrollPreventionBound, { passive: false });
             this.uiElements.playerContainer.addEventListener('wheel', this.handleScrollPreventionBound, { passive: false });
+            this.uiElements.playerContainer.addEventListener('contextmenu', this.handleContextMenuBound);
         }
         if (this.uiElements.overlay) {
+            this.uiElements.overlay.addEventListener('touchstart', this.handleTouchStartBound, { passive: true });
             this.uiElements.overlay.addEventListener('touchmove', this.handleScrollPreventionBound, { passive: false });
             this.uiElements.overlay.addEventListener('wheel', this.handleScrollPreventionBound, { passive: false });
+            this.uiElements.overlay.addEventListener('contextmenu', this.handleContextMenuBound);
         }
         
         // 设置视频事件监听器
@@ -160,6 +388,15 @@ export class EventManager {
         
         // 监听视频播放状态变化
         this.handlePlayBound = () => {
+            // 每次播放时二次强化 inline 播放属性，防止宿主脚本动态移除或重构导致 iOS 进入默认全屏
+            if (this.targetVideo) {
+                this.targetVideo.setAttribute('playsinline', 'true');
+                this.targetVideo.setAttribute('webkit-playsinline', 'true');
+                this.targetVideo.setAttribute('x5-playsinline', 'true');
+                this.targetVideo.playsInline = true;
+                this.targetVideo.webkitPlaysInline = true;
+            }
+
             if (this.managers.controlManager) {
                 this.managers.controlManager.updatePlayPauseButton();
             }
@@ -338,12 +575,23 @@ export class EventManager {
         
         // 移除穿透滚动阻止事件
         if (this.uiElements.playerContainer) {
+            this.uiElements.playerContainer.removeEventListener('touchstart', this.handleTouchStartBound);
             this.uiElements.playerContainer.removeEventListener('touchmove', this.handleScrollPreventionBound);
             this.uiElements.playerContainer.removeEventListener('wheel', this.handleScrollPreventionBound);
+            this.uiElements.playerContainer.removeEventListener('contextmenu', this.handleContextMenuBound);
         }
         if (this.uiElements.overlay) {
+            this.uiElements.overlay.removeEventListener('touchstart', this.handleTouchStartBound);
             this.uiElements.overlay.removeEventListener('touchmove', this.handleScrollPreventionBound);
             this.uiElements.overlay.removeEventListener('wheel', this.handleScrollPreventionBound);
+            this.uiElements.overlay.removeEventListener('contextmenu', this.handleContextMenuBound);
+        }
+        if (this.handleWindowScrollDebugBound) {
+            window.removeEventListener('scroll', this.handleWindowScrollDebugBound);
+        }
+        if (window.tmDebugLogger) {
+            window.tmDebugLogger.destroy();
+            window.tmDebugLogger = null;
         }
     }
 } 

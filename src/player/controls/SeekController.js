@@ -53,21 +53,39 @@ export class SeekController {
         seekControlRow.appendChild(rewindGroup);
         seekControlRow.appendChild(forwardGroup);
 
-        // 添加快退按钮 - 从右到左排列：-5s, -10s, -30s, -1m, -5m, -10m
-        this.addTimeControlButton(rewindButtonsContainer, '-5s', () => this.seekRelative(-5));
-        this.addTimeControlButton(rewindButtonsContainer, '-10s', () => this.seekRelative(-10));
-        this.addTimeControlButton(rewindButtonsContainer, '-30s', () => this.seekRelative(-30));
-        this.addTimeControlButton(rewindButtonsContainer, '-1m', () => this.seekRelative(-60));
-        this.addTimeControlButton(rewindButtonsContainer, '-5m', () => this.seekRelative(-300));
-        this.addTimeControlButton(rewindButtonsContainer, '-10m', () => this.seekRelative(-600));
+        // 获取启用选中的步进选项（包含默认与自定义）
+        const state = this.playerCore.options ? this.playerCore.options.playerState : null;
+        const enabledSteps = (state && state.settings && Array.isArray(state.settings.enabledSeekSteps))
+            ? state.settings.enabledSeekSteps
+            : ['5s', '10s', '30s', '1m', '5m', '10m'];
 
-        // 添加快进按钮 - 从左到右排列：+5s, +10s, +30s, +1m, +5m, +10m
-        this.addTimeControlButton(forwardButtonsContainer, '+5s', () => this.seekRelative(5));
-        this.addTimeControlButton(forwardButtonsContainer, '+10s', () => this.seekRelative(10));
-        this.addTimeControlButton(forwardButtonsContainer, '+30s', () => this.seekRelative(30));
-        this.addTimeControlButton(forwardButtonsContainer, '+1m', () => this.seekRelative(60));
-        this.addTimeControlButton(forwardButtonsContainer, '+5m', () => this.seekRelative(300));
-        this.addTimeControlButton(forwardButtonsContainer, '+10m', () => this.seekRelative(600));
+        // 解析步进字符串转换为秒数
+        const parseStepToSeconds = (stepKey) => {
+            const num = parseInt(stepKey, 10) || 0;
+            if (stepKey.toLowerCase().endsWith('m')) {
+                return num * 60;
+            }
+            return num;
+        };
+
+        // 按秒数升序排列启用的步进
+        const sortedEnabledSteps = [...enabledSteps].sort((a, b) => parseStepToSeconds(a) - parseStepToSeconds(b));
+
+        // 快退按钮
+        sortedEnabledSteps.forEach(stepKey => {
+            const sec = parseStepToSeconds(stepKey);
+            if (sec > 0) {
+                this.addTimeControlButton(rewindButtonsContainer, `-${stepKey}`, () => this.seekRelative(-sec));
+            }
+        });
+
+        // 快进按钮
+        sortedEnabledSteps.forEach(stepKey => {
+            const sec = parseStepToSeconds(stepKey);
+            if (sec > 0) {
+                this.addTimeControlButton(forwardButtonsContainer, `+${stepKey}`, () => this.seekRelative(sec));
+            }
+        });
 
         return seekControlRow;
     }
@@ -102,7 +120,7 @@ export class SeekController {
         
         const button = document.createElement('button');
         button.className = 'tm-time-control-button';
-        button.style.backgroundColor = `hsl(var(--shadcn-secondary) / ${opacity})`;
+        button.style.setProperty('--btn-opacity', opacity);
 
         const isRewind = text.includes('-');
         const isForward = text.includes('+');

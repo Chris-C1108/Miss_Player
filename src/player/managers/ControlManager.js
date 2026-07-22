@@ -1,5 +1,5 @@
 import { formatTime } from '../../utils/index.js';
-import { LOOP_INDICATOR } from '../../constants/icons.js';
+
 import { CommentPanel } from '../controls/CommentPanel.js';
 import { VolumeController } from '../controls/VolumeController.js';
 import { SeekController } from '../controls/SeekController.js';
@@ -38,9 +38,11 @@ export class ControlManager {
         this.loopStartMarker = null;
         this.loopEndMarker = null;
         this.loopRangeElement = null;
-        this.currentPositionDisplay = null;
-        this.durationDisplay = null;
-        this.loopToggleButton = null;
+        
+        // 标签栏元素 (暴露给 LoopManager)
+        this.tabScrollContainer = null;
+        this.tabAddBtn = null;
+        this.progressMarkersContainer = null;
         
         // 循环管理器引用
         this.loopManager = null;
@@ -202,6 +204,11 @@ export class ControlManager {
 
         this.progressBarElement.appendChild(this.progressIndicator);
         progressBarContainer.appendChild(this.progressBarElement);
+
+        this.progressMarkersContainer = document.createElement('div');
+        this.progressMarkersContainer.className = 'tm-progress-markers-container';
+        progressBarContainer.appendChild(this.progressMarkersContainer);
+
         progressBarContainer.appendChild(this.loopStartMarker);
         progressBarContainer.appendChild(this.loopEndMarker);
         progressBarContainer.appendChild(this.loopRangeElement);
@@ -240,65 +247,19 @@ export class ControlManager {
         const seekControlRow = this.seekController.createSeekControlRow();
         this.controlButtonsContainer.appendChild(seekControlRow);
 
-        // 4. 循环控制行
+        // 4. 标签页导航行 (Tab-Style Marker Bar)
         const loopControlRow = document.createElement('div');
         loopControlRow.className = 'tm-loop-control-row';
 
-        const timeDisplay = document.createElement('div');
-        timeDisplay.className = 'tm-time-display';
+        this.tabScrollContainer = document.createElement('div');
+        this.tabScrollContainer.className = 'tm-tab-scroll-container';
 
-        const loopControl = document.createElement('div');
-        loopControl.className = 'tm-loop-control';
+        this.tabAddBtn = document.createElement('div');
+        this.tabAddBtn.className = 'tm-tab-list-btn';
+        this.tabAddBtn.textContent = '☰';
 
-        this.currentPositionDisplay = document.createElement('span');
-        this.currentPositionDisplay.className = 'tm-loop-start-position';
-        this.currentPositionDisplay.textContent = '00:00:00';
-
-        this.setLoopStartButton = document.createElement('span');
-        this.setLoopStartButton.className = 'tm-set-loop-start-label';
-        this.setLoopStartButton.innerHTML = 'A';
-
-        this.durationDisplay = document.createElement('span');
-        this.durationDisplay.className = 'tm-loop-end-position';
-        this.durationDisplay.textContent = '00:00:00';
-
-        this.setLoopEndButton = document.createElement('span');
-        this.setLoopEndButton.className = 'tm-set-loop-end-label';
-        this.setLoopEndButton.innerHTML = 'B';
-
-        const startTimeContainer = document.createElement('div');
-        startTimeContainer.className = 'tm-start-time-container';
-        startTimeContainer.addEventListener('click', () => {
-            if (this.loopManager) this.loopManager.setLoopStart();
-        });
-
-        const endTimeContainer = document.createElement('div');
-        endTimeContainer.className = 'tm-end-time-container';
-        endTimeContainer.addEventListener('click', () => {
-            if (this.loopManager) this.loopManager.setLoopEnd();
-        });
-
-        startTimeContainer.appendChild(this.setLoopStartButton);
-        startTimeContainer.appendChild(this.currentPositionDisplay);
-        endTimeContainer.appendChild(this.setLoopEndButton);
-        endTimeContainer.appendChild(this.durationDisplay);
-
-        const loopButton = document.createElement('div');
-        loopButton.className = 'tm-loop-toggle-button';
-        loopButton.innerHTML = `
-            <span class="tm-loop-toggle-label">Loop</span>
-            ${LOOP_INDICATOR}
-        `;
-        loopButton.addEventListener('click', () => {
-            if (this.loopManager) this.loopManager.toggleLoop();
-        });
-        this.loopToggleButton = loopButton;
-        loopControl.appendChild(loopButton);
-
-        timeDisplay.appendChild(startTimeContainer);
-        timeDisplay.appendChild(endTimeContainer);
-        loopControlRow.appendChild(timeDisplay);
-        loopControlRow.appendChild(loopControl);
+        loopControlRow.appendChild(this.tabScrollContainer);
+        loopControlRow.appendChild(this.tabAddBtn);
         this.controlButtonsContainer.appendChild(loopControlRow);
 
         // 5. 播放控制行：播放/暂停、音量和倍速滑杆

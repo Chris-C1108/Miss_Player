@@ -85,21 +85,34 @@ export class JableLoginProvider extends BaseLoginProvider {
         
         // 1. 如果在 Jable 本地页面，直接通过 DOM 探测
         if (this.isSupportedSite()) {
-            return this.checkLoginByDOM();
+            const isLogged = this.checkLoginByDOM();
+            this.cacheLoginStatus(isLogged);
+            return isLogged;
         }
 
         // 2. 如果是跨域调用，请求首页并分析 HTML 关键字判断登录态
         try {
             const response = await this._request(`${activeDomain}/`);
-            if (!response.ok) return false;
+            if (!response.ok) {
+                return this.getCachedLoginStatus() ?? false;
+            }
 
             const html = await response.text();
-            return html.includes('/logout/') || 
+
+            // 如果遇到了 Cloudflare 验证拦截，保留之前的缓存登录状态，绝不误判覆盖为未登录
+            if (html.includes('cf-challenge') || html.includes('Cloudflare') || html.includes('Just a moment') || html.includes('Checking your browser')) {
+                console.warn('[JableLoginProvider] 跨域登录探测遇到 Cloudflare 防护，维持缓存状态');
+                return this.getCachedLoginStatus() ?? false;
+            }
+
+            const isLogged = html.includes('/logout/') || 
                    html.includes('user-avatar') || 
                    (!html.includes('/login/') && html.includes('member'));
+            this.cacheLoginStatus(isLogged);
+            return isLogged;
         } catch (e) {
             console.error('[JableLoginProvider] 跨域检查登录态异常:', e);
-            return false;
+            return this.getCachedLoginStatus() ?? false;
         }
     }
 
@@ -166,6 +179,7 @@ export class JableLoginProvider extends BaseLoginProvider {
             console.log('[JableLoginProvider] 登录响应结果:', result);
             
             if (result.status === 'success' || (result.html && !result.html.includes('error-field'))) {
+                this.cacheLoginStatus(true);
                 if (!silent) Toast('Jable.tv 登录成功', 2000, 'success');
                 return true;
             } else if (result.errors) {

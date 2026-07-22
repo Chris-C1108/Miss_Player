@@ -22,7 +22,6 @@ export class PlayerCore {
         // 配置和选项
         this.options = Object.assign({
             containerId: 'tm-video-container',
-            startLooped: false,
             startMuted: false,
         }, options);
         
@@ -105,7 +104,10 @@ export class PlayerCore {
             videoSrc: this.targetVideo.src,
             posterSrc: this.targetVideo.poster,
             wasMuted: this.targetVideo.muted,
-            controls: this.targetVideo.controls // 保存原始控制组件状态
+            controls: this.targetVideo.controls, // 保存原始控制组件状态
+            playsinline: this.targetVideo.getAttribute('playsinline'),
+            webkitPlaysinline: this.targetVideo.getAttribute('webkit-playsinline'),
+            x5Playsinline: this.targetVideo.getAttribute('x5-playsinline')
         };
     }
     
@@ -152,7 +154,7 @@ export class PlayerCore {
             this.targetVideo.pause();
         }
         
-        // 恢复原始的视频样式
+        // 恢复原始的视频样式和属性
         if (this.originalParent && this.targetVideo && this.targetVideo.parentNode) {
             if (this.targetVideo.parentNode !== this.originalParent) {
                 // 移动回原始位置
@@ -168,6 +170,20 @@ export class PlayerCore {
                 this.targetVideo.style.maxHeight = '';
                 this.targetVideo.style.margin = '';
                 this.targetVideo.style.position = '';
+
+                // 恢复 playsinline 属性
+                const restoreAttr = (name, val) => {
+                    if (val === null || val === undefined) {
+                        this.targetVideo.removeAttribute(name);
+                    } else {
+                        this.targetVideo.setAttribute(name, val);
+                    }
+                };
+                restoreAttr('playsinline', this.videoState.playsinline);
+                restoreAttr('webkit-playsinline', this.videoState.webkitPlaysinline);
+                restoreAttr('x5-playsinline', this.videoState.x5Playsinline);
+                this.targetVideo.playsInline = this.videoState.playsinline === 'true';
+                this.targetVideo.webkitPlaysInline = this.videoState.webkitPlaysinline === 'true';
             }
         }
         
@@ -181,13 +197,39 @@ export class PlayerCore {
             playerContainer.parentNode.removeChild(playerContainer);
         }
         
-        // 移除body上的控制状态类
-        document.body.classList.remove('controls-hidden');
+        // 移除 body 和 html 上的播放器激活与控制隐藏状态类
+        document.body.classList.remove('tm-player-active', 'controls-hidden');
+        document.documentElement.classList.remove('tm-player-active', 'controls-hidden');
+        
+        // 恢复隐藏滚动条样式元素（如存在）
+        const scrollbarStyle = document.getElementById('tm-hide-scrollbar-style');
+        if (scrollbarStyle && scrollbarStyle.parentNode) {
+            scrollbarStyle.parentNode.removeChild(scrollbarStyle);
+        }
         
         // 如果添加了全屏切换样式，移除它
         const fullscreenStyle = document.getElementById('tm-fullscreen-style');
-        if (fullscreenStyle) {
+        if (fullscreenStyle && fullscreenStyle.parentNode) {
             fullscreenStyle.parentNode.removeChild(fullscreenStyle);
+        }
+
+        // 确保恢复宿主页面的头部/导航栏元素显隐状态
+        try {
+            const hostHeaders = document.querySelectorAll('header, .site-header, .header, #site-header, navbar, .navbar, .top-nav, [class*="site-header"]');
+            hostHeaders.forEach(h => {
+                if (h) {
+                    h.style.display = '';
+                    h.style.transform = '';
+                    h.style.visibility = '';
+                    h.style.top = '';
+                    h.style.opacity = '';
+                    h.classList.remove('hidden', 'is-hidden', 'header-hidden', 'hide');
+                }
+            });
+            window.dispatchEvent(new Event('scroll'));
+            window.dispatchEvent(new Event('resize'));
+        } catch (e) {
+            console.error('[PlayerCore] 恢复宿主 Header 异常:', e);
         }
         
         // 重置状态
