@@ -9,3 +9,6 @@ export * from './dom.js';
 export * from './storage.js';
 export * from './ui-feedback.js';
 export * from './videoCode.js';
+export * from './http.js';
+export * from './modal.js';
+export * from './clipboard.js';

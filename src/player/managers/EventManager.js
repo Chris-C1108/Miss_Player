@@ -166,21 +166,25 @@ export class EventManager {
         }
         
         // 阻止穿透滚动：除视频画面区域和可滚动评论内容外，阻止默认的 touchmove/wheel 事件以防止穿透到原始网页
-        if (this.uiElements.playerContainer) {
-            this.uiElements.playerContainer.addEventListener('touchstart', this.handleTouchStartBound, { passive: true });
-            this.uiElements.playerContainer.addEventListener('touchmove', this.handleScrollPreventionBound, { passive: false });
-            this.uiElements.playerContainer.addEventListener('wheel', this.handleScrollPreventionBound, { passive: false });
-            this.uiElements.playerContainer.addEventListener('contextmenu', this.handleContextMenuBound);
-        }
-        if (this.uiElements.overlay) {
-            this.uiElements.overlay.addEventListener('touchstart', this.handleTouchStartBound, { passive: true });
-            this.uiElements.overlay.addEventListener('touchmove', this.handleScrollPreventionBound, { passive: false });
-            this.uiElements.overlay.addEventListener('wheel', this.handleScrollPreventionBound, { passive: false });
-            this.uiElements.overlay.addEventListener('contextmenu', this.handleContextMenuBound);
-        }
+        this._toggleScrollListeners(true);
         
         // 设置视频事件监听器
         this.initVideoEventListeners();
+    }
+
+    /**
+     * 切换穿透滚动与上下文菜单监听器
+     * @private
+     */
+    _toggleScrollListeners(add = true) {
+        const method = add ? 'addEventListener' : 'removeEventListener';
+        [this.uiElements.playerContainer, this.uiElements.overlay].forEach(el => {
+            if (!el) return;
+            el[method]('touchstart', this.handleTouchStartBound, { passive: true });
+            el[method]('touchmove', this.handleScrollPreventionBound, { passive: false });
+            el[method]('wheel', this.handleScrollPreventionBound, { passive: false });
+            el[method]('contextmenu', this.handleContextMenuBound);
+        });
     }
     
     /**
@@ -189,32 +193,12 @@ export class EventManager {
     initVideoEventListeners() {
         // 视频元数据加载完成监听
         this.handleMetadataLoadedBound = () => {
-            if (this.managers.progressManager) {
-                this.managers.progressManager.updateProgressBar();
-            }
-            
+            if (this.managers.progressManager) this.managers.progressManager.updateProgressBar();
             if (this.managers.loopManager) {
                 this.managers.loopManager.updateLoopTimeDisplay();
                 this.managers.loopManager.updateLoopMarkers();
             }
-            
-            if (this.managers.dragManager) {
-                this.managers.dragManager.updateHandlePosition();
-            }
-            
-            if (this.managers.uiManager) {
-                this.managers.uiManager.updateContainerMinHeight();
-            }
-            
-            // 更新SwipeManager以处理动态视频宽度
-            if (this.managers.swipeManager) {
-                this.managers.swipeManager.updateSize();
-            }
-
-            // 元数据加载后，根据真实视频比例设置评论区初始位置
-            if (this.managers.controlManager && this.managers.controlManager.commentPanel) {
-                this.managers.controlManager.commentPanel.updatePosition();
-            }
+            this._notifyLayoutChanged();
         };
         this.targetVideo.addEventListener('loadedmetadata', this.handleMetadataLoadedBound);
         
@@ -338,18 +322,22 @@ export class EventManager {
     /**
      * 处理容器大小变化 (由 ResizeObserver 触发)
      */
-    handleContainerResize() {
-        // 更新拖动手柄位置
-        if (this.managers.dragManager) {
-            this.managers.dragManager.updateHandlePosition();
-        }
-        
-        // 更新SwipeManager以处理动态视频宽度
-        if (this.managers.swipeManager) {
-            this.managers.swipeManager.updateSize();
-        }
+    /**
+     * 统一通知相关 Manager 布局和尺寸发生改变
+     * @private
+     */
+    _notifyLayoutChanged() {
+        if (this.managers.dragManager) this.managers.dragManager.updateHandlePosition();
+        if (this.managers.uiManager) this.managers.uiManager.updateContainerMinHeight();
+        if (this.managers.swipeManager) this.managers.swipeManager.updateSize();
+        if (this.managers.controlManager?.commentPanel) this.managers.controlManager.commentPanel.updatePosition();
+    }
 
-        // 用户调整视频画面大小时，不影响/不同步更新评论区 padding-top，仅保留初始位置
+    /**
+     * 处理容器大小调整事件
+     */
+    handleContainerResize() {
+        this._notifyLayoutChanged();
     }
     
     /**
@@ -395,18 +383,7 @@ export class EventManager {
         }
         
         // 移除穿透滚动阻止事件
-        if (this.uiElements.playerContainer) {
-            this.uiElements.playerContainer.removeEventListener('touchstart', this.handleTouchStartBound);
-            this.uiElements.playerContainer.removeEventListener('touchmove', this.handleScrollPreventionBound);
-            this.uiElements.playerContainer.removeEventListener('wheel', this.handleScrollPreventionBound);
-            this.uiElements.playerContainer.removeEventListener('contextmenu', this.handleContextMenuBound);
-        }
-        if (this.uiElements.overlay) {
-            this.uiElements.overlay.removeEventListener('touchstart', this.handleTouchStartBound);
-            this.uiElements.overlay.removeEventListener('touchmove', this.handleScrollPreventionBound);
-            this.uiElements.overlay.removeEventListener('wheel', this.handleScrollPreventionBound);
-            this.uiElements.overlay.removeEventListener('contextmenu', this.handleContextMenuBound);
-        }
+        this._toggleScrollListeners(false);
         if (this.handleWindowScrollDebugBound) {
             window.removeEventListener('scroll', this.handleWindowScrollDebugBound);
         }

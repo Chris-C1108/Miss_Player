@@ -17103,31 +17103,30 @@
           this.resizeObserver = new ResizeObserver(this.handleContainerResizeBound);
           this.resizeObserver.observe(this.uiElements.container);
         }
-        if (this.uiElements.playerContainer) {
-          this.uiElements.playerContainer.addEventListener("touchstart", this.handleTouchStartBound, {
-            "passive": true
-          });
-          this.uiElements.playerContainer.addEventListener("touchmove", this.handleScrollPreventionBound, {
-            "passive": false
-          });
-          this.uiElements.playerContainer.addEventListener("wheel", this.handleScrollPreventionBound, {
-            "passive": false
-          });
-          this.uiElements.playerContainer.addEventListener("contextmenu", this.handleContextMenuBound);
-        }
-        if (this.uiElements.overlay) {
-          this.uiElements.overlay.addEventListener("touchstart", this.handleTouchStartBound, {
-            "passive": true
-          });
-          this.uiElements.overlay.addEventListener("touchmove", this.handleScrollPreventionBound, {
-            "passive": false
-          });
-          this.uiElements.overlay.addEventListener("wheel", this.handleScrollPreventionBound, {
-            "passive": false
-          });
-          this.uiElements.overlay.addEventListener("contextmenu", this.handleContextMenuBound);
-        }
+        this._toggleScrollListeners(true);
         this.initVideoEventListeners();
+      }
+    }, {
+      "key": "_toggleScrollListeners",
+      "value": function _toggleScrollListeners() {
+        var r = this;
+        var o = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : true;
+        var a = o ? "addEventListener" : "removeEventListener";
+        [ this.uiElements.playerContainer, this.uiElements.overlay ].forEach((function(o) {
+          if (!o) {
+            return;
+          }
+          o[a]("touchstart", r.handleTouchStartBound, {
+            "passive": true
+          });
+          o[a]("touchmove", r.handleScrollPreventionBound, {
+            "passive": false
+          });
+          o[a]("wheel", r.handleScrollPreventionBound, {
+            "passive": false
+          });
+          o[a]("contextmenu", r.handleContextMenuBound);
+        }));
       }
     }, {
       "key": "initVideoEventListeners",
@@ -17141,18 +17140,7 @@
             r.managers.loopManager.updateLoopTimeDisplay();
             r.managers.loopManager.updateLoopMarkers();
           }
-          if (r.managers.dragManager) {
-            r.managers.dragManager.updateHandlePosition();
-          }
-          if (r.managers.uiManager) {
-            r.managers.uiManager.updateContainerMinHeight();
-          }
-          if (r.managers.swipeManager) {
-            r.managers.swipeManager.updateSize();
-          }
-          if (r.managers.controlManager && r.managers.controlManager.commentPanel) {
-            r.managers.controlManager.commentPanel.updatePosition();
-          }
+          r._notifyLayoutChanged();
         };
         this.targetVideo.addEventListener("loadedmetadata", this.handleMetadataLoadedBound);
         this.handleCanPlayBound = function() {
@@ -17234,14 +17222,26 @@
         }
       }
     }, {
-      "key": "handleContainerResize",
-      "value": function handleContainerResize() {
+      "key": "_notifyLayoutChanged",
+      "value": function _notifyLayoutChanged() {
+        var r;
         if (this.managers.dragManager) {
           this.managers.dragManager.updateHandlePosition();
+        }
+        if (this.managers.uiManager) {
+          this.managers.uiManager.updateContainerMinHeight();
         }
         if (this.managers.swipeManager) {
           this.managers.swipeManager.updateSize();
         }
+        if ((r = this.managers.controlManager) !== null && r !== void 0 && r.commentPanel) {
+          this.managers.controlManager.commentPanel.updatePosition();
+        }
+      }
+    }, {
+      "key": "handleContainerResize",
+      "value": function handleContainerResize() {
+        this._notifyLayoutChanged();
       }
     }, {
       "key": "cleanup",
@@ -17268,18 +17268,7 @@
           this.targetVideo.removeEventListener("play", this.handlePlayBound);
           this.targetVideo.removeEventListener("pause", this.handlePauseBound);
         }
-        if (this.uiElements.playerContainer) {
-          this.uiElements.playerContainer.removeEventListener("touchstart", this.handleTouchStartBound);
-          this.uiElements.playerContainer.removeEventListener("touchmove", this.handleScrollPreventionBound);
-          this.uiElements.playerContainer.removeEventListener("wheel", this.handleScrollPreventionBound);
-          this.uiElements.playerContainer.removeEventListener("contextmenu", this.handleContextMenuBound);
-        }
-        if (this.uiElements.overlay) {
-          this.uiElements.overlay.removeEventListener("touchstart", this.handleTouchStartBound);
-          this.uiElements.overlay.removeEventListener("touchmove", this.handleScrollPreventionBound);
-          this.uiElements.overlay.removeEventListener("wheel", this.handleScrollPreventionBound);
-          this.uiElements.overlay.removeEventListener("contextmenu", this.handleContextMenuBound);
-        }
+        this._toggleScrollListeners(false);
         if (this.handleWindowScrollDebugBound) {
           window.removeEventListener("scroll", this.handleWindowScrollDebugBound);
         }
