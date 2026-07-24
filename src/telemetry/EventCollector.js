@@ -124,6 +124,10 @@ function getSiteCategory() {
     return 'GENERIC';
 }
 
+const MP_CACHE_KEY = 'mp_telemetry_cache_v2';
+const ONE_HOUR_MS = 60 * 60 * 1000;
+const MIN_FLUSH_INTERVAL_MS = 15 * 60 * 1000;
+
 export class EventCollector {
     constructor() {
         this.clientId = getOrCreateClientId();
@@ -133,8 +137,10 @@ export class EventCollector {
             totalPlaySec: 0,
             milestones: []
         };
+        this.lastFlushTs = 0;
         this.flushTimer = null;
-        this.batchDelayMs = 15 * 60 * 1000; // 15分钟批量汇总刷新
+
+        this.loadCache();
 
         // 页面关闭/隐藏时同步刷新汇总包
         if (typeof window !== 'undefined') {
@@ -146,6 +152,55 @@ export class EventCollector {
                 }
             });
         }
+    }
+
+    loadCache() {
+        try {
+            let raw = null;
+            if (typeof GM_getValue === 'function') {
+                raw = GM_getValue(MP_CACHE_KEY, null);
+            }
+            if (!raw) {
+                raw = localStorage.getItem(MP_CACHE_KEY);
+            }
+            if (raw) {
+                const cache = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                if (cache) {
+                    this.sessionBuffer.eventCounts = cache.eventCounts || {};
+                    this.sessionBuffer.avcodes = new Set(cache.avcodes || []);
+                    this.sessionBuffer.totalPlaySec = cache.totalPlaySec || 0;
+                    this.sessionBuffer.milestones = cache.milestones || [];
+                    this.lastFlushTs = cache.lastFlushTs || 0;
+                }
+            }
+        } catch (_) {}
+    }
+
+    saveCache() {
+        try {
+            const data = JSON.stringify({
+                eventCounts: this.sessionBuffer.eventCounts,
+                avcodes: Array.from(this.sessionBuffer.avcodes),
+                totalPlaySec: this.sessionBuffer.totalPlaySec,
+                milestones: this.sessionBuffer.milestones,
+                lastFlushTs: this.lastFlushTs
+            });
+            if (typeof GM_setValue === 'function') {
+                GM_setValue(MP_CACHE_KEY, data);
+            }
+            localStorage.setItem(MP_CACHE_KEY, data);
+        } catch (_) {}
+    }
+
+    clearCache() {
+        this.sessionBuffer = {
+            eventCounts: {},
+            avcodes: new Set(),
+            totalPlaySec: 0,
+            milestones: []
+        };
+        this.lastFlushTs = Date.now();
+        this.saveCache();
     }
 
     /**
@@ -196,31 +251,18 @@ export class EventCollector {
             }
         }
 
-        // 重要关键事件或特定时机触发延时 Flush
-        if (eventType === 'player_close' || eventType === 'app_init') {
-            this.scheduleFlush(1000);
-        } else {
-            this.scheduleFlush(this.batchDelayMs);
-        }
+        // 保存到本地持久化缓存
+        this.saveCache();
+
+        // 检查 1 小时定期上报
+        this.checkPeriodicFlush();
     }
 
-    /**
-     * 安排防抖/定时刷新
-     */
-    scheduleFlush(delayMs) {
-        const targetDelay = delayMs || this.batchDelayMs;
-        if (this.flushTimer) {
-            if (targetDelay < 10000) {
-                clearTimeout(this.flushTimer);
-                this.flushTimer = null;
-            } else {
-                return;
-            }
+    checkPeriodicFlush() {
+        const now = Date.now();
+        if (now - this.lastFlushTs >= ONE_HOUR_MS) {
+            this.flush(false);
         }
-        this.flushTimer = setTimeout(() => {
-            this.flushTimer = null;
-            this.flush();
-        }, targetDelay);
     }
 
     /**
@@ -228,14 +270,17 @@ export class EventCollector {
      * @param {boolean} [isSync=false] 页面关闭时强制发送
      */
     async flush(isSync = false) {
-        if (this.flushTimer) {
-            clearTimeout(this.flushTimer);
-            this.flushTimer = null;
-        }
-
         const counts = this.sessionBuffer.eventCounts;
         const countKeys = Object.keys(counts);
         if (countKeys.length === 0 && this.sessionBuffer.totalPlaySec === 0) return;
+
+        const now = Date.now();
+        if (!isSync && now - this.lastFlushTs < ONE_HOUR_MS) {
+            return; // 未满1小时存本地，不触发网络上报
+        }
+        if (isSync && now - this.lastFlushTs < MIN_FLUSH_INTERVAL_MS && this.sessionBuffer.totalPlaySec < 30) {
+            return; // 强制离屏但未满15分钟且无有效播放，存本地
+        }
 
         // 导出当前缓冲区并重置
         const currentCounts = { ...counts };
@@ -295,11 +340,13 @@ export class EventCollector {
             if (res.status !== 200) {
                 await sendToUrl(WORKER_URL_FALLBACK);
             }
+            this.clearCache();
         } catch (e) {
             try {
                 await sendToUrl(WORKER_URL_FALLBACK);
+                this.clearCache();
             } catch (_) {
-                // 上报失败时避免阻塞主进程
+                // 上报失败时保留本地缓存，下次合并重试
             }
         }
     }

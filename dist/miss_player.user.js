@@ -3092,7 +3092,7 @@
             u = b.sent;
             p = parseCommentsHtml(u.html, u.domain);
             k.log("[CommentScraper] 成功采集到 Jable 评论，共 ".concat(p.comments.length, " 条 (总数: ").concat(p.totalCount, ")"));
-            se.track("comment_scrape_result", {
+            ue.track("comment_scrape_result", {
               "site": "jable",
               "success": true,
               "count": p.comments.length,
@@ -3105,7 +3105,7 @@
            case 14:
             b.prev = 14;
             b.t0 = b["catch"](4);
-            se.track("comment_scrape_result", {
+            ue.track("comment_scrape_result", {
               "site": "jable",
               "success": false,
               "duration_ms": Date.now() - l
@@ -5695,7 +5695,10 @@
     }
     return "GENERIC";
   }
-  var ie = function() {
+  var ie = "mp_telemetry_cache_v2";
+  var se = 60 * 60 * 1e3;
+  var le = 15 * 60 * 1e3;
+  var ce = function() {
     function EventCollector() {
       var r = this;
       EventCollector_classCallCheck(this, EventCollector);
@@ -5706,8 +5709,9 @@
         "totalPlaySec": 0,
         "milestones": []
       };
+      this.lastFlushTs = 0;
       this.flushTimer = null;
-      this.batchDelayMs = 15 * 60 * 1e3;
+      this.loadCache();
       if (typeof window !== "undefined") {
         window.addEventListener("beforeunload", (function() {
           return r.flush(true);
@@ -5723,6 +5727,58 @@
       }
     }
     return EventCollector_createClass(EventCollector, [ {
+      "key": "loadCache",
+      "value": function loadCache() {
+        try {
+          var r = null;
+          if (typeof GM_getValue === "function") {
+            r = GM_getValue(ie, null);
+          }
+          if (!r) {
+            r = localStorage.getItem(ie);
+          }
+          if (r) {
+            var o = typeof r === "string" ? JSON.parse(r) : r;
+            if (o) {
+              this.sessionBuffer.eventCounts = o.eventCounts || {};
+              this.sessionBuffer.avcodes = new Set(o.avcodes || []);
+              this.sessionBuffer.totalPlaySec = o.totalPlaySec || 0;
+              this.sessionBuffer.milestones = o.milestones || [];
+              this.lastFlushTs = o.lastFlushTs || 0;
+            }
+          }
+        } catch (r) {}
+      }
+    }, {
+      "key": "saveCache",
+      "value": function saveCache() {
+        try {
+          var r = JSON.stringify({
+            "eventCounts": this.sessionBuffer.eventCounts,
+            "avcodes": Array.from(this.sessionBuffer.avcodes),
+            "totalPlaySec": this.sessionBuffer.totalPlaySec,
+            "milestones": this.sessionBuffer.milestones,
+            "lastFlushTs": this.lastFlushTs
+          });
+          if (typeof GM_setValue === "function") {
+            GM_setValue(ie, r);
+          }
+          localStorage.setItem(ie, r);
+        } catch (r) {}
+      }
+    }, {
+      "key": "clearCache",
+      "value": function clearCache() {
+        this.sessionBuffer = {
+          "eventCounts": {},
+          "avcodes": new Set,
+          "totalPlaySec": 0,
+          "milestones": []
+        };
+        this.lastFlushTs = Date.now();
+        this.saveCache();
+      }
+    }, {
       "key": "getDeviceType",
       "value": function getDeviceType() {
         var r = isMobile() ? "Mobile" : "PC";
@@ -5758,90 +5814,88 @@
             });
           }
         }
-        if (r === "player_close" || r === "app_init") {
-          this.scheduleFlush(1e3);
-        } else {
-          this.scheduleFlush(this.batchDelayMs);
-        }
+        this.saveCache();
+        this.checkPeriodicFlush();
       }
     }, {
-      "key": "scheduleFlush",
-      "value": function scheduleFlush(r) {
-        var o = this;
-        var a = r || this.batchDelayMs;
-        if (this.flushTimer) {
-          if (a < 1e4) {
-            clearTimeout(this.flushTimer);
-            this.flushTimer = null;
-          } else {
-            return;
-          }
+      "key": "checkPeriodicFlush",
+      "value": function checkPeriodicFlush() {
+        var r = Date.now();
+        if (r - this.lastFlushTs >= se) {
+          this.flush(false);
         }
-        this.flushTimer = setTimeout((function() {
-          o.flushTimer = null;
-          o.flush();
-        }), a);
       }
     }, {
       "key": "flush",
       "value": function() {
         var r = EventCollector_asyncToGenerator(EventCollector_regeneratorRuntime().mark((function _callee2() {
-          var r, o, a, l, u, p, v, y, b, C, _, k, E, S, P, D, L, M = arguments;
-          return EventCollector_regeneratorRuntime().wrap((function _callee2$(A) {
+          var r, o, a, l, u, p, v, y, b, C, _, k, E, S, P, D, L, M, A = arguments;
+          return EventCollector_regeneratorRuntime().wrap((function _callee2$(T) {
             while (1) {
-              switch (A.prev = A.next) {
+              switch (T.prev = T.next) {
                case 0:
-                r = M.length > 0 && M[0] !== void 0 ? M[0] : false;
-                if (this.flushTimer) {
-                  clearTimeout(this.flushTimer);
-                  this.flushTimer = null;
-                }
+                r = A.length > 0 && A[0] !== void 0 ? A[0] : false;
                 o = this.sessionBuffer.eventCounts;
                 a = Object.keys(o);
                 if (!(a.length === 0 && this.sessionBuffer.totalPlaySec === 0)) {
-                  A.next = 6;
+                  T.next = 5;
                   break;
                 }
-                return A.abrupt("return");
+                return T.abrupt("return");
 
-               case 6:
-                l = EventCollector_objectSpread({}, o);
-                u = this.sessionBuffer.totalPlaySec;
-                p = Array.from(this.sessionBuffer.avcodes);
-                v = EventCollector_toConsumableArray(this.sessionBuffer.milestones);
+               case 5:
+                l = Date.now();
+                if (!(!r && l - this.lastFlushTs < se)) {
+                  T.next = 8;
+                  break;
+                }
+                return T.abrupt("return");
+
+               case 8:
+                if (!(r && l - this.lastFlushTs < le && this.sessionBuffer.totalPlaySec < 30)) {
+                  T.next = 10;
+                  break;
+                }
+                return T.abrupt("return");
+
+               case 10:
+                u = EventCollector_objectSpread({}, o);
+                p = this.sessionBuffer.totalPlaySec;
+                v = Array.from(this.sessionBuffer.avcodes);
+                y = EventCollector_toConsumableArray(this.sessionBuffer.milestones);
                 this.sessionBuffer.eventCounts = {};
                 this.sessionBuffer.totalPlaySec = 0;
                 this.sessionBuffer.milestones = [];
-                y = Date.now();
-                b = new Date(y);
-                C = b.toISOString().slice(0, 10);
-                _ = b.getHours();
-                k = "mp_".concat(this.clientId, "_").concat(C, "_").concat(_);
-                E = {
+                b = Date.now();
+                C = new Date(b);
+                _ = C.toISOString().slice(0, 10);
+                k = C.getHours();
+                E = "mp_".concat(this.clientId, "_").concat(_, "_").concat(k);
+                S = {
                   "is_session_summary": true,
                   "client_id": this.clientId,
-                  "session_id": k,
-                  "date": C,
-                  "ts": y,
-                  "hour_of_day": _,
+                  "session_id": E,
+                  "date": _,
+                  "ts": b,
+                  "hour_of_day": k,
                   "host": window.location.hostname || "",
                   "site_category": getSiteCategory(),
                   "script_version": getScriptVersion(),
                   "device_type": this.getDeviceType(),
-                  "total_play_sec": u,
-                  "event_counts": l,
-                  "avcodes": p,
+                  "total_play_sec": p,
+                  "event_counts": u,
+                  "avcodes": v,
                   "details_json": {
-                    "milestones": v
+                    "milestones": y
                   }
                 };
-                S = JSON.stringify(E);
-                P = {
+                P = JSON.stringify(S);
+                D = {
                   "Content-Type": "application/json",
-                  "X-MP-Token": genToken(y),
-                  "X-MP-Ts": String(y)
+                  "X-MP-Token": genToken(b),
+                  "X-MP-Ts": String(b)
                 };
-                D = function() {
+                L = function() {
                   var o = EventCollector_asyncToGenerator(EventCollector_regeneratorRuntime().mark((function _callee(o) {
                     var a;
                     return EventCollector_regeneratorRuntime().wrap((function _callee$(l) {
@@ -5852,8 +5906,8 @@
                           l.next = 3;
                           return fetchWithTransport(a, {
                             "method": "POST",
-                            "headers": P,
-                            "body": S,
+                            "headers": D,
+                            "body": P,
                             "timeout": r ? 3e3 : 8e3
                           });
 
@@ -5871,44 +5925,46 @@
                     return o.apply(this, arguments);
                   };
                 }();
-                A.prev = 22;
-                A.next = 25;
-                return D(ne);
-
-               case 25:
-                L = A.sent;
-                if (!(L.status !== 200)) {
-                  A.next = 29;
-                  break;
-                }
-                A.next = 29;
-                return D(re);
+                T.prev = 26;
+                T.next = 29;
+                return L(ne);
 
                case 29:
-                A.next = 40;
-                break;
+                M = T.sent;
+                if (!(M.status !== 200)) {
+                  T.next = 33;
+                  break;
+                }
+                T.next = 33;
+                return L(re);
 
-               case 31:
-                A.prev = 31;
-                A.t0 = A["catch"](22);
-                A.prev = 33;
-                A.next = 36;
-                return D(re);
+               case 33:
+                this.clearCache();
+                T.next = 46;
+                break;
 
                case 36:
-                A.next = 40;
+                T.prev = 36;
+                T.t0 = T["catch"](26);
+                T.prev = 38;
+                T.next = 41;
+                return L(re);
+
+               case 41:
+                this.clearCache();
+                T.next = 46;
                 break;
 
-               case 38:
-                A.prev = 38;
-                A.t1 = A["catch"](33);
+               case 44:
+                T.prev = 44;
+                T.t1 = T["catch"](38);
 
-               case 40:
+               case 46:
                case "end":
-                return A.stop();
+                return T.stop();
               }
             }
-          }), _callee2, this, [ [ 22, 31 ], [ 33, 38 ] ]);
+          }), _callee2, this, [ [ 26, 36 ], [ 38, 44 ] ]);
         })));
         function flush() {
           return r.apply(this, arguments);
@@ -5948,7 +6004,7 @@
       }
     } ]);
   }();
-  var se = new ie;
+  var ue = new ce;
   function clipboard_typeof(r) {
     "@babel/helpers - typeof";
     return clipboard_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -6305,7 +6361,7 @@
         while (1) {
           switch (l.prev = l.next) {
            case 0:
-            se.track("share_copy", {
+            ue.track("share_copy", {
               "text_len": r ? r.length : 0,
               "is_url": r ? r.includes("http") || r.includes("#") : false,
               "has_timestamp": r ? r.includes("t=") || r.includes("tab=") : false
@@ -6411,7 +6467,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var le = function() {
+  var de = function() {
     function PlayerCore() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       PlayerCore_classCallCheck(this, PlayerCore);
@@ -6576,25 +6632,25 @@
       }
     } ]);
   }();
-  var ce = '\n    <svg width="48" height="48" viewBox="0 0 68 48" fill="none">\n        <path class="tm-play-button-bg" d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="rgb(254, 98, 142)"></path>\n        <path d="M 45,24 27,14 27,34" fill="#fff"></path>\n    </svg>\n';
-  var ue = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M18 12L7 5V19L18 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var de = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M10 4H6V20H10V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18 4H14V20H18V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var he = '\n    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M14,6v20c0,1.1-0.9,2-2,2H8c-1.1,0-2-0.9-2-2V6c0-1.1,0.9-2,2-2h4C13.1,4,14,4.9,14,6z M24,4h-4\n        c-1.1,0-2,0.9-2,2v20c0,1.1,0.9,2,2,2h4c1.1,0,2-0.9,2-2V6C26,4.9,25.1,4,24,4z" fill="white"/>\n    </svg>\n';
-  var pe = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var me = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var fe = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var ve = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>\n    </svg>\n';
-  var ge = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n    </svg>\n';
-  var ye = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var be = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="18" y1="6" x2="6" y2="18"></line>\n        <line x1="6" y1="6" x2="18" y2="18"></line>\n    </svg>\n';
-  var Ce = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="22" y1="2" x2="11" y2="13"></line>\n        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>\n    </svg>\n';
-  var xe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M19.4 15C19.1277 15.6171 19.2583 16.3378 19.73 16.82L19.79 16.88C20.1837 17.2737 20.4009 17.7994 20.4009 18.345C20.4009 18.8906 20.1837 19.4163 19.79 19.81C19.4163 20.2037 18.8906 20.4209 18.345 20.4209C17.7994 20.4209 17.2737 20.2037 16.91 19.81L16.85 19.75C16.3678 19.2783 15.6471 19.1477 15.03 19.42C14.4301 19.6801 14.0386 20.2502 14.03 20.89V21C14.03 21.5304 13.8193 22.0391 13.4442 22.4142C13.0691 22.7893 12.5604 23 12.03 23C11.4996 23 10.9909 22.7893 10.6158 22.4142C10.2407 22.0391 10.03 21.5304 10.03 21V20.91C10.0112 20.2556 9.5979 19.6818 8.98 19.43C8.36289 19.1577 7.64221 19.2883 7.16 19.76L7.1 19.82C6.73629 20.2137 6.21056 20.4309 5.665 20.4309C5.11944 20.4309 4.59371 20.2137 4.23 19.82C3.83628 19.4463 3.61911 18.9206 3.61911 18.375C3.61911 17.8294 3.83628 17.3037 4.23 16.93L4.29 16.87C4.76167 16.3878 4.89231 15.6671 4.62 15.05C4.35995 14.4501 3.78985 14.0586 3.15 14.05H3C2.46957 14.05 1.96086 13.8393 1.58579 13.4642C1.21071 13.0891 1 12.5804 1 12.05C1 11.5196 1.21071 11.0109 1.58579 10.6358C1.96086 10.2607 2.46957 10.05 3 10.05H3.09C3.74435 10.0312 4.31814 9.61788 4.57 9C4.84231 8.38289 4.71167 7.66221 4.24 7.18L4.18 7.12C3.78628 6.75629 3.56911 6.23056 3.56911 5.685C3.56911 5.13944 3.78628 4.61371 4.18 4.25C4.55371 3.85628 5.07944 3.63911 5.625 3.63911C6.17056 3.63911 6.69629 3.85628 7.07 4.25L7.13 4.31C7.61221 4.78167 8.33289 4.91231 8.95 4.64H9C9.59994 4.37995 9.99144 3.80985 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0086 3.72985 14.4001 4.29995 15 4.56C15.6171 4.83231 16.3378 4.70167 16.82 4.23L16.88 4.17C17.2437 3.77628 17.7694 3.55911 18.325 3.55911C18.8806 3.55911 19.4063 3.77628 19.77 4.17C20.1637 4.54371 20.3809 5.06944 20.3809 5.615C20.3809 6.16056 20.1637 6.68629 19.77 7.06L19.71 7.12C19.2383 7.60221 19.1077 8.32289 19.38 8.94L19.4 9C19.66 9.59994 20.2301 9.99144 20.87 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.2702 14.0086 19.7001 14.4001 19.44 15H19.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var we = '\n    <svg width="12" height="12" style="vertical-align: middle;">\n        <circle class="tm-loop-indicator-circle" cx="6" cy="6" r="5" fill="hsl(var(--shadcn-muted-foreground) / 0.5)"></circle>\n    </svg>\n';
-  var _e = '\n    <svg viewBox="2 5 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5ZM6 10C6.55228 10 7 9.55228 7 9C7 8.44772 6.55228 8 6 8C5.44772 8 5 8.44772 5 9C5 9.55228 5.44772 10 6 10ZM6 13C6.55228 13 7 12.5523 7 12C7 11.4477 6.55228 11 6 11C5.44772 11 5 11.4477 5 12C5 12.5523 5.44772 13 6 13ZM9 13C9.55228 13 10 12.5523 10 12C10 11.4477 9.55228 11 9 11C8.44772 11 8 11.4477 8 12C8 12.5523 8.44772 13 9 13ZM9 10C9.55228 10 10 9.55228 10 9C10 8.44772 9.55228 8 9 8C8.44772 8 8 8.44772 8 9C8 9.55228 8.44772 10 9 10ZM12 10C12.5523 10 13 9.55228 13 9C13 8.44772 12.5523 8 12 8C11.4477 8 11 8.44772 11 9C11 9.55228 11.4477 10 12 10ZM12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13ZM15 10C15.5523 10 16 9.55228 16 9C16 8.44772 15.5523 8 15 8C14.4477 8 14 8.44772 14 9C14 9.55228 14.4477 10 15 10ZM15 13C15.5523 13 16 12.5523 16 12C16 11.4477 15.5523 11 15 11C14.4477 11 14 11.4477 14 12C14 12.5523 14.4477 13 15 13ZM18 10C18.5523 10 19 9.55228 19 9C19 8.44772 18.5523 8 18 8C17.4477 8 17 8.44772 17 9C17 9.55228 17.4477 10 18 10ZM18 13C18.5523 13 19 12.5523 19 12C19 11.4477 18.5523 11 18 11C17.4477 11 17 11.4477 17 12C17 12.5523 17.4477 13 18 13ZM17.75 16C17.75 16.4142 17.4142 16.75 17 16.75H7C6.58579 16.75 6.25 16.4142 6.25 16C6.25 15.5858 6.58579 15.25 7 15.25H17C17.4142 15.25 17.75 15.5858 17.75 16Z" fill="currentColor"/>\n    </svg>\n';
-  var ke = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="7.5" y1="3" x2="7.5" y2="21"/>\n        <path d="M15.5 9l-3 3 3 3"/>\n    </svg>\n';
-  var Ee = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="16.5" y1="3" x2="16.5" y2="21"/>\n        <path d="M8.5 9l3 3-3 3"/>\n    </svg>\n';
-  var Se = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>\n    </svg>\n';
-  var Pe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" opacity="0.4"/>\n        <line x1="3" y1="3" x2="21" y2="21"/>\n    </svg>\n';
+  var he = '\n    <svg width="48" height="48" viewBox="0 0 68 48" fill="none">\n        <path class="tm-play-button-bg" d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="rgb(254, 98, 142)"></path>\n        <path d="M 45,24 27,14 27,34" fill="#fff"></path>\n    </svg>\n';
+  var pe = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M18 12L7 5V19L18 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var me = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M10 4H6V20H10V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18 4H14V20H18V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var fe = '\n    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M14,6v20c0,1.1-0.9,2-2,2H8c-1.1,0-2-0.9-2-2V6c0-1.1,0.9-2,2-2h4C13.1,4,14,4.9,14,6z M24,4h-4\n        c-1.1,0-2,0.9-2,2v20c0,1.1,0.9,2,2,2h4c1.1,0,2-0.9,2-2V6C26,4.9,25.1,4,24,4z" fill="white"/>\n    </svg>\n';
+  var ve = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var ge = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var ye = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var be = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>\n    </svg>\n';
+  var Ce = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n    </svg>\n';
+  var xe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var we = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="18" y1="6" x2="6" y2="18"></line>\n        <line x1="6" y1="6" x2="18" y2="18"></line>\n    </svg>\n';
+  var _e = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="22" y1="2" x2="11" y2="13"></line>\n        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>\n    </svg>\n';
+  var ke = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M19.4 15C19.1277 15.6171 19.2583 16.3378 19.73 16.82L19.79 16.88C20.1837 17.2737 20.4009 17.7994 20.4009 18.345C20.4009 18.8906 20.1837 19.4163 19.79 19.81C19.4163 20.2037 18.8906 20.4209 18.345 20.4209C17.7994 20.4209 17.2737 20.2037 16.91 19.81L16.85 19.75C16.3678 19.2783 15.6471 19.1477 15.03 19.42C14.4301 19.6801 14.0386 20.2502 14.03 20.89V21C14.03 21.5304 13.8193 22.0391 13.4442 22.4142C13.0691 22.7893 12.5604 23 12.03 23C11.4996 23 10.9909 22.7893 10.6158 22.4142C10.2407 22.0391 10.03 21.5304 10.03 21V20.91C10.0112 20.2556 9.5979 19.6818 8.98 19.43C8.36289 19.1577 7.64221 19.2883 7.16 19.76L7.1 19.82C6.73629 20.2137 6.21056 20.4309 5.665 20.4309C5.11944 20.4309 4.59371 20.2137 4.23 19.82C3.83628 19.4463 3.61911 18.9206 3.61911 18.375C3.61911 17.8294 3.83628 17.3037 4.23 16.93L4.29 16.87C4.76167 16.3878 4.89231 15.6671 4.62 15.05C4.35995 14.4501 3.78985 14.0586 3.15 14.05H3C2.46957 14.05 1.96086 13.8393 1.58579 13.4642C1.21071 13.0891 1 12.5804 1 12.05C1 11.5196 1.21071 11.0109 1.58579 10.6358C1.96086 10.2607 2.46957 10.05 3 10.05H3.09C3.74435 10.0312 4.31814 9.61788 4.57 9C4.84231 8.38289 4.71167 7.66221 4.24 7.18L4.18 7.12C3.78628 6.75629 3.56911 6.23056 3.56911 5.685C3.56911 5.13944 3.78628 4.61371 4.18 4.25C4.55371 3.85628 5.07944 3.63911 5.625 3.63911C6.17056 3.63911 6.69629 3.85628 7.07 4.25L7.13 4.31C7.61221 4.78167 8.33289 4.91231 8.95 4.64H9C9.59994 4.37995 9.99144 3.80985 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0086 3.72985 14.4001 4.29995 15 4.56C15.6171 4.83231 16.3378 4.70167 16.82 4.23L16.88 4.17C17.2437 3.77628 17.7694 3.55911 18.325 3.55911C18.8806 3.55911 19.4063 3.77628 19.77 4.17C20.1637 4.54371 20.3809 5.06944 20.3809 5.615C20.3809 6.16056 20.1637 6.68629 19.77 7.06L19.71 7.12C19.2383 7.60221 19.1077 8.32289 19.38 8.94L19.4 9C19.66 9.59994 20.2301 9.99144 20.87 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.2702 14.0086 19.7001 14.4001 19.44 15H19.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var Ee = '\n    <svg width="12" height="12" style="vertical-align: middle;">\n        <circle class="tm-loop-indicator-circle" cx="6" cy="6" r="5" fill="hsl(var(--shadcn-muted-foreground) / 0.5)"></circle>\n    </svg>\n';
+  var Se = '\n    <svg viewBox="2 5 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5ZM6 10C6.55228 10 7 9.55228 7 9C7 8.44772 6.55228 8 6 8C5.44772 8 5 8.44772 5 9C5 9.55228 5.44772 10 6 10ZM6 13C6.55228 13 7 12.5523 7 12C7 11.4477 6.55228 11 6 11C5.44772 11 5 11.4477 5 12C5 12.5523 5.44772 13 6 13ZM9 13C9.55228 13 10 12.5523 10 12C10 11.4477 9.55228 11 9 11C8.44772 11 8 11.4477 8 12C8 12.5523 8.44772 13 9 13ZM9 10C9.55228 10 10 9.55228 10 9C10 8.44772 9.55228 8 9 8C8.44772 8 8 8.44772 8 9C8 9.55228 8.44772 10 9 10ZM12 10C12.5523 10 13 9.55228 13 9C13 8.44772 12.5523 8 12 8C11.4477 8 11 8.44772 11 9C11 9.55228 11.4477 10 12 10ZM12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13ZM15 10C15.5523 10 16 9.55228 16 9C16 8.44772 15.5523 8 15 8C14.4477 8 14 8.44772 14 9C14 9.55228 14.4477 10 15 10ZM15 13C15.5523 13 16 12.5523 16 12C16 11.4477 15.5523 11 15 11C14.4477 11 14 11.4477 14 12C14 12.5523 14.4477 13 15 13ZM18 10C18.5523 10 19 9.55228 19 9C19 8.44772 18.5523 8 18 8C17.4477 8 17 8.44772 17 9C17 9.55228 17.4477 10 18 10ZM18 13C18.5523 13 19 12.5523 19 12C19 11.4477 18.5523 11 18 11C17.4477 11 17 11.4477 17 12C17 12.5523 17.4477 13 18 13ZM17.75 16C17.75 16.4142 17.4142 16.75 17 16.75H7C6.58579 16.75 6.25 16.4142 6.25 16C6.25 15.5858 6.58579 15.25 7 15.25H17C17.4142 15.25 17.75 15.5858 17.75 16Z" fill="currentColor"/>\n    </svg>\n';
+  var Pe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="7.5" y1="3" x2="7.5" y2="21"/>\n        <path d="M15.5 9l-3 3 3 3"/>\n    </svg>\n';
+  var De = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="16.5" y1="3" x2="16.5" y2="21"/>\n        <path d="M8.5 9l3 3-3 3"/>\n    </svg>\n';
+  var Le = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>\n    </svg>\n';
+  var Me = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" opacity="0.4"/>\n        <line x1="3" y1="3" x2="21" y2="21"/>\n    </svg>\n';
   function UIManager_typeof(r) {
     "@babel/helpers - typeof";
     return UIManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -6639,7 +6695,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var De = function() {
+  var Fe = function() {
     function UIManager(r) {
       UIManager_classCallCheck(this, UIManager);
       this.playerCore = r;
@@ -7085,7 +7141,7 @@
         if (!this.sidebarPosBtn) {
           return;
         }
-        this.sidebarPosBtn.innerHTML = this.sidebarPosition === "right" ? ke : Ee;
+        this.sidebarPosBtn.innerHTML = this.sidebarPosition === "right" ? Pe : De;
       }
     }, {
       "key": "updateSidebarToggleButtonIcon",
@@ -7093,7 +7149,7 @@
         if (!this.sidebarToggleBtn) {
           return;
         }
-        this.sidebarToggleBtn.innerHTML = this.isSidebarHidden ? Se : Pe;
+        this.sidebarToggleBtn.innerHTML = this.isSidebarHidden ? Le : Me;
       }
     }, {
       "key": "toggleSidebarPosition",
@@ -7716,7 +7772,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Le = function() {
+  var Ae = function() {
     function I18n() {
       i18n_classCallCheck(this, I18n);
     }
@@ -7735,7 +7791,7 @@
       }
     } ]);
   }();
-  i18n_defineProperty(Le, "strings", {
+  i18n_defineProperty(Ae, "strings", {
     "en": {
       "scriptName": "Miss Player | Cinema Mode (One-handed Player)",
       "scriptDescription": "MissAV ad-free|One-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|Custom player supporting jable po*nhub etc",
@@ -7987,7 +8043,7 @@
   });
   function __(r) {
     var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : "";
-    return Le.translate(r, o);
+    return Ae.translate(r, o);
   }
   function CrossDomainBridge_typeof(r) {
     "@babel/helpers - typeof";
@@ -8371,7 +8427,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Me = function() {
+  var Te = function() {
     function CrossDomainBridge() {
       CrossDomainBridge_classCallCheck(this, CrossDomainBridge);
     }
@@ -8737,41 +8793,41 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Fe = "MissPlayerSalt_2026";
-  var Ae = "_mp_obf_:";
+  var je = "MissPlayerSalt_2026";
+  var Be = "_mp_obf_:";
   function xorObfuscate(r) {
     if (!r) {
       return "";
     }
     var o = "";
     for (var a = 0; a < r.length; a++) {
-      o += String.fromCharCode(r.charCodeAt(a) ^ Fe.charCodeAt(a % Fe.length));
+      o += String.fromCharCode(r.charCodeAt(a) ^ je.charCodeAt(a % je.length));
     }
     try {
-      return Ae + btoa(encodeURIComponent(o));
+      return Be + btoa(encodeURIComponent(o));
     } catch (r) {
-      return Ae + o;
+      return Be + o;
     }
   }
   function xorDeobfuscate(r) {
     if (!r) {
       return "";
     }
-    if (!r.startsWith(Ae)) {
+    if (!r.startsWith(Be)) {
       return r;
     }
-    var o = r.substring(Ae.length);
+    var o = r.substring(Be.length);
     var a = o;
     try {
       a = decodeURIComponent(atob(o));
     } catch (r) {}
     var l = "";
     for (var u = 0; u < a.length; u++) {
-      l += String.fromCharCode(a.charCodeAt(u) ^ Fe.charCodeAt(u % Fe.length));
+      l += String.fromCharCode(a.charCodeAt(u) ^ je.charCodeAt(u % je.length));
     }
     return l;
   }
-  var Te = function() {
+  var Ie = function() {
     function CredentialManager() {
       CredentialManager_classCallCheck(this, CredentialManager);
     }
@@ -8810,7 +8866,7 @@
         var _ = "";
         if (v) {
           _ = xorDeobfuscate(v);
-          if (!v.startsWith(Ae) && p) {
+          if (!v.startsWith(Be) && p) {
             this.save(r, p, _, y);
           }
         }
@@ -9249,7 +9305,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var je = function() {
+  var Ve = function() {
     function BaseLoginProvider() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       BaseLoginProvider_classCallCheck(this, BaseLoginProvider);
@@ -9449,7 +9505,7 @@
           return o;
         }
         try {
-          var a = Te.get(this.siteKey);
+          var a = Ie.get(this.siteKey);
           if (a && a.email && a.password && a.autoLogin) {
             return true;
           }
@@ -9640,13 +9696,13 @@
                 } else {
                   l.appendChild(u);
                 }
-                v = Te.get(this.siteKey);
+                v = Ie.get(this.siteKey);
                 y = document.getElementById("mp_auto_login");
                 if (y) {
                   y.checked = v.autoLogin;
                   y.addEventListener("change", (function() {
                     var a = y.checked;
-                    Te.save(o.siteKey, v.email, v.password, a);
+                    Ie.save(o.siteKey, v.email, v.password, a);
                     if (r) {
                       r({
                         "autoLogin": a
@@ -9663,7 +9719,7 @@
                       var b = u.value;
                       var C = p.value;
                       if (b && C) {
-                        Te.save(o.siteKey, b, C, true);
+                        Ie.save(o.siteKey, b, C, true);
                         if (r) {
                           r({
                             "email": b,
@@ -9707,7 +9763,7 @@
             while (1) {
               switch (l.prev = l.next) {
                case 0:
-                r = Te.get(this.siteKey);
+                r = Ie.get(this.siteKey);
                 if (!(!r.email || !r.password || !r.autoLogin)) {
                   l.next = 3;
                   break;
@@ -10254,7 +10310,7 @@
     }
     return String(r);
   }
-  var Be = function(r) {
+  var Oe = function(r) {
     function JableLoginProvider() {
       var r;
       JableLoginProvider_classCallCheck(this, JableLoginProvider);
@@ -10281,7 +10337,7 @@
         if (!this.isSupportedSite()) {
           return;
         }
-        Me.startBroker(this.siteKey, {
+        Te.startBroker(this.siteKey, {
           "PUBLISH_COMMENT": function() {
             var o = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee(o) {
               var a, l, u, p, v, y, b;
@@ -10546,7 +10602,7 @@
                   y = b.innerHTML;
                 }
                 C.next = 5;
-                return Me.sendCommand(this.siteKey, "PUBLISH_COMMENT", {
+                return Te.sendCommand(this.siteKey, "PUBLISH_COMMENT", {
                   "commentText": r,
                   "videoCode": a,
                   "videoId": l,
@@ -10601,7 +10657,7 @@
                   break;
                 }
                 V.next = 11;
-                return Me.checkShadowActive(this.siteKey);
+                return Te.checkShadowActive(this.siteKey);
 
                case 11:
                 b = V.sent;
@@ -10760,7 +10816,7 @@
         return publishComment;
       }()
     } ]);
-  }(je);
+  }(Ve);
   function MissavLoginProvider_typeof(r) {
     "@babel/helpers - typeof";
     return MissavLoginProvider_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -11201,7 +11257,7 @@
     }
     return null;
   }
-  var Ie = function(r) {
+  var Re = function(r) {
     function MissavLoginProvider() {
       MissavLoginProvider_classCallCheck(this, MissavLoginProvider);
       return MissavLoginProvider_callSuper(this, MissavLoginProvider, [ {
@@ -11345,7 +11401,7 @@
         }
       }
     } ]);
-  }(je);
+  }(Ve);
   function CommentPanel_typeof(r) {
     "@babel/helpers - typeof";
     return CommentPanel_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -11926,7 +11982,7 @@
     }
     return 0;
   }
-  var Ve = function() {
+  var Ge = function() {
     function CommentPanel(r, o) {
       var a = this;
       CommentPanel_classCallCheck(this, CommentPanel);
@@ -12460,7 +12516,7 @@
                   break;
                 }
                 se.next = 37;
-                return Me.checkShadowActive("JAVLIBRARY");
+                return Te.checkShadowActive("JAVLIBRARY");
 
                case 37:
                 T = se.sent;
@@ -12470,7 +12526,7 @@
                 }
                 k.log("[CommentPanel] 检测到 JAVLibrary 影子通道在线，优先通过影子协同获取数据...");
                 se.next = 42;
-                return Me.sendCommand("JAVLIBRARY", "FETCH_JAVLIB_DATA", {
+                return Te.sendCommand("JAVLIBRARY", "FETCH_JAVLIB_DATA", {
                   "avcode": this.videoCode,
                   "page": u
                 });
@@ -12983,7 +13039,7 @@
         var r = this;
         this.commentsPanel = document.createElement("div");
         this.commentsPanel.className = "tm-comments-panel";
-        this.commentsPanel.innerHTML = '\n            <div class="tm-comments-list tm-comments-panel-list"></div>\n            <div class="tm-comment-loading tm-comments-panel-loading" style="display: none;"></div>\n            <div class="tm-comment-error tm-comments-panel-error" style="display: none;"></div>\n            <div class="tm-comment-submit-bar-wrapper">\n                <div class="tm-comment-tag-select-modal">\n                    <div class="tm-tag-select-header">\n                        <div class="tm-tag-select-btn-group">\n                            <button type="button" class="tm-tag-select-all-btn">全选</button>\n                            <button type="button" class="tm-tag-deselect-all-btn">取消全选</button>\n                        </div>\n                        <button type="button" class="tm-tag-select-close-btn" title="关闭">✕</button>\n                    </div>\n                    <div class="tm-tag-select-list"></div>\n                </div>\n                <div class="tm-comment-submit-bar">\n                    <button type="button" class="tm-comment-add-tag-btn" title="插入/勾选高光标签">\n                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>\n                    </button>\n                    <input type="text" class="tm-comment-text-input" placeholder="Comment" />\n                    <button type="button" class="tm-comment-send-btn">'.concat(__("send"), '</button>\n                </div>\n            </div>\n            <div class="tm-comments-panel-action-bar" style="display: none;">\n                <div class="tm-action-bar-left">\n                    <span class="tm-comment-count">共 0 条评论</span>\n                    <button class="tm-comment-copy-all-btn" title="一键复制所有加载的原始评论">').concat(__("commentsCopyAll"), '</button>\n                </div>\n                <div class="tm-action-bar-right">\n                    <label class="tm-comment-filter-label">\n                        <input type="checkbox" class="tm-comment-filter-checkbox" ').concat(this.filterSpam ? "checked" : "", " />\n                        <span>").concat(__("commentsFilterSpam"), '</span>\n                    </label>\n                </div>\n            </div>\n            <button class="tm-show-controls-float-btn" title="显示控制面板">').concat(_e, "</button>\n        ");
+        this.commentsPanel.innerHTML = '\n            <div class="tm-comments-list tm-comments-panel-list"></div>\n            <div class="tm-comment-loading tm-comments-panel-loading" style="display: none;"></div>\n            <div class="tm-comment-error tm-comments-panel-error" style="display: none;"></div>\n            <div class="tm-comment-submit-bar-wrapper">\n                <div class="tm-comment-tag-select-modal">\n                    <div class="tm-tag-select-header">\n                        <div class="tm-tag-select-btn-group">\n                            <button type="button" class="tm-tag-select-all-btn">全选</button>\n                            <button type="button" class="tm-tag-deselect-all-btn">取消全选</button>\n                        </div>\n                        <button type="button" class="tm-tag-select-close-btn" title="关闭">✕</button>\n                    </div>\n                    <div class="tm-tag-select-list"></div>\n                </div>\n                <div class="tm-comment-submit-bar">\n                    <button type="button" class="tm-comment-add-tag-btn" title="插入/勾选高光标签">\n                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>\n                    </button>\n                    <input type="text" class="tm-comment-text-input" placeholder="Comment" />\n                    <button type="button" class="tm-comment-send-btn">'.concat(__("send"), '</button>\n                </div>\n            </div>\n            <div class="tm-comments-panel-action-bar" style="display: none;">\n                <div class="tm-action-bar-left">\n                    <span class="tm-comment-count">共 0 条评论</span>\n                    <button class="tm-comment-copy-all-btn" title="一键复制所有加载的原始评论">').concat(__("commentsCopyAll"), '</button>\n                </div>\n                <div class="tm-action-bar-right">\n                    <label class="tm-comment-filter-label">\n                        <input type="checkbox" class="tm-comment-filter-checkbox" ').concat(this.filterSpam ? "checked" : "", " />\n                        <span>").concat(__("commentsFilterSpam"), '</span>\n                    </label>\n                </div>\n            </div>\n            <button class="tm-show-controls-float-btn" title="显示控制面板">').concat(Se, "</button>\n        ");
         this.commentsList = this.commentsPanel.querySelector(".tm-comments-list");
         this.loadingElement = this.commentsPanel.querySelector(".tm-comment-loading");
         this.errorElement = this.commentsPanel.querySelector(".tm-comment-error");
@@ -14717,8 +14773,8 @@
         }
         if (!this._staticProviders) {
           this._staticProviders = {
-            "JABLE": new Be,
-            "MISSAV": new Ie
+            "JABLE": new Oe,
+            "MISSAV": new Re
           };
         }
         return this._staticProviders[o] || null;
@@ -15120,7 +15176,7 @@
       }
     } ]);
   }();
-  CommentPanel_defineProperty(Ve, "preloadCache", {
+  CommentPanel_defineProperty(Ge, "preloadCache", {
     "videoCode": "",
     "jableCommentsPromise": null,
     "javlibVideoIdPromise": null,
@@ -15173,7 +15229,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Oe = function() {
+  var He = function() {
     function VolumeController(r, o) {
       VolumeController_classCallCheck(this, VolumeController);
       this.playerCore = r;
@@ -15332,11 +15388,11 @@
       "key": "getVolumeIcon",
       "value": function getVolumeIcon(r) {
         if (this.targetVideo.muted || r === 0) {
-          return pe;
+          return ve;
         } else if (this.supportsVolumeControl && r < .5) {
-          return me;
+          return ge;
         } else {
-          return fe;
+          return ye;
         }
       }
     }, {
@@ -15376,7 +15432,7 @@
             this.volumeValue.classList.add("volume-high");
           }
         }
-        se.track("volume_change", {
+        ue.track("volume_change", {
           "volume": Math.round(r * 100) / 100,
           "is_muted": !!this.targetVideo.muted
         });
@@ -15471,7 +15527,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Re = function() {
+  var ze = function() {
     function SeekController(r, o) {
       SeekController_classCallCheck(this, SeekController);
       this.playerCore = r;
@@ -15487,7 +15543,7 @@
         }
         var o = Math.max(0, Math.min(this.targetVideo.duration, this.targetVideo.currentTime + r));
         this.targetVideo.currentTime = o;
-        se.track("seek_click", {
+        ue.track("seek_click", {
           "seconds": r,
           "step": r > 0 ? "+".concat(r, "s") : "".concat(r, "s")
         });
@@ -15574,9 +15630,9 @@
         var y = o.includes("+");
         var b = o.replace(/[+-]/g, "");
         if (v) {
-          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(ve, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
+          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(be, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
         } else if (y) {
-          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(ge, "</div>");
+          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(Ce, "</div>");
         } else {
           p.textContent = o;
         }
@@ -15646,7 +15702,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ge = function() {
+  var Ne = function() {
     function PlaybackController(r, o) {
       PlaybackController_classCallCheck(this, PlaybackController);
       this.playerCore = r;
@@ -15674,7 +15730,7 @@
             o.targetVideo.pause();
           }
           o.updatePlayPauseButton();
-          se.track("play_toggle", {
+          ue.track("play_toggle", {
             "is_playing": !r
           });
         }));
@@ -15697,9 +15753,9 @@
           return;
         }
         if (this.targetVideo.paused) {
-          this.playPauseButton.innerHTML = ue;
+          this.playPauseButton.innerHTML = pe;
         } else {
-          this.playPauseButton.innerHTML = de;
+          this.playPauseButton.innerHTML = me;
         }
       }
     }, {
@@ -15755,7 +15811,7 @@
           } else {
             this.playbackRateSlider.classList.add("normal");
           }
-          se.track("rate_change", {
+          ue.track("rate_change", {
             "rate": r
           });
         }
@@ -15779,7 +15835,7 @@
         this.pauseIndicator.style.display = "flex";
         this.pauseIndicator.style.justifyContent = "center";
         this.pauseIndicator.style.alignItems = "center";
-        this.pauseIndicator.innerHTML = he;
+        this.pauseIndicator.innerHTML = fe;
         this.uiElements.videoWrapper.appendChild(this.pauseIndicator);
         requestAnimationFrame((function() {
           r.pauseIndicator.classList.add("visible");
@@ -15849,16 +15905,16 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var He = function() {
+  var Je = function() {
     function ControlManager(r, o) {
       ControlManager_classCallCheck(this, ControlManager);
       this.playerCore = r;
       this.targetVideo = r.targetVideo;
       this.uiElements = o;
-      this.commentPanel = new Ve(r, this);
-      this.volumeController = new Oe(r, this);
-      this.seekController = new Re(r, this);
-      this.playbackController = new Ge(r, this);
+      this.commentPanel = new Ge(r, this);
+      this.volumeController = new He(r, this);
+      this.seekController = new ze(r, this);
+      this.playbackController = new Ne(r, this);
       this.controlButtonsContainer = null;
       this.progressControlsContainer = null;
       this.progressBarElement = null;
@@ -16175,7 +16231,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ze = function() {
+  var qe = function() {
     function DragManager(r, o) {
       DragManager_classCallCheck(this, DragManager);
       this.playerCore = r;
@@ -16788,7 +16844,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ne = function() {
+  var Ue = function() {
     function LoopManager(r, o) {
       LoopManager_classCallCheck(this, LoopManager);
       this.playerCore = r;
@@ -17220,7 +17276,7 @@
     }, {
       "key": "_handleTabClick",
       "value": function _handleTabClick(r) {
-        se.track("tag_jump", {
+        ue.track("tag_jump", {
           "type": r.type,
           "has_comment": !!r.comment
         });
@@ -17337,7 +17393,7 @@
               a._updateBottomSheet();
             }
           } else {
-            se.track("tag_create", {
+            ue.track("tag_create", {
               "type": a.draftTab.type || (a.draftTab.endTime !== null ? "interval" : "highlight"),
               "has_comment": !!r,
               "duration_sec": a.draftTab.endTime && a.draftTab.startTime ? Math.round(a.draftTab.endTime - a.draftTab.startTime) : 0
@@ -17387,7 +17443,7 @@
           return;
         }
         this.loopActive = true;
-        se.track("loop_toggle", {
+        ue.track("loop_toggle", {
           "enabled": true,
           "interval_sec": Math.round((this.loopEndTime - this.loopStartTime) * 10) / 10
         });
@@ -18163,7 +18219,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Je = function() {
+  var We = function() {
     function ProgressManager(r, o) {
       ProgressManager_classCallCheck(this, ProgressManager);
       this.playerCore = r;
@@ -18437,7 +18493,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var qe = function() {
+  var Ye = function() {
     function EventManager(r, o, a) {
       EventManager_classCallCheck(this, EventManager);
       this.playerCore = r;
@@ -18827,7 +18883,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ue = function() {
+  var Ke = function() {
     function SettingsManager(r, o) {
       SettingsManager_classCallCheck(this, SettingsManager);
       this.playerCore = r;
@@ -19330,12 +19386,12 @@
         } else {
           this.saveSettings();
         }
-        se.track("setting_toggle_ui", {
+        ue.track("setting_toggle_ui", {
           "key": r,
           "value": o
         });
         if (r === "debugMode") {
-          se.track("setting_debug_mode", {
+          ue.track("setting_debug_mode", {
             "debug_mode": !!o
           });
         }
@@ -19389,7 +19445,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var We = function() {
+  var Xe = function() {
     function VideoSwipeManager(r, o, a) {
       var l = this;
       var u = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -19806,7 +19862,7 @@
           this.wasDragging = true;
           this.dragEndTimestamp = Date.now();
           if (this.dragDirection) {
-            se.track("gesture_swipe", {
+            ue.track("gesture_swipe", {
               "direction": this.dragDirection,
               "distance": Math.round(this.dragDistance)
             });
@@ -20155,11 +20211,11 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ye = function() {
+  var $e = function() {
     function CustomVideoPlayer() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       CustomVideoPlayer_classCallCheck(this, CustomVideoPlayer);
-      this.playerCore = new le(r);
+      this.playerCore = new de(r);
       this.callingButton = r.callingButton || null;
       this.managers = {};
       this.initialized = false;
@@ -20178,14 +20234,14 @@
         this._scrollbarStyle.innerHTML = "\n            html::-webkit-scrollbar, body::-webkit-scrollbar {\n                display: none !important;\n            }\n            html, body {\n                scrollbar-width: none !important;\n                -ms-overflow-style: none !important;\n                overscroll-behavior: none !important;\n                overscroll-behavior-y: none !important;\n            }\n        ";
         document.head.appendChild(this._scrollbarStyle);
         if (!this.playerCore) {
-          this.playerCore = new le({
+          this.playerCore = new de({
             "callingButton": this.callingButton
           });
         }
         this._sessionStartTime = Date.now();
         this.playerCore.init();
         if (!this.playerCore.targetVideo) {
-          se.track("player_open_fail");
+          ue.track("player_open_fail");
           Toast(__("loadingError") || "Failed to load video", 3e3, "error");
           if (this.callingButton) {
             this.callingButton.style.display = "flex";
@@ -20193,7 +20249,7 @@
           return;
         }
         var o = this.playerCore.targetVideo;
-        se.track("player_open_success", {
+        ue.track("player_open_success", {
           "video_duration": o.duration || 0,
           "video_width": o.videoWidth || 0,
           "video_height": o.videoHeight || 0,
@@ -20205,18 +20261,18 @@
             }
           }()
         });
-        var a = new De(this.playerCore);
+        var a = new Fe(this.playerCore);
         var l = a.createUI();
         this.managers.uiManager = a;
         this.playerCore.uiManager = a;
-        var u = new Ue(this.playerCore, l);
+        var u = new Ke(this.playerCore, l);
         u.init();
         this.managers.settingsManager = u;
-        var p = new He(this.playerCore, l);
+        var p = new Je(this.playerCore, l);
         p.init();
         this.managers.controlManager = p;
         this.playerCore.controlManager = p;
-        var v = new Je(this.playerCore, l);
+        var v = new We(this.playerCore, l);
         this.playerCore.progressManager = v;
         v.init({
           "progressBarElement": p.progressBarElement,
@@ -20226,7 +20282,7 @@
           "timeIndicator": p.timeIndicator
         });
         this.managers.progressManager = v;
-        var y = new Ne(this.playerCore, l);
+        var y = new Ue(this.playerCore, l);
         y.init({
           "loopStartMarker": p.loopStartMarker,
           "loopEndMarker": p.loopEndMarker,
@@ -20237,19 +20293,19 @@
         });
         this.managers.loopManager = y;
         p.setLoopManager(y);
-        var b = new ze(this.playerCore, l);
+        var b = new qe(this.playerCore, l);
         b.init();
         this.managers.dragManager = b;
         this.playerCore.dragManager = b;
         if (this.playerCore.targetVideo && l.videoWrapper && l.handle) {
-          this.swipeManager = new We(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
+          this.swipeManager = new Xe(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
             return r.close();
           }));
           this.swipeManager.playerCore = this.playerCore;
           this.playerCore.swipeManager = this.swipeManager;
           this.managers.swipeManager = this.swipeManager;
         }
-        var C = new qe(this.playerCore, l, this.managers);
+        var C = new Ye(this.playerCore, l, this.managers);
         C.init();
         this.managers.eventManager = C;
         a.assembleDOM();
@@ -20288,7 +20344,7 @@
       "key": "close",
       "value": function close() {
         var r = this._sessionStartTime ? Math.round((Date.now() - this._sessionStartTime) / 1e3) : 0;
-        se.track("player_close", {
+        ue.track("player_close", {
           "duration_sec": r
         });
         if (this._scrollbarStyle) {
@@ -20361,7 +20417,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ke = function() {
+  var Qe = function() {
     function FloatingButton() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       FloatingButton_classCallCheck(this, FloatingButton);
@@ -20472,7 +20528,7 @@
       "value": function createButton() {
         var r = this;
         this.button = createElementWithStyle("button", "tm-floating-button");
-        this.button.innerHTML = ce;
+        this.button.innerHTML = he;
         this.button.addEventListener("click", (function() {
           r.handleButtonClick();
         }));
@@ -20505,9 +20561,9 @@
     }, {
       "key": "handleButtonClick",
       "value": function handleButtonClick() {
-        se.track("button_click");
+        ue.track("button_click");
         this.button.style.display = "none";
-        this.videoPlayer = new Ye({
+        this.videoPlayer = new $e({
           "playerState": this.playerState,
           "callingButton": this.button
         });
@@ -20576,7 +20632,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Xe = function() {
+  var Ze = function() {
     function PlayerState() {
       PlayerState_classCallCheck(this, PlayerState);
       this.settings = {
@@ -21090,15 +21146,15 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var $e = 30 * 60 * 1e3;
-  var Qe = 3;
-  var Ze = function() {
+  var et = 30 * 60 * 1e3;
+  var tt = 3;
+  var nt = function() {
     function LoginManager() {
       LoginManager_classCallCheck(this, LoginManager);
       this.userEmail = "";
       this.userPassword = "";
       this.autoLogin = true;
-      this.providers = [ new Ie, new Be ];
+      this.providers = [ new Re, new Oe ];
       this.activeProvider = null;
     }
     return LoginManager_createClass(LoginManager, [ {
@@ -21149,14 +21205,14 @@
           return;
         }
         var o = this.activeProvider.siteKey;
-        var a = Te.get(o);
+        var a = Ie.get(o);
         var l = r.email !== void 0 ? r.email : a.email;
         var u = r.password !== void 0 ? r.password : a.password;
         var p = r.autoLogin !== void 0 ? r.autoLogin : a.autoLogin;
         this.userEmail = l;
         this.userPassword = u;
         this.autoLogin = p;
-        Te.save(o, l, u, p);
+        Ie.save(o, l, u, p);
         this.resetCircuitBreaker(o);
       }
     }, {
@@ -21166,7 +21222,7 @@
           return;
         }
         var r = this.activeProvider.siteKey;
-        var o = Te.get(r);
+        var o = Ie.get(r);
         this.userEmail = o.email;
         this.userPassword = o.password;
         this.autoLogin = o.autoLogin;
@@ -21257,7 +21313,7 @@
 
                case 23:
                 p = v.sent;
-                se.track("autologin_result", {
+                ue.track("autologin_result", {
                   "site": r,
                   "success": !!p
                 });
@@ -21298,12 +21354,12 @@
       "value": function isCircuitBroken(r) {
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0);
         var a = getLocalStorage("mp_circuit_last_fail_".concat(r), 0);
-        if (o >= Qe) {
+        if (o >= tt) {
           var l = Date.now() - a;
-          if (l < $e) {
+          if (l < et) {
             return true;
           }
-          setLocalStorage("mp_circuit_fail_".concat(r), Qe - 1);
+          setLocalStorage("mp_circuit_fail_".concat(r), tt - 1);
         }
         return false;
       }
@@ -21313,7 +21369,7 @@
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0) + 1;
         setLocalStorage("mp_circuit_fail_".concat(r), o);
         setLocalStorage("mp_circuit_last_fail_".concat(r), Date.now());
-        if (o >= Qe) {}
+        if (o >= tt) {}
       }
     }, {
       "key": "resetCircuitBreaker",
@@ -21805,7 +21861,7 @@
           switch (o.prev = o.next) {
            case 0:
             o.prev = 0;
-            r = new Ze;
+            r = new nt;
             o.next = 4;
             return r.init();
 
@@ -21826,8 +21882,8 @@
     })));
     return _initAutoLogin.apply(this, arguments);
   }
-  var et = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
-  var tt = [ {
+  var rt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
+  var ot = [ {
     "selector": 'div[class="my-2 text-sm text-nord4 truncate"]',
     "styles": "white-space: normal !important;"
   }, {
@@ -21837,11 +21893,11 @@
     "selector": 'div[class*="z-max"]',
     "styles": "z-index: 9000 !important;"
   } ];
-  var nt = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
-  const rt = {
-    "adSelectors": et,
-    "customStyles": tt,
-    "blockedUrlPatterns": nt,
+  var at = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
+  const it = {
+    "adSelectors": rt,
+    "customStyles": ot,
+    "blockedUrlPatterns": at,
     "isVideoSite": true,
     "domains": getSiteDomains("MISSAV")
   };
@@ -21952,7 +22008,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ot = function() {
+  var st = function() {
     function AdBlockConfig() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       adblock_classCallCheck(this, AdBlockConfig);
@@ -21992,7 +22048,7 @@
       }
     } ]);
   }();
-  var at = function() {
+  var lt = function() {
     function StyleManager(r) {
       adblock_classCallCheck(this, StyleManager);
       this.config = r;
@@ -22020,7 +22076,7 @@
       }
     } ]);
   }();
-  var it = function() {
+  var ct = function() {
     function DOMCleaner(r) {
       adblock_classCallCheck(this, DOMCleaner);
       this.config = r;
@@ -22109,7 +22165,7 @@
       }
     } ]);
   }();
-  var st = function() {
+  var ut = function() {
     function RequestBlocker(r) {
       adblock_classCallCheck(this, RequestBlocker);
       this.config = r;
@@ -22121,7 +22177,7 @@
         var o = this.config;
         XMLHttpRequest.prototype.open = function(a, l) {
           if (typeof l === "string" && o.shouldBlockUrl(l)) {
-            se.track("adblock_intercept", {
+            ue.track("adblock_intercept", {
               "type": "xhr",
               "url": l.slice(0, 128)
             });
@@ -22136,7 +22192,7 @@
         window.fetch = function(r, l) {
           var u = r instanceof Request ? r.url : r;
           if (typeof u === "string" && o.shouldBlockUrl(u)) {
-            se.track("adblock_intercept", {
+            ue.track("adblock_intercept", {
               "type": "fetch",
               "url": String(u).slice(0, 128)
             });
@@ -22162,7 +22218,7 @@
             Object.defineProperty(l, "src", {
               "set": function set(r) {
                 if (typeof r === "string" && o.shouldBlockUrl(r)) {
-                  se.track("adblock_intercept", {
+                  ue.track("adblock_intercept", {
                     "type": "iframe",
                     "url": r.slice(0, 128)
                   });
@@ -22177,7 +22233,7 @@
             var p = l.setAttribute;
             l.setAttribute = function(r, a) {
               if (r === "src" && typeof a === "string" && o.shouldBlockUrl(a)) {
-                se.track("adblock_intercept", {
+                ue.track("adblock_intercept", {
                   "type": "iframe",
                   "url": a.slice(0, 128)
                 });
@@ -22193,7 +22249,7 @@
       "key": "blockPopups",
       "value": function blockPopups() {
         var r = function trackPopup() {
-          return se.track("adblock_intercept", {
+          return ue.track("adblock_intercept", {
             "type": "popup"
           });
         };
@@ -22217,15 +22273,15 @@
       }
     } ]);
   }();
-  var lt = function() {
+  var dt = function() {
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(window.location.href);
-      var o = r ? rt : {};
-      this.config = new ot(o);
-      this.styleManager = new at(this.config);
-      this.domCleaner = new it(this.config);
-      this.requestBlocker = new st(this.config);
+      var o = r ? it : {};
+      this.config = new st(o);
+      this.styleManager = new lt(this.config);
+      this.domCleaner = new ct(this.config);
+      this.requestBlocker = new ut(this.config);
     }
     return adblock_createClass(AdBlocker, [ {
       "key": "preventDetection",
@@ -22273,7 +22329,7 @@
       }
     } ]);
   }();
-  const ct = lt;
+  const ht = dt;
   function DetailExpander_typeof(r) {
     "@babel/helpers - typeof";
     return DetailExpander_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -22318,7 +22374,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ut = function() {
+  var pt = function() {
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
@@ -22348,7 +22404,7 @@
           var r = document.querySelector(this.SHOW_MORE_SELECTOR);
           if (r) {
             r.click();
-            se.track("detail_expand_click");
+            ue.track("detail_expand_click");
             return true;
           }
         } catch (r) {}
@@ -22432,7 +22488,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var dt = function() {
+  var mt = function() {
     function QualityManager() {
       QualityManager_classCallCheck(this, QualityManager);
       this.maxAttempts = 20;
@@ -22583,7 +22639,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ht = function() {
+  var ft = function() {
     function UrlRedirector() {
       UrlRedirector_classCallCheck(this, UrlRedirector);
       var r = v.MISSAV.primary;
@@ -22691,13 +22747,13 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var pt = new ht;
-  var mt = function() {
+  var vt = new ft;
+  var gt = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
-      this.detailExpander = new ut;
-      this.qualityManager = new dt;
-      this.urlRedirector = pt;
+      this.detailExpander = new pt;
+      this.qualityManager = new mt;
+      this.urlRedirector = vt;
     }
     return userExperienceEnhancer_createClass(UserExperienceEnhancer, [ {
       "key": "init",
@@ -22729,7 +22785,7 @@
   }();
   function initUserExperienceEnhancer() {
     var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
-    var o = new mt;
+    var o = new gt;
     o.init(r);
     return o;
   }
@@ -23135,7 +23191,7 @@
       }));
     };
   }
-  pt.checkAndRedirect();
+  vt.checkAndRedirect();
   function setupViewport() {
     var r = document.querySelector('meta[name="viewport"]');
     if (!r) {
@@ -23171,7 +23227,7 @@
             switch (p.prev = p.next) {
              case 0:
               p.prev = 0;
-              se.trackAppInit();
+              ue.trackAppInit();
               if (!isSiteDomain("JAVLIBRARY")) {
                 p.next = 5;
                 break;
@@ -23182,9 +23238,9 @@
              case 5:
               injectStyles();
               r = initUserExperienceEnhancer(true);
-              o = new Xe;
+              o = new Ze;
               o.loadSettings();
-              a = new Ke({
+              a = new Qe({
                 "playerState": o
               });
               a.init();
@@ -23196,7 +23252,7 @@
               if (l) {
                 window.loginManager = l;
               }
-              u = new ct;
+              u = new ht;
               u.init();
               p.next = 21;
               break;
@@ -23219,7 +23275,7 @@
       var a = Date.now();
       var l = false;
       k.log("检测到运行在 JAVLibrary 域名上，启动验证协同助手。".concat(o ? " (iframe broker 模式)" : ""));
-      Me.startBroker("JAVLIBRARY", {
+      Te.startBroker("JAVLIBRARY", {
         "FETCH_JAVLIB_DATA": function() {
           var r = src_asyncToGenerator(src_regeneratorRuntime().mark((function _callee(r) {
             var o, a, l, u, p, v, y, b, C;
@@ -23269,7 +23325,7 @@
         if (r && !u) {
           if (!l) {
             l = true;
-            se.track("javlib_cf_bypass", {
+            ue.track("javlib_cf_bypass", {
               "success": true,
               "duration_ms": Date.now() - a,
               "is_iframe": o
@@ -23315,7 +23371,7 @@
           clearInterval(u);
           if (!l) {
             l = true;
-            se.track("javlib_cf_bypass", {
+            ue.track("javlib_cf_bypass", {
               "success": false,
               "duration_ms": Date.now() - a,
               "is_iframe": o
