@@ -154,9 +154,10 @@ export class UIManager {
         
         // 不再手动添加paddingTop和paddingBottom，使用CSS的safe-area-inset变量
 
-        // 计算默认高度和最小高度
-        const defaultHeight = window.innerWidth * (4/5);
-        const defaultMinHeight = window.innerWidth * (9/16); // 默认16:9比例
+        // 计算默认高度和最小高度（限制最大不超过 80vh 视口高度）
+        const maxAllowedHeight = window.innerHeight * 0.8;
+        const defaultHeight = Math.min(window.innerWidth * (4/5), maxAllowedHeight);
+        const defaultMinHeight = Math.min(window.innerWidth * (9/16), maxAllowedHeight); // 默认16:9比例，不超过80vh
 
         // 创建视频容器 - 使用预定义样式类
         this.container = document.createElement('div');
@@ -1316,18 +1317,17 @@ export class UIManager {
             return;
         }
         
-        const videoWidth = this.targetVideo.videoWidth || this.targetVideo.naturalWidth;
-        const videoHeight = this.targetVideo.videoHeight || this.targetVideo.naturalHeight;
-        
+        const maxAllowedHeight = window.innerHeight * 0.8;
         let minHeight = window.innerWidth * (9/16); // 默认16:9比例
         if (videoWidth && videoHeight) {
             minHeight = window.innerWidth * (videoHeight / videoWidth);
         }
+        minHeight = Math.min(minHeight, maxAllowedHeight);
         
         this.container.style.minHeight = `${minHeight}px`;
         
         if (!this.isCustomResized) {
-            const defaultHeight = window.innerWidth * (4/5);
+            const defaultHeight = Math.min(window.innerWidth * (4/5), maxAllowedHeight);
             this.container.style.height = `${defaultHeight}px`;
             console.log('[UIManager] 自动更新容器高度为默认比例高度:', defaultHeight);
         } else if (this.customHeightPortrait) {
@@ -1336,7 +1336,8 @@ export class UIManager {
                 this.container.style.height = `${minHeight}px`;
                 this.customHeightPortrait = `${minHeight}px`;
             } else {
-                this.container.style.height = this.customHeightPortrait;
+                const clampedHeight = Math.min(currentHeight, maxAllowedHeight);
+                this.container.style.height = `${clampedHeight}px`;
             }
         }
         

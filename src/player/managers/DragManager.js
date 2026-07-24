@@ -95,11 +95,12 @@ export class DragManager {
         const currentY = touch ? e.touches[0].clientY : e.clientY;
         const deltaY = currentY - this.startY;
 
-        // 获取容器当前的最小高度作为约束
-        const minHeight = parseFloat(this.container.style.minHeight) || window.innerWidth * (9/16);
+        // 获取容器当前的最小高度与最大高度限制 (不超过 80vh)
+        const maxAllowedHeight = window.innerHeight * 0.8;
+        const minHeight = Math.min(parseFloat(this.container.style.minHeight) || window.innerWidth * (9/16), maxAllowedHeight);
         
-        // 处理Y轴 (调整高度)
-        const newHeight = Math.max(minHeight, this.startHeight + deltaY);
+        // 处理Y轴 (调整高度，上限设为 maxAllowedHeight)
+        const newHeight = Math.min(Math.max(minHeight, this.startHeight + deltaY), maxAllowedHeight);
         this.container.style.height = newHeight + 'px';
 
         // 标记用户手动调整了高度，防止被 resize 事件重置，同时保存对应方向的高数值

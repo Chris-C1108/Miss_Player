@@ -6786,12 +6786,13 @@
         this.overlay = document.createElement("div");
         this.overlay.className = "tm-video-overlay";
         this.overlay.style.zIndex = "2000000000";
-        var r = window.innerWidth * (4 / 5);
-        var o = window.innerWidth * (9 / 16);
+        var r = window.innerHeight * .8;
+        var o = Math.min(window.innerWidth * (4 / 5), r);
+        var a = Math.min(window.innerWidth * (9 / 16), r);
         this.container = document.createElement("div");
         this.container.className = "tm-video-container";
-        this.container.style.height = "".concat(r, "px");
-        this.container.style.minHeight = "".concat(o, "px");
+        this.container.style.height = "".concat(o, "px");
+        this.container.style.minHeight = "".concat(a, "px");
       }
     }, {
       "key": "createPlayerContainer",
@@ -7664,23 +7665,24 @@
         if (this.isLandscape) {
           return;
         }
-        var r = this.targetVideo.videoWidth || this.targetVideo.naturalWidth;
-        var o = this.targetVideo.videoHeight || this.targetVideo.naturalHeight;
-        var a = window.innerWidth * (9 / 16);
-        if (r && o) {
-          a = window.innerWidth * (o / r);
+        var r = window.innerHeight * .8;
+        var o = window.innerWidth * (9 / 16);
+        if (videoWidth && videoHeight) {
+          o = window.innerWidth * (videoHeight / videoWidth);
         }
-        this.container.style.minHeight = "".concat(a, "px");
+        o = Math.min(o, r);
+        this.container.style.minHeight = "".concat(o, "px");
         if (!this.isCustomResized) {
-          var l = window.innerWidth * (4 / 5);
-          this.container.style.height = "".concat(l, "px");
+          var a = Math.min(window.innerWidth * (4 / 5), r);
+          this.container.style.height = "".concat(a, "px");
         } else if (this.customHeightPortrait) {
-          var u = parseFloat(this.customHeightPortrait);
-          if (u < a) {
-            this.container.style.height = "".concat(a, "px");
-            this.customHeightPortrait = "".concat(a, "px");
+          var l = parseFloat(this.customHeightPortrait);
+          if (l < o) {
+            this.container.style.height = "".concat(o, "px");
+            this.customHeightPortrait = "".concat(o, "px");
           } else {
-            this.container.style.height = this.customHeightPortrait;
+            var u = Math.min(l, r);
+            this.container.style.height = "".concat(u, "px");
           }
         }
       }
@@ -16307,15 +16309,16 @@
         var o = r.type.includes("touch");
         var a = o ? r.touches[0].clientY : r.clientY;
         var l = a - this.startY;
-        var u = parseFloat(this.container.style.minHeight) || window.innerWidth * (9 / 16);
-        var p = Math.max(u, this.startHeight + l);
-        this.container.style.height = p + "px";
+        var u = window.innerHeight * .8;
+        var p = Math.min(parseFloat(this.container.style.minHeight) || window.innerWidth * (9 / 16), u);
+        var v = Math.min(Math.max(p, this.startHeight + l), u);
+        this.container.style.height = v + "px";
         if (this.playerCore.uiManager) {
           this.playerCore.uiManager.isCustomResized = true;
           if (!this.playerCore.uiManager.isLandscape) {
-            this.playerCore.uiManager.customHeightPortrait = p + "px";
+            this.playerCore.uiManager.customHeightPortrait = v + "px";
           } else {
-            this.playerCore.uiManager.customHeightLandscape = p + "px";
+            this.playerCore.uiManager.customHeightLandscape = v + "px";
           }
         }
       }
