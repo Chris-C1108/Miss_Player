@@ -1,4 +1,5 @@
 import { PLAY, PAUSE, PLAY_CENTER } from '../../constants/icons.js';
+import { telemetry } from '../../telemetry';
 
 /**
  * 播放控制器组件 - 负责播放、暂停、倍速滑杆及相关指示器
@@ -30,12 +31,14 @@ export class PlaybackController {
         this.playPauseButton.className = 'tm-control-button';
         
         this.playPauseButton.addEventListener('click', () => {
+            const isPlaying = !this.targetVideo.paused;
             if (this.targetVideo.paused) {
                 this.targetVideo.play();
             } else {
                 this.targetVideo.pause();
             }
             this.updatePlayPauseButton();
+            telemetry.track('play_toggle', { is_playing: !isPlaying });
         });
         
         // 添加悬停效果
@@ -133,6 +136,8 @@ export class PlaybackController {
             } else {
                 this.playbackRateSlider.classList.add('normal');
             }
+
+            telemetry.track('rate_change', { rate: speed });
         }
     }
 

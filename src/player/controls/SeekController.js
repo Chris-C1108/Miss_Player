@@ -1,4 +1,5 @@
 import { REWIND, FORWARD } from '../../constants/icons.js';
+import { telemetry } from '../../telemetry';
 
 /**
  * 进度跳转控制器组件
@@ -19,6 +20,11 @@ export class SeekController {
         if (!this.targetVideo) return;
         const newTime = Math.max(0, Math.min(this.targetVideo.duration, this.targetVideo.currentTime + seconds));
         this.targetVideo.currentTime = newTime;
+
+        telemetry.track('seek_click', {
+            seconds,
+            step: seconds > 0 ? `+${seconds}s` : `${seconds}s`
+        });
     }
 
     /**

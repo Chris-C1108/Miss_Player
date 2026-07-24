@@ -1,3 +1,5 @@
+import { telemetry } from '../../telemetry';
+
 /**
  * 视频水平移动管理器 - 全新模块化设计
  */
@@ -610,6 +612,12 @@ export class VideoSwipeManager {
         if (this.dragDistance > this.minDragDistance) {
             this.wasDragging = true;
             this.dragEndTimestamp = Date.now();
+            if (this.dragDirection) {
+                telemetry.track('gesture_swipe', {
+                    direction: this.dragDirection,
+                    distance: Math.round(this.dragDistance)
+                });
+            }
         } else {
             this.wasDragging = false;
         }

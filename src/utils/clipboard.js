@@ -2,12 +2,20 @@
  * 剪贴板统一工具函数
  */
 
+import { telemetry } from '../telemetry';
+
 /**
  * 复制文本到系统剪贴板（依次尝试 GM_setClipboard, navigator.clipboard, 降级 textarea）
  * @param {string} text - 目标文本
  * @returns {Promise<boolean>} 是否成功
  */
 export async function copyToClipboard(text) {
+    telemetry.track('share_copy', {
+        text_len: text ? text.length : 0,
+        is_url: text ? (text.includes('http') || text.includes('#')) : false,
+        has_timestamp: text ? (text.includes('t=') || text.includes('tab=')) : false
+    });
+
     if (typeof GM_setClipboard === 'function') {
         try {
             GM_setClipboard(text);

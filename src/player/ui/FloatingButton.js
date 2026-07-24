@@ -1,6 +1,7 @@
 import { findVideoElement, createElementWithStyle, getSafeAreaInsets, isPortrait } from '../../utils/index.js';
 import { CustomVideoPlayer } from '../index.js';
 import { FLOATING_PLAY } from '../../constants/icons.js';
+import { telemetry } from '../../telemetry';
 
 /**
  * 浮动按钮类
@@ -241,6 +242,9 @@ export class FloatingButton {
      * 处理按钮点击
      */
     handleButtonClick() {
+        // 遥测上报：浮窗按钮被点击
+        telemetry.track('button_click');
+
         // 隐藏按钮
         this.button.style.display = 'none';
         

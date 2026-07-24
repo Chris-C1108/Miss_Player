@@ -9,6 +9,7 @@ import { SettingsManager } from './managers/SettingsManager.js';
 import { VideoSwipeManager } from './managers/videoSwipeManager.js';
 import { updateSafariThemeColor, Toast } from '../utils/index.js';
 import { __ } from '../constants/i18n.js';
+import { telemetry } from '../telemetry';
 
 /**
  * 自定义视频播放器控制器 - 模块化重构版本
@@ -63,11 +64,15 @@ export class CustomVideoPlayer {
             });
         }
         
+        // 记录播放会话开始时间
+        this._sessionStartTime = Date.now();
+
         // 初始化核心播放器
         this.playerCore.init();
         
         if (!this.playerCore.targetVideo) {
             console.error('[CustomVideoPlayer] 核心初始化失败: 未找到视频元素');
+            telemetry.track('player_open_fail');
             Toast(__('loadingError') || 'Failed to load video', 3000, 'error');
             // 如果是从浮动按钮调用的，则重新显示按钮
             if (this.callingButton) {
@@ -75,6 +80,16 @@ export class CustomVideoPlayer {
             }
             return;
         }
+
+        const videoElem = this.playerCore.targetVideo;
+        telemetry.track('player_open_success', {
+            video_duration: videoElem.duration || 0,
+            video_width: videoElem.videoWidth || 0,
+            video_height: videoElem.videoHeight || 0,
+            video_src_domain: (function() {
+                try { return new URL(videoElem.src).hostname; } catch(_) { return ''; }
+            })()
+        });
         
         // 创建UI管理器
         const uiManager = new UIManager(this.playerCore);
@@ -199,6 +214,10 @@ export class CustomVideoPlayer {
      * 关闭播放器
      */
     close() {
+        // 遥测上报：播放器关闭与会话时长
+        const durationSec = this._sessionStartTime ? Math.round((Date.now() - this._sessionStartTime) / 1000) : 0;
+        telemetry.track('player_close', { duration_sec: durationSec });
+
         // 恢复网页浏览器滚动条
         if (this._scrollbarStyle) {
             this._scrollbarStyle.remove();

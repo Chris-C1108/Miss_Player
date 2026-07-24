@@ -5,6 +5,8 @@
 
 
 
+import { telemetry } from '../telemetry';
+
 /**
  * 详情展开器类
  */
@@ -52,6 +54,7 @@ export class DetailExpander {
             if (showMoreButton) {
                 console.log('[DetailExpander] 找到"显示更多"按钮，点击展开');
                 showMoreButton.click();
+                telemetry.track('detail_expand_click');
                 return true;
             }
         } catch (error) {

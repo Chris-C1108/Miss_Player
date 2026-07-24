@@ -1,4 +1,5 @@
 import { MUTE, VOLUME_LOW, VOLUME_HIGH } from '../../constants/icons.js';
+import { telemetry } from '../../telemetry';
 
 /**
  * 音量控制器组件
@@ -275,6 +276,11 @@ export class VolumeController {
                 this.volumeValue.classList.add('volume-high');
             }
         }
+
+        telemetry.track('volume_change', {
+            volume: Math.round(volume * 100) / 100,
+            is_muted: !!this.targetVideo.muted
+        });
     }
 
     /**

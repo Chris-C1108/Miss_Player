@@ -9,6 +9,7 @@ import { getVideoCodeFromUrl, fetchJavLibraryVideoId, fetchJavLibraryData } from
 import { CommentPanel } from './player/controls/CommentPanel.js';
 import { isSiteDomain } from './constants/domains.js';
 import { logger } from './utils/logger.js';
+import { telemetry } from './telemetry';
 
 // 确保最早执行URL重定向检查
 earlyUrlRedirector.checkAndRedirect();
@@ -73,16 +74,13 @@ function setupViewport() {
      */
     async function startScript() {
         try {
+            // 触发 App 初始化心跳遥测上报 (6小时内防重)
+            telemetry.trackAppInit();
+
             // 检查是否在 JAVLibrary 域名上
             if (isSiteDomain('JAVLIBRARY')) {
                 handleJavLibraryVerification();
                 return; // 提前退出，不在 JAVLibrary 注入播放器等无关逻辑
-            }
-
-            // 开始对当前视频的评论和文章进行后台异步预加载，缩短用户等待时长
-            const videoCode = getVideoCodeFromUrl();
-            if (videoCode) {
-                CommentPanel.preload(videoCode);
             }
 
             // 首先注入样式
@@ -130,6 +128,8 @@ function setupViewport() {
      */
     function handleJavLibraryVerification() {
         const isIframeBroker = isInIframe;
+        const startTime = Date.now();
+        let reported = false;
         logger.log(`检测到运行在 JAVLibrary 域名上，启动验证协同助手。${isIframeBroker ? ' (iframe broker 模式)' : ''}`);
 
         // 启动 JAVLibrary 影子通道监听，提供本地同源拉取服务，完全绕过 Cloudflare 跨域拦截
@@ -160,6 +160,14 @@ function setupViewport() {
             logger.log(`检测验证状态中... hasLogo = ${!!hasLogo}, isChallenged = ${!!isChallenged}${isIframeBroker ? ' (iframe)' : ''}`);
 
             if (hasLogo && !isChallenged) {
+                if (!reported) {
+                    reported = true;
+                    telemetry.track('javlib_cf_bypass', {
+                        success: true,
+                        duration_ms: Date.now() - startTime,
+                        is_iframe: isIframeBroker
+                    });
+                }
                 logger.log('JAVLibrary 页面加载成功（未被拦截/验证已通过）。');
                 // 广播验证成功信号并存储 Cookie 与 UA
                 if (typeof GM_setValue === 'function') {
@@ -204,7 +212,17 @@ function setupViewport() {
             
             // 安全超时：iframe broker 模式给更长时间（60秒），独立标签页30秒
             const maxWait = isIframeBroker ? 60000 : 30000;
-            setTimeout(() => clearInterval(interval), maxWait);
+            setTimeout(() => {
+                clearInterval(interval);
+                if (!reported) {
+                    reported = true;
+                    telemetry.track('javlib_cf_bypass', {
+                        success: false,
+                        duration_ms: Date.now() - startTime,
+                        is_iframe: isIframeBroker
+                    });
+                }
+            }, maxWait);
         }
     }
 

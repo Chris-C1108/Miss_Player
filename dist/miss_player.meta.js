@@ -11,12 +11,14 @@
 // @description:vi MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @description:zh-CN MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:zh-TW MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器|多語言支持 支持 jable po*nhub 等通用
-// @version 5.5.0
+// @version 5.5.1
 // @author Chris_C
 // @match *://*.missav.ws/*
 // @match *://*.missav.ai/*
 // @match *://*.jable.tv/*
 // @match *://*/*
+// @connect telemetry.x-flow.ccwu.cc
+// @connect xflow-telemetry.chen-m1108.workers.dev
 // @connect jable.tv
 // @connect www.jable.tv
 // @connect fs1.app

@@ -1,6 +1,7 @@
 import { formatTimeWithHours, getValue, setValue, Toast } from '../../utils/index.js';
 import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { __ } from '../../constants/i18n.js';
+import { telemetry } from '../../telemetry';
 
 /**
  * LoopManager — Tab-Style Marker & AB Loop controller
@@ -147,12 +148,13 @@ export class LoopManager {
     }
 
     _createTabPill(tab) {
-        const index = this.tabs.findIndex(t => t.id === tab.id);
+        if (!tab) return document.createElement('div');
+        const index = this.tabs.findIndex(t => t && t.id === tab.id);
         const color = index !== -1 ? this.tabColors[index % this.tabColors.length] : this.tabColors[0];
 
         const pill = document.createElement('div');
         pill.className = 'tm-tab-pill';
-        pill.dataset.tabId = tab.id;
+        pill.dataset.tabId = tab.id || '';
         pill.style.setProperty('--tab-color', color);
 
         if (tab.type === 'highlight') {
@@ -504,6 +506,11 @@ export class LoopManager {
     //  Tab Interactions
     // =====================================================================
     _handleTabClick(tab) {
+        telemetry.track('tag_jump', {
+            type: tab.type,
+            has_comment: !!tab.comment
+        });
+
         if (tab.type === 'highlight') {
             // Trigger flashing hint on the progress bar
             if (this.playerCore.controlManager && typeof this.playerCore.controlManager.showJumpHint === 'function') {
@@ -643,6 +650,11 @@ export class LoopManager {
                     this._updateBottomSheet();
                 }
             } else {
+                telemetry.track('tag_create', {
+                    type: this.draftTab.type || (this.draftTab.endTime !== null ? 'interval' : 'highlight'),
+                    has_comment: !!comment,
+                    duration_sec: (this.draftTab.endTime && this.draftTab.startTime) ? Math.round(this.draftTab.endTime - this.draftTab.startTime) : 0
+                });
                 this.tabs.push({ ...this.draftTab, comment });
                 this._resetDraftTab();
                 this._saveTabs();
@@ -692,16 +704,16 @@ export class LoopManager {
         if (!this.targetVideo || this.loopStartTime === null || this.loopEndTime === null) return;
 
         this.loopActive = true;
+        telemetry.track('loop_toggle', {
+            enabled: true,
+            interval_sec: Math.round((this.loopEndTime - this.loopStartTime) * 10) / 10
+        });
 
         this.targetVideo.removeEventListener('timeupdate', this._handleLoopTimeUpdate);
         this.targetVideo.addEventListener('timeupdate', this._handleLoopTimeUpdate);
 
         if (this.targetVideo.currentTime < this.loopStartTime || this.targetVideo.currentTime > this.loopEndTime) {
             this.targetVideo.currentTime = this.loopStartTime;
-        }
-
-        if (this.targetVideo.paused) {
-            this.targetVideo.play().catch(() => {});
         }
 
         this.updateLoopMarkers();
@@ -1395,7 +1407,7 @@ export class LoopManager {
             return;
         }
         const saved = getValue(this.storageKey, []);
-        this.tabs = Array.isArray(saved) ? saved : [];
+        this.tabs = (Array.isArray(saved) ? saved : []).filter(t => t && typeof t === 'object' && t.id);
         this._sortTabs();
     }
 

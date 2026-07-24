@@ -1,4 +1,5 @@
 import { getValue, setValue, Toast } from '../../utils/index.js';
+import { telemetry } from '../../telemetry';
 
 /**
  * 设置管理器类 - 负责播放器设置面板及其交互功能
@@ -641,6 +642,11 @@ export class SettingsManager {
             state.updateSetting(key, value);
         } else {
             this.saveSettings();
+        }
+
+        telemetry.track('setting_toggle_ui', { key, value });
+        if (key === 'debugMode') {
+            telemetry.track('setting_debug_mode', { debug_mode: !!value });
         }
         
         if (key.startsWith('show') && key.endsWith('Row')) {

@@ -7,6 +7,7 @@ import { getSiteUrls, isSiteDomain } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { md5 } from '../../utils/md5.js';
 import { fetchWithTransport, fetchWithDomainRotation, detectCloudflare } from '../../utils/index.js';
+import { telemetry } from '../../telemetry';
 
 export const JABLE_DOMAINS = getSiteUrls('JABLE');
 export const JAVLIB_DOMAINS = getSiteUrls('JAVLIBRARY');
@@ -60,6 +61,7 @@ export { cleanAvCode, getVideoCodeFromUrl } from '../../utils/videoCode.js';
 // =====================================================================
 export async function fetchJableComments(code, page = 1) {
     const slug = code.toLowerCase().trim();
+    const startTime = Date.now();
     logger.log(`[CommentScraper] 开始采集 Jable 评论，番号: ${slug}, 页码: ${page}`);
     try {
         const res = await fetchWithDomainRotation(
@@ -69,8 +71,22 @@ export async function fetchJableComments(code, page = 1) {
         );
         const parsed = parseCommentsHtml(res.html, res.domain);
         logger.log(`[CommentScraper] 成功采集到 Jable 评论，共 ${parsed.comments.length} 条 (总数: ${parsed.totalCount})`);
+        
+        telemetry.track('comment_scrape_result', {
+            site: 'jable',
+            success: true,
+            count: parsed.comments.length,
+            duration_ms: Date.now() - startTime
+        });
+
         return { ...parsed, domain: res.domain };
     } catch (err) {
+        telemetry.track('comment_scrape_result', {
+            site: 'jable',
+            success: false,
+            duration_ms: Date.now() - startTime
+        });
+
         if (err.message && err.message.includes('CF_SHIELD')) {
             const cfErr = new Error('触发人机验证');
             cfErr.status = 403;

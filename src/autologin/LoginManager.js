@@ -2,6 +2,7 @@ import { getLocalStorage, setLocalStorage } from '../utils/index.js';
 import { MissavLoginProvider } from './MissavLoginProvider.js';
 import { JableLoginProvider } from './JableLoginProvider.js';
 import { CredentialManager } from './CredentialManager.js';
+import { telemetry } from '../telemetry';
 
 const COOLDOWN_DURATION = 30 * 60 * 1000; // 冷却熔断持续时间：30 分钟
 const MAX_FAIL_COUNT = 3; // 最大连续失败次数，超过即熔断
@@ -158,6 +159,8 @@ export class LoginManager {
                 console.log(`[LoginManager] 检测到用户未登录 [${siteKey}]，尝试自动登录...`);
                 const success = await this.activeProvider.login(this.userEmail, this.userPassword, { silent: true });
                 
+                telemetry.track('autologin_result', { site: siteKey, success: !!success });
+
                 if (success) {
                     this.resetCircuitBreaker(siteKey);
                     try { sessionStorage.removeItem(ATTEMPT_KEY); } catch(e) {}
