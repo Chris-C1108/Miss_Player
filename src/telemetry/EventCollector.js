@@ -1,11 +1,10 @@
 /**
- * Miss_Player 核心遥测埋点模块 (EventCollector)
+ * Miss_Player 核心遥测埋点模块 (EventCollector v9.0)
  * 
  * 职责：
- * 1. 匿名客户端 ID 管理（基于终端浏览器指纹生成确定性 MD5，重装脚本依然保持一致）
+ * 1. 匿名客户端 ID 管理（基于终端浏览器指纹生成确定性 MD5）
  * 2. 丰富上下文数据采集 (avcode 番号、站点类型、设备/方向维度、脚本版本)
- * 3. 防抖与批量打包上报 (3 秒防抖, 页面关闭同步 flush)
- * 4. 多 Worker 节点容灾传输
+ * 3. 1小时定期 / 页面卸载 统一 Batch 上报 (POST /api/telemetry/unified)
  */
 
 import { md5 } from '../utils/md5.js';
@@ -14,15 +13,14 @@ import { isSiteDomain } from '../constants/domains.js';
 import { fetchWithTransport } from '../utils/http.js';
 import { getVideoCodeFromUrl } from '../player/controls/CommentScraper.js';
 
-const WORKER_URL_PRIMARY = 'https://telemetry.x-flow.ccwu.cc';
+const WORKER_URL_PRIMARY  = 'https://telemetry.x-flow.ccwu.cc';
 const WORKER_URL_FALLBACK = 'https://xflow-telemetry.chen-m1108.workers.dev';
-const TOKEN_SALT = 'XFLOW_v6_SECRET';
-const CLIENT_ID_KEY = 'mp_telemetry_client_id_v2';
+const TOKEN_SALT          = 'XFLOW_v6_SECRET';
+const CLIENT_ID_KEY       = 'mp_telemetry_client_id_v2';
+const MP_CACHE_KEY        = 'mp_telemetry_cache_v3';
+const ONE_HOUR_MS         = 60 * 60 * 1000;
+const MIN_FLUSH_INTERVAL_MS = 15 * 60 * 1000;
 
-/**
- * 提取确定性终端浏览器指纹
- * @returns {string} 包含硬件/浏览器特性的特征串
- */
 function getDeviceFingerprintString() {
     const components = [];
     try {
@@ -32,7 +30,6 @@ function getDeviceFingerprintString() {
         components.push(`${window.screen ? window.screen.width : 0}x${window.screen ? window.screen.height : 0}`);
         components.push(new Date().getTimezoneOffset());
         
-        // Canvas 轻量级签名
         const canvas = document.createElement('canvas');
         canvas.width = 200;
         canvas.height = 40;
@@ -48,15 +45,12 @@ function getDeviceFingerprintString() {
             ctx.fillText('MissPlayer,v1!~', 4, 17);
             components.push(canvas.toDataURL());
         }
-    } catch (e) {
+    } catch (_) {
         components.push('fp_err');
     }
     return components.join('||');
 }
 
-/**
- * 生成或获取存留的持久化 client_id
- */
 function getOrCreateClientId() {
     let storedId = '';
     try {
@@ -73,7 +67,6 @@ function getOrCreateClientId() {
 
     if (storedId) return storedId;
 
-    // 基于浏览器指纹生成确定性 MD5 client_id
     const fpString = getDeviceFingerprintString();
     const newId = 'mp_' + md5(fpString).slice(0, 24);
 
@@ -89,9 +82,6 @@ function getOrCreateClientId() {
     return newId;
 }
 
-/**
- * 计算简单 Hash Token 防爬
- */
 function genToken(ts) {
     const str = `${TOKEN_SALT}_${ts}`;
     let hash = 0;
@@ -101,21 +91,15 @@ function genToken(ts) {
     return Math.abs(hash).toString(36);
 }
 
-/**
- * 获取当前脚本版本
- */
 function getScriptVersion() {
     try {
         if (typeof GM_info !== 'undefined' && GM_info?.script?.version) {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '1.2.0';
+    return '5.5.3';
 }
 
-/**
- * 获取当前站点归属
- */
 function getSiteCategory() {
     if (isSiteDomain('MISSAV')) return 'MISSAV';
     if (isSiteDomain('JABLE')) return 'JABLE';
@@ -123,10 +107,6 @@ function getSiteCategory() {
     if (isSiteDomain('JAVDB')) return 'JAVDB';
     return 'GENERIC';
 }
-
-const MP_CACHE_KEY = 'mp_telemetry_cache_v2';
-const ONE_HOUR_MS = 60 * 60 * 1000;
-const MIN_FLUSH_INTERVAL_MS = 15 * 60 * 1000;
 
 export class EventCollector {
     constructor() {
@@ -138,11 +118,8 @@ export class EventCollector {
             milestones: []
         };
         this.lastFlushTs = 0;
-        this.flushTimer = null;
-
         this.loadCache();
 
-        // 页面关闭/隐藏时同步刷新汇总包
         if (typeof window !== 'undefined') {
             window.addEventListener('beforeunload', () => this.flush(true));
             window.addEventListener('pagehide', () => this.flush(true));
@@ -160,7 +137,7 @@ export class EventCollector {
             if (typeof GM_getValue === 'function') {
                 raw = GM_getValue(MP_CACHE_KEY, null);
             }
-            if (!raw) {
+            if (!raw && typeof localStorage !== 'undefined') {
                 raw = localStorage.getItem(MP_CACHE_KEY);
             }
             if (raw) {
@@ -188,7 +165,9 @@ export class EventCollector {
             if (typeof GM_setValue === 'function') {
                 GM_setValue(MP_CACHE_KEY, data);
             }
-            localStorage.setItem(MP_CACHE_KEY, data);
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem(MP_CACHE_KEY, data);
+            }
         } catch (_) {}
     }
 
@@ -203,35 +182,24 @@ export class EventCollector {
         this.saveCache();
     }
 
-    /**
-     * 获取设备类型/模式
-     */
     getDeviceType() {
         const mob = isMobile() ? 'Mobile' : 'PC';
         const ori = isPortrait() ? 'Portrait' : 'Landscape';
         return `${mob}_${ori}`;
     }
 
-    /**
-     * 核心埋点上报函数 - 本地累加合并，大幅降低 D1 写入频次
-     * @param {string} eventType 事件类型名称
-     * @param {Object} [eventValue={}] 细节 Payload
-     */
     track(eventType, eventValue = {}) {
         if (!eventType) return;
 
         const ts = Date.now();
         const avcode = getVideoCodeFromUrl() || '';
 
-        // 1. 累加事件触发次数
         this.sessionBuffer.eventCounts[eventType] = (this.sessionBuffer.eventCounts[eventType] || 0) + 1;
 
-        // 2. 收集番号
         if (avcode) {
             this.sessionBuffer.avcodes.add(avcode);
         }
 
-        // 3. 收集播放时长
         if (eventType === 'player_close' && eventValue && eventValue.duration_sec) {
             const sec = parseInt(eventValue.duration_sec, 10);
             if (!isNaN(sec) && sec > 0) {
@@ -239,7 +207,6 @@ export class EventCollector {
             }
         }
 
-        // 4. 重要关键节点记录到 milestones 里程碑 (上限 30 条)
         const CRITICAL_EVENTS = ['app_init', 'player_open_success', 'player_open_fail', 'player_close', 'autologin_result', 'comment_scrape_result', 'adblock_intercept'];
         if (CRITICAL_EVENTS.includes(eventType)) {
             if (this.sessionBuffer.milestones.length < 30) {
@@ -251,10 +218,7 @@ export class EventCollector {
             }
         }
 
-        // 保存到本地持久化缓存
         this.saveCache();
-
-        // 检查 1 小时定期上报
         this.checkPeriodicFlush();
     }
 
@@ -265,33 +229,19 @@ export class EventCollector {
         }
     }
 
-    /**
-     * 刷新并发送当前 Session / 小时聚合汇总数据包
-     * @param {boolean} [isSync=false] 页面关闭时强制发送
-     */
     async flush(isSync = false) {
         const counts = this.sessionBuffer.eventCounts;
         const countKeys = Object.keys(counts);
         if (countKeys.length === 0 && this.sessionBuffer.totalPlaySec === 0) return;
 
         const now = Date.now();
-        if (!isSync && now - this.lastFlushTs < ONE_HOUR_MS) {
-            return; // 未满1小时存本地，不触发网络上报
-        }
-        if (isSync && now - this.lastFlushTs < MIN_FLUSH_INTERVAL_MS && this.sessionBuffer.totalPlaySec < 30) {
-            return; // 强制离屏但未满15分钟且无有效播放，存本地
-        }
+        if (!isSync && now - this.lastFlushTs < ONE_HOUR_MS) return;
+        if (isSync && now - this.lastFlushTs < MIN_FLUSH_INTERVAL_MS && this.sessionBuffer.totalPlaySec < 30) return;
 
-        // 导出当前缓冲区并重置
         const currentCounts = { ...counts };
         const currentPlaySec = this.sessionBuffer.totalPlaySec;
         const currentAvcodes = Array.from(this.sessionBuffer.avcodes);
         const currentMilestones = [...this.sessionBuffer.milestones];
-
-        // 重置内存缓冲区
-        this.sessionBuffer.eventCounts = {};
-        this.sessionBuffer.totalPlaySec = 0;
-        this.sessionBuffer.milestones = [];
 
         const ts = Date.now();
         const dateObj = new Date(ts);
@@ -300,33 +250,34 @@ export class EventCollector {
         const sessionId = `mp_${this.clientId}_${dateStr}_${hourOfDay}`;
 
         const payload = {
-            is_session_summary: true,
-            client_id: this.clientId,
+            app_id: 'missplayer',
+            user_id: this.clientId,
             session_id: sessionId,
             date: dateStr,
             ts,
             hour_of_day: hourOfDay,
-            host: window.location.hostname || '',
+            site_key: typeof window !== 'undefined' ? window.location.hostname || '' : '',
             site_category: getSiteCategory(),
-            script_version: getScriptVersion(),
+            version: getScriptVersion(),
             device_type: this.getDeviceType(),
             total_play_sec: currentPlaySec,
             event_counts: currentCounts,
             avcodes: currentAvcodes,
             details_json: {
                 milestones: currentMilestones
-            }
+            },
+            user_agent: typeof navigator !== 'undefined' ? navigator.userAgent || '' : ''
         };
 
         const body = JSON.stringify(payload);
         const headers = {
             'Content-Type': 'application/json',
-            'X-MP-Token': genToken(ts),
-            'X-MP-Ts': String(ts)
+            'X-Telemetry-Token': genToken(ts),
+            'X-Telemetry-Ts': String(ts)
         };
 
         const sendToUrl = async (baseUrl) => {
-            const url = `${baseUrl}/api/mp/telemetry/events`;
+            const url = `${baseUrl}/api/telemetry/unified`;
             return await fetchWithTransport(url, {
                 method: 'POST',
                 headers,
@@ -335,25 +286,22 @@ export class EventCollector {
             });
         };
 
+        this.clearCache();
+
         try {
             const res = await sendToUrl(WORKER_URL_PRIMARY);
             if (res.status !== 200) {
                 await sendToUrl(WORKER_URL_FALLBACK);
             }
-            this.clearCache();
-        } catch (e) {
+        } catch (_) {
             try {
                 await sendToUrl(WORKER_URL_FALLBACK);
-                this.clearCache();
-            } catch (_) {
-                // 上报失败时保留本地缓存，下次合并重试
+            } catch (__) {
+                // 上报失败时无强求，已打点至 AE 与下次会话
             }
         }
     }
 
-    /**
-     * 应用初始化心跳 (6小时防重)
-     */
     trackAppInit() {
         const INIT_KEY = 'mp_app_init_last_ts';
         let lastSent = 0;

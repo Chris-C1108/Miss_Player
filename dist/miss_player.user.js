@@ -5608,6 +5608,9 @@
   var re = "https://xflow-telemetry.chen-m1108.workers.dev";
   var oe = "XFLOW_v6_SECRET";
   var ae = "mp_telemetry_client_id_v2";
+  var ie = "mp_telemetry_cache_v3";
+  var se = 60 * 60 * 1e3;
+  var le = 15 * 60 * 1e3;
   function getDeviceFingerprintString() {
     var r = [];
     try {
@@ -5678,7 +5681,7 @@
         return GM_info.script.version;
       }
     } catch (r) {}
-    return "1.2.0";
+    return "5.5.3";
   }
   function getSiteCategory() {
     if (isSiteDomain("MISSAV")) {
@@ -5695,9 +5698,6 @@
     }
     return "GENERIC";
   }
-  var ie = "mp_telemetry_cache_v2";
-  var se = 60 * 60 * 1e3;
-  var le = 15 * 60 * 1e3;
   var ce = function() {
     function EventCollector() {
       var r = this;
@@ -5710,7 +5710,6 @@
         "milestones": []
       };
       this.lastFlushTs = 0;
-      this.flushTimer = null;
       this.loadCache();
       if (typeof window !== "undefined") {
         window.addEventListener("beforeunload", (function() {
@@ -5734,7 +5733,7 @@
           if (typeof GM_getValue === "function") {
             r = GM_getValue(ie, null);
           }
-          if (!r) {
+          if (!r && typeof localStorage !== "undefined") {
             r = localStorage.getItem(ie);
           }
           if (r) {
@@ -5763,7 +5762,9 @@
           if (typeof GM_setValue === "function") {
             GM_setValue(ie, r);
           }
-          localStorage.setItem(ie, r);
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem(ie, r);
+          }
         } catch (r) {}
       }
     }, {
@@ -5863,37 +5864,35 @@
                 p = this.sessionBuffer.totalPlaySec;
                 v = Array.from(this.sessionBuffer.avcodes);
                 y = EventCollector_toConsumableArray(this.sessionBuffer.milestones);
-                this.sessionBuffer.eventCounts = {};
-                this.sessionBuffer.totalPlaySec = 0;
-                this.sessionBuffer.milestones = [];
                 b = Date.now();
                 C = new Date(b);
                 _ = C.toISOString().slice(0, 10);
                 k = C.getHours();
                 E = "mp_".concat(this.clientId, "_").concat(_, "_").concat(k);
                 S = {
-                  "is_session_summary": true,
-                  "client_id": this.clientId,
+                  "app_id": "missplayer",
+                  "user_id": this.clientId,
                   "session_id": E,
                   "date": _,
                   "ts": b,
                   "hour_of_day": k,
-                  "host": window.location.hostname || "",
+                  "site_key": typeof window !== "undefined" ? window.location.hostname || "" : "",
                   "site_category": getSiteCategory(),
-                  "script_version": getScriptVersion(),
+                  "version": getScriptVersion(),
                   "device_type": this.getDeviceType(),
                   "total_play_sec": p,
                   "event_counts": u,
                   "avcodes": v,
                   "details_json": {
                     "milestones": y
-                  }
+                  },
+                  "user_agent": typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
                 };
                 P = JSON.stringify(S);
                 D = {
                   "Content-Type": "application/json",
-                  "X-MP-Token": genToken(b),
-                  "X-MP-Ts": String(b)
+                  "X-Telemetry-Token": genToken(b),
+                  "X-Telemetry-Ts": String(b)
                 };
                 L = function() {
                   var o = EventCollector_asyncToGenerator(EventCollector_regeneratorRuntime().mark((function _callee(o) {
@@ -5902,7 +5901,7 @@
                       while (1) {
                         switch (l.prev = l.next) {
                          case 0:
-                          a = "".concat(o, "/api/mp/telemetry/events");
+                          a = "".concat(o, "/api/telemetry/unified");
                           l.next = 3;
                           return fetchWithTransport(a, {
                             "method": "POST",
@@ -5925,46 +5924,45 @@
                     return o.apply(this, arguments);
                   };
                 }();
-                T.prev = 26;
-                T.next = 29;
+                this.clearCache();
+                T.prev = 24;
+                T.next = 27;
                 return L(ne);
 
-               case 29:
+               case 27:
                 M = T.sent;
                 if (!(M.status !== 200)) {
-                  T.next = 33;
+                  T.next = 31;
                   break;
                 }
-                T.next = 33;
+                T.next = 31;
                 return L(re);
+
+               case 31:
+                T.next = 42;
+                break;
 
                case 33:
-                this.clearCache();
-                T.next = 46;
-                break;
-
-               case 36:
-                T.prev = 36;
-                T.t0 = T["catch"](26);
-                T.prev = 38;
-                T.next = 41;
+                T.prev = 33;
+                T.t0 = T["catch"](24);
+                T.prev = 35;
+                T.next = 38;
                 return L(re);
 
-               case 41:
-                this.clearCache();
-                T.next = 46;
+               case 38:
+                T.next = 42;
                 break;
 
-               case 44:
-                T.prev = 44;
-                T.t1 = T["catch"](38);
+               case 40:
+                T.prev = 40;
+                T.t1 = T["catch"](35);
 
-               case 46:
+               case 42:
                case "end":
                 return T.stop();
               }
             }
-          }), _callee2, this, [ [ 26, 36 ], [ 38, 44 ] ]);
+          }), _callee2, this, [ [ 24, 33 ], [ 35, 40 ] ]);
         })));
         function flush() {
           return r.apply(this, arguments);
