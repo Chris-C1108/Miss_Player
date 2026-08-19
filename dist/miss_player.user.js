@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name Miss_Player
+// @name Miss Player | 影院模式 (单手播放器)
 // @name:en Miss Player | Theater Mode (One-handed Player)
 // @name:ja Miss Player | シアターモード (片手プレーヤー)
 // @name:vi Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
