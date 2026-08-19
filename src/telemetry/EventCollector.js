@@ -12,6 +12,7 @@ import { isMobile, isPortrait } from '../utils/device.js';
 import { isSiteDomain } from '../constants/domains.js';
 import { fetchWithTransport } from '../utils/http.js';
 import { getVideoCodeFromUrl } from '../player/controls/CommentScraper.js';
+import { getValue } from '../utils/storage.js';
 
 const WORKER_URL_PRIMARY  = 'https://telemetry.x-flow.ccwu.cc';
 const WORKER_URL_FALLBACK = 'https://xflow-telemetry.chen-m1108.workers.dev';
@@ -97,7 +98,7 @@ function getScriptVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.5.3';
+    return '5.5.1';
 }
 
 function getSiteCategory() {
@@ -222,6 +223,10 @@ export class EventCollector {
         this.checkPeriodicFlush();
     }
 
+    isEnabled() {
+        return getValue('telemetryEnabled', true);
+    }
+
     checkPeriodicFlush() {
         const now = Date.now();
         if (now - this.lastFlushTs >= ONE_HOUR_MS) {
@@ -229,14 +234,18 @@ export class EventCollector {
         }
     }
 
-    async flush(isSync = false) {
+    async flush(isSync = false, force = false) {
+        if (!this.isEnabled()) return;
+
         const counts = this.sessionBuffer.eventCounts;
         const countKeys = Object.keys(counts);
         if (countKeys.length === 0 && this.sessionBuffer.totalPlaySec === 0) return;
 
         const now = Date.now();
-        if (!isSync && now - this.lastFlushTs < ONE_HOUR_MS) return;
-        if (isSync && now - this.lastFlushTs < MIN_FLUSH_INTERVAL_MS && this.sessionBuffer.totalPlaySec < 30) return;
+        if (!force) {
+            if (!isSync && now - this.lastFlushTs < ONE_HOUR_MS) return;
+            if (isSync && now - this.lastFlushTs < MIN_FLUSH_INTERVAL_MS && this.sessionBuffer.totalPlaySec < 30) return;
+        }
 
         const currentCounts = { ...counts };
         const currentPlaySec = this.sessionBuffer.totalPlaySec;

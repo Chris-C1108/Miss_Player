@@ -1,5 +1,6 @@
 import { getValue, setValue, Toast } from '../../utils/index.js';
 import { telemetry } from '../../telemetry';
+import { __ } from '../../constants/i18n.js';
 
 /**
  * 设置管理器类 - 负责播放器设置面板及其交互功能
@@ -30,6 +31,7 @@ export class SettingsManager {
                 javdb: true,
                 javlibrary: false
             },
+            telemetryEnabled: true,
             debugMode: false
         };
 
@@ -180,6 +182,21 @@ export class SettingsManager {
         // =================================================================
         const section3 = this._createSectionHeader('其他 :');
 
+        // 1. 帮助改进 (遥测开关)
+        const telemetryOption = this._createToggleOption(
+            __('helpImprove') || '帮助改进',
+            'telemetryEnabled',
+            this.settings.telemetryEnabled !== false,
+            (checked) => {
+                this.updateSetting('telemetryEnabled', checked);
+                if (checked) {
+                    telemetry.flush(true, true);
+                }
+            },
+            null,
+            __('helpImproveDesc') || '收集必要数据用于改进功能'
+        );
+
         const debugOption = this._createToggleOption(
             'DEBUG',
             'debugMode',
@@ -192,6 +209,7 @@ export class SettingsManager {
             }
         );
 
+        section3.appendChild(telemetryOption);
         section3.appendChild(debugOption);
         container.appendChild(section3);
 
@@ -220,7 +238,7 @@ export class SettingsManager {
     /**
      * 创建标准开关选项行
      */
-    _createToggleOption(labelText, settingKey, initialValue, onChange, extraElement = null) {
+    _createToggleOption(labelText, settingKey, initialValue, onChange, extraElement = null, subText = null) {
         const row = document.createElement('div');
         row.className = 'tm-settings-option-row';
         row.id = `tm-setting-${settingKey}`;
@@ -228,10 +246,22 @@ export class SettingsManager {
         const labelWrapper = document.createElement('div');
         labelWrapper.className = 'tm-settings-label-wrapper';
 
+        const textWrapper = document.createElement('div');
+        textWrapper.className = 'tm-settings-text-wrapper';
+
         const label = document.createElement('span');
         label.className = 'tm-settings-label';
         label.textContent = labelText;
-        labelWrapper.appendChild(label);
+        textWrapper.appendChild(label);
+
+        if (subText) {
+            const sub = document.createElement('span');
+            sub.className = 'tm-settings-subtext';
+            sub.textContent = subText;
+            textWrapper.appendChild(sub);
+        }
+
+        labelWrapper.appendChild(textWrapper);
 
         if (extraElement) {
             labelWrapper.appendChild(extraElement);
@@ -580,6 +610,7 @@ export class SettingsManager {
                 javdb: true,
                 javlibrary: false
             });
+            this.settings.telemetryEnabled = getValue('telemetryEnabled', true);
             this.settings.debugMode = getValue('debugMode', false);
         }
     }
@@ -599,6 +630,7 @@ export class SettingsManager {
             setValue('enabledSeekSteps', this.settings.enabledSeekSteps);
             setValue('showCommentsSection', this.settings.showCommentsSection);
             setValue('enabledCommentSources', this.settings.enabledCommentSources);
+            setValue('telemetryEnabled', this.settings.telemetryEnabled);
             setValue('debugMode', this.settings.debugMode);
         }
     }

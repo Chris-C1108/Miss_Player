@@ -62,6 +62,8 @@ export class I18n {
             tabJavlibReview: 'JAVLib Reviews',
             tabComments: 'Comments',
             autoQuality: 'Auto Quality',
+            helpImprove: 'Help improve',
+            helpImproveDesc: 'Collect necessary data to improve features',
             
             // 消息提示
             loadingError: 'Failed to load video',
@@ -123,6 +125,8 @@ export class I18n {
             tabJavlibReview: 'JAVLib 文章',
             tabComments: '评论',
             autoQuality: '自动画质',
+            helpImprove: '帮助改进',
+            helpImproveDesc: '收集必要数据用于改进功能',
             
             // 消息提示
             loadingError: '视频加载失败',
@@ -184,6 +188,8 @@ export class I18n {
             tabJavlibReview: 'JAVLib 文章',
             tabComments: '評論',
             autoQuality: '自動畫質',
+            helpImprove: '幫助改進',
+            helpImproveDesc: '收集必要數據用於改進功能',
             
             // 消息提示
             loadingError: '視頻加載失敗',
@@ -244,6 +250,8 @@ export class I18n {
             tabJavlibReview: 'JAVLib レビュー',
             tabComments: 'コメント',
             autoQuality: '自動画质',
+            helpImprove: '改善に協力',
+            helpImproveDesc: '機能改善のために必要なデータを収集します',
             
             // 消息提示
             loadingError: '動画の読み込みに失敗しました',
@@ -304,6 +312,8 @@ export class I18n {
             tabJavlibReview: 'Bài viết JAVLib',
             tabComments: 'Bình luận',
             autoQuality: 'Chất lượng tự động',
+            helpImprove: 'Giúp cải thiện',
+            helpImproveDesc: 'Thu thập dữ liệu cần thiết để cải thiện tính năng',
             
             // 消息提示
             loadingError: 'Không thể tải video',

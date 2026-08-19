@@ -331,10 +331,23 @@
     gap: 8px;
 }
 
+.tm-settings-text-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
 .tm-settings-label {
     font-size: 13.5px;
     font-weight: 500;
     color: hsl(var(--shadcn-foreground));
+}
+
+.tm-settings-subtext {
+    font-size: 11px;
+    font-weight: 400;
+    color: hsla(var(--shadcn-muted-foreground) / 0.7);
+    line-height: 1.25;
 }
 
 /* 快进/快退 步进 Badges 面板 (横向滑动不换行设计) */
