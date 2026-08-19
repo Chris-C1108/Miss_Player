@@ -1,6 +1,6 @@
 {
   "name": "miss-noad-video-player",
-  "version": "5.5.1",
+  "version": "5.5.5",
   "main": "dist/miss_noad_player.user.js",
   "scripts": {
     "build": "webpack --mode production",
