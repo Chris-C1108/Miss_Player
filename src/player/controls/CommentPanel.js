@@ -6,6 +6,7 @@ import { logger } from '../../utils/logger.js';
 import { CrossDomainBridge } from '../../autologin/CrossDomainBridge.js';
 import { JableLoginProvider } from '../../autologin/JableLoginProvider.js';
 import { MissavLoginProvider } from '../../autologin/MissavLoginProvider.js';
+import { telemetry } from '../../telemetry/index.js';
 import {
     getVideoCodeFromUrl,
     fetchJableComments,
@@ -494,6 +495,16 @@ export class CommentPanel {
             targetSecs = secs[0]; // 范围类型跳转到起点
             isRange = true;
         }
+
+        // 遥测上报：点击时间戳跳转
+        try {
+            telemetry.trackTimestampClick({
+                secs,
+                avcode: this.videoCode || '',
+                source: 'comment'
+            });
+        } catch (_) {}
+
         if (this.targetVideo) {
             this.targetVideo.currentTime = targetSecs;
             this.targetVideo.play().catch(() => { });

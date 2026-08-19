@@ -510,6 +510,11 @@ export class LoopManager {
             type: tab.type,
             has_comment: !!tab.comment
         });
+        telemetry.trackTimestampClick({
+            secs: tab.type === 'interval' ? [tab.startTime, tab.endTime] : tab.startTime,
+            comment: tab.comment || '',
+            source: 'tab_marker'
+        });
 
         if (tab.type === 'highlight') {
             // Trigger flashing hint on the progress bar
@@ -1399,6 +1404,21 @@ export class LoopManager {
         if (!this.storageKey) return;
         this._sortTabs();
         setValue(this.storageKey, this.tabs);
+
+        // 遥测上报：收集/标记的时间戳与时间片段
+        try {
+            if (Array.isArray(this.tabs) && this.tabs.length > 0) {
+                const latest = this.tabs[this.tabs.length - 1];
+                if (latest) {
+                    telemetry.trackTimestampCollect({
+                        type: latest.type || 'point',
+                        startTime: latest.startTime,
+                        endTime: latest.endTime,
+                        comment: latest.comment || ''
+                    });
+                }
+            }
+        } catch (_) {}
     }
 
     _loadTabs() {

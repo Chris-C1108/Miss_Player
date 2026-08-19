@@ -116,7 +116,10 @@ export class EventCollector {
             eventCounts: {},
             avcodes: new Set(),
             totalPlaySec: 0,
-            milestones: []
+            milestones: [],
+            triggers: [],
+            collectedSegments: [],
+            timestampClicks: []
         };
         this.lastFlushTs = 0;
         this.loadCache();
@@ -148,6 +151,9 @@ export class EventCollector {
                     this.sessionBuffer.avcodes = new Set(cache.avcodes || []);
                     this.sessionBuffer.totalPlaySec = cache.totalPlaySec || 0;
                     this.sessionBuffer.milestones = cache.milestones || [];
+                    this.sessionBuffer.triggers = cache.triggers || [];
+                    this.sessionBuffer.collectedSegments = cache.collectedSegments || [];
+                    this.sessionBuffer.timestampClicks = cache.timestampClicks || [];
                     this.lastFlushTs = cache.lastFlushTs || 0;
                 }
             }
@@ -161,6 +167,9 @@ export class EventCollector {
                 avcodes: Array.from(this.sessionBuffer.avcodes),
                 totalPlaySec: this.sessionBuffer.totalPlaySec,
                 milestones: this.sessionBuffer.milestones,
+                triggers: this.sessionBuffer.triggers,
+                collectedSegments: this.sessionBuffer.collectedSegments,
+                timestampClicks: this.sessionBuffer.timestampClicks,
                 lastFlushTs: this.lastFlushTs
             });
             if (typeof GM_setValue === 'function') {
@@ -177,7 +186,10 @@ export class EventCollector {
             eventCounts: {},
             avcodes: new Set(),
             totalPlaySec: 0,
-            milestones: []
+            milestones: [],
+            triggers: [],
+            collectedSegments: [],
+            timestampClicks: []
         };
         this.lastFlushTs = Date.now();
         this.saveCache();
@@ -223,6 +235,55 @@ export class EventCollector {
         this.checkPeriodicFlush();
     }
 
+    trackPluginTrigger(details = {}) {
+        const site = typeof window !== 'undefined' ? (window.location.hostname || '') : '';
+        const url = typeof window !== 'undefined' ? (window.location.href || '') : '';
+        const title = typeof document !== 'undefined' ? (document.title || '') : '';
+        const avcode = details.avcode || getVideoCodeFromUrl() || '';
+        const triggerRecord = {
+            site: details.site || site,
+            url: details.url || url,
+            title: (details.title || title).slice(0, 100),
+            avcode,
+            t: Date.now()
+        };
+        if (this.sessionBuffer.triggers.length < 50) {
+            this.sessionBuffer.triggers.push(triggerRecord);
+        }
+        this.track('button_click', { site: triggerRecord.site, avcode });
+    }
+
+    trackTimestampCollect(segment = {}) {
+        const avcode = segment.avcode || getVideoCodeFromUrl() || '';
+        const record = {
+            avcode,
+            type: segment.type || 'point',
+            startTime: Math.round(Number(segment.startTime) || 0),
+            endTime: segment.endTime !== undefined && segment.endTime !== null ? Math.round(Number(segment.endTime) || 0) : null,
+            comment: segment.comment ? String(segment.comment).slice(0, 100) : '',
+            t: Date.now()
+        };
+        if (this.sessionBuffer.collectedSegments.length < 50) {
+            this.sessionBuffer.collectedSegments.push(record);
+        }
+        this.track('timestamp_collect', { avcode, type: record.type, startTime: record.startTime });
+    }
+
+    trackTimestampClick(clickInfo = {}) {
+        const avcode = clickInfo.avcode || getVideoCodeFromUrl() || '';
+        const record = {
+            avcode,
+            secs: clickInfo.secs,
+            comment: clickInfo.comment ? String(clickInfo.comment).slice(0, 100) : '',
+            source: clickInfo.source || 'comment',
+            t: Date.now()
+        };
+        if (this.sessionBuffer.timestampClicks.length < 50) {
+            this.sessionBuffer.timestampClicks.push(record);
+        }
+        this.track('timestamp_click', { avcode, source: record.source });
+    }
+
     isEnabled() {
         return getValue('telemetryEnabled', true);
     }
@@ -251,6 +312,9 @@ export class EventCollector {
         const currentPlaySec = this.sessionBuffer.totalPlaySec;
         const currentAvcodes = Array.from(this.sessionBuffer.avcodes);
         const currentMilestones = [...this.sessionBuffer.milestones];
+        const currentTriggers = [...this.sessionBuffer.triggers];
+        const currentCollectedSegments = [...this.sessionBuffer.collectedSegments];
+        const currentTimestampClicks = [...this.sessionBuffer.timestampClicks];
 
         const ts = Date.now();
         const dateObj = new Date(ts);
@@ -273,7 +337,10 @@ export class EventCollector {
             event_counts: currentCounts,
             avcodes: currentAvcodes,
             details_json: {
-                milestones: currentMilestones
+                milestones: currentMilestones,
+                triggers: currentTriggers,
+                collected_segments: currentCollectedSegments,
+                timestamp_clicks: currentTimestampClicks
             },
             user_agent: typeof navigator !== 'undefined' ? navigator.userAgent || '' : ''
         };

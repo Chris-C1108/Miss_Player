@@ -5707,7 +5707,10 @@
         "eventCounts": {},
         "avcodes": new Set,
         "totalPlaySec": 0,
-        "milestones": []
+        "milestones": [],
+        "triggers": [],
+        "collectedSegments": [],
+        "timestampClicks": []
       };
       this.lastFlushTs = 0;
       this.loadCache();
@@ -5743,6 +5746,9 @@
               this.sessionBuffer.avcodes = new Set(o.avcodes || []);
               this.sessionBuffer.totalPlaySec = o.totalPlaySec || 0;
               this.sessionBuffer.milestones = o.milestones || [];
+              this.sessionBuffer.triggers = o.triggers || [];
+              this.sessionBuffer.collectedSegments = o.collectedSegments || [];
+              this.sessionBuffer.timestampClicks = o.timestampClicks || [];
               this.lastFlushTs = o.lastFlushTs || 0;
             }
           }
@@ -5757,6 +5763,9 @@
             "avcodes": Array.from(this.sessionBuffer.avcodes),
             "totalPlaySec": this.sessionBuffer.totalPlaySec,
             "milestones": this.sessionBuffer.milestones,
+            "triggers": this.sessionBuffer.triggers,
+            "collectedSegments": this.sessionBuffer.collectedSegments,
+            "timestampClicks": this.sessionBuffer.timestampClicks,
             "lastFlushTs": this.lastFlushTs
           });
           if (typeof GM_setValue === "function") {
@@ -5774,7 +5783,10 @@
           "eventCounts": {},
           "avcodes": new Set,
           "totalPlaySec": 0,
-          "milestones": []
+          "milestones": [],
+          "triggers": [],
+          "collectedSegments": [],
+          "timestampClicks": []
         };
         this.lastFlushTs = Date.now();
         this.saveCache();
@@ -5819,6 +5831,71 @@
         this.checkPeriodicFlush();
       }
     }, {
+      "key": "trackPluginTrigger",
+      "value": function trackPluginTrigger() {
+        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
+        var o = typeof window !== "undefined" ? window.location.hostname || "" : "";
+        var a = typeof window !== "undefined" ? window.location.href || "" : "";
+        var l = typeof document !== "undefined" ? document.title || "" : "";
+        var u = r.avcode || getVideoCodeFromUrl() || "";
+        var p = {
+          "site": r.site || o,
+          "url": r.url || a,
+          "title": (r.title || l).slice(0, 100),
+          "avcode": u,
+          "t": Date.now()
+        };
+        if (this.sessionBuffer.triggers.length < 50) {
+          this.sessionBuffer.triggers.push(p);
+        }
+        this.track("button_click", {
+          "site": p.site,
+          "avcode": u
+        });
+      }
+    }, {
+      "key": "trackTimestampCollect",
+      "value": function trackTimestampCollect() {
+        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
+        var o = r.avcode || getVideoCodeFromUrl() || "";
+        var a = {
+          "avcode": o,
+          "type": r.type || "point",
+          "startTime": Math.round(Number(r.startTime) || 0),
+          "endTime": r.endTime !== void 0 && r.endTime !== null ? Math.round(Number(r.endTime) || 0) : null,
+          "comment": r.comment ? String(r.comment).slice(0, 100) : "",
+          "t": Date.now()
+        };
+        if (this.sessionBuffer.collectedSegments.length < 50) {
+          this.sessionBuffer.collectedSegments.push(a);
+        }
+        this.track("timestamp_collect", {
+          "avcode": o,
+          "type": a.type,
+          "startTime": a.startTime
+        });
+      }
+    }, {
+      "key": "trackTimestampClick",
+      "value": function trackTimestampClick() {
+        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
+        var o = r.avcode || getVideoCodeFromUrl() || "";
+        var a = {
+          "avcode": o,
+          "secs": r.secs,
+          "comment": r.comment ? String(r.comment).slice(0, 100) : "",
+          "source": r.source || "comment",
+          "t": Date.now()
+        };
+        if (this.sessionBuffer.timestampClicks.length < 50) {
+          this.sessionBuffer.timestampClicks.push(a);
+        }
+        this.track("timestamp_click", {
+          "avcode": o,
+          "source": a.source
+        });
+      }
+    }, {
       "key": "isEnabled",
       "value": function isEnabled() {
         return getValue("telemetryEnabled", true);
@@ -5835,64 +5912,67 @@
       "key": "flush",
       "value": function() {
         var r = EventCollector_asyncToGenerator(EventCollector_regeneratorRuntime().mark((function _callee2() {
-          var r, o, a, l, u, p, v, y, b, C, _, k, E, S, P, D, L, M, A, T = arguments;
-          return EventCollector_regeneratorRuntime().wrap((function _callee2$(j) {
+          var r, o, a, l, u, p, v, y, b, C, _, k, E, S, P, D, L, M, A, T, j, B, I = arguments;
+          return EventCollector_regeneratorRuntime().wrap((function _callee2$(V) {
             while (1) {
-              switch (j.prev = j.next) {
+              switch (V.prev = V.next) {
                case 0:
-                r = T.length > 0 && T[0] !== void 0 ? T[0] : false;
-                o = T.length > 1 && T[1] !== void 0 ? T[1] : false;
+                r = I.length > 0 && I[0] !== void 0 ? I[0] : false;
+                o = I.length > 1 && I[1] !== void 0 ? I[1] : false;
                 if (this.isEnabled()) {
-                  j.next = 4;
+                  V.next = 4;
                   break;
                 }
-                return j.abrupt("return");
+                return V.abrupt("return");
 
                case 4:
                 a = this.sessionBuffer.eventCounts;
                 l = Object.keys(a);
                 if (!(l.length === 0 && this.sessionBuffer.totalPlaySec === 0)) {
-                  j.next = 8;
+                  V.next = 8;
                   break;
                 }
-                return j.abrupt("return");
+                return V.abrupt("return");
 
                case 8:
                 u = Date.now();
                 if (o) {
-                  j.next = 14;
+                  V.next = 14;
                   break;
                 }
                 if (!(!r && u - this.lastFlushTs < se)) {
-                  j.next = 12;
+                  V.next = 12;
                   break;
                 }
-                return j.abrupt("return");
+                return V.abrupt("return");
 
                case 12:
                 if (!(r && u - this.lastFlushTs < le && this.sessionBuffer.totalPlaySec < 30)) {
-                  j.next = 14;
+                  V.next = 14;
                   break;
                 }
-                return j.abrupt("return");
+                return V.abrupt("return");
 
                case 14:
                 p = EventCollector_objectSpread({}, a);
                 v = this.sessionBuffer.totalPlaySec;
                 y = Array.from(this.sessionBuffer.avcodes);
                 b = EventCollector_toConsumableArray(this.sessionBuffer.milestones);
-                C = Date.now();
-                _ = new Date(C);
-                k = _.toISOString().slice(0, 10);
-                E = _.getHours();
-                S = "mp_".concat(this.clientId, "_").concat(k, "_").concat(E);
-                P = {
+                C = EventCollector_toConsumableArray(this.sessionBuffer.triggers);
+                _ = EventCollector_toConsumableArray(this.sessionBuffer.collectedSegments);
+                k = EventCollector_toConsumableArray(this.sessionBuffer.timestampClicks);
+                E = Date.now();
+                S = new Date(E);
+                P = S.toISOString().slice(0, 10);
+                D = S.getHours();
+                L = "mp_".concat(this.clientId, "_").concat(P, "_").concat(D);
+                M = {
                   "app_id": "missplayer",
                   "user_id": this.clientId,
-                  "session_id": S,
-                  "date": k,
-                  "ts": C,
-                  "hour_of_day": E,
+                  "session_id": L,
+                  "date": P,
+                  "ts": E,
+                  "hour_of_day": D,
                   "site_key": typeof window !== "undefined" ? window.location.hostname || "" : "",
                   "site_category": getSiteCategory(),
                   "version": getScriptVersion(),
@@ -5901,17 +5981,20 @@
                   "event_counts": p,
                   "avcodes": y,
                   "details_json": {
-                    "milestones": b
+                    "milestones": b,
+                    "triggers": C,
+                    "collected_segments": _,
+                    "timestamp_clicks": k
                   },
                   "user_agent": typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
                 };
-                D = JSON.stringify(P);
-                L = {
+                A = JSON.stringify(M);
+                T = {
                   "Content-Type": "application/json",
-                  "X-Telemetry-Token": genToken(C),
-                  "X-Telemetry-Ts": String(C)
+                  "X-Telemetry-Token": genToken(E),
+                  "X-Telemetry-Ts": String(E)
                 };
-                M = function() {
+                j = function() {
                   var o = EventCollector_asyncToGenerator(EventCollector_regeneratorRuntime().mark((function _callee(o) {
                     var a;
                     return EventCollector_regeneratorRuntime().wrap((function _callee$(l) {
@@ -5922,8 +6005,8 @@
                           l.next = 3;
                           return fetchWithTransport(a, {
                             "method": "POST",
-                            "headers": L,
-                            "body": D,
+                            "headers": T,
+                            "body": A,
                             "timeout": r ? 3e3 : 8e3
                           });
 
@@ -5942,44 +6025,44 @@
                   };
                 }();
                 this.clearCache();
-                j.prev = 28;
-                j.next = 31;
-                return M(ne);
+                V.prev = 31;
+                V.next = 34;
+                return j(ne);
 
-               case 31:
-                A = j.sent;
-                if (!(A.status !== 200)) {
-                  j.next = 35;
+               case 34:
+                B = V.sent;
+                if (!(B.status !== 200)) {
+                  V.next = 38;
                   break;
                 }
-                j.next = 35;
-                return M(re);
+                V.next = 38;
+                return j(re);
 
-               case 35:
-                j.next = 46;
+               case 38:
+                V.next = 49;
                 break;
 
-               case 37:
-                j.prev = 37;
-                j.t0 = j["catch"](28);
-                j.prev = 39;
-                j.next = 42;
-                return M(re);
+               case 40:
+                V.prev = 40;
+                V.t0 = V["catch"](31);
+                V.prev = 42;
+                V.next = 45;
+                return j(re);
 
-               case 42:
-                j.next = 46;
+               case 45:
+                V.next = 49;
                 break;
 
-               case 44:
-                j.prev = 44;
-                j.t1 = j["catch"](39);
+               case 47:
+                V.prev = 47;
+                V.t1 = V["catch"](42);
 
-               case 46:
+               case 49:
                case "end":
-                return j.stop();
+                return V.stop();
               }
             }
-          }), _callee2, this, [ [ 28, 37 ], [ 39, 44 ] ]);
+          }), _callee2, this, [ [ 31, 40 ], [ 42, 47 ] ]);
         })));
         function flush() {
           return r.apply(this, arguments);
@@ -12304,6 +12387,13 @@
           o = r[0];
           a = true;
         }
+        try {
+          ue.trackTimestampClick({
+            "secs": r,
+            "avcode": this.videoCode || "",
+            "source": "comment"
+          });
+        } catch (r) {}
         if (this.targetVideo) {
           this.targetVideo.currentTime = o;
           this.targetVideo.play()["catch"]((function() {}));
@@ -17308,6 +17398,11 @@
           "type": r.type,
           "has_comment": !!r.comment
         });
+        ue.trackTimestampClick({
+          "secs": r.type === "interval" ? [ r.startTime, r.endTime ] : r.startTime,
+          "comment": r.comment || "",
+          "source": "tab_marker"
+        });
         if (r.type === "highlight") {
           if (this.playerCore.controlManager && typeof this.playerCore.controlManager.showJumpHint === "function") {
             this.playerCore.controlManager.showJumpHint(r.startTime);
@@ -18162,6 +18257,19 @@
         }
         this._sortTabs();
         setValue(this.storageKey, this.tabs);
+        try {
+          if (Array.isArray(this.tabs) && this.tabs.length > 0) {
+            var r = this.tabs[this.tabs.length - 1];
+            if (r) {
+              ue.trackTimestampCollect({
+                "type": r.type || "point",
+                "startTime": r.startTime,
+                "endTime": r.endTime,
+                "comment": r.comment || ""
+              });
+            }
+          }
+        } catch (r) {}
       }
     }, {
       "key": "_loadTabs",
@@ -20609,7 +20717,7 @@
     }, {
       "key": "handleButtonClick",
       "value": function handleButtonClick() {
-        ue.track("button_click");
+        ue.trackPluginTrigger();
         this.button.style.display = "none";
         this.videoPlayer = new $e({
           "playerState": this.playerState,

@@ -242,8 +242,8 @@ export class FloatingButton {
      * 处理按钮点击
      */
     handleButtonClick() {
-        // 遥测上报：浮窗按钮被点击
-        telemetry.track('button_click');
+        // 遥测上报：浮窗按钮被点击，记录触发站点和视频信息
+        telemetry.trackPluginTrigger();
 
         // 隐藏按钮
         this.button.style.display = 'none';
