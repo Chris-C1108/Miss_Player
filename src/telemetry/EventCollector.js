@@ -98,7 +98,7 @@ function getScriptVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.5.5';
+    return '5.5.6';
 }
 
 function getSiteCategory() {

@@ -70,9 +70,9 @@ module.exports = {
     new CleanWebpackPlugin(),
     new WebpackUserscript({
       headers: {
-        name: 'Miss Player | 影院模式 (单手播放器)',
-        namespace: 'loadingi.local',
-        version: '5.5.5',
+        name: 'Miss_Player',
+        namespace: 'https://github.com/Chris-C1108/Miss_Player',
+        version: '5.5.6',
         description: "MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用",
         author: 'Chris_C',
         match: [
