@@ -1,6 +1,6 @@
 import { __ } from '../../constants/i18n.js';
 import { CLOSE_LINE, SEND, KEYBOARD } from '../../constants/icons.js';
-import { Toast, isMobile, createModal, copyToClipboard } from '../../utils/index.js';
+import { Toast, isMobile, createModal, copyToClipboard, getValue } from '../../utils/index.js';
 import { isSiteDomain, SITE_DOMAINS, checkSiteReachability } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { CrossDomainBridge } from '../../autologin/CrossDomainBridge.js';
@@ -103,25 +103,8 @@ export class CommentPanel {
         if (!videoCode) return;
 
         // 读取用户设置 (与 PlayerState.loadSettings 使用相同的逐键存储方式)
-        let showCommentsSection = true;
-        let enabledSources = { jable: true, javdb: true, javlibrary: false };
-
-        try {
-            if (typeof GM_getValue === 'function') {
-                showCommentsSection = GM_getValue('showCommentsSection', true);
-                enabledSources = GM_getValue('enabledCommentSources', enabledSources);
-            } else {
-                const LOCAL_STORAGE_PREFIX = 'missNoAD_';
-                const scRaw = localStorage.getItem(LOCAL_STORAGE_PREFIX + 'showCommentsSection');
-                if (scRaw !== null) {
-                    try { showCommentsSection = JSON.parse(scRaw); } catch (e) { }
-                }
-                const esRaw = localStorage.getItem(LOCAL_STORAGE_PREFIX + 'enabledCommentSources');
-                if (esRaw !== null) {
-                    try { enabledSources = JSON.parse(esRaw); } catch (e) { }
-                }
-            }
-        } catch (e) { }
+        const showCommentsSection = getValue('showCommentsSection', true);
+        const enabledSources = getValue('enabledCommentSources', { jable: true, javdb: true, javlibrary: false });
 
         if (!showCommentsSection) {
             logger.log(`[CommentPanel] 设置中未开启评论区 (showCommentsSection: false)，跳过后台预加载`);

@@ -438,7 +438,7 @@
     "964": (r, o, a) => {
       a.r(o);
       a.d(o, {
-        "default": () => A
+        "default": () => T
       });
       var l = a(72);
       var u = a.n(l);
@@ -460,7 +460,7 @@
       L.domAPI = v();
       L.insertStyleElement = E();
       var M = u()(D.A, L);
-      const A = D.A && D.A.locals ? D.A.locals : void 0;
+      const T = D.A && D.A.locals ? D.A.locals : void 0;
     }
   };
   var o = {};
@@ -743,7 +743,8 @@
       return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
     }, storage_typeof(r);
   }
-  var p = "missNoAD_";
+  var p = "mp_";
+  var v = "missNoAD_";
   function hasGMApi() {
     return typeof GM_getValue === "function" && typeof GM_setValue === "function";
   }
@@ -755,6 +756,9 @@
         return GM_getValue(r, o);
       }
       var l = localStorage.getItem(p + r);
+      if (l === null) {
+        l = localStorage.getItem(v + r);
+      }
       if (l !== null) {
         try {
           return JSON.parse(l);
@@ -786,6 +790,7 @@
         return;
       }
       localStorage.removeItem(p + r);
+      localStorage.removeItem(v + r);
     } catch (r) {}
   }
   function obfuscate(r) {
@@ -1275,7 +1280,7 @@
     }
     return l;
   }
-  var v = {
+  var y = {
     "MISSAV": {
       "primary": "missav.ai",
       "backups": [ "missav.ws" ]
@@ -1296,14 +1301,14 @@
     }
   };
   function getSiteDomains(r) {
-    var o = v[r];
+    var o = y[r];
     if (!o) {
       return [];
     }
     return [ o.primary ].concat(_toConsumableArray(o.backups || []));
   }
   function getAllSiteDomains(r) {
-    var o = v[r];
+    var o = y[r];
     if (!o) {
       return [];
     }
@@ -1321,7 +1326,7 @@
       return o.includes(r);
     }));
   }
-  var y = new Map;
+  var b = new Map;
   function checkSiteReachability(r) {
     return _checkSiteReachability.apply(this, arguments);
   }
@@ -1333,11 +1338,11 @@
           switch (v.prev = v.next) {
            case 0:
             o = p.length > 1 && p[1] !== void 0 ? p[1] : false;
-            if (!(!o && y.has(r))) {
+            if (!(!o && b.has(r))) {
               v.next = 3;
               break;
             }
-            return v.abrupt("return", y.get(r));
+            return v.abrupt("return", b.get(r));
 
            case 3:
             a = getSiteDomains(r);
@@ -1399,7 +1404,7 @@
 
            case 9:
             u = v.sent;
-            y.set(r, u);
+            b.set(r, u);
             return v.abrupt("return", u);
 
            case 12:
@@ -2339,11 +2344,11 @@
     md5cycle(a, u);
     return a;
   }
-  var b = "0123456789abcdef".split("");
+  var C = "0123456789abcdef".split("");
   function rhex(r) {
     var o = "", a = 0;
     for (;a < 4; a++) {
-      o += b[r >> a * 8 + 4 & 15] + b[r >> a * 8 & 15];
+      o += C[r >> a * 8 + 4 & 15] + C[r >> a * 8 & 15];
     }
     return o;
   }
@@ -2401,8 +2406,8 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var C = typeof console !== "undefined" ? console : null;
-  var _ = function() {
+  var _ = typeof console !== "undefined" ? console : null;
+  var k = function() {
     function Logger() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : "[Miss Player]";
       _classCallCheck(this, Logger);
@@ -2444,10 +2449,10 @@
         if (window.missPlayerLogs.length > 500) {
           window.missPlayerLogs.shift();
         }
-        if (C) {
+        if (_) {
           var v = r === "error" ? "error" : r === "warn" ? "warn" : "log";
-          if (C[v]) {
-            C[v].apply(C, [ "".concat(this.prefix) ].concat(a));
+          if (_[v]) {
+            _[v].apply(_, [ "".concat(this.prefix) ].concat(a));
           }
         }
       }
@@ -2525,8 +2530,8 @@
       }
     } ]);
   }();
-  var k = new _("[Miss Player]");
-  const E = null && k;
+  var E = new k("[Miss Player]");
+  const S = null && E;
   function CommentScraper_typeof(r) {
     "@babel/helpers - typeof";
     return CommentScraper_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -3039,10 +3044,10 @@
       }));
     };
   }
-  var S = getSiteUrls("JABLE");
-  var P = getSiteUrls("JAVLIBRARY");
-  var D = getSiteUrls("JAVDB");
-  var L = {
+  var P = getSiteUrls("JABLE");
+  var D = getSiteUrls("JAVLIBRARY");
+  var L = getSiteUrls("JAVDB");
+  var M = {
     "FILTER": {
       "NAME_INITIAL_EXCLUSIONS": new Set([ "ok", "good", "nice", "love", "best", "cool", "hot", "av", "vip", "lol", "wow", "omg", "no", "yes", "hi", "like", "sexy", "god", "star", "new", "old", "top", "pro", "fun", "bad", "hub", "tv" ]),
       "JABLE_EMOJI_REGEX": /:[a-zA-Z]{2,15}:/,
@@ -3057,7 +3062,7 @@
       "SECOND_KEYWORDS": [ "秒", "秒钟", "s" ]
     }
   };
-  var M = function esc(r) {
+  var T = function esc(r) {
     var o = document.createElement("div");
     o.textContent = r;
     return o.innerHTML;
@@ -3075,10 +3080,10 @@
             o = y.length > 1 && y[1] !== void 0 ? y[1] : 1;
             a = r.toLowerCase().trim();
             l = Date.now();
-            k.log("[CommentScraper] 开始采集 Jable 评论，番号: ".concat(a, ", 页码: ").concat(o));
+            E.log("[CommentScraper] 开始采集 Jable 评论，番号: ".concat(a, ", 页码: ").concat(o));
             b.prev = 4;
             b.next = 7;
-            return fetchWithDomainRotation(S, (function(r) {
+            return fetchWithDomainRotation(P, (function(r) {
               return "".concat(r, "/videos/").concat(a, "/?mode=async&function=get_block&block_id=video_comments_video_comments&sort_by=&from=").concat(o, "&ipp=10&_=").concat(Date.now());
             }), {
               "headers": {
@@ -3091,8 +3096,8 @@
            case 7:
             u = b.sent;
             p = parseCommentsHtml(u.html, u.domain);
-            k.log("[CommentScraper] 成功采集到 Jable 评论，共 ".concat(p.comments.length, " 条 (总数: ").concat(p.totalCount, ")"));
-            ue.track("comment_scrape_result", {
+            E.log("[CommentScraper] 成功采集到 Jable 评论，共 ".concat(p.comments.length, " 条 (总数: ").concat(p.totalCount, ")"));
+            de.track("comment_scrape_result", {
               "site": "jable",
               "success": true,
               "count": p.comments.length,
@@ -3105,7 +3110,7 @@
            case 14:
             b.prev = 14;
             b.t0 = b["catch"](4);
-            ue.track("comment_scrape_result", {
+            de.track("comment_scrape_result", {
               "site": "jable",
               "success": false,
               "duration_ms": Date.now() - l
@@ -3131,7 +3136,7 @@
     return _fetchJableComments.apply(this, arguments);
   }
   function parseCommentsHtml(r) {
-    var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : S[0];
+    var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : P[0];
     if (r.includes("cf-challenge") || r.includes("Turnstile") || r.includes("Checking your browser") || r.includes("cloudflare")) {
       var a = new Error("触发人机验证");
       a.status = 403;
@@ -3219,12 +3224,12 @@
     return r.replace(/:[a-zA-Z]{2,15}:/g, "");
   }
   var A = "[張张趙赵陳陈廖郭邱翁蕭萧馮冯鄧邓呂吕吳吴宋罗羅彭劉刘蔣蒋柯隋詹潘賴赖卓崔薛]";
-  var T = /(?:高中|中學|中学|大學(?!習|习)|大学(?!习|擺)|一中|國中|国中|高工|高商|商工|二信|清大|台大|世新|附中|大足一中|大足第一中学|神岡高工|大明高中|吉安國中|靜宜大學|珊瑚高中|南港高中|建國中學|文華高中|明道高中|二信中學|慧燈中學|道明中學|新竹高商|成功高中)/i;
-  var j = /(?:不要?(?:再|在)?\s*(?:自己)?\s*尻|不要?(?:再|在)?\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|別(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|别(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|唔好(?:再|在)?\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|咪撚\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|不要一直\s*(?:自己)?\s*尻|不要一直\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|别一直\s*(?:自己)?\s*尻|别在尻|别在打|别在尻|别再打了|別再打了|别打了|別打了|別擼了|别撸了|別J了|别J了|别打飞机|別打飛機|別打手槍|别打手枪|玩手槍|玩手枪|實名(?:開導|觀看|推薦|观看|开导|推荐)|实名(?:开导|观看|推荐)|又射了|縱慾過度|纵欲过度|著返條褲|別在射精|别在射精|别射精|別射精|別打手槍|别打手枪|會破皮|会破皮|别冲了|別衝了|别冲|別衝)/i;
-  var B = /^(?:的(?:女神|女友|女朋友|男友|男朋友|时候|時候|回忆|回憶|时代|時代|样子|樣子|日子|故事|剧情|劇情|感觉|感覺|妹子|女孩|女生|男生|学妹|學妹|学姐|學姐|美女|老师|老師|同学|同學)|生|JK|jk|制服|校校服|学生|學生|女优|女優|演员|演員|少女|美少女|辣妹|熟女|人妻)/i;
-  var I = new RegExp("(?:".concat(A, "[\\u4e00-\\u9fa5]{1,2})(?:[我你他她]|同學|同学|同事|老師|老师|醫生|医生|老闆|老板|只有|说明|是|有|沒|没|在|別|别|不|好|快|整天|到此|生日|畢業|毕业|求求|這|气|那|大|小|長|长|屁股|逆天|牛逼|牛b|神人|實名|实名|太神|太牛|就|被|也|跟|說|说|講|讲|超|愛|爱|想|本|人|雞|鸡|的|都|要|去|戴|拿|看|打|尻|撸|擼|射|叫|做|操|肏|草|干|幹|一定|真的|早就|一直|天天|已|给|給|和|与|與|同|学|學|唱|跳|写|寫|读|讀|听|聽|走|跑|吃|喝|玩|笑|哭|买|買|卖|賣|住|用|到|来|來)"), "i");
-  var V = new RegExp("(?:不如|比|像|叫|是)\\s*(?:[\\u4e00-\\u9fa5]{1,4}\\s*)?(?:".concat(A, "[\\u4e00-\\u9fa5]{1,2})"), "i");
-  var O = [ {
+  var j = /(?:高中|中學|中学|大學(?!習|习)|大学(?!习|擺)|一中|國中|国中|高工|高商|商工|二信|清大|台大|世新|附中|大足一中|大足第一中学|神岡高工|大明高中|吉安國中|靜宜大學|珊瑚高中|南港高中|建國中學|文華高中|明道高中|二信中學|慧燈中學|道明中學|新竹高商|成功高中)/i;
+  var B = /(?:不要?(?:再|在)?\s*(?:自己)?\s*尻|不要?(?:再|在)?\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|別(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|别(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|唔好(?:再|在)?\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|咪撚\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|不要一直\s*(?:自己)?\s*尻|不要一直\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|别一直\s*(?:自己)?\s*尻|别在尻|别在打|别在尻|别再打了|別再打了|别打了|別打了|別擼了|别撸了|別J了|别J了|别打飞机|別打飛機|別打手槍|别打手枪|玩手槍|玩手枪|實名(?:開導|觀看|推薦|观看|开导|推荐)|实名(?:开导|观看|推荐)|又射了|縱慾過度|纵欲过度|著返條褲|別在射精|别在射精|别射精|別射精|別打手槍|别打手枪|會破皮|会破皮|别冲了|別衝了|别冲|別衝)/i;
+  var I = /^(?:的(?:女神|女友|女朋友|男友|男朋友|时候|時候|回忆|回憶|时代|時代|样子|樣子|日子|故事|剧情|劇情|感觉|感覺|妹子|女孩|女生|男生|学妹|學妹|学姐|學姐|美女|老师|老師|同学|同學)|生|JK|jk|制服|校校服|学生|學生|女优|女優|演员|演員|少女|美少女|辣妹|熟女|人妻)/i;
+  var V = new RegExp("(?:".concat(A, "[\\u4e00-\\u9fa5]{1,2})(?:[我你他她]|同學|同学|同事|老師|老师|醫生|医生|老闆|老板|只有|说明|是|有|沒|没|在|別|别|不|好|快|整天|到此|生日|畢業|毕业|求求|這|气|那|大|小|長|长|屁股|逆天|牛逼|牛b|神人|實名|实名|太神|太牛|就|被|也|跟|說|说|講|讲|超|愛|爱|想|本|人|雞|鸡|的|都|要|去|戴|拿|看|打|尻|撸|擼|射|叫|做|操|肏|草|干|幹|一定|真的|早就|一直|天天|已|给|給|和|与|與|同|学|學|唱|跳|写|寫|读|讀|听|聽|走|跑|吃|喝|玩|笑|哭|买|買|卖|賣|住|用|到|来|來)"), "i");
+  var O = new RegExp("(?:不如|比|像|叫|是)\\s*(?:[\\u4e00-\\u9fa5]{1,4}\\s*)?(?:".concat(A, "[\\u4e00-\\u9fa5]{1,2})"), "i");
+  var R = [ {
     "regex": /(?:火影策划|削弱(?:黑土|通灵兽|青年|大野木|忍战|秽土)|加强(?:秽土|白面具|秽土二代|青年|水门))/i,
     "reason": "火影平衡小作文"
   }, {
@@ -3237,7 +3242,7 @@
     "regex": /(?:SSNI-647：禁欲与背叛|阿丽娜|出差一个月|阿丽娜的吻)/i,
     "reason": "小作文/小说复读"
   } ];
-  var R = [ {
+  var G = [ {
     "regex": /你在看(?:吗|嗎)/i,
     "reason": '圈人喊话 ("你在看吗")'
   }, {
@@ -3343,7 +3348,7 @@
     "regex": /(?:Kingmore|K麼|Kmo)/i,
     "reason": "Kingmore梗"
   } ];
-  var G = [ {
+  var H = [ {
     "regex": /(?:联系我|微信号|联系方式|p友|找长期p友|找p友|同城约|约吗|約嗎|约啊|约呗|找个(?:哥哥|妹妹|姐姐|弟弟|爸爸|主)|找m|找s|有s女|想被玩弄|同城|滴滴我|滴滴滴|私我|name传来|求主|求m|鬼女|约嘛|約嘛|找女|找男|约ㄇ|約ㄇ)/i,
     "reason": "交友/约炮关键词"
   }, {
@@ -3395,7 +3400,7 @@
     "regex": /(?:xt=urn:btih:|urn:btih:|file\|[\s\S]+\|\d+\|[a-f0-9]{32})/i,
     "reason": "BT/ED2K哈希与特征码"
   } ];
-  var H = [ {
+  var z = [ {
     "regex": /(?:把她?當成|把她?当成)\s*([\\u4e00-\\u9fa5]{2,4})\s*(?:肏|操|日|做)/i,
     "reason": "意淫/带入同学代称"
   }, {
@@ -3414,13 +3419,13 @@
     "regex": new RegExp("(?:骚货|骚屄|骚逼|婊子|賤人|贱人|臭甲|垃圾)(?:".concat(A, "[\\u4e00-\\u9fa5]{1,2})"), "i"),
     "reason": "辱骂词后跟人名"
   } ];
-  var z = /想(?:这样|這麼|这么|那樣|那样)?(?:干|肏|操|日|弄|草|幹)\s*([a-zA-Z\\u4e00-\\u9fa5]{2,4})/i;
-  var N = new RegExp("(".concat(A, "[\\u4e00-\\u9fa5]{1,2})好[骚騷]啊"), "i");
-  var J = [ {
+  var N = /想(?:这样|這麼|这么|那樣|那样)?(?:干|肏|操|日|弄|草|幹)\s*([a-zA-Z\\u4e00-\\u9fa5]{2,4})/i;
+  var J = new RegExp("(".concat(A, "[\\u4e00-\\u9fa5]{1,2})好[骚騷]啊"), "i");
+  var q = [ {
     "regex": /(?:卡(?:的要死|死了|极了|爆了|的不行|得一比|的一比|了|得)|点解咁卡|怎么(?:那么|這麼|这么|這么)?卡)/i,
     "reason": "网站卡顿疑问"
   } ];
-  var q = [ {
+  var U = [ {
     "regex": /(?:^|[^a-zA-Z0-9])(?:xo|xoxo)\s*(?:你(?:妈|媽|马)死了|是不是|老母|全家|你老味)/i,
     "reason": "评论区XO骂战"
   }, {
@@ -3443,7 +3448,7 @@
     var l = a.replace(/\s+/g, "");
     var u = l.replace(/(?:[\t-\r -\/:-@\[-`\{-~\xA0-\xA9\xAB\xAC\xAE-\xB1\xB4\xB6-\xB8\xBB\xBF\xD7\xF7\u02C2-\u02C5\u02D2-\u02DF\u02E5-\u02EB\u02ED\u02EF-\u02FF\u0375\u037E\u0384\u0385\u0387\u03F6\u0482\u055A-\u055F\u0589\u058A\u058D-\u058F\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0606-\u060F\u061B\u061D-\u061F\u066A-\u066D\u06D4\u06DE\u06E9\u06FD\u06FE\u0700-\u070D\u07F6-\u07F9\u07FE\u07FF\u0830-\u083E\u085E\u0888\u0964\u0965\u0970\u09F2\u09F3\u09FA\u09FB\u09FD\u0A76\u0AF0\u0AF1\u0B70\u0BF3-\u0BFA\u0C77\u0C7F\u0C84\u0D4F\u0D79\u0DF4\u0E3F\u0E4F\u0E5A\u0E5B\u0F01-\u0F17\u0F1A-\u0F1F\u0F34\u0F36\u0F38\u0F3A-\u0F3D\u0F85\u0FBE-\u0FC5\u0FC7-\u0FCC\u0FCE-\u0FDA\u104A-\u104F\u109E\u109F\u10FB\u1360-\u1368\u1390-\u1399\u1400\u166D\u166E\u1680\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DB\u1800-\u180A\u1940\u1944\u1945\u19DE-\u19FF\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B4E\u1B4F\u1B5A-\u1B6A\u1B74-\u1B7F\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u1FBD\u1FBF-\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED-\u1FEF\u1FFD\u1FFE\u2000-\u200A\u2010-\u2029\u202F-\u205F\u207A-\u207E\u208A-\u208E\u20A0-\u20C0\u2100\u2101\u2103-\u2106\u2108\u2109\u2114\u2116-\u2118\u211E-\u2123\u2125\u2127\u2129\u212E\u213A\u213B\u2140-\u2144\u214A-\u214D\u214F\u218A\u218B\u2190-\u2429\u2440-\u244A\u249C-\u24E9\u2500-\u2775\u2794-\u2B73\u2B76-\u2B95\u2B97-\u2BFF\u2CE5-\u2CEA\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E5D\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u2FF0-\u3004\u3008-\u3020\u3030\u3036\u3037\u303D-\u303F\u309B\u309C\u30A0\u30FB\u3190\u3191\u3196-\u319F\u31C0-\u31E5\u31EF\u3200-\u321E\u322A-\u3247\u3250\u3260-\u327F\u328A-\u32B0\u32C0-\u33FF\u4DC0-\u4DFF\uA490-\uA4C6\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA700-\uA716\uA720\uA721\uA789\uA78A\uA828-\uA82B\uA836-\uA839\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAA77-\uAA79\uAADE\uAADF\uAAF0\uAAF1\uAB5B\uAB6A\uAB6B\uABEB\uFB29\uFBB2-\uFBC2\uFD3E-\uFD4F\uFDCF\uFDFC-\uFDFF\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE66\uFE68-\uFE6B\uFEFF\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFE6\uFFE8-\uFFEE\uFFFC\uFFFD]|\uD800[\uDD00-\uDD02\uDD37-\uDD3F\uDD79-\uDD89\uDD8C-\uDD8E\uDD90-\uDD9C\uDDA0\uDDD0-\uDDFC\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDC77\uDC78\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEC8\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD803[\uDD6E\uDD8E\uDD8F\uDEAD\uDF55-\uDF59\uDF86-\uDF89]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC8\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9\uDFD4\uDFD5\uDFD7\uDFD8]|\uD805[\uDC4B-\uDC4F\uDC5A\uDC5B\uDC5D\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDE60-\uDE6C\uDEB9\uDF3C-\uDF3F]|\uD806[\uDC3B\uDD44-\uDD46\uDDE2\uDE3F-\uDE46\uDE9A-\uDE9C\uDE9E-\uDEA2\uDF00-\uDF09\uDFE1]|\uD807[\uDC41-\uDC45\uDC70\uDC71\uDEF7\uDEF8\uDF43-\uDF4F\uDFD5-\uDFF1\uDFFF]|\uD809[\uDC70-\uDC74]|\uD80B[\uDFF1\uDFF2]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3F\uDF44\uDF45]|\uD81B[\uDD6D-\uDD6F\uDE97-\uDE9A\uDFE2]|\uD82F[\uDC9C\uDC9F]|\uD833[\uDC00-\uDCEF\uDD00-\uDEB3\uDF50-\uDFC3]|\uD834[\uDC00-\uDCF5\uDD00-\uDD26\uDD29-\uDD64\uDD6A-\uDD6C\uDD83\uDD84\uDD8C-\uDDA9\uDDAE-\uDDEA\uDE00-\uDE41\uDE45\uDF00-\uDF56]|\uD835[\uDEC1\uDEDB\uDEFB\uDF15\uDF35\uDF4F\uDF6F\uDF89\uDFA9\uDFC3]|\uD836[\uDC00-\uDDFF\uDE37-\uDE3A\uDE6D-\uDE74\uDE76-\uDE83\uDE85-\uDE8B]|\uD838[\uDD4F\uDEFF]|\uD839\uDDFF|\uD83A[\uDD5E\uDD5F]|\uD83B[\uDCAC\uDCB0\uDD2E\uDEF0\uDEF1]|\uD83C[\uDC00-\uDC2B\uDC30-\uDC93\uDCA0-\uDCAE\uDCB1-\uDCBF\uDCC1-\uDCCF\uDCD1-\uDCF5\uDD0D-\uDDAD\uDDE6-\uDE02\uDE10-\uDE3B\uDE40-\uDE48\uDE50\uDE51\uDE60-\uDE65\uDF00-\uDFFF]|\uD83D[\uDC00-\uDED7\uDEDC-\uDEEC\uDEF0-\uDEFC\uDF00-\uDF76\uDF7B-\uDFD9\uDFE0-\uDFEB\uDFF0]|\uD83E[\uDC00-\uDC0B\uDC10-\uDC47\uDC50-\uDC59\uDC60-\uDC87\uDC90-\uDCAD\uDCB0-\uDCBB\uDCC0\uDCC1\uDD00-\uDE53\uDE60-\uDE6D\uDE70-\uDE7C\uDE80-\uDE89\uDE8F-\uDEC6\uDECE-\uDEDC\uDEDF-\uDEE9\uDEF0-\uDEF8\uDF00-\uDF92\uDF94-\uDFEF])+/g, "");
     var p = /[\u4e00-\u9fa5]/.test(l);
-    var v = CommentScraper_createForOfIteratorHelper(O), y;
+    var v = CommentScraper_createForOfIteratorHelper(R), y;
     try {
       for (v.s(); !(y = v.n()).done; ) {
         var b = y.value;
@@ -3460,10 +3465,10 @@
     } finally {
       v.f();
     }
-    var C = T.exec(o);
+    var C = j.exec(o);
     if (C) {
       var _ = o.slice(C.index + C[0].length, C.index + C[0].length + 6);
-      if (!B.test(_)) {
+      if (!I.test(_)) {
         return {
           "label": "SPAM",
           "category": "FRIEND_TAG_MEME",
@@ -3471,7 +3476,7 @@
         };
       }
     }
-    if (j.test(o)) {
+    if (B.test(o)) {
       return {
         "label": "SPAM",
         "category": "FRIEND_TAG_MEME",
@@ -3485,7 +3490,7 @@
         "reason": "包含台湾注音（拼音圈人）"
       };
     }
-    var k = I.exec(u);
+    var k = V.exec(u);
     if (k) {
       var E = k[0];
       if (/^(?:马上|馬上|林北|陈述|陳述|余下|于是|方便|方面|方向|方法|古代|古老|高潮|高中|高兴|高興|周围|周圍|周末|施工|施展|程度|程序|胡说|胡說|胡闹|胡鬧|朱红|朱紅|何必|何况|何況|洪水|曹操|温柔|溫柔|唐突|许多|許多|沈默|江湖|王八|李子|杨柳|楊柳|徐徐|魏然|龚自|顏色|颜色|严格|嚴格|康复|康復|阮囊|褚色|简单|簡單|游泳|学妹|学姐|学弟|学长|學妹|學姐|學弟|學長|女生|女人|旅馆|旅館|失禁|馆开)/i.test(E)) {} else {
@@ -3496,14 +3501,14 @@
         };
       }
     }
-    if (V.test(o)) {
+    if (O.test(o)) {
       return {
         "label": "SPAM",
         "category": "FRIEND_TAG_MEME",
         "reason": "与同学名字进行对比"
       };
     }
-    var S = CommentScraper_createForOfIteratorHelper(R), P;
+    var S = CommentScraper_createForOfIteratorHelper(G), P;
     try {
       for (S.s(); !(P = S.n()).done; ) {
         var D = P.value;
@@ -3520,24 +3525,24 @@
     } finally {
       S.f();
     }
-    var M = CommentScraper_createForOfIteratorHelper(G), A;
+    var L = CommentScraper_createForOfIteratorHelper(H), T;
     try {
-      for (M.s(); !(A = M.n()).done; ) {
-        var U = A.value;
-        if (U.regex.test(o)) {
+      for (L.s(); !(T = L.n()).done; ) {
+        var A = T.value;
+        if (A.regex.test(o)) {
           return {
             "label": "SPAM",
             "category": "AD_CONTACT",
-            "reason": U.reason
+            "reason": A.reason
           };
         }
       }
     } catch (r) {
-      M.e(r);
+      L.e(r);
     } finally {
-      M.f();
+      L.f();
     }
-    var W = CommentScraper_createForOfIteratorHelper(H), Y;
+    var W = CommentScraper_createForOfIteratorHelper(z), Y;
     try {
       for (W.s(); !(Y = W.n()).done; ) {
         var K = Y.value;
@@ -3555,7 +3560,7 @@
       W.f();
     }
     var X = [ "女优", "女優", "女主", "他", "她", "它", "老婆", "闺蜜", "閨蜜", "妹妹", "女人", "人", "别人", "別人", "角色", "演员", "演員", "身材", "皮肤", "皮膚", "美腿", "丝袜", "絲襪", "衣服", "屁股", "大屁股", "逼", "穴", "闺密", "閨密", "妹妹", "姐姐", "前女友", "前妻" ];
-    var $ = z.exec(o);
+    var $ = N.exec(o);
     if ($) {
       var Q = $[1].trim();
       if (!X.includes(Q.toLowerCase())) {
@@ -3566,7 +3571,7 @@
         };
       }
     }
-    var Z = N.exec(o);
+    var Z = J.exec(o);
     if (Z) {
       return {
         "label": "SPAM",
@@ -3574,7 +3579,7 @@
         "reason": '针对同学人身的性调侃: "'.concat(Z[1], '好骚啊"')
       };
     }
-    var ee = CommentScraper_createForOfIteratorHelper(J), te;
+    var ee = CommentScraper_createForOfIteratorHelper(q), te;
     try {
       for (ee.s(); !(te = ee.n()).done; ) {
         var ne = te.value;
@@ -3591,8 +3596,8 @@
     } finally {
       ee.f();
     }
-    var re = L.FILTER.JABLE_EMOJI_REGEX.test(r);
-    var oe = L.FILTER.UNICODE_EMOJI_REGEX.test(r);
+    var re = M.FILTER.JABLE_EMOJI_REGEX.test(r);
+    var oe = M.FILTER.UNICODE_EMOJI_REGEX.test(r);
     var ae = re || oe;
     var ie = /(?:\d{1,3}):(?:\d{2})/.test(o);
     if (!ie && !ae) {
@@ -3632,7 +3637,7 @@
         };
       }
     }
-    var se = CommentScraper_createForOfIteratorHelper(q), le;
+    var se = CommentScraper_createForOfIteratorHelper(U), le;
     try {
       for (se.s(); !(le = se.n()).done; ) {
         var ce = le.value;
@@ -3774,13 +3779,13 @@
         "isNegative": E
       });
     }
-    var A = /(?<!\d)(\d{1,2})\s*(?:小时|h|H)\s*(\d{1,2})\s*(?:分钟|分鐘|分|m|M)\s*(\d{1,2})\s*(?:秒钟|秒鐘|秒|s|S)(?!\d)/g;
-    while ((u = A.exec(r)) !== null) {
-      var T = u[0];
+    var T = /(?<!\d)(\d{1,2})\s*(?:小时|h|H)\s*(\d{1,2})\s*(?:分钟|分鐘|分|m|M)\s*(\d{1,2})\s*(?:秒钟|秒鐘|秒|s|S)(?!\d)/g;
+    while ((u = T.exec(r)) !== null) {
+      var A = u[0];
       a.push({
-        "raw": T,
+        "raw": A,
         "index": u.index,
-        "end": u.index + T.length,
+        "end": u.index + A.length,
         "level": "L3",
         "seconds": parseInt(u[1], 10) * 3600 + parseInt(u[2], 10) * 60 + parseInt(u[3], 10),
         "isNegative": false
@@ -3941,7 +3946,7 @@
     var u = arguments.length > 4 && arguments[4] !== void 0 ? arguments[4] : false;
     if (r.index !== void 0) {
       var p = a.slice(Math.max(0, r.index - 10), r.index);
-      var v = new RegExp("(?:".concat(L.TIMESTAMPS.DURATION_KEYWORDS.join("|"), ")[\\s:：,，、]*$"), "i");
+      var v = new RegExp("(?:".concat(M.TIMESTAMPS.DURATION_KEYWORDS.join("|"), ")[\\s:：,，、]*$"), "i");
       if (v.test(p)) {
         return {
           "isValid": false,
@@ -3994,21 +3999,21 @@
     }
     var D = Math.max(l, 28800);
     if (r.isSlashList) {
-      var M = [];
-      var A = CommentScraper_createForOfIteratorHelper(r.seconds), T;
+      var L = [];
+      var T = CommentScraper_createForOfIteratorHelper(r.seconds), A;
       try {
-        for (A.s(); !(T = A.n()).done; ) {
-          var j = T.value;
+        for (T.s(); !(A = T.n()).done; ) {
+          var j = A.value;
           if (j <= D) {
-            M.push(j);
+            L.push(j);
           }
         }
       } catch (r) {
-        A.e(r);
+        T.e(r);
       } finally {
-        A.f();
+        T.f();
       }
-      if (M.length === 0) {
+      if (L.length === 0) {
         return {
           "isValid": false,
           "reason": "斜杠列表全部超出时长"
@@ -4016,7 +4021,7 @@
       }
       return {
         "isValid": true,
-        "seconds": M.length === 1 ? M[0] : M,
+        "seconds": L.length === 1 ? L[0] : L,
         "level": "L5",
         "confidence": "Medium"
       };
@@ -4047,12 +4052,12 @@
       var N = Math.max(0, r.index - 5);
       var J = Math.min(a.length, r.end + 5);
       var q = a.slice(N, r.index) + " | " + a.slice(r.end, J);
-      var U = L.TIMESTAMPS.MINUTE_KEYWORDS;
-      var W = L.TIMESTAMPS.SECOND_KEYWORDS;
+      var U = M.TIMESTAMPS.MINUTE_KEYWORDS;
+      var W = M.TIMESTAMPS.SECOND_KEYWORDS;
       var Y = a.replace(/(?:[\t-\r -\/:-@\[-`\{-~\xA0-\xA9\xAB\xAC\xAE-\xB1\xB4\xB6-\xB8\xBB\xBF\xD7\xF7\u02C2-\u02C5\u02D2-\u02DF\u02E5-\u02EB\u02ED\u02EF-\u02FF\u0375\u037E\u0384\u0385\u0387\u03F6\u0482\u055A-\u055F\u0589\u058A\u058D-\u058F\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0606-\u060F\u061B\u061D-\u061F\u066A-\u066D\u06D4\u06DE\u06E9\u06FD\u06FE\u0700-\u070D\u07F6-\u07F9\u07FE\u07FF\u0830-\u083E\u085E\u0888\u0964\u0965\u0970\u09F2\u09F3\u09FA\u09FB\u09FD\u0A76\u0AF0\u0AF1\u0B70\u0BF3-\u0BFA\u0C77\u0C7F\u0C84\u0D4F\u0D79\u0DF4\u0E3F\u0E4F\u0E5A\u0E5B\u0F01-\u0F17\u0F1A-\u0F1F\u0F34\u0F36\u0F38\u0F3A-\u0F3D\u0F85\u0FBE-\u0FC5\u0FC7-\u0FCC\u0FCE-\u0FDA\u104A-\u104F\u109E\u109F\u10FB\u1360-\u1368\u1390-\u1399\u1400\u166D\u166E\u1680\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DB\u1800-\u180A\u1940\u1944\u1945\u19DE-\u19FF\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B4E\u1B4F\u1B5A-\u1B6A\u1B74-\u1B7F\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u1FBD\u1FBF-\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED-\u1FEF\u1FFD\u1FFE\u2000-\u200A\u2010-\u2029\u202F-\u205F\u207A-\u207E\u208A-\u208E\u20A0-\u20C0\u2100\u2101\u2103-\u2106\u2108\u2109\u2114\u2116-\u2118\u211E-\u2123\u2125\u2127\u2129\u212E\u213A\u213B\u2140-\u2144\u214A-\u214D\u214F\u218A\u218B\u2190-\u2429\u2440-\u244A\u249C-\u24E9\u2500-\u2775\u2794-\u2B73\u2B76-\u2B95\u2B97-\u2BFF\u2CE5-\u2CEA\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E5D\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u2FF0-\u3004\u3008-\u3020\u3030\u3036\u3037\u303D-\u303F\u309B\u309C\u30A0\u30FB\u3190\u3191\u3196-\u319F\u31C0-\u31E5\u31EF\u3200-\u321E\u322A-\u3247\u3250\u3260-\u327F\u328A-\u32B0\u32C0-\u33FF\u4DC0-\u4DFF\uA490-\uA4C6\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA700-\uA716\uA720\uA721\uA789\uA78A\uA828-\uA82B\uA836-\uA839\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAA77-\uAA79\uAADE\uAADF\uAAF0\uAAF1\uAB5B\uAB6A\uAB6B\uABEB\uFB29\uFBB2-\uFBC2\uFD3E-\uFD4F\uFDCF\uFDFC-\uFDFF\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE66\uFE68-\uFE6B\uFEFF\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFE6\uFFE8-\uFFEE\uFFFC\uFFFD]|\uD800[\uDD00-\uDD02\uDD37-\uDD3F\uDD79-\uDD89\uDD8C-\uDD8E\uDD90-\uDD9C\uDDA0\uDDD0-\uDDFC\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDC77\uDC78\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEC8\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD803[\uDD6E\uDD8E\uDD8F\uDEAD\uDF55-\uDF59\uDF86-\uDF89]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC8\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9\uDFD4\uDFD5\uDFD7\uDFD8]|\uD805[\uDC4B-\uDC4F\uDC5A\uDC5B\uDC5D\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDE60-\uDE6C\uDEB9\uDF3C-\uDF3F]|\uD806[\uDC3B\uDD44-\uDD46\uDDE2\uDE3F-\uDE46\uDE9A-\uDE9C\uDE9E-\uDEA2\uDF00-\uDF09\uDFE1]|\uD807[\uDC41-\uDC45\uDC70\uDC71\uDEF7\uDEF8\uDF43-\uDF4F\uDFD5-\uDFF1\uDFFF]|\uD809[\uDC70-\uDC74]|\uD80B[\uDFF1\uDFF2]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3F\uDF44\uDF45]|\uD81B[\uDD6D-\uDD6F\uDE97-\uDE9A\uDFE2]|\uD82F[\uDC9C\uDC9F]|\uD833[\uDC00-\uDCEF\uDD00-\uDEB3\uDF50-\uDFC3]|\uD834[\uDC00-\uDCF5\uDD00-\uDD26\uDD29-\uDD64\uDD6A-\uDD6C\uDD83\uDD84\uDD8C-\uDDA9\uDDAE-\uDDEA\uDE00-\uDE41\uDE45\uDF00-\uDF56]|\uD835[\uDEC1\uDEDB\uDEFB\uDF15\uDF35\uDF4F\uDF6F\uDF89\uDFA9\uDFC3]|\uD836[\uDC00-\uDDFF\uDE37-\uDE3A\uDE6D-\uDE74\uDE76-\uDE83\uDE85-\uDE8B]|\uD838[\uDD4F\uDEFF]|\uD839\uDDFF|\uD83A[\uDD5E\uDD5F]|\uD83B[\uDCAC\uDCB0\uDD2E\uDEF0\uDEF1]|\uD83C[\uDC00-\uDC2B\uDC30-\uDC93\uDCA0-\uDCAE\uDCB1-\uDCBF\uDCC1-\uDCCF\uDCD1-\uDCF5\uDD0D-\uDDAD\uDDE6-\uDE02\uDE10-\uDE3B\uDE40-\uDE48\uDE50\uDE51\uDE60-\uDE65\uDF00-\uDFFF]|\uD83D[\uDC00-\uDED7\uDEDC-\uDEEC\uDEF0-\uDEFC\uDF00-\uDF76\uDF7B-\uDFD9\uDFE0-\uDFEB\uDFF0]|\uD83E[\uDC00-\uDC0B\uDC10-\uDC47\uDC50-\uDC59\uDC60-\uDC87\uDC90-\uDCAD\uDCB0-\uDCBB\uDCC0\uDCC1\uDD00-\uDE53\uDE60-\uDE6D\uDE70-\uDE7C\uDE80-\uDE89\uDE8F-\uDEC6\uDECE-\uDEDC\uDEDF-\uDEE9\uDEF0-\uDEF8\uDF00-\uDF92\uDF94-\uDFEF])+/g, "");
       var K = Y === r.raw;
       if (K) {
-        if (L.FILTER.SINGLE_DIGIT_REGEX.test(r.raw) || L.FILTER.REPEATING_DIGIT_REGEX.test(r.raw)) {
+        if (M.FILTER.SINGLE_DIGIT_REGEX.test(r.raw) || M.FILTER.REPEATING_DIGIT_REGEX.test(r.raw)) {
           K = false;
         }
       }
@@ -4118,7 +4123,7 @@
     var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 10800;
     var a = normalizeText(r);
     var l = maskBlacklist(a);
-    var u = L.TIMESTAMPS.HOUR_LIMIT;
+    var u = M.TIMESTAMPS.HOUR_LIMIT;
     if (o && o > 0) {
       u = Math.floor(o / 3600);
       if (u < 1) {
@@ -4166,21 +4171,21 @@
         "Medium": 2,
         "Low": 1
       };
-      var M = 0;
-      var A = CommentScraper_createForOfIteratorHelper(b), T;
+      var L = 0;
+      var T = CommentScraper_createForOfIteratorHelper(b), A;
       try {
-        for (A.s(); !(T = A.n()).done; ) {
-          var j = T.value;
+        for (T.s(); !(A = T.n()).done; ) {
+          var j = A.value;
           var B = D[j.confidence] || 0;
-          if (B > M) {
-            M = B;
+          if (B > L) {
+            L = B;
             P = j.confidence;
           }
         }
       } catch (r) {
-        A.e(r);
+        T.e(r);
       } finally {
-        A.f();
+        T.f();
       }
     }
     return {
@@ -4190,29 +4195,29 @@
       "confidence": P
     };
   }
-  var U = /(?<!\w|\/|www\.|=|col-|\d-|>|Jukujo-)(?!heyzo|SHINKI|JPNXXX|carib|vps)[a-zA-Z]{2,6}-\d{2,5}(?:-c|_c|-4k)?(?!\d|[A-Za-z]{2,}|-\d|\.com|\.\d)|(?<!\w|\/|\\|\.|【|-|#|@|=|www\.)(?!heyzo|SHINKI|JPNXXX|carib|and|vps|dvd)[a-zA-Z]{2,6}\s{0,2}\d{3,4}(?:-c|_c)?(?!\w|-|\.|\/|×|％|%|@|\s?天| 于| 发表| 發表|歳| 歲|小时|分|系列| Min| day|ml| time|cm| ppi|\.com)|(?<!\w)(?:PARATHD|3DSVR|STARSBD)[-\s]?\d{3,4}(?!\w)|(?<!\w)(?:HIMEMIX|CASMANI|MGSSLND)[-\s]?\d{3}(?!\w)|(?<!\w)(?:k|n)[01]\d{3}(?!\w|-)|(?<!\w|\d-|\/)[01]\d{5}[-_](?:1)?\d{2,3}(?!\w|-\d)|(?<!\w)(?:carib|1pondo)[-_]\d{6}[-_]\d{2,3}(?!\w)|(?<!\w|\d-)\d{6}[-_]\d{2,3}(?:-1pon|-carib|-paco)(?!\w)|(?<!\w|\d-)\d{6}_(1)?\d{3}_0[12](?!\w|-\d)|HEYZO[_-\s]?(?:hd_)?\d{4}/gi;
-  var W = /(?<!\w|-|\/)\d{3}[a-zA-Z]{2,5}[-\s]?\d{3,4}(?!\w|-|.torrent|年)|(?<!\w|\/)FC2[^\d]{0,5}\d{6,7}|HEYDOUGA[_-\s]?\d{4}-\d{3,5}|(?<!\w)T28-\d{3}|(?<!\w)T-2\d{4,5}(?!\w|-)|(?<!\w|-|\/)[01]\d{5}-[a-zA-Z]{2,7}(?!\w|-)|(?<!\w)MK(?:B)?D-S\d{2,3}(?!\w|-)|(?:SHINKI|KITAIKE)[-\s]?\d{3}(?!\w|-)|JPNXXX[-\s]?\d{5}(?!\w|-)|xxx-av[-\s]\d{4,5}(?!\w|-)|(?<!\w)crazyasia\d{5}(?!\w|-)|(?<!\w)PEWORLD\d{5}(?!\w|-)|(?<!\w)[01]\d{5}[-_]?_01(?=-10mu)?|Jukujo-Club-\d{3}/gi;
-  var Y = /(?<=(?<!\w|\d-)([a-zA-Z]{2,6})(?:[\s,，、-]?(?!2022|2021|2020|2019)\d{3,4})+(?!\d)[\s,、，和跟]{0,2})\d{3,4}(?!\w|％|%|人|年|歳|万|の|发)/gim;
-  var K = /(?<=(FC2[^\d]{0,5})(?:[\s,、-]?\d{6,7})+[\s,、]?)\d{6,7}/gim;
-  var X = /^(?:fx-?([^0]\d{2}|\d{4})|[a-zA-Z]+-?0{2,6}$|pg-13|crc-32|ea211|fs[\s-]?140|trc-20|erc-20|rs[\s-]?(232|422|485)|(sg|ae|kr|tw|ph|vn|kh|ru|uk|ua|tr|th|fr|in|de|sr)[\s-]\d{2}|(gm|ga)-\d{4}|cd[\s-]?\d{2,4}|seed[\s-]?\d{3}$|pc005|moc-\d{5}|wd-40|rtd[\s-]?\d{4}|cm\d{4}|rk\d{4})|ns[\s-]?\d{3,4}/i;
-  var $ = /^(?:about|ac|actg|adreno|aes|aff|again|agm|all|ak|akko|apex|aptx|arm|au|ax|avhd|avx|bej|bgm|bd|bm|build|(?:fc|p)?[blp]ga|by|bzk|cc|ccie|cctv|cea|chrome|ckg|class|cny|code|core|covid|cpu|dc|debian|df|ds|dw|dx|ea|edit|er|ecma|eia|emui|eof|ep|error|exp|ez|fc|file|flash|flyme|fps|for|fork|from|fuck|fx|gbx|get|github|glm|gnz|gp|groupr|gt|gts|gtx|guest|hao|hd|her|hdr|hk|https?|hp|IEEE|il|ilc|ilce|imx|index|intel|inteli|ip|ipad|is|ISBN|iso|issue|issues|it|jav|javdb|joy|jp|jr|jsr|jt|jukujo|just|kc|keccak|kv[bd]|Kirin|kryo|lancet|libx|line|linux|lk|lolrng|lpl|lt|lumia|lg|macos|math|md|mh|miui|mipc|mnvr|mm|model|mv|mvp|ms|nas|nature|nc|next|ngff|note|number|ok|only|os|oss|osx|opga|pa|page|pch|phl|pmw|png|ppv|qbz|qsz|raid|rfc|ripemd|rmb|rng|rog|row|rtx|rush|rx|sale|scp|scte|sdm|sdr|server|sha|shp|sonnet|spent|sql|sn|snh|Socket|ssd|status|steam|su|swipe|tcp|the|top|than|thread|tr|ts|type|uh|uhd|under|us|usa|usc|utf|utc|via|video|vkffsc|vol|vr|vs|vv|web|win|with|width|wikis|wta|xdr|xfx|xiaomi|yah)$/i;
-  var Q = /^(?:ace|akb|api|am|anime|at|be|best|bt|bl|cp|crc|exynos|dl|dp|dq|gb|girl|jd|ha|has|hc|hours|iq|in|mk|mini|mhz|mx|no|open|of|over|part|pd|pdd|porn|pt|sb|sex|tv|tb|ty|ver|vip|zd|zip)$/i;
-  var Z = /^(?:007|101|110|115|123|128|256|360|365|370|404|512|520|911|996|\d{1,2}00|19[789]\d|20[012]\d|720|1080|1024|2048|[056789]\d{3}|(\d)\1{2,3})$/;
-  var ee = /^(?:512gb)/i;
+  var W = /(?<!\w|\/|www\.|=|col-|\d-|>|Jukujo-)(?!heyzo|SHINKI|JPNXXX|carib|vps)[a-zA-Z]{2,6}-\d{2,5}(?:-c|_c|-4k)?(?!\d|[A-Za-z]{2,}|-\d|\.com|\.\d)|(?<!\w|\/|\\|\.|【|-|#|@|=|www\.)(?!heyzo|SHINKI|JPNXXX|carib|and|vps|dvd)[a-zA-Z]{2,6}\s{0,2}\d{3,4}(?:-c|_c)?(?!\w|-|\.|\/|×|％|%|@|\s?天| 于| 发表| 發表|歳| 歲|小时|分|系列| Min| day|ml| time|cm| ppi|\.com)|(?<!\w)(?:PARATHD|3DSVR|STARSBD)[-\s]?\d{3,4}(?!\w)|(?<!\w)(?:HIMEMIX|CASMANI|MGSSLND)[-\s]?\d{3}(?!\w)|(?<!\w)(?:k|n)[01]\d{3}(?!\w|-)|(?<!\w|\d-|\/)[01]\d{5}[-_](?:1)?\d{2,3}(?!\w|-\d)|(?<!\w)(?:carib|1pondo)[-_]\d{6}[-_]\d{2,3}(?!\w)|(?<!\w|\d-)\d{6}[-_]\d{2,3}(?:-1pon|-carib|-paco)(?!\w)|(?<!\w|\d-)\d{6}_(1)?\d{3}_0[12](?!\w|-\d)|HEYZO[_-\s]?(?:hd_)?\d{4}/gi;
+  var Y = /(?<!\w|-|\/)\d{3}[a-zA-Z]{2,5}[-\s]?\d{3,4}(?!\w|-|.torrent|年)|(?<!\w|\/)FC2[^\d]{0,5}\d{6,7}|HEYDOUGA[_-\s]?\d{4}-\d{3,5}|(?<!\w)T28-\d{3}|(?<!\w)T-2\d{4,5}(?!\w|-)|(?<!\w|-|\/)[01]\d{5}-[a-zA-Z]{2,7}(?!\w|-)|(?<!\w)MK(?:B)?D-S\d{2,3}(?!\w|-)|(?:SHINKI|KITAIKE)[-\s]?\d{3}(?!\w|-)|JPNXXX[-\s]?\d{5}(?!\w|-)|xxx-av[-\s]\d{4,5}(?!\w|-)|(?<!\w)crazyasia\d{5}(?!\w|-)|(?<!\w)PEWORLD\d{5}(?!\w|-)|(?<!\w)[01]\d{5}[-_]?_01(?=-10mu)?|Jukujo-Club-\d{3}/gi;
+  var K = /(?<=(?<!\w|\d-)([a-zA-Z]{2,6})(?:[\s,，、-]?(?!2022|2021|2020|2019)\d{3,4})+(?!\d)[\s,、，和跟]{0,2})\d{3,4}(?!\w|％|%|人|年|歳|万|の|发)/gim;
+  var X = /(?<=(FC2[^\d]{0,5})(?:[\s,、-]?\d{6,7})+[\s,、]?)\d{6,7}/gim;
+  var $ = /^(?:fx-?([^0]\d{2}|\d{4})|[a-zA-Z]+-?0{2,6}$|pg-13|crc-32|ea211|fs[\s-]?140|trc-20|erc-20|rs[\s-]?(232|422|485)|(sg|ae|kr|tw|ph|vn|kh|ru|uk|ua|tr|th|fr|in|de|sr)[\s-]\d{2}|(gm|ga)-\d{4}|cd[\s-]?\d{2,4}|seed[\s-]?\d{3}$|pc005|moc-\d{5}|wd-40|rtd[\s-]?\d{4}|cm\d{4}|rk\d{4})|ns[\s-]?\d{3,4}/i;
+  var Q = /^(?:about|ac|actg|adreno|aes|aff|again|agm|all|ak|akko|apex|aptx|arm|au|ax|avhd|avx|bej|bgm|bd|bm|build|(?:fc|p)?[blp]ga|by|bzk|cc|ccie|cctv|cea|chrome|ckg|class|cny|code|core|covid|cpu|dc|debian|df|ds|dw|dx|ea|edit|er|ecma|eia|emui|eof|ep|error|exp|ez|fc|file|flash|flyme|fps|for|fork|from|fuck|fx|gbx|get|github|glm|gnz|gp|groupr|gt|gts|gtx|guest|hao|hd|her|hdr|hk|https?|hp|IEEE|il|ilc|ilce|imx|index|intel|inteli|ip|ipad|is|ISBN|iso|issue|issues|it|jav|javdb|joy|jp|jr|jsr|jt|jukujo|just|kc|keccak|kv[bd]|Kirin|kryo|lancet|libx|line|linux|lk|lolrng|lpl|lt|lumia|lg|macos|math|md|mh|miui|mipc|mnvr|mm|model|mv|mvp|ms|nas|nature|nc|next|ngff|note|number|ok|only|os|oss|osx|opga|pa|page|pch|phl|pmw|png|ppv|qbz|qsz|raid|rfc|ripemd|rmb|rng|rog|row|rtx|rush|rx|sale|scp|scte|sdm|sdr|server|sha|shp|sonnet|spent|sql|sn|snh|Socket|ssd|status|steam|su|swipe|tcp|the|top|than|thread|tr|ts|type|uh|uhd|under|us|usa|usc|utf|utc|via|video|vkffsc|vol|vr|vs|vv|web|win|with|width|wikis|wta|xdr|xfx|xiaomi|yah)$/i;
+  var Z = /^(?:ace|akb|api|am|anime|at|be|best|bt|bl|cp|crc|exynos|dl|dp|dq|gb|girl|jd|ha|has|hc|hours|iq|in|mk|mini|mhz|mx|no|open|of|over|part|pd|pdd|porn|pt|sb|sex|tv|tb|ty|ver|vip|zd|zip)$/i;
+  var ee = /^(?:007|101|110|115|123|128|256|360|365|370|404|512|520|911|996|\d{1,2}00|19[789]\d|20[012]\d|720|1080|1024|2048|[056789]\d{3}|(\d)\1{2,3})$/;
+  var te = /^(?:512gb)/i;
   function IDcheck(r) {
     var o = r.replace(/[^a-zA-Z]/gi, "");
     var a = r.replace(/[^0-9]/gi, "");
-    if (r.match(X)) {
+    if (r.match($)) {
       return true;
     }
-    if (o.match($)) {
+    if (o.match(Q)) {
       return true;
     }
     if (r.match(/^[a-z|A-Z]{2,8}\s?\d{2,5}$/i)) {
-      if (a.match(Z)) {
+      if (a.match(ee)) {
         return true;
       }
-      if (o.match(Q)) {
+      if (o.match(Z)) {
         return true;
       }
     }
@@ -4224,7 +4229,7 @@
         return true;
       }
     }
-    if (r.match(ee)) {
+    if (r.match(te)) {
       return true;
     }
     return false;
@@ -4267,15 +4272,15 @@
     var a = new Set;
     var l = normalizeText(r);
     var u;
-    U.lastIndex = 0;
-    while ((u = U.exec(l)) !== null) {
+    W.lastIndex = 0;
+    while ((u = W.exec(l)) !== null) {
       var p = u[0].trim();
       if (!IDcheck(p)) {
         a.add(formatAVID(p));
       }
     }
-    W.lastIndex = 0;
-    while ((u = W.exec(l)) !== null) {
+    Y.lastIndex = 0;
+    while ((u = Y.exec(l)) !== null) {
       var v = u[0].trim();
       if (!IDcheckWuma(v)) {
         var y = formatWuma(v);
@@ -4285,8 +4290,8 @@
         a.add(y);
       }
     }
-    Y.lastIndex = 0;
-    while ((u = Y.exec(l)) !== null) {
+    K.lastIndex = 0;
+    while ((u = K.exec(l)) !== null) {
       if (u[1]) {
         var b = u[1] + " " + u[0];
         if (!IDcheck(b)) {
@@ -4294,8 +4299,8 @@
         }
       }
     }
-    K.lastIndex = 0;
-    while ((u = K.exec(l)) !== null) {
+    X.lastIndex = 0;
+    while ((u = X.exec(l)) !== null) {
       if (u[1]) {
         var C = u[1] + u[0];
         if (!IDcheckWuma(C)) {
@@ -4309,7 +4314,7 @@
       _.lastIndex = 0;
       while ((k = _.exec(l)) !== null) {
         var E = k[0];
-        if (!E.match(Z)) {
+        if (!E.match(ee)) {
           var S = "".concat(o, "-").concat(E);
           if (!IDcheck(S)) {
             a.add(S.toUpperCase());
@@ -4407,7 +4412,7 @@
     return o;
   }
   function highlightCommentText(r, o, a) {
-    var l = M(r);
+    var l = T(r);
     l = parseBBCode(l);
     var u = {};
     var p = 0;
@@ -4434,7 +4439,7 @@
         } else {
           y = "跳转至 ".concat(formatSeconds(r.seconds));
         }
-        u[a] = '<span class="jc-time-link" data-secs=\''.concat(v, "' title=\"").concat(M(y), '">').concat(b, "</span>");
+        u[a] = '<span class="jc-time-link" data-secs=\''.concat(v, "' title=\"").concat(T(y), '">').concat(b, "</span>");
         return a;
       }));
     }));
@@ -4442,7 +4447,7 @@
       var o = buildAvcodeRegex(r);
       l = l.replace(o, (function(o) {
         var a = "___AV_".concat(p++, "___");
-        u[a] = '<span class="jc-code-link" data-code="'.concat(M(r), '" title="复制并搜索番号">').concat(o, "</span>");
+        u[a] = '<span class="jc-code-link" data-code="'.concat(T(r), '" title="复制并搜索番号">').concat(o, "</span>");
         return a;
       }));
     }));
@@ -4541,7 +4546,7 @@
             o = r.toLowerCase().trim();
             p.prev = 3;
             p.next = 6;
-            return fetchWithDomainRotation(P, (function(r) {
+            return fetchWithDomainRotation(D, (function(r) {
               return "".concat(r, "/cn/vl_searchbyid.php?keyword=").concat(encodeURIComponent(o));
             }), {
               "headers": {
@@ -4611,8 +4616,8 @@
         if (C) {
           var _ = C.textContent.trim();
           if (matchAvCode(_, o)) {
-            var E = b.getAttribute("href") || "";
-            var S = E.match(/v=([^&]+)/);
+            var k = b.getAttribute("href") || "";
+            var S = k.match(/v=([^&]+)/);
             if (S) {
               p = S[1];
               break;
@@ -4633,12 +4638,12 @@
       }
     }
     if (p) {
-      k.log("找到 JAVLibrary ID (搜索列表): ".concat(p, " (工作域名: ").concat(a, ")"));
+      E.log("找到 JAVLibrary ID (搜索列表): ".concat(p, " (工作域名: ").concat(a, ")"));
       return p;
     }
     var L = r.match(/videocomments\.php\?v=([^"]+)/);
     if (L) {
-      k.log("从页面文本中解析到 JAVLibrary ID: ".concat(L[1], " (工作域名: ").concat(a, ")"));
+      E.log("从页面文本中解析到 JAVLibrary ID: ".concat(L[1], " (工作域名: ").concat(a, ")"));
       return L[1];
     }
     throw new Error("Movie not found on JAVLibrary");
@@ -4736,9 +4741,9 @@
            case 5:
             u = o === "reviews";
             p = u ? "videoreviews.php" : "videocomments.php";
-            v = l || P[0];
+            v = l || D[0];
             y = "".concat(v, "/cn/").concat(p, "?v=").concat(r, "&page=").concat(a);
-            k.log("[CommentScraper] 采集 JAVLibrary ".concat(o, " (Page ").concat(a, "): ").concat(y));
+            E.log("[CommentScraper] 采集 JAVLibrary ".concat(o, " (Page ").concat(a, "): ").concat(y));
             _.next = 12;
             return fetchWithTransport(y, {
               "headers": {
@@ -4768,7 +4773,7 @@
     })));
     return _fetchJavLibraryData.apply(this, arguments);
   }
-  var te = "https://jdforrepam.com/api";
+  var ne = "https://jdforrepam.com/api";
   function jbBuildSignature() {
     var r = Math.floor(Date.now() / 1e3);
     try {
@@ -4841,9 +4846,9 @@
       return Promise.reject(new Error("Invalid AVCode"));
     }
     var a = r.trim();
-    var l = D[o] || D[0] || "https://javdb.com";
+    var l = L[o] || L[0] || "https://javdb.com";
     var u = "".concat(l, "/search?q=").concat(encodeURIComponent(a), "&f=all");
-    k.log("[CommentScraper] 开始获取 JavDB 影片 ID，番号: ".concat(a, ", 域名: ").concat(l));
+    E.log("[CommentScraper] 开始获取 JavDB 影片 ID，番号: ".concat(a, ", 域名: ").concat(l));
     return new Promise((function(r, o) {
       if (typeof GM_xmlhttpRequest === "undefined") {
         o(new Error("GM_xmlhttpRequest unavailable"));
@@ -4926,10 +4931,10 @@
           while (1) {
             switch (b.prev = b.next) {
              case 0:
-              k.warn("[CommentScraper] JavDB 主线搜索失败 (".concat(r.message, ")，正在尝试第三方 API 备用线路..."));
+              E.warn("[CommentScraper] JavDB 主线搜索失败 (".concat(r.message, ")，正在尝试第三方 API 备用线路..."));
               b.prev = 1;
               u = jbBuildSignature();
-              p = "".concat(te, "/v2/search");
+              p = "".concat(ne, "/v2/search");
               b.next = 6;
               return jbApiGetOnce(p, {
                 "q": a,
@@ -4954,7 +4959,7 @@
                 b.next = 11;
                 break;
               }
-              k.log("[CommentScraper] 备用线路获取 JavDB movieId 成功: ".concat(y[0].id));
+              E.log("[CommentScraper] 备用线路获取 JavDB movieId 成功: ".concat(y[0].id));
               return b.abrupt("return", {
                 "movieId": y[0].id,
                 "domain": l,
@@ -4968,7 +4973,7 @@
              case 13:
               b.prev = 13;
               b.t0 = b["catch"](1);
-              k.error("[CommentScraper] JavDB 备用线路搜索亦失败:", b.t0);
+              E.error("[CommentScraper] JavDB 备用线路搜索亦失败:", b.t0);
 
              case 16:
               throw r;
@@ -4991,9 +4996,9 @@
     if (!r) {
       return Promise.reject(new Error("Invalid MovieId"));
     }
-    var l = a || D[0] || "https://javdb.com";
+    var l = a || L[0] || "https://javdb.com";
     var u = "".concat(l, "/v/").concat(r, "/reviews?page=").concat(o);
-    k.log("[CommentScraper] 尝试 JavDB 主线获取短评 (Page ".concat(o, "): ").concat(u));
+    E.log("[CommentScraper] 尝试 JavDB 主线获取短评 (Page ".concat(o, "): ").concat(u));
     var p = function fetchMainLine() {
       return new Promise((function(r, a) {
         if (typeof GM_xmlhttpRequest === "undefined") {
@@ -5105,9 +5110,9 @@
           while (1) {
             switch (C.prev = C.next) {
              case 0:
-              k.log("[CommentScraper] 自动无缝切换至 JavDB 备用 API (jdforrepam.com) 抓取短评...");
+              E.log("[CommentScraper] 自动无缝切换至 JavDB 备用 API (jdforrepam.com) 抓取短评...");
               l = jbBuildSignature();
-              u = "".concat(te, "/v1/movies/").concat(r, "/reviews");
+              u = "".concat(ne, "/v1/movies/").concat(r, "/reviews");
               C.next = 5;
               return jbApiGetOnce(u, {
                 "page": o,
@@ -5604,13 +5609,13 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ne = "https://telemetry.x-flow.ccwu.cc";
-  var re = "https://xflow-telemetry.chen-m1108.workers.dev";
-  var oe = "XFLOW_v6_SECRET";
-  var ae = "mp_telemetry_client_id_v2";
-  var ie = "mp_telemetry_cache_v3";
-  var se = 60 * 60 * 1e3;
-  var le = 15 * 60 * 1e3;
+  var re = "https://telemetry.x-flow.ccwu.cc";
+  var oe = "https://xflow-telemetry.chen-m1108.workers.dev";
+  var ae = "XFLOW_v6_SECRET";
+  var ie = "mp_telemetry_client_id_v2";
+  var se = "mp_telemetry_cache_v3";
+  var le = 60 * 60 * 1e3;
+  var ce = 15 * 60 * 1e3;
   function getDeviceFingerprintString() {
     var r = [];
     try {
@@ -5643,12 +5648,12 @@
     var r = "";
     try {
       if (typeof GM_getValue === "function") {
-        r = GM_getValue(ae, "");
+        r = GM_getValue(ie, "");
       }
     } catch (r) {}
     if (!r) {
       try {
-        r = localStorage.getItem(ae) || "";
+        r = localStorage.getItem(ie) || "";
       } catch (r) {}
     }
     if (r) {
@@ -5658,16 +5663,16 @@
     var a = "mp_" + md5(o).slice(0, 24);
     try {
       if (typeof GM_setValue === "function") {
-        GM_setValue(ae, a);
+        GM_setValue(ie, a);
       }
     } catch (r) {}
     try {
-      localStorage.setItem(ae, a);
+      localStorage.setItem(ie, a);
     } catch (r) {}
     return a;
   }
   function genToken(r) {
-    var o = "".concat(oe, "_").concat(r);
+    var o = "".concat(ae, "_").concat(r);
     var a = 0;
     for (var l = 0; l < o.length; l++) {
       a = Math.imul(31, a) + o.charCodeAt(l) | 0;
@@ -5698,7 +5703,7 @@
     }
     return "GENERIC";
   }
-  var ce = function() {
+  var ue = function() {
     function EventCollector() {
       var r = this;
       EventCollector_classCallCheck(this, EventCollector);
@@ -5734,10 +5739,10 @@
         try {
           var r = null;
           if (typeof GM_getValue === "function") {
-            r = GM_getValue(ie, null);
+            r = GM_getValue(se, null);
           }
           if (!r && typeof localStorage !== "undefined") {
-            r = localStorage.getItem(ie);
+            r = localStorage.getItem(se);
           }
           if (r) {
             var o = typeof r === "string" ? JSON.parse(r) : r;
@@ -5769,10 +5774,10 @@
             "lastFlushTs": this.lastFlushTs
           });
           if (typeof GM_setValue === "function") {
-            GM_setValue(ie, r);
+            GM_setValue(se, r);
           }
           if (typeof localStorage !== "undefined") {
-            localStorage.setItem(ie, r);
+            localStorage.setItem(se, r);
           }
         } catch (r) {}
       }
@@ -5904,7 +5909,7 @@
       "key": "checkPeriodicFlush",
       "value": function checkPeriodicFlush() {
         var r = Date.now();
-        if (r - this.lastFlushTs >= se) {
+        if (r - this.lastFlushTs >= le) {
           this.flush(false);
         }
       }
@@ -5912,7 +5917,7 @@
       "key": "flush",
       "value": function() {
         var r = EventCollector_asyncToGenerator(EventCollector_regeneratorRuntime().mark((function _callee2() {
-          var r, o, a, l, u, p, v, y, b, C, _, k, E, S, P, D, L, M, A, T, j, B, I = arguments;
+          var r, o, a, l, u, p, v, y, b, C, _, k, E, S, P, D, L, M, T, A, j, B, I = arguments;
           return EventCollector_regeneratorRuntime().wrap((function _callee2$(V) {
             while (1) {
               switch (V.prev = V.next) {
@@ -5940,14 +5945,14 @@
                   V.next = 14;
                   break;
                 }
-                if (!(!r && u - this.lastFlushTs < se)) {
+                if (!(!r && u - this.lastFlushTs < le)) {
                   V.next = 12;
                   break;
                 }
                 return V.abrupt("return");
 
                case 12:
-                if (!(r && u - this.lastFlushTs < le && this.sessionBuffer.totalPlaySec < 30)) {
+                if (!(r && u - this.lastFlushTs < ce && this.sessionBuffer.totalPlaySec < 30)) {
                   V.next = 14;
                   break;
                 }
@@ -5988,8 +5993,8 @@
                   },
                   "user_agent": typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
                 };
-                A = JSON.stringify(M);
-                T = {
+                T = JSON.stringify(M);
+                A = {
                   "Content-Type": "application/json",
                   "X-Telemetry-Token": genToken(E),
                   "X-Telemetry-Ts": String(E)
@@ -6005,8 +6010,8 @@
                           l.next = 3;
                           return fetchWithTransport(a, {
                             "method": "POST",
-                            "headers": T,
-                            "body": A,
+                            "headers": A,
+                            "body": T,
                             "timeout": r ? 3e3 : 8e3
                           });
 
@@ -6027,7 +6032,7 @@
                 this.clearCache();
                 V.prev = 31;
                 V.next = 34;
-                return j(ne);
+                return j(re);
 
                case 34:
                 B = V.sent;
@@ -6036,7 +6041,7 @@
                   break;
                 }
                 V.next = 38;
-                return j(re);
+                return j(oe);
 
                case 38:
                 V.next = 49;
@@ -6047,7 +6052,7 @@
                 V.t0 = V["catch"](31);
                 V.prev = 42;
                 V.next = 45;
-                return j(re);
+                return j(oe);
 
                case 45:
                 V.next = 49;
@@ -6102,7 +6107,7 @@
       }
     } ]);
   }();
-  var ue = new ce;
+  var de = new ue;
   function clipboard_typeof(r) {
     "@babel/helpers - typeof";
     return clipboard_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -6459,7 +6464,7 @@
         while (1) {
           switch (l.prev = l.next) {
            case 0:
-            ue.track("share_copy", {
+            de.track("share_copy", {
               "text_len": r ? r.length : 0,
               "is_url": r ? r.includes("http") || r.includes("#") : false,
               "has_timestamp": r ? r.includes("t=") || r.includes("tab=") : false
@@ -6565,7 +6570,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var de = function() {
+  var he = function() {
     function PlayerCore() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       PlayerCore_classCallCheck(this, PlayerCore);
@@ -6730,25 +6735,25 @@
       }
     } ]);
   }();
-  var he = '\n    <svg width="48" height="48" viewBox="0 0 68 48" fill="none">\n        <path class="tm-play-button-bg" d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="rgb(254, 98, 142)"></path>\n        <path d="M 45,24 27,14 27,34" fill="#fff"></path>\n    </svg>\n';
-  var pe = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M18 12L7 5V19L18 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var me = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M10 4H6V20H10V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18 4H14V20H18V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var fe = '\n    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M14,6v20c0,1.1-0.9,2-2,2H8c-1.1,0-2-0.9-2-2V6c0-1.1,0.9-2,2-2h4C13.1,4,14,4.9,14,6z M24,4h-4\n        c-1.1,0-2,0.9-2,2v20c0,1.1,0.9,2,2,2h4c1.1,0,2-0.9,2-2V6C26,4.9,25.1,4,24,4z" fill="white"/>\n    </svg>\n';
-  var ve = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var ge = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var ye = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var be = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>\n    </svg>\n';
-  var Ce = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n    </svg>\n';
-  var xe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var we = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="18" y1="6" x2="6" y2="18"></line>\n        <line x1="6" y1="6" x2="18" y2="18"></line>\n    </svg>\n';
-  var _e = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="22" y1="2" x2="11" y2="13"></line>\n        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>\n    </svg>\n';
-  var ke = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M19.4 15C19.1277 15.6171 19.2583 16.3378 19.73 16.82L19.79 16.88C20.1837 17.2737 20.4009 17.7994 20.4009 18.345C20.4009 18.8906 20.1837 19.4163 19.79 19.81C19.4163 20.2037 18.8906 20.4209 18.345 20.4209C17.7994 20.4209 17.2737 20.2037 16.91 19.81L16.85 19.75C16.3678 19.2783 15.6471 19.1477 15.03 19.42C14.4301 19.6801 14.0386 20.2502 14.03 20.89V21C14.03 21.5304 13.8193 22.0391 13.4442 22.4142C13.0691 22.7893 12.5604 23 12.03 23C11.4996 23 10.9909 22.7893 10.6158 22.4142C10.2407 22.0391 10.03 21.5304 10.03 21V20.91C10.0112 20.2556 9.5979 19.6818 8.98 19.43C8.36289 19.1577 7.64221 19.2883 7.16 19.76L7.1 19.82C6.73629 20.2137 6.21056 20.4309 5.665 20.4309C5.11944 20.4309 4.59371 20.2137 4.23 19.82C3.83628 19.4463 3.61911 18.9206 3.61911 18.375C3.61911 17.8294 3.83628 17.3037 4.23 16.93L4.29 16.87C4.76167 16.3878 4.89231 15.6671 4.62 15.05C4.35995 14.4501 3.78985 14.0586 3.15 14.05H3C2.46957 14.05 1.96086 13.8393 1.58579 13.4642C1.21071 13.0891 1 12.5804 1 12.05C1 11.5196 1.21071 11.0109 1.58579 10.6358C1.96086 10.2607 2.46957 10.05 3 10.05H3.09C3.74435 10.0312 4.31814 9.61788 4.57 9C4.84231 8.38289 4.71167 7.66221 4.24 7.18L4.18 7.12C3.78628 6.75629 3.56911 6.23056 3.56911 5.685C3.56911 5.13944 3.78628 4.61371 4.18 4.25C4.55371 3.85628 5.07944 3.63911 5.625 3.63911C6.17056 3.63911 6.69629 3.85628 7.07 4.25L7.13 4.31C7.61221 4.78167 8.33289 4.91231 8.95 4.64H9C9.59994 4.37995 9.99144 3.80985 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0086 3.72985 14.4001 4.29995 15 4.56C15.6171 4.83231 16.3378 4.70167 16.82 4.23L16.88 4.17C17.2437 3.77628 17.7694 3.55911 18.325 3.55911C18.8806 3.55911 19.4063 3.77628 19.77 4.17C20.1637 4.54371 20.3809 5.06944 20.3809 5.615C20.3809 6.16056 20.1637 6.68629 19.77 7.06L19.71 7.12C19.2383 7.60221 19.1077 8.32289 19.38 8.94L19.4 9C19.66 9.59994 20.2301 9.99144 20.87 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.2702 14.0086 19.7001 14.4001 19.44 15H19.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var Ee = '\n    <svg width="12" height="12" style="vertical-align: middle;">\n        <circle class="tm-loop-indicator-circle" cx="6" cy="6" r="5" fill="hsl(var(--shadcn-muted-foreground) / 0.5)"></circle>\n    </svg>\n';
-  var Se = '\n    <svg viewBox="2 5 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5ZM6 10C6.55228 10 7 9.55228 7 9C7 8.44772 6.55228 8 6 8C5.44772 8 5 8.44772 5 9C5 9.55228 5.44772 10 6 10ZM6 13C6.55228 13 7 12.5523 7 12C7 11.4477 6.55228 11 6 11C5.44772 11 5 11.4477 5 12C5 12.5523 5.44772 13 6 13ZM9 13C9.55228 13 10 12.5523 10 12C10 11.4477 9.55228 11 9 11C8.44772 11 8 11.4477 8 12C8 12.5523 8.44772 13 9 13ZM9 10C9.55228 10 10 9.55228 10 9C10 8.44772 9.55228 8 9 8C8.44772 8 8 8.44772 8 9C8 9.55228 8.44772 10 9 10ZM12 10C12.5523 10 13 9.55228 13 9C13 8.44772 12.5523 8 12 8C11.4477 8 11 8.44772 11 9C11 9.55228 11.4477 10 12 10ZM12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13ZM15 10C15.5523 10 16 9.55228 16 9C16 8.44772 15.5523 8 15 8C14.4477 8 14 8.44772 14 9C14 9.55228 14.4477 10 15 10ZM15 13C15.5523 13 16 12.5523 16 12C16 11.4477 15.5523 11 15 11C14.4477 11 14 11.4477 14 12C14 12.5523 14.4477 13 15 13ZM18 10C18.5523 10 19 9.55228 19 9C19 8.44772 18.5523 8 18 8C17.4477 8 17 8.44772 17 9C17 9.55228 17.4477 10 18 10ZM18 13C18.5523 13 19 12.5523 19 12C19 11.4477 18.5523 11 18 11C17.4477 11 17 11.4477 17 12C17 12.5523 17.4477 13 18 13ZM17.75 16C17.75 16.4142 17.4142 16.75 17 16.75H7C6.58579 16.75 6.25 16.4142 6.25 16C6.25 15.5858 6.58579 15.25 7 15.25H17C17.4142 15.25 17.75 15.5858 17.75 16Z" fill="currentColor"/>\n    </svg>\n';
-  var Pe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="7.5" y1="3" x2="7.5" y2="21"/>\n        <path d="M15.5 9l-3 3 3 3"/>\n    </svg>\n';
-  var De = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="16.5" y1="3" x2="16.5" y2="21"/>\n        <path d="M8.5 9l3 3-3 3"/>\n    </svg>\n';
-  var Le = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>\n    </svg>\n';
-  var Me = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" opacity="0.4"/>\n        <line x1="3" y1="3" x2="21" y2="21"/>\n    </svg>\n';
+  var pe = '\n    <svg width="48" height="48" viewBox="0 0 68 48" fill="none">\n        <path class="tm-play-button-bg" d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="rgb(254, 98, 142)"></path>\n        <path d="M 45,24 27,14 27,34" fill="#fff"></path>\n    </svg>\n';
+  var me = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M18 12L7 5V19L18 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var fe = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M10 4H6V20H10V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18 4H14V20H18V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var ve = '\n    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M14,6v20c0,1.1-0.9,2-2,2H8c-1.1,0-2-0.9-2-2V6c0-1.1,0.9-2,2-2h4C13.1,4,14,4.9,14,6z M24,4h-4\n        c-1.1,0-2,0.9-2,2v20c0,1.1,0.9,2,2,2h4c1.1,0,2-0.9,2-2V6C26,4.9,25.1,4,24,4z" fill="white"/>\n    </svg>\n';
+  var ge = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var ye = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var be = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var Ce = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>\n    </svg>\n';
+  var xe = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n    </svg>\n';
+  var we = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var _e = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="18" y1="6" x2="6" y2="18"></line>\n        <line x1="6" y1="6" x2="18" y2="18"></line>\n    </svg>\n';
+  var ke = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="22" y1="2" x2="11" y2="13"></line>\n        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>\n    </svg>\n';
+  var Ee = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M19.4 15C19.1277 15.6171 19.2583 16.3378 19.73 16.82L19.79 16.88C20.1837 17.2737 20.4009 17.7994 20.4009 18.345C20.4009 18.8906 20.1837 19.4163 19.79 19.81C19.4163 20.2037 18.8906 20.4209 18.345 20.4209C17.7994 20.4209 17.2737 20.2037 16.91 19.81L16.85 19.75C16.3678 19.2783 15.6471 19.1477 15.03 19.42C14.4301 19.6801 14.0386 20.2502 14.03 20.89V21C14.03 21.5304 13.8193 22.0391 13.4442 22.4142C13.0691 22.7893 12.5604 23 12.03 23C11.4996 23 10.9909 22.7893 10.6158 22.4142C10.2407 22.0391 10.03 21.5304 10.03 21V20.91C10.0112 20.2556 9.5979 19.6818 8.98 19.43C8.36289 19.1577 7.64221 19.2883 7.16 19.76L7.1 19.82C6.73629 20.2137 6.21056 20.4309 5.665 20.4309C5.11944 20.4309 4.59371 20.2137 4.23 19.82C3.83628 19.4463 3.61911 18.9206 3.61911 18.375C3.61911 17.8294 3.83628 17.3037 4.23 16.93L4.29 16.87C4.76167 16.3878 4.89231 15.6671 4.62 15.05C4.35995 14.4501 3.78985 14.0586 3.15 14.05H3C2.46957 14.05 1.96086 13.8393 1.58579 13.4642C1.21071 13.0891 1 12.5804 1 12.05C1 11.5196 1.21071 11.0109 1.58579 10.6358C1.96086 10.2607 2.46957 10.05 3 10.05H3.09C3.74435 10.0312 4.31814 9.61788 4.57 9C4.84231 8.38289 4.71167 7.66221 4.24 7.18L4.18 7.12C3.78628 6.75629 3.56911 6.23056 3.56911 5.685C3.56911 5.13944 3.78628 4.61371 4.18 4.25C4.55371 3.85628 5.07944 3.63911 5.625 3.63911C6.17056 3.63911 6.69629 3.85628 7.07 4.25L7.13 4.31C7.61221 4.78167 8.33289 4.91231 8.95 4.64H9C9.59994 4.37995 9.99144 3.80985 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0086 3.72985 14.4001 4.29995 15 4.56C15.6171 4.83231 16.3378 4.70167 16.82 4.23L16.88 4.17C17.2437 3.77628 17.7694 3.55911 18.325 3.55911C18.8806 3.55911 19.4063 3.77628 19.77 4.17C20.1637 4.54371 20.3809 5.06944 20.3809 5.615C20.3809 6.16056 20.1637 6.68629 19.77 7.06L19.71 7.12C19.2383 7.60221 19.1077 8.32289 19.38 8.94L19.4 9C19.66 9.59994 20.2301 9.99144 20.87 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.2702 14.0086 19.7001 14.4001 19.44 15H19.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var Se = '\n    <svg width="12" height="12" style="vertical-align: middle;">\n        <circle class="tm-loop-indicator-circle" cx="6" cy="6" r="5" fill="hsl(var(--shadcn-muted-foreground) / 0.5)"></circle>\n    </svg>\n';
+  var Pe = '\n    <svg viewBox="2 5 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5ZM6 10C6.55228 10 7 9.55228 7 9C7 8.44772 6.55228 8 6 8C5.44772 8 5 8.44772 5 9C5 9.55228 5.44772 10 6 10ZM6 13C6.55228 13 7 12.5523 7 12C7 11.4477 6.55228 11 6 11C5.44772 11 5 11.4477 5 12C5 12.5523 5.44772 13 6 13ZM9 13C9.55228 13 10 12.5523 10 12C10 11.4477 9.55228 11 9 11C8.44772 11 8 11.4477 8 12C8 12.5523 8.44772 13 9 13ZM9 10C9.55228 10 10 9.55228 10 9C10 8.44772 9.55228 8 9 8C8.44772 8 8 8.44772 8 9C8 9.55228 8.44772 10 9 10ZM12 10C12.5523 10 13 9.55228 13 9C13 8.44772 12.5523 8 12 8C11.4477 8 11 8.44772 11 9C11 9.55228 11.4477 10 12 10ZM12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13ZM15 10C15.5523 10 16 9.55228 16 9C16 8.44772 15.5523 8 15 8C14.4477 8 14 8.44772 14 9C14 9.55228 14.4477 10 15 10ZM15 13C15.5523 13 16 12.5523 16 12C16 11.4477 15.5523 11 15 11C14.4477 11 14 11.4477 14 12C14 12.5523 14.4477 13 15 13ZM18 10C18.5523 10 19 9.55228 19 9C19 8.44772 18.5523 8 18 8C17.4477 8 17 8.44772 17 9C17 9.55228 17.4477 10 18 10ZM18 13C18.5523 13 19 12.5523 19 12C19 11.4477 18.5523 11 18 11C17.4477 11 17 11.4477 17 12C17 12.5523 17.4477 13 18 13ZM17.75 16C17.75 16.4142 17.4142 16.75 17 16.75H7C6.58579 16.75 6.25 16.4142 6.25 16C6.25 15.5858 6.58579 15.25 7 15.25H17C17.4142 15.25 17.75 15.5858 17.75 16Z" fill="currentColor"/>\n    </svg>\n';
+  var De = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="7.5" y1="3" x2="7.5" y2="21"/>\n        <path d="M15.5 9l-3 3 3 3"/>\n    </svg>\n';
+  var Le = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="16.5" y1="3" x2="16.5" y2="21"/>\n        <path d="M8.5 9l3 3-3 3"/>\n    </svg>\n';
+  var Me = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>\n    </svg>\n';
+  var Fe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" opacity="0.4"/>\n        <line x1="3" y1="3" x2="21" y2="21"/>\n    </svg>\n';
   function UIManager_typeof(r) {
     "@babel/helpers - typeof";
     return UIManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -6793,7 +6798,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Fe = function() {
+  var Te = function() {
     function UIManager(r) {
       UIManager_classCallCheck(this, UIManager);
       this.playerCore = r;
@@ -7240,7 +7245,7 @@
         if (!this.sidebarPosBtn) {
           return;
         }
-        this.sidebarPosBtn.innerHTML = this.sidebarPosition === "right" ? Pe : De;
+        this.sidebarPosBtn.innerHTML = this.sidebarPosition === "right" ? De : Le;
       }
     }, {
       "key": "updateSidebarToggleButtonIcon",
@@ -7248,7 +7253,7 @@
         if (!this.sidebarToggleBtn) {
           return;
         }
-        this.sidebarToggleBtn.innerHTML = this.isSidebarHidden ? Le : Me;
+        this.sidebarToggleBtn.innerHTML = this.isSidebarHidden ? Me : Fe;
       }
     }, {
       "key": "toggleSidebarPosition",
@@ -8537,7 +8542,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Te = function() {
+  var je = function() {
     function CrossDomainBridge() {
       CrossDomainBridge_classCallCheck(this, CrossDomainBridge);
     }
@@ -8903,41 +8908,41 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var je = "MissPlayerSalt_2026";
-  var Be = "_mp_obf_:";
+  var Be = "MissPlayerSalt_2026";
+  var Ie = "_mp_obf_:";
   function xorObfuscate(r) {
     if (!r) {
       return "";
     }
     var o = "";
     for (var a = 0; a < r.length; a++) {
-      o += String.fromCharCode(r.charCodeAt(a) ^ je.charCodeAt(a % je.length));
+      o += String.fromCharCode(r.charCodeAt(a) ^ Be.charCodeAt(a % Be.length));
     }
     try {
-      return Be + btoa(encodeURIComponent(o));
+      return Ie + btoa(encodeURIComponent(o));
     } catch (r) {
-      return Be + o;
+      return Ie + o;
     }
   }
   function xorDeobfuscate(r) {
     if (!r) {
       return "";
     }
-    if (!r.startsWith(Be)) {
+    if (!r.startsWith(Ie)) {
       return r;
     }
-    var o = r.substring(Be.length);
+    var o = r.substring(Ie.length);
     var a = o;
     try {
       a = decodeURIComponent(atob(o));
     } catch (r) {}
     var l = "";
     for (var u = 0; u < a.length; u++) {
-      l += String.fromCharCode(a.charCodeAt(u) ^ je.charCodeAt(u % je.length));
+      l += String.fromCharCode(a.charCodeAt(u) ^ Be.charCodeAt(u % Be.length));
     }
     return l;
   }
-  var Ie = function() {
+  var Ve = function() {
     function CredentialManager() {
       CredentialManager_classCallCheck(this, CredentialManager);
     }
@@ -8976,7 +8981,7 @@
         var _ = "";
         if (v) {
           _ = xorDeobfuscate(v);
-          if (!v.startsWith(Be) && p) {
+          if (!v.startsWith(Ie) && p) {
             this.save(r, p, _, y);
           }
         }
@@ -9415,7 +9420,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ve = function() {
+  var Oe = function() {
     function BaseLoginProvider() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       BaseLoginProvider_classCallCheck(this, BaseLoginProvider);
@@ -9615,7 +9620,7 @@
           return o;
         }
         try {
-          var a = Ie.get(this.siteKey);
+          var a = Ve.get(this.siteKey);
           if (a && a.email && a.password && a.autoLogin) {
             return true;
           }
@@ -9806,13 +9811,13 @@
                 } else {
                   l.appendChild(u);
                 }
-                v = Ie.get(this.siteKey);
+                v = Ve.get(this.siteKey);
                 y = document.getElementById("mp_auto_login");
                 if (y) {
                   y.checked = v.autoLogin;
                   y.addEventListener("change", (function() {
                     var a = y.checked;
-                    Ie.save(o.siteKey, v.email, v.password, a);
+                    Ve.save(o.siteKey, v.email, v.password, a);
                     if (r) {
                       r({
                         "autoLogin": a
@@ -9829,7 +9834,7 @@
                       var b = u.value;
                       var C = p.value;
                       if (b && C) {
-                        Ie.save(o.siteKey, b, C, true);
+                        Ve.save(o.siteKey, b, C, true);
                         if (r) {
                           r({
                             "email": b,
@@ -9873,7 +9878,7 @@
             while (1) {
               switch (l.prev = l.next) {
                case 0:
-                r = Ie.get(this.siteKey);
+                r = Ve.get(this.siteKey);
                 if (!(!r.email || !r.password || !r.autoLogin)) {
                   l.next = 3;
                   break;
@@ -10420,7 +10425,7 @@
     }
     return String(r);
   }
-  var Oe = function(r) {
+  var Re = function(r) {
     function JableLoginProvider() {
       var r;
       JableLoginProvider_classCallCheck(this, JableLoginProvider);
@@ -10447,7 +10452,7 @@
         if (!this.isSupportedSite()) {
           return;
         }
-        Te.startBroker(this.siteKey, {
+        je.startBroker(this.siteKey, {
           "PUBLISH_COMMENT": function() {
             var o = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee(o) {
               var a, l, u, p, v, y, b;
@@ -10712,7 +10717,7 @@
                   y = b.innerHTML;
                 }
                 C.next = 5;
-                return Te.sendCommand(this.siteKey, "PUBLISH_COMMENT", {
+                return je.sendCommand(this.siteKey, "PUBLISH_COMMENT", {
                   "commentText": r,
                   "videoCode": a,
                   "videoId": l,
@@ -10739,7 +10744,7 @@
       "key": "publishComment",
       "value": function() {
         var r = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee5(r, o) {
-          var a, l, u, p, v, y, b, C, _, k, E, S, P, D, L, M, A, T, j, B, I;
+          var a, l, u, p, v, y, b, C, _, k, E, S, P, D, L, M, T, A, j, B, I;
           return JableLoginProvider_regeneratorRuntime().wrap((function _callee5$(V) {
             while (1) {
               switch (V.prev = V.next) {
@@ -10767,7 +10772,7 @@
                   break;
                 }
                 V.next = 11;
-                return Te.checkShadowActive(this.siteKey);
+                return je.checkShadowActive(this.siteKey);
 
                case 11:
                 b = V.sent;
@@ -10855,8 +10860,8 @@
                case 35:
                 M = V.sent;
                 V.prev = 36;
-                A = JSON.parse(M);
-                if (!(A.status === "success")) {
+                T = JSON.parse(M);
+                if (!(T.status === "success")) {
                   V.next = 43;
                   break;
                 }
@@ -10864,12 +10869,12 @@
                 return V.abrupt("return", true);
 
                case 43:
-                if (!A.errors) {
+                if (!T.errors) {
                   V.next = 47;
                   break;
                 }
-                T = formatErrorMessage(A.errors, "评论发表失败");
-                Toast("提交失败: ".concat(T), 3e3, "error");
+                A = formatErrorMessage(T.errors, "评论发表失败");
+                Toast("提交失败: ".concat(A), 3e3, "error");
                 return V.abrupt("return", false);
 
                case 47:
@@ -10926,7 +10931,7 @@
         return publishComment;
       }()
     } ]);
-  }(Ve);
+  }(Oe);
   function MissavLoginProvider_typeof(r) {
     "@babel/helpers - typeof";
     return MissavLoginProvider_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -11367,7 +11372,7 @@
     }
     return null;
   }
-  var Re = function(r) {
+  var Ge = function(r) {
     function MissavLoginProvider() {
       MissavLoginProvider_classCallCheck(this, MissavLoginProvider);
       return MissavLoginProvider_callSuper(this, MissavLoginProvider, [ {
@@ -11511,7 +11516,7 @@
         }
       }
     } ]);
-  }(Ve);
+  }(Oe);
   function CommentPanel_typeof(r) {
     "@babel/helpers - typeof";
     return CommentPanel_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -12092,7 +12097,7 @@
     }
     return 0;
   }
-  var Ge = function() {
+  var He = function() {
     function CommentPanel(r, o) {
       var a = this;
       CommentPanel_classCallCheck(this, CommentPanel);
@@ -12388,7 +12393,7 @@
           a = true;
         }
         try {
-          ue.trackTimestampClick({
+          de.trackTimestampClick({
             "secs": r,
             "avcode": this.videoCode || "",
             "source": "comment"
@@ -12520,7 +12525,7 @@
       "value": function() {
         var r = CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee3(r) {
           var o, a, l = this;
-          var u, p, v, y, b, C, _, E, L, M, A, T, j, B, I, V, O, R, G, H, z, N, J, q, U, W, Y, K, X, $, Q, Z, ee, te, ne, re, oe, ae, ie = arguments;
+          var u, p, v, y, b, C, _, k, S, M, T, A, j, B, I, V, O, R, G, H, z, N, J, q, U, W, Y, K, X, $, Q, Z, ee, te, ne, re, oe, ae, ie = arguments;
           return CommentPanel_regeneratorRuntime().wrap((function _callee3$(se) {
             while (1) {
               switch (se.prev = se.next) {
@@ -12552,7 +12557,7 @@
                   se.next = 13;
                   break;
                 }
-                k.log("[CommentPanel] 站点 ".concat(r, " 在设置中已禁用，取消评论抓取。"));
+                E.log("[CommentPanel] 站点 ".concat(r, " 在设置中已禁用，取消评论抓取。"));
                 p.loading = false;
                 return se.abrupt("return");
 
@@ -12591,24 +12596,24 @@
                   break;
                 }
                 if (u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.jableCommentsPromise) {
-                  k.log("[CommentPanel] 使用预加载的 Jable.tv 评论...");
+                  E.log("[CommentPanel] 使用预加载的 Jable.tv 评论...");
                   _ = CommentPanel.preloadCache.jableCommentsPromise;
                 } else {
-                  E = 0;
-                  L = "";
+                  k = 0;
+                  S = "";
                   if (typeof GM_getValue === "function") {
                     try {
-                      L = GM_getValue("mp_jable_working_domain", "");
+                      S = GM_getValue("mp_jable_working_domain", "");
                     } catch (r) {}
                   }
-                  M = p.workingDomain || L;
+                  M = p.workingDomain || S;
                   if (M) {
-                    A = S.indexOf(M);
-                    if (A !== -1) {
-                      E = A;
+                    T = P.indexOf(M);
+                    if (T !== -1) {
+                      k = T;
                     }
                   }
-                  _ = fetchJableComments(this.videoCode, u, E);
+                  _ = fetchJableComments(this.videoCode, u, k);
                 }
                 se.next = 29;
                 return _;
@@ -12633,17 +12638,17 @@
                   break;
                 }
                 se.next = 37;
-                return Te.checkShadowActive("JAVLIBRARY");
+                return je.checkShadowActive("JAVLIBRARY");
 
                case 37:
-                T = se.sent;
-                if (!T) {
+                A = se.sent;
+                if (!A) {
                   se.next = 44;
                   break;
                 }
-                k.log("[CommentPanel] 检测到 JAVLibrary 影子通道在线，优先通过影子协同获取数据...");
+                E.log("[CommentPanel] 检测到 JAVLibrary 影子通道在线，优先通过影子协同获取数据...");
                 se.next = 42;
-                return Te.sendCommand("JAVLIBRARY", "FETCH_JAVLIB_DATA", {
+                return je.sendCommand("JAVLIBRARY", "FETCH_JAVLIB_DATA", {
                   "avcode": this.videoCode,
                   "page": u
                 });
@@ -12664,7 +12669,7 @@
                     "hasMore": I.hasMore || V.hasMore
                   };
                 } else {
-                  k.log("[CommentPanel] JAVLibrary 影子通道同源抓取失败，降级为跨域直连抓取...");
+                  E.log("[CommentPanel] JAVLibrary 影子通道同源抓取失败，降级为跨域直连抓取...");
                 }
 
                case 44:
@@ -12679,7 +12684,7 @@
                   break;
                 }
                 if (CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibVideoIdPromise) {
-                  k.log("[CommentPanel] 使用预加载的 JAVLibrary ID...");
+                  E.log("[CommentPanel] 使用预加载的 JAVLibrary ID...");
                   G = CommentPanel.preloadCache.javlibVideoIdPromise;
                 } else {
                   G = fetchJavLibraryVideoId(this.videoCode);
@@ -12695,15 +12700,15 @@
                 p.workingDomain = R;
 
                case 56:
-                z = R || P[0];
+                z = R || D[0];
                 N = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibCommentsPromise ? CommentPanel.preloadCache.javlibCommentsPromise : fetchJavLibraryData(O, "comments", u, z);
                 J = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibReviewsPromise ? CommentPanel.preloadCache.javlibReviewsPromise : fetchJavLibraryData(O, "reviews", u, z);
                 se.next = 61;
                 return Promise.all([ N["catch"]((function(r) {
-                  k.warn("[CommentPanel] 获取 JAVLibrary 评论失败:", r);
+                  E.warn("[CommentPanel] 获取 JAVLibrary 评论失败:", r);
                   throw r;
                 })), J["catch"]((function(r) {
-                  k.warn("[CommentPanel] 获取 JAVLibrary 文章失败:", r);
+                  E.warn("[CommentPanel] 获取 JAVLibrary 文章失败:", r);
                   throw r;
                 })) ]);
 
@@ -12737,7 +12742,7 @@
                   break;
                 }
                 if (CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javdbMovieIdPromise) {
-                  k.log("[CommentPanel] 使用预加载的 JavDB ID...");
+                  E.log("[CommentPanel] 使用预加载的 JavDB ID...");
                   $ = CommentPanel.preloadCache.javdbMovieIdPromise;
                 } else {
                   $ = fetchJavdbMovieId(this.videoCode);
@@ -12753,7 +12758,7 @@
                 p.workingDomain = X;
 
                case 81:
-                Z = X || D[0];
+                Z = X || L[0];
                 ee = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javdbCommentsPromise ? CommentPanel.preloadCache.javdbCommentsPromise : fetchJavdbData(K, u, Z);
                 se.next = 85;
                 return ee;
@@ -12796,7 +12801,7 @@
                case 96:
                 se.prev = 96;
                 se.t0 = se["catch"](24);
-                k.warn("[CommentPanel] 获取 ".concat(p.name, " 评论失败:"), se.t0);
+                E.warn("[CommentPanel] 获取 ".concat(p.name, " 评论失败:"), se.t0);
                 if (r === "javlib") {
                   this.handleJavlibError(se.t0);
                 } else {
@@ -12809,7 +12814,7 @@
                   } else if (ae.includes("人机验证") || ae.startsWith("CF_SHIELD_ON_") || ae.includes("cf-challenge") || ae.includes("Cloudflare") || ae.includes("cloudflare")) {
                     p.status = "cf_shield";
                     if (r === "jable") {
-                      this.jableFailedDomain = se.t0.domain || p.workingDomain || S[0];
+                      this.jableFailedDomain = se.t0.domain || p.workingDomain || P[0];
                     }
                   } else {
                     p.status = "unreachable";
@@ -12983,7 +12988,7 @@
     }, {
       "key": "showCloudflarePrompt",
       "value": function showCloudflarePrompt(r) {
-        var o = r || "https://".concat(v.JAVLIBRARY.primary);
+        var o = r || "https://".concat(y.JAVLIBRARY.primary);
         if (this.loadingElement) {
           this.loadingElement.style.display = "none";
         }
@@ -13007,19 +13012,19 @@
           return;
         }
         this.javlibAutoVerifyAttempted = true;
-        var a = r || "https://".concat(v.JAVLIBRARY.primary);
-        k.log("尝试启动 JAVLibrary 后台验证，目标域名: ".concat(a));
+        var a = r || "https://".concat(y.JAVLIBRARY.primary);
+        E.log("尝试启动 JAVLibrary 后台验证，目标域名: ".concat(a));
         this.javlibVerifyingStatus = "verifying";
         this.renderCommentsList();
         this.startSignalListener();
         var l = "".concat(a, "/cn/?cf_verify=1");
         var u = Date.now();
         var p = (typeof GM_getValue === "function" ? GM_getValue("javlib_verifying_start_time") : 0) || 0;
-        var y = typeof GM_getValue === "function" && GM_getValue("javlib_verifying") === true && u - p < 15e3;
-        if (y) {
-          k.log("监测到其他标签页已经在进行 JAVLibrary 验证，本标签页仅挂载监听器。");
+        var v = typeof GM_getValue === "function" && GM_getValue("javlib_verifying") === true && u - p < 15e3;
+        if (v) {
+          E.log("监测到其他标签页已经在进行 JAVLibrary 验证，本标签页仅挂载监听器。");
         } else {
-          k.log("无其他活跃验证标签页，尝试启动后台验证标签页。");
+          E.log("无其他活跃验证标签页，尝试启动后台验证标签页。");
           if (typeof GM_setValue === "function") {
             GM_setValue("javlib_verifying", true);
             GM_setValue("javlib_verifying_start_time", u);
@@ -13031,7 +13036,7 @@
                 "insert": true,
                 "pinned": true
               });
-              k.log("已通过 GM_openInTab 打开后台静默验证标签页。");
+              E.log("已通过 GM_openInTab 打开后台静默验证标签页。");
             } else if (typeof GM !== "undefined" && typeof GM.openInTab === "function") {
               var b = GM.openInTab(l, {
                 "active": false,
@@ -13042,25 +13047,25 @@
                 b.then((function(r) {
                   o.javlibVerificationTab = r;
                 }))["catch"]((function(r) {
-                  k.error("GM.openInTab 异步启动失败:", r);
+                  E.error("GM.openInTab 异步启动失败:", r);
                 }));
               } else {
                 this.javlibVerificationTab = b;
               }
-              k.log("已通过 GM.openInTab 打开后台静默验证标签页。");
+              E.log("已通过 GM.openInTab 打开后台静默验证标签页。");
             } else {
-              k.warn("GM_openInTab 和 GM.openInTab 均未定义，降级为手动验证。");
+              E.warn("GM_openInTab 和 GM.openInTab 均未定义，降级为手动验证。");
               this.handleJavlibVerificationTimeout(r);
               return;
             }
           } catch (o) {
-            k.error("启动后台验证标签页失败:", o);
+            E.error("启动后台验证标签页失败:", o);
             this.handleJavlibVerificationTimeout(r);
             return;
           }
         }
         this.javlibVerificationTimeout = setTimeout((function() {
-          k.warn("JAVLibrary 后台验证超时，切换至手动验证提示。");
+          E.warn("JAVLibrary 后台验证超时，切换至手动验证提示。");
           o.handleJavlibVerificationTimeout(r);
         }), 15e3);
       }
@@ -13098,7 +13103,7 @@
           }
         }
         if (this.javlibVerificationTab) {
-          k.log("保持后台验证标签页存活，充当影子 Broker。");
+          E.log("保持后台验证标签页存活，充当影子 Broker。");
           this.javlibVerificationTab = null;
         }
         if (typeof GM_setValue === "function") {
@@ -13114,16 +13119,16 @@
         }
         if (typeof GM_addValueChangeListener === "function") {
           this.javlibVerifiedListenerId = GM_addValueChangeListener("javlib_verified_time", (function(o, a, l, u) {
-            k.log("监听到 JAVLibrary 验证成功信号 (监听器)！");
+            E.log("监听到 JAVLibrary 验证成功信号 (监听器)！");
             r.handleJavlibVerificationSuccess();
           }));
         } else {
-          k.log("GM_addValueChangeListener 未定义，使用轮询方式监听验证信号。");
+          E.log("GM_addValueChangeListener 未定义，使用轮询方式监听验证信号。");
           var o = (typeof GM_getValue === "function" ? GM_getValue("javlib_verified_time") : 0) || 0;
           this.javlibVerifiedPollInterval = setInterval((function() {
             var a = (typeof GM_getValue === "function" ? GM_getValue("javlib_verified_time") : 0) || 0;
             if (a > o) {
-              k.log("通过轮询监听到 JAVLibrary 验证成功信号！");
+              E.log("通过轮询监听到 JAVLibrary 验证成功信号！");
               r.handleJavlibVerificationSuccess();
             }
           }), 1e3);
@@ -13156,7 +13161,7 @@
         var r = this;
         this.commentsPanel = document.createElement("div");
         this.commentsPanel.className = "tm-comments-panel";
-        this.commentsPanel.innerHTML = '\n            <div class="tm-comments-list tm-comments-panel-list"></div>\n            <div class="tm-comment-loading tm-comments-panel-loading" style="display: none;"></div>\n            <div class="tm-comment-error tm-comments-panel-error" style="display: none;"></div>\n            <div class="tm-comment-submit-bar-wrapper">\n                <div class="tm-comment-tag-select-modal">\n                    <div class="tm-tag-select-header">\n                        <div class="tm-tag-select-btn-group">\n                            <button type="button" class="tm-tag-select-all-btn">全选</button>\n                            <button type="button" class="tm-tag-deselect-all-btn">取消全选</button>\n                        </div>\n                        <button type="button" class="tm-tag-select-close-btn" title="关闭">✕</button>\n                    </div>\n                    <div class="tm-tag-select-list"></div>\n                </div>\n                <div class="tm-comment-submit-bar">\n                    <button type="button" class="tm-comment-add-tag-btn" title="插入/勾选高光标签">\n                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>\n                    </button>\n                    <input type="text" class="tm-comment-text-input" placeholder="Comment" />\n                    <button type="button" class="tm-comment-send-btn">'.concat(__("send"), '</button>\n                </div>\n            </div>\n            <div class="tm-comments-panel-action-bar" style="display: none;">\n                <div class="tm-action-bar-left">\n                    <span class="tm-comment-count">共 0 条评论</span>\n                    <button class="tm-comment-copy-all-btn" title="一键复制所有加载的原始评论">').concat(__("commentsCopyAll"), '</button>\n                </div>\n                <div class="tm-action-bar-right">\n                    <label class="tm-comment-filter-label">\n                        <input type="checkbox" class="tm-comment-filter-checkbox" ').concat(this.filterSpam ? "checked" : "", " />\n                        <span>").concat(__("commentsFilterSpam"), '</span>\n                    </label>\n                </div>\n            </div>\n            <button class="tm-show-controls-float-btn" title="显示控制面板">').concat(Se, "</button>\n        ");
+        this.commentsPanel.innerHTML = '\n            <div class="tm-comments-list tm-comments-panel-list"></div>\n            <div class="tm-comment-loading tm-comments-panel-loading" style="display: none;"></div>\n            <div class="tm-comment-error tm-comments-panel-error" style="display: none;"></div>\n            <div class="tm-comment-submit-bar-wrapper">\n                <div class="tm-comment-tag-select-modal">\n                    <div class="tm-tag-select-header">\n                        <div class="tm-tag-select-btn-group">\n                            <button type="button" class="tm-tag-select-all-btn">全选</button>\n                            <button type="button" class="tm-tag-deselect-all-btn">取消全选</button>\n                        </div>\n                        <button type="button" class="tm-tag-select-close-btn" title="关闭">✕</button>\n                    </div>\n                    <div class="tm-tag-select-list"></div>\n                </div>\n                <div class="tm-comment-submit-bar">\n                    <button type="button" class="tm-comment-add-tag-btn" title="插入/勾选高光标签">\n                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>\n                    </button>\n                    <input type="text" class="tm-comment-text-input" placeholder="Comment" />\n                    <button type="button" class="tm-comment-send-btn">'.concat(__("send"), '</button>\n                </div>\n            </div>\n            <div class="tm-comments-panel-action-bar" style="display: none;">\n                <div class="tm-action-bar-left">\n                    <span class="tm-comment-count">共 0 条评论</span>\n                    <button class="tm-comment-copy-all-btn" title="一键复制所有加载的原始评论">').concat(__("commentsCopyAll"), '</button>\n                </div>\n                <div class="tm-action-bar-right">\n                    <label class="tm-comment-filter-label">\n                        <input type="checkbox" class="tm-comment-filter-checkbox" ').concat(this.filterSpam ? "checked" : "", " />\n                        <span>").concat(__("commentsFilterSpam"), '</span>\n                    </label>\n                </div>\n            </div>\n            <button class="tm-show-controls-float-btn" title="显示控制面板">').concat(Pe, "</button>\n        ");
         this.commentsList = this.commentsPanel.querySelector(".tm-comments-list");
         this.loadingElement = this.commentsPanel.querySelector(".tm-comment-loading");
         this.errorElement = this.commentsPanel.querySelector(".tm-comment-error");
@@ -13390,10 +13395,10 @@
         }), 300);
         this.videoCode = getVideoCodeFromUrl();
         if (this.videoCode) {
-          k.log("[CommentPanel] 提取到当前视频番号: ".concat(this.videoCode, "，开始采集..."));
+          E.log("[CommentPanel] 提取到当前视频番号: ".concat(this.videoCode, "，开始采集..."));
           this.loadComments(1);
         } else {
-          k.warn("[CommentPanel] 无法从当前URL解析到视频番号。");
+          E.warn("[CommentPanel] 无法从当前URL解析到视频番号。");
           if (this.commentsList) {
             this.commentsList.innerHTML = '<div class="tm-comment-error">无法解析视频番号，暂不支持展示评论。</div>';
           }
@@ -13457,7 +13462,7 @@
                 return l.abrupt("return", null);
 
                case 3:
-                o = this.jableWorkingDomain || S[0];
+                o = this.jableWorkingDomain || P[0];
                 a = "".concat(o, "/videos/").concat(this.videoCode.toLowerCase().trim(), "/");
                 return l.abrupt("return", new Promise((function(l) {
                   var u = false;
@@ -13522,7 +13527,7 @@
                       }
                       u = true;
                       clearTimeout(p);
-                      k.error("[CommentPanel] 检测 Jable 失败:", r);
+                      E.error("[CommentPanel] 检测 Jable 失败:", r);
                       Toast("网络请求失败，请稍后重试", 2e3, "error");
                       l(null);
                     },
@@ -13913,7 +13918,7 @@
                   } else if (!b.startsWith("http")) {
                     b = u;
                   }
-                  k.log("[CommentPanel] 正在提交评论: ".concat(b));
+                  E.log("[CommentPanel] 正在提交评论: ".concat(b));
                   GM_xmlhttpRequest({
                     "method": "POST",
                     "url": b,
@@ -13944,7 +13949,7 @@
                       }
                     },
                     "onerror": function onerror(r) {
-                      k.error("[CommentPanel] 提交评论失败:", r);
+                      E.error("[CommentPanel] 提交评论失败:", r);
                       Toast("网络请求出错，请重试", 2e3, "error");
                       o(false);
                     }
@@ -13973,7 +13978,7 @@
                 _.prev = 25;
                 _.t0 = _["catch"](10);
                 y();
-                k.error("[CommentPanel] 发表评论过程出现异常:", _.t0);
+                E.error("[CommentPanel] 发表评论过程出现异常:", _.t0);
                 Toast("发表评论失败", 2e3, "error");
 
                case 30:
@@ -14006,7 +14011,7 @@
                 return C.abrupt("return");
 
                case 3:
-                o = this.jableWorkingDomain || S[0];
+                o = this.jableWorkingDomain || P[0];
                 a = "".concat(o, "/videos/").concat(this.videoCode.toLowerCase().trim(), "/");
                 l = this.commentsPanel.querySelector(".tm-comments-panel-publish-btn");
                 u = l ? l.textContent : "发表";
@@ -14022,7 +14027,7 @@
                     l.style.opacity = "1";
                   }
                 };
-                k.log("[CommentPanel] 正在检测 Jable 页面与登录态: ".concat(a));
+                E.log("[CommentPanel] 正在检测 Jable 页面与登录态: ".concat(a));
                 v = false;
                 y = setTimeout((function() {
                   if (!v) {
@@ -14033,7 +14038,7 @@
                         b.abort();
                       } catch (r) {}
                     }
-                    k.error("[CommentPanel] 检测 Jable 页面超时");
+                    E.error("[CommentPanel] 检测 Jable 页面超时");
                     Toast("网络请求超时，请稍后重试", 2e3, "error");
                   }
                 }), 6e3);
@@ -14081,7 +14086,7 @@
                     v = true;
                     clearTimeout(y);
                     p();
-                    k.error("[CommentPanel] 检测 Jable 失败:", r);
+                    E.error("[CommentPanel] 检测 Jable 失败:", r);
                     Toast("网络请求失败，请稍后重试", 2e3, "error");
                   },
                   "ontimeout": function ontimeout() {
@@ -14091,7 +14096,7 @@
                     v = true;
                     clearTimeout(y);
                     p();
-                    k.error("[CommentPanel] 检测 Jable 超时");
+                    E.error("[CommentPanel] 检测 Jable 超时");
                     Toast("网络请求超时，请稍后重试", 2e3, "error");
                   }
                 });
@@ -14280,17 +14285,17 @@
           }));
           CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee0() {
             var _;
-            return CommentPanel_regeneratorRuntime().wrap((function _callee0$(E) {
+            return CommentPanel_regeneratorRuntime().wrap((function _callee0$(k) {
               while (1) {
-                switch (E.prev = E.next) {
+                switch (k.prev = k.next) {
                  case 0:
-                  E.prev = 0;
+                  k.prev = 0;
                   _ = false;
                   if (!(p && typeof p.publishComment === "function")) {
-                    E.next = 8;
+                    k.next = 8;
                     break;
                   }
-                  E.next = 5;
+                  k.next = 5;
                   return p.publishComment(u, {
                     "videoCode": l.videoCode,
                     "commentForm": r,
@@ -14299,12 +14304,12 @@
                   });
 
                  case 5:
-                  _ = E.sent;
-                  E.next = 11;
+                  _ = k.sent;
+                  k.next = 11;
                   break;
 
                  case 8:
-                  E.next = 10;
+                  k.next = 10;
                   return new Promise((function(l) {
                     var p = new URLSearchParams;
                     r.querySelectorAll("input").forEach((function(r) {
@@ -14321,7 +14326,7 @@
                     } else if (!b.startsWith("http")) {
                       b = o;
                     }
-                    k.log("[CommentPanel] 正在向 Jable 提交评论: ".concat(b));
+                    E.log("[CommentPanel] 正在向 Jable 提交评论: ".concat(b));
                     GM_xmlhttpRequest({
                       "method": "POST",
                       "url": b,
@@ -14352,7 +14357,7 @@
                         }
                       },
                       "onerror": function onerror(r) {
-                        k.error("[CommentPanel] 提交评论失败:", r);
+                        E.error("[CommentPanel] 提交评论失败:", r);
                         Toast("网络请求出错，请重试", 2e3, "error");
                         l(false);
                       }
@@ -14360,7 +14365,7 @@
                   }));
 
                  case 10:
-                  _ = E.sent;
+                  _ = k.sent;
 
                  case 11:
                   if (_) {
@@ -14374,13 +14379,13 @@
                     C.textContent = "提交";
                     b.disabled = false;
                   }
-                  E.next = 21;
+                  k.next = 21;
                   break;
 
                  case 14:
-                  E.prev = 14;
-                  E.t0 = E["catch"](0);
-                  k.error("[CommentPanel] 发表评论失败:", E.t0);
+                  k.prev = 14;
+                  k.t0 = k["catch"](0);
+                  E.error("[CommentPanel] 发表评论失败:", k.t0);
                   y.disabled = false;
                   C.disabled = false;
                   C.textContent = "提交";
@@ -14388,7 +14393,7 @@
 
                  case 21:
                  case "end":
-                  return E.stop();
+                  return k.stop();
                 }
               }
             }), _callee0, null, [ [ 0, 14 ] ]);
@@ -14488,7 +14493,7 @@
         if (!o || o.loading || !o.hasMore || o.collapsed) {
           return;
         }
-        k.log("[CommentPanel] 触发加载更多 ".concat(o.name, " 评论..."));
+        E.log("[CommentPanel] 触发加载更多 ".concat(o.name, " 评论..."));
         this.loadSiteComments(r, o.currentPage + 1);
       }
     }, {
@@ -14515,12 +14520,12 @@
           return "";
         }
         var p = (o = this.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState;
-        var y = (p === null || p === void 0 || (a = p.settings) === null || a === void 0 ? void 0 : a.enabledCommentSources) || {
+        var v = (p === null || p === void 0 || (a = p.settings) === null || a === void 0 ? void 0 : a.enabledCommentSources) || {
           "jable": true,
           "javdb": true,
           "javlibrary": false
         };
-        var b = r === "javlib" ? y.javlib !== false && y.javlibrary !== false : y[r] !== false;
+        var b = r === "javlib" ? v.javlib !== false && v.javlibrary !== false : v[r] !== false;
         if (!b) {
           return "";
         }
@@ -14539,7 +14544,7 @@
           if (r === "javlib" && this.javlibVerifyingStatus === "verifying") {
             C = '\n                    <div class="tm-comments-cf-warning" style="border-radius: 6px; padding: 10px 14px; background-color: hsla(var(--shadcn-blue)/0.08); border: 1px solid hsla(var(--shadcn-blue)/0.15); font-size: 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: hsl(var(--shadcn-blue)); box-sizing: border-box; width: 100%; pointer-events: auto;">\n                        <div style="display: flex; align-items: center; gap: 8px;">\n                            <div class="tm-comment-loader-graphic" style="display: flex; gap: 3px; padding: 0; width: auto; min-height: 0;">\n                                <div class="dot" style="width: 4px; height: 4px; border-radius: 50%; background-color: hsl(var(--shadcn-blue)); animation: tmDotPulse 1.4s infinite ease-in-out both;"></div>\n                                <div class="dot" style="width: 4px; height: 4px; border-radius: 50%; background-color: hsl(var(--shadcn-blue)); animation: tmDotPulse 1.4s infinite ease-in-out both; animation-delay: -0.16s;"></div>\n                                <div class="dot" style="width: 4px; height: 4px; border-radius: 50%; background-color: hsl(var(--shadcn-blue)); animation: tmDotPulse 1.4s infinite ease-in-out both; animation-delay: -0.32s;"></div>\n                            </div>\n                            <span style="font-weight: 500;">正在后台尝试自动通过 JAVLibrary 验证，请稍候...</span>\n                        </div>\n                    </div>\n                ';
           } else {
-            var _ = r === "jable" ? this.jableFailedDomain || "https://".concat(v.JABLE.primary) : r === "javlib" ? this.javlibFailedDomain || "https://".concat(v.JAVLIBRARY.primary) : "https://".concat(v.JAVDB.primary);
+            var _ = r === "jable" ? this.jableFailedDomain || "https://".concat(y.JABLE.primary) : r === "javlib" ? this.javlibFailedDomain || "https://".concat(y.JAVLIBRARY.primary) : "https://".concat(y.JAVDB.primary);
             var k = r === "jable" ? "tm-jable-verify-retry-btn" : r === "javlib" ? "tm-comments-verify-retry-btn" : "tm-javdb-verify-retry-btn";
             C = '\n                    <div class="tm-comments-cf-warning" style="border-radius: 6px; padding: 10px 14px; background-color: hsla(var(--shadcn-destructive)/0.08); border: 1px solid hsla(var(--shadcn-destructive)/0.15); font-size: 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: hsl(var(--shadcn-destructive)); box-sizing: border-box; width: 100%; pointer-events: auto;">\n                        <span>'.concat(u.name, ' 评论抓取受阻 (Cloudflare 拦截)</span>\n                        <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">\n                            <a href="').concat(_, '/" target="_blank" class="tm-comments-verify-link" style="padding: 4px 10px; background-color: hsl(var(--shadcn-destructive)); color: white; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 10px; white-space: nowrap;">去验证</a>\n                            <button class="').concat(k, '" style="padding: 4px 10px; background-color: hsla(var(--shadcn-muted) / 0.15); border: 1px solid hsla(var(--shadcn-border) / 0.3); color: hsl(var(--shadcn-foreground)); border-radius: 12px; font-weight: 600; font-size: 10px; cursor: pointer; white-space: nowrap; outline: none; transition: all 0.2s;">重新加载</button>\n                            ').concat(r === "javlib" ? '<button class="tm-comments-verify-copy-logs-btn" style="padding: 4px 10px; background-color: hsla(var(--shadcn-muted) / 0.15); border: 1px solid hsla(var(--shadcn-border) / 0.3); color: hsl(var(--shadcn-foreground)); border-radius: 12px; font-weight: 600; font-size: 10px; cursor: pointer; white-space: nowrap; outline: none; transition: all 0.2s;">复制日志</button>' : "", "\n                        </div>\n                    </div>\n                ");
           }
@@ -14568,12 +14573,12 @@
         var D = P ? "none" : "block";
         var L = r === "jable" ? "JABLE" : r === "javlib" ? "JAVLIBRARY" : "";
         var M = L ? this.renderLoginBadgeHtml(L) : "";
-        var A = {
+        var T = {
           "jable": "■ Jable.tv",
           "javlib": "■ JAVLibrary",
           "javdb": "■ JavDB"
         };
-        return '\n            <div class="tm-comment-section'.concat(P ? " is-collapsed" : "", '" id="tm-comment-section-').concat(r, '">\n                <div class="tm-comment-section-hdr" title="点击展开/折叠">\n                    <span class="tm-comment-section-title">').concat(A[r], '</span>\n                    <div class="tm-comment-hdr-right" style="display: inline-flex; align-items: center; gap: 6px;">\n                        ').concat(M, '\n                        <span class="tm-comment-status-badge tm-status-badge-').concat(u.status, '">').concat(S, '</span>\n                    </div>\n                </div>\n                <div class="tm-comment-section-body" style="display: ').concat(D, '; pointer-events: auto;">\n                    ').concat(C, "\n                </div>\n            </div>\n        ");
+        return '\n            <div class="tm-comment-section'.concat(P ? " is-collapsed" : "", '" id="tm-comment-section-').concat(r, '">\n                <div class="tm-comment-section-hdr" title="点击展开/折叠">\n                    <span class="tm-comment-section-title">').concat(T[r], '</span>\n                    <div class="tm-comment-hdr-right" style="display: inline-flex; align-items: center; gap: 6px;">\n                        ').concat(M, '\n                        <span class="tm-comment-status-badge tm-status-badge-').concat(u.status, '">').concat(S, '</span>\n                    </div>\n                </div>\n                <div class="tm-comment-section-body" style="display: ').concat(D, '; pointer-events: auto;">\n                    ').concat(C, "\n                </div>\n            </div>\n        ");
       }
     }, {
       "key": "showBottomLoader",
@@ -14723,7 +14728,7 @@
           if (y) {
             y.addEventListener("click", (function(o) {
               o.stopPropagation();
-              k.log("用户手动点击 JAVLibrary 重试，清除历史验证状态并重载...");
+              E.log("用户手动点击 JAVLibrary 重试，清除历史验证状态并重载...");
               r.javlibAutoVerifyAttempted = false;
               r.javlibCfShield = false;
               r.javlibVerifyingStatus = "";
@@ -14734,7 +14739,7 @@
           if (b) {
             b.addEventListener("click", (function(o) {
               o.stopPropagation();
-              k.log("用户手动点击 Jable.tv 重试，清除历史验证状态并重载...");
+              E.log("用户手动点击 Jable.tv 重试，清除历史验证状态并重载...");
               r.jableStatus = "loading";
               r.handleRetry("jable");
             }));
@@ -14743,7 +14748,7 @@
           if (C) {
             C.addEventListener("click", (function(o) {
               o.stopPropagation();
-              k.log("用户手动点击 JavDB 重试...");
+              E.log("用户手动点击 JavDB 重试...");
               r.javdbStatus = "loading";
               r.loadJavdbComments(1);
             }));
@@ -14755,16 +14760,16 @@
               var a = r.closest("#tm-comment-section-javlib") !== null;
               var l = a ? [ "javlib", "c97k.com", "CrossDomainBridge", "iframe", "shadow" ] : [ "jable", "fs1.app" ];
               var u = a ? "JAVLibrary" : "Jable.tv";
-              if (k.copyLogs(l)) {
+              if (E.copyLogs(l)) {
                 Toast("".concat(u, " 调试日志已复制到剪贴板，请发送给开发者分析！"), 3e3, "success");
               } else {
                 Toast("复制日志失败，请手动打开控制台查看。", 3e3, "error");
               }
             }));
           }));
-          var E = this.commentsList.querySelector("#tm-comment-section-jable .tm-comment-section-hdr");
-          if (E) {
-            E.addEventListener("click", (function() {
+          var k = this.commentsList.querySelector("#tm-comment-section-jable .tm-comment-section-hdr");
+          if (k) {
+            k.addEventListener("click", (function() {
               var o = r.commentsList.querySelector("#tm-comment-section-jable .tm-comment-section-body");
               var a = r.commentsList.querySelector("#tm-comment-section-jable");
               if (o && a) {
@@ -14864,13 +14869,13 @@
             var u = l.closest(".tm-comment-section");
             var p = u ? u.id : "";
             if (p === "tm-comment-section-jable" && this.jableHasMore && !this.jableLoading) {
-              k.log("[CommentPanel] Jable section viewport not filled. Auto-loading next page...");
+              E.log("[CommentPanel] Jable section viewport not filled. Auto-loading next page...");
               this.triggerLoadMoreJable();
             } else if (p === "tm-comment-section-javlib" && this.javlibHasMore && !this.javlibLoading) {
-              k.log("[CommentPanel] JAVLibrary section viewport not filled. Auto-loading next page...");
+              E.log("[CommentPanel] JAVLibrary section viewport not filled. Auto-loading next page...");
               this.triggerLoadMoreJavlib();
             } else if (p === "tm-comment-section-javdb" && this.javdbHasMore && !this.javdbLoading) {
-              k.log("[CommentPanel] JavDB section viewport not filled. Auto-loading next page...");
+              E.log("[CommentPanel] JavDB section viewport not filled. Auto-loading next page...");
               this.triggerLoadMoreJavdb();
             }
           }
@@ -14890,8 +14895,8 @@
         }
         if (!this._staticProviders) {
           this._staticProviders = {
-            "JABLE": new Oe,
-            "MISSAV": new Re
+            "JABLE": new Re,
+            "MISSAV": new Ge
           };
         }
         return this._staticProviders[o] || null;
@@ -15123,13 +15128,13 @@
               o.click();
               Toast("请在页面登录窗口中完成登录", 3e3, "info");
             } else if (typeof GM_openInTab === "function") {
-              GM_openInTab("https://".concat(v.MISSAV.primary, "/cn/login"), {
+              GM_openInTab("https://".concat(y.MISSAV.primary, "/cn/login"), {
                 "active": true,
                 "insert": true,
                 "setParent": true
               });
             } else {
-              window.open("https://".concat(v.MISSAV.primary, "/cn/login"), "_blank");
+              window.open("https://".concat(y.MISSAV.primary, "/cn/login"), "_blank");
             }
           } else if (isSiteDomain("JABLE")) {
             window.location.href = "/login/";
@@ -15149,7 +15154,7 @@
         if (!o || isNaN(o)) {
           return;
         }
-        k.log("[CommentPanel] 视频元数据已加载，时长: ".concat(o, "s。重新解析所有评论..."));
+        E.log("[CommentPanel] 视频元数据已加载，时长: ".concat(o, "s。重新解析所有评论..."));
         var a = function reprocess(a) {
           return a.map((function(a) {
             var l = processComment(a.text, r.videoCode, o);
@@ -15186,57 +15191,37 @@
         if (!r) {
           return;
         }
-        var o = true;
-        var a = {
+        var o = getValue("showCommentsSection", true);
+        var a = getValue("enabledCommentSources", {
           "jable": true,
           "javdb": true,
           "javlibrary": false
-        };
-        try {
-          if (typeof GM_getValue === "function") {
-            o = GM_getValue("showCommentsSection", true);
-            a = GM_getValue("enabledCommentSources", a);
-          } else {
-            var l = "missNoAD_";
-            var u = localStorage.getItem(l + "showCommentsSection");
-            if (u !== null) {
-              try {
-                o = JSON.parse(u);
-              } catch (r) {}
-            }
-            var p = localStorage.getItem(l + "enabledCommentSources");
-            if (p !== null) {
-              try {
-                a = JSON.parse(p);
-              } catch (r) {}
-            }
-          }
-        } catch (r) {}
+        });
         if (!o) {
-          k.log("[CommentPanel] 设置中未开启评论区 (showCommentsSection: false)，跳过后台预加载");
+          E.log("[CommentPanel] 设置中未开启评论区 (showCommentsSection: false)，跳过后台预加载");
           return;
         }
         CommentPanel.preloadCache.videoCode = r;
-        k.log("[CommentPanel] 启动后台预加载，番号: ".concat(r));
+        E.log("[CommentPanel] 启动后台预加载，番号: ".concat(r));
         if (a.jable !== false) {
-          var v = "";
+          var l = "";
           if (typeof GM_getValue === "function") {
             try {
-              v = GM_getValue("mp_jable_working_domain", "");
+              l = GM_getValue("mp_jable_working_domain", "");
             } catch (r) {}
           }
-          var y = 0;
-          if (v) {
-            var b = S.indexOf(v);
-            if (b !== -1) {
-              y = b;
+          var u = 0;
+          if (l) {
+            var p = P.indexOf(l);
+            if (p !== -1) {
+              u = p;
             }
           }
-          CommentPanel.preloadCache.jableCommentsPromise = fetchJableComments(r, 1, y).then((function(r) {
-            k.log("[CommentPanel] 预加载 Jable 评论成功，共 ".concat(r.comments.length, " 条 (域名: ").concat(r.domain || "default", ")"));
+          CommentPanel.preloadCache.jableCommentsPromise = fetchJableComments(r, 1, u).then((function(r) {
+            E.log("[CommentPanel] 预加载 Jable 评论成功，共 ".concat(r.comments.length, " 条 (域名: ").concat(r.domain || "default", ")"));
             return r;
           }))["catch"]((function(o) {
-            k.warn("[CommentPanel] 预加载 Jable 评论失败:", o);
+            E.warn("[CommentPanel] 预加载 Jable 评论失败:", o);
             if (CommentPanel.preloadCache.videoCode === r) {
               CommentPanel.preloadCache.jableCommentsPromise = null;
             }
@@ -15246,16 +15231,16 @@
         if (!isMobile() && a.javlib !== false && a.javlibrary !== false) {
           CommentPanel.preloadCache.javlibVideoIdPromise = fetchJavLibraryVideoId(r).then((function(o) {
             var a = o.videoId, l = o.domain;
-            k.log("[CommentPanel] 预加载 JAVLibrary ID 成功: ".concat(a, " (域名: ").concat(l, ")"));
+            E.log("[CommentPanel] 预加载 JAVLibrary ID 成功: ".concat(a, " (域名: ").concat(l, ")"));
             CommentPanel.preloadCache.javlibCommentsPromise = fetchJavLibraryData(a, "comments", 1, l)["catch"]((function(o) {
-              k.warn("[CommentPanel] 预加载 JAVLib 评论失败:", o);
+              E.warn("[CommentPanel] 预加载 JAVLib 评论失败:", o);
               if (CommentPanel.preloadCache.videoCode === r) {
                 CommentPanel.preloadCache.javlibCommentsPromise = null;
               }
               throw o;
             }));
             CommentPanel.preloadCache.javlibReviewsPromise = fetchJavLibraryData(a, "reviews", 1, l)["catch"]((function(o) {
-              k.warn("[CommentPanel] 预加载 JAVLib 文章失败:", o);
+              E.warn("[CommentPanel] 预加载 JAVLib 文章失败:", o);
               if (CommentPanel.preloadCache.videoCode === r) {
                 CommentPanel.preloadCache.javlibReviewsPromise = null;
               }
@@ -15263,7 +15248,7 @@
             }));
             return o;
           }))["catch"]((function(o) {
-            k.warn("[CommentPanel] 预加载 JAVLibrary ID 失败:", o);
+            E.warn("[CommentPanel] 预加载 JAVLibrary ID 失败:", o);
             if (CommentPanel.preloadCache.videoCode === r) {
               CommentPanel.preloadCache.javlibVideoIdPromise = null;
             }
@@ -15273,9 +15258,9 @@
         if (a.javdb !== false) {
           CommentPanel.preloadCache.javdbMovieIdPromise = fetchJavdbMovieId(r).then((function(o) {
             var a = o.movieId, l = o.domain;
-            k.log("[CommentPanel] 预加载 JavDB MovieId 成功: ".concat(a, " (域名: ").concat(l, ")"));
+            E.log("[CommentPanel] 预加载 JavDB MovieId 成功: ".concat(a, " (域名: ").concat(l, ")"));
             CommentPanel.preloadCache.javdbCommentsPromise = fetchJavdbData(a, 1, l)["catch"]((function(o) {
-              k.warn("[CommentPanel] 预加载 JavDB 短评失败:", o);
+              E.warn("[CommentPanel] 预加载 JavDB 短评失败:", o);
               if (CommentPanel.preloadCache.videoCode === r) {
                 CommentPanel.preloadCache.javdbCommentsPromise = null;
               }
@@ -15283,7 +15268,7 @@
             }));
             return o;
           }))["catch"]((function(o) {
-            k.warn("[CommentPanel] 预加载 JavDB MovieId 失败:", o);
+            E.warn("[CommentPanel] 预加载 JavDB MovieId 失败:", o);
             if (CommentPanel.preloadCache.videoCode === r) {
               CommentPanel.preloadCache.javdbMovieIdPromise = null;
             }
@@ -15293,7 +15278,7 @@
       }
     } ]);
   }();
-  CommentPanel_defineProperty(Ge, "preloadCache", {
+  CommentPanel_defineProperty(He, "preloadCache", {
     "videoCode": "",
     "jableCommentsPromise": null,
     "javlibVideoIdPromise": null,
@@ -15346,7 +15331,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var He = function() {
+  var ze = function() {
     function VolumeController(r, o) {
       VolumeController_classCallCheck(this, VolumeController);
       this.playerCore = r;
@@ -15505,11 +15490,11 @@
       "key": "getVolumeIcon",
       "value": function getVolumeIcon(r) {
         if (this.targetVideo.muted || r === 0) {
-          return ve;
-        } else if (this.supportsVolumeControl && r < .5) {
           return ge;
-        } else {
+        } else if (this.supportsVolumeControl && r < .5) {
           return ye;
+        } else {
+          return be;
         }
       }
     }, {
@@ -15549,7 +15534,7 @@
             this.volumeValue.classList.add("volume-high");
           }
         }
-        ue.track("volume_change", {
+        de.track("volume_change", {
           "volume": Math.round(r * 100) / 100,
           "is_muted": !!this.targetVideo.muted
         });
@@ -15644,7 +15629,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ze = function() {
+  var Ne = function() {
     function SeekController(r, o) {
       SeekController_classCallCheck(this, SeekController);
       this.playerCore = r;
@@ -15660,7 +15645,7 @@
         }
         var o = Math.max(0, Math.min(this.targetVideo.duration, this.targetVideo.currentTime + r));
         this.targetVideo.currentTime = o;
-        ue.track("seek_click", {
+        de.track("seek_click", {
           "seconds": r,
           "step": r > 0 ? "+".concat(r, "s") : "".concat(r, "s")
         });
@@ -15747,9 +15732,9 @@
         var y = o.includes("+");
         var b = o.replace(/[+-]/g, "");
         if (v) {
-          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(be, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
+          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(Ce, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
         } else if (y) {
-          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(Ce, "</div>");
+          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(xe, "</div>");
         } else {
           p.textContent = o;
         }
@@ -15819,7 +15804,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ne = function() {
+  var Je = function() {
     function PlaybackController(r, o) {
       PlaybackController_classCallCheck(this, PlaybackController);
       this.playerCore = r;
@@ -15847,7 +15832,7 @@
             o.targetVideo.pause();
           }
           o.updatePlayPauseButton();
-          ue.track("play_toggle", {
+          de.track("play_toggle", {
             "is_playing": !r
           });
         }));
@@ -15870,9 +15855,9 @@
           return;
         }
         if (this.targetVideo.paused) {
-          this.playPauseButton.innerHTML = pe;
-        } else {
           this.playPauseButton.innerHTML = me;
+        } else {
+          this.playPauseButton.innerHTML = fe;
         }
       }
     }, {
@@ -15928,7 +15913,7 @@
           } else {
             this.playbackRateSlider.classList.add("normal");
           }
-          ue.track("rate_change", {
+          de.track("rate_change", {
             "rate": r
           });
         }
@@ -15952,7 +15937,7 @@
         this.pauseIndicator.style.display = "flex";
         this.pauseIndicator.style.justifyContent = "center";
         this.pauseIndicator.style.alignItems = "center";
-        this.pauseIndicator.innerHTML = fe;
+        this.pauseIndicator.innerHTML = ve;
         this.uiElements.videoWrapper.appendChild(this.pauseIndicator);
         requestAnimationFrame((function() {
           r.pauseIndicator.classList.add("visible");
@@ -16022,16 +16007,16 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Je = function() {
+  var qe = function() {
     function ControlManager(r, o) {
       ControlManager_classCallCheck(this, ControlManager);
       this.playerCore = r;
       this.targetVideo = r.targetVideo;
       this.uiElements = o;
-      this.commentPanel = new Ge(r, this);
-      this.volumeController = new He(r, this);
-      this.seekController = new ze(r, this);
-      this.playbackController = new Ne(r, this);
+      this.commentPanel = new He(r, this);
+      this.volumeController = new ze(r, this);
+      this.seekController = new Ne(r, this);
+      this.playbackController = new Je(r, this);
       this.controlButtonsContainer = null;
       this.progressControlsContainer = null;
       this.progressBarElement = null;
@@ -16348,7 +16333,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var qe = function() {
+  var Ue = function() {
     function DragManager(r, o) {
       DragManager_classCallCheck(this, DragManager);
       this.playerCore = r;
@@ -16615,20 +16600,20 @@
           }
         }
         var M = 90;
-        var A = false;
+        var T = false;
         if (P < M) {
           _ = S.x;
           k = S.y;
-          A = true;
+          T = true;
         } else {
-          var T = b;
+          var A = b;
           var j = v - u - b;
           var B = C + b;
           var I = y - p - b;
-          _ = Math.max(T, Math.min(_, j));
+          _ = Math.max(A, Math.min(_, j));
           k = Math.max(B, Math.min(k, I));
         }
-        if (A) {
+        if (T) {
           if (window.navigator.vibrate) {
             window.navigator.vibrate(10);
           }
@@ -16647,13 +16632,13 @@
         var V = {
           "left": _,
           "top": k,
-          "anchorName": A ? S.name : null,
-          "didSnap": A
+          "anchorName": T ? S.name : null,
+          "didSnap": T
         };
         var O = this.getControlPanelStorageKey();
         localStorage.setItem(O, JSON.stringify(V));
         localStorage.setItem("tm-control-panel-pos", JSON.stringify(V));
-        this.updateDockedState(A ? S.name : null, A);
+        this.updateDockedState(T ? S.name : null, T);
         if (a) {
           r.preventDefault();
         }
@@ -16737,10 +16722,10 @@
             var D = E;
             var L = _ - b - E;
             var M = S + E;
-            var A = k - C - E;
-            var T = Math.max(D, Math.min(l, L));
-            var j = Math.max(M, Math.min(u, A));
-            this.controlButtonsContainer.style.left = T + "px";
+            var T = k - C - E;
+            var A = Math.max(D, Math.min(l, L));
+            var j = Math.max(M, Math.min(u, T));
+            this.controlButtonsContainer.style.left = A + "px";
             this.controlButtonsContainer.style.top = j + "px";
             this.controlButtonsContainer.style.bottom = "auto";
             this.controlButtonsContainer.style.right = "auto";
@@ -16962,7 +16947,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ue = function() {
+  var We = function() {
     function LoopManager(r, o) {
       LoopManager_classCallCheck(this, LoopManager);
       this.playerCore = r;
@@ -17394,11 +17379,11 @@
     }, {
       "key": "_handleTabClick",
       "value": function _handleTabClick(r) {
-        ue.track("tag_jump", {
+        de.track("tag_jump", {
           "type": r.type,
           "has_comment": !!r.comment
         });
-        ue.trackTimestampClick({
+        de.trackTimestampClick({
           "secs": r.type === "interval" ? [ r.startTime, r.endTime ] : r.startTime,
           "comment": r.comment || "",
           "source": "tab_marker"
@@ -17516,7 +17501,7 @@
               a._updateBottomSheet();
             }
           } else {
-            ue.track("tag_create", {
+            de.track("tag_create", {
               "type": a.draftTab.type || (a.draftTab.endTime !== null ? "interval" : "highlight"),
               "has_comment": !!r,
               "duration_sec": a.draftTab.endTime && a.draftTab.startTime ? Math.round(a.draftTab.endTime - a.draftTab.startTime) : 0
@@ -17566,7 +17551,7 @@
           return;
         }
         this.loopActive = true;
-        ue.track("loop_toggle", {
+        de.track("loop_toggle", {
           "enabled": true,
           "interval_sec": Math.round((this.loopEndTime - this.loopStartTime) * 10) / 10
         });
@@ -18261,7 +18246,7 @@
           if (Array.isArray(this.tabs) && this.tabs.length > 0) {
             var r = this.tabs[this.tabs.length - 1];
             if (r) {
-              ue.trackTimestampCollect({
+              de.trackTimestampCollect({
                 "type": r.type || "point",
                 "startTime": r.startTime,
                 "endTime": r.endTime,
@@ -18355,7 +18340,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var We = function() {
+  var Ye = function() {
     function ProgressManager(r, o) {
       ProgressManager_classCallCheck(this, ProgressManager);
       this.playerCore = r;
@@ -18629,7 +18614,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ye = function() {
+  var Ke = function() {
     function EventManager(r, o, a) {
       EventManager_classCallCheck(this, EventManager);
       this.playerCore = r;
@@ -19019,7 +19004,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ke = function() {
+  var Xe = function() {
     function SettingsManager(r, o) {
       SettingsManager_classCallCheck(this, SettingsManager);
       this.playerCore = r;
@@ -19134,7 +19119,7 @@
         var P = this._createToggleOption(__("helpImprove") || "帮助改进", "telemetryEnabled", this.settings.telemetryEnabled !== false, (function(o) {
           r.updateSetting("telemetryEnabled", o);
           if (o) {
-            ue.flush(true, true);
+            de.flush(true, true);
           }
         }), null, __("helpImproveDesc") || "收集必要数据用于改进功能");
         var D = this._createToggleOption("DEBUG", "debugMode", this.settings.debugMode, (function(o) {
@@ -19542,12 +19527,12 @@
         } else {
           this.saveSettings();
         }
-        ue.track("setting_toggle_ui", {
+        de.track("setting_toggle_ui", {
           "key": r,
           "value": o
         });
         if (r === "debugMode") {
-          ue.track("setting_debug_mode", {
+          de.track("setting_debug_mode", {
             "debug_mode": !!o
           });
         }
@@ -19601,7 +19586,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Xe = function() {
+  var $e = function() {
     function VideoSwipeManager(r, o, a) {
       var l = this;
       var u = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -20018,7 +20003,7 @@
           this.wasDragging = true;
           this.dragEndTimestamp = Date.now();
           if (this.dragDirection) {
-            ue.track("gesture_swipe", {
+            de.track("gesture_swipe", {
               "direction": this.dragDirection,
               "distance": Math.round(this.dragDistance)
             });
@@ -20223,21 +20208,21 @@
         var P = Number.MAX_VALUE;
         for (var D = 0, L = k; D < L.length; D++) {
           var M = L[D];
-          var A = Math.abs(_ - M);
-          if (A < E && A < P) {
+          var T = Math.abs(_ - M);
+          if (T < E && T < P) {
             S = M;
-            P = A;
+            P = T;
           }
         }
         if (P < Number.MAX_VALUE) {
           _ = S;
         }
-        var T = _ / o * 100;
+        var A = _ / o * 100;
         var j = l > 0 ? _ / l : 0;
         var B = (1 - j) * 2 * this.maxOffset - this.maxOffset;
         this.handle.style.transition = "left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
         this.video.style.transition = "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-        this.handle.style.left = "".concat(T, "%");
+        this.handle.style.left = "".concat(A, "%");
         this.video.style.transform = "translateX(".concat(B, "px)");
         this.offset = B;
         if (P < Number.MAX_VALUE && window.navigator.vibrate) {
@@ -20367,11 +20352,11 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var $e = function() {
+  var Qe = function() {
     function CustomVideoPlayer() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       CustomVideoPlayer_classCallCheck(this, CustomVideoPlayer);
-      this.playerCore = new de(r);
+      this.playerCore = new he(r);
       this.callingButton = r.callingButton || null;
       this.managers = {};
       this.initialized = false;
@@ -20390,14 +20375,14 @@
         this._scrollbarStyle.innerHTML = "\n            html::-webkit-scrollbar, body::-webkit-scrollbar {\n                display: none !important;\n            }\n            html, body {\n                scrollbar-width: none !important;\n                -ms-overflow-style: none !important;\n                overscroll-behavior: none !important;\n                overscroll-behavior-y: none !important;\n            }\n        ";
         document.head.appendChild(this._scrollbarStyle);
         if (!this.playerCore) {
-          this.playerCore = new de({
+          this.playerCore = new he({
             "callingButton": this.callingButton
           });
         }
         this._sessionStartTime = Date.now();
         this.playerCore.init();
         if (!this.playerCore.targetVideo) {
-          ue.track("player_open_fail");
+          de.track("player_open_fail");
           Toast(__("loadingError") || "Failed to load video", 3e3, "error");
           if (this.callingButton) {
             this.callingButton.style.display = "flex";
@@ -20405,7 +20390,7 @@
           return;
         }
         var o = this.playerCore.targetVideo;
-        ue.track("player_open_success", {
+        de.track("player_open_success", {
           "video_duration": o.duration || 0,
           "video_width": o.videoWidth || 0,
           "video_height": o.videoHeight || 0,
@@ -20417,18 +20402,18 @@
             }
           }()
         });
-        var a = new Fe(this.playerCore);
+        var a = new Te(this.playerCore);
         var l = a.createUI();
         this.managers.uiManager = a;
         this.playerCore.uiManager = a;
-        var u = new Ke(this.playerCore, l);
+        var u = new Xe(this.playerCore, l);
         u.init();
         this.managers.settingsManager = u;
-        var p = new Je(this.playerCore, l);
+        var p = new qe(this.playerCore, l);
         p.init();
         this.managers.controlManager = p;
         this.playerCore.controlManager = p;
-        var v = new We(this.playerCore, l);
+        var v = new Ye(this.playerCore, l);
         this.playerCore.progressManager = v;
         v.init({
           "progressBarElement": p.progressBarElement,
@@ -20438,7 +20423,7 @@
           "timeIndicator": p.timeIndicator
         });
         this.managers.progressManager = v;
-        var y = new Ue(this.playerCore, l);
+        var y = new We(this.playerCore, l);
         y.init({
           "loopStartMarker": p.loopStartMarker,
           "loopEndMarker": p.loopEndMarker,
@@ -20449,19 +20434,19 @@
         });
         this.managers.loopManager = y;
         p.setLoopManager(y);
-        var b = new qe(this.playerCore, l);
+        var b = new Ue(this.playerCore, l);
         b.init();
         this.managers.dragManager = b;
         this.playerCore.dragManager = b;
         if (this.playerCore.targetVideo && l.videoWrapper && l.handle) {
-          this.swipeManager = new Xe(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
+          this.swipeManager = new $e(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
             return r.close();
           }));
           this.swipeManager.playerCore = this.playerCore;
           this.playerCore.swipeManager = this.swipeManager;
           this.managers.swipeManager = this.swipeManager;
         }
-        var C = new Ye(this.playerCore, l, this.managers);
+        var C = new Ke(this.playerCore, l, this.managers);
         C.init();
         this.managers.eventManager = C;
         a.assembleDOM();
@@ -20500,7 +20485,7 @@
       "key": "close",
       "value": function close() {
         var r = this._sessionStartTime ? Math.round((Date.now() - this._sessionStartTime) / 1e3) : 0;
-        ue.track("player_close", {
+        de.track("player_close", {
           "duration_sec": r
         });
         if (this._scrollbarStyle) {
@@ -20573,7 +20558,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Qe = function() {
+  var Ze = function() {
     function FloatingButton() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       FloatingButton_classCallCheck(this, FloatingButton);
@@ -20684,7 +20669,7 @@
       "value": function createButton() {
         var r = this;
         this.button = createElementWithStyle("button", "tm-floating-button");
-        this.button.innerHTML = he;
+        this.button.innerHTML = pe;
         this.button.addEventListener("click", (function() {
           r.handleButtonClick();
         }));
@@ -20717,9 +20702,9 @@
     }, {
       "key": "handleButtonClick",
       "value": function handleButtonClick() {
-        ue.trackPluginTrigger();
+        de.trackPluginTrigger();
         this.button.style.display = "none";
-        this.videoPlayer = new $e({
+        this.videoPlayer = new Qe({
           "playerState": this.playerState,
           "callingButton": this.button
         });
@@ -20788,7 +20773,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ze = function() {
+  var et = function() {
     function PlayerState() {
       PlayerState_classCallCheck(this, PlayerState);
       this.settings = {
@@ -21305,15 +21290,15 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var et = 30 * 60 * 1e3;
-  var tt = 3;
-  var nt = function() {
+  var tt = 30 * 60 * 1e3;
+  var nt = 3;
+  var rt = function() {
     function LoginManager() {
       LoginManager_classCallCheck(this, LoginManager);
       this.userEmail = "";
       this.userPassword = "";
       this.autoLogin = true;
-      this.providers = [ new Re, new Oe ];
+      this.providers = [ new Ge, new Re ];
       this.activeProvider = null;
     }
     return LoginManager_createClass(LoginManager, [ {
@@ -21364,14 +21349,14 @@
           return;
         }
         var o = this.activeProvider.siteKey;
-        var a = Ie.get(o);
+        var a = Ve.get(o);
         var l = r.email !== void 0 ? r.email : a.email;
         var u = r.password !== void 0 ? r.password : a.password;
         var p = r.autoLogin !== void 0 ? r.autoLogin : a.autoLogin;
         this.userEmail = l;
         this.userPassword = u;
         this.autoLogin = p;
-        Ie.save(o, l, u, p);
+        Ve.save(o, l, u, p);
         this.resetCircuitBreaker(o);
       }
     }, {
@@ -21381,7 +21366,7 @@
           return;
         }
         var r = this.activeProvider.siteKey;
-        var o = Ie.get(r);
+        var o = Ve.get(r);
         this.userEmail = o.email;
         this.userPassword = o.password;
         this.autoLogin = o.autoLogin;
@@ -21472,7 +21457,7 @@
 
                case 23:
                 p = v.sent;
-                ue.track("autologin_result", {
+                de.track("autologin_result", {
                   "site": r,
                   "success": !!p
                 });
@@ -21513,12 +21498,12 @@
       "value": function isCircuitBroken(r) {
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0);
         var a = getLocalStorage("mp_circuit_last_fail_".concat(r), 0);
-        if (o >= tt) {
+        if (o >= nt) {
           var l = Date.now() - a;
-          if (l < et) {
+          if (l < tt) {
             return true;
           }
-          setLocalStorage("mp_circuit_fail_".concat(r), tt - 1);
+          setLocalStorage("mp_circuit_fail_".concat(r), nt - 1);
         }
         return false;
       }
@@ -21528,7 +21513,7 @@
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0) + 1;
         setLocalStorage("mp_circuit_fail_".concat(r), o);
         setLocalStorage("mp_circuit_last_fail_".concat(r), Date.now());
-        if (o >= tt) {}
+        if (o >= nt) {}
       }
     }, {
       "key": "resetCircuitBreaker",
@@ -22020,7 +22005,7 @@
           switch (o.prev = o.next) {
            case 0:
             o.prev = 0;
-            r = new nt;
+            r = new rt;
             o.next = 4;
             return r.init();
 
@@ -22041,8 +22026,8 @@
     })));
     return _initAutoLogin.apply(this, arguments);
   }
-  var rt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
-  var ot = [ {
+  var ot = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
+  var at = [ {
     "selector": 'div[class="my-2 text-sm text-nord4 truncate"]',
     "styles": "white-space: normal !important;"
   }, {
@@ -22052,11 +22037,11 @@
     "selector": 'div[class*="z-max"]',
     "styles": "z-index: 9000 !important;"
   } ];
-  var at = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
-  const it = {
-    "adSelectors": rt,
-    "customStyles": ot,
-    "blockedUrlPatterns": at,
+  var it = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
+  const st = {
+    "adSelectors": ot,
+    "customStyles": at,
+    "blockedUrlPatterns": it,
     "isVideoSite": true,
     "domains": getSiteDomains("MISSAV")
   };
@@ -22167,7 +22152,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var st = function() {
+  var lt = function() {
     function AdBlockConfig() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       adblock_classCallCheck(this, AdBlockConfig);
@@ -22207,7 +22192,7 @@
       }
     } ]);
   }();
-  var lt = function() {
+  var ct = function() {
     function StyleManager(r) {
       adblock_classCallCheck(this, StyleManager);
       this.config = r;
@@ -22235,7 +22220,7 @@
       }
     } ]);
   }();
-  var ct = function() {
+  var ut = function() {
     function DOMCleaner(r) {
       adblock_classCallCheck(this, DOMCleaner);
       this.config = r;
@@ -22324,7 +22309,7 @@
       }
     } ]);
   }();
-  var ut = function() {
+  var dt = function() {
     function RequestBlocker(r) {
       adblock_classCallCheck(this, RequestBlocker);
       this.config = r;
@@ -22336,7 +22321,7 @@
         var o = this.config;
         XMLHttpRequest.prototype.open = function(a, l) {
           if (typeof l === "string" && o.shouldBlockUrl(l)) {
-            ue.track("adblock_intercept", {
+            de.track("adblock_intercept", {
               "type": "xhr",
               "url": l.slice(0, 128)
             });
@@ -22351,7 +22336,7 @@
         window.fetch = function(r, l) {
           var u = r instanceof Request ? r.url : r;
           if (typeof u === "string" && o.shouldBlockUrl(u)) {
-            ue.track("adblock_intercept", {
+            de.track("adblock_intercept", {
               "type": "fetch",
               "url": String(u).slice(0, 128)
             });
@@ -22377,7 +22362,7 @@
             Object.defineProperty(l, "src", {
               "set": function set(r) {
                 if (typeof r === "string" && o.shouldBlockUrl(r)) {
-                  ue.track("adblock_intercept", {
+                  de.track("adblock_intercept", {
                     "type": "iframe",
                     "url": r.slice(0, 128)
                   });
@@ -22392,7 +22377,7 @@
             var p = l.setAttribute;
             l.setAttribute = function(r, a) {
               if (r === "src" && typeof a === "string" && o.shouldBlockUrl(a)) {
-                ue.track("adblock_intercept", {
+                de.track("adblock_intercept", {
                   "type": "iframe",
                   "url": a.slice(0, 128)
                 });
@@ -22408,7 +22393,7 @@
       "key": "blockPopups",
       "value": function blockPopups() {
         var r = function trackPopup() {
-          return ue.track("adblock_intercept", {
+          return de.track("adblock_intercept", {
             "type": "popup"
           });
         };
@@ -22432,15 +22417,15 @@
       }
     } ]);
   }();
-  var dt = function() {
+  var ht = function() {
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(window.location.href);
-      var o = r ? it : {};
-      this.config = new st(o);
-      this.styleManager = new lt(this.config);
-      this.domCleaner = new ct(this.config);
-      this.requestBlocker = new ut(this.config);
+      var o = r ? st : {};
+      this.config = new lt(o);
+      this.styleManager = new ct(this.config);
+      this.domCleaner = new ut(this.config);
+      this.requestBlocker = new dt(this.config);
     }
     return adblock_createClass(AdBlocker, [ {
       "key": "preventDetection",
@@ -22488,7 +22473,7 @@
       }
     } ]);
   }();
-  const ht = dt;
+  const pt = ht;
   function DetailExpander_typeof(r) {
     "@babel/helpers - typeof";
     return DetailExpander_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -22533,7 +22518,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var pt = function() {
+  var mt = function() {
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
@@ -22563,7 +22548,7 @@
           var r = document.querySelector(this.SHOW_MORE_SELECTOR);
           if (r) {
             r.click();
-            ue.track("detail_expand_click");
+            de.track("detail_expand_click");
             return true;
           }
         } catch (r) {}
@@ -22647,7 +22632,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var mt = function() {
+  var ft = function() {
     function QualityManager() {
       QualityManager_classCallCheck(this, QualityManager);
       this.maxAttempts = 20;
@@ -22798,11 +22783,11 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ft = function() {
+  var vt = function() {
     function UrlRedirector() {
       UrlRedirector_classCallCheck(this, UrlRedirector);
-      var r = v.MISSAV.primary;
-      var o = v.MISSAV.backups;
+      var r = y.MISSAV.primary;
+      var o = y.MISSAV.backups;
       this.redirectRules = [];
       var a = UrlRedirector_createForOfIteratorHelper(o), l;
       try {
@@ -22906,13 +22891,13 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var vt = new ft;
-  var gt = function() {
+  var gt = new vt;
+  var yt = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
-      this.detailExpander = new pt;
-      this.qualityManager = new mt;
-      this.urlRedirector = vt;
+      this.detailExpander = new mt;
+      this.qualityManager = new ft;
+      this.urlRedirector = gt;
     }
     return userExperienceEnhancer_createClass(UserExperienceEnhancer, [ {
       "key": "init",
@@ -22944,7 +22929,7 @@
   }();
   function initUserExperienceEnhancer() {
     var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
-    var o = new gt;
+    var o = new yt;
     o.init(r);
     return o;
   }
@@ -23350,7 +23335,7 @@
       }));
     };
   }
-  vt.checkAndRedirect();
+  gt.checkAndRedirect();
   function setupViewport() {
     var r = document.querySelector('meta[name="viewport"]');
     if (!r) {
@@ -23386,7 +23371,7 @@
             switch (p.prev = p.next) {
              case 0:
               p.prev = 0;
-              ue.trackAppInit();
+              de.trackAppInit();
               if (!isSiteDomain("JAVLIBRARY")) {
                 p.next = 5;
                 break;
@@ -23397,9 +23382,9 @@
              case 5:
               injectStyles();
               r = initUserExperienceEnhancer(true);
-              o = new Ze;
+              o = new et;
               o.loadSettings();
-              a = new Qe({
+              a = new Ze({
                 "playerState": o
               });
               a.init();
@@ -23411,7 +23396,7 @@
               if (l) {
                 window.loginManager = l;
               }
-              u = new ht;
+              u = new pt;
               u.init();
               p.next = 21;
               break;
@@ -23433,8 +23418,8 @@
       var o = r;
       var a = Date.now();
       var l = false;
-      k.log("检测到运行在 JAVLibrary 域名上，启动验证协同助手。".concat(o ? " (iframe broker 模式)" : ""));
-      Te.startBroker("JAVLIBRARY", {
+      E.log("检测到运行在 JAVLibrary 域名上，启动验证协同助手。".concat(o ? " (iframe broker 模式)" : ""));
+      je.startBroker("JAVLIBRARY", {
         "FETCH_JAVLIB_DATA": function() {
           var r = src_asyncToGenerator(src_regeneratorRuntime().mark((function _callee(r) {
             var o, a, l, u, p, v, y, b, C;
@@ -23443,7 +23428,7 @@
                 switch (_.prev = _.next) {
                  case 0:
                   o = r.avcode, a = r.page;
-                  k.log("[ShadowBroker] 收到 JAVLibrary 同源抓取请求: ".concat(o, ", Page: ").concat(a));
+                  E.log("[ShadowBroker] 收到 JAVLibrary 同源抓取请求: ".concat(o, ", Page: ").concat(a));
                   _.next = 4;
                   return fetchJavLibraryVideoId(o);
 
@@ -23480,17 +23465,17 @@
       function checkBypass() {
         var r = document.querySelector("#logo") || document.querySelector("#right") || document.querySelector("#top_bar") || document.title.includes("JAVLibrary");
         var u = document.querySelector("#cf-challenge") || document.querySelector("#turnstile-wrapper") || document.body.innerHTML.includes("Checking your browser") || document.body.innerHTML.includes("cf-challenge");
-        k.log("检测验证状态中... hasLogo = ".concat(!!r, ", isChallenged = ").concat(!!u).concat(o ? " (iframe)" : ""));
+        E.log("检测验证状态中... hasLogo = ".concat(!!r, ", isChallenged = ").concat(!!u).concat(o ? " (iframe)" : ""));
         if (r && !u) {
           if (!l) {
             l = true;
-            ue.track("javlib_cf_bypass", {
+            de.track("javlib_cf_bypass", {
               "success": true,
               "duration_ms": Date.now() - a,
               "is_iframe": o
             });
           }
-          k.log("JAVLibrary 页面加载成功（未被拦截/验证已通过）。");
+          E.log("JAVLibrary 页面加载成功（未被拦截/验证已通过）。");
           if (typeof GM_setValue === "function") {
             var p = window.location.origin;
             var v = {};
@@ -23501,18 +23486,18 @@
             GM_setValue("javlib_cookies", v);
             GM_setValue("javlib_user_agent", navigator.userAgent);
             GM_setValue("javlib_verified_time", Date.now());
-            k.log("Cookie 已保存至跨域存储: ".concat(p, ", UA: ").concat(navigator.userAgent));
+            E.log("Cookie 已保存至跨域存储: ".concat(p, ", UA: ").concat(navigator.userAgent));
           }
           if (o) {
-            k.log("iframe broker 模式：页面验证通过，保持 iframe 存活以持续提供同源代理服务。");
+            E.log("iframe broker 模式：页面验证通过，保持 iframe 存活以持续提供同源代理服务。");
           } else {
             var y = window.location.href.includes("cf_verify") || typeof GM_getValue === "function" && GM_getValue("javlib_verifying") === true;
             if (y) {
-              k.log("正在释放验证锁...");
+              E.log("正在释放验证锁...");
               if (typeof GM_setValue === "function") {
                 GM_setValue("javlib_verifying", false);
               }
-              k.log("保持协同验证标签页开启，以作为影子 Broker 持续在后台提供同源代理服务。");
+              E.log("保持协同验证标签页开启，以作为影子 Broker 持续在后台提供同源代理服务。");
             }
           }
           return true;
@@ -23530,7 +23515,7 @@
           clearInterval(u);
           if (!l) {
             l = true;
-            ue.track("javlib_cf_bypass", {
+            de.track("javlib_cf_bypass", {
               "success": false,
               "duration_ms": Date.now() - a,
               "is_iframe": o

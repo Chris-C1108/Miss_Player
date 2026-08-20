@@ -1,7 +1,7 @@
 {
-  "name": "miss-noad-video-player",
+  "name": "miss-player",
   "version": "5.5.7",
-  "main": "dist/miss_noad_player.user.js",
+  "main": "dist/miss_player.user.js",
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch"
@@ -10,7 +10,7 @@
     "油猴脚本",
     "视频播放器"
   ],
-  "author": "",
+  "author": "Chris_C",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.23.2",

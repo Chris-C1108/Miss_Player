@@ -2,7 +2,8 @@
  * 存储管理工具函数 (支持 GM_getValue/GM_setValue 和 localStorage 降级)
  */
 
-const LOCAL_STORAGE_PREFIX = 'missNoAD_';
+const LOCAL_STORAGE_PREFIX = 'mp_';
+const LEGACY_STORAGE_PREFIX = 'missNoAD_';
 
 /**
  * 检查是否支持 GM_getValue / GM_setValue 接口
@@ -24,7 +25,10 @@ export function getValue(key, defaultValue = null, useGM = true) {
         if (useGM && hasGMApi()) {
             return GM_getValue(key, defaultValue);
         }
-        const item = localStorage.getItem(LOCAL_STORAGE_PREFIX + key);
+        let item = localStorage.getItem(LOCAL_STORAGE_PREFIX + key);
+        if (item === null) {
+            item = localStorage.getItem(LEGACY_STORAGE_PREFIX + key);
+        }
         if (item !== null) {
             try {
                 return JSON.parse(item);
@@ -70,6 +74,7 @@ export function deleteValue(key, useGM = true) {
             return;
         }
         localStorage.removeItem(LOCAL_STORAGE_PREFIX + key);
+        localStorage.removeItem(LEGACY_STORAGE_PREFIX + key);
     } catch (e) {
         console.error(`[Storage] 删除存储键 ${key} 失败:`, e);
     }

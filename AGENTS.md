@@ -44,3 +44,20 @@
 ### 3. 跨站点适配与防盗链原则
 * 请求 Google Drive / `lh3.googleusercontent.com` 等特殊 CDN 时，严禁携带外部网站的 `Referer` 头。
 * iframe 跨域通信使用 `unsafeWindow.__mpBridge` 与 `GM_xmlhttpRequest` 进行二进制安全桥接。
+
+---
+
+## 🤖 Agent skills (工程技能配置)
+
+### Issue tracker (任务追踪器)
+
+本地 Markdown 任务管理，存放于 `.scratch/<feature-slug>/`。详见 `docs/agents/issue-tracker.md`。
+
+### Triage labels (分流标签)
+
+标准 5 角色分流标签（`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`）。详见 `docs/agents/triage-labels.md`。
+
+### Domain docs (领域与架构文档)
+
+单上下文结构（根目录 `CONTEXT.md` 与 `docs/adr/`）。详见 `docs/agents/domain.md`。
+
