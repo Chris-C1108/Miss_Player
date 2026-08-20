@@ -474,7 +474,7 @@
 .tm-seek-step-input {
     width: 60px;
     height: 28px;
-    font-size: 11.5px;
+    font-size: 16px;
     font-weight: 500;
     text-align: center;
     border-radius: 6px;
@@ -832,7 +832,7 @@
     border-radius: 12px;
     padding: 0 14px;
     color: #ffffff;
-    font-size: 0.85rem;
+    font-size: 16px;
     outline: none;
     box-sizing: border-box;
     transition: border-color 0.2s, background 0.2s;
@@ -1295,7 +1295,7 @@
     border-radius: 8px;
     padding: 0 10px;
     color: #ffffff;
-    font-size: 0.82rem;
+    font-size: 16px;
     outline: none;
     display: inline-flex;
     align-items: center;

@@ -223,7 +223,9 @@
     background: linear-gradient(to top, rgba(10, 10, 12, 0.98) 0%, rgba(10, 10, 12, 0.85) 60%, rgba(10, 10, 12, 0) 100%);
     border-top: none;
     z-index: 9996;
-    .tm-floating-comment-panel {
+}
+
+.tm-floating-comment-panel {
     z-index: 9999;
 }
 
@@ -272,12 +274,12 @@
     border: 1px solid hsla(var(--shadcn-border) / 0.3);
     background-color: hsla(var(--shadcn-muted) / 0.1);
     color: hsl(var(--shadcn-foreground));
-    font-size: 13px;
+    font-size: 16px;
     resize: none;
     box-sizing: border-box;
     outline: none;
     transition: border-color 0.2s;
-}    pointer-events: auto;
+    pointer-events: auto;
 }
 
 .tm-comment-submit-bar {
@@ -331,7 +333,7 @@
     border-radius: 17px;
     padding: 0 14px;
     color: #ffffff;
-    font-size: 0.85rem;
+    font-size: 16px;
     outline: none;
     box-sizing: border-box;
     transition: border-color 0.2s, background 0.2s;
@@ -501,7 +503,7 @@
     border-radius: 8px;
     padding: 0 10px;
     color: #ffffff;
-    font-size: 0.82rem;
+    font-size: 16px;
     outline: none;
     display: inline-flex;
     align-items: center;

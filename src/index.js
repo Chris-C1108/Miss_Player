@@ -27,8 +27,16 @@ function setupViewport() {
         document.head.appendChild(viewportMeta);
     }
     
-    // 更新viewport内容，添加viewport-fit=cover以支持安全区域
-    viewportMeta.content = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
+    // 更新viewport内容，添加viewport-fit=cover以支持安全区域，并限制缩放以防移动端意外放大
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+    
+    // 监听输入框失焦事件：当软键盘收起后，自动复位页面滚动，杜绝 Safari 页面残留偏移
+    document.addEventListener('focusout', (e) => {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
+            window.scrollTo(0, 0);
+        }
+    });
+
     console.log(`[${__('scriptName')}] ${__('viewportConfigured')}`);
 }
 

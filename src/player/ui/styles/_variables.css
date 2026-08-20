@@ -75,3 +75,23 @@ html, body, button, input, select, textarea {
 .tm-video-overlay * {
     font-family: var(--font-sans);
 }
+
+/* 针对所有移动端/触控设备下的输入框，强制基准字体不低于 16px，彻底杜绝 iOS Safari 聚焦时自动放大视口 */
+@media screen and (max-width: 1024px), (pointer: coarse) {
+    input[type="text"],
+    input[type="number"],
+    input[type="search"],
+    input[type="password"],
+    input[type="email"],
+    textarea,
+    select,
+    .tm-comment-text-input,
+    .tm-comment-input-textarea,
+    .tm-tag-remark-input,
+    .tm-sheet-item-comment-input,
+    .tm-inline-remark-input,
+    .tm-seek-step-input,
+    .tm-floating-panel-input {
+        font-size: 16px !important;
+    }
+}
