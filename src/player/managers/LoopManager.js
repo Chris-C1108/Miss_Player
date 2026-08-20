@@ -7,9 +7,10 @@ import { telemetry } from '../../telemetry';
  * LoopManager — Tab-Style Marker & AB Loop controller
  */
 export class LoopManager {
-    constructor(playerCore, uiElements) {
+    constructor(playerCore, uiElements, controlManager = null) {
         this.playerCore = playerCore;
-        this.targetVideo = playerCore.targetVideo;
+        this.controlManager = controlManager || (playerCore ? playerCore.controlManager : null);
+        this.targetVideo = playerCore?.targetVideo;
         this.uiElements = uiElements;
 
         // Progress bar markers (unchanged)
@@ -58,6 +59,10 @@ export class LoopManager {
         // Bound handlers
         this._handleLoopTimeUpdate = this._handleLoopTimeUpdate.bind(this);
         this._handleOutsideClickForEdit = this._handleOutsideClickForEdit.bind(this);
+    }
+
+    setControlManager(controlManager) {
+        this.controlManager = controlManager;
     }
 
     /**
@@ -518,8 +523,8 @@ export class LoopManager {
 
         if (tab.type === 'highlight') {
             // Trigger flashing hint on the progress bar
-            if (this.playerCore.controlManager && typeof this.playerCore.controlManager.showJumpHint === 'function') {
-                this.playerCore.controlManager.showJumpHint(tab.startTime);
+            if (this.controlManager && typeof this.controlManager.showJumpHint === 'function') {
+                this.controlManager.showJumpHint(tab.startTime);
             }
             // Jump to timestamp
             this.targetVideo.currentTime = tab.startTime;
@@ -551,8 +556,8 @@ export class LoopManager {
                 // 2. 若当前进度不在当前时间片段内，跳转到片段起点并显示提示；
                 //    若在片段内，则启用循环播放，但不打断当前进度（不跳转到起点）
                 if (!isInRange) {
-                    if (this.playerCore.controlManager && typeof this.playerCore.controlManager.showJumpHint === 'function') {
-                        this.playerCore.controlManager.showJumpHint(tab.startTime);
+                    if (this.controlManager && typeof this.controlManager.showJumpHint === 'function') {
+                        this.controlManager.showJumpHint(tab.startTime);
                     }
                     if (this.targetVideo) {
                         this.targetVideo.currentTime = tab.startTime;

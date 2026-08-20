@@ -9,16 +9,17 @@ import { PlaybackController } from '../controls/PlaybackController.js';
  * 控制管理器类 - 负责播放器控制按钮和相关功能 (重构后的 Facade 编排器)
  */
 export class ControlManager {
-    constructor(playerCore, uiElements) {
+    constructor(playerCore, uiElements, uiManager = null) {
         // 核心引用
         this.playerCore = playerCore;
         this.targetVideo = playerCore.targetVideo;
+        this.uiManager = uiManager;
         
         // UI元素引用
         this.uiElements = uiElements;
 
         // 初始化子控制器组件
-        this.commentPanel = new CommentPanel(playerCore, this);
+        this.commentPanel = new CommentPanel(playerCore, this, uiManager);
         this.volumeController = new VolumeController(playerCore, this);
         this.seekController = new SeekController(playerCore, this);
         this.playbackController = new PlaybackController(playerCore, this);
@@ -53,6 +54,16 @@ export class ControlManager {
         // 保存绑定的事件处理器，便于清理
         this._volumeChangeHandler = null;
         this._rateChangeHandler = null;
+    }
+
+    /**
+     * 设置 UI 管理器引用
+     */
+    setUiManager(uiManager) {
+        this.uiManager = uiManager;
+        if (this.commentPanel && typeof this.commentPanel.setUiManager === 'function') {
+            this.commentPanel.setUiManager(uiManager);
+        }
     }
 
     /**

@@ -95,24 +95,19 @@ export class CustomVideoPlayer {
         const uiManager = new UIManager(this.playerCore);
         const uiElements = uiManager.createUI();
         this.managers.uiManager = uiManager;
-        this.playerCore.uiManager = uiManager; // 注册到 playerCore 以供全局访问
         
-        // 创建设置管理器
-        const settingsManager = new SettingsManager(this.playerCore, uiElements);
-        settingsManager.init();
-        this.managers.settingsManager = settingsManager;
-        
-        // 创建控制管理器
-        const controlManager = new ControlManager(this.playerCore, uiElements);
+        // 创建控制管理器 (注入 uiManager)
+        const controlManager = new ControlManager(this.playerCore, uiElements, uiManager);
         controlManager.init();
         this.managers.controlManager = controlManager;
         
-        // 将控制管理器设置到playerCore上，以便UIManager可以访问到它
-        this.playerCore.controlManager = controlManager;
+        // 创建设置管理器 (注入 uiManager, controlManager)
+        const settingsManager = new SettingsManager(this.playerCore, uiElements, uiManager, controlManager);
+        settingsManager.init();
+        this.managers.settingsManager = settingsManager;
         
         // 创建进度管理器
         const progressManager = new ProgressManager(this.playerCore, uiElements);
-        this.playerCore.progressManager = progressManager;
         progressManager.init({
             progressBarElement: controlManager.progressBarElement,
             progressIndicator: controlManager.progressIndicator,
@@ -122,8 +117,8 @@ export class CustomVideoPlayer {
         });
         this.managers.progressManager = progressManager;
         
-        // 创建循环管理器
-        const loopManager = new LoopManager(this.playerCore, uiElements);
+        // 创建循环管理器 (注入 controlManager)
+        const loopManager = new LoopManager(this.playerCore, uiElements, controlManager);
         loopManager.init({
             loopStartMarker: controlManager.loopStartMarker,
             loopEndMarker: controlManager.loopEndMarker,
@@ -137,13 +132,12 @@ export class CustomVideoPlayer {
         // 设置循环管理器引用到控制管理器
         controlManager.setLoopManager(loopManager);
         
-        // 创建拖动管理器
-        const dragManager = new DragManager(this.playerCore, uiElements);
+        // 创建拖动管理器 (注入 uiManager, controlManager)
+        const dragManager = new DragManager(this.playerCore, uiElements, uiManager, controlManager);
         dragManager.init();
         this.managers.dragManager = dragManager;
-        this.playerCore.dragManager = dragManager; // 注册到 playerCore 以供全局访问
         
-        // 初始化VideoSwipeManager
+        // 初始化VideoSwipeManager (注入 uiManager)
         if (this.playerCore.targetVideo && uiElements.videoWrapper && uiElements.handle) {
             console.log('[CustomVideoPlayer] 初始化SwipeManager...');
             this.swipeManager = new VideoSwipeManager(
@@ -151,12 +145,20 @@ export class CustomVideoPlayer {
                 uiElements.videoWrapper,
                 uiElements.handle,
                 uiElements,
-                () => this.close()
+                () => this.close(),
+                uiManager
             );
             this.swipeManager.playerCore = this.playerCore; // 关联 playerCore 到 swipeManager
-            this.playerCore.swipeManager = this.swipeManager; // 注册到 playerCore 以供全局访问
             this.managers.swipeManager = this.swipeManager;
         }
+        
+        // 集中向 UIManager 注入其它管理器依赖
+        uiManager.setManagers({
+            controlManager,
+            progressManager,
+            dragManager,
+            swipeManager: this.swipeManager
+        });
         
         // 创建事件管理器 - 必须在所有其他管理器之后创建
         const eventManager = new EventManager(this.playerCore, uiElements, this.managers);

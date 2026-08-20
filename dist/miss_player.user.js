@@ -6742,9 +6742,9 @@
   var ge = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
   var ye = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
   var be = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var Ce = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>\n    </svg>\n';
-  var xe = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n    </svg>\n';
-  var we = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var xe = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>\n    </svg>\n';
+  var we = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n    </svg>\n';
+  var Ce = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
   var _e = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="18" y1="6" x2="6" y2="18"></line>\n        <line x1="6" y1="6" x2="18" y2="18"></line>\n    </svg>\n';
   var ke = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="22" y1="2" x2="11" y2="13"></line>\n        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>\n    </svg>\n';
   var Ee = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M19.4 15C19.1277 15.6171 19.2583 16.3378 19.73 16.82L19.79 16.88C20.1837 17.2737 20.4009 17.7994 20.4009 18.345C20.4009 18.8906 20.1837 19.4163 19.79 19.81C19.4163 20.2037 18.8906 20.4209 18.345 20.4209C17.7994 20.4209 17.2737 20.2037 16.91 19.81L16.85 19.75C16.3678 19.2783 15.6471 19.1477 15.03 19.42C14.4301 19.6801 14.0386 20.2502 14.03 20.89V21C14.03 21.5304 13.8193 22.0391 13.4442 22.4142C13.0691 22.7893 12.5604 23 12.03 23C11.4996 23 10.9909 22.7893 10.6158 22.4142C10.2407 22.0391 10.03 21.5304 10.03 21V20.91C10.0112 20.2556 9.5979 19.6818 8.98 19.43C8.36289 19.1577 7.64221 19.2883 7.16 19.76L7.1 19.82C6.73629 20.2137 6.21056 20.4309 5.665 20.4309C5.11944 20.4309 4.59371 20.2137 4.23 19.82C3.83628 19.4463 3.61911 18.9206 3.61911 18.375C3.61911 17.8294 3.83628 17.3037 4.23 16.93L4.29 16.87C4.76167 16.3878 4.89231 15.6671 4.62 15.05C4.35995 14.4501 3.78985 14.0586 3.15 14.05H3C2.46957 14.05 1.96086 13.8393 1.58579 13.4642C1.21071 13.0891 1 12.5804 1 12.05C1 11.5196 1.21071 11.0109 1.58579 10.6358C1.96086 10.2607 2.46957 10.05 3 10.05H3.09C3.74435 10.0312 4.31814 9.61788 4.57 9C4.84231 8.38289 4.71167 7.66221 4.24 7.18L4.18 7.12C3.78628 6.75629 3.56911 6.23056 3.56911 5.685C3.56911 5.13944 3.78628 4.61371 4.18 4.25C4.55371 3.85628 5.07944 3.63911 5.625 3.63911C6.17056 3.63911 6.69629 3.85628 7.07 4.25L7.13 4.31C7.61221 4.78167 8.33289 4.91231 8.95 4.64H9C9.59994 4.37995 9.99144 3.80985 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0086 3.72985 14.4001 4.29995 15 4.56C15.6171 4.83231 16.3378 4.70167 16.82 4.23L16.88 4.17C17.2437 3.77628 17.7694 3.55911 18.325 3.55911C18.8806 3.55911 19.4063 3.77628 19.77 4.17C20.1637 4.54371 20.3809 5.06944 20.3809 5.615C20.3809 6.16056 20.1637 6.68629 19.77 7.06L19.71 7.12C19.2383 7.60221 19.1077 8.32289 19.38 8.94L19.4 9C19.66 9.59994 20.2301 9.99144 20.87 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.2702 14.0086 19.7001 14.4001 19.44 15H19.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
@@ -6831,9 +6831,39 @@
       this.isCustomResizedLandscape = false;
       this.customHeightPortrait = null;
       this.customHeightLandscape = null;
+      this.managers = {};
       this.loadStyles();
     }
     return UIManager_createClass(UIManager, [ {
+      "key": "setManagers",
+      "value": function setManagers(r) {
+        this.managers = Object.assign({}, this.managers, r);
+      }
+    }, {
+      "key": "controlManager",
+      "get": function get() {
+        var r, o;
+        return ((r = this.managers) === null || r === void 0 ? void 0 : r.controlManager) || ((o = this.playerCore) === null || o === void 0 ? void 0 : o.controlManager);
+      }
+    }, {
+      "key": "progressManager",
+      "get": function get() {
+        var r, o;
+        return ((r = this.managers) === null || r === void 0 ? void 0 : r.progressManager) || ((o = this.playerCore) === null || o === void 0 ? void 0 : o.progressManager);
+      }
+    }, {
+      "key": "dragManager",
+      "get": function get() {
+        var r, o;
+        return ((r = this.managers) === null || r === void 0 ? void 0 : r.dragManager) || ((o = this.playerCore) === null || o === void 0 ? void 0 : o.dragManager);
+      }
+    }, {
+      "key": "swipeManager",
+      "get": function get() {
+        var r, o;
+        return ((r = this.managers) === null || r === void 0 ? void 0 : r.swipeManager) || ((o = this.playerCore) === null || o === void 0 ? void 0 : o.swipeManager);
+      }
+    }, {
       "key": "isCustomResized",
       "get": function get() {
         return this.isLandscape ? this.isCustomResizedLandscape : this.isCustomResizedPortrait;
@@ -7055,7 +7085,7 @@
           if (a) {
             return;
           }
-          if (r.playerCore.swipeManager && typeof r.playerCore.swipeManager.wasRecentlyDragging === "function" && r.playerCore.swipeManager.wasRecentlyDragging()) {
+          if (r.swipeManager && typeof r.swipeManager.wasRecentlyDragging === "function" && r.swipeManager.wasRecentlyDragging()) {
             return;
           }
           if (o.target.closest(".tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button")) {
@@ -7082,12 +7112,12 @@
               r.playerCore.targetVideo.play();
             } else {
               r.playerCore.targetVideo.pause();
-              if (r.playerCore.controlManager) {
-                r.playerCore.controlManager.showPauseIndicator();
+              if (r.controlManager) {
+                r.controlManager.showPauseIndicator();
               }
             }
-            if (r.playerCore.controlManager) {
-              r.playerCore.controlManager.updatePlayPauseButton();
+            if (r.controlManager) {
+              r.controlManager.updatePlayPauseButton();
             }
           };
           if (!r.controlsVisible) {
@@ -7270,7 +7300,7 @@
         if (r) {
           r.updateSetting("sidebarPosition", this.sidebarPosition);
         }
-        var o = this.playerCore.dragManager;
+        var o = this.dragManager;
         if (o) {
           var a = localStorage.getItem("tm-control-panel-pos");
           if (a) {
@@ -7322,8 +7352,8 @@
           if (this.isLandscape) {
             this.autoHideControls();
           }
-          if (this.playerCore.dragManager) {
-            this.playerCore.dragManager.reapplyDockedState();
+          if (this.dragManager) {
+            this.dragManager.reapplyDockedState();
           }
         }
         this.updateButtonContainerParent();
@@ -7339,7 +7369,7 @@
         if (!this.buttonContainer) {
           return;
         }
-        var o = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+        var o = this.controlManager && this.controlManager.commentPanel;
         var a = o && o.commentsPanel;
         var l = this.isLandscape && window.innerWidth >= 930;
         var u = a && l && !this.isSidebarHidden ? a : this.playerContainer;
@@ -7397,9 +7427,9 @@
           r.checkOrientation();
           r.updateContainerMinHeight();
           r.updateVideoAspectRatio();
-          if (r.playerCore.progressManager) {
-            r.playerCore.progressManager.updateProgressBar();
-            r.playerCore.progressManager.updateCurrentTimeDisplay();
+          if (r.progressManager) {
+            r.progressManager.updateProgressBar();
+            r.progressManager.updateCurrentTimeDisplay();
           }
           r.updateButtonContainerParent();
         };
@@ -7586,15 +7616,15 @@
         }
         this.updateContainerMinHeight();
         this.updateVideoAspectRatio();
-        if (this.playerCore.progressManager) {
-          this.playerCore.progressManager.updateProgressBar();
-          this.playerCore.progressManager.updateCurrentTimeDisplay();
+        if (this.progressManager) {
+          this.progressManager.updateProgressBar();
+          this.progressManager.updateCurrentTimeDisplay();
         }
-        if (this.playerCore.controlManager) {
+        if (this.controlManager) {
           this.updateControlPanelVisibility();
         }
-        if (this.playerCore.dragManager) {
-          this.playerCore.dragManager.restoreControlPanelPosition();
+        if (this.dragManager) {
+          this.dragManager.restoreControlPanelPosition();
         }
         if (this.isLandscape) {
           if (window.innerWidth < 930) {
@@ -7615,10 +7645,10 @@
     }, {
       "key": "updateControlPanelVisibility",
       "value": function updateControlPanelVisibility() {
-        if (!this.playerCore.controlManager) {
+        if (!this.controlManager) {
           return;
         }
-        var r = this.playerCore.controlManager.controlButtonsContainer;
+        var r = this.controlManager.controlButtonsContainer;
         if (!r) {
           return;
         }
@@ -7700,7 +7730,7 @@
           this.controlsHideTimerId = null;
         }
         if (!this.isLandscape) {
-          var r = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+          var r = this.controlManager && this.controlManager.commentPanel;
           if (r && r.commentsPanel) {
             r.commentsPanel.classList.add("is-dimmed");
           }
@@ -7723,7 +7753,7 @@
         document.body.classList.add("controls-hidden");
         this.controlsVisible = false;
         if (!this.isLandscape) {
-          var o = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+          var o = this.controlManager && this.controlManager.commentPanel;
           if (o && o.commentsPanel) {
             o.commentsPanel.classList.remove("is-dimmed");
           }
@@ -7806,7 +7836,7 @@
         this.buttonContainer.appendChild(this.settingsBtn);
         this.playerContainer.appendChild(this.container);
         this.playerContainer.appendChild(this.handleContainer);
-        var r = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+        var r = this.controlManager && this.controlManager.commentPanel;
         if (r && r.commentsPanel) {
           this.playerContainer.appendChild(r.commentsPanel);
           if (!this.isLandscape && this.controlsVisible) {
@@ -7815,8 +7845,8 @@
         }
         this.updateButtonContainerParent();
         this.playerContainer.appendChild(this.settingsPanel);
-        if (this.playerCore.controlManager && this.playerCore.controlManager.controlButtonsContainer) {
-          this.playerContainer.appendChild(this.playerCore.controlManager.controlButtonsContainer);
+        if (this.controlManager && this.controlManager.controlButtonsContainer) {
+          this.playerContainer.appendChild(this.controlManager.controlButtonsContainer);
         }
         document.body.appendChild(this.overlay);
         document.body.appendChild(this.playerContainer);
@@ -12100,11 +12130,13 @@
   var He = function() {
     function CommentPanel(r, o) {
       var a = this;
+      var l = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       CommentPanel_classCallCheck(this, CommentPanel);
       this.playerCore = r;
       this.controlManager = o;
-      this.uiElements = r.uiElements || o.uiElements;
-      this.targetVideo = r.targetVideo;
+      this.uiManager = l || (r ? r.uiManager : null);
+      this.uiElements = (r === null || r === void 0 ? void 0 : r.uiElements) || (o === null || o === void 0 ? void 0 : o.uiElements);
+      this.targetVideo = r === null || r === void 0 ? void 0 : r.targetVideo;
       this.videoCode = "";
       this.comments = [];
       this.filteredComments = [];
@@ -12163,7 +12195,7 @@
           "workingDomain": ""
         }
       };
-      var l = function bindSiteProp(r, o, l) {
+      var u = function bindSiteProp(r, o, l) {
         Object.defineProperty(a, r, {
           "get": function get() {
             return a.sites[o][l];
@@ -12176,19 +12208,19 @@
         });
       };
       [ "jable", "javlib", "javdb" ].forEach((function(r) {
-        l("".concat(r, "Status"), r, "status");
-        l("".concat(r, "Comments"), r, "comments");
-        l("filtered".concat(r.charAt(0).toUpperCase() + r.slice(1), "Comments"), r, "filteredComments");
-        l("".concat(r, "TotalCount"), r, "totalCount");
-        l("".concat(r, "HasMore"), r, "hasMore");
-        l("".concat(r, "CurrentPage"), r, "currentPage");
-        l("".concat(r, "Collapsed"), r, "collapsed");
-        l("".concat(r, "Loading"), r, "loading");
-        l("".concat(r, "Unreachable"), r, "unreachable");
-        l("".concat(r, "WorkingDomain"), r, "workingDomain");
+        u("".concat(r, "Status"), r, "status");
+        u("".concat(r, "Comments"), r, "comments");
+        u("filtered".concat(r.charAt(0).toUpperCase() + r.slice(1), "Comments"), r, "filteredComments");
+        u("".concat(r, "TotalCount"), r, "totalCount");
+        u("".concat(r, "HasMore"), r, "hasMore");
+        u("".concat(r, "CurrentPage"), r, "currentPage");
+        u("".concat(r, "Collapsed"), r, "collapsed");
+        u("".concat(r, "Loading"), r, "loading");
+        u("".concat(r, "Unreachable"), r, "unreachable");
+        u("".concat(r, "WorkingDomain"), r, "workingDomain");
       }));
-      l("javlibVideoId", "javlib", "videoId");
-      l("javdbMovieId", "javdb", "movieId");
+      u("javlibVideoId", "javlib", "videoId");
+      u("javdbMovieId", "javdb", "movieId");
       this.jableVideoExists = null;
       this.jableFailedDomain = "";
       this.javlibVideoExists = null;
@@ -12215,6 +12247,11 @@
       }
     }
     return CommentPanel_createClass(CommentPanel, [ {
+      "key": "setUiManager",
+      "value": function setUiManager(r) {
+        this.uiManager = r;
+      }
+    }, {
       "key": "detectReachability",
       "value": function() {
         var r = CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee() {
@@ -12408,8 +12445,8 @@
           if (a && r.length >= 2 && u && typeof u.setLoopRange === "function") {
             u.setLoopRange(r[0], r[1]);
           }
-          if (this.playerCore.uiManager) {
-            this.playerCore.uiManager.showControls();
+          if (this.uiManager) {
+            this.uiManager.showControls();
           }
           if (this.controlManager && typeof this.controlManager.showJumpHint === "function") {
             this.controlManager.showJumpHint(o);
@@ -13179,9 +13216,9 @@
         if (o) {
           o.addEventListener("click", (function(o) {
             o.stopPropagation();
-            if (r.playerCore.uiManager) {
-              r.playerCore.uiManager.showControls();
-              r.playerCore.uiManager.autoHideControls();
+            if (r.uiManager) {
+              r.uiManager.showControls();
+              r.uiManager.autoHideControls();
             }
           }));
         }
@@ -13194,11 +13231,11 @@
         }
         this.applySettingsState();
         var l = function hideControlsOnScroll() {
-          if (r.playerCore.uiManager && r.playerCore.uiManager.controlsVisible) {
-            if (r.playerCore.uiManager.isFloatingControlPanel) {
+          if (r.uiManager && r.uiManager.controlsVisible) {
+            if (r.uiManager.isFloatingControlPanel) {
               return;
             }
-            r.playerCore.uiManager.hideControls(true);
+            r.uiManager.hideControls(true);
           }
         };
         this.commentsList.addEventListener("touchmove", l, {
@@ -13308,18 +13345,18 @@
             return;
           }
           o.stopPropagation();
-          if (r.playerCore.uiManager) {
-            if (r.playerCore.uiManager.isFloatingControlPanel) {
+          if (r.uiManager) {
+            if (r.uiManager.isFloatingControlPanel) {
               r.commentsPanel.classList.remove("is-dimmed");
               return;
             }
-            if (r.playerCore.uiManager.controlsVisible) {
-              r.playerCore.uiManager.hideControls(true);
+            if (r.uiManager.controlsVisible) {
+              r.uiManager.hideControls(true);
             }
           }
         }));
         var y = function handleCommentTouchStart(o) {
-          if (!r.playerCore.uiManager) {
+          if (!r.uiManager) {
             return;
           }
           var a = o.target.closest(".tm-show-controls-float-btn");
@@ -13337,8 +13374,8 @@
           }
           if (a) {
             r.commentsPanel.classList.remove("is-dimmed");
-            r.playerCore.uiManager.showControls();
-            r.playerCore.uiManager.autoHideControls();
+            r.uiManager.showControls();
+            r.uiManager.autoHideControls();
             if (o.cancelable) {
               o.preventDefault();
             }
@@ -13347,8 +13384,8 @@
           }
           if (r.commentsPanel.classList.contains("is-dimmed")) {
             r.setDimmed(false);
-            if (!r.playerCore.uiManager.isLandscape) {
-              r.playerCore.uiManager.hideControls(true);
+            if (!r.uiManager.isLandscape) {
+              r.uiManager.hideControls(true);
             }
             if (o.cancelable) {
               o.preventDefault();
@@ -13356,13 +13393,13 @@
             o.stopPropagation();
             return;
           }
-          var b = r.playerCore.uiManager.isFloatingControlPanel;
-          var C = r.playerCore.uiManager.controlsVisible;
+          var b = r.uiManager.isFloatingControlPanel;
+          var C = r.uiManager.controlsVisible;
           if (b) {
             r.setDimmed(false);
           } else if (C) {
             if (!o.target.closest(".jc-time-link")) {
-              r.playerCore.uiManager.hideControls(true);
+              r.uiManager.hideControls(true);
             }
           }
         };
@@ -13373,12 +13410,12 @@
           "passive": false
         });
         this.commentsPanel.addEventListener("mouseenter", (function() {
-          if (r.playerCore.uiManager && r.playerCore.uiManager.isFloatingControlPanel) {
+          if (r.uiManager && r.uiManager.isFloatingControlPanel) {
             r.setDimmed(false);
           }
         }));
         this.commentsPanel.addEventListener("mouseleave", (function() {
-          if (r.playerCore.uiManager && r.playerCore.uiManager.isFloatingControlPanel && r.playerCore.uiManager.controlsVisible) {
+          if (r.uiManager && r.uiManager.isFloatingControlPanel && r.uiManager.controlsVisible) {
             r.setDimmed(true);
           }
         }));
@@ -15732,9 +15769,9 @@
         var y = o.includes("+");
         var b = o.replace(/[+-]/g, "");
         if (v) {
-          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(Ce, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
+          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(xe, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
         } else if (y) {
-          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(xe, "</div>");
+          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(we, "</div>");
         } else {
           p.textContent = o;
         }
@@ -16009,11 +16046,13 @@
   }
   var qe = function() {
     function ControlManager(r, o) {
+      var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       ControlManager_classCallCheck(this, ControlManager);
       this.playerCore = r;
       this.targetVideo = r.targetVideo;
+      this.uiManager = a;
       this.uiElements = o;
-      this.commentPanel = new He(r, this);
+      this.commentPanel = new He(r, this, a);
       this.volumeController = new ze(r, this);
       this.seekController = new Ne(r, this);
       this.playbackController = new Je(r, this);
@@ -16036,6 +16075,14 @@
       this._rateChangeHandler = null;
     }
     return ControlManager_createClass(ControlManager, [ {
+      "key": "setUiManager",
+      "value": function setUiManager(r) {
+        this.uiManager = r;
+        if (this.commentPanel && typeof this.commentPanel.setUiManager === "function") {
+          this.commentPanel.setUiManager(r);
+        }
+      }
+    }, {
       "key": "volumeSlider",
       "get": function get() {
         return this.volumeController ? this.volumeController.volumeSlider : null;
@@ -16335,10 +16382,13 @@
   }
   var Ue = function() {
     function DragManager(r, o) {
+      var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
+      var l = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
       DragManager_classCallCheck(this, DragManager);
       this.playerCore = r;
-      this.playerCore.dragManager = this;
-      this.targetVideo = r.targetVideo;
+      this.uiManager = a || (r ? r.uiManager : null);
+      this.controlManager = l || (r ? r.controlManager : null);
+      this.targetVideo = r === null || r === void 0 ? void 0 : r.targetVideo;
       this.uiElements = o;
       this.container = o.container;
       this.handle = o.handle;
@@ -16360,6 +16410,17 @@
       this.ctrlEndHandler = null;
     }
     return DragManager_createClass(DragManager, [ {
+      "key": "setManagers",
+      "value": function setManagers() {
+        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
+        if (r.uiManager) {
+          this.uiManager = r.uiManager;
+        }
+        if (r.controlManager) {
+          this.controlManager = r.controlManager;
+        }
+      }
+    }, {
       "key": "init",
       "value": function init() {
         this.handle.addEventListener("mousedown", this.startHandleDrag.bind(this));
@@ -16413,12 +16474,12 @@
         var p = Math.min(parseFloat(this.container.style.minHeight) || window.innerWidth * (9 / 16), u);
         var v = Math.min(Math.max(p, this.startHeight + l), u);
         this.container.style.height = v + "px";
-        if (this.playerCore.uiManager) {
-          this.playerCore.uiManager.isCustomResized = true;
-          if (!this.playerCore.uiManager.isLandscape) {
-            this.playerCore.uiManager.customHeightPortrait = v + "px";
+        if (this.uiManager) {
+          this.uiManager.isCustomResized = true;
+          if (!this.uiManager.isLandscape) {
+            this.uiManager.customHeightPortrait = v + "px";
           } else {
-            this.playerCore.uiManager.customHeightLandscape = v + "px";
+            this.uiManager.customHeightLandscape = v + "px";
           }
         }
       }
@@ -16446,11 +16507,11 @@
       "value": function initControlPanelDrag() {
         var r = this;
         setTimeout((function() {
-          if (!r.playerCore.controlManager) {
+          if (!r.controlManager) {
             return;
           }
-          r.controlButtonsContainer = r.playerCore.controlManager.controlButtonsContainer;
-          r.dragHandle = r.playerCore.controlManager.dragHandle;
+          r.controlButtonsContainer = r.controlManager.controlButtonsContainer;
+          r.dragHandle = r.controlManager.dragHandle;
           if (!r.controlButtonsContainer || !r.dragHandle) {
             return;
           }
@@ -16459,7 +16520,7 @@
             "passive": false
           });
           r.dragHandle.addEventListener("dblclick", r.resetControlPanelPosition.bind(r));
-          if (r.playerCore.uiManager && r.playerCore.uiManager.isFloatingControlPanel) {
+          if (r.uiManager && r.uiManager.isFloatingControlPanel) {
             r.restoreControlPanelPosition();
           }
         }), 100);
@@ -16467,7 +16528,7 @@
     }, {
       "key": "startControlPanelDrag",
       "value": function startControlPanelDrag(r) {
-        if (!this.playerCore.uiManager || !this.playerCore.uiManager.isFloatingControlPanel) {
+        if (!this.uiManager || !this.uiManager.isFloatingControlPanel) {
           return;
         }
         if (r.type === "mousedown" && r.button !== 0) {
@@ -16647,7 +16708,7 @@
     }, {
       "key": "getControlPanelStorageKey",
       "value": function getControlPanelStorageKey() {
-        var r = this.playerCore.uiManager ? this.playerCore.uiManager.isLandscape : window.innerWidth > window.innerHeight;
+        var r = this.uiManager ? this.uiManager.isLandscape : window.innerWidth > window.innerHeight;
         return r ? "tm-control-panel-pos-landscape" : "tm-control-panel-pos-portrait";
       }
     }, {
@@ -16656,7 +16717,7 @@
         if (!this.controlButtonsContainer) {
           return;
         }
-        if (this.playerCore.uiManager && !this.playerCore.uiManager.isFloatingControlPanel) {
+        if (this.uiManager && !this.uiManager.isFloatingControlPanel) {
           this.clearControlPanelInlineStyles();
           return;
         }
@@ -16949,9 +17010,11 @@
   }
   var We = function() {
     function LoopManager(r, o) {
+      var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       LoopManager_classCallCheck(this, LoopManager);
       this.playerCore = r;
-      this.targetVideo = r.targetVideo;
+      this.controlManager = a || (r ? r.controlManager : null);
+      this.targetVideo = r === null || r === void 0 ? void 0 : r.targetVideo;
       this.uiElements = o;
       this.loopStartMarker = null;
       this.loopEndMarker = null;
@@ -16979,6 +17042,11 @@
       this._handleOutsideClickForEdit = this._handleOutsideClickForEdit.bind(this);
     }
     return LoopManager_createClass(LoopManager, [ {
+      "key": "setControlManager",
+      "value": function setControlManager(r) {
+        this.controlManager = r;
+      }
+    }, {
       "key": "init",
       "value": function init(r) {
         var o = this;
@@ -17389,8 +17457,8 @@
           "source": "tab_marker"
         });
         if (r.type === "highlight") {
-          if (this.playerCore.controlManager && typeof this.playerCore.controlManager.showJumpHint === "function") {
-            this.playerCore.controlManager.showJumpHint(r.startTime);
+          if (this.controlManager && typeof this.controlManager.showJumpHint === "function") {
+            this.controlManager.showJumpHint(r.startTime);
           }
           this.targetVideo.currentTime = r.startTime;
           if (this.targetVideo.paused) {
@@ -17411,8 +17479,8 @@
           var o = this.targetVideo ? this.targetVideo.currentTime : 0;
           var a = o >= r.startTime && o < r.endTime;
           if (!a) {
-            if (this.playerCore.controlManager && typeof this.playerCore.controlManager.showJumpHint === "function") {
-              this.playerCore.controlManager.showJumpHint(r.startTime);
+            if (this.controlManager && typeof this.controlManager.showJumpHint === "function") {
+              this.controlManager.showJumpHint(r.startTime);
             }
             if (this.targetVideo) {
               this.targetVideo.currentTime = r.startTime;
@@ -18798,8 +18866,8 @@
           if (r.managers.controlManager) {
             r.managers.controlManager.updatePlayPauseButton();
           }
-          if (r.playerCore.uiManager && r.playerCore.uiManager.isLandscape) {
-            r.playerCore.uiManager.autoHideControls();
+          if (r.managers.uiManager && r.managers.uiManager.isLandscape) {
+            r.managers.uiManager.autoHideControls();
           }
         };
         this.targetVideo.addEventListener("play", this.handlePlayBound);
@@ -19006,9 +19074,13 @@
   }
   var Xe = function() {
     function SettingsManager(r, o) {
+      var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
+      var l = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
       SettingsManager_classCallCheck(this, SettingsManager);
       this.playerCore = r;
-      this.targetVideo = r.targetVideo;
+      this.uiManager = a || (r ? r.uiManager : null);
+      this.controlManager = l || (r ? r.controlManager : null);
+      this.targetVideo = r === null || r === void 0 ? void 0 : r.targetVideo;
       this.uiElements = o;
       this.settingsPanel = o.settingsPanel;
       this.overlayClickHandler = null;
@@ -19030,6 +19102,17 @@
       this.showCustomSeekStepsPanel = false;
     }
     return SettingsManager_createClass(SettingsManager, [ {
+      "key": "setManagers",
+      "value": function setManagers() {
+        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
+        if (r.uiManager) {
+          this.uiManager = r.uiManager;
+        }
+        if (r.controlManager) {
+          this.controlManager = r.controlManager;
+        }
+      }
+    }, {
       "key": "init",
       "value": function init() {
         this.loadSettings();
@@ -19098,13 +19181,13 @@
           r.updateSetting("showCommentsSection", o);
           if (o) {
             r.updateSetting("sidebarHidden", false);
-            if (r.playerCore.uiManager) {
-              r.playerCore.uiManager.isSidebarHidden = false;
-              r.playerCore.uiManager.updateSidebarToggleButtonIcon();
+            if (r.uiManager) {
+              r.uiManager.isSidebarHidden = false;
+              r.uiManager.updateSidebarToggleButtonIcon();
             }
           }
-          if ((a = r.playerCore.controlManager) !== null && a !== void 0 && a.commentPanel) {
-            r.playerCore.controlManager.commentPanel.updateCommentsVisibility(o);
+          if ((a = r.controlManager) !== null && a !== void 0 && a.commentPanel) {
+            r.controlManager.commentPanel.updateCommentsVisibility(o);
           }
           r.createSettingsPanel();
         }));
@@ -19125,8 +19208,8 @@
         var D = this._createToggleOption("DEBUG", "debugMode", this.settings.debugMode, (function(o) {
           var a;
           r.updateSetting("debugMode", o);
-          if ((a = r.playerCore.controlManager) !== null && a !== void 0 && a.commentPanel) {
-            r.playerCore.controlManager.commentPanel.updateDebugMode(o);
+          if ((a = r.controlManager) !== null && a !== void 0 && a.commentPanel) {
+            r.controlManager.commentPanel.updateDebugMode(o);
           }
         }));
         S.appendChild(P);
@@ -19358,7 +19441,7 @@
     }, {
       "key": "rebuildControlPanelSeekRow",
       "value": function rebuildControlPanelSeekRow() {
-        var r = this.playerCore.controlManager;
+        var r = this.controlManager;
         if (!r || !r.controlButtonsContainer || !r.seekController) {
           return;
         }
@@ -19402,8 +19485,8 @@
             var p = SettingsManager_objectSpread({}, r.settings.enabledCommentSources);
             p[a.key] = !u;
             r.updateSetting("enabledCommentSources", p);
-            if ((l = r.playerCore.controlManager) !== null && l !== void 0 && l.commentPanel) {
-              r.playerCore.controlManager.commentPanel.updateCommentSources();
+            if ((l = r.controlManager) !== null && l !== void 0 && l.commentPanel) {
+              r.controlManager.commentPanel.updateCommentSources();
             }
             r.createSettingsPanel();
           }));
@@ -19591,12 +19674,14 @@
       var l = this;
       var u = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
       var p = arguments.length > 4 && arguments[4] !== void 0 ? arguments[4] : null;
+      var v = arguments.length > 5 && arguments[5] !== void 0 ? arguments[5] : null;
       videoSwipeManager_classCallCheck(this, VideoSwipeManager);
       this.video = r;
       this.container = o;
       this.handle = a;
       this.uiElements = u;
       this.onClose = p;
+      this.uiManager = v;
       this._touchPreventDefault = function(r) {
         if (l.isDragging && r.touches && r.touches.length > 0) {
           var o = r.touches[0].clientY;
@@ -19662,6 +19747,11 @@
       this._init();
     }
     return videoSwipeManager_createClass(VideoSwipeManager, [ {
+      "key": "setUiManager",
+      "value": function setUiManager(r) {
+        this.uiManager = r;
+      }
+    }, {
       "key": "_init",
       "value": function _init() {
         var r = this;
@@ -19921,11 +20011,11 @@
         if (!this.isDragging || !r.isPrimary) {
           return;
         }
-        if (this.playerCore && this.playerCore.uiManager && this.playerCore.uiManager.isLongPress) {
+        var o = this.uiManager || this.playerCore && this.playerCore.uiManager;
+        if (o && o.isLongPress) {
           return;
         }
-        if (this.playerCore && this.playerCore.uiManager && this.playerCore.uiManager.isLandscape) {
-          var o = this.playerCore.uiManager;
+        if (o && o.isLandscape) {
           var a = !!(o.playerContainer && o.playerContainer.className.match(/tm-controls-docked-/));
           var l = o.isSidebarHidden || !a;
           if (l && o.controlsVisible) {
@@ -20011,21 +20101,22 @@
         } else {
           this.wasDragging = false;
         }
-        if (this.playerCore && this.playerCore.uiManager && this.playerCore.uiManager.isLandscape) {
-          this.playerCore.uiManager.autoHideControls();
+        var a = this.uiManager || this.playerCore && this.playerCore.uiManager;
+        if (a && a.isLandscape) {
+          a.autoHideControls();
         }
-        var a = this.uiElements && this.uiElements.videoWrapper ? this.uiElements.videoWrapper : this.video;
-        if (a && a.classList) {
+        var l = this.uiElements && this.uiElements.videoWrapper ? this.uiElements.videoWrapper : this.video;
+        if (l && l.classList) {
           setTimeout((function() {
-            if (!o.isDragging && a && a.classList) {
-              a.classList.remove("is-swiping");
+            if (!o.isDragging && l && l.classList) {
+              l.classList.remove("is-swiping");
             }
           }), 600);
         }
         window.removeEventListener("pointermove", this._pointerMoveHandler);
         window.removeEventListener("pointerup", this._pointerUpHandler);
         window.removeEventListener("pointercancel", this._pointerUpHandler);
-        a.removeEventListener("touchmove", this._touchPreventDefault);
+        l.removeEventListener("touchmove", this._touchPreventDefault);
         this.video.style.cursor = "grab";
         if (this.dragDirection === "vertical") {
           if (this.deltaY > 120) {
@@ -20405,52 +20496,53 @@
         var a = new Te(this.playerCore);
         var l = a.createUI();
         this.managers.uiManager = a;
-        this.playerCore.uiManager = a;
-        var u = new Xe(this.playerCore, l);
+        var u = new qe(this.playerCore, l, a);
         u.init();
-        this.managers.settingsManager = u;
-        var p = new qe(this.playerCore, l);
+        this.managers.controlManager = u;
+        var p = new Xe(this.playerCore, l, a, u);
         p.init();
-        this.managers.controlManager = p;
-        this.playerCore.controlManager = p;
+        this.managers.settingsManager = p;
         var v = new Ye(this.playerCore, l);
-        this.playerCore.progressManager = v;
         v.init({
-          "progressBarElement": p.progressBarElement,
-          "progressIndicator": p.progressIndicator,
-          "currentTimeDisplay": p.currentTimeDisplay,
-          "totalDurationDisplay": p.totalDurationDisplay,
-          "timeIndicator": p.timeIndicator
+          "progressBarElement": u.progressBarElement,
+          "progressIndicator": u.progressIndicator,
+          "currentTimeDisplay": u.currentTimeDisplay,
+          "totalDurationDisplay": u.totalDurationDisplay,
+          "timeIndicator": u.timeIndicator
         });
         this.managers.progressManager = v;
-        var y = new We(this.playerCore, l);
+        var y = new We(this.playerCore, l, u);
         y.init({
-          "loopStartMarker": p.loopStartMarker,
-          "loopEndMarker": p.loopEndMarker,
-          "loopRangeElement": p.loopRangeElement,
-          "progressMarkersContainer": p.progressMarkersContainer,
-          "tabScrollContainer": p.tabScrollContainer,
-          "tabAddBtn": p.tabAddBtn
+          "loopStartMarker": u.loopStartMarker,
+          "loopEndMarker": u.loopEndMarker,
+          "loopRangeElement": u.loopRangeElement,
+          "progressMarkersContainer": u.progressMarkersContainer,
+          "tabScrollContainer": u.tabScrollContainer,
+          "tabAddBtn": u.tabAddBtn
         });
         this.managers.loopManager = y;
-        p.setLoopManager(y);
-        var b = new Ue(this.playerCore, l);
+        u.setLoopManager(y);
+        var b = new Ue(this.playerCore, l, a, u);
         b.init();
         this.managers.dragManager = b;
-        this.playerCore.dragManager = b;
         if (this.playerCore.targetVideo && l.videoWrapper && l.handle) {
           this.swipeManager = new $e(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
             return r.close();
-          }));
+          }), a);
           this.swipeManager.playerCore = this.playerCore;
-          this.playerCore.swipeManager = this.swipeManager;
           this.managers.swipeManager = this.swipeManager;
         }
+        a.setManagers({
+          "controlManager": u,
+          "progressManager": v,
+          "dragManager": b,
+          "swipeManager": this.swipeManager
+        });
         var C = new Ke(this.playerCore, l, this.managers);
         C.init();
         this.managers.eventManager = C;
         a.assembleDOM();
-        u.updateControlRowsVisibility();
+        p.updateControlRowsVisibility();
         this.playerCore.restoreVideoState();
         v.updateProgressBar();
         v.updateCurrentTimeDisplay();

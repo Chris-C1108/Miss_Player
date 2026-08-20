@@ -47,8 +47,35 @@ export class UIManager {
         this.customHeightPortrait = null;
         this.customHeightLandscape = null;
         
+        // 关联管理器引用
+        this.managers = {};
+        
         // 导入样式
         this.loadStyles();
+    }
+
+    /**
+     * 注册相关管理器引用
+     * @param {Object} managers 管理器字典
+     */
+    setManagers(managers) {
+        this.managers = Object.assign({}, this.managers, managers);
+    }
+
+    get controlManager() {
+        return this.managers?.controlManager || this.playerCore?.controlManager;
+    }
+
+    get progressManager() {
+        return this.managers?.progressManager || this.playerCore?.progressManager;
+    }
+
+    get dragManager() {
+        return this.managers?.dragManager || this.playerCore?.dragManager;
+    }
+
+    get swipeManager() {
+        return this.managers?.swipeManager || this.playerCore?.swipeManager;
     }
 
     /**
@@ -392,8 +419,8 @@ export class UIManager {
             }
             
             // 检查是否刚完成拖动/左右滑动操作，如果是则不触发暂停/播放或控制栏切换
-            if (this.playerCore.swipeManager && typeof this.playerCore.swipeManager.wasRecentlyDragging === 'function' 
-                && this.playerCore.swipeManager.wasRecentlyDragging()) {
+            if (this.swipeManager && typeof this.swipeManager.wasRecentlyDragging === 'function' 
+                && this.swipeManager.wasRecentlyDragging()) {
                 return;
             }
             
@@ -426,13 +453,13 @@ export class UIManager {
                     this.playerCore.targetVideo.play();
                 } else {
                     this.playerCore.targetVideo.pause();
-                    if (this.playerCore.controlManager) {
-                        this.playerCore.controlManager.showPauseIndicator();
+                    if (this.controlManager) {
+                        this.controlManager.showPauseIndicator();
                     }
                 }
                 
-                if (this.playerCore.controlManager) {
-                    this.playerCore.controlManager.updatePlayPauseButton();
+                if (this.controlManager) {
+                    this.controlManager.updatePlayPauseButton();
                 }
             };
             
@@ -698,7 +725,7 @@ export class UIManager {
         }
 
         // 如果当前控制面板是吸附停靠状态，则自动变换吸附锚点（TL <-> TR, BL <-> BR），携带其一同切换
-        const dragManager = this.playerCore.dragManager;
+        const dragManager = this.dragManager;
         if (dragManager) {
             const saved = localStorage.getItem('tm-control-panel-pos');
             if (saved) {
@@ -762,8 +789,8 @@ export class UIManager {
             }
             
             // 连动：重新应用吸附排版状态
-            if (this.playerCore.dragManager) {
-                this.playerCore.dragManager.reapplyDockedState();
+            if (this.dragManager) {
+                this.dragManager.reapplyDockedState();
             }
         }
         
@@ -785,7 +812,7 @@ export class UIManager {
     updateButtonContainerParent() {
         if (!this.buttonContainer) return;
         
-        const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+        const commentPanel = this.controlManager && this.controlManager.commentPanel;
         const commentsPanelEl = commentPanel && commentPanel.commentsPanel;
         const isPcLandscape = this.isLandscape && window.innerWidth >= 930;
         
@@ -863,9 +890,9 @@ export class UIManager {
             // 无论 orientation 状态是否改变，都强制刷新关键布局和高度，防止 iOS Safari 延迟获取尺寸导致布局失效
             this.updateContainerMinHeight();
             this.updateVideoAspectRatio();
-            if (this.playerCore.progressManager) {
-                this.playerCore.progressManager.updateProgressBar();
-                this.playerCore.progressManager.updateCurrentTimeDisplay();
+            if (this.progressManager) {
+                this.progressManager.updateProgressBar();
+                this.progressManager.updateCurrentTimeDisplay();
             }
             this.updateButtonContainerParent();
         };
@@ -1093,20 +1120,20 @@ export class UIManager {
         this.updateVideoAspectRatio();
         
         // 如果存在进度管理器，通知其刷新UI
-        if (this.playerCore.progressManager) {
-            this.playerCore.progressManager.updateProgressBar();
-            this.playerCore.progressManager.updateCurrentTimeDisplay();
+        if (this.progressManager) {
+            this.progressManager.updateProgressBar();
+            this.progressManager.updateCurrentTimeDisplay();
         }
         
         // 如果存在控制管理器，通知其刷新UI
-        if (this.playerCore.controlManager) {
+        if (this.controlManager) {
             // 更新控制面板显示
             this.updateControlPanelVisibility();
         }
         
         // 旋转后控制面板重新计算并恢复位置，防止超出视口边界
-        if (this.playerCore.dragManager) {
-            this.playerCore.dragManager.restoreControlPanelPosition();
+        if (this.dragManager) {
+            this.dragManager.restoreControlPanelPosition();
         }
         
         // 横屏模式下自动隐藏控制界面（如果是手机横屏，即宽 < 930px），或显示并定时隐藏（PC大屏 >= 930px）
@@ -1135,9 +1162,9 @@ export class UIManager {
      * 更新控制面板各行的可见性
      */
     updateControlPanelVisibility() {
-        if (!this.playerCore.controlManager) return;
+        if (!this.controlManager) return;
         
-        const controlButtons = this.playerCore.controlManager.controlButtonsContainer;
+        const controlButtons = this.controlManager.controlButtonsContainer;
         if (!controlButtons) return;
         
         // 查找各控制行
@@ -1234,7 +1261,7 @@ export class UIManager {
 
         // 手机竖屏场景下：控制面板显示时 评论区与拖动手柄同步变暗
         if (!this.isLandscape) {
-            const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+            const commentPanel = this.controlManager && this.controlManager.commentPanel;
             if (commentPanel && commentPanel.commentsPanel) {
                 commentPanel.commentsPanel.classList.add('is-dimmed');
             }
@@ -1258,7 +1285,7 @@ export class UIManager {
 
         // 手机竖屏场景下：控制面板隐藏时评论区与手柄同步变亮 (解除变暗)
         if (!this.isLandscape) {
-            const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+            const commentPanel = this.controlManager && this.controlManager.commentPanel;
             if (commentPanel && commentPanel.commentsPanel) {
                 commentPanel.commentsPanel.classList.remove('is-dimmed');
             }
@@ -1373,7 +1400,7 @@ export class UIManager {
         this.playerContainer.appendChild(this.handleContainer);
         
         // 将评论区挂载到播放器容器，并动态挂载按钮容器到正确的位置
-        const commentPanel = this.playerCore.controlManager && this.playerCore.controlManager.commentPanel;
+        const commentPanel = this.controlManager && this.controlManager.commentPanel;
         if (commentPanel && commentPanel.commentsPanel) {
             this.playerContainer.appendChild(commentPanel.commentsPanel);
             
@@ -1388,8 +1415,8 @@ export class UIManager {
         this.playerContainer.appendChild(this.settingsPanel);
         
         // 如果存在控制按钮，也添加到播放器容器内
-        if (this.playerCore.controlManager && this.playerCore.controlManager.controlButtonsContainer) {
-            this.playerContainer.appendChild(this.playerCore.controlManager.controlButtonsContainer);
+        if (this.controlManager && this.controlManager.controlButtonsContainer) {
+            this.playerContainer.appendChild(this.controlManager.controlButtonsContainer);
         }
         
         // 将overlay添加到document.body

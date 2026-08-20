@@ -4,13 +4,14 @@ import { telemetry } from '../../telemetry';
  * 视频水平移动管理器 - 全新模块化设计
  */
 export class VideoSwipeManager {
-    constructor(videoElement, containerElement, handleElement, uiElements = null, onClose = null) {
+    constructor(videoElement, containerElement, handleElement, uiElements = null, onClose = null, uiManager = null) {
         // 核心元素引用
         this.video = videoElement;
         this.container = containerElement;
         this.handle = handleElement;
         this.uiElements = uiElements;
         this.onClose = onClose;
+        this.uiManager = uiManager;
         this._touchPreventDefault = (e) => {
             // 只有当拖动方向为 vertical 且向下滑动时，阻止默认行为（用于下拉退出播放器）
             // 如果是向上滑动，则不阻止，允许事件穿透到原始网页以滚动触发 iOS 工具栏隐藏
@@ -94,6 +95,10 @@ export class VideoSwipeManager {
 
         // 初始化
         this._init();
+    }
+
+    setUiManager(uiManager) {
+        this.uiManager = uiManager;
     }
 
     /**
@@ -500,17 +505,17 @@ export class VideoSwipeManager {
         if (!this.isDragging || !e.isPrimary) return;
         
         // 如果当前处于 3 倍速长按状态下，不响应任何滑动拖拽操作
-        if (this.playerCore && this.playerCore.uiManager && this.playerCore.uiManager.isLongPress) {
+        const uiManager = this.uiManager || (this.playerCore && this.playerCore.uiManager);
+        if (uiManager && uiManager.isLongPress) {
             return;
         }
         
         // 处于横屏模式且控制面板悬浮时，滑动/拖拽视频立即隐藏控制面板
-        if (this.playerCore && this.playerCore.uiManager && this.playerCore.uiManager.isLandscape) {
-            const ui = this.playerCore.uiManager;
-            const isDocked = !!(ui.playerContainer && ui.playerContainer.className.match(/tm-controls-docked-/));
-            const isFloating = ui.isSidebarHidden || !isDocked;
-            if (isFloating && ui.controlsVisible) {
-                ui.hideControls();
+        if (uiManager && uiManager.isLandscape) {
+            const isDocked = !!(uiManager.playerContainer && uiManager.playerContainer.className.match(/tm-controls-docked-/));
+            const isFloating = uiManager.isSidebarHidden || !isDocked;
+            if (isFloating && uiManager.controlsVisible) {
+                uiManager.hideControls();
             }
         }
         
@@ -623,8 +628,9 @@ export class VideoSwipeManager {
         }
         
         // 拖动结束时在横屏模式下触发自动隐藏
-        if (this.playerCore && this.playerCore.uiManager && this.playerCore.uiManager.isLandscape) {
-            this.playerCore.uiManager.autoHideControls();
+        const uiMgr = this.uiManager || (this.playerCore && this.playerCore.uiManager);
+        if (uiMgr && uiMgr.isLandscape) {
+            uiMgr.autoHideControls();
         }
         
         const dragTarget = this.uiElements && this.uiElements.videoWrapper ? this.uiElements.videoWrapper : this.video;

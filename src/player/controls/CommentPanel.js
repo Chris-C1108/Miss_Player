@@ -206,11 +206,12 @@ export class CommentPanel {
         }
     }
 
-    constructor(playerCore, controlManager) {
+    constructor(playerCore, controlManager, uiManager = null) {
         this.playerCore = playerCore;
         this.controlManager = controlManager;
-        this.uiElements = playerCore.uiElements || controlManager.uiElements;
-        this.targetVideo = playerCore.targetVideo;
+        this.uiManager = uiManager || (playerCore ? playerCore.uiManager : null);
+        this.uiElements = playerCore?.uiElements || controlManager?.uiElements;
+        this.targetVideo = playerCore?.targetVideo;
 
         this.videoCode = '';
         this.comments = [];          // 所有采集的原始评论数据（向下兼容）
@@ -328,6 +329,10 @@ export class CommentPanel {
             this.handleMetadataLoadedBound = () => this.reprocessComments();
             this.targetVideo.addEventListener('loadedmetadata', this.handleMetadataLoadedBound);
         }
+    }
+
+    setUiManager(uiManager) {
+        this.uiManager = uiManager;
     }
 
     /**
@@ -504,8 +509,8 @@ export class CommentPanel {
             }
 
             // 点击时间戳时，恢复显示控制面板
-            if (this.playerCore.uiManager) {
-                this.playerCore.uiManager.showControls();
+            if (this.uiManager) {
+                this.uiManager.showControls();
             }
 
             // 触发时间跳转的视觉提示
@@ -1184,9 +1189,9 @@ export class CommentPanel {
         if (showControlsBtn) {
             showControlsBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (this.playerCore.uiManager) {
-                    this.playerCore.uiManager.showControls();
-                    this.playerCore.uiManager.autoHideControls();
+                if (this.uiManager) {
+                    this.uiManager.showControls();
+                    this.uiManager.autoHideControls();
                 }
             });
         }
@@ -1205,12 +1210,12 @@ export class CommentPanel {
 
         // 绑定滑动/滚轮隐藏控制面板事件 (仅在控制面板显示时生效)
         const hideControlsOnScroll = () => {
-            if (this.playerCore.uiManager && this.playerCore.uiManager.controlsVisible) {
+            if (this.uiManager && this.uiManager.controlsVisible) {
                 // 大屏设备/悬浮窗模式下（iPad 竖屏及 PC 横屏），评论区与控制面板共存，滚动时不隐藏控制栏
-                if (this.playerCore.uiManager.isFloatingControlPanel) {
+                if (this.uiManager.isFloatingControlPanel) {
                     return;
                 }
-                this.playerCore.uiManager.hideControls(true);
+                this.uiManager.hideControls(true);
             }
         };
         this.commentsList.addEventListener('touchmove', hideControlsOnScroll, { passive: true });
@@ -1330,23 +1335,23 @@ export class CommentPanel {
 
             e.stopPropagation();
 
-            if (this.playerCore.uiManager) {
+            if (this.uiManager) {
                 // 大屏设备/悬浮窗模式下（iPad 竖屏及 PC 横屏），评论区与控制面板共存，点击空白使评论区变亮
-                if (this.playerCore.uiManager.isFloatingControlPanel) {
+                if (this.uiManager.isFloatingControlPanel) {
                     this.commentsPanel.classList.remove('is-dimmed');
                     return;
                 }
 
                 // 手机端：如果控制面板已显示，点击空白处将其隐藏；但不允许点击空白处再次拉起/弹起控制面板
-                if (this.playerCore.uiManager.controlsVisible) {
-                    this.playerCore.uiManager.hideControls(true);
+                if (this.uiManager.controlsVisible) {
+                    this.uiManager.hideControls(true);
                 }
             }
         });
 
         // 触碰与点击拦截处理器：处理不同终端的激活与误触隐藏逻辑
         const handleCommentTouchStart = (e) => {
-            if (!this.playerCore.uiManager) return;
+            if (!this.uiManager) return;
 
             // 检查是否点击了显示控制栏的浮动按钮
             let isShowControlsBtn = e.target.closest('.tm-show-controls-float-btn');
@@ -1366,8 +1371,8 @@ export class CommentPanel {
 
             if (isShowControlsBtn) {
                 this.commentsPanel.classList.remove('is-dimmed');
-                this.playerCore.uiManager.showControls();
-                this.playerCore.uiManager.autoHideControls();
+                this.uiManager.showControls();
+                this.uiManager.autoHideControls();
                 if (e.cancelable) e.preventDefault();
                 e.stopPropagation();
                 return;
@@ -1377,16 +1382,16 @@ export class CommentPanel {
             if (this.commentsPanel.classList.contains('is-dimmed')) {
                 this.setDimmed(false);
                 // 手机竖屏模式下，激活评论区的同时隐藏控制面板
-                if (!this.playerCore.uiManager.isLandscape) {
-                    this.playerCore.uiManager.hideControls(true);
+                if (!this.uiManager.isLandscape) {
+                    this.uiManager.hideControls(true);
                 }
                 if (e.cancelable) e.preventDefault();
                 e.stopPropagation(); // 阻止事件传给视频区
                 return;
             }
 
-            const isFloating = this.playerCore.uiManager.isFloatingControlPanel;
-            const controlsVisible = this.playerCore.uiManager.controlsVisible;
+            const isFloating = this.uiManager.isFloatingControlPanel;
+            const controlsVisible = this.uiManager.controlsVisible;
 
             if (isFloating) {
                 // 大屏端 (PC/iPad)：任何对评论区的点击或触屏，都会使评论区重新变亮 (移除 is-dimmed)
@@ -1394,7 +1399,7 @@ export class CommentPanel {
             } else if (controlsVisible) {
                 // 手机端：若控制面板已显示，用户点击/触摸评论区（排除时间戳链接）时，立即隐藏控制面板以防止误触
                 if (!e.target.closest('.jc-time-link')) {
-                    this.playerCore.uiManager.hideControls(true);
+                    this.uiManager.hideControls(true);
                 }
             }
         };
@@ -1403,14 +1408,14 @@ export class CommentPanel {
 
         // PC端专用：鼠标移入评论区 -> 评论区变亮；移出评论区 -> 评论区重新变暗以突出显示控制栏
         this.commentsPanel.addEventListener('mouseenter', () => {
-            if (this.playerCore.uiManager && this.playerCore.uiManager.isFloatingControlPanel) {
+            if (this.uiManager && this.uiManager.isFloatingControlPanel) {
                 this.setDimmed(false);
             }
         });
         this.commentsPanel.addEventListener('mouseleave', () => {
-            if (this.playerCore.uiManager &&
-                this.playerCore.uiManager.isFloatingControlPanel &&
-                this.playerCore.uiManager.controlsVisible) {
+            if (this.uiManager &&
+                this.uiManager.isFloatingControlPanel &&
+                this.uiManager.controlsVisible) {
                 this.setDimmed(true);
             }
         });

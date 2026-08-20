@@ -6,10 +6,12 @@ import { __ } from '../../constants/i18n.js';
  * 设置管理器类 - 负责播放器设置面板及其交互功能
  */
 export class SettingsManager {
-    constructor(playerCore, uiElements) {
+    constructor(playerCore, uiElements, uiManager = null, controlManager = null) {
         // 核心引用
         this.playerCore = playerCore;
-        this.targetVideo = playerCore.targetVideo;
+        this.uiManager = uiManager || (playerCore ? playerCore.uiManager : null);
+        this.controlManager = controlManager || (playerCore ? playerCore.controlManager : null);
+        this.targetVideo = playerCore?.targetVideo;
         
         // UI元素引用
         this.uiElements = uiElements;
@@ -37,6 +39,11 @@ export class SettingsManager {
 
         // 快进快退步进自定义展开状态
         this.showCustomSeekStepsPanel = false;
+    }
+
+    setManagers(managers = {}) {
+        if (managers.uiManager) this.uiManager = managers.uiManager;
+        if (managers.controlManager) this.controlManager = managers.controlManager;
     }
     
     /**
@@ -155,13 +162,13 @@ export class SettingsManager {
                 if (checked) {
                     // 当从关闭状态切换为开启状态时，重置用户手动隐藏侧栏配置，重新展示侧边栏
                     this.updateSetting('sidebarHidden', false);
-                    if (this.playerCore.uiManager) {
-                        this.playerCore.uiManager.isSidebarHidden = false;
-                        this.playerCore.uiManager.updateSidebarToggleButtonIcon();
+                    if (this.uiManager) {
+                        this.uiManager.isSidebarHidden = false;
+                        this.uiManager.updateSidebarToggleButtonIcon();
                     }
                 }
-                if (this.playerCore.controlManager?.commentPanel) {
-                    this.playerCore.controlManager.commentPanel.updateCommentsVisibility(checked);
+                if (this.controlManager?.commentPanel) {
+                    this.controlManager.commentPanel.updateCommentsVisibility(checked);
                 }
                 this.createSettingsPanel(); // 刷新源 Badge 子面板
             }
@@ -203,8 +210,8 @@ export class SettingsManager {
             this.settings.debugMode,
             (checked) => {
                 this.updateSetting('debugMode', checked);
-                if (this.playerCore.controlManager?.commentPanel) {
-                    this.playerCore.controlManager.commentPanel.updateDebugMode(checked);
+                if (this.controlManager?.commentPanel) {
+                    this.controlManager.commentPanel.updateDebugMode(checked);
                 }
             }
         );
@@ -497,7 +504,7 @@ export class SettingsManager {
      * 重新创建控制面板中的快进快退按钮行
      */
     rebuildControlPanelSeekRow() {
-        const controlManager = this.playerCore.controlManager;
+        const controlManager = this.controlManager;
         if (!controlManager || !controlManager.controlButtonsContainer || !controlManager.seekController) return;
 
         const oldSeekRow = controlManager.controlButtonsContainer.querySelector('.tm-seek-control-row');
@@ -537,8 +544,8 @@ export class SettingsManager {
                 const nextSources = { ...this.settings.enabledCommentSources };
                 nextSources[source.key] = !isEnabled;
                 this.updateSetting('enabledCommentSources', nextSources);
-                if (this.playerCore.controlManager?.commentPanel) {
-                    this.playerCore.controlManager.commentPanel.updateCommentSources();
+                if (this.controlManager?.commentPanel) {
+                    this.controlManager.commentPanel.updateCommentSources();
                 }
                 this.createSettingsPanel();
             });

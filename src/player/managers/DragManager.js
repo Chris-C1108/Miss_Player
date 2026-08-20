@@ -2,11 +2,12 @@
  * 拖动管理器类 - 负责拖动和大小调整功能
  */
 export class DragManager {
-    constructor(playerCore, uiElements) {
+    constructor(playerCore, uiElements, uiManager = null, controlManager = null) {
         // 核心引用
         this.playerCore = playerCore;
-        this.playerCore.dragManager = this; // 注册到核心播放器上以供全局访问
-        this.targetVideo = playerCore.targetVideo;
+        this.uiManager = uiManager || (playerCore ? playerCore.uiManager : null);
+        this.controlManager = controlManager || (playerCore ? playerCore.controlManager : null);
+        this.targetVideo = playerCore?.targetVideo;
         
         // UI元素引用
         this.uiElements = uiElements;
@@ -32,6 +33,11 @@ export class DragManager {
         this.ctrlStartTop = 0;
         this.ctrlMoveHandler = null;
         this.ctrlEndHandler = null;
+    }
+
+    setManagers(managers = {}) {
+        if (managers.uiManager) this.uiManager = managers.uiManager;
+        if (managers.controlManager) this.controlManager = managers.controlManager;
     }
     
     /**
@@ -104,12 +110,12 @@ export class DragManager {
         this.container.style.height = newHeight + 'px';
 
         // 标记用户手动调整了高度，防止被 resize 事件重置，同时保存对应方向的高数值
-        if (this.playerCore.uiManager) {
-            this.playerCore.uiManager.isCustomResized = true;
-            if (!this.playerCore.uiManager.isLandscape) {
-                this.playerCore.uiManager.customHeightPortrait = newHeight + 'px';
+        if (this.uiManager) {
+            this.uiManager.isCustomResized = true;
+            if (!this.uiManager.isLandscape) {
+                this.uiManager.customHeightPortrait = newHeight + 'px';
             } else {
-                this.playerCore.uiManager.customHeightLandscape = newHeight + 'px';
+                this.uiManager.customHeightLandscape = newHeight + 'px';
             }
         }
 
@@ -148,10 +154,10 @@ export class DragManager {
     initControlPanelDrag() {
         // 等待一小段时间以确保 controlManager 已经完全创建了 DOM 结构
         setTimeout(() => {
-            if (!this.playerCore.controlManager) return;
+            if (!this.controlManager) return;
             
-            this.controlButtonsContainer = this.playerCore.controlManager.controlButtonsContainer;
-            this.dragHandle = this.playerCore.controlManager.dragHandle;
+            this.controlButtonsContainer = this.controlManager.controlButtonsContainer;
+            this.dragHandle = this.controlManager.dragHandle;
             
             if (!this.controlButtonsContainer || !this.dragHandle) return;
             
@@ -163,7 +169,7 @@ export class DragManager {
             this.dragHandle.addEventListener('dblclick', this.resetControlPanelPosition.bind(this));
             
             // 如果处于悬浮控制面板模式下，尝试恢复已记忆的位置
-            if (this.playerCore.uiManager && this.playerCore.uiManager.isFloatingControlPanel) {
+            if (this.uiManager && this.uiManager.isFloatingControlPanel) {
                 this.restoreControlPanelPosition();
             }
         }, 100);
@@ -174,7 +180,7 @@ export class DragManager {
      */
     startControlPanelDrag(e) {
         // 仅在悬浮控制面板模式下允许拖拽定位
-        if (!this.playerCore.uiManager || !this.playerCore.uiManager.isFloatingControlPanel) {
+        if (!this.uiManager || !this.uiManager.isFloatingControlPanel) {
             return;
         }
         
@@ -377,7 +383,7 @@ export class DragManager {
      * 获取当前屏幕方向对应的位置存储键
      */
     getControlPanelStorageKey() {
-        const isLandscape = this.playerCore.uiManager ? this.playerCore.uiManager.isLandscape : (window.innerWidth > window.innerHeight);
+        const isLandscape = this.uiManager ? this.uiManager.isLandscape : (window.innerWidth > window.innerHeight);
         return isLandscape ? 'tm-control-panel-pos-landscape' : 'tm-control-panel-pos-portrait';
     }
     
@@ -388,7 +394,7 @@ export class DragManager {
         if (!this.controlButtonsContainer) return;
         
         // 如果当前非悬浮控制面板模式（例如手机竖屏下），则直接清理所有行内样式以将控制权交还给 CSS
-        if (this.playerCore.uiManager && !this.playerCore.uiManager.isFloatingControlPanel) {
+        if (this.uiManager && !this.uiManager.isFloatingControlPanel) {
             this.clearControlPanelInlineStyles();
             return;
         }

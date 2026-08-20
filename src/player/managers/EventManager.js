@@ -253,8 +253,8 @@ export class EventManager {
                 this.managers.controlManager.updatePlayPauseButton();
             }
             // 播放时如果处于横屏，设置定时隐藏控制界面
-            if (this.playerCore.uiManager && this.playerCore.uiManager.isLandscape) {
-                this.playerCore.uiManager.autoHideControls();
+            if (this.managers.uiManager && this.managers.uiManager.isLandscape) {
+                this.managers.uiManager.autoHideControls();
             }
         };
         this.targetVideo.addEventListener('play', this.handlePlayBound);
