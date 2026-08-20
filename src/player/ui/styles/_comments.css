@@ -8,7 +8,7 @@
     flex: 1;
     min-height: 0; /* 允许 Flexbox 子元素收缩并正常触发 overflow-y 滚动 */
     background-color: transparent;
-    z-index: 9995; /* 确保在视频与拖动手柄之上，避免输入框被视频遮盖 */
+    z-index: 9990; /* 基础层级，坐落在控制面板（9997）与变暗遮罩（9993）下方 */
     display: flex;
     flex-direction: column;
     box-sizing: border-box;

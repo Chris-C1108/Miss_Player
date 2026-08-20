@@ -1470,7 +1470,7 @@
     width: 95%;
     max-width: 700px;
     min-width: 350px; /* 与竖屏模式保持一致 */
-    z-index: 9991;
+    z-index: 9997 !important;
     padding: 16px 16px 14px;
     border-radius: 16px;
     background-color: rgba(10, 10, 10, 0.52); /* 降低透明度，允许环境色（如宿主紫色）自然折射渗透 */
