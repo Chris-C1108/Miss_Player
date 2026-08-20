@@ -1,6 +1,6 @@
 # Agent 开发与维护准则 (AGENTS.md)
 
-本文档定义了 AI Agent 及开发者在维护与迭代 **Miss Player** 项目时必须严格遵守的架构规范、发版流程及安全红线。
+本文档定义了 AI Agent 及开发者在维护与迭代 **Miss Player** 项目时必须严格遵守的架构规范、设计标准、发版流程及安全红线。
 
 ---
 
@@ -29,35 +29,72 @@
 
 ---
 
-## 🛠️ 项目架构与技术规范
+## 🏗️ 架构与模块目录拓扑
 
-### 1. 核心技术栈
-* **构建系统**：Webpack 5 + Babel + Terser + PostCSS + webpack-userscript
-* **跨域与特权 API**：`GM_xmlhttpRequest`, `GM_setValue`, `GM_getValue`, `GM_setClipboard`, `GM_notification`
-* **视频播放引擎**：Hls.js (MSE) + 原生 `<video>` 元素
+Miss Player 遵循高内聚、单一职责的模块化设计体系：
 
-### 2. 遥测与数据隐私 (Telemetry)
-* **隐私开关**：所有遥测上报均受用户设置中的隐私开关 (`telemetryEnabled`) 控制，必须通过 `telemetry.isEnabled()` 校验。
-* **上报频次控制**：本地持久化缓存（1小时定期聚合批量上报），严禁在用户每次点击时触发高频网络请求。
-* **防重策略**：`app_init` 心跳内置 6 小时本地去重机制。
+### 1. 核心与生命周期
+* **主入口**：`src/index.js` — 初始化全局模块与站点路由分发
+* **播放器核心**：`src/player/CustomVideoPlayer.js` 与 `src/player/core/PlayerCore.js`
+* **状态机**：`src/player/state/PlayerState.js` — 集中管理播放器状态、全屏/浮层模式及用户配置
 
-### 3. 跨站点适配与防盗链原则
-* 请求 Google Drive / `lh3.googleusercontent.com` 等特殊 CDN 时，严禁携带外部网站的 `Referer` 头。
-* iframe 跨域通信使用 `unsafeWindow.__mpBridge` 与 `GM_xmlhttpRequest` 进行二进制安全桥接。
+### 2. 播放器管理器 (`src/player/managers/`)
+* **UIManager**：模态与视窗 DOM 构建、横竖屏自适应
+* **ControlManager**：播放控制栏、清晰度/倍速切换
+* **ProgressManager**：进度条更新、时间格式化与精准 Seek
+* **LoopManager**：A-B 点片段循环播放、切片打点与收藏
+* **DragManager**：Minimap 缩略图平移拖拽与跟手手势
+* **EventManager**：集中式事件委托与生命周期监听
+* **SettingsManager**：用户设置模态框与偏好持久化
+
+### 3. 增强功能模块
+* **评论系统**：`src/player/controls/CommentPanel.js` 与 `CommentScraper.js`（多源异步抓取 Jable / JavDB / JavLibrary 评论、时间戳解析与一键跳转）
+* **自动登录**：`src/autologin/`（多站点凭据管理、跨域 iframe 签名桥接）
+* **广告拦截**：`src/adblock/`（DOM 净化与弹窗拦截）
+* **数据遥测**：`src/telemetry/`（匿名设备指纹、会话聚合、隐私开关保护）
+
+### 4. 共享支持层
+* **工具库**：`src/utils/index.js`（`storage.js`, `http.js`, `modal.js`, `clipboard.js`, `device.js`, `time.js`, `dom.js`）
+* **常量与配置**：`src/constants/domains.js`（多站点域名矩阵与可用性检测）、`i18n.js`（多语言字典）、`icons.js`（统一 SVG 矢量图标）
 
 ---
 
-## 🤖 Agent skills (工程技能配置)
+## 🎨 UI/UX 与交互规范 (Apple Design)
 
-### Issue tracker (任务追踪器)
+Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感、跟手性、空间层次与单手可用性：
 
-本地 Markdown 任务管理，存放于 `.scratch/<feature-slug>/`。详见 `docs/agents/issue-tracker.md`。
+1. **毛玻璃与深度层级**：统一采用 `backdrop-filter: blur(20px)` 与半透明材质（`-apple-system` 风格），避免生硬的纯色遮罩。
+2. **GPU 零重排流畅度**：所有位移与缩放手势交互（如 Minimap 缩略图拖拽）一律采用 `transform: translate3d()`，杜绝触发 DOM Reflow。
+3. **单手操作至上**：核心控件（播放/暂停、快进/退、A-B 循环、清晰度切换）集中布局在屏幕下半部大拇指易触及区域。
+4. **全屏与安全区适配**：全量适配 iOS Safari `env(safe-area-inset-bottom)` / `env(safe-area-inset-top)`，支持横竖屏自适应旋转。
+5. **资产集中化**：禁止在业务组件内散落内联 SVG 字符串，所有图标必须集中在 `src/constants/icons.js`；所有面向用户的文案必须通过 `__('key')` 从 `src/constants/i18n.js` 读取。
 
-### Triage labels (分流标签)
+---
 
-标准 5 角色分流标签（`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`）。详见 `docs/agents/triage-labels.md`。
+## 🌐 网络请求、跨沙箱与防盗链规范
 
-### Domain docs (领域与架构文档)
+1. **特权跨域请求**：必须使用 `GM_xmlhttpRequest` 绕过宿主页面的 CORS 限制。
+2. **跨沙箱 MSE 播放架构**：
+   * `Hls.js` 运行在页面主 DOM 上下文，无缝挂载 `<video>` 标签（规避浏览器对 MSE 的沙箱隔离限制）；
+   * 沙箱底层通过 `unsafeWindow.__mpBridge` 与 `GM_xmlhttpRequest` 下载二进制分片并生成 Blob URL 交付。
+3. **防盗链与 Referer 控制**：
+   * 请求 Google Drive / `lh3.googleusercontent.com` 等特殊 CDN 时，**严禁携带外部网站的 Referer 头**，避免触发 HTTP 429 频控限制。
 
-单上下文结构（根目录 `CONTEXT.md` 与 `docs/adr/`）。详见 `docs/agents/domain.md`。
+---
 
+## 💾 数据持久化与遥测规范
+
+1. **存储降级规范**：
+   * 统一使用 `src/utils/storage.js` 中的 `getValue`, `setValue`, `deleteValue`。
+   * 优先调用 `GM_getValue`/`GM_setValue`，在纯浏览器环境自动降级至 `localStorage`（前缀 `mp_` 并兼容旧前缀 `missNoAD_`）。
+2. **遥测开发规范 (Telemetry)**：
+   * **隐私受控**：上报前必须先通过 `telemetry.isEnabled()` 校验用户设置中的隐私开关。
+   * **频控聚合**：本地持久化缓存（1小时定期聚合批量上报），严禁在用户单次点击时触发高频网络请求。
+   * **心跳防重**：`app_init` 心跳内置 6 小时本地去重机制。
+
+---
+
+## 🚀 开发与构建命令
+
+* **开发监听构建**：`npm run dev`
+* **生产发布打包**：`npm run build`（生成 `dist/miss_player.user.js`、`dist/miss_player.meta.js`、`dist/miss_player.proxy.user.js`）
