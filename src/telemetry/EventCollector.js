@@ -98,7 +98,7 @@ function getScriptVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.5.8';
+    return '5.5.9';
 }
 
 function getSiteCategory() {
@@ -220,7 +220,7 @@ export class EventCollector {
             }
         }
 
-        const CRITICAL_EVENTS = ['app_init', 'player_open_success', 'player_open_fail', 'player_close', 'autologin_result', 'comment_scrape_result', 'adblock_intercept'];
+        const CRITICAL_EVENTS = ['player_open_success', 'player_open_fail', 'player_close', 'button_click', 'autologin_result', 'comment_scrape_result', 'timestamp_collect', 'timestamp_click'];
         if (CRITICAL_EVENTS.includes(eventType)) {
             if (this.sessionBuffer.milestones.length < 30) {
                 this.sessionBuffer.milestones.push({
@@ -376,35 +376,6 @@ export class EventCollector {
                 // 上报失败时无强求，已打点至 AE 与下次会话
             }
         }
-    }
-
-    trackAppInit() {
-        const INIT_KEY = 'mp_app_init_last_ts';
-        let lastSent = 0;
-        try {
-            if (typeof GM_getValue === 'function') {
-                lastSent = parseInt(GM_getValue(INIT_KEY, '0'), 10);
-            }
-        } catch (_) {}
-        if (!lastSent) {
-            try {
-                lastSent = parseInt(localStorage.getItem(INIT_KEY) || '0', 10);
-            } catch (_) {}
-        }
-
-        const now = Date.now();
-        if (now - lastSent < 6 * 3600 * 1000) return;
-
-        try {
-            if (typeof GM_setValue === 'function') GM_setValue(INIT_KEY, String(now));
-            localStorage.setItem(INIT_KEY, String(now));
-        } catch (_) {}
-
-        this.track('app_init', {
-            screen_resolution: `${window.screen ? window.screen.width : 0}x${window.screen ? window.screen.height : 0}`,
-            language: navigator.language || '',
-            hardware_concurrency: navigator.hardwareConcurrency || 0
-        });
     }
 }
 

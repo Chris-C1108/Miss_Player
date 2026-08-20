@@ -101,9 +101,6 @@ function setupViewport() {
      */
     async function startScript() {
         try {
-            // 触发 App 初始化心跳遥测上报 (6小时内防重)
-            telemetry.trackAppInit();
-
             // 检查是否在 JAVLibrary 域名上
             if (isSiteDomain('JAVLIBRARY')) {
                 handleJavLibraryVerification();

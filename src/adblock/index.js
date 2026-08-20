@@ -131,7 +131,6 @@ class RequestBlocker {
     const config = this.config;
     XMLHttpRequest.prototype.open = function(method, url) {
       if (typeof url === 'string' && config.shouldBlockUrl(url)) {
-        telemetry.track('adblock_intercept', { type: 'xhr', url: url.slice(0, 128) });
         this.send = function(){};
         this.onload = null;
         this.onerror = null;
@@ -144,7 +143,6 @@ class RequestBlocker {
     window.fetch = function(url, options) {
       let urlToCheck = url instanceof Request ? url.url : url;
       if (typeof urlToCheck === 'string' && config.shouldBlockUrl(urlToCheck)) {
-        telemetry.track('adblock_intercept', { type: 'fetch', url: String(urlToCheck).slice(0, 128) });
         return Promise.resolve(new Response('', { status: 200, headers: {'Content-Type': 'text/plain'} }));
       }
       return originalFetch.apply(this, arguments);
@@ -161,7 +159,6 @@ class RequestBlocker {
         Object.defineProperty(element, 'src', {
           set: function(value) {
             if (typeof value === 'string' && config.shouldBlockUrl(value)) {
-              telemetry.track('adblock_intercept', { type: 'iframe', url: value.slice(0, 128) });
               return;
             }
             originalSrc = value;
@@ -171,7 +168,6 @@ class RequestBlocker {
         const originalSetAttribute = element.setAttribute;
         element.setAttribute = function(name, value) {
           if (name === 'src' && typeof value === 'string' && config.shouldBlockUrl(value)) {
-            telemetry.track('adblock_intercept', { type: 'iframe', url: value.slice(0, 128) });
             return;
           }
           return originalSetAttribute.call(this, name, value);
@@ -182,10 +178,9 @@ class RequestBlocker {
   }
   
   blockPopups() {
-    const trackPopup = () => telemetry.track('adblock_intercept', { type: 'popup' });
-    window.open = function() { trackPopup(); return null; };
+    window.open = function() { return null; };
     if (typeof unsafeWindow !== 'undefined') {
-      unsafeWindow.open = function() { trackPopup(); return null; };
+      unsafeWindow.open = function() { return null; };
     }
   }
   
