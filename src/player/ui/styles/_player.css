@@ -6,16 +6,19 @@
     top: 0;
     left: 0;
     right: 0;
+    bottom: 0;
+    width: 100vw;
     height: 100vh;
-    background-color: rgba(35, 17, 29, 0.8); /* 更深的背景色 */
+    height: 100dvh;
+    background-color: #0b0b0e;
     z-index: 2000000000 !important;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    backdrop-filter: blur(30px); /* 增加模糊效果，符合iOS风格 */
+    backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
-    padding: 0; /* 移除默认padding */
+    padding: 0;
     
     /* 全局触摸、滚动、选择隔离 */
     touch-action: none;
@@ -33,19 +36,19 @@
     left: 0;
     right: 0;
     width: 100%;
-    background-color: transparent;
+    height: 100%;
+    height: 100dvh;
+    background-color: #0b0b0e;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
     z-index: 2000000001 !important;
-    /* 确保能完全包含所有子元素 */
-    height: 100%;
-    overflow: visible;
+    overflow: hidden;
     pointer-events: auto;
     
     /* 全局触摸、滚动、选择隔离 */
-    touch-action: pan-y; /* 修改为 pan-y 以便允许子视频区域上滑穿透冒泡 */
+    touch-action: pan-y;
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
