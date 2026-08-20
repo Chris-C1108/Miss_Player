@@ -1407,6 +1407,8 @@ export class CommentPanel {
                 return;
             }
 
+            const isSubmitBar = !!e.target.closest('.tm-comment-submit-bar-wrapper, .tm-comment-tag-select-modal, .tm-floating-comment-panel, .tm-comment-text-input, .tm-comment-add-tag-btn, .tm-comment-send-btn');
+
             // 只要评论区是变暗状态，任何触摸或点击都应立即激活它并移除 is-dimmed
             if (this.commentsPanel.classList.contains('is-dimmed')) {
                 this.setDimmed(false);
@@ -1414,9 +1416,12 @@ export class CommentPanel {
                 if (!this.uiManager.isLandscape) {
                     this.uiManager.hideControls(true);
                 }
-                if (e.cancelable) e.preventDefault();
-                e.stopPropagation(); // 阻止事件传给视频区
-                return;
+                // 如果用户点击的是发表栏或弹窗控件，不阻止默认行为以允许正常聚焦输入或点击按钮
+                if (!isSubmitBar) {
+                    if (e.cancelable) e.preventDefault();
+                    e.stopPropagation(); // 阻止事件传给视频区
+                    return;
+                }
             }
 
             const isFloating = this.uiManager.isFloatingControlPanel;
@@ -1426,8 +1431,8 @@ export class CommentPanel {
                 // 大屏端 (PC/iPad)：任何对评论区的点击或触屏，都会使评论区重新变亮 (移除 is-dimmed)
                 this.setDimmed(false);
             } else if (controlsVisible) {
-                // 手机端：若控制面板已显示，用户点击/触摸评论区（排除时间戳链接）时，立即隐藏控制面板以防止误触
-                if (!e.target.closest('.jc-time-link')) {
+                // 手机端：若控制面板已显示，用户点击/触摸评论区（排除时间戳链接与发表栏）时，立即隐藏控制面板以防止误触
+                if (!e.target.closest('.jc-time-link, .tm-comment-submit-bar-wrapper, .tm-comment-tag-select-modal, .tm-floating-comment-panel')) {
                     this.uiManager.hideControls(true);
                 }
             }

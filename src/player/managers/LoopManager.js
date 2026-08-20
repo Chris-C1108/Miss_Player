@@ -664,7 +664,11 @@ export class LoopManager {
 
         requestAnimationFrame(() => {
             popover.classList.add('visible');
-            input.focus();
+            try {
+                input.focus({ preventScroll: true });
+            } catch (_) {
+                input.focus();
+            }
             input.select();
         });
 

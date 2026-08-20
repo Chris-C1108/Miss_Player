@@ -37,6 +37,13 @@ function setupViewport() {
         }
     });
 
+    // 监听全局滚动：当播放器处于激活状态时，锁定视口在 (0,0)，防止聚焦或手势导致页面产生任何偏移
+    window.addEventListener('scroll', () => {
+        if (document.body && document.body.classList.contains('tm-player-active') && (window.scrollX !== 0 || window.scrollY !== 0)) {
+            window.scrollTo(0, 0);
+        }
+    }, { passive: true });
+
     console.log(`[${__('scriptName')}] ${__('viewportConfigured')}`);
 }
 

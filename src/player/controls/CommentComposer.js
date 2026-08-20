@@ -732,7 +732,11 @@ export class CommentComposer {
         `);
 
         const textarea = modal.querySelector('.tm-comment-input-textarea');
-        textarea.focus();
+        try {
+            textarea.focus({ preventScroll: true });
+        } catch (_) {
+            textarea.focus();
+        }
 
         const cancelBtn = modal.querySelector('.tm-custom-modal-cancel-btn');
         cancelBtn.addEventListener('click', close);
