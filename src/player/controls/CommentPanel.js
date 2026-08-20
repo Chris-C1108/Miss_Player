@@ -1587,14 +1587,6 @@ export class CommentPanel {
 
     updatePosition() {
         if (!this.commentsPanel) return;
-
-        const isLandscape = window.innerWidth > window.innerHeight;
-        const isPcLandscape = isLandscape && window.innerWidth >= 930;
-        if (isLandscape && !isPcLandscape) {
-            this.commentsPanel.style.display = 'none';
-            return;
-        }
-
         this.commentsPanel.style.display = 'flex';
     }
 

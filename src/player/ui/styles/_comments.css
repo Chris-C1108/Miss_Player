@@ -17,14 +17,17 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 
-/* 评论区遮罩变暗效果，突出控制面板 */
+/* 评论区遮罩变暗效果，突出控制面板 (扩展至全视口高度，避免圆角外侧露出浅色底色) */
 .tm-comments-panel::after {
     content: '';
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
     background-color: rgba(0, 0, 0, 0.45); /* 遮罩暗度 */
     pointer-events: none; /* 允许点击与滑动穿透 */
     opacity: 0;
@@ -32,24 +35,14 @@
     z-index: 9993; /* 盖在评论列表和输入框上方，但在控制面板下方 */
 }
 
-/* 移动端手柄区域 (.tm-handle-container) 同步遮罩变暗效果，消除顶部色差割裂 */
+/* 移动端手柄区域 (.tm-handle-container) 遮罩由全屏 fixed 统一覆盖 */
 .tm-handle-container::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.45);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 9993;
+    display: none;
 }
 
 .tm-handle-container.is-dimmed::after,
 .tm-player-container:has(.tm-comments-panel.is-dimmed) .tm-handle-container::after {
-    opacity: 1;
+    display: none;
 }
 
 .tm-comments-panel.is-dimmed::after {
@@ -1251,8 +1244,8 @@
     animation: jcCardHighlightFlash 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-/* PC 端鼠标悬浮评论区时强制变亮 */
-@media screen and (min-width: 930px) and (orientation: landscape) {
+/* 横屏端鼠标悬浮评论区时强制变亮 */
+@media screen and (orientation: landscape) {
     .tm-comments-panel:hover::after {
         opacity: 0 !important;
         pointer-events: none !important;

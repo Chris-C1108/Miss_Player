@@ -31,9 +31,12 @@
 }
 
 /* 1. 响应式布局参数定义 */
-@media screen and (min-width: 930px) and (orientation: landscape) {
+:root {
+    --sidebar-width: clamp(350px, 28vw, 420px);
+}
+@media screen and (orientation: landscape) {
     :root {
-        --sidebar-width: clamp(350px, 25vw, 420px);
+        --sidebar-width: clamp(350px, 28vw, 420px);
     }
 }
 @media screen and (min-width: 1440px) and (orientation: landscape) {
@@ -42,8 +45,8 @@
     }
 }
 
-/* 2. PC 横屏分栏基础样式 */
-@media screen and (min-width: 930px) and (orientation: landscape) {
+/* 2. 横屏分栏基础样式 */
+@media screen and (orientation: landscape) {
     /* 调整播放器容器为 Grid 双分栏布局 */
     .tm-player-container {
         display: grid !important;
@@ -194,6 +197,8 @@
         grid-area: sidebar;
         position: relative !important;
         width: 100% !important; /* 由 Grid 的 var(--sidebar-width) 宽度决定 */
+        min-width: var(--sidebar-width) !important;
+        max-width: var(--sidebar-width) !important;
         height: 100% !important;
         max-height: 100% !important;
         min-height: 0 !important;
@@ -379,6 +384,7 @@
     body.controls-hidden .tm-player-container[class*="tm-controls-docked-"] .tm-control-buttons {
         position: fixed !important;
         width: var(--sidebar-width) !important;
+        min-width: 350px !important;
         max-width: var(--sidebar-width) !important;
         border-radius: 0 !important;
         border: none !important;
@@ -509,9 +515,9 @@
         right: 16px;
         left: auto;
         transform: none;
-        width: 348px !important;
-        max-width: 348px !important;
-        min-width: 320px !important;
+        width: 350px !important;
+        max-width: 350px !important;
+        min-width: 350px !important;
         background-color: hsla(var(--shadcn-card) / 0.85) !important;
         border: 1px solid hsla(var(--shadcn-border) / 0.2) !important;
         border-radius: 16px !important;

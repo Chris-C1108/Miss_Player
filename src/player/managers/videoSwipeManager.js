@@ -173,16 +173,20 @@ export class VideoSwipeManager {
             return false;
         }
 
-        // 获取视频元素的当前实际尺寸
-        const videoRect = this.video.getBoundingClientRect();
-        const actualVideoWidth = videoRect.width;
-        const actualVideoHeight = videoRect.height;
+        // 获取视频元素容器内的理论渲染实际宽度 (基于 height: 100% contain 几何渲染特性)
+        const videoAspect = this.videoWidth / this.videoHeight;
+        const renderedVideoWidth = this.containerHeight * videoAspect;
 
-        // 计算视频缩放比例
-        this.videoScale = actualVideoHeight / this.videoHeight;
+        this.videoScale = this.containerHeight / this.videoHeight;
 
-        // 计算最大水平偏移量 (视频超出容器的部分的一半)
-        const overflow = Math.max(0, actualVideoWidth - this.containerWidth);
+        // 若视频渲染宽度未超过容器宽度（例如矮视频或竖屏），不可水平滑动以防止露出左右黑边
+        if (renderedVideoWidth <= this.containerWidth) {
+            this.maxOffset = 0;
+            return true;
+        }
+
+        // 计算最大水平偏移量 (视频超出容器的部分的一半，确保边缘严丝合缝)
+        const overflow = renderedVideoWidth - this.containerWidth;
         this.maxOffset = overflow / 2;
 
         return true;
