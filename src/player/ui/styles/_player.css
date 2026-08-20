@@ -87,7 +87,7 @@
     background-color: hsl(var(--shadcn-card));
     border-radius: var(--shadcn-radius-lg);
     box-shadow: var(--shadow-lg);
-    z-index: 9992;
+    z-index: 9985;
     touch-action: pan-y; /* 仅允许纵向原生手势以支持单向滚动穿透 */
     flex-shrink: 1;
     transition: max-height 0.15s ease-out;
@@ -148,7 +148,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9992;
+    z-index: 9986;
     width: 100%;
     flex-shrink: 0; /* 防止 Flex 布局下高度被压缩 */
     touch-action: none; /* 手指在手柄区滑动不产生背景滚动 */

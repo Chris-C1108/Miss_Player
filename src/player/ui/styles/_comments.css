@@ -387,7 +387,7 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    z-index: 9996;
+    z-index: 9998 !important;
     opacity: 0;
     pointer-events: none;
     transform: translateY(16px);
