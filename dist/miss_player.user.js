@@ -11,7 +11,7 @@
 // @description:vi MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @description:zh-CN MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:zh-TW MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器|多語言支持 支持 jable po*nhub 等通用
-// @version 5.5.6
+// @version 5.5.7
 // @author Chris_C
 // @match *://*.missav.ws/*
 // @match *://*.missav.ai/*
@@ -42,7 +42,7 @@
 // @grant GM_openInTab
 // @icon https://missav.ws/img/favicon.ico
 // @license MIT
-// @namespace https://github.com/Chris-C1108/Miss_Player
+// @namespace loadingi.local
 // @run-at document-start
 // ==/UserScript==
 
@@ -5681,7 +5681,7 @@
         return GM_info.script.version;
       }
     } catch (r) {}
-    return "5.5.6";
+    return "5.5.7";
   }
   function getSiteCategory() {
     if (isSiteDomain("MISSAV")) {
