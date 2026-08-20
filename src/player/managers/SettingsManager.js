@@ -277,14 +277,16 @@ export class SettingsManager {
         // 开关组件
         const toggleContainer = document.createElement('div');
         toggleContainer.className = 'tm-toggle-switch';
+        toggleContainer.style.pointerEvents = 'none'; // 避免子元素事件拦截或与行点击冲突
 
+        const isChecked = Boolean(initialValue);
         const toggleInput = document.createElement('input');
         toggleInput.type = 'checkbox';
-        toggleInput.checked = initialValue;
+        toggleInput.checked = isChecked;
         toggleInput.className = 'tm-toggle-input';
 
         const toggleSlider = document.createElement('span');
-        toggleSlider.className = initialValue ? 'tm-toggle-slider checked' : 'tm-toggle-slider';
+        toggleSlider.className = isChecked ? 'tm-toggle-slider checked' : 'tm-toggle-slider';
 
         toggleContainer.appendChild(toggleInput);
         toggleContainer.appendChild(toggleSlider);
@@ -571,14 +573,16 @@ export class SettingsManager {
             
             // 点击外部遮罩或其它区域关闭设置面板
             this.overlayClickHandler = (e) => {
-                if (!this.settingsPanel.contains(e.target) && e.target !== this.uiElements.settingsBtn) {
+                if (!this.settingsPanel.contains(e.target) && 
+                    !this.uiElements?.settingsBtn?.contains(e.target) &&
+                    e.target !== this.uiElements?.settingsBtn) {
                     this.closeSettingsPanel();
                 }
             };
             
             setTimeout(() => {
-                const overlay = this.uiElements.overlay || document.body;
-                overlay.addEventListener('click', this.overlayClickHandler);
+                document.addEventListener('click', this.overlayClickHandler);
+                document.addEventListener('touchstart', this.overlayClickHandler, { passive: true });
             }, 50);
         }
     }
@@ -591,8 +595,8 @@ export class SettingsManager {
         this.settingsPanel.classList.remove('active');
         
         if (this.overlayClickHandler) {
-            const overlay = this.uiElements.overlay || document.body;
-            overlay.removeEventListener('click', this.overlayClickHandler);
+            document.removeEventListener('click', this.overlayClickHandler);
+            document.removeEventListener('touchstart', this.overlayClickHandler);
             this.overlayClickHandler = null;
         }
     }
@@ -606,19 +610,35 @@ export class SettingsManager {
             state.loadSettings();
             this.settings = state.settings;
         } else {
-            this.settings.showProgressBar = getValue('showProgressBar', true);
-            this.settings.showSeekControlRow = getValue('showSeekControlRow', true);
-            this.settings.showLoopControlRow = getValue('showLoopControlRow', true);
-            this.settings.showPlaybackControlRow = getValue('showPlaybackControlRow', true);
-            this.settings.enabledSeekSteps = getValue('enabledSeekSteps', ['5s', '10s', '30s', '1m', '5m', '10m']);
-            this.settings.showCommentsSection = getValue('showCommentsSection', true);
-            this.settings.enabledCommentSources = getValue('enabledCommentSources', {
+            const getBool = (key, def) => {
+                const v = getValue(key, def);
+                return typeof v === 'boolean' ? v : (v === 'true' ? true : (v === 'false' ? false : def));
+            };
+
+            this.settings.showProgressBar = getBool('showProgressBar', true);
+            this.settings.showSeekControlRow = getBool('showSeekControlRow', true);
+            this.settings.showLoopControlRow = getBool('showLoopControlRow', true);
+            this.settings.showPlaybackControlRow = getBool('showPlaybackControlRow', true);
+            
+            const rawSeekSteps = getValue('enabledSeekSteps', null);
+            this.settings.enabledSeekSteps = Array.isArray(rawSeekSteps) && rawSeekSteps.length > 0
+                ? rawSeekSteps
+                : ['5s', '10s', '30s', '1m', '5m', '10m'];
+
+            const rawCustomSteps = getValue('customUserSeekSteps', null);
+            this.settings.customUserSeekSteps = Array.isArray(rawCustomSteps) ? rawCustomSteps : [];
+
+            this.settings.showCommentsSection = getBool('showCommentsSection', true);
+
+            const rawSources = getValue('enabledCommentSources', null);
+            this.settings.enabledCommentSources = Object.assign({
                 jable: true,
                 javdb: true,
                 javlibrary: false
-            });
-            this.settings.telemetryEnabled = getValue('telemetryEnabled', true);
-            this.settings.debugMode = getValue('debugMode', false);
+            }, (rawSources && typeof rawSources === 'object') ? rawSources : {});
+
+            this.settings.telemetryEnabled = getBool('telemetryEnabled', true);
+            this.settings.debugMode = getBool('debugMode', false);
         }
     }
     

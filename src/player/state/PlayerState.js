@@ -31,22 +31,37 @@ export class PlayerState {
      */
     loadSettings() {
         try {
-            this.settings.showProgressBar = getValue('showProgressBar', true);
-            this.settings.showSeekControlRow = getValue('showSeekControlRow', true);
-            this.settings.showLoopControlRow = getValue('showLoopControlRow', true);
-            this.settings.showPlaybackControlRow = getValue('showPlaybackControlRow', true);
-            this.settings.enabledSeekSteps = getValue('enabledSeekSteps', ['5s', '10s', '30s', '1m', '5m', '10m']);
-            this.settings.customUserSeekSteps = getValue('customUserSeekSteps', []);
-            this.settings.showCommentsSection = getValue('showCommentsSection', true);
-            this.settings.enabledCommentSources = getValue('enabledCommentSources', {
+            const getBool = (key, def) => {
+                const v = getValue(key, def);
+                return typeof v === 'boolean' ? v : (v === 'true' ? true : (v === 'false' ? false : def));
+            };
+
+            this.settings.showProgressBar = getBool('showProgressBar', true);
+            this.settings.showSeekControlRow = getBool('showSeekControlRow', true);
+            this.settings.showLoopControlRow = getBool('showLoopControlRow', true);
+            this.settings.showPlaybackControlRow = getBool('showPlaybackControlRow', true);
+            
+            const rawSeekSteps = getValue('enabledSeekSteps', null);
+            this.settings.enabledSeekSteps = Array.isArray(rawSeekSteps) && rawSeekSteps.length > 0
+                ? rawSeekSteps
+                : ['5s', '10s', '30s', '1m', '5m', '10m'];
+
+            const rawCustomSteps = getValue('customUserSeekSteps', null);
+            this.settings.customUserSeekSteps = Array.isArray(rawCustomSteps) ? rawCustomSteps : [];
+
+            this.settings.showCommentsSection = getBool('showCommentsSection', true);
+
+            const rawSources = getValue('enabledCommentSources', null);
+            this.settings.enabledCommentSources = Object.assign({
                 jable: true,
                 javdb: true,
                 javlibrary: false
-            });
-            this.settings.telemetryEnabled = getValue('telemetryEnabled', true);
-            this.settings.debugMode = getValue('debugMode', false);
-            this.settings.sidebarPosition = getValue('sidebarPosition', 'right');
-            this.settings.sidebarHidden = getValue('sidebarHidden', false);
+            }, (rawSources && typeof rawSources === 'object') ? rawSources : {});
+
+            this.settings.telemetryEnabled = getBool('telemetryEnabled', true);
+            this.settings.debugMode = getBool('debugMode', false);
+            this.settings.sidebarPosition = getValue('sidebarPosition', 'right') || 'right';
+            this.settings.sidebarHidden = getBool('sidebarHidden', false);
         } catch (error) {
             console.error('[PlayerState] 加载设置失败:', error);
         }

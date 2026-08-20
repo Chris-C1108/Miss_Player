@@ -182,7 +182,7 @@ export class MarkerBottomSheet {
         this._sheetPanel.appendChild(header);
         this._sheetPanel.appendChild(this._sheetList);
 
-        const playerContainer = this.uiElements?.container ||
+        const playerContainer = this.uiElements?.playerContainer ||
                                 document.querySelector('.tm-player-container') ||
                                 document.body;
         playerContainer.appendChild(this._sheetOverlay);

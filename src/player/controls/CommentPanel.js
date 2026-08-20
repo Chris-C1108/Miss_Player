@@ -213,6 +213,7 @@ export class CommentPanel {
         this.uiManager = uiManager || (playerCore ? playerCore.uiManager : null);
         this.uiElements = playerCore?.uiElements || controlManager?.uiElements;
         this.targetVideo = playerCore?.targetVideo;
+        this.loopManager = null;
 
         this.videoCode = '';
         this.comments = [];          // 所有采集的原始评论数据（向下兼容）
@@ -1502,15 +1503,31 @@ export class CommentPanel {
         this.showTipModal('提示', '评论功能开发中');
     }
 
+    setLoopManager(loopManager) {
+        this.loopManager = loopManager;
+    }
+
     getLoopManager() {
-        return this.playerCore?.controlManager?.loopManager || 
+        return this.loopManager || 
+               this.controlManager?.loopManager || 
+               this.playerCore?.controlManager?.loopManager || 
                this.playerCore?.loopManager || 
-               this.playerCore?.customVideoPlayer?.managers?.loopManager || null;
+               this.playerCore?.customVideoPlayer?.managers?.loopManager || 
+               null;
     }
 
     getTabs() {
         const lm = this.getLoopManager();
-        return lm && Array.isArray(lm.tabs) ? lm.tabs : [];
+        if (lm && Array.isArray(lm.tabs) && lm.tabs.length > 0) {
+            return lm.tabs;
+        }
+        if (this.videoCode) {
+            const saved = getValue(`tabs_${this.videoCode}`, []);
+            if (Array.isArray(saved) && saved.length > 0) {
+                return saved.filter(t => t && typeof t === 'object' && t.id);
+            }
+        }
+        return (lm && Array.isArray(lm.tabs)) ? lm.tabs : [];
     }
 
     /**

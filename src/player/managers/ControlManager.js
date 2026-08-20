@@ -120,6 +120,9 @@ export class ControlManager {
      */
     setLoopManager(loopManager) {
         this.loopManager = loopManager;
+        if (this.commentPanel && typeof this.commentPanel.setLoopManager === 'function') {
+            this.commentPanel.setLoopManager(loopManager);
+        }
     }
 
     /**

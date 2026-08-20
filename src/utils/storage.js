@@ -23,7 +23,8 @@ export function hasGMApi() {
 export function getValue(key, defaultValue = null, useGM = true) {
     try {
         if (useGM && hasGMApi()) {
-            return GM_getValue(key, defaultValue);
+            const val = GM_getValue(key, defaultValue);
+            return val !== undefined ? val : defaultValue;
         }
         let item = localStorage.getItem(LOCAL_STORAGE_PREFIX + key);
         if (item === null) {

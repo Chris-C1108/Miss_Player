@@ -1110,9 +1110,7 @@
 .tm-bottom-sheet-overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background-color: transparent;
     z-index: 9990 !important;
     opacity: 0;
     pointer-events: none;
