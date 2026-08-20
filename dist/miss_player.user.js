@@ -5163,8 +5163,8 @@
   var V = /(?:高中|中學|中学|大學(?!習|习)|大学(?!习|擺)|一中|國中|国中|高工|高商|商工|二信|清大|台大|世新|附中|大足一中|大足第一中学|神岡高工|大明高中|吉安國中|靜宜大學|珊瑚高中|南港高中|建國中學|文華高中|明道高中|二信中學|慧燈中學|道明中學|新竹高商|成功高中)/i;
   var R = /(?:不要?(?:再|在)?\s*(?:自己)?\s*尻|不要?(?:再|在)?\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|別(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|别(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|唔好(?:再|在)?\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|咪撚\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|不要一直\s*(?:自己)?\s*尻|不要一直\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|别一直\s*(?:自己)?\s*尻|别在尻|别在打|别在尻|别再打了|別再打了|别打了|別打了|別擼了|别撸了|別J了|别J了|别打飞机|別打飛機|別打手槍|别打手枪|玩手槍|玩手枪|實名(?:開導|觀看|推薦|观看|开导|推荐)|实名(?:开导|观看|推荐)|又射了|縱慾過度|纵欲过度|著返條褲|別在射精|别在射精|别射精|別射精|別打手槍|别打手枪|會破皮|会破皮|别冲了|別衝了|别冲|別衝)/i;
   var G = /^(?:的(?:女神|女友|女朋友|男友|男朋友|时候|時候|回忆|回憶|时代|時代|样子|樣子|日子|故事|剧情|劇情|感觉|感覺|妹子|女孩|女生|男生|学妹|學妹|学姐|學姐|美女|老师|老師|同学|同學)|生|JK|jk|制服|校校服|学生|學生|女优|女優|演员|演員|少女|美少女|辣妹|熟女|人妻)/i;
-  var J = new RegExp("(?:".concat(O, "[\\u4e00-\\u9fa5]{1,2})(?:[我你他她]|同學|同学|同事|老師|老师|醫生|医生|老闆|老板|只有|说明|是|有|沒|没|在|別|别|不|好|快|整天|到此|生日|畢業|毕业|求求|這|气|那|大|小|長|长|屁股|逆天|牛逼|牛b|神人|實名|实名|太神|太牛|就|被|也|跟|說|说|講|讲|超|愛|爱|想|本|人|雞|鸡|的|都|要|去|戴|拿|看|打|尻|撸|擼|射|叫|做|操|肏|草|干|幹|一定|真的|早就|一直|天天|已|给|給|和|与|與|同|学|學|唱|跳|写|寫|读|讀|听|聽|走|跑|吃|喝|玩|笑|哭|买|買|卖|賣|住|用|到|来|來)"), "i");
-  var H = new RegExp("(?:不如|比|像|叫|是)\\s*(?:[\\u4e00-\\u9fa5]{1,4}\\s*)?(?:".concat(O, "[\\u4e00-\\u9fa5]{1,2})"), "i");
+  var H = new RegExp("(?:".concat(O, "[\\u4e00-\\u9fa5]{1,2})(?:[我你他她]|同學|同学|同事|老師|老师|醫生|医生|老闆|老板|只有|说明|是|有|沒|没|在|別|别|不|好|快|整天|到此|生日|畢業|毕业|求求|這|气|那|大|小|長|长|屁股|逆天|牛逼|牛b|神人|實名|实名|太神|太牛|就|被|也|跟|說|说|講|讲|超|愛|爱|想|本|人|雞|鸡|的|都|要|去|戴|拿|看|打|尻|撸|擼|射|叫|做|操|肏|草|干|幹|一定|真的|早就|一直|天天|已|给|給|和|与|與|同|学|學|唱|跳|写|寫|读|讀|听|聽|走|跑|吃|喝|玩|笑|哭|买|買|卖|賣|住|用|到|来|來)"), "i");
+  var J = new RegExp("(?:不如|比|像|叫|是)\\s*(?:[\\u4e00-\\u9fa5]{1,4}\\s*)?(?:".concat(O, "[\\u4e00-\\u9fa5]{1,2})"), "i");
   var N = [ {
     "regex": /(?:火影策划|削弱(?:黑土|通灵兽|青年|大野木|忍战|秽土)|加强(?:秽土|白面具|秽土二代|青年|水门))/i,
     "reason": "火影平衡小作文"
@@ -5426,7 +5426,7 @@
         "reason": "包含台湾注音（拼音圈人）"
       };
     }
-    var k = J.exec(u);
+    var k = H.exec(u);
     if (k) {
       var P = k[0];
       if (/^(?:马上|馬上|林北|陈述|陳述|余下|于是|方便|方面|方向|方法|古代|古老|高潮|高中|高兴|高興|周围|周圍|周末|施工|施展|程度|程序|胡说|胡說|胡闹|胡鬧|朱红|朱紅|何必|何况|何況|洪水|曹操|温柔|溫柔|唐突|许多|許多|沈默|江湖|王八|李子|杨柳|楊柳|徐徐|魏然|龚自|顏色|颜色|严格|嚴格|康复|康復|阮囊|褚色|简单|簡單|游泳|学妹|学姐|学弟|学长|學妹|學姐|學弟|學長|女生|女人|旅馆|旅館|失禁|馆开)/i.test(P)) {} else {
@@ -5437,7 +5437,7 @@
         };
       }
     }
-    if (H.test(o)) {
+    if (J.test(o)) {
       return {
         "label": "SPAM",
         "category": "FRIEND_TAG_MEME",
@@ -5765,18 +5765,18 @@
     }
     var G = /(?<!\d)(\d{1,2})\s*(?:秒钟|秒鐘|秒)(?!\d)/g;
     while ((u = G.exec(r)) !== null) {
-      var J = u[0];
+      var H = u[0];
       a.push({
-        "raw": J,
+        "raw": H,
         "index": u.index,
-        "end": u.index + J.length,
+        "end": u.index + H.length,
         "level": "L3",
         "seconds": parseInt(u[1], 10),
         "isNegative": false
       });
     }
-    var H = /(?<!\d)(\d{1,3})(?:\s*\/\s*(\d{1,3}))+(?!\d)/g;
-    while ((u = H.exec(r)) !== null) {
+    var J = /(?<!\d)(\d{1,3})(?:\s*\/\s*(\d{1,3}))+(?!\d)/g;
+    while ((u = J.exec(r)) !== null) {
       var N = u[0];
       var z = N.split("/").map((function(r) {
         return parseInt(r.trim(), 10);
@@ -5973,9 +5973,9 @@
             continue;
           }
           var G = r.index < R.index ? r : R;
-          var J = r.index < R.index ? R : r;
-          var H = a.slice(G.end, J.index);
-          if (/^[\s,，、/\\"\d]*$/.test(H) && H.length < 10) {
+          var H = r.index < R.index ? R : r;
+          var J = a.slice(G.end, H.index);
+          if (/^[\s,，、/\\"\d]*$/.test(J) && J.length < 10) {
             I = true;
             break;
           }
@@ -6884,7 +6884,7 @@
   var ce = "mp_telemetry_client_id_v2";
   var ue = "mp_telemetry_cache_v3";
   var de = 60 * 60 * 1e3;
-  var he = 15 * 60 * 1e3;
+  var me = 15 * 60 * 1e3;
   function getDeviceFingerprintString() {
     var r = [];
     try {
@@ -6972,7 +6972,7 @@
     }
     return "GENERIC";
   }
-  var me = function() {
+  var he = function() {
     function EventCollector() {
       var r = this;
       EventCollector_classCallCheck(this, EventCollector);
@@ -7221,7 +7221,7 @@
                 return O.abrupt("return");
 
                case 12:
-                if (!(r && u - this.lastFlushTs < he && this.sessionBuffer.totalPlaySec < 30)) {
+                if (!(r && u - this.lastFlushTs < me && this.sessionBuffer.totalPlaySec < 30)) {
                   O.next = 14;
                   break;
                 }
@@ -7376,7 +7376,7 @@
       }
     } ]);
   }();
-  var pe = new me;
+  var pe = new he;
   function clipboard_typeof(r) {
     "@babel/helpers - typeof";
     return clipboard_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -8023,6 +8023,135 @@
   var Te = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="16.5" y1="3" x2="16.5" y2="21"/>\n        <path d="M8.5 9l3 3-3 3"/>\n    </svg>\n';
   var Ae = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>\n    </svg>\n';
   var je = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" opacity="0.4"/>\n        <line x1="3" y1="3" x2="21" y2="21"/>\n    </svg>\n';
+  function createOverlayElement() {
+    var r = document.createElement("div");
+    r.className = "tm-video-overlay";
+    r.style.zIndex = "2000000000";
+    return r;
+  }
+  function createContainerElement(r, o) {
+    var a = document.createElement("div");
+    a.className = "tm-video-container";
+    a.style.height = "".concat(r, "px");
+    a.style.minHeight = "".concat(o, "px");
+    return a;
+  }
+  function createPlayerContainerElement(r, o) {
+    var a = document.createElement("div");
+    a.className = "tm-player-container";
+    a.style.zIndex = "2000000001";
+    if (r) {
+      a.classList.add("tm-sidebar-hidden");
+    }
+    if (o === "left") {
+      a.classList.add("tm-sidebar-left");
+    }
+    return a;
+  }
+  function createResizeHandleElement() {
+    var r = document.createElement("div");
+    r.className = "tm-handle-container";
+    var o = document.createElement("div");
+    o.className = "tm-resize-handle";
+    o.insertAdjacentHTML("beforeend", '\n        <div style="\n            position: absolute;\n            left: -10px;\n            right: -10px;\n            top: -15px;\n            bottom: -15px;\n            background: transparent;\n        "></div>\n    ');
+    r.appendChild(o);
+    return {
+      "handleContainer": r,
+      "handle": o
+    };
+  }
+  function createCloseButtonElement() {
+    var r = document.createElement("button");
+    r.className = "tm-close-button tm-control-button-base";
+    var o = '\n        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n            <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n        </svg>\n    ';
+    r.innerHTML = o;
+    r.addEventListener("mouseenter", (function() {
+      r.style.backgroundColor = "hsla(var(--shadcn-destructive) / 0.9)";
+      r.style.transform = "scale(1.1)";
+    }));
+    r.addEventListener("mouseleave", (function() {
+      r.style.backgroundColor = "hsla(var(--shadcn-background) / 0.7)";
+      r.style.transform = "scale(1)";
+    }));
+    return r;
+  }
+  function createSettingsButtonElement() {
+    var r = document.createElement("button");
+    r.className = "tm-settings-button tm-control-button-base";
+    var o = '\n        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n            <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n            <path d="M19.4 15C19.1277 15.6171 19.2583 16.3378 19.73 16.82L19.79 16.88C20.1837 17.2737 20.4009 17.7994 20.4009 18.345C20.4009 18.8906 20.1837 19.4163 19.79 19.81C19.4163 20.2037 18.8906 20.4209 18.345 20.4209C17.7994 20.4209 17.2737 20.2037 16.91 19.81L16.85 19.75C16.3678 19.2783 15.6471 19.1477 15.03 19.42C14.4301 19.6801 14.0386 20.2502 14.03 20.89V21C14.03 21.5304 13.8193 22.0391 13.4442 22.4142C13.0691 22.7893 12.5604 23 12.03 23C11.4996 23 10.9909 22.7893 10.6158 22.4142C10.2407 22.0391 10.03 21.5304 10.03 21V20.91C10.0112 20.2556 9.5979 19.6818 8.98 19.43C8.36289 19.1577 7.64221 19.2883 7.16 19.76L7.1 19.82C6.73629 20.2137 6.21056 20.4309 5.665 20.4309C5.11944 20.4309 4.59371 20.2137 4.23 19.82C3.83628 19.4463 3.61911 18.9206 3.61911 18.375C3.61911 17.8294 3.83628 17.3037 4.23 16.93L4.29 16.87C4.76167 16.3878 4.89231 15.6671 4.62 15.05C4.35995 14.4501 3.78985 14.0586 3.15 14.05H3C2.46957 14.05 1.96086 13.8393 1.58579 13.4642C1.21071 13.0891 1 12.5804 1 12.05C1 11.5196 1.21071 11.0109 1.58579 10.6358C1.96086 10.2607 2.46957 10.05 3 10.05H3.09C3.74435 10.0312 4.31814 9.61788 4.57 9C4.84231 8.38289 4.71167 7.66221 4.24 7.18L4.18 7.12C3.78628 6.75629 3.56911 6.23056 3.56911 5.685C3.56911 5.13944 3.78628 4.61371 4.18 4.25C4.55371 3.85628 5.07944 3.63911 5.625 3.63911C6.17056 3.63911 6.69629 3.85628 7.07 4.25L7.13 4.31C7.61221 4.78167 8.33289 4.91231 8.95 4.64H9C9.59994 4.37995 9.99144 3.80985 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0086 3.72985 14.4001 4.29995 15 4.56C15.6171 4.83231 16.3378 4.70167 16.82 4.23L16.88 4.17C17.2437 3.77628 17.7694 3.55911 18.325 3.55911C18.8806 3.55911 19.4063 3.77628 19.77 4.17C20.1637 4.54371 20.3809 5.06944 20.3809 5.615C20.3809 6.16056 20.1637 6.68629 19.77 7.06L19.71 7.12C19.2383 7.60221 19.1077 8.32289 19.38 8.94L19.4 9C19.66 9.59994 20.2301 9.99144 20.87 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.2702 14.0086 19.7001 14.4001 19.44 15H19.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n        </svg>\n    ';
+    r.innerHTML = o;
+    r.addEventListener("mouseenter", (function() {
+      r.style.backgroundColor = "hsla(var(--shadcn-accent) / 0.9)";
+      r.style.transform = "rotate(45deg)";
+    }));
+    r.addEventListener("mouseleave", (function() {
+      r.style.backgroundColor = "hsla(var(--shadcn-background) / 0.7)";
+      r.style.transform = "rotate(0deg)";
+    }));
+    return r;
+  }
+  function createSidebarControlButtons(r, o) {
+    var a = document.createElement("button");
+    a.className = "tm-sidebar-pos-button tm-control-button-base";
+    a.style.display = "flex";
+    a.innerHTML = r === "right" ? Fe : Te;
+    a.title = r === "right" ? "切换侧边栏到左侧" : "切换侧边栏到右侧";
+    var l = document.createElement("button");
+    l.className = "tm-sidebar-toggle-button tm-control-button-base";
+    l.style.display = "flex";
+    l.innerHTML = o ? Ae : je;
+    l.title = o ? "显示评论区" : "隐藏评论区";
+    return {
+      "sidebarPosBtn": a,
+      "sidebarToggleBtn": l
+    };
+  }
+  function createButtonContainerElement() {
+    var r = document.createElement("div");
+    r.className = "tm-button-container";
+    r.style.display = "flex";
+    r.style.alignItems = "center";
+    r.style.gap = "10px";
+    r.style.zIndex = "99999";
+    return r;
+  }
+  function createSettingsPanelElement() {
+    var r = document.createElement("div");
+    r.className = "tm-settings-panel";
+    return r;
+  }
+  function createSpeedIndicatorElement() {
+    var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : "3x";
+    var o = document.createElement("div");
+    o.className = "tm-speed-indicator";
+    o.textContent = r;
+    o.style.position = "absolute";
+    o.style.top = "50%";
+    o.style.left = "50%";
+    o.style.transform = "translate(-50%, -50%)";
+    o.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+    o.style.color = "white";
+    o.style.padding = "8px 16px";
+    o.style.borderRadius = "4px";
+    o.style.fontSize = "24px";
+    o.style.fontWeight = "bold";
+    o.style.zIndex = "9999";
+    return o;
+  }
+  function _uiFactories_getVideoTitle() {
+    var r = document.querySelector("h4");
+    if (r && r.textContent) {
+      return r.textContent.trim();
+    }
+    var o = document.querySelector("h1");
+    if (o && o.textContent) {
+      return o.textContent.trim();
+    }
+    var a = document.title || "";
+    a = a.replace(/\s*-\s*Jable\.tv.*$/i, "");
+    a = a.replace(/\s*-\s*JAVLibrary.*$/i, "");
+    return a.trim();
+  }
   function UIManager_typeof(r) {
     "@babel/helpers - typeof";
     return UIManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -8185,29 +8314,16 @@
     }, {
       "key": "createOverlayAndContainer",
       "value": function createOverlayAndContainer() {
-        this.overlay = document.createElement("div");
-        this.overlay.className = "tm-video-overlay";
-        this.overlay.style.zIndex = "2000000000";
         var r = window.innerHeight * .8;
         var o = Math.min(window.innerWidth * (4 / 5), r);
         var a = Math.min(window.innerWidth * (9 / 16), r);
-        this.container = document.createElement("div");
-        this.container.className = "tm-video-container";
-        this.container.style.height = "".concat(o, "px");
-        this.container.style.minHeight = "".concat(a, "px");
+        this.overlay = createOverlayElement();
+        this.container = createContainerElement(o, a);
       }
     }, {
       "key": "createPlayerContainer",
       "value": function createPlayerContainer() {
-        this.playerContainer = document.createElement("div");
-        this.playerContainer.className = "tm-player-container";
-        this.playerContainer.style.zIndex = "2000000001";
-        if (this.isSidebarHidden) {
-          this.playerContainer.classList.add("tm-sidebar-hidden");
-        }
-        if (this.sidebarPosition === "left") {
-          this.playerContainer.classList.add("tm-sidebar-left");
-        }
+        this.playerContainer = createPlayerContainerElement(this.isSidebarHidden, this.sidebarPosition);
       }
     }, {
       "key": "createVideoWrapper",
@@ -8264,20 +8380,7 @@
             r.isLongPress = true;
             l = r.playerCore.targetVideo.playbackRate;
             r.playerCore.targetVideo.playbackRate = 3;
-            var o = document.createElement("div");
-            o.className = "tm-speed-indicator";
-            o.textContent = "3x";
-            o.style.position = "absolute";
-            o.style.top = "50%";
-            o.style.left = "50%";
-            o.style.transform = "translate(-50%, -50%)";
-            o.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
-            o.style.color = "white";
-            o.style.padding = "8px 16px";
-            o.style.borderRadius = "4px";
-            o.style.fontSize = "24px";
-            o.style.fontWeight = "bold";
-            o.style.zIndex = "9999";
+            var o = createSpeedIndicatorElement("3x");
             r.videoWrapper.appendChild(o);
             if (window.navigator.vibrate) {
               window.navigator.vibrate(50);
@@ -8400,11 +8503,9 @@
       "key": "createResizeHandle",
       "value": function createResizeHandle() {
         var r = this;
-        this.handleContainer = document.createElement("div");
-        this.handleContainer.className = "tm-handle-container";
-        this.handle = document.createElement("div");
-        this.handle.className = "tm-resize-handle";
-        this.handle.insertAdjacentHTML("beforeend", '\n            <div style="\n                position: absolute;\n                left: -10px;\n                right: -10px;\n                top: -15px;\n                bottom: -15px;\n                background: transparent;\n            "></div>\n        ');
+        var o = createResizeHandleElement(), a = o.handleContainer, l = o.handle;
+        this.handleContainer = a;
+        this.handle = l;
         this.handle.addEventListener("mouseenter", (function() {
           r.handle.style.opacity = "1";
           r.handle.style.backgroundColor = "hsla(var(--shadcn-foreground) / 0.8)";
@@ -8441,57 +8542,21 @@
             r.handle.style.backgroundColor = "hsla(var(--shadcn-foreground) / 0.6)";
           }
         }));
-        this.handleContainer.appendChild(this.handle);
       }
     }, {
       "key": "createCloseButton",
       "value": function createCloseButton() {
-        var r = this;
-        this.closeBtn = document.createElement("button");
-        this.closeBtn.className = "tm-close-button tm-control-button-base";
-        var o = '\n            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n                <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n            </svg>\n        ';
-        this.closeBtn.innerHTML = o;
-        this.closeBtn.addEventListener("mouseenter", (function() {
-          r.closeBtn.style.backgroundColor = "hsla(var(--shadcn-destructive) / 0.9)";
-          r.closeBtn.style.transform = "scale(1.1)";
-        }));
-        this.closeBtn.addEventListener("mouseleave", (function() {
-          r.closeBtn.style.backgroundColor = "hsla(var(--shadcn-background) / 0.7)";
-          r.closeBtn.style.transform = "scale(1)";
-        }));
+        this.closeBtn = createCloseButtonElement();
       }
     }, {
       "key": "createSettingsButton",
       "value": function createSettingsButton() {
-        var r = this;
-        this.settingsBtn = document.createElement("button");
-        this.settingsBtn.className = "tm-settings-button tm-control-button-base";
-        var o = '\n            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n                <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n                <path d="M19.4 15C19.1277 15.6171 19.2583 16.3378 19.73 16.82L19.79 16.88C20.1837 17.2737 20.4009 17.7994 20.4009 18.345C20.4009 18.8906 20.1837 19.4163 19.79 19.81C19.4163 20.2037 18.8906 20.4209 18.345 20.4209C17.7994 20.4209 17.2737 20.2037 16.91 19.81L16.85 19.75C16.3678 19.2783 15.6471 19.1477 15.03 19.42C14.4301 19.6801 14.0386 20.2502 14.03 20.89V21C14.03 21.5304 13.8193 22.0391 13.4442 22.4142C13.0691 22.7893 12.5604 23 12.03 23C11.4996 23 10.9909 22.7893 10.6158 22.4142C10.2407 22.0391 10.03 21.5304 10.03 21V20.91C10.0112 20.2556 9.5979 19.6818 8.98 19.43C8.36289 19.1577 7.64221 19.2883 7.16 19.76L7.1 19.82C6.73629 20.2137 6.21056 20.4309 5.665 20.4309C5.11944 20.4309 4.59371 20.2137 4.23 19.82C3.83628 19.4463 3.61911 18.9206 3.61911 18.375C3.61911 17.8294 3.83628 17.3037 4.23 16.93L4.29 16.87C4.76167 16.3878 4.89231 15.6671 4.62 15.05C4.35995 14.4501 3.78985 14.0586 3.15 14.05H3C2.46957 14.05 1.96086 13.8393 1.58579 13.4642C1.21071 13.0891 1 12.5804 1 12.05C1 11.5196 1.21071 11.0109 1.58579 10.6358C1.96086 10.2607 2.46957 10.05 3 10.05H3.09C3.74435 10.0312 4.31814 9.61788 4.57 9C4.84231 8.38289 4.71167 7.66221 4.24 7.18L4.18 7.12C3.78628 6.75629 3.56911 6.23056 3.56911 5.685C3.56911 5.13944 3.78628 4.61371 4.18 4.25C4.55371 3.85628 5.07944 3.63911 5.625 3.63911C6.17056 3.63911 6.69629 3.85628 7.07 4.25L7.13 4.31C7.61221 4.78167 8.33289 4.91231 8.95 4.64H9C9.59994 4.37995 9.99144 3.80985 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0086 3.72985 14.4001 4.29995 15 4.56C15.6171 4.83231 16.3378 4.70167 16.82 4.23L16.88 4.17C17.2437 3.77628 17.7694 3.55911 18.325 3.55911C18.8806 3.55911 19.4063 3.77628 19.77 4.17C20.1637 4.54371 20.3809 5.06944 20.3809 5.615C20.3809 6.16056 20.1637 6.68629 19.77 7.06L19.71 7.12C19.2383 7.60221 19.1077 8.32289 19.38 8.94L19.4 9C19.66 9.59994 20.2301 9.99144 20.87 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.2702 14.0086 19.7001 14.4001 19.44 15H19.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n            </svg>\n        ';
-        this.settingsBtn.innerHTML = o;
-        this.settingsBtn.addEventListener("mouseenter", (function() {
-          r.settingsBtn.style.backgroundColor = "hsla(var(--shadcn-accent) / 0.9)";
-          r.settingsBtn.style.transform = "rotate(45deg)";
-        }));
-        this.settingsBtn.addEventListener("mouseleave", (function() {
-          r.settingsBtn.style.backgroundColor = "hsla(var(--shadcn-background) / 0.7)";
-          r.settingsBtn.style.transform = "rotate(0deg)";
-        }));
+        this.settingsBtn = createSettingsButtonElement();
       }
     }, {
       "key": "getVideoTitle",
       "value": function getVideoTitle() {
-        var r = document.querySelector("h4");
-        if (r && r.textContent) {
-          return r.textContent.trim();
-        }
-        var o = document.querySelector("h1");
-        if (o && o.textContent) {
-          return o.textContent.trim();
-        }
-        var a = document.title || "";
-        a = a.replace(/\s*-\s*Jable\.tv.*$/i, "");
-        a = a.replace(/\s*-\s*JAVLibrary.*$/i, "");
-        return a.trim();
+        return _uiFactories_getVideoTitle();
       }
     }, {
       "key": "createTitle",
@@ -8504,20 +8569,13 @@
       "key": "createSidebarControls",
       "value": function createSidebarControls() {
         var r = this;
-        this.sidebarPosBtn = document.createElement("button");
-        this.sidebarPosBtn.className = "tm-sidebar-pos-button tm-control-button-base";
-        this.sidebarPosBtn.style.display = "flex";
-        this.updateSidebarPosButtonIcon();
-        this.sidebarPosBtn.title = this.sidebarPosition === "right" ? "切换侧边栏到左侧" : "切换侧边栏到右侧";
+        var o = createSidebarControlButtons(this.sidebarPosition, this.isSidebarHidden), a = o.sidebarPosBtn, l = o.sidebarToggleBtn;
+        this.sidebarPosBtn = a;
+        this.sidebarToggleBtn = l;
         this.sidebarPosBtn.addEventListener("click", (function(o) {
           o.stopPropagation();
           r.toggleSidebarPosition();
         }));
-        this.sidebarToggleBtn = document.createElement("button");
-        this.sidebarToggleBtn.className = "tm-sidebar-toggle-button tm-control-button-base";
-        this.sidebarToggleBtn.style.display = "flex";
-        this.updateSidebarToggleButtonIcon();
-        this.sidebarToggleBtn.title = this.isSidebarHidden ? "显示评论区" : "隐藏评论区";
         this.sidebarToggleBtn.addEventListener("click", (function(o) {
           o.stopPropagation();
           r.toggleSidebarVisibility();
@@ -8674,18 +8732,12 @@
     }, {
       "key": "createSettingsPanel",
       "value": function createSettingsPanel() {
-        this.settingsPanel = document.createElement("div");
-        this.settingsPanel.className = "tm-settings-panel";
+        this.settingsPanel = createSettingsPanelElement();
       }
     }, {
       "key": "createButtonContainer",
       "value": function createButtonContainer() {
-        this.buttonContainer = document.createElement("div");
-        this.buttonContainer.className = "tm-button-container";
-        this.buttonContainer.style.display = "flex";
-        this.buttonContainer.style.alignItems = "center";
-        this.buttonContainer.style.gap = "10px";
-        this.buttonContainer.style.zIndex = "99999";
+        this.buttonContainer = createButtonContainerElement();
       }
     }, {
       "key": "setupOrientationListener",
@@ -10719,7 +10771,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Je = function() {
+  var He = function() {
     function BaseLoginProvider() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       BaseLoginProvider_classCallCheck(this, BaseLoginProvider);
@@ -11724,7 +11776,7 @@
     }
     return String(r);
   }
-  var He = function(r) {
+  var Je = function(r) {
     function JableLoginProvider() {
       var r;
       JableLoginProvider_classCallCheck(this, JableLoginProvider);
@@ -12230,7 +12282,7 @@
         return publishComment;
       }()
     } ]);
-  }(Je);
+  }(He);
   function MissavLoginProvider_typeof(r) {
     "@babel/helpers - typeof";
     return MissavLoginProvider_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -12815,7 +12867,7 @@
         }
       }
     } ]);
-  }(Je);
+  }(He);
   function CommentComposer_typeof(r) {
     "@babel/helpers - typeof";
     return CommentComposer_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -15386,7 +15438,7 @@
       "value": function() {
         var r = CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee3(r) {
           var o, a, l = this;
-          var u, p, v, y, b, C, _, k, E, D, M, A, j, B, I, O, V, R, G, J, H, N, z, q, U, W, K, Y, X, $, Q, Z, ee, te, ne, re, oe, ae, ie = arguments;
+          var u, p, v, y, b, C, _, k, E, D, M, A, j, B, I, O, V, R, G, H, J, N, z, q, U, W, K, Y, X, $, Q, Z, ee, te, ne, re, oe, ae, ie = arguments;
           return CommentPanel_regeneratorRuntime().wrap((function _callee3$(se) {
             while (1) {
               switch (se.prev = se.next) {
@@ -15554,16 +15606,16 @@
                 return G;
 
                case 51:
-                J = se.sent;
-                V = J.videoId;
-                R = J.domain;
+                H = se.sent;
+                V = H.videoId;
+                R = H.domain;
                 p.videoId = V;
                 p.workingDomain = R;
 
                case 56:
-                H = R || L[0];
-                N = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibCommentsPromise ? CommentPanel.preloadCache.javlibCommentsPromise : fetchJavLibraryData(V, "comments", u, H);
-                z = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibReviewsPromise ? CommentPanel.preloadCache.javlibReviewsPromise : fetchJavLibraryData(V, "reviews", u, H);
+                J = R || L[0];
+                N = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibCommentsPromise ? CommentPanel.preloadCache.javlibCommentsPromise : fetchJavLibraryData(V, "comments", u, J);
+                z = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibReviewsPromise ? CommentPanel.preloadCache.javlibReviewsPromise : fetchJavLibraryData(V, "reviews", u, J);
                 se.next = 61;
                 return Promise.all([ N["catch"]((function(r) {
                   P.warn("[CommentPanel] 获取 JAVLibrary 评论失败:", r);
@@ -16927,7 +16979,7 @@
         }
         if (!this._staticProviders) {
           this._staticProviders = {
-            "JABLE": new He,
+            "JABLE": new Je,
             "MISSAV": new Ne
           };
         }
@@ -23475,7 +23527,7 @@
       this.userEmail = "";
       this.userPassword = "";
       this.autoLogin = true;
-      this.providers = [ new Ne, new He ];
+      this.providers = [ new Ne, new Je ];
       this.activeProvider = null;
     }
     return LoginManager_createClass(LoginManager, [ {
@@ -24214,11 +24266,11 @@
     "selector": 'div[class*="z-max"]',
     "styles": "z-index: 9000 !important;"
   } ];
-  var ht = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
-  const mt = {
+  var mt = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
+  const ht = {
     "adSelectors": ut,
     "customStyles": dt,
-    "blockedUrlPatterns": ht,
+    "blockedUrlPatterns": mt,
     "isVideoSite": true,
     "domains": getSiteDomains("MISSAV")
   };
@@ -24598,7 +24650,7 @@
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(window.location.href);
-      var o = r ? mt : {};
+      var o = r ? ht : {};
       this.config = new pt(o);
       this.styleManager = new ft(this.config);
       this.domCleaner = new vt(this.config);
