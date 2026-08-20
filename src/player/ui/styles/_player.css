@@ -1461,7 +1461,7 @@
     width: 95%;
     max-width: 700px;
     min-width: 350px; /* 与竖屏模式保持一致 */
-    z-index: 9991;
+    z-index: 9994;
     padding: 16px 16px 14px;
     border-radius: 16px;
     background-color: rgba(10, 10, 10, 0.52); /* 降低透明度，允许环境色（如宿主紫色）自然折射渗透 */
@@ -1471,6 +1471,14 @@
         inset 0 0 0 1px rgba(255, 255, 255, 0.05), /* 极薄微量内描边，防黑背景融合 */
         0 12px 32px rgba(0, 0, 0, 0.45);            /* 外层弥散阴影 */
     border: none;
+
+/* 输入框激活或嵌入备注弹窗开启时，将控制栏层级提升至最高，彻底防止被视频容器遮挡 */
+.tm-control-buttons.is-input-active,
+.tm-control-buttons:focus-within,
+.tm-control-buttons:has(.tm-inline-remark-popover.visible),
+.tm-player-container.is-input-focused .tm-control-buttons {
+    z-index: 10020 !important;
+}
     transition: 
         opacity 0.3s ease, 
         transform 0.3s ease, 
