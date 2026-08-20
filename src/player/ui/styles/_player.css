@@ -32,12 +32,12 @@
 .tm-player-container {
     position: fixed;
     top: 0;
-    bottom: 0;
+    bottom: var(--keyboard-height, 0px);
     left: 0;
     right: 0;
     width: 100%;
-    height: 100%;
-    height: 100dvh;
+    height: calc(100% - var(--keyboard-height, 0px));
+    height: calc(100dvh - var(--keyboard-height, 0px));
     background-color: #0b0b0e;
     display: flex;
     flex-direction: column;
@@ -46,6 +46,7 @@
     z-index: 2000000001 !important;
     overflow: hidden;
     pointer-events: auto;
+    transition: bottom 0.15s ease-out, height 0.15s ease-out;
     
     /* 全局触摸、滚动、选择隔离 */
     touch-action: pan-y;

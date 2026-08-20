@@ -28,12 +28,24 @@ function setupViewport() {
     }
     
     // 更新viewport内容，添加viewport-fit=cover以支持安全区域，并限制缩放以防移动端意外放大
-    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content';
     
-    // 监听输入框失焦事件：当软键盘收起后，自动复位页面滚动，杜绝 Safari 页面残留偏移
+    // 监听 visualViewport 动态获取移动端软键盘高度，并将视口高度实时同步给 --keyboard-height
+    if (window.visualViewport) {
+        const updateKeyboardHeight = () => {
+            if (!document.body || !document.body.classList.contains('tm-player-active')) return;
+            const keyboardHeight = Math.max(0, window.innerHeight - window.visualViewport.height);
+            document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+        };
+        window.visualViewport.addEventListener('resize', updateKeyboardHeight);
+        window.visualViewport.addEventListener('scroll', updateKeyboardHeight);
+    }
+
+    // 监听输入框失焦事件：当软键盘收起后，自动复位页面滚动并重置键盘高度
     document.addEventListener('focusout', (e) => {
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
             window.scrollTo(0, 0);
+            document.documentElement.style.setProperty('--keyboard-height', '0px');
         }
     });
 
