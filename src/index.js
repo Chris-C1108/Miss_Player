@@ -41,27 +41,11 @@ function setupViewport() {
         window.visualViewport.addEventListener('scroll', updateKeyboardHeight);
     }
 
-    // 监听输入框聚焦事件：临时将输入框所在组件及播放器容器的层级提高，彻底杜绝视频区域遮盖
-    document.addEventListener('focusin', (e) => {
-        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
-            const playerContainer = document.querySelector('.tm-player-container');
-            if (playerContainer) playerContainer.classList.add('is-input-focused');
-            
-            const parentPanel = e.target.closest('.tm-comments-panel, .tm-control-buttons, .tm-video-container, .tm-sheet-overlay, .tm-custom-modal');
-            if (parentPanel) parentPanel.classList.add('is-input-active');
-        }
-    });
-
-    // 监听输入框失焦事件：当软键盘收起后，自动复位页面滚动并重置键盘高度与层级状态
+    // 监听输入框失焦事件：当软键盘收起后，自动复位页面滚动并重置键盘高度
     document.addEventListener('focusout', (e) => {
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
             window.scrollTo(0, 0);
             document.documentElement.style.setProperty('--keyboard-height', '0px');
-            
-            const playerContainer = document.querySelector('.tm-player-container');
-            if (playerContainer) playerContainer.classList.remove('is-input-focused');
-            
-            document.querySelectorAll('.is-input-active').forEach(el => el.classList.remove('is-input-active'));
         }
     });
 

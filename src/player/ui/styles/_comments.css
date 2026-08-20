@@ -8,21 +8,13 @@
     flex: 1;
     min-height: 0; /* 允许 Flexbox 子元素收缩并正常触发 overflow-y 滚动 */
     background-color: transparent;
-    z-index: 9990; /* 默认坐落在控制面板（9991）的 Z 轴下方 */
+    z-index: 9995; /* 确保在视频与拖动手柄之上，避免输入框被视频遮盖 */
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     overflow: hidden;
     pointer-events: none; /* 让点击穿透视频区域 */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-}
-
-/* 输入框激活或标签选择弹窗开启时，将评论区层级提升至视频组件与控制栏之上，防止被视频遮挡 */
-.tm-comments-panel.is-input-active,
-.tm-comments-panel:focus-within,
-.tm-comments-panel:has(.tm-comment-tag-select-modal.visible),
-.tm-player-container.is-input-focused .tm-comments-panel {
-    z-index: 10005 !important;
 }
 
 /* 评论区遮罩变暗效果，突出控制面板 (扩展至全视口高度，避免圆角外侧露出浅色底色) */
@@ -395,7 +387,7 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    z-index: 10020;
+    z-index: 9996;
     opacity: 0;
     pointer-events: none;
     transform: translateY(16px);
@@ -405,7 +397,6 @@
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
-    z-index: 10020 !important;
 }
 
 .tm-tag-select-header {
