@@ -1,7 +1,8 @@
 import { formatTimeWithHours, getValue, setValue, Toast } from '../../utils/index.js';
 import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { __ } from '../../constants/i18n.js';
-import { telemetry } from '../../telemetry';
+import { telemetry } from '../../telemetry/index.js';
+import { MarkerBottomSheet } from './MarkerBottomSheet.js';
 
 /**
  * LoopManager — Tab-Style Marker & AB Loop controller
@@ -38,10 +39,8 @@ export class LoopManager {
         // Storage
         this.storageKey = null;
 
-        // Bottom sheet DOM
-        this._sheetOverlay = null;
-        this._sheetPanel = null;
-        this._sheetList = null;
+        // Bottom sheet component
+        this.bottomSheet = new MarkerBottomSheet(this);
 
         this.editingTabId = null;   // ID of the tab currently being edited inline
         this.editingTabCopy = null; // Copy of the tab data being edited inline
@@ -59,6 +58,31 @@ export class LoopManager {
         // Bound handlers
         this._handleLoopTimeUpdate = this._handleLoopTimeUpdate.bind(this);
         this._handleOutsideClickForEdit = this._handleOutsideClickForEdit.bind(this);
+    }
+
+    get _sheetOverlay() {
+        return this.bottomSheet._sheetOverlay;
+    }
+    set _sheetOverlay(v) {
+        this.bottomSheet._sheetOverlay = v;
+    }
+    get _sheetPanel() {
+        return this.bottomSheet._sheetPanel;
+    }
+    set _sheetPanel(v) {
+        this.bottomSheet._sheetPanel = v;
+    }
+    get _sheetList() {
+        return this.bottomSheet._sheetList;
+    }
+    set _sheetList(v) {
+        this.bottomSheet._sheetList = v;
+    }
+    get _sheetCountBadge() {
+        return this.bottomSheet._sheetCountBadge;
+    }
+    set _sheetCountBadge(v) {
+        this.bottomSheet._sheetCountBadge = v;
     }
 
     setControlManager(controlManager) {
@@ -793,7 +817,7 @@ export class LoopManager {
     updateLoopMarkers() {
         if (!this.targetVideo || !this.loopStartMarker || !this.loopEndMarker) return;
 
-        const progressBarElement = document.querySelector('.tm-progress-bar');
+        const progressBarElement = this.uiElements?.progressBar || document.querySelector('.tm-progress-bar');
         if (!progressBarElement) return;
 
         const duration = this.targetVideo.duration;
@@ -1024,278 +1048,34 @@ export class LoopManager {
     }
 
     // =====================================================================
-    //  Bottom Sheet
+    //  Bottom Sheet (delegated to MarkerBottomSheet)
     // =====================================================================
     _bindSwipeUpGesture() {
-        const el = this.tabScrollContainer?.parentElement; // .tm-loop-control-row
-        if (!el) return;
-
-        let startY = 0;
-        let startX = 0;
-        let tracking = false;
-
-        el.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            startY = touch.clientY;
-            startX = touch.clientX;
-            tracking = true;
-        }, { passive: true });
-
-        el.addEventListener('touchend', (e) => {
-            if (!tracking) return;
-            tracking = false;
-            const touch = e.changedTouches[0];
-            const dy = touch.clientY - startY;
-            const dx = Math.abs(touch.clientX - startX);
-            // Swipe up: dy < -40 and more vertical than horizontal
-            if (dy < -40 && Math.abs(dy) > dx) {
-                e.stopPropagation();
-                this._openBottomSheet();
-            }
-        });
+        return this.bottomSheet.bindSwipeUpGesture();
     }
 
     _toggleBottomSheet() {
-        if (this._sheetPanel && this._sheetPanel.classList.contains('visible')) {
-            this._closeBottomSheet();
-        } else {
-            this._openBottomSheet();
-        }
+        return this.bottomSheet.toggle();
     }
 
     _updatePanelPosition() {
-        if (!this._sheetPanel) return;
-        const parentContainer = this.tabAddBtn?.closest('.tm-control-buttons') || document.querySelector('.tm-control-buttons');
-        const loopRow = this.tabAddBtn?.closest('.tm-loop-control-row') || this.tabAddBtn?.parentElement;
-        const handleContainer = document.querySelector('.tm-handle-container');
-        
-        if (parentContainer && loopRow) {
-            const parentRect = parentContainer.getBoundingClientRect();
-            const loopRect = loopRow.getBoundingClientRect();
-            // 计算从 parentContainer 底部到 loopRow 底部的距离，作为 bottom 偏移量
-            const bottomOffset = Math.max(0, parentRect.bottom - loopRect.bottom);
-            this._sheetPanel.style.bottom = `${bottomOffset}px`;
-
-            if (handleContainer) {
-                const handleRect = handleContainer.getBoundingClientRect();
-                // 顶部低于 handleContainer
-                const availableHeight = loopRect.bottom - handleRect.bottom - 10;
-                if (availableHeight > 80) {
-                    this._sheetPanel.style.maxHeight = `${availableHeight}px`;
-                    return;
-                }
-            }
-        }
-        this._sheetPanel.style.maxHeight = 'calc(100vh - 120px)';
+        return this.bottomSheet.updatePanelPosition();
     }
 
     _openBottomSheet() {
-        if (!this._sheetOverlay || !this._sheetPanel) this._createBottomSheet();
-        this._updateBottomSheet();
-        this._updatePanelPosition();
-        if (this._sheetOverlay) this._sheetOverlay.classList.add('visible');
-        if (this._sheetPanel) this._sheetPanel.classList.add('visible');
+        return this.bottomSheet.open();
     }
 
     _closeBottomSheet() {
-        if (this._sheetOverlay) this._sheetOverlay.classList.remove('visible');
-        if (this._sheetPanel) this._sheetPanel.classList.remove('visible');
+        return this.bottomSheet.close();
     }
 
     _createBottomSheet() {
-        const parentContainer = this.tabAddBtn?.closest('.tm-control-buttons') || document.querySelector('.tm-control-buttons');
-        if (!parentContainer) return;
-
-        if (this._sheetOverlay) this._sheetOverlay.remove();
-        if (this._sheetPanel) this._sheetPanel.remove();
-
-        // 蒙版背景
-        this._sheetOverlay = document.createElement('div');
-        this._sheetOverlay.className = 'tm-bottom-sheet-overlay';
-        this._sheetOverlay.addEventListener('click', () => this._closeBottomSheet());
-
-        this._sheetOverlay.addEventListener('touchmove', (e) => {
-            if (e.cancelable) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        // 模态框面板 (挂载于控制面板容器内，宽度与控制面板一致，底部与 tm-loop-control-row 对齐)
-        this._sheetPanel = document.createElement('div');
-        this._sheetPanel.className = 'tm-bottom-sheet-panel';
-        this._sheetPanel.addEventListener('click', (e) => e.stopPropagation());
-
-        // 头部标题与关闭按钮
-        const header = document.createElement('div');
-        header.className = 'tm-sheet-header';
-
-        const titleWrapper = document.createElement('div');
-        titleWrapper.style.display = 'flex';
-        titleWrapper.style.alignItems = 'center';
-        titleWrapper.style.gap = '8px';
-
-        const title = document.createElement('div');
-        title.className = 'tm-bottom-sheet-title';
-        title.textContent = '标签管理';
-
-        const countBadge = document.createElement('span');
-        countBadge.className = 'tm-sheet-count-badge';
-        this._sheetCountBadge = countBadge;
-
-        titleWrapper.appendChild(title);
-        titleWrapper.appendChild(countBadge);
-
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'tm-sheet-close-btn';
-        closeBtn.innerHTML = '✕';
-        closeBtn.title = '关闭';
-        closeBtn.addEventListener('click', () => this._closeBottomSheet());
-
-        header.appendChild(titleWrapper);
-        header.appendChild(closeBtn);
-
-        // 滚动列表容器
-        this._sheetList = document.createElement('div');
-        this._sheetList.className = 'tm-bottom-sheet-list';
-
-        this._sheetPanel.appendChild(header);
-        this._sheetPanel.appendChild(this._sheetList);
-
-        const playerContainer = document.querySelector('.tm-player-container') || document.body;
-        playerContainer.appendChild(this._sheetOverlay);
-
-        // 挂载到控制面板容器中，保证宽度 100% 与控制面板完全对齐
-        parentContainer.appendChild(this._sheetPanel);
+        return this.bottomSheet.createBottomSheet();
     }
 
     _updateBottomSheet() {
-        if (!this._sheetList) return;
-        this._sheetList.innerHTML = '';
-
-        if (this._sheetCountBadge) {
-            this._sheetCountBadge.textContent = `共 ${this.tabs.length} 条`;
-        }
-
-        if (this.tabs.length === 0) {
-            const empty = document.createElement('div');
-            empty.className = 'tm-bottom-sheet-empty';
-            empty.textContent = '暂无标签';
-            this._sheetList.appendChild(empty);
-            return;
-        }
-
-        this.tabs.forEach((tab, index) => {
-            const color = this.tabColors[index % this.tabColors.length];
-            const row = document.createElement('div');
-            row.className = 'tm-sheet-item';
-            if (this.activeTabId === tab.id) {
-                row.classList.add('active');
-            }
-
-            // 1. 时间胶囊按钮容器
-            const timeContainer = document.createElement('div');
-            timeContainer.className = 'tm-sheet-item-time-container';
-
-            if (tab.type === 'highlight') {
-                const pill = document.createElement('button');
-                pill.className = 'tm-sheet-time-pill';
-                pill.style.setProperty('--tab-color', color);
-                pill.textContent = formatTimeWithHours(tab.startTime);
-                pill.title = '跳转到此时间';
-                pill.addEventListener('click', () => {
-                    this._handleTabClick(tab);
-                });
-                timeContainer.appendChild(pill);
-            } else {
-                // AB 时间片段在一个宽胶囊内显示
-                const pill = document.createElement('div');
-                pill.className = 'tm-sheet-time-pill interval';
-                pill.style.setProperty('--tab-color', color);
-
-                const startSpan = document.createElement('span');
-                startSpan.className = 'tm-time-part start';
-                startSpan.textContent = formatTimeWithHours(tab.startTime);
-                startSpan.title = '跳转到起点并开始循环';
-                startSpan.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this._handleTabClick(tab);
-                });
-
-                const sepSpan = document.createElement('span');
-                sepSpan.className = 'tm-time-sep';
-                sepSpan.textContent = '~';
-
-                const endSpan = document.createElement('span');
-                endSpan.className = 'tm-time-part end';
-                endSpan.textContent = formatTimeWithHours(tab.endTime);
-                endSpan.title = '跳转到终点';
-                endSpan.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (this.targetVideo) {
-                        this.targetVideo.currentTime = tab.endTime;
-                    }
-                });
-
-                pill.appendChild(startSpan);
-                pill.appendChild(sepSpan);
-                pill.appendChild(endSpan);
-
-                pill.addEventListener('click', () => {
-                    this._handleTabClick(tab);
-                });
-
-                timeContainer.appendChild(pill);
-            }
-
-            // 2. 备注文本框 (可以直接手动修改)
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'tm-sheet-item-comment-input';
-            input.placeholder = '添加备注...';
-            input.value = tab.comment || '';
-
-            // 阻止按键冒泡，防止触发视频播放快捷键
-            const stopProp = (e) => e.stopPropagation();
-            input.addEventListener('keydown', stopProp);
-            input.addEventListener('keyup', stopProp);
-            input.addEventListener('keypress', stopProp);
-            input.addEventListener('mousedown', stopProp);
-            input.addEventListener('touchstart', stopProp);
-
-            // 直接修改备注
-            input.addEventListener('input', (e) => {
-                tab.comment = e.target.value;
-                this._saveTabs();
-                this.renderTabs();
-            });
-
-            input.addEventListener('change', () => {
-                this._saveTabs();
-                this.renderTabs();
-            });
-
-            // 3. 删除按钮 (❌)
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'tm-sheet-delete-btn';
-            deleteBtn.innerHTML = '❌';
-            deleteBtn.title = '删除标签';
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.tabs = this.tabs.filter(t => t.id !== tab.id);
-                if (this.activeTabId === tab.id) {
-                    this.disableLoop();
-                    this.activeTabId = null;
-                }
-                this._saveTabs();
-                this.renderTabs();
-                this._updateBottomSheet();
-            });
-
-            row.appendChild(timeContainer);
-            row.appendChild(input);
-            row.appendChild(deleteBtn);
-            this._sheetList.appendChild(row);
-        });
+        return this.bottomSheet.updateBottomSheet();
     }
 
     renderProgressMarkers() {
@@ -1450,11 +1230,8 @@ export class LoopManager {
             this.targetVideo.removeEventListener('timeupdate', this._durationFallbackBound);
             this._durationFallbackBound = null;
         }
-        if (this._sheetOverlay) {
-            this._sheetOverlay.remove();
-            this._sheetOverlay = null;
-            this._sheetPanel = null;
-            this._sheetList = null;
+        if (this.bottomSheet) {
+            this.bottomSheet.cleanup();
         }
         if (this._longPressTimer) {
             clearTimeout(this._longPressTimer);

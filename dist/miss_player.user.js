@@ -6884,7 +6884,7 @@
   var ce = "mp_telemetry_client_id_v2";
   var ue = "mp_telemetry_cache_v3";
   var de = 60 * 60 * 1e3;
-  var me = 15 * 60 * 1e3;
+  var he = 15 * 60 * 1e3;
   function getDeviceFingerprintString() {
     var r = [];
     try {
@@ -6972,7 +6972,7 @@
     }
     return "GENERIC";
   }
-  var he = function() {
+  var me = function() {
     function EventCollector() {
       var r = this;
       EventCollector_classCallCheck(this, EventCollector);
@@ -7221,7 +7221,7 @@
                 return O.abrupt("return");
 
                case 12:
-                if (!(r && u - this.lastFlushTs < me && this.sessionBuffer.totalPlaySec < 30)) {
+                if (!(r && u - this.lastFlushTs < he && this.sessionBuffer.totalPlaySec < 30)) {
                   O.next = 14;
                   break;
                 }
@@ -7376,7 +7376,7 @@
       }
     } ]);
   }();
-  var pe = new he;
+  var pe = new me;
   function clipboard_typeof(r) {
     "@babel/helpers - typeof";
     return clipboard_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -18781,6 +18781,380 @@
       }
     } ]);
   }();
+  function MarkerBottomSheet_typeof(r) {
+    "@babel/helpers - typeof";
+    return MarkerBottomSheet_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
+      return typeof r;
+    } : function(r) {
+      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
+    }, MarkerBottomSheet_typeof(r);
+  }
+  function MarkerBottomSheet_classCallCheck(r, o) {
+    if (!(r instanceof o)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+  function MarkerBottomSheet_defineProperties(r, o) {
+    for (var a = 0; a < o.length; a++) {
+      var l = o[a];
+      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
+      Object.defineProperty(r, MarkerBottomSheet_toPropertyKey(l.key), l);
+    }
+  }
+  function MarkerBottomSheet_createClass(r, o, a) {
+    return o && MarkerBottomSheet_defineProperties(r.prototype, o), a && MarkerBottomSheet_defineProperties(r, a), 
+    Object.defineProperty(r, "prototype", {
+      "writable": !1
+    }), r;
+  }
+  function MarkerBottomSheet_toPropertyKey(r) {
+    var o = MarkerBottomSheet_toPrimitive(r, "string");
+    return "symbol" == MarkerBottomSheet_typeof(o) ? o : o + "";
+  }
+  function MarkerBottomSheet_toPrimitive(r, o) {
+    if ("object" != MarkerBottomSheet_typeof(r) || !r) {
+      return r;
+    }
+    var a = r[Symbol.toPrimitive];
+    if (void 0 !== a) {
+      var l = a.call(r, o || "default");
+      if ("object" != MarkerBottomSheet_typeof(l)) {
+        return l;
+      }
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === o ? String : Number)(r);
+  }
+  var Qe = function() {
+    function MarkerBottomSheet(r) {
+      MarkerBottomSheet_classCallCheck(this, MarkerBottomSheet);
+      this.loopManager = r;
+      this._sheetOverlay = null;
+      this._sheetPanel = null;
+      this._sheetList = null;
+      this._sheetCountBadge = null;
+    }
+    return MarkerBottomSheet_createClass(MarkerBottomSheet, [ {
+      "key": "tabs",
+      "get": function get() {
+        return this.loopManager.tabs;
+      }
+    }, {
+      "key": "activeTabId",
+      "get": function get() {
+        return this.loopManager.activeTabId;
+      }
+    }, {
+      "key": "tabColors",
+      "get": function get() {
+        return this.loopManager.tabColors;
+      }
+    }, {
+      "key": "tabAddBtn",
+      "get": function get() {
+        return this.loopManager.tabAddBtn;
+      }
+    }, {
+      "key": "tabScrollContainer",
+      "get": function get() {
+        return this.loopManager.tabScrollContainer;
+      }
+    }, {
+      "key": "targetVideo",
+      "get": function get() {
+        return this.loopManager.targetVideo;
+      }
+    }, {
+      "key": "uiElements",
+      "get": function get() {
+        return this.loopManager.uiElements;
+      }
+    }, {
+      "key": "bindSwipeUpGesture",
+      "value": function bindSwipeUpGesture() {
+        var r, o = this;
+        var a = (r = this.tabScrollContainer) === null || r === void 0 ? void 0 : r.parentElement;
+        if (!a) {
+          return;
+        }
+        var l = 0;
+        var u = 0;
+        var p = false;
+        a.addEventListener("touchstart", (function(r) {
+          var o = r.touches[0];
+          l = o.clientY;
+          u = o.clientX;
+          p = true;
+        }), {
+          "passive": true
+        });
+        a.addEventListener("touchend", (function(r) {
+          if (!p) {
+            return;
+          }
+          p = false;
+          var a = r.changedTouches[0];
+          var v = a.clientY - l;
+          var y = Math.abs(a.clientX - u);
+          if (v < -40 && Math.abs(v) > y) {
+            r.stopPropagation();
+            o.open();
+          }
+        }));
+      }
+    }, {
+      "key": "toggle",
+      "value": function toggle() {
+        if (this._sheetPanel && this._sheetPanel.classList.contains("visible")) {
+          this.close();
+        } else {
+          this.open();
+        }
+      }
+    }, {
+      "key": "updatePanelPosition",
+      "value": function updatePanelPosition() {
+        var r, o, a, l, u;
+        if (!this._sheetPanel) {
+          return;
+        }
+        var p = ((r = this.tabAddBtn) === null || r === void 0 ? void 0 : r.closest(".tm-control-buttons")) || ((o = this.uiElements) === null || o === void 0 ? void 0 : o.controlButtons) || document.querySelector(".tm-control-buttons");
+        var v = ((a = this.tabAddBtn) === null || a === void 0 ? void 0 : a.closest(".tm-loop-control-row")) || ((l = this.tabAddBtn) === null || l === void 0 ? void 0 : l.parentElement);
+        var y = ((u = this.uiElements) === null || u === void 0 ? void 0 : u.handleContainer) || document.querySelector(".tm-handle-container");
+        if (p && v) {
+          var b = p.getBoundingClientRect();
+          var C = v.getBoundingClientRect();
+          var _ = Math.max(0, b.bottom - C.bottom);
+          this._sheetPanel.style.bottom = "".concat(_, "px");
+          if (y) {
+            var k = y.getBoundingClientRect();
+            var P = C.bottom - k.bottom - 10;
+            if (P > 80) {
+              this._sheetPanel.style.maxHeight = "".concat(P, "px");
+              return;
+            }
+          }
+        }
+        this._sheetPanel.style.maxHeight = "calc(100vh - 120px)";
+      }
+    }, {
+      "key": "open",
+      "value": function open() {
+        if (!this._sheetOverlay || !this._sheetPanel) {
+          this.createBottomSheet();
+        }
+        this.updateBottomSheet();
+        this.updatePanelPosition();
+        if (this._sheetOverlay) {
+          this._sheetOverlay.classList.add("visible");
+        }
+        if (this._sheetPanel) {
+          this._sheetPanel.classList.add("visible");
+        }
+      }
+    }, {
+      "key": "close",
+      "value": function close() {
+        if (this._sheetOverlay) {
+          this._sheetOverlay.classList.remove("visible");
+        }
+        if (this._sheetPanel) {
+          this._sheetPanel.classList.remove("visible");
+        }
+      }
+    }, {
+      "key": "createBottomSheet",
+      "value": function createBottomSheet() {
+        var r, o, a = this, l;
+        var u = ((r = this.tabAddBtn) === null || r === void 0 ? void 0 : r.closest(".tm-control-buttons")) || ((o = this.uiElements) === null || o === void 0 ? void 0 : o.controlButtons) || document.querySelector(".tm-control-buttons");
+        if (!u) {
+          return;
+        }
+        if (this._sheetOverlay) {
+          this._sheetOverlay.remove();
+        }
+        if (this._sheetPanel) {
+          this._sheetPanel.remove();
+        }
+        this._sheetOverlay = document.createElement("div");
+        this._sheetOverlay.className = "tm-bottom-sheet-overlay";
+        this._sheetOverlay.addEventListener("click", (function() {
+          return a.close();
+        }));
+        this._sheetOverlay.addEventListener("touchmove", (function(r) {
+          if (r.cancelable) {
+            r.preventDefault();
+          }
+        }), {
+          "passive": false
+        });
+        this._sheetPanel = document.createElement("div");
+        this._sheetPanel.className = "tm-bottom-sheet-panel";
+        this._sheetPanel.addEventListener("click", (function(r) {
+          return r.stopPropagation();
+        }));
+        var p = document.createElement("div");
+        p.className = "tm-sheet-header";
+        var v = document.createElement("div");
+        v.style.display = "flex";
+        v.style.alignItems = "center";
+        v.style.gap = "8px";
+        var y = document.createElement("div");
+        y.className = "tm-bottom-sheet-title";
+        y.textContent = "标签管理";
+        var b = document.createElement("span");
+        b.className = "tm-sheet-count-badge";
+        this._sheetCountBadge = b;
+        v.appendChild(y);
+        v.appendChild(b);
+        var C = document.createElement("button");
+        C.className = "tm-sheet-close-btn";
+        C.innerHTML = "✕";
+        C.title = "关闭";
+        C.addEventListener("click", (function() {
+          return a.close();
+        }));
+        p.appendChild(v);
+        p.appendChild(C);
+        this._sheetList = document.createElement("div");
+        this._sheetList.className = "tm-bottom-sheet-list";
+        this._sheetPanel.appendChild(p);
+        this._sheetPanel.appendChild(this._sheetList);
+        var _ = ((l = this.uiElements) === null || l === void 0 ? void 0 : l.container) || document.querySelector(".tm-player-container") || document.body;
+        _.appendChild(this._sheetOverlay);
+        u.appendChild(this._sheetPanel);
+      }
+    }, {
+      "key": "updateBottomSheet",
+      "value": function updateBottomSheet() {
+        var r = this;
+        if (!this._sheetList) {
+          return;
+        }
+        this._sheetList.innerHTML = "";
+        if (this._sheetCountBadge) {
+          this._sheetCountBadge.textContent = "共 ".concat(this.tabs.length, " 条");
+        }
+        if (this.tabs.length === 0) {
+          var o = document.createElement("div");
+          o.className = "tm-bottom-sheet-empty";
+          o.textContent = "暂无标签";
+          this._sheetList.appendChild(o);
+          return;
+        }
+        this.tabs.forEach((function(o, a) {
+          var l = r.tabColors[a % r.tabColors.length];
+          var u = document.createElement("div");
+          u.className = "tm-sheet-item";
+          if (r.activeTabId === o.id) {
+            u.classList.add("active");
+          }
+          var p = document.createElement("div");
+          p.className = "tm-sheet-item-time-container";
+          if (o.type === "highlight") {
+            var v = document.createElement("button");
+            v.className = "tm-sheet-time-pill";
+            v.style.setProperty("--tab-color", l);
+            v.textContent = formatTimeWithHours(o.startTime);
+            v.title = "跳转到此时间";
+            v.addEventListener("click", (function() {
+              r.loopManager._handleTabClick(o);
+            }));
+            p.appendChild(v);
+          } else {
+            var y = document.createElement("div");
+            y.className = "tm-sheet-time-pill interval";
+            y.style.setProperty("--tab-color", l);
+            var b = document.createElement("span");
+            b.className = "tm-time-part start";
+            b.textContent = formatTimeWithHours(o.startTime);
+            b.title = "跳转到起点并开始循环";
+            b.addEventListener("click", (function(a) {
+              a.stopPropagation();
+              r.loopManager._handleTabClick(o);
+            }));
+            var C = document.createElement("span");
+            C.className = "tm-time-sep";
+            C.textContent = "~";
+            var _ = document.createElement("span");
+            _.className = "tm-time-part end";
+            _.textContent = formatTimeWithHours(o.endTime);
+            _.title = "跳转到终点";
+            _.addEventListener("click", (function(a) {
+              a.stopPropagation();
+              if (r.targetVideo) {
+                r.targetVideo.currentTime = o.endTime;
+              }
+            }));
+            y.appendChild(b);
+            y.appendChild(C);
+            y.appendChild(_);
+            y.addEventListener("click", (function() {
+              r.loopManager._handleTabClick(o);
+            }));
+            p.appendChild(y);
+          }
+          var k = document.createElement("input");
+          k.type = "text";
+          k.className = "tm-sheet-item-comment-input";
+          k.placeholder = "添加备注...";
+          k.value = o.comment || "";
+          var P = function stopProp(r) {
+            return r.stopPropagation();
+          };
+          k.addEventListener("keydown", P);
+          k.addEventListener("keyup", P);
+          k.addEventListener("keypress", P);
+          k.addEventListener("mousedown", P);
+          k.addEventListener("touchstart", P);
+          k.addEventListener("input", (function(a) {
+            o.comment = a.target.value;
+            r.loopManager._saveTabs();
+            r.loopManager.renderTabs();
+          }));
+          k.addEventListener("change", (function() {
+            r.loopManager._saveTabs();
+            r.loopManager.renderTabs();
+          }));
+          var E = document.createElement("button");
+          E.className = "tm-sheet-delete-btn";
+          E.innerHTML = "❌";
+          E.title = "删除标签";
+          E.addEventListener("click", (function(a) {
+            a.stopPropagation();
+            r.loopManager.tabs = r.loopManager.tabs.filter((function(r) {
+              return r.id !== o.id;
+            }));
+            if (r.loopManager.activeTabId === o.id) {
+              r.loopManager.disableLoop();
+              r.loopManager.activeTabId = null;
+            }
+            r.loopManager._saveTabs();
+            r.loopManager.renderTabs();
+            r.updateBottomSheet();
+          }));
+          u.appendChild(p);
+          u.appendChild(k);
+          u.appendChild(E);
+          r._sheetList.appendChild(u);
+        }));
+      }
+    }, {
+      "key": "cleanup",
+      "value": function cleanup() {
+        if (this._sheetOverlay) {
+          this._sheetOverlay.remove();
+          this._sheetOverlay = null;
+        }
+        if (this._sheetPanel) {
+          this._sheetPanel.remove();
+          this._sheetPanel = null;
+          this._sheetList = null;
+          this._sheetCountBadge = null;
+        }
+      }
+    } ]);
+  }();
   function LoopManager_typeof(r) {
     "@babel/helpers - typeof";
     return LoopManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -18926,7 +19300,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Qe = function() {
+  var Ze = function() {
     function LoopManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       LoopManager_classCallCheck(this, LoopManager);
@@ -18949,9 +19323,7 @@
       this._longPressTimer = null;
       this._longPressTriggered = false;
       this.storageKey = null;
-      this._sheetOverlay = null;
-      this._sheetPanel = null;
-      this._sheetList = null;
+      this.bottomSheet = new Qe(this);
       this.editingTabId = null;
       this.editingTabCopy = null;
       this._durationFallbackBound = null;
@@ -18960,6 +19332,38 @@
       this._handleOutsideClickForEdit = this._handleOutsideClickForEdit.bind(this);
     }
     return LoopManager_createClass(LoopManager, [ {
+      "key": "_sheetOverlay",
+      "get": function get() {
+        return this.bottomSheet._sheetOverlay;
+      },
+      "set": function set(r) {
+        this.bottomSheet._sheetOverlay = r;
+      }
+    }, {
+      "key": "_sheetPanel",
+      "get": function get() {
+        return this.bottomSheet._sheetPanel;
+      },
+      "set": function set(r) {
+        this.bottomSheet._sheetPanel = r;
+      }
+    }, {
+      "key": "_sheetList",
+      "get": function get() {
+        return this.bottomSheet._sheetList;
+      },
+      "set": function set(r) {
+        this.bottomSheet._sheetList = r;
+      }
+    }, {
+      "key": "_sheetCountBadge",
+      "get": function get() {
+        return this.bottomSheet._sheetCountBadge;
+      },
+      "set": function set(r) {
+        this.bottomSheet._sheetCountBadge = r;
+      }
+    }, {
       "key": "setControlManager",
       "value": function setControlManager(r) {
         this.controlManager = r;
@@ -19623,41 +20027,42 @@
     }, {
       "key": "updateLoopMarkers",
       "value": function updateLoopMarkers() {
+        var r;
         if (!this.targetVideo || !this.loopStartMarker || !this.loopEndMarker) {
           return;
         }
-        var r = document.querySelector(".tm-progress-bar");
-        if (!r) {
+        var o = ((r = this.uiElements) === null || r === void 0 ? void 0 : r.progressBar) || document.querySelector(".tm-progress-bar");
+        if (!o) {
           return;
         }
-        var o = this.targetVideo.duration;
-        if (o <= 0) {
+        var a = this.targetVideo.duration;
+        if (a <= 0) {
           return;
         }
-        var a = function updateMarker(r, a, l) {
-          if (r !== null && !isNaN(r) && r >= 0 && r <= o) {
-            a.style.left = "".concat(r / o * 100, "%");
-            a.style.display = "block";
+        var l = function updateMarker(r, o, l) {
+          if (r !== null && !isNaN(r) && r >= 0 && r <= a) {
+            o.style.left = "".concat(r / a * 100, "%");
+            o.style.display = "block";
             if (l) {
-              a.classList.add("active");
+              o.classList.add("active");
             } else {
-              a.classList.remove("active");
+              o.classList.remove("active");
             }
           } else {
-            a.style.display = "none";
-            a.classList.remove("active");
+            o.style.display = "none";
+            o.classList.remove("active");
           }
         };
-        a(this.loopStartTime, this.loopStartMarker, this.loopActive);
-        a(this.loopEndTime, this.loopEndMarker, this.loopActive);
+        l(this.loopStartTime, this.loopStartMarker, this.loopActive);
+        l(this.loopEndTime, this.loopEndMarker, this.loopActive);
         if (this.loopRangeElement) {
           if (this.loopActive && this.loopStartTime !== null && this.loopEndTime !== null) {
-            var l = this.loopStartTime / o * 100;
-            var u = this.loopEndTime / o * 100;
-            var p = u - l;
-            if (p > 0) {
-              this.loopRangeElement.style.left = "".concat(l, "%");
-              this.loopRangeElement.style.width = "".concat(p, "%");
+            var u = this.loopStartTime / a * 100;
+            var p = this.loopEndTime / a * 100;
+            var v = p - u;
+            if (v > 0) {
+              this.loopRangeElement.style.left = "".concat(u, "%");
+              this.loopRangeElement.style.width = "".concat(v, "%");
               this.loopRangeElement.style.display = "block";
               this.loopRangeElement.classList.add("active");
             } else {
@@ -19848,272 +20253,37 @@
     }, {
       "key": "_bindSwipeUpGesture",
       "value": function _bindSwipeUpGesture() {
-        var r, o = this;
-        var a = (r = this.tabScrollContainer) === null || r === void 0 ? void 0 : r.parentElement;
-        if (!a) {
-          return;
-        }
-        var l = 0;
-        var u = 0;
-        var p = false;
-        a.addEventListener("touchstart", (function(r) {
-          var o = r.touches[0];
-          l = o.clientY;
-          u = o.clientX;
-          p = true;
-        }), {
-          "passive": true
-        });
-        a.addEventListener("touchend", (function(r) {
-          if (!p) {
-            return;
-          }
-          p = false;
-          var a = r.changedTouches[0];
-          var v = a.clientY - l;
-          var y = Math.abs(a.clientX - u);
-          if (v < -40 && Math.abs(v) > y) {
-            r.stopPropagation();
-            o._openBottomSheet();
-          }
-        }));
+        return this.bottomSheet.bindSwipeUpGesture();
       }
     }, {
       "key": "_toggleBottomSheet",
       "value": function _toggleBottomSheet() {
-        if (this._sheetPanel && this._sheetPanel.classList.contains("visible")) {
-          this._closeBottomSheet();
-        } else {
-          this._openBottomSheet();
-        }
+        return this.bottomSheet.toggle();
       }
     }, {
       "key": "_updatePanelPosition",
       "value": function _updatePanelPosition() {
-        var r, o, a;
-        if (!this._sheetPanel) {
-          return;
-        }
-        var l = ((r = this.tabAddBtn) === null || r === void 0 ? void 0 : r.closest(".tm-control-buttons")) || document.querySelector(".tm-control-buttons");
-        var u = ((o = this.tabAddBtn) === null || o === void 0 ? void 0 : o.closest(".tm-loop-control-row")) || ((a = this.tabAddBtn) === null || a === void 0 ? void 0 : a.parentElement);
-        var p = document.querySelector(".tm-handle-container");
-        if (l && u) {
-          var v = l.getBoundingClientRect();
-          var y = u.getBoundingClientRect();
-          var b = Math.max(0, v.bottom - y.bottom);
-          this._sheetPanel.style.bottom = "".concat(b, "px");
-          if (p) {
-            var C = p.getBoundingClientRect();
-            var _ = y.bottom - C.bottom - 10;
-            if (_ > 80) {
-              this._sheetPanel.style.maxHeight = "".concat(_, "px");
-              return;
-            }
-          }
-        }
-        this._sheetPanel.style.maxHeight = "calc(100vh - 120px)";
+        return this.bottomSheet.updatePanelPosition();
       }
     }, {
       "key": "_openBottomSheet",
       "value": function _openBottomSheet() {
-        if (!this._sheetOverlay || !this._sheetPanel) {
-          this._createBottomSheet();
-        }
-        this._updateBottomSheet();
-        this._updatePanelPosition();
-        if (this._sheetOverlay) {
-          this._sheetOverlay.classList.add("visible");
-        }
-        if (this._sheetPanel) {
-          this._sheetPanel.classList.add("visible");
-        }
+        return this.bottomSheet.open();
       }
     }, {
       "key": "_closeBottomSheet",
       "value": function _closeBottomSheet() {
-        if (this._sheetOverlay) {
-          this._sheetOverlay.classList.remove("visible");
-        }
-        if (this._sheetPanel) {
-          this._sheetPanel.classList.remove("visible");
-        }
+        return this.bottomSheet.close();
       }
     }, {
       "key": "_createBottomSheet",
       "value": function _createBottomSheet() {
-        var r, o = this;
-        var a = ((r = this.tabAddBtn) === null || r === void 0 ? void 0 : r.closest(".tm-control-buttons")) || document.querySelector(".tm-control-buttons");
-        if (!a) {
-          return;
-        }
-        if (this._sheetOverlay) {
-          this._sheetOverlay.remove();
-        }
-        if (this._sheetPanel) {
-          this._sheetPanel.remove();
-        }
-        this._sheetOverlay = document.createElement("div");
-        this._sheetOverlay.className = "tm-bottom-sheet-overlay";
-        this._sheetOverlay.addEventListener("click", (function() {
-          return o._closeBottomSheet();
-        }));
-        this._sheetOverlay.addEventListener("touchmove", (function(r) {
-          if (r.cancelable) {
-            r.preventDefault();
-          }
-        }), {
-          "passive": false
-        });
-        this._sheetPanel = document.createElement("div");
-        this._sheetPanel.className = "tm-bottom-sheet-panel";
-        this._sheetPanel.addEventListener("click", (function(r) {
-          return r.stopPropagation();
-        }));
-        var l = document.createElement("div");
-        l.className = "tm-sheet-header";
-        var u = document.createElement("div");
-        u.style.display = "flex";
-        u.style.alignItems = "center";
-        u.style.gap = "8px";
-        var p = document.createElement("div");
-        p.className = "tm-bottom-sheet-title";
-        p.textContent = "标签管理";
-        var v = document.createElement("span");
-        v.className = "tm-sheet-count-badge";
-        this._sheetCountBadge = v;
-        u.appendChild(p);
-        u.appendChild(v);
-        var y = document.createElement("button");
-        y.className = "tm-sheet-close-btn";
-        y.innerHTML = "✕";
-        y.title = "关闭";
-        y.addEventListener("click", (function() {
-          return o._closeBottomSheet();
-        }));
-        l.appendChild(u);
-        l.appendChild(y);
-        this._sheetList = document.createElement("div");
-        this._sheetList.className = "tm-bottom-sheet-list";
-        this._sheetPanel.appendChild(l);
-        this._sheetPanel.appendChild(this._sheetList);
-        var b = document.querySelector(".tm-player-container") || document.body;
-        b.appendChild(this._sheetOverlay);
-        a.appendChild(this._sheetPanel);
+        return this.bottomSheet.createBottomSheet();
       }
     }, {
       "key": "_updateBottomSheet",
       "value": function _updateBottomSheet() {
-        var r = this;
-        if (!this._sheetList) {
-          return;
-        }
-        this._sheetList.innerHTML = "";
-        if (this._sheetCountBadge) {
-          this._sheetCountBadge.textContent = "共 ".concat(this.tabs.length, " 条");
-        }
-        if (this.tabs.length === 0) {
-          var o = document.createElement("div");
-          o.className = "tm-bottom-sheet-empty";
-          o.textContent = "暂无标签";
-          this._sheetList.appendChild(o);
-          return;
-        }
-        this.tabs.forEach((function(o, a) {
-          var l = r.tabColors[a % r.tabColors.length];
-          var u = document.createElement("div");
-          u.className = "tm-sheet-item";
-          if (r.activeTabId === o.id) {
-            u.classList.add("active");
-          }
-          var p = document.createElement("div");
-          p.className = "tm-sheet-item-time-container";
-          if (o.type === "highlight") {
-            var v = document.createElement("button");
-            v.className = "tm-sheet-time-pill";
-            v.style.setProperty("--tab-color", l);
-            v.textContent = formatTimeWithHours(o.startTime);
-            v.title = "跳转到此时间";
-            v.addEventListener("click", (function() {
-              r._handleTabClick(o);
-            }));
-            p.appendChild(v);
-          } else {
-            var y = document.createElement("div");
-            y.className = "tm-sheet-time-pill interval";
-            y.style.setProperty("--tab-color", l);
-            var b = document.createElement("span");
-            b.className = "tm-time-part start";
-            b.textContent = formatTimeWithHours(o.startTime);
-            b.title = "跳转到起点并开始循环";
-            b.addEventListener("click", (function(a) {
-              a.stopPropagation();
-              r._handleTabClick(o);
-            }));
-            var C = document.createElement("span");
-            C.className = "tm-time-sep";
-            C.textContent = "~";
-            var _ = document.createElement("span");
-            _.className = "tm-time-part end";
-            _.textContent = formatTimeWithHours(o.endTime);
-            _.title = "跳转到终点";
-            _.addEventListener("click", (function(a) {
-              a.stopPropagation();
-              if (r.targetVideo) {
-                r.targetVideo.currentTime = o.endTime;
-              }
-            }));
-            y.appendChild(b);
-            y.appendChild(C);
-            y.appendChild(_);
-            y.addEventListener("click", (function() {
-              r._handleTabClick(o);
-            }));
-            p.appendChild(y);
-          }
-          var k = document.createElement("input");
-          k.type = "text";
-          k.className = "tm-sheet-item-comment-input";
-          k.placeholder = "添加备注...";
-          k.value = o.comment || "";
-          var P = function stopProp(r) {
-            return r.stopPropagation();
-          };
-          k.addEventListener("keydown", P);
-          k.addEventListener("keyup", P);
-          k.addEventListener("keypress", P);
-          k.addEventListener("mousedown", P);
-          k.addEventListener("touchstart", P);
-          k.addEventListener("input", (function(a) {
-            o.comment = a.target.value;
-            r._saveTabs();
-            r.renderTabs();
-          }));
-          k.addEventListener("change", (function() {
-            r._saveTabs();
-            r.renderTabs();
-          }));
-          var E = document.createElement("button");
-          E.className = "tm-sheet-delete-btn";
-          E.innerHTML = "❌";
-          E.title = "删除标签";
-          E.addEventListener("click", (function(a) {
-            a.stopPropagation();
-            r.tabs = r.tabs.filter((function(r) {
-              return r.id !== o.id;
-            }));
-            if (r.activeTabId === o.id) {
-              r.disableLoop();
-              r.activeTabId = null;
-            }
-            r._saveTabs();
-            r.renderTabs();
-            r._updateBottomSheet();
-          }));
-          u.appendChild(p);
-          u.appendChild(k);
-          u.appendChild(E);
-          r._sheetList.appendChild(u);
-        }));
+        return this.bottomSheet.updateBottomSheet();
       }
     }, {
       "key": "renderProgressMarkers",
@@ -20269,11 +20439,8 @@
           this.targetVideo.removeEventListener("timeupdate", this._durationFallbackBound);
           this._durationFallbackBound = null;
         }
-        if (this._sheetOverlay) {
-          this._sheetOverlay.remove();
-          this._sheetOverlay = null;
-          this._sheetPanel = null;
-          this._sheetList = null;
+        if (this.bottomSheet) {
+          this.bottomSheet.cleanup();
         }
         if (this._longPressTimer) {
           clearTimeout(this._longPressTimer);
@@ -20326,7 +20493,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ze = function() {
+  var et = function() {
     function ProgressManager(r, o) {
       ProgressManager_classCallCheck(this, ProgressManager);
       this.playerCore = r;
@@ -20600,7 +20767,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var et = function() {
+  var tt = function() {
     function EventManager(r, o, a) {
       EventManager_classCallCheck(this, EventManager);
       this.playerCore = r;
@@ -20990,7 +21157,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var tt = function() {
+  var nt = function() {
     function SettingsManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       var l = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -21587,7 +21754,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var nt = function() {
+  var rt = function() {
     function VideoSwipeManager(r, o, a) {
       var l = this;
       var u = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -22361,7 +22528,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var rt = function() {
+  var ot = function() {
     function CustomVideoPlayer() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       CustomVideoPlayer_classCallCheck(this, CustomVideoPlayer);
@@ -22417,10 +22584,10 @@
         var u = new Xe(this.playerCore, l, a);
         u.init();
         this.managers.controlManager = u;
-        var p = new tt(this.playerCore, l, a, u);
+        var p = new nt(this.playerCore, l, a, u);
         p.init();
         this.managers.settingsManager = p;
-        var v = new Ze(this.playerCore, l);
+        var v = new et(this.playerCore, l);
         v.init({
           "progressBarElement": u.progressBarElement,
           "progressIndicator": u.progressIndicator,
@@ -22429,7 +22596,7 @@
           "timeIndicator": u.timeIndicator
         });
         this.managers.progressManager = v;
-        var y = new Qe(this.playerCore, l, u);
+        var y = new Ze(this.playerCore, l, u);
         y.init({
           "loopStartMarker": u.loopStartMarker,
           "loopEndMarker": u.loopEndMarker,
@@ -22444,7 +22611,7 @@
         b.init();
         this.managers.dragManager = b;
         if (this.playerCore.targetVideo && l.videoWrapper && l.handle) {
-          this.swipeManager = new nt(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
+          this.swipeManager = new rt(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
             return r.close();
           }), a);
           this.swipeManager.playerCore = this.playerCore;
@@ -22456,7 +22623,7 @@
           "dragManager": b,
           "swipeManager": this.swipeManager
         });
-        var C = new et(this.playerCore, l, this.managers);
+        var C = new tt(this.playerCore, l, this.managers);
         C.init();
         this.managers.eventManager = C;
         a.assembleDOM();
@@ -22568,7 +22735,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ot = function() {
+  var at = function() {
     function FloatingButton() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       FloatingButton_classCallCheck(this, FloatingButton);
@@ -22714,7 +22881,7 @@
       "value": function handleButtonClick() {
         pe.trackPluginTrigger();
         this.button.style.display = "none";
-        this.videoPlayer = new rt({
+        this.videoPlayer = new ot({
           "playerState": this.playerState,
           "callingButton": this.button
         });
@@ -22783,7 +22950,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var at = function() {
+  var it = function() {
     function PlayerState() {
       PlayerState_classCallCheck(this, PlayerState);
       this.settings = {
@@ -23300,9 +23467,9 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var it = 30 * 60 * 1e3;
-  var st = 3;
-  var lt = function() {
+  var st = 30 * 60 * 1e3;
+  var lt = 3;
+  var ct = function() {
     function LoginManager() {
       LoginManager_classCallCheck(this, LoginManager);
       this.userEmail = "";
@@ -23508,12 +23675,12 @@
       "value": function isCircuitBroken(r) {
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0);
         var a = getLocalStorage("mp_circuit_last_fail_".concat(r), 0);
-        if (o >= st) {
+        if (o >= lt) {
           var l = Date.now() - a;
-          if (l < it) {
+          if (l < st) {
             return true;
           }
-          setLocalStorage("mp_circuit_fail_".concat(r), st - 1);
+          setLocalStorage("mp_circuit_fail_".concat(r), lt - 1);
         }
         return false;
       }
@@ -23523,7 +23690,7 @@
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0) + 1;
         setLocalStorage("mp_circuit_fail_".concat(r), o);
         setLocalStorage("mp_circuit_last_fail_".concat(r), Date.now());
-        if (o >= st) {}
+        if (o >= lt) {}
       }
     }, {
       "key": "resetCircuitBreaker",
@@ -24015,7 +24182,7 @@
           switch (o.prev = o.next) {
            case 0:
             o.prev = 0;
-            r = new lt;
+            r = new ct;
             o.next = 4;
             return r.init();
 
@@ -24036,8 +24203,8 @@
     })));
     return _initAutoLogin.apply(this, arguments);
   }
-  var ct = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
-  var ut = [ {
+  var ut = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
+  var dt = [ {
     "selector": 'div[class="my-2 text-sm text-nord4 truncate"]',
     "styles": "white-space: normal !important;"
   }, {
@@ -24047,11 +24214,11 @@
     "selector": 'div[class*="z-max"]',
     "styles": "z-index: 9000 !important;"
   } ];
-  var dt = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
+  var ht = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
   const mt = {
-    "adSelectors": ct,
-    "customStyles": ut,
-    "blockedUrlPatterns": dt,
+    "adSelectors": ut,
+    "customStyles": dt,
+    "blockedUrlPatterns": ht,
     "isVideoSite": true,
     "domains": getSiteDomains("MISSAV")
   };
@@ -24162,7 +24329,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ht = function() {
+  var pt = function() {
     function AdBlockConfig() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       adblock_classCallCheck(this, AdBlockConfig);
@@ -24202,7 +24369,7 @@
       }
     } ]);
   }();
-  var pt = function() {
+  var ft = function() {
     function StyleManager(r) {
       adblock_classCallCheck(this, StyleManager);
       this.config = r;
@@ -24230,7 +24397,7 @@
       }
     } ]);
   }();
-  var ft = function() {
+  var vt = function() {
     function DOMCleaner(r) {
       adblock_classCallCheck(this, DOMCleaner);
       this.config = r;
@@ -24319,7 +24486,7 @@
       }
     } ]);
   }();
-  var vt = function() {
+  var gt = function() {
     function RequestBlocker(r) {
       adblock_classCallCheck(this, RequestBlocker);
       this.config = r;
@@ -24427,15 +24594,15 @@
       }
     } ]);
   }();
-  var gt = function() {
+  var yt = function() {
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(window.location.href);
       var o = r ? mt : {};
-      this.config = new ht(o);
-      this.styleManager = new pt(this.config);
-      this.domCleaner = new ft(this.config);
-      this.requestBlocker = new vt(this.config);
+      this.config = new pt(o);
+      this.styleManager = new ft(this.config);
+      this.domCleaner = new vt(this.config);
+      this.requestBlocker = new gt(this.config);
     }
     return adblock_createClass(AdBlocker, [ {
       "key": "preventDetection",
@@ -24483,7 +24650,7 @@
       }
     } ]);
   }();
-  const yt = gt;
+  const bt = yt;
   function DetailExpander_typeof(r) {
     "@babel/helpers - typeof";
     return DetailExpander_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -24528,7 +24695,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var bt = function() {
+  var Ct = function() {
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
@@ -24642,7 +24809,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ct = function() {
+  var wt = function() {
     function QualityManager() {
       QualityManager_classCallCheck(this, QualityManager);
       this.maxAttempts = 20;
@@ -24793,7 +24960,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var wt = function() {
+  var xt = function() {
     function UrlRedirector() {
       UrlRedirector_classCallCheck(this, UrlRedirector);
       var r = y.MISSAV.primary;
@@ -24901,13 +25068,13 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var xt = new wt;
-  var _t = function() {
+  var _t = new xt;
+  var kt = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
-      this.detailExpander = new bt;
-      this.qualityManager = new Ct;
-      this.urlRedirector = xt;
+      this.detailExpander = new Ct;
+      this.qualityManager = new wt;
+      this.urlRedirector = _t;
     }
     return userExperienceEnhancer_createClass(UserExperienceEnhancer, [ {
       "key": "init",
@@ -24939,7 +25106,7 @@
   }();
   function initUserExperienceEnhancer() {
     var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
-    var o = new _t;
+    var o = new kt;
     o.init(r);
     return o;
   }
@@ -25345,7 +25512,7 @@
       }));
     };
   }
-  xt.checkAndRedirect();
+  _t.checkAndRedirect();
   function setupViewport() {
     var r = document.querySelector('meta[name="viewport"]');
     if (!r) {
@@ -25392,9 +25559,9 @@
              case 5:
               injectStyles();
               r = initUserExperienceEnhancer(true);
-              o = new at;
+              o = new it;
               o.loadSettings();
-              a = new ot({
+              a = new at({
                 "playerState": o
               });
               a.init();
@@ -25406,7 +25573,7 @@
               if (l) {
                 window.loginManager = l;
               }
-              u = new yt;
+              u = new bt;
               u.init();
               p.next = 21;
               break;
