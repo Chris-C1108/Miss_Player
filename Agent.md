@@ -1,4 +1,4 @@
-# Agent 开发与维护准则 (Agent.md)
+# Agent 开发与维护准则 (AGENTS.md)
 
 本文档定义了 AI Agent 及开发者在维护与迭代 **Miss Player** 项目时必须严格遵守的架构规范、发版流程及安全红线。
 
