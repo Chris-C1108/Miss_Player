@@ -742,6 +742,7 @@ export class LoopManager {
         if (!this.targetVideo || this.loopStartTime === null || this.loopEndTime === null) return;
 
         this.loopActive = true;
+        telemetry.recordFeatureAction('ab_loop_set');
         telemetry.track('loop_toggle', {
             enabled: true,
             interval_sec: Math.round((this.loopEndTime - this.loopStartTime) * 10) / 10
@@ -775,6 +776,7 @@ export class LoopManager {
         if (!this.loopActive || this.loopStartTime === null || this.loopEndTime === null) return;
         const ct = this.targetVideo.currentTime;
         if (ct >= this.loopEndTime || ct < this.loopStartTime) {
+            this.totalLoopDurationSec = (this.totalLoopDurationSec || 0) + Math.max(0, this.loopEndTime - this.loopStartTime);
             this.targetVideo.currentTime = this.loopStartTime;
         }
         this.renderProgressMarkers();

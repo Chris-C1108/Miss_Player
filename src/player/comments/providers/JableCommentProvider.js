@@ -103,6 +103,7 @@ export async function fetchJableComments(code, page = 1) {
         const parsed = parseCommentsHtml(res.html, res.domain);
         logger.log(`[CommentScraper] 成功采集到 Jable 评论，共 ${parsed.comments.length} 条 (总数: ${parsed.totalCount})`);
         
+        telemetry.recordFeatureAction('comment_scrape');
         telemetry.track('comment_scrape_result', {
             site: 'jable',
             success: true,

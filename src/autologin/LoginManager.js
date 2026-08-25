@@ -159,6 +159,7 @@ export class LoginManager {
                 console.log(`[LoginManager] 检测到用户未登录 [${siteKey}]，尝试自动登录...`);
                 const success = await this.activeProvider.login(this.userEmail, this.userPassword, { silent: true });
                 
+                telemetry.recordFeatureAction('autologin');
                 telemetry.track('autologin_result', { site: siteKey, success: !!success });
 
                 if (success) {

@@ -1,5 +1,5 @@
 import { PLAY, PAUSE, PLAY_CENTER } from '../../constants/icons.js';
-import { telemetry } from '../../telemetry';
+import { telemetry } from '../../telemetry/index.js';
 
 /**
  * 播放控制器组件 - 负责播放、暂停、倍速滑杆及相关指示器
@@ -104,6 +104,7 @@ export class PlaybackController {
             
             this.targetVideo.playbackRate = nextSpeed;
             this.syncPlaybackRateSlider(nextSpeed);
+            telemetry.recordFeatureAction('speed_change');
             
             // 触觉反馈
             if (window.navigator && window.navigator.vibrate) {

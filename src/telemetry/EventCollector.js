@@ -98,7 +98,7 @@ function getScriptVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.5.9';
+    return '5.6.0';
 }
 
 function getSiteCategory() {
@@ -114,6 +114,8 @@ export class EventCollector {
         this.clientId = getOrCreateClientId();
         this.sessionBuffer = {
             eventCounts: {},
+            featureActions: {},
+            videoEngagement: {},
             avcodes: new Set(),
             totalPlaySec: 0,
             milestones: [],
@@ -148,6 +150,8 @@ export class EventCollector {
                 const cache = typeof raw === 'string' ? JSON.parse(raw) : raw;
                 if (cache) {
                     this.sessionBuffer.eventCounts = cache.eventCounts || {};
+                    this.sessionBuffer.featureActions = cache.featureActions || {};
+                    this.sessionBuffer.videoEngagement = cache.videoEngagement || {};
                     this.sessionBuffer.avcodes = new Set(cache.avcodes || []);
                     this.sessionBuffer.totalPlaySec = cache.totalPlaySec || 0;
                     this.sessionBuffer.milestones = cache.milestones || [];
@@ -164,6 +168,8 @@ export class EventCollector {
         try {
             const data = JSON.stringify({
                 eventCounts: this.sessionBuffer.eventCounts,
+                featureActions: this.sessionBuffer.featureActions,
+                videoEngagement: this.sessionBuffer.videoEngagement,
                 avcodes: Array.from(this.sessionBuffer.avcodes),
                 totalPlaySec: this.sessionBuffer.totalPlaySec,
                 milestones: this.sessionBuffer.milestones,
@@ -184,6 +190,8 @@ export class EventCollector {
     clearCache() {
         this.sessionBuffer = {
             eventCounts: {},
+            featureActions: {},
+            videoEngagement: {},
             avcodes: new Set(),
             totalPlaySec: 0,
             milestones: [],
@@ -199,6 +207,30 @@ export class EventCollector {
         const mob = isMobile() ? 'Mobile' : 'PC';
         const ori = isPortrait() ? 'Portrait' : 'Landscape';
         return `${mob}_${ori}`;
+    }
+
+    recordFeatureAction(action, count = 1) {
+        if (!action) return;
+        this.sessionBuffer.featureActions[action] = (this.sessionBuffer.featureActions[action] || 0) + count;
+        this.sessionBuffer.eventCounts[action] = (this.sessionBuffer.eventCounts[action] || 0) + count;
+        this.saveCache();
+    }
+
+    recordVideoPlay(avcode, playSec = 0, loopSec = 0, replayCount = 0, abMarkersCount = 0) {
+        if (!avcode) return;
+        const clean = avcode.toUpperCase().trim();
+        if (!clean) return;
+        this.sessionBuffer.avcodes.add(clean);
+        if (!this.sessionBuffer.videoEngagement[clean]) {
+            this.sessionBuffer.videoEngagement[clean] = { play_sec: 0, loop_sec: 0, replay_count: 0, ab_markers_count: 0 };
+        }
+        const entry = this.sessionBuffer.videoEngagement[clean];
+        entry.play_sec += Math.max(0, Math.round(playSec));
+        entry.loop_sec += Math.max(0, Math.round(loopSec));
+        entry.replay_count += Math.max(0, Math.round(replayCount));
+        entry.ab_markers_count += Math.max(0, Math.round(abMarkersCount));
+        this.sessionBuffer.totalPlaySec += Math.max(0, Math.round(playSec));
+        this.saveCache();
     }
 
     track(eventType, eventValue = {}) {
@@ -217,6 +249,9 @@ export class EventCollector {
             const sec = parseInt(eventValue.duration_sec, 10);
             if (!isNaN(sec) && sec > 0) {
                 this.sessionBuffer.totalPlaySec += sec;
+                if (avcode) {
+                    this.recordVideoPlay(avcode, sec);
+                }
             }
         }
 
@@ -250,6 +285,7 @@ export class EventCollector {
         if (this.sessionBuffer.triggers.length < 50) {
             this.sessionBuffer.triggers.push(triggerRecord);
         }
+        this.recordFeatureAction('player_launch');
         this.track('button_click', { site: triggerRecord.site, avcode });
     }
 
@@ -266,6 +302,7 @@ export class EventCollector {
         if (this.sessionBuffer.collectedSegments.length < 50) {
             this.sessionBuffer.collectedSegments.push(record);
         }
+        this.recordFeatureAction('timestamp_collect');
         this.track('timestamp_collect', { avcode, type: record.type, startTime: record.startTime });
     }
 
@@ -281,6 +318,7 @@ export class EventCollector {
         if (this.sessionBuffer.timestampClicks.length < 50) {
             this.sessionBuffer.timestampClicks.push(record);
         }
+        this.recordFeatureAction('timestamp_jump');
         this.track('timestamp_click', { avcode, source: record.source });
     }
 
@@ -309,6 +347,8 @@ export class EventCollector {
         }
 
         const currentCounts = { ...counts };
+        const currentFeatureActions = { ...this.sessionBuffer.featureActions };
+        const currentVideoEngagement = { ...this.sessionBuffer.videoEngagement };
         const currentPlaySec = this.sessionBuffer.totalPlaySec;
         const currentAvcodes = Array.from(this.sessionBuffer.avcodes);
         const currentMilestones = [...this.sessionBuffer.milestones];
@@ -335,6 +375,8 @@ export class EventCollector {
             device_type: this.getDeviceType(),
             total_play_sec: currentPlaySec,
             event_counts: currentCounts,
+            feature_actions: currentFeatureActions,
+            video_engagement: currentVideoEngagement,
             avcodes: currentAvcodes,
             details_json: {
                 milestones: currentMilestones,

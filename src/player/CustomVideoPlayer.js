@@ -9,7 +9,8 @@ import { SettingsManager } from './managers/SettingsManager.js';
 import { VideoSwipeManager } from './managers/videoSwipeManager.js';
 import { updateSafariThemeColor, Toast } from '../utils/index.js';
 import { __ } from '../constants/i18n.js';
-import { telemetry } from '../telemetry';
+import { telemetry } from '../telemetry/index.js';
+import { getVideoCodeFromUrl } from '../utils/videoCode.js';
 
 /**
  * 自定义视频播放器控制器 - 模块化重构版本
@@ -29,6 +30,10 @@ export class CustomVideoPlayer {
         
         // 初始状态
         this.initialized = false;
+        this._activePlayStartTime = null;
+        this._activePlayDurationSec = 0;
+        this._lastVideoCurrentTime = 0;
+        this._replayCount = 0;
     }
 
     /**
@@ -90,6 +95,39 @@ export class CustomVideoPlayer {
                 try { return new URL(videoElem.src).hostname; } catch(_) { return ''; }
             })()
         });
+
+        // 挂载真实有效播放时长与重播追踪器
+        this._activePlayStartTime = !videoElem.paused ? Date.now() : null;
+        this._activePlayDurationSec = 0;
+        this._lastVideoCurrentTime = 0;
+        this._replayCount = 0;
+
+        this._onPlay = () => {
+            this._activePlayStartTime = Date.now();
+        };
+        this._onPauseOrEnded = () => {
+            if (this._activePlayStartTime) {
+                this._activePlayDurationSec += (Date.now() - this._activePlayStartTime) / 1000;
+                this._activePlayStartTime = null;
+            }
+        };
+        this._onTimeUpdate = () => {
+            if (videoElem && !videoElem.paused) {
+                if (!this._activePlayStartTime) {
+                    this._activePlayStartTime = Date.now();
+                }
+                const cur = videoElem.currentTime;
+                if (this._lastVideoCurrentTime > 0 && (this._lastVideoCurrentTime - cur) > 2.5) {
+                    this._replayCount++;
+                }
+                this._lastVideoCurrentTime = cur;
+            }
+        };
+
+        videoElem.addEventListener('play', this._onPlay);
+        videoElem.addEventListener('pause', this._onPauseOrEnded);
+        videoElem.addEventListener('ended', this._onPauseOrEnded);
+        videoElem.addEventListener('timeupdate', this._onTimeUpdate);
         
         // 创建UI管理器
         const uiManager = new UIManager(this.playerCore);
@@ -216,9 +254,33 @@ export class CustomVideoPlayer {
      * 关闭播放器
      */
     close() {
-        // 遥测上报：播放器关闭与会话时长
-        const durationSec = this._sessionStartTime ? Math.round((Date.now() - this._sessionStartTime) / 1000) : 0;
-        telemetry.track('player_close', { duration_sec: durationSec });
+        if (this._activePlayStartTime) {
+            this._activePlayDurationSec += (Date.now() - this._activePlayStartTime) / 1000;
+            this._activePlayStartTime = null;
+        }
+
+        const videoElem = this.playerCore?.targetVideo;
+        if (videoElem) {
+            if (this._onPlay) videoElem.removeEventListener('play', this._onPlay);
+            if (this._onPauseOrEnded) {
+                videoElem.removeEventListener('pause', this._onPauseOrEnded);
+                videoElem.removeEventListener('ended', this._onPauseOrEnded);
+            }
+            if (this._onTimeUpdate) videoElem.removeEventListener('timeupdate', this._onTimeUpdate);
+        }
+
+        const avcode = getVideoCodeFromUrl() || '';
+        const playSec = Math.round(this._activePlayDurationSec);
+        const loopManager = this.managers?.loopManager;
+        const loopSec = loopManager ? Math.round(loopManager.totalLoopDurationSec || 0) : 0;
+        const abCount = loopManager ? (loopManager.tabs?.length || 0) : 0;
+
+        if (avcode && (playSec > 0 || loopSec > 0)) {
+            telemetry.recordVideoPlay(avcode, playSec, loopSec, this._replayCount, abCount);
+        }
+
+        const sessionSec = this._sessionStartTime ? Math.round((Date.now() - this._sessionStartTime) / 1000) : playSec;
+        telemetry.track('player_close', { duration_sec: playSec || sessionSec });
 
         // 恢复网页浏览器滚动条
         if (this._scrollbarStyle) {
@@ -261,4 +323,4 @@ export class CustomVideoPlayer {
         this.managers = {};
         this.playerCore = null;
     }
-} 
+}

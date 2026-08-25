@@ -11,7 +11,7 @@
 // @description:vi MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @description:zh-CN MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:zh-TW MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器|多語言支持 支持 jable po*nhub 等通用
-// @version 5.5.9
+// @version 5.6.0
 // @author Chris_C
 // @match *://*.missav.ws/*
 // @match *://*.missav.ai/*
@@ -3146,6 +3146,7 @@
             u = b.sent;
             p = parseCommentsHtml(u.html, u.domain);
             E.log("[CommentScraper] 成功采集到 Jable 评论，共 ".concat(p.comments.length, " 条 (总数: ").concat(p.totalCount, ")"));
+            fe.recordFeatureAction("comment_scrape");
             fe.track("comment_scrape_result", {
               "site": "jable",
               "success": true,
@@ -3156,8 +3157,8 @@
               "domain": u.domain
             }));
 
-           case 14:
-            b.prev = 14;
+           case 15:
+            b.prev = 15;
             b.t0 = b["catch"](4);
             fe.track("comment_scrape_result", {
               "site": "jable",
@@ -3165,22 +3166,22 @@
               "duration_ms": Date.now() - l
             });
             if (!(b.t0.message && b.t0.message.includes("CF_SHIELD"))) {
-              b.next = 21;
+              b.next = 22;
               break;
             }
             v = new Error("触发人机验证");
             v.status = 403;
             throw v;
 
-           case 21:
+           case 22:
             throw b.t0;
 
-           case 22:
+           case 23:
            case "end":
             return b.stop();
           }
         }
-      }), _callee2, null, [ [ 4, 14 ] ]);
+      }), _callee2, null, [ [ 4, 15 ] ]);
     })));
     return _fetchJableComments.apply(this, arguments);
   }
@@ -7008,7 +7009,7 @@
         return GM_info.script.version;
       }
     } catch (r) {}
-    return "5.5.9";
+    return "5.6.0";
   }
   function getSiteCategory() {
     if (isSiteDomain("MISSAV")) {
@@ -7032,6 +7033,8 @@
       this.clientId = getOrCreateClientId();
       this.sessionBuffer = {
         "eventCounts": {},
+        "featureActions": {},
+        "videoEngagement": {},
         "avcodes": new Set,
         "totalPlaySec": 0,
         "milestones": [],
@@ -7070,6 +7073,8 @@
             var o = typeof r === "string" ? JSON.parse(r) : r;
             if (o) {
               this.sessionBuffer.eventCounts = o.eventCounts || {};
+              this.sessionBuffer.featureActions = o.featureActions || {};
+              this.sessionBuffer.videoEngagement = o.videoEngagement || {};
               this.sessionBuffer.avcodes = new Set(o.avcodes || []);
               this.sessionBuffer.totalPlaySec = o.totalPlaySec || 0;
               this.sessionBuffer.milestones = o.milestones || [];
@@ -7087,6 +7092,8 @@
         try {
           var r = JSON.stringify({
             "eventCounts": this.sessionBuffer.eventCounts,
+            "featureActions": this.sessionBuffer.featureActions,
+            "videoEngagement": this.sessionBuffer.videoEngagement,
             "avcodes": Array.from(this.sessionBuffer.avcodes),
             "totalPlaySec": this.sessionBuffer.totalPlaySec,
             "milestones": this.sessionBuffer.milestones,
@@ -7108,6 +7115,8 @@
       "value": function clearCache() {
         this.sessionBuffer = {
           "eventCounts": {},
+          "featureActions": {},
+          "videoEngagement": {},
           "avcodes": new Set,
           "totalPlaySec": 0,
           "milestones": [],
@@ -7126,6 +7135,48 @@
         return "".concat(r, "_").concat(o);
       }
     }, {
+      "key": "recordFeatureAction",
+      "value": function recordFeatureAction(r) {
+        var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 1;
+        if (!r) {
+          return;
+        }
+        this.sessionBuffer.featureActions[r] = (this.sessionBuffer.featureActions[r] || 0) + o;
+        this.sessionBuffer.eventCounts[r] = (this.sessionBuffer.eventCounts[r] || 0) + o;
+        this.saveCache();
+      }
+    }, {
+      "key": "recordVideoPlay",
+      "value": function recordVideoPlay(r) {
+        var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 0;
+        var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : 0;
+        var l = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : 0;
+        var u = arguments.length > 4 && arguments[4] !== void 0 ? arguments[4] : 0;
+        if (!r) {
+          return;
+        }
+        var p = r.toUpperCase().trim();
+        if (!p) {
+          return;
+        }
+        this.sessionBuffer.avcodes.add(p);
+        if (!this.sessionBuffer.videoEngagement[p]) {
+          this.sessionBuffer.videoEngagement[p] = {
+            "play_sec": 0,
+            "loop_sec": 0,
+            "replay_count": 0,
+            "ab_markers_count": 0
+          };
+        }
+        var v = this.sessionBuffer.videoEngagement[p];
+        v.play_sec += Math.max(0, Math.round(o));
+        v.loop_sec += Math.max(0, Math.round(a));
+        v.replay_count += Math.max(0, Math.round(l));
+        v.ab_markers_count += Math.max(0, Math.round(u));
+        this.sessionBuffer.totalPlaySec += Math.max(0, Math.round(o));
+        this.saveCache();
+      }
+    }, {
       "key": "track",
       "value": function track(r) {
         var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
@@ -7142,6 +7193,9 @@
           var u = parseInt(o.duration_sec, 10);
           if (!isNaN(u) && u > 0) {
             this.sessionBuffer.totalPlaySec += u;
+            if (l) {
+              this.recordVideoPlay(l, u);
+            }
           }
         }
         var p = [ "player_open_success", "player_open_fail", "player_close", "button_click", "autologin_result", "comment_scrape_result", "timestamp_collect", "timestamp_click" ];
@@ -7175,6 +7229,7 @@
         if (this.sessionBuffer.triggers.length < 50) {
           this.sessionBuffer.triggers.push(p);
         }
+        this.recordFeatureAction("player_launch");
         this.track("button_click", {
           "site": p.site,
           "avcode": u
@@ -7196,6 +7251,7 @@
         if (this.sessionBuffer.collectedSegments.length < 50) {
           this.sessionBuffer.collectedSegments.push(a);
         }
+        this.recordFeatureAction("timestamp_collect");
         this.track("timestamp_collect", {
           "avcode": o,
           "type": a.type,
@@ -7217,6 +7273,7 @@
         if (this.sessionBuffer.timestampClicks.length < 50) {
           this.sessionBuffer.timestampClicks.push(a);
         }
+        this.recordFeatureAction("timestamp_jump");
         this.track("timestamp_click", {
           "avcode": o,
           "source": a.source
@@ -7239,89 +7296,93 @@
       "key": "flush",
       "value": function() {
         var r = EventCollector_asyncToGenerator(EventCollector_regeneratorRuntime().mark((function _callee2() {
-          var r, o, a, l, u, p, v, y, b, C, _, k, P, E, S, D, L, M, T, A, j, B, I = arguments;
-          return EventCollector_regeneratorRuntime().wrap((function _callee2$(O) {
+          var r, o, a, l, u, p, v, y, b, C, _, k, P, E, S, D, L, M, T, A, j, B, I, O, V = arguments;
+          return EventCollector_regeneratorRuntime().wrap((function _callee2$(R) {
             while (1) {
-              switch (O.prev = O.next) {
+              switch (R.prev = R.next) {
                case 0:
-                r = I.length > 0 && I[0] !== void 0 ? I[0] : false;
-                o = I.length > 1 && I[1] !== void 0 ? I[1] : false;
+                r = V.length > 0 && V[0] !== void 0 ? V[0] : false;
+                o = V.length > 1 && V[1] !== void 0 ? V[1] : false;
                 if (this.isEnabled()) {
-                  O.next = 4;
+                  R.next = 4;
                   break;
                 }
-                return O.abrupt("return");
+                return R.abrupt("return");
 
                case 4:
                 a = this.sessionBuffer.eventCounts;
                 l = Object.keys(a);
                 if (!(l.length === 0 && this.sessionBuffer.totalPlaySec === 0)) {
-                  O.next = 8;
+                  R.next = 8;
                   break;
                 }
-                return O.abrupt("return");
+                return R.abrupt("return");
 
                case 8:
                 u = Date.now();
                 if (o) {
-                  O.next = 14;
+                  R.next = 14;
                   break;
                 }
                 if (!(!r && u - this.lastFlushTs < me)) {
-                  O.next = 12;
+                  R.next = 12;
                   break;
                 }
-                return O.abrupt("return");
+                return R.abrupt("return");
 
                case 12:
                 if (!(r && u - this.lastFlushTs < he && this.sessionBuffer.totalPlaySec < 30)) {
-                  O.next = 14;
+                  R.next = 14;
                   break;
                 }
-                return O.abrupt("return");
+                return R.abrupt("return");
 
                case 14:
                 p = EventCollector_objectSpread({}, a);
-                v = this.sessionBuffer.totalPlaySec;
-                y = Array.from(this.sessionBuffer.avcodes);
-                b = EventCollector_toConsumableArray(this.sessionBuffer.milestones);
-                C = EventCollector_toConsumableArray(this.sessionBuffer.triggers);
-                _ = EventCollector_toConsumableArray(this.sessionBuffer.collectedSegments);
-                k = EventCollector_toConsumableArray(this.sessionBuffer.timestampClicks);
-                P = Date.now();
-                E = new Date(P);
-                S = E.toISOString().slice(0, 10);
-                D = E.getHours();
-                L = "mp_".concat(this.clientId, "_").concat(S, "_").concat(D);
-                M = {
+                v = EventCollector_objectSpread({}, this.sessionBuffer.featureActions);
+                y = EventCollector_objectSpread({}, this.sessionBuffer.videoEngagement);
+                b = this.sessionBuffer.totalPlaySec;
+                C = Array.from(this.sessionBuffer.avcodes);
+                _ = EventCollector_toConsumableArray(this.sessionBuffer.milestones);
+                k = EventCollector_toConsumableArray(this.sessionBuffer.triggers);
+                P = EventCollector_toConsumableArray(this.sessionBuffer.collectedSegments);
+                E = EventCollector_toConsumableArray(this.sessionBuffer.timestampClicks);
+                S = Date.now();
+                D = new Date(S);
+                L = D.toISOString().slice(0, 10);
+                M = D.getHours();
+                T = "mp_".concat(this.clientId, "_").concat(L, "_").concat(M);
+                A = {
                   "app_id": "missplayer",
                   "user_id": this.clientId,
-                  "session_id": L,
-                  "date": S,
-                  "ts": P,
-                  "hour_of_day": D,
+                  "session_id": T,
+                  "date": L,
+                  "ts": S,
+                  "hour_of_day": M,
                   "site_key": typeof window !== "undefined" ? window.location.hostname || "" : "",
                   "site_category": getSiteCategory(),
                   "version": getScriptVersion(),
                   "device_type": this.getDeviceType(),
-                  "total_play_sec": v,
+                  "total_play_sec": b,
                   "event_counts": p,
-                  "avcodes": y,
+                  "feature_actions": v,
+                  "video_engagement": y,
+                  "avcodes": C,
                   "details_json": {
-                    "milestones": b,
-                    "triggers": C,
-                    "collected_segments": _,
-                    "timestamp_clicks": k
+                    "milestones": _,
+                    "triggers": k,
+                    "collected_segments": P,
+                    "timestamp_clicks": E
                   },
                   "user_agent": typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
                 };
-                T = JSON.stringify(M);
-                A = {
+                j = JSON.stringify(A);
+                B = {
                   "Content-Type": "application/json",
-                  "X-Telemetry-Token": genToken(P),
-                  "X-Telemetry-Ts": String(P)
+                  "X-Telemetry-Token": genToken(S),
+                  "X-Telemetry-Ts": String(S)
                 };
-                j = function() {
+                I = function() {
                   var o = EventCollector_asyncToGenerator(EventCollector_regeneratorRuntime().mark((function _callee(o) {
                     var a;
                     return EventCollector_regeneratorRuntime().wrap((function _callee$(l) {
@@ -7332,8 +7393,8 @@
                           l.next = 3;
                           return fetchWithTransport(a, {
                             "method": "POST",
-                            "headers": A,
-                            "body": T,
+                            "headers": B,
+                            "body": j,
                             "timeout": r ? 3e3 : 8e3
                           });
 
@@ -7352,44 +7413,44 @@
                   };
                 }();
                 this.clearCache();
-                O.prev = 31;
-                O.next = 34;
-                return j(se);
+                R.prev = 33;
+                R.next = 36;
+                return I(se);
 
-               case 34:
-                B = O.sent;
-                if (!(B.status !== 200)) {
-                  O.next = 38;
+               case 36:
+                O = R.sent;
+                if (!(O.status !== 200)) {
+                  R.next = 40;
                   break;
                 }
-                O.next = 38;
-                return j(le);
-
-               case 38:
-                O.next = 49;
-                break;
+                R.next = 40;
+                return I(le);
 
                case 40:
-                O.prev = 40;
-                O.t0 = O["catch"](31);
-                O.prev = 42;
-                O.next = 45;
-                return j(le);
-
-               case 45:
-                O.next = 49;
+                R.next = 51;
                 break;
 
+               case 42:
+                R.prev = 42;
+                R.t0 = R["catch"](33);
+                R.prev = 44;
+                R.next = 47;
+                return I(le);
+
                case 47:
-                O.prev = 47;
-                O.t1 = O["catch"](42);
+                R.next = 51;
+                break;
 
                case 49:
+                R.prev = 49;
+                R.t1 = R["catch"](44);
+
+               case 51:
                case "end":
-                return O.stop();
+                return R.stop();
               }
             }
-          }), _callee2, this, [ [ 31, 40 ], [ 42, 47 ] ]);
+          }), _callee2, this, [ [ 33, 42 ], [ 44, 49 ] ]);
         })));
         function flush() {
           return r.apply(this, arguments);
@@ -17940,6 +18001,7 @@
           }
           o.targetVideo.playbackRate = l;
           o.syncPlaybackRateSlider(l);
+          fe.recordFeatureAction("speed_change");
           if (window.navigator && window.navigator.vibrate) {
             window.navigator.vibrate(5);
           }
@@ -20044,6 +20106,7 @@
           return;
         }
         this.loopActive = true;
+        fe.recordFeatureAction("ab_loop_set");
         fe.track("loop_toggle", {
           "enabled": true,
           "interval_sec": Math.round((this.loopEndTime - this.loopStartTime) * 10) / 10
@@ -20081,6 +20144,7 @@
         }
         var r = this.targetVideo.currentTime;
         if (r >= this.loopEndTime || r < this.loopStartTime) {
+          this.totalLoopDurationSec = (this.totalLoopDurationSec || 0) + Math.max(0, this.loopEndTime - this.loopStartTime);
           this.targetVideo.currentTime = this.loopStartTime;
         }
         this.renderProgressMarkers();
@@ -22655,6 +22719,10 @@
       this.callingButton = r.callingButton || null;
       this.managers = {};
       this.initialized = false;
+      this._activePlayStartTime = null;
+      this._activePlayDurationSec = 0;
+      this._lastVideoCurrentTime = 0;
+      this._replayCount = 0;
     }
     return CustomVideoPlayer_createClass(CustomVideoPlayer, [ {
       "key": "init",
@@ -22697,6 +22765,35 @@
             }
           }()
         });
+        this._activePlayStartTime = !o.paused ? Date.now() : null;
+        this._activePlayDurationSec = 0;
+        this._lastVideoCurrentTime = 0;
+        this._replayCount = 0;
+        this._onPlay = function() {
+          r._activePlayStartTime = Date.now();
+        };
+        this._onPauseOrEnded = function() {
+          if (r._activePlayStartTime) {
+            r._activePlayDurationSec += (Date.now() - r._activePlayStartTime) / 1e3;
+            r._activePlayStartTime = null;
+          }
+        };
+        this._onTimeUpdate = function() {
+          if (o && !o.paused) {
+            if (!r._activePlayStartTime) {
+              r._activePlayStartTime = Date.now();
+            }
+            var a = o.currentTime;
+            if (r._lastVideoCurrentTime > 0 && r._lastVideoCurrentTime - a > 2.5) {
+              r._replayCount++;
+            }
+            r._lastVideoCurrentTime = a;
+          }
+        };
+        o.addEventListener("play", this._onPlay);
+        o.addEventListener("pause", this._onPauseOrEnded);
+        o.addEventListener("ended", this._onPauseOrEnded);
+        o.addEventListener("timeupdate", this._onTimeUpdate);
         var a = new Ie(this.playerCore);
         var l = a.createUI();
         this.managers.uiManager = a;
@@ -22780,9 +22877,35 @@
     }, {
       "key": "close",
       "value": function close() {
-        var r = this._sessionStartTime ? Math.round((Date.now() - this._sessionStartTime) / 1e3) : 0;
+        var r, o, a;
+        if (this._activePlayStartTime) {
+          this._activePlayDurationSec += (Date.now() - this._activePlayStartTime) / 1e3;
+          this._activePlayStartTime = null;
+        }
+        var l = (r = this.playerCore) === null || r === void 0 ? void 0 : r.targetVideo;
+        if (l) {
+          if (this._onPlay) {
+            l.removeEventListener("play", this._onPlay);
+          }
+          if (this._onPauseOrEnded) {
+            l.removeEventListener("pause", this._onPauseOrEnded);
+            l.removeEventListener("ended", this._onPauseOrEnded);
+          }
+          if (this._onTimeUpdate) {
+            l.removeEventListener("timeupdate", this._onTimeUpdate);
+          }
+        }
+        var u = getVideoCodeFromUrl() || "";
+        var p = Math.round(this._activePlayDurationSec);
+        var v = (o = this.managers) === null || o === void 0 ? void 0 : o.loopManager;
+        var y = v ? Math.round(v.totalLoopDurationSec || 0) : 0;
+        var b = v ? ((a = v.tabs) === null || a === void 0 ? void 0 : a.length) || 0 : 0;
+        if (u && (p > 0 || y > 0)) {
+          fe.recordVideoPlay(u, p, y, this._replayCount, b);
+        }
+        var C = this._sessionStartTime ? Math.round((Date.now() - this._sessionStartTime) / 1e3) : p;
         fe.track("player_close", {
-          "duration_sec": r
+          "duration_sec": p || C
         });
         if (this._scrollbarStyle) {
           this._scrollbarStyle.remove();
@@ -22798,11 +22921,11 @@
           this.swipeManager.destroy();
           this.swipeManager = null;
         }
-        for (var o in this.managers) {
-          if (this.managers[o] && typeof this.managers[o].cleanup === "function") {
-            this.managers[o].cleanup();
+        for (var _ in this.managers) {
+          if (this.managers[_] && typeof this.managers[_].cleanup === "function") {
+            this.managers[_].cleanup();
           }
-          this.managers[o] = null;
+          this.managers[_] = null;
         }
         this.initialized = false;
         this.managers = {};
@@ -23729,7 +23852,7 @@
 
                case 13:
                 if (!(this.autoLogin && this.userEmail && this.userPassword)) {
-                  v.next = 28;
+                  v.next = 29;
                   break;
                 }
                 if (!this.isCircuitBroken(r)) {
@@ -23760,6 +23883,7 @@
 
                case 23:
                 p = v.sent;
+                fe.recordFeatureAction("autologin");
                 fe.track("autologin_result", {
                   "site": r,
                   "success": !!p
@@ -23772,24 +23896,24 @@
                 } else {
                   this.recordFailure(r);
                 }
-                v.next = 28;
+                v.next = 29;
                 break;
 
-               case 28:
-                v.next = 33;
+               case 29:
+                v.next = 34;
                 break;
 
-               case 30:
-                v.prev = 30;
+               case 31:
+                v.prev = 31;
                 v.t0 = v["catch"](5);
                 this.recordFailure(r);
 
-               case 33:
+               case 34:
                case "end":
                 return v.stop();
               }
             }
-          }), _callee2, this, [ [ 5, 30 ] ]);
+          }), _callee2, this, [ [ 5, 31 ] ]);
         })));
         function checkLoginAndAutoLogin() {
           return r.apply(this, arguments);
