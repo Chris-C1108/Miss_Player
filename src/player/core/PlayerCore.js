@@ -1,4 +1,4 @@
-import { restoreSafariThemeColor, findVideoElement } from '../../utils/index.js';
+import { restoreSafariThemeColor, findVideoElement, getValue, setValue } from '../../utils/index.js';
 
 /**
  * 播放器核心类 - 负责播放器的基本功能和状态管理
@@ -112,28 +112,46 @@ export class PlayerCore {
     }
     
     /**
-     * 恢复视频状态
+     * 恢复视频状态并执行自动起播
      */
     restoreVideoState() {
         try {
-            // 设置默认播放速度
-            this.targetVideo.playbackRate = this.defaultPlaybackRate;
+            // 加载持久化的用户首选播放速度
+            const savedSpeed = parseFloat(getValue('preferredPlaybackRate', 1.0));
+            const validSpeed = (!isNaN(savedSpeed) && savedSpeed >= 0.5 && savedSpeed <= 4.0) ? savedSpeed : this.defaultPlaybackRate;
+            this.targetVideo.playbackRate = validSpeed;
             
             // 恢复播放位置
-            this.targetVideo.currentTime = this.videoState.currentTime;
+            if (this.videoState && this.videoState.currentTime && !isNaN(this.videoState.currentTime)) {
+                this.targetVideo.currentTime = this.videoState.currentTime;
+            }
 
-            // 尝试播放视频
-            const playPromise = this.targetVideo.play();
+            // 浮钮启动播放器后，主动触发自动播放
+            const attemptPlay = () => {
+                if (!this.targetVideo) return;
+                const playPromise = this.targetVideo.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log('[PlayerCore] 视频自动起播受限或被阻止:', error);
+                    });
+                }
+            };
 
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log('视频自动播放被阻止: ', error);
-                    // 不再尝试静音播放，保持暂停状态
-                    // 可以考虑在这里添加一个UI提示，告知用户手动点击播放按钮
-                });
+            // 立即尝试起播
+            attemptPlay();
+
+            // 若视频尚未完全就绪 (readyState < 2)，在 canplay / loadeddata 时再次确保触发起播
+            if (this.targetVideo.readyState < 2) {
+                const onReadyToPlay = () => {
+                    attemptPlay();
+                    this.targetVideo.removeEventListener('canplay', onReadyToPlay);
+                    this.targetVideo.removeEventListener('loadeddata', onReadyToPlay);
+                };
+                this.targetVideo.addEventListener('canplay', onReadyToPlay, { once: true });
+                this.targetVideo.addEventListener('loadeddata', onReadyToPlay, { once: true });
             }
         } catch (e) {
-            console.error('尝试播放时出错: ', e);
+            console.error('[PlayerCore] 尝试恢复视频状态与起播时出错:', e);
         }
     }
     

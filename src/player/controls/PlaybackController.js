@@ -1,5 +1,6 @@
 import { PLAY, PAUSE, PLAY_CENTER } from '../../constants/icons.js';
 import { telemetry } from '../../telemetry/index.js';
+import { getValue, setValue } from '../../utils/index.js';
 
 /**
  * 播放控制器组件 - 负责播放、暂停、倍速滑杆及相关指示器
@@ -78,11 +79,17 @@ export class PlaybackController {
         const playbackRateButton = document.createElement('button');
         playbackRateButton.className = 'tm-playback-rate-button';
         
-        // 双击重置为 1.0x
+        // 从本地持久化存储中读取用户首选倍速并初始化
+        const savedSpeed = parseFloat(getValue('preferredPlaybackRate', 1.0));
+        const initialSpeed = (!isNaN(savedSpeed) && savedSpeed >= 0.5 && savedSpeed <= 4.0) ? savedSpeed : 1.0;
+        this.targetVideo.playbackRate = initialSpeed;
+
+        // 双击重置为 1.0x 并持久化保存
         playbackRateButton.addEventListener('dblclick', (e) => {
             e.stopPropagation();
             if (this.targetVideo.playbackRate !== 1.0) {
                 this.targetVideo.playbackRate = 1.0;
+                setValue('preferredPlaybackRate', 1.0);
                 this.syncPlaybackRateSlider(1.0);
                 if (window.navigator && window.navigator.vibrate) {
                     window.navigator.vibrate(5);
@@ -90,7 +97,7 @@ export class PlaybackController {
             }
         });
 
-        // 单击循环切换倍速
+        // 单击循环切换倍速并持久化保存
         playbackRateButton.addEventListener('click', (e) => {
             e.stopPropagation();
             const currentSpeed = this.targetVideo.playbackRate;
@@ -103,6 +110,7 @@ export class PlaybackController {
             else nextSpeed = 1.0; // 其他所有倍速均重置为 1.0x
             
             this.targetVideo.playbackRate = nextSpeed;
+            setValue('preferredPlaybackRate', nextSpeed);
             this.syncPlaybackRateSlider(nextSpeed);
             telemetry.recordFeatureAction('speed_change');
             

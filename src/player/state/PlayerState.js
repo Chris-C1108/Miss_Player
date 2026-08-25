@@ -22,7 +22,8 @@ export class PlayerState {
             telemetryEnabled: true,         // 遥测功能开关 (帮助改进)
             debugMode: false,               // DEBUG 模式
             sidebarPosition: 'right',       // 评论侧边栏位置 ('left' | 'right')
-            sidebarHidden: false            // 评论侧边栏是否隐藏 (true | false)
+            sidebarHidden: false,           // 评论侧边栏是否隐藏 (true | false)
+            preferredPlaybackRate: 1.0      // 默认/首选播放速度
         };
     }
 
@@ -62,6 +63,8 @@ export class PlayerState {
             this.settings.debugMode = getBool('debugMode', false);
             this.settings.sidebarPosition = getValue('sidebarPosition', 'right') || 'right';
             this.settings.sidebarHidden = getBool('sidebarHidden', false);
+            const rawSpeed = parseFloat(getValue('preferredPlaybackRate', 1.0));
+            this.settings.preferredPlaybackRate = (!isNaN(rawSpeed) && rawSpeed >= 0.5 && rawSpeed <= 4.0) ? rawSpeed : 1.0;
         } catch (error) {
             console.error('[PlayerState] 加载设置失败:', error);
         }
@@ -84,6 +87,7 @@ export class PlayerState {
             setValue('debugMode', this.settings.debugMode);
             setValue('sidebarPosition', this.settings.sidebarPosition);
             setValue('sidebarHidden', this.settings.sidebarHidden);
+            setValue('preferredPlaybackRate', this.settings.preferredPlaybackRate);
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }

@@ -7999,12 +7999,36 @@
     }, {
       "key": "restoreVideoState",
       "value": function restoreVideoState() {
+        var r = this;
         try {
-          this.targetVideo.playbackRate = this.defaultPlaybackRate;
-          this.targetVideo.currentTime = this.videoState.currentTime;
-          var r = this.targetVideo.play();
-          if (r !== void 0) {
-            r["catch"]((function(r) {}));
+          var o = parseFloat(getValue("preferredPlaybackRate", 1));
+          var a = !isNaN(o) && o >= .5 && o <= 4 ? o : this.defaultPlaybackRate;
+          this.targetVideo.playbackRate = a;
+          if (this.videoState && this.videoState.currentTime && !isNaN(this.videoState.currentTime)) {
+            this.targetVideo.currentTime = this.videoState.currentTime;
+          }
+          var l = function attemptPlay() {
+            if (!r.targetVideo) {
+              return;
+            }
+            var o = r.targetVideo.play();
+            if (o !== void 0) {
+              o["catch"]((function(r) {}));
+            }
+          };
+          l();
+          if (this.targetVideo.readyState < 2) {
+            var u = function onReadyToPlay() {
+              l();
+              r.targetVideo.removeEventListener("canplay", u);
+              r.targetVideo.removeEventListener("loadeddata", u);
+            };
+            this.targetVideo.addEventListener("canplay", u, {
+              "once": true
+            });
+            this.targetVideo.addEventListener("loadeddata", u, {
+              "once": true
+            });
           }
         } catch (r) {}
       }
@@ -17976,10 +18000,14 @@
         var o = this;
         var a = document.createElement("button");
         a.className = "tm-playback-rate-button";
+        var l = parseFloat(getValue("preferredPlaybackRate", 1));
+        var u = !isNaN(l) && l >= .5 && l <= 4 ? l : 1;
+        this.targetVideo.playbackRate = u;
         a.addEventListener("dblclick", (function(r) {
           r.stopPropagation();
           if (o.targetVideo.playbackRate !== 1) {
             o.targetVideo.playbackRate = 1;
+            setValue("preferredPlaybackRate", 1);
             o.syncPlaybackRateSlider(1);
             if (window.navigator && window.navigator.vibrate) {
               window.navigator.vibrate(5);
@@ -18000,6 +18028,7 @@
             l = 1;
           }
           o.targetVideo.playbackRate = l;
+          setValue("preferredPlaybackRate", l);
           o.syncPlaybackRateSlider(l);
           fe.recordFeatureAction("speed_change");
           if (window.navigator && window.navigator.vibrate) {
@@ -23211,7 +23240,8 @@
         "telemetryEnabled": true,
         "debugMode": false,
         "sidebarPosition": "right",
-        "sidebarHidden": false
+        "sidebarHidden": false,
+        "preferredPlaybackRate": 1
       };
     }
     return PlayerState_createClass(PlayerState, [ {
@@ -23241,6 +23271,8 @@
           this.settings.debugMode = r("debugMode", false);
           this.settings.sidebarPosition = getValue("sidebarPosition", "right") || "right";
           this.settings.sidebarHidden = r("sidebarHidden", false);
+          var u = parseFloat(getValue("preferredPlaybackRate", 1));
+          this.settings.preferredPlaybackRate = !isNaN(u) && u >= .5 && u <= 4 ? u : 1;
         } catch (r) {}
       }
     }, {
@@ -23259,6 +23291,7 @@
           setValue("debugMode", this.settings.debugMode);
           setValue("sidebarPosition", this.settings.sidebarPosition);
           setValue("sidebarHidden", this.settings.sidebarHidden);
+          setValue("preferredPlaybackRate", this.settings.preferredPlaybackRate);
         } catch (r) {}
       }
     }, {
