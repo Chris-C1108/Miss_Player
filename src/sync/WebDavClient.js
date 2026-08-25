@@ -166,6 +166,7 @@ export class WebDavClient {
 
     /**
      * 递归确保 WebDAV 上的专用目录存在 (若不存在则通过 MKCOL 自动创建)
+     * 支持带尾部斜杠与不带斜杠的双重容错探测与创建
      * @param {Object} config - { url, user, pass, path }
      */
     static async ensureDirectory(config) {
@@ -174,43 +175,79 @@ export class WebDavClient {
         if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
         if (!cleanPath.endsWith('/')) cleanPath = cleanPath + '/';
 
-        // 拆分各层级子路径，例如 /backups/MissPlayer/ -> ['/backups/', '/backups/MissPlayer/']
+        // 拆分各层级子路径，例如 /backups/MissPlayer/ -> ['backups', 'MissPlayer']
         const segments = cleanPath.split('/').filter(Boolean);
         let currentPath = '';
 
         for (const seg of segments) {
-            currentPath += '/' + seg + '/';
-            const dirUrl = this.normalizeUrl(url, currentPath);
+            currentPath += '/' + seg;
+            const dirUrlWithSlash = this.normalizeUrl(url, currentPath + '/');
+            const dirUrlNoSlash = this.normalizeUrl(url, currentPath);
 
+            let isExisting = false;
+
+            // 1. 尝试使用 PROPFIND 探测目录是否已存在
             try {
-                // 先探测该目录是否存在
                 const propRes = await this.request({
                     method: 'PROPFIND',
-                    url: dirUrl,
+                    url: dirUrlWithSlash,
                     user,
                     pass,
                     headers: { 'Depth': '0' }
                 });
 
                 if (propRes.status === 207 || (propRes.status >= 200 && propRes.status < 300)) {
-                    // 目录已存在
-                    continue;
+                    isExisting = true;
                 }
+            } catch (_) {}
 
-                // 目录不存在 (404)，创建目录 MKCOL
+            if (!isExisting) {
+                try {
+                    const propResNoSlash = await this.request({
+                        method: 'PROPFIND',
+                        url: dirUrlNoSlash,
+                        user,
+                        pass,
+                        headers: { 'Depth': '0' }
+                    });
+                    if (propResNoSlash.status === 207 || (propResNoSlash.status >= 200 && propResNoSlash.status < 300)) {
+                        isExisting = true;
+                    }
+                } catch (_) {}
+            }
+
+            if (isExisting) continue;
+
+            // 2. 目录不存在，执行 MKCOL 创建 (先尝试无斜杠，再尝试带斜杠)
+            let created = false;
+            try {
                 const mkcolRes = await this.request({
                     method: 'MKCOL',
-                    url: dirUrl,
+                    url: dirUrlNoSlash,
                     user,
                     pass
                 });
-
-                if (mkcolRes.status === 201 || mkcolRes.status === 405 || (mkcolRes.status >= 200 && mkcolRes.status < 300)) {
-                    // 创建成功或已存在
-                    continue;
+                if (mkcolRes.status === 201 || mkcolRes.status === 200 || mkcolRes.status === 204 || mkcolRes.status === 405) {
+                    created = true;
                 }
             } catch (err) {
-                console.warn(`[WebDavClient] 创建目录 ${currentPath} 遇到异常:`, err);
+                console.warn(`[WebDavClient] MKCOL (no-slash) 创建目录 ${currentPath} 遇到状态:`, err);
+            }
+
+            if (!created) {
+                try {
+                    const mkcolResSlash = await this.request({
+                        method: 'MKCOL',
+                        url: dirUrlWithSlash,
+                        user,
+                        pass
+                    });
+                    if (mkcolResSlash.status === 201 || mkcolResSlash.status === 200 || mkcolResSlash.status === 204 || mkcolResSlash.status === 405) {
+                        created = true;
+                    }
+                } catch (err) {
+                    console.warn(`[WebDavClient] MKCOL (with-slash) 创建目录 ${currentPath} 遇到状态:`, err);
+                }
             }
         }
     }
@@ -265,7 +302,7 @@ export class WebDavClient {
     }
 
     /**
-     * 上传备份 JSON 数据至 WebDAV (自动确保目录已创建)
+     * 上传备份 JSON 数据至 WebDAV (自动确保目录已创建，支持 404/409 自动自愈重试)
      * @param {Object} config - { url, user, pass, path }
      * @param {Object} data - 要备份的完整 JSON 对象
      * @param {string} [filename='miss_player_sync.json'] - 文件名
@@ -284,7 +321,7 @@ export class WebDavClient {
         const jsonString = JSON.stringify(data, null, 2);
 
         try {
-            const res = await this.request({
+            let res = await this.request({
                 method: 'PUT',
                 url: fileUrl,
                 user,
@@ -294,6 +331,22 @@ export class WebDavClient {
                 },
                 data: jsonString
             });
+
+            // 如果遇到 404 / 409 (父目录未完全识别)，强制二次确保目录并重试 PUT
+            if (res.status === 404 || res.status === 409) {
+                console.warn(`[WebDavClient] PUT 返回 ${res.status}，强制二次创建目录并重试上传...`);
+                await this.ensureDirectory(config);
+                res = await this.request({
+                    method: 'PUT',
+                    url: fileUrl,
+                    user,
+                    pass,
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    data: jsonString
+                });
+            }
 
             if (res.status === 401 || res.status === 403) {
                 throw new Error(`认证失败 (${res.status}): 权限不足或密码错误`);

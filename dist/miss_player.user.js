@@ -279,7 +279,7 @@
       var p = a(314);
       var v = a.n(p);
       var y = v()(u());
-      y.push([ r.id, `.tm-video-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    width:100vw;\n    height:100vh;\n    height:100dvh;\n    background-color:#0b0b0e;\n    z-index:2000000000 !important;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    backdrop-filter:blur(30px);\n    -webkit-backdrop-filter:blur(30px);\n    padding:0;\n    touch-action:none;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-player-container{\n    position:fixed;\n    top:0;\n    bottom:var(--keyboard-height, 0px);\n    left:0;\n    right:0;\n    width:100%;\n    height:calc(100% - var(--keyboard-height, 0px));\n    height:calc(100dvh - var(--keyboard-height, 0px));\n    background-color:#0b0b0e;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    z-index:2000000001 !important;\n    overflow:hidden;\n    pointer-events:auto;\n    transition:bottom 0.15s ease-out, height 0.15s ease-out;\n    touch-action:pan-y;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-button-container{\n    width:100%;\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    gap:10px;\n    padding:6px 10px;\n    box-sizing:border-box;\n    z-index:99999;\n    position:absolute;\n    top:0;\n    left:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);\n    touch-action:none;\n}\n\n.tm-video-container{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:auto;\n    max-height:calc(100% - 130px);\n    margin-top:44px;\n    display:flex;\n    align-items:flex-start;\n    justify-content:center;\n    background-color:hsl(var(--shadcn-card));\n    border-radius:var(--shadcn-radius-lg);\n    box-shadow:var(--shadow-lg);\n    z-index:9985;\n    touch-action:pan-y;\n    flex-shrink:1;\n    transition:max-height 0.15s ease-out;\n}\n\n@media screen and (orientation: portrait){\n    .tm-video-container{\n        max-height:calc(100dvh - var(--keyboard-height, 0px) - 130px) !important;\n        min-height:0 !important;\n    }\n}\n\n.tm-video-wrapper{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:100%;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    will-change:transform;\n    border-radius:var(--shadcn-radius) var(--shadcn-radius) 0 0;\n    touch-action:pan-y;\n}\n.tm-video-wrapper > *:not(video):not(.tm-speed-indicator):not(.tm-video-minimap):not(.tm-inline-remark-popover){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video > *:not(track):not(source){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video{\n    width:auto !important; \n    height:100% !important; \n    max-height:100% !important; \n    max-width:none !important; \n    object-fit:contain !important; \n    transition:transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n    touch-action:pan-y;\n    cursor:grab; \n}\n.tm-handle-container{\n    position:relative;\n    height:30px;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    z-index:9986;\n    width:100%;\n    flex-shrink:0;\n    touch-action:none;\n}\n\n.tm-resize-handle{\n    position:absolute;\n    height:5px;\n    width:134px;\n    max-width:134px;\n    background-color:hsla(var(--shadcn-foreground) / 0.6);\n    border-radius:2.5px;\n    cursor:grab;\n    touch-action:none;\n    opacity:0.5;\n    will-change:transform;\n    transition:all var(--anim-quick);\n    box-shadow:none;\n}\n\n.tm-resize-handle::after{\n    content:'';\n    position:absolute;\n    left:-10px;\n    right:-10px;\n    top:-15px;\n    bottom:-15px;\n    background:transparent;\n}\n\n.tm-resize-handle:hover,\n.tm-resize-handle.dragging{\n    opacity:1;\n    background-color:hsla(var(--shadcn-foreground) / 0.8);\n}\n\n.tm-resize-handle.dragging{\n    cursor:grabbing;\n}\n.tm-control-button-base{\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    box-shadow:var(--shadow-sm);\n}\n.tm-close-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-smooth);\n    z-index:9994;\n}\n\n.tm-close-button:hover{\n    background-color:hsl(var(--shadcn-destructive));\n    transform:scale(1.1);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-close-button:active{\n    transform:scale(0.9);\n}\n.tm-settings-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    z-index:9993;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-settings-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.1) rotate(30deg);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-settings-button:active{\n    transform:scale(0.9);\n}\n.tm-settings-panel{\n    position:absolute;\n    top:calc(env(safe-area-inset-top, 8px) + 60px);\n    right:16px;\n    background-color:hsla(var(--shadcn-card) / 0.92);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border-radius:14px;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    box-shadow:0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px hsla(0, 0%, 100%, 0.05);\n    padding:14px 16px;\n    z-index:9996;\n    min-width:275px;\n    max-width:325px;\n    max-height:calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 80px);\n    overflow-y:auto;\n    overflow-x:hidden;\n    -webkit-overflow-scrolling:touch;\n    overscroll-behavior:contain;\n    touch-action:pan-y;\n    scrollbar-width:thin;\n    scrollbar-color:hsla(var(--shadcn-muted-foreground) / 0.3) transparent;\n    transform:translateY(-10px);\n    opacity:0;\n    pointer-events:none;\n    transition:transform var(--anim-smooth), opacity var(--anim-smooth);\n    box-sizing:border-box;\n}\n\n.tm-settings-panel::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-settings-panel::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.3);\n    border-radius:4px;\n}\n\n.tm-settings-panel.active{\n    transform:translateY(0);\n    opacity:1;\n    pointer-events:auto;\n}\n.tm-settings-menu-container{\n    display:flex;\n    flex-direction:column;\n    gap:12px;\n    color:hsl(var(--shadcn-foreground));\n    user-select:none;\n    font-size:13.5px;\n}\n.tm-settings-section{\n    display:flex;\n    flex-direction:column;\n    gap:3px;\n}\n.tm-settings-section-header{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    font-size:11px;\n    font-weight:700;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    letter-spacing:0.8px;\n    text-transform:uppercase;\n    padding-left:2px;\n    user-select:none;\n}\n\n.tm-settings-section-header.collapsible{\n    cursor:pointer;\n    padding:2px 4px;\n    border-radius:4px;\n    transition:background 0.15s ease;\n}\n\n.tm-settings-section-header.collapsible:hover{\n    background:hsla(var(--shadcn-muted) / 0.2);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-settings-header-arrow{\n    font-size:10px;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-settings-header-arrow.expanded{\n    transform:rotate(180deg);\n}\n.tm-settings-section-divider{\n    height:1px;\n    background:linear-gradient(90deg, hsla(var(--shadcn-border) / 0.3) 0%, hsla(var(--shadcn-border) / 0.05) 100%);\n    margin:3px 0 6px 0;\n    border-radius:1px;\n}\n.tm-settings-option-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    padding:6px 4px;\n    border-radius:8px;\n    cursor:pointer;\n    transition:background 0.15s ease;\n}\n\n.tm-settings-option-row:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.3);\n}\n\n.tm-settings-label-wrapper{\n    display:flex;\n    align-items:center;\n    gap:8px;\n}\n\n.tm-settings-text-wrapper{\n    display:flex;\n    flex-direction:column;\n    gap:2px;\n}\n\n.tm-settings-label{\n    font-size:13.5px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-settings-subtext{\n    font-size:11px;\n    font-weight:400;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    line-height:1.25;\n}\n.tm-settings-seek-steps-subpanel{\n    display:flex;\n    flex-wrap:nowrap;\n    gap:6px;\n    align-items:center;\n    overflow-x:auto;\n    overflow-y:hidden;\n    white-space:nowrap;\n    padding:6px 2px 4px 2px;\n    margin-top:2px;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    -ms-overflow-style:none;\n}\n\n.tm-settings-seek-steps-subpanel::-webkit-scrollbar{\n    display:none;\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    flex-wrap:wrap;\n    gap:8px;\n    align-items:center;\n    justify-content:flex-start;\n    padding:6px 2px 2px 2px;\n    margin-top:2px;\n}\n.tm-seek-step-badge,\n.tm-source-badge{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    font-size:11.5px;\n    font-weight:500;\n    padding:0 12px;\n    height:28px;\n    line-height:1;\n    border-radius:6px;\n    box-sizing:border-box;\n    border:1px solid transparent;\n    cursor:pointer;\n    user-select:none;\n    flex-shrink:0;\n    transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-seek-step-badge.enabled,\n.tm-source-badge.enabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    border-color:hsla(var(--shadcn-border) / 0.35);\n    color:#ffffff;\n    font-weight:600;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.2);\n}\n.tm-seek-step-badge.disabled,\n.tm-source-badge.disabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.15);\n    border-color:hsla(var(--shadcn-border) / 0.08);\n    color:hsla(var(--shadcn-muted-foreground) / 0.4);\n    font-weight:400;\n}\n.tm-seek-step-badge:hover,\n.tm-source-badge:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n.tm-seek-step-badge:active,\n.tm-source-badge:active{\n    transform:scale(0.94);\n    box-shadow:none;\n}\n.tm-seek-step-add-btn{\n    font-size:14px;\n    font-weight:600;\n    width:32px;\n    height:28px;\n    border-radius:6px;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    border:1px dashed hsla(var(--shadcn-border) / 0.35);\n    color:hsla(var(--shadcn-foreground) / 0.75);\n    cursor:pointer;\n    flex-shrink:0;\n    transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-seek-step-add-btn:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.5);\n    border-style:solid;\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n\n.tm-seek-step-add-btn:active{\n    transform:scale(0.94);\n}\n.tm-seek-step-input{\n    width:60px;\n    height:28px;\n    font-size:16px;\n    font-weight:500;\n    text-align:center;\n    border-radius:6px;\n    border:1px solid hsla(var(--shadcn-accent) / 0.8);\n    background-color:hsla(var(--shadcn-background) / 0.85);\n    color:#ffffff;\n    outline:none;\n    box-sizing:border-box;\n    flex-shrink:0;\n    box-shadow:0 0 8px hsla(var(--shadcn-accent) / 0.4);\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    gap:8px;\n    padding:6px 2px 2px 2px;\n}\n\n.tm-source-badge{\n    font-size:11px;\n    padding:4px 10px;\n    border-radius:12px;\n    border:1px solid transparent;\n    cursor:pointer;\n    font-weight:500;\n    transition:all 0.15s ease;\n}\n\n.tm-source-badge.enabled{\n    background:rgba(239, 68, 68, 0.2);\n    border-color:rgba(239, 68, 68, 0.6);\n    color:#fca5a5;\n}\n\n.tm-source-badge.disabled{\n    background:rgba(255, 255, 255, 0.06);\n    border-color:rgba(255, 255, 255, 0.1);\n    color:rgba(255, 255, 255, 0.4);\n}\n.tm-settings-webdav-card{\n    display:flex;\n    flex-direction:column;\n    gap:10px;\n    background:hsla(var(--shadcn-card) / 0.45);\n    backdrop-filter:blur(16px);\n    -webkit-backdrop-filter:blur(16px);\n    border:1px solid hsla(var(--shadcn-border) / 0.25);\n    border-radius:10px;\n    padding:12px;\n    margin-top:4px;\n}\n\n.tm-webdav-form-row{\n    display:flex;\n    flex-direction:column;\n    gap:4px;\n}\n\n.tm-webdav-label{\n    font-size:11.5px;\n    font-weight:500;\n    color:hsla(var(--shadcn-muted-foreground) / 0.85);\n}\n\n.tm-webdav-input-group{\n    position:relative;\n    display:flex;\n    align-items:center;\n    width:100%;\n}\n\n.tm-webdav-input{\n    width:100%;\n    height:32px;\n    background:hsla(var(--shadcn-background) / 0.6);\n    border:1px solid hsla(var(--shadcn-border) / 0.3);\n    border-radius:6px;\n    padding:0 10px;\n    font-size:12.5px;\n    color:hsl(var(--shadcn-foreground));\n    box-sizing:border-box;\n    outline:none;\n    transition:all 0.2s ease;\n    font-family:inherit;\n}\n\n.tm-webdav-input-group .tm-webdav-input.has-eye{\n    padding-right:34px;\n}\n\n.tm-webdav-input:focus{\n    border-color:hsla(var(--shadcn-accent) / 0.8);\n    box-shadow:0 0 0 2px hsla(var(--shadcn-accent) / 0.2);\n    background:hsla(var(--shadcn-background) / 0.85);\n}\n\n.tm-webdav-input::placeholder{\n    color:hsla(var(--shadcn-muted-foreground) / 0.4);\n    font-size:11.5px;\n}\n\n.tm-webdav-eye-btn{\n    position:absolute;\n    right:4px;\n    top:50%;\n    transform:translateY(-50%);\n    width:26px;\n    height:26px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    background:transparent;\n    border:none;\n    border-radius:4px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.6);\n    cursor:pointer;\n    padding:0;\n    transition:all 0.15s ease;\n}\n\n.tm-webdav-eye-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background:hsla(var(--shadcn-muted) / 0.3);\n}\n\n.tm-webdav-device-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:6px;\n    font-size:11px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    padding:4px 8px;\n    background:hsla(var(--shadcn-muted) / 0.2);\n    border-radius:6px;\n    margin-top:2px;\n    word-break:break-all;\n}\n\n.tm-webdav-actions-grid{\n    display:grid;\n    grid-template-columns:repeat(2, 1fr);\n    gap:8px;\n    margin-top:6px;\n}\n\n.tm-webdav-btn{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    gap:6px;\n    height:32px;\n    padding:0 10px;\n    border-radius:6px;\n    font-size:12px;\n    font-weight:500;\n    cursor:pointer;\n    user-select:none;\n    transition:all 0.18s cubic-bezier(0.16, 1, 0.3, 1);\n    box-sizing:border-box;\n    border:1px solid transparent;\n    -webkit-tap-highlight-color:transparent;\n}\n\n.tm-webdav-btn-primary{\n    background:linear-gradient(135deg, hsl(var(--shadcn-primary)) 0%, hsl(var(--shadcn-accent)) 100%);\n    color:#fff;\n    border:none;\n    box-shadow:0 2px 6px hsla(var(--shadcn-primary) / 0.25);\n    grid-column:span 2;\n    height:36px;\n    font-weight:600;\n}\n\n.tm-webdav-btn-primary:hover{\n    filter:brightness(1.08);\n    box-shadow:0 3px 8px hsla(var(--shadcn-primary) / 0.35);\n}\n\n.tm-webdav-btn-secondary{\n    background:hsla(var(--shadcn-muted) / 0.4);\n    color:hsl(var(--shadcn-foreground));\n    border-color:hsla(var(--shadcn-border) / 0.3);\n}\n\n.tm-webdav-btn-secondary:hover{\n    background:hsla(var(--shadcn-muted) / 0.7);\n    border-color:hsla(var(--shadcn-border) / 0.5);\n}\n\n.tm-webdav-btn:active{\n    transform:scale(0.97);\n}\n\n.tm-webdav-btn:disabled{\n    opacity:0.5;\n    cursor:not-allowed;\n    transform:none;\n}\n\n.tm-webdav-status-bar{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    font-size:10.5px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.65);\n    padding:4px 2px 0 2px;\n    border-top:1px dashed hsla(var(--shadcn-border) / 0.2);\n    margin-top:4px;\n}\n\n.tm-webdav-status-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 6px;\n    border-radius:4px;\n    font-size:10.5px;\n    font-weight:500;\n}\n\n.tm-webdav-status-badge.success{\n    background:rgba(34, 197, 94, 0.15);\n    color:#4ade80;\n}\n\n.tm-webdav-status-badge.error{\n    background:rgba(239, 68, 68, 0.15);\n    color:#f87171;\n}\n.tm-toggle-input{\n    position:absolute;\n    left:-9999px;\n}\n.tm-start-time-container.active{\n    background-color:hsl(var(--shadcn-green) / 0.15);\n    border-color:hsl(var(--shadcn-green) / 0.4);\n}\n\n.tm-start-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-end-time-container.active{\n    background-color:hsl(var(--shadcn-orange) / 0.15);\n    border-color:hsl(var(--shadcn-orange) / 0.4);\n}\n\n.tm-end-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-set-loop-start-label.active{\n    color:hsl(var(--shadcn-green));\n    opacity:1;\n}\n\n.tm-set-loop-start-label:not(.active){\n    opacity:0.9;\n}\n.tm-set-loop-end-label.active{\n    color:hsl(var(--shadcn-orange));\n    opacity:1;\n}\n\n.tm-set-loop-end-label:not(.active){\n    opacity:0.9;\n}\n.tm-loop-start-position.active, .tm-loop-end-position.active{\n    color:hsl(var(--shadcn-foreground));\n    opacity:1;\n}\n\n.tm-loop-start-position:not(.active), .tm-loop-end-position:not(.active){\n    color:hsl(var(--shadcn-muted-foreground));\n    opacity:0.9;\n}\n.tm-loop-toggle-button.active{\n    background-color:hsl(var(--shadcn-red) / 0.1);\n    border-color:hsl(var(--shadcn-red) / 0.3);\n}\n\n.tm-loop-toggle-button:active{\n    transform:scale(0.98);\n}\n.tm-loop-range{\n    position:absolute;\n    height:4px;\n    background:linear-gradient(90deg, \n        hsla(var(--shadcn-green) / 0.3) 0%, \n        hsla(var(--shadcn-orange) / 0.3) 100%);\n    top:50%;\n    transform:translateY(-50%);\n    border-radius:2px;\n    opacity:0;\n    transition:opacity 0.3s ease;\n    z-index:1;\n    pointer-events:none;\n}\n\n.tm-loop-range.active{\n    opacity:0.7;\n    box-shadow:0 0 8px rgba(0, 0, 0, 0.1);\n}\n.tm-progress-bar-container:hover .tm-loop-range.active{\n    opacity:0.9;\n    height:6px;\n}\n.tm-loop-marker{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:3;\n    transition:opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),  transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);\n    backdrop-filter:blur(4px);\n    -webkit-backdrop-filter:blur(4px);\n}\n.tm-loop-start-marker{\n    background-color:hsla(var(--shadcn-green) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n}\n.tm-loop-end-marker{\n    background-color:hsla(var(--shadcn-orange) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-orange) / 0.3);\n}\n.tm-loop-marker:hover{\n    cursor:pointer;\n    z-index:4;\n}\n\n.tm-loop-start-marker:hover{\n    background-color:hsla(var(--shadcn-green) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-green) / 0.5);\n}\n\n.tm-loop-end-marker:hover{\n    background-color:hsla(var(--shadcn-orange) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-orange) / 0.5);\n}\n.tm-loop-marker.active{\n    opacity:1;\n}\n\n.tm-loop-marker:not(.active){\n    opacity:0.7;\n}\n.tm-loop-marker::before{\n    content:attr(data-label);\n    position:absolute;\n    top:-24px;\n    left:50%;\n    transform:translateX(-50%);\n    background-color:hsla(var(--shadcn-card) / 0.7);\n    color:hsl(var(--shadcn-card-foreground));\n    font-size:10px;\n    font-weight:600;\n    padding:2px 8px;\n    border-radius:10px;\n    opacity:0;\n    transition:opacity 0.2s ease, transform 0.2s ease;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:0 2px 4px rgba(0, 0, 0, 0.1);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    white-space:nowrap;\n    z-index:5;\n}\n\n.tm-loop-marker:hover::before{\n    opacity:1;\n    transform:translateX(-50%) translateY(-4px);\n}\n.tm-start-time-container-hover{\n    background-color:hsl(var(--shadcn-green) / 0.1);\n    border-color:hsl(var(--shadcn-green) / 0.3);\n}\n\n.tm-start-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n\n.tm-end-time-container-hover{\n    background-color:hsl(var(--shadcn-orange) / 0.1);\n    border-color:hsl(var(--shadcn-orange) / 0.3);\n}\n\n.tm-end-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-loop-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:translateY(-1px);\n}\n\n.tm-loop-button-active{\n    background-color:hsl(var(--shadcn-muted) / 0.7);\n}\n\n.tm-loop-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:translateY(0);\n}\n.tm-indicator-base{\n    position:absolute;\n    padding:8px 16px;\n    background-color:hsla(var(--shadcn-card) / 0.6);\n    color:hsl(var(--shadcn-card-foreground));\n    border-radius:var(--shadcn-radius);\n    opacity:0;\n    backdrop-filter:blur(15px);\n    -webkit-backdrop-filter:blur(15px);\n    box-shadow:var(--shadow-md);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    transform:translateY(20px);\n    transition:opacity var(--anim-smooth), transform var(--anim-smooth);\n    pointer-events:none;\n    z-index:9994;\n    font-size:15px;\n    font-weight:500;\n}\n\n.tm-indicator-base.visible{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-pause-indicator{\n    width:80px;\n    height:80px;\n}\n.tm-progress-row{\n    display:flex;\n    flex-direction:column;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-seek-control-row{\n    display:flex;\n    flex-direction:row;\n    justify-content:space-between;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-loop-control-row{\n    display:flex;\n    align-items:center;\n    width:100%;\n    box-sizing:border-box;\n    position:relative;\n    gap:8px;\n}\n.tm-inline-remark-popover{\n    position:absolute;\n    bottom:calc(45px + 42px + 10px);\n    left:12px;\n    right:12px;\n    width:calc(100% - 24px);\n    margin:0 auto;\n    background:rgba(18, 18, 20, 0.96);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:16px;\n    padding:12px;\n    box-shadow:0 10px 30px rgba(0, 0, 0, 0.7);\n    z-index:9998;\n    pointer-events:auto;\n    opacity:0;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n    box-sizing:border-box;\n}\n\n.tm-inline-remark-popover.visible{\n    opacity:1;\n    transform:translateY(0) scale(1);\n}\n\n.tm-inline-remark-body{\n    display:flex;\n    flex-direction:column;\n    gap:10px;\n    width:100%;\n}\n\n.tm-inline-remark-input{\n    width:100%;\n    height:38px;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:12px;\n    padding:0 14px;\n    color:#ffffff;\n    font-size:16px;\n    outline:none;\n    box-sizing:border-box;\n    transition:border-color 0.2s, background 0.2s;\n}\n\n.tm-inline-remark-input:focus{\n    border-color:rgba(255, 255, 255, 0.35);\n    background:rgba(255, 255, 255, 0.1);\n}\n\n.tm-inline-remark-input::placeholder{\n    color:rgba(255, 255, 255, 0.35);\n}\n\n.tm-inline-remark-footer{\n    display:flex;\n    justify-content:flex-end;\n    gap:10px;\n}\n\n.tm-inline-remark-btn{\n    height:32px;\n    padding:0 20px;\n    border-radius:14px;\n    font-size:0.82rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.18s, transform 0.12s;\n    box-sizing:border-box;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-inline-remark-btn.cancel{\n    background:rgba(255, 255, 255, 0.08);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    color:rgba(255, 255, 255, 0.8);\n}\n\n.tm-inline-remark-btn.cancel:hover{\n    background:rgba(255, 255, 255, 0.16);\n    color:#ffffff;\n}\n\n.tm-inline-remark-btn.submit{\n    background:hsl(var(--shadcn-blue));\n    border:none;\n    color:#ffffff;\n    box-shadow:0 4px 12px hsla(var(--shadcn-blue) / 0.4);\n}\n\n.tm-inline-remark-btn.submit:hover{\n    background:hsl(var(--shadcn-blue) / 0.9);\n    transform:scale(1.03);\n}\n\n.tm-playback-control-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    position:relative;\n    width:100%;\n    max-height:45px;\n    height:45px;\n    border-radius:8px;\n    box-sizing:border-box;\n}\n.tm-left-controls, .tm-center-controls, .tm-right-controls{\n    flex:1;\n    display:flex;\n    height:100%;\n    align-items:center;\n}\n\n.tm-left-controls{\n    justify-content:flex-start;\n}\n\n.tm-center-controls{\n    justify-content:center;\n}\n\n.tm-right-controls{\n    justify-content:flex-end;\n}\n.tm-time-display{\n    display:flex;\n    justify-content:space-between;\n    color:hsl(var(--shadcn-foreground) / 0.9);\n    font-size:12px;\n    margin-top:-2px;\n    font-variant-numeric:tabular-nums;\n    gap:8px;\n}\n\n.tm-time-display-container{\n    display:flex;\n    justify-content:space-between;\n    width:100%;\n    padding:0px 1px;\n    margin-bottom:6px;\n}\n\n.tm-current-time, .tm-total-duration{\n    color:hsla(var(--shadcn-foreground) / 0.55);\n    font-size:12px;\n    min-width:60px;\n    font-variant-numeric:tabular-nums;\n    font-weight:500;\n    line-height:1;\n}\n\n.tm-current-time{\n    text-align:left;\n}\n\n.tm-total-duration{\n    text-align:right;\n}\n.tm-tab-scroll-container{\n    display:flex;\n    flex:1;\n    gap:8px;\n    overflow-x:auto;\n    overflow-y:hidden;\n    overscroll-behavior:contain;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    height:38px;\n    padding:0 44px 0 0;\n    margin:0;\n    box-sizing:border-box;\n    align-items:center;\n    mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    -webkit-mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    touch-action:pan-x;\n}\n.tm-tab-scroll-container::-webkit-scrollbar{ display:none; }\n.tm-tab-pill{\n    display:flex;\n    align-items:center;\n    gap:4px;\n    height:38px;\n    padding:0 12px;\n    box-sizing:border-box;\n    border-radius:9999px;\n    background-color:hsla(0, 0%, 15%, 0.12);\n    border:1px solid hsla(0, 0%, 20%, 0.35);\n    color:hsl(var(--shadcn-foreground));\n    font-size:0.8rem;\n    font-variant-numeric:tabular-nums;\n    white-space:nowrap;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:all var(--anim-quick);\n    user-select:none;\n    -webkit-user-select:none;\n    -webkit-tap-highlight-color:transparent;\n    pointer-events:auto;\n}\n.tm-tab-pill{\n    background-color:hsla(var(--tab-color), 0.12);\n    border-color:hsla(var(--tab-color), 0.35);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill:active{ transform:scale(0.95); }\n.tm-tab-pill.active{\n    background-color:hsla(var(--tab-color), 0.25);\n    border-color:hsla(var(--tab-color), 0.6);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill.draft{\n    background-color:hsla(var(--tab-color), 0.08);\n    border-color:hsla(var(--tab-color), 0.45);\n    border-style:dashed;\n    gap:5px;\n    padding:0 8px;\n}\n.tm-tab-pill.draft.editing,\n.tm-tab-pill.draft:not(.placeholder){\n    background-color:hsla(var(--tab-color), 0.22);\n    border-color:hsla(var(--tab-color), 0.75);\n}\n.tm-tab-pill.draft .tm-draft-label{\n    font-weight:600;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-label.a{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-label.b{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-time{\n    color:#fff;\n    font-variant-numeric:tabular-nums;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-time.placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-draft-action{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    height:24px;\n    width:32px;\n    border-radius:6px;\n    border:none;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    -webkit-tap-highlight-color:transparent;\n    box-sizing:border-box;\n}\n.tm-draft-action:active{\n    transform:scale(0.88);\n}\n.tm-draft-action.save{\n    background-color:hsla(var(--tab-color), 0.18);\n    color:hsl(var(--tab-color));\n}\n.tm-draft-action.save:hover{\n    background-color:hsla(var(--tab-color), 0.28);\n}\n.tm-draft-action.cancel{\n    background-color:rgba(239, 68, 68, 0.15);\n    color:#ef4444;\n}\n.tm-draft-action.cancel:hover{\n    background-color:rgba(239, 68, 68, 0.25);\n}\n.tm-draft-action.edit-comment{\n    background-color:rgba(245, 158, 11, 0.15);\n    color:#f59e0b;\n}\n.tm-draft-action.edit-comment:hover{\n    background-color:rgba(245, 158, 11, 0.25);\n}\n.tm-tab-list-btn{\n    flex-shrink:0;\n    width:38px;\n    height:38px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    border-radius:50%;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    color:hsl(var(--shadcn-foreground));\n    font-size:1.1rem;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-tab-list-btn:active{ transform:scale(0.88); }\n.tm-tab-list-btn:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.8);\n    border-color:hsla(var(--shadcn-border) / 0.3);\n}\n.tm-bottom-sheet-overlay{\n    position:fixed;\n    inset:0;\n    background-color:transparent;\n    z-index:9990 !important;\n    opacity:0;\n    pointer-events:none;\n    transition:opacity var(--anim-smooth);\n\n    touch-action:none;\n    user-select:none;\n    -webkit-user-select:none;\n    overscroll-behavior:none;\n}\n.tm-bottom-sheet-overlay.visible{\n    opacity:1;\n    pointer-events:auto;\n}\n\n.tm-bottom-sheet-panel{\n    position:absolute;\n    bottom:0;\n    left:0;\n    right:0;\n    width:100%;\n    max-height:calc(100vh - 120px);\n    background-color:rgba(18, 18, 20, 0.94);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.6);\n    border-radius:16px;\n    border:1px solid rgba(255, 255, 255, 0.1);\n    z-index:9995 !important;\n    opacity:0;\n    pointer-events:none;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    display:flex;\n    flex-direction:column;\n    overflow:hidden;\n    box-sizing:border-box;\n    padding:10px 14px 12px;\n}\n.tm-bottom-sheet-panel.visible{\n    opacity:1;\n    pointer-events:auto;\n    transform:translateY(0) scale(1);\n}\n.tm-sheet-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    padding:2px 2px 6px 2px;\n    margin-bottom:6px;\n    border-bottom:1px solid rgba(255, 255, 255, 0.06);\n    flex-shrink:0;\n}\n\n.tm-bottom-sheet-title{\n    font-size:0.82rem;\n    font-weight:600;\n    color:rgba(255, 255, 255, 0.88);\n    letter-spacing:0.2px;\n}\n\n.tm-sheet-count-badge{\n    font-size:0.7rem;\n    color:rgba(255, 255, 255, 0.45);\n    background:rgba(255, 255, 255, 0.08);\n    padding:1px 6px;\n    border-radius:8px;\n}\n\n.tm-sheet-close-btn{\n    background:transparent;\n    border:none;\n    color:rgba(255, 255, 255, 0.45);\n    font-size:0.95rem;\n    cursor:pointer;\n    padding:0 4px;\n    border-radius:4px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    transition:color 0.2s;\n}\n.tm-sheet-close-btn:hover{\n    color:#ffffff;\n}\n.tm-bottom-sheet-list{\n    flex:1;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n    display:flex;\n    flex-direction:column;\n    gap:6px;\n    padding-right:2px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar{\n    width:4px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar-thumb{\n    background:rgba(255, 255, 255, 0.2);\n    border-radius:2px;\n}\n.tm-sheet-item{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    padding:2px 0;\n    background:transparent;\n    border:none;\n    height:32px;\n    box-sizing:border-box;\n}\n\n.tm-sheet-item-time-container{\n    display:flex;\n    align-items:center;\n    flex-shrink:0;\n    height:32px;\n}\n.tm-sheet-time-pill{\n    height:32px;\n    box-sizing:border-box;\n    padding:0 12px;\n    border-radius:16px;\n    background:hsla(var(--tab-color, 200 100% 55%), 0.15);\n    border:1px solid hsla(var(--tab-color, 200 100% 55%), 0.4);\n    color:#ffffff;\n    font-size:0.8rem;\n    font-family:inherit;\n    font-weight:500;\n    cursor:pointer;\n    white-space:nowrap;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    transition:transform 0.15s ease, background-color 0.2s;\n}\n.tm-sheet-time-pill:hover{\n    transform:scale(1.02);\n    background:hsla(var(--tab-color, 200 100% 55%), 0.28);\n}\n.tm-sheet-time-pill.interval{\n    padding:0 10px;\n    gap:4px;\n}\n.tm-sheet-time-pill.interval .tm-time-part{\n    cursor:pointer;\n    padding:2px 4px;\n    border-radius:4px;\n    transition:background-color 0.15s, color 0.15s;\n}\n.tm-sheet-time-pill.interval .tm-time-part:hover{\n    background-color:rgba(255, 255, 255, 0.25);\n    color:#ffffff;\n}\n.tm-sheet-time-pill.interval .tm-time-sep{\n    opacity:0.6;\n    font-weight:400;\n    user-select:none;\n    padding:0 1px;\n}\n.tm-sheet-item-comment-input{\n    flex:1;\n    min-width:0;\n    height:32px;\n    box-sizing:border-box;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:8px;\n    padding:0 10px;\n    color:#ffffff;\n    font-size:16px;\n    outline:none;\n    display:inline-flex;\n    align-items:center;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-sheet-item-comment-input:focus{\n    border-color:rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-sheet-item-comment-input::placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-sheet-delete-btn{\n    width:32px;\n    height:32px;\n    box-sizing:border-box;\n    border-radius:8px;\n    border:1px solid rgba(255, 60, 60, 0.25);\n    background:rgba(255, 60, 60, 0.12);\n    color:#ff5252;\n    font-size:0.85rem;\n    font-weight:bold;\n    cursor:pointer;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s;\n}\n.tm-sheet-delete-btn:hover{\n    background:rgba(255, 60, 60, 0.28);\n    transform:scale(1.05);\n}\n\n.tm-bottom-sheet-empty{\n    padding:16px;\n    text-align:center;\n    font-size:0.82rem;\n    color:rgba(255, 255, 255, 0.35);\n}\n.tm-rewind-group, .tm-forward-group{\n    display:flex;\n    flex-direction:column;\n    width:50%;\n    gap:8px;\n    align-items:center;\n}\n\n.tm-rewind-buttons-container{\n    display:flex;\n    flex-direction:row-reverse;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n\n.tm-forward-buttons-container{\n    display:flex;\n    flex-direction:row;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n.tm-time-control-button{\n    background-color:hsla(var(--shadcn-secondary) / var(--btn-opacity, 0.5));\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsl(var(--shadcn-border) / 0.1);\n    border-radius:8px;\n    padding:0;\n    font-size:0.75rem;\n    cursor:pointer;\n    transition:all 0.2s cubic-bezier(.25,.8,.25,1);\n    white-space:nowrap;\n    font-weight:500;\n    box-shadow:0 1px 2px rgba(0,0,0,0.05);\n    width:var(--button-xl);\n    height:var(--button-lg);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    flex:0 0 auto;\n}\n\n.tm-time-control-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.15));\n    border-color:hsla(var(--shadcn-border) / 0.3);\n    transform:translateY(-1.5px);\n    box-shadow:0 4px 8px rgba(0,0,0,0.2);\n}\n\n.tm-time-control-button:active{\n    transform:scale(0.96);\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.25));\n    box-shadow:none;\n}\n\n.tm-time-control-button-active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-time-control-button-after-active{\n    transform:none;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.15);\n}\n\n.tm-time-control-button-inner{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-rewind-icon{\n    margin-right:-2px;\n}\n\n.tm-forward-icon{\n    margin-left:-2px;\n}\n\n.tm-time-text-margin-left{\n    margin-left:2px;\n}\n\n.tm-time-text-margin-right{\n    margin-right:2px;\n}\n.tm-control-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:none;\n}\n\n.tm-control-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:none;\n}\n.tm-control-buttons{\n    position:absolute;\n    bottom:calc(10px + env(safe-area-inset-bottom, 0px));\n    left:50%;\n    transform:translateX(-50%);\n    width:95%;\n    max-width:700px;\n    min-width:350px;\n    z-index:9997 !important;\n    padding:16px 16px 14px;\n    border-radius:16px;\n    background-color:rgba(10, 10, 10, 0.52);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 12px 32px rgba(0, 0, 0, 0.45);\n    border:none;\n    transition: opacity 0.3s ease,  transform 0.3s ease,  width 0.35s cubic-bezier(0.25, 1, 0.5, 1),  left 0.35s cubic-bezier(0.25, 1, 0.5, 1),  bottom 0.35s cubic-bezier(0.25, 1, 0.5, 1),  right 0.35s cubic-bezier(0.25, 1, 0.5, 1),  border-radius 0.3s ease;\n    gap:10px;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:center;\n    overflow:visible !important;\n    touch-action:none;\n}\n\n.tm-control-buttons.dragging{\n    transition:none !important;\n}\nbody.controls-hidden .tm-player-container .tm-control-buttons{\n    opacity:0;\n    transform:translateX(-50%) translateY(calc(100% + 30px));\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-control-buttons{\n    opacity:1;\n    transform:translateX(-50%) translateY(0);\n    pointer-events:auto;\n}\nbody.controls-hidden .tm-player-container .tm-button-container{\n    opacity:0;\n    transform:translateY(-60px);\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-button-container{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-control-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.6);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n}\n\n.tm-control-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    transform:translateY(-2px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-control-button:active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-control-button.active{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-control-button svg,\n.tm-control-button img{\n    width:16px;\n    height:16px;\n}\n.tm-control-row{\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    gap:8px;\n    margin-top:4px;\n    opacity:1;\n    transition:opacity var(--anim-quick), height var(--anim-quick);\n    height:auto;\n    overflow:hidden;\n}\n\n.tm-control-row.hidden{\n    opacity:0;\n    height:0;\n    margin:0;\n}\n.tm-comment-row{\n    width:100%;\n    display:flex;\n    flex-direction:column;\n    margin-bottom:10px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.2);\n    padding-bottom:10px;\n}\n\n.tm-comment-container{\n    width:100%;\n    min-height:60px;\n    display:flex;\n    flex-direction:column;\n    gap:8px;\n}\n\n.tm-comment-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    font-size:14px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-comment-left{\n    display:flex;\n    align-items:center;\n}\n\n.tm-comment-title{\n    margin-right:5px;\n}\n\n.tm-comment-count{\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:12px;\n}\n\n.tm-comment-actions{\n    display:flex;\n    gap:8px;\n}\n\n.tm-comment-button{\n    border:none;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:4px;\n    padding:4px 8px;\n    font-size:12px;\n    cursor:pointer;\n    transition:all 0.2s ease;\n}\n\n.tm-comment-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.6);\n    transform:translateY(-1px);\n}\n\n.tm-comment-button:active{\n    transform:scale(0.95);\n}\n\n.tm-comment-write{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n}\n\n.tm-comment-write:hover{\n    background-color:hsla(var(--shadcn-blue) / 0.8);\n}\n\n.tm-comment-placeholder{\n    width:100%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:10px;\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:13px;\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    border-radius:6px;\n}\n@media screen and (orientation: landscape){\n    .tm-comment-container{\n        min-height:50px;\n    }\n    \n    .tm-comment-placeholder{\n        padding:8px;\n    }\n}\n\n.tm-player-title{\n    position:absolute !important;\n    top:calc(env(safe-area-inset-top, 0px) + 12px) !important;\n    left:50% !important;\n    transform:translateX(-50%) !important;\n    max-width:calc(100% - 110px) !important;\n    text-align:center;\n    font-size:14px;\n    font-weight:600;\n    color:#ffffff;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    user-select:none;\n    z-index:9998 !important;\n    text-shadow:0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;\n    pointer-events:none !important;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n\nbody.controls-hidden .tm-player-title{\n    opacity:0 !important;\n    transform:translate(-50%, -20px) !important;\n    pointer-events:none !important;\n}\nbody.tm-swiping-down .tm-button-container,\nbody.tm-swiping-down .tm-handle-container,\nbody.tm-swiping-down .tm-comments-panel,\nbody.tm-swiping-down .tm-control-buttons,\nbody.tm-swiping-down .tm-settings-panel{\n    opacity:0 !important;\n    pointer-events:none !important;\n    transition:opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n.tm-jump-active{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:5;\n    background-color:hsla(var(--shadcn-green) / 0.8);\n    border-radius:2px;\n    box-shadow:0 0 8px hsla(var(--shadcn-green) / 0.5);\n    pointer-events:none;\n    animation:tm-jump-flash-fade 3.0s cubic-bezier(0.25, 1, 0.5, 1) forwards;\n}\n\n@keyframes tm-jump-flash-fade{\n    0%, 20%, 40%, 60%, 80%{\n        opacity:1;\n        background-color:hsl(var(--shadcn-green));\n        box-shadow:0 0 16px 4px hsl(var(--shadcn-green));\n        transform:translateX(-50%) scaleX(1.6);\n    }\n    10%, 30%, 50%, 70%{\n        opacity:0.3;\n        background-color:hsla(var(--shadcn-green) / 0.4);\n        box-shadow:0 0 4px hsla(var(--shadcn-green) / 0.2);\n        transform:translateX(-50%) scaleX(1.0);\n    }\n    90%{\n        opacity:0.5;\n        background-color:hsla(var(--shadcn-green) / 0.5);\n        box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n        transform:translateX(-50%) scaleX(0.8);\n    }\n    100%{\n        opacity:0;\n        background-color:transparent;\n        box-shadow:none;\n        transform:translateX(-50%) scaleX(0);\n    }\n}\n.tm-sidebar-pos-button,\n.tm-sidebar-toggle-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:none !important;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n}\n\n.tm-sidebar-pos-button:hover,\n.tm-sidebar-toggle-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.1);\n}\n\n.tm-sidebar-pos-button:active,\n.tm-sidebar-toggle-button:active{\n    transform:scale(0.9);\n}\n.tm-sidebar-hidden .tm-sidebar-pos-button{\n    display:none !important;\n}\n@media screen and (min-width: 480px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:520px;\n    }\n}\n\n@media screen and (min-width: 768px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:640px;\n    }\n    .tm-comments-panel{\n        max-width:720px;\n        margin:0 auto;\n        border-left:1px solid hsla(var(--shadcn-border) / 0.1);\n        border-right:1px solid hsla(var(--shadcn-border) / 0.1);\n        box-shadow:0 4px 20px rgba(0, 0, 0, 0.08);\n        background-color:hsla(var(--shadcn-card) / 0.02);\n    }\n}\nhtml.tm-player-active,\nbody.tm-player-active{\n    position:fixed !important;\n    top:0 !important;\n    left:0 !important;\n    right:0 !important;\n    bottom:0 !important;\n    width:100vw !important;\n    height:100vh !important;\n    height:100dvh !important;\n    overflow:hidden !important;\n    overscroll-behavior:none !important;\n    touch-action:none !important;\n    background-color:#0b0b0e !important;\n}\n\nbody.tm-player-active > *:not(.tm-video-overlay):not(.tm-player-container):not(.tm-floating-button):not(script):not(style):not(#tm-hide-scrollbar-style){\n    display:none !important;\n}\n\nbody.tm-player-active header,\nbody.tm-player-active .header,\nbody.tm-player-active navbar,\nbody.tm-player-active .navbar,\nbody.tm-player-active #header-top,\nbody.tm-player-active .top-nav,\nbody.tm-player-active [class*="header--sticky"],\nbody.tm-player-active [class*="navbar-fixed"]{\n    display:none !important;\n}\n\n.tm-progress-markers-container{\n    position:absolute;\n    top:0;\n    left:0;\n    width:100%;\n    height:100%;\n    pointer-events:none;\n    z-index:5;\n}\n.tm-progress-marker-tick{\n    position:absolute;\n    width:6px;\n    height:3px;\n    bottom:-4px;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:10;\n    pointer-events:auto;\n    transition:all var(--anim-quick);\n}\n.tm-progress-marker-tick:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n    transform:translateX(-50%) scale(1.1);\n}\n.tm-progress-marker-range{\n    position:absolute;\n    height:3px;\n    bottom:-4px;\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:9;\n    pointer-events:auto;\n    transition:all var(--anim-quick);\n}\n.tm-progress-marker-range:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n}\n\n.tm-active-loop-played{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.45);\n    z-index:8;\n    pointer-events:none;\n    box-shadow:0 0 4px hsla(var(--tab-color), 0.15);\n}\n\n.tm-active-loop-unplayed{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.15);\n    z-index:7;\n    pointer-events:none;\n}\n\n.tm-active-loop-boundary{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.75);\n    z-index:9;\n    pointer-events:none;\n    box-shadow:0 0 3px rgba(0, 0, 0, 0.3);\n}\n.tm-active-loop-boundary.start{\n    border-radius:2px 0 0 2px;\n}\n.tm-active-loop-boundary.end{\n    border-radius:0 2px 2px 0;\n}\n`, "" ]);
+      y.push([ r.id, `.tm-video-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    width:100vw;\n    height:100vh;\n    height:100dvh;\n    background-color:#0b0b0e;\n    z-index:2000000000 !important;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    backdrop-filter:blur(30px);\n    -webkit-backdrop-filter:blur(30px);\n    padding:0;\n    touch-action:none;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-player-container{\n    position:fixed;\n    top:0;\n    bottom:var(--keyboard-height, 0px);\n    left:0;\n    right:0;\n    width:100%;\n    height:calc(100% - var(--keyboard-height, 0px));\n    height:calc(100dvh - var(--keyboard-height, 0px));\n    background-color:#0b0b0e;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    z-index:2000000001 !important;\n    overflow:hidden;\n    pointer-events:auto;\n    transition:bottom 0.15s ease-out, height 0.15s ease-out;\n    touch-action:pan-y;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-button-container{\n    width:100%;\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    gap:10px;\n    padding:6px 10px;\n    box-sizing:border-box;\n    z-index:99999;\n    position:absolute;\n    top:0;\n    left:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);\n    touch-action:none;\n}\n\n.tm-video-container{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:auto;\n    max-height:calc(100% - 130px);\n    margin-top:44px;\n    display:flex;\n    align-items:flex-start;\n    justify-content:center;\n    background-color:hsl(var(--shadcn-card));\n    border-radius:var(--shadcn-radius-lg);\n    box-shadow:var(--shadow-lg);\n    z-index:9985;\n    touch-action:pan-y;\n    flex-shrink:1;\n    transition:max-height 0.15s ease-out;\n}\n\n@media screen and (orientation: portrait){\n    .tm-video-container{\n        max-height:calc(100dvh - var(--keyboard-height, 0px) - 130px) !important;\n        min-height:0 !important;\n    }\n}\n\n.tm-video-wrapper{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:100%;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    will-change:transform;\n    border-radius:var(--shadcn-radius) var(--shadcn-radius) 0 0;\n    touch-action:pan-y;\n}\n.tm-video-wrapper > *:not(video):not(.tm-speed-indicator):not(.tm-video-minimap):not(.tm-inline-remark-popover){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video > *:not(track):not(source){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video{\n    width:auto !important; \n    height:100% !important; \n    max-height:100% !important; \n    max-width:none !important; \n    object-fit:contain !important; \n    transition:transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n    touch-action:pan-y;\n    cursor:grab; \n}\n.tm-handle-container{\n    position:relative;\n    height:30px;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    z-index:9986;\n    width:100%;\n    flex-shrink:0;\n    touch-action:none;\n}\n\n.tm-resize-handle{\n    position:absolute;\n    height:5px;\n    width:134px;\n    max-width:134px;\n    background-color:hsla(var(--shadcn-foreground) / 0.6);\n    border-radius:2.5px;\n    cursor:grab;\n    touch-action:none;\n    opacity:0.5;\n    will-change:transform;\n    transition:all var(--anim-quick);\n    box-shadow:none;\n}\n\n.tm-resize-handle::after{\n    content:'';\n    position:absolute;\n    left:-10px;\n    right:-10px;\n    top:-15px;\n    bottom:-15px;\n    background:transparent;\n}\n\n.tm-resize-handle:hover,\n.tm-resize-handle.dragging{\n    opacity:1;\n    background-color:hsla(var(--shadcn-foreground) / 0.8);\n}\n\n.tm-resize-handle.dragging{\n    cursor:grabbing;\n}\n.tm-control-button-base{\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    box-shadow:var(--shadow-sm);\n}\n.tm-close-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-smooth);\n    z-index:9994;\n}\n\n.tm-close-button:hover{\n    background-color:hsl(var(--shadcn-destructive));\n    transform:scale(1.1);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-close-button:active{\n    transform:scale(0.9);\n}\n.tm-settings-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    z-index:9993;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-settings-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.1) rotate(30deg);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-settings-button:active{\n    transform:scale(0.9);\n}\n.tm-settings-panel{\n    position:absolute;\n    top:calc(env(safe-area-inset-top, 8px) + 60px);\n    right:16px;\n    background-color:hsla(var(--shadcn-card) / 0.92);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border-radius:14px;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    box-shadow:0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px hsla(0, 0%, 100%, 0.05);\n    padding:14px 16px;\n    z-index:9996;\n    min-width:275px;\n    max-width:325px;\n    max-height:calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 80px);\n    overflow-y:auto;\n    overflow-x:hidden;\n    -webkit-overflow-scrolling:touch;\n    overscroll-behavior:contain;\n    touch-action:pan-y;\n    scrollbar-width:thin;\n    scrollbar-color:hsla(var(--shadcn-muted-foreground) / 0.3) transparent;\n    transform:translateY(-10px);\n    opacity:0;\n    pointer-events:none;\n    transition:transform var(--anim-smooth), opacity var(--anim-smooth);\n    box-sizing:border-box;\n}\n\n.tm-settings-panel::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-settings-panel::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.3);\n    border-radius:4px;\n}\n\n.tm-settings-panel.active{\n    transform:translateY(0);\n    opacity:1;\n    pointer-events:auto;\n}\n.tm-settings-menu-container{\n    display:flex;\n    flex-direction:column;\n    gap:12px;\n    color:hsl(var(--shadcn-foreground));\n    user-select:none;\n    font-size:13.5px;\n}\n.tm-settings-section{\n    display:flex;\n    flex-direction:column;\n    gap:3px;\n}\n.tm-settings-section-header{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    font-size:11px;\n    font-weight:700;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    letter-spacing:0.8px;\n    text-transform:uppercase;\n    padding-left:2px;\n    user-select:none;\n}\n\n.tm-settings-section-header.collapsible{\n    cursor:pointer;\n    padding:2px 4px;\n    border-radius:4px;\n    transition:background 0.15s ease;\n}\n\n.tm-settings-section-header.collapsible:hover{\n    background:hsla(var(--shadcn-muted) / 0.2);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-settings-header-arrow{\n    font-size:10px;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-settings-header-arrow.expanded{\n    transform:rotate(180deg);\n}\n.tm-settings-section-divider{\n    height:1px;\n    background:linear-gradient(90deg, hsla(var(--shadcn-border) / 0.3) 0%, hsla(var(--shadcn-border) / 0.05) 100%);\n    margin:3px 0 6px 0;\n    border-radius:1px;\n}\n.tm-settings-option-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    padding:6px 4px;\n    border-radius:8px;\n    cursor:pointer;\n    transition:background 0.15s ease;\n}\n\n.tm-settings-option-row:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.3);\n}\n\n.tm-settings-label-wrapper{\n    display:flex;\n    align-items:center;\n    gap:8px;\n}\n\n.tm-settings-text-wrapper{\n    display:flex;\n    flex-direction:column;\n    gap:2px;\n}\n\n.tm-settings-label{\n    font-size:13.5px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-settings-subtext{\n    font-size:11px;\n    font-weight:400;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    line-height:1.25;\n}\n.tm-settings-seek-steps-subpanel{\n    display:flex;\n    flex-wrap:nowrap;\n    gap:6px;\n    align-items:center;\n    overflow-x:auto;\n    overflow-y:hidden;\n    white-space:nowrap;\n    padding:6px 2px 4px 2px;\n    margin-top:2px;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    -ms-overflow-style:none;\n}\n\n.tm-settings-seek-steps-subpanel::-webkit-scrollbar{\n    display:none;\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    flex-wrap:wrap;\n    gap:8px;\n    align-items:center;\n    justify-content:flex-start;\n    padding:6px 2px 2px 2px;\n    margin-top:2px;\n}\n.tm-seek-step-badge,\n.tm-source-badge{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    font-size:11.5px;\n    font-weight:500;\n    padding:0 12px;\n    height:28px;\n    line-height:1;\n    border-radius:6px;\n    box-sizing:border-box;\n    border:1px solid transparent;\n    cursor:pointer;\n    user-select:none;\n    flex-shrink:0;\n    transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-seek-step-badge.enabled,\n.tm-source-badge.enabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    border-color:hsla(var(--shadcn-border) / 0.35);\n    color:#ffffff;\n    font-weight:600;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.2);\n}\n.tm-seek-step-badge.disabled,\n.tm-source-badge.disabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.15);\n    border-color:hsla(var(--shadcn-border) / 0.08);\n    color:hsla(var(--shadcn-muted-foreground) / 0.4);\n    font-weight:400;\n}\n.tm-seek-step-badge:hover,\n.tm-source-badge:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n.tm-seek-step-badge:active,\n.tm-source-badge:active{\n    transform:scale(0.94);\n    box-shadow:none;\n}\n.tm-seek-step-add-btn{\n    font-size:14px;\n    font-weight:600;\n    width:32px;\n    height:28px;\n    border-radius:6px;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    border:1px dashed hsla(var(--shadcn-border) / 0.35);\n    color:hsla(var(--shadcn-foreground) / 0.75);\n    cursor:pointer;\n    flex-shrink:0;\n    transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-seek-step-add-btn:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.5);\n    border-style:solid;\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n\n.tm-seek-step-add-btn:active{\n    transform:scale(0.94);\n}\n.tm-seek-step-input{\n    width:60px;\n    height:28px;\n    font-size:16px;\n    font-weight:500;\n    text-align:center;\n    border-radius:6px;\n    border:1px solid hsla(var(--shadcn-accent) / 0.8);\n    background-color:hsla(var(--shadcn-background) / 0.85);\n    color:#ffffff;\n    outline:none;\n    box-sizing:border-box;\n    flex-shrink:0;\n    box-shadow:0 0 8px hsla(var(--shadcn-accent) / 0.4);\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    gap:8px;\n    padding:6px 2px 2px 2px;\n}\n\n.tm-source-badge{\n    font-size:11px;\n    padding:4px 10px;\n    border-radius:12px;\n    border:1px solid transparent;\n    cursor:pointer;\n    font-weight:500;\n    transition:all 0.15s ease;\n}\n\n.tm-source-badge.enabled{\n    background:rgba(239, 68, 68, 0.2);\n    border-color:rgba(239, 68, 68, 0.6);\n    color:#fca5a5;\n}\n\n.tm-source-badge.disabled{\n    background:rgba(255, 255, 255, 0.06);\n    border-color:rgba(255, 255, 255, 0.1);\n    color:rgba(255, 255, 255, 0.4);\n}\n.tm-settings-webdav-card{\n    display:flex;\n    flex-direction:column;\n    gap:10px;\n    background:hsla(var(--shadcn-card) / 0.45);\n    backdrop-filter:blur(16px);\n    -webkit-backdrop-filter:blur(16px);\n    border:1px solid hsla(var(--shadcn-border) / 0.25);\n    border-radius:10px;\n    padding:12px;\n    margin-top:4px;\n}\n\n.tm-webdav-form-row{\n    display:flex;\n    flex-direction:column;\n    gap:4px;\n}\n\n.tm-webdav-form-row.tm-webdav-switch-row{\n    flex-direction:row;\n    justify-content:space-between;\n    align-items:center;\n    padding:3px 0;\n}\n\n.tm-webdav-label{\n    font-size:11.5px;\n    font-weight:500;\n    color:hsla(var(--shadcn-muted-foreground) / 0.85);\n}\n\n.tm-webdav-input-group{\n    position:relative;\n    display:flex;\n    align-items:center;\n    width:100%;\n}\n\n.tm-webdav-input{\n    width:100%;\n    height:32px;\n    background:hsla(var(--shadcn-background) / 0.6);\n    border:1px solid hsla(var(--shadcn-border) / 0.3);\n    border-radius:6px;\n    padding:0 10px;\n    font-size:12.5px;\n    color:hsl(var(--shadcn-foreground));\n    box-sizing:border-box;\n    outline:none;\n    transition:all 0.2s ease;\n    font-family:inherit;\n}\n\n.tm-webdav-input-group .tm-webdav-input.has-eye{\n    padding-right:34px;\n}\n\n.tm-webdav-input:focus{\n    border-color:hsla(var(--shadcn-accent) / 0.8);\n    box-shadow:0 0 0 2px hsla(var(--shadcn-accent) / 0.2);\n    background:hsla(var(--shadcn-background) / 0.85);\n}\n\n.tm-webdav-input::placeholder{\n    color:hsla(var(--shadcn-muted-foreground) / 0.4);\n    font-size:11.5px;\n}\n\n.tm-webdav-eye-btn{\n    position:absolute;\n    right:4px;\n    top:50%;\n    transform:translateY(-50%);\n    width:26px;\n    height:26px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    background:transparent;\n    border:none;\n    border-radius:4px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.6);\n    cursor:pointer;\n    padding:0;\n    transition:all 0.15s ease;\n}\n\n.tm-webdav-eye-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background:hsla(var(--shadcn-muted) / 0.3);\n}\n\n.tm-webdav-device-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:6px;\n    font-size:11px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    padding:4px 8px;\n    background:hsla(var(--shadcn-muted) / 0.2);\n    border-radius:6px;\n    margin-top:2px;\n    word-break:break-all;\n}\n\n.tm-webdav-actions-grid{\n    display:grid;\n    grid-template-columns:repeat(2, 1fr);\n    gap:8px;\n    margin-top:6px;\n}\n\n.tm-webdav-btn{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    gap:6px;\n    height:32px;\n    padding:0 10px;\n    border-radius:6px;\n    font-size:12px;\n    font-weight:500;\n    cursor:pointer;\n    user-select:none;\n    transition:all 0.18s cubic-bezier(0.16, 1, 0.3, 1);\n    box-sizing:border-box;\n    border:1px solid transparent;\n    -webkit-tap-highlight-color:transparent;\n}\n\n.tm-webdav-btn-primary{\n    background:linear-gradient(135deg, hsl(var(--shadcn-primary)) 0%, hsl(var(--shadcn-accent)) 100%);\n    color:#fff;\n    border:none;\n    box-shadow:0 2px 6px hsla(var(--shadcn-primary) / 0.25);\n    grid-column:span 2;\n    height:36px;\n    font-weight:600;\n}\n\n.tm-webdav-btn-primary:hover{\n    filter:brightness(1.08);\n    box-shadow:0 3px 8px hsla(var(--shadcn-primary) / 0.35);\n}\n\n.tm-webdav-btn-secondary{\n    background:hsla(var(--shadcn-muted) / 0.4);\n    color:hsl(var(--shadcn-foreground));\n    border-color:hsla(var(--shadcn-border) / 0.3);\n}\n\n.tm-webdav-btn-secondary:hover{\n    background:hsla(var(--shadcn-muted) / 0.7);\n    border-color:hsla(var(--shadcn-border) / 0.5);\n}\n\n.tm-webdav-btn:active{\n    transform:scale(0.97);\n}\n\n.tm-webdav-btn:disabled{\n    opacity:0.5;\n    cursor:not-allowed;\n    transform:none;\n}\n\n.tm-webdav-status-bar{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    font-size:10.5px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.65);\n    padding:4px 2px 0 2px;\n    border-top:1px dashed hsla(var(--shadcn-border) / 0.2);\n    margin-top:4px;\n}\n\n.tm-webdav-status-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 6px;\n    border-radius:4px;\n    font-size:10.5px;\n    font-weight:500;\n}\n\n.tm-webdav-status-badge.success{\n    background:rgba(34, 197, 94, 0.15);\n    color:#4ade80;\n}\n\n.tm-webdav-status-badge.error{\n    background:rgba(239, 68, 68, 0.15);\n    color:#f87171;\n}\n.tm-toggle-input{\n    position:absolute;\n    left:-9999px;\n}\n.tm-start-time-container.active{\n    background-color:hsl(var(--shadcn-green) / 0.15);\n    border-color:hsl(var(--shadcn-green) / 0.4);\n}\n\n.tm-start-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-end-time-container.active{\n    background-color:hsl(var(--shadcn-orange) / 0.15);\n    border-color:hsl(var(--shadcn-orange) / 0.4);\n}\n\n.tm-end-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-set-loop-start-label.active{\n    color:hsl(var(--shadcn-green));\n    opacity:1;\n}\n\n.tm-set-loop-start-label:not(.active){\n    opacity:0.9;\n}\n.tm-set-loop-end-label.active{\n    color:hsl(var(--shadcn-orange));\n    opacity:1;\n}\n\n.tm-set-loop-end-label:not(.active){\n    opacity:0.9;\n}\n.tm-loop-start-position.active, .tm-loop-end-position.active{\n    color:hsl(var(--shadcn-foreground));\n    opacity:1;\n}\n\n.tm-loop-start-position:not(.active), .tm-loop-end-position:not(.active){\n    color:hsl(var(--shadcn-muted-foreground));\n    opacity:0.9;\n}\n.tm-loop-toggle-button.active{\n    background-color:hsl(var(--shadcn-red) / 0.1);\n    border-color:hsl(var(--shadcn-red) / 0.3);\n}\n\n.tm-loop-toggle-button:active{\n    transform:scale(0.98);\n}\n.tm-loop-range{\n    position:absolute;\n    height:4px;\n    background:linear-gradient(90deg, \n        hsla(var(--shadcn-green) / 0.3) 0%, \n        hsla(var(--shadcn-orange) / 0.3) 100%);\n    top:50%;\n    transform:translateY(-50%);\n    border-radius:2px;\n    opacity:0;\n    transition:opacity 0.3s ease;\n    z-index:1;\n    pointer-events:none;\n}\n\n.tm-loop-range.active{\n    opacity:0.7;\n    box-shadow:0 0 8px rgba(0, 0, 0, 0.1);\n}\n.tm-progress-bar-container:hover .tm-loop-range.active{\n    opacity:0.9;\n    height:6px;\n}\n.tm-loop-marker{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:3;\n    transition:opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),  transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);\n    backdrop-filter:blur(4px);\n    -webkit-backdrop-filter:blur(4px);\n}\n.tm-loop-start-marker{\n    background-color:hsla(var(--shadcn-green) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n}\n.tm-loop-end-marker{\n    background-color:hsla(var(--shadcn-orange) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-orange) / 0.3);\n}\n.tm-loop-marker:hover{\n    cursor:pointer;\n    z-index:4;\n}\n\n.tm-loop-start-marker:hover{\n    background-color:hsla(var(--shadcn-green) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-green) / 0.5);\n}\n\n.tm-loop-end-marker:hover{\n    background-color:hsla(var(--shadcn-orange) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-orange) / 0.5);\n}\n.tm-loop-marker.active{\n    opacity:1;\n}\n\n.tm-loop-marker:not(.active){\n    opacity:0.7;\n}\n.tm-loop-marker::before{\n    content:attr(data-label);\n    position:absolute;\n    top:-24px;\n    left:50%;\n    transform:translateX(-50%);\n    background-color:hsla(var(--shadcn-card) / 0.7);\n    color:hsl(var(--shadcn-card-foreground));\n    font-size:10px;\n    font-weight:600;\n    padding:2px 8px;\n    border-radius:10px;\n    opacity:0;\n    transition:opacity 0.2s ease, transform 0.2s ease;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:0 2px 4px rgba(0, 0, 0, 0.1);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    white-space:nowrap;\n    z-index:5;\n}\n\n.tm-loop-marker:hover::before{\n    opacity:1;\n    transform:translateX(-50%) translateY(-4px);\n}\n.tm-start-time-container-hover{\n    background-color:hsl(var(--shadcn-green) / 0.1);\n    border-color:hsl(var(--shadcn-green) / 0.3);\n}\n\n.tm-start-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n\n.tm-end-time-container-hover{\n    background-color:hsl(var(--shadcn-orange) / 0.1);\n    border-color:hsl(var(--shadcn-orange) / 0.3);\n}\n\n.tm-end-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-loop-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:translateY(-1px);\n}\n\n.tm-loop-button-active{\n    background-color:hsl(var(--shadcn-muted) / 0.7);\n}\n\n.tm-loop-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:translateY(0);\n}\n.tm-indicator-base{\n    position:absolute;\n    padding:8px 16px;\n    background-color:hsla(var(--shadcn-card) / 0.6);\n    color:hsl(var(--shadcn-card-foreground));\n    border-radius:var(--shadcn-radius);\n    opacity:0;\n    backdrop-filter:blur(15px);\n    -webkit-backdrop-filter:blur(15px);\n    box-shadow:var(--shadow-md);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    transform:translateY(20px);\n    transition:opacity var(--anim-smooth), transform var(--anim-smooth);\n    pointer-events:none;\n    z-index:9994;\n    font-size:15px;\n    font-weight:500;\n}\n\n.tm-indicator-base.visible{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-pause-indicator{\n    width:80px;\n    height:80px;\n}\n.tm-progress-row{\n    display:flex;\n    flex-direction:column;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-seek-control-row{\n    display:flex;\n    flex-direction:row;\n    justify-content:space-between;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-loop-control-row{\n    display:flex;\n    align-items:center;\n    width:100%;\n    box-sizing:border-box;\n    position:relative;\n    gap:8px;\n}\n.tm-inline-remark-popover{\n    position:absolute;\n    bottom:calc(45px + 42px + 10px);\n    left:12px;\n    right:12px;\n    width:calc(100% - 24px);\n    margin:0 auto;\n    background:rgba(18, 18, 20, 0.96);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:16px;\n    padding:12px;\n    box-shadow:0 10px 30px rgba(0, 0, 0, 0.7);\n    z-index:9998;\n    pointer-events:auto;\n    opacity:0;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n    box-sizing:border-box;\n}\n\n.tm-inline-remark-popover.visible{\n    opacity:1;\n    transform:translateY(0) scale(1);\n}\n\n.tm-inline-remark-body{\n    display:flex;\n    flex-direction:column;\n    gap:10px;\n    width:100%;\n}\n\n.tm-inline-remark-input{\n    width:100%;\n    height:38px;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:12px;\n    padding:0 14px;\n    color:#ffffff;\n    font-size:16px;\n    outline:none;\n    box-sizing:border-box;\n    transition:border-color 0.2s, background 0.2s;\n}\n\n.tm-inline-remark-input:focus{\n    border-color:rgba(255, 255, 255, 0.35);\n    background:rgba(255, 255, 255, 0.1);\n}\n\n.tm-inline-remark-input::placeholder{\n    color:rgba(255, 255, 255, 0.35);\n}\n\n.tm-inline-remark-footer{\n    display:flex;\n    justify-content:flex-end;\n    gap:10px;\n}\n\n.tm-inline-remark-btn{\n    height:32px;\n    padding:0 20px;\n    border-radius:14px;\n    font-size:0.82rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background 0.18s, transform 0.12s;\n    box-sizing:border-box;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-inline-remark-btn.cancel{\n    background:rgba(255, 255, 255, 0.08);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    color:rgba(255, 255, 255, 0.8);\n}\n\n.tm-inline-remark-btn.cancel:hover{\n    background:rgba(255, 255, 255, 0.16);\n    color:#ffffff;\n}\n\n.tm-inline-remark-btn.submit{\n    background:hsl(var(--shadcn-blue));\n    border:none;\n    color:#ffffff;\n    box-shadow:0 4px 12px hsla(var(--shadcn-blue) / 0.4);\n}\n\n.tm-inline-remark-btn.submit:hover{\n    background:hsl(var(--shadcn-blue) / 0.9);\n    transform:scale(1.03);\n}\n\n.tm-playback-control-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    position:relative;\n    width:100%;\n    max-height:45px;\n    height:45px;\n    border-radius:8px;\n    box-sizing:border-box;\n}\n.tm-left-controls, .tm-center-controls, .tm-right-controls{\n    flex:1;\n    display:flex;\n    height:100%;\n    align-items:center;\n}\n\n.tm-left-controls{\n    justify-content:flex-start;\n}\n\n.tm-center-controls{\n    justify-content:center;\n}\n\n.tm-right-controls{\n    justify-content:flex-end;\n}\n.tm-time-display{\n    display:flex;\n    justify-content:space-between;\n    color:hsl(var(--shadcn-foreground) / 0.9);\n    font-size:12px;\n    margin-top:-2px;\n    font-variant-numeric:tabular-nums;\n    gap:8px;\n}\n\n.tm-time-display-container{\n    display:flex;\n    justify-content:space-between;\n    width:100%;\n    padding:0px 1px;\n    margin-bottom:6px;\n}\n\n.tm-current-time, .tm-total-duration{\n    color:hsla(var(--shadcn-foreground) / 0.55);\n    font-size:12px;\n    min-width:60px;\n    font-variant-numeric:tabular-nums;\n    font-weight:500;\n    line-height:1;\n}\n\n.tm-current-time{\n    text-align:left;\n}\n\n.tm-total-duration{\n    text-align:right;\n}\n.tm-tab-scroll-container{\n    display:flex;\n    flex:1;\n    gap:8px;\n    overflow-x:auto;\n    overflow-y:hidden;\n    overscroll-behavior:contain;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    height:38px;\n    padding:0 44px 0 0;\n    margin:0;\n    box-sizing:border-box;\n    align-items:center;\n    mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    -webkit-mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    touch-action:pan-x;\n}\n.tm-tab-scroll-container::-webkit-scrollbar{ display:none; }\n.tm-tab-pill{\n    display:flex;\n    align-items:center;\n    gap:4px;\n    height:38px;\n    padding:0 12px;\n    box-sizing:border-box;\n    border-radius:9999px;\n    background-color:hsla(0, 0%, 15%, 0.12);\n    border:1px solid hsla(0, 0%, 20%, 0.35);\n    color:hsl(var(--shadcn-foreground));\n    font-size:0.8rem;\n    font-variant-numeric:tabular-nums;\n    white-space:nowrap;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:all var(--anim-quick);\n    user-select:none;\n    -webkit-user-select:none;\n    -webkit-tap-highlight-color:transparent;\n    pointer-events:auto;\n}\n.tm-tab-pill{\n    background-color:hsla(var(--tab-color), 0.12);\n    border-color:hsla(var(--tab-color), 0.35);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill:active{ transform:scale(0.95); }\n.tm-tab-pill.active{\n    background-color:hsla(var(--tab-color), 0.25);\n    border-color:hsla(var(--tab-color), 0.6);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill.draft{\n    background-color:hsla(var(--tab-color), 0.08);\n    border-color:hsla(var(--tab-color), 0.45);\n    border-style:dashed;\n    gap:5px;\n    padding:0 8px;\n}\n.tm-tab-pill.draft.editing,\n.tm-tab-pill.draft:not(.placeholder){\n    background-color:hsla(var(--tab-color), 0.22);\n    border-color:hsla(var(--tab-color), 0.75);\n}\n.tm-tab-pill.draft .tm-draft-label{\n    font-weight:600;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-label.a{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-label.b{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-time{\n    color:#fff;\n    font-variant-numeric:tabular-nums;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-time.placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-draft-action{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    height:24px;\n    width:32px;\n    border-radius:6px;\n    border:none;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    -webkit-tap-highlight-color:transparent;\n    box-sizing:border-box;\n}\n.tm-draft-action:active{\n    transform:scale(0.88);\n}\n.tm-draft-action.save{\n    background-color:hsla(var(--tab-color), 0.18);\n    color:hsl(var(--tab-color));\n}\n.tm-draft-action.save:hover{\n    background-color:hsla(var(--tab-color), 0.28);\n}\n.tm-draft-action.cancel{\n    background-color:rgba(239, 68, 68, 0.15);\n    color:#ef4444;\n}\n.tm-draft-action.cancel:hover{\n    background-color:rgba(239, 68, 68, 0.25);\n}\n.tm-draft-action.edit-comment{\n    background-color:rgba(245, 158, 11, 0.15);\n    color:#f59e0b;\n}\n.tm-draft-action.edit-comment:hover{\n    background-color:rgba(245, 158, 11, 0.25);\n}\n.tm-tab-list-btn{\n    flex-shrink:0;\n    width:38px;\n    height:38px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    border-radius:50%;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    color:hsl(var(--shadcn-foreground));\n    font-size:1.1rem;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-tab-list-btn:active{ transform:scale(0.88); }\n.tm-tab-list-btn:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.8);\n    border-color:hsla(var(--shadcn-border) / 0.3);\n}\n.tm-bottom-sheet-overlay{\n    position:fixed;\n    inset:0;\n    background-color:transparent;\n    z-index:9990 !important;\n    opacity:0;\n    pointer-events:none;\n    transition:opacity var(--anim-smooth);\n\n    touch-action:none;\n    user-select:none;\n    -webkit-user-select:none;\n    overscroll-behavior:none;\n}\n.tm-bottom-sheet-overlay.visible{\n    opacity:1;\n    pointer-events:auto;\n}\n\n.tm-bottom-sheet-panel{\n    position:absolute;\n    bottom:0;\n    left:0;\n    right:0;\n    width:100%;\n    max-height:calc(100vh - 120px);\n    background-color:rgba(18, 18, 20, 0.94);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.6);\n    border-radius:16px;\n    border:1px solid rgba(255, 255, 255, 0.1);\n    z-index:9995 !important;\n    opacity:0;\n    pointer-events:none;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    display:flex;\n    flex-direction:column;\n    overflow:hidden;\n    box-sizing:border-box;\n    padding:10px 14px 12px;\n}\n.tm-bottom-sheet-panel.visible{\n    opacity:1;\n    pointer-events:auto;\n    transform:translateY(0) scale(1);\n}\n.tm-sheet-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    padding:2px 2px 6px 2px;\n    margin-bottom:6px;\n    border-bottom:1px solid rgba(255, 255, 255, 0.06);\n    flex-shrink:0;\n}\n\n.tm-bottom-sheet-title{\n    font-size:0.82rem;\n    font-weight:600;\n    color:rgba(255, 255, 255, 0.88);\n    letter-spacing:0.2px;\n}\n\n.tm-sheet-count-badge{\n    font-size:0.7rem;\n    color:rgba(255, 255, 255, 0.45);\n    background:rgba(255, 255, 255, 0.08);\n    padding:1px 6px;\n    border-radius:8px;\n}\n\n.tm-sheet-close-btn{\n    background:transparent;\n    border:none;\n    color:rgba(255, 255, 255, 0.45);\n    font-size:0.95rem;\n    cursor:pointer;\n    padding:0 4px;\n    border-radius:4px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    transition:color 0.2s;\n}\n.tm-sheet-close-btn:hover{\n    color:#ffffff;\n}\n.tm-bottom-sheet-list{\n    flex:1;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n    display:flex;\n    flex-direction:column;\n    gap:6px;\n    padding-right:2px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar{\n    width:4px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar-thumb{\n    background:rgba(255, 255, 255, 0.2);\n    border-radius:2px;\n}\n.tm-sheet-item{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    padding:2px 0;\n    background:transparent;\n    border:none;\n    height:32px;\n    box-sizing:border-box;\n}\n\n.tm-sheet-item-time-container{\n    display:flex;\n    align-items:center;\n    flex-shrink:0;\n    height:32px;\n}\n.tm-sheet-time-pill{\n    height:32px;\n    box-sizing:border-box;\n    padding:0 12px;\n    border-radius:16px;\n    background:hsla(var(--tab-color, 200 100% 55%), 0.15);\n    border:1px solid hsla(var(--tab-color, 200 100% 55%), 0.4);\n    color:#ffffff;\n    font-size:0.8rem;\n    font-family:inherit;\n    font-weight:500;\n    cursor:pointer;\n    white-space:nowrap;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    transition:transform 0.15s ease, background-color 0.2s;\n}\n.tm-sheet-time-pill:hover{\n    transform:scale(1.02);\n    background:hsla(var(--tab-color, 200 100% 55%), 0.28);\n}\n.tm-sheet-time-pill.interval{\n    padding:0 10px;\n    gap:4px;\n}\n.tm-sheet-time-pill.interval .tm-time-part{\n    cursor:pointer;\n    padding:2px 4px;\n    border-radius:4px;\n    transition:background-color 0.15s, color 0.15s;\n}\n.tm-sheet-time-pill.interval .tm-time-part:hover{\n    background-color:rgba(255, 255, 255, 0.25);\n    color:#ffffff;\n}\n.tm-sheet-time-pill.interval .tm-time-sep{\n    opacity:0.6;\n    font-weight:400;\n    user-select:none;\n    padding:0 1px;\n}\n.tm-sheet-item-comment-input{\n    flex:1;\n    min-width:0;\n    height:32px;\n    box-sizing:border-box;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:8px;\n    padding:0 10px;\n    color:#ffffff;\n    font-size:16px;\n    outline:none;\n    display:inline-flex;\n    align-items:center;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-sheet-item-comment-input:focus{\n    border-color:rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-sheet-item-comment-input::placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-sheet-delete-btn{\n    width:32px;\n    height:32px;\n    box-sizing:border-box;\n    border-radius:8px;\n    border:1px solid rgba(255, 60, 60, 0.25);\n    background:rgba(255, 60, 60, 0.12);\n    color:#ff5252;\n    font-size:0.85rem;\n    font-weight:bold;\n    cursor:pointer;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s;\n}\n.tm-sheet-delete-btn:hover{\n    background:rgba(255, 60, 60, 0.28);\n    transform:scale(1.05);\n}\n\n.tm-bottom-sheet-empty{\n    padding:16px;\n    text-align:center;\n    font-size:0.82rem;\n    color:rgba(255, 255, 255, 0.35);\n}\n.tm-rewind-group, .tm-forward-group{\n    display:flex;\n    flex-direction:column;\n    width:50%;\n    gap:8px;\n    align-items:center;\n}\n\n.tm-rewind-buttons-container{\n    display:flex;\n    flex-direction:row-reverse;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n\n.tm-forward-buttons-container{\n    display:flex;\n    flex-direction:row;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n.tm-time-control-button{\n    background-color:hsla(var(--shadcn-secondary) / var(--btn-opacity, 0.5));\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsl(var(--shadcn-border) / 0.1);\n    border-radius:8px;\n    padding:0;\n    font-size:0.75rem;\n    cursor:pointer;\n    transition:all 0.2s cubic-bezier(.25,.8,.25,1);\n    white-space:nowrap;\n    font-weight:500;\n    box-shadow:0 1px 2px rgba(0,0,0,0.05);\n    width:var(--button-xl);\n    height:var(--button-lg);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    flex:0 0 auto;\n}\n\n.tm-time-control-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.15));\n    border-color:hsla(var(--shadcn-border) / 0.3);\n    transform:translateY(-1.5px);\n    box-shadow:0 4px 8px rgba(0,0,0,0.2);\n}\n\n.tm-time-control-button:active{\n    transform:scale(0.96);\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.25));\n    box-shadow:none;\n}\n\n.tm-time-control-button-active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-time-control-button-after-active{\n    transform:none;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.15);\n}\n\n.tm-time-control-button-inner{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-rewind-icon{\n    margin-right:-2px;\n}\n\n.tm-forward-icon{\n    margin-left:-2px;\n}\n\n.tm-time-text-margin-left{\n    margin-left:2px;\n}\n\n.tm-time-text-margin-right{\n    margin-right:2px;\n}\n.tm-control-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:none;\n}\n\n.tm-control-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:none;\n}\n.tm-control-buttons{\n    position:absolute;\n    bottom:calc(10px + env(safe-area-inset-bottom, 0px));\n    left:50%;\n    transform:translateX(-50%);\n    width:95%;\n    max-width:700px;\n    min-width:350px;\n    z-index:9997 !important;\n    padding:16px 16px 14px;\n    border-radius:16px;\n    background-color:rgba(10, 10, 10, 0.52);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 12px 32px rgba(0, 0, 0, 0.45);\n    border:none;\n    transition: opacity 0.3s ease,  transform 0.3s ease,  width 0.35s cubic-bezier(0.25, 1, 0.5, 1),  left 0.35s cubic-bezier(0.25, 1, 0.5, 1),  bottom 0.35s cubic-bezier(0.25, 1, 0.5, 1),  right 0.35s cubic-bezier(0.25, 1, 0.5, 1),  border-radius 0.3s ease;\n    gap:10px;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:center;\n    overflow:visible !important;\n    touch-action:none;\n}\n\n.tm-control-buttons.dragging{\n    transition:none !important;\n}\nbody.controls-hidden .tm-player-container .tm-control-buttons{\n    opacity:0;\n    transform:translateX(-50%) translateY(calc(100% + 30px));\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-control-buttons{\n    opacity:1;\n    transform:translateX(-50%) translateY(0);\n    pointer-events:auto;\n}\nbody.controls-hidden .tm-player-container .tm-button-container{\n    opacity:0;\n    transform:translateY(-60px);\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-button-container{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-control-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.6);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n}\n\n.tm-control-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    transform:translateY(-2px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-control-button:active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-control-button.active{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-control-button svg,\n.tm-control-button img{\n    width:16px;\n    height:16px;\n}\n.tm-control-row{\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    gap:8px;\n    margin-top:4px;\n    opacity:1;\n    transition:opacity var(--anim-quick), height var(--anim-quick);\n    height:auto;\n    overflow:hidden;\n}\n\n.tm-control-row.hidden{\n    opacity:0;\n    height:0;\n    margin:0;\n}\n.tm-comment-row{\n    width:100%;\n    display:flex;\n    flex-direction:column;\n    margin-bottom:10px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.2);\n    padding-bottom:10px;\n}\n\n.tm-comment-container{\n    width:100%;\n    min-height:60px;\n    display:flex;\n    flex-direction:column;\n    gap:8px;\n}\n\n.tm-comment-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    font-size:14px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-comment-left{\n    display:flex;\n    align-items:center;\n}\n\n.tm-comment-title{\n    margin-right:5px;\n}\n\n.tm-comment-count{\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:12px;\n}\n\n.tm-comment-actions{\n    display:flex;\n    gap:8px;\n}\n\n.tm-comment-button{\n    border:none;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:4px;\n    padding:4px 8px;\n    font-size:12px;\n    cursor:pointer;\n    transition:all 0.2s ease;\n}\n\n.tm-comment-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.6);\n    transform:translateY(-1px);\n}\n\n.tm-comment-button:active{\n    transform:scale(0.95);\n}\n\n.tm-comment-write{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n}\n\n.tm-comment-write:hover{\n    background-color:hsla(var(--shadcn-blue) / 0.8);\n}\n\n.tm-comment-placeholder{\n    width:100%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:10px;\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:13px;\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    border-radius:6px;\n}\n@media screen and (orientation: landscape){\n    .tm-comment-container{\n        min-height:50px;\n    }\n    \n    .tm-comment-placeholder{\n        padding:8px;\n    }\n}\n\n.tm-player-title{\n    position:absolute !important;\n    top:calc(env(safe-area-inset-top, 0px) + 12px) !important;\n    left:50% !important;\n    transform:translateX(-50%) !important;\n    max-width:calc(100% - 110px) !important;\n    text-align:center;\n    font-size:14px;\n    font-weight:600;\n    color:#ffffff;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    user-select:none;\n    z-index:9998 !important;\n    text-shadow:0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;\n    pointer-events:none !important;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n\nbody.controls-hidden .tm-player-title{\n    opacity:0 !important;\n    transform:translate(-50%, -20px) !important;\n    pointer-events:none !important;\n}\nbody.tm-swiping-down .tm-button-container,\nbody.tm-swiping-down .tm-handle-container,\nbody.tm-swiping-down .tm-comments-panel,\nbody.tm-swiping-down .tm-control-buttons,\nbody.tm-swiping-down .tm-settings-panel{\n    opacity:0 !important;\n    pointer-events:none !important;\n    transition:opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n.tm-jump-active{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:5;\n    background-color:hsla(var(--shadcn-green) / 0.8);\n    border-radius:2px;\n    box-shadow:0 0 8px hsla(var(--shadcn-green) / 0.5);\n    pointer-events:none;\n    animation:tm-jump-flash-fade 3.0s cubic-bezier(0.25, 1, 0.5, 1) forwards;\n}\n\n@keyframes tm-jump-flash-fade{\n    0%, 20%, 40%, 60%, 80%{\n        opacity:1;\n        background-color:hsl(var(--shadcn-green));\n        box-shadow:0 0 16px 4px hsl(var(--shadcn-green));\n        transform:translateX(-50%) scaleX(1.6);\n    }\n    10%, 30%, 50%, 70%{\n        opacity:0.3;\n        background-color:hsla(var(--shadcn-green) / 0.4);\n        box-shadow:0 0 4px hsla(var(--shadcn-green) / 0.2);\n        transform:translateX(-50%) scaleX(1.0);\n    }\n    90%{\n        opacity:0.5;\n        background-color:hsla(var(--shadcn-green) / 0.5);\n        box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n        transform:translateX(-50%) scaleX(0.8);\n    }\n    100%{\n        opacity:0;\n        background-color:transparent;\n        box-shadow:none;\n        transform:translateX(-50%) scaleX(0);\n    }\n}\n.tm-sidebar-pos-button,\n.tm-sidebar-toggle-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:none !important;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:all var(--anim-quick);\n}\n\n.tm-sidebar-pos-button:hover,\n.tm-sidebar-toggle-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.1);\n}\n\n.tm-sidebar-pos-button:active,\n.tm-sidebar-toggle-button:active{\n    transform:scale(0.9);\n}\n.tm-sidebar-hidden .tm-sidebar-pos-button{\n    display:none !important;\n}\n@media screen and (min-width: 480px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:520px;\n    }\n}\n\n@media screen and (min-width: 768px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:640px;\n    }\n    .tm-comments-panel{\n        max-width:720px;\n        margin:0 auto;\n        border-left:1px solid hsla(var(--shadcn-border) / 0.1);\n        border-right:1px solid hsla(var(--shadcn-border) / 0.1);\n        box-shadow:0 4px 20px rgba(0, 0, 0, 0.08);\n        background-color:hsla(var(--shadcn-card) / 0.02);\n    }\n}\nhtml.tm-player-active,\nbody.tm-player-active{\n    position:fixed !important;\n    top:0 !important;\n    left:0 !important;\n    right:0 !important;\n    bottom:0 !important;\n    width:100vw !important;\n    height:100vh !important;\n    height:100dvh !important;\n    overflow:hidden !important;\n    overscroll-behavior:none !important;\n    touch-action:none !important;\n    background-color:#0b0b0e !important;\n}\n\nbody.tm-player-active > *:not(.tm-video-overlay):not(.tm-player-container):not(.tm-floating-button):not(script):not(style):not(#tm-hide-scrollbar-style){\n    display:none !important;\n}\n\nbody.tm-player-active header,\nbody.tm-player-active .header,\nbody.tm-player-active navbar,\nbody.tm-player-active .navbar,\nbody.tm-player-active #header-top,\nbody.tm-player-active .top-nav,\nbody.tm-player-active [class*="header--sticky"],\nbody.tm-player-active [class*="navbar-fixed"]{\n    display:none !important;\n}\n\n.tm-progress-markers-container{\n    position:absolute;\n    top:0;\n    left:0;\n    width:100%;\n    height:100%;\n    pointer-events:none;\n    z-index:5;\n}\n.tm-progress-marker-tick{\n    position:absolute;\n    width:6px;\n    height:3px;\n    bottom:-4px;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:10;\n    pointer-events:auto;\n    transition:all var(--anim-quick);\n}\n.tm-progress-marker-tick:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n    transform:translateX(-50%) scale(1.1);\n}\n.tm-progress-marker-range{\n    position:absolute;\n    height:3px;\n    bottom:-4px;\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:9;\n    pointer-events:auto;\n    transition:all var(--anim-quick);\n}\n.tm-progress-marker-range:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n}\n\n.tm-active-loop-played{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.45);\n    z-index:8;\n    pointer-events:none;\n    box-shadow:0 0 4px hsla(var(--tab-color), 0.15);\n}\n\n.tm-active-loop-unplayed{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.15);\n    z-index:7;\n    pointer-events:none;\n}\n\n.tm-active-loop-boundary{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.75);\n    z-index:9;\n    pointer-events:none;\n    box-shadow:0 0 3px rgba(0, 0, 0, 0.3);\n}\n.tm-active-loop-boundary.start{\n    border-radius:2px 0 0 2px;\n}\n.tm-active-loop-boundary.end{\n    border-radius:0 2px 2px 0;\n}\n`, "" ]);
       const b = y;
     },
     "479": (r, o, a) => {
@@ -9470,6 +9470,8 @@
       "webdavSyncFailed": "Sync failed: ",
       "webdavLastSync": "Last Sync",
       "webdavNeverSynced": "Never synced",
+      "webdavAutoSync": "Auto Smart Merge Sync",
+      "webdavAutoSyncDesc": "Automatically sync in background on player launch and marker changes",
       "webdavConfirmUpload": "Are you sure you want to force upload local config to cloud? This will overwrite the backup on WebDAV.",
       "webdavConfirmDownload": "Are you sure you want to download and overwrite local config? This will replace settings and markers on this device.",
       "loadingError": "Failed to load video",
@@ -9544,6 +9546,8 @@
       "webdavSyncFailed": "同步失败: ",
       "webdavLastSync": "上次同步",
       "webdavNeverSynced": "尚未同步",
+      "webdavAutoSync": "自动智能合并同步",
+      "webdavAutoSyncDesc": "播放器启动及打点变更时自动在后台静默合并同步",
       "webdavConfirmUpload": "确定要将当前本地配置强制覆盖到云端吗？这将替换 WebDAV 上的所有备份数据。",
       "webdavConfirmDownload": "确定要从云端拉取配置并覆盖本地吗？这将替换此设备上的当前设置与打点数据。",
       "loadingError": "视频加载失败",
@@ -9618,6 +9622,8 @@
       "webdavSyncFailed": "同步失敗: ",
       "webdavLastSync": "上次同步",
       "webdavNeverSynced": "尚未同步",
+      "webdavAutoSync": "自動智慧合併同步",
+      "webdavAutoSyncDesc": "播放器啟動及打點變更時自動在後台靜默合併同步",
       "webdavConfirmUpload": "確定要將當前本地配置強制覆蓋到雲端嗎？這將替換 WebDAV 上的所有備份資料。",
       "webdavConfirmDownload": "確定要從雲端拉取配置並覆蓋本地嗎？這將替換此設備上的當前設置與打點資料。",
       "loadingError": "視頻加載失敗",
@@ -9691,6 +9697,8 @@
       "webdavSyncFailed": "同期に失敗しました: ",
       "webdavLastSync": "前回の同期",
       "webdavNeverSynced": "未同期",
+      "webdavAutoSync": "自動スマートマージ同期",
+      "webdavAutoSyncDesc": "プレーヤー起動時やマーカー変更時にバックグラウンドで自動同期",
       "webdavConfirmUpload": "現在のローカル設定をクラウドに強制上書きしますか？WebDAV上のバックアップが置き換えられます。",
       "webdavConfirmDownload": "クラウドから設定をダウンロードしてローカルを上書きしますか？このデバイスの設定とマーカーが置き換えられます。",
       "loadingError": "動画の読み込みに失敗しました",
@@ -9764,6 +9772,8 @@
       "webdavSyncFailed": "Đồng bộ thất bại: ",
       "webdavLastSync": "Lần đồng bộ trước",
       "webdavNeverSynced": "Chưa đồng bộ",
+      "webdavAutoSync": "Tự động đồng bộ hợp nhất",
+      "webdavAutoSyncDesc": "Tự động đồng bộ dưới nền khi khởi chạy trình phát và thay đổi điểm đánh dấu",
       "webdavConfirmUpload": "Bạn có chắc muốn ghi đè cấu hình cục bộ lên đám mây? Việc này sẽ thay thế bản sao lưu trên WebDAV.",
       "webdavConfirmDownload": "Bạn có chắc muốn tải xuống và ghi đè cấu hình cục bộ? Việc này sẽ thay thế cài đặt và điểm đánh dấu trên thiết bị này.",
       "loadingError": "Không thể tải video",
@@ -19506,6 +19516,2027 @@
       }
     } ]);
   }();
+  function WebDavClient_typeof(r) {
+    "@babel/helpers - typeof";
+    return WebDavClient_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
+      return typeof r;
+    } : function(r) {
+      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
+    }, WebDavClient_typeof(r);
+  }
+  function WebDavClient_createForOfIteratorHelper(r, o) {
+    var a = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+    if (!a) {
+      if (Array.isArray(r) || (a = WebDavClient_unsupportedIterableToArray(r)) || o && r && "number" == typeof r.length) {
+        a && (r = a);
+        var l = 0, u = function F() {};
+        return {
+          "s": u,
+          "n": function n() {
+            return l >= r.length ? {
+              "done": !0
+            } : {
+              "done": !1,
+              "value": r[l++]
+            };
+          },
+          "e": function e(r) {
+            throw r;
+          },
+          "f": u
+        };
+      }
+      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+    var p, v = !0, y = !1;
+    return {
+      "s": function s() {
+        a = a.call(r);
+      },
+      "n": function n() {
+        var r = a.next();
+        return v = r.done, r;
+      },
+      "e": function e(r) {
+        y = !0, p = r;
+      },
+      "f": function f() {
+        try {
+          v || null == a["return"] || a["return"]();
+        } finally {
+          if (y) {
+            throw p;
+          }
+        }
+      }
+    };
+  }
+  function WebDavClient_unsupportedIterableToArray(r, o) {
+    if (r) {
+      if ("string" == typeof r) {
+        return WebDavClient_arrayLikeToArray(r, o);
+      }
+      var a = {}.toString.call(r).slice(8, -1);
+      return "Object" === a && r.constructor && (a = r.constructor.name), "Map" === a || "Set" === a ? Array.from(r) : "Arguments" === a || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(a) ? WebDavClient_arrayLikeToArray(r, o) : void 0;
+    }
+  }
+  function WebDavClient_arrayLikeToArray(r, o) {
+    (null == o || o > r.length) && (o = r.length);
+    for (var a = 0, l = Array(o); a < o; a++) {
+      l[a] = r[a];
+    }
+    return l;
+  }
+  function WebDavClient_regeneratorRuntime() {
+    "use strict";
+    WebDavClient_regeneratorRuntime = function _regeneratorRuntime() {
+      return o;
+    };
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    function c(r, o, a, l) {
+      return Object.defineProperty(r, o, {
+        "value": a,
+        "enumerable": !l,
+        "configurable": !l,
+        "writable": !l
+      });
+    }
+    try {
+      c({}, "");
+    } catch (r) {
+      c = function c(r, o, a) {
+        return r[o] = a;
+      };
+    }
+    function h(o, a, l, u) {
+      var p = a && a.prototype instanceof Generator ? a : Generator, v = Object.create(p.prototype);
+      return c(v, "_invoke", function(o, a, l) {
+        var u = 1;
+        return function(p, v) {
+          if (3 === u) {
+            throw Error("Generator is already running");
+          }
+          if (4 === u) {
+            if ("throw" === p) {
+              throw v;
+            }
+            return {
+              "value": r,
+              "done": !0
+            };
+          }
+          for (l.method = p, l.arg = v; ;) {
+            var y = l.delegate;
+            if (y) {
+              var C = d(y, l);
+              if (C) {
+                if (C === b) {
+                  continue;
+                }
+                return C;
+              }
+            }
+            if ("next" === l.method) {
+              l.sent = l._sent = l.arg;
+            } else if ("throw" === l.method) {
+              if (1 === u) {
+                throw u = 4, l.arg;
+              }
+              l.dispatchException(l.arg);
+            } else {
+              "return" === l.method && l.abrupt("return", l.arg);
+            }
+            u = 3;
+            var _ = s(o, a, l);
+            if ("normal" === _.type) {
+              if (u = l.done ? 4 : 2, _.arg === b) {
+                continue;
+              }
+              return {
+                "value": _.arg,
+                "done": l.done
+              };
+            }
+            "throw" === _.type && (u = 4, l.method = "throw", l.arg = _.arg);
+          }
+        };
+      }(o, l, new Context(u || [])), !0), v;
+    }
+    function s(r, o, a) {
+      try {
+        return {
+          "type": "normal",
+          "arg": r.call(o, a)
+        };
+      } catch (r) {
+        return {
+          "type": "throw",
+          "arg": r
+        };
+      }
+    }
+    o.wrap = h;
+    var b = {};
+    function Generator() {}
+    function GeneratorFunction() {}
+    function GeneratorFunctionPrototype() {}
+    var C = {};
+    c(C, p, (function() {
+      return this;
+    }));
+    var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
+    k && k !== a && l.call(k, p) && (C = k);
+    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    function g(r) {
+      [ "next", "throw", "return" ].forEach((function(o) {
+        c(r, o, (function(r) {
+          return this._invoke(o, r);
+        }));
+      }));
+    }
+    function AsyncIterator(r, o) {
+      function e(a, u, p, v) {
+        var y = s(r[a], r, u);
+        if ("throw" !== y.type) {
+          var b = y.arg, C = b.value;
+          return C && "object" == WebDavClient_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
+            e("next", r, p, v);
+          }), (function(r) {
+            e("throw", r, p, v);
+          })) : o.resolve(C).then((function(r) {
+            b.value = r, p(b);
+          }), (function(r) {
+            return e("throw", r, p, v);
+          }));
+        }
+        v(y.arg);
+      }
+      var a;
+      c(this, "_invoke", (function(r, l) {
+        function i() {
+          return new o((function(o, a) {
+            e(r, l, o, a);
+          }));
+        }
+        return a = a ? a.then(i, i) : i();
+      }), !0);
+    }
+    function d(o, a) {
+      var l = a.method, u = o.i[l];
+      if (u === r) {
+        return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
+        a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+      }
+      var p = s(u, o.i, a.arg);
+      if ("throw" === p.type) {
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+      }
+      var v = p.arg;
+      return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
+      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, b);
+    }
+    function w(r) {
+      this.tryEntries.push(r);
+    }
+    function m(o) {
+      var a = o[4] || {};
+      a.type = "normal", a.arg = r, o[4] = a;
+    }
+    function Context(r) {
+      this.tryEntries = [ [ -1 ] ], r.forEach(w, this), this.reset(!0);
+    }
+    function x(o) {
+      if (null != o) {
+        var a = o[p];
+        if (a) {
+          return a.call(o);
+        }
+        if ("function" == typeof o.next) {
+          return o;
+        }
+        if (!isNaN(o.length)) {
+          var u = -1, v = function e() {
+            for (;++u < o.length; ) {
+              if (l.call(o, u)) {
+                return e.value = o[u], e.done = !1, e;
+              }
+            }
+            return e.value = r, e.done = !0, e;
+          };
+          return v.next = v;
+        }
+      }
+      throw new TypeError(WebDavClient_typeof(o) + " is not iterable");
+    }
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    o.isGeneratorFunction = function(r) {
+      var o = "function" == typeof r && r.constructor;
+      return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
+    }, o.mark = function(r) {
+      return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+    }, o.awrap = function(r) {
+      return {
+        "__await": r
+      };
+    }, g(AsyncIterator.prototype), c(AsyncIterator.prototype, v, (function() {
+      return this;
+    })), o.AsyncIterator = AsyncIterator, o.async = function(r, a, l, u, p) {
+      void 0 === p && (p = Promise);
+      var v = new AsyncIterator(h(r, a, l, u), p);
+      return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
+        return r.done ? r.value : v.next();
+      }));
+    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+      return this;
+    })), c(P, "toString", (function() {
+      return "[object Generator]";
+    })), o.keys = function(r) {
+      var o = Object(r), a = [];
+      for (var l in o) {
+        a.unshift(l);
+      }
+      return function t() {
+        for (;a.length; ) {
+          if ((l = a.pop()) in o) {
+            return t.value = l, t.done = !1, t;
+          }
+        }
+        return t.done = !0, t;
+      };
+    }, o.values = x, Context.prototype = {
+      "constructor": Context,
+      "reset": function reset(o) {
+        if (this.prev = this.next = 0, this.sent = this._sent = r, this.done = !1, this.delegate = null, 
+        this.method = "next", this.arg = r, this.tryEntries.forEach(m), !o) {
+          for (var a in this) {
+            "t" === a.charAt(0) && l.call(this, a) && !isNaN(+a.slice(1)) && (this[a] = r);
+          }
+        }
+      },
+      "stop": function stop() {
+        this.done = !0;
+        var r = this.tryEntries[0][4];
+        if ("throw" === r.type) {
+          throw r.arg;
+        }
+        return this.rval;
+      },
+      "dispatchException": function dispatchException(o) {
+        if (this.done) {
+          throw o;
+        }
+        var a = this;
+        function n(r) {
+          p.type = "throw", p.arg = o, a.next = r;
+        }
+        for (var l = a.tryEntries.length - 1; l >= 0; --l) {
+          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          if (-1 === u[0]) {
+            return n("end"), !1;
+          }
+          if (!y && !b) {
+            throw Error("try statement without catch or finally");
+          }
+          if (null != u[0] && u[0] <= v) {
+            if (v < y) {
+              return this.method = "next", this.arg = r, n(y), !0;
+            }
+            if (v < b) {
+              return n(b), !1;
+            }
+          }
+        }
+      },
+      "abrupt": function abrupt(r, o) {
+        for (var a = this.tryEntries.length - 1; a >= 0; --a) {
+          var l = this.tryEntries[a];
+          if (l[0] > -1 && l[0] <= this.prev && this.prev < l[2]) {
+            var u = l;
+            break;
+          }
+        }
+        u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
+        var p = u ? u[4] : {};
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+      },
+      "complete": function complete(r, o) {
+        if ("throw" === r.type) {
+          throw r.arg;
+        }
+        return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
+        this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
+        b;
+      },
+      "finish": function finish(r) {
+        for (var o = this.tryEntries.length - 1; o >= 0; --o) {
+          var a = this.tryEntries[o];
+          if (a[2] === r) {
+            return this.complete(a[4], a[3]), m(a), b;
+          }
+        }
+      },
+      "catch": function _catch(r) {
+        for (var o = this.tryEntries.length - 1; o >= 0; --o) {
+          var a = this.tryEntries[o];
+          if (a[0] === r) {
+            var l = a[4];
+            if ("throw" === l.type) {
+              var u = l.arg;
+              m(a);
+            }
+            return u;
+          }
+        }
+        throw Error("illegal catch attempt");
+      },
+      "delegateYield": function delegateYield(o, a, l) {
+        return this.delegate = {
+          "i": x(o),
+          "r": a,
+          "n": l
+        }, "next" === this.method && (this.arg = r), b;
+      }
+    }, o;
+  }
+  function WebDavClient_asyncGeneratorStep(r, o, a, l, u, p, v) {
+    try {
+      var y = r[p](v), b = y.value;
+    } catch (r) {
+      return void a(r);
+    }
+    y.done ? o(b) : Promise.resolve(b).then(l, u);
+  }
+  function WebDavClient_asyncToGenerator(r) {
+    return function() {
+      var o = this, a = arguments;
+      return new Promise((function(l, u) {
+        var p = r.apply(o, a);
+        function _next(r) {
+          WebDavClient_asyncGeneratorStep(p, l, u, _next, _throw, "next", r);
+        }
+        function _throw(r) {
+          WebDavClient_asyncGeneratorStep(p, l, u, _next, _throw, "throw", r);
+        }
+        _next(void 0);
+      }));
+    };
+  }
+  function WebDavClient_classCallCheck(r, o) {
+    if (!(r instanceof o)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+  function WebDavClient_defineProperties(r, o) {
+    for (var a = 0; a < o.length; a++) {
+      var l = o[a];
+      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
+      Object.defineProperty(r, WebDavClient_toPropertyKey(l.key), l);
+    }
+  }
+  function WebDavClient_createClass(r, o, a) {
+    return o && WebDavClient_defineProperties(r.prototype, o), a && WebDavClient_defineProperties(r, a), 
+    Object.defineProperty(r, "prototype", {
+      "writable": !1
+    }), r;
+  }
+  function WebDavClient_toPropertyKey(r) {
+    var o = WebDavClient_toPrimitive(r, "string");
+    return "symbol" == WebDavClient_typeof(o) ? o : o + "";
+  }
+  function WebDavClient_toPrimitive(r, o) {
+    if ("object" != WebDavClient_typeof(r) || !r) {
+      return r;
+    }
+    var a = r[Symbol.toPrimitive];
+    if (void 0 !== a) {
+      var l = a.call(r, o || "default");
+      if ("object" != WebDavClient_typeof(l)) {
+        return l;
+      }
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === o ? String : Number)(r);
+  }
+  var st = function() {
+    function WebDavClient() {
+      WebDavClient_classCallCheck(this, WebDavClient);
+    }
+    return WebDavClient_createClass(WebDavClient, null, [ {
+      "key": "getAuthHeaders",
+      "value": function getAuthHeaders(r, o) {
+        if (!r && !o) {
+          return {};
+        }
+        try {
+          var a = btoa(unescape(encodeURIComponent("".concat(r || "", ":").concat(o || ""))));
+          return {
+            "Authorization": "Basic ".concat(a)
+          };
+        } catch (r) {
+          return {};
+        }
+      }
+    }, {
+      "key": "normalizeUrl",
+      "value": function normalizeUrl(r) {
+        var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : "";
+        if (!r) {
+          return "";
+        }
+        var a = r.trim();
+        if (!/^https?:\/\//i.test(a)) {
+          a = "https://" + a;
+        }
+        a = a.replace(/\/+$/, "");
+        var l = (o || "").trim();
+        if (l && !l.startsWith("/")) {
+          l = "/" + l;
+        }
+        return a + l;
+      }
+    }, {
+      "key": "request",
+      "value": function request(r) {
+        var o = r.method, a = o === void 0 ? "GET" : o, l = r.url, u = r.user, p = u === void 0 ? "" : u, v = r.pass, y = v === void 0 ? "" : v, b = r.headers, C = b === void 0 ? {} : b, _ = r.data, k = _ === void 0 ? null : _, P = r.timeout, S = P === void 0 ? 15e3 : P;
+        var E = this.getAuthHeaders(p, y);
+        var D = Object.assign({}, E, C);
+        return new Promise((function(r, o) {
+          if (typeof GM_xmlhttpRequest === "function") {
+            GM_xmlhttpRequest({
+              "method": a,
+              "url": l,
+              "headers": D,
+              "data": k,
+              "timeout": S,
+              "onload": function onload(o) {
+                r({
+                  "status": o.status,
+                  "statusText": o.statusText,
+                  "data": o.responseText,
+                  "response": o.response
+                });
+              },
+              "ontimeout": function ontimeout() {
+                o(new Error("WebDAV 请求超时 (".concat(S, "ms)")));
+              },
+              "onerror": function onerror(r) {
+                o(new Error(r.error || "网络请求错误 [".concat(r.status || 0, "]")));
+              }
+            });
+          } else {
+            var u = {
+              "method": a,
+              "headers": D,
+              "body": a !== "GET" && a !== "HEAD" && a !== "PROPFIND" ? k : void 0
+            };
+            var p = new AbortController;
+            var v = setTimeout((function() {
+              return p.abort();
+            }), S);
+            u.signal = p.signal;
+            fetch(l, u).then(function() {
+              var o = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee(o) {
+                var a;
+                return WebDavClient_regeneratorRuntime().wrap((function _callee$(l) {
+                  while (1) {
+                    switch (l.prev = l.next) {
+                     case 0:
+                      clearTimeout(v);
+                      l.next = 3;
+                      return o.text();
+
+                     case 3:
+                      a = l.sent;
+                      r({
+                        "status": o.status,
+                        "statusText": o.statusText,
+                        "data": a
+                      });
+
+                     case 5:
+                     case "end":
+                      return l.stop();
+                    }
+                  }
+                }), _callee);
+              })));
+              return function(r) {
+                return o.apply(this, arguments);
+              };
+            }())["catch"]((function(r) {
+              clearTimeout(v);
+              o(r);
+            }));
+          }
+        }));
+      }
+    }, {
+      "key": "testConnection",
+      "value": function() {
+        var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee2(r) {
+          var o, a, l, u, p, v, y;
+          return WebDavClient_regeneratorRuntime().wrap((function _callee2$(b) {
+            while (1) {
+              switch (b.prev = b.next) {
+               case 0:
+                o = r.url, a = r.user, l = r.pass, u = r.path, p = u === void 0 ? "/MissPlayer/" : u;
+                if (o) {
+                  b.next = 3;
+                  break;
+                }
+                throw new Error("WebDAV 服务器地址不能为空");
+
+               case 3:
+                v = this.normalizeUrl(o, "/");
+                b.prev = 4;
+                b.next = 7;
+                return this.request({
+                  "method": "PROPFIND",
+                  "url": v,
+                  "user": a,
+                  "pass": l,
+                  "headers": {
+                    "Depth": "0",
+                    "Content-Type": "application/xml; charset=utf-8"
+                  }
+                });
+
+               case 7:
+                y = b.sent;
+                if (!(y.status === 401 || y.status === 403)) {
+                  b.next = 10;
+                  break;
+                }
+                throw new Error("认证失败 (".concat(y.status, "): 请检查用户名与密码/Token"));
+
+               case 10:
+                if (!(y.status >= 500)) {
+                  b.next = 12;
+                  break;
+                }
+                throw new Error("服务器错误 (".concat(y.status, ")"));
+
+               case 12:
+                b.next = 14;
+                return this.ensureDirectory(r);
+
+               case 14:
+                return b.abrupt("return", {
+                  "success": true,
+                  "message": "WebDAV 连接与目录创建成功！"
+                });
+
+               case 17:
+                b.prev = 17;
+                b.t0 = b["catch"](4);
+                throw b.t0;
+
+               case 20:
+               case "end":
+                return b.stop();
+              }
+            }
+          }), _callee2, this, [ [ 4, 17 ] ]);
+        })));
+        function testConnection(o) {
+          return r.apply(this, arguments);
+        }
+        return testConnection;
+      }()
+    }, {
+      "key": "ensureDirectory",
+      "value": function() {
+        var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee3(r) {
+          var o, a, l, u, p, v, y, b, C, _, k, P, S, E, D, L, M, T, A;
+          return WebDavClient_regeneratorRuntime().wrap((function _callee3$(j) {
+            while (1) {
+              switch (j.prev = j.next) {
+               case 0:
+                o = r.url, a = r.user, l = r.pass, u = r.path, p = u === void 0 ? "/MissPlayer/" : u;
+                v = (p || "/MissPlayer/").trim();
+                if (!v.startsWith("/")) {
+                  v = "/" + v;
+                }
+                if (!v.endsWith("/")) {
+                  v += "/";
+                }
+                y = v.split("/").filter(Boolean);
+                b = "";
+                C = WebDavClient_createForOfIteratorHelper(y);
+                j.prev = 7;
+                C.s();
+
+               case 9:
+                if ((_ = C.n()).done) {
+                  j.next = 58;
+                  break;
+                }
+                k = _.value;
+                b += "/" + k;
+                P = this.normalizeUrl(o, b + "/");
+                S = this.normalizeUrl(o, b);
+                E = false;
+                j.prev = 15;
+                j.next = 18;
+                return this.request({
+                  "method": "PROPFIND",
+                  "url": P,
+                  "user": a,
+                  "pass": l,
+                  "headers": {
+                    "Depth": "0"
+                  }
+                });
+
+               case 18:
+                D = j.sent;
+                if (D.status === 207 || D.status >= 200 && D.status < 300) {
+                  E = true;
+                }
+                j.next = 24;
+                break;
+
+               case 22:
+                j.prev = 22;
+                j.t0 = j["catch"](15);
+
+               case 24:
+                if (E) {
+                  j.next = 34;
+                  break;
+                }
+                j.prev = 25;
+                j.next = 28;
+                return this.request({
+                  "method": "PROPFIND",
+                  "url": S,
+                  "user": a,
+                  "pass": l,
+                  "headers": {
+                    "Depth": "0"
+                  }
+                });
+
+               case 28:
+                L = j.sent;
+                if (L.status === 207 || L.status >= 200 && L.status < 300) {
+                  E = true;
+                }
+                j.next = 34;
+                break;
+
+               case 32:
+                j.prev = 32;
+                j.t1 = j["catch"](25);
+
+               case 34:
+                if (!E) {
+                  j.next = 36;
+                  break;
+                }
+                return j.abrupt("continue", 56);
+
+               case 36:
+                M = false;
+                j.prev = 37;
+                j.next = 40;
+                return this.request({
+                  "method": "MKCOL",
+                  "url": S,
+                  "user": a,
+                  "pass": l
+                });
+
+               case 40:
+                T = j.sent;
+                if (T.status === 201 || T.status === 200 || T.status === 204 || T.status === 405) {
+                  M = true;
+                }
+                j.next = 46;
+                break;
+
+               case 44:
+                j.prev = 44;
+                j.t2 = j["catch"](37);
+
+               case 46:
+                if (M) {
+                  j.next = 56;
+                  break;
+                }
+                j.prev = 47;
+                j.next = 50;
+                return this.request({
+                  "method": "MKCOL",
+                  "url": P,
+                  "user": a,
+                  "pass": l
+                });
+
+               case 50:
+                A = j.sent;
+                if (A.status === 201 || A.status === 200 || A.status === 204 || A.status === 405) {
+                  M = true;
+                }
+                j.next = 56;
+                break;
+
+               case 54:
+                j.prev = 54;
+                j.t3 = j["catch"](47);
+
+               case 56:
+                j.next = 9;
+                break;
+
+               case 58:
+                j.next = 63;
+                break;
+
+               case 60:
+                j.prev = 60;
+                j.t4 = j["catch"](7);
+                C.e(j.t4);
+
+               case 63:
+                j.prev = 63;
+                C.f();
+                return j.finish(63);
+
+               case 66:
+               case "end":
+                return j.stop();
+              }
+            }
+          }), _callee3, this, [ [ 7, 60, 63, 66 ], [ 15, 22 ], [ 25, 32 ], [ 37, 44 ], [ 47, 54 ] ]);
+        })));
+        function ensureDirectory(o) {
+          return r.apply(this, arguments);
+        }
+        return ensureDirectory;
+      }()
+    }, {
+      "key": "downloadBackup",
+      "value": function() {
+        var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee4(r) {
+          var o, a, l, u, p, v, y, b, C, _ = arguments;
+          return WebDavClient_regeneratorRuntime().wrap((function _callee4$(k) {
+            while (1) {
+              switch (k.prev = k.next) {
+               case 0:
+                o = _.length > 1 && _[1] !== void 0 ? _[1] : "miss_player_sync.json";
+                a = r.url, l = r.user, u = r.pass, p = r.path, v = p === void 0 ? "/MissPlayer/" : p;
+                y = (v || "/MissPlayer/").trim();
+                if (!y.startsWith("/")) {
+                  y = "/" + y;
+                }
+                if (!y.endsWith("/")) {
+                  y += "/";
+                }
+                b = this.normalizeUrl(a, y + o);
+                k.prev = 6;
+                k.next = 9;
+                return this.request({
+                  "method": "GET",
+                  "url": b,
+                  "user": l,
+                  "pass": u,
+                  "headers": {
+                    "Cache-Control": "no-cache",
+                    "Pragma": "no-cache"
+                  }
+                });
+
+               case 9:
+                C = k.sent;
+                if (!(C.status === 404)) {
+                  k.next = 12;
+                  break;
+                }
+                return k.abrupt("return", null);
+
+               case 12:
+                if (!(C.status === 401 || C.status === 403)) {
+                  k.next = 14;
+                  break;
+                }
+                throw new Error("认证失败 (".concat(C.status, "): 请检查用户名与密码/Token"));
+
+               case 14:
+                if (!(C.status >= 200 && C.status < 300)) {
+                  k.next = 18;
+                  break;
+                }
+                if (!(!C.data || !C.data.trim())) {
+                  k.next = 17;
+                  break;
+                }
+                return k.abrupt("return", null);
+
+               case 17:
+                return k.abrupt("return", JSON.parse(C.data));
+
+               case 18:
+                throw new Error("下载失败，服务器返回状态码: ".concat(C.status));
+
+               case 21:
+                k.prev = 21;
+                k.t0 = k["catch"](6);
+                throw k.t0;
+
+               case 24:
+               case "end":
+                return k.stop();
+              }
+            }
+          }), _callee4, this, [ [ 6, 21 ] ]);
+        })));
+        function downloadBackup(o) {
+          return r.apply(this, arguments);
+        }
+        return downloadBackup;
+      }()
+    }, {
+      "key": "uploadBackup",
+      "value": function() {
+        var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee5(r, o) {
+          var a, l, u, p, v, y, b, C, _, k, P = arguments;
+          return WebDavClient_regeneratorRuntime().wrap((function _callee5$(S) {
+            while (1) {
+              switch (S.prev = S.next) {
+               case 0:
+                a = P.length > 2 && P[2] !== void 0 ? P[2] : "miss_player_sync.json";
+                l = r.url, u = r.user, p = r.pass, v = r.path, y = v === void 0 ? "/MissPlayer/" : v;
+                S.next = 4;
+                return this.ensureDirectory(r);
+
+               case 4:
+                b = (y || "/MissPlayer/").trim();
+                if (!b.startsWith("/")) {
+                  b = "/" + b;
+                }
+                if (!b.endsWith("/")) {
+                  b += "/";
+                }
+                C = this.normalizeUrl(l, b + a);
+                _ = JSON.stringify(o, null, 2);
+                S.prev = 9;
+                S.next = 12;
+                return this.request({
+                  "method": "PUT",
+                  "url": C,
+                  "user": u,
+                  "pass": p,
+                  "headers": {
+                    "Content-Type": "application/json; charset=utf-8"
+                  },
+                  "data": _
+                });
+
+               case 12:
+                k = S.sent;
+                if (!(k.status === 404 || k.status === 409)) {
+                  S.next = 19;
+                  break;
+                }
+                S.next = 16;
+                return this.ensureDirectory(r);
+
+               case 16:
+                S.next = 18;
+                return this.request({
+                  "method": "PUT",
+                  "url": C,
+                  "user": u,
+                  "pass": p,
+                  "headers": {
+                    "Content-Type": "application/json; charset=utf-8"
+                  },
+                  "data": _
+                });
+
+               case 18:
+                k = S.sent;
+
+               case 19:
+                if (!(k.status === 401 || k.status === 403)) {
+                  S.next = 21;
+                  break;
+                }
+                throw new Error("认证失败 (".concat(k.status, "): 权限不足或密码错误"));
+
+               case 21:
+                if (!(k.status === 200 || k.status === 201 || k.status === 204)) {
+                  S.next = 23;
+                  break;
+                }
+                return S.abrupt("return", {
+                  "success": true,
+                  "status": k.status
+                });
+
+               case 23:
+                throw new Error("上传失败，服务器返回状态码: ".concat(k.status));
+
+               case 26:
+                S.prev = 26;
+                S.t0 = S["catch"](9);
+                throw S.t0;
+
+               case 29:
+               case "end":
+                return S.stop();
+              }
+            }
+          }), _callee5, this, [ [ 9, 26 ] ]);
+        })));
+        function uploadBackup(o, a) {
+          return r.apply(this, arguments);
+        }
+        return uploadBackup;
+      }()
+    } ]);
+  }();
+  function SyncManager_regeneratorRuntime() {
+    "use strict";
+    SyncManager_regeneratorRuntime = function _regeneratorRuntime() {
+      return o;
+    };
+    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
+    function c(r, o, a, l) {
+      return Object.defineProperty(r, o, {
+        "value": a,
+        "enumerable": !l,
+        "configurable": !l,
+        "writable": !l
+      });
+    }
+    try {
+      c({}, "");
+    } catch (r) {
+      c = function c(r, o, a) {
+        return r[o] = a;
+      };
+    }
+    function h(o, a, l, u) {
+      var p = a && a.prototype instanceof Generator ? a : Generator, v = Object.create(p.prototype);
+      return c(v, "_invoke", function(o, a, l) {
+        var u = 1;
+        return function(p, v) {
+          if (3 === u) {
+            throw Error("Generator is already running");
+          }
+          if (4 === u) {
+            if ("throw" === p) {
+              throw v;
+            }
+            return {
+              "value": r,
+              "done": !0
+            };
+          }
+          for (l.method = p, l.arg = v; ;) {
+            var y = l.delegate;
+            if (y) {
+              var C = d(y, l);
+              if (C) {
+                if (C === b) {
+                  continue;
+                }
+                return C;
+              }
+            }
+            if ("next" === l.method) {
+              l.sent = l._sent = l.arg;
+            } else if ("throw" === l.method) {
+              if (1 === u) {
+                throw u = 4, l.arg;
+              }
+              l.dispatchException(l.arg);
+            } else {
+              "return" === l.method && l.abrupt("return", l.arg);
+            }
+            u = 3;
+            var _ = s(o, a, l);
+            if ("normal" === _.type) {
+              if (u = l.done ? 4 : 2, _.arg === b) {
+                continue;
+              }
+              return {
+                "value": _.arg,
+                "done": l.done
+              };
+            }
+            "throw" === _.type && (u = 4, l.method = "throw", l.arg = _.arg);
+          }
+        };
+      }(o, l, new Context(u || [])), !0), v;
+    }
+    function s(r, o, a) {
+      try {
+        return {
+          "type": "normal",
+          "arg": r.call(o, a)
+        };
+      } catch (r) {
+        return {
+          "type": "throw",
+          "arg": r
+        };
+      }
+    }
+    o.wrap = h;
+    var b = {};
+    function Generator() {}
+    function GeneratorFunction() {}
+    function GeneratorFunctionPrototype() {}
+    var C = {};
+    c(C, p, (function() {
+      return this;
+    }));
+    var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
+    k && k !== a && l.call(k, p) && (C = k);
+    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    function g(r) {
+      [ "next", "throw", "return" ].forEach((function(o) {
+        c(r, o, (function(r) {
+          return this._invoke(o, r);
+        }));
+      }));
+    }
+    function AsyncIterator(r, o) {
+      function e(a, u, p, v) {
+        var y = s(r[a], r, u);
+        if ("throw" !== y.type) {
+          var b = y.arg, C = b.value;
+          return C && "object" == SyncManager_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
+            e("next", r, p, v);
+          }), (function(r) {
+            e("throw", r, p, v);
+          })) : o.resolve(C).then((function(r) {
+            b.value = r, p(b);
+          }), (function(r) {
+            return e("throw", r, p, v);
+          }));
+        }
+        v(y.arg);
+      }
+      var a;
+      c(this, "_invoke", (function(r, l) {
+        function i() {
+          return new o((function(o, a) {
+            e(r, l, o, a);
+          }));
+        }
+        return a = a ? a.then(i, i) : i();
+      }), !0);
+    }
+    function d(o, a) {
+      var l = a.method, u = o.i[l];
+      if (u === r) {
+        return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
+        a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
+        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
+      }
+      var p = s(u, o.i, a.arg);
+      if ("throw" === p.type) {
+        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
+      }
+      var v = p.arg;
+      return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
+      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
+      a.delegate = null, b);
+    }
+    function w(r) {
+      this.tryEntries.push(r);
+    }
+    function m(o) {
+      var a = o[4] || {};
+      a.type = "normal", a.arg = r, o[4] = a;
+    }
+    function Context(r) {
+      this.tryEntries = [ [ -1 ] ], r.forEach(w, this), this.reset(!0);
+    }
+    function x(o) {
+      if (null != o) {
+        var a = o[p];
+        if (a) {
+          return a.call(o);
+        }
+        if ("function" == typeof o.next) {
+          return o;
+        }
+        if (!isNaN(o.length)) {
+          var u = -1, v = function e() {
+            for (;++u < o.length; ) {
+              if (l.call(o, u)) {
+                return e.value = o[u], e.done = !1, e;
+              }
+            }
+            return e.value = r, e.done = !0, e;
+          };
+          return v.next = v;
+        }
+      }
+      throw new TypeError(SyncManager_typeof(o) + " is not iterable");
+    }
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
+    o.isGeneratorFunction = function(r) {
+      var o = "function" == typeof r && r.constructor;
+      return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
+    }, o.mark = function(r) {
+      return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+    }, o.awrap = function(r) {
+      return {
+        "__await": r
+      };
+    }, g(AsyncIterator.prototype), c(AsyncIterator.prototype, v, (function() {
+      return this;
+    })), o.AsyncIterator = AsyncIterator, o.async = function(r, a, l, u, p) {
+      void 0 === p && (p = Promise);
+      var v = new AsyncIterator(h(r, a, l, u), p);
+      return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
+        return r.done ? r.value : v.next();
+      }));
+    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+      return this;
+    })), c(P, "toString", (function() {
+      return "[object Generator]";
+    })), o.keys = function(r) {
+      var o = Object(r), a = [];
+      for (var l in o) {
+        a.unshift(l);
+      }
+      return function t() {
+        for (;a.length; ) {
+          if ((l = a.pop()) in o) {
+            return t.value = l, t.done = !1, t;
+          }
+        }
+        return t.done = !0, t;
+      };
+    }, o.values = x, Context.prototype = {
+      "constructor": Context,
+      "reset": function reset(o) {
+        if (this.prev = this.next = 0, this.sent = this._sent = r, this.done = !1, this.delegate = null, 
+        this.method = "next", this.arg = r, this.tryEntries.forEach(m), !o) {
+          for (var a in this) {
+            "t" === a.charAt(0) && l.call(this, a) && !isNaN(+a.slice(1)) && (this[a] = r);
+          }
+        }
+      },
+      "stop": function stop() {
+        this.done = !0;
+        var r = this.tryEntries[0][4];
+        if ("throw" === r.type) {
+          throw r.arg;
+        }
+        return this.rval;
+      },
+      "dispatchException": function dispatchException(o) {
+        if (this.done) {
+          throw o;
+        }
+        var a = this;
+        function n(r) {
+          p.type = "throw", p.arg = o, a.next = r;
+        }
+        for (var l = a.tryEntries.length - 1; l >= 0; --l) {
+          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
+          if (-1 === u[0]) {
+            return n("end"), !1;
+          }
+          if (!y && !b) {
+            throw Error("try statement without catch or finally");
+          }
+          if (null != u[0] && u[0] <= v) {
+            if (v < y) {
+              return this.method = "next", this.arg = r, n(y), !0;
+            }
+            if (v < b) {
+              return n(b), !1;
+            }
+          }
+        }
+      },
+      "abrupt": function abrupt(r, o) {
+        for (var a = this.tryEntries.length - 1; a >= 0; --a) {
+          var l = this.tryEntries[a];
+          if (l[0] > -1 && l[0] <= this.prev && this.prev < l[2]) {
+            var u = l;
+            break;
+          }
+        }
+        u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
+        var p = u ? u[4] : {};
+        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
+      },
+      "complete": function complete(r, o) {
+        if ("throw" === r.type) {
+          throw r.arg;
+        }
+        return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
+        this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
+        b;
+      },
+      "finish": function finish(r) {
+        for (var o = this.tryEntries.length - 1; o >= 0; --o) {
+          var a = this.tryEntries[o];
+          if (a[2] === r) {
+            return this.complete(a[4], a[3]), m(a), b;
+          }
+        }
+      },
+      "catch": function _catch(r) {
+        for (var o = this.tryEntries.length - 1; o >= 0; --o) {
+          var a = this.tryEntries[o];
+          if (a[0] === r) {
+            var l = a[4];
+            if ("throw" === l.type) {
+              var u = l.arg;
+              m(a);
+            }
+            return u;
+          }
+        }
+        throw Error("illegal catch attempt");
+      },
+      "delegateYield": function delegateYield(o, a, l) {
+        return this.delegate = {
+          "i": x(o),
+          "r": a,
+          "n": l
+        }, "next" === this.method && (this.arg = r), b;
+      }
+    }, o;
+  }
+  function SyncManager_asyncGeneratorStep(r, o, a, l, u, p, v) {
+    try {
+      var y = r[p](v), b = y.value;
+    } catch (r) {
+      return void a(r);
+    }
+    y.done ? o(b) : Promise.resolve(b).then(l, u);
+  }
+  function SyncManager_asyncToGenerator(r) {
+    return function() {
+      var o = this, a = arguments;
+      return new Promise((function(l, u) {
+        var p = r.apply(o, a);
+        function _next(r) {
+          SyncManager_asyncGeneratorStep(p, l, u, _next, _throw, "next", r);
+        }
+        function _throw(r) {
+          SyncManager_asyncGeneratorStep(p, l, u, _next, _throw, "throw", r);
+        }
+        _next(void 0);
+      }));
+    };
+  }
+  function SyncManager_slicedToArray(r, o) {
+    return SyncManager_arrayWithHoles(r) || SyncManager_iterableToArrayLimit(r, o) || SyncManager_unsupportedIterableToArray(r, o) || SyncManager_nonIterableRest();
+  }
+  function SyncManager_nonIterableRest() {
+    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  }
+  function SyncManager_iterableToArrayLimit(r, o) {
+    var a = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+    if (null != a) {
+      var l, u, p, v, y = [], b = !0, C = !1;
+      try {
+        if (p = (a = a.call(r)).next, 0 === o) {
+          if (Object(a) !== a) {
+            return;
+          }
+          b = !1;
+        } else {
+          for (;!(b = (l = p.call(a)).done) && (y.push(l.value), y.length !== o); b = !0) {}
+        }
+      } catch (r) {
+        C = !0, u = r;
+      } finally {
+        try {
+          if (!b && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
+            return;
+          }
+        } finally {
+          if (C) {
+            throw u;
+          }
+        }
+      }
+      return y;
+    }
+  }
+  function SyncManager_arrayWithHoles(r) {
+    if (Array.isArray(r)) {
+      return r;
+    }
+  }
+  function SyncManager_toConsumableArray(r) {
+    return SyncManager_arrayWithoutHoles(r) || SyncManager_iterableToArray(r) || SyncManager_unsupportedIterableToArray(r) || SyncManager_nonIterableSpread();
+  }
+  function SyncManager_nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  }
+  function SyncManager_iterableToArray(r) {
+    if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) {
+      return Array.from(r);
+    }
+  }
+  function SyncManager_arrayWithoutHoles(r) {
+    if (Array.isArray(r)) {
+      return SyncManager_arrayLikeToArray(r);
+    }
+  }
+  function SyncManager_defineProperty(r, o, a) {
+    return (o = SyncManager_toPropertyKey(o)) in r ? Object.defineProperty(r, o, {
+      "value": a,
+      "enumerable": !0,
+      "configurable": !0,
+      "writable": !0
+    }) : r[o] = a, r;
+  }
+  function SyncManager_createForOfIteratorHelper(r, o) {
+    var a = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+    if (!a) {
+      if (Array.isArray(r) || (a = SyncManager_unsupportedIterableToArray(r)) || o && r && "number" == typeof r.length) {
+        a && (r = a);
+        var l = 0, u = function F() {};
+        return {
+          "s": u,
+          "n": function n() {
+            return l >= r.length ? {
+              "done": !0
+            } : {
+              "done": !1,
+              "value": r[l++]
+            };
+          },
+          "e": function e(r) {
+            throw r;
+          },
+          "f": u
+        };
+      }
+      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+    var p, v = !0, y = !1;
+    return {
+      "s": function s() {
+        a = a.call(r);
+      },
+      "n": function n() {
+        var r = a.next();
+        return v = r.done, r;
+      },
+      "e": function e(r) {
+        y = !0, p = r;
+      },
+      "f": function f() {
+        try {
+          v || null == a["return"] || a["return"]();
+        } finally {
+          if (y) {
+            throw p;
+          }
+        }
+      }
+    };
+  }
+  function SyncManager_unsupportedIterableToArray(r, o) {
+    if (r) {
+      if ("string" == typeof r) {
+        return SyncManager_arrayLikeToArray(r, o);
+      }
+      var a = {}.toString.call(r).slice(8, -1);
+      return "Object" === a && r.constructor && (a = r.constructor.name), "Map" === a || "Set" === a ? Array.from(r) : "Arguments" === a || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(a) ? SyncManager_arrayLikeToArray(r, o) : void 0;
+    }
+  }
+  function SyncManager_arrayLikeToArray(r, o) {
+    (null == o || o > r.length) && (o = r.length);
+    for (var a = 0, l = Array(o); a < o; a++) {
+      l[a] = r[a];
+    }
+    return l;
+  }
+  function SyncManager_typeof(r) {
+    "@babel/helpers - typeof";
+    return SyncManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
+      return typeof r;
+    } : function(r) {
+      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
+    }, SyncManager_typeof(r);
+  }
+  function SyncManager_classCallCheck(r, o) {
+    if (!(r instanceof o)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+  function SyncManager_defineProperties(r, o) {
+    for (var a = 0; a < o.length; a++) {
+      var l = o[a];
+      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
+      Object.defineProperty(r, SyncManager_toPropertyKey(l.key), l);
+    }
+  }
+  function SyncManager_createClass(r, o, a) {
+    return o && SyncManager_defineProperties(r.prototype, o), a && SyncManager_defineProperties(r, a), 
+    Object.defineProperty(r, "prototype", {
+      "writable": !1
+    }), r;
+  }
+  function SyncManager_toPropertyKey(r) {
+    var o = SyncManager_toPrimitive(r, "string");
+    return "symbol" == SyncManager_typeof(o) ? o : o + "";
+  }
+  function SyncManager_toPrimitive(r, o) {
+    if ("object" != SyncManager_typeof(r) || !r) {
+      return r;
+    }
+    var a = r[Symbol.toPrimitive];
+    if (void 0 !== a) {
+      var l = a.call(r, o || "default");
+      if ("object" != SyncManager_typeof(l)) {
+        return l;
+      }
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === o ? String : Number)(r);
+  }
+  var lt = "mp_client_id";
+  var ct = "mp_webdav_config";
+  var ut = "mp_webdav_last_sync_time";
+  var dt = 1;
+  function SyncManager_getOrCreateClientId() {
+    var r = getValue(lt, "");
+    if (r) {
+      return r;
+    }
+    var o = Math.random().toString(36).substring(2, 10);
+    var a = Date.now().toString(36).substring(4);
+    var l = "mp_".concat(o).concat(a);
+    setValue(lt, l);
+    return l;
+  }
+  function getDeviceName() {
+    var r = navigator.userAgent;
+    var o = "Unknown OS";
+    if (/iPad|iPhone|iPod/.test(r)) {
+      o = /iPad/.test(r) ? "iPad" : "iPhone";
+    } else if (/Macintosh|Mac OS X/.test(r)) {
+      o = "macOS";
+    } else if (/Windows NT/.test(r)) {
+      o = "Windows";
+    } else if (/Android/.test(r)) {
+      o = "Android";
+    } else if (/Linux/.test(r)) {
+      o = "Linux";
+    }
+    var a = "Browser";
+    if (/ScriptCat/i.test(r)) {
+      a = "ScriptCat";
+    } else if (/Edg/i.test(r)) {
+      a = "Edge";
+    } else if (/Chrome/i.test(r) && !/Edg/i.test(r)) {
+      a = "Chrome";
+    } else if (/Safari/i.test(r) && !/Chrome/i.test(r)) {
+      a = "Safari";
+    } else if (/Firefox/i.test(r)) {
+      a = "Firefox";
+    }
+    return "".concat(o, " (").concat(a, ")");
+  }
+  function getDeviceType() {
+    var r = navigator.userAgent;
+    if (/iPad/i.test(r) || navigator.maxTouchPoints > 1 && /Macintosh/.test(r)) {
+      return "tablet";
+    }
+    if (/Mobile|iPhone|Android/i.test(r)) {
+      return "mobile";
+    }
+    return "desktop";
+  }
+  var ht = function() {
+    function SyncManager() {
+      SyncManager_classCallCheck(this, SyncManager);
+    }
+    return SyncManager_createClass(SyncManager, null, [ {
+      "key": "getWebDavConfig",
+      "value": function getWebDavConfig() {
+        var r = {
+          "url": "",
+          "user": "",
+          "pass": "",
+          "path": "/MissPlayer/",
+          "autoSync": true
+        };
+        var o = getValue(ct, null);
+        return Object.assign({}, r, o && SyncManager_typeof(o) === "object" ? o : {});
+      }
+    }, {
+      "key": "saveWebDavConfig",
+      "value": function saveWebDavConfig(r) {
+        setValue(ct, r);
+      }
+    }, {
+      "key": "getLastSyncTime",
+      "value": function getLastSyncTime() {
+        return getValue(ut, 0);
+      }
+    }, {
+      "key": "setLastSyncTime",
+      "value": function setLastSyncTime() {
+        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : Date.now();
+        setValue(ut, r);
+      }
+    }, {
+      "key": "gatherLocalData",
+      "value": function gatherLocalData() {
+        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : null;
+        var o = SyncManager_getOrCreateClientId();
+        var a = Date.now();
+        var l = (r === null || r === void 0 ? void 0 : r.settings) || {
+          "showProgressBar": getValue("showProgressBar", true),
+          "showSeekControlRow": getValue("showSeekControlRow", true),
+          "showLoopControlRow": getValue("showLoopControlRow", true),
+          "showPlaybackControlRow": getValue("showPlaybackControlRow", true),
+          "enabledSeekSteps": getValue("enabledSeekSteps", [ "5s", "10s", "30s", "1m", "5m", "10m" ]),
+          "customUserSeekSteps": getValue("customUserSeekSteps", []),
+          "showCommentsSection": getValue("showCommentsSection", true),
+          "enabledCommentSources": getValue("enabledCommentSources", {
+            "jable": true,
+            "javdb": true,
+            "javlibrary": false
+          }),
+          "sidebarPosition": getValue("sidebarPosition", "right"),
+          "sidebarHidden": getValue("sidebarHidden", false),
+          "preferredPlaybackRate": parseFloat(getValue("preferredPlaybackRate", 1)) || 1,
+          "pauseOnBlur": getValue("pauseOnBlur", true),
+          "telemetryEnabled": getValue("telemetryEnabled", true),
+          "debugMode": getValue("debugMode", false)
+        };
+        var u = {};
+        try {
+          if (typeof GM_listValues === "function") {
+            var p = GM_listValues();
+            var v = SyncManager_createForOfIteratorHelper(p), y;
+            try {
+              for (v.s(); !(y = v.n()).done; ) {
+                var b = y.value;
+                if (b && b.startsWith("tabs_")) {
+                  var C = getValue(b, []);
+                  if (Array.isArray(C) && C.length > 0) {
+                    u[b] = C;
+                  }
+                }
+              }
+            } catch (r) {
+              v.e(r);
+            } finally {
+              v.f();
+            }
+          } else {
+            for (var _ = 0; _ < localStorage.length; _++) {
+              var k = localStorage.key(_);
+              if (k) {
+                var P = k;
+                if (k.startsWith("mp_")) {
+                  P = k.replace(/^mp_/, "");
+                }
+                if (P.startsWith("tabs_")) {
+                  var S = getValue(P, []);
+                  if (Array.isArray(S) && S.length > 0) {
+                    u[P] = S;
+                  }
+                }
+              }
+            }
+          }
+        } catch (r) {}
+        var E = getDeviceType();
+        var D = SyncManager_defineProperty({}, E, {
+          "sidebarPosition": getValue("sidebarPosition", "right"),
+          "sidebarHidden": getValue("sidebarHidden", false)
+        });
+        return {
+          "schemaVersion": dt,
+          "scriptVersion": "5.6.1",
+          "lastModified": a,
+          "lastModifiedBy": o,
+          "devices": SyncManager_defineProperty({}, o, {
+            "deviceName": getDeviceName(),
+            "deviceType": E,
+            "lastSyncTime": a,
+            "scriptVersion": "5.6.1"
+          }),
+          "deviceLayouts": D,
+          "settings": l,
+          "markers": u
+        };
+      }
+    }, {
+      "key": "migrateBackupSchema",
+      "value": function migrateBackupSchema(r) {
+        if (!r || SyncManager_typeof(r) !== "object") {
+          return null;
+        }
+        var o = Object.assign({}, r);
+        if (!o.schemaVersion || o.schemaVersion < 1) {
+          o.schemaVersion = 1;
+          if (!o.devices) {
+            o.devices = {};
+          }
+          if (!o.settings) {
+            o.settings = {};
+          }
+          if (!o.markers) {
+            o.markers = {};
+          }
+          if (!o.lastModified) {
+            o.lastModified = Date.now();
+          }
+        }
+        return o;
+      }
+    }, {
+      "key": "mergeData",
+      "value": function mergeData(r, o, a) {
+        if (!o) {
+          return r;
+        }
+        if (!r) {
+          return o;
+        }
+        var l = this.migrateBackupSchema(o);
+        var u = Date.now();
+        var p = Object.assign({}, l.devices || {}, r.devices || {});
+        p[a] = {
+          "deviceName": getDeviceName(),
+          "lastSyncTime": u,
+          "scriptVersion": "5.6.1"
+        };
+        var v = r.settings || {};
+        var y = l.settings || {};
+        var b = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(v.enabledSeekSteps) ? v.enabledSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(y.enabledSeekSteps) ? y.enabledSeekSteps : []))));
+        var C = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(v.customUserSeekSteps) ? v.customUserSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(y.customUserSeekSteps) ? y.customUserSeekSteps : []))));
+        var _ = Object.assign({
+          "jable": true,
+          "javdb": true,
+          "javlibrary": false
+        }, y.enabledCommentSources || {}, v.enabledCommentSources || {});
+        var k = (l.lastModified || 0) > (r.lastModified || 0);
+        var P = k ? y : v;
+        var S = k ? v : y;
+        var E = {
+          "showProgressBar": P.showProgressBar !== void 0 ? P.showProgressBar : S.showProgressBar,
+          "showSeekControlRow": P.showSeekControlRow !== void 0 ? P.showSeekControlRow : S.showSeekControlRow,
+          "showLoopControlRow": P.showLoopControlRow !== void 0 ? P.showLoopControlRow : S.showLoopControlRow,
+          "showPlaybackControlRow": P.showPlaybackControlRow !== void 0 ? P.showPlaybackControlRow : S.showPlaybackControlRow,
+          "enabledSeekSteps": b.length > 0 ? b : [ "5s", "10s", "30s", "1m", "5m", "10m" ],
+          "customUserSeekSteps": C,
+          "showCommentsSection": P.showCommentsSection !== void 0 ? P.showCommentsSection : S.showCommentsSection,
+          "enabledCommentSources": _,
+          "sidebarPosition": P.sidebarPosition || S.sidebarPosition || "right",
+          "sidebarHidden": P.sidebarHidden !== void 0 ? P.sidebarHidden : S.sidebarHidden,
+          "preferredPlaybackRate": P.preferredPlaybackRate || S.preferredPlaybackRate || 1,
+          "pauseOnBlur": P.pauseOnBlur !== void 0 ? P.pauseOnBlur : S.pauseOnBlur,
+          "telemetryEnabled": P.telemetryEnabled !== void 0 ? P.telemetryEnabled : S.telemetryEnabled,
+          "debugMode": P.debugMode !== void 0 ? P.debugMode : S.debugMode
+        };
+        var D = r.markers || {};
+        var L = l.markers || {};
+        var M = Array.from(new Set([].concat(SyncManager_toConsumableArray(Object.keys(D)), SyncManager_toConsumableArray(Object.keys(L)))));
+        var T = {};
+        for (var A = 0, j = M; A < j.length; A++) {
+          var B = j[A];
+          var I = Array.isArray(D[B]) ? D[B] : [];
+          var O = Array.isArray(L[B]) ? L[B] : [];
+          if (I.length === 0) {
+            T[B] = O;
+            continue;
+          }
+          if (O.length === 0) {
+            T[B] = I;
+            continue;
+          }
+          var V = new Map;
+          var G = SyncManager_createForOfIteratorHelper(O), R;
+          try {
+            for (G.s(); !(R = G.n()).done; ) {
+              var H = R.value;
+              var J = H.id || "".concat(Math.round((H.tabTime || 0) * 10) / 10, "_").concat(Math.round((H.tabEnd || 0) * 10) / 10);
+              V.set(J, H);
+            }
+          } catch (r) {
+            G.e(r);
+          } finally {
+            G.f();
+          }
+          var N = SyncManager_createForOfIteratorHelper(I), z;
+          try {
+            for (N.s(); !(z = N.n()).done; ) {
+              var W = z.value;
+              var U = W.id || "".concat(Math.round((W.tabTime || 0) * 10) / 10, "_").concat(Math.round((W.tabEnd || 0) * 10) / 10);
+              if (!V.has(U)) {
+                V.set(U, W);
+              } else {
+                var q = V.get(U);
+                var K = W.updatedAt || 0;
+                var Y = q.updatedAt || 0;
+                if (K >= Y || !q.tabComment && W.tabComment) {
+                  V.set(U, Object.assign({}, q, W));
+                }
+              }
+            }
+          } catch (r) {
+            N.e(r);
+          } finally {
+            N.f();
+          }
+          T[B] = Array.from(V.values());
+        }
+        var X = Object.assign({}, l.deviceLayouts || {}, r.deviceLayouts || {});
+        return {
+          "schemaVersion": dt,
+          "scriptVersion": "5.6.1",
+          "lastModified": u,
+          "lastModifiedBy": a,
+          "devices": p,
+          "deviceLayouts": X,
+          "settings": E,
+          "markers": T
+        };
+      }
+    }, {
+      "key": "applyDataToLocal",
+      "value": function applyDataToLocal(r) {
+        var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : null;
+        if (!r || !r.settings) {
+          return;
+        }
+        var a = r.settings, l = r.markers, u = r.deviceLayouts;
+        for (var p = 0, v = Object.entries(a); p < v.length; p++) {
+          var y = SyncManager_slicedToArray(v[p], 2), b = y[0], C = y[1];
+          setValue(b, C);
+        }
+        var _ = getDeviceType();
+        if (u && u[_]) {
+          var k = u[_];
+          if (k.sidebarPosition !== void 0) {
+            setValue("sidebarPosition", k.sidebarPosition);
+          }
+          if (k.sidebarHidden !== void 0) {
+            setValue("sidebarHidden", k.sidebarHidden);
+          }
+        }
+        if (l && SyncManager_typeof(l) === "object") {
+          for (var P = 0, S = Object.entries(l); P < S.length; P++) {
+            var E = SyncManager_slicedToArray(S[P], 2), D = E[0], L = E[1];
+            if (D.startsWith("tabs_") && Array.isArray(L)) {
+              setValue(D, L);
+            }
+          }
+        }
+        if (o) {
+          o.loadSettings();
+        }
+      }
+    }, {
+      "key": "executeSync",
+      "value": function() {
+        var r = SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee(r) {
+          var o, a, l, u, p, v, y, b, C, _, k, P;
+          return SyncManager_regeneratorRuntime().wrap((function _callee$(S) {
+            while (1) {
+              switch (S.prev = S.next) {
+               case 0:
+                o = r.mode, a = o === void 0 ? "merge" : o, l = r.config, u = l === void 0 ? this.getWebDavConfig() : l, 
+                p = r.playerState, v = p === void 0 ? null : p;
+                if (u.url) {
+                  S.next = 3;
+                  break;
+                }
+                throw new Error("未配置 WebDAV 服务器地址");
+
+               case 3:
+                y = SyncManager_getOrCreateClientId();
+                b = this.gatherLocalData(v);
+                if (!(a === "upload")) {
+                  S.next = 10;
+                  break;
+                }
+                S.next = 8;
+                return st.uploadBackup(u, b);
+
+               case 8:
+                this.setLastSyncTime(b.lastModified);
+                return S.abrupt("return", {
+                  "success": true,
+                  "message": "本地配置已成功向上覆盖至云端！",
+                  "data": b
+                });
+
+               case 10:
+                if (!(a === "download")) {
+                  S.next = 20;
+                  break;
+                }
+                S.next = 13;
+                return st.downloadBackup(u);
+
+               case 13:
+                C = S.sent;
+                if (C) {
+                  S.next = 16;
+                  break;
+                }
+                throw new Error("云端备份文件不存在，无法向下覆盖");
+
+               case 16:
+                _ = this.migrateBackupSchema(C);
+                this.applyDataToLocal(_, v);
+                this.setLastSyncTime(Date.now());
+                return S.abrupt("return", {
+                  "success": true,
+                  "message": "已成功从云端拉取配置并覆盖本地！",
+                  "data": _
+                });
+
+               case 20:
+                S.next = 22;
+                return st.downloadBackup(u);
+
+               case 22:
+                k = S.sent;
+                P = this.mergeData(b, k, y);
+                S.next = 26;
+                return st.uploadBackup(u, P);
+
+               case 26:
+                this.applyDataToLocal(P, v);
+                this.setLastSyncTime(P.lastModified);
+                return S.abrupt("return", {
+                  "success": true,
+                  "message": "云端多端配置智能合并同步完成！",
+                  "data": P
+                });
+
+               case 29:
+               case "end":
+                return S.stop();
+              }
+            }
+          }), _callee, this);
+        })));
+        function executeSync(o) {
+          return r.apply(this, arguments);
+        }
+        return executeSync;
+      }()
+    }, {
+      "key": "triggerAutoSync",
+      "value": function triggerAutoSync() {
+        var r = this;
+        var o = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : null;
+        var a = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : "startup";
+        var l = this.getWebDavConfig();
+        if (!l.url || l.autoSync === false) {
+          return;
+        }
+        if (this._isAutoSyncing) {
+          return;
+        }
+        var u = Date.now();
+        var p = this.getLastSyncTime();
+        if (a === "startup") {
+          if (p > 0 && u - p < 5 * 60 * 1e3) {
+            return;
+          }
+          setTimeout(SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee2() {
+            return SyncManager_regeneratorRuntime().wrap((function _callee2$(a) {
+              while (1) {
+                switch (a.prev = a.next) {
+                 case 0:
+                  a.prev = 0;
+                  r._isAutoSyncing = true;
+                  a.next = 4;
+                  return r.executeSync({
+                    "mode": "merge",
+                    "config": l,
+                    "playerState": o
+                  });
+
+                 case 4:
+                  a.next = 8;
+                  break;
+
+                 case 6:
+                  a.prev = 6;
+                  a.t0 = a["catch"](0);
+
+                 case 8:
+                  a.prev = 8;
+                  r._isAutoSyncing = false;
+                  return a.finish(8);
+
+                 case 11:
+                 case "end":
+                  return a.stop();
+                }
+              }
+            }), _callee2, null, [ [ 0, 6, 8, 11 ] ]);
+          }))), 2500);
+          return;
+        }
+        if (a === "change") {
+          if (this._autoSyncDebounceTimer) {
+            clearTimeout(this._autoSyncDebounceTimer);
+          }
+          this._autoSyncDebounceTimer = setTimeout(SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee3() {
+            return SyncManager_regeneratorRuntime().wrap((function _callee3$(a) {
+              while (1) {
+                switch (a.prev = a.next) {
+                 case 0:
+                  a.prev = 0;
+                  r._isAutoSyncing = true;
+                  a.next = 4;
+                  return r.executeSync({
+                    "mode": "merge",
+                    "config": l,
+                    "playerState": o
+                  });
+
+                 case 4:
+                  a.next = 8;
+                  break;
+
+                 case 6:
+                  a.prev = 6;
+                  a.t0 = a["catch"](0);
+
+                 case 8:
+                  a.prev = 8;
+                  r._isAutoSyncing = false;
+                  return a.finish(8);
+
+                 case 11:
+                 case "end":
+                  return a.stop();
+                }
+              }
+            }), _callee3, null, [ [ 0, 6, 8, 11 ] ]);
+          }))), 5e3);
+        }
+      }
+    } ]);
+  }();
   function LoopManager_typeof(r) {
     "@babel/helpers - typeof";
     return LoopManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -19651,7 +21682,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var st = function() {
+  var pt = function() {
     function LoopManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       LoopManager_classCallCheck(this, LoopManager);
@@ -20758,14 +22789,18 @@
         this._sortTabs();
         setValue(this.storageKey, this.tabs);
         try {
+          var r;
+          ht.triggerAutoSync((r = this.playerCore) === null || r === void 0 || (r = r.options) === null || r === void 0 ? void 0 : r.playerState, "change");
+        } catch (r) {}
+        try {
           if (Array.isArray(this.tabs) && this.tabs.length > 0) {
-            var r = this.tabs[this.tabs.length - 1];
-            if (r) {
+            var o = this.tabs[this.tabs.length - 1];
+            if (o) {
               fe.trackTimestampCollect({
-                "type": r.type || "point",
-                "startTime": r.startTime,
-                "endTime": r.endTime,
-                "comment": r.comment || ""
+                "type": o.type || "point",
+                "startTime": o.startTime,
+                "endTime": o.endTime,
+                "comment": o.comment || ""
               });
             }
           }
@@ -20852,7 +22887,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var lt = function() {
+  var mt = function() {
     function ProgressManager(r, o) {
       ProgressManager_classCallCheck(this, ProgressManager);
       this.playerCore = r;
@@ -21134,7 +23169,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ct = function() {
+  var ft = function() {
     function BlurPlaybackManager() {
       BlurPlaybackManager_classCallCheck(this, BlurPlaybackManager);
     }
@@ -21249,7 +23284,7 @@
       }
     } ]);
   }();
-  BlurPlaybackManager_defineProperty(ct, "isInitialized", false);
+  BlurPlaybackManager_defineProperty(ft, "isInitialized", false);
   function EventManager_typeof(r) {
     "@babel/helpers - typeof";
     return EventManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -21294,7 +23329,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ut = function() {
+  var vt = function() {
     function EventManager(r, o, a) {
       EventManager_classCallCheck(this, EventManager);
       this.playerCore = r;
@@ -21381,7 +23416,7 @@
             }
             return;
           }
-          if (o.target.closest(".tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list")) {
+          if (o.target.closest(".tm-settings-panel, .tm-settings-menu-container, .tm-settings-seek-steps-subpanel, .tm-settings-webdav-card, .tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list")) {
             return;
           }
           if (o.cancelable) {
@@ -21490,7 +23525,7 @@
           }
         };
         this.targetVideo.addEventListener("pause", this.handlePauseBound);
-        ct.attachPlayer(this.targetVideo, this.playerCore);
+        ft.attachPlayer(this.targetVideo, this.playerCore);
       }
     }, {
       "key": "handleCloseButtonClick",
@@ -21578,1842 +23613,6 @@
           window.tmDebugLogger = null;
         }
       }
-    } ]);
-  }();
-  function WebDavClient_typeof(r) {
-    "@babel/helpers - typeof";
-    return WebDavClient_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
-      return typeof r;
-    } : function(r) {
-      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
-    }, WebDavClient_typeof(r);
-  }
-  function WebDavClient_createForOfIteratorHelper(r, o) {
-    var a = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
-    if (!a) {
-      if (Array.isArray(r) || (a = WebDavClient_unsupportedIterableToArray(r)) || o && r && "number" == typeof r.length) {
-        a && (r = a);
-        var l = 0, u = function F() {};
-        return {
-          "s": u,
-          "n": function n() {
-            return l >= r.length ? {
-              "done": !0
-            } : {
-              "done": !1,
-              "value": r[l++]
-            };
-          },
-          "e": function e(r) {
-            throw r;
-          },
-          "f": u
-        };
-      }
-      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    }
-    var p, v = !0, y = !1;
-    return {
-      "s": function s() {
-        a = a.call(r);
-      },
-      "n": function n() {
-        var r = a.next();
-        return v = r.done, r;
-      },
-      "e": function e(r) {
-        y = !0, p = r;
-      },
-      "f": function f() {
-        try {
-          v || null == a["return"] || a["return"]();
-        } finally {
-          if (y) {
-            throw p;
-          }
-        }
-      }
-    };
-  }
-  function WebDavClient_unsupportedIterableToArray(r, o) {
-    if (r) {
-      if ("string" == typeof r) {
-        return WebDavClient_arrayLikeToArray(r, o);
-      }
-      var a = {}.toString.call(r).slice(8, -1);
-      return "Object" === a && r.constructor && (a = r.constructor.name), "Map" === a || "Set" === a ? Array.from(r) : "Arguments" === a || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(a) ? WebDavClient_arrayLikeToArray(r, o) : void 0;
-    }
-  }
-  function WebDavClient_arrayLikeToArray(r, o) {
-    (null == o || o > r.length) && (o = r.length);
-    for (var a = 0, l = Array(o); a < o; a++) {
-      l[a] = r[a];
-    }
-    return l;
-  }
-  function WebDavClient_regeneratorRuntime() {
-    "use strict";
-    WebDavClient_regeneratorRuntime = function _regeneratorRuntime() {
-      return o;
-    };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
-    function c(r, o, a, l) {
-      return Object.defineProperty(r, o, {
-        "value": a,
-        "enumerable": !l,
-        "configurable": !l,
-        "writable": !l
-      });
-    }
-    try {
-      c({}, "");
-    } catch (r) {
-      c = function c(r, o, a) {
-        return r[o] = a;
-      };
-    }
-    function h(o, a, l, u) {
-      var p = a && a.prototype instanceof Generator ? a : Generator, v = Object.create(p.prototype);
-      return c(v, "_invoke", function(o, a, l) {
-        var u = 1;
-        return function(p, v) {
-          if (3 === u) {
-            throw Error("Generator is already running");
-          }
-          if (4 === u) {
-            if ("throw" === p) {
-              throw v;
-            }
-            return {
-              "value": r,
-              "done": !0
-            };
-          }
-          for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
-              if (C) {
-                if (C === b) {
-                  continue;
-                }
-                return C;
-              }
-            }
-            if ("next" === l.method) {
-              l.sent = l._sent = l.arg;
-            } else if ("throw" === l.method) {
-              if (1 === u) {
-                throw u = 4, l.arg;
-              }
-              l.dispatchException(l.arg);
-            } else {
-              "return" === l.method && l.abrupt("return", l.arg);
-            }
-            u = 3;
-            var _ = s(o, a, l);
-            if ("normal" === _.type) {
-              if (u = l.done ? 4 : 2, _.arg === b) {
-                continue;
-              }
-              return {
-                "value": _.arg,
-                "done": l.done
-              };
-            }
-            "throw" === _.type && (u = 4, l.method = "throw", l.arg = _.arg);
-          }
-        };
-      }(o, l, new Context(u || [])), !0), v;
-    }
-    function s(r, o, a) {
-      try {
-        return {
-          "type": "normal",
-          "arg": r.call(o, a)
-        };
-      } catch (r) {
-        return {
-          "type": "throw",
-          "arg": r
-        };
-      }
-    }
-    o.wrap = h;
-    var b = {};
-    function Generator() {}
-    function GeneratorFunction() {}
-    function GeneratorFunctionPrototype() {}
-    var C = {};
-    c(C, p, (function() {
-      return this;
-    }));
-    var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
-    k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
-    function g(r) {
-      [ "next", "throw", "return" ].forEach((function(o) {
-        c(r, o, (function(r) {
-          return this._invoke(o, r);
-        }));
-      }));
-    }
-    function AsyncIterator(r, o) {
-      function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
-          return C && "object" == WebDavClient_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
-            e("next", r, p, v);
-          }), (function(r) {
-            e("throw", r, p, v);
-          })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
-          }), (function(r) {
-            return e("throw", r, p, v);
-          }));
-        }
-        v(y.arg);
-      }
-      var a;
-      c(this, "_invoke", (function(r, l) {
-        function i() {
-          return new o((function(o, a) {
-            e(r, l, o, a);
-          }));
-        }
-        return a = a ? a.then(i, i) : i();
-      }), !0);
-    }
-    function d(o, a) {
-      var l = a.method, u = o.i[l];
-      if (u === r) {
-        return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
-        a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
-      }
-      var p = s(u, o.i, a.arg);
-      if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
-      }
-      var v = p.arg;
-      return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
-    }
-    function w(r) {
-      this.tryEntries.push(r);
-    }
-    function m(o) {
-      var a = o[4] || {};
-      a.type = "normal", a.arg = r, o[4] = a;
-    }
-    function Context(r) {
-      this.tryEntries = [ [ -1 ] ], r.forEach(w, this), this.reset(!0);
-    }
-    function x(o) {
-      if (null != o) {
-        var a = o[p];
-        if (a) {
-          return a.call(o);
-        }
-        if ("function" == typeof o.next) {
-          return o;
-        }
-        if (!isNaN(o.length)) {
-          var u = -1, v = function e() {
-            for (;++u < o.length; ) {
-              if (l.call(o, u)) {
-                return e.value = o[u], e.done = !1, e;
-              }
-            }
-            return e.value = r, e.done = !0, e;
-          };
-          return v.next = v;
-        }
-      }
-      throw new TypeError(WebDavClient_typeof(o) + " is not iterable");
-    }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
-    o.isGeneratorFunction = function(r) {
-      var o = "function" == typeof r && r.constructor;
-      return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
-    }, o.mark = function(r) {
-      return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
-    }, o.awrap = function(r) {
-      return {
-        "__await": r
-      };
-    }, g(AsyncIterator.prototype), c(AsyncIterator.prototype, v, (function() {
-      return this;
-    })), o.AsyncIterator = AsyncIterator, o.async = function(r, a, l, u, p) {
-      void 0 === p && (p = Promise);
-      var v = new AsyncIterator(h(r, a, l, u), p);
-      return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
-        return r.done ? r.value : v.next();
-      }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
-      return this;
-    })), c(P, "toString", (function() {
-      return "[object Generator]";
-    })), o.keys = function(r) {
-      var o = Object(r), a = [];
-      for (var l in o) {
-        a.unshift(l);
-      }
-      return function t() {
-        for (;a.length; ) {
-          if ((l = a.pop()) in o) {
-            return t.value = l, t.done = !1, t;
-          }
-        }
-        return t.done = !0, t;
-      };
-    }, o.values = x, Context.prototype = {
-      "constructor": Context,
-      "reset": function reset(o) {
-        if (this.prev = this.next = 0, this.sent = this._sent = r, this.done = !1, this.delegate = null, 
-        this.method = "next", this.arg = r, this.tryEntries.forEach(m), !o) {
-          for (var a in this) {
-            "t" === a.charAt(0) && l.call(this, a) && !isNaN(+a.slice(1)) && (this[a] = r);
-          }
-        }
-      },
-      "stop": function stop() {
-        this.done = !0;
-        var r = this.tryEntries[0][4];
-        if ("throw" === r.type) {
-          throw r.arg;
-        }
-        return this.rval;
-      },
-      "dispatchException": function dispatchException(o) {
-        if (this.done) {
-          throw o;
-        }
-        var a = this;
-        function n(r) {
-          p.type = "throw", p.arg = o, a.next = r;
-        }
-        for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
-          if (-1 === u[0]) {
-            return n("end"), !1;
-          }
-          if (!y && !b) {
-            throw Error("try statement without catch or finally");
-          }
-          if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
-            if (v < b) {
-              return n(b), !1;
-            }
-          }
-        }
-      },
-      "abrupt": function abrupt(r, o) {
-        for (var a = this.tryEntries.length - 1; a >= 0; --a) {
-          var l = this.tryEntries[a];
-          if (l[0] > -1 && l[0] <= this.prev && this.prev < l[2]) {
-            var u = l;
-            break;
-          }
-        }
-        u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
-        var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
-      },
-      "complete": function complete(r, o) {
-        if ("throw" === r.type) {
-          throw r.arg;
-        }
-        return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
-        this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
-      },
-      "finish": function finish(r) {
-        for (var o = this.tryEntries.length - 1; o >= 0; --o) {
-          var a = this.tryEntries[o];
-          if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
-          }
-        }
-      },
-      "catch": function _catch(r) {
-        for (var o = this.tryEntries.length - 1; o >= 0; --o) {
-          var a = this.tryEntries[o];
-          if (a[0] === r) {
-            var l = a[4];
-            if ("throw" === l.type) {
-              var u = l.arg;
-              m(a);
-            }
-            return u;
-          }
-        }
-        throw Error("illegal catch attempt");
-      },
-      "delegateYield": function delegateYield(o, a, l) {
-        return this.delegate = {
-          "i": x(o),
-          "r": a,
-          "n": l
-        }, "next" === this.method && (this.arg = r), b;
-      }
-    }, o;
-  }
-  function WebDavClient_asyncGeneratorStep(r, o, a, l, u, p, v) {
-    try {
-      var y = r[p](v), b = y.value;
-    } catch (r) {
-      return void a(r);
-    }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
-  }
-  function WebDavClient_asyncToGenerator(r) {
-    return function() {
-      var o = this, a = arguments;
-      return new Promise((function(l, u) {
-        var p = r.apply(o, a);
-        function _next(r) {
-          WebDavClient_asyncGeneratorStep(p, l, u, _next, _throw, "next", r);
-        }
-        function _throw(r) {
-          WebDavClient_asyncGeneratorStep(p, l, u, _next, _throw, "throw", r);
-        }
-        _next(void 0);
-      }));
-    };
-  }
-  function WebDavClient_classCallCheck(r, o) {
-    if (!(r instanceof o)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-  function WebDavClient_defineProperties(r, o) {
-    for (var a = 0; a < o.length; a++) {
-      var l = o[a];
-      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
-      Object.defineProperty(r, WebDavClient_toPropertyKey(l.key), l);
-    }
-  }
-  function WebDavClient_createClass(r, o, a) {
-    return o && WebDavClient_defineProperties(r.prototype, o), a && WebDavClient_defineProperties(r, a), 
-    Object.defineProperty(r, "prototype", {
-      "writable": !1
-    }), r;
-  }
-  function WebDavClient_toPropertyKey(r) {
-    var o = WebDavClient_toPrimitive(r, "string");
-    return "symbol" == WebDavClient_typeof(o) ? o : o + "";
-  }
-  function WebDavClient_toPrimitive(r, o) {
-    if ("object" != WebDavClient_typeof(r) || !r) {
-      return r;
-    }
-    var a = r[Symbol.toPrimitive];
-    if (void 0 !== a) {
-      var l = a.call(r, o || "default");
-      if ("object" != WebDavClient_typeof(l)) {
-        return l;
-      }
-      throw new TypeError("@@toPrimitive must return a primitive value.");
-    }
-    return ("string" === o ? String : Number)(r);
-  }
-  var dt = function() {
-    function WebDavClient() {
-      WebDavClient_classCallCheck(this, WebDavClient);
-    }
-    return WebDavClient_createClass(WebDavClient, null, [ {
-      "key": "getAuthHeaders",
-      "value": function getAuthHeaders(r, o) {
-        if (!r && !o) {
-          return {};
-        }
-        try {
-          var a = btoa(unescape(encodeURIComponent("".concat(r || "", ":").concat(o || ""))));
-          return {
-            "Authorization": "Basic ".concat(a)
-          };
-        } catch (r) {
-          return {};
-        }
-      }
-    }, {
-      "key": "normalizeUrl",
-      "value": function normalizeUrl(r) {
-        var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : "";
-        if (!r) {
-          return "";
-        }
-        var a = r.trim();
-        if (!/^https?:\/\//i.test(a)) {
-          a = "https://" + a;
-        }
-        a = a.replace(/\/+$/, "");
-        var l = (o || "").trim();
-        if (l && !l.startsWith("/")) {
-          l = "/" + l;
-        }
-        return a + l;
-      }
-    }, {
-      "key": "request",
-      "value": function request(r) {
-        var o = r.method, a = o === void 0 ? "GET" : o, l = r.url, u = r.user, p = u === void 0 ? "" : u, v = r.pass, y = v === void 0 ? "" : v, b = r.headers, C = b === void 0 ? {} : b, _ = r.data, k = _ === void 0 ? null : _, P = r.timeout, S = P === void 0 ? 15e3 : P;
-        var E = this.getAuthHeaders(p, y);
-        var D = Object.assign({}, E, C);
-        return new Promise((function(r, o) {
-          if (typeof GM_xmlhttpRequest === "function") {
-            GM_xmlhttpRequest({
-              "method": a,
-              "url": l,
-              "headers": D,
-              "data": k,
-              "timeout": S,
-              "onload": function onload(o) {
-                r({
-                  "status": o.status,
-                  "statusText": o.statusText,
-                  "data": o.responseText,
-                  "response": o.response
-                });
-              },
-              "ontimeout": function ontimeout() {
-                o(new Error("WebDAV 请求超时 (".concat(S, "ms)")));
-              },
-              "onerror": function onerror(r) {
-                o(new Error(r.error || "网络请求错误 [".concat(r.status || 0, "]")));
-              }
-            });
-          } else {
-            var u = {
-              "method": a,
-              "headers": D,
-              "body": a !== "GET" && a !== "HEAD" && a !== "PROPFIND" ? k : void 0
-            };
-            var p = new AbortController;
-            var v = setTimeout((function() {
-              return p.abort();
-            }), S);
-            u.signal = p.signal;
-            fetch(l, u).then(function() {
-              var o = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee(o) {
-                var a;
-                return WebDavClient_regeneratorRuntime().wrap((function _callee$(l) {
-                  while (1) {
-                    switch (l.prev = l.next) {
-                     case 0:
-                      clearTimeout(v);
-                      l.next = 3;
-                      return o.text();
-
-                     case 3:
-                      a = l.sent;
-                      r({
-                        "status": o.status,
-                        "statusText": o.statusText,
-                        "data": a
-                      });
-
-                     case 5:
-                     case "end":
-                      return l.stop();
-                    }
-                  }
-                }), _callee);
-              })));
-              return function(r) {
-                return o.apply(this, arguments);
-              };
-            }())["catch"]((function(r) {
-              clearTimeout(v);
-              o(r);
-            }));
-          }
-        }));
-      }
-    }, {
-      "key": "testConnection",
-      "value": function() {
-        var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee2(r) {
-          var o, a, l, u, p, v, y;
-          return WebDavClient_regeneratorRuntime().wrap((function _callee2$(b) {
-            while (1) {
-              switch (b.prev = b.next) {
-               case 0:
-                o = r.url, a = r.user, l = r.pass, u = r.path, p = u === void 0 ? "/MissPlayer/" : u;
-                if (o) {
-                  b.next = 3;
-                  break;
-                }
-                throw new Error("WebDAV 服务器地址不能为空");
-
-               case 3:
-                v = this.normalizeUrl(o, "/");
-                b.prev = 4;
-                b.next = 7;
-                return this.request({
-                  "method": "PROPFIND",
-                  "url": v,
-                  "user": a,
-                  "pass": l,
-                  "headers": {
-                    "Depth": "0",
-                    "Content-Type": "application/xml; charset=utf-8"
-                  }
-                });
-
-               case 7:
-                y = b.sent;
-                if (!(y.status === 401 || y.status === 403)) {
-                  b.next = 10;
-                  break;
-                }
-                throw new Error("认证失败 (".concat(y.status, "): 请检查用户名与密码/Token"));
-
-               case 10:
-                if (!(y.status >= 500)) {
-                  b.next = 12;
-                  break;
-                }
-                throw new Error("服务器错误 (".concat(y.status, ")"));
-
-               case 12:
-                b.next = 14;
-                return this.ensureDirectory(r);
-
-               case 14:
-                return b.abrupt("return", {
-                  "success": true,
-                  "message": "WebDAV 连接与目录创建成功！"
-                });
-
-               case 17:
-                b.prev = 17;
-                b.t0 = b["catch"](4);
-                throw b.t0;
-
-               case 20:
-               case "end":
-                return b.stop();
-              }
-            }
-          }), _callee2, this, [ [ 4, 17 ] ]);
-        })));
-        function testConnection(o) {
-          return r.apply(this, arguments);
-        }
-        return testConnection;
-      }()
-    }, {
-      "key": "ensureDirectory",
-      "value": function() {
-        var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee3(r) {
-          var o, a, l, u, p, v, y, b, C, _, k, P, S, E;
-          return WebDavClient_regeneratorRuntime().wrap((function _callee3$(D) {
-            while (1) {
-              switch (D.prev = D.next) {
-               case 0:
-                o = r.url, a = r.user, l = r.pass, u = r.path, p = u === void 0 ? "/MissPlayer/" : u;
-                v = (p || "/MissPlayer/").trim();
-                if (!v.startsWith("/")) {
-                  v = "/" + v;
-                }
-                if (!v.endsWith("/")) {
-                  v += "/";
-                }
-                y = v.split("/").filter(Boolean);
-                b = "";
-                C = WebDavClient_createForOfIteratorHelper(y);
-                D.prev = 7;
-                C.s();
-
-               case 9:
-                if ((_ = C.n()).done) {
-                  D.next = 30;
-                  break;
-                }
-                k = _.value;
-                b += "/" + k + "/";
-                P = this.normalizeUrl(o, b);
-                D.prev = 13;
-                D.next = 16;
-                return this.request({
-                  "method": "PROPFIND",
-                  "url": P,
-                  "user": a,
-                  "pass": l,
-                  "headers": {
-                    "Depth": "0"
-                  }
-                });
-
-               case 16:
-                S = D.sent;
-                if (!(S.status === 207 || S.status >= 200 && S.status < 300)) {
-                  D.next = 19;
-                  break;
-                }
-                return D.abrupt("continue", 28);
-
-               case 19:
-                D.next = 21;
-                return this.request({
-                  "method": "MKCOL",
-                  "url": P,
-                  "user": a,
-                  "pass": l
-                });
-
-               case 21:
-                E = D.sent;
-                if (!(E.status === 201 || E.status === 405 || E.status >= 200 && E.status < 300)) {
-                  D.next = 24;
-                  break;
-                }
-                return D.abrupt("continue", 28);
-
-               case 24:
-                D.next = 28;
-                break;
-
-               case 26:
-                D.prev = 26;
-                D.t0 = D["catch"](13);
-
-               case 28:
-                D.next = 9;
-                break;
-
-               case 30:
-                D.next = 35;
-                break;
-
-               case 32:
-                D.prev = 32;
-                D.t1 = D["catch"](7);
-                C.e(D.t1);
-
-               case 35:
-                D.prev = 35;
-                C.f();
-                return D.finish(35);
-
-               case 38:
-               case "end":
-                return D.stop();
-              }
-            }
-          }), _callee3, this, [ [ 7, 32, 35, 38 ], [ 13, 26 ] ]);
-        })));
-        function ensureDirectory(o) {
-          return r.apply(this, arguments);
-        }
-        return ensureDirectory;
-      }()
-    }, {
-      "key": "downloadBackup",
-      "value": function() {
-        var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee4(r) {
-          var o, a, l, u, p, v, y, b, C, _ = arguments;
-          return WebDavClient_regeneratorRuntime().wrap((function _callee4$(k) {
-            while (1) {
-              switch (k.prev = k.next) {
-               case 0:
-                o = _.length > 1 && _[1] !== void 0 ? _[1] : "miss_player_sync.json";
-                a = r.url, l = r.user, u = r.pass, p = r.path, v = p === void 0 ? "/MissPlayer/" : p;
-                y = (v || "/MissPlayer/").trim();
-                if (!y.startsWith("/")) {
-                  y = "/" + y;
-                }
-                if (!y.endsWith("/")) {
-                  y += "/";
-                }
-                b = this.normalizeUrl(a, y + o);
-                k.prev = 6;
-                k.next = 9;
-                return this.request({
-                  "method": "GET",
-                  "url": b,
-                  "user": l,
-                  "pass": u,
-                  "headers": {
-                    "Cache-Control": "no-cache",
-                    "Pragma": "no-cache"
-                  }
-                });
-
-               case 9:
-                C = k.sent;
-                if (!(C.status === 404)) {
-                  k.next = 12;
-                  break;
-                }
-                return k.abrupt("return", null);
-
-               case 12:
-                if (!(C.status === 401 || C.status === 403)) {
-                  k.next = 14;
-                  break;
-                }
-                throw new Error("认证失败 (".concat(C.status, "): 请检查用户名与密码/Token"));
-
-               case 14:
-                if (!(C.status >= 200 && C.status < 300)) {
-                  k.next = 18;
-                  break;
-                }
-                if (!(!C.data || !C.data.trim())) {
-                  k.next = 17;
-                  break;
-                }
-                return k.abrupt("return", null);
-
-               case 17:
-                return k.abrupt("return", JSON.parse(C.data));
-
-               case 18:
-                throw new Error("下载失败，服务器返回状态码: ".concat(C.status));
-
-               case 21:
-                k.prev = 21;
-                k.t0 = k["catch"](6);
-                throw k.t0;
-
-               case 24:
-               case "end":
-                return k.stop();
-              }
-            }
-          }), _callee4, this, [ [ 6, 21 ] ]);
-        })));
-        function downloadBackup(o) {
-          return r.apply(this, arguments);
-        }
-        return downloadBackup;
-      }()
-    }, {
-      "key": "uploadBackup",
-      "value": function() {
-        var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee5(r, o) {
-          var a, l, u, p, v, y, b, C, _, k, P = arguments;
-          return WebDavClient_regeneratorRuntime().wrap((function _callee5$(S) {
-            while (1) {
-              switch (S.prev = S.next) {
-               case 0:
-                a = P.length > 2 && P[2] !== void 0 ? P[2] : "miss_player_sync.json";
-                l = r.url, u = r.user, p = r.pass, v = r.path, y = v === void 0 ? "/MissPlayer/" : v;
-                S.next = 4;
-                return this.ensureDirectory(r);
-
-               case 4:
-                b = (y || "/MissPlayer/").trim();
-                if (!b.startsWith("/")) {
-                  b = "/" + b;
-                }
-                if (!b.endsWith("/")) {
-                  b += "/";
-                }
-                C = this.normalizeUrl(l, b + a);
-                _ = JSON.stringify(o, null, 2);
-                S.prev = 9;
-                S.next = 12;
-                return this.request({
-                  "method": "PUT",
-                  "url": C,
-                  "user": u,
-                  "pass": p,
-                  "headers": {
-                    "Content-Type": "application/json; charset=utf-8"
-                  },
-                  "data": _
-                });
-
-               case 12:
-                k = S.sent;
-                if (!(k.status === 401 || k.status === 403)) {
-                  S.next = 15;
-                  break;
-                }
-                throw new Error("认证失败 (".concat(k.status, "): 权限不足或密码错误"));
-
-               case 15:
-                if (!(k.status === 200 || k.status === 201 || k.status === 204)) {
-                  S.next = 17;
-                  break;
-                }
-                return S.abrupt("return", {
-                  "success": true,
-                  "status": k.status
-                });
-
-               case 17:
-                throw new Error("上传失败，服务器返回状态码: ".concat(k.status));
-
-               case 20:
-                S.prev = 20;
-                S.t0 = S["catch"](9);
-                throw S.t0;
-
-               case 23:
-               case "end":
-                return S.stop();
-              }
-            }
-          }), _callee5, this, [ [ 9, 20 ] ]);
-        })));
-        function uploadBackup(o, a) {
-          return r.apply(this, arguments);
-        }
-        return uploadBackup;
-      }()
-    } ]);
-  }();
-  function SyncManager_regeneratorRuntime() {
-    "use strict";
-    SyncManager_regeneratorRuntime = function _regeneratorRuntime() {
-      return o;
-    };
-    var r, o = {}, a = Object.prototype, l = a.hasOwnProperty, u = "function" == typeof Symbol ? Symbol : {}, p = u.iterator || "@@iterator", v = u.asyncIterator || "@@asyncIterator", y = u.toStringTag || "@@toStringTag";
-    function c(r, o, a, l) {
-      return Object.defineProperty(r, o, {
-        "value": a,
-        "enumerable": !l,
-        "configurable": !l,
-        "writable": !l
-      });
-    }
-    try {
-      c({}, "");
-    } catch (r) {
-      c = function c(r, o, a) {
-        return r[o] = a;
-      };
-    }
-    function h(o, a, l, u) {
-      var p = a && a.prototype instanceof Generator ? a : Generator, v = Object.create(p.prototype);
-      return c(v, "_invoke", function(o, a, l) {
-        var u = 1;
-        return function(p, v) {
-          if (3 === u) {
-            throw Error("Generator is already running");
-          }
-          if (4 === u) {
-            if ("throw" === p) {
-              throw v;
-            }
-            return {
-              "value": r,
-              "done": !0
-            };
-          }
-          for (l.method = p, l.arg = v; ;) {
-            var y = l.delegate;
-            if (y) {
-              var C = d(y, l);
-              if (C) {
-                if (C === b) {
-                  continue;
-                }
-                return C;
-              }
-            }
-            if ("next" === l.method) {
-              l.sent = l._sent = l.arg;
-            } else if ("throw" === l.method) {
-              if (1 === u) {
-                throw u = 4, l.arg;
-              }
-              l.dispatchException(l.arg);
-            } else {
-              "return" === l.method && l.abrupt("return", l.arg);
-            }
-            u = 3;
-            var _ = s(o, a, l);
-            if ("normal" === _.type) {
-              if (u = l.done ? 4 : 2, _.arg === b) {
-                continue;
-              }
-              return {
-                "value": _.arg,
-                "done": l.done
-              };
-            }
-            "throw" === _.type && (u = 4, l.method = "throw", l.arg = _.arg);
-          }
-        };
-      }(o, l, new Context(u || [])), !0), v;
-    }
-    function s(r, o, a) {
-      try {
-        return {
-          "type": "normal",
-          "arg": r.call(o, a)
-        };
-      } catch (r) {
-        return {
-          "type": "throw",
-          "arg": r
-        };
-      }
-    }
-    o.wrap = h;
-    var b = {};
-    function Generator() {}
-    function GeneratorFunction() {}
-    function GeneratorFunctionPrototype() {}
-    var C = {};
-    c(C, p, (function() {
-      return this;
-    }));
-    var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
-    k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
-    function g(r) {
-      [ "next", "throw", "return" ].forEach((function(o) {
-        c(r, o, (function(r) {
-          return this._invoke(o, r);
-        }));
-      }));
-    }
-    function AsyncIterator(r, o) {
-      function e(a, u, p, v) {
-        var y = s(r[a], r, u);
-        if ("throw" !== y.type) {
-          var b = y.arg, C = b.value;
-          return C && "object" == SyncManager_typeof(C) && l.call(C, "__await") ? o.resolve(C.__await).then((function(r) {
-            e("next", r, p, v);
-          }), (function(r) {
-            e("throw", r, p, v);
-          })) : o.resolve(C).then((function(r) {
-            b.value = r, p(b);
-          }), (function(r) {
-            return e("throw", r, p, v);
-          }));
-        }
-        v(y.arg);
-      }
-      var a;
-      c(this, "_invoke", (function(r, l) {
-        function i() {
-          return new o((function(o, a) {
-            e(r, l, o, a);
-          }));
-        }
-        return a = a ? a.then(i, i) : i();
-      }), !0);
-    }
-    function d(o, a) {
-      var l = a.method, u = o.i[l];
-      if (u === r) {
-        return a.delegate = null, "throw" === l && o.i["return"] && (a.method = "return", 
-        a.arg = r, d(o, a), "throw" === a.method) || "return" !== l && (a.method = "throw", 
-        a.arg = new TypeError("The iterator does not provide a '" + l + "' method")), b;
-      }
-      var p = s(u, o.i, a.arg);
-      if ("throw" === p.type) {
-        return a.method = "throw", a.arg = p.arg, a.delegate = null, b;
-      }
-      var v = p.arg;
-      return v ? v.done ? (a[o.r] = v.value, a.next = o.n, "return" !== a.method && (a.method = "next", 
-      a.arg = r), a.delegate = null, b) : v : (a.method = "throw", a.arg = new TypeError("iterator result is not an object"), 
-      a.delegate = null, b);
-    }
-    function w(r) {
-      this.tryEntries.push(r);
-    }
-    function m(o) {
-      var a = o[4] || {};
-      a.type = "normal", a.arg = r, o[4] = a;
-    }
-    function Context(r) {
-      this.tryEntries = [ [ -1 ] ], r.forEach(w, this), this.reset(!0);
-    }
-    function x(o) {
-      if (null != o) {
-        var a = o[p];
-        if (a) {
-          return a.call(o);
-        }
-        if ("function" == typeof o.next) {
-          return o;
-        }
-        if (!isNaN(o.length)) {
-          var u = -1, v = function e() {
-            for (;++u < o.length; ) {
-              if (l.call(o, u)) {
-                return e.value = o[u], e.done = !1, e;
-              }
-            }
-            return e.value = r, e.done = !0, e;
-          };
-          return v.next = v;
-        }
-      }
-      throw new TypeError(SyncManager_typeof(o) + " is not iterable");
-    }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
-    c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
-    o.isGeneratorFunction = function(r) {
-      var o = "function" == typeof r && r.constructor;
-      return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
-    }, o.mark = function(r) {
-      return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
-    }, o.awrap = function(r) {
-      return {
-        "__await": r
-      };
-    }, g(AsyncIterator.prototype), c(AsyncIterator.prototype, v, (function() {
-      return this;
-    })), o.AsyncIterator = AsyncIterator, o.async = function(r, a, l, u, p) {
-      void 0 === p && (p = Promise);
-      var v = new AsyncIterator(h(r, a, l, u), p);
-      return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
-        return r.done ? r.value : v.next();
-      }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
-      return this;
-    })), c(P, "toString", (function() {
-      return "[object Generator]";
-    })), o.keys = function(r) {
-      var o = Object(r), a = [];
-      for (var l in o) {
-        a.unshift(l);
-      }
-      return function t() {
-        for (;a.length; ) {
-          if ((l = a.pop()) in o) {
-            return t.value = l, t.done = !1, t;
-          }
-        }
-        return t.done = !0, t;
-      };
-    }, o.values = x, Context.prototype = {
-      "constructor": Context,
-      "reset": function reset(o) {
-        if (this.prev = this.next = 0, this.sent = this._sent = r, this.done = !1, this.delegate = null, 
-        this.method = "next", this.arg = r, this.tryEntries.forEach(m), !o) {
-          for (var a in this) {
-            "t" === a.charAt(0) && l.call(this, a) && !isNaN(+a.slice(1)) && (this[a] = r);
-          }
-        }
-      },
-      "stop": function stop() {
-        this.done = !0;
-        var r = this.tryEntries[0][4];
-        if ("throw" === r.type) {
-          throw r.arg;
-        }
-        return this.rval;
-      },
-      "dispatchException": function dispatchException(o) {
-        if (this.done) {
-          throw o;
-        }
-        var a = this;
-        function n(r) {
-          p.type = "throw", p.arg = o, a.next = r;
-        }
-        for (var l = a.tryEntries.length - 1; l >= 0; --l) {
-          var u = this.tryEntries[l], p = u[4], v = this.prev, y = u[1], b = u[2];
-          if (-1 === u[0]) {
-            return n("end"), !1;
-          }
-          if (!y && !b) {
-            throw Error("try statement without catch or finally");
-          }
-          if (null != u[0] && u[0] <= v) {
-            if (v < y) {
-              return this.method = "next", this.arg = r, n(y), !0;
-            }
-            if (v < b) {
-              return n(b), !1;
-            }
-          }
-        }
-      },
-      "abrupt": function abrupt(r, o) {
-        for (var a = this.tryEntries.length - 1; a >= 0; --a) {
-          var l = this.tryEntries[a];
-          if (l[0] > -1 && l[0] <= this.prev && this.prev < l[2]) {
-            var u = l;
-            break;
-          }
-        }
-        u && ("break" === r || "continue" === r) && u[0] <= o && o <= u[2] && (u = null);
-        var p = u ? u[4] : {};
-        return p.type = r, p.arg = o, u ? (this.method = "next", this.next = u[2], b) : this.complete(p);
-      },
-      "complete": function complete(r, o) {
-        if ("throw" === r.type) {
-          throw r.arg;
-        }
-        return "break" === r.type || "continue" === r.type ? this.next = r.arg : "return" === r.type ? (this.rval = this.arg = r.arg, 
-        this.method = "return", this.next = "end") : "normal" === r.type && o && (this.next = o), 
-        b;
-      },
-      "finish": function finish(r) {
-        for (var o = this.tryEntries.length - 1; o >= 0; --o) {
-          var a = this.tryEntries[o];
-          if (a[2] === r) {
-            return this.complete(a[4], a[3]), m(a), b;
-          }
-        }
-      },
-      "catch": function _catch(r) {
-        for (var o = this.tryEntries.length - 1; o >= 0; --o) {
-          var a = this.tryEntries[o];
-          if (a[0] === r) {
-            var l = a[4];
-            if ("throw" === l.type) {
-              var u = l.arg;
-              m(a);
-            }
-            return u;
-          }
-        }
-        throw Error("illegal catch attempt");
-      },
-      "delegateYield": function delegateYield(o, a, l) {
-        return this.delegate = {
-          "i": x(o),
-          "r": a,
-          "n": l
-        }, "next" === this.method && (this.arg = r), b;
-      }
-    }, o;
-  }
-  function SyncManager_asyncGeneratorStep(r, o, a, l, u, p, v) {
-    try {
-      var y = r[p](v), b = y.value;
-    } catch (r) {
-      return void a(r);
-    }
-    y.done ? o(b) : Promise.resolve(b).then(l, u);
-  }
-  function SyncManager_asyncToGenerator(r) {
-    return function() {
-      var o = this, a = arguments;
-      return new Promise((function(l, u) {
-        var p = r.apply(o, a);
-        function _next(r) {
-          SyncManager_asyncGeneratorStep(p, l, u, _next, _throw, "next", r);
-        }
-        function _throw(r) {
-          SyncManager_asyncGeneratorStep(p, l, u, _next, _throw, "throw", r);
-        }
-        _next(void 0);
-      }));
-    };
-  }
-  function SyncManager_slicedToArray(r, o) {
-    return SyncManager_arrayWithHoles(r) || SyncManager_iterableToArrayLimit(r, o) || SyncManager_unsupportedIterableToArray(r, o) || SyncManager_nonIterableRest();
-  }
-  function SyncManager_nonIterableRest() {
-    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-  }
-  function SyncManager_iterableToArrayLimit(r, o) {
-    var a = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
-    if (null != a) {
-      var l, u, p, v, y = [], b = !0, C = !1;
-      try {
-        if (p = (a = a.call(r)).next, 0 === o) {
-          if (Object(a) !== a) {
-            return;
-          }
-          b = !1;
-        } else {
-          for (;!(b = (l = p.call(a)).done) && (y.push(l.value), y.length !== o); b = !0) {}
-        }
-      } catch (r) {
-        C = !0, u = r;
-      } finally {
-        try {
-          if (!b && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
-            return;
-          }
-        } finally {
-          if (C) {
-            throw u;
-          }
-        }
-      }
-      return y;
-    }
-  }
-  function SyncManager_arrayWithHoles(r) {
-    if (Array.isArray(r)) {
-      return r;
-    }
-  }
-  function SyncManager_toConsumableArray(r) {
-    return SyncManager_arrayWithoutHoles(r) || SyncManager_iterableToArray(r) || SyncManager_unsupportedIterableToArray(r) || SyncManager_nonIterableSpread();
-  }
-  function SyncManager_nonIterableSpread() {
-    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-  }
-  function SyncManager_iterableToArray(r) {
-    if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) {
-      return Array.from(r);
-    }
-  }
-  function SyncManager_arrayWithoutHoles(r) {
-    if (Array.isArray(r)) {
-      return SyncManager_arrayLikeToArray(r);
-    }
-  }
-  function SyncManager_defineProperty(r, o, a) {
-    return (o = SyncManager_toPropertyKey(o)) in r ? Object.defineProperty(r, o, {
-      "value": a,
-      "enumerable": !0,
-      "configurable": !0,
-      "writable": !0
-    }) : r[o] = a, r;
-  }
-  function SyncManager_createForOfIteratorHelper(r, o) {
-    var a = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
-    if (!a) {
-      if (Array.isArray(r) || (a = SyncManager_unsupportedIterableToArray(r)) || o && r && "number" == typeof r.length) {
-        a && (r = a);
-        var l = 0, u = function F() {};
-        return {
-          "s": u,
-          "n": function n() {
-            return l >= r.length ? {
-              "done": !0
-            } : {
-              "done": !1,
-              "value": r[l++]
-            };
-          },
-          "e": function e(r) {
-            throw r;
-          },
-          "f": u
-        };
-      }
-      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    }
-    var p, v = !0, y = !1;
-    return {
-      "s": function s() {
-        a = a.call(r);
-      },
-      "n": function n() {
-        var r = a.next();
-        return v = r.done, r;
-      },
-      "e": function e(r) {
-        y = !0, p = r;
-      },
-      "f": function f() {
-        try {
-          v || null == a["return"] || a["return"]();
-        } finally {
-          if (y) {
-            throw p;
-          }
-        }
-      }
-    };
-  }
-  function SyncManager_unsupportedIterableToArray(r, o) {
-    if (r) {
-      if ("string" == typeof r) {
-        return SyncManager_arrayLikeToArray(r, o);
-      }
-      var a = {}.toString.call(r).slice(8, -1);
-      return "Object" === a && r.constructor && (a = r.constructor.name), "Map" === a || "Set" === a ? Array.from(r) : "Arguments" === a || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(a) ? SyncManager_arrayLikeToArray(r, o) : void 0;
-    }
-  }
-  function SyncManager_arrayLikeToArray(r, o) {
-    (null == o || o > r.length) && (o = r.length);
-    for (var a = 0, l = Array(o); a < o; a++) {
-      l[a] = r[a];
-    }
-    return l;
-  }
-  function SyncManager_typeof(r) {
-    "@babel/helpers - typeof";
-    return SyncManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
-      return typeof r;
-    } : function(r) {
-      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
-    }, SyncManager_typeof(r);
-  }
-  function SyncManager_classCallCheck(r, o) {
-    if (!(r instanceof o)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-  function SyncManager_defineProperties(r, o) {
-    for (var a = 0; a < o.length; a++) {
-      var l = o[a];
-      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
-      Object.defineProperty(r, SyncManager_toPropertyKey(l.key), l);
-    }
-  }
-  function SyncManager_createClass(r, o, a) {
-    return o && SyncManager_defineProperties(r.prototype, o), a && SyncManager_defineProperties(r, a), 
-    Object.defineProperty(r, "prototype", {
-      "writable": !1
-    }), r;
-  }
-  function SyncManager_toPropertyKey(r) {
-    var o = SyncManager_toPrimitive(r, "string");
-    return "symbol" == SyncManager_typeof(o) ? o : o + "";
-  }
-  function SyncManager_toPrimitive(r, o) {
-    if ("object" != SyncManager_typeof(r) || !r) {
-      return r;
-    }
-    var a = r[Symbol.toPrimitive];
-    if (void 0 !== a) {
-      var l = a.call(r, o || "default");
-      if ("object" != SyncManager_typeof(l)) {
-        return l;
-      }
-      throw new TypeError("@@toPrimitive must return a primitive value.");
-    }
-    return ("string" === o ? String : Number)(r);
-  }
-  var ht = "mp_client_id";
-  var pt = "mp_webdav_config";
-  var mt = "mp_webdav_last_sync_time";
-  var ft = 1;
-  function SyncManager_getOrCreateClientId() {
-    var r = getValue(ht, "");
-    if (r) {
-      return r;
-    }
-    var o = Math.random().toString(36).substring(2, 10);
-    var a = Date.now().toString(36).substring(4);
-    var l = "mp_".concat(o).concat(a);
-    setValue(ht, l);
-    return l;
-  }
-  function getDeviceName() {
-    var r = navigator.userAgent;
-    var o = "Unknown OS";
-    if (/iPad|iPhone|iPod/.test(r)) {
-      o = /iPad/.test(r) ? "iPad" : "iPhone";
-    } else if (/Macintosh|Mac OS X/.test(r)) {
-      o = "macOS";
-    } else if (/Windows NT/.test(r)) {
-      o = "Windows";
-    } else if (/Android/.test(r)) {
-      o = "Android";
-    } else if (/Linux/.test(r)) {
-      o = "Linux";
-    }
-    var a = "Browser";
-    if (/ScriptCat/i.test(r)) {
-      a = "ScriptCat";
-    } else if (/Edg/i.test(r)) {
-      a = "Edge";
-    } else if (/Chrome/i.test(r) && !/Edg/i.test(r)) {
-      a = "Chrome";
-    } else if (/Safari/i.test(r) && !/Chrome/i.test(r)) {
-      a = "Safari";
-    } else if (/Firefox/i.test(r)) {
-      a = "Firefox";
-    }
-    return "".concat(o, " (").concat(a, ")");
-  }
-  function getDeviceType() {
-    var r = navigator.userAgent;
-    if (/iPad/i.test(r) || navigator.maxTouchPoints > 1 && /Macintosh/.test(r)) {
-      return "tablet";
-    }
-    if (/Mobile|iPhone|Android/i.test(r)) {
-      return "mobile";
-    }
-    return "desktop";
-  }
-  var vt = function() {
-    function SyncManager() {
-      SyncManager_classCallCheck(this, SyncManager);
-    }
-    return SyncManager_createClass(SyncManager, null, [ {
-      "key": "getWebDavConfig",
-      "value": function getWebDavConfig() {
-        var r = {
-          "url": "",
-          "user": "",
-          "pass": "",
-          "path": "/MissPlayer/",
-          "autoSync": false
-        };
-        var o = getValue(pt, null);
-        return Object.assign({}, r, o && SyncManager_typeof(o) === "object" ? o : {});
-      }
-    }, {
-      "key": "saveWebDavConfig",
-      "value": function saveWebDavConfig(r) {
-        setValue(pt, r);
-      }
-    }, {
-      "key": "getLastSyncTime",
-      "value": function getLastSyncTime() {
-        return getValue(mt, 0);
-      }
-    }, {
-      "key": "setLastSyncTime",
-      "value": function setLastSyncTime() {
-        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : Date.now();
-        setValue(mt, r);
-      }
-    }, {
-      "key": "gatherLocalData",
-      "value": function gatherLocalData() {
-        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : null;
-        var o = SyncManager_getOrCreateClientId();
-        var a = Date.now();
-        var l = (r === null || r === void 0 ? void 0 : r.settings) || {
-          "showProgressBar": getValue("showProgressBar", true),
-          "showSeekControlRow": getValue("showSeekControlRow", true),
-          "showLoopControlRow": getValue("showLoopControlRow", true),
-          "showPlaybackControlRow": getValue("showPlaybackControlRow", true),
-          "enabledSeekSteps": getValue("enabledSeekSteps", [ "5s", "10s", "30s", "1m", "5m", "10m" ]),
-          "customUserSeekSteps": getValue("customUserSeekSteps", []),
-          "showCommentsSection": getValue("showCommentsSection", true),
-          "enabledCommentSources": getValue("enabledCommentSources", {
-            "jable": true,
-            "javdb": true,
-            "javlibrary": false
-          }),
-          "sidebarPosition": getValue("sidebarPosition", "right"),
-          "sidebarHidden": getValue("sidebarHidden", false),
-          "preferredPlaybackRate": parseFloat(getValue("preferredPlaybackRate", 1)) || 1,
-          "pauseOnBlur": getValue("pauseOnBlur", true),
-          "telemetryEnabled": getValue("telemetryEnabled", true),
-          "debugMode": getValue("debugMode", false)
-        };
-        var u = {};
-        try {
-          if (typeof GM_listValues === "function") {
-            var p = GM_listValues();
-            var v = SyncManager_createForOfIteratorHelper(p), y;
-            try {
-              for (v.s(); !(y = v.n()).done; ) {
-                var b = y.value;
-                if (b && b.startsWith("tabs_")) {
-                  var C = getValue(b, []);
-                  if (Array.isArray(C) && C.length > 0) {
-                    u[b] = C;
-                  }
-                }
-              }
-            } catch (r) {
-              v.e(r);
-            } finally {
-              v.f();
-            }
-          } else {
-            for (var _ = 0; _ < localStorage.length; _++) {
-              var k = localStorage.key(_);
-              if (k) {
-                var P = k;
-                if (k.startsWith("mp_")) {
-                  P = k.replace(/^mp_/, "");
-                }
-                if (P.startsWith("tabs_")) {
-                  var S = getValue(P, []);
-                  if (Array.isArray(S) && S.length > 0) {
-                    u[P] = S;
-                  }
-                }
-              }
-            }
-          }
-        } catch (r) {}
-        var E = getDeviceType();
-        var D = SyncManager_defineProperty({}, E, {
-          "sidebarPosition": getValue("sidebarPosition", "right"),
-          "sidebarHidden": getValue("sidebarHidden", false)
-        });
-        return {
-          "schemaVersion": ft,
-          "scriptVersion": "5.6.1",
-          "lastModified": a,
-          "lastModifiedBy": o,
-          "devices": SyncManager_defineProperty({}, o, {
-            "deviceName": getDeviceName(),
-            "deviceType": E,
-            "lastSyncTime": a,
-            "scriptVersion": "5.6.1"
-          }),
-          "deviceLayouts": D,
-          "settings": l,
-          "markers": u
-        };
-      }
-    }, {
-      "key": "migrateBackupSchema",
-      "value": function migrateBackupSchema(r) {
-        if (!r || SyncManager_typeof(r) !== "object") {
-          return null;
-        }
-        var o = Object.assign({}, r);
-        if (!o.schemaVersion || o.schemaVersion < 1) {
-          o.schemaVersion = 1;
-          if (!o.devices) {
-            o.devices = {};
-          }
-          if (!o.settings) {
-            o.settings = {};
-          }
-          if (!o.markers) {
-            o.markers = {};
-          }
-          if (!o.lastModified) {
-            o.lastModified = Date.now();
-          }
-        }
-        return o;
-      }
-    }, {
-      "key": "mergeData",
-      "value": function mergeData(r, o, a) {
-        if (!o) {
-          return r;
-        }
-        if (!r) {
-          return o;
-        }
-        var l = this.migrateBackupSchema(o);
-        var u = Date.now();
-        var p = Object.assign({}, l.devices || {}, r.devices || {});
-        p[a] = {
-          "deviceName": getDeviceName(),
-          "lastSyncTime": u,
-          "scriptVersion": "5.6.1"
-        };
-        var v = r.settings || {};
-        var y = l.settings || {};
-        var b = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(v.enabledSeekSteps) ? v.enabledSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(y.enabledSeekSteps) ? y.enabledSeekSteps : []))));
-        var C = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(v.customUserSeekSteps) ? v.customUserSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(y.customUserSeekSteps) ? y.customUserSeekSteps : []))));
-        var _ = Object.assign({
-          "jable": true,
-          "javdb": true,
-          "javlibrary": false
-        }, y.enabledCommentSources || {}, v.enabledCommentSources || {});
-        var k = (l.lastModified || 0) > (r.lastModified || 0);
-        var P = k ? y : v;
-        var S = k ? v : y;
-        var E = {
-          "showProgressBar": P.showProgressBar !== void 0 ? P.showProgressBar : S.showProgressBar,
-          "showSeekControlRow": P.showSeekControlRow !== void 0 ? P.showSeekControlRow : S.showSeekControlRow,
-          "showLoopControlRow": P.showLoopControlRow !== void 0 ? P.showLoopControlRow : S.showLoopControlRow,
-          "showPlaybackControlRow": P.showPlaybackControlRow !== void 0 ? P.showPlaybackControlRow : S.showPlaybackControlRow,
-          "enabledSeekSteps": b.length > 0 ? b : [ "5s", "10s", "30s", "1m", "5m", "10m" ],
-          "customUserSeekSteps": C,
-          "showCommentsSection": P.showCommentsSection !== void 0 ? P.showCommentsSection : S.showCommentsSection,
-          "enabledCommentSources": _,
-          "sidebarPosition": P.sidebarPosition || S.sidebarPosition || "right",
-          "sidebarHidden": P.sidebarHidden !== void 0 ? P.sidebarHidden : S.sidebarHidden,
-          "preferredPlaybackRate": P.preferredPlaybackRate || S.preferredPlaybackRate || 1,
-          "pauseOnBlur": P.pauseOnBlur !== void 0 ? P.pauseOnBlur : S.pauseOnBlur,
-          "telemetryEnabled": P.telemetryEnabled !== void 0 ? P.telemetryEnabled : S.telemetryEnabled,
-          "debugMode": P.debugMode !== void 0 ? P.debugMode : S.debugMode
-        };
-        var D = r.markers || {};
-        var L = l.markers || {};
-        var M = Array.from(new Set([].concat(SyncManager_toConsumableArray(Object.keys(D)), SyncManager_toConsumableArray(Object.keys(L)))));
-        var T = {};
-        for (var A = 0, j = M; A < j.length; A++) {
-          var B = j[A];
-          var I = Array.isArray(D[B]) ? D[B] : [];
-          var O = Array.isArray(L[B]) ? L[B] : [];
-          if (I.length === 0) {
-            T[B] = O;
-            continue;
-          }
-          if (O.length === 0) {
-            T[B] = I;
-            continue;
-          }
-          var V = new Map;
-          var G = SyncManager_createForOfIteratorHelper(O), R;
-          try {
-            for (G.s(); !(R = G.n()).done; ) {
-              var H = R.value;
-              var J = H.id || "".concat(Math.round((H.tabTime || 0) * 10) / 10, "_").concat(Math.round((H.tabEnd || 0) * 10) / 10);
-              V.set(J, H);
-            }
-          } catch (r) {
-            G.e(r);
-          } finally {
-            G.f();
-          }
-          var N = SyncManager_createForOfIteratorHelper(I), z;
-          try {
-            for (N.s(); !(z = N.n()).done; ) {
-              var W = z.value;
-              var U = W.id || "".concat(Math.round((W.tabTime || 0) * 10) / 10, "_").concat(Math.round((W.tabEnd || 0) * 10) / 10);
-              if (!V.has(U)) {
-                V.set(U, W);
-              } else {
-                var q = V.get(U);
-                var K = W.updatedAt || 0;
-                var Y = q.updatedAt || 0;
-                if (K >= Y || !q.tabComment && W.tabComment) {
-                  V.set(U, Object.assign({}, q, W));
-                }
-              }
-            }
-          } catch (r) {
-            N.e(r);
-          } finally {
-            N.f();
-          }
-          T[B] = Array.from(V.values());
-        }
-        var X = Object.assign({}, l.deviceLayouts || {}, r.deviceLayouts || {});
-        return {
-          "schemaVersion": ft,
-          "scriptVersion": "5.6.1",
-          "lastModified": u,
-          "lastModifiedBy": a,
-          "devices": p,
-          "deviceLayouts": X,
-          "settings": E,
-          "markers": T
-        };
-      }
-    }, {
-      "key": "applyDataToLocal",
-      "value": function applyDataToLocal(r) {
-        var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : null;
-        if (!r || !r.settings) {
-          return;
-        }
-        var a = r.settings, l = r.markers, u = r.deviceLayouts;
-        for (var p = 0, v = Object.entries(a); p < v.length; p++) {
-          var y = SyncManager_slicedToArray(v[p], 2), b = y[0], C = y[1];
-          setValue(b, C);
-        }
-        var _ = getDeviceType();
-        if (u && u[_]) {
-          var k = u[_];
-          if (k.sidebarPosition !== void 0) {
-            setValue("sidebarPosition", k.sidebarPosition);
-          }
-          if (k.sidebarHidden !== void 0) {
-            setValue("sidebarHidden", k.sidebarHidden);
-          }
-        }
-        if (l && SyncManager_typeof(l) === "object") {
-          for (var P = 0, S = Object.entries(l); P < S.length; P++) {
-            var E = SyncManager_slicedToArray(S[P], 2), D = E[0], L = E[1];
-            if (D.startsWith("tabs_") && Array.isArray(L)) {
-              setValue(D, L);
-            }
-          }
-        }
-        if (o) {
-          o.loadSettings();
-        }
-      }
-    }, {
-      "key": "executeSync",
-      "value": function() {
-        var r = SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee(r) {
-          var o, a, l, u, p, v, y, b, C, _, k, P;
-          return SyncManager_regeneratorRuntime().wrap((function _callee$(S) {
-            while (1) {
-              switch (S.prev = S.next) {
-               case 0:
-                o = r.mode, a = o === void 0 ? "merge" : o, l = r.config, u = l === void 0 ? this.getWebDavConfig() : l, 
-                p = r.playerState, v = p === void 0 ? null : p;
-                if (u.url) {
-                  S.next = 3;
-                  break;
-                }
-                throw new Error("未配置 WebDAV 服务器地址");
-
-               case 3:
-                y = SyncManager_getOrCreateClientId();
-                b = this.gatherLocalData(v);
-                if (!(a === "upload")) {
-                  S.next = 10;
-                  break;
-                }
-                S.next = 8;
-                return dt.uploadBackup(u, b);
-
-               case 8:
-                this.setLastSyncTime(b.lastModified);
-                return S.abrupt("return", {
-                  "success": true,
-                  "message": "本地配置已成功向上覆盖至云端！",
-                  "data": b
-                });
-
-               case 10:
-                if (!(a === "download")) {
-                  S.next = 20;
-                  break;
-                }
-                S.next = 13;
-                return dt.downloadBackup(u);
-
-               case 13:
-                C = S.sent;
-                if (C) {
-                  S.next = 16;
-                  break;
-                }
-                throw new Error("云端备份文件不存在，无法向下覆盖");
-
-               case 16:
-                _ = this.migrateBackupSchema(C);
-                this.applyDataToLocal(_, v);
-                this.setLastSyncTime(Date.now());
-                return S.abrupt("return", {
-                  "success": true,
-                  "message": "已成功从云端拉取配置并覆盖本地！",
-                  "data": _
-                });
-
-               case 20:
-                S.next = 22;
-                return dt.downloadBackup(u);
-
-               case 22:
-                k = S.sent;
-                P = this.mergeData(b, k, y);
-                S.next = 26;
-                return dt.uploadBackup(u, P);
-
-               case 26:
-                this.applyDataToLocal(P, v);
-                this.setLastSyncTime(P.lastModified);
-                return S.abrupt("return", {
-                  "success": true,
-                  "message": "云端多端配置智能合并同步完成！",
-                  "data": P
-                });
-
-               case 29:
-               case "end":
-                return S.stop();
-              }
-            }
-          }), _callee, this);
-        })));
-        function executeSync(o) {
-          return r.apply(this, arguments);
-        }
-        return executeSync;
-      }()
     } ]);
   }();
   function SettingsManager_typeof(r) {
@@ -24007,9 +24206,9 @@
         S.appendChild(L);
         S.appendChild(D);
         o.appendChild(S);
-        var M = vt.getWebDavConfig();
+        var M = ht.getWebDavConfig();
         var T = Boolean(M.url);
-        var A = vt.getLastSyncTime();
+        var A = ht.getLastSyncTime();
         var j = T ? A > 0 ? " (已配置)" : " (未同步)" : " (点击展开)";
         var B = document.createElement("div");
         B.className = "tm-settings-section";
@@ -24068,7 +24267,7 @@
         var r = this;
         var o = document.createElement("div");
         o.className = "tm-settings-webdav-card";
-        var a = vt.getWebDavConfig();
+        var a = ht.getWebDavConfig();
         var l = SyncManager_getOrCreateClientId();
         var u = getDeviceName();
         var p = document.createElement("div");
@@ -24083,7 +24282,7 @@
         y.value = a.url || "";
         y.addEventListener("change", (function() {
           a.url = y.value.trim();
-          vt.saveWebDavConfig(a);
+          ht.saveWebDavConfig(a);
         }));
         p.appendChild(v);
         p.appendChild(y);
@@ -24099,7 +24298,7 @@
         _.value = a.user || "";
         _.addEventListener("change", (function() {
           a.user = _.value.trim();
-          vt.saveWebDavConfig(a);
+          ht.saveWebDavConfig(a);
         }));
         b.appendChild(C);
         b.appendChild(_);
@@ -24117,7 +24316,7 @@
         E.value = a.pass || "";
         E.addEventListener("change", (function() {
           a.pass = E.value;
-          vt.saveWebDavConfig(a);
+          ht.saveWebDavConfig(a);
         }));
         var D = document.createElement("button");
         D.className = "tm-webdav-eye-btn";
@@ -24149,67 +24348,91 @@
         T.value = a.path || "/MissPlayer/";
         T.addEventListener("change", (function() {
           a.path = T.value.trim() || "/MissPlayer/";
-          vt.saveWebDavConfig(a);
+          ht.saveWebDavConfig(a);
         }));
         L.appendChild(M);
         L.appendChild(T);
         var A = document.createElement("div");
-        A.className = "tm-webdav-device-badge";
-        A.innerHTML = "".concat(Je, " <span>").concat(__("webdavCurrentDevice") || "当前设备", ": ").concat(u, " (").concat(l.slice(-6), ")</span>");
-        var j = document.createElement("div");
-        j.className = "tm-webdav-actions-grid";
-        var B = document.createElement("button");
-        B.className = "tm-webdav-btn tm-webdav-btn-primary";
-        B.innerHTML = "".concat(Ie, " <span>").concat(__("webdavSyncMerge") || "智能合并同步", "</span>");
-        var I = document.createElement("button");
-        I.className = "tm-webdav-btn tm-webdav-btn-secondary";
-        I.innerHTML = "".concat(He, " <span>").concat(__("webdavTestConnection") || "测试连接", "</span>");
-        var O = document.createElement("button");
-        O.className = "tm-webdav-btn tm-webdav-btn-secondary";
-        O.innerHTML = "".concat(Oe, " <span>").concat(__("webdavUploadOverwrite") || "向上覆盖", "</span>");
-        var V = document.createElement("button");
-        V.className = "tm-webdav-btn tm-webdav-btn-secondary";
-        V.innerHTML = "".concat(Ve, " <span>").concat(__("webdavDownloadOverwrite") || "向下覆盖", "</span>");
-        j.appendChild(B);
-        j.appendChild(I);
-        j.appendChild(O);
-        j.appendChild(V);
+        A.className = "tm-webdav-form-row tm-webdav-switch-row";
+        var j = document.createElement("label");
+        j.className = "tm-webdav-label";
+        j.textContent = __("webdavAutoSync") || "自动智能合并同步";
+        var B = document.createElement("label");
+        B.className = "tm-switch";
+        var I = document.createElement("input");
+        I.type = "checkbox";
+        I.checked = a.autoSync !== false;
+        I.addEventListener("change", (function() {
+          a.autoSync = I.checked;
+          ht.saveWebDavConfig(a);
+          if (a.autoSync && a.url) {
+            var o;
+            ht.triggerAutoSync((o = r.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "startup");
+          }
+        }));
+        var O = document.createElement("span");
+        O.className = "tm-slider round";
+        B.appendChild(I);
+        B.appendChild(O);
+        A.appendChild(j);
+        A.appendChild(B);
+        var V = document.createElement("div");
+        V.className = "tm-webdav-device-badge";
+        V.innerHTML = "".concat(Je, " <span>").concat(__("webdavCurrentDevice") || "当前设备", ": ").concat(u, " (").concat(l.slice(-6), ")</span>");
         var G = document.createElement("div");
-        G.className = "tm-webdav-status-bar";
-        var R = vt.getLastSyncTime();
-        var H = R > 0 ? new Date(R).toLocaleString() : __("webdavNeverSynced") || "尚未同步";
-        var J = document.createElement("span");
-        J.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat(H);
-        var N = document.createElement("span");
-        N.className = "tm-webdav-status-badge";
-        N.style.display = "none";
+        G.className = "tm-webdav-actions-grid";
+        var R = document.createElement("button");
+        R.className = "tm-webdav-btn tm-webdav-btn-primary";
+        R.innerHTML = "".concat(Ie, " <span>").concat(__("webdavSyncMerge") || "智能合并同步", "</span>");
+        var H = document.createElement("button");
+        H.className = "tm-webdav-btn tm-webdav-btn-secondary";
+        H.innerHTML = "".concat(He, " <span>").concat(__("webdavTestConnection") || "测试连接", "</span>");
+        var J = document.createElement("button");
+        J.className = "tm-webdav-btn tm-webdav-btn-secondary";
+        J.innerHTML = "".concat(Oe, " <span>").concat(__("webdavUploadOverwrite") || "向上覆盖", "</span>");
+        var N = document.createElement("button");
+        N.className = "tm-webdav-btn tm-webdav-btn-secondary";
+        N.innerHTML = "".concat(Ve, " <span>").concat(__("webdavDownloadOverwrite") || "向下覆盖", "</span>");
+        G.appendChild(R);
+        G.appendChild(H);
         G.appendChild(J);
         G.appendChild(N);
-        var z = function persistCurrentInputs() {
+        var z = document.createElement("div");
+        z.className = "tm-webdav-status-bar";
+        var W = ht.getLastSyncTime();
+        var U = W > 0 ? new Date(W).toLocaleString() : __("webdavNeverSynced") || "尚未同步";
+        var q = document.createElement("span");
+        q.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat(U);
+        var K = document.createElement("span");
+        K.className = "tm-webdav-status-badge";
+        K.style.display = "none";
+        z.appendChild(q);
+        z.appendChild(K);
+        var Y = function persistCurrentInputs() {
           a.url = y.value.trim();
           a.user = _.value.trim();
           a.pass = E.value;
           a.path = T.value.trim() || "/MissPlayer/";
-          vt.saveWebDavConfig(a);
+          ht.saveWebDavConfig(a);
           return a;
         };
-        var W = function updateStatus(r, o) {
-          N.style.display = "inline-flex";
-          N.className = "tm-webdav-status-badge ".concat(o ? "success" : "error");
-          N.textContent = r;
+        var X = function updateStatus(r, o) {
+          K.style.display = "inline-flex";
+          K.className = "tm-webdav-status-badge ".concat(o ? "success" : "error");
+          K.textContent = r;
         };
-        var U = function setButtonsDisabled(r) {
-          [ B, I, O, V ].forEach((function(o) {
+        var $ = function setButtonsDisabled(r) {
+          [ R, H, J, N ].forEach((function(o) {
             o.disabled = r;
           }));
         };
-        I.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee() {
+        H.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee() {
           var r, o;
           return SettingsManager_regeneratorRuntime().wrap((function _callee$(a) {
             while (1) {
               switch (a.prev = a.next) {
                case 0:
-                r = z();
+                r = Y();
                 if (r.url) {
                   a.next = 4;
                   break;
@@ -24218,16 +24441,16 @@
                 return a.abrupt("return");
 
                case 4:
-                U(true);
-                I.innerHTML = "<span>".concat(__("webdavTesting") || "正在测试...", "</span>");
+                $(true);
+                H.innerHTML = "<span>".concat(__("webdavTesting") || "正在测试...", "</span>");
                 a.prev = 6;
                 a.next = 9;
-                return dt.testConnection(r);
+                return st.testConnection(r);
 
                case 9:
                 o = a.sent;
                 Toast.show(o.message || "连接成功！", 3e3);
-                W("连接正常", true);
+                X("连接正常", true);
                 a.next = 18;
                 break;
 
@@ -24235,12 +24458,12 @@
                 a.prev = 14;
                 a.t0 = a["catch"](6);
                 Toast.show((__("webdavTestFailed") || "连接失败: ") + a.t0.message, 4e3);
-                W("连接失败", false);
+                X("连接失败", false);
 
                case 18:
                 a.prev = 18;
-                I.innerHTML = "".concat(He, " <span>").concat(__("webdavTestConnection") || "测试连接", "</span>");
-                U(false);
+                H.innerHTML = "".concat(He, " <span>").concat(__("webdavTestConnection") || "测试连接", "</span>");
+                $(false);
                 return a.finish(18);
 
                case 22:
@@ -24250,13 +24473,13 @@
             }
           }), _callee, null, [ [ 6, 14, 18, 22 ] ]);
         }))));
-        B.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee2() {
+        R.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee2() {
           var o, a, l;
           return SettingsManager_regeneratorRuntime().wrap((function _callee2$(u) {
             while (1) {
               switch (u.prev = u.next) {
                case 0:
-                o = z();
+                o = Y();
                 if (o.url) {
                   u.next = 4;
                   break;
@@ -24265,11 +24488,11 @@
                 return u.abrupt("return");
 
                case 4:
-                U(true);
-                B.innerHTML = "<span>".concat(__("webdavSyncing") || "正在同步...", "</span>");
+                $(true);
+                R.innerHTML = "<span>".concat(__("webdavSyncing") || "正在同步...", "</span>");
                 u.prev = 6;
                 u.next = 9;
-                return vt.executeSync({
+                return ht.executeSync({
                   "mode": "merge",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -24278,8 +24501,8 @@
                case 9:
                 l = u.sent;
                 Toast.show(l.message || "云端多端合并同步成功！", 3e3);
-                W("同步成功", true);
-                J.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat((new Date).toLocaleString());
+                X("同步成功", true);
+                q.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat((new Date).toLocaleString());
                 r.createSettingsPanel();
                 u.next = 20;
                 break;
@@ -24288,12 +24511,12 @@
                 u.prev = 16;
                 u.t0 = u["catch"](6);
                 Toast.show((__("webdavSyncFailed") || "同步失败: ") + u.t0.message, 4500);
-                W("同步失败", false);
+                X("同步失败", false);
 
                case 20:
                 u.prev = 20;
-                B.innerHTML = "".concat(Ie, " <span>").concat(__("webdavSyncMerge") || "智能合并同步", "</span>");
-                U(false);
+                R.innerHTML = "".concat(Ie, " <span>").concat(__("webdavSyncMerge") || "智能合并同步", "</span>");
+                $(false);
                 return u.finish(20);
 
                case 24:
@@ -24303,13 +24526,13 @@
             }
           }), _callee2, null, [ [ 6, 16, 20, 24 ] ]);
         }))));
-        O.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee3() {
+        J.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee3() {
           var o, a, l;
           return SettingsManager_regeneratorRuntime().wrap((function _callee3$(u) {
             while (1) {
               switch (u.prev = u.next) {
                case 0:
-                o = z();
+                o = Y();
                 if (o.url) {
                   u.next = 4;
                   break;
@@ -24325,11 +24548,11 @@
                 return u.abrupt("return");
 
                case 6:
-                U(true);
-                O.innerHTML = "<span>".concat(__("webdavSyncing") || "正在上传...", "</span>");
+                $(true);
+                J.innerHTML = "<span>".concat(__("webdavSyncing") || "正在上传...", "</span>");
                 u.prev = 8;
                 u.next = 11;
-                return vt.executeSync({
+                return ht.executeSync({
                   "mode": "upload",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -24338,8 +24561,8 @@
                case 11:
                 l = u.sent;
                 Toast.show(l.message || "已成功覆盖云端备份！", 3e3);
-                W("已上传覆盖", true);
-                J.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat((new Date).toLocaleString());
+                X("已上传覆盖", true);
+                q.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat((new Date).toLocaleString());
                 u.next = 21;
                 break;
 
@@ -24347,12 +24570,12 @@
                 u.prev = 17;
                 u.t0 = u["catch"](8);
                 Toast.show((__("webdavSyncFailed") || "上传失败: ") + u.t0.message, 4500);
-                W("上传失败", false);
+                X("上传失败", false);
 
                case 21:
                 u.prev = 21;
-                O.innerHTML = "".concat(Oe, " <span>").concat(__("webdavUploadOverwrite") || "向上覆盖", "</span>");
-                U(false);
+                J.innerHTML = "".concat(Oe, " <span>").concat(__("webdavUploadOverwrite") || "向上覆盖", "</span>");
+                $(false);
                 return u.finish(21);
 
                case 25:
@@ -24362,13 +24585,13 @@
             }
           }), _callee3, null, [ [ 8, 17, 21, 25 ] ]);
         }))));
-        V.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee4() {
+        N.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee4() {
           var o, a, l;
           return SettingsManager_regeneratorRuntime().wrap((function _callee4$(u) {
             while (1) {
               switch (u.prev = u.next) {
                case 0:
-                o = z();
+                o = Y();
                 if (o.url) {
                   u.next = 4;
                   break;
@@ -24384,11 +24607,11 @@
                 return u.abrupt("return");
 
                case 6:
-                U(true);
-                V.innerHTML = "<span>".concat(__("webdavSyncing") || "正在下载...", "</span>");
+                $(true);
+                N.innerHTML = "<span>".concat(__("webdavSyncing") || "正在下载...", "</span>");
                 u.prev = 8;
                 u.next = 11;
-                return vt.executeSync({
+                return ht.executeSync({
                   "mode": "download",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -24397,8 +24620,8 @@
                case 11:
                 l = u.sent;
                 Toast.show(l.message || "已成功从云端覆盖本地！", 3e3);
-                W("已下载覆盖", true);
-                J.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat((new Date).toLocaleString());
+                X("已下载覆盖", true);
+                q.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat((new Date).toLocaleString());
                 r.createSettingsPanel();
                 u.next = 22;
                 break;
@@ -24407,12 +24630,12 @@
                 u.prev = 18;
                 u.t0 = u["catch"](8);
                 Toast.show((__("webdavSyncFailed") || "下载失败: ") + u.t0.message, 4500);
-                W("下载失败", false);
+                X("下载失败", false);
 
                case 22:
                 u.prev = 22;
-                V.innerHTML = "".concat(Ve, " <span>").concat(__("webdavDownloadOverwrite") || "向下覆盖", "</span>");
-                U(false);
+                N.innerHTML = "".concat(Ve, " <span>").concat(__("webdavDownloadOverwrite") || "向下覆盖", "</span>");
+                $(false);
                 return u.finish(22);
 
                case 26:
@@ -24426,9 +24649,9 @@
         o.appendChild(b);
         o.appendChild(k);
         o.appendChild(L);
-        o.appendChild(A);
-        o.appendChild(j);
+        o.appendChild(V);
         o.appendChild(G);
+        o.appendChild(z);
         return o;
       }
     }, {
@@ -25753,7 +25976,7 @@
         var p = new gt(this.playerCore, l, a, u);
         p.init();
         this.managers.settingsManager = p;
-        var v = new lt(this.playerCore, l);
+        var v = new mt(this.playerCore, l);
         v.init({
           "progressBarElement": u.progressBarElement,
           "progressIndicator": u.progressIndicator,
@@ -25762,7 +25985,7 @@
           "timeIndicator": u.timeIndicator
         });
         this.managers.progressManager = v;
-        var y = new st(this.playerCore, l, u);
+        var y = new pt(this.playerCore, l, u);
         y.init({
           "loopStartMarker": u.loopStartMarker,
           "loopEndMarker": u.loopEndMarker,
@@ -25789,7 +26012,7 @@
           "dragManager": b,
           "swipeManager": this.swipeManager
         });
-        var C = new ut(this.playerCore, l, this.managers);
+        var C = new vt(this.playerCore, l, this.managers);
         C.init();
         this.managers.eventManager = C;
         a.assembleDOM();
@@ -28782,34 +29005,35 @@
               r = initUserExperienceEnhancer(true);
               o = new Ct;
               o.loadSettings();
-              ct.initGlobal(o);
+              ht.triggerAutoSync(o, "startup");
+              ft.initGlobal(o);
               a = new wt({
                 "playerState": o
               });
               a.init();
-              p.next = 13;
+              p.next = 14;
               return initAutoLogin();
 
-             case 13:
+             case 14:
               l = p.sent;
               if (l) {
                 window.loginManager = l;
               }
               u = new jt;
               u.init();
-              p.next = 21;
+              p.next = 22;
               break;
 
-             case 19:
-              p.prev = 19;
+             case 20:
+              p.prev = 20;
               p.t0 = p["catch"](0);
 
-             case 21:
+             case 22:
              case "end":
               return p.stop();
             }
           }
-        }), _callee2, null, [ [ 0, 19 ] ]);
+        }), _callee2, null, [ [ 0, 20 ] ]);
       })));
       return _startScript.apply(this, arguments);
     }

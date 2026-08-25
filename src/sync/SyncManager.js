@@ -67,7 +67,7 @@ export class SyncManager {
             user: '',
             pass: '',
             path: '/MissPlayer/',
-            autoSync: false
+            autoSync: true
         };
         const saved = getValue(WEBDAV_CONFIG_KEY, null);
         return Object.assign({}, defaultCfg, (saved && typeof saved === 'object') ? saved : {});
@@ -429,5 +429,61 @@ export class SyncManager {
             message: '云端多端配置智能合并同步完成！',
             data: mergedData
         };
+    }
+
+    /**
+     * 自动智能合并同步触发器
+     * @param {PlayerState} [playerState=null] - 播放器状态机实例
+     * @param {'startup' | 'change'} [reason='startup'] - 触发时机
+     */
+    static triggerAutoSync(playerState = null, reason = 'startup') {
+        const config = this.getWebDavConfig();
+        if (!config.url || config.autoSync === false) {
+            return;
+        }
+
+        if (this._isAutoSyncing) return;
+
+        const now = Date.now();
+        const lastSync = this.getLastSyncTime();
+
+        if (reason === 'startup') {
+            // 启动时节流：若 5 分钟内已成功同步，则无需重复同步
+            if (lastSync > 0 && now - lastSync < 5 * 60 * 1000) {
+                return;
+            }
+
+            // 延迟 2.5 秒在后台静默执行
+            setTimeout(async () => {
+                try {
+                    this._isAutoSyncing = true;
+                    await this.executeSync({ mode: 'merge', config, playerState });
+                    console.log('[SyncManager] 自动智能合并同步 (启动) 完成');
+                } catch (err) {
+                    console.warn('[SyncManager] 启动自动同步未完成:', err.message || err);
+                } finally {
+                    this._isAutoSyncing = false;
+                }
+            }, 2500);
+            return;
+        }
+
+        if (reason === 'change') {
+            // 变更时防抖：5 秒无新变更后静默在后台同步
+            if (this._autoSyncDebounceTimer) {
+                clearTimeout(this._autoSyncDebounceTimer);
+            }
+            this._autoSyncDebounceTimer = setTimeout(async () => {
+                try {
+                    this._isAutoSyncing = true;
+                    await this.executeSync({ mode: 'merge', config, playerState });
+                    console.log('[SyncManager] 自动智能合并同步 (数据变更) 完成');
+                } catch (err) {
+                    console.warn('[SyncManager] 数据变更自动同步未完成:', err.message || err);
+                } finally {
+                    this._isAutoSyncing = false;
+                }
+            }, 5000);
+        }
     }
 }

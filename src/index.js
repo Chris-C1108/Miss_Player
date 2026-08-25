@@ -11,6 +11,7 @@ import { CommentPanel } from './player/controls/CommentPanel.js';
 import { isSiteDomain } from './constants/domains.js';
 import { logger } from './utils/logger.js';
 import { telemetry } from './telemetry';
+import { SyncManager } from './sync/index.js';
 
 // 确保最早执行URL重定向检查
 earlyUrlRedirector.checkAndRedirect();
@@ -121,6 +122,9 @@ function setupViewport() {
             
             // 加载设置
             playerState.loadSettings();
+
+            // 触发自动智能合并云同步 (若开启 WebDAV 自动同步)
+            SyncManager.triggerAutoSync(playerState, 'startup');
 
             // 初始化失焦/后台播放控制器
             BlurPlaybackManager.initGlobal(playerState);

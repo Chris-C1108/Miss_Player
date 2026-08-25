@@ -84,6 +84,8 @@ export class I18n {
             webdavSyncFailed: 'Sync failed: ',
             webdavLastSync: 'Last Sync',
             webdavNeverSynced: 'Never synced',
+            webdavAutoSync: 'Auto Smart Merge Sync',
+            webdavAutoSyncDesc: 'Automatically sync in background on player launch and marker changes',
             webdavConfirmUpload: 'Are you sure you want to force upload local config to cloud? This will overwrite the backup on WebDAV.',
             webdavConfirmDownload: 'Are you sure you want to download and overwrite local config? This will replace settings and markers on this device.',
             
@@ -169,6 +171,8 @@ export class I18n {
             webdavSyncFailed: '同步失败: ',
             webdavLastSync: '上次同步',
             webdavNeverSynced: '尚未同步',
+            webdavAutoSync: '自动智能合并同步',
+            webdavAutoSyncDesc: '播放器启动及打点变更时自动在后台静默合并同步',
             webdavConfirmUpload: '确定要将当前本地配置强制覆盖到云端吗？这将替换 WebDAV 上的所有备份数据。',
             webdavConfirmDownload: '确定要从云端拉取配置并覆盖本地吗？这将替换此设备上的当前设置与打点数据。',
             
@@ -254,6 +258,8 @@ export class I18n {
             webdavSyncFailed: '同步失敗: ',
             webdavLastSync: '上次同步',
             webdavNeverSynced: '尚未同步',
+            webdavAutoSync: '自動智慧合併同步',
+            webdavAutoSyncDesc: '播放器啟動及打點變更時自動在後台靜默合併同步',
             webdavConfirmUpload: '確定要將當前本地配置強制覆蓋到雲端嗎？這將替換 WebDAV 上的所有備份資料。',
             webdavConfirmDownload: '確定要從雲端拉取配置並覆蓋本地嗎？這將替換此設備上的當前設置與打點資料。',
             
@@ -338,6 +344,8 @@ export class I18n {
             webdavSyncFailed: '同期に失敗しました: ',
             webdavLastSync: '前回の同期',
             webdavNeverSynced: '未同期',
+            webdavAutoSync: '自動スマートマージ同期',
+            webdavAutoSyncDesc: 'プレーヤー起動時やマーカー変更時にバックグラウンドで自動同期',
             webdavConfirmUpload: '現在のローカル設定をクラウドに強制上書きしますか？WebDAV上のバックアップが置き換えられます。',
             webdavConfirmDownload: 'クラウドから設定をダウンロードしてローカルを上書きしますか？このデバイスの設定とマーカーが置き換えられます。',
             
@@ -422,6 +430,8 @@ export class I18n {
             webdavSyncFailed: 'Đồng bộ thất bại: ',
             webdavLastSync: 'Lần đồng bộ trước',
             webdavNeverSynced: 'Chưa đồng bộ',
+            webdavAutoSync: 'Tự động đồng bộ hợp nhất',
+            webdavAutoSyncDesc: 'Tự động đồng bộ dưới nền khi khởi chạy trình phát và thay đổi điểm đánh dấu',
             webdavConfirmUpload: 'Bạn có chắc muốn ghi đè cấu hình cục bộ lên đám mây? Việc này sẽ thay thế bản sao lưu trên WebDAV.',
             webdavConfirmDownload: 'Bạn có chắc muốn tải xuống và ghi đè cấu hình cục bộ? Việc này sẽ thay thế cài đặt và điểm đánh dấu trên thiết bị này.',
             

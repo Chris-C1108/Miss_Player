@@ -3,6 +3,7 @@ import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { __ } from '../../constants/i18n.js';
 import { telemetry } from '../../telemetry/index.js';
 import { MarkerBottomSheet } from './MarkerBottomSheet.js';
+import { SyncManager } from '../../sync/index.js';
 
 /**
  * LoopManager — Tab-Style Marker & AB Loop controller
@@ -1195,6 +1196,11 @@ export class LoopManager {
         if (!this.storageKey) return;
         this._sortTabs();
         setValue(this.storageKey, this.tabs);
+
+        // 触发自动智能合并同步 (数据变更，防抖 5 秒)
+        try {
+            SyncManager.triggerAutoSync(this.playerCore?.options?.playerState, 'change');
+        } catch (_) {}
 
         // 遥测上报：收集/标记的时间戳与时间片段
         try {

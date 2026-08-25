@@ -593,6 +593,13 @@
     gap: 4px;
 }
 
+.tm-webdav-form-row.tm-webdav-switch-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+}
+
 .tm-webdav-label {
     font-size: 11.5px;
     font-weight: 500;

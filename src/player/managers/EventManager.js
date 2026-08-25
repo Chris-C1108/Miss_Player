@@ -128,8 +128,8 @@ export class EventManager {
                 return;
             }
             
-            // 允许评论区内部滚动容器正常在组件内滚动，配合 overscroll-behavior: contain 防止边界穿透
-            if (e.target.closest('.tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list')) {
+            // 允许设置菜单面板、快进滑动条、评论区及弹窗内部滚动容器正常在组件内自由滚动，配合 overscroll-behavior: contain 防止边界穿透
+            if (e.target.closest('.tm-settings-panel, .tm-settings-menu-container, .tm-settings-seek-steps-subpanel, .tm-settings-webdav-card, .tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list')) {
                 return;
             }
             

@@ -425,12 +425,39 @@ export class SettingsManager {
         pathRow.appendChild(pathLabel);
         pathRow.appendChild(pathInput);
 
-        // 5. 当前设备标识
+        // 5. 自动智能合并同步开关 (Auto Sync)
+        const autoSyncRow = document.createElement('div');
+        autoSyncRow.className = 'tm-webdav-form-row tm-webdav-switch-row';
+        const autoSyncLabel = document.createElement('label');
+        autoSyncLabel.className = 'tm-webdav-label';
+        autoSyncLabel.textContent = __('webdavAutoSync') || '自动智能合并同步';
+
+        const autoSyncSwitch = document.createElement('label');
+        autoSyncSwitch.className = 'tm-switch';
+        const autoSyncCheckbox = document.createElement('input');
+        autoSyncCheckbox.type = 'checkbox';
+        autoSyncCheckbox.checked = config.autoSync !== false;
+        autoSyncCheckbox.addEventListener('change', () => {
+            config.autoSync = autoSyncCheckbox.checked;
+            SyncManager.saveWebDavConfig(config);
+            if (config.autoSync && config.url) {
+                SyncManager.triggerAutoSync(this.playerCore?.options?.playerState, 'startup');
+            }
+        });
+        const autoSyncSlider = document.createElement('span');
+        autoSyncSlider.className = 'tm-slider round';
+        autoSyncSwitch.appendChild(autoSyncCheckbox);
+        autoSyncSwitch.appendChild(autoSyncSlider);
+
+        autoSyncRow.appendChild(autoSyncLabel);
+        autoSyncRow.appendChild(autoSyncSwitch);
+
+        // 6. 当前设备标识
         const deviceBadge = document.createElement('div');
         deviceBadge.className = 'tm-webdav-device-badge';
         deviceBadge.innerHTML = `${ICON_SERVER} <span>${__('webdavCurrentDevice') || '当前设备'}: ${deviceName} (${clientId.slice(-6)})</span>`;
 
-        // 6. 操作按钮网格
+        // 7. 操作按钮网格
         const actionsGrid = document.createElement('div');
         actionsGrid.className = 'tm-webdav-actions-grid';
 
