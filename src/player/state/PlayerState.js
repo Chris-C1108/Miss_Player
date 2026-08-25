@@ -23,7 +23,8 @@ export class PlayerState {
             debugMode: false,               // DEBUG 模式
             sidebarPosition: 'right',       // 评论侧边栏位置 ('left' | 'right')
             sidebarHidden: false,           // 评论侧边栏是否隐藏 (true | false)
-            preferredPlaybackRate: 1.0      // 默认/首选播放速度
+            preferredPlaybackRate: 1.0,     // 默认/首选播放速度
+            pauseOnBlur: true               // 页面离开/失焦后停止播放 (默认为开)
         };
     }
 
@@ -65,6 +66,7 @@ export class PlayerState {
             this.settings.sidebarHidden = getBool('sidebarHidden', false);
             const rawSpeed = parseFloat(getValue('preferredPlaybackRate', 1.0));
             this.settings.preferredPlaybackRate = (!isNaN(rawSpeed) && rawSpeed >= 0.5 && rawSpeed <= 4.0) ? rawSpeed : 1.0;
+            this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
         } catch (error) {
             console.error('[PlayerState] 加载设置失败:', error);
         }
@@ -88,6 +90,7 @@ export class PlayerState {
             setValue('sidebarPosition', this.settings.sidebarPosition);
             setValue('sidebarHidden', this.settings.sidebarHidden);
             setValue('preferredPlaybackRate', this.settings.preferredPlaybackRate);
+            setValue('pauseOnBlur', this.settings.pauseOnBlur);
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }

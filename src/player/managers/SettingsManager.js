@@ -34,7 +34,8 @@ export class SettingsManager {
                 javlibrary: false
             },
             telemetryEnabled: true,
-            debugMode: false
+            debugMode: false,
+            pauseOnBlur: true
         };
 
         // 快进快退步进自定义展开状态
@@ -216,7 +217,20 @@ export class SettingsManager {
             }
         );
 
+        // 3. 失焦后停止播放开关 (默认为开)
+        const pauseOnBlurOption = this._createToggleOption(
+            __('pauseOnBlur') || '失焦后停止播放',
+            'pauseOnBlur',
+            this.settings.pauseOnBlur !== false,
+            (checked) => {
+                this.updateSetting('pauseOnBlur', checked);
+            },
+            null,
+            __('pauseOnBlurDesc') || '页面离开或失去焦点时自动暂停播放'
+        );
+
         section3.appendChild(telemetryOption);
+        section3.appendChild(pauseOnBlurOption);
         section3.appendChild(debugOption);
         container.appendChild(section3);
 
@@ -639,6 +653,7 @@ export class SettingsManager {
 
             this.settings.telemetryEnabled = getBool('telemetryEnabled', true);
             this.settings.debugMode = getBool('debugMode', false);
+            this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
         }
     }
     
@@ -659,6 +674,7 @@ export class SettingsManager {
             setValue('enabledCommentSources', this.settings.enabledCommentSources);
             setValue('telemetryEnabled', this.settings.telemetryEnabled);
             setValue('debugMode', this.settings.debugMode);
+            setValue('pauseOnBlur', this.settings.pauseOnBlur);
         }
     }
     

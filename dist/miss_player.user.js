@@ -9441,6 +9441,8 @@
       "autoQuality": "Auto Quality",
       "helpImprove": "Help improve",
       "helpImproveDesc": "Collect necessary data to improve features",
+      "pauseOnBlur": "Stop playback on blur",
+      "pauseOnBlurDesc": "Automatically pause video when switching tabs or losing focus",
       "loadingError": "Failed to load video",
       "networkError": "Network error",
       "loginSuccess": "Login successful",
@@ -9493,6 +9495,8 @@
       "autoQuality": "自动画质",
       "helpImprove": "帮助改进",
       "helpImproveDesc": "收集必要数据用于改进功能",
+      "pauseOnBlur": "失焦后停止播放",
+      "pauseOnBlurDesc": "页面离开或失去焦点时自动暂停播放",
       "loadingError": "视频加载失败",
       "networkError": "网络错误",
       "loginSuccess": "登录成功",
@@ -9545,6 +9549,8 @@
       "autoQuality": "自動畫質",
       "helpImprove": "幫助改進",
       "helpImproveDesc": "收集必要數據用於改進功能",
+      "pauseOnBlur": "失焦後停止播放",
+      "pauseOnBlurDesc": "頁面離開或失去焦點時自動暫停播放",
       "loadingError": "視頻加載失敗",
       "networkError": "網絡錯誤",
       "loginSuccess": "登錄成功",
@@ -9596,6 +9602,8 @@
       "autoQuality": "自動画质",
       "helpImprove": "改善に協力",
       "helpImproveDesc": "機能改善のために必要なデータを収集します",
+      "pauseOnBlur": "フォーカス外で再生停止",
+      "pauseOnBlurDesc": "タブ切替やフォーカス喪失時に再生を一時停止",
       "loadingError": "動画の読み込みに失敗しました",
       "networkError": "ネットワークエラー",
       "loginSuccess": "ログイン成功",
@@ -9647,6 +9655,8 @@
       "autoQuality": "Chất lượng tự động",
       "helpImprove": "Giúp cải thiện",
       "helpImproveDesc": "Thu thập dữ liệu cần thiết để cải thiện tính năng",
+      "pauseOnBlur": "Dừng phát khi mất tiêu điểm",
+      "pauseOnBlurDesc": "Tự động tạm dừng khi chuyển tab hoặc mất tiêu điểm",
       "loadingError": "Không thể tải video",
       "networkError": "Lỗi mạng",
       "loginSuccess": "Đăng nhập thành công",
@@ -20963,6 +20973,174 @@
       }
     } ]);
   }();
+  function BlurPlaybackManager_typeof(r) {
+    "@babel/helpers - typeof";
+    return BlurPlaybackManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
+      return typeof r;
+    } : function(r) {
+      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
+    }, BlurPlaybackManager_typeof(r);
+  }
+  function BlurPlaybackManager_classCallCheck(r, o) {
+    if (!(r instanceof o)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+  function BlurPlaybackManager_defineProperties(r, o) {
+    for (var a = 0; a < o.length; a++) {
+      var l = o[a];
+      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
+      Object.defineProperty(r, BlurPlaybackManager_toPropertyKey(l.key), l);
+    }
+  }
+  function BlurPlaybackManager_createClass(r, o, a) {
+    return o && BlurPlaybackManager_defineProperties(r.prototype, o), a && BlurPlaybackManager_defineProperties(r, a), 
+    Object.defineProperty(r, "prototype", {
+      "writable": !1
+    }), r;
+  }
+  function BlurPlaybackManager_defineProperty(r, o, a) {
+    return (o = BlurPlaybackManager_toPropertyKey(o)) in r ? Object.defineProperty(r, o, {
+      "value": a,
+      "enumerable": !0,
+      "configurable": !0,
+      "writable": !0
+    }) : r[o] = a, r;
+  }
+  function BlurPlaybackManager_toPropertyKey(r) {
+    var o = BlurPlaybackManager_toPrimitive(r, "string");
+    return "symbol" == BlurPlaybackManager_typeof(o) ? o : o + "";
+  }
+  function BlurPlaybackManager_toPrimitive(r, o) {
+    if ("object" != BlurPlaybackManager_typeof(r) || !r) {
+      return r;
+    }
+    var a = r[Symbol.toPrimitive];
+    if (void 0 !== a) {
+      var l = a.call(r, o || "default");
+      if ("object" != BlurPlaybackManager_typeof(l)) {
+        return l;
+      }
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === o ? String : Number)(r);
+  }
+  var nt = function() {
+    function BlurPlaybackManager() {
+      BlurPlaybackManager_classCallCheck(this, BlurPlaybackManager);
+    }
+    return BlurPlaybackManager_createClass(BlurPlaybackManager, null, [ {
+      "key": "initGlobal",
+      "value": function initGlobal() {
+        var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : null;
+        if (this.isInitialized) {
+          return;
+        }
+        this.isInitialized = true;
+        var o = function isPauseOnBlurEnabled() {
+          var o;
+          if ((r === null || r === void 0 || (o = r.settings) === null || o === void 0 ? void 0 : o.pauseOnBlur) !== void 0) {
+            return r.settings.pauseOnBlur;
+          }
+          var a = getValue("pauseOnBlur", true);
+          return a === true || a === "true";
+        };
+        try {
+          Object.defineProperty(document, "hidden", {
+            "get": function get() {
+              return o() ? false : false;
+            },
+            "configurable": true
+          });
+        } catch (r) {}
+        try {
+          Object.defineProperty(document, "visibilityState", {
+            "get": function get() {
+              return o() ? "visible" : "visible";
+            },
+            "configurable": true
+          });
+        } catch (r) {}
+        try {
+          Object.defineProperty(document, "hasFocus", {
+            "value": function value() {
+              return true;
+            },
+            "configurable": true
+          });
+        } catch (r) {}
+        var a = [ "visibilitychange", "webkitvisibilitychange", "mozvisibilitychange", "blur", "focusout", "pagehide" ];
+        a.forEach((function(r) {
+          var a = function handler(r) {
+            if (!o()) {
+              r.stopImmediatePropagation();
+            }
+          };
+          window.addEventListener(r, a, true);
+          document.addEventListener(r, a, true);
+        }));
+      }
+    }, {
+      "key": "attachPlayer",
+      "value": function attachPlayer(r, o) {
+        if (!r) {
+          return;
+        }
+        var a = false;
+        var l = !r.paused;
+        var u = function isPauseOnBlurEnabled() {
+          var r;
+          if ((o === null || o === void 0 || (r = o.options) === null || r === void 0 || (r = r.playerState) === null || r === void 0 || (r = r.settings) === null || r === void 0 ? void 0 : r.pauseOnBlur) !== void 0) {
+            return o.options.playerState.settings.pauseOnBlur;
+          }
+          var a = getValue("pauseOnBlur", true);
+          return a === true || a === "true";
+        };
+        var p = function markUserInteraction() {
+          a = true;
+          setTimeout((function() {
+            a = false;
+          }), 600);
+        };
+        [ "click", "touchstart", "keydown" ].forEach((function(r) {
+          document.addEventListener(r, p, {
+            "capture": true,
+            "passive": true
+          });
+        }));
+        r.addEventListener("play", (function() {
+          l = true;
+        }));
+        r.addEventListener("pause", (function() {
+          if (u()) {
+            l = false;
+            return;
+          }
+          if (!a && l && !r.ended) {
+            setTimeout((function() {
+              if (r.paused && !r.ended && l) {
+                r.play()["catch"]((function() {}));
+              }
+            }), 150);
+          } else if (a) {
+            l = false;
+          }
+        }), true);
+        var v = function handleVisibilityChange() {
+          if (u()) {
+            if (document.hidden || document.visibilityState === "hidden") {
+              if (r && !r.paused) {
+                r.pause();
+              }
+            }
+          }
+        };
+        document.addEventListener("visibilitychange", v);
+        window.addEventListener("blur", v);
+      }
+    } ]);
+  }();
+  BlurPlaybackManager_defineProperty(nt, "isInitialized", false);
   function EventManager_typeof(r) {
     "@babel/helpers - typeof";
     return EventManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -21007,7 +21185,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var nt = function() {
+  var rt = function() {
     function EventManager(r, o, a) {
       EventManager_classCallCheck(this, EventManager);
       this.playerCore = r;
@@ -21203,6 +21381,7 @@
           }
         };
         this.targetVideo.addEventListener("pause", this.handlePauseBound);
+        nt.attachPlayer(this.targetVideo, this.playerCore);
       }
     }, {
       "key": "handleCloseButtonClick",
@@ -21397,7 +21576,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var rt = function() {
+  var ot = function() {
     function SettingsManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       var l = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -21422,7 +21601,8 @@
           "javlibrary": false
         },
         "telemetryEnabled": true,
-        "debugMode": false
+        "debugMode": false,
+        "pauseOnBlur": true
       };
       this.showCustomSeekStepsPanel = false;
     }
@@ -21537,7 +21717,11 @@
             r.controlManager.commentPanel.updateDebugMode(o);
           }
         }));
+        var L = this._createToggleOption(__("pauseOnBlur") || "失焦后停止播放", "pauseOnBlur", this.settings.pauseOnBlur !== false, (function(o) {
+          r.updateSetting("pauseOnBlur", o);
+        }), null, __("pauseOnBlurDesc") || "页面离开或失去焦点时自动暂停播放");
         E.appendChild(S);
+        E.appendChild(L);
         E.appendChild(D);
         o.appendChild(E);
         this.settingsPanel.appendChild(o);
@@ -21892,6 +22076,7 @@
           }, p && SettingsManager_typeof(p) === "object" ? p : {});
           this.settings.telemetryEnabled = a("telemetryEnabled", true);
           this.settings.debugMode = a("debugMode", false);
+          this.settings.pauseOnBlur = a("pauseOnBlur", true);
         }
       }
     }, {
@@ -21911,6 +22096,7 @@
           setValue("enabledCommentSources", this.settings.enabledCommentSources);
           setValue("telemetryEnabled", this.settings.telemetryEnabled);
           setValue("debugMode", this.settings.debugMode);
+          setValue("pauseOnBlur", this.settings.pauseOnBlur);
         }
       }
     }, {
@@ -22007,7 +22193,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ot = function() {
+  var at = function() {
     function VideoSwipeManager(r, o, a) {
       var l = this;
       var u = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -22784,7 +22970,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var at = function() {
+  var it = function() {
     function CustomVideoPlayer() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       CustomVideoPlayer_classCallCheck(this, CustomVideoPlayer);
@@ -22873,7 +23059,7 @@
         var u = new $e(this.playerCore, l, a);
         u.init();
         this.managers.controlManager = u;
-        var p = new rt(this.playerCore, l, a, u);
+        var p = new ot(this.playerCore, l, a, u);
         p.init();
         this.managers.settingsManager = p;
         var v = new tt(this.playerCore, l);
@@ -22900,7 +23086,7 @@
         b.init();
         this.managers.dragManager = b;
         if (this.playerCore.targetVideo && l.videoWrapper && l.handle) {
-          this.swipeManager = new ot(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
+          this.swipeManager = new at(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
             return r.close();
           }), a);
           this.swipeManager.playerCore = this.playerCore;
@@ -22912,7 +23098,7 @@
           "dragManager": b,
           "swipeManager": this.swipeManager
         });
-        var C = new nt(this.playerCore, l, this.managers);
+        var C = new rt(this.playerCore, l, this.managers);
         C.init();
         this.managers.eventManager = C;
         a.assembleDOM();
@@ -23050,7 +23236,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var it = function() {
+  var st = function() {
     function FloatingButton() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       FloatingButton_classCallCheck(this, FloatingButton);
@@ -23211,7 +23397,7 @@
           } catch (r) {}
         }
         this.button.style.display = "none";
-        this.videoPlayer = new at({
+        this.videoPlayer = new it({
           "playerState": this.playerState,
           "callingButton": this.button
         });
@@ -23280,7 +23466,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var st = function() {
+  var lt = function() {
     function PlayerState() {
       PlayerState_classCallCheck(this, PlayerState);
       this.settings = {
@@ -23300,7 +23486,8 @@
         "debugMode": false,
         "sidebarPosition": "right",
         "sidebarHidden": false,
-        "preferredPlaybackRate": 1
+        "preferredPlaybackRate": 1,
+        "pauseOnBlur": true
       };
     }
     return PlayerState_createClass(PlayerState, [ {
@@ -23332,6 +23519,7 @@
           this.settings.sidebarHidden = r("sidebarHidden", false);
           var u = parseFloat(getValue("preferredPlaybackRate", 1));
           this.settings.preferredPlaybackRate = !isNaN(u) && u >= .5 && u <= 4 ? u : 1;
+          this.settings.pauseOnBlur = r("pauseOnBlur", true);
         } catch (r) {}
       }
     }, {
@@ -23351,6 +23539,7 @@
           setValue("sidebarPosition", this.settings.sidebarPosition);
           setValue("sidebarHidden", this.settings.sidebarHidden);
           setValue("preferredPlaybackRate", this.settings.preferredPlaybackRate);
+          setValue("pauseOnBlur", this.settings.pauseOnBlur);
         } catch (r) {}
       }
     }, {
@@ -23808,9 +23997,9 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var lt = 30 * 60 * 1e3;
-  var ct = 3;
-  var ut = function() {
+  var ct = 30 * 60 * 1e3;
+  var ut = 3;
+  var dt = function() {
     function LoginManager() {
       LoginManager_classCallCheck(this, LoginManager);
       this.userEmail = "";
@@ -24017,12 +24206,12 @@
       "value": function isCircuitBroken(r) {
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0);
         var a = getLocalStorage("mp_circuit_last_fail_".concat(r), 0);
-        if (o >= ct) {
+        if (o >= ut) {
           var l = Date.now() - a;
-          if (l < lt) {
+          if (l < ct) {
             return true;
           }
-          setLocalStorage("mp_circuit_fail_".concat(r), ct - 1);
+          setLocalStorage("mp_circuit_fail_".concat(r), ut - 1);
         }
         return false;
       }
@@ -24032,7 +24221,7 @@
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0) + 1;
         setLocalStorage("mp_circuit_fail_".concat(r), o);
         setLocalStorage("mp_circuit_last_fail_".concat(r), Date.now());
-        if (o >= ct) {}
+        if (o >= ut) {}
       }
     }, {
       "key": "resetCircuitBreaker",
@@ -24524,7 +24713,7 @@
           switch (o.prev = o.next) {
            case 0:
             o.prev = 0;
-            r = new ut;
+            r = new dt;
             o.next = 4;
             return r.init();
 
@@ -24545,8 +24734,8 @@
     })));
     return _initAutoLogin.apply(this, arguments);
   }
-  var dt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
-  var mt = [ {
+  var mt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
+  var ht = [ {
     "selector": 'div[class="my-2 text-sm text-nord4 truncate"]',
     "styles": "white-space: normal !important;"
   }, {
@@ -24556,11 +24745,11 @@
     "selector": 'div[class*="z-max"]',
     "styles": "z-index: 9000 !important;"
   } ];
-  var ht = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
-  const pt = {
-    "adSelectors": dt,
-    "customStyles": mt,
-    "blockedUrlPatterns": ht,
+  var pt = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
+  const ft = {
+    "adSelectors": mt,
+    "customStyles": ht,
+    "blockedUrlPatterns": pt,
     "isVideoSite": true,
     "domains": getSiteDomains("MISSAV")
   };
@@ -24671,7 +24860,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ft = function() {
+  var vt = function() {
     function AdBlockConfig() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       adblock_classCallCheck(this, AdBlockConfig);
@@ -24711,7 +24900,7 @@
       }
     } ]);
   }();
-  var vt = function() {
+  var gt = function() {
     function StyleManager(r) {
       adblock_classCallCheck(this, StyleManager);
       this.config = r;
@@ -24739,7 +24928,7 @@
       }
     } ]);
   }();
-  var gt = function() {
+  var yt = function() {
     function DOMCleaner(r) {
       adblock_classCallCheck(this, DOMCleaner);
       this.config = r;
@@ -24828,7 +25017,7 @@
       }
     } ]);
   }();
-  var yt = function() {
+  var bt = function() {
     function RequestBlocker(r) {
       adblock_classCallCheck(this, RequestBlocker);
       this.config = r;
@@ -24913,15 +25102,15 @@
       }
     } ]);
   }();
-  var bt = function() {
+  var Ct = function() {
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(window.location.href);
-      var o = r ? pt : {};
-      this.config = new ft(o);
-      this.styleManager = new vt(this.config);
-      this.domCleaner = new gt(this.config);
-      this.requestBlocker = new yt(this.config);
+      var o = r ? ft : {};
+      this.config = new vt(o);
+      this.styleManager = new gt(this.config);
+      this.domCleaner = new yt(this.config);
+      this.requestBlocker = new bt(this.config);
     }
     return adblock_createClass(AdBlocker, [ {
       "key": "preventDetection",
@@ -24969,7 +25158,7 @@
       }
     } ]);
   }();
-  const Ct = bt;
+  const wt = Ct;
   function DetailExpander_typeof(r) {
     "@babel/helpers - typeof";
     return DetailExpander_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -25014,7 +25203,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var wt = function() {
+  var xt = function() {
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
@@ -25127,7 +25316,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var xt = function() {
+  var _t = function() {
     function QualityManager() {
       QualityManager_classCallCheck(this, QualityManager);
       this.maxAttempts = 20;
@@ -25278,7 +25467,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var _t = function() {
+  var kt = function() {
     function UrlRedirector() {
       UrlRedirector_classCallCheck(this, UrlRedirector);
       var r = y.MISSAV.primary;
@@ -25386,13 +25575,13 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var kt = new _t;
-  var Pt = function() {
+  var Pt = new kt;
+  var Et = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
-      this.detailExpander = new wt;
-      this.qualityManager = new xt;
-      this.urlRedirector = kt;
+      this.detailExpander = new xt;
+      this.qualityManager = new _t;
+      this.urlRedirector = Pt;
     }
     return userExperienceEnhancer_createClass(UserExperienceEnhancer, [ {
       "key": "init",
@@ -25424,7 +25613,7 @@
   }();
   function initUserExperienceEnhancer() {
     var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
-    var o = new Pt;
+    var o = new Et;
     o.init(r);
     return o;
   }
@@ -25830,7 +26019,7 @@
       }));
     };
   }
-  kt.checkAndRedirect();
+  Pt.checkAndRedirect();
   function setupViewport() {
     var r = document.querySelector('meta[name="viewport"]');
     if (!r) {
@@ -25900,35 +26089,36 @@
              case 4:
               injectStyles();
               r = initUserExperienceEnhancer(true);
-              o = new st;
+              o = new lt;
               o.loadSettings();
-              a = new it({
+              nt.initGlobal(o);
+              a = new st({
                 "playerState": o
               });
               a.init();
-              p.next = 12;
+              p.next = 13;
               return initAutoLogin();
 
-             case 12:
+             case 13:
               l = p.sent;
               if (l) {
                 window.loginManager = l;
               }
-              u = new Ct;
+              u = new wt;
               u.init();
-              p.next = 20;
+              p.next = 21;
               break;
 
-             case 18:
-              p.prev = 18;
+             case 19:
+              p.prev = 19;
               p.t0 = p["catch"](0);
 
-             case 20:
+             case 21:
              case "end":
               return p.stop();
             }
           }
-        }), _callee2, null, [ [ 0, 18 ] ]);
+        }), _callee2, null, [ [ 0, 19 ] ]);
       })));
       return _startScript.apply(this, arguments);
     }

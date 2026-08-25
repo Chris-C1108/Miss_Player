@@ -1,6 +1,7 @@
 
 import { FloatingButton } from './player/ui/FloatingButton.js';
 import { PlayerState } from './player/state/PlayerState.js';
+import { BlurPlaybackManager } from './player/managers/BlurPlaybackManager.js';
 import { initAutoLogin, CrossDomainBridge } from './autologin/index.js';
 import AdBlocker from './adblock';
 import { initUserExperienceEnhancer, earlyUrlRedirector } from './userExperienceEnhancer';
@@ -120,6 +121,9 @@ function setupViewport() {
             
             // 加载设置
             playerState.loadSettings();
+
+            // 初始化失焦/后台播放控制器
+            BlurPlaybackManager.initGlobal(playerState);
 
             // 创建浮动按钮实例并初始化
             const floatingButton = new FloatingButton({

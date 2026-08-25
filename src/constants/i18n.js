@@ -64,6 +64,8 @@ export class I18n {
             autoQuality: 'Auto Quality',
             helpImprove: 'Help improve',
             helpImproveDesc: 'Collect necessary data to improve features',
+            pauseOnBlur: 'Stop playback on blur',
+            pauseOnBlurDesc: 'Automatically pause video when switching tabs or losing focus',
             
             // 消息提示
             loadingError: 'Failed to load video',
@@ -127,6 +129,8 @@ export class I18n {
             autoQuality: '自动画质',
             helpImprove: '帮助改进',
             helpImproveDesc: '收集必要数据用于改进功能',
+            pauseOnBlur: '失焦后停止播放',
+            pauseOnBlurDesc: '页面离开或失去焦点时自动暂停播放',
             
             // 消息提示
             loadingError: '视频加载失败',
@@ -190,6 +194,8 @@ export class I18n {
             autoQuality: '自動畫質',
             helpImprove: '幫助改進',
             helpImproveDesc: '收集必要數據用於改進功能',
+            pauseOnBlur: '失焦後停止播放',
+            pauseOnBlurDesc: '頁面離開或失去焦點時自動暫停播放',
             
             // 消息提示
             loadingError: '視頻加載失敗',
@@ -252,6 +258,8 @@ export class I18n {
             autoQuality: '自動画质',
             helpImprove: '改善に協力',
             helpImproveDesc: '機能改善のために必要なデータを収集します',
+            pauseOnBlur: 'フォーカス外で再生停止',
+            pauseOnBlurDesc: 'タブ切替やフォーカス喪失時に再生を一時停止',
             
             // 消息提示
             loadingError: '動画の読み込みに失敗しました',
@@ -314,6 +322,8 @@ export class I18n {
             autoQuality: 'Chất lượng tự động',
             helpImprove: 'Giúp cải thiện',
             helpImproveDesc: 'Thu thập dữ liệu cần thiết để cải thiện tính năng',
+            pauseOnBlur: 'Dừng phát khi mất tiêu điểm',
+            pauseOnBlurDesc: 'Tự động tạm dừng khi chuyển tab hoặc mất tiêu điểm',
             
             // 消息提示
             loadingError: 'Không thể tải video',

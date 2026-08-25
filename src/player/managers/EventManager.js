@@ -1,3 +1,5 @@
+import { BlurPlaybackManager } from './BlurPlaybackManager.js';
+
 /**
  * 事件管理器类 - 负责事件监听和处理
  */
@@ -266,6 +268,9 @@ export class EventManager {
             }
         };
         this.targetVideo.addEventListener('pause', this.handlePauseBound);
+
+        // 挂载失焦控制与后台播放状态管理
+        BlurPlaybackManager.attachPlayer(this.targetVideo, this.playerCore);
     }
     
 
