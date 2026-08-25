@@ -11,7 +11,7 @@
 // @description:vi MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @description:zh-CN MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:zh-TW MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器|多語言支持 支持 jable po*nhub 等通用
-// @version 5.6.3
+// @version 5.6.4
 // @author Chris_C
 // @match *://*.missav.ws/*
 // @match *://*.missav.ai/*
@@ -7011,7 +7011,7 @@
         return GM_info.script.version;
       }
     } catch (r) {}
-    return "5.6.3";
+    return "5.6.4";
   }
   function getSiteCategory() {
     if (isSiteDomain("MISSAV")) {
@@ -19620,76 +19620,104 @@
     }, {
       "key": "request",
       "value": function request(r) {
-        var o = r.method, a = o === void 0 ? "GET" : o, l = r.url, u = r.user, p = u === void 0 ? "" : u, v = r.pass, y = v === void 0 ? "" : v, b = r.headers, C = b === void 0 ? {} : b, _ = r.data, k = _ === void 0 ? null : _, S = r.timeout, P = S === void 0 ? 15e3 : S;
+        var o = r.method, a = o === void 0 ? "GET" : o, l = r.url, u = r.user, p = u === void 0 ? "" : u, v = r.pass, y = v === void 0 ? "" : v, b = r.headers, C = b === void 0 ? {} : b, _ = r.data, k = _ === void 0 ? null : _, S = r.timeout, P = S === void 0 ? 12e3 : S;
         var E = this.getAuthHeaders(p, y);
         var D = Object.assign({}, E, C);
         return new Promise((function(r, o) {
+          var u = false;
+          var p = function safeResolve(o) {
+            if (u) {
+              return;
+            }
+            u = true;
+            r(o);
+          };
+          var v = function safeReject(r) {
+            if (u) {
+              return;
+            }
+            u = true;
+            o(r instanceof Error ? r : new Error(String(r)));
+          };
           if (typeof GM_xmlhttpRequest === "function") {
-            GM_xmlhttpRequest({
-              "method": a,
-              "url": l,
-              "headers": D,
-              "data": k,
-              "timeout": P,
-              "onload": function onload(o) {
-                r({
-                  "status": o.status,
-                  "statusText": o.statusText,
-                  "data": o.responseText,
-                  "response": o.response
-                });
-              },
-              "ontimeout": function ontimeout() {
-                o(new Error("WebDAV 请求超时 (".concat(P, "ms)")));
-              },
-              "onerror": function onerror(r) {
-                o(new Error(r.error || "网络请求错误 [".concat(r.status || 0, "]")));
-              }
-            });
-          } else {
-            var u = {
+            try {
+              GM_xmlhttpRequest({
+                "method": a,
+                "url": l,
+                "headers": D,
+                "data": k,
+                "timeout": P,
+                "onload": function onload(r) {
+                  p({
+                    "status": r.status,
+                    "statusText": r.statusText,
+                    "data": r.responseText || "",
+                    "response": r.response
+                  });
+                },
+                "ontimeout": function ontimeout() {
+                  v(new Error("WebDAV 请求超时 (".concat(P, "ms)")));
+                },
+                "onerror": function onerror(r) {
+                  var o = (r === null || r === void 0 ? void 0 : r.error) || (r === null || r === void 0 ? void 0 : r.statusText) || (r !== null && r !== void 0 && r.status ? "HTTP [".concat(r.status, "]") : "网络连接失败，请检查服务器地址或跨域权限");
+                  v(new Error(o));
+                },
+                "onabort": function onabort() {
+                  v(new Error("请求被中止"));
+                }
+              });
+            } catch (r) {
+              v(r);
+            }
+            return;
+          }
+          try {
+            var y = {
               "method": a,
               "headers": D,
               "body": a !== "GET" && a !== "HEAD" && a !== "PROPFIND" ? k : void 0
             };
-            var p = new AbortController;
-            var v = setTimeout((function() {
-              return p.abort();
+            var b = new AbortController;
+            var C = setTimeout((function() {
+              b.abort();
+              v(new Error("WebDAV 请求超时 (".concat(P, "ms)")));
             }), P);
-            u.signal = p.signal;
-            fetch(l, u).then(function() {
-              var o = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee(o) {
-                var a;
-                return WebDavClient_regeneratorRuntime().wrap((function _callee$(l) {
+            y.signal = b.signal;
+            fetch(l, y).then(function() {
+              var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee(r) {
+                var o;
+                return WebDavClient_regeneratorRuntime().wrap((function _callee$(a) {
                   while (1) {
-                    switch (l.prev = l.next) {
+                    switch (a.prev = a.next) {
                      case 0:
-                      clearTimeout(v);
-                      l.next = 3;
-                      return o.text();
+                      clearTimeout(C);
+                      a.next = 3;
+                      return r.text();
 
                      case 3:
-                      a = l.sent;
-                      r({
-                        "status": o.status,
-                        "statusText": o.statusText,
-                        "data": a
+                      o = a.sent;
+                      p({
+                        "status": r.status,
+                        "statusText": r.statusText,
+                        "data": o
                       });
 
                      case 5:
                      case "end":
-                      return l.stop();
+                      return a.stop();
                     }
                   }
                 }), _callee);
               })));
-              return function(r) {
-                return o.apply(this, arguments);
+              return function(o) {
+                return r.apply(this, arguments);
               };
             }())["catch"]((function(r) {
-              clearTimeout(v);
-              o(r);
+              clearTimeout(C);
+              v(r);
             }));
+          } catch (r) {
+            v(r);
           }
         }));
       }
@@ -19697,69 +19725,82 @@
       "key": "testConnection",
       "value": function() {
         var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee2(r) {
-          var o, a, l, u, p, v, y;
-          return WebDavClient_regeneratorRuntime().wrap((function _callee2$(b) {
+          var o, a, l, u, p, v, y, b;
+          return WebDavClient_regeneratorRuntime().wrap((function _callee2$(C) {
             while (1) {
-              switch (b.prev = b.next) {
+              switch (C.prev = C.next) {
                case 0:
                 o = r.url, a = r.user, l = r.pass, u = r.path, p = u === void 0 ? "/MissPlayer/" : u;
                 if (o) {
-                  b.next = 3;
+                  C.next = 3;
                   break;
                 }
                 throw new Error("WebDAV 服务器地址不能为空");
 
                case 3:
-                v = this.normalizeUrl(o, "/");
-                b.prev = 4;
-                b.next = 7;
+                v = (p || "/MissPlayer/").trim();
+                if (!v.startsWith("/")) {
+                  v = "/" + v;
+                }
+                if (!v.endsWith("/")) {
+                  v += "/";
+                }
+                y = this.normalizeUrl(o, v + "miss_player_sync.json");
+                C.prev = 7;
+                C.next = 10;
                 return this.request({
-                  "method": "PROPFIND",
-                  "url": v,
+                  "method": "GET",
+                  "url": y,
                   "user": a,
                   "pass": l,
                   "headers": {
-                    "Depth": "0",
-                    "Content-Type": "application/xml; charset=utf-8"
+                    "Cache-Control": "no-cache",
+                    "Pragma": "no-cache"
                   }
                 });
 
-               case 7:
-                y = b.sent;
-                if (!(y.status === 401 || y.status === 403)) {
-                  b.next = 10;
-                  break;
-                }
-                throw new Error("认证失败 (".concat(y.status, "): 请检查用户名与密码/Token"));
-
                case 10:
-                if (!(y.status >= 500)) {
-                  b.next = 12;
+                b = C.sent;
+                if (!(b.status === 401 || b.status === 403)) {
+                  C.next = 13;
                   break;
                 }
-                throw new Error("服务器错误 (".concat(y.status, ")"));
+                throw new Error("认证失败 (".concat(b.status, "): 请检查用户名与密码/Token"));
 
-               case 12:
-                b.next = 14;
-                return this.ensureDirectory(r);
+               case 13:
+                if (!(b.status >= 500)) {
+                  C.next = 15;
+                  break;
+                }
+                throw new Error("服务器错误 (".concat(b.status, ")"));
 
-               case 14:
-                return b.abrupt("return", {
+               case 15:
+                if (!(b.status === 200 || b.status === 404 || b.status === 204 || b.status === 207)) {
+                  C.next = 17;
+                  break;
+                }
+                return C.abrupt("return", {
                   "success": true,
-                  "message": "WebDAV 连接与目录创建成功！"
+                  "message": "WebDAV 连接成功！"
                 });
 
                case 17:
-                b.prev = 17;
-                b.t0 = b["catch"](4);
-                throw b.t0;
+                return C.abrupt("return", {
+                  "success": true,
+                  "message": "WebDAV 响应状态: ".concat(b.status)
+                });
 
                case 20:
+                C.prev = 20;
+                C.t0 = C["catch"](7);
+                throw C.t0;
+
+               case 23:
                case "end":
-                return b.stop();
+                return C.stop();
               }
             }
-          }), _callee2, this, [ [ 4, 17 ] ]);
+          }), _callee2, this, [ [ 7, 20 ] ]);
         })));
         function testConnection(o) {
           return r.apply(this, arguments);
@@ -19770,10 +19811,10 @@
       "key": "ensureDirectory",
       "value": function() {
         var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee3(r) {
-          var o, a, l, u, p, v, y, b, C, _, k, S, P, E, D, L, M, T, A;
-          return WebDavClient_regeneratorRuntime().wrap((function _callee3$(j) {
+          var o, a, l, u, p, v, y, b, C, _, k, S, P;
+          return WebDavClient_regeneratorRuntime().wrap((function _callee3$(E) {
             while (1) {
-              switch (j.prev = j.next) {
+              switch (E.prev = E.next) {
                case 0:
                 o = r.url, a = r.user, l = r.pass, u = r.path, p = u === void 0 ? "/MissPlayer/" : u;
                 v = (p || "/MissPlayer/").trim();
@@ -19786,109 +19827,19 @@
                 y = v.split("/").filter(Boolean);
                 b = "";
                 C = WebDavClient_createForOfIteratorHelper(y);
-                j.prev = 7;
+                E.prev = 7;
                 C.s();
 
                case 9:
                 if ((_ = C.n()).done) {
-                  j.next = 58;
+                  E.next = 25;
                   break;
                 }
                 k = _.value;
                 b += "/" + k;
                 S = this.normalizeUrl(o, b + "/");
-                P = this.normalizeUrl(o, b);
-                E = false;
-                j.prev = 15;
-                j.next = 18;
-                return this.request({
-                  "method": "PROPFIND",
-                  "url": S,
-                  "user": a,
-                  "pass": l,
-                  "headers": {
-                    "Depth": "0"
-                  }
-                });
-
-               case 18:
-                D = j.sent;
-                if (D.status === 207 || D.status >= 200 && D.status < 300) {
-                  E = true;
-                }
-                j.next = 24;
-                break;
-
-               case 22:
-                j.prev = 22;
-                j.t0 = j["catch"](15);
-
-               case 24:
-                if (E) {
-                  j.next = 34;
-                  break;
-                }
-                j.prev = 25;
-                j.next = 28;
-                return this.request({
-                  "method": "PROPFIND",
-                  "url": P,
-                  "user": a,
-                  "pass": l,
-                  "headers": {
-                    "Depth": "0"
-                  }
-                });
-
-               case 28:
-                L = j.sent;
-                if (L.status === 207 || L.status >= 200 && L.status < 300) {
-                  E = true;
-                }
-                j.next = 34;
-                break;
-
-               case 32:
-                j.prev = 32;
-                j.t1 = j["catch"](25);
-
-               case 34:
-                if (!E) {
-                  j.next = 36;
-                  break;
-                }
-                return j.abrupt("continue", 56);
-
-               case 36:
-                M = false;
-                j.prev = 37;
-                j.next = 40;
-                return this.request({
-                  "method": "MKCOL",
-                  "url": P,
-                  "user": a,
-                  "pass": l
-                });
-
-               case 40:
-                T = j.sent;
-                if (T.status === 201 || T.status === 200 || T.status === 204 || T.status === 405) {
-                  M = true;
-                }
-                j.next = 46;
-                break;
-
-               case 44:
-                j.prev = 44;
-                j.t2 = j["catch"](37);
-
-               case 46:
-                if (M) {
-                  j.next = 56;
-                  break;
-                }
-                j.prev = 47;
-                j.next = 50;
+                E.prev = 13;
+                E.next = 16;
                 return this.request({
                   "method": "MKCOL",
                   "url": S,
@@ -19896,42 +19847,46 @@
                   "pass": l
                 });
 
-               case 50:
-                A = j.sent;
-                if (A.status === 201 || A.status === 200 || A.status === 204 || A.status === 405) {
-                  M = true;
+               case 16:
+                P = E.sent;
+                if (!(P.status === 201 || P.status === 405 || P.status === 200 || P.status === 204)) {
+                  E.next = 19;
+                  break;
                 }
-                j.next = 56;
+                return E.abrupt("continue", 23);
+
+               case 19:
+                E.next = 23;
                 break;
 
-               case 54:
-                j.prev = 54;
-                j.t3 = j["catch"](47);
+               case 21:
+                E.prev = 21;
+                E.t0 = E["catch"](13);
 
-               case 56:
-                j.next = 9;
+               case 23:
+                E.next = 9;
                 break;
 
-               case 58:
-                j.next = 63;
+               case 25:
+                E.next = 30;
                 break;
 
-               case 60:
-                j.prev = 60;
-                j.t4 = j["catch"](7);
-                C.e(j.t4);
+               case 27:
+                E.prev = 27;
+                E.t1 = E["catch"](7);
+                C.e(E.t1);
 
-               case 63:
-                j.prev = 63;
+               case 30:
+                E.prev = 30;
                 C.f();
-                return j.finish(63);
+                return E.finish(30);
 
-               case 66:
+               case 33:
                case "end":
-                return j.stop();
+                return E.stop();
               }
             }
-          }), _callee3, this, [ [ 7, 60, 63, 66 ], [ 15, 22 ], [ 25, 32 ], [ 37, 44 ], [ 47, 54 ] ]);
+          }), _callee3, this, [ [ 7, 27, 30, 33 ], [ 13, 21 ] ]);
         })));
         function ensureDirectory(o) {
           return r.apply(this, arguments);
@@ -20030,10 +19985,6 @@
                case 0:
                 a = S.length > 2 && S[2] !== void 0 ? S[2] : "miss_player_sync.json";
                 l = r.url, u = r.user, p = r.pass, v = r.path, y = v === void 0 ? "/MissPlayer/" : v;
-                P.next = 4;
-                return this.ensureDirectory(r);
-
-               case 4:
                 b = (y || "/MissPlayer/").trim();
                 if (!b.startsWith("/")) {
                   b = "/" + b;
@@ -20043,8 +19994,8 @@
                 }
                 C = this.normalizeUrl(l, b + a);
                 _ = JSON.stringify(o, null, 2);
-                P.prev = 9;
-                P.next = 12;
+                P.prev = 7;
+                P.next = 10;
                 return this.request({
                   "method": "PUT",
                   "url": C,
@@ -20056,17 +20007,17 @@
                   "data": _
                 });
 
-               case 12:
+               case 10:
                 k = P.sent;
                 if (!(k.status === 404 || k.status === 409)) {
-                  P.next = 19;
+                  P.next = 17;
                   break;
                 }
-                P.next = 16;
+                P.next = 14;
                 return this.ensureDirectory(r);
 
-               case 16:
-                P.next = 18;
+               case 14:
+                P.next = 16;
                 return this.request({
                   "method": "PUT",
                   "url": C,
@@ -20078,19 +20029,19 @@
                   "data": _
                 });
 
-               case 18:
+               case 16:
                 k = P.sent;
 
-               case 19:
+               case 17:
                 if (!(k.status === 401 || k.status === 403)) {
-                  P.next = 21;
+                  P.next = 19;
                   break;
                 }
                 throw new Error("认证失败 (".concat(k.status, "): 权限不足或密码错误"));
 
-               case 21:
+               case 19:
                 if (!(k.status === 200 || k.status === 201 || k.status === 204)) {
-                  P.next = 23;
+                  P.next = 21;
                   break;
                 }
                 return P.abrupt("return", {
@@ -20098,20 +20049,20 @@
                   "status": k.status
                 });
 
-               case 23:
+               case 21:
                 throw new Error("上传失败，服务器返回状态码: ".concat(k.status));
 
-               case 26:
-                P.prev = 26;
-                P.t0 = P["catch"](9);
+               case 24:
+                P.prev = 24;
+                P.t0 = P["catch"](7);
                 throw P.t0;
 
-               case 29:
+               case 27:
                case "end":
                 return P.stop();
               }
             }
-          }), _callee5, this, [ [ 9, 26 ] ]);
+          }), _callee5, this, [ [ 7, 24 ] ]);
         })));
         function uploadBackup(o, a) {
           return r.apply(this, arguments);
@@ -20957,14 +20908,14 @@
         });
         return {
           "schemaVersion": pt,
-          "scriptVersion": "5.6.3",
+          "scriptVersion": "5.6.4",
           "lastModified": a,
           "lastModifiedBy": o,
           "devices": SyncManager_defineProperty({}, o, {
             "deviceName": getDeviceName(),
             "deviceType": D,
             "lastSyncTime": a,
-            "scriptVersion": "5.6.3"
+            "scriptVersion": "5.6.4"
           }),
           "deviceLayouts": L,
           "settings": p,
@@ -21080,7 +21031,7 @@
           "deviceName": getDeviceName(),
           "deviceType": getDeviceType(),
           "lastSyncTime": u,
-          "scriptVersion": "5.6.3"
+          "scriptVersion": "5.6.4"
         };
         var V = r.settings || {};
         var G = l.settings || {};
@@ -21195,7 +21146,7 @@
         var ae = Object.assign({}, l.deviceLayouts || {}, r.deviceLayouts || {});
         return {
           "schemaVersion": pt,
-          "scriptVersion": "5.6.3",
+          "scriptVersion": "5.6.4",
           "lastModified": u,
           "lastModifiedBy": a,
           "devices": O,
@@ -21361,16 +21312,16 @@
         if (!l.url || l.autoSync === false) {
           return;
         }
+        this.startPeriodicSync(o);
         if (this._isAutoSyncing) {
           return;
         }
         var u = Date.now();
         var p = this.getLastSyncTime();
-        if (a === "startup" || a === "resume") {
-          if (p > 0 && u - p < 60 * 1e3) {
+        if (a === "resume") {
+          if (p > 0 && u - p < 15 * 1e3) {
             return;
           }
-          var v = a === "resume" ? 1e3 : 2500;
           setTimeout(SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee2() {
             return SyncManager_regeneratorRuntime().wrap((function _callee2$(a) {
               while (1) {
@@ -21404,14 +21355,11 @@
                 }
               }
             }), _callee2, null, [ [ 0, 6, 8, 11 ] ]);
-          }))), v);
+          }))), 1e3);
           return;
         }
-        if (a === "change") {
-          if (this._autoSyncDebounceTimer) {
-            clearTimeout(this._autoSyncDebounceTimer);
-          }
-          this._autoSyncDebounceTimer = setTimeout(SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee3() {
+        if (a === "startup") {
+          setTimeout(SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee3() {
             return SyncManager_regeneratorRuntime().wrap((function _callee3$(a) {
               while (1) {
                 switch (a.prev = a.next) {
@@ -21444,8 +21392,112 @@
                 }
               }
             }), _callee3, null, [ [ 0, 6, 8, 11 ] ]);
-          }))), 5e3);
+          }))), 1500);
+          return;
         }
+        if (a === "change") {
+          if (this._autoSyncDebounceTimer) {
+            clearTimeout(this._autoSyncDebounceTimer);
+          }
+          this._autoSyncDebounceTimer = setTimeout(SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee4() {
+            return SyncManager_regeneratorRuntime().wrap((function _callee4$(a) {
+              while (1) {
+                switch (a.prev = a.next) {
+                 case 0:
+                  a.prev = 0;
+                  r._isAutoSyncing = true;
+                  a.next = 4;
+                  return r.executeSync({
+                    "mode": "merge",
+                    "config": l,
+                    "playerState": o
+                  });
+
+                 case 4:
+                  a.next = 8;
+                  break;
+
+                 case 6:
+                  a.prev = 6;
+                  a.t0 = a["catch"](0);
+
+                 case 8:
+                  a.prev = 8;
+                  r._isAutoSyncing = false;
+                  return a.finish(8);
+
+                 case 11:
+                 case "end":
+                  return a.stop();
+                }
+              }
+            }), _callee4, null, [ [ 0, 6, 8, 11 ] ]);
+          }))), 3e3);
+        }
+      }
+    }, {
+      "key": "startPeriodicSync",
+      "value": function startPeriodicSync() {
+        var r = this;
+        var o = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : null;
+        if (this._periodicTimer) {
+          return;
+        }
+        this._periodicTimer = setInterval(SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee5() {
+          var a, l, u, p, v, y;
+          return SyncManager_regeneratorRuntime().wrap((function _callee5$(b) {
+            while (1) {
+              switch (b.prev = b.next) {
+               case 0:
+                a = r.getWebDavConfig();
+                if (!(!a.url || a.autoSync === false || r._isAutoSyncing)) {
+                  b.next = 3;
+                  break;
+                }
+                return b.abrupt("return");
+
+               case 3:
+                b.prev = 3;
+                r._isAutoSyncing = true;
+                b.next = 7;
+                return it.downloadBackup(a);
+
+               case 7:
+                l = b.sent;
+                if (l) {
+                  b.next = 10;
+                  break;
+                }
+                return b.abrupt("return");
+
+               case 10:
+                u = r.getLastSyncTime();
+                if ((l.lastModified || 0) > u) {
+                  p = SyncManager_getOrCreateClientId();
+                  v = r.gatherLocalData(o);
+                  y = r.mergeData(v, l, p);
+                  r.applyDataToLocal(y, o);
+                  r.setLastSyncTime(y.lastModified);
+                }
+                b.next = 16;
+                break;
+
+               case 14:
+                b.prev = 14;
+                b.t0 = b["catch"](3);
+
+               case 16:
+                b.prev = 16;
+                r._isAutoSyncing = false;
+                return b.finish(16);
+
+               case 19:
+               case "end":
+                return b.stop();
+              }
+            }
+          }), _callee5, null, [ [ 3, 14, 16, 19 ] ]);
+        }))), 25e3);
       }
     } ]);
   }();

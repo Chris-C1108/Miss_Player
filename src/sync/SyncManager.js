@@ -320,7 +320,7 @@ export class SyncManager {
 
         return {
             schemaVersion: CURRENT_SCHEMA_VERSION,
-            scriptVersion: '5.6.3',
+            scriptVersion: '5.6.4',
             lastModified: now,
             lastModifiedBy: clientId,
             devices: {
@@ -328,7 +328,7 @@ export class SyncManager {
                     deviceName: getDeviceName(),
                     deviceType,
                     lastSyncTime: now,
-                    scriptVersion: '5.6.3'
+                    scriptVersion: '5.6.4'
                 }
             },
             deviceLayouts,
@@ -425,7 +425,7 @@ export class SyncManager {
             deviceName: getDeviceName(),
             deviceType: getDeviceType(),
             lastSyncTime: now,
-            scriptVersion: '5.6.3'
+            scriptVersion: '5.6.4'
         };
 
         // 3. 字段级 LWW 合并 Settings 配置
@@ -546,7 +546,7 @@ export class SyncManager {
 
         return {
             schemaVersion: CURRENT_SCHEMA_VERSION,
-            scriptVersion: '5.6.3',
+            scriptVersion: '5.6.4',
             lastModified: now,
             lastModifiedBy: clientId,
             devices: mergedDevices,
@@ -688,34 +688,52 @@ export class SyncManager {
             return;
         }
 
+        // 启动后台 25 秒心跳轮询 (确保两端同时播放或挂起时能实时获取对方的修改)
+        this.startPeriodicSync(playerState);
+
         if (this._isAutoSyncing) return;
 
         const now = Date.now();
         const lastSync = this.getLastSyncTime();
 
-        if (reason === 'startup' || reason === 'resume') {
-            // 启动或页面切回唤醒时节流：若 60 秒内已成功同步，则无需重复同步
-            if (lastSync > 0 && now - lastSync < 60 * 1000) {
+        if (reason === 'resume') {
+            // 切回标签页唤醒时节流：若 15 秒内已同步则跳过
+            if (lastSync > 0 && now - lastSync < 15 * 1000) {
                 return;
             }
 
-            const delay = reason === 'resume' ? 1000 : 2500;
             setTimeout(async () => {
                 try {
                     this._isAutoSyncing = true;
                     await this.executeSync({ mode: 'merge', config, playerState });
-                    console.log(`[SyncManager] 自动智能合并同步 (${reason}) 完成`);
+                    console.log('[SyncManager] 自动智能合并同步 (resume) 完成');
                 } catch (err) {
-                    console.warn(`[SyncManager] ${reason} 自动同步未完成:`, err.message || err);
+                    console.warn('[SyncManager] resume 自动同步未完成:', err.message || err);
                 } finally {
                     this._isAutoSyncing = false;
                 }
-            }, delay);
+            }, 1000);
+            return;
+        }
+
+        if (reason === 'startup') {
+            // 启动时延迟 1.5 秒在后台静默拉取合并
+            setTimeout(async () => {
+                try {
+                    this._isAutoSyncing = true;
+                    await this.executeSync({ mode: 'merge', config, playerState });
+                    console.log('[SyncManager] 自动智能合并同步 (startup) 完成');
+                } catch (err) {
+                    console.warn('[SyncManager] 启动自动同步未完成:', err.message || err);
+                } finally {
+                    this._isAutoSyncing = false;
+                }
+            }, 1500);
             return;
         }
 
         if (reason === 'change') {
-            // 变更时防抖：5 秒无新变更后静默在后台同步
+            // 变更时防抖：3 秒无新变更后静默在后台同步
             if (this._autoSyncDebounceTimer) {
                 clearTimeout(this._autoSyncDebounceTimer);
             }
@@ -729,7 +747,38 @@ export class SyncManager {
                 } finally {
                     this._isAutoSyncing = false;
                 }
-            }, 5000);
+            }, 3000);
         }
+    }
+
+    /**
+     * 启动后台 25 秒轻量心跳轮询
+     */
+    static startPeriodicSync(playerState = null) {
+        if (this._periodicTimer) return;
+        this._periodicTimer = setInterval(async () => {
+            const config = this.getWebDavConfig();
+            if (!config.url || config.autoSync === false || this._isAutoSyncing) {
+                return;
+            }
+            try {
+                this._isAutoSyncing = true;
+                const remoteData = await WebDavClient.downloadBackup(config);
+                if (!remoteData) return;
+                const lastSync = this.getLastSyncTime();
+                // 仅当远端有更新时才执行合并与落盘
+                if ((remoteData.lastModified || 0) > lastSync) {
+                    const clientId = getOrCreateClientId();
+                    const localData = this.gatherLocalData(playerState);
+                    const mergedData = this.mergeData(localData, remoteData, clientId);
+                    this.applyDataToLocal(mergedData, playerState);
+                    this.setLastSyncTime(mergedData.lastModified);
+                    console.log('[SyncManager] 后台轮询检测到云端更新并已无感同步');
+                }
+            } catch (_) {
+            } finally {
+                this._isAutoSyncing = false;
+            }
+        }, 25000);
     }
 }

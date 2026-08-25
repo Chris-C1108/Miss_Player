@@ -46,7 +46,7 @@ export class WebDavClient {
     }
 
     /**
-     * 执行底层 HTTP 请求 (优先调用 GM_xmlhttpRequest)
+     * 执行底层 HTTP 请求 (优先调用 GM_xmlhttpRequest，支持超时、异常捕获与 abort)
      * @param {Object} options - 请求配置
      * @returns {Promise<{ status: number, statusText: string, data: string, headers: Object }>}
      */
@@ -58,37 +58,63 @@ export class WebDavClient {
             pass = '',
             headers = {},
             data = null,
-            timeout = 15000
+            timeout = 12000
         } = options;
 
         const authHeaders = this.getAuthHeaders(user, pass);
         const mergedHeaders = Object.assign({}, authHeaders, headers);
 
         return new Promise((resolve, reject) => {
+            let settled = false;
+
+            const safeResolve = (res) => {
+                if (settled) return;
+                settled = true;
+                resolve(res);
+            };
+
+            const safeReject = (err) => {
+                if (settled) return;
+                settled = true;
+                reject(err instanceof Error ? err : new Error(String(err)));
+            };
+
+            // 1. 优先使用 GM_xmlhttpRequest
             if (typeof GM_xmlhttpRequest === 'function') {
-                GM_xmlhttpRequest({
-                    method,
-                    url,
-                    headers: mergedHeaders,
-                    data,
-                    timeout,
-                    onload: (res) => {
-                        resolve({
-                            status: res.status,
-                            statusText: res.statusText,
-                            data: res.responseText,
-                            response: res.response
-                        });
-                    },
-                    ontimeout: () => {
-                        reject(new Error(`WebDAV 请求超时 (${timeout}ms)`));
-                    },
-                    onerror: (err) => {
-                        reject(new Error(err.error || `网络请求错误 [${err.status || 0}]`));
-                    }
-                });
-            } else {
-                // 浏览器原生 fetch 降级
+                try {
+                    GM_xmlhttpRequest({
+                        method,
+                        url,
+                        headers: mergedHeaders,
+                        data,
+                        timeout,
+                        onload: (res) => {
+                            safeResolve({
+                                status: res.status,
+                                statusText: res.statusText,
+                                data: res.responseText || '',
+                                response: res.response
+                            });
+                        },
+                        ontimeout: () => {
+                            safeReject(new Error(`WebDAV 请求超时 (${timeout}ms)`));
+                        },
+                        onerror: (err) => {
+                            const msg = err?.error || err?.statusText || (err?.status ? `HTTP [${err.status}]` : '网络连接失败，请检查服务器地址或跨域权限');
+                            safeReject(new Error(msg));
+                        },
+                        onabort: () => {
+                            safeReject(new Error('请求被中止'));
+                        }
+                    });
+                } catch (e) {
+                    safeReject(e);
+                }
+                return;
+            }
+
+            // 2. 浏览器原生 fetch 降级
+            try {
                 const fetchOpts = {
                     method,
                     headers: mergedHeaders,
@@ -96,14 +122,17 @@ export class WebDavClient {
                 };
 
                 const controller = new AbortController();
-                const timer = setTimeout(() => controller.abort(), timeout);
+                const timer = setTimeout(() => {
+                    controller.abort();
+                    safeReject(new Error(`WebDAV 请求超时 (${timeout}ms)`));
+                }, timeout);
                 fetchOpts.signal = controller.signal;
 
                 fetch(url, fetchOpts)
                     .then(async (res) => {
                         clearTimeout(timer);
                         const text = await res.text();
-                        resolve({
+                        safeResolve({
                             status: res.status,
                             statusText: res.statusText,
                             data: text
@@ -111,14 +140,16 @@ export class WebDavClient {
                     })
                     .catch((err) => {
                         clearTimeout(timer);
-                        reject(err);
+                        safeReject(err);
                     });
+            } catch (e) {
+                safeReject(e);
             }
         });
     }
 
     /**
-     * 测试 WebDAV 连通性并自动探测/创建专用文件夹
+     * 测试 WebDAV 连通性
      * @param {Object} config - { url, user, pass, path }
      * @returns {Promise<{ success: boolean, message: string }>}
      */
@@ -128,18 +159,22 @@ export class WebDavClient {
             throw new Error('WebDAV 服务器地址不能为空');
         }
 
-        const testUrl = this.normalizeUrl(url, '/');
-        
+        let cleanPath = (path || '/MissPlayer/').trim();
+        if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+        if (!cleanPath.endsWith('/')) cleanPath = cleanPath + '/';
+
+        const fileUrl = this.normalizeUrl(url, cleanPath + 'miss_player_sync.json');
+
         try {
-            // 1. 验证基础鉴权与服务器根连通性 (发送 PROPFIND)
+            // 发送 GET 探测备份文件是否存在或连通
             const res = await this.request({
-                method: 'PROPFIND',
-                url: testUrl,
+                method: 'GET',
+                url: fileUrl,
                 user,
                 pass,
                 headers: {
-                    'Depth': '0',
-                    'Content-Type': 'application/xml; charset=utf-8'
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
                 }
             });
 
@@ -151,12 +186,17 @@ export class WebDavClient {
                 throw new Error(`服务器错误 (${res.status})`);
             }
 
-            // 2. 确保专用备份文件夹存在
-            await this.ensureDirectory(config);
+            // 若返回 200 (文件已存在) 或 404 (连接正常，文件尚未创建) 均代表认证及连通成功！
+            if (res.status === 200 || res.status === 404 || res.status === 204 || res.status === 207) {
+                return {
+                    success: true,
+                    message: 'WebDAV 连接成功！'
+                };
+            }
 
             return {
                 success: true,
-                message: 'WebDAV 连接与目录创建成功！'
+                message: `WebDAV 响应状态: ${res.status}`
             };
         } catch (error) {
             console.error('[WebDavClient] 测试连接失败:', error);
@@ -165,8 +205,7 @@ export class WebDavClient {
     }
 
     /**
-     * 递归确保 WebDAV 上的专用目录存在 (若不存在则通过 MKCOL 自动创建)
-     * 支持带尾部斜杠与不带斜杠的双重容错探测与创建
+     * 递归确保 WebDAV 上的专用目录存在 (通过 MKCOL 创建)
      * @param {Object} config - { url, user, pass, path }
      */
     static async ensureDirectory(config) {
@@ -175,79 +214,27 @@ export class WebDavClient {
         if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
         if (!cleanPath.endsWith('/')) cleanPath = cleanPath + '/';
 
-        // 拆分各层级子路径，例如 /backups/MissPlayer/ -> ['backups', 'MissPlayer']
         const segments = cleanPath.split('/').filter(Boolean);
         let currentPath = '';
 
         for (const seg of segments) {
             currentPath += '/' + seg;
             const dirUrlWithSlash = this.normalizeUrl(url, currentPath + '/');
-            const dirUrlNoSlash = this.normalizeUrl(url, currentPath);
 
-            let isExisting = false;
-
-            // 1. 尝试使用 PROPFIND 探测目录是否已存在
             try {
-                const propRes = await this.request({
-                    method: 'PROPFIND',
-                    url: dirUrlWithSlash,
-                    user,
-                    pass,
-                    headers: { 'Depth': '0' }
-                });
-
-                if (propRes.status === 207 || (propRes.status >= 200 && propRes.status < 300)) {
-                    isExisting = true;
-                }
-            } catch (_) {}
-
-            if (!isExisting) {
-                try {
-                    const propResNoSlash = await this.request({
-                        method: 'PROPFIND',
-                        url: dirUrlNoSlash,
-                        user,
-                        pass,
-                        headers: { 'Depth': '0' }
-                    });
-                    if (propResNoSlash.status === 207 || (propResNoSlash.status >= 200 && propResNoSlash.status < 300)) {
-                        isExisting = true;
-                    }
-                } catch (_) {}
-            }
-
-            if (isExisting) continue;
-
-            // 2. 目录不存在，执行 MKCOL 创建 (先尝试无斜杠，再尝试带斜杠)
-            let created = false;
-            try {
-                const mkcolRes = await this.request({
+                const res = await this.request({
                     method: 'MKCOL',
-                    url: dirUrlNoSlash,
+                    url: dirUrlWithSlash,
                     user,
                     pass
                 });
-                if (mkcolRes.status === 201 || mkcolRes.status === 200 || mkcolRes.status === 204 || mkcolRes.status === 405) {
-                    created = true;
+                // 201: 已创建, 405: 目录已存在(合法), 200/204: 成功
+                if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204) {
+                    continue;
                 }
             } catch (err) {
-                console.warn(`[WebDavClient] MKCOL (no-slash) 创建目录 ${currentPath} 遇到状态:`, err);
-            }
-
-            if (!created) {
-                try {
-                    const mkcolResSlash = await this.request({
-                        method: 'MKCOL',
-                        url: dirUrlWithSlash,
-                        user,
-                        pass
-                    });
-                    if (mkcolResSlash.status === 201 || mkcolResSlash.status === 200 || mkcolResSlash.status === 204 || mkcolResSlash.status === 405) {
-                        created = true;
-                    }
-                } catch (err) {
-                    console.warn(`[WebDavClient] MKCOL (with-slash) 创建目录 ${currentPath} 遇到状态:`, err);
-                }
+                // 忽略创建目录的非致命异常
+                console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到状态:`, err.message || err);
             }
         }
     }
@@ -302,16 +289,13 @@ export class WebDavClient {
     }
 
     /**
-     * 上传备份 JSON 数据至 WebDAV (自动确保目录已创建，支持 404/409 自动自愈重试)
+     * 上传备份 JSON 数据至 WebDAV (支持 404/409 自动创建目录并重试)
      * @param {Object} config - { url, user, pass, path }
      * @param {Object} data - 要备份的完整 JSON 对象
      * @param {string} [filename='miss_player_sync.json'] - 文件名
      */
     static async uploadBackup(config, data, filename = 'miss_player_sync.json') {
         const { url, user, pass, path = '/MissPlayer/' } = config;
-        
-        // 1. 确保目录结构存在
-        await this.ensureDirectory(config);
 
         let dirPath = (path || '/MissPlayer/').trim();
         if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
@@ -332,9 +316,9 @@ export class WebDavClient {
                 data: jsonString
             });
 
-            // 如果遇到 404 / 409 (父目录未完全识别)，强制二次确保目录并重试 PUT
+            // 如果遇到 404 / 409 (父目录未创建)，自动创建目录并重试 PUT
             if (res.status === 404 || res.status === 409) {
-                console.warn(`[WebDavClient] PUT 返回 ${res.status}，强制二次创建目录并重试上传...`);
+                console.warn(`[WebDavClient] PUT 返回 ${res.status}，自动创建目录并重试上传...`);
                 await this.ensureDirectory(config);
                 res = await this.request({
                     method: 'PUT',
