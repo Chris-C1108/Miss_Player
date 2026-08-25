@@ -389,6 +389,9 @@ export class UIManager {
         
         // 添加点击事件用于显示/隐藏控制界面（横竖屏均有效）
         this.videoWrapper.addEventListener('click', (e) => {
+            // 阻止冒泡至宿主页面，防止触发宿主站点的广告弹窗监听
+            e.stopPropagation();
+
             // 如果是长按触发的，不执行点击操作
             if (isLongPress) {
                 return;

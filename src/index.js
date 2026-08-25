@@ -13,7 +13,11 @@ import { logger } from './utils/logger.js';
 import { telemetry } from './telemetry';
 import { SyncManager } from './sync/index.js';
 
-// 确保最早执行URL重定向检查
+// 1. 最早执行广告与弹窗拦截 (确保在宿主脚本加载前劫持 window.open 与广告请求)
+const earlyAdBlocker = new AdBlocker();
+earlyAdBlocker.init();
+
+// 2. 确保最早执行URL重定向检查
 earlyUrlRedirector.checkAndRedirect();
 
 /**

@@ -178,10 +178,30 @@ class RequestBlocker {
   }
   
   blockPopups() {
-    window.open = function() { return null; };
-    if (typeof unsafeWindow !== 'undefined') {
-      unsafeWindow.open = function() { return null; };
-    }
+    const noopOpen = function() { return null; };
+    try {
+      window.open = noopOpen;
+    } catch (_) {}
+    try {
+      if (typeof unsafeWindow !== 'undefined' && unsafeWindow) {
+        unsafeWindow.open = noopOpen;
+      }
+    } catch (_) {}
+
+    // 拦截 <a> 标签编程式 click 打开广告新标签页
+    try {
+      const origClick = HTMLAnchorElement.prototype.click;
+      const config = this.config;
+      HTMLAnchorElement.prototype.click = function() {
+        if (this.href && config.shouldBlockUrl(this.href)) {
+          return;
+        }
+        if (this.target === '_blank' && this.href && (this.href.includes('ads') || this.href.includes('pop') || config.shouldBlockUrl(this.href))) {
+          return;
+        }
+        return origClick.apply(this, arguments);
+      };
+    } catch (_) {}
   }
   
   init() {
@@ -196,7 +216,13 @@ class RequestBlocker {
  */
 class AdBlocker {
   constructor() {
-    const isMissav = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(window.location.href);
+    let isMissav = false;
+    try {
+      const { isSiteDomain } = require('../constants/domains.js');
+      isMissav = isSiteDomain('MISSAV');
+    } catch (_) {
+      isMissav = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai|live|net|org)/i.test(window.location.href);
+    }
     const siteConfig = isMissav ? missavConfig : {};
     this.config = new AdBlockConfig(siteConfig);
     this.styleManager = new StyleManager(this.config);

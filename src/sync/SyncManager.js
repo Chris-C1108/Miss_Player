@@ -320,7 +320,7 @@ export class SyncManager {
 
         return {
             schemaVersion: CURRENT_SCHEMA_VERSION,
-            scriptVersion: '5.6.4',
+            scriptVersion: '5.6.5',
             lastModified: now,
             lastModifiedBy: clientId,
             devices: {
@@ -328,7 +328,7 @@ export class SyncManager {
                     deviceName: getDeviceName(),
                     deviceType,
                     lastSyncTime: now,
-                    scriptVersion: '5.6.4'
+                    scriptVersion: '5.6.5'
                 }
             },
             deviceLayouts,
@@ -425,7 +425,7 @@ export class SyncManager {
             deviceName: getDeviceName(),
             deviceType: getDeviceType(),
             lastSyncTime: now,
-            scriptVersion: '5.6.4'
+            scriptVersion: '5.6.5'
         };
 
         // 3. 字段级 LWW 合并 Settings 配置
@@ -546,7 +546,7 @@ export class SyncManager {
 
         return {
             schemaVersion: CURRENT_SCHEMA_VERSION,
-            scriptVersion: '5.6.4',
+            scriptVersion: '5.6.5',
             lastModified: now,
             lastModifiedBy: clientId,
             devices: mergedDevices,

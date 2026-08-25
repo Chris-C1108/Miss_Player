@@ -245,15 +245,7 @@ export class FloatingButton {
         // 遥测上报：浮窗按钮被点击，记录触发站点和视频信息
         telemetry.trackPluginTrigger();
 
-        // 尝试提前触发宿主潜在的播放按钮以唤醒流加载器 (如 Plyr, VideoJS, DPlayer)
-        try {
-            const hostPlayBtn = document.querySelector('.plyr__control--overlaid, .art-state-play, .vjs-big-play-button, .dplayer-play-icon');
-            if (hostPlayBtn && typeof hostPlayBtn.click === 'function') {
-                hostPlayBtn.click();
-            }
-        } catch (_) {}
-
-        // 在用户直接点击手势的调用栈顶端尝试预热激活视频元素
+        // 在用户直接点击手势的调用栈顶端尝试预热激活视频元素 (直接触发 video.play()，严禁触发宿主带有广告绑定的 Plyr 播放按钮)
         const preTargetVideo = findVideoElement();
         if (preTargetVideo) {
             try {
