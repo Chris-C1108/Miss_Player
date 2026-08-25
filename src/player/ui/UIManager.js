@@ -230,12 +230,16 @@ export class UIManager {
             });
         }
 
-        // 强制使用内联播放，防止 iOS Safari/微信等自动进入系统全屏播放器
         this.targetVideo.setAttribute('playsinline', 'true');
         this.targetVideo.setAttribute('webkit-playsinline', 'true');
         this.targetVideo.setAttribute('x5-playsinline', 'true');
         this.targetVideo.playsInline = true;
         this.targetVideo.webkitPlaysInline = true;
+
+        // 若处于 Safari 原生系统全屏中，主动退出
+        if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === 'function') {
+            try { this.targetVideo.webkitExitFullscreen(); } catch (_) {}
+        }
 
         // 添加视频到包装器
         this.videoWrapper.appendChild(this.targetVideo);

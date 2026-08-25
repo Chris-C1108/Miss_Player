@@ -233,19 +233,17 @@ export class PlayerCore {
                 this.targetVideo.style.margin = '';
                 this.targetVideo.style.position = '';
 
-                // 恢复 playsinline 属性
-                const restoreAttr = (name, val) => {
-                    if (val === null || val === undefined) {
-                        this.targetVideo.removeAttribute(name);
-                    } else {
-                        this.targetVideo.setAttribute(name, val);
-                    }
-                };
-                restoreAttr('playsinline', this.videoState.playsinline);
-                restoreAttr('webkit-playsinline', this.videoState.webkitPlaysinline);
-                restoreAttr('x5-playsinline', this.videoState.x5Playsinline);
-                this.targetVideo.playsInline = this.videoState.playsinline === 'true';
-                this.targetVideo.webkitPlaysInline = this.videoState.webkitPlaysinline === 'true';
+                // 始终保持 playsinline 属性，防止 Safari / 移动端在退出播放器或二次加载时被系统全屏劫持
+                this.targetVideo.setAttribute('playsinline', 'true');
+                this.targetVideo.setAttribute('webkit-playsinline', 'true');
+                this.targetVideo.setAttribute('x5-playsinline', 'true');
+                this.targetVideo.playsInline = true;
+                this.targetVideo.webkitPlaysInline = true;
+
+                // 若处于 Safari 原生系统全屏中，主动退出
+                if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === 'function') {
+                    try { this.targetVideo.webkitExitFullscreen(); } catch (_) {}
+                }
             }
         }
         

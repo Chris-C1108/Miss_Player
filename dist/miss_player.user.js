@@ -11,7 +11,7 @@
 // @description:vi MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @description:zh-CN MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:zh-TW MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器|多語言支持 支持 jable po*nhub 等通用
-// @version 5.6.5
+// @version 5.6.6
 // @author Chris_C
 // @match *://*.missav.ws/*
 // @match *://*.missav.ai/*
@@ -7023,7 +7023,7 @@
         return GM_info.script.version;
       }
     } catch (r) {}
-    return "5.6.5";
+    return "5.6.6";
   }
   function getSiteCategory() {
     if ((0, y.isSiteDomain)("MISSAV")) {
@@ -8093,7 +8093,6 @@
     }, {
       "key": "close",
       "value": function close(r, o, a) {
-        var l = this;
         if (!r) {
           return;
         }
@@ -8116,18 +8115,16 @@
             this.targetVideo.style.maxHeight = "";
             this.targetVideo.style.margin = "";
             this.targetVideo.style.position = "";
-            var u = function restoreAttr(r, o) {
-              if (o === null || o === void 0) {
-                l.targetVideo.removeAttribute(r);
-              } else {
-                l.targetVideo.setAttribute(r, o);
-              }
-            };
-            u("playsinline", this.videoState.playsinline);
-            u("webkit-playsinline", this.videoState.webkitPlaysinline);
-            u("x5-playsinline", this.videoState.x5Playsinline);
-            this.targetVideo.playsInline = this.videoState.playsinline === "true";
-            this.targetVideo.webkitPlaysInline = this.videoState.webkitPlaysinline === "true";
+            this.targetVideo.setAttribute("playsinline", "true");
+            this.targetVideo.setAttribute("webkit-playsinline", "true");
+            this.targetVideo.setAttribute("x5-playsinline", "true");
+            this.targetVideo.playsInline = true;
+            this.targetVideo.webkitPlaysInline = true;
+            if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === "function") {
+              try {
+                this.targetVideo.webkitExitFullscreen();
+              } catch (r) {}
+            }
           }
         }
         if (r.parentNode) {
@@ -8138,17 +8135,17 @@
         }
         document.body.classList.remove("tm-player-active", "controls-hidden");
         document.documentElement.classList.remove("tm-player-active", "controls-hidden");
-        var p = document.getElementById("tm-hide-scrollbar-style");
-        if (p && p.parentNode) {
-          p.parentNode.removeChild(p);
+        var l = document.getElementById("tm-hide-scrollbar-style");
+        if (l && l.parentNode) {
+          l.parentNode.removeChild(l);
         }
-        var v = document.getElementById("tm-fullscreen-style");
-        if (v && v.parentNode) {
-          v.parentNode.removeChild(v);
+        var u = document.getElementById("tm-fullscreen-style");
+        if (u && u.parentNode) {
+          u.parentNode.removeChild(u);
         }
         try {
-          var y = document.querySelectorAll('header, .site-header, .header, #site-header, navbar, .navbar, .top-nav, [class*="site-header"]');
-          y.forEach((function(r) {
+          var p = document.querySelectorAll('header, .site-header, .header, #site-header, navbar, .navbar, .top-nav, [class*="site-header"]');
+          p.forEach((function(r) {
             if (r) {
               r.style.display = "";
               r.style.transform = "";
@@ -8523,6 +8520,11 @@
         this.targetVideo.setAttribute("x5-playsinline", "true");
         this.targetVideo.playsInline = true;
         this.targetVideo.webkitPlaysInline = true;
+        if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === "function") {
+          try {
+            this.targetVideo.webkitExitFullscreen();
+          } catch (r) {}
+        }
         this.videoWrapper.appendChild(this.targetVideo);
         this.targetVideo.addEventListener("loadedmetadata", (function() {
           r.updateVideoAspectRatio();
@@ -20922,14 +20924,14 @@
         });
         return {
           "schemaVersion": dt,
-          "scriptVersion": "5.6.5",
+          "scriptVersion": "5.6.6",
           "lastModified": a,
           "lastModifiedBy": o,
           "devices": SyncManager_defineProperty({}, o, {
             "deviceName": getDeviceName(),
             "deviceType": D,
             "lastSyncTime": a,
-            "scriptVersion": "5.6.5"
+            "scriptVersion": "5.6.6"
           }),
           "deviceLayouts": L,
           "settings": p,
@@ -21045,7 +21047,7 @@
           "deviceName": getDeviceName(),
           "deviceType": getDeviceType(),
           "lastSyncTime": u,
-          "scriptVersion": "5.6.5"
+          "scriptVersion": "5.6.6"
         };
         var V = r.settings || {};
         var G = l.settings || {};
@@ -21160,7 +21162,7 @@
         var ae = Object.assign({}, l.deviceLayouts || {}, r.deviceLayouts || {});
         return {
           "schemaVersion": dt,
-          "scriptVersion": "5.6.5",
+          "scriptVersion": "5.6.6",
           "lastModified": u,
           "lastModifiedBy": a,
           "devices": O,
@@ -26744,6 +26746,16 @@
         me.trackPluginTrigger();
         var r = findVideoElement();
         if (r) {
+          r.setAttribute("playsinline", "true");
+          r.setAttribute("webkit-playsinline", "true");
+          r.setAttribute("x5-playsinline", "true");
+          r.playsInline = true;
+          r.webkitPlaysInline = true;
+          if (r.webkitDisplayingFullscreen && typeof r.webkitExitFullscreen === "function") {
+            try {
+              r.webkitExitFullscreen();
+            } catch (r) {}
+          }
           try {
             var o = r.play();
             if (o !== void 0) {

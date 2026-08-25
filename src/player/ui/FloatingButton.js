@@ -245,9 +245,20 @@ export class FloatingButton {
         // 遥测上报：浮窗按钮被点击，记录触发站点和视频信息
         telemetry.trackPluginTrigger();
 
-        // 在用户直接点击手势的调用栈顶端尝试预热激活视频元素 (直接触发 video.play()，严禁触发宿主带有广告绑定的 Plyr 播放按钮)
+        // 在用户直接点击手势的调用栈顶端尝试预热激活视频元素 (必须先设置 playsinline 属性，防止 Safari 自动跳入系统全屏播放器)
         const preTargetVideo = findVideoElement();
         if (preTargetVideo) {
+            preTargetVideo.setAttribute('playsinline', 'true');
+            preTargetVideo.setAttribute('webkit-playsinline', 'true');
+            preTargetVideo.setAttribute('x5-playsinline', 'true');
+            preTargetVideo.playsInline = true;
+            preTargetVideo.webkitPlaysInline = true;
+
+            // 如果处于 Safari 系统全屏播放中，主动退出
+            if (preTargetVideo.webkitDisplayingFullscreen && typeof preTargetVideo.webkitExitFullscreen === 'function') {
+                try { preTargetVideo.webkitExitFullscreen(); } catch (_) {}
+            }
+
             try {
                 const p = preTargetVideo.play();
                 if (p !== undefined) p.catch(() => {});
