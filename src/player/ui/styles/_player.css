@@ -2069,25 +2069,10 @@ body.tm-swiping-down .tm-settings-panel {
     }
 }
 
-/* 激活播放器时，全面隐藏宿主页面的所有原生子节点（除了播放器自身与浮动按钮），并锁定 body/html 绝对固定 */
+/* 激活播放器时，拦截 Safari 边缘橡皮筋回弹，但保持宿主网页正常渲染以允许上滑穿透滚动 */
 html.tm-player-active,
 body.tm-player-active {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    overflow: hidden !important;
     overscroll-behavior: none !important;
-    touch-action: none !important;
-    background-color: #0b0b0e !important;
-}
-
-body.tm-player-active > *:not(.tm-video-overlay):not(.tm-player-container):not(.tm-floating-button):not(script):not(style):not(#tm-hide-scrollbar-style) {
-    display: none !important;
 }
 
 body.tm-player-active header,

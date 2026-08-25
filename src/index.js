@@ -43,20 +43,12 @@ function setupViewport() {
         window.visualViewport.addEventListener('scroll', updateKeyboardHeight);
     }
 
-    // 监听输入框失焦事件：当软键盘收起后，自动复位页面滚动并重置键盘高度
+    // 监听输入框失焦事件：当软键盘收起后，重置键盘高度
     document.addEventListener('focusout', (e) => {
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
-            window.scrollTo(0, 0);
             document.documentElement.style.setProperty('--keyboard-height', '0px');
         }
     });
-
-    // 监听全局滚动：当播放器处于激活状态时，锁定视口在 (0,0)，防止聚焦或手势导致页面产生任何偏移
-    window.addEventListener('scroll', () => {
-        if (document.body && document.body.classList.contains('tm-player-active') && (window.scrollX !== 0 || window.scrollY !== 0)) {
-            window.scrollTo(0, 0);
-        }
-    }, { passive: true });
 
     console.log(`[${__('scriptName')}] ${__('viewportConfigured')}`);
 }
