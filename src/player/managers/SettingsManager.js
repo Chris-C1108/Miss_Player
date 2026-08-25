@@ -909,6 +909,7 @@ export class SettingsManager {
             enabledSteps.push(newStep);
         }
 
+        SyncManager.clearTombstone('customSeekSteps', newStep);
         this.updateSetting('customUserSeekSteps', customSteps);
         this.updateSetting('enabledSeekSteps', enabledSteps);
         this.rebuildControlPanelSeekRow();
@@ -926,6 +927,7 @@ export class SettingsManager {
         customSteps = customSteps.filter(s => s !== targetStep);
         enabledSteps = enabledSteps.filter(s => s !== targetStep);
 
+        SyncManager.recordTombstone('customSeekSteps', targetStep);
         this.updateSetting('customUserSeekSteps', customSteps);
         this.updateSetting('enabledSeekSteps', enabledSteps);
         this.rebuildControlPanelSeekRow();

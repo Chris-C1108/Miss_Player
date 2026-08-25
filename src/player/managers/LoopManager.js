@@ -470,7 +470,8 @@ export class LoopManager {
             // Save changes
             const idx = this.tabs.findIndex(t => t.id === tab.id);
             if (idx !== -1) {
-                this.tabs[idx] = { ...copy };
+                this.tabs[idx] = { ...copy, updatedAt: Date.now() };
+                SyncManager.clearTombstone('markers', tab.id);
                 this._saveTabs();
             }
             this._exitEditMode();
@@ -484,6 +485,9 @@ export class LoopManager {
         deleteBtn.title = '删除标签';
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            if (tab && tab.id) {
+                SyncManager.recordTombstone('markers', tab.id, this.storageKey);
+            }
             this.tabs = this.tabs.filter(t => t.id !== tab.id);
             if (this.activeTabId === tab.id) {
                 this.disableLoop();
@@ -680,7 +684,11 @@ export class LoopManager {
 
         const save = (comment) => {
             tab.comment = comment;
+            tab.updatedAt = Date.now();
             if (isEdit) {
+                if (tab.id) {
+                    SyncManager.clearTombstone('markers', tab.id);
+                }
                 if (existingTab === this.editingTabCopy) {
                     this.renderTabs();
                 } else {
@@ -694,7 +702,12 @@ export class LoopManager {
                     has_comment: !!comment,
                     duration_sec: (this.draftTab.endTime && this.draftTab.startTime) ? Math.round(this.draftTab.endTime - this.draftTab.startTime) : 0
                 });
-                this.tabs.push({ ...this.draftTab, comment });
+                const now = Date.now();
+                const newTab = { ...this.draftTab, comment, createdAt: now, updatedAt: now };
+                this.tabs.push(newTab);
+                if (newTab.id) {
+                    SyncManager.clearTombstone('markers', newTab.id);
+                }
                 this._resetDraftTab();
                 this._saveTabs();
                 this._sortTabs();
@@ -1194,6 +1207,13 @@ export class LoopManager {
 
     _saveTabs() {
         if (!this.storageKey) return;
+        const now = Date.now();
+        this.tabs = this.tabs.map(t => {
+            const copy = { ...t };
+            if (!copy.createdAt) copy.createdAt = now;
+            if (!copy.updatedAt) copy.updatedAt = now;
+            return copy;
+        });
         this._sortTabs();
         setValue(this.storageKey, this.tabs);
 
@@ -1224,7 +1244,16 @@ export class LoopManager {
             return;
         }
         const saved = getValue(this.storageKey, []);
-        this.tabs = (Array.isArray(saved) ? saved : []).filter(t => t && typeof t === 'object' && t.id);
+        const now = Date.now();
+        this.tabs = (Array.isArray(saved) ? saved : [])
+            .filter(t => t && typeof t === 'object')
+            .map(t => {
+                const item = { ...t };
+                if (!item.id) item.id = this._generateId();
+                if (!item.createdAt) item.createdAt = now;
+                if (!item.updatedAt) item.updatedAt = item.createdAt;
+                return item;
+            });
         this._sortTabs();
     }
 

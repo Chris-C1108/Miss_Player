@@ -1,4 +1,5 @@
 import { formatTimeWithHours } from '../../utils/index.js';
+import { SyncManager } from '../../sync/index.js';
 
 /**
  * MarkerBottomSheet — 循环片段与时间戳标签管理底部浮层面板
@@ -304,6 +305,9 @@ export class MarkerBottomSheet {
             deleteBtn.title = '删除标签';
             deleteBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (tab && tab.id) {
+                    SyncManager.recordTombstone('markers', tab.id, this.loopManager.storageKey);
+                }
                 this.loopManager.tabs = this.loopManager.tabs.filter(t => t.id !== tab.id);
                 if (this.loopManager.activeTabId === tab.id) {
                     this.loopManager.disableLoop();

@@ -1,10 +1,14 @@
-import { getValue, setValue, hasGMApi } from '../utils/storage.js';
+import { getValue, setValue, deleteValue, hasGMApi } from '../utils/storage.js';
 import { WebDavClient } from './WebDavClient.js';
 
 const CLIENT_ID_KEY = 'mp_client_id';
 const WEBDAV_CONFIG_KEY = 'mp_webdav_config';
 const LAST_SYNC_TIME_KEY = 'mp_webdav_last_sync_time';
-const CURRENT_SCHEMA_VERSION = 1;
+const TOMBSTONES_KEY = 'mp_sync_tombstones';
+const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
+
+const CURRENT_SCHEMA_VERSION = 2;
+const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -56,6 +60,8 @@ export function getDeviceType() {
 
 /**
  * 云同步与多设备配置管理引擎 (SyncManager)
+ * 采用 CRDT / LWW-Element-Set 最终一致性算法与墓碑标记 (Tombstones)，
+ * 彻底解决多端非实时异步同步时已删除打点/配置被错误回流复活的问题。
  */
 export class SyncManager {
     /**
@@ -94,12 +100,154 @@ export class SyncManager {
         setValue(LAST_SYNC_TIME_KEY, timestamp);
     }
 
+    // =========================================================================
+    //  墓碑机制 (Tombstones) 与 字段时间戳管理
+    // =========================================================================
+
     /**
-     * 收集本地所有需同步的数据包 (Settings + Markers + Client Meta)
+     * 获取本地删除墓碑表
+     * @returns {{ markers: Object.<string, { deletedAt: number, videoKey: string }>, customSeekSteps: Object.<string, number>, videos: Object.<string, number> }}
+     */
+    static getLocalTombstones() {
+        const defaultTombstones = {
+            markers: {},
+            customSeekSteps: {},
+            videos: {}
+        };
+        const stored = getValue(TOMBSTONES_KEY, null);
+        if (!stored || typeof stored !== 'object') return defaultTombstones;
+        return {
+            markers: (stored.markers && typeof stored.markers === 'object') ? stored.markers : {},
+            customSeekSteps: (stored.customSeekSteps && typeof stored.customSeekSteps === 'object') ? stored.customSeekSteps : {},
+            videos: (stored.videos && typeof stored.videos === 'object') ? stored.videos : {}
+        };
+    }
+
+    /**
+     * 保存本地墓碑表 (自动执行 30 天 GC)
+     */
+    static saveLocalTombstones(tombstones) {
+        const cleaned = this.purgeExpiredTombstones(tombstones);
+        setValue(TOMBSTONES_KEY, cleaned);
+    }
+
+    /**
+     * 记录一个删除操作墓碑 (Tombstone)
+     * @param {'markers' | 'customSeekSteps' | 'videos'} type - 删除类型
+     * @param {string} id - 被删除实体的唯一标识
+     * @param {string} [extraInfo=null] - 附加信息 (如 videoKey)
+     */
+    static recordTombstone(type, id, extraInfo = null) {
+        if (!id) return;
+        const tombstones = this.getLocalTombstones();
+        const now = Date.now();
+
+        if (type === 'markers') {
+            tombstones.markers[id] = { deletedAt: now, videoKey: extraInfo || '' };
+        } else if (type === 'customSeekSteps') {
+            tombstones.customSeekSteps[id] = now;
+        } else if (type === 'videos') {
+            tombstones.videos[id] = now;
+        }
+
+        this.saveLocalTombstones(tombstones);
+    }
+
+    /**
+     * 清除某个实体的墓碑 (当实体被重新创建或修改时)
+     */
+    static clearTombstone(type, id) {
+        if (!id) return;
+        const tombstones = this.getLocalTombstones();
+        let changed = false;
+
+        if (type === 'markers' && tombstones.markers[id]) {
+            delete tombstones.markers[id];
+            changed = true;
+        } else if (type === 'customSeekSteps' && tombstones.customSeekSteps[id]) {
+            delete tombstones.customSeekSteps[id];
+            changed = true;
+        } else if (type === 'videos' && tombstones.videos[id]) {
+            delete tombstones.videos[id];
+            changed = true;
+        }
+
+        if (changed) {
+            this.saveLocalTombstones(tombstones);
+        }
+    }
+
+    /**
+     * 垃圾回收已超过 30 天的陈旧墓碑，避免元数据无限增长
+     */
+    static purgeExpiredTombstones(tombstones) {
+        if (!tombstones || typeof tombstones !== 'object') {
+            return { markers: {}, customSeekSteps: {}, videos: {} };
+        }
+        const now = Date.now();
+        const cutoff = now - MAX_TOMBSTONE_AGE;
+
+        const cleanedMarkers = {};
+        if (tombstones.markers) {
+            for (const [id, meta] of Object.entries(tombstones.markers)) {
+                const time = typeof meta === 'object' ? meta.deletedAt : meta;
+                if (time && time >= cutoff) {
+                    cleanedMarkers[id] = typeof meta === 'object' ? meta : { deletedAt: time };
+                }
+            }
+        }
+
+        const cleanedSteps = {};
+        if (tombstones.customSeekSteps) {
+            for (const [step, time] of Object.entries(tombstones.customSeekSteps)) {
+                if (time >= cutoff) cleanedSteps[step] = time;
+            }
+        }
+
+        const cleanedVideos = {};
+        if (tombstones.videos) {
+            for (const [k, time] of Object.entries(tombstones.videos)) {
+                if (time >= cutoff) cleanedVideos[k] = time;
+            }
+        }
+
+        return {
+            markers: cleanedMarkers,
+            customSeekSteps: cleanedSteps,
+            videos: cleanedVideos
+        };
+    }
+
+    /**
+     * 获取各项设置项的独立修改时间戳
+     */
+    static getLocalSettingTimestamps() {
+        const stored = getValue(SETTING_TIMESTAMPS_KEY, null);
+        return (stored && typeof stored === 'object') ? stored : {};
+    }
+
+    /**
+     * 记录设置项更新修改时间
+     */
+    static recordSettingUpdate(key) {
+        if (!key) return;
+        const timestamps = this.getLocalSettingTimestamps();
+        timestamps[key] = Date.now();
+        setValue(SETTING_TIMESTAMPS_KEY, timestamps);
+    }
+
+    // =========================================================================
+    //  数据包打包与架构迁移 (Schema Migration)
+    // =========================================================================
+
+    /**
+     * 收集本地所有需同步的数据包 (Settings + Markers + Tombstones + Meta)
      */
     static gatherLocalData(playerState = null) {
         const clientId = getOrCreateClientId();
         const now = Date.now();
+        const tombstones = this.getLocalTombstones();
+        const settingTimestamps = this.getLocalSettingTimestamps();
 
         // 1. 收集 Settings 配置
         const settings = playerState?.settings || {
@@ -119,31 +267,40 @@ export class SyncManager {
             debugMode: getValue('debugMode', false)
         };
 
-        // 2. 收集所有视频打点数据 (tabs_*)
+        // 2. 收集所有视频打点数据 (tabs_*)，规范化补全 id / createdAt / updatedAt
         const markers = {};
         try {
+            const processList = (cleanKey, val) => {
+                if (Array.isArray(val) && val.length > 0) {
+                    markers[cleanKey] = val.map(item => {
+                        const m = { ...item };
+                        if (!m.id) {
+                            const start = Math.round((m.startTime || m.tabTime || 0) * 10);
+                            const end = Math.round((m.endTime || m.tabEnd || 0) * 10);
+                            m.id = `tab_${start}_${end}_${Math.random().toString(36).slice(2, 6)}`;
+                        }
+                        if (!m.createdAt) m.createdAt = now;
+                        if (!m.updatedAt) m.updatedAt = m.createdAt;
+                        return m;
+                    });
+                }
+            };
+
             if (typeof GM_listValues === 'function') {
                 const keys = GM_listValues();
                 for (const k of keys) {
                     if (k && k.startsWith('tabs_')) {
-                        const val = getValue(k, []);
-                        if (Array.isArray(val) && val.length > 0) {
-                            markers[k] = val;
-                        }
+                        processList(k, getValue(k, []));
                     }
                 }
             } else {
-                // localStorage 遍历
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
                     if (k) {
                         let cleanKey = k;
                         if (k.startsWith('mp_')) cleanKey = k.replace(/^mp_/, '');
                         if (cleanKey.startsWith('tabs_')) {
-                            const val = getValue(cleanKey, []);
-                            if (Array.isArray(val) && val.length > 0) {
-                                markers[cleanKey] = val;
-                            }
+                            processList(cleanKey, getValue(cleanKey, []));
                         }
                     }
                 }
@@ -156,7 +313,8 @@ export class SyncManager {
         const deviceLayouts = {
             [deviceType]: {
                 sidebarPosition: getValue('sidebarPosition', 'right'),
-                sidebarHidden: getValue('sidebarHidden', false)
+                sidebarHidden: getValue('sidebarHidden', false),
+                updatedAt: settingTimestamps.sidebarPosition || settingTimestamps.sidebarHidden || now
             }
         };
 
@@ -175,25 +333,48 @@ export class SyncManager {
             },
             deviceLayouts,
             settings,
-            markers
+            settingTimestamps,
+            markers,
+            tombstones
         };
     }
 
     /**
-     * 架构版本迁移管道 (保证旧版本格式自动向前兼容转化)
+     * 架构版本迁移管道 (保证旧版本 Schema v1 格式自动平滑向前升级为 Schema v2)
      */
     static migrateBackupSchema(data) {
         if (!data || typeof data !== 'object') return null;
 
         const migrated = Object.assign({}, data);
 
-        // 如果没有 schemaVersion 或版本 < 1
-        if (!migrated.schemaVersion || migrated.schemaVersion < 1) {
-            migrated.schemaVersion = 1;
+        if (!migrated.schemaVersion || migrated.schemaVersion < CURRENT_SCHEMA_VERSION) {
+            migrated.schemaVersion = CURRENT_SCHEMA_VERSION;
             if (!migrated.devices) migrated.devices = {};
             if (!migrated.settings) migrated.settings = {};
+            if (!migrated.settingTimestamps) migrated.settingTimestamps = {};
             if (!migrated.markers) migrated.markers = {};
+            if (!migrated.deviceLayouts) migrated.deviceLayouts = {};
+            if (!migrated.tombstones) {
+                migrated.tombstones = { markers: {}, customSeekSteps: {}, videos: {} };
+            }
             if (!migrated.lastModified) migrated.lastModified = Date.now();
+
+            // 为旧版本 markers 补全唯一稳定 ID 和修改时间戳
+            for (const [k, list] of Object.entries(migrated.markers)) {
+                if (Array.isArray(list)) {
+                    migrated.markers[k] = list.map(item => {
+                        const m = { ...item };
+                        if (!m.id) {
+                            const start = Math.round((m.startTime || m.tabTime || 0) * 10);
+                            const end = Math.round((m.endTime || m.tabEnd || 0) * 10);
+                            m.id = `legacy_${start}_${end}`;
+                        }
+                        if (!m.updatedAt) m.updatedAt = migrated.lastModified || 0;
+                        if (!m.createdAt) m.createdAt = m.updatedAt;
+                        return m;
+                    });
+                }
+            }
         }
 
         return migrated;
@@ -213,106 +394,150 @@ export class SyncManager {
         const remoteMigrated = this.migrateBackupSchema(remoteData);
         const now = Date.now();
 
-        // 1. 合并终端设备字典 (devices)
+        // 1. 合并墓碑集合 (Tombstones Union with Max timestamp)
+        const localTombstones = localData.tombstones || { markers: {}, customSeekSteps: {}, videos: {} };
+        const remoteTombstones = remoteMigrated.tombstones || { markers: {}, customSeekSteps: {}, videos: {} };
+
+        const mergedMarkerTombstones = {};
+        for (const [id, meta] of Object.entries(remoteTombstones.markers || {})) {
+            mergedMarkerTombstones[id] = typeof meta === 'object' ? meta : { deletedAt: meta };
+        }
+        for (const [id, meta] of Object.entries(localTombstones.markers || {})) {
+            const lMeta = typeof meta === 'object' ? meta : { deletedAt: meta };
+            const existing = mergedMarkerTombstones[id];
+            if (!existing || lMeta.deletedAt > existing.deletedAt) {
+                mergedMarkerTombstones[id] = lMeta;
+            }
+        }
+
+        const mergedStepTombstones = Object.assign({}, remoteTombstones.customSeekSteps || {}, localTombstones.customSeekSteps || {});
+        const mergedVideoTombstones = Object.assign({}, remoteTombstones.videos || {}, localTombstones.videos || {});
+
+        const mergedTombstones = {
+            markers: mergedMarkerTombstones,
+            customSeekSteps: mergedStepTombstones,
+            videos: mergedVideoTombstones
+        };
+
+        // 2. 合并设备列表 (devices)
         const mergedDevices = Object.assign({}, remoteMigrated.devices || {}, localData.devices || {});
         mergedDevices[clientId] = {
             deviceName: getDeviceName(),
+            deviceType: getDeviceType(),
             lastSyncTime: now,
             scriptVersion: '5.6.1'
         };
 
-        // 2. 合并设置项 (Settings)
+        // 3. 字段级 LWW 合并 Settings 配置
         const localSettings = localData.settings || {};
         const remoteSettings = remoteMigrated.settings || {};
+        const localTimestamps = localData.settingTimestamps || {};
+        const remoteTimestamps = remoteMigrated.settingTimestamps || {};
+        const mergedSettingTimestamps = {};
 
-        // 列表类设置做集合并集去重
-        const mergedEnabledSeekSteps = Array.from(new Set([
-            ...(Array.isArray(localSettings.enabledSeekSteps) ? localSettings.enabledSeekSteps : []),
-            ...(Array.isArray(remoteSettings.enabledSeekSteps) ? remoteSettings.enabledSeekSteps : [])
+        const mergedSettings = {};
+        const allSettingKeys = Array.from(new Set([
+            ...Object.keys(localSettings),
+            ...Object.keys(remoteSettings)
         ]));
 
-        const mergedCustomSteps = Array.from(new Set([
+        for (const key of allSettingKeys) {
+            if (key === 'customUserSeekSteps' || key === 'enabledSeekSteps' || key === 'enabledCommentSources') {
+                continue;
+            }
+
+            const lTime = localTimestamps[key] || localData.lastModified || 0;
+            const rTime = remoteTimestamps[key] || remoteMigrated.lastModified || 0;
+
+            if (lTime >= rTime) {
+                mergedSettings[key] = localSettings[key] !== undefined ? localSettings[key] : remoteSettings[key];
+                mergedSettingTimestamps[key] = lTime;
+            } else {
+                mergedSettings[key] = remoteSettings[key] !== undefined ? remoteSettings[key] : localSettings[key];
+                mergedSettingTimestamps[key] = rTime;
+            }
+        }
+
+        // 合并 customUserSeekSteps (过滤墓碑中的已删除步进)
+        const rawSteps = Array.from(new Set([
             ...(Array.isArray(localSettings.customUserSeekSteps) ? localSettings.customUserSeekSteps : []),
             ...(Array.isArray(remoteSettings.customUserSeekSteps) ? remoteSettings.customUserSeekSteps : [])
         ]));
+        const mergedCustomSteps = rawSteps.filter(step => {
+            const deletedAt = mergedStepTombstones[step];
+            return !deletedAt; // 存在墓碑则已被删除，拒绝复活
+        });
+        mergedSettings.customUserSeekSteps = mergedCustomSteps;
 
-        // 评论源字典合并
-        const mergedCommentSources = Object.assign(
+        // 合并 enabledSeekSteps
+        mergedSettings.enabledSeekSteps = Array.from(new Set([
+            ...(Array.isArray(localSettings.enabledSeekSteps) ? localSettings.enabledSeekSteps : []),
+            ...(Array.isArray(remoteSettings.enabledSeekSteps) ? remoteSettings.enabledSeekSteps : [])
+        ]));
+        if (mergedSettings.enabledSeekSteps.length === 0) {
+            mergedSettings.enabledSeekSteps = ['5s', '10s', '30s', '1m', '5m', '10m'];
+        }
+
+        // 合并 enabledCommentSources
+        mergedSettings.enabledCommentSources = Object.assign(
             { jable: true, javdb: true, javlibrary: false },
             remoteSettings.enabledCommentSources || {},
             localSettings.enabledCommentSources || {}
         );
 
-        // 标量设置按最后修改时间 (LWW)
-        const isRemoteNewer = (remoteMigrated.lastModified || 0) > (localData.lastModified || 0);
-        const baseSettings = isRemoteNewer ? remoteSettings : localSettings;
-        const fallbackSettings = isRemoteNewer ? localSettings : remoteSettings;
-
-        const mergedSettings = {
-            showProgressBar: baseSettings.showProgressBar !== undefined ? baseSettings.showProgressBar : fallbackSettings.showProgressBar,
-            showSeekControlRow: baseSettings.showSeekControlRow !== undefined ? baseSettings.showSeekControlRow : fallbackSettings.showSeekControlRow,
-            showLoopControlRow: baseSettings.showLoopControlRow !== undefined ? baseSettings.showLoopControlRow : fallbackSettings.showLoopControlRow,
-            showPlaybackControlRow: baseSettings.showPlaybackControlRow !== undefined ? baseSettings.showPlaybackControlRow : fallbackSettings.showPlaybackControlRow,
-            enabledSeekSteps: mergedEnabledSeekSteps.length > 0 ? mergedEnabledSeekSteps : ['5s', '10s', '30s', '1m', '5m', '10m'],
-            customUserSeekSteps: mergedCustomSteps,
-            showCommentsSection: baseSettings.showCommentsSection !== undefined ? baseSettings.showCommentsSection : fallbackSettings.showCommentsSection,
-            enabledCommentSources: mergedCommentSources,
-            sidebarPosition: baseSettings.sidebarPosition || fallbackSettings.sidebarPosition || 'right',
-            sidebarHidden: baseSettings.sidebarHidden !== undefined ? baseSettings.sidebarHidden : fallbackSettings.sidebarHidden,
-            preferredPlaybackRate: baseSettings.preferredPlaybackRate || fallbackSettings.preferredPlaybackRate || 1.0,
-            pauseOnBlur: baseSettings.pauseOnBlur !== undefined ? baseSettings.pauseOnBlur : fallbackSettings.pauseOnBlur,
-            telemetryEnabled: baseSettings.telemetryEnabled !== undefined ? baseSettings.telemetryEnabled : fallbackSettings.telemetryEnabled,
-            debugMode: baseSettings.debugMode !== undefined ? baseSettings.debugMode : fallbackSettings.debugMode
-        };
-
-        // 3. 智能合并视频打点/高光片段 (Markers: tabs_*)
+        // 4. 核心：CRDT / Tombstone 视频打点合并 (Markers: tabs_*)
         const localMarkers = localData.markers || {};
         const remoteMarkers = remoteMigrated.markers || {};
-        const allMarkerKeys = Array.from(new Set([...Object.keys(localMarkers), ...Object.keys(remoteMarkers)]));
+        const allVideoKeys = Array.from(new Set([
+            ...Object.keys(localMarkers),
+            ...Object.keys(remoteMarkers)
+        ]));
+
         const mergedMarkers = {};
 
-        for (const key of allMarkerKeys) {
-            const lList = Array.isArray(localMarkers[key]) ? localMarkers[key] : [];
-            const rList = Array.isArray(remoteMarkers[key]) ? remoteMarkers[key] : [];
+        for (const vKey of allVideoKeys) {
+            const lList = Array.isArray(localMarkers[vKey]) ? localMarkers[vKey] : [];
+            const rList = Array.isArray(remoteMarkers[vKey]) ? remoteMarkers[vKey] : [];
 
-            if (lList.length === 0) {
-                mergedMarkers[key] = rList;
-                continue;
-            }
-            if (rList.length === 0) {
-                mergedMarkers[key] = lList;
-                continue;
-            }
-
-            // 两端均存在同一视频的打点：按 (startTime_endTime / id) 指纹去重融合
             const markerMap = new Map();
 
-            // 先入库远端
-            for (const m of rList) {
-                const sig = m.id || `${Math.round((m.tabTime || 0) * 10) / 10}_${Math.round((m.tabEnd || 0) * 10) / 10}`;
-                markerMap.set(sig, m);
-            }
+            // 辅助处理打点候选
+            const processCandidate = (m) => {
+                if (!m) return;
+                const mId = m.id || `tab_${Math.round((m.startTime || m.tabTime || 0) * 10)}_${Math.round((m.endTime || m.tabEnd || 0) * 10)}`;
+                const mUpdated = m.updatedAt || m.createdAt || 0;
 
-            // 合并本地打点
-            for (const m of lList) {
-                const sig = m.id || `${Math.round((m.tabTime || 0) * 10) / 10}_${Math.round((m.tabEnd || 0) * 10) / 10}`;
-                if (!markerMap.has(sig)) {
-                    markerMap.set(sig, m);
+                // 核心墓碑校验：若存在墓碑且删除时间 >= 该打点的更新时间，说明已被某一端删除，严禁回流复活！
+                const tomb = mergedMarkerTombstones[mId];
+                if (tomb && tomb.deletedAt >= mUpdated) {
+                    return; // 墓碑拦截，丢弃已删除的打点
+                }
+
+                if (!markerMap.has(mId)) {
+                    markerMap.set(mId, { ...m, id: mId, updatedAt: mUpdated });
                 } else {
-                    const existing = markerMap.get(sig);
-                    // 挑选更新时间较新或备注内容更完整的版本
-                    const mTime = m.updatedAt || 0;
-                    const eTime = existing.updatedAt || 0;
-                    if (mTime >= eTime || (!existing.tabComment && m.tabComment)) {
-                        markerMap.set(sig, Object.assign({}, existing, m));
+                    const existing = markerMap.get(mId);
+                    const eUpdated = existing.updatedAt || existing.createdAt || 0;
+                    if (mUpdated > eUpdated) {
+                        markerMap.set(mId, { ...existing, ...m, id: mId, updatedAt: mUpdated });
+                    } else if (mUpdated === eUpdated && !existing.comment && m.comment) {
+                        markerMap.set(mId, { ...existing, comment: m.comment });
                     }
                 }
-            }
+            };
 
-            mergedMarkers[key] = Array.from(markerMap.values());
+            for (const m of rList) processCandidate(m);
+            for (const m of lList) processCandidate(m);
+
+            const mergedList = Array.from(markerMap.values()).sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+            if (mergedList.length > 0) {
+                mergedMarkers[vKey] = mergedList;
+            } else {
+                mergedMarkers[vKey] = [];
+            }
         }
 
-        // 4. 合并终端特异性布局 (Desktop / Mobile / Tablet 各自保留特有布局偏好)
+        // 5. 合并设备形态特异布局 (Desktop / Mobile / Tablet)
         const mergedDeviceLayouts = Object.assign(
             {},
             remoteMigrated.deviceLayouts || {},
@@ -327,7 +552,9 @@ export class SyncManager {
             devices: mergedDevices,
             deviceLayouts: mergedDeviceLayouts,
             settings: mergedSettings,
-            markers: mergedMarkers
+            settingTimestamps: mergedSettingTimestamps,
+            markers: mergedMarkers,
+            tombstones: mergedTombstones
         };
     }
 
@@ -335,16 +562,26 @@ export class SyncManager {
      * 将同步/合并后的数据包落盘到本地持久化存储并同步 PlayerState 实例
      */
     static applyDataToLocal(data, playerState = null) {
-        if (!data || !data.settings) return;
+        if (!data) return;
 
-        const { settings, markers, deviceLayouts } = data;
+        const { settings, settingTimestamps, markers, deviceLayouts, tombstones } = data;
 
         // 1. 持久化共通核心设置项
-        for (const [k, v] of Object.entries(settings)) {
-            setValue(k, v);
+        if (settings && typeof settings === 'object') {
+            for (const [k, v] of Object.entries(settings)) {
+                setValue(k, v);
+            }
         }
 
-        // 2. 恢复当前终端专属形态的特异布局配置 (桌面侧栏位置与折叠状态不与移动端冲突)
+        // 2. 持久化设置项独立修改时间戳与墓碑
+        if (settingTimestamps && typeof settingTimestamps === 'object') {
+            setValue(SETTING_TIMESTAMPS_KEY, settingTimestamps);
+        }
+        if (tombstones && typeof tombstones === 'object') {
+            this.saveLocalTombstones(tombstones);
+        }
+
+        // 3. 恢复当前终端专属形态的特异布局配置 (桌面侧栏位置与折叠状态不与移动端冲突)
         const currentDeviceType = getDeviceType();
         if (deviceLayouts && deviceLayouts[currentDeviceType]) {
             const layout = deviceLayouts[currentDeviceType];
@@ -352,16 +589,20 @@ export class SyncManager {
             if (layout.sidebarHidden !== undefined) setValue('sidebarHidden', layout.sidebarHidden);
         }
 
-        // 3. 持久化打点数据 (tabs_*)
+        // 4. 持久化打点数据 (tabs_*)：对于已清空或已被删除的视频打点，执行 deleteValue
         if (markers && typeof markers === 'object') {
             for (const [k, v] of Object.entries(markers)) {
-                if (k.startsWith('tabs_') && Array.isArray(v)) {
-                    setValue(k, v);
+                if (k.startsWith('tabs_')) {
+                    if (Array.isArray(v) && v.length > 0) {
+                        setValue(k, v);
+                    } else {
+                        deleteValue(k);
+                    }
                 }
             }
         }
 
-        // 4. 刷新内存中 PlayerState
+        // 5. 刷新内存中 PlayerState
         if (playerState) {
             playerState.loadSettings();
         }

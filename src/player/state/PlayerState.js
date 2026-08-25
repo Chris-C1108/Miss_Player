@@ -1,4 +1,5 @@
 import { getValue, setValue } from '../../utils/index.js';
+import { SyncManager } from '../../sync/index.js';
 
 /**
  * 播放器状态管理类
@@ -105,6 +106,9 @@ export class PlayerState {
         if (key in this.settings) {
             this.settings[key] = value;
             this.saveSettings();
+            try {
+                SyncManager.recordSettingUpdate(key);
+            } catch (_) {}
         }
     }
 } 

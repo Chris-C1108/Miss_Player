@@ -105,11 +105,11 @@
             o[_].references++;
             o[_].updater(k);
           } else {
-            var P = addElementStyle(k, a);
+            var S = addElementStyle(k, a);
             a.byIndex = p;
             o.splice(p, 0, {
               "identifier": C,
-              "updater": P,
+              "updater": S,
               "references": 1
             });
           }
@@ -346,16 +346,16 @@
       var C = a(465);
       var _ = a(140);
       var k = a(12);
-      var P = a(725);
-      var S = a(919);
+      var S = a(725);
+      var P = a(919);
       var E = v()(u());
       E.i(y.A);
       E.i(b.A);
       E.i(C.A);
       E.i(_.A);
       E.i(k.A);
-      E.i(P.A);
       E.i(S.A);
+      E.i(P.A);
       E.push([ r.id, `\n\n`, "" ]);
       const D = E;
     },
@@ -451,16 +451,16 @@
       var C = a(56);
       var _ = a.n(C);
       var k = a(540);
-      var P = a.n(k);
-      var S = a(113);
-      var E = a.n(S);
+      var S = a.n(k);
+      var P = a(113);
+      var E = a.n(P);
       var D = a(703);
       var L = {};
       L.styleTagTransform = E();
       L.setAttributes = _();
       L.insert = b().bind(null, "head");
       L.domAPI = v();
-      L.insertStyleElement = P();
+      L.insertStyleElement = S();
       var M = u()(D.A, L);
       const T = D.A && D.A.locals ? D.A.locals : void 0;
     }
@@ -1012,7 +1012,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -1096,14 +1096,14 @@
       }
       throw new TypeError(domains_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -1116,9 +1116,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -1587,11 +1587,11 @@
         }
       }
       if (!u) {
-        var P = a.split("/").filter(Boolean);
-        if (P.length > 0) {
-          var S = P[P.length - 1];
-          if (isValidAvCode(S)) {
-            u = S;
+        var S = a.split("/").filter(Boolean);
+        if (S.length > 0) {
+          var P = S[S.length - 1];
+          if (isValidAvCode(P)) {
+            u = P;
           }
         }
       }
@@ -1818,7 +1818,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -1902,14 +1902,14 @@
       }
       throw new TypeError(http_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -1922,9 +1922,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -2462,7 +2462,7 @@
     return ("string" === o ? String : Number)(r);
   }
   var k = typeof console !== "undefined" ? console : null;
-  var P = function() {
+  var S = function() {
     function Logger() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : "[Miss Player]";
       _classCallCheck(this, Logger);
@@ -2585,8 +2585,8 @@
       }
     } ]);
   }();
-  var S = new P("[Miss Player]");
-  const E = null && S;
+  var P = new S("[Miss Player]");
+  const E = null && P;
   function JableCommentProvider_typeof(r) {
     "@babel/helpers - typeof";
     return JableCommentProvider_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -2723,7 +2723,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -2807,14 +2807,14 @@
       }
       throw new TypeError(JableCommentProvider_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -2827,9 +2827,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -3085,16 +3085,16 @@
       var C = r.querySelector(".comment-text .original-text");
       var _ = "", k = false;
       if (C) {
-        var P = C.cloneNode(true);
-        P.querySelectorAll("img").forEach((function(r) {
+        var S = C.cloneNode(true);
+        S.querySelectorAll("img").forEach((function(r) {
           return r.replaceWith(r.getAttribute("alt") || "");
         }));
-        _ = P.textContent.trim();
+        _ = S.textContent.trim();
       } else {
-        var S = r.querySelector(".comment-text .inactive-color");
-        if (S && S.textContent.includes("審核")) {
+        var P = r.querySelector(".comment-text .inactive-color");
+        if (P && P.textContent.includes("審核")) {
           k = true;
-          _ = S.textContent.trim();
+          _ = P.textContent.trim();
         }
       }
       if (_ || p !== "Anonymous") {
@@ -3131,7 +3131,7 @@
             o = y.length > 1 && y[1] !== void 0 ? y[1] : 1;
             a = r.toLowerCase().trim();
             l = Date.now();
-            S.log("[CommentScraper] 开始采集 Jable 评论，番号: ".concat(a, ", 页码: ").concat(o));
+            P.log("[CommentScraper] 开始采集 Jable 评论，番号: ".concat(a, ", 页码: ").concat(o));
             b.prev = 4;
             b.next = 7;
             return fetchWithDomainRotation(D, (function(r) {
@@ -3147,7 +3147,7 @@
            case 7:
             u = b.sent;
             p = parseCommentsHtml(u.html, u.domain);
-            S.log("[CommentScraper] 成功采集到 Jable 评论，共 ".concat(p.comments.length, " 条 (总数: ").concat(p.totalCount, ")"));
+            P.log("[CommentScraper] 成功采集到 Jable 评论，共 ".concat(p.comments.length, " 条 (总数: ").concat(p.totalCount, ")"));
             fe.recordFeatureAction("comment_scrape");
             fe.track("comment_scrape_result", {
               "site": "jable",
@@ -3329,7 +3329,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -3413,14 +3413,14 @@
       }
       throw new TypeError(JavLibCommentProvider_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -3433,9 +3433,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -3801,9 +3801,9 @@
           var _ = C.textContent.trim();
           if (matchAvCode(_, o)) {
             var k = b.getAttribute("href") || "";
-            var P = k.match(/v=([^&]+)/);
-            if (P) {
-              p = P[1];
+            var S = k.match(/v=([^&]+)/);
+            if (S) {
+              p = S[1];
               break;
             }
           }
@@ -3822,12 +3822,12 @@
       }
     }
     if (p) {
-      S.log("找到 JAVLibrary ID (搜索列表): ".concat(p, " (工作域名: ").concat(a, ")"));
+      P.log("找到 JAVLibrary ID (搜索列表): ".concat(p, " (工作域名: ").concat(a, ")"));
       return p;
     }
     var L = r.match(/videocomments\.php\?v=([^"]+)/);
     if (L) {
-      S.log("从页面文本中解析到 JAVLibrary ID: ".concat(L[1], " (工作域名: ").concat(a, ")"));
+      P.log("从页面文本中解析到 JAVLibrary ID: ".concat(L[1], " (工作域名: ").concat(a, ")"));
       return L[1];
     }
     throw new Error("Movie not found on JAVLibrary");
@@ -3924,16 +3924,16 @@
       var C = r.querySelector(".date");
       var _ = C ? C.textContent.trim() : "";
       var k = r.querySelector("textarea.hidden");
-      var P = k ? (k.value || k.textContent || "").trim() : "";
-      var S = r.querySelector('[class^="rating"]');
-      var E = S ? S.getAttribute("title") : null;
-      if (P || v !== "Anonymous") {
+      var S = k ? (k.value || k.textContent || "").trim() : "";
+      var P = r.querySelector('[class^="rating"]');
+      var E = P ? P.getAttribute("title") : null;
+      if (S || v !== "Anonymous") {
         b.push({
           "id": "javlib-".concat(o, "-").concat(a, "-").concat(u),
           "user": v,
           "userUrl": y,
           "time": _,
-          "text": P,
+          "text": S,
           "score": E,
           "isPending": false,
           "site": "javlib"
@@ -3944,13 +3944,13 @@
     var _ = false;
     var k = b.length;
     if (C) {
-      var P = new RegExp("[\\?&]page=".concat(a + 1, "(?:&|$)"));
-      var S = C.querySelectorAll("a");
-      var E = JavLibCommentProvider_createForOfIteratorHelper(S), D;
+      var S = new RegExp("[\\?&]page=".concat(a + 1, "(?:&|$)"));
+      var P = C.querySelectorAll("a");
+      var E = JavLibCommentProvider_createForOfIteratorHelper(P), D;
       try {
         for (E.s(); !(D = E.n()).done; ) {
           var L = D.value;
-          if (P.test(L.getAttribute("href") || "")) {
+          if (S.test(L.getAttribute("href") || "")) {
             _ = true;
             break;
           }
@@ -3991,7 +3991,7 @@
             p = u ? "videoreviews.php" : "videocomments.php";
             v = l || M[0];
             y = "".concat(v, "/cn/").concat(p, "?v=").concat(r, "&page=").concat(a);
-            S.log("[CommentScraper] 采集 JAVLibrary ".concat(o, " (Page ").concat(a, "): ").concat(y));
+            P.log("[CommentScraper] 采集 JAVLibrary ".concat(o, " (Page ").concat(a, "): ").concat(y));
             _.next = 12;
             return fetchWithTransport(y, {
               "headers": {
@@ -4302,7 +4302,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -4386,14 +4386,14 @@
       }
       throw new TypeError(JavDbCommentProvider_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -4406,9 +4406,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -4680,7 +4680,7 @@
     var a = r.trim();
     var l = A[o] || A[0] || "https://javdb.com";
     var u = "".concat(l, "/search?q=").concat(encodeURIComponent(a), "&f=all");
-    S.log("[CommentScraper] 开始获取 JavDB 影片 ID，番号: ".concat(a, ", 域名: ").concat(l));
+    P.log("[CommentScraper] 开始获取 JavDB 影片 ID，番号: ".concat(a, ", 域名: ").concat(l));
     return new Promise((function(r, o) {
       if (typeof GM_xmlhttpRequest === "undefined") {
         o(new Error("GM_xmlhttpRequest unavailable"));
@@ -4719,16 +4719,16 @@
               try {
                 for (C.s(); !(_ = C.n()).done; ) {
                   var k = _.value;
-                  var P = k.getAttribute("href") || "";
-                  var S = P.match(/\/v\/([a-zA-Z0-9]+)/);
-                  if (S) {
+                  var S = k.getAttribute("href") || "";
+                  var P = S.match(/\/v\/([a-zA-Z0-9]+)/);
+                  if (P) {
                     var E = k.getAttribute("title") || k.textContent || "";
                     if (!a || matchAvCode(E, a)) {
-                      b = S[1];
+                      b = P[1];
                       break;
                     }
                     if (!b) {
-                      b = S[1];
+                      b = P[1];
                     }
                   }
                 }
@@ -4763,7 +4763,7 @@
           while (1) {
             switch (b.prev = b.next) {
              case 0:
-              S.warn("[CommentScraper] JavDB 主线搜索失败 (".concat(r.message, ")，正在尝试第三方 API 备用线路..."));
+              P.warn("[CommentScraper] JavDB 主线搜索失败 (".concat(r.message, ")，正在尝试第三方 API 备用线路..."));
               b.prev = 1;
               u = jbBuildSignature();
               p = "".concat(j, "/v2/search");
@@ -4791,7 +4791,7 @@
                 b.next = 11;
                 break;
               }
-              S.log("[CommentScraper] 备用线路获取 JavDB movieId 成功: ".concat(y[0].id));
+              P.log("[CommentScraper] 备用线路获取 JavDB movieId 成功: ".concat(y[0].id));
               return b.abrupt("return", {
                 "movieId": y[0].id,
                 "domain": l,
@@ -4805,7 +4805,7 @@
              case 13:
               b.prev = 13;
               b.t0 = b["catch"](1);
-              S.error("[CommentScraper] JavDB 备用线路搜索亦失败:", b.t0);
+              P.error("[CommentScraper] JavDB 备用线路搜索亦失败:", b.t0);
 
              case 16:
               throw r;
@@ -4830,7 +4830,7 @@
     }
     var l = a || A[0] || "https://javdb.com";
     var u = "".concat(l, "/v/").concat(r, "/reviews?page=").concat(o);
-    S.log("[CommentScraper] 尝试 JavDB 主线获取短评 (Page ".concat(o, "): ").concat(u));
+    P.log("[CommentScraper] 尝试 JavDB 主线获取短评 (Page ".concat(o, "): ").concat(u));
     var p = function fetchMainLine() {
       return new Promise((function(r, a) {
         if (typeof GM_xmlhttpRequest === "undefined") {
@@ -4886,10 +4886,10 @@
                 }
                 var _ = l.querySelector(".time");
                 var k = _ ? _.textContent.trim() : "";
-                var P = l.querySelector(".score-stars");
-                var S = 0;
-                if (P) {
-                  S = P.querySelectorAll("i.icon-star:not(.gray)").length;
+                var S = l.querySelector(".score-stars");
+                var P = 0;
+                if (S) {
+                  P = S.querySelectorAll("i.icon-star:not(.gray)").length;
                 }
                 var E = r.querySelector(".content p, .content");
                 var D = E ? E.textContent.trim() : "";
@@ -4899,7 +4899,7 @@
                     "user": u,
                     "time": k,
                     "text": D,
-                    "score": S,
+                    "score": P,
                     "isPending": false,
                     "site": "javdb"
                   });
@@ -4942,7 +4942,7 @@
           while (1) {
             switch (C.prev = C.next) {
              case 0:
-              S.log("[CommentScraper] 自动无缝切换至 JavDB 备用 API (jdforrepam.com) 抓取短评...");
+              P.log("[CommentScraper] 自动无缝切换至 JavDB 备用 API (jdforrepam.com) 抓取短评...");
               l = jbBuildSignature();
               u = "".concat(j, "/v1/movies/").concat(r, "/reviews");
               C.next = 5;
@@ -5234,7 +5234,7 @@
     "regex": /(?:SSNI-647：禁欲与背叛|阿丽娜|出差一个月|阿丽娜的吻)/i,
     "reason": "小作文/小说复读"
   } ];
-  var W = [ {
+  var U = [ {
     "regex": /你在看(?:吗|嗎)/i,
     "reason": '圈人喊话 ("你在看吗")'
   }, {
@@ -5340,7 +5340,7 @@
     "regex": /(?:Kingmore|K麼|Kmo)/i,
     "reason": "Kingmore梗"
   } ];
-  var U = [ {
+  var W = [ {
     "regex": /(?:联系我|微信号|联系方式|p友|找长期p友|找p友|同城约|约吗|約嗎|约啊|约呗|找个(?:哥哥|妹妹|姐姐|弟弟|爸爸|主)|找m|找s|有s女|想被玩弄|同城|滴滴我|滴滴滴|私我|name传来|求主|求m|鬼女|约嘛|約嘛|找女|找男|约ㄇ|約ㄇ)/i,
     "reason": "交友/约炮关键词"
   }, {
@@ -5484,8 +5484,8 @@
     }
     var k = J.exec(u);
     if (k) {
-      var P = k[0];
-      if (/^(?:马上|馬上|林北|陈述|陳述|余下|于是|方便|方面|方向|方法|古代|古老|高潮|高中|高兴|高興|周围|周圍|周末|施工|施展|程度|程序|胡说|胡說|胡闹|胡鬧|朱红|朱紅|何必|何况|何況|洪水|曹操|温柔|溫柔|唐突|许多|許多|沈默|江湖|王八|李子|杨柳|楊柳|徐徐|魏然|龚自|顏色|颜色|严格|嚴格|康复|康復|阮囊|褚色|简单|簡單|游泳|学妹|学姐|学弟|学长|學妹|學姐|學弟|學長|女生|女人|旅馆|旅館|失禁|馆开)/i.test(P)) {} else {
+      var S = k[0];
+      if (/^(?:马上|馬上|林北|陈述|陳述|余下|于是|方便|方面|方向|方法|古代|古老|高潮|高中|高兴|高興|周围|周圍|周末|施工|施展|程度|程序|胡说|胡說|胡闹|胡鬧|朱红|朱紅|何必|何况|何況|洪水|曹操|温柔|溫柔|唐突|许多|許多|沈默|江湖|王八|李子|杨柳|楊柳|徐徐|魏然|龚自|顏色|颜色|严格|嚴格|康复|康復|阮囊|褚色|简单|簡單|游泳|学妹|学姐|学弟|学长|學妹|學姐|學弟|學長|女生|女人|旅馆|旅館|失禁|馆开)/i.test(S)) {} else {
         return {
           "label": "SPAM",
           "category": "FRIEND_TAG_MEME",
@@ -5500,9 +5500,9 @@
         "reason": "与同学名字进行对比"
       };
     }
-    var S = CommentDataPipeline_createForOfIteratorHelper(W), E;
+    var P = CommentDataPipeline_createForOfIteratorHelper(U), E;
     try {
-      for (S.s(); !(E = S.n()).done; ) {
+      for (P.s(); !(E = P.n()).done; ) {
         var D = E.value;
         if (D.regex.test(o)) {
           return {
@@ -5513,11 +5513,11 @@
         }
       }
     } catch (r) {
-      S.e(r);
+      P.e(r);
     } finally {
-      S.f();
+      P.f();
     }
-    var L = CommentDataPipeline_createForOfIteratorHelper(U), M;
+    var L = CommentDataPipeline_createForOfIteratorHelper(W), M;
     try {
       for (L.s(); !(M = L.n()).done; ) {
         var T = M.value;
@@ -5743,32 +5743,32 @@
     var _ = /(?<!\d)(-?\d{1,3})\.(\d{1,2})(?:\.(\d{1,2}))?(?!\d)/g;
     while ((u = _.exec(r)) !== null) {
       var k = u[0];
-      var P = k.startsWith("-");
-      var S = [ parseInt(u[1], 10), u[2], u[3] ? parseInt(u[3], 10) : null ];
-      var E = parseInt(S[1], 10);
-      if (E >= 60 || S[2] !== null && S[2] >= 60) {
+      var S = k.startsWith("-");
+      var P = [ parseInt(u[1], 10), u[2], u[3] ? parseInt(u[3], 10) : null ];
+      var E = parseInt(P[1], 10);
+      if (E >= 60 || P[2] !== null && P[2] >= 60) {
         continue;
       }
       var D = 0;
-      var L = Math.abs(S[0]);
-      if (S[2] !== null) {
-        D = L * 3600 + parseInt(S[1], 10) * 60 + S[2];
-      } else if (P) {
-        var M = parseInt(S[1], 10);
-        if (S[1].length === 1) {
+      var L = Math.abs(P[0]);
+      if (P[2] !== null) {
+        D = L * 3600 + parseInt(P[1], 10) * 60 + P[2];
+      } else if (S) {
+        var M = parseInt(P[1], 10);
+        if (P[1].length === 1) {
           M *= 10;
         }
         D = L * 60 + M;
       } else {
-        D = parseTwoPartTime(L, S[1], true, o);
+        D = parseTwoPartTime(L, P[1], true, o);
       }
       a.push({
         "raw": k,
         "index": u.index,
         "end": u.index + k.length,
         "level": "L2",
-        "seconds": P ? -D : D,
-        "isNegative": P
+        "seconds": S ? -D : D,
+        "isNegative": S
       });
     }
     var T = /(?<!\d)(\d{1,2})\s*(?:小时|h|H)\s*(\d{1,2})\s*(?:分钟|分鐘|分|m|M)\s*(\d{1,2})\s*(?:秒钟|秒鐘|秒|s|S)(?!\d)/g;
@@ -5848,15 +5848,15 @@
         "isSlashList": true
       });
     }
-    var W = /(?<!\d)\b(\d{1,3})\b(?!\d)/g;
-    while ((u = W.exec(r)) !== null) {
-      var U = u[0];
+    var U = /(?<!\d)\b(\d{1,3})\b(?!\d)/g;
+    while ((u = U.exec(r)) !== null) {
+      var W = u[0];
       a.push({
-        "raw": U,
+        "raw": W,
         "index": u.index,
-        "end": u.index + U.length,
+        "end": u.index + W.length,
         "level": "L5",
-        "seconds": parseInt(U, 10),
+        "seconds": parseInt(W, 10),
         "isIsolated": true
       });
     }
@@ -5966,12 +5966,12 @@
       }
       var _ = b.seconds;
       var k = C.seconds;
-      var P = false;
+      var S = false;
       if (_ > k) {
-        P = true;
-        var S = _;
+        S = true;
+        var P = _;
         var E = k;
-        _ = l - S;
+        _ = l - P;
         k = l - E;
         if (_ < 0 || k < 0) {
           return {
@@ -5985,8 +5985,8 @@
         "seconds": [ _, k ],
         "level": "L4",
         "confidence": "High",
-        "isCountdown": P,
-        "countdownOffsets": P ? [ b.seconds, C.seconds ] : null
+        "isCountdown": S,
+        "countdownOffsets": S ? [ b.seconds, C.seconds ] : null
       };
     }
     var D = Math.max(l, 28800);
@@ -6043,8 +6043,8 @@
       }
       var N = Math.max(0, r.index - 5);
       var z = Math.min(a.length, r.end + 5);
-      var W = a.slice(N, r.index) + " | " + a.slice(r.end, z);
-      var U = I.TIMESTAMPS.MINUTE_KEYWORDS;
+      var U = a.slice(N, r.index) + " | " + a.slice(r.end, z);
+      var W = I.TIMESTAMPS.MINUTE_KEYWORDS;
       var q = I.TIMESTAMPS.SECOND_KEYWORDS;
       var K = a.replace(/(?:[\t-\r -\/:-@\[-`\{-~\xA0-\xA9\xAB\xAC\xAE-\xB1\xB4\xB6-\xB8\xBB\xBF\xD7\xF7\u02C2-\u02C5\u02D2-\u02DF\u02E5-\u02EB\u02ED\u02EF-\u02FF\u0375\u037E\u0384\u0385\u0387\u03F6\u0482\u055A-\u055F\u0589\u058A\u058D-\u058F\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0606-\u060F\u061B\u061D-\u061F\u066A-\u066D\u06D4\u06DE\u06E9\u06FD\u06FE\u0700-\u070D\u07F6-\u07F9\u07FE\u07FF\u0830-\u083E\u085E\u0888\u0964\u0965\u0970\u09F2\u09F3\u09FA\u09FB\u09FD\u0A76\u0AF0\u0AF1\u0B70\u0BF3-\u0BFA\u0C77\u0C7F\u0C84\u0D4F\u0D79\u0DF4\u0E3F\u0E4F\u0E5A\u0E5B\u0F01-\u0F17\u0F1A-\u0F1F\u0F34\u0F36\u0F38\u0F3A-\u0F3D\u0F85\u0FBE-\u0FC5\u0FC7-\u0FCC\u0FCE-\u0FDA\u104A-\u104F\u109E\u109F\u10FB\u1360-\u1368\u1390-\u1399\u1400\u166D\u166E\u1680\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DB\u1800-\u180A\u1940\u1944\u1945\u19DE-\u19FF\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B4E\u1B4F\u1B5A-\u1B6A\u1B74-\u1B7F\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u1FBD\u1FBF-\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED-\u1FEF\u1FFD\u1FFE\u2000-\u200A\u2010-\u2029\u202F-\u205F\u207A-\u207E\u208A-\u208E\u20A0-\u20C0\u2100\u2101\u2103-\u2106\u2108\u2109\u2114\u2116-\u2118\u211E-\u2123\u2125\u2127\u2129\u212E\u213A\u213B\u2140-\u2144\u214A-\u214D\u214F\u218A\u218B\u2190-\u2429\u2440-\u244A\u249C-\u24E9\u2500-\u2775\u2794-\u2B73\u2B76-\u2B95\u2B97-\u2BFF\u2CE5-\u2CEA\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E5D\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u2FF0-\u3004\u3008-\u3020\u3030\u3036\u3037\u303D-\u303F\u309B\u309C\u30A0\u30FB\u3190\u3191\u3196-\u319F\u31C0-\u31E5\u31EF\u3200-\u321E\u322A-\u3247\u3250\u3260-\u327F\u328A-\u32B0\u32C0-\u33FF\u4DC0-\u4DFF\uA490-\uA4C6\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA700-\uA716\uA720\uA721\uA789\uA78A\uA828-\uA82B\uA836-\uA839\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAA77-\uAA79\uAADE\uAADF\uAAF0\uAAF1\uAB5B\uAB6A\uAB6B\uABEB\uFB29\uFBB2-\uFBC2\uFD3E-\uFD4F\uFDCF\uFDFC-\uFDFF\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE66\uFE68-\uFE6B\uFEFF\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFE6\uFFE8-\uFFEE\uFFFC\uFFFD]|\uD800[\uDD00-\uDD02\uDD37-\uDD3F\uDD79-\uDD89\uDD8C-\uDD8E\uDD90-\uDD9C\uDDA0\uDDD0-\uDDFC\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDC77\uDC78\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEC8\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD803[\uDD6E\uDD8E\uDD8F\uDEAD\uDF55-\uDF59\uDF86-\uDF89]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC8\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9\uDFD4\uDFD5\uDFD7\uDFD8]|\uD805[\uDC4B-\uDC4F\uDC5A\uDC5B\uDC5D\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDE60-\uDE6C\uDEB9\uDF3C-\uDF3F]|\uD806[\uDC3B\uDD44-\uDD46\uDDE2\uDE3F-\uDE46\uDE9A-\uDE9C\uDE9E-\uDEA2\uDF00-\uDF09\uDFE1]|\uD807[\uDC41-\uDC45\uDC70\uDC71\uDEF7\uDEF8\uDF43-\uDF4F\uDFD5-\uDFF1\uDFFF]|\uD809[\uDC70-\uDC74]|\uD80B[\uDFF1\uDFF2]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3F\uDF44\uDF45]|\uD81B[\uDD6D-\uDD6F\uDE97-\uDE9A\uDFE2]|\uD82F[\uDC9C\uDC9F]|\uD833[\uDC00-\uDCEF\uDD00-\uDEB3\uDF50-\uDFC3]|\uD834[\uDC00-\uDCF5\uDD00-\uDD26\uDD29-\uDD64\uDD6A-\uDD6C\uDD83\uDD84\uDD8C-\uDDA9\uDDAE-\uDDEA\uDE00-\uDE41\uDE45\uDF00-\uDF56]|\uD835[\uDEC1\uDEDB\uDEFB\uDF15\uDF35\uDF4F\uDF6F\uDF89\uDFA9\uDFC3]|\uD836[\uDC00-\uDDFF\uDE37-\uDE3A\uDE6D-\uDE74\uDE76-\uDE83\uDE85-\uDE8B]|\uD838[\uDD4F\uDEFF]|\uD839\uDDFF|\uD83A[\uDD5E\uDD5F]|\uD83B[\uDCAC\uDCB0\uDD2E\uDEF0\uDEF1]|\uD83C[\uDC00-\uDC2B\uDC30-\uDC93\uDCA0-\uDCAE\uDCB1-\uDCBF\uDCC1-\uDCCF\uDCD1-\uDCF5\uDD0D-\uDDAD\uDDE6-\uDE02\uDE10-\uDE3B\uDE40-\uDE48\uDE50\uDE51\uDE60-\uDE65\uDF00-\uDFFF]|\uD83D[\uDC00-\uDED7\uDEDC-\uDEEC\uDEF0-\uDEFC\uDF00-\uDF76\uDF7B-\uDFD9\uDFE0-\uDFEB\uDFF0]|\uD83E[\uDC00-\uDC0B\uDC10-\uDC47\uDC50-\uDC59\uDC60-\uDC87\uDC90-\uDCAD\uDCB0-\uDCBB\uDCC0\uDCC1\uDD00-\uDE53\uDE60-\uDE6D\uDE70-\uDE7C\uDE80-\uDE89\uDE8F-\uDEC6\uDECE-\uDEDC\uDEDF-\uDEE9\uDEF0-\uDEF8\uDF00-\uDF92\uDF94-\uDFEF])+/g, "");
       var Y = K === r.raw;
@@ -6054,9 +6054,9 @@
         }
       }
       var X = q.some((function(r) {
-        return W.includes(r);
-      })) || U.some((function(r) {
-        return W.includes(r);
+        return U.includes(r);
+      })) || W.some((function(r) {
+        return U.includes(r);
       })) || B || Y || u;
       if (!X) {
         return {
@@ -6065,7 +6065,7 @@
         };
       }
       var $ = q.some((function(r) {
-        return W.includes(r);
+        return U.includes(r);
       }));
       var Q = $ ? j : j * 60;
       if (Q > D) {
@@ -6133,21 +6133,21 @@
     var _ = CommentDataPipeline_createForOfIteratorHelper(y), k;
     try {
       for (_.s(); !(k = _.n()).done; ) {
-        var P = k.value;
-        var S = validateMatch(P, v, l, o);
-        if (S.isValid) {
+        var S = k.value;
+        var P = validateMatch(S, v, l, o);
+        if (P.isValid) {
           b.push({
-            "raw": P.raw,
-            "seconds": S.seconds,
-            "level": P.level,
-            "confidence": S.confidence,
-            "isCountdown": S.isCountdown,
-            "countdownOffsets": S.countdownOffsets
+            "raw": S.raw,
+            "seconds": P.seconds,
+            "level": S.level,
+            "confidence": P.confidence,
+            "isCountdown": P.isCountdown,
+            "countdownOffsets": P.countdownOffsets
           });
         } else {
           C.push({
-            "raw": P.raw,
-            "reason": S.reason
+            "raw": S.raw,
+            "reason": P.reason
           });
         }
       }
@@ -6305,11 +6305,11 @@
       var k;
       _.lastIndex = 0;
       while ((k = _.exec(l)) !== null) {
-        var P = k[0];
-        if (!P.match(ae)) {
-          var S = "".concat(o, "-").concat(P);
-          if (!IDcheck(S)) {
-            a.add(S.toUpperCase());
+        var S = k[0];
+        if (!S.match(ae)) {
+          var P = "".concat(o, "-").concat(S);
+          if (!IDcheck(P)) {
+            a.add(P.toUpperCase());
           }
         }
       }
@@ -6462,8 +6462,8 @@
       return r;
     }));
     for (var b = 0, C = Object.entries(u); b < C.length; b++) {
-      var _ = _slicedToArray(C[b], 2), k = _[0], P = _[1];
-      l = l.replace(k, P);
+      var _ = _slicedToArray(C[b], 2), k = _[0], S = _[1];
+      l = l.replace(k, S);
     }
     return l;
   }
@@ -6598,7 +6598,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -6682,14 +6682,14 @@
       }
       throw new TypeError(EventCollector_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -6702,9 +6702,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -6939,8 +6939,8 @@
   var ce = "XFLOW_v6_SECRET";
   var ue = "mp_telemetry_client_id_v2";
   var de = "mp_telemetry_cache_v3";
-  var he = 60 * 60 * 1e3;
-  var pe = 15 * 60 * 1e3;
+  var pe = 60 * 60 * 1e3;
+  var he = 15 * 60 * 1e3;
   function getDeviceFingerprintString() {
     var r = [];
     try {
@@ -7290,7 +7290,7 @@
       "key": "checkPeriodicFlush",
       "value": function checkPeriodicFlush() {
         var r = Date.now();
-        if (r - this.lastFlushTs >= he) {
+        if (r - this.lastFlushTs >= pe) {
           this.flush(false);
         }
       }
@@ -7298,7 +7298,7 @@
       "key": "flush",
       "value": function() {
         var r = EventCollector_asyncToGenerator(EventCollector_regeneratorRuntime().mark((function _callee2() {
-          var r, o, a, l, u, p, v, y, b, C, _, k, P, S, E, D, L, M, T, A, j, B, I, O, V = arguments;
+          var r, o, a, l, u, p, v, y, b, C, _, k, S, P, E, D, L, M, T, A, j, B, I, O, V = arguments;
           return EventCollector_regeneratorRuntime().wrap((function _callee2$(G) {
             while (1) {
               switch (G.prev = G.next) {
@@ -7326,14 +7326,14 @@
                   G.next = 14;
                   break;
                 }
-                if (!(!r && u - this.lastFlushTs < he)) {
+                if (!(!r && u - this.lastFlushTs < pe)) {
                   G.next = 12;
                   break;
                 }
                 return G.abrupt("return");
 
                case 12:
-                if (!(r && u - this.lastFlushTs < pe && this.sessionBuffer.totalPlaySec < 30)) {
+                if (!(r && u - this.lastFlushTs < he && this.sessionBuffer.totalPlaySec < 30)) {
                   G.next = 14;
                   break;
                 }
@@ -7347,8 +7347,8 @@
                 C = Array.from(this.sessionBuffer.avcodes);
                 _ = EventCollector_toConsumableArray(this.sessionBuffer.milestones);
                 k = EventCollector_toConsumableArray(this.sessionBuffer.triggers);
-                P = EventCollector_toConsumableArray(this.sessionBuffer.collectedSegments);
-                S = EventCollector_toConsumableArray(this.sessionBuffer.timestampClicks);
+                S = EventCollector_toConsumableArray(this.sessionBuffer.collectedSegments);
+                P = EventCollector_toConsumableArray(this.sessionBuffer.timestampClicks);
                 E = Date.now();
                 D = new Date(E);
                 L = D.toISOString().slice(0, 10);
@@ -7373,8 +7373,8 @@
                   "details_json": {
                     "milestones": _,
                     "triggers": k,
-                    "collected_segments": P,
-                    "timestamp_clicks": S
+                    "collected_segments": S,
+                    "timestamp_clicks": P
                   },
                   "user_agent": typeof navigator !== "undefined" ? navigator.userAgent || "" : ""
                 };
@@ -7569,7 +7569,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -7653,14 +7653,14 @@
       }
       throw new TypeError(clipboard_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -7673,9 +7673,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -8165,8 +8165,8 @@
   var xe = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
   var _e = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
   var ke = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>\n    </svg>\n';
-  var Pe = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n    </svg>\n';
-  var Se = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var Se = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n    </svg>\n';
+  var Pe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
   var Ee = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="18" y1="6" x2="6" y2="18"></line>\n        <line x1="6" y1="6" x2="18" y2="18"></line>\n    </svg>\n';
   var De = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="22" y1="2" x2="11" y2="13"></line>\n        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>\n    </svg>\n';
   var Le = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M19.4 15C19.1277 15.6171 19.2583 16.3378 19.73 16.82L19.79 16.88C20.1837 17.2737 20.4009 17.7994 20.4009 18.345C20.4009 18.8906 20.1837 19.4163 19.79 19.81C19.4163 20.2037 18.8906 20.4209 18.345 20.4209C17.7994 20.4209 17.2737 20.2037 16.91 19.81L16.85 19.75C16.3678 19.2783 15.6471 19.1477 15.03 19.42C14.4301 19.6801 14.0386 20.2502 14.03 20.89V21C14.03 21.5304 13.8193 22.0391 13.4442 22.4142C13.0691 22.7893 12.5604 23 12.03 23C11.4996 23 10.9909 22.7893 10.6158 22.4142C10.2407 22.0391 10.03 21.5304 10.03 21V20.91C10.0112 20.2556 9.5979 19.6818 8.98 19.43C8.36289 19.1577 7.64221 19.2883 7.16 19.76L7.1 19.82C6.73629 20.2137 6.21056 20.4309 5.665 20.4309C5.11944 20.4309 4.59371 20.2137 4.23 19.82C3.83628 19.4463 3.61911 18.9206 3.61911 18.375C3.61911 17.8294 3.83628 17.3037 4.23 16.93L4.29 16.87C4.76167 16.3878 4.89231 15.6671 4.62 15.05C4.35995 14.4501 3.78985 14.0586 3.15 14.05H3C2.46957 14.05 1.96086 13.8393 1.58579 13.4642C1.21071 13.0891 1 12.5804 1 12.05C1 11.5196 1.21071 11.0109 1.58579 10.6358C1.96086 10.2607 2.46957 10.05 3 10.05H3.09C3.74435 10.0312 4.31814 9.61788 4.57 9C4.84231 8.38289 4.71167 7.66221 4.24 7.18L4.18 7.12C3.78628 6.75629 3.56911 6.23056 3.56911 5.685C3.56911 5.13944 3.78628 4.61371 4.18 4.25C4.55371 3.85628 5.07944 3.63911 5.625 3.63911C6.17056 3.63911 6.69629 3.85628 7.07 4.25L7.13 4.31C7.61221 4.78167 8.33289 4.91231 8.95 4.64H9C9.59994 4.37995 9.99144 3.80985 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0086 3.72985 14.4001 4.29995 15 4.56C15.6171 4.83231 16.3378 4.70167 16.82 4.23L16.88 4.17C17.2437 3.77628 17.7694 3.55911 18.325 3.55911C18.8806 3.55911 19.4063 3.77628 19.77 4.17C20.1637 4.54371 20.3809 5.06944 20.3809 5.615C20.3809 6.16056 20.1637 6.68629 19.77 7.06L19.71 7.12C19.2383 7.60221 19.1077 8.32289 19.38 8.94L19.4 9C19.66 9.59994 20.2301 9.99144 20.87 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.2702 14.0086 19.7001 14.4001 19.44 15H19.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
@@ -9898,7 +9898,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -9982,14 +9982,14 @@
       }
       throw new TypeError(CrossDomainBridge_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -10002,9 +10002,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -10173,7 +10173,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var We = function() {
+  var Ue = function() {
     function CrossDomainBridge() {
       CrossDomainBridge_classCallCheck(this, CrossDomainBridge);
     }
@@ -10539,7 +10539,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ue = "MissPlayerSalt_2026";
+  var We = "MissPlayerSalt_2026";
   var qe = "_mp_obf_:";
   function xorObfuscate(r) {
     if (!r) {
@@ -10547,7 +10547,7 @@
     }
     var o = "";
     for (var a = 0; a < r.length; a++) {
-      o += String.fromCharCode(r.charCodeAt(a) ^ Ue.charCodeAt(a % Ue.length));
+      o += String.fromCharCode(r.charCodeAt(a) ^ We.charCodeAt(a % We.length));
     }
     try {
       return qe + btoa(encodeURIComponent(o));
@@ -10569,7 +10569,7 @@
     } catch (r) {}
     var l = "";
     for (var u = 0; u < a.length; u++) {
-      l += String.fromCharCode(a.charCodeAt(u) ^ Ue.charCodeAt(u % Ue.length));
+      l += String.fromCharCode(a.charCodeAt(u) ^ We.charCodeAt(u % We.length));
     }
     return l;
   }
@@ -10776,7 +10776,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -10860,14 +10860,14 @@
       }
       throw new TypeError(BaseLoginProvider_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -10880,9 +10880,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -11083,7 +11083,7 @@
       "key": "_request",
       "value": function() {
         var r = BaseLoginProvider_asyncToGenerator(BaseLoginProvider_regeneratorRuntime().mark((function _callee3(r) {
-          var o, a, l, u, p, v, y, b, C, _, k, P, S, E = arguments;
+          var o, a, l, u, p, v, y, b, C, _, k, S, P, E = arguments;
           return BaseLoginProvider_regeneratorRuntime().wrap((function _callee3$(D) {
             while (1) {
               switch (D.prev = D.next) {
@@ -11102,29 +11102,29 @@
                   break;
                 }
                 D.prev = 6;
-                P = {
+                S = {
                   "method": l,
                   "headers": p,
                   "credentials": "same-origin"
                 };
                 if (y) {
-                  P.body = y;
+                  S.body = y;
                 }
                 D.next = 11;
-                return k(r, P);
+                return k(r, S);
 
                case 11:
-                S = D.sent;
+                P = D.sent;
                 return D.abrupt("return", {
-                  "ok": S.ok,
-                  "status": S.status,
-                  "statusText": S.statusText,
-                  "headers": S.headers,
+                  "ok": P.ok,
+                  "status": P.status,
+                  "statusText": P.statusText,
+                  "headers": P.headers,
                   "json": function json() {
-                    return S.json();
+                    return P.json();
                   },
                   "text": function text() {
-                    return S.text();
+                    return P.text();
                   }
                 });
 
@@ -11688,7 +11688,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -11772,14 +11772,14 @@
       }
       throw new TypeError(JableLoginProvider_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -11792,9 +11792,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -12083,7 +12083,7 @@
         if (!this.isSupportedSite()) {
           return;
         }
-        We.startBroker(this.siteKey, {
+        Ue.startBroker(this.siteKey, {
           "PUBLISH_COMMENT": function() {
             var o = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee(o) {
               var a, l, u, p, v, y, b;
@@ -12348,7 +12348,7 @@
                   y = b.innerHTML;
                 }
                 C.next = 5;
-                return We.sendCommand(this.siteKey, "PUBLISH_COMMENT", {
+                return Ue.sendCommand(this.siteKey, "PUBLISH_COMMENT", {
                   "commentText": r,
                   "videoCode": a,
                   "videoId": l,
@@ -12375,7 +12375,7 @@
       "key": "publishComment",
       "value": function() {
         var r = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee5(r, o) {
-          var a, l, u, p, v, y, b, C, _, k, P, S, E, D, L, M, T, A, j, B, I;
+          var a, l, u, p, v, y, b, C, _, k, S, P, E, D, L, M, T, A, j, B, I;
           return JableLoginProvider_regeneratorRuntime().wrap((function _callee5$(O) {
             while (1) {
               switch (O.prev = O.next) {
@@ -12403,7 +12403,7 @@
                   break;
                 }
                 O.next = 11;
-                return We.checkShadowActive(this.siteKey);
+                return Ue.checkShadowActive(this.siteKey);
 
                case 11:
                 b = O.sent;
@@ -12435,30 +12435,30 @@
                case 20:
                 _ = this.getActiveDomain(v);
                 k = p || "".concat(_, "/videos/").concat(a.toLowerCase(), "/");
-                P = new URLSearchParams;
+                S = new URLSearchParams;
                 if (u) {
                   u.querySelectorAll("input").forEach((function(r) {
                     if (r.name && r.type !== "submit") {
                       if (r.name !== "format" && r.name !== "mode") {
-                        P.append(r.name, r.value);
+                        S.append(r.name, r.value);
                       }
                     }
                   }));
-                  S = u.querySelector("textarea");
-                  E = S ? S.name : "comment";
-                  P.append(E, r);
+                  P = u.querySelector("textarea");
+                  E = P ? P.name : "comment";
+                  S.append(E, r);
                 } else {
-                  P.append("action", "add_comment");
+                  S.append("action", "add_comment");
                   if (l) {
-                    P.append("video_id", l);
+                    S.append("video_id", l);
                   }
-                  P.append("comment", r);
+                  S.append("comment", r);
                 }
-                if (!P.has("format")) {
-                  P.append("format", "json");
+                if (!S.has("format")) {
+                  S.append("format", "json");
                 }
-                if (!P.has("mode")) {
-                  P.append("mode", "async");
+                if (!S.has("mode")) {
+                  S.append("mode", "async");
                 }
                 D = u ? u.getAttribute("action") || "" : "";
                 if (D.startsWith("/")) {
@@ -12476,7 +12476,7 @@
                     "referer": k,
                     "origin": _
                   },
-                  "body": P.toString()
+                  "body": S.toString()
                 });
 
                case 31:
@@ -12670,7 +12670,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -12754,14 +12754,14 @@
       }
       throw new TypeError(MissavLoginProvider_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -12774,9 +12774,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -13029,7 +13029,7 @@
       "key": "login",
       "value": function() {
         var r = MissavLoginProvider_asyncToGenerator(MissavLoginProvider_regeneratorRuntime().mark((function _callee(r, o) {
-          var a, l, u, p, v, y, b, C, _, k, P, S, E = arguments;
+          var a, l, u, p, v, y, b, C, _, k, S, P, E = arguments;
           return MissavLoginProvider_regeneratorRuntime().wrap((function _callee$(D) {
             while (1) {
               switch (D.prev = D.next) {
@@ -13078,9 +13078,9 @@
                 return k.text();
 
                case 17:
-                P = D.sent;
+                S = D.sent;
                 if (!v) {
-                  Toast("登录失败: ".concat(P), 2e3, "error");
+                  Toast("登录失败: ".concat(S), 2e3, "error");
                 }
                 throw new Error(__("login_networkFailed") || "网络请求失败");
 
@@ -13089,7 +13089,7 @@
                 return k.json();
 
                case 22:
-                S = D.sent;
+                P = D.sent;
                 if (!v) {
                   Toast(__("login_success") || "登录成功", 2e3, "success");
                 }
@@ -13255,7 +13255,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -13339,14 +13339,14 @@
       }
       throw new TypeError(CommentComposer_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -13359,9 +13359,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -13660,7 +13660,7 @@
                       }
                       u = true;
                       clearTimeout(v);
-                      S.error("[CommentComposer] 检测 Jable 失败:", r);
+                      P.error("[CommentComposer] 检测 Jable 失败:", r);
                       Toast("网络请求失败，请稍后重试", 2e3, "error");
                       l(null);
                     },
@@ -13881,35 +13881,35 @@
             var k = document.createElement("span");
             k.className = "tm-time-sep";
             k.textContent = "~";
-            var P = document.createElement("span");
-            P.className = "tm-time-part end";
-            P.textContent = formatSeconds(o.endTime);
+            var S = document.createElement("span");
+            S.className = "tm-time-part end";
+            S.textContent = formatSeconds(o.endTime);
             C.appendChild(_);
             C.appendChild(k);
-            C.appendChild(P);
+            C.appendChild(S);
             y.appendChild(C);
           }
-          var S = document.createElement("input");
-          S.type = "text";
-          S.className = "tm-tag-remark-input";
-          S.placeholder = "添加备注...";
-          S.value = o.comment || "";
+          var P = document.createElement("input");
+          P.type = "text";
+          P.className = "tm-tag-remark-input";
+          P.placeholder = "添加备注...";
+          P.value = o.comment || "";
           var E = function stopProp(r) {
             return r.stopPropagation();
           };
-          S.addEventListener("keydown", E);
-          S.addEventListener("keyup", E);
-          S.addEventListener("keypress", E);
-          S.addEventListener("mousedown", E);
-          S.addEventListener("touchstart", E);
-          S.addEventListener("input", (function(r) {
+          P.addEventListener("keydown", E);
+          P.addEventListener("keyup", E);
+          P.addEventListener("keypress", E);
+          P.addEventListener("mousedown", E);
+          P.addEventListener("touchstart", E);
+          P.addEventListener("input", (function(r) {
             o.comment = r.target.value;
             if (a) {
               a._saveTabs();
               a.renderTabs();
             }
           }));
-          S.addEventListener("change", (function() {
+          P.addEventListener("change", (function() {
             if (a) {
               a._saveTabs();
               a.renderTabs();
@@ -13917,7 +13917,7 @@
           }));
           p.appendChild(v);
           p.appendChild(y);
-          p.appendChild(S);
+          p.appendChild(P);
           r.tagSelectList.appendChild(p);
         }));
       }
@@ -14052,7 +14052,7 @@
                   } else if (!b.startsWith("http")) {
                     b = u;
                   }
-                  S.log("[CommentComposer] 正在提交评论: ".concat(b));
+                  P.log("[CommentComposer] 正在提交评论: ".concat(b));
                   GM_xmlhttpRequest({
                     "method": "POST",
                     "url": b,
@@ -14083,7 +14083,7 @@
                       }
                     },
                     "onerror": function onerror(r) {
-                      S.error("[CommentComposer] 提交评论失败:", r);
+                      P.error("[CommentComposer] 提交评论失败:", r);
                       Toast("网络请求出错，请重试", 2e3, "error");
                       o(false);
                     }
@@ -14112,7 +14112,7 @@
                 _.prev = 25;
                 _.t0 = _["catch"](10);
                 y();
-                S.error("[CommentComposer] 发表评论过程出现异常:", _.t0);
+                P.error("[CommentComposer] 发表评论过程出现异常:", _.t0);
                 Toast("发表评论失败", 2e3, "error");
 
                case 30:
@@ -14161,7 +14161,7 @@
                     l.style.opacity = "1";
                   }
                 };
-                S.log("[CommentComposer] 正在检测 Jable 页面与登录态: ".concat(a));
+                P.log("[CommentComposer] 正在检测 Jable 页面与登录态: ".concat(a));
                 v = false;
                 y = null;
                 b = setTimeout((function() {
@@ -14173,7 +14173,7 @@
                         y.abort();
                       } catch (r) {}
                     }
-                    S.error("[CommentComposer] 检测 Jable 页面超时");
+                    P.error("[CommentComposer] 检测 Jable 页面超时");
                     Toast("网络请求超时，请稍后重试", 2e3, "error");
                   }
                 }), 6e3);
@@ -14221,7 +14221,7 @@
                     v = true;
                     clearTimeout(b);
                     p();
-                    S.error("[CommentComposer] 检测 Jable 失败:", r);
+                    P.error("[CommentComposer] 检测 Jable 失败:", r);
                     Toast("网络请求失败，请稍后重试", 2e3, "error");
                   },
                   "ontimeout": function ontimeout() {
@@ -14231,7 +14231,7 @@
                     v = true;
                     clearTimeout(b);
                     p();
-                    S.error("[CommentComposer] 检测 Jable 超时");
+                    P.error("[CommentComposer] 检测 Jable 超时");
                     Toast("网络请求超时，请稍后重试", 2e3, "error");
                   }
                 });
@@ -14292,14 +14292,14 @@
           k.value = window.loginManager.userPassword || "";
         }
         C.addEventListener("click", CommentComposer_asyncToGenerator(CommentComposer_regeneratorRuntime().mark((function _callee6() {
-          var u, p, P, S;
+          var u, p, S, P;
           return CommentComposer_regeneratorRuntime().wrap((function _callee6$(E) {
             while (1) {
               switch (E.prev = E.next) {
                case 0:
                 u = _.value.trim();
                 p = k.value.trim();
-                P = v.querySelector("#tm-login-remember").checked;
+                S = v.querySelector("#tm-login-remember").checked;
                 if (!(!u || !p)) {
                   E.next = 6;
                   break;
@@ -14337,13 +14337,13 @@
                 E.t0 = false;
 
                case 20:
-                S = E.t0;
-                if (S) {
+                P = E.t0;
+                if (P) {
                   if (window.loginManager) {
                     window.loginManager.handleLoginInfoChange({
                       "email": u,
                       "password": p,
-                      "autoLogin": P
+                      "autoLogin": S
                     });
                   }
                   a.updateAllSiteLoginStatuses(true);
@@ -14467,7 +14467,7 @@
                     } else if (!b.startsWith("http")) {
                       b = o;
                     }
-                    S.log("[CommentComposer] 正在向 Jable 提交评论: ".concat(b));
+                    P.log("[CommentComposer] 正在向 Jable 提交评论: ".concat(b));
                     GM_xmlhttpRequest({
                       "method": "POST",
                       "url": b,
@@ -14498,7 +14498,7 @@
                         }
                       },
                       "onerror": function onerror(r) {
-                        S.error("[CommentComposer] 提交评论失败:", r);
+                        P.error("[CommentComposer] 提交评论失败:", r);
                         Toast("网络请求出错，请重试", 2e3, "error");
                         l(false);
                       }
@@ -14526,7 +14526,7 @@
                  case 14:
                   k.prev = 14;
                   k.t0 = k["catch"](0);
-                  S.error("[CommentComposer] 发表评论失败:", k.t0);
+                  P.error("[CommentComposer] 发表评论失败:", k.t0);
                   y.disabled = false;
                   C.disabled = false;
                   C.textContent = "提交";
@@ -14867,7 +14867,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -14951,14 +14951,14 @@
       }
       throw new TypeError(CommentPanel_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -14971,9 +14971,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -15725,7 +15725,7 @@
       "value": function() {
         var r = CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee3(r) {
           var o, a, l = this;
-          var u, p, v, y, b, C, _, k, P, E, L, T, j, B, I, O, V, G, R, H, J, N, z, W, U, q, K, Y, X, $, Q, Z, ee, te, ne, re, oe, ae, ie = arguments;
+          var u, p, v, y, b, C, _, k, S, E, L, T, j, B, I, O, V, G, R, H, J, N, z, U, W, q, K, Y, X, $, Q, Z, ee, te, ne, re, oe, ae, ie = arguments;
           return CommentPanel_regeneratorRuntime().wrap((function _callee3$(se) {
             while (1) {
               switch (se.prev = se.next) {
@@ -15757,7 +15757,7 @@
                   se.next = 13;
                   break;
                 }
-                S.log("[CommentPanel] 站点 ".concat(r, " 在设置中已禁用，取消评论抓取。"));
+                P.log("[CommentPanel] 站点 ".concat(r, " 在设置中已禁用，取消评论抓取。"));
                 p.loading = false;
                 return se.abrupt("return");
 
@@ -15796,17 +15796,17 @@
                   break;
                 }
                 if (u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.jableCommentsPromise) {
-                  S.log("[CommentPanel] 使用预加载的 Jable.tv 评论...");
+                  P.log("[CommentPanel] 使用预加载的 Jable.tv 评论...");
                   _ = CommentPanel.preloadCache.jableCommentsPromise;
                 } else {
                   k = 0;
-                  P = "";
+                  S = "";
                   if (typeof GM_getValue === "function") {
                     try {
-                      P = GM_getValue("mp_jable_working_domain", "");
+                      S = GM_getValue("mp_jable_working_domain", "");
                     } catch (r) {}
                   }
-                  E = p.workingDomain || P;
+                  E = p.workingDomain || S;
                   if (E) {
                     L = D.indexOf(E);
                     if (L !== -1) {
@@ -15838,7 +15838,7 @@
                   break;
                 }
                 se.next = 37;
-                return We.checkShadowActive("JAVLIBRARY");
+                return Ue.checkShadowActive("JAVLIBRARY");
 
                case 37:
                 T = se.sent;
@@ -15846,9 +15846,9 @@
                   se.next = 44;
                   break;
                 }
-                S.log("[CommentPanel] 检测到 JAVLibrary 影子通道在线，优先通过影子协同获取数据...");
+                P.log("[CommentPanel] 检测到 JAVLibrary 影子通道在线，优先通过影子协同获取数据...");
                 se.next = 42;
-                return We.sendCommand("JAVLIBRARY", "FETCH_JAVLIB_DATA", {
+                return Ue.sendCommand("JAVLIBRARY", "FETCH_JAVLIB_DATA", {
                   "avcode": this.videoCode,
                   "page": u
                 });
@@ -15869,7 +15869,7 @@
                     "hasMore": I.hasMore || O.hasMore
                   };
                 } else {
-                  S.log("[CommentPanel] JAVLibrary 影子通道同源抓取失败，降级为跨域直连抓取...");
+                  P.log("[CommentPanel] JAVLibrary 影子通道同源抓取失败，降级为跨域直连抓取...");
                 }
 
                case 44:
@@ -15884,7 +15884,7 @@
                   break;
                 }
                 if (CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibVideoIdPromise) {
-                  S.log("[CommentPanel] 使用预加载的 JAVLibrary ID...");
+                  P.log("[CommentPanel] 使用预加载的 JAVLibrary ID...");
                   R = CommentPanel.preloadCache.javlibVideoIdPromise;
                 } else {
                   R = fetchJavLibraryVideoId(this.videoCode);
@@ -15905,18 +15905,18 @@
                 z = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibReviewsPromise ? CommentPanel.preloadCache.javlibReviewsPromise : fetchJavLibraryData(V, "reviews", u, J);
                 se.next = 61;
                 return Promise.all([ N["catch"]((function(r) {
-                  S.warn("[CommentPanel] 获取 JAVLibrary 评论失败:", r);
+                  P.warn("[CommentPanel] 获取 JAVLibrary 评论失败:", r);
                   throw r;
                 })), z["catch"]((function(r) {
-                  S.warn("[CommentPanel] 获取 JAVLibrary 文章失败:", r);
+                  P.warn("[CommentPanel] 获取 JAVLibrary 文章失败:", r);
                   throw r;
                 })) ]);
 
                case 61:
-                W = se.sent;
-                U = CommentPanel_slicedToArray(W, 2);
-                q = U[0];
-                K = U[1];
+                U = se.sent;
+                W = CommentPanel_slicedToArray(U, 2);
+                q = W[0];
+                K = W[1];
                 K.comments.forEach((function(r) {
                   r.site = "javlib-review";
                 }));
@@ -15942,7 +15942,7 @@
                   break;
                 }
                 if (CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javdbMovieIdPromise) {
-                  S.log("[CommentPanel] 使用预加载的 JavDB ID...");
+                  P.log("[CommentPanel] 使用预加载的 JavDB ID...");
                   $ = CommentPanel.preloadCache.javdbMovieIdPromise;
                 } else {
                   $ = fetchJavdbMovieId(this.videoCode);
@@ -16001,7 +16001,7 @@
                case 96:
                 se.prev = 96;
                 se.t0 = se["catch"](24);
-                S.warn("[CommentPanel] 获取 ".concat(p.name, " 评论失败:"), se.t0);
+                P.warn("[CommentPanel] 获取 ".concat(p.name, " 评论失败:"), se.t0);
                 if (r === "javlib") {
                   this.handleJavlibError(se.t0);
                 } else {
@@ -16213,7 +16213,7 @@
         }
         this.javlibAutoVerifyAttempted = true;
         var a = r || "https://".concat(y.JAVLIBRARY.primary);
-        S.log("尝试启动 JAVLibrary 后台验证，目标域名: ".concat(a));
+        P.log("尝试启动 JAVLibrary 后台验证，目标域名: ".concat(a));
         this.javlibVerifyingStatus = "verifying";
         this.renderCommentsList();
         this.startSignalListener();
@@ -16222,9 +16222,9 @@
         var p = (typeof GM_getValue === "function" ? GM_getValue("javlib_verifying_start_time") : 0) || 0;
         var v = typeof GM_getValue === "function" && GM_getValue("javlib_verifying") === true && u - p < 15e3;
         if (v) {
-          S.log("监测到其他标签页已经在进行 JAVLibrary 验证，本标签页仅挂载监听器。");
+          P.log("监测到其他标签页已经在进行 JAVLibrary 验证，本标签页仅挂载监听器。");
         } else {
-          S.log("无其他活跃验证标签页，尝试启动后台验证标签页。");
+          P.log("无其他活跃验证标签页，尝试启动后台验证标签页。");
           if (typeof GM_setValue === "function") {
             GM_setValue("javlib_verifying", true);
             GM_setValue("javlib_verifying_start_time", u);
@@ -16236,7 +16236,7 @@
                 "insert": true,
                 "pinned": true
               });
-              S.log("已通过 GM_openInTab 打开后台静默验证标签页。");
+              P.log("已通过 GM_openInTab 打开后台静默验证标签页。");
             } else if (typeof GM !== "undefined" && typeof GM.openInTab === "function") {
               var b = GM.openInTab(l, {
                 "active": false,
@@ -16247,25 +16247,25 @@
                 b.then((function(r) {
                   o.javlibVerificationTab = r;
                 }))["catch"]((function(r) {
-                  S.error("GM.openInTab 异步启动失败:", r);
+                  P.error("GM.openInTab 异步启动失败:", r);
                 }));
               } else {
                 this.javlibVerificationTab = b;
               }
-              S.log("已通过 GM.openInTab 打开后台静默验证标签页。");
+              P.log("已通过 GM.openInTab 打开后台静默验证标签页。");
             } else {
-              S.warn("GM_openInTab 和 GM.openInTab 均未定义，降级为手动验证。");
+              P.warn("GM_openInTab 和 GM.openInTab 均未定义，降级为手动验证。");
               this.handleJavlibVerificationTimeout(r);
               return;
             }
           } catch (o) {
-            S.error("启动后台验证标签页失败:", o);
+            P.error("启动后台验证标签页失败:", o);
             this.handleJavlibVerificationTimeout(r);
             return;
           }
         }
         this.javlibVerificationTimeout = setTimeout((function() {
-          S.warn("JAVLibrary 后台验证超时，切换至手动验证提示。");
+          P.warn("JAVLibrary 后台验证超时，切换至手动验证提示。");
           o.handleJavlibVerificationTimeout(r);
         }), 15e3);
       }
@@ -16303,7 +16303,7 @@
           }
         }
         if (this.javlibVerificationTab) {
-          S.log("保持后台验证标签页存活，充当影子 Broker。");
+          P.log("保持后台验证标签页存活，充当影子 Broker。");
           this.javlibVerificationTab = null;
         }
         if (typeof GM_setValue === "function") {
@@ -16319,16 +16319,16 @@
         }
         if (typeof GM_addValueChangeListener === "function") {
           this.javlibVerifiedListenerId = GM_addValueChangeListener("javlib_verified_time", (function(o, a, l, u) {
-            S.log("监听到 JAVLibrary 验证成功信号 (监听器)！");
+            P.log("监听到 JAVLibrary 验证成功信号 (监听器)！");
             r.handleJavlibVerificationSuccess();
           }));
         } else {
-          S.log("GM_addValueChangeListener 未定义，使用轮询方式监听验证信号。");
+          P.log("GM_addValueChangeListener 未定义，使用轮询方式监听验证信号。");
           var o = (typeof GM_getValue === "function" ? GM_getValue("javlib_verified_time") : 0) || 0;
           this.javlibVerifiedPollInterval = setInterval((function() {
             var a = (typeof GM_getValue === "function" ? GM_getValue("javlib_verified_time") : 0) || 0;
             if (a > o) {
-              S.log("通过轮询监听到 JAVLibrary 验证成功信号！");
+              P.log("通过轮询监听到 JAVLibrary 验证成功信号！");
               r.handleJavlibVerificationSuccess();
             }
           }), 1e3);
@@ -16598,10 +16598,10 @@
         }), 300);
         this.videoCode = getVideoCodeFromUrl();
         if (this.videoCode) {
-          S.log("[CommentPanel] 提取到当前视频番号: ".concat(this.videoCode, "，开始采集..."));
+          P.log("[CommentPanel] 提取到当前视频番号: ".concat(this.videoCode, "，开始采集..."));
           this.loadComments(1);
         } else {
-          S.warn("[CommentPanel] 无法从当前URL解析到视频番号。");
+          P.warn("[CommentPanel] 无法从当前URL解析到视频番号。");
           if (this.commentsList) {
             this.commentsList.innerHTML = '<div class="tm-comment-error">无法解析视频番号，暂不支持展示评论。</div>';
           }
@@ -16877,7 +16877,7 @@
         if (!o || o.loading || !o.hasMore || o.collapsed) {
           return;
         }
-        S.log("[CommentPanel] 触发加载更多 ".concat(o.name, " 评论..."));
+        P.log("[CommentPanel] 触发加载更多 ".concat(o.name, " 评论..."));
         this.loadSiteComments(r, o.currentPage + 1);
       }
     }, {
@@ -16943,7 +16943,7 @@
             C += '\n                    <div class="tm-comment-end-marker" style="text-align: center; padding: 4px; font-size: 10px; color: hsl(var(--shadcn-muted-foreground)); opacity: 0.6;">-end-</div>\n                ';
           }
         }
-        var P = {
+        var S = {
           "loading": "采集中...",
           "unreachable": "不可达",
           "not_found": "未收录",
@@ -16952,7 +16952,7 @@
           "mobile_unsupported": "移动端浏览器不支持",
           "loaded": "共 ".concat(u.filteredComments.length).concat(u.hasMore ? "+" : "", " 条")
         };
-        var S = P[u.status] || "";
+        var P = S[u.status] || "";
         var E = u.status === "unreachable" || u.status === "not_found" || u.status === "mobile_unsupported" || u.collapsed;
         var D = E ? "none" : "block";
         var L = r === "jable" ? "JABLE" : r === "javlib" ? "JAVLIBRARY" : "";
@@ -16962,7 +16962,7 @@
           "javlib": "■ JAVLibrary",
           "javdb": "■ JavDB"
         };
-        return '\n            <div class="tm-comment-section'.concat(E ? " is-collapsed" : "", '" id="tm-comment-section-').concat(r, '">\n                <div class="tm-comment-section-hdr" title="点击展开/折叠">\n                    <span class="tm-comment-section-title">').concat(T[r], '</span>\n                    <div class="tm-comment-hdr-right" style="display: inline-flex; align-items: center; gap: 6px;">\n                        ').concat(M, '\n                        <span class="tm-comment-status-badge tm-status-badge-').concat(u.status, '">').concat(S, '</span>\n                    </div>\n                </div>\n                <div class="tm-comment-section-body" style="display: ').concat(D, '; pointer-events: auto;">\n                    ').concat(C, "\n                </div>\n            </div>\n        ");
+        return '\n            <div class="tm-comment-section'.concat(E ? " is-collapsed" : "", '" id="tm-comment-section-').concat(r, '">\n                <div class="tm-comment-section-hdr" title="点击展开/折叠">\n                    <span class="tm-comment-section-title">').concat(T[r], '</span>\n                    <div class="tm-comment-hdr-right" style="display: inline-flex; align-items: center; gap: 6px;">\n                        ').concat(M, '\n                        <span class="tm-comment-status-badge tm-status-badge-').concat(u.status, '">').concat(P, '</span>\n                    </div>\n                </div>\n                <div class="tm-comment-section-body" style="display: ').concat(D, '; pointer-events: auto;">\n                    ').concat(C, "\n                </div>\n            </div>\n        ");
       }
     }, {
       "key": "showBottomLoader",
@@ -17112,7 +17112,7 @@
           if (y) {
             y.addEventListener("click", (function(o) {
               o.stopPropagation();
-              S.log("用户手动点击 JAVLibrary 重试，清除历史验证状态并重载...");
+              P.log("用户手动点击 JAVLibrary 重试，清除历史验证状态并重载...");
               r.javlibAutoVerifyAttempted = false;
               r.javlibCfShield = false;
               r.javlibVerifyingStatus = "";
@@ -17123,7 +17123,7 @@
           if (b) {
             b.addEventListener("click", (function(o) {
               o.stopPropagation();
-              S.log("用户手动点击 Jable.tv 重试，清除历史验证状态并重载...");
+              P.log("用户手动点击 Jable.tv 重试，清除历史验证状态并重载...");
               r.jableStatus = "loading";
               r.handleRetry("jable");
             }));
@@ -17132,7 +17132,7 @@
           if (C) {
             C.addEventListener("click", (function(o) {
               o.stopPropagation();
-              S.log("用户手动点击 JavDB 重试...");
+              P.log("用户手动点击 JavDB 重试...");
               r.javdbStatus = "loading";
               r.loadJavdbComments(1);
             }));
@@ -17144,7 +17144,7 @@
               var a = r.closest("#tm-comment-section-javlib") !== null;
               var l = a ? [ "javlib", "c97k.com", "CrossDomainBridge", "iframe", "shadow" ] : [ "jable", "fs1.app" ];
               var u = a ? "JAVLibrary" : "Jable.tv";
-              if (S.copyLogs(l)) {
+              if (P.copyLogs(l)) {
                 Toast("".concat(u, " 调试日志已复制到剪贴板，请发送给开发者分析！"), 3e3, "success");
               } else {
                 Toast("复制日志失败，请手动打开控制台查看。", 3e3, "error");
@@ -17176,9 +17176,9 @@
               }
             }));
           }
-          var P = this.commentsList.querySelector("#tm-comment-section-javlib .tm-comment-section-hdr");
-          if (P) {
-            P.addEventListener("click", (function() {
+          var S = this.commentsList.querySelector("#tm-comment-section-javlib .tm-comment-section-hdr");
+          if (S) {
+            S.addEventListener("click", (function() {
               var o = r.commentsList.querySelector("#tm-comment-section-javlib .tm-comment-section-body");
               var a = r.commentsList.querySelector("#tm-comment-section-javlib");
               if (o && a) {
@@ -17253,13 +17253,13 @@
             var u = l.closest(".tm-comment-section");
             var p = u ? u.id : "";
             if (p === "tm-comment-section-jable" && this.jableHasMore && !this.jableLoading) {
-              S.log("[CommentPanel] Jable section viewport not filled. Auto-loading next page...");
+              P.log("[CommentPanel] Jable section viewport not filled. Auto-loading next page...");
               this.triggerLoadMoreJable();
             } else if (p === "tm-comment-section-javlib" && this.javlibHasMore && !this.javlibLoading) {
-              S.log("[CommentPanel] JAVLibrary section viewport not filled. Auto-loading next page...");
+              P.log("[CommentPanel] JAVLibrary section viewport not filled. Auto-loading next page...");
               this.triggerLoadMoreJavlib();
             } else if (p === "tm-comment-section-javdb" && this.javdbHasMore && !this.javdbLoading) {
-              S.log("[CommentPanel] JavDB section viewport not filled. Auto-loading next page...");
+              P.log("[CommentPanel] JavDB section viewport not filled. Auto-loading next page...");
               this.triggerLoadMoreJavdb();
             }
           }
@@ -17461,7 +17461,7 @@
         if (!o || isNaN(o)) {
           return;
         }
-        S.log("[CommentPanel] 视频元数据已加载，时长: ".concat(o, "s。重新解析所有评论..."));
+        P.log("[CommentPanel] 视频元数据已加载，时长: ".concat(o, "s。重新解析所有评论..."));
         var a = function reprocess(a) {
           return a.map((function(a) {
             var l = processComment(a.text, r.videoCode, o);
@@ -17505,11 +17505,11 @@
           "javlibrary": false
         });
         if (!o) {
-          S.log("[CommentPanel] 设置中未开启评论区 (showCommentsSection: false)，跳过后台预加载");
+          P.log("[CommentPanel] 设置中未开启评论区 (showCommentsSection: false)，跳过后台预加载");
           return;
         }
         CommentPanel.preloadCache.videoCode = r;
-        S.log("[CommentPanel] 启动后台预加载，番号: ".concat(r));
+        P.log("[CommentPanel] 启动后台预加载，番号: ".concat(r));
         if (a.jable !== false) {
           var l = "";
           if (typeof GM_getValue === "function") {
@@ -17525,10 +17525,10 @@
             }
           }
           CommentPanel.preloadCache.jableCommentsPromise = fetchJableComments(r, 1, u).then((function(r) {
-            S.log("[CommentPanel] 预加载 Jable 评论成功，共 ".concat(r.comments.length, " 条 (域名: ").concat(r.domain || "default", ")"));
+            P.log("[CommentPanel] 预加载 Jable 评论成功，共 ".concat(r.comments.length, " 条 (域名: ").concat(r.domain || "default", ")"));
             return r;
           }))["catch"]((function(o) {
-            S.warn("[CommentPanel] 预加载 Jable 评论失败:", o);
+            P.warn("[CommentPanel] 预加载 Jable 评论失败:", o);
             if (CommentPanel.preloadCache.videoCode === r) {
               CommentPanel.preloadCache.jableCommentsPromise = null;
             }
@@ -17538,16 +17538,16 @@
         if (!isMobile() && a.javlib !== false && a.javlibrary !== false) {
           CommentPanel.preloadCache.javlibVideoIdPromise = fetchJavLibraryVideoId(r).then((function(o) {
             var a = o.videoId, l = o.domain;
-            S.log("[CommentPanel] 预加载 JAVLibrary ID 成功: ".concat(a, " (域名: ").concat(l, ")"));
+            P.log("[CommentPanel] 预加载 JAVLibrary ID 成功: ".concat(a, " (域名: ").concat(l, ")"));
             CommentPanel.preloadCache.javlibCommentsPromise = fetchJavLibraryData(a, "comments", 1, l)["catch"]((function(o) {
-              S.warn("[CommentPanel] 预加载 JAVLib 评论失败:", o);
+              P.warn("[CommentPanel] 预加载 JAVLib 评论失败:", o);
               if (CommentPanel.preloadCache.videoCode === r) {
                 CommentPanel.preloadCache.javlibCommentsPromise = null;
               }
               throw o;
             }));
             CommentPanel.preloadCache.javlibReviewsPromise = fetchJavLibraryData(a, "reviews", 1, l)["catch"]((function(o) {
-              S.warn("[CommentPanel] 预加载 JAVLib 文章失败:", o);
+              P.warn("[CommentPanel] 预加载 JAVLib 文章失败:", o);
               if (CommentPanel.preloadCache.videoCode === r) {
                 CommentPanel.preloadCache.javlibReviewsPromise = null;
               }
@@ -17555,7 +17555,7 @@
             }));
             return o;
           }))["catch"]((function(o) {
-            S.warn("[CommentPanel] 预加载 JAVLibrary ID 失败:", o);
+            P.warn("[CommentPanel] 预加载 JAVLibrary ID 失败:", o);
             if (CommentPanel.preloadCache.videoCode === r) {
               CommentPanel.preloadCache.javlibVideoIdPromise = null;
             }
@@ -17565,9 +17565,9 @@
         if (a.javdb !== false) {
           CommentPanel.preloadCache.javdbMovieIdPromise = fetchJavdbMovieId(r).then((function(o) {
             var a = o.movieId, l = o.domain;
-            S.log("[CommentPanel] 预加载 JavDB MovieId 成功: ".concat(a, " (域名: ").concat(l, ")"));
+            P.log("[CommentPanel] 预加载 JavDB MovieId 成功: ".concat(a, " (域名: ").concat(l, ")"));
             CommentPanel.preloadCache.javdbCommentsPromise = fetchJavdbData(a, 1, l)["catch"]((function(o) {
-              S.warn("[CommentPanel] 预加载 JavDB 短评失败:", o);
+              P.warn("[CommentPanel] 预加载 JavDB 短评失败:", o);
               if (CommentPanel.preloadCache.videoCode === r) {
                 CommentPanel.preloadCache.javdbCommentsPromise = null;
               }
@@ -17575,7 +17575,7 @@
             }));
             return o;
           }))["catch"]((function(o) {
-            S.warn("[CommentPanel] 预加载 JavDB MovieId 失败:", o);
+            P.warn("[CommentPanel] 预加载 JavDB MovieId 失败:", o);
             if (CommentPanel.preloadCache.videoCode === r) {
               CommentPanel.preloadCache.javdbMovieIdPromise = null;
             }
@@ -18041,7 +18041,7 @@
         if (v) {
           p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(ke, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
         } else if (y) {
-          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(Pe, "</div>");
+          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(Se, "</div>");
         } else {
           p.textContent = o;
         }
@@ -18857,11 +18857,11 @@
         var C = 16;
         var _ = 44;
         var k = C;
-        var P = window.innerWidth - b.width - C;
-        var S = _ + C;
+        var S = window.innerWidth - b.width - C;
+        var P = _ + C;
         var E = window.innerHeight - b.height - C;
-        v = Math.max(k - 10, Math.min(v, P + 10));
-        y = Math.max(S - 10, Math.min(y, E + 10));
+        v = Math.max(k - 10, Math.min(v, S + 10));
+        y = Math.max(P - 10, Math.min(y, E + 10));
         this.controlButtonsContainer.style.left = v + "px";
         this.controlButtonsContainer.style.top = y + "px";
         this.controlButtonsContainer.style.bottom = "auto";
@@ -18897,7 +18897,7 @@
         var C = 44;
         var _ = l.left;
         var k = l.top;
-        var P = [ {
+        var S = [ {
           "name": "TL",
           "x": b,
           "y": C + b
@@ -18930,20 +18930,20 @@
           "x": v - u - b,
           "y": y - p - b
         } ];
-        var S = P[0];
-        var E = Math.hypot(_ - S.x, k - S.y);
-        for (var D = 1; D < P.length; D++) {
-          var L = Math.hypot(_ - P[D].x, k - P[D].y);
+        var P = S[0];
+        var E = Math.hypot(_ - P.x, k - P.y);
+        for (var D = 1; D < S.length; D++) {
+          var L = Math.hypot(_ - S[D].x, k - S[D].y);
           if (L < E) {
             E = L;
-            S = P[D];
+            P = S[D];
           }
         }
         var M = 90;
         var T = false;
         if (E < M) {
-          _ = S.x;
-          k = S.y;
+          _ = P.x;
+          k = P.y;
           T = true;
         } else {
           var A = b;
@@ -18972,13 +18972,13 @@
         var O = {
           "left": _,
           "top": k,
-          "anchorName": T ? S.name : null,
+          "anchorName": T ? P.name : null,
           "didSnap": T
         };
         var V = this.getControlPanelStorageKey();
         localStorage.setItem(V, JSON.stringify(O));
         localStorage.setItem("tm-control-panel-pos", JSON.stringify(O));
-        this.updateDockedState(T ? S.name : null, T);
+        this.updateDockedState(T ? P.name : null, T);
         if (a) {
           r.preventDefault();
         }
@@ -19017,41 +19017,41 @@
             var C = y.height || 180;
             var _ = window.innerWidth;
             var k = window.innerHeight;
-            var P = 16;
-            var S = 44;
+            var S = 16;
+            var P = 44;
             if (v && p) {
               var E = {
                 "TL": {
-                  "x": P,
-                  "y": S + P
+                  "x": S,
+                  "y": P + S
                 },
                 "TC": {
                   "x": (_ - b) / 2,
-                  "y": S + P
+                  "y": P + S
                 },
                 "TR": {
-                  "x": _ - b - P,
-                  "y": S + P
+                  "x": _ - b - S,
+                  "y": P + S
                 },
                 "LC": {
-                  "x": P,
+                  "x": S,
                   "y": (k - C) / 2
                 },
                 "RC": {
-                  "x": _ - b - P,
+                  "x": _ - b - S,
                   "y": (k - C) / 2
                 },
                 "BL": {
-                  "x": P,
-                  "y": k - C - P
+                  "x": S,
+                  "y": k - C - S
                 },
                 "BC": {
                   "x": (_ - b) / 2,
-                  "y": k - C - P
+                  "y": k - C - S
                 },
                 "BR": {
-                  "x": _ - b - P,
-                  "y": k - C - P
+                  "x": _ - b - S,
+                  "y": k - C - S
                 }
               };
               if (E[p]) {
@@ -19059,10 +19059,10 @@
                 u = E[p].y;
               }
             }
-            var D = P;
-            var L = _ - b - P;
-            var M = S + P;
-            var T = k - C - P;
+            var D = S;
+            var L = _ - b - S;
+            var M = P + S;
+            var T = k - C - S;
             var A = Math.max(D, Math.min(l, L));
             var j = Math.max(M, Math.min(u, T));
             this.controlButtonsContainer.style.left = A + "px";
@@ -19139,380 +19139,6 @@
         localStorage.removeItem("tm-control-panel-pos-portrait");
         localStorage.removeItem("tm-control-panel-pos-landscape");
         this.clearControlPanelInlineStyles();
-      }
-    } ]);
-  }();
-  function MarkerBottomSheet_typeof(r) {
-    "@babel/helpers - typeof";
-    return MarkerBottomSheet_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
-      return typeof r;
-    } : function(r) {
-      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
-    }, MarkerBottomSheet_typeof(r);
-  }
-  function MarkerBottomSheet_classCallCheck(r, o) {
-    if (!(r instanceof o)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-  function MarkerBottomSheet_defineProperties(r, o) {
-    for (var a = 0; a < o.length; a++) {
-      var l = o[a];
-      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
-      Object.defineProperty(r, MarkerBottomSheet_toPropertyKey(l.key), l);
-    }
-  }
-  function MarkerBottomSheet_createClass(r, o, a) {
-    return o && MarkerBottomSheet_defineProperties(r.prototype, o), a && MarkerBottomSheet_defineProperties(r, a), 
-    Object.defineProperty(r, "prototype", {
-      "writable": !1
-    }), r;
-  }
-  function MarkerBottomSheet_toPropertyKey(r) {
-    var o = MarkerBottomSheet_toPrimitive(r, "string");
-    return "symbol" == MarkerBottomSheet_typeof(o) ? o : o + "";
-  }
-  function MarkerBottomSheet_toPrimitive(r, o) {
-    if ("object" != MarkerBottomSheet_typeof(r) || !r) {
-      return r;
-    }
-    var a = r[Symbol.toPrimitive];
-    if (void 0 !== a) {
-      var l = a.call(r, o || "default");
-      if ("object" != MarkerBottomSheet_typeof(l)) {
-        return l;
-      }
-      throw new TypeError("@@toPrimitive must return a primitive value.");
-    }
-    return ("string" === o ? String : Number)(r);
-  }
-  var it = function() {
-    function MarkerBottomSheet(r) {
-      MarkerBottomSheet_classCallCheck(this, MarkerBottomSheet);
-      this.loopManager = r;
-      this._sheetOverlay = null;
-      this._sheetPanel = null;
-      this._sheetList = null;
-      this._sheetCountBadge = null;
-    }
-    return MarkerBottomSheet_createClass(MarkerBottomSheet, [ {
-      "key": "tabs",
-      "get": function get() {
-        return this.loopManager.tabs;
-      }
-    }, {
-      "key": "activeTabId",
-      "get": function get() {
-        return this.loopManager.activeTabId;
-      }
-    }, {
-      "key": "tabColors",
-      "get": function get() {
-        return this.loopManager.tabColors;
-      }
-    }, {
-      "key": "tabAddBtn",
-      "get": function get() {
-        return this.loopManager.tabAddBtn;
-      }
-    }, {
-      "key": "tabScrollContainer",
-      "get": function get() {
-        return this.loopManager.tabScrollContainer;
-      }
-    }, {
-      "key": "targetVideo",
-      "get": function get() {
-        return this.loopManager.targetVideo;
-      }
-    }, {
-      "key": "uiElements",
-      "get": function get() {
-        return this.loopManager.uiElements;
-      }
-    }, {
-      "key": "bindSwipeUpGesture",
-      "value": function bindSwipeUpGesture() {
-        var r, o = this;
-        var a = (r = this.tabScrollContainer) === null || r === void 0 ? void 0 : r.parentElement;
-        if (!a) {
-          return;
-        }
-        var l = 0;
-        var u = 0;
-        var p = false;
-        a.addEventListener("touchstart", (function(r) {
-          var o = r.touches[0];
-          l = o.clientY;
-          u = o.clientX;
-          p = true;
-        }), {
-          "passive": true
-        });
-        a.addEventListener("touchend", (function(r) {
-          if (!p) {
-            return;
-          }
-          p = false;
-          var a = r.changedTouches[0];
-          var v = a.clientY - l;
-          var y = Math.abs(a.clientX - u);
-          if (v < -40 && Math.abs(v) > y) {
-            r.stopPropagation();
-            o.open();
-          }
-        }));
-      }
-    }, {
-      "key": "toggle",
-      "value": function toggle() {
-        if (this._sheetPanel && this._sheetPanel.classList.contains("visible")) {
-          this.close();
-        } else {
-          this.open();
-        }
-      }
-    }, {
-      "key": "updatePanelPosition",
-      "value": function updatePanelPosition() {
-        var r, o, a, l, u;
-        if (!this._sheetPanel) {
-          return;
-        }
-        var p = ((r = this.tabAddBtn) === null || r === void 0 ? void 0 : r.closest(".tm-control-buttons")) || ((o = this.uiElements) === null || o === void 0 ? void 0 : o.controlButtons) || document.querySelector(".tm-control-buttons");
-        var v = ((a = this.tabAddBtn) === null || a === void 0 ? void 0 : a.closest(".tm-loop-control-row")) || ((l = this.tabAddBtn) === null || l === void 0 ? void 0 : l.parentElement);
-        var y = ((u = this.uiElements) === null || u === void 0 ? void 0 : u.handleContainer) || document.querySelector(".tm-handle-container");
-        if (p && v) {
-          var b = p.getBoundingClientRect();
-          var C = v.getBoundingClientRect();
-          var _ = Math.max(0, b.bottom - C.bottom);
-          this._sheetPanel.style.bottom = "".concat(_, "px");
-          if (y) {
-            var k = y.getBoundingClientRect();
-            var P = C.bottom - k.bottom - 10;
-            if (P > 80) {
-              this._sheetPanel.style.maxHeight = "".concat(P, "px");
-              return;
-            }
-          }
-        }
-        this._sheetPanel.style.maxHeight = "calc(100vh - 120px)";
-      }
-    }, {
-      "key": "open",
-      "value": function open() {
-        if (!this._sheetOverlay || !this._sheetPanel) {
-          this.createBottomSheet();
-        }
-        this.updateBottomSheet();
-        this.updatePanelPosition();
-        if (this._sheetOverlay) {
-          this._sheetOverlay.classList.add("visible");
-        }
-        if (this._sheetPanel) {
-          this._sheetPanel.classList.add("visible");
-        }
-      }
-    }, {
-      "key": "close",
-      "value": function close() {
-        if (this._sheetOverlay) {
-          this._sheetOverlay.classList.remove("visible");
-        }
-        if (this._sheetPanel) {
-          this._sheetPanel.classList.remove("visible");
-        }
-      }
-    }, {
-      "key": "createBottomSheet",
-      "value": function createBottomSheet() {
-        var r, o, a = this, l;
-        var u = ((r = this.tabAddBtn) === null || r === void 0 ? void 0 : r.closest(".tm-control-buttons")) || ((o = this.uiElements) === null || o === void 0 ? void 0 : o.controlButtons) || document.querySelector(".tm-control-buttons");
-        if (!u) {
-          return;
-        }
-        if (this._sheetOverlay) {
-          this._sheetOverlay.remove();
-        }
-        if (this._sheetPanel) {
-          this._sheetPanel.remove();
-        }
-        this._sheetOverlay = document.createElement("div");
-        this._sheetOverlay.className = "tm-bottom-sheet-overlay";
-        this._sheetOverlay.addEventListener("click", (function() {
-          return a.close();
-        }));
-        this._sheetOverlay.addEventListener("touchmove", (function(r) {
-          if (r.cancelable) {
-            r.preventDefault();
-          }
-        }), {
-          "passive": false
-        });
-        this._sheetPanel = document.createElement("div");
-        this._sheetPanel.className = "tm-bottom-sheet-panel";
-        this._sheetPanel.addEventListener("click", (function(r) {
-          return r.stopPropagation();
-        }));
-        var p = document.createElement("div");
-        p.className = "tm-sheet-header";
-        var v = document.createElement("div");
-        v.style.display = "flex";
-        v.style.alignItems = "center";
-        v.style.gap = "8px";
-        var y = document.createElement("div");
-        y.className = "tm-bottom-sheet-title";
-        y.textContent = "标签管理";
-        var b = document.createElement("span");
-        b.className = "tm-sheet-count-badge";
-        this._sheetCountBadge = b;
-        v.appendChild(y);
-        v.appendChild(b);
-        var C = document.createElement("button");
-        C.className = "tm-sheet-close-btn";
-        C.innerHTML = "✕";
-        C.title = "关闭";
-        C.addEventListener("click", (function() {
-          return a.close();
-        }));
-        p.appendChild(v);
-        p.appendChild(C);
-        this._sheetList = document.createElement("div");
-        this._sheetList.className = "tm-bottom-sheet-list";
-        this._sheetPanel.appendChild(p);
-        this._sheetPanel.appendChild(this._sheetList);
-        var _ = ((l = this.uiElements) === null || l === void 0 ? void 0 : l.playerContainer) || document.querySelector(".tm-player-container") || document.body;
-        _.appendChild(this._sheetOverlay);
-        u.appendChild(this._sheetPanel);
-      }
-    }, {
-      "key": "updateBottomSheet",
-      "value": function updateBottomSheet() {
-        var r = this;
-        if (!this._sheetList) {
-          return;
-        }
-        this._sheetList.innerHTML = "";
-        if (this._sheetCountBadge) {
-          this._sheetCountBadge.textContent = "共 ".concat(this.tabs.length, " 条");
-        }
-        if (this.tabs.length === 0) {
-          var o = document.createElement("div");
-          o.className = "tm-bottom-sheet-empty";
-          o.textContent = "暂无标签";
-          this._sheetList.appendChild(o);
-          return;
-        }
-        this.tabs.forEach((function(o, a) {
-          var l = r.tabColors[a % r.tabColors.length];
-          var u = document.createElement("div");
-          u.className = "tm-sheet-item";
-          if (r.activeTabId === o.id) {
-            u.classList.add("active");
-          }
-          var p = document.createElement("div");
-          p.className = "tm-sheet-item-time-container";
-          if (o.type === "highlight") {
-            var v = document.createElement("button");
-            v.className = "tm-sheet-time-pill";
-            v.style.setProperty("--tab-color", l);
-            v.textContent = formatTimeWithHours(o.startTime);
-            v.title = "跳转到此时间";
-            v.addEventListener("click", (function() {
-              r.loopManager._handleTabClick(o);
-            }));
-            p.appendChild(v);
-          } else {
-            var y = document.createElement("div");
-            y.className = "tm-sheet-time-pill interval";
-            y.style.setProperty("--tab-color", l);
-            var b = document.createElement("span");
-            b.className = "tm-time-part start";
-            b.textContent = formatTimeWithHours(o.startTime);
-            b.title = "跳转到起点并开始循环";
-            b.addEventListener("click", (function(a) {
-              a.stopPropagation();
-              r.loopManager._handleTabClick(o);
-            }));
-            var C = document.createElement("span");
-            C.className = "tm-time-sep";
-            C.textContent = "~";
-            var _ = document.createElement("span");
-            _.className = "tm-time-part end";
-            _.textContent = formatTimeWithHours(o.endTime);
-            _.title = "跳转到终点";
-            _.addEventListener("click", (function(a) {
-              a.stopPropagation();
-              if (r.targetVideo) {
-                r.targetVideo.currentTime = o.endTime;
-              }
-            }));
-            y.appendChild(b);
-            y.appendChild(C);
-            y.appendChild(_);
-            y.addEventListener("click", (function() {
-              r.loopManager._handleTabClick(o);
-            }));
-            p.appendChild(y);
-          }
-          var k = document.createElement("input");
-          k.type = "text";
-          k.className = "tm-sheet-item-comment-input";
-          k.placeholder = "添加备注...";
-          k.value = o.comment || "";
-          var P = function stopProp(r) {
-            return r.stopPropagation();
-          };
-          k.addEventListener("keydown", P);
-          k.addEventListener("keyup", P);
-          k.addEventListener("keypress", P);
-          k.addEventListener("mousedown", P);
-          k.addEventListener("touchstart", P);
-          k.addEventListener("input", (function(a) {
-            o.comment = a.target.value;
-            r.loopManager._saveTabs();
-            r.loopManager.renderTabs();
-          }));
-          k.addEventListener("change", (function() {
-            r.loopManager._saveTabs();
-            r.loopManager.renderTabs();
-          }));
-          var S = document.createElement("button");
-          S.className = "tm-sheet-delete-btn";
-          S.innerHTML = "❌";
-          S.title = "删除标签";
-          S.addEventListener("click", (function(a) {
-            a.stopPropagation();
-            r.loopManager.tabs = r.loopManager.tabs.filter((function(r) {
-              return r.id !== o.id;
-            }));
-            if (r.loopManager.activeTabId === o.id) {
-              r.loopManager.disableLoop();
-              r.loopManager.activeTabId = null;
-            }
-            r.loopManager._saveTabs();
-            r.loopManager.renderTabs();
-            r.updateBottomSheet();
-          }));
-          u.appendChild(p);
-          u.appendChild(k);
-          u.appendChild(S);
-          r._sheetList.appendChild(u);
-        }));
-      }
-    }, {
-      "key": "cleanup",
-      "value": function cleanup() {
-        if (this._sheetOverlay) {
-          this._sheetOverlay.remove();
-          this._sheetOverlay = null;
-        }
-        if (this._sheetPanel) {
-          this._sheetPanel.remove();
-          this._sheetPanel = null;
-          this._sheetList = null;
-          this._sheetCountBadge = null;
-        }
       }
     } ]);
   }();
@@ -19686,7 +19312,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -19770,14 +19396,14 @@
       }
       throw new TypeError(WebDavClient_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -19790,9 +19416,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -19961,7 +19587,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var st = function() {
+  var it = function() {
     function WebDavClient() {
       WebDavClient_classCallCheck(this, WebDavClient);
     }
@@ -20001,7 +19627,7 @@
     }, {
       "key": "request",
       "value": function request(r) {
-        var o = r.method, a = o === void 0 ? "GET" : o, l = r.url, u = r.user, p = u === void 0 ? "" : u, v = r.pass, y = v === void 0 ? "" : v, b = r.headers, C = b === void 0 ? {} : b, _ = r.data, k = _ === void 0 ? null : _, P = r.timeout, S = P === void 0 ? 15e3 : P;
+        var o = r.method, a = o === void 0 ? "GET" : o, l = r.url, u = r.user, p = u === void 0 ? "" : u, v = r.pass, y = v === void 0 ? "" : v, b = r.headers, C = b === void 0 ? {} : b, _ = r.data, k = _ === void 0 ? null : _, S = r.timeout, P = S === void 0 ? 15e3 : S;
         var E = this.getAuthHeaders(p, y);
         var D = Object.assign({}, E, C);
         return new Promise((function(r, o) {
@@ -20011,7 +19637,7 @@
               "url": l,
               "headers": D,
               "data": k,
-              "timeout": S,
+              "timeout": P,
               "onload": function onload(o) {
                 r({
                   "status": o.status,
@@ -20021,7 +19647,7 @@
                 });
               },
               "ontimeout": function ontimeout() {
-                o(new Error("WebDAV 请求超时 (".concat(S, "ms)")));
+                o(new Error("WebDAV 请求超时 (".concat(P, "ms)")));
               },
               "onerror": function onerror(r) {
                 o(new Error(r.error || "网络请求错误 [".concat(r.status || 0, "]")));
@@ -20036,7 +19662,7 @@
             var p = new AbortController;
             var v = setTimeout((function() {
               return p.abort();
-            }), S);
+            }), P);
             u.signal = p.signal;
             fetch(l, u).then(function() {
               var o = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee(o) {
@@ -20151,7 +19777,7 @@
       "key": "ensureDirectory",
       "value": function() {
         var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee3(r) {
-          var o, a, l, u, p, v, y, b, C, _, k, P, S, E, D, L, M, T, A;
+          var o, a, l, u, p, v, y, b, C, _, k, S, P, E, D, L, M, T, A;
           return WebDavClient_regeneratorRuntime().wrap((function _callee3$(j) {
             while (1) {
               switch (j.prev = j.next) {
@@ -20177,14 +19803,14 @@
                 }
                 k = _.value;
                 b += "/" + k;
-                P = this.normalizeUrl(o, b + "/");
-                S = this.normalizeUrl(o, b);
+                S = this.normalizeUrl(o, b + "/");
+                P = this.normalizeUrl(o, b);
                 E = false;
                 j.prev = 15;
                 j.next = 18;
                 return this.request({
                   "method": "PROPFIND",
-                  "url": P,
+                  "url": S,
                   "user": a,
                   "pass": l,
                   "headers": {
@@ -20213,7 +19839,7 @@
                 j.next = 28;
                 return this.request({
                   "method": "PROPFIND",
-                  "url": S,
+                  "url": P,
                   "user": a,
                   "pass": l,
                   "headers": {
@@ -20246,7 +19872,7 @@
                 j.next = 40;
                 return this.request({
                   "method": "MKCOL",
-                  "url": S,
+                  "url": P,
                   "user": a,
                   "pass": l
                 });
@@ -20272,7 +19898,7 @@
                 j.next = 50;
                 return this.request({
                   "method": "MKCOL",
-                  "url": P,
+                  "url": S,
                   "user": a,
                   "pass": l
                 });
@@ -20404,14 +20030,14 @@
       "key": "uploadBackup",
       "value": function() {
         var r = WebDavClient_asyncToGenerator(WebDavClient_regeneratorRuntime().mark((function _callee5(r, o) {
-          var a, l, u, p, v, y, b, C, _, k, P = arguments;
-          return WebDavClient_regeneratorRuntime().wrap((function _callee5$(S) {
+          var a, l, u, p, v, y, b, C, _, k, S = arguments;
+          return WebDavClient_regeneratorRuntime().wrap((function _callee5$(P) {
             while (1) {
-              switch (S.prev = S.next) {
+              switch (P.prev = P.next) {
                case 0:
-                a = P.length > 2 && P[2] !== void 0 ? P[2] : "miss_player_sync.json";
+                a = S.length > 2 && S[2] !== void 0 ? S[2] : "miss_player_sync.json";
                 l = r.url, u = r.user, p = r.pass, v = r.path, y = v === void 0 ? "/MissPlayer/" : v;
-                S.next = 4;
+                P.next = 4;
                 return this.ensureDirectory(r);
 
                case 4:
@@ -20424,8 +20050,8 @@
                 }
                 C = this.normalizeUrl(l, b + a);
                 _ = JSON.stringify(o, null, 2);
-                S.prev = 9;
-                S.next = 12;
+                P.prev = 9;
+                P.next = 12;
                 return this.request({
                   "method": "PUT",
                   "url": C,
@@ -20438,16 +20064,16 @@
                 });
 
                case 12:
-                k = S.sent;
+                k = P.sent;
                 if (!(k.status === 404 || k.status === 409)) {
-                  S.next = 19;
+                  P.next = 19;
                   break;
                 }
-                S.next = 16;
+                P.next = 16;
                 return this.ensureDirectory(r);
 
                case 16:
-                S.next = 18;
+                P.next = 18;
                 return this.request({
                   "method": "PUT",
                   "url": C,
@@ -20460,21 +20086,21 @@
                 });
 
                case 18:
-                k = S.sent;
+                k = P.sent;
 
                case 19:
                 if (!(k.status === 401 || k.status === 403)) {
-                  S.next = 21;
+                  P.next = 21;
                   break;
                 }
                 throw new Error("认证失败 (".concat(k.status, "): 权限不足或密码错误"));
 
                case 21:
                 if (!(k.status === 200 || k.status === 201 || k.status === 204)) {
-                  S.next = 23;
+                  P.next = 23;
                   break;
                 }
-                return S.abrupt("return", {
+                return P.abrupt("return", {
                   "success": true,
                   "status": k.status
                 });
@@ -20483,13 +20109,13 @@
                 throw new Error("上传失败，服务器返回状态码: ".concat(k.status));
 
                case 26:
-                S.prev = 26;
-                S.t0 = S["catch"](9);
-                throw S.t0;
+                P.prev = 26;
+                P.t0 = P["catch"](9);
+                throw P.t0;
 
                case 29:
                case "end":
-                return S.stop();
+                return P.stop();
               }
             }
           }), _callee5, this, [ [ 9, 26 ] ]);
@@ -20600,7 +20226,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -20684,14 +20310,14 @@
       }
       throw new TypeError(SyncManager_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -20704,9 +20330,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -20839,46 +20465,6 @@
       }));
     };
   }
-  function SyncManager_slicedToArray(r, o) {
-    return SyncManager_arrayWithHoles(r) || SyncManager_iterableToArrayLimit(r, o) || SyncManager_unsupportedIterableToArray(r, o) || SyncManager_nonIterableRest();
-  }
-  function SyncManager_nonIterableRest() {
-    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-  }
-  function SyncManager_iterableToArrayLimit(r, o) {
-    var a = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
-    if (null != a) {
-      var l, u, p, v, y = [], b = !0, C = !1;
-      try {
-        if (p = (a = a.call(r)).next, 0 === o) {
-          if (Object(a) !== a) {
-            return;
-          }
-          b = !1;
-        } else {
-          for (;!(b = (l = p.call(a)).done) && (y.push(l.value), y.length !== o); b = !0) {}
-        }
-      } catch (r) {
-        C = !0, u = r;
-      } finally {
-        try {
-          if (!b && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
-            return;
-          }
-        } finally {
-          if (C) {
-            throw u;
-          }
-        }
-      }
-      return y;
-    }
-  }
-  function SyncManager_arrayWithHoles(r) {
-    if (Array.isArray(r)) {
-      return r;
-    }
-  }
   function SyncManager_toConsumableArray(r) {
     return SyncManager_arrayWithoutHoles(r) || SyncManager_iterableToArray(r) || SyncManager_unsupportedIterableToArray(r) || SyncManager_nonIterableSpread();
   }
@@ -20894,14 +20480,6 @@
     if (Array.isArray(r)) {
       return SyncManager_arrayLikeToArray(r);
     }
-  }
-  function SyncManager_defineProperty(r, o, a) {
-    return (o = SyncManager_toPropertyKey(o)) in r ? Object.defineProperty(r, o, {
-      "value": a,
-      "enumerable": !0,
-      "configurable": !0,
-      "writable": !0
-    }) : r[o] = a, r;
   }
   function SyncManager_createForOfIteratorHelper(r, o) {
     var a = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
@@ -20950,6 +20528,41 @@
       }
     };
   }
+  function SyncManager_ownKeys(r, o) {
+    var a = Object.keys(r);
+    if (Object.getOwnPropertySymbols) {
+      var l = Object.getOwnPropertySymbols(r);
+      o && (l = l.filter((function(o) {
+        return Object.getOwnPropertyDescriptor(r, o).enumerable;
+      }))), a.push.apply(a, l);
+    }
+    return a;
+  }
+  function SyncManager_objectSpread(r) {
+    for (var o = 1; o < arguments.length; o++) {
+      var a = null != arguments[o] ? arguments[o] : {};
+      o % 2 ? SyncManager_ownKeys(Object(a), !0).forEach((function(o) {
+        SyncManager_defineProperty(r, o, a[o]);
+      })) : Object.getOwnPropertyDescriptors ? Object.defineProperties(r, Object.getOwnPropertyDescriptors(a)) : SyncManager_ownKeys(Object(a)).forEach((function(o) {
+        Object.defineProperty(r, o, Object.getOwnPropertyDescriptor(a, o));
+      }));
+    }
+    return r;
+  }
+  function SyncManager_defineProperty(r, o, a) {
+    return (o = SyncManager_toPropertyKey(o)) in r ? Object.defineProperty(r, o, {
+      "value": a,
+      "enumerable": !0,
+      "configurable": !0,
+      "writable": !0
+    }) : r[o] = a, r;
+  }
+  function SyncManager_slicedToArray(r, o) {
+    return SyncManager_arrayWithHoles(r) || SyncManager_iterableToArrayLimit(r, o) || SyncManager_unsupportedIterableToArray(r, o) || SyncManager_nonIterableRest();
+  }
+  function SyncManager_nonIterableRest() {
+    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  }
   function SyncManager_unsupportedIterableToArray(r, o) {
     if (r) {
       if ("string" == typeof r) {
@@ -20965,6 +20578,40 @@
       l[a] = r[a];
     }
     return l;
+  }
+  function SyncManager_iterableToArrayLimit(r, o) {
+    var a = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+    if (null != a) {
+      var l, u, p, v, y = [], b = !0, C = !1;
+      try {
+        if (p = (a = a.call(r)).next, 0 === o) {
+          if (Object(a) !== a) {
+            return;
+          }
+          b = !1;
+        } else {
+          for (;!(b = (l = p.call(a)).done) && (y.push(l.value), y.length !== o); b = !0) {}
+        }
+      } catch (r) {
+        C = !0, u = r;
+      } finally {
+        try {
+          if (!b && null != a["return"] && (v = a["return"](), Object(v) !== v)) {
+            return;
+          }
+        } finally {
+          if (C) {
+            throw u;
+          }
+        }
+      }
+      return y;
+    }
+  }
+  function SyncManager_arrayWithHoles(r) {
+    if (Array.isArray(r)) {
+      return r;
+    }
   }
   function SyncManager_typeof(r) {
     "@babel/helpers - typeof";
@@ -21010,19 +20657,22 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var lt = "mp_client_id";
-  var ct = "mp_webdav_config";
-  var ut = "mp_webdav_last_sync_time";
-  var dt = 1;
+  var st = "mp_client_id";
+  var lt = "mp_webdav_config";
+  var ct = "mp_webdav_last_sync_time";
+  var ut = "mp_sync_tombstones";
+  var dt = "mp_setting_timestamps";
+  var pt = 2;
+  var ht = 30 * 24 * 60 * 60 * 1e3;
   function SyncManager_getOrCreateClientId() {
-    var r = getValue(lt, "");
+    var r = getValue(st, "");
     if (r) {
       return r;
     }
     var o = Math.random().toString(36).substring(2, 10);
     var a = Date.now().toString(36).substring(4);
     var l = "mp_".concat(o).concat(a);
-    setValue(lt, l);
+    setValue(st, l);
     return l;
   }
   function getDeviceName() {
@@ -21063,7 +20713,7 @@
     }
     return "desktop";
   }
-  var ht = function() {
+  var mt = function() {
     function SyncManager() {
       SyncManager_classCallCheck(this, SyncManager);
     }
@@ -21077,24 +20727,155 @@
           "path": "/MissPlayer/",
           "autoSync": true
         };
-        var o = getValue(ct, null);
+        var o = getValue(lt, null);
         return Object.assign({}, r, o && SyncManager_typeof(o) === "object" ? o : {});
       }
     }, {
       "key": "saveWebDavConfig",
       "value": function saveWebDavConfig(r) {
-        setValue(ct, r);
+        setValue(lt, r);
       }
     }, {
       "key": "getLastSyncTime",
       "value": function getLastSyncTime() {
-        return getValue(ut, 0);
+        return getValue(ct, 0);
       }
     }, {
       "key": "setLastSyncTime",
       "value": function setLastSyncTime() {
         var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : Date.now();
-        setValue(ut, r);
+        setValue(ct, r);
+      }
+    }, {
+      "key": "getLocalTombstones",
+      "value": function getLocalTombstones() {
+        var r = {
+          "markers": {},
+          "customSeekSteps": {},
+          "videos": {}
+        };
+        var o = getValue(ut, null);
+        if (!o || SyncManager_typeof(o) !== "object") {
+          return r;
+        }
+        return {
+          "markers": o.markers && SyncManager_typeof(o.markers) === "object" ? o.markers : {},
+          "customSeekSteps": o.customSeekSteps && SyncManager_typeof(o.customSeekSteps) === "object" ? o.customSeekSteps : {},
+          "videos": o.videos && SyncManager_typeof(o.videos) === "object" ? o.videos : {}
+        };
+      }
+    }, {
+      "key": "saveLocalTombstones",
+      "value": function saveLocalTombstones(r) {
+        var o = this.purgeExpiredTombstones(r);
+        setValue(ut, o);
+      }
+    }, {
+      "key": "recordTombstone",
+      "value": function recordTombstone(r, o) {
+        var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
+        if (!o) {
+          return;
+        }
+        var l = this.getLocalTombstones();
+        var u = Date.now();
+        if (r === "markers") {
+          l.markers[o] = {
+            "deletedAt": u,
+            "videoKey": a || ""
+          };
+        } else if (r === "customSeekSteps") {
+          l.customSeekSteps[o] = u;
+        } else if (r === "videos") {
+          l.videos[o] = u;
+        }
+        this.saveLocalTombstones(l);
+      }
+    }, {
+      "key": "clearTombstone",
+      "value": function clearTombstone(r, o) {
+        if (!o) {
+          return;
+        }
+        var a = this.getLocalTombstones();
+        var l = false;
+        if (r === "markers" && a.markers[o]) {
+          delete a.markers[o];
+          l = true;
+        } else if (r === "customSeekSteps" && a.customSeekSteps[o]) {
+          delete a.customSeekSteps[o];
+          l = true;
+        } else if (r === "videos" && a.videos[o]) {
+          delete a.videos[o];
+          l = true;
+        }
+        if (l) {
+          this.saveLocalTombstones(a);
+        }
+      }
+    }, {
+      "key": "purgeExpiredTombstones",
+      "value": function purgeExpiredTombstones(r) {
+        if (!r || SyncManager_typeof(r) !== "object") {
+          return {
+            "markers": {},
+            "customSeekSteps": {},
+            "videos": {}
+          };
+        }
+        var o = Date.now();
+        var a = o - ht;
+        var l = {};
+        if (r.markers) {
+          for (var u = 0, p = Object.entries(r.markers); u < p.length; u++) {
+            var v = SyncManager_slicedToArray(p[u], 2), y = v[0], b = v[1];
+            var C = SyncManager_typeof(b) === "object" ? b.deletedAt : b;
+            if (C && C >= a) {
+              l[y] = SyncManager_typeof(b) === "object" ? b : {
+                "deletedAt": C
+              };
+            }
+          }
+        }
+        var _ = {};
+        if (r.customSeekSteps) {
+          for (var k = 0, S = Object.entries(r.customSeekSteps); k < S.length; k++) {
+            var P = SyncManager_slicedToArray(S[k], 2), E = P[0], D = P[1];
+            if (D >= a) {
+              _[E] = D;
+            }
+          }
+        }
+        var L = {};
+        if (r.videos) {
+          for (var M = 0, T = Object.entries(r.videos); M < T.length; M++) {
+            var A = SyncManager_slicedToArray(T[M], 2), j = A[0], B = A[1];
+            if (B >= a) {
+              L[j] = B;
+            }
+          }
+        }
+        return {
+          "markers": l,
+          "customSeekSteps": _,
+          "videos": L
+        };
+      }
+    }, {
+      "key": "getLocalSettingTimestamps",
+      "value": function getLocalSettingTimestamps() {
+        var r = getValue(dt, null);
+        return r && SyncManager_typeof(r) === "object" ? r : {};
+      }
+    }, {
+      "key": "recordSettingUpdate",
+      "value": function recordSettingUpdate(r) {
+        if (!r) {
+          return;
+        }
+        var o = this.getLocalSettingTimestamps();
+        o[r] = Date.now();
+        setValue(dt, o);
       }
     }, {
       "key": "gatherLocalData",
@@ -21102,7 +20883,9 @@
         var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : null;
         var o = SyncManager_getOrCreateClientId();
         var a = Date.now();
-        var l = (r === null || r === void 0 ? void 0 : r.settings) || {
+        var l = this.getLocalTombstones();
+        var u = this.getLocalSettingTimestamps();
+        var p = (r === null || r === void 0 ? void 0 : r.settings) || {
           "showProgressBar": getValue("showProgressBar", true),
           "showSeekControlRow": getValue("showSeekControlRow", true),
           "showLoopControlRow": getValue("showLoopControlRow", true),
@@ -21122,63 +20905,79 @@
           "telemetryEnabled": getValue("telemetryEnabled", true),
           "debugMode": getValue("debugMode", false)
         };
-        var u = {};
+        var v = {};
         try {
+          var y = function processList(r, o) {
+            if (Array.isArray(o) && o.length > 0) {
+              v[r] = o.map((function(r) {
+                var o = SyncManager_objectSpread({}, r);
+                if (!o.id) {
+                  var l = Math.round((o.startTime || o.tabTime || 0) * 10);
+                  var u = Math.round((o.endTime || o.tabEnd || 0) * 10);
+                  o.id = "tab_".concat(l, "_").concat(u, "_").concat(Math.random().toString(36).slice(2, 6));
+                }
+                if (!o.createdAt) {
+                  o.createdAt = a;
+                }
+                if (!o.updatedAt) {
+                  o.updatedAt = o.createdAt;
+                }
+                return o;
+              }));
+            }
+          };
           if (typeof GM_listValues === "function") {
-            var p = GM_listValues();
-            var v = SyncManager_createForOfIteratorHelper(p), y;
+            var b = GM_listValues();
+            var C = SyncManager_createForOfIteratorHelper(b), _;
             try {
-              for (v.s(); !(y = v.n()).done; ) {
-                var b = y.value;
-                if (b && b.startsWith("tabs_")) {
-                  var C = getValue(b, []);
-                  if (Array.isArray(C) && C.length > 0) {
-                    u[b] = C;
-                  }
+              for (C.s(); !(_ = C.n()).done; ) {
+                var k = _.value;
+                if (k && k.startsWith("tabs_")) {
+                  y(k, getValue(k, []));
                 }
               }
             } catch (r) {
-              v.e(r);
+              C.e(r);
             } finally {
-              v.f();
+              C.f();
             }
           } else {
-            for (var _ = 0; _ < localStorage.length; _++) {
-              var k = localStorage.key(_);
-              if (k) {
-                var P = k;
-                if (k.startsWith("mp_")) {
-                  P = k.replace(/^mp_/, "");
+            for (var S = 0; S < localStorage.length; S++) {
+              var P = localStorage.key(S);
+              if (P) {
+                var E = P;
+                if (P.startsWith("mp_")) {
+                  E = P.replace(/^mp_/, "");
                 }
-                if (P.startsWith("tabs_")) {
-                  var S = getValue(P, []);
-                  if (Array.isArray(S) && S.length > 0) {
-                    u[P] = S;
-                  }
+                if (E.startsWith("tabs_")) {
+                  y(E, getValue(E, []));
                 }
               }
             }
           }
         } catch (r) {}
-        var E = getDeviceType();
-        var D = SyncManager_defineProperty({}, E, {
+        var D = getDeviceType();
+        var L = SyncManager_defineProperty({}, D, {
           "sidebarPosition": getValue("sidebarPosition", "right"),
-          "sidebarHidden": getValue("sidebarHidden", false)
+          "sidebarHidden": getValue("sidebarHidden", false),
+          "updatedAt": u.sidebarPosition || u.sidebarHidden || a
         });
         return {
-          "schemaVersion": dt,
+          "schemaVersion": pt,
           "scriptVersion": "5.6.1",
           "lastModified": a,
           "lastModifiedBy": o,
           "devices": SyncManager_defineProperty({}, o, {
             "deviceName": getDeviceName(),
-            "deviceType": E,
+            "deviceType": D,
             "lastSyncTime": a,
             "scriptVersion": "5.6.1"
           }),
-          "deviceLayouts": D,
-          "settings": l,
-          "markers": u
+          "deviceLayouts": L,
+          "settings": p,
+          "settingTimestamps": u,
+          "markers": v,
+          "tombstones": l
         };
       }
     }, {
@@ -21188,19 +20987,52 @@
           return null;
         }
         var o = Object.assign({}, r);
-        if (!o.schemaVersion || o.schemaVersion < 1) {
-          o.schemaVersion = 1;
+        if (!o.schemaVersion || o.schemaVersion < pt) {
+          o.schemaVersion = pt;
           if (!o.devices) {
             o.devices = {};
           }
           if (!o.settings) {
             o.settings = {};
           }
+          if (!o.settingTimestamps) {
+            o.settingTimestamps = {};
+          }
           if (!o.markers) {
             o.markers = {};
           }
+          if (!o.deviceLayouts) {
+            o.deviceLayouts = {};
+          }
+          if (!o.tombstones) {
+            o.tombstones = {
+              "markers": {},
+              "customSeekSteps": {},
+              "videos": {}
+            };
+          }
           if (!o.lastModified) {
             o.lastModified = Date.now();
+          }
+          for (var a = 0, l = Object.entries(o.markers); a < l.length; a++) {
+            var u = SyncManager_slicedToArray(l[a], 2), p = u[0], v = u[1];
+            if (Array.isArray(v)) {
+              o.markers[p] = v.map((function(r) {
+                var a = SyncManager_objectSpread({}, r);
+                if (!a.id) {
+                  var l = Math.round((a.startTime || a.tabTime || 0) * 10);
+                  var u = Math.round((a.endTime || a.tabEnd || 0) * 10);
+                  a.id = "legacy_".concat(l, "_").concat(u);
+                }
+                if (!a.updatedAt) {
+                  a.updatedAt = o.lastModified || 0;
+                }
+                if (!a.createdAt) {
+                  a.createdAt = a.updatedAt;
+                }
+                return a;
+              }));
+            }
           }
         }
         return o;
@@ -21216,131 +21048,210 @@
         }
         var l = this.migrateBackupSchema(o);
         var u = Date.now();
-        var p = Object.assign({}, l.devices || {}, r.devices || {});
-        p[a] = {
+        var p = r.tombstones || {
+          "markers": {},
+          "customSeekSteps": {},
+          "videos": {}
+        };
+        var v = l.tombstones || {
+          "markers": {},
+          "customSeekSteps": {},
+          "videos": {}
+        };
+        var y = {};
+        for (var b = 0, C = Object.entries(v.markers || {}); b < C.length; b++) {
+          var _ = SyncManager_slicedToArray(C[b], 2), k = _[0], S = _[1];
+          y[k] = SyncManager_typeof(S) === "object" ? S : {
+            "deletedAt": S
+          };
+        }
+        for (var P = 0, E = Object.entries(p.markers || {}); P < E.length; P++) {
+          var D = SyncManager_slicedToArray(E[P], 2), L = D[0], M = D[1];
+          var T = SyncManager_typeof(M) === "object" ? M : {
+            "deletedAt": M
+          };
+          var A = y[L];
+          if (!A || T.deletedAt > A.deletedAt) {
+            y[L] = T;
+          }
+        }
+        var j = Object.assign({}, v.customSeekSteps || {}, p.customSeekSteps || {});
+        var B = Object.assign({}, v.videos || {}, p.videos || {});
+        var I = {
+          "markers": y,
+          "customSeekSteps": j,
+          "videos": B
+        };
+        var O = Object.assign({}, l.devices || {}, r.devices || {});
+        O[a] = {
           "deviceName": getDeviceName(),
+          "deviceType": getDeviceType(),
           "lastSyncTime": u,
           "scriptVersion": "5.6.1"
         };
-        var v = r.settings || {};
-        var y = l.settings || {};
-        var b = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(v.enabledSeekSteps) ? v.enabledSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(y.enabledSeekSteps) ? y.enabledSeekSteps : []))));
-        var C = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(v.customUserSeekSteps) ? v.customUserSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(y.customUserSeekSteps) ? y.customUserSeekSteps : []))));
-        var _ = Object.assign({
+        var V = r.settings || {};
+        var G = l.settings || {};
+        var R = r.settingTimestamps || {};
+        var H = l.settingTimestamps || {};
+        var J = {};
+        var N = {};
+        var z = Array.from(new Set([].concat(SyncManager_toConsumableArray(Object.keys(V)), SyncManager_toConsumableArray(Object.keys(G)))));
+        for (var U = 0, W = z; U < W.length; U++) {
+          var q = W[U];
+          if (q === "customUserSeekSteps" || q === "enabledSeekSteps" || q === "enabledCommentSources") {
+            continue;
+          }
+          var K = R[q] || r.lastModified || 0;
+          var Y = H[q] || l.lastModified || 0;
+          if (K >= Y) {
+            N[q] = V[q] !== void 0 ? V[q] : G[q];
+            J[q] = K;
+          } else {
+            N[q] = G[q] !== void 0 ? G[q] : V[q];
+            J[q] = Y;
+          }
+        }
+        var X = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(V.customUserSeekSteps) ? V.customUserSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(G.customUserSeekSteps) ? G.customUserSeekSteps : []))));
+        var $ = X.filter((function(r) {
+          var o = j[r];
+          return !o;
+        }));
+        N.customUserSeekSteps = $;
+        N.enabledSeekSteps = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(V.enabledSeekSteps) ? V.enabledSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(G.enabledSeekSteps) ? G.enabledSeekSteps : []))));
+        if (N.enabledSeekSteps.length === 0) {
+          N.enabledSeekSteps = [ "5s", "10s", "30s", "1m", "5m", "10m" ];
+        }
+        N.enabledCommentSources = Object.assign({
           "jable": true,
           "javdb": true,
           "javlibrary": false
-        }, y.enabledCommentSources || {}, v.enabledCommentSources || {});
-        var k = (l.lastModified || 0) > (r.lastModified || 0);
-        var P = k ? y : v;
-        var S = k ? v : y;
-        var E = {
-          "showProgressBar": P.showProgressBar !== void 0 ? P.showProgressBar : S.showProgressBar,
-          "showSeekControlRow": P.showSeekControlRow !== void 0 ? P.showSeekControlRow : S.showSeekControlRow,
-          "showLoopControlRow": P.showLoopControlRow !== void 0 ? P.showLoopControlRow : S.showLoopControlRow,
-          "showPlaybackControlRow": P.showPlaybackControlRow !== void 0 ? P.showPlaybackControlRow : S.showPlaybackControlRow,
-          "enabledSeekSteps": b.length > 0 ? b : [ "5s", "10s", "30s", "1m", "5m", "10m" ],
-          "customUserSeekSteps": C,
-          "showCommentsSection": P.showCommentsSection !== void 0 ? P.showCommentsSection : S.showCommentsSection,
-          "enabledCommentSources": _,
-          "sidebarPosition": P.sidebarPosition || S.sidebarPosition || "right",
-          "sidebarHidden": P.sidebarHidden !== void 0 ? P.sidebarHidden : S.sidebarHidden,
-          "preferredPlaybackRate": P.preferredPlaybackRate || S.preferredPlaybackRate || 1,
-          "pauseOnBlur": P.pauseOnBlur !== void 0 ? P.pauseOnBlur : S.pauseOnBlur,
-          "telemetryEnabled": P.telemetryEnabled !== void 0 ? P.telemetryEnabled : S.telemetryEnabled,
-          "debugMode": P.debugMode !== void 0 ? P.debugMode : S.debugMode
-        };
-        var D = r.markers || {};
-        var L = l.markers || {};
-        var M = Array.from(new Set([].concat(SyncManager_toConsumableArray(Object.keys(D)), SyncManager_toConsumableArray(Object.keys(L)))));
-        var T = {};
-        for (var A = 0, j = M; A < j.length; A++) {
-          var B = j[A];
-          var I = Array.isArray(D[B]) ? D[B] : [];
-          var O = Array.isArray(L[B]) ? L[B] : [];
-          if (I.length === 0) {
-            T[B] = O;
-            continue;
-          }
-          if (O.length === 0) {
-            T[B] = I;
-            continue;
-          }
-          var V = new Map;
-          var G = SyncManager_createForOfIteratorHelper(O), R;
-          try {
-            for (G.s(); !(R = G.n()).done; ) {
-              var H = R.value;
-              var J = H.id || "".concat(Math.round((H.tabTime || 0) * 10) / 10, "_").concat(Math.round((H.tabEnd || 0) * 10) / 10);
-              V.set(J, H);
+        }, G.enabledCommentSources || {}, V.enabledCommentSources || {});
+        var Q = r.markers || {};
+        var Z = l.markers || {};
+        var ee = Array.from(new Set([].concat(SyncManager_toConsumableArray(Object.keys(Q)), SyncManager_toConsumableArray(Object.keys(Z)))));
+        var te = {};
+        var ne = function _loop() {
+          var r = oe[re];
+          var o = Array.isArray(Q[r]) ? Q[r] : [];
+          var a = Array.isArray(Z[r]) ? Z[r] : [];
+          var l = new Map;
+          var u = function processCandidate(r) {
+            if (!r) {
+              return;
             }
-          } catch (r) {
-            G.e(r);
-          } finally {
-            G.f();
-          }
-          var N = SyncManager_createForOfIteratorHelper(I), z;
-          try {
-            for (N.s(); !(z = N.n()).done; ) {
-              var W = z.value;
-              var U = W.id || "".concat(Math.round((W.tabTime || 0) * 10) / 10, "_").concat(Math.round((W.tabEnd || 0) * 10) / 10);
-              if (!V.has(U)) {
-                V.set(U, W);
-              } else {
-                var q = V.get(U);
-                var K = W.updatedAt || 0;
-                var Y = q.updatedAt || 0;
-                if (K >= Y || !q.tabComment && W.tabComment) {
-                  V.set(U, Object.assign({}, q, W));
-                }
+            var o = r.id || "tab_".concat(Math.round((r.startTime || r.tabTime || 0) * 10), "_").concat(Math.round((r.endTime || r.tabEnd || 0) * 10));
+            var a = r.updatedAt || r.createdAt || 0;
+            var u = y[o];
+            if (u && u.deletedAt >= a) {
+              return;
+            }
+            if (!l.has(o)) {
+              l.set(o, SyncManager_objectSpread(SyncManager_objectSpread({}, r), {}, {
+                "id": o,
+                "updatedAt": a
+              }));
+            } else {
+              var p = l.get(o);
+              var v = p.updatedAt || p.createdAt || 0;
+              if (a > v) {
+                l.set(o, SyncManager_objectSpread(SyncManager_objectSpread(SyncManager_objectSpread({}, p), r), {}, {
+                  "id": o,
+                  "updatedAt": a
+                }));
+              } else if (a === v && !p.comment && r.comment) {
+                l.set(o, SyncManager_objectSpread(SyncManager_objectSpread({}, p), {}, {
+                  "comment": r.comment
+                }));
               }
             }
+          };
+          var p = SyncManager_createForOfIteratorHelper(a), v;
+          try {
+            for (p.s(); !(v = p.n()).done; ) {
+              var b = v.value;
+              u(b);
+            }
           } catch (r) {
-            N.e(r);
+            p.e(r);
           } finally {
-            N.f();
+            p.f();
           }
-          T[B] = Array.from(V.values());
+          var C = SyncManager_createForOfIteratorHelper(o), _;
+          try {
+            for (C.s(); !(_ = C.n()).done; ) {
+              var k = _.value;
+              u(k);
+            }
+          } catch (r) {
+            C.e(r);
+          } finally {
+            C.f();
+          }
+          var S = Array.from(l.values()).sort((function(r, o) {
+            return (r.startTime || 0) - (o.startTime || 0);
+          }));
+          if (S.length > 0) {
+            te[r] = S;
+          } else {
+            te[r] = [];
+          }
+        };
+        for (var re = 0, oe = ee; re < oe.length; re++) {
+          ne();
         }
-        var X = Object.assign({}, l.deviceLayouts || {}, r.deviceLayouts || {});
+        var ae = Object.assign({}, l.deviceLayouts || {}, r.deviceLayouts || {});
         return {
-          "schemaVersion": dt,
+          "schemaVersion": pt,
           "scriptVersion": "5.6.1",
           "lastModified": u,
           "lastModifiedBy": a,
-          "devices": p,
-          "deviceLayouts": X,
-          "settings": E,
-          "markers": T
+          "devices": O,
+          "deviceLayouts": ae,
+          "settings": N,
+          "settingTimestamps": J,
+          "markers": te,
+          "tombstones": I
         };
       }
     }, {
       "key": "applyDataToLocal",
       "value": function applyDataToLocal(r) {
         var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : null;
-        if (!r || !r.settings) {
+        if (!r) {
           return;
         }
-        var a = r.settings, l = r.markers, u = r.deviceLayouts;
-        for (var p = 0, v = Object.entries(a); p < v.length; p++) {
-          var y = SyncManager_slicedToArray(v[p], 2), b = y[0], C = y[1];
-          setValue(b, C);
-        }
-        var _ = getDeviceType();
-        if (u && u[_]) {
-          var k = u[_];
-          if (k.sidebarPosition !== void 0) {
-            setValue("sidebarPosition", k.sidebarPosition);
-          }
-          if (k.sidebarHidden !== void 0) {
-            setValue("sidebarHidden", k.sidebarHidden);
+        var a = r.settings, l = r.settingTimestamps, u = r.markers, p = r.deviceLayouts, v = r.tombstones;
+        if (a && SyncManager_typeof(a) === "object") {
+          for (var y = 0, b = Object.entries(a); y < b.length; y++) {
+            var C = SyncManager_slicedToArray(b[y], 2), _ = C[0], k = C[1];
+            setValue(_, k);
           }
         }
         if (l && SyncManager_typeof(l) === "object") {
-          for (var P = 0, S = Object.entries(l); P < S.length; P++) {
-            var E = SyncManager_slicedToArray(S[P], 2), D = E[0], L = E[1];
-            if (D.startsWith("tabs_") && Array.isArray(L)) {
-              setValue(D, L);
+          setValue(dt, l);
+        }
+        if (v && SyncManager_typeof(v) === "object") {
+          this.saveLocalTombstones(v);
+        }
+        var S = getDeviceType();
+        if (p && p[S]) {
+          var P = p[S];
+          if (P.sidebarPosition !== void 0) {
+            setValue("sidebarPosition", P.sidebarPosition);
+          }
+          if (P.sidebarHidden !== void 0) {
+            setValue("sidebarHidden", P.sidebarHidden);
+          }
+        }
+        if (u && SyncManager_typeof(u) === "object") {
+          for (var E = 0, D = Object.entries(u); E < D.length; E++) {
+            var L = SyncManager_slicedToArray(D[E], 2), M = L[0], T = L[1];
+            if (M.startsWith("tabs_")) {
+              if (Array.isArray(T) && T.length > 0) {
+                setValue(M, T);
+              } else {
+                deleteValue(M);
+              }
             }
           }
         }
@@ -21352,15 +21263,15 @@
       "key": "executeSync",
       "value": function() {
         var r = SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee(r) {
-          var o, a, l, u, p, v, y, b, C, _, k, P;
-          return SyncManager_regeneratorRuntime().wrap((function _callee$(S) {
+          var o, a, l, u, p, v, y, b, C, _, k, S;
+          return SyncManager_regeneratorRuntime().wrap((function _callee$(P) {
             while (1) {
-              switch (S.prev = S.next) {
+              switch (P.prev = P.next) {
                case 0:
                 o = r.mode, a = o === void 0 ? "merge" : o, l = r.config, u = l === void 0 ? this.getWebDavConfig() : l, 
                 p = r.playerState, v = p === void 0 ? null : p;
                 if (u.url) {
-                  S.next = 3;
+                  P.next = 3;
                   break;
                 }
                 throw new Error("未配置 WebDAV 服务器地址");
@@ -21369,15 +21280,15 @@
                 y = SyncManager_getOrCreateClientId();
                 b = this.gatherLocalData(v);
                 if (!(a === "upload")) {
-                  S.next = 10;
+                  P.next = 10;
                   break;
                 }
-                S.next = 8;
-                return st.uploadBackup(u, b);
+                P.next = 8;
+                return it.uploadBackup(u, b);
 
                case 8:
                 this.setLastSyncTime(b.lastModified);
-                return S.abrupt("return", {
+                return P.abrupt("return", {
                   "success": true,
                   "message": "本地配置已成功向上覆盖至云端！",
                   "data": b
@@ -21385,16 +21296,16 @@
 
                case 10:
                 if (!(a === "download")) {
-                  S.next = 20;
+                  P.next = 20;
                   break;
                 }
-                S.next = 13;
-                return st.downloadBackup(u);
+                P.next = 13;
+                return it.downloadBackup(u);
 
                case 13:
-                C = S.sent;
+                C = P.sent;
                 if (C) {
-                  S.next = 16;
+                  P.next = 16;
                   break;
                 }
                 throw new Error("云端备份文件不存在，无法向下覆盖");
@@ -21403,34 +21314,34 @@
                 _ = this.migrateBackupSchema(C);
                 this.applyDataToLocal(_, v);
                 this.setLastSyncTime(Date.now());
-                return S.abrupt("return", {
+                return P.abrupt("return", {
                   "success": true,
                   "message": "已成功从云端拉取配置并覆盖本地！",
                   "data": _
                 });
 
                case 20:
-                S.next = 22;
-                return st.downloadBackup(u);
+                P.next = 22;
+                return it.downloadBackup(u);
 
                case 22:
-                k = S.sent;
-                P = this.mergeData(b, k, y);
-                S.next = 26;
-                return st.uploadBackup(u, P);
+                k = P.sent;
+                S = this.mergeData(b, k, y);
+                P.next = 26;
+                return it.uploadBackup(u, S);
 
                case 26:
-                this.applyDataToLocal(P, v);
-                this.setLastSyncTime(P.lastModified);
-                return S.abrupt("return", {
+                this.applyDataToLocal(S, v);
+                this.setLastSyncTime(S.lastModified);
+                return P.abrupt("return", {
                   "success": true,
                   "message": "云端多端配置智能合并同步完成！",
-                  "data": P
+                  "data": S
                 });
 
                case 29:
                case "end":
-                return S.stop();
+                return P.stop();
               }
             }
           }), _callee, this);
@@ -21533,6 +21444,383 @@
               }
             }), _callee3, null, [ [ 0, 6, 8, 11 ] ]);
           }))), 5e3);
+        }
+      }
+    } ]);
+  }();
+  function MarkerBottomSheet_typeof(r) {
+    "@babel/helpers - typeof";
+    return MarkerBottomSheet_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
+      return typeof r;
+    } : function(r) {
+      return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
+    }, MarkerBottomSheet_typeof(r);
+  }
+  function MarkerBottomSheet_classCallCheck(r, o) {
+    if (!(r instanceof o)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+  function MarkerBottomSheet_defineProperties(r, o) {
+    for (var a = 0; a < o.length; a++) {
+      var l = o[a];
+      l.enumerable = l.enumerable || !1, l.configurable = !0, "value" in l && (l.writable = !0), 
+      Object.defineProperty(r, MarkerBottomSheet_toPropertyKey(l.key), l);
+    }
+  }
+  function MarkerBottomSheet_createClass(r, o, a) {
+    return o && MarkerBottomSheet_defineProperties(r.prototype, o), a && MarkerBottomSheet_defineProperties(r, a), 
+    Object.defineProperty(r, "prototype", {
+      "writable": !1
+    }), r;
+  }
+  function MarkerBottomSheet_toPropertyKey(r) {
+    var o = MarkerBottomSheet_toPrimitive(r, "string");
+    return "symbol" == MarkerBottomSheet_typeof(o) ? o : o + "";
+  }
+  function MarkerBottomSheet_toPrimitive(r, o) {
+    if ("object" != MarkerBottomSheet_typeof(r) || !r) {
+      return r;
+    }
+    var a = r[Symbol.toPrimitive];
+    if (void 0 !== a) {
+      var l = a.call(r, o || "default");
+      if ("object" != MarkerBottomSheet_typeof(l)) {
+        return l;
+      }
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === o ? String : Number)(r);
+  }
+  var ft = function() {
+    function MarkerBottomSheet(r) {
+      MarkerBottomSheet_classCallCheck(this, MarkerBottomSheet);
+      this.loopManager = r;
+      this._sheetOverlay = null;
+      this._sheetPanel = null;
+      this._sheetList = null;
+      this._sheetCountBadge = null;
+    }
+    return MarkerBottomSheet_createClass(MarkerBottomSheet, [ {
+      "key": "tabs",
+      "get": function get() {
+        return this.loopManager.tabs;
+      }
+    }, {
+      "key": "activeTabId",
+      "get": function get() {
+        return this.loopManager.activeTabId;
+      }
+    }, {
+      "key": "tabColors",
+      "get": function get() {
+        return this.loopManager.tabColors;
+      }
+    }, {
+      "key": "tabAddBtn",
+      "get": function get() {
+        return this.loopManager.tabAddBtn;
+      }
+    }, {
+      "key": "tabScrollContainer",
+      "get": function get() {
+        return this.loopManager.tabScrollContainer;
+      }
+    }, {
+      "key": "targetVideo",
+      "get": function get() {
+        return this.loopManager.targetVideo;
+      }
+    }, {
+      "key": "uiElements",
+      "get": function get() {
+        return this.loopManager.uiElements;
+      }
+    }, {
+      "key": "bindSwipeUpGesture",
+      "value": function bindSwipeUpGesture() {
+        var r, o = this;
+        var a = (r = this.tabScrollContainer) === null || r === void 0 ? void 0 : r.parentElement;
+        if (!a) {
+          return;
+        }
+        var l = 0;
+        var u = 0;
+        var p = false;
+        a.addEventListener("touchstart", (function(r) {
+          var o = r.touches[0];
+          l = o.clientY;
+          u = o.clientX;
+          p = true;
+        }), {
+          "passive": true
+        });
+        a.addEventListener("touchend", (function(r) {
+          if (!p) {
+            return;
+          }
+          p = false;
+          var a = r.changedTouches[0];
+          var v = a.clientY - l;
+          var y = Math.abs(a.clientX - u);
+          if (v < -40 && Math.abs(v) > y) {
+            r.stopPropagation();
+            o.open();
+          }
+        }));
+      }
+    }, {
+      "key": "toggle",
+      "value": function toggle() {
+        if (this._sheetPanel && this._sheetPanel.classList.contains("visible")) {
+          this.close();
+        } else {
+          this.open();
+        }
+      }
+    }, {
+      "key": "updatePanelPosition",
+      "value": function updatePanelPosition() {
+        var r, o, a, l, u;
+        if (!this._sheetPanel) {
+          return;
+        }
+        var p = ((r = this.tabAddBtn) === null || r === void 0 ? void 0 : r.closest(".tm-control-buttons")) || ((o = this.uiElements) === null || o === void 0 ? void 0 : o.controlButtons) || document.querySelector(".tm-control-buttons");
+        var v = ((a = this.tabAddBtn) === null || a === void 0 ? void 0 : a.closest(".tm-loop-control-row")) || ((l = this.tabAddBtn) === null || l === void 0 ? void 0 : l.parentElement);
+        var y = ((u = this.uiElements) === null || u === void 0 ? void 0 : u.handleContainer) || document.querySelector(".tm-handle-container");
+        if (p && v) {
+          var b = p.getBoundingClientRect();
+          var C = v.getBoundingClientRect();
+          var _ = Math.max(0, b.bottom - C.bottom);
+          this._sheetPanel.style.bottom = "".concat(_, "px");
+          if (y) {
+            var k = y.getBoundingClientRect();
+            var S = C.bottom - k.bottom - 10;
+            if (S > 80) {
+              this._sheetPanel.style.maxHeight = "".concat(S, "px");
+              return;
+            }
+          }
+        }
+        this._sheetPanel.style.maxHeight = "calc(100vh - 120px)";
+      }
+    }, {
+      "key": "open",
+      "value": function open() {
+        if (!this._sheetOverlay || !this._sheetPanel) {
+          this.createBottomSheet();
+        }
+        this.updateBottomSheet();
+        this.updatePanelPosition();
+        if (this._sheetOverlay) {
+          this._sheetOverlay.classList.add("visible");
+        }
+        if (this._sheetPanel) {
+          this._sheetPanel.classList.add("visible");
+        }
+      }
+    }, {
+      "key": "close",
+      "value": function close() {
+        if (this._sheetOverlay) {
+          this._sheetOverlay.classList.remove("visible");
+        }
+        if (this._sheetPanel) {
+          this._sheetPanel.classList.remove("visible");
+        }
+      }
+    }, {
+      "key": "createBottomSheet",
+      "value": function createBottomSheet() {
+        var r, o, a = this, l;
+        var u = ((r = this.tabAddBtn) === null || r === void 0 ? void 0 : r.closest(".tm-control-buttons")) || ((o = this.uiElements) === null || o === void 0 ? void 0 : o.controlButtons) || document.querySelector(".tm-control-buttons");
+        if (!u) {
+          return;
+        }
+        if (this._sheetOverlay) {
+          this._sheetOverlay.remove();
+        }
+        if (this._sheetPanel) {
+          this._sheetPanel.remove();
+        }
+        this._sheetOverlay = document.createElement("div");
+        this._sheetOverlay.className = "tm-bottom-sheet-overlay";
+        this._sheetOverlay.addEventListener("click", (function() {
+          return a.close();
+        }));
+        this._sheetOverlay.addEventListener("touchmove", (function(r) {
+          if (r.cancelable) {
+            r.preventDefault();
+          }
+        }), {
+          "passive": false
+        });
+        this._sheetPanel = document.createElement("div");
+        this._sheetPanel.className = "tm-bottom-sheet-panel";
+        this._sheetPanel.addEventListener("click", (function(r) {
+          return r.stopPropagation();
+        }));
+        var p = document.createElement("div");
+        p.className = "tm-sheet-header";
+        var v = document.createElement("div");
+        v.style.display = "flex";
+        v.style.alignItems = "center";
+        v.style.gap = "8px";
+        var y = document.createElement("div");
+        y.className = "tm-bottom-sheet-title";
+        y.textContent = "标签管理";
+        var b = document.createElement("span");
+        b.className = "tm-sheet-count-badge";
+        this._sheetCountBadge = b;
+        v.appendChild(y);
+        v.appendChild(b);
+        var C = document.createElement("button");
+        C.className = "tm-sheet-close-btn";
+        C.innerHTML = "✕";
+        C.title = "关闭";
+        C.addEventListener("click", (function() {
+          return a.close();
+        }));
+        p.appendChild(v);
+        p.appendChild(C);
+        this._sheetList = document.createElement("div");
+        this._sheetList.className = "tm-bottom-sheet-list";
+        this._sheetPanel.appendChild(p);
+        this._sheetPanel.appendChild(this._sheetList);
+        var _ = ((l = this.uiElements) === null || l === void 0 ? void 0 : l.playerContainer) || document.querySelector(".tm-player-container") || document.body;
+        _.appendChild(this._sheetOverlay);
+        u.appendChild(this._sheetPanel);
+      }
+    }, {
+      "key": "updateBottomSheet",
+      "value": function updateBottomSheet() {
+        var r = this;
+        if (!this._sheetList) {
+          return;
+        }
+        this._sheetList.innerHTML = "";
+        if (this._sheetCountBadge) {
+          this._sheetCountBadge.textContent = "共 ".concat(this.tabs.length, " 条");
+        }
+        if (this.tabs.length === 0) {
+          var o = document.createElement("div");
+          o.className = "tm-bottom-sheet-empty";
+          o.textContent = "暂无标签";
+          this._sheetList.appendChild(o);
+          return;
+        }
+        this.tabs.forEach((function(o, a) {
+          var l = r.tabColors[a % r.tabColors.length];
+          var u = document.createElement("div");
+          u.className = "tm-sheet-item";
+          if (r.activeTabId === o.id) {
+            u.classList.add("active");
+          }
+          var p = document.createElement("div");
+          p.className = "tm-sheet-item-time-container";
+          if (o.type === "highlight") {
+            var v = document.createElement("button");
+            v.className = "tm-sheet-time-pill";
+            v.style.setProperty("--tab-color", l);
+            v.textContent = formatTimeWithHours(o.startTime);
+            v.title = "跳转到此时间";
+            v.addEventListener("click", (function() {
+              r.loopManager._handleTabClick(o);
+            }));
+            p.appendChild(v);
+          } else {
+            var y = document.createElement("div");
+            y.className = "tm-sheet-time-pill interval";
+            y.style.setProperty("--tab-color", l);
+            var b = document.createElement("span");
+            b.className = "tm-time-part start";
+            b.textContent = formatTimeWithHours(o.startTime);
+            b.title = "跳转到起点并开始循环";
+            b.addEventListener("click", (function(a) {
+              a.stopPropagation();
+              r.loopManager._handleTabClick(o);
+            }));
+            var C = document.createElement("span");
+            C.className = "tm-time-sep";
+            C.textContent = "~";
+            var _ = document.createElement("span");
+            _.className = "tm-time-part end";
+            _.textContent = formatTimeWithHours(o.endTime);
+            _.title = "跳转到终点";
+            _.addEventListener("click", (function(a) {
+              a.stopPropagation();
+              if (r.targetVideo) {
+                r.targetVideo.currentTime = o.endTime;
+              }
+            }));
+            y.appendChild(b);
+            y.appendChild(C);
+            y.appendChild(_);
+            y.addEventListener("click", (function() {
+              r.loopManager._handleTabClick(o);
+            }));
+            p.appendChild(y);
+          }
+          var k = document.createElement("input");
+          k.type = "text";
+          k.className = "tm-sheet-item-comment-input";
+          k.placeholder = "添加备注...";
+          k.value = o.comment || "";
+          var S = function stopProp(r) {
+            return r.stopPropagation();
+          };
+          k.addEventListener("keydown", S);
+          k.addEventListener("keyup", S);
+          k.addEventListener("keypress", S);
+          k.addEventListener("mousedown", S);
+          k.addEventListener("touchstart", S);
+          k.addEventListener("input", (function(a) {
+            o.comment = a.target.value;
+            r.loopManager._saveTabs();
+            r.loopManager.renderTabs();
+          }));
+          k.addEventListener("change", (function() {
+            r.loopManager._saveTabs();
+            r.loopManager.renderTabs();
+          }));
+          var P = document.createElement("button");
+          P.className = "tm-sheet-delete-btn";
+          P.innerHTML = "❌";
+          P.title = "删除标签";
+          P.addEventListener("click", (function(a) {
+            a.stopPropagation();
+            if (o && o.id) {
+              mt.recordTombstone("markers", o.id, r.loopManager.storageKey);
+            }
+            r.loopManager.tabs = r.loopManager.tabs.filter((function(r) {
+              return r.id !== o.id;
+            }));
+            if (r.loopManager.activeTabId === o.id) {
+              r.loopManager.disableLoop();
+              r.loopManager.activeTabId = null;
+            }
+            r.loopManager._saveTabs();
+            r.loopManager.renderTabs();
+            r.updateBottomSheet();
+          }));
+          u.appendChild(p);
+          u.appendChild(k);
+          u.appendChild(P);
+          r._sheetList.appendChild(u);
+        }));
+      }
+    }, {
+      "key": "cleanup",
+      "value": function cleanup() {
+        if (this._sheetOverlay) {
+          this._sheetOverlay.remove();
+          this._sheetOverlay = null;
+        }
+        if (this._sheetPanel) {
+          this._sheetPanel.remove();
+          this._sheetPanel = null;
+          this._sheetList = null;
+          this._sheetCountBadge = null;
         }
       }
     } ]);
@@ -21682,7 +21970,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var pt = function() {
+  var vt = function() {
     function LoopManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       LoopManager_classCallCheck(this, LoopManager);
@@ -21705,7 +21993,7 @@
       this._longPressTimer = null;
       this._longPressTriggered = false;
       this.storageKey = null;
-      this.bottomSheet = new it(this);
+      this.bottomSheet = new ft(this);
       this.editingTabId = null;
       this.editingTabCopy = null;
       this._durationFallbackBound = null;
@@ -22062,11 +22350,11 @@
           o._showCommentDialog(p);
         }));
         u.appendChild(k);
-        var P = document.createElement("button");
-        P.className = "tm-draft-action save";
-        P.innerHTML = C;
-        P.title = "保存修改";
-        P.addEventListener("click", (function(a) {
+        var S = document.createElement("button");
+        S.className = "tm-draft-action save";
+        S.innerHTML = C;
+        S.title = "保存修改";
+        S.addEventListener("click", (function(a) {
           a.stopPropagation();
           if (p.startTime === null && p.endTime === null) {
             Toast("请至少设置一个时间点", 2e3, "error");
@@ -22089,18 +22377,24 @@
             return o.id === r.id;
           }));
           if (l !== -1) {
-            o.tabs[l] = LoopManager_objectSpread({}, p);
+            o.tabs[l] = LoopManager_objectSpread(LoopManager_objectSpread({}, p), {}, {
+              "updatedAt": Date.now()
+            });
+            mt.clearTombstone("markers", r.id);
             o._saveTabs();
           }
           o._exitEditMode();
         }));
-        u.appendChild(P);
-        var S = document.createElement("button");
-        S.className = "tm-draft-action cancel";
-        S.innerHTML = _;
-        S.title = "删除标签";
-        S.addEventListener("click", (function(a) {
+        u.appendChild(S);
+        var P = document.createElement("button");
+        P.className = "tm-draft-action cancel";
+        P.innerHTML = _;
+        P.title = "删除标签";
+        P.addEventListener("click", (function(a) {
           a.stopPropagation();
+          if (r && r.id) {
+            mt.recordTombstone("markers", r.id, o.storageKey);
+          }
           o.tabs = o.tabs.filter((function(o) {
             return o.id !== r.id;
           }));
@@ -22111,7 +22405,7 @@
           o._saveTabs();
           o._exitEditMode();
         }));
-        u.appendChild(S);
+        u.appendChild(P);
         return u;
       }
     }, {
@@ -22237,14 +22531,14 @@
         var C = b.querySelector(".tm-inline-remark-input");
         var _ = b.querySelector(".tm-inline-remark-btn.cancel");
         var k = b.querySelector(".tm-inline-remark-btn.submit");
-        var P = function stopProp(r) {
+        var S = function stopProp(r) {
           return r.stopPropagation();
         };
-        C.addEventListener("keydown", P);
-        C.addEventListener("keyup", P);
-        C.addEventListener("keypress", P);
-        C.addEventListener("mousedown", P);
-        C.addEventListener("touchstart", P);
+        C.addEventListener("keydown", S);
+        C.addEventListener("keyup", S);
+        C.addEventListener("keypress", S);
+        C.addEventListener("mousedown", S);
+        C.addEventListener("touchstart", S);
         b.addEventListener("click", (function(r) {
           return r.stopPropagation();
         }));
@@ -22260,7 +22554,7 @@
           }
           C.select();
         }));
-        var S = function close() {
+        var P = function close() {
           b.classList.remove("visible");
           b.addEventListener("transitionend", (function() {
             return b.remove();
@@ -22270,7 +22564,11 @@
         };
         var E = function save(r) {
           p.comment = r;
+          p.updatedAt = Date.now();
           if (u) {
+            if (p.id) {
+              mt.clearTombstone("markers", p.id);
+            }
             if (l === a.editingTabCopy) {
               a.renderTabs();
             } else {
@@ -22284,15 +22582,22 @@
               "has_comment": !!r,
               "duration_sec": a.draftTab.endTime && a.draftTab.startTime ? Math.round(a.draftTab.endTime - a.draftTab.startTime) : 0
             });
-            a.tabs.push(LoopManager_objectSpread(LoopManager_objectSpread({}, a.draftTab), {}, {
-              "comment": r
-            }));
+            var o = Date.now();
+            var v = LoopManager_objectSpread(LoopManager_objectSpread({}, a.draftTab), {}, {
+              "comment": r,
+              "createdAt": o,
+              "updatedAt": o
+            });
+            a.tabs.push(v);
+            if (v.id) {
+              mt.clearTombstone("markers", v.id);
+            }
             a._resetDraftTab();
             a._saveTabs();
             a._sortTabs();
             a.renderTabs();
           }
-          S();
+          P();
         };
         k.addEventListener("click", (function(r) {
           r.stopPropagation();
@@ -22303,7 +22608,7 @@
           if (!u) {
             E("");
           } else {
-            S();
+            P();
           }
         }));
         C.addEventListener("keydown", (function(r) {
@@ -22318,7 +22623,7 @@
               a._resetDraftTab();
               a.renderTabs();
             }
-            S();
+            P();
           }
         }));
       }
@@ -22741,18 +23046,18 @@
               var _ = Math.max(a.startTime, Math.min(a.endTime, r.targetVideo.currentTime));
               var k = (_ - a.startTime) / o * 100;
               if (k > 0) {
-                var P = document.createElement("div");
-                P.className = "tm-active-loop-played";
-                P.style.left = "".concat(p, "%");
-                P.style.width = "".concat(k, "%");
-                P.style.setProperty("--tab-color", u);
-                r.progressMarkersContainer.appendChild(P);
+                var S = document.createElement("div");
+                S.className = "tm-active-loop-played";
+                S.style.left = "".concat(p, "%");
+                S.style.width = "".concat(k, "%");
+                S.style.setProperty("--tab-color", u);
+                r.progressMarkersContainer.appendChild(S);
               }
-              var S = document.createElement("div");
-              S.className = "tm-active-loop-boundary start";
-              S.style.left = "".concat(p, "%");
-              S.style.setProperty("--tab-color", u);
-              r.progressMarkersContainer.appendChild(S);
+              var P = document.createElement("div");
+              P.className = "tm-active-loop-boundary start";
+              P.style.left = "".concat(p, "%");
+              P.style.setProperty("--tab-color", u);
+              r.progressMarkersContainer.appendChild(P);
               var E = document.createElement("div");
               E.className = "tm-active-loop-boundary end";
               E.style.left = "".concat(y, "%");
@@ -22786,21 +23091,32 @@
         if (!this.storageKey) {
           return;
         }
+        var r = Date.now();
+        this.tabs = this.tabs.map((function(o) {
+          var a = LoopManager_objectSpread({}, o);
+          if (!a.createdAt) {
+            a.createdAt = r;
+          }
+          if (!a.updatedAt) {
+            a.updatedAt = r;
+          }
+          return a;
+        }));
         this._sortTabs();
         setValue(this.storageKey, this.tabs);
         try {
-          var r;
-          ht.triggerAutoSync((r = this.playerCore) === null || r === void 0 || (r = r.options) === null || r === void 0 ? void 0 : r.playerState, "change");
+          var o;
+          mt.triggerAutoSync((o = this.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "change");
         } catch (r) {}
         try {
           if (Array.isArray(this.tabs) && this.tabs.length > 0) {
-            var o = this.tabs[this.tabs.length - 1];
-            if (o) {
+            var a = this.tabs[this.tabs.length - 1];
+            if (a) {
               fe.trackTimestampCollect({
-                "type": o.type || "point",
-                "startTime": o.startTime,
-                "endTime": o.endTime,
-                "comment": o.comment || ""
+                "type": a.type || "point",
+                "startTime": a.startTime,
+                "endTime": a.endTime,
+                "comment": a.comment || ""
               });
             }
           }
@@ -22809,13 +23125,27 @@
     }, {
       "key": "_loadTabs",
       "value": function _loadTabs() {
+        var r = this;
         if (!this.storageKey) {
           this.tabs = [];
           return;
         }
-        var r = getValue(this.storageKey, []);
-        this.tabs = (Array.isArray(r) ? r : []).filter((function(r) {
-          return r && LoopManager_typeof(r) === "object" && r.id;
+        var o = getValue(this.storageKey, []);
+        var a = Date.now();
+        this.tabs = (Array.isArray(o) ? o : []).filter((function(r) {
+          return r && LoopManager_typeof(r) === "object";
+        })).map((function(o) {
+          var l = LoopManager_objectSpread({}, o);
+          if (!l.id) {
+            l.id = r._generateId();
+          }
+          if (!l.createdAt) {
+            l.createdAt = a;
+          }
+          if (!l.updatedAt) {
+            l.updatedAt = l.createdAt;
+          }
+          return l;
         }));
         this._sortTabs();
       }
@@ -22887,7 +23217,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var mt = function() {
+  var gt = function() {
     function ProgressManager(r, o) {
       ProgressManager_classCallCheck(this, ProgressManager);
       this.playerCore = r;
@@ -23169,7 +23499,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ft = function() {
+  var yt = function() {
     function BlurPlaybackManager() {
       BlurPlaybackManager_classCallCheck(this, BlurPlaybackManager);
     }
@@ -23284,7 +23614,7 @@
       }
     } ]);
   }();
-  BlurPlaybackManager_defineProperty(ft, "isInitialized", false);
+  BlurPlaybackManager_defineProperty(yt, "isInitialized", false);
   function EventManager_typeof(r) {
     "@babel/helpers - typeof";
     return EventManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -23329,7 +23659,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var vt = function() {
+  var bt = function() {
     function EventManager(r, o, a) {
       EventManager_classCallCheck(this, EventManager);
       this.playerCore = r;
@@ -23525,7 +23855,7 @@
           }
         };
         this.targetVideo.addEventListener("pause", this.handlePauseBound);
-        ft.attachPlayer(this.targetVideo, this.playerCore);
+        yt.attachPlayer(this.targetVideo, this.playerCore);
       }
     }, {
       "key": "handleCloseButtonClick",
@@ -23783,7 +24113,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -23867,14 +24197,14 @@
       }
       throw new TypeError(SettingsManager_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -23887,9 +24217,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -24058,7 +24388,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var gt = function() {
+  var wt = function() {
     function SettingsManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       var l = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -24180,12 +24510,12 @@
         }));
         _.appendChild(k);
         if (this.settings.showCommentsSection) {
-          var P = this._createCommentSourcesSubPanel();
-          _.appendChild(P);
+          var S = this._createCommentSourcesSubPanel();
+          _.appendChild(S);
         }
         C.appendChild(_);
         o.appendChild(C);
-        var S = this._createSectionHeader("其他 :");
+        var P = this._createSectionHeader("其他 :");
         var E = this._createToggleOption(__("helpImprove") || "帮助改进", "telemetryEnabled", this.settings.telemetryEnabled !== false, (function(o) {
           r.updateSetting("telemetryEnabled", o);
           if (o) {
@@ -24202,13 +24532,13 @@
         var L = this._createToggleOption(__("pauseOnBlur") || "失焦后停止播放", "pauseOnBlur", this.settings.pauseOnBlur !== false, (function(o) {
           r.updateSetting("pauseOnBlur", o);
         }), null, __("pauseOnBlurDesc") || "页面离开或失去焦点时自动暂停播放");
-        S.appendChild(E);
-        S.appendChild(L);
-        S.appendChild(D);
-        o.appendChild(S);
-        var M = ht.getWebDavConfig();
+        P.appendChild(E);
+        P.appendChild(L);
+        P.appendChild(D);
+        o.appendChild(P);
+        var M = mt.getWebDavConfig();
         var T = Boolean(M.url);
-        var A = ht.getLastSyncTime();
+        var A = mt.getLastSyncTime();
         var j = T ? A > 0 ? " (已配置)" : " (未同步)" : " (点击展开)";
         var B = document.createElement("div");
         B.className = "tm-settings-section";
@@ -24267,7 +24597,7 @@
         var r = this;
         var o = document.createElement("div");
         o.className = "tm-settings-webdav-card";
-        var a = ht.getWebDavConfig();
+        var a = mt.getWebDavConfig();
         var l = SyncManager_getOrCreateClientId();
         var u = getDeviceName();
         var p = document.createElement("div");
@@ -24282,7 +24612,7 @@
         y.value = a.url || "";
         y.addEventListener("change", (function() {
           a.url = y.value.trim();
-          ht.saveWebDavConfig(a);
+          mt.saveWebDavConfig(a);
         }));
         p.appendChild(v);
         p.appendChild(y);
@@ -24298,17 +24628,17 @@
         _.value = a.user || "";
         _.addEventListener("change", (function() {
           a.user = _.value.trim();
-          ht.saveWebDavConfig(a);
+          mt.saveWebDavConfig(a);
         }));
         b.appendChild(C);
         b.appendChild(_);
         var k = document.createElement("div");
         k.className = "tm-webdav-form-row";
-        var P = document.createElement("label");
-        P.className = "tm-webdav-label";
-        P.textContent = __("webdavPassword") || "密码 / 应用授权码";
-        var S = document.createElement("div");
-        S.className = "tm-webdav-input-group";
+        var S = document.createElement("label");
+        S.className = "tm-webdav-label";
+        S.textContent = __("webdavPassword") || "密码 / 应用授权码";
+        var P = document.createElement("div");
+        P.className = "tm-webdav-input-group";
         var E = document.createElement("input");
         E.className = "tm-webdav-input has-eye";
         E.type = "password";
@@ -24316,7 +24646,7 @@
         E.value = a.pass || "";
         E.addEventListener("change", (function() {
           a.pass = E.value;
-          ht.saveWebDavConfig(a);
+          mt.saveWebDavConfig(a);
         }));
         var D = document.createElement("button");
         D.className = "tm-webdav-eye-btn";
@@ -24332,10 +24662,10 @@
             D.innerHTML = Ge;
           }
         }));
-        S.appendChild(E);
-        S.appendChild(D);
-        k.appendChild(P);
+        P.appendChild(E);
+        P.appendChild(D);
         k.appendChild(S);
+        k.appendChild(P);
         var L = document.createElement("div");
         L.className = "tm-webdav-form-row";
         var M = document.createElement("label");
@@ -24348,7 +24678,7 @@
         T.value = a.path || "/MissPlayer/";
         T.addEventListener("change", (function() {
           a.path = T.value.trim() || "/MissPlayer/";
-          ht.saveWebDavConfig(a);
+          mt.saveWebDavConfig(a);
         }));
         L.appendChild(M);
         L.appendChild(T);
@@ -24371,10 +24701,10 @@
         V.checked = a.autoSync !== false;
         V.addEventListener("change", (function() {
           a.autoSync = V.checked;
-          ht.saveWebDavConfig(a);
+          mt.saveWebDavConfig(a);
           if (a.autoSync && a.url) {
             var o;
-            ht.triggerAutoSync((o = r.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "startup");
+            mt.triggerAutoSync((o = r.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "startup");
           }
         }));
         var G = document.createElement("span");
@@ -24397,22 +24727,22 @@
         z.className = "tm-webdav-btn tm-webdav-btn-secondary";
         z.title = "测试 WebDAV 服务器连通性并创建目录";
         z.innerHTML = "".concat(He, " <span>").concat(__("webdavTestConnection") || "测试连接", "</span>");
-        var W = document.createElement("button");
-        W.className = "tm-webdav-btn tm-webdav-btn-secondary";
-        W.title = "将当前本地配置与打点覆盖到云端";
-        W.innerHTML = "".concat(Oe, " <span>").concat(__("webdavUploadOverwrite") || "上传覆盖", "</span>");
         var U = document.createElement("button");
         U.className = "tm-webdav-btn tm-webdav-btn-secondary";
-        U.title = "从云端拉取配置覆盖当前设备";
-        U.innerHTML = "".concat(Ve, " <span>").concat(__("webdavDownloadOverwrite") || "下载覆盖", "</span>");
+        U.title = "将当前本地配置与打点覆盖到云端";
+        U.innerHTML = "".concat(Oe, " <span>").concat(__("webdavUploadOverwrite") || "上传覆盖", "</span>");
+        var W = document.createElement("button");
+        W.className = "tm-webdav-btn tm-webdav-btn-secondary";
+        W.title = "从云端拉取配置覆盖当前设备";
+        W.innerHTML = "".concat(Ve, " <span>").concat(__("webdavDownloadOverwrite") || "下载覆盖", "</span>");
         N.appendChild(z);
-        N.appendChild(W);
         N.appendChild(U);
+        N.appendChild(W);
         H.appendChild(J);
         H.appendChild(N);
         var q = document.createElement("div");
         q.className = "tm-webdav-status-bar";
-        var K = ht.getLastSyncTime();
+        var K = mt.getLastSyncTime();
         var Y = K > 0 ? new Date(K).toLocaleString() : __("webdavNeverSynced") || "尚未同步";
         var X = document.createElement("span");
         X.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat(Y);
@@ -24426,7 +24756,7 @@
           a.user = _.value.trim();
           a.pass = E.value;
           a.path = T.value.trim() || "/MissPlayer/";
-          ht.saveWebDavConfig(a);
+          mt.saveWebDavConfig(a);
           return a;
         };
         var Z = function updateStatus(r, o) {
@@ -24435,7 +24765,7 @@
           $.textContent = r;
         };
         var ee = function setButtonsDisabled(r) {
-          [ J, z, W, U ].forEach((function(o) {
+          [ J, z, U, W ].forEach((function(o) {
             o.disabled = r;
           }));
         };
@@ -24458,7 +24788,7 @@
                 z.innerHTML = "<span>".concat(__("webdavTesting") || "正在测试...", "</span>");
                 a.prev = 6;
                 a.next = 9;
-                return st.testConnection(r);
+                return it.testConnection(r);
 
                case 9:
                 o = a.sent;
@@ -24505,7 +24835,7 @@
                 J.innerHTML = "<span>".concat(__("webdavSyncing") || "正在同步...", "</span>");
                 u.prev = 6;
                 u.next = 9;
-                return ht.executeSync({
+                return mt.executeSync({
                   "mode": "merge",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -24539,7 +24869,7 @@
             }
           }), _callee2, null, [ [ 6, 16, 20, 24 ] ]);
         }))));
-        W.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee3() {
+        U.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee3() {
           var o, a, l;
           return SettingsManager_regeneratorRuntime().wrap((function _callee3$(u) {
             while (1) {
@@ -24562,10 +24892,10 @@
 
                case 6:
                 ee(true);
-                W.innerHTML = "<span>".concat(__("webdavSyncing") || "正在上传...", "</span>");
+                U.innerHTML = "<span>".concat(__("webdavSyncing") || "正在上传...", "</span>");
                 u.prev = 8;
                 u.next = 11;
-                return ht.executeSync({
+                return mt.executeSync({
                   "mode": "upload",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -24587,7 +24917,7 @@
 
                case 21:
                 u.prev = 21;
-                W.innerHTML = "".concat(Oe, " <span>").concat(__("webdavUploadOverwrite") || "上传覆盖", "</span>");
+                U.innerHTML = "".concat(Oe, " <span>").concat(__("webdavUploadOverwrite") || "上传覆盖", "</span>");
                 ee(false);
                 return u.finish(21);
 
@@ -24598,7 +24928,7 @@
             }
           }), _callee3, null, [ [ 8, 17, 21, 25 ] ]);
         }))));
-        U.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee4() {
+        W.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee4() {
           var o, a, l;
           return SettingsManager_regeneratorRuntime().wrap((function _callee4$(u) {
             while (1) {
@@ -24621,10 +24951,10 @@
 
                case 6:
                 ee(true);
-                U.innerHTML = "<span>".concat(__("webdavSyncing") || "正在下载...", "</span>");
+                W.innerHTML = "<span>".concat(__("webdavSyncing") || "正在下载...", "</span>");
                 u.prev = 8;
                 u.next = 11;
-                return ht.executeSync({
+                return mt.executeSync({
                   "mode": "download",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -24647,7 +24977,7 @@
 
                case 22:
                 u.prev = 22;
-                U.innerHTML = "".concat(Ve, " <span>").concat(__("webdavDownloadOverwrite") || "下载覆盖", "</span>");
+                W.innerHTML = "".concat(Ve, " <span>").concat(__("webdavDownloadOverwrite") || "下载覆盖", "</span>");
                 ee(false);
                 return u.finish(22);
 
@@ -24697,20 +25027,20 @@
         var k = document.createElement("div");
         k.className = "tm-toggle-switch";
         k.style.pointerEvents = "none";
-        var P = Boolean(a);
-        var S = document.createElement("input");
-        S.type = "checkbox";
-        S.checked = P;
-        S.className = "tm-toggle-input";
+        var S = Boolean(a);
+        var P = document.createElement("input");
+        P.type = "checkbox";
+        P.checked = S;
+        P.className = "tm-toggle-input";
         var E = document.createElement("span");
-        E.className = P ? "tm-toggle-slider checked" : "tm-toggle-slider";
-        k.appendChild(S);
+        E.className = S ? "tm-toggle-slider checked" : "tm-toggle-slider";
+        k.appendChild(P);
         k.appendChild(E);
         var D = function toggleSwitch(r) {
           r.preventDefault();
           r.stopPropagation();
-          var o = !S.checked;
-          S.checked = o;
+          var o = !P.checked;
+          P.checked = o;
           E.className = o ? "tm-toggle-slider checked" : "tm-toggle-slider";
           if (typeof l === "function") {
             l(o);
@@ -24854,6 +25184,7 @@
         if (!a.includes(r)) {
           a.push(r);
         }
+        mt.clearTombstone("customSeekSteps", r);
         this.updateSetting("customUserSeekSteps", o);
         this.updateSetting("enabledSeekSteps", a);
         this.rebuildControlPanelSeekRow();
@@ -24871,6 +25202,7 @@
         a = a.filter((function(o) {
           return o !== r;
         }));
+        mt.recordTombstone("customSeekSteps", r);
         this.updateSetting("customUserSeekSteps", o);
         this.updateSetting("enabledSeekSteps", a);
         this.rebuildControlPanelSeekRow();
@@ -25121,7 +25453,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var yt = function() {
+  var Ct = function() {
     function VideoSwipeManager(r, o, a) {
       var l = this;
       var u = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -25675,13 +26007,13 @@
         var b = 15;
         var C = false;
         for (var _ = 0, k = y; _ < k.length; _++) {
-          var P = k[_];
-          if (Math.abs(p - P) < b) {
-            p = P;
+          var S = k[_];
+          if (Math.abs(p - S) < b) {
+            p = S;
             C = true;
-            if (window.navigator.vibrate && (!this.lastSnapPosition || this.lastSnapPosition !== P)) {
+            if (window.navigator.vibrate && (!this.lastSnapPosition || this.lastSnapPosition !== S)) {
               window.navigator.vibrate(15);
-              this.lastSnapPosition = P;
+              this.lastSnapPosition = S;
             }
             break;
           }
@@ -25689,8 +26021,8 @@
         if (!C) {
           this.lastSnapPosition = null;
         }
-        var S = p / a * 100;
-        this.handle.style.left = "".concat(S, "%");
+        var P = p / a * 100;
+        this.handle.style.left = "".concat(P, "%");
         var E = v > 0 ? p / v : 0;
         var D = (1 - E) * 2 * this.maxOffset - this.maxOffset;
         this.video.style.transform = "translateX(".concat(D, "px)");
@@ -25749,19 +26081,19 @@
         var _ = v + C;
         _ = Math.max(0, Math.min(_, l));
         var k = [ 0, l / 2, l ];
-        var P = 30;
-        var S = _;
+        var S = 30;
+        var P = _;
         var E = Number.MAX_VALUE;
         for (var D = 0, L = k; D < L.length; D++) {
           var M = L[D];
           var T = Math.abs(_ - M);
-          if (T < P && T < E) {
-            S = M;
+          if (T < S && T < E) {
+            P = M;
             E = T;
           }
         }
         if (E < Number.MAX_VALUE) {
-          _ = S;
+          _ = P;
         }
         var A = _ / o * 100;
         var j = l > 0 ? _ / l : 0;
@@ -25898,7 +26230,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var bt = function() {
+  var xt = function() {
     function CustomVideoPlayer() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       CustomVideoPlayer_classCallCheck(this, CustomVideoPlayer);
@@ -25987,10 +26319,10 @@
         var u = new ot(this.playerCore, l, a);
         u.init();
         this.managers.controlManager = u;
-        var p = new gt(this.playerCore, l, a, u);
+        var p = new wt(this.playerCore, l, a, u);
         p.init();
         this.managers.settingsManager = p;
-        var v = new mt(this.playerCore, l);
+        var v = new gt(this.playerCore, l);
         v.init({
           "progressBarElement": u.progressBarElement,
           "progressIndicator": u.progressIndicator,
@@ -25999,7 +26331,7 @@
           "timeIndicator": u.timeIndicator
         });
         this.managers.progressManager = v;
-        var y = new pt(this.playerCore, l, u);
+        var y = new vt(this.playerCore, l, u);
         y.init({
           "loopStartMarker": u.loopStartMarker,
           "loopEndMarker": u.loopEndMarker,
@@ -26014,7 +26346,7 @@
         b.init();
         this.managers.dragManager = b;
         if (this.playerCore.targetVideo && l.videoWrapper && l.handle) {
-          this.swipeManager = new yt(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
+          this.swipeManager = new Ct(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
             return r.close();
           }), a);
           this.swipeManager.playerCore = this.playerCore;
@@ -26026,7 +26358,7 @@
           "dragManager": b,
           "swipeManager": this.swipeManager
         });
-        var C = new vt(this.playerCore, l, this.managers);
+        var C = new bt(this.playerCore, l, this.managers);
         C.init();
         this.managers.eventManager = C;
         a.assembleDOM();
@@ -26164,7 +26496,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var wt = function() {
+  var _t = function() {
     function FloatingButton() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       FloatingButton_classCallCheck(this, FloatingButton);
@@ -26325,7 +26657,7 @@
           } catch (r) {}
         }
         this.button.style.display = "none";
-        this.videoPlayer = new bt({
+        this.videoPlayer = new xt({
           "playerState": this.playerState,
           "callingButton": this.button
         });
@@ -26394,7 +26726,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ct = function() {
+  var kt = function() {
     function PlayerState() {
       PlayerState_classCallCheck(this, PlayerState);
       this.settings = {
@@ -26476,6 +26808,9 @@
         if (r in this.settings) {
           this.settings[r] = o;
           this.saveSettings();
+          try {
+            mt.recordSettingUpdate(r);
+          } catch (r) {}
         }
       }
     } ]);
@@ -26650,7 +26985,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -26734,14 +27069,14 @@
       }
       throw new TypeError(LoginManager_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -26754,9 +27089,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -26925,9 +27260,9 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var xt = 30 * 60 * 1e3;
-  var _t = 3;
-  var kt = function() {
+  var St = 30 * 60 * 1e3;
+  var Pt = 3;
+  var Et = function() {
     function LoginManager() {
       LoginManager_classCallCheck(this, LoginManager);
       this.userEmail = "";
@@ -27134,12 +27469,12 @@
       "value": function isCircuitBroken(r) {
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0);
         var a = getLocalStorage("mp_circuit_last_fail_".concat(r), 0);
-        if (o >= _t) {
+        if (o >= Pt) {
           var l = Date.now() - a;
-          if (l < xt) {
+          if (l < St) {
             return true;
           }
-          setLocalStorage("mp_circuit_fail_".concat(r), _t - 1);
+          setLocalStorage("mp_circuit_fail_".concat(r), Pt - 1);
         }
         return false;
       }
@@ -27149,7 +27484,7 @@
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0) + 1;
         setLocalStorage("mp_circuit_fail_".concat(r), o);
         setLocalStorage("mp_circuit_last_fail_".concat(r), Date.now());
-        if (o >= _t) {}
+        if (o >= Pt) {}
       }
     }, {
       "key": "resetCircuitBreaker",
@@ -27391,7 +27726,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -27475,14 +27810,14 @@
       }
       throw new TypeError(autologin_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -27495,9 +27830,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -27641,7 +27976,7 @@
           switch (o.prev = o.next) {
            case 0:
             o.prev = 0;
-            r = new kt;
+            r = new Et;
             o.next = 4;
             return r.init();
 
@@ -27662,8 +27997,8 @@
     })));
     return _initAutoLogin.apply(this, arguments);
   }
-  var Pt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
-  var St = [ {
+  var Dt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
+  var Lt = [ {
     "selector": 'div[class="my-2 text-sm text-nord4 truncate"]',
     "styles": "white-space: normal !important;"
   }, {
@@ -27673,11 +28008,11 @@
     "selector": 'div[class*="z-max"]',
     "styles": "z-index: 9000 !important;"
   } ];
-  var Et = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
-  const Dt = {
-    "adSelectors": Pt,
-    "customStyles": St,
-    "blockedUrlPatterns": Et,
+  var Mt = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
+  const Tt = {
+    "adSelectors": Dt,
+    "customStyles": Lt,
+    "blockedUrlPatterns": Mt,
     "isVideoSite": true,
     "domains": getSiteDomains("MISSAV")
   };
@@ -27788,7 +28123,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Lt = function() {
+  var At = function() {
     function AdBlockConfig() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       adblock_classCallCheck(this, AdBlockConfig);
@@ -27828,7 +28163,7 @@
       }
     } ]);
   }();
-  var Mt = function() {
+  var Ft = function() {
     function StyleManager(r) {
       adblock_classCallCheck(this, StyleManager);
       this.config = r;
@@ -27856,7 +28191,7 @@
       }
     } ]);
   }();
-  var Tt = function() {
+  var jt = function() {
     function DOMCleaner(r) {
       adblock_classCallCheck(this, DOMCleaner);
       this.config = r;
@@ -27945,7 +28280,7 @@
       }
     } ]);
   }();
-  var At = function() {
+  var Bt = function() {
     function RequestBlocker(r) {
       adblock_classCallCheck(this, RequestBlocker);
       this.config = r;
@@ -28030,15 +28365,15 @@
       }
     } ]);
   }();
-  var Ft = function() {
+  var It = function() {
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai)/.test(window.location.href);
-      var o = r ? Dt : {};
-      this.config = new Lt(o);
-      this.styleManager = new Mt(this.config);
-      this.domCleaner = new Tt(this.config);
-      this.requestBlocker = new At(this.config);
+      var o = r ? Tt : {};
+      this.config = new At(o);
+      this.styleManager = new Ft(this.config);
+      this.domCleaner = new jt(this.config);
+      this.requestBlocker = new Bt(this.config);
     }
     return adblock_createClass(AdBlocker, [ {
       "key": "preventDetection",
@@ -28086,7 +28421,7 @@
       }
     } ]);
   }();
-  const jt = Ft;
+  const Ot = It;
   function DetailExpander_typeof(r) {
     "@babel/helpers - typeof";
     return DetailExpander_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -28131,7 +28466,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Bt = function() {
+  var Vt = function() {
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
@@ -28244,7 +28579,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var It = function() {
+  var Gt = function() {
     function QualityManager() {
       QualityManager_classCallCheck(this, QualityManager);
       this.maxAttempts = 20;
@@ -28395,7 +28730,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ot = function() {
+  var Rt = function() {
     function UrlRedirector() {
       UrlRedirector_classCallCheck(this, UrlRedirector);
       var r = y.MISSAV.primary;
@@ -28503,13 +28838,13 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Vt = new Ot;
-  var Gt = function() {
+  var Ht = new Rt;
+  var Jt = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
-      this.detailExpander = new Bt;
-      this.qualityManager = new It;
-      this.urlRedirector = Vt;
+      this.detailExpander = new Vt;
+      this.qualityManager = new Gt;
+      this.urlRedirector = Ht;
     }
     return userExperienceEnhancer_createClass(UserExperienceEnhancer, [ {
       "key": "init",
@@ -28541,7 +28876,7 @@
   }();
   function initUserExperienceEnhancer() {
     var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
-    var o = new Gt;
+    var o = new Jt;
     o.init(r);
     return o;
   }
@@ -28652,7 +28987,7 @@
     }));
     var _ = Object.getPrototypeOf, k = _ && _(_(x([])));
     k && k !== a && l.call(k, p) && (C = k);
-    var P = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
+    var S = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(C);
     function g(r) {
       [ "next", "throw", "return" ].forEach((function(o) {
         c(r, o, (function(r) {
@@ -28736,14 +29071,14 @@
       }
       throw new TypeError(src_typeof(o) + " is not iterable");
     }
-    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(P, "constructor", GeneratorFunctionPrototype), 
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, c(S, "constructor", GeneratorFunctionPrototype), 
     c(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = c(GeneratorFunctionPrototype, y, "GeneratorFunction"), 
     o.isGeneratorFunction = function(r) {
       var o = "function" == typeof r && r.constructor;
       return !!o && (o === GeneratorFunction || "GeneratorFunction" === (o.displayName || o.name));
     }, o.mark = function(r) {
       return Object.setPrototypeOf ? Object.setPrototypeOf(r, GeneratorFunctionPrototype) : (r.__proto__ = GeneratorFunctionPrototype, 
-      c(r, y, "GeneratorFunction")), r.prototype = Object.create(P), r;
+      c(r, y, "GeneratorFunction")), r.prototype = Object.create(S), r;
     }, o.awrap = function(r) {
       return {
         "__await": r
@@ -28756,9 +29091,9 @@
       return o.isGeneratorFunction(a) ? v : v.next().then((function(r) {
         return r.done ? r.value : v.next();
       }));
-    }, g(P), c(P, y, "Generator"), c(P, p, (function() {
+    }, g(S), c(S, y, "Generator"), c(S, p, (function() {
       return this;
-    })), c(P, "toString", (function() {
+    })), c(S, "toString", (function() {
       return "[object Generator]";
     })), o.keys = function(r) {
       var o = Object(r), a = [];
@@ -28947,7 +29282,7 @@
       }));
     };
   }
-  Vt.checkAndRedirect();
+  Ht.checkAndRedirect();
   function setupViewport() {
     var r = document.querySelector('meta[name="viewport"]');
     if (!r) {
@@ -29009,11 +29344,11 @@
              case 4:
               injectStyles();
               r = initUserExperienceEnhancer(true);
-              o = new Ct;
+              o = new kt;
               o.loadSettings();
-              ht.triggerAutoSync(o, "startup");
-              ft.initGlobal(o);
-              a = new wt({
+              mt.triggerAutoSync(o, "startup");
+              yt.initGlobal(o);
+              a = new _t({
                 "playerState": o
               });
               a.init();
@@ -29025,7 +29360,7 @@
               if (l) {
                 window.loginManager = l;
               }
-              u = new jt;
+              u = new Ot;
               u.init();
               p.next = 22;
               break;
@@ -29047,8 +29382,8 @@
       var o = r;
       var a = Date.now();
       var l = false;
-      S.log("检测到运行在 JAVLibrary 域名上，启动验证协同助手。".concat(o ? " (iframe broker 模式)" : ""));
-      We.startBroker("JAVLIBRARY", {
+      P.log("检测到运行在 JAVLibrary 域名上，启动验证协同助手。".concat(o ? " (iframe broker 模式)" : ""));
+      Ue.startBroker("JAVLIBRARY", {
         "FETCH_JAVLIB_DATA": function() {
           var r = src_asyncToGenerator(src_regeneratorRuntime().mark((function _callee(r) {
             var o, a, l, u, p, v, y, b, C;
@@ -29057,7 +29392,7 @@
                 switch (_.prev = _.next) {
                  case 0:
                   o = r.avcode, a = r.page;
-                  S.log("[ShadowBroker] 收到 JAVLibrary 同源抓取请求: ".concat(o, ", Page: ").concat(a));
+                  P.log("[ShadowBroker] 收到 JAVLibrary 同源抓取请求: ".concat(o, ", Page: ").concat(a));
                   _.next = 4;
                   return fetchJavLibraryVideoId(o);
 
@@ -29094,7 +29429,7 @@
       function checkBypass() {
         var r = document.querySelector("#logo") || document.querySelector("#right") || document.querySelector("#top_bar") || document.title.includes("JAVLibrary");
         var u = document.querySelector("#cf-challenge") || document.querySelector("#turnstile-wrapper") || document.body.innerHTML.includes("Checking your browser") || document.body.innerHTML.includes("cf-challenge");
-        S.log("检测验证状态中... hasLogo = ".concat(!!r, ", isChallenged = ").concat(!!u).concat(o ? " (iframe)" : ""));
+        P.log("检测验证状态中... hasLogo = ".concat(!!r, ", isChallenged = ").concat(!!u).concat(o ? " (iframe)" : ""));
         if (r && !u) {
           if (!l) {
             l = true;
@@ -29104,7 +29439,7 @@
               "is_iframe": o
             });
           }
-          S.log("JAVLibrary 页面加载成功（未被拦截/验证已通过）。");
+          P.log("JAVLibrary 页面加载成功（未被拦截/验证已通过）。");
           if (typeof GM_setValue === "function") {
             var p = window.location.origin;
             var v = {};
@@ -29115,18 +29450,18 @@
             GM_setValue("javlib_cookies", v);
             GM_setValue("javlib_user_agent", navigator.userAgent);
             GM_setValue("javlib_verified_time", Date.now());
-            S.log("Cookie 已保存至跨域存储: ".concat(p, ", UA: ").concat(navigator.userAgent));
+            P.log("Cookie 已保存至跨域存储: ".concat(p, ", UA: ").concat(navigator.userAgent));
           }
           if (o) {
-            S.log("iframe broker 模式：页面验证通过，保持 iframe 存活以持续提供同源代理服务。");
+            P.log("iframe broker 模式：页面验证通过，保持 iframe 存活以持续提供同源代理服务。");
           } else {
             var y = window.location.href.includes("cf_verify") || typeof GM_getValue === "function" && GM_getValue("javlib_verifying") === true;
             if (y) {
-              S.log("正在释放验证锁...");
+              P.log("正在释放验证锁...");
               if (typeof GM_setValue === "function") {
                 GM_setValue("javlib_verifying", false);
               }
-              S.log("保持协同验证标签页开启，以作为影子 Broker 持续在后台提供同源代理服务。");
+              P.log("保持协同验证标签页开启，以作为影子 Broker 持续在后台提供同源代理服务。");
             }
           }
           return true;
