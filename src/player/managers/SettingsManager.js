@@ -510,13 +510,15 @@ export class SettingsManager {
         const statusBar = document.createElement('div');
         statusBar.className = 'tm-webdav-status-bar';
 
-        const lastSyncTime = SyncManager.getLastSyncTime();
-        const timeText = lastSyncTime > 0
-            ? new Date(lastSyncTime).toLocaleString()
-            : (__('webdavNeverSynced') || '尚未同步');
-
         const timeSpan = document.createElement('span');
-        timeSpan.textContent = `${__('webdavLastSync') || '上次同步'}: ${timeText}`;
+        const renderTimeText = () => {
+            const lastSyncTime = SyncManager.getLastSyncTime();
+            const timeText = lastSyncTime > 0
+                ? new Date(lastSyncTime).toLocaleString()
+                : (__('webdavNeverSynced') || '尚未同步');
+            timeSpan.textContent = `${__('webdavLastSync') || '上次同步'}: ${timeText}`;
+        };
+        renderTimeText();
 
         const statusBadge = document.createElement('span');
         statusBadge.className = 'tm-webdav-status-badge';
@@ -535,11 +537,25 @@ export class SettingsManager {
             return config;
         };
 
-        const updateStatus = (text, isSuccess) => {
+        const updateStatus = (text, type = 'success') => {
+            this._lastWebDavStatus = { text, type, time: Date.now() };
             statusBadge.style.display = 'inline-flex';
-            statusBadge.className = `tm-webdav-status-badge ${isSuccess ? 'success' : 'error'}`;
-            statusBadge.textContent = text;
+            statusBadge.className = `tm-webdav-status-badge ${type}`;
+            if (type === 'running') {
+                statusBadge.innerHTML = `<span class="tm-spinner-sm"></span> <span>${text}</span>`;
+            } else if (type === 'success') {
+                statusBadge.innerHTML = `<span>✓</span> <span>${text}</span>`;
+            } else if (type === 'error') {
+                statusBadge.innerHTML = `<span>✕</span> <span>${text}</span>`;
+            } else {
+                statusBadge.textContent = text;
+            }
         };
+
+        // 若近期有状态更新，重新创建面板时自动恢复展示
+        if (this._lastWebDavStatus && Date.now() - this._lastWebDavStatus.time < 5 * 60 * 1000) {
+            updateStatus(this._lastWebDavStatus.text, this._lastWebDavStatus.type);
+        }
 
         const setButtonsDisabled = (disabled) => {
             [syncMergeBtn, testBtn, uploadBtn, downloadBtn].forEach(b => {
@@ -554,17 +570,19 @@ export class SettingsManager {
             const currentCfg = persistCurrentInputs();
             if (!currentCfg.url) {
                 Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                updateStatus('请输入服务器地址', 'error');
                 return;
             }
             setButtonsDisabled(true);
             testBtn.innerHTML = `<span>${__('webdavTesting') || '正在测试...'}</span>`;
+            updateStatus('正在测试连接...', 'running');
             try {
                 const res = await WebDavClient.testConnection(currentCfg);
                 Toast.show(res.message || '连接成功！', 3000);
-                updateStatus('连接正常', true);
+                updateStatus('连接正常', 'success');
             } catch (err) {
                 Toast.show((__('webdavTestFailed') || '连接失败: ') + err.message, 4000);
-                updateStatus('连接失败', false);
+                updateStatus(err.message ? `连接失败: ${err.message}` : '连接失败', 'error');
             } finally {
                 testBtn.innerHTML = `${ICON_CHECK} <span>${__('webdavTestConnection') || '测试连接'}</span>`;
                 setButtonsDisabled(false);
@@ -576,10 +594,12 @@ export class SettingsManager {
             const currentCfg = persistCurrentInputs();
             if (!currentCfg.url) {
                 Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                updateStatus('请输入服务器地址', 'error');
                 return;
             }
             setButtonsDisabled(true);
             syncMergeBtn.innerHTML = `<span>${__('webdavSyncing') || '正在同步...'}</span>`;
+            updateStatus('正在智能合并同步...', 'running');
             try {
                 const res = await SyncManager.executeSync({
                     mode: 'merge',
@@ -587,13 +607,11 @@ export class SettingsManager {
                     playerState: this.playerCore?.options?.playerState
                 });
                 Toast.show(res.message || '云端多端合并同步成功！', 3000);
-                updateStatus('同步成功', true);
-                timeSpan.textContent = `${__('webdavLastSync') || '上次同步'}: ${new Date().toLocaleString()}`;
-                this.createSettingsPanel(); // 刷新面板显示最新合并设置
+                this._lastWebDavStatus = { text: '同步成功', type: 'success', time: Date.now() };
+                this.createSettingsPanel(); // 刷新面板显示最新合并设置与状态徽标
             } catch (err) {
                 Toast.show((__('webdavSyncFailed') || '同步失败: ') + err.message, 4500);
-                updateStatus('同步失败', false);
-            } finally {
+                updateStatus(err.message ? `同步失败: ${err.message}` : '同步失败', 'error');
                 syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__('webdavSyncMerge') || '智能合并同步'}</span>`;
                 setButtonsDisabled(false);
             }
@@ -604,6 +622,7 @@ export class SettingsManager {
             const currentCfg = persistCurrentInputs();
             if (!currentCfg.url) {
                 Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                updateStatus('请输入服务器地址', 'error');
                 return;
             }
             if (!window.confirm(__('webdavConfirmUpload') || '确定要将当前本地配置强制覆盖到云端吗？')) {
@@ -611,6 +630,7 @@ export class SettingsManager {
             }
             setButtonsDisabled(true);
             uploadBtn.innerHTML = `<span>${__('webdavSyncing') || '正在上传...'}</span>`;
+            updateStatus('正在上传覆盖云端...', 'running');
             try {
                 const res = await SyncManager.executeSync({
                     mode: 'upload',
@@ -618,11 +638,11 @@ export class SettingsManager {
                     playerState: this.playerCore?.options?.playerState
                 });
                 Toast.show(res.message || '已成功覆盖云端备份！', 3000);
-                updateStatus('已上传覆盖', true);
-                timeSpan.textContent = `${__('webdavLastSync') || '上次同步'}: ${new Date().toLocaleString()}`;
+                updateStatus('已上传覆盖', 'success');
+                renderTimeText();
             } catch (err) {
                 Toast.show((__('webdavSyncFailed') || '上传失败: ') + err.message, 4500);
-                updateStatus('上传失败', false);
+                updateStatus(err.message ? `上传失败: ${err.message}` : '上传失败', 'error');
             } finally {
                 uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '上传覆盖'}</span>`;
                 setButtonsDisabled(false);
@@ -634,6 +654,7 @@ export class SettingsManager {
             const currentCfg = persistCurrentInputs();
             if (!currentCfg.url) {
                 Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                updateStatus('请输入服务器地址', 'error');
                 return;
             }
             if (!window.confirm(__('webdavConfirmDownload') || '确定要从云端拉取配置并覆盖本地吗？')) {
@@ -641,6 +662,7 @@ export class SettingsManager {
             }
             setButtonsDisabled(true);
             downloadBtn.innerHTML = `<span>${__('webdavSyncing') || '正在下载...'}</span>`;
+            updateStatus('正在从云端拉取覆盖...', 'running');
             try {
                 const res = await SyncManager.executeSync({
                     mode: 'download',
@@ -648,13 +670,11 @@ export class SettingsManager {
                     playerState: this.playerCore?.options?.playerState
                 });
                 Toast.show(res.message || '已成功从云端覆盖本地！', 3000);
-                updateStatus('已下载覆盖', true);
-                timeSpan.textContent = `${__('webdavLastSync') || '上次同步'}: ${new Date().toLocaleString()}`;
-                this.createSettingsPanel(); // 刷新面板显示最新覆盖设置
+                this._lastWebDavStatus = { text: '已下载覆盖', type: 'success', time: Date.now() };
+                this.createSettingsPanel(); // 刷新面板显示最新覆盖设置与状态徽标
             } catch (err) {
                 Toast.show((__('webdavSyncFailed') || '下载失败: ') + err.message, 4500);
-                updateStatus('下载失败', false);
-            } finally {
+                updateStatus(err.message ? `下载失败: ${err.message}` : '下载失败', 'error');
                 downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '下载覆盖'}</span>`;
                 setButtonsDisabled(false);
             }

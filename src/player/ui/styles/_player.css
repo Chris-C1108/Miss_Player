@@ -808,6 +808,25 @@
     color: #f87171;
 }
 
+.tm-webdav-status-badge.running {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+.tm-spinner-sm {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border: 1.5px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: tm-spin 0.75s linear infinite;
+}
+
+@keyframes tm-spin {
+    to { transform: rotate(360deg); }
+}
+
 /* 切换开关输入框样式 */
 .tm-toggle-input {
     position: absolute;
