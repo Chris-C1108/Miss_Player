@@ -260,26 +260,43 @@
     transform: scale(0.9);
 }
 
-/* 设置面板 */
+/* 设置面板 (自适应视口高度并支持原生平滑滚动) */
 .tm-settings-panel {
     position: absolute;
     top: calc(env(safe-area-inset-top, 8px) + 60px);
     right: 16px;
-    background-color: hsla(var(--shadcn-card) / 0.9);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background-color: hsla(var(--shadcn-card) / 0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-radius: 14px;
-    border: 1px solid hsla(var(--shadcn-border) / 0.15);
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px hsla(0, 0%, 100%, 0.05);
-    padding: 16px 18px;
+    padding: 14px 16px;
     z-index: 9996;
-    min-width: 270px;
-    max-width: 320px;
+    min-width: 275px;
+    max-width: 325px;
+    max-height: calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 80px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y; /* 允许纵向丝滑滚动 */
+    scrollbar-width: thin;
+    scrollbar-color: hsla(var(--shadcn-muted-foreground) / 0.3) transparent;
     transform: translateY(-10px);
     opacity: 0;
     pointer-events: none;
     transition: transform var(--anim-smooth), opacity var(--anim-smooth);
-    touch-action: none; /* 面板隔离触摸 */
+    box-sizing: border-box;
+}
+
+.tm-settings-panel::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tm-settings-panel::-webkit-scrollbar-thumb {
+    background: hsla(var(--shadcn-muted-foreground) / 0.3);
+    border-radius: 4px;
 }
 
 .tm-settings-panel.active {
@@ -292,7 +309,7 @@
 .tm-settings-menu-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     color: hsl(var(--shadcn-foreground));
     user-select: none;
     font-size: 13.5px;
@@ -302,24 +319,49 @@
 .tm-settings-section {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
 }
 
 /* 分区标题：次级大写轻暗标题 */
 .tm-settings-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 11px;
     font-weight: 700;
     color: hsla(var(--shadcn-muted-foreground) / 0.7);
     letter-spacing: 0.8px;
     text-transform: uppercase;
     padding-left: 2px;
+    user-select: none;
+}
+
+.tm-settings-section-header.collapsible {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.15s ease;
+}
+
+.tm-settings-section-header.collapsible:hover {
+    background: hsla(var(--shadcn-muted) / 0.2);
+    color: hsl(var(--shadcn-foreground));
+}
+
+.tm-settings-header-arrow {
+    font-size: 10px;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tm-settings-header-arrow.expanded {
+    transform: rotate(180deg);
 }
 
 /* 分割线 */
 .tm-settings-section-divider {
     height: 1px;
     background: linear-gradient(90deg, hsla(var(--shadcn-border) / 0.3) 0%, hsla(var(--shadcn-border) / 0.05) 100%);
-    margin: 4px 0 8px 0;
+    margin: 3px 0 6px 0;
     border-radius: 1px;
 }
 

@@ -45,6 +45,16 @@ export function getDeviceName() {
 }
 
 /**
+ * 获取当前终端形态类别 ('mobile' | 'tablet' | 'desktop')
+ */
+export function getDeviceType() {
+    const ua = navigator.userAgent;
+    if (/iPad/i.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua))) return 'tablet';
+    if (/Mobile|iPhone|Android/i.test(ua)) return 'mobile';
+    return 'desktop';
+}
+
+/**
  * 云同步与多设备配置管理引擎 (SyncManager)
  */
 export class SyncManager {
@@ -142,6 +152,14 @@ export class SyncManager {
             console.warn('[SyncManager] 收集打点数据遇到异常:', e);
         }
 
+        const deviceType = getDeviceType();
+        const deviceLayouts = {
+            [deviceType]: {
+                sidebarPosition: getValue('sidebarPosition', 'right'),
+                sidebarHidden: getValue('sidebarHidden', false)
+            }
+        };
+
         return {
             schemaVersion: CURRENT_SCHEMA_VERSION,
             scriptVersion: '5.6.1',
@@ -150,10 +168,12 @@ export class SyncManager {
             devices: {
                 [clientId]: {
                     deviceName: getDeviceName(),
+                    deviceType,
                     lastSyncTime: now,
                     scriptVersion: '5.6.1'
                 }
             },
+            deviceLayouts,
             settings,
             markers
         };
@@ -292,12 +312,20 @@ export class SyncManager {
             mergedMarkers[key] = Array.from(markerMap.values());
         }
 
+        // 4. 合并终端特异性布局 (Desktop / Mobile / Tablet 各自保留特有布局偏好)
+        const mergedDeviceLayouts = Object.assign(
+            {},
+            remoteMigrated.deviceLayouts || {},
+            localData.deviceLayouts || {}
+        );
+
         return {
             schemaVersion: CURRENT_SCHEMA_VERSION,
             scriptVersion: '5.6.1',
             lastModified: now,
             lastModifiedBy: clientId,
             devices: mergedDevices,
+            deviceLayouts: mergedDeviceLayouts,
             settings: mergedSettings,
             markers: mergedMarkers
         };
@@ -309,14 +337,22 @@ export class SyncManager {
     static applyDataToLocal(data, playerState = null) {
         if (!data || !data.settings) return;
 
-        const { settings, markers } = data;
+        const { settings, markers, deviceLayouts } = data;
 
-        // 1. 持久化设置项
+        // 1. 持久化共通核心设置项
         for (const [k, v] of Object.entries(settings)) {
             setValue(k, v);
         }
 
-        // 2. 持久化打点数据 (tabs_*)
+        // 2. 恢复当前终端专属形态的特异布局配置 (桌面侧栏位置与折叠状态不与移动端冲突)
+        const currentDeviceType = getDeviceType();
+        if (deviceLayouts && deviceLayouts[currentDeviceType]) {
+            const layout = deviceLayouts[currentDeviceType];
+            if (layout.sidebarPosition !== undefined) setValue('sidebarPosition', layout.sidebarPosition);
+            if (layout.sidebarHidden !== undefined) setValue('sidebarHidden', layout.sidebarHidden);
+        }
+
+        // 3. 持久化打点数据 (tabs_*)
         if (markers && typeof markers === 'object') {
             for (const [k, v] of Object.entries(markers)) {
                 if (k.startsWith('tabs_') && Array.isArray(v)) {
@@ -325,7 +361,7 @@ export class SyncManager {
             }
         }
 
-        // 3. 刷新内存中 PlayerState
+        // 4. 刷新内存中 PlayerState
         if (playerState) {
             playerState.loadSettings();
         }

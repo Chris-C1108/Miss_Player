@@ -247,8 +247,32 @@ export class SettingsManager {
         // =================================================================
         // SECTION 4: 云端同步 (WebDAV) :
         // =================================================================
-        const section4 = this._createSectionHeader(__('webdavTitle') || '云端同步 (WebDAV) :');
+        const webdavConfig = SyncManager.getWebDavConfig();
+        const hasWebdavConfig = Boolean(webdavConfig.url);
+        const lastSync = SyncManager.getLastSyncTime();
+        const statusSummary = hasWebdavConfig
+            ? (lastSync > 0 ? ` (已配置)` : ` (未同步)`)
+            : ` (点击展开)`;
+
+        const section4 = document.createElement('div');
+        section4.className = 'tm-settings-section';
+
+        const header4 = this._createSectionHeader(
+            (__('webdavTitle') || '云端同步 (WebDAV) :') + statusSummary,
+            true,
+            this.isWebDavExpanded || false,
+            (expanded) => {
+                this.isWebDavExpanded = expanded;
+                if (webdavCard) {
+                    webdavCard.style.display = expanded ? 'flex' : 'none';
+                }
+            }
+        );
+
         const webdavCard = this._createWebDavSyncCard();
+        webdavCard.style.display = this.isWebDavExpanded ? 'flex' : 'none';
+
+        section4.appendChild(header4);
         section4.appendChild(webdavCard);
         container.appendChild(section4);
 
@@ -256,22 +280,44 @@ export class SettingsManager {
     }
 
     /**
-     * 创建 Section 标题与分割线
+     * 创建 Section 标题与分割线 (支持可折叠选项)
      */
-    _createSectionHeader(titleText) {
-        const section = document.createElement('div');
-        section.className = 'tm-settings-section';
+    _createSectionHeader(titleText, collapsible = false, isExpanded = true, onToggle = null) {
+        const sectionHeaderWrap = document.createElement('div');
+        sectionHeaderWrap.className = 'tm-settings-section-header-wrap';
 
         const header = document.createElement('div');
-        header.className = 'tm-settings-section-header';
-        header.textContent = titleText;
+        header.className = `tm-settings-section-header ${collapsible ? 'collapsible' : ''}`;
+        
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = titleText;
+        header.appendChild(titleSpan);
+
+        if (collapsible) {
+            const arrowSpan = document.createElement('span');
+            arrowSpan.className = `tm-settings-header-arrow ${isExpanded ? 'expanded' : ''}`;
+            arrowSpan.textContent = '▼';
+            header.appendChild(arrowSpan);
+
+            header.addEventListener('click', () => {
+                const willExpand = !arrowSpan.classList.contains('expanded');
+                if (willExpand) {
+                    arrowSpan.classList.add('expanded');
+                } else {
+                    arrowSpan.classList.remove('expanded');
+                }
+                if (typeof onToggle === 'function') {
+                    onToggle(willExpand);
+                }
+            });
+        }
 
         const divider = document.createElement('div');
         divider.className = 'tm-settings-section-divider';
 
-        section.appendChild(header);
-        section.appendChild(divider);
-        return section;
+        sectionHeaderWrap.appendChild(header);
+        sectionHeaderWrap.appendChild(divider);
+        return sectionHeaderWrap;
     }
 
     /**
