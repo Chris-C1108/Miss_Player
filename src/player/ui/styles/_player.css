@@ -272,7 +272,7 @@
     border: 1px solid hsla(var(--shadcn-border) / 0.2);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px hsla(0, 0%, 100%, 0.05);
     padding: 14px 16px;
-    z-index: 9996;
+    z-index: 100000 !important; /* 层级高于控制面板(9997)与标题(9998) */
     min-width: 275px;
     max-width: 325px;
     max-height: calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 80px);
