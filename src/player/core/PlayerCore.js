@@ -112,7 +112,7 @@ export class PlayerCore {
     }
     
     /**
-     * 恢复视频状态并执行自动起播
+     * 恢复视频状态并执行自动起播 (包含静音降级容错与手势唤醒)
      */
     restoreVideoState() {
         try {
@@ -121,18 +121,62 @@ export class PlayerCore {
             const validSpeed = (!isNaN(savedSpeed) && savedSpeed >= 0.5 && savedSpeed <= 4.0) ? savedSpeed : this.defaultPlaybackRate;
             this.targetVideo.playbackRate = validSpeed;
             
-            // 恢复播放位置
-            if (this.videoState && this.videoState.currentTime && !isNaN(this.videoState.currentTime)) {
-                this.targetVideo.currentTime = this.videoState.currentTime;
+            // 仅在已有实际进度时安全恢复播放位置，避免未就绪时抛出异常或打断流加载
+            if (this.videoState && this.videoState.currentTime > 0) {
+                if (this.targetVideo.readyState >= 1) {
+                    try {
+                        this.targetVideo.currentTime = this.videoState.currentTime;
+                    } catch (_) {}
+                } else {
+                    const restoreTimeOnReady = () => {
+                        if (this.targetVideo && this.videoState && this.videoState.currentTime > 0) {
+                            try {
+                                this.targetVideo.currentTime = this.videoState.currentTime;
+                            } catch (_) {}
+                        }
+                    };
+                    this.targetVideo.addEventListener('loadedmetadata', restoreTimeOnReady, { once: true });
+                }
             }
 
-            // 浮钮启动播放器后，主动触发自动播放
+            // 主动触发自动起播 (支持有声尝试 -> 静音降级 -> 首次触摸唤醒)
             const attemptPlay = () => {
                 if (!this.targetVideo) return;
+                
+                // 确保 playsinline 属性就绪，防止被移动端全屏劫持
+                this.targetVideo.setAttribute('playsinline', 'true');
+                this.targetVideo.setAttribute('webkit-playsinline', 'true');
+                this.targetVideo.setAttribute('x5-playsinline', 'true');
+                this.targetVideo.playsInline = true;
+                this.targetVideo.webkitPlaysInline = true;
+
                 const playPromise = this.targetVideo.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(error => {
-                        console.log('[PlayerCore] 视频自动起播受限或被阻止:', error);
+                        console.warn('[PlayerCore] 正常起播被浏览器策略拦截:', error);
+                        // 如果因为浏览器自动播放策略阻止有声播放，降级为静音自动起播
+                        if (error.name === 'NotAllowedError' || !this.targetVideo.muted) {
+                            console.log('[PlayerCore] 尝试降级为静音自动起播...');
+                            this.targetVideo.muted = true;
+                            const mutedPromise = this.targetVideo.play();
+                            if (mutedPromise !== undefined) {
+                                mutedPromise.then(() => {
+                                    console.log('[PlayerCore] 静音自动起播成功');
+                                    // 挂载全局一次性交互监听，用户一旦点击/触碰屏幕立即尝试解除静音
+                                    const unmuteOnInteract = () => {
+                                        if (this.targetVideo) {
+                                            this.targetVideo.muted = false;
+                                        }
+                                        document.removeEventListener('click', unmuteOnInteract, true);
+                                        document.removeEventListener('touchstart', unmuteOnInteract, true);
+                                    };
+                                    document.addEventListener('click', unmuteOnInteract, { once: true, capture: true });
+                                    document.addEventListener('touchstart', unmuteOnInteract, { once: true, capture: true });
+                                }).catch(err => {
+                                    console.error('[PlayerCore] 静音起播仍失败:', err);
+                                });
+                            }
+                        }
                     });
                 }
             };

@@ -8004,29 +8004,73 @@
           var o = parseFloat(getValue("preferredPlaybackRate", 1));
           var a = !isNaN(o) && o >= .5 && o <= 4 ? o : this.defaultPlaybackRate;
           this.targetVideo.playbackRate = a;
-          if (this.videoState && this.videoState.currentTime && !isNaN(this.videoState.currentTime)) {
-            this.targetVideo.currentTime = this.videoState.currentTime;
+          if (this.videoState && this.videoState.currentTime > 0) {
+            if (this.targetVideo.readyState >= 1) {
+              try {
+                this.targetVideo.currentTime = this.videoState.currentTime;
+              } catch (r) {}
+            } else {
+              var l = function restoreTimeOnReady() {
+                if (r.targetVideo && r.videoState && r.videoState.currentTime > 0) {
+                  try {
+                    r.targetVideo.currentTime = r.videoState.currentTime;
+                  } catch (r) {}
+                }
+              };
+              this.targetVideo.addEventListener("loadedmetadata", l, {
+                "once": true
+              });
+            }
           }
-          var l = function attemptPlay() {
+          var u = function attemptPlay() {
             if (!r.targetVideo) {
               return;
             }
+            r.targetVideo.setAttribute("playsinline", "true");
+            r.targetVideo.setAttribute("webkit-playsinline", "true");
+            r.targetVideo.setAttribute("x5-playsinline", "true");
+            r.targetVideo.playsInline = true;
+            r.targetVideo.webkitPlaysInline = true;
             var o = r.targetVideo.play();
             if (o !== void 0) {
-              o["catch"]((function(r) {}));
+              o["catch"]((function(o) {
+                if (o.name === "NotAllowedError" || !r.targetVideo.muted) {
+                  r.targetVideo.muted = true;
+                  var a = r.targetVideo.play();
+                  if (a !== void 0) {
+                    a.then((function() {
+                      var o = function unmuteOnInteract() {
+                        if (r.targetVideo) {
+                          r.targetVideo.muted = false;
+                        }
+                        document.removeEventListener("click", o, true);
+                        document.removeEventListener("touchstart", o, true);
+                      };
+                      document.addEventListener("click", o, {
+                        "once": true,
+                        "capture": true
+                      });
+                      document.addEventListener("touchstart", o, {
+                        "once": true,
+                        "capture": true
+                      });
+                    }))["catch"]((function(r) {}));
+                  }
+                }
+              }));
             }
           };
-          l();
+          u();
           if (this.targetVideo.readyState < 2) {
-            var u = function onReadyToPlay() {
-              l();
-              r.targetVideo.removeEventListener("canplay", u);
-              r.targetVideo.removeEventListener("loadeddata", u);
+            var p = function onReadyToPlay() {
+              u();
+              r.targetVideo.removeEventListener("canplay", p);
+              r.targetVideo.removeEventListener("loadeddata", p);
             };
-            this.targetVideo.addEventListener("canplay", u, {
+            this.targetVideo.addEventListener("canplay", p, {
               "once": true
             });
-            this.targetVideo.addEventListener("loadeddata", u, {
+            this.targetVideo.addEventListener("loadeddata", p, {
               "once": true
             });
           }
@@ -23151,6 +23195,21 @@
       "key": "handleButtonClick",
       "value": function handleButtonClick() {
         fe.trackPluginTrigger();
+        try {
+          var r = document.querySelector(".plyr__control--overlaid, .art-state-play, .vjs-big-play-button, .dplayer-play-icon");
+          if (r && typeof r.click === "function") {
+            r.click();
+          }
+        } catch (r) {}
+        var o = findVideoElement();
+        if (o) {
+          try {
+            var a = o.play();
+            if (a !== void 0) {
+              a["catch"]((function() {}));
+            }
+          } catch (r) {}
+        }
         this.button.style.display = "none";
         this.videoPlayer = new at({
           "playerState": this.playerState,
