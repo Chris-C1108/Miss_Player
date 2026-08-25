@@ -401,27 +401,11 @@ export class UIManager {
             }
             
             // 确保点击事件不是从控制按钮冒泡上来的
-            if (e.target.closest('.tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button')) {
+            if (e.target.closest('.tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel')) {
                 return;
             }
             
-            // 在横屏模式下且控制面板悬浮时，点击视频画面直接切换控制面板显示/隐藏状态
-            if (this.isLandscape) {
-                const isDocked = !!(this.playerContainer && this.playerContainer.className.match(/tm-controls-docked-/));
-                const isFloating = this.isSidebarHidden || !isDocked;
-                
-                if (isFloating) {
-                    if (this.controlsVisible) {
-                        this.hideControls();
-                    } else {
-                        this.showControls();
-                        this.autoHideControls();
-                    }
-                    return;
-                }
-            }
-            
-            // 播放/暂停切换函数 (竖屏或吸附模式)
+            // 播放/暂停切换函数
             const togglePlayPause = () => {
                 if (!this.playerCore.targetVideo) return;
                 
@@ -439,14 +423,20 @@ export class UIManager {
                 }
             };
             
-            // 如果控制界面当前是隐藏状态，则只显示控制界面而不触发暂停
-            if (!this.controlsVisible) {
+            // 移动端触摸操作时：如果控制界面当前是隐藏状态，则先唤醒显示控制界面
+            const isTouchPointer = e.pointerType === 'touch' || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+            if (!this.controlsVisible && isTouchPointer) {
                 this.showControls();
+                this.autoHideControls();
                 return;
             }
             
-            // 如果控制界面已显示，则切换播放/暂停状态
+            // 切换播放/暂停状态，并保证控制栏状态与自动隐藏计时器同步
             togglePlayPause();
+            if (!this.controlsVisible) {
+                this.showControls();
+            }
+            this.autoHideControls();
         });
     }
 

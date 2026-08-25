@@ -141,6 +141,16 @@ export class LoopManager {
             this.targetVideo.addEventListener('loadedmetadata', () => this.renderProgressMarkers());
         }
 
+        // 监听多端云同步落盘事件，实时无感刷新当前视频的打点与高光片段
+        this._onSyncAppliedBound = () => {
+            this._loadTabs();
+            this.renderTabs();
+            if (this.markerBottomSheet) {
+                this.markerBottomSheet.updateBottomSheet();
+            }
+        };
+        window.addEventListener('mp_sync_applied', this._onSyncAppliedBound);
+
         // Parse URL hash for backward compatibility and multi-tabs support
         this._parseUrlHashParams();
 

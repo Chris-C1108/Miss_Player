@@ -606,6 +606,11 @@ export class SyncManager {
         if (playerState) {
             playerState.loadSettings();
         }
+
+        // 6. 派发全局同步完成事件，通知当前运行中的播放器组件 (如 LoopManager、SettingsManager) 实时刷新
+        try {
+            window.dispatchEvent(new CustomEvent('mp_sync_applied', { detail: { data } }));
+        } catch (_) {}
     }
 
     /**
@@ -675,7 +680,7 @@ export class SyncManager {
     /**
      * 自动智能合并同步触发器
      * @param {PlayerState} [playerState=null] - 播放器状态机实例
-     * @param {'startup' | 'change'} [reason='startup'] - 触发时机
+     * @param {'startup' | 'change' | 'resume'} [reason='startup'] - 触发时机
      */
     static triggerAutoSync(playerState = null, reason = 'startup') {
         const config = this.getWebDavConfig();
@@ -688,24 +693,24 @@ export class SyncManager {
         const now = Date.now();
         const lastSync = this.getLastSyncTime();
 
-        if (reason === 'startup') {
-            // 启动时节流：若 5 分钟内已成功同步，则无需重复同步
-            if (lastSync > 0 && now - lastSync < 5 * 60 * 1000) {
+        if (reason === 'startup' || reason === 'resume') {
+            // 启动或页面切回唤醒时节流：若 60 秒内已成功同步，则无需重复同步
+            if (lastSync > 0 && now - lastSync < 60 * 1000) {
                 return;
             }
 
-            // 延迟 2.5 秒在后台静默执行
+            const delay = reason === 'resume' ? 1000 : 2500;
             setTimeout(async () => {
                 try {
                     this._isAutoSyncing = true;
                     await this.executeSync({ mode: 'merge', config, playerState });
-                    console.log('[SyncManager] 自动智能合并同步 (启动) 完成');
+                    console.log(`[SyncManager] 自动智能合并同步 (${reason}) 完成`);
                 } catch (err) {
-                    console.warn('[SyncManager] 启动自动同步未完成:', err.message || err);
+                    console.warn(`[SyncManager] ${reason} 自动同步未完成:`, err.message || err);
                 } finally {
                     this._isAutoSyncing = false;
                 }
-            }, 2500);
+            }, delay);
             return;
         }
 

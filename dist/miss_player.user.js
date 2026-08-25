@@ -8620,23 +8620,10 @@
           if (r.swipeManager && typeof r.swipeManager.wasRecentlyDragging === "function" && r.swipeManager.wasRecentlyDragging()) {
             return;
           }
-          if (o.target.closest(".tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button")) {
+          if (o.target.closest(".tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel")) {
             return;
           }
-          if (r.isLandscape) {
-            var l = !!(r.playerContainer && r.playerContainer.className.match(/tm-controls-docked-/));
-            var u = r.isSidebarHidden || !l;
-            if (u) {
-              if (r.controlsVisible) {
-                r.hideControls();
-              } else {
-                r.showControls();
-                r.autoHideControls();
-              }
-              return;
-            }
-          }
-          var p = function togglePlayPause() {
+          var l = function togglePlayPause() {
             if (!r.playerCore.targetVideo) {
               return;
             }
@@ -8652,11 +8639,17 @@
               r.controlManager.updatePlayPauseButton();
             }
           };
-          if (!r.controlsVisible) {
+          var u = o.pointerType === "touch" || window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+          if (!r.controlsVisible && u) {
             r.showControls();
+            r.autoHideControls();
             return;
           }
-          p();
+          l();
+          if (!r.controlsVisible) {
+            r.showControls();
+          }
+          r.autoHideControls();
         }));
       }
     }, {
@@ -21258,6 +21251,13 @@
         if (o) {
           o.loadSettings();
         }
+        try {
+          window.dispatchEvent(new CustomEvent("mp_sync_applied", {
+            "detail": {
+              "data": r
+            }
+          }));
+        } catch (r) {}
       }
     }, {
       "key": "executeSync",
@@ -21366,10 +21366,11 @@
         }
         var u = Date.now();
         var p = this.getLastSyncTime();
-        if (a === "startup") {
-          if (p > 0 && u - p < 5 * 60 * 1e3) {
+        if (a === "startup" || a === "resume") {
+          if (p > 0 && u - p < 60 * 1e3) {
             return;
           }
+          var v = a === "resume" ? 1e3 : 2500;
           setTimeout(SyncManager_asyncToGenerator(SyncManager_regeneratorRuntime().mark((function _callee2() {
             return SyncManager_regeneratorRuntime().wrap((function _callee2$(a) {
               while (1) {
@@ -21403,7 +21404,7 @@
                 }
               }
             }), _callee2, null, [ [ 0, 6, 8, 11 ] ]);
-          }))), 2500);
+          }))), v);
           return;
         }
         if (a === "change") {
@@ -22078,6 +22079,14 @@
             return o.renderProgressMarkers();
           }));
         }
+        this._onSyncAppliedBound = function() {
+          o._loadTabs();
+          o.renderTabs();
+          if (o.markerBottomSheet) {
+            o.markerBottomSheet.updateBottomSheet();
+          }
+        };
+        window.addEventListener("mp_sync_applied", this._onSyncAppliedBound);
         this._parseUrlHashParams();
         return this;
       }
@@ -29347,34 +29356,42 @@
               o = new kt;
               o.loadSettings();
               mt.triggerAutoSync(o, "startup");
+              document.addEventListener("visibilitychange", (function() {
+                if (document.visibilityState === "visible") {
+                  mt.triggerAutoSync(o, "resume");
+                }
+              }));
+              window.addEventListener("focus", (function() {
+                mt.triggerAutoSync(o, "resume");
+              }));
               yt.initGlobal(o);
               a = new _t({
                 "playerState": o
               });
               a.init();
-              p.next = 14;
+              p.next = 16;
               return initAutoLogin();
 
-             case 14:
+             case 16:
               l = p.sent;
               if (l) {
                 window.loginManager = l;
               }
               u = new Ot;
               u.init();
-              p.next = 22;
+              p.next = 24;
               break;
 
-             case 20:
-              p.prev = 20;
+             case 22:
+              p.prev = 22;
               p.t0 = p["catch"](0);
 
-             case 22:
+             case 24:
              case "end":
               return p.stop();
             }
           }
-        }), _callee2, null, [ [ 0, 20 ] ]);
+        }), _callee2, null, [ [ 0, 22 ] ]);
       })));
       return _startScript.apply(this, arguments);
     }

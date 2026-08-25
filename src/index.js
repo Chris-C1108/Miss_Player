@@ -118,6 +118,16 @@ function setupViewport() {
             // 触发自动智能合并云同步 (若开启 WebDAV 自动同步)
             SyncManager.triggerAutoSync(playerState, 'startup');
 
+            // 监听标签页切回与页面聚焦唤醒，自动检查同步最新云端配置
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    SyncManager.triggerAutoSync(playerState, 'resume');
+                }
+            });
+            window.addEventListener('focus', () => {
+                SyncManager.triggerAutoSync(playerState, 'resume');
+            });
+
             // 初始化失焦/后台播放控制器
             BlurPlaybackManager.initGlobal(playerState);
 
