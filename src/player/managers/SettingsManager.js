@@ -425,12 +425,23 @@ export class SettingsManager {
         pathRow.appendChild(pathLabel);
         pathRow.appendChild(pathInput);
 
-        // 5. 自动智能合并同步开关 (Auto Sync)
+        // 5. 自动同步开关行 (Auto Sync Switch with title + subtitle)
         const autoSyncRow = document.createElement('div');
-        autoSyncRow.className = 'tm-webdav-form-row tm-webdav-switch-row';
-        const autoSyncLabel = document.createElement('label');
-        autoSyncLabel.className = 'tm-webdav-label';
-        autoSyncLabel.textContent = __('webdavAutoSync') || '自动智能合并同步';
+        autoSyncRow.className = 'tm-webdav-switch-row';
+        
+        const autoSyncInfo = document.createElement('div');
+        autoSyncInfo.className = 'tm-webdav-switch-info';
+        
+        const autoSyncTitle = document.createElement('span');
+        autoSyncTitle.className = 'tm-webdav-switch-title';
+        autoSyncTitle.textContent = __('webdavAutoSync') || '自动同步';
+        
+        const autoSyncDesc = document.createElement('span');
+        autoSyncDesc.className = 'tm-webdav-switch-desc';
+        autoSyncDesc.textContent = __('webdavAutoSyncDesc') || '启动及打点修改时自动在后台静默合并';
+
+        autoSyncInfo.appendChild(autoSyncTitle);
+        autoSyncInfo.appendChild(autoSyncDesc);
 
         const autoSyncSwitch = document.createElement('label');
         autoSyncSwitch.className = 'tm-switch';
@@ -449,7 +460,7 @@ export class SettingsManager {
         autoSyncSwitch.appendChild(autoSyncCheckbox);
         autoSyncSwitch.appendChild(autoSyncSlider);
 
-        autoSyncRow.appendChild(autoSyncLabel);
+        autoSyncRow.appendChild(autoSyncInfo);
         autoSyncRow.appendChild(autoSyncSwitch);
 
         // 6. 当前设备标识
@@ -457,34 +468,43 @@ export class SettingsManager {
         deviceBadge.className = 'tm-webdav-device-badge';
         deviceBadge.innerHTML = `${ICON_SERVER} <span>${__('webdavCurrentDevice') || '当前设备'}: ${deviceName} (${clientId.slice(-6)})</span>`;
 
-        // 7. 操作按钮网格
-        const actionsGrid = document.createElement('div');
-        actionsGrid.className = 'tm-webdav-actions-grid';
+        // 7. 操作按钮容器
+        const actionsContainer = document.createElement('div');
+        actionsContainer.className = 'tm-webdav-actions-container';
 
-        // 智能合并同步 (Primary)
+        // 智能合并同步 (Primary Hero Button)
         const syncMergeBtn = document.createElement('button');
         syncMergeBtn.className = 'tm-webdav-btn tm-webdav-btn-primary';
         syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__('webdavSyncMerge') || '智能合并同步'}</span>`;
 
+        // 次级操作三列等宽网格 (Sub-Actions Row)
+        const subActions = document.createElement('div');
+        subActions.className = 'tm-webdav-sub-actions';
+
         // 测试连接 (Secondary)
         const testBtn = document.createElement('button');
         testBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
+        testBtn.title = '测试 WebDAV 服务器连通性并创建目录';
         testBtn.innerHTML = `${ICON_CHECK} <span>${__('webdavTestConnection') || '测试连接'}</span>`;
 
         // 向上覆盖 (Upload Overwrite)
         const uploadBtn = document.createElement('button');
         uploadBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
-        uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '向上覆盖'}</span>`;
+        uploadBtn.title = '将当前本地配置与打点覆盖到云端';
+        uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '上传覆盖'}</span>`;
 
         // 向下覆盖 (Download Overwrite)
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
-        downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '向下覆盖'}</span>`;
+        downloadBtn.title = '从云端拉取配置覆盖当前设备';
+        downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '下载覆盖'}</span>`;
 
-        actionsGrid.appendChild(syncMergeBtn);
-        actionsGrid.appendChild(testBtn);
-        actionsGrid.appendChild(uploadBtn);
-        actionsGrid.appendChild(downloadBtn);
+        subActions.appendChild(testBtn);
+        subActions.appendChild(uploadBtn);
+        subActions.appendChild(downloadBtn);
+
+        actionsContainer.appendChild(syncMergeBtn);
+        actionsContainer.appendChild(subActions);
 
         // 7. 状态栏 (上次同步时间 & 状态)
         const statusBar = document.createElement('div');
@@ -604,7 +624,7 @@ export class SettingsManager {
                 Toast.show((__('webdavSyncFailed') || '上传失败: ') + err.message, 4500);
                 updateStatus('上传失败', false);
             } finally {
-                uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '向上覆盖'}</span>`;
+                uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '上传覆盖'}</span>`;
                 setButtonsDisabled(false);
             }
         });
@@ -635,7 +655,7 @@ export class SettingsManager {
                 Toast.show((__('webdavSyncFailed') || '下载失败: ') + err.message, 4500);
                 updateStatus('下载失败', false);
             } finally {
-                downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '向下覆盖'}</span>`;
+                downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '下载覆盖'}</span>`;
                 setButtonsDisabled(false);
             }
         });
@@ -645,8 +665,9 @@ export class SettingsManager {
         card.appendChild(userRow);
         card.appendChild(passRow);
         card.appendChild(pathRow);
+        card.appendChild(autoSyncRow);
         card.appendChild(deviceBadge);
-        card.appendChild(actionsGrid);
+        card.appendChild(actionsContainer);
         card.appendChild(statusBar);
 
         return card;
