@@ -1,6 +1,16 @@
 import { getValue, setValue, Toast } from '../../utils/index.js';
 import { telemetry } from '../../telemetry';
 import { __ } from '../../constants/i18n.js';
+import { SyncManager, WebDavClient, getOrCreateClientId, getDeviceName } from '../../sync/index.js';
+import {
+    ICON_CLOUD_SYNC,
+    ICON_CLOUD_UPLOAD,
+    ICON_CLOUD_DOWNLOAD,
+    ICON_EYE,
+    ICON_EYE_OFF,
+    ICON_CHECK,
+    ICON_SERVER
+} from '../../constants/icons.js';
 
 /**
  * 设置管理器类 - 负责播放器设置面板及其交互功能
@@ -234,6 +244,14 @@ export class SettingsManager {
         section3.appendChild(debugOption);
         container.appendChild(section3);
 
+        // =================================================================
+        // SECTION 4: 云端同步 (WebDAV) :
+        // =================================================================
+        const section4 = this._createSectionHeader(__('webdavTitle') || '云端同步 (WebDAV) :');
+        const webdavCard = this._createWebDavSyncCard();
+        section4.appendChild(webdavCard);
+        container.appendChild(section4);
+
         this.settingsPanel.appendChild(container);
     }
 
@@ -254,6 +272,311 @@ export class SettingsManager {
         section.appendChild(header);
         section.appendChild(divider);
         return section;
+    }
+
+    /**
+     * 创建 WebDAV 云同步卡片与控制表单
+     */
+    _createWebDavSyncCard() {
+        const card = document.createElement('div');
+        card.className = 'tm-settings-webdav-card';
+
+        const config = SyncManager.getWebDavConfig();
+        const clientId = getOrCreateClientId();
+        const deviceName = getDeviceName();
+
+        // 1. 服务器地址 (URL)
+        const urlRow = document.createElement('div');
+        urlRow.className = 'tm-webdav-form-row';
+        const urlLabel = document.createElement('label');
+        urlLabel.className = 'tm-webdav-label';
+        urlLabel.textContent = __('webdavServerUrl') || '服务器地址';
+        const urlInput = document.createElement('input');
+        urlInput.className = 'tm-webdav-input';
+        urlInput.type = 'text';
+        urlInput.placeholder = 'https://dav.jianguoyun.com/dav/';
+        urlInput.value = config.url || '';
+        urlInput.addEventListener('change', () => {
+            config.url = urlInput.value.trim();
+            SyncManager.saveWebDavConfig(config);
+        });
+        urlRow.appendChild(urlLabel);
+        urlRow.appendChild(urlInput);
+
+        // 2. 用户名 (Username)
+        const userRow = document.createElement('div');
+        userRow.className = 'tm-webdav-form-row';
+        const userLabel = document.createElement('label');
+        userLabel.className = 'tm-webdav-label';
+        userLabel.textContent = __('webdavUsername') || '用户名';
+        const userInput = document.createElement('input');
+        userInput.className = 'tm-webdav-input';
+        userInput.type = 'text';
+        userInput.placeholder = 'username@example.com';
+        userInput.value = config.user || '';
+        userInput.addEventListener('change', () => {
+            config.user = userInput.value.trim();
+            SyncManager.saveWebDavConfig(config);
+        });
+        userRow.appendChild(userLabel);
+        userRow.appendChild(userInput);
+
+        // 3. 密码 / 应用授权码 (Password) 带明文切换眼睛
+        const passRow = document.createElement('div');
+        passRow.className = 'tm-webdav-form-row';
+        const passLabel = document.createElement('label');
+        passLabel.className = 'tm-webdav-label';
+        passLabel.textContent = __('webdavPassword') || '密码 / 应用授权码';
+        
+        const passInputGroup = document.createElement('div');
+        passInputGroup.className = 'tm-webdav-input-group';
+        
+        const passInput = document.createElement('input');
+        passInput.className = 'tm-webdav-input has-eye';
+        passInput.type = 'password';
+        passInput.placeholder = '••••••••••••';
+        passInput.value = config.pass || '';
+        passInput.addEventListener('change', () => {
+            config.pass = passInput.value;
+            SyncManager.saveWebDavConfig(config);
+        });
+
+        const eyeBtn = document.createElement('button');
+        eyeBtn.className = 'tm-webdav-eye-btn';
+        eyeBtn.type = 'button';
+        eyeBtn.innerHTML = ICON_EYE;
+        eyeBtn.title = '切换密码可见性';
+        eyeBtn.addEventListener('click', () => {
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeBtn.innerHTML = ICON_EYE_OFF;
+            } else {
+                passInput.type = 'password';
+                eyeBtn.innerHTML = ICON_EYE;
+            }
+        });
+
+        passInputGroup.appendChild(passInput);
+        passInputGroup.appendChild(eyeBtn);
+        passRow.appendChild(passLabel);
+        passRow.appendChild(passInputGroup);
+
+        // 4. 备份目录路径 (Path)
+        const pathRow = document.createElement('div');
+        pathRow.className = 'tm-webdav-form-row';
+        const pathLabel = document.createElement('label');
+        pathLabel.className = 'tm-webdav-label';
+        pathLabel.textContent = __('webdavBackupPath') || '备份目录路径';
+        const pathInput = document.createElement('input');
+        pathInput.className = 'tm-webdav-input';
+        pathInput.type = 'text';
+        pathInput.placeholder = '/MissPlayer/';
+        pathInput.value = config.path || '/MissPlayer/';
+        pathInput.addEventListener('change', () => {
+            config.path = pathInput.value.trim() || '/MissPlayer/';
+            SyncManager.saveWebDavConfig(config);
+        });
+        pathRow.appendChild(pathLabel);
+        pathRow.appendChild(pathInput);
+
+        // 5. 当前设备标识
+        const deviceBadge = document.createElement('div');
+        deviceBadge.className = 'tm-webdav-device-badge';
+        deviceBadge.innerHTML = `${ICON_SERVER} <span>${__('webdavCurrentDevice') || '当前设备'}: ${deviceName} (${clientId.slice(-6)})</span>`;
+
+        // 6. 操作按钮网格
+        const actionsGrid = document.createElement('div');
+        actionsGrid.className = 'tm-webdav-actions-grid';
+
+        // 智能合并同步 (Primary)
+        const syncMergeBtn = document.createElement('button');
+        syncMergeBtn.className = 'tm-webdav-btn tm-webdav-btn-primary';
+        syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__('webdavSyncMerge') || '智能合并同步'}</span>`;
+
+        // 测试连接 (Secondary)
+        const testBtn = document.createElement('button');
+        testBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
+        testBtn.innerHTML = `${ICON_CHECK} <span>${__('webdavTestConnection') || '测试连接'}</span>`;
+
+        // 向上覆盖 (Upload Overwrite)
+        const uploadBtn = document.createElement('button');
+        uploadBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
+        uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '向上覆盖'}</span>`;
+
+        // 向下覆盖 (Download Overwrite)
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
+        downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '向下覆盖'}</span>`;
+
+        actionsGrid.appendChild(syncMergeBtn);
+        actionsGrid.appendChild(testBtn);
+        actionsGrid.appendChild(uploadBtn);
+        actionsGrid.appendChild(downloadBtn);
+
+        // 7. 状态栏 (上次同步时间 & 状态)
+        const statusBar = document.createElement('div');
+        statusBar.className = 'tm-webdav-status-bar';
+
+        const lastSyncTime = SyncManager.getLastSyncTime();
+        const timeText = lastSyncTime > 0
+            ? new Date(lastSyncTime).toLocaleString()
+            : (__('webdavNeverSynced') || '尚未同步');
+
+        const timeSpan = document.createElement('span');
+        timeSpan.textContent = `${__('webdavLastSync') || '上次同步'}: ${timeText}`;
+
+        const statusBadge = document.createElement('span');
+        statusBadge.className = 'tm-webdav-status-badge';
+        statusBadge.style.display = 'none';
+
+        statusBar.appendChild(timeSpan);
+        statusBar.appendChild(statusBadge);
+
+        // 保存即时配置辅助函数
+        const persistCurrentInputs = () => {
+            config.url = urlInput.value.trim();
+            config.user = userInput.value.trim();
+            config.pass = passInput.value;
+            config.path = pathInput.value.trim() || '/MissPlayer/';
+            SyncManager.saveWebDavConfig(config);
+            return config;
+        };
+
+        const updateStatus = (text, isSuccess) => {
+            statusBadge.style.display = 'inline-flex';
+            statusBadge.className = `tm-webdav-status-badge ${isSuccess ? 'success' : 'error'}`;
+            statusBadge.textContent = text;
+        };
+
+        const setButtonsDisabled = (disabled) => {
+            [syncMergeBtn, testBtn, uploadBtn, downloadBtn].forEach(b => {
+                b.disabled = disabled;
+            });
+        };
+
+        // --- 事件绑定 ---
+
+        // 1. 测试连接
+        testBtn.addEventListener('click', async () => {
+            const currentCfg = persistCurrentInputs();
+            if (!currentCfg.url) {
+                Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                return;
+            }
+            setButtonsDisabled(true);
+            testBtn.innerHTML = `<span>${__('webdavTesting') || '正在测试...'}</span>`;
+            try {
+                const res = await WebDavClient.testConnection(currentCfg);
+                Toast.show(res.message || '连接成功！', 3000);
+                updateStatus('连接正常', true);
+            } catch (err) {
+                Toast.show((__('webdavTestFailed') || '连接失败: ') + err.message, 4000);
+                updateStatus('连接失败', false);
+            } finally {
+                testBtn.innerHTML = `${ICON_CHECK} <span>${__('webdavTestConnection') || '测试连接'}</span>`;
+                setButtonsDisabled(false);
+            }
+        });
+
+        // 2. 智能合并同步
+        syncMergeBtn.addEventListener('click', async () => {
+            const currentCfg = persistCurrentInputs();
+            if (!currentCfg.url) {
+                Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                return;
+            }
+            setButtonsDisabled(true);
+            syncMergeBtn.innerHTML = `<span>${__('webdavSyncing') || '正在同步...'}</span>`;
+            try {
+                const res = await SyncManager.executeSync({
+                    mode: 'merge',
+                    config: currentCfg,
+                    playerState: this.playerCore?.options?.playerState
+                });
+                Toast.show(res.message || '云端多端合并同步成功！', 3000);
+                updateStatus('同步成功', true);
+                timeSpan.textContent = `${__('webdavLastSync') || '上次同步'}: ${new Date().toLocaleString()}`;
+                this.createSettingsPanel(); // 刷新面板显示最新合并设置
+            } catch (err) {
+                Toast.show((__('webdavSyncFailed') || '同步失败: ') + err.message, 4500);
+                updateStatus('同步失败', false);
+            } finally {
+                syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__('webdavSyncMerge') || '智能合并同步'}</span>`;
+                setButtonsDisabled(false);
+            }
+        });
+
+        // 3. 向上覆盖 (Upload Overwrite)
+        uploadBtn.addEventListener('click', async () => {
+            const currentCfg = persistCurrentInputs();
+            if (!currentCfg.url) {
+                Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                return;
+            }
+            if (!window.confirm(__('webdavConfirmUpload') || '确定要将当前本地配置强制覆盖到云端吗？')) {
+                return;
+            }
+            setButtonsDisabled(true);
+            uploadBtn.innerHTML = `<span>${__('webdavSyncing') || '正在上传...'}</span>`;
+            try {
+                const res = await SyncManager.executeSync({
+                    mode: 'upload',
+                    config: currentCfg,
+                    playerState: this.playerCore?.options?.playerState
+                });
+                Toast.show(res.message || '已成功覆盖云端备份！', 3000);
+                updateStatus('已上传覆盖', true);
+                timeSpan.textContent = `${__('webdavLastSync') || '上次同步'}: ${new Date().toLocaleString()}`;
+            } catch (err) {
+                Toast.show((__('webdavSyncFailed') || '上传失败: ') + err.message, 4500);
+                updateStatus('上传失败', false);
+            } finally {
+                uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '向上覆盖'}</span>`;
+                setButtonsDisabled(false);
+            }
+        });
+
+        // 4. 向下覆盖 (Download Overwrite)
+        downloadBtn.addEventListener('click', async () => {
+            const currentCfg = persistCurrentInputs();
+            if (!currentCfg.url) {
+                Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                return;
+            }
+            if (!window.confirm(__('webdavConfirmDownload') || '确定要从云端拉取配置并覆盖本地吗？')) {
+                return;
+            }
+            setButtonsDisabled(true);
+            downloadBtn.innerHTML = `<span>${__('webdavSyncing') || '正在下载...'}</span>`;
+            try {
+                const res = await SyncManager.executeSync({
+                    mode: 'download',
+                    config: currentCfg,
+                    playerState: this.playerCore?.options?.playerState
+                });
+                Toast.show(res.message || '已成功从云端覆盖本地！', 3000);
+                updateStatus('已下载覆盖', true);
+                timeSpan.textContent = `${__('webdavLastSync') || '上次同步'}: ${new Date().toLocaleString()}`;
+                this.createSettingsPanel(); // 刷新面板显示最新覆盖设置
+            } catch (err) {
+                Toast.show((__('webdavSyncFailed') || '下载失败: ') + err.message, 4500);
+                updateStatus('下载失败', false);
+            } finally {
+                downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '向下覆盖'}</span>`;
+                setButtonsDisabled(false);
+            }
+        });
+
+        // 组装卡片
+        card.appendChild(urlRow);
+        card.appendChild(userRow);
+        card.appendChild(passRow);
+        card.appendChild(pathRow);
+        card.appendChild(deviceBadge);
+        card.appendChild(actionsGrid);
+        card.appendChild(statusBar);
+
+        return card;
     }
 
     /**

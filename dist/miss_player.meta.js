@@ -17,6 +17,7 @@
 // @match *://*.missav.ai/*
 // @match *://*.jable.tv/*
 // @match *://*/*
+// @connect *
 // @connect telemetry.x-flow.ccwu.cc
 // @connect xflow-telemetry.chen-m1108.workers.dev
 // @connect jable.tv
@@ -37,6 +38,7 @@
 // @grant GM_setValue
 // @grant GM_getValue
 // @grant GM_deleteValue
+// @grant GM_listValues
 // @grant GM_addValueChangeListener
 // @grant GM_removeValueChangeListener
 // @grant GM_openInTab

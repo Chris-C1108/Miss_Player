@@ -89,11 +89,13 @@ module.exports = {
           'GM_setValue',
           'GM_getValue',
           'GM_deleteValue',
+          'GM_listValues',
           'GM_addValueChangeListener',
           'GM_removeValueChangeListener',
           'GM_openInTab'
         ],
         connect: [
+          '*',
           'telemetry.x-flow.ccwu.cc',
           'xflow-telemetry.chen-m1108.workers.dev',
           'jable.tv',
