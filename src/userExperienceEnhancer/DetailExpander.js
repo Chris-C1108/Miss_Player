@@ -1,9 +1,7 @@
 /**
  * 详情自动展开类
- * 负责自动展开视频的详细信息
+ * 负责在页面空闲时自动展开视频的详细信息，避免阻塞主线程关键渲染 (LCP/INP)
  */
-
-
 
 import { telemetry } from '../telemetry';
 
@@ -12,9 +10,8 @@ import { telemetry } from '../telemetry';
  */
 export class DetailExpander {
     constructor() {
-        // 配置
-        this.maxAttempts = 3;       // 最大尝试次数
-        this.attemptInterval = 1000; // 尝试间隔时间(ms)
+        this.maxAttempts = 3;        // 最大尝试次数
+        this.attemptInterval = 1500; // 尝试间隔时间(ms)
     }
 
     /**
@@ -26,22 +23,26 @@ export class DetailExpander {
     }
 
     /**
-     * 自动展开详情
+     * 自动展开详情 (延迟至空闲回调，杜绝阻塞主线程渲染)
      */
     autoExpandDetails() {
-        console.log('[DetailExpander] 尝试自动展开详情');
-        
-        // 立即尝试展开一次
-        this.expandDetailsSingle();
-        
-        // 多次尝试，因为有时候页面加载较慢
-        let attempts = 0;
-        const attemptInterval = setInterval(() => {
-            if (this.expandDetailsSingle() || ++attempts >= this.maxAttempts) {
-                clearInterval(attemptInterval);
-                console.log(`[DetailExpander] 完成尝试 (${attempts + 1}次)`);
-            }
-        }, this.attemptInterval);
+        const executeExpand = () => {
+            if (this.expandDetailsSingle()) return;
+            
+            let attempts = 0;
+            const attemptInterval = setInterval(() => {
+                if (this.expandDetailsSingle() || ++attempts >= this.maxAttempts) {
+                    clearInterval(attemptInterval);
+                }
+            }, this.attemptInterval);
+        };
+
+        // 优先在浏览器空闲时调度，避开 LCP 绘制与关键交互
+        if (typeof window.requestIdleCallback === 'function') {
+            window.requestIdleCallback(executeExpand, { timeout: 3500 });
+        } else {
+            setTimeout(executeExpand, 1200);
+        }
     }
     
     /**
@@ -52,7 +53,10 @@ export class DetailExpander {
         try {
             const showMoreButton = document.querySelector(this.SHOW_MORE_SELECTOR);
             if (showMoreButton) {
-                console.log('[DetailExpander] 找到"显示更多"按钮，点击展开');
+                // 如果按钮已被隐藏或已展开，则无需重复触发
+                if (showMoreButton.offsetParent === null && showMoreButton.style.display === 'none') {
+                    return true;
+                }
                 showMoreButton.click();
                 return true;
             }

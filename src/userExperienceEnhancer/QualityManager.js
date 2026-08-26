@@ -1,6 +1,6 @@
 /**
  * 视频画质管理类
- * 负责自动设置视频的最高画质
+ * 负责在页面空闲或播放器就绪时自动设置视频最高画质
  */
 
 /**
@@ -8,34 +8,32 @@
  */
 export class QualityManager {
     constructor() {
-        // 配置
-        this.maxAttempts = 20;      // 最大尝试次数
-        this.attemptInterval = 500; // 尝试间隔时间(ms)
+        this.maxAttempts = 6;        // 最大尝试次数
+        this.attemptInterval = 1000; // 尝试间隔时间(ms)
     }
 
     /**
-     * 自动设置最高画质
+     * 自动设置最高画质 (延迟至空闲状态执行，避免主线程关键渲染阻塞)
      */
     setupAutoHighestQuality() {
-        console.log('[QualityManager] 尝试设置视频最高画质');
-        
-        // 立即尝试一次
-        if (this.setHighestQualitySingle()) {
-            console.log('[QualityManager] 成功设置最高画质');
-            return;
-        }
-        
-        // 失败则定时尝试
-        let attempts = 0;
-        const checkInterval = setInterval(() => {
-            if (this.setHighestQualitySingle() || ++attempts >= this.maxAttempts) {
-                clearInterval(checkInterval);
-                console.log(`[QualityManager] 完成尝试 (${attempts + 1}次)`);
+        const executeQualitySetup = () => {
+            if (this.setHighestQualitySingle()) {
+                return;
             }
-        }, this.attemptInterval);
-        
-        // 页面完全加载后再尝试一次
-        window.addEventListener('load', () => this.setHighestQualitySingle());
+            
+            let attempts = 0;
+            const checkInterval = setInterval(() => {
+                if (this.setHighestQualitySingle() || ++attempts >= this.maxAttempts) {
+                    clearInterval(checkInterval);
+                }
+            }, this.attemptInterval);
+        };
+
+        if (typeof window.requestIdleCallback === 'function') {
+            window.requestIdleCallback(executeQualitySetup, { timeout: 4000 });
+        } else {
+            setTimeout(executeQualitySetup, 1500);
+        }
     }
     
     /**
@@ -44,16 +42,13 @@ export class QualityManager {
      */
     setHighestQualitySingle() {
         try {
-            // 检查播放器
             const player = window.player || (typeof unsafeWindow !== 'undefined' ? unsafeWindow.player : null);
             
             if (!player || !player.config || !player.config.quality || !player.config.quality.options || !player.config.quality.options.length) {
                 return false;
             }
             
-            // 设置最高画质
             const maxQuality = Math.max(...player.config.quality.options);
-            console.log('[QualityManager] 设置画质:', maxQuality);
             
             // 同时设置属性和方法
             player.quality = maxQuality;

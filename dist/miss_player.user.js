@@ -11,7 +11,7 @@
 // @description:vi MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @description:zh-CN MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:zh-TW MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器|多語言支持 支持 jable po*nhub 等通用
-// @version 5.6.6
+// @version 5.6.7
 // @author Chris_C
 // @match *://*.missav.ws/*
 // @match *://*.missav.ai/*
@@ -7023,7 +7023,7 @@
         return GM_info.script.version;
       }
     } catch (r) {}
-    return "5.6.6";
+    return "5.6.7";
   }
   function getSiteCategory() {
     if ((0, y.isSiteDomain)("MISSAV")) {
@@ -20924,14 +20924,14 @@
         });
         return {
           "schemaVersion": dt,
-          "scriptVersion": "5.6.6",
+          "scriptVersion": "5.6.7",
           "lastModified": a,
           "lastModifiedBy": o,
           "devices": SyncManager_defineProperty({}, o, {
             "deviceName": getDeviceName(),
             "deviceType": D,
             "lastSyncTime": a,
-            "scriptVersion": "5.6.6"
+            "scriptVersion": "5.6.7"
           }),
           "deviceLayouts": L,
           "settings": p,
@@ -21047,7 +21047,7 @@
           "deviceName": getDeviceName(),
           "deviceType": getDeviceType(),
           "lastSyncTime": u,
-          "scriptVersion": "5.6.6"
+          "scriptVersion": "5.6.7"
         };
         var V = r.settings || {};
         var G = l.settings || {};
@@ -21162,7 +21162,7 @@
         var ae = Object.assign({}, l.deviceLayouts || {}, r.deviceLayouts || {});
         return {
           "schemaVersion": dt,
-          "scriptVersion": "5.6.6",
+          "scriptVersion": "5.6.7",
           "lastModified": u,
           "lastModifiedBy": a,
           "devices": O,
@@ -28319,17 +28319,16 @@
     }, {
       "key": "removeAdElements",
       "value": function removeAdElements() {
-        if (this.config.adSelectors.length === 0) {
+        if (!this.config.adSelectors || this.config.adSelectors.length === 0) {
           return;
         }
-        for (var r = 0; r < this.config.adSelectors.length; r++) {
-          try {
-            var o = document.querySelectorAll(this.config.adSelectors[r]);
-            for (var a = 0; a < o.length; a++) {
-              o[a].remove();
-            }
-          } catch (r) {}
-        }
+        try {
+          var r = this.config.adSelectors.join(", ");
+          var o = document.querySelectorAll(r);
+          for (var a = 0; a < o.length; a++) {
+            o[a].remove();
+          }
+        } catch (r) {}
       }
     }, {
       "key": "observeDOMChanges",
@@ -28526,9 +28525,23 @@
         var r = this;
         this.domCleaner.removeAdElements();
         this.domCleaner.observeDOMChanges();
-        setInterval((function() {
-          return r.domCleaner.removeAdElements();
-        }), 2e3);
+        var o = function idleCleanup() {
+          r.domCleaner.removeAdElements();
+          if (typeof window.requestIdleCallback === "function") {
+            window.requestIdleCallback(o, {
+              "timeout": 12e3
+            });
+          } else {
+            setTimeout(o, 1e4);
+          }
+        };
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(o, {
+            "timeout": 6e3
+          });
+        } else {
+          setTimeout(o, 6e3);
+        }
       }
     }, {
       "key": "init",
@@ -28599,7 +28612,7 @@
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
-      this.attemptInterval = 1e3;
+      this.attemptInterval = 1500;
     }
     return DetailExpander_createClass(DetailExpander, [ {
       "key": "SHOW_MORE_SELECTOR",
@@ -28610,13 +28623,24 @@
       "key": "autoExpandDetails",
       "value": function autoExpandDetails() {
         var r = this;
-        this.expandDetailsSingle();
-        var o = 0;
-        var a = setInterval((function() {
-          if (r.expandDetailsSingle() || ++o >= r.maxAttempts) {
-            clearInterval(a);
+        var o = function executeExpand() {
+          if (r.expandDetailsSingle()) {
+            return;
           }
-        }), this.attemptInterval);
+          var o = 0;
+          var a = setInterval((function() {
+            if (r.expandDetailsSingle() || ++o >= r.maxAttempts) {
+              clearInterval(a);
+            }
+          }), r.attemptInterval);
+        };
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(o, {
+            "timeout": 3500
+          });
+        } else {
+          setTimeout(o, 1200);
+        }
       }
     }, {
       "key": "expandDetailsSingle",
@@ -28624,6 +28648,9 @@
         try {
           var r = document.querySelector(this.SHOW_MORE_SELECTOR);
           if (r) {
+            if (r.offsetParent === null && r.style.display === "none") {
+              return true;
+            }
             r.click();
             return true;
           }
@@ -28711,25 +28738,31 @@
   var Vt = function() {
     function QualityManager() {
       QualityManager_classCallCheck(this, QualityManager);
-      this.maxAttempts = 20;
-      this.attemptInterval = 500;
+      this.maxAttempts = 6;
+      this.attemptInterval = 1e3;
     }
     return QualityManager_createClass(QualityManager, [ {
       "key": "setupAutoHighestQuality",
       "value": function setupAutoHighestQuality() {
         var r = this;
-        if (this.setHighestQualitySingle()) {
-          return;
-        }
-        var o = 0;
-        var a = setInterval((function() {
-          if (r.setHighestQualitySingle() || ++o >= r.maxAttempts) {
-            clearInterval(a);
+        var o = function executeQualitySetup() {
+          if (r.setHighestQualitySingle()) {
+            return;
           }
-        }), this.attemptInterval);
-        window.addEventListener("load", (function() {
-          return r.setHighestQualitySingle();
-        }));
+          var o = 0;
+          var a = setInterval((function() {
+            if (r.setHighestQualitySingle() || ++o >= r.maxAttempts) {
+              clearInterval(a);
+            }
+          }), r.attemptInterval);
+        };
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(o, {
+            "timeout": 4e3
+          });
+        } else {
+          setTimeout(o, 1500);
+        }
       }
     }, {
       "key": "setHighestQualitySingle",
@@ -29459,18 +29492,18 @@
     }
     function _startScript() {
       _startScript = src_asyncToGenerator(src_regeneratorRuntime().mark((function _callee2() {
-        var r, a, l, u;
-        return src_regeneratorRuntime().wrap((function _callee2$(p) {
+        var r, a;
+        return src_regeneratorRuntime().wrap((function _callee2$(l) {
           while (1) {
-            switch (p.prev = p.next) {
+            switch (l.prev = l.next) {
              case 0:
-              p.prev = 0;
+              l.prev = 0;
               if (!(0, y.isSiteDomain)("JAVLIBRARY")) {
-                p.next = 4;
+                l.next = 4;
                 break;
               }
               handleJavLibraryVerification();
-              return p.abrupt("return");
+              return l.abrupt("return");
 
              case 4:
               injectStyles();
@@ -29491,29 +29524,24 @@
                 "playerState": o
               });
               a.init();
-              p.next = 16;
-              return initAutoLogin();
-
-             case 16:
-              l = p.sent;
-              if (l) {
-                window.loginManager = l;
-              }
-              u = new It;
-              u.init();
-              p.next = 24;
+              initAutoLogin().then((function(r) {
+                if (r) {
+                  window.loginManager = r;
+                }
+              }))["catch"]((function() {}));
+              l.next = 19;
               break;
 
-             case 22:
-              p.prev = 22;
-              p.t0 = p["catch"](0);
+             case 17:
+              l.prev = 17;
+              l.t0 = l["catch"](0);
 
-             case 24:
+             case 19:
              case "end":
-              return p.stop();
+              return l.stop();
             }
           }
-        }), _callee2, null, [ [ 0, 22 ] ]);
+        }), _callee2, null, [ [ 0, 17 ] ]);
       })));
       return _startScript.apply(this, arguments);
     }

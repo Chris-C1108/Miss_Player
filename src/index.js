@@ -143,16 +143,12 @@ function setupViewport() {
             // 初始化浮动按钮
             floatingButton.init();
             
-            // 初始化自动登录模块
-            const loginManager = await initAutoLogin();
-            if (loginManager) {
-                console.log(`[${__('scriptName')}] ${__('loginModuleInitialized')}`);
-                window.loginManager = loginManager;
-            }
-            
-            // 初始化广告屏蔽模块
-            const adBlocker = new AdBlocker();
-            adBlocker.init();
+            // 异步非阻塞初始化自动登录模块
+            initAutoLogin().then(loginManager => {
+                if (loginManager) {
+                    window.loginManager = loginManager;
+                }
+            }).catch(() => {});
             
             // 控制台日志 - 便于调试
             console.log(`[${__('scriptName')}] ${__('initializationComplete')}`);

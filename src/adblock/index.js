@@ -71,15 +71,14 @@ class DOMCleaner {
   }
   
   removeAdElements() {
-    if (this.config.adSelectors.length === 0) return;
-    for (let i = 0; i < this.config.adSelectors.length; i++) {
-      try {
-        const elements = document.querySelectorAll(this.config.adSelectors[i]);
-        for (let j = 0; j < elements.length; j++) {
-          elements[j].remove();
-        }
-      } catch (e) {}
-    }
+    if (!this.config.adSelectors || this.config.adSelectors.length === 0) return;
+    try {
+      const combinedSelector = this.config.adSelectors.join(', ');
+      const elements = document.querySelectorAll(combinedSelector);
+      for (let j = 0; j < elements.length; j++) {
+        elements[j].remove();
+      }
+    } catch (_) {}
   }
   
   observeDOMChanges() {
@@ -244,7 +243,22 @@ class AdBlocker {
   setupPeriodicCleaning() {
     this.domCleaner.removeAdElements();
     this.domCleaner.observeDOMChanges();
-    setInterval(() => this.domCleaner.removeAdElements(), 2000);
+    
+    // 使用 requestIdleCallback 进行低优先级空闲保底清理，杜绝主线程频繁 2s setInterval 轮询
+    const idleCleanup = () => {
+      this.domCleaner.removeAdElements();
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(idleCleanup, { timeout: 12000 });
+      } else {
+        setTimeout(idleCleanup, 10000);
+      }
+    };
+
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(idleCleanup, { timeout: 6000 });
+    } else {
+      setTimeout(idleCleanup, 6000);
+    }
   }
   
   init() {
