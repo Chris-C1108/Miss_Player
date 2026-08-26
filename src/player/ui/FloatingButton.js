@@ -213,24 +213,20 @@ export class FloatingButton {
     updateButtonPosition() {
         if (!this.button) return;
         
-        const safeArea = getSafeAreaInsets();
-        
         // 获取当前屏幕方向
         const isPortraitValue = isPortrait();
         
         if (isPortraitValue) {
-            // 竖屏模式 - 按钮在底部居中
-            this.button.style.bottom = `${Math.max(20, safeArea.bottom)}px`;
+            // 竖屏模式 - 按钮在底部居中，通过 CSS env() 纯原生适配安全区域
+            this.button.style.bottom = 'max(20px, env(safe-area-inset-bottom, 20px))';
             this.button.style.right = 'auto';
             this.button.style.left = '50%';
-            // 重置transform以保持hover和active效果正常
             this.button.style.transform = 'translateX(-50%)';
         } else {
             // 横屏模式 - 按钮在右下角且加大安全距离
-            this.button.style.bottom = `${Math.max(20, safeArea.bottom + 10)}px`;
-            this.button.style.right = `${Math.max(20, safeArea.right + 10)}px`;
+            this.button.style.bottom = 'max(20px, calc(env(safe-area-inset-bottom, 20px) + 10px))';
+            this.button.style.right = 'max(20px, calc(env(safe-area-inset-right, 20px) + 10px))';
             this.button.style.left = 'auto';
-            // 重置transform以保持hover和active效果正常
             this.button.style.transform = 'translateX(0)';
         }
         

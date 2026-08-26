@@ -64,11 +64,23 @@ export class SettingsManager {
         // 加载保存的设置
         this.loadSettings();
         
-        // 创建设置面板内容
-        this.createSettingsPanel();
-
         // 初始应用设置到控制组件
         this.updateControlRowsVisibility();
+
+        // 延迟至浏览器空闲期或首次打开时再构建庞大的设置面板 DOM，降低播放器首屏组装耗时
+        if (typeof window.requestIdleCallback === 'function') {
+            window.requestIdleCallback(() => {
+                if (!this.settingsPanel || !this.settingsPanel.children.length) {
+                    this.createSettingsPanel();
+                }
+            }, { timeout: 4000 });
+        } else {
+            setTimeout(() => {
+                if (!this.settingsPanel || !this.settingsPanel.children.length) {
+                    this.createSettingsPanel();
+                }
+            }, 600);
+        }
         
         return this;
     }

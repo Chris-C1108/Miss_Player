@@ -195,9 +195,25 @@ export class VideoSwipeManager {
     }
 
     /**
-     * 更新约束条件（如最大偏移量）
+     * 更新约束条件（使用 rAF 防抖合并，杜绝高频触发 Forced Reflow）
      */
     _updateConstraints() {
+        if (this._constraintsRafPending) return;
+        this._constraintsRafPending = true;
+
+        requestAnimationFrame(() => {
+            this._constraintsRafPending = false;
+            this._doUpdateConstraints();
+        });
+    }
+
+    /**
+     * 实际执行约束计算与样式应用
+     * @private
+     */
+    _doUpdateConstraints() {
+        if (!this.container || !this.video) return false;
+
         // 更新视频尺寸和约束
         const dimensionsUpdated = this._updateVideoDimensions();
 

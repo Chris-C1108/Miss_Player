@@ -98,6 +98,16 @@ export class PlayerCore {
         this.originalParent = this.targetVideo.parentNode;
         this.originalIndex = Array.from(this.originalParent.children).indexOf(this.targetVideo);
 
+        // 插入原位隐藏占位符，防止将 targetVideo 移入播放器浮层后原网页布局发生高度塌陷 (消除 CLS 累计布局偏移)
+        try {
+            if (this.originalParent && !this.videoPlaceholder) {
+                this.videoPlaceholder = document.createElement('div');
+                this.videoPlaceholder.className = 'tm-video-placeholder';
+                this.videoPlaceholder.style.cssText = 'width: 100%; height: 100%; min-height: 200px; aspect-ratio: 16/9; visibility: hidden; pointer-events: none;';
+                this.originalParent.insertBefore(this.videoPlaceholder, this.targetVideo);
+            }
+        } catch (_) {}
+
         this.videoState = {
             currentTime: this.targetVideo.currentTime,
             isPaused: this.targetVideo.paused,
@@ -217,10 +227,13 @@ export class PlayerCore {
         }
         
         // 恢复原始的视频样式和属性
-        if (this.originalParent && this.targetVideo && this.targetVideo.parentNode) {
+        if (this.originalParent && this.targetVideo) {
             if (this.targetVideo.parentNode !== this.originalParent) {
-                // 移动回原始位置
-                if (this.originalIndex !== -1 && this.originalParent.childNodes.length > this.originalIndex) {
+                // 优先替换原位置占位符
+                if (this.videoPlaceholder && this.videoPlaceholder.parentNode) {
+                    this.videoPlaceholder.parentNode.replaceChild(this.targetVideo, this.videoPlaceholder);
+                    this.videoPlaceholder = null;
+                } else if (this.originalIndex !== -1 && this.originalParent.childNodes.length > this.originalIndex) {
                     this.originalParent.insertBefore(this.targetVideo, this.originalParent.childNodes[this.originalIndex]);
                 } else {
                     this.originalParent.appendChild(this.targetVideo);
