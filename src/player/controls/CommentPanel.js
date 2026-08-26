@@ -324,7 +324,12 @@ export class CommentPanel {
 
         this.composer = new CommentComposer(this);
 
-        this.detectReachability();
+        // 延迟后台域名探测，避免在 UI 挂载的关键帧争抢网络和主线程微任务
+        if (typeof window.requestIdleCallback === 'function') {
+            window.requestIdleCallback(() => this.detectReachability(), { timeout: 4000 });
+        } else {
+            setTimeout(() => this.detectReachability(), 600);
+        }
 
         // 初始化事件委托
         this.initDelegatedEvents();
@@ -2166,27 +2171,30 @@ export class CommentPanel {
     }
 
     /**
-     * 检查并自动加载下一页评论，直到视口填满或无更多数据
+     * 检查并自动加载下一页评论，直到视口填满或无更多数据 (使用 rAF 避开同步布局重排)
      */
     checkViewportFill() {
         if (!this.commentsList) return;
-        const activeBodies = Array.from(this.commentsList.querySelectorAll('.tm-comment-section:not(.is-collapsed) .tm-comment-section-body'));
-        for (const body of activeBodies) {
-            if (body.clientHeight > 0 && body.scrollHeight > 0 && body.scrollHeight <= body.clientHeight + 10) {
-                const section = body.closest('.tm-comment-section');
-                const sectionId = section ? section.id : '';
-                if (sectionId === 'tm-comment-section-jable' && this.jableHasMore && !this.jableLoading) {
-                    logger.log('[CommentPanel] Jable section viewport not filled. Auto-loading next page...');
-                    this.triggerLoadMoreJable();
-                } else if (sectionId === 'tm-comment-section-javlib' && this.javlibHasMore && !this.javlibLoading) {
-                    logger.log('[CommentPanel] JAVLibrary section viewport not filled. Auto-loading next page...');
-                    this.triggerLoadMoreJavlib();
-                } else if (sectionId === 'tm-comment-section-javdb' && this.javdbHasMore && !this.javdbLoading) {
-                    logger.log('[CommentPanel] JavDB section viewport not filled. Auto-loading next page...');
-                    this.triggerLoadMoreJavdb();
+        requestAnimationFrame(() => {
+            if (!this.commentsList) return;
+            const activeBodies = Array.from(this.commentsList.querySelectorAll('.tm-comment-section:not(.is-collapsed) .tm-comment-section-body'));
+            for (const body of activeBodies) {
+                if (body.clientHeight > 0 && body.scrollHeight > 0 && body.scrollHeight <= body.clientHeight + 10) {
+                    const section = body.closest('.tm-comment-section');
+                    const sectionId = section ? section.id : '';
+                    if (sectionId === 'tm-comment-section-jable' && this.jableHasMore && !this.jableLoading) {
+                        logger.log('[CommentPanel] Jable section viewport not filled. Auto-loading next page...');
+                        this.triggerLoadMoreJable();
+                    } else if (sectionId === 'tm-comment-section-javlib' && this.javlibHasMore && !this.javlibLoading) {
+                        logger.log('[CommentPanel] JAVLibrary section viewport not filled. Auto-loading next page...');
+                        this.triggerLoadMoreJavlib();
+                    } else if (sectionId === 'tm-comment-section-javdb' && this.javdbHasMore && !this.javdbLoading) {
+                        logger.log('[CommentPanel] JavDB section viewport not filled. Auto-loading next page...');
+                        this.triggerLoadMoreJavdb();
+                    }
                 }
             }
-        }
+        });
     }
     /**
      * 根据站点 Key 获取匹配的 LoginProvider

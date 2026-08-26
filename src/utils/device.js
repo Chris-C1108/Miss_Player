@@ -37,26 +37,51 @@ export function isPortrait() {
 }
 
 
+let _cachedSafeAreaInsets = null;
+let _hasBoundSafeAreaListeners = false;
+
 /**
- * 获取设备安全区域尺寸
+ * 获取设备安全区域尺寸 (带内存缓存与事件联动，杜绝高频 getComputedStyle 引发 Forced Reflow)
  * @returns {Object} - 安全区域尺寸 {top, right, bottom, left}
  */
 export function getSafeAreaInsets() {
+    if (_cachedSafeAreaInsets) {
+        return _cachedSafeAreaInsets;
+    }
+
+    if (!_hasBoundSafeAreaListeners && typeof window !== 'undefined') {
+        const invalidate = () => { _cachedSafeAreaInsets = null; };
+        window.addEventListener('resize', invalidate, { passive: true });
+        window.addEventListener('orientationchange', invalidate, { passive: true });
+        _hasBoundSafeAreaListeners = true;
+    }
+
     const defaultTopInset = 44;    // 默认顶部安全区域
     const defaultBottomInset = 34; // 默认底部安全区域
     const defaultSideInset = 16;   // 默认左右安全区域
 
-    const style = window.getComputedStyle(document.documentElement);
-    return {
-        top: parseInt(style.getPropertyValue('--sat') || 
-            style.getPropertyValue('--safe-area-inset-top') || '0', 10) || defaultTopInset,
-        right: parseInt(style.getPropertyValue('--sar') || 
-            style.getPropertyValue('--safe-area-inset-right') || '0', 10) || defaultSideInset,
-        bottom: parseInt(style.getPropertyValue('--sab') || 
-            style.getPropertyValue('--safe-area-inset-bottom') || '0', 10) || defaultBottomInset,
-        left: parseInt(style.getPropertyValue('--sal') || 
-            style.getPropertyValue('--safe-area-inset-left') || '0', 10) || defaultSideInset
-    };
+    try {
+        const style = window.getComputedStyle(document.documentElement);
+        _cachedSafeAreaInsets = {
+            top: parseInt(style.getPropertyValue('--sat') || 
+                style.getPropertyValue('--safe-area-inset-top') || '0', 10) || defaultTopInset,
+            right: parseInt(style.getPropertyValue('--sar') || 
+                style.getPropertyValue('--safe-area-inset-right') || '0', 10) || defaultSideInset,
+            bottom: parseInt(style.getPropertyValue('--sab') || 
+                style.getPropertyValue('--safe-area-inset-bottom') || '0', 10) || defaultBottomInset,
+            left: parseInt(style.getPropertyValue('--sal') || 
+                style.getPropertyValue('--safe-area-inset-left') || '0', 10) || defaultSideInset
+        };
+    } catch (_) {
+        _cachedSafeAreaInsets = {
+            top: defaultTopInset,
+            right: defaultSideInset,
+            bottom: defaultBottomInset,
+            left: defaultSideInset
+        };
+    }
+
+    return _cachedSafeAreaInsets;
 }
 
 const _theme = {

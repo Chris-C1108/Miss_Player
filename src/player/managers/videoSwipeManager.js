@@ -130,8 +130,10 @@ export class VideoSwipeManager {
             this.handle.addEventListener('pointerdown', this._handlePointerDownHandler);
         }
 
-        // 初始更新约束条件
-        this._updateConstraints();
+        // 初始更新约束条件 (移入 requestAnimationFrame，避免在 DOM 挂载帧同步强制布局)
+        requestAnimationFrame(() => {
+            this._updateConstraints();
+        });
         
         // 视频加载或尺寸变化时更新约束
         this.video.addEventListener('loadedmetadata', () => {
