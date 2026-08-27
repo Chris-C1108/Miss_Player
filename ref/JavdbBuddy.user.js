@@ -970,10 +970,11 @@
     // 分页获取媒体服务器所有项目（Emby / Jellyfin API 兼容）
     function fetchAllMediaItems(server) {
         return new Promise((resolve, reject) => {
-            const apiUrl = `${server.url}/Items?Recursive=true&IncludeItemTypes=Movie&Fields=Path&api_key=${server.apiKey}`;
+            const apiUrl = `${server.url}/Items?Recursive=true&IncludeItemTypes=Movie&Fields=Path`;
             GM_xmlhttpRequest({
                 method: 'GET',
                 url: apiUrl,
+                headers: { 'X-Emby-Token': server.apiKey },
                 timeout: 10000,
                 onload: function(response) {
                     if (response.status === 200) {
@@ -1619,8 +1620,9 @@
 
             try {
                 const items = await new Promise((resolve, reject) => {
-                    const apiUrl = `${tempServer.url}/Items?Recursive=true&IncludeItemTypes=Movie&Fields=Path&Limit=1&api_key=${tempServer.apiKey}`;
+                    const apiUrl = `${tempServer.url}/Items?Recursive=true&IncludeItemTypes=Movie&Fields=Path&Limit=1`;
                     GM_xmlhttpRequest({
+                        headers: { 'X-Emby-Token': tempServer.apiKey },
                         method: 'GET',
                         url: apiUrl,
                         timeout: 3000,
