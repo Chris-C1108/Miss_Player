@@ -62,14 +62,18 @@
     --font-sans: "SF Pro Display", "SF Pro", "Segoe UI", "Microsoft YaHei", "微软雅黑", "PingFang SC", "苹方", "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
-/* 全局字体设置 */
+/* 全局字体设置与 macOS 精致抗锯齿 */
 html, body, button, input, select, textarea {
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* 确保所有元素都使用全局字体 */
 *, *::before, *::after {
     font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .tm-video-overlay * {

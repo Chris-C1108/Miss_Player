@@ -165,7 +165,7 @@
     touch-action: none;
     opacity: 0.5;
     will-change: transform;
-    transition: all var(--anim-quick);
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
     box-shadow: none;
 }
 
@@ -197,7 +197,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--anim-quick);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s, box-shadow 0.2s;
     backdrop-filter: blur(12px); /* 增加模糊效果 */
     -webkit-backdrop-filter: blur(12px);
     box-shadow: var(--shadow-sm);
@@ -216,18 +216,30 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--anim-smooth);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
     z-index: 9994;
+}
+
+/* 扩充触控与移动端最小点击热区至 44x44px */
+.tm-close-button::after,
+.tm-settings-button::after,
+.tm-sidebar-pos-button::after,
+.tm-sidebar-toggle-button::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    pointer-events: auto;
 }
 
 .tm-close-button:hover {
     background-color: hsl(var(--shadcn-destructive));
-    transform: scale(1.1);
+    transform: scale(1.08);
     box-shadow: var(--shadow-md);
 }
 
 .tm-close-button:active {
-    transform: scale(0.9);
+    transform: scale(0.96);
 }
 
 /* 设置按钮 */
@@ -244,7 +256,7 @@
     justify-content: center;
     z-index: 9993;
     cursor: pointer;
-    transition: all var(--anim-quick);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     box-shadow: var(--shadow-sm);
@@ -252,12 +264,12 @@
 
 .tm-settings-button:hover {
     background-color: hsla(var(--shadcn-accent) / 0.9);
-    transform: scale(1.1) rotate(30deg);
+    transform: scale(1.08) rotate(30deg);
     box-shadow: var(--shadow-md);
 }
 
 .tm-settings-button:active {
-    transform: scale(0.9);
+    transform: scale(0.96);
 }
 
 /* 设置面板 (自适应视口高度并支持原生平滑滚动) */
@@ -474,7 +486,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     cursor: pointer;
     user-select: none;
     flex-shrink: 0;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -507,10 +519,10 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
 }
 
-/* 点击微交互 (参考 tm-time-control-button-active) */
+/* 点击微交互 (统一 scale(0.96) 细腻触觉反馈) */
 .tm-seek-step-badge:active,
 .tm-source-badge:active {
-    transform: scale(0.94);
+    transform: scale(0.96);
     box-shadow: none;
 }
 
@@ -529,7 +541,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     color: hsla(var(--shadcn-foreground) / 0.75);
     cursor: pointer;
     flex-shrink: 0;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
 .tm-seek-step-add-btn:hover {
@@ -542,7 +554,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 .tm-seek-step-add-btn:active {
-    transform: scale(0.94);
+    transform: scale(0.96);
 }
 
 /* 新增自定义步进输入框 */
@@ -576,7 +588,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     border: 1px solid transparent;
     cursor: pointer;
     font-weight: 500;
-    transition: all 0.15s ease;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .tm-source-badge.enabled {
@@ -637,7 +649,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     color: hsl(var(--shadcn-foreground));
     box-sizing: border-box;
     outline: none;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
     font-family: inherit;
 }
 
@@ -672,12 +684,24 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     color: hsla(var(--shadcn-muted-foreground) / 0.6);
     cursor: pointer;
     padding: 0;
-    transition: all 0.15s ease;
+    transition: background-color 0.15s, color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tm-webdav-eye-btn::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 4px;
+    pointer-events: auto;
 }
 
 .tm-webdav-eye-btn:hover {
     color: hsl(var(--shadcn-foreground));
     background: hsla(var(--shadcn-muted) / 0.3);
+}
+
+.tm-webdav-eye-btn:active {
+    transform: translateY(-50%) scale(0.96);
 }
 
 .tm-webdav-switch-row {
@@ -741,13 +765,13 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     justify-content: center;
     gap: 5px;
     height: 32px;
-    padding: 0 4px;
+    padding: 0 8px 0 6px; /* 图标侧少 2px 光学平衡 */
     border-radius: 6px;
     font-size: 11.5px;
     font-weight: 500;
     cursor: pointer;
     user-select: none;
-    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s, filter 0.15s;
     box-sizing: border-box;
     border: 1px solid transparent;
     white-space: nowrap;
@@ -788,7 +812,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 .tm-webdav-btn:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
 }
 
 .tm-webdav-btn:disabled {
@@ -914,7 +938,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 .tm-loop-toggle-button:active {
-    transform: scale(0.98);
+    transform: scale(0.96);
 }
 
 /* 循环区间连接效果 */
@@ -1132,7 +1156,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 16px;
+    border-radius: 20px;
     padding: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     z-index: 9998;
@@ -1160,7 +1184,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     height: 38px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
+    border-radius: 8px; /* 同心圆角: 8px + 12px(padding) = 20px(outer) */
     padding: 0 14px;
     color: #ffffff;
     font-size: 16px;
@@ -1187,16 +1211,20 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 .tm-inline-remark-btn {
     height: 32px;
     padding: 0 20px;
-    border-radius: 14px;
+    border-radius: 12px;
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
     outline: none;
-    transition: background 0.18s, transform 0.12s;
+    transition: background-color 0.18s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+.tm-inline-remark-btn:active {
+    transform: scale(0.96);
 }
 
 .tm-inline-remark-btn.cancel {
@@ -1220,6 +1248,10 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 .tm-inline-remark-btn.submit:hover {
     background: hsl(var(--shadcn-blue) / 0.9);
     transform: scale(1.03);
+}
+
+.tm-inline-remark-btn.submit:active {
+    transform: scale(0.96);
 }
 
 .tm-playback-control-row {
@@ -1330,7 +1362,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     white-space: nowrap;
     cursor: pointer;
     flex-shrink: 0;
-    transition: all var(--anim-quick);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, color 0.15s;
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
@@ -1341,7 +1373,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     border-color: hsla(var(--tab-color), 0.35);
     color: hsl(var(--tab-color));
 }
-.tm-tab-pill:active { transform: scale(0.95); }
+.tm-tab-pill:active { transform: scale(0.96); }
 .tm-tab-pill.active {
     background-color: hsla(var(--tab-color), 0.25);
     border-color: hsla(var(--tab-color), 0.6);
@@ -1385,12 +1417,12 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     border-radius: 6px;
     border: none;
     cursor: pointer;
-    transition: all var(--anim-quick);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, color 0.15s;
     -webkit-tap-highlight-color: transparent;
     box-sizing: border-box;
 }
 .tm-draft-action:active {
-    transform: scale(0.88);
+    transform: scale(0.96);
 }
 .tm-draft-action.save {
     background-color: hsla(var(--tab-color), 0.18);
@@ -1428,10 +1460,10 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     color: hsl(var(--shadcn-foreground));
     font-size: 1.1rem;
     cursor: pointer;
-    transition: all var(--anim-quick);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s;
     -webkit-tap-highlight-color: transparent;
 }
-.tm-tab-list-btn:active { transform: scale(0.88); }
+.tm-tab-list-btn:active { transform: scale(0.96); }
 .tm-tab-list-btn:hover {
     background-color: hsla(var(--shadcn-secondary) / 0.8);
     border-color: hsla(var(--shadcn-border) / 0.3);
@@ -1711,7 +1743,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     padding: 0;
     font-size: 0.75rem;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(.25,.8,.25,1);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
     white-space: nowrap;
     font-weight: 500;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
@@ -1737,7 +1769,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 .tm-time-control-button-active {
-    transform: scale(0.95);
+    transform: scale(0.96);
     box-shadow: none;
 }
 
@@ -1862,7 +1894,7 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--anim-quick);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;
 }
 
 .tm-control-button:hover {
@@ -1872,7 +1904,7 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container {
 }
 
 .tm-control-button:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
     box-shadow: none;
 }
 
@@ -1961,7 +1993,7 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container {
     padding: 4px 8px;
     font-size: 12px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
 }
 
 .tm-comment-button:hover {
@@ -1970,7 +2002,7 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container {
 }
 
 .tm-comment-button:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
 }
 
 .tm-comment-write {
@@ -2102,18 +2134,18 @@ body.tm-swiping-down .tm-settings-panel {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--anim-quick);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
 }
 
 .tm-sidebar-pos-button:hover,
 .tm-sidebar-toggle-button:hover {
     background-color: hsla(var(--shadcn-accent) / 0.9);
-    transform: scale(1.1);
+    transform: scale(1.08);
 }
 
 .tm-sidebar-pos-button:active,
 .tm-sidebar-toggle-button:active {
-    transform: scale(0.9);
+    transform: scale(0.96);
 }
 
 /* 隐藏评论区后，位置按钮隐藏 */
@@ -2181,7 +2213,7 @@ body.tm-player-active [class*="navbar-fixed"] {
     cursor: pointer;
     z-index: 10;
     pointer-events: auto;
-    transition: all var(--anim-quick);
+    transition: transform 0.15s, background-color 0.15s, height 0.15s, bottom 0.15s;
 }
 .tm-progress-marker-tick:hover {
     height: 4px;
@@ -2198,7 +2230,7 @@ body.tm-player-active [class*="navbar-fixed"] {
     cursor: pointer;
     z-index: 9;
     pointer-events: auto;
-    transition: all var(--anim-quick);
+    transition: background-color 0.15s, height 0.15s, bottom 0.15s;
 }
 .tm-progress-marker-range:hover {
     height: 4px;

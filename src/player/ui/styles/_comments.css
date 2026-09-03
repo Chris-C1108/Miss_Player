@@ -120,7 +120,7 @@
     font-size: 0.7rem;
     padding: 2px 8px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: background-color 0.15s, color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
     outline: none;
     line-height: 1;
     display: inline-flex;
@@ -131,6 +131,9 @@
 .tm-comment-copy-all-btn:hover {
     color: #ffffff;
     background: rgba(255, 255, 255, 0.12);
+}
+.tm-comment-copy-all-btn:active {
+    transform: scale(0.96);
 }
 
 .tm-comments-panel-action-bar .tm-comment-filter-label {
@@ -253,10 +256,13 @@
     font-weight: 600;
     cursor: pointer;
     outline: none;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-custom-modal-cancel-btn:hover {
     background-color: hsla(var(--shadcn-muted)/0.3);
+}
+.tm-custom-modal-cancel-btn:active {
+    transform: scale(0.96);
 }
 
 .tm-custom-modal-submit-btn,
@@ -271,11 +277,15 @@
     cursor: pointer;
     outline: none;
     box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3);
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-custom-modal-submit-btn:hover,
 .tm-custom-modal-login-btn:hover {
     background-color: hsl(var(--shadcn-blue)/0.9);
+}
+.tm-custom-modal-submit-btn:active,
+.tm-custom-modal-login-btn:active {
+    transform: scale(0.96);
 }
 
 .tm-comment-input-textarea {
@@ -320,7 +330,7 @@
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.2s, transform 0.15s, color 0.2s;
+    transition: background-color 0.2s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s;
     outline: none;
     padding: 0;
     margin: 0;
@@ -330,6 +340,9 @@
     background: rgba(255, 255, 255, 0.18);
     color: #ffffff;
     transform: scale(1.05);
+}
+.tm-comment-add-tag-btn:active {
+    transform: scale(0.96);
 }
 .tm-comment-add-tag-btn svg {
     width: 14px;
@@ -370,12 +383,15 @@
     font-weight: 600;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.2s, transform 0.15s;
+    transition: background-color 0.2s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     outline: none;
 }
 .tm-comment-send-btn:hover {
     background: rgba(255, 255, 255, 0.22);
     transform: scale(1.03);
+}
+.tm-comment-send-btn:active {
+    transform: scale(0.96);
 }
 
 /* 标签勾选弹出模态框 (与标签管理模态框类似，悬浮于评论输入栏上方) */
@@ -436,10 +452,13 @@
     font-weight: 600;
     cursor: pointer;
     outline: none;
-    transition: background 0.15s;
+    transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-tag-select-all-btn:hover {
     background: rgba(255, 80, 80, 0.3);
+}
+.tm-tag-select-all-btn:active {
+    transform: scale(0.96);
 }
 
 .tm-tag-deselect-all-btn {
@@ -452,10 +471,13 @@
     font-weight: 600;
     cursor: pointer;
     outline: none;
-    transition: background 0.15s;
+    transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-tag-deselect-all-btn:hover {
     background: rgba(255, 255, 255, 0.15);
+}
+.tm-tag-deselect-all-btn:active {
+    transform: scale(0.96);
 }
 
 .tm-tag-select-close-btn {
@@ -602,7 +624,7 @@
     cursor: pointer;
     outline: none;
     box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3);
-    transition: all 0.2s;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;
 }
 
 .tm-custom-modal-close-btn:hover {
@@ -611,7 +633,7 @@
 }
 
 .tm-custom-modal-close-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
 }
 
 /* 评论头部布局 (Row-based Chat Flow) */
@@ -778,7 +800,7 @@
     font-weight: 700;
     cursor: pointer;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, color 0.15s, box-shadow 0.15s;
     padding: 2px 6px;
     background-color: hsla(142.1 70.6% 45.3% / 0.16);
     border: 1px solid hsla(142.1 70.6% 45.3% / 0.25);
@@ -795,6 +817,10 @@
     box-shadow: 0 1px 4px hsla(142.1 70.6% 45.3% / 0.15);
 }
 
+.jc-time-link:active {
+    transform: scale(0.96);
+}
+
 .jc-code-link {
     display: inline-block;
     padding: 2px 6px;
@@ -807,13 +833,17 @@
     cursor: pointer;
     font-size: 12px;
     font-family: monospace;
-    transition: all 0.2s ease;
+    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
 .jc-code-link:hover {
     background-color: hsl(var(--shadcn-blue));
     color: hsl(var(--shadcn-blue-foreground));
     box-shadow: 0 2px 6px hsla(var(--shadcn-blue) / 0.3);
+}
+
+.jc-code-link:active {
+    transform: scale(0.96);
 }
 
 .jc-emoji {
@@ -917,12 +947,16 @@
     cursor: pointer;
     white-space: nowrap;
     outline: none;
-    transition: all var(--anim-quick);
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tm-comments-tab-btn:hover {
     color: hsl(var(--shadcn-foreground));
     background-color: hsla(var(--shadcn-muted) / 0.15);
+}
+
+.tm-comments-tab-btn:active {
+    transform: scale(0.96);
 }
 
 .tm-comments-tab-btn.active {
@@ -1115,7 +1149,7 @@
     font-size: 10px;
     font-weight: 600;
     line-height: 1;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .tm-comment-login-badge.is-logged-in {
@@ -1139,7 +1173,7 @@
 }
 
 .tm-comment-login-badge.is-not-logged-in:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
 }
 
 .tm-comment-login-badge.is-checking {
@@ -1235,7 +1269,7 @@
     font-weight: 600;
     color: hsl(var(--shadcn-muted-foreground));
     outline: none;
-    transition: all var(--anim-quick);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s;
 }
 .tm-comment-copy-all-btn:hover {
     color: hsl(var(--shadcn-foreground));
@@ -1243,7 +1277,7 @@
     border-color: hsla(var(--shadcn-border) / 0.4);
 }
 .tm-comment-copy-all-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
 }
 
 /* 新增加载评论高亮闪烁效果 */
@@ -1286,10 +1320,17 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     z-index: 9997;
     cursor: pointer;
-    transition: all var(--anim-quick);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
     padding: 0;
     outline: none;
     box-sizing: border-box;
+    pointer-events: auto;
+}
+.tm-show-controls-float-btn::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
     pointer-events: auto;
 }
 .tm-show-controls-float-btn:hover {
@@ -1298,7 +1339,7 @@
     transform: scale(1.06);
 }
 .tm-show-controls-float-btn:active {
-    transform: scale(0.92);
+    transform: scale(0.96);
 }
 .tm-show-controls-float-btn svg {
     height: 18px; /* 视觉高度适中，防止太大 */

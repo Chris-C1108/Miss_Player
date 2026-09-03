@@ -9,6 +9,7 @@
     border-radius: 4px;
     font-size: 12px;
     font-weight: 500;
+    font-variant-numeric: tabular-nums;
     pointer-events: none;
     z-index: 9995;
     opacity: 0;
@@ -125,6 +126,7 @@
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 12px;
+    font-variant-numeric: tabular-nums;
     opacity: 0;
     transition: opacity 0.2s ease;
     pointer-events: none;
@@ -223,12 +225,13 @@
     color: hsl(var(--shadcn-foreground));
     font-size: 15px;
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
     letter-spacing: -0.1px;
     border-radius: 9999px;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    transition: all var(--anim-quick);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s;
     cursor: pointer;
     text-align: center;
     box-sizing: border-box;
@@ -243,7 +246,7 @@
 }
 
 .tm-playback-rate-button:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
     background: hsla(var(--shadcn-secondary) / 0.9);
 }
 
@@ -395,7 +398,7 @@
     background-color: transparent;
     color: #fff;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -417,7 +420,7 @@
 
 .tm-playback-control-row .tm-control-button:active,
 .tm-playback-control-row .tm-volume-button:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
 }
 
 .tm-playback-control-row .tm-control-button svg {
@@ -426,6 +429,11 @@
     stroke: currentColor;
     stroke-width: 2;
     fill: none;
+}
+
+/* 播放三角形视觉重心偏左，向右光学微移 2px 达到真视觉居中 */
+.tm-playback-control-row .tm-control-button svg.tm-play-icon {
+    margin-left: 2px;
 }
 
 .tm-playback-control-row .tm-volume-button svg {
@@ -539,6 +547,7 @@
 }
 
 .tm-modal-close {
+    position: relative;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -549,12 +558,25 @@
     align-items: center;
     justify-content: center;
     color: hsl(var(--shadcn-muted-foreground));
-    transition: background-color 0.2s, color 0.2s;
+    transition: background-color 0.2s, color 0.2s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tm-modal-close::after,
+.tm-floating-panel-close::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    pointer-events: auto;
 }
 
 .tm-modal-close:hover {
     background-color: hsla(var(--shadcn-muted) / 0.1);
     color: hsl(var(--shadcn-foreground));
+}
+
+.tm-modal-close:active {
+    transform: scale(0.96);
 }
 
 .tm-modal-content {
@@ -594,7 +616,7 @@
 }
 
 .tm-modal-footer {
-    padding: 12px 20px 16px;
+    padding: 16px 20px;
     border-top: 1px solid hsla(var(--shadcn-border) / 0.1);
     display: flex;
     justify-content: flex-end;
@@ -608,7 +630,7 @@
     font-weight: 500;
     border: none;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;
 }
 
 .tm-modal-cancel {
@@ -633,7 +655,7 @@
 }
 
 .tm-modal-button:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
 }
 
 @media (max-width: 480px) {
@@ -845,7 +867,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;
     flex-shrink: 0;
 }
 
@@ -856,7 +878,7 @@
 }
 
 .tm-floating-panel-submit:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
 }
 
 .tm-floating-panel-submit svg {

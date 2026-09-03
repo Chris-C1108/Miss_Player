@@ -1,6 +1,6 @@
 {
   "name": "miss-player",
-  "version": "5.6.10",
+  "version": "5.6.11",
   "main": "dist/miss_player.user.js",
   "scripts": {
     "build": "webpack --mode production",
