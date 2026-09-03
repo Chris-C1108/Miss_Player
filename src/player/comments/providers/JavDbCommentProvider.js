@@ -291,7 +291,29 @@ export function fetchJavdbData(movieId, page = 1, domain) {
         });
         const reviews = res?.data?.reviews || [];
         const comments = reviews.map((item, index) => {
-            const dateStr = item.created_at ? new Date(item.created_at * 1000).toLocaleDateString('zh-CN') : '';
+            let dateStr = '';
+            if (item.created_at) {
+                let d = null;
+                if (typeof item.created_at === 'number') {
+                    d = new Date(item.created_at < 1e11 ? item.created_at * 1000 : item.created_at);
+                } else if (typeof item.created_at === 'string') {
+                    const trimmed = item.created_at.trim();
+                    if (/^\d+$/.test(trimmed)) {
+                        const num = Number(trimmed);
+                        d = new Date(num < 1e11 ? num * 1000 : num);
+                    } else {
+                        d = new Date(trimmed.replace(/-/g, '/'));
+                        if (isNaN(d.getTime())) {
+                            d = new Date(trimmed);
+                        }
+                    }
+                }
+                if (d && !isNaN(d.getTime())) {
+                    dateStr = d.toLocaleDateString('zh-CN');
+                } else if (typeof item.created_at === 'string' && !item.created_at.includes('Invalid')) {
+                    dateStr = item.created_at;
+                }
+            }
             return {
                 id: `javdb-api-${page}-${item.id || index}`,
                 user: item.username || '匿名用户',

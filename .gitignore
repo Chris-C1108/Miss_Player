@@ -31,3 +31,6 @@ Thumbs.db
 # other
 .pass
 
+# 测试产物
+tests/ui/reports/artifacts/
+

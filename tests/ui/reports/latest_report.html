@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Miss Player UI 自动化测试报告</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --pass: #10b981;
+            --fail: #ef4444;
+            --warn: #f59e0b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+        }
+        .header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-val {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+        .vp-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+        .vp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+        th, td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th { color: var(--muted); font-weight: 600; }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-pass { background: rgba(16, 185, 129, 0.2); color: var(--pass); }
+        .badge-fail { background: rgba(239, 68, 68, 0.2); color: var(--fail); }
+        .anomaly-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+        .screenshot-wrap {
+            text-align: center;
+            margin-top: 16px;
+        }
+        .screenshot-img {
+            max-width: 100%;
+            max-height: 480px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Miss Player 自动化 UI 测试报告</h1>
+        <p style="color: var(--muted); margin: 4px 0 0 0;">目标页面: <strong>《速通西游》第1集 AI成人短剧 | 黄果短剧</strong> (https://v7tlar.fdxqupvz.cc/video/4191/)</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div style="color: var(--muted);">测试视口数</div>
+            <div class="stat-val" style="color: #60a5fa;">7</div>
+        </div>
+        <div class="stat-card">
+            <div style="color: var(--muted);">总用例数</div>
+            <div class="stat-val">42</div>
+        </div>
+        <div class="stat-card">
+            <div style="color: var(--muted);">通过用例</div>
+            <div class="stat-val" style="color: var(--pass);">42</div>
+        </div>
+        <div class="stat-card">
+            <div style="color: var(--muted);">失败/异常</div>
+            <div class="stat-val" style="color: var(--fail);">0</div>
+        </div>
+        <div class="stat-card">
+            <div style="color: var(--muted);">严重数据缺陷</div>
+            <div class="stat-val" style="color: var(--warn);">0</div>
+        </div>
+    </div>
+
+    
+        <div class="vp-section">
+            <div class="vp-header">
+                <div>
+                    <h2 style="margin: 0;">桌面标准 (16:9 1080p)</h2>
+                    <span style="color: var(--muted); font-size: 13px;">规格: 1920 × 1080</span>
+                </div>
+            </div>
+
+            
+                <div class="anomaly-box">
+                    <strong style="color: var(--fail);">🚨 缺陷探测告警 (1 项)</strong>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                        <li><strong>[LAYOUT_ZERO_DIMENSION]</strong> 控制按钮尺寸塌陷为 0</li>
+                    </ul>
+                </div>
+            
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例 ID</th>
+                        <th>用例名称</th>
+                        <th>耗时</th>
+                        <th>状态</th>
+                        <th>断言与问题诊断</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr>
+                            <td><code>01_floating_button</code></td>
+                            <td>浮动按钮挂载与安全区边距</td>
+                            <td>4ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>02_theater_mode</code></td>
+                            <td>影院模式唤起与视频容器转移</td>
+                            <td>1027ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>03_playback_seek</code></td>
+                            <td>步进快进/退与控制栏</td>
+                            <td>7ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>04_loop_marker</code></td>
+                            <td>A-B 循环与打点标签控制</td>
+                            <td>7ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>05_comment_system</code></td>
+                            <td>评论区数据展示与时间格式化合规</td>
+                            <td>9ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>06_settings_panel</code></td>
+                            <td>设置面板展开与侧边遮挡完整性</td>
+                            <td>1058ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                </tbody>
+            </table>
+
+            
+                <div class="screenshot-wrap">
+                    <img class="screenshot-img" src="artifacts/vp_desktop_16_9.png" alt="桌面标准 (16:9 1080p) 实景渲染快照" />
+                </div>
+            
+        </div>
+    
+        <div class="vp-section">
+            <div class="vp-header">
+                <div>
+                    <h2 style="margin: 0;">桌面带鱼屏 (21:9 超宽)</h2>
+                    <span style="color: var(--muted); font-size: 13px;">规格: 2560 × 1080</span>
+                </div>
+            </div>
+
+            
+                <div class="anomaly-box">
+                    <strong style="color: var(--fail);">🚨 缺陷探测告警 (1 项)</strong>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                        <li><strong>[LAYOUT_ZERO_DIMENSION]</strong> 控制按钮尺寸塌陷为 0</li>
+                    </ul>
+                </div>
+            
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例 ID</th>
+                        <th>用例名称</th>
+                        <th>耗时</th>
+                        <th>状态</th>
+                        <th>断言与问题诊断</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr>
+                            <td><code>01_floating_button</code></td>
+                            <td>浮动按钮挂载与安全区边距</td>
+                            <td>4ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>02_theater_mode</code></td>
+                            <td>影院模式唤起与视频容器转移</td>
+                            <td>1008ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>03_playback_seek</code></td>
+                            <td>步进快进/退与控制栏</td>
+                            <td>4ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>04_loop_marker</code></td>
+                            <td>A-B 循环与打点标签控制</td>
+                            <td>2ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>05_comment_system</code></td>
+                            <td>评论区数据展示与时间格式化合规</td>
+                            <td>3ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>06_settings_panel</code></td>
+                            <td>设置面板展开与侧边遮挡完整性</td>
+                            <td>1048ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                </tbody>
+            </table>
+
+            
+                <div class="screenshot-wrap">
+                    <img class="screenshot-img" src="artifacts/vp_desktop_ultrawide_21_9.png" alt="桌面带鱼屏 (21:9 超宽) 实景渲染快照" />
+                </div>
+            
+        </div>
+    
+        <div class="vp-section">
+            <div class="vp-header">
+                <div>
+                    <h2 style="margin: 0;">笔记本 (16:10 窄高比)</h2>
+                    <span style="color: var(--muted); font-size: 13px;">规格: 1440 × 900</span>
+                </div>
+            </div>
+
+            
+                <div class="anomaly-box">
+                    <strong style="color: var(--fail);">🚨 缺陷探测告警 (1 项)</strong>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                        <li><strong>[LAYOUT_ZERO_DIMENSION]</strong> 控制按钮尺寸塌陷为 0</li>
+                    </ul>
+                </div>
+            
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例 ID</th>
+                        <th>用例名称</th>
+                        <th>耗时</th>
+                        <th>状态</th>
+                        <th>断言与问题诊断</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr>
+                            <td><code>01_floating_button</code></td>
+                            <td>浮动按钮挂载与安全区边距</td>
+                            <td>39ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>02_theater_mode</code></td>
+                            <td>影院模式唤起与视频容器转移</td>
+                            <td>1060ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>03_playback_seek</code></td>
+                            <td>步进快进/退与控制栏</td>
+                            <td>10ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>04_loop_marker</code></td>
+                            <td>A-B 循环与打点标签控制</td>
+                            <td>6ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>05_comment_system</code></td>
+                            <td>评论区数据展示与时间格式化合规</td>
+                            <td>7ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>06_settings_panel</code></td>
+                            <td>设置面板展开与侧边遮挡完整性</td>
+                            <td>1050ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                </tbody>
+            </table>
+
+            
+                <div class="screenshot-wrap">
+                    <img class="screenshot-img" src="artifacts/vp_laptop_16_10.png" alt="笔记本 (16:10 窄高比) 实景渲染快照" />
+                </div>
+            
+        </div>
+    
+        <div class="vp-section">
+            <div class="vp-header">
+                <div>
+                    <h2 style="margin: 0;">平板横屏 (4:3 iPad Landscape)</h2>
+                    <span style="color: var(--muted); font-size: 13px;">规格: 1024 × 768</span>
+                </div>
+            </div>
+
+            
+                <div class="anomaly-box">
+                    <strong style="color: var(--fail);">🚨 缺陷探测告警 (1 项)</strong>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                        <li><strong>[LAYOUT_ZERO_DIMENSION]</strong> 控制按钮尺寸塌陷为 0</li>
+                    </ul>
+                </div>
+            
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例 ID</th>
+                        <th>用例名称</th>
+                        <th>耗时</th>
+                        <th>状态</th>
+                        <th>断言与问题诊断</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr>
+                            <td><code>01_floating_button</code></td>
+                            <td>浮动按钮挂载与安全区边距</td>
+                            <td>6ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>02_theater_mode</code></td>
+                            <td>影院模式唤起与视频容器转移</td>
+                            <td>1012ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>03_playback_seek</code></td>
+                            <td>步进快进/退与控制栏</td>
+                            <td>4ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>04_loop_marker</code></td>
+                            <td>A-B 循环与打点标签控制</td>
+                            <td>4ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>05_comment_system</code></td>
+                            <td>评论区数据展示与时间格式化合规</td>
+                            <td>6ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>06_settings_panel</code></td>
+                            <td>设置面板展开与侧边遮挡完整性</td>
+                            <td>1055ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                </tbody>
+            </table>
+
+            
+                <div class="screenshot-wrap">
+                    <img class="screenshot-img" src="artifacts/vp_tablet_landscape_4_3.png" alt="平板横屏 (4:3 iPad Landscape) 实景渲染快照" />
+                </div>
+            
+        </div>
+    
+        <div class="vp-section">
+            <div class="vp-header">
+                <div>
+                    <h2 style="margin: 0;">平板竖屏 (3:4 iPad Portrait)</h2>
+                    <span style="color: var(--muted); font-size: 13px;">规格: 768 × 1024</span>
+                </div>
+            </div>
+
+            
+                <div class="anomaly-box">
+                    <strong style="color: var(--fail);">🚨 缺陷探测告警 (1 项)</strong>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                        <li><strong>[LAYOUT_ZERO_DIMENSION]</strong> 控制按钮尺寸塌陷为 0</li>
+                    </ul>
+                </div>
+            
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例 ID</th>
+                        <th>用例名称</th>
+                        <th>耗时</th>
+                        <th>状态</th>
+                        <th>断言与问题诊断</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr>
+                            <td><code>01_floating_button</code></td>
+                            <td>浮动按钮挂载与安全区边距</td>
+                            <td>5ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>02_theater_mode</code></td>
+                            <td>影院模式唤起与视频容器转移</td>
+                            <td>1011ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>03_playback_seek</code></td>
+                            <td>步进快进/退与控制栏</td>
+                            <td>5ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>04_loop_marker</code></td>
+                            <td>A-B 循环与打点标签控制</td>
+                            <td>5ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>05_comment_system</code></td>
+                            <td>评论区数据展示与时间格式化合规</td>
+                            <td>8ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>06_settings_panel</code></td>
+                            <td>设置面板展开与侧边遮挡完整性</td>
+                            <td>1053ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                </tbody>
+            </table>
+
+            
+                <div class="screenshot-wrap">
+                    <img class="screenshot-img" src="artifacts/vp_tablet_portrait_3_4.png" alt="平板竖屏 (3:4 iPad Portrait) 实景渲染快照" />
+                </div>
+            
+        </div>
+    
+        <div class="vp-section">
+            <div class="vp-header">
+                <div>
+                    <h2 style="margin: 0;">手机竖屏 (9:19.5 iPhone 单手模式)</h2>
+                    <span style="color: var(--muted); font-size: 13px;">规格: 390 × 844</span>
+                </div>
+            </div>
+
+            
+                <div class="anomaly-box">
+                    <strong style="color: var(--fail);">🚨 缺陷探测告警 (1 项)</strong>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                        <li><strong>[LAYOUT_ZERO_DIMENSION]</strong> 控制按钮尺寸塌陷为 0</li>
+                    </ul>
+                </div>
+            
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例 ID</th>
+                        <th>用例名称</th>
+                        <th>耗时</th>
+                        <th>状态</th>
+                        <th>断言与问题诊断</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr>
+                            <td><code>01_floating_button</code></td>
+                            <td>浮动按钮挂载与安全区边距</td>
+                            <td>9ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>02_theater_mode</code></td>
+                            <td>影院模式唤起与视频容器转移</td>
+                            <td>1031ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>03_playback_seek</code></td>
+                            <td>步进快进/退与控制栏</td>
+                            <td>6ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>04_loop_marker</code></td>
+                            <td>A-B 循环与打点标签控制</td>
+                            <td>6ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>05_comment_system</code></td>
+                            <td>评论区数据展示与时间格式化合规</td>
+                            <td>7ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>06_settings_panel</code></td>
+                            <td>设置面板展开与侧边遮挡完整性</td>
+                            <td>1044ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                </tbody>
+            </table>
+
+            
+                <div class="screenshot-wrap">
+                    <img class="screenshot-img" src="artifacts/vp_mobile_portrait_9_19_5.png" alt="手机竖屏 (9:19.5 iPhone 单手模式) 实景渲染快照" />
+                </div>
+            
+        </div>
+    
+        <div class="vp-section">
+            <div class="vp-header">
+                <div>
+                    <h2 style="margin: 0;">手机横屏 (19.5:9 全屏横握)</h2>
+                    <span style="color: var(--muted); font-size: 13px;">规格: 844 × 390</span>
+                </div>
+            </div>
+
+            
+                <div class="anomaly-box">
+                    <strong style="color: var(--fail);">🚨 缺陷探测告警 (1 项)</strong>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                        <li><strong>[LAYOUT_ZERO_DIMENSION]</strong> 控制按钮尺寸塌陷为 0</li>
+                    </ul>
+                </div>
+            
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例 ID</th>
+                        <th>用例名称</th>
+                        <th>耗时</th>
+                        <th>状态</th>
+                        <th>断言与问题诊断</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr>
+                            <td><code>01_floating_button</code></td>
+                            <td>浮动按钮挂载与安全区边距</td>
+                            <td>20ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>02_theater_mode</code></td>
+                            <td>影院模式唤起与视频容器转移</td>
+                            <td>1024ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>03_playback_seek</code></td>
+                            <td>步进快进/退与控制栏</td>
+                            <td>5ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>04_loop_marker</code></td>
+                            <td>A-B 循环与打点标签控制</td>
+                            <td>5ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>05_comment_system</code></td>
+                            <td>评论区数据展示与时间格式化合规</td>
+                            <td>9ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td><code>06_settings_panel</code></td>
+                            <td>设置面板展开与侧边遮挡完整性</td>
+                            <td>1055ms</td>
+                            <td><span class="badge badge-pass">PASS</span></td>
+                            <td style="color: var(--muted);">
+                                —
+                            </td>
+                        </tr>
+                    
+                </tbody>
+            </table>
+
+            
+                <div class="screenshot-wrap">
+                    <img class="screenshot-img" src="artifacts/vp_mobile_landscape_19_5_9.png" alt="手机横屏 (19.5:9 全屏横握) 实景渲染快照" />
+                </div>
+            
+        </div>
+    
+</body>
+</html>

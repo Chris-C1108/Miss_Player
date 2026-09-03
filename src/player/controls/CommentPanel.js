@@ -1935,7 +1935,7 @@ export class CommentPanel {
                 <div class="jc-bd">
                     <div class="jc-hdr">
                         <div class="jc-hdr-left">
-                            <span class="jc-t">${c.time}</span>
+                            <span class="jc-t">${(c.time && !c.time.includes('Invalid')) ? c.time : ''}</span>
                         </div>
                         <div class="jc-hdr-right">
                             ${userHtml}

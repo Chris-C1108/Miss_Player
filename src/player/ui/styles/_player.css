@@ -305,6 +305,26 @@
     pointer-events: auto;
 }
 
+/* 当设置面板处于激活态时，底层评论列表优雅暗化防干扰 */
+.tm-player-container.tm-settings-active .tm-comments-list,
+.tm-settings-panel.active ~ .tm-comments-panel .tm-comments-list,
+body.tm-settings-active .tm-comments-panel .tm-comments-list {
+    opacity: 0.15 !important;
+    filter: blur(3px) !important;
+    pointer-events: none !important;
+    transition: opacity var(--anim-smooth), filter var(--anim-smooth) !important;
+}
+
+/* 竖屏与窄屏视口下设置面板全宽自适应 */
+@media screen and (max-width: 929px), screen and (orientation: portrait) {
+    .tm-settings-panel {
+        right: 12px !important;
+        left: 12px !important;
+        width: calc(100% - 24px) !important;
+        max-width: calc(100% - 24px) !important;
+    }
+}
+
 /* 关联菜单主容器 */
 .tm-settings-menu-container {
     display: flex;

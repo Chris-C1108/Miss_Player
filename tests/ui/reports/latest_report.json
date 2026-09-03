@@ -1,0 +1,1085 @@
+{
+  "startTime": 1788455450439,
+  "targetUrl": "https://v7tlar.fdxqupvz.cc/video/4191/",
+  "targetTitle": "《速通西游》第1集 AI成人短剧 | 黄果短剧",
+  "viewportsTested": [
+    "desktop_16_9",
+    "desktop_ultrawide_21_9",
+    "laptop_16_10",
+    "tablet_landscape_4_3",
+    "tablet_portrait_3_4",
+    "mobile_portrait_9_19_5",
+    "mobile_landscape_19_5_9"
+  ],
+  "totalCases": 42,
+  "passedCases": 42,
+  "failedCases": 0,
+  "criticalAnomalies": 0,
+  "reports": [
+    {
+      "viewportKey": "desktop_16_9",
+      "viewportName": "桌面标准 (16:9 1080p)",
+      "width": 1920,
+      "height": 1080,
+      "cases": [
+        {
+          "id": "01_floating_button",
+          "name": "浮动按钮挂载与安全区边距",
+          "passed": true,
+          "duration": 4,
+          "assertions": [],
+          "details": {
+            "visible": true,
+            "display": "flex",
+            "position": "fixed",
+            "zIndex": 9980,
+            "rect": {
+              "top": 1004,
+              "bottom": 1060,
+              "left": 1834,
+              "right": 1890,
+              "width": 56,
+              "height": 56
+            },
+            "hasSvg": true
+          }
+        },
+        {
+          "id": "02_theater_mode",
+          "name": "影院模式唤起与视频容器转移",
+          "passed": true,
+          "duration": 1027,
+          "assertions": [],
+          "details": {
+            "isBodyActive": true,
+            "hasVideoWrapper": true,
+            "hasVideoMounted": true,
+            "videoSrc": "blob:https://v7tlar.fdxqupvz.cc/c127260c-74ca-4c00-b032-9bf500bcbbb8",
+            "hasPlaceholder": true,
+            "hasSidebar": true,
+            "sidebarRect": {},
+            "hasTitle": true,
+            "titleText": "速通西游 第 01 集"
+          }
+        },
+        {
+          "id": "03_playback_seek",
+          "name": "步进快进/退与控制栏",
+          "passed": true,
+          "duration": 7,
+          "assertions": [],
+          "details": {
+            "hasSeekRow": true,
+            "buttonLabels": [
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m",
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m"
+            ],
+            "hasTimeIndicator": true,
+            "timeText": "0:01",
+            "speedText": "",
+            "hasVolume": true
+          }
+        },
+        {
+          "id": "04_loop_marker",
+          "name": "A-B 循环与打点标签控制",
+          "passed": true,
+          "duration": 7,
+          "assertions": [],
+          "details": {
+            "hasLoopRow": true,
+            "buttons": [
+              {
+                "className": "tm-draft-action save",
+                "title": "保存标签",
+                "text": ""
+              },
+              {
+                "className": "tm-draft-action cancel",
+                "title": "取消草稿",
+                "text": ""
+              }
+            ],
+            "isDraftVisible": true
+          }
+        },
+        {
+          "id": "05_comment_system",
+          "name": "评论区数据展示与时间格式化合规",
+          "passed": true,
+          "duration": 9,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "badges": [
+              {
+                "text": "Jable",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "JavDB",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "Javlibrary",
+                "className": "tm-source-badge disabled"
+              }
+            ],
+            "cardCount": 0,
+            "invalidDateCount": 0,
+            "sampleCards": []
+          }
+        },
+        {
+          "id": "06_settings_panel",
+          "name": "设置面板展开与侧边遮挡完整性",
+          "passed": true,
+          "duration": 1058,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "isActive": true,
+            "leftGap": 12,
+            "panelWidth": 398,
+            "sidebarWidth": 422,
+            "togglesCount": 8,
+            "rowsCount": 0
+          }
+        }
+      ],
+      "anomalies": [
+        {
+          "type": "LAYOUT_ZERO_DIMENSION",
+          "severity": "HIGH",
+          "message": "控制按钮尺寸塌陷为 0",
+          "className": "tm-comment-copy-all-btn",
+          "title": "一键复制所有加载的原始评论"
+        }
+      ],
+      "screenshot": "artifacts/vp_desktop_16_9.png"
+    },
+    {
+      "viewportKey": "desktop_ultrawide_21_9",
+      "viewportName": "桌面带鱼屏 (21:9 超宽)",
+      "width": 2560,
+      "height": 1080,
+      "cases": [
+        {
+          "id": "01_floating_button",
+          "name": "浮动按钮挂载与安全区边距",
+          "passed": true,
+          "duration": 4,
+          "assertions": [],
+          "details": {
+            "visible": true,
+            "display": "flex",
+            "position": "fixed",
+            "zIndex": 9980,
+            "rect": {
+              "top": 1004,
+              "bottom": 1060,
+              "left": 2484,
+              "right": 2540,
+              "width": 56,
+              "height": 56
+            },
+            "hasSvg": true
+          }
+        },
+        {
+          "id": "02_theater_mode",
+          "name": "影院模式唤起与视频容器转移",
+          "passed": true,
+          "duration": 1008,
+          "assertions": [],
+          "details": {
+            "isBodyActive": true,
+            "hasVideoWrapper": true,
+            "hasVideoMounted": true,
+            "videoSrc": "blob:https://v7tlar.fdxqupvz.cc/c127260c-74ca-4c00-b032-9bf500bcbbb8",
+            "hasPlaceholder": true,
+            "hasSidebar": true,
+            "sidebarRect": {},
+            "hasTitle": true,
+            "titleText": "速通西游 第 01 集"
+          }
+        },
+        {
+          "id": "03_playback_seek",
+          "name": "步进快进/退与控制栏",
+          "passed": true,
+          "duration": 4,
+          "assertions": [],
+          "details": {
+            "hasSeekRow": true,
+            "buttonLabels": [
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m",
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m"
+            ],
+            "hasTimeIndicator": true,
+            "timeText": "0:04",
+            "speedText": "",
+            "hasVolume": true
+          }
+        },
+        {
+          "id": "04_loop_marker",
+          "name": "A-B 循环与打点标签控制",
+          "passed": true,
+          "duration": 2,
+          "assertions": [],
+          "details": {
+            "hasLoopRow": true,
+            "buttons": [
+              {
+                "className": "tm-draft-action save",
+                "title": "保存标签",
+                "text": ""
+              },
+              {
+                "className": "tm-draft-action cancel",
+                "title": "取消草稿",
+                "text": ""
+              }
+            ],
+            "isDraftVisible": true
+          }
+        },
+        {
+          "id": "05_comment_system",
+          "name": "评论区数据展示与时间格式化合规",
+          "passed": true,
+          "duration": 3,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "badges": [
+              {
+                "text": "Jable",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "JavDB",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "Javlibrary",
+                "className": "tm-source-badge disabled"
+              }
+            ],
+            "cardCount": 0,
+            "invalidDateCount": 0,
+            "sampleCards": []
+          }
+        },
+        {
+          "id": "06_settings_panel",
+          "name": "设置面板展开与侧边遮挡完整性",
+          "passed": true,
+          "duration": 1048,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "isActive": true,
+            "leftGap": 12,
+            "panelWidth": 536,
+            "sidebarWidth": 560,
+            "togglesCount": 8,
+            "rowsCount": 0
+          }
+        }
+      ],
+      "anomalies": [
+        {
+          "type": "LAYOUT_ZERO_DIMENSION",
+          "severity": "HIGH",
+          "message": "控制按钮尺寸塌陷为 0",
+          "className": "tm-comment-copy-all-btn",
+          "title": "一键复制所有加载的原始评论"
+        }
+      ],
+      "screenshot": "artifacts/vp_desktop_ultrawide_21_9.png"
+    },
+    {
+      "viewportKey": "laptop_16_10",
+      "viewportName": "笔记本 (16:10 窄高比)",
+      "width": 1440,
+      "height": 900,
+      "cases": [
+        {
+          "id": "01_floating_button",
+          "name": "浮动按钮挂载与安全区边距",
+          "passed": true,
+          "duration": 39,
+          "assertions": [],
+          "details": {
+            "visible": true,
+            "display": "flex",
+            "position": "fixed",
+            "zIndex": 9980,
+            "rect": {
+              "top": 824,
+              "bottom": 880,
+              "left": 1364,
+              "right": 1420,
+              "width": 56,
+              "height": 56
+            },
+            "hasSvg": true
+          }
+        },
+        {
+          "id": "02_theater_mode",
+          "name": "影院模式唤起与视频容器转移",
+          "passed": true,
+          "duration": 1060,
+          "assertions": [],
+          "details": {
+            "isBodyActive": true,
+            "hasVideoWrapper": true,
+            "hasVideoMounted": true,
+            "videoSrc": "blob:https://v7tlar.fdxqupvz.cc/c127260c-74ca-4c00-b032-9bf500bcbbb8",
+            "hasPlaceholder": true,
+            "hasSidebar": true,
+            "sidebarRect": {},
+            "hasTitle": true,
+            "titleText": "速通西游 第 01 集"
+          }
+        },
+        {
+          "id": "03_playback_seek",
+          "name": "步进快进/退与控制栏",
+          "passed": true,
+          "duration": 10,
+          "assertions": [],
+          "details": {
+            "hasSeekRow": true,
+            "buttonLabels": [
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m",
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m"
+            ],
+            "hasTimeIndicator": true,
+            "timeText": "0:08",
+            "speedText": "",
+            "hasVolume": true
+          }
+        },
+        {
+          "id": "04_loop_marker",
+          "name": "A-B 循环与打点标签控制",
+          "passed": true,
+          "duration": 6,
+          "assertions": [],
+          "details": {
+            "hasLoopRow": true,
+            "buttons": [
+              {
+                "className": "tm-draft-action save",
+                "title": "保存标签",
+                "text": ""
+              },
+              {
+                "className": "tm-draft-action cancel",
+                "title": "取消草稿",
+                "text": ""
+              }
+            ],
+            "isDraftVisible": true
+          }
+        },
+        {
+          "id": "05_comment_system",
+          "name": "评论区数据展示与时间格式化合规",
+          "passed": true,
+          "duration": 7,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "badges": [
+              {
+                "text": "Jable",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "JavDB",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "Javlibrary",
+                "className": "tm-source-badge disabled"
+              }
+            ],
+            "cardCount": 0,
+            "invalidDateCount": 0,
+            "sampleCards": []
+          }
+        },
+        {
+          "id": "06_settings_panel",
+          "name": "设置面板展开与侧边遮挡完整性",
+          "passed": true,
+          "duration": 1050,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "isActive": true,
+            "leftGap": 12,
+            "panelWidth": 356,
+            "sidebarWidth": 380,
+            "togglesCount": 8,
+            "rowsCount": 0
+          }
+        }
+      ],
+      "anomalies": [
+        {
+          "type": "LAYOUT_ZERO_DIMENSION",
+          "severity": "HIGH",
+          "message": "控制按钮尺寸塌陷为 0",
+          "className": "tm-comment-copy-all-btn",
+          "title": "一键复制所有加载的原始评论"
+        }
+      ],
+      "screenshot": "artifacts/vp_laptop_16_10.png"
+    },
+    {
+      "viewportKey": "tablet_landscape_4_3",
+      "viewportName": "平板横屏 (4:3 iPad Landscape)",
+      "width": 1024,
+      "height": 768,
+      "cases": [
+        {
+          "id": "01_floating_button",
+          "name": "浮动按钮挂载与安全区边距",
+          "passed": true,
+          "duration": 6,
+          "assertions": [],
+          "details": {
+            "visible": true,
+            "display": "flex",
+            "position": "fixed",
+            "zIndex": 9980,
+            "rect": {
+              "top": 692,
+              "bottom": 748,
+              "left": 948,
+              "right": 1004,
+              "width": 56,
+              "height": 56
+            },
+            "hasSvg": true
+          }
+        },
+        {
+          "id": "02_theater_mode",
+          "name": "影院模式唤起与视频容器转移",
+          "passed": true,
+          "duration": 1012,
+          "assertions": [],
+          "details": {
+            "isBodyActive": true,
+            "hasVideoWrapper": true,
+            "hasVideoMounted": true,
+            "videoSrc": "blob:https://v7tlar.fdxqupvz.cc/c127260c-74ca-4c00-b032-9bf500bcbbb8",
+            "hasPlaceholder": true,
+            "hasSidebar": true,
+            "sidebarRect": {},
+            "hasTitle": true,
+            "titleText": "速通西游 第 01 集"
+          }
+        },
+        {
+          "id": "03_playback_seek",
+          "name": "步进快进/退与控制栏",
+          "passed": true,
+          "duration": 4,
+          "assertions": [],
+          "details": {
+            "hasSeekRow": true,
+            "buttonLabels": [
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m",
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m"
+            ],
+            "hasTimeIndicator": true,
+            "timeText": "0:11",
+            "speedText": "",
+            "hasVolume": true
+          }
+        },
+        {
+          "id": "04_loop_marker",
+          "name": "A-B 循环与打点标签控制",
+          "passed": true,
+          "duration": 4,
+          "assertions": [],
+          "details": {
+            "hasLoopRow": true,
+            "buttons": [
+              {
+                "className": "tm-draft-action save",
+                "title": "保存标签",
+                "text": ""
+              },
+              {
+                "className": "tm-draft-action cancel",
+                "title": "取消草稿",
+                "text": ""
+              }
+            ],
+            "isDraftVisible": true
+          }
+        },
+        {
+          "id": "05_comment_system",
+          "name": "评论区数据展示与时间格式化合规",
+          "passed": true,
+          "duration": 6,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "badges": [
+              {
+                "text": "Jable",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "JavDB",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "Javlibrary",
+                "className": "tm-source-badge disabled"
+              }
+            ],
+            "cardCount": 0,
+            "invalidDateCount": 0,
+            "sampleCards": []
+          }
+        },
+        {
+          "id": "06_settings_panel",
+          "name": "设置面板展开与侧边遮挡完整性",
+          "passed": true,
+          "duration": 1055,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "isActive": true,
+            "leftGap": 12,
+            "panelWidth": 326,
+            "sidebarWidth": 350,
+            "togglesCount": 8,
+            "rowsCount": 0
+          }
+        }
+      ],
+      "anomalies": [
+        {
+          "type": "LAYOUT_ZERO_DIMENSION",
+          "severity": "HIGH",
+          "message": "控制按钮尺寸塌陷为 0",
+          "className": "tm-comment-copy-all-btn",
+          "title": "一键复制所有加载的原始评论"
+        }
+      ],
+      "screenshot": "artifacts/vp_tablet_landscape_4_3.png"
+    },
+    {
+      "viewportKey": "tablet_portrait_3_4",
+      "viewportName": "平板竖屏 (3:4 iPad Portrait)",
+      "width": 768,
+      "height": 1024,
+      "cases": [
+        {
+          "id": "01_floating_button",
+          "name": "浮动按钮挂载与安全区边距",
+          "passed": true,
+          "duration": 5,
+          "assertions": [],
+          "details": {
+            "visible": true,
+            "display": "flex",
+            "position": "fixed",
+            "zIndex": 9980,
+            "rect": {
+              "top": 948,
+              "bottom": 1004,
+              "left": 361.9032287597656,
+              "right": 417.9032287597656,
+              "width": 56,
+              "height": 56
+            },
+            "hasSvg": true
+          }
+        },
+        {
+          "id": "02_theater_mode",
+          "name": "影院模式唤起与视频容器转移",
+          "passed": true,
+          "duration": 1011,
+          "assertions": [],
+          "details": {
+            "isBodyActive": true,
+            "hasVideoWrapper": true,
+            "hasVideoMounted": true,
+            "videoSrc": "blob:https://v7tlar.fdxqupvz.cc/c127260c-74ca-4c00-b032-9bf500bcbbb8",
+            "hasPlaceholder": true,
+            "hasSidebar": true,
+            "sidebarRect": {},
+            "hasTitle": true,
+            "titleText": "速通西游 第 01 集"
+          }
+        },
+        {
+          "id": "03_playback_seek",
+          "name": "步进快进/退与控制栏",
+          "passed": true,
+          "duration": 5,
+          "assertions": [],
+          "details": {
+            "hasSeekRow": true,
+            "buttonLabels": [
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m",
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m"
+            ],
+            "hasTimeIndicator": true,
+            "timeText": "0:14",
+            "speedText": "",
+            "hasVolume": true
+          }
+        },
+        {
+          "id": "04_loop_marker",
+          "name": "A-B 循环与打点标签控制",
+          "passed": true,
+          "duration": 5,
+          "assertions": [],
+          "details": {
+            "hasLoopRow": true,
+            "buttons": [
+              {
+                "className": "tm-draft-action save",
+                "title": "保存标签",
+                "text": ""
+              },
+              {
+                "className": "tm-draft-action cancel",
+                "title": "取消草稿",
+                "text": ""
+              }
+            ],
+            "isDraftVisible": true
+          }
+        },
+        {
+          "id": "05_comment_system",
+          "name": "评论区数据展示与时间格式化合规",
+          "passed": true,
+          "duration": 8,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "badges": [
+              {
+                "text": "Jable",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "JavDB",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "Javlibrary",
+                "className": "tm-source-badge disabled"
+              }
+            ],
+            "cardCount": 0,
+            "invalidDateCount": 0,
+            "sampleCards": []
+          }
+        },
+        {
+          "id": "06_settings_panel",
+          "name": "设置面板展开与侧边遮挡完整性",
+          "passed": true,
+          "duration": 1053,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "isActive": true,
+            "leftGap": -12,
+            "panelWidth": 744,
+            "sidebarWidth": 720,
+            "togglesCount": 8,
+            "rowsCount": 0
+          }
+        }
+      ],
+      "anomalies": [
+        {
+          "type": "LAYOUT_ZERO_DIMENSION",
+          "severity": "HIGH",
+          "message": "控制按钮尺寸塌陷为 0",
+          "className": "tm-comment-copy-all-btn",
+          "title": "一键复制所有加载的原始评论"
+        }
+      ],
+      "screenshot": "artifacts/vp_tablet_portrait_3_4.png"
+    },
+    {
+      "viewportKey": "mobile_portrait_9_19_5",
+      "viewportName": "手机竖屏 (9:19.5 iPhone 单手模式)",
+      "width": 390,
+      "height": 844,
+      "cases": [
+        {
+          "id": "01_floating_button",
+          "name": "浮动按钮挂载与安全区边距",
+          "passed": true,
+          "duration": 9,
+          "assertions": [],
+          "details": {
+            "visible": true,
+            "display": "flex",
+            "position": "fixed",
+            "zIndex": 9980,
+            "rect": {
+              "top": 768,
+              "bottom": 824,
+              "left": 167,
+              "right": 223,
+              "width": 56,
+              "height": 56
+            },
+            "hasSvg": true
+          }
+        },
+        {
+          "id": "02_theater_mode",
+          "name": "影院模式唤起与视频容器转移",
+          "passed": true,
+          "duration": 1031,
+          "assertions": [],
+          "details": {
+            "isBodyActive": true,
+            "hasVideoWrapper": true,
+            "hasVideoMounted": true,
+            "videoSrc": "blob:https://v7tlar.fdxqupvz.cc/c127260c-74ca-4c00-b032-9bf500bcbbb8",
+            "hasPlaceholder": true,
+            "hasSidebar": true,
+            "sidebarRect": {},
+            "hasTitle": true,
+            "titleText": "速通西游 第 01 集"
+          }
+        },
+        {
+          "id": "03_playback_seek",
+          "name": "步进快进/退与控制栏",
+          "passed": true,
+          "duration": 6,
+          "assertions": [],
+          "details": {
+            "hasSeekRow": true,
+            "buttonLabels": [
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m",
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m"
+            ],
+            "hasTimeIndicator": true,
+            "timeText": "0:18",
+            "speedText": "",
+            "hasVolume": true
+          }
+        },
+        {
+          "id": "04_loop_marker",
+          "name": "A-B 循环与打点标签控制",
+          "passed": true,
+          "duration": 6,
+          "assertions": [],
+          "details": {
+            "hasLoopRow": true,
+            "buttons": [
+              {
+                "className": "tm-draft-action save",
+                "title": "保存标签",
+                "text": ""
+              },
+              {
+                "className": "tm-draft-action cancel",
+                "title": "取消草稿",
+                "text": ""
+              }
+            ],
+            "isDraftVisible": true
+          }
+        },
+        {
+          "id": "05_comment_system",
+          "name": "评论区数据展示与时间格式化合规",
+          "passed": true,
+          "duration": 7,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "badges": [
+              {
+                "text": "Jable",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "JavDB",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "Javlibrary",
+                "className": "tm-source-badge disabled"
+              }
+            ],
+            "cardCount": 0,
+            "invalidDateCount": 0,
+            "sampleCards": []
+          }
+        },
+        {
+          "id": "06_settings_panel",
+          "name": "设置面板展开与侧边遮挡完整性",
+          "passed": true,
+          "duration": 1044,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "isActive": true,
+            "leftGap": 12,
+            "panelWidth": 366,
+            "sidebarWidth": 390,
+            "togglesCount": 8,
+            "rowsCount": 0
+          }
+        }
+      ],
+      "anomalies": [
+        {
+          "type": "LAYOUT_ZERO_DIMENSION",
+          "severity": "HIGH",
+          "message": "控制按钮尺寸塌陷为 0",
+          "className": "tm-comment-copy-all-btn",
+          "title": "一键复制所有加载的原始评论"
+        }
+      ],
+      "screenshot": "artifacts/vp_mobile_portrait_9_19_5.png"
+    },
+    {
+      "viewportKey": "mobile_landscape_19_5_9",
+      "viewportName": "手机横屏 (19.5:9 全屏横握)",
+      "width": 844,
+      "height": 390,
+      "cases": [
+        {
+          "id": "01_floating_button",
+          "name": "浮动按钮挂载与安全区边距",
+          "passed": true,
+          "duration": 20,
+          "assertions": [],
+          "details": {
+            "visible": true,
+            "display": "flex",
+            "position": "fixed",
+            "zIndex": 9980,
+            "rect": {
+              "top": 322,
+              "bottom": 370,
+              "left": 770.9048461914062,
+              "right": 818.9048461914062,
+              "width": 48,
+              "height": 48
+            },
+            "hasSvg": true
+          }
+        },
+        {
+          "id": "02_theater_mode",
+          "name": "影院模式唤起与视频容器转移",
+          "passed": true,
+          "duration": 1024,
+          "assertions": [],
+          "details": {
+            "isBodyActive": true,
+            "hasVideoWrapper": true,
+            "hasVideoMounted": true,
+            "videoSrc": "blob:https://v7tlar.fdxqupvz.cc/c127260c-74ca-4c00-b032-9bf500bcbbb8",
+            "hasPlaceholder": true,
+            "hasSidebar": true,
+            "sidebarRect": {},
+            "hasTitle": true,
+            "titleText": "速通西游 第 01 集"
+          }
+        },
+        {
+          "id": "03_playback_seek",
+          "name": "步进快进/退与控制栏",
+          "passed": true,
+          "duration": 5,
+          "assertions": [],
+          "details": {
+            "hasSeekRow": true,
+            "buttonLabels": [
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m",
+              "5s",
+              "10s",
+              "30s",
+              "1m",
+              "5m",
+              "10m"
+            ],
+            "hasTimeIndicator": true,
+            "timeText": "0:21",
+            "speedText": "",
+            "hasVolume": true
+          }
+        },
+        {
+          "id": "04_loop_marker",
+          "name": "A-B 循环与打点标签控制",
+          "passed": true,
+          "duration": 5,
+          "assertions": [],
+          "details": {
+            "hasLoopRow": true,
+            "buttons": [
+              {
+                "className": "tm-draft-action save",
+                "title": "保存标签",
+                "text": ""
+              },
+              {
+                "className": "tm-draft-action cancel",
+                "title": "取消草稿",
+                "text": ""
+              }
+            ],
+            "isDraftVisible": true
+          }
+        },
+        {
+          "id": "05_comment_system",
+          "name": "评论区数据展示与时间格式化合规",
+          "passed": true,
+          "duration": 9,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "badges": [
+              {
+                "text": "Jable",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "JavDB",
+                "className": "tm-source-badge enabled"
+              },
+              {
+                "text": "Javlibrary",
+                "className": "tm-source-badge disabled"
+              }
+            ],
+            "cardCount": 0,
+            "invalidDateCount": 0,
+            "sampleCards": []
+          }
+        },
+        {
+          "id": "06_settings_panel",
+          "name": "设置面板展开与侧边遮挡完整性",
+          "passed": true,
+          "duration": 1055,
+          "assertions": [],
+          "details": {
+            "hasPanel": true,
+            "isActive": true,
+            "leftGap": -482,
+            "panelWidth": 326,
+            "sidebarWidth": 350,
+            "togglesCount": 8,
+            "rowsCount": 0
+          }
+        }
+      ],
+      "anomalies": [
+        {
+          "type": "LAYOUT_ZERO_DIMENSION",
+          "severity": "HIGH",
+          "message": "控制按钮尺寸塌陷为 0",
+          "className": "tm-comment-copy-all-btn",
+          "title": "一键复制所有加载的原始评论"
+        }
+      ],
+      "screenshot": "artifacts/vp_mobile_landscape_19_5_9.png"
+    }
+  ],
+  "duration": 25536
+}

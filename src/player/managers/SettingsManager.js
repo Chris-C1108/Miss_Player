@@ -1035,6 +1035,8 @@ export class SettingsManager {
             this.syncState();
             this.createSettingsPanel();
             this.settingsPanel.classList.add('active');
+            document.body.classList.add('tm-settings-active');
+            this.uiElements?.playerContainer?.classList.add('tm-settings-active');
             
             // 点击外部遮罩或其它区域关闭设置面板
             this.overlayClickHandler = (e) => {
@@ -1058,6 +1060,8 @@ export class SettingsManager {
     closeSettingsPanel() {
         if (!this.settingsPanel) return;
         this.settingsPanel.classList.remove('active');
+        document.body.classList.remove('tm-settings-active');
+        this.uiElements?.playerContainer?.classList.remove('tm-settings-active');
         
         if (this.overlayClickHandler) {
             document.removeEventListener('click', this.overlayClickHandler);

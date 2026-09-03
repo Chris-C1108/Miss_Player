@@ -352,9 +352,17 @@
         -webkit-backdrop-filter: blur(10px) !important;
     }
 
-    /* 设置面板与评论栏层级微调 */
-    .tm-settings-panel {
+    /* 设置面板与评论栏层级及宽度适配：对称填满侧边栏，杜绝底层评论侧漏 */
+    .tm-player-container .tm-settings-panel {
         z-index: 10002 !important;
+        width: calc(var(--sidebar-width) - 24px) !important;
+        max-width: calc(var(--sidebar-width) - 24px) !important;
+        right: 12px !important;
+    }
+
+    .tm-player-container.tm-sidebar-left .tm-settings-panel {
+        left: 12px !important;
+        right: auto !important;
     }
 
 
