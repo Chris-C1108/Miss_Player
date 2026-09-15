@@ -11,7 +11,7 @@
 // @description:vi MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @description:zh-CN MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:zh-TW MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器|多語言支持 支持 jable po*nhub 等通用
-// @version 5.6.11
+// @version 5.6.12
 // @author Chris_C
 // @match *://*.missav.ws/*
 // @match *://*.missav.ai/*
@@ -178,7 +178,7 @@
       var p = a(314);
       var v = a.n(p);
       var y = v()(u());
-      y.push([ r.id, `.tm-time-indicator{\n    position:absolute;\n    background-color:hsla(var(--shadcn-card) / 0.8);\n    color:hsl(var(--shadcn-card-foreground));\n    padding:4px 8px;\n    border-radius:4px;\n    font-size:12px;\n    font-weight:500;\n    font-variant-numeric:tabular-nums;\n    pointer-events:none;\n    z-index:9995;\n    opacity:0;\n    transform:translateY(-8px);\n    transition:opacity 0.2s, transform 0.2s;\n    box-shadow:0 2px 8px rgba(0, 0, 0, 0.2);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n}\n.tm-volume-control{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:40px;\n    padding:0 8px;\n    background-color:transparent;\n    transition:opacity 0.3s ease;\n}\n.tm-volume-control-no-slider{\n    width:auto;\n    padding:0;\n}\n\n.tm-volume-control-no-slider .tm-volume-button{\n    margin:0 8px;\n}\n.tm-volume-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    width:32px;\n    height:32px;\n    padding:4px;\n    border:none;\n    border-radius:50%;\n    background:transparent;\n    color:#fff;\n    cursor:pointer;\n    transition:background-color 0.2s ease;\n}\n\n.tm-volume-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n}\n\n.tm-volume-button svg{\n    width:20px;\n    height:20px;\n}\n.tm-volume-slider-container{\n    position:relative;\n    width:0;\n    height:40px;\n    display:flex;\n    align-items:center;\n    overflow:hidden;\n    transition:width 0.3s ease;\n    opacity:0;\n}\n@media (hover: hover){\n    .tm-volume-control:hover .tm-volume-slider-container{\n        width:80px;\n        opacity:1;\n    }\n}\n.tm-volume-control.dragging .tm-volume-slider-container{\n    width:80px;\n    opacity:1;\n}\n.tm-volume-slider-track{\n    position:relative;\n    width:100%;\n    height:4px;\n    background-color:hsla(var(--shadcn-secondary) / 0.3);\n    border-radius:2px;\n    cursor:pointer;\n}\n.tm-volume-slider-level{\n    position:absolute;\n    left:0;\n    top:0;\n    height:100%;\n    background-color:#fff;\n    border-radius:2px;\n    pointer-events:none;\n    transition:width 0.1s ease;\n}\n.tm-volume-value{\n    position:absolute;\n    top:-24px;\n    left:50%;\n    transform:translateX(-50%);\n    background-color:hsla(var(--shadcn-secondary) / 0.8);\n    color:#fff;\n    padding:2px 6px;\n    border-radius:4px;\n    font-size:12px;\n    font-variant-numeric:tabular-nums;\n    opacity:0;\n    transition:opacity 0.2s ease;\n    pointer-events:none;\n    backdrop-filter:blur(4px);\n}\n.tm-volume-control.dragging .tm-volume-value{\n    opacity:1;\n}\n@media (hover: none){\n    .tm-volume-control{\n        touch-action:none;\n    }\n    \n    .tm-volume-slider-track{\n        height:6px;\n    }\n    \n    .tm-volume-button{\n        width:40px;\n        height:40px;\n    }\n}\n@media (prefers-color-scheme: dark){\n    .tm-volume-slider-level{\n        background-color:hsl(var(--shadcn-primary));\n    }\n    \n    .tm-volume-button svg{\n        stroke:hsl(var(--shadcn-primary));\n    }\n}\n.tm-toggle-switch{\n    position:relative;\n    display:inline-block;\n    width:40px;\n    height:24px;\n}\n\n.tm-toggle-switch input{\n    opacity:0;\n    width:0;\n    height:0;\n}\n\n.tm-toggle-slider{\n    position:absolute;\n    cursor:pointer;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:hsla(var(--shadcn-muted) / 0.7);\n    border-radius:12px;\n    transition:var(--anim-quick);\n}\n\n.tm-toggle-slider:before{\n    position:absolute;\n    content:"";\n    height:20px;\n    width:20px;\n    left:2px;\n    bottom:2px;\n    background-color:hsl(var(--shadcn-foreground));\n    border-radius:50%;\n    transition:var(--anim-quick);\n    box-shadow:0 2px 4px rgba(0, 0, 0, 0.1);\n}\n\n.tm-toggle-slider.checked{\n    background-color:hsl(var(--shadcn-blue));\n}\n\n.tm-toggle-slider.checked:before{\n    transform:translateX(16px);\n}\n.tm-playback-rate-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    margin-left:0;\n    height:32px;\n    width:80px;\n    background:hsla(var(--shadcn-secondary) / 0.5);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    color:hsl(var(--shadcn-foreground));\n    font-size:15px;\n    font-weight:600;\n    font-variant-numeric:tabular-nums;\n    letter-spacing:-0.1px;\n    border-radius:9999px;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:0 1px 3px rgba(0, 0, 0, 0.08);\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s;\n    cursor:pointer;\n    text-align:center;\n    box-sizing:border-box;\n    padding:0;\n}\n\n.tm-playback-rate-button:hover{\n    background:hsla(var(--shadcn-secondary) / 0.8);\n    border-color:hsla(var(--shadcn-border) / 0.3);\n    transform:translateY(-1px);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-playback-rate-button:active{\n    transform:scale(0.96);\n    background:hsla(var(--shadcn-secondary) / 0.9);\n}\n.tm-playback-rate-button.fast{\n    color:hsl(var(--shadcn-orange));\n    border-color:hsla(var(--shadcn-orange) / 0.3);\n    background:hsla(var(--shadcn-orange) / 0.1);\n}\n\n.tm-playback-rate-button.medium{\n    color:hsl(var(--shadcn-blue));\n    border-color:hsla(var(--shadcn-blue) / 0.3);\n    background:hsla(var(--shadcn-blue) / 0.1);\n}\n\n.tm-playback-rate-button.normal{\n    color:hsl(var(--shadcn-foreground));\n}\n.tm-progress-controls{\n    position:relative;\n    width:100%;\n    bottom:0;\n    left:0;\n    right:0;\n    display:flex;\n    flex-direction:column;\n    z-index:9991;\n    border-radius:0 0 var(--shadcn-radius-lg) var(--shadcn-radius-lg);\n    font-family:var(--font-sans);\n    transition:opacity var(--anim-smooth);\n}\n.tm-progress-bar-container{\n    position:relative;\n    height:12px;\n    display:flex;\n    align-items:center;\n    cursor:pointer;\n    user-select:none;\n    -webkit-user-select:none;\n    -moz-user-select:none;\n    -ms-user-select:none;\n    touch-action:none;\n}\n.tm-progress-bar{\n    width:100%;\n    height:8px;\n    background-color:hsla(var(--shadcn-muted) / 0.5);\n    border-radius:8px;\n    overflow:hidden;\n    position:relative;\n    transition:height 0.15s;\n}\n\n.tm-progress-bar:hover{\n    height:6px;\n}\n.tm-progress-bar-expanded{\n    height:16px !important;\n}\n\n.tm-progress-bar-normal{\n    height:8px !important;\n}\n.tm-progress-bar.tm-dragging{\n    height:16px !important;\n    background-color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    cursor:grabbing;\n}\n.tm-progress-bar-container:has(.tm-dragging){\n    cursor:grabbing;\n}\n.tm-progress-indicator{\n    height:100%;\n    width:0%;\n    background-color:hsla(var(--shadcn-muted) / 0.8);\n    border-radius:0;\n    position:absolute;\n    left:0;\n    top:0;\n    transition:width 0.1s linear;\n    overflow:hidden;\n}\n.tm-dragging .tm-progress-indicator{\n    background-color:hsl(var(--shadcn-card-foreground));\n    box-shadow:none;\n    transition:none;\n}\n.tm-progress-handle{\n    width:12px;\n    height:12px;\n    background-color:hsl(var(--shadcn-blue));\n    border:2px solid hsl(var(--shadcn-card));\n    border-radius:50%;\n    position:absolute;\n    top:50%;\n    left:0%;\n    transform:translate(0, -50%);\n    z-index:2;\n    opacity:1;\n    transition:opacity 0.15s, width 0.15s, height 0.15s, box-shadow 0.15s;\n    box-shadow:0 0 0 4px hsl(var(--shadcn-blue) / 0.2);\n    cursor:grab;\n}\n\n.tm-progress-handle:hover,\n.tm-progress-handle.dragging{\n    transform:translate(0, -50%) scale(1.1);\n    box-shadow:0 0 0 6px hsl(var(--shadcn-blue) / 0.3);\n}\n.tm-settings-label{\n    cursor:pointer;\n    flex:1;\n    font-family:var(--font-sans);\n    font-size:14px;\n    color:hsl(var(--shadcn-foreground));\n}\n.tm-playback-control-row .tm-control-button,\n.tm-playback-control-row .tm-volume-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:0px;\n    border:none;\n    border-radius:50%;\n    background-color:transparent;\n    color:#fff;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease;\n    -webkit-tap-highlight-color:transparent;\n}\n\n.tm-playback-control-row .tm-control-button{\n    width:42px;\n    height:42px;\n}\n\n.tm-playback-control-row .tm-volume-button{\n    width:36px;\n    height:36px;\n}\n\n.tm-playback-control-row .tm-control-button:hover,\n.tm-playback-control-row .tm-volume-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    transform:scale(1.05);\n}\n\n.tm-playback-control-row .tm-control-button:active,\n.tm-playback-control-row .tm-volume-button:active{\n    transform:scale(0.96);\n}\n\n.tm-playback-control-row .tm-control-button svg{\n    width:24px;\n    height:24px;\n    stroke:currentColor;\n    stroke-width:2;\n    fill:none;\n}\n.tm-playback-control-row .tm-control-button svg.tm-play-icon{\n    margin-left:2px;\n}\n\n.tm-playback-control-row .tm-volume-button svg{\n    width:20px;\n    height:20px;\n    stroke:currentColor;\n    stroke-width:2;\n    fill:none;\n}\n@media (hover: none){\n    .tm-playback-control-row .tm-control-button{\n        width:44px;\n        height:44px;\n    }\n    .tm-playback-control-row .tm-volume-button{\n        width:40px;\n        height:40px;\n    }\n}\n@media (prefers-color-scheme: dark){\n    .tm-playback-control-row .tm-control-button svg,\n    .tm-playback-control-row .tm-volume-button svg{\n        stroke:hsl(var(--shadcn-secondary-foreground));\n    }\n}\n.tm-time-control-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.6);\n    transform:none;\n    box-shadow:0 2px 4px rgba(0,0,0,0.1);\n}\n\n.tm-time-control-button-active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-time-control-button-default{\n    transform:translateY(0);\n    box-shadow:0 1px 2px rgba(0,0,0,0.05);\n}\n\n.tm-time-control-button-after-active{\n    transform:none;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.15);\n}\n.tm-modal-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:hsla(var(--shadcn-background) / 0.7);\n    backdrop-filter:blur(6px);\n    -webkit-backdrop-filter:blur(6px);\n    z-index:2000000010 !important;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    opacity:0;\n    transition:opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    padding:20px;\n    box-sizing:border-box;\n}\n\n.tm-modal-overlay.visible{\n    opacity:1;\n}\n\n.tm-comment-modal{\n    width:100%;\n    max-width:420px;\n    background-color:hsla(var(--shadcn-card) / 0.95);\n    border-radius:12px;\n    box-shadow:0 10px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.12);\n    overflow:hidden;\n    transform:scale(0.95) translateY(10px);\n    opacity:0;\n    transition:transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),  opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    flex-direction:column;\n}\n\n.tm-comment-modal.visible{\n    transform:scale(1) translateY(0);\n    opacity:1;\n}\n\n.tm-modal-header{\n    padding:16px 20px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n}\n\n.tm-modal-title{\n    font-size:16px;\n    font-weight:600;\n    margin:0;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-modal-close{\n    position:relative;\n    background:transparent;\n    border:none;\n    cursor:pointer;\n    width:28px;\n    height:28px;\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    color:hsl(var(--shadcn-muted-foreground));\n    transition:background-color 0.2s, color 0.2s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-modal-close::after,\n.tm-floating-panel-close::after{\n    content:'';\n    position:absolute;\n    inset:-6px;\n    border-radius:50%;\n    pointer-events:auto;\n}\n\n.tm-modal-close:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-modal-close:active{\n    transform:scale(0.96);\n}\n\n.tm-modal-content{\n    padding:16px 20px;\n    flex:1;\n}\n\n.tm-comment-textarea{\n    width:100%;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    border-radius:8px;\n    padding:12px;\n    font-family:var(--font-sans);\n    font-size:14px;\n    line-height:1.5;\n    resize:none;\n    height:120px;\n    box-sizing:border-box;\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    color:hsl(var(--shadcn-foreground));\n    transition:border-color 0.2s, box-shadow 0.2s;\n}\n\n.tm-comment-textarea:focus{\n    outline:none;\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.2);\n}\n\n.tm-comment-textarea::placeholder{\n    color:hsl(var(--shadcn-muted-foreground));\n}\n\n.tm-comment-textarea.error{\n    border-color:hsl(var(--shadcn-destructive));\n    animation:shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;\n}\n\n.tm-modal-footer{\n    padding:16px 20px;\n    border-top:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    justify-content:flex-end;\n    gap:12px;\n}\n\n.tm-modal-button{\n    padding:8px 16px;\n    border-radius:8px;\n    font-size:14px;\n    font-weight:500;\n    border:none;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;\n}\n\n.tm-modal-cancel{\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n}\n\n.tm-modal-cancel:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    transform:translateY(-1px);\n}\n\n.tm-modal-submit{\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n}\n\n.tm-modal-submit:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-1px);\n    box-shadow:0 2px 5px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-modal-button:active{\n    transform:scale(0.96);\n}\n\n@media (max-width: 480px){\n    .tm-comment-modal{\n        max-width:100%;\n    }\n    \n    .tm-modal-header,\n    .tm-modal-content,\n    .tm-modal-footer{\n        padding:12px 16px;\n    }\n}\n@media screen and (orientation: landscape){\n    .tm-comment-modal{\n        max-width:500px;\n        max-height:90vh;\n    }\n    \n    .tm-comment-textarea{\n        height:100px;\n    }\n}\n.tm-video-minimap{\n    position:absolute !important;\n    bottom:20px !important;\n    left:20px !important;\n    top:auto !important;\n    right:auto !important;\n    margin:0 !important;\n    transform:none !important;\n    width:80px;\n    height:45px;\n    background-color:rgba(0, 0, 0, 0.65) !important;\n    border:1px solid rgba(255, 255, 255, 0.3) !important;\n    border-radius:4px !important;\n    overflow:hidden !important;\n    z-index:9998 !important;\n    pointer-events:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    transition:opacity 0.3s ease, visibility 0.3s ease !important;\n    backdrop-filter:blur(6px) !important;\n    -webkit-backdrop-filter:blur(6px) !important;\n    box-shadow:0 4px 12px rgba(0, 0, 0, 0.4) !important;\n}\n\n.tm-video-minimap-viewport{\n    position:absolute !important;\n    top:0 !important;\n    bottom:0 !important;\n    left:0 !important;\n    width:100%;\n    height:100% !important;\n    box-sizing:border-box !important;\n    border:1.5px solid hsl(var(--shadcn-blue)) !important;\n    background-color:hsla(var(--shadcn-blue) / 0.15) !important;\n    border-radius:2px !important;\n    will-change:transform;\n    transition:none !important;\n}\n.tm-video-wrapper.is-swiping .tm-video-minimap{\n    opacity:1 !important;\n    visibility:visible !important;\n    border-color:rgba(255, 255, 255, 0.45) !important;\n}\n.tm-floating-comment-panel{\n    position:fixed;\n    left:50%;\n    bottom:10px;\n    transform:translateX(-50%) translateY(100%);\n    width:90%;\n    max-width:700px;\n    background-color:hsla(var(--shadcn-card) / 0.95);\n    border-radius:12px 12px 0 0;\n    box-shadow:0 -5px 25px rgba(0, 0, 0, 0.2);\n    z-index:9996;\n    opacity:0;\n    transition:transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),  opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n    display:flex;\n    flex-direction:column;\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    overflow:hidden;\n}\n\n.tm-floating-comment-panel.visible{\n    transform:translateX(-50%) translateY(0);\n    opacity:1;\n}\n\n.tm-floating-panel-header{\n    padding:16px 20px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    background-color:hsla(var(--shadcn-card) / 0.98);\n}\n\n.tm-floating-panel-title{\n    font-size:16px;\n    font-weight:600;\n    margin:0;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-floating-panel-close{\n    background:transparent;\n    border:none;\n    cursor:pointer;\n    width:28px;\n    height:28px;\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    color:hsl(var(--shadcn-muted-foreground));\n    transition:background-color 0.2s, color 0.2s;\n}\n\n.tm-floating-panel-close:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-floating-panel-content{\n    padding:16px 20px;\n    flex:1;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n}\n\n.tm-floating-panel-content .tm-comment-placeholder{\n    min-height:200px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    font-size:14px;\n}\n@media screen and (orientation: landscape){\n    .tm-floating-comment-panel{\n        max-width:500px;\n        max-height:80vh;\n        border-radius:12px;\n        bottom:20px;\n    }\n}\n.tm-floating-panel-input-area{\n    padding:12px 16px;\n    border-top:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    gap:8px;\n    background-color:hsla(var(--shadcn-card) / 0.98);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n}\n\n.tm-floating-panel-input{\n    flex:1;\n    height:40px;\n    border-radius:20px;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    padding:0 16px;\n    font-size:16px;\n    color:hsl(var(--shadcn-foreground));\n    transition:border-color 0.2s, box-shadow 0.2s;\n}\n\n.tm-floating-panel-input:focus{\n    outline:none;\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.2);\n}\n\n.tm-floating-panel-input::placeholder{\n    color:hsl(var(--shadcn-muted-foreground));\n}\n\n.tm-floating-panel-input.error{\n    border-color:hsl(var(--shadcn-destructive));\n    animation:shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;\n}\n\n.tm-floating-panel-submit{\n    width:40px;\n    height:40px;\n    border-radius:50%;\n    border:none;\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;\n    flex-shrink:0;\n}\n\n.tm-floating-panel-submit:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-2px);\n    box-shadow:0 2px 5px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-floating-panel-submit:active{\n    transform:scale(0.96);\n}\n\n.tm-floating-panel-submit svg{\n    width:18px;\n    height:18px;\n    stroke:currentColor;\n    stroke-width:2;\n}\n@media screen and (orientation: landscape){\n    .tm-floating-panel-input-area{\n        padding:10px 16px;\n    }\n}\n.tm-speed-indicator{\n    position:absolute;\n    top:50%;\n    left:50%;\n    transform:translate(-50%, -50%);\n    background-color:rgba(0, 0, 0, 0.7);\n    color:white;\n    padding:8px 16px;\n    border-radius:4px;\n    font-size:24px;\n    font-weight:bold;\n    z-index:9999;\n}\n`, "" ]);
+      y.push([ r.id, `.tm-time-indicator{\n    position:absolute;\n    background-color:hsla(var(--shadcn-card) / 0.8);\n    color:hsl(var(--shadcn-card-foreground));\n    padding:4px 8px;\n    border-radius:4px;\n    font-size:12px;\n    font-weight:500;\n    font-variant-numeric:tabular-nums;\n    pointer-events:none;\n    z-index:9995;\n    opacity:0;\n    transform:translateY(-8px);\n    transition:opacity 0.2s, transform 0.2s;\n    box-shadow:0 2px 8px rgba(0, 0, 0, 0.2);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n}\n.tm-volume-control{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    height:40px;\n    padding:0 8px;\n    background-color:transparent;\n    transition:opacity 0.3s ease;\n}\n.tm-volume-control-no-slider{\n    width:auto;\n    padding:0;\n}\n\n.tm-volume-control-no-slider .tm-volume-button{\n    margin:0 8px;\n}\n.tm-volume-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    width:32px;\n    height:32px;\n    padding:4px;\n    border:none;\n    border-radius:50%;\n    background:transparent;\n    color:#fff;\n    cursor:pointer;\n    transition:background-color 0.2s ease;\n}\n\n.tm-volume-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n}\n\n.tm-volume-button svg{\n    width:20px;\n    height:20px;\n}\n.tm-volume-slider-container{\n    position:relative;\n    width:0;\n    height:40px;\n    display:flex;\n    align-items:center;\n    overflow:hidden;\n    transition:width 0.3s ease;\n    opacity:0;\n}\n@media (hover: hover){\n    .tm-volume-control:hover .tm-volume-slider-container{\n        width:80px;\n        opacity:1;\n    }\n}\n.tm-volume-control.dragging .tm-volume-slider-container{\n    width:80px;\n    opacity:1;\n}\n.tm-volume-slider-track{\n    position:relative;\n    width:100%;\n    height:4px;\n    background-color:hsla(var(--shadcn-secondary) / 0.3);\n    border-radius:2px;\n    cursor:pointer;\n}\n.tm-volume-slider-level{\n    position:absolute;\n    left:0;\n    top:0;\n    height:100%;\n    background-color:#fff;\n    border-radius:2px;\n    pointer-events:none;\n    transition:width 0.1s ease;\n}\n.tm-volume-value{\n    position:absolute;\n    top:-24px;\n    left:50%;\n    transform:translateX(-50%);\n    background-color:hsla(var(--shadcn-secondary) / 0.8);\n    color:#fff;\n    padding:2px 6px;\n    border-radius:4px;\n    font-size:12px;\n    font-variant-numeric:tabular-nums;\n    opacity:0;\n    transition:opacity 0.2s ease;\n    pointer-events:none;\n    backdrop-filter:blur(4px);\n}\n.tm-volume-control.dragging .tm-volume-value{\n    opacity:1;\n}\n@media (hover: none){\n    .tm-volume-control{\n        touch-action:none;\n    }\n    \n    .tm-volume-slider-track{\n        height:6px;\n    }\n    \n    .tm-volume-button{\n        width:40px;\n        height:40px;\n    }\n}\n@media (prefers-color-scheme: dark){\n    .tm-volume-slider-level{\n        background-color:hsl(var(--shadcn-primary));\n    }\n    \n    .tm-volume-button svg{\n        stroke:hsl(var(--shadcn-primary));\n    }\n}\n.tm-toggle-switch{\n    position:relative;\n    display:inline-block;\n    width:40px;\n    height:24px;\n}\n\n.tm-toggle-switch input{\n    opacity:0;\n    width:0;\n    height:0;\n}\n\n.tm-toggle-slider{\n    position:absolute;\n    cursor:pointer;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:hsla(var(--shadcn-muted) / 0.7);\n    border-radius:12px;\n    transition:var(--anim-quick);\n}\n\n.tm-toggle-slider:before{\n    position:absolute;\n    content:"";\n    height:20px;\n    width:20px;\n    left:2px;\n    bottom:2px;\n    background-color:hsl(var(--shadcn-foreground));\n    border-radius:50%;\n    transition:var(--anim-quick);\n    box-shadow:0 2px 4px rgba(0, 0, 0, 0.1);\n}\n\n.tm-toggle-slider.checked{\n    background-color:hsl(var(--shadcn-blue));\n}\n\n.tm-toggle-slider.checked:before{\n    transform:translateX(16px);\n}\n.tm-playback-rate-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    margin-left:0;\n    height:32px;\n    width:80px;\n    background:hsla(var(--shadcn-secondary) / 0.5);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    color:hsl(var(--shadcn-foreground));\n    font-size:15px;\n    font-weight:600;\n    font-variant-numeric:tabular-nums;\n    letter-spacing:-0.1px;\n    border-radius:9999px;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:0 1px 3px rgba(0, 0, 0, 0.08);\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s;\n    cursor:pointer;\n    text-align:center;\n    box-sizing:border-box;\n    padding:0;\n}\n\n.tm-playback-rate-button:hover{\n    background:hsla(var(--shadcn-secondary) / 0.8);\n    border-color:hsla(var(--shadcn-border) / 0.3);\n    transform:translateY(-1px);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-playback-rate-button:active{\n    transform:scale(0.96);\n    background:hsla(var(--shadcn-secondary) / 0.9);\n}\n.tm-playback-rate-button.fast{\n    color:hsl(var(--shadcn-orange));\n    border-color:hsla(var(--shadcn-orange) / 0.3);\n    background:hsla(var(--shadcn-orange) / 0.1);\n}\n\n.tm-playback-rate-button.medium{\n    color:hsl(var(--shadcn-blue));\n    border-color:hsla(var(--shadcn-blue) / 0.3);\n    background:hsla(var(--shadcn-blue) / 0.1);\n}\n\n.tm-playback-rate-button.normal{\n    color:hsl(var(--shadcn-foreground));\n}\n.tm-progress-controls{\n    position:relative;\n    width:100%;\n    bottom:0;\n    left:0;\n    right:0;\n    display:flex;\n    flex-direction:column;\n    z-index:9991;\n    border-radius:0 0 var(--shadcn-radius-lg) var(--shadcn-radius-lg);\n    font-family:var(--font-sans);\n    transition:opacity var(--anim-smooth);\n}\n.tm-progress-bar-container{\n    position:relative;\n    height:12px;\n    display:flex;\n    align-items:center;\n    cursor:pointer;\n    user-select:none;\n    -webkit-user-select:none;\n    -moz-user-select:none;\n    -ms-user-select:none;\n    touch-action:none;\n}\n.tm-progress-bar{\n    width:100%;\n    height:8px;\n    background-color:hsla(var(--shadcn-muted) / 0.5);\n    border-radius:8px;\n    overflow:hidden;\n    position:relative;\n    transition:height 0.15s;\n}\n\n.tm-progress-bar:hover{\n    height:6px;\n}\n.tm-progress-bar-expanded{\n    height:16px !important;\n}\n\n.tm-progress-bar-normal{\n    height:8px !important;\n}\n.tm-progress-bar.tm-dragging{\n    height:16px !important;\n    background-color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    cursor:grabbing;\n}\n.tm-progress-bar-container:has(.tm-dragging){\n    cursor:grabbing;\n}\n.tm-progress-indicator{\n    height:100%;\n    width:0%;\n    background-color:hsla(var(--shadcn-muted) / 0.8);\n    border-radius:0;\n    position:absolute;\n    left:0;\n    top:0;\n    transition:width 0.1s linear;\n    overflow:hidden;\n}\n.tm-dragging .tm-progress-indicator{\n    background-color:hsl(var(--shadcn-card-foreground));\n    box-shadow:none;\n    transition:none;\n}\n.tm-progress-handle{\n    width:12px;\n    height:12px;\n    background-color:hsl(var(--shadcn-blue));\n    border:2px solid hsl(var(--shadcn-card));\n    border-radius:50%;\n    position:absolute;\n    top:50%;\n    left:0%;\n    transform:translate(0, -50%);\n    z-index:2;\n    opacity:1;\n    transition:opacity 0.15s, width 0.15s, height 0.15s, box-shadow 0.15s;\n    box-shadow:0 0 0 4px hsl(var(--shadcn-blue) / 0.2);\n    cursor:grab;\n}\n\n.tm-progress-handle:hover,\n.tm-progress-handle.dragging{\n    transform:translate(0, -50%) scale(1.1);\n    box-shadow:0 0 0 6px hsl(var(--shadcn-blue) / 0.3);\n}\n.tm-settings-label{\n    cursor:pointer;\n    flex:1;\n    font-family:var(--font-sans);\n    font-size:14px;\n    color:hsl(var(--shadcn-foreground));\n}\n.tm-playback-control-row .tm-control-button,\n.tm-playback-control-row .tm-volume-button{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:0px;\n    border:none;\n    border-radius:50%;\n    background-color:transparent;\n    color:#fff;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease;\n    -webkit-tap-highlight-color:transparent;\n}\n\n.tm-playback-control-row .tm-control-button{\n    width:42px;\n    height:42px;\n}\n\n.tm-playback-control-row .tm-volume-button{\n    width:36px;\n    height:36px;\n}\n\n.tm-playback-control-row .tm-control-button:hover,\n.tm-playback-control-row .tm-volume-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    transform:scale(1.05);\n}\n\n.tm-playback-control-row .tm-control-button:active,\n.tm-playback-control-row .tm-volume-button:active{\n    transform:scale(0.96);\n}\n\n.tm-playback-control-row .tm-control-button svg{\n    width:24px;\n    height:24px;\n    stroke:currentColor;\n    stroke-width:2;\n    fill:none;\n}\n.tm-playback-control-row .tm-control-button svg.tm-play-icon{\n    margin-left:2px;\n}\n\n.tm-playback-control-row .tm-volume-button svg{\n    width:20px;\n    height:20px;\n    stroke:currentColor;\n    stroke-width:2;\n    fill:none;\n}\n@media (hover: none){\n    .tm-playback-control-row .tm-control-button{\n        width:44px;\n        height:44px;\n    }\n    .tm-playback-control-row .tm-volume-button{\n        width:40px;\n        height:40px;\n    }\n}\n@media (prefers-color-scheme: dark){\n    .tm-playback-control-row .tm-control-button svg,\n    .tm-playback-control-row .tm-volume-button svg{\n        stroke:hsl(var(--shadcn-secondary-foreground));\n    }\n}\n.tm-time-control-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.6);\n    transform:none;\n    box-shadow:0 2px 4px rgba(0,0,0,0.1);\n}\n\n.tm-time-control-button-active{\n    transform:scale(0.95);\n    box-shadow:none;\n}\n\n.tm-time-control-button-default{\n    transform:translateY(0);\n    box-shadow:0 1px 2px rgba(0,0,0,0.05);\n}\n\n.tm-time-control-button-after-active{\n    transform:none;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.15);\n}\n.tm-modal-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    background-color:hsla(var(--shadcn-background) / 0.7);\n    backdrop-filter:blur(6px);\n    -webkit-backdrop-filter:blur(6px);\n    z-index:2000000010 !important;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    opacity:0;\n    transition:opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    padding:20px;\n    box-sizing:border-box;\n}\n\n.tm-modal-overlay.visible{\n    opacity:1;\n}\n\n.tm-comment-modal{\n    width:100%;\n    max-width:420px;\n    background-color:hsla(var(--shadcn-card) / 0.95);\n    border-radius:12px;\n    box-shadow:0 10px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.12);\n    overflow:hidden;\n    transform:scale(0.95) translateY(10px);\n    opacity:0;\n    transition:transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),  opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    flex-direction:column;\n}\n\n.tm-comment-modal.visible{\n    transform:scale(1) translateY(0);\n    opacity:1;\n}\n\n.tm-modal-header{\n    padding:16px 20px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n}\n\n.tm-modal-title{\n    font-size:16px;\n    font-weight:600;\n    margin:0;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-modal-close{\n    position:relative;\n    background:transparent;\n    border:none;\n    cursor:pointer;\n    width:28px;\n    height:28px;\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    color:hsl(var(--shadcn-muted-foreground));\n    transition:background-color 0.2s, color 0.2s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-modal-close::after,\n.tm-floating-panel-close::after{\n    content:'';\n    position:absolute;\n    inset:-6px;\n    border-radius:50%;\n    pointer-events:auto;\n}\n\n.tm-modal-close:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-modal-close:active{\n    transform:scale(0.96);\n}\n\n.tm-modal-content{\n    padding:16px 20px;\n    flex:1;\n}\n\n.tm-comment-textarea{\n    width:100%;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    border-radius:8px;\n    padding:12px;\n    font-family:var(--font-sans);\n    font-size:14px;\n    line-height:1.5;\n    resize:none;\n    height:120px;\n    box-sizing:border-box;\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    color:hsl(var(--shadcn-foreground));\n    transition:border-color 0.2s, box-shadow 0.2s;\n}\n\n.tm-comment-textarea:focus{\n    outline:none;\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.2);\n}\n\n.tm-comment-textarea::placeholder{\n    color:hsl(var(--shadcn-muted-foreground));\n}\n\n.tm-comment-textarea.error{\n    border-color:hsl(var(--shadcn-destructive));\n    animation:shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;\n}\n\n.tm-modal-footer{\n    padding:16px 20px;\n    border-top:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    justify-content:flex-end;\n    gap:12px;\n}\n\n.tm-modal-button{\n    padding:8px 16px;\n    border-radius:8px;\n    font-size:14px;\n    font-weight:500;\n    border:none;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;\n}\n\n.tm-modal-cancel{\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n}\n\n.tm-modal-cancel:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    transform:translateY(-1px);\n}\n\n.tm-modal-submit{\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n}\n\n.tm-modal-submit:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-1px);\n    box-shadow:0 2px 5px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-modal-button:active{\n    transform:scale(0.96);\n}\n\n@media (max-width: 480px){\n    .tm-comment-modal{\n        max-width:100%;\n    }\n    \n    .tm-modal-header,\n    .tm-modal-content,\n    .tm-modal-footer{\n        padding:12px 16px;\n    }\n}\n@media screen and (orientation: landscape){\n    .tm-comment-modal{\n        max-width:500px;\n        max-height:90vh;\n    }\n    \n    .tm-comment-textarea{\n        height:100px;\n    }\n}\n.tm-video-minimap{\n    position:absolute !important;\n    bottom:20px !important;\n    left:20px !important;\n    top:auto !important;\n    right:auto !important;\n    margin:0 !important;\n    transform:none !important;\n    width:80px;\n    height:45px;\n    background-color:rgba(0, 0, 0, 0.65) !important;\n    border:1px solid rgba(255, 255, 255, 0.3) !important;\n    border-radius:4px !important;\n    overflow:hidden !important;\n    z-index:9998 !important;\n    pointer-events:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    transition:opacity 0.3s ease, visibility 0.3s ease !important;\n    backdrop-filter:blur(6px) !important;\n    -webkit-backdrop-filter:blur(6px) !important;\n    box-shadow:0 4px 12px rgba(0, 0, 0, 0.4) !important;\n}\n\n.tm-video-minimap-viewport{\n    position:absolute !important;\n    top:0 !important;\n    bottom:0 !important;\n    left:0 !important;\n    width:100%;\n    height:100% !important;\n    box-sizing:border-box !important;\n    border:1.5px solid hsl(var(--shadcn-blue)) !important;\n    background-color:hsla(var(--shadcn-blue) / 0.15) !important;\n    border-radius:2px !important;\n    will-change:transform;\n    transition:none !important;\n}\n.tm-video-wrapper.is-swiping .tm-video-minimap{\n    opacity:1 !important;\n    visibility:visible !important;\n    border-color:rgba(255, 255, 255, 0.45) !important;\n}\n.tm-floating-comment-panel{\n    position:fixed;\n    left:50%;\n    bottom:10px;\n    transform:translateX(-50%) translateY(100%);\n    width:90%;\n    max-width:700px;\n    background-color:hsla(var(--shadcn-card) / 0.95);\n    border-radius:12px 12px 0 0;\n    box-shadow:0 -5px 25px rgba(0, 0, 0, 0.2);\n    z-index:9996;\n    opacity:0;\n    transition:transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),  opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);\n    display:flex;\n    flex-direction:column;\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    overflow:hidden;\n}\n\n.tm-floating-comment-panel.visible{\n    transform:translateX(-50%) translateY(0);\n    opacity:1;\n}\n\n.tm-floating-panel-header{\n    padding:16px 20px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    background-color:hsla(var(--shadcn-card) / 0.98);\n}\n\n.tm-floating-panel-title{\n    font-size:16px;\n    font-weight:600;\n    margin:0;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-floating-panel-close{\n    background:transparent;\n    border:none;\n    cursor:pointer;\n    width:28px;\n    height:28px;\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    color:hsl(var(--shadcn-muted-foreground));\n    transition:background-color 0.2s, color 0.2s;\n}\n\n.tm-floating-panel-close:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-floating-panel-content{\n    padding:16px 20px;\n    flex:1;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n}\n\n.tm-floating-panel-content .tm-comment-placeholder{\n    min-height:200px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    font-size:14px;\n}\n@media screen and (orientation: landscape){\n    .tm-floating-comment-panel{\n        max-width:500px;\n        max-height:80vh;\n        border-radius:12px;\n        bottom:20px;\n    }\n}\n.tm-floating-panel-input-area{\n    padding:12px 16px;\n    border-top:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    gap:8px;\n    background-color:hsla(var(--shadcn-card) / 0.98);\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n}\n\n.tm-floating-panel-input{\n    flex:1;\n    height:40px;\n    border-radius:20px;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    padding:0 16px;\n    font-size:16px;\n    color:hsl(var(--shadcn-foreground));\n    transition:border-color 0.2s, box-shadow 0.2s;\n}\n\n.tm-floating-panel-input:focus{\n    outline:none;\n    border-color:hsl(var(--shadcn-blue));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.2);\n}\n\n.tm-floating-panel-input::placeholder{\n    color:hsl(var(--shadcn-muted-foreground));\n}\n\n.tm-floating-panel-input.error{\n    border-color:hsl(var(--shadcn-destructive));\n    animation:shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;\n}\n\n.tm-floating-panel-submit{\n    width:40px;\n    height:40px;\n    border-radius:50%;\n    border:none;\n    background-color:hsl(var(--shadcn-blue));\n    color:hsl(var(--shadcn-blue-foreground));\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;\n    flex-shrink:0;\n}\n\n.tm-floating-panel-submit:hover{\n    background-color:hsl(var(--shadcn-blue) / 0.9);\n    transform:translateY(-2px);\n    box-shadow:0 2px 5px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-floating-panel-submit:active{\n    transform:scale(0.96);\n}\n\n.tm-floating-panel-submit svg{\n    width:18px;\n    height:18px;\n    stroke:currentColor;\n    stroke-width:2;\n}\n@media screen and (orientation: landscape){\n    .tm-floating-panel-input-area{\n        padding:10px 16px;\n    }\n}\n.tm-speed-indicator{\n    position:absolute;\n    top:50%;\n    left:50%;\n    transform:translate(-50%, -50%);\n    background-color:rgba(0, 0, 0, 0.7);\n    color:white;\n    padding:8px 16px;\n    border-radius:4px;\n    font-size:24px;\n    font-weight:bold;\n    z-index:9999;\n}\n.ripple-btn,\n.tm-control-buttons button:not(.tm-show-controls-float-btn),\n.tm-control-buttons .tm-tab-list-btn,\n.tm-control-buttons .tm-tab-pill,\n.tm-bottom-sheet-panel button,\n.tm-bottom-sheet-panel .tm-sheet-tab-pill{\n    position:relative !important;\n    overflow:hidden !important;\n    isolation:isolate;\n}\n\n.tm-control-buttons .tm-show-controls-float-btn{\n    overflow:hidden !important;\n    isolation:isolate;\n}\n\n.ripple,\n.tm-ripple{\n    position:absolute;\n    border-radius:50%;\n    background:rgba(var(--brand-pink-rgb, 254, 98, 142), 0.4);\n    transform:scale(0);\n    animation:tm-ripple-out 0.6s ease-out;\n    pointer-events:none;\n    will-change:transform, opacity;\n    z-index:1;\n}\n\n@keyframes tm-ripple-out{\n    from{\n        transform:scale(0);\n        opacity:1;\n    }\n    to{\n        transform:scale(2.6);\n        opacity:0;\n    }\n}\n\n@keyframes ripple-out{\n    from{\n        transform:scale(0);\n        opacity:1;\n    }\n    to{\n        transform:scale(2.6);\n        opacity:0;\n    }\n}\n`, "" ]);
       const b = y;
     },
     "314": r => {
@@ -1258,6 +1258,50 @@
       return v[0].element;
     }
     return p[0];
+  }
+  function createRipple(r, o, a) {
+    if (!o || typeof o.getBoundingClientRect !== "function") {
+      return null;
+    }
+    var l = o.getBoundingClientRect();
+    var u = Math.max(l.width, l.height);
+    var p = l.left + l.width / 2;
+    var v = l.top + l.height / 2;
+    if (r) {
+      if (typeof r.clientX === "number" && (r.clientX !== 0 || r.clientY !== 0)) {
+        p = r.clientX;
+        v = r.clientY;
+      } else if (r.touches && r.touches[0]) {
+        p = r.touches[0].clientX;
+        v = r.touches[0].clientY;
+      } else if (r.changedTouches && r.changedTouches[0]) {
+        p = r.changedTouches[0].clientX;
+        v = r.changedTouches[0].clientY;
+      }
+    }
+    var y = p - l.left - u / 2;
+    var b = v - l.top - u / 2;
+    var C = document.createElement("span");
+    C.className = "ripple tm-ripple";
+    C.style.width = "".concat(u, "px");
+    C.style.height = "".concat(u, "px");
+    C.style.left = "".concat(y, "px");
+    C.style.top = "".concat(b, "px");
+    if (a) {
+      C.style.background = a;
+    }
+    o.appendChild(C);
+    var _ = function removeRipple() {
+      C.removeEventListener("animationend", _);
+      if (C.parentNode) {
+        C.parentNode.removeChild(C);
+      }
+    };
+    C.addEventListener("animationend", _, {
+      "once": true
+    });
+    setTimeout(_, 650);
+    return C;
   }
   function storage_typeof(r) {
     "@babel/helpers - typeof";
@@ -7042,7 +7086,7 @@
         return GM_info.script.version;
       }
     } catch (r) {}
-    return "5.6.11";
+    return "5.6.12";
   }
   function getSiteCategory() {
     if ((0, b.isSiteDomain)("MISSAV")) {
@@ -17857,18 +17901,39 @@
         }
         var o = this.volumeSlider.querySelector(".tm-volume-button");
         if (o) {
-          o.innerHTML = this.getVolumeIcon(r);
+          var a = this.getVolumeIcon(r);
+          var l = o.querySelector("svg");
+          if (l) {
+            var u = document.createElement("div");
+            u.innerHTML = a.trim();
+            var p = u.firstElementChild;
+            if (p) {
+              o.replaceChild(p, l);
+            } else {
+              var v = Array.from(o.querySelectorAll(".tm-ripple, .ripple"));
+              o.innerHTML = a;
+              v.forEach((function(r) {
+                return o.appendChild(r);
+              }));
+            }
+          } else {
+            var y = Array.from(o.querySelectorAll(".tm-ripple, .ripple"));
+            o.innerHTML = a;
+            y.forEach((function(r) {
+              return o.appendChild(r);
+            }));
+          }
         }
         if (!this.supportsVolumeControl) {
           return;
         }
         if (this.volumeLevel) {
-          var a = Math.max(0, Math.min(100, r * 100));
-          this.volumeLevel.style.width = "calc(".concat(a, "% - 2px)");
+          var b = Math.max(0, Math.min(100, r * 100));
+          this.volumeLevel.style.width = "calc(".concat(b, "% - 2px)");
         }
         if (this.volumeValue) {
-          var l = Math.round(r * 100);
-          this.volumeValue.textContent = "".concat(l, "%");
+          var C = Math.round(r * 100);
+          this.volumeValue.textContent = "".concat(C, "%");
           this.volumeValue.classList.remove("volume-high", "volume-medium", "volume-low", "volume-muted");
           if (r === 0 || this.targetVideo.muted) {
             this.volumeValue.classList.add("volume-muted");
@@ -18114,6 +18179,69 @@
       return r && "function" == typeof Symbol && r.constructor === Symbol && r !== Symbol.prototype ? "symbol" : typeof r;
     }, PlaybackController_typeof(r);
   }
+  function PlaybackController_createForOfIteratorHelper(r, o) {
+    var a = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+    if (!a) {
+      if (Array.isArray(r) || (a = PlaybackController_unsupportedIterableToArray(r)) || o && r && "number" == typeof r.length) {
+        a && (r = a);
+        var l = 0, u = function F() {};
+        return {
+          "s": u,
+          "n": function n() {
+            return l >= r.length ? {
+              "done": !0
+            } : {
+              "done": !1,
+              "value": r[l++]
+            };
+          },
+          "e": function e(r) {
+            throw r;
+          },
+          "f": u
+        };
+      }
+      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+    var p, v = !0, y = !1;
+    return {
+      "s": function s() {
+        a = a.call(r);
+      },
+      "n": function n() {
+        var r = a.next();
+        return v = r.done, r;
+      },
+      "e": function e(r) {
+        y = !0, p = r;
+      },
+      "f": function f() {
+        try {
+          v || null == a["return"] || a["return"]();
+        } finally {
+          if (y) {
+            throw p;
+          }
+        }
+      }
+    };
+  }
+  function PlaybackController_unsupportedIterableToArray(r, o) {
+    if (r) {
+      if ("string" == typeof r) {
+        return PlaybackController_arrayLikeToArray(r, o);
+      }
+      var a = {}.toString.call(r).slice(8, -1);
+      return "Object" === a && r.constructor && (a = r.constructor.name), "Map" === a || "Set" === a ? Array.from(r) : "Arguments" === a || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(a) ? PlaybackController_arrayLikeToArray(r, o) : void 0;
+    }
+  }
+  function PlaybackController_arrayLikeToArray(r, o) {
+    (null == o || o > r.length) && (o = r.length);
+    for (var a = 0, l = Array(o); a < o; a++) {
+      l[a] = r[a];
+    }
+    return l;
+  }
   function PlaybackController_classCallCheck(r, o) {
     if (!(r instanceof o)) {
       throw new TypeError("Cannot call a class as a function");
@@ -18197,14 +18325,27 @@
     }, {
       "key": "updatePlayPauseButton",
       "value": function updatePlayPauseButton() {
+        var r = this;
         if (!this.playPauseButton) {
           return;
         }
-        if (this.targetVideo.paused) {
-          this.playPauseButton.innerHTML = ye;
-        } else {
-          this.playPauseButton.innerHTML = be;
+        var o = this.targetVideo.paused;
+        var a = o ? ye : be;
+        var l = this.playPauseButton.querySelector("svg");
+        if (l) {
+          var u = document.createElement("div");
+          u.innerHTML = a.trim();
+          var p = u.firstElementChild;
+          if (p) {
+            this.playPauseButton.replaceChild(p, l);
+            return;
+          }
         }
+        var v = Array.from(this.playPauseButton.querySelectorAll(".tm-ripple, .ripple"));
+        this.playPauseButton.innerHTML = a;
+        v.forEach((function(o) {
+          return r.playPauseButton.appendChild(o);
+        }));
       }
     }, {
       "key": "createPlaybackRateSlider",
@@ -18254,9 +18395,33 @@
     }, {
       "key": "syncPlaybackRateSlider",
       "value": function syncPlaybackRateSlider(r) {
+        var o = this;
         if (this.playbackRateSlider) {
-          var o = "".concat(r.toFixed(1), "x");
-          this.playbackRateSlider.textContent = o;
+          var a = "".concat(r.toFixed(1), "x");
+          var l = null;
+          var u = PlaybackController_createForOfIteratorHelper(this.playbackRateSlider.childNodes), p;
+          try {
+            for (u.s(); !(p = u.n()).done; ) {
+              var v = p.value;
+              if (v.nodeType === Node.TEXT_NODE) {
+                l = v;
+                break;
+              }
+            }
+          } catch (r) {
+            u.e(r);
+          } finally {
+            u.f();
+          }
+          if (l) {
+            l.textContent = a;
+          } else {
+            var y = Array.from(this.playbackRateSlider.querySelectorAll(".tm-ripple, .ripple"));
+            this.playbackRateSlider.textContent = a;
+            y.forEach((function(r) {
+              return o.playbackRateSlider.appendChild(r);
+            }));
+          }
           this.playbackRateSlider.className = "tm-playback-rate-button";
           if (r > 1.5) {
             this.playbackRateSlider.classList.add("fast");
@@ -18366,6 +18531,7 @@
       this.playerCore = r;
       this.targetVideo = r.targetVideo;
       this.uiManager = a;
+      this._rippleHandler = null;
       this.uiElements = o;
       this.commentPanel = new et(r, this, a);
       this.volumeController = new tt(r, this);
@@ -18459,6 +18625,7 @@
       "value": function init() {
         this.progressControlsContainer = this.createProgressControls();
         this.controlButtonsContainer = this.createControlButtonsContainer();
+        this.initRippleEffect();
         this.initEventListeners();
         return {
           "progressControlsContainer": this.progressControlsContainer,
@@ -18635,8 +18802,31 @@
         }));
       }
     }, {
+      "key": "initRippleEffect",
+      "value": function initRippleEffect() {
+        var r = this;
+        if (!this.controlButtonsContainer) {
+          return;
+        }
+        this._rippleHandler = function(o) {
+          var a = o.target.closest("button, .tm-tab-list-btn, .tm-tab-pill");
+          if (!a || !r.controlButtonsContainer.contains(a)) {
+            return;
+          }
+          if (a.disabled || a.getAttribute("aria-disabled") === "true") {
+            return;
+          }
+          createRipple(o, a);
+        };
+        this.controlButtonsContainer.addEventListener("click", this._rippleHandler, true);
+      }
+    }, {
       "key": "cleanup",
       "value": function cleanup() {
+        if (this._rippleHandler && this.controlButtonsContainer) {
+          this.controlButtonsContainer.removeEventListener("click", this._rippleHandler, true);
+          this._rippleHandler = null;
+        }
         if (this._volumeChangeHandler) {
           this.targetVideo.removeEventListener("volumechange", this._volumeChangeHandler);
           this._volumeChangeHandler = null;
@@ -20117,6 +20307,7 @@
       }()
     } ]);
   }();
+  var st;
   function SyncManager_regeneratorRuntime() {
     "use strict";
     SyncManager_regeneratorRuntime = function _regeneratorRuntime() {
@@ -20647,22 +20838,23 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var st = "mp_client_id";
-  var lt = "mp_webdav_config";
-  var ct = "mp_webdav_last_sync_time";
-  var ut = "mp_sync_tombstones";
-  var dt = "mp_setting_timestamps";
-  var pt = 2;
-  var ht = 30 * 24 * 60 * 60 * 1e3;
+  var lt = "mp_client_id";
+  var ct = "mp_webdav_config";
+  var ut = "mp_webdav_last_sync_time";
+  var dt = "mp_sync_tombstones";
+  var pt = "mp_setting_timestamps";
+  var ht = 2;
+  var mt = 30 * 24 * 60 * 60 * 1e3;
+  var ft = typeof GM_info !== "undefined" && (st = GM_info) !== null && st !== void 0 && (st = st.script) !== null && st !== void 0 && st.version ? GM_info.script.version : "5.6.12";
   function SyncManager_getOrCreateClientId() {
-    var r = getValue(st, "");
+    var r = getValue(lt, "");
     if (r) {
       return r;
     }
     var o = Math.random().toString(36).substring(2, 10);
     var a = Date.now().toString(36).substring(4);
     var l = "mp_".concat(o).concat(a);
-    setValue(st, l);
+    setValue(lt, l);
     return l;
   }
   function getDeviceName() {
@@ -20703,7 +20895,7 @@
     }
     return "desktop";
   }
-  var mt = function() {
+  var vt = function() {
     function SyncManager() {
       SyncManager_classCallCheck(this, SyncManager);
     }
@@ -20717,24 +20909,24 @@
           "path": "/MissPlayer/",
           "autoSync": true
         };
-        var o = getValue(lt, null);
+        var o = getValue(ct, null);
         return Object.assign({}, r, o && SyncManager_typeof(o) === "object" ? o : {});
       }
     }, {
       "key": "saveWebDavConfig",
       "value": function saveWebDavConfig(r) {
-        setValue(lt, r);
+        setValue(ct, r);
       }
     }, {
       "key": "getLastSyncTime",
       "value": function getLastSyncTime() {
-        return getValue(ct, 0);
+        return getValue(ut, 0);
       }
     }, {
       "key": "setLastSyncTime",
       "value": function setLastSyncTime() {
         var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : Date.now();
-        setValue(ct, r);
+        setValue(ut, r);
       }
     }, {
       "key": "getLocalTombstones",
@@ -20744,7 +20936,7 @@
           "customSeekSteps": {},
           "videos": {}
         };
-        var o = getValue(ut, null);
+        var o = getValue(dt, null);
         if (!o || SyncManager_typeof(o) !== "object") {
           return r;
         }
@@ -20758,7 +20950,7 @@
       "key": "saveLocalTombstones",
       "value": function saveLocalTombstones(r) {
         var o = this.purgeExpiredTombstones(r);
-        setValue(ut, o);
+        setValue(dt, o);
       }
     }, {
       "key": "recordTombstone",
@@ -20814,7 +21006,7 @@
           };
         }
         var o = Date.now();
-        var a = o - ht;
+        var a = o - mt;
         var l = {};
         if (r.markers) {
           for (var u = 0, p = Object.entries(r.markers); u < p.length; u++) {
@@ -20854,7 +21046,7 @@
     }, {
       "key": "getLocalSettingTimestamps",
       "value": function getLocalSettingTimestamps() {
-        var r = getValue(dt, null);
+        var r = getValue(pt, null);
         return r && SyncManager_typeof(r) === "object" ? r : {};
       }
     }, {
@@ -20865,7 +21057,7 @@
         }
         var o = this.getLocalSettingTimestamps();
         o[r] = Date.now();
-        setValue(dt, o);
+        setValue(pt, o);
       }
     }, {
       "key": "gatherLocalData",
@@ -20953,15 +21145,15 @@
           "updatedAt": u.sidebarPosition || u.sidebarHidden || a
         });
         return {
-          "schemaVersion": pt,
-          "scriptVersion": "5.6.11",
+          "schemaVersion": ht,
+          "scriptVersion": ft,
           "lastModified": a,
           "lastModifiedBy": o,
           "devices": SyncManager_defineProperty({}, o, {
             "deviceName": getDeviceName(),
             "deviceType": D,
             "lastSyncTime": a,
-            "scriptVersion": "5.6.11"
+            "scriptVersion": ft
           }),
           "deviceLayouts": L,
           "settings": p,
@@ -20977,8 +21169,8 @@
           return null;
         }
         var o = Object.assign({}, r);
-        if (!o.schemaVersion || o.schemaVersion < pt) {
-          o.schemaVersion = pt;
+        if (!o.schemaVersion || o.schemaVersion < ht) {
+          o.schemaVersion = ht;
           if (!o.devices) {
             o.devices = {};
           }
@@ -21077,7 +21269,7 @@
           "deviceName": getDeviceName(),
           "deviceType": getDeviceType(),
           "lastSyncTime": u,
-          "scriptVersion": "5.6.11"
+          "scriptVersion": ft
         };
         var V = r.settings || {};
         var G = l.settings || {};
@@ -21191,8 +21383,8 @@
         }
         var ae = Object.assign({}, l.deviceLayouts || {}, r.deviceLayouts || {});
         return {
-          "schemaVersion": pt,
-          "scriptVersion": "5.6.11",
+          "schemaVersion": ht,
+          "scriptVersion": ft,
           "lastModified": u,
           "lastModifiedBy": a,
           "devices": O,
@@ -21218,7 +21410,7 @@
           }
         }
         if (l && SyncManager_typeof(l) === "object") {
-          setValue(dt, l);
+          setValue(pt, l);
         }
         if (v && SyncManager_typeof(v) === "object") {
           this.saveLocalTombstones(v);
@@ -21591,7 +21783,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ft = function() {
+  var gt = function() {
     function MarkerBottomSheet(r) {
       MarkerBottomSheet_classCallCheck(this, MarkerBottomSheet);
       this.loopManager = r;
@@ -21889,7 +22081,7 @@
           P.addEventListener("click", (function(a) {
             a.stopPropagation();
             if (o && o.id) {
-              mt.recordTombstone("markers", o.id, r.loopManager.storageKey);
+              vt.recordTombstone("markers", o.id, r.loopManager.storageKey);
             }
             r.loopManager.tabs = r.loopManager.tabs.filter((function(r) {
               return r.id !== o.id;
@@ -22069,7 +22261,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var vt = function() {
+  var yt = function() {
     function LoopManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       LoopManager_classCallCheck(this, LoopManager);
@@ -22092,7 +22284,7 @@
       this._longPressTimer = null;
       this._longPressTriggered = false;
       this.storageKey = null;
-      this.bottomSheet = new ft(this);
+      this.bottomSheet = new gt(this);
       this.editingTabId = null;
       this.editingTabCopy = null;
       this._durationFallbackBound = null;
@@ -22487,7 +22679,7 @@
             o.tabs[l] = LoopManager_objectSpread(LoopManager_objectSpread({}, p), {}, {
               "updatedAt": Date.now()
             });
-            mt.clearTombstone("markers", r.id);
+            vt.clearTombstone("markers", r.id);
             o._saveTabs();
           }
           o._exitEditMode();
@@ -22500,7 +22692,7 @@
         P.addEventListener("click", (function(a) {
           a.stopPropagation();
           if (r && r.id) {
-            mt.recordTombstone("markers", r.id, o.storageKey);
+            vt.recordTombstone("markers", r.id, o.storageKey);
           }
           o.tabs = o.tabs.filter((function(o) {
             return o.id !== r.id;
@@ -22674,7 +22866,7 @@
           p.updatedAt = Date.now();
           if (u) {
             if (p.id) {
-              mt.clearTombstone("markers", p.id);
+              vt.clearTombstone("markers", p.id);
             }
             if (l === a.editingTabCopy) {
               a.renderTabs();
@@ -22697,7 +22889,7 @@
             });
             a.tabs.push(v);
             if (v.id) {
-              mt.clearTombstone("markers", v.id);
+              vt.clearTombstone("markers", v.id);
             }
             a._resetDraftTab();
             a._saveTabs();
@@ -23213,7 +23405,7 @@
         setValue(this.storageKey, this.tabs);
         try {
           var o;
-          mt.triggerAutoSync((o = this.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "change");
+          vt.triggerAutoSync((o = this.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "change");
         } catch (r) {}
         try {
           if (Array.isArray(this.tabs) && this.tabs.length > 0) {
@@ -23324,7 +23516,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var gt = function() {
+  var bt = function() {
     function ProgressManager(r, o) {
       ProgressManager_classCallCheck(this, ProgressManager);
       this.playerCore = r;
@@ -23606,7 +23798,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var yt = function() {
+  var wt = function() {
     function BlurPlaybackManager() {
       BlurPlaybackManager_classCallCheck(this, BlurPlaybackManager);
     }
@@ -23721,7 +23913,7 @@
       }
     } ]);
   }();
-  BlurPlaybackManager_defineProperty(yt, "isInitialized", false);
+  BlurPlaybackManager_defineProperty(wt, "isInitialized", false);
   function EventManager_typeof(r) {
     "@babel/helpers - typeof";
     return EventManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -23766,7 +23958,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var bt = function() {
+  var Ct = function() {
     function EventManager(r, o, a) {
       EventManager_classCallCheck(this, EventManager);
       this.playerCore = r;
@@ -23962,7 +24154,7 @@
           }
         };
         this.targetVideo.addEventListener("pause", this.handlePauseBound);
-        yt.attachPlayer(this.targetVideo, this.playerCore);
+        wt.attachPlayer(this.targetVideo, this.playerCore);
       }
     }, {
       "key": "handleCloseButtonClick",
@@ -24495,7 +24687,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var wt = function() {
+  var xt = function() {
     function SettingsManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       var l = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -24658,9 +24850,9 @@
         P.appendChild(L);
         P.appendChild(D);
         o.appendChild(P);
-        var M = mt.getWebDavConfig();
+        var M = vt.getWebDavConfig();
         var T = Boolean(M.url);
-        var A = mt.getLastSyncTime();
+        var A = vt.getLastSyncTime();
         var j = T ? A > 0 ? " (已配置)" : " (未同步)" : " (点击展开)";
         var B = document.createElement("div");
         B.className = "tm-settings-section";
@@ -24719,7 +24911,7 @@
         var r = this;
         var o = document.createElement("div");
         o.className = "tm-settings-webdav-card";
-        var a = mt.getWebDavConfig();
+        var a = vt.getWebDavConfig();
         var l = SyncManager_getOrCreateClientId();
         var u = getDeviceName();
         var p = document.createElement("div");
@@ -24734,7 +24926,7 @@
         y.value = a.url || "";
         y.addEventListener("change", (function() {
           a.url = y.value.trim();
-          mt.saveWebDavConfig(a);
+          vt.saveWebDavConfig(a);
         }));
         p.appendChild(v);
         p.appendChild(y);
@@ -24750,7 +24942,7 @@
         _.value = a.user || "";
         _.addEventListener("change", (function() {
           a.user = _.value.trim();
-          mt.saveWebDavConfig(a);
+          vt.saveWebDavConfig(a);
         }));
         b.appendChild(C);
         b.appendChild(_);
@@ -24768,7 +24960,7 @@
         E.value = a.pass || "";
         E.addEventListener("change", (function() {
           a.pass = E.value;
-          mt.saveWebDavConfig(a);
+          vt.saveWebDavConfig(a);
         }));
         var D = document.createElement("button");
         D.className = "tm-webdav-eye-btn";
@@ -24800,7 +24992,7 @@
         T.value = a.path || "/MissPlayer/";
         T.addEventListener("change", (function() {
           a.path = T.value.trim() || "/MissPlayer/";
-          mt.saveWebDavConfig(a);
+          vt.saveWebDavConfig(a);
         }));
         L.appendChild(M);
         L.appendChild(T);
@@ -24823,10 +25015,10 @@
         V.checked = a.autoSync !== false;
         V.addEventListener("change", (function() {
           a.autoSync = V.checked;
-          mt.saveWebDavConfig(a);
+          vt.saveWebDavConfig(a);
           if (a.autoSync && a.url) {
             var o;
-            mt.triggerAutoSync((o = r.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "startup");
+            vt.triggerAutoSync((o = r.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "startup");
           }
         }));
         var G = document.createElement("span");
@@ -24866,7 +25058,7 @@
         q.className = "tm-webdav-status-bar";
         var K = document.createElement("span");
         var Y = function renderTimeText() {
-          var r = mt.getLastSyncTime();
+          var r = vt.getLastSyncTime();
           var o = r > 0 ? new Date(r).toLocaleString() : __("webdavNeverSynced") || "尚未同步";
           K.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat(o);
         };
@@ -24881,7 +25073,7 @@
           a.user = _.value.trim();
           a.pass = E.value;
           a.path = T.value.trim() || "/MissPlayer/";
-          mt.saveWebDavConfig(a);
+          vt.saveWebDavConfig(a);
           return a;
         };
         var Q = function updateStatus(o) {
@@ -24981,7 +25173,7 @@
                 Q("正在智能合并同步...", "running");
                 u.prev = 8;
                 u.next = 11;
-                return mt.executeSync({
+                return vt.executeSync({
                   "mode": "merge",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -25042,7 +25234,7 @@
                 Q("正在上传覆盖云端...", "running");
                 u.prev = 10;
                 u.next = 13;
-                return mt.executeSync({
+                return vt.executeSync({
                   "mode": "upload",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -25103,7 +25295,7 @@
                 Q("正在从云端拉取覆盖...", "running");
                 u.prev = 10;
                 u.next = 13;
-                return mt.executeSync({
+                return vt.executeSync({
                   "mode": "download",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -25332,7 +25524,7 @@
         if (!a.includes(r)) {
           a.push(r);
         }
-        mt.clearTombstone("customSeekSteps", r);
+        vt.clearTombstone("customSeekSteps", r);
         this.updateSetting("customUserSeekSteps", o);
         this.updateSetting("enabledSeekSteps", a);
         this.rebuildControlPanelSeekRow();
@@ -25350,7 +25542,7 @@
         a = a.filter((function(o) {
           return o !== r;
         }));
-        mt.recordTombstone("customSeekSteps", r);
+        vt.recordTombstone("customSeekSteps", r);
         this.updateSetting("customUserSeekSteps", o);
         this.updateSetting("enabledSeekSteps", a);
         this.rebuildControlPanelSeekRow();
@@ -25607,7 +25799,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ct = function() {
+  var _t = function() {
     function VideoSwipeManager(r, o, a) {
       var l = this;
       var u = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -26402,7 +26594,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var xt = function() {
+  var kt = function() {
     function CustomVideoPlayer() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       CustomVideoPlayer_classCallCheck(this, CustomVideoPlayer);
@@ -26491,10 +26683,10 @@
         var u = new ot(this.playerCore, l, a);
         u.init();
         this.managers.controlManager = u;
-        var p = new wt(this.playerCore, l, a, u);
+        var p = new xt(this.playerCore, l, a, u);
         p.init();
         this.managers.settingsManager = p;
-        var v = new gt(this.playerCore, l);
+        var v = new bt(this.playerCore, l);
         v.init({
           "progressBarElement": u.progressBarElement,
           "progressIndicator": u.progressIndicator,
@@ -26503,7 +26695,7 @@
           "timeIndicator": u.timeIndicator
         });
         this.managers.progressManager = v;
-        var y = new vt(this.playerCore, l, u);
+        var y = new yt(this.playerCore, l, u);
         y.init({
           "loopStartMarker": u.loopStartMarker,
           "loopEndMarker": u.loopEndMarker,
@@ -26518,7 +26710,7 @@
         b.init();
         this.managers.dragManager = b;
         if (this.playerCore.targetVideo && l.videoWrapper && l.handle) {
-          this.swipeManager = new Ct(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
+          this.swipeManager = new _t(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
             return r.close();
           }), a);
           this.swipeManager.playerCore = this.playerCore;
@@ -26530,7 +26722,7 @@
           "dragManager": b,
           "swipeManager": this.swipeManager
         });
-        var C = new bt(this.playerCore, l, this.managers);
+        var C = new Ct(this.playerCore, l, this.managers);
         C.init();
         this.managers.eventManager = C;
         a.assembleDOM();
@@ -26668,7 +26860,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var _t = function() {
+  var St = function() {
     function FloatingButton() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       FloatingButton_classCallCheck(this, FloatingButton);
@@ -26834,7 +27026,7 @@
         }
         this.button.style.display = "none";
         requestAnimationFrame((function() {
-          r.videoPlayer = new xt({
+          r.videoPlayer = new kt({
             "playerState": r.playerState,
             "callingButton": r.button
           });
@@ -26904,7 +27096,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var kt = function() {
+  var Pt = function() {
     function PlayerState() {
       PlayerState_classCallCheck(this, PlayerState);
       this.settings = {
@@ -26987,7 +27179,7 @@
           this.settings[r] = o;
           this.saveSettings();
           try {
-            mt.recordSettingUpdate(r);
+            vt.recordSettingUpdate(r);
           } catch (r) {}
         }
       }
@@ -27438,9 +27630,9 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var St = 30 * 60 * 1e3;
-  var Pt = 3;
-  var Et = function() {
+  var Et = 30 * 60 * 1e3;
+  var Dt = 3;
+  var Lt = function() {
     function LoginManager() {
       LoginManager_classCallCheck(this, LoginManager);
       this.userEmail = "";
@@ -27647,12 +27839,12 @@
       "value": function isCircuitBroken(r) {
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0);
         var a = getLocalStorage("mp_circuit_last_fail_".concat(r), 0);
-        if (o >= Pt) {
+        if (o >= Dt) {
           var l = Date.now() - a;
-          if (l < St) {
+          if (l < Et) {
             return true;
           }
-          setLocalStorage("mp_circuit_fail_".concat(r), Pt - 1);
+          setLocalStorage("mp_circuit_fail_".concat(r), Dt - 1);
         }
         return false;
       }
@@ -27662,7 +27854,7 @@
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0) + 1;
         setLocalStorage("mp_circuit_fail_".concat(r), o);
         setLocalStorage("mp_circuit_last_fail_".concat(r), Date.now());
-        if (o >= Pt) {}
+        if (o >= Dt) {}
       }
     }, {
       "key": "resetCircuitBreaker",
@@ -28154,7 +28346,7 @@
           switch (o.prev = o.next) {
            case 0:
             o.prev = 0;
-            r = new Et;
+            r = new Lt;
             o.next = 4;
             return r.init();
 
@@ -28175,8 +28367,8 @@
     })));
     return _initAutoLogin.apply(this, arguments);
   }
-  var Dt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
-  var Lt = [ {
+  var Mt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
+  var Tt = [ {
     "selector": 'div[class="my-2 text-sm text-nord4 truncate"]',
     "styles": "white-space: normal !important;"
   }, {
@@ -28186,11 +28378,11 @@
     "selector": 'div[class*="z-max"]',
     "styles": "z-index: 9000 !important;"
   } ];
-  var Mt = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
-  const Tt = {
-    "adSelectors": Dt,
-    "customStyles": Lt,
-    "blockedUrlPatterns": Mt,
+  var At = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
+  const Ft = {
+    "adSelectors": Mt,
+    "customStyles": Tt,
+    "blockedUrlPatterns": At,
     "isVideoSite": true,
     "domains": (0, b.getSiteDomains)("MISSAV")
   };
@@ -28301,7 +28493,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var At = function() {
+  var jt = function() {
     function AdBlockConfig() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       adblock_classCallCheck(this, AdBlockConfig);
@@ -28341,7 +28533,7 @@
       }
     } ]);
   }();
-  var Ft = function() {
+  var Bt = function() {
     function StyleManager(r) {
       adblock_classCallCheck(this, StyleManager);
       this.config = r;
@@ -28369,7 +28561,7 @@
       }
     } ]);
   }();
-  var jt = function() {
+  var It = function() {
     function DOMCleaner(r) {
       adblock_classCallCheck(this, DOMCleaner);
       this.config = r;
@@ -28457,7 +28649,7 @@
       }
     } ]);
   }();
-  var Bt = function() {
+  var Ot = function() {
     function RequestBlocker(r) {
       adblock_classCallCheck(this, RequestBlocker);
       this.config = r;
@@ -28558,7 +28750,7 @@
       }
     } ]);
   }();
-  var It = function() {
+  var Vt = function() {
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = false;
@@ -28568,11 +28760,11 @@
       } catch (o) {
         r = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai|live|net|org)/i.test(window.location.href);
       }
-      var l = r ? Tt : {};
-      this.config = new At(l);
-      this.styleManager = new Ft(this.config);
-      this.domCleaner = new jt(this.config);
-      this.requestBlocker = new Bt(this.config);
+      var l = r ? Ft : {};
+      this.config = new jt(l);
+      this.styleManager = new Bt(this.config);
+      this.domCleaner = new It(this.config);
+      this.requestBlocker = new Ot(this.config);
     }
     return adblock_createClass(AdBlocker, [ {
       "key": "preventDetection",
@@ -28634,7 +28826,7 @@
       }
     } ]);
   }();
-  const Ot = It;
+  const Gt = Vt;
   function DetailExpander_typeof(r) {
     "@babel/helpers - typeof";
     return DetailExpander_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -28679,7 +28871,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Vt = function() {
+  var Rt = function() {
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
@@ -28806,7 +28998,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Gt = function() {
+  var Ht = function() {
     function QualityManager() {
       QualityManager_classCallCheck(this, QualityManager);
       this.maxAttempts = 6;
@@ -28963,7 +29155,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Rt = function() {
+  var Nt = function() {
     function UrlRedirector() {
       UrlRedirector_classCallCheck(this, UrlRedirector);
       var r = b.SITE_DOMAINS.MISSAV.primary;
@@ -29071,13 +29263,13 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ht = new Rt;
-  var Nt = function() {
+  var Jt = new Nt;
+  var zt = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
-      this.detailExpander = new Vt;
-      this.qualityManager = new Gt;
-      this.urlRedirector = Ht;
+      this.detailExpander = new Rt;
+      this.qualityManager = new Ht;
+      this.urlRedirector = Jt;
     }
     return userExperienceEnhancer_createClass(UserExperienceEnhancer, [ {
       "key": "init",
@@ -29109,7 +29301,7 @@
   }();
   function initUserExperienceEnhancer() {
     var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
-    var o = new Nt;
+    var o = new zt;
     o.init(r);
     return o;
   }
@@ -29515,9 +29707,9 @@
       }));
     };
   }
-  var Jt = new Ot;
-  Jt.init();
-  Ht.checkAndRedirect();
+  var Wt = new Gt;
+  Wt.init();
+  Jt.checkAndRedirect();
   function setupViewport() {
     var r = document.querySelector('meta[name="viewport"]');
     if (!r) {
@@ -29579,19 +29771,19 @@
              case 4:
               injectStyles();
               r = initUserExperienceEnhancer(true);
-              o = new kt;
+              o = new Pt;
               o.loadSettings();
-              mt.triggerAutoSync(o, "startup");
+              vt.triggerAutoSync(o, "startup");
               document.addEventListener("visibilitychange", (function() {
                 if (document.visibilityState === "visible") {
-                  mt.triggerAutoSync(o, "resume");
+                  vt.triggerAutoSync(o, "resume");
                 }
               }));
               window.addEventListener("focus", (function() {
-                mt.triggerAutoSync(o, "resume");
+                vt.triggerAutoSync(o, "resume");
               }));
-              yt.initGlobal(o);
-              a = new _t({
+              wt.initGlobal(o);
+              a = new St({
                 "playerState": o
               });
               a.init();

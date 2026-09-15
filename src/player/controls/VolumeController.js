@@ -246,9 +246,26 @@ export class VolumeController {
         
         const volumeButton = this.volumeSlider.querySelector('.tm-volume-button');
         
-        // 更新音量图标
+        // 更新音量图标 (优先仅替换 svg，避免清除正在扩散的粉色水波纹)
         if (volumeButton) {
-            volumeButton.innerHTML = this.getVolumeIcon(volume);
+            const newIconHtml = this.getVolumeIcon(volume);
+            const currentSvg = volumeButton.querySelector('svg');
+            if (currentSvg) {
+                const temp = document.createElement('div');
+                temp.innerHTML = newIconHtml.trim();
+                const newSvg = temp.firstElementChild;
+                if (newSvg) {
+                    volumeButton.replaceChild(newSvg, currentSvg);
+                } else {
+                    const ripples = Array.from(volumeButton.querySelectorAll('.tm-ripple, .ripple'));
+                    volumeButton.innerHTML = newIconHtml;
+                    ripples.forEach(r => volumeButton.appendChild(r));
+                }
+            } else {
+                const ripples = Array.from(volumeButton.querySelectorAll('.tm-ripple, .ripple'));
+                volumeButton.innerHTML = newIconHtml;
+                ripples.forEach(r => volumeButton.appendChild(r));
+            }
         }
         
         // 如果不支持音量控制，只更新图标

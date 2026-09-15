@@ -1,4 +1,4 @@
-import { formatTime } from '../../utils/index.js';
+import { formatTime, createRipple } from '../../utils/index.js';
 
 import { CommentPanel } from '../controls/CommentPanel.js';
 import { VolumeController } from '../controls/VolumeController.js';
@@ -14,6 +14,7 @@ export class ControlManager {
         this.playerCore = playerCore;
         this.targetVideo = playerCore.targetVideo;
         this.uiManager = uiManager;
+        this._rippleHandler = null;
         
         // UI元素引用
         this.uiElements = uiElements;
@@ -135,6 +136,9 @@ export class ControlManager {
         // 创建控制按钮容器
         this.controlButtonsContainer = this.createControlButtonsContainer();
         
+        // 初始化控制面板内按钮的 Material 风格粉色水波纹动画
+        this.initRippleEffect();
+
         // 初始化事件监听器
         this.initEventListeners();
         
@@ -374,9 +378,32 @@ export class ControlManager {
     }
 
     /**
+     * 初始化控制面板内所有按钮的 Material 风格粉色水波纹动画效果 (Ripple Effect)
+     * 采用 capture 捕获阶段，确保即使内部子按钮调用了 stopPropagation()，水波纹依然能精准从点击坐标扩散
+     */
+    initRippleEffect() {
+        if (!this.controlButtonsContainer) return;
+
+        this._rippleHandler = (e) => {
+            const btn = e.target.closest('button, .tm-tab-list-btn, .tm-tab-pill');
+            if (!btn || !this.controlButtonsContainer.contains(btn)) return;
+            if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
+
+            createRipple(e, btn);
+        };
+
+        this.controlButtonsContainer.addEventListener('click', this._rippleHandler, true);
+    }
+
+    /**
      * 销毁事件监听器和子控制器以防止内存泄漏 (Lifecycle hook)
      */
     cleanup() {
+        if (this._rippleHandler && this.controlButtonsContainer) {
+            this.controlButtonsContainer.removeEventListener('click', this._rippleHandler, true);
+            this._rippleHandler = null;
+        }
+
         if (this._volumeChangeHandler) {
             this.targetVideo.removeEventListener('volumechange', this._volumeChangeHandler);
             this._volumeChangeHandler = null;

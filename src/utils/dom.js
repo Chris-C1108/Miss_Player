@@ -122,6 +122,61 @@ export function findVideoElement() {
     return allVideos[0];
 }
 
+/**
+ * 为按钮生成 Material 风格的波纹扩散动画 (Ripple Effect)
+ * 从指针点击的精确坐标位置为圆心，自 scale(0) 扩散至 scale(2.6) 并在 ~0.6s 内淡出移除
+ * @param {MouseEvent|PointerEvent|TouchEvent} event - 点击事件对象
+ * @param {HTMLElement} button - 承载波纹的容器元素
+ * @param {string} [color] - 可选自定义波纹背景色
+ * @returns {HTMLElement|null} 生成的波纹元素
+ */
+export function createRipple(event, button, color) {
+    if (!button || typeof button.getBoundingClientRect !== 'function') return null;
 
+    const r = button.getBoundingClientRect();
+    const size = Math.max(r.width, r.height);
 
+    // 获取指针相对于视口的精确坐标，兼顾触控事件与键盘触发回退
+    let clientX = r.left + r.width / 2;
+    let clientY = r.top + r.height / 2;
 
+    if (event) {
+        if (typeof event.clientX === 'number' && (event.clientX !== 0 || event.clientY !== 0)) {
+            clientX = event.clientX;
+            clientY = event.clientY;
+        } else if (event.touches && event.touches[0]) {
+            clientX = event.touches[0].clientX;
+            clientY = event.touches[0].clientY;
+        } else if (event.changedTouches && event.changedTouches[0]) {
+            clientX = event.changedTouches[0].clientX;
+            clientY = event.changedTouches[0].clientY;
+        }
+    }
+
+    const x = clientX - r.left - size / 2;
+    const y = clientY - r.top - size / 2;
+
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple tm-ripple';
+    ripple.style.width = `${size}px`;
+    ripple.style.height = `${size}px`;
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+    if (color) {
+        ripple.style.background = color;
+    }
+
+    button.appendChild(ripple);
+
+    const removeRipple = () => {
+        ripple.removeEventListener('animationend', removeRipple);
+        if (ripple.parentNode) {
+            ripple.parentNode.removeChild(ripple);
+        }
+    };
+
+    ripple.addEventListener('animationend', removeRipple, { once: true });
+    setTimeout(removeRipple, 650);
+
+    return ripple;
+}

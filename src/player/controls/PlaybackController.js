@@ -64,11 +64,24 @@ export class PlaybackController {
     updatePlayPauseButton() {
         if (!this.playPauseButton) return;
         
-        if (this.targetVideo.paused) {
-            this.playPauseButton.innerHTML = PLAY;
-        } else {
-            this.playPauseButton.innerHTML = PAUSE;
+        const isPaused = this.targetVideo.paused;
+        const newSvgHtml = isPaused ? PLAY : PAUSE;
+        const currentSvg = this.playPauseButton.querySelector('svg');
+
+        if (currentSvg) {
+            const temp = document.createElement('div');
+            temp.innerHTML = newSvgHtml.trim();
+            const newSvg = temp.firstElementChild;
+            if (newSvg) {
+                this.playPauseButton.replaceChild(newSvg, currentSvg);
+                return;
+            }
         }
+
+        // 降级保护：保留活跃水波纹节点
+        const ripples = Array.from(this.playPauseButton.querySelectorAll('.tm-ripple, .ripple'));
+        this.playPauseButton.innerHTML = newSvgHtml;
+        ripples.forEach(r => this.playPauseButton.appendChild(r));
     }
 
     /**
@@ -134,7 +147,22 @@ export class PlaybackController {
         if (this.playbackRateSlider) {
             // 格式化展示速率，始终保留一位小数，如 1.0x, 1.2x, 1.5x, 2.0x
             const speedText = `${speed.toFixed(1)}x`;
-            this.playbackRateSlider.textContent = speedText;
+            
+            // 仅更新文本节点，避免清除正在扩散的活跃水波纹元素
+            let textNode = null;
+            for (const child of this.playbackRateSlider.childNodes) {
+                if (child.nodeType === Node.TEXT_NODE) {
+                    textNode = child;
+                    break;
+                }
+            }
+            if (textNode) {
+                textNode.textContent = speedText;
+            } else {
+                const ripples = Array.from(this.playbackRateSlider.querySelectorAll('.tm-ripple, .ripple'));
+                this.playbackRateSlider.textContent = speedText;
+                ripples.forEach(r => this.playbackRateSlider.appendChild(r));
+            }
             
             // 刷新高亮样式
             this.playbackRateSlider.className = 'tm-playback-rate-button';

@@ -9,6 +9,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.6.12';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -320,7 +321,7 @@ export class SyncManager {
 
         return {
             schemaVersion: CURRENT_SCHEMA_VERSION,
-            scriptVersion: '5.6.11',
+            scriptVersion: SCRIPT_VERSION,
             lastModified: now,
             lastModifiedBy: clientId,
             devices: {
@@ -328,7 +329,7 @@ export class SyncManager {
                     deviceName: getDeviceName(),
                     deviceType,
                     lastSyncTime: now,
-                    scriptVersion: '5.6.11'
+                    scriptVersion: SCRIPT_VERSION
                 }
             },
             deviceLayouts,
@@ -425,7 +426,7 @@ export class SyncManager {
             deviceName: getDeviceName(),
             deviceType: getDeviceType(),
             lastSyncTime: now,
-            scriptVersion: '5.6.11'
+            scriptVersion: SCRIPT_VERSION
         };
 
         // 3. 字段级 LWW 合并 Settings 配置
@@ -546,7 +547,7 @@ export class SyncManager {
 
         return {
             schemaVersion: CURRENT_SCHEMA_VERSION,
-            scriptVersion: '5.6.11',
+            scriptVersion: SCRIPT_VERSION,
             lastModified: now,
             lastModifiedBy: clientId,
             devices: mergedDevices,
