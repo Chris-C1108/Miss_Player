@@ -1,4 +1,4 @@
-import { getValue, setValue, Toast } from '../../utils/index.js';
+import { getValue, setValue, Toast, playTapSound } from '../../utils/index.js';
 import { telemetry } from '../../telemetry';
 import { __ } from '../../constants/i18n.js';
 import { SyncManager, WebDavClient, getOrCreateClientId, getDeviceName } from '../../sync/index.js';
@@ -45,7 +45,8 @@ export class SettingsManager {
             },
             telemetryEnabled: true,
             debugMode: false,
-            pauseOnBlur: true
+            pauseOnBlur: true,
+            buttonSoundEnabled: true
         };
 
         // 快进快退步进自定义展开状态
@@ -251,8 +252,24 @@ export class SettingsManager {
             __('pauseOnBlurDesc') || '页面离开或失去焦点时自动暂停播放'
         );
 
+        // 4. 按键点击音效开关 (默认为开)
+        const buttonSoundOption = this._createToggleOption(
+            __('buttonSound') || '按键点击音效',
+            'buttonSoundEnabled',
+            this.settings.buttonSoundEnabled !== false,
+            (checked) => {
+                this.updateSetting('buttonSoundEnabled', checked);
+                if (checked) {
+                    playTapSound(true);
+                }
+            },
+            null,
+            __('buttonSoundDesc') || '点击控制面板按钮时播放清脆触控反馈音效'
+        );
+
         section3.appendChild(telemetryOption);
         section3.appendChild(pauseOnBlurOption);
+        section3.appendChild(buttonSoundOption);
         section3.appendChild(debugOption);
         container.appendChild(section3);
 
@@ -1109,6 +1126,7 @@ export class SettingsManager {
             this.settings.telemetryEnabled = getBool('telemetryEnabled', true);
             this.settings.debugMode = getBool('debugMode', false);
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
+            this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
         }
     }
     
@@ -1130,6 +1148,7 @@ export class SettingsManager {
             setValue('telemetryEnabled', this.settings.telemetryEnabled);
             setValue('debugMode', this.settings.debugMode);
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
+            setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
         }
     }
     

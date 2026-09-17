@@ -1347,6 +1347,8 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 
 /* ===== Tab Pill ===== */
 .tm-tab-pill {
+    position: relative;
+    overflow: hidden;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -1378,6 +1380,43 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     background-color: hsla(var(--tab-color), 0.25);
     border-color: hsla(var(--tab-color), 0.6);
     color: hsl(var(--tab-color));
+}
+
+.tm-tab-time-text {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.tm-tab-loop-overlay {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 60%;
+    z-index: 2;
+    pointer-events: none;
+    border: none;
+    background: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.tm-tab-loop-overlay svg {
+    display: block;
+    height: 100%;
+    width: auto;
+    color: #ffffff;
+    fill: #ffffff;
+    stroke: #ffffff;
+    stroke-width: 0.8px;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 }
 
 /* Draft tab (dashed border, dynamic tint) */
@@ -1627,6 +1666,8 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 
 /* AB 时间片段宽胶囊样式 */
 .tm-sheet-time-pill.interval {
+    position: relative;
+    overflow: hidden;
     padding: 0 10px;
     gap: 4px;
 }

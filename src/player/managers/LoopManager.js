@@ -1,6 +1,7 @@
-import { formatTimeWithHours, getValue, setValue, Toast } from '../../utils/index.js';
+import { formatTimeWithHours, getValue, setValue, Toast, playTapSound } from '../../utils/index.js';
 import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { __ } from '../../constants/i18n.js';
+import { LOOP_INTERVAL } from '../../constants/icons.js';
 import { telemetry } from '../../telemetry/index.js';
 import { MarkerBottomSheet } from './MarkerBottomSheet.js';
 import { SyncManager } from '../../sync/index.js';
@@ -198,9 +199,24 @@ export class LoopManager {
         pill.style.setProperty('--tab-color', color);
 
         if (tab.type === 'highlight') {
-            pill.textContent = formatTimeWithHours(tab.startTime);
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'tm-tab-time-text';
+            timeSpan.textContent = formatTimeWithHours(tab.startTime);
+            pill.appendChild(timeSpan);
         } else {
-            pill.textContent = `${formatTimeWithHours(tab.startTime)} ~ ${formatTimeWithHours(tab.endTime)}`;
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'tm-tab-time-text';
+            timeSpan.textContent = `${formatTimeWithHours(tab.startTime)} ~ ${formatTimeWithHours(tab.endTime)}`;
+            pill.appendChild(timeSpan);
+
+            // 如果当前时间片段正在循环播放，叠加循环图标
+            if (this.activeTabId === tab.id && this.loopActive) {
+                pill.classList.add('looping');
+                const overlay = document.createElement('div');
+                overlay.className = 'tm-tab-loop-overlay';
+                overlay.innerHTML = LOOP_INTERVAL;
+                pill.appendChild(overlay);
+            }
         }
 
         // Active state
@@ -550,6 +566,7 @@ export class LoopManager {
     //  Tab Interactions
     // =====================================================================
     _handleTabClick(tab) {
+        playTapSound();
         telemetry.track('tag_jump', {
             type: tab.type,
             has_comment: !!tab.comment
@@ -794,6 +811,30 @@ export class LoopManager {
         this._clearAllTabProgress();
         this.updateLoopMarkers();
         this.renderProgressMarkers();
+    }
+
+    /**
+     * 检查目标时间是否超出当前循环区间；若超出则自动跳出循环播放
+     * @param {number} targetTime 目标跳转时间（秒）
+     * @returns {boolean} 是否跳出了循环播放
+     */
+    checkAndExitLoopIfOutside(targetTime) {
+        if (!this.loopActive || this.loopStartTime === null || this.loopEndTime === null) {
+            return false;
+        }
+
+        // 允许极小的浮点误差容限（0.05 秒）
+        const isOutside = targetTime < (this.loopStartTime - 0.05) || targetTime > (this.loopEndTime + 0.05);
+        if (isOutside) {
+            this.disableLoop();
+            this.activeTabId = null;
+            this.renderTabs();
+            if (this.bottomSheet && typeof this.bottomSheet.updateBottomSheet === 'function') {
+                this.bottomSheet.updateBottomSheet();
+            }
+            return true;
+        }
+        return false;
     }
 
     _handleLoopTimeUpdate() {

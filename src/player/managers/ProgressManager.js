@@ -23,6 +23,15 @@ export class ProgressManager {
         this.progressHandleUpHandler = null;   // 进度条释放事件处理函数
         this.lastDragX = 0; // 上次拖动位置的X坐标
         this.isTouchDevice = 'ontouchstart' in window; // 检测是否为触摸设备
+        this._loopManager = null; // 循环管理器引用
+    }
+
+    setLoopManager(loopManager) {
+        this._loopManager = loopManager;
+    }
+
+    get loopManager() {
+        return this._loopManager || this.playerCore?.loopManager || this.playerCore?.managers?.loopManager;
     }
     
     /**
@@ -112,6 +121,11 @@ export class ProgressManager {
         
         const targetTime = duration * relativePos;
         
+        // 循环播放状态：若调整到循环区间外的时间则自动跳出循环播放
+        if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === 'function') {
+            this.loopManager.checkAndExitLoopIfOutside(targetTime);
+        }
+
         // 设置视频当前时间
         this.targetVideo.currentTime = targetTime;
         
@@ -126,6 +140,12 @@ export class ProgressManager {
         if (!this.targetVideo) return;
         
         const newTime = Math.max(0, Math.min(this.targetVideo.duration, this.targetVideo.currentTime + seconds));
+        
+        // 循环播放状态：若调整到循环区间外的时间则自动跳出循环播放
+        if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === 'function') {
+            this.loopManager.checkAndExitLoopIfOutside(newTime);
+        }
+
         this.targetVideo.currentTime = newTime;
     }
     
@@ -187,6 +207,9 @@ export class ProgressManager {
         const duration = this.targetVideo.duration;
         if (!isNaN(duration)) {
             const newTime = duration * relativePos;
+            if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === 'function') {
+                this.loopManager.checkAndExitLoopIfOutside(newTime);
+            }
             this.targetVideo.currentTime = newTime;
             this.progressIndicator.style.width = `${relativePos * 100}%`;
             this.updateCurrentTimeDisplay();
@@ -225,6 +248,10 @@ export class ProgressManager {
         
         const newTime = duration * relativePos;
         
+        if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === 'function') {
+            this.loopManager.checkAndExitLoopIfOutside(newTime);
+        }
+        
         // 更新进度指示器位置
         this.progressIndicator.style.width = `${relativePos * 100}%`;
         
@@ -260,7 +287,11 @@ export class ProgressManager {
         // 设置视频当前时间
         const duration = this.targetVideo.duration;
         if (!isNaN(duration)) {
-            this.targetVideo.currentTime = duration * relativePos;
+            const targetTime = duration * relativePos;
+            if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === 'function') {
+                this.loopManager.checkAndExitLoopIfOutside(targetTime);
+            }
+            this.targetVideo.currentTime = targetTime;
         }
         
         // 隐藏时间指示器

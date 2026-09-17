@@ -19,6 +19,13 @@ export class SeekController {
     seekRelative(seconds) {
         if (!this.targetVideo) return;
         const newTime = Math.max(0, Math.min(this.targetVideo.duration, this.targetVideo.currentTime + seconds));
+
+        // 循环播放状态：若调整到循环区间外的时间则自动跳出循环播放
+        const loopManager = this.controlManager?.loopManager || this.playerCore?.loopManager;
+        if (loopManager && typeof loopManager.checkAndExitLoopIfOutside === 'function') {
+            loopManager.checkAndExitLoopIfOutside(newTime);
+        }
+
         this.targetVideo.currentTime = newTime;
 
         telemetry.track('seek_click', {

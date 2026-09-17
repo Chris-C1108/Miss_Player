@@ -1,5 +1,6 @@
 import { formatTimeWithHours } from '../../utils/index.js';
 import { SyncManager } from '../../sync/index.js';
+import { LOOP_INTERVAL } from '../../constants/icons.js';
 
 /**
  * MarkerBottomSheet — 循环片段与时间戳标签管理底部浮层面板
@@ -263,6 +264,15 @@ export class MarkerBottomSheet {
                 pill.appendChild(startSpan);
                 pill.appendChild(sepSpan);
                 pill.appendChild(endSpan);
+
+                // 如果当前时间片段正在循环播放，叠加循环图标
+                if (this.loopManager.activeTabId === tab.id && this.loopManager.loopActive) {
+                    pill.classList.add('looping');
+                    const overlay = document.createElement('div');
+                    overlay.className = 'tm-tab-loop-overlay';
+                    overlay.innerHTML = LOOP_INTERVAL;
+                    pill.appendChild(overlay);
+                }
 
                 pill.addEventListener('click', () => {
                     this.loopManager._handleTabClick(tab);

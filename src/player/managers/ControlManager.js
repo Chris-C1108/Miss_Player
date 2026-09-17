@@ -1,4 +1,4 @@
-import { formatTime, createRipple } from '../../utils/index.js';
+import { formatTime, createRipple, playTapSound } from '../../utils/index.js';
 
 import { CommentPanel } from '../controls/CommentPanel.js';
 import { VolumeController } from '../controls/VolumeController.js';
@@ -390,6 +390,7 @@ export class ControlManager {
             if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
 
             createRipple(e, btn);
+            playTapSound();
         };
 
         this.controlButtonsContainer.addEventListener('click', this._rippleHandler, true);

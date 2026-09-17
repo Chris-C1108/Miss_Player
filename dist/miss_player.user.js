@@ -11,7 +11,7 @@
 // @description:vi MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @description:zh-CN MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:zh-TW MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器|多語言支持 支持 jable po*nhub 等通用
-// @version 5.6.12
+// @version 5.6.16
 // @author Chris_C
 // @match *://*.missav.ws/*
 // @match *://*.missav.ai/*
@@ -279,7 +279,7 @@
       var p = a(314);
       var v = a.n(p);
       var y = v()(u());
-      y.push([ r.id, `.tm-video-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    width:100vw;\n    height:100vh;\n    height:100dvh;\n    background-color:#0b0b0e;\n    z-index:2000000000 !important;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    backdrop-filter:blur(30px);\n    -webkit-backdrop-filter:blur(30px);\n    padding:0;\n    touch-action:none;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-player-container{\n    position:fixed;\n    top:0;\n    bottom:var(--keyboard-height, 0px);\n    left:0;\n    right:0;\n    width:100%;\n    height:calc(100% - var(--keyboard-height, 0px));\n    height:calc(100dvh - var(--keyboard-height, 0px));\n    background-color:#0b0b0e;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    z-index:2000000001 !important;\n    overflow:hidden;\n    pointer-events:auto;\n    transition:bottom 0.15s ease-out, height 0.15s ease-out;\n    touch-action:pan-y;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-button-container{\n    width:100%;\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    gap:10px;\n    padding:6px 10px;\n    box-sizing:border-box;\n    z-index:99999;\n    position:absolute;\n    top:0;\n    left:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);\n    touch-action:none;\n}\n\n.tm-video-container{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:auto;\n    max-height:calc(100% - 130px);\n    margin-top:44px;\n    display:flex;\n    align-items:flex-start;\n    justify-content:center;\n    background-color:hsl(var(--shadcn-card));\n    border-radius:var(--shadcn-radius-lg);\n    box-shadow:var(--shadow-lg);\n    z-index:9985;\n    touch-action:pan-y;\n    flex-shrink:1;\n    transition:max-height 0.15s ease-out;\n}\n\n@media screen and (orientation: portrait){\n    .tm-video-container{\n        max-height:calc(100dvh - var(--keyboard-height, 0px) - 130px) !important;\n        min-height:0 !important;\n    }\n}\n\n.tm-video-wrapper{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:100%;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    will-change:transform;\n    border-radius:var(--shadcn-radius) var(--shadcn-radius) 0 0;\n    touch-action:pan-y;\n}\n.tm-video-wrapper > *:not(video):not(.tm-speed-indicator):not(.tm-video-minimap):not(.tm-inline-remark-popover){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video > *:not(track):not(source){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video{\n    width:auto !important; \n    height:100% !important; \n    max-height:100% !important; \n    max-width:none !important; \n    object-fit:contain !important; \n    transition:transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n    touch-action:pan-y;\n    cursor:grab; \n}\n.tm-handle-container{\n    position:relative;\n    height:30px;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    z-index:9986;\n    width:100%;\n    flex-shrink:0;\n    touch-action:none;\n}\n\n.tm-resize-handle{\n    position:absolute;\n    height:5px;\n    width:134px;\n    max-width:134px;\n    background-color:hsla(var(--shadcn-foreground) / 0.6);\n    border-radius:2.5px;\n    cursor:grab;\n    touch-action:none;\n    opacity:0.5;\n    will-change:transform;\n    transition:opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;\n    box-shadow:none;\n}\n\n.tm-resize-handle::after{\n    content:'';\n    position:absolute;\n    left:-10px;\n    right:-10px;\n    top:-15px;\n    bottom:-15px;\n    background:transparent;\n}\n\n.tm-resize-handle:hover,\n.tm-resize-handle.dragging{\n    opacity:1;\n    background-color:hsla(var(--shadcn-foreground) / 0.8);\n}\n\n.tm-resize-handle.dragging{\n    cursor:grabbing;\n}\n.tm-control-button-base{\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s, box-shadow 0.2s;\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    box-shadow:var(--shadow-sm);\n}\n.tm-close-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;\n    z-index:9994;\n}\n.tm-close-button::after,\n.tm-settings-button::after,\n.tm-sidebar-pos-button::after,\n.tm-sidebar-toggle-button::after{\n    content:'';\n    position:absolute;\n    inset:-6px;\n    border-radius:50%;\n    pointer-events:auto;\n}\n\n.tm-close-button:hover{\n    background-color:hsl(var(--shadcn-destructive));\n    transform:scale(1.08);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-close-button:active{\n    transform:scale(0.96);\n}\n.tm-settings-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    z-index:9993;\n    cursor:pointer;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-settings-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.08) rotate(30deg);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-settings-button:active{\n    transform:scale(0.96);\n}\n.tm-settings-panel{\n    position:absolute;\n    top:calc(env(safe-area-inset-top, 8px) + 60px);\n    right:16px;\n    background-color:hsla(var(--shadcn-card) / 0.92);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border-radius:14px;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    box-shadow:0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px hsla(0, 0%, 100%, 0.05);\n    padding:14px 16px;\n    z-index:100000 !important;\n    min-width:275px;\n    max-width:325px;\n    max-height:calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 80px);\n    overflow-y:auto;\n    overflow-x:hidden;\n    -webkit-overflow-scrolling:touch;\n    overscroll-behavior:contain;\n    touch-action:pan-y;\n    scrollbar-width:thin;\n    scrollbar-color:hsla(var(--shadcn-muted-foreground) / 0.3) transparent;\n    transform:translateY(-10px);\n    opacity:0;\n    pointer-events:none;\n    transition:transform var(--anim-smooth), opacity var(--anim-smooth);\n    box-sizing:border-box;\n}\n\n.tm-settings-panel::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-settings-panel::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.3);\n    border-radius:4px;\n}\n\n.tm-settings-panel.active{\n    transform:translateY(0);\n    opacity:1;\n    pointer-events:auto;\n}\n.tm-player-container.tm-settings-active .tm-comments-list,\n.tm-settings-panel.active ~ .tm-comments-panel .tm-comments-list,\nbody.tm-settings-active .tm-comments-panel .tm-comments-list{\n    opacity:0.15 !important;\n    filter:blur(3px) !important;\n    pointer-events:none !important;\n    transition:opacity var(--anim-smooth), filter var(--anim-smooth) !important;\n}\n@media screen and (max-width: 929px), screen and (orientation: portrait){\n    .tm-settings-panel{\n        right:12px !important;\n        left:12px !important;\n        width:calc(100% - 24px) !important;\n        max-width:calc(100% - 24px) !important;\n    }\n}\n.tm-settings-menu-container{\n    display:flex;\n    flex-direction:column;\n    gap:12px;\n    color:hsl(var(--shadcn-foreground));\n    user-select:none;\n    font-size:13.5px;\n}\n.tm-settings-section{\n    display:flex;\n    flex-direction:column;\n    gap:3px;\n}\n.tm-settings-section-header{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    font-size:11px;\n    font-weight:700;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    letter-spacing:0.8px;\n    text-transform:uppercase;\n    padding-left:2px;\n    user-select:none;\n}\n\n.tm-settings-section-header.collapsible{\n    cursor:pointer;\n    padding:2px 4px;\n    border-radius:4px;\n    transition:background 0.15s ease;\n}\n\n.tm-settings-section-header.collapsible:hover{\n    background:hsla(var(--shadcn-muted) / 0.2);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-settings-header-arrow{\n    font-size:10px;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-settings-header-arrow.expanded{\n    transform:rotate(180deg);\n}\n.tm-settings-section-divider{\n    height:1px;\n    background:linear-gradient(90deg, hsla(var(--shadcn-border) / 0.3) 0%, hsla(var(--shadcn-border) / 0.05) 100%);\n    margin:3px 0 6px 0;\n    border-radius:1px;\n}\n.tm-settings-option-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    padding:6px 4px;\n    border-radius:8px;\n    cursor:pointer;\n    transition:background 0.15s ease;\n}\n\n.tm-settings-option-row:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.3);\n}\n\n.tm-settings-label-wrapper{\n    display:flex;\n    align-items:center;\n    gap:8px;\n}\n\n.tm-settings-text-wrapper{\n    display:flex;\n    flex-direction:column;\n    gap:2px;\n}\n\n.tm-settings-label{\n    font-size:13.5px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-settings-subtext{\n    font-size:11px;\n    font-weight:400;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    line-height:1.25;\n}\n.tm-settings-seek-steps-subpanel{\n    display:flex;\n    flex-wrap:nowrap;\n    gap:6px;\n    align-items:center;\n    overflow-x:auto;\n    overflow-y:hidden;\n    white-space:nowrap;\n    padding:6px 2px 4px 2px;\n    margin-top:2px;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    -ms-overflow-style:none;\n}\n\n.tm-settings-seek-steps-subpanel::-webkit-scrollbar{\n    display:none;\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    flex-wrap:wrap;\n    gap:8px;\n    align-items:center;\n    justify-content:flex-start;\n    padding:6px 2px 2px 2px;\n    margin-top:2px;\n}\n.tm-seek-step-badge,\n.tm-source-badge{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    font-size:11.5px;\n    font-weight:500;\n    padding:0 12px;\n    height:28px;\n    line-height:1;\n    border-radius:6px;\n    box-sizing:border-box;\n    border:1px solid transparent;\n    cursor:pointer;\n    user-select:none;\n    flex-shrink:0;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-seek-step-badge.enabled,\n.tm-source-badge.enabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    border-color:hsla(var(--shadcn-border) / 0.35);\n    color:#ffffff;\n    font-weight:600;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.2);\n}\n.tm-seek-step-badge.disabled,\n.tm-source-badge.disabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.15);\n    border-color:hsla(var(--shadcn-border) / 0.08);\n    color:hsla(var(--shadcn-muted-foreground) / 0.4);\n    font-weight:400;\n}\n.tm-seek-step-badge:hover,\n.tm-source-badge:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n.tm-seek-step-badge:active,\n.tm-source-badge:active{\n    transform:scale(0.96);\n    box-shadow:none;\n}\n.tm-seek-step-add-btn{\n    font-size:14px;\n    font-weight:600;\n    width:32px;\n    height:28px;\n    border-radius:6px;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    border:1px dashed hsla(var(--shadcn-border) / 0.35);\n    color:hsla(var(--shadcn-foreground) / 0.75);\n    cursor:pointer;\n    flex-shrink:0;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;\n}\n\n.tm-seek-step-add-btn:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.5);\n    border-style:solid;\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n\n.tm-seek-step-add-btn:active{\n    transform:scale(0.96);\n}\n.tm-seek-step-input{\n    width:60px;\n    height:28px;\n    font-size:16px;\n    font-weight:500;\n    text-align:center;\n    border-radius:6px;\n    border:1px solid hsla(var(--shadcn-accent) / 0.8);\n    background-color:hsla(var(--shadcn-background) / 0.85);\n    color:#ffffff;\n    outline:none;\n    box-sizing:border-box;\n    flex-shrink:0;\n    box-shadow:0 0 8px hsla(var(--shadcn-accent) / 0.4);\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    gap:8px;\n    padding:6px 2px 2px 2px;\n}\n\n.tm-source-badge{\n    font-size:11px;\n    padding:4px 10px;\n    border-radius:12px;\n    border:1px solid transparent;\n    cursor:pointer;\n    font-weight:500;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, color 0.15s;\n}\n\n.tm-source-badge.enabled{\n    background:rgba(239, 68, 68, 0.2);\n    border-color:rgba(239, 68, 68, 0.6);\n    color:#fca5a5;\n}\n\n.tm-source-badge.disabled{\n    background:rgba(255, 255, 255, 0.06);\n    border-color:rgba(255, 255, 255, 0.1);\n    color:rgba(255, 255, 255, 0.4);\n}\n.tm-settings-webdav-card{\n    display:flex;\n    flex-direction:column;\n    gap:10px;\n    background:hsla(var(--shadcn-card) / 0.45);\n    backdrop-filter:blur(16px);\n    -webkit-backdrop-filter:blur(16px);\n    border:1px solid hsla(var(--shadcn-border) / 0.25);\n    border-radius:10px;\n    padding:12px;\n    margin-top:4px;\n}\n\n.tm-webdav-form-row{\n    display:flex;\n    flex-direction:column;\n    gap:4px;\n}\n\n.tm-webdav-label{\n    font-size:11.5px;\n    font-weight:500;\n    color:hsla(var(--shadcn-muted-foreground) / 0.85);\n}\n\n.tm-webdav-input-group{\n    position:relative;\n    display:flex;\n    align-items:center;\n    width:100%;\n}\n\n.tm-webdav-input{\n    width:100%;\n    height:32px;\n    background:hsla(var(--shadcn-background) / 0.6);\n    border:1px solid hsla(var(--shadcn-border) / 0.3);\n    border-radius:6px;\n    padding:0 10px;\n    font-size:12.5px;\n    color:hsl(var(--shadcn-foreground));\n    box-sizing:border-box;\n    outline:none;\n    transition:border-color 0.2s, box-shadow 0.2s, background-color 0.2s;\n    font-family:inherit;\n}\n\n.tm-webdav-input-group .tm-webdav-input.has-eye{\n    padding-right:34px;\n}\n\n.tm-webdav-input:focus{\n    border-color:hsla(var(--shadcn-accent) / 0.8);\n    box-shadow:0 0 0 2px hsla(var(--shadcn-accent) / 0.2);\n    background:hsla(var(--shadcn-background) / 0.85);\n}\n\n.tm-webdav-input::placeholder{\n    color:hsla(var(--shadcn-muted-foreground) / 0.4);\n    font-size:11.5px;\n}\n\n.tm-webdav-eye-btn{\n    position:absolute;\n    right:4px;\n    top:50%;\n    transform:translateY(-50%);\n    width:26px;\n    height:26px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    background:transparent;\n    border:none;\n    border-radius:4px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.6);\n    cursor:pointer;\n    padding:0;\n    transition:background-color 0.15s, color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-webdav-eye-btn::after{\n    content:'';\n    position:absolute;\n    inset:-6px;\n    border-radius:4px;\n    pointer-events:auto;\n}\n\n.tm-webdav-eye-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background:hsla(var(--shadcn-muted) / 0.3);\n}\n\n.tm-webdav-eye-btn:active{\n    transform:translateY(-50%) scale(0.96);\n}\n\n.tm-webdav-switch-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    padding:8px 10px;\n    background:hsla(var(--shadcn-muted) / 0.18);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    border-radius:8px;\n    margin-top:2px;\n}\n\n.tm-webdav-switch-info{\n    display:flex;\n    flex-direction:column;\n    gap:2px;\n}\n\n.tm-webdav-switch-title{\n    font-size:12px;\n    font-weight:600;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-webdav-switch-desc{\n    font-size:10px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    line-height:1.3;\n}\n\n.tm-webdav-device-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:6px;\n    font-size:11px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    padding:4px 8px;\n    background:hsla(var(--shadcn-muted) / 0.2);\n    border-radius:6px;\n    margin-top:2px;\n    word-break:break-all;\n}\n\n.tm-webdav-actions-container{\n    display:flex;\n    flex-direction:column;\n    gap:7px;\n    margin-top:6px;\n}\n\n.tm-webdav-sub-actions{\n    display:grid;\n    grid-template-columns:repeat(3, 1fr);\n    gap:6px;\n}\n\n.tm-webdav-btn{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    gap:5px;\n    height:32px;\n    padding:0 8px 0 6px;\n    border-radius:6px;\n    font-size:11.5px;\n    font-weight:500;\n    cursor:pointer;\n    user-select:none;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s, filter 0.15s;\n    box-sizing:border-box;\n    border:1px solid transparent;\n    white-space:nowrap;\n    -webkit-tap-highlight-color:transparent;\n}\n\n.tm-webdav-btn svg{\n    width:13px;\n    height:13px;\n    flex-shrink:0;\n}\n\n.tm-webdav-btn-primary{\n    background:linear-gradient(135deg, hsl(var(--shadcn-primary)) 0%, hsl(var(--shadcn-accent)) 100%);\n    color:#fff;\n    border:none;\n    box-shadow:0 2px 8px hsla(var(--shadcn-primary) / 0.3);\n    width:100%;\n    height:36px;\n    font-size:13px;\n    font-weight:600;\n}\n\n.tm-webdav-btn-primary:hover{\n    filter:brightness(1.08);\n    box-shadow:0 4px 12px hsla(var(--shadcn-primary) / 0.4);\n}\n\n.tm-webdav-btn-secondary{\n    background:hsla(var(--shadcn-muted) / 0.35);\n    color:hsl(var(--shadcn-foreground));\n    border-color:hsla(var(--shadcn-border) / 0.25);\n}\n\n.tm-webdav-btn-secondary:hover{\n    background:hsla(var(--shadcn-muted) / 0.65);\n    border-color:hsla(var(--shadcn-border) / 0.45);\n}\n\n.tm-webdav-btn:active{\n    transform:scale(0.96);\n}\n\n.tm-webdav-btn:disabled{\n    opacity:0.5;\n    cursor:not-allowed;\n    transform:none;\n}\n\n.tm-webdav-status-bar{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    font-size:10.5px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.65);\n    padding:4px 2px 0 2px;\n    border-top:1px dashed hsla(var(--shadcn-border) / 0.2);\n    margin-top:4px;\n}\n\n.tm-webdav-status-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 6px;\n    border-radius:4px;\n    font-size:10.5px;\n    font-weight:500;\n}\n\n.tm-webdav-status-badge.success{\n    background:rgba(34, 197, 94, 0.15);\n    color:#4ade80;\n}\n\n.tm-webdav-status-badge.error{\n    background:rgba(239, 68, 68, 0.15);\n    color:#f87171;\n}\n\n.tm-webdav-status-badge.running{\n    background:rgba(59, 130, 246, 0.15);\n    color:#60a5fa;\n}\n\n.tm-spinner-sm{\n    display:inline-block;\n    width:9px;\n    height:9px;\n    border:1.5px solid currentColor;\n    border-right-color:transparent;\n    border-radius:50%;\n    animation:tm-spin 0.75s linear infinite;\n}\n\n@keyframes tm-spin{\n    to{ transform:rotate(360deg); }\n}\n.tm-toggle-input{\n    position:absolute;\n    left:-9999px;\n}\n.tm-start-time-container.active{\n    background-color:hsl(var(--shadcn-green) / 0.15);\n    border-color:hsl(var(--shadcn-green) / 0.4);\n}\n\n.tm-start-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-end-time-container.active{\n    background-color:hsl(var(--shadcn-orange) / 0.15);\n    border-color:hsl(var(--shadcn-orange) / 0.4);\n}\n\n.tm-end-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-set-loop-start-label.active{\n    color:hsl(var(--shadcn-green));\n    opacity:1;\n}\n\n.tm-set-loop-start-label:not(.active){\n    opacity:0.9;\n}\n.tm-set-loop-end-label.active{\n    color:hsl(var(--shadcn-orange));\n    opacity:1;\n}\n\n.tm-set-loop-end-label:not(.active){\n    opacity:0.9;\n}\n.tm-loop-start-position.active, .tm-loop-end-position.active{\n    color:hsl(var(--shadcn-foreground));\n    opacity:1;\n}\n\n.tm-loop-start-position:not(.active), .tm-loop-end-position:not(.active){\n    color:hsl(var(--shadcn-muted-foreground));\n    opacity:0.9;\n}\n.tm-loop-toggle-button.active{\n    background-color:hsl(var(--shadcn-red) / 0.1);\n    border-color:hsl(var(--shadcn-red) / 0.3);\n}\n\n.tm-loop-toggle-button:active{\n    transform:scale(0.96);\n}\n.tm-loop-range{\n    position:absolute;\n    height:4px;\n    background:linear-gradient(90deg, \n        hsla(var(--shadcn-green) / 0.3) 0%, \n        hsla(var(--shadcn-orange) / 0.3) 100%);\n    top:50%;\n    transform:translateY(-50%);\n    border-radius:2px;\n    opacity:0;\n    transition:opacity 0.3s ease;\n    z-index:1;\n    pointer-events:none;\n}\n\n.tm-loop-range.active{\n    opacity:0.7;\n    box-shadow:0 0 8px rgba(0, 0, 0, 0.1);\n}\n.tm-progress-bar-container:hover .tm-loop-range.active{\n    opacity:0.9;\n    height:6px;\n}\n.tm-loop-marker{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:3;\n    transition:opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),  transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);\n    backdrop-filter:blur(4px);\n    -webkit-backdrop-filter:blur(4px);\n}\n.tm-loop-start-marker{\n    background-color:hsla(var(--shadcn-green) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n}\n.tm-loop-end-marker{\n    background-color:hsla(var(--shadcn-orange) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-orange) / 0.3);\n}\n.tm-loop-marker:hover{\n    cursor:pointer;\n    z-index:4;\n}\n\n.tm-loop-start-marker:hover{\n    background-color:hsla(var(--shadcn-green) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-green) / 0.5);\n}\n\n.tm-loop-end-marker:hover{\n    background-color:hsla(var(--shadcn-orange) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-orange) / 0.5);\n}\n.tm-loop-marker.active{\n    opacity:1;\n}\n\n.tm-loop-marker:not(.active){\n    opacity:0.7;\n}\n.tm-loop-marker::before{\n    content:attr(data-label);\n    position:absolute;\n    top:-24px;\n    left:50%;\n    transform:translateX(-50%);\n    background-color:hsla(var(--shadcn-card) / 0.7);\n    color:hsl(var(--shadcn-card-foreground));\n    font-size:10px;\n    font-weight:600;\n    padding:2px 8px;\n    border-radius:10px;\n    opacity:0;\n    transition:opacity 0.2s ease, transform 0.2s ease;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:0 2px 4px rgba(0, 0, 0, 0.1);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    white-space:nowrap;\n    z-index:5;\n}\n\n.tm-loop-marker:hover::before{\n    opacity:1;\n    transform:translateX(-50%) translateY(-4px);\n}\n.tm-start-time-container-hover{\n    background-color:hsl(var(--shadcn-green) / 0.1);\n    border-color:hsl(var(--shadcn-green) / 0.3);\n}\n\n.tm-start-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n\n.tm-end-time-container-hover{\n    background-color:hsl(var(--shadcn-orange) / 0.1);\n    border-color:hsl(var(--shadcn-orange) / 0.3);\n}\n\n.tm-end-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-loop-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:translateY(-1px);\n}\n\n.tm-loop-button-active{\n    background-color:hsl(var(--shadcn-muted) / 0.7);\n}\n\n.tm-loop-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:translateY(0);\n}\n.tm-indicator-base{\n    position:absolute;\n    padding:8px 16px;\n    background-color:hsla(var(--shadcn-card) / 0.6);\n    color:hsl(var(--shadcn-card-foreground));\n    border-radius:var(--shadcn-radius);\n    opacity:0;\n    backdrop-filter:blur(15px);\n    -webkit-backdrop-filter:blur(15px);\n    box-shadow:var(--shadow-md);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    transform:translateY(20px);\n    transition:opacity var(--anim-smooth), transform var(--anim-smooth);\n    pointer-events:none;\n    z-index:9994;\n    font-size:15px;\n    font-weight:500;\n}\n\n.tm-indicator-base.visible{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-pause-indicator{\n    width:80px;\n    height:80px;\n}\n.tm-progress-row{\n    display:flex;\n    flex-direction:column;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-seek-control-row{\n    display:flex;\n    flex-direction:row;\n    justify-content:space-between;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-loop-control-row{\n    display:flex;\n    align-items:center;\n    width:100%;\n    box-sizing:border-box;\n    position:relative;\n    gap:8px;\n}\n.tm-inline-remark-popover{\n    position:absolute;\n    bottom:calc(45px + 42px + 10px);\n    left:12px;\n    right:12px;\n    width:calc(100% - 24px);\n    margin:0 auto;\n    background:rgba(18, 18, 20, 0.96);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:20px;\n    padding:12px;\n    box-shadow:0 10px 30px rgba(0, 0, 0, 0.7);\n    z-index:9998;\n    pointer-events:auto;\n    opacity:0;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n    box-sizing:border-box;\n}\n\n.tm-inline-remark-popover.visible{\n    opacity:1;\n    transform:translateY(0) scale(1);\n}\n\n.tm-inline-remark-body{\n    display:flex;\n    flex-direction:column;\n    gap:10px;\n    width:100%;\n}\n\n.tm-inline-remark-input{\n    width:100%;\n    height:38px;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:8px;\n    padding:0 14px;\n    color:#ffffff;\n    font-size:16px;\n    outline:none;\n    box-sizing:border-box;\n    transition:border-color 0.2s, background 0.2s;\n}\n\n.tm-inline-remark-input:focus{\n    border-color:rgba(255, 255, 255, 0.35);\n    background:rgba(255, 255, 255, 0.1);\n}\n\n.tm-inline-remark-input::placeholder{\n    color:rgba(255, 255, 255, 0.35);\n}\n\n.tm-inline-remark-footer{\n    display:flex;\n    justify-content:flex-end;\n    gap:10px;\n}\n\n.tm-inline-remark-btn{\n    height:32px;\n    padding:0 20px;\n    border-radius:12px;\n    font-size:0.82rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background-color 0.18s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);\n    box-sizing:border-box;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-inline-remark-btn:active{\n    transform:scale(0.96);\n}\n\n.tm-inline-remark-btn.cancel{\n    background:rgba(255, 255, 255, 0.08);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    color:rgba(255, 255, 255, 0.8);\n}\n\n.tm-inline-remark-btn.cancel:hover{\n    background:rgba(255, 255, 255, 0.16);\n    color:#ffffff;\n}\n\n.tm-inline-remark-btn.submit{\n    background:hsl(var(--shadcn-blue));\n    border:none;\n    color:#ffffff;\n    box-shadow:0 4px 12px hsla(var(--shadcn-blue) / 0.4);\n}\n\n.tm-inline-remark-btn.submit:hover{\n    background:hsl(var(--shadcn-blue) / 0.9);\n    transform:scale(1.03);\n}\n\n.tm-inline-remark-btn.submit:active{\n    transform:scale(0.96);\n}\n\n.tm-playback-control-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    position:relative;\n    width:100%;\n    max-height:45px;\n    height:45px;\n    border-radius:8px;\n    box-sizing:border-box;\n}\n.tm-left-controls, .tm-center-controls, .tm-right-controls{\n    flex:1;\n    display:flex;\n    height:100%;\n    align-items:center;\n}\n\n.tm-left-controls{\n    justify-content:flex-start;\n}\n\n.tm-center-controls{\n    justify-content:center;\n}\n\n.tm-right-controls{\n    justify-content:flex-end;\n}\n.tm-time-display{\n    display:flex;\n    justify-content:space-between;\n    color:hsl(var(--shadcn-foreground) / 0.9);\n    font-size:12px;\n    margin-top:-2px;\n    font-variant-numeric:tabular-nums;\n    gap:8px;\n}\n\n.tm-time-display-container{\n    display:flex;\n    justify-content:space-between;\n    width:100%;\n    padding:0px 1px;\n    margin-bottom:6px;\n}\n\n.tm-current-time, .tm-total-duration{\n    color:hsla(var(--shadcn-foreground) / 0.55);\n    font-size:12px;\n    min-width:60px;\n    font-variant-numeric:tabular-nums;\n    font-weight:500;\n    line-height:1;\n}\n\n.tm-current-time{\n    text-align:left;\n}\n\n.tm-total-duration{\n    text-align:right;\n}\n.tm-tab-scroll-container{\n    display:flex;\n    flex:1;\n    gap:8px;\n    overflow-x:auto;\n    overflow-y:hidden;\n    overscroll-behavior:contain;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    height:38px;\n    padding:0 44px 0 0;\n    margin:0;\n    box-sizing:border-box;\n    align-items:center;\n    mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    -webkit-mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    touch-action:pan-x;\n}\n.tm-tab-scroll-container::-webkit-scrollbar{ display:none; }\n.tm-tab-pill{\n    display:flex;\n    align-items:center;\n    gap:4px;\n    height:38px;\n    padding:0 12px;\n    box-sizing:border-box;\n    border-radius:9999px;\n    background-color:hsla(0, 0%, 15%, 0.12);\n    border:1px solid hsla(0, 0%, 20%, 0.35);\n    color:hsl(var(--shadcn-foreground));\n    font-size:0.8rem;\n    font-variant-numeric:tabular-nums;\n    white-space:nowrap;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, color 0.15s;\n    user-select:none;\n    -webkit-user-select:none;\n    -webkit-tap-highlight-color:transparent;\n    pointer-events:auto;\n}\n.tm-tab-pill{\n    background-color:hsla(var(--tab-color), 0.12);\n    border-color:hsla(var(--tab-color), 0.35);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill:active{ transform:scale(0.96); }\n.tm-tab-pill.active{\n    background-color:hsla(var(--tab-color), 0.25);\n    border-color:hsla(var(--tab-color), 0.6);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill.draft{\n    background-color:hsla(var(--tab-color), 0.08);\n    border-color:hsla(var(--tab-color), 0.45);\n    border-style:dashed;\n    gap:5px;\n    padding:0 8px;\n}\n.tm-tab-pill.draft.editing,\n.tm-tab-pill.draft:not(.placeholder){\n    background-color:hsla(var(--tab-color), 0.22);\n    border-color:hsla(var(--tab-color), 0.75);\n}\n.tm-tab-pill.draft .tm-draft-label{\n    font-weight:600;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-label.a{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-label.b{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-time{\n    color:#fff;\n    font-variant-numeric:tabular-nums;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-time.placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-draft-action{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    height:24px;\n    width:32px;\n    border-radius:6px;\n    border:none;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, color 0.15s;\n    -webkit-tap-highlight-color:transparent;\n    box-sizing:border-box;\n}\n.tm-draft-action:active{\n    transform:scale(0.96);\n}\n.tm-draft-action.save{\n    background-color:hsla(var(--tab-color), 0.18);\n    color:hsl(var(--tab-color));\n}\n.tm-draft-action.save:hover{\n    background-color:hsla(var(--tab-color), 0.28);\n}\n.tm-draft-action.cancel{\n    background-color:rgba(239, 68, 68, 0.15);\n    color:#ef4444;\n}\n.tm-draft-action.cancel:hover{\n    background-color:rgba(239, 68, 68, 0.25);\n}\n.tm-draft-action.edit-comment{\n    background-color:rgba(245, 158, 11, 0.15);\n    color:#f59e0b;\n}\n.tm-draft-action.edit-comment:hover{\n    background-color:rgba(245, 158, 11, 0.25);\n}\n.tm-tab-list-btn{\n    flex-shrink:0;\n    width:38px;\n    height:38px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    border-radius:50%;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    color:hsl(var(--shadcn-foreground));\n    font-size:1.1rem;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s;\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-tab-list-btn:active{ transform:scale(0.96); }\n.tm-tab-list-btn:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.8);\n    border-color:hsla(var(--shadcn-border) / 0.3);\n}\n.tm-bottom-sheet-overlay{\n    position:fixed;\n    inset:0;\n    background-color:transparent;\n    z-index:9990 !important;\n    opacity:0;\n    pointer-events:none;\n    transition:opacity var(--anim-smooth);\n\n    touch-action:none;\n    user-select:none;\n    -webkit-user-select:none;\n    overscroll-behavior:none;\n}\n.tm-bottom-sheet-overlay.visible{\n    opacity:1;\n    pointer-events:auto;\n}\n\n.tm-bottom-sheet-panel{\n    position:absolute;\n    bottom:0;\n    left:0;\n    right:0;\n    width:100%;\n    max-height:calc(100vh - 120px);\n    background-color:rgba(18, 18, 20, 0.94);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.6);\n    border-radius:16px;\n    border:1px solid rgba(255, 255, 255, 0.1);\n    z-index:9995 !important;\n    opacity:0;\n    pointer-events:none;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    display:flex;\n    flex-direction:column;\n    overflow:hidden;\n    box-sizing:border-box;\n    padding:10px 14px 12px;\n}\n.tm-bottom-sheet-panel.visible{\n    opacity:1;\n    pointer-events:auto;\n    transform:translateY(0) scale(1);\n}\n.tm-sheet-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    padding:2px 2px 6px 2px;\n    margin-bottom:6px;\n    border-bottom:1px solid rgba(255, 255, 255, 0.06);\n    flex-shrink:0;\n}\n\n.tm-bottom-sheet-title{\n    font-size:0.82rem;\n    font-weight:600;\n    color:rgba(255, 255, 255, 0.88);\n    letter-spacing:0.2px;\n}\n\n.tm-sheet-count-badge{\n    font-size:0.7rem;\n    color:rgba(255, 255, 255, 0.45);\n    background:rgba(255, 255, 255, 0.08);\n    padding:1px 6px;\n    border-radius:8px;\n}\n\n.tm-sheet-close-btn{\n    background:transparent;\n    border:none;\n    color:rgba(255, 255, 255, 0.45);\n    font-size:0.95rem;\n    cursor:pointer;\n    padding:0 4px;\n    border-radius:4px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    transition:color 0.2s;\n}\n.tm-sheet-close-btn:hover{\n    color:#ffffff;\n}\n.tm-bottom-sheet-list{\n    flex:1;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n    display:flex;\n    flex-direction:column;\n    gap:6px;\n    padding-right:2px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar{\n    width:4px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar-thumb{\n    background:rgba(255, 255, 255, 0.2);\n    border-radius:2px;\n}\n.tm-sheet-item{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    padding:2px 0;\n    background:transparent;\n    border:none;\n    height:32px;\n    box-sizing:border-box;\n}\n\n.tm-sheet-item-time-container{\n    display:flex;\n    align-items:center;\n    flex-shrink:0;\n    height:32px;\n}\n.tm-sheet-time-pill{\n    height:32px;\n    box-sizing:border-box;\n    padding:0 12px;\n    border-radius:16px;\n    background:hsla(var(--tab-color, 200 100% 55%), 0.15);\n    border:1px solid hsla(var(--tab-color, 200 100% 55%), 0.4);\n    color:#ffffff;\n    font-size:0.8rem;\n    font-family:inherit;\n    font-weight:500;\n    cursor:pointer;\n    white-space:nowrap;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    transition:transform 0.15s ease, background-color 0.2s;\n}\n.tm-sheet-time-pill:hover{\n    transform:scale(1.02);\n    background:hsla(var(--tab-color, 200 100% 55%), 0.28);\n}\n.tm-sheet-time-pill.interval{\n    padding:0 10px;\n    gap:4px;\n}\n.tm-sheet-time-pill.interval .tm-time-part{\n    cursor:pointer;\n    padding:2px 4px;\n    border-radius:4px;\n    transition:background-color 0.15s, color 0.15s;\n}\n.tm-sheet-time-pill.interval .tm-time-part:hover{\n    background-color:rgba(255, 255, 255, 0.25);\n    color:#ffffff;\n}\n.tm-sheet-time-pill.interval .tm-time-sep{\n    opacity:0.6;\n    font-weight:400;\n    user-select:none;\n    padding:0 1px;\n}\n.tm-sheet-item-comment-input{\n    flex:1;\n    min-width:0;\n    height:32px;\n    box-sizing:border-box;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:8px;\n    padding:0 10px;\n    color:#ffffff;\n    font-size:16px;\n    outline:none;\n    display:inline-flex;\n    align-items:center;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-sheet-item-comment-input:focus{\n    border-color:rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-sheet-item-comment-input::placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-sheet-delete-btn{\n    width:32px;\n    height:32px;\n    box-sizing:border-box;\n    border-radius:8px;\n    border:1px solid rgba(255, 60, 60, 0.25);\n    background:rgba(255, 60, 60, 0.12);\n    color:#ff5252;\n    font-size:0.85rem;\n    font-weight:bold;\n    cursor:pointer;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s;\n}\n.tm-sheet-delete-btn:hover{\n    background:rgba(255, 60, 60, 0.28);\n    transform:scale(1.05);\n}\n\n.tm-bottom-sheet-empty{\n    padding:16px;\n    text-align:center;\n    font-size:0.82rem;\n    color:rgba(255, 255, 255, 0.35);\n}\n.tm-rewind-group, .tm-forward-group{\n    display:flex;\n    flex-direction:column;\n    width:50%;\n    gap:8px;\n    align-items:center;\n}\n\n.tm-rewind-buttons-container{\n    display:flex;\n    flex-direction:row-reverse;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n\n.tm-forward-buttons-container{\n    display:flex;\n    flex-direction:row;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n.tm-time-control-button{\n    background-color:hsla(var(--shadcn-secondary) / var(--btn-opacity, 0.5));\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsl(var(--shadcn-border) / 0.1);\n    border-radius:8px;\n    padding:0;\n    font-size:0.75rem;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;\n    white-space:nowrap;\n    font-weight:500;\n    box-shadow:0 1px 2px rgba(0,0,0,0.05);\n    width:var(--button-xl);\n    height:var(--button-lg);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    flex:0 0 auto;\n}\n\n.tm-time-control-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.15));\n    border-color:hsla(var(--shadcn-border) / 0.3);\n    transform:translateY(-1.5px);\n    box-shadow:0 4px 8px rgba(0,0,0,0.2);\n}\n\n.tm-time-control-button:active{\n    transform:scale(0.96);\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.25));\n    box-shadow:none;\n}\n\n.tm-time-control-button-active{\n    transform:scale(0.96);\n    box-shadow:none;\n}\n\n.tm-time-control-button-after-active{\n    transform:none;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.15);\n}\n\n.tm-time-control-button-inner{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-rewind-icon{\n    margin-right:-2px;\n}\n\n.tm-forward-icon{\n    margin-left:-2px;\n}\n\n.tm-time-text-margin-left{\n    margin-left:2px;\n}\n\n.tm-time-text-margin-right{\n    margin-right:2px;\n}\n.tm-control-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:none;\n}\n\n.tm-control-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:none;\n}\n.tm-control-buttons{\n    position:absolute;\n    bottom:calc(10px + env(safe-area-inset-bottom, 0px));\n    left:50%;\n    transform:translateX(-50%);\n    width:95%;\n    max-width:700px;\n    min-width:350px;\n    z-index:9997 !important;\n    padding:16px 16px 14px;\n    border-radius:16px;\n    background-color:rgba(10, 10, 10, 0.52);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 12px 32px rgba(0, 0, 0, 0.45);\n    border:none;\n    transition: opacity 0.3s ease,  transform 0.3s ease,  width 0.35s cubic-bezier(0.25, 1, 0.5, 1),  left 0.35s cubic-bezier(0.25, 1, 0.5, 1),  bottom 0.35s cubic-bezier(0.25, 1, 0.5, 1),  right 0.35s cubic-bezier(0.25, 1, 0.5, 1),  border-radius 0.3s ease;\n    gap:10px;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:center;\n    overflow:visible !important;\n    touch-action:none;\n}\n\n.tm-control-buttons.dragging{\n    transition:none !important;\n}\nbody.controls-hidden .tm-player-container .tm-control-buttons{\n    opacity:0;\n    transform:translateX(-50%) translateY(calc(100% + 30px));\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-control-buttons{\n    opacity:1;\n    transform:translateX(-50%) translateY(0);\n    pointer-events:auto;\n}\nbody.controls-hidden .tm-player-container .tm-button-container{\n    opacity:0;\n    transform:translateY(-60px);\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-button-container{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-control-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.6);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;\n}\n\n.tm-control-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    transform:translateY(-2px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-control-button:active{\n    transform:scale(0.96);\n    box-shadow:none;\n}\n\n.tm-control-button.active{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-control-button svg,\n.tm-control-button img{\n    width:16px;\n    height:16px;\n}\n.tm-control-row{\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    gap:8px;\n    margin-top:4px;\n    opacity:1;\n    transition:opacity var(--anim-quick), height var(--anim-quick);\n    height:auto;\n    overflow:hidden;\n}\n\n.tm-control-row.hidden{\n    opacity:0;\n    height:0;\n    margin:0;\n}\n.tm-comment-row{\n    width:100%;\n    display:flex;\n    flex-direction:column;\n    margin-bottom:10px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.2);\n    padding-bottom:10px;\n}\n\n.tm-comment-container{\n    width:100%;\n    min-height:60px;\n    display:flex;\n    flex-direction:column;\n    gap:8px;\n}\n\n.tm-comment-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    font-size:14px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-comment-left{\n    display:flex;\n    align-items:center;\n}\n\n.tm-comment-title{\n    margin-right:5px;\n}\n\n.tm-comment-count{\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:12px;\n}\n\n.tm-comment-actions{\n    display:flex;\n    gap:8px;\n}\n\n.tm-comment-button{\n    border:none;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:4px;\n    padding:4px 8px;\n    font-size:12px;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;\n}\n\n.tm-comment-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.6);\n    transform:translateY(-1px);\n}\n\n.tm-comment-button:active{\n    transform:scale(0.96);\n}\n\n.tm-comment-write{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n}\n\n.tm-comment-write:hover{\n    background-color:hsla(var(--shadcn-blue) / 0.8);\n}\n\n.tm-comment-placeholder{\n    width:100%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:10px;\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:13px;\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    border-radius:6px;\n}\n@media screen and (orientation: landscape){\n    .tm-comment-container{\n        min-height:50px;\n    }\n    \n    .tm-comment-placeholder{\n        padding:8px;\n    }\n}\n\n.tm-player-title{\n    position:absolute !important;\n    top:calc(env(safe-area-inset-top, 0px) + 12px) !important;\n    left:50% !important;\n    transform:translateX(-50%) !important;\n    max-width:calc(100% - 110px) !important;\n    text-align:center;\n    font-size:14px;\n    font-weight:600;\n    color:#ffffff;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    user-select:none;\n    z-index:9998 !important;\n    text-shadow:0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;\n    pointer-events:none !important;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n\nbody.controls-hidden .tm-player-title{\n    opacity:0 !important;\n    transform:translate(-50%, -20px) !important;\n    pointer-events:none !important;\n}\nbody.tm-swiping-down .tm-button-container,\nbody.tm-swiping-down .tm-handle-container,\nbody.tm-swiping-down .tm-comments-panel,\nbody.tm-swiping-down .tm-control-buttons,\nbody.tm-swiping-down .tm-settings-panel{\n    opacity:0 !important;\n    pointer-events:none !important;\n    transition:opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n.tm-jump-active{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:5;\n    background-color:hsla(var(--shadcn-green) / 0.8);\n    border-radius:2px;\n    box-shadow:0 0 8px hsla(var(--shadcn-green) / 0.5);\n    pointer-events:none;\n    animation:tm-jump-flash-fade 3.0s cubic-bezier(0.25, 1, 0.5, 1) forwards;\n}\n\n@keyframes tm-jump-flash-fade{\n    0%, 20%, 40%, 60%, 80%{\n        opacity:1;\n        background-color:hsl(var(--shadcn-green));\n        box-shadow:0 0 16px 4px hsl(var(--shadcn-green));\n        transform:translateX(-50%) scaleX(1.6);\n    }\n    10%, 30%, 50%, 70%{\n        opacity:0.3;\n        background-color:hsla(var(--shadcn-green) / 0.4);\n        box-shadow:0 0 4px hsla(var(--shadcn-green) / 0.2);\n        transform:translateX(-50%) scaleX(1.0);\n    }\n    90%{\n        opacity:0.5;\n        background-color:hsla(var(--shadcn-green) / 0.5);\n        box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n        transform:translateX(-50%) scaleX(0.8);\n    }\n    100%{\n        opacity:0;\n        background-color:transparent;\n        box-shadow:none;\n        transform:translateX(-50%) scaleX(0);\n    }\n}\n.tm-sidebar-pos-button,\n.tm-sidebar-toggle-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:none !important;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;\n}\n\n.tm-sidebar-pos-button:hover,\n.tm-sidebar-toggle-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.08);\n}\n\n.tm-sidebar-pos-button:active,\n.tm-sidebar-toggle-button:active{\n    transform:scale(0.96);\n}\n.tm-sidebar-hidden .tm-sidebar-pos-button{\n    display:none !important;\n}\n@media screen and (min-width: 480px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:520px;\n    }\n}\n\n@media screen and (min-width: 768px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:640px;\n    }\n    .tm-comments-panel{\n        max-width:720px;\n        margin:0 auto;\n        border-left:1px solid hsla(var(--shadcn-border) / 0.1);\n        border-right:1px solid hsla(var(--shadcn-border) / 0.1);\n        box-shadow:0 4px 20px rgba(0, 0, 0, 0.08);\n        background-color:hsla(var(--shadcn-card) / 0.02);\n    }\n}\nhtml.tm-player-active,\nbody.tm-player-active{\n    overscroll-behavior:none !important;\n}\n\nbody.tm-player-active header,\nbody.tm-player-active .header,\nbody.tm-player-active navbar,\nbody.tm-player-active .navbar,\nbody.tm-player-active #header-top,\nbody.tm-player-active .top-nav,\nbody.tm-player-active [class*="header--sticky"],\nbody.tm-player-active [class*="navbar-fixed"]{\n    display:none !important;\n}\n\n.tm-progress-markers-container{\n    position:absolute;\n    top:0;\n    left:0;\n    width:100%;\n    height:100%;\n    pointer-events:none;\n    z-index:5;\n}\n.tm-progress-marker-tick{\n    position:absolute;\n    width:6px;\n    height:3px;\n    bottom:-4px;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:10;\n    pointer-events:auto;\n    transition:transform 0.15s, background-color 0.15s, height 0.15s, bottom 0.15s;\n}\n.tm-progress-marker-tick:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n    transform:translateX(-50%) scale(1.1);\n}\n.tm-progress-marker-range{\n    position:absolute;\n    height:3px;\n    bottom:-4px;\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:9;\n    pointer-events:auto;\n    transition:background-color 0.15s, height 0.15s, bottom 0.15s;\n}\n.tm-progress-marker-range:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n}\n\n.tm-active-loop-played{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.45);\n    z-index:8;\n    pointer-events:none;\n    box-shadow:0 0 4px hsla(var(--tab-color), 0.15);\n}\n\n.tm-active-loop-unplayed{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.15);\n    z-index:7;\n    pointer-events:none;\n}\n\n.tm-active-loop-boundary{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.75);\n    z-index:9;\n    pointer-events:none;\n    box-shadow:0 0 3px rgba(0, 0, 0, 0.3);\n}\n.tm-active-loop-boundary.start{\n    border-radius:2px 0 0 2px;\n}\n.tm-active-loop-boundary.end{\n    border-radius:0 2px 2px 0;\n}\n`, "" ]);
+      y.push([ r.id, `.tm-video-overlay{\n    position:fixed;\n    top:0;\n    left:0;\n    right:0;\n    bottom:0;\n    width:100vw;\n    height:100vh;\n    height:100dvh;\n    background-color:#0b0b0e;\n    z-index:2000000000 !important;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    backdrop-filter:blur(30px);\n    -webkit-backdrop-filter:blur(30px);\n    padding:0;\n    touch-action:none;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-player-container{\n    position:fixed;\n    top:0;\n    bottom:var(--keyboard-height, 0px);\n    left:0;\n    right:0;\n    width:100%;\n    height:calc(100% - var(--keyboard-height, 0px));\n    height:calc(100dvh - var(--keyboard-height, 0px));\n    background-color:#0b0b0e;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:flex-start;\n    z-index:2000000001 !important;\n    overflow:hidden;\n    pointer-events:auto;\n    transition:bottom 0.15s ease-out, height 0.15s ease-out;\n    touch-action:pan-y;\n    -webkit-user-select:none;\n    user-select:none;\n    -webkit-touch-callout:none;\n    overscroll-behavior:none;\n}\n.tm-button-container{\n    width:100%;\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    gap:10px;\n    padding:6px 10px;\n    box-sizing:border-box;\n    z-index:99999;\n    position:absolute;\n    top:0;\n    left:0;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);\n    touch-action:none;\n}\n\n.tm-video-container{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:auto;\n    max-height:calc(100% - 130px);\n    margin-top:44px;\n    display:flex;\n    align-items:flex-start;\n    justify-content:center;\n    background-color:hsl(var(--shadcn-card));\n    border-radius:var(--shadcn-radius-lg);\n    box-shadow:var(--shadow-lg);\n    z-index:9985;\n    touch-action:pan-y;\n    flex-shrink:1;\n    transition:max-height 0.15s ease-out;\n}\n\n@media screen and (orientation: portrait){\n    .tm-video-container{\n        max-height:calc(100dvh - var(--keyboard-height, 0px) - 130px) !important;\n        min-height:0 !important;\n    }\n}\n\n.tm-video-wrapper{\n    position:relative;\n    overflow:hidden;\n    width:100%;\n    height:100%;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    will-change:transform;\n    border-radius:var(--shadcn-radius) var(--shadcn-radius) 0 0;\n    touch-action:pan-y;\n}\n.tm-video-wrapper > *:not(video):not(.tm-speed-indicator):not(.tm-video-minimap):not(.tm-inline-remark-popover){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video > *:not(track):not(source){\n    display:none !important;\n    opacity:0 !important;\n    visibility:hidden !important;\n    pointer-events:none !important;\n}\n.tm-video-wrapper video{\n    width:auto !important; \n    height:100% !important; \n    max-height:100% !important; \n    max-width:none !important; \n    object-fit:contain !important; \n    transition:transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);\n    touch-action:pan-y;\n    cursor:grab; \n}\n.tm-handle-container{\n    position:relative;\n    height:30px;\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    z-index:9986;\n    width:100%;\n    flex-shrink:0;\n    touch-action:none;\n}\n\n.tm-resize-handle{\n    position:absolute;\n    height:5px;\n    width:134px;\n    max-width:134px;\n    background-color:hsla(var(--shadcn-foreground) / 0.6);\n    border-radius:2.5px;\n    cursor:grab;\n    touch-action:none;\n    opacity:0.5;\n    will-change:transform;\n    transition:opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;\n    box-shadow:none;\n}\n\n.tm-resize-handle::after{\n    content:'';\n    position:absolute;\n    left:-10px;\n    right:-10px;\n    top:-15px;\n    bottom:-15px;\n    background:transparent;\n}\n\n.tm-resize-handle:hover,\n.tm-resize-handle.dragging{\n    opacity:1;\n    background-color:hsla(var(--shadcn-foreground) / 0.8);\n}\n\n.tm-resize-handle.dragging{\n    cursor:grabbing;\n}\n.tm-control-button-base{\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:50%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s, box-shadow 0.2s;\n    backdrop-filter:blur(12px);\n    -webkit-backdrop-filter:blur(12px);\n    box-shadow:var(--shadow-sm);\n}\n.tm-close-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;\n    z-index:9994;\n}\n.tm-close-button::after,\n.tm-settings-button::after,\n.tm-sidebar-pos-button::after,\n.tm-sidebar-toggle-button::after{\n    content:'';\n    position:absolute;\n    inset:-6px;\n    border-radius:50%;\n    pointer-events:auto;\n}\n\n.tm-close-button:hover{\n    background-color:hsl(var(--shadcn-destructive));\n    transform:scale(1.08);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-close-button:active{\n    transform:scale(0.96);\n}\n.tm-settings-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    z-index:9993;\n    cursor:pointer;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-settings-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.08) rotate(30deg);\n    box-shadow:var(--shadow-md);\n}\n\n.tm-settings-button:active{\n    transform:scale(0.96);\n}\n.tm-settings-panel{\n    position:absolute;\n    top:calc(env(safe-area-inset-top, 8px) + 60px);\n    right:16px;\n    background-color:hsla(var(--shadcn-card) / 0.92);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border-radius:14px;\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    box-shadow:0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px hsla(0, 0%, 100%, 0.05);\n    padding:14px 16px;\n    z-index:100000 !important;\n    min-width:275px;\n    max-width:325px;\n    max-height:calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 80px);\n    overflow-y:auto;\n    overflow-x:hidden;\n    -webkit-overflow-scrolling:touch;\n    overscroll-behavior:contain;\n    touch-action:pan-y;\n    scrollbar-width:thin;\n    scrollbar-color:hsla(var(--shadcn-muted-foreground) / 0.3) transparent;\n    transform:translateY(-10px);\n    opacity:0;\n    pointer-events:none;\n    transition:transform var(--anim-smooth), opacity var(--anim-smooth);\n    box-sizing:border-box;\n}\n\n.tm-settings-panel::-webkit-scrollbar{\n    width:4px;\n}\n\n.tm-settings-panel::-webkit-scrollbar-thumb{\n    background:hsla(var(--shadcn-muted-foreground) / 0.3);\n    border-radius:4px;\n}\n\n.tm-settings-panel.active{\n    transform:translateY(0);\n    opacity:1;\n    pointer-events:auto;\n}\n.tm-player-container.tm-settings-active .tm-comments-list,\n.tm-settings-panel.active ~ .tm-comments-panel .tm-comments-list,\nbody.tm-settings-active .tm-comments-panel .tm-comments-list{\n    opacity:0.15 !important;\n    filter:blur(3px) !important;\n    pointer-events:none !important;\n    transition:opacity var(--anim-smooth), filter var(--anim-smooth) !important;\n}\n@media screen and (max-width: 929px), screen and (orientation: portrait){\n    .tm-settings-panel{\n        right:12px !important;\n        left:12px !important;\n        width:calc(100% - 24px) !important;\n        max-width:calc(100% - 24px) !important;\n    }\n}\n.tm-settings-menu-container{\n    display:flex;\n    flex-direction:column;\n    gap:12px;\n    color:hsl(var(--shadcn-foreground));\n    user-select:none;\n    font-size:13.5px;\n}\n.tm-settings-section{\n    display:flex;\n    flex-direction:column;\n    gap:3px;\n}\n.tm-settings-section-header{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    font-size:11px;\n    font-weight:700;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    letter-spacing:0.8px;\n    text-transform:uppercase;\n    padding-left:2px;\n    user-select:none;\n}\n\n.tm-settings-section-header.collapsible{\n    cursor:pointer;\n    padding:2px 4px;\n    border-radius:4px;\n    transition:background 0.15s ease;\n}\n\n.tm-settings-section-header.collapsible:hover{\n    background:hsla(var(--shadcn-muted) / 0.2);\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-settings-header-arrow{\n    font-size:10px;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-settings-header-arrow.expanded{\n    transform:rotate(180deg);\n}\n.tm-settings-section-divider{\n    height:1px;\n    background:linear-gradient(90deg, hsla(var(--shadcn-border) / 0.3) 0%, hsla(var(--shadcn-border) / 0.05) 100%);\n    margin:3px 0 6px 0;\n    border-radius:1px;\n}\n.tm-settings-option-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    padding:6px 4px;\n    border-radius:8px;\n    cursor:pointer;\n    transition:background 0.15s ease;\n}\n\n.tm-settings-option-row:hover{\n    background-color:hsla(var(--shadcn-muted) / 0.3);\n}\n\n.tm-settings-label-wrapper{\n    display:flex;\n    align-items:center;\n    gap:8px;\n}\n\n.tm-settings-text-wrapper{\n    display:flex;\n    flex-direction:column;\n    gap:2px;\n}\n\n.tm-settings-label{\n    font-size:13.5px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-settings-subtext{\n    font-size:11px;\n    font-weight:400;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    line-height:1.25;\n}\n.tm-settings-seek-steps-subpanel{\n    display:flex;\n    flex-wrap:nowrap;\n    gap:6px;\n    align-items:center;\n    overflow-x:auto;\n    overflow-y:hidden;\n    white-space:nowrap;\n    padding:6px 2px 4px 2px;\n    margin-top:2px;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    -ms-overflow-style:none;\n}\n\n.tm-settings-seek-steps-subpanel::-webkit-scrollbar{\n    display:none;\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    flex-wrap:wrap;\n    gap:8px;\n    align-items:center;\n    justify-content:flex-start;\n    padding:6px 2px 2px 2px;\n    margin-top:2px;\n}\n.tm-seek-step-badge,\n.tm-source-badge{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    font-size:11.5px;\n    font-weight:500;\n    padding:0 12px;\n    height:28px;\n    line-height:1;\n    border-radius:6px;\n    box-sizing:border-box;\n    border:1px solid transparent;\n    cursor:pointer;\n    user-select:none;\n    flex-shrink:0;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-seek-step-badge.enabled,\n.tm-source-badge.enabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    border-color:hsla(var(--shadcn-border) / 0.35);\n    color:#ffffff;\n    font-weight:600;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.2);\n}\n.tm-seek-step-badge.disabled,\n.tm-source-badge.disabled{\n    background-color:hsla(var(--shadcn-secondary) / 0.15);\n    border-color:hsla(var(--shadcn-border) / 0.08);\n    color:hsla(var(--shadcn-muted-foreground) / 0.4);\n    font-weight:400;\n}\n.tm-seek-step-badge:hover,\n.tm-source-badge:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n.tm-seek-step-badge:active,\n.tm-source-badge:active{\n    transform:scale(0.96);\n    box-shadow:none;\n}\n.tm-seek-step-add-btn{\n    font-size:14px;\n    font-weight:600;\n    width:32px;\n    height:28px;\n    border-radius:6px;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    background-color:hsla(var(--shadcn-secondary) / 0.2);\n    border:1px dashed hsla(var(--shadcn-border) / 0.35);\n    color:hsla(var(--shadcn-foreground) / 0.75);\n    cursor:pointer;\n    flex-shrink:0;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;\n}\n\n.tm-seek-step-add-btn:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.5);\n    border-style:solid;\n    border-color:hsla(var(--shadcn-accent) / 0.9);\n    color:#ffffff;\n    transform:translateY(-1px);\n    box-shadow:0 4px 8px rgba(0, 0, 0, 0.25);\n}\n\n.tm-seek-step-add-btn:active{\n    transform:scale(0.96);\n}\n.tm-seek-step-input{\n    width:60px;\n    height:28px;\n    font-size:16px;\n    font-weight:500;\n    text-align:center;\n    border-radius:6px;\n    border:1px solid hsla(var(--shadcn-accent) / 0.8);\n    background-color:hsla(var(--shadcn-background) / 0.85);\n    color:#ffffff;\n    outline:none;\n    box-sizing:border-box;\n    flex-shrink:0;\n    box-shadow:0 0 8px hsla(var(--shadcn-accent) / 0.4);\n}\n.tm-settings-sources-subpanel{\n    display:flex;\n    gap:8px;\n    padding:6px 2px 2px 2px;\n}\n\n.tm-source-badge{\n    font-size:11px;\n    padding:4px 10px;\n    border-radius:12px;\n    border:1px solid transparent;\n    cursor:pointer;\n    font-weight:500;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, color 0.15s;\n}\n\n.tm-source-badge.enabled{\n    background:rgba(239, 68, 68, 0.2);\n    border-color:rgba(239, 68, 68, 0.6);\n    color:#fca5a5;\n}\n\n.tm-source-badge.disabled{\n    background:rgba(255, 255, 255, 0.06);\n    border-color:rgba(255, 255, 255, 0.1);\n    color:rgba(255, 255, 255, 0.4);\n}\n.tm-settings-webdav-card{\n    display:flex;\n    flex-direction:column;\n    gap:10px;\n    background:hsla(var(--shadcn-card) / 0.45);\n    backdrop-filter:blur(16px);\n    -webkit-backdrop-filter:blur(16px);\n    border:1px solid hsla(var(--shadcn-border) / 0.25);\n    border-radius:10px;\n    padding:12px;\n    margin-top:4px;\n}\n\n.tm-webdav-form-row{\n    display:flex;\n    flex-direction:column;\n    gap:4px;\n}\n\n.tm-webdav-label{\n    font-size:11.5px;\n    font-weight:500;\n    color:hsla(var(--shadcn-muted-foreground) / 0.85);\n}\n\n.tm-webdav-input-group{\n    position:relative;\n    display:flex;\n    align-items:center;\n    width:100%;\n}\n\n.tm-webdav-input{\n    width:100%;\n    height:32px;\n    background:hsla(var(--shadcn-background) / 0.6);\n    border:1px solid hsla(var(--shadcn-border) / 0.3);\n    border-radius:6px;\n    padding:0 10px;\n    font-size:12.5px;\n    color:hsl(var(--shadcn-foreground));\n    box-sizing:border-box;\n    outline:none;\n    transition:border-color 0.2s, box-shadow 0.2s, background-color 0.2s;\n    font-family:inherit;\n}\n\n.tm-webdav-input-group .tm-webdav-input.has-eye{\n    padding-right:34px;\n}\n\n.tm-webdav-input:focus{\n    border-color:hsla(var(--shadcn-accent) / 0.8);\n    box-shadow:0 0 0 2px hsla(var(--shadcn-accent) / 0.2);\n    background:hsla(var(--shadcn-background) / 0.85);\n}\n\n.tm-webdav-input::placeholder{\n    color:hsla(var(--shadcn-muted-foreground) / 0.4);\n    font-size:11.5px;\n}\n\n.tm-webdav-eye-btn{\n    position:absolute;\n    right:4px;\n    top:50%;\n    transform:translateY(-50%);\n    width:26px;\n    height:26px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    background:transparent;\n    border:none;\n    border-radius:4px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.6);\n    cursor:pointer;\n    padding:0;\n    transition:background-color 0.15s, color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);\n}\n\n.tm-webdav-eye-btn::after{\n    content:'';\n    position:absolute;\n    inset:-6px;\n    border-radius:4px;\n    pointer-events:auto;\n}\n\n.tm-webdav-eye-btn:hover{\n    color:hsl(var(--shadcn-foreground));\n    background:hsla(var(--shadcn-muted) / 0.3);\n}\n\n.tm-webdav-eye-btn:active{\n    transform:translateY(-50%) scale(0.96);\n}\n\n.tm-webdav-switch-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    padding:8px 10px;\n    background:hsla(var(--shadcn-muted) / 0.18);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    border-radius:8px;\n    margin-top:2px;\n}\n\n.tm-webdav-switch-info{\n    display:flex;\n    flex-direction:column;\n    gap:2px;\n}\n\n.tm-webdav-switch-title{\n    font-size:12px;\n    font-weight:600;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-webdav-switch-desc{\n    font-size:10px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    line-height:1.3;\n}\n\n.tm-webdav-device-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:6px;\n    font-size:11px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.7);\n    padding:4px 8px;\n    background:hsla(var(--shadcn-muted) / 0.2);\n    border-radius:6px;\n    margin-top:2px;\n    word-break:break-all;\n}\n\n.tm-webdav-actions-container{\n    display:flex;\n    flex-direction:column;\n    gap:7px;\n    margin-top:6px;\n}\n\n.tm-webdav-sub-actions{\n    display:grid;\n    grid-template-columns:repeat(3, 1fr);\n    gap:6px;\n}\n\n.tm-webdav-btn{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    gap:5px;\n    height:32px;\n    padding:0 8px 0 6px;\n    border-radius:6px;\n    font-size:11.5px;\n    font-weight:500;\n    cursor:pointer;\n    user-select:none;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s, filter 0.15s;\n    box-sizing:border-box;\n    border:1px solid transparent;\n    white-space:nowrap;\n    -webkit-tap-highlight-color:transparent;\n}\n\n.tm-webdav-btn svg{\n    width:13px;\n    height:13px;\n    flex-shrink:0;\n}\n\n.tm-webdav-btn-primary{\n    background:linear-gradient(135deg, hsl(var(--shadcn-primary)) 0%, hsl(var(--shadcn-accent)) 100%);\n    color:#fff;\n    border:none;\n    box-shadow:0 2px 8px hsla(var(--shadcn-primary) / 0.3);\n    width:100%;\n    height:36px;\n    font-size:13px;\n    font-weight:600;\n}\n\n.tm-webdav-btn-primary:hover{\n    filter:brightness(1.08);\n    box-shadow:0 4px 12px hsla(var(--shadcn-primary) / 0.4);\n}\n\n.tm-webdav-btn-secondary{\n    background:hsla(var(--shadcn-muted) / 0.35);\n    color:hsl(var(--shadcn-foreground));\n    border-color:hsla(var(--shadcn-border) / 0.25);\n}\n\n.tm-webdav-btn-secondary:hover{\n    background:hsla(var(--shadcn-muted) / 0.65);\n    border-color:hsla(var(--shadcn-border) / 0.45);\n}\n\n.tm-webdav-btn:active{\n    transform:scale(0.96);\n}\n\n.tm-webdav-btn:disabled{\n    opacity:0.5;\n    cursor:not-allowed;\n    transform:none;\n}\n\n.tm-webdav-status-bar{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    font-size:10.5px;\n    color:hsla(var(--shadcn-muted-foreground) / 0.65);\n    padding:4px 2px 0 2px;\n    border-top:1px dashed hsla(var(--shadcn-border) / 0.2);\n    margin-top:4px;\n}\n\n.tm-webdav-status-badge{\n    display:inline-flex;\n    align-items:center;\n    gap:4px;\n    padding:2px 6px;\n    border-radius:4px;\n    font-size:10.5px;\n    font-weight:500;\n}\n\n.tm-webdav-status-badge.success{\n    background:rgba(34, 197, 94, 0.15);\n    color:#4ade80;\n}\n\n.tm-webdav-status-badge.error{\n    background:rgba(239, 68, 68, 0.15);\n    color:#f87171;\n}\n\n.tm-webdav-status-badge.running{\n    background:rgba(59, 130, 246, 0.15);\n    color:#60a5fa;\n}\n\n.tm-spinner-sm{\n    display:inline-block;\n    width:9px;\n    height:9px;\n    border:1.5px solid currentColor;\n    border-right-color:transparent;\n    border-radius:50%;\n    animation:tm-spin 0.75s linear infinite;\n}\n\n@keyframes tm-spin{\n    to{ transform:rotate(360deg); }\n}\n.tm-toggle-input{\n    position:absolute;\n    left:-9999px;\n}\n.tm-start-time-container.active{\n    background-color:hsl(var(--shadcn-green) / 0.15);\n    border-color:hsl(var(--shadcn-green) / 0.4);\n}\n\n.tm-start-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-end-time-container.active{\n    background-color:hsl(var(--shadcn-orange) / 0.15);\n    border-color:hsl(var(--shadcn-orange) / 0.4);\n}\n\n.tm-end-time-container:not(.active){\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-set-loop-start-label.active{\n    color:hsl(var(--shadcn-green));\n    opacity:1;\n}\n\n.tm-set-loop-start-label:not(.active){\n    opacity:0.9;\n}\n.tm-set-loop-end-label.active{\n    color:hsl(var(--shadcn-orange));\n    opacity:1;\n}\n\n.tm-set-loop-end-label:not(.active){\n    opacity:0.9;\n}\n.tm-loop-start-position.active, .tm-loop-end-position.active{\n    color:hsl(var(--shadcn-foreground));\n    opacity:1;\n}\n\n.tm-loop-start-position:not(.active), .tm-loop-end-position:not(.active){\n    color:hsl(var(--shadcn-muted-foreground));\n    opacity:0.9;\n}\n.tm-loop-toggle-button.active{\n    background-color:hsl(var(--shadcn-red) / 0.1);\n    border-color:hsl(var(--shadcn-red) / 0.3);\n}\n\n.tm-loop-toggle-button:active{\n    transform:scale(0.96);\n}\n.tm-loop-range{\n    position:absolute;\n    height:4px;\n    background:linear-gradient(90deg, \n        hsla(var(--shadcn-green) / 0.3) 0%, \n        hsla(var(--shadcn-orange) / 0.3) 100%);\n    top:50%;\n    transform:translateY(-50%);\n    border-radius:2px;\n    opacity:0;\n    transition:opacity 0.3s ease;\n    z-index:1;\n    pointer-events:none;\n}\n\n.tm-loop-range.active{\n    opacity:0.7;\n    box-shadow:0 0 8px rgba(0, 0, 0, 0.1);\n}\n.tm-progress-bar-container:hover .tm-loop-range.active{\n    opacity:0.9;\n    height:6px;\n}\n.tm-loop-marker{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:3;\n    transition:opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),  transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);\n    backdrop-filter:blur(4px);\n    -webkit-backdrop-filter:blur(4px);\n}\n.tm-loop-start-marker{\n    background-color:hsla(var(--shadcn-green) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n}\n.tm-loop-end-marker{\n    background-color:hsla(var(--shadcn-orange) / 0.5);\n    border-radius:2px;\n    box-shadow:0 0 6px hsla(var(--shadcn-orange) / 0.3);\n}\n.tm-loop-marker:hover{\n    cursor:pointer;\n    z-index:4;\n}\n\n.tm-loop-start-marker:hover{\n    background-color:hsla(var(--shadcn-green) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-green) / 0.5);\n}\n\n.tm-loop-end-marker:hover{\n    background-color:hsla(var(--shadcn-orange) / 0.7);\n    box-shadow:0 0 10px hsla(var(--shadcn-orange) / 0.5);\n}\n.tm-loop-marker.active{\n    opacity:1;\n}\n\n.tm-loop-marker:not(.active){\n    opacity:0.7;\n}\n.tm-loop-marker::before{\n    content:attr(data-label);\n    position:absolute;\n    top:-24px;\n    left:50%;\n    transform:translateX(-50%);\n    background-color:hsla(var(--shadcn-card) / 0.7);\n    color:hsl(var(--shadcn-card-foreground));\n    font-size:10px;\n    font-weight:600;\n    padding:2px 8px;\n    border-radius:10px;\n    opacity:0;\n    transition:opacity 0.2s ease, transform 0.2s ease;\n    backdrop-filter:blur(8px);\n    -webkit-backdrop-filter:blur(8px);\n    box-shadow:0 2px 4px rgba(0, 0, 0, 0.1);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    white-space:nowrap;\n    z-index:5;\n}\n\n.tm-loop-marker:hover::before{\n    opacity:1;\n    transform:translateX(-50%) translateY(-4px);\n}\n.tm-start-time-container-hover{\n    background-color:hsl(var(--shadcn-green) / 0.1);\n    border-color:hsl(var(--shadcn-green) / 0.3);\n}\n\n.tm-start-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n\n.tm-end-time-container-hover{\n    background-color:hsl(var(--shadcn-orange) / 0.1);\n    border-color:hsl(var(--shadcn-orange) / 0.3);\n}\n\n.tm-end-time-container-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    border-color:hsl(var(--shadcn-border) / 0.1);\n}\n.tm-loop-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:translateY(-1px);\n}\n\n.tm-loop-button-active{\n    background-color:hsl(var(--shadcn-muted) / 0.7);\n}\n\n.tm-loop-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:translateY(0);\n}\n.tm-indicator-base{\n    position:absolute;\n    padding:8px 16px;\n    background-color:hsla(var(--shadcn-card) / 0.6);\n    color:hsl(var(--shadcn-card-foreground));\n    border-radius:var(--shadcn-radius);\n    opacity:0;\n    backdrop-filter:blur(15px);\n    -webkit-backdrop-filter:blur(15px);\n    box-shadow:var(--shadow-md);\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    transform:translateY(20px);\n    transition:opacity var(--anim-smooth), transform var(--anim-smooth);\n    pointer-events:none;\n    z-index:9994;\n    font-size:15px;\n    font-weight:500;\n}\n\n.tm-indicator-base.visible{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-pause-indicator{\n    width:80px;\n    height:80px;\n}\n.tm-progress-row{\n    display:flex;\n    flex-direction:column;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-seek-control-row{\n    display:flex;\n    flex-direction:row;\n    justify-content:space-between;\n    width:100%;\n    box-sizing:border-box;\n}\n\n.tm-loop-control-row{\n    display:flex;\n    align-items:center;\n    width:100%;\n    box-sizing:border-box;\n    position:relative;\n    gap:8px;\n}\n.tm-inline-remark-popover{\n    position:absolute;\n    bottom:calc(45px + 42px + 10px);\n    left:12px;\n    right:12px;\n    width:calc(100% - 24px);\n    margin:0 auto;\n    background:rgba(18, 18, 20, 0.96);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:20px;\n    padding:12px;\n    box-shadow:0 10px 30px rgba(0, 0, 0, 0.7);\n    z-index:9998;\n    pointer-events:auto;\n    opacity:0;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);\n    box-sizing:border-box;\n}\n\n.tm-inline-remark-popover.visible{\n    opacity:1;\n    transform:translateY(0) scale(1);\n}\n\n.tm-inline-remark-body{\n    display:flex;\n    flex-direction:column;\n    gap:10px;\n    width:100%;\n}\n\n.tm-inline-remark-input{\n    width:100%;\n    height:38px;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    border-radius:8px;\n    padding:0 14px;\n    color:#ffffff;\n    font-size:16px;\n    outline:none;\n    box-sizing:border-box;\n    transition:border-color 0.2s, background 0.2s;\n}\n\n.tm-inline-remark-input:focus{\n    border-color:rgba(255, 255, 255, 0.35);\n    background:rgba(255, 255, 255, 0.1);\n}\n\n.tm-inline-remark-input::placeholder{\n    color:rgba(255, 255, 255, 0.35);\n}\n\n.tm-inline-remark-footer{\n    display:flex;\n    justify-content:flex-end;\n    gap:10px;\n}\n\n.tm-inline-remark-btn{\n    height:32px;\n    padding:0 20px;\n    border-radius:12px;\n    font-size:0.82rem;\n    font-weight:600;\n    cursor:pointer;\n    outline:none;\n    transition:background-color 0.18s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);\n    box-sizing:border-box;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-inline-remark-btn:active{\n    transform:scale(0.96);\n}\n\n.tm-inline-remark-btn.cancel{\n    background:rgba(255, 255, 255, 0.08);\n    border:1px solid rgba(255, 255, 255, 0.15);\n    color:rgba(255, 255, 255, 0.8);\n}\n\n.tm-inline-remark-btn.cancel:hover{\n    background:rgba(255, 255, 255, 0.16);\n    color:#ffffff;\n}\n\n.tm-inline-remark-btn.submit{\n    background:hsl(var(--shadcn-blue));\n    border:none;\n    color:#ffffff;\n    box-shadow:0 4px 12px hsla(var(--shadcn-blue) / 0.4);\n}\n\n.tm-inline-remark-btn.submit:hover{\n    background:hsl(var(--shadcn-blue) / 0.9);\n    transform:scale(1.03);\n}\n\n.tm-inline-remark-btn.submit:active{\n    transform:scale(0.96);\n}\n\n.tm-playback-control-row{\n    display:flex;\n    justify-content:space-between;\n    align-items:center;\n    position:relative;\n    width:100%;\n    max-height:45px;\n    height:45px;\n    border-radius:8px;\n    box-sizing:border-box;\n}\n.tm-left-controls, .tm-center-controls, .tm-right-controls{\n    flex:1;\n    display:flex;\n    height:100%;\n    align-items:center;\n}\n\n.tm-left-controls{\n    justify-content:flex-start;\n}\n\n.tm-center-controls{\n    justify-content:center;\n}\n\n.tm-right-controls{\n    justify-content:flex-end;\n}\n.tm-time-display{\n    display:flex;\n    justify-content:space-between;\n    color:hsl(var(--shadcn-foreground) / 0.9);\n    font-size:12px;\n    margin-top:-2px;\n    font-variant-numeric:tabular-nums;\n    gap:8px;\n}\n\n.tm-time-display-container{\n    display:flex;\n    justify-content:space-between;\n    width:100%;\n    padding:0px 1px;\n    margin-bottom:6px;\n}\n\n.tm-current-time, .tm-total-duration{\n    color:hsla(var(--shadcn-foreground) / 0.55);\n    font-size:12px;\n    min-width:60px;\n    font-variant-numeric:tabular-nums;\n    font-weight:500;\n    line-height:1;\n}\n\n.tm-current-time{\n    text-align:left;\n}\n\n.tm-total-duration{\n    text-align:right;\n}\n.tm-tab-scroll-container{\n    display:flex;\n    flex:1;\n    gap:8px;\n    overflow-x:auto;\n    overflow-y:hidden;\n    overscroll-behavior:contain;\n    scroll-behavior:smooth;\n    -webkit-overflow-scrolling:touch;\n    scrollbar-width:none;\n    height:38px;\n    padding:0 44px 0 0;\n    margin:0;\n    box-sizing:border-box;\n    align-items:center;\n    mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    -webkit-mask-image:linear-gradient(to right, black calc(100% - 36px), transparent);\n    touch-action:pan-x;\n}\n.tm-tab-scroll-container::-webkit-scrollbar{ display:none; }\n.tm-tab-pill{\n    position:relative;\n    overflow:hidden;\n    display:flex;\n    align-items:center;\n    gap:4px;\n    height:38px;\n    padding:0 12px;\n    box-sizing:border-box;\n    border-radius:9999px;\n    background-color:hsla(0, 0%, 15%, 0.12);\n    border:1px solid hsla(0, 0%, 20%, 0.35);\n    color:hsl(var(--shadcn-foreground));\n    font-size:0.8rem;\n    font-variant-numeric:tabular-nums;\n    white-space:nowrap;\n    cursor:pointer;\n    flex-shrink:0;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, color 0.15s;\n    user-select:none;\n    -webkit-user-select:none;\n    -webkit-tap-highlight-color:transparent;\n    pointer-events:auto;\n}\n.tm-tab-pill{\n    background-color:hsla(var(--tab-color), 0.12);\n    border-color:hsla(var(--tab-color), 0.35);\n    color:hsl(var(--tab-color));\n}\n.tm-tab-pill:active{ transform:scale(0.96); }\n.tm-tab-pill.active{\n    background-color:hsla(var(--tab-color), 0.25);\n    border-color:hsla(var(--tab-color), 0.6);\n    color:hsl(var(--tab-color));\n}\n\n.tm-tab-time-text{\n    position:relative;\n    z-index:1;\n    display:inline-flex;\n    align-items:center;\n    white-space:nowrap;\n}\n\n.tm-tab-loop-overlay{\n    position:absolute;\n    left:50%;\n    top:50%;\n    transform:translate(-50%, -50%);\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    height:60%;\n    z-index:2;\n    pointer-events:none;\n    border:none;\n    background:none;\n    box-shadow:none;\n    padding:0;\n}\n\n.tm-tab-loop-overlay svg{\n    display:block;\n    height:100%;\n    width:auto;\n    color:#ffffff;\n    fill:#ffffff;\n    stroke:#ffffff;\n    stroke-width:0.8px;\n    stroke-linejoin:round;\n    filter:drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));\n}\n.tm-tab-pill.draft{\n    background-color:hsla(var(--tab-color), 0.08);\n    border-color:hsla(var(--tab-color), 0.45);\n    border-style:dashed;\n    gap:5px;\n    padding:0 8px;\n}\n.tm-tab-pill.draft.editing,\n.tm-tab-pill.draft:not(.placeholder){\n    background-color:hsla(var(--tab-color), 0.22);\n    border-color:hsla(var(--tab-color), 0.75);\n}\n.tm-tab-pill.draft .tm-draft-label{\n    font-weight:600;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-label.a{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-label.b{ color:#fff; }\n.tm-tab-pill.draft .tm-draft-time{\n    color:#fff;\n    font-variant-numeric:tabular-nums;\n    font-size:11px;\n}\n.tm-tab-pill.draft .tm-draft-time.placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-draft-action{\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    height:24px;\n    width:32px;\n    border-radius:6px;\n    border:none;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, color 0.15s;\n    -webkit-tap-highlight-color:transparent;\n    box-sizing:border-box;\n}\n.tm-draft-action:active{\n    transform:scale(0.96);\n}\n.tm-draft-action.save{\n    background-color:hsla(var(--tab-color), 0.18);\n    color:hsl(var(--tab-color));\n}\n.tm-draft-action.save:hover{\n    background-color:hsla(var(--tab-color), 0.28);\n}\n.tm-draft-action.cancel{\n    background-color:rgba(239, 68, 68, 0.15);\n    color:#ef4444;\n}\n.tm-draft-action.cancel:hover{\n    background-color:rgba(239, 68, 68, 0.25);\n}\n.tm-draft-action.edit-comment{\n    background-color:rgba(245, 158, 11, 0.15);\n    color:#f59e0b;\n}\n.tm-draft-action.edit-comment:hover{\n    background-color:rgba(245, 158, 11, 0.25);\n}\n.tm-tab-list-btn{\n    flex-shrink:0;\n    width:38px;\n    height:38px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    border-radius:50%;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    border:1px solid hsla(var(--shadcn-border) / 0.15);\n    color:hsl(var(--shadcn-foreground));\n    font-size:1.1rem;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s;\n    -webkit-tap-highlight-color:transparent;\n}\n.tm-tab-list-btn:active{ transform:scale(0.96); }\n.tm-tab-list-btn:hover{\n    background-color:hsla(var(--shadcn-secondary) / 0.8);\n    border-color:hsla(var(--shadcn-border) / 0.3);\n}\n.tm-bottom-sheet-overlay{\n    position:fixed;\n    inset:0;\n    background-color:transparent;\n    z-index:9990 !important;\n    opacity:0;\n    pointer-events:none;\n    transition:opacity var(--anim-smooth);\n\n    touch-action:none;\n    user-select:none;\n    -webkit-user-select:none;\n    overscroll-behavior:none;\n}\n.tm-bottom-sheet-overlay.visible{\n    opacity:1;\n    pointer-events:auto;\n}\n\n.tm-bottom-sheet-panel{\n    position:absolute;\n    bottom:0;\n    left:0;\n    right:0;\n    width:100%;\n    max-height:calc(100vh - 120px);\n    background-color:rgba(18, 18, 20, 0.94);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.6);\n    border-radius:16px;\n    border:1px solid rgba(255, 255, 255, 0.1);\n    z-index:9995 !important;\n    opacity:0;\n    pointer-events:none;\n    transform:translateY(8px) scale(0.98);\n    transition:opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);\n    display:flex;\n    flex-direction:column;\n    overflow:hidden;\n    box-sizing:border-box;\n    padding:10px 14px 12px;\n}\n.tm-bottom-sheet-panel.visible{\n    opacity:1;\n    pointer-events:auto;\n    transform:translateY(0) scale(1);\n}\n.tm-sheet-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    padding:2px 2px 6px 2px;\n    margin-bottom:6px;\n    border-bottom:1px solid rgba(255, 255, 255, 0.06);\n    flex-shrink:0;\n}\n\n.tm-bottom-sheet-title{\n    font-size:0.82rem;\n    font-weight:600;\n    color:rgba(255, 255, 255, 0.88);\n    letter-spacing:0.2px;\n}\n\n.tm-sheet-count-badge{\n    font-size:0.7rem;\n    color:rgba(255, 255, 255, 0.45);\n    background:rgba(255, 255, 255, 0.08);\n    padding:1px 6px;\n    border-radius:8px;\n}\n\n.tm-sheet-close-btn{\n    background:transparent;\n    border:none;\n    color:rgba(255, 255, 255, 0.45);\n    font-size:0.95rem;\n    cursor:pointer;\n    padding:0 4px;\n    border-radius:4px;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    transition:color 0.2s;\n}\n.tm-sheet-close-btn:hover{\n    color:#ffffff;\n}\n.tm-bottom-sheet-list{\n    flex:1;\n    overflow-y:auto;\n    -webkit-overflow-scrolling:touch;\n    display:flex;\n    flex-direction:column;\n    gap:6px;\n    padding-right:2px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar{\n    width:4px;\n}\n.tm-bottom-sheet-list::-webkit-scrollbar-thumb{\n    background:rgba(255, 255, 255, 0.2);\n    border-radius:2px;\n}\n.tm-sheet-item{\n    display:flex;\n    align-items:center;\n    gap:8px;\n    padding:2px 0;\n    background:transparent;\n    border:none;\n    height:32px;\n    box-sizing:border-box;\n}\n\n.tm-sheet-item-time-container{\n    display:flex;\n    align-items:center;\n    flex-shrink:0;\n    height:32px;\n}\n.tm-sheet-time-pill{\n    height:32px;\n    box-sizing:border-box;\n    padding:0 12px;\n    border-radius:16px;\n    background:hsla(var(--tab-color, 200 100% 55%), 0.15);\n    border:1px solid hsla(var(--tab-color, 200 100% 55%), 0.4);\n    color:#ffffff;\n    font-size:0.8rem;\n    font-family:inherit;\n    font-weight:500;\n    cursor:pointer;\n    white-space:nowrap;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    transition:transform 0.15s ease, background-color 0.2s;\n}\n.tm-sheet-time-pill:hover{\n    transform:scale(1.02);\n    background:hsla(var(--tab-color, 200 100% 55%), 0.28);\n}\n.tm-sheet-time-pill.interval{\n    position:relative;\n    overflow:hidden;\n    padding:0 10px;\n    gap:4px;\n}\n.tm-sheet-time-pill.interval .tm-time-part{\n    cursor:pointer;\n    padding:2px 4px;\n    border-radius:4px;\n    transition:background-color 0.15s, color 0.15s;\n}\n.tm-sheet-time-pill.interval .tm-time-part:hover{\n    background-color:rgba(255, 255, 255, 0.25);\n    color:#ffffff;\n}\n.tm-sheet-time-pill.interval .tm-time-sep{\n    opacity:0.6;\n    font-weight:400;\n    user-select:none;\n    padding:0 1px;\n}\n.tm-sheet-item-comment-input{\n    flex:1;\n    min-width:0;\n    height:32px;\n    box-sizing:border-box;\n    background:rgba(255, 255, 255, 0.06);\n    border:1px solid rgba(255, 255, 255, 0.1);\n    border-radius:8px;\n    padding:0 10px;\n    color:#ffffff;\n    font-size:16px;\n    outline:none;\n    display:inline-flex;\n    align-items:center;\n    transition:border-color 0.2s, background 0.2s;\n}\n.tm-sheet-item-comment-input:focus{\n    border-color:rgba(255, 255, 255, 0.3);\n    background:rgba(255, 255, 255, 0.1);\n}\n.tm-sheet-item-comment-input::placeholder{\n    color:rgba(255, 255, 255, 0.3);\n}\n.tm-sheet-delete-btn{\n    width:32px;\n    height:32px;\n    box-sizing:border-box;\n    border-radius:8px;\n    border:1px solid rgba(255, 60, 60, 0.25);\n    background:rgba(255, 60, 60, 0.12);\n    color:#ff5252;\n    font-size:0.85rem;\n    font-weight:bold;\n    cursor:pointer;\n    display:inline-flex;\n    align-items:center;\n    justify-content:center;\n    flex-shrink:0;\n    transition:background 0.2s, transform 0.15s;\n}\n.tm-sheet-delete-btn:hover{\n    background:rgba(255, 60, 60, 0.28);\n    transform:scale(1.05);\n}\n\n.tm-bottom-sheet-empty{\n    padding:16px;\n    text-align:center;\n    font-size:0.82rem;\n    color:rgba(255, 255, 255, 0.35);\n}\n.tm-rewind-group, .tm-forward-group{\n    display:flex;\n    flex-direction:column;\n    width:50%;\n    gap:8px;\n    align-items:center;\n}\n\n.tm-rewind-buttons-container{\n    display:flex;\n    flex-direction:row-reverse;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n\n.tm-forward-buttons-container{\n    display:flex;\n    flex-direction:row;\n    flex-wrap:wrap;\n    width:100%;\n    justify-content:flex-end;\n    align-content:flex-start;\n    gap:6px;\n}\n.tm-time-control-button{\n    background-color:hsla(var(--shadcn-secondary) / var(--btn-opacity, 0.5));\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsl(var(--shadcn-border) / 0.1);\n    border-radius:8px;\n    padding:0;\n    font-size:0.75rem;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;\n    white-space:nowrap;\n    font-weight:500;\n    box-shadow:0 1px 2px rgba(0,0,0,0.05);\n    width:var(--button-xl);\n    height:var(--button-lg);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    flex:0 0 auto;\n}\n\n.tm-time-control-button:hover{\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.15));\n    border-color:hsla(var(--shadcn-border) / 0.3);\n    transform:translateY(-1.5px);\n    box-shadow:0 4px 8px rgba(0,0,0,0.2);\n}\n\n.tm-time-control-button:active{\n    transform:scale(0.96);\n    background-color:hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.25));\n    box-shadow:none;\n}\n\n.tm-time-control-button-active{\n    transform:scale(0.96);\n    box-shadow:none;\n}\n\n.tm-time-control-button-after-active{\n    transform:none;\n    box-shadow:0 2px 5px rgba(0, 0, 0, 0.15);\n}\n\n.tm-time-control-button-inner{\n    display:flex;\n    align-items:center;\n    justify-content:center;\n}\n\n.tm-rewind-icon{\n    margin-right:-2px;\n}\n\n.tm-forward-icon{\n    margin-left:-2px;\n}\n\n.tm-time-text-margin-left{\n    margin-left:2px;\n}\n\n.tm-time-text-margin-right{\n    margin-right:2px;\n}\n.tm-control-button-hover{\n    background-color:hsl(var(--shadcn-accent) / 0.3);\n    transform:none;\n}\n\n.tm-control-button-default{\n    background-color:hsl(var(--shadcn-secondary) / 0.5);\n    transform:none;\n}\n.tm-control-buttons{\n    position:absolute;\n    bottom:calc(10px + env(safe-area-inset-bottom, 0px));\n    left:50%;\n    transform:translateX(-50%);\n    width:95%;\n    max-width:700px;\n    min-width:350px;\n    z-index:9997 !important;\n    padding:16px 16px 14px;\n    border-radius:16px;\n    background-color:rgba(10, 10, 10, 0.52);\n    backdrop-filter:blur(24px);\n    -webkit-backdrop-filter:blur(24px);\n    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 12px 32px rgba(0, 0, 0, 0.45);\n    border:none;\n    transition: opacity 0.3s ease,  transform 0.3s ease,  width 0.35s cubic-bezier(0.25, 1, 0.5, 1),  left 0.35s cubic-bezier(0.25, 1, 0.5, 1),  bottom 0.35s cubic-bezier(0.25, 1, 0.5, 1),  right 0.35s cubic-bezier(0.25, 1, 0.5, 1),  border-radius 0.3s ease;\n    gap:10px;\n    display:flex;\n    flex-direction:column;\n    align-items:center;\n    justify-content:center;\n    overflow:visible !important;\n    touch-action:none;\n}\n\n.tm-control-buttons.dragging{\n    transition:none !important;\n}\nbody.controls-hidden .tm-player-container .tm-control-buttons{\n    opacity:0;\n    transform:translateX(-50%) translateY(calc(100% + 30px));\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-control-buttons{\n    opacity:1;\n    transform:translateX(-50%) translateY(0);\n    pointer-events:auto;\n}\nbody.controls-hidden .tm-player-container .tm-button-container{\n    opacity:0;\n    transform:translateY(-60px);\n    pointer-events:none;\n}\nbody:not(.controls-hidden) .tm-player-container .tm-button-container{\n    opacity:1;\n    transform:translateY(0);\n    pointer-events:auto;\n}\n.tm-control-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.6);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.1);\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;\n}\n\n.tm-control-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.7);\n    transform:translateY(-2px);\n    box-shadow:var(--shadow-sm);\n}\n\n.tm-control-button:active{\n    transform:scale(0.96);\n    box-shadow:none;\n}\n\n.tm-control-button.active{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n    box-shadow:0 0 0 2px hsla(var(--shadcn-blue) / 0.3);\n}\n\n.tm-control-button svg,\n.tm-control-button img{\n    width:16px;\n    height:16px;\n}\n.tm-control-row{\n    display:flex;\n    justify-content:center;\n    align-items:center;\n    gap:8px;\n    margin-top:4px;\n    opacity:1;\n    transition:opacity var(--anim-quick), height var(--anim-quick);\n    height:auto;\n    overflow:hidden;\n}\n\n.tm-control-row.hidden{\n    opacity:0;\n    height:0;\n    margin:0;\n}\n.tm-comment-row{\n    width:100%;\n    display:flex;\n    flex-direction:column;\n    margin-bottom:10px;\n    border-bottom:1px solid hsla(var(--shadcn-border) / 0.2);\n    padding-bottom:10px;\n}\n\n.tm-comment-container{\n    width:100%;\n    min-height:60px;\n    display:flex;\n    flex-direction:column;\n    gap:8px;\n}\n\n.tm-comment-header{\n    display:flex;\n    align-items:center;\n    justify-content:space-between;\n    font-size:14px;\n    font-weight:500;\n    color:hsl(var(--shadcn-foreground));\n}\n\n.tm-comment-left{\n    display:flex;\n    align-items:center;\n}\n\n.tm-comment-title{\n    margin-right:5px;\n}\n\n.tm-comment-count{\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:12px;\n}\n\n.tm-comment-actions{\n    display:flex;\n    gap:8px;\n}\n\n.tm-comment-button{\n    border:none;\n    background-color:hsla(var(--shadcn-secondary) / 0.5);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border-radius:4px;\n    padding:4px 8px;\n    font-size:12px;\n    cursor:pointer;\n    transition:transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;\n}\n\n.tm-comment-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.6);\n    transform:translateY(-1px);\n}\n\n.tm-comment-button:active{\n    transform:scale(0.96);\n}\n\n.tm-comment-write{\n    background-color:hsla(var(--shadcn-blue) / 0.7);\n    color:hsl(var(--shadcn-blue-foreground));\n}\n\n.tm-comment-write:hover{\n    background-color:hsla(var(--shadcn-blue) / 0.8);\n}\n\n.tm-comment-placeholder{\n    width:100%;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:10px;\n    color:hsl(var(--shadcn-muted-foreground));\n    font-size:13px;\n    background-color:hsla(var(--shadcn-muted) / 0.1);\n    border-radius:6px;\n}\n@media screen and (orientation: landscape){\n    .tm-comment-container{\n        min-height:50px;\n    }\n    \n    .tm-comment-placeholder{\n        padding:8px;\n    }\n}\n\n.tm-player-title{\n    position:absolute !important;\n    top:calc(env(safe-area-inset-top, 0px) + 12px) !important;\n    left:50% !important;\n    transform:translateX(-50%) !important;\n    max-width:calc(100% - 110px) !important;\n    text-align:center;\n    font-size:14px;\n    font-weight:600;\n    color:#ffffff;\n    white-space:nowrap;\n    overflow:hidden;\n    text-overflow:ellipsis;\n    user-select:none;\n    z-index:9998 !important;\n    text-shadow:0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;\n    pointer-events:none !important;\n    transition:opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n\nbody.controls-hidden .tm-player-title{\n    opacity:0 !important;\n    transform:translate(-50%, -20px) !important;\n    pointer-events:none !important;\n}\nbody.tm-swiping-down .tm-button-container,\nbody.tm-swiping-down .tm-handle-container,\nbody.tm-swiping-down .tm-comments-panel,\nbody.tm-swiping-down .tm-control-buttons,\nbody.tm-swiping-down .tm-settings-panel{\n    opacity:0 !important;\n    pointer-events:none !important;\n    transition:opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;\n}\n.tm-jump-active{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    z-index:5;\n    background-color:hsla(var(--shadcn-green) / 0.8);\n    border-radius:2px;\n    box-shadow:0 0 8px hsla(var(--shadcn-green) / 0.5);\n    pointer-events:none;\n    animation:tm-jump-flash-fade 3.0s cubic-bezier(0.25, 1, 0.5, 1) forwards;\n}\n\n@keyframes tm-jump-flash-fade{\n    0%, 20%, 40%, 60%, 80%{\n        opacity:1;\n        background-color:hsl(var(--shadcn-green));\n        box-shadow:0 0 16px 4px hsl(var(--shadcn-green));\n        transform:translateX(-50%) scaleX(1.6);\n    }\n    10%, 30%, 50%, 70%{\n        opacity:0.3;\n        background-color:hsla(var(--shadcn-green) / 0.4);\n        box-shadow:0 0 4px hsla(var(--shadcn-green) / 0.2);\n        transform:translateX(-50%) scaleX(1.0);\n    }\n    90%{\n        opacity:0.5;\n        background-color:hsla(var(--shadcn-green) / 0.5);\n        box-shadow:0 0 6px hsla(var(--shadcn-green) / 0.3);\n        transform:translateX(-50%) scaleX(0.8);\n    }\n    100%{\n        opacity:0;\n        background-color:transparent;\n        box-shadow:none;\n        transform:translateX(-50%) scaleX(0);\n    }\n}\n.tm-sidebar-pos-button,\n.tm-sidebar-toggle-button{\n    position:relative;\n    width:var(--button-md);\n    height:var(--button-md);\n    border-radius:calc(var(--button-md) / 2);\n    background-color:hsla(var(--shadcn-secondary) / 0.7);\n    color:hsl(var(--shadcn-secondary-foreground));\n    border:1px solid hsla(var(--shadcn-border) / 0.2);\n    display:none !important;\n    align-items:center;\n    justify-content:center;\n    cursor:pointer;\n    transition:transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;\n}\n\n.tm-sidebar-pos-button:hover,\n.tm-sidebar-toggle-button:hover{\n    background-color:hsla(var(--shadcn-accent) / 0.9);\n    transform:scale(1.08);\n}\n\n.tm-sidebar-pos-button:active,\n.tm-sidebar-toggle-button:active{\n    transform:scale(0.96);\n}\n.tm-sidebar-hidden .tm-sidebar-pos-button{\n    display:none !important;\n}\n@media screen and (min-width: 480px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:520px;\n    }\n}\n\n@media screen and (min-width: 768px) and (orientation: portrait){\n    .tm-control-buttons{\n        max-width:640px;\n    }\n    .tm-comments-panel{\n        max-width:720px;\n        margin:0 auto;\n        border-left:1px solid hsla(var(--shadcn-border) / 0.1);\n        border-right:1px solid hsla(var(--shadcn-border) / 0.1);\n        box-shadow:0 4px 20px rgba(0, 0, 0, 0.08);\n        background-color:hsla(var(--shadcn-card) / 0.02);\n    }\n}\nhtml.tm-player-active,\nbody.tm-player-active{\n    overscroll-behavior:none !important;\n}\n\nbody.tm-player-active header,\nbody.tm-player-active .header,\nbody.tm-player-active navbar,\nbody.tm-player-active .navbar,\nbody.tm-player-active #header-top,\nbody.tm-player-active .top-nav,\nbody.tm-player-active [class*="header--sticky"],\nbody.tm-player-active [class*="navbar-fixed"]{\n    display:none !important;\n}\n\n.tm-progress-markers-container{\n    position:absolute;\n    top:0;\n    left:0;\n    width:100%;\n    height:100%;\n    pointer-events:none;\n    z-index:5;\n}\n.tm-progress-marker-tick{\n    position:absolute;\n    width:6px;\n    height:3px;\n    bottom:-4px;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:10;\n    pointer-events:auto;\n    transition:transform 0.15s, background-color 0.15s, height 0.15s, bottom 0.15s;\n}\n.tm-progress-marker-tick:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n    transform:translateX(-50%) scale(1.1);\n}\n.tm-progress-marker-range{\n    position:absolute;\n    height:3px;\n    bottom:-4px;\n    background-color:hsla(var(--tab-color), 0.25);\n    border-radius:1.5px;\n    cursor:pointer;\n    z-index:9;\n    pointer-events:auto;\n    transition:background-color 0.15s, height 0.15s, bottom 0.15s;\n}\n.tm-progress-marker-range:hover{\n    height:4px;\n    bottom:-5px;\n    background-color:hsla(var(--tab-color), 0.45);\n}\n\n.tm-active-loop-played{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.45);\n    z-index:8;\n    pointer-events:none;\n    box-shadow:0 0 4px hsla(var(--tab-color), 0.15);\n}\n\n.tm-active-loop-unplayed{\n    position:absolute;\n    height:100%;\n    top:0;\n    background-color:hsla(var(--tab-color), 0.15);\n    z-index:7;\n    pointer-events:none;\n}\n\n.tm-active-loop-boundary{\n    position:absolute;\n    width:4px;\n    height:100%;\n    top:0;\n    transform:translateX(-50%);\n    background-color:hsla(var(--tab-color), 0.75);\n    z-index:9;\n    pointer-events:none;\n    box-shadow:0 0 3px rgba(0, 0, 0, 0.3);\n}\n.tm-active-loop-boundary.start{\n    border-radius:2px 0 0 2px;\n}\n.tm-active-loop-boundary.end{\n    border-radius:0 2px 2px 0;\n}\n`, "" ]);
       const b = y;
     },
     "479": (r, o, a) => {
@@ -980,13 +980,13 @@
       var P = a(113);
       var E = a.n(P);
       var D = a(703);
-      var L = {};
-      L.styleTagTransform = E();
-      L.setAttributes = _();
-      L.insert = b().bind(null, "head");
-      L.domAPI = v();
-      L.insertStyleElement = S();
-      var M = u()(D.A, L);
+      var M = {};
+      M.styleTagTransform = E();
+      M.setAttributes = _();
+      M.insert = b().bind(null, "head");
+      M.domAPI = v();
+      M.insertStyleElement = S();
+      var L = u()(D.A, M);
       const T = D.A && D.A.locals ? D.A.locals : void 0;
     }
   };
@@ -3240,7 +3240,7 @@
     })));
     return _fetchJableComments.apply(this, arguments);
   }
-  var L = null && function(r) {
+  var M = null && function(r) {
     function JableCommentProvider() {
       var r;
       JableCommentProvider_classCallCheck(this, JableCommentProvider);
@@ -3799,7 +3799,7 @@
     }
     return l;
   }
-  var M = (0, b.getSiteUrls)("JAVLIBRARY");
+  var L = (0, b.getSiteUrls)("JAVLIBRARY");
   function matchAvCode(r, o) {
     var a = function clean(r) {
       return (r || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -3878,10 +3878,10 @@
       P.log("找到 JAVLibrary ID (搜索列表): ".concat(p, " (工作域名: ").concat(a, ")"));
       return p;
     }
-    var L = r.match(/videocomments\.php\?v=([^"]+)/);
-    if (L) {
-      P.log("从页面文本中解析到 JAVLibrary ID: ".concat(L[1], " (工作域名: ").concat(a, ")"));
-      return L[1];
+    var M = r.match(/videocomments\.php\?v=([^"]+)/);
+    if (M) {
+      P.log("从页面文本中解析到 JAVLibrary ID: ".concat(M[1], " (工作域名: ").concat(a, ")"));
+      return M[1];
     }
     throw new Error("Movie not found on JAVLibrary");
   }
@@ -3905,7 +3905,7 @@
             o = r.toLowerCase().trim();
             p.prev = 3;
             p.next = 6;
-            return fetchWithDomainRotation(M, (function(r) {
+            return fetchWithDomainRotation(L, (function(r) {
               return "".concat(r, "/cn/vl_searchbyid.php?keyword=").concat(encodeURIComponent(o));
             }), {
               "headers": {
@@ -4002,8 +4002,8 @@
       var E = JavLibCommentProvider_createForOfIteratorHelper(P), D;
       try {
         for (E.s(); !(D = E.n()).done; ) {
-          var L = D.value;
-          if (S.test(L.getAttribute("href") || "")) {
+          var M = D.value;
+          if (S.test(M.getAttribute("href") || "")) {
             _ = true;
             break;
           }
@@ -4042,7 +4042,7 @@
            case 5:
             u = o === "reviews";
             p = u ? "videoreviews.php" : "videocomments.php";
-            v = l || M[0];
+            v = l || L[0];
             y = "".concat(v, "/cn/").concat(p, "?v=").concat(r, "&page=").concat(a);
             P.log("[CommentScraper] 采集 JAVLibrary ".concat(o, " (Page ").concat(a, "): ").concat(y));
             _.next = 12;
@@ -4079,7 +4079,7 @@
       var r;
       JavLibCommentProvider_classCallCheck(this, JavLibCommentProvider);
       r = JavLibCommentProvider_callSuper(this, JavLibCommentProvider, [ "javlib" ]);
-      r.domains = M;
+      r.domains = L;
       return r;
     }
     JavLibCommentProvider_inherits(JavLibCommentProvider, r);
@@ -5291,8 +5291,8 @@
     return r.replace(/:[a-zA-Z]{2,15}:/g, "");
   }
   var V = "[張张趙赵陳陈廖郭邱翁蕭萧馮冯鄧邓呂吕吳吴宋罗羅彭劉刘蔣蒋柯隋詹潘賴赖卓崔薛]";
-  var G = /(?:高中|中學|中学|大學(?!習|习)|大学(?!习|擺)|一中|國中|国中|高工|高商|商工|二信|清大|台大|世新|附中|大足一中|大足第一中学|神岡高工|大明高中|吉安國中|靜宜大學|珊瑚高中|南港高中|建國中學|文華高中|明道高中|二信中學|慧燈中學|道明中學|新竹高商|成功高中)/i;
-  var R = /(?:不要?(?:再|在)?\s*(?:自己)?\s*尻|不要?(?:再|在)?\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|別(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|别(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|唔好(?:再|在)?\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|咪撚\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|不要一直\s*(?:自己)?\s*尻|不要一直\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|别一直\s*(?:自己)?\s*尻|别在尻|别在打|别在尻|别再打了|別再打了|别打了|別打了|別擼了|别撸了|別J了|别J了|别打飞机|別打飛機|別打手槍|别打手枪|玩手槍|玩手枪|實名(?:開導|觀看|推薦|观看|开导|推荐)|实名(?:开导|观看|推荐)|又射了|縱慾過度|纵欲过度|著返條褲|別在射精|别在射精|别射精|別射精|別打手槍|别打手枪|會破皮|会破皮|别冲了|別衝了|别冲|別衝)/i;
+  var R = /(?:高中|中學|中学|大學(?!習|习)|大学(?!习|擺)|一中|國中|国中|高工|高商|商工|二信|清大|台大|世新|附中|大足一中|大足第一中学|神岡高工|大明高中|吉安國中|靜宜大學|珊瑚高中|南港高中|建國中學|文華高中|明道高中|二信中學|慧燈中學|道明中學|新竹高商|成功高中)/i;
+  var G = /(?:不要?(?:再|在)?\s*(?:自己)?\s*尻|不要?(?:再|在)?\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|別(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|别(?:再|在)?\s*(?:自己)?\s*(?:尻|打|撸|擼)|唔好(?:再|在)?\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|咪撚\s*(?:自己)?\s*(?:打飛機|J|尻|擼|撸)|不要一直\s*(?:自己)?\s*尻|不要一直\s*(?:自己)?\s*打(?:手槍|手枪|飛機|飞机)|别一直\s*(?:自己)?\s*尻|别在尻|别在打|别在尻|别再打了|別再打了|别打了|別打了|別擼了|别撸了|別J了|别J了|别打飞机|別打飛機|別打手槍|别打手枪|玩手槍|玩手枪|實名(?:開導|觀看|推薦|观看|开导|推荐)|实名(?:开导|观看|推荐)|又射了|縱慾過度|纵欲过度|著返條褲|別在射精|别在射精|别射精|別射精|別打手槍|别打手枪|會破皮|会破皮|别冲了|別衝了|别冲|別衝)/i;
   var H = /^(?:的(?:女神|女友|女朋友|男友|男朋友|时候|時候|回忆|回憶|时代|時代|样子|樣子|日子|故事|剧情|劇情|感觉|感覺|妹子|女孩|女生|男生|学妹|學妹|学姐|學姐|美女|老师|老師|同学|同學)|生|JK|jk|制服|校校服|学生|學生|女优|女優|演员|演員|少女|美少女|辣妹|熟女|人妻)/i;
   var N = new RegExp("(?:".concat(V, "[\\u4e00-\\u9fa5]{1,2})(?:[我你他她]|同學|同学|同事|老師|老师|醫生|医生|老闆|老板|只有|说明|是|有|沒|没|在|別|别|不|好|快|整天|到此|生日|畢業|毕业|求求|這|气|那|大|小|長|长|屁股|逆天|牛逼|牛b|神人|實名|实名|太神|太牛|就|被|也|跟|說|说|講|讲|超|愛|爱|想|本|人|雞|鸡|的|都|要|去|戴|拿|看|打|尻|撸|擼|射|叫|做|操|肏|草|干|幹|一定|真的|早就|一直|天天|已|给|給|和|与|與|同|学|學|唱|跳|写|寫|读|讀|听|聽|走|跑|吃|喝|玩|笑|哭|买|買|卖|賣|住|用|到|来|來)"), "i");
   var J = new RegExp("(?:不如|比|像|叫|是)\\s*(?:[\\u4e00-\\u9fa5]{1,4}\\s*)?(?:".concat(V, "[\\u4e00-\\u9fa5]{1,2})"), "i");
@@ -5309,7 +5309,7 @@
     "regex": /(?:SSNI-647：禁欲与背叛|阿丽娜|出差一个月|阿丽娜的吻)/i,
     "reason": "小作文/小说复读"
   } ];
-  var W = [ {
+  var q = [ {
     "regex": /你在看(?:吗|嗎)/i,
     "reason": '圈人喊话 ("你在看吗")'
   }, {
@@ -5415,7 +5415,7 @@
     "regex": /(?:Kingmore|K麼|Kmo)/i,
     "reason": "Kingmore梗"
   } ];
-  var U = [ {
+  var W = [ {
     "regex": /(?:联系我|微信号|联系方式|p友|找长期p友|找p友|同城约|约吗|約嗎|约啊|约呗|找个(?:哥哥|妹妹|姐姐|弟弟|爸爸|主)|找m|找s|有s女|想被玩弄|同城|滴滴我|滴滴滴|私我|name传来|求主|求m|鬼女|约嘛|約嘛|找女|找男|约ㄇ|約ㄇ)/i,
     "reason": "交友/约炮关键词"
   }, {
@@ -5467,7 +5467,7 @@
     "regex": /(?:xt=urn:btih:|urn:btih:|file\|[\s\S]+\|\d+\|[a-f0-9]{32})/i,
     "reason": "BT/ED2K哈希与特征码"
   } ];
-  var q = [ {
+  var U = [ {
     "regex": /(?:把她?當成|把她?当成)\s*([\\u4e00-\\u9fa5]{2,4})\s*(?:肏|操|日|做)/i,
     "reason": "意淫/带入同学代称"
   }, {
@@ -5486,8 +5486,8 @@
     "regex": new RegExp("(?:骚货|骚屄|骚逼|婊子|賤人|贱人|臭甲|垃圾)(?:".concat(V, "[\\u4e00-\\u9fa5]{1,2})"), "i"),
     "reason": "辱骂词后跟人名"
   } ];
-  var K = /想(?:这样|這麼|这么|那樣|那样)?(?:干|肏|操|日|弄|草|幹)\s*([a-zA-Z\\u4e00-\\u9fa5]{2,4})/i;
-  var Y = new RegExp("(".concat(V, "[\\u4e00-\\u9fa5]{1,2})好[骚騷]啊"), "i");
+  var Y = /想(?:这样|這麼|这么|那樣|那样)?(?:干|肏|操|日|弄|草|幹)\s*([a-zA-Z\\u4e00-\\u9fa5]{2,4})/i;
+  var K = new RegExp("(".concat(V, "[\\u4e00-\\u9fa5]{1,2})好[骚騷]啊"), "i");
   var X = [ {
     "regex": /(?:卡(?:的要死|死了|极了|爆了|的不行|得一比|的一比|了|得)|点解咁卡|怎么(?:那么|這麼|这么|這么)?卡)/i,
     "reason": "网站卡顿疑问"
@@ -5532,7 +5532,7 @@
     } finally {
       v.f();
     }
-    var C = G.exec(o);
+    var C = R.exec(o);
     if (C) {
       var _ = o.slice(C.index + C[0].length, C.index + C[0].length + 6);
       if (!H.test(_)) {
@@ -5543,7 +5543,7 @@
         };
       }
     }
-    if (R.test(o)) {
+    if (G.test(o)) {
       return {
         "label": "SPAM",
         "category": "FRIEND_TAG_MEME",
@@ -5575,7 +5575,7 @@
         "reason": "与同学名字进行对比"
       };
     }
-    var P = CommentDataPipeline_createForOfIteratorHelper(W), E;
+    var P = CommentDataPipeline_createForOfIteratorHelper(q), E;
     try {
       for (P.s(); !(E = P.n()).done; ) {
         var D = E.value;
@@ -5592,10 +5592,10 @@
     } finally {
       P.f();
     }
-    var L = CommentDataPipeline_createForOfIteratorHelper(U), M;
+    var M = CommentDataPipeline_createForOfIteratorHelper(W), L;
     try {
-      for (L.s(); !(M = L.n()).done; ) {
-        var T = M.value;
+      for (M.s(); !(L = M.n()).done; ) {
+        var T = L.value;
         if (T.regex.test(o)) {
           return {
             "label": "SPAM",
@@ -5605,11 +5605,11 @@
         }
       }
     } catch (r) {
-      L.e(r);
+      M.e(r);
     } finally {
-      L.f();
+      M.f();
     }
-    var A = CommentDataPipeline_createForOfIteratorHelper(q), j;
+    var A = CommentDataPipeline_createForOfIteratorHelper(U), j;
     try {
       for (A.s(); !(j = A.n()).done; ) {
         var B = j.value;
@@ -5627,23 +5627,23 @@
       A.f();
     }
     var O = [ "女优", "女優", "女主", "他", "她", "它", "老婆", "闺蜜", "閨蜜", "妹妹", "女人", "人", "别人", "別人", "角色", "演员", "演員", "身材", "皮肤", "皮膚", "美腿", "丝袜", "絲襪", "衣服", "屁股", "大屁股", "逼", "穴", "闺密", "閨密", "妹妹", "姐姐", "前女友", "前妻" ];
-    var V = K.exec(o);
+    var V = Y.exec(o);
     if (V) {
-      var Q = V[1].trim();
-      if (!O.includes(Q.toLowerCase())) {
+      var Z = V[1].trim();
+      if (!O.includes(Z.toLowerCase())) {
         return {
           "label": "SPAM",
           "category": "HARASSMENT_DOXXING",
-          "reason": "针对特定个人的侵害性想法: ".concat(Q)
+          "reason": "针对特定个人的侵害性想法: ".concat(Z)
         };
       }
     }
-    var Z = Y.exec(o);
-    if (Z) {
+    var Q = K.exec(o);
+    if (Q) {
       return {
         "label": "SPAM",
         "category": "HARASSMENT_DOXXING",
-        "reason": '针对同学人身的性调侃: "'.concat(Z[1], '好骚啊"')
+        "reason": '针对同学人身的性调侃: "'.concat(Q[1], '好骚啊"')
       };
     }
     var ee = CommentDataPipeline_createForOfIteratorHelper(X), te;
@@ -5825,17 +5825,17 @@
         continue;
       }
       var D = 0;
-      var L = Math.abs(P[0]);
+      var M = Math.abs(P[0]);
       if (P[2] !== null) {
-        D = L * 3600 + parseInt(P[1], 10) * 60 + P[2];
+        D = M * 3600 + parseInt(P[1], 10) * 60 + P[2];
       } else if (S) {
-        var M = parseInt(P[1], 10);
+        var L = parseInt(P[1], 10);
         if (P[1].length === 1) {
-          M *= 10;
+          L *= 10;
         }
-        D = L * 60 + M;
+        D = M * 60 + L;
       } else {
-        D = parseTwoPartTime(L, P[1], true, o);
+        D = parseTwoPartTime(M, P[1], true, o);
       }
       a.push({
         "raw": k,
@@ -5884,18 +5884,18 @@
     }
     var V = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分)(?!\d)/g;
     while ((u = V.exec(r)) !== null) {
-      var G = u[0];
+      var R = u[0];
       a.push({
-        "raw": G,
+        "raw": R,
         "index": u.index,
-        "end": u.index + G.length,
+        "end": u.index + R.length,
         "level": "L3",
         "seconds": parseInt(u[1], 10) * 60,
         "isNegative": false
       });
     }
-    var R = /(?<!\d)(\d{1,2})\s*(?:秒钟|秒鐘|秒)(?!\d)/g;
-    while ((u = R.exec(r)) !== null) {
+    var G = /(?<!\d)(\d{1,2})\s*(?:秒钟|秒鐘|秒)(?!\d)/g;
+    while ((u = G.exec(r)) !== null) {
       var H = u[0];
       a.push({
         "raw": H,
@@ -5923,15 +5923,15 @@
         "isSlashList": true
       });
     }
-    var W = /(?<!\d)\b(\d{1,3})\b(?!\d)/g;
-    while ((u = W.exec(r)) !== null) {
-      var U = u[0];
+    var q = /(?<!\d)\b(\d{1,3})\b(?!\d)/g;
+    while ((u = q.exec(r)) !== null) {
+      var W = u[0];
       a.push({
-        "raw": U,
+        "raw": W,
         "index": u.index,
-        "end": u.index + U.length,
+        "end": u.index + W.length,
         "level": "L5",
-        "seconds": parseInt(U, 10),
+        "seconds": parseInt(W, 10),
         "isIsolated": true
       });
     }
@@ -6066,21 +6066,21 @@
     }
     var D = Math.max(l, 28800);
     if (r.isSlashList) {
-      var L = [];
-      var M = CommentDataPipeline_createForOfIteratorHelper(r.seconds), T;
+      var M = [];
+      var L = CommentDataPipeline_createForOfIteratorHelper(r.seconds), T;
       try {
-        for (M.s(); !(T = M.n()).done; ) {
+        for (L.s(); !(T = L.n()).done; ) {
           var A = T.value;
           if (A <= D) {
-            L.push(A);
+            M.push(A);
           }
         }
       } catch (r) {
-        M.e(r);
+        L.e(r);
       } finally {
-        M.f();
+        L.f();
       }
-      if (L.length === 0) {
+      if (M.length === 0) {
         return {
           "isValid": false,
           "reason": "斜杠列表全部超出时长"
@@ -6088,7 +6088,7 @@
       }
       return {
         "isValid": true,
-        "seconds": L.length === 1 ? L[0] : L,
+        "seconds": M.length === 1 ? M[0] : M,
         "level": "L5",
         "confidence": "Medium"
       };
@@ -6099,13 +6099,13 @@
       var O = CommentDataPipeline_createForOfIteratorHelper(o), V;
       try {
         for (O.s(); !(V = O.n()).done; ) {
-          var G = V.value;
-          if (G === r || G.isIsolated) {
+          var R = V.value;
+          if (R === r || R.isIsolated) {
             continue;
           }
-          var R = r.index < G.index ? r : G;
-          var H = r.index < G.index ? G : r;
-          var N = a.slice(R.end, H.index);
+          var G = r.index < R.index ? r : R;
+          var H = r.index < R.index ? R : r;
+          var N = a.slice(G.end, H.index);
           if (/^[\s,，、/\\"\d]*$/.test(N) && N.length < 10) {
             B = true;
             break;
@@ -6118,60 +6118,60 @@
       }
       var J = Math.max(0, r.index - 5);
       var z = Math.min(a.length, r.end + 5);
-      var W = a.slice(J, r.index) + " | " + a.slice(r.end, z);
-      var U = I.TIMESTAMPS.MINUTE_KEYWORDS;
-      var q = I.TIMESTAMPS.SECOND_KEYWORDS;
-      var K = a.replace(/(?:[\t-\r -\/:-@\[-`\{-~\xA0-\xA9\xAB\xAC\xAE-\xB1\xB4\xB6-\xB8\xBB\xBF\xD7\xF7\u02C2-\u02C5\u02D2-\u02DF\u02E5-\u02EB\u02ED\u02EF-\u02FF\u0375\u037E\u0384\u0385\u0387\u03F6\u0482\u055A-\u055F\u0589\u058A\u058D-\u058F\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0606-\u060F\u061B\u061D-\u061F\u066A-\u066D\u06D4\u06DE\u06E9\u06FD\u06FE\u0700-\u070D\u07F6-\u07F9\u07FE\u07FF\u0830-\u083E\u085E\u0888\u0964\u0965\u0970\u09F2\u09F3\u09FA\u09FB\u09FD\u0A76\u0AF0\u0AF1\u0B70\u0BF3-\u0BFA\u0C77\u0C7F\u0C84\u0D4F\u0D79\u0DF4\u0E3F\u0E4F\u0E5A\u0E5B\u0F01-\u0F17\u0F1A-\u0F1F\u0F34\u0F36\u0F38\u0F3A-\u0F3D\u0F85\u0FBE-\u0FC5\u0FC7-\u0FCC\u0FCE-\u0FDA\u104A-\u104F\u109E\u109F\u10FB\u1360-\u1368\u1390-\u1399\u1400\u166D\u166E\u1680\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DB\u1800-\u180A\u1940\u1944\u1945\u19DE-\u19FF\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B4E\u1B4F\u1B5A-\u1B6A\u1B74-\u1B7F\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u1FBD\u1FBF-\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED-\u1FEF\u1FFD\u1FFE\u2000-\u200A\u2010-\u2029\u202F-\u205F\u207A-\u207E\u208A-\u208E\u20A0-\u20C0\u2100\u2101\u2103-\u2106\u2108\u2109\u2114\u2116-\u2118\u211E-\u2123\u2125\u2127\u2129\u212E\u213A\u213B\u2140-\u2144\u214A-\u214D\u214F\u218A\u218B\u2190-\u2429\u2440-\u244A\u249C-\u24E9\u2500-\u2775\u2794-\u2B73\u2B76-\u2B95\u2B97-\u2BFF\u2CE5-\u2CEA\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E5D\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u2FF0-\u3004\u3008-\u3020\u3030\u3036\u3037\u303D-\u303F\u309B\u309C\u30A0\u30FB\u3190\u3191\u3196-\u319F\u31C0-\u31E5\u31EF\u3200-\u321E\u322A-\u3247\u3250\u3260-\u327F\u328A-\u32B0\u32C0-\u33FF\u4DC0-\u4DFF\uA490-\uA4C6\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA700-\uA716\uA720\uA721\uA789\uA78A\uA828-\uA82B\uA836-\uA839\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAA77-\uAA79\uAADE\uAADF\uAAF0\uAAF1\uAB5B\uAB6A\uAB6B\uABEB\uFB29\uFBB2-\uFBC2\uFD3E-\uFD4F\uFDCF\uFDFC-\uFDFF\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE66\uFE68-\uFE6B\uFEFF\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFE6\uFFE8-\uFFEE\uFFFC\uFFFD]|\uD800[\uDD00-\uDD02\uDD37-\uDD3F\uDD79-\uDD89\uDD8C-\uDD8E\uDD90-\uDD9C\uDDA0\uDDD0-\uDDFC\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDC77\uDC78\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEC8\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD803[\uDD6E\uDD8E\uDD8F\uDEAD\uDF55-\uDF59\uDF86-\uDF89]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC8\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9\uDFD4\uDFD5\uDFD7\uDFD8]|\uD805[\uDC4B-\uDC4F\uDC5A\uDC5B\uDC5D\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDE60-\uDE6C\uDEB9\uDF3C-\uDF3F]|\uD806[\uDC3B\uDD44-\uDD46\uDDE2\uDE3F-\uDE46\uDE9A-\uDE9C\uDE9E-\uDEA2\uDF00-\uDF09\uDFE1]|\uD807[\uDC41-\uDC45\uDC70\uDC71\uDEF7\uDEF8\uDF43-\uDF4F\uDFD5-\uDFF1\uDFFF]|\uD809[\uDC70-\uDC74]|\uD80B[\uDFF1\uDFF2]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3F\uDF44\uDF45]|\uD81B[\uDD6D-\uDD6F\uDE97-\uDE9A\uDFE2]|\uD82F[\uDC9C\uDC9F]|\uD833[\uDC00-\uDCEF\uDD00-\uDEB3\uDF50-\uDFC3]|\uD834[\uDC00-\uDCF5\uDD00-\uDD26\uDD29-\uDD64\uDD6A-\uDD6C\uDD83\uDD84\uDD8C-\uDDA9\uDDAE-\uDDEA\uDE00-\uDE41\uDE45\uDF00-\uDF56]|\uD835[\uDEC1\uDEDB\uDEFB\uDF15\uDF35\uDF4F\uDF6F\uDF89\uDFA9\uDFC3]|\uD836[\uDC00-\uDDFF\uDE37-\uDE3A\uDE6D-\uDE74\uDE76-\uDE83\uDE85-\uDE8B]|\uD838[\uDD4F\uDEFF]|\uD839\uDDFF|\uD83A[\uDD5E\uDD5F]|\uD83B[\uDCAC\uDCB0\uDD2E\uDEF0\uDEF1]|\uD83C[\uDC00-\uDC2B\uDC30-\uDC93\uDCA0-\uDCAE\uDCB1-\uDCBF\uDCC1-\uDCCF\uDCD1-\uDCF5\uDD0D-\uDDAD\uDDE6-\uDE02\uDE10-\uDE3B\uDE40-\uDE48\uDE50\uDE51\uDE60-\uDE65\uDF00-\uDFFF]|\uD83D[\uDC00-\uDED7\uDEDC-\uDEEC\uDEF0-\uDEFC\uDF00-\uDF76\uDF7B-\uDFD9\uDFE0-\uDFEB\uDFF0]|\uD83E[\uDC00-\uDC0B\uDC10-\uDC47\uDC50-\uDC59\uDC60-\uDC87\uDC90-\uDCAD\uDCB0-\uDCBB\uDCC0\uDCC1\uDD00-\uDE53\uDE60-\uDE6D\uDE70-\uDE7C\uDE80-\uDE89\uDE8F-\uDEC6\uDECE-\uDEDC\uDEDF-\uDEE9\uDEF0-\uDEF8\uDF00-\uDF92\uDF94-\uDFEF])+/g, "");
-      var Y = K === r.raw;
-      if (Y) {
+      var q = a.slice(J, r.index) + " | " + a.slice(r.end, z);
+      var W = I.TIMESTAMPS.MINUTE_KEYWORDS;
+      var U = I.TIMESTAMPS.SECOND_KEYWORDS;
+      var Y = a.replace(/(?:[\t-\r -\/:-@\[-`\{-~\xA0-\xA9\xAB\xAC\xAE-\xB1\xB4\xB6-\xB8\xBB\xBF\xD7\xF7\u02C2-\u02C5\u02D2-\u02DF\u02E5-\u02EB\u02ED\u02EF-\u02FF\u0375\u037E\u0384\u0385\u0387\u03F6\u0482\u055A-\u055F\u0589\u058A\u058D-\u058F\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0606-\u060F\u061B\u061D-\u061F\u066A-\u066D\u06D4\u06DE\u06E9\u06FD\u06FE\u0700-\u070D\u07F6-\u07F9\u07FE\u07FF\u0830-\u083E\u085E\u0888\u0964\u0965\u0970\u09F2\u09F3\u09FA\u09FB\u09FD\u0A76\u0AF0\u0AF1\u0B70\u0BF3-\u0BFA\u0C77\u0C7F\u0C84\u0D4F\u0D79\u0DF4\u0E3F\u0E4F\u0E5A\u0E5B\u0F01-\u0F17\u0F1A-\u0F1F\u0F34\u0F36\u0F38\u0F3A-\u0F3D\u0F85\u0FBE-\u0FC5\u0FC7-\u0FCC\u0FCE-\u0FDA\u104A-\u104F\u109E\u109F\u10FB\u1360-\u1368\u1390-\u1399\u1400\u166D\u166E\u1680\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DB\u1800-\u180A\u1940\u1944\u1945\u19DE-\u19FF\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B4E\u1B4F\u1B5A-\u1B6A\u1B74-\u1B7F\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u1FBD\u1FBF-\u1FC1\u1FCD-\u1FCF\u1FDD-\u1FDF\u1FED-\u1FEF\u1FFD\u1FFE\u2000-\u200A\u2010-\u2029\u202F-\u205F\u207A-\u207E\u208A-\u208E\u20A0-\u20C0\u2100\u2101\u2103-\u2106\u2108\u2109\u2114\u2116-\u2118\u211E-\u2123\u2125\u2127\u2129\u212E\u213A\u213B\u2140-\u2144\u214A-\u214D\u214F\u218A\u218B\u2190-\u2429\u2440-\u244A\u249C-\u24E9\u2500-\u2775\u2794-\u2B73\u2B76-\u2B95\u2B97-\u2BFF\u2CE5-\u2CEA\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E5D\u2E80-\u2E99\u2E9B-\u2EF3\u2F00-\u2FD5\u2FF0-\u3004\u3008-\u3020\u3030\u3036\u3037\u303D-\u303F\u309B\u309C\u30A0\u30FB\u3190\u3191\u3196-\u319F\u31C0-\u31E5\u31EF\u3200-\u321E\u322A-\u3247\u3250\u3260-\u327F\u328A-\u32B0\u32C0-\u33FF\u4DC0-\u4DFF\uA490-\uA4C6\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA700-\uA716\uA720\uA721\uA789\uA78A\uA828-\uA82B\uA836-\uA839\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAA77-\uAA79\uAADE\uAADF\uAAF0\uAAF1\uAB5B\uAB6A\uAB6B\uABEB\uFB29\uFBB2-\uFBC2\uFD3E-\uFD4F\uFDCF\uFDFC-\uFDFF\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE66\uFE68-\uFE6B\uFEFF\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFFE0-\uFFE6\uFFE8-\uFFEE\uFFFC\uFFFD]|\uD800[\uDD00-\uDD02\uDD37-\uDD3F\uDD79-\uDD89\uDD8C-\uDD8E\uDD90-\uDD9C\uDDA0\uDDD0-\uDDFC\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDC77\uDC78\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEC8\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD803[\uDD6E\uDD8E\uDD8F\uDEAD\uDF55-\uDF59\uDF86-\uDF89]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC8\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9\uDFD4\uDFD5\uDFD7\uDFD8]|\uD805[\uDC4B-\uDC4F\uDC5A\uDC5B\uDC5D\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDE60-\uDE6C\uDEB9\uDF3C-\uDF3F]|\uD806[\uDC3B\uDD44-\uDD46\uDDE2\uDE3F-\uDE46\uDE9A-\uDE9C\uDE9E-\uDEA2\uDF00-\uDF09\uDFE1]|\uD807[\uDC41-\uDC45\uDC70\uDC71\uDEF7\uDEF8\uDF43-\uDF4F\uDFD5-\uDFF1\uDFFF]|\uD809[\uDC70-\uDC74]|\uD80B[\uDFF1\uDFF2]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3F\uDF44\uDF45]|\uD81B[\uDD6D-\uDD6F\uDE97-\uDE9A\uDFE2]|\uD82F[\uDC9C\uDC9F]|\uD833[\uDC00-\uDCEF\uDD00-\uDEB3\uDF50-\uDFC3]|\uD834[\uDC00-\uDCF5\uDD00-\uDD26\uDD29-\uDD64\uDD6A-\uDD6C\uDD83\uDD84\uDD8C-\uDDA9\uDDAE-\uDDEA\uDE00-\uDE41\uDE45\uDF00-\uDF56]|\uD835[\uDEC1\uDEDB\uDEFB\uDF15\uDF35\uDF4F\uDF6F\uDF89\uDFA9\uDFC3]|\uD836[\uDC00-\uDDFF\uDE37-\uDE3A\uDE6D-\uDE74\uDE76-\uDE83\uDE85-\uDE8B]|\uD838[\uDD4F\uDEFF]|\uD839\uDDFF|\uD83A[\uDD5E\uDD5F]|\uD83B[\uDCAC\uDCB0\uDD2E\uDEF0\uDEF1]|\uD83C[\uDC00-\uDC2B\uDC30-\uDC93\uDCA0-\uDCAE\uDCB1-\uDCBF\uDCC1-\uDCCF\uDCD1-\uDCF5\uDD0D-\uDDAD\uDDE6-\uDE02\uDE10-\uDE3B\uDE40-\uDE48\uDE50\uDE51\uDE60-\uDE65\uDF00-\uDFFF]|\uD83D[\uDC00-\uDED7\uDEDC-\uDEEC\uDEF0-\uDEFC\uDF00-\uDF76\uDF7B-\uDFD9\uDFE0-\uDFEB\uDFF0]|\uD83E[\uDC00-\uDC0B\uDC10-\uDC47\uDC50-\uDC59\uDC60-\uDC87\uDC90-\uDCAD\uDCB0-\uDCBB\uDCC0\uDCC1\uDD00-\uDE53\uDE60-\uDE6D\uDE70-\uDE7C\uDE80-\uDE89\uDE8F-\uDEC6\uDECE-\uDEDC\uDEDF-\uDEE9\uDEF0-\uDEF8\uDF00-\uDF92\uDF94-\uDFEF])+/g, "");
+      var K = Y === r.raw;
+      if (K) {
         if (I.FILTER.SINGLE_DIGIT_REGEX.test(r.raw) || I.FILTER.REPEATING_DIGIT_REGEX.test(r.raw)) {
-          Y = false;
+          K = false;
         }
       }
-      var X = q.some((function(r) {
-        return W.includes(r);
-      })) || U.some((function(r) {
-        return W.includes(r);
-      })) || B || Y || u;
+      var X = U.some((function(r) {
+        return q.includes(r);
+      })) || W.some((function(r) {
+        return q.includes(r);
+      })) || B || K || u;
       if (!X) {
         return {
           "isValid": false,
           "reason": "孤立数字缺少时间上下文"
         };
       }
-      var $ = q.some((function(r) {
-        return W.includes(r);
+      var $ = U.some((function(r) {
+        return q.includes(r);
       }));
-      var Q = $ ? j : j * 60;
-      if (Q > D) {
+      var Z = $ ? j : j * 60;
+      if (Z > D) {
         return {
           "isValid": false,
-          "reason": "数值超出限制 (".concat(Q, "秒 > ").concat(D, "秒)")
+          "reason": "数值超出限制 (".concat(Z, "秒 > ").concat(D, "秒)")
         };
       }
       return {
         "isValid": true,
-        "seconds": Q,
+        "seconds": Z,
         "level": "L5",
         "confidence": "Medium"
       };
     }
-    var Z = r.seconds;
+    var Q = r.seconds;
     var ee = false;
     var te = null;
     if (r.isNegative) {
       ee = true;
-      var ne = Math.abs(Z);
+      var ne = Math.abs(Q);
       if (ne > D) {
         return {
           "isValid": false,
           "reason": "倒计时超出总时长"
         };
       }
-      Z = l - ne;
+      Q = l - ne;
       te = ne;
     }
-    if (Z > D) {
+    if (Q > D) {
       return {
         "isValid": false,
         "reason": "时间点超出视频时长"
@@ -6179,7 +6179,7 @@
     }
     return {
       "isValid": true,
-      "seconds": Z,
+      "seconds": Q,
       "level": r.level,
       "confidence": "High",
       "isCountdown": ee,
@@ -6238,21 +6238,21 @@
         "Medium": 2,
         "Low": 1
       };
-      var L = 0;
-      var M = CommentDataPipeline_createForOfIteratorHelper(b), T;
+      var M = 0;
+      var L = CommentDataPipeline_createForOfIteratorHelper(b), T;
       try {
-        for (M.s(); !(T = M.n()).done; ) {
+        for (L.s(); !(T = L.n()).done; ) {
           var A = T.value;
           var j = D[A.confidence] || 0;
-          if (j > L) {
-            L = j;
+          if (j > M) {
+            M = j;
             E = A.confidence;
           }
         }
       } catch (r) {
-        M.e(r);
+        L.e(r);
       } finally {
-        M.f();
+        L.f();
       }
     }
     return {
@@ -6262,8 +6262,8 @@
       "confidence": E
     };
   }
-  var Q = /(?<!\w|\/|www\.|=|col-|\d-|>|Jukujo-)(?!heyzo|SHINKI|JPNXXX|carib|vps)[a-zA-Z]{2,6}-\d{2,5}(?:-c|_c|-4k)?(?!\d|[A-Za-z]{2,}|-\d|\.com|\.\d)|(?<!\w|\/|\\|\.|【|-|#|@|=|www\.)(?!heyzo|SHINKI|JPNXXX|carib|and|vps|dvd)[a-zA-Z]{2,6}\s{0,2}\d{3,4}(?:-c|_c)?(?!\w|-|\.|\/|×|％|%|@|\s?天| 于| 发表| 發表|歳| 歲|小时|分|系列| Min| day|ml| time|cm| ppi|\.com)|(?<!\w)(?:PARATHD|3DSVR|STARSBD)[-\s]?\d{3,4}(?!\w)|(?<!\w)(?:HIMEMIX|CASMANI|MGSSLND)[-\s]?\d{3}(?!\w)|(?<!\w)(?:k|n)[01]\d{3}(?!\w|-)|(?<!\w|\d-|\/)[01]\d{5}[-_](?:1)?\d{2,3}(?!\w|-\d)|(?<!\w)(?:carib|1pondo)[-_]\d{6}[-_]\d{2,3}(?!\w)|(?<!\w|\d-)\d{6}[-_]\d{2,3}(?:-1pon|-carib|-paco)(?!\w)|(?<!\w|\d-)\d{6}_(1)?\d{3}_0[12](?!\w|-\d)|HEYZO[_-\s]?(?:hd_)?\d{4}/gi;
-  var Z = /(?<!\w|-|\/)\d{3}[a-zA-Z]{2,5}[-\s]?\d{3,4}(?!\w|-|.torrent|年)|(?<!\w|\/)FC2[^\d]{0,5}\d{6,7}|HEYDOUGA[_-\s]?\d{4}-\d{3,5}|(?<!\w)T28-\d{3}|(?<!\w)T-2\d{4,5}(?!\w|-)|(?<!\w|-|\/)[01]\d{5}-[a-zA-Z]{2,7}(?!\w|-)|(?<!\w)MK(?:B)?D-S\d{2,3}(?!\w|-)|(?:SHINKI|KITAIKE)[-\s]?\d{3}(?!\w|-)|JPNXXX[-\s]?\d{5}(?!\w|-)|xxx-av[-\s]\d{4,5}(?!\w|-)|(?<!\w)crazyasia\d{5}(?!\w|-)|(?<!\w)PEWORLD\d{5}(?!\w|-)|(?<!\w)[01]\d{5}[-_]?_01(?=-10mu)?|Jukujo-Club-\d{3}/gi;
+  var Z = /(?<!\w|\/|www\.|=|col-|\d-|>|Jukujo-)(?!heyzo|SHINKI|JPNXXX|carib|vps)[a-zA-Z]{2,6}-\d{2,5}(?:-c|_c|-4k)?(?!\d|[A-Za-z]{2,}|-\d|\.com|\.\d)|(?<!\w|\/|\\|\.|【|-|#|@|=|www\.)(?!heyzo|SHINKI|JPNXXX|carib|and|vps|dvd)[a-zA-Z]{2,6}\s{0,2}\d{3,4}(?:-c|_c)?(?!\w|-|\.|\/|×|％|%|@|\s?天| 于| 发表| 發表|歳| 歲|小时|分|系列| Min| day|ml| time|cm| ppi|\.com)|(?<!\w)(?:PARATHD|3DSVR|STARSBD)[-\s]?\d{3,4}(?!\w)|(?<!\w)(?:HIMEMIX|CASMANI|MGSSLND)[-\s]?\d{3}(?!\w)|(?<!\w)(?:k|n)[01]\d{3}(?!\w|-)|(?<!\w|\d-|\/)[01]\d{5}[-_](?:1)?\d{2,3}(?!\w|-\d)|(?<!\w)(?:carib|1pondo)[-_]\d{6}[-_]\d{2,3}(?!\w)|(?<!\w|\d-)\d{6}[-_]\d{2,3}(?:-1pon|-carib|-paco)(?!\w)|(?<!\w|\d-)\d{6}_(1)?\d{3}_0[12](?!\w|-\d)|HEYZO[_-\s]?(?:hd_)?\d{4}/gi;
+  var Q = /(?<!\w|-|\/)\d{3}[a-zA-Z]{2,5}[-\s]?\d{3,4}(?!\w|-|.torrent|年)|(?<!\w|\/)FC2[^\d]{0,5}\d{6,7}|HEYDOUGA[_-\s]?\d{4}-\d{3,5}|(?<!\w)T28-\d{3}|(?<!\w)T-2\d{4,5}(?!\w|-)|(?<!\w|-|\/)[01]\d{5}-[a-zA-Z]{2,7}(?!\w|-)|(?<!\w)MK(?:B)?D-S\d{2,3}(?!\w|-)|(?:SHINKI|KITAIKE)[-\s]?\d{3}(?!\w|-)|JPNXXX[-\s]?\d{5}(?!\w|-)|xxx-av[-\s]\d{4,5}(?!\w|-)|(?<!\w)crazyasia\d{5}(?!\w|-)|(?<!\w)PEWORLD\d{5}(?!\w|-)|(?<!\w)[01]\d{5}[-_]?_01(?=-10mu)?|Jukujo-Club-\d{3}/gi;
   var ee = /(?<=(?<!\w|\d-)([a-zA-Z]{2,6})(?:[\s,，、-]?(?!2022|2021|2020|2019)\d{3,4})+(?!\d)[\s,、，和跟]{0,2})\d{3,4}(?!\w|％|%|人|年|歳|万|の|发)/gim;
   var te = /(?<=(FC2[^\d]{0,5})(?:[\s,、-]?\d{6,7})+[\s,、]?)\d{6,7}/gim;
   var ne = /^(?:fx-?([^0]\d{2}|\d{4})|[a-zA-Z]+-?0{2,6}$|pg-13|crc-32|ea211|fs[\s-]?140|trc-20|erc-20|rs[\s-]?(232|422|485)|(sg|ae|kr|tw|ph|vn|kh|ru|uk|ua|tr|th|fr|in|de|sr)[\s-]\d{2}|(gm|ga)-\d{4}|cd[\s-]?\d{2,4}|seed[\s-]?\d{3}$|pc005|moc-\d{5}|wd-40|rtd[\s-]?\d{4}|cm\d{4}|rk\d{4})|ns[\s-]?\d{3,4}/i;
@@ -6339,15 +6339,15 @@
     var a = new Set;
     var l = normalizeText(r);
     var u;
-    Q.lastIndex = 0;
-    while ((u = Q.exec(l)) !== null) {
+    Z.lastIndex = 0;
+    while ((u = Z.exec(l)) !== null) {
       var p = u[0].trim();
       if (!IDcheck(p)) {
         a.add(formatAVID(p));
       }
     }
-    Z.lastIndex = 0;
-    while ((u = Z.exec(l)) !== null) {
+    Q.lastIndex = 0;
+    while ((u = Q.exec(l)) !== null) {
       var v = u[0].trim();
       if (!IDcheckWuma(v)) {
         var y = formatWuma(v);
@@ -7086,7 +7086,7 @@
         return GM_info.script.version;
       }
     } catch (r) {}
-    return "5.6.12";
+    return "5.6.16";
   }
   function getSiteCategory() {
     if ((0, b.isSiteDomain)("MISSAV")) {
@@ -7373,46 +7373,46 @@
       "key": "flush",
       "value": function() {
         var r = EventCollector_asyncToGenerator(EventCollector_regeneratorRuntime().mark((function _callee2() {
-          var r, o, a, l, u, p, v, y, b, C, _, k, S, P, E, D, L, M, T, A, j, B, I, O, V = arguments;
-          return EventCollector_regeneratorRuntime().wrap((function _callee2$(G) {
+          var r, o, a, l, u, p, v, y, b, C, _, k, S, P, E, D, M, L, T, A, j, B, I, O, V = arguments;
+          return EventCollector_regeneratorRuntime().wrap((function _callee2$(R) {
             while (1) {
-              switch (G.prev = G.next) {
+              switch (R.prev = R.next) {
                case 0:
                 r = V.length > 0 && V[0] !== void 0 ? V[0] : false;
                 o = V.length > 1 && V[1] !== void 0 ? V[1] : false;
                 if (this.isEnabled()) {
-                  G.next = 4;
+                  R.next = 4;
                   break;
                 }
-                return G.abrupt("return");
+                return R.abrupt("return");
 
                case 4:
                 a = this.sessionBuffer.eventCounts;
                 l = Object.keys(a);
                 if (!(l.length === 0 && this.sessionBuffer.totalPlaySec === 0)) {
-                  G.next = 8;
+                  R.next = 8;
                   break;
                 }
-                return G.abrupt("return");
+                return R.abrupt("return");
 
                case 8:
                 u = Date.now();
                 if (o) {
-                  G.next = 14;
+                  R.next = 14;
                   break;
                 }
                 if (!(!r && u - this.lastFlushTs < pe)) {
-                  G.next = 12;
+                  R.next = 12;
                   break;
                 }
-                return G.abrupt("return");
+                return R.abrupt("return");
 
                case 12:
                 if (!(r && u - this.lastFlushTs < he && this.sessionBuffer.totalPlaySec < 30)) {
-                  G.next = 14;
+                  R.next = 14;
                   break;
                 }
-                return G.abrupt("return");
+                return R.abrupt("return");
 
                case 14:
                 p = EventCollector_objectSpread({}, a);
@@ -7426,16 +7426,16 @@
                 P = EventCollector_toConsumableArray(this.sessionBuffer.timestampClicks);
                 E = Date.now();
                 D = new Date(E);
-                L = D.toISOString().slice(0, 10);
-                M = D.getHours();
-                T = "mp_".concat(this.clientId, "_").concat(L, "_").concat(M);
+                M = D.toISOString().slice(0, 10);
+                L = D.getHours();
+                T = "mp_".concat(this.clientId, "_").concat(M, "_").concat(L);
                 A = {
                   "app_id": "missplayer",
                   "user_id": this.clientId,
                   "session_id": T,
-                  "date": L,
+                  "date": M,
                   "ts": E,
-                  "hour_of_day": M,
+                  "hour_of_day": L,
                   "site_key": typeof window !== "undefined" ? window.location.hostname || "" : "",
                   "site_category": getSiteCategory(),
                   "version": getScriptVersion(),
@@ -7490,41 +7490,41 @@
                   };
                 }();
                 this.clearCache();
-                G.prev = 33;
-                G.next = 36;
+                R.prev = 33;
+                R.next = 36;
                 return I(se);
 
                case 36:
-                O = G.sent;
+                O = R.sent;
                 if (!(O.status !== 200)) {
-                  G.next = 40;
+                  R.next = 40;
                   break;
                 }
-                G.next = 40;
+                R.next = 40;
                 return I(le);
 
                case 40:
-                G.next = 51;
+                R.next = 51;
                 break;
 
                case 42:
-                G.prev = 42;
-                G.t0 = G["catch"](33);
-                G.prev = 44;
-                G.next = 47;
+                R.prev = 42;
+                R.t0 = R["catch"](33);
+                R.prev = 44;
+                R.next = 47;
                 return I(le);
 
                case 47:
-                G.next = 51;
+                R.next = 51;
                 break;
 
                case 49:
-                G.prev = 49;
-                G.t1 = G["catch"](44);
+                R.prev = 49;
+                R.t1 = R["catch"](44);
 
                case 51:
                case "end":
-                return G.stop();
+                return R.stop();
               }
             }
           }), _callee2, this, [ [ 33, 42 ], [ 44, 49 ] ]);
@@ -7955,6 +7955,1444 @@
     })));
     return _copyToClipboard.apply(this, arguments);
   }
+  let ve = null;
+  let ge = null;
+  let ye = {};
+  function getContext(r) {
+    if (r) {
+      ye = r;
+    }
+    if (!ve || ve.state === "closed") {
+      ve = new AudioContext({
+        "latencyHint": ye.latencyHint,
+        "sampleRate": ye.sampleRate
+      });
+      ge = null;
+    }
+    if (ve.state === "suspended") {
+      ve.resume();
+    }
+    return ve;
+  }
+  async function ensureReady(r) {
+    const o = getContext(r);
+    if (o.state === "suspended") {
+      await o.resume();
+    }
+    return o;
+  }
+  function dispose() {
+    if (ve) {
+      ve.close();
+      ve = null;
+      ge = null;
+    }
+  }
+  function getMasterBus() {
+    const r = getContext();
+    if (!ge || ge.context !== r) {
+      ge = r.createGain();
+      ge.connect(r.destination);
+    }
+    return ge;
+  }
+  function getDestination() {
+    const r = getContext();
+    if (ge && ge.context === r) {
+      return ge;
+    }
+    return r.destination;
+  }
+  function setMasterVolume(r) {
+    getMasterBus().gain.value = r;
+  }
+  function setListener(r) {
+    const o = getContext();
+    const a = o.listener;
+    a.positionX.value = r.positionX;
+    a.positionY.value = r.positionY;
+    a.positionZ.value = r.positionZ;
+    a.forwardX.value = r.forwardX ?? 0;
+    a.forwardY.value = r.forwardY ?? 0;
+    a.forwardZ.value = r.forwardZ ?? -1;
+    a.upX.value = r.upX ?? 0;
+    a.upY.value = r.upY ?? 1;
+    a.upZ.value = r.upZ ?? 0;
+  }
+  function getListener() {
+    const r = getContext();
+    const o = r.listener;
+    return {
+      "positionX": o.positionX.value,
+      "positionY": o.positionY.value,
+      "positionZ": o.positionZ.value,
+      "forwardX": o.forwardX.value,
+      "forwardY": o.forwardY.value,
+      "forwardZ": o.forwardZ.value,
+      "upX": o.upX.value,
+      "upY": o.upY.value,
+      "upZ": o.upZ.value
+    };
+  }
+  function createAnalyser(r) {
+    const o = getContext();
+    const a = o.createAnalyser();
+    a.fftSize = r?.fftSize ?? 2048;
+    a.smoothingTimeConstant = r?.smoothingTimeConstant ?? .8;
+    if (r?.minDecibels !== void 0) {
+      a.minDecibels = r.minDecibels;
+    }
+    if (r?.maxDecibels !== void 0) {
+      a.maxDecibels = r.maxDecibels;
+    }
+    const l = new Uint8Array(a.frequencyBinCount);
+    const u = new Uint8Array(a.fftSize);
+    const p = new Float32Array(a.frequencyBinCount);
+    const v = new Float32Array(a.fftSize);
+    return {
+      "node": a,
+      "frequencyBinCount": a.frequencyBinCount,
+      "getFrequencyData"() {
+        a.getByteFrequencyData(l);
+        return l;
+      },
+      "getTimeDomainData"() {
+        a.getByteTimeDomainData(u);
+        return u;
+      },
+      "getFloatFrequencyData"() {
+        a.getFloatFrequencyData(p);
+        return p;
+      },
+      "getFloatTimeDomainData"() {
+        a.getFloatTimeDomainData(v);
+        return v;
+      },
+      "dispose"() {
+        try {
+          a.disconnect();
+        } catch (r) {}
+      }
+    };
+  }
+  function createMasterAnalyser(r) {
+    const o = getMasterBus();
+    const a = createAnalyser(r);
+    o.connect(a.node);
+    const l = a.dispose;
+    a.dispose = () => {
+      try {
+        o.disconnect(a.node);
+      } catch (r) {}
+      l();
+    };
+    return a;
+  }
+  function withMix(r, o, a) {
+    const l = r.createGain();
+    const u = r.createGain();
+    const p = r.createGain();
+    p.gain.value = 1 - o;
+    l.connect(p);
+    p.connect(u);
+    const v = r.createGain();
+    v.gain.value = o;
+    l.connect(v);
+    const y = r.createGain();
+    y.connect(u);
+    const b = a(v, y);
+    return {
+      "input": l,
+      "output": u,
+      "dispose": b?.dispose
+    };
+  }
+  function createReverb(r, o) {
+    const a = o.decay ?? .5;
+    const l = o.mix ?? .3;
+    const u = o.preDelay ?? 0;
+    const p = o.damping ?? 0;
+    const v = o.roomSize ?? 1;
+    return withMix(r, l, ((o, l) => {
+      const y = r.sampleRate;
+      const b = a * v;
+      const C = Math.ceil(y * b);
+      const _ = r.createBuffer(2, C, y);
+      for (let r = 0; r < 2; r++) {
+        const o = _.getChannelData(r);
+        for (let r = 0; r < C; r++) {
+          o[r] = (Math.random() * 2 - 1) * Math.exp(-r / (C * .28));
+        }
+      }
+      if (p > 0) {
+        for (let r = 0; r < 2; r++) {
+          const o = _.getChannelData(r);
+          const a = Math.min(p, .99);
+          let l = 0;
+          for (let r = 0; r < C; r++) {
+            l = o[r] * (1 - a) + l * a;
+            o[r] = l;
+          }
+        }
+      }
+      const k = r.createConvolver();
+      k.buffer = _;
+      if (u > 0) {
+        const a = r.createDelay(Math.max(u + .01, 1));
+        a.delayTime.value = u;
+        o.connect(a);
+        a.connect(k);
+      } else {
+        o.connect(k);
+      }
+      k.connect(l);
+    }));
+  }
+  const be = new Map;
+  function createConvolver(r, o) {
+    const a = o.mix ?? .5;
+    return withMix(r, a, ((a, l) => {
+      const u = r.createConvolver();
+      if (o.buffer) {
+        u.buffer = o.buffer;
+      } else if (o.url) {
+        const a = be.get(o.url);
+        if (a) {
+          u.buffer = a;
+        } else {
+          const a = o.url;
+          fetch(a).then((r => r.arrayBuffer())).then((o => r.decodeAudioData(o))).then((r => {
+            be.set(a, r);
+            u.buffer = r;
+          }));
+        }
+      }
+      a.connect(u);
+      u.connect(l);
+    }));
+  }
+  function createDelay(r, o) {
+    const a = o.time ?? .25;
+    const l = o.feedback ?? .3;
+    const u = o.mix ?? .3;
+    return withMix(r, u, ((u, p) => {
+      const v = r.createDelay(Math.max(a + .01, 1));
+      v.delayTime.value = a;
+      const y = r.createGain();
+      y.gain.value = l;
+      u.connect(v);
+      v.connect(y);
+      if (o.feedbackFilter) {
+        const a = r.createBiquadFilter();
+        a.type = o.feedbackFilter.type;
+        a.frequency.value = o.feedbackFilter.frequency;
+        a.Q.value = o.feedbackFilter.Q ?? 1;
+        y.connect(a);
+        a.connect(v);
+      } else {
+        y.connect(v);
+      }
+      v.connect(p);
+    }));
+  }
+  function createDistortion(r, o) {
+    const a = o.amount ?? 50;
+    const l = o.mix ?? .5;
+    return withMix(r, l, ((o, l) => {
+      const u = r.createWaveShaper();
+      const p = 44100;
+      const v = new Float32Array(p);
+      const y = a;
+      for (let r = 0; r < p; r++) {
+        const o = r * 2 / p - 1;
+        v[r] = Math.tanh(y * o);
+      }
+      u.curve = v;
+      u.oversample = "4x";
+      o.connect(u);
+      u.connect(l);
+    }));
+  }
+  function createChorus(r, o) {
+    const a = o.rate ?? 1.5;
+    const l = o.depth ?? .003;
+    const u = o.mix ?? .3;
+    return withMix(r, u, ((o, u) => {
+      const p = r.createDelay();
+      p.delayTime.value = .012;
+      const v = r.createDelay();
+      v.delayTime.value = .016;
+      const y = r.createOscillator();
+      y.type = "sine";
+      y.frequency.value = a;
+      const b = r.createOscillator();
+      b.type = "sine";
+      b.frequency.value = a * 1.1;
+      const C = r.createGain();
+      C.gain.value = l;
+      const _ = r.createGain();
+      _.gain.value = l;
+      y.connect(C);
+      C.connect(p.delayTime);
+      y.start();
+      b.connect(_);
+      _.connect(v.delayTime);
+      b.start();
+      o.connect(p);
+      o.connect(v);
+      p.connect(u);
+      v.connect(u);
+      return {
+        "dispose"() {
+          try {
+            y.stop();
+          } catch (r) {}
+          try {
+            b.stop();
+          } catch (r) {}
+        }
+      };
+    }));
+  }
+  function createFlanger(r, o) {
+    const a = o.rate ?? .5;
+    const l = o.depth ?? .002;
+    const u = o.feedback ?? .5;
+    const p = o.mix ?? .5;
+    return withMix(r, p, ((o, p) => {
+      const v = r.createDelay();
+      v.delayTime.value = .005;
+      const y = r.createOscillator();
+      y.type = "sine";
+      y.frequency.value = a;
+      const b = r.createGain();
+      b.gain.value = l;
+      y.connect(b);
+      b.connect(v.delayTime);
+      y.start();
+      const C = r.createGain();
+      C.gain.value = u;
+      v.connect(C);
+      C.connect(v);
+      o.connect(v);
+      v.connect(p);
+      return {
+        "dispose"() {
+          try {
+            y.stop();
+          } catch (r) {}
+        }
+      };
+    }));
+  }
+  function createPhaser(r, o) {
+    const a = o.rate ?? .5;
+    const l = o.depth ?? 1e3;
+    const u = o.stages ?? 4;
+    const p = o.feedback ?? .5;
+    const v = o.mix ?? .5;
+    return withMix(r, v, ((o, v) => {
+      const y = [];
+      const b = [ 200, 600, 1200, 2400, 4800, 8e3 ];
+      for (let o = 0; o < u; o++) {
+        const a = r.createBiquadFilter();
+        a.type = "allpass";
+        a.frequency.value = b[o % b.length];
+        a.Q.value = .5;
+        y.push(a);
+      }
+      for (let r = 0; r < y.length - 1; r++) {
+        y[r].connect(y[r + 1]);
+      }
+      const C = r.createOscillator();
+      C.type = "sine";
+      C.frequency.value = a;
+      const _ = r.createGain();
+      _.gain.value = l;
+      C.connect(_);
+      for (const r of y) {
+        _.connect(r.frequency);
+      }
+      C.start();
+      const k = r.createGain();
+      k.gain.value = p;
+      y[y.length - 1].connect(k);
+      k.connect(y[0]);
+      o.connect(y[0]);
+      y[y.length - 1].connect(v);
+      return {
+        "dispose"() {
+          try {
+            C.stop();
+          } catch (r) {}
+        }
+      };
+    }));
+  }
+  function createTremolo(r, o) {
+    const a = o.rate ?? 4;
+    const l = o.depth ?? .5;
+    const u = r.createGain();
+    const p = r.createGain();
+    const v = r.createGain();
+    v.gain.value = 1 - l / 2;
+    u.connect(v);
+    v.connect(p);
+    const y = r.createOscillator();
+    y.type = "sine";
+    y.frequency.value = a;
+    const b = r.createGain();
+    b.gain.value = l / 2;
+    y.connect(b);
+    b.connect(v.gain);
+    y.start();
+    return {
+      "input": u,
+      "output": p,
+      "dispose"() {
+        try {
+          y.stop();
+        } catch (r) {}
+      }
+    };
+  }
+  function createVibrato(r, o) {
+    const a = o.rate ?? 5;
+    const l = o.depth ?? .002;
+    const u = r.createGain();
+    const p = r.createGain();
+    const v = r.createDelay();
+    v.delayTime.value = l;
+    const y = r.createOscillator();
+    y.type = "sine";
+    y.frequency.value = a;
+    const b = r.createGain();
+    b.gain.value = l;
+    y.connect(b);
+    b.connect(v.delayTime);
+    y.start();
+    u.connect(v);
+    v.connect(p);
+    return {
+      "input": u,
+      "output": p,
+      "dispose"() {
+        try {
+          y.stop();
+        } catch (r) {}
+      }
+    };
+  }
+  function createBitcrusher(r, o) {
+    const a = o.bits ?? 8;
+    const l = o.mix ?? 1;
+    const u = o.sampleRateReduction ?? 1;
+    return withMix(r, l, ((o, l) => {
+      const p = r.createWaveShaper();
+      const v = 2 ** a;
+      const y = 65536;
+      const b = new Float32Array(y);
+      for (let r = 0; r < y; r++) {
+        const o = r * 2 / y - 1;
+        if (u > 1) {
+          const o = Math.floor(r / u) * u;
+          const a = o * 2 / y - 1;
+          b[r] = Math.round(a * v) / v;
+        } else {
+          b[r] = Math.round(o * v) / v;
+        }
+      }
+      p.curve = b;
+      o.connect(p);
+      p.connect(l);
+    }));
+  }
+  function createCompressor(r, o) {
+    const a = r.createDynamicsCompressor();
+    a.threshold.value = o.threshold ?? -24;
+    a.knee.value = o.knee ?? 30;
+    a.ratio.value = o.ratio ?? 4;
+    a.attack.value = o.attack ?? .003;
+    a.release.value = o.release ?? .25;
+    return {
+      "input": a,
+      "output": a
+    };
+  }
+  function createEQ(r, o) {
+    const a = r.createGain();
+    const l = r.createGain();
+    if (o.bands.length === 0) {
+      a.connect(l);
+      return {
+        "input": a,
+        "output": l
+      };
+    }
+    const u = o.bands.map((o => {
+      const a = r.createBiquadFilter();
+      a.type = o.type;
+      a.frequency.value = o.frequency;
+      a.gain.value = o.gain;
+      a.Q.value = o.Q ?? 1;
+      return a;
+    }));
+    a.connect(u[0]);
+    for (let r = 0; r < u.length - 1; r++) {
+      u[r].connect(u[r + 1]);
+    }
+    u[u.length - 1].connect(l);
+    return {
+      "input": a,
+      "output": l
+    };
+  }
+  function createGainEffect(r, o) {
+    const a = r.createGain();
+    a.gain.value = o.value;
+    return {
+      "input": a,
+      "output": a
+    };
+  }
+  function createPanEffect(r, o) {
+    const a = r.createStereoPanner();
+    a.pan.value = o.value;
+    return {
+      "input": a,
+      "output": a
+    };
+  }
+  function createEffect(r, o) {
+    switch (o.type) {
+     case "reverb":
+      return createReverb(r, o);
+
+     case "convolver":
+      return createConvolver(r, o);
+
+     case "delay":
+      return createDelay(r, o);
+
+     case "distortion":
+      return createDistortion(r, o);
+
+     case "chorus":
+      return createChorus(r, o);
+
+     case "flanger":
+      return createFlanger(r, o);
+
+     case "phaser":
+      return createPhaser(r, o);
+
+     case "tremolo":
+      return createTremolo(r, o);
+
+     case "vibrato":
+      return createVibrato(r, o);
+
+     case "bitcrusher":
+      return createBitcrusher(r, o);
+
+     case "compressor":
+      return createCompressor(r, o);
+
+     case "eq":
+      return createEQ(r, o);
+
+     case "gain":
+      return createGainEffect(r, o);
+
+     case "pan":
+      return createPanEffect(r, o);
+    }
+  }
+  const we = 1e-4;
+  function isMultiLayer(r) {
+    return "layers" in r;
+  }
+  function normalize(r) {
+    if (isMultiLayer(r)) {
+      return r;
+    }
+    return {
+      "layers": [ r ],
+      "effects": []
+    };
+  }
+  function generateWhiteNoise(r) {
+    for (let o = 0; o < r.length; o++) {
+      r[o] = Math.random() * 2 - 1;
+    }
+  }
+  function generatePinkNoise(r) {
+    let o = 0;
+    let a = 0;
+    let l = 0;
+    let u = 0;
+    let p = 0;
+    let v = 0;
+    let y = 0;
+    for (let b = 0; b < r.length; b++) {
+      const C = Math.random() * 2 - 1;
+      o = .99886 * o + C * .0555179;
+      a = .99332 * a + C * .0750759;
+      l = .969 * l + C * .153852;
+      u = .8665 * u + C * .3104856;
+      p = .55 * p + C * .5329522;
+      v = -.7616 * v - C * .016898;
+      r[b] = (o + a + l + u + p + v + y + C * .5362) * .11;
+      y = C * .115926;
+    }
+  }
+  function generateBrownNoise(r) {
+    let o = 0;
+    for (let a = 0; a < r.length; a++) {
+      const l = Math.random() * 2 - 1;
+      o = (o + .02 * l) / 1.02;
+      r[a] = o * 3.5;
+    }
+  }
+  function createNoiseBuffer(r, o, a) {
+    const l = r.sampleRate * a;
+    const u = r.createBuffer(1, l, r.sampleRate);
+    const p = u.getChannelData(0);
+    switch (o) {
+     case "pink":
+      generatePinkNoise(p);
+      break;
+
+     case "brown":
+      generateBrownNoise(p);
+      break;
+
+     default:
+      generateWhiteNoise(p);
+      break;
+    }
+    return u;
+  }
+  const Ce = new Map;
+  async function loadSample(r, o) {
+    const a = Ce.get(o);
+    if (a) {
+      return a;
+    }
+    const l = await fetch(o);
+    const u = await l.arrayBuffer();
+    const p = await r.decodeAudioData(u);
+    Ce.set(o, p);
+    return p;
+  }
+  function buildOscillatorSource(r, o, a, l) {
+    const u = r.createOscillator();
+    u.type = o.type;
+    if (typeof o.frequency === "number") {
+      u.frequency.setValueAtTime(o.frequency, a);
+    } else {
+      u.frequency.setValueAtTime(o.frequency.start, a);
+      u.frequency.exponentialRampToValueAtTime(Math.max(o.frequency.end, 1), a + l);
+    }
+    if (o.detune) {
+      u.detune.value = o.detune;
+    }
+    u.start(a);
+    u.stop(a + l + .1);
+    let p;
+    if (o.fm) {
+      const v = typeof o.frequency === "number" ? o.frequency : o.frequency.start;
+      p = r.createOscillator();
+      p.type = "sine";
+      p.frequency.value = v * o.fm.ratio;
+      const y = r.createGain();
+      y.gain.value = o.fm.depth;
+      p.connect(y);
+      y.connect(u.frequency);
+      p.start(a);
+      p.stop(a + l + .1);
+    }
+    return {
+      "node": u,
+      "scheduled": u,
+      "frequencyParam": u.frequency,
+      "detuneParam": u.detune
+    };
+  }
+  function buildNoiseSource(r, o, a, l) {
+    const u = o.color ?? "white";
+    const p = createNoiseBuffer(r, u, l + .1);
+    const v = r.createBufferSource();
+    v.buffer = p;
+    v.start(a);
+    v.stop(a + l + .1);
+    return {
+      "node": v,
+      "scheduled": v
+    };
+  }
+  function buildWavetableSource(r, o, a, l) {
+    const u = new Float32Array(o.harmonics.length + 1);
+    const p = new Float32Array(o.harmonics.length + 1);
+    u[0] = 0;
+    p[0] = 0;
+    for (let r = 0; r < o.harmonics.length; r++) {
+      u[r + 1] = 0;
+      p[r + 1] = o.harmonics[r];
+    }
+    const v = r.createPeriodicWave(u, p, {
+      "disableNormalization": false
+    });
+    const y = r.createOscillator();
+    y.setPeriodicWave(v);
+    if (typeof o.frequency === "number") {
+      y.frequency.setValueAtTime(o.frequency, a);
+    } else {
+      y.frequency.setValueAtTime(o.frequency.start, a);
+      y.frequency.exponentialRampToValueAtTime(Math.max(o.frequency.end, 1), a + l);
+    }
+    y.start(a);
+    y.stop(a + l + .1);
+    return {
+      "node": y,
+      "scheduled": y,
+      "frequencyParam": y.frequency,
+      "detuneParam": y.detune
+    };
+  }
+  function buildSampleSource(r, o, a) {
+    const l = r.createBufferSource();
+    if (o.playbackRate !== void 0) {
+      l.playbackRate.value = o.playbackRate;
+    }
+    if (o.detune !== void 0) {
+      l.detune.value = o.detune;
+    }
+    if (o.loop) {
+      l.loop = true;
+      if (o.loopStart !== void 0) {
+        l.loopStart = o.loopStart;
+      }
+      if (o.loopEnd !== void 0) {
+        l.loopEnd = o.loopEnd;
+      }
+    }
+    if (o.buffer) {
+      l.buffer = o.buffer;
+      l.start(a);
+    } else if (o.url) {
+      loadSample(r, o.url).then((o => {
+        l.buffer = o;
+        l.start(Math.max(a, r.currentTime));
+      }));
+    }
+    return {
+      "node": l,
+      "scheduled": l,
+      "detuneParam": l.detune,
+      "playbackRateParam": l.playbackRate
+    };
+  }
+  function buildStreamSource(r, o) {
+    const a = r.createMediaStreamSource(o.stream);
+    return {
+      "node": a
+    };
+  }
+  function buildConstantSource(r, o, a, l) {
+    const u = r.createConstantSource();
+    u.offset.value = o.offset ?? 1;
+    u.start(a);
+    u.stop(a + l + .1);
+    return {
+      "node": u,
+      "scheduled": u
+    };
+  }
+  function buildSource(r, o, a, l) {
+    switch (o.type) {
+     case "sine":
+     case "triangle":
+     case "square":
+     case "sawtooth":
+      return buildOscillatorSource(r, o, a, l);
+
+     case "noise":
+      return buildNoiseSource(r, o, a, l);
+
+     case "wavetable":
+      return buildWavetableSource(r, o, a, l);
+
+     case "sample":
+      return buildSampleSource(r, o, a);
+
+     case "stream":
+      return buildStreamSource(r, o);
+
+     case "constant":
+      return buildConstantSource(r, o, a, l);
+    }
+  }
+  function buildBiquadFilter(r, o, a) {
+    const l = r.createBiquadFilter();
+    l.type = o.type;
+    l.frequency.setValueAtTime(o.frequency, a);
+    l.Q.value = o.resonance ?? 1;
+    if (o.gain !== void 0) {
+      l.gain.value = o.gain;
+    }
+    if (o.envelope) {
+      const r = o.envelope;
+      const u = a + (r.attack ?? 0);
+      l.frequency.setValueAtTime(o.frequency, a);
+      l.frequency.linearRampToValueAtTime(r.peak, u);
+      l.frequency.exponentialRampToValueAtTime(Math.max(o.frequency, 1), u + r.decay);
+    }
+    return {
+      "node": l,
+      "frequencyParam": l.frequency
+    };
+  }
+  function buildIIRFilter(r, o) {
+    const a = r.createIIRFilter(o.feedforward, o.feedback);
+    return {
+      "node": a
+    };
+  }
+  function buildSingleFilter(r, o, a) {
+    if (o.type === "iir") {
+      const {"node": a} = buildIIRFilter(r, o);
+      return {
+        "node": a
+      };
+    }
+    const {"node": l, "frequencyParam": u} = buildBiquadFilter(r, o, a);
+    return {
+      "node": l,
+      "frequencyParam": u,
+      "detuneParam": l.detune,
+      "QParam": l.Q,
+      "gainParam": l.gain
+    };
+  }
+  function buildFilters(r, o, a) {
+    const l = Array.isArray(o) ? o : [ o ];
+    return l.map((o => buildSingleFilter(r, o, a)));
+  }
+  function buildEnvelope(r, o, a, l) {
+    const u = r.createGain();
+    if (!o) {
+      u.gain.setValueAtTime(a, l);
+      u.gain.setTargetAtTime(we, l, .15);
+      return {
+        "node": u,
+        "duration": .5
+      };
+    }
+    const p = o.attack ?? 0;
+    const v = o.decay;
+    const y = o.sustain ?? 0;
+    const b = o.release ?? 0;
+    const C = Math.max(y * a, we);
+    const _ = v / 3;
+    u.gain.setValueAtTime(we, l);
+    if (p > 0) {
+      u.gain.linearRampToValueAtTime(a, l + p);
+    } else {
+      u.gain.setValueAtTime(a, l);
+    }
+    if (y > 0) {
+      u.gain.setTargetAtTime(C, l + p, _);
+      if (b > 0) {
+        const r = b / 3;
+        u.gain.setTargetAtTime(we, l + p + v, r);
+      }
+    } else {
+      u.gain.setTargetAtTime(we, l + p, _);
+    }
+    return {
+      "node": u,
+      "duration": p + v + b
+    };
+  }
+  function buildLFO(r, o, a, l, u) {
+    const p = r.createOscillator();
+    p.type = o.type;
+    p.frequency.value = o.frequency;
+    const v = r.createGain();
+    v.gain.value = o.depth;
+    p.connect(v);
+    let y = null;
+    switch (o.target) {
+     case "frequency":
+      y = u.source.frequencyParam ?? null;
+      break;
+
+     case "detune":
+      y = u.source.detuneParam ?? null;
+      break;
+
+     case "gain":
+      y = u.envNode.gain;
+      break;
+
+     case "pan":
+      y = u.panner?.pan ?? null;
+      break;
+
+     case "playbackRate":
+      y = u.source.playbackRateParam ?? null;
+      break;
+
+     case "filter.frequency":
+      y = u.filters[0]?.frequencyParam ?? null;
+      break;
+
+     case "filter.detune":
+      y = u.filters[0]?.detuneParam ?? null;
+      break;
+
+     case "filter.Q":
+      y = u.filters[0]?.QParam ?? null;
+      break;
+
+     case "filter.gain":
+      y = u.filters[0]?.gainParam ?? null;
+      break;
+    }
+    if (y) {
+      v.connect(y);
+      p.start(a);
+      p.stop(a + l + .1);
+      return p;
+    }
+    return null;
+  }
+  function buildPanner3D(r, o) {
+    const a = r.createPanner();
+    a.panningModel = o.panningModel ?? "HRTF";
+    a.distanceModel = o.distanceModel ?? "inverse";
+    a.positionX.value = o.positionX;
+    a.positionY.value = o.positionY;
+    a.positionZ.value = o.positionZ;
+    if (o.orientationX !== void 0) {
+      a.orientationX.value = o.orientationX;
+    }
+    if (o.orientationY !== void 0) {
+      a.orientationY.value = o.orientationY;
+    }
+    if (o.orientationZ !== void 0) {
+      a.orientationZ.value = o.orientationZ;
+    }
+    if (o.maxDistance !== void 0) {
+      a.maxDistance = o.maxDistance;
+    }
+    if (o.refDistance !== void 0) {
+      a.refDistance = o.refDistance;
+    }
+    if (o.rolloffFactor !== void 0) {
+      a.rolloffFactor = o.rolloffFactor;
+    }
+    if (o.coneInnerAngle !== void 0) {
+      a.coneInnerAngle = o.coneInnerAngle;
+    }
+    if (o.coneOuterAngle !== void 0) {
+      a.coneOuterAngle = o.coneOuterAngle;
+    }
+    if (o.coneOuterGain !== void 0) {
+      a.coneOuterGain = o.coneOuterGain;
+    }
+    return a;
+  }
+  function buildEffectsChain(r, o, a) {
+    if (o.length === 0) {
+      return {
+        "input": a,
+        "output": a,
+        "dispose"() {}
+      };
+    }
+    const l = o.map((o => createEffect(r, o)));
+    for (let r = 0; r < l.length - 1; r++) {
+      l[r].output.connect(l[r + 1].input);
+    }
+    l[l.length - 1].output.connect(a);
+    return {
+      "input": l[0].input,
+      "output": l[l.length - 1].output,
+      "dispose"() {
+        for (const r of l) {
+          r.dispose?.();
+        }
+      }
+    };
+  }
+  function render(r, o, a, l, u) {
+    const {"layers": p, "effects": v} = normalize(o);
+    const y = u ?? r.destination;
+    const b = buildEffectsChain(r, v ?? [], y);
+    const C = l ?? r.currentTime;
+    const _ = a?.velocity ?? 1;
+    const k = a?.jitter;
+    const S = k?.detune ? (Math.random() * 2 - 1) * k.detune : 0;
+    const P = k?.volume ? 1 + (Math.random() * 2 - 1) * k.volume : 1;
+    const E = k?.playbackRate ? 1 + (Math.random() * 2 - 1) * k.playbackRate : 1;
+    const D = [ b.dispose ];
+    const M = [];
+    const L = [];
+    for (const o of p) {
+      const l = C + (o.delay ?? 0);
+      const u = (o.gain ?? .5) * (a?.volume ?? 1) * _ * P;
+      const {"node": p, "duration": v} = buildEnvelope(r, o.envelope, u, l);
+      L.push(p);
+      const y = buildSource(r, o.source, l, v);
+      if (y.detuneParam && (a?.detune || S !== 0)) {
+        y.detuneParam.value += (a?.detune ?? 0) + S;
+      }
+      if (y.playbackRateParam && (a?.playbackRate || E !== 1)) {
+        y.playbackRateParam.value *= (a?.playbackRate ?? 1) * E;
+      }
+      let k = y.node;
+      const T = [];
+      if (o.filter) {
+        const a = buildFilters(r, o.filter, l);
+        for (const r of a) {
+          k.connect(r.node);
+          k = r.node;
+          T.push(r);
+          if (_ < 1 && r.frequencyParam) {
+            const o = r.frequencyParam.value;
+            r.frequencyParam.setValueAtTime(o * (.5 + .5 * _), l);
+          }
+        }
+      }
+      k.connect(p);
+      let A = p;
+      const j = [];
+      if (o.effects && o.effects.length > 0) {
+        const a = o.effects.map((o => createEffect(r, o)));
+        for (let r = 0; r < a.length - 1; r++) {
+          a[r].output.connect(a[r + 1].input);
+        }
+        A.connect(a[0].input);
+        A = a[a.length - 1].output;
+        for (const r of a) {
+          if (r.dispose) {
+            j.push(r.dispose);
+          }
+        }
+      }
+      let B;
+      const I = a?.pan ?? o.pan;
+      if (o.panner) {
+        const a = buildPanner3D(r, o.panner);
+        A.connect(a);
+        A = a;
+      } else if (I !== void 0 && I !== 0) {
+        B = r.createStereoPanner();
+        B.pan.value = I;
+        A.connect(B);
+        A = B;
+      }
+      A.connect(b.input);
+      if (o.lfo) {
+        const a = Array.isArray(o.lfo) ? o.lfo : [ o.lfo ];
+        for (const o of a) {
+          buildLFO(r, o, l, v, {
+            "source": y,
+            "filters": T,
+            "envNode": p,
+            "panner": B
+          });
+        }
+      }
+      if (y.scheduled) {
+        M.push(y.scheduled);
+        const r = [ y.node, p, ...T.map((r => r.node)), ...B ? [ B ] : [] ];
+        y.scheduled.onended = () => {
+          for (const o of r) {
+            try {
+              o.disconnect();
+            } catch (r) {}
+          }
+          for (const r of j) {
+            r();
+          }
+        };
+      }
+      D.push(...j);
+    }
+    return {
+      "stop"(o) {
+        const a = r.currentTime;
+        const l = o ?? .015;
+        for (const r of L) {
+          r.gain.cancelScheduledValues(a);
+          r.gain.setValueAtTime(r.gain.value, a);
+          r.gain.setTargetAtTime(we, a, l / 3);
+        }
+        for (const r of M) {
+          try {
+            r.stop(a + l + .05);
+          } catch (r) {}
+        }
+      }
+    };
+  }
+  async function renderToBuffer(r, o, a) {
+    const l = o.sampleRate ?? 44100;
+    const u = o.numberOfChannels ?? 2;
+    const p = Math.ceil(o.duration * l);
+    const v = new OfflineAudioContext(u, p, l);
+    render(v, r, a, 0, v.destination);
+    return v.startRendering();
+  }
+  function bufferToWav(r) {
+    const o = r.numberOfChannels;
+    const a = r.sampleRate;
+    const l = r.length;
+    const u = 2;
+    const p = o * u;
+    const v = l * p;
+    const y = 44;
+    const b = new ArrayBuffer(y + v);
+    const C = new DataView(b);
+    writeString(C, 0, "RIFF");
+    C.setUint32(4, 36 + v, true);
+    writeString(C, 8, "WAVE");
+    writeString(C, 12, "fmt ");
+    C.setUint32(16, 16, true);
+    C.setUint16(20, 1, true);
+    C.setUint16(22, o, true);
+    C.setUint32(24, a, true);
+    C.setUint32(28, a * p, true);
+    C.setUint16(32, p, true);
+    C.setUint16(34, u * 8, true);
+    writeString(C, 36, "data");
+    C.setUint32(40, v, true);
+    const _ = [];
+    for (let a = 0; a < o; a++) {
+      _.push(r.getChannelData(a));
+    }
+    let k = y;
+    for (let r = 0; r < l; r++) {
+      for (let a = 0; a < o; a++) {
+        const o = Math.max(-1, Math.min(1, _[a][r]));
+        const l = o < 0 ? o * 32768 : o * 32767;
+        C.setInt16(k, l, true);
+        k += u;
+      }
+    }
+    return new Blob([ b ], {
+      "type": "audio/wav"
+    });
+  }
+  function writeString(r, o, a) {
+    for (let l = 0; l < a.length; l++) {
+      r.setUint8(o + l, a.charCodeAt(l));
+    }
+  }
+  async function renderToWav(r, o, a) {
+    const l = await renderToBuffer(r, o, a);
+    return bufferToWav(l);
+  }
+  function createPatchInstance(r) {
+    const o = Object.keys(r.sounds);
+    return {
+      "ready": true,
+      "name": r.name,
+      "author": r.author,
+      "version": r.version,
+      "description": r.description,
+      "tags": r.tags,
+      "sounds": o,
+      "play"(o, a) {
+        const l = r.sounds[o];
+        if (!l) {
+          throw new Error(`Sound "${o}" not found in patch "${r.name}"`);
+        }
+        const u = getContext();
+        return render(u, l, a, void 0, getDestination());
+      },
+      "get"(o) {
+        return r.sounds[o];
+      },
+      "toJSON"() {
+        return structuredClone(r);
+      }
+    };
+  }
+  function definePatch(r) {
+    return createPatchInstance(r);
+  }
+  async function loadPatch(r) {
+    if (typeof r === "string") {
+      const o = await fetch(r);
+      if (!o.ok) {
+        throw new Error(`Failed to load patch from ${r}: ${o.status}`);
+      }
+      const a = await o.json();
+      return createPatchInstance(a);
+    }
+    return createPatchInstance(r);
+  }
+  function isDefinition(r) {
+    return typeof r !== "function";
+  }
+  function resolveStepTimes(r) {
+    const o = [];
+    let a = 0;
+    for (let l = 0; l < r.length; l++) {
+      const u = r[l];
+      if (u.at !== void 0) {
+        a = u.at;
+      } else if (u.wait !== void 0) {
+        a += u.wait;
+      } else if (l === 0) {
+        a = 0;
+      }
+      o.push(a);
+    }
+    return o;
+  }
+  const xe = 25;
+  const _e = .1;
+  function scheduleOnce(r, o, a, l, u, p) {
+    const v = [];
+    for (let y = 0; y < o.length; y++) {
+      if (p.has(y)) {
+        continue;
+      }
+      const b = u + a[y];
+      if (b > r.currentTime + _e) {
+        continue;
+      }
+      p.add(y);
+      const C = o[y];
+      const _ = C.volume ?? l?.volume;
+      if (isDefinition(C.sound)) {
+        const o = render(r, C.sound, _ !== void 0 ? {
+          "volume": _
+        } : l, b, getDestination());
+        v.push(o);
+      } else {
+        const o = C.sound;
+        const a = (b - r.currentTime) * 1e3;
+        if (a <= 0) {
+          const r = o(_ !== void 0 ? {
+            "volume": _
+          } : l);
+          if (r) {
+            v.push(r);
+          }
+        } else {
+          setTimeout((() => o(_ !== void 0 ? {
+            "volume": _
+          } : l)), a);
+        }
+      }
+    }
+    return v;
+  }
+  function playSequence(r, o, a, l) {
+    const u = resolveStepTimes(o);
+    if (!a?.loop) {
+      const a = new Set;
+      const p = [];
+      const tick = () => {
+        const y = scheduleOnce(r, o, u, l, r.currentTime, a);
+        p.push(...y);
+        if (a.size < o.length) {
+          v = setTimeout(tick, xe);
+        }
+      };
+      let v = null;
+      tick();
+      return () => {
+        if (v !== null) {
+          clearTimeout(v);
+        }
+        for (const r of p) {
+          r.stop();
+        }
+      };
+    }
+    const p = a.duration ?? 1;
+    let v = false;
+    let y = null;
+    let b = r.currentTime;
+    let C = new Set;
+    const _ = [];
+    const tick = () => {
+      if (v) {
+        return;
+      }
+      const a = scheduleOnce(r, o, u, l, b, C);
+      _.push(...a);
+      if (C.size >= o.length) {
+        if (r.currentTime >= b + p - _e) {
+          b += p;
+          C = new Set;
+        }
+      }
+    };
+    y = setInterval(tick, xe);
+    tick();
+    return () => {
+      v = true;
+      if (y !== null) {
+        clearInterval(y);
+      }
+      for (const r of _) {
+        r.stop();
+      }
+    };
+  }
+  function defineSound(r) {
+    return o => {
+      const a = getContext();
+      return render(a, r, o, void 0, getDestination());
+    };
+  }
+  function defineSequence(r, o) {
+    return a => {
+      const l = getContext();
+      return playSequence(l, r, o, a);
+    };
+  }
+  function osc(r, o, a, l = .4) {
+    return defineSound({
+      "source": {
+        "type": r,
+        "frequency": o
+      },
+      "envelope": {
+        "decay": a
+      },
+      "gain": l
+    });
+  }
+  function sine(r, o, a) {
+    return osc("sine", r, o, a);
+  }
+  function triangle(r, o, a) {
+    return osc("triangle", r, o, a);
+  }
+  function square(r, o, a) {
+    return osc("square", r, o, a);
+  }
+  function sawtooth(r, o, a) {
+    return osc("sawtooth", r, o, a);
+  }
+  function noise(r = "white", o = .05, a = .4) {
+    return defineSound({
+      "source": {
+        "type": "noise",
+        "color": r
+      },
+      "envelope": {
+        "decay": o
+      },
+      "gain": a
+    });
+  }
+  var ke = {
+    "source": {
+      "type": "sine",
+      "frequency": 1200
+    },
+    "envelope": {
+      "attack": 0,
+      "decay": .012,
+      "sustain": 0,
+      "release": .004
+    },
+    "gain": .08
+  };
+  var Se = {
+    "source": {
+      "type": "sine",
+      "frequency": 800
+    },
+    "envelope": {
+      "attack": 0,
+      "decay": .015,
+      "sustain": 0,
+      "release": .005
+    },
+    "gain": .1
+  };
+  var Pe = {
+    "source": {
+      "type": "sine",
+      "frequency": 1100
+    },
+    "envelope": {
+      "attack": 0,
+      "decay": .01,
+      "sustain": 0,
+      "release": .003
+    },
+    "gain": .06
+  };
+  var Ee = {
+    "source": {
+      "type": "sine",
+      "frequency": 1050
+    },
+    "envelope": {
+      "attack": 0,
+      "decay": .015,
+      "sustain": 0,
+      "release": .005
+    },
+    "gain": .07
+  };
+  var De = {
+    "name": "Minimal",
+    "author": "Raphael Salaja",
+    "version": "1.0.0",
+    "description": "An ultra-clean sine-based palette for quiet, transparent UI feedback, made for products that prioritize subtlety, restraint, and smooth interaction cues over expressive flourish.",
+    "sounds": {
+      "tap": ke,
+      "click": Se,
+      "key-press": Pe,
+      "tab-switch": Ee
+    }
+  };
+  if (typeof window !== "undefined" && !window.AudioContext && window.webkitAudioContext) {
+    window.AudioContext = window.webkitAudioContext;
+  }
+  var Me = null;
+  var Le = 0;
+  function getTapSound() {
+    if (!Me) {
+      Me = defineSound(ke);
+    }
+    return Me;
+  }
+  function playTapSound() {
+    var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
+    try {
+      if (typeof window === "undefined" || !window.AudioContext && !window.webkitAudioContext) {
+        return;
+      }
+      var o = typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
+      if (o - Le < 25) {
+        return;
+      }
+      Le = o;
+      if (!r) {
+        var a = getValue("buttonSoundEnabled", true);
+        if (!a) {
+          return;
+        }
+      }
+      var l = getTapSound();
+      l();
+    } catch (r) {}
+  }
+  var Te = null && playTapSound;
   function PlayerCore_typeof(r) {
     "@babel/helpers - typeof";
     return PlayerCore_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -7999,7 +9437,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ve = function() {
+  var Ae = function() {
     function PlayerCore() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       PlayerCore_classCallCheck(this, PlayerCore);
@@ -8240,32 +9678,33 @@
       }
     } ]);
   }();
-  var ge = '\n    <svg width="48" height="48" viewBox="0 0 68 48" fill="none">\n        <path class="tm-play-button-bg" d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="rgb(254, 98, 142)"></path>\n        <path d="M 45,24 27,14 27,34" fill="#fff"></path>\n    </svg>\n';
-  var ye = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="tm-play-icon" xmlns="http://www.w3.org/2000/svg">\n        <path d="M18 12L7 5V19L18 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var be = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M10 4H6V20H10V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18 4H14V20H18V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var we = '\n    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M14,6v20c0,1.1-0.9,2-2,2H8c-1.1,0-2-0.9-2-2V6c0-1.1,0.9-2,2-2h4C13.1,4,14,4.9,14,6z M24,4h-4\n        c-1.1,0-2,0.9-2,2v20c0,1.1,0.9,2,2,2h4c1.1,0,2-0.9,2-2V6C26,4.9,25.1,4,24,4z" fill="white"/>\n    </svg>\n';
-  var Ce = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var xe = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var _e = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var ke = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>\n    </svg>\n';
-  var Se = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n    </svg>\n';
-  var Pe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var Ee = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="18" y1="6" x2="6" y2="18"></line>\n        <line x1="6" y1="6" x2="18" y2="18"></line>\n    </svg>\n';
-  var De = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="22" y1="2" x2="11" y2="13"></line>\n        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>\n    </svg>\n';
-  var Le = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M19.4 15C19.1277 15.6171 19.2583 16.3378 19.73 16.82L19.79 16.88C20.1837 17.2737 20.4009 17.7994 20.4009 18.345C20.4009 18.8906 20.1837 19.4163 19.79 19.81C19.4163 20.2037 18.8906 20.4209 18.345 20.4209C17.7994 20.4209 17.2737 20.2037 16.91 19.81L16.85 19.75C16.3678 19.2783 15.6471 19.1477 15.03 19.42C14.4301 19.6801 14.0386 20.2502 14.03 20.89V21C14.03 21.5304 13.8193 22.0391 13.4442 22.4142C13.0691 22.7893 12.5604 23 12.03 23C11.4996 23 10.9909 22.7893 10.6158 22.4142C10.2407 22.0391 10.03 21.5304 10.03 21V20.91C10.0112 20.2556 9.5979 19.6818 8.98 19.43C8.36289 19.1577 7.64221 19.2883 7.16 19.76L7.1 19.82C6.73629 20.2137 6.21056 20.4309 5.665 20.4309C5.11944 20.4309 4.59371 20.2137 4.23 19.82C3.83628 19.4463 3.61911 18.9206 3.61911 18.375C3.61911 17.8294 3.83628 17.3037 4.23 16.93L4.29 16.87C4.76167 16.3878 4.89231 15.6671 4.62 15.05C4.35995 14.4501 3.78985 14.0586 3.15 14.05H3C2.46957 14.05 1.96086 13.8393 1.58579 13.4642C1.21071 13.0891 1 12.5804 1 12.05C1 11.5196 1.21071 11.0109 1.58579 10.6358C1.96086 10.2607 2.46957 10.05 3 10.05H3.09C3.74435 10.0312 4.31814 9.61788 4.57 9C4.84231 8.38289 4.71167 7.66221 4.24 7.18L4.18 7.12C3.78628 6.75629 3.56911 6.23056 3.56911 5.685C3.56911 5.13944 3.78628 4.61371 4.18 4.25C4.55371 3.85628 5.07944 3.63911 5.625 3.63911C6.17056 3.63911 6.69629 3.85628 7.07 4.25L7.13 4.31C7.61221 4.78167 8.33289 4.91231 8.95 4.64H9C9.59994 4.37995 9.99144 3.80985 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0086 3.72985 14.4001 4.29995 15 4.56C15.6171 4.83231 16.3378 4.70167 16.82 4.23L16.88 4.17C17.2437 3.77628 17.7694 3.55911 18.325 3.55911C18.8806 3.55911 19.4063 3.77628 19.77 4.17C20.1637 4.54371 20.3809 5.06944 20.3809 5.615C20.3809 6.16056 20.1637 6.68629 19.77 7.06L19.71 7.12C19.2383 7.60221 19.1077 8.32289 19.38 8.94L19.4 9C19.66 9.59994 20.2301 9.99144 20.87 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.2702 14.0086 19.7001 14.4001 19.44 15H19.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
-  var Me = '\n    <svg width="12" height="12" style="vertical-align: middle;">\n        <circle class="tm-loop-indicator-circle" cx="6" cy="6" r="5" fill="hsl(var(--shadcn-muted-foreground) / 0.5)"></circle>\n    </svg>\n';
-  var Te = '\n    <svg viewBox="2 5 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5ZM6 10C6.55228 10 7 9.55228 7 9C7 8.44772 6.55228 8 6 8C5.44772 8 5 8.44772 5 9C5 9.55228 5.44772 10 6 10ZM6 13C6.55228 13 7 12.5523 7 12C7 11.4477 6.55228 11 6 11C5.44772 11 5 11.4477 5 12C5 12.5523 5.44772 13 6 13ZM9 13C9.55228 13 10 12.5523 10 12C10 11.4477 9.55228 11 9 11C8.44772 11 8 11.4477 8 12C8 12.5523 8.44772 13 9 13ZM9 10C9.55228 10 10 9.55228 10 9C10 8.44772 9.55228 8 9 8C8.44772 8 8 8.44772 8 9C8 9.55228 8.44772 10 9 10ZM12 10C12.5523 10 13 9.55228 13 9C13 8.44772 12.5523 8 12 8C11.4477 8 11 8.44772 11 9C11 9.55228 11.4477 10 12 10ZM12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13ZM15 10C15.5523 10 16 9.55228 16 9C16 8.44772 15.5523 8 15 8C14.4477 8 14 8.44772 14 9C14 9.55228 14.4477 10 15 10ZM15 13C15.5523 13 16 12.5523 16 12C16 11.4477 15.5523 11 15 11C14.4477 11 14 11.4477 14 12C14 12.5523 14.4477 13 15 13ZM18 10C18.5523 10 19 9.55228 19 9C19 8.44772 18.5523 8 18 8C17.4477 8 17 8.44772 17 9C17 9.55228 17.4477 10 18 10ZM18 13C18.5523 13 19 12.5523 19 12C19 11.4477 18.5523 11 18 11C17.4477 11 17 11.4477 17 12C17 12.5523 17.4477 13 18 13ZM17.75 16C17.75 16.4142 17.4142 16.75 17 16.75H7C6.58579 16.75 6.25 16.4142 6.25 16C6.25 15.5858 6.58579 15.25 7 15.25H17C17.4142 15.25 17.75 15.5858 17.75 16Z" fill="currentColor"/>\n    </svg>\n';
-  var Ae = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="7.5" y1="3" x2="7.5" y2="21"/>\n        <path d="M15.5 9l-3 3 3 3"/>\n    </svg>\n';
-  var Fe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="16.5" y1="3" x2="16.5" y2="21"/>\n        <path d="M8.5 9l3 3-3 3"/>\n    </svg>\n';
-  var je = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>\n    </svg>\n';
-  var Be = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" opacity="0.4"/>\n        <line x1="3" y1="3" x2="21" y2="21"/>\n    </svg>\n';
-  var Ie = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21.5 15a4.5 4.5 0 0 0-4-6.5h-1a7 7 0 0 0-13 3.5 4.5 4.5 0 0 0 4.5 4.5"/>\n        <polyline points="17 19 21 19 21 15"/>\n        <path d="M21 19l-4-4"/>\n    </svg>\n';
-  var Oe = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>\n        <polyline points="17 8 12 3 7 8"/>\n        <line x1="12" y1="3" x2="12" y2="15"/>\n    </svg>\n';
-  var Ve = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>\n        <polyline points="7 10 12 15 17 10"/>\n        <line x1="12" y1="15" x2="12" y2="3"/>\n    </svg>\n';
-  var Ge = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>\n        <circle cx="12" cy="12" r="3"/>\n    </svg>\n';
-  var Re = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>\n        <line x1="1" y1="1" x2="23" y2="23"/>\n    </svg>\n';
-  var He = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">\n        <polyline points="20 6 9 17 4 12"/>\n    </svg>\n';
-  var Ne = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>\n        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>\n        <line x1="6" y1="6" x2="6.01" y2="6"/>\n        <line x1="6" y1="18" x2="6.01" y2="18"/>\n    </svg>\n';
+  var Fe = '\n    <svg width="48" height="48" viewBox="0 0 68 48" fill="none">\n        <path class="tm-play-button-bg" d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="rgb(254, 98, 142)"></path>\n        <path d="M 45,24 27,14 27,34" fill="#fff"></path>\n    </svg>\n';
+  var je = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="tm-play-icon" xmlns="http://www.w3.org/2000/svg">\n        <path d="M18 12L7 5V19L18 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var Be = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M10 4H6V20H10V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18 4H14V20H18V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var Ie = '\n    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M14,6v20c0,1.1-0.9,2-2,2H8c-1.1,0-2-0.9-2-2V6c0-1.1,0.9-2,2-2h4C13.1,4,14,4.9,14,6z M24,4h-4\n        c-1.1,0-2,0.9-2,2v20c0,1.1,0.9,2,2,2h4c1.1,0,2-0.9,2-2V6C26,4.9,25.1,4,24,4z" fill="white"/>\n    </svg>\n';
+  var Oe = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var Ve = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var Re = '\n    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var Ge = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>\n    </svg>\n';
+  var He = '\n    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>\n    </svg>\n';
+  var Ne = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var Je = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="18" y1="6" x2="6" y2="18"></line>\n        <line x1="6" y1="6" x2="18" y2="18"></line>\n    </svg>\n';
+  var ze = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <line x1="22" y1="2" x2="11" y2="13"></line>\n        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>\n    </svg>\n';
+  var qe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n        <path d="M19.4 15C19.1277 15.6171 19.2583 16.3378 19.73 16.82L19.79 16.88C20.1837 17.2737 20.4009 17.7994 20.4009 18.345C20.4009 18.8906 20.1837 19.4163 19.79 19.81C19.4163 20.2037 18.8906 20.4209 18.345 20.4209C17.7994 20.4209 17.2737 20.2037 16.91 19.81L16.85 19.75C16.3678 19.2783 15.6471 19.1477 15.03 19.42C14.4301 19.6801 14.0386 20.2502 14.03 20.89V21C14.03 21.5304 13.8193 22.0391 13.4442 22.4142C13.0691 22.7893 12.5604 23 12.03 23C11.4996 23 10.9909 22.7893 10.6158 22.4142C10.2407 22.0391 10.03 21.5304 10.03 21V20.91C10.0112 20.2556 9.5979 19.6818 8.98 19.43C8.36289 19.1577 7.64221 19.2883 7.16 19.76L7.1 19.82C6.73629 20.2137 6.21056 20.4309 5.665 20.4309C5.11944 20.4309 4.59371 20.2137 4.23 19.82C3.83628 19.4463 3.61911 18.9206 3.61911 18.375C3.61911 17.8294 3.83628 17.3037 4.23 16.93L4.29 16.87C4.76167 16.3878 4.89231 15.6671 4.62 15.05C4.35995 14.4501 3.78985 14.0586 3.15 14.05H3C2.46957 14.05 1.96086 13.8393 1.58579 13.4642C1.21071 13.0891 1 12.5804 1 12.05C1 11.5196 1.21071 11.0109 1.58579 10.6358C1.96086 10.2607 2.46957 10.05 3 10.05H3.09C3.74435 10.0312 4.31814 9.61788 4.57 9C4.84231 8.38289 4.71167 7.66221 4.24 7.18L4.18 7.12C3.78628 6.75629 3.56911 6.23056 3.56911 5.685C3.56911 5.13944 3.78628 4.61371 4.18 4.25C4.55371 3.85628 5.07944 3.63911 5.625 3.63911C6.17056 3.63911 6.69629 3.85628 7.07 4.25L7.13 4.31C7.61221 4.78167 8.33289 4.91231 8.95 4.64H9C9.59994 4.37995 9.99144 3.80985 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0086 3.72985 14.4001 4.29995 15 4.56C15.6171 4.83231 16.3378 4.70167 16.82 4.23L16.88 4.17C17.2437 3.77628 17.7694 3.55911 18.325 3.55911C18.8806 3.55911 19.4063 3.77628 19.77 4.17C20.1637 4.54371 20.3809 5.06944 20.3809 5.615C20.3809 6.16056 20.1637 6.68629 19.77 7.06L19.71 7.12C19.2383 7.60221 19.1077 8.32289 19.38 8.94L19.4 9C19.66 9.59994 20.2301 9.99144 20.87 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.2702 14.0086 19.7001 14.4001 19.44 15H19.4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\n    </svg>\n';
+  var We = '\n    <svg width="12" height="12" style="vertical-align: middle;">\n        <circle class="tm-loop-indicator-circle" cx="6" cy="6" r="5" fill="hsl(var(--shadcn-muted-foreground) / 0.5)"></circle>\n    </svg>\n';
+  var Ue = '\n    <svg viewBox="2 5 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5ZM6 10C6.55228 10 7 9.55228 7 9C7 8.44772 6.55228 8 6 8C5.44772 8 5 8.44772 5 9C5 9.55228 5.44772 10 6 10ZM6 13C6.55228 13 7 12.5523 7 12C7 11.4477 6.55228 11 6 11C5.44772 11 5 11.4477 5 12C5 12.5523 5.44772 13 6 13ZM9 13C9.55228 13 10 12.5523 10 12C10 11.4477 9.55228 11 9 11C8.44772 11 8 11.4477 8 12C8 12.5523 8.44772 13 9 13ZM9 10C9.55228 10 10 9.55228 10 9C10 8.44772 9.55228 8 9 8C8.44772 8 8 8.44772 8 9C8 9.55228 8.44772 10 9 10ZM12 10C12.5523 10 13 9.55228 13 9C13 8.44772 12.5523 8 12 8C11.4477 8 11 8.44772 11 9C11 9.55228 11.4477 10 12 10ZM12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13ZM15 10C15.5523 10 16 9.55228 16 9C16 8.44772 15.5523 8 15 8C14.4477 8 14 8.44772 14 9C14 9.55228 14.4477 10 15 10ZM15 13C15.5523 13 16 12.5523 16 12C16 11.4477 15.5523 11 15 11C14.4477 11 14 11.4477 14 12C14 12.5523 14.4477 13 15 13ZM18 10C18.5523 10 19 9.55228 19 9C19 8.44772 18.5523 8 18 8C17.4477 8 17 8.44772 17 9C17 9.55228 17.4477 10 18 10ZM18 13C18.5523 13 19 12.5523 19 12C19 11.4477 18.5523 11 18 11C17.4477 11 17 11.4477 17 12C17 12.5523 17.4477 13 18 13ZM17.75 16C17.75 16.4142 17.4142 16.75 17 16.75H7C6.58579 16.75 6.25 16.4142 6.25 16C6.25 15.5858 6.58579 15.25 7 15.25H17C17.4142 15.25 17.75 15.5858 17.75 16Z" fill="currentColor"/>\n    </svg>\n';
+  var Ye = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="7.5" y1="3" x2="7.5" y2="21"/>\n        <path d="M15.5 9l-3 3 3 3"/>\n    </svg>\n';
+  var Ke = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="3" y="3" width="18" height="18" rx="5"/>\n        <line x1="16.5" y1="3" x2="16.5" y2="21"/>\n        <path d="M8.5 9l3 3-3 3"/>\n    </svg>\n';
+  var Xe = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>\n    </svg>\n';
+  var $e = '\n    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" opacity="0.4"/>\n        <line x1="3" y1="3" x2="21" y2="21"/>\n    </svg>\n';
+  var Ze = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21.5 15a4.5 4.5 0 0 0-4-6.5h-1a7 7 0 0 0-13 3.5 4.5 4.5 0 0 0 4.5 4.5"/>\n        <polyline points="17 19 21 19 21 15"/>\n        <path d="M21 19l-4-4"/>\n    </svg>\n';
+  var Qe = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>\n        <polyline points="17 8 12 3 7 8"/>\n        <line x1="12" y1="3" x2="12" y2="15"/>\n    </svg>\n';
+  var et = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>\n        <polyline points="7 10 12 15 17 10"/>\n        <line x1="12" y1="15" x2="12" y2="3"/>\n    </svg>\n';
+  var tt = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>\n        <circle cx="12" cy="12" r="3"/>\n    </svg>\n';
+  var nt = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>\n        <line x1="1" y1="1" x2="23" y2="23"/>\n    </svg>\n';
+  var rt = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">\n        <polyline points="20 6 9 17 4 12"/>\n    </svg>\n';
+  var ot = '\n    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>\n        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>\n        <line x1="6" y1="6" x2="6.01" y2="6"/>\n        <line x1="6" y1="18" x2="6.01" y2="18"/>\n    </svg>\n';
+  var at = '\n    <svg viewBox="0 7 32 18" fill="currentColor" class="tm-loop-icon-svg" xmlns="http://www.w3.org/2000/svg">\n        <path d="M20.462 10.824l-9.265 9.196 0.753 0.756 9.265-9.196z"/>\n        <path d="M6.937 21.864c-3.234 0-5.864-2.631-5.864-5.864s2.631-5.864 5.864-5.864c1.566 0 2.987 0.621 4.040 1.624l0.001-0.006 0.054 0.047 2.076 2.066h-1.905v1.066h3.732v-3.732h-1.066v1.918l-2.084-2.074-0.005 0.005c-1.251-1.224-2.959-1.982-4.842-1.982-3.821 0-6.931 3.109-6.931 6.931s3.109 6.931 6.931 6.931c1.971 0 3.747-0.831 5.011-2.156l-0.753-0.754c-1.070 1.132-2.581 1.844-4.258 1.844z"/>\n        <path d="M25.063 9.069c-1.765 0-3.373 0.668-4.597 1.759l0.753 0.753c1.030-0.898 2.373-1.446 3.844-1.446 3.234 0 5.864 2.631 5.864 5.864s-2.631 5.864-5.864 5.864c-1.56 0-2.976-0.616-4.028-1.613l-0.002 0.010-3.531-3.518-0.757 0.751 3.535 3.522 0.006-0.006c1.245 1.187 2.925 1.921 4.776 1.921 3.821 0 6.931-3.109 6.931-6.931s-3.109-6.931-6.931-6.931z"/>\n    </svg>\n';
   function createOverlayElement() {
     var r = document.createElement("div");
     r.className = "tm-video-overlay";
@@ -8321,12 +9760,12 @@
     var a = document.createElement("button");
     a.className = "tm-sidebar-pos-button tm-control-button-base";
     a.style.display = "flex";
-    a.innerHTML = r === "right" ? Ae : Fe;
+    a.innerHTML = r === "right" ? Ye : Ke;
     a.title = r === "right" ? "切换侧边栏到左侧" : "切换侧边栏到右侧";
     var l = document.createElement("button");
     l.className = "tm-sidebar-toggle-button tm-control-button-base";
     l.style.display = "flex";
-    l.innerHTML = o ? je : Be;
+    l.innerHTML = o ? Xe : $e;
     l.title = o ? "显示评论区" : "隐藏评论区";
     return {
       "sidebarPosBtn": a,
@@ -8423,7 +9862,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Je = function() {
+  var it = function() {
     function UIManager(r) {
       UIManager_classCallCheck(this, UIManager);
       this.playerCore = r;
@@ -8828,7 +10267,7 @@
         if (!this.sidebarPosBtn) {
           return;
         }
-        this.sidebarPosBtn.innerHTML = this.sidebarPosition === "right" ? Ae : Fe;
+        this.sidebarPosBtn.innerHTML = this.sidebarPosition === "right" ? Ye : Ke;
       }
     }, {
       "key": "updateSidebarToggleButtonIcon",
@@ -8836,7 +10275,7 @@
         if (!this.sidebarToggleBtn) {
           return;
         }
-        this.sidebarToggleBtn.innerHTML = this.isSidebarHidden ? je : Be;
+        this.sidebarToggleBtn.innerHTML = this.isSidebarHidden ? Xe : $e;
       }
     }, {
       "key": "toggleSidebarPosition",
@@ -9454,7 +10893,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ze = function() {
+  var st = function() {
     function I18n() {
       i18n_classCallCheck(this, I18n);
     }
@@ -9473,7 +10912,7 @@
       }
     } ]);
   }();
-  i18n_defineProperty(ze, "strings", {
+  i18n_defineProperty(st, "strings", {
     "en": {
       "scriptName": "Miss Player | Cinema Mode (One-handed Player)",
       "scriptDescription": "MissAV ad-free|One-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|Custom player supporting jable po*nhub etc",
@@ -9518,6 +10957,8 @@
       "helpImproveDesc": "Collect necessary data to improve features",
       "pauseOnBlur": "Stop playback on blur",
       "pauseOnBlurDesc": "Automatically pause video when switching tabs or losing focus",
+      "buttonSound": "Button Sound",
+      "buttonSoundDesc": "Play tactile audio feedback when clicking control panel buttons",
       "webdavTitle": "Cloud Sync (WebDAV)",
       "webdavServerUrl": "Server URL",
       "webdavUsername": "Username",
@@ -9594,6 +11035,8 @@
       "helpImproveDesc": "收集必要数据用于改进功能",
       "pauseOnBlur": "失焦后停止播放",
       "pauseOnBlurDesc": "页面离开或失去焦点时自动暂停播放",
+      "buttonSound": "按键点击音效",
+      "buttonSoundDesc": "点击控制面板按钮时播放清脆触控反馈音效",
       "webdavTitle": "云端同步 (WebDAV)",
       "webdavServerUrl": "服务器地址",
       "webdavUsername": "用户名",
@@ -9670,6 +11113,8 @@
       "helpImproveDesc": "收集必要數據用於改進功能",
       "pauseOnBlur": "失焦後停止播放",
       "pauseOnBlurDesc": "頁面離開或失去焦點時自動暫停播放",
+      "buttonSound": "按鍵點擊音效",
+      "buttonSoundDesc": "點擊控制面板按鈕時播放清脆觸控反饋音效",
       "webdavTitle": "雲端同步 (WebDAV)",
       "webdavServerUrl": "伺服器位址",
       "webdavUsername": "用戶名",
@@ -9745,6 +11190,8 @@
       "helpImproveDesc": "機能改善のために必要なデータを収集します",
       "pauseOnBlur": "フォーカス外で再生停止",
       "pauseOnBlurDesc": "タブ切替やフォーカス喪失時に再生を一時停止",
+      "buttonSound": "ボタン効果音",
+      "buttonSoundDesc": "コントロールパネルのボタンクリック時に触覚フィードバック音を再生",
       "webdavTitle": "クラウド同期 (WebDAV)",
       "webdavServerUrl": "サーバーアドレス",
       "webdavUsername": "ユーザー名",
@@ -9820,6 +11267,8 @@
       "helpImproveDesc": "Thu thập dữ liệu cần thiết để cải thiện tính năng",
       "pauseOnBlur": "Dừng phát khi mất tiêu điểm",
       "pauseOnBlurDesc": "Tự động tạm dừng khi chuyển tab hoặc mất tiêu điểm",
+      "buttonSound": "Âm thanh nút bấm",
+      "buttonSoundDesc": "Phát âm thanh phản hồi khi nhấp vào nút điều khiển",
       "webdavTitle": "Đồng bộ đám mây (WebDAV)",
       "webdavServerUrl": "Địa chỉ máy chủ",
       "webdavUsername": "Tên người dùng",
@@ -9855,7 +11304,7 @@
   });
   function __(r) {
     var o = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : "";
-    return ze.translate(r, o);
+    return st.translate(r, o);
   }
   function CrossDomainBridge_typeof(r) {
     "@babel/helpers - typeof";
@@ -10239,7 +11688,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var We = function() {
+  var lt = function() {
     function CrossDomainBridge() {
       CrossDomainBridge_classCallCheck(this, CrossDomainBridge);
     }
@@ -10605,41 +12054,41 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ue = "MissPlayerSalt_2026";
-  var qe = "_mp_obf_:";
+  var ct = "MissPlayerSalt_2026";
+  var ut = "_mp_obf_:";
   function xorObfuscate(r) {
     if (!r) {
       return "";
     }
     var o = "";
     for (var a = 0; a < r.length; a++) {
-      o += String.fromCharCode(r.charCodeAt(a) ^ Ue.charCodeAt(a % Ue.length));
+      o += String.fromCharCode(r.charCodeAt(a) ^ ct.charCodeAt(a % ct.length));
     }
     try {
-      return qe + btoa(encodeURIComponent(o));
+      return ut + btoa(encodeURIComponent(o));
     } catch (r) {
-      return qe + o;
+      return ut + o;
     }
   }
   function xorDeobfuscate(r) {
     if (!r) {
       return "";
     }
-    if (!r.startsWith(qe)) {
+    if (!r.startsWith(ut)) {
       return r;
     }
-    var o = r.substring(qe.length);
+    var o = r.substring(ut.length);
     var a = o;
     try {
       a = decodeURIComponent(atob(o));
     } catch (r) {}
     var l = "";
     for (var u = 0; u < a.length; u++) {
-      l += String.fromCharCode(a.charCodeAt(u) ^ Ue.charCodeAt(u % Ue.length));
+      l += String.fromCharCode(a.charCodeAt(u) ^ ct.charCodeAt(u % ct.length));
     }
     return l;
   }
-  var Ke = function() {
+  var dt = function() {
     function CredentialManager() {
       CredentialManager_classCallCheck(this, CredentialManager);
     }
@@ -10678,7 +12127,7 @@
         var _ = "";
         if (v) {
           _ = xorDeobfuscate(v);
-          if (!v.startsWith(qe) && p) {
+          if (!v.startsWith(ut) && p) {
             this.save(r, p, _, y);
           }
         }
@@ -11117,7 +12566,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ye = function() {
+  var pt = function() {
     function BaseLoginProvider() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       BaseLoginProvider_classCallCheck(this, BaseLoginProvider);
@@ -11317,7 +12766,7 @@
           return o;
         }
         try {
-          var a = Ke.get(this.siteKey);
+          var a = dt.get(this.siteKey);
           if (a && a.email && a.password && a.autoLogin) {
             return true;
           }
@@ -11508,13 +12957,13 @@
                 } else {
                   l.appendChild(u);
                 }
-                v = Ke.get(this.siteKey);
+                v = dt.get(this.siteKey);
                 y = document.getElementById("mp_auto_login");
                 if (y) {
                   y.checked = v.autoLogin;
                   y.addEventListener("change", (function() {
                     var a = y.checked;
-                    Ke.save(o.siteKey, v.email, v.password, a);
+                    dt.save(o.siteKey, v.email, v.password, a);
                     if (r) {
                       r({
                         "autoLogin": a
@@ -11531,7 +12980,7 @@
                       var b = u.value;
                       var C = p.value;
                       if (b && C) {
-                        Ke.save(o.siteKey, b, C, true);
+                        dt.save(o.siteKey, b, C, true);
                         if (r) {
                           r({
                             "email": b,
@@ -11575,7 +13024,7 @@
             while (1) {
               switch (l.prev = l.next) {
                case 0:
-                r = Ke.get(this.siteKey);
+                r = dt.get(this.siteKey);
                 if (!(!r.email || !r.password || !r.autoLogin)) {
                   l.next = 3;
                   break;
@@ -12122,7 +13571,7 @@
     }
     return String(r);
   }
-  var Xe = function(r) {
+  var ht = function(r) {
     function JableLoginProvider() {
       var r;
       JableLoginProvider_classCallCheck(this, JableLoginProvider);
@@ -12149,7 +13598,7 @@
         if (!this.isSupportedSite()) {
           return;
         }
-        We.startBroker(this.siteKey, {
+        lt.startBroker(this.siteKey, {
           "PUBLISH_COMMENT": function() {
             var o = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee(o) {
               var a, l, u, p, v, y, b;
@@ -12414,7 +13863,7 @@
                   y = b.innerHTML;
                 }
                 C.next = 5;
-                return We.sendCommand(this.siteKey, "PUBLISH_COMMENT", {
+                return lt.sendCommand(this.siteKey, "PUBLISH_COMMENT", {
                   "commentText": r,
                   "videoCode": a,
                   "videoId": l,
@@ -12441,7 +13890,7 @@
       "key": "publishComment",
       "value": function() {
         var r = JableLoginProvider_asyncToGenerator(JableLoginProvider_regeneratorRuntime().mark((function _callee5(r, o) {
-          var a, l, u, p, v, y, b, C, _, k, S, P, E, D, L, M, T, A, j, B, I;
+          var a, l, u, p, v, y, b, C, _, k, S, P, E, D, M, L, T, A, j, B, I;
           return JableLoginProvider_regeneratorRuntime().wrap((function _callee5$(O) {
             while (1) {
               switch (O.prev = O.next) {
@@ -12469,7 +13918,7 @@
                   break;
                 }
                 O.next = 11;
-                return We.checkShadowActive(this.siteKey);
+                return lt.checkShadowActive(this.siteKey);
 
                case 11:
                 b = O.sent;
@@ -12546,18 +13995,18 @@
                 });
 
                case 31:
-                L = O.sent;
-                if (!(L.status === 200 || L.status === 302)) {
+                M = O.sent;
+                if (!(M.status === 200 || M.status === 302)) {
                   O.next = 63;
                   break;
                 }
                 O.next = 35;
-                return L.text();
+                return M.text();
 
                case 35:
-                M = O.sent;
+                L = O.sent;
                 O.prev = 36;
-                T = JSON.parse(M);
+                T = JSON.parse(L);
                 if (!(T.status === "success")) {
                   O.next = 43;
                   break;
@@ -12583,11 +14032,11 @@
                 O.t0 = O["catch"](36);
 
                case 51:
-                if (!(M.includes("error-field") || M.includes('class="error"') || M.includes('class="err"'))) {
+                if (!(L.includes("error-field") || L.includes('class="error"') || L.includes('class="err"'))) {
                   O.next = 59;
                   break;
                 }
-                j = (new DOMParser).parseFromString(M, "text/html");
+                j = (new DOMParser).parseFromString(L, "text/html");
                 B = j.querySelector(".error") || j.querySelector(".err") || j.querySelector(".message-error");
                 I = B ? B.textContent.trim() : "评论提交失败，可能包含敏感词或触发了频率限制。";
                 Toast(I, 3e3, "error");
@@ -12602,7 +14051,7 @@
                 break;
 
                case 63:
-                Toast("提交失败: HTTP ".concat(L.status), 2e3, "error");
+                Toast("提交失败: HTTP ".concat(M.status), 2e3, "error");
                 return O.abrupt("return", false);
 
                case 65:
@@ -12628,7 +14077,7 @@
         return publishComment;
       }()
     } ]);
-  }(Ye);
+  }(pt);
   function MissavLoginProvider_typeof(r) {
     "@babel/helpers - typeof";
     return MissavLoginProvider_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -13069,7 +14518,7 @@
     }
     return null;
   }
-  var $e = function(r) {
+  var mt = function(r) {
     function MissavLoginProvider() {
       MissavLoginProvider_classCallCheck(this, MissavLoginProvider);
       return MissavLoginProvider_callSuper(this, MissavLoginProvider, [ {
@@ -13213,7 +14662,7 @@
         }
       }
     } ]);
-  }(Ye);
+  }(pt);
   function CommentComposer_typeof(r) {
     "@babel/helpers - typeof";
     return CommentComposer_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -13596,8 +15045,8 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Qe = (0, b.getSiteUrls)("JABLE");
-  var Ze = function() {
+  var ft = (0, b.getSiteUrls)("JABLE");
+  var vt = function() {
     function CommentComposer(r) {
       CommentComposer_classCallCheck(this, CommentComposer);
       this.panel = r;
@@ -13660,7 +15109,7 @@
                 return l.abrupt("return", null);
 
                case 3:
-                o = this.jableWorkingDomain || Qe[0];
+                o = this.jableWorkingDomain || ft[0];
                 a = "".concat(o, "/videos/").concat(this.videoCode.toLowerCase().trim(), "/");
                 return l.abrupt("return", new Promise((function(l) {
                   var u = false;
@@ -14211,7 +15660,7 @@
                 return C.abrupt("return");
 
                case 3:
-                o = this.jableWorkingDomain || Qe[0];
+                o = this.jableWorkingDomain || ft[0];
                 a = "".concat(o, "/videos/").concat(this.videoCode.toLowerCase().trim(), "/");
                 l = this.commentsPanel.querySelector(".tm-comments-panel-publish-btn");
                 u = l ? l.textContent : "发表";
@@ -15322,7 +16771,7 @@
     }
     return 0;
   }
-  var et = function() {
+  var gt = function() {
     function CommentPanel(r, o) {
       var a = this;
       var l = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
@@ -15433,7 +16882,7 @@
       this.errorElement = null;
       this.countSpan = null;
       this.filterCheckbox = null;
-      this.composer = new Ze(this);
+      this.composer = new vt(this);
       if (typeof window.requestIdleCallback === "function") {
         window.requestIdleCallback((function() {
           return a.detectReachability();
@@ -15802,7 +17251,7 @@
       "value": function() {
         var r = CommentPanel_asyncToGenerator(CommentPanel_regeneratorRuntime().mark((function _callee3(r) {
           var o, a, l = this;
-          var u, p, v, y, b, C, _, k, S, E, L, T, j, B, I, O, V, G, R, H, N, J, z, W, U, q, K, Y, X, $, Q, Z, ee, te, ne, re, oe, ae, ie = arguments;
+          var u, p, v, y, b, C, _, k, S, E, M, T, j, B, I, O, V, R, G, H, N, J, z, q, W, U, Y, K, X, $, Z, Q, ee, te, ne, re, oe, ae, ie = arguments;
           return CommentPanel_regeneratorRuntime().wrap((function _callee3$(se) {
             while (1) {
               switch (se.prev = se.next) {
@@ -15885,9 +17334,9 @@
                   }
                   E = p.workingDomain || S;
                   if (E) {
-                    L = D.indexOf(E);
-                    if (L !== -1) {
-                      k = L;
+                    M = D.indexOf(E);
+                    if (M !== -1) {
+                      k = M;
                     }
                   }
                   _ = fetchJableComments(this.videoCode, u, k);
@@ -15915,7 +17364,7 @@
                   break;
                 }
                 se.next = 37;
-                return We.checkShadowActive("JAVLIBRARY");
+                return lt.checkShadowActive("JAVLIBRARY");
 
                case 37:
                 T = se.sent;
@@ -15925,7 +17374,7 @@
                 }
                 P.log("[CommentPanel] 检测到 JAVLibrary 影子通道在线，优先通过影子协同获取数据...");
                 se.next = 42;
-                return We.sendCommand("JAVLIBRARY", "FETCH_JAVLIB_DATA", {
+                return lt.sendCommand("JAVLIBRARY", "FETCH_JAVLIB_DATA", {
                   "avcode": this.videoCode,
                   "page": u
                 });
@@ -15955,29 +17404,29 @@
                   break;
                 }
                 V = p.videoId;
-                G = p.workingDomain;
+                R = p.workingDomain;
                 if (V) {
                   se.next = 56;
                   break;
                 }
                 if (CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibVideoIdPromise) {
                   P.log("[CommentPanel] 使用预加载的 JAVLibrary ID...");
-                  R = CommentPanel.preloadCache.javlibVideoIdPromise;
+                  G = CommentPanel.preloadCache.javlibVideoIdPromise;
                 } else {
-                  R = fetchJavLibraryVideoId(this.videoCode);
+                  G = fetchJavLibraryVideoId(this.videoCode);
                 }
                 se.next = 51;
-                return R;
+                return G;
 
                case 51:
                 H = se.sent;
                 V = H.videoId;
-                G = H.domain;
+                R = H.domain;
                 p.videoId = V;
-                p.workingDomain = G;
+                p.workingDomain = R;
 
                case 56:
-                N = G || M[0];
+                N = R || L[0];
                 J = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibCommentsPromise ? CommentPanel.preloadCache.javlibCommentsPromise : fetchJavLibraryData(V, "comments", u, N);
                 z = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javlibReviewsPromise ? CommentPanel.preloadCache.javlibReviewsPromise : fetchJavLibraryData(V, "reviews", u, N);
                 se.next = 61;
@@ -15990,17 +17439,17 @@
                 })) ]);
 
                case 61:
-                W = se.sent;
-                U = CommentPanel_slicedToArray(W, 2);
-                q = U[0];
-                K = U[1];
-                K.comments.forEach((function(r) {
+                q = se.sent;
+                W = CommentPanel_slicedToArray(q, 2);
+                U = W[0];
+                Y = W[1];
+                Y.comments.forEach((function(r) {
                   r.site = "javlib-review";
                 }));
                 C = {
-                  "comments": [].concat(CommentPanel_toConsumableArray(q.comments), CommentPanel_toConsumableArray(K.comments)),
-                  "totalCount": q.totalCount + K.totalCount,
-                  "hasMore": q.hasMore || K.hasMore
+                  "comments": [].concat(CommentPanel_toConsumableArray(U.comments), CommentPanel_toConsumableArray(Y.comments)),
+                  "totalCount": U.totalCount + Y.totalCount,
+                  "hasMore": U.hasMore || Y.hasMore
                 };
 
                case 67:
@@ -16012,9 +17461,9 @@
                   se.next = 86;
                   break;
                 }
-                Y = p.movieId;
+                K = p.movieId;
                 X = p.workingDomain;
-                if (Y) {
+                if (K) {
                   se.next = 81;
                   break;
                 }
@@ -16028,15 +17477,15 @@
                 return $;
 
                case 76:
-                Q = se.sent;
-                Y = Q.movieId;
-                X = Q.domain;
-                p.movieId = Y;
+                Z = se.sent;
+                K = Z.movieId;
+                X = Z.domain;
+                p.movieId = K;
                 p.workingDomain = X;
 
                case 81:
-                Z = X || A[0];
-                ee = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javdbCommentsPromise ? CommentPanel.preloadCache.javdbCommentsPromise : fetchJavdbData(Y, u, Z);
+                Q = X || A[0];
+                ee = u === 1 && CommentPanel.preloadCache.videoCode === this.videoCode && CommentPanel.preloadCache.javdbCommentsPromise ? CommentPanel.preloadCache.javdbCommentsPromise : fetchJavdbData(K, u, Q);
                 se.next = 85;
                 return ee;
 
@@ -16438,7 +17887,7 @@
         var r = this;
         this.commentsPanel = document.createElement("div");
         this.commentsPanel.className = "tm-comments-panel";
-        this.commentsPanel.innerHTML = '\n            <div class="tm-comments-list tm-comments-panel-list"></div>\n            <div class="tm-comment-loading tm-comments-panel-loading" style="display: none;"></div>\n            <div class="tm-comment-error tm-comments-panel-error" style="display: none;"></div>\n            <div class="tm-comment-submit-bar-wrapper">\n                <div class="tm-comment-tag-select-modal">\n                    <div class="tm-tag-select-header">\n                        <div class="tm-tag-select-btn-group">\n                            <button type="button" class="tm-tag-select-all-btn">全选</button>\n                            <button type="button" class="tm-tag-deselect-all-btn">取消全选</button>\n                        </div>\n                        <button type="button" class="tm-tag-select-close-btn" title="关闭">✕</button>\n                    </div>\n                    <div class="tm-tag-select-list"></div>\n                </div>\n                <div class="tm-comment-submit-bar">\n                    <button type="button" class="tm-comment-add-tag-btn" title="插入/勾选高光标签">\n                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>\n                    </button>\n                    <input type="text" class="tm-comment-text-input" placeholder="Comment" />\n                    <button type="button" class="tm-comment-send-btn">'.concat(__("send"), '</button>\n                </div>\n            </div>\n            <div class="tm-comments-panel-action-bar" style="display: none;">\n                <div class="tm-action-bar-left">\n                    <span class="tm-comment-count">共 0 条评论</span>\n                    <button class="tm-comment-copy-all-btn" title="一键复制所有加载的原始评论">').concat(__("commentsCopyAll"), '</button>\n                </div>\n                <div class="tm-action-bar-right">\n                    <label class="tm-comment-filter-label">\n                        <input type="checkbox" class="tm-comment-filter-checkbox" ').concat(this.filterSpam ? "checked" : "", " />\n                        <span>").concat(__("commentsFilterSpam"), '</span>\n                    </label>\n                </div>\n            </div>\n            <button class="tm-show-controls-float-btn" title="显示控制面板">').concat(Te, "</button>\n        ");
+        this.commentsPanel.innerHTML = '\n            <div class="tm-comments-list tm-comments-panel-list"></div>\n            <div class="tm-comment-loading tm-comments-panel-loading" style="display: none;"></div>\n            <div class="tm-comment-error tm-comments-panel-error" style="display: none;"></div>\n            <div class="tm-comment-submit-bar-wrapper">\n                <div class="tm-comment-tag-select-modal">\n                    <div class="tm-tag-select-header">\n                        <div class="tm-tag-select-btn-group">\n                            <button type="button" class="tm-tag-select-all-btn">全选</button>\n                            <button type="button" class="tm-tag-deselect-all-btn">取消全选</button>\n                        </div>\n                        <button type="button" class="tm-tag-select-close-btn" title="关闭">✕</button>\n                    </div>\n                    <div class="tm-tag-select-list"></div>\n                </div>\n                <div class="tm-comment-submit-bar">\n                    <button type="button" class="tm-comment-add-tag-btn" title="插入/勾选高光标签">\n                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>\n                    </button>\n                    <input type="text" class="tm-comment-text-input" placeholder="Comment" />\n                    <button type="button" class="tm-comment-send-btn">'.concat(__("send"), '</button>\n                </div>\n            </div>\n            <div class="tm-comments-panel-action-bar" style="display: none;">\n                <div class="tm-action-bar-left">\n                    <span class="tm-comment-count">共 0 条评论</span>\n                    <button class="tm-comment-copy-all-btn" title="一键复制所有加载的原始评论">').concat(__("commentsCopyAll"), '</button>\n                </div>\n                <div class="tm-action-bar-right">\n                    <label class="tm-comment-filter-label">\n                        <input type="checkbox" class="tm-comment-filter-checkbox" ').concat(this.filterSpam ? "checked" : "", " />\n                        <span>").concat(__("commentsFilterSpam"), '</span>\n                    </label>\n                </div>\n            </div>\n            <button class="tm-show-controls-float-btn" title="显示控制面板">').concat(Ue, "</button>\n        ");
         this.commentsList = this.commentsPanel.querySelector(".tm-comments-list");
         this.loadingElement = this.commentsPanel.querySelector(".tm-comment-loading");
         this.errorElement = this.commentsPanel.querySelector(".tm-comment-error");
@@ -17032,14 +18481,14 @@
         var P = S[u.status] || "";
         var E = u.status === "unreachable" || u.status === "not_found" || u.status === "mobile_unsupported" || u.collapsed;
         var D = E ? "none" : "block";
-        var L = r === "jable" ? "JABLE" : r === "javlib" ? "JAVLIBRARY" : "";
-        var M = L ? this.renderLoginBadgeHtml(L) : "";
+        var M = r === "jable" ? "JABLE" : r === "javlib" ? "JAVLIBRARY" : "";
+        var L = M ? this.renderLoginBadgeHtml(M) : "";
         var T = {
           "jable": "■ Jable.tv",
           "javlib": "■ JAVLibrary",
           "javdb": "■ JavDB"
         };
-        return '\n            <div class="tm-comment-section'.concat(E ? " is-collapsed" : "", '" id="tm-comment-section-').concat(r, '">\n                <div class="tm-comment-section-hdr" title="点击展开/折叠">\n                    <span class="tm-comment-section-title">').concat(T[r], '</span>\n                    <div class="tm-comment-hdr-right" style="display: inline-flex; align-items: center; gap: 6px;">\n                        ').concat(M, '\n                        <span class="tm-comment-status-badge tm-status-badge-').concat(u.status, '">').concat(P, '</span>\n                    </div>\n                </div>\n                <div class="tm-comment-section-body" style="display: ').concat(D, '; pointer-events: auto;">\n                    ').concat(C, "\n                </div>\n            </div>\n        ");
+        return '\n            <div class="tm-comment-section'.concat(E ? " is-collapsed" : "", '" id="tm-comment-section-').concat(r, '">\n                <div class="tm-comment-section-hdr" title="点击展开/折叠">\n                    <span class="tm-comment-section-title">').concat(T[r], '</span>\n                    <div class="tm-comment-hdr-right" style="display: inline-flex; align-items: center; gap: 6px;">\n                        ').concat(L, '\n                        <span class="tm-comment-status-badge tm-status-badge-').concat(u.status, '">').concat(P, '</span>\n                    </div>\n                </div>\n                <div class="tm-comment-section-body" style="display: ').concat(D, '; pointer-events: auto;">\n                    ').concat(C, "\n                </div>\n            </div>\n        ");
       }
     }, {
       "key": "showBottomLoader",
@@ -17362,8 +18811,8 @@
         }
         if (!this._staticProviders) {
           this._staticProviders = {
-            "JABLE": new Xe,
-            "MISSAV": new $e
+            "JABLE": new ht,
+            "MISSAV": new mt
           };
         }
         return this._staticProviders[o] || null;
@@ -17668,7 +19117,7 @@
       }
     } ]);
   }();
-  CommentPanel_defineProperty(et, "preloadCache", {
+  CommentPanel_defineProperty(gt, "preloadCache", {
     "videoCode": "",
     "jableCommentsPromise": null,
     "javlibVideoIdPromise": null,
@@ -17721,7 +19170,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var tt = function() {
+  var yt = function() {
     function VolumeController(r, o) {
       VolumeController_classCallCheck(this, VolumeController);
       this.playerCore = r;
@@ -17880,11 +19329,11 @@
       "key": "getVolumeIcon",
       "value": function getVolumeIcon(r) {
         if (this.targetVideo.muted || r === 0) {
-          return Ce;
+          return Oe;
         } else if (this.supportsVolumeControl && r < .5) {
-          return xe;
+          return Ve;
         } else {
-          return _e;
+          return Re;
         }
       }
     }, {
@@ -18040,7 +19489,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var nt = function() {
+  var bt = function() {
     function SeekController(r, o) {
       SeekController_classCallCheck(this, SeekController);
       this.playerCore = r;
@@ -18051,11 +19500,16 @@
     return SeekController_createClass(SeekController, [ {
       "key": "seekRelative",
       "value": function seekRelative(r) {
+        var o, a;
         if (!this.targetVideo) {
           return;
         }
-        var o = Math.max(0, Math.min(this.targetVideo.duration, this.targetVideo.currentTime + r));
-        this.targetVideo.currentTime = o;
+        var l = Math.max(0, Math.min(this.targetVideo.duration, this.targetVideo.currentTime + r));
+        var u = ((o = this.controlManager) === null || o === void 0 ? void 0 : o.loopManager) || ((a = this.playerCore) === null || a === void 0 ? void 0 : a.loopManager);
+        if (u && typeof u.checkAndExitLoopIfOutside === "function") {
+          u.checkAndExitLoopIfOutside(l);
+        }
+        this.targetVideo.currentTime = l;
         fe.track("seek_click", {
           "seconds": r,
           "step": r > 0 ? "+".concat(r, "s") : "".concat(r, "s")
@@ -18143,9 +19597,9 @@
         var y = o.includes("+");
         var b = o.replace(/[+-]/g, "");
         if (v) {
-          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(ke, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
+          p.innerHTML = '<div class="tm-time-control-button-inner">'.concat(Ge, '<span class="tm-time-text-margin-left">').concat(b, "</span></div>");
         } else if (y) {
-          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(Se, "</div>");
+          p.innerHTML = '<div class="tm-time-control-button-inner"><span class="tm-time-text-margin-right">'.concat(b, "</span>").concat(He, "</div>");
         } else {
           p.textContent = o;
         }
@@ -18278,7 +19732,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var rt = function() {
+  var wt = function() {
     function PlaybackController(r, o) {
       PlaybackController_classCallCheck(this, PlaybackController);
       this.playerCore = r;
@@ -18330,7 +19784,7 @@
           return;
         }
         var o = this.targetVideo.paused;
-        var a = o ? ye : be;
+        var a = o ? je : Be;
         var l = this.playPauseButton.querySelector("svg");
         if (l) {
           var u = document.createElement("div");
@@ -18454,7 +19908,7 @@
         this.pauseIndicator.style.display = "flex";
         this.pauseIndicator.style.justifyContent = "center";
         this.pauseIndicator.style.alignItems = "center";
-        this.pauseIndicator.innerHTML = we;
+        this.pauseIndicator.innerHTML = Ie;
         this.uiElements.videoWrapper.appendChild(this.pauseIndicator);
         requestAnimationFrame((function() {
           r.pauseIndicator.classList.add("visible");
@@ -18524,7 +19978,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var ot = function() {
+  var Ct = function() {
     function ControlManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       ControlManager_classCallCheck(this, ControlManager);
@@ -18533,10 +19987,10 @@
       this.uiManager = a;
       this._rippleHandler = null;
       this.uiElements = o;
-      this.commentPanel = new et(r, this, a);
-      this.volumeController = new tt(r, this);
-      this.seekController = new nt(r, this);
-      this.playbackController = new rt(r, this);
+      this.commentPanel = new gt(r, this, a);
+      this.volumeController = new yt(r, this);
+      this.seekController = new bt(r, this);
+      this.playbackController = new wt(r, this);
       this.controlButtonsContainer = null;
       this.progressControlsContainer = null;
       this.progressBarElement = null;
@@ -18817,6 +20271,7 @@
             return;
           }
           createRipple(o, a);
+          playTapSound();
         };
         this.controlButtonsContainer.addEventListener("click", this._rippleHandler, true);
       }
@@ -18888,7 +20343,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var at = function() {
+  var xt = function() {
     function DragManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       var l = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -19162,15 +20617,15 @@
         var P = S[0];
         var E = Math.hypot(_ - P.x, k - P.y);
         for (var D = 1; D < S.length; D++) {
-          var L = Math.hypot(_ - S[D].x, k - S[D].y);
-          if (L < E) {
-            E = L;
+          var M = Math.hypot(_ - S[D].x, k - S[D].y);
+          if (M < E) {
+            E = M;
             P = S[D];
           }
         }
-        var M = 90;
+        var L = 90;
         var T = false;
-        if (E < M) {
+        if (E < L) {
           _ = P.x;
           k = P.y;
           T = true;
@@ -19289,11 +20744,11 @@
               }
             }
             var D = S;
-            var L = _ - b - S;
-            var M = P + S;
+            var M = _ - b - S;
+            var L = P + S;
             var T = k - C - S;
-            var A = Math.max(D, Math.min(l, L));
-            var j = Math.max(M, Math.min(u, T));
+            var A = Math.max(D, Math.min(l, M));
+            var j = Math.max(L, Math.min(u, T));
             this.controlButtonsContainer.style.left = A + "px";
             this.controlButtonsContainer.style.top = j + "px";
             this.controlButtonsContainer.style.bottom = "auto";
@@ -19816,7 +21271,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var it = function() {
+  var _t = function() {
     function WebDavClient() {
       WebDavClient_classCallCheck(this, WebDavClient);
     }
@@ -20307,7 +21762,7 @@
       }()
     } ]);
   }();
-  var st;
+  var kt;
   function SyncManager_regeneratorRuntime() {
     "use strict";
     SyncManager_regeneratorRuntime = function _regeneratorRuntime() {
@@ -20838,23 +22293,23 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var lt = "mp_client_id";
-  var ct = "mp_webdav_config";
-  var ut = "mp_webdav_last_sync_time";
-  var dt = "mp_sync_tombstones";
-  var pt = "mp_setting_timestamps";
-  var ht = 2;
-  var mt = 30 * 24 * 60 * 60 * 1e3;
-  var ft = typeof GM_info !== "undefined" && (st = GM_info) !== null && st !== void 0 && (st = st.script) !== null && st !== void 0 && st.version ? GM_info.script.version : "5.6.12";
+  var St = "mp_client_id";
+  var Pt = "mp_webdav_config";
+  var Et = "mp_webdav_last_sync_time";
+  var Dt = "mp_sync_tombstones";
+  var Mt = "mp_setting_timestamps";
+  var Lt = 2;
+  var Tt = 30 * 24 * 60 * 60 * 1e3;
+  var At = typeof GM_info !== "undefined" && (kt = GM_info) !== null && kt !== void 0 && (kt = kt.script) !== null && kt !== void 0 && kt.version ? GM_info.script.version : "5.6.16";
   function SyncManager_getOrCreateClientId() {
-    var r = getValue(lt, "");
+    var r = getValue(St, "");
     if (r) {
       return r;
     }
     var o = Math.random().toString(36).substring(2, 10);
     var a = Date.now().toString(36).substring(4);
     var l = "mp_".concat(o).concat(a);
-    setValue(lt, l);
+    setValue(St, l);
     return l;
   }
   function getDeviceName() {
@@ -20895,7 +22350,7 @@
     }
     return "desktop";
   }
-  var vt = function() {
+  var Ft = function() {
     function SyncManager() {
       SyncManager_classCallCheck(this, SyncManager);
     }
@@ -20909,24 +22364,24 @@
           "path": "/MissPlayer/",
           "autoSync": true
         };
-        var o = getValue(ct, null);
+        var o = getValue(Pt, null);
         return Object.assign({}, r, o && SyncManager_typeof(o) === "object" ? o : {});
       }
     }, {
       "key": "saveWebDavConfig",
       "value": function saveWebDavConfig(r) {
-        setValue(ct, r);
+        setValue(Pt, r);
       }
     }, {
       "key": "getLastSyncTime",
       "value": function getLastSyncTime() {
-        return getValue(ut, 0);
+        return getValue(Et, 0);
       }
     }, {
       "key": "setLastSyncTime",
       "value": function setLastSyncTime() {
         var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : Date.now();
-        setValue(ut, r);
+        setValue(Et, r);
       }
     }, {
       "key": "getLocalTombstones",
@@ -20936,7 +22391,7 @@
           "customSeekSteps": {},
           "videos": {}
         };
-        var o = getValue(dt, null);
+        var o = getValue(Dt, null);
         if (!o || SyncManager_typeof(o) !== "object") {
           return r;
         }
@@ -20950,7 +22405,7 @@
       "key": "saveLocalTombstones",
       "value": function saveLocalTombstones(r) {
         var o = this.purgeExpiredTombstones(r);
-        setValue(dt, o);
+        setValue(Dt, o);
       }
     }, {
       "key": "recordTombstone",
@@ -21006,7 +22461,7 @@
           };
         }
         var o = Date.now();
-        var a = o - mt;
+        var a = o - Tt;
         var l = {};
         if (r.markers) {
           for (var u = 0, p = Object.entries(r.markers); u < p.length; u++) {
@@ -21028,25 +22483,25 @@
             }
           }
         }
-        var L = {};
+        var M = {};
         if (r.videos) {
-          for (var M = 0, T = Object.entries(r.videos); M < T.length; M++) {
-            var A = SyncManager_slicedToArray(T[M], 2), j = A[0], B = A[1];
+          for (var L = 0, T = Object.entries(r.videos); L < T.length; L++) {
+            var A = SyncManager_slicedToArray(T[L], 2), j = A[0], B = A[1];
             if (B >= a) {
-              L[j] = B;
+              M[j] = B;
             }
           }
         }
         return {
           "markers": l,
           "customSeekSteps": _,
-          "videos": L
+          "videos": M
         };
       }
     }, {
       "key": "getLocalSettingTimestamps",
       "value": function getLocalSettingTimestamps() {
-        var r = getValue(pt, null);
+        var r = getValue(Mt, null);
         return r && SyncManager_typeof(r) === "object" ? r : {};
       }
     }, {
@@ -21057,7 +22512,7 @@
         }
         var o = this.getLocalSettingTimestamps();
         o[r] = Date.now();
-        setValue(pt, o);
+        setValue(Mt, o);
       }
     }, {
       "key": "gatherLocalData",
@@ -21084,6 +22539,7 @@
           "sidebarHidden": getValue("sidebarHidden", false),
           "preferredPlaybackRate": parseFloat(getValue("preferredPlaybackRate", 1)) || 1,
           "pauseOnBlur": getValue("pauseOnBlur", true),
+          "buttonSoundEnabled": getValue("buttonSoundEnabled", true),
           "telemetryEnabled": getValue("telemetryEnabled", true),
           "debugMode": getValue("debugMode", false)
         };
@@ -21139,23 +22595,23 @@
           }
         } catch (r) {}
         var D = getDeviceType();
-        var L = SyncManager_defineProperty({}, D, {
+        var M = SyncManager_defineProperty({}, D, {
           "sidebarPosition": getValue("sidebarPosition", "right"),
           "sidebarHidden": getValue("sidebarHidden", false),
           "updatedAt": u.sidebarPosition || u.sidebarHidden || a
         });
         return {
-          "schemaVersion": ht,
-          "scriptVersion": ft,
+          "schemaVersion": Lt,
+          "scriptVersion": At,
           "lastModified": a,
           "lastModifiedBy": o,
           "devices": SyncManager_defineProperty({}, o, {
             "deviceName": getDeviceName(),
             "deviceType": D,
             "lastSyncTime": a,
-            "scriptVersion": ft
+            "scriptVersion": At
           }),
-          "deviceLayouts": L,
+          "deviceLayouts": M,
           "settings": p,
           "settingTimestamps": u,
           "markers": v,
@@ -21169,8 +22625,8 @@
           return null;
         }
         var o = Object.assign({}, r);
-        if (!o.schemaVersion || o.schemaVersion < ht) {
-          o.schemaVersion = ht;
+        if (!o.schemaVersion || o.schemaVersion < Lt) {
+          o.schemaVersion = Lt;
           if (!o.devices) {
             o.devices = {};
           }
@@ -21248,13 +22704,13 @@
           };
         }
         for (var P = 0, E = Object.entries(p.markers || {}); P < E.length; P++) {
-          var D = SyncManager_slicedToArray(E[P], 2), L = D[0], M = D[1];
-          var T = SyncManager_typeof(M) === "object" ? M : {
-            "deletedAt": M
+          var D = SyncManager_slicedToArray(E[P], 2), M = D[0], L = D[1];
+          var T = SyncManager_typeof(L) === "object" ? L : {
+            "deletedAt": L
           };
-          var A = y[L];
+          var A = y[M];
           if (!A || T.deletedAt > A.deletedAt) {
-            y[L] = T;
+            y[M] = T;
           }
         }
         var j = Object.assign({}, v.customSeekSteps || {}, p.customSeekSteps || {});
@@ -21269,37 +22725,37 @@
           "deviceName": getDeviceName(),
           "deviceType": getDeviceType(),
           "lastSyncTime": u,
-          "scriptVersion": ft
+          "scriptVersion": At
         };
         var V = r.settings || {};
-        var G = l.settings || {};
-        var R = r.settingTimestamps || {};
+        var R = l.settings || {};
+        var G = r.settingTimestamps || {};
         var H = l.settingTimestamps || {};
         var N = {};
         var J = {};
-        var z = Array.from(new Set([].concat(SyncManager_toConsumableArray(Object.keys(V)), SyncManager_toConsumableArray(Object.keys(G)))));
-        for (var W = 0, U = z; W < U.length; W++) {
-          var q = U[W];
-          if (q === "customUserSeekSteps" || q === "enabledSeekSteps" || q === "enabledCommentSources") {
+        var z = Array.from(new Set([].concat(SyncManager_toConsumableArray(Object.keys(V)), SyncManager_toConsumableArray(Object.keys(R)))));
+        for (var q = 0, W = z; q < W.length; q++) {
+          var U = W[q];
+          if (U === "customUserSeekSteps" || U === "enabledSeekSteps" || U === "enabledCommentSources") {
             continue;
           }
-          var K = R[q] || r.lastModified || 0;
-          var Y = H[q] || l.lastModified || 0;
-          if (K >= Y) {
-            J[q] = V[q] !== void 0 ? V[q] : G[q];
-            N[q] = K;
+          var Y = G[U] || r.lastModified || 0;
+          var K = H[U] || l.lastModified || 0;
+          if (Y >= K) {
+            J[U] = V[U] !== void 0 ? V[U] : R[U];
+            N[U] = Y;
           } else {
-            J[q] = G[q] !== void 0 ? G[q] : V[q];
-            N[q] = Y;
+            J[U] = R[U] !== void 0 ? R[U] : V[U];
+            N[U] = K;
           }
         }
-        var X = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(V.customUserSeekSteps) ? V.customUserSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(G.customUserSeekSteps) ? G.customUserSeekSteps : []))));
+        var X = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(V.customUserSeekSteps) ? V.customUserSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(R.customUserSeekSteps) ? R.customUserSeekSteps : []))));
         var $ = X.filter((function(r) {
           var o = j[r];
           return !o;
         }));
         J.customUserSeekSteps = $;
-        J.enabledSeekSteps = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(V.enabledSeekSteps) ? V.enabledSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(G.enabledSeekSteps) ? G.enabledSeekSteps : []))));
+        J.enabledSeekSteps = Array.from(new Set([].concat(SyncManager_toConsumableArray(Array.isArray(V.enabledSeekSteps) ? V.enabledSeekSteps : []), SyncManager_toConsumableArray(Array.isArray(R.enabledSeekSteps) ? R.enabledSeekSteps : []))));
         if (J.enabledSeekSteps.length === 0) {
           J.enabledSeekSteps = [ "5s", "10s", "30s", "1m", "5m", "10m" ];
         }
@@ -21307,15 +22763,15 @@
           "jable": true,
           "javdb": true,
           "javlibrary": false
-        }, G.enabledCommentSources || {}, V.enabledCommentSources || {});
-        var Q = r.markers || {};
-        var Z = l.markers || {};
-        var ee = Array.from(new Set([].concat(SyncManager_toConsumableArray(Object.keys(Q)), SyncManager_toConsumableArray(Object.keys(Z)))));
+        }, R.enabledCommentSources || {}, V.enabledCommentSources || {});
+        var Z = r.markers || {};
+        var Q = l.markers || {};
+        var ee = Array.from(new Set([].concat(SyncManager_toConsumableArray(Object.keys(Z)), SyncManager_toConsumableArray(Object.keys(Q)))));
         var te = {};
         var ne = function _loop() {
           var r = oe[re];
-          var o = Array.isArray(Q[r]) ? Q[r] : [];
-          var a = Array.isArray(Z[r]) ? Z[r] : [];
+          var o = Array.isArray(Z[r]) ? Z[r] : [];
+          var a = Array.isArray(Q[r]) ? Q[r] : [];
           var l = new Map;
           var u = function processCandidate(r) {
             if (!r) {
@@ -21383,8 +22839,8 @@
         }
         var ae = Object.assign({}, l.deviceLayouts || {}, r.deviceLayouts || {});
         return {
-          "schemaVersion": ht,
-          "scriptVersion": ft,
+          "schemaVersion": Lt,
+          "scriptVersion": At,
           "lastModified": u,
           "lastModifiedBy": a,
           "devices": O,
@@ -21410,7 +22866,7 @@
           }
         }
         if (l && SyncManager_typeof(l) === "object") {
-          setValue(pt, l);
+          setValue(Mt, l);
         }
         if (v && SyncManager_typeof(v) === "object") {
           this.saveLocalTombstones(v);
@@ -21427,12 +22883,12 @@
         }
         if (u && SyncManager_typeof(u) === "object") {
           for (var E = 0, D = Object.entries(u); E < D.length; E++) {
-            var L = SyncManager_slicedToArray(D[E], 2), M = L[0], T = L[1];
-            if (M.startsWith("tabs_")) {
+            var M = SyncManager_slicedToArray(D[E], 2), L = M[0], T = M[1];
+            if (L.startsWith("tabs_")) {
               if (Array.isArray(T) && T.length > 0) {
-                setValue(M, T);
+                setValue(L, T);
               } else {
-                deleteValue(M);
+                deleteValue(L);
               }
             }
           }
@@ -21473,7 +22929,7 @@
                   break;
                 }
                 P.next = 8;
-                return it.uploadBackup(u, b);
+                return _t.uploadBackup(u, b);
 
                case 8:
                 this.setLastSyncTime(b.lastModified);
@@ -21489,7 +22945,7 @@
                   break;
                 }
                 P.next = 13;
-                return it.downloadBackup(u);
+                return _t.downloadBackup(u);
 
                case 13:
                 C = P.sent;
@@ -21511,13 +22967,13 @@
 
                case 20:
                 P.next = 22;
-                return it.downloadBackup(u);
+                return _t.downloadBackup(u);
 
                case 22:
                 k = P.sent;
                 S = this.mergeData(b, k, y);
                 P.next = 26;
-                return it.uploadBackup(u, S);
+                return _t.uploadBackup(u, S);
 
                case 26:
                 this.applyDataToLocal(S, v);
@@ -21698,7 +23154,7 @@
                 b.prev = 3;
                 r._isAutoSyncing = true;
                 b.next = 7;
-                return it.downloadBackup(a);
+                return _t.downloadBackup(a);
 
                case 7:
                 l = b.sent;
@@ -21783,7 +23239,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var gt = function() {
+  var jt = function() {
     function MarkerBottomSheet(r) {
       MarkerBottomSheet_classCallCheck(this, MarkerBottomSheet);
       this.loopManager = r;
@@ -22047,41 +23503,48 @@
             y.appendChild(b);
             y.appendChild(C);
             y.appendChild(_);
+            if (r.loopManager.activeTabId === o.id && r.loopManager.loopActive) {
+              y.classList.add("looping");
+              var k = document.createElement("div");
+              k.className = "tm-tab-loop-overlay";
+              k.innerHTML = at;
+              y.appendChild(k);
+            }
             y.addEventListener("click", (function() {
               r.loopManager._handleTabClick(o);
             }));
             p.appendChild(y);
           }
-          var k = document.createElement("input");
-          k.type = "text";
-          k.className = "tm-sheet-item-comment-input";
-          k.placeholder = "添加备注...";
-          k.value = o.comment || "";
-          var S = function stopProp(r) {
+          var S = document.createElement("input");
+          S.type = "text";
+          S.className = "tm-sheet-item-comment-input";
+          S.placeholder = "添加备注...";
+          S.value = o.comment || "";
+          var P = function stopProp(r) {
             return r.stopPropagation();
           };
-          k.addEventListener("keydown", S);
-          k.addEventListener("keyup", S);
-          k.addEventListener("keypress", S);
-          k.addEventListener("mousedown", S);
-          k.addEventListener("touchstart", S);
-          k.addEventListener("input", (function(a) {
+          S.addEventListener("keydown", P);
+          S.addEventListener("keyup", P);
+          S.addEventListener("keypress", P);
+          S.addEventListener("mousedown", P);
+          S.addEventListener("touchstart", P);
+          S.addEventListener("input", (function(a) {
             o.comment = a.target.value;
             r.loopManager._saveTabs();
             r.loopManager.renderTabs();
           }));
-          k.addEventListener("change", (function() {
+          S.addEventListener("change", (function() {
             r.loopManager._saveTabs();
             r.loopManager.renderTabs();
           }));
-          var P = document.createElement("button");
-          P.className = "tm-sheet-delete-btn";
-          P.innerHTML = "❌";
-          P.title = "删除标签";
-          P.addEventListener("click", (function(a) {
+          var E = document.createElement("button");
+          E.className = "tm-sheet-delete-btn";
+          E.innerHTML = "❌";
+          E.title = "删除标签";
+          E.addEventListener("click", (function(a) {
             a.stopPropagation();
             if (o && o.id) {
-              vt.recordTombstone("markers", o.id, r.loopManager.storageKey);
+              Ft.recordTombstone("markers", o.id, r.loopManager.storageKey);
             }
             r.loopManager.tabs = r.loopManager.tabs.filter((function(r) {
               return r.id !== o.id;
@@ -22095,8 +23558,8 @@
             r.updateBottomSheet();
           }));
           u.appendChild(p);
-          u.appendChild(k);
-          u.appendChild(P);
+          u.appendChild(S);
+          u.appendChild(E);
           r._sheetList.appendChild(u);
         }));
       }
@@ -22261,7 +23724,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var yt = function() {
+  var Bt = function() {
     function LoopManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       LoopManager_classCallCheck(this, LoopManager);
@@ -22284,7 +23747,7 @@
       this._longPressTimer = null;
       this._longPressTriggered = false;
       this.storageKey = null;
-      this.bottomSheet = new gt(this);
+      this.bottomSheet = new jt(this);
       this.editingTabId = null;
       this.editingTabCopy = null;
       this._durationFallbackBound = null;
@@ -22416,9 +23879,22 @@
         u.dataset.tabId = r.id || "";
         u.style.setProperty("--tab-color", l);
         if (r.type === "highlight") {
-          u.textContent = formatTimeWithHours(r.startTime);
+          var p = document.createElement("span");
+          p.className = "tm-tab-time-text";
+          p.textContent = formatTimeWithHours(r.startTime);
+          u.appendChild(p);
         } else {
-          u.textContent = "".concat(formatTimeWithHours(r.startTime), " ~ ").concat(formatTimeWithHours(r.endTime));
+          var v = document.createElement("span");
+          v.className = "tm-tab-time-text";
+          v.textContent = "".concat(formatTimeWithHours(r.startTime), " ~ ").concat(formatTimeWithHours(r.endTime));
+          u.appendChild(v);
+          if (this.activeTabId === r.id && this.loopActive) {
+            u.classList.add("looping");
+            var y = document.createElement("div");
+            y.className = "tm-tab-loop-overlay";
+            y.innerHTML = at;
+            u.appendChild(y);
+          }
         }
         if (this.activeTabId === r.id) {
           u.classList.add("active");
@@ -22430,13 +23906,13 @@
           }
           o._handleTabClick(r);
         }));
-        var p = 0;
-        var v = 0;
-        var y = function startLongPress(a) {
+        var b = 0;
+        var C = 0;
+        var _ = function startLongPress(a) {
           o._longPressTriggered = false;
           var l = a.touches ? a.touches[0] : a;
-          p = l.clientX;
-          v = l.clientY;
+          b = l.clientX;
+          C = l.clientY;
           o._longPressTimer = setTimeout((function() {
             o._longPressTriggered = true;
             o._handleTabLongPress(r);
@@ -22445,32 +23921,32 @@
             }
           }), 500);
         };
-        var b = function cancelLongPress() {
+        var k = function cancelLongPress() {
           if (o._longPressTimer) {
             clearTimeout(o._longPressTimer);
             o._longPressTimer = null;
           }
         };
-        var C = function moveLongPress(r) {
+        var S = function moveLongPress(r) {
           var o = r.touches ? r.touches[0] : r;
-          var a = o.clientX - p;
-          var l = o.clientY - v;
+          var a = o.clientX - b;
+          var l = o.clientY - C;
           if (Math.hypot(a, l) > 8) {
-            b();
+            k();
           }
         };
-        u.addEventListener("mousedown", y);
-        u.addEventListener("touchstart", y, {
+        u.addEventListener("mousedown", _);
+        u.addEventListener("touchstart", _, {
           "passive": true
         });
-        u.addEventListener("mousemove", C);
-        u.addEventListener("touchmove", C, {
+        u.addEventListener("mousemove", S);
+        u.addEventListener("touchmove", S, {
           "passive": true
         });
-        u.addEventListener("mouseup", b);
-        u.addEventListener("mouseleave", b);
-        u.addEventListener("touchend", b);
-        u.addEventListener("touchcancel", b);
+        u.addEventListener("mouseup", k);
+        u.addEventListener("mouseleave", k);
+        u.addEventListener("touchend", k);
+        u.addEventListener("touchcancel", k);
         return u;
       }
     }, {
@@ -22679,7 +24155,7 @@
             o.tabs[l] = LoopManager_objectSpread(LoopManager_objectSpread({}, p), {}, {
               "updatedAt": Date.now()
             });
-            vt.clearTombstone("markers", r.id);
+            Ft.clearTombstone("markers", r.id);
             o._saveTabs();
           }
           o._exitEditMode();
@@ -22692,7 +24168,7 @@
         P.addEventListener("click", (function(a) {
           a.stopPropagation();
           if (r && r.id) {
-            vt.recordTombstone("markers", r.id, o.storageKey);
+            Ft.recordTombstone("markers", r.id, o.storageKey);
           }
           o.tabs = o.tabs.filter((function(o) {
             return o.id !== r.id;
@@ -22744,6 +24220,7 @@
     }, {
       "key": "_handleTabClick",
       "value": function _handleTabClick(r) {
+        playTapSound();
         fe.track("tag_jump", {
           "type": r.type,
           "has_comment": !!r.comment
@@ -22866,7 +24343,7 @@
           p.updatedAt = Date.now();
           if (u) {
             if (p.id) {
-              vt.clearTombstone("markers", p.id);
+              Ft.clearTombstone("markers", p.id);
             }
             if (l === a.editingTabCopy) {
               a.renderTabs();
@@ -22889,7 +24366,7 @@
             });
             a.tabs.push(v);
             if (v.id) {
-              vt.clearTombstone("markers", v.id);
+              Ft.clearTombstone("markers", v.id);
             }
             a._resetDraftTab();
             a._saveTabs();
@@ -22962,6 +24439,24 @@
         this._clearAllTabProgress();
         this.updateLoopMarkers();
         this.renderProgressMarkers();
+      }
+    }, {
+      "key": "checkAndExitLoopIfOutside",
+      "value": function checkAndExitLoopIfOutside(r) {
+        if (!this.loopActive || this.loopStartTime === null || this.loopEndTime === null) {
+          return false;
+        }
+        var o = r < this.loopStartTime - .05 || r > this.loopEndTime + .05;
+        if (o) {
+          this.disableLoop();
+          this.activeTabId = null;
+          this.renderTabs();
+          if (this.bottomSheet && typeof this.bottomSheet.updateBottomSheet === "function") {
+            this.bottomSheet.updateBottomSheet();
+          }
+          return true;
+        }
+        return false;
       }
     }, {
       "key": "_handleLoopTimeUpdate",
@@ -23405,7 +24900,7 @@
         setValue(this.storageKey, this.tabs);
         try {
           var o;
-          vt.triggerAutoSync((o = this.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "change");
+          Ft.triggerAutoSync((o = this.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "change");
         } catch (r) {}
         try {
           if (Array.isArray(this.tabs) && this.tabs.length > 0) {
@@ -23516,7 +25011,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var bt = function() {
+  var It = function() {
     function ProgressManager(r, o) {
       ProgressManager_classCallCheck(this, ProgressManager);
       this.playerCore = r;
@@ -23532,8 +25027,20 @@
       this.progressHandleUpHandler = null;
       this.lastDragX = 0;
       this.isTouchDevice = "ontouchstart" in window;
+      this._loopManager = null;
     }
     return ProgressManager_createClass(ProgressManager, [ {
+      "key": "setLoopManager",
+      "value": function setLoopManager(r) {
+        this._loopManager = r;
+      }
+    }, {
+      "key": "loopManager",
+      "get": function get() {
+        var r, o;
+        return this._loopManager || ((r = this.playerCore) === null || r === void 0 ? void 0 : r.loopManager) || ((o = this.playerCore) === null || o === void 0 || (o = o.managers) === null || o === void 0 ? void 0 : o.loopManager);
+      }
+    }, {
       "key": "init",
       "value": function init(r) {
         this.progressBarElement = r.progressBarElement;
@@ -23593,6 +25100,9 @@
           return;
         }
         var u = l * a;
+        if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === "function") {
+          this.loopManager.checkAndExitLoopIfOutside(u);
+        }
         this.targetVideo.currentTime = u;
         this.updateProgressBar();
       }
@@ -23603,6 +25113,9 @@
           return;
         }
         var o = Math.max(0, Math.min(this.targetVideo.duration, this.targetVideo.currentTime + r));
+        if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === "function") {
+          this.loopManager.checkAndExitLoopIfOutside(o);
+        }
         this.targetVideo.currentTime = o;
       }
     }, {
@@ -23647,6 +25160,9 @@
         var v = this.targetVideo.duration;
         if (!isNaN(v)) {
           var y = v * p;
+          if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === "function") {
+            this.loopManager.checkAndExitLoopIfOutside(y);
+          }
           this.targetVideo.currentTime = y;
           this.progressIndicator.style.width = "".concat(p * 100, "%");
           this.updateCurrentTimeDisplay();
@@ -23672,6 +25188,9 @@
           return;
         }
         var p = u * l;
+        if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === "function") {
+          this.loopManager.checkAndExitLoopIfOutside(p);
+        }
         this.progressIndicator.style.width = "".concat(l * 100, "%");
         this.targetVideo.currentTime = p;
         this.currentTimeDisplay.textContent = formatTime(p);
@@ -23691,7 +25210,11 @@
         l = Math.max(0, Math.min(1, l));
         var u = this.targetVideo.duration;
         if (!isNaN(u)) {
-          this.targetVideo.currentTime = u * l;
+          var p = u * l;
+          if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === "function") {
+            this.loopManager.checkAndExitLoopIfOutside(p);
+          }
+          this.targetVideo.currentTime = p;
         }
         if (this.timeIndicator) {
           this.timeIndicator.style.opacity = "0";
@@ -23798,7 +25321,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var wt = function() {
+  var Ot = function() {
     function BlurPlaybackManager() {
       BlurPlaybackManager_classCallCheck(this, BlurPlaybackManager);
     }
@@ -23913,7 +25436,7 @@
       }
     } ]);
   }();
-  BlurPlaybackManager_defineProperty(wt, "isInitialized", false);
+  BlurPlaybackManager_defineProperty(Ot, "isInitialized", false);
   function EventManager_typeof(r) {
     "@babel/helpers - typeof";
     return EventManager_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -23958,7 +25481,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ct = function() {
+  var Vt = function() {
     function EventManager(r, o, a) {
       EventManager_classCallCheck(this, EventManager);
       this.playerCore = r;
@@ -24154,7 +25677,7 @@
           }
         };
         this.targetVideo.addEventListener("pause", this.handlePauseBound);
-        wt.attachPlayer(this.targetVideo, this.playerCore);
+        Ot.attachPlayer(this.targetVideo, this.playerCore);
       }
     }, {
       "key": "handleCloseButtonClick",
@@ -24687,7 +26210,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var xt = function() {
+  var Rt = function() {
     function SettingsManager(r, o) {
       var a = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : null;
       var l = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -24713,7 +26236,8 @@
         },
         "telemetryEnabled": true,
         "debugMode": false,
-        "pauseOnBlur": true
+        "pauseOnBlur": true,
+        "buttonSoundEnabled": true
       };
       this.showCustomSeekStepsPanel = false;
     }
@@ -24843,30 +26367,37 @@
             r.controlManager.commentPanel.updateDebugMode(o);
           }
         }));
-        var L = this._createToggleOption(__("pauseOnBlur") || "失焦后停止播放", "pauseOnBlur", this.settings.pauseOnBlur !== false, (function(o) {
+        var M = this._createToggleOption(__("pauseOnBlur") || "失焦后停止播放", "pauseOnBlur", this.settings.pauseOnBlur !== false, (function(o) {
           r.updateSetting("pauseOnBlur", o);
         }), null, __("pauseOnBlurDesc") || "页面离开或失去焦点时自动暂停播放");
+        var L = this._createToggleOption(__("buttonSound") || "按键点击音效", "buttonSoundEnabled", this.settings.buttonSoundEnabled !== false, (function(o) {
+          r.updateSetting("buttonSoundEnabled", o);
+          if (o) {
+            playTapSound(true);
+          }
+        }), null, __("buttonSoundDesc") || "点击控制面板按钮时播放清脆触控反馈音效");
         P.appendChild(E);
+        P.appendChild(M);
         P.appendChild(L);
         P.appendChild(D);
         o.appendChild(P);
-        var M = vt.getWebDavConfig();
-        var T = Boolean(M.url);
-        var A = vt.getLastSyncTime();
-        var j = T ? A > 0 ? " (已配置)" : " (未同步)" : " (点击展开)";
-        var B = document.createElement("div");
-        B.className = "tm-settings-section";
-        var I = this._createSectionHeader((__("webdavTitle") || "云端同步 (WebDAV) :") + j, true, this.isWebDavExpanded || false, (function(o) {
+        var T = Ft.getWebDavConfig();
+        var A = Boolean(T.url);
+        var j = Ft.getLastSyncTime();
+        var B = A ? j > 0 ? " (已配置)" : " (未同步)" : " (点击展开)";
+        var I = document.createElement("div");
+        I.className = "tm-settings-section";
+        var O = this._createSectionHeader((__("webdavTitle") || "云端同步 (WebDAV) :") + B, true, this.isWebDavExpanded || false, (function(o) {
           r.isWebDavExpanded = o;
-          if (O) {
-            O.style.display = o ? "flex" : "none";
+          if (V) {
+            V.style.display = o ? "flex" : "none";
           }
         }));
-        var O = this._createWebDavSyncCard();
-        O.style.display = this.isWebDavExpanded ? "flex" : "none";
-        B.appendChild(I);
-        B.appendChild(O);
-        o.appendChild(B);
+        var V = this._createWebDavSyncCard();
+        V.style.display = this.isWebDavExpanded ? "flex" : "none";
+        I.appendChild(O);
+        I.appendChild(V);
+        o.appendChild(I);
         this.settingsPanel.appendChild(o);
       }
     }, {
@@ -24911,7 +26442,7 @@
         var r = this;
         var o = document.createElement("div");
         o.className = "tm-settings-webdav-card";
-        var a = vt.getWebDavConfig();
+        var a = Ft.getWebDavConfig();
         var l = SyncManager_getOrCreateClientId();
         var u = getDeviceName();
         var p = document.createElement("div");
@@ -24926,7 +26457,7 @@
         y.value = a.url || "";
         y.addEventListener("change", (function() {
           a.url = y.value.trim();
-          vt.saveWebDavConfig(a);
+          Ft.saveWebDavConfig(a);
         }));
         p.appendChild(v);
         p.appendChild(y);
@@ -24942,7 +26473,7 @@
         _.value = a.user || "";
         _.addEventListener("change", (function() {
           a.user = _.value.trim();
-          vt.saveWebDavConfig(a);
+          Ft.saveWebDavConfig(a);
         }));
         b.appendChild(C);
         b.appendChild(_);
@@ -24960,31 +26491,31 @@
         E.value = a.pass || "";
         E.addEventListener("change", (function() {
           a.pass = E.value;
-          vt.saveWebDavConfig(a);
+          Ft.saveWebDavConfig(a);
         }));
         var D = document.createElement("button");
         D.className = "tm-webdav-eye-btn";
         D.type = "button";
-        D.innerHTML = Ge;
+        D.innerHTML = tt;
         D.title = "切换密码可见性";
         D.addEventListener("click", (function() {
           if (E.type === "password") {
             E.type = "text";
-            D.innerHTML = Re;
+            D.innerHTML = nt;
           } else {
             E.type = "password";
-            D.innerHTML = Ge;
+            D.innerHTML = tt;
           }
         }));
         P.appendChild(E);
         P.appendChild(D);
         k.appendChild(S);
         k.appendChild(P);
-        var L = document.createElement("div");
-        L.className = "tm-webdav-form-row";
-        var M = document.createElement("label");
-        M.className = "tm-webdav-label";
-        M.textContent = __("webdavBackupPath") || "备份目录路径";
+        var M = document.createElement("div");
+        M.className = "tm-webdav-form-row";
+        var L = document.createElement("label");
+        L.className = "tm-webdav-label";
+        L.textContent = __("webdavBackupPath") || "备份目录路径";
         var T = document.createElement("input");
         T.className = "tm-webdav-input";
         T.type = "text";
@@ -24992,10 +26523,10 @@
         T.value = a.path || "/MissPlayer/";
         T.addEventListener("change", (function() {
           a.path = T.value.trim() || "/MissPlayer/";
-          vt.saveWebDavConfig(a);
+          Ft.saveWebDavConfig(a);
         }));
-        L.appendChild(M);
-        L.appendChild(T);
+        M.appendChild(L);
+        M.appendChild(T);
         var A = document.createElement("div");
         A.className = "tm-webdav-switch-row";
         var j = document.createElement("div");
@@ -25015,68 +26546,68 @@
         V.checked = a.autoSync !== false;
         V.addEventListener("change", (function() {
           a.autoSync = V.checked;
-          vt.saveWebDavConfig(a);
+          Ft.saveWebDavConfig(a);
           if (a.autoSync && a.url) {
             var o;
-            vt.triggerAutoSync((o = r.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "startup");
+            Ft.triggerAutoSync((o = r.playerCore) === null || o === void 0 || (o = o.options) === null || o === void 0 ? void 0 : o.playerState, "startup");
           }
         }));
-        var G = document.createElement("span");
-        G.className = "tm-slider round";
+        var R = document.createElement("span");
+        R.className = "tm-slider round";
         O.appendChild(V);
-        O.appendChild(G);
+        O.appendChild(R);
         A.appendChild(j);
         A.appendChild(O);
-        var R = document.createElement("div");
-        R.className = "tm-webdav-device-badge";
-        R.innerHTML = "".concat(Ne, " <span>").concat(__("webdavCurrentDevice") || "当前设备", ": ").concat(u, " (").concat(l.slice(-6), ")</span>");
+        var G = document.createElement("div");
+        G.className = "tm-webdav-device-badge";
+        G.innerHTML = "".concat(ot, " <span>").concat(__("webdavCurrentDevice") || "当前设备", ": ").concat(u, " (").concat(l.slice(-6), ")</span>");
         var H = document.createElement("div");
         H.className = "tm-webdav-actions-container";
         var N = document.createElement("button");
         N.className = "tm-webdav-btn tm-webdav-btn-primary";
-        N.innerHTML = "".concat(Ie, " <span>").concat(__("webdavSyncMerge") || "智能合并同步", "</span>");
+        N.innerHTML = "".concat(Ze, " <span>").concat(__("webdavSyncMerge") || "智能合并同步", "</span>");
         var J = document.createElement("div");
         J.className = "tm-webdav-sub-actions";
         var z = document.createElement("button");
         z.className = "tm-webdav-btn tm-webdav-btn-secondary";
         z.title = "测试 WebDAV 服务器连通性并创建目录";
-        z.innerHTML = "".concat(He, " <span>").concat(__("webdavTestConnection") || "测试连接", "</span>");
+        z.innerHTML = "".concat(rt, " <span>").concat(__("webdavTestConnection") || "测试连接", "</span>");
+        var q = document.createElement("button");
+        q.className = "tm-webdav-btn tm-webdav-btn-secondary";
+        q.title = "将当前本地配置与打点覆盖到云端";
+        q.innerHTML = "".concat(Qe, " <span>").concat(__("webdavUploadOverwrite") || "上传覆盖", "</span>");
         var W = document.createElement("button");
         W.className = "tm-webdav-btn tm-webdav-btn-secondary";
-        W.title = "将当前本地配置与打点覆盖到云端";
-        W.innerHTML = "".concat(Oe, " <span>").concat(__("webdavUploadOverwrite") || "上传覆盖", "</span>");
-        var U = document.createElement("button");
-        U.className = "tm-webdav-btn tm-webdav-btn-secondary";
-        U.title = "从云端拉取配置覆盖当前设备";
-        U.innerHTML = "".concat(Ve, " <span>").concat(__("webdavDownloadOverwrite") || "下载覆盖", "</span>");
+        W.title = "从云端拉取配置覆盖当前设备";
+        W.innerHTML = "".concat(et, " <span>").concat(__("webdavDownloadOverwrite") || "下载覆盖", "</span>");
         J.appendChild(z);
+        J.appendChild(q);
         J.appendChild(W);
-        J.appendChild(U);
         H.appendChild(N);
         H.appendChild(J);
-        var q = document.createElement("div");
-        q.className = "tm-webdav-status-bar";
-        var K = document.createElement("span");
-        var Y = function renderTimeText() {
-          var r = vt.getLastSyncTime();
+        var U = document.createElement("div");
+        U.className = "tm-webdav-status-bar";
+        var Y = document.createElement("span");
+        var K = function renderTimeText() {
+          var r = Ft.getLastSyncTime();
           var o = r > 0 ? new Date(r).toLocaleString() : __("webdavNeverSynced") || "尚未同步";
-          K.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat(o);
+          Y.textContent = "".concat(__("webdavLastSync") || "上次同步", ": ").concat(o);
         };
-        Y();
+        K();
         var X = document.createElement("span");
         X.className = "tm-webdav-status-badge";
         X.style.display = "none";
-        q.appendChild(K);
-        q.appendChild(X);
+        U.appendChild(Y);
+        U.appendChild(X);
         var $ = function persistCurrentInputs() {
           a.url = y.value.trim();
           a.user = _.value.trim();
           a.pass = E.value;
           a.path = T.value.trim() || "/MissPlayer/";
-          vt.saveWebDavConfig(a);
+          Ft.saveWebDavConfig(a);
           return a;
         };
-        var Q = function updateStatus(o) {
+        var Z = function updateStatus(o) {
           var a = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : "success";
           r._lastWebDavStatus = {
             "text": o,
@@ -25096,10 +26627,10 @@
           }
         };
         if (this._lastWebDavStatus && Date.now() - this._lastWebDavStatus.time < 5 * 60 * 1e3) {
-          Q(this._lastWebDavStatus.text, this._lastWebDavStatus.type);
+          Z(this._lastWebDavStatus.text, this._lastWebDavStatus.type);
         }
-        var Z = function setButtonsDisabled(r) {
-          [ N, z, W, U ].forEach((function(o) {
+        var Q = function setButtonsDisabled(r) {
+          [ N, z, q, W ].forEach((function(o) {
             o.disabled = r;
           }));
         };
@@ -25115,21 +26646,21 @@
                   break;
                 }
                 Toast.show(__("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
-                Q("请输入服务器地址", "error");
+                Z("请输入服务器地址", "error");
                 return a.abrupt("return");
 
                case 5:
-                Z(true);
+                Q(true);
                 z.innerHTML = "<span>".concat(__("webdavTesting") || "正在测试...", "</span>");
-                Q("正在测试连接...", "running");
+                Z("正在测试连接...", "running");
                 a.prev = 8;
                 a.next = 11;
-                return it.testConnection(r);
+                return _t.testConnection(r);
 
                case 11:
                 o = a.sent;
                 Toast.show(o.message || "连接成功！", 3e3);
-                Q("连接正常", "success");
+                Z("连接正常", "success");
                 a.next = 20;
                 break;
 
@@ -25137,12 +26668,12 @@
                 a.prev = 16;
                 a.t0 = a["catch"](8);
                 Toast.show((__("webdavTestFailed") || "连接失败: ") + a.t0.message, 4e3);
-                Q(a.t0.message ? "连接失败: ".concat(a.t0.message) : "连接失败", "error");
+                Z(a.t0.message ? "连接失败: ".concat(a.t0.message) : "连接失败", "error");
 
                case 20:
                 a.prev = 20;
-                z.innerHTML = "".concat(He, " <span>").concat(__("webdavTestConnection") || "测试连接", "</span>");
-                Z(false);
+                z.innerHTML = "".concat(rt, " <span>").concat(__("webdavTestConnection") || "测试连接", "</span>");
+                Q(false);
                 return a.finish(20);
 
                case 24:
@@ -25164,16 +26695,16 @@
                   break;
                 }
                 Toast.show(__("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
-                Q("请输入服务器地址", "error");
+                Z("请输入服务器地址", "error");
                 return u.abrupt("return");
 
                case 5:
-                Z(true);
+                Q(true);
                 N.innerHTML = "<span>".concat(__("webdavSyncing") || "正在同步...", "</span>");
-                Q("正在智能合并同步...", "running");
+                Z("正在智能合并同步...", "running");
                 u.prev = 8;
                 u.next = 11;
-                return vt.executeSync({
+                return Ft.executeSync({
                   "mode": "merge",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -25195,9 +26726,9 @@
                 u.prev = 17;
                 u.t0 = u["catch"](8);
                 Toast.show((__("webdavSyncFailed") || "同步失败: ") + u.t0.message, 4500);
-                Q(u.t0.message ? "同步失败: ".concat(u.t0.message) : "同步失败", "error");
-                N.innerHTML = "".concat(Ie, " <span>").concat(__("webdavSyncMerge") || "智能合并同步", "</span>");
-                Z(false);
+                Z(u.t0.message ? "同步失败: ".concat(u.t0.message) : "同步失败", "error");
+                N.innerHTML = "".concat(Ze, " <span>").concat(__("webdavSyncMerge") || "智能合并同步", "</span>");
+                Q(false);
 
                case 23:
                case "end":
@@ -25206,7 +26737,7 @@
             }
           }), _callee2, null, [ [ 8, 17 ] ]);
         }))));
-        W.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee3() {
+        q.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee3() {
           var o, a, l;
           return SettingsManager_regeneratorRuntime().wrap((function _callee3$(u) {
             while (1) {
@@ -25218,7 +26749,7 @@
                   break;
                 }
                 Toast.show(__("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
-                Q("请输入服务器地址", "error");
+                Z("请输入服务器地址", "error");
                 return u.abrupt("return");
 
                case 5:
@@ -25229,12 +26760,12 @@
                 return u.abrupt("return");
 
                case 7:
-                Z(true);
-                W.innerHTML = "<span>".concat(__("webdavSyncing") || "正在上传...", "</span>");
-                Q("正在上传覆盖云端...", "running");
+                Q(true);
+                q.innerHTML = "<span>".concat(__("webdavSyncing") || "正在上传...", "</span>");
+                Z("正在上传覆盖云端...", "running");
                 u.prev = 10;
                 u.next = 13;
-                return vt.executeSync({
+                return Ft.executeSync({
                   "mode": "upload",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -25243,8 +26774,8 @@
                case 13:
                 l = u.sent;
                 Toast.show(l.message || "已成功覆盖云端备份！", 3e3);
-                Q("已上传覆盖", "success");
-                Y();
+                Z("已上传覆盖", "success");
+                K();
                 u.next = 23;
                 break;
 
@@ -25252,12 +26783,12 @@
                 u.prev = 19;
                 u.t0 = u["catch"](10);
                 Toast.show((__("webdavSyncFailed") || "上传失败: ") + u.t0.message, 4500);
-                Q(u.t0.message ? "上传失败: ".concat(u.t0.message) : "上传失败", "error");
+                Z(u.t0.message ? "上传失败: ".concat(u.t0.message) : "上传失败", "error");
 
                case 23:
                 u.prev = 23;
-                W.innerHTML = "".concat(Oe, " <span>").concat(__("webdavUploadOverwrite") || "上传覆盖", "</span>");
-                Z(false);
+                q.innerHTML = "".concat(Qe, " <span>").concat(__("webdavUploadOverwrite") || "上传覆盖", "</span>");
+                Q(false);
                 return u.finish(23);
 
                case 27:
@@ -25267,7 +26798,7 @@
             }
           }), _callee3, null, [ [ 10, 19, 23, 27 ] ]);
         }))));
-        U.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee4() {
+        W.addEventListener("click", SettingsManager_asyncToGenerator(SettingsManager_regeneratorRuntime().mark((function _callee4() {
           var o, a, l;
           return SettingsManager_regeneratorRuntime().wrap((function _callee4$(u) {
             while (1) {
@@ -25279,7 +26810,7 @@
                   break;
                 }
                 Toast.show(__("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
-                Q("请输入服务器地址", "error");
+                Z("请输入服务器地址", "error");
                 return u.abrupt("return");
 
                case 5:
@@ -25290,12 +26821,12 @@
                 return u.abrupt("return");
 
                case 7:
-                Z(true);
-                U.innerHTML = "<span>".concat(__("webdavSyncing") || "正在下载...", "</span>");
-                Q("正在从云端拉取覆盖...", "running");
+                Q(true);
+                W.innerHTML = "<span>".concat(__("webdavSyncing") || "正在下载...", "</span>");
+                Z("正在从云端拉取覆盖...", "running");
                 u.prev = 10;
                 u.next = 13;
-                return vt.executeSync({
+                return Ft.executeSync({
                   "mode": "download",
                   "config": o,
                   "playerState": (a = r.playerCore) === null || a === void 0 || (a = a.options) === null || a === void 0 ? void 0 : a.playerState
@@ -25317,9 +26848,9 @@
                 u.prev = 19;
                 u.t0 = u["catch"](10);
                 Toast.show((__("webdavSyncFailed") || "下载失败: ") + u.t0.message, 4500);
-                Q(u.t0.message ? "下载失败: ".concat(u.t0.message) : "下载失败", "error");
-                U.innerHTML = "".concat(Ve, " <span>").concat(__("webdavDownloadOverwrite") || "下载覆盖", "</span>");
-                Z(false);
+                Z(u.t0.message ? "下载失败: ".concat(u.t0.message) : "下载失败", "error");
+                W.innerHTML = "".concat(et, " <span>").concat(__("webdavDownloadOverwrite") || "下载覆盖", "</span>");
+                Q(false);
 
                case 25:
                case "end":
@@ -25331,11 +26862,11 @@
         o.appendChild(p);
         o.appendChild(b);
         o.appendChild(k);
-        o.appendChild(L);
+        o.appendChild(M);
         o.appendChild(A);
-        o.appendChild(R);
+        o.appendChild(G);
         o.appendChild(H);
-        o.appendChild(q);
+        o.appendChild(U);
         return o;
       }
     }, {
@@ -25524,7 +27055,7 @@
         if (!a.includes(r)) {
           a.push(r);
         }
-        vt.clearTombstone("customSeekSteps", r);
+        Ft.clearTombstone("customSeekSteps", r);
         this.updateSetting("customUserSeekSteps", o);
         this.updateSetting("enabledSeekSteps", a);
         this.rebuildControlPanelSeekRow();
@@ -25542,7 +27073,7 @@
         a = a.filter((function(o) {
           return o !== r;
         }));
-        vt.recordTombstone("customSeekSteps", r);
+        Ft.recordTombstone("customSeekSteps", r);
         this.updateSetting("customUserSeekSteps", o);
         this.updateSetting("enabledSeekSteps", a);
         this.rebuildControlPanelSeekRow();
@@ -25683,6 +27214,7 @@
           this.settings.telemetryEnabled = a("telemetryEnabled", true);
           this.settings.debugMode = a("debugMode", false);
           this.settings.pauseOnBlur = a("pauseOnBlur", true);
+          this.settings.buttonSoundEnabled = a("buttonSoundEnabled", true);
         }
       }
     }, {
@@ -25703,6 +27235,7 @@
           setValue("telemetryEnabled", this.settings.telemetryEnabled);
           setValue("debugMode", this.settings.debugMode);
           setValue("pauseOnBlur", this.settings.pauseOnBlur);
+          setValue("buttonSoundEnabled", this.settings.buttonSoundEnabled);
         }
       }
     }, {
@@ -25799,7 +27332,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var _t = function() {
+  var Gt = function() {
     function VideoSwipeManager(r, o, a) {
       var l = this;
       var u = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : null;
@@ -26448,11 +27981,11 @@
         var S = 30;
         var P = _;
         var E = Number.MAX_VALUE;
-        for (var D = 0, L = k; D < L.length; D++) {
-          var M = L[D];
-          var T = Math.abs(_ - M);
+        for (var D = 0, M = k; D < M.length; D++) {
+          var L = M[D];
+          var T = Math.abs(_ - L);
           if (T < S && T < E) {
-            P = M;
+            P = L;
             E = T;
           }
         }
@@ -26594,11 +28127,11 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var kt = function() {
+  var Ht = function() {
     function CustomVideoPlayer() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       CustomVideoPlayer_classCallCheck(this, CustomVideoPlayer);
-      this.playerCore = new ve(r);
+      this.playerCore = new Ae(r);
       this.callingButton = r.callingButton || null;
       this.managers = {};
       this.initialized = false;
@@ -26621,7 +28154,7 @@
         this._scrollbarStyle.innerHTML = "\n            html::-webkit-scrollbar, body::-webkit-scrollbar {\n                display: none !important;\n            }\n            html, body {\n                scrollbar-width: none !important;\n                -ms-overflow-style: none !important;\n                overscroll-behavior: none !important;\n                overscroll-behavior-y: none !important;\n            }\n        ";
         document.head.appendChild(this._scrollbarStyle);
         if (!this.playerCore) {
-          this.playerCore = new ve({
+          this.playerCore = new Ae({
             "callingButton": this.callingButton
           });
         }
@@ -26677,16 +28210,16 @@
         o.addEventListener("pause", this._onPauseOrEnded);
         o.addEventListener("ended", this._onPauseOrEnded);
         o.addEventListener("timeupdate", this._onTimeUpdate);
-        var a = new Je(this.playerCore);
+        var a = new it(this.playerCore);
         var l = a.createUI();
         this.managers.uiManager = a;
-        var u = new ot(this.playerCore, l, a);
+        var u = new Ct(this.playerCore, l, a);
         u.init();
         this.managers.controlManager = u;
-        var p = new xt(this.playerCore, l, a, u);
+        var p = new Rt(this.playerCore, l, a, u);
         p.init();
         this.managers.settingsManager = p;
-        var v = new bt(this.playerCore, l);
+        var v = new It(this.playerCore, l);
         v.init({
           "progressBarElement": u.progressBarElement,
           "progressIndicator": u.progressIndicator,
@@ -26695,7 +28228,7 @@
           "timeIndicator": u.timeIndicator
         });
         this.managers.progressManager = v;
-        var y = new yt(this.playerCore, l, u);
+        var y = new Bt(this.playerCore, l, u);
         y.init({
           "loopStartMarker": u.loopStartMarker,
           "loopEndMarker": u.loopEndMarker,
@@ -26706,11 +28239,13 @@
         });
         this.managers.loopManager = y;
         u.setLoopManager(y);
-        var b = new at(this.playerCore, l, a, u);
+        v.setLoopManager(y);
+        this.playerCore.loopManager = y;
+        var b = new xt(this.playerCore, l, a, u);
         b.init();
         this.managers.dragManager = b;
         if (this.playerCore.targetVideo && l.videoWrapper && l.handle) {
-          this.swipeManager = new _t(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
+          this.swipeManager = new Gt(this.playerCore.targetVideo, l.videoWrapper, l.handle, l, (function() {
             return r.close();
           }), a);
           this.swipeManager.playerCore = this.playerCore;
@@ -26720,9 +28255,10 @@
           "controlManager": u,
           "progressManager": v,
           "dragManager": b,
+          "loopManager": y,
           "swipeManager": this.swipeManager
         });
-        var C = new Ct(this.playerCore, l, this.managers);
+        var C = new Vt(this.playerCore, l, this.managers);
         C.init();
         this.managers.eventManager = C;
         a.assembleDOM();
@@ -26860,7 +28396,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var St = function() {
+  var Nt = function() {
     function FloatingButton() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       FloatingButton_classCallCheck(this, FloatingButton);
@@ -26971,7 +28507,7 @@
       "value": function createButton() {
         var r = this;
         this.button = createElementWithStyle("button", "tm-floating-button");
-        this.button.innerHTML = ge;
+        this.button.innerHTML = Fe;
         this.button.addEventListener("click", (function() {
           r.handleButtonClick();
         }));
@@ -27026,7 +28562,7 @@
         }
         this.button.style.display = "none";
         requestAnimationFrame((function() {
-          r.videoPlayer = new kt({
+          r.videoPlayer = new Ht({
             "playerState": r.playerState,
             "callingButton": r.button
           });
@@ -27096,7 +28632,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Pt = function() {
+  var Jt = function() {
     function PlayerState() {
       PlayerState_classCallCheck(this, PlayerState);
       this.settings = {
@@ -27117,7 +28653,8 @@
         "sidebarPosition": "right",
         "sidebarHidden": false,
         "preferredPlaybackRate": 1,
-        "pauseOnBlur": true
+        "pauseOnBlur": true,
+        "buttonSoundEnabled": true
       };
     }
     return PlayerState_createClass(PlayerState, [ {
@@ -27150,6 +28687,7 @@
           var u = parseFloat(getValue("preferredPlaybackRate", 1));
           this.settings.preferredPlaybackRate = !isNaN(u) && u >= .5 && u <= 4 ? u : 1;
           this.settings.pauseOnBlur = r("pauseOnBlur", true);
+          this.settings.buttonSoundEnabled = r("buttonSoundEnabled", true);
         } catch (r) {}
       }
     }, {
@@ -27170,6 +28708,7 @@
           setValue("sidebarHidden", this.settings.sidebarHidden);
           setValue("preferredPlaybackRate", this.settings.preferredPlaybackRate);
           setValue("pauseOnBlur", this.settings.pauseOnBlur);
+          setValue("buttonSoundEnabled", this.settings.buttonSoundEnabled);
         } catch (r) {}
       }
     }, {
@@ -27179,7 +28718,7 @@
           this.settings[r] = o;
           this.saveSettings();
           try {
-            vt.recordSettingUpdate(r);
+            Ft.recordSettingUpdate(r);
           } catch (r) {}
         }
       }
@@ -27630,15 +29169,15 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Et = 30 * 60 * 1e3;
-  var Dt = 3;
-  var Lt = function() {
+  var zt = 30 * 60 * 1e3;
+  var qt = 3;
+  var Wt = function() {
     function LoginManager() {
       LoginManager_classCallCheck(this, LoginManager);
       this.userEmail = "";
       this.userPassword = "";
       this.autoLogin = true;
-      this.providers = [ new $e, new Xe ];
+      this.providers = [ new mt, new ht ];
       this.activeProvider = null;
     }
     return LoginManager_createClass(LoginManager, [ {
@@ -27689,14 +29228,14 @@
           return;
         }
         var o = this.activeProvider.siteKey;
-        var a = Ke.get(o);
+        var a = dt.get(o);
         var l = r.email !== void 0 ? r.email : a.email;
         var u = r.password !== void 0 ? r.password : a.password;
         var p = r.autoLogin !== void 0 ? r.autoLogin : a.autoLogin;
         this.userEmail = l;
         this.userPassword = u;
         this.autoLogin = p;
-        Ke.save(o, l, u, p);
+        dt.save(o, l, u, p);
         this.resetCircuitBreaker(o);
       }
     }, {
@@ -27706,7 +29245,7 @@
           return;
         }
         var r = this.activeProvider.siteKey;
-        var o = Ke.get(r);
+        var o = dt.get(r);
         this.userEmail = o.email;
         this.userPassword = o.password;
         this.autoLogin = o.autoLogin;
@@ -27839,12 +29378,12 @@
       "value": function isCircuitBroken(r) {
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0);
         var a = getLocalStorage("mp_circuit_last_fail_".concat(r), 0);
-        if (o >= Dt) {
+        if (o >= qt) {
           var l = Date.now() - a;
-          if (l < Et) {
+          if (l < zt) {
             return true;
           }
-          setLocalStorage("mp_circuit_fail_".concat(r), Dt - 1);
+          setLocalStorage("mp_circuit_fail_".concat(r), qt - 1);
         }
         return false;
       }
@@ -27854,7 +29393,7 @@
         var o = getLocalStorage("mp_circuit_fail_".concat(r), 0) + 1;
         setLocalStorage("mp_circuit_fail_".concat(r), o);
         setLocalStorage("mp_circuit_last_fail_".concat(r), Date.now());
-        if (o >= Dt) {}
+        if (o >= qt) {}
       }
     }, {
       "key": "resetCircuitBreaker",
@@ -28346,7 +29885,7 @@
           switch (o.prev = o.next) {
            case 0:
             o.prev = 0;
-            r = new Lt;
+            r = new Wt;
             o.next = 4;
             return r.init();
 
@@ -28367,8 +29906,8 @@
     })));
     return _initAutoLogin.apply(this, arguments);
   }
-  var Mt = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
-  var Tt = [ {
+  var Ut = [ 'div[class="space-y-6 mb-6"]', 'div[class*="root--"][class*="bottomRight--"]', 'div[class="grid md:grid-cols-2 gap-8"]', 'ul[class="mb-4 list-none text-nord14 grid grid-cols-2 gap-2"]', 'div[class="space-y-5 mb-5"]', 'iframe[src*="ads"]', 'iframe[src*="banner"]', 'iframe[src*="pop"]', "iframe[data-ad]", 'iframe[id*="ads"]', 'iframe[class*="ads"]', 'iframe:not([src*="plyr.io"])' ];
+  var Yt = [ {
     "selector": 'div[class="my-2 text-sm text-nord4 truncate"]',
     "styles": "white-space: normal !important;"
   }, {
@@ -28378,11 +29917,11 @@
     "selector": 'div[class*="z-max"]',
     "styles": "z-index: 9000 !important;"
   } ];
-  var At = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
-  const Ft = {
-    "adSelectors": Mt,
-    "customStyles": Tt,
-    "blockedUrlPatterns": At,
+  var Kt = [ "exoclick.com", "juicyads.com", "popads.net", "adsterra.com", "trafficjunky.com", "adnium.com", "ad-maven.com", "browser-update.org", "mopvip.icu", "toppages.pw", "cpmstar.com", "propellerads.com", "tsyndicate.com", "syndication.exosrv.com", "ads.exosrv.com", "tsyndicate.com/sdk", "cdn.tsyndicate.com", "adsco.re", "adscpm.site", "a-ads.com", "ad-delivery.net", "outbrain.com", "taboola.com", "mgid.com", "revcontent.com", "adnxs.com", "pubmatic.com", "rubiconproject.com", "openx.net", "criteo.com", "doubleclick.net" ];
+  const Xt = {
+    "adSelectors": Ut,
+    "customStyles": Yt,
+    "blockedUrlPatterns": Kt,
     "isVideoSite": true,
     "domains": (0, b.getSiteDomains)("MISSAV")
   };
@@ -28493,7 +30032,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var jt = function() {
+  var $t = function() {
     function AdBlockConfig() {
       var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
       adblock_classCallCheck(this, AdBlockConfig);
@@ -28533,7 +30072,7 @@
       }
     } ]);
   }();
-  var Bt = function() {
+  var Zt = function() {
     function StyleManager(r) {
       adblock_classCallCheck(this, StyleManager);
       this.config = r;
@@ -28561,7 +30100,7 @@
       }
     } ]);
   }();
-  var It = function() {
+  var Qt = function() {
     function DOMCleaner(r) {
       adblock_classCallCheck(this, DOMCleaner);
       this.config = r;
@@ -28649,7 +30188,7 @@
       }
     } ]);
   }();
-  var Ot = function() {
+  var en = function() {
     function RequestBlocker(r) {
       adblock_classCallCheck(this, RequestBlocker);
       this.config = r;
@@ -28750,7 +30289,7 @@
       }
     } ]);
   }();
-  var Vt = function() {
+  var tn = function() {
     function AdBlocker() {
       adblock_classCallCheck(this, AdBlocker);
       var r = false;
@@ -28760,11 +30299,11 @@
       } catch (o) {
         r = /^https?:\/\/(www\.)?(missav|thisav)\.(com|ws|ai|live|net|org)/i.test(window.location.href);
       }
-      var l = r ? Ft : {};
-      this.config = new jt(l);
-      this.styleManager = new Bt(this.config);
-      this.domCleaner = new It(this.config);
-      this.requestBlocker = new Ot(this.config);
+      var l = r ? Xt : {};
+      this.config = new $t(l);
+      this.styleManager = new Zt(this.config);
+      this.domCleaner = new Qt(this.config);
+      this.requestBlocker = new en(this.config);
     }
     return adblock_createClass(AdBlocker, [ {
       "key": "preventDetection",
@@ -28826,7 +30365,7 @@
       }
     } ]);
   }();
-  const Gt = Vt;
+  const nn = tn;
   function DetailExpander_typeof(r) {
     "@babel/helpers - typeof";
     return DetailExpander_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(r) {
@@ -28871,7 +30410,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Rt = function() {
+  var rn = function() {
     function DetailExpander() {
       DetailExpander_classCallCheck(this, DetailExpander);
       this.maxAttempts = 3;
@@ -28998,7 +30537,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Ht = function() {
+  var on = function() {
     function QualityManager() {
       QualityManager_classCallCheck(this, QualityManager);
       this.maxAttempts = 6;
@@ -29155,7 +30694,7 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Nt = function() {
+  var an = function() {
     function UrlRedirector() {
       UrlRedirector_classCallCheck(this, UrlRedirector);
       var r = b.SITE_DOMAINS.MISSAV.primary;
@@ -29263,13 +30802,13 @@
     }
     return ("string" === o ? String : Number)(r);
   }
-  var Jt = new Nt;
-  var zt = function() {
+  var sn = new an;
+  var ln = function() {
     function UserExperienceEnhancer() {
       userExperienceEnhancer_classCallCheck(this, UserExperienceEnhancer);
-      this.detailExpander = new Rt;
-      this.qualityManager = new Ht;
-      this.urlRedirector = Jt;
+      this.detailExpander = new rn;
+      this.qualityManager = new on;
+      this.urlRedirector = sn;
     }
     return userExperienceEnhancer_createClass(UserExperienceEnhancer, [ {
       "key": "init",
@@ -29301,7 +30840,7 @@
   }();
   function initUserExperienceEnhancer() {
     var r = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : false;
-    var o = new zt;
+    var o = new ln;
     o.init(r);
     return o;
   }
@@ -29707,9 +31246,9 @@
       }));
     };
   }
-  var Wt = new Gt;
-  Wt.init();
-  Jt.checkAndRedirect();
+  var cn = new nn;
+  cn.init();
+  sn.checkAndRedirect();
   function setupViewport() {
     var r = document.querySelector('meta[name="viewport"]');
     if (!r) {
@@ -29771,19 +31310,19 @@
              case 4:
               injectStyles();
               r = initUserExperienceEnhancer(true);
-              o = new Pt;
+              o = new Jt;
               o.loadSettings();
-              vt.triggerAutoSync(o, "startup");
+              Ft.triggerAutoSync(o, "startup");
               document.addEventListener("visibilitychange", (function() {
                 if (document.visibilityState === "visible") {
-                  vt.triggerAutoSync(o, "resume");
+                  Ft.triggerAutoSync(o, "resume");
                 }
               }));
               window.addEventListener("focus", (function() {
-                vt.triggerAutoSync(o, "resume");
+                Ft.triggerAutoSync(o, "resume");
               }));
-              wt.initGlobal(o);
-              a = new St({
+              Ot.initGlobal(o);
+              a = new Nt({
                 "playerState": o
               });
               a.init();
@@ -29813,7 +31352,7 @@
       var a = Date.now();
       var l = false;
       P.log("检测到运行在 JAVLibrary 域名上，启动验证协同助手。".concat(o ? " (iframe broker 模式)" : ""));
-      We.startBroker("JAVLIBRARY", {
+      lt.startBroker("JAVLIBRARY", {
         "FETCH_JAVLIB_DATA": function() {
           var r = src_asyncToGenerator(src_regeneratorRuntime().mark((function _callee(r) {
             var o, a, l, u, p, v, y, b, C;

@@ -1,6 +1,6 @@
 {
   "name": "miss-player",
-  "version": "5.6.12",
+  "version": "5.6.16",
   "main": "dist/miss_player.user.js",
   "scripts": {
     "build": "webpack --mode production",
@@ -33,6 +33,7 @@
     "ws": "^8.21.1"
   },
   "dependencies": {
+    "@web-kits/audio": "^0.2.0",
     "hls.js": "^1.6.16"
   }
 }

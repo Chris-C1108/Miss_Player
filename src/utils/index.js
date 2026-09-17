@@ -12,3 +12,4 @@ export * from './videoCode.js';
 export * from './http.js';
 export * from './modal.js';
 export * from './clipboard.js';
+export * from './sound.js';

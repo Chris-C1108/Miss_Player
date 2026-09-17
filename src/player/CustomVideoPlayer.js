@@ -167,8 +167,10 @@ export class CustomVideoPlayer {
         });
         this.managers.loopManager = loopManager;
         
-        // 设置循环管理器引用到控制管理器
+        // 设置循环管理器引用到控制管理器与进度管理器
         controlManager.setLoopManager(loopManager);
+        progressManager.setLoopManager(loopManager);
+        this.playerCore.loopManager = loopManager;
         
         // 创建拖动管理器 (注入 uiManager, controlManager)
         const dragManager = new DragManager(this.playerCore, uiElements, uiManager, controlManager);
@@ -195,6 +197,7 @@ export class CustomVideoPlayer {
             controlManager,
             progressManager,
             dragManager,
+            loopManager,
             swipeManager: this.swipeManager
         });
         
