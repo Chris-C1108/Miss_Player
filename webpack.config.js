@@ -22,7 +22,17 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env'],
+            presets: [
+              ['@babel/preset-env', {
+                targets: {
+                  chrome: '90',
+                  firefox: '88',
+                  safari: '14',
+                  edge: '90'
+                },
+                modules: false
+              }]
+            ],
             plugins: ['transform-remove-console', 'transform-remove-debugger'],
             comments: false
           }
@@ -74,7 +84,7 @@ module.exports = {
       headers: {
         name: 'Miss Player | 影院模式 (单手播放器)',
         namespace: 'loadingi.local',
-        version: '5.6.17',
+        version: '5.6.18',
         description: "MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用",
         author: 'Chris_C',
         match: [
@@ -149,7 +159,7 @@ module.exports = {
         parallel: true,
         extractComments: false,
         terserOptions: {
-          ecma: 5,
+          ecma: 2020,
           parse: {},
           compress: {
             defaults: false,

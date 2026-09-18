@@ -94,6 +94,25 @@ Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感�
 
 ---
 
+## ⚖️ 平台合规与分发红线 (GreasyFork & SleazyFork Rules)
+
+所有代码编写、模块设计、依赖引入与版本发布，必须无条件遵从根目录的 **[GreasyFork&sleazyfork_rules.md](./GreasyFork&sleazyfork_rules.md)** 规范。开发过程中必须严格落实以下红线约束：
+
+1. **绝对禁止隐瞒负面功能 (Zero Undisclosed Antifeatures)**：
+   - 脚本必须保持 100% 纯本地运行，严禁加入任何用户行为监听、视频历史收集、设备指纹抓取或私有分析接口回传；
+   - 严禁在元信息 @connect 中声明未经披露或不必要的私有收集端点。
+
+2. **严禁代码混淆与压缩 (No Obfuscation / No Mangling)**：
+   - webpack.config.js 中的 Terser 插件必须永久保持 mangle: false，确保编译后变量名与函数名清晰透明、完全可审计；
+   - Babel 编译目标必须锁定为现代浏览器（Chrome 90+ / Safari 14+），严禁降级到古老的 ES5，避免引入携带单字母变量（, e, r, t, o）的冗余辅助垫片（如 _classCallCheck、_typeof）。
+
+3. **单文件体积限制 (2.0 MB Hard Limit)**：
+   - 平台硬性限制单脚本体积不可超过 2.0 MB，本项目构建体积安全线控制在 1.0 MB 以内。
+
+4. **合规审计与危机应对纪律**：
+   - 收到平台举报或问询时，必须严格遵守“**代码先行修复上线 -> 携带 Commit 实证客观回复申诉**”的 SOP 流程，严禁辩解推脱，严禁私自重新发布已被下架的脚本。
+
+---
 ## 🚀 开发与构建命令
 
 * **开发监听构建**：`npm run dev`
