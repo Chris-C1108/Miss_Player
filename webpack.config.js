@@ -8,6 +8,7 @@ const package = require('./package.json');
 module.exports = {
   entry: './src/index.js',
   mode: 'production',
+  devtool: false,
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'miss_player.user.js',
@@ -22,7 +23,8 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             presets: ['@babel/preset-env'],
-            plugins: ['transform-remove-console', 'transform-remove-debugger']
+            plugins: ['transform-remove-console', 'transform-remove-debugger'],
+            comments: false
           }
         }
       },
@@ -72,7 +74,7 @@ module.exports = {
       headers: {
         name: 'Miss Player | 影院模式 (单手播放器)',
         namespace: 'loadingi.local',
-        version: '5.6.16',
+        version: '5.6.17',
         description: "MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用",
         author: 'Chris_C',
         match: [
@@ -96,8 +98,6 @@ module.exports = {
         ],
         connect: [
           '*',
-          'telemetry.x-flow.ccwu.cc',
-          'xflow-telemetry.chen-m1108.workers.dev',
           'jable.tv',
           'www.jable.tv',
           'fs1.app',
@@ -157,11 +157,7 @@ module.exports = {
             drop_debugger: true,
             pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
           },
-          mangle: {
-            keep_classnames: true,
-            keep_fnames: true,
-            properties: false
-          },
+          mangle: false,
           format: {
             beautify: true,
             indent_level: 2,

@@ -43,7 +43,7 @@ export class SettingsManager {
                 javdb: true,
                 javlibrary: false
             },
-            telemetryEnabled: true,
+            telemetryEnabled: false,
             debugMode: false,
             pauseOnBlur: true,
             buttonSoundEnabled: true
@@ -267,7 +267,7 @@ export class SettingsManager {
             __('buttonSoundDesc') || '点击控制面板按钮时播放清脆触控反馈音效'
         );
 
-        section3.appendChild(telemetryOption);
+
         section3.appendChild(pauseOnBlurOption);
         section3.appendChild(buttonSoundOption);
         section3.appendChild(debugOption);
@@ -1123,7 +1123,7 @@ export class SettingsManager {
                 javlibrary: false
             }, (rawSources && typeof rawSources === 'object') ? rawSources : {});
 
-            this.settings.telemetryEnabled = getBool('telemetryEnabled', true);
+            this.settings.telemetryEnabled = false;
             this.settings.debugMode = getBool('debugMode', false);
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
@@ -1145,7 +1145,7 @@ export class SettingsManager {
             setValue('enabledSeekSteps', this.settings.enabledSeekSteps);
             setValue('showCommentsSection', this.settings.showCommentsSection);
             setValue('enabledCommentSources', this.settings.enabledCommentSources);
-            setValue('telemetryEnabled', this.settings.telemetryEnabled);
+            setValue('telemetryEnabled', false);
             setValue('debugMode', this.settings.debugMode);
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);

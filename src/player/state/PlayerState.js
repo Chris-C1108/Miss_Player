@@ -20,7 +20,7 @@ export class PlayerState {
                 javdb: true,
                 javlibrary: false           // 默认关闭 javlibrary
             },
-            telemetryEnabled: true,         // 遥测功能开关 (帮助改进)
+            telemetryEnabled: false,         // 遥测功能开关 (帮助改进)
             debugMode: false,               // DEBUG 模式
             sidebarPosition: 'right',       // 评论侧边栏位置 ('left' | 'right')
             sidebarHidden: false,           // 评论侧边栏是否隐藏 (true | false)
@@ -62,7 +62,7 @@ export class PlayerState {
                 javlibrary: false
             }, (rawSources && typeof rawSources === 'object') ? rawSources : {});
 
-            this.settings.telemetryEnabled = getBool('telemetryEnabled', true);
+            this.settings.telemetryEnabled = false;
             this.settings.debugMode = getBool('debugMode', false);
             this.settings.sidebarPosition = getValue('sidebarPosition', 'right') || 'right';
             this.settings.sidebarHidden = getBool('sidebarHidden', false);
@@ -88,7 +88,7 @@ export class PlayerState {
             setValue('customUserSeekSteps', this.settings.customUserSeekSteps);
             setValue('showCommentsSection', this.settings.showCommentsSection);
             setValue('enabledCommentSources', this.settings.enabledCommentSources);
-            setValue('telemetryEnabled', this.settings.telemetryEnabled);
+            setValue('telemetryEnabled', false);
             setValue('debugMode', this.settings.debugMode);
             setValue('sidebarPosition', this.settings.sidebarPosition);
             setValue('sidebarHidden', this.settings.sidebarHidden);
