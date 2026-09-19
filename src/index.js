@@ -1,3 +1,4 @@
+import { mediaSniffer } from './network/MediaSniffer.js';
 import './player/ui/style.css';
 
 import { FloatingButton } from './player/ui/FloatingButton.js';
@@ -17,6 +18,9 @@ import { SyncManager } from './sync/index.js';
 // 1. 最早执行广告与弹窗拦截 (确保在宿主脚本加载前劫持 window.open 与广告请求)
 const earlyAdBlocker = new AdBlocker();
 earlyAdBlocker.init();
+
+// 2. 尽早启动底层网络媒体嗅探器 (拦截 .m3u8 与高清源地址)
+mediaSniffer.init();
 
 // 2. 确保最早执行URL重定向检查
 earlyUrlRedirector.checkAndRedirect();

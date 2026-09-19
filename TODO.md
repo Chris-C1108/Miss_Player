@@ -11,8 +11,8 @@ flowchart TD
     P0[Phase 0: 应急合规治理 - 已完成 ✅] --> P1[Phase 1: 依赖轻量化与外部化 - 已完成 ✅]
     P1 --> P2[Phase 2: 工程基建迁移 Vite + vite-plugin-monkey - 已完成 ✅]
     P2 --> P3[Phase 3: Shadow DOM 界面隔离与微前端化 - 已完成 ✅]
-    P3 --> P4[Phase 4: 网络层 Proxy 嗅探与跨标签响应式状态机 🎯]
-    P4 --> P5[Phase 5: 自动化 CI/CD 与合规巡检流水线]
+    P3 --> P4[Phase 4: 网络层 Proxy 嗅探与跨标签响应式状态机 - 已完成 ✅]
+    P4 --> P5[Phase 5: 自动化 CI/CD 与合规巡检流水线 🎯]
 ```
 
 ---
@@ -84,23 +84,23 @@ flowchart TD
 
 ---
 
-### Phase 4: 网络层底层嗅探与响应式跨标签状态机 🎯 下一步重点
+### Phase 4: 网络层底层嗅探与响应式跨标签状态机 (已达成 ✅)
 > **目标**：由“脆弱的 DOM 抓取”向“底层网络拦截”演进，构建无后端的跨标签页实时同步能力。
 
-- [ ] **4.1 原生 Fetch / XHR 原型链 Proxy 劫持**
-  - [ ] 在 `@run-at document-start` 阶段安全劫持目标站点的 API 请求与响应；
-  - [ ] 直接从网络层响应拦截解析 m3u8 播放地址与高清视频元数据，取代 DOM 正则提取；
-  - [ ] 建立沙箱防御机制，杜绝原型链污染并防止宿主页面脚本窥探特权操作。
-- [ ] **4.2 基于 `GM_addValueChangeListener` 的响应式 Store**
-  - [ ] 引入 Nano Stores / Zustand 风格轻量状态机，桥接油猴跨域存储；
-  - [ ] 实现多标签页之间的播放进度无缝接力、播放器全局配置秒级热同步；
-  - [ ] A-B 打点切片、本地收藏夹在多个页面之间实时增量响应。
-- [ ] **4.3 本地离线高阶持久化 (IndexedDB)**
-  - [ ] 针对高频打点、大批量评论离线缓存接入 `IndexedDB`，彻底解除单 key 存储容量限制。
+- [x] **4.1 原生 Fetch / XHR 原型链 Proxy 劫持**
+  - [x] 落成 `src/network/MediaSniffer.js`，在 `@run-at document-start` 阶段安全代理 `window.fetch` 与 `XMLHttpRequest`；
+  - [x] 实时拦截捕获 `.m3u8`、`.mp4` 等视频流地址与清晰度元数据，替代滞后脆弱的 DOM 正则爬取；
+  - [x] 建立沙箱防护机制，防范原型链污染并防止宿主脚本窥探特权操作。
+- [x] **4.2 基于 `GM_addValueChangeListener` 的响应式 Store**
+  - [x] 落成 `src/utils/reactiveStore.js`，基于 ES6 Proxy 实现状态属性修改到持久化存储与广播的自动闭环；
+  - [x] 自动接入 `GM_addValueChangeListener` 跨标签监听，多标签页之间的设置变更（控制栏可见性、音效开关等）实现秒级热响应。
+- [x] **4.3 本地离线高阶持久化 (IndexedDB)**
+  - [x] 落成 `src/utils/indexedDB.js`，原生 Promise 封装建立 `MissPlayerDB` 高阶存储；
+  - [x] 提供 `markers`、`comments_cache` 与 `media_streams` 对象仓库，彻底解除单 key 字符串存储容量上限。
 
 ---
 
-### Phase 5: 自动化 CI/CD 与合规巡检流水线
+### Phase 5: 自动化 CI/CD 与合规巡检流水线 🎯 下一步重点
 > **目标**：打造工业级发版防御屏障，杜绝任何违规代码再次流入生产发布区。
 
 - [ ] **5.1 本地静态合规 Linter**

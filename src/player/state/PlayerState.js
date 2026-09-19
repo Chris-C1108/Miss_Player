@@ -1,3 +1,4 @@
+import { ReactiveStore } from '../../utils/reactiveStore.js';
 import { getValue, setValue } from '../../utils/index.js';
 import { SyncManager } from '../../sync/index.js';
 
@@ -78,6 +79,46 @@ export class PlayerState {
     /**
      * 保存设置
      */
+
+    /**
+     * 开启跨标签页状态响应式同步
+     * @param {Function} [onRemoteChange] 远端标签页状态变更回调 (key, newVal, oldVal) => void
+     */
+    initReactiveSync(onRemoteChange = null) {
+        if (this._reactiveStore) return;
+        const MONITORED_SETTINGS = [
+            'showProgressBar',
+            'showSeekControlRow',
+            'showLoopControlRow',
+            'showPlaybackControlRow',
+            'showCommentsSection',
+            'enabledCommentSources',
+            'sidebarPosition',
+            'sidebarHidden',
+            'preferredPlaybackRate',
+            'pauseOnBlur',
+            'buttonSoundEnabled'
+        ];
+
+        this._reactiveStore = new ReactiveStore(this.settings);
+        this._reactiveStore.enableCrossTabSync(MONITORED_SETTINGS);
+
+        for (const key of MONITORED_SETTINGS) {
+            this._reactiveStore.subscribe(key, (newVal, oldVal, isRemote) => {
+                if (isRemote) {
+                    this.settings[key] = newVal;
+                    if (typeof onRemoteChange === 'function') {
+                        try {
+                            onRemoteChange(key, newVal, oldVal);
+                        } catch (e) {
+                            console.error('[PlayerState] 跨标签响应回调异常:', e);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
     saveSettings() {
         try {
             setValue('showProgressBar', this.settings.showProgressBar);

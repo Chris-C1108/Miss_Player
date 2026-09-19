@@ -74,6 +74,19 @@ export class CustomVideoPlayer {
 
         // 初始化核心播放器
         this.playerCore.init();
+
+        // 激活多标签页响应式状态热同步
+        if (this.playerCore && this.playerCore.options && this.playerCore.options.playerState) {
+            this.playerCore.options.playerState.initReactiveSync((key, newVal) => {
+                if (this.managers.settingsManager) {
+                    this.managers.settingsManager.updateControlRowsVisibility();
+                }
+                if (key === 'buttonSoundEnabled' && this.managers.settingsManager) {
+                    this.managers.settingsManager.settings.buttonSoundEnabled = newVal;
+                }
+            });
+        }
+
         
         if (!this.playerCore.targetVideo) {
             console.error('[CustomVideoPlayer] 核心初始化失败: 未找到视频元素');
