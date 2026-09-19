@@ -1,4 +1,3 @@
-import './player/ui/style.css';
 
 import { FloatingButton } from './player/ui/FloatingButton.js';
 import { PlayerState } from './player/state/PlayerState.js';
