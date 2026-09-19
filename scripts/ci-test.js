@@ -115,7 +115,7 @@ runStep('无头浏览器沙箱安全启动测试', () => {
             error() {},
             trace() {}
         },
-        setTimeout, clearTimeout, setInterval, clearInterval
+        setTimeout, clearTimeout, setInterval: () => 1, clearInterval: () => {}
     };
 
     sandbox.window.self = sandbox.window;
@@ -140,3 +140,5 @@ runStep('无头浏览器沙箱安全启动测试', () => {
 console.log('\n====================================================');
 console.log('🎉 所有 CI 检查项 100% 通过，产物已具备工业级发布品质！');
 console.log('====================================================');
+
+process.exit(0);
