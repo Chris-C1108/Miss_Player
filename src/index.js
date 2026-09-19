@@ -1,3 +1,4 @@
+import './player/ui/style.css';
 
 import { FloatingButton } from './player/ui/FloatingButton.js';
 import { PlayerState } from './player/state/PlayerState.js';
@@ -88,7 +89,6 @@ function setupViewport() {
         setupViewport();
         
         // 注入CSS变量和样式
-        require('./player/ui/style.css');
         
         // 控制台日志 - 便于调试
         console.log(`[${__('scriptName')}] ${__('stylesInjected')}`);
