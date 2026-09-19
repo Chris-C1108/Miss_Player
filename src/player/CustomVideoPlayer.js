@@ -299,7 +299,8 @@ export class CustomVideoPlayer {
         this.playerCore.close(
             this.managers.uiManager.overlay, 
             this.managers.uiManager.container,
-            this.managers.uiManager.playerContainer
+            this.managers.uiManager.playerContainer,
+            this.managers.uiManager.rootHost
         );
         
         // 清理事件监听器

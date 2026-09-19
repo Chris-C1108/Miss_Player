@@ -31,16 +31,16 @@
 }
 
 /* 1. 响应式布局参数定义 */
-:root {
+:root, :host {
     --sidebar-width: clamp(350px, 28vw, 420px);
 }
 @media screen and (orientation: landscape) {
-    :root {
+    :root, :host {
         --sidebar-width: clamp(350px, 28vw, 420px);
     }
 }
 @media screen and (min-width: 1440px) and (orientation: landscape) {
-    :root {
+    :root, :host {
         --sidebar-width: clamp(380px, 22vw, 560px);
     }
 }
@@ -333,13 +333,13 @@
     }
 
     /* PC 端控制栏隐藏时的动画过渡 */
-    body.controls-hidden .tm-control-buttons {
+    body.controls-hidden .tm-control-buttons, .tm-player-container.controls-hidden .tm-control-buttons, :host(.controls-hidden) .tm-control-buttons {
         opacity: 0 !important;
         transform: translateY(20px) !important;
         pointer-events: none !important;
     }
 
-    body:not(.controls-hidden) .tm-control-buttons {
+    body:not(.controls-hidden) .tm-control-buttons, .tm-player-container:not(.controls-hidden) .tm-control-buttons, :host(:not(.controls-hidden)) .tm-control-buttons {
         opacity: 1 !important;
         transform: none !important;
         pointer-events: auto !important;
@@ -389,7 +389,7 @@
 
     /* 控制栏吸附在侧边栏（docked）时，100% 填满停靠区域，并去除外边距、圆角与阴影；即使画面顶栏隐藏，侧边栏底部的控制面板也保持常驻显示 */
     .tm-player-container[class*="tm-controls-docked-"] .tm-control-buttons,
-    body.controls-hidden .tm-player-container[class*="tm-controls-docked-"] .tm-control-buttons {
+    body.controls-hidden .tm-player-container[class*="tm-controls-docked-"] .tm-control-buttons, .tm-player-container.controls-hidden[class*="tm-controls-docked-"] .tm-control-buttons {
         position: fixed !important;
         width: var(--sidebar-width) !important;
         min-width: 350px !important;
@@ -546,13 +546,13 @@
     }
 
     /* 控制栏隐藏时的动画过渡 */
-    body.controls-hidden .tm-control-buttons {
+    body.controls-hidden .tm-control-buttons, .tm-player-container.controls-hidden .tm-control-buttons, :host(.controls-hidden) .tm-control-buttons {
         opacity: 0 !important;
         transform: translateY(20px) !important;
         pointer-events: none !important;
     }
 
-    body:not(.controls-hidden) .tm-control-buttons {
+    body:not(.controls-hidden) .tm-control-buttons, .tm-player-container:not(.controls-hidden) .tm-control-buttons, :host(:not(.controls-hidden)) .tm-control-buttons {
         opacity: 1 !important;
         transform: none !important;
         pointer-events: auto !important;

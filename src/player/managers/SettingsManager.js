@@ -1156,7 +1156,7 @@ export class SettingsManager {
      * 更新控制行的可见性
      */
     updateControlRowsVisibility() {
-        const controlButtonsContainer = document.querySelector('.tm-control-buttons');
+        const controlButtonsContainer = this.controlManager?.controlButtonsContainer || this.uiElements?.controlButtonsContainer || this.uiManager?.shadowRoot?.querySelector('.tm-control-buttons') || document.querySelector('.tm-control-buttons');
         if (!controlButtonsContainer) return;
 
         const seekControlRow = controlButtonsContainer.querySelector('.tm-seek-control-row');

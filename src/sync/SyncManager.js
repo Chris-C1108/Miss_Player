@@ -9,7 +9,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.6.19';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.6.20';
 
 /**
  * 获取或创建当前终端唯一 Client ID

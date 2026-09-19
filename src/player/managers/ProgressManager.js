@@ -39,6 +39,7 @@ export class ProgressManager {
      */
     init(progressElements) {
         this.progressBarElement = progressElements.progressBarElement;
+        if (this.uiElements) { this.uiElements.progressBar = this.progressBarElement; }
         this.progressIndicator = progressElements.progressIndicator;
         this.currentTimeDisplay = progressElements.currentTimeDisplay;
         this.totalDurationDisplay = progressElements.totalDurationDisplay;

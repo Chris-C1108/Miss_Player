@@ -67,6 +67,8 @@ export class PlayerCore {
      * 清理可能存在的旧overlay元素
      */
     cleanupExistingOverlays() {
+        const existingRoots = document.querySelectorAll('miss-player-root');
+        existingRoots.forEach(r => { try { r.remove(); } catch (_) {} });
         // 查找所有现有的overlay元素
         const existingOverlays = document.querySelectorAll('.tm-video-overlay');
         
@@ -212,7 +214,7 @@ export class PlayerCore {
     /**
      * 关闭播放器并恢复原始视频
      */
-    close(overlay, container, playerContainer) {
+    close(overlay, container, playerContainer, rootHost) {
         if (!overlay) return;
         
         // 保存当前视频状态以便下次打开
@@ -261,6 +263,9 @@ export class PlayerCore {
         }
         
         // 移除叠加层
+        if (rootHost && rootHost.parentNode) {
+            rootHost.parentNode.removeChild(rootHost);
+        }
         if (overlay.parentNode) {
             overlay.parentNode.removeChild(overlay);
         }

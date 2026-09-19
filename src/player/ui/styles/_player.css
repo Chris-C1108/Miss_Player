@@ -1,3 +1,4 @@
+:host { display: contents !important; }
 /* =========== 视频播放器样式 =========== */
 
 /* 整体布局 */
@@ -1895,28 +1896,28 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 /* 控制界面隐藏时的动画效果 - 更新选择器 */
-body.controls-hidden .tm-player-container .tm-control-buttons {
+body.controls-hidden .tm-player-container .tm-control-buttons, .tm-player-container.controls-hidden .tm-control-buttons, :host(.controls-hidden) .tm-control-buttons {
     opacity: 0;
     transform: translateX(-50%) translateY(calc(100% + 30px));
     pointer-events: none;
 }
 
 /* 控制界面显示时的动画效果 - 更新选择器 */
-body:not(.controls-hidden) .tm-player-container .tm-control-buttons {
+body:not(.controls-hidden) .tm-player-container .tm-control-buttons, .tm-player-container:not(.controls-hidden) .tm-control-buttons, :host(:not(.controls-hidden)) .tm-control-buttons {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
     pointer-events: auto;
 }
 
 /* 控制界面隐藏时的动画效果 - 更新选择器 */
-body.controls-hidden .tm-player-container .tm-button-container {
+body.controls-hidden .tm-player-container .tm-button-container, .tm-player-container.controls-hidden .tm-button-container, :host(.controls-hidden) .tm-button-container {
     opacity: 0;
     transform: translateY(-60px);
     pointer-events: none;
 }
 
 /* 控制界面显示时的动画效果 - 更新选择器 */
-body:not(.controls-hidden) .tm-player-container .tm-button-container {
+body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player-container:not(.controls-hidden) .tm-button-container, :host(:not(.controls-hidden)) .tm-button-container {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
@@ -2098,7 +2099,7 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container {
     transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-body.controls-hidden .tm-player-title {
+body.controls-hidden .tm-player-title, .tm-player-container.controls-hidden .tm-player-title, :host(.controls-hidden) .tm-player-title {
     opacity: 0 !important;
     transform: translate(-50%, -20px) !important;
     pointer-events: none !important;

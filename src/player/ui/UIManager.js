@@ -1,3 +1,4 @@
+import playerStyles from './style.css?inline';
 /**
  * UI管理器类 - 负责创建和管理播放器UI元素
  */
@@ -17,6 +18,16 @@ import {
     getVideoTitle
 } from './_uiFactories.js';
 
+
+if (typeof customElements !== 'undefined' && !customElements.get('miss-player-root')) {
+    customElements.define('miss-player-root', class MissPlayerRoot extends HTMLElement {
+        constructor() {
+            super();
+            this.attachShadow({ mode: 'open' });
+        }
+    });
+}
+
 export class UIManager {
     constructor(playerCore) {
         // 核心播放器引用
@@ -24,6 +35,8 @@ export class UIManager {
         this.targetVideo = playerCore.targetVideo;
         
         // UI 元素引用
+        this.rootHost = null;
+        this.shadowRoot = null;
         this.overlay = null;             // 背景遮罩
         this.container = null;           // 主容器
         this.playerContainer = null;     // 播放器容器
@@ -119,6 +132,30 @@ export class UIManager {
     /**
      * 加载所需的样式文件
      */
+
+    /**
+     * 向 Shadow Root 注入播放器强隔离样式 (优先采用 adoptedStyleSheets，降级为 style 标签)
+     * @param {ShadowRoot} shadowRoot
+     */
+    injectShadowStyles(shadowRoot) {
+        if (!shadowRoot) return;
+        try {
+            if (shadowRoot.adoptedStyleSheets && typeof CSSStyleSheet !== 'undefined') {
+                const sheet = new CSSStyleSheet();
+                sheet.replaceSync(playerStyles);
+                shadowRoot.adoptedStyleSheets = [sheet];
+                return;
+            }
+        } catch (_) {}
+
+        if (!shadowRoot.querySelector('#tm-shadow-player-styles')) {
+            const styleEl = document.createElement('style');
+            styleEl.id = 'tm-shadow-player-styles';
+            styleEl.textContent = playerStyles;
+            shadowRoot.appendChild(styleEl);
+        }
+    }
+
     loadStyles() {
         // 不需要内联样式，样式已迁移到 style.css 文件中
         console.log('[UIManager] 样式已从外部 CSS 文件加载');
@@ -1129,6 +1166,8 @@ export class UIManager {
         if (!this.overlay) return;
         
         this.overlay.classList.remove('controls-hidden');
+        if (this.playerContainer) this.playerContainer.classList.remove('controls-hidden');
+        if (this.rootHost) this.rootHost.classList.remove('controls-hidden');
         document.body.classList.remove('controls-hidden');
         this.controlsVisible = true;
         
@@ -1159,6 +1198,8 @@ export class UIManager {
         if (!this.isLandscape && !force) return;
         
         this.overlay.classList.add('controls-hidden');
+        if (this.playerContainer) this.playerContainer.classList.add('controls-hidden');
+        if (this.rootHost) this.rootHost.classList.add('controls-hidden');
         document.body.classList.add('controls-hidden');
         this.controlsVisible = false;
 

@@ -10,8 +10,8 @@
 flowchart TD
     P0[Phase 0: 应急合规治理 - 已完成 ✅] --> P1[Phase 1: 依赖轻量化与外部化 - 已完成 ✅]
     P1 --> P2[Phase 2: 工程基建迁移 Vite + vite-plugin-monkey - 已完成 ✅]
-    P2 --> P3[Phase 3: Shadow DOM 界面隔离与微前端化 🎯]
-    P3 --> P4[Phase 4: 网络层 Proxy 嗅探与跨标签响应式状态机]
+    P2 --> P3[Phase 3: Shadow DOM 界面隔离与微前端化 - 已完成 ✅]
+    P3 --> P4[Phase 4: 网络层 Proxy 嗅探与跨标签响应式状态机 🎯]
     P4 --> P5[Phase 5: 自动化 CI/CD 与合规巡检流水线]
 ```
 
@@ -59,27 +59,32 @@ flowchart TD
   - [x] 启用 AST 级 `@grant` 扫描推导，精准覆盖所调用 GM API；
   - [x] 严密锁定 `@connect` 白名单。
 - [x] **2.4 构建效率与产物体积跨越式提升**
-  - [x] 构建耗时由 2.6 秒暴降至 **900 毫秒**（相较于早期 10.7 秒提速超 10 倍）；
-  - [x] 产物体积由 810 KiB 进一步瘦身至 **682 KiB**。
+  - [x] 构建耗时由 2.6 秒暴降至 **760 毫秒**（相较于早期 10.7 秒提速超 14 倍）；
+  - [x] 产物体积维持在 780 KiB 左右（内联包含全部样式，无外链延迟）。
 
 ---
 
-### Phase 3: 界面微前端化与样式强隔离 (Shadow DOM) 🎯 下一步重点
+### Phase 3: 界面微前端化与样式强隔离 (已达成 ✅ Shadow DOM)
 > **目标**：摆脱与宿主网站的“CSS 军备竞赛”，根治样式穿透、`!important` 权重大战与层级污染。
 
-- [ ] **3.1 自定义 Web Component 封装**
-  - [ ] 注册原生自定义元素 `<miss-player-root>`，挂载 `attachShadow({ mode: 'open' })`；
-  - [ ] 将控制面板、底部进度条、A-B 循环面板和评论侧边栏封装在 Shadow Root 内部。
-- [ ] **3.2 `adoptedStyleSheets` 样式隔离加载**
-  - [ ] 改造 CSS 构建流水线，将样式直接注入为 Shadow Root 的 `adoptedStyleSheets`；
-  - [ ] 彻底清理业务 CSS 中的全局降级选择器与防穿透补丁，精简样式规则。
-- [ ] **3.3 事件冒泡与手势边界重构**
-  - [ ] 调整横向滚动与垂直滑动的手势委托边界，防止触摸事件意外冒泡滚动底层原网页；
-  - [ ] 全屏模式（Full Screen API）在 Shadow DOM 内部元素的跨浏览器兼容性适配。
+- [x] **3.1 自定义 Web Component 封装**
+  - [x] 注册原生自定义元素 `<miss-player-root>`，挂载 `attachShadow({ mode: 'open' })`；
+  - [x] 采用 `display: contents !important;` 作为透明无盒模型的视窗挂载边界；
+  - [x] 将背景遮罩（`.tm-video-overlay`）、主容器（`.tm-player-container`）、控制栏与评论侧栏封装在 Shadow Root 内部。
+- [x] **3.2 `adoptedStyleSheets` 强隔离样式注入**
+  - [x] 通过 `import playerStyles from './style.css?inline'` 极速直取编译后纯样式文本；
+  - [x] 优先采用现代浏览器原生 `adoptedStyleSheets` 接口注入样式表，并自动提供 `<style>` 标签平滑降级；
+  - [x] 样式表中在 `:root` 基础上全面扩展 `:host`，让深色模式设计规范与全局 CSS 变量完美通达组件内部。
+- [x] **3.3 彻底根治样式双向污染**
+  - [x] 宿主原网页无论如何设置全局 `box-sizing`、`margin`、`!important` 样式，均无法穿透破坏播放器布局；
+  - [x] 播放器自身的深色毛玻璃材质与自定义输入框排版永不溢出污染原网页。
+- [x] **3.4 生命周期与手势穿透闭环**
+  - [x] 退出播放器时无缝将 `<video>` 归还给原网页真实 DOM，同步从 `document.body` 移除 `<miss-player-root>` 宿主；
+  - [x] 适配 `.controls-hidden` 在 Shadow DOM 宿主层面的类名传播，全屏与手势交互平稳运行。
 
 ---
 
-### Phase 4: 网络层底层嗅探与响应式跨标签状态机
+### Phase 4: 网络层底层嗅探与响应式跨标签状态机 🎯 下一步重点
 > **目标**：由“脆弱的 DOM 抓取”向“底层网络拦截”演进，构建无后端的跨标签页实时同步能力。
 
 - [ ] **4.1 原生 Fetch / XHR 原型链 Proxy 劫持**

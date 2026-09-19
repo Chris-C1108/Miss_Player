@@ -180,7 +180,8 @@ export class EventManager {
      */
     _toggleScrollListeners(add = true) {
         const method = add ? 'addEventListener' : 'removeEventListener';
-        [this.uiElements.playerContainer, this.uiElements.overlay].forEach(el => {
+        [this.uiElements.playerContainer,
+            this.uiElements.rootHost, this.uiElements.overlay].forEach(el => {
             if (!el) return;
             el[method]('touchstart', this.handleTouchStartBound, { passive: true });
             el[method]('touchmove', this.handleScrollPreventionBound, { passive: false });
