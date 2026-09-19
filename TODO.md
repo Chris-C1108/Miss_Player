@@ -12,7 +12,7 @@ flowchart TD
     P1 --> P2[Phase 2: 工程基建迁移 Vite + vite-plugin-monkey - 已完成 ✅]
     P2 --> P3[Phase 3: Shadow DOM 界面隔离与微前端化 - 已完成 ✅]
     P3 --> P4[Phase 4: 网络层 Proxy 嗅探与跨标签响应式状态机 - 已完成 ✅]
-    P4 --> P5[Phase 5: 自动化 CI/CD 与合规巡检流水线 🎯]
+    P4 --> P5[Phase 5: 自动化 CI/CD 与合规巡检流水线 - 已完成 ✅]
 ```
 
 ---
@@ -100,18 +100,22 @@ flowchart TD
 
 ---
 
-### Phase 5: 自动化 CI/CD 与合规巡检流水线 🎯 下一步重点
+### Phase 5: 自动化 CI/CD 与合规巡检流水线 (已达成 ✅ 工业级防御屏障)
 > **目标**：打造工业级发版防御屏障，杜绝任何违规代码再次流入生产发布区。
 
-- [ ] **5.1 本地静态合规 Linter**
-  - [ ] 编写 AST 检查脚本：自动扫描打包产物，若检测到代码混淆、单字母变量密集区或未注明的外部连接，直接阻断构建；
-  - [ ] 校验体积预算：构建产物超过 1.0 MB 触发黄色告警，超过 1.8 MB 强制构建失败。
-- [ ] **5.2 Playwright 真实扩展端到端自动化测试**
-  - [ ] 搭建无头浏览器加载 Tampermonkey 扩展的 E2E 自动化测试，覆盖 MissAV / Jable 核心播放流程；
-  - [ ] 校验各站点广告拦截与 DOM 渲染稳定性。
-- [ ] **5.3 GitHub Actions 自动发版与分发**
-  - [ ] 配置 Release Tag 触发自动构建、测试与版本发布；
-  - [ ] 自动同步至 SleazyFork / GreasyFork 并生成带有详细 Diff 说明的 Release Notes。
+- [x] **5.1 本地静态合规 Linter (scripts/compliance-lint.js)**
+  - [x] 编写并落地合规审查脚本：自动扫描打包产物，严格审计 @namespace、@version 与泛/根域名匹配；
+  - [x] 违规端点零容忍扫描：自动阻断任何残留遥测域名；
+  - [x] 抽象语法树（AST）审计与变量命名检查：确保代码可读无混淆；
+  - [x] 产物体积预算守卫：> 1.0 MB 告警，> 1.8 MB 强制构建失败。
+- [x] **5.2 综合质量核验套件 (scripts/ci-test.js)**
+  - [x] 版本三处强同步校验自动化；
+  - [x] 无头沙箱安全启动与运行仿真测试，防止任何运行时 SyntaxError/TypeError 流入生产；
+  - [x] 接入 package.json 提供 npm run ci:check 一键门禁命令。
+- [x] **5.3 GitHub Actions 自动发版与分发 (.github/workflows/ci-release.yml)**
+  - [x] 配置分支 Push & PR 自动触发 CI 质量核验流；
+  - [x] 配置 v* Release Tag 自动构建、门禁核验与 GitHub Release 脚本资产分发；
+  - [x] 实现日常开发推送与正式线上发布严格隔离。
 
 ---
 

@@ -1,0 +1,63 @@
+name: Miss Player CI & Safe Release Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  compliance-and-test:
+    name: 🛡️ 合规门禁与安全质量核验
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Node.js 环境 (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 安装项目依赖
+        run: npm ci
+
+      - name: 执行 CI 综合质量与安全门禁
+        run: npm run ci:check
+
+      - name: 上传构建产物 (Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: userscript-dist
+          path: |
+            dist/miss_player.user.js
+            dist/miss_player.meta.js
+
+  release:
+    name: 🚀 GitHub Release 资产发布
+    needs: compliance-and-test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 下载核验通过的构建产物
+        uses: actions/download-artifact@v4
+        with:
+          name: userscript-dist
+          path: dist
+
+      - name: 创建 GitHub Release 并附加脚本资产
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/miss_player.user.js
+            dist/miss_player.meta.js
+          generate_release_notes: true
