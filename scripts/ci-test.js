@@ -107,7 +107,14 @@ runStep('无头浏览器沙箱安全启动测试', () => {
             removeEventListener() {}
         },
         navigator: { userAgent: 'Mozilla/5.0 CI-Runner' },
-        console: { log() {}, warn() {}, error() {} },
+        console: {
+            log() {},
+            info() {},
+            debug() {},
+            warn() {},
+            error() {},
+            trace() {}
+        },
         setTimeout, clearTimeout, setInterval, clearInterval
     };
 
