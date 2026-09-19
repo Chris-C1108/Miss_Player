@@ -104,7 +104,7 @@ Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感�
 
 2. **严禁代码混淆与压缩 (No Obfuscation / No Mangling)**：
    - webpack.config.js 中的 Terser 插件必须永久保持 mangle: false，确保编译后变量名与函数名清晰透明、完全可审计；
-   - Babel 编译目标必须锁定为现代浏览器（Chrome 90+ / Safari 14+），严禁降级到古老的 ES5，避免引入携带单字母变量（, e, r, t, o）的冗余辅助垫片（如 _classCallCheck、_typeof）。
+   - Babel 编译目标必须锁定为现代浏览器（Chrome 90+ / Safari 14+），严禁降级到古老的 ES5，避免引入携带单字母变量（a, e, r, t, o）的冗余辅助垫片（如 _classCallCheck、_typeof）。
 
 3. **单文件体积限制 (2.0 MB Hard Limit)**：
    - 平台硬性限制单脚本体积不可超过 2.0 MB，本项目构建体积安全线控制在 1.0 MB 以内。
@@ -113,6 +113,24 @@ Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感�
    - 收到平台举报或问询时，必须严格遵守“**代码先行修复上线 -> 携带 Commit 实证客观回复申诉**”的 SOP 流程，严禁辩解推脱，严禁私自重新发布已被下架的脚本。
 
 ---
+
+## 🔄 会话交接与知识沉淀工作流 (Handoff & Lesson Workflow)
+
+当会话结束、阶段性里程碑达成或需要跨 Agent 交接工作时，**必须执行以下标准化沉淀工作流**，严禁仅将信息停留在会话对话中：
+
+1. **交接文档归档 (Handoff)**：
+   - 必须生成完整的交接文档并写入：`002.devlog/yyyy-mm-dd-hhmm-handoff.md`；
+   - 记录当前稳定版本号、Git Commit、已完成的核心成果拓扑、关键文件变动及下一阶段（For Next Session）任务清单；
+   - 标明推荐后续 Agent 调用的关键 Skills 清单。
+
+2. **经验教训沉淀 (Lesson Learned)**：
+   - 必须将本阶段排查出的致命 Bug、隐藏陷阱、反模式及技术解决方案同步写入：`002.devlog/yyyy-mm-dd-hhmm-lesson.md`；
+   - 重点记录平台合规红线教训、构建语法陷阱（如严格模式无分号 ASI、域名匹配规则）、Shadow DOM 隔离边界及异步调试经验。
+
+3. **两份文档强关联与时间戳一致性**：
+   - `yyyy-mm-dd-hhmm` 统一采用当前系统的精确本地时间戳（如 `2026-09-20-0025`）；
+   - 生成后同步提交 Git 仓库进行版本受控。
+
 ## 🚀 开发与构建命令
 
 * **开发监听构建**：`npm run dev`
