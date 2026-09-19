@@ -5,6 +5,10 @@ import fs from 'fs';
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 
 export default defineConfig({
+  server: {
+    cors: true,
+    port: 5173
+  },
   plugins: [
     monkey({
       entry: 'src/index.js',
@@ -30,8 +34,11 @@ export default defineConfig({
         author: 'Chris_C',
         match: [
           '*://*.missav.ws/*',
+          '*://missav.ws/*',
           '*://*.missav.ai/*',
+          '*://missav.ai/*',
           '*://*.jable.tv/*',
+          '*://jable.tv/*',
           '*://*/*',
         ],
         icon: 'https://missav.ws/img/favicon.ico',
@@ -45,7 +52,8 @@ export default defineConfig({
           'GM_listValues',
           'GM_addValueChangeListener',
           'GM_removeValueChangeListener',
-          'GM_openInTab'
+          'GM_openInTab',
+          'GM_addStyle'
         ],
         connect: [
           '*',

@@ -104,7 +104,8 @@ module.exports = {
           'GM_listValues',
           'GM_addValueChangeListener',
           'GM_removeValueChangeListener',
-          'GM_openInTab'
+          'GM_openInTab',
+          'GM_addStyle'
         ],
         connect: [
           '*',

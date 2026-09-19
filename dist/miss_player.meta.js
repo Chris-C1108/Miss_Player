@@ -17,8 +17,11 @@
 // @license            MIT
 // @icon               https://missav.ws/img/favicon.ico
 // @match              *://*.missav.ws/*
+// @match              *://missav.ws/*
 // @match              *://*.missav.ai/*
+// @match              *://missav.ai/*
 // @match              *://*.jable.tv/*
+// @match              *://jable.tv/*
 // @match              *://*/*
 // @connect            *
 // @connect            jable.tv
@@ -34,6 +37,7 @@
 // @connect            c97k.com
 // @connect            www.c97k.com
 // @grant              GM.openInTab
+// @grant              GM_addStyle
 // @grant              GM_addValueChangeListener
 // @grant              GM_deleteValue
 // @grant              GM_getValue
