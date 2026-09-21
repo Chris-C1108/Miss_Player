@@ -1,10 +1,11 @@
 /**
  * WebDAV 协议客户端 (WebDavClient)
  * 提供基于 GM_xmlhttpRequest / fetch 的跨域 WebDAV 存储交互
+ * 包含 UTF-8 安全 Base64 认证、PROPFIND 目录嗅探、MKCOL 逐级创建及各服务商自适应
  */
 export class WebDavClient {
     /**
-     * 构建认证请求头
+     * UTF-8 安全的标准 Basic Auth 编码 (避免 btoa 遇到中文/特殊字符报 InvalidCharacterError)
      * @param {string} user - 用户名
      * @param {string} pass - 密码 / 授权码
      * @returns {Object} Headers 字典
@@ -12,9 +13,12 @@ export class WebDavClient {
     static getAuthHeaders(user, pass) {
         if (!user && !pass) return {};
         try {
-            const token = btoa(unescape(encodeURIComponent(`${user || ''}:${pass || ''}`)));
+            const raw = `${user || ''}:${pass || ''}`;
+            const b64 = btoa(encodeURIComponent(raw).replace(/%([0-9A-F]{2})/g, (_, p1) => {
+                return String.fromCharCode(parseInt(p1, 16));
+            }));
             return {
-                'Authorization': `Basic ${token}`
+                'Authorization': `Basic ${b64}`
             };
         } catch (_) {
             return {};
@@ -22,27 +26,56 @@ export class WebDavClient {
     }
 
     /**
-     * 规范化 WebDAV URL 和路径拼接
-     * @param {string} baseUrl - WebDAV 服务器基础地址
-     * @param {string} path - 相对或绝对路径
-     * @returns {string} 完整的规范化 URL
+     * 智能服务商 URL 归一化与端点补全 (适配坚果云、Nextcloud/ownCloud、InfiniCLOUD 等)
+     * @param {string} baseUrl - 用户输入的 WebDAV 服务器地址
+     * @param {string} [username=''] - 用户名 (用于 Nextcloud 自动补齐路径)
+     * @returns {string} 清洗归一化后的基础 URL (不带尾部斜杠)
      */
-    static normalizeUrl(baseUrl, path = '') {
+    static normalizeProviderUrl(baseUrl, username = '') {
         if (!baseUrl) return '';
         let url = baseUrl.trim();
         if (!/^https?:\/\//i.test(url)) {
             url = 'https://' + url;
         }
-        // 移除 baseUrl 尾部斜杠
         url = url.replace(/\/+$/, '');
 
-        // 规范化 path
+        // 1. 坚果云 (Jianguoyun)：要求根端点包含 /dav
+        if (/jianguoyun\.com/i.test(url) && !/\/dav$/i.test(url)) {
+            url = `${url}/dav`;
+        }
+
+        // 2. Nextcloud / ownCloud：若用户仅填写主域名且未带 /remote.php/dav，自动补充标准个人端点
+        if (/(?:nextcloud|owncloud)/i.test(url)) {
+            if (!/\/remote\.php\/dav/i.test(url) && username) {
+                url = `${url}/remote.php/dav/files/${encodeURIComponent(username.trim())}`;
+            }
+        }
+
+        // 3. InfiniCLOUD (TeraCLOUD)：保持其标准 /dav 端点
+        if (/teracloud\.jp/i.test(url) && !/\/dav$/i.test(url)) {
+            url = `${url}/dav`;
+        }
+
+        return url;
+    }
+
+    /**
+     * 规范化 WebDAV URL 和路径拼接，并严格校验目录/文件斜杠规则 (防 301 重定向导致 Auth 标头丢失)
+     * @param {string} baseUrl - WebDAV 服务器基础地址
+     * @param {string} path - 相对或绝对路径
+     * @param {string} [username=''] - 用户名
+     * @returns {string} 完整的规范化 URL
+     */
+    static normalizeUrl(baseUrl, path = '', username = '') {
+        if (!baseUrl) return '';
+        const cleanBase = this.normalizeProviderUrl(baseUrl, username);
+
         let cleanPath = (path || '').trim();
         if (cleanPath && !cleanPath.startsWith('/')) {
             cleanPath = '/' + cleanPath;
         }
 
-        return url + cleanPath;
+        return cleanBase + cleanPath;
     }
 
     /**
@@ -58,7 +91,7 @@ export class WebDavClient {
             pass = '',
             headers = {},
             data = null,
-            timeout = 12000
+            timeout = 15000
         } = options;
 
         const authHeaders = this.getAuthHeaders(user, pass);
@@ -79,7 +112,7 @@ export class WebDavClient {
                 reject(err instanceof Error ? err : new Error(String(err)));
             };
 
-            // 1. 优先使用 GM_xmlhttpRequest
+            // 1. 优先使用 GM_xmlhttpRequest (穿透浏览器沙箱与 CORS 预检)
             if (typeof GM_xmlhttpRequest === 'function') {
                 try {
                     GM_xmlhttpRequest({
@@ -88,6 +121,7 @@ export class WebDavClient {
                         headers: mergedHeaders,
                         data,
                         timeout,
+                        anonymous: false,
                         onload: (res) => {
                             safeResolve({
                                 status: res.status,
@@ -149,7 +183,87 @@ export class WebDavClient {
     }
 
     /**
-     * 测试 WebDAV 连通性
+     * 远端目录嗅探 (通过 PROPFIND Depth: 0 验证目录是否存在)
+     * @param {string} dirUrl 目录完整 URL (以 / 结尾)
+     * @param {string} user 用户名
+     * @param {string} pass 密码
+     * @returns {Promise<boolean>} true: 目录存在; false: 目录不存在 (404)
+     */
+    static async checkDirectoryExists(dirUrl, user, pass) {
+        try {
+            const res = await this.request({
+                method: 'PROPFIND',
+                url: dirUrl,
+                user,
+                pass,
+                headers: {
+                    'Depth': '0',
+                    'Content-Type': 'application/xml; charset=utf-8'
+                }
+            });
+            // 207 Multi-Status 或 200 OK 说明目录已存在且可访问
+            if (res.status === 207 || res.status === 200) {
+                return true;
+            }
+            // 404: 明确不存在，需要创建
+            if (res.status === 404) {
+                return false;
+            }
+            // 部分简易 WebDAV 网关对 PROPFIND 支持不全返回 405 Method Not Allowed，视为可能存在
+            if (res.status === 405) {
+                return true;
+            }
+            return false;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    /**
+     * 逐级嗅探并创建 WebDAV 专用目录 (PROPFIND 嗅探 -> MKCOL 创建)
+     * 严格遵守 RFC 4918：目录 URL 末尾必须带 /，防止 301 重定向剥离鉴权头
+     * @param {Object} config - { url, user, pass, path }
+     */
+    static async ensureDirectory(config) {
+        const { url, user, pass, path = '/MissPlayer/' } = config;
+        let cleanPath = (path || '/MissPlayer/').trim();
+        if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+        if (!cleanPath.endsWith('/')) cleanPath = cleanPath + '/';
+
+        const segments = cleanPath.split('/').filter(Boolean);
+        let currentPath = '';
+
+        for (const seg of segments) {
+            currentPath += '/' + seg;
+            const dirUrlWithSlash = this.normalizeUrl(url, currentPath + '/', user);
+
+            // 1. 目录级嗅探：先探测该层级目录是否存在
+            const exists = await this.checkDirectoryExists(dirUrlWithSlash, user, pass);
+            if (exists) {
+                continue; // 该层级已存在，继续检测下一级
+            }
+
+            // 2. 该层级不存在，发送 MKCOL 创建目录
+            try {
+                const res = await this.request({
+                    method: 'MKCOL',
+                    url: dirUrlWithSlash,
+                    user,
+                    pass
+                });
+                // 201 Created: 成功创建; 405: 目录已存在; 200/204: 成功
+                if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204) {
+                    continue;
+                }
+                console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到状态码: ${res.status}`);
+            } catch (err) {
+                console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到异常:`, err.message || err);
+            }
+        }
+    }
+
+    /**
+     * 测试 WebDAV 连通性并自动嗅探预建目录
      * @param {Object} config - { url, user, pass, path }
      * @returns {Promise<{ success: boolean, message: string }>}
      */
@@ -163,7 +277,10 @@ export class WebDavClient {
         if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
         if (!cleanPath.endsWith('/')) cleanPath = cleanPath + '/';
 
-        const fileUrl = this.normalizeUrl(url, cleanPath + 'miss_player_sync.json');
+        // 1. 优先执行目录级嗅探与自动创建
+        await this.ensureDirectory(config);
+
+        const fileUrl = this.normalizeUrl(url, cleanPath + 'miss_player_sync.json', user);
 
         try {
             // 发送 GET 探测备份文件是否存在或连通
@@ -179,18 +296,25 @@ export class WebDavClient {
             });
 
             if (res.status === 401 || res.status === 403) {
-                throw new Error(`认证失败 (${res.status}): 请检查用户名与密码/Token`);
+                throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
             }
 
             if (res.status >= 500) {
-                throw new Error(`服务器错误 (${res.status})`);
+                throw new Error(`服务器内部错误 (${res.status})`);
             }
 
-            // 若返回 200 (文件已存在) 或 404 (连接正常，文件尚未创建) 均代表认证及连通成功！
-            if (res.status === 200 || res.status === 404 || res.status === 204 || res.status === 207) {
+            // 200 (文件已存在) 或 404 (连接正常且目录就绪，文件尚未创建) 均代表认证及连通成功！
+            if (res.status === 200 || res.status === 204 || res.status === 207) {
                 return {
                     success: true,
-                    message: 'WebDAV 连接成功！'
+                    message: 'WebDAV 连接成功，已检测到云端备份！'
+                };
+            }
+
+            if (res.status === 404) {
+                return {
+                    success: true,
+                    message: 'WebDAV 目录已自动就绪，随时可同步数据！'
                 };
             }
 
@@ -205,42 +329,7 @@ export class WebDavClient {
     }
 
     /**
-     * 递归确保 WebDAV 上的专用目录存在 (通过 MKCOL 创建)
-     * @param {Object} config - { url, user, pass, path }
-     */
-    static async ensureDirectory(config) {
-        const { url, user, pass, path = '/MissPlayer/' } = config;
-        let cleanPath = (path || '/MissPlayer/').trim();
-        if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
-        if (!cleanPath.endsWith('/')) cleanPath = cleanPath + '/';
-
-        const segments = cleanPath.split('/').filter(Boolean);
-        let currentPath = '';
-
-        for (const seg of segments) {
-            currentPath += '/' + seg;
-            const dirUrlWithSlash = this.normalizeUrl(url, currentPath + '/');
-
-            try {
-                const res = await this.request({
-                    method: 'MKCOL',
-                    url: dirUrlWithSlash,
-                    user,
-                    pass
-                });
-                // 201: 已创建, 405: 目录已存在(合法), 200/204: 成功
-                if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204) {
-                    continue;
-                }
-            } catch (err) {
-                // 忽略创建目录的非致命异常
-                console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到状态:`, err.message || err);
-            }
-        }
-    }
-
-    /**
-     * 从 WebDAV 下载备份 JSON 文件
+     * 从 WebDAV 下载备份 JSON 文件 (安全 JSON 解析与容错校验)
      * @param {Object} config - { url, user, pass, path }
      * @param {string} [filename='miss_player_sync.json'] - 文件名
      * @returns {Promise<Object|null>} 成功返回 JSON 数据对象，若文件不存在返回 null
@@ -251,7 +340,7 @@ export class WebDavClient {
         if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
         if (!dirPath.endsWith('/')) dirPath = dirPath + '/';
 
-        const fileUrl = this.normalizeUrl(url, dirPath + filename);
+        const fileUrl = this.normalizeUrl(url, dirPath + filename, user);
 
         try {
             const res = await this.request({
@@ -271,14 +360,23 @@ export class WebDavClient {
             }
 
             if (res.status === 401 || res.status === 403) {
-                throw new Error(`认证失败 (${res.status}): 请检查用户名与密码/Token`);
+                throw new Error(`认证失败 (${res.status}): 请检查用户名与应用授权码`);
             }
 
             if (res.status >= 200 && res.status < 300) {
                 if (!res.data || !res.data.trim()) {
                     return null;
                 }
-                return JSON.parse(res.data);
+                try {
+                    const parsed = JSON.parse(res.data);
+                    if (parsed && typeof parsed === 'object') {
+                        return parsed;
+                    }
+                    throw new Error('云端备份文件内容格式畸变');
+                } catch (jsonErr) {
+                    console.error('[WebDavClient] 云端 JSON 解析失败:', jsonErr);
+                    throw new Error('云端备份数据损坏或被截断，已终止读取');
+                }
             }
 
             throw new Error(`下载失败，服务器返回状态码: ${res.status}`);
@@ -289,7 +387,7 @@ export class WebDavClient {
     }
 
     /**
-     * 上传备份 JSON 数据至 WebDAV (支持 404/409 自动创建目录并重试)
+     * 上传备份 JSON 数据至 WebDAV (写入前主动确保目录就绪)
      * @param {Object} config - { url, user, pass, path }
      * @param {Object} data - 要备份的完整 JSON 对象
      * @param {string} [filename='miss_player_sync.json'] - 文件名
@@ -297,11 +395,14 @@ export class WebDavClient {
     static async uploadBackup(config, data, filename = 'miss_player_sync.json') {
         const { url, user, pass, path = '/MissPlayer/' } = config;
 
+        // 1. 上传前主动确保所有父级目录存在
+        await this.ensureDirectory(config);
+
         let dirPath = (path || '/MissPlayer/').trim();
         if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
         if (!dirPath.endsWith('/')) dirPath = dirPath + '/';
 
-        const fileUrl = this.normalizeUrl(url, dirPath + filename);
+        const fileUrl = this.normalizeUrl(url, dirPath + filename, user);
         const jsonString = JSON.stringify(data, null, 2);
 
         try {
@@ -316,9 +417,9 @@ export class WebDavClient {
                 data: jsonString
             });
 
-            // 如果遇到 404 / 409 (父目录未创建)，自动创建目录并重试 PUT
+            // 遇到极端情况 404/409 时再次重试一次
             if (res.status === 404 || res.status === 409) {
-                console.warn(`[WebDavClient] PUT 返回 ${res.status}，自动创建目录并重试上传...`);
+                console.warn(`[WebDavClient] PUT 返回 ${res.status}，重试 ensureDirectory 并二次上传...`);
                 await this.ensureDirectory(config);
                 res = await this.request({
                     method: 'PUT',

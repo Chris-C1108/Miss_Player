@@ -95,8 +95,9 @@ export default defineConfig({
             let code = fs.readFileSync('dist/miss_player.user.js', 'utf8');
             if (code.includes('"use strict"(function')) {
               code = code.replace('"use strict"(function', '"use strict";\n(function');
-              fs.writeFileSync('dist/miss_player.user.js', code, 'utf8');
             }
+            code = code.replace(/-webkit-backdrop-filter:([^;}]+)/g, 'backdrop-filter:$1;-webkit-backdrop-filter:$1');
+            fs.writeFileSync('dist/miss_player.user.js', code, 'utf8');
           }
         } catch (_) {}
       }

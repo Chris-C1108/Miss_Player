@@ -39,10 +39,13 @@ When watching web videos on your phone or desktop browser, have you ever run int
 ### 3. 🔁 A-B Loop & Multi-Marker Segment System — The Ultimate Reviewing Tool
 - **Seamless A-B Looping**: One-tap to set start and end points for continuous, uninterrupted playback of your favorite clips.
 - **Colorful Pill Tabs**: Supports multiple markers per video with custom labels, color categories, and fine-tuned millisecond trimming.
-- **Marker Bottom Sheet**: Swipe up from the bottom anytime to reveal the full marker drawer and switch points instantly.
+- **Marker Bottom Sheet**: Swipe up from the bottom anytime to reveal the full marker drawer with native-feeling momentum touch scrolling on mobile.
+- **Apple-Inspired Restrained Floating Glass**: Floating control bar and settings panels feature a 32px Gaussian blur and 200% saturation boost with refined hairline highlight edges and ambient shadows, ensuring spatial float even on pitch-black backgrounds.
+- **High-Contrast All-Scene Progress Bar**: Redesigned luminous white indicator and high-contrast marker ticks ensure sharp visibility across high-key and bright scenes.
 
 ### 4. ☁️ WebDAV Smart Multi-Device Cloud Sync — Continuity across Phone / PC / Tablet
-- **Cross-Platform Config & Marker Sync**: Compatible with Nutstore (Jianguoyun), Alist, Nextcloud, Nginx, or any standard WebDAV service.
+- **Ecosystem-Wide WebDAV Compatibility**: Out-of-the-box support for Nutstore (auto-resolves /dav), Nextcloud/ownCloud (auto-derives user endpoints), InfiniCLOUD (TeraCLOUD), fnOS NAS, Synology, AList, and custom WebDAV servers.
+- **PROPFIND Auto-Discovery & Directory Provisioning**: Features smart two-phase PROPFIND directory inspection with multi-level MKCOL creation—no manual folder creation required on your cloud storage.
 - **CRDT-Based Distributed Smart Merge**: Timestamps saved on your PC are automatically and silently pulled to your mobile device within 25 seconds; features a 30-day tombstone mechanism to ensure deletions stay accurately in sync.
 - **Adaptive Form Factor Isolation**: Keeps the comment sidebar expanded on Desktop while maintaining pure one-handed mode on Mobile without config conflicts.
 

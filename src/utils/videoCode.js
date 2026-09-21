@@ -151,6 +151,32 @@ export function getVideoCodeFromUrl(url = (typeof window !== 'undefined' ? windo
             }
         }
 
+                // 7. 检查常见 URL 查询参数 (例如 ?code=MIAB-592, ?v=..., ?av=...)
+        if (!rawCandidate && urlObj.searchParams) {
+            for (const param of ['code', 'v', 'id', 'av', 'vid']) {
+                const val = urlObj.searchParams.get(param);
+                if (val && isValidAvCode(val)) {
+                    rawCandidate = val;
+                    break;
+                }
+            }
+        }
+
+        // 8. 兜底回退：从页面 document.title 或 meta[property="og:title"] 中解析番号
+        if (!rawCandidate && typeof document !== 'undefined') {
+            const ogTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
+            const docTitle = document.title || '';
+            for (const text of [ogTitle, docTitle]) {
+                if (!text) continue;
+                const m = text.match(/\b([a-zA-Z0-9]+-[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*)\b/i) ||
+                          text.match(/\b(dm|[a-zA-Z]{2,8})\d{2,8}\b/i);
+                if (m && isValidAvCode(m[1] || m[0])) {
+                    rawCandidate = m[1] || m[0];
+                    break;
+                }
+            }
+        }
+
         if (rawCandidate && isValidAvCode(rawCandidate)) {
             return cleanAvCode(rawCandidate);
         }

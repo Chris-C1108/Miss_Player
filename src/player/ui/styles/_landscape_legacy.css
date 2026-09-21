@@ -98,14 +98,11 @@
         width: 90%;
         max-width: 700px;
         min-width: 350px; /* 与竖屏模式保持一致 */
-        background-color: transparent; /* 统一使用 ::before 绘制高档高斯模糊与内阴影 */
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-        z-index: 9994;
-        padding: 16px 16px 14px;
-        border-radius: 16px;
-        border: none;
-        box-shadow: none;
+        background-color: rgba(22, 22, 28, 0.76) !important;
+        backdrop-filter: blur(32px) saturate(200%) !important;
+        -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
         transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     }
 

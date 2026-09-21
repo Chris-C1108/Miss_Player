@@ -278,12 +278,12 @@
     position: absolute;
     top: calc(env(safe-area-inset-top, 8px) + 60px);
     right: 16px;
-    background-color: hsla(var(--shadcn-card) / 0.92);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background-color: rgba(22, 22, 28, 0.78);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
     border-radius: 14px;
-    border: 1px solid hsla(var(--shadcn-border) / 0.2);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px hsla(0, 0%, 100%, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     padding: 14px 16px;
     z-index: 100000 !important; /* 层级高于控制面板(9997)与标题(9998) */
     min-width: 275px;
@@ -1554,6 +1554,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     overflow: hidden;
     box-sizing: border-box;
     padding: 10px 14px 12px;
+    touch-action: pan-y !important;
 }
 .tm-bottom-sheet-panel.visible {
     opacity: 1;
@@ -1609,6 +1610,8 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y !important;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -1632,6 +1635,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     border: none;
     height: 32px;
     box-sizing: border-box;
+    touch-action: pan-y !important;
 }
 
 .tm-sheet-item-time-container {
@@ -1865,13 +1869,11 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     z-index: 9997 !important;
     padding: 16px 16px 14px;
     border-radius: 16px;
-    background-color: rgba(10, 10, 10, 0.52); /* 降低透明度，允许环境色（如宿主紫色）自然折射渗透 */
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    box-shadow: 
-        inset 0 0 0 1px rgba(255, 255, 255, 0.05), /* 极薄微量内描边，防黑背景融合 */
-        0 12px 32px rgba(0, 0, 0, 0.45);            /* 外层弥散阴影 */
-    border: none;
+    background-color: rgba(22, 22, 28, 0.76); /* 降低透明度，允许环境色（如宿主紫色）自然折射渗透 */
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);            /* 外层弥散阴影 */
+    border: 1px solid rgba(255, 255, 255, 0.14);
     transition: 
         opacity 0.3s ease, 
         transform 0.3s ease, 
@@ -1893,6 +1895,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 
 .tm-control-buttons.dragging {
     transition: none !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
 }
 
 /* 控制界面隐藏时的动画效果 - 更新选择器 */
@@ -2247,11 +2250,13 @@ body.tm-player-active [class*="navbar-fixed"] {
 .tm-progress-marker-tick {
     position: absolute;
     width: 6px;
-    height: 3px;
+    height: 4px;
     bottom: -4px;
     transform: translateX(-50%);
-    background-color: hsla(var(--tab-color), 0.25);
-    border-radius: 1.5px;
+    background-color: hsla(var(--tab-color), 0.75);
+    border: 0.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    border-radius: 2px;
     cursor: pointer;
     z-index: 10;
     pointer-events: auto;
@@ -2265,10 +2270,11 @@ body.tm-player-active [class*="navbar-fixed"] {
 }
 .tm-progress-marker-range {
     position: absolute;
-    height: 3px;
+    height: 4px;
     bottom: -4px;
-    background-color: hsla(var(--tab-color), 0.25);
-    border-radius: 1.5px;
+    background-color: hsla(var(--tab-color), 0.55);
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     cursor: pointer;
     z-index: 9;
     pointer-events: auto;
