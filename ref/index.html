@@ -1,74 +1,72 @@
-<html>
-    <head>
-        <title>XXXXXXXXXXXXXX</title>
-        
-        <script src="../dist/miss_player.user.js"></script>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>XXXXX</h1>
-            </div>
-            <div class="content">
-                # 一个基本的vedio播放器 
-                <div class="vedio">
-                    <video src="https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-576p.mp4" controls width="360" height="240"></video>
-                </div>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h22</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-				<p>h1</p>
-            </div>
-        </div>
-    </body>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 静态 HTML 保持空值或默认值 -->
+  <title></title>
+  <meta property="og:title" content="">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0b0c10;
+      /* 强制页面高度超出 1080px */
+      min-height: 1440px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 48px;
+      overflow-y: scroll;
+    }
+    .video-container {
+      width: 90%;
+      max-width: 1200px;
+      background-color: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    video {
+      width: 100%;
+      display: block;
+      aspect-ratio: 16 / 9;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="video-container">
+    <video controls playsinline preload="metadata">
+      <!-- 采用公网标准开源测试视频源，可按需替换 -->
+      <source src="https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-576p.mp4" type="video/mp4">
+    </video>
+  </div>
+<script>
+    // ================= 配置区域 =================
+    // 默认测试番号，直接修改此处即可：
+    const DEFAULT_CODE = "MIAB-592";
+
+    // 支持直接从 URL 参数动态获取（例如: index.html?code=REAL-995），若无参数则回退到 DEFAULT_CODE
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetCode = urlParams.get("code") || DEFAULT_CODE;
+
+    // ================= 执行写入 =================
+    // 1. 设置 document.title
+    document.title = targetCode;
+
+    // 2. 设置或创建 meta[property="og:title"]
+    let ogTitleMeta = document.querySelector('meta[property="og:title"]');
+    if (!ogTitleMeta) {
+      ogTitleMeta = document.createElement('meta');
+      ogTitleMeta.setAttribute('property', 'og:title');
+      document.head.appendChild(ogTitleMeta);
+    }
+    ogTitleMeta.setAttribute('content', targetCode);
+  </script>
+</body>
 </html>

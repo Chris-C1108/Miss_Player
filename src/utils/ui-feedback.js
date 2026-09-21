@@ -82,3 +82,6 @@ export function Toast(msg, duration = 3000, bgColor = '', textColor = '', positi
         }, 300);
     }, duration);
 }
+
+// 静态便捷方法扩展 (兼容 Toast.show 调用)
+Toast.show = (msg, duration = 3000, type = '') => Toast(msg, duration, type);

@@ -598,7 +598,7 @@ export class SettingsManager {
         testBtn.addEventListener('click', async () => {
             const currentCfg = persistCurrentInputs();
             if (!currentCfg.url) {
-                Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
                 updateStatus('请输入服务器地址', 'error');
                 return;
             }
@@ -607,10 +607,10 @@ export class SettingsManager {
             updateStatus('正在测试连接...', 'running');
             try {
                 const res = await WebDavClient.testConnection(currentCfg);
-                Toast.show(res.message || '连接成功！', 3000);
+                Toast(res.message || '连接成功！', 3000);
                 updateStatus('连接正常', 'success');
             } catch (err) {
-                Toast.show((__('webdavTestFailed') || '连接失败: ') + err.message, 4000);
+                Toast((__('webdavTestFailed') || '连接失败: ') + err.message, 4000);
                 updateStatus(err.message ? `连接失败: ${err.message}` : '连接失败', 'error');
             } finally {
                 testBtn.innerHTML = `${ICON_CHECK} <span>${__('webdavTestConnection') || '测试连接'}</span>`;
@@ -622,7 +622,7 @@ export class SettingsManager {
         syncMergeBtn.addEventListener('click', async () => {
             const currentCfg = persistCurrentInputs();
             if (!currentCfg.url) {
-                Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
                 updateStatus('请输入服务器地址', 'error');
                 return;
             }
@@ -635,11 +635,11 @@ export class SettingsManager {
                     config: currentCfg,
                     playerState: this.playerCore?.options?.playerState
                 });
-                Toast.show(res.message || '云端多端合并同步成功！', 3000);
+                Toast(res.message || '云端多端合并同步成功！', 3000);
                 this._lastWebDavStatus = { text: '同步成功', type: 'success', time: Date.now() };
                 this.createSettingsPanel(); // 刷新面板显示最新合并设置与状态徽标
             } catch (err) {
-                Toast.show((__('webdavSyncFailed') || '同步失败: ') + err.message, 4500);
+                Toast((__('webdavSyncFailed') || '同步失败: ') + err.message, 4500);
                 updateStatus(err.message ? `同步失败: ${err.message}` : '同步失败', 'error');
                 syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__('webdavSyncMerge') || '智能合并同步'}</span>`;
                 setButtonsDisabled(false);
@@ -650,7 +650,7 @@ export class SettingsManager {
         uploadBtn.addEventListener('click', async () => {
             const currentCfg = persistCurrentInputs();
             if (!currentCfg.url) {
-                Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
                 updateStatus('请输入服务器地址', 'error');
                 return;
             }
@@ -666,11 +666,11 @@ export class SettingsManager {
                     config: currentCfg,
                     playerState: this.playerCore?.options?.playerState
                 });
-                Toast.show(res.message || '已成功覆盖云端备份！', 3000);
+                Toast(res.message || '已成功覆盖云端备份！', 3000);
                 updateStatus('已上传覆盖', 'success');
                 renderTimeText();
             } catch (err) {
-                Toast.show((__('webdavSyncFailed') || '上传失败: ') + err.message, 4500);
+                Toast((__('webdavSyncFailed') || '上传失败: ') + err.message, 4500);
                 updateStatus(err.message ? `上传失败: ${err.message}` : '上传失败', 'error');
             } finally {
                 uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '上传覆盖'}</span>`;
@@ -682,7 +682,7 @@ export class SettingsManager {
         downloadBtn.addEventListener('click', async () => {
             const currentCfg = persistCurrentInputs();
             if (!currentCfg.url) {
-                Toast.show(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
+                Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
                 updateStatus('请输入服务器地址', 'error');
                 return;
             }
@@ -698,11 +698,11 @@ export class SettingsManager {
                     config: currentCfg,
                     playerState: this.playerCore?.options?.playerState
                 });
-                Toast.show(res.message || '已成功从云端覆盖本地！', 3000);
+                Toast(res.message || '已成功从云端覆盖本地！', 3000);
                 this._lastWebDavStatus = { text: '已下载覆盖', type: 'success', time: Date.now() };
                 this.createSettingsPanel(); // 刷新面板显示最新覆盖设置与状态徽标
             } catch (err) {
-                Toast.show((__('webdavSyncFailed') || '下载失败: ') + err.message, 4500);
+                Toast((__('webdavSyncFailed') || '下载失败: ') + err.message, 4500);
                 updateStatus(err.message ? `下载失败: ${err.message}` : '下载失败', 'error');
                 downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '下载覆盖'}</span>`;
                 setButtonsDisabled(false);
