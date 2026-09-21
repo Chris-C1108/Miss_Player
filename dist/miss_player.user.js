@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.6.23
+// @version            5.6.24
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -595,6 +595,46 @@
 		reachabilityCache = new Map();
 	}));
 	init_domains();
+	var TECHNICAL_BLACKLIST = new Set([
+		"1080P",
+		"720P",
+		"480P",
+		"2160P",
+		"4K",
+		"8K",
+		"UHD",
+		"FHD",
+		"HD",
+		"SD",
+		"H264",
+		"H265",
+		"X264",
+		"X265",
+		"HEVC",
+		"AVC",
+		"AAC",
+		"MP4",
+		"MKV",
+		"AVI",
+		"WMV",
+		"TS",
+		"M2TS",
+		"SUB",
+		"CH",
+		"ZH",
+		"CN",
+		"UNCENSORED",
+		"LEAK",
+		"WIN7",
+		"WIN10",
+		"WIN11",
+		"WIN",
+		"ISO",
+		"SHA",
+		"MD5",
+		"SAMPLE",
+		"TRAILER"
+	]);
 	var NON_AV_SLUGS = new Set([
 		"search",
 		"s",
@@ -657,110 +697,210 @@
 		"top",
 		"trending"
 	]);
-	function isValidAvCode(code) {
-		if (!code || typeof code !== "string") return false;
-		const s = code.trim().toLowerCase();
-		if (s.length < 2 || s.length > 50) return false;
-		if (NON_AV_SLUGS.has(s)) return false;
-		if (s.endsWith(".html") || s.endsWith(".php") || s.endsWith(".htm") || s.endsWith(".js") || s.endsWith(".css")) return false;
-		if (/^[a-z0-9]+-[a-z0-9]+(-[a-z0-9]+)*$/i.test(s) && /\d/.test(s)) return true;
-		if (/^(dm|[a-z]{2,8})\d{2,8}$/i.test(s)) return true;
-		if (/^uncensored-leak-[a-z0-9-]+$/i.test(s) && /\d/.test(s)) return true;
-		return false;
-	}
-	function cleanAvCode(code) {
-		if (!code) return "";
-		let result = code.trim();
-		const suffixes = [
-			"-uncensored-leak",
-			"-uncensored",
-			"-english-subtitle",
-			"-chinese-subtitle",
-			"-subtitle",
-			"-leak",
-			"-c",
-			"-uc"
-		];
-		let changed = true;
-		while (changed) {
-			changed = false;
-			for (const suffix of suffixes) if (result.toLowerCase().endsWith(suffix)) {
-				result = result.slice(0, -suffix.length);
-				changed = true;
-				break;
+	var PARSER_RULES = [
+		{
+			type: "FC2",
+			regex: /(?:FC2(?:[_s-]?PPV)?|PPV)[_s-]?(\d{5,7})\b/i,
+			format: (m) => `FC2-PPV-${m[1]}`
+		},
+		{
+			type: "MGS",
+			regex: /\b(\d{3}[A-Z]{2,6})[_s-]?(\d{2,5})\b/i,
+			format: (m) => `${m[1].toUpperCase()}-${m[2]}`
+		},
+		{
+			type: "UNCENSORED_DATE",
+			regex: /\b(\d{6})[_s-](\d{3})\b/,
+			format: (m) => `${m[1]}-${m[2]}`
+		},
+		{
+			type: "TOKYO_HOT",
+			regex: /\b(CZ|[NK])(\d{4})\b/i,
+			format: (m) => `${m[1].toUpperCase()}${m[2]}`
+		},
+		{
+			type: "HEYZO",
+			regex: /\bHEYZO[_s-]?(\d{4})\b/i,
+			format: (m) => `HEYZO-${m[1]}`
+		},
+		{
+			type: "DM",
+			regex: /\bDM[_s-]?(\d{2,5})\b/i,
+			format: (m) => `DM-${m[1]}`
+		},
+		{
+			type: "STANDARD_HYPHEN",
+			regex: /\b([A-Z]{2,8})[\s_\-](\d{2,5})\b/i,
+			format: (m) => `${m[1].toUpperCase()}-${m[2]}`
+		},
+		{
+			type: "DMM_CID",
+			regex: /\b([A-Z]{2,8})(?:00|0)(\d{2,5})\b/i,
+			format: (m) => {
+				const prefix = m[1].toUpperCase();
+				let num = m[2].replace(/^0+/, "");
+				if (num.length === 1) num = "0" + num;
+				return `${prefix}-${num}`;
+			}
+		},
+		{
+			type: "COMPACT",
+			regex: /\b([A-Z]{2,8})(\d{2,5})\b/i,
+			format: (m) => {
+				const prefix = m[1].toUpperCase();
+				let num = m[2].replace(/^0+/, "");
+				if (num.length === 1) num = "0" + num;
+				return `${prefix}-${num}`;
 			}
 		}
-		const stdMatch = result.match(/^([a-zA-Z]+)-?(\d+)$/);
-		if (stdMatch) return `${stdMatch[1].toUpperCase()}-${stdMatch[2]}`;
-		const dmMatch = result.match(/^dm-?(\d+)$/i);
-		if (dmMatch) return `DM-${dmMatch[1]}`;
-		return result.toUpperCase();
+	];
+	function sanitizeInput(str) {
+		if (!str || typeof str !== "string") return "";
+		return str.replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 65248)).replace(/\u3000/g, " ").replace(/\[[^\]]*\]|【[^】]*】|\([^\)]*\)/g, " ").replace(/[-_ ](?:c|ch|uc|hd|fhd|4k|leak|uncensored|wuma|youma|subtitle)\b/gi, " ").trim();
 	}
-	function getVideoCodeFromUrl(url = typeof window !== "undefined" ? window.location.href : "") {
+	function isValidAvCode(code) {
+		if (!code || typeof code !== "string") return false;
+		const s = code.trim();
+		if (s.length < 2 || s.length > 50) return false;
+		if (NON_AV_SLUGS.has(s.toLowerCase())) return false;
+		if (/\.(html|php|htm|js|css|mp4|mkv|avi|wmv)$/i.test(s)) return false;
+		for (const rule of PARSER_RULES) {
+			const m = s.match(rule.regex);
+			if (m) {
+				const prefix = (m[1] || "").toUpperCase();
+				if (TECHNICAL_BLACKLIST.has(prefix)) return false;
+				return true;
+			}
+		}
+		return false;
+	}
+	function matchAvCodeFromText(rawStr) {
+		if (!rawStr) return "";
+		const text = sanitizeInput(rawStr);
+		for (const rule of PARSER_RULES) {
+			const match = text.match(rule.regex);
+			if (match) {
+				const prefix = (match[1] || "").toUpperCase();
+				if (TECHNICAL_BLACKLIST.has(prefix)) continue;
+				const formatted = rule.format(match);
+				if (isValidAvCode(formatted)) return formatted;
+			}
+		}
+		return "";
+	}
+	function getVideoCodeFromUrl(urlOrElement = typeof window !== "undefined" ? window.location.href : "") {
+		let url = typeof urlOrElement === "string" ? urlOrElement : "";
+		let targetVideo = urlOrElement && typeof urlOrElement === "object" && urlOrElement.tagName === "VIDEO" ? urlOrElement : null;
+		if (!targetVideo && typeof document !== "undefined") targetVideo = document.querySelector(".tm-video-wrapper video") || document.querySelector("video[preload]:not([muted])") || document.querySelector("video");
+		if (targetVideo) {
+			const videoCandidates = [
+				targetVideo.getAttribute("data-code"),
+				targetVideo.getAttribute("data-avcode"),
+				targetVideo.getAttribute("data-id"),
+				targetVideo.getAttribute("data-video-id"),
+				targetVideo.title,
+				targetVideo.currentSrc,
+				targetVideo.src
+			];
+			const childSources = targetVideo.querySelectorAll("source");
+			for (const s of childSources) if (s.src) videoCandidates.push(s.src);
+			let parent = targetVideo.parentElement;
+			let depth = 0;
+			while (parent && depth < 3) {
+				const pCode = parent.getAttribute("data-code") || parent.getAttribute("data-avcode") || parent.getAttribute("data-id");
+				if (pCode) videoCandidates.push(pCode);
+				depth++;
+				parent = parent.parentElement;
+			}
+			for (const candidate of videoCandidates) if (candidate) {
+				const code = matchAvCodeFromText(candidate);
+				if (code) return code;
+			}
+		}
+		if (!url && typeof window !== "undefined") url = window.location.href;
 		if (!url) return "";
 		try {
 			const urlObj = new URL(url);
-			const path = urlObj.pathname;
-			urlObj.search;
-			let rawCandidate = "";
+			const path = decodeURIComponent(urlObj.pathname || "");
+			decodeURIComponent(urlObj.search || "");
 			if (isSiteDomain("JABLE", urlObj.hostname)) {
 				const match = path.match(/\/videos\/([^/?#]+)/i);
-				if (match) rawCandidate = match[1];
+				if (match) {
+					const code = matchAvCodeFromText(match[1]);
+					if (code) return code;
+				}
 			}
-			if (!rawCandidate && isSiteDomain("JAVDB", urlObj.hostname)) {
+			if (isSiteDomain("JAVDB", urlObj.hostname)) {
 				const match = path.match(/\/(?:v|videos)\/([^/?#]+)/i);
-				if (match) rawCandidate = match[1];
+				if (match) {
+					const code = matchAvCodeFromText(match[1]);
+					if (code) return code;
+				}
 			}
-			if (!rawCandidate && isSiteDomain("JAVLIBRARY", urlObj.hostname)) {
+			if (isSiteDomain("JAVLIBRARY", urlObj.hostname)) {
 				const vParam = urlObj.searchParams.get("v");
-				if (vParam) rawCandidate = vParam;
+				if (vParam) {
+					const code = matchAvCodeFromText(vParam);
+					if (code) return code;
+				}
 			}
-			if (!rawCandidate && isSiteDomain("MISSAV", urlObj.hostname)) {
+			if (isSiteDomain("MISSAV", urlObj.hostname)) {
 				const segments = path.split("/").filter(Boolean);
 				if (segments.length > 0) {
 					const last = segments[segments.length - 1];
-					if (!NON_AV_SLUGS.has(last.toLowerCase())) rawCandidate = last;
+					if (!NON_AV_SLUGS.has(last.toLowerCase())) {
+						const code = matchAvCodeFromText(last);
+						if (code) return code;
+					}
 				}
 			}
-			if (!rawCandidate) {
-				const genericMatch = path.match(/\/([a-zA-Z0-9]+-\d+[a-zA-Z0-9-]*)/i);
-				if (genericMatch) rawCandidate = genericMatch[1];
-			}
-			if (!rawCandidate) {
-				const segments = path.split("/").filter(Boolean);
-				if (segments.length > 0) {
-					const last = segments[segments.length - 1];
-					if (isValidAvCode(last)) rawCandidate = last;
-				}
-			}
-			if (!rawCandidate && urlObj.searchParams) for (const param of [
+			if (urlObj.searchParams) for (const param of [
 				"code",
 				"v",
 				"id",
 				"av",
-				"vid"
+				"vid",
+				"movie"
 			]) {
 				const val = urlObj.searchParams.get(param);
-				if (val && isValidAvCode(val)) {
-					rawCandidate = val;
-					break;
+				if (val) {
+					const code = matchAvCodeFromText(val);
+					if (code) return code;
 				}
 			}
-			if (!rawCandidate && typeof document !== "undefined") {
-				const ogTitle = document.querySelector("meta[property=\"og:title\"]")?.getAttribute("content") || "";
-				const docTitle = document.title || "";
-				for (const text of [ogTitle, docTitle]) {
-					if (!text) continue;
-					const m = text.match(/\b([a-zA-Z0-9]+-[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*)\b/i) || text.match(/\b(dm|[a-zA-Z]{2,8})\d{2,8}\b/i);
-					if (m && isValidAvCode(m[1] || m[0])) {
-						rawCandidate = m[1] || m[0];
-						break;
-					}
+			const segments = path.split("/").filter(Boolean);
+			if (segments.length > 0) {
+				const last = segments[segments.length - 1];
+				if (!NON_AV_SLUGS.has(last.toLowerCase())) {
+					const code = matchAvCodeFromText(last);
+					if (code) return code;
 				}
 			}
-			if (rawCandidate && isValidAvCode(rawCandidate)) return cleanAvCode(rawCandidate);
+			const pathCode = matchAvCodeFromText(path);
+			if (pathCode) return pathCode;
+			if (typeof document !== "undefined") {
+				const ogTitle = document.querySelector("meta[property=\"og:title\"]")?.getAttribute("content") || document.querySelector("meta[name=\"twitter:title\"]")?.getAttribute("content") || "";
+				if (ogTitle) {
+					const code = matchAvCodeFromText(ogTitle);
+					if (code) return code;
+				}
+				const h1Text = document.querySelector("h1")?.innerText || document.querySelector("h1")?.textContent || "";
+				if (h1Text) {
+					const code = matchAvCodeFromText(h1Text);
+					if (code) return code;
+				}
+				const javDbCodeNode = document.querySelector(".current-title, .video-meta-panel .first-block span.value");
+				if (javDbCodeNode && javDbCodeNode.textContent) {
+					const code = matchAvCodeFromText(javDbCodeNode.textContent);
+					if (code) return code;
+				}
+				if (document.title) {
+					const code = matchAvCodeFromText(document.title);
+					if (code) return code;
+				}
+			}
 		} catch (e) {
-			console.error("[VideoCode] Failed to parse video code from URL:", e);
+			console.error("[VideoCode] 番号解析管道发生异常:", e);
 		}
 		return "";
 	}
@@ -879,7 +1019,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.23";
+		return "5.6.24";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -9180,7 +9320,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.23";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.24";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
