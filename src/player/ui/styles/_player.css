@@ -872,6 +872,266 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     to { transform: rotate(360deg); }
 }
 
+/* =========================================================================
+   关于与更新卡片 (SleazyFork JSON API 驱动)
+   ========================================================================= */
+.tm-settings-about-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: hsla(var(--shadcn-card) / 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsla(var(--shadcn-border) / 0.25);
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 4px;
+}
+
+.tm-about-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tm-about-brand-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tm-about-brand-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: hsl(var(--shadcn-foreground));
+    letter-spacing: -0.2px;
+}
+
+.tm-about-version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    font-size: 10.5px;
+    font-weight: 600;
+    background: hsla(var(--shadcn-secondary) / 0.7);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.3);
+}
+
+.tm-about-version-badge.is-update {
+    background: linear-gradient(135deg, #ff3b30 0%, #ff9500 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 2px 6px rgba(255, 59, 48, 0.4);
+    animation: tm-pulse 2s infinite;
+}
+
+.tm-about-version-badge svg {
+    width: 11px;
+    height: 11px;
+}
+
+@keyframes tm-pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.04); opacity: 0.92; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.tm-about-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: hsla(var(--shadcn-muted-foreground) / 0.85);
+    text-decoration: none;
+    padding: 3px 8px;
+    background: hsla(var(--shadcn-muted) / 0.3);
+    border: 1px solid hsla(var(--shadcn-border) / 0.25);
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+.tm-about-link-btn:hover {
+    color: hsl(var(--shadcn-foreground));
+    background: hsla(var(--shadcn-muted) / 0.6);
+    border-color: hsla(var(--shadcn-border) / 0.45);
+}
+
+.tm-about-link-btn svg {
+    width: 11px;
+    height: 11px;
+}
+
+.tm-about-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.tm-about-stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 4px;
+    background: hsla(var(--shadcn-muted) / 0.2);
+    border: 1px solid hsla(var(--shadcn-border) / 0.15);
+    border-radius: 6px;
+    text-align: center;
+}
+
+.tm-about-stat-val {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: hsl(var(--shadcn-foreground));
+    font-variant-numeric: tabular-nums;
+}
+
+.tm-about-stat-lbl {
+    font-size: 10px;
+    color: hsla(var(--shadcn-muted-foreground) / 0.7);
+    margin-top: 1px;
+}
+
+.tm-about-update-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    background: linear-gradient(135deg, hsla(var(--shadcn-primary) / 0.12) 0%, hsla(var(--shadcn-accent) / 0.08) 100%);
+    border: 1px solid hsla(var(--shadcn-primary) / 0.35);
+    border-radius: 8px;
+    margin-top: 2px;
+}
+
+.tm-about-update-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: hsl(var(--shadcn-primary));
+}
+
+.tm-about-update-title svg {
+    width: 13px;
+    height: 13px;
+}
+
+.tm-about-update-desc {
+    font-size: 11px;
+    color: hsla(var(--shadcn-foreground) / 0.85);
+    line-height: 1.4;
+}
+
+.tm-about-update-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.tm-about-check-row {
+    margin-top: 2px;
+}
+
+.tm-about-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.tm-about-btn svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+.tm-about-btn--check {
+    width: 100%;
+    background: hsla(var(--shadcn-muted) / 0.35);
+    color: hsl(var(--shadcn-foreground));
+    border-color: hsla(var(--shadcn-border) / 0.25);
+}
+
+.tm-about-btn--check:hover {
+    background: hsla(var(--shadcn-muted) / 0.65);
+    border-color: hsla(var(--shadcn-border) / 0.45);
+}
+
+.tm-about-btn--check.is-loading svg {
+    animation: tm-spin 0.75s linear infinite;
+}
+
+.tm-about-btn--primary {
+    background: linear-gradient(135deg, hsl(var(--shadcn-primary)) 0%, hsl(var(--shadcn-accent)) 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 2px 8px hsla(var(--shadcn-primary) / 0.3);
+    font-weight: 600;
+}
+
+.tm-about-btn--primary:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 4px 12px hsla(var(--shadcn-primary) / 0.4);
+}
+
+.tm-about-btn--secondary {
+    background: hsla(var(--shadcn-muted) / 0.35);
+    color: hsl(var(--shadcn-foreground));
+    border-color: hsla(var(--shadcn-border) / 0.25);
+}
+
+.tm-about-btn--secondary:hover {
+    background: hsla(var(--shadcn-muted) / 0.65);
+    border-color: hsla(var(--shadcn-border) / 0.45);
+}
+
+.tm-about-btn:active {
+    transform: scale(0.97);
+}
+
+.tm-about-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 设置齿轮按钮的更新红点徽章 */
+.tm-settings-button.has-update-badge {
+    position: relative;
+}
+
+.tm-settings-button.has-update-badge::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    background: #ff3b30;
+    border-radius: 50%;
+    border: 1.5px solid hsl(var(--shadcn-background));
+    box-shadow: 0 0 6px rgba(255, 59, 48, 0.8);
+    z-index: 10;
+    pointer-events: none;
+    animation: tm-pulse 2s infinite;
+}
+
 /* 切换开关输入框样式 */
 .tm-toggle-input {
     position: absolute;

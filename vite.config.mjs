@@ -68,7 +68,10 @@ export default defineConfig({
           'javlib.com',
           'www.javlib.com',
           'c97k.com',
-          'www.c97k.com'
+          'www.c97k.com',
+          'sleazyfork.org',
+          'greasyfork.org',
+          'update.sleazyfork.org'
         ],
         'run-at': 'document-start',
         license: pkg.license

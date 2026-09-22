@@ -28,11 +28,9 @@ export function fetchWithTransport(url, options = {}) {
             });
     }
 
-    // 跨域场景使用 GM_xmlhttpRequest
-    return new Promise((resolve, reject) => {
-        if (typeof GM_xmlhttpRequest !== 'function') {
-            return reject(new Error('GM_xmlhttpRequest unavailable'));
-        }
+    // 跨域场景优先使用 GM_xmlhttpRequest
+    if (typeof GM_xmlhttpRequest === 'function') {
+        return new Promise((resolve, reject) => {
 
         let completed = false;
         const timer = setTimeout(() => {
@@ -69,6 +67,19 @@ export function fetchWithTransport(url, options = {}) {
             }
         });
     });
+    }
+
+    // 环境降级：如果在非油猴纯标准环境（如测试），降级使用标准 fetch
+    if (typeof fetch === 'function') {
+        const fetchFn = (typeof unsafeWindow !== 'undefined' && unsafeWindow.fetch) ? unsafeWindow.fetch : fetch;
+        return fetchFn(url, { method, headers, body })
+            .then(async res => {
+                const text = await res.text();
+                return { status: res.status, html: text, finalUrl: res.url };
+            });
+    }
+
+    return Promise.reject(new Error('GM_xmlhttpRequest unavailable'));
 }
 
 /**

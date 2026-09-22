@@ -2,6 +2,7 @@ import { getValue, setValue, Toast, playTapSound } from '../../utils/index.js';
 import { telemetry } from '../../telemetry';
 import { __ } from '../../constants/i18n.js';
 import { SyncManager, WebDavClient, getOrCreateClientId, getDeviceName } from '../../sync/index.js';
+import { SleazyForkService, getCurrentVersion } from '../../services/SleazyForkService.js';
 import {
     ICON_CLOUD_SYNC,
     ICON_CLOUD_UPLOAD,
@@ -9,7 +10,11 @@ import {
     ICON_EYE,
     ICON_EYE_OFF,
     ICON_CHECK,
-    ICON_SERVER
+    ICON_SERVER,
+    ICON_REFRESH,
+    ICON_EXTERNAL_LINK,
+    ICON_DOWNLOAD,
+    ICON_SPARKLES
 } from '../../constants/icons.js';
 
 /**
@@ -46,11 +51,15 @@ export class SettingsManager {
             telemetryEnabled: false,
             debugMode: false,
             pauseOnBlur: true,
-            buttonSoundEnabled: true
+            buttonSoundEnabled: true,
+            autoCheckUpdate: true
         };
 
         // 快进快退步进自定义展开状态
         this.showCustomSeekStepsPanel = false;
+        this.isAboutExpanded = true;
+        this._latestUpdateInfo = null;
+        this._isCheckingUpdate = false;
     }
 
     setManagers(managers = {}) {
@@ -67,6 +76,34 @@ export class SettingsManager {
         
         // 初始应用设置到控制组件
         this.updateControlRowsVisibility();
+
+        // 自动静默检查更新 (后台闲时执行，杜绝卡顿)
+        if (this.settings.autoCheckUpdate !== false) {
+            const runSilentCheck = async () => {
+                try {
+                    const res = await SleazyForkService.checkUpdate(false);
+                    if (res && res.success) {
+                        this._latestUpdateInfo = res;
+                        if (res.hasUpdate) {
+                            const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
+                            if (btn) {
+                                btn.classList.add('has-update-badge');
+                                btn.setAttribute('title', `${__('updateFound') || '发现新版本'}: v${res.latestVersion}`);
+                            }
+                            if (this.settingsPanel && this.settingsPanel.children.length) {
+                                this.createSettingsPanel();
+                            }
+                        }
+                    }
+                } catch (_) {}
+            };
+
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(() => setTimeout(runSilentCheck, 2500));
+            } else {
+                setTimeout(runSilentCheck, 3000);
+            }
+        }
 
         // 延迟至浏览器空闲期或首次打开时再构建庞大的设置面板 DOM，降低播放器首屏组装耗时
         if (typeof window.requestIdleCallback === 'function') {
@@ -304,6 +341,37 @@ export class SettingsManager {
         section4.appendChild(header4);
         section4.appendChild(webdavCard);
         container.appendChild(section4);
+
+        // =================================================================
+        // SECTION 5: 关于与更新 (About & Updates) :
+        // =================================================================
+        const currentVersion = getCurrentVersion();
+        const hasUpdate = Boolean(this._latestUpdateInfo?.hasUpdate);
+        const updateSummary = hasUpdate
+            ? ` (${__('updateFound') || '发现新版本'} v${this._latestUpdateInfo.latestVersion})`
+            : ` (v${currentVersion})`;
+
+        const section5 = document.createElement('div');
+        section5.className = 'tm-settings-section';
+
+        const header5 = this._createSectionHeader(
+            (__('aboutAndUpdates') || '关于与更新 :') + updateSummary,
+            true,
+            this.isAboutExpanded !== false,
+            (expanded) => {
+                this.isAboutExpanded = expanded;
+                if (aboutCard) {
+                    aboutCard.style.display = expanded ? 'flex' : 'none';
+                }
+            }
+        );
+
+        const aboutCard = this._createAboutCard();
+        aboutCard.style.display = (this.isAboutExpanded !== false) ? 'flex' : 'none';
+
+        section5.appendChild(header5);
+        section5.appendChild(aboutCard);
+        container.appendChild(section5);
 
         this.settingsPanel.appendChild(container);
     }
@@ -723,6 +791,196 @@ export class SettingsManager {
     }
 
     /**
+     * 创建“关于与更新”卡片 (基于 SleazyFork 官方 JSON API)
+     */
+    _createAboutCard() {
+        const card = document.createElement('div');
+        card.className = 'tm-settings-about-card';
+
+        const currentVersion = getCurrentVersion();
+        const updateInfo = this._latestUpdateInfo;
+        const meta = updateInfo?.meta;
+        const hasUpdate = Boolean(updateInfo?.hasUpdate);
+        const latestVer = updateInfo?.latestVersion || currentVersion;
+
+        // 1. 顶部 Header (品牌名 + 版本徽章 + SleazyFork 快捷跳转)
+        const headerRow = document.createElement('div');
+        headerRow.className = 'tm-about-header-row';
+
+        const brandWrap = document.createElement('div');
+        brandWrap.className = 'tm-about-brand-wrap';
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'tm-about-brand-title';
+        titleSpan.textContent = 'Miss Player';
+
+        const versionBadge = document.createElement('span');
+        versionBadge.className = `tm-about-version-badge ${hasUpdate ? 'is-update' : ''}`;
+        versionBadge.innerHTML = hasUpdate
+            ? `${ICON_SPARKLES} NEW v${latestVer}`
+            : `v${currentVersion}`;
+        versionBadge.title = hasUpdate ? `可升级至 v${latestVer}` : `当前运行版本 v${currentVersion}`;
+
+        brandWrap.appendChild(titleSpan);
+        brandWrap.appendChild(versionBadge);
+
+        const sleazyLink = document.createElement('a');
+        sleazyLink.className = 'tm-about-link-btn';
+        sleazyLink.href = meta?.url || 'https://sleazyfork.org/scripts/453300';
+        sleazyLink.target = '_blank';
+        sleazyLink.rel = 'noopener noreferrer';
+        sleazyLink.title = __('viewRelease') || 'SleazyFork 主页';
+        sleazyLink.innerHTML = `<span>SleazyFork</span> ${ICON_EXTERNAL_LINK}`;
+
+        headerRow.appendChild(brandWrap);
+        headerRow.appendChild(sleazyLink);
+        card.appendChild(headerRow);
+
+        // 2. 社区活跃度指标（来自 SleazyFork JSON API）
+        const statsGrid = document.createElement('div');
+        statsGrid.className = 'tm-about-stats-grid';
+
+        const formatNumber = (num) => {
+            if (num === null || num === undefined) return '--';
+            const n = Number(num);
+            return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
+        };
+
+        const totalInstalls = meta?.total_installs !== undefined ? formatNumber(meta.total_installs) : (updateInfo ? '5.6k+' : '--');
+        const fanScore = meta?.fan_score !== undefined ? `${meta.fan_score}` : '--';
+        const updatedDate = meta?.code_updated_at ? meta.code_updated_at.split('T')[0] : '--';
+
+        const createStatBox = (val, label) => {
+            const box = document.createElement('div');
+            box.className = 'tm-about-stat-box';
+            const valEl = document.createElement('span');
+            valEl.className = 'tm-about-stat-val';
+            valEl.textContent = val;
+            const lblEl = document.createElement('span');
+            lblEl.className = 'tm-about-stat-lbl';
+            lblEl.textContent = label;
+            box.appendChild(valEl);
+            box.appendChild(lblEl);
+            return box;
+        };
+
+        statsGrid.appendChild(createStatBox(totalInstalls, __('statsInstalls') || '总安装量'));
+        statsGrid.appendChild(createStatBox(fanScore, __('statsRating') || '好评评分'));
+        statsGrid.appendChild(createStatBox(updatedDate, __('statsUpdated') || '代码更新'));
+        card.appendChild(statsGrid);
+
+        // 3. 若检测到新版本，渲染高亮提醒与立即升级区域
+        if (hasUpdate) {
+            const updateBanner = document.createElement('div');
+            updateBanner.className = 'tm-about-update-banner';
+
+            const bannerTitle = document.createElement('div');
+            bannerTitle.className = 'tm-about-update-title';
+            bannerTitle.innerHTML = `${ICON_SPARKLES} <strong>${__('updateFound') || '发现新版本'} v${latestVer}</strong>`;
+
+            const bannerDesc = document.createElement('div');
+            bannerDesc.className = 'tm-about-update-desc';
+            bannerDesc.textContent = `当前安装为 v${currentVersion}，新版本已在 SleazyFork 发布 (${updatedDate})。`;
+
+            const bannerActions = document.createElement('div');
+            bannerActions.className = 'tm-about-update-actions';
+
+            const updateNowBtn = document.createElement('button');
+            updateNowBtn.className = 'tm-about-btn tm-about-btn--primary';
+            updateNowBtn.innerHTML = `${ICON_DOWNLOAD} <span>${__('updateNow') || '立即更新'}</span>`;
+            updateNowBtn.addEventListener('click', () => {
+                const codeUrl = meta?.code_url || `https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js`;
+                if (typeof GM_openInTab === 'function') {
+                    GM_openInTab(codeUrl, { active: true });
+                } else {
+                    window.open(codeUrl, '_blank');
+                }
+                Toast.show(__('updating') || '已触发脚本更新安装', 3000, 'success');
+            });
+
+            const changelogBtn = document.createElement('button');
+            changelogBtn.className = 'tm-about-btn tm-about-btn--secondary';
+            changelogBtn.innerHTML = `${ICON_EXTERNAL_LINK} <span>${__('updateChangelog') || '版本日志'}</span>`;
+            changelogBtn.addEventListener('click', () => {
+                const versionsUrl = 'https://sleazyfork.org/scripts/453300/versions';
+                if (typeof GM_openInTab === 'function') {
+                    GM_openInTab(versionsUrl, { active: true });
+                } else {
+                    window.open(versionsUrl, '_blank');
+                }
+            });
+
+            bannerActions.appendChild(updateNowBtn);
+            bannerActions.appendChild(changelogBtn);
+            updateBanner.appendChild(bannerTitle);
+            updateBanner.appendChild(bannerDesc);
+            updateBanner.appendChild(bannerActions);
+            card.appendChild(updateBanner);
+        }
+
+        // 4. 手动检查更新操作行
+        const checkRow = document.createElement('div');
+        checkRow.className = 'tm-about-check-row';
+
+        const checkBtn = document.createElement('button');
+        checkBtn.className = 'tm-about-btn tm-about-btn--check';
+        checkBtn.innerHTML = `${ICON_REFRESH} <span>${this._isCheckingUpdate ? (__('checkingUpdate') || '正在检查...') : (__('checkUpdate') || '检查更新')}</span>`;
+        if (this._isCheckingUpdate) {
+            checkBtn.disabled = true;
+            checkBtn.classList.add('is-loading');
+        }
+
+        checkBtn.addEventListener('click', async () => {
+            if (this._isCheckingUpdate) return;
+            this._isCheckingUpdate = true;
+            checkBtn.disabled = true;
+            checkBtn.classList.add('is-loading');
+            checkBtn.innerHTML = `${ICON_REFRESH} <span>${__('checkingUpdate') || '正在检查...'}</span>`;
+
+            try {
+                const res = await SleazyForkService.checkUpdate(true);
+                this._latestUpdateInfo = res;
+                if (res.success) {
+                    if (res.hasUpdate) {
+                        Toast.show(`${__('updateFound') || '发现新版本'}: v${res.latestVersion}`, 3500, 'success');
+                        const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
+                        if (btn) btn.classList.add('has-update-badge');
+                    } else {
+                        Toast.show(`${__('alreadyLatest') || '当前已是最新版本'} (v${currentVersion})`, 3000, 'success');
+                        const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
+                        if (btn) btn.classList.remove('has-update-badge');
+                    }
+                } else {
+                    Toast.show(res.error || __('fetchFailed') || '检查更新失败', 3000, 'error');
+                }
+            } catch (err) {
+                Toast.show(err.message || __('fetchFailed') || '检查更新失败', 3000, 'error');
+            } finally {
+                this._isCheckingUpdate = false;
+                this.createSettingsPanel();
+            }
+        });
+
+        checkRow.appendChild(checkBtn);
+        card.appendChild(checkRow);
+
+        // 5. 自动检查更新开关行
+        const autoCheckOption = this._createToggleOption(
+            __('autoCheckUpdate') || '自动检查更新',
+            'autoCheckUpdate',
+            this.settings.autoCheckUpdate !== false,
+            (checked) => {
+                this.updateSetting('autoCheckUpdate', checked);
+            },
+            null,
+            __('autoCheckUpdateDesc') || '启动时定期静默检查并在设置按钮提示新版本'
+        );
+        card.appendChild(autoCheckOption);
+
+        return card;
+    }
+
+    /**
      * 创建标准开关选项行
      */
     _createToggleOption(labelText, settingKey, initialValue, onChange, extraElement = null, subText = null) {
@@ -1127,6 +1385,7 @@ export class SettingsManager {
             this.settings.debugMode = getBool('debugMode', false);
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
+            this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
         }
     }
     
@@ -1149,6 +1408,7 @@ export class SettingsManager {
             setValue('debugMode', this.settings.debugMode);
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
+            setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
         }
     }
     

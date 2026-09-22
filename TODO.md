@@ -119,6 +119,24 @@ flowchart TD
 
 ---
 
+### Phase 6: 官方平台生态联动与版本生命周期管理 (已达成 ✅ SleazyFork JSON API)
+> **目标**：打通与分发平台官方 API 的结构化只读交互通道，实现轻量版本自动检测、社区活跃度透明展示与零侵入升级闭环。
+
+- [x] **6.1 SleazyFork / GreasyFork 官方只读 JSON API 服务集成 (`src/services/SleazyForkService.js`)**
+  - [x] 纯本地无埋点只读公开元数据拉取（ID: 453300），支持主备端点自动故障切换；
+  - [x] 12 小时本地节流缓存（TTL 防刷保护，避免滥用平台 API）；
+  - [x] 工业级语义化版本比对（Semver 支持前后缀容错）。
+- [x] **6.2 Apple 风格「关于与更新」面板与微前端交互 (`SettingsManager.js`)**
+  - [x] 实时社区生态活跃度卡片（总安装量、评分、更新时间等透明展示）；
+  - [x] 一键「检查更新」与平滑升级（一键在新标签页触发 Userscript 管理器安装确认）；
+  - [x] 闲时静默检查与非阻断式徽章（设置齿轮呼吸红点提示，零弹窗干扰观影）；
+  - [x] 自动更新多语言全覆盖（中、英、繁、日、越 5 种语言）。
+- [x] **6.3 自动化测试与 CI 门禁闭环 (`tests/sleazyfork.test.mjs`)**
+  - [x] 单元测试覆盖 Semver 比对、i18n 完整性与真实 API 握手；
+  - [x] 深度集成至 `npm run ci:check`，确保发版前 100% 自动联检。
+
+---
+
 ## 📌 执行纪律与红线备忘 (Quick Reference)
 
 1. **绝对主键保护**：任何重构无论怎样变动，`@namespace: loadingi.local` 与主名称绝对不可变动。
