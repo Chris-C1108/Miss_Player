@@ -8,6 +8,7 @@ import { JableLoginProvider } from '../../autologin/JableLoginProvider.js';
 import { MissavLoginProvider } from '../../autologin/MissavLoginProvider.js';
 import { telemetry } from '../../telemetry/index.js';
 import { CommentComposer } from './CommentComposer.js';
+import { CommentDebugCollector } from '../comments/CommentDebugCollector.js';
 import {
     getVideoCodeFromUrl,
     fetchJableComments,
@@ -16,6 +17,8 @@ import {
     fetchJavdbMovieId,
     fetchJavdbData,
     processComment,
+    applyCommentCountdown,
+    highlightCommentText,
     formatSeconds,
     JAVLIB_DOMAINS,
     JABLE_DOMAINS,
@@ -476,12 +479,39 @@ export class CommentPanel {
         if (!this.uiElements || !this.uiElements.playerContainer) return;
 
         this.uiElements.playerContainer.addEventListener('click', (e) => {
+            const addBadge = e.target.closest('.jc-time-add-badge');
+            const countdownBtn = e.target.closest('.jc-countdown-btn');
             const timeLink = e.target.closest('.jc-time-link');
             const codeLink = e.target.closest('.jc-code-link');
             const retryBtn = e.target.closest('.tm-comment-retry-btn');
             const toggleExpandBtn = e.target.closest('.jc-toggle-expand-btn');
 
-            if (timeLink) {
+            if (addBadge) {
+                e.stopPropagation();
+                e.preventDefault();
+                const link = addBadge.closest('.jc-time-link');
+                if (link) {
+                    const secsAttr = link.getAttribute('data-secs');
+                    if (secsAttr) {
+                        try {
+                            const secs = JSON.parse(secsAttr);
+                            this.handleAddTabFromTime(secs);
+                        } catch (_) {
+                            const secs = parseFloat(secsAttr);
+                            this.handleAddTabFromTime(secs);
+                        }
+                    }
+                    link.classList.remove('show-add-badge');
+                }
+            } else if (countdownBtn) {
+                e.stopPropagation();
+                e.preventDefault();
+                const card = countdownBtn.closest('.jc-card');
+                const commentId = card ? card.getAttribute('data-id') : null;
+                if (commentId) {
+                    this.toggleCommentCountdown(commentId, card, countdownBtn);
+                }
+            } else if (timeLink) {
                 e.stopPropagation();
                 const secsAttr = timeLink.getAttribute('data-secs');
                 if (secsAttr) {
@@ -503,6 +533,64 @@ export class CommentPanel {
                 e.stopPropagation();
                 this.handleRetry();
             }
+        });
+
+        // 移动端长按时间胶囊显示加号角标
+        let longPressTimer = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let currentLink = null;
+
+        const clearLongPress = () => {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            currentLink = null;
+        };
+
+        this.uiElements.playerContainer.addEventListener('touchstart', (e) => {
+            const link = e.target.closest('.jc-time-link');
+            if (!link) {
+                this.uiElements.playerContainer.querySelectorAll('.jc-time-link.show-add-badge')
+                    .forEach(el => el.classList.remove('show-add-badge'));
+                return;
+            }
+            if (e.target.closest('.jc-time-add-badge')) return;
+
+            currentLink = link;
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+
+            clearLongPress();
+            currentLink = link;
+            longPressTimer = setTimeout(() => {
+                if (currentLink) {
+                    this.uiElements.playerContainer.querySelectorAll('.jc-time-link.show-add-badge')
+                        .forEach(el => el.classList.remove('show-add-badge'));
+                    currentLink.classList.add('show-add-badge');
+                    if (window.navigator && typeof window.navigator.vibrate === 'function') {
+                        window.navigator.vibrate(15);
+                    }
+                }
+            }, 350);
+        }, { passive: true });
+
+        this.uiElements.playerContainer.addEventListener('touchmove', (e) => {
+            if (!longPressTimer) return;
+            const touch = e.touches[0];
+            if (Math.hypot(touch.clientX - touchStartX, touch.clientY - touchStartY) > 8) {
+                clearLongPress();
+            }
+        }, { passive: true });
+
+        this.uiElements.playerContainer.addEventListener('touchend', () => {
+            clearLongPress();
+        });
+
+        this.uiElements.playerContainer.addEventListener('touchcancel', () => {
+            clearLongPress();
         });
     }
 
@@ -542,6 +630,11 @@ export class CommentPanel {
                 lm.setLoopRange(secs[0], secs[1]);
             }
 
+            // 在 tm-loop-control-row 添加临时胶囊 (tm-tab-pill draft) 并填入对应的时间戳或时间区间值（需求 2）
+            if (lm && typeof lm.setDraftTabFromTime === 'function') {
+                lm.setDraftTabFromTime(secs);
+            }
+
             // 点击时间戳时，恢复显示控制面板
             if (this.uiManager) {
                 this.uiManager.showControls();
@@ -553,6 +646,94 @@ export class CommentPanel {
             }
         }
     }
+
+
+    /**
+     * 将评论中的时间点或时间区间添加至控制面板循环标记栏（需求 1）
+     * @param {number|number[]} secs 
+     */
+    handleAddTabFromTime(secs) {
+        const lm = this.getLoopManager();
+        if (!lm) {
+            Toast('循环标记管理器未就绪', 2000, 'error');
+            return;
+        }
+        if (typeof lm.addTabFromTime === 'function') {
+            lm.addTabFromTime(secs);
+            Toast('已添加至片段标记', 2000, 'success');
+            if (this.uiManager) {
+                this.uiManager.showControls();
+            }
+        }
+    }
+
+    /**
+     * 切换某条评论的时间倒数状态并实时换算更新卡片（需求 3）
+     * @param {string|number} commentId 
+     * @param {HTMLElement} card 
+     * @param {HTMLElement} btn 
+     */
+    toggleCommentCountdown(commentId, card, btn) {
+        const comment = this.findCommentById(commentId);
+        if (!comment) return;
+
+        const duration = (this.targetVideo && this.targetVideo.duration && !isNaN(this.targetVideo.duration))
+            ? this.targetVideo.duration
+            : 10800;
+
+        // 切换倒数应用状态
+        comment.countdownApplied = !comment.countdownApplied;
+
+        // 重新计算并换算时间戳
+        comment.timestamps = applyCommentCountdown(comment.timestamps, duration, comment.countdownApplied);
+
+        // 重新生成高亮 HTML
+        comment.textHtml = highlightCommentText(comment.rawText || comment.text, comment.timestamps, comment.avcodes || []);
+
+        // 局部更新卡片 DOM 文本内容
+        const bodyContent = card.querySelector('.jc-body-text-content');
+        const bodyText = card.querySelector('.jc-body-text');
+        if (bodyContent) {
+            bodyContent.innerHTML = comment.textHtml;
+        } else if (bodyText) {
+            const expandBtn = bodyText.querySelector('.jc-toggle-expand-btn');
+            if (expandBtn) {
+                bodyText.innerHTML = `<div class="jc-body-text-content">${comment.textHtml}</div><button class="jc-toggle-expand-btn">${expandBtn.textContent}</button>`;
+            } else {
+                bodyText.innerHTML = comment.textHtml;
+            }
+        }
+
+        // 更新按钮视觉状态
+        if (btn) {
+            btn.classList.toggle('jc-countdown-btn--active', comment.countdownApplied);
+            btn.title = comment.countdownApplied ? '当前已按总时长换算为正向时间，点击还原' : '按视频总时长倒数换算为正向时间';
+        }
+
+        const toastMsg = comment.countdownApplied ? '已按视频总时长倒数换算为正向时间' : '已还原为原始时间';
+        Toast(toastMsg, 1500, 'info');
+
+        // 收集用户手动微调倒数时间样本 (Ground Truth)
+        CommentDebugCollector.recordCountdownAdjustment(this.videoCode, comment, duration);
+    }
+
+    /**
+     * 查找各站点存储的评论对象
+     * @param {string|number} commentId 
+     * @returns {Object|null}
+     */
+    findCommentById(commentId) {
+        if (!commentId) return null;
+        for (const siteKey of Object.keys(this.sites)) {
+            const site = this.sites[siteKey];
+            if (site && Array.isArray(site.comments)) {
+                const found = site.comments.find(c => String(c.id) === String(commentId));
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
 
     async loadComments(page = 1) {
         if (!this.videoCode) return;
@@ -786,6 +967,9 @@ export class CommentPanel {
                     _originalIndex: (page - 1) * 50 + idx
                 };
             });
+
+            // 调试模式与 WebDAV 收集含数字的评论语料
+            CommentDebugCollector.collectComments(this.videoCode, processed, duration);
 
             if (page === 1) {
                 site.comments = processed;
@@ -1928,6 +2112,11 @@ export class CommentPanel {
             : `<span class="jc-u">${c.user}</span>`;
 
         const scoreHtml = c.score ? `<span class="jc-score-badge" title="评分">${c.score}</span>` : '';
+                const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
+        const isCountdownActive = !!c.countdownApplied;
+        const countdownBtn = hasTimestamps
+            ? `<button class="jc-countdown-btn${isCountdownActive ? ' jc-countdown-btn--active' : ''}" title="${isCountdownActive ? '当前已按总时长换算为正向时间，点击还原' : '按视频总时长倒数换算为正向时间'}">${__('commentCountdown') || '时间倒数'}</button>`
+            : '';
         const spamHtml = (c.spam && c.spam.label === 'SPAM') ? `<span class="jc-spam-badge" title="${c.spam.reason}">灌水: ${c.spam.category}</span>` : '';
 
         return `
@@ -1938,6 +2127,7 @@ export class CommentPanel {
                             <span class="jc-t">${(c.time && !c.time.includes('Invalid')) ? c.time : ''}</span>
                         </div>
                         <div class="jc-hdr-right">
+                            ${countdownBtn}
                             ${userHtml}
                             ${scoreHtml}
                             ${spamHtml}
@@ -2373,14 +2563,17 @@ export class CommentPanel {
 
         if (this.jableComments && this.jableComments.length > 0) {
             this.jableComments = reprocess(this.jableComments);
+            CommentDebugCollector.collectComments(this.videoCode, this.jableComments, duration);
         }
 
         if (this.javlibComments && this.javlibComments.length > 0) {
             this.javlibComments = reprocess(this.javlibComments);
+            CommentDebugCollector.collectComments(this.videoCode, this.javlibComments, duration);
         }
 
         if (this.javdbComments && this.javdbComments.length > 0) {
             this.javdbComments = reprocess(this.javdbComments);
+            CommentDebugCollector.collectComments(this.videoCode, this.javdbComments, duration);
         }
 
         this.applyFilter();

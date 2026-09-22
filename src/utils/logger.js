@@ -49,6 +49,10 @@ class Logger {
         }
     }
 
+    debug(...args) {
+        this._addLog('debug', ...args);
+    }
+
     log(...args) {
         this._addLog('info', ...args);
     }

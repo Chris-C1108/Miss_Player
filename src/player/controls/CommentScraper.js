@@ -36,5 +36,6 @@ export {
     formatSeconds,
     parseBBCode,
     highlightCommentText,
-    processComment
+    processComment,
+    applyCommentCountdown
 } from '../comments/CommentDataPipeline.js';

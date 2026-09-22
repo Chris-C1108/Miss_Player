@@ -647,6 +647,96 @@ export class LoopManager {
         };
     }
 
+    /**
+     * 外部注入或填充临时草稿胶囊 (draft pill) 并自动渲染更新控制栏
+     * @param {number|number[]} secs - 时间戳秒数或 [start, end] 时间区间
+     */
+    setDraftTabFromTime(secs) {
+        if (!this.draftTab) {
+            this._resetDraftTab();
+        }
+        if (this.editingTabId) {
+            this._exitEditMode();
+        }
+
+        if (Array.isArray(secs) && secs.length >= 2) {
+            const start = Math.min(secs[0], secs[1]);
+            const end = Math.max(secs[0], secs[1]);
+            this.draftTab.startTime = start;
+            this.draftTab.endTime = end;
+            this.draftTab.type = 'interval';
+        } else {
+            const t = Array.isArray(secs) ? secs[0] : secs;
+            this.draftTab.startTime = t;
+            this.draftTab.endTime = null;
+            this.draftTab.type = 'highlight';
+        }
+
+        this.renderTabs();
+
+        // 自动平滑滚动到最右侧草稿胶囊处
+        if (this.tabScrollContainer) {
+            this.tabScrollContainer.scrollTo({
+                left: this.tabScrollContainer.scrollWidth,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    /**
+     * 直接从时间戳/时间区间添加正式 Tab 片段标记至控制面板
+     * @param {number|number[]} secs - 时间戳秒数或 [start, end] 时间区间
+     * @param {string} comment - 备注文本
+     * @returns {Object} 新创建的 Tab 对象
+     */
+    addTabFromTime(secs, comment = '') {
+        if (!this.tabs) this.tabs = [];
+        const id = this._generateId();
+        const now = Date.now();
+        let newTab = null;
+
+        if (Array.isArray(secs) && secs.length >= 2) {
+            const startTime = Math.min(secs[0], secs[1]);
+            const endTime = Math.max(secs[0], secs[1]);
+            newTab = {
+                id,
+                type: 'interval',
+                startTime,
+                endTime,
+                comment,
+                createdAt: now,
+                updatedAt: now
+            };
+        } else {
+            const startTime = Array.isArray(secs) ? secs[0] : secs;
+            newTab = {
+                id,
+                type: 'highlight',
+                startTime,
+                comment,
+                createdAt: now,
+                updatedAt: now
+            };
+        }
+
+        this.tabs.push(newTab);
+        this._saveTabs();
+        this._sortTabs();
+        this.renderTabs();
+
+        if (this.tabScrollContainer) {
+            setTimeout(() => {
+                const selector = '[data-tab-id="' + id + '"]';
+                const pill = this.tabScrollContainer.querySelector(selector);
+                if (pill) {
+                    pill.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }
+            }, 60);
+        }
+
+        return newTab;
+    }
+
     // =====================================================================
     //  Comment Dialog
     // =====================================================================

@@ -964,7 +964,7 @@ export function highlightCommentText(text, timestamps, avcodes) {
             } else {
                 tooltip = `跳转至 ${formatSeconds(ts.seconds)}`;
             }
-            replacements[tokenId] = `<span class="jc-time-link" data-secs='${secsAttr}' title="${esc(tooltip)}">${displayText}</span>`;
+            replacements[tokenId] = `<span class="jc-time-link" data-secs='${secsAttr}' title="${esc(tooltip)}"><span class="jc-time-text">${displayText}</span><span class="jc-time-add-badge" title="添加至片段标记" role="button">+</span></span>`;
             return tokenId;
         });
     });
@@ -999,6 +999,51 @@ export function highlightCommentText(text, timestamps, avcodes) {
 // =====================================================================
 //  6. MAIN COMMENT PROCESSOR
 // =====================================================================
+/**
+ * 将评论中的时间戳在“倒数转正向”和“原始时间”之间切换计算
+ * @param {Array} timestamps - 时间戳对象数组
+ * @param {number} videoDuration - 视频总时长秒数
+ * @param {boolean} enable - true 为按总时长倒数计算为正向；false 为还原为原始时间
+ * @returns {Array} 转换后的时间戳数组
+ */
+export function applyCommentCountdown(timestamps, videoDuration = 10800, enable = true) {
+    if (!Array.isArray(timestamps)) return [];
+    return timestamps.map(ts => {
+        const rawSec = ts.rawSeconds !== undefined ? ts.rawSeconds : (ts.countdownOffsets || ts.seconds);
+        if (enable) {
+            if (Array.isArray(rawSec)) {
+                const s1 = rawSec[0];
+                const s2 = rawSec[1];
+                const forwardStart = Math.max(0, videoDuration - Math.max(s1, s2));
+                const forwardEnd = Math.max(0, videoDuration - Math.min(s1, s2));
+                return {
+                    ...ts,
+                    rawSeconds: rawSec,
+                    seconds: [forwardStart, forwardEnd],
+                    isCountdown: true,
+                    countdownOffsets: rawSec
+                };
+            } else {
+                return {
+                    ...ts,
+                    rawSeconds: rawSec,
+                    seconds: Math.max(0, videoDuration - rawSec),
+                    isCountdown: true,
+                    countdownOffsets: rawSec
+                };
+            }
+        } else {
+            return {
+                ...ts,
+                rawSeconds: rawSec,
+                seconds: rawSec,
+                isCountdown: false,
+                countdownOffsets: null
+            };
+        }
+    });
+}
+
 export function processComment(commentText, contextPrefix, videoDuration = 10800) {
     // 1. 净化引用回复类：移除 BBCode 的 [quote] 引用块
     let cleanedText = commentText;
@@ -1018,12 +1063,58 @@ export function processComment(commentText, contextPrefix, videoDuration = 10800
         avcodes = extractAVCodes(cleanedText, contextPrefix);
     }
 
+    // 检测时间区间或时间序列是否从大到小（需求 4）
+    let isCountdownComment = false;
+    if (timestamps.length > 0) {
+        // 记录原始秒数
+        timestamps.forEach(ts => {
+            if (ts.rawSeconds === undefined) {
+                ts.rawSeconds = ts.countdownOffsets || ts.seconds;
+            }
+        });
+
+        // 判定条件 A: 存在时间区间且区间内从大到小
+        const hasDescendingRange = timestamps.some(ts => {
+            const rawSec = ts.rawSeconds;
+            return Array.isArray(rawSec) && rawSec.length >= 2 && rawSec[0] > rawSec[1];
+        });
+
+        // 判定条件 B: 存在多个时间点且时间序列整体呈现从大到小递减
+        let hasDescendingSequence = false;
+        if (timestamps.length >= 2) {
+            let isStrictDescending = true;
+            for (let i = 0; i < timestamps.length - 1; i++) {
+                const curSec = Array.isArray(timestamps[i].rawSeconds) ? timestamps[i].rawSeconds[0] : timestamps[i].rawSeconds;
+                const nextSec = Array.isArray(timestamps[i + 1].rawSeconds) ? timestamps[i + 1].rawSeconds[0] : timestamps[i + 1].rawSeconds;
+                if (curSec <= nextSec) {
+                    isStrictDescending = false;
+                    break;
+                }
+            }
+            if (isStrictDescending) {
+                hasDescendingSequence = true;
+            }
+        }
+
+        if (hasDescendingRange || hasDescendingSequence) {
+            isCountdownComment = true;
+        }
+    }
+
+    const countdownApplied = isCountdownComment;
+    if (countdownApplied) {
+        timestamps = applyCommentCountdown(timestamps, videoDuration, true);
+    }
+
     const textHtml = highlightCommentText(cleanedText, timestamps, avcodes);
 
     return {
         spam,
         timestamps,
         avcodes,
-        textHtml
+        textHtml,
+        rawText: cleanedText,
+        isCountdownComment,
+        countdownApplied
     };
 }
