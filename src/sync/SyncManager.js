@@ -1,3 +1,10 @@
+function sanitizeSeekStepList(arr, isCustom = false) {
+    if (!Array.isArray(arr)) return isCustom ? [] : ['5s', '10s', '30s', '1m', '5m', '10m'];
+    const valid = arr.filter(s => typeof s === 'string' && /^\d+[sm]$/i.test(s.trim())).map(s => s.trim().toLowerCase());
+    const unique = Array.from(new Set(valid));
+    return isCustom ? unique.slice(0, 30) : (unique.length > 0 ? unique : ['5s', '10s', '30s', '1m', '5m', '10m']);
+}
+
 import { getValue, setValue, deleteValue, hasGMApi } from '../utils/storage.js';
 import { WebDavClient } from './WebDavClient.js';
 
@@ -9,7 +16,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.6.34';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.6.35';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -256,8 +263,8 @@ export class SyncManager {
             showSeekControlRow: getValue('showSeekControlRow', true),
             showLoopControlRow: getValue('showLoopControlRow', true),
             showPlaybackControlRow: getValue('showPlaybackControlRow', true),
-            enabledSeekSteps: getValue('enabledSeekSteps', ['5s', '10s', '30s', '1m', '5m', '10m']),
-            customUserSeekSteps: getValue('customUserSeekSteps', []),
+            enabledSeekSteps: sanitizeSeekStepList(getValue('enabledSeekSteps', ['5s', '10s', '30s', '1m', '5m', '10m']), false),
+            customUserSeekSteps: sanitizeSeekStepList(getValue('customUserSeekSteps', []), true),
             showCommentsSection: getValue('showCommentsSection', true),
             enabledCommentSources: getValue('enabledCommentSources', { jable: true, javdb: true, javlibrary: false }),
             sidebarPosition: getValue('sidebarPosition', 'right'),
@@ -460,22 +467,25 @@ export class SyncManager {
             }
         }
 
-        // 合并 customUserSeekSteps (过滤墓碑中的已删除步进)
+        // 合并 customUserSeekSteps (过滤墓碑中的已删除步进与非法空对象)
         const rawSteps = Array.from(new Set([
-            ...(Array.isArray(localSettings.customUserSeekSteps) ? localSettings.customUserSeekSteps : []),
-            ...(Array.isArray(remoteSettings.customUserSeekSteps) ? remoteSettings.customUserSeekSteps : [])
+            ...sanitizeSeekStepList(localSettings.customUserSeekSteps, true),
+            ...sanitizeSeekStepList(remoteSettings.customUserSeekSteps, true)
         ]));
         const mergedCustomSteps = rawSteps.filter(step => {
             const deletedAt = mergedStepTombstones[step];
-            return !deletedAt; // 存在墓碑则已被删除，拒绝复活
-        });
+            return !deletedAt;
+        }).slice(0, 30);
         mergedSettings.customUserSeekSteps = mergedCustomSteps;
 
-        // 合并 enabledSeekSteps
+        // 合并 enabledSeekSteps (过滤非法空对象)
         mergedSettings.enabledSeekSteps = Array.from(new Set([
-            ...(Array.isArray(localSettings.enabledSeekSteps) ? localSettings.enabledSeekSteps : []),
-            ...(Array.isArray(remoteSettings.enabledSeekSteps) ? remoteSettings.enabledSeekSteps : [])
-        ]));
+            ...sanitizeSeekStepList(localSettings.enabledSeekSteps, false),
+            ...sanitizeSeekStepList(remoteSettings.enabledSeekSteps, false)
+        ])).filter(step => {
+            const deletedAt = mergedStepTombstones[step];
+            return !deletedAt;
+        }).slice(0, 30);
         if (mergedSettings.enabledSeekSteps.length === 0) {
             mergedSettings.enabledSeekSteps = ['5s', '10s', '30s', '1m', '5m', '10m'];
         }

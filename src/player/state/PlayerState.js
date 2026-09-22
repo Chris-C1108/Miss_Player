@@ -1,3 +1,10 @@
+function sanitizeSeekStepList(arr, isCustom = false) {
+    if (!Array.isArray(arr)) return isCustom ? [] : ['5s', '10s', '30s', '1m', '5m', '10m'];
+    const valid = arr.filter(s => typeof s === 'string' && /^\d+[sm]$/i.test(s.trim())).map(s => s.trim().toLowerCase());
+    const unique = Array.from(new Set(valid));
+    return isCustom ? unique.slice(0, 30) : (unique.length > 0 ? unique : ['5s', '10s', '30s', '1m', '5m', '10m']);
+}
+
 import { ReactiveStore } from '../../utils/reactiveStore.js';
 import { getValue, setValue } from '../../utils/index.js';
 import { SyncManager } from '../../sync/index.js';
@@ -49,12 +56,16 @@ export class PlayerState {
             this.settings.showPlaybackControlRow = getBool('showPlaybackControlRow', true);
             
             const rawSeekSteps = getValue('enabledSeekSteps', null);
-            this.settings.enabledSeekSteps = Array.isArray(rawSeekSteps) && rawSeekSteps.length > 0
-                ? rawSeekSteps
-                : ['5s', '10s', '30s', '1m', '5m', '10m'];
+            this.settings.enabledSeekSteps = sanitizeSeekStepList(rawSeekSteps, false);
+            if (Array.isArray(rawSeekSteps) && (rawSeekSteps.length !== this.settings.enabledSeekSteps.length || rawSeekSteps.some(s => typeof s !== 'string'))) {
+                setValue('enabledSeekSteps', this.settings.enabledSeekSteps);
+            }
 
             const rawCustomSteps = getValue('customUserSeekSteps', null);
-            this.settings.customUserSeekSteps = Array.isArray(rawCustomSteps) ? rawCustomSteps : [];
+            this.settings.customUserSeekSteps = sanitizeSeekStepList(rawCustomSteps, true);
+            if (Array.isArray(rawCustomSteps) && (rawCustomSteps.length !== this.settings.customUserSeekSteps.length || rawCustomSteps.some(s => typeof s !== 'string'))) {
+                setValue('customUserSeekSteps', this.settings.customUserSeekSteps);
+            }
 
             this.settings.showCommentsSection = getBool('showCommentsSection', true);
 

@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.6.34
+// @version            5.6.35
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1034,7 +1034,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.34";
+		return "5.6.35";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -6441,6 +6441,16 @@
 			return true;
 		}
 	};
+	function sanitizeIncomingJsonText(text) {
+		if (!text || typeof text !== "string") return text;
+		if (text.length > 102400 || text.includes("{},")) {
+			console.warn("[WebDavClient] 检测到云端 JSON 包含大量异常空对象畸变，启动流式预清洗...");
+			let cleaned = text.replace(/\{\s*\},?\s*/g, "");
+			cleaned = cleaned.replace(/,\s*([}\]])/g, "$1");
+			return cleaned;
+		}
+		return text;
+	}
 	function tryRepairTruncatedJson(text) {
 		if (!text || typeof text !== "string") return null;
 		let clean = text.trim();
@@ -6701,14 +6711,15 @@
 				if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 请检查用户名与应用授权码`);
 				if (res.status >= 200 && res.status < 300) {
 					if (!res.data || !res.data.trim()) return null;
+					const sanitizedData = sanitizeIncomingJsonText(res.data.trim());
 					try {
-						const parsed = JSON.parse(res.data);
+						const parsed = JSON.parse(sanitizedData);
 						if (parsed && typeof parsed === "object") return parsed;
 						throw new Error("云端备份文件内容格式畸变");
 					} catch (jsonErr) {
 						console.error("[WebDavClient] 云端 JSON 解析失败:", jsonErr);
 						try {
-							const repaired = tryRepairTruncatedJson(res.data);
+							const repaired = tryRepairTruncatedJson(sanitizedData);
 							if (repaired && typeof repaired === "object" && (repaired.settings || repaired.markers)) {
 								console.warn("[WebDavClient] 成功智能补全截断云端备份 JSON 并安全恢复数据");
 								return repaired;
@@ -6764,6 +6775,26 @@
 			}
 		}
 	};
+	function sanitizeSeekStepList$2(arr, isCustom = false) {
+		if (!Array.isArray(arr)) return isCustom ? [] : [
+			"5s",
+			"10s",
+			"30s",
+			"1m",
+			"5m",
+			"10m"
+		];
+		const valid = arr.filter((s) => typeof s === "string" && /^\d+[sm]$/i.test(s.trim())).map((s) => s.trim().toLowerCase());
+		const unique = Array.from(new Set(valid));
+		return isCustom ? unique.slice(0, 30) : unique.length > 0 ? unique : [
+			"5s",
+			"10s",
+			"30s",
+			"1m",
+			"5m",
+			"10m"
+		];
+	}
 	var CLIENT_ID_KEY = "mp_client_id";
 	var WEBDAV_CONFIG_KEY = "mp_webdav_config";
 	var LAST_SYNC_TIME_KEY = "mp_webdav_last_sync_time";
@@ -6771,7 +6802,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.34";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.35";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -6913,15 +6944,15 @@
 				showSeekControlRow: getValue("showSeekControlRow", true),
 				showLoopControlRow: getValue("showLoopControlRow", true),
 				showPlaybackControlRow: getValue("showPlaybackControlRow", true),
-				enabledSeekSteps: getValue("enabledSeekSteps", [
+				enabledSeekSteps: sanitizeSeekStepList$2(getValue("enabledSeekSteps", [
 					"5s",
 					"10s",
 					"30s",
 					"1m",
 					"5m",
 					"10m"
-				]),
-				customUserSeekSteps: getValue("customUserSeekSteps", []),
+				]), false),
+				customUserSeekSteps: sanitizeSeekStepList$2(getValue("customUserSeekSteps", []), true),
 				showCommentsSection: getValue("showCommentsSection", true),
 				enabledCommentSources: getValue("enabledCommentSources", {
 					jable: true,
@@ -7065,10 +7096,12 @@
 					mergedSettingTimestamps[key] = rTime;
 				}
 			}
-			mergedSettings.customUserSeekSteps = Array.from(new Set([...Array.isArray(localSettings.customUserSeekSteps) ? localSettings.customUserSeekSteps : [], ...Array.isArray(remoteSettings.customUserSeekSteps) ? remoteSettings.customUserSeekSteps : []])).filter((step) => {
+			mergedSettings.customUserSeekSteps = Array.from(new Set([...sanitizeSeekStepList$2(localSettings.customUserSeekSteps, true), ...sanitizeSeekStepList$2(remoteSettings.customUserSeekSteps, true)])).filter((step) => {
 				return !mergedStepTombstones[step];
-			});
-			mergedSettings.enabledSeekSteps = Array.from(new Set([...Array.isArray(localSettings.enabledSeekSteps) ? localSettings.enabledSeekSteps : [], ...Array.isArray(remoteSettings.enabledSeekSteps) ? remoteSettings.enabledSeekSteps : []]));
+			}).slice(0, 30);
+			mergedSettings.enabledSeekSteps = Array.from(new Set([...sanitizeSeekStepList$2(localSettings.enabledSeekSteps, false), ...sanitizeSeekStepList$2(remoteSettings.enabledSeekSteps, false)])).filter((step) => {
+				return !mergedStepTombstones[step];
+			}).slice(0, 30);
 			if (mergedSettings.enabledSeekSteps.length === 0) mergedSettings.enabledSeekSteps = [
 				"5s",
 				"10s",
@@ -12940,7 +12973,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.34";
+		return "5.6.35";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -13033,6 +13066,26 @@
 			}
 		}
 	};
+	function sanitizeSeekStepList$1(arr, isCustom = false) {
+		if (!Array.isArray(arr)) return isCustom ? [] : [
+			"5s",
+			"10s",
+			"30s",
+			"1m",
+			"5m",
+			"10m"
+		];
+		const valid = arr.filter((s) => typeof s === "string" && /^\d+[sm]$/i.test(s.trim())).map((s) => s.trim().toLowerCase());
+		const unique = Array.from(new Set(valid));
+		return isCustom ? unique.slice(0, 30) : unique.length > 0 ? unique : [
+			"5s",
+			"10s",
+			"30s",
+			"1m",
+			"5m",
+			"10m"
+		];
+	}
 	var SettingsManager = class {
 		constructor(playerCore, uiElements, uiManager = null, controlManager = null) {
 			this.playerCore = playerCore;
@@ -13980,16 +14033,9 @@
 				this.settings.showLoopControlRow = getBool("showLoopControlRow", true);
 				this.settings.showPlaybackControlRow = getBool("showPlaybackControlRow", true);
 				const rawSeekSteps = getValue("enabledSeekSteps", null);
-				this.settings.enabledSeekSteps = Array.isArray(rawSeekSteps) && rawSeekSteps.length > 0 ? rawSeekSteps : [
-					"5s",
-					"10s",
-					"30s",
-					"1m",
-					"5m",
-					"10m"
-				];
+				this.settings.enabledSeekSteps = sanitizeSeekStepList$1(rawSeekSteps, false);
 				const rawCustomSteps = getValue("customUserSeekSteps", null);
-				this.settings.customUserSeekSteps = Array.isArray(rawCustomSteps) ? rawCustomSteps : [];
+				this.settings.customUserSeekSteps = sanitizeSeekStepList$1(rawCustomSteps, true);
 				this.settings.showCommentsSection = getBool("showCommentsSection", true);
 				const rawSources = getValue("enabledCommentSources", null);
 				this.settings.enabledCommentSources = Object.assign({
@@ -15037,6 +15083,26 @@
 			this.listeners.clear();
 		}
 	};
+	function sanitizeSeekStepList(arr, isCustom = false) {
+		if (!Array.isArray(arr)) return isCustom ? [] : [
+			"5s",
+			"10s",
+			"30s",
+			"1m",
+			"5m",
+			"10m"
+		];
+		const valid = arr.filter((s) => typeof s === "string" && /^\d+[sm]$/i.test(s.trim())).map((s) => s.trim().toLowerCase());
+		const unique = Array.from(new Set(valid));
+		return isCustom ? unique.slice(0, 30) : unique.length > 0 ? unique : [
+			"5s",
+			"10s",
+			"30s",
+			"1m",
+			"5m",
+			"10m"
+		];
+	}
 	var PlayerState = class {
 		constructor() {
 			this.settings = {
@@ -15081,16 +15147,11 @@
 				this.settings.showLoopControlRow = getBool("showLoopControlRow", true);
 				this.settings.showPlaybackControlRow = getBool("showPlaybackControlRow", true);
 				const rawSeekSteps = getValue("enabledSeekSteps", null);
-				this.settings.enabledSeekSteps = Array.isArray(rawSeekSteps) && rawSeekSteps.length > 0 ? rawSeekSteps : [
-					"5s",
-					"10s",
-					"30s",
-					"1m",
-					"5m",
-					"10m"
-				];
+				this.settings.enabledSeekSteps = sanitizeSeekStepList(rawSeekSteps, false);
+				if (Array.isArray(rawSeekSteps) && (rawSeekSteps.length !== this.settings.enabledSeekSteps.length || rawSeekSteps.some((s) => typeof s !== "string"))) setValue("enabledSeekSteps", this.settings.enabledSeekSteps);
 				const rawCustomSteps = getValue("customUserSeekSteps", null);
-				this.settings.customUserSeekSteps = Array.isArray(rawCustomSteps) ? rawCustomSteps : [];
+				this.settings.customUserSeekSteps = sanitizeSeekStepList(rawCustomSteps, true);
+				if (Array.isArray(rawCustomSteps) && (rawCustomSteps.length !== this.settings.customUserSeekSteps.length || rawCustomSteps.some((s) => typeof s !== "string"))) setValue("customUserSeekSteps", this.settings.customUserSeekSteps);
 				this.settings.showCommentsSection = getBool("showCommentsSection", true);
 				const rawSources = getValue("enabledCommentSources", null);
 				this.settings.enabledCommentSources = Object.assign({

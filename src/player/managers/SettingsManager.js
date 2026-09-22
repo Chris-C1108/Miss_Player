@@ -1,3 +1,10 @@
+function sanitizeSeekStepList(arr, isCustom = false) {
+    if (!Array.isArray(arr)) return isCustom ? [] : ['5s', '10s', '30s', '1m', '5m', '10m'];
+    const valid = arr.filter(s => typeof s === 'string' && /^\d+[sm]$/i.test(s.trim())).map(s => s.trim().toLowerCase());
+    const unique = Array.from(new Set(valid));
+    return isCustom ? unique.slice(0, 30) : (unique.length > 0 ? unique : ['5s', '10s', '30s', '1m', '5m', '10m']);
+}
+
 import { getValue, setValue, Toast, playTapSound } from '../../utils/index.js';
 import { telemetry } from '../../telemetry';
 import { __ } from '../../constants/i18n.js';
@@ -1403,12 +1410,10 @@ export class SettingsManager {
             this.settings.showPlaybackControlRow = getBool('showPlaybackControlRow', true);
             
             const rawSeekSteps = getValue('enabledSeekSteps', null);
-            this.settings.enabledSeekSteps = Array.isArray(rawSeekSteps) && rawSeekSteps.length > 0
-                ? rawSeekSteps
-                : ['5s', '10s', '30s', '1m', '5m', '10m'];
+            this.settings.enabledSeekSteps = sanitizeSeekStepList(rawSeekSteps, false);
 
             const rawCustomSteps = getValue('customUserSeekSteps', null);
-            this.settings.customUserSeekSteps = Array.isArray(rawCustomSteps) ? rawCustomSteps : [];
+            this.settings.customUserSeekSteps = sanitizeSeekStepList(rawCustomSteps, true);
 
             this.settings.showCommentsSection = getBool('showCommentsSection', true);
 

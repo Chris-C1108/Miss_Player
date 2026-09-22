@@ -1,4 +1,21 @@
 /**
+ * 针对云端大文件或异常畸变空对象进行预清洗，防止 JSON.parse 导致主线程严重卡死
+ * @param {string} text 
+ * @returns {string}
+ */
+function sanitizeIncomingJsonText(text) {
+    if (!text || typeof text !== 'string') return text;
+    // 当检测到大量空对象畸变或体积异常膨胀时，极速剔除空对象占位
+    if (text.length > 100 * 1024 || text.includes('{},')) {
+        console.warn('[WebDavClient] 检测到云端 JSON 包含大量异常空对象畸变，启动流式预清洗...');
+        let cleaned = text.replace(/\{\s*\},?\s*/g, '');
+        cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
+        return cleaned;
+    }
+    return text;
+}
+
+/**
  * 容错修补因网络截断或并发脏写导致的未闭合 JSON
  * @param {string} text 
  * @returns {Object|null}
@@ -428,8 +445,9 @@ export class WebDavClient {
                 if (!res.data || !res.data.trim()) {
                     return null;
                 }
+                const sanitizedData = sanitizeIncomingJsonText(res.data.trim());
                 try {
-                    const parsed = JSON.parse(res.data);
+                    const parsed = JSON.parse(sanitizedData);
                     if (parsed && typeof parsed === 'object') {
                         return parsed;
                     }
@@ -438,7 +456,7 @@ export class WebDavClient {
                     console.error('[WebDavClient] 云端 JSON 解析失败:', jsonErr);
                     // 尝试智能补全因截断导致的未闭合结构
                     try {
-                        const repaired = tryRepairTruncatedJson(res.data);
+                        const repaired = tryRepairTruncatedJson(sanitizedData);
                         if (repaired && typeof repaired === 'object' && (repaired.settings || repaired.markers)) {
                             console.warn('[WebDavClient] 成功智能补全截断云端备份 JSON 并安全恢复数据');
                             return repaired;
