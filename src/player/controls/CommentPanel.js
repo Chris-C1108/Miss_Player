@@ -9,6 +9,7 @@ import { MissavLoginProvider } from '../../autologin/MissavLoginProvider.js';
 import { telemetry } from '../../telemetry/index.js';
 import { CommentComposer } from './CommentComposer.js';
 import { CommentDebugCollector } from '../comments/CommentDebugCollector.js';
+import { CommentCacheManager } from '../comments/CommentCacheManager.js';
 import {
     getVideoCodeFromUrl,
     fetchJableComments,
@@ -244,6 +245,7 @@ export class CommentPanel {
                 totalCount: 0,
                 hasMore: false,
                 currentPage: 1,
+                collectedPages: new Set(),
                 collapsed: localStorage.getItem('tm-comment-jable-collapsed') === 'true',
                 loading: false,
                 unreachable: false,
@@ -258,6 +260,7 @@ export class CommentPanel {
                 totalCount: 0,
                 hasMore: false,
                 currentPage: 1,
+                collectedPages: new Set(),
                 collapsed: localStorage.getItem('tm-comment-javlib-collapsed') === 'true',
                 loading: false,
                 unreachable: false,
@@ -273,6 +276,7 @@ export class CommentPanel {
                 totalCount: 0,
                 hasMore: false,
                 currentPage: 1,
+                collectedPages: new Set(),
                 collapsed: localStorage.getItem('tm-comment-javdb-collapsed') === 'true',
                 loading: false,
                 unreachable: false,
@@ -735,9 +739,40 @@ export class CommentPanel {
     }
 
 
-    async loadComments(page = 1) {
+    async loadComments(page = 1, forceRefresh = false) {
         if (!this.videoCode) return;
         this.isLoading = true;
+
+        if (page === 1 && !forceRefresh && CommentCacheManager.hasValidCache(this.videoCode)) {
+            const cached = CommentCacheManager.get(this.videoCode);
+            if (cached && cached.sites) {
+                let restoredCount = 0;
+                for (const siteKey of Object.keys(this.sites)) {
+                    const cachedSite = cached.sites[siteKey];
+                    const targetSite = this.sites[siteKey];
+                    if (cachedSite && Array.isArray(cachedSite.comments) && cachedSite.comments.length > 0) {
+                        targetSite.comments = [...cachedSite.comments];
+                        targetSite.totalCount = cachedSite.totalCount || cachedSite.comments.length;
+                        targetSite.hasMore = cachedSite.hasMore;
+                        targetSite.currentPage = cachedSite.currentPage || 1;
+                        targetSite.collectedPages = new Set(cachedSite.collectedPages || [1]);
+                        targetSite.status = cachedSite.status || 'loaded';
+                        if (cachedSite.workingDomain) targetSite.workingDomain = cachedSite.workingDomain;
+                        if (cachedSite.videoId) targetSite.videoId = cachedSite.videoId;
+                        if (cachedSite.movieId) targetSite.movieId = cachedSite.movieId;
+                        restoredCount += cachedSite.comments.length;
+                    }
+                }
+                if (restoredCount > 0) {
+                    logger.log(`[CommentPanel] 命中本地评论缓存 (${this.videoCode})，直接恢复 ${restoredCount} 条评论展示，跳过重复网络请求。`);
+                    this.isLoading = false;
+                    this.applyFilter();
+                    this.renderCommentsList();
+                    this.updateCommentsCount();
+                    return;
+                }
+            }
+        }
 
         if (page === 1) {
             this.currentPage = 1;
@@ -800,10 +835,17 @@ export class CommentPanel {
         this.isLoading = false;
     }
 
-    async loadSiteComments(siteKey, page = 1) {
+    async loadSiteComments(siteKey, page = 1, forceRefresh = false) {
         if (!this.videoCode) return;
         const site = this.sites[siteKey];
         if (!site) return;
+
+        // 页码级防重：若该页码已采集过且非强制刷新，坚决不发重复网络请求
+        if (!forceRefresh && site.collectedPages && site.collectedPages.has(page)) {
+            logger.log(`[CommentPanel] 站点 ${siteKey} 第 ${page} 页已在本地采集集合中，跳过重复请求。`);
+            site.loading = false;
+            return;
+        }
 
         const state = this.playerCore?.options?.playerState;
         const enabledSources = state?.settings?.enabledCommentSources || { jable: true, javdb: true, javlibrary: false };
@@ -971,7 +1013,12 @@ export class CommentPanel {
             // 调试模式与 WebDAV 收集含数字的评论语料
             CommentDebugCollector.collectComments(this.videoCode, processed, duration);
 
-            if (page === 1) {
+            if (!site.collectedPages) {
+                site.collectedPages = new Set();
+            }
+            site.collectedPages.add(page);
+
+            if (page === 1 && forceRefresh) {
                 site.comments = processed;
             } else {
                 const existingIds = new Set(site.comments.map(c => c.id));
@@ -986,7 +1033,10 @@ export class CommentPanel {
             site.totalCount = res.totalCount || site.comments.length;
             site.hasMore = res.hasMore;
             site.status = site.comments.length === 0 ? 'empty' : 'loaded';
-            site.currentPage = page;
+            site.currentPage = Math.max(site.currentPage || 1, page);
+
+            // 同步保存至本地增量评论缓存
+            CommentCacheManager.saveSiteCache(this.videoCode, siteKey, site);
 
         } catch (err) {
             logger.warn(`[CommentPanel] 获取 ${site.name} 评论失败:`, err);
@@ -1872,32 +1922,31 @@ export class CommentPanel {
     handleRetry(site) {
         console.log(`[CommentPanel] 用户触发重新加载评论数据... site: ${site || 'all'}`);
 
-        const reloadJable = !site || site === 'jable';
-        const reloadJavlib = !site || site === 'javlib';
-
-        if (reloadJable) {
-            CommentPanel.preloadCache.jableCommentsPromise = null;
-            this.jableComments = [];
-            this.filteredJableComments = [];
-            this.jableCurrentPage = 1;
-            this.jableHasMore = false;
-            this.jableStatus = 'loading';
-            this.loadJableComments(1);
-        }
-
-        if (reloadJavlib) {
-            CommentPanel.preloadCache.javlibVideoIdPromise = null;
-            CommentPanel.preloadCache.javlibCommentsPromise = null;
-            CommentPanel.preloadCache.javlibReviewsPromise = null;
-            this.javlibComments = [];
-            this.filteredJavlibComments = [];
-            this.javlibCurrentPage = 1;
-            this.javlibHasMore = false;
-            this.javlibVideoId = '';
-            this.javlibWorkingDomain = '';
-            this.javlibVideoExists = false;
-            this.javlibStatus = 'loading';
-            this.loadJavlibComments(1);
+        if (site && this.sites[site]) {
+            const targetSite = this.sites[site];
+            targetSite.comments = [];
+            targetSite.filteredComments = [];
+            targetSite.currentPage = 1;
+            targetSite.collectedPages = new Set();
+            targetSite.hasMore = false;
+            targetSite.status = 'loading';
+            if (site === 'jable') CommentPanel.preloadCache.jableCommentsPromise = null;
+            if (site === 'javlib') {
+                CommentPanel.preloadCache.javlibVideoIdPromise = null;
+                CommentPanel.preloadCache.javlibCommentsPromise = null;
+                CommentPanel.preloadCache.javlibReviewsPromise = null;
+                targetSite.videoId = '';
+            }
+            if (site === 'javdb') {
+                CommentPanel.preloadCache.javdbMovieIdPromise = null;
+                CommentPanel.preloadCache.javdbCommentsPromise = null;
+                targetSite.movieId = '';
+            }
+            this.loadSiteComments(site, 1, true);
+        } else {
+            // 全量清除缓存并强制刷新
+            CommentCacheManager.clear(this.videoCode);
+            this.loadComments(1, true);
         }
     }
 
@@ -2574,6 +2623,13 @@ export class CommentPanel {
         if (this.javdbComments && this.javdbComments.length > 0) {
             this.javdbComments = reprocess(this.javdbComments);
             CommentDebugCollector.collectComments(this.videoCode, this.javdbComments, duration);
+        }
+
+        // 更新各站点缓存中的解析数据
+        for (const sKey of Object.keys(this.sites)) {
+            if (this.sites[sKey].comments.length > 0) {
+                CommentCacheManager.saveSiteCache(this.videoCode, sKey, this.sites[sKey]);
+            }
         }
 
         this.applyFilter();

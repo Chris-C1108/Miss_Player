@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.6.26
+// @version            5.6.27
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1034,7 +1034,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.26";
+		return "5.6.27";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -6700,7 +6700,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.26";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.27";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -7412,6 +7412,121 @@
 	_defineProperty(CommentDebugCollector, "_pendingSamples", new Map());
 	_defineProperty(CommentDebugCollector, "_sampleSyncTimer", null);
 	_defineProperty(CommentDebugCollector, "_isSampleSyncing", false);
+	var CACHE_TTL_MS = 9e5;
+	var STORAGE_PREFIX = "mp_ccache_";
+	var CommentCacheManager = class {
+		static hasValidCache(videoCode) {
+			const entry = this.get(videoCode);
+			if (!entry || !entry.sites) return false;
+			return Object.values(entry.sites).some((s) => s && Array.isArray(s.comments) && s.comments.length > 0);
+		}
+		static get(videoCode) {
+			if (!videoCode) return null;
+			const now = Date.now();
+			const memEntry = this._memoryCache.get(videoCode);
+			if (memEntry) {
+				if (now - memEntry.timestamp < CACHE_TTL_MS) return memEntry;
+				this._memoryCache.delete(videoCode);
+			}
+			try {
+				if (typeof sessionStorage !== "undefined") {
+					const raw = sessionStorage.getItem(`${STORAGE_PREFIX}${videoCode}`);
+					if (raw) {
+						const parsed = JSON.parse(raw);
+						if (parsed && now - (parsed.timestamp || 0) < CACHE_TTL_MS) {
+							if (parsed.sites) for (const siteKey of Object.keys(parsed.sites)) {
+								const s = parsed.sites[siteKey];
+								if (s && Array.isArray(s.collectedPages)) s.collectedPages = new Set(s.collectedPages);
+							}
+							this._memoryCache.set(videoCode, parsed);
+							return parsed;
+						}
+						sessionStorage.removeItem(`${STORAGE_PREFIX}${videoCode}`);
+					}
+				}
+			} catch (e) {
+				logger.debug("[CommentCacheManager] 读取会话缓存异常:", e);
+			}
+			return null;
+		}
+		static saveSiteCache(videoCode, siteKey, siteInstance) {
+			if (!videoCode || !siteKey || !siteInstance) return;
+			let entry = this._memoryCache.get(videoCode);
+			if (!entry) {
+				entry = {
+					videoCode,
+					timestamp: Date.now(),
+					sites: {}
+				};
+				this._memoryCache.set(videoCode, entry);
+			}
+			entry.timestamp = Date.now();
+			const collectedPagesArray = siteInstance.collectedPages instanceof Set ? Array.from(siteInstance.collectedPages) : Array.isArray(siteInstance.collectedPages) ? siteInstance.collectedPages : [1];
+			entry.sites[siteKey] = {
+				key: siteKey,
+				status: siteInstance.status || "loaded",
+				comments: Array.isArray(siteInstance.comments) ? [...siteInstance.comments] : [],
+				totalCount: siteInstance.totalCount || 0,
+				hasMore: Boolean(siteInstance.hasMore),
+				currentPage: siteInstance.currentPage || 1,
+				collectedPages: new Set(collectedPagesArray),
+				workingDomain: siteInstance.workingDomain || "",
+				videoId: siteInstance.videoId || "",
+				movieId: siteInstance.movieId || "",
+				updatedAt: Date.now()
+			};
+			this._persistToSession(videoCode, entry);
+		}
+		static _persistToSession(videoCode, entry) {
+			try {
+				if (typeof sessionStorage !== "undefined") {
+					const serializableSites = {};
+					for (const k of Object.keys(entry.sites)) {
+						const s = entry.sites[k];
+						serializableSites[k] = {
+							...s,
+							collectedPages: Array.from(s.collectedPages || [1])
+						};
+					}
+					const toStore = {
+						videoCode: entry.videoCode,
+						timestamp: entry.timestamp,
+						sites: serializableSites
+					};
+					sessionStorage.setItem(`${STORAGE_PREFIX}${videoCode}`, JSON.stringify(toStore));
+				}
+			} catch (e) {
+				logger.debug("[CommentCacheManager] sessionStorage 写入跳过:", e);
+			}
+		}
+		static isPageCollected(videoCode, siteKey, page) {
+			const entry = this.get(videoCode);
+			if (!entry || !entry.sites || !entry.sites[siteKey]) return false;
+			const site = entry.sites[siteKey];
+			if (site.collectedPages instanceof Set) return site.collectedPages.has(page);
+			if (Array.isArray(site.collectedPages)) return site.collectedPages.includes(page);
+			return false;
+		}
+		static clear(videoCode) {
+			if (videoCode) {
+				this._memoryCache.delete(videoCode);
+				try {
+					if (typeof sessionStorage !== "undefined") sessionStorage.removeItem(`${STORAGE_PREFIX}${videoCode}`);
+				} catch (_) {}
+				logger.log(`[CommentCacheManager] 已清除番号 ${videoCode} 的评论缓存`);
+			} else {
+				this._memoryCache.clear();
+				try {
+					if (typeof sessionStorage !== "undefined") for (let i = sessionStorage.length - 1; i >= 0; i--) {
+						const key = sessionStorage.key(i);
+						if (key && key.startsWith(STORAGE_PREFIX)) sessionStorage.removeItem(key);
+					}
+				} catch (_) {}
+				logger.log("[CommentCacheManager] 已清除所有本地评论缓存");
+			}
+		}
+	};
+	_defineProperty(CommentCacheManager, "_memoryCache", new Map());
 	init_domains();
 	function parseCommentDate(dateStr) {
 		if (!dateStr) return 0;
@@ -7534,6 +7649,7 @@
 					totalCount: 0,
 					hasMore: false,
 					currentPage: 1,
+					collectedPages: new Set(),
 					collapsed: localStorage.getItem("tm-comment-jable-collapsed") === "true",
 					loading: false,
 					unreachable: false,
@@ -7548,6 +7664,7 @@
 					totalCount: 0,
 					hasMore: false,
 					currentPage: 1,
+					collectedPages: new Set(),
 					collapsed: localStorage.getItem("tm-comment-javlib-collapsed") === "true",
 					loading: false,
 					unreachable: false,
@@ -7563,6 +7680,7 @@
 					totalCount: 0,
 					hasMore: false,
 					currentPage: 1,
+					collectedPages: new Set(),
 					collapsed: localStorage.getItem("tm-comment-javdb-collapsed") === "true",
 					loading: false,
 					unreachable: false,
@@ -7885,9 +8003,39 @@
 			}
 			return null;
 		}
-		async loadComments(page = 1) {
+		async loadComments(page = 1, forceRefresh = false) {
 			if (!this.videoCode) return;
 			this.isLoading = true;
+			if (page === 1 && !forceRefresh && CommentCacheManager.hasValidCache(this.videoCode)) {
+				const cached = CommentCacheManager.get(this.videoCode);
+				if (cached && cached.sites) {
+					let restoredCount = 0;
+					for (const siteKey of Object.keys(this.sites)) {
+						const cachedSite = cached.sites[siteKey];
+						const targetSite = this.sites[siteKey];
+						if (cachedSite && Array.isArray(cachedSite.comments) && cachedSite.comments.length > 0) {
+							targetSite.comments = [...cachedSite.comments];
+							targetSite.totalCount = cachedSite.totalCount || cachedSite.comments.length;
+							targetSite.hasMore = cachedSite.hasMore;
+							targetSite.currentPage = cachedSite.currentPage || 1;
+							targetSite.collectedPages = new Set(cachedSite.collectedPages || [1]);
+							targetSite.status = cachedSite.status || "loaded";
+							if (cachedSite.workingDomain) targetSite.workingDomain = cachedSite.workingDomain;
+							if (cachedSite.videoId) targetSite.videoId = cachedSite.videoId;
+							if (cachedSite.movieId) targetSite.movieId = cachedSite.movieId;
+							restoredCount += cachedSite.comments.length;
+						}
+					}
+					if (restoredCount > 0) {
+						logger.log(`[CommentPanel] 命中本地评论缓存 (${this.videoCode})，直接恢复 ${restoredCount} 条评论展示，跳过重复网络请求。`);
+						this.isLoading = false;
+						this.applyFilter();
+						this.renderCommentsList();
+						this.updateCommentsCount();
+						return;
+					}
+				}
+			}
 			if (page === 1) {
 				this.currentPage = 1;
 				this.renderedCommentIds.clear();
@@ -7931,10 +8079,15 @@
 			}
 			this.isLoading = false;
 		}
-		async loadSiteComments(siteKey, page = 1) {
+		async loadSiteComments(siteKey, page = 1, forceRefresh = false) {
 			if (!this.videoCode) return;
 			const site = this.sites[siteKey];
 			if (!site) return;
+			if (!forceRefresh && site.collectedPages && site.collectedPages.has(page)) {
+				logger.log(`[CommentPanel] 站点 ${siteKey} 第 ${page} 页已在本地采集集合中，跳过重复请求。`);
+				site.loading = false;
+				return;
+			}
 			const enabledSources = (this.playerCore?.options?.playerState)?.settings?.enabledCommentSources || {
 				jable: true,
 				javdb: true,
@@ -8080,7 +8233,9 @@
 					};
 				});
 				CommentDebugCollector.collectComments(this.videoCode, processed, duration);
-				if (page === 1) site.comments = processed;
+				if (!site.collectedPages) site.collectedPages = new Set();
+				site.collectedPages.add(page);
+				if (page === 1 && forceRefresh) site.comments = processed;
 				else {
 					const existingIds = new Set(site.comments.map((c) => c.id));
 					const uniqueNew = processed.filter((c) => !existingIds.has(c.id));
@@ -8090,7 +8245,8 @@
 				site.totalCount = res.totalCount || site.comments.length;
 				site.hasMore = res.hasMore;
 				site.status = site.comments.length === 0 ? "empty" : "loaded";
-				site.currentPage = page;
+				site.currentPage = Math.max(site.currentPage || 1, page);
+				CommentCacheManager.saveSiteCache(this.videoCode, siteKey, site);
 			} catch (err) {
 				logger.warn(`[CommentPanel] 获取 ${site.name} 评论失败:`, err);
 				if (siteKey === "javlib") this.handleJavlibError(err);
@@ -8725,30 +8881,30 @@
 		}
 		handleRetry(site) {
 			console.log(`[CommentPanel] 用户触发重新加载评论数据... site: ${site || "all"}`);
-			const reloadJable = !site || site === "jable";
-			const reloadJavlib = !site || site === "javlib";
-			if (reloadJable) {
-				CommentPanel.preloadCache.jableCommentsPromise = null;
-				this.jableComments = [];
-				this.filteredJableComments = [];
-				this.jableCurrentPage = 1;
-				this.jableHasMore = false;
-				this.jableStatus = "loading";
-				this.loadJableComments(1);
-			}
-			if (reloadJavlib) {
-				CommentPanel.preloadCache.javlibVideoIdPromise = null;
-				CommentPanel.preloadCache.javlibCommentsPromise = null;
-				CommentPanel.preloadCache.javlibReviewsPromise = null;
-				this.javlibComments = [];
-				this.filteredJavlibComments = [];
-				this.javlibCurrentPage = 1;
-				this.javlibHasMore = false;
-				this.javlibVideoId = "";
-				this.javlibWorkingDomain = "";
-				this.javlibVideoExists = false;
-				this.javlibStatus = "loading";
-				this.loadJavlibComments(1);
+			if (site && this.sites[site]) {
+				const targetSite = this.sites[site];
+				targetSite.comments = [];
+				targetSite.filteredComments = [];
+				targetSite.currentPage = 1;
+				targetSite.collectedPages = new Set();
+				targetSite.hasMore = false;
+				targetSite.status = "loading";
+				if (site === "jable") CommentPanel.preloadCache.jableCommentsPromise = null;
+				if (site === "javlib") {
+					CommentPanel.preloadCache.javlibVideoIdPromise = null;
+					CommentPanel.preloadCache.javlibCommentsPromise = null;
+					CommentPanel.preloadCache.javlibReviewsPromise = null;
+					targetSite.videoId = "";
+				}
+				if (site === "javdb") {
+					CommentPanel.preloadCache.javdbMovieIdPromise = null;
+					CommentPanel.preloadCache.javdbCommentsPromise = null;
+					targetSite.movieId = "";
+				}
+				this.loadSiteComments(site, 1, true);
+			} else {
+				CommentCacheManager.clear(this.videoCode);
+				this.loadComments(1, true);
 			}
 		}
 		triggerLoadMore(siteKey) {
@@ -9249,6 +9405,7 @@
 				this.javdbComments = reprocess(this.javdbComments);
 				CommentDebugCollector.collectComments(this.videoCode, this.javdbComments, duration);
 			}
+			for (const sKey of Object.keys(this.sites)) if (this.sites[sKey].comments.length > 0) CommentCacheManager.saveSiteCache(this.videoCode, sKey, this.sites[sKey]);
 			this.applyFilter();
 			this.renderCommentsList();
 		}
@@ -12079,7 +12236,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.26";
+		return "5.6.27";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
