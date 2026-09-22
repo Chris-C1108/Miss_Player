@@ -482,6 +482,21 @@ export class CommentPanel {
     initDelegatedEvents() {
         if (!this.uiElements || !this.uiElements.playerContainer) return;
 
+        // 移动端长按手势与防误触状态变量
+        let longPressTimer = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let currentLink = null;
+        let isLongPressTriggered = false;
+
+        const clearLongPress = () => {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            currentLink = null;
+        };
+
         this.uiElements.playerContainer.addEventListener('click', (e) => {
             const addBadge = e.target.closest('.jc-time-add-badge');
             const countdownBtn = e.target.closest('.jc-countdown-btn');
@@ -490,6 +505,7 @@ export class CommentPanel {
             const retryBtn = e.target.closest('.tm-comment-retry-btn');
             const toggleExpandBtn = e.target.closest('.jc-toggle-expand-btn');
 
+            // 1. 点击加号角标：将其添加至控制面板草稿胶囊 (tm-loop-control-row draft)
             if (addBadge) {
                 e.stopPropagation();
                 e.preventDefault();
@@ -507,7 +523,11 @@ export class CommentPanel {
                     }
                     link.classList.remove('show-add-badge');
                 }
-            } else if (countdownBtn) {
+                return;
+            } 
+            
+            // 2. 点击倒计换算按钮：双向换算正向播放时间
+            if (countdownBtn) {
                 e.stopPropagation();
                 e.preventDefault();
                 const card = countdownBtn.closest('.jc-card');
@@ -515,7 +535,18 @@ export class CommentPanel {
                 if (commentId) {
                     this.toggleCommentCountdown(commentId, card, countdownBtn);
                 }
-            } else if (timeLink) {
+                return;
+            } 
+            
+            // 3. 点击时间胶囊本身：仅跳转对应时间播放，绝不添加草稿胶囊
+            if (timeLink) {
+                // 若本次点击是由移动端长按松手触发的，坚决拦截跳转
+                if (isLongPressTriggered) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    isLongPressTriggered = false;
+                    return;
+                }
                 e.stopPropagation();
                 const secsAttr = timeLink.getAttribute('data-secs');
                 if (secsAttr) {
@@ -527,7 +558,10 @@ export class CommentPanel {
                         this.handleTimeClick(secs);
                     }
                 }
-            } else if (codeLink) {
+                return;
+            } 
+            
+            if (codeLink) {
                 e.stopPropagation();
                 const code = codeLink.getAttribute('data-code');
                 if (code) {
@@ -539,38 +573,28 @@ export class CommentPanel {
             }
         });
 
-        // 移动端长按时间胶囊显示加号角标
-        let longPressTimer = null;
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let currentLink = null;
-
-        const clearLongPress = () => {
-            if (longPressTimer) {
-                clearTimeout(longPressTimer);
-                longPressTimer = null;
-            }
-            currentLink = null;
-        };
-
+        // 移动端长按时间胶囊显示加号角标 (+)
         this.uiElements.playerContainer.addEventListener('touchstart', (e) => {
             const link = e.target.closest('.jc-time-link');
             if (!link) {
+                // 点击时间胶囊外部区域，收起所有已浮现的加号角标
                 this.uiElements.playerContainer.querySelectorAll('.jc-time-link.show-add-badge')
                     .forEach(el => el.classList.remove('show-add-badge'));
                 return;
             }
+            // 如果触摸点在加号本身，直接进入加号点击流
             if (e.target.closest('.jc-time-add-badge')) return;
 
-            currentLink = link;
             const touch = e.touches[0];
             touchStartX = touch.clientX;
             touchStartY = touch.clientY;
+            isLongPressTriggered = false;
 
             clearLongPress();
             currentLink = link;
             longPressTimer = setTimeout(() => {
                 if (currentLink) {
+                    isLongPressTriggered = true;
                     this.uiElements.playerContainer.querySelectorAll('.jc-time-link.show-add-badge')
                         .forEach(el => el.classList.remove('show-add-badge'));
                     currentLink.classList.add('show-add-badge');
@@ -584,7 +608,7 @@ export class CommentPanel {
         this.uiElements.playerContainer.addEventListener('touchmove', (e) => {
             if (!longPressTimer) return;
             const touch = e.touches[0];
-            if (Math.hypot(touch.clientX - touchStartX, touch.clientY - touchStartY) > 8) {
+            if (Math.hypot(touch.clientX - touchStartX, touch.clientY - touchStartY) > 10) {
                 clearLongPress();
             }
         }, { passive: true });
@@ -595,6 +619,7 @@ export class CommentPanel {
 
         this.uiElements.playerContainer.addEventListener('touchcancel', () => {
             clearLongPress();
+            isLongPressTriggered = false;
         });
     }
 
@@ -634,10 +659,7 @@ export class CommentPanel {
                 lm.setLoopRange(secs[0], secs[1]);
             }
 
-            // 在 tm-loop-control-row 添加临时胶囊 (tm-tab-pill draft) 并填入对应的时间戳或时间区间值（需求 2）
-            if (lm && typeof lm.setDraftTabFromTime === 'function') {
-                lm.setDraftTabFromTime(secs);
-            }
+
 
             // 点击时间戳时，恢复显示控制面板
             if (this.uiManager) {
@@ -659,12 +681,16 @@ export class CommentPanel {
     handleAddTabFromTime(secs) {
         const lm = this.getLoopManager();
         if (!lm) {
-            Toast('循环标记管理器未就绪', 2000, 'error');
+            Toast('循环控制面板未就绪', 2000, 'error');
             return;
         }
-        if (typeof lm.addTabFromTime === 'function') {
-            lm.addTabFromTime(secs);
-            Toast('已添加至片段标记', 2000, 'success');
+        if (typeof lm.setDraftTabFromTime === 'function') {
+            lm.setDraftTabFromTime(secs);
+            const isRange = Array.isArray(secs) && secs.length >= 2;
+            const toastMsg = isRange
+                ? `已将区间 ${formatSeconds(secs[0])} ~ ${formatSeconds(secs[1])} 填入控制栏草稿胶囊`
+                : `已将时间 ${formatSeconds(Array.isArray(secs) ? secs[0] : secs)} 填入控制栏草稿胶囊`;
+            Toast(toastMsg, 2000, 'info');
             if (this.uiManager) {
                 this.uiManager.showControls();
             }
@@ -708,10 +734,16 @@ export class CommentPanel {
             }
         }
 
-        // 更新按钮视觉状态
+        // 更新按钮文案、样式与 title
         if (btn) {
-            btn.classList.toggle('jc-countdown-btn--active', comment.countdownApplied);
-            btn.title = comment.countdownApplied ? '当前已按总时长换算为正向时间，点击还原' : '按视频总时长倒数换算为正向时间';
+            const isConverted = Boolean(comment.countdownApplied);
+            btn.classList.toggle('jc-countdown-btn--active', isConverted);
+            btn.textContent = isConverted 
+                ? (__('commentCountdownReverted') || '✓ 已转正向') 
+                : (__('commentCountdownConvert') || '⏱️ 倒计换算');
+            btn.title = isConverted 
+                ? '当前时间已按视频总时长换算为正向时间，点击还原为原始评论时间' 
+                : '若评论作者使用的是倒计时间，点击按总时长换算为正向播放时间';
         }
 
         const toastMsg = comment.countdownApplied ? '已按视频总时长倒数换算为正向时间' : '已还原为原始时间';
@@ -2162,9 +2194,16 @@ export class CommentPanel {
 
         const scoreHtml = c.score ? `<span class="jc-score-badge" title="评分">${c.score}</span>` : '';
                 const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
-        const isCountdownActive = !!c.countdownApplied;
+        const isConverted = !!c.countdownApplied;
+        const btnText = isConverted 
+            ? (__('commentCountdownReverted') || '✓ 已转正向') 
+            : (__('commentCountdownConvert') || '⏱️ 倒计换算');
+        const btnTitle = isConverted 
+            ? '当前时间已按视频总时长换算为正向时间，点击还原为原始评论时间' 
+            : '若评论作者使用的是倒计时间，点击按总时长换算为正向播放时间';
+
         const countdownBtn = hasTimestamps
-            ? `<button class="jc-countdown-btn${isCountdownActive ? ' jc-countdown-btn--active' : ''}" title="${isCountdownActive ? '当前已按总时长换算为正向时间，点击还原' : '按视频总时长倒数换算为正向时间'}">${__('commentCountdown') || '时间倒数'}</button>`
+            ? `<button class="jc-countdown-btn${isConverted ? ' jc-countdown-btn--active' : ''}" title="${btnTitle}">${btnText}</button>`
             : '';
         const spamHtml = (c.spam && c.spam.label === 'SPAM') ? `<span class="jc-spam-badge" title="${c.spam.reason}">灌水: ${c.spam.category}</span>` : '';
 
