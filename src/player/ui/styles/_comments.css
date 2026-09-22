@@ -896,6 +896,22 @@
 .jc-time-add-badge:active {
     transform: scale(0.9);
 }
+/* 已收藏状态：主动常驻展示绿色角标 (✓) 表示该时间已经收藏 */
+.jc-time-add-badge.is-favorited {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: scale(1) !important;
+    background: #22c55e !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 1px 4px rgba(34, 197, 94, 0.55) !important;
+}
+
+.jc-time-add-badge.is-favorited:hover {
+    background: #16a34a !important;
+    transform: scale(1.15) !important;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.65) !important;
+}
 
 /* 评论卡片：倒计换算按钮 (高度统一、双态协调的 Apple Glass 设计) */
 .jc-countdown-btn {

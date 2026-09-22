@@ -1592,7 +1592,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior: contain;
-    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     height: 38px;
@@ -1631,16 +1630,58 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     -webkit-tap-highlight-color: transparent;
     pointer-events: auto;
 }
+/* 状态 1：默认状态（半透明背景色、无边框、无高亮） */
 .tm-tab-pill {
     background-color: hsla(var(--tab-color), 0.12);
-    border-color: hsla(var(--tab-color), 0.35);
-    color: hsl(var(--tab-color));
+    border: 1px solid transparent;
+    color: hsla(var(--tab-color), 0.82);
+    box-shadow: none;
+    transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.tm-tab-pill:active { transform: scale(0.96); }
-.tm-tab-pill.active {
-    background-color: hsla(var(--tab-color), 0.25);
-    border-color: hsla(var(--tab-color), 0.6);
-    color: hsl(var(--tab-color));
+
+.tm-tab-pill:active {
+    transform: scale(0.96);
+}
+
+/* 状态 2：当前视频进度附近 ±5s 时（半透明背景色、颜色边框、文字高亮） */
+.tm-tab-pill.near {
+    background-color: hsla(var(--tab-color), 0.22);
+    border-color: hsla(var(--tab-color), 0.75);
+    color: #ffffff;
+    font-weight: 600;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
+}
+
+/* 状态 3：区间循环播放时（半透明背景色、颜色边框、文字高亮、外发光呼吸灯） */
+@keyframes tm-tab-loop-pulse {
+    0%, 100% {
+        box-shadow: 0 0 6px hsla(var(--tab-color), 0.45), 0 0 14px hsla(var(--tab-color), 0.25);
+        border-color: hsla(var(--tab-color), 0.75);
+    }
+    50% {
+        box-shadow: 0 0 12px hsla(var(--tab-color), 0.9), 0 0 24px hsla(var(--tab-color), 0.55);
+        border-color: hsl(var(--tab-color));
+    }
+}
+
+.tm-tab-pill.looping {
+    background-color: hsla(var(--tab-color), 0.32);
+    border-color: hsl(var(--tab-color));
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    animation: tm-tab-loop-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 激活态兜底 */
+.tm-tab-pill.active:not(.looping):not(.near) {
+    background-color: hsla(var(--tab-color), 0.2);
+    border-color: hsla(var(--tab-color), 0.55);
+    color: #ffffff;
 }
 
 .tm-tab-time-text {

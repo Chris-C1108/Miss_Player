@@ -123,14 +123,50 @@ export class LoopManager {
             });
         }
 
-        // Translate vertical scroll wheel into horizontal scroll on the tab bar
+        // PC 端鼠标滚轮横向平滑阻尼动力学滚动 (Momentum Smooth Wheel)
         if (this.tabScrollContainer) {
+            let wheelTarget = null;
+            let wheelRafId = null;
+
+            const animateScroll = () => {
+                if (!this.tabScrollContainer || wheelTarget === null) return;
+                const current = this.tabScrollContainer.scrollLeft;
+                const diff = wheelTarget - current;
+                if (Math.abs(diff) < 0.5) {
+                    this.tabScrollContainer.scrollLeft = wheelTarget;
+                    wheelTarget = null;
+                    wheelRafId = null;
+                    return;
+                }
+                this.tabScrollContainer.scrollLeft = current + diff * 0.28;
+                wheelRafId = requestAnimationFrame(animateScroll);
+            };
+
             this.tabScrollContainer.addEventListener('wheel', (e) => {
-                if (e.deltaY !== 0) {
+                const delta = e.deltaY || e.deltaX;
+                if (delta !== 0) {
                     e.preventDefault();
-                    this.tabScrollContainer.scrollLeft += e.deltaY;
+                    this._isUserInteractingWithTabs = true;
+                    if (wheelTarget === null) {
+                        wheelTarget = this.tabScrollContainer.scrollLeft;
+                    }
+                    const maxScroll = Math.max(0, this.tabScrollContainer.scrollWidth - this.tabScrollContainer.clientWidth);
+                    wheelTarget = Math.max(0, Math.min(maxScroll, wheelTarget + delta * 1.1));
+                    if (!wheelRafId) {
+                        wheelRafId = requestAnimationFrame(animateScroll);
+                    }
+                    if (this._userScrollTimer) clearTimeout(this._userScrollTimer);
+                    this._userScrollTimer = setTimeout(() => {
+                        this._isUserInteractingWithTabs = false;
+                    }, 600);
                 }
             }, { passive: false });
+        }
+
+        // 监听视频进度：检测进度附近 ±5s 胶囊高亮与自动居中滚动
+        if (this.targetVideo) {
+            this._onVideoTimeUpdateBound = () => this._handleVideoTimeUpdate();
+            this.targetVideo.addEventListener('timeupdate', this._onVideoTimeUpdateBound);
         }
 
         // Bind swipe-up gesture on tab row
@@ -257,11 +293,21 @@ export class LoopManager {
         };
         const moveLongPress = (e) => {
             const touch = e.touches ? e.touches[0] : e;
-            const dx = touch.clientX - startX;
-            const dy = touch.clientY - startY;
-            if (Math.hypot(dx, dy) > 8) {
+            const dx = Math.abs(touch.clientX - startX);
+            const dy = Math.abs(touch.clientY - startY);
+            // 只要产生微小位移趋势 (> 5px)，立即认定为滑动意图，瞬间释放拖拽手势
+            if (dx > 5 || dy > 5) {
                 cancelLongPress();
+                this._isUserInteractingWithTabs = true;
             }
+        };
+
+        const handleTouchEnd = () => {
+            cancelLongPress();
+            if (this._userScrollTimer) clearTimeout(this._userScrollTimer);
+            this._userScrollTimer = setTimeout(() => {
+                this._isUserInteractingWithTabs = false;
+            }, 800);
         };
 
         pill.addEventListener('mousedown', startLongPress);
@@ -270,8 +316,8 @@ export class LoopManager {
         pill.addEventListener('touchmove', moveLongPress, { passive: true });
         pill.addEventListener('mouseup', cancelLongPress);
         pill.addEventListener('mouseleave', cancelLongPress);
-        pill.addEventListener('touchend', cancelLongPress);
-        pill.addEventListener('touchcancel', cancelLongPress);
+        pill.addEventListener('touchend', handleTouchEnd);
+        pill.addEventListener('touchcancel', handleTouchEnd);
 
         return pill;
     }
@@ -938,6 +984,76 @@ export class LoopManager {
         this._updateActiveTabProgress();
     }
 
+/**
+     * 监听视频播放进度：
+     * 1. 判断是否在时间胶囊附近 ±5s，赋予 .near 样式（文字高亮与颜色边框）
+     * 2. 在进入新胶囊附近时，平滑将胶囊滚动到居中位置
+     * @private
+     */
+    _handleVideoTimeUpdate() {
+        if (!this.targetVideo || !this.tabScrollContainer) return;
+        const now = Date.now();
+        if (this._lastNearCheckTime && now - this._lastNearCheckTime < 150) return;
+        this._lastNearCheckTime = now;
+
+        const curTime = this.targetVideo.currentTime;
+        if (isNaN(curTime)) return;
+
+        const NEAR_THRESHOLD = 5; // 时间附近判断标准：前后 5s
+        let currentNearTab = null;
+
+        for (const tab of this.tabs) {
+            if (!tab) continue;
+            let isNear = false;
+            if (tab.type === 'highlight' && tab.startTime !== null) {
+                isNear = (curTime >= tab.startTime - NEAR_THRESHOLD && curTime <= tab.startTime + NEAR_THRESHOLD);
+            } else if (tab.type === 'interval' && tab.startTime !== null && tab.endTime !== null) {
+                const minT = Math.min(tab.startTime, tab.endTime);
+                const maxT = Math.max(tab.startTime, tab.endTime);
+                isNear = (curTime >= minT - NEAR_THRESHOLD && curTime <= maxT + NEAR_THRESHOLD);
+            }
+
+            const pill = this.tabScrollContainer.querySelector(`.tm-tab-pill[data-tab-id="${tab.id}"]`);
+            if (pill) {
+                if (isNear) {
+                    pill.classList.add('near');
+                    if (!currentNearTab) currentNearTab = { tab, pill };
+                } else {
+                    pill.classList.remove('near');
+                }
+            }
+        }
+
+        // 自动居中滚动：新进入某个胶囊范围且用户当前未手动触摸/滚动时执行
+        if (currentNearTab) {
+            if (this._currentNearTabId !== currentNearTab.tab.id) {
+                this._currentNearTabId = currentNearTab.tab.id;
+                this._scrollToCenterPill(currentNearTab.pill);
+            }
+        } else {
+            this._currentNearTabId = null;
+        }
+    }
+
+    /**
+     * 将目标胶囊平滑滚动到容器的水平居中位置
+     * @param {HTMLElement} pill 
+     * @private
+     */
+    _scrollToCenterPill(pill) {
+        if (!pill || !this.tabScrollContainer || this._isUserInteractingWithTabs) return;
+        const container = this.tabScrollContainer;
+        const pillLeft = pill.offsetLeft;
+        const pillWidth = pill.offsetWidth;
+        const containerWidth = container.clientWidth;
+        const targetScrollLeft = pillLeft - (containerWidth / 2) + (pillWidth / 2);
+
+        container.scrollTo({
+            left: Math.max(0, targetScrollLeft),
+            behavior: 'smooth'
+        });
+    }
+
     _clearAllTabProgress() {
         if (!this.tabScrollContainer) return;
         const pills = this.tabScrollContainer.querySelectorAll('.tm-tab-pill');
@@ -1358,6 +1474,11 @@ export class LoopManager {
         this._sortTabs();
         setValue(this.storageKey, this.tabs);
 
+        // 广播标签更新事件，通知评论区同步更新已收藏角标 (✓)
+        try {
+            window.dispatchEvent(new CustomEvent('mp_tabs_updated', { detail: this.tabs }));
+        } catch (_) {}
+
         // 触发自动智能合并同步 (数据变更，防抖 5 秒)
         try {
             SyncManager.triggerAutoSync(this.playerCore?.options?.playerState, 'change');
@@ -1408,6 +1529,10 @@ export class LoopManager {
     cleanup() {
         this.disableLoop();
         document.removeEventListener('click', this._handleOutsideClickForEdit);
+        if (this.targetVideo && this._onVideoTimeUpdateBound) {
+            this.targetVideo.removeEventListener('timeupdate', this._onVideoTimeUpdateBound);
+            this._onVideoTimeUpdateBound = null;
+        }
         if (this.targetVideo && this._durationFallbackBound) {
             this.targetVideo.removeEventListener('timeupdate', this._durationFallbackBound);
             this._durationFallbackBound = null;

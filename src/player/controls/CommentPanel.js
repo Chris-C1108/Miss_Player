@@ -505,10 +505,15 @@ export class CommentPanel {
             const retryBtn = e.target.closest('.tm-comment-retry-btn');
             const toggleExpandBtn = e.target.closest('.jc-toggle-expand-btn');
 
-            // 1. 点击加号角标：将其添加至控制面板草稿胶囊 (tm-loop-control-row draft)
+            // 1. 点击角标：若已收藏则提示，未收藏则添加至控制面板草稿胶囊
             if (addBadge) {
                 e.stopPropagation();
                 e.preventDefault();
+                if (addBadge.classList.contains('is-favorited')) {
+                    Toast('该时间已在控制栏片段标记中', 1500, 'success');
+                    if (this.uiManager) this.uiManager.showControls();
+                    return;
+                }
                 const link = addBadge.closest('.jc-time-link');
                 if (link) {
                     const secsAttr = link.getAttribute('data-secs');
@@ -572,6 +577,11 @@ export class CommentPanel {
                 this.handleRetry();
             }
         });
+
+        // 移动端长按时间胶囊显示加号角标 (+)
+                // 监听控制栏标签变动事件，实时刷新评论区已收藏角标 (✓)
+        this._onTabsUpdatedBound = () => this.updateFavoriteBadges();
+        window.addEventListener('mp_tabs_updated', this._onTabsUpdatedBound);
 
         // 移动端长按时间胶囊显示加号角标 (+)
         this.uiElements.playerContainer.addEventListener('touchstart', (e) => {
@@ -1324,6 +1334,10 @@ export class CommentPanel {
      */
     handleJavlibVerificationSuccess() {
         this.cleanupJavlibVerification();
+        if (this._onTabsUpdatedBound) {
+            window.removeEventListener('mp_tabs_updated', this._onTabsUpdatedBound);
+            this._onTabsUpdatedBound = null;
+        }
         this.javlibCfShield = false;
         this.javlibVerifyingStatus = '';
 
@@ -2445,13 +2459,78 @@ export class CommentPanel {
 
             // 当分区没有被评论填满（没有出现滚动条）且仍有更多评论可加载时，自动触发加载下一页
             setTimeout(() => this.checkViewportFill(), 150);
+            setTimeout(() => this.updateFavoriteBadges(), 50);
         }
     }
 
     /**
      * 检查并自动加载下一页评论，直到视口填满或无更多数据 (使用 rAF 避开同步布局重排)
      */
-    checkViewportFill() {
+/**
+     * 比对用户的片段标签列表 (tabs)，对评论区中误差在微小范围内的时间胶囊主动高亮展示绿色角标 (✓)
+     */
+    updateFavoriteBadges() {
+        if (!this.commentsList) return;
+        const tabs = this.getTabs();
+        const timeLinks = this.commentsList.querySelectorAll('.jc-time-link');
+        if (timeLinks.length === 0) return;
+
+        const THRESHOLD = 3; // 微小误差容差 ±3 秒
+
+        timeLinks.forEach(link => {
+            const badge = link.querySelector('.jc-time-add-badge');
+            if (!badge) return;
+
+            const secsAttr = link.getAttribute('data-secs');
+            if (!secsAttr) return;
+
+            let secs;
+            try {
+                secs = JSON.parse(secsAttr);
+            } catch (_) {
+                secs = parseFloat(secsAttr);
+            }
+            if (secs === null || secs === undefined || isNaN(Array.isArray(secs) ? secs[0] : secs)) return;
+
+            // 比对 tabs
+            const isFavorited = Array.isArray(tabs) && tabs.some(tab => {
+                if (!tab) return false;
+                if (Array.isArray(secs) && secs.length >= 2) {
+                    if (tab.type === 'interval' && tab.startTime !== null && tab.endTime !== null) {
+                        const s1 = Math.min(secs[0], secs[1]);
+                        const s2 = Math.max(secs[0], secs[1]);
+                        const t1 = Math.min(tab.startTime, tab.endTime);
+                        const t2 = Math.max(tab.startTime, tab.endTime);
+                        return Math.abs(t1 - s1) <= 5 && Math.abs(t2 - s2) <= 5;
+                    }
+                    return false;
+                } else {
+                    const sec = Array.isArray(secs) ? secs[0] : secs;
+                    if (tab.type === 'highlight' && tab.startTime !== null) {
+                        return Math.abs(tab.startTime - sec) <= THRESHOLD;
+                    }
+                    if (tab.type === 'interval' && tab.startTime !== null && tab.endTime !== null) {
+                        const t1 = Math.min(tab.startTime, tab.endTime);
+                        const t2 = Math.max(tab.startTime, tab.endTime);
+                        return sec >= (t1 - THRESHOLD) && sec <= (t2 + THRESHOLD);
+                    }
+                    return false;
+                }
+            });
+
+            if (isFavorited) {
+                badge.classList.add('is-favorited');
+                badge.textContent = '✓';
+                badge.title = '已添加至控制栏片段标记 (误差 ≤ 3s)';
+            } else {
+                badge.classList.remove('is-favorited');
+                badge.textContent = '+';
+                badge.title = '添加至控制栏草稿胶囊';
+            }
+        });
+    }
+
+        checkViewportFill() {
         if (!this.commentsList) return;
         requestAnimationFrame(() => {
             if (!this.commentsList) return;
@@ -2684,5 +2763,9 @@ export class CommentPanel {
             this.targetVideo.removeEventListener('loadedmetadata', this.handleMetadataLoadedBound);
         }
         this.cleanupJavlibVerification();
+        if (this._onTabsUpdatedBound) {
+            window.removeEventListener('mp_tabs_updated', this._onTabsUpdatedBound);
+            this._onTabsUpdatedBound = null;
+        }
     }
 }
