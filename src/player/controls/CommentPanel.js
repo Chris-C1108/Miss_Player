@@ -498,40 +498,38 @@ export class CommentPanel {
         };
 
         this.uiElements.playerContainer.addEventListener('click', (e) => {
-            const addBadge = e.target.closest('.jc-time-add-badge');
+            const starBtn = e.target.closest('.jc-time-star-btn');
             const countdownBtn = e.target.closest('.jc-countdown-btn');
             const timeLink = e.target.closest('.jc-time-link');
             const codeLink = e.target.closest('.jc-code-link');
             const retryBtn = e.target.closest('.tm-comment-retry-btn');
             const toggleExpandBtn = e.target.closest('.jc-toggle-expand-btn');
 
-            // 1. 点击角标：若已收藏则提示，未收藏则添加至控制面板草稿胶囊
-            if (addBadge) {
+            // 1. 点击胶囊内嵌右侧五角星收藏按钮：触发控制面板草稿，同时跳转播放进度
+            if (starBtn) {
                 e.stopPropagation();
                 e.preventDefault();
-                if (addBadge.classList.contains('is-favorited')) {
-                    Toast('该时间已在控制栏片段标记中', 1500, 'success');
-                    if (this.uiManager) this.uiManager.showControls();
-                    return;
-                }
-                const link = addBadge.closest('.jc-time-link');
+                const link = starBtn.closest('.jc-time-link');
                 if (link) {
+                    if (link._starHideTimer) {
+                        clearTimeout(link._starHideTimer);
+                        link._starHideTimer = null;
+                    }
                     const secsAttr = link.getAttribute('data-secs');
                     if (secsAttr) {
+                        let secs;
                         try {
-                            const secs = JSON.parse(secsAttr);
-                            this.handleAddTabFromTime(secs);
+                            secs = JSON.parse(secsAttr);
                         } catch (_) {
-                            const secs = parseFloat(secsAttr);
-                            this.handleAddTabFromTime(secs);
+                            secs = parseFloat(secsAttr);
                         }
+                        this.handleStarClick(secs, link);
                     }
-                    link.classList.remove('show-add-badge');
                 }
                 return;
-            } 
-            
-            // 2. 点击倒计换算按钮：双向换算正向播放时间
+            }
+
+            // 2. 点击时序换算按钮：双向换算正向播放时间
             if (countdownBtn) {
                 e.stopPropagation();
                 e.preventDefault();
@@ -541,11 +539,11 @@ export class CommentPanel {
                     this.toggleCommentCountdown(commentId, card, countdownBtn);
                 }
                 return;
-            } 
-            
-            // 3. 点击时间胶囊本身：仅跳转对应时间播放，绝不添加草稿胶囊
+            }
+
+            // 3. 点击时间胶囊本身（文字区域）：仅跳转对应时间播放，绝不添加草稿胶囊
             if (timeLink) {
-                // 若本次点击是由移动端长按松手触发的，坚决拦截跳转
+                // 若本次点击是由移动端长按松手触发的，坚决拦截，不触发播放跳转
                 if (isLongPressTriggered) {
                     e.stopPropagation();
                     e.preventDefault();
@@ -564,8 +562,8 @@ export class CommentPanel {
                     }
                 }
                 return;
-            } 
-            
+            }
+
             if (codeLink) {
                 e.stopPropagation();
                 const code = codeLink.getAttribute('data-code');
@@ -578,22 +576,24 @@ export class CommentPanel {
             }
         });
 
-        // 移动端长按时间胶囊显示加号角标 (+)
-                // 监听控制栏标签变动事件，实时刷新评论区已收藏角标 (✓)
+        // 监听控制栏标签变动事件，实时刷新评论区已收藏实心金星 (★)
         this._onTabsUpdatedBound = () => this.updateFavoriteBadges();
         window.addEventListener('mp_tabs_updated', this._onTabsUpdatedBound);
 
-        // 移动端长按时间胶囊显示加号角标 (+)
+        // 移动端长按时间胶囊显示内部右侧五角星按钮 (延迟 10 秒自动收起)
         this.uiElements.playerContainer.addEventListener('touchstart', (e) => {
             const link = e.target.closest('.jc-time-link');
             if (!link) {
-                // 点击时间胶囊外部区域，收起所有已浮现的加号角标
-                this.uiElements.playerContainer.querySelectorAll('.jc-time-link.show-add-badge')
-                    .forEach(el => el.classList.remove('show-add-badge'));
+                // 点击时间胶囊外部区域，收起所有已展开的五角星
+                this.uiElements.playerContainer.querySelectorAll('.jc-time-link.show-star-btn')
+                    .forEach(el => {
+                        if (el._starHideTimer) clearTimeout(el._starHideTimer);
+                        el.classList.remove('show-star-btn');
+                    });
                 return;
             }
-            // 如果触摸点在加号本身，直接进入加号点击流
-            if (e.target.closest('.jc-time-add-badge')) return;
+            // 如果触摸点在五角星按钮本身，直接放行给点击流
+            if (e.target.closest('.jc-time-star-btn')) return;
 
             const touch = e.touches[0];
             touchStartX = touch.clientX;
@@ -605,9 +605,27 @@ export class CommentPanel {
             longPressTimer = setTimeout(() => {
                 if (currentLink) {
                     isLongPressTriggered = true;
-                    this.uiElements.playerContainer.querySelectorAll('.jc-time-link.show-add-badge')
-                        .forEach(el => el.classList.remove('show-add-badge'));
-                    currentLink.classList.add('show-add-badge');
+                    // 先收起其他的胶囊五角星
+                    this.uiElements.playerContainer.querySelectorAll('.jc-time-link.show-star-btn')
+                        .forEach(el => {
+                            if (el !== currentLink) {
+                                if (el._starHideTimer) clearTimeout(el._starHideTimer);
+                                el.classList.remove('show-star-btn');
+                            }
+                        });
+
+                    // 展开当前胶囊右侧五角星
+                    currentLink.classList.add('show-star-btn');
+
+                    // 延迟 10 秒自动收起
+                    if (currentLink._starHideTimer) clearTimeout(currentLink._starHideTimer);
+                    const targetLink = currentLink;
+                    targetLink._starHideTimer = setTimeout(() => {
+                        targetLink.classList.remove('show-star-btn');
+                        targetLink._starHideTimer = null;
+                    }, 10000);
+
+                    // 触觉反馈
                     if (window.navigator && typeof window.navigator.vibrate === 'function') {
                         window.navigator.vibrate(15);
                     }
@@ -688,22 +706,45 @@ export class CommentPanel {
      * 将评论中的时间点或时间区间添加至控制面板循环标记栏（需求 1）
      * @param {number|number[]} secs 
      */
-    handleAddTabFromTime(secs) {
+    /**
+     * 处理点击胶囊内部右侧五角星收藏按钮：
+     * 需求：点击添加收藏时触发控制面板草稿同时跳转进度
+     * @param {number|number[]} secs - 秒数或 [start, end]
+     * @param {HTMLElement} link - 对应的时间胶囊元素
+     */
+    handleStarClick(secs, link) {
         const lm = this.getLoopManager();
-        if (!lm) {
-            Toast('循环控制面板未就绪', 2000, 'error');
+        const isFavorited = link ? link.classList.contains('is-favorited') : false;
+        const targetSecs = Array.isArray(secs) ? secs[0] : secs;
+
+        // 1. 同时跳转播放进度
+        if (this.targetVideo && typeof targetSecs === 'number' && !isNaN(targetSecs)) {
+            this.targetVideo.currentTime = targetSecs;
+            this.targetVideo.play().catch(() => {});
+            if (this.controlManager && typeof this.controlManager.showJumpHint === 'function') {
+                this.controlManager.showJumpHint(targetSecs);
+            }
+        }
+
+        // 2. 恢复显示控制面板
+        if (this.uiManager) {
+            this.uiManager.showControls();
+        }
+
+        // 3. 已收藏状态点击反馈
+        if (isFavorited) {
+            Toast('该时间已在片段标记中', 1500, 'info');
             return;
         }
-        if (typeof lm.setDraftTabFromTime === 'function') {
+
+        // 4. 未收藏：触发控制面板草稿胶囊 (tm-loop-control-row draft)
+        if (lm && typeof lm.setDraftTabFromTime === 'function') {
             lm.setDraftTabFromTime(secs);
             const isRange = Array.isArray(secs) && secs.length >= 2;
             const toastMsg = isRange
-                ? `已将区间 ${formatSeconds(secs[0])} ~ ${formatSeconds(secs[1])} 填入控制栏草稿胶囊`
-                : `已将时间 ${formatSeconds(Array.isArray(secs) ? secs[0] : secs)} 填入控制栏草稿胶囊`;
-            Toast(toastMsg, 2000, 'info');
-            if (this.uiManager) {
-                this.uiManager.showControls();
-            }
+                ? `已添加区间 ${formatSeconds(secs[0])} ~ ${formatSeconds(secs[1])} 至草稿并跳转播放`
+                : `已添加时间 ${formatSeconds(targetSecs)} 至草稿并跳转播放`;
+            Toast(toastMsg, 2000, 'success');
         }
     }
 
@@ -2518,14 +2559,17 @@ export class CommentPanel {
                 }
             });
 
+            const starBtn = link.querySelector('.jc-time-star-btn');
             if (isFavorited) {
-                badge.classList.add('is-favorited');
-                badge.textContent = '✓';
-                badge.title = '已添加至控制栏片段标记 (误差 ≤ 3s)';
+                link.classList.add('is-favorited');
+                if (starBtn) {
+                    starBtn.title = '此时间已收藏在片段标记中 (误差 ≤ 3s)';
+                }
             } else {
-                badge.classList.remove('is-favorited');
-                badge.textContent = '+';
-                badge.title = '添加至控制栏草稿胶囊';
+                link.classList.remove('is-favorited');
+                if (starBtn) {
+                    starBtn.title = '添加收藏至控制栏草稿胶囊并跳转播放';
+                }
             }
         });
     }

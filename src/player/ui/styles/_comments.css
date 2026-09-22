@@ -833,84 +833,101 @@
     line-height: 1.2;
 }
 
-/* 评论时间胶囊右上角添加草稿标记角标 (+) */
-.jc-time-add-badge {
-    position: absolute;
-    top: -7px;
-    right: -7px;
-    width: 17px;
-    height: 17px;
-    border-radius: 50%;
-    background: #fda4af;
-    color: #881337;
-    border: 1.5px solid #ffffff;
-    display: flex;
+/* 胶囊内嵌右侧收藏图标按钮 (Inline Accessory Star) */
+.jc-time-star-btn {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
-    font-weight: 900;
-    line-height: 1;
     cursor: pointer;
-    opacity: 0;
-    pointer-events: none;
-    transform: scale(0.5);
-    transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.12s, color 0.12s;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
-    z-index: 10;
     box-sizing: border-box;
-    text-indent: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    line-height: 1;
+    color: inherit;
+    /* 未展开时平滑折叠收起 */
+    max-width: 0;
+    opacity: 0;
+    margin-left: -2px;
+    overflow: hidden;
+    transform: scale(0.65);
+    transition: max-width 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                margin 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.15s ease;
+    pointer-events: none;
+    vertical-align: middle;
 }
 
-/* 增加 6px 隐形外边距热区，防止鼠标移向加号时因掠过父级边框导致 hover 中断闪退 */
-.jc-time-add-badge::before {
-    content: '';
-    position: absolute;
-    top: -6px;
-    left: -6px;
-    right: -6px;
-    bottom: -6px;
-    border-radius: 50%;
+/* 图标尺寸与矢量样式 */
+.jc-time-star-btn .jc-star-icon {
+    display: block;
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
 }
 
-/* PC 端鼠标悬浮时间胶囊时无条件稳固浮现（不依赖 @media hover） */
-.jc-time-link:hover .jc-time-add-badge {
+/* 默认未收藏状态：展示空心五角星 (☆)，隐藏实心星 */
+.jc-time-star-btn .jc-star-filled {
+    display: none !important;
+}
+.jc-time-star-btn .jc-star-outline {
+    display: block !important;
+    color: hsla(142.1, 70.6%, 45.3%, 0.85);
+    stroke-width: 2.2px;
+}
+
+/* PC 端鼠标悬浮胶囊时：胶囊内右侧平滑展开露处空心五角星 */
+.jc-time-link:hover .jc-time-star-btn {
+    max-width: 22px;
     opacity: 1;
-    pointer-events: auto;
+    margin-left: 3px;
     transform: scale(1);
+    pointer-events: auto;
 }
 
-/* 移动端长按激活或显式类名时浮现 */
-.jc-time-link.show-add-badge .jc-time-add-badge {
+/* 移动端长按唤出：赋予 .show-star-btn 保持展开 (延迟 10 秒后自动收起) */
+.jc-time-link.show-star-btn .jc-time-star-btn {
+    max-width: 22px;
     opacity: 1;
-    pointer-events: auto;
+    margin-left: 3px;
     transform: scale(1);
+    pointer-events: auto;
 }
 
-.jc-time-add-badge:hover {
-    background: #f43f5e;
-    color: #ffffff;
-    transform: scale(1.18);
-    box-shadow: 0 2px 6px rgba(244, 63, 94, 0.5);
+/* 悬浮在空心星上的交互反馈与金色微光 */
+.jc-time-star-btn:hover {
+    transform: scale(1.22) !important;
+}
+.jc-time-star-btn:hover .jc-star-outline {
+    color: #fbbf24 !important;
+    filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.6));
+}
+.jc-time-star-btn:active {
+    transform: scale(0.9) !important;
 }
 
-.jc-time-add-badge:active {
-    transform: scale(0.9);
-}
-/* 已收藏状态：主动常驻展示绿色角标 (✓) 表示该时间已经收藏 */
-.jc-time-add-badge.is-favorited {
+/* ===== 已收藏状态：实心金星 (★) 主动常驻展示 ===== */
+.jc-time-link.is-favorited .jc-time-star-btn {
+    max-width: 22px !important;
     opacity: 1 !important;
-    pointer-events: auto !important;
+    margin-left: 3px !important;
     transform: scale(1) !important;
-    background: #22c55e !important;
-    color: #ffffff !important;
-    border-color: #ffffff !important;
-    box-shadow: 0 1px 4px rgba(34, 197, 94, 0.55) !important;
+    pointer-events: auto !important;
 }
-
-.jc-time-add-badge.is-favorited:hover {
-    background: #16a34a !important;
-    transform: scale(1.15) !important;
-    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.65) !important;
+.jc-time-link.is-favorited .jc-time-star-btn .jc-star-outline {
+    display: none !important;
+}
+.jc-time-link.is-favorited .jc-time-star-btn .jc-star-filled {
+    display: block !important;
+    color: #f59e0b !important;
+    filter: drop-shadow(0 1px 3px rgba(245, 158, 11, 0.5));
+}
+.jc-time-link.is-favorited .jc-time-star-btn:hover .jc-star-filled {
+    color: #fbbf24 !important;
+    filter: drop-shadow(0 1px 5px rgba(251, 191, 36, 0.8));
 }
 
 /* 评论卡片：倒计换算按钮 (高度统一、双态协调的 Apple Glass 设计) */
