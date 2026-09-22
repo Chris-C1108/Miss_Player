@@ -1,19 +1,117 @@
 /**
- * 评论多级缓存管理器 (CommentCacheManager)
+ * 评论多级缓存管理器 (CommentCacheManager) - 原生 IndexedDB 工业级实现
  * 
- * 采用工业级 Page-Aware Feed Cache 架构思想：
- * 1. L1 内存静态高速缓存：跨播放器实例在页面生命周期内实现零序列化秒开；
- * 2. L2 会话缓存 (sessionStorage)：支持页面临时前进后退/刷新，隔离不同标签页与番号，设置 15 分钟 TTL；
- * 3. 页码级防重与增量合并：精确追踪各站点已抓取页码集 (collectedPages)，彻底杜绝重复请求。
+ * 核心设计决策 (为什么不用油猴 storage)：
+ * 1. 评论体量与长文本 JSON 序列化极大，写入 GM_setValue 会通过 IPC 消息强占脚本管理器主进程 SQLite，导致油猴与浏览器卡死；
+ * 2. 采用浏览器原生纯异步非阻塞 IndexedDB，零 IPC 消息负担，几十 MB 大容量高吞吐，彻底隔绝油猴扩展压力；
+ * 3. 搭配 L1 内存高速 Map 缓存，实现页面内秒级直接恢复与页码级 (collectedPages: Set) 防重。
  */
 
 import { logger } from '../../utils/logger.js';
+import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 
-const CACHE_TTL_MS = 15 * 60 * 1000; // 15 分钟有效期
-const STORAGE_PREFIX = 'mp_ccache_';
+const DB_NAME = 'MissPlayerCommentCache';
+const DB_VERSION = 1;
+const STORE_NAME = 'video_comments';
+const CACHE_TTL_MS = 20 * 60 * 1000; // 20 分钟有效期
+
+// 极简原生 IndexedDB Promise 工具封装
+class IDBHelper {
+    static _dbPromise = null;
+
+    static getDB() {
+        if (this._dbPromise) return this._dbPromise;
+        if (typeof indexedDB === 'undefined') return Promise.resolve(null);
+
+        this._dbPromise = new Promise((resolve) => {
+            try {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'videoCode' });
+                    }
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => {
+                    logger.debug('[IDBHelper] 打开 IndexedDB 失败 (降级为纯内存缓存):', e.target?.error);
+                    resolve(null);
+                };
+            } catch (err) {
+                logger.debug('[IDBHelper] IndexedDB 初始化异常:', err);
+                resolve(null);
+            }
+        });
+        return this._dbPromise;
+    }
+
+    static async get(key) {
+        const db = await this.getDB();
+        if (!db) return null;
+        return new Promise((resolve) => {
+            try {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.get(key);
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror = () => resolve(null);
+            } catch (_) {
+                resolve(null);
+            }
+        });
+    }
+
+    static async put(val) {
+        const db = await this.getDB();
+        if (!db || !val) return;
+        return new Promise((resolve) => {
+            try {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.put(val);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            } catch (_) {
+                resolve(false);
+            }
+        });
+    }
+
+    static async delete(key) {
+        const db = await this.getDB();
+        if (!db) return;
+        return new Promise((resolve) => {
+            try {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.delete(key);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            } catch (_) {
+                resolve(false);
+            }
+        });
+    }
+
+    static async clear() {
+        const db = await this.getDB();
+        if (!db) return;
+        return new Promise((resolve) => {
+            try {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.clear();
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            } catch (_) {
+                resolve(false);
+            }
+        });
+    }
+}
 
 export class CommentCacheManager {
-    // L1 内存静态缓存：Map<videoCode, CacheEntry>
+    // L1 内存静态高速缓存：Map<videoCode, CacheEntry>
     static _memoryCache = new Map();
 
     /**
@@ -24,12 +122,11 @@ export class CommentCacheManager {
     static hasValidCache(videoCode) {
         const entry = this.get(videoCode);
         if (!entry || !entry.sites) return false;
-        // 至少有一个站点包含有效已加载评论
         return Object.values(entry.sites).some(s => s && Array.isArray(s.comments) && s.comments.length > 0);
     }
 
     /**
-     * 读取指定番号的评论缓存 (L1 优先，L2 降级并做 TTL 校验)
+     * 读取指定番号的评论缓存 (L1 内存秒级即时命中，同时后台异步从 IndexedDB 预热)
      * @param {string} videoCode 
      * @returns {Object|null}
      */
@@ -37,41 +134,59 @@ export class CommentCacheManager {
         if (!videoCode) return null;
         const now = Date.now();
 
-        // 1. 检查 L1 内存缓存
+        // 1. 优先从 L1 内存缓存同步读取（零阻塞）
         const memEntry = this._memoryCache.get(videoCode);
         if (memEntry) {
             if (now - memEntry.timestamp < CACHE_TTL_MS) {
                 return memEntry;
             }
             this._memoryCache.delete(videoCode);
+            IDBHelper.delete(videoCode);
+            return null;
         }
 
-        // 2. 检查 L2 会话缓存 (sessionStorage)
-        try {
-            if (typeof sessionStorage !== 'undefined') {
-                const raw = sessionStorage.getItem(`${STORAGE_PREFIX}${videoCode}`);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (parsed && (now - (parsed.timestamp || 0) < CACHE_TTL_MS)) {
-                        // 还原站点数据中的 collectedPages 为 Set
-                        if (parsed.sites) {
-                            for (const siteKey of Object.keys(parsed.sites)) {
-                                const s = parsed.sites[siteKey];
-                                if (s && Array.isArray(s.collectedPages)) {
-                                    s.collectedPages = new Set(s.collectedPages);
-                                }
-                            }
+        // 2. 异步从 IndexedDB 预热回内存（供下次调用使用）
+        IDBHelper.get(videoCode).then(dbRecord => {
+            if (dbRecord && (now - (dbRecord.timestamp || 0) < CACHE_TTL_MS)) {
+                if (dbRecord.sites) {
+                    for (const k of Object.keys(dbRecord.sites)) {
+                        const s = dbRecord.sites[k];
+                        if (s && Array.isArray(s.collectedPages)) {
+                            s.collectedPages = new Set(s.collectedPages);
                         }
-                        this._memoryCache.set(videoCode, parsed);
-                        return parsed;
                     }
-                    sessionStorage.removeItem(`${STORAGE_PREFIX}${videoCode}`);
+                }
+                this._memoryCache.set(videoCode, dbRecord);
+            }
+        }).catch(() => {});
+
+        return null;
+    }
+
+    /**
+     * 异步精确读取 (优先 L1，其次等待 IndexedDB)
+     * @param {string} videoCode 
+     * @returns {Promise<Object|null>}
+     */
+    static async getAsync(videoCode) {
+        if (!videoCode) return null;
+        const syncRes = this.get(videoCode);
+        if (syncRes) return syncRes;
+
+        const now = Date.now();
+        const dbRecord = await IDBHelper.get(videoCode);
+        if (dbRecord && (now - (dbRecord.timestamp || 0) < CACHE_TTL_MS)) {
+            if (dbRecord.sites) {
+                for (const k of Object.keys(dbRecord.sites)) {
+                    const s = dbRecord.sites[k];
+                    if (s && Array.isArray(s.collectedPages)) {
+                        s.collectedPages = new Set(s.collectedPages);
+                    }
                 }
             }
-        } catch (e) {
-            logger.debug('[CommentCacheManager] 读取会话缓存异常:', e);
+            this._memoryCache.set(videoCode, dbRecord);
+            return dbRecord;
         }
-
         return null;
     }
 
@@ -113,36 +228,20 @@ export class CommentCacheManager {
             updatedAt: Date.now()
         };
 
-        // 异步更新至 L2 sessionStorage
-        this._persistToSession(videoCode, entry);
-    }
-
-    /**
-     * 将缓存持久化至 sessionStorage
-     * @private
-     */
-    static _persistToSession(videoCode, entry) {
-        try {
-            if (typeof sessionStorage !== 'undefined') {
-                // 转换 Set 为 Array 保证合法 JSON 序列化
-                const serializableSites = {};
-                for (const k of Object.keys(entry.sites)) {
-                    const s = entry.sites[k];
-                    serializableSites[k] = {
-                        ...s,
-                        collectedPages: Array.from(s.collectedPages || [1])
-                    };
-                }
-                const toStore = {
-                    videoCode: entry.videoCode,
-                    timestamp: entry.timestamp,
-                    sites: serializableSites
-                };
-                sessionStorage.setItem(`${STORAGE_PREFIX}${videoCode}`, JSON.stringify(toStore));
-            }
-        } catch (e) {
-            logger.debug('[CommentCacheManager] sessionStorage 写入跳过:', e);
+        // 异步非阻塞持久化至浏览器内置 IndexedDB (彻底绕开油猴 storage)
+        const idbRecord = {
+            videoCode: entry.videoCode,
+            timestamp: entry.timestamp,
+            sites: {}
+        };
+        for (const k of Object.keys(entry.sites)) {
+            const s = entry.sites[k];
+            idbRecord.sites[k] = {
+                ...s,
+                collectedPages: Array.from(s.collectedPages || [1])
+            };
         }
+        IDBHelper.put(idbRecord).catch(() => {});
     }
 
     /**
@@ -166,31 +265,110 @@ export class CommentCacheManager {
     }
 
     /**
-     * 清空指定番号或全局的评论缓存 (用于用户主动点击重试或刷新)
+     * 清空指定番号或全局的评论缓存
      * @param {string} [videoCode] 
      */
-    static clear(videoCode) {
-        if (videoCode) {
-            this._memoryCache.delete(videoCode);
-            try {
-                if (typeof sessionStorage !== 'undefined') {
-                    sessionStorage.removeItem(`${STORAGE_PREFIX}${videoCode}`);
-                }
-            } catch (_) {}
-            logger.log(`[CommentCacheManager] 已清除番号 ${videoCode} 的评论缓存`);
-        } else {
-            this._memoryCache.clear();
-            try {
-                if (typeof sessionStorage !== 'undefined') {
-                    for (let i = sessionStorage.length - 1; i >= 0; i--) {
-                        const key = sessionStorage.key(i);
-                        if (key && key.startsWith(STORAGE_PREFIX)) {
-                            sessionStorage.removeItem(key);
-                        }
+/**
+     * 检测并迁移油猴 storage / localStorage 中的历史评论缓存至原生 IndexedDB
+     * 迁移完成后立即彻底删除油猴 storage 中的旧键，释放脚本管理器空间，防止卡死
+     * @returns {Promise<number>} 迁移的记录数
+     */
+    static async migrateFromLegacyStorage() {
+        try {
+            let allKeys = [];
+            if (typeof GM_listValues === 'function') {
+                try {
+                    allKeys = GM_listValues() || [];
+                } catch (_) {}
+            }
+            if (typeof localStorage !== 'undefined') {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && !allKeys.includes(k)) {
+                        allKeys.push(k);
                     }
                 }
-            } catch (_) {}
-            logger.log('[CommentCacheManager] 已清除所有本地评论缓存');
+            }
+
+            // 识别旧评论缓存键 (包含 mp_ccache_, ccache_, mp_comments_, comments_cache_)
+            const legacyKeys = allKeys.filter(k => 
+                k.startsWith('mp_ccache_') || 
+                k.startsWith('ccache_') || 
+                k.startsWith('mp_comments_') || 
+                k.startsWith('comments_cache_')
+            );
+
+            if (legacyKeys.length === 0) return 0;
+
+            let migratedCount = 0;
+            for (const key of legacyKeys) {
+                try {
+                    let raw = null;
+                    if (typeof GM_getValue === 'function') {
+                        raw = GM_getValue(key, null);
+                    }
+                    if (!raw && typeof localStorage !== 'undefined') {
+                        const item = localStorage.getItem(key);
+                        if (item) {
+                            try { raw = JSON.parse(item); } catch (_) { raw = item; }
+                        }
+                    }
+
+                    if (typeof raw === 'string') {
+                        try { raw = JSON.parse(raw); } catch (_) {}
+                    }
+                    if (raw && typeof raw === 'object') {
+                        const videoCode = raw.videoCode || key.replace(/^(mp_ccache_|ccache_|mp_comments_|comments_cache_)/, '');
+                        if (videoCode && raw.sites) {
+                            const idbRecord = {
+                                videoCode,
+                                timestamp: raw.timestamp || Date.now(),
+                                sites: {}
+                            };
+                            for (const sk of Object.keys(raw.sites)) {
+                                const s = raw.sites[sk];
+                                idbRecord.sites[sk] = {
+                                    ...s,
+                                    collectedPages: Array.isArray(s.collectedPages) ? s.collectedPages : Array.from(s.collectedPages || [1])
+                                };
+                            }
+                            await IDBHelper.put(idbRecord);
+                            migratedCount++;
+                        }
+                    }
+
+                    // 迁移完毕后，彻底从油猴 storage 和 localStorage 删除，释放空间
+                    if (typeof GM_deleteValue === 'function') {
+                        try { GM_deleteValue(key); } catch (_) {}
+                    }
+                    if (typeof localStorage !== 'undefined') {
+                        try { localStorage.removeItem(key); } catch (_) {}
+                    }
+                } catch (itemErr) {
+                    logger.debug('[CommentCacheManager] 迁移单项失败:', itemErr);
+                }
+            }
+
+            if (migratedCount > 0) {
+                logger.log(`[CommentCacheManager] 成功将 ${migratedCount} 条旧评论缓存从油猴 storage 迁移至原生 IndexedDB，已彻底清理油猴存储！`);
+                DebugLogPanel.addLog(`[数据迁移] 检测到油猴旧评论缓存，已迁移 ${migratedCount} 条记录至 IndexedDB 并彻底清除旧存储`, 'success');
+            }
+            return migratedCount;
+        } catch (e) {
+            logger.debug('[CommentCacheManager] 历史评论迁移异常:', e);
+            return 0;
+        }
+    }
+
+        static clear(videoCode) {
+        if (videoCode) {
+            this._memoryCache.delete(videoCode);
+            IDBHelper.delete(videoCode).catch(() => {});
+            logger.log(`[CommentCacheManager] 已从内存与 IndexedDB 清除番号 ${videoCode} 评论缓存`);
+        } else {
+            this._memoryCache.clear();
+            IDBHelper.clear().catch(() => {});
+            logger.log('[CommentCacheManager] 已清空全部浏览器内置评论缓存');
         }
     }
 }

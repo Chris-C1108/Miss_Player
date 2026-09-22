@@ -10,6 +10,7 @@ import { telemetry } from '../../telemetry/index.js';
 import { CommentComposer } from './CommentComposer.js';
 import { CommentDebugCollector } from '../comments/CommentDebugCollector.js';
 import { CommentCacheManager } from '../comments/CommentCacheManager.js';
+import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 import {
     getVideoCodeFromUrl,
     fetchJableComments,
@@ -848,6 +849,7 @@ export class CommentPanel {
                 }
                 if (restoredCount > 0) {
                     logger.log(`[CommentPanel] 命中本地评论缓存 (${this.videoCode})，直接恢复 ${restoredCount} 条评论展示，跳过重复网络请求。`);
+                    DebugLogPanel.addLog(`[本地缓存] ${this.videoCode}: 瞬时恢复 ${restoredCount} 条评论 (零网络请求)`, 'success');
                     this.isLoading = false;
                     this.applyFilter();
                     this.renderCommentsList();
@@ -1093,8 +1095,17 @@ export class CommentPanel {
                 };
             });
 
-            // 调试模式与 WebDAV 收集含数字的评论语料
-            CommentDebugCollector.collectComments(this.videoCode, processed, duration);
+            // 统计各平台评论总条数 (需求 2)
+            const platformStats = {
+                jable: this.sites.jable?.totalCount || this.sites.jable?.comments?.length || 0,
+                javdb: this.sites.javdb?.totalCount || this.sites.javdb?.comments?.length || 0,
+                javlib: this.sites.javlib?.totalCount || this.sites.javlib?.comments?.length || 0
+            };
+            platformStats.total = (platformStats.jable || 0) + (platformStats.javdb || 0) + (platformStats.javlib || 0);
+
+            // 调试模式与 WebDAV 收集含数字或提到其他 AVCODE 的评论语料 (附带各平台总数)
+            CommentDebugCollector.collectComments(this.videoCode, processed, duration, platformStats);
+            DebugLogPanel.addLog(`[评论采集] ${site.name} 第 ${page} 页完成 (${processed.length}条，总计${site.totalCount}条)`, 'success');
 
             if (!site.collectedPages) {
                 site.collectedPages = new Set();

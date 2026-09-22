@@ -14,6 +14,7 @@ import { isSiteDomain } from './constants/domains.js';
 import { logger } from './utils/logger.js';
 import { telemetry } from './telemetry';
 import { SyncManager } from './sync/index.js';
+import { CommentCacheManager } from './player/comments/CommentCacheManager.js';
 
 // 1. 最早执行广告与弹窗拦截 (确保在宿主脚本加载前劫持 window.open 与广告请求)
 const earlyAdBlocker = new AdBlocker();
@@ -122,6 +123,9 @@ function setupViewport() {
             
             // 加载设置
             playerState.loadSettings();
+
+            // 异步检测并迁移油猴 storage 中的旧评论缓存至原生 IndexedDB，彻底释放油猴存储
+            CommentCacheManager.migrateFromLegacyStorage().catch(() => {});
 
             // 触发自动智能合并云同步 (若开启 WebDAV 自动同步)
             SyncManager.triggerAutoSync(playerState, 'startup');

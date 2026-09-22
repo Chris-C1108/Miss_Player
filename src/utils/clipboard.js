@@ -2,7 +2,7 @@
  * 剪贴板统一工具函数
  */
 
-import { telemetry } from '../telemetry';
+import { telemetry } from '../telemetry/index.js';
 
 /**
  * 复制文本到系统剪贴板（依次尝试 GM_setClipboard, navigator.clipboard, 降级 textarea）

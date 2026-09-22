@@ -2,6 +2,8 @@ import { getValue, setValue, Toast, playTapSound } from '../../utils/index.js';
 import { telemetry } from '../../telemetry';
 import { __ } from '../../constants/i18n.js';
 import { SyncManager, WebDavClient, getOrCreateClientId, getDeviceName } from '../../sync/index.js';
+import { DebugLogPanel } from '../ui/DebugLogPanel.js';
+import { CrazyScraper } from '../comments/CrazyScraper.js';
 import { SleazyForkService, getCurrentVersion } from '../../services/SleazyForkService.js';
 import {
     ICON_CLOUD_SYNC,
@@ -50,6 +52,7 @@ export class SettingsManager {
             },
             telemetryEnabled: false,
             debugMode: false,
+            crazyScrapeMode: false,
             pauseOnBlur: true,
             buttonSoundEnabled: true,
             autoCheckUpdate: true
@@ -73,6 +76,10 @@ export class SettingsManager {
     init() {
         // 加载保存的设置
         this.loadSettings();
+        DebugLogPanel.updateDebugState(this.settings.debugMode);
+        if (this.settings.debugMode && this.settings.crazyScrapeMode) {
+            setTimeout(() => CrazyScraper.start(this.controlManager?.commentPanel?.videoCode || ''), 2500);
+        }
         
         // 初始应用设置到控制组件
         this.updateControlRowsVisibility();
@@ -265,17 +272,47 @@ export class SettingsManager {
             __('helpImproveDesc') || '收集必要数据用于改进功能'
         );
 
+        let crazyOption = null;
+
         const debugOption = this._createToggleOption(
             'DEBUG',
             'debugMode',
             this.settings.debugMode,
             (checked) => {
                 this.updateSetting('debugMode', checked);
+                DebugLogPanel.updateDebugState(checked);
                 if (this.controlManager?.commentPanel) {
                     this.controlManager.commentPanel.updateDebugMode(checked);
                 }
+                if (crazyOption) {
+                    crazyOption.style.display = checked ? 'flex' : 'none';
+                }
+                if (!checked) {
+                    CrazyScraper.stop();
+                } else if (this.settings.crazyScrapeMode) {
+                    CrazyScraper.start(this.controlManager?.commentPanel?.videoCode || '');
+                }
             }
         );
+
+        // 疯狂采集模式子开关 (仅在 DEBUG 开启时展示)
+        crazyOption = this._createToggleOption(
+            __('crazyScrapeTitle') || '疯狂采集模式',
+            'crazyScrapeMode',
+            Boolean(this.settings.crazyScrapeMode),
+            (checked) => {
+                this.updateSetting('crazyScrapeMode', checked);
+                if (checked) {
+                    CrazyScraper.start(this.controlManager?.commentPanel?.videoCode || '');
+                } else {
+                    CrazyScraper.stop();
+                }
+            },
+            null,
+            __('crazyScrapeDesc') || '自动扫描宿主页面所有关联番号，低速防爬排队采集评论语料'
+        );
+        crazyOption.style.display = this.settings.debugMode ? 'flex' : 'none';
+        crazyOption.style.paddingLeft = '28px';
 
         // 3. 失焦后停止播放开关 (默认为开)
         const pauseOnBlurOption = this._createToggleOption(
@@ -308,6 +345,7 @@ export class SettingsManager {
         section3.appendChild(pauseOnBlurOption);
         section3.appendChild(buttonSoundOption);
         section3.appendChild(debugOption);
+        section3.appendChild(crazyOption);
         container.appendChild(section3);
 
         // =================================================================
@@ -1383,6 +1421,7 @@ export class SettingsManager {
 
             this.settings.telemetryEnabled = false;
             this.settings.debugMode = getBool('debugMode', false);
+            this.settings.crazyScrapeMode = getBool('crazyScrapeMode', false);
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
@@ -1406,6 +1445,7 @@ export class SettingsManager {
             setValue('enabledCommentSources', this.settings.enabledCommentSources);
             setValue('telemetryEnabled', false);
             setValue('debugMode', this.settings.debugMode);
+            setValue('crazyScrapeMode', Boolean(this.settings.crazyScrapeMode));
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);

@@ -14,6 +14,7 @@
 import { getValue } from '../../utils/storage.js';
 import { SyncManager, WebDavClient } from '../../sync/index.js';
 import { logger } from '../../utils/logger.js';
+import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 
 const COMMENTS_DEBUG_FILENAME = 'miss_player_comments_debug.json';
 const COUNTDOWN_SAMPLES_FILENAME = 'miss_player_countdown_samples.json';
@@ -54,7 +55,7 @@ export class CommentDebugCollector {
      * @param {Array} comments - 解析后的评论对象列表
      * @param {number} videoDuration - 视频真实时长 (秒)
      */
-    static collectComments(avcode, comments, videoDuration = 10800) {
+    static collectComments(avcode, comments, videoDuration = 10800, platformStats = null) {
         if (!this.isEnabled() || !avcode || !Array.isArray(comments) || comments.length === 0) {
             return;
         }
@@ -63,11 +64,18 @@ export class CommentDebugCollector {
             ? Math.round(videoDuration) 
             : 10800;
 
-        // 筛选包含数字且非 SPAM 的评论
+        const cleanCurAvcode = String(avcode || '').toUpperCase();
+
+        // 筛选包含数字或提到其他 AVCODE 的有效非 SPAM 评论 (需求 2)
         const candidateComments = comments.filter(c => {
             if (!c || typeof c.text !== 'string') return false;
             if (c.spam && c.spam.label === 'SPAM') return false;
-            return /\d/.test(c.text);
+            const hasDigits = /\d/.test(c.text);
+            const mentionedOther = Array.isArray(c.avcodes) && c.avcodes.some(code => {
+                const up = String(code || '').toUpperCase();
+                return up && up !== cleanCurAvcode;
+            });
+            return hasDigits || mentionedOther;
         });
 
         if (candidateComments.length === 0) return;
@@ -77,12 +85,16 @@ export class CommentDebugCollector {
             batch = {
                 avcode,
                 videoDuration: validDuration,
+                platformStats: platformStats || {},
                 comments: new Map()
             };
             this._pendingCommentBatches.set(avcode, batch);
         }
         if (validDuration !== 10800) {
             batch.videoDuration = validDuration;
+        }
+        if (platformStats && typeof platformStats === 'object') {
+            batch.platformStats = Object.assign({}, batch.platformStats || {}, platformStats);
         }
 
         let newCount = 0;
@@ -101,6 +113,8 @@ export class CommentDebugCollector {
                     hasTimestamps: Array.isArray(c.timestamps) && c.timestamps.length > 0,
                     isCountdownAuto: Boolean(c.isCountdownComment),
                     countdownApplied: Boolean(c.countdownApplied),
+                    mentionedOtherAvcodes: Array.isArray(c.avcodes) ? c.avcodes.map(a => String(a).toUpperCase()).filter(a => a && a !== cleanCurAvcode) : [],
+                    hasMentionedOtherAvcodes: Array.isArray(c.avcodes) && c.avcodes.some(a => String(a).toUpperCase() !== cleanCurAvcode),
                     timestamps: Array.isArray(c.timestamps) ? c.timestamps.map(t => ({
                         raw: t.raw,
                         seconds: t.seconds,
@@ -116,7 +130,8 @@ export class CommentDebugCollector {
         }
 
         if (newCount > 0) {
-            logger.debug(`[DebugCollector] 番号 ${avcode} 暂存 ${newCount} 条含数字评论待同步至 WebDAV`);
+            logger.debug(`[DebugCollector] 番号 ${avcode} 暂存 ${newCount} 条含数字/跨番号评论待同步至 WebDAV`);
+            DebugLogPanel.addLog(`[语料缓存] ${avcode}: 暂存 ${newCount} 条语料待同步至 WebDAV`, 'info');
             this._scheduleCommentSync();
         }
     }
@@ -185,6 +200,9 @@ export class CommentDebugCollector {
                     targetVideo.videoDuration = batch.videoDuration;
                 }
                 targetVideo.updatedAt = Date.now();
+                if (batch.platformStats && typeof batch.platformStats === 'object') {
+                    targetVideo.platformStats = Object.assign({}, targetVideo.platformStats || {}, batch.platformStats);
+                }
 
                 for (const [key, commentObj] of batch.comments.entries()) {
                     targetVideo.comments[key] = commentObj;
@@ -197,6 +215,7 @@ export class CommentDebugCollector {
             // 2. 上传合并后的全量语料数据
             await WebDavClient.uploadBackup(config, remoteData, COMMENTS_DEBUG_FILENAME);
             logger.debug(`[DebugCollector] 成功写回 WebDAV: 合并 ${totalMerged} 条评论至 ${COMMENTS_DEBUG_FILENAME}`);
+            DebugLogPanel.addLog(`[WebDAV] 成功合并 ${totalMerged} 条评论至 ${COMMENTS_DEBUG_FILENAME}`, 'success');
         } catch (err) {
             logger.warn('[DebugCollector] WebDAV 评论语料写回失败 (静默忽略):', err.message || err);
             // 写回失败时，将未提交成功的数据放回待处理批次中重试
