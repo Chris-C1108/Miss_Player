@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.6.32
+// @version            5.6.33
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1034,7 +1034,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.32";
+		return "5.6.33";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2326,6 +2326,8 @@
 			}
 			const maxAllowedHeight = window.innerHeight * .8;
 			let minHeight = window.innerWidth * (9 / 16);
+			const videoWidth = this.targetVideo.videoWidth || this.targetVideo.naturalWidth || 0;
+			const videoHeight = this.targetVideo.videoHeight || this.targetVideo.naturalHeight || 0;
 			if (videoWidth && videoHeight) minHeight = window.innerWidth * (videoHeight / videoWidth);
 			minHeight = Math.min(minHeight, maxAllowedHeight);
 			this.container.style.minHeight = `${minHeight}px`;
@@ -6658,6 +6660,18 @@
 						throw new Error("云端备份文件内容格式畸变");
 					} catch (jsonErr) {
 						console.error("[WebDavClient] 云端 JSON 解析失败:", jsonErr);
+						try {
+							let text = res.data.trim();
+							const lastBrace = text.lastIndexOf("}");
+							if (lastBrace > 0) {
+								text = text.slice(0, lastBrace + 1);
+								const repaired = JSON.parse(text);
+								if (repaired && typeof repaired === "object") {
+									console.warn("[WebDavClient] 成功容错截断闭合修复云端备份 JSON");
+									return repaired;
+								}
+							}
+						} catch (_) {}
 						throw new Error("云端备份数据损坏或被截断，已终止读取");
 					}
 				}
@@ -6715,7 +6729,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.32";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.33";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -10060,8 +10074,10 @@
 				"10m"
 			];
 			const parseStepToSeconds = (stepKey) => {
-				const num = parseInt(stepKey, 10) || 0;
-				if (stepKey.toLowerCase().endsWith("m")) return num * 60;
+				if (typeof stepKey === "number") return stepKey;
+				const str = String(stepKey || "").trim();
+				const num = parseInt(str, 10) || 0;
+				if (str.toLowerCase().endsWith("m")) return num * 60;
 				return num;
 			};
 			const sortedEnabledSteps = [...enabledSteps].sort((a, b) => parseStepToSeconds(a) - parseStepToSeconds(b));
@@ -12862,7 +12878,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.32";
+		return "5.6.33";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;

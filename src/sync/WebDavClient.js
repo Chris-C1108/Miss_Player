@@ -375,6 +375,20 @@ export class WebDavClient {
                     throw new Error('云端备份文件内容格式畸变');
                 } catch (jsonErr) {
                     console.error('[WebDavClient] 云端 JSON 解析失败:', jsonErr);
+                    // 尝试容错修复因截断或并发脏写导致的末尾破损 (Truncated JSON Repair)
+                    try {
+                        let text = res.data.trim();
+                        // 寻找最后一个闭合括号
+                        const lastBrace = text.lastIndexOf('}');
+                        if (lastBrace > 0) {
+                            text = text.slice(0, lastBrace + 1);
+                            const repaired = JSON.parse(text);
+                            if (repaired && typeof repaired === 'object') {
+                                console.warn('[WebDavClient] 成功容错截断闭合修复云端备份 JSON');
+                                return repaired;
+                            }
+                        }
+                    } catch (_) {}
                     throw new Error('云端备份数据损坏或被截断，已终止读取');
                 }
             }

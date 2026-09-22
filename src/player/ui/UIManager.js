@@ -1266,6 +1266,8 @@ export class UIManager {
         
         const maxAllowedHeight = window.innerHeight * 0.8;
         let minHeight = window.innerWidth * (9/16); // 默认16:9比例
+        const videoWidth = this.targetVideo.videoWidth || this.targetVideo.naturalWidth || 0;
+        const videoHeight = this.targetVideo.videoHeight || this.targetVideo.naturalHeight || 0;
         if (videoWidth && videoHeight) {
             minHeight = window.innerWidth * (videoHeight / videoWidth);
         }

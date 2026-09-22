@@ -74,8 +74,10 @@ export class SeekController {
 
         // 解析步进字符串转换为秒数
         const parseStepToSeconds = (stepKey) => {
-            const num = parseInt(stepKey, 10) || 0;
-            if (stepKey.toLowerCase().endsWith('m')) {
+            if (typeof stepKey === 'number') return stepKey;
+            const str = String(stepKey || '').trim();
+            const num = parseInt(str, 10) || 0;
+            if (str.toLowerCase().endsWith('m')) {
                 return num * 60;
             }
             return num;
