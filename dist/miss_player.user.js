@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.6.33
+// @version            5.6.34
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1034,7 +1034,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.33";
+		return "5.6.34";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -6441,6 +6441,53 @@
 			return true;
 		}
 	};
+	function tryRepairTruncatedJson(text) {
+		if (!text || typeof text !== "string") return null;
+		let clean = text.trim();
+		if (!clean.startsWith("{")) return null;
+		for (let i = clean.length - 1; i >= Math.max(0, clean.length - 4096); i--) {
+			const char = clean[i];
+			if (char === "}" || char === "]" || char === "\"" || char === ",") {
+				let candidate = clean.slice(0, i + 1);
+				if (char === ",") candidate = clean.slice(0, i);
+				let openBraces = 0;
+				let openBrackets = 0;
+				let inString = false;
+				let escape = false;
+				for (let j = 0; j < candidate.length; j++) {
+					const c = candidate[j];
+					if (escape) {
+						escape = false;
+						continue;
+					}
+					if (c === "\\") {
+						escape = true;
+						continue;
+					}
+					if (c === "\"") {
+						inString = !inString;
+						continue;
+					}
+					if (!inString) {
+						if (c === "{") openBraces++;
+						else if (c === "}") openBraces = Math.max(0, openBraces - 1);
+						else if (c === "[") openBrackets++;
+						else if (c === "]") openBrackets = Math.max(0, openBrackets - 1);
+					}
+				}
+				if (!inString && (openBraces > 0 || openBrackets > 0)) {
+					let closing = "";
+					for (let k = 0; k < openBrackets; k++) closing += "]";
+					for (let k = 0; k < openBraces; k++) closing += "}";
+					try {
+						const parsed = JSON.parse(candidate + closing);
+						if (parsed && typeof parsed === "object") return parsed;
+					} catch (_) {}
+				}
+			}
+		}
+		return null;
+	}
 	var WebDavClient = class {
 		static getAuthHeaders(user, pass) {
 			if (!user && !pass) return {};
@@ -6661,15 +6708,10 @@
 					} catch (jsonErr) {
 						console.error("[WebDavClient] 云端 JSON 解析失败:", jsonErr);
 						try {
-							let text = res.data.trim();
-							const lastBrace = text.lastIndexOf("}");
-							if (lastBrace > 0) {
-								text = text.slice(0, lastBrace + 1);
-								const repaired = JSON.parse(text);
-								if (repaired && typeof repaired === "object") {
-									console.warn("[WebDavClient] 成功容错截断闭合修复云端备份 JSON");
-									return repaired;
-								}
+							const repaired = tryRepairTruncatedJson(res.data);
+							if (repaired && typeof repaired === "object" && (repaired.settings || repaired.markers)) {
+								console.warn("[WebDavClient] 成功智能补全截断云端备份 JSON 并安全恢复数据");
+								return repaired;
 							}
 						} catch (_) {}
 						throw new Error("云端备份数据损坏或被截断，已终止读取");
@@ -6729,7 +6771,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.33";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.34";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -7142,7 +7184,27 @@
 					data: migratedRemote
 				};
 			}
-			const remoteData = await WebDavClient.downloadBackup(config);
+			let remoteData = null;
+			try {
+				remoteData = await WebDavClient.downloadBackup(config);
+			} catch (downloadErr) {
+				console.warn("[SyncManager] 云端备份下载或解析失败:", downloadErr.message || downloadErr);
+				if (String(downloadErr.message || "").includes("损坏") || String(downloadErr.message || "").includes("截断") || String(downloadErr.message || "").includes("JSON")) {
+					console.log("[SyncManager] 启动云端破损自愈：使用本地健康数据重新上传覆盖云端基线...");
+					try {
+						await WebDavClient.uploadBackup(config, localData);
+						this.setLastSyncTime(localData.lastModified);
+						return {
+							success: true,
+							message: "云端破损数据已自动通过本地健康基线修复！",
+							data: localData
+						};
+					} catch (repairErr) {
+						console.error("[SyncManager] 自愈修复云端失败:", repairErr);
+					}
+				}
+				throw downloadErr;
+			}
 			const mergedData = this.mergeData(localData, remoteData, clientId);
 			await WebDavClient.uploadBackup(config, mergedData);
 			this.applyDataToLocal(mergedData, playerState);
@@ -12878,7 +12940,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.33";
+		return "5.6.34";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;

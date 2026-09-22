@@ -9,7 +9,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.6.33';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.6.34';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -662,7 +662,28 @@ export class SyncManager {
         }
 
         // ================= 智能合并同步 (Smart Merge) =================
-        const remoteData = await WebDavClient.downloadBackup(config);
+        let remoteData = null;
+        try {
+            remoteData = await WebDavClient.downloadBackup(config);
+        } catch (downloadErr) {
+            console.warn('[SyncManager] 云端备份下载或解析失败:', downloadErr.message || downloadErr);
+            // 自愈机制：若云端数据损坏或截断且无法智能修复，使用本地健康数据重新上传覆盖，重置云端基线
+            if (String(downloadErr.message || '').includes('损坏') || String(downloadErr.message || '').includes('截断') || String(downloadErr.message || '').includes('JSON')) {
+                console.log('[SyncManager] 启动云端破损自愈：使用本地健康数据重新上传覆盖云端基线...');
+                try {
+                    await WebDavClient.uploadBackup(config, localData);
+                    this.setLastSyncTime(localData.lastModified);
+                    return {
+                        success: true,
+                        message: '云端破损数据已自动通过本地健康基线修复！',
+                        data: localData
+                    };
+                } catch (repairErr) {
+                    console.error('[SyncManager] 自愈修复云端失败:', repairErr);
+                }
+            }
+            throw downloadErr;
+        }
         const mergedData = this.mergeData(localData, remoteData, clientId);
 
         // 写回 WebDAV

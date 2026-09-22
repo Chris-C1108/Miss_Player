@@ -1,4 +1,65 @@
 /**
+ * 容错修补因网络截断或并发脏写导致的未闭合 JSON
+ * @param {string} text 
+ * @returns {Object|null}
+ */
+function tryRepairTruncatedJson(text) {
+    if (!text || typeof text !== 'string') return null;
+    let clean = text.trim();
+    if (!clean.startsWith('{')) return null;
+
+    // 逆向查找最近的一个完整结构结尾
+    for (let i = clean.length - 1; i >= Math.max(0, clean.length - 4096); i--) {
+        const char = clean[i];
+        if (char === '}' || char === ']' || char === '"' || char === ',') {
+            let candidate = clean.slice(0, i + 1);
+            if (char === ',') {
+                candidate = clean.slice(0, i);
+            }
+            let openBraces = 0;
+            let openBrackets = 0;
+            let inString = false;
+            let escape = false;
+
+            for (let j = 0; j < candidate.length; j++) {
+                const c = candidate[j];
+                if (escape) {
+                    escape = false;
+                    continue;
+                }
+                if (c === '\\') {
+                    escape = true;
+                    continue;
+                }
+                if (c === '"') {
+                    inString = !inString;
+                    continue;
+                }
+                if (!inString) {
+                    if (c === '{') openBraces++;
+                    else if (c === '}') openBraces = Math.max(0, openBraces - 1);
+                    else if (c === '[') openBrackets++;
+                    else if (c === ']') openBrackets = Math.max(0, openBrackets - 1);
+                }
+            }
+
+            if (!inString && (openBraces > 0 || openBrackets > 0)) {
+                let closing = '';
+                for (let k = 0; k < openBrackets; k++) closing += ']';
+                for (let k = 0; k < openBraces; k++) closing += '}';
+                try {
+                    const parsed = JSON.parse(candidate + closing);
+                    if (parsed && typeof parsed === 'object') {
+                        return parsed;
+                    }
+                } catch (_) {}
+            }
+        }
+    }
+    return null;
+}
+
+/**
  * WebDAV 协议客户端 (WebDavClient)
  * 提供基于 GM_xmlhttpRequest / fetch 的跨域 WebDAV 存储交互
  * 包含 UTF-8 安全 Base64 认证、PROPFIND 目录嗅探、MKCOL 逐级创建及各服务商自适应
@@ -375,18 +436,12 @@ export class WebDavClient {
                     throw new Error('云端备份文件内容格式畸变');
                 } catch (jsonErr) {
                     console.error('[WebDavClient] 云端 JSON 解析失败:', jsonErr);
-                    // 尝试容错修复因截断或并发脏写导致的末尾破损 (Truncated JSON Repair)
+                    // 尝试智能补全因截断导致的未闭合结构
                     try {
-                        let text = res.data.trim();
-                        // 寻找最后一个闭合括号
-                        const lastBrace = text.lastIndexOf('}');
-                        if (lastBrace > 0) {
-                            text = text.slice(0, lastBrace + 1);
-                            const repaired = JSON.parse(text);
-                            if (repaired && typeof repaired === 'object') {
-                                console.warn('[WebDavClient] 成功容错截断闭合修复云端备份 JSON');
-                                return repaired;
-                            }
+                        const repaired = tryRepairTruncatedJson(res.data);
+                        if (repaired && typeof repaired === 'object' && (repaired.settings || repaired.markers)) {
+                            console.warn('[WebDavClient] 成功智能补全截断云端备份 JSON 并安全恢复数据');
+                            return repaired;
                         }
                     } catch (_) {}
                     throw new Error('云端备份数据损坏或被截断，已终止读取');
