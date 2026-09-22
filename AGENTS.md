@@ -131,6 +131,14 @@ Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感�
    - `yyyy-mm-dd-hhmm` 统一采用当前系统的精确本地时间戳（如 `2026-09-20-0025`）；
    - 生成后同步提交 Git 仓库进行版本受控。
 
+4. **技能库自我成长与沉淀机制 (Skill Self-Evolution Protocol)**：
+   - **核心目的**：让 AI Agent 在实战攻坚与架构探索中建立的方法论不仅停留在单个项目内，更能持续反哺通用技能库，实现 Skills 的自主成长与终身进化（Skills Self-Growth）；
+   - **触发条件**：当在本项目中攻克了复杂技术难题、建立或实践了可用于通用油猴脚本中的方案最佳实践时（例如：Shadow DOM 隔离方案、Proxy 底层网络嗅探、响应式 Store、IndexedDB 高阶离线存储、WebDAV 双向分布式增量合并与墓碑 GC、SleazyFork/GreasyFork 只读 JSON API 自更检测与 Prefilled 表单预填发版）；
+   - **执行规范**：
+     1. 自动定位本地全局技能库目录：`C:\Users\chenahao\.agents\skills\modern-userscript`；
+     2. 将提炼出的架构设计哲学、合规红线约束与开箱即用的标准实现模板同步更新至技能的 `SKILL.md` 与 `references/` 对应专题目次；
+     3. 确保沉淀的内容高度通用化、解耦具体业务逻辑，使未来所有基于 `$modern-userscript` 规范的油猴项目均可直接受益并复用最佳实践。
+
 ## 🚀 开发与构建命令
 
 * **开发监听构建**：`npm run dev`
