@@ -739,14 +739,14 @@ export class CommentPanel {
             const isConverted = Boolean(comment.countdownApplied);
             btn.classList.toggle('jc-countdown-btn--active', isConverted);
             btn.textContent = isConverted 
-                ? (__('commentCountdownReverted') || '✓ 已转正向') 
-                : (__('commentCountdownConvert') || '⏱️ 倒计换算');
+                ? (__('commentCountdownReverted') || '还原时序') 
+                : (__('commentCountdownConvert') || '纠正时序');
             btn.title = isConverted 
-                ? '当前时间已按视频总时长换算为正向时间，点击还原为原始评论时间' 
-                : '若评论作者使用的是倒计时间，点击按总时长换算为正向播放时间';
+                ? '当前已纠正时序为正向播放时间，点击还原时序' 
+                : '若评论作者使用的是倒计时间，点击纠正时序为正向播放时间';
         }
 
-        const toastMsg = comment.countdownApplied ? '已按视频总时长倒数换算为正向时间' : '已还原为原始时间';
+        const toastMsg = comment.countdownApplied ? '已纠正评论时序为正向播放时间' : '已还原为原始评论时序';
         Toast(toastMsg, 1500, 'info');
 
         // 收集用户手动微调倒数时间样本 (Ground Truth)
@@ -2196,11 +2196,11 @@ export class CommentPanel {
                 const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
         const isConverted = !!c.countdownApplied;
         const btnText = isConverted 
-            ? (__('commentCountdownReverted') || '✓ 已转正向') 
-            : (__('commentCountdownConvert') || '⏱️ 倒计换算');
+            ? (__('commentCountdownReverted') || '还原时序') 
+            : (__('commentCountdownConvert') || '纠正时序');
         const btnTitle = isConverted 
-            ? '当前时间已按视频总时长换算为正向时间，点击还原为原始评论时间' 
-            : '若评论作者使用的是倒计时间，点击按总时长换算为正向播放时间';
+            ? '当前已纠正时序为正向播放时间，点击还原时序' 
+            : '若评论作者使用的是倒计时间，点击纠正时序为正向播放时间';
 
         const countdownBtn = hasTimestamps
             ? `<button class="jc-countdown-btn${isConverted ? ' jc-countdown-btn--active' : ''}" title="${btnTitle}">${btnText}</button>`

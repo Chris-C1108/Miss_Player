@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.6.28
+// @version            5.6.29
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1034,7 +1034,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.28";
+		return "5.6.29";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2449,8 +2449,8 @@
 			commentsLoadMore: "Load More",
 			commentsLoading: "Loading comments...",
 			commentsNoComments: "No comments yet",
-			commentCountdownConvert: "⏱️ Reverse Time",
-			commentCountdownReverted: "✓ Forward Time",
+			commentCountdownConvert: "Correct Timeline",
+			commentCountdownReverted: "Revert Timeline",
 			commentsError: "Failed to load comments",
 			tabJable: "Jable.tv Comments",
 			tabJavlibComment: "JAVLib Comments",
@@ -2544,8 +2544,8 @@
 			commentsLoadMore: "加载更多",
 			commentsLoading: "正在采集评论...",
 			commentsNoComments: "暂无评论",
-			commentCountdownConvert: "⏱️ 倒计换算",
-			commentCountdownReverted: "✓ 已转正向",
+			commentCountdownConvert: "纠正时序",
+			commentCountdownReverted: "还原时序",
 			commentsError: "评论采集失败",
 			tabJable: "Jable.tv 评论",
 			tabJavlibComment: "JAVLib 评论",
@@ -2639,8 +2639,8 @@
 			commentsLoadMore: "載入更多",
 			commentsLoading: "正在採集評論...",
 			commentsNoComments: "暫無評論",
-			commentCountdownConvert: "⏱️ 倒計換算",
-			commentCountdownReverted: "✓ 已轉正向",
+			commentCountdownConvert: "糾正時序",
+			commentCountdownReverted: "還原時序",
 			commentsError: "評論採集失敗",
 			tabJable: "Jable.tv 評論",
 			tabJavlibComment: "JAVLib 評論",
@@ -2733,8 +2733,8 @@
 			commentsLoadMore: "もっと読み込む",
 			commentsLoading: "コメントを読み込み中...",
 			commentsNoComments: "コメントはまだありません",
-			commentCountdownConvert: "⏱️ カウントダウン換算",
-			commentCountdownReverted: "✓ 正方向換算済み",
+			commentCountdownConvert: "タイムライン補正",
+			commentCountdownReverted: "タイムライン復元",
 			commentsError: "コメントの読み込みに失敗しました",
 			tabJable: "Jable.tv コメント",
 			tabJavlibComment: "JAVLib コメント",
@@ -2827,8 +2827,8 @@
 			commentsLoadMore: "Tải thêm",
 			commentsLoading: "Đang tải bình luận...",
 			commentsNoComments: "Chưa có bình luận nào",
-			commentCountdownConvert: "⏱️ Đổi đếm ngược",
-			commentCountdownReverted: "✓ Đã đổi sang xuôi",
+			commentCountdownConvert: "Sửa mốc thời gian",
+			commentCountdownReverted: "Khôi phục thời gian",
 			commentsError: "Không thể tải bình luận",
 			tabJable: "Bình luận Jable.tv",
 			tabJavlibComment: "Bình luận JAVLib",
@@ -6705,7 +6705,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.28";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.29";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -8007,10 +8007,10 @@
 			if (btn) {
 				const isConverted = Boolean(comment.countdownApplied);
 				btn.classList.toggle("jc-countdown-btn--active", isConverted);
-				btn.textContent = isConverted ? __("commentCountdownReverted") || "✓ 已转正向" : __("commentCountdownConvert") || "⏱️ 倒计换算";
-				btn.title = isConverted ? "当前时间已按视频总时长换算为正向时间，点击还原为原始评论时间" : "若评论作者使用的是倒计时间，点击按总时长换算为正向播放时间";
+				btn.textContent = isConverted ? __("commentCountdownReverted") || "还原时序" : __("commentCountdownConvert") || "纠正时序";
+				btn.title = isConverted ? "当前已纠正时序为正向播放时间，点击还原时序" : "若评论作者使用的是倒计时间，点击纠正时序为正向播放时间";
 			}
-			Toast(comment.countdownApplied ? "已按视频总时长倒数换算为正向时间" : "已还原为原始时间", 1500, "info");
+			Toast(comment.countdownApplied ? "已纠正评论时序为正向播放时间" : "已还原为原始评论时序", 1500, "info");
 			CommentDebugCollector.recordCountdownAdjustment(this.videoCode, comment, duration);
 		}
 		findCommentById(commentId) {
@@ -9099,8 +9099,8 @@
 			const scoreHtml = c.score ? `<span class="jc-score-badge" title="评分">${c.score}</span>` : "";
 			const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
 			const isConverted = !!c.countdownApplied;
-			const btnText = isConverted ? __("commentCountdownReverted") || "✓ 已转正向" : __("commentCountdownConvert") || "⏱️ 倒计换算";
-			const countdownBtn = hasTimestamps ? `<button class="jc-countdown-btn${isConverted ? " jc-countdown-btn--active" : ""}" title="${isConverted ? "当前时间已按视频总时长换算为正向时间，点击还原为原始评论时间" : "若评论作者使用的是倒计时间，点击按总时长换算为正向播放时间"}">${btnText}</button>` : "";
+			const btnText = isConverted ? __("commentCountdownReverted") || "还原时序" : __("commentCountdownConvert") || "纠正时序";
+			const countdownBtn = hasTimestamps ? `<button class="jc-countdown-btn${isConverted ? " jc-countdown-btn--active" : ""}" title="${isConverted ? "当前已纠正时序为正向播放时间，点击还原时序" : "若评论作者使用的是倒计时间，点击纠正时序为正向播放时间"}">${btnText}</button>` : "";
 			const spamHtml = c.spam && c.spam.label === "SPAM" ? `<span class="jc-spam-badge" title="${c.spam.reason}">灌水: ${c.spam.category}</span>` : "";
 			return `
             <div class="jc-card ${isNew ? "jc-card--new" : ""}" data-id="${c.id}">
@@ -12258,7 +12258,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.28";
+		return "5.6.29";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
