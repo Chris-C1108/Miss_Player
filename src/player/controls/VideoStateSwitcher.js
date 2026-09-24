@@ -1,22 +1,21 @@
+
 import { PLAY, PAUSE, REPLAY } from '../../constants/icons.js';
 
 /**
  * VideoStateSwitcher
  * 
- * 移植自 https://github.com/Chris-C1108/3-status-switcher-demo
- * 
- * 核心交互特性：
- * 1. 外部胶囊两端带渐变遮罩 (mask-image)，左右相邻模式露出边缘提示 (Peeking Indication)
- * 2. 居中固定 Apple 风格毛玻璃视口胶囊 (backdrop-filter: blur(16px) saturate(180%))
- * 3. 内部履带 1:1 跟手滑动物理模型，惯性衰减 (Friction) 与磁吸弹簧刚度 (Spring Stiffness)
- * 4. 两阶段 Morphing：横滑时显示清晰档位文本，居中停顿后平滑渐变为变体快捷操作按键
- * 5. Web Audio 极简纯正弦波微反馈音效 (Raphael Salaja Minimal)
+ * 遵循 Apple 界面交互设计哲学：
+ * 1. 正常模式居中，左为「快速预览」，右为「精彩重温」
+ * 2. 92px 纯净 Apple 宽胶囊，高斯毛玻璃 (backdrop-filter: blur(20px) saturate(180%)) 与标志 Apple 蓝描边
+ * 3. 半透明隐形式底壳，去除死黑硬块，完美融入播放器半透背景
+ * 4. 1:1 跟手滑动物理惯性与磁吸吸附，两阶段平滑 Morph 渐变
+ * 5. 纯正弦 Web Audio 触感级微音效
  */
 export class VideoStateSwitcher {
     /**
      * @param {Object} options
      * @param {HTMLElement} options.container 挂载容器
-     * @param {string} [options.initialMode='normal'] 初始主状态 ('normal' | 'preview' | 'climax')
+     * @param {string} [options.initialMode='normal'] 初始主状态 ('preview' | 'normal' | 'climax')
      * @param {Function} [options.onModeChange] 状态档位切换回调 (mode) => void
      * @param {Function} [options.onVariantAction] 变体操作回调 (actionType, mode) => void
      * @param {Object} [options.config] 物理参数配置
@@ -27,28 +26,29 @@ export class VideoStateSwitcher {
         this.onModeChange = options.onModeChange || (() => {});
         this.onVariantAction = options.onVariantAction || (() => {});
 
+        // 1. 正常模式居中，左右分别是快速预览和精彩重温
         this.modes = [
-            { id: 'normal', title: '正常模式', shortTitle: '正常' },
             { id: 'preview', title: '快速预览', shortTitle: '预览' },
-            { id: 'climax', title: '精彩重温', shortTitle: '重温' }
+            { id: 'normal',  title: '正常模式', shortTitle: '正常' },
+            { id: 'climax',  title: '精彩重温', shortTitle: '重温' }
         ];
 
-        this.currentIndex = Math.max(0, this.modes.findIndex(m => m.id === this.initialMode));
-        if (this.currentIndex === -1) this.currentIndex = 0;
+        this.currentIndex = this.modes.findIndex(m => m.id === this.initialMode);
+        if (this.currentIndex === -1) this.currentIndex = 1; // 默认居中为正常模式
 
-        // 经典 Safari 物理与尺寸配置
+        // Apple Design 精密几何与物理参数
         this.config = Object.assign({
-            width: 236,              // 胶囊外壳宽度 (px)
-            height: 36,             // 胶囊高度 (px)
-            morphDelay: 450,        // 吸附稳定后变为变体按键的时延 (ms)
-            friction: 0.55,         // 惯性衰减/阻尼 (0.15 ~ 0.90)
-            springStiffness: 300,   // 磁吸刚度 (100 ~ 600)
-            enableSound: true       // 是否开启触感音效
+            width: 192,              // 紧凑适度，给两侧音量和倍速留足呼吸空间
+            height: 34,             // 契合 Apple 经典 32~36px 胶囊标高
+            morphDelay: 420,        // 停留吸附稳定后平滑 Morph 变为按键的时延 (ms)
+            friction: 0.55,         // Safari 经典惯性阻尼
+            springStiffness: 320,   // 磁吸刚度，紧致清脆
+            enableSound: true
         }, options.config || {});
 
-        // 几何布局尺寸
-        this.indicatorWidth = Math.min(128, Math.max(100, Math.round(this.config.width * 0.50)));
-        this.slotWidth = Math.min(108, Math.max(86, Math.round(this.config.width * 0.40)));
+        // 居中指示器 92px（严格契合 Miss Player 的 92px 纯净 Apple 宽胶囊设计规范）
+        this.indicatorWidth = 92;
+        this.slotWidth = 72;
 
         // 运行时状态
         this.isMorphed = false;
@@ -70,10 +70,8 @@ export class VideoStateSwitcher {
         this.hasDragged = false;
         this.isPointerDown = false;
 
-        // 音效上下文
         this.audioCtx = null;
 
-        // 初始化构建与事件绑定
         this.render();
         this.bindEvents();
         this.snapToIndex(this.currentIndex, false, false);
@@ -107,21 +105,19 @@ export class VideoStateSwitcher {
             const t = this.audioCtx.currentTime;
 
             if (type === 'tick') {
-                // Raphael Salaja 'tab-switch': 1050Hz 纯正弦
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(1050, t);
-                gain.gain.setValueAtTime(0.06, t);
+                gain.gain.setValueAtTime(0.05, t);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
                 osc.connect(gain);
                 gain.connect(this.audioCtx.destination);
                 osc.start(t);
                 osc.stop(t + 0.025);
             } else if (type === 'click') {
-                // Raphael Salaja 'click': 840Hz -> 420Hz
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(840, t);
                 osc.frequency.exponentialRampToValueAtTime(420, t + 0.035);
-                gain.gain.setValueAtTime(0.08, t);
+                gain.gain.setValueAtTime(0.07, t);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
                 osc.connect(gain);
                 gain.connect(this.audioCtx.destination);
@@ -139,53 +135,57 @@ export class VideoStateSwitcher {
             display: inline-flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             user-select: none;
             -webkit-user-select: none;
         `;
 
-        // 1. 外部黑曜石胶囊容器 (带两端羽化渐变遮罩)
+        // 1. 外部底壳：轻薄通透的 Apple 毛玻璃底壳，去除死黑沉闷
         this.capsuleContainer = document.createElement('div');
         this.capsuleContainer.className = 'mp-switcher-capsule';
         this.capsuleContainer.style.cssText = `
             position: relative;
             width: ${this.config.width}px;
             height: ${this.config.height}px;
-            background: rgba(18, 18, 20, 0.88);
+            background: rgba(255, 255, 255, 0.06);
             border-radius: 9999px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.08);
-            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
-            mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.12);
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%);
             cursor: grab;
             touch-action: none;
             box-sizing: border-box;
-            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: border-color 0.25s ease, background-color 0.25s ease;
         `;
 
-        // 2. 居中固定 Apple 风格毛玻璃指示器 (Pill Indicator)
+        // 2. 居中固定 Apple 宽胶囊视口指示器 (92px 纯净 Apple 蓝描边与半透明毛玻璃)
         this.indicator = document.createElement('div');
         this.indicator.className = 'mp-switcher-indicator';
         this.indicator.style.cssText = `
             position: absolute;
-            top: 2.5px;
+            top: 2px;
             left: 50%;
             transform: translate(-50%, 0) scale(1);
             width: ${this.indicatorWidth}px;
-            height: calc(100% - 5px);
+            height: calc(100% - 4px);
             border-radius: 9999px;
             pointer-events: none;
             z-index: 10;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.12) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.45), 0 2px 10px rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            background: rgba(255, 255, 255, 0.14);
+            border: 1.5px solid rgba(0, 122, 255, 0.8);
+            box-shadow: 0 2px 12px rgba(0, 122, 255, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
             box-sizing: border-box;
+            overflow: hidden;
         `;
 
-        // 3. 内部滑动履带 (Sliding Track)
+        // 3. 内部滑动履带
         this.track = document.createElement('div');
         this.track.className = 'mp-switcher-track';
         this.track.style.cssText = `
@@ -198,7 +198,7 @@ export class VideoStateSwitcher {
             will-change: transform;
         `;
 
-        // 渲染 3 档状态 Item
+        // 渲染各档位 Item
         this.itemElements = [];
         this.modes.forEach((mode, idx) => {
             const itemEl = document.createElement('div');
@@ -216,15 +216,16 @@ export class VideoStateSwitcher {
                 -webkit-user-select: none;
             `;
 
-            // 文本标题层
+            // 文本标题层 (滑动时显露)
             const labelEl = document.createElement('span');
             labelEl.className = 'mp-switcher-label';
             labelEl.textContent = mode.title;
             labelEl.style.cssText = `
-                font-size: 13px;
+                font-size: 12px;
                 white-space: nowrap;
-                font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-                color: rgba(255, 255, 255, 0.4);
+                font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+                font-weight: 500;
+                color: rgba(255, 255, 255, 0.45);
                 transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
                 pointer-events: none;
                 letter-spacing: -0.01em;
@@ -266,7 +267,7 @@ export class VideoStateSwitcher {
     }
 
     /**
-     * 刷新并呈现当前模式下的变体操作内容
+     * 刷新居中胶囊变体 UI
      */
     updateVariantUI() {
         this.itemElements.forEach((item, idx) => {
@@ -274,8 +275,8 @@ export class VideoStateSwitcher {
             const showVariant = isActive && this.isMorphed && !this.isDragging;
 
             item.labelEl.style.opacity = showVariant ? '0' : '1';
-            item.labelEl.style.color = isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.4)';
-            item.labelEl.style.fontWeight = isActive ? '600' : '400';
+            item.labelEl.style.color = isActive ? '#007aff' : 'rgba(255, 255, 255, 0.45)';
+            item.labelEl.style.fontWeight = isActive ? '600' : '500';
 
             item.variantContainer.style.opacity = showVariant ? '1' : '0';
             item.variantContainer.style.pointerEvents = showVariant ? 'auto' : 'none';
@@ -290,62 +291,60 @@ export class VideoStateSwitcher {
                     height: 100%;
                     background: transparent;
                     border: none;
-                    color: #fff;
+                    color: #007aff;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
                     outline: none;
-                    gap: 5px;
-                    padding: 0 8px;
+                    gap: 4px;
+                    padding: 0 4px;
+                    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
                     transition: transform 0.12s ease;
                 `;
 
                 const curMode = this.modes[idx].id;
 
-                // 场景 1: 正常模式 ── 纯粹播放/暂停
+                // 场景 1: 正常模式 (居中展现纯净 Apple 蓝播放/暂停按键)
                 if (curMode === 'normal') {
                     btn.title = this.runtimeState.isPlaying ? '暂停' : '播放';
                     btn.innerHTML = this.runtimeState.isPlaying ? PAUSE : PLAY;
                     const svg = btn.querySelector('svg');
                     if (svg) {
-                        svg.style.width = '18px';
-                        svg.style.height = '18px';
+                        svg.style.width = '20px';
+                        svg.style.height = '20px';
                         svg.style.fill = '#007aff';
+                        svg.style.stroke = 'none';
                     }
                 }
                 // 场景 2: 快速预览 / 精彩重温
                 else {
-                    // 特殊情况 A: 用户锁定了某个单胶囊循环
+                    // 特殊情况 A: 单胶囊循环锁定
                     if (this.runtimeState.isCapsuleLocked) {
                         btn.title = '点击取消单片段循环';
-                        btn.innerHTML = `<span style="font-size:12px; font-weight:600; color:#ff3b30; white-space:nowrap; letter-spacing:-0.2px;">点击取消循环</span>`;
+                        btn.innerHTML = `<span style="font-size:11.5px; font-weight:600; color:#ff3b30; white-space:nowrap; letter-spacing:-0.2px;">取消循环</span>`;
                     }
-                    // 特殊情况 B: 所有胶囊全部播放完毕
+                    // 特殊情况 B: 胶囊全部巡播完毕
                     else if (this.runtimeState.isTourEnded) {
                         btn.title = '从第一个胶囊重新播放';
                         btn.innerHTML = `
                             <span style="font-size:12px; font-weight:600; color:#007aff; display:flex; align-items:center; gap:3px; white-space:nowrap;">
-                                ${REPLAY || ''} 重新播放
+                                ${REPLAY || ''} 重播
                             </span>
                         `;
                         const svg = btn.querySelector('svg');
                         if (svg) {
-                            svg.style.width = '14px';
-                            svg.style.height = '14px';
+                            svg.style.width = '13px';
+                            svg.style.height = '13px';
                             svg.style.stroke = '#007aff';
                         }
                     }
                     // 特殊情况 C: 巡检运行中播放/暂停
                     else {
-                        btn.title = this.runtimeState.isPlaying ? '暂停' : '播放';
-                        btn.innerHTML = this.runtimeState.isPlaying ? PAUSE : PLAY;
-                        const svg = btn.querySelector('svg');
-                        if (svg) {
-                            svg.style.width = '18px';
-                            svg.style.height = '18px';
-                            svg.style.fill = '#007aff';
-                        }
+                        const modeText = (curMode === 'preview') ? '快速预览' : '精彩重温';
+                        const statusIndicator = this.runtimeState.isPlaying ? '' : ' ▶';
+                        btn.title = modeText + ' (点击' + (this.runtimeState.isPlaying ? '暂停' : '继续') + ')';
+                        btn.innerHTML = `<span style="font-size:12px; font-weight:600; color:#007aff; white-space:nowrap; letter-spacing:-0.1px;">${modeText}${statusIndicator}</span>`;
                     }
                 }
 
@@ -393,10 +392,10 @@ export class VideoStateSwitcher {
 
         const safeStiffness = Math.max(100, Math.min(600, this.config.springStiffness));
         const stiffnessRatio = safeStiffness / 300;
-        const defaultDuration = Math.round((0.32 / Math.sqrt(stiffnessRatio)) * 100) / 100;
+        const defaultDuration = Math.round((0.30 / Math.sqrt(stiffnessRatio)) * 100) / 100;
         const defaultEasing = safeStiffness > 380
             ? 'cubic-bezier(0.14, 1.05, 0.24, 1)'
-            : 'cubic-bezier(0.2, 0.98, 0.25, 1)';
+            : 'cubic-bezier(0.16, 1, 0.3, 1)';
 
         const duration = animConfig?.duration ?? defaultDuration;
         const easing = animConfig?.easing ?? defaultEasing;
@@ -412,30 +411,28 @@ export class VideoStateSwitcher {
         this.updateVariantUI();
         this.onModeChange(this.modes[targetIndex].id);
 
-        // 停留时延：平滑 Morph 为变体操作按钮
         this.morphTimer = setTimeout(() => {
             this.isMorphed = true;
             this.updateVariantUI();
         }, this.config.morphDelay);
     }
 
-    /**
-     * 绑定原生拖拽、惯性与防粘滞边界事件 (完全对齐 Demo 原生手势安全协议)
-     */
     bindEvents() {
         const picker = this.capsuleContainer;
         const track = this.track;
         const DRAG_THRESHOLD = 6;
 
         picker.addEventListener('mouseenter', () => {
-            this.indicator.style.transform = 'translate(-50%, 0) scale(1.04)';
-            this.indicator.style.borderColor = 'rgba(0, 122, 255, 0.5)';
-            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+            this.indicator.style.transform = 'translate(-50%, 0) scale(1.03)';
+            this.indicator.style.borderColor = 'rgba(0, 122, 255, 1)';
+            this.indicator.style.boxShadow = '0 4px 16px rgba(0, 122, 255, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.5)';
+            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.24)';
         });
         picker.addEventListener('mouseleave', () => {
             this.indicator.style.transform = 'translate(-50%, 0) scale(1)';
-            this.indicator.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.16)';
+            this.indicator.style.borderColor = 'rgba(0, 122, 255, 0.8)';
+            this.indicator.style.boxShadow = '0 2px 12px rgba(0, 122, 255, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.4)';
+            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.14)';
         });
 
         const forceEndDrag = (clientX) => {
@@ -453,7 +450,6 @@ export class VideoStateSwitcher {
                 const endX = clientX !== undefined ? clientX : this.lastX;
                 const now = performance.now();
 
-                // 统计 100ms 内释放瞬时速度
                 const recentHistory = this.moveHistory.filter(p => now - p.time < 100);
                 let velocity = 0;
                 if (recentHistory.length >= 2) {
@@ -466,15 +462,13 @@ export class VideoStateSwitcher {
 
                 const deltaX = endX - this.startX;
 
-                // 惯性投影距离计算 (基于摩擦衰减)
                 const safeFriction = Math.max(0.15, Math.min(0.95, this.config.friction));
-                const momentumFactor = Math.round(160 * (0.55 / safeFriction));
+                const momentumFactor = Math.round(150 * (0.55 / safeFriction));
                 const projectedDeltaX = deltaX + velocity * momentumFactor;
 
-                // 磁吸阈值判定
                 const safeStiffness = Math.max(100, Math.min(600, this.config.springStiffness));
                 const stiffnessRatio = safeStiffness / 300;
-                const threshold = Math.round(this.slotWidth * Math.max(0.15, 0.28 - (stiffnessRatio - 1) * 0.08));
+                const threshold = Math.round(this.slotWidth * Math.max(0.15, 0.26 - (stiffnessRatio - 1) * 0.08));
 
                 let step = 0;
                 if (projectedDeltaX < -threshold) {
@@ -485,12 +479,12 @@ export class VideoStateSwitcher {
 
                 const newIndex = Math.max(0, Math.min(this.modes.length - 1, this.currentIndex + step));
                 const speed = Math.abs(velocity);
-                const baseDuration = 0.32 / Math.sqrt(stiffnessRatio);
-                const animDuration = Math.min(0.55, Math.max(0.18, baseDuration + speed * (0.08 / safeFriction)));
+                const baseDuration = 0.30 / Math.sqrt(stiffnessRatio);
+                const animDuration = Math.min(0.50, Math.max(0.18, baseDuration + speed * (0.07 / safeFriction)));
 
                 this.snapToIndex(newIndex, true, true, { duration: animDuration });
             } else {
-                track.style.transition = 'transform 0.2s cubic-bezier(0.25, 1, 0.35, 1)';
+                track.style.transition = 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)';
                 track.style.transform = `translateX(${this.getTranslateForIndex(this.currentIndex)}px)`;
                 this.moveHistory = [];
             }
@@ -530,8 +524,8 @@ export class VideoStateSwitcher {
 
             const pureDelta = deltaX - Math.sign(deltaX) * DRAG_THRESHOLD;
             let newTranslate = this.startTranslate + pureDelta;
-            const minTranslate = this.getTranslateForIndex(this.modes.length - 1) - 24;
-            const maxTranslate = this.getTranslateForIndex(0) + 24;
+            const minTranslate = this.getTranslateForIndex(this.modes.length - 1) - 20;
+            const maxTranslate = this.getTranslateForIndex(0) + 20;
             newTranslate = Math.max(minTranslate, Math.min(maxTranslate, newTranslate));
 
             this.currentTranslate = newTranslate;
@@ -555,7 +549,6 @@ export class VideoStateSwitcher {
             window.addEventListener('pointerup', onPointerUp, { once: true });
         });
 
-        // 点击未激活项直接平滑吸附
         this.itemElements.forEach((item, idx) => {
             item.itemEl.addEventListener('click', (e) => {
                 if (this.isDragging || this.hasDragged) return;
@@ -566,17 +559,11 @@ export class VideoStateSwitcher {
         });
     }
 
-    /**
-     * 外部播放器状态发生变更时，同步更新组件运行时展示
-     */
     setPlaybackRuntime(runtimeUpdate = {}) {
         Object.assign(this.runtimeState, runtimeUpdate);
         this.updateVariantUI();
     }
 
-    /**
-     * 外部变更主模式
-     */
     setMode(modeId) {
         const idx = this.modes.findIndex(m => m.id === modeId);
         if (idx !== -1 && idx !== this.currentIndex) {
@@ -584,16 +571,14 @@ export class VideoStateSwitcher {
         }
     }
 
-    /**
-     * 设置指示器上的倒计时平滑进度 (0 ~ 100)
-     */
     setProgressFill(pct) {
         if (!this.indicator) return;
         const curMode = this.modes[this.currentIndex]?.id;
         if (curMode === 'normal' || pct <= 0) {
-            this.indicator.style.background = 'linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.12) 100%)';
+            this.indicator.style.background = 'rgba(255, 255, 255, 0.14)';
             return;
         }
-        this.indicator.style.background = `linear-gradient(to right, rgba(255, 120, 130, 0.5) ${pct}%, rgba(255, 255, 255, 0.15) ${pct}%)`;
+        // 优雅的半透粉红自左向右平滑推进 (保持高透明度与毛玻璃)
+        this.indicator.style.background = `linear-gradient(to right, rgba(255, 120, 130, 0.45) ${pct}%, rgba(255, 255, 255, 0.14) ${pct}%)`;
     }
 }

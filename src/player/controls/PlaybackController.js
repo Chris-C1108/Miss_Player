@@ -48,8 +48,8 @@ export class PlaybackController {
             container,
             initialMode,
             config: {
-                width: 236,
-                height: 36,
+                width: 192,
+                height: 34,
                 morphDelay: 450,
                 friction: 0.55,
                 springStiffness: 300,
