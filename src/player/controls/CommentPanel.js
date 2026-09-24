@@ -1181,7 +1181,8 @@ export class CommentPanel {
             // 调试模式与 WebDAV 收集含数字或提到其他 AVCODE 的评论语料 (附带各平台总数)
             CommentDebugCollector.collectComments(this.videoCode, processed, duration, platformStats);
             // 自动同步至 Supabase 自建评论分析数据库
-            SupabaseService.uploadComments(this.videoCode, siteKey, processed);
+            const videoDuration = Math.round(this.playerCore?.targetVideo?.duration || duration || 0);
+            SupabaseService.uploadComments(this.videoCode, siteKey, processed, videoDuration);
             DebugLogPanel.addLog(`[评论采集] ${site.name} 第 ${page} 页完成 (${processed.length}条，总计${site.totalCount}条)`, 'success');
 
             if (!site.collectedPages) {

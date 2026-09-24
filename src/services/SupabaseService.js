@@ -120,7 +120,7 @@ export class SupabaseService {
      * @param {string} sourceSite - 站点
      * @param {Array} comments - 抓取的评论
      */
-    static async uploadComments(videoCode, sourceSite, comments) {
+    static async uploadComments(videoCode, sourceSite, comments, durationSeconds = 0) {
         const config = this.getConfig();
         if (!config.isEnabled || !videoCode || !Array.isArray(comments) || comments.length === 0) return;
 
@@ -165,7 +165,8 @@ export class SupabaseService {
                 data: JSON.stringify({
                     p_avcode: code,
                     p_new_comments: rows,
-                    p_source: sourceSite
+                    p_source: sourceSite,
+                    p_duration_seconds: Math.round(durationSeconds || 0)
                 })
             });
 
@@ -193,6 +194,7 @@ export class SupabaseService {
                     comments: rows,
                     total_count: rows.length,
                     has_timestamps_count: rows.filter(r => r.has_timestamps).length,
+                    duration_seconds: Math.round(durationSeconds || 0),
                     last_source: sourceSite,
                     updated_at: new Date().toISOString()
                 })

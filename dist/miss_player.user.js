@@ -3854,7 +3854,7 @@
 			} catch (_) {}
 			return [];
 		}
-		static async uploadComments(videoCode, sourceSite, comments) {
+		static async uploadComments(videoCode, sourceSite, comments, durationSeconds = 0) {
 			const config = this.getConfig();
 			if (!config.isEnabled || !videoCode || !Array.isArray(comments) || comments.length === 0) return;
 			const code = videoCode.toUpperCase();
@@ -3894,7 +3894,8 @@
 					data: JSON.stringify({
 						p_avcode: code,
 						p_new_comments: rows,
-						p_source: sourceSite
+						p_source: sourceSite,
+						p_duration_seconds: Math.round(durationSeconds || 0)
 					})
 				});
 				if (rpcRes.status >= 200 && rpcRes.status < 300) {
@@ -3919,6 +3920,7 @@
 						comments: rows,
 						total_count: rows.length,
 						has_timestamps_count: rows.filter((r) => r.has_timestamps).length,
+						duration_seconds: Math.round(durationSeconds || 0),
 						last_source: sourceSite,
 						updated_at: new Date().toISOString()
 					})
@@ -9038,7 +9040,8 @@
 				};
 				platformStats.total = (platformStats.jable || 0) + (platformStats.javdb || 0) + (platformStats.javlib || 0);
 				CommentDebugCollector.collectComments(this.videoCode, processed, duration, platformStats);
-				SupabaseService.uploadComments(this.videoCode, siteKey, processed);
+				const videoDuration = Math.round(this.playerCore?.targetVideo?.duration || duration || 0);
+				SupabaseService.uploadComments(this.videoCode, siteKey, processed, videoDuration);
 				DebugLogPanel.addLog(`[评论采集] ${site.name} 第 ${page} 页完成 (${processed.length}条，总计${site.totalCount}条)`, "success");
 				if (!site.collectedPages) site.collectedPages = new Set();
 				site.collectedPages.add(page);
