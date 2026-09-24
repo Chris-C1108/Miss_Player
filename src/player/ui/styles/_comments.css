@@ -1571,3 +1571,35 @@ body.controls-hidden:not(.tm-mode-pc):not(.tm-mode-ipad-portrait) .tm-show-contr
 
 
 
+
+/* 评论区上报按钮与弹窗样式 */
+.jc-action-btn.jc-report-btn {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10;
+}
+.tm-comments-panel.is-dimmed .jc-action-btn.jc-report-btn {
+    pointer-events: auto !important;
+    z-index: 9994 !important;
+}
+.tm-custom-modal-overlay.tm-report-modal-overlay {
+    z-index: 2000000050 !important;
+}
+.tm-report-modal-dialog {
+    background: rgba(28, 28, 30, 0.95);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 20px;
+    width: 90%;
+    max-width: 360px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    color: #fff;
+    text-align: left;
+    transform: scale(0.95);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tm-custom-modal-overlay.active .tm-report-modal-dialog {
+    transform: scale(1);
+}
