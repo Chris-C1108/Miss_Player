@@ -1,3 +1,4 @@
+import { getVideoDurationSeconds } from '../../utils/dom.js';
 import { SupabaseService } from '../../services/SupabaseService.js';
 import { SyncManager } from '../../sync/index.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
@@ -348,6 +349,9 @@ export class CommentPanel {
         if (this.targetVideo) {
             this.handleMetadataLoadedBound = () => this.reprocessComments();
             this.targetVideo.addEventListener('loadedmetadata', this.handleMetadataLoadedBound);
+            if (this.targetVideo.readyState >= 1) {
+                setTimeout(() => this.reprocessComments(), 100);
+            }
         }
     }
 
@@ -1181,7 +1185,7 @@ export class CommentPanel {
             // 调试模式与 WebDAV 收集含数字或提到其他 AVCODE 的评论语料 (附带各平台总数)
             CommentDebugCollector.collectComments(this.videoCode, processed, duration, platformStats);
             // 自动同步至 Supabase 自建评论分析数据库
-            const videoDuration = Math.round(this.playerCore?.targetVideo?.duration || duration || 0);
+            const videoDuration = getVideoDurationSeconds(this.targetVideo || this.playerCore?.targetVideo);
             SupabaseService.uploadComments(this.videoCode, siteKey, processed, videoDuration);
             DebugLogPanel.addLog(`[评论采集] ${site.name} 第 ${page} 页完成 (${processed.length}条，总计${site.totalCount}条)`, 'success');
 
@@ -2897,6 +2901,8 @@ export class CommentPanel {
         for (const sKey of Object.keys(this.sites)) {
             if (this.sites[sKey].comments.length > 0) {
                 CommentCacheManager.saveSiteCache(this.videoCode, sKey, this.sites[sKey]);
+                // 同步将真实总时长更新至 Supabase
+                SupabaseService.uploadComments(this.videoCode, sKey, this.sites[sKey].comments, Math.round(duration));
             }
         }
 

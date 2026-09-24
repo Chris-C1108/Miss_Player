@@ -180,3 +180,49 @@ export function createRipple(event, button, color) {
 
     return ripple;
 }
+
+/**
+ * 高鲁棒性视频总时长提取器 (按真实 <video> -> Meta 标签 -> 播放器 UI 文本 -> 页面元数据多层级提取)
+ * @param {HTMLVideoElement|null} [videoElement] 
+ * @returns {number} 视频总秒数 (整数)
+ */
+export function getVideoDurationSeconds(videoElement = null) {
+    // 1. 直取 HTML5 <video> 元素物理时长
+    const v = videoElement || document.querySelector('.tm-video-wrapper video, video');
+    if (v && v.duration && !isNaN(v.duration) && v.duration > 0 && v.duration !== Infinity) {
+        return Math.round(v.duration);
+    }
+
+    if (typeof document === 'undefined') return 0;
+
+    // 2. 从页面 Meta 标头提取 (MissAV / Jable / JavDB / OpenGraph)
+    const metaDur = document.querySelector('meta[property="video:duration"], meta[property="og:video:duration"], meta[name="duration"]');
+    if (metaDur) {
+        const val = parseInt(metaDur.getAttribute('content'), 10);
+        if (!isNaN(val) && val > 0) return val;
+    }
+
+    // 3. 从播放器 UI 文本提取 (如 Plyr, Video.js, Jable 播放条时间)
+    const durationEl = document.querySelector('.plyr__time--duration, .vjs-duration-display, .total-time, .duration, span.time-duration');
+    if (durationEl && durationEl.textContent) {
+        const m = durationEl.textContent.trim().match(/(?:(\d{1,2}):)?(\d{1,2}):(\d{2})/);
+        if (m) {
+            const h = m[1] ? parseInt(m[1], 10) : 0;
+            const min = parseInt(m[2], 10);
+            const sec = parseInt(m[3], 10);
+            const total = h * 3600 + min * 60 + sec;
+            if (total > 0) return total;
+        }
+    }
+
+    // 4. 从 JavDB / Jable 详情面板文本提取 (例如 "120 分鐘" / "120 分钟")
+    const panelEls = document.querySelectorAll('.video-meta-panel .value, .video-info .value, .header-video-duration');
+    for (const el of panelEls) {
+        const m = (el.textContent || '').match(/(\d{1,3})\s*分[鐘钟]/);
+        if (m) {
+            return parseInt(m[1], 10) * 60;
+        }
+    }
+
+    return 0;
+}

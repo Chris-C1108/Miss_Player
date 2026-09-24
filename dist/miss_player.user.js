@@ -333,6 +333,33 @@
 		setTimeout(removeRipple, 650);
 		return ripple;
 	}
+	function getVideoDurationSeconds(videoElement = null) {
+		const v = videoElement || document.querySelector(".tm-video-wrapper video, video");
+		if (v && v.duration && !isNaN(v.duration) && v.duration > 0 && v.duration !== Infinity) return Math.round(v.duration);
+		if (typeof document === "undefined") return 0;
+		const metaDur = document.querySelector("meta[property=\"video:duration\"], meta[property=\"og:video:duration\"], meta[name=\"duration\"]");
+		if (metaDur) {
+			const val = parseInt(metaDur.getAttribute("content"), 10);
+			if (!isNaN(val) && val > 0) return val;
+		}
+		const durationEl = document.querySelector(".plyr__time--duration, .vjs-duration-display, .total-time, .duration, span.time-duration");
+		if (durationEl && durationEl.textContent) {
+			const m = durationEl.textContent.trim().match(/(?:(\d{1,2}):)?(\d{1,2}):(\d{2})/);
+			if (m) {
+				const h = m[1] ? parseInt(m[1], 10) : 0;
+				const min = parseInt(m[2], 10);
+				const sec = parseInt(m[3], 10);
+				const total = h * 3600 + min * 60 + sec;
+				if (total > 0) return total;
+			}
+		}
+		const panelEls = document.querySelectorAll(".video-meta-panel .value, .video-info .value, .header-video-duration");
+		for (const el of panelEls) {
+			const m = (el.textContent || "").match(/(\d{1,3})\s*分[鐘钟]/);
+			if (m) return parseInt(m[1], 10) * 60;
+		}
+		return 0;
+	}
 	var LOCAL_STORAGE_PREFIX = "mp_";
 	var LEGACY_STORAGE_PREFIX = "missNoAD_";
 	function hasGMApi() {
@@ -8434,6 +8461,7 @@
 			if (this.targetVideo) {
 				this.handleMetadataLoadedBound = () => this.reprocessComments();
 				this.targetVideo.addEventListener("loadedmetadata", this.handleMetadataLoadedBound);
+				if (this.targetVideo.readyState >= 1) setTimeout(() => this.reprocessComments(), 100);
 			}
 		}
 		get selectedTagIds() {
@@ -9040,7 +9068,7 @@
 				};
 				platformStats.total = (platformStats.jable || 0) + (platformStats.javdb || 0) + (platformStats.javlib || 0);
 				CommentDebugCollector.collectComments(this.videoCode, processed, duration, platformStats);
-				const videoDuration = Math.round(this.playerCore?.targetVideo?.duration || duration || 0);
+				const videoDuration = getVideoDurationSeconds(this.targetVideo || this.playerCore?.targetVideo);
 				SupabaseService.uploadComments(this.videoCode, siteKey, processed, videoDuration);
 				DebugLogPanel.addLog(`[评论采集] ${site.name} 第 ${page} 页完成 (${processed.length}条，总计${site.totalCount}条)`, "success");
 				if (!site.collectedPages) site.collectedPages = new Set();
@@ -10279,7 +10307,10 @@
 				this.javdbComments = reprocess(this.javdbComments);
 				CommentDebugCollector.collectComments(this.videoCode, this.javdbComments, duration);
 			}
-			for (const sKey of Object.keys(this.sites)) if (this.sites[sKey].comments.length > 0) CommentCacheManager.saveSiteCache(this.videoCode, sKey, this.sites[sKey]);
+			for (const sKey of Object.keys(this.sites)) if (this.sites[sKey].comments.length > 0) {
+				CommentCacheManager.saveSiteCache(this.videoCode, sKey, this.sites[sKey]);
+				SupabaseService.uploadComments(this.videoCode, sKey, this.sites[sKey].comments, Math.round(duration));
+			}
 			this.applyFilter();
 			this.renderCommentsList();
 		}
@@ -13844,7 +13875,23 @@
 					if (code && isValidAvCode(code)) {
 						const upper = code.toUpperCase();
 						if (upper.startsWith("DM-")) continue;
-						if (upper !== currentUpper && !this._completedCodes.has(upper)) found.add(upper);
+						if (upper !== currentUpper && !this._completedCodes.has(upper)) {
+							found.add(upper);
+							const card = a.closest(".video-img-box, .grid-item, .video-item, .item, .movie-card, .col") || a.parentElement;
+							if (card) {
+								const durEl = card.querySelector(".label, .duration, [class*=\"time\"], [class*=\"duration\"]");
+								if (durEl && durEl.textContent) {
+									const dm = durEl.textContent.trim().match(/(?:(\d{1,2}):)?(\d{1,2}):(\d{2})/);
+									if (dm) {
+										const h = dm[1] ? parseInt(dm[1], 10) : 0;
+										const m = parseInt(dm[2], 10);
+										const s = parseInt(dm[3], 10);
+										const sec = h * 3600 + m * 60 + s;
+										if (sec > 0) this._avcodeDurations.set(upper, sec);
+									}
+								}
+							}
+						}
 					}
 				}
 			} catch (e) {
@@ -13924,7 +13971,8 @@
 						total: totalCount || allProcessed.length
 					};
 					CommentDebugCollector.collectComments(code, allProcessed, 10800, stats);
-					SupabaseService.uploadComments(code, "jable", allProcessed);
+					const durSec = this._avcodeDurations.get(code) || (code === currentUpper ? getVideoDurationSeconds() : 0);
+					SupabaseService.uploadComments(code, "jable", allProcessed, durSec);
 					CommentCacheManager.saveSiteCache(code, "jable", {
 						key: "jable",
 						status: "loaded",
@@ -13959,6 +14007,7 @@
 	_defineProperty(CrazyScraper, "_shouldStop", false);
 	_defineProperty(CrazyScraper, "_scannedCodes", new Set());
 	_defineProperty(CrazyScraper, "_completedCodes", new Set());
+	_defineProperty(CrazyScraper, "_avcodeDurations", new Map());
 	var OFFICIAL_SCRIPT_ID = 453300;
 	var CACHE_KEY_DATA = "mp_sleazyfork_meta_cache";
 	var CACHE_KEY_TIME = "mp_sleazyfork_last_check";

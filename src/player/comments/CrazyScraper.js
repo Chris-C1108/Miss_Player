@@ -1,3 +1,4 @@
+import { getVideoDurationSeconds } from '../../utils/dom.js';
 import { SyncManager, WebDavClient } from '../../sync/index.js';
 import { isValidAvCode, matchAvCodeFromText } from '../../utils/videoCode.js';
 import { SupabaseService } from '../../services/SupabaseService.js';
@@ -28,6 +29,7 @@ export class CrazyScraper {
     static _shouldStop = false;
     static _scannedCodes = new Set();
     static _completedCodes = new Set();
+    static _avcodeDurations = new Map();
 
     /**
      * 判断当前是否允许运行疯狂采集
@@ -131,8 +133,23 @@ export class CrazyScraper {
                     const upper = code.toUpperCase();
                     // Jable 源站未收录 MissAV 专属内部 DM-xxx 企划，跳过避免无效 404
                     if (upper.startsWith('DM-')) continue;
-                    if (upper !== currentUpper && !this._completedCodes.has(upper)) {
+                                        if (upper !== currentUpper && !this._completedCodes.has(upper)) {
                         found.add(upper);
+                        // 提取卡片上的时长徽章 (例如 .label / .duration: 124:35)
+                        const card = a.closest('.video-img-box, .grid-item, .video-item, .item, .movie-card, .col') || a.parentElement;
+                        if (card) {
+                            const durEl = card.querySelector('.label, .duration, [class*="time"], [class*="duration"]');
+                            if (durEl && durEl.textContent) {
+                                const dm = durEl.textContent.trim().match(/(?:(\d{1,2}):)?(\d{1,2}):(\d{2})/);
+                                if (dm) {
+                                    const h = dm[1] ? parseInt(dm[1], 10) : 0;
+                                    const m = parseInt(dm[2], 10);
+                                    const s = parseInt(dm[3], 10);
+                                    const sec = h * 3600 + m * 60 + s;
+                                    if (sec > 0) this._avcodeDurations.set(upper, sec);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -219,7 +236,8 @@ static async _scrapeSingleAvcode(code, index, total) {
                 }
                 const stats = { jable: totalCount || allProcessed.length, total: totalCount || allProcessed.length };
                 CommentDebugCollector.collectComments(code, allProcessed, 10800, stats);
-                SupabaseService.uploadComments(code, 'jable', allProcessed);
+                const durSec = this._avcodeDurations.get(code) || (code === currentUpper ? getVideoDurationSeconds() : 0);
+                SupabaseService.uploadComments(code, 'jable', allProcessed, durSec);
                 CommentCacheManager.saveSiteCache(code, 'jable', { key: 'jable', status: 'loaded', comments: allProcessed, totalCount: stats.jable, hasMore: false, currentPage: page, collectedPages, workingDomain });
                 DebugLogPanel.addLog('[疯狂采集] ✅ ' + code + ' 全量采集完成 (获取 ' + allProcessed.length + ' 条评论，总计 ' + stats.jable + ' 条)', 'success');
                 return;
