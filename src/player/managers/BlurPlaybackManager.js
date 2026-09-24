@@ -136,7 +136,7 @@ export class BlurPlaybackManager {
             };
 
             DebugLogPanel.addLog(`[PAUSE] 视频暂停: [${triggerSource}] 进度=${diagInfo.currentTime}s`, triggerSource === 'HOST_SCRIPT_TRIGGERED' ? 'warn' : 'info');
-            console.warn('[MissPlayer Diagnostic] 自动暂停分析:', diagInfo, '\nStack:', stack);
+            console.warn(`[MissPlayer Diagnostic] 自动暂停分析 【${triggerSource}】: 进度=${diagInfo.currentTime}s, 就绪=${diagInfo.readyState}, 缓冲=${diagInfo.networkState}, 失焦=${diagInfo.documentHidden}`, diagInfo, '\nStack:', stack);
 
             if (isPauseOnBlurEnabled()) {
                 wasPlaying = false;

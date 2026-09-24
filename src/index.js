@@ -74,7 +74,12 @@ function setupViewport() {
     //  - 如果在 iframe 中 且 不在 JAVLibrary 域名上 → 立刻退出
     //  - 如果在 iframe 中 且 在 JAVLibrary 域名上 → 继续执行 (iframe broker 模式)
     // =====================================================================
-    const isInIframe = (window.self !== window.top);
+    let isInIframe = false;
+    try {
+        isInIframe = (window.self !== window.top);
+    } catch (_) {
+        isInIframe = true;
+    }
     if (isInIframe && !isSiteDomain('JAVLIBRARY')) {
         return; // 非 JAVLib 的 iframe 环境，不注入任何逻辑
     }

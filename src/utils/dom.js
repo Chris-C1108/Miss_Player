@@ -85,7 +85,7 @@ export function findVideoElement() {
     for (const selector of specificSelectors) {
         potentialVideo = document.querySelector(selector);
         if (potentialVideo) {
-            console.log('[Utils] 通过选择器找到视频:', selector);
+            // logger.debug('[Utils] 通过选择器找到视频:', selector);
             return potentialVideo;
         }
     }

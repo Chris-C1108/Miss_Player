@@ -282,10 +282,7 @@
 			"video[preload]:not([muted])"
 		]) {
 			potentialVideo = document.querySelector(selector);
-			if (potentialVideo) {
-				console.log("[Utils] 通过选择器找到视频:", selector);
-				return potentialVideo;
-			}
+			if (potentialVideo) return potentialVideo;
 		}
 		const allVideos = Array.from(document.querySelectorAll("video"));
 		if (allVideos.length === 0) return null;
@@ -2584,14 +2581,11 @@
 					url: dirUrl,
 					user,
 					pass,
-					headers: {
-						"Depth": "0",
-						"Content-Type": "application/xml; charset=utf-8"
-					}
+					headers: { "Depth": "0" }
 				});
 				if (res.status === 207 || res.status === 200) return true;
 				if (res.status === 404) return false;
-				if (res.status === 405) return true;
+				if (res.status === 405 || res.status === 415) return true;
 				return false;
 			} catch (_) {
 				return false;
@@ -2615,7 +2609,7 @@
 						user,
 						pass
 					});
-					if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204) continue;
+					if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204 || res.status === 415) continue;
 					console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到状态码: ${res.status}`);
 				} catch (err) {
 					console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到异常:`, err.message || err);
@@ -13327,7 +13321,7 @@
 					documentHidden: document.hidden
 				};
 				DebugLogPanel.addLog(`[PAUSE] 视频暂停: [${triggerSource}] 进度=${diagInfo.currentTime}s`, triggerSource === "HOST_SCRIPT_TRIGGERED" ? "warn" : "info");
-				console.warn("[MissPlayer Diagnostic] 自动暂停分析:", diagInfo, "\nStack:", stack);
+				console.warn(`[MissPlayer Diagnostic] 自动暂停分析 【${triggerSource}】: 进度=${diagInfo.currentTime}s, 就绪=${diagInfo.readyState}, 缓冲=${diagInfo.networkState}, 失焦=${diagInfo.documentHidden}`, diagInfo, "\nStack:", stack);
 				if (isPauseOnBlurEnabled()) {
 					wasPlaying = false;
 					return;
@@ -16685,7 +16679,12 @@
 	}
 	(function() {
 		"use strict";
-		const isInIframe = window.self !== window.top;
+		let isInIframe = false;
+		try {
+			isInIframe = window.self !== window.top;
+		} catch (_) {
+			isInIframe = true;
+		}
 		if (isInIframe && !isSiteDomain("JAVLIBRARY")) return;
 		let playerState = null;
 		function injectStyles() {

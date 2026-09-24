@@ -275,8 +275,7 @@ export class WebDavClient {
                 user,
                 pass,
                 headers: {
-                    'Depth': '0',
-                    'Content-Type': 'application/xml; charset=utf-8'
+                    'Depth': '0'
                 }
             });
             // 207 Multi-Status 或 200 OK 说明目录已存在且可访问
@@ -287,8 +286,8 @@ export class WebDavClient {
             if (res.status === 404) {
                 return false;
             }
-            // 部分简易 WebDAV 网关对 PROPFIND 支持不全返回 405 Method Not Allowed，视为可能存在
-            if (res.status === 405) {
+            // 部分简易 WebDAV 网关对 PROPFIND 返回 405 或 415 (Unsupported Media Type)，说明目录存在或不支持探测，视为可能存在
+            if (res.status === 405 || res.status === 415) {
                 return true;
             }
             return false;
@@ -329,8 +328,8 @@ export class WebDavClient {
                     user,
                     pass
                 });
-                // 201 Created: 成功创建; 405: 目录已存在; 200/204: 成功
-                if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204) {
+                // 201 Created: 成功创建; 405: 目录已存在; 200/204: 成功; 415: 已存在或网关不支持空body
+                if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204 || res.status === 415) {
                     continue;
                 }
                 console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到状态码: ${res.status}`);
