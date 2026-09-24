@@ -431,6 +431,10 @@ export class CommentPanel {
         if (actionBar) {
             actionBar.style.display = debugMode ? 'flex' : 'none';
         }
+        const reportBtns = this.commentsPanel.querySelectorAll('.jc-report-btn');
+        reportBtns.forEach(btn => {
+            btn.style.display = debugMode ? 'inline-block' : 'none';
+        });
     }
 
     updateCommentsVisibility(showCommentsSection) {
@@ -2375,7 +2379,7 @@ export class CommentPanel {
                         <div class="jc-hdr-right">
                             ${countdownBtn}
                             ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="转存所有时间" data-comment-id="${c.id}" style="background: rgba(0,201,255,0.15); border: 1px solid rgba(0,201,255,0.4); color: #00c9ff; font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-right: 4px;">📌 转存</button>` : ""}
-                            <button class="jc-action-btn jc-report-btn" title="上报该评论" data-comment-id="${c.id}" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #aaa; font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-right: 4px;">🐛 上报</button>
+                            <button class="jc-action-btn jc-report-btn" title="上报该评论" data-comment-id="${c.id}" style="display: ${(this.playerCore?.options?.playerState?.settings?.debugMode || Boolean(getValue('debugMode', false))) ? 'inline-block' : 'none'}; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #aaa; font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-right: 4px;">🐛 上报</button>
                             ${userHtml}
                             ${scoreHtml}
                             ${spamHtml}
@@ -2936,7 +2940,7 @@ export class CommentPanel {
 
     _showCommentReportModal(comment) {
         let selectedReason = "时间解析错误";
-        const { modal, close } = createModal(`<div class="tm-custom-modal-title">评论问题上报</div><div style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px;">上报内容将归档至 WebDAV / Debug 日志用于分析</div><div style="font-size: 12px; background: rgba(255,255,255,0.06); padding: 8px; border-radius: 6px; margin-bottom: 10px; max-height: 80px; overflow-y: auto;">${esc(comment.rawText || comment.text || "")}</div><div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;"><span class="tm-report-chip active" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #007aff; color: #fff; cursor: pointer;">时间解析错误</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">倒序时间需过滤</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">垃圾水贴</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">漏抓关键片段</span></div><textarea class="tm-report-note" placeholder="附加补充说明 (可选)..." style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px; color: #fff; font-size: 12px; height: 60px; margin-bottom: 10px;"></textarea><div class="tm-modal-buttons" style="display: flex; gap: 8px; justify-content: flex-end;"><button class="tm-custom-modal-cancel-btn" style="background: rgba(255,255,255,0.1); color: #ccc; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">取消</button><button class="tm-custom-modal-submit-btn" style="background: #007aff; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer;">提交上报</button></div>`);
+        const { modal, close } = createModal(`<div class="tm-custom-modal-title">评论问题上报</div><div style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px;">问题将上报至 Supabase 数据库用于算法分析与模型微调</div><div style="font-size: 12px; background: rgba(255,255,255,0.06); padding: 8px; border-radius: 6px; margin-bottom: 10px; max-height: 80px; overflow-y: auto;">${esc(comment.rawText || comment.text || "")}</div><div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;"><span class="tm-report-chip active" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #007aff; color: #fff; cursor: pointer;">时间解析错误</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">倒序时间需过滤</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">垃圾水贴</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">漏抓关键片段</span></div><textarea class="tm-report-note" placeholder="附加补充说明 (可选)..." style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px; color: #fff; font-size: 12px; height: 60px; margin-bottom: 10px;"></textarea><div class="tm-modal-buttons" style="display: flex; gap: 8px; justify-content: flex-end;"><button class="tm-custom-modal-cancel-btn" style="background: rgba(255,255,255,0.1); color: #ccc; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">取消</button><button class="tm-custom-modal-submit-btn" style="background: #007aff; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer;">提交上报</button></div>`);
         const chips = modal.querySelectorAll(".tm-report-chip");
         chips.forEach(chip => {
             chip.addEventListener("click", () => {
@@ -2949,28 +2953,48 @@ export class CommentPanel {
         const submitBtn = modal.querySelector(".tm-custom-modal-submit-btn");
         submitBtn.addEventListener("click", async () => {
             const note = modal.querySelector(".tm-report-note").value.trim();
-            const reportPayload = { videoCode: this.videoCode, commentId: comment.id, user: comment.user, commentText: comment.rawText || comment.text, timestamps: comment.timestamps, reason: selectedReason, userNote: note, reportedAt: new Date().toISOString() };
-            DebugLogPanel.addLog(`[REPORT] 评论上报: [${selectedReason}] id=${comment.id}`, "warn");
+            const reportPayload = {
+                videoCode: this.videoCode,
+                commentId: comment.id,
+                userName: comment.user || "匿名",
+                commentText: comment.rawText || comment.text || "",
+                reason: selectedReason,
+                userNote: note || null,
+                timestamps: comment.timestamps || null,
+                reportedAt: new Date().toISOString()
+            };
+            DebugLogPanel.addLog("[REPORT] 评论上报: [" + selectedReason + "] id=" + comment.id + " (" + this.videoCode + ")", "warn");
+            submitBtn.textContent = "上报中...";
+            submitBtn.disabled = true;
+
+            // 1. 优先上报至 Supabase 数据库
+            let reportedToDb = false;
+            try {
+                reportedToDb = await SupabaseService.submitCommentReport(reportPayload);
+            } catch (err) {
+                logger.warn("[Report] Supabase 上报异常:", err);
+            }
+
+            // 2. 同时支持 WebDAV 归档备份
             const webdavConfig = SyncManager.getWebDavConfig();
             if (webdavConfig && webdavConfig.url) {
                 try {
-                    submitBtn.textContent = "提交中...";
                     const now = new Date();
                     const pad = (n) => String(n).padStart(2, "0");
-                    const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-                    const subPath = `logs/comment_report/${this.videoCode}_${ts}.json`;
+                    const ts = "" + now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + "_" + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+                    const subPath = "logs/comment_report/" + this.videoCode + "_" + ts + ".json";
                     await WebDavClient.uploadFile(webdavConfig, subPath, reportPayload, "application/json; charset=utf-8");
-                    Toast("上报成功并已同步至 WebDAV！", 2000, "success");
-                } catch (e) {
-                    Toast("已记录本地日志，WebDAV同步遇到网络问题", 2500, "warn");
-                }
+                } catch (_) {}
+            }
+
+            if (reportedToDb) {
+                Toast("上报成功！已同步至云端数据库用于改进", 2200, "success");
             } else {
-                Toast("已记录上报信息至 Debug 日志", 2000, "success");
+                Toast("已记录上报信息至调试日志", 2000, "info");
             }
             close();
         });
     }
-
 
     _mergeRemoteComments(remoteList) {
         if (!Array.isArray(remoteList) || remoteList.length === 0) return;

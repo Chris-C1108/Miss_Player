@@ -226,4 +226,75 @@ export class SupabaseService {
             logger.warn('[Supabase] 写入数据库异常:', err.message || err);
         }
     }
+
+    /**
+     * 上报评论问题 (优先通过 RPC submit_comment_report 直写 Supabase，降级直写 comment_reports 表)
+     * @param {Object} reportData
+     * @returns {Promise<boolean>}
+     */
+    static async submitCommentReport(reportData) {
+        const config = this.getConfig();
+        if (!config.isEnabled || !reportData) return false;
+
+        const { videoCode, commentId, userName, commentText, reason, userNote } = reportData;
+        if (!videoCode || !reason) return false;
+
+        const code = String(videoCode).trim().toUpperCase();
+
+        // 1. 优先调用服务端 RPC submit_comment_report
+        try {
+            const rpcUrl = config.baseUrl + '/rpc/submit_comment_report';
+            const rpcRes = await this.request({
+                method: 'POST',
+                url: rpcUrl,
+                headers: {
+                    'apikey': config.apiKey,
+                    'Authorization': 'Bearer ' + config.apiKey,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({
+                    p_avcode: code,
+                    p_comment_id: String(commentId || ''),
+                    p_user_name: String(userName || '匿名'),
+                    p_comment_text: String(commentText || ''),
+                    p_reason: String(reason),
+                    p_user_note: userNote ? String(userNote) : null
+                })
+            });
+            if (rpcRes.status >= 200 && rpcRes.status < 300) {
+                DebugLogPanel.addLog('[Supabase] 评论问题上报成功 (RPC: ' + code + ')', 'success');
+                return true;
+            }
+        } catch (_) {}
+
+        // 2. 降级直接写入 comment_reports 表
+        try {
+            const tableUrl = config.baseUrl + '/comment_reports';
+            const tableRes = await this.request({
+                method: 'POST',
+                url: tableUrl,
+                headers: {
+                    'apikey': config.apiKey,
+                    'Authorization': 'Bearer ' + config.apiKey,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                data: JSON.stringify({
+                    avcode: code,
+                    comment_id: String(commentId || ''),
+                    user_name: String(userName || '匿名'),
+                    comment_text: String(commentText || ''),
+                    reason: String(reason),
+                    user_note: userNote ? String(userNote) : null
+                })
+            });
+            if (tableRes.status >= 200 && tableRes.status < 300) {
+                DebugLogPanel.addLog('[Supabase] 评论问题直接入库成功 (' + code + ')', 'success');
+                return true;
+            }
+        } catch (err) {
+            logger.warn('[Supabase] 评论问题上报失败:', err.message || err);
+        }
+        return false;
+    }
 }
