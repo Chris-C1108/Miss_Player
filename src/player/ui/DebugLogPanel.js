@@ -1,3 +1,5 @@
+import { SyncManager } from '../../sync/index.js';
+import { WebDavClient } from '../../sync/WebDavClient.js';
 /**
  * 顶部居中 DEBUG 精简日志面板 (DebugLogPanel)
  * 
@@ -51,6 +53,7 @@ export class DebugLogPanel {
                     </div>
                     <div class="tm-debug-box-actions">
                         <button class="tm-debug-btn tm-debug-copy-btn" title="复制所有调试日志">复制</button>
+                        <button class="tm-debug-btn tm-debug-upload-btn" title="上传调试日志至 WebDAV">上传</button>
                         <button class="tm-debug-btn tm-debug-clear-btn" title="清空日志">清空</button>
                         <button class="tm-debug-btn tm-debug-collapse-btn" title="收起面板">▴</button>
                     </div>
@@ -61,6 +64,7 @@ export class DebugLogPanel {
             </div>
         `;
 
+        container.style.zIndex = '2147483647';
         document.body.appendChild(container);
         this._container = container;
         this._bindEvents();
@@ -101,6 +105,39 @@ export class DebugLogPanel {
             arrow.textContent = '▾';
         });
 
+        const uploadBtn = this._container.querySelector('.tm-debug-upload-btn');
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (this._logs.length === 0) {
+                    Toast('暂无日志可上传', 1500, 'info');
+                    return;
+                }
+                const config = SyncManager.getWebDavConfig();
+                if (!config || !config.url) {
+                    Toast('请先在设置中配置 WebDAV 服务器', 2000, 'error');
+                    return;
+                }
+
+                try {
+                    uploadBtn.textContent = '上传中...';
+                    const now = new Date();
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+                    const avCode = (typeof window !== 'undefined' ? (window.location.pathname.split('/').filter(Boolean).pop() || 'GLOBAL') : 'GLOBAL').toUpperCase();
+                    const subPath = `logs/debug/${avCode}_${ts}.txt`;
+                    const fullText = this._logs.map(l => `[${l.time}] [${l.level.toUpperCase()}] ${l.text}`).join('\n');
+
+                    await WebDavClient.uploadFile(config, subPath, fullText, 'text/plain; charset=utf-8');
+                    Toast(`日志已上传至 WebDAV: ${subPath}`, 2500, 'success');
+                } catch (err) {
+                    Toast(`上传日志失败: ${err.message || err}`, 2500, 'error');
+                } finally {
+                    uploadBtn.textContent = '上传';
+                }
+            });
+        }
+
         clearBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             this._logs = [];
@@ -115,7 +152,15 @@ export class DebugLogPanel {
                 return;
             }
             const fullText = this._logs.map(l => `[${l.time}] [${l.level.toUpperCase()}] ${l.text}`).join('\n');
-            copyToClipboard(fullText);
+            try {
+                if (typeof GM_setClipboard === 'function') {
+                    GM_setClipboard(fullText);
+                } else {
+                    copyToClipboard(fullText);
+                }
+            } catch (_) {
+                copyToClipboard(fullText);
+            }
             Toast('调试日志已复制到剪贴板', 1500, 'success');
         });
     }

@@ -34,3 +34,7 @@ Thumbs.db
 # 测试产物
 tests/ui/reports/artifacts/
 
+
+supabase.txt
+.env*
+ref/miss_player_sync.json

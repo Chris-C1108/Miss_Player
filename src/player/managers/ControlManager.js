@@ -299,10 +299,12 @@ export class ControlManager {
         centerControlsArea.style.display = 'flex';
         centerControlsArea.style.alignItems = 'center';
         centerControlsArea.style.justifyContent = 'center';
+        centerControlsArea.style.gap = '10px';
         centerControlsArea.style.flex = '1';
 
         // 委托 PlaybackController 创建播放/暂停按钮
         this.playbackController.createPlayPauseButton(centerControlsArea);
+        this.playbackController.createColorCapsulePlayButton(centerControlsArea);
 
         const rightControlsArea = document.createElement('div');
         rightControlsArea.className = 'tm-right-controls';

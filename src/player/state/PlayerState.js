@@ -85,7 +85,22 @@ export class PlayerState {
             this.settings.preferredPlaybackRate = (!isNaN(rawSpeed) && rawSpeed >= 0.5 && rawSpeed <= 4.0) ? rawSpeed : 1.0;
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
-            this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
+            this.settings.autoCheckUpdate = getBool('autoCheckUpdate',
+            'betaMode',
+            'betaFirstCapsulePlay',
+            'betaColorPlayMode',
+            'betaSafariMuteStyle',
+            'betaCapsuleUndo',
+            'betaDeepLinking', true);
+            this.settings.betaMode = getBool('betaMode', false);
+            this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
+            const rawPlayMode = getValue('betaColorPlayMode', 'preview');
+            this.settings.betaColorPlayMode = (rawPlayMode === 'review') ? 'review' : 'preview';
+            this.settings.betaSafariMuteStyle = getBool('betaSafariMuteStyle', true);
+            this.settings.betaCapsuleUndo = getBool('betaCapsuleUndo', true);
+            this.settings.betaDeepLinking = getBool('betaDeepLinking', true);
+            this.settings.betaDbEndpoint = getValue('betaDbEndpoint', '') || '';
+            this.settings.betaDbApiKey = getValue('betaDbApiKey', '') || '';
         } catch (error) {
             console.error('[PlayerState] 加载设置失败:', error);
         }
@@ -154,6 +169,14 @@ export class PlayerState {
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
+            setValue('betaMode', Boolean(this.settings.betaMode));
+            setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));
+            setValue('betaColorPlayMode', this.settings.betaColorPlayMode || 'preview');
+            setValue('betaSafariMuteStyle', Boolean(this.settings.betaSafariMuteStyle));
+            setValue('betaCapsuleUndo', Boolean(this.settings.betaCapsuleUndo));
+            setValue('betaDeepLinking', Boolean(this.settings.betaDeepLinking));
+            setValue('betaDbEndpoint', this.settings.betaDbEndpoint || '');
+            setValue('betaDbApiKey', this.settings.betaDbApiKey || '');
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }

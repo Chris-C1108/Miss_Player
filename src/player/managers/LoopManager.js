@@ -1,3 +1,4 @@
+import { getRandomCapsuleColor } from './tagTaxonomy.js';
 import { formatTimeWithHours, getValue, setValue, Toast, playTapSound } from '../../utils/index.js';
 import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { __ } from '../../constants/i18n.js';
@@ -108,6 +109,7 @@ export class LoopManager {
 
         // Load saved tabs
         this._loadTabs();
+        this.checkAndLoadDeepLinkCapsules();
 
         // Initialize empty draft tab
         this._resetDraftTab();
@@ -116,6 +118,28 @@ export class LoopManager {
         this.renderTabs();
 
         // Bind list button
+        if (this.tabAddBtn && !this.tabQuickAddBtn && this.tabAddBtn.parentElement) {
+            const quickBtn = document.createElement('button');
+            quickBtn.className = 'tm-tab-quick-plus-btn';
+            quickBtn.innerHTML = '+';
+            quickBtn.title = '添加当前时间胶囊';
+            quickBtn.style.cssText = 'width: 28px; height: 28px; border-radius: 50%; background: hsla(var(--shadcn-primary) / 0.2); border: 1px solid hsla(var(--shadcn-primary) / 0.4); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; margin-right: 6px; flex-shrink: 0;';
+            quickBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.targetVideo) {
+                    this.draftTab.startTime = this.targetVideo.currentTime;
+                    this.renderTabs();
+                    setTimeout(() => {
+                        const selector = '.tm-draft-pill';
+                        const el = this.tabScrollContainer?.querySelector(selector);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                    }, 50);
+                }
+            });
+            this.tabAddBtn.parentElement.insertBefore(quickBtn, this.tabAddBtn);
+            this.tabQuickAddBtn = quickBtn;
+        }
+
         if (this.tabAddBtn) {
             this.tabAddBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -205,6 +229,26 @@ export class LoopManager {
         this.renderProgressMarkers();
 
         // 1. Render all saved tabs (or their inline edit pills if currently editing)
+        if (this.tabs.length === 0 && (!this.draftTab || (this.draftTab.startTime === null && this.draftTab.endTime === null))) {
+            const emptyWideBtn = document.createElement('div');
+            emptyWideBtn.className = 'tm-tab-empty-wide-btn';
+            emptyWideBtn.style.cssText = 'padding: 4px 16px; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px dashed rgba(255,255,255,0.3); color: rgba(255,255,255,0.8); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; user-select: none;';
+            emptyWideBtn.innerHTML = '<span>+ 添加首个精彩片段</span>';
+            emptyWideBtn.title = '以当前播放进度添加胶囊';
+            emptyWideBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.targetVideo) {
+                    this.draftTab.startTime = this.targetVideo.currentTime;
+                    this.renderTabs();
+                }
+            });
+            this.tabScrollContainer.appendChild(emptyWideBtn);
+            if (this.tabQuickAddBtn) this.tabQuickAddBtn.style.display = 'none';
+            return;
+        } else {
+            if (this.tabQuickAddBtn) this.tabQuickAddBtn.style.display = 'flex';
+        }
+
         this.tabs.forEach(tab => {
             const pill = (this.editingTabId === tab.id)
                 ? this._createEditPill(tab)
@@ -866,7 +910,7 @@ export class LoopManager {
                     duration_sec: (this.draftTab.endTime && this.draftTab.startTime) ? Math.round(this.draftTab.endTime - this.draftTab.startTime) : 0
                 });
                 const now = Date.now();
-                const newTab = { ...this.draftTab, comment, createdAt: now, updatedAt: now };
+                const newTab = { ...this.draftTab, color: getRandomCapsuleColor(), comment, createdAt: now, updatedAt: now };
                 this.tabs.push(newTab);
                 if (newTab.id) {
                     SyncManager.clearTombstone('markers', newTab.id);
@@ -1545,4 +1589,44 @@ export class LoopManager {
             this._longPressTimer = null;
         }
     }
+
+    checkAndLoadDeepLinkCapsules() {
+        if (typeof window === 'undefined') return;
+        try {
+            const hash = window.location.hash || '';
+            const match = hash.match(/mp_capsules=([^&]+)/);
+            if (!match) return;
+
+            const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(match[1]))));
+            const data = JSON.parse(jsonStr);
+            if (!data || !Array.isArray(data.t)) return;
+
+            if (data.s && this.targetVideo) {
+                this.targetVideo.playbackRate = data.s;
+            }
+
+            window.__mp_imported_capsules = {
+                videoCode: data.c,
+                speed: data.s || 1.0,
+                capsules: data.t.map(item => ({
+                    id: 'imp_' + Math.random().toString(36).slice(2, 8),
+                    type: item.t || 'highlight',
+                    startTime: item.a,
+                    endTime: item.b,
+                    comment: item.m || '',
+                    isImported: true
+                }))
+            };
+
+            if (window.history && window.history.replaceState) {
+                const cleanUrl = window.location.href.split('#')[0];
+                window.history.replaceState(null, '', cleanUrl);
+            }
+
+            Toast(`已识别到外部分享时间胶囊 (${data.t.length}条)，可在评论区或侧栏一键导入`, 4000, 'info');
+        } catch (e) {
+            console.warn('[DeepLinking] 解析胶囊参数异常:', e);
+        }
+    }
+
 }

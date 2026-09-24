@@ -965,3 +965,44 @@
         opacity: 0;
     }
 }
+
+
+/* Safari 风格高对比度红色静音按钮 */
+.tm-volume-button.is-muted {
+    background-color: #ff3b30 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(255, 59, 48, 0.45) !important;
+    border-radius: 50% !important;
+}
+
+.tm-volume-button.is-muted svg {
+    stroke: #ffffff !important;
+}
+
+
+/* 彩色胶囊连播按钮 */
+.tm-color-capsule-play-btn {
+    position: relative;
+    border-radius: 50%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tm-color-capsule-play-btn:hover {
+    transform: scale(1.08);
+}
+
+.tm-color-capsule-play-btn.is-active {
+    box-shadow: 0 0 12px rgba(255, 90, 95, 0.75);
+    animation: tm-capsule-pulse 1.8s infinite ease-in-out;
+}
+
+@keyframes tm-capsule-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 8px rgba(255, 90, 95, 0.6);
+    }
+    50% {
+        transform: scale(1.06);
+        box-shadow: 0 0 16px rgba(0, 201, 255, 0.85);
+    }
+}

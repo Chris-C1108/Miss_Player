@@ -1590,7 +1590,9 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     flex: 1;
     gap: 8px;
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: visible;
+    padding-top: 4px;
+    padding-bottom: 4px;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -1608,7 +1610,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 /* ===== Tab Pill ===== */
 .tm-tab-pill {
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     align-items: center;
     gap: 4px;

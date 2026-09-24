@@ -1,3 +1,4 @@
+import { Toast } from '../../utils/index.js';
 import { PLAY, PAUSE, PLAY_CENTER } from '../../constants/icons.js';
 import { telemetry } from '../../telemetry/index.js';
 import { getValue, setValue } from '../../utils/index.js';
@@ -229,4 +230,158 @@ export class PlaybackController {
         this.dragHandler = null;
         this.upHandler = null;
     }
+
+    /**
+     * 创建彩色胶囊顺序播放控制按钮
+     * @param {HTMLElement} container 按钮容器
+     * @returns {HTMLElement} 彩色胶囊播放按钮
+     */
+    createColorCapsulePlayButton(container) {
+        this.colorCapsuleButton = document.createElement('button');
+        this.colorCapsuleButton.className = 'tm-control-button tm-color-capsule-play-btn';
+        this.colorCapsuleButton.title = '彩色胶囊连播 (点击连播/停止，长按或右键切换模式)';
+        this.colorCapsuleButton.innerHTML = `
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" style="filter: drop-shadow(0 0 4px rgba(255, 90, 95, 0.6));">
+                <defs>
+                    <linearGradient id="tm-capsule-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#FF5A5F" />
+                        <stop offset="50%" stop-color="#8A2387" />
+                        <stop offset="100%" stop-color="#00C9FF" />
+                    </linearGradient>
+                </defs>
+                <polygon points="6,4 19,12 6,20" fill="url(#tm-capsule-gradient)" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round" />
+            </svg>
+        `;
+
+        this._isCapsuleLoopPlaying = false;
+        this._capsulePlayIndex = 0;
+        this._capsulePlayMode = 'preview';
+        this._capsuleTimeUpdateBound = this._handleCapsulePlaybackTick.bind(this);
+
+        this.colorCapsuleButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleCapsulePlayback();
+        });
+
+        this.colorCapsuleButton.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.switchCapsulePlayMode();
+        });
+
+        let pressTimer = null;
+        this.colorCapsuleButton.addEventListener('touchstart', (e) => {
+            pressTimer = setTimeout(() => {
+                this.switchCapsulePlayMode();
+            }, 650);
+        }, { passive: true });
+        this.colorCapsuleButton.addEventListener('touchend', () => {
+            if (pressTimer) clearTimeout(pressTimer);
+        });
+
+        container.appendChild(this.colorCapsuleButton);
+        return this.colorCapsuleButton;
+    }
+
+    toggleCapsulePlayback() {
+        const loopManager = this.controlManager?.loopManager;
+        const tabs = loopManager?.tabs || [];
+        if (tabs.length === 0) {
+            Toast('当前视频暂无胶囊片段，请先在时间轴添加', 2000, 'info');
+            return;
+        }
+
+        if (this._isCapsuleLoopPlaying) {
+            this.stopCapsulePlayback();
+            Toast('已退出胶囊连播模式', 1500, 'info');
+        } else {
+            this.startCapsulePlayback();
+        }
+    }
+
+    startCapsulePlayback(startIndex = 0) {
+        const loopManager = this.controlManager?.loopManager;
+        const tabs = loopManager?.tabs || [];
+        if (tabs.length === 0) return;
+
+        const playerState = this.playerCore?.options?.playerState;
+        this._capsulePlayMode = playerState?.settings?.betaColorPlayMode || 'preview';
+
+        this._isCapsuleLoopPlaying = true;
+        this._capsulePlayIndex = Math.max(0, Math.min(startIndex, tabs.length - 1));
+        this.colorCapsuleButton?.classList.add('is-active');
+
+        this.targetVideo.removeEventListener('timeupdate', this._capsuleTimeUpdateBound);
+        this.targetVideo.addEventListener('timeupdate', this._capsuleTimeUpdateBound);
+
+        this._playCurrentCapsule();
+        this._showModeToast();
+    }
+
+    stopCapsulePlayback() {
+        this._isCapsuleLoopPlaying = false;
+        this.colorCapsuleButton?.classList.remove('is-active');
+        this.targetVideo.removeEventListener('timeupdate', this._capsuleTimeUpdateBound);
+    }
+
+    switchCapsulePlayMode() {
+        const nextMode = (this._capsulePlayMode === 'preview') ? 'review' : 'preview';
+        this._capsulePlayMode = nextMode;
+        const playerState = this.playerCore?.options?.playerState;
+        if (playerState?.settings) {
+            playerState.settings.betaColorPlayMode = nextMode;
+            playerState.saveSettings();
+        }
+        this._showModeToast();
+    }
+
+    _showModeToast() {
+        const isPreview = (this._capsulePlayMode === 'preview');
+        const modeName = isPreview ? '走马灯预览 (各播30秒)' : '高潮回看 (完整区间)';
+        Toast(`胶囊播放: ${modeName}`, 3000, 'info', () => {
+            Toast('【预览模式】所有胶囊统一只播30秒快进预览\n【回看模式】单点时间戳播60秒，时间区间完整播放A至B点', 4000, 'info');
+        });
+    }
+
+    _playCurrentCapsule() {
+        const loopManager = this.controlManager?.loopManager;
+        const tabs = loopManager?.tabs || [];
+        if (!this._isCapsuleLoopPlaying || this._capsulePlayIndex >= tabs.length) {
+            this.stopCapsulePlayback();
+            Toast('全部胶囊连播已完成', 2000, 'success');
+            return;
+        }
+
+        const tab = tabs[this._capsulePlayIndex];
+        const startTime = (tab.startTime !== undefined && tab.startTime !== null) ? tab.startTime : (tab.time || 0);
+        this._currentCapsuleStartTime = startTime;
+        
+        if (this._capsulePlayMode === 'preview') {
+            this._currentCapsuleDuration = 30;
+        } else {
+            if (tab.startTime !== undefined && tab.endTime !== undefined && tab.endTime > tab.startTime) {
+                this._currentCapsuleDuration = tab.endTime - tab.startTime;
+            } else {
+                this._currentCapsuleDuration = 60;
+            }
+        }
+
+        this.targetVideo.currentTime = startTime;
+        if (this.targetVideo.paused) {
+            this.targetVideo.play().catch(() => {});
+        }
+        if (typeof loopManager?.setActiveTab === 'function') {
+            loopManager.setActiveTab(tab.id);
+        }
+    }
+
+    _handleCapsulePlaybackTick() {
+        if (!this._isCapsuleLoopPlaying) return;
+        const ct = this.targetVideo.currentTime;
+        if (ct < this._currentCapsuleStartTime || ct >= (this._currentCapsuleStartTime + this._currentCapsuleDuration)) {
+            this._capsulePlayIndex++;
+            this._playCurrentCapsule();
+        }
+    }
+
 }

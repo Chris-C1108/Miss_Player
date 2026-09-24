@@ -1,3 +1,4 @@
+import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 import { getValue } from '../../utils/index.js';
 
 /**
@@ -108,6 +109,35 @@ export class BlurPlaybackManager {
 
         // 监听视频暂停事件：若是原站脚本在后台偷偷暂停，且用户开启了允许后台播放，则自动拉起播放
         targetVideo.addEventListener('pause', () => {
+            const stack = (new Error().stack || '');
+            let triggerSource = 'UNKNOWN';
+            if (userInteracted) {
+                triggerSource = 'USER_INTERACTION';
+            } else if (targetVideo.ended) {
+                triggerSource = 'VIDEO_ENDED';
+            } else if (document.hidden || document.visibilityState === 'hidden') {
+                triggerSource = 'PAGE_HIDDEN_OR_BLUR';
+            } else if (targetVideo.readyState < 3 || targetVideo.networkState === 2) {
+                triggerSource = 'BUFFER_STALL';
+            } else if (stack.includes('MissPlayer') || stack.includes('CustomVideoPlayer') || stack.includes('PlaybackController') || stack.includes('LoopManager')) {
+                triggerSource = 'MISS_PLAYER_INTERNAL';
+            } else {
+                triggerSource = 'HOST_SCRIPT_TRIGGERED';
+            }
+
+            const diagInfo = {
+                source: triggerSource,
+                currentTime: targetVideo.currentTime ? targetVideo.currentTime.toFixed(2) : 0,
+                duration: targetVideo.duration ? targetVideo.duration.toFixed(2) : 0,
+                readyState: targetVideo.readyState,
+                networkState: targetVideo.networkState,
+                userInteracted,
+                documentHidden: document.hidden
+            };
+
+            DebugLogPanel.addLog(`[PAUSE] 视频暂停: [${triggerSource}] 进度=${diagInfo.currentTime}s`, triggerSource === 'HOST_SCRIPT_TRIGGERED' ? 'warn' : 'info');
+            console.warn('[MissPlayer Diagnostic] 自动暂停分析:', diagInfo, '\nStack:', stack);
+
             if (isPauseOnBlurEnabled()) {
                 wasPlaying = false;
                 return;

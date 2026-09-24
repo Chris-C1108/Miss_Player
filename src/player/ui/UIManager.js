@@ -862,6 +862,37 @@ export class UIManager {
             }, 100);
         };
         window.addEventListener('resize', this.resizeListener);
+
+        // 5. iOS visualViewport 监听 (移动端虚拟键盘弹起自适应挤压与避让)
+        if (typeof window !== 'undefined' && window.visualViewport) {
+            this.visualViewportListener = () => {
+                const vv = window.visualViewport;
+                const keyboardHeight = Math.max(0, window.innerHeight - vv.height);
+                const playerContainer = this.playerContainer || document.querySelector('.tm-player-container');
+                const commentSubmitBar = document.querySelector('.tm-comment-submit-bar-wrapper');
+                const activeModal = document.querySelector('.tm-custom-modal') || document.querySelector('.tm-comment-tag-select-modal');
+
+                if (keyboardHeight > 100) {
+                    if (playerContainer) playerContainer.classList.add('tm-ios-keyboard-open');
+                    if (commentSubmitBar) {
+                        commentSubmitBar.style.transform = `translateY(-${keyboardHeight}px)`;
+                    }
+                    if (activeModal) {
+                        activeModal.style.transform = `translate(-50%, -${keyboardHeight / 2}px)`;
+                    }
+                } else {
+                    if (playerContainer) playerContainer.classList.remove('tm-ios-keyboard-open');
+                    if (commentSubmitBar) {
+                        commentSubmitBar.style.transform = '';
+                    }
+                    if (activeModal) {
+                        activeModal.style.transform = '';
+                    }
+                }
+            };
+            window.visualViewport.addEventListener('resize', this.visualViewportListener);
+            window.visualViewport.addEventListener('scroll', this.visualViewportListener);
+        }
         
         // 存储清理引用，以防多次初始化或在 cleanup() 中调用
         this._cleanupLayoutSchedulers = () => {
@@ -888,6 +919,11 @@ export class UIManager {
         if (this.resizeListener) {
             window.removeEventListener('resize', this.resizeListener);
             this.resizeListener = null;
+        }
+        if (this.visualViewportListener && typeof window !== 'undefined' && window.visualViewport) {
+            window.visualViewport.removeEventListener('resize', this.visualViewportListener);
+            window.visualViewport.removeEventListener('scroll', this.visualViewportListener);
+            this.visualViewportListener = null;
         }
         if (this.screenOrientationListener && screen && screen.orientation) {
             screen.orientation.removeEventListener('change', this.screenOrientationListener);

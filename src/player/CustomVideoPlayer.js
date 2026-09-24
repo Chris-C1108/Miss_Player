@@ -184,6 +184,24 @@ export class CustomVideoPlayer {
         controlManager.setLoopManager(loopManager);
         progressManager.setLoopManager(loopManager);
         this.playerCore.loopManager = loopManager;
+
+        // Phase 7.4: 首个胶囊开播与断点续播仲裁 (Beta 受控)
+        const playerSettings = this.playerCore.options?.playerState?.settings;
+        if (playerSettings && playerSettings.betaMode && playerSettings.betaFirstCapsulePlay && loopManager.tabs.length > 0) {
+            const firstTab = loopManager.tabs[0];
+            const targetTime = (firstTab.startTime !== undefined && firstTab.startTime !== null) ? firstTab.startTime : (firstTab.time || 0);
+            const prevTime = this.playerCore.videoState?.currentTime || 0;
+            if (this.playerCore.targetVideo) {
+                this.playerCore.targetVideo.currentTime = targetTime;
+                if (prevTime > 0 && Math.abs(prevTime - targetTime) > 3) {
+                    Toast('已从第 1 个胶囊开播，点击恢复上次断点', 5000, 'info', () => {
+                        if (this.playerCore.targetVideo) {
+                            this.playerCore.targetVideo.currentTime = prevTime;
+                        }
+                    });
+                }
+            }
+        }
         
         // 创建拖动管理器 (注入 uiManager, controlManager)
         const dragManager = new DragManager(this.playerCore, uiElements, uiManager, controlManager);

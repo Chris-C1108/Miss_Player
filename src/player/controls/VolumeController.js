@@ -245,6 +245,16 @@ export class VolumeController {
         }
         
         const volumeButton = this.volumeSlider.querySelector('.tm-volume-button');
+        const isMuted = Boolean(this.targetVideo.muted || volume === 0);
+        if (volumeButton) {
+            const playerState = this.playerCore?.options?.playerState;
+            const useSafariStyle = !playerState || (playerState.settings?.betaSafariMuteStyle !== false);
+            if (useSafariStyle) {
+                volumeButton.classList.toggle('is-muted', isMuted);
+            } else {
+                volumeButton.classList.remove('is-muted');
+            }
+        }
         
         // 更新音量图标 (优先仅替换 svg，避免清除正在扩散的粉色水波纹)
         if (volumeButton) {

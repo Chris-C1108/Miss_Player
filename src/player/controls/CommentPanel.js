@@ -1,3 +1,5 @@
+import { SyncManager } from '../../sync/index.js';
+import { WebDavClient } from '../../sync/WebDavClient.js';
 import { __ } from '../../constants/i18n.js';
 import { CLOSE_LINE, SEND, KEYBOARD } from '../../constants/icons.js';
 import { Toast, isMobile, createModal, copyToClipboard, getValue } from '../../utils/index.js';
@@ -499,6 +501,53 @@ export class CommentPanel {
         };
 
         this.uiElements.playerContainer.addEventListener('click', (e) => {
+            const saveAllBtn = e.target.closest(".jc-save-all-btn");
+            const reportBtn = e.target.closest(".jc-report-btn");
+            const importDeepLinkBtn = e.target.closest(".tm-import-deep-link-btn");
+
+            if (importDeepLinkBtn) {
+                e.stopPropagation();
+                const imp = (typeof window !== "undefined") ? window.__mp_imported_capsules : null;
+                if (imp && Array.isArray(imp.capsules)) {
+                    const lm = this.getLoopManager();
+                    if (lm) {
+                        imp.capsules.forEach(c => {
+                            lm.addTabFromTime(c.endTime ? [c.startTime, c.endTime] : c.startTime, c.comment);
+                        });
+                        Toast(`已将 ${imp.capsules.length} 条外部分享胶囊导入时间轴`, 2000, "success");
+                    }
+                    window.__mp_imported_capsules = null;
+                    this.renderCommentsList();
+                }
+                return;
+            }
+
+            if (saveAllBtn) {
+                e.stopPropagation();
+                const commentId = saveAllBtn.getAttribute("data-comment-id");
+                const comment = this.findCommentById(commentId);
+                if (comment && Array.isArray(comment.timestamps) && comment.timestamps.length > 0) {
+                    const lm = this.getLoopManager();
+                    if (lm) {
+                        comment.timestamps.forEach(ts => {
+                            lm.addTabFromTime(ts.seconds, comment.rawText ? comment.rawText.slice(0, 30) : (comment.text || "").slice(0, 30));
+                        });
+                        Toast(`已转存 ${comment.timestamps.length} 个时间片段至胶囊列表`, 2000, "success");
+                    }
+                }
+                return;
+            }
+
+            if (reportBtn) {
+                e.stopPropagation();
+                const commentId = reportBtn.getAttribute("data-comment-id");
+                const comment = this.findCommentById(commentId);
+                if (comment) {
+                    this._showCommentReportModal(comment);
+                }
+                return;
+            }
+
             const starBtn = e.target.closest('.jc-time-star-btn');
             const countdownBtn = e.target.closest('.jc-countdown-btn');
             const timeLink = e.target.closest('.jc-time-link');
@@ -2282,6 +2331,8 @@ export class CommentPanel {
                         </div>
                         <div class="jc-hdr-right">
                             ${countdownBtn}
+                            ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="转存所有时间" data-comment-id="${c.id}" style="background: rgba(0,201,255,0.15); border: 1px solid rgba(0,201,255,0.4); color: #00c9ff; font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-right: 4px;">📌 转存</button>` : ""}
+                            <button class="jc-action-btn jc-report-btn" title="上报该评论" data-comment-id="${c.id}" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #aaa; font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-right: 4px;">🐛 上报</button>
                             ${userHtml}
                             ${scoreHtml}
                             ${spamHtml}
@@ -2305,6 +2356,11 @@ export class CommentPanel {
             setTimeout(() => this.startJavlibBackgroundVerification(this.javlibFailedDomain), 50);
         }
 
+        let importedCardHtml = "";
+        if (typeof window !== "undefined" && window.__mp_imported_capsules && window.__mp_imported_capsules.capsules && window.__mp_imported_capsules.capsules.length > 0) {
+            const imp = window.__mp_imported_capsules;
+            importedCardHtml = `<div class="jc-card jc-imported-share-card" style="border: 1px solid rgba(0, 201, 255, 0.4); background: rgba(0, 201, 255, 0.08); margin-bottom: 10px; border-radius: 8px; padding: 10px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><span style="font-weight: 700; color: #00c9ff;">🌟 外部分享胶囊导入 (${imp.capsules.length} 条)</span><span style="font-size: 11px; color: rgba(255,255,255,0.6);">推荐倍速: ${imp.speed}x</span></div><div style="font-size: 12px; color: rgba(255,255,255,0.8); margin-bottom: 8px;">检测到来自 URL 的时间胶囊分享，点击一键转存到当前视频时间轴：</div><button class="tm-import-deep-link-btn" style="background: #00c9ff; color: #000; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px;">一键导入全部胶囊到时间轴</button></div>`;
+        }
         // 动态渲染三大数据源 Section HTML
         const sectionHtmlMap = {
             jable: this.renderSectionHtml('jable'),
@@ -2823,4 +2879,51 @@ export class CommentPanel {
             this._onTabsUpdatedBound = null;
         }
     }
+    findCommentById(id) {
+        if (!id) return null;
+        for (const sKey of ["jable", "javlib", "javdb"]) {
+            const list = this.sites[sKey]?.comments || [];
+            const found = list.find(c => c && String(c.id) === String(id));
+            if (found) return found;
+        }
+        return null;
+    }
+
+    _showCommentReportModal(comment) {
+        let selectedReason = "时间解析错误";
+        const { modal, close } = createModal(`<div class="tm-custom-modal-title">评论问题上报</div><div style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px;">上报内容将归档至 WebDAV / Debug 日志用于分析</div><div style="font-size: 12px; background: rgba(255,255,255,0.06); padding: 8px; border-radius: 6px; margin-bottom: 10px; max-height: 80px; overflow-y: auto;">${esc(comment.rawText || comment.text || "")}</div><div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;"><span class="tm-report-chip active" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #007aff; color: #fff; cursor: pointer;">时间解析错误</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">倒序时间需过滤</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">垃圾水贴</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">漏抓关键片段</span></div><textarea class="tm-report-note" placeholder="附加补充说明 (可选)..." style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px; color: #fff; font-size: 12px; height: 60px; margin-bottom: 10px;"></textarea><div class="tm-modal-buttons" style="display: flex; gap: 8px; justify-content: flex-end;"><button class="tm-custom-modal-cancel-btn" style="background: rgba(255,255,255,0.1); color: #ccc; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">取消</button><button class="tm-custom-modal-submit-btn" style="background: #007aff; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer;">提交上报</button></div>`);
+        const chips = modal.querySelectorAll(".tm-report-chip");
+        chips.forEach(chip => {
+            chip.addEventListener("click", () => {
+                chips.forEach(c => { c.style.background = "rgba(255,255,255,0.1)"; c.style.color = "#ccc"; });
+                chip.style.background = "#007aff"; chip.style.color = "#fff";
+                selectedReason = chip.textContent;
+            });
+        });
+        modal.querySelector(".tm-custom-modal-cancel-btn").addEventListener("click", close);
+        const submitBtn = modal.querySelector(".tm-custom-modal-submit-btn");
+        submitBtn.addEventListener("click", async () => {
+            const note = modal.querySelector(".tm-report-note").value.trim();
+            const reportPayload = { videoCode: this.videoCode, commentId: comment.id, user: comment.user, commentText: comment.rawText || comment.text, timestamps: comment.timestamps, reason: selectedReason, userNote: note, reportedAt: new Date().toISOString() };
+            DebugLogPanel.addLog(`[REPORT] 评论上报: [${selectedReason}] id=${comment.id}`, "warn");
+            const webdavConfig = SyncManager.getWebDavConfig();
+            if (webdavConfig && webdavConfig.url) {
+                try {
+                    submitBtn.textContent = "提交中...";
+                    const now = new Date();
+                    const pad = (n) => String(n).padStart(2, "0");
+                    const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+                    const subPath = `logs/comment_report/${this.videoCode}_${ts}.json`;
+                    await WebDavClient.uploadFile(webdavConfig, subPath, reportPayload, "application/json; charset=utf-8");
+                    Toast("上报成功并已同步至 WebDAV！", 2000, "success");
+                } catch (e) {
+                    Toast("已记录本地日志，WebDAV同步遇到网络问题", 2500, "warn");
+                }
+            } else {
+                Toast("已记录上报信息至 Debug 日志", 2000, "success");
+            }
+            close();
+        });
+    }
+
 }

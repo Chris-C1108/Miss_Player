@@ -152,6 +152,11 @@ export function matchAvCodeFromText(rawStr) {
             if (TECHNICAL_BLACKLIST.has(prefix)) continue;
             const formatted = rule.format(match);
             if (isValidAvCode(formatted)) {
+                if (rule.type === 'DM') {
+                    try {
+                        console.log('[VideoCode Diagnostic] 命中 DM 匹配:', { rawStr: String(rawStr).slice(0, 100), matched: match[0], formatted });
+                    } catch (_) {}
+                }
                 return formatted;
             }
         }

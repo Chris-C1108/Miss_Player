@@ -94,6 +94,21 @@ Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感�
 
 ---
 
+## 🧪 Beta 模式与新特性治理规范 (Beta Feature Flag Governance)
+
+为了保障生产环境稳定性与用户体验连续性，**即日起所有新功能、实验性特性或高阶能力必须严格受控于「Beta 模式」开关**：
+
+1. **新功能准入原则 (Default Off in Beta)**：
+   - 任何新增功能模块、实验性交互、多级网络抓取、外部数据库对接等能力，在初始开发与测试阶段，**必须挂载在设置菜单的「Beta 实验室」独立分段内**；
+   - 所有 Beta 新功能默认必须保持为**关闭状态（Default OFF）**，由用户主动选择开启；
+   - 核心代码执行逻辑中必须先行校验 Beta 总开关及对应子功能开关（如 `playerState.settings.betaMode && playerState.settings.betaFeatureX`），未开启时完全走原有稳定链路。
+
+2. **特性转正与剥离标准 (Promote to Stable)**：
+   - 只有在 Beta 模式下经过至少 1 个完整版本周期的真机验证、异常与边界问题彻底闭环、且未收到任何致命缺陷反馈后，经评估方可从 Beta 实验室中“转正”；
+   - 转正后的功能移入设置菜单对应的正式常规分段，或作为播放器默认行为启用。
+
+---
+
 ## ⚖️ 平台合规与分发红线 (GreasyFork & SleazyFork Rules)
 
 所有代码编写、模块设计、依赖引入与版本发布，必须无条件遵从根目录的 **[GreasyFork&sleazyfork_rules.md](./GreasyFork&sleazyfork_rules.md)** 规范。开发过程中必须严格落实以下红线约束：

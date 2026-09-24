@@ -62,7 +62,15 @@ export class SettingsManager {
             crazyScrapeMode: false,
             pauseOnBlur: true,
             buttonSoundEnabled: true,
-            autoCheckUpdate: true
+            autoCheckUpdate: true,
+            betaMode: false,
+            betaFirstCapsulePlay: false,
+            betaColorPlayMode: 'preview',
+            betaSafariMuteStyle: true,
+            betaCapsuleUndo: true,
+            betaDeepLinking: true,
+            betaDbEndpoint: '',
+            betaDbApiKey: ''
         };
 
         // 快进快退步进自定义展开状态
@@ -354,6 +362,149 @@ export class SettingsManager {
         section3.appendChild(debugOption);
         section3.appendChild(crazyOption);
         container.appendChild(section3);
+
+        // =================================================================
+        // SECTION: Beta 实验室 (Beta Lab) :
+        // =================================================================
+        const sectionBeta = this._createSectionHeader('Beta 实验室 :');
+        const betaWrapper = document.createElement('div');
+        betaWrapper.className = 'tm-settings-beta-wrapper';
+
+        let betaSubPanel = null;
+
+        // 1. Beta 实验室总开关
+        const betaMainToggle = this._createToggleOption(
+            'Beta 实验室总开关',
+            'betaMode',
+            Boolean(this.settings.betaMode),
+            (checked) => {
+                this.updateSetting('betaMode', checked);
+                if (betaSubPanel) {
+                    betaSubPanel.style.display = checked ? 'flex' : 'none';
+                }
+                Toast(checked ? '已开启 Beta 实验室' : '已关闭 Beta 实验室', 1200, 'info');
+            },
+            null,
+            '抢先体验实验性新功能，所有测试特性均在此集中受控'
+        );
+        betaWrapper.appendChild(betaMainToggle);
+
+        // 2. Beta 子特性面板
+        betaSubPanel = document.createElement('div');
+        betaSubPanel.className = 'tm-settings-beta-subpanel';
+        betaSubPanel.style.display = this.settings.betaMode ? 'flex' : 'none';
+        betaSubPanel.style.flexDirection = 'column';
+        betaSubPanel.style.paddingLeft = '20px';
+        betaSubPanel.style.borderLeft = '2px solid hsla(var(--shadcn-primary) / 0.3)';
+        betaSubPanel.style.marginLeft = '12px';
+        betaSubPanel.style.marginTop = '6px';
+        betaSubPanel.style.gap = '8px';
+
+        // 子项 A: 从首个胶囊开播
+        const firstCapsuleOption = this._createToggleOption(
+            '开播定位至首个胶囊',
+            'betaFirstCapsulePlay',
+            Boolean(this.settings.betaFirstCapsulePlay),
+            (checked) => {
+                this.updateSetting('betaFirstCapsulePlay', checked);
+            },
+            null,
+            '载入视频时优先从已有胶囊列表第 1 个开播；若无胶囊则恢复上次断点'
+        );
+        betaSubPanel.appendChild(firstCapsuleOption);
+
+        // 子项 B: 彩色胶囊播放按钮默认模式
+        const colorPlayModeRow = document.createElement('div');
+        colorPlayModeRow.className = 'tm-settings-option-row';
+        colorPlayModeRow.innerHTML = `
+            <div class="tm-settings-option-label-wrapper">
+                <div class="tm-settings-option-label">
+                    <span>彩色胶囊播放默认模式</span>
+                    <span class="tm-beta-info-btn" title="查看播放规则" style="cursor: pointer; margin-left: 6px; font-size: 13px;">ℹ️</span>
+                </div>
+                <div class="tm-settings-option-subtext">预览模式各播 30s，回看模式完整播放高潮区间</div>
+            </div>
+            <select class="tm-settings-select tm-beta-playmode-select" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 4px 8px;">
+                <option value="preview" ${this.settings.betaColorPlayMode === 'preview' ? 'selected' : ''}>走马灯预览 (30秒)</option>
+                <option value="review" ${this.settings.betaColorPlayMode === 'review' ? 'selected' : ''}>高潮回看 (完整区间)</option>
+            </select>
+        `;
+        const playModeSelect = colorPlayModeRow.querySelector('.tm-beta-playmode-select');
+        playModeSelect.addEventListener('change', (e) => {
+            this.updateSetting('betaColorPlayMode', e.target.value);
+        });
+        const infoBtn = colorPlayModeRow.querySelector('.tm-beta-info-btn');
+        infoBtn.addEventListener('click', () => {
+            Toast('【预览模式】所有胶囊统一只播30秒走马灯扫片\n【回看模式】时间戳播60秒，时间区间完整播放A至B点', 4000, 'info');
+        });
+        betaSubPanel.appendChild(colorPlayModeRow);
+
+        // 子项 C: Safari 风格红色静音
+        const safariMuteOption = this._createToggleOption(
+            'Safari 风格高对比静音',
+            'betaSafariMuteStyle',
+            this.settings.betaSafariMuteStyle !== false,
+            (checked) => {
+                this.updateSetting('betaSafariMuteStyle', checked);
+            },
+            null,
+            '音量归零或静音时，以 Safari 标志性红底白图标呈现'
+        );
+        betaSubPanel.appendChild(safariMuteOption);
+
+        // 子项 D: 胶囊删除 60 秒撤销
+        const capsuleUndoOption = this._createToggleOption(
+            '胶囊删除撤销保护',
+            'betaCapsuleUndo',
+            this.settings.betaCapsuleUndo !== false,
+            (checked) => {
+                this.updateSetting('betaCapsuleUndo', checked);
+            },
+            null,
+            '删除胶囊后 1 分钟内在管理面板提供撤销恢复按钮'
+        );
+        betaSubPanel.appendChild(capsuleUndoOption);
+
+        // 子项 E: URL 参数深链导入
+        const deepLinkingOption = this._createToggleOption(
+            'URL 参数深链胶囊导入',
+            'betaDeepLinking',
+            this.settings.betaDeepLinking !== false,
+            (checked) => {
+                this.updateSetting('betaDeepLinking', checked);
+            },
+            null,
+            '自动识别分享链接中的时间轴与倍速参数并挂载'
+        );
+        betaSubPanel.appendChild(deepLinkingOption);
+
+        // 子项 F: 评论分析外部数据库配置 (REST / Supabase / CouchDB)
+        const dbConfigContainer = document.createElement('div');
+        dbConfigContainer.className = 'tm-settings-option-row tm-beta-db-row';
+        dbConfigContainer.style.flexDirection = 'column';
+        dbConfigContainer.style.alignItems = 'flex-start';
+        dbConfigContainer.style.gap = '6px';
+        dbConfigContainer.innerHTML = `
+            <div class="tm-settings-option-label">自建评论分析数据库 (REST API)</div>
+            <div class="tm-settings-option-subtext">配置个人远端数据库端点，优先于公共源查询聚合评论</div>
+            <input type="text" class="tm-settings-input tm-beta-db-url" placeholder="https://your-api.domain.com/comments" value="${this.settings.betaDbEndpoint || ''}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 12px;" />
+            <input type="password" class="tm-settings-input tm-beta-db-key" placeholder="API Key / Token (可选)" value="${this.settings.betaDbApiKey || ''}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 12px;" />
+        `;
+        const dbUrlInput = dbConfigContainer.querySelector('.tm-beta-db-url');
+        const dbKeyInput = dbConfigContainer.querySelector('.tm-beta-db-key');
+        const saveDbConfig = () => {
+            this.updateSetting('betaDbEndpoint', dbUrlInput.value.trim());
+            this.updateSetting('betaDbApiKey', dbKeyInput.value.trim());
+        };
+        dbUrlInput.addEventListener('change', saveDbConfig);
+        dbUrlInput.addEventListener('blur', saveDbConfig);
+        dbKeyInput.addEventListener('change', saveDbConfig);
+        dbKeyInput.addEventListener('blur', saveDbConfig);
+        betaSubPanel.appendChild(dbConfigContainer);
+
+        betaWrapper.appendChild(betaSubPanel);
+        sectionBeta.appendChild(betaWrapper);
+        container.appendChild(sectionBeta);
 
         // =================================================================
         // SECTION 4: 云端同步 (WebDAV) :
@@ -1430,6 +1581,15 @@ export class SettingsManager {
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
+            this.settings.betaMode = getBool('betaMode', false);
+            this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
+            const rawPlayMode = getValue('betaColorPlayMode', 'preview');
+            this.settings.betaColorPlayMode = (rawPlayMode === 'review') ? 'review' : 'preview';
+            this.settings.betaSafariMuteStyle = getBool('betaSafariMuteStyle', true);
+            this.settings.betaCapsuleUndo = getBool('betaCapsuleUndo', true);
+            this.settings.betaDeepLinking = getBool('betaDeepLinking', true);
+            this.settings.betaDbEndpoint = getValue('betaDbEndpoint', '') || '';
+            this.settings.betaDbApiKey = getValue('betaDbApiKey', '') || '';
         }
     }
     
@@ -1454,6 +1614,14 @@ export class SettingsManager {
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
+            setValue('betaMode', Boolean(this.settings.betaMode));
+            setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));
+            setValue('betaColorPlayMode', this.settings.betaColorPlayMode || 'preview');
+            setValue('betaSafariMuteStyle', Boolean(this.settings.betaSafariMuteStyle));
+            setValue('betaCapsuleUndo', Boolean(this.settings.betaCapsuleUndo));
+            setValue('betaDeepLinking', Boolean(this.settings.betaDeepLinking));
+            setValue('betaDbEndpoint', this.settings.betaDbEndpoint || '');
+            setValue('betaDbApiKey', this.settings.betaDbApiKey || '');
         }
     }
     

@@ -537,4 +537,51 @@ export class WebDavClient {
             throw error;
         }
     }
+
+    /**
+     * 上传任意文本/JSON文件至 WebDAV 指定子目录
+     * @param {Object} config - { url, user, pass, path }
+     * @param {string} subPath - 相对子路径 (如 'logs/debug/xxx.txt' 或 'comments/xxx.json')
+     * @param {string|Object} content - 文件文本或 JSON 对象
+     * @param {string} [contentType='text/plain; charset=utf-8'] - MIME 类型
+     * @returns {Promise<{ success: boolean, status: number }>}
+     */
+    static async uploadFile(config, subPath, content, contentType = 'text/plain; charset=utf-8') {
+        const { url, user, pass, path = '/MissPlayer/' } = config;
+        let dirPath = (path || '/MissPlayer/').trim();
+        if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
+        if (!dirPath.endsWith('/')) dirPath = dirPath + '/';
+
+        let targetPath = subPath.trim();
+        if (targetPath.startsWith('/')) targetPath = targetPath.slice(1);
+
+        // 确保上级目录存在
+        const lastSlash = targetPath.lastIndexOf('/');
+        if (lastSlash !== -1) {
+            const subDir = targetPath.slice(0, lastSlash + 1);
+            await this.ensureDirectory({ ...config, path: dirPath + subDir });
+        } else {
+            await this.ensureDirectory(config);
+        }
+
+        const fileUrl = this.normalizeUrl(url, dirPath + targetPath, user);
+        const data = typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content);
+
+        const res = await this.request({
+            method: 'PUT',
+            url: fileUrl,
+            user,
+            pass,
+            headers: {
+                'Content-Type': contentType
+            },
+            data
+        });
+
+        if (res.status === 200 || res.status === 201 || res.status === 204) {
+            return { success: true, status: res.status };
+        }
+        throw new Error(`上传文件失败，状态码: ${res.status}`);
+    }
+
 }
