@@ -16,6 +16,7 @@ import { CommentDebugCollector } from '../comments/CommentDebugCollector.js';
 import { CommentCacheManager } from '../comments/CommentCacheManager.js';
 import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 import {
+    esc,
     getVideoCodeFromUrl,
     fetchJableComments,
     fetchJavLibraryVideoId,
