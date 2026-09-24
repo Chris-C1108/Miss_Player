@@ -58,7 +58,7 @@
 
 .tm-comments-panel.is-dimmed::after {
     opacity: 1;
-    pointer-events: auto; /* 拦截交互事件以防误触，或者用于点击/触碰激活 */
+    pointer-events: none; /* 遮罩层仅做纯视觉变暗渲染，不阻断下方子元素事件 */
 }
 
 /* 评论面板底部次要功能栏 (共X条评论、一键复制、过滤灌水) */
@@ -1602,4 +1602,13 @@ body.controls-hidden:not(.tm-mode-pc):not(.tm-mode-ipad-portrait) .tm-show-contr
 }
 .tm-custom-modal-overlay.active .tm-report-modal-dialog {
     transform: scale(1);
+}
+
+.tm-comments-panel.is-dimmed .tm-comments-list {
+    pointer-events: auto !important;
+}
+.tm-comments-panel.is-dimmed .jc-card,
+.tm-comments-panel.is-dimmed .jc-action-btn,
+.tm-comments-panel.is-dimmed .jc-report-btn {
+    pointer-events: auto !important;
 }

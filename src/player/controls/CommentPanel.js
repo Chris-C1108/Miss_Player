@@ -1782,6 +1782,9 @@ export class CommentPanel {
             const reportBtn = e.target.closest('.jc-report-btn');
             if (reportBtn) {
                 e.stopPropagation();
+                if (e.cancelable) e.preventDefault();
+                console.log('[CommentPanel] 点击上报按钮触发:', reportBtn);
+                DebugLogPanel.addLog('[CommentPanel] 点击上报按钮触发', 'info');
                 const commentId = reportBtn.getAttribute('data-comment-id');
                 const card = reportBtn.closest('.jc-card');
                 const cardId = card ? card.getAttribute('data-id') : null;
@@ -1876,7 +1879,7 @@ export class CommentPanel {
                 return;
             }
 
-            const isSubmitBar = !!e.target.closest('.tm-comment-submit-bar-wrapper, .tm-comment-tag-select-modal, .tm-floating-comment-panel, .tm-comment-text-input, .tm-comment-add-tag-btn, .tm-comment-send-btn');
+            const isSubmitBar = !!e.target.closest('.jc-report-btn, .jc-save-all-btn, .jc-action-btn, .tm-comment-submit-bar-wrapper, .tm-comment-tag-select-modal, .tm-floating-comment-panel, .tm-comment-text-input, .tm-comment-add-tag-btn, .tm-comment-send-btn');
 
             // 只要评论区是变暗状态，任何触摸或点击都应立即激活它并移除 is-dimmed
             if (this.commentsPanel.classList.contains('is-dimmed')) {
