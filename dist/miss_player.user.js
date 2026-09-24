@@ -10711,42 +10711,77 @@
 		}
 		createPlayPauseButton(container) {
 			this.playPauseButton = document.createElement("button");
-			this.playPauseButton.className = "tm-control-button";
-			this.playPauseButton.addEventListener("click", () => {
-				const isPlaying = !this.targetVideo.paused;
-				if (this.targetVideo.paused) this.targetVideo.play();
-				else this.targetVideo.pause();
-				this.updatePlayPauseButton();
-				telemetry.track("play_toggle", { is_playing: !isPlaying });
+			this.playPauseButton.className = "tm-control-button tm-integrated-play-btn";
+			this._isCapsuleLoopPlaying = false;
+			this._capsulePlayIndex = 0;
+			this._currentCapsuleStartTime = 0;
+			this._currentCapsuleDuration = 30;
+			this._isSeekingCapsule = false;
+			this._capsuleTimeUpdateBound = this._handleCapsulePlaybackTick.bind(this);
+			this.playPauseButton.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.handleMainPlayButtonClick();
 			});
 			this.playPauseButton.addEventListener("mouseover", () => {
 				this.playPauseButton.classList.add("tm-control-button-hover");
-				this.playPauseButton.classList.remove("tm-control-button-default");
 			});
 			this.playPauseButton.addEventListener("mouseout", () => {
-				this.playPauseButton.classList.add("tm-control-button-default");
 				this.playPauseButton.classList.remove("tm-control-button-hover");
 			});
 			container.appendChild(this.playPauseButton);
 			this.updatePlayPauseButton();
 			return this.playPauseButton;
 		}
+		getPlayMode() {
+			const mode = (this.playerCore?.options?.playerState)?.settings?.betaPlayMode || getValue("betaPlayMode", "normal");
+			return mode === "preview" || mode === "climax" ? mode : "normal";
+		}
+		handleMainPlayButtonClick() {
+			const mode = this.getPlayMode();
+			const isPaused = this.targetVideo.paused;
+			if (mode === "normal") {
+				if (isPaused) this.targetVideo.play().catch(() => {});
+				else this.targetVideo.pause();
+				this.updatePlayPauseButton();
+				telemetry.track("play_toggle", { is_playing: isPaused });
+				return;
+			}
+			if (((this.controlManager?.loopManager)?.tabs || []).length === 0) {
+				Toast("当前视频暂无胶囊片段，请先在时间轴添加", 2e3, "info");
+				if (isPaused) this.targetVideo.play().catch(() => {});
+				else this.targetVideo.pause();
+				this.updatePlayPauseButton();
+				return;
+			}
+			if (isPaused) {
+				if (!this._isCapsuleLoopPlaying) this.startCapsulePlayback(0);
+				else this.targetVideo.play().catch(() => {});
+			} else this.targetVideo.pause();
+			this.updatePlayPauseButton();
+		}
 		updatePlayPauseButton() {
 			if (!this.playPauseButton) return;
-			const newSvgHtml = this.targetVideo.paused ? PLAY : PAUSE;
-			const currentSvg = this.playPauseButton.querySelector("svg");
-			if (currentSvg) {
-				const temp = document.createElement("div");
-				temp.innerHTML = newSvgHtml.trim();
-				const newSvg = temp.firstElementChild;
-				if (newSvg) {
-					this.playPauseButton.replaceChild(newSvg, currentSvg);
-					return;
-				}
+			const mode = this.getPlayMode();
+			const isPaused = this.targetVideo.paused;
+			this.playPauseButton.classList.remove("mode-normal", "mode-preview", "mode-climax");
+			this.playPauseButton.classList.add("mode-" + mode);
+			if (mode === "normal") {
+				this.playPauseButton.style.background = "";
+				const newSvgHtml = isPaused ? PLAY : PAUSE;
+				const currentSvg = this.playPauseButton.querySelector("svg");
+				if (currentSvg) {
+					const temp = document.createElement("div");
+					temp.innerHTML = newSvgHtml.trim();
+					const newSvg = temp.firstElementChild;
+					if (newSvg) this.playPauseButton.replaceChild(newSvg, currentSvg);
+				} else this.playPauseButton.innerHTML = newSvgHtml;
+				this.playPauseButton.title = isPaused ? "播放" : "暂停";
+			} else {
+				const modeText = mode === "preview" ? "预览模式" : "精彩重温";
+				const statusIcon = isPaused ? " ▶" : "";
+				this.playPauseButton.innerHTML = "<span class='tm-play-mode-text'>" + modeText + statusIcon + "</span>";
+				this.playPauseButton.title = modeText + " (点击" + (isPaused ? "开始连播" : "暂停") + ")";
 			}
-			const ripples = Array.from(this.playPauseButton.querySelectorAll(".tm-ripple, .ripple"));
-			this.playPauseButton.innerHTML = newSvgHtml;
-			ripples.forEach((r) => this.playPauseButton.appendChild(r));
 		}
 		createPlaybackRateSlider(container) {
 			const playbackRateButton = document.createElement("button");
@@ -10838,85 +10873,6 @@
 			this.dragHandler = null;
 			this.upHandler = null;
 		}
-		createPlayModeSwitcher(container) {
-			this.playModeBtn = document.createElement("button");
-			this.playModeBtn.className = "tm-control-button tm-play-mode-btn mode-normal";
-			this.playModeBtn.title = "点击切换播放模式: 正常模式 / 预览模式 / 精彩欣赏";
-			this._playMode = "normal";
-			this._isCapsuleLoopPlaying = false;
-			this._capsulePlayIndex = 0;
-			this._currentCapsuleStartTime = 0;
-			this._currentCapsuleDuration = 30;
-			this._isSeekingCapsule = false;
-			this._capsuleTimeUpdateBound = this._handleCapsulePlaybackTick.bind(this);
-			this._updatePlayModeBtnUI();
-			this.playModeBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
-				this.cyclePlayMode();
-			});
-			this.playModeBtn.addEventListener("contextmenu", (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				this._showModeDetails();
-			});
-			container.appendChild(this.playModeBtn);
-			return this.playModeBtn;
-		}
-		cyclePlayMode() {
-			const nextMode = {
-				normal: "preview",
-				preview: "climax",
-				climax: "normal"
-			}[this._playMode] || "normal";
-			this.setPlayMode(nextMode);
-		}
-		setPlayMode(mode) {
-			const tabs = (this.controlManager?.loopManager)?.tabs || [];
-			if (mode !== "normal" && tabs.length === 0) {
-				Toast("当前视频暂无胶囊片段，请先在时间轴添加", 2e3, "info");
-				this._playMode = "normal";
-				this._updatePlayModeBtnUI();
-				this.stopCapsulePlayback();
-				return;
-			}
-			this._playMode = mode;
-			this._updatePlayModeBtnUI();
-			if (mode === "normal") {
-				this.stopCapsulePlayback();
-				Toast("已切换至: 正常模式 (连贯完整播放)", 2e3, "info");
-			} else if (mode === "preview") {
-				this.startCapsulePlayback(0);
-				Toast("已切换至: 预览模式 (每个胶囊快进走马灯 30 秒)", 3e3, "info");
-			} else if (mode === "climax") {
-				this.startCapsulePlayback(0);
-				Toast("已切换至: 精彩欣赏 (完整温习高潮区间)", 3e3, "info");
-			}
-		}
-		_updatePlayModeBtnUI() {
-			if (!this.playModeBtn) return;
-			this.playModeBtn.classList.remove("mode-normal", "mode-preview", "mode-climax");
-			this.playModeBtn.classList.add("mode-" + this._playMode);
-			const configs = {
-				normal: {
-					text: "🎬 正常",
-					title: "当前: 正常模式 (点击切换为预览模式)"
-				},
-				preview: {
-					text: "⚡ 预览",
-					title: "当前: 预览模式 30s 走马灯 (点击切换为精彩欣赏)"
-				},
-				climax: {
-					text: "🌟 精彩",
-					title: "当前: 精彩欣赏模式 (点击切换为正常模式)"
-				}
-			};
-			const cur = configs[this._playMode] || configs.normal;
-			this.playModeBtn.innerHTML = "<span>" + cur.text + "</span>";
-			this.playModeBtn.title = cur.title;
-		}
-		_showModeDetails() {
-			Toast("【正常模式】连续播放，不自动跳过\n【预览模式】所有胶囊统一走马灯各播 30 秒\n【精彩欣赏】时间区间完整播放 A 至 B 点高潮，时间戳播 45 秒", 4500, "info");
-		}
 		startCapsulePlayback(startIndex = 0) {
 			const tabs = (this.controlManager?.loopManager)?.tabs || [];
 			if (tabs.length === 0) return;
@@ -10929,19 +10885,22 @@
 		stopCapsulePlayback() {
 			this._isCapsuleLoopPlaying = false;
 			this.targetVideo.removeEventListener("timeupdate", this._capsuleTimeUpdateBound);
+			this._setProgressFill(0);
+			this.updatePlayPauseButton();
 		}
 		_playCurrentCapsule() {
 			const loopManager = this.controlManager?.loopManager;
 			const tabs = loopManager?.tabs || [];
+			const mode = this.getPlayMode();
 			if (!this._isCapsuleLoopPlaying || this._capsulePlayIndex >= tabs.length) {
-				this.setPlayMode("normal");
-				Toast("全部精彩胶囊已播放完毕，恢复正常播放", 2500, "success");
+				this.stopCapsulePlayback();
+				Toast("全部精彩胶囊已播放完毕", 2500, "success");
 				return;
 			}
 			const tab = tabs[this._capsulePlayIndex];
 			const startTime = tab.startTime !== void 0 && tab.startTime !== null ? tab.startTime : tab.time || 0;
 			this._currentCapsuleStartTime = startTime;
-			if (this._playMode === "preview") this._currentCapsuleDuration = 30;
+			if (mode === "preview") this._currentCapsuleDuration = 30;
 			else if (tab.startTime !== void 0 && tab.endTime !== void 0 && tab.endTime > tab.startTime) this._currentCapsuleDuration = Math.max(15, tab.endTime - tab.startTime);
 			else this._currentCapsuleDuration = 45;
 			this._isSeekingCapsule = true;
@@ -10955,13 +10914,30 @@
 			this.targetVideo.addEventListener("seeked", onSeeked);
 			if (this.targetVideo.paused) this.targetVideo.play().catch(() => {});
 			if (typeof loopManager?.setActiveTab === "function") loopManager.setActiveTab(tab.id);
+			this._setProgressFill(0);
 		}
 		_handleCapsulePlaybackTick() {
 			if (!this._isCapsuleLoopPlaying || this._isSeekingCapsule || this.targetVideo.seeking) return;
-			if (this.targetVideo.currentTime >= this._currentCapsuleStartTime + this._currentCapsuleDuration) {
+			if (this.getPlayMode() === "normal") {
+				this.stopCapsulePlayback();
+				return;
+			}
+			const ct = this.targetVideo.currentTime;
+			const elapsed = ct - this._currentCapsuleStartTime;
+			const pct = Math.max(0, Math.min(100, elapsed / this._currentCapsuleDuration * 100));
+			this._setProgressFill(pct);
+			if (ct >= this._currentCapsuleStartTime + this._currentCapsuleDuration) {
 				this._capsulePlayIndex++;
 				this._playCurrentCapsule();
 			}
+		}
+		_setProgressFill(pct) {
+			if (!this.playPauseButton) return;
+			if (this.getPlayMode() === "normal") {
+				this.playPauseButton.style.background = "";
+				return;
+			}
+			this.playPauseButton.style.background = "linear-gradient(to right, rgba(255, 120, 130, 0.45) " + pct + "%, rgba(255, 255, 255, 0.08) " + pct + "%)";
 		}
 	};
 	var ControlManager = class {
@@ -11138,10 +11114,8 @@
 			centerControlsArea.style.display = "flex";
 			centerControlsArea.style.alignItems = "center";
 			centerControlsArea.style.justifyContent = "center";
-			centerControlsArea.style.gap = "10px";
 			centerControlsArea.style.flex = "1";
 			this.playbackController.createPlayPauseButton(centerControlsArea);
-			this.playbackController.createPlayModeSwitcher(centerControlsArea);
 			const rightControlsArea = document.createElement("div");
 			rightControlsArea.className = "tm-right-controls";
 			rightControlsArea.style.display = "flex";
