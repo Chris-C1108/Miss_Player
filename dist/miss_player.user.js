@@ -8080,7 +8080,7 @@
 		}
 	};
 	_defineProperty(IDBHelper, "_dbPromise", null);
-	var CommentCacheManager = class {
+	var CommentCacheManager$1 = class {
 		static hasValidCache(videoCode) {
 			const entry = this.get(videoCode);
 			if (!entry || !entry.sites) return false;
@@ -8248,7 +8248,7 @@
 			}
 		}
 	};
-	_defineProperty(CommentCacheManager, "_memoryCache", new Map());
+	_defineProperty(CommentCacheManager$1, "_memoryCache", new Map());
 	init_domains();
 	function parseCommentDate(dateStr) {
 		if (!dateStr) return 0;
@@ -8813,8 +8813,8 @@
 		async loadComments(page = 1, forceRefresh = false) {
 			if (!this.videoCode) return;
 			this.isLoading = true;
-			if (page === 1 && !forceRefresh && CommentCacheManager.hasValidCache(this.videoCode)) {
-				const cached = CommentCacheManager.get(this.videoCode);
+			if (page === 1 && !forceRefresh && CommentCacheManager$1.hasValidCache(this.videoCode)) {
+				const cached = CommentCacheManager$1.get(this.videoCode);
 				if (cached && cached.sites) {
 					let restoredCount = 0;
 					for (const siteKey of Object.keys(this.sites)) {
@@ -9084,7 +9084,7 @@
 				site.hasMore = res.hasMore;
 				site.status = site.comments.length === 0 ? "empty" : "loaded";
 				site.currentPage = Math.max(site.currentPage || 1, page);
-				CommentCacheManager.saveSiteCache(this.videoCode, siteKey, site);
+				CommentCacheManager$1.saveSiteCache(this.videoCode, siteKey, site);
 				if (Boolean(getValue("crazyScrapeMode", false)) && site.hasMore && page < 20) setTimeout(() => {
 					if (this.videoCode === this.currentVideoCode || !this.currentVideoCode) this.loadSiteComments(siteKey, page + 1);
 				}, 1e3 + Math.random() * 600);
@@ -9748,7 +9748,7 @@
 				}
 				this.loadSiteComments(site, 1, true);
 			} else {
-				CommentCacheManager.clear(this.videoCode);
+				CommentCacheManager$1.clear(this.videoCode);
 				this.loadComments(1, true);
 			}
 		}
@@ -10308,7 +10308,7 @@
 				CommentDebugCollector.collectComments(this.videoCode, this.javdbComments, duration);
 			}
 			for (const sKey of Object.keys(this.sites)) if (this.sites[sKey].comments.length > 0) {
-				CommentCacheManager.saveSiteCache(this.videoCode, sKey, this.sites[sKey]);
+				CommentCacheManager$1.saveSiteCache(this.videoCode, sKey, this.sites[sKey]);
 				SupabaseService.uploadComments(this.videoCode, sKey, this.sites[sKey].comments, Math.round(duration));
 			}
 			this.applyFilter();
@@ -13903,7 +13903,7 @@
 			if (this._completedCodes.has(code)) return;
 			this._completedCodes.add(code);
 			try {
-				const localRecord = await CommentCacheManager.getAsync(code);
+				const localRecord = await CommentCacheManager$1.getAsync(code);
 				if (localRecord && localRecord.sites && Object.values(localRecord.sites).some((s) => s && s.comments && s.comments.length > 0)) {
 					DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} 本地已存在评论，跳过重复采集`, "info");
 					return;
@@ -13971,9 +13971,10 @@
 						total: totalCount || allProcessed.length
 					};
 					CommentDebugCollector.collectComments(code, allProcessed, 10800, stats);
-					const durSec = this._avcodeDurations.get(code) || (code === currentUpper ? getVideoDurationSeconds() : 0);
+					const currentVideoCode = typeof window !== "undefined" ? (window.location.pathname.split("/").filter(Boolean).pop() || "").toUpperCase() : "";
+					const durSec = this._avcodeDurations.get(code) || (code === currentVideoCode ? getVideoDurationSeconds() : 0);
 					SupabaseService.uploadComments(code, "jable", allProcessed, durSec);
-					CommentCacheManager.saveSiteCache(code, "jable", {
+					CommentCacheManager$1.saveSiteCache(code, "jable", {
 						key: "jable",
 						status: "loaded",
 						comments: allProcessed,
@@ -14335,6 +14336,7 @@
 				DebugLogPanel.updateDebugState(checked);
 				if (this.controlManager?.commentPanel) this.controlManager.commentPanel.updateDebugMode(checked);
 				if (crazyOption) crazyOption.style.display = checked ? "flex" : "none";
+				if (clearLocalCacheBtn) clearLocalCacheBtn.style.display = checked ? "inline-flex" : "none";
 				if (!checked) CrazyScraper.stop();
 				else if (this.settings.crazyScrapeMode) CrazyScraper.start(this.controlManager?.commentPanel?.videoCode || "");
 			});
@@ -14345,6 +14347,19 @@
 			}, null, __("crazyScrapeDesc") || "自动扫描宿主页面所有关联番号，低速防爬排队采集评论语料");
 			crazyOption.style.display = this.settings.debugMode ? "flex" : "none";
 			crazyOption.style.paddingLeft = "28px";
+			const clearLocalCacheBtn = document.createElement("button");
+			clearLocalCacheBtn.className = "tm-about-btn tm-clear-comments-cache-btn";
+			clearLocalCacheBtn.style.cssText = "background: rgba(255, 59, 48, 0.15); border: 1px solid rgba(255, 59, 48, 0.45); color: #ff3b30; font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; margin-left: 28px; margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; width: fit-content;";
+			clearLocalCacheBtn.innerHTML = "<span>🗑️ 清空本地评论缓存</span>";
+			clearLocalCacheBtn.title = "清空本地已采集的评论缓存 (IndexedDB 及内存)，重置已采集记录以便重新全量采集";
+			clearLocalCacheBtn.style.display = this.settings.debugMode ? "inline-flex" : "none";
+			clearLocalCacheBtn.addEventListener("click", (e) => {
+				e.stopPropagation();
+				CommentCacheManager.clear();
+				CrazyScraper._completedCodes.clear();
+				CrazyScraper._scannedCodes.clear();
+				Toast("已成功清空本地评论缓存与已抓取记录！", 2e3, "success");
+			});
 			const pauseOnBlurOption = this._createToggleOption(__("pauseOnBlur") || "失焦后停止播放", "pauseOnBlur", this.settings.pauseOnBlur !== false, (checked) => {
 				this.updateSetting("pauseOnBlur", checked);
 			}, null, __("pauseOnBlurDesc") || "页面离开或失去焦点时自动暂停播放");
@@ -14356,6 +14371,7 @@
 			section3.appendChild(buttonSoundOption);
 			section3.appendChild(debugOption);
 			section3.appendChild(crazyOption);
+			section3.appendChild(clearLocalCacheBtn);
 			container.appendChild(section3);
 			const sectionBeta = this._createSectionHeader("Beta 实验室 :");
 			const betaWrapper = document.createElement("div");
@@ -14380,30 +14396,6 @@
 				this.updateSetting("betaFirstCapsulePlay", checked);
 			}, null, "载入视频时优先从已有胶囊列表第 1 个开播；若无胶囊则恢复上次断点");
 			betaSubPanel.appendChild(firstCapsuleOption);
-			const colorPlayModeRow = document.createElement("div");
-			colorPlayModeRow.className = "tm-settings-option-row";
-			colorPlayModeRow.innerHTML = `
-            <div class="tm-settings-option-label-wrapper">
-                <div class="tm-settings-option-label">
-                    <span>彩色胶囊播放默认模式</span>
-                    <span class="tm-beta-info-btn" title="查看播放规则" style="cursor: pointer; margin-left: 6px; font-size: 13px;">ℹ️</span>
-                </div>
-                <div class="tm-settings-option-subtext">预览模式各播 30s，回看模式完整播放高潮区间</div>
-            </div>
-            <select class="tm-settings-select tm-beta-playmode-select" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 4px 8px;">
-                <option value="preview" ${this.settings.betaColorPlayMode === "preview" ? "selected" : ""}>走马灯预览 (30秒)</option>
-                <option value="review" ${this.settings.betaColorPlayMode === "review" ? "selected" : ""}>高潮回看 (完整区间)</option>
-            </select>
-        `;
-			colorPlayModeRow.querySelector(".tm-beta-playmode-select").addEventListener("change", (e) => {
-				this.updateSetting("betaPlayMode", e.target.value);
-				const pc = this.controlManager?.playbackController;
-				if (pc) pc.updatePlayPauseButton();
-			});
-			colorPlayModeRow.querySelector(".tm-beta-info-btn").addEventListener("click", () => {
-				Toast("【预览模式】所有胶囊统一只播30秒走马灯扫片\n【回看模式】时间戳播60秒，时间区间完整播放A至B点", 4e3, "info");
-			});
-			betaSubPanel.appendChild(colorPlayModeRow);
 			const safariMuteOption = this._createToggleOption("Safari 风格高对比静音", "betaSafariMuteStyle", this.settings.betaSafariMuteStyle !== false, (checked) => {
 				this.updateSetting("betaSafariMuteStyle", checked);
 			}, null, "音量归零或静音时，以 Safari 标志性红底白图标呈现");
@@ -17120,7 +17112,7 @@
 				console.log(`[${__("scriptName")}] ${__("enhancerInitialized")}`);
 				playerState = new PlayerState();
 				playerState.loadSettings();
-				CommentCacheManager.migrateFromLegacyStorage().catch(() => {});
+				CommentCacheManager$1.migrateFromLegacyStorage().catch(() => {});
 				SyncManager.triggerAutoSync(playerState, "startup");
 				document.addEventListener("visibilitychange", () => {
 					if (document.visibilityState === "visible") SyncManager.triggerAutoSync(playerState, "resume");

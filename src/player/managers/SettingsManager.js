@@ -361,6 +361,9 @@ export class SettingsManager {
                 if (crazyOption) {
                     crazyOption.style.display = checked ? 'flex' : 'none';
                 }
+                if (clearLocalCacheBtn) {
+                    clearLocalCacheBtn.style.display = checked ? 'inline-flex' : 'none';
+                }
                 if (!checked) {
                     CrazyScraper.stop();
                 } else if (this.settings.crazyScrapeMode) {
@@ -387,6 +390,21 @@ export class SettingsManager {
         );
         crazyOption.style.display = this.settings.debugMode ? 'flex' : 'none';
         crazyOption.style.paddingLeft = '28px';
+
+        // 清空本地评论缓存按钮
+        const clearLocalCacheBtn = document.createElement('button');
+        clearLocalCacheBtn.className = 'tm-about-btn tm-clear-comments-cache-btn';
+        clearLocalCacheBtn.style.cssText = 'background: rgba(255, 59, 48, 0.15); border: 1px solid rgba(255, 59, 48, 0.45); color: #ff3b30; font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; margin-left: 28px; margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; width: fit-content;';
+        clearLocalCacheBtn.innerHTML = '<span>🗑️ 清空本地评论缓存</span>';
+        clearLocalCacheBtn.title = '清空本地已采集的评论缓存 (IndexedDB 及内存)，重置已采集记录以便重新全量采集';
+        clearLocalCacheBtn.style.display = this.settings.debugMode ? 'inline-flex' : 'none';
+        clearLocalCacheBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            CommentCacheManager.clear();
+            CrazyScraper._completedCodes.clear();
+            CrazyScraper._scannedCodes.clear();
+            Toast('已成功清空本地评论缓存与已抓取记录！', 2000, 'success');
+        });
 
         // 3. 失焦后停止播放开关 (默认为开)
         const pauseOnBlurOption = this._createToggleOption(
@@ -420,6 +438,7 @@ export class SettingsManager {
         section3.appendChild(buttonSoundOption);
         section3.appendChild(debugOption);
         section3.appendChild(crazyOption);
+        section3.appendChild(clearLocalCacheBtn);
         container.appendChild(section3);
 
         // =================================================================
@@ -471,34 +490,6 @@ export class SettingsManager {
             '载入视频时优先从已有胶囊列表第 1 个开播；若无胶囊则恢复上次断点'
         );
         betaSubPanel.appendChild(firstCapsuleOption);
-
-        // 子项 B: 彩色胶囊播放按钮默认模式
-        const colorPlayModeRow = document.createElement('div');
-        colorPlayModeRow.className = 'tm-settings-option-row';
-        colorPlayModeRow.innerHTML = `
-            <div class="tm-settings-option-label-wrapper">
-                <div class="tm-settings-option-label">
-                    <span>彩色胶囊播放默认模式</span>
-                    <span class="tm-beta-info-btn" title="查看播放规则" style="cursor: pointer; margin-left: 6px; font-size: 13px;">ℹ️</span>
-                </div>
-                <div class="tm-settings-option-subtext">预览模式各播 30s，回看模式完整播放高潮区间</div>
-            </div>
-            <select class="tm-settings-select tm-beta-playmode-select" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 4px 8px;">
-                <option value="preview" ${this.settings.betaColorPlayMode === 'preview' ? 'selected' : ''}>走马灯预览 (30秒)</option>
-                <option value="review" ${this.settings.betaColorPlayMode === 'review' ? 'selected' : ''}>高潮回看 (完整区间)</option>
-            </select>
-        `;
-        const betaPlayModeSelect = colorPlayModeRow.querySelector('.tm-beta-playmode-select');
-        betaPlayModeSelect.addEventListener('change', (e) => {
-            this.updateSetting('betaPlayMode', e.target.value);
-            const pc = this.controlManager?.playbackController;
-            if (pc) pc.updatePlayPauseButton();
-        });
-        const infoBtn = colorPlayModeRow.querySelector('.tm-beta-info-btn');
-        infoBtn.addEventListener('click', () => {
-            Toast('【预览模式】所有胶囊统一只播30秒走马灯扫片\n【回看模式】时间戳播60秒，时间区间完整播放A至B点', 4000, 'info');
-        });
-        betaSubPanel.appendChild(colorPlayModeRow);
 
         // 子项 C: Safari 风格红色静音
         const safariMuteOption = this._createToggleOption(

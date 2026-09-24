@@ -236,7 +236,8 @@ static async _scrapeSingleAvcode(code, index, total) {
                 }
                 const stats = { jable: totalCount || allProcessed.length, total: totalCount || allProcessed.length };
                 CommentDebugCollector.collectComments(code, allProcessed, 10800, stats);
-                const durSec = this._avcodeDurations.get(code) || (code === currentUpper ? getVideoDurationSeconds() : 0);
+                const currentVideoCode = (typeof window !== 'undefined' ? (window.location.pathname.split('/').filter(Boolean).pop() || '').toUpperCase() : '');
+                const durSec = this._avcodeDurations.get(code) || (code === currentVideoCode ? getVideoDurationSeconds() : 0);
                 SupabaseService.uploadComments(code, 'jable', allProcessed, durSec);
                 CommentCacheManager.saveSiteCache(code, 'jable', { key: 'jable', status: 'loaded', comments: allProcessed, totalCount: stats.jable, hasMore: false, currentPage: page, collectedPages, workingDomain });
                 DebugLogPanel.addLog('[疯狂采集] ✅ ' + code + ' 全量采集完成 (获取 ' + allProcessed.length + ' 条评论，总计 ' + stats.jable + ' 条)', 'success');
