@@ -8245,6 +8245,61 @@
 				return 0;
 			}
 		}
+		static async clearAll() {
+			this._memoryCache.clear();
+			if (IDBHelper._dbPromise) {
+				try {
+					const db = await IDBHelper._dbPromise;
+					if (db && typeof db.close === "function") db.close();
+				} catch (_) {}
+				IDBHelper._dbPromise = null;
+			}
+			if (typeof indexedDB !== "undefined") {
+				try {
+					await new Promise((resolve) => {
+						const req = indexedDB.deleteDatabase(DB_NAME);
+						req.onsuccess = () => resolve(true);
+						req.onerror = () => resolve(false);
+						req.onblocked = () => resolve(false);
+					});
+				} catch (_) {}
+				try {
+					await new Promise((resolve) => {
+						const req2 = indexedDB.open("MissPlayerDB", 1);
+						req2.onsuccess = (e) => {
+							const db2 = e.target.result;
+							if (db2.objectStoreNames.contains("comments_cache")) {
+								const tx = db2.transaction("comments_cache", "readwrite");
+								tx.objectStore("comments_cache").clear();
+								tx.oncomplete = () => {
+									db2.close();
+									resolve(true);
+								};
+								tx.onerror = () => {
+									db2.close();
+									resolve(false);
+								};
+							} else {
+								db2.close();
+								resolve(true);
+							}
+						};
+						req2.onerror = () => resolve(false);
+					});
+				} catch (_) {}
+			}
+			if (typeof localStorage !== "undefined") {
+				const keysToRemove = [];
+				for (let i = 0; i < localStorage.length; i++) {
+					const k = localStorage.key(i);
+					if (k && (k.startsWith("mp_ccache_") || k.startsWith("ccache_") || k.startsWith("comments_cache_"))) keysToRemove.push(k);
+				}
+				keysToRemove.forEach((k) => localStorage.removeItem(k));
+			}
+			logger.log("[CommentCacheManager] 已彻底清空所有本地 IndexedDB、内存及 Storage 评论缓存");
+			DebugLogPanel.addLog("[本地存储] 已彻底清空所有 IndexedDB 离线评论数据库", "success");
+			return true;
+		}
 		static clear(videoCode) {
 			if (videoCode) {
 				this._memoryCache.delete(videoCode);
@@ -13924,31 +13979,33 @@
 		static async _scrapeSingleAvcode(code, index, total) {
 			if (this._completedCodes.has(code)) return;
 			this._completedCodes.add(code);
-			try {
-				const localRecord = await CommentCacheManager$1.getAsync(code);
-				if (localRecord && localRecord.sites && Object.values(localRecord.sites).some((s) => s && s.comments && s.comments.length > 0)) {
-					DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} 本地已存在评论，跳过重复采集`, "info");
-					return;
-				}
-			} catch (_) {}
-			try {
-				const remoteComments = await SupabaseService.fetchComments(code);
-				if (remoteComments && remoteComments.length > 0) {
-					DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} Supabase 已收录 (${remoteComments.length}条)，跳过重复采集`, "info");
-					return;
-				}
-			} catch (_) {}
-			try {
-				const config = SyncManager.getWebDavConfig();
-				if (config && config.url) {
-					const subPath = `comments/${code.toUpperCase()}.json`;
-					const wdData = await WebDavClient.downloadBackup(config, subPath);
-					if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
-						DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} WebDAV 已收录 (${wdData.comments.length}条)，跳过重复采集`, "info");
+			if (!Boolean(getValue("crazyForceRescrape", false))) {
+				try {
+					const localRecord = await CommentCacheManager$1.getAsync(code);
+					if (localRecord && localRecord.sites && Object.values(localRecord.sites).some((s) => s && s.comments && s.comments.length > 0)) {
+						DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} 本地已存在评论，跳过重复采集`, "info");
 						return;
 					}
-				}
-			} catch (_) {}
+				} catch (_) {}
+				try {
+					const remoteComments = await SupabaseService.fetchComments(code);
+					if (remoteComments && remoteComments.length > 0) {
+						DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} Supabase 已收录 (${remoteComments.length}条)，跳过重复采集`, "info");
+						return;
+					}
+				} catch (_) {}
+				try {
+					const config = SyncManager.getWebDavConfig();
+					if (config && config.url) {
+						const subPath = `comments/${code.toUpperCase()}.json`;
+						const wdData = await WebDavClient.downloadBackup(config, subPath);
+						if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
+							DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} WebDAV 已收录 (${wdData.comments.length}条)，跳过重复采集`, "info");
+							return;
+						}
+					}
+				} catch (_) {}
+			} else DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} 强制覆盖模式已开启，重新全量爬取并更新时长`, "info");
 			DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) 正在抓取 ${code}...`, "info");
 			let domainIndex = 0;
 			let retryCount = 0;
@@ -14383,12 +14440,15 @@
 			clearLocalCacheBtn.innerHTML = "<span>🗑️ 清空本地评论缓存</span>";
 			clearLocalCacheBtn.title = "清空本地已采集的评论缓存 (IndexedDB 及内存)，重置已采集记录以便重新全量采集";
 			clearLocalCacheBtn.style.display = this.settings.debugMode ? "inline-flex" : "none";
-			clearLocalCacheBtn.addEventListener("click", (e) => {
+			clearLocalCacheBtn.addEventListener("click", async (e) => {
 				e.stopPropagation();
-				CommentCacheManager.clear();
+				clearLocalCacheBtn.textContent = "清理中...";
+				await CommentCacheManager.clearAll();
 				CrazyScraper._completedCodes.clear();
 				CrazyScraper._scannedCodes.clear();
-				Toast("已成功清空本地评论缓存与已抓取记录！", 2e3, "success");
+				CrazyScraper._avcodeDurations.clear();
+				clearLocalCacheBtn.innerHTML = "<span>🗑️ 清空本地评论缓存</span>";
+				Toast("已彻底删除所有本地 IndexedDB 离线评论！", 2500, "success");
 			});
 			const pauseOnBlurOption = this._createToggleOption(__("pauseOnBlur") || "失焦后停止播放", "pauseOnBlur", this.settings.pauseOnBlur !== false, (checked) => {
 				this.updateSetting("pauseOnBlur", checked);
@@ -14402,6 +14462,12 @@
 			section3.appendChild(debugOption);
 			section3.appendChild(crazyOption);
 			section3.appendChild(clearLocalCacheBtn);
+			const forceRescrapeOption = this._createToggleOption("强制覆盖重新采集", "crazyForceRescrape", Boolean(this.settings.crazyForceRescrape), (checked) => {
+				this.updateSetting("crazyForceRescrape", checked);
+			}, null, "开启后将忽略本地与云端已收录状态，重新爬取全量评论并更新时长");
+			forceRescrapeOption.style.display = this.settings.debugMode ? "flex" : "none";
+			forceRescrapeOption.style.paddingLeft = "28px";
+			section3.appendChild(forceRescrapeOption);
 			container.appendChild(section3);
 			const sectionBeta = this._createSectionHeader("Beta 实验室 :");
 			const betaWrapper = document.createElement("div");
@@ -16381,6 +16447,7 @@
 				telemetryEnabled: false,
 				debugMode: false,
 				crazyScrapeMode: false,
+				crazyForceRescrape: false,
 				sidebarPosition: "right",
 				sidebarHidden: false,
 				preferredPlaybackRate: 1,
@@ -16415,6 +16482,7 @@
 				this.settings.telemetryEnabled = false;
 				this.settings.debugMode = getBool("debugMode", false);
 				this.settings.crazyScrapeMode = getBool("crazyScrapeMode", false);
+				this.settings.crazyForceRescrape = getBool("crazyForceRescrape", false);
 				this.settings.sidebarPosition = getValue("sidebarPosition", "right") || "right";
 				this.settings.sidebarHidden = getBool("sidebarHidden", false);
 				const rawSpeed = parseFloat(getValue("preferredPlaybackRate", 1));
@@ -16479,6 +16547,7 @@
 				setValue("telemetryEnabled", false);
 				setValue("debugMode", this.settings.debugMode);
 				setValue("crazyScrapeMode", this.settings.crazyScrapeMode);
+				setValue("crazyForceRescrape", this.settings.crazyForceRescrape);
 				setValue("sidebarPosition", this.settings.sidebarPosition);
 				setValue("sidebarHidden", this.settings.sidebarHidden);
 				setValue("preferredPlaybackRate", this.settings.preferredPlaybackRate);

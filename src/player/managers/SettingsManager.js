@@ -398,12 +398,15 @@ export class SettingsManager {
         clearLocalCacheBtn.innerHTML = '<span>🗑️ 清空本地评论缓存</span>';
         clearLocalCacheBtn.title = '清空本地已采集的评论缓存 (IndexedDB 及内存)，重置已采集记录以便重新全量采集';
         clearLocalCacheBtn.style.display = this.settings.debugMode ? 'inline-flex' : 'none';
-        clearLocalCacheBtn.addEventListener('click', (e) => {
+        clearLocalCacheBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            CommentCacheManager.clear();
+            clearLocalCacheBtn.textContent = '清理中...';
+            await CommentCacheManager.clearAll();
             CrazyScraper._completedCodes.clear();
             CrazyScraper._scannedCodes.clear();
-            Toast('已成功清空本地评论缓存与已抓取记录！', 2000, 'success');
+            CrazyScraper._avcodeDurations.clear();
+            clearLocalCacheBtn.innerHTML = '<span>🗑️ 清空本地评论缓存</span>';
+            Toast('已彻底删除所有本地 IndexedDB 离线评论！', 2500, 'success');
         });
 
         // 3. 失焦后停止播放开关 (默认为开)
@@ -439,6 +442,22 @@ export class SettingsManager {
         section3.appendChild(debugOption);
         section3.appendChild(crazyOption);
         section3.appendChild(clearLocalCacheBtn);
+
+        // 强制重新采集开关 (可跳过已收录检查)
+        const forceRescrapeOption = this._createToggleOption(
+            '强制覆盖重新采集',
+            'crazyForceRescrape',
+            Boolean(this.settings.crazyForceRescrape),
+            (checked) => {
+                this.updateSetting('crazyForceRescrape', checked);
+            },
+            null,
+            '开启后将忽略本地与云端已收录状态，重新爬取全量评论并更新时长'
+        );
+        forceRescrapeOption.style.display = this.settings.debugMode ? 'flex' : 'none';
+        forceRescrapeOption.style.paddingLeft = '28px';
+
+        section3.appendChild(forceRescrapeOption);
         container.appendChild(section3);
 
         // =================================================================

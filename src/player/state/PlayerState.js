@@ -30,7 +30,8 @@ export class PlayerState {
             },
             telemetryEnabled: false,         // 遥测功能开关 (帮助改进)
             debugMode: false,               // DEBUG 模式
-            crazyScrapeMode: false,         // 疯狂采集模式
+            crazyScrapeMode: false,
+            crazyForceRescrape: false,         // 疯狂采集模式
             sidebarPosition: 'right',       // 评论侧边栏位置 ('left' | 'right')
             sidebarHidden: false,           // 评论侧边栏是否隐藏 (true | false)
             preferredPlaybackRate: 1.0,     // 默认/首选播放速度
@@ -79,6 +80,7 @@ export class PlayerState {
             this.settings.telemetryEnabled = false;
             this.settings.debugMode = getBool('debugMode', false);
             this.settings.crazyScrapeMode = getBool('crazyScrapeMode', false);
+            this.settings.crazyForceRescrape = getBool('crazyForceRescrape', false);
             this.settings.sidebarPosition = getValue('sidebarPosition', 'right') || 'right';
             this.settings.sidebarHidden = getBool('sidebarHidden', false);
             const rawSpeed = parseFloat(getValue('preferredPlaybackRate', 1.0));
@@ -166,6 +168,7 @@ export class PlayerState {
             setValue('telemetryEnabled', false);
             setValue('debugMode', this.settings.debugMode);
             setValue('crazyScrapeMode', this.settings.crazyScrapeMode);
+            setValue('crazyForceRescrape', this.settings.crazyForceRescrape);
             setValue('sidebarPosition', this.settings.sidebarPosition);
             setValue('sidebarHidden', this.settings.sidebarHidden);
             setValue('preferredPlaybackRate', this.settings.preferredPlaybackRate);

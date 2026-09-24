@@ -360,7 +360,72 @@ export class CommentCacheManager {
         }
     }
 
-        static clear(videoCode) {
+        
+    /**
+     * 彻底清空所有本地 IndexedDB 评论数据库、内存高速缓存及 localStorage 残留
+     * @returns {Promise<boolean>}
+     */
+    static async clearAll() {
+        this._memoryCache.clear();
+
+        // 1. 关闭现有连接并物理清空 MissPlayerCommentCache 数据库
+        if (IDBHelper._dbPromise) {
+            try {
+                const db = await IDBHelper._dbPromise;
+                if (db && typeof db.close === 'function') db.close();
+            } catch (_) {}
+            IDBHelper._dbPromise = null;
+        }
+
+        if (typeof indexedDB !== 'undefined') {
+            try {
+                await new Promise((resolve) => {
+                    const req = indexedDB.deleteDatabase(DB_NAME);
+                    req.onsuccess = () => resolve(true);
+                    req.onerror = () => resolve(false);
+                    req.onblocked = () => resolve(false);
+                });
+            } catch (_) {}
+
+            // 2. 清空通用存储 MissPlayerDB 中的 comments_cache 仓库
+            try {
+                await new Promise((resolve) => {
+                    const req2 = indexedDB.open('MissPlayerDB', 1);
+                    req2.onsuccess = (e) => {
+                        const db2 = e.target.result;
+                        if (db2.objectStoreNames.contains('comments_cache')) {
+                            const tx = db2.transaction('comments_cache', 'readwrite');
+                            tx.objectStore('comments_cache').clear();
+                            tx.oncomplete = () => { db2.close(); resolve(true); };
+                            tx.onerror = () => { db2.close(); resolve(false); };
+                        } else {
+                            db2.close();
+                            resolve(true);
+                        }
+                    };
+                    req2.onerror = () => resolve(false);
+                });
+            } catch (_) {}
+        }
+
+        // 3. 彻底清除 localStorage 中可能遗留的旧缓存
+        if (typeof localStorage !== 'undefined') {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && (k.startsWith('mp_ccache_') || k.startsWith('ccache_') || k.startsWith('comments_cache_'))) {
+                    keysToRemove.push(k);
+                }
+            }
+            keysToRemove.forEach(k => localStorage.removeItem(k));
+        }
+
+        logger.log('[CommentCacheManager] 已彻底清空所有本地 IndexedDB、内存及 Storage 评论缓存');
+        DebugLogPanel.addLog('[本地存储] 已彻底清空所有 IndexedDB 离线评论数据库', 'success');
+        return true;
+    }
+
+    static clear(videoCode) {
         if (videoCode) {
             this._memoryCache.delete(videoCode);
             IDBHelper.delete(videoCode).catch(() => {});

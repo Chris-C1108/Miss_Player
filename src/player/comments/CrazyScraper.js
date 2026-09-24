@@ -185,36 +185,42 @@ static async _scrapeSingleAvcode(code, index, total) {
         if (this._completedCodes.has(code)) return;
         this._completedCodes.add(code);
 
-        // 1. 本地 IndexedDB 离线缓存防重 (已采集则跳过)
-        try {
-            const localRecord = await CommentCacheManager.getAsync(code);
-            if (localRecord && localRecord.sites && Object.values(localRecord.sites).some(s => s && s.comments && s.comments.length > 0)) {
-                DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} 本地已存在评论，跳过重复采集`, 'info');
-                return;
-            }
-        } catch (_) {}
+        const forceRescrape = Boolean(getValue('crazyForceRescrape', false));
 
-        // 2. Supabase 方案 1 JSONB 聚合仓储防重 (云端已收录则跳过)
-        try {
-            const remoteComments = await SupabaseService.fetchComments(code);
-            if (remoteComments && remoteComments.length > 0) {
-                DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} Supabase 已收录 (${remoteComments.length}条)，跳过重复采集`, 'info');
-                return;
-            }
-        } catch (_) {}
-
-        // 3. WebDAV 独立文件防重 (/MissPlayer/comments/[AVCODE].json 已收录则跳过)
-        try {
-            const config = SyncManager.getWebDavConfig();
-            if (config && config.url) {
-                const subPath = `comments/${code.toUpperCase()}.json`;
-                const wdData = await WebDavClient.downloadBackup(config, subPath);
-                if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
-                    DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} WebDAV 已收录 (${wdData.comments.length}条)，跳过重复采集`, 'info');
+        if (!forceRescrape) {
+            // 1. 本地 IndexedDB 离线缓存防重 (已采集则跳过)
+            try {
+                const localRecord = await CommentCacheManager.getAsync(code);
+                if (localRecord && localRecord.sites && Object.values(localRecord.sites).some(s => s && s.comments && s.comments.length > 0)) {
+                    DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} 本地已存在评论，跳过重复采集`, 'info');
                     return;
                 }
-            }
-        } catch (_) {}
+            } catch (_) {}
+
+            // 2. Supabase 方案 1 JSONB 聚合仓储防重 (云端已收录则跳过)
+            try {
+                const remoteComments = await SupabaseService.fetchComments(code);
+                if (remoteComments && remoteComments.length > 0) {
+                    DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} Supabase 已收录 (${remoteComments.length}条)，跳过重复采集`, 'info');
+                    return;
+                }
+            } catch (_) {}
+
+            // 3. WebDAV 独立文件防重 (/MissPlayer/comments/[AVCODE].json 已收录则跳过)
+            try {
+                const config = SyncManager.getWebDavConfig();
+                if (config && config.url) {
+                    const subPath = `comments/${code.toUpperCase()}.json`;
+                    const wdData = await WebDavClient.downloadBackup(config, subPath);
+                    if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
+                        DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} WebDAV 已收录 (${wdData.comments.length}条)，跳过重复采集`, 'info');
+                        return;
+                    }
+                }
+            } catch (_) {}
+        } else {
+            DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) ${code} 强制覆盖模式已开启，重新全量爬取并更新时长`, 'info');
+        }
 
         DebugLogPanel.addLog(`[疯狂采集] (${index}/${total}) 正在抓取 ${code}...`, 'info');
 
