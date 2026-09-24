@@ -2,9 +2,10 @@ import { Toast } from '../../utils/index.js';
 import { PLAY, PAUSE, PLAY_CENTER } from '../../constants/icons.js';
 import { telemetry } from '../../telemetry/index.js';
 import { getValue, setValue } from '../../utils/index.js';
+import { VideoStateSwitcher } from './VideoStateSwitcher.js';
 
 /**
- * 播放控制器组件 - 负责播放、暂停、倍速滑杆及相关指示器
+ * 播放控制器组件 - 负责播放、暂停、3状态流体切换器、倍速滑杆及相关指示器
  */
 export class PlaybackController {
     constructor(playerCore, controlManager) {
@@ -14,9 +15,19 @@ export class PlaybackController {
         this.uiElements = playerCore.uiElements || controlManager.uiElements;
 
         this.playPauseButton = null;
+        this.stateSwitcher = null;
         this.playbackRateSlider = null;
         this.updatePlaybackRateSliderFn = null;
         this.pauseIndicator = null;
+
+        // 胶囊巡播运行态
+        this._isCapsuleLoopPlaying = false;
+        this._capsulePlayIndex = 0;
+        this._currentCapsuleStartTime = 0;
+        this._currentCapsuleDuration = 30;
+        this._isSeekingCapsule = false;
+        this._isTourEnded = false;
+        this._capsuleTimeUpdateBound = this._handleCapsulePlaybackTick.bind(this);
 
         // 保存绑定的拖拽监听器，以便清理
         this.dragHandler = null;
@@ -24,34 +35,69 @@ export class PlaybackController {
     }
 
     /**
-     * 创建播放/暂停按钮
+     * 创建居中 3 状态流体切换器与播放/暂停核心交互
      * @param {HTMLElement} container 按钮容器
-     * @returns {HTMLElement} 播放暂停按钮元素
+     * @returns {HTMLElement} 切换器容器元素
      */
     createPlayPauseButton(container) {
-        this.playPauseButton = document.createElement('button');
-        this.playPauseButton.className = 'tm-control-button tm-integrated-play-btn';
+        const playerState = this.playerCore?.options?.playerState;
+        const initialMode = this.getPlayMode();
+        const soundEnabled = playerState?.settings?.buttonSoundEnabled !== false;
 
-        this._isCapsuleLoopPlaying = false;
-        this._capsulePlayIndex = 0;
-        this._currentCapsuleStartTime = 0;
-        this._currentCapsuleDuration = 30;
-        this._isSeekingCapsule = false;
-        this._capsuleTimeUpdateBound = this._handleCapsulePlaybackTick.bind(this);
+        this.stateSwitcher = new VideoStateSwitcher({
+            container,
+            initialMode,
+            config: {
+                width: 236,
+                height: 36,
+                morphDelay: 450,
+                friction: 0.55,
+                springStiffness: 300,
+                enableSound: soundEnabled
+            },
+            onModeChange: (newMode) => {
+                const prevMode = this.getPlayMode();
+                if (playerState?.settings) {
+                    playerState.settings.betaPlayMode = newMode;
+                }
+                setValue('betaPlayMode', newMode);
 
-        this.playPauseButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.handleMainPlayButtonClick();
+                // 如果从快速预览或精彩重温手动滑到正常模式：
+                // 停止胶囊队列拦截，让视频原地连续自然播放
+                if (newMode === 'normal') {
+                    if (this._isCapsuleLoopPlaying) {
+                        this.stopCapsulePlayback(false); // false 表示不强制暂停
+                    }
+                } else if (prevMode === 'normal') {
+                    // 若切换进预览/重温模式，重置巡播终点状态
+                    this._isTourEnded = false;
+                }
+
+                this.updatePlayPauseButton();
+                telemetry.recordFeatureAction('play_mode_change', { mode: newMode });
+            },
+            onVariantAction: (actionType, mode) => {
+                if (actionType === 'toggle') {
+                    this.handleMainPlayButtonClick();
+                } else if (actionType === 'replay') {
+                    this._isTourEnded = false;
+                    this.startCapsulePlayback(0);
+                } else if (actionType === 'cancel_loop') {
+                    const loopManager = this.controlManager?.loopManager;
+                    if (loopManager) {
+                        loopManager.disableLoop();
+                        loopManager.activeTabId = null;
+                        if (typeof loopManager.renderTabs === 'function') {
+                            loopManager.renderTabs();
+                        }
+                    }
+                    this.updatePlayPauseButton();
+                    Toast('已取消单片段循环锁定', 1800, 'info');
+                }
+            }
         });
 
-        this.playPauseButton.addEventListener('mouseover', () => {
-            this.playPauseButton.classList.add('tm-control-button-hover');
-        });
-        this.playPauseButton.addEventListener('mouseout', () => {
-            this.playPauseButton.classList.remove('tm-control-button-hover');
-        });
-
-        container.appendChild(this.playPauseButton);
+        this.playPauseButton = this.stateSwitcher.wrapper;
         this.updatePlayPauseButton();
         return this.playPauseButton;
     }
@@ -77,7 +123,7 @@ export class PlaybackController {
             return;
         }
 
-        // 预览模式 (preview) 或 精彩重温 (climax)
+        // 快速预览 (preview) 或 精彩重温 (climax)
         const loopManager = this.controlManager?.loopManager;
         const tabs = loopManager?.tabs || [];
         if (tabs.length === 0) {
@@ -91,9 +137,15 @@ export class PlaybackController {
             return;
         }
 
+        if (this._isTourEnded) {
+            this._isTourEnded = false;
+            this.startCapsulePlayback(0);
+            return;
+        }
+
         if (isPaused) {
             if (!this._isCapsuleLoopPlaying) {
-                this.startCapsulePlayback(0);
+                this.startCapsulePlayback(this._capsulePlayIndex || 0);
             } else {
                 this.targetVideo.play().catch(() => {});
             }
@@ -103,33 +155,20 @@ export class PlaybackController {
         this.updatePlayPauseButton();
     }
 
+    /**
+     * 保持与 EventManager / ControlManager 现有接口的完全兼容
+     */
     updatePlayPauseButton() {
-        if (!this.playPauseButton) return;
-        const mode = this.getPlayMode();
-        const isPaused = this.targetVideo.paused;
+        const isPaused = this.targetVideo ? this.targetVideo.paused : true;
+        const loopManager = this.controlManager?.loopManager;
+        const isCapsuleLocked = Boolean(loopManager && loopManager.loopActive && loopManager.activeTabId);
 
-        this.playPauseButton.classList.remove('mode-normal', 'mode-preview', 'mode-climax');
-        this.playPauseButton.classList.add('mode-' + mode);
-
-        if (mode === 'normal') {
-            this.playPauseButton.style.background = '';
-            const newSvgHtml = isPaused ? PLAY : PAUSE;
-            const currentSvg = this.playPauseButton.querySelector('svg');
-            if (currentSvg) {
-                const temp = document.createElement('div');
-                temp.innerHTML = newSvgHtml.trim();
-                const newSvg = temp.firstElementChild;
-                if (newSvg) this.playPauseButton.replaceChild(newSvg, currentSvg);
-            } else {
-                this.playPauseButton.innerHTML = newSvgHtml;
-            }
-            this.playPauseButton.title = isPaused ? '播放' : '暂停';
-        } else {
-            // 预览模式 or 精彩重温
-            const modeText = (mode === 'preview') ? '预览模式' : '精彩重温';
-            const statusIcon = isPaused ? ' ▶' : '';
-            this.playPauseButton.innerHTML = '<span class=\'tm-play-mode-text\'>' + modeText + statusIcon + '</span>';
-            this.playPauseButton.title = modeText + ' (点击' + (isPaused ? '开始连播' : '暂停') + ')';
+        if (this.stateSwitcher) {
+            this.stateSwitcher.setPlaybackRuntime({
+                isPlaying: !isPaused,
+                isTourEnded: this._isTourEnded,
+                isCapsuleLocked: isCapsuleLocked
+            });
         }
     }
 
@@ -165,14 +204,13 @@ export class PlaybackController {
             if (currentSpeed === 1.0) nextSpeed = 1.2;
             else if (currentSpeed === 1.2) nextSpeed = 1.5;
             else if (currentSpeed === 1.5) nextSpeed = 2.0;
-            else nextSpeed = 1.0; // 其他所有倍速均重置为 1.0x
+            else nextSpeed = 1.0;
             
             this.targetVideo.playbackRate = nextSpeed;
             setValue('preferredPlaybackRate', nextSpeed);
             this.syncPlaybackRateSlider(nextSpeed);
             telemetry.recordFeatureAction('speed_change');
             
-            // 触觉反馈
             if (window.navigator && window.navigator.vibrate) {
                 window.navigator.vibrate(5);
             }
@@ -181,19 +219,13 @@ export class PlaybackController {
         container.appendChild(playbackRateButton);
         this.playbackRateSlider = playbackRateButton;
         
-        // 初始同步按钮文本和状态
         this.syncPlaybackRateSlider(this.targetVideo.playbackRate);
     }
 
-    /**
-     * 提供给外部使用的同步方法，在视频的ratechange事件中被触发
-     */
     syncPlaybackRateSlider(speed) {
         if (this.playbackRateSlider) {
-            // 格式化展示速率，始终保留一位小数，如 1.0x, 1.2x, 1.5x, 2.0x
             const speedText = `${speed.toFixed(1)}x`;
             
-            // 仅更新文本节点，避免清除正在扩散的活跃水波纹元素
             let textNode = null;
             for (const child of this.playbackRateSlider.childNodes) {
                 if (child.nodeType === Node.TEXT_NODE) {
@@ -209,7 +241,6 @@ export class PlaybackController {
                 ripples.forEach(r => this.playbackRateSlider.appendChild(r));
             }
             
-            // 刷新高亮样式
             this.playbackRateSlider.className = 'tm-playback-rate-button';
             if (speed > 1.5) {
                 this.playbackRateSlider.classList.add('fast');
@@ -223,9 +254,6 @@ export class PlaybackController {
         }
     }
 
-    /**
-     * 显示暂停指示器于视频中心
-     */
     showPauseIndicator() {
         if (this.pauseIndicator) {
             if (this.pauseIndicator.parentNode) {
@@ -265,20 +293,19 @@ export class PlaybackController {
         }, 1000);
     }
 
-
-    /**
-     * 销毁生命周期，防止内存泄漏
-     */
     cleanup() {
         this.playbackRateSlider = null;
         this.dragHandler = null;
         this.upHandler = null;
+        this.stopCapsulePlayback();
     }
+
     startCapsulePlayback(startIndex = 0) {
         const loopManager = this.controlManager?.loopManager;
         const tabs = loopManager?.tabs || [];
         if (tabs.length === 0) return;
 
+        this._isTourEnded = false;
         this._isCapsuleLoopPlaying = true;
         this._capsulePlayIndex = Math.max(0, Math.min(startIndex, tabs.length - 1));
 
@@ -288,10 +315,13 @@ export class PlaybackController {
         this._playCurrentCapsule();
     }
 
-    stopCapsulePlayback() {
+    stopCapsulePlayback(shouldPause = true) {
         this._isCapsuleLoopPlaying = false;
         this.targetVideo.removeEventListener('timeupdate', this._capsuleTimeUpdateBound);
         this._setProgressFill(0);
+        if (shouldPause && !this.targetVideo.paused) {
+            this.targetVideo.pause();
+        }
         this.updatePlayPauseButton();
     }
 
@@ -299,9 +329,11 @@ export class PlaybackController {
         const loopManager = this.controlManager?.loopManager;
         const tabs = loopManager?.tabs || [];
         const mode = this.getPlayMode();
+        const playerState = this.playerCore?.options?.playerState;
 
         if (!this._isCapsuleLoopPlaying || this._capsulePlayIndex >= tabs.length) {
-            this.stopCapsulePlayback();
+            this._isTourEnded = true;
+            this.stopCapsulePlayback(true);
             Toast('全部精彩胶囊已播放完毕', 2500, 'success');
             return;
         }
@@ -311,13 +343,16 @@ export class PlaybackController {
         this._currentCapsuleStartTime = startTime;
 
         if (mode === 'preview') {
-            this._currentCapsuleDuration = 5; // 预览模式严格 5 秒
+            // 从设置中获取快速预览时长 (默认 5 秒)
+            const configuredPreview = playerState?.settings?.previewDurationSeconds || getValue('previewDurationSeconds', 5);
+            this._currentCapsuleDuration = Math.max(1, Math.min(60, parseInt(configuredPreview, 10) || 5));
         } else {
-            // 精彩重温：时间区间完整播放 A 至 B 点，单点时间戳播放 60 秒
+            // 精彩重温：如果设置了完整区间 A-B，则完整播放；单点时间戳播放设置秒数 (默认 60 秒)
             if (tab.startTime !== undefined && tab.endTime !== undefined && tab.endTime > tab.startTime) {
                 this._currentCapsuleDuration = tab.endTime - tab.startTime;
             } else {
-                this._currentCapsuleDuration = 60;
+                const configuredClimax = playerState?.settings?.climaxDurationSeconds || getValue('climaxDurationSeconds', 60);
+                this._currentCapsuleDuration = Math.max(5, Math.min(300, parseInt(configuredClimax, 10) || 60));
             }
         }
 
@@ -340,13 +375,14 @@ export class PlaybackController {
             loopManager.setActiveTab(tab.id);
         }
         this._setProgressFill(0);
+        this.updatePlayPauseButton();
     }
 
     _handleCapsulePlaybackTick() {
         if (!this._isCapsuleLoopPlaying || this._isSeekingCapsule || this.targetVideo.seeking) return;
         const mode = this.getPlayMode();
         if (mode === 'normal') {
-            this.stopCapsulePlayback();
+            this.stopCapsulePlayback(false);
             return;
         }
 
@@ -362,13 +398,8 @@ export class PlaybackController {
     }
 
     _setProgressFill(pct) {
-        if (!this.playPauseButton) return;
-        const mode = this.getPlayMode();
-        if (mode === 'normal') {
-            this.playPauseButton.style.background = '';
-            return;
+        if (this.stateSwitcher) {
+            this.stateSwitcher.setProgressFill(pct);
         }
-        // 粉红倒计时进度条背景填充 (如草图所示)
-        this.playPauseButton.style.background = 'linear-gradient(to right, rgba(255, 120, 130, 0.45) ' + pct + '%, rgba(255, 255, 255, 0.12) ' + pct + '%)';
     }
 }

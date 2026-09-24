@@ -66,6 +66,8 @@ export class SettingsManager {
             betaMode: false,
             betaFirstCapsulePlay: false,
             betaPlayMode: 'normal',
+            previewDurationSeconds: 5,
+            climaxDurationSeconds: 60,
             betaColorPlayMode: 'preview',
             betaSafariMuteStyle: true,
             betaCapsuleUndo: true,
@@ -284,6 +286,50 @@ export class SettingsManager {
         playModeContainer.appendChild(playModeLabelWrap);
         playModeContainer.appendChild(playModeSelect);
         section1.appendChild(playModeContainer);
+
+        // 快速预览单段播放时长设置
+        const prevDurContainer = document.createElement('div');
+        prevDurContainer.className = 'tm-settings-option';
+        prevDurContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);';
+        const prevDurLabelWrap = document.createElement('div');
+        prevDurLabelWrap.innerHTML = '<div style="color: #fff; font-size: 13px; font-weight: 500;">⚡ 快速预览播放时长 (秒)</div><div style="color: rgba(255, 255, 255, 0.5); font-size: 11px;">设置每个胶囊片段预览的停留秒数 (1 ~ 30秒)</div>';
+        const prevDurInput = document.createElement('input');
+        prevDurInput.type = 'number';
+        prevDurInput.min = '1';
+        prevDurInput.max = '30';
+        prevDurInput.value = this.settings.previewDurationSeconds || 5;
+        prevDurInput.style.cssText = 'width: 60px; background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; padding: 4px 8px; font-size: 12px; text-align: center; outline: none;';
+        prevDurInput.addEventListener('change', (e) => {
+            const val = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 5));
+            this.updateSetting('previewDurationSeconds', val);
+            prevDurInput.value = val;
+            Toast(`快速预览时长已设为: ${val} 秒`, 1800, 'info');
+        });
+        prevDurContainer.appendChild(prevDurLabelWrap);
+        prevDurContainer.appendChild(prevDurInput);
+        section1.appendChild(prevDurContainer);
+
+        // 精彩重温单点播放时长设置
+        const climaxDurContainer = document.createElement('div');
+        climaxDurContainer.className = 'tm-settings-option';
+        climaxDurContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);';
+        const climaxDurLabelWrap = document.createElement('div');
+        climaxDurLabelWrap.innerHTML = '<div style="color: #fff; font-size: 13px; font-weight: 500;">💎 精彩重温单点时长 (秒)</div><div style="color: rgba(255, 255, 255, 0.5); font-size: 11px;">单时间戳胶囊播放时长，A-B 区间优先播放全区间 (10 ~ 180秒)</div>';
+        const climaxDurInput = document.createElement('input');
+        climaxDurInput.type = 'number';
+        climaxDurInput.min = '5';
+        climaxDurInput.max = '180';
+        climaxDurInput.value = this.settings.climaxDurationSeconds || 60;
+        climaxDurInput.style.cssText = 'width: 60px; background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; padding: 4px 8px; font-size: 12px; text-align: center; outline: none;';
+        climaxDurInput.addEventListener('change', (e) => {
+            const val = Math.max(5, Math.min(180, parseInt(e.target.value, 10) || 60));
+            this.updateSetting('climaxDurationSeconds', val);
+            climaxDurInput.value = val;
+            Toast(`精彩重温单点时长已设为: ${val} 秒`, 1800, 'info');
+        });
+        climaxDurContainer.appendChild(climaxDurLabelWrap);
+        climaxDurContainer.appendChild(climaxDurInput);
+        section1.appendChild(climaxDurContainer);
 
         container.appendChild(section1);
 
@@ -1676,6 +1722,8 @@ export class SettingsManager {
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
             const rawPm = getValue('betaPlayMode', 'normal');
             this.settings.betaPlayMode = (rawPm === 'preview' || rawPm === 'climax') ? rawPm : 'normal';
+            this.settings.previewDurationSeconds = parseInt(getValue('previewDurationSeconds', 5), 10) || 5;
+            this.settings.climaxDurationSeconds = parseInt(getValue('climaxDurationSeconds', 60), 10) || 60;
             this.settings.betaMode = getBool('betaMode', false);
             this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
             const rawPlayMode = getValue('betaColorPlayMode', 'preview');
@@ -1710,6 +1758,8 @@ export class SettingsManager {
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
             setValue('betaPlayMode', this.settings.betaPlayMode || 'normal');
+            setValue('previewDurationSeconds', this.settings.previewDurationSeconds || 5);
+            setValue('climaxDurationSeconds', this.settings.climaxDurationSeconds || 60);
             setValue('betaMode', Boolean(this.settings.betaMode));
             setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));
             setValue('betaColorPlayMode', this.settings.betaColorPlayMode || 'preview');

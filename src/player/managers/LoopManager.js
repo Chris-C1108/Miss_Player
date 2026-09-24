@@ -980,6 +980,7 @@ export class LoopManager {
         this.renderProgressMarkers();
 
         if (window.navigator.vibrate) window.navigator.vibrate([10, 30, 10]);
+        this.controlManager?.updatePlayPauseButton();
     }
 
     disableLoop() {
@@ -991,6 +992,7 @@ export class LoopManager {
         this._clearAllTabProgress();
         this.updateLoopMarkers();
         this.renderProgressMarkers();
+        this.controlManager?.updatePlayPauseButton();
     }
 
     /**

@@ -99,6 +99,10 @@ export class PlayerState {
             this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
             const rawPlayMode = getValue('betaPlayMode', 'normal');
             this.settings.betaPlayMode = (rawPlayMode === 'preview' || rawPlayMode === 'climax') ? rawPlayMode : 'normal';
+            const rawPrevSec = parseInt(getValue('previewDurationSeconds', 5), 10);
+            this.settings.previewDurationSeconds = (!isNaN(rawPrevSec) && rawPrevSec >= 1 && rawPrevSec <= 60) ? rawPrevSec : 5;
+            const rawClimaxSec = parseInt(getValue('climaxDurationSeconds', 60), 10);
+            this.settings.climaxDurationSeconds = (!isNaN(rawClimaxSec) && rawClimaxSec >= 5 && rawClimaxSec <= 300) ? rawClimaxSec : 60;
             const rawColorMode = getValue('betaColorPlayMode', 'preview');
             this.settings.betaColorPlayMode = (rawPlayMode === 'review') ? 'review' : 'preview';
             this.settings.betaSafariMuteStyle = getBool('betaSafariMuteStyle', true);
@@ -178,6 +182,8 @@ export class PlayerState {
             setValue('betaMode', Boolean(this.settings.betaMode));
             setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));
             setValue('betaPlayMode', this.settings.betaPlayMode || 'normal');
+            setValue('previewDurationSeconds', this.settings.previewDurationSeconds || 5);
+            setValue('climaxDurationSeconds', this.settings.climaxDurationSeconds || 60);
             setValue('betaColorPlayMode', this.settings.betaColorPlayMode || 'preview');
             setValue('betaSafariMuteStyle', Boolean(this.settings.betaSafariMuteStyle));
             setValue('betaCapsuleUndo', Boolean(this.settings.betaCapsuleUndo));

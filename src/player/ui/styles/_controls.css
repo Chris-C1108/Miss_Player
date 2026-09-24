@@ -1121,3 +1121,24 @@
 .tm-integrated-play-btn:active {
     transform: scale(0.96) !important;
 }
+
+/* ===== 3-Status Fluid Switcher (参考 3-status-switcher-demo 交互模型) ===== */
+.mp-switcher-capsule:hover .mp-switcher-indicator {
+    transform: translate(-50%, 0) scale(1.05) !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.16) 100%) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, 0.65), 0 8px 24px rgba(0, 0, 0, 0.75), 0 0 16px rgba(0, 122, 255, 0.22) !important;
+}
+
+.mp-switcher-capsule:active .mp-switcher-indicator {
+    transform: translate(-50%, 0) scale(1.02) !important;
+    box-shadow: inset 0 1px 0.8px rgba(255, 255, 255, 0.5), 0 4px 14px rgba(0, 0, 0, 0.65) !important;
+}
+
+.mp-switcher-action-btn:hover {
+    transform: scale(1.06);
+}
+
+.mp-switcher-action-btn:active {
+    transform: scale(0.92);
+}
