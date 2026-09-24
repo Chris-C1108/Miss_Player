@@ -360,6 +360,15 @@
 		}
 		return 0;
 	}
+	function parseDurationFromBadge(txt) {
+		if (!txt || typeof txt !== "string") return 0;
+		const clean = txt.trim();
+		const m1 = clean.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+		if (m1) return parseInt(m1[1], 10) * 3600 + parseInt(m1[2], 10) * 60 + parseInt(m1[3], 10);
+		const m2 = clean.match(/^(\d{1,3}):(\d{2})$/);
+		if (m2) return parseInt(m2[1], 10) * 60 + parseInt(m2[2], 10);
+		return 0;
+	}
 	var LOCAL_STORAGE_PREFIX = "mp_";
 	var LEGACY_STORAGE_PREFIX = "missNoAD_";
 	function hasGMApi() {
@@ -13877,20 +13886,33 @@
 						if (upper.startsWith("DM-")) continue;
 						if (upper !== currentUpper && !this._completedCodes.has(upper)) {
 							found.add(upper);
-							const card = a.closest(".video-img-box, .grid-item, .video-item, .item, .movie-card, .col") || a.parentElement;
+							let durSec = 0;
+							let card = a.closest(".video-img-box, .grid-item, .video-item, .item, .movie-card, .col, li, div.relative");
+							if (!card) {
+								let p = a.parentElement;
+								for (let i = 0; i < 4 && p && p !== document.body; i++) {
+									if (p.querySelector("img") || p.classList.contains("relative") || p.tagName === "LI") {
+										card = p;
+										break;
+									}
+									p = p.parentElement;
+								}
+							}
+							if (!card) card = a.parentElement;
 							if (card) {
-								const durEl = card.querySelector(".label, .duration, [class*=\"time\"], [class*=\"duration\"]");
-								if (durEl && durEl.textContent) {
-									const dm = durEl.textContent.trim().match(/(?:(\d{1,2}):)?(\d{1,2}):(\d{2})/);
-									if (dm) {
-										const h = dm[1] ? parseInt(dm[1], 10) : 0;
-										const m = parseInt(dm[2], 10);
-										const s = parseInt(dm[3], 10);
-										const sec = h * 3600 + m * 60 + s;
-										if (sec > 0) this._avcodeDurations.set(upper, sec);
+								const allNodes = card.querySelectorAll("span, div, time, p, label");
+								for (const node of allNodes) if (node.children.length === 0) {
+									const txt = (node.textContent || "").trim();
+									if (txt.length >= 4 && txt.length <= 10) {
+										const s = parseDurationFromBadge(txt);
+										if (s > 60) {
+											durSec = s;
+											break;
+										}
 									}
 								}
 							}
+							if (durSec > 0) this._avcodeDurations.set(upper, durSec);
 						}
 					}
 				}
@@ -13972,7 +13994,15 @@
 					};
 					CommentDebugCollector.collectComments(code, allProcessed, 10800, stats);
 					const currentVideoCode = typeof window !== "undefined" ? (window.location.pathname.split("/").filter(Boolean).pop() || "").toUpperCase() : "";
-					const durSec = this._avcodeDurations.get(code) || (code === currentVideoCode ? getVideoDurationSeconds() : 0);
+					let durSec = this._avcodeDurations.get(code) || 0;
+					if (!durSec && code === currentVideoCode) durSec = getVideoDurationSeconds();
+					if (!durSec && Array.isArray(allProcessed) && allProcessed.length > 0) {
+						let maxTs = 0;
+						for (const c of allProcessed) if (Array.isArray(c.timestamps)) {
+							for (const t of c.timestamps) if (t.seconds && t.seconds > maxTs) maxTs = Math.round(t.seconds);
+						}
+						if (maxTs > 300) durSec = maxTs;
+					}
 					SupabaseService.uploadComments(code, "jable", allProcessed, durSec);
 					CommentCacheManager$1.saveSiteCache(code, "jable", {
 						key: "jable",

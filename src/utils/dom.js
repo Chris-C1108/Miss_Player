@@ -226,3 +226,25 @@ export function getVideoDurationSeconds(videoElement = null) {
 
     return 0;
 }
+
+
+/**
+ * 从文本或时长徽章中精准解析秒数 (支持 HH:MM:SS 和 MM:SS，如 02:14:35, 124:35, 58:12)
+ * @param {string} txt
+ * @returns {number} 秒数 (未匹配则返回 0)
+ */
+export function parseDurationFromBadge(txt) {
+    if (!txt || typeof txt !== 'string') return 0;
+    const clean = txt.trim();
+    // 1. HH:MM:SS (例如 02:14:35 或 1:35:20)
+    const m1 = clean.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+    if (m1) {
+        return parseInt(m1[1], 10) * 3600 + parseInt(m1[2], 10) * 60 + parseInt(m1[3], 10);
+    }
+    // 2. MM:SS (例如 124:35 或 58:12，注意分钟可为 3 位数)
+    const m2 = clean.match(/^(\d{1,3}):(\d{2})$/);
+    if (m2) {
+        return parseInt(m2[1], 10) * 60 + parseInt(m2[2], 10);
+    }
+    return 0;
+}

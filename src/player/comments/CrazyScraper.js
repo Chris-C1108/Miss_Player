@@ -1,4 +1,4 @@
-import { getVideoDurationSeconds } from '../../utils/dom.js';
+import { getVideoDurationSeconds, parseDurationFromBadge } from '../../utils/dom.js';
 import { SyncManager, WebDavClient } from '../../sync/index.js';
 import { isValidAvCode, matchAvCodeFromText } from '../../utils/videoCode.js';
 import { SupabaseService } from '../../services/SupabaseService.js';
@@ -135,20 +135,41 @@ export class CrazyScraper {
                     if (upper.startsWith('DM-')) continue;
                                         if (upper !== currentUpper && !this._completedCodes.has(upper)) {
                         found.add(upper);
-                        // 提取卡片上的时长徽章 (例如 .label / .duration: 124:35)
-                        const card = a.closest('.video-img-box, .grid-item, .video-item, .item, .movie-card, .col') || a.parentElement;
+
+                        // 全方位探测该视频卡片上的时长徽章 (Tailwind/Bootstrap/通用结构兼容)
+                        let durSec = 0;
+                        let card = a.closest('.video-img-box, .grid-item, .video-item, .item, .movie-card, .col, li, div.relative');
+                        if (!card) {
+                            let p = a.parentElement;
+                            for (let i = 0; i < 4 && p && p !== document.body; i++) {
+                                if (p.querySelector('img') || p.classList.contains('relative') || p.tagName === 'LI') {
+                                    card = p;
+                                    break;
+                                }
+                                p = p.parentElement;
+                            }
+                        }
+                        if (!card) card = a.parentElement;
+
                         if (card) {
-                            const durEl = card.querySelector('.label, .duration, [class*="time"], [class*="duration"]');
-                            if (durEl && durEl.textContent) {
-                                const dm = durEl.textContent.trim().match(/(?:(\d{1,2}):)?(\d{1,2}):(\d{2})/);
-                                if (dm) {
-                                    const h = dm[1] ? parseInt(dm[1], 10) : 0;
-                                    const m = parseInt(dm[2], 10);
-                                    const s = parseInt(dm[3], 10);
-                                    const sec = h * 3600 + m * 60 + s;
-                                    if (sec > 0) this._avcodeDurations.set(upper, sec);
+                            // 检查卡片内所有纯文本叶子节点
+                            const allNodes = card.querySelectorAll('span, div, time, p, label');
+                            for (const node of allNodes) {
+                                if (node.children.length === 0) {
+                                    const txt = (node.textContent || '').trim();
+                                    if (txt.length >= 4 && txt.length <= 10) {
+                                        const s = parseDurationFromBadge(txt);
+                                        if (s > 60) {
+                                            durSec = s;
+                                            break;
+                                        }
+                                    }
                                 }
                             }
+                        }
+
+                        if (durSec > 0) {
+                            this._avcodeDurations.set(upper, durSec);
                         }
                     }
                 }
@@ -237,7 +258,26 @@ static async _scrapeSingleAvcode(code, index, total) {
                 const stats = { jable: totalCount || allProcessed.length, total: totalCount || allProcessed.length };
                 CommentDebugCollector.collectComments(code, allProcessed, 10800, stats);
                 const currentVideoCode = (typeof window !== 'undefined' ? (window.location.pathname.split('/').filter(Boolean).pop() || '').toUpperCase() : '');
-                const durSec = this._avcodeDurations.get(code) || (code === currentVideoCode ? getVideoDurationSeconds() : 0);
+                let durSec = this._avcodeDurations.get(code) || 0;
+                if (!durSec && code === currentVideoCode) {
+                    durSec = getVideoDurationSeconds();
+                }
+                // 从已抓取评论的最大时间戳推导保底视频物理时长
+                if (!durSec && Array.isArray(allProcessed) && allProcessed.length > 0) {
+                    let maxTs = 0;
+                    for (const c of allProcessed) {
+                        if (Array.isArray(c.timestamps)) {
+                            for (const t of c.timestamps) {
+                                if (t.seconds && t.seconds > maxTs) {
+                                    maxTs = Math.round(t.seconds);
+                                }
+                            }
+                        }
+                    }
+                    if (maxTs > 300) {
+                        durSec = maxTs;
+                    }
+                }
                 SupabaseService.uploadComments(code, 'jable', allProcessed, durSec);
                 CommentCacheManager.saveSiteCache(code, 'jable', { key: 'jable', status: 'loaded', comments: allProcessed, totalCount: stats.jable, hasMore: false, currentPage: page, collectedPages, workingDomain });
                 DebugLogPanel.addLog('[疯狂采集] ✅ ' + code + ' 全量采集完成 (获取 ' + allProcessed.length + ' 条评论，总计 ' + stats.jable + ' 条)', 'success');
