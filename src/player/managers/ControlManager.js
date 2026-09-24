@@ -288,8 +288,10 @@ export class ControlManager {
         leftControlsArea.className = 'tm-left-controls';
         leftControlsArea.style.display = 'flex';
         leftControlsArea.style.alignItems = 'center';
-        leftControlsArea.style.gap = '6px';
-        leftControlsArea.style.flex = '1';
+        leftControlsArea.style.justifyContent = 'flex-start';
+        leftControlsArea.style.width = '40px';
+        leftControlsArea.style.flex = '0 0 40px';
+        leftControlsArea.style.marginRight = '16px';
 
         // 委托 VolumeController 创建音量滑杆
         this.volumeController.createVolumeSlider(leftControlsArea);
@@ -299,7 +301,7 @@ export class ControlManager {
         centerControlsArea.style.display = 'flex';
         centerControlsArea.style.alignItems = 'center';
         centerControlsArea.style.justifyContent = 'center';
-        centerControlsArea.style.flex = '1';
+        centerControlsArea.style.flex = '0 0 auto';
 
         // 委托 PlaybackController 创建一体化居中播放与模式按钮 (匹配设计草图)
         this.playbackController.createPlayPauseButton(centerControlsArea);
@@ -309,8 +311,9 @@ export class ControlManager {
         rightControlsArea.style.display = 'flex';
         rightControlsArea.style.alignItems = 'center';
         rightControlsArea.style.justifyContent = 'flex-end';
-        rightControlsArea.style.flex = '1';
-        rightControlsArea.style.gap = '6px';
+        rightControlsArea.style.width = '44px';
+        rightControlsArea.style.flex = '0 0 44px';
+        rightControlsArea.style.marginLeft = '16px';
 
         // 委托 PlaybackController 创建倍速滑块
         this.playbackController.createPlaybackRateSlider(rightControlsArea);

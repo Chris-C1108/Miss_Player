@@ -1516,35 +1516,41 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 .tm-playback-control-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    width: 100%;
-    max-height: 45px;
-    height: 45px;
-    border-radius: 8px;
-    box-sizing: border-box;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: relative !important;
+    width: 100% !important;
+    height: 52px !important;
+    max-height: 52px !important;
+    box-sizing: border-box !important;
+    padding: 0 4px !important;
 }
 
-/* 播放控制区域相关样式 */
-.tm-left-controls, .tm-center-controls, .tm-right-controls {
-    flex: 1;
-    display: flex;
-    height: 100%;
-    align-items: center;
-}
-
+/* 播放控制区域结构重组 (严格遵循 16px 呼吸间距与对称重量) */
 .tm-left-controls {
-    justify-content: flex-start;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 44px !important;
+    flex: 0 0 44px !important;
+    margin-right: 16px !important;
 }
 
 .tm-center-controls {
-    justify-content: center;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
 }
 
 .tm-right-controls {
-    justify-content: flex-end;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    width: 44px !important;
+    flex: 0 0 44px !important;
+    margin-left: 16px !important;
 }
 
 /* 时间显示 */

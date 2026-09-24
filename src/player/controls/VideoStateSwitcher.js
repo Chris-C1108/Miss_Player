@@ -1,15 +1,14 @@
-
 import { PLAY, PAUSE, REPLAY } from '../../constants/icons.js';
 
 /**
  * VideoStateSwitcher
  * 
- * 遵循 Apple 界面交互设计哲学：
- * 1. 正常模式居中，左为「快速预览」，右为「精彩重温」
- * 2. 92px 纯净 Apple 宽胶囊，高斯毛玻璃 (backdrop-filter: blur(20px) saturate(180%)) 与标志 Apple 蓝描边
- * 3. 半透明隐形式底壳，去除死黑硬块，完美融入播放器半透背景
- * 4. 1:1 跟手滑动物理惯性与磁吸吸附，两阶段平滑 Morph 渐变
- * 5. 纯正弦 Web Audio 触感级微音效
+ * 严格对标 Apple HIG 极致美学与 Safari 流体状态切换交互：
+ * 1. 正常模式居中，左右对齐「快速预览」与「精彩重温」
+ * 2. 独立精密宽度 (224px ~ 228px)，与左右控制单元保持至少 16px 呼吸间距
+ * 3. 外层轨道：rgba(0, 0, 0, 0.45) 结合 backdrop-filter: blur(20px)，两端高阶羽化渐隐
+ * 4. 居中毛玻璃指示器：彻底移除廉价蓝色外发光！采用 Apple 标准分层反射 + 内倒角高光 (Specular Rim)
+ * 5. 播放 Icon 与变体字体：采用纯白 / drop-shadow 投影，非活跃态文字为 rgba(255, 255, 255, 0.45)
  */
 export class VideoStateSwitcher {
     /**
@@ -26,7 +25,7 @@ export class VideoStateSwitcher {
         this.onModeChange = options.onModeChange || (() => {});
         this.onVariantAction = options.onVariantAction || (() => {});
 
-        // 1. 正常模式居中，左右分别是快速预览和精彩重温
+        // 正常模式居中，左右分别是快速预览和精彩重温
         this.modes = [
             { id: 'preview', title: '快速预览', shortTitle: '预览' },
             { id: 'normal',  title: '正常模式', shortTitle: '正常' },
@@ -34,21 +33,21 @@ export class VideoStateSwitcher {
         ];
 
         this.currentIndex = this.modes.findIndex(m => m.id === this.initialMode);
-        if (this.currentIndex === -1) this.currentIndex = 1; // 默认居中为正常模式
+        if (this.currentIndex === -1) this.currentIndex = 1;
 
-        // Apple Design 精密几何与物理参数
+        // Apple HIG 精准几何与物理参数
         this.config = Object.assign({
-            width: 192,              // 紧凑适度，给两侧音量和倍速留足呼吸空间
-            height: 34,             // 契合 Apple 经典 32~36px 胶囊标高
-            morphDelay: 420,        // 停留吸附稳定后平滑 Morph 变为按键的时延 (ms)
+            width: 228,              // 核心独立宽度 (220px ~ 240px)
+            height: 38,             // 适中舒适的高度
+            morphDelay: 420,        // 停留稳定后平滑渐变为按键的时延 (ms)
             friction: 0.55,         // Safari 经典惯性阻尼
-            springStiffness: 320,   // 磁吸刚度，紧致清脆
+            springStiffness: 320,   // 磁吸刚度
             enableSound: true
         }, options.config || {});
 
-        // 居中指示器 92px（严格契合 Miss Player 的 92px 纯净 Apple 宽胶囊设计规范）
-        this.indicatorWidth = 92;
-        this.slotWidth = 72;
+        // 居中指示器 104px，slot 84px
+        this.indicatorWidth = 104;
+        this.slotWidth = 84;
 
         // 运行时状态
         this.isMorphed = false;
@@ -107,7 +106,7 @@ export class VideoStateSwitcher {
             if (type === 'tick') {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(1050, t);
-                gain.gain.setValueAtTime(0.05, t);
+                gain.gain.setValueAtTime(0.04, t);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
                 osc.connect(gain);
                 gain.connect(this.audioCtx.destination);
@@ -116,13 +115,13 @@ export class VideoStateSwitcher {
             } else if (type === 'click') {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(840, t);
-                osc.frequency.exponentialRampToValueAtTime(420, t + 0.035);
-                gain.gain.setValueAtTime(0.07, t);
-                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+                osc.frequency.exponentialRampToValueAtTime(420, t + 0.03);
+                gain.gain.setValueAtTime(0.06, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
                 osc.connect(gain);
                 gain.connect(this.audioCtx.destination);
                 osc.start(t);
-                osc.stop(t + 0.04);
+                osc.stop(t + 0.035);
             }
         } catch {}
     }
@@ -140,47 +139,54 @@ export class VideoStateSwitcher {
             -webkit-user-select: none;
         `;
 
-        // 1. 外部底壳：轻薄通透的 Apple 毛玻璃底壳，去除死黑沉闷
+        // 1. 外层轨道 (Track)：严格遵循规范要求
+        // 背景 rgba(0, 0, 0, 0.45)，结合 backdrop-filter: blur(20px)
+        // 边缘渐隐 mask-image 让左右两侧文字自然淡出
+        // 边框 1px solid rgba(255, 255, 255, 0.08)
         this.capsuleContainer = document.createElement('div');
         this.capsuleContainer.className = 'mp-switcher-capsule';
         this.capsuleContainer.style.cssText = `
             position: relative;
             width: ${this.config.width}px;
             height: ${this.config.height}px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(0, 0, 0, 0.45);
             border-radius: 9999px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25), 0 2px 10px rgba(0, 0, 0, 0.25);
             -webkit-mask-image: linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%);
             mask-image: linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%);
             cursor: grab;
             touch-action: none;
             box-sizing: border-box;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             transition: border-color 0.25s ease, background-color 0.25s ease;
         `;
 
-        // 2. 居中固定 Apple 宽胶囊视口指示器 (92px 纯净 Apple 蓝描边与半透明毛玻璃)
+        // 2. 居中毛玻璃指示器 (Center Glass Indicator)：
+        // 彻底移除蓝色外发光边框！
+        // 背景：Apple 标准分层反射 linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%)
+        // 内倒角高光：box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.45), inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.5)
+        // 边框：1px solid rgba(255, 255, 255, 0.18)
         this.indicator = document.createElement('div');
         this.indicator.className = 'mp-switcher-indicator';
         this.indicator.style.cssText = `
             position: absolute;
-            top: 2px;
+            top: 2.5px;
             left: 50%;
             transform: translate(-50%, 0) scale(1);
             width: ${this.indicatorWidth}px;
-            height: calc(100% - 4px);
+            height: calc(100% - 5px);
             border-radius: 9999px;
             pointer-events: none;
             z-index: 10;
-            background: rgba(255, 255, 255, 0.14);
-            border: 1.5px solid rgba(0, 122, 255, 0.8);
-            box-shadow: 0 2px 12px rgba(0, 122, 255, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.45), inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
             box-sizing: border-box;
             overflow: hidden;
         `;
@@ -216,22 +222,22 @@ export class VideoStateSwitcher {
                 -webkit-user-select: none;
             `;
 
-            // 文本标题层 (滑动时显露)
+            // 两侧文字：SF Pro Text / 苹方，大小 12.5px，字重 font-medium，非活跃态 rgba(255, 255, 255, 0.45)
             const labelEl = document.createElement('span');
             labelEl.className = 'mp-switcher-label';
             labelEl.textContent = mode.title;
             labelEl.style.cssText = `
-                font-size: 12px;
+                font-size: 12.5px;
                 white-space: nowrap;
-                font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+                font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
                 font-weight: 500;
                 color: rgba(255, 255, 255, 0.45);
-                transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+                transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease, text-shadow 0.2s ease;
                 pointer-events: none;
-                letter-spacing: -0.01em;
+                letter-spacing: -0.1px;
             `;
 
-            // 变体操作层 (停留后渐变展示)
+            // 变体操作层 (停留稳定后平滑渐出)
             const variantContainer = document.createElement('div');
             variantContainer.className = 'mp-switcher-variant-slot';
             variantContainer.style.cssText = `
@@ -267,16 +273,18 @@ export class VideoStateSwitcher {
     }
 
     /**
-     * 刷新居中胶囊变体 UI
+     * 刷新居中变体 UI
      */
     updateVariantUI() {
         this.itemElements.forEach((item, idx) => {
             const isActive = idx === this.currentIndex;
             const showVariant = isActive && this.isMorphed && !this.isDragging;
 
+            // 活跃态停留在中心时文字为高亮纯白
             item.labelEl.style.opacity = showVariant ? '0' : '1';
-            item.labelEl.style.color = isActive ? '#007aff' : 'rgba(255, 255, 255, 0.45)';
+            item.labelEl.style.color = isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.45)';
             item.labelEl.style.fontWeight = isActive ? '600' : '500';
+            item.labelEl.style.textShadow = isActive ? '0 1px 2px rgba(0, 0, 0, 0.6)' : 'none';
 
             item.variantContainer.style.opacity = showVariant ? '1' : '0';
             item.variantContainer.style.pointerEvents = showVariant ? 'auto' : 'none';
@@ -291,60 +299,68 @@ export class VideoStateSwitcher {
                     height: 100%;
                     background: transparent;
                     border: none;
-                    color: #007aff;
+                    color: #ffffff;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
                     outline: none;
-                    gap: 4px;
+                    gap: 5px;
                     padding: 0 4px;
-                    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+                    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
                     transition: transform 0.12s ease;
                 `;
 
                 const curMode = this.modes[idx].id;
 
-                // 场景 1: 正常模式 (居中展现纯净 Apple 蓝播放/暂停按键)
+                // 场景 1: 正常模式 (居中展现纯白播放/暂停图标，带柔和高光投影)
                 if (curMode === 'normal') {
                     btn.title = this.runtimeState.isPlaying ? '暂停' : '播放';
                     btn.innerHTML = this.runtimeState.isPlaying ? PAUSE : PLAY;
                     const svg = btn.querySelector('svg');
                     if (svg) {
-                        svg.style.width = '20px';
-                        svg.style.height = '20px';
-                        svg.style.fill = '#007aff';
+                        svg.style.width = '19px';
+                        svg.style.height = '19px';
+                        svg.style.fill = '#ffffff';
                         svg.style.stroke = 'none';
+                        svg.style.filter = 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45))';
+                        // 播放图标视觉微调向右 1px
+                        if (!this.runtimeState.isPlaying) {
+                            svg.style.marginLeft = '1.5px';
+                        }
                     }
                 }
                 // 场景 2: 快速预览 / 精彩重温
                 else {
-                    // 特殊情况 A: 单胶囊循环锁定
+                    // 特殊场景 A: 单胶囊循环锁定
                     if (this.runtimeState.isCapsuleLocked) {
                         btn.title = '点击取消单片段循环';
-                        btn.innerHTML = `<span style="font-size:11.5px; font-weight:600; color:#ff3b30; white-space:nowrap; letter-spacing:-0.2px;">取消循环</span>`;
+                        btn.innerHTML = `<span style="font-size:12px; font-weight:600; color:#ff453a; white-space:nowrap; letter-spacing:-0.2px; text-shadow:0 1px 2px rgba(0,0,0,0.5);">取消循环</span>`;
                     }
-                    // 特殊情况 B: 胶囊全部巡播完毕
+                    // 特殊场景 B: 胶囊全部巡检完毕
                     else if (this.runtimeState.isTourEnded) {
                         btn.title = '从第一个胶囊重新播放';
                         btn.innerHTML = `
-                            <span style="font-size:12px; font-weight:600; color:#007aff; display:flex; align-items:center; gap:3px; white-space:nowrap;">
-                                ${REPLAY || ''} 重播
+                            <span style="font-size:12px; font-weight:600; color:#ffffff; display:flex; align-items:center; gap:4px; white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,0.5);">
+                                ${REPLAY || ''} 重新播放
                             </span>
                         `;
                         const svg = btn.querySelector('svg');
                         if (svg) {
                             svg.style.width = '13px';
                             svg.style.height = '13px';
-                            svg.style.stroke = '#007aff';
+                            svg.style.stroke = '#ffffff';
+                            svg.style.filter = 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))';
                         }
                     }
-                    // 特殊情况 C: 巡检运行中播放/暂停
+                    // 特殊场景 C: 正常预览/重温中
                     else {
                         const modeText = (curMode === 'preview') ? '快速预览' : '精彩重温';
-                        const statusIndicator = this.runtimeState.isPlaying ? '' : ' ▶';
+                        const statusDot = this.runtimeState.isPlaying 
+                            ? '<span style="display:inline-block; width:4px; height:4px; border-radius:50%; background:#30d158; box-shadow:0 0 6px rgba(48,209,88,0.8); margin-left:3px;"></span>'
+                            : '<span style="font-size:10px; margin-left:2px; opacity:0.8;">▶</span>';
                         btn.title = modeText + ' (点击' + (this.runtimeState.isPlaying ? '暂停' : '继续') + ')';
-                        btn.innerHTML = `<span style="font-size:12px; font-weight:600; color:#007aff; white-space:nowrap; letter-spacing:-0.1px;">${modeText}${statusIndicator}</span>`;
+                        btn.innerHTML = `<span style="font-size:12px; font-weight:600; color:#ffffff; display:flex; align-items:center; white-space:nowrap; letter-spacing:-0.1px; text-shadow:0 1px 2px rgba(0,0,0,0.6);">${modeText}${statusDot}</span>`;
                     }
                 }
 
@@ -375,9 +391,6 @@ export class VideoStateSwitcher {
         }
     }
 
-    /**
-     * 吸附至指定状态档位
-     */
     snapToIndex(index, animated = true, triggerSound = true, animConfig = null) {
         if (this.morphTimer) {
             clearTimeout(this.morphTimer);
@@ -423,16 +436,14 @@ export class VideoStateSwitcher {
         const DRAG_THRESHOLD = 6;
 
         picker.addEventListener('mouseenter', () => {
-            this.indicator.style.transform = 'translate(-50%, 0) scale(1.03)';
-            this.indicator.style.borderColor = 'rgba(0, 122, 255, 1)';
-            this.indicator.style.boxShadow = '0 4px 16px rgba(0, 122, 255, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.5)';
-            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.24)';
+            this.indicator.style.transform = 'translate(-50%, 0) scale(1.025)';
+            this.indicator.style.boxShadow = 'inset 0 1px 0.5px rgba(255, 255, 255, 0.55), inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.15), 0 6px 20px rgba(0, 0, 0, 0.6)';
+            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.15)';
         });
         picker.addEventListener('mouseleave', () => {
             this.indicator.style.transform = 'translate(-50%, 0) scale(1)';
-            this.indicator.style.borderColor = 'rgba(0, 122, 255, 0.8)';
-            this.indicator.style.boxShadow = '0 2px 12px rgba(0, 122, 255, 0.28), inset 0 1px 1px rgba(255, 255, 255, 0.4)';
-            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+            this.indicator.style.boxShadow = 'inset 0 1px 0.5px rgba(255, 255, 255, 0.45), inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.5)';
+            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.08)';
         });
 
         const forceEndDrag = (clientX) => {
@@ -575,10 +586,10 @@ export class VideoStateSwitcher {
         if (!this.indicator) return;
         const curMode = this.modes[this.currentIndex]?.id;
         if (curMode === 'normal' || pct <= 0) {
-            this.indicator.style.background = 'rgba(255, 255, 255, 0.14)';
+            this.indicator.style.background = 'linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%)';
             return;
         }
-        // 优雅的半透粉红自左向右平滑推进 (保持高透明度与毛玻璃)
-        this.indicator.style.background = `linear-gradient(to right, rgba(255, 120, 130, 0.45) ${pct}%, rgba(255, 255, 255, 0.14) ${pct}%)`;
+        // 优雅通透的半透粉红自左向右推进
+        this.indicator.style.background = `linear-gradient(to right, rgba(255, 120, 130, 0.40) ${pct}%, rgba(255, 255, 255, 0.16) ${pct}%)`;
     }
 }
