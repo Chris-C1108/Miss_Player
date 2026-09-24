@@ -549,8 +549,20 @@ export class CommentPanel {
 
             if (reportBtn) {
                 e.stopPropagation();
-                const commentId = reportBtn.getAttribute("data-comment-id");
-                const comment = this.findCommentById(commentId);
+                const commentId = reportBtn.getAttribute('data-comment-id');
+                const card = reportBtn.closest('.jc-card');
+                const cardId = card ? card.getAttribute('data-id') : null;
+                let comment = this.findCommentById(commentId) || (cardId ? this.findCommentById(cardId) : null);
+                if (!comment && card) {
+                    const textEl = card.querySelector('.jc-body-text-content') || card.querySelector('.jc-body-text');
+                    const userEl = card.querySelector('.jc-u');
+                    comment = {
+                        id: commentId || cardId || 'unknown',
+                        user: userEl ? userEl.textContent.trim() : '匿名',
+                        rawText: textEl ? textEl.textContent.trim() : '',
+                        text: textEl ? textEl.textContent.trim() : ''
+                    };
+                }
                 if (comment) {
                     this._showCommentReportModal(comment);
                 }
@@ -869,15 +881,17 @@ export class CommentPanel {
      * @returns {Object|null}
      */
     findCommentById(commentId) {
-        if (!commentId) return null;
+        if (!commentId && commentId !== 0) return null;
+        const targetId = String(commentId).trim();
         for (const siteKey of Object.keys(this.sites)) {
             const site = this.sites[siteKey];
             if (site && Array.isArray(site.comments)) {
-                const found = site.comments.find(c => String(c.id) === String(commentId));
+                const found = site.comments.find(c => c && (String(c.id) === targetId || String(c.site_comment_id) === targetId));
                 if (found) return found;
             }
         }
-        return null;
+        const all = [...(this.filteredJableComments || []), ...(this.filteredJavlibComments || []), ...(this.filteredJavdbComments || []), ...(this.comments || [])];
+        return all.find(c => c && (String(c.id) === targetId || String(c.site_comment_id) === targetId)) || null;
     }
 
 
@@ -1765,6 +1779,28 @@ export class CommentPanel {
         // 绑定点击评论面板区域事件：如果是大屏/悬浮窗模式，点击空白处不切换控制面板，但使评论区变亮；
         // 如果是手机端模式，仅允许在控制面板显示时点击空白处隐藏它，不可点击空白处弹起显示控制面板
         this.commentsPanel.addEventListener('click', (e) => {
+            const reportBtn = e.target.closest('.jc-report-btn');
+            if (reportBtn) {
+                e.stopPropagation();
+                const commentId = reportBtn.getAttribute('data-comment-id');
+                const card = reportBtn.closest('.jc-card');
+                const cardId = card ? card.getAttribute('data-id') : null;
+                let comment = this.findCommentById(commentId) || (cardId ? this.findCommentById(cardId) : null);
+                if (!comment && card) {
+                    const textEl = card.querySelector('.jc-body-text-content') || card.querySelector('.jc-body-text');
+                    const userEl = card.querySelector('.jc-u');
+                    comment = {
+                        id: commentId || cardId || 'unknown',
+                        user: userEl ? userEl.textContent.trim() : '匿名',
+                        rawText: textEl ? textEl.textContent.trim() : '',
+                        text: textEl ? textEl.textContent.trim() : ''
+                    };
+                }
+                if (comment) {
+                    this._showCommentReportModal(comment);
+                }
+                return;
+            }
             const interactive = e.target.closest('a, button, input, label, .jc-time-link, .jc-code-link, .jc-toggle-expand-btn, .tm-comment-retry-btn');
             const toggleExpandBtn = e.target.closest('.jc-toggle-expand-btn');
             const collapsible = e.target.closest('.jc-body-text--collapsible');

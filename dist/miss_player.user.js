@@ -8746,7 +8746,19 @@
 				if (reportBtn) {
 					e.stopPropagation();
 					const commentId = reportBtn.getAttribute("data-comment-id");
-					const comment = this.findCommentById(commentId);
+					const card = reportBtn.closest(".jc-card");
+					const cardId = card ? card.getAttribute("data-id") : null;
+					let comment = this.findCommentById(commentId) || (cardId ? this.findCommentById(cardId) : null);
+					if (!comment && card) {
+						const textEl = card.querySelector(".jc-body-text-content") || card.querySelector(".jc-body-text");
+						const userEl = card.querySelector(".jc-u");
+						comment = {
+							id: commentId || cardId || "unknown",
+							user: userEl ? userEl.textContent.trim() : "匿名",
+							rawText: textEl ? textEl.textContent.trim() : "",
+							text: textEl ? textEl.textContent.trim() : ""
+						};
+					}
 					if (comment) this._showCommentReportModal(comment);
 					return;
 				}
@@ -8932,15 +8944,21 @@
 			CommentDebugCollector.recordCountdownAdjustment(this.videoCode, comment, duration);
 		}
 		findCommentById(commentId) {
-			if (!commentId) return null;
+			if (!commentId && commentId !== 0) return null;
+			const targetId = String(commentId).trim();
 			for (const siteKey of Object.keys(this.sites)) {
 				const site = this.sites[siteKey];
 				if (site && Array.isArray(site.comments)) {
-					const found = site.comments.find((c) => String(c.id) === String(commentId));
+					const found = site.comments.find((c) => c && (String(c.id) === targetId || String(c.site_comment_id) === targetId));
 					if (found) return found;
 				}
 			}
-			return null;
+			return [
+				...this.filteredJableComments || [],
+				...this.filteredJavlibComments || [],
+				...this.filteredJavdbComments || [],
+				...this.comments || []
+			].find((c) => c && (String(c.id) === targetId || String(c.site_comment_id) === targetId)) || null;
 		}
 		async loadComments(page = 1, forceRefresh = false) {
 			if (!this.videoCode) return;
@@ -9620,6 +9638,26 @@
 				else this.uiElements.playerContainer.appendChild(this.commentsPanel);
 			}
 			this.commentsPanel.addEventListener("click", (e) => {
+				const reportBtn = e.target.closest(".jc-report-btn");
+				if (reportBtn) {
+					e.stopPropagation();
+					const commentId = reportBtn.getAttribute("data-comment-id");
+					const card = reportBtn.closest(".jc-card");
+					const cardId = card ? card.getAttribute("data-id") : null;
+					let comment = this.findCommentById(commentId) || (cardId ? this.findCommentById(cardId) : null);
+					if (!comment && card) {
+						const textEl = card.querySelector(".jc-body-text-content") || card.querySelector(".jc-body-text");
+						const userEl = card.querySelector(".jc-u");
+						comment = {
+							id: commentId || cardId || "unknown",
+							user: userEl ? userEl.textContent.trim() : "匿名",
+							rawText: textEl ? textEl.textContent.trim() : "",
+							text: textEl ? textEl.textContent.trim() : ""
+						};
+					}
+					if (comment) this._showCommentReportModal(comment);
+					return;
+				}
 				const interactive = e.target.closest("a, button, input, label, .jc-time-link, .jc-code-link, .jc-toggle-expand-btn, .tm-comment-retry-btn");
 				const toggleExpandBtn = e.target.closest(".jc-toggle-expand-btn");
 				const collapsible = e.target.closest(".jc-body-text--collapsible");
