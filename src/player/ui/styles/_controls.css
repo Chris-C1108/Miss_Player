@@ -1006,3 +1006,53 @@
         box-shadow: 0 0 16px rgba(0, 201, 255, 0.85);
     }
 }
+
+
+/* 播放模式切换按钮 (正常模式 / 预览模式 / 精彩欣赏) */
+.tm-play-mode-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 10px !important;
+    border-radius: 16px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.tm-play-mode-btn.mode-normal {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.tm-play-mode-btn.mode-preview {
+    background: rgba(0, 201, 255, 0.18) !important;
+    border: 1px solid rgba(0, 201, 255, 0.6) !important;
+    color: #00c9ff !important;
+    box-shadow: 0 0 10px rgba(0, 201, 255, 0.45) !important;
+    animation: tm-mode-pulse-cyan 2s infinite ease-in-out;
+}
+
+.tm-play-mode-btn.mode-climax {
+    background: rgba(255, 90, 95, 0.2) !important;
+    border: 1px solid rgba(255, 90, 95, 0.7) !important;
+    color: #ff5a5f !important;
+    box-shadow: 0 0 12px rgba(255, 90, 95, 0.5) !important;
+    animation: tm-mode-pulse-gold 2s infinite ease-in-out;
+}
+
+@keyframes tm-mode-pulse-cyan {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(0, 201, 255, 0.4); }
+    50% { transform: scale(1.04); box-shadow: 0 0 16px rgba(0, 201, 255, 0.75); }
+}
+
+@keyframes tm-mode-pulse-gold {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(255, 90, 95, 0.45); }
+    50% { transform: scale(1.04); box-shadow: 0 0 16px rgba(255, 180, 0, 0.8); }
+}

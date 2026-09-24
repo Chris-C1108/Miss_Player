@@ -304,7 +304,7 @@ export class ControlManager {
 
         // 委托 PlaybackController 创建播放/暂停按钮
         this.playbackController.createPlayPauseButton(centerControlsArea);
-        this.playbackController.createColorCapsulePlayButton(centerControlsArea);
+        this.playbackController.createPlayModeSwitcher(centerControlsArea);
 
         const rightControlsArea = document.createElement('div');
         rightControlsArea.className = 'tm-right-controls';

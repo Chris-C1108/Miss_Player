@@ -1194,6 +1194,16 @@ export class CommentPanel {
             // 同步保存至本地增量评论缓存
             CommentCacheManager.saveSiteCache(this.videoCode, siteKey, site);
 
+            // 疯狂采集模式：普通评论采集也自动采集更多页，直到结束 (全量采集)
+            const isCrazy = Boolean(getValue('crazyScrapeMode', false));
+            if (isCrazy && site.hasMore && page < 20) {
+                setTimeout(() => {
+                    if (this.videoCode === this.currentVideoCode || !this.currentVideoCode) {
+                        this.loadSiteComments(siteKey, page + 1);
+                    }
+                }, 1000 + Math.random() * 600);
+            }
+
         } catch (err) {
             logger.warn(`[CommentPanel] 获取 ${site.name} 评论失败:`, err);
             if (siteKey === 'javlib') {

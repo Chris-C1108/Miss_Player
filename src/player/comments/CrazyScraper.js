@@ -102,25 +102,36 @@ export class CrazyScraper {
      * @param {string} [currentAvcode] 
      * @returns {string[]}
      */
-    static scanHostPageAvcodes(currentAvcode = '') {
+        static scanHostPageAvcodes(currentAvcode = '') {
         const found = new Set();
         const currentUpper = String(currentAvcode || '').toUpperCase();
 
         try {
-            // 扫描所有链接与文本元素
-            // 仅精准扫描真正的视频链接与标题节点
-            const elements = document.querySelectorAll('a[href*="/videos/"], a[href*="/v/"], a.video-title, .video-card-title, h1, h2');
-            for (const el of elements) {
-                const href = el.getAttribute('href') || '';
-                const text = el.textContent || '';
-                
-                // 优先从 href 提取
-                let code = matchAvCodeFromText(href) || matchAvCodeFromText(text);
+            // 全面扫描当前页面中的所有 <a> 链接与视频卡片节点
+            const links = document.querySelectorAll('a[href]');
+            for (const a of links) {
+                const href = a.getAttribute('href') || '';
+                if (!href || href.startsWith('#') || href.startsWith('javascript:') || /\.(css|js|png|jpg|jpeg|gif|svg|ico)$/i.test(href)) {
+                    continue;
+                }
+
+                // 1. 优先从 URL 路径末尾分段精准提取 (如 /cn/mvsd-617, /videos/ssis-123/, /miaa-598)
+                let cleanPath = href.split('?')[0].split('#')[0].replace(/\/+$/, '');
+                const segments = cleanPath.split('/').filter(Boolean);
+                const lastSegment = segments.length > 0 ? segments[segments.length - 1] : '';
+
+                let code = matchAvCodeFromText(lastSegment);
+                // 2. 兜底从链接文本或 title 属性提取
+                if (!code) {
+                    code = matchAvCodeFromText(a.getAttribute('title') || a.textContent || '');
+                }
+
                 if (code && isValidAvCode(code)) {
-                    // Jable 源站未收录 MissAV 专属企划 DM-xxx，跳过避免无效 404
-                    if (code.startsWith('DM-')) continue;
-                    if (code !== currentUpper && !this._completedCodes.has(code)) {
-                        found.add(code);
+                    const upper = code.toUpperCase();
+                    // Jable 源站未收录 MissAV 专属内部 DM-xxx 企划，跳过避免无效 404
+                    if (upper.startsWith('DM-')) continue;
+                    if (upper !== currentUpper && !this._completedCodes.has(upper)) {
+                        found.add(upper);
                     }
                 }
             }
@@ -131,11 +142,7 @@ export class CrazyScraper {
         return Array.from(found);
     }
 
-    /**
-     * 执行单个番号的评论抓取与沉淀
-     * @private
-     */
-    static async _scrapeSingleAvcode(code, index, total) {
+static async _scrapeSingleAvcode(code, index, total) {
         if (this._completedCodes.has(code)) return;
         this._completedCodes.add(code);
 
