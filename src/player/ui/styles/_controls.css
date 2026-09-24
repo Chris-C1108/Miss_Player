@@ -218,55 +218,50 @@
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
-    height: 32px !important;
-    width: auto !important;
-    min-width: 44px !important;
-    padding: 0 10px !important; /* px-2.5 */
+    height: 36px !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    padding: 0 !important;
     background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: rgba(255, 255, 255, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.70) !important;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif !important;
-    font-size: 12.5px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
     font-variant-numeric: tabular-nums !important;
-    letter-spacing: -0.2px !important;
+    letter-spacing: -0.4px !important;
     border-radius: 9999px !important;
-    backdrop-filter: blur(16px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-    box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.25), 0 2px 6px rgba(0, 0, 0, 0.2) !important;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    box-shadow: none !important;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
     cursor: pointer !important;
     text-align: center !important;
     box-sizing: border-box !important;
 }
 
 .tm-playback-rate-button:hover {
-    background: rgba(255, 255, 255, 0.14) !important;
-    border-color: rgba(255, 255, 255, 0.22) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
     color: #ffffff !important;
-    transform: scale(1.04) !important;
+    transform: scale(1.03) !important;
 }
 
 .tm-playback-rate-button:active {
-    transform: scale(0.96) !important;
-    background: rgba(255, 255, 255, 0.18) !important;
+    transform: scale(0.95) !important;
+    background: rgba(255, 255, 255, 0.16) !important;
 }
 
-/* 速度高亮状态：对比度收敛，与左侧视觉重量对等 */
 .tm-playback-rate-button.fast {
     color: #ff9f0a !important;
-    border-color: rgba(255, 159, 10, 0.35) !important;
-    background: rgba(255, 159, 10, 0.12) !important;
 }
 
 .tm-playback-rate-button.medium {
     color: #64d2ff !important;
-    border-color: rgba(100, 210, 255, 0.35) !important;
-    background: rgba(100, 210, 255, 0.12) !important;
 }
 
 .tm-playback-rate-button.normal {
-    color: rgba(255, 255, 255, 0.75) !important;
+    color: rgba(255, 255, 255, 0.70) !important;
 }
 
 .tm-playback-rate-button:hover {
@@ -442,33 +437,41 @@
 }
 
 .tm-playback-control-row .tm-volume-button {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    border-radius: 50% !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 9999px !important;
     background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: rgba(255, 255, 255, 0.6) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.70) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    box-shadow: none !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
-    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .tm-playback-control-row .tm-volume-button:hover {
-    background: rgba(255, 255, 255, 0.14) !important;
-    border-color: rgba(255, 255, 255, 0.22) !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-    transform: scale(1.04) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    transform: scale(1.03) !important;
 }
 
 .tm-playback-control-row .tm-volume-button:active {
-    transform: scale(0.96) !important;
-    background: rgba(255, 255, 255, 0.18) !important;
+    transform: scale(0.95) !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+}
+
+.tm-playback-control-row .tm-volume-button svg {
+    width: 17px !important;
+    height: 17px !important;
+    fill: none !important;
+    stroke: currentColor !important;
 }
 
 .tm-playback-control-row .tm-control-button:hover,
@@ -1178,32 +1181,27 @@
     transform: scale(0.96) !important;
 }
 
-/* ===== Apple HIG 状态切换器 ===== */
+/* ===== 极简 Apple 毛玻璃 3 状态切换器 ===== */
 .mp-switcher-capsule {
-    transition: border-color 0.2s ease, background-color 0.2s ease !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease !important;
 }
 
 .mp-switcher-capsule:hover {
-    border-color: rgba(255, 255, 255, 0.14) !important;
-    background-color: rgba(0, 0, 0, 0.50) !important;
+    background-color: rgba(255, 255, 255, 0.09) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
 }
 
 .mp-switcher-indicator {
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease, background 0.25s ease !important;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease !important;
 }
 
 .mp-switcher-capsule:hover .mp-switcher-indicator {
-    transform: translate(-50%, 0) scale(1.025) !important;
-    border-color: rgba(255, 255, 255, 0.26) !important;
-    box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.55), inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.15), 0 6px 20px rgba(0, 0, 0, 0.6) !important;
+    transform: translate(-50%, 0) scale(1.02) !important;
+    background-color: rgba(255, 255, 255, 0.22) !important;
 }
 
 .mp-switcher-capsule:active .mp-switcher-indicator {
-    transform: translate(-50%, 0) scale(0.98) !important;
-}
-
-.mp-switcher-action-btn {
-    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transform: translate(-50%, 0) scale(0.97) !important;
 }
 
 .mp-switcher-action-btn:hover {
@@ -1211,5 +1209,5 @@
 }
 
 .mp-switcher-action-btn:active {
-    transform: scale(0.94) !important;
+    transform: scale(0.95) !important;
 }

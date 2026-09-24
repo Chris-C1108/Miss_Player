@@ -3,12 +3,11 @@ import { PLAY, PAUSE, REPLAY } from '../../constants/icons.js';
 /**
  * VideoStateSwitcher
  * 
- * 严格对标 Apple HIG 极致美学与 Safari 流体状态切换交互：
+ * 严格遵从 Apple 极简毛玻璃美学与流体滑动规范：
  * 1. 正常模式居中，左右对齐「快速预览」与「精彩重温」
- * 2. 独立精密宽度 (224px ~ 228px)，与左右控制单元保持至少 16px 呼吸间距
- * 3. 外层轨道：rgba(0, 0, 0, 0.45) 结合 backdrop-filter: blur(20px)，两端高阶羽化渐隐
- * 4. 居中毛玻璃指示器：彻底移除廉价蓝色外发光！采用 Apple 标准分层反射 + 内倒角高光 (Specular Rim)
- * 5. 播放 Icon 与变体字体：采用纯白 / drop-shadow 投影，非活跃态文字为 rgba(255, 255, 255, 0.45)
+ * 2. 宽度固定 184px，高度统一对齐为 36px，严禁溢出！
+ * 3. 外层轨道：bg-white/[0.06] backdrop-blur-md border border-white/[0.06]，两端自然渐隐
+ * 4. 居中滑块高度缩小为 30px，背景采用轻量半透白 bg-white/[0.18]，内投影 inset 0 1px 0.5px rgba(255,255,255,0.4)，纯白 14px 播放 Icon，坚决不要粗糙外描边！
  */
 export class VideoStateSwitcher {
     /**
@@ -35,19 +34,18 @@ export class VideoStateSwitcher {
         this.currentIndex = this.modes.findIndex(m => m.id === this.initialMode);
         if (this.currentIndex === -1) this.currentIndex = 1;
 
-        // Apple HIG 精准几何与物理参数
+        // 几何参数（宽度 184px，高度 36px，居中滑块 84px × 30px）
         this.config = Object.assign({
-            width: 228,              // 核心独立宽度 (220px ~ 240px)
-            height: 38,             // 适中舒适的高度
-            morphDelay: 420,        // 停留稳定后平滑渐变为按键的时延 (ms)
+            width: 184,              // 紧凑 184px，绝不溢出容器
+            height: 36,             // 统一对齐为 36px
+            morphDelay: 380,        // 停留稳定后平滑渐变为按键的时延 (ms)
             friction: 0.55,         // Safari 经典惯性阻尼
             springStiffness: 320,   // 磁吸刚度
             enableSound: true
         }, options.config || {});
 
-        // 居中指示器 104px，slot 84px
-        this.indicatorWidth = 104;
-        this.slotWidth = 84;
+        this.indicatorWidth = 84;
+        this.slotWidth = 68;
 
         // 运行时状态
         this.isMorphed = false;
@@ -116,7 +114,7 @@ export class VideoStateSwitcher {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(840, t);
                 osc.frequency.exponentialRampToValueAtTime(420, t + 0.03);
-                gain.gain.setValueAtTime(0.06, t);
+                gain.gain.setValueAtTime(0.05, t);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
                 osc.connect(gain);
                 gain.connect(this.audioCtx.destination);
@@ -128,7 +126,7 @@ export class VideoStateSwitcher {
 
     render() {
         this.wrapper = document.createElement('div');
-        this.wrapper.className = 'mp-switcher-wrapper select-none';
+        this.wrapper.className = 'mp-switcher-wrapper select-none shrink-0';
         this.wrapper.style.cssText = `
             position: relative;
             display: inline-flex;
@@ -137,56 +135,50 @@ export class VideoStateSwitcher {
             justify-content: center;
             user-select: none;
             -webkit-user-select: none;
+            flex-shrink: 0;
         `;
 
-        // 1. 外层轨道 (Track)：严格遵循规范要求
-        // 背景 rgba(0, 0, 0, 0.45)，结合 backdrop-filter: blur(20px)
-        // 边缘渐隐 mask-image 让左右两侧文字自然淡出
-        // 边框 1px solid rgba(255, 255, 255, 0.08)
+        // 1. 外层轨道：bg-white/[0.06] backdrop-blur-md border border-white/[0.06]
+        // 恢复两端渐隐遮罩：mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)
         this.capsuleContainer = document.createElement('div');
         this.capsuleContainer.className = 'mp-switcher-capsule';
         this.capsuleContainer.style.cssText = `
             position: relative;
             width: ${this.config.width}px;
             height: ${this.config.height}px;
-            background: rgba(0, 0, 0, 0.45);
+            background: rgba(255, 255, 255, 0.06);
             border-radius: 9999px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25), 0 2px 10px rgba(0, 0, 0, 0.25);
-            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%);
-            mask-image: linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
             cursor: grab;
             touch-action: none;
             box-sizing: border-box;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            transition: border-color 0.25s ease, background-color 0.25s ease;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         `;
 
-        // 2. 居中毛玻璃指示器 (Center Glass Indicator)：
-        // 彻底移除蓝色外发光边框！
-        // 背景：Apple 标准分层反射 linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%)
-        // 内倒角高光：box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.45), inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.5)
-        // 边框：1px solid rgba(255, 255, 255, 0.18)
+        // 2. 居中滑块高度缩小为 30px，背景采用轻量半透白 bg-white/[0.18]，内投影 inset 0 1px 0.5px rgba(255,255,255,0.4)，坚决不要粗糙外描边！
         this.indicator = document.createElement('div');
         this.indicator.className = 'mp-switcher-indicator';
         this.indicator.style.cssText = `
             position: absolute;
-            top: 2.5px;
+            top: 3px;
             left: 50%;
             transform: translate(-50%, 0) scale(1);
             width: ${this.indicatorWidth}px;
-            height: calc(100% - 5px);
+            height: 30px;
             border-radius: 9999px;
             pointer-events: none;
             z-index: 10;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.45), inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+            background: rgba(255, 255, 255, 0.18);
+            border: none;
+            box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease;
             box-sizing: border-box;
             overflow: hidden;
         `;
@@ -222,22 +214,22 @@ export class VideoStateSwitcher {
                 -webkit-user-select: none;
             `;
 
-            // 两侧文字：SF Pro Text / 苹方，大小 12.5px，字重 font-medium，非活跃态 rgba(255, 255, 255, 0.45)
+            // 两侧文字
             const labelEl = document.createElement('span');
             labelEl.className = 'mp-switcher-label';
             labelEl.textContent = mode.title;
             labelEl.style.cssText = `
-                font-size: 12.5px;
+                font-size: 12px;
                 white-space: nowrap;
                 font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
                 font-weight: 500;
                 color: rgba(255, 255, 255, 0.45);
-                transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease, text-shadow 0.2s ease;
+                transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
                 pointer-events: none;
                 letter-spacing: -0.1px;
             `;
 
-            // 变体操作层 (停留稳定后平滑渐出)
+            // 变体操作层
             const variantContainer = document.createElement('div');
             variantContainer.className = 'mp-switcher-variant-slot';
             variantContainer.style.cssText = `
@@ -248,7 +240,7 @@ export class VideoStateSwitcher {
                 justify-content: center;
                 opacity: 0;
                 pointer-events: none;
-                transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1);
             `;
 
             itemEl.appendChild(labelEl);
@@ -280,11 +272,9 @@ export class VideoStateSwitcher {
             const isActive = idx === this.currentIndex;
             const showVariant = isActive && this.isMorphed && !this.isDragging;
 
-            // 活跃态停留在中心时文字为高亮纯白
             item.labelEl.style.opacity = showVariant ? '0' : '1';
             item.labelEl.style.color = isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.45)';
             item.labelEl.style.fontWeight = isActive ? '600' : '500';
-            item.labelEl.style.textShadow = isActive ? '0 1px 2px rgba(0, 0, 0, 0.6)' : 'none';
 
             item.variantContainer.style.opacity = showVariant ? '1' : '0';
             item.variantContainer.style.pointerEvents = showVariant ? 'auto' : 'none';
@@ -305,62 +295,54 @@ export class VideoStateSwitcher {
                     justify-content: center;
                     cursor: pointer;
                     outline: none;
-                    gap: 5px;
-                    padding: 0 4px;
+                    gap: 4px;
+                    padding: 0 2px;
                     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
                     transition: transform 0.12s ease;
                 `;
 
                 const curMode = this.modes[idx].id;
 
-                // 场景 1: 正常模式 (居中展现纯白播放/暂停图标，带柔和高光投影)
+                // 场景 1: 正常模式 (居中展现纯白 14px 播放/暂停图标)
                 if (curMode === 'normal') {
                     btn.title = this.runtimeState.isPlaying ? '暂停' : '播放';
                     btn.innerHTML = this.runtimeState.isPlaying ? PAUSE : PLAY;
                     const svg = btn.querySelector('svg');
                     if (svg) {
-                        svg.style.width = '19px';
-                        svg.style.height = '19px';
+                        svg.style.width = '14px';
+                        svg.style.height = '14px';
                         svg.style.fill = '#ffffff';
                         svg.style.stroke = 'none';
-                        svg.style.filter = 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45))';
-                        // 播放图标视觉微调向右 1px
                         if (!this.runtimeState.isPlaying) {
-                            svg.style.marginLeft = '1.5px';
+                            svg.style.marginLeft = '1px';
                         }
                     }
                 }
                 // 场景 2: 快速预览 / 精彩重温
                 else {
-                    // 特殊场景 A: 单胶囊循环锁定
                     if (this.runtimeState.isCapsuleLocked) {
                         btn.title = '点击取消单片段循环';
-                        btn.innerHTML = `<span style="font-size:12px; font-weight:600; color:#ff453a; white-space:nowrap; letter-spacing:-0.2px; text-shadow:0 1px 2px rgba(0,0,0,0.5);">取消循环</span>`;
-                    }
-                    // 特殊场景 B: 胶囊全部巡检完毕
-                    else if (this.runtimeState.isTourEnded) {
+                        btn.innerHTML = `<span style="font-size:11px; font-weight:600; color:#ff453a; white-space:nowrap; letter-spacing:-0.2px;">取消循环</span>`;
+                    } else if (this.runtimeState.isTourEnded) {
                         btn.title = '从第一个胶囊重新播放';
                         btn.innerHTML = `
-                            <span style="font-size:12px; font-weight:600; color:#ffffff; display:flex; align-items:center; gap:4px; white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,0.5);">
-                                ${REPLAY || ''} 重新播放
+                            <span style="font-size:11.5px; font-weight:600; color:#ffffff; display:flex; align-items:center; gap:3px; white-space:nowrap;">
+                                ${REPLAY || ''} 重播
                             </span>
                         `;
                         const svg = btn.querySelector('svg');
                         if (svg) {
-                            svg.style.width = '13px';
-                            svg.style.height = '13px';
+                            svg.style.width = '12px';
+                            svg.style.height = '12px';
                             svg.style.stroke = '#ffffff';
-                            svg.style.filter = 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))';
                         }
-                    }
-                    // 特殊场景 C: 正常预览/重温中
-                    else {
+                    } else {
                         const modeText = (curMode === 'preview') ? '快速预览' : '精彩重温';
                         const statusDot = this.runtimeState.isPlaying 
-                            ? '<span style="display:inline-block; width:4px; height:4px; border-radius:50%; background:#30d158; box-shadow:0 0 6px rgba(48,209,88,0.8); margin-left:3px;"></span>'
-                            : '<span style="font-size:10px; margin-left:2px; opacity:0.8;">▶</span>';
+                            ? '<span style="display:inline-block; width:4px; height:4px; border-radius:50%; background:#30d158; box-shadow:0 0 5px rgba(48,209,88,0.8); margin-left:2px;"></span>'
+                            : '<span style="font-size:9px; margin-left:2px; opacity:0.8;">▶</span>';
                         btn.title = modeText + ' (点击' + (this.runtimeState.isPlaying ? '暂停' : '继续') + ')';
-                        btn.innerHTML = `<span style="font-size:12px; font-weight:600; color:#ffffff; display:flex; align-items:center; white-space:nowrap; letter-spacing:-0.1px; text-shadow:0 1px 2px rgba(0,0,0,0.6);">${modeText}${statusDot}</span>`;
+                        btn.innerHTML = `<span style="font-size:11.5px; font-weight:600; color:#ffffff; display:flex; align-items:center; white-space:nowrap; letter-spacing:-0.1px;">${modeText}${statusDot}</span>`;
                     }
                 }
 
@@ -405,7 +387,7 @@ export class VideoStateSwitcher {
 
         const safeStiffness = Math.max(100, Math.min(600, this.config.springStiffness));
         const stiffnessRatio = safeStiffness / 300;
-        const defaultDuration = Math.round((0.30 / Math.sqrt(stiffnessRatio)) * 100) / 100;
+        const defaultDuration = Math.round((0.28 / Math.sqrt(stiffnessRatio)) * 100) / 100;
         const defaultEasing = safeStiffness > 380
             ? 'cubic-bezier(0.14, 1.05, 0.24, 1)'
             : 'cubic-bezier(0.16, 1, 0.3, 1)';
@@ -436,14 +418,14 @@ export class VideoStateSwitcher {
         const DRAG_THRESHOLD = 6;
 
         picker.addEventListener('mouseenter', () => {
-            this.indicator.style.transform = 'translate(-50%, 0) scale(1.025)';
-            this.indicator.style.boxShadow = 'inset 0 1px 0.5px rgba(255, 255, 255, 0.55), inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.15), 0 6px 20px rgba(0, 0, 0, 0.6)';
-            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+            this.indicator.style.transform = 'translate(-50%, 0) scale(1.02)';
+            this.capsuleContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.10)';
         });
         picker.addEventListener('mouseleave', () => {
             this.indicator.style.transform = 'translate(-50%, 0) scale(1)';
-            this.indicator.style.boxShadow = 'inset 0 1px 0.5px rgba(255, 255, 255, 0.45), inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.5)';
-            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+            this.capsuleContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+            this.capsuleContainer.style.borderColor = 'rgba(255, 255, 255, 0.06)';
         });
 
         const forceEndDrag = (clientX) => {
@@ -490,8 +472,8 @@ export class VideoStateSwitcher {
 
                 const newIndex = Math.max(0, Math.min(this.modes.length - 1, this.currentIndex + step));
                 const speed = Math.abs(velocity);
-                const baseDuration = 0.30 / Math.sqrt(stiffnessRatio);
-                const animDuration = Math.min(0.50, Math.max(0.18, baseDuration + speed * (0.07 / safeFriction)));
+                const baseDuration = 0.28 / Math.sqrt(stiffnessRatio);
+                const animDuration = Math.min(0.48, Math.max(0.18, baseDuration + speed * (0.07 / safeFriction)));
 
                 this.snapToIndex(newIndex, true, true, { duration: animDuration });
             } else {
@@ -535,8 +517,8 @@ export class VideoStateSwitcher {
 
             const pureDelta = deltaX - Math.sign(deltaX) * DRAG_THRESHOLD;
             let newTranslate = this.startTranslate + pureDelta;
-            const minTranslate = this.getTranslateForIndex(this.modes.length - 1) - 20;
-            const maxTranslate = this.getTranslateForIndex(0) + 20;
+            const minTranslate = this.getTranslateForIndex(this.modes.length - 1) - 16;
+            const maxTranslate = this.getTranslateForIndex(0) + 16;
             newTranslate = Math.max(minTranslate, Math.min(maxTranslate, newTranslate));
 
             this.currentTranslate = newTranslate;
@@ -586,10 +568,9 @@ export class VideoStateSwitcher {
         if (!this.indicator) return;
         const curMode = this.modes[this.currentIndex]?.id;
         if (curMode === 'normal' || pct <= 0) {
-            this.indicator.style.background = 'linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%)';
+            this.indicator.style.background = 'rgba(255, 255, 255, 0.18)';
             return;
         }
-        // 优雅通透的半透粉红自左向右推进
-        this.indicator.style.background = `linear-gradient(to right, rgba(255, 120, 130, 0.40) ${pct}%, rgba(255, 255, 255, 0.16) ${pct}%)`;
+        this.indicator.style.background = `linear-gradient(to right, rgba(255, 120, 130, 0.45) ${pct}%, rgba(255, 255, 255, 0.18) ${pct}%)`;
     }
 }

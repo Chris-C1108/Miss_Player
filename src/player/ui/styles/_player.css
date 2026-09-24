@@ -1517,40 +1517,35 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 
 .tm-playback-control-row {
     display: flex !important;
-    justify-content: space-between !important;
     align-items: center !important;
+    justify-content: space-between !important;
     position: relative !important;
     width: 100% !important;
-    height: 52px !important;
-    max-height: 52px !important;
+    height: 48px !important;
+    max-height: 48px !important;
     box-sizing: border-box !important;
-    padding: 0 4px !important;
+    padding: 0 12px !important; /* px-3 */
+    gap: 8px !important;        /* gap-2 */
+    overflow: hidden !important;
 }
 
-/* 播放控制区域结构重组 (严格遵循 16px 呼吸间距与对称重量) */
-.tm-left-controls {
+.tm-left-controls,
+.tm-right-controls {
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    width: 44px !important;
-    flex: 0 0 44px !important;
-    margin-right: 16px !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    flex: 0 0 36px !important;
+    flex-shrink: 0 !important;
 }
 
 .tm-center-controls {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    flex: 0 0 auto !important;
-}
-
-.tm-right-controls {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    width: 44px !important;
-    flex: 0 0 44px !important;
-    margin-left: 16px !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
 }
 
 /* 时间显示 */
