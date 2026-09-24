@@ -280,27 +280,28 @@ export class ControlManager {
         loopControlRow.appendChild(this.tabAddBtn);
         this.controlButtonsContainer.appendChild(loopControlRow);
 
-        // 5. 播放控制行：严格遵循 w-full flex items-center justify-between px-3 gap-2 overflow-hidden
+        // 5. 播放控制行：与上层按钮行左右严密对齐，统一 40px 高度
         const playbackControlRow = document.createElement('div');
-        playbackControlRow.className = 'tm-playback-control-row w-full flex items-center justify-between px-3 gap-2 overflow-hidden';
+        playbackControlRow.className = 'tm-playback-control-row';
+        playbackControlRow.style.cssText = 'display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0; margin: 0; box-sizing: border-box;';
 
         const leftControlsArea = document.createElement('div');
-        leftControlsArea.className = 'tm-left-controls flex items-center justify-center shrink-0';
-        leftControlsArea.style.cssText = 'width: 36px; height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;';
+        leftControlsArea.className = 'tm-left-controls';
+        leftControlsArea.style.cssText = 'display: flex; align-items: center; justify-content: flex-start; height: 40px; margin: 0; padding: 0;';
 
-        // 委托 VolumeController 创建音量滑杆
+        // 委托 VolumeController 创建音量滑杆 (40px 高度)
         this.volumeController.createVolumeSlider(leftControlsArea);
 
         const centerControlsArea = document.createElement('div');
-        centerControlsArea.className = 'tm-center-controls flex-1 flex items-center justify-center overflow-hidden';
-        centerControlsArea.style.cssText = 'flex: 1 1 auto; display: flex; align-items: center; justify-content: center; overflow: hidden;';
+        centerControlsArea.className = 'tm-center-controls';
+        centerControlsArea.style.cssText = 'display: flex; align-items: center; justify-content: center; height: 40px; margin: 0; padding: 0; flex: 1 1 auto;';
 
-        // 委托 PlaybackController 创建一体化居中播放与模式按钮
+        // 委托 PlaybackController 创建一体化居中播放与模式按钮 (40px 高度，透明外轨)
         this.playbackController.createPlayPauseButton(centerControlsArea);
 
         const rightControlsArea = document.createElement('div');
-        rightControlsArea.className = 'tm-right-controls flex items-center justify-center shrink-0';
-        rightControlsArea.style.cssText = 'width: 36px; height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;';
+        rightControlsArea.className = 'tm-right-controls';
+        rightControlsArea.style.cssText = 'display: flex; align-items: center; justify-content: flex-end; height: 40px; margin: 0; padding: 0;';
 
         // 委托 PlaybackController 创建倍速滑块
         this.playbackController.createPlaybackRateSlider(rightControlsArea);

@@ -218,27 +218,26 @@
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
-    height: 36px !important;
-    width: 36px !important;
-    min-width: 36px !important;
-    max-width: 36px !important;
-    padding: 0 !important;
+    height: 40px !important;
+    width: auto !important;
+    min-width: 58px !important;
+    padding: 0 14px !important; /* 经典 Apple 优雅胶囊形态 */
     background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    color: rgba(255, 255, 255, 0.70) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif !important;
-    font-size: 11px !important;
+    font-size: 13px !important;
     font-weight: 600 !important;
     font-variant-numeric: tabular-nums !important;
-    letter-spacing: -0.4px !important;
+    letter-spacing: -0.2px !important;
     border-radius: 9999px !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
     box-shadow: none !important;
+    box-sizing: border-box !important;
     transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
     cursor: pointer !important;
     text-align: center !important;
-    box-sizing: border-box !important;
 }
 
 .tm-playback-rate-button:hover {
@@ -437,15 +436,16 @@
 }
 
 .tm-playback-control-row .tm-volume-button {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
     border-radius: 9999px !important;
     background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
     color: rgba(255, 255, 255, 0.70) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
     box-shadow: none !important;
     display: flex !important;
     align-items: center !important;
@@ -453,6 +453,7 @@
     cursor: pointer !important;
     padding: 0 !important;
     margin: 0 !important;
+    box-sizing: border-box !important;
     transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
@@ -1181,23 +1182,21 @@
     transform: scale(0.96) !important;
 }
 
-/* ===== 极简 Apple 毛玻璃 3 状态切换器 ===== */
+/* ===== 极简透明 3 状态切换器 ===== */
 .mp-switcher-capsule {
-    transition: background-color 0.2s ease, border-color 0.2s ease !important;
-}
-
-.mp-switcher-capsule:hover {
-    background-color: rgba(255, 255, 255, 0.09) !important;
-    border-color: rgba(255, 255, 255, 0.10) !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .mp-switcher-indicator {
+    border-radius: 9999px !important;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease !important;
 }
 
 .mp-switcher-capsule:hover .mp-switcher-indicator {
     transform: translate(-50%, 0) scale(1.02) !important;
-    background-color: rgba(255, 255, 255, 0.22) !important;
+    background-color: rgba(255, 255, 255, 0.20) !important;
 }
 
 .mp-switcher-capsule:active .mp-switcher-indicator {

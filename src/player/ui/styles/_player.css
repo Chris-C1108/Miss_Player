@@ -1521,31 +1521,41 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     justify-content: space-between !important;
     position: relative !important;
     width: 100% !important;
-    height: 48px !important;
-    max-height: 48px !important;
+    height: 40px !important;
+    max-height: 40px !important;
     box-sizing: border-box !important;
-    padding: 0 12px !important; /* px-3 */
-    gap: 8px !important;        /* gap-2 */
-    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
-.tm-left-controls,
-.tm-right-controls {
+.tm-left-controls {
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
-    width: 36px !important;
-    height: 36px !important;
-    flex: 0 0 36px !important;
-    flex-shrink: 0 !important;
+    justify-content: flex-start !important;
+    height: 40px !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .tm-center-controls {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    height: 40px !important;
     flex: 1 1 auto !important;
-    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.tm-right-controls {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    height: 40px !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* 时间显示 */
