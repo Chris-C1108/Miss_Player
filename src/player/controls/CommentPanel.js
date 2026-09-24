@@ -1,3 +1,4 @@
+import { SupabaseService } from '../../services/SupabaseService.js';
 import { SyncManager } from '../../sync/index.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
 import { __ } from '../../constants/i18n.js';
@@ -923,7 +924,17 @@ export class CommentPanel {
             const enabledSources = state?.settings?.enabledCommentSources || { jable: true, javdb: true, javlibrary: false };
 
             const promises = [];
-            if (enabledSources.jable !== false) promises.push(this.loadJableComments(1));
+            // 优先检查 Supabase 自建分析数据库
+        try {
+            const remoteComments = await SupabaseService.fetchComments(this.videoCode);
+            if (remoteComments && remoteComments.length > 0) {
+                this._mergeRemoteComments(remoteComments);
+                this.renderCommentsList();
+                this.updateCommentsCount();
+            }
+        } catch (_) {}
+
+        if (enabledSources.jable !== false) promises.push(this.loadJableComments(1));
             if (enabledSources.javlib !== false && enabledSources.javlibrary !== false) promises.push(this.loadJavlibComments(1));
             if (enabledSources.javdb !== false) promises.push(this.loadJavdbComments(1));
 
@@ -1154,6 +1165,8 @@ export class CommentPanel {
 
             // 调试模式与 WebDAV 收集含数字或提到其他 AVCODE 的评论语料 (附带各平台总数)
             CommentDebugCollector.collectComments(this.videoCode, processed, duration, platformStats);
+            // 自动同步至 Supabase 自建评论分析数据库
+            SupabaseService.uploadComments(this.videoCode, siteKey, processed);
             DebugLogPanel.addLog(`[评论采集] ${site.name} 第 ${page} 页完成 (${processed.length}条，总计${site.totalCount}条)`, 'success');
 
             if (!site.collectedPages) {
@@ -2924,6 +2937,30 @@ export class CommentPanel {
             }
             close();
         });
+    }
+
+
+    _mergeRemoteComments(remoteList) {
+        if (!Array.isArray(remoteList) || remoteList.length === 0) return;
+        const duration = this.playerCore?.targetVideo?.duration || 10800;
+
+        for (const item of remoteList) {
+            const sKey = (item.source_site || 'jable').toLowerCase();
+            const targetSite = this.sites[sKey] || this.sites.jable;
+            if (!targetSite) continue;
+
+            const exists = targetSite.comments.some(c => String(c.id) === String(item.site_comment_id) || (c.text && c.text === item.content_raw));
+            if (!exists) {
+                const processed = processComment(item.content_raw, duration, item.published_at);
+                processed.id = item.site_comment_id;
+                processed.user = item.user_name;
+                processed.userUrl = item.user_url;
+                processed.time = item.published_at;
+                processed.score = item.score;
+                targetSite.comments.push(processed);
+            }
+        }
+        this.applyFilter();
     }
 
 }

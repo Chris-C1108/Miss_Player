@@ -1,3 +1,4 @@
+import { SupabaseService } from '../../services/SupabaseService.js';
 /**
  * 疯狂采集模式引擎 (CrazyScraper)
  * 
@@ -171,6 +172,7 @@ export class CrazyScraper {
 
                 // 1. 送入 WebDAV 调试语料库 (包含数字或提到其他番号的评论)
                 CommentDebugCollector.collectComments(code, processed, 10800, stats);
+                SupabaseService.uploadComments(code, 'jable', processed);
 
                 // 2. 存入浏览器内置 IndexedDB (防止重复采集)
                 CommentCacheManager.saveSiteCache(code, 'jable', {

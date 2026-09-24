@@ -2408,6 +2408,221 @@
 			});
 		}
 	};
+	function md5cycle(x, k) {
+		var a = x[0], b = x[1], c = x[2], d = x[3];
+		a = ff(a, b, c, d, k[0], 7, -680876936);
+		d = ff(d, a, b, c, k[1], 12, -389564586);
+		c = ff(c, d, a, b, k[2], 17, 606105819);
+		b = ff(b, c, d, a, k[3], 22, -1044525330);
+		a = ff(a, b, c, d, k[4], 7, -176418897);
+		d = ff(d, a, b, c, k[5], 12, 1200080426);
+		c = ff(c, d, a, b, k[6], 17, -1473231341);
+		b = ff(b, c, d, a, k[7], 22, -45705983);
+		a = ff(a, b, c, d, k[8], 7, 1770035416);
+		d = ff(d, a, b, c, k[9], 12, -1958414417);
+		c = ff(c, d, a, b, k[10], 17, -42063);
+		b = ff(b, c, d, a, k[11], 22, -1990404162);
+		a = ff(a, b, c, d, k[12], 7, 1804603682);
+		d = ff(d, a, b, c, k[13], 12, -40341101);
+		c = ff(c, d, a, b, k[14], 17, -1502002290);
+		b = ff(b, c, d, a, k[15], 22, 1236535329);
+		a = gg(a, b, c, d, k[1], 5, -165796510);
+		d = gg(d, a, b, c, k[6], 9, -1069501632);
+		c = gg(c, d, a, b, k[11], 14, 643717713);
+		b = gg(b, c, d, a, k[0], 20, -373897302);
+		a = gg(a, b, c, d, k[5], 5, -701558691);
+		d = gg(d, a, b, c, k[10], 9, 38016083);
+		c = gg(c, d, a, b, k[15], 14, -660478335);
+		b = gg(b, c, d, a, k[4], 20, -405537848);
+		a = gg(a, b, c, d, k[9], 5, 568446438);
+		d = gg(d, a, b, c, k[14], 9, -1019803690);
+		c = gg(c, d, a, b, k[3], 14, -187363961);
+		b = gg(b, c, d, a, k[8], 20, 1163531501);
+		a = gg(a, b, c, d, k[13], 5, -1444681467);
+		d = gg(d, a, b, c, k[2], 9, -51403784);
+		c = gg(c, d, a, b, k[7], 14, 1735328473);
+		b = gg(b, c, d, a, k[12], 20, -1926607734);
+		a = hh(a, b, c, d, k[5], 4, -378558);
+		d = hh(d, a, b, c, k[8], 11, -2022574463);
+		c = hh(c, d, a, b, k[11], 16, 1839030562);
+		b = hh(b, c, d, a, k[14], 23, -35309556);
+		a = hh(a, b, c, d, k[1], 4, -1530992060);
+		d = hh(d, a, b, c, k[4], 11, 1272893353);
+		c = hh(c, d, a, b, k[7], 16, -155497632);
+		b = hh(b, c, d, a, k[10], 23, -1094730640);
+		a = hh(a, b, c, d, k[13], 4, 681279174);
+		d = hh(d, a, b, c, k[0], 11, -358537222);
+		c = hh(c, d, a, b, k[3], 16, -722521979);
+		b = hh(b, c, d, a, k[6], 23, 76029189);
+		a = hh(a, b, c, d, k[9], 4, -640364487);
+		d = hh(d, a, b, c, k[12], 11, -421815835);
+		c = hh(c, d, a, b, k[15], 16, 530742520);
+		b = hh(b, c, d, a, k[2], 23, -995338651);
+		a = ii(a, b, c, d, k[0], 6, -198630844);
+		d = ii(d, a, b, c, k[7], 10, 1126891415);
+		c = ii(c, d, a, b, k[14], 15, -1416354905);
+		b = ii(b, c, d, a, k[5], 21, -57434055);
+		a = ii(a, b, c, d, k[12], 6, 1700485571);
+		d = ii(d, a, b, c, k[3], 10, -1894986606);
+		c = ii(c, d, a, b, k[10], 15, -1051523);
+		b = ii(b, c, d, a, k[1], 21, -2054922799);
+		a = ii(a, b, c, d, k[8], 6, 1873313359);
+		d = ii(d, a, b, c, k[15], 10, -30611744);
+		c = ii(c, d, a, b, k[6], 15, -1560198380);
+		b = ii(b, c, d, a, k[13], 21, 1309151649);
+		a = ii(a, b, c, d, k[4], 6, -145523070);
+		d = ii(d, a, b, c, k[11], 10, -1120210379);
+		c = ii(c, d, a, b, k[2], 15, 718787259);
+		b = ii(b, c, d, a, k[9], 21, -343485551);
+		x[0] = add32(a, x[0]);
+		x[1] = add32(b, x[1]);
+		x[2] = add32(c, x[2]);
+		x[3] = add32(d, x[3]);
+	}
+	function cmn(q, a, b, x, s, t) {
+		a = add32(add32(a, q), add32(x, t));
+		return add32(a << s | a >>> 32 - s, b);
+	}
+	function ff(a, b, c, d, x, s, t) {
+		return cmn(b & c | ~b & d, a, b, x, s, t);
+	}
+	function gg(a, b, c, d, x, s, t) {
+		return cmn(b & d | c & ~d, a, b, x, s, t);
+	}
+	function hh(a, b, c, d, x, s, t) {
+		return cmn(b ^ c ^ d, a, b, x, s, t);
+	}
+	function ii(a, b, c, d, x, s, t) {
+		return cmn(c ^ (b | ~d), a, b, x, s, t);
+	}
+	function md5blk(s) {
+		var md5blks = [], i = 0;
+		for (; i < 64; i += 4) md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
+		return md5blks;
+	}
+	function md5str(s) {
+		var n = s.length, state = [
+			1732584193,
+			-271733879,
+			-1732584194,
+			271733878
+		], i = 64;
+		for (; i <= n; i += 64) md5cycle(state, md5blk(s.substring(i - 64, i)));
+		s = s.substring(i - 64);
+		var tail = [
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0
+		];
+		for (i = 0; i < s.length; i++) tail[i >> 2] |= s.charCodeAt(i) << (i % 4 << 3);
+		tail[i >> 2] |= 128 << (i % 4 << 3);
+		if (i > 55) {
+			md5cycle(state, tail);
+			for (i = 0; i < 16; i++) tail[i] = 0;
+		}
+		tail[14] = n * 8;
+		md5cycle(state, tail);
+		return state;
+	}
+	var hex_chr = "0123456789abcdef".split("");
+	function rhex(n) {
+		var s = "", j = 0;
+		for (; j < 4; j++) s += hex_chr[n >> j * 8 + 4 & 15] + hex_chr[n >> j * 8 & 15];
+		return s;
+	}
+	function add32(a, b) {
+		return a + b & 4294967295;
+	}
+	function md5(s) {
+		if (typeof s !== "string") return "";
+		s = unescape(encodeURIComponent(s));
+		var state = md5str(s);
+		return rhex(state[0]) + rhex(state[1]) + rhex(state[2]) + rhex(state[3]);
+	}
+	var globalConsole = typeof console !== "undefined" ? console : null;
+	var Logger = class {
+		constructor(prefix = "[Miss Player]") {
+			this.prefix = prefix;
+			if (typeof window !== "undefined") {
+				if (!window.missPlayerLogs) window.missPlayerLogs = [];
+			}
+		}
+		_addLog(level, ...args) {
+			if (typeof window === "undefined") return;
+			const msg = args.map((arg) => {
+				if (arg instanceof Error) return `${arg.message}\n${arg.stack}`;
+				if (typeof arg === "object") try {
+					return JSON.stringify(arg);
+				} catch (e) {
+					return String(arg);
+				}
+				return String(arg);
+			}).join(" ");
+			const logEntry = {
+				time: new Date().toISOString(),
+				level,
+				msg: `${this.prefix} ${msg}`
+			};
+			window.missPlayerLogs.push(logEntry);
+			if (window.missPlayerLogs.length > 500) window.missPlayerLogs.shift();
+			if (globalConsole) {
+				const consoleMethod = level === "error" ? "error" : level === "warn" ? "warn" : "log";
+				if (globalConsole[consoleMethod]) globalConsole[consoleMethod](`${this.prefix}`, ...args);
+			}
+		}
+		debug(...args) {
+			this._addLog("debug", ...args);
+		}
+		log(...args) {
+			this._addLog("info", ...args);
+		}
+		info(...args) {
+			this._addLog("info", ...args);
+		}
+		warn(...args) {
+			this._addLog("warn", ...args);
+		}
+		error(...args) {
+			this._addLog("error", ...args);
+		}
+		getLogsText(filter) {
+			if (typeof window === "undefined" || !window.missPlayerLogs || window.missPlayerLogs.length === 0) return "No logs collected.";
+			let logs = window.missPlayerLogs;
+			if (filter) {
+				if (typeof filter === "function") logs = logs.filter((l) => filter(l.msg));
+				else if (typeof filter === "string") {
+					const keyword = filter.toLowerCase();
+					logs = logs.filter((l) => l.msg.toLowerCase().includes(keyword));
+				} else if (Array.isArray(filter)) logs = logs.filter((l) => {
+					const msgLower = l.msg.toLowerCase();
+					return filter.some((keyword) => msgLower.includes(keyword.toLowerCase()));
+				});
+			}
+			return logs.map((l) => `[${l.time}] [${l.level.toUpperCase()}] ${l.msg}`).join("\n");
+		}
+		copyLogs(filter) {
+			const text = this.getLogsText(filter);
+			if (typeof GM_setClipboard === "function") {
+				GM_setClipboard(text);
+				return true;
+			}
+			return false;
+		}
+	};
+	var logger = new Logger("[Miss Player]");
 	function sanitizeIncomingJsonText(text) {
 		if (!text || typeof text !== "string") return text;
 		if (text.length > 102400 || text.includes("{},")) {
@@ -3360,6 +3575,291 @@
 			writable: !0
 		}) : e[r] = t, e;
 	}
+	var DebugLogPanel = class {
+		static updateDebugState(isDebug) {
+			if (isDebug) {
+				this.ensurePanel();
+				if (this._container) this._container.style.display = "block";
+			} else if (this._container) this._container.style.display = "none";
+		}
+		static ensurePanel() {
+			if (this._container || typeof document === "undefined") return;
+			const container = document.createElement("div");
+			container.className = "tm-debug-log-panel-container";
+			container.innerHTML = `
+            <div class="tm-debug-log-pill" title="点击展开/收起 DEBUG 精简日志">
+                <span class="tm-debug-pill-icon">🐛</span>
+                <span class="tm-debug-pill-title">DEBUG 日志</span>
+                <span class="tm-debug-pill-status" id="tm-debug-status-text">就绪</span>
+                <span class="tm-debug-pill-arrow">▾</span>
+            </div>
+            <div class="tm-debug-log-box" style="display: none;">
+                <div class="tm-debug-box-header">
+                    <div class="tm-debug-box-title">
+                        <span>🐛 DEBUG 精简日志</span>
+                        <span class="tm-debug-box-count">(0)</span>
+                    </div>
+                    <div class="tm-debug-box-actions">
+                        <button class="tm-debug-btn tm-debug-copy-btn" title="复制所有调试日志">复制</button>
+                        <button class="tm-debug-btn tm-debug-upload-btn" title="上传调试日志至 WebDAV">上传</button>
+                        <button class="tm-debug-btn tm-debug-clear-btn" title="清空日志">清空</button>
+                        <button class="tm-debug-btn tm-debug-collapse-btn" title="收起面板">▴</button>
+                    </div>
+                </div>
+                <div class="tm-debug-log-list">
+                    <div class="tm-debug-log-empty">暂无调试日志</div>
+                </div>
+            </div>
+        `;
+			container.style.zIndex = "2147483647";
+			document.body.appendChild(container);
+			this._container = container;
+			this._bindEvents();
+		}
+		static _bindEvents() {
+			if (!this._container) return;
+			const pill = this._container.querySelector(".tm-debug-log-pill");
+			const box = this._container.querySelector(".tm-debug-log-box");
+			const arrow = this._container.querySelector(".tm-debug-pill-arrow");
+			const copyBtn = this._container.querySelector(".tm-debug-copy-btn");
+			const clearBtn = this._container.querySelector(".tm-debug-clear-btn");
+			const collapseBtn = this._container.querySelector(".tm-debug-collapse-btn");
+			const toggle = () => {
+				this._isExpanded = !this._isExpanded;
+				box.style.display = this._isExpanded ? "flex" : "none";
+				arrow.textContent = this._isExpanded ? "▴" : "▾";
+				if (this._isExpanded) this._scrollToBottom();
+			};
+			pill.addEventListener("click", (e) => {
+				e.stopPropagation();
+				toggle();
+			});
+			collapseBtn.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this._isExpanded = false;
+				box.style.display = "none";
+				arrow.textContent = "▾";
+			});
+			const uploadBtn = this._container.querySelector(".tm-debug-upload-btn");
+			if (uploadBtn) uploadBtn.addEventListener("click", async (e) => {
+				e.stopPropagation();
+				if (this._logs.length === 0) {
+					Toast("暂无日志可上传", 1500, "info");
+					return;
+				}
+				const config = SyncManager.getWebDavConfig();
+				if (!config || !config.url) {
+					Toast("请先在设置中配置 WebDAV 服务器", 2e3, "error");
+					return;
+				}
+				try {
+					uploadBtn.textContent = "上传中...";
+					const now = new Date();
+					const pad = (n) => String(n).padStart(2, "0");
+					const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+					const subPath = `logs/debug/${(typeof window !== "undefined" ? window.location.pathname.split("/").filter(Boolean).pop() || "GLOBAL" : "GLOBAL").toUpperCase()}_${ts}.txt`;
+					const fullText = this._logs.map((l) => `[${l.time}] [${l.level.toUpperCase()}] ${l.text}`).join("\n");
+					await WebDavClient.uploadFile(config, subPath, fullText, "text/plain; charset=utf-8");
+					Toast(`日志已上传至 WebDAV: ${subPath}`, 2500, "success");
+				} catch (err) {
+					Toast(`上传日志失败: ${err.message || err}`, 2500, "error");
+				} finally {
+					uploadBtn.textContent = "上传";
+				}
+			});
+			clearBtn.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this._logs = [];
+				this._renderLogs();
+				Toast("已清空调试日志", 1200, "info");
+			});
+			copyBtn.addEventListener("click", (e) => {
+				e.stopPropagation();
+				if (this._logs.length === 0) {
+					Toast("暂无日志可复制", 1500, "info");
+					return;
+				}
+				const fullText = this._logs.map((l) => `[${l.time}] [${l.level.toUpperCase()}] ${l.text}`).join("\n");
+				try {
+					if (typeof GM_setClipboard === "function") GM_setClipboard(fullText);
+					else copyToClipboard(fullText);
+				} catch (_) {
+					copyToClipboard(fullText);
+				}
+				Toast("调试日志已复制到剪贴板", 1500, "success");
+			});
+		}
+		static addLog(text, level = "info") {
+			if (!text) return;
+			const now = new Date();
+			const pad = (n) => String(n).padStart(2, "0");
+			const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+			const entry = {
+				id: Date.now() + Math.random().toString(36).slice(2, 6),
+				time: timeStr,
+				text: String(text),
+				level
+			};
+			this._logs.push(entry);
+			if (this._logs.length > this._maxLogs) this._logs.shift();
+			if (this._container) {
+				const statusEl = this._container.querySelector("#tm-debug-status-text");
+				if (statusEl) {
+					statusEl.textContent = entry.text.slice(0, 24) + (entry.text.length > 24 ? "..." : "");
+					statusEl.className = `tm-debug-pill-status level-${level}`;
+				}
+				this._renderLogs();
+			}
+		}
+		static _renderLogs() {
+			if (!this._container) return;
+			const listEl = this._container.querySelector(".tm-debug-log-list");
+			const countEl = this._container.querySelector(".tm-debug-box-count");
+			if (!listEl) return;
+			if (countEl) countEl.textContent = `(${this._logs.length})`;
+			if (this._logs.length === 0) {
+				listEl.innerHTML = "<div class=\"tm-debug-log-empty\">暂无调试日志</div>";
+				return;
+			}
+			listEl.innerHTML = this._logs.map((l) => {
+				return `<div class="tm-debug-log-row level-${l.level}"><span class="tm-log-time">[${l.time}]</span> <span class="tm-log-msg">${l.text}</span></div>`;
+			}).join("");
+			if (this._isExpanded) this._scrollToBottom();
+		}
+		static _scrollToBottom() {
+			if (!this._container) return;
+			const listEl = this._container.querySelector(".tm-debug-log-list");
+			if (listEl) listEl.scrollTop = listEl.scrollHeight;
+		}
+	};
+	_defineProperty(DebugLogPanel, "_container", null);
+	_defineProperty(DebugLogPanel, "_isExpanded", false);
+	_defineProperty(DebugLogPanel, "_logs", []);
+	_defineProperty(DebugLogPanel, "_maxLogs", 150);
+	var SupabaseService = class {
+		static normalizeBaseUrl(url) {
+			if (!url) return "";
+			let clean = url.trim().replace(/\/+$/, "");
+			if (!clean.startsWith("http")) clean = "https://" + clean;
+			const match = clean.match(/^(https:\/\/[a-z0-9_-]+\.supabase\.co)/i);
+			if (match) return `${match[1]}/rest/v1`;
+			return clean;
+		}
+		static getConfig() {
+			const endpoint = getValue("betaDbEndpoint", "").trim();
+			const apiKey = getValue("betaDbApiKey", "").trim();
+			const baseUrl = this.normalizeBaseUrl(endpoint);
+			return {
+				baseUrl,
+				apiKey,
+				isEnabled: Boolean(baseUrl && apiKey)
+			};
+		}
+		static async request(options) {
+			const { method = "GET", url, headers = {}, data = null, timeout = 12e3 } = options;
+			return new Promise((resolve, reject) => {
+				if (typeof GM_xmlhttpRequest === "function") try {
+					GM_xmlhttpRequest({
+						method,
+						url,
+						headers,
+						data,
+						timeout,
+						onload: (res) => resolve({
+							status: res.status,
+							data: res.responseText
+						}),
+						onerror: (err) => reject(new Error(err?.statusText || "Network Error")),
+						ontimeout: () => reject(new Error("Request Timeout"))
+					});
+					return;
+				} catch (e) {}
+				fetch(url, {
+					method,
+					headers,
+					body: data
+				}).then(async (r) => resolve({
+					status: r.status,
+					data: await r.text()
+				})).catch(reject);
+			});
+		}
+		static async fetchComments(videoCode) {
+			const config = this.getConfig();
+			if (!config.isEnabled || !videoCode) return [];
+			const url = `${config.baseUrl}/comments?avcode=eq.${encodeURIComponent(videoCode.toUpperCase())}&order=created_at.desc&select=*`;
+			try {
+				const res = await this.request({
+					method: "GET",
+					url,
+					headers: {
+						"apikey": config.apiKey,
+						"Authorization": `Bearer ${config.apiKey}`,
+						"Content-Type": "application/json"
+					}
+				});
+				if (res.status >= 200 && res.status < 300) {
+					const list = JSON.parse(res.data || "[]");
+					if (list.length > 0) {
+						logger.log(`[Supabase] 从云端数据库拉取到 ${list.length} 条评论 (${videoCode})`);
+						DebugLogPanel.addLog(`[Supabase] 命中云端评论库: 获取 ${list.length} 条记录 (${videoCode})`, "success");
+					}
+					return list;
+				}
+				return [];
+			} catch (e) {
+				logger.debug("[Supabase] 查询云端评论异常:", e.message || e);
+				return [];
+			}
+		}
+		static async uploadComments(videoCode, sourceSite, comments) {
+			const config = this.getConfig();
+			if (!config.isEnabled || !videoCode || !Array.isArray(comments) || comments.length === 0) return;
+			const rows = [];
+			for (const c of comments) {
+				if (!c) continue;
+				const siteId = c.id || c.user + "_" + (c.time || "");
+				const content = c.rawText || c.text || "";
+				if (!content.trim()) continue;
+				const fingerprint = md5(`${sourceSite}_${siteId}_${content}`);
+				rows.push({
+					avcode: videoCode.toUpperCase(),
+					source_site: sourceSite,
+					site_comment_id: String(siteId),
+					user_name: c.user || "匿名",
+					user_url: c.userUrl || null,
+					content_raw: content,
+					score: c.score || null,
+					is_spam: Boolean(c.spam && c.spam.label === "SPAM"),
+					spam_reason: c.spam?.reason || null,
+					has_timestamps: Boolean(Array.isArray(c.timestamps) && c.timestamps.length > 0),
+					hash_fingerprint: fingerprint,
+					published_at: c.time || null
+				});
+			}
+			if (rows.length === 0) return;
+			const url = `${config.baseUrl}/comments`;
+			try {
+				const res = await this.request({
+					method: "POST",
+					url,
+					headers: {
+						"apikey": config.apiKey,
+						"Authorization": `Bearer ${config.apiKey}`,
+						"Content-Type": "application/json",
+						"Prefer": "resolution=merge-duplicates,return=minimal"
+					},
+					data: JSON.stringify(rows)
+				});
+				if (res.status === 201 || res.status === 200 || res.status === 204) {
+					logger.log(`[Supabase] 成功同步 ${rows.length} 条 ${sourceSite} 评论至云端数据库 (${videoCode})`);
+					DebugLogPanel.addLog(`[Supabase] 写入 ${rows.length} 条评论至云端库 (${videoCode})`, "success");
+				} else logger.warn(`[Supabase] 同步评论遇到状态码 ${res.status}:`, res.data);
+			} catch (err) {
+				logger.warn("[Supabase] 同步评论异常:", err.message || err);
+			}
+		}
+	};
 	var I18n = class {
 		static get userLang() {
 			return navigator.languages && navigator.languages[0] || navigator.language || "en";
@@ -3857,77 +4357,6 @@
 	function __(id, lang = "") {
 		return I18n.translate(id, lang);
 	}
-	var globalConsole = typeof console !== "undefined" ? console : null;
-	var Logger = class {
-		constructor(prefix = "[Miss Player]") {
-			this.prefix = prefix;
-			if (typeof window !== "undefined") {
-				if (!window.missPlayerLogs) window.missPlayerLogs = [];
-			}
-		}
-		_addLog(level, ...args) {
-			if (typeof window === "undefined") return;
-			const msg = args.map((arg) => {
-				if (arg instanceof Error) return `${arg.message}\n${arg.stack}`;
-				if (typeof arg === "object") try {
-					return JSON.stringify(arg);
-				} catch (e) {
-					return String(arg);
-				}
-				return String(arg);
-			}).join(" ");
-			const logEntry = {
-				time: new Date().toISOString(),
-				level,
-				msg: `${this.prefix} ${msg}`
-			};
-			window.missPlayerLogs.push(logEntry);
-			if (window.missPlayerLogs.length > 500) window.missPlayerLogs.shift();
-			if (globalConsole) {
-				const consoleMethod = level === "error" ? "error" : level === "warn" ? "warn" : "log";
-				if (globalConsole[consoleMethod]) globalConsole[consoleMethod](`${this.prefix}`, ...args);
-			}
-		}
-		debug(...args) {
-			this._addLog("debug", ...args);
-		}
-		log(...args) {
-			this._addLog("info", ...args);
-		}
-		info(...args) {
-			this._addLog("info", ...args);
-		}
-		warn(...args) {
-			this._addLog("warn", ...args);
-		}
-		error(...args) {
-			this._addLog("error", ...args);
-		}
-		getLogsText(filter) {
-			if (typeof window === "undefined" || !window.missPlayerLogs || window.missPlayerLogs.length === 0) return "No logs collected.";
-			let logs = window.missPlayerLogs;
-			if (filter) {
-				if (typeof filter === "function") logs = logs.filter((l) => filter(l.msg));
-				else if (typeof filter === "string") {
-					const keyword = filter.toLowerCase();
-					logs = logs.filter((l) => l.msg.toLowerCase().includes(keyword));
-				} else if (Array.isArray(filter)) logs = logs.filter((l) => {
-					const msgLower = l.msg.toLowerCase();
-					return filter.some((keyword) => msgLower.includes(keyword.toLowerCase()));
-				});
-			}
-			return logs.map((l) => `[${l.time}] [${l.level.toUpperCase()}] ${l.msg}`).join("\n");
-		}
-		copyLogs(filter) {
-			const text = this.getLogsText(filter);
-			if (typeof GM_setClipboard === "function") {
-				GM_setClipboard(text);
-				return true;
-			}
-			return false;
-		}
-	};
-	var logger = new Logger("[Miss Player]");
 	var CrossDomainBridge = class {
 		static async checkShadowActive(siteKey) {
 			try {
@@ -4965,150 +5394,6 @@
 		});
 		if (detectCloudflare(res.status, res.html)) throw new Error(`CF_SHIELD_ON_${activeDomain}`);
 		return parseJavLibraryDataHtml(res.html, type, page, activeDomain);
-	}
-	function md5cycle(x, k) {
-		var a = x[0], b = x[1], c = x[2], d = x[3];
-		a = ff(a, b, c, d, k[0], 7, -680876936);
-		d = ff(d, a, b, c, k[1], 12, -389564586);
-		c = ff(c, d, a, b, k[2], 17, 606105819);
-		b = ff(b, c, d, a, k[3], 22, -1044525330);
-		a = ff(a, b, c, d, k[4], 7, -176418897);
-		d = ff(d, a, b, c, k[5], 12, 1200080426);
-		c = ff(c, d, a, b, k[6], 17, -1473231341);
-		b = ff(b, c, d, a, k[7], 22, -45705983);
-		a = ff(a, b, c, d, k[8], 7, 1770035416);
-		d = ff(d, a, b, c, k[9], 12, -1958414417);
-		c = ff(c, d, a, b, k[10], 17, -42063);
-		b = ff(b, c, d, a, k[11], 22, -1990404162);
-		a = ff(a, b, c, d, k[12], 7, 1804603682);
-		d = ff(d, a, b, c, k[13], 12, -40341101);
-		c = ff(c, d, a, b, k[14], 17, -1502002290);
-		b = ff(b, c, d, a, k[15], 22, 1236535329);
-		a = gg(a, b, c, d, k[1], 5, -165796510);
-		d = gg(d, a, b, c, k[6], 9, -1069501632);
-		c = gg(c, d, a, b, k[11], 14, 643717713);
-		b = gg(b, c, d, a, k[0], 20, -373897302);
-		a = gg(a, b, c, d, k[5], 5, -701558691);
-		d = gg(d, a, b, c, k[10], 9, 38016083);
-		c = gg(c, d, a, b, k[15], 14, -660478335);
-		b = gg(b, c, d, a, k[4], 20, -405537848);
-		a = gg(a, b, c, d, k[9], 5, 568446438);
-		d = gg(d, a, b, c, k[14], 9, -1019803690);
-		c = gg(c, d, a, b, k[3], 14, -187363961);
-		b = gg(b, c, d, a, k[8], 20, 1163531501);
-		a = gg(a, b, c, d, k[13], 5, -1444681467);
-		d = gg(d, a, b, c, k[2], 9, -51403784);
-		c = gg(c, d, a, b, k[7], 14, 1735328473);
-		b = gg(b, c, d, a, k[12], 20, -1926607734);
-		a = hh(a, b, c, d, k[5], 4, -378558);
-		d = hh(d, a, b, c, k[8], 11, -2022574463);
-		c = hh(c, d, a, b, k[11], 16, 1839030562);
-		b = hh(b, c, d, a, k[14], 23, -35309556);
-		a = hh(a, b, c, d, k[1], 4, -1530992060);
-		d = hh(d, a, b, c, k[4], 11, 1272893353);
-		c = hh(c, d, a, b, k[7], 16, -155497632);
-		b = hh(b, c, d, a, k[10], 23, -1094730640);
-		a = hh(a, b, c, d, k[13], 4, 681279174);
-		d = hh(d, a, b, c, k[0], 11, -358537222);
-		c = hh(c, d, a, b, k[3], 16, -722521979);
-		b = hh(b, c, d, a, k[6], 23, 76029189);
-		a = hh(a, b, c, d, k[9], 4, -640364487);
-		d = hh(d, a, b, c, k[12], 11, -421815835);
-		c = hh(c, d, a, b, k[15], 16, 530742520);
-		b = hh(b, c, d, a, k[2], 23, -995338651);
-		a = ii(a, b, c, d, k[0], 6, -198630844);
-		d = ii(d, a, b, c, k[7], 10, 1126891415);
-		c = ii(c, d, a, b, k[14], 15, -1416354905);
-		b = ii(b, c, d, a, k[5], 21, -57434055);
-		a = ii(a, b, c, d, k[12], 6, 1700485571);
-		d = ii(d, a, b, c, k[3], 10, -1894986606);
-		c = ii(c, d, a, b, k[10], 15, -1051523);
-		b = ii(b, c, d, a, k[1], 21, -2054922799);
-		a = ii(a, b, c, d, k[8], 6, 1873313359);
-		d = ii(d, a, b, c, k[15], 10, -30611744);
-		c = ii(c, d, a, b, k[6], 15, -1560198380);
-		b = ii(b, c, d, a, k[13], 21, 1309151649);
-		a = ii(a, b, c, d, k[4], 6, -145523070);
-		d = ii(d, a, b, c, k[11], 10, -1120210379);
-		c = ii(c, d, a, b, k[2], 15, 718787259);
-		b = ii(b, c, d, a, k[9], 21, -343485551);
-		x[0] = add32(a, x[0]);
-		x[1] = add32(b, x[1]);
-		x[2] = add32(c, x[2]);
-		x[3] = add32(d, x[3]);
-	}
-	function cmn(q, a, b, x, s, t) {
-		a = add32(add32(a, q), add32(x, t));
-		return add32(a << s | a >>> 32 - s, b);
-	}
-	function ff(a, b, c, d, x, s, t) {
-		return cmn(b & c | ~b & d, a, b, x, s, t);
-	}
-	function gg(a, b, c, d, x, s, t) {
-		return cmn(b & d | c & ~d, a, b, x, s, t);
-	}
-	function hh(a, b, c, d, x, s, t) {
-		return cmn(b ^ c ^ d, a, b, x, s, t);
-	}
-	function ii(a, b, c, d, x, s, t) {
-		return cmn(c ^ (b | ~d), a, b, x, s, t);
-	}
-	function md5blk(s) {
-		var md5blks = [], i = 0;
-		for (; i < 64; i += 4) md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
-		return md5blks;
-	}
-	function md5str(s) {
-		var n = s.length, state = [
-			1732584193,
-			-271733879,
-			-1732584194,
-			271733878
-		], i = 64;
-		for (; i <= n; i += 64) md5cycle(state, md5blk(s.substring(i - 64, i)));
-		s = s.substring(i - 64);
-		var tail = [
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			0
-		];
-		for (i = 0; i < s.length; i++) tail[i >> 2] |= s.charCodeAt(i) << (i % 4 << 3);
-		tail[i >> 2] |= 128 << (i % 4 << 3);
-		if (i > 55) {
-			md5cycle(state, tail);
-			for (i = 0; i < 16; i++) tail[i] = 0;
-		}
-		tail[14] = n * 8;
-		md5cycle(state, tail);
-		return state;
-	}
-	var hex_chr = "0123456789abcdef".split("");
-	function rhex(n) {
-		var s = "", j = 0;
-		for (; j < 4; j++) s += hex_chr[n >> j * 8 + 4 & 15] + hex_chr[n >> j * 8 & 15];
-		return s;
-	}
-	function add32(a, b) {
-		return a + b & 4294967295;
-	}
-	function md5(s) {
-		if (typeof s !== "string") return "";
-		s = unescape(encodeURIComponent(s));
-		var state = md5str(s);
-		return rhex(state[0]) + rhex(state[1]) + rhex(state[2]) + rhex(state[3]);
 	}
 	init_domains();
 	var JAVDB_DOMAINS = getSiteUrls("JAVDB");
@@ -7394,167 +7679,6 @@
 			return true;
 		}
 	};
-	var DebugLogPanel = class {
-		static updateDebugState(isDebug) {
-			if (isDebug) {
-				this.ensurePanel();
-				if (this._container) this._container.style.display = "block";
-			} else if (this._container) this._container.style.display = "none";
-		}
-		static ensurePanel() {
-			if (this._container || typeof document === "undefined") return;
-			const container = document.createElement("div");
-			container.className = "tm-debug-log-panel-container";
-			container.innerHTML = `
-            <div class="tm-debug-log-pill" title="点击展开/收起 DEBUG 精简日志">
-                <span class="tm-debug-pill-icon">🐛</span>
-                <span class="tm-debug-pill-title">DEBUG 日志</span>
-                <span class="tm-debug-pill-status" id="tm-debug-status-text">就绪</span>
-                <span class="tm-debug-pill-arrow">▾</span>
-            </div>
-            <div class="tm-debug-log-box" style="display: none;">
-                <div class="tm-debug-box-header">
-                    <div class="tm-debug-box-title">
-                        <span>🐛 DEBUG 精简日志</span>
-                        <span class="tm-debug-box-count">(0)</span>
-                    </div>
-                    <div class="tm-debug-box-actions">
-                        <button class="tm-debug-btn tm-debug-copy-btn" title="复制所有调试日志">复制</button>
-                        <button class="tm-debug-btn tm-debug-upload-btn" title="上传调试日志至 WebDAV">上传</button>
-                        <button class="tm-debug-btn tm-debug-clear-btn" title="清空日志">清空</button>
-                        <button class="tm-debug-btn tm-debug-collapse-btn" title="收起面板">▴</button>
-                    </div>
-                </div>
-                <div class="tm-debug-log-list">
-                    <div class="tm-debug-log-empty">暂无调试日志</div>
-                </div>
-            </div>
-        `;
-			container.style.zIndex = "2147483647";
-			document.body.appendChild(container);
-			this._container = container;
-			this._bindEvents();
-		}
-		static _bindEvents() {
-			if (!this._container) return;
-			const pill = this._container.querySelector(".tm-debug-log-pill");
-			const box = this._container.querySelector(".tm-debug-log-box");
-			const arrow = this._container.querySelector(".tm-debug-pill-arrow");
-			const copyBtn = this._container.querySelector(".tm-debug-copy-btn");
-			const clearBtn = this._container.querySelector(".tm-debug-clear-btn");
-			const collapseBtn = this._container.querySelector(".tm-debug-collapse-btn");
-			const toggle = () => {
-				this._isExpanded = !this._isExpanded;
-				box.style.display = this._isExpanded ? "flex" : "none";
-				arrow.textContent = this._isExpanded ? "▴" : "▾";
-				if (this._isExpanded) this._scrollToBottom();
-			};
-			pill.addEventListener("click", (e) => {
-				e.stopPropagation();
-				toggle();
-			});
-			collapseBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
-				this._isExpanded = false;
-				box.style.display = "none";
-				arrow.textContent = "▾";
-			});
-			const uploadBtn = this._container.querySelector(".tm-debug-upload-btn");
-			if (uploadBtn) uploadBtn.addEventListener("click", async (e) => {
-				e.stopPropagation();
-				if (this._logs.length === 0) {
-					Toast("暂无日志可上传", 1500, "info");
-					return;
-				}
-				const config = SyncManager.getWebDavConfig();
-				if (!config || !config.url) {
-					Toast("请先在设置中配置 WebDAV 服务器", 2e3, "error");
-					return;
-				}
-				try {
-					uploadBtn.textContent = "上传中...";
-					const now = new Date();
-					const pad = (n) => String(n).padStart(2, "0");
-					const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-					const subPath = `logs/debug/${(typeof window !== "undefined" ? window.location.pathname.split("/").filter(Boolean).pop() || "GLOBAL" : "GLOBAL").toUpperCase()}_${ts}.txt`;
-					const fullText = this._logs.map((l) => `[${l.time}] [${l.level.toUpperCase()}] ${l.text}`).join("\n");
-					await WebDavClient.uploadFile(config, subPath, fullText, "text/plain; charset=utf-8");
-					Toast(`日志已上传至 WebDAV: ${subPath}`, 2500, "success");
-				} catch (err) {
-					Toast(`上传日志失败: ${err.message || err}`, 2500, "error");
-				} finally {
-					uploadBtn.textContent = "上传";
-				}
-			});
-			clearBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
-				this._logs = [];
-				this._renderLogs();
-				Toast("已清空调试日志", 1200, "info");
-			});
-			copyBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
-				if (this._logs.length === 0) {
-					Toast("暂无日志可复制", 1500, "info");
-					return;
-				}
-				const fullText = this._logs.map((l) => `[${l.time}] [${l.level.toUpperCase()}] ${l.text}`).join("\n");
-				try {
-					if (typeof GM_setClipboard === "function") GM_setClipboard(fullText);
-					else copyToClipboard(fullText);
-				} catch (_) {
-					copyToClipboard(fullText);
-				}
-				Toast("调试日志已复制到剪贴板", 1500, "success");
-			});
-		}
-		static addLog(text, level = "info") {
-			if (!text) return;
-			const now = new Date();
-			const pad = (n) => String(n).padStart(2, "0");
-			const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-			const entry = {
-				id: Date.now() + Math.random().toString(36).slice(2, 6),
-				time: timeStr,
-				text: String(text),
-				level
-			};
-			this._logs.push(entry);
-			if (this._logs.length > this._maxLogs) this._logs.shift();
-			if (this._container) {
-				const statusEl = this._container.querySelector("#tm-debug-status-text");
-				if (statusEl) {
-					statusEl.textContent = entry.text.slice(0, 24) + (entry.text.length > 24 ? "..." : "");
-					statusEl.className = `tm-debug-pill-status level-${level}`;
-				}
-				this._renderLogs();
-			}
-		}
-		static _renderLogs() {
-			if (!this._container) return;
-			const listEl = this._container.querySelector(".tm-debug-log-list");
-			const countEl = this._container.querySelector(".tm-debug-box-count");
-			if (!listEl) return;
-			if (countEl) countEl.textContent = `(${this._logs.length})`;
-			if (this._logs.length === 0) {
-				listEl.innerHTML = "<div class=\"tm-debug-log-empty\">暂无调试日志</div>";
-				return;
-			}
-			listEl.innerHTML = this._logs.map((l) => {
-				return `<div class="tm-debug-log-row level-${l.level}"><span class="tm-log-time">[${l.time}]</span> <span class="tm-log-msg">${l.text}</span></div>`;
-			}).join("");
-			if (this._isExpanded) this._scrollToBottom();
-		}
-		static _scrollToBottom() {
-			if (!this._container) return;
-			const listEl = this._container.querySelector(".tm-debug-log-list");
-			if (listEl) listEl.scrollTop = listEl.scrollHeight;
-		}
-	};
-	_defineProperty(DebugLogPanel, "_container", null);
-	_defineProperty(DebugLogPanel, "_isExpanded", false);
-	_defineProperty(DebugLogPanel, "_logs", []);
-	_defineProperty(DebugLogPanel, "_maxLogs", 150);
 	var COMMENTS_DEBUG_FILENAME = "miss_player_comments_debug.json";
 	var COUNTDOWN_SAMPLES_FILENAME = "miss_player_countdown_samples.json";
 	var DEBOUNCE_DELAY_MS = 12e3;
@@ -8629,6 +8753,14 @@
 					javlibrary: false
 				};
 				const promises = [];
+				try {
+					const remoteComments = await SupabaseService.fetchComments(this.videoCode);
+					if (remoteComments && remoteComments.length > 0) {
+						this._mergeRemoteComments(remoteComments);
+						this.renderCommentsList();
+						this.updateCommentsCount();
+					}
+				} catch (_) {}
 				if (enabledSources.jable !== false) promises.push(this.loadJableComments(1));
 				if (enabledSources.javlib !== false && enabledSources.javlibrary !== false) promises.push(this.loadJavlibComments(1));
 				if (enabledSources.javdb !== false) promises.push(this.loadJavdbComments(1));
@@ -8819,6 +8951,7 @@
 				};
 				platformStats.total = (platformStats.jable || 0) + (platformStats.javdb || 0) + (platformStats.javlib || 0);
 				CommentDebugCollector.collectComments(this.videoCode, processed, duration, platformStats);
+				SupabaseService.uploadComments(this.videoCode, siteKey, processed);
 				DebugLogPanel.addLog(`[评论采集] ${site.name} 第 ${page} 页完成 (${processed.length}条，总计${site.totalCount}条)`, "success");
 				if (!site.collectedPages) site.collectedPages = new Set();
 				site.collectedPages.add(page);
@@ -10126,6 +10259,25 @@
 				else Toast("已记录上报信息至 Debug 日志", 2e3, "success");
 				close();
 			});
+		}
+		_mergeRemoteComments(remoteList) {
+			if (!Array.isArray(remoteList) || remoteList.length === 0) return;
+			const duration = this.playerCore?.targetVideo?.duration || 10800;
+			for (const item of remoteList) {
+				const sKey = (item.source_site || "jable").toLowerCase();
+				const targetSite = this.sites[sKey] || this.sites.jable;
+				if (!targetSite) continue;
+				if (!targetSite.comments.some((c) => String(c.id) === String(item.site_comment_id) || c.text && c.text === item.content_raw)) {
+					const processed = processComment(item.content_raw, duration, item.published_at);
+					processed.id = item.site_comment_id;
+					processed.user = item.user_name;
+					processed.userUrl = item.user_url;
+					processed.time = item.published_at;
+					processed.score = item.score;
+					targetSite.comments.push(processed);
+				}
+			}
+			this.applyFilter();
 		}
 	};
 	_defineProperty(CommentPanel, "preloadCache", {
@@ -13630,6 +13782,7 @@
 						total: res.totalCount || processed.length
 					};
 					CommentDebugCollector.collectComments(code, processed, 10800, stats);
+					SupabaseService.uploadComments(code, "jable", processed);
 					CommentCacheManager.saveSiteCache(code, "jable", {
 						key: "jable",
 						status: "loaded",
