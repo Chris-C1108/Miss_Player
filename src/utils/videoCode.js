@@ -9,7 +9,11 @@ export const TECHNICAL_BLACKLIST = new Set([
     '1080P', '720P', '480P', '2160P', '4K', '8K', 'UHD', 'FHD', 'HD', 'SD',
     'H264', 'H265', 'X264', 'X265', 'HEVC', 'AVC', 'AAC', 'MP4', 'MKV', 'AVI',
     'WMV', 'TS', 'M2TS', 'SUB', 'CH', 'ZH', 'CN', 'UNCENSORED', 'LEAK',
-    'WIN7', 'WIN10', 'WIN11', 'WIN', 'ISO', 'SHA', 'MD5', 'SAMPLE', 'TRAILER'
+    'WIN7', 'WIN10', 'WIN11', 'WIN', 'ISO', 'SHA', 'MD5', 'SAMPLE', 'TRAILER',
+    // 英文月份 (严防 SEP-2026, OCT-2024 等误判)
+    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+    // 常用单位与技术词
+    'FPS', 'KB', 'MB', 'GB', 'TB', 'PAGE', 'EPISODE', 'PART', 'VOL', 'DISC', 'DVD', 'VOD'
 ]);
 
 // 2. 非番号的通用路由与功能页面路径黑名单
@@ -59,7 +63,7 @@ export const PARSER_RULES = [
     // 梯队 6: DM 体系 (如 DM-339, dm339)
     {
         type: 'DM',
-        regex: /\bDM[_s-]?(\d{2,5})\b/i,
+        regex: /\bDM[_s-]?([1-9]\d{1,4})\b/i,
         format: (m) => `DM-${m[1]}`
     },
     // 梯队 7: 标准日系有码 (带横杠/下划线/空格分隔，如 SSIS-888, MIAA-598, ABP-123, SIVR-012)

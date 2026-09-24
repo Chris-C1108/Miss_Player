@@ -633,7 +633,31 @@
 		"SHA",
 		"MD5",
 		"SAMPLE",
-		"TRAILER"
+		"TRAILER",
+		"JAN",
+		"FEB",
+		"MAR",
+		"APR",
+		"MAY",
+		"JUN",
+		"JUL",
+		"AUG",
+		"SEP",
+		"OCT",
+		"NOV",
+		"DEC",
+		"FPS",
+		"KB",
+		"MB",
+		"GB",
+		"TB",
+		"PAGE",
+		"EPISODE",
+		"PART",
+		"VOL",
+		"DISC",
+		"DVD",
+		"VOD"
 	]);
 	var NON_AV_SLUGS = new Set([
 		"search",
@@ -725,7 +749,7 @@
 		},
 		{
 			type: "DM",
-			regex: /\bDM[_s-]?(\d{2,5})\b/i,
+			regex: /\bDM[_s-]?([1-9]\d{1,4})\b/i,
 			format: (m) => `DM-${m[1]}`
 		},
 		{
@@ -13750,7 +13774,6 @@
 			}
 		}
 	};
-	var AVCODE_REGEX = /([a-zA-Z]{2,6})[-_\s]?(\d{2,5})(?:-c|_c|-4k)?/gi;
 	var CrazyScraper = class {
 		static isEnabled() {
 			const isDebug = Boolean(getValue("debugMode", false));
@@ -13799,16 +13822,13 @@
 			const found = new Set();
 			const currentUpper = String(currentAvcode || "").toUpperCase();
 			try {
-				const elements = document.querySelectorAll("a[href], .title, [class*=\"title\"], [class*=\"name\"]");
+				const elements = document.querySelectorAll("a[href*=\"/videos/\"], a[href*=\"/v/\"], a.video-title, .video-card-title, h1, h2");
 				for (const el of elements) {
-					const text = (el.textContent || "") + " " + (el.getAttribute("href") || "");
-					AVCODE_REGEX.lastIndex = 0;
-					let match;
-					while ((match = AVCODE_REGEX.exec(text)) !== null) {
-						const prefix = match[1].toUpperCase();
-						const num = match[2];
-						if (/^(HTTP|HTTPS|WWW|COM|NET|HTML|PHP|JPG|PNG|MP4|M3U8)$/i.test(prefix)) continue;
-						const code = `${prefix}-${num}`;
+					const href = el.getAttribute("href") || "";
+					const text = el.textContent || "";
+					let code = matchAvCodeFromText(href) || matchAvCodeFromText(text);
+					if (code && isValidAvCode(code)) {
+						if (code.startsWith("DM-")) continue;
 						if (code !== currentUpper && !this._completedCodes.has(code)) found.add(code);
 					}
 				}

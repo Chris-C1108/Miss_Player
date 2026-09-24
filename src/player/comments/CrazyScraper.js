@@ -1,3 +1,4 @@
+import { isValidAvCode, matchAvCodeFromText } from '../../utils/videoCode.js';
 import { SupabaseService } from '../../services/SupabaseService.js';
 /**
  * 疯狂采集模式引擎 (CrazyScraper)
@@ -107,17 +108,17 @@ export class CrazyScraper {
 
         try {
             // 扫描所有链接与文本元素
-            const elements = document.querySelectorAll('a[href], .title, [class*="title"], [class*="name"]');
+            // 仅精准扫描真正的视频链接与标题节点
+            const elements = document.querySelectorAll('a[href*="/videos/"], a[href*="/v/"], a.video-title, .video-card-title, h1, h2');
             for (const el of elements) {
-                const text = (el.textContent || '') + ' ' + (el.getAttribute('href') || '');
-                AVCODE_REGEX.lastIndex = 0;
-                let match;
-                while ((match = AVCODE_REGEX.exec(text)) !== null) {
-                    const prefix = match[1].toUpperCase();
-                    const num = match[2];
-                    // 排除无效通用词
-                    if (/^(HTTP|HTTPS|WWW|COM|NET|HTML|PHP|JPG|PNG|MP4|M3U8)$/i.test(prefix)) continue;
-                    const code = `${prefix}-${num}`;
+                const href = el.getAttribute('href') || '';
+                const text = el.textContent || '';
+                
+                // 优先从 href 提取
+                let code = matchAvCodeFromText(href) || matchAvCodeFromText(text);
+                if (code && isValidAvCode(code)) {
+                    // Jable 源站未收录 MissAV 专属企划 DM-xxx，跳过避免无效 404
+                    if (code.startsWith('DM-')) continue;
                     if (code !== currentUpper && !this._completedCodes.has(code)) {
                         found.add(code);
                     }
