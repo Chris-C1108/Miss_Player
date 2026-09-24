@@ -266,8 +266,8 @@ export class SettingsManager {
         const curMode = this.settings.betaPlayMode || 'normal';
         playModeSelect.innerHTML = `
             <option value="normal" ${curMode === 'normal' ? 'selected' : ''}>🎬 正常模式 (常规播放)</option>
-            <option value="preview" ${curMode === 'preview' ? 'selected' : ''}>⚡ 预览模式 (各播30秒)</option>
-            <option value="climax" ${curMode === 'climax' ? 'selected' : ''}>🌟 精彩重温 (高潮区间)</option>
+            <option value="preview" ${curMode === 'preview' ? 'selected' : ''}>⚡ 预览模式 (各播5秒)</option>
+            <option value="climax" ${curMode === 'climax' ? 'selected' : ''}>🌟 精彩重温 (区间完整/时间戳60s)</option>
         `;
 
         playModeSelect.addEventListener('change', (e) => {

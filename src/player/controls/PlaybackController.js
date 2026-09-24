@@ -311,13 +311,13 @@ export class PlaybackController {
         this._currentCapsuleStartTime = startTime;
 
         if (mode === 'preview') {
-            this._currentCapsuleDuration = 30;
+            this._currentCapsuleDuration = 5; // 预览模式严格 5 秒
         } else {
-            // 精彩重温：至少保证播放 15 秒以上
+            // 精彩重温：时间区间完整播放 A 至 B 点，单点时间戳播放 60 秒
             if (tab.startTime !== undefined && tab.endTime !== undefined && tab.endTime > tab.startTime) {
-                this._currentCapsuleDuration = Math.max(15, tab.endTime - tab.startTime);
+                this._currentCapsuleDuration = tab.endTime - tab.startTime;
             } else {
-                this._currentCapsuleDuration = 45;
+                this._currentCapsuleDuration = 60;
             }
         }
 
@@ -369,6 +369,6 @@ export class PlaybackController {
             return;
         }
         // 粉红倒计时进度条背景填充 (如草图所示)
-        this.playPauseButton.style.background = 'linear-gradient(to right, rgba(255, 120, 130, 0.45) ' + pct + '%, rgba(255, 255, 255, 0.08) ' + pct + '%)';
+        this.playPauseButton.style.background = 'linear-gradient(to right, rgba(255, 120, 130, 0.45) ' + pct + '%, rgba(255, 255, 255, 0.12) ' + pct + '%)';
     }
 }

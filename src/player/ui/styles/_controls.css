@@ -1056,3 +1056,68 @@
     0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(255, 90, 95, 0.45); }
     50% { transform: scale(1.04); box-shadow: 0 0 16px rgba(255, 180, 0, 0.8); }
 }
+
+
+/* ===== 一体化居中播放与模式按钮 (Apple 宽胶囊设计规范) ===== */
+.tm-integrated-play-btn {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    height: 36px !important;
+    min-width: 92px !important; /* 统一宽胶囊设计 */
+    padding: 0 16px !important;
+    border-radius: 9999px !important; /* 经典 Apple 全圆角胶囊 */
+    border: 1.5px solid rgba(0, 122, 255, 0.75) !important; /* 优雅的 Apple 标志蓝描边 */
+    cursor: pointer !important;
+    user-select: none !important;
+    overflow: hidden !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+}
+
+/* 状态 1: 正常模式 (宽胶囊居中展示 Apple 蓝播放/暂停 SVG 图标) */
+.tm-integrated-play-btn.mode-normal {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #007aff !important;
+}
+
+.tm-integrated-play-btn.mode-normal svg {
+    width: 20px !important;
+    height: 20px !important;
+    fill: #007aff !important;
+    stroke: none !important;
+    transition: transform 0.12s ease;
+}
+
+/* 状态 2 & 3: 预览模式 / 精彩重温 (宽胶囊直接呈现文字 + 左向右倒计时粉红进度条) */
+.tm-integrated-play-btn.mode-preview,
+.tm-integrated-play-btn.mode-climax {
+    background: rgba(255, 255, 255, 0.12);
+    color: #007aff !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em !important;
+    white-space: nowrap !important;
+}
+
+.tm-integrated-play-btn .tm-play-mode-text {
+    position: relative !important;
+    z-index: 2 !important;
+    color: #007aff !important;
+    letter-spacing: 0.5px !important;
+    user-select: none !important;
+}
+
+/* Apple 微动效与悬浮微光 */
+.tm-integrated-play-btn:hover {
+    transform: scale(1.04) !important;
+    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.35) !important;
+}
+
+.tm-integrated-play-btn:active {
+    transform: scale(0.96) !important;
+}
