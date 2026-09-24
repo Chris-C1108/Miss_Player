@@ -1157,7 +1157,29 @@ export class SettingsManager {
             }
         });
 
+        checkRow.style.display = 'flex';
+        checkRow.style.gap = '8px';
+        checkRow.style.flexWrap = 'wrap';
+
+        const reinstallBtn = document.createElement('button');
+        reinstallBtn.className = 'tm-about-btn tm-about-btn--reinstall';
+        reinstallBtn.style.cssText = 'background: rgba(255, 149, 0, 0.18); border: 1px solid rgba(255, 149, 0, 0.45); color: #ff9500; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
+        reinstallBtn.innerHTML = '<span>⚡ 强制重新安装</span>';
+        reinstallBtn.title = '无论版本号是否变化，直接唤起油猴重新安装最新发布代码 (带时间戳刷新缓存，开发测试利器)';
+        reinstallBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const timestamp = Date.now();
+            const installUrl = 'https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js?_t=' + timestamp;
+            Toast('正在跳转油猴强制重新安装...', 2000, 'info');
+            if (typeof GM_openInTab === 'function') {
+                GM_openInTab(installUrl, { active: true });
+            } else {
+                window.open(installUrl, '_blank');
+            }
+        });
+
         checkRow.appendChild(checkBtn);
+        checkRow.appendChild(reinstallBtn);
         card.appendChild(checkRow);
 
         // 5. 自动检查更新开关行

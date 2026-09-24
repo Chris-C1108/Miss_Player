@@ -148,47 +148,41 @@ export class CrazyScraper {
             if (this._shouldStop || !this.isEnabled()) return;
 
             try {
-                const res = await fetchJableComments(code, 1, domainIndex);
-                if (!res || !Array.isArray(res.comments)) {
-                    DebugLogPanel.addLog(`[疯狂采集] ${code} 暂无评论或未在源站收录`, 'info');
+                let page = 1;
+                let allProcessed = [];
+                let totalCount = 0;
+                let hasMore = true;
+                let workingDomain = '';
+                const collectedPages = new Set();
+                const maxPages = 15;
+
+                while (hasMore && page <= maxPages) {
+                    if (this._shouldStop || !this.isEnabled()) return;
+                    const res = await fetchJableComments(code, page, domainIndex);
+                    if (!res || !Array.isArray(res.comments) || res.comments.length === 0) break;
+                    workingDomain = res.domain || workingDomain;
+                    totalCount = res.totalCount || totalCount;
+                    collectedPages.add(page);
+                    const pageProcessed = res.comments.map((c, idx) => {
+                        const proc = processComment(c.text, code, 10800);
+                        return { ...c, ...proc, _originalIndex: allProcessed.length + idx };
+                    });
+                    allProcessed.push(...pageProcessed);
+                    hasMore = Boolean(res.hasMore);
+                    if (!hasMore) break;
+                    page++;
+                    await this._sleep(800 + Math.random() * 600);
+                }
+                if (allProcessed.length === 0) {
+                    DebugLogPanel.addLog('[疯狂采集] ' + code + ' 暂无评论或未在源站收录', 'info');
                     return;
                 }
-
-                const rawComments = res.comments;
-                const processed = rawComments.map((c, idx) => {
-                    const proc = processComment(c.text, code, 10800);
-                    return {
-                        ...c,
-                        ...proc,
-                        _originalIndex: idx
-                    };
-                });
-
-                // 统计该平台总条数
-                const stats = {
-                    jable: res.totalCount || processed.length,
-                    total: res.totalCount || processed.length
-                };
-
-                // 1. 送入 WebDAV 调试语料库 (包含数字或提到其他番号的评论)
-                CommentDebugCollector.collectComments(code, processed, 10800, stats);
-                SupabaseService.uploadComments(code, 'jable', processed);
-
-                // 2. 存入浏览器内置 IndexedDB (防止重复采集)
-                CommentCacheManager.saveSiteCache(code, 'jable', {
-                    key: 'jable',
-                    status: 'loaded',
-                    comments: processed,
-                    totalCount: stats.jable,
-                    hasMore: res.hasMore,
-                    currentPage: 1,
-                    collectedPages: new Set([1]),
-                    workingDomain: res.domain || ''
-                });
-
-                DebugLogPanel.addLog(`[疯狂采集] ✓ ${code} 采集成功 (获取 ${processed.length} 条评论，总计 ${stats.jable} 条)`, 'success');
+                const stats = { jable: totalCount || allProcessed.length, total: totalCount || allProcessed.length };
+                CommentDebugCollector.collectComments(code, allProcessed, 10800, stats);
+                SupabaseService.uploadComments(code, 'jable', allProcessed);
+                CommentCacheManager.saveSiteCache(code, 'jable', { key: 'jable', status: 'loaded', comments: allProcessed, totalCount: stats.jable, hasMore: false, currentPage: page, collectedPages, workingDomain });
+                DebugLogPanel.addLog('[疯狂采集] ✅ ' + code + ' 全量采集完成 (获取 ' + allProcessed.length + ' 条评论，总计 ' + stats.jable + ' 条)', 'success');
                 return;
-
             } catch (err) {
                 const msg = err.message || '';
                 // 遇到 429 / 频控 / 盾牌，自动退避
