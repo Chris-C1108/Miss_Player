@@ -1,14 +1,14 @@
-
 import { PLAY, PAUSE, REPLAY } from '../../constants/icons.js';
 
 /**
  * VideoStateSwitcher
  * 
- * 严格遵从 Apple 极简毛玻璃美学与流体滑动规范：
+ * 严格遵从 Apple 极简美学与流体滑动人机工程：
  * 1. 正常模式居中，左右对齐「快速预览」与「精彩重温」
- * 2. 宽度收窄至 168px，高度与两侧组件统一对齐为 40px
- * 3. 外层轨道背景完全透明 (transparent)，彻底消除框体与视觉包袱，保留两端平滑渐隐遮罩
- * 4. 居中滑块高度 36px，轻量半透白毛玻璃质感，内倒角高光，纯白 15px 播放 Icon，无粗糙外描边
+ * 2. 宽度扩展至 216px，滑动步长增至 78px，彻底消除误触！
+ * 3. 外层轨道完全透明 (transparent)，彻底消除框体多余包袱
+ * 4. 状态切换滑块完全透明 (background: transparent)，纯净透视底层滑动文字，辅以极轻内倒角微光与半透边框
+ * 5. 高度与两侧组件严格统一为 40px
  */
 export class VideoStateSwitcher {
     /**
@@ -34,9 +34,9 @@ export class VideoStateSwitcher {
         this.currentIndex = this.modes.findIndex(m => m.id === this.initialMode);
         if (this.currentIndex === -1) this.currentIndex = 1;
 
-        // 统一高度 40px，宽度更窄 168px，居中滑块 78px × 36px
+        // 统一高度 40px，宽度加宽至 216px，滑块 94px × 36px，slot 78px
         this.config = Object.assign({
-            width: 168,              // 更窄紧凑，给两端留足自由呼吸
+            width: 216,              // 充足加宽，防止误触
             height: 40,             // 严格与两侧音量、变速胶囊统一为 40px 高度
             morphDelay: 380,
             friction: 0.55,
@@ -44,8 +44,8 @@ export class VideoStateSwitcher {
             enableSound: true
         }, options.config || {});
 
-        this.indicatorWidth = 78;
-        this.slotWidth = 60;
+        this.indicatorWidth = 94;
+        this.slotWidth = 78;
 
         // 运行时状态
         this.isMorphed = false;
@@ -139,7 +139,7 @@ export class VideoStateSwitcher {
             height: ${this.config.height}px;
         `;
 
-        // 1. 外层轨道：完全透明！保留两端平滑渐隐遮罩
+        // 1. 外层轨道：完全透明！两端保留平滑渐隐遮罩
         this.capsuleContainer = document.createElement('div');
         this.capsuleContainer.className = 'mp-switcher-capsule';
         this.capsuleContainer.style.cssText = `
@@ -157,7 +157,8 @@ export class VideoStateSwitcher {
             box-sizing: border-box;
         `;
 
-        // 2. 居中毛玻璃滑块：高度 36px，高度紧密统一，轻量半透白毛玻璃质感，内倒角高光，无粗糙外描边！
+        // 2. 居中滑块：透明背景！让滑动时底部的文字完全清晰透视可见
+        // 配合极轻的 1px solid rgba(255,255,255,0.22) 与内倒角微光
         this.indicator = document.createElement('div');
         this.indicator.className = 'mp-switcher-indicator';
         this.indicator.style.cssText = `
@@ -170,12 +171,10 @@ export class VideoStateSwitcher {
             border-radius: 9999px;
             pointer-events: none;
             z-index: 10;
-            background: rgba(255, 255, 255, 0.16);
-            border: none;
-            box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.45), 0 2px 8px rgba(0, 0, 0, 0.22);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.35), 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
             box-sizing: border-box;
             overflow: hidden;
         `;
@@ -216,7 +215,7 @@ export class VideoStateSwitcher {
             labelEl.className = 'mp-switcher-label';
             labelEl.textContent = mode.title;
             labelEl.style.cssText = `
-                font-size: 11.5px;
+                font-size: 12px;
                 white-space: nowrap;
                 font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
                 font-weight: 500;
@@ -292,7 +291,7 @@ export class VideoStateSwitcher {
                     justify-content: center;
                     cursor: pointer;
                     outline: none;
-                    gap: 3px;
+                    gap: 4px;
                     padding: 0;
                     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
                     transition: transform 0.12s ease;
@@ -416,11 +415,11 @@ export class VideoStateSwitcher {
 
         picker.addEventListener('mouseenter', () => {
             this.indicator.style.transform = 'translate(-50%, 0) scale(1.02)';
-            this.indicator.style.backgroundColor = 'rgba(255, 255, 255, 0.20)';
+            this.indicator.style.borderColor = 'rgba(255, 255, 255, 0.35)';
         });
         picker.addEventListener('mouseleave', () => {
             this.indicator.style.transform = 'translate(-50%, 0) scale(1)';
-            this.indicator.style.backgroundColor = 'rgba(255, 255, 255, 0.16)';
+            this.indicator.style.borderColor = 'rgba(255, 255, 255, 0.22)';
         });
 
         const forceEndDrag = (clientX) => {
@@ -563,9 +562,9 @@ export class VideoStateSwitcher {
         if (!this.indicator) return;
         const curMode = this.modes[this.currentIndex]?.id;
         if (curMode === 'normal' || pct <= 0) {
-            this.indicator.style.background = 'rgba(255, 255, 255, 0.16)';
+            this.indicator.style.background = 'transparent';
             return;
         }
-        this.indicator.style.background = `linear-gradient(to right, rgba(255, 120, 130, 0.45) ${pct}%, rgba(255, 255, 255, 0.16) ${pct}%)`;
+        this.indicator.style.background = `linear-gradient(to right, rgba(255, 120, 130, 0.40) ${pct}%, transparent ${pct}%)`;
     }
 }

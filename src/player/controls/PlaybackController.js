@@ -48,7 +48,7 @@ export class PlaybackController {
             container,
             initialMode,
             config: {
-                width: 168,              // 紧凑 184px，与左右 36px 圆形按键完美对称
+                width: 216,              // 紧凑 184px，与左右 36px 圆形按键完美对称
                 height: 40,             // 统一对齐为 36px
                 morphDelay: 380,
                 friction: 0.55,
