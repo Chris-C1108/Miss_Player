@@ -934,6 +934,21 @@ export class CommentPanel {
             }
         } catch (_) {}
 
+        // 检查 WebDAV 独立评论文件 (/MissPlayer/comments/[AVCODE].json)
+        try {
+            const webdavConfig = SyncManager.getWebDavConfig();
+            if (webdavConfig && webdavConfig.url) {
+                const subPath = 'comments/' + this.videoCode.toUpperCase() + '.json';
+                const wdData = await WebDavClient.downloadBackup(webdavConfig, subPath);
+                if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
+                    this._mergeWebdavComments(wdData.comments);
+                    this.renderCommentsList();
+                    this.updateCommentsCount();
+                    DebugLogPanel.addLog('已从 WebDAV 独立文件加载 ' + wdData.comments.length + ' 条评论 (' + this.videoCode + ')', 'success');
+                }
+            }
+        } catch (_) {}
+
         if (enabledSources.jable !== false) promises.push(this.loadJableComments(1));
             if (enabledSources.javlib !== false && enabledSources.javlibrary !== false) promises.push(this.loadJavlibComments(1));
             if (enabledSources.javdb !== false) promises.push(this.loadJavdbComments(1));
@@ -2967,6 +2982,27 @@ export class CommentPanel {
                 processed.userUrl = item.user_url;
                 processed.time = item.published_at;
                 processed.score = item.score;
+                targetSite.comments.push(processed);
+            }
+        }
+        this.applyFilter();
+    }
+
+
+    _mergeWebdavComments(commentList) {
+        if (!Array.isArray(commentList) || commentList.length === 0) return;
+        const duration = this.playerCore?.targetVideo?.duration || 10800;
+        for (const item of commentList) {
+            const sKey = (item.source || 'jable').toLowerCase();
+            const targetSite = this.sites[sKey] || this.sites.jable;
+            if (!targetSite) continue;
+
+            const exists = targetSite.comments.some(c => String(c.id) === String(item.id) || (c.text && c.text === item.text));
+            if (!exists) {
+                const processed = processComment(item.text, duration, item.time);
+                processed.id = item.id;
+                processed.user = item.user;
+                processed.time = item.time;
                 targetSite.comments.push(processed);
             }
         }

@@ -7766,13 +7766,11 @@
 			return true;
 		}
 	};
-	var COMMENTS_DEBUG_FILENAME = "miss_player_comments_debug.json";
 	var COUNTDOWN_SAMPLES_FILENAME = "miss_player_countdown_samples.json";
 	var DEBOUNCE_DELAY_MS = 12e3;
 	var CommentDebugCollector = class {
 		static isEnabled() {
 			try {
-				if (!Boolean(getValue("debugMode", false))) return false;
 				const config = SyncManager.getWebDavConfig();
 				return Boolean(config && config.url && config.url.trim());
 			} catch (_) {
@@ -7786,12 +7784,7 @@
 			const candidateComments = comments.filter((c) => {
 				if (!c || typeof c.text !== "string") return false;
 				if (c.spam && c.spam.label === "SPAM") return false;
-				const hasDigits = /\d/.test(c.text);
-				const mentionedOther = Array.isArray(c.avcodes) && c.avcodes.some((code) => {
-					const up = String(code || "").toUpperCase();
-					return up && up !== cleanCurAvcode;
-				});
-				return hasDigits || mentionedOther;
+				return (c.rawText || c.text).trim().length > 0;
 			});
 			if (candidateComments.length === 0) return;
 			let batch = this._pendingCommentBatches.get(avcode);
@@ -7857,42 +7850,36 @@
 			this._pendingCommentBatches.clear();
 			try {
 				const config = SyncManager.getWebDavConfig();
-				logger.debug("[DebugCollector] 开始执行 WebDAV 评论语料库增量合并...");
-				let remoteData = null;
-				try {
-					remoteData = await WebDavClient.downloadBackup(config, COMMENTS_DEBUG_FILENAME);
-				} catch (dlErr) {
-					logger.debug("[DebugCollector] 远端文件尚未创建或拉取失败，将初始化新文件:", dlErr.message);
-				}
-				if (!remoteData || typeof remoteData !== "object" || !remoteData.videos) remoteData = {
-					schemaVersion: 1,
-					description: "Miss Player 包含数字的评论语料库 (用于分析时间戳与倒数识别)",
-					lastUpdated: Date.now(),
-					videos: {}
-				};
-				let totalMerged = 0;
+				logger.debug("[DebugCollector] 开始执行 WebDAV 独立番号全量评论同步...");
 				for (const [avcode, batch] of batchesToFlush.entries()) {
-					if (!remoteData.videos[avcode]) remoteData.videos[avcode] = {
-						avcode,
-						videoDuration: batch.videoDuration,
-						updatedAt: Date.now(),
-						comments: {}
+					const cleanCode = avcode.toUpperCase();
+					const subPath = `comments/${cleanCode}.json`;
+					let avData = null;
+					try {
+						avData = await WebDavClient.downloadBackup(config, subPath);
+					} catch (_) {}
+					if (!avData || typeof avData !== "object" || !Array.isArray(avData.comments)) avData = {
+						avcode: cleanCode,
+						videoDuration: batch.videoDuration || 10800,
+						totalCount: 0,
+						hasTimestampsCount: 0,
+						updatedAt: new Date().toISOString(),
+						comments: []
 					};
-					const targetVideo = remoteData.videos[avcode];
-					if (batch.videoDuration && batch.videoDuration !== 10800) targetVideo.videoDuration = batch.videoDuration;
-					targetVideo.updatedAt = Date.now();
-					if (batch.platformStats && typeof batch.platformStats === "object") targetVideo.platformStats = Object.assign({}, targetVideo.platformStats || {}, batch.platformStats);
-					for (const [key, commentObj] of batch.comments.entries()) {
-						targetVideo.comments[key] = commentObj;
-						totalMerged++;
-					}
+					if (batch.videoDuration && batch.videoDuration !== 10800) avData.videoDuration = batch.videoDuration;
+					const existingMap = new Map();
+					avData.comments.forEach((c) => existingMap.set(c.id || c.text, c));
+					for (const [key, commentObj] of batch.comments.entries()) existingMap.set(commentObj.id || commentObj.text, commentObj);
+					avData.comments = Array.from(existingMap.values());
+					avData.totalCount = avData.comments.length;
+					avData.hasTimestampsCount = avData.comments.filter((c) => c.hasTimestamps).length;
+					avData.updatedAt = new Date().toISOString();
+					await WebDavClient.uploadFile(config, subPath, avData, "application/json; charset=utf-8");
+					logger.debug(`[DebugCollector] WebDAV 独立存储完成: ${subPath} (共 ${avData.totalCount} 条)`);
+					DebugLogPanel.addLog(`[WebDAV] 已将 ${cleanCode} 全量评论存入 /MissPlayer/${subPath} (${avData.totalCount}条)`, "success");
 				}
-				remoteData.lastUpdated = Date.now();
-				await WebDavClient.uploadBackup(config, remoteData, COMMENTS_DEBUG_FILENAME);
-				logger.debug(`[DebugCollector] 成功写回 WebDAV: 合并 ${totalMerged} 条评论至 ${COMMENTS_DEBUG_FILENAME}`);
-				DebugLogPanel.addLog(`[WebDAV] 成功合并 ${totalMerged} 条评论至 ${COMMENTS_DEBUG_FILENAME}`, "success");
 			} catch (err) {
-				logger.warn("[DebugCollector] WebDAV 评论语料写回失败 (静默忽略):", err.message || err);
+				logger.warn("[DebugCollector] WebDAV 独立评论存储异常 (重入队列待重试):", err.message || err);
 				for (const [avcode, batch] of batchesToFlush.entries()) {
 					const existing = this._pendingCommentBatches.get(avcode);
 					if (existing) for (const [k, v] of batch.comments.entries()) existing.comments.set(k, v);
@@ -8846,6 +8833,19 @@
 						this._mergeRemoteComments(remoteComments);
 						this.renderCommentsList();
 						this.updateCommentsCount();
+					}
+				} catch (_) {}
+				try {
+					const webdavConfig = SyncManager.getWebDavConfig();
+					if (webdavConfig && webdavConfig.url) {
+						const subPath = "comments/" + this.videoCode.toUpperCase() + ".json";
+						const wdData = await WebDavClient.downloadBackup(webdavConfig, subPath);
+						if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
+							this._mergeWebdavComments(wdData.comments);
+							this.renderCommentsList();
+							this.updateCommentsCount();
+							DebugLogPanel.addLog("已从 WebDAV 独立文件加载 " + wdData.comments.length + " 条评论 (" + this.videoCode + ")", "success");
+						}
 					}
 				} catch (_) {}
 				if (enabledSources.jable !== false) promises.push(this.loadJableComments(1));
@@ -10364,6 +10364,23 @@
 					processed.userUrl = item.user_url;
 					processed.time = item.published_at;
 					processed.score = item.score;
+					targetSite.comments.push(processed);
+				}
+			}
+			this.applyFilter();
+		}
+		_mergeWebdavComments(commentList) {
+			if (!Array.isArray(commentList) || commentList.length === 0) return;
+			const duration = this.playerCore?.targetVideo?.duration || 10800;
+			for (const item of commentList) {
+				const sKey = (item.source || "jable").toLowerCase();
+				const targetSite = this.sites[sKey] || this.sites.jable;
+				if (!targetSite) continue;
+				if (!targetSite.comments.some((c) => String(c.id) === String(item.id) || c.text && c.text === item.text)) {
+					const processed = processComment(item.text, duration, item.time);
+					processed.id = item.id;
+					processed.user = item.user;
+					processed.time = item.time;
 					targetSite.comments.push(processed);
 				}
 			}
