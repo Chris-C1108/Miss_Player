@@ -14115,6 +14115,7 @@
 				autoCheckUpdate: true,
 				betaMode: false,
 				betaFirstCapsulePlay: false,
+				betaPlayMode: "normal",
 				betaColorPlayMode: "preview",
 				betaSafariMuteStyle: true,
 				betaCapsuleUndo: true,
@@ -14203,6 +14204,54 @@
 			section1.appendChild(progressBarOption);
 			section1.appendChild(seekControlContainer);
 			section1.appendChild(loopControlOption);
+			const playModeContainer = document.createElement("div");
+			playModeContainer.className = "tm-settings-option-row";
+			playModeContainer.id = "tm-setting-playMode";
+			playModeContainer.style.display = "flex";
+			playModeContainer.style.alignItems = "center";
+			playModeContainer.style.justifyContent = "space-between";
+			playModeContainer.style.padding = "8px 0";
+			playModeContainer.style.borderTop = "1px solid rgba(255, 255, 255, 0.06)";
+			playModeContainer.style.marginTop = "4px";
+			const playModeLabelWrap = document.createElement("div");
+			playModeLabelWrap.style.display = "flex";
+			playModeLabelWrap.style.flexDirection = "column";
+			playModeLabelWrap.style.gap = "2px";
+			const playModeLabel = document.createElement("span");
+			playModeLabel.className = "tm-settings-label";
+			playModeLabel.textContent = "播放按钮运行模式";
+			playModeLabel.style.fontSize = "13px";
+			playModeLabel.style.fontWeight = "600";
+			playModeLabel.style.color = "#fff";
+			const playModeSub = document.createElement("span");
+			playModeSub.style.fontSize = "11px";
+			playModeSub.style.color = "rgba(255, 255, 255, 0.5)";
+			playModeSub.textContent = "常规连贯播放、胶囊走马灯预览或高潮精彩重温";
+			playModeLabelWrap.appendChild(playModeLabel);
+			playModeLabelWrap.appendChild(playModeSub);
+			const playModeSelect = document.createElement("select");
+			playModeSelect.className = "tm-settings-select tm-settings-playmode-select";
+			playModeSelect.style.cssText = "background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; outline: none;";
+			const curMode = this.settings.betaPlayMode || "normal";
+			playModeSelect.innerHTML = `
+            <option value="normal" ${curMode === "normal" ? "selected" : ""}>🎬 正常模式 (常规播放)</option>
+            <option value="preview" ${curMode === "preview" ? "selected" : ""}>⚡ 预览模式 (各播30秒)</option>
+            <option value="climax" ${curMode === "climax" ? "selected" : ""}>🌟 精彩重温 (高潮区间)</option>
+        `;
+			playModeSelect.addEventListener("change", (e) => {
+				const val = e.target.value;
+				this.updateSetting("betaPlayMode", val);
+				const pb = this.controlManager?.playbackController;
+				if (pb && typeof pb.updatePlayPauseButton === "function") pb.updatePlayPauseButton();
+				Toast(`已切换为: ${{
+					normal: "正常模式",
+					preview: "预览模式",
+					climax: "精彩重温"
+				}[val] || val}`, 2e3, "info");
+			});
+			playModeContainer.appendChild(playModeLabelWrap);
+			playModeContainer.appendChild(playModeSelect);
+			section1.appendChild(playModeContainer);
 			container.appendChild(section1);
 			const section2 = this._createSectionHeader("评论区 :");
 			const commentsOptionContainer = document.createElement("div");
@@ -14298,7 +14347,9 @@
             </select>
         `;
 			colorPlayModeRow.querySelector(".tm-beta-playmode-select").addEventListener("change", (e) => {
-				this.updateSetting("betaColorPlayMode", e.target.value);
+				this.updateSetting("betaPlayMode", e.target.value);
+				const pc = this.controlManager?.playbackController;
+				if (pc) pc.updatePlayPauseButton();
 			});
 			colorPlayModeRow.querySelector(".tm-beta-info-btn").addEventListener("click", () => {
 				Toast("【预览模式】所有胶囊统一只播30秒走马灯扫片\n【回看模式】时间戳播60秒，时间区间完整播放A至B点", 4e3, "info");
@@ -15148,6 +15199,8 @@
 				this.settings.pauseOnBlur = getBool("pauseOnBlur", true);
 				this.settings.buttonSoundEnabled = getBool("buttonSoundEnabled", true);
 				this.settings.autoCheckUpdate = getBool("autoCheckUpdate", true);
+				const rawPm = getValue("betaPlayMode", "normal");
+				this.settings.betaPlayMode = rawPm === "preview" || rawPm === "climax" ? rawPm : "normal";
 				this.settings.betaMode = getBool("betaMode", false);
 				this.settings.betaFirstCapsulePlay = getBool("betaFirstCapsulePlay", false);
 				const rawPlayMode = getValue("betaColorPlayMode", "preview");
@@ -15176,6 +15229,7 @@
 				setValue("pauseOnBlur", this.settings.pauseOnBlur);
 				setValue("buttonSoundEnabled", this.settings.buttonSoundEnabled);
 				setValue("autoCheckUpdate", this.settings.autoCheckUpdate !== false);
+				setValue("betaPlayMode", this.settings.betaPlayMode || "normal");
 				setValue("betaMode", Boolean(this.settings.betaMode));
 				setValue("betaFirstCapsulePlay", Boolean(this.settings.betaFirstCapsulePlay));
 				setValue("betaColorPlayMode", this.settings.betaColorPlayMode || "preview");
@@ -16296,10 +16350,12 @@
 				this.settings.preferredPlaybackRate = !isNaN(rawSpeed) && rawSpeed >= .5 && rawSpeed <= 4 ? rawSpeed : 1;
 				this.settings.pauseOnBlur = getBool("pauseOnBlur", true);
 				this.settings.buttonSoundEnabled = getBool("buttonSoundEnabled", true);
-				this.settings.autoCheckUpdate = getBool("autoCheckUpdate", "betaMode", "betaFirstCapsulePlay", "betaColorPlayMode", "betaSafariMuteStyle", "betaCapsuleUndo", "betaDeepLinking", true);
+				this.settings.autoCheckUpdate = getBool("autoCheckUpdate", "betaMode", "betaFirstCapsulePlay", "betaPlayMode", "betaColorPlayMode", "betaSafariMuteStyle", "betaCapsuleUndo", "betaDeepLinking", true);
 				this.settings.betaMode = getBool("betaMode", false);
 				this.settings.betaFirstCapsulePlay = getBool("betaFirstCapsulePlay", false);
-				const rawPlayMode = getValue("betaColorPlayMode", "preview");
+				const rawPlayMode = getValue("betaPlayMode", "normal");
+				this.settings.betaPlayMode = rawPlayMode === "preview" || rawPlayMode === "climax" ? rawPlayMode : "normal";
+				getValue("betaColorPlayMode", "preview");
 				this.settings.betaColorPlayMode = rawPlayMode === "review" ? "review" : "preview";
 				this.settings.betaSafariMuteStyle = getBool("betaSafariMuteStyle", true);
 				this.settings.betaCapsuleUndo = getBool("betaCapsuleUndo", true);
@@ -16360,6 +16416,7 @@
 				setValue("autoCheckUpdate", this.settings.autoCheckUpdate !== false);
 				setValue("betaMode", Boolean(this.settings.betaMode));
 				setValue("betaFirstCapsulePlay", Boolean(this.settings.betaFirstCapsulePlay));
+				setValue("betaPlayMode", this.settings.betaPlayMode || "normal");
 				setValue("betaColorPlayMode", this.settings.betaColorPlayMode || "preview");
 				setValue("betaSafariMuteStyle", Boolean(this.settings.betaSafariMuteStyle));
 				setValue("betaCapsuleUndo", Boolean(this.settings.betaCapsuleUndo));

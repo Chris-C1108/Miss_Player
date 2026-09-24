@@ -88,13 +88,16 @@ export class PlayerState {
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate',
             'betaMode',
             'betaFirstCapsulePlay',
+            'betaPlayMode',
             'betaColorPlayMode',
             'betaSafariMuteStyle',
             'betaCapsuleUndo',
             'betaDeepLinking', true);
             this.settings.betaMode = getBool('betaMode', false);
             this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
-            const rawPlayMode = getValue('betaColorPlayMode', 'preview');
+            const rawPlayMode = getValue('betaPlayMode', 'normal');
+            this.settings.betaPlayMode = (rawPlayMode === 'preview' || rawPlayMode === 'climax') ? rawPlayMode : 'normal';
+            const rawColorMode = getValue('betaColorPlayMode', 'preview');
             this.settings.betaColorPlayMode = (rawPlayMode === 'review') ? 'review' : 'preview';
             this.settings.betaSafariMuteStyle = getBool('betaSafariMuteStyle', true);
             this.settings.betaCapsuleUndo = getBool('betaCapsuleUndo', true);
@@ -171,6 +174,7 @@ export class PlayerState {
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
             setValue('betaMode', Boolean(this.settings.betaMode));
             setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));
+            setValue('betaPlayMode', this.settings.betaPlayMode || 'normal');
             setValue('betaColorPlayMode', this.settings.betaColorPlayMode || 'preview');
             setValue('betaSafariMuteStyle', Boolean(this.settings.betaSafariMuteStyle));
             setValue('betaCapsuleUndo', Boolean(this.settings.betaCapsuleUndo));
