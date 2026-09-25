@@ -283,6 +283,14 @@ export class EventManager {
         console.log('[EventManager] 处理关闭按钮点击');
         // 先移除所有事件监听器
         this.cleanup();
+
+        // 通知父页面折叠 iframe 全屏
+        try {
+            if (window.self !== window.top) {
+                window.top.postMessage({ type: 'MP_IFRAME_COLLAPSE' }, '*');
+            }
+        } catch (_) {}
+
         // 然后关闭播放器
         this.playerCore.close(
             this.uiElements.overlay, 

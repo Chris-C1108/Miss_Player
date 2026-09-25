@@ -24,7 +24,7 @@ export class FloatingButton {
         this.cleanupExistingButtons();
         
         // 检查页面是否存在视频元素
-        if (findVideoElement()) {
+        if (findVideoElement(true)) {
             // 创建新按钮
             this.createButton();
             
@@ -76,7 +76,7 @@ export class FloatingButton {
         if (this.mutationTimeout) clearTimeout(this.mutationTimeout);
         
         this.mutationTimeout = setTimeout(() => {
-            const hasVideo = findVideoElement();
+            const hasVideo = findVideoElement(true);
             
             // 如果有视频元素但没有按钮，创建按钮
             if (hasVideo && !this.button) {
@@ -115,7 +115,7 @@ export class FloatingButton {
         
         // 设置新计时器，每2秒检查一次
         this.videoCheckInterval = setInterval(() => {
-            if (findVideoElement()) {
+            if (findVideoElement(true)) {
                 // 只有当按钮不存在时才创建
                 if (!this.button) {
                     // 找到视频元素，创建按钮
@@ -168,7 +168,7 @@ export class FloatingButton {
         
         this.resizeTimeout = setTimeout(() => {
             // 检查页面是否存在视频元素
-            if (findVideoElement()) {
+            if (findVideoElement(true)) {
                 // 无论横屏还是竖屏都显示按钮
                 this.button.style.display = 'flex';
                 
@@ -241,8 +241,35 @@ export class FloatingButton {
         // 遥测上报：浮窗按钮被点击，记录触发站点和视频信息
         telemetry.trackPluginTrigger();
 
+        const targetNode = findVideoElement(true);
+
+        // 如果命中的是播放器 iframe，直接通知内部或最大化
+        if (targetNode && targetNode.tagName === 'IFRAME') {
+            console.log('[FloatingButton] 命中播放器 iframe，发送跨帧全屏广播');
+            try {
+                targetNode.contentWindow.postMessage({ type: 'MP_TRIGGER_PLAYER' }, '*');
+            } catch (_) {}
+            targetNode.classList.toggle('tm-iframe-expanded');
+            if (!document.getElementById('tm-iframe-expand-style')) {
+                const style = document.createElement('style');
+                style.id = 'tm-iframe-expand-style';
+                style.textContent = `
+                    iframe.tm-iframe-expanded {
+                        position: fixed !important;
+                        inset: 0 !important;
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        z-index: 2000000000 !important;
+                        border: none !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            return;
+        }
+
         // 在用户直接点击手势的调用栈顶端尝试预热激活视频元素 (必须先设置 playsinline 属性，防止 Safari 自动跳入系统全屏播放器)
-        const preTargetVideo = findVideoElement();
+        const preTargetVideo = (targetNode && targetNode.tagName === 'VIDEO') ? targetNode : findVideoElement(false);
         if (preTargetVideo) {
             preTargetVideo.setAttribute('playsinline', 'true');
             preTargetVideo.setAttribute('webkit-playsinline', 'true');

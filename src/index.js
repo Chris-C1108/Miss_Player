@@ -80,8 +80,19 @@ function setupViewport() {
     } catch (_) {
         isInIframe = true;
     }
-    if (isInIframe && !isSiteDomain('JAVLIBRARY')) {
-        return; // 非 JAVLib 的 iframe 环境，不注入任何逻辑
+
+    // 识别是否是播放器相关 iframe (如 Javrate, Supjav, Dood, Streamtape 等)
+    const isPlayerIframe = isInIframe && (
+        window.location.pathname.includes('/player/') ||
+        window.location.pathname.includes('/embed/') ||
+        window.location.search.includes('payload=') ||
+        window.location.search.includes('video=') ||
+        window.location.href.includes('avking') ||
+        window.location.href.includes('videocdn')
+    );
+
+    if (isInIframe && !isSiteDomain('JAVLIBRARY') && !isPlayerIframe) {
+        return; // 过滤广告与非播放器 iframe
     }
 
     // 全局状态管理和播放器实例
@@ -147,6 +158,33 @@ function setupViewport() {
 
             // 初始化失焦/后台播放控制器
             BlurPlaybackManager.initGlobal(playerState);
+
+            // 跨帧消息通信：支持父页面与嵌入式播放器 iframe 之间的双向唤醒
+            window.addEventListener('message', (event) => {
+                const data = event.data;
+                if (!data || typeof data !== 'object') return;
+
+                if (data.type === 'MP_TRIGGER_PLAYER') {
+                    console.log('[MissPlayer] 接收到跨帧唤醒信号，拉起播放器');
+                    const btn = document.querySelector('.tm-floating-button');
+                    if (btn) {
+                        btn.click();
+                    } else {
+                        const player = new CustomVideoPlayer({ playerState });
+                        player.init();
+                    }
+                    try {
+                        window.top.postMessage({ type: 'MP_IFRAME_EXPAND' }, '*');
+                    } catch (_) {}
+                } else if (data.type === 'MP_IFRAME_EXPAND' && !isInIframe) {
+                    const ifr = findVideoIframeElement();
+                    if (ifr) ifr.classList.add('tm-iframe-expanded');
+                } else if (data.type === 'MP_IFRAME_COLLAPSE' && !isInIframe) {
+                    const ifr = findVideoIframeElement();
+                    if (ifr) ifr.classList.remove('tm-iframe-expanded');
+                }
+            });
+
 
             // 创建浮动按钮实例并初始化
             const floatingButton = new FloatingButton({

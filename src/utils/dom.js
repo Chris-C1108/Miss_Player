@@ -68,7 +68,45 @@ export function waitForElement(selector, timeout = 10000, interval = 100) {
  * 查找并检测页面中的视频元素（按优先级和尺寸大小筛选）
  * @returns {HTMLVideoElement|null} - 找到的视频元素或null
  */
-export function findVideoElement() {
+/**
+ * 寻找嵌入式播放器 iframe（如 Javrate、Supjav 等站点）
+ * @returns {HTMLIFrameElement|null}
+ */
+export function findVideoIframeElement() {
+    const iframeSelectors = [
+        'iframe[src*="/player/"]',
+        'iframe[src*="payload="]',
+        'iframe[src*="/embed/"]',
+        'iframe[src*="video"]',
+        '.player iframe',
+        '#player iframe',
+        '.video-player iframe',
+        '.responsive-embed iframe'
+    ];
+
+    for (const sel of iframeSelectors) {
+        const el = document.querySelector(sel);
+        if (el) return el;
+    }
+
+    // 检查所有可见且尺寸合理的 iframe
+    const allIframes = Array.from(document.querySelectorAll('iframe'));
+    for (const ifr of allIframes) {
+        const src = (ifr.getAttribute('src') || '').toLowerCase();
+        if (src.includes('player') || src.includes('embed') || src.includes('video') || src.includes('payload=')) {
+            return ifr;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * 查找并检测页面中的视频元素（或嵌入式播放器元素）
+ * @param {boolean} [includeIframe=false] 是否包含播放器 iframe
+ * @returns {HTMLVideoElement|HTMLIFrameElement|null}
+ */
+export function findVideoElement(includeIframe = false) {
     let potentialVideo = null;
 
     // --- Strategy 1: Specific known selectors ---
@@ -85,7 +123,6 @@ export function findVideoElement() {
     for (const selector of specificSelectors) {
         potentialVideo = document.querySelector(selector);
         if (potentialVideo) {
-            // logger.debug('[Utils] 通过选择器找到视频:', selector);
             return potentialVideo;
         }
     }
@@ -93,33 +130,36 @@ export function findVideoElement() {
     // --- Strategy 2: Find all videos and prioritize ---
     const allVideos = Array.from(document.querySelectorAll('video'));
 
-    if (allVideos.length === 0) {
-        return null;
-    }
-
     if (allVideos.length === 1) {
         return allVideos[0];
     }
 
-    // Filter out potentially hidden or invalid videos and calculate area
-    const visibleVideos = allVideos
-        .map(video => ({
-            element: video,
-            rect: video.getBoundingClientRect(),
-        }))
-        .filter(item => item.rect.width > 50 && item.rect.height > 50) // Basic visibility/size check
-        .map(item => ({
-            ...item,
-            area: item.rect.width * item.rect.height
-        }))
-        .sort((a, b) => b.area - a.area); // Sort by area descending
+    if (allVideos.length > 1) {
+        const visibleVideos = allVideos
+            .map(video => ({
+                element: video,
+                rect: video.getBoundingClientRect(),
+            }))
+            .filter(item => item.rect.width > 50 && item.rect.height > 50)
+            .map(item => ({
+                ...item,
+                area: item.rect.width * item.rect.height
+            }))
+            .sort((a, b) => b.area - a.area);
 
-    if (visibleVideos.length > 0) {
-        return visibleVideos[0].element;
+        if (visibleVideos.length > 0) {
+            return visibleVideos[0].element;
+        }
+        return allVideos[0];
     }
 
-    // --- Strategy 3: Fallback to first video if filtering fails ---
-    return allVideos[0];
+    // --- Strategy 3: 检查是否存在视频播放器 iframe ---
+    if (includeIframe) {
+        const ifr = findVideoIframeElement();
+        if (ifr) return ifr;
+    }
+
+    return null;
 }
 
 /**

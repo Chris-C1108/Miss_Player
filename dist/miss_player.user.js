@@ -271,7 +271,28 @@
 			}, interval);
 		});
 	}
-	function findVideoElement() {
+	function findVideoIframeElement$1() {
+		for (const sel of [
+			"iframe[src*=\"/player/\"]",
+			"iframe[src*=\"payload=\"]",
+			"iframe[src*=\"/embed/\"]",
+			"iframe[src*=\"video\"]",
+			".player iframe",
+			"#player iframe",
+			".video-player iframe",
+			".responsive-embed iframe"
+		]) {
+			const el = document.querySelector(sel);
+			if (el) return el;
+		}
+		const allIframes = Array.from(document.querySelectorAll("iframe"));
+		for (const ifr of allIframes) {
+			const src = (ifr.getAttribute("src") || "").toLowerCase();
+			if (src.includes("player") || src.includes("embed") || src.includes("video") || src.includes("payload=")) return ifr;
+		}
+		return null;
+	}
+	function findVideoElement(includeIframe = false) {
 		let potentialVideo = null;
 		for (const selector of [
 			"#player video",
@@ -286,17 +307,23 @@
 			if (potentialVideo) return potentialVideo;
 		}
 		const allVideos = Array.from(document.querySelectorAll("video"));
-		if (allVideos.length === 0) return null;
 		if (allVideos.length === 1) return allVideos[0];
-		const visibleVideos = allVideos.map((video) => ({
-			element: video,
-			rect: video.getBoundingClientRect()
-		})).filter((item) => item.rect.width > 50 && item.rect.height > 50).map((item) => ({
-			...item,
-			area: item.rect.width * item.rect.height
-		})).sort((a, b) => b.area - a.area);
-		if (visibleVideos.length > 0) return visibleVideos[0].element;
-		return allVideos[0];
+		if (allVideos.length > 1) {
+			const visibleVideos = allVideos.map((video) => ({
+				element: video,
+				rect: video.getBoundingClientRect()
+			})).filter((item) => item.rect.width > 50 && item.rect.height > 50).map((item) => ({
+				...item,
+				area: item.rect.width * item.rect.height
+			})).sort((a, b) => b.area - a.area);
+			if (visibleVideos.length > 0) return visibleVideos[0].element;
+			return allVideos[0];
+		}
+		if (includeIframe) {
+			const ifr = findVideoIframeElement$1();
+			if (ifr) return ifr;
+		}
+		return null;
 	}
 	function createRipple(event, button, color) {
 		if (!button || typeof button.getBoundingClientRect !== "function") return null;
@@ -14552,6 +14579,9 @@
 		handleCloseButtonClick() {
 			console.log("[EventManager] 处理关闭按钮点击");
 			this.cleanup();
+			try {
+				if (window.self !== window.top) window.top.postMessage({ type: "MP_IFRAME_COLLAPSE" }, "*");
+			} catch (_) {}
 			this.playerCore.close(this.uiElements.overlay, this.uiElements.container, this.uiElements.playerContainer);
 		}
 		handleSettingsButtonClick() {
@@ -16749,7 +16779,7 @@
 			return true;
 		}
 	};
-	var CustomVideoPlayer = class {
+	var CustomVideoPlayer$1 = class {
 		constructor(options = {}) {
 			console.log("[CustomVideoPlayer] 初始化...");
 			this.playerCore = new PlayerCore(options);
@@ -16973,7 +17003,7 @@
 		}
 		init() {
 			this.cleanupExistingButtons();
-			if (findVideoElement()) {
+			if (findVideoElement(true)) {
 				this.createButton();
 				window.addEventListener("resize", this.handleResize.bind(this));
 				window.matchMedia("(orientation: portrait)").addEventListener("change", this.handleResize.bind(this));
@@ -16996,7 +17026,7 @@
 		handleDomMutations() {
 			if (this.mutationTimeout) clearTimeout(this.mutationTimeout);
 			this.mutationTimeout = setTimeout(() => {
-				const hasVideo = findVideoElement();
+				const hasVideo = findVideoElement(true);
 				if (hasVideo && !this.button) {
 					this.createButton();
 					window.addEventListener("resize", this.handleResize.bind(this));
@@ -17014,7 +17044,7 @@
 		startVideoElementCheck() {
 			if (this.videoCheckInterval) clearInterval(this.videoCheckInterval);
 			this.videoCheckInterval = setInterval(() => {
-				if (findVideoElement()) {
+				if (findVideoElement(true)) {
 					if (!this.button) {
 						this.createButton();
 						window.addEventListener("resize", this.handleResize.bind(this));
@@ -17041,7 +17071,7 @@
 		handleResize() {
 			if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
 			this.resizeTimeout = setTimeout(() => {
-				if (findVideoElement()) {
+				if (findVideoElement(true)) {
 					this.button.style.display = "flex";
 					this.updateButtonPosition();
 				} else if (this.button) this.button.style.display = "none";
@@ -17075,7 +17105,31 @@
 		}
 		handleButtonClick() {
 			telemetry.trackPluginTrigger();
-			const preTargetVideo = findVideoElement();
+			const targetNode = findVideoElement(true);
+			if (targetNode && targetNode.tagName === "IFRAME") {
+				console.log("[FloatingButton] 命中播放器 iframe，发送跨帧全屏广播");
+				try {
+					targetNode.contentWindow.postMessage({ type: "MP_TRIGGER_PLAYER" }, "*");
+				} catch (_) {}
+				targetNode.classList.toggle("tm-iframe-expanded");
+				if (!document.getElementById("tm-iframe-expand-style")) {
+					const style = document.createElement("style");
+					style.id = "tm-iframe-expand-style";
+					style.textContent = `
+                    iframe.tm-iframe-expanded {
+                        position: fixed !important;
+                        inset: 0 !important;
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        z-index: 2000000000 !important;
+                        border: none !important;
+                    }
+                `;
+					document.head.appendChild(style);
+				}
+				return;
+			}
+			const preTargetVideo = targetNode && targetNode.tagName === "VIDEO" ? targetNode : findVideoElement(false);
 			if (preTargetVideo) {
 				preTargetVideo.setAttribute("playsinline", "true");
 				preTargetVideo.setAttribute("webkit-playsinline", "true");
@@ -17092,7 +17146,7 @@
 			}
 			this.button.style.display = "none";
 			requestAnimationFrame(() => {
-				this.videoPlayer = new CustomVideoPlayer({
+				this.videoPlayer = new CustomVideoPlayer$1({
 					playerState: this.playerState,
 					callingButton: this.button
 				});
@@ -17967,7 +18021,8 @@
 		} catch (_) {
 			isInIframe = true;
 		}
-		if (isInIframe && !isSiteDomain("JAVLIBRARY")) return;
+		const isPlayerIframe = isInIframe && (window.location.pathname.includes("/player/") || window.location.pathname.includes("/embed/") || window.location.search.includes("payload=") || window.location.search.includes("video=") || window.location.href.includes("avking") || window.location.href.includes("videocdn"));
+		if (isInIframe && !isSiteDomain("JAVLIBRARY") && !isPlayerIframe) return;
 		let playerState = null;
 		function injectStyles() {
 			if (document.getElementById("tm-player-styles")) return;
@@ -17994,6 +18049,25 @@
 					SyncManager.triggerAutoSync(playerState, "resume");
 				});
 				BlurPlaybackManager.initGlobal(playerState);
+				window.addEventListener("message", (event) => {
+					const data = event.data;
+					if (!data || typeof data !== "object") return;
+					if (data.type === "MP_TRIGGER_PLAYER") {
+						console.log("[MissPlayer] 接收到跨帧唤醒信号，拉起播放器");
+						const btn = document.querySelector(".tm-floating-button");
+						if (btn) btn.click();
+						else new CustomVideoPlayer({ playerState }).init();
+						try {
+							window.top.postMessage({ type: "MP_IFRAME_EXPAND" }, "*");
+						} catch (_) {}
+					} else if (data.type === "MP_IFRAME_EXPAND" && !isInIframe) {
+						const ifr = findVideoIframeElement();
+						if (ifr) ifr.classList.add("tm-iframe-expanded");
+					} else if (data.type === "MP_IFRAME_COLLAPSE" && !isInIframe) {
+						const ifr = findVideoIframeElement();
+						if (ifr) ifr.classList.remove("tm-iframe-expanded");
+					}
+				});
 				new FloatingButton({ playerState }).init();
 				initAutoLogin().then((loginManager) => {
 					if (loginManager) window.loginManager = loginManager;
