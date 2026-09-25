@@ -1445,7 +1445,7 @@ export class CommentPanel {
                 <div class="jc-code-preview-spinner"></div>
                 <span>${loadingText}</span>
             </div>
-            <video class="jc-code-preview-video" loop muted playsinline style="display:none;"></video>
+            <video class="jc-code-preview-video" loop muted playsinline referrerpolicy="no-referrer" style="display:none;"></video>
             <div class="jc-code-preview-fallback" style="display:none;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="opacity:0.6;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                 <span>${notFoundText}</span>
