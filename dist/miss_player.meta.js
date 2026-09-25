@@ -36,6 +36,7 @@
 // @connect            www.javlib.com
 // @connect            c97k.com
 // @connect            www.c97k.com
+// @connect            fourhoi.com
 // @connect            sleazyfork.org
 // @connect            greasyfork.org
 // @connect            update.sleazyfork.org

@@ -121,6 +121,7 @@ module.exports = {
           'www.javlib.com',
           'c97k.com',
           'www.c97k.com',
+          'fourhoi.com',
           'sleazyfork.org',
           'greasyfork.org',
           'update.sleazyfork.org'

@@ -3,7 +3,7 @@ import { SupabaseService } from '../../services/SupabaseService.js';
 import { SyncManager } from '../../sync/index.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
 import { __ } from '../../constants/i18n.js';
-import { CLOSE_LINE, SEND, KEYBOARD } from '../../constants/icons.js';
+import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK } from '../../constants/icons.js';
 import { Toast, isMobile, createModal, copyToClipboard, getValue } from '../../utils/index.js';
 import { isSiteDomain, SITE_DOMAINS, checkSiteReachability } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
@@ -637,6 +637,12 @@ export class CommentPanel {
             }
 
             if (codeLink) {
+                if (isLongPressTriggered) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    isLongPressTriggered = false;
+                    return;
+                }
                 e.stopPropagation();
                 const code = codeLink.getAttribute('data-code');
                 if (code) {
@@ -654,6 +660,26 @@ export class CommentPanel {
 
         // 移动端长按时间胶囊显示内部右侧五角星按钮 (延迟 10 秒自动收起)
         this.uiElements.playerContainer.addEventListener('touchstart', (e) => {
+            const codeLink = e.target.closest('.jc-code-link');
+            if (codeLink) {
+                const touch = e.touches[0];
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+                isLongPressTriggered = false;
+                clearLongPress();
+                longPressTimer = setTimeout(() => {
+                    isLongPressTriggered = true;
+                    const code = codeLink.getAttribute('data-code');
+                    if (code) {
+                        this.showCodePreview(code, codeLink);
+                        if (window.navigator && typeof window.navigator.vibrate === 'function') {
+                            window.navigator.vibrate(15);
+                        }
+                    }
+                }, 400);
+                return;
+            }
+
             const link = e.target.closest('.jc-time-link');
             if (!link) {
                 // 点击时间胶囊外部区域，收起所有已展开的五角星
@@ -712,6 +738,36 @@ export class CommentPanel {
                 clearLongPress();
             }
         }, { passive: true });
+
+        // 番号 (jc-code-link) PC 端鼠标悬停预览处理
+        this.uiElements.playerContainer.addEventListener('mouseover', (e) => {
+            const codeLink = e.target.closest('.jc-code-link');
+            if (codeLink) {
+                if (this._codePreviewLeaveTimer) {
+                    clearTimeout(this._codePreviewLeaveTimer);
+                    this._codePreviewLeaveTimer = null;
+                }
+                const code = codeLink.getAttribute('data-code');
+                if (code) {
+                    this._codePreviewHoverTimer = setTimeout(() => {
+                        this.showCodePreview(code, codeLink);
+                    }, 200);
+                }
+            }
+        });
+
+        this.uiElements.playerContainer.addEventListener('mouseout', (e) => {
+            const codeLink = e.target.closest('.jc-code-link');
+            if (codeLink) {
+                if (this._codePreviewHoverTimer) {
+                    clearTimeout(this._codePreviewHoverTimer);
+                    this._codePreviewHoverTimer = null;
+                }
+                this._codePreviewLeaveTimer = setTimeout(() => {
+                    this.hideCodePreview();
+                }, 250);
+            }
+        });
 
         this.uiElements.playerContainer.addEventListener('touchend', () => {
             clearLongPress();
@@ -1299,8 +1355,56 @@ export class CommentPanel {
      * 处理评论中番号点击，复制并跳转搜索
      * @param {string} code - 番号
      */
+    /**
+     * 处理评论中番号点击，弹出操作模态框（拷贝番号 / 跳转到视频页面）
+     * @param {string} code - 番号
+     */
     handleCodeClick(code) {
-        // 复制到剪贴板
+        this.hideCodePreview();
+        const cleanCode = (code || '').toUpperCase().trim();
+        const copyLabel = __('copyCode') || '拷贝番号';
+        const jumpLabel = __('goToVideo') || '跳转到视频页面';
+
+        const dialogHtml = `<div class="tm-code-action-dialog">
+            <div class="tm-code-action-title">番号快捷操作</div>
+            <div class="tm-code-action-code">${esc(cleanCode)}</div>
+            <div class="tm-code-action-buttons">
+                <button class="tm-code-action-btn tm-code-action-btn--primary jc-btn-copy-code">
+                    ${ICON_COPY || ''}
+                    <span>${copyLabel}</span>
+                </button>
+                <button class="tm-code-action-btn tm-code-action-btn--secondary jc-btn-jump-code">
+                    ${ICON_EXTERNAL_LINK || ''}
+                    <span>${jumpLabel}</span>
+                </button>
+            </div>
+        </div>`;
+
+        const { modal, close } = createModal(dialogHtml, { extraClass: 'tm-code-action-overlay' });
+
+        const copyBtn = modal.querySelector('.jc-btn-copy-code');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                this._doCopyCode(cleanCode);
+                close();
+            });
+        }
+
+        const jumpBtn = modal.querySelector('.jc-btn-jump-code');
+        if (jumpBtn) {
+            jumpBtn.addEventListener('click', () => {
+                const targetUrl = `https://missav.ai/${cleanCode.toLowerCase()}`;
+                if (typeof GM_openInTab === 'function') {
+                    GM_openInTab(targetUrl, { active: true });
+                } else {
+                    window.open(targetUrl, '_blank');
+                }
+                close();
+            });
+        }
+    }
+
+    _doCopyCode(code) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(code).then(() => {
                 Toast(`番号已复制: ${code}`, 2000, 'success');
@@ -1319,6 +1423,129 @@ export class CommentPanel {
             else Toast(`复制失败，请手动复制: ${text}`, 3000, 'warning');
         });
     }
+
+    /**
+     * 显示番号预览浮层 (PC端悬浮 / 移动端长按)
+     * @param {string} code 
+     * @param {HTMLElement} targetEl 
+     */
+    showCodePreview(code, targetEl) {
+        if (!code || !targetEl) return;
+        const cleanCode = code.toUpperCase().trim();
+        const lowCode = code.toLowerCase().trim();
+
+        if (!this._codePreviewPopover) {
+            this._codePreviewPopover = document.createElement('div');
+            this._codePreviewPopover.className = 'jc-code-preview-popover';
+            document.body.appendChild(this._codePreviewPopover);
+
+            this._codePreviewPopover.addEventListener('mouseenter', () => {
+                if (this._codePreviewLeaveTimer) {
+                    clearTimeout(this._codePreviewLeaveTimer);
+                    this._codePreviewLeaveTimer = null;
+                }
+            });
+            this._codePreviewPopover.addEventListener('mouseleave', () => {
+                this.hideCodePreview();
+            });
+        }
+
+        const pop = this._codePreviewPopover;
+        const loadingText = __('previewLoading') || '正在加载预览...';
+        const notFoundText = __('previewNotFound') || '暂无预览小视频';
+
+        pop.innerHTML = `<div class="jc-code-preview-video-wrap">
+            <div class="jc-code-preview-loading">
+                <div class="jc-code-preview-spinner"></div>
+                <span>${loadingText}</span>
+            </div>
+            <video class="jc-code-preview-video" loop muted playsinline style="display:none;"></video>
+            <div class="jc-code-preview-fallback" style="display:none;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="opacity:0.6;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                <span>${notFoundText}</span>
+            </div>
+        </div>
+        <div class="jc-code-preview-header">
+            <span class="jc-code-preview-title">${esc(cleanCode)}</span>
+            <span class="jc-code-preview-badge">Preview</span>
+        </div>`;
+
+        const rect = targetEl.getBoundingClientRect();
+        const popWidth = 256;
+        const popHeight = 180;
+
+        let left = rect.left + (rect.width / 2) - (popWidth / 2);
+        let top = rect.top - popHeight - 10;
+
+        if (left < 10) left = 10;
+        if (left + popWidth > window.innerWidth - 10) left = window.innerWidth - popWidth - 10;
+        if (top < 10) {
+            top = rect.bottom + 10;
+        }
+
+        pop.style.left = `${Math.round(left)}px`;
+        pop.style.top = `${Math.round(top)}px`;
+
+        requestAnimationFrame(() => {
+            pop.classList.add('active');
+        });
+
+        const candidates = [
+            `https://fourhoi.com/${lowCode}/preview.mp4`,
+            `https://fourhoi.com/${lowCode}-uncensored-leak/preview.mp4`
+        ];
+
+        const videoEl = pop.querySelector('.jc-code-preview-video');
+        const loadingEl = pop.querySelector('.jc-code-preview-loading');
+        const fallbackEl = pop.querySelector('.jc-code-preview-fallback');
+
+        let candidateIndex = 0;
+        const tryNextCandidate = () => {
+            if (candidateIndex >= candidates.length) {
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (videoEl) videoEl.style.display = 'none';
+                if (fallbackEl) fallbackEl.style.display = 'flex';
+                return;
+            }
+
+            const currentSrc = candidates[candidateIndex++];
+            videoEl.src = currentSrc;
+            videoEl.load();
+        };
+
+        videoEl.oncanplay = () => {
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (fallbackEl) fallbackEl.style.display = 'none';
+            videoEl.style.display = 'block';
+            videoEl.play().catch(() => {});
+        };
+
+        videoEl.onerror = () => {
+            tryNextCandidate();
+        };
+
+        tryNextCandidate();
+    }
+
+    /**
+     * 隐藏番号预览浮层
+     */
+    hideCodePreview() {
+        if (this._codePreviewLeaveTimer) {
+            clearTimeout(this._codePreviewLeaveTimer);
+            this._codePreviewLeaveTimer = null;
+        }
+        if (this._codePreviewPopover) {
+            this._codePreviewPopover.classList.remove('active');
+            const videoEl = this._codePreviewPopover.querySelector('video');
+            if (videoEl) {
+                videoEl.pause();
+                videoEl.removeAttribute('src');
+                videoEl.load();
+            }
+        }
+    }
+
 
     handleCopyAllComments() {
         const totalJable = this.jableComments ? this.jableComments.length : 0;
