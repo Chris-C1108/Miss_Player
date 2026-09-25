@@ -9450,7 +9450,35 @@
 			const loadingEl = pop.querySelector(".jc-code-preview-loading");
 			const fallbackEl = pop.querySelector(".jc-code-preview-fallback");
 			let candidateIndex = 0;
-			const tryNextCandidate = () => {
+			this._currentPreviewReqId = (this._currentPreviewReqId || 0) + 1;
+			const reqId = this._currentPreviewReqId;
+			const loadVideoBlob = (url) => {
+				return new Promise((resolve, reject) => {
+					if (typeof GM_xmlhttpRequest !== "function") {
+						resolve(url);
+						return;
+					}
+					GM_xmlhttpRequest({
+						method: "GET",
+						url,
+						responseType: "blob",
+						headers: { "Referer": "https://missav.ai/" },
+						timeout: 8e3,
+						onload: (res) => {
+							if (res.status === 200 && res.response) try {
+								resolve(URL.createObjectURL(res.response));
+							} catch (e) {
+								reject(e);
+							}
+							else reject(new Error(`HTTP_${res.status}`));
+						},
+						onerror: () => reject(new Error("NETWORK_ERROR")),
+						ontimeout: () => reject(new Error("TIMEOUT"))
+					});
+				});
+			};
+			const tryNextCandidate = async () => {
+				if (reqId !== this._currentPreviewReqId) return;
 				if (candidateIndex >= candidates.length) {
 					if (loadingEl) loadingEl.style.display = "none";
 					if (videoEl) videoEl.style.display = "none";
@@ -9458,10 +9486,22 @@
 					return;
 				}
 				const currentSrc = candidates[candidateIndex++];
-				videoEl.src = currentSrc;
-				videoEl.load();
+				try {
+					const playUrl = await loadVideoBlob(currentSrc);
+					if (reqId !== this._currentPreviewReqId) {
+						if (playUrl.startsWith("blob:")) URL.revokeObjectURL(playUrl);
+						return;
+					}
+					if (this._currentBlobUrl && this._currentBlobUrl.startsWith("blob:")) URL.revokeObjectURL(this._currentBlobUrl);
+					this._currentBlobUrl = playUrl;
+					videoEl.src = playUrl;
+					videoEl.load();
+				} catch (err) {
+					tryNextCandidate();
+				}
 			};
 			videoEl.oncanplay = () => {
+				if (reqId !== this._currentPreviewReqId) return;
 				if (loadingEl) loadingEl.style.display = "none";
 				if (fallbackEl) fallbackEl.style.display = "none";
 				videoEl.style.display = "block";
@@ -9476,6 +9516,11 @@
 			if (this._codePreviewLeaveTimer) {
 				clearTimeout(this._codePreviewLeaveTimer);
 				this._codePreviewLeaveTimer = null;
+			}
+			this._currentPreviewReqId = (this._currentPreviewReqId || 0) + 1;
+			if (this._currentBlobUrl && this._currentBlobUrl.startsWith("blob:")) {
+				URL.revokeObjectURL(this._currentBlobUrl);
+				this._currentBlobUrl = null;
 			}
 			if (this._codePreviewPopover) {
 				this._codePreviewPopover.classList.remove("active");
