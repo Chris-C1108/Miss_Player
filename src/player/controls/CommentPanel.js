@@ -646,7 +646,7 @@ export class CommentPanel {
                 e.stopPropagation();
                 const code = codeLink.getAttribute('data-code');
                 if (code) {
-                    this.handleCodeClick(code);
+                    this.handleCodeClick(code, codeLink);
                 }
             } else if (retryBtn) {
                 e.stopPropagation();
@@ -1359,48 +1359,21 @@ export class CommentPanel {
      * 处理评论中番号点击，弹出操作模态框（拷贝番号 / 跳转到视频页面）
      * @param {string} code - 番号
      */
-    handleCodeClick(code) {
-        this.hideCodePreview();
+    /**
+     * 处理评论中番号点击：仅显示视频预览浮窗，同时自动拷贝番号
+     * @param {string} code - 番号
+     * @param {HTMLElement} [targetEl] - 触发元素
+     */
+    handleCodeClick(code, targetEl) {
         const cleanCode = (code || '').toUpperCase().trim();
-        const copyLabel = __('copyCode') || '拷贝番号';
-        const jumpLabel = __('goToVideo') || '跳转到视频页面';
+        if (!cleanCode) return;
 
-        const dialogHtml = `<div class="tm-code-action-dialog">
-            <div class="tm-code-action-title">番号快捷操作</div>
-            <div class="tm-code-action-code">${esc(cleanCode)}</div>
-            <div class="tm-code-action-buttons">
-                <button class="tm-code-action-btn tm-code-action-btn--primary jc-btn-copy-code">
-                    ${ICON_COPY || ''}
-                    <span>${copyLabel}</span>
-                </button>
-                <button class="tm-code-action-btn tm-code-action-btn--secondary jc-btn-jump-code">
-                    ${ICON_EXTERNAL_LINK || ''}
-                    <span>${jumpLabel}</span>
-                </button>
-            </div>
-        </div>`;
+        // 1. 静默拷贝番号并弹出 Toast
+        this._doCopyCode(cleanCode);
 
-        const { modal, close } = createModal(dialogHtml, { extraClass: 'tm-code-action-overlay' });
-
-        const copyBtn = modal.querySelector('.jc-btn-copy-code');
-        if (copyBtn) {
-            copyBtn.addEventListener('click', () => {
-                this._doCopyCode(cleanCode);
-                close();
-            });
-        }
-
-        const jumpBtn = modal.querySelector('.jc-btn-jump-code');
-        if (jumpBtn) {
-            jumpBtn.addEventListener('click', () => {
-                const targetUrl = `https://missav.ai/${cleanCode.toLowerCase()}`;
-                if (typeof GM_openInTab === 'function') {
-                    GM_openInTab(targetUrl, { active: true });
-                } else {
-                    window.open(targetUrl, '_blank');
-                }
-                close();
-            });
+        // 2. 触发或保持小视频预览浮窗
+        if (targetEl) {
+            this.showCodePreview(cleanCode, targetEl);
         }
     }
 
@@ -1425,7 +1398,8 @@ export class CommentPanel {
     }
 
     /**
-     * 显示番号预览浮层 (PC端悬浮 / 移动端长按)
+     * 显示番号预览浮层 (PC端悬浮/点击 / 移动端长按/点击)
+     * 点击预览窗中的视频即可跳转到视频页面
      * @param {string} code 
      * @param {HTMLElement} targetEl 
      */
@@ -1439,6 +1413,7 @@ export class CommentPanel {
             this._codePreviewPopover.className = 'jc-code-preview-popover';
             document.body.appendChild(this._codePreviewPopover);
 
+            // 鼠标移入浮层本身时保持显示，移出时隐藏
             this._codePreviewPopover.addEventListener('mouseenter', () => {
                 if (this._codePreviewLeaveTimer) {
                     clearTimeout(this._codePreviewLeaveTimer);
@@ -1448,13 +1423,24 @@ export class CommentPanel {
             this._codePreviewPopover.addEventListener('mouseleave', () => {
                 this.hideCodePreview();
             });
+
+            // 点击外部区域自动收起预览浮层（适配移动端和点击交互）
+            this._onDocumentClickForPreview = (e) => {
+                if (!this._codePreviewPopover || !this._codePreviewPopover.classList.contains('active')) return;
+                if (!e.target.closest('.jc-code-preview-popover') && !e.target.closest('.jc-code-link')) {
+                    this.hideCodePreview();
+                }
+            };
+            document.addEventListener('pointerdown', this._onDocumentClickForPreview, true);
         }
 
         const pop = this._codePreviewPopover;
+        pop.setAttribute('data-current-code', cleanCode);
         const loadingText = __('previewLoading') || '正在加载预览...';
         const notFoundText = __('previewNotFound') || '暂无预览小视频';
+        const jumpTip = __('goToVideo') || '点击跳转到视频页面';
 
-        pop.innerHTML = `<div class="jc-code-preview-video-wrap">
+        pop.innerHTML = `<div class="jc-code-preview-video-wrap" title="${esc(jumpTip)}">
             <div class="jc-code-preview-loading">
                 <div class="jc-code-preview-spinner"></div>
                 <span>${loadingText}</span>
@@ -1464,12 +1450,33 @@ export class CommentPanel {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="opacity:0.6;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                 <span>${notFoundText}</span>
             </div>
+            <div class="jc-code-preview-hover-hint">
+                <span>${esc(jumpTip)}</span>
+            </div>
         </div>
         <div class="jc-code-preview-header">
             <span class="jc-code-preview-title">${esc(cleanCode)}</span>
             <span class="jc-code-preview-badge">Preview</span>
         </div>`;
 
+        // 点击预览窗中视频/卡片区域，跳转到 MissAV 对应视频页面
+        const videoWrap = pop.querySelector('.jc-code-preview-video-wrap');
+        if (videoWrap) {
+            videoWrap.style.cursor = 'pointer';
+            videoWrap.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const targetUrl = `https://missav.ai/${cleanCode.toLowerCase()}`;
+                if (typeof GM_openInTab === 'function') {
+                    GM_openInTab(targetUrl, { active: true });
+                } else {
+                    window.open(targetUrl, '_blank');
+                }
+                this.hideCodePreview();
+            });
+        }
+
+        // 计算定位
         const rect = targetEl.getBoundingClientRect();
         const popWidth = 256;
         const popHeight = 180;
@@ -1477,9 +1484,11 @@ export class CommentPanel {
         let left = rect.left + (rect.width / 2) - (popWidth / 2);
         let top = rect.top - popHeight - 10;
 
+        // 视口边界碰撞保护
         if (left < 10) left = 10;
         if (left + popWidth > window.innerWidth - 10) left = window.innerWidth - popWidth - 10;
         if (top < 10) {
+            // 上方空间不足，显示在下方
             top = rect.bottom + 10;
         }
 
