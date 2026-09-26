@@ -279,8 +279,6 @@
     top: calc(env(safe-area-inset-top, 8px) + 60px);
     right: 16px;
     background-color: rgba(22, 22, 28, 0.78);
-    backdrop-filter: blur(32px) saturate(200%);
-    -webkit-backdrop-filter: blur(32px) saturate(200%);
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
@@ -301,6 +299,7 @@
     pointer-events: none;
     transition: transform var(--anim-smooth), opacity var(--anim-smooth);
     box-sizing: border-box;
+    contain: paint layout;
 }
 
 .tm-settings-panel::-webkit-scrollbar {
@@ -316,6 +315,8 @@
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
 }
 
 /* 当设置面板处于激活态时，底层评论列表优雅暗化防干扰 */
@@ -1240,8 +1241,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     transition: opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), 
                 transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
                 box-shadow 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
 }
 
 /* 循环开始标记(A) */
@@ -1414,8 +1413,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     width: calc(100% - 24px);
     margin: 0 auto;
     background: rgba(18, 18, 20, 0.96);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 20px;
     padding: 12px;
@@ -1426,11 +1423,14 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     transform: translateY(8px) scale(0.98);
     transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
+    contain: paint layout;
 }
 
 .tm-inline-remark-popover.visible {
     opacity: 1;
     transform: translateY(0) scale(1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
 }
 
 .tm-inline-remark-body {
@@ -1851,8 +1851,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     width: 100%;
     max-height: calc(100vh - 120px);
     background-color: rgba(18, 18, 20, 0.94);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
     box-shadow: 
         inset 0 0 0 1px rgba(255, 255, 255, 0.08),
         0 12px 32px rgba(0, 0, 0, 0.6);
@@ -1869,11 +1867,14 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     box-sizing: border-box;
     padding: 10px 14px 12px;
     touch-action: pan-y !important;
+    contain: paint layout;
 }
 .tm-bottom-sheet-panel.visible {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0) scale(1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
 }
 
 /* 紧凑标题栏 */
