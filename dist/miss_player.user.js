@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.6.36
+// @version            5.6.37
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1230,7 +1230,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.36";
+		return "5.6.37";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3208,7 +3208,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.36";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.37";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -6100,7 +6100,17 @@
 				"將近",
 				"不到",
 				"超过",
-				"超過"
+				"超過",
+				"连续",
+				"連續",
+				"整整",
+				"大概",
+				"只有",
+				"仅有",
+				"不足",
+				"快进",
+				"至少",
+				"耗时"
 			],
 			MINUTE_KEYWORDS: [
 				"分",
@@ -6147,7 +6157,7 @@
 		str = str.replace(/[\uFF01-\uFF5E]/g, (char) => {
 			return String.fromCharCode(char.charCodeAt(0) - 65248);
 		});
-		str = str.replace(/\u3000/g, " ").replace(/：/g, ":").replace(/。/g, ".").replace(/，/g, ",").replace(/～/g, "~").replace(/ー/g, "-").replace(/－/g, "-").replace(/(\d|分钟|分鐘|小时|小時|秒钟|秒鐘|[分秒时時hmsmHMS])\s*(?:到|至)\s*(\d)/gi, "$1~$2");
+		str = str.replace(/\u3000/g, " ").replace(/：/g, ":").replace(/。/g, ".").replace(/，/g, ",").replace(/～/g, "~").replace(/ー/g, "-").replace(/－/g, "-").replace(/[—–―]{1,2}/g, "~").replace(/(\d|分钟|分鐘|小时|小時|秒钟|秒鐘|[分秒时時hmsmHMS])\s*(?:到|至)\s*(\d)/gi, "$1~$2");
 		str = str.replace(/:[a-zA-Z]{2,15}:/g, "");
 		str = str.replace(/(\d+)\s*分\s*([-~～到])\s*(\d+)/g, "$1$2$3");
 		str = str.replace(/(\d+)\s*秒\s*([-~～到])\s*(\d+)/g, "$1$2$3");
@@ -6644,6 +6654,46 @@
 				placeholder: "_SPAM_"
 			},
 			{
+				regex: /\b\d+(?:\.\d+)?\s*(?:[gG][bB]?|[mM][bB]|[kK][bB]|[fF][pP][sS])\b/g,
+				placeholder: "_CAPACITY_"
+			},
+			{
+				regex: /(?:打|给|給|顏|颜|臉|脸|身材|剧情|劇情|破解|泡芙|演技|评|評|打个|值)\s*\d{1,2}(?:\.\d+)?\s*分/g,
+				placeholder: "_RATING_"
+			},
+			{
+				regex: /(?<![时小時分秒hmsHM\d])\b\d{1,2}\s*分(?:半|左右|制|吧)/g,
+				placeholder: "_RATING_"
+			},
+			{
+				regex: /\d+\s*(?:星|⭐|★|颗星)/gu,
+				placeholder: "_STAR_RATING_"
+			},
+			{
+				regex: /\d+(?:[.\-~～到]\d+)?\s*(?:发|發|发炮|个人|個人|部|本|套)/g,
+				placeholder: "_QUANTITY_"
+			},
+			{
+				regex: /\b\d{4}[./-]\d{1,2}[./-]\d{1,2}\b/g,
+				placeholder: "_DATE_"
+			},
+			{
+				regex: /\d{1,2}[./]\d{1,2}\s*(?:推特|發推|发推|微博|号|號|日)/g,
+				placeholder: "_TWEET_DATE_"
+			},
+			{
+				regex: /(?:推特|發推|发推|微博|在)\s*\d{1,2}[./]\d{1,2}/g,
+				placeholder: "_TWEET_DATE_"
+			},
+			{
+				regex: /(?:早上|凌晨|半夜|晚上|下午|中午|上午)\s*(\d{1,2})\s*点(?:半|\d{1,2}分?)?/g,
+				placeholder: "_REAL_TIME_"
+			},
+			{
+				regex: /1\s*秒(?:不落|都不|没差|不差)/g,
+				placeholder: "_IDIOM_"
+			},
+			{
 				regex: /(?<![-:.])\b\d{4,}\b(?![-:.])/g,
 				placeholder: "_LONG_NUM_"
 			}
@@ -6711,7 +6761,53 @@
 				isNegative
 			});
 		}
-		const l3hmsRegex = /(?<!\d)(\d{1,2})\s*(?:小时|h|H)\s*(\d{1,2})\s*(?:分钟|分鐘|分|m|M)\s*(\d{1,2})\s*(?:秒钟|秒鐘|秒|s|S)(?!\d)/g;
+		const l1DashHmsRegex = /(?<!\d)(\d{1,2})-(\d{1,2})-(\d{1,2})(?!\d)/g;
+		while ((match = l1DashHmsRegex.exec(normalizedText)) !== null) {
+			const raw = match[0];
+			const parts = [
+				parseInt(match[1], 10),
+				parseInt(match[2], 10),
+				parseInt(match[3], 10)
+			];
+			if (parts[1] < 60 && parts[2] < 60) candidates.push({
+				raw,
+				index: match.index,
+				end: match.index + raw.length,
+				level: "L1",
+				seconds: parts[0] * 3600 + parts[1] * 60 + parts[2],
+				isNegative: false
+			});
+		}
+		const l1ColonDotRegex = /(?<!\d)(\d{1,2}):(\d{2})\.(\d{2})(?!\d)/g;
+		while ((match = l1ColonDotRegex.exec(normalizedText)) !== null) {
+			const raw = match[0];
+			const parts = [
+				parseInt(match[1], 10),
+				parseInt(match[2], 10),
+				parseInt(match[3], 10)
+			];
+			if (parts[1] < 60 && parts[2] < 60) candidates.push({
+				raw,
+				index: match.index,
+				end: match.index + raw.length,
+				level: "L1",
+				seconds: parts[0] * 3600 + parts[1] * 60 + parts[2],
+				isNegative: false
+			});
+		}
+		const l3SingleHRegex = /(?<!\w)(\d{1,2})\s*[hH](?!\w|[\d:：.分秒])/g;
+		while ((match = l3SingleHRegex.exec(normalizedText)) !== null) {
+			const raw = match[0];
+			candidates.push({
+				raw,
+				index: match.index,
+				end: match.index + raw.length,
+				level: "L3",
+				seconds: parseInt(match[1], 10) * 3600,
+				isNegative: false
+			});
+		}
+		const l3hmsRegex = /(?<!\d)(\d{1,2})\s*(?:小时|小時|时|時|h|H)\s*(\d{1,2})\s*(?:分钟|分鐘|分|min|m|M)\s*(\d{1,2})\s*(?:秒钟|秒鐘|秒|s|S)?(?!\d)/g;
 		while ((match = l3hmsRegex.exec(normalizedText)) !== null) {
 			const raw = match[0];
 			candidates.push({
@@ -6723,7 +6819,7 @@
 				isNegative: false
 			});
 		}
-		const l3hmRegex = /(?<!\d)(\d{1,2})\s*(?:小时|h|H)\s*(\d{1,2})\s*(?:分钟|分鐘|分|m|M)(?!\d)/g;
+		const l3hmRegex = /(?<!\d)(\d{1,2})\s*(?:小时|小時|时|時|h|H)\s*(\d{1,2})\s*(?:分钟|分鐘|分|min|m|M)(?!\d)/g;
 		while ((match = l3hmRegex.exec(normalizedText)) !== null) {
 			const raw = match[0];
 			candidates.push({
@@ -6732,6 +6828,30 @@
 				end: match.index + raw.length,
 				level: "L3",
 				seconds: parseInt(match[1], 10) * 3600 + parseInt(match[2], 10) * 60,
+				isNegative: false
+			});
+		}
+		const l3hShortMRegex = /(?<!\d)(\d{1,2})\s*(?:小时|小時|时|時|h|H)\s*([0-5]\d)(?!\d|[分秒min])/g;
+		while ((match = l3hShortMRegex.exec(normalizedText)) !== null) {
+			const raw = match[0];
+			candidates.push({
+				raw,
+				index: match.index,
+				end: match.index + raw.length,
+				level: "L3",
+				seconds: parseInt(match[1], 10) * 3600 + parseInt(match[2], 10) * 60,
+				isNegative: false
+			});
+		}
+		const l3mShortSRegex = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分)\s*([0-5]\d)(?!\d|[秒])/g;
+		while ((match = l3mShortSRegex.exec(normalizedText)) !== null) {
+			const raw = match[0];
+			candidates.push({
+				raw,
+				index: match.index,
+				end: match.index + raw.length,
+				level: "L3",
+				seconds: parseInt(match[1], 10) * 60 + parseInt(match[2], 10),
 				isNegative: false
 			});
 		}
@@ -6858,6 +6978,12 @@
 				isValid: false,
 				reason: "检测到持续时长语义"
 			};
+			if (match.level === "L3" && /^(?:\d+秒|\d+秒钟|\d+分钟)$/.test(match.raw)) {
+				if (CFG.TIMESTAMPS.DURATION_KEYWORDS.some((kw) => preText.includes(kw))) return {
+					isValid: false,
+					reason: "检测到动作或过程耗时描述"
+				};
+			}
 			if (!/[分秒时時hmsmHMS]/i.test(match.raw)) {
 				const postText = normalizedText.slice(match.end, Math.min(normalizedText.length, match.end + 5)).trim();
 				if (/^[xX倍]/i.test(postText)) return {
@@ -6867,6 +6993,13 @@
 			}
 		}
 		if (match.isRange) {
+			if (match.index !== void 0) {
+				const preRangeText = normalizedText.slice(Math.max(0, match.index - 12), match.index);
+				if (CFG.TIMESTAMPS.DURATION_KEYWORDS.some((kw) => preRangeText.includes(kw))) return {
+					isValid: false,
+					reason: "检测到行为或过程持续时长区间"
+				};
+			}
 			const startVal = validateMatch(match.start, allResolvedMatches, normalizedText, videoDuration, true);
 			const endVal = validateMatch(match.endMatch, allResolvedMatches, normalizedText, videoDuration, true);
 			if (!startVal.isValid || !endVal.isValid) return {
@@ -14994,7 +15127,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.36";
+		return "5.6.37";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
