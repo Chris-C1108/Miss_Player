@@ -30,6 +30,7 @@
 
 ### 3. 发版版本号五处强同步规范 (5-Place Version Sync)
 每次发布新版本时，必须且只能同步递增以下 **5 处**版本号，任何一处脱节都将被 `npm run ci:check` 强制阻断：
+* **性能基准测试**：`npm run test:perf`（启动隔离 Chrome 实例、注入脚本、采集 CDP 指标与 User Timing 标记、校验阈值后自动退出）
 1. `package.json` 中的 `"version"`
 2. `webpack.config.js` 中的 `headers.version`
 3. `src/telemetry/EventCollector.js` 中 `getScriptVersion()` 函数内的 fallback 版本字符串
@@ -168,6 +169,95 @@ Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感�
 2. **特性转正与剥离标准 (Promote to Stable)**：
    - 只有在 Beta 模式下经过至少 1 个完整版本周期的真机验证、异常与边界问题彻底闭环、且未收到任何致命缺陷反馈后，经评估方可从 Beta 实验室中“转正”；
    - 转正后的功能移入设置菜单对应的正式常规分段（如遥控器运行模式），或作为播放器默认行为启用。
+
+---
+
+## ⚡ 性能测试与性能优先实现规范 (Performance Testing & Performance-First Patterns)
+
+油猴脚本寄生于宿主页面，主线程每一毫秒的阻塞都直接降低宿主页面的交互流畅度。以下规范覆盖两个方面：**如何测量性能**（当用户关心性能时按步骤执行）和**如何写出高性能代码**（日常开发中必须遵守的实现模式）。
+
+### 一、性能测量方法论 (How to Profile)
+
+> **给 ADHD 用户的 3 步操作清单**：
+> 1. 打开 Chrome DevTools → Performance 面板 → 点录制 → 操作页面 → 停止录制 → 在 Timings 轨道找 **mp:** 开头的标记条，数字就是脚本各阶段耗时。
+> 2. 运行 `npm run test:ui`，查看 `00_performance_snapshot` 用例输出的 ScriptDuration 和 JSHeapUsedMB。
+> 3. 如果某个 `mp:` measure 超过阈值（见下表），就去对应的源码区间找瓶颈。
+
+#### 1.1 内置 User Timing 标记体系
+
+脚本在关键生命周期节点埋入了标准 W3C User Timing 标记。这些标记在 Chrome DevTools Performance 面板的 **Timings** 轨道自动显示，与宿主站的 JS 执行在视觉上彻底分离。
+
+| 标记名 | 位置 | 含义 |
+| --- | --- | --- |
+| `mp:module-loaded` | index.js 模块顶层 | ES Module 全部解析完成 |
+| `mp:adblock-done` | AdBlocker.init() 之后 | 广告拦截器挂载完成 |
+| `mp:early-init-done` | 媒体嗅探器 + URL 重定向之后 | 早期同步初始化全部完成 |
+| `mp:state-created` | PlayerState 构造之后 | 状态管理器就绪 |
+| `mp:ui-ready` | FloatingButton.init() 之后 | 浮动按钮挂载完成，首屏可交互 |
+| `mp:theater-init-start` | CustomVideoPlayer.init() 入口 | 用户点击进入影院模式 |
+| `mp:video-hijacked` | PlayerCore.init() 之后 | 宿主 video 元素劫持完成 |
+| `mp:theater-ready` | 影院模式 UI 全部装配完成 | 影院模式可交互 |
+
+**自动聚合的 measure（区间耗时）：**
+
+| measure 名 | 区间 | 告警阈值 |
+| --- | --- | --- |
+| `mp:early-init` | 模块加载 → 早期初始化完成 | > 50ms |
+| `mp:startup` | 模块加载 → 浮动按钮就绪 | > 120ms |
+| `mp:theater-init` | 影院模式开始 → 影院模式就绪 | > 80ms |
+
+#### 1.2 CDP 自动化性能快照
+
+`tests/ui/cases/00_performance_snapshot.js` 通过现有的 CDP 测试框架自动采集：
+- **CDP Performance.getMetrics**：ScriptDuration、TaskDuration、LayoutDuration、JSHeapUsedSize
+- **User Timing 标记**：自动读取并校验所有 mp:* measure 是否超过阈值
+- **Long Task 计数**：查询 longtask 历史记录
+
+运行方式：`npm run test:ui`（需要浏览器已打开目标播放页且脚本已激活）。
+
+#### 1.3 重要约束：油猴脚本不能用 Playwright 无头测试
+
+Playwright 启动的干净 Chromium 里没有 Tampermonkey 扩展，GM_xmlhttpRequest / GM_getValue 等沙箱 API 全部不存在，脚本会在初始化阶段崩溃。性能测试必须连接**已安装脚本管理器并已激活脚本的真实浏览器**（即现有的 CDP 直连架构）。如需自动化 A/B 对比，通过 CDP 操作 Tampermonkey 扩展页面切换脚本启用/禁用状态，而不是启动两个不同的浏览器实例。
+
+### 二、性能优先实现模式 (Performance-First Patterns)
+
+以下模式是经过 profiling 验证的高效实现方式。**日常开发中遇到同类场景时，必须优先采用这些模式**，避免引入非必要的性能开销。
+
+#### 2.1 DOM 构建：延迟初始化 + 批量挂载
+
+- **首屏只构建必要 DOM**：设置面板（SettingsManager）、评论抽屉（CommentPanel）、标签编辑弹层（MarkerBottomSheet）等非首屏组件，**必须在用户首次触发时才构建 DOM**，禁止在 startScript() 中预创建。
+- **批量插入用 DocumentFragment**：需要一次性添加多个子节点时（如渲染评论列表、时间胶囊序列），必须先构建 DocumentFragment，最后一次性 appendChild，将浏览器 Reflow 压缩为 1 次。
+- **克隆优于重复创建**：对于结构相同的重复元素（如列表项），使用 template.content.cloneNode(true) 而非每次 createElement 逐个组装。
+
+#### 2.2 动画与位移：纯 GPU 合成管线
+
+- **位移手势一律用 transform**：Minimap 拖拽、进度条指示器、浮窗移动、弹窗入场动画必须使用 transform: translate3d(x, y, 0)，禁止动态修改 top / left / width / height（这些属性触发 Layout 重排）。
+- **毛玻璃浮层声明合成隔离**：带有 backdrop-filter: blur() 的容器必须同时声明 contain: layout paint 和 will-change: transform，强制浏览器创建独立合成层，避免宿主页面微小变动导致整个模糊区域重新光栅化。
+- **过渡帧率保障**：CSS transition / animation 的属性只允许 transform 和 opacity（这两个属性可以纯 GPU 合成），禁止对 margin、padding、border-width 等布局属性做动画。
+
+#### 2.3 布局属性读取：避免读写交替
+
+- **强制同步重排的触发条件**：在同一个微任务中先修改了样式（如 el.style.width = '100px'），然后立即读取布局属性（如 el.offsetWidth），浏览器被迫同步执行一次完整的 Layout 计算。这是油猴脚本最常见的性能陷阱。
+- **正确做法**：先集中读取所有需要的布局数据，再集中写入样式修改。如果必须在循环中读写，使用 requestAnimationFrame 将写操作推迟到下一帧。
+- **拖拽/手势场景**：在 pointerdown 时一次性缓存容器尺寸和位置（参考 videoSwipeManager.js 第 257 行的做法），在 pointermove 中只用缓存值计算，不再调用 getBoundingClientRect()。
+
+#### 2.4 MutationObserver：精准作用域 + 及时断开
+
+- **监听范围最小化**：禁止对 document.body 开启 subtree + childList + attributes 的全量深层监听，除非功能明确需要（如广告拦截器需要持续拦截动态注入的广告 DOM）。
+- **一次性嗅探场景必须断开**：如果监听目的是寻找某个目标元素（如等待 video 出现），找到后**必须立即 observer.disconnect()**，不得遗留空转监听器。
+- **回调必须防抖**：MutationObserver 回调可能在一次 DOM 操作中被触发数十次，必须用 setTimeout 或 requestIdleCallback 合并处理。
+
+#### 2.5 存储访问：分级调度 + 零阻塞
+
+- **GM_getValue / GM_setValue 只存轻量配置**：严禁存储大体积数据（评论、切片、缓存），防止脚本管理器 SQLite 跨进程通信阻塞主线程。
+- **大数据走 IndexedDB**：评论与切片的本地持久化必须使用 src/utils/indexedDB.js（MissPlayerDB），其 API 全异步、不阻塞主线程。
+- **高频请求加内存防抖**：番号预览、评论拉取等网络请求必须配合内存缓存和防抖/节流，防止用户快速滑动触发爆发式请求。
+
+#### 2.6 新增 performance.mark 的规范
+
+- 所有标记名以 mp: 前缀开头，使用 kebab-case 命名（如 mp:comment-panel-open）。
+- performance.mark() 和 performance.measure() 的运行时开销是纳秒级的，**无条件调用即可**，不需要环境变量或配置开关来守卫。
+- 禁止使用 process.env.NODE_ENV 控制性能标记的开关——这个变量在 Vite/Webpack 编译时被静态替换，生产构建中永远是 'production'，会导致标记代码被死代码消除，在真正需要测量的环境里反而不可用。
 
 ---
 

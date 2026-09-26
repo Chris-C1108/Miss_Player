@@ -41,6 +41,7 @@ export class CustomVideoPlayer {
      */
     init() {
         if (this.initialized) return;
+        performance.mark('mp:theater-init-start');
         
         // 标记播放器激活状态，以便 CSS 隐藏宿主干扰元素
         document.body.classList.add('tm-player-active');
@@ -74,6 +75,7 @@ export class CustomVideoPlayer {
 
         // 初始化核心播放器
         this.playerCore.init();
+        performance.mark('mp:video-hijacked');
 
         // 激活多标签页响应式状态热同步
         if (this.playerCore && this.playerCore.options && this.playerCore.options.playerState) {
@@ -281,6 +283,8 @@ export class CustomVideoPlayer {
         }
         
         this.initialized = true;
+        performance.mark('mp:theater-ready');
+        performance.measure('mp:theater-init', 'mp:theater-init-start', 'mp:theater-ready');
         console.log('[CustomVideoPlayer] 初始化完成');
     }
 

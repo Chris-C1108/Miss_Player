@@ -122,6 +122,13 @@ runStep('无头浏览器沙箱安全启动测试', () => {
         },
         setTimeout, clearTimeout, setInterval: () => 1, clearInterval: () => {}
     };
+    sandbox.performance = {
+        mark() {},
+        measure() {},
+        getEntriesByType() { return []; },
+        getEntriesByName() { return []; },
+        now() { return Date.now(); }
+    };
 
     sandbox.window.self = sandbox.window;
     sandbox.window.top = sandbox.window;

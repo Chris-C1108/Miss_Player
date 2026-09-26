@@ -6,6 +6,9 @@ import { PlayerState } from './player/state/PlayerState.js';
 import { BlurPlaybackManager } from './player/managers/BlurPlaybackManager.js';
 import { initAutoLogin, CrossDomainBridge } from './autologin/index.js';
 import AdBlocker from './adblock';
+
+performance.mark('mp:module-loaded');
+
 import { initUserExperienceEnhancer, earlyUrlRedirector } from './userExperienceEnhancer';
 import { I18n, __ } from './constants/i18n.js';
 import { getVideoCodeFromUrl, fetchJavLibraryVideoId, fetchJavLibraryData } from './player/controls/CommentScraper.js';
@@ -19,12 +22,16 @@ import { CommentCacheManager } from './player/comments/CommentCacheManager.js';
 // 1. 最早执行广告与弹窗拦截 (确保在宿主脚本加载前劫持 window.open 与广告请求)
 const earlyAdBlocker = new AdBlocker();
 earlyAdBlocker.init();
+performance.mark('mp:adblock-done');
 
 // 2. 尽早启动底层网络媒体嗅探器 (拦截 .m3u8 与高清源地址)
 mediaSniffer.init();
 
 // 2. 确保最早执行URL重定向检查
 earlyUrlRedirector.checkAndRedirect();
+
+performance.mark('mp:early-init-done');
+performance.measure('mp:early-init', 'mp:module-loaded', 'mp:early-init-done');
 
 /**
  * 配置viewport以支持iOS安全区域
@@ -136,6 +143,7 @@ function setupViewport() {
             
             // 创建状态管理实例
             playerState = new PlayerState();
+            performance.mark('mp:state-created');
             
             // 加载设置
             playerState.loadSettings();
@@ -193,6 +201,8 @@ function setupViewport() {
             
             // 初始化浮动按钮
             floatingButton.init();
+            performance.mark('mp:ui-ready');
+            performance.measure('mp:startup', 'mp:module-loaded', 'mp:ui-ready');
             
             // 异步非阻塞初始化自动登录模块
             initAutoLogin().then(loginManager => {

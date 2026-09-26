@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.6.37
+// @version            5.6.38
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1230,7 +1230,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.37";
+		return "5.6.38";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3208,7 +3208,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.37";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.38";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -14578,10 +14578,28 @@
 			this.timeIndicator.textContent = `${formatTime(time)} / ${formatTime(duration)}`;
 		}
 	};
-	var BlurPlaybackManager = class {
+	var BlurPlaybackManager = class BlurPlaybackManager {
+		static optimizeHlsBuffer() {
+			try {
+				const win = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+				if (win.Hls && win.Hls.DefaultConfig) {
+					win.Hls.DefaultConfig.maxBufferLength = Math.max(win.Hls.DefaultConfig.maxBufferLength || 30, 60);
+					win.Hls.DefaultConfig.maxMaxBufferLength = Math.max(win.Hls.DefaultConfig.maxMaxBufferLength || 600, 120);
+					win.Hls.DefaultConfig.maxBufferSize = Math.max(win.Hls.DefaultConfig.maxBufferSize || 6e7, 8e7);
+					win.Hls.DefaultConfig.maxBufferHole = Math.max(win.Hls.DefaultConfig.maxBufferHole || .5, .8);
+				}
+				const hlsInstance = win.hls || win.player?.hls;
+				if (hlsInstance && hlsInstance.config) {
+					hlsInstance.config.maxBufferLength = Math.max(hlsInstance.config.maxBufferLength || 30, 60);
+					hlsInstance.config.maxMaxBufferLength = Math.max(hlsInstance.config.maxMaxBufferLength || 600, 120);
+					hlsInstance.config.maxBufferHole = Math.max(hlsInstance.config.maxBufferHole || .5, .8);
+				}
+			} catch (_) {}
+		}
 		static initGlobal(playerState = null) {
 			if (this.isInitialized) return;
 			this.isInitialized = true;
+			this.optimizeHlsBuffer();
 			const isPauseOnBlurEnabled = () => {
 				if (playerState?.settings?.pauseOnBlur !== void 0) return playerState.settings.pauseOnBlur;
 				const val = getValue("pauseOnBlur", true);
@@ -14628,13 +14646,25 @@
 			if (!targetVideo) return;
 			let userInteracted = false;
 			let wasPlaying = !targetVideo.paused;
+			let recoveryTimer = null;
+			let recoveryAttempts = 0;
+			let isRecovering = false;
 			const isPauseOnBlurEnabled = () => {
 				if (playerCore?.options?.playerState?.settings?.pauseOnBlur !== void 0) return playerCore.options.playerState.settings.pauseOnBlur;
 				const val = getValue("pauseOnBlur", true);
 				return val === true || val === "true";
 			};
+			const cancelRecovery = () => {
+				if (recoveryTimer) {
+					clearTimeout(recoveryTimer);
+					recoveryTimer = null;
+				}
+				recoveryAttempts = 0;
+				isRecovering = false;
+			};
 			const markUserInteraction = () => {
 				userInteracted = true;
+				cancelRecovery();
 				setTimeout(() => {
 					userInteracted = false;
 				}, 600);
@@ -14651,7 +14681,72 @@
 			});
 			targetVideo.addEventListener("play", () => {
 				wasPlaying = true;
+				cancelRecovery();
 			});
+			targetVideo.addEventListener("playing", () => {
+				wasPlaying = true;
+				cancelRecovery();
+			});
+			targetVideo.addEventListener("waiting", () => {
+				if (!targetVideo.paused) wasPlaying = true;
+			});
+			const checkAndJumpBufferHole = () => {
+				try {
+					const ct = targetVideo.currentTime;
+					const buffered = targetVideo.buffered;
+					if (!buffered || buffered.length === 0) return false;
+					for (let i = 0; i < buffered.length; i++) {
+						const start = buffered.start(i);
+						if (ct < start && start - ct <= .35) {
+							const newTime = start + .05;
+							console.log("[MissPlayer] 检测到缓冲区微空洞，微调跳跃:", ct.toFixed(2), "->", newTime.toFixed(2));
+							targetVideo.currentTime = newTime;
+							return true;
+						}
+					}
+				} catch (_) {}
+				return false;
+			};
+			const attemptAutoResume = (triggerReason = "stall") => {
+				if (!targetVideo.paused || targetVideo.ended || userInteracted || !wasPlaying) {
+					cancelRecovery();
+					return;
+				}
+				if ((document.hidden || document.visibilityState === "hidden") && isPauseOnBlurEnabled()) {
+					cancelRecovery();
+					wasPlaying = false;
+					return;
+				}
+				recoveryAttempts++;
+				if (recoveryAttempts >= 2) checkAndJumpBufferHole();
+				if (targetVideo.readyState >= 3) targetVideo.play().then(() => {
+					const curTime = targetVideo.currentTime ? targetVideo.currentTime.toFixed(2) : 0;
+					DebugLogPanel.addLog("[RECOVER] 缓冲恢复: 自动恢复播放成功 (" + triggerReason + ") 进度=" + curTime + "s", "info");
+					console.log("[MissPlayer Diagnostic] 自动恢复播放成功 (" + triggerReason + ") 进度=" + curTime + "s");
+					cancelRecovery();
+				}).catch(() => {
+					scheduleRetry(triggerReason);
+				});
+				else scheduleRetry(triggerReason);
+			};
+			const scheduleRetry = (triggerReason) => {
+				if (recoveryTimer) clearTimeout(recoveryTimer);
+				if (recoveryAttempts > 30) {
+					console.warn("[MissPlayer] 缓冲超时重试已达上限，停止自动重试");
+					cancelRecovery();
+					return;
+				}
+				const delay = Math.min(300 + recoveryAttempts * 100, 1500);
+				recoveryTimer = setTimeout(() => {
+					attemptAutoResume(triggerReason);
+				}, delay);
+			};
+			const onBufferReady = () => {
+				if (isRecovering && targetVideo.paused && !userInteracted && wasPlaying && !targetVideo.ended) attemptAutoResume("canplay_ready");
+			};
+			targetVideo.addEventListener("canplay", onBufferReady);
+			targetVideo.addEventListener("canplaythrough", onBufferReady);
+			targetVideo.addEventListener("error", cancelRecovery);
 			targetVideo.addEventListener("pause", () => {
 				const stack = new Error().stack || "";
 				let triggerSource = "UNKNOWN";
@@ -14670,20 +14765,34 @@
 					userInteracted,
 					documentHidden: document.hidden
 				};
-				DebugLogPanel.addLog(`[PAUSE] 视频暂停: [${triggerSource}] 进度=${diagInfo.currentTime}s`, triggerSource === "HOST_SCRIPT_TRIGGERED" ? "warn" : "info");
-				console.warn(`[MissPlayer Diagnostic] 自动暂停分析 【${triggerSource}】: 进度=${diagInfo.currentTime}s, 就绪=${diagInfo.readyState}, 缓冲=${diagInfo.networkState}, 失焦=${diagInfo.documentHidden}`, diagInfo, "\nStack:", stack);
-				if (isPauseOnBlurEnabled()) {
+				DebugLogPanel.addLog("[PAUSE] 视频暂停: [" + triggerSource + "] 进度=" + diagInfo.currentTime + "s", triggerSource === "HOST_SCRIPT_TRIGGERED" ? "warn" : "info");
+				console.warn("[MissPlayer Diagnostic] 自动暂停分析 【" + triggerSource + "】: 进度=" + diagInfo.currentTime + "s, 就绪=" + diagInfo.readyState + ", 缓冲=" + diagInfo.networkState + ", 失焦=" + diagInfo.documentHidden, diagInfo, "\nStack:", stack);
+				if (triggerSource === "USER_INTERACTION" || triggerSource === "VIDEO_ENDED" || triggerSource === "MISS_PLAYER_INTERNAL") {
+					cancelRecovery();
 					wasPlaying = false;
 					return;
 				}
-				if (!userInteracted && wasPlaying && !targetVideo.ended) setTimeout(() => {
-					if (targetVideo.paused && !targetVideo.ended && wasPlaying) targetVideo.play().catch(() => {});
-				}, 150);
-				else if (userInteracted) wasPlaying = false;
+				if (triggerSource === "PAGE_HIDDEN_OR_BLUR") {
+					cancelRecovery();
+					if (isPauseOnBlurEnabled()) {
+						wasPlaying = false;
+						return;
+					}
+					if (wasPlaying && !targetVideo.ended) setTimeout(() => {
+						if (targetVideo.paused && !targetVideo.ended && wasPlaying) targetVideo.play().catch(() => {});
+					}, 150);
+					return;
+				}
+				if (wasPlaying && !targetVideo.ended) {
+					isRecovering = true;
+					BlurPlaybackManager.optimizeHlsBuffer();
+					attemptAutoResume(triggerSource);
+				}
 			}, true);
 			const handleVisibilityChange = () => {
 				if (isPauseOnBlurEnabled()) {
 					if (document.hidden || document.visibilityState === "hidden") {
+						cancelRecovery();
 						if (targetVideo && !targetVideo.paused) targetVideo.pause();
 					}
 				}
@@ -15127,7 +15236,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.37";
+		return "5.6.38";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -17077,6 +17186,7 @@
 		}
 		init() {
 			if (this.initialized) return;
+			performance.mark("mp:theater-init-start");
 			document.body.classList.add("tm-player-active");
 			document.documentElement.classList.add("tm-player-active");
 			this._scrollbarStyle = document.createElement("style");
@@ -17096,6 +17206,7 @@
 			if (!this.playerCore) this.playerCore = new PlayerCore({ callingButton: this.callingButton });
 			this._sessionStartTime = Date.now();
 			this.playerCore.init();
+			performance.mark("mp:video-hijacked");
 			if (this.playerCore && this.playerCore.options && this.playerCore.options.playerState) this.playerCore.options.playerState.initReactiveSync((key, newVal) => {
 				if (this.managers.settingsManager) this.managers.settingsManager.updateControlRowsVisibility();
 				if (key === "buttonSoundEnabled" && this.managers.settingsManager) this.managers.settingsManager.settings.buttonSoundEnabled = newVal;
@@ -17231,6 +17342,8 @@
 			});
 			else this.playerCore.targetVideo.addEventListener("loadedmetadata", runUIUpdates, { once: true });
 			this.initialized = true;
+			performance.mark("mp:theater-ready");
+			performance.measure("mp:theater-init", "mp:theater-init-start", "mp:theater-ready");
 			console.log("[CustomVideoPlayer] 初始化完成");
 		}
 		close() {
@@ -18275,9 +18388,13 @@
 		return enhancer;
 	}
 	init_domains();
+	performance.mark("mp:module-loaded");
 	new AdBlocker().init();
+	performance.mark("mp:adblock-done");
 	mediaSniffer.init();
 	earlyUrlRedirector.checkAndRedirect();
+	performance.mark("mp:early-init-done");
+	performance.measure("mp:early-init", "mp:module-loaded", "mp:early-init-done");
 	function setupViewport() {
 		let viewportMeta = document.querySelector("meta[name=\"viewport\"]");
 		if (!viewportMeta) {
@@ -18326,6 +18443,7 @@
 				initUserExperienceEnhancer(true);
 				console.log(`[${__("scriptName")}] ${__("enhancerInitialized")}`);
 				playerState = new PlayerState();
+				performance.mark("mp:state-created");
 				playerState.loadSettings();
 				CommentCacheManager$1.migrateFromLegacyStorage().catch(() => {});
 				SyncManager.triggerAutoSync(playerState, "startup");
@@ -18356,6 +18474,8 @@
 					}
 				});
 				new FloatingButton({ playerState }).init();
+				performance.mark("mp:ui-ready");
+				performance.measure("mp:startup", "mp:module-loaded", "mp:ui-ready");
 				initAutoLogin().then((loginManager) => {
 					if (loginManager) window.loginManager = loginManager;
 				}).catch(() => {});
