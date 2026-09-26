@@ -192,19 +192,31 @@ export class WebDavClient {
 
             // 1. 优先使用油猴扩展特权网络通道 (绕过 CORS 预检与 302 重定向拦截)
             const getGmXhr = () => {
-                if (typeof GM_xmlhttpRequest === 'function') return GM_xmlhttpRequest;
-                if (typeof GM !== 'undefined' && GM && typeof GM.xmlHttpRequest === 'function') {
-                    return (opts) => GM.xmlHttpRequest(opts);
-                }
-                if (typeof window !== 'undefined' && typeof window.GM_xmlhttpRequest === 'function') {
-                    return window.GM_xmlhttpRequest;
-                }
-                if (typeof unsafeWindow !== 'undefined' && unsafeWindow && typeof unsafeWindow.GM_xmlhttpRequest === 'function') {
-                    return unsafeWindow.GM_xmlhttpRequest;
-                }
+                try {
+                    if (typeof GM_xmlhttpRequest === 'function') return GM_xmlhttpRequest;
+                } catch (_) {}
+                try {
+                    if (typeof globalThis !== 'undefined' && typeof globalThis.GM_xmlhttpRequest === 'function') {
+                        return globalThis.GM_xmlhttpRequest;
+                    }
+                } catch (_) {}
+                try {
+                    if (typeof window !== 'undefined' && typeof window.GM_xmlhttpRequest === 'function') {
+                        return window.GM_xmlhttpRequest;
+                    }
+                } catch (_) {}
+                try {
+                    if (typeof GM !== 'undefined' && GM && typeof GM.xmlHttpRequest === 'function') {
+                        return (opts) => GM.xmlHttpRequest(opts);
+                    }
+                } catch (_) {}
+                try {
+                    if (typeof unsafeWindow !== 'undefined' && unsafeWindow && typeof unsafeWindow.GM_xmlhttpRequest === 'function') {
+                        return unsafeWindow.GM_xmlhttpRequest;
+                    }
+                } catch (_) {}
                 return null;
             };
-
             const gmXhr = getGmXhr();
             if (gmXhr) {
                 try {

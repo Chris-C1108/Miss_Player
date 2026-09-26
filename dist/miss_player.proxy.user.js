@@ -58,3 +58,27 @@
 // @run-at             document-start
 // @require              http://localhost:5173/miss_player.user.js
 // ==/UserScript==
+
+// 桥接 Tampermonkey 沙箱特权 API 给本地动态加载的开发脚本
+(function() {
+  const gmApis = {
+    GM_xmlhttpRequest: typeof GM_xmlhttpRequest !== 'undefined' ? GM_xmlhttpRequest : undefined,
+    GM: typeof GM !== 'undefined' ? GM : undefined,
+    GM_getValue: typeof GM_getValue !== 'undefined' ? GM_getValue : undefined,
+    GM_setValue: typeof GM_setValue !== 'undefined' ? GM_setValue : undefined,
+    GM_deleteValue: typeof GM_deleteValue !== 'undefined' ? GM_deleteValue : undefined,
+    GM_listValues: typeof GM_listValues !== 'undefined' ? GM_listValues : undefined,
+    GM_addValueChangeListener: typeof GM_addValueChangeListener !== 'undefined' ? GM_addValueChangeListener : undefined,
+    GM_removeValueChangeListener: typeof GM_removeValueChangeListener !== 'undefined' ? GM_removeValueChangeListener : undefined,
+    GM_setClipboard: typeof GM_setClipboard !== 'undefined' ? GM_setClipboard : undefined,
+    GM_notification: typeof GM_notification !== 'undefined' ? GM_notification : undefined,
+    GM_openInTab: typeof GM_openInTab !== 'undefined' ? GM_openInTab : undefined,
+    GM_addStyle: typeof GM_addStyle !== 'undefined' ? GM_addStyle : undefined
+  };
+  for (const [k, v] of Object.entries(gmApis)) {
+    if (v !== undefined) {
+      try { window[k] = v; } catch (_) {}
+      try { globalThis[k] = v; } catch (_) {}
+    }
+  }
+})();

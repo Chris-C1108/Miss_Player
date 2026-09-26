@@ -2935,10 +2935,21 @@
 					reject(err instanceof Error ? err : new Error(String(err)));
 				};
 				const getGmXhr = () => {
-					if (typeof GM_xmlhttpRequest === "function") return GM_xmlhttpRequest;
-					if (typeof GM !== "undefined" && GM && typeof GM.xmlHttpRequest === "function") return (opts) => GM.xmlHttpRequest(opts);
-					if (typeof window !== "undefined" && typeof window.GM_xmlhttpRequest === "function") return window.GM_xmlhttpRequest;
-					if (typeof unsafeWindow !== "undefined" && unsafeWindow && typeof unsafeWindow.GM_xmlhttpRequest === "function") return unsafeWindow.GM_xmlhttpRequest;
+					try {
+						if (typeof GM_xmlhttpRequest === "function") return GM_xmlhttpRequest;
+					} catch (_) {}
+					try {
+						if (typeof globalThis !== "undefined" && typeof globalThis.GM_xmlhttpRequest === "function") return globalThis.GM_xmlhttpRequest;
+					} catch (_) {}
+					try {
+						if (typeof window !== "undefined" && typeof window.GM_xmlhttpRequest === "function") return window.GM_xmlhttpRequest;
+					} catch (_) {}
+					try {
+						if (typeof GM !== "undefined" && GM && typeof GM.xmlHttpRequest === "function") return (opts) => GM.xmlHttpRequest(opts);
+					} catch (_) {}
+					try {
+						if (typeof unsafeWindow !== "undefined" && unsafeWindow && typeof unsafeWindow.GM_xmlhttpRequest === "function") return unsafeWindow.GM_xmlhttpRequest;
+					} catch (_) {}
 					return null;
 				};
 				const gmXhr = getGmXhr();
