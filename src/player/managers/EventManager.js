@@ -101,8 +101,25 @@ export class EventManager {
                 return;
             }
 
+            // 跨 Shadow DOM 边界解析真实交互目标 (通过 composedPath 穿透 retargeting)
+            const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+            const targetEl = path[0] || e.target;
+            const findInPath = (selector) => {
+                if (!targetEl) return null;
+                if (typeof targetEl.closest === 'function') {
+                    const match = targetEl.closest(selector);
+                    if (match) return match;
+                }
+                for (const node of path) {
+                    if (node && node.nodeType === 1 && typeof node.matches === 'function' && node.matches(selector)) {
+                        return node;
+                    }
+                }
+                return null;
+            };
+
             // 针对水平滚动容器（标签页栏与评论源选项卡），只允许水平滑动，阻止垂直滑动以防穿透
-            const horizontalScrollContainer = e.target.closest('.tm-tab-scroll-container, .tm-comments-tabs');
+            const horizontalScrollContainer = findInPath('.tm-tab-scroll-container, .tm-comments-tabs');
             if (horizontalScrollContainer) {
                 if (e.type === 'touchmove') {
                     if (e.touches && e.touches.length > 0) {
@@ -129,7 +146,8 @@ export class EventManager {
             }
             
             // 允许设置菜单面板、快进滑动条、评论区及弹窗内部滚动容器正常在组件内自由滚动，配合 overscroll-behavior: contain 防止边界穿透
-            if (e.target.closest('.tm-settings-panel, .tm-settings-menu-container, .tm-settings-seek-steps-subpanel, .tm-settings-webdav-card, .tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list')) {
+            const inScrollable = typeof findInPath === 'function' ? findInPath('.tm-settings-panel, .tm-settings-menu-container, .tm-settings-apple-container, .tm-settings-seek-steps-subpanel, .tm-settings-webdav-card, .tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list') : e.target.closest('.tm-settings-panel, .tm-settings-menu-container, .tm-settings-apple-container, .tm-settings-seek-steps-subpanel, .tm-settings-webdav-card, .tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list');
+            if (inScrollable) {
                 return;
             }
             

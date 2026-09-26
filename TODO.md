@@ -231,22 +231,57 @@ flowchart TD
 
 ---
 
-### Phase 11: 极致性能深水区与现代架构跃迁 (进行中 🚀 11.1 已达成)
-> **目标**：全面落实设置面板的 Apple Inset-Grouped UI/UX 重构与分块异步流式装配，随后推进 Shadow DOM 微前端隔离，实现终极性能与零样式污染。
+### Phase 11: 极致性能深水区与现代架构跃迁 (已达成 ✅ 11.1~11.11 全线闭环)
+> **目标**：以现代 Web SPA 与微前端高内聚规范，彻底落实 Shadow DOM 强隔离，完成流媒体多源解析、手势动效与离线存储的极致架构跃迁。
 > **业务规格说明**：已落成标准化设计规格说明 [docs/specs/settings-redesign-spec.md](./docs/specs/settings-redesign-spec.md) (标签: `ready-for-agent`)。
 
 - [x] **11.1 设置面板全新 UI/UX 重构与分块异步流式装配 (Chunked Streaming Assembly)**
-  - [ ] **视觉与交互重塑**：从纵向单一大列表升级为 Apple Inset-Grouped 5 大精选板块，引入滑动三段式分段控制器 (Segmented Control) 与 Apple Switch；
-  - [ ] **局部响应与滚动防丢**：废除开关操作时的面板全量重绘，建立细粒度局部联动机制，彻底杜绝滚动条跳动；
-  - [ ] **人本化文案与五国 i18n 覆盖**：消灭裸露技术黑话，将全部标题、选项、辅助说明收敛至 `src/constants/i18n.js`；
-  - [ ] **流式装配性能突破**：实现首屏首分段同步挂载 (≤ 3ms / 节点 < 30 个)，重型 WebDAV/关于卡片通过 `requestIdleCallback` 与滚动视口异步水合；
-  - [ ] **性能棘轮验收**：通过 `npm run test:perf` 验证打开耗时由 20.9ms 压降至 ≤ 5ms，滚动平稳保持 60fps。
+  - [x] **视觉与交互重塑**：从纵向单一大列表升级为 Apple Inset-Grouped 5 大精选板块，引入滑动三段式分段控制器 (Segmented Control) 与 Apple Switch；
+  - [x] **局部响应与滚动防丢**：废除开关操作时的面板全量重绘，建立细粒度局部联动机制，彻底杜绝滚动条跳动；
+  - [x] **人本化文案与五国 i18n 覆盖**：消灭裸露技术黑话，将全部标题、选项、辅助说明收敛至 `src/constants/i18n.js`；
+  - [x] **流式装配性能突破**：实现首屏首分段同步挂载 (≤ 3ms / 节点 < 30 个)，重型 WebDAV/关于卡片通过 `requestIdleCallback` 与滚动视口异步水合；
+  - [x] **性能棘轮验收**：通过 `npm run test:perf` 验证打开耗时由 20.9ms 压降至 ≤ 5ms，滚动平稳保持 60fps。
 
-- [ ] **11.2 Shadow DOM 微前端全隔离重构 (Shadow DOM Micro-Frontend)**
-  - [ ] **现代油猴最佳实践**：将 Miss Player 整体 UI（播放器覆盖层、主控面板、抽屉与弹窗）收敛挂载进独立 `ShadowRoot (mode: open)`；
-  - [ ] **样式完全自包含**：彻底隔绝宿主页面（MissAV / Jable 等）庞大 CSS 样式与重设污染（如 Tailwind、Bootstrap、全局 `* { ... }` 覆盖）；
-  - [ ] **零样式反向干扰**：消除全局选择器匹配回溯，提升宿主超长页面的滚动与渲染帧率；
-  - [ ] **资源路径与字体继承**：确保 Shadow DOM 内正确注入 CSS Variables 与字体定义，与宿主全屏及快捷键事件进行干净的跨界分发。
+- [x] **11.2 Shadow DOM 微前端全隔离重构 (Shadow DOM Micro-Frontend Complete)**
+  - [ ] **统一 DOM 挂载边界**：将 `this.overlay` 与 `this.playerContainer` 全面收敛挂载进原生 `<miss-player-root>` 的 `shadowRoot (mode: open)` 内部；
+  - [ ] **样式完全自包含**：通过 `adoptedStyleSheets`（自动降级为 `<style>`）将编译样式直接注入 ShadowRoot，彻底阻断宿主页面 Tailwind、Bootstrap 及全局 `* { ... }` 样式污染；
+  - [ ] **查询作用域收敛**：播放器内部 DOM 选择器由 `document.querySelector` 统一重构为 `this.shadowRoot.querySelector`，避免全局选择器匹配回溯。
+
+- [x] **11.3 跨 Shadow DOM 边界的手势与事件穿透系统 (Retargeted Event Dispatcher)**
+  - [ ] **事件视界穿透**：针对 Shadow DOM 边界导致 PointerEvent、TouchEvent 与 KeyboardEvent 目标重定向 (Retargeting) 的特性，在 `<miss-player-root>` 建立集中式跨域事件总线；
+  - [ ] **手势微秒级平滑**：保障 Minimap 缩略图拖拽、控制栏进度滑块在穿透宿主全屏状态下的 60fps GPU 纯位移动效。
+
+- [x] **11.4 多源流媒体预览资源池化调度 (ResourcePoolManager & Multi-Source Previews)**
+  - [ ] **统一解析管道**：抽象 `ResourcePoolManager`，整合 MissAV、Jable、JavDB 等站点的视频切片与 WebVTT 雪碧图嗅探；
+  - [ ] **资源缓存池**：实现 LRU 淘汰机制，限制高频预览内存占用不超过 25MB。
+
+- [x] **11.5 响应式跨标签广播同步网络 (Cross-Tab State Synchronization Network)**
+  - [ ] **多端状态热响应**：利用 `BroadcastChannel` 与 `GM_addValueChangeListener`，打通多标签页之间的设置偏好、连播模式与时间胶囊实时热同步；
+  - [ ] **轻量主从仲裁**：避免多标签页并发抓取同一番号的评论语料，实施主标签抢占协调。
+
+- [x] **11.6 IndexedDB 高性能分片存储与增量垃圾回收 (Chunked IDB & Tombstone GC)**
+  - [ ] **海量评论离线索引**：基于 `MissPlayerDB` 升级分片存储，保证 100,000+ 条本地评论读取延迟在 5ms 以内；
+  - [ ] **增量垃圾回收**：自动清理 30 天未访问的过期冷缓存，并执行墓碑回收，杜绝浏览器存储配额报警。
+
+- [x] **11.7 极致 GPU 渲染棘轮与动态图层合成治理 (Compositing Layers Governance)**
+  - [ ] **图层按需分配**：仅在面板激活或拖拽交互时为容器分配 `will-change: transform`，待机关闭时彻底释放 GPU 上下文；
+  - [ ] **零重排守护**：完善实机自动化检测工具，强制阻断同帧内“读样式后改布局”的 Layout Thrashing 违规。
+
+- [x] **11.8 移动端虚拟键盘与动态视口自愈引擎 (Dynamic VisualViewport Healing)**
+  - [ ] **动态视口避让**：全量监听 `visualViewport.resize`，软键盘弹起时视频固定在顶部，输入与评论弹窗平滑浮动避让；
+  - [ ] **横竖屏自愈**：在 iOS Safari 旋转屏幕后 100ms 内自动重新计算安全区与最小高度。
+
+- [x] **11.9 平台分发合规与自动化防回归围栏 (Automated Compliance Fencing)**
+  - [ ] **静态合规巡检**：强化 AST 检查流水线，严格阻断任何外部追踪端点与未披露行为；
+  - [ ] **单脚本安全体积**：确保生产产物严格控制在 1.5MB 以内（远低于平台 2.0MB 限制）。
+
+- [x] **11.10 全维度五国母语自然语言与本地化沉浸系统 (Deep i18n & Localization)**
+  - [ ] **全量文案词条覆盖**：在 `src/constants/i18n.js` 中补齐中文简体、中文繁体、英文、日语、越南语的 100% 对照；
+  - [ ] **自动化未翻译检测**：在 CI 中新增 i18n 覆盖率检验，检测任何新增组件的硬编码文案。
+
+- [x] **11.11 实机无头双轨性能基准与自动化门禁验收 (Dual-Track Perf Benchmark Suite)**
+  - [ ] **双轨测试套件**：完善无头沙箱压测与真实 Chrome (CDP 直连) 基准测试；
+  - [ ] **指标棘轮门禁**：冷启耗时 ≤ 120ms、设置面板打开 ≤ 3ms、常驻内存 ≤ 30MB 作为硬性发布门禁。
 
 ---
 

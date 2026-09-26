@@ -67,6 +67,14 @@ class MediaSniffer {
     /**
      * 获取最近捕获到的指定类型流
      */
+    /**
+     * 获取所有嗅探捕获到的媒体流列表
+     * @returns {Array}
+     */
+    getAllStreams() {
+        return Array.from(this.sniffedStreams.values());
+    }
+
     getLatestStream(type = null) {
         const list = Array.from(this.sniffedStreams.values()).reverse();
         if (!type) return list[0] || null;

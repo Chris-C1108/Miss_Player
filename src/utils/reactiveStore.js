@@ -14,6 +14,19 @@ export class ReactiveStore {
         this.listeners = new Map(); // key -> Set<callback>
         this.changeListenerIds = new Map(); // key -> listenerId
         
+        // 双轨跨标签低延迟广播通道 (BroadcastChannel)
+        this.channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('miss_player_state_bus') : null;
+        if (this.channel) {
+            this.channel.onmessage = (event) => {
+                const { key, newValue, oldValue, senderId } = event.data || {};
+                if (key && senderId !== this.instanceId) {
+                    this.state[key] = newValue;
+                    this._notify(key, newValue, oldValue, true);
+                }
+            };
+        }
+        this.instanceId = Math.random().toString(36).slice(2, 9);
+        
         // 创建代理对象
         this.proxy = new Proxy(this.state, {
             set: (target, prop, value) => {
@@ -23,6 +36,11 @@ export class ReactiveStore {
                 target[prop] = value;
                 setValue(prop, value);
                 this._notify(prop, value, oldValue, false);
+                if (this.channel) {
+                    try {
+                        this.channel.postMessage({ key: prop, newValue: value, oldValue, senderId: this.instanceId });
+                    } catch (_) {}
+                }
                 return true;
             },
             get: (target, prop) => {
@@ -93,5 +111,9 @@ export class ReactiveStore {
         }
         this.changeListenerIds.clear();
         this.listeners.clear();
+        if (this.channel) {
+            try { this.channel.close(); } catch (_) {}
+            this.channel = null;
+        }
     }
 }

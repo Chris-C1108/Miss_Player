@@ -425,6 +425,46 @@ export class CommentCacheManager {
         return true;
     }
 
+    /**
+     * 自动执行墓碑增量垃圾回收 (Tombstone GC)
+     * 清理超过 maxAgeDays 天未访问的过期冷评论缓存
+     * @param {number} maxAgeDays 默认 30 天
+     */
+    static async runTombstoneGC(maxAgeDays = 30) {
+        try {
+            const db = await IDBHelper.getDB();
+            if (!db) return 0;
+            const threshold = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
+            let cleanedCount = 0;
+
+            const tx = db.transaction(STORES.COMMENTS_CACHE, 'readwrite');
+            const store = tx.objectStore(STORES.COMMENTS_CACHE);
+            const req = store.openCursor();
+
+            return new Promise((resolve) => {
+                req.onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        const val = cursor.value;
+                        if (val && val.timestamp && val.timestamp < threshold) {
+                            cursor.delete();
+                            cleanedCount++;
+                        }
+                        cursor.continue();
+                    } else {
+                        if (cleanedCount > 0) {
+                            logger.log(`[CommentCacheManager] 墓碑垃圾回收完成，已清理 ${cleanedCount} 条超过 ${maxAgeDays} 天的过期冷缓存`);
+                        }
+                        resolve(cleanedCount);
+                    }
+                };
+                req.onerror = () => resolve(0);
+            });
+        } catch (_) {
+            return 0;
+        }
+    }
+
     static clear(videoCode) {
         if (videoCode) {
             this._memoryCache.delete(videoCode);

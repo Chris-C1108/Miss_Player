@@ -1377,11 +1377,20 @@ export class UIManager {
             this.playerContainer.appendChild(this.controlManager.controlButtonsContainer);
         }
         
-        // 将overlay添加到document.body
-        document.body.appendChild(this.overlay);
+        // 创建或复用 Shadow DOM 宿主自定义元素 <miss-player-root>
+        if (!this.rootHost) {
+            this.rootHost = document.createElement("miss-player-root");
+            this.rootHost.style.display = "contents";
+            this.shadowRoot = this.rootHost.shadowRoot;
+            this.injectShadowStyles(this.shadowRoot);
+        }
+
+        // 将 overlay 与 playerContainer 封装进 ShadowRoot 强隔离环境
+        this.shadowRoot.appendChild(this.overlay);
+        this.shadowRoot.appendChild(this.playerContainer);
         
-        // 将playerContainer与overlay同级添加到document.body，而不是作为overlay的子元素
-        document.body.appendChild(this.playerContainer);
+        // 将 rootHost 一次性挂载到 document.body
+        document.body.appendChild(this.rootHost);
         
         // 立即更新容器最小高度
         this.updateContainerMinHeight();
