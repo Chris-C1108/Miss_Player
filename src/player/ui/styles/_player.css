@@ -2179,9 +2179,9 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     bottom: calc(10px + env(safe-area-inset-bottom, 0px)); /* 保持距离底部10px，同时考虑iOS安全区域 */
     left: 50%;
     transform: translateX(-50%);
-    width: 95%;
-    max-width: 700px;
-    min-width: 350px; /* 与竖屏模式保持一致 */
+    width: min(94vw, 560px);
+    max-width: 560px;
+    box-sizing: border-box;
     z-index: 9997 !important;
     padding: 16px 16px 14px;
     border-radius: 16px;
@@ -2512,6 +2512,52 @@ body.tm-swiping-down .tm-settings-panel {
 /* 隐藏评论区后，位置按钮隐藏 */
 .tm-sidebar-hidden .tm-sidebar-pos-button {
     display: none !important;
+}
+
+/* 移动端与竖屏手机极致紧凑排版优化 (防控制面板过宽与折行溢出) */
+@media screen and (max-width: 600px), screen and (orientation: portrait) {
+    .tm-control-buttons {
+        width: calc(100vw - 20px) !important;
+        max-width: 440px !important;
+        min-width: 0 !important;
+        padding: 10px 12px 8px !important;
+        gap: 7px !important;
+        border-radius: 14px !important;
+    }
+
+    /* 快进/快退按键紧凑自适应弹性，确保单边多步进时精致容纳不折行撑高 */
+    .tm-rewind-buttons-container,
+    .tm-forward-buttons-container {
+        gap: 4px !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        scrollbar-width: none !important;
+    }
+    .tm-rewind-buttons-container::-webkit-scrollbar,
+    .tm-forward-buttons-container::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    .tm-time-control-button {
+        width: auto !important;
+        min-width: 34px !important;
+        height: 28px !important;
+        padding: 0 6px !important;
+        font-size: 11px !important;
+        border-radius: 6px !important;
+        flex: 1 1 auto !important;
+        max-width: 44px !important;
+    }
+
+    /* 播放控制胶囊行紧凑微调 */
+    .tm-playback-control-row {
+        gap: 6px !important;
+    }
+
+    /* 胶囊时间标记行自适应紧凑 */
+    .tm-loop-control-row {
+        gap: 5px !important;
+    }
 }
 
 /* 中大屏竖屏及折叠屏优化 */
