@@ -124,7 +124,7 @@
 }
 
 .tm-apple-row:not(:last-child)::after {
-    content: ;
+    content: "";
     position: absolute;
     bottom: 0;
     left: 12px;
@@ -168,45 +168,170 @@
     flex-shrink: 0;
 }
 
-/* Apple Switch 开关样式 */
+/* 标准 Apple Switch 开关样式 (精准带圆纽) */
 .tm-apple-switch {
     position: relative;
-    width: 38px;
-    height: 22px;
-    background: var(--mp-settings-switch-track);
-    border-radius: 12px;
+    display: inline-block;
+    width: 44px;
+    height: 26px;
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 13px;
     cursor: pointer;
     outline: none;
     border: none;
     padding: 0;
-    transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     -webkit-tap-highlight-color: transparent;
 }
 
 .tm-apple-switch::after {
-    content: ;
+    content: "";
     position: absolute;
     top: 2px;
     left: 2px;
-    width: 18px;
-    height: 18px;
-    background: var(--mp-settings-switch-thumb);
+    width: 22px;
+    height: 22px;
+    background: #ffffff;
     border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25), 0 0 1px rgba(0, 0, 0, 0.15);
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tm-apple-switch.active {
-    background: var(--mp-settings-switch-active);
+    background: #0a84ff; /* Apple System Blue */
 }
 
 .tm-apple-switch.active::after {
-    transform: translateX(16px);
+    transform: translateX(18px);
+}
+
+/* 多数据源抓取策略三站 Badge 按键 (明确区分开启与关闭状态) */
+.tm-settings-sources-subpanel {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tm-comment-source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    outline: none;
+}
+
+.tm-comment-source-badge.enabled {
+    background: rgba(10, 132, 255, 0.18);
+    border-color: rgba(10, 132, 255, 0.55);
+    color: #5ac8fa;
+    box-shadow: 0 0 8px rgba(10, 132, 255, 0.25);
+}
+
+.tm-comment-source-badge.enabled::before {
+    content: "✓";
+    font-size: 10.5px;
+    font-weight: bold;
+}
+
+.tm-comment-source-badge.disabled {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.35);
+    opacity: 0.65;
+}
+
+.tm-comment-source-badge.disabled::before {
+    content: "✕";
+    font-size: 9.5px;
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.tm-comment-source-badge:hover {
+    transform: scale(1.03);
+}
+
+.tm-comment-source-badge:active {
+    transform: scale(0.97);
+}
+
+/* 紧凑可折叠卡片 Header 与折叠体 */
+.tm-apple-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+}
+
+.tm-apple-accordion-header:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.tm-apple-accordion-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tm-apple-accordion-meta {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.45);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tm-apple-accordion-arrow {
+    font-size: 10px;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.tm-apple-accordion-arrow.expanded {
+    transform: rotate(180deg);
+}
+
+/* 时长微调输入框行 */
+.tm-apple-duration-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+}
+
+.tm-apple-duration-input {
+    width: 60px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
+    padding: 4px 8px;
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.tm-apple-duration-input:focus {
+    border-color: #0a84ff;
 }
 
 /* 骨架占位屏 (Skeleton Screen) */
 .tm-settings-skeleton-card {
-    height: 64px;
+    height: 48px;
     background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0.03) 75%);
     background-size: 200% 100%;
     animation: tm-skeleton-pulse 1.5s infinite ease-in-out;
