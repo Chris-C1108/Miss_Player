@@ -190,10 +190,25 @@ export class WebDavClient {
                 reject(err instanceof Error ? err : new Error(String(err)));
             };
 
-            // 1. 优先使用 GM_xmlhttpRequest (穿透浏览器沙箱与 CORS 预检)
-            if (typeof GM_xmlhttpRequest === 'function') {
+            // 1. 优先使用油猴扩展特权网络通道 (绕过 CORS 预检与 302 重定向拦截)
+            const getGmXhr = () => {
+                if (typeof GM_xmlhttpRequest === 'function') return GM_xmlhttpRequest;
+                if (typeof GM !== 'undefined' && GM && typeof GM.xmlHttpRequest === 'function') {
+                    return (opts) => GM.xmlHttpRequest(opts);
+                }
+                if (typeof window !== 'undefined' && typeof window.GM_xmlhttpRequest === 'function') {
+                    return window.GM_xmlhttpRequest;
+                }
+                if (typeof unsafeWindow !== 'undefined' && unsafeWindow && typeof unsafeWindow.GM_xmlhttpRequest === 'function') {
+                    return unsafeWindow.GM_xmlhttpRequest;
+                }
+                return null;
+            };
+
+            const gmXhr = getGmXhr();
+            if (gmXhr) {
                 try {
-                    GM_xmlhttpRequest({
+                    gmXhr({
                         method,
                         url,
                         headers: mergedHeaders,
@@ -252,6 +267,14 @@ export class WebDavClient {
                     })
                     .catch((err) => {
                         clearTimeout(timer);
+                        // 诊断是否是预检重定向 CORS 拦截
+                        const isCorsPreflightErr = err && (
+                            err.name === 'TypeError' ||
+                            (err.message && (err.message.includes('Failed to fetch') || err.message.includes('preflight') || err.message.includes('CORS')))
+                        );
+                        if (isCorsPreflightErr) {
+                            console.warn('[WebDavClient] 原生 fetch 受同源策略或重定向拦截，请确保油猴脚本已授权 GM_xmlhttpRequest 权限:', err);
+                        }
                         safeReject(err);
                     });
             } catch (e) {

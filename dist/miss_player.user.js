@@ -41,6 +41,7 @@
 // @connect            greasyfork.org
 // @connect            update.sleazyfork.org
 // @grant              GM.openInTab
+// @grant              GM.xmlHttpRequest
 // @grant              GM_addStyle
 // @grant              GM_addValueChangeListener
 // @grant              GM_deleteValue
@@ -2933,9 +2934,17 @@
 					settled = true;
 					reject(err instanceof Error ? err : new Error(String(err)));
 				};
-				if (typeof GM_xmlhttpRequest === "function") {
+				const getGmXhr = () => {
+					if (typeof GM_xmlhttpRequest === "function") return GM_xmlhttpRequest;
+					if (typeof GM !== "undefined" && GM && typeof GM.xmlHttpRequest === "function") return (opts) => GM.xmlHttpRequest(opts);
+					if (typeof window !== "undefined" && typeof window.GM_xmlhttpRequest === "function") return window.GM_xmlhttpRequest;
+					if (typeof unsafeWindow !== "undefined" && unsafeWindow && typeof unsafeWindow.GM_xmlhttpRequest === "function") return unsafeWindow.GM_xmlhttpRequest;
+					return null;
+				};
+				const gmXhr = getGmXhr();
+				if (gmXhr) {
 					try {
-						GM_xmlhttpRequest({
+						gmXhr({
 							method,
 							url,
 							headers: mergedHeaders,
@@ -2988,6 +2997,7 @@
 						});
 					}).catch((err) => {
 						clearTimeout(timer);
+						if (err && (err.name === "TypeError" || err.message && (err.message.includes("Failed to fetch") || err.message.includes("preflight") || err.message.includes("CORS")))) console.warn("[WebDavClient] 原生 fetch 受同源策略或重定向拦截，请确保油猴脚本已授权 GM_xmlhttpRequest 权限:", err);
 						safeReject(err);
 					});
 				} catch (e) {

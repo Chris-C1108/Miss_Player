@@ -41,6 +41,7 @@
 // @connect            greasyfork.org
 // @connect            update.sleazyfork.org
 // @grant              GM.openInTab
+// @grant              GM.xmlHttpRequest
 // @grant              GM_addStyle
 // @grant              GM_addValueChangeListener
 // @grant              GM_deleteValue

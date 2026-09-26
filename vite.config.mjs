@@ -44,6 +44,7 @@ export default defineConfig({
         icon: 'https://missav.ws/img/favicon.ico',
         grant: [
           'GM_xmlhttpRequest',
+          'GM.xmlHttpRequest',
           'GM_setClipboard',
           'GM_notification',
           'GM_setValue',
