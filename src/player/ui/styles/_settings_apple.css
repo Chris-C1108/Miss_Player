@@ -1,0 +1,220 @@
+/* =========================================================================
+   Miss Player - Apple Inset-Grouped Settings System
+   遵循 Apple Human Interface Guidelines (HIG) 设计规范
+   ========================================================================= */
+
+:root, :host {
+    --mp-settings-card-bg: rgba(255, 255, 255, 0.05);
+    --mp-settings-card-border: rgba(255, 255, 255, 0.08);
+    --mp-settings-card-radius: 12px;
+    --mp-settings-row-height: 44px;
+    --mp-settings-divider: rgba(255, 255, 255, 0.06);
+    --mp-settings-text-primary: #ffffff;
+    --mp-settings-text-secondary: rgba(255, 255, 255, 0.55);
+    --mp-settings-text-muted: rgba(255, 255, 255, 0.38);
+    --mp-settings-switch-active: #0a84ff; /* Apple System Blue */
+    --mp-settings-switch-track: rgba(255, 255, 255, 0.16);
+    --mp-settings-switch-thumb: #ffffff;
+}
+
+/* 设置主菜单容器 */
+.tm-settings-apple-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 顶部 Header：标题与关闭按钮快捷栏 */
+.tm-settings-apple-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 4px 6px 4px;
+    border-bottom: 1px solid var(--mp-settings-divider);
+    margin-bottom: 2px;
+}
+
+.tm-settings-apple-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tm-settings-apple-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: var(--mp-settings-text-primary);
+}
+
+.tm-settings-apple-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--mp-settings-text-secondary);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tm-settings-apple-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--mp-settings-text-primary);
+}
+
+.tm-settings-apple-close-btn:active {
+    transform: scale(0.92);
+}
+
+/* Section 分组容器 */
+.tm-settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Section Header 标题 */
+.tm-settings-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--mp-settings-text-muted);
+    padding: 0 4px;
+    user-select: none;
+}
+
+/* Apple Inset-Grouped 卡片外壳 */
+.tm-apple-card {
+    background: var(--mp-settings-card-bg);
+    border: 1px solid var(--mp-settings-card-border);
+    border-radius: var(--mp-settings-card-radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.tm-apple-card:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* Apple 风格列表行 (ToggleRow / ActionRow) */
+.tm-apple-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: var(--mp-settings-row-height);
+    padding: 8px 12px;
+    box-sizing: border-box;
+    position: relative;
+    user-select: none;
+    transition: background 0.15s ease;
+}
+
+.tm-apple-row:not(:last-child)::after {
+    content: ;
+    position: absolute;
+    bottom: 0;
+    left: 12px;
+    right: 12px;
+    height: 1px;
+    background: var(--mp-settings-divider);
+    pointer-events: none;
+}
+
+.tm-apple-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* 文本与标签包装器 */
+.tm-apple-row-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+    padding-right: 10px;
+}
+
+.tm-apple-row-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--mp-settings-text-primary);
+    line-height: 1.3;
+}
+
+.tm-apple-row-subtext {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--mp-settings-text-secondary);
+    line-height: 1.25;
+}
+
+.tm-apple-row-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Apple Switch 开关样式 */
+.tm-apple-switch {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    background: var(--mp-settings-switch-track);
+    border-radius: 12px;
+    cursor: pointer;
+    outline: none;
+    border: none;
+    padding: 0;
+    transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tm-apple-switch::after {
+    content: ;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: var(--mp-settings-switch-thumb);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tm-apple-switch.active {
+    background: var(--mp-settings-switch-active);
+}
+
+.tm-apple-switch.active::after {
+    transform: translateX(16px);
+}
+
+/* 骨架占位屏 (Skeleton Screen) */
+.tm-settings-skeleton-card {
+    height: 64px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0.03) 75%);
+    background-size: 200% 100%;
+    animation: tm-skeleton-pulse 1.5s infinite ease-in-out;
+    border-radius: var(--mp-settings-card-radius);
+    border: 1px solid var(--mp-settings-card-border);
+}
+
+@keyframes tm-skeleton-pulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}

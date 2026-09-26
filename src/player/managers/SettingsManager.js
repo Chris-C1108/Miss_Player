@@ -1,3 +1,9 @@
+import { SettingsStreamScheduler } from "./settings/SettingsStreamScheduler.js";
+import { PlaybackSection } from "./settings/sections/PlaybackSection.js";
+import { CommentsSection } from "./settings/sections/CommentsSection.js";
+import { BetaSection } from "./settings/sections/BetaSection.js";
+import { CloudSyncSection } from "./settings/sections/CloudSyncSection.js";
+import { AboutSection } from "./settings/sections/AboutSection.js";
 function sanitizeSeekStepList(arr, isCustom = false) {
     if (!Array.isArray(arr)) return isCustom ? [] : ['5s', '10s', '30s', '1m', '5m', '10m'];
     const valid = arr.filter(s => typeof s === 'string' && /^\d+[sm]$/i.test(s.trim())).map(s => s.trim().toLowerCase());
@@ -152,550 +158,67 @@ export class SettingsManager {
     createSettingsPanel() {
         if (!this.settingsPanel) return;
         this.syncState();
-        this.settingsPanel.innerHTML = '';
+        this.settingsPanel.innerHTML = "";
 
-        const container = document.createElement('div');
-        container.className = 'tm-settings-menu-container';
+        if (this._scheduler) {
+            this._scheduler.destroy();
+            this._scheduler = null;
+        }
 
-        // 阻止按键冒泡
+        const container = document.createElement("div");
+        container.className = "tm-settings-apple-container";
+
+        // 阻止按键事件冒泡至视频宿主
         const stopProp = (e) => e.stopPropagation();
-        container.addEventListener('click', stopProp);
-        container.addEventListener('mousedown', stopProp);
-        container.addEventListener('touchstart', stopProp);
+        container.addEventListener("click", stopProp);
+        container.addEventListener("mousedown", stopProp);
+        container.addEventListener("touchstart", stopProp);
 
-        // =================================================================
-        // SECTION 1: 遥控器 :
-        // =================================================================
-        const section1 = this._createSectionHeader('遥控器 :');
+        // 顶部 Header 栏 (标题 + 快捷关闭按钮)
+        const headerRow = document.createElement("div");
+        headerRow.className = "tm-settings-apple-header";
 
-        // 1. 进度条栏
-        const progressBarOption = this._createToggleOption(
-            '进度条栏',
-            'showProgressBar',
-            this.settings.showProgressBar,
-            (checked) => {
-                this.updateSetting('showProgressBar', checked);
-                this.updateControlRowsVisibility();
-            }
-        );
+        const titleWrap = document.createElement("div");
+        titleWrap.className = "tm-settings-apple-title-wrap";
+        titleWrap.innerHTML = `<span class="tm-settings-apple-title">${__("settings") || "设置"}</span>`;
 
-        // 2. 快进/快退栏
-        const seekControlContainer = document.createElement('div');
-        seekControlContainer.className = 'tm-settings-seek-wrapper';
-
-        const seekControlOption = this._createToggleOption(
-            '快进/快退栏',
-            'showSeekControlRow',
-            this.settings.showSeekControlRow,
-            (checked) => {
-                this.updateSetting('showSeekControlRow', checked);
-                this.updateControlRowsVisibility();
-                this.createSettingsPanel(); // 刷新子面板显示
-            }
-        );
-        seekControlContainer.appendChild(seekControlOption);
-
-        // 当“快进/快退栏”启用时直接展示跳转步进 Badges 子面板
-        if (this.settings.showSeekControlRow) {
-            const seekStepsSubPanel = this._createSeekStepsSubPanel();
-            seekControlContainer.appendChild(seekStepsSubPanel);
-        }
-
-        // 3. 跳转/循环栏
-        const loopControlOption = this._createToggleOption(
-            '跳转/循环栏',
-            'showLoopControlRow',
-            this.settings.showLoopControlRow,
-            (checked) => {
-                this.updateSetting('showLoopControlRow', checked);
-                this.updateControlRowsVisibility();
-            }
-        );
-
-        section1.appendChild(progressBarOption);
-        section1.appendChild(seekControlContainer);
-        section1.appendChild(loopControlOption);
-
-        // 4. 播放按钮运行模式 (正常模式 / 预览模式 / 精彩重温)
-        const playModeContainer = document.createElement('div');
-        playModeContainer.className = 'tm-settings-option-row';
-        playModeContainer.id = 'tm-setting-playMode';
-        playModeContainer.style.display = 'flex';
-        playModeContainer.style.alignItems = 'center';
-        playModeContainer.style.justifyContent = 'space-between';
-        playModeContainer.style.padding = '8px 0';
-        playModeContainer.style.borderTop = '1px solid rgba(255, 255, 255, 0.06)';
-        playModeContainer.style.marginTop = '4px';
-
-        const playModeLabelWrap = document.createElement('div');
-        playModeLabelWrap.style.display = 'flex';
-        playModeLabelWrap.style.flexDirection = 'column';
-        playModeLabelWrap.style.gap = '2px';
-
-        const playModeLabel = document.createElement('span');
-        playModeLabel.className = 'tm-settings-label';
-        playModeLabel.textContent = '播放按钮运行模式';
-        playModeLabel.style.fontSize = '13px';
-        playModeLabel.style.fontWeight = '600';
-        playModeLabel.style.color = '#fff';
-
-        const playModeSub = document.createElement('span');
-        playModeSub.style.fontSize = '11px';
-        playModeSub.style.color = 'rgba(255, 255, 255, 0.5)';
-        playModeSub.textContent = '常规连贯播放、胶囊走马灯预览或高潮精彩重温';
-
-        playModeLabelWrap.appendChild(playModeLabel);
-        playModeLabelWrap.appendChild(playModeSub);
-
-        const playModeSelect = document.createElement('select');
-        playModeSelect.className = 'tm-settings-select tm-settings-playmode-select';
-        playModeSelect.style.cssText = 'background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; outline: none;';
-        
-        const curMode = this.settings.betaPlayMode || 'normal';
-        playModeSelect.innerHTML = `
-            <option value="normal" ${curMode === 'normal' ? 'selected' : ''}>🎬 正常模式 (常规播放)</option>
-            <option value="preview" ${curMode === 'preview' ? 'selected' : ''}>⚡ 预览模式 (各播5秒)</option>
-            <option value="climax" ${curMode === 'climax' ? 'selected' : ''}>🌟 精彩重温 (区间完整/时间戳60s)</option>
-        `;
-
-        playModeSelect.addEventListener('change', (e) => {
-            const val = e.target.value;
-            this.updateSetting('betaPlayMode', val);
-            const pb = this.controlManager?.playbackController;
-            if (pb && typeof pb.updatePlayPauseButton === 'function') {
-                pb.updatePlayPauseButton();
-            }
-            const modeNames = { normal: '正常模式', preview: '预览模式', climax: '精彩重温' };
-            Toast(`已切换为: ${modeNames[val] || val}`, 2000, 'info');
-        });
-
-        playModeContainer.appendChild(playModeLabelWrap);
-        playModeContainer.appendChild(playModeSelect);
-        section1.appendChild(playModeContainer);
-
-        // 快速预览单段播放时长设置
-        const prevDurContainer = document.createElement('div');
-        prevDurContainer.className = 'tm-settings-option';
-        prevDurContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);';
-        const prevDurLabelWrap = document.createElement('div');
-        prevDurLabelWrap.innerHTML = '<div style="color: #fff; font-size: 13px; font-weight: 500;">⚡ 快速预览播放时长 (秒)</div><div style="color: rgba(255, 255, 255, 0.5); font-size: 11px;">设置每个胶囊片段预览的停留秒数 (1 ~ 30秒)</div>';
-        const prevDurInput = document.createElement('input');
-        prevDurInput.type = 'number';
-        prevDurInput.min = '1';
-        prevDurInput.max = '30';
-        prevDurInput.value = this.settings.previewDurationSeconds || 5;
-        prevDurInput.style.cssText = 'width: 60px; background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; padding: 4px 8px; font-size: 12px; text-align: center; outline: none;';
-        prevDurInput.addEventListener('change', (e) => {
-            const val = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 5));
-            this.updateSetting('previewDurationSeconds', val);
-            prevDurInput.value = val;
-            Toast(`快速预览时长已设为: ${val} 秒`, 1800, 'info');
-        });
-        prevDurContainer.appendChild(prevDurLabelWrap);
-        prevDurContainer.appendChild(prevDurInput);
-        section1.appendChild(prevDurContainer);
-
-        // 精彩重温单点播放时长设置
-        const climaxDurContainer = document.createElement('div');
-        climaxDurContainer.className = 'tm-settings-option';
-        climaxDurContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);';
-        const climaxDurLabelWrap = document.createElement('div');
-        climaxDurLabelWrap.innerHTML = '<div style="color: #fff; font-size: 13px; font-weight: 500;">💎 精彩重温单点时长 (秒)</div><div style="color: rgba(255, 255, 255, 0.5); font-size: 11px;">单时间戳胶囊播放时长，A-B 区间优先播放全区间 (10 ~ 180秒)</div>';
-        const climaxDurInput = document.createElement('input');
-        climaxDurInput.type = 'number';
-        climaxDurInput.min = '5';
-        climaxDurInput.max = '180';
-        climaxDurInput.value = this.settings.climaxDurationSeconds || 60;
-        climaxDurInput.style.cssText = 'width: 60px; background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; padding: 4px 8px; font-size: 12px; text-align: center; outline: none;';
-        climaxDurInput.addEventListener('change', (e) => {
-            const val = Math.max(5, Math.min(180, parseInt(e.target.value, 10) || 60));
-            this.updateSetting('climaxDurationSeconds', val);
-            climaxDurInput.value = val;
-            Toast(`精彩重温单点时长已设为: ${val} 秒`, 1800, 'info');
-        });
-        climaxDurContainer.appendChild(climaxDurLabelWrap);
-        climaxDurContainer.appendChild(climaxDurInput);
-        section1.appendChild(climaxDurContainer);
-
-        container.appendChild(section1);
-
-        // =================================================================
-        // SECTION 2: 评论区 :
-        // =================================================================
-        const section2 = this._createSectionHeader('评论区 :');
-
-        const commentsOptionContainer = document.createElement('div');
-        commentsOptionContainer.className = 'tm-settings-comments-wrapper';
-
-        const commentsToggleOption = this._createToggleOption(
-            '是否展示评论区',
-            'showCommentsSection',
-            this.settings.showCommentsSection,
-            (checked) => {
-                this.updateSetting('showCommentsSection', checked);
-                if (checked) {
-                    // 当从关闭状态切换为开启状态时，重置用户手动隐藏侧栏配置，重新展示侧边栏
-                    this.updateSetting('sidebarHidden', false);
-                    if (this.uiManager) {
-                        this.uiManager.isSidebarHidden = false;
-                        this.uiManager.updateSidebarToggleButtonIcon();
-                    }
-                }
-                if (this.controlManager?.commentPanel) {
-                    this.controlManager.commentPanel.updateCommentsVisibility(checked);
-                }
-                this.createSettingsPanel(); // 刷新源 Badge 子面板
-            }
-        );
-        commentsOptionContainer.appendChild(commentsToggleOption);
-
-        // 仅当“是否展示评论区”开关打开时显示源 Badges 组
-        if (this.settings.showCommentsSection) {
-            const sourcesSubPanel = this._createCommentSourcesSubPanel();
-            commentsOptionContainer.appendChild(sourcesSubPanel);
-        }
-
-        section2.appendChild(commentsOptionContainer);
-        container.appendChild(section2);
-
-        // =================================================================
-        // SECTION 3: 其他 :
-        // =================================================================
-        const section3 = this._createSectionHeader('其他 :');
-
-        // 1. 帮助改进 (遥测开关)
-        const telemetryOption = this._createToggleOption(
-            __('helpImprove') || '帮助改进',
-            'telemetryEnabled',
-            this.settings.telemetryEnabled !== false,
-            (checked) => {
-                this.updateSetting('telemetryEnabled', checked);
-                if (checked) {
-                    telemetry.flush(true, true);
-                }
-            },
-            null,
-            __('helpImproveDesc') || '收集必要数据用于改进功能'
-        );
-
-        let crazyOption = null;
-
-        let debugFilterNumbersOption = null;
-
-        const debugOption = this._createToggleOption(
-            'DEBUG',
-            'debugMode',
-            this.settings.debugMode,
-            (checked) => {
-                this.updateSetting('debugMode', checked);
-                DebugLogPanel.updateDebugState(checked);
-                if (this.controlManager?.commentPanel) {
-                    this.controlManager.commentPanel.updateDebugMode(checked);
-                }
-                if (debugFilterNumbersOption) {
-                    debugFilterNumbersOption.style.display = checked ? 'flex' : 'none';
-                }
-                if (crazyOption) {
-                    crazyOption.style.display = checked ? 'flex' : 'none';
-                }
-                if (clearLocalCacheBtn) {
-                    clearLocalCacheBtn.style.display = checked ? 'inline-flex' : 'none';
-                }
-                if (!checked) {
-                    CrazyScraper.stop();
-                } else if (this.settings.crazyScrapeMode) {
-                    CrazyScraper.start(this.controlManager?.commentPanel?.videoCode || '');
-                }
-            }
-        );
-
-        // 疯狂采集模式子开关 (仅在 DEBUG 开启时展示)
-        crazyOption = this._createToggleOption(
-            __('crazyScrapeTitle') || '疯狂采集模式',
-            'crazyScrapeMode',
-            Boolean(this.settings.crazyScrapeMode),
-            (checked) => {
-                this.updateSetting('crazyScrapeMode', checked);
-                if (checked) {
-                    CrazyScraper.start(this.controlManager?.commentPanel?.videoCode || '');
-                } else {
-                    CrazyScraper.stop();
-                }
-            },
-            null,
-            __('crazyScrapeDesc') || '自动扫描宿主页面所有关联番号，低速防爬排队采集评论语料'
-        );
-        crazyOption.style.display = this.settings.debugMode ? 'flex' : 'none';
-        crazyOption.style.paddingLeft = '28px';
-
-        // 清空本地评论缓存按钮
-        const clearLocalCacheBtn = document.createElement('button');
-        clearLocalCacheBtn.className = 'tm-about-btn tm-clear-comments-cache-btn';
-        clearLocalCacheBtn.style.cssText = 'background: rgba(255, 59, 48, 0.15); border: 1px solid rgba(255, 59, 48, 0.45); color: #ff3b30; font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; margin-left: 28px; margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; width: fit-content;';
-        clearLocalCacheBtn.innerHTML = '<span>🗑️ 清空本地评论缓存</span>';
-        clearLocalCacheBtn.title = '清空本地已采集的评论缓存 (IndexedDB 及内存)，重置已采集记录以便重新全量采集';
-        clearLocalCacheBtn.style.display = this.settings.debugMode ? 'inline-flex' : 'none';
-        clearLocalCacheBtn.addEventListener('click', async (e) => {
+        const closeBtn = document.createElement("button");
+        closeBtn.type = "button";
+        closeBtn.className = "tm-settings-apple-close-btn";
+        closeBtn.title = "关闭设置面板 (ESC)";
+        closeBtn.innerHTML = "✕";
+        closeBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            clearLocalCacheBtn.textContent = '清理中...';
-            await CommentCacheManager.clearAll();
-            CrazyScraper._completedCodes.clear();
-            CrazyScraper._scannedCodes.clear();
-            CrazyScraper._avcodeDurations.clear();
-            clearLocalCacheBtn.innerHTML = '<span>🗑️ 清空本地评论缓存</span>';
-            Toast('已彻底删除所有本地 IndexedDB 离线评论！', 2500, 'success');
+            this.closeSettingsPanel();
         });
 
-        // 3. 失焦后停止播放开关 (默认为开)
-        const pauseOnBlurOption = this._createToggleOption(
-            __('pauseOnBlur') || '失焦后停止播放',
-            'pauseOnBlur',
-            this.settings.pauseOnBlur !== false,
-            (checked) => {
-                this.updateSetting('pauseOnBlur', checked);
-            },
-            null,
-            __('pauseOnBlurDesc') || '页面离开或失去焦点时自动暂停播放'
-        );
+        headerRow.appendChild(titleWrap);
+        headerRow.appendChild(closeBtn);
+        container.appendChild(headerRow);
 
-        // 4. 按键点击音效开关 (默认为开)
-        const buttonSoundOption = this._createToggleOption(
-            __('buttonSound') || '按键点击音效',
-            'buttonSoundEnabled',
-            this.settings.buttonSoundEnabled !== false,
-            (checked) => {
-                this.updateSetting('buttonSoundEnabled', checked);
-                if (checked) {
-                    playTapSound(true);
-                }
-            },
-            null,
-            __('buttonSoundDesc') || '点击控制面板按钮时播放清脆触控反馈音效'
-        );
+        // 1. 同步挂载第一分段 (控制与手势) —— 首屏极其快速 (<= 3ms / < 30 个 DOM 节点)
+        const playbackSection = new PlaybackSection(this);
+        container.appendChild(playbackSection.getElement());
 
+        // 2. 初始化流式异步装配调度器
+        this._scheduler = new SettingsStreamScheduler(container, this);
 
-        // 只看有数字的评论开关 (仅在 DEBUG 开启时展示，审查时间解析效果)
-        debugFilterNumbersOption = this._createToggleOption(
-            __('debugFilterHasNumbersTitle') || '只看有数字的评论',
-            'debugFilterHasNumbers',
-            Boolean(this.settings.debugFilterHasNumbers),
-            (checked) => {
-                this.updateSetting('debugFilterHasNumbers', checked);
-                if (this.controlManager?.commentPanel) {
-                    this.controlManager.commentPanel.updateDebugFilterHasNumbers(checked);
-                }
-            },
-            null,
-            __('debugFilterHasNumbersDesc') || '仅保留评论中包含数字的条目，便于排查与审查时间戳、区间与倒数解析效果'
-        );
-        debugFilterNumbersOption.style.display = this.settings.debugMode ? 'flex' : 'none';
-        debugFilterNumbersOption.style.paddingLeft = '28px';
+        // 分段 2: 评论与数据源 (空闲时间追加)
+        this._scheduler.register("comments", () => new CommentsSection(this).getElement(), { defer: "idle" });
 
-        section3.appendChild(pauseOnBlurOption);
-        section3.appendChild(buttonSoundOption);
-        section3.appendChild(debugOption);
-        section3.appendChild(debugFilterNumbersOption);
-        section3.appendChild(crazyOption);
-        section3.appendChild(clearLocalCacheBtn);
+        // 分段 3: 实验特性与高级排错 (空闲时间追加)
+        this._scheduler.register("beta", () => new BetaSection(this).getElement(), { defer: "idle" });
 
-        // 强制重新采集开关 (可跳过已收录检查)
-        const forceRescrapeOption = this._createToggleOption(
-            '强制覆盖重新采集',
-            'crazyForceRescrape',
-            Boolean(this.settings.crazyForceRescrape),
-            (checked) => {
-                this.updateSetting('crazyForceRescrape', checked);
-            },
-            null,
-            '开启后将忽略本地与云端已收录状态，重新爬取全量评论并更新时长'
-        );
-        forceRescrapeOption.style.display = this.settings.debugMode ? 'flex' : 'none';
-        forceRescrapeOption.style.paddingLeft = '28px';
+        // 分段 4: 云端同步 WebDAV (视口感知延迟水合)
+        this._scheduler.register("cloudSync", () => new CloudSyncSection(this).getElement(), { defer: "viewport" });
 
-        section3.appendChild(forceRescrapeOption);
-        container.appendChild(section3);
-
-        // =================================================================
-        // SECTION: Beta 实验室 (Beta Lab) :
-        // =================================================================
-        const sectionBeta = this._createSectionHeader('Beta 实验室 :');
-        const betaWrapper = document.createElement('div');
-        betaWrapper.className = 'tm-settings-beta-wrapper';
-
-        let betaSubPanel = null;
-
-        // 1. Beta 实验室总开关
-        const betaMainToggle = this._createToggleOption(
-            'Beta 实验室总开关',
-            'betaMode',
-            Boolean(this.settings.betaMode),
-            (checked) => {
-                this.updateSetting('betaMode', checked);
-                if (betaSubPanel) {
-                    betaSubPanel.style.display = checked ? 'flex' : 'none';
-                }
-                Toast(checked ? '已开启 Beta 实验室' : '已关闭 Beta 实验室', 1200, 'info');
-            },
-            null,
-            '抢先体验实验性新功能，所有测试特性均在此集中受控'
-        );
-        betaWrapper.appendChild(betaMainToggle);
-
-        // 2. Beta 子特性面板
-        betaSubPanel = document.createElement('div');
-        betaSubPanel.className = 'tm-settings-beta-subpanel';
-        betaSubPanel.style.display = this.settings.betaMode ? 'flex' : 'none';
-        betaSubPanel.style.flexDirection = 'column';
-        betaSubPanel.style.paddingLeft = '20px';
-        betaSubPanel.style.borderLeft = '2px solid hsla(var(--shadcn-primary) / 0.3)';
-        betaSubPanel.style.marginLeft = '12px';
-        betaSubPanel.style.marginTop = '6px';
-        betaSubPanel.style.gap = '8px';
-
-        // 子项 A: 从首个胶囊开播
-        const firstCapsuleOption = this._createToggleOption(
-            '开播定位至首个胶囊',
-            'betaFirstCapsulePlay',
-            Boolean(this.settings.betaFirstCapsulePlay),
-            (checked) => {
-                this.updateSetting('betaFirstCapsulePlay', checked);
-            },
-            null,
-            '载入视频时优先从已有胶囊列表第 1 个开播；若无胶囊则恢复上次断点'
-        );
-        betaSubPanel.appendChild(firstCapsuleOption);
-
-        // 子项 C: Safari 风格红色静音
-        const safariMuteOption = this._createToggleOption(
-            'Safari 风格高对比静音',
-            'betaSafariMuteStyle',
-            this.settings.betaSafariMuteStyle !== false,
-            (checked) => {
-                this.updateSetting('betaSafariMuteStyle', checked);
-            },
-            null,
-            '音量归零或静音时，以 Safari 标志性红底白图标呈现'
-        );
-        betaSubPanel.appendChild(safariMuteOption);
-
-        // 子项 D: 胶囊删除 60 秒撤销
-        const capsuleUndoOption = this._createToggleOption(
-            '胶囊删除撤销保护',
-            'betaCapsuleUndo',
-            this.settings.betaCapsuleUndo !== false,
-            (checked) => {
-                this.updateSetting('betaCapsuleUndo', checked);
-            },
-            null,
-            '删除胶囊后 1 分钟内在管理面板提供撤销恢复按钮'
-        );
-        betaSubPanel.appendChild(capsuleUndoOption);
-
-        // 子项 E: URL 参数深链导入
-        const deepLinkingOption = this._createToggleOption(
-            'URL 参数深链胶囊导入',
-            'betaDeepLinking',
-            this.settings.betaDeepLinking !== false,
-            (checked) => {
-                this.updateSetting('betaDeepLinking', checked);
-            },
-            null,
-            '自动识别分享链接中的时间轴与倍速参数并挂载'
-        );
-        betaSubPanel.appendChild(deepLinkingOption);
-
-        // 子项 F: 评论分析外部数据库配置 (REST / Supabase / CouchDB)
-        const dbConfigContainer = document.createElement('div');
-        dbConfigContainer.className = 'tm-settings-option-row tm-beta-db-row';
-        dbConfigContainer.style.flexDirection = 'column';
-        dbConfigContainer.style.alignItems = 'flex-start';
-        dbConfigContainer.style.gap = '6px';
-        dbConfigContainer.innerHTML = `
-            <div class="tm-settings-option-label">自建评论分析数据库 (REST API)</div>
-            <div class="tm-settings-option-subtext">配置个人远端数据库端点，优先于公共源查询聚合评论</div>
-            <input type="text" class="tm-settings-input tm-beta-db-url" placeholder="https://your-api.domain.com/comments" value="${this.settings.betaDbEndpoint || ''}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 12px;" />
-            <input type="password" class="tm-settings-input tm-beta-db-key" placeholder="API Key / Token (可选)" value="${this.settings.betaDbApiKey || ''}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 12px;" />
-        `;
-        const dbUrlInput = dbConfigContainer.querySelector('.tm-beta-db-url');
-        const dbKeyInput = dbConfigContainer.querySelector('.tm-beta-db-key');
-        const saveDbConfig = () => {
-            this.updateSetting('betaDbEndpoint', dbUrlInput.value.trim());
-            this.updateSetting('betaDbApiKey', dbKeyInput.value.trim());
-        };
-        dbUrlInput.addEventListener('change', saveDbConfig);
-        dbUrlInput.addEventListener('blur', saveDbConfig);
-        dbKeyInput.addEventListener('change', saveDbConfig);
-        dbKeyInput.addEventListener('blur', saveDbConfig);
-        betaSubPanel.appendChild(dbConfigContainer);
-
-        betaWrapper.appendChild(betaSubPanel);
-        sectionBeta.appendChild(betaWrapper);
-        container.appendChild(sectionBeta);
-
-        // =================================================================
-        // SECTION 4: 云端同步 (WebDAV) :
-        // =================================================================
-        const webdavConfig = SyncManager.getWebDavConfig();
-        const hasWebdavConfig = Boolean(webdavConfig.url);
-        const lastSync = SyncManager.getLastSyncTime();
-        const statusSummary = hasWebdavConfig
-            ? (lastSync > 0 ? ` (已配置)` : ` (未同步)`)
-            : ` (点击展开)`;
-
-        const section4 = document.createElement('div');
-        section4.className = 'tm-settings-section';
-
-        const header4 = this._createSectionHeader(
-            (__('webdavTitle') || '云端同步 (WebDAV) :') + statusSummary,
-            true,
-            this.isWebDavExpanded || false,
-            (expanded) => {
-                this.isWebDavExpanded = expanded;
-                if (webdavCard) {
-                    webdavCard.style.display = expanded ? 'flex' : 'none';
-                }
-            }
-        );
-
-        const webdavCard = this._createWebDavSyncCard();
-        webdavCard.style.display = this.isWebDavExpanded ? 'flex' : 'none';
-
-        section4.appendChild(header4);
-        section4.appendChild(webdavCard);
-        container.appendChild(section4);
-
-        // =================================================================
-        // SECTION 5: 关于与更新 (About & Updates) :
-        // =================================================================
-        const currentVersion = getCurrentVersion();
-        const hasUpdate = Boolean(this._latestUpdateInfo?.hasUpdate);
-        const updateSummary = hasUpdate
-            ? ` (${__('updateFound') || '发现新版本'} v${this._latestUpdateInfo.latestVersion})`
-            : ` (v${currentVersion})`;
-
-        const section5 = document.createElement('div');
-        section5.className = 'tm-settings-section';
-
-        const header5 = this._createSectionHeader(
-            (__('aboutAndUpdates') || '关于与更新 :') + updateSummary,
-            true,
-            this.isAboutExpanded !== false,
-            (expanded) => {
-                this.isAboutExpanded = expanded;
-                if (aboutCard) {
-                    aboutCard.style.display = expanded ? 'flex' : 'none';
-                }
-            }
-        );
-
-        const aboutCard = this._createAboutCard();
-        aboutCard.style.display = (this.isAboutExpanded !== false) ? 'flex' : 'none';
-
-        section5.appendChild(header5);
-        section5.appendChild(aboutCard);
-        container.appendChild(section5);
+        // 分段 5: 关于与更新 (视口感知延迟水合)
+        this._scheduler.register("about", () => new AboutSection(this).getElement(), { defer: "viewport" });
 
         this.settingsPanel.appendChild(container);
+
+        // 启动流式异步装配流水线
+        this._scheduler.start();
     }
 
     /**

@@ -231,16 +231,19 @@ flowchart TD
 
 ---
 
-### Phase 11: 极致性能深水区与现代架构跃迁 (待启动 ⏳ In Pipeline)
-> **目标**：推进设置面板的分块异步流式装配，全面落地 Shadow DOM 微前端隔离，实现终极性能与零样式污染。
+### Phase 11: 极致性能深水区与现代架构跃迁 (进行中 🚀 11.1 已达成)
+> **目标**：全面落实设置面板的 Apple Inset-Grouped UI/UX 重构与分块异步流式装配，随后推进 Shadow DOM 微前端隔离，实现终极性能与零样式污染。
+> **业务规格说明**：已落成标准化设计规格说明 [docs/specs/settings-redesign-spec.md](./docs/specs/settings-redesign-spec.md) (标签: `ready-for-agent`)。
 
-- [ ] **11.1 设置面板全新 UI 与分块异步流式装配 (Chunked Streaming Assembly)**
-  - [ ] **痛点背景**：当前用户点击设置齿轮时，一次性同步构建 890 个子节点耗时约 20.9ms，存在短暂主线程微耗。
-  - [ ] **重构目标**：重新设计现代 Apple 风格设置面板 UI 布局，按功能分区分段（遥控器、评论区、BETA实验室、关于/更新）；
-  - [ ] **异步流式装配**：仅首屏首屏优先渲染第一分段（耗时压缩至 ≤5ms），后续重型配置卡片（WebDAV、关于卡片）采用 `IntersectionObserver` 或空闲时间流式追加，实现极致跟手性与单帧内交互响应。
+- [x] **11.1 设置面板全新 UI/UX 重构与分块异步流式装配 (Chunked Streaming Assembly)**
+  - [ ] **视觉与交互重塑**：从纵向单一大列表升级为 Apple Inset-Grouped 5 大精选板块，引入滑动三段式分段控制器 (Segmented Control) 与 Apple Switch；
+  - [ ] **局部响应与滚动防丢**：废除开关操作时的面板全量重绘，建立细粒度局部联动机制，彻底杜绝滚动条跳动；
+  - [ ] **人本化文案与五国 i18n 覆盖**：消灭裸露技术黑话，将全部标题、选项、辅助说明收敛至 `src/constants/i18n.js`；
+  - [ ] **流式装配性能突破**：实现首屏首分段同步挂载 (≤ 3ms / 节点 < 30 个)，重型 WebDAV/关于卡片通过 `requestIdleCallback` 与滚动视口异步水合；
+  - [ ] **性能棘轮验收**：通过 `npm run test:perf` 验证打开耗时由 20.9ms 压降至 ≤ 5ms，滚动平稳保持 60fps。
 
 - [ ] **11.2 Shadow DOM 微前端全隔离重构 (Shadow DOM Micro-Frontend)**
-  - [ ] **现代油猴最佳实践**：将 Miss Player 整体 UI（播放器覆盖层、主控面板、抽屉与弹窗）收敛挂载进独立 `ShadowRoot (mode: 'open')`；
+  - [ ] **现代油猴最佳实践**：将 Miss Player 整体 UI（播放器覆盖层、主控面板、抽屉与弹窗）收敛挂载进独立 `ShadowRoot (mode: open)`；
   - [ ] **样式完全自包含**：彻底隔绝宿主页面（MissAV / Jable 等）庞大 CSS 样式与重设污染（如 Tailwind、Bootstrap、全局 `* { ... }` 覆盖）；
   - [ ] **零样式反向干扰**：消除全局选择器匹配回溯，提升宿主超长页面的滚动与渲染帧率；
   - [ ] **资源路径与字体继承**：确保 Shadow DOM 内正确注入 CSS Variables 与字体定义，与宿主全屏及快捷键事件进行干净的跨界分发。
