@@ -1,6 +1,5 @@
 import { AppleCard } from '../components/AppleCard.js';
 import { ToggleRow } from '../components/ToggleRow.js';
-import { SegmentedControl } from '../components/SegmentedControl.js';
 import { SeekStepEditor } from '../components/SeekStepEditor.js';
 import { Toast } from '../../../../utils/index.js';
 
@@ -18,11 +17,12 @@ export class PlaybackSection {
 
         const header = document.createElement('div');
         header.className = 'tm-settings-group-header';
-        header.textContent = '控制与播放模式';
+        header.textContent = '控制与播放行为';
         this.element.appendChild(header);
 
         const card = new AppleCard();
 
+        // 1. 进度条栏
         const progressToggle = new ToggleRow({
             title: '进度条栏',
             subtext: '在底部展示主播放进度条与微秒滑块',
@@ -34,6 +34,7 @@ export class PlaybackSection {
         });
         card.appendChild(progressToggle.getElement());
 
+        // 2. 快捷跳转控制栏
         const seekContainer = document.createElement('div');
         seekContainer.className = 'tm-settings-seek-group-wrap';
 
@@ -107,6 +108,7 @@ export class PlaybackSection {
         seekContainer.appendChild(stepPanelWrapper);
         card.appendChild(seekContainer);
 
+        // 3. 片段循环栏
         const loopToggle = new ToggleRow({
             title: '片段循环栏',
             subtext: '展示 A-B 点循环控制与多维语义时间胶囊',
@@ -118,51 +120,51 @@ export class PlaybackSection {
         });
         card.appendChild(loopToggle.getElement());
 
-        const playModeRow = document.createElement('div');
-        playModeRow.className = 'tm-apple-row';
-        playModeRow.style.flexDirection = 'column';
-        playModeRow.style.alignItems = 'stretch';
-        playModeRow.style.gap = '8px';
-
-        const playModeTop = document.createElement('div');
-        playModeTop.style.display = 'flex';
-        playModeTop.style.justifyContent = 'space-between';
-        playModeTop.style.alignItems = 'center';
-
-        const playModeTitle = document.createElement('div');
-        playModeTitle.className = 'tm-apple-row-title';
-        playModeTitle.textContent = '连续播放模式';
-
-        const playModeSub = document.createElement('div');
-        playModeSub.className = 'tm-apple-row-subtext';
-        playModeSub.textContent = '切换主播放按键的默认运行机制';
-
-        playModeTop.appendChild(playModeTitle);
-        playModeRow.appendChild(playModeTop);
-        playModeRow.appendChild(playModeSub);
-
-        const curMode = this.settings.betaPlayMode || 'normal';
-        const segControl = new SegmentedControl({
-            options: [
-                { label: '🎬 常规连播', value: 'normal' },
-                { label: '⚡ 胶囊走马灯', value: 'preview' },
-                { label: '🌟 精彩重温', value: 'climax' }
-            ],
-            value: curMode,
-            onChange: (val) => {
-                this.sm.updateSetting('betaPlayMode', val);
-                const pb = this.sm.controlManager?.playbackController;
-                if (pb && typeof pb.updatePlayPauseButton === 'function') {
-                    pb.updatePlayPauseButton();
-                }
-                const modeNames = { normal: '常规连播', preview: '胶囊走马灯', climax: '精彩重温' };
-                Toast('已切换为: ' + (modeNames[val] || val), 1500, 'info');
-            }
+        // 4. 快速预览播放时长 (秒)
+        const prevDurRow = document.createElement('div');
+        prevDurRow.className = 'tm-apple-row';
+        prevDurRow.innerHTML = `
+            <div class="tm-apple-row-left">
+                <div class="tm-apple-row-title">⚡ 快速预览播放时长</div>
+                <div class="tm-apple-row-subtext">胶囊走马灯预览时每段停留秒数 (1 ~ 30秒)</div>
+            </div>
+            <div class="tm-apple-row-right">
+                <input type="number" class="tm-apple-duration-input tm-preview-dur-input" min="1" max="30" value="${this.settings.previewDurationSeconds || 5}" />
+                <span style="font-size: 11px; color: rgba(255,255,255,0.4); margin-left: 6px;">秒</span>
+            </div>
+        `;
+        const prevInput = prevDurRow.querySelector('.tm-preview-dur-input');
+        prevInput.addEventListener('change', (e) => {
+            const val = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 5));
+            this.sm.updateSetting('previewDurationSeconds', val);
+            prevInput.value = val;
+            Toast(`快速预览时长已设为: ${val} 秒`, 1500, 'info');
         });
+        card.appendChild(prevDurRow);
 
-        playModeRow.appendChild(segControl.getElement());
-        card.appendChild(playModeRow);
+        // 5. 精彩重温单点时长 (秒)
+        const climaxDurRow = document.createElement('div');
+        climaxDurRow.className = 'tm-apple-row';
+        climaxDurRow.innerHTML = `
+            <div class="tm-apple-row-left">
+                <div class="tm-apple-row-title">🌟 精彩重温单点时长</div>
+                <div class="tm-apple-row-subtext">单时间戳胶囊播放秒数，A-B 区间优先播全区间</div>
+            </div>
+            <div class="tm-apple-row-right">
+                <input type="number" class="tm-apple-duration-input tm-climax-dur-input" min="5" max="180" value="${this.settings.climaxDurationSeconds || 60}" />
+                <span style="font-size: 11px; color: rgba(255,255,255,0.4); margin-left: 6px;">秒</span>
+            </div>
+        `;
+        const climaxInput = climaxDurRow.querySelector('.tm-climax-dur-input');
+        climaxInput.addEventListener('change', (e) => {
+            const val = Math.max(5, Math.min(180, parseInt(e.target.value, 10) || 60));
+            this.sm.updateSetting('climaxDurationSeconds', val);
+            climaxInput.value = val;
+            Toast(`精彩重温时长已设为: ${val} 秒`, 1500, 'info');
+        });
+        card.appendChild(climaxDurRow);
 
+        // 6. 离开标签页自动暂停
         const pauseBlurToggle = new ToggleRow({
             title: '离开标签页自动暂停',
             subtext: '窗口失焦或切换网页时自动暂停，节省系统资源',
@@ -173,6 +175,7 @@ export class PlaybackSection {
         });
         card.appendChild(pauseBlurToggle.getElement());
 
+        // 7. 触控交互音效
         const soundToggle = new ToggleRow({
             title: '触控交互音效',
             subtext: '点击控制面板核心按键时播放轻脆听觉反馈',

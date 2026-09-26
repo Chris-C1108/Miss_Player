@@ -15198,63 +15198,6 @@
 			return this.element;
 		}
 	};
-	var SegmentedControl = class {
-		constructor({ options = [], value = "", onChange = null, className = "", id = "" } = {}) {
-			this.options = options;
-			this.value = value || (options[0] ? options[0].value : "");
-			this.onChange = onChange;
-			this.element = document.createElement("div");
-			this.element.className = `tm-segmented-control ${className}`.trim();
-			if (id) this.element.id = id;
-			this._render();
-		}
-		_render() {
-			this.element.innerHTML = "";
-			this.element.style.cssText = "display: flex; background: rgba(0, 0, 0, 0.28); border-radius: 8px; padding: 2px; position: relative; gap: 2px; border: 1px solid rgba(255, 255, 255, 0.08);";
-			this.options.forEach((opt) => {
-				const btn = document.createElement("button");
-				btn.type = "button";
-				btn.className = `tm-segmented-btn ${opt.value === this.value ? "active" : ""}`;
-				btn.textContent = opt.label;
-				btn.dataset.value = opt.value;
-				const isSelected = opt.value === this.value;
-				btn.style.cssText = `
-                flex: 1;
-                font-size: 11.5px;
-                font-weight: ${isSelected ? "600" : "400"};
-                color: ${isSelected ? "#ffffff" : "rgba(255, 255, 255, 0.6)"};
-                background: ${isSelected ? "rgba(255, 255, 255, 0.16)" : "transparent"};
-                border: none;
-                border-radius: 6px;
-                padding: 6px 8px;
-                cursor: pointer;
-                transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-                white-space: nowrap;
-                outline: none;
-            `;
-				btn.addEventListener("click", (e) => {
-					e.stopPropagation();
-					this.setValue(opt.value);
-				});
-				this.element.appendChild(btn);
-			});
-		}
-		setValue(nextVal) {
-			if (this.value === nextVal) return;
-			this.value = nextVal;
-			this.element.querySelectorAll(".tm-segmented-btn").forEach((btn) => {
-				const isSelected = btn.dataset.value === this.value;
-				btn.classList.toggle("active", isSelected);
-				btn.style.fontWeight = isSelected ? "600" : "400";
-				btn.style.color = isSelected ? "#ffffff" : "rgba(255, 255, 255, 0.6)";
-				btn.style.background = isSelected ? "rgba(255, 255, 255, 0.16)" : "transparent";
-			});
-			if (typeof this.onChange === "function") this.onChange(this.value);
-		}
-		getElement() {
-			return this.element;
-		}
-	};
 	var SeekStepEditor = class {
 		constructor({ defaultSteps = [
 			"5s",
@@ -15362,7 +15305,7 @@
 			this.element.innerHTML = "";
 			const header = document.createElement("div");
 			header.className = "tm-settings-group-header";
-			header.textContent = "控制与播放模式";
+			header.textContent = "控制与播放行为";
 			this.element.appendChild(header);
 			const card = new AppleCard();
 			const progressToggle = new ToggleRow({
@@ -15469,53 +15412,46 @@
 				}
 			});
 			card.appendChild(loopToggle.getElement());
-			const playModeRow = document.createElement("div");
-			playModeRow.className = "tm-apple-row";
-			playModeRow.style.flexDirection = "column";
-			playModeRow.style.alignItems = "stretch";
-			playModeRow.style.gap = "8px";
-			const playModeTop = document.createElement("div");
-			playModeTop.style.display = "flex";
-			playModeTop.style.justifyContent = "space-between";
-			playModeTop.style.alignItems = "center";
-			const playModeTitle = document.createElement("div");
-			playModeTitle.className = "tm-apple-row-title";
-			playModeTitle.textContent = "连续播放模式";
-			const playModeSub = document.createElement("div");
-			playModeSub.className = "tm-apple-row-subtext";
-			playModeSub.textContent = "切换主播放按键的默认运行机制";
-			playModeTop.appendChild(playModeTitle);
-			playModeRow.appendChild(playModeTop);
-			playModeRow.appendChild(playModeSub);
-			const segControl = new SegmentedControl({
-				options: [
-					{
-						label: "🎬 常规连播",
-						value: "normal"
-					},
-					{
-						label: "⚡ 胶囊走马灯",
-						value: "preview"
-					},
-					{
-						label: "🌟 精彩重温",
-						value: "climax"
-					}
-				],
-				value: this.settings.betaPlayMode || "normal",
-				onChange: (val) => {
-					this.sm.updateSetting("betaPlayMode", val);
-					const pb = this.sm.controlManager?.playbackController;
-					if (pb && typeof pb.updatePlayPauseButton === "function") pb.updatePlayPauseButton();
-					Toast("已切换为: " + ({
-						normal: "常规连播",
-						preview: "胶囊走马灯",
-						climax: "精彩重温"
-					}[val] || val), 1500, "info");
-				}
+			const prevDurRow = document.createElement("div");
+			prevDurRow.className = "tm-apple-row";
+			prevDurRow.innerHTML = `
+            <div class="tm-apple-row-left">
+                <div class="tm-apple-row-title">⚡ 快速预览播放时长</div>
+                <div class="tm-apple-row-subtext">胶囊走马灯预览时每段停留秒数 (1 ~ 30秒)</div>
+            </div>
+            <div class="tm-apple-row-right">
+                <input type="number" class="tm-apple-duration-input tm-preview-dur-input" min="1" max="30" value="${this.settings.previewDurationSeconds || 5}" />
+                <span style="font-size: 11px; color: rgba(255,255,255,0.4); margin-left: 6px;">秒</span>
+            </div>
+        `;
+			const prevInput = prevDurRow.querySelector(".tm-preview-dur-input");
+			prevInput.addEventListener("change", (e) => {
+				const val = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 5));
+				this.sm.updateSetting("previewDurationSeconds", val);
+				prevInput.value = val;
+				Toast(`快速预览时长已设为: ${val} 秒`, 1500, "info");
 			});
-			playModeRow.appendChild(segControl.getElement());
-			card.appendChild(playModeRow);
+			card.appendChild(prevDurRow);
+			const climaxDurRow = document.createElement("div");
+			climaxDurRow.className = "tm-apple-row";
+			climaxDurRow.innerHTML = `
+            <div class="tm-apple-row-left">
+                <div class="tm-apple-row-title">🌟 精彩重温单点时长</div>
+                <div class="tm-apple-row-subtext">单时间戳胶囊播放秒数，A-B 区间优先播全区间</div>
+            </div>
+            <div class="tm-apple-row-right">
+                <input type="number" class="tm-apple-duration-input tm-climax-dur-input" min="5" max="180" value="${this.settings.climaxDurationSeconds || 60}" />
+                <span style="font-size: 11px; color: rgba(255,255,255,0.4); margin-left: 6px;">秒</span>
+            </div>
+        `;
+			const climaxInput = climaxDurRow.querySelector(".tm-climax-dur-input");
+			climaxInput.addEventListener("change", (e) => {
+				const val = Math.max(5, Math.min(180, parseInt(e.target.value, 10) || 60));
+				this.sm.updateSetting("climaxDurationSeconds", val);
+				climaxInput.value = val;
+				Toast(`精彩重温时长已设为: ${val} 秒`, 1500, "info");
+			});
+			card.appendChild(climaxDurRow);
 			const pauseBlurToggle = new ToggleRow({
 				title: "离开标签页自动暂停",
 				subtext: "窗口失焦或切换网页时自动暂停，节省系统资源",
@@ -16022,6 +15958,7 @@
 	var CloudSyncSection = class {
 		constructor(settingsManager) {
 			this.sm = settingsManager;
+			this.isExpanded = false;
 			this.element = document.createElement("div");
 			this.element.className = "tm-settings-group";
 			this._render();
@@ -16030,46 +15967,41 @@
 			this.element.innerHTML = "";
 			const config = SyncManager.getWebDavConfig();
 			const hasConfig = Boolean(config.url);
-			const header = document.createElement("div");
-			header.className = "tm-settings-group-header";
-			header.innerHTML = `
-            <span>云端同步 (WebDAV)</span>
-            <span style="font-size: 10px; color: ${hasConfig ? "#30d158" : "rgba(255,255,255,0.4)"};">
+			const card = new AppleCard();
+			const headerRow = document.createElement("div");
+			headerRow.className = "tm-apple-accordion-header";
+			const titleDiv = document.createElement("div");
+			titleDiv.className = "tm-apple-accordion-title";
+			titleDiv.innerHTML = `
+            <span>☁️ 云端同步 (WebDAV)</span>
+        `;
+			const metaDiv = document.createElement("div");
+			metaDiv.className = "tm-apple-accordion-meta";
+			metaDiv.innerHTML = `
+            <span style="color: ${hasConfig ? "#30d158" : "rgba(255,255,255,0.4)"};">
                 ${hasConfig ? "● 已配置" : "○ 未配置"}
             </span>
+            <span class="tm-apple-accordion-arrow ${this.isExpanded ? "expanded" : ""}">▼</span>
         `;
-			this.element.appendChild(header);
-			const card = new AppleCard();
+			headerRow.appendChild(titleDiv);
+			headerRow.appendChild(metaDiv);
+			card.appendChild(headerRow);
+			const bodyWrap = document.createElement("div");
+			bodyWrap.style.display = this.isExpanded ? "block" : "none";
+			bodyWrap.style.borderTop = "1px solid rgba(255, 255, 255, 0.06)";
 			const webDavCard = this.sm._createWebDavSyncCard();
 			webDavCard.style.padding = "10px 12px";
 			webDavCard.style.background = "transparent";
 			webDavCard.style.border = "none";
-			card.appendChild(webDavCard);
-			this.element.appendChild(card.getElement());
-		}
-		getElement() {
-			return this.element;
-		}
-	};
-	var AboutSection = class {
-		constructor(settingsManager) {
-			this.sm = settingsManager;
-			this.element = document.createElement("div");
-			this.element.className = "tm-settings-group";
-			this._render();
-		}
-		_render() {
-			this.element.innerHTML = "";
-			const header = document.createElement("div");
-			header.className = "tm-settings-group-header";
-			header.textContent = "关于与更新";
-			this.element.appendChild(header);
-			const card = new AppleCard();
-			const aboutCard = this.sm._createAboutCard();
-			aboutCard.style.padding = "12px 14px";
-			aboutCard.style.background = "transparent";
-			aboutCard.style.border = "none";
-			card.appendChild(aboutCard);
+			bodyWrap.appendChild(webDavCard);
+			card.appendChild(bodyWrap);
+			headerRow.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.isExpanded = !this.isExpanded;
+				bodyWrap.style.display = this.isExpanded ? "block" : "none";
+				const arrow = metaDiv.querySelector(".tm-apple-accordion-arrow");
+				if (arrow) arrow.classList.toggle("expanded", this.isExpanded);
+			});
 			this.element.appendChild(card.getElement());
 		}
 		getElement() {
@@ -16174,6 +16106,61 @@
 					error: err.message
 				};
 			}
+		}
+	};
+	var AboutSection = class {
+		constructor(settingsManager) {
+			this.sm = settingsManager;
+			this.isExpanded = false;
+			this.element = document.createElement("div");
+			this.element.className = "tm-settings-group";
+			this._render();
+		}
+		_render() {
+			this.element.innerHTML = "";
+			const currentVersion = getCurrentVersion();
+			const updateInfo = this.sm._latestUpdateInfo;
+			const hasUpdate = Boolean(updateInfo?.hasUpdate);
+			const latestVer = updateInfo?.latestVersion || currentVersion;
+			const card = new AppleCard();
+			const headerRow = document.createElement("div");
+			headerRow.className = "tm-apple-accordion-header";
+			const titleDiv = document.createElement("div");
+			titleDiv.className = "tm-apple-accordion-title";
+			titleDiv.innerHTML = `
+            <span>ℹ️ 关于与更新</span>
+        `;
+			const metaDiv = document.createElement("div");
+			metaDiv.className = "tm-apple-accordion-meta";
+			metaDiv.innerHTML = `
+            <span style="color: ${hasUpdate ? "#ff9f0a" : "rgba(255,255,255,0.5)"}; font-weight: 500;">
+                ${hasUpdate ? "发现新版 v" + latestVer : "v" + currentVersion}
+            </span>
+            <span class="tm-apple-accordion-arrow ${this.isExpanded ? "expanded" : ""}">▼</span>
+        `;
+			headerRow.appendChild(titleDiv);
+			headerRow.appendChild(metaDiv);
+			card.appendChild(headerRow);
+			const bodyWrap = document.createElement("div");
+			bodyWrap.style.display = this.isExpanded ? "block" : "none";
+			bodyWrap.style.borderTop = "1px solid rgba(255, 255, 255, 0.06)";
+			const aboutCard = this.sm._createAboutCard();
+			aboutCard.style.padding = "10px 12px";
+			aboutCard.style.background = "transparent";
+			aboutCard.style.border = "none";
+			bodyWrap.appendChild(aboutCard);
+			card.appendChild(bodyWrap);
+			headerRow.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.isExpanded = !this.isExpanded;
+				bodyWrap.style.display = this.isExpanded ? "block" : "none";
+				const arrow = metaDiv.querySelector(".tm-apple-accordion-arrow");
+				if (arrow) arrow.classList.toggle("expanded", this.isExpanded);
+			});
+			this.element.appendChild(card.getElement());
+		}
+		getElement() {
+			return this.element;
 		}
 	};
 	function sanitizeSeekStepList$1(arr, isCustom = false) {
