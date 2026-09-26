@@ -55,13 +55,35 @@ export class SleazyForkService {
                     timeout: 8000
                 });
                 if (res.status >= 200 && res.status < 400 && res.html) {
-                    const data = JSON.parse(res.html);
-                    if (data && data.id) return data;
+                    try {
+                        const data = JSON.parse(res.html);
+                        if (data && data.id) return data;
+                    } catch (_) {}
                 }
-                throw new Error('HTTP_' + res.status);
             } catch (err) {
                 lastErr = err;
             }
+        }
+
+        // Cloudflare 403 盾牌穿透兜底：从不受盾牌拦截的 update CDN 官方源抓取 meta.js 解析最新版本
+        try {
+            const metaUrl = 'https://update.sleazyfork.org/scripts/' + scriptId + '/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.meta.js';
+            const metaRes = await fetchWithTransport(metaUrl, { method: 'GET', timeout: 8000 });
+            if (metaRes.status >= 200 && metaRes.status < 400 && metaRes.html) {
+                const match = metaRes.html.match(/@version\s+([\w\.\-]+)/i);
+                if (match && match[1]) {
+                    return {
+                        id: Number(scriptId),
+                        name: 'Miss Player | 影院模式 (单手播放器)',
+                        version: match[1].trim(),
+                        code_url: metaUrl.replace('.meta.js', '.user.js'),
+                        url: 'https://sleazyfork.org/scripts/' + scriptId,
+                        code_updated_at: new Date().toISOString()
+                    };
+                }
+            }
+        } catch (e) {
+            lastErr = e;
         }
         throw lastErr || new Error('FETCH_FAILED');
     }
