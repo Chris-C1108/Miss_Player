@@ -721,7 +721,109 @@
 		"VOL",
 		"DISC",
 		"DVD",
-		"VOD"
+		"VOD",
+		"NAUGHTY",
+		"BRAZZERS",
+		"BLACKED",
+		"REALITY",
+		"TUSHY",
+		"TUSHYS",
+		"BANG",
+		"MOFOS",
+		"BABES",
+		"VIXEN",
+		"DEVIL",
+		"TWISTYS",
+		"SWEET",
+		"SEXY",
+		"MODEL",
+		"ADULT",
+		"PORN",
+		"EROTIC",
+		"FAKINGS",
+		"FAKE",
+		"AMATEUR",
+		"CREAMPIE",
+		"BLONDE",
+		"MILF",
+		"TEEN",
+		"TEENS",
+		"BIGTITS",
+		"STEP",
+		"UPDATE",
+		"POST",
+		"ITEM",
+		"USER",
+		"ORDER",
+		"CODE",
+		"TEST",
+		"VIDEO",
+		"VIDEOS",
+		"MOVIE",
+		"MOVIES",
+		"IMAGE",
+		"IMAGES",
+		"PHOTO",
+		"PHOTOS",
+		"STUDENT",
+		"SCHOOL",
+		"PARTY",
+		"BEACH",
+		"SUMMER",
+		"WINTER",
+		"SPRING",
+		"AUTUMN",
+		"ONLINE",
+		"MOBILE",
+		"SERVER",
+		"CLIENT",
+		"PLAYER",
+		"STATUS",
+		"SYSTEM",
+		"CONFIG",
+		"FILTER",
+		"BUTTON",
+		"LAYOUT",
+		"REPORT",
+		"DOMAIN",
+		"COOKIE",
+		"RECORD",
+		"UPLOAD",
+		"STREAM",
+		"SOURCE",
+		"PUBLIC",
+		"GLOBAL",
+		"COMMON",
+		"SHARED",
+		"SECRET",
+		"NOTICE",
+		"DETAIL",
+		"HEADER",
+		"FOOTER",
+		"BANNER",
+		"SELECT",
+		"SUBMIT",
+		"CANCEL",
+		"DELETE",
+		"REMOVE",
+		"INSERT",
+		"SEARCH",
+		"RESULT",
+		"FOLLOW",
+		"MEMBER",
+		"CREDIT",
+		"SCREEN",
+		"WINDOW",
+		"SCROLL",
+		"BOTTOM",
+		"NORMAL",
+		"DIALOG",
+		"DRAWER",
+		"HOT",
+		"TOP",
+		"BEST",
+		"NEW",
+		"ASIAN"
 	]);
 	var NON_AV_SLUGS = new Set([
 		"search",
@@ -818,12 +920,12 @@
 		},
 		{
 			type: "STANDARD_HYPHEN",
-			regex: /\b([A-Z]{2,8})[\s_\-](\d{2,5})\b/i,
+			regex: /\b([A-Z]{2,6})[\s_\-](\d{2,5})\b/i,
 			format: (m) => `${m[1].toUpperCase()}-${m[2]}`
 		},
 		{
 			type: "DMM_CID",
-			regex: /\b([A-Z]{2,8})(?:00|0)(\d{2,5})\b/i,
+			regex: /\b([A-Z]{2,6})(?:00|0)(\d{2,5})\b/i,
 			format: (m) => {
 				const prefix = m[1].toUpperCase();
 				let num = m[2].replace(/^0+/, "");
@@ -833,7 +935,7 @@
 		},
 		{
 			type: "COMPACT",
-			regex: /\b([A-Z]{2,8})(\d{2,5})\b/i,
+			regex: /\b([A-Z]{2,6})(\d{2,5})\b/i,
 			format: (m) => {
 				const prefix = m[1].toUpperCase();
 				let num = m[2].replace(/^0+/, "");
@@ -944,8 +1046,8 @@
 			if (isSiteDomain("MISSAV", urlObj.hostname)) {
 				const segments = path.split("/").filter(Boolean);
 				if (segments.length > 0) {
-					const last = segments[segments.length - 1];
-					if (!NON_AV_SLUGS.has(last.toLowerCase())) {
+					if (!segments.some((seg) => NON_AV_SLUGS.has(seg.toLowerCase()))) {
+						const last = segments[segments.length - 1];
 						const code = matchAvCodeFromText(last);
 						if (code) return code;
 					}
@@ -967,8 +1069,8 @@
 			}
 			const segments = path.split("/").filter(Boolean);
 			if (segments.length > 0) {
-				const last = segments[segments.length - 1];
-				if (!NON_AV_SLUGS.has(last.toLowerCase())) {
+				if (!segments.some((seg) => NON_AV_SLUGS.has(seg.toLowerCase()))) {
+					const last = segments[segments.length - 1];
 					const code = matchAvCodeFromText(last);
 					if (code) return code;
 				}
@@ -4130,6 +4232,8 @@
 			previewNotFound: "No preview video available",
 			crazyScrapeTitle: "Aggressive Scrape Mode",
 			crazyScrapeDesc: "Scrape comments for all matched AV codes on host page with rate-limiting queue",
+			debugFilterHasNumbersTitle: "Numbers Only Comments",
+			debugFilterHasNumbersDesc: "Show only comments containing digits to inspect and verify timestamp parsing",
 			commentsError: "Failed to load comments",
 			tabJable: "Jable.tv Comments",
 			tabJavlibComment: "JAVLib Comments",
@@ -4231,6 +4335,8 @@
 			previewNotFound: "暂无预览小视频",
 			crazyScrapeTitle: "疯狂采集模式",
 			crazyScrapeDesc: "自动扫描宿主页面所有关联番号，低速防爬排队采集评论语料",
+			debugFilterHasNumbersTitle: "只看有数字的评论",
+			debugFilterHasNumbersDesc: "仅保留评论中包含数字的条目，便于排查与审查时间戳、区间与倒数解析效果",
 			commentsError: "评论采集失败",
 			tabJable: "Jable.tv 评论",
 			tabJavlibComment: "JAVLib 评论",
@@ -4332,6 +4438,8 @@
 			previewNotFound: "暫無預覽短片",
 			crazyScrapeTitle: "瘋狂採集模式",
 			crazyScrapeDesc: "自動掃描宿主頁面所有關聯番號，低速防爬排隊採集評論語料",
+			debugFilterHasNumbersTitle: "只看有數字的評論",
+			debugFilterHasNumbersDesc: "僅保留評論中包含數字的條目，便於排查與審查時間戳、區間與倒數解析效果",
 			commentsError: "評論採集失敗",
 			tabJable: "Jable.tv 評論",
 			tabJavlibComment: "JAVLib 評論",
@@ -4432,6 +4540,8 @@
 			previewNotFound: "プレビュー動画なし",
 			crazyScrapeTitle: "拡張収集モード",
 			crazyScrapeDesc: "ホストページ内の全関連品番コメントをアンチスクレイピング制御で順次収集",
+			debugFilterHasNumbersTitle: "数字を含むコメントのみ表示",
+			debugFilterHasNumbersDesc: "数字を含むコメントのみを残しタイムスタンプや区間の解析精度を検証",
 			commentsError: "コメントの読み込みに失敗しました",
 			tabJable: "Jable.tv コメント",
 			tabJavlibComment: "JAVLib コメント",
@@ -4532,6 +4642,8 @@
 			previewNotFound: "Không có video xem trước",
 			crazyScrapeTitle: "Chế độ cào mở rộng",
 			crazyScrapeDesc: "Tự động quét tất cả mã số trên trang và xếp hàng cào bình luận an toàn",
+			debugFilterHasNumbersTitle: "Chỉ xem bình luận có số",
+			debugFilterHasNumbersDesc: "Chỉ giữ lại các bình luận có chứa chữ số để kiểm tra phân tích mốc thời gian",
 			commentsError: "Không thể tải bình luận",
 			tabJable: "Bình luận Jable.tv",
 			tabJavlibComment: "Bình luận JAVLib",
@@ -8707,6 +8819,12 @@
 			this.commentsPanel.querySelectorAll(".jc-report-btn").forEach((btn) => {
 				btn.style.display = debugMode ? "inline-block" : "none";
 			});
+			this.applyFilter();
+			this.renderCommentsList();
+		}
+		updateDebugFilterHasNumbers(enabled) {
+			this.applyFilter();
+			this.renderCommentsList();
 		}
 		updateCommentsVisibility(showCommentsSection) {
 			if (!this.commentsPanel) return;
@@ -9752,15 +9870,19 @@
 			}
 		}
 		applyFilter() {
-			if (this.filterSpam) {
-				this.filteredJableComments = this.jableComments.filter((c) => c.spam.label !== "SPAM");
-				this.filteredJavlibComments = this.javlibComments.filter((c) => c.spam.label !== "SPAM");
-				this.filteredJavdbComments = this.javdbComments.filter((c) => c.spam.label !== "SPAM");
-			} else {
-				this.filteredJableComments = this.jableComments;
-				this.filteredJavlibComments = this.javlibComments;
-				this.filteredJavdbComments = this.javdbComments;
-			}
+			const hasNumberRegex = /\d/;
+			const onlyNumbers = Boolean(this.playerCore?.options?.playerState?.settings?.debugMode && this.playerCore?.options?.playerState?.settings?.debugFilterHasNumbers);
+			const filterFn = (c) => {
+				if (this.filterSpam && c?.spam?.label === "SPAM") return false;
+				if (onlyNumbers) {
+					const text = c?.rawText || c?.text || "";
+					return hasNumberRegex.test(text);
+				}
+				return true;
+			};
+			this.filteredJableComments = this.jableComments.filter(filterFn);
+			this.filteredJavlibComments = this.javlibComments.filter(filterFn);
+			this.filteredJavdbComments = this.javdbComments.filter(filterFn);
 			this.filteredComments = [
 				...this.filteredJableComments,
 				...this.filteredJavlibComments,
@@ -14633,6 +14755,7 @@
 			}
 		}
 	};
+	init_domains();
 	var CrazyScraper = class {
 		static isEnabled() {
 			const isDebug = Boolean(getValue("debugMode", false));
@@ -14682,12 +14805,28 @@
 			const currentUpper = String(currentAvcode || "").toUpperCase();
 			try {
 				const links = document.querySelectorAll("a[href]");
+				const currentHost = typeof window !== "undefined" && window.location ? window.location.hostname : "";
+				const nonVideoRouteRegex = /\/(tags?|genres?|categories|category|makers?|actress(?:es)?|actors?|series|channels?|models?|stars?|users?|search|popular|latest|ranking|playlists?|forum|news|help|about|dmca|terms|privacy)\b/i;
 				for (const a of links) {
 					const href = a.getAttribute("href") || "";
 					if (!href || href.startsWith("#") || href.startsWith("javascript:") || /\.(css|js|png|jpg|jpeg|gif|svg|ico)$/i.test(href)) continue;
-					const segments = href.split("?")[0].split("#")[0].replace(/\/+$/, "").split("/").filter(Boolean);
+					let urlObj;
+					try {
+						urlObj = new URL(href, typeof window !== "undefined" ? window.location.href : "https://missav.ai");
+					} catch (_) {
+						continue;
+					}
+					const linkHost = urlObj.hostname;
+					if (!(!currentHost || linkHost === currentHost || isSiteDomain("MISSAV", linkHost) || isSiteDomain("JABLE", linkHost) || isSiteDomain("JAVDB", linkHost) || isSiteDomain("JAVLIBRARY", linkHost))) continue;
+					const pathname = urlObj.pathname.toLowerCase();
+					if (nonVideoRouteRegex.test(pathname)) continue;
+					if (currentHost && isSiteDomain("JABLE", currentHost) && !pathname.includes("/videos/")) continue;
+					if (currentHost && isSiteDomain("JAVDB", currentHost) && !/\/(?:v|videos)\//i.test(pathname)) continue;
+					const segments = urlObj.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
 					let code = matchAvCodeFromText(segments.length > 0 ? segments[segments.length - 1] : "");
-					if (!code) code = matchAvCodeFromText(a.getAttribute("title") || a.textContent || "");
+					if (!code) {
+						if (a.querySelector("img") || a.closest(".video-img-box, .grid-item, .video-item, .item, .movie-card, .col, li")) code = matchAvCodeFromText(a.getAttribute("title") || a.textContent || "");
+					}
 					if (code && isValidAvCode(code)) {
 						const upper = code.toUpperCase();
 						if (upper.startsWith("DM-")) continue;
@@ -14998,6 +15137,7 @@
 				},
 				telemetryEnabled: false,
 				debugMode: false,
+				debugFilterHasNumbers: false,
 				crazyScrapeMode: false,
 				pauseOnBlur: true,
 				buttonSoundEnabled: true,
@@ -15212,10 +15352,12 @@
 				if (checked) telemetry.flush(true, true);
 			}, null, __("helpImproveDesc") || "收集必要数据用于改进功能");
 			let crazyOption = null;
+			let debugFilterNumbersOption = null;
 			const debugOption = this._createToggleOption("DEBUG", "debugMode", this.settings.debugMode, (checked) => {
 				this.updateSetting("debugMode", checked);
 				DebugLogPanel.updateDebugState(checked);
 				if (this.controlManager?.commentPanel) this.controlManager.commentPanel.updateDebugMode(checked);
+				if (debugFilterNumbersOption) debugFilterNumbersOption.style.display = checked ? "flex" : "none";
 				if (crazyOption) crazyOption.style.display = checked ? "flex" : "none";
 				if (clearLocalCacheBtn) clearLocalCacheBtn.style.display = checked ? "inline-flex" : "none";
 				if (!checked) CrazyScraper.stop();
@@ -15251,9 +15393,16 @@
 				this.updateSetting("buttonSoundEnabled", checked);
 				if (checked) playTapSound(true);
 			}, null, __("buttonSoundDesc") || "点击控制面板按钮时播放清脆触控反馈音效");
+			debugFilterNumbersOption = this._createToggleOption(__("debugFilterHasNumbersTitle") || "只看有数字的评论", "debugFilterHasNumbers", Boolean(this.settings.debugFilterHasNumbers), (checked) => {
+				this.updateSetting("debugFilterHasNumbers", checked);
+				if (this.controlManager?.commentPanel) this.controlManager.commentPanel.updateDebugFilterHasNumbers(checked);
+			}, null, __("debugFilterHasNumbersDesc") || "仅保留评论中包含数字的条目，便于排查与审查时间戳、区间与倒数解析效果");
+			debugFilterNumbersOption.style.display = this.settings.debugMode ? "flex" : "none";
+			debugFilterNumbersOption.style.paddingLeft = "28px";
 			section3.appendChild(pauseOnBlurOption);
 			section3.appendChild(buttonSoundOption);
 			section3.appendChild(debugOption);
+			section3.appendChild(debugFilterNumbersOption);
 			section3.appendChild(crazyOption);
 			section3.appendChild(clearLocalCacheBtn);
 			const forceRescrapeOption = this._createToggleOption("强制覆盖重新采集", "crazyForceRescrape", Boolean(this.settings.crazyForceRescrape), (checked) => {
@@ -16126,6 +16275,7 @@
 				}, rawSources && typeof rawSources === "object" ? rawSources : {});
 				this.settings.telemetryEnabled = false;
 				this.settings.debugMode = getBool("debugMode", false);
+				this.settings.debugFilterHasNumbers = getBool("debugFilterHasNumbers", false);
 				this.settings.crazyScrapeMode = getBool("crazyScrapeMode", false);
 				this.settings.pauseOnBlur = getBool("pauseOnBlur", true);
 				this.settings.buttonSoundEnabled = getBool("buttonSoundEnabled", true);
@@ -16158,6 +16308,7 @@
 				setValue("enabledCommentSources", this.settings.enabledCommentSources);
 				setValue("telemetryEnabled", false);
 				setValue("debugMode", this.settings.debugMode);
+				setValue("debugFilterHasNumbers", this.settings.debugFilterHasNumbers);
 				setValue("crazyScrapeMode", Boolean(this.settings.crazyScrapeMode));
 				setValue("pauseOnBlur", this.settings.pauseOnBlur);
 				setValue("buttonSoundEnabled", this.settings.buttonSoundEnabled);
@@ -17268,6 +17419,7 @@
 				},
 				telemetryEnabled: false,
 				debugMode: false,
+				debugFilterHasNumbers: false,
 				crazyScrapeMode: false,
 				crazyForceRescrape: false,
 				sidebarPosition: "right",
@@ -17303,6 +17455,7 @@
 				}, rawSources && typeof rawSources === "object" ? rawSources : {});
 				this.settings.telemetryEnabled = false;
 				this.settings.debugMode = getBool("debugMode", false);
+				this.settings.debugFilterHasNumbers = getBool("debugFilterHasNumbers", false);
 				this.settings.crazyScrapeMode = getBool("crazyScrapeMode", false);
 				this.settings.crazyForceRescrape = getBool("crazyForceRescrape", false);
 				this.settings.sidebarPosition = getValue("sidebarPosition", "right") || "right";
@@ -17372,6 +17525,7 @@
 				setValue("enabledCommentSources", this.settings.enabledCommentSources);
 				setValue("telemetryEnabled", false);
 				setValue("debugMode", this.settings.debugMode);
+				setValue("debugFilterHasNumbers", this.settings.debugFilterHasNumbers);
 				setValue("crazyScrapeMode", this.settings.crazyScrapeMode);
 				setValue("crazyForceRescrape", this.settings.crazyForceRescrape);
 				setValue("sidebarPosition", this.settings.sidebarPosition);

@@ -59,6 +59,7 @@ export class SettingsManager {
             },
             telemetryEnabled: false,
             debugMode: false,
+            debugFilterHasNumbers: false,
             crazyScrapeMode: false,
             pauseOnBlur: true,
             buttonSoundEnabled: true,
@@ -394,6 +395,8 @@ export class SettingsManager {
 
         let crazyOption = null;
 
+        let debugFilterNumbersOption = null;
+
         const debugOption = this._createToggleOption(
             'DEBUG',
             'debugMode',
@@ -403,6 +406,9 @@ export class SettingsManager {
                 DebugLogPanel.updateDebugState(checked);
                 if (this.controlManager?.commentPanel) {
                     this.controlManager.commentPanel.updateDebugMode(checked);
+                }
+                if (debugFilterNumbersOption) {
+                    debugFilterNumbersOption.style.display = checked ? 'flex' : 'none';
                 }
                 if (crazyOption) {
                     crazyOption.style.display = checked ? 'flex' : 'none';
@@ -483,9 +489,27 @@ export class SettingsManager {
         );
 
 
+        // 只看有数字的评论开关 (仅在 DEBUG 开启时展示，审查时间解析效果)
+        debugFilterNumbersOption = this._createToggleOption(
+            __('debugFilterHasNumbersTitle') || '只看有数字的评论',
+            'debugFilterHasNumbers',
+            Boolean(this.settings.debugFilterHasNumbers),
+            (checked) => {
+                this.updateSetting('debugFilterHasNumbers', checked);
+                if (this.controlManager?.commentPanel) {
+                    this.controlManager.commentPanel.updateDebugFilterHasNumbers(checked);
+                }
+            },
+            null,
+            __('debugFilterHasNumbersDesc') || '仅保留评论中包含数字的条目，便于排查与审查时间戳、区间与倒数解析效果'
+        );
+        debugFilterNumbersOption.style.display = this.settings.debugMode ? 'flex' : 'none';
+        debugFilterNumbersOption.style.paddingLeft = '28px';
+
         section3.appendChild(pauseOnBlurOption);
         section3.appendChild(buttonSoundOption);
         section3.appendChild(debugOption);
+        section3.appendChild(debugFilterNumbersOption);
         section3.appendChild(crazyOption);
         section3.appendChild(clearLocalCacheBtn);
 
@@ -1716,6 +1740,7 @@ export class SettingsManager {
 
             this.settings.telemetryEnabled = false;
             this.settings.debugMode = getBool('debugMode', false);
+            this.settings.debugFilterHasNumbers = getBool('debugFilterHasNumbers', false);
             this.settings.crazyScrapeMode = getBool('crazyScrapeMode', false);
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
@@ -1753,6 +1778,7 @@ export class SettingsManager {
             setValue('enabledCommentSources', this.settings.enabledCommentSources);
             setValue('telemetryEnabled', false);
             setValue('debugMode', this.settings.debugMode);
+            setValue('debugFilterHasNumbers', this.settings.debugFilterHasNumbers);
             setValue('crazyScrapeMode', Boolean(this.settings.crazyScrapeMode));
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);

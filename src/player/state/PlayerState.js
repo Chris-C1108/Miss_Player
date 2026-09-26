@@ -30,6 +30,7 @@ export class PlayerState {
             },
             telemetryEnabled: false,         // 遥测功能开关 (帮助改进)
             debugMode: false,               // DEBUG 模式
+            debugFilterHasNumbers: false,    // 只看有数字的评论 (用于审查时间解析)
             crazyScrapeMode: false,
             crazyForceRescrape: false,         // 疯狂采集模式
             sidebarPosition: 'right',       // 评论侧边栏位置 ('left' | 'right')
@@ -79,6 +80,7 @@ export class PlayerState {
 
             this.settings.telemetryEnabled = false;
             this.settings.debugMode = getBool('debugMode', false);
+            this.settings.debugFilterHasNumbers = getBool('debugFilterHasNumbers', false);
             this.settings.crazyScrapeMode = getBool('crazyScrapeMode', false);
             this.settings.crazyForceRescrape = getBool('crazyForceRescrape', false);
             this.settings.sidebarPosition = getValue('sidebarPosition', 'right') || 'right';
@@ -171,6 +173,7 @@ export class PlayerState {
             setValue('enabledCommentSources', this.settings.enabledCommentSources);
             setValue('telemetryEnabled', false);
             setValue('debugMode', this.settings.debugMode);
+            setValue('debugFilterHasNumbers', this.settings.debugFilterHasNumbers);
             setValue('crazyScrapeMode', this.settings.crazyScrapeMode);
             setValue('crazyForceRescrape', this.settings.crazyForceRescrape);
             setValue('sidebarPosition', this.settings.sidebarPosition);

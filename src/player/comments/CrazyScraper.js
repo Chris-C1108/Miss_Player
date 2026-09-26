@@ -1,6 +1,7 @@
 import { getVideoDurationSeconds, parseDurationFromBadge } from '../../utils/dom.js';
 import { SyncManager, WebDavClient } from '../../sync/index.js';
 import { isValidAvCode, matchAvCodeFromText } from '../../utils/videoCode.js';
+import { isSiteDomain } from '../../constants/domains.js';
 import { SupabaseService } from '../../services/SupabaseService.js';
 /**
  * 疯狂采集模式引擎 (CrazyScraper)
@@ -112,21 +113,61 @@ export class CrazyScraper {
         try {
             // 全面扫描当前页面中的所有 <a> 链接与视频卡片节点
             const links = document.querySelectorAll('a[href]');
+            const currentHost = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '';
+            const nonVideoRouteRegex = /\/(tags?|genres?|categories|category|makers?|actress(?:es)?|actors?|series|channels?|models?|stars?|users?|search|popular|latest|ranking|playlists?|forum|news|help|about|dmca|terms|privacy)\b/i;
+
             for (const a of links) {
                 const href = a.getAttribute('href') || '';
                 if (!href || href.startsWith('#') || href.startsWith('javascript:') || /\.(css|js|png|jpg|jpeg|gif|svg|ico)$/i.test(href)) {
                     continue;
                 }
 
+                // A. 跨域与外链广告熔断：排除第三方外链与广告追踪链接
+                let urlObj;
+                try {
+                    urlObj = new URL(href, (typeof window !== 'undefined' ? window.location.href : 'https://missav.ai'));
+                } catch (_) {
+                    continue;
+                }
+
+                const linkHost = urlObj.hostname;
+                const isTrustedHost = !currentHost || linkHost === currentHost ||
+                    isSiteDomain('MISSAV', linkHost) ||
+                    isSiteDomain('JABLE', linkHost) ||
+                    isSiteDomain('JAVDB', linkHost) ||
+                    isSiteDomain('JAVLIBRARY', linkHost);
+                if (!isTrustedHost) {
+                    continue;
+                }
+
+                // B. 排除标签、分类、演员、合集等非视频路由
+                const pathname = urlObj.pathname.toLowerCase();
+                if (nonVideoRouteRegex.test(pathname)) {
+                    continue;
+                }
+
+                // C. 针对 Jable 宿主页面的专属过滤：非 /videos/ 路径不是视频
+                if (currentHost && isSiteDomain('JABLE', currentHost) && !pathname.includes('/videos/')) {
+                    continue;
+                }
+
+                // D. 针对 JavDB 宿主页面的专属过滤：非 /v/ 或 /videos/ 路径不是视频
+                if (currentHost && isSiteDomain('JAVDB', currentHost) && !/\/(?:v|videos)\//i.test(pathname)) {
+                    continue;
+                }
+
                 // 1. 优先从 URL 路径末尾分段精准提取 (如 /cn/mvsd-617, /videos/ssis-123/, /miaa-598)
-                let cleanPath = href.split('?')[0].split('#')[0].replace(/\/+$/, '');
+                let cleanPath = urlObj.pathname.replace(/\/+$/, '');
                 const segments = cleanPath.split('/').filter(Boolean);
                 const lastSegment = segments.length > 0 ? segments[segments.length - 1] : '';
 
                 let code = matchAvCodeFromText(lastSegment);
-                // 2. 兜底从链接文本或 title 属性提取
+                // 2. 兜底从链接文本或 title 属性提取 (仅在当前节点为视频卡片结构时允许)
                 if (!code) {
-                    code = matchAvCodeFromText(a.getAttribute('title') || a.textContent || '');
+                    const isLikelyCard = a.querySelector('img') || a.closest('.video-img-box, .grid-item, .video-item, .item, .movie-card, .col, li');
+                    if (isLikelyCard) {
+                        code = matchAvCodeFromText(a.getAttribute('title') || a.textContent || '');
+                    }
                 }
 
                 if (code && isValidAvCode(code)) {

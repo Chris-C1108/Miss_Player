@@ -13,7 +13,22 @@ export const TECHNICAL_BLACKLIST = new Set([
     // 英文月份 (严防 SEP-2026, OCT-2024 等误判)
     'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
     // 常用单位与技术词
-    'FPS', 'KB', 'MB', 'GB', 'TB', 'PAGE', 'EPISODE', 'PART', 'VOL', 'DISC', 'DVD', 'VOD'
+    'FPS', 'KB', 'MB', 'GB', 'TB', 'PAGE', 'EPISODE', 'PART', 'VOL', 'DISC', 'DVD', 'VOD',
+    // 欧美成人知名厂牌与常见分类词 (严防 NAUGHTY-930, BRAZZERS, BLACKED 等假阳性)
+    'NAUGHTY', 'BRAZZERS', 'BLACKED', 'REALITY', 'TUSHY', 'TUSHYS', 'BANG', 'MOFOS',
+    'BABES', 'VIXEN', 'DEVIL', 'TWISTYS', 'SWEET', 'SEXY', 'MODEL', 'ADULT', 'PORN',
+    'EROTIC', 'FAKINGS', 'FAKE', 'AMATEUR', 'CREAMPIE', 'BLONDE', 'MILF', 'TEEN', 'TEENS',
+    'BIGTITS', 'STEP',
+    // 常见通用英文系统、路由与开发词 (严防 tags/asian-123, categories/hot-101 等误判)
+    'UPDATE', 'POST', 'ITEM', 'USER', 'ORDER', 'CODE', 'TEST', 'VIDEO', 'VIDEOS',
+    'MOVIE', 'MOVIES', 'IMAGE', 'IMAGES', 'PHOTO', 'PHOTOS', 'STUDENT', 'SCHOOL',
+    'PARTY', 'BEACH', 'SUMMER', 'WINTER', 'SPRING', 'AUTUMN', 'ONLINE', 'MOBILE',
+    'SERVER', 'CLIENT', 'PLAYER', 'STATUS', 'SYSTEM', 'CONFIG', 'FILTER', 'BUTTON',
+    'LAYOUT', 'REPORT', 'DOMAIN', 'COOKIE', 'RECORD', 'UPLOAD', 'STREAM', 'SOURCE',
+    'PUBLIC', 'GLOBAL', 'COMMON', 'SHARED', 'SECRET', 'NOTICE', 'DETAIL', 'HEADER',
+    'FOOTER', 'BANNER', 'SELECT', 'SUBMIT', 'CANCEL', 'DELETE', 'REMOVE', 'INSERT',
+    'SEARCH', 'RESULT', 'FOLLOW', 'MEMBER', 'CREDIT', 'SCREEN', 'WINDOW', 'SCROLL',
+    'BOTTOM', 'NORMAL', 'DIALOG', 'DRAWER', 'HOT', 'TOP', 'BEST', 'NEW', 'ASIAN'
 ]);
 
 // 2. 非番号的通用路由与功能页面路径黑名单
@@ -69,13 +84,13 @@ export const PARSER_RULES = [
     // 梯队 7: 标准日系有码 (带横杠/下划线/空格分隔，如 SSIS-888, MIAA-598, ABP-123, SIVR-012)
     {
         type: 'STANDARD_HYPHEN',
-        regex: /\b([A-Z]{2,8})[\s_\-](\d{2,5})\b/i,
+        regex: /\b([A-Z]{2,6})[\s_\-](\d{2,5})\b/i,
         format: (m) => `${m[1].toUpperCase()}-${m[2]}`
     },
     // 梯队 8: DMM CID 逆向对齐 (如 ssis00123 -> SSIS-123, miaa00598 -> MIAA-598)
     {
         type: 'DMM_CID',
-        regex: /\b([A-Z]{2,8})(?:00|0)(\d{2,5})\b/i,
+        regex: /\b([A-Z]{2,6})(?:00|0)(\d{2,5})\b/i,
         format: (m) => {
             const prefix = m[1].toUpperCase();
             let num = m[2].replace(/^0+/, '');
@@ -86,7 +101,7 @@ export const PARSER_RULES = [
     // 梯队 9: 紧凑无分隔符格式 (如 IPX123 -> IPX-123, SSIS888 -> SSIS-888)
     {
         type: 'COMPACT',
-        regex: /\b([A-Z]{2,8})(\d{2,5})\b/i,
+        regex: /\b([A-Z]{2,6})(\d{2,5})\b/i,
         format: (m) => {
             const prefix = m[1].toUpperCase();
             let num = m[2].replace(/^0+/, '');
@@ -281,8 +296,10 @@ export function getVideoCodeFromUrl(urlOrElement = (typeof window !== 'undefined
         if (isSiteDomain('MISSAV', urlObj.hostname)) {
             const segments = path.split('/').filter(Boolean);
             if (segments.length > 0) {
-                const last = segments[segments.length - 1];
-                if (!NON_AV_SLUGS.has(last.toLowerCase())) {
+                // 若路径中任一分段属于分类/标签/非视频路由 (如 genres, tags, actresses)，则绝非视频播放页面
+                const hasNonAvSegment = segments.some(seg => NON_AV_SLUGS.has(seg.toLowerCase()));
+                if (!hasNonAvSegment) {
+                    const last = segments[segments.length - 1];
                     const code = matchAvCodeFromText(last);
                     if (code) return code;
                 }
@@ -307,8 +324,9 @@ export function getVideoCodeFromUrl(urlOrElement = (typeof window !== 'undefined
         // 6. 从通用 URL 路径的末尾分段提取
         const segments = path.split('/').filter(Boolean);
         if (segments.length > 0) {
-            const last = segments[segments.length - 1];
-            if (!NON_AV_SLUGS.has(last.toLowerCase())) {
+            const hasNonAvSegment = segments.some(seg => NON_AV_SLUGS.has(seg.toLowerCase()));
+            if (!hasNonAvSegment) {
+                const last = segments[segments.length - 1];
                 const code = matchAvCodeFromText(last);
                 if (code) return code;
             }

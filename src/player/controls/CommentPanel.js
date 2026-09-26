@@ -436,6 +436,14 @@ export class CommentPanel {
         reportBtns.forEach(btn => {
             btn.style.display = debugMode ? 'inline-block' : 'none';
         });
+        // 当 debugMode 改变时重新计算数字过滤
+        this.applyFilter();
+        this.renderCommentsList();
+    }
+
+    updateDebugFilterHasNumbers(enabled) {
+        this.applyFilter();
+        this.renderCommentsList();
     }
 
     updateCommentsVisibility(showCommentsSection) {
@@ -1876,15 +1884,21 @@ export class CommentPanel {
      * 过滤灌水/SPAM评论（分源独立过滤）
      */
     applyFilter() {
-        if (this.filterSpam) {
-            this.filteredJableComments = this.jableComments.filter(c => c.spam.label !== 'SPAM');
-            this.filteredJavlibComments = this.javlibComments.filter(c => c.spam.label !== 'SPAM');
-            this.filteredJavdbComments = this.javdbComments.filter(c => c.spam.label !== 'SPAM');
-        } else {
-            this.filteredJableComments = this.jableComments;
-            this.filteredJavlibComments = this.javlibComments;
-            this.filteredJavdbComments = this.javdbComments;
-        }
+        const hasNumberRegex = /\d/;
+        const onlyNumbers = Boolean(this.playerCore?.options?.playerState?.settings?.debugMode && this.playerCore?.options?.playerState?.settings?.debugFilterHasNumbers);
+
+        const filterFn = (c) => {
+            if (this.filterSpam && c?.spam?.label === 'SPAM') return false;
+            if (onlyNumbers) {
+                const text = c?.rawText || c?.text || '';
+                return hasNumberRegex.test(text);
+            }
+            return true;
+        };
+
+        this.filteredJableComments = this.jableComments.filter(filterFn);
+        this.filteredJavlibComments = this.javlibComments.filter(filterFn);
+        this.filteredJavdbComments = this.javdbComments.filter(filterFn);
         // 向下兼容：维护合并列表
         this.filteredComments = [...this.filteredJableComments, ...this.filteredJavlibComments, ...this.filteredJavdbComments];
         this.comments = [...this.jableComments, ...this.javlibComments, ...this.javdbComments];
