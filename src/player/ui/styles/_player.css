@@ -2514,49 +2514,13 @@ body.tm-swiping-down .tm-settings-panel {
     display: none !important;
 }
 
-/* 移动端与竖屏手机极致紧凑排版优化 (防控制面板过宽与折行溢出) */
+/* 移动端与竖屏手机控制面板宽度约束 (保持优雅触控比例，绝不破坏按钮饱满质感) */
 @media screen and (max-width: 600px), screen and (orientation: portrait) {
     .tm-control-buttons {
-        width: calc(100vw - 20px) !important;
-        max-width: 440px !important;
+        width: calc(100vw - 24px) !important;
+        max-width: 480px !important;
         min-width: 0 !important;
-        padding: 10px 12px 8px !important;
-        gap: 7px !important;
-        border-radius: 14px !important;
-    }
-
-    /* 快进/快退按键紧凑自适应弹性，确保单边多步进时精致容纳不折行撑高 */
-    .tm-rewind-buttons-container,
-    .tm-forward-buttons-container {
-        gap: 4px !important;
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        scrollbar-width: none !important;
-    }
-    .tm-rewind-buttons-container::-webkit-scrollbar,
-    .tm-forward-buttons-container::-webkit-scrollbar {
-        display: none !important;
-    }
-
-    .tm-time-control-button {
-        width: auto !important;
-        min-width: 34px !important;
-        height: 28px !important;
-        padding: 0 6px !important;
-        font-size: 11px !important;
-        border-radius: 6px !important;
-        flex: 1 1 auto !important;
-        max-width: 44px !important;
-    }
-
-    /* 播放控制胶囊行紧凑微调 */
-    .tm-playback-control-row {
-        gap: 6px !important;
-    }
-
-    /* 胶囊时间标记行自适应紧凑 */
-    .tm-loop-control-row {
-        gap: 5px !important;
+        border-radius: 16px !important;
     }
 }
 
