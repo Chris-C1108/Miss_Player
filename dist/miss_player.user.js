@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.6.41
+// @version            5.6.42
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1234,7 +1234,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.41";
+		return "5.6.42";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3239,7 +3239,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.41";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.6.42";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -12882,7 +12882,7 @@
 		}
 		updatePanelPosition() {
 			if (!this._sheetPanel) return;
-			const parentContainer = this.tabAddBtn?.closest(".tm-control-buttons") || this.uiElements?.controlButtons || document.querySelector(".tm-control-buttons");
+			const parentContainer = this.tabAddBtn?.closest(".tm-control-buttons") || this.loopManager?.controlManager?.controlButtonsContainer || this.uiElements?.controlButtons || document.querySelector(".tm-control-buttons");
 			const loopRow = this.tabAddBtn?.closest(".tm-loop-control-row") || this.tabAddBtn?.parentElement;
 			const handleContainer = this.uiElements?.handleContainer || document.querySelector(".tm-handle-container");
 			if (parentContainer && loopRow) {
@@ -12913,7 +12913,7 @@
 			if (this._sheetPanel) this._sheetPanel.classList.remove("visible");
 		}
 		createBottomSheet() {
-			const parentContainer = this.tabAddBtn?.closest(".tm-control-buttons") || this.uiElements?.controlButtons || document.querySelector(".tm-control-buttons");
+			const parentContainer = this.tabAddBtn?.closest(".tm-control-buttons") || this.loopManager?.controlManager?.controlButtonsContainer || this.uiElements?.controlButtons || document.querySelector(".tm-control-buttons");
 			if (!parentContainer) return;
 			if (this._sheetOverlay) this._sheetOverlay.remove();
 			if (this._sheetPanel) this._sheetPanel.remove();
@@ -13868,7 +13868,7 @@
 			const isEdit = existingTab !== null;
 			const tab = isEdit ? existingTab : this.draftTab;
 			if (!tab) return;
-			const parentContainer = this.uiElements?.controlButtonsContainer || this.uiElements?.controlPanel || document.querySelector(".tm-control-buttons");
+			const parentContainer = this.controlManager?.controlButtonsContainer || this.tabScrollContainer?.closest(".tm-control-buttons") || this.tabAddBtn?.closest(".tm-control-buttons") || this.uiElements?.controlButtonsContainer || this.playerCore?.uiManager?.shadowRoot?.querySelector(".tm-control-buttons") || this.uiElements?.controlPanel || document.querySelector(".tm-control-buttons");
 			if (!parentContainer) return;
 			const existingPopover = parentContainer.querySelector(".tm-inline-remark-popover");
 			if (existingPopover) existingPopover.remove();
@@ -13903,10 +13903,28 @@
 				}
 				input.select();
 			});
+			let isClosed = false;
 			const close = () => {
+				if (isClosed) return;
+				isClosed = true;
+				document.removeEventListener("click", handleOutsideClick, true);
 				popover.classList.remove("visible");
-				popover.addEventListener("transitionend", () => popover.remove(), { once: true });
+				let removed = false;
+				const cleanup = () => {
+					if (!removed) {
+						removed = true;
+						popover.remove();
+					}
+				};
+				popover.addEventListener("transitionend", cleanup, { once: true });
+				setTimeout(cleanup, 250);
 			};
+			const handleOutsideClick = (e) => {
+				if (!popover.contains(e.target)) close();
+			};
+			setTimeout(() => {
+				document.addEventListener("click", handleOutsideClick, true);
+			}, 50);
 			const save = (comment) => {
 				tab.comment = comment;
 				tab.updatedAt = Date.now();
@@ -13938,6 +13956,15 @@
 					this._saveTabs();
 					this._sortTabs();
 					this.renderTabs();
+					Toast("已保存片段标记", 1500, "success");
+					if (this.tabScrollContainer) setTimeout(() => {
+						const selector = "[data-tab-id=\"" + newTab.id + "\"]";
+						const pill = this.tabScrollContainer.querySelector(selector);
+						if (pill) pill.scrollIntoView({
+							behavior: "smooth",
+							inline: "center"
+						});
+					}, 60);
 				}
 				close();
 			};
@@ -14090,7 +14117,7 @@
 		}
 		updateLoopMarkers() {
 			if (!this.targetVideo || !this.loopStartMarker || !this.loopEndMarker) return;
-			if (!(this.uiElements?.progressBar || document.querySelector(".tm-progress-bar"))) return;
+			if (!(this.controlManager?.progressBarElement || this.loopStartMarker?.parentElement || this.playerCore?.uiManager?.shadowRoot?.querySelector(".tm-progress-bar") || this.uiElements?.progressBar || document.querySelector(".tm-progress-bar"))) return;
 			const duration = this.targetVideo.duration;
 			if (duration <= 0) return;
 			const updateMarker = (time, marker, isActive) => {
@@ -14638,6 +14665,24 @@
 		}
 	};
 	var BlurPlaybackManager = class BlurPlaybackManager {
+		static getRealHidden() {
+			try {
+				if (this.origHiddenDesc && typeof this.origHiddenDesc.get === "function") return this.origHiddenDesc.get.call(document);
+			} catch (_) {}
+			return document.hidden;
+		}
+		static getRealVisibilityState() {
+			try {
+				if (this.origVisibilityStateDesc && typeof this.origVisibilityStateDesc.get === "function") return this.origVisibilityStateDesc.get.call(document);
+			} catch (_) {}
+			return document.visibilityState;
+		}
+		static getRealHasFocus() {
+			try {
+				if (typeof this.origHasFocus === "function") return this.origHasFocus.call(document);
+			} catch (_) {}
+			return true;
+		}
 		static optimizeHlsBuffer() {
 			try {
 				const win = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
@@ -14658,16 +14703,26 @@
 		static initGlobal(playerState = null) {
 			if (this.isInitialized) return;
 			this.isInitialized = true;
+			this.playerState = playerState;
+			try {
+				this.origHiddenDesc = Object.getOwnPropertyDescriptor(Document.prototype, "hidden") || Object.getOwnPropertyDescriptor(HTMLDocument.prototype, "hidden") || Object.getOwnPropertyDescriptor(document, "hidden");
+			} catch (_) {}
+			try {
+				this.origVisibilityStateDesc = Object.getOwnPropertyDescriptor(Document.prototype, "visibilityState") || Object.getOwnPropertyDescriptor(HTMLDocument.prototype, "visibilityState") || Object.getOwnPropertyDescriptor(document, "visibilityState");
+			} catch (_) {}
+			try {
+				this.origHasFocus = Document.prototype.hasFocus || document.hasFocus;
+			} catch (_) {}
 			this.optimizeHlsBuffer();
 			const isPauseOnBlurEnabled = () => {
-				if (playerState?.settings?.pauseOnBlur !== void 0) return playerState.settings.pauseOnBlur;
+				if (this.playerState?.settings?.pauseOnBlur !== void 0) return this.playerState.settings.pauseOnBlur;
 				const val = getValue("pauseOnBlur", true);
 				return val === true || val === "true";
 			};
 			try {
 				Object.defineProperty(document, "hidden", {
 					get: () => {
-						return isPauseOnBlurEnabled() ? false : false;
+						return isPauseOnBlurEnabled() ? BlurPlaybackManager.getRealHidden() : false;
 					},
 					configurable: true
 				});
@@ -14675,14 +14730,16 @@
 			try {
 				Object.defineProperty(document, "visibilityState", {
 					get: () => {
-						return isPauseOnBlurEnabled() ? "visible" : "visible";
+						return isPauseOnBlurEnabled() ? BlurPlaybackManager.getRealVisibilityState() : "visible";
 					},
 					configurable: true
 				});
 			} catch (_) {}
 			try {
 				Object.defineProperty(document, "hasFocus", {
-					value: () => true,
+					value: () => {
+						return isPauseOnBlurEnabled() ? BlurPlaybackManager.getRealHasFocus() : true;
+					},
 					configurable: true
 				});
 			} catch (_) {}
@@ -14710,6 +14767,7 @@
 			let isRecovering = false;
 			const isPauseOnBlurEnabled = () => {
 				if (playerCore?.options?.playerState?.settings?.pauseOnBlur !== void 0) return playerCore.options.playerState.settings.pauseOnBlur;
+				if (BlurPlaybackManager.playerState?.settings?.pauseOnBlur !== void 0) return BlurPlaybackManager.playerState.settings.pauseOnBlur;
 				const val = getValue("pauseOnBlur", true);
 				return val === true || val === "true";
 			};
@@ -14771,7 +14829,9 @@
 					cancelRecovery();
 					return;
 				}
-				if ((document.hidden || document.visibilityState === "hidden") && isPauseOnBlurEnabled()) {
+				const isHidden = BlurPlaybackManager.getRealHidden() || BlurPlaybackManager.getRealVisibilityState() === "hidden";
+				const hasFocus = BlurPlaybackManager.getRealHasFocus();
+				if ((isHidden || !hasFocus) && isPauseOnBlurEnabled()) {
 					cancelRecovery();
 					wasPlaying = false;
 					return;
@@ -14809,9 +14869,11 @@
 			targetVideo.addEventListener("pause", () => {
 				const stack = new Error().stack || "";
 				let triggerSource = "UNKNOWN";
+				const isHidden = BlurPlaybackManager.getRealHidden() || BlurPlaybackManager.getRealVisibilityState() === "hidden";
+				const hasFocus = BlurPlaybackManager.getRealHasFocus();
 				if (userInteracted) triggerSource = "USER_INTERACTION";
 				else if (targetVideo.ended) triggerSource = "VIDEO_ENDED";
-				else if (document.hidden || document.visibilityState === "hidden") triggerSource = "PAGE_HIDDEN_OR_BLUR";
+				else if (isHidden || !hasFocus) triggerSource = "PAGE_HIDDEN_OR_BLUR";
 				else if (targetVideo.readyState < 3 || targetVideo.networkState === 2) triggerSource = "BUFFER_STALL";
 				else if (stack.includes("MissPlayer") || stack.includes("CustomVideoPlayer") || stack.includes("PlaybackController") || stack.includes("LoopManager")) triggerSource = "MISS_PLAYER_INTERNAL";
 				else triggerSource = "HOST_SCRIPT_TRIGGERED";
@@ -14822,10 +14884,11 @@
 					readyState: targetVideo.readyState,
 					networkState: targetVideo.networkState,
 					userInteracted,
-					documentHidden: document.hidden
+					documentHidden: isHidden,
+					hasFocus
 				};
 				DebugLogPanel.addLog("[PAUSE] 视频暂停: [" + triggerSource + "] 进度=" + diagInfo.currentTime + "s", triggerSource === "HOST_SCRIPT_TRIGGERED" ? "warn" : "info");
-				console.warn("[MissPlayer Diagnostic] 自动暂停分析 【" + triggerSource + "】: 进度=" + diagInfo.currentTime + "s, 就绪=" + diagInfo.readyState + ", 缓冲=" + diagInfo.networkState + ", 失焦=" + diagInfo.documentHidden, diagInfo, "\nStack:", stack);
+				console.warn("[MissPlayer Diagnostic] 自动暂停分析 【" + triggerSource + "】: 进度=" + diagInfo.currentTime + "s, 就绪=" + diagInfo.readyState + ", 缓冲=" + diagInfo.networkState + ", 失焦=" + diagInfo.documentHidden + ", 焦点=" + diagInfo.hasFocus, diagInfo, "\nStack:", stack);
 				if (triggerSource === "USER_INTERACTION" || triggerSource === "VIDEO_ENDED" || triggerSource === "MISS_PLAYER_INTERNAL") {
 					cancelRecovery();
 					wasPlaying = false;
@@ -14850,17 +14913,35 @@
 			}, true);
 			const handleVisibilityChange = () => {
 				if (isPauseOnBlurEnabled()) {
-					if (document.hidden || document.visibilityState === "hidden") {
+					if (BlurPlaybackManager.getRealHidden() || BlurPlaybackManager.getRealVisibilityState() === "hidden") {
 						cancelRecovery();
+						wasPlaying = false;
 						if (targetVideo && !targetVideo.paused) targetVideo.pause();
 					}
 				}
 			};
-			document.addEventListener("visibilitychange", handleVisibilityChange);
-			window.addEventListener("blur", handleVisibilityChange);
+			const handleWindowBlur = () => {
+				if (isPauseOnBlurEnabled()) setTimeout(() => {
+					if (!isPauseOnBlurEnabled()) return;
+					const isHidden = BlurPlaybackManager.getRealHidden() || BlurPlaybackManager.getRealVisibilityState() === "hidden";
+					const hasFocus = BlurPlaybackManager.getRealHasFocus();
+					if (isHidden || !hasFocus) {
+						cancelRecovery();
+						wasPlaying = false;
+						if (targetVideo && !targetVideo.paused) targetVideo.pause();
+					}
+				}, 60);
+			};
+			document.addEventListener("visibilitychange", handleVisibilityChange, true);
+			window.addEventListener("pagehide", handleVisibilityChange, true);
+			window.addEventListener("blur", handleWindowBlur);
 		}
 	};
 	_defineProperty(BlurPlaybackManager, "isInitialized", false);
+	_defineProperty(BlurPlaybackManager, "playerState", null);
+	_defineProperty(BlurPlaybackManager, "origHiddenDesc", null);
+	_defineProperty(BlurPlaybackManager, "origVisibilityStateDesc", null);
+	_defineProperty(BlurPlaybackManager, "origHasFocus", null);
 	var EventManager = class {
 		constructor(playerCore, uiElements, managers) {
 			this.playerCore = playerCore;
@@ -16015,7 +16096,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.6.41";
+		return "5.6.42";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;

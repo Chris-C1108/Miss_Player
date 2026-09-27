@@ -91,6 +91,7 @@ export class MarkerBottomSheet {
     updatePanelPosition() {
         if (!this._sheetPanel) return;
         const parentContainer = this.tabAddBtn?.closest('.tm-control-buttons') ||
+                                this.loopManager?.controlManager?.controlButtonsContainer ||
                                 this.uiElements?.controlButtons ||
                                 document.querySelector('.tm-control-buttons');
         const loopRow = this.tabAddBtn?.closest('.tm-loop-control-row') || this.tabAddBtn?.parentElement;
@@ -131,6 +132,7 @@ export class MarkerBottomSheet {
 
     createBottomSheet() {
         const parentContainer = this.tabAddBtn?.closest('.tm-control-buttons') ||
+                                this.loopManager?.controlManager?.controlButtonsContainer ||
                                 this.uiElements?.controlButtons ||
                                 document.querySelector('.tm-control-buttons');
         if (!parentContainer) return;

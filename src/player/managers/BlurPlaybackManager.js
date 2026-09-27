@@ -10,6 +10,46 @@ import { getValue } from '../../utils/index.js';
  */
 export class BlurPlaybackManager {
     static isInitialized = false;
+    static playerState = null;
+    static origHiddenDesc = null;
+    static origVisibilityStateDesc = null;
+    static origHasFocus = null;
+
+    /**
+     * 获取底层真实 hidden 状态 (穿透本地劫持)
+     */
+    static getRealHidden() {
+        try {
+            if (this.origHiddenDesc && typeof this.origHiddenDesc.get === 'function') {
+                return this.origHiddenDesc.get.call(document);
+            }
+        } catch (_) {}
+        return document.hidden;
+    }
+
+    /**
+     * 获取底层真实 visibilityState 状态 (穿透本地劫持)
+     */
+    static getRealVisibilityState() {
+        try {
+            if (this.origVisibilityStateDesc && typeof this.origVisibilityStateDesc.get === 'function') {
+                return this.origVisibilityStateDesc.get.call(document);
+            }
+        } catch (_) {}
+        return document.visibilityState;
+    }
+
+    /**
+     * 获取底层真实 hasFocus 状态 (穿透本地劫持)
+     */
+    static getRealHasFocus() {
+        try {
+            if (typeof this.origHasFocus === 'function') {
+                return this.origHasFocus.call(document);
+            }
+        } catch (_) {}
+        return true;
+    }
 
     /**
      * 优化宿主 HLS 缓冲配置（扩大前向缓冲区预加载，减少网络微抖动引发的 stall）
@@ -40,12 +80,28 @@ export class BlurPlaybackManager {
     static initGlobal(playerState = null) {
         if (this.isInitialized) return;
         this.isInitialized = true;
+        this.playerState = playerState;
+
+        // 捕获真实原型 descriptor，供内部精准判断
+        try {
+            this.origHiddenDesc = Object.getOwnPropertyDescriptor(Document.prototype, 'hidden') ||
+                                   Object.getOwnPropertyDescriptor(HTMLDocument.prototype, 'hidden') ||
+                                   Object.getOwnPropertyDescriptor(document, 'hidden');
+        } catch (_) {}
+        try {
+            this.origVisibilityStateDesc = Object.getOwnPropertyDescriptor(Document.prototype, 'visibilityState') ||
+                                            Object.getOwnPropertyDescriptor(HTMLDocument.prototype, 'visibilityState') ||
+                                            Object.getOwnPropertyDescriptor(document, 'visibilityState');
+        } catch (_) {}
+        try {
+            this.origHasFocus = Document.prototype.hasFocus || document.hasFocus;
+        } catch (_) {}
 
         this.optimizeHlsBuffer();
 
         const isPauseOnBlurEnabled = () => {
-            if (playerState?.settings?.pauseOnBlur !== undefined) {
-                return playerState.settings.pauseOnBlur;
+            if (this.playerState?.settings?.pauseOnBlur !== undefined) {
+                return this.playerState.settings.pauseOnBlur;
             }
             const val = getValue('pauseOnBlur', true);
             return val === true || val === 'true';
@@ -55,7 +111,7 @@ export class BlurPlaybackManager {
         try {
             Object.defineProperty(document, 'hidden', {
                 get: () => {
-                    return isPauseOnBlurEnabled() ? false : false;
+                    return isPauseOnBlurEnabled() ? BlurPlaybackManager.getRealHidden() : false;
                 },
                 configurable: true
             });
@@ -65,7 +121,7 @@ export class BlurPlaybackManager {
         try {
             Object.defineProperty(document, 'visibilityState', {
                 get: () => {
-                    return isPauseOnBlurEnabled() ? 'visible' : 'visible';
+                    return isPauseOnBlurEnabled() ? BlurPlaybackManager.getRealVisibilityState() : 'visible';
                 },
                 configurable: true
             });
@@ -74,7 +130,9 @@ export class BlurPlaybackManager {
         // 3. 劫持 document.hasFocus
         try {
             Object.defineProperty(document, 'hasFocus', {
-                value: () => true,
+                value: () => {
+                    return isPauseOnBlurEnabled() ? BlurPlaybackManager.getRealHasFocus() : true;
+                },
                 configurable: true
             });
         } catch (_) {}
@@ -116,6 +174,9 @@ export class BlurPlaybackManager {
         const isPauseOnBlurEnabled = () => {
             if (playerCore?.options?.playerState?.settings?.pauseOnBlur !== undefined) {
                 return playerCore.options.playerState.settings.pauseOnBlur;
+            }
+            if (BlurPlaybackManager.playerState?.settings?.pauseOnBlur !== undefined) {
+                return BlurPlaybackManager.playerState.settings.pauseOnBlur;
             }
             const val = getValue('pauseOnBlur', true);
             return val === true || val === 'true';
@@ -188,8 +249,10 @@ export class BlurPlaybackManager {
                 return;
             }
 
-            // 若页面已被切到后台且开启了失焦暂停，则终止自动恢复
-            if ((document.hidden || document.visibilityState === 'hidden') && isPauseOnBlurEnabled()) {
+            // 若页面已被切到后台或失去焦点且开启了失焦暂停，则终止自动恢复
+            const isHidden = BlurPlaybackManager.getRealHidden() || BlurPlaybackManager.getRealVisibilityState() === 'hidden';
+            const hasFocus = BlurPlaybackManager.getRealHasFocus();
+            if ((isHidden || !hasFocus) && isPauseOnBlurEnabled()) {
                 cancelRecovery();
                 wasPlaying = false;
                 return;
@@ -247,11 +310,14 @@ export class BlurPlaybackManager {
         targetVideo.addEventListener('pause', () => {
             const stack = (new Error().stack || '');
             let triggerSource = 'UNKNOWN';
+            const isHidden = BlurPlaybackManager.getRealHidden() || BlurPlaybackManager.getRealVisibilityState() === 'hidden';
+            const hasFocus = BlurPlaybackManager.getRealHasFocus();
+
             if (userInteracted) {
                 triggerSource = 'USER_INTERACTION';
             } else if (targetVideo.ended) {
                 triggerSource = 'VIDEO_ENDED';
-            } else if (document.hidden || document.visibilityState === 'hidden') {
+            } else if (isHidden || !hasFocus) {
                 triggerSource = 'PAGE_HIDDEN_OR_BLUR';
             } else if (targetVideo.readyState < 3 || targetVideo.networkState === 2) {
                 triggerSource = 'BUFFER_STALL';
@@ -268,11 +334,12 @@ export class BlurPlaybackManager {
                 readyState: targetVideo.readyState,
                 networkState: targetVideo.networkState,
                 userInteracted,
-                documentHidden: document.hidden
+                documentHidden: isHidden,
+                hasFocus
             };
 
             DebugLogPanel.addLog('[PAUSE] 视频暂停: [' + triggerSource + '] 进度=' + diagInfo.currentTime + 's', triggerSource === 'HOST_SCRIPT_TRIGGERED' ? 'warn' : 'info');
-            console.warn('[MissPlayer Diagnostic] 自动暂停分析 【' + triggerSource + '】: 进度=' + diagInfo.currentTime + 's, 就绪=' + diagInfo.readyState + ', 缓冲=' + diagInfo.networkState + ', 失焦=' + diagInfo.documentHidden, diagInfo, '\nStack:', stack);
+            console.warn('[MissPlayer Diagnostic] 自动暂停分析 【' + triggerSource + '】: 进度=' + diagInfo.currentTime + 's, 就绪=' + diagInfo.readyState + ', 缓冲=' + diagInfo.networkState + ', 失焦=' + diagInfo.documentHidden + ', 焦点=' + diagInfo.hasFocus, diagInfo, '\nStack:', stack);
 
             // 1. 若是用户主动交互暂停、视频正常播放结束、或 MissPlayer 内部控制器主动调用的暂停：
             if (triggerSource === 'USER_INTERACTION' || triggerSource === 'VIDEO_ENDED' || triggerSource === 'MISS_PLAYER_INTERNAL') {
@@ -313,9 +380,10 @@ export class BlurPlaybackManager {
         // 页面可见性变化监听
         const handleVisibilityChange = () => {
             if (isPauseOnBlurEnabled()) {
-                // 开启“失焦后停止播放”：离开页面或窗口失焦时主动暂停
-                if (document.hidden || document.visibilityState === 'hidden') {
+                const isHidden = BlurPlaybackManager.getRealHidden() || BlurPlaybackManager.getRealVisibilityState() === 'hidden';
+                if (isHidden) {
                     cancelRecovery();
+                    wasPlaying = false;
                     if (targetVideo && !targetVideo.paused) {
                         targetVideo.pause();
                     }
@@ -323,7 +391,27 @@ export class BlurPlaybackManager {
             }
         };
 
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('blur', handleVisibilityChange);
+        // 窗口失去焦点监听
+        const handleWindowBlur = () => {
+            if (isPauseOnBlurEnabled()) {
+                // 微延时确认失焦状态（避免窗口内焦点转移导致的偶发误判）
+                setTimeout(() => {
+                    if (!isPauseOnBlurEnabled()) return;
+                    const isHidden = BlurPlaybackManager.getRealHidden() || BlurPlaybackManager.getRealVisibilityState() === 'hidden';
+                    const hasFocus = BlurPlaybackManager.getRealHasFocus();
+                    if (isHidden || !hasFocus) {
+                        cancelRecovery();
+                        wasPlaying = false;
+                        if (targetVideo && !targetVideo.paused) {
+                            targetVideo.pause();
+                        }
+                    }
+                }, 60);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange, true);
+        window.addEventListener('pagehide', handleVisibilityChange, true);
+        window.addEventListener('blur', handleWindowBlur);
     }
 }

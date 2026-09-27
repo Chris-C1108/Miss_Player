@@ -836,7 +836,11 @@ export class LoopManager {
         if (!tab) return;
 
         // 获取控制面板容器 (.tm-control-buttons)
-        const parentContainer = this.uiElements?.controlButtonsContainer || 
+        const parentContainer = this.controlManager?.controlButtonsContainer || 
+                                this.tabScrollContainer?.closest('.tm-control-buttons') || 
+                                this.tabAddBtn?.closest('.tm-control-buttons') || 
+                                this.uiElements?.controlButtonsContainer || 
+                                this.playerCore?.uiManager?.shadowRoot?.querySelector('.tm-control-buttons') || 
                                 this.uiElements?.controlPanel || 
                                 document.querySelector('.tm-control-buttons');
         if (!parentContainer) return;
@@ -884,10 +888,31 @@ export class LoopManager {
             input.select();
         });
 
+        let isClosed = false;
         const close = () => {
+            if (isClosed) return;
+            isClosed = true;
+            document.removeEventListener('click', handleOutsideClick, true);
             popover.classList.remove('visible');
-            popover.addEventListener('transitionend', () => popover.remove(), { once: true });
+            let removed = false;
+            const cleanup = () => {
+                if (!removed) {
+                    removed = true;
+                    popover.remove();
+                }
+            };
+            popover.addEventListener('transitionend', cleanup, { once: true });
+            setTimeout(cleanup, 250);
         };
+
+        const handleOutsideClick = (e) => {
+            if (!popover.contains(e.target)) {
+                close();
+            }
+        };
+        setTimeout(() => {
+            document.addEventListener('click', handleOutsideClick, true);
+        }, 50);
 
         const save = (comment) => {
             tab.comment = comment;
@@ -919,6 +944,16 @@ export class LoopManager {
                 this._saveTabs();
                 this._sortTabs();
                 this.renderTabs();
+                Toast('已保存片段标记', 1500, 'success');
+                if (this.tabScrollContainer) {
+                    setTimeout(() => {
+                        const selector = '[data-tab-id="' + newTab.id + '"]';
+                        const pill = this.tabScrollContainer.querySelector(selector);
+                        if (pill) {
+                            pill.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                        }
+                    }, 60);
+                }
             }
             close();
         };
@@ -1140,7 +1175,11 @@ export class LoopManager {
     updateLoopMarkers() {
         if (!this.targetVideo || !this.loopStartMarker || !this.loopEndMarker) return;
 
-        const progressBarElement = this.uiElements?.progressBar || document.querySelector('.tm-progress-bar');
+        const progressBarElement = this.controlManager?.progressBarElement ||
+                                   this.loopStartMarker?.parentElement ||
+                                   this.playerCore?.uiManager?.shadowRoot?.querySelector('.tm-progress-bar') ||
+                                   this.uiElements?.progressBar ||
+                                   document.querySelector('.tm-progress-bar');
         if (!progressBarElement) return;
 
         const duration = this.targetVideo.duration;
