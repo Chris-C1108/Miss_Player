@@ -1,0 +1,1 @@
+UI构建器 (src/player/ui/UIManager.js)，构建播放器主舞台DOM、处理移动端软键盘避让与横竖屏响应式适配。

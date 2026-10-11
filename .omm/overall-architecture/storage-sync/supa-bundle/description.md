@@ -1,0 +1,1 @@
+Supabase方案1高密度JSONB聚合仓储 (video_comments_bundle)，以番号为键，依靠PostgreSQL TOAST透明压缩实现500MB容纳500万条评论。

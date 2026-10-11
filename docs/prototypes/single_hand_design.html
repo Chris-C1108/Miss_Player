@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Miss Player - 竖屏单手操控模式 人体工学与前端美学架构</title>
+<style>
+  :root {
+    --bg-page: #0a0a0f;
+    --text-primary: #f5f5f7;
+    --text-secondary: rgba(255, 255, 255, 0.65);
+    --text-muted: rgba(255, 255, 255, 0.45);
+    --apple-blue: #007aff;
+    --apple-blue-rgb: 0, 122, 255;
+    --apple-green: #34c759;
+    --apple-orange: #ff9500;
+    --apple-red: #ff3b30;
+    --apple-purple: #af52de;
+    --apple-pink: #ff2d55;
+    --apple-cyan: #32ade6;
+    
+    --panel-bg: rgba(22, 22, 28, 0.82);
+    --panel-border: rgba(255, 255, 255, 0.14);
+    --panel-blur: blur(28px) saturate(190%);
+    --card-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+  }
+
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 50px;
+    overflow-x: hidden;
+  }
+
+  header {
+    max-width: 1160px;
+    width: 100%;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .badge-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 9999px;
+    background: rgba(0, 122, 255, 0.12);
+    border: 1px solid rgba(0, 122, 255, 0.3);
+    color: var(--apple-blue);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #ffffff 40%, rgba(255,255,255,0.7) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    max-width: 820px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* 顶部全局控制台 */
+  .control-dock {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    padding: 8px 16px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    max-width: 1160px;
+    width: 100%;
+  }
+
+  .dock-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dock-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+
+  .seg-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .seg-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+  }
+
+  .seg-btn.active {
+    background: var(--apple-blue);
+    border-color: var(--apple-blue);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(var(--apple-blue-rgb), 0.35);
+  }
+
+  .toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle-btn.active {
+    background: rgba(52, 199, 89, 0.2);
+    border-color: var(--apple-green);
+    color: #fff;
+  }
+
+  /* 主工作区：左手机模型 + 右人体工学数据分析 */
+  .workspace {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: center;
+    align-items: flex-start;
+    max-width: 1200px;
+    width: 100%;
+  }
+
+  /* 手机物理外壳模拟器 */
+  .phone-chassis {
+    position: relative;
+    width: 385px;
+    height: 800px;
+    background: #000;
+    border-radius: 50px;
+    box-shadow: 0 0 0 10px #242428, 0 0 0 12px #38383e, 0 20px 50px rgba(0, 0, 0, 0.85);
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* 灵动岛 Dynamic Island */
+  .dynamic-island {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 118px;
+    height: 32px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+  }
+
+  .island-cam {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #111;
+    border: 2px solid #1c1c1e;
+  }
+
+  .island-sensor {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #080808;
+  }
+
+  /* 底部 Home Indicator 条 */
+  .home-indicator {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130px;
+    height: 4.5px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 3px;
+    z-index: 999;
+  }
+
+  /* 屏幕内部视频与背景 */
+  .screen-viewport {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #0b0b0e;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 模拟视频播放画面 */
+  .video-stage {
+    position: relative;
+    width: 100%;
+    height: 48%;
+    background: radial-gradient(circle at 50% 40%, #1f1830 0%, #0c0b13 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .video-dummy-art {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.8;
+  }
+
+  .video-dummy-art svg {
+    width: 44px;
+    height: 44px;
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.45);
+  }
+
+  .video-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.45);
+    padding: 4px 10px;
+    border-radius: 20px;
+    backdrop-filter: blur(8px);
+  }
+
+  /* 顶部浮动控制（关闭、设置等） */
+  .stage-top-bar {
+    position: absolute;
+    top: 46px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .icon-circle-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  /* 模拟评论流列表区（屏幕下半部） */
+  .comments-stage {
+    flex: 1;
+    background: #0d0d12;
+    padding: 10px 14px 220px;
+    overflow-y: hidden;
+    position: relative;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .comment-item {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 7px 10px;
+    margin-bottom: 7px;
+  }
+
+  .comment-hdr {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+  }
+
+  .comment-txt {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.35;
+  }
+
+  .comment-pill {
+    color: var(--apple-cyan);
+    font-weight: 600;
+  }
+
+  /* ==============================================================
+     人体工学拇指区域热力图遮罩 (Ergonomics Thumb Zones Overlay)
+     ============================================================== */
+  .thumb-zones-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 800;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .thumb-zones-layer.visible {
+    opacity: 1;
+  }
+
+  .zone-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ==============================================================
+     Miss Player 控制面板停靠外壳 (Dock Wrapper)
+     ============================================================== */
+  .panel-dock-wrapper {
+    position: absolute;
+    bottom: 22px;
+    left: 0;
+    right: 0;
+    z-index: 900;
+    display: flex;
+    align-items: flex-end;
+    padding: 0 10px;
+    pointer-events: none;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* 模式 1：全宽标准模式 */
+  .panel-dock-wrapper.mode-full {
+    justify-content: center;
+    padding: 0 10px;
+  }
+  .panel-dock-wrapper.mode-full .miss-player-card {
+    width: 100%;
+    max-width: 480px;
+  }
+  .panel-dock-wrapper.mode-full .ergonomic-gutter {
+    display: none !important;
+  }
+
+  /* 模式 2：右手单手模式 */
+  .panel-dock-wrapper.mode-right {
+    justify-content: flex-end;
+    padding-left: 6px;
+    padding-right: 8px;
+    gap: 8px;
+  }
+  .panel-dock-wrapper.mode-right .miss-player-card {
+    width: 304px;
+    border-radius: 18px;
+  }
+
+  /* 模式 3：左手单手模式 */
+  .panel-dock-wrapper.mode-left {
+    justify-content: flex-start;
+    padding-left: 8px;
+    padding-right: 6px;
+    flex-direction: row-reverse;
+    gap: 8px;
+  }
+  .panel-dock-wrapper.mode-left .miss-player-card {
+    width: 304px;
+    border-radius: 18px;
+  }
+
+  /* 辅助侧边栏 (Utility Gutter) — 完美复刻输入法单手模式侧边立柱 */
+  .ergonomic-gutter {
+    width: 50px;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 5px;
+    pointer-events: auto;
+    flex-shrink: 0;
+    background: rgba(22, 22, 28, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 18px;
+    padding: 4px;
+    box-shadow: var(--card-shadow);
+    backdrop-filter: var(--panel-blur);
+    -webkit-backdrop-filter: var(--panel-blur);
+    box-sizing: border-box;
+  }
+
+  /* 上部“还原”按键 */
+  .gutter-btn-top {
+    width: 100%;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .gutter-btn-top:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .gutter-btn-top:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .gutter-btn-top svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+  }
+
+  /* 下部“切换左右”大按钮 (占据全部下半部高度，超大人体工学触控靶心) */
+  .gutter-btn-bottom {
+    width: 100%;
+    flex: 1 1 auto;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    padding: 10px 0;
+  }
+
+  .gutter-btn-bottom:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .gutter-btn-bottom:active {
+    transform: scale(0.96);
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .gutter-btn-bottom svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    fill: none;
+  }
+
+  .gutter-btn-bottom .dock-arrow {
+    margin-top: 6px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  /* 核心播放器面板卡片 */
+  .miss-player-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    backdrop-filter: var(--panel-blur);
+    -webkit-backdrop-filter: var(--panel-blur);
+    box-shadow: var(--card-shadow);
+    padding: 10px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    pointer-events: auto;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  /* 顶部拖动条 / 状态指示 */
+  .card-handle-bar {
+    width: 32px;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.22);
+    margin: 0 auto -1px;
+    cursor: grab;
+  }
+
+  /* Row 1: 微评论/状态提醒 */
+  .card-comment-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 0 2px;
+    line-height: 1.2;
+  }
+
+  .comment-badge {
+    background: rgba(0, 201, 255, 0.15);
+    color: #00c9ff;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Row 2: 进度条与时间 */
+  .card-progress-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .time-readout {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.75);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    padding: 0 2px;
+  }
+
+  .progress-track-wrapper {
+    position: relative;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .progress-bg {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 42%;
+    background: var(--apple-blue);
+    border-radius: 2px;
+  }
+
+  .progress-thumb {
+    position: absolute;
+    left: 42%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Row 3: 快退与快进按钮排布 */
+  .card-seek-row {
+    display: flex;
+    gap: 4px;
+  }
+
+  /* 全宽模式下的两极分裂排布 */
+  .card-seek-row.split-layout {
+    justify-content: space-between;
+  }
+  .card-seek-row.split-layout .seek-subgroup {
+    display: flex;
+    gap: 3px;
+  }
+
+  /* 单手模式下的智能簇状重构 (Cluster Layout) */
+  .card-seek-row.cluster-layout {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4.5px;
+  }
+
+  .seek-btn {
+    height: 27px;
+    padding: 0 4px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 10.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .seek-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+  }
+
+  .seek-btn:active {
+    transform: scale(0.93);
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  /* 单手高频按键高亮区分 (5s, 10s 为最核心黄金触点) */
+  .seek-btn.hot {
+    background: rgba(0, 122, 255, 0.18);
+    border-color: rgba(0, 122, 255, 0.4);
+    color: #5ac8fa;
+  }
+
+  /* Row 4: 循环标签胶囊栏 */
+  .card-loop-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  .tab-pills-scroll {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex: 1;
+  }
+  .tab-pills-scroll::-webkit-scrollbar { display: none; }
+
+  .tab-pill {
+    height: 23px;
+    padding: 0 8px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .tab-pill.active {
+    background: rgba(255, 45, 85, 0.2);
+    border-color: rgba(255, 45, 85, 0.6);
+    color: #ff2d55;
+  }
+
+  .tab-more-btn {
+    width: 23px;
+    height: 23px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  /* Row 5: 底部主控行（音量 + Apple 一体化居中宽胶囊 + 倍速） */
+  .card-playback-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 38px;
+    margin-top: 2px;
+    gap: 5px;
+  }
+
+  .round-action-btn {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .round-action-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .round-action-btn:active {
+    transform: scale(0.92);
+  }
+
+  .round-action-btn svg {
+    width: 17px;
+    height: 17px;
+    fill: currentColor;
+  }
+
+  /* Apple 一体化宽胶囊 VideoStateSwitcher (支持单手紧凑自适应) */
+  .apple-wide-capsule {
+    position: relative;
+    height: 36px;
+    border-radius: 9999px;
+    border: 1.5px solid rgba(0, 122, 255, 0.75);
+    background: rgba(255, 255, 255, 0.09);
+    backdrop-filter: blur(20px) saturate(180%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    cursor: pointer;
+    flex: 1;
+    max-width: 216px;
+    min-width: 130px;
+    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.25);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+  }
+
+  .apple-wide-capsule:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 18px rgba(0, 122, 255, 0.38);
+  }
+
+  .apple-wide-capsule:active {
+    transform: scale(0.96);
+  }
+
+  .capsule-content {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--apple-blue);
+    letter-spacing: -0.2px;
+  }
+
+  .capsule-content svg {
+    width: 17px;
+    height: 17px;
+    fill: var(--apple-blue);
+  }
+
+  .rate-badge-btn {
+    height: 35px;
+    padding: 0 9px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* 右侧数据分析看板 */
+  .analytics-board {
+    flex: 1;
+    min-width: 320px;
+    max-width: 620px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .glass-card {
+    background: rgba(22, 22, 28, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: var(--panel-blur);
+    padding: 20px 22px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+  }
+
+  .card-title .icon {
+    font-size: 18px;
+  }
+
+  /* 热力区指标图例 */
+  .legend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 9px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .legend-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+  .dot-green { background: #34c759; box-shadow: 0 0 10px rgba(52, 199, 89, 0.6); }
+  .dot-yellow { background: #ffcc00; box-shadow: 0 0 10px rgba(255, 204, 0, 0.6); }
+  .dot-red { background: #ff3b30; box-shadow: 0 0 10px rgba(255, 59, 48, 0.6); }
+  .dot-gray { background: #8e8e93; }
+
+  .legend-info h4 {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .legend-info p {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.35;
+  }
+
+  /* 核心对比评分雷达/进度条 */
+  .metric-row {
+    margin-bottom: 12px;
+  }
+
+  .metric-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .metric-bar-bg {
+    height: 7px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .metric-bar-val {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .val-green { background: linear-gradient(90deg, #30d158, #34c759); }
+  .val-blue { background: linear-gradient(90deg, #0a84ff, #007aff); }
+  .val-orange { background: linear-gradient(90deg, #ff9f0a, #ff9500); }
+
+  /* 调研表格 */
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 11.5px;
+  }
+
+  .spec-table th, .spec-table td {
+    padding: 7px 8px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .spec-table th {
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .spec-table td {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .highlight-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .tag-danger { background: rgba(255, 59, 48, 0.2); color: #ff453a; }
+  .tag-success { background: rgba(52, 199, 89, 0.2); color: #32d74b; }
+
+  /* 提示条 */
+  .design-tip {
+    background: rgba(0, 122, 255, 0.08);
+    border: 1px solid rgba(0, 122, 255, 0.2);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.5;
+  }
+
+  .design-tip strong {
+    color: var(--apple-blue);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge-tag">
+    <span></span> Apple Design &amp; Human Interface Ergonomics
+  </div>
+  <h1>Miss Player 竖屏单手操控模式 · 人体工学与前端美学架构</h1>
+  <p class="subtitle">
+    结合 2023–2026 主流超大屏手机（6.3" ~ 6.9"）单手持机拇指旋转扫掠生理学，借鉴 iOS / Gboard 原生输入法单手收缩与偏置哲学，保持 Apple 毛玻璃轻奢质感，为播放器打造无级单手模式。
+  </p>
+</header>
+
+<!-- 顶部交互控制坞 -->
+<div class="control-dock">
+  <div class="dock-group">
+    <span class="dock-label">操控模式切换:</span>
+    <button class="seg-btn" id="btnModeFull" onclick="setMode('full')">全宽标准模式 (Full)</button>
+    <button class="seg-btn active" id="btnModeRight" onclick="setMode('right')">右手单手模式 (Right)</button>
+    <button class="seg-btn" id="btnModeLeft" onclick="setMode('left')">左手单手模式 (Left)</button>
+  </div>
+
+  <div class="dock-group" style="margin-left: 12px;">
+    <span class="dock-label">机型尺寸:</span>
+    <button class="seg-btn active" id="btnDev16Pro" onclick="setDevice('16pro')">iPhone 16 Pro (6.3")</button>
+    <button class="seg-btn" id="btnDev16Max" onclick="setDevice('16max')">16 Pro Max (6.9")</button>
+  </div>
+
+  <div class="dock-group" style="margin-left: 12px;">
+    <button class="toggle-btn active" id="btnToggleZones" onclick="toggleThumbZones()">
+      <span>🎯</span> 人体工学拇指热力图: <strong id="zoneStateTxt">已开启</strong>
+    </button>
+  </div>
+</div>
+
+<!-- 主工作区 -->
+<div class="workspace">
+
+  <!-- 1. 真实比例手机物理容器 -->
+  <div class="phone-chassis" id="phoneChassis">
+    <!-- 灵动岛 -->
+    <div class="dynamic-island">
+      <div class="island-sensor"></div>
+      <div class="island-cam"></div>
+    </div>
+
+    <!-- 底部主屏幕指示条 -->
+    <div class="home-indicator"></div>
+
+    <!-- 屏幕视口 -->
+    <div class="screen-viewport">
+      
+      <!-- 视频画面区域 -->
+      <div class="video-stage">
+        <div class="stage-top-bar">
+          <div class="icon-circle-btn">✕</div>
+          <div class="video-title">FC2-PPV-3892011 沉浸原画</div>
+          <div class="icon-circle-btn">⚙︎</div>
+        </div>
+
+        <div class="video-dummy-art">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke-width="1.5"/>
+            <polygon points="10 8 16 12 10 16" fill="rgba(255,255,255,0.4)"/>
+          </svg>
+          <span style="font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px;">Miss Player 影院模式已挂载</span>
+        </div>
+      </div>
+
+      <!-- 评论区滚动列表模拟 -->
+      <div class="comments-stage">
+        <div class="comment-item">
+          <div class="comment-hdr">
+            <span>VIP 老司机 · 2小时前</span>
+            <span>⭐ 9.8</span>
+          </div>
+          <div class="comment-txt">
+            <span class="comment-pill">12:35</span> 这里的特写光影和运镜绝了，强烈推荐用精彩重温！
+          </div>
+        </div>
+        <div class="comment-item">
+          <div class="comment-hdr">
+            <span>秋名山观察员 · 昨天</span>
+            <span>⭐ 9.5</span>
+          </div>
+          <div class="comment-txt">
+            <span class="comment-pill">24:10</span> - <span class="comment-pill">28:45</span> 这段连续互动很顶，建议循环播放打标。
+          </div>
+        </div>
+        <div class="comment-item">
+          <div class="comment-hdr">
+            <span>影院探索者 · 3天前</span>
+            <span>⭐ 9.2</span>
+          </div>
+          <div class="comment-txt">
+            单手握持用这播放器真的太爽了，快进快退全在一个拇指范围内！
+          </div>
+        </div>
+      </div>
+
+      <!-- =======================================================
+           人体工学拇指热力图覆盖层 (SVG 动态自适应左右手)
+           ======================================================= -->
+      <div class="thumb-zones-layer visible" id="thumbZonesLayer">
+        <svg class="zone-svg" id="zoneSvg" viewBox="0 0 385 800" preserveAspectRatio="none">
+          <defs>
+            <!-- 绿色自然舒适区放射渐变 (右手) -->
+            <radialGradient id="greenGradRight" cx="92%" cy="86%" r="50%">
+              <stop offset="0%" stop-color="#34c759" stop-opacity="0.55"/>
+              <stop offset="60%" stop-color="#34c759" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#34c759" stop-opacity="0"/>
+            </radialGradient>
+            <!-- 黄色伸展可达区放射渐变 (右手) -->
+            <radialGradient id="yellowGradRight" cx="92%" cy="86%" r="76%">
+              <stop offset="50%" stop-color="#ffcc00" stop-opacity="0"/>
+              <stop offset="75%" stop-color="#ffcc00" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#ffcc00" stop-opacity="0"/>
+            </radialGradient>
+            <!-- 红色极限危险区 (顶部及对角) -->
+            <linearGradient id="redGradTop" x1="0%" y1="0%" x2="0%" y2="50%">
+              <stop offset="0%" stop-color="#ff3b30" stop-opacity="0.38"/>
+              <stop offset="65%" stop-color="#ff3b30" stop-opacity="0.12"/>
+              <stop offset="100%" stop-color="#ff3b30" stop-opacity="0"/>
+            </linearGradient>
+
+            <!-- 左手镜像渐变 -->
+            <radialGradient id="greenGradLeft" cx="8%" cy="86%" r="50%">
+              <stop offset="0%" stop-color="#34c759" stop-opacity="0.55"/>
+              <stop offset="60%" stop-color="#34c759" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#34c759" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="yellowGradLeft" cx="8%" cy="86%" r="76%">
+              <stop offset="50%" stop-color="#ffcc00" stop-opacity="0"/>
+              <stop offset="75%" stop-color="#ffcc00" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#ffcc00" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <!-- 顶部红色极限区 -->
+          <rect x="0" y="0" width="385" height="380" fill="url(#redGradTop)"/>
+
+          <!-- 动态渲染圆弧区域 -->
+          <g id="dynamicZoneGraphics">
+            <!-- 默认右手模式圆弧 -->
+            <path d="M 110 800 A 260 260 0 0 1 385 540 L 385 800 Z" fill="url(#yellowGradRight)"/>
+            <path d="M 200 800 A 175 175 0 0 1 385 625 L 385 800 Z" fill="url(#greenGradRight)"/>
+            <!-- 拇指根部支撑点标记 -->
+            <circle cx="365" cy="700" r="9" fill="#fff" opacity="0.8"/>
+            <circle cx="365" cy="700" r="16" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="3 3" opacity="0.6"/>
+            <text x="340" y="704" fill="#fff" font-size="10.5" font-weight="700" text-anchor="end">右手拇指关节</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- =======================================================
+           Miss Player 控制面板停靠外壳 (Dock Wrapper)
+           ======================================================= -->
+      <div class="panel-dock-wrapper mode-right" id="panelDockWrapper">
+
+        <!-- 辅助工具侧边栏 (单手模式激活时显示)：上“还原” + 下“切换左右”大按钮 -->
+        <div class="ergonomic-gutter" id="ergonomicGutter">
+          <!-- 上部：还原全宽按键 -->
+          <button class="gutter-btn-top" title="还原为标准全宽模式" onclick="setMode('full')">
+            <svg viewBox="0 0 24 24">
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <!-- 下部：切换左右大按钮 -->
+          <button class="gutter-btn-bottom" id="gutterBtnSwitch" title="切换至另一侧" onclick="toggleHandSide()">
+            <!-- 手机底座侧靠指示图标 -->
+            <svg viewBox="0 0 24 24" id="switchSideSvg">
+              <rect x="3" y="4" width="18" height="16" rx="3" stroke-width="1.8"/>
+              <path d="M7 4v16" stroke-width="1.8" stroke-dasharray="2 2" opacity="0.4"/>
+              <path d="M16 9l-4 3 4 3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="dock-arrow" id="dockArrowText">◀</span>
+          </button>
+        </div>
+
+        <!-- 播放器核心卡片 -->
+        <div class="miss-player-card" id="playerCard">
+          <!-- 顶部抓手条 (左右滑动可直接切手) -->
+          <div class="card-handle-bar" title="向左/右轻滑切换手势"></div>
+
+          <!-- 1. 微评论提示行 -->
+          <div class="card-comment-row">
+            <span class="comment-badge">💬 精彩高能点</span>
+            <span style="opacity: 0.8;">共 24 条高光标记</span>
+          </div>
+
+          <!-- 2. 进度条行 -->
+          <div class="card-progress-row">
+            <div class="time-readout">
+              <span id="curTimeDisplay">00:42:18</span>
+              <span id="remTimeDisplay">-01:14:02</span>
+            </div>
+            <div class="progress-track-wrapper">
+              <div class="progress-bg">
+                <div class="progress-fill"></div>
+              </div>
+              <div class="progress-thumb"></div>
+            </div>
+          </div>
+
+          <!-- 3. 快进/快退行：在单手模式下采用高频人体工学簇状 (Cluster) 排布 -->
+          <div class="card-seek-row cluster-layout" id="seekButtonsRow">
+            <!-- 动态渲染按键 -->
+          </div>
+
+          <!-- 4. 循环时间胶囊横向滑动栏 -->
+          <div class="card-loop-row">
+            <div class="tab-pills-scroll">
+              <div class="tab-pill active">00:15 - 00:45 ⭐</div>
+              <div class="tab-pill">12:30 高潮</div>
+              <div class="tab-pill">28:10 特写</div>
+              <div class="tab-pill">+ 新建片段</div>
+            </div>
+            <div class="tab-more-btn">☰</div>
+          </div>
+
+          <!-- 5. 底部核心主控行 (Apple 宽胶囊 + 音量/倍速) -->
+          <div class="card-playback-row">
+            <button class="round-action-btn" title="静音/音量" onclick="toggleMuteFeedback(this)">
+              <svg viewBox="0 0 24 24">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+
+            <!-- 居中宽胶囊 VideoStateSwitcher (自适应紧凑) -->
+            <div class="apple-wide-capsule" id="mainCapsule" onclick="togglePlayState(this)">
+              <div class="capsule-content">
+                <svg viewBox="0 0 24 24" id="capsulePlayIcon">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span id="capsuleModeLabel">正常播放</span>
+              </div>
+            </div>
+
+            <button class="rate-badge-btn" onclick="cycleSpeedFeedback(this)">1.5x</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. 人体工学对比评测与数据看板 -->
+  <div class="analytics-board">
+
+    <!-- 人体工学区域定义说明 -->
+    <div class="glass-card">
+      <div class="card-title">
+        <span class="icon">📐</span> 人体测量学与拇指旋转扫掠模型 (Thumb Zone)
+      </div>
+      <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 10px;">
+        基于 Steven Hoober 49% 单手握持实证与大屏智能手机（6.1"~6.9"）人机工程力学，成年人拇指以腕掌关节（CMC）为圆心，最大舒适活动半径为 <strong>65~75mm</strong>。
+      </p>
+
+      <div class="legend-grid">
+        <div class="legend-item">
+          <div class="legend-dot dot-green"></div>
+          <div class="legend-info">
+            <h4 style="color: #34c759;">自然舒适区 (Green)</h4>
+            <p>拇指自然微屈，大鱼际肌放松，无需调整手势即可精准盲操。覆盖约 35% 屏区。</p>
+          </div>
+        </div>
+
+        <div class="legend-item">
+          <div class="legend-dot dot-yellow"></div>
+          <div class="legend-info">
+            <h4 style="color: #ffcc00;">伸展可达区 (Yellow)</h4>
+            <p>拇指完全挺直，手掌需小幅倾斜，可稳定操作但不宜长时间高频交互。</p>
+          </div>
+        </div>
+
+        <div class="legend-item">
+          <div class="legend-dot dot-red"></div>
+          <div class="legend-info">
+            <h4 style="color: #ff3b30;">极限危险区 (Red)</h4>
+            <p>对角线远端，必须“换手握姿 (Grip Shift)”，极易造成手部疲劳与跌落碎屏。</p>
+          </div>
+        </div>
+
+        <div class="legend-item">
+          <div class="legend-dot dot-gray"></div>
+          <div class="legend-info">
+            <h4 style="color: #8e8e93;">死角挤压区 (Pinch)</h4>
+            <p>紧贴大鱼际掌心下沿死角，拇指内折骨骼挤压，不宜安放微小按钮。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 关键数据对比评分卡 -->
+    <div class="glass-card">
+      <div class="card-title">
+        <span class="icon">📊</span> 操控体验量化对比：全宽标准模式 vs 创新单手模式
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-header">
+          <span>核心按键舒适绿区覆盖率 (Green Reachability)</span>
+          <span id="metricGreenTxt" style="color: #34c759;">94% (单手模式)</span>
+        </div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-val val-green" id="barGreen" style="width: 94%;"></div>
+        </div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-header">
+          <span>拇指平均往返位移距离 (Travel Distance)</span>
+          <span id="metricTravelTxt" style="color: #0a84ff;">28.5 mm (降低 62%)</span>
+        </div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-val val-blue" id="barTravel" style="width: 82%;"></div>
+        </div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-header">
+          <span>换手握持防跌落安全系数 (Grip Stability Index)</span>
+          <span id="metricSafetyTxt" style="color: #ff9500;">98.5 / 100 极高</span>
+        </div>
+        <div class="metric-bar-bg">
+          <div class="metric-bar-val val-orange" id="barSafety" style="width: 98%;"></div>
+        </div>
+      </div>
+
+      <!-- 主流机型参数调研表 -->
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>主流机型 (2023-2026)</th>
+            <th>屏幕尺寸 / 比例</th>
+            <th>机身宽度</th>
+            <th>全宽模式触控难度</th>
+            <th>单手模式舒适度</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>iPhone 16 Pro Max / 15 Pro Max</td>
+            <td>6.9" / 19.5:9 (440pt)</td>
+            <td>77.6 mm</td>
+            <td><span class="highlight-tag tag-danger">极高 (需双手)</span></td>
+            <td><span class="highlight-tag tag-success">98% 完美覆盖</span></td>
+          </tr>
+          <tr>
+            <td>Galaxy S24 / S25 Ultra</td>
+            <td>6.8" / 19.5:9 (432dp)</td>
+            <td>79.0 mm</td>
+            <td><span class="highlight-tag tag-danger">极高 (边角卡手)</span></td>
+            <td><span class="highlight-tag tag-success">96% 轻松单手</span></td>
+          </tr>
+          <tr>
+            <td>iPhone 16 / 15 (标准版)</td>
+            <td>6.1" ~ 6.3" (393pt)</td>
+            <td>71.5 mm</td>
+            <td><span class="highlight-tag" style="background: rgba(255,204,0,0.2); color: #ffd60a;">中等 (远端拉伸)</span></td>
+            <td><span class="highlight-tag tag-success">100% 极速盲操</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 借鉴输入法与前端美学架构要点 -->
+    <div class="glass-card">
+      <div class="card-title">
+        <span class="icon">💡</span> 输入法借鉴与 Miss Player 前端美学重构哲学
+      </div>
+
+      <div class="design-tip" style="margin-bottom: 10px;">
+        <strong>1. 借鉴 iOS / Gboard 键盘单手收缩机制：</strong><br>
+        放弃强行铺满屏幕宽度的执念，将控制面板宽度从全宽 94vw 收窄至 <strong>304px (约 78% 屏宽)</strong>，贴近持机侧；留出的空间赋予专职辅助侧边栏（包含左右手一键换边 ⇄、还原全宽 ⤢）。
+      </div>
+
+      <div class="design-tip" style="margin-bottom: 10px;">
+        <strong>2. 颠覆传统“左退右进”的两极分裂：</strong><br>
+        全宽模式下快退在最左、快进在最右，单手持机必有一端落在地狱区！单手模式下升级为 <strong>人体工学簇状 (Cluster Layout)</strong>：高频快进快退（±5s, ±10s）全部收敛在拇指最易触及的扇环中层，低频大步进在边缘，实现“单手双向极速 Seek”。
+      </div>
+
+      <div class="design-tip">
+        <strong>3. 坚守 Apple 纯净宽胶囊与毛玻璃基因：</strong><br>
+        保持 <code>backdrop-filter: blur(28px)</code> 与 Apple 标志性蓝色描边胶囊（VideoStateSwitcher），三状态流体切换与莫兰迪标签系统原汁原味，零视觉降级。
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  let currentMode = 'right'; // 'full' | 'right' | 'left'
+  let currentDevice = '16pro'; // '16pro' | '16max'
+  let showThumbZones = true;
+
+  function renderSeekButtons(mode) {
+    const row = document.getElementById('seekButtonsRow');
+    if (!row) return;
+
+    if (mode === 'full') {
+      row.className = 'card-seek-row split-layout';
+      row.innerHTML = `
+        <div class="seek-subgroup">
+          <button class="seek-btn" onclick="seekFeedback('-10m')">-10m</button>
+          <button class="seek-btn" onclick="seekFeedback('-1m')">-1m</button>
+          <button class="seek-btn" onclick="seekFeedback('-30s')">-30s</button>
+          <button class="seek-btn hot" onclick="seekFeedback('-10s')">-10s</button>
+          <button class="seek-btn hot" onclick="seekFeedback('-5s')">-5s</button>
+        </div>
+        <div class="seek-subgroup">
+          <button class="seek-btn hot" onclick="seekFeedback('+5s')">+5s</button>
+          <button class="seek-btn hot" onclick="seekFeedback('+10s')">+10s</button>
+          <button class="seek-btn" onclick="seekFeedback('+30s')">+30s</button>
+          <button class="seek-btn" onclick="seekFeedback('+1m')">+1m</button>
+          <button class="seek-btn" onclick="seekFeedback('+10m')">+10m</button>
+        </div>
+      `;
+    } else {
+      row.className = 'card-seek-row cluster-layout';
+      row.innerHTML = `
+        <button class="seek-btn" onclick="seekFeedback('-1m')">-1m</button>
+        <button class="seek-btn hot" onclick="seekFeedback('-10s')">⏪ -10s</button>
+        <button class="seek-btn hot" onclick="seekFeedback('-5s')">-5s</button>
+        <button class="seek-btn hot" onclick="seekFeedback('+5s')">+5s</button>
+        <button class="seek-btn hot" onclick="seekFeedback('+10s')">+10s ⏩</button>
+        <button class="seek-btn" onclick="seekFeedback('+30s')">+30s</button>
+        <button class="seek-btn" onclick="seekFeedback('+1m')">+1m</button>
+        <button class="seek-btn" onclick="seekFeedback('+5m')">+5m</button>
+      `;
+    }
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    const wrapper = document.getElementById('panelDockWrapper');
+    wrapper.className = 'panel-dock-wrapper mode-' + mode;
+
+    document.querySelectorAll('.seg-btn').forEach(btn => {
+      if (btn.id === 'btnModeFull' || btn.id === 'btnModeRight' || btn.id === 'btnModeLeft') {
+        btn.classList.remove('active');
+      }
+    });
+
+    renderSeekButtons(mode);
+
+    if (mode === 'full') {
+      document.getElementById('btnModeFull').classList.add('active');
+      updateMetrics(56, '64.5 mm (横跨全屏远端拉伸)', '70.0 / 100 (易拉伸脱手)');
+    } else if (mode === 'right') {
+      document.getElementById('btnModeRight').classList.add('active');
+      document.getElementById('handSideLabel').textContent = '切左手';
+      updateMetrics(94, '28.5 mm (降低 62%)', '98.5 / 100 极高安全');
+    } else if (mode === 'left') {
+      document.getElementById('btnModeLeft').classList.add('active');
+      document.getElementById('handSideLabel').textContent = '切右手';
+      updateMetrics(93, '29.2 mm (降低 60%)', '98.0 / 100 极高安全');
+    }
+
+    updateZoneGraphics(); updateGutterIcons(mode);
+  }
+
+  function toggleHandSide() {
+    if (currentMode === 'right') {
+      setMode('left');
+    } else {
+      setMode('right');
+    }
+  }
+
+  function updateGutterIcons(mode) {
+    const svg = document.getElementById('switchSideSvg');
+    const arrow = document.getElementById('dockArrowText');
+    if (!svg || !arrow) return;
+
+    if (mode === 'left') {
+      // 侧边栏在右侧，点击切回右手（箭头指向右边）
+      svg.innerHTML = `
+        <rect x="3" y="4" width="18" height="16" rx="3" stroke-width="1.8"/>
+        <path d="M17 4v16" stroke-width="1.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <path d="M8 9l4 3-4 3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      `;
+      arrow.textContent = '▶';
+    } else {
+      // 侧边栏在左侧，点击切换到左手（箭头指向左边）
+      svg.innerHTML = `
+        <rect x="3" y="4" width="18" height="16" rx="3" stroke-width="1.8"/>
+        <path d="M7 4v16" stroke-width="1.8" stroke-dasharray="2 2" opacity="0.4"/>
+        <path d="M16 9l-4 3 4 3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      `;
+      arrow.textContent = '◀';
+    }
+  }
+
+  function setDevice(dev) {
+    currentDevice = dev;
+    const chassis = document.getElementById('phoneChassis');
+    document.getElementById('btnDev16Pro').classList.toggle('active', dev === '16pro');
+    document.getElementById('btnDev16Max').classList.toggle('active', dev === '16max');
+
+    if (dev === '16max') {
+      chassis.style.width = '420px';
+      chassis.style.height = '860px';
+    } else {
+      chassis.style.width = '385px';
+      chassis.style.height = '800px';
+    }
+    updateZoneGraphics();
+  }
+
+  function toggleThumbZones() {
+    showThumbZones = !showThumbZones;
+    const layer = document.getElementById('thumbZonesLayer');
+    layer.classList.toggle('visible', showThumbZones);
+    document.getElementById('btnToggleZones').classList.toggle('active', showThumbZones);
+    document.getElementById('zoneStateTxt').textContent = showThumbZones ? '已开启' : '已隐藏';
+  }
+
+  function updateZoneGraphics() {
+    const g = document.getElementById('dynamicZoneGraphics');
+    if (!g) return;
+
+    if (currentMode === 'left') {
+      // 左手持机热力图 (镜像到左侧)
+      g.innerHTML = `
+        <path d="M 0 800 L 0 540 A 260 260 0 0 1 275 800 Z" fill="url(#yellowGradLeft)"/>
+        <path d="M 0 800 L 0 625 A 175 175 0 0 1 185 800 Z" fill="url(#greenGradLeft)"/>
+        <circle cx="20" cy="700" r="9" fill="#fff" opacity="0.8"/>
+        <circle cx="20" cy="700" r="16" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="3 3" opacity="0.6"/>
+        <text x="46" y="704" fill="#fff" font-size="10.5" font-weight="700">左手拇指关节</text>
+      `;
+    } else {
+      // 右手模式或全宽右手主导
+      g.innerHTML = `
+        <path d="M 110 800 A 260 260 0 0 1 385 540 L 385 800 Z" fill="url(#yellowGradRight)"/>
+        <path d="M 200 800 A 175 175 0 0 1 385 625 L 385 800 Z" fill="url(#greenGradRight)"/>
+        <circle cx="365" cy="700" r="9" fill="#fff" opacity="0.8"/>
+        <circle cx="365" cy="700" r="16" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="3 3" opacity="0.6"/>
+        <text x="340" y="704" fill="#fff" font-size="10.5" font-weight="700" text-anchor="end">右手拇指关节</text>
+      `;
+    }
+  }
+
+  function updateMetrics(greenScore, travelTxt, safetyTxt) {
+    document.getElementById('metricGreenTxt').textContent = greenScore + '%';
+    document.getElementById('barGreen').style.width = greenScore + '%';
+
+    document.getElementById('metricTravelTxt').textContent = travelTxt;
+    document.getElementById('metricSafetyTxt').textContent = safetyTxt;
+  }
+
+  // 交互微反馈
+  let isPlaying = true;
+  function togglePlayState(capsule) {
+    isPlaying = !isPlaying;
+    const label = document.getElementById('capsuleModeLabel');
+    const icon = document.getElementById('capsulePlayIcon');
+    if (isPlaying) {
+      label.textContent = '正常播放';
+      icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+      capsule.style.borderColor = 'rgba(0, 122, 255, 0.75)';
+    } else {
+      label.textContent = '已暂停';
+      icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+      capsule.style.borderColor = 'rgba(255, 204, 0, 0.75)';
+    }
+  }
+
+  function seekFeedback(step) {
+    const curTime = document.getElementById('curTimeDisplay');
+    curTime.style.color = '#5ac8fa';
+    setTimeout(() => curTime.style.color = 'rgba(255, 255, 255, 0.75)', 400);
+  }
+
+  let isMuted = false;
+  function toggleMuteFeedback(btn) {
+    isMuted = !isMuted;
+    btn.style.color = isMuted ? '#ff453a' : '#fff';
+  }
+
+  let speeds = ['1.0x', '1.25x', '1.5x', '2.0x', '3.0x'];
+  let speedIdx = 2;
+  function cycleSpeedFeedback(btn) {
+    speedIdx = (speedIdx + 1) % speeds.length;
+    btn.textContent = speeds[speedIdx];
+  }
+
+  // URL 参数自动装载
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramMode = urlParams.get('mode') || 'right';
+  const paramDev = urlParams.get('dev') || '16pro';
+  const paramZones = urlParams.get('zones') !== 'false';
+
+  window.addEventListener('DOMContentLoaded', () => {
+    setDevice(paramDev);
+    setMode(paramMode);
+    if (!paramZones) {
+      toggleThumbZones();
+    }
+  });
+</script>
+
+</body>
+</html>

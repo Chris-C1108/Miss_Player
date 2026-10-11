@@ -1,0 +1,17 @@
+created: 2026-10-09T08:08:55.064Z
+updated: 2026-10-09T08:09:41.490Z
+update_count: 4
+last_field: constraint
+kind: nested-class
+title: player-managers
+children:
+  - blur-mgr
+  - ctrl-mgr
+  - event-mgr
+  - loop-mgr
+  - marker-sheet
+  - prog-mgr
+  - settings-mgr
+  - single-hand
+  - ui-mgr
+parentPath: []

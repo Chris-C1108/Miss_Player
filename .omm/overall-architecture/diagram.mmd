@@ -1,0 +1,12 @@
+graph LR
+    entry-guard["入口守护与嗅探\nsrc/index.js"]
+    entry-guard -->|"劫持媒体流"| media-sniffer["媒体网络嗅探\nsrc/network/MediaSniffer.js"]
+    entry-guard -->|"挂载悬浮胶囊"| floating-button["悬浮唤起按键\nsrc/player/ui/FloatingButton.js"]
+    entry-guard -->|"拦截弹窗与广告"| adblock-system["广告净化系统\nsrc/adblock/"]
+    entry-guard -->|"凭据分发与桥接"| autologin-system["跨域自动登录\nsrc/autologin/"]
+    floating-button -->|"实例化启动"| custom-video-player["自定义播放器总装\nsrc/player/CustomVideoPlayer.js"]
+    custom-video-player -->|"宿主Video劫持"| player-core["播放器内核\nsrc/player/core/PlayerCore.js"]
+    custom-video-player -->|"状态与配置派发"| player-state["响应式状态机\nsrc/player/state/PlayerState.js"]
+    custom-video-player -->|"装配UI与交互"| player-managers["核心管理器矩阵\nsrc/player/managers/"]
+    player-managers -->|"多源评论与打点"| comment-engine["评论与采集引擎\nsrc/player/comments/"]
+    comment-engine -->|"四级存储与同步"| storage-sync["存储架构与云同步\nsrc/sync/ & src/services/"]

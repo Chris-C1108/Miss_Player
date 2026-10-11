@@ -1516,10 +1516,8 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     transform: scale(0.96);
 }
 
+/* 播放控制行：双层叠加架构 (底层为 100% 宽度 switcher，上层为可左右滑动隐退的左/右控制组件) */
 .tm-playback-control-row {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
     position: relative !important;
     width: 100% !important;
     height: 40px !important;
@@ -1527,9 +1525,80 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     box-sizing: border-box !important;
     padding: 0 !important;
     margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
 }
 
-.tm-left-controls {
+/* 底层：Switcher 占满 100% 宽度 */
+.tm-playback-bottom-layer,
+.tm-playback-control-row .tm-center-controls {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* 上层：左右控制浮层，容器穿透放行给底层，子元素捕获点击 */
+.tm-playback-top-layer {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.tm-playback-top-layer .tm-left-controls,
+.tm-playback-top-layer .tm-right-controls {
+    pointer-events: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease !important;
+    will-change: transform, opacity !important;
+}
+
+.tm-playback-top-layer .tm-left-controls {
+    justify-content: flex-start !important;
+}
+
+.tm-playback-top-layer .tm-right-controls {
+    justify-content: flex-end !important;
+}
+
+/* 左右滑动 Switcher 时，上层 [左&右] 组件做动画向两侧移出并淡出隐藏 */
+.tm-playback-control-row.is-sliding .tm-left-controls {
+    transform: translateX(-120%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.tm-playback-control-row.is-sliding .tm-right-controls {
+    transform: translateX(120%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* 兼容未包含在 top-layer 下的直接子元素降级选择器 */
+.tm-playback-control-row:not(.tm-has-layers) > .tm-left-controls {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
@@ -1539,22 +1608,23 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     padding: 0 !important;
 }
 
-.tm-center-controls {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    height: 40px !important;
-    flex: 1 1 auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.tm-right-controls {
+.tm-playback-control-row:not(.tm-has-layers) > .tm-right-controls {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
     height: 40px !important;
     flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 静音外层组件容器 */
+.tm-volume-control {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
 }
@@ -2173,6 +2243,23 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     transform: none;
 }
 
+/* 控制面板总容器 (.tm-control-panel)
+   包裹 .tm-control-buttons 与单手辅助立柱 .tm-single-hand-gutter */
+.tm-control-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9997 !important;
+    box-sizing: border-box;
+}
+
+.tm-control-panel > * {
+    pointer-events: auto;
+}
+
 /* 控制面板容器 */
 .tm-control-buttons {
     position: absolute;
@@ -2424,10 +2511,147 @@ body.controls-hidden .tm-player-title, .tm-player-container.controls-hidden .tm-
     pointer-events: none !important;
 }
 
+/* 移动端竖屏状态下（iPhone Pro Max 及以下宽度：<=480px / 竖屏）
+   tm-control-panel 样式参考 iOS 键盘：
+   1. 宽度与屏幕宽度完全一致 (100vw / 100%)
+   2. 左右上角为圆角 (20px)，左右下角为直角 (0)
+   3. 贴合底边，自适应 iOS 底部安全区
+*/
+@media screen and (max-width: 480px), screen and (max-width: 600px) and (orientation: portrait) {
+    .tm-control-panel {
+        top: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100vw !important;
+        border-top-left-radius: 20px !important;
+        border-top-right-radius: 20px !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        background-image: linear-gradient(#1a1a20e0, #000000) !important;
+        backdrop-filter: blur(36px) saturate(190%) !important;
+        -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
+        border: none !important;
+        box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18), 0 -4px 24px rgba(0, 0, 0, 0.38) !important;
+        padding-top: 10px !important;
+        padding-left: calc(10px + env(safe-area-inset-left, 0px)) !important;
+        padding-right: calc(10px + env(safe-area-inset-right, 0px)) !important;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+        pointer-events: auto !important;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease !important;
+    }
+
+    /* 当作为 iOS 键盘底板时，里面的 tm-control-buttons 与底板融为一体，取消自身 padding 由外层 tm-control-panel 统一提供 */
+    .tm-control-panel .tm-control-buttons {
+        position: relative !important;
+        bottom: 0 !important;
+        left: auto !important;
+        right: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+
+    /* 竖屏单手模式下的 iOS 键盘外形适配：主控制区与侧栏立柱在 iOS 底板内部并排，通过 gap 统一控制间距 */
+    /* 1. 右手单手模式：主面板靠右，Gutter 靠左并占满剩余空间 (由于 DOM 先 buttons 后 gutter，使用 row-reverse 反向排列) */
+    .tm-player-container.tm-single-hand-right .tm-control-panel {
+        display: flex !important;
+        flex-direction: row-reverse !important;
+        align-items: flex-end !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+    }
+
+    .tm-player-container.tm-single-hand-right .tm-control-panel .tm-single-hand-gutter {
+        position: relative !important;
+        bottom: 0 !important;
+        left: auto !important;
+        right: auto !important;
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 44px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .tm-player-container.tm-single-hand-right .tm-control-panel .tm-control-buttons {
+        flex: 0 0 auto !important;
+        width: 320px !important;
+        max-width: 320px !important;
+        min-width: 320px !important;
+    }
+
+    /* 2. 左手单手模式：主面板靠左，Gutter 靠右并占满剩余空间 (由于 DOM 先 buttons 后 gutter，使用 row 正向排列) */
+    .tm-player-container.tm-single-hand-left .tm-control-panel {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: flex-end !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+    }
+
+    .tm-player-container.tm-single-hand-left .tm-control-panel .tm-single-hand-gutter {
+        position: relative !important;
+        bottom: 0 !important;
+        right: auto !important;
+        left: auto !important;
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 44px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .tm-player-container.tm-single-hand-left .tm-control-panel .tm-control-buttons {
+        flex: 0 0 auto !important;
+        width: 320px !important;
+        max-width: 320px !important;
+        min-width: 320px !important;
+    }
+
+    /* 单手模式下确保 tm-seek-control-row 充分填满自适应剩余空间，保证 6 个快进快退按钮在 320px 下稳定排 2 行 */
+    .tm-player-container.tm-single-hand-active .tm-seek-control-row {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
+
+/* 更窄的屏幕 (<380px，如 iPhone SE、mini 及紧凑屏幕) 限制不支持开启单手模式，始终保持全宽 */
+@media screen and (max-width: 379px) {
+    .tm-player-container .tm-control-panel .tm-single-hand-gutter {
+        display: none !important;
+    }
+    .tm-player-container .tm-control-panel .tm-control-buttons {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+/* 隐藏控制界面时的动画过渡 */
+body.controls-hidden .tm-control-panel,
+.tm-player-container.controls-hidden .tm-control-panel,
+:host(.controls-hidden) .tm-control-panel {
+    opacity: 0 !important;
+    transform: translateY(100%) !important;
+    pointer-events: none !important;
+}
+
 /* 下滑手势拖动时，隐藏所有播放器控制和面板组件，实现极致沉浸感 */
 body.tm-swiping-down .tm-button-container,
 body.tm-swiping-down .tm-handle-container,
 body.tm-swiping-down .tm-comments-panel,
+body.tm-swiping-down .tm-control-panel,
 body.tm-swiping-down .tm-control-buttons,
 body.tm-swiping-down .tm-settings-panel {
     opacity: 0 !important;
@@ -2514,8 +2738,8 @@ body.tm-swiping-down .tm-settings-panel {
     display: none !important;
 }
 
-/* 移动端与竖屏手机控制面板宽度约束 (保持优雅触控比例，绝不破坏按钮饱满质感) */
-@media screen and (max-width: 600px), screen and (orientation: portrait) {
+/* 移动端与竖屏手机控制面板宽度约束 (保持优雅触控比例，非内嵌在 tm-control-panel 下的降级适配) */
+@media screen and (min-width: 481px) and (max-width: 600px) and (orientation: landscape) {
     .tm-control-buttons {
         width: calc(100vw - 24px) !important;
         max-width: 480px !important;

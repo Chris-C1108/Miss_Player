@@ -1,0 +1,1 @@
+多源评论抓取中枢 (src/player/controls/CommentScraper.js)，统一调度各源爬虫，实现去重合并与结果分发。

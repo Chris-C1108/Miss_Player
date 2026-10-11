@@ -1,5 +1,7 @@
 import { AppleCard } from '../components/AppleCard.js';
 import { ToggleRow } from '../components/ToggleRow.js';
+import { SegmentedControl } from '../components/SegmentedControl.js';
+import { __ } from '../../../../constants/i18n.js';
 import { Toast } from '../../../../utils/index.js';
 import { CrazyScraper } from '../../../comments/CrazyScraper.js';
 import { CommentCacheManager } from "../../../comments/CommentCacheManager.js";
@@ -34,11 +36,58 @@ export class BetaSection {
             checked: Boolean(this.settings.betaMode),
             onChange: (checked) => {
                 this.sm.updateSetting('betaMode', checked);
+                if (this.sm.controlManager?.singleHandManager) {
+                    this.sm.controlManager.singleHandManager.updateState();
+                }
                 betaSubWrap.style.display = checked ? 'block' : 'none';
                 Toast(checked ? '已开启 Beta 实验室' : '已关闭 Beta 实验室', 1200, 'info');
             }
         });
         card.appendChild(betaMainToggle.getElement());
+
+        const singleHandToggle = new ToggleRow({
+            title: __('singleHandMode') || '竖屏单手模式 (Beta)',
+            subtext: __('singleHandModeDesc') || '针对大屏手机单手握持优化，将控制面板收拢至单手舒适触控区',
+            checked: Boolean(this.settings.betaSingleHandMode),
+            onChange: (checked) => {
+                this.sm.updateSetting('betaSingleHandMode', checked);
+                if (this.sm.controlManager?.singleHandManager) {
+                    this.sm.controlManager.singleHandManager.updateState();
+                }
+                singleHandPrefWrap.style.display = checked ? 'block' : 'none';
+            }
+        });
+        betaSubWrap.appendChild(singleHandToggle.getElement());
+
+        const singleHandPrefWrap = document.createElement('div');
+        singleHandPrefWrap.className = 'tm-settings-subpanel-wrap';
+        singleHandPrefWrap.style.display = Boolean(this.settings.betaSingleHandMode) ? 'block' : 'none';
+
+        const handPrefRow = document.createElement('div');
+        handPrefRow.className = 'tm-apple-row';
+        handPrefRow.style.justifyContent = 'space-between';
+        handPrefRow.innerHTML = `
+            <div class="tm-apple-row-left">
+                <div class="tm-apple-row-title">${__('singleHandPref') || '单手惯用手偏好'}</div>
+                <div class="tm-apple-row-subtext">选择单手控制面板贴靠方向</div>
+            </div>
+        `;
+        const segmentedControl = new SegmentedControl({
+            options: [
+                { value: 'right', label: __('singleHandRight') || '右手单手 (默认)' },
+                { value: 'left', label: __('singleHandLeft') || '左手单手' }
+            ],
+            value: this.settings.singleHandPosition || 'right',
+            onChange: (val) => {
+                this.sm.updateSetting('singleHandPosition', val);
+                if (this.sm.controlManager?.singleHandManager) {
+                    this.sm.controlManager.singleHandManager.updateState();
+                }
+            }
+        });
+        handPrefRow.appendChild(segmentedControl.getElement());
+        singleHandPrefWrap.appendChild(handPrefRow);
+        betaSubWrap.appendChild(singleHandPrefWrap);
 
         const firstCapToggle = new ToggleRow({
             title: '智能跳过片头',

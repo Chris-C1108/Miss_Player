@@ -238,3 +238,39 @@ export const ICON_COPY = `
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
     </svg>
 `;
+
+export const HAND_SWITCH = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 8h14M14 4l4 4-4 4"/>
+        <path d="M20 16H6M10 12l-4 4 4 4"/>
+    </svg>
+`;
+
+export const EXPAND_FULL = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+    </svg>
+`;
+
+export const COLLAPSE_SINGLE = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="3"/>
+        <path d="M9 12h6M12 9l3 3-3 3"/>
+    </svg>
+`;
+
+export const DOCK_SWITCH_LEFT = `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="3"/>
+        <path d="M7 4v16" stroke-dasharray="2 2" opacity="0.4"/>
+        <path d="M16 9l-4 3 4 3" stroke-width="2"/>
+    </svg>
+`;
+
+export const DOCK_SWITCH_RIGHT = `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="3"/>
+        <path d="M17 4v16" stroke-dasharray="2 2" opacity="0.4"/>
+        <path d="M8 9l4 3-4 3" stroke-width="2"/>
+    </svg>
+`;

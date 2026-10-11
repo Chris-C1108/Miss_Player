@@ -297,7 +297,7 @@ export class UIManager {
         // 鼠标/触摸按下事件 - 开始检测长按
         const handlePointerDown = (e) => {
             // 确保点击事件不是从控制按钮冒泡上来的
-            if (e.target.closest('.tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button')) {
+            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button')) {
                 return;
             }
             
@@ -445,7 +445,7 @@ export class UIManager {
             }
             
             // 确保点击事件不是从控制按钮冒泡上来的
-            if (e.target.closest('.tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel')) {
+            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel')) {
                 return;
             }
             
@@ -979,7 +979,7 @@ export class UIManager {
         }, { passive: false });
         
         // 使用事件委托处理mouseenter事件
-        delegateEvent(this.playerContainer, 'mouseenter', '.tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
+        delegateEvent(this.playerContainer, 'mouseenter', '.tm-control-panel, .tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
             this.isMouseOverControls = true;
             if (this.controlsHideTimerId) {
                 clearTimeout(this.controlsHideTimerId);
@@ -988,7 +988,7 @@ export class UIManager {
         });
         
         // 使用事件委托处理mouseleave事件
-        delegateEvent(this.playerContainer, 'mouseleave', '.tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
+        delegateEvent(this.playerContainer, 'mouseleave', '.tm-control-panel, .tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
             this.isMouseOverControls = false;
             if (this.isLandscape) {
                 this.autoHideControls();
@@ -1372,9 +1372,10 @@ export class UIManager {
         // 添加设置面板到播放器容器
         this.playerContainer.appendChild(this.settingsPanel);
         
-        // 如果存在控制按钮，也添加到播放器容器内
-        if (this.controlManager && this.controlManager.controlButtonsContainer) {
-            this.playerContainer.appendChild(this.controlManager.controlButtonsContainer);
+        // 挂载控制面板：优先挂载外层总组件 tm-control-panel (包含 tm-single-hand-gutter 与 tm-control-buttons)，兼容降级至 controlButtonsContainer
+        const controlPanelEl = this.controlManager?.controlPanel || this.controlManager?.controlButtonsContainer;
+        if (controlPanelEl) {
+            this.playerContainer.appendChild(controlPanelEl);
         }
         
         // 创建或复用 Shadow DOM 宿主自定义元素 <miss-player-root>

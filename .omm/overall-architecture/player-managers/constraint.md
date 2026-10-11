@@ -1,0 +1,1 @@
+1. 严禁同帧发生 Layout Thrashing；2. 所有位移动画必须采用 transform: translate3d 配合 GPU 合成；3. 控件集中在屏幕下半部大拇指触控区。

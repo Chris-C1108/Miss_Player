@@ -1,0 +1,1 @@
+严格读取优先级漏斗：IndexedDB -> Supabase方案1 -> WebDAV -> 源站爬虫。

@@ -1,0 +1,1 @@
+1. 严禁在 GM_getValue 存储评论体；2. WebDAV 严禁合并为单一单文件；3. Supabase 写入必须使用 upsert_comment_bundle RPC 服务端原子合并。

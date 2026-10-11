@@ -1,0 +1,9 @@
+created: 2026-10-09T08:09:36.323Z
+updated: 2026-10-09T08:09:36.324Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: ctrl-mgr
+children: []
+parentPath:
+  - player-managers

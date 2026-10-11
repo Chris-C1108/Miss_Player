@@ -1,0 +1,9 @@
+graph LR
+    host-dom["宿主DOM与Meta"] -->|"提取物理时长"| duration-detector["时长探测漏斗\nsrc/utils/dom.js"]
+    source-sites["三方评论源站"] -->|"并发抓取"| comment-providers["评论适配器源\nsrc/player/comments/providers/"]
+    comment-providers -->|"原始文本"| pipeline-cleaner["清洗与反垃圾\nCommentDataPipeline.js"]
+    pipeline-cleaner -->|"有效时间戳/番号"| time-calibrator["倒数时间倒转\napplyCommentCountdown"]
+    time-calibrator -->|"标准化评论集合"| mem-store["内存响应式状态\nsrc/player/state/"]
+    mem-store -->|"毫秒写本地"| idb-store["本地持久化\nIndexedDB"]
+    mem-store -->|"异步RPC合并"| supa-store["云端JSONB仓储\nSupabase"]
+    mem-store -->|"PUT番号JSON"| webdav-store["私有云文件\nWebDAV"]

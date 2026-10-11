@@ -1,0 +1,16 @@
+created: 2026-10-09T08:07:16.789Z
+updated: 2026-10-09T08:07:58.635Z
+update_count: 7
+last_field: note
+children:
+  - adblock-system
+  - autologin-system
+  - comment-engine
+  - custom-video-player
+  - entry-guard
+  - floating-button
+  - media-sniffer
+  - player-core
+  - player-managers
+  - player-state
+  - storage-sync

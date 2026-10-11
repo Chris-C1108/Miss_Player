@@ -1,0 +1,9 @@
+created: 2026-10-09T08:10:39.984Z
+updated: 2026-10-09T08:10:39.984Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: read-pipeline
+children: []
+parentPath:
+  - storage-sync

@@ -1,0 +1,1 @@
+云端Supabase PostgreSQL仓储，以番号为唯一键聚合，借助TOAST透明压缩实现海量存储。

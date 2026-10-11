@@ -1,0 +1,1 @@
+失焦播放管理器 (src/player/managers/BlurPlaybackManager.js)，拦截宿主页面切后台或失焦时的恶意暂停脚本。

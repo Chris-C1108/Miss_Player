@@ -59,6 +59,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **DragManager**：Minimap 缩略图平移拖拽与跟手手势
 * **EventManager**：集中式事件委托、快捷键绑定与全屏监听
 * **SettingsManager**：Apple 风格设置面板、遥控器运行模式控制、Beta 实验室、WebDAV 配置
+* **SingleHandManager**：竖屏单手操控模式管理器、侧边辅助条 (Utility Gutter) 挂载、左右手镜像与全宽还原状态机
 
 ### 3. 增强业务功能
 * **评论系统**：`src/player/controls/CommentPanel.js` 与 `CommentScraper.js`（多源异步抓取 Jable / JavDB / JavLibrary、时间戳解析、逆向倒数时间校准、单条问题上报）

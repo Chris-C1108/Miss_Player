@@ -1,0 +1,9 @@
+created: 2026-10-09T08:10:40.319Z
+updated: 2026-10-09T08:10:40.320Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: webdav-file
+children: []
+parentPath:
+  - storage-sync

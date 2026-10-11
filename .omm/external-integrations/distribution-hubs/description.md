@@ -1,0 +1,1 @@
+分发与版本检查中心（SleazyFork / GreasyFork），通过开放 API 检索新版本。

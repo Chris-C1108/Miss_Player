@@ -1,0 +1,1 @@
+事件管理器 (src/player/managers/EventManager.js)，集中式键盘快捷键委托、双击手势与全屏状态变更分发。

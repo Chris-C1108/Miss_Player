@@ -1,0 +1,9 @@
+created: 2026-10-09T08:10:40.096Z
+updated: 2026-10-09T08:10:40.097Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: idb-local
+children: []
+parentPath:
+  - storage-sync

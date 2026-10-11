@@ -1,0 +1,1 @@
+Jable评论抓取器 (JableCommentProvider.js)，抓取Jable原站评论区与表情符号。

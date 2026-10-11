@@ -1,0 +1,1 @@
+主动加锁阶段，挂起 _isSeekingCapsule 标志，阻止 timeupdate 产生连环干扰。

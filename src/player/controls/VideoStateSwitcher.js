@@ -24,6 +24,7 @@ export class VideoStateSwitcher {
         this.initialMode = options.initialMode || 'normal';
         this.onModeChange = options.onModeChange || (() => {});
         this.onVariantAction = options.onVariantAction || (() => {});
+        this.onDragStateChange = options.onDragStateChange || (() => {});
 
         this.modes = [
             { id: 'preview', title: '快速预览', shortTitle: '预览' },
@@ -34,9 +35,9 @@ export class VideoStateSwitcher {
         this.currentIndex = this.modes.findIndex(m => m.id === this.initialMode);
         if (this.currentIndex === -1) this.currentIndex = 1;
 
-        // 统一高度 40px，宽度加宽至 216px，滑块 94px × 36px，slot 78px
+        // 统一高度 40px，宽度自适应 100%，滑块 94px × 36px，slot 78px
         this.config = Object.assign({
-            width: 216,              // 充足加宽，防止误触
+            width: 340,              // 基础参考宽度 (实际由 100% 容器自适应)
             height: 40,             // 严格与两侧音量、变速胶囊统一为 40px 高度
             morphDelay: 380,
             friction: 0.55,
@@ -61,21 +62,35 @@ export class VideoStateSwitcher {
         this.startX = 0;
         this.startY = 0;
         this.lastX = 0;
-        this.currentTranslate = this.getTranslateForIndex(this.currentIndex);
-        this.startTranslate = this.currentTranslate;
+        this.currentTranslate = 0;
+        this.startTranslate = 0;
         this.moveHistory = [];
         this.hasDragged = false;
         this.isPointerDown = false;
 
         this.audioCtx = null;
+        this._ro = null;
 
         this.render();
+        this.currentTranslate = this.getTranslateForIndex(this.currentIndex);
+        this.startTranslate = this.currentTranslate;
         this.bindEvents();
         this.snapToIndex(this.currentIndex, false, false);
     }
 
+    notifyDragState(isDragging) {
+        if (typeof this.onDragStateChange === 'function') {
+            this.onDragStateChange(isDragging);
+        }
+        const row = this.container?.closest?.('.tm-playback-control-row') || this.wrapper?.closest?.('.tm-playback-control-row');
+        if (row) {
+            row.classList.toggle('is-sliding', isDragging);
+        }
+    }
+
     getTranslateForIndex(index) {
-        return this.config.width / 2 - (index + 0.5) * this.slotWidth;
+        const containerWidth = this.capsuleContainer?.offsetWidth || this.container?.offsetWidth || this.config.width;
+        return containerWidth / 2 - (index + 0.5) * this.slotWidth;
     }
 
     initAudioContext() {
@@ -127,117 +142,33 @@ export class VideoStateSwitcher {
     render() {
         this.wrapper = document.createElement('div');
         this.wrapper.className = 'mp-switcher-wrapper select-none shrink-0';
-        this.wrapper.style.cssText = `
-            position: relative;
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-            -webkit-user-select: none;
-            flex-shrink: 0;
-            height: ${this.config.height}px;
-        `;
 
-        // 1. 外层轨道：完全透明！两端保留平滑渐隐遮罩
+        // 1. 外层轨道：100% 全宽透明轨道，两端平滑渐隐遮罩
         this.capsuleContainer = document.createElement('div');
         this.capsuleContainer.className = 'mp-switcher-capsule';
-        this.capsuleContainer.style.cssText = `
-            position: relative;
-            width: ${this.config.width}px;
-            height: ${this.config.height}px;
-            background: transparent;
-            border-radius: 9999px;
-            overflow: hidden;
-            border: none;
-            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
-            mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
-            cursor: grab;
-            touch-action: none;
-            box-sizing: border-box;
-        `;
 
-        // 2. 居中滑块：透明背景！让滑动时底部的文字完全清晰透视可见
-        // 配合极轻的 1px solid rgba(255,255,255,0.22) 与内倒角微光
+        // 2. 居中滑块：透明背景，纯净透视底部文字，1px 微光边框与内阴影
         this.indicator = document.createElement('div');
         this.indicator.className = 'mp-switcher-indicator';
-        this.indicator.style.cssText = `
-            position: absolute;
-            top: 2px;
-            left: 50%;
-            transform: translate(-50%, 0) scale(1);
-            width: ${this.indicatorWidth}px;
-            height: 36px;
-            border-radius: 9999px;
-            pointer-events: none;
-            z-index: 10;
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.22);
-            box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.35), 0 2px 8px rgba(0, 0, 0, 0.15);
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
-            box-sizing: border-box;
-            overflow: hidden;
-        `;
 
         // 3. 内部滑动履带
         this.track = document.createElement('div');
         this.track.className = 'mp-switcher-track';
-        this.track.style.cssText = `
-            display: flex;
-            height: 100%;
-            position: relative;
-            z-index: 20;
-            align-items: center;
-            width: ${this.modes.length * this.slotWidth}px;
-            will-change: transform;
-        `;
 
         // 渲染各档位 Item
         this.itemElements = [];
         this.modes.forEach((mode, idx) => {
             const itemEl = document.createElement('div');
             itemEl.className = `mp-switcher-item mp-switcher-item-${mode.id}`;
-            itemEl.style.cssText = `
-                position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                height: 100%;
-                width: ${this.slotWidth}px;
-                flex-shrink: 0;
-                cursor: pointer;
-                user-select: none;
-                -webkit-user-select: none;
-            `;
 
             // 两侧文字
             const labelEl = document.createElement('span');
             labelEl.className = 'mp-switcher-label';
             labelEl.textContent = mode.title;
-            labelEl.style.cssText = `
-                font-size: 12px;
-                white-space: nowrap;
-                font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
-                font-weight: 500;
-                color: rgba(255, 255, 255, 0.45);
-                transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
-                pointer-events: none;
-                letter-spacing: -0.1px;
-            `;
 
             // 变体操作层
             const variantContainer = document.createElement('div');
             variantContainer.className = 'mp-switcher-variant-slot';
-            variantContainer.style.cssText = `
-                position: absolute;
-                inset: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-            `;
 
             itemEl.appendChild(labelEl);
             itemEl.appendChild(variantContainer);
@@ -261,84 +192,46 @@ export class VideoStateSwitcher {
     }
 
     /**
-     * 刷新居中变体 UI
+     * 刷新居中变体 UI (纯 Class 控制，禁止内嵌样式)
      */
     updateVariantUI() {
         this.itemElements.forEach((item, idx) => {
             const isActive = idx === this.currentIndex;
             const showVariant = isActive && this.isMorphed && !this.isDragging;
 
-            item.labelEl.style.opacity = showVariant ? '0' : '1';
-            item.labelEl.style.color = isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.45)';
-            item.labelEl.style.fontWeight = isActive ? '600' : '500';
+            item.labelEl.classList.toggle('is-hidden', showVariant);
+            item.labelEl.classList.toggle('is-active', isActive);
 
-            item.variantContainer.style.opacity = showVariant ? '1' : '0';
-            item.variantContainer.style.pointerEvents = showVariant ? 'auto' : 'none';
+            item.variantContainer.classList.toggle('is-visible', showVariant);
 
             if (isActive) {
                 item.variantContainer.innerHTML = '';
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'mp-switcher-action-btn';
-                btn.style.cssText = `
-                    width: 100%;
-                    height: 100%;
-                    background: transparent;
-                    border: none;
-                    color: #ffffff;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    outline: none;
-                    gap: 4px;
-                    padding: 0;
-                    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
-                    transition: transform 0.12s ease;
-                `;
 
                 const curMode = this.modes[idx].id;
 
                 // 场景 1: 正常模式 (居中展现纯白 15px 播放/暂停图标)
                 if (curMode === 'normal') {
                     btn.title = this.runtimeState.isPlaying ? '暂停' : '播放';
-                    btn.innerHTML = this.runtimeState.isPlaying ? PAUSE : PLAY;
-                    const svg = btn.querySelector('svg');
-                    if (svg) {
-                        svg.style.width = '15px';
-                        svg.style.height = '15px';
-                        svg.style.fill = '#ffffff';
-                        svg.style.stroke = 'none';
-                        if (!this.runtimeState.isPlaying) {
-                            svg.style.marginLeft = '1.5px';
-                        }
-                    }
+                    btn.innerHTML = `<span class="mp-switcher-play-icon${!this.runtimeState.isPlaying ? ' is-paused' : ''}">${this.runtimeState.isPlaying ? PAUSE : PLAY}</span>`;
                 }
                 // 场景 2: 快速预览 / 精彩重温
                 else {
                     if (this.runtimeState.isCapsuleLocked) {
                         btn.title = '点击取消单片段循环';
-                        btn.innerHTML = `<span style="font-size:11px; font-weight:600; color:#ff453a; white-space:nowrap; letter-spacing:-0.2px;">取消循环</span>`;
+                        btn.innerHTML = `<span class="mp-switcher-btn-cancel">取消循环</span>`;
                     } else if (this.runtimeState.isTourEnded) {
                         btn.title = '从第一个胶囊重新播放';
-                        btn.innerHTML = `
-                            <span style="font-size:11px; font-weight:600; color:#ffffff; display:flex; align-items:center; gap:2px; white-space:nowrap;">
-                                ${REPLAY || ''} 重播
-                            </span>
-                        `;
-                        const svg = btn.querySelector('svg');
-                        if (svg) {
-                            svg.style.width = '11px';
-                            svg.style.height = '11px';
-                            svg.style.stroke = '#ffffff';
-                        }
+                        btn.innerHTML = `<span class="mp-switcher-btn-text"><span class="mp-switcher-replay-icon">${REPLAY || ''}</span> 重播</span>`;
                     } else {
                         const modeText = (curMode === 'preview') ? '快速预览' : '精彩重温';
                         const statusDot = this.runtimeState.isPlaying 
-                            ? '<span style="display:inline-block; width:4px; height:4px; border-radius:50%; background:#30d158; box-shadow:0 0 5px rgba(48,209,88,0.8); margin-left:2px;"></span>'
-                            : '<span style="font-size:8px; margin-left:2px; opacity:0.8;">▶</span>';
+                            ? '<span class="mp-switcher-status-dot"></span>'
+                            : '<span class="mp-switcher-status-play">▶</span>';
                         btn.title = modeText + ' (点击' + (this.runtimeState.isPlaying ? '暂停' : '继续') + ')';
-                        btn.innerHTML = `<span style="font-size:11.5px; font-weight:600; color:#ffffff; display:flex; align-items:center; white-space:nowrap; letter-spacing:-0.2px;">${modeText}${statusDot}</span>`;
+                        btn.innerHTML = `<span class="mp-switcher-btn-text">${modeText}${statusDot}</span>`;
                     }
                 }
 
@@ -431,6 +324,7 @@ export class VideoStateSwitcher {
             picker.style.cursor = 'grab';
 
             if (wasDragging) {
+                this.notifyDragState(false);
                 this.hasDragged = true;
                 setTimeout(() => { this.hasDragged = false; }, 120);
 
@@ -459,9 +353,9 @@ export class VideoStateSwitcher {
 
                 let step = 0;
                 if (projectedDeltaX < -threshold) {
-                    step = Math.min(2, Math.max(1, Math.round(-projectedDeltaX / this.slotWidth)));
+                    step = 1; // 每次滑动只允许切换到相邻下一个，不可跳格
                 } else if (projectedDeltaX > threshold) {
-                    step = -Math.min(2, Math.max(1, Math.round(projectedDeltaX / this.slotWidth)));
+                    step = -1; // 每次滑动只允许切换到相邻上一个，不可跳格
                 }
 
                 const newIndex = Math.max(0, Math.min(this.modes.length - 1, this.currentIndex + step));
@@ -497,6 +391,7 @@ export class VideoStateSwitcher {
                 if (Math.abs(deltaX) > DRAG_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
                     this.isDragging = true;
                     picker.style.cursor = 'grabbing';
+                    this.notifyDragState(true);
                     if (this.morphTimer) {
                         clearTimeout(this.morphTimer);
                         this.morphTimer = null;
@@ -511,8 +406,11 @@ export class VideoStateSwitcher {
 
             const pureDelta = deltaX - Math.sign(deltaX) * DRAG_THRESHOLD;
             let newTranslate = this.startTranslate + pureDelta;
-            const minTranslate = this.getTranslateForIndex(this.modes.length - 1) - 14;
-            const maxTranslate = this.getTranslateForIndex(0) + 14;
+            // 每次拖动物理限制在相邻的下一个与上一个档位范围内，禁止跨档滑至最后一个
+            const minIndex = Math.min(this.modes.length - 1, this.currentIndex + 1);
+            const maxIndex = Math.max(0, this.currentIndex - 1);
+            const minTranslate = this.getTranslateForIndex(minIndex) - 14;
+            const maxTranslate = this.getTranslateForIndex(maxIndex) + 14;
             newTranslate = Math.max(minTranslate, Math.min(maxTranslate, newTranslate));
 
             this.currentTranslate = newTranslate;
@@ -544,6 +442,27 @@ export class VideoStateSwitcher {
                 }
             });
         });
+
+        // 监听容器尺寸变化，自适应居中对齐
+        if (typeof ResizeObserver !== 'undefined' && this.capsuleContainer) {
+            this._ro = new ResizeObserver(() => {
+                if (!this.isDragging) {
+                    this.snapToIndex(this.currentIndex, false, false);
+                }
+            });
+            this._ro.observe(this.capsuleContainer);
+        }
+    }
+
+    destroy() {
+        if (this._ro) {
+            this._ro.disconnect();
+            this._ro = null;
+        }
+        if (this.morphTimer) {
+            clearTimeout(this.morphTimer);
+            this.morphTimer = null;
+        }
     }
 
     setPlaybackRuntime(runtimeUpdate = {}) {

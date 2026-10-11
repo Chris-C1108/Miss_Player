@@ -1,0 +1,1 @@
+A-B片段循环管理器 (src/player/managers/LoopManager.js)，动态创建莫兰迪色时间胶囊，支持URL深链参数还原与倒计时预览。

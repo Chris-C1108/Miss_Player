@@ -1,0 +1,17 @@
+graph LR
+    scraper-hub["评论抓取调度\nsrc/player/controls/CommentScraper.js"]
+    prov-jable["Jable抓取源\nsrc/player/comments/providers/JableCommentProvider.js"]
+    prov-javdb["JavDB抓取源\nsrc/player/comments/providers/JavDbCommentProvider.js"]
+    prov-javlib["JavLib抓取源\nsrc/player/comments/providers/JavLibCommentProvider.js"]
+    crazy-scraper["疯狂采集引擎\nsrc/player/comments/CrazyScraper.js"]
+    data-pipeline["数据清洗与提取管道\nsrc/player/comments/CommentDataPipeline.js"]
+    comment-panel["评论交互面板\nsrc/player/controls/CommentPanel.js"]
+
+    scraper-hub -->|"并发调用"| prov-jable
+    scraper-hub -->|"并发调用"| prov-javdb
+    scraper-hub -->|"并发调用"| prov-javlib
+    crazy-scraper -->|"批量遍历番号"| scraper-hub
+    prov-jable -->|"输出原始文本"| data-pipeline
+    prov-javdb -->|"输出原始文本"| data-pipeline
+    prov-javlib -->|"输出原始文本"| data-pipeline
+    data-pipeline -->|"过滤垃圾/解析时间戳/高亮"| comment-panel

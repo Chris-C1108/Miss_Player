@@ -38,6 +38,8 @@ export class PlayerState {
             preferredPlaybackRate: 1.0,     // 默认/首选播放速度
             pauseOnBlur: true,              // 页面离开/失焦后停止播放 (默认为开)
             buttonSoundEnabled: true,       // 控制面板按钮点击音效 (默认为开)
+            betaSingleHandMode: false,      // 竖屏单手模式 (Beta 默认关闭)
+            singleHandPosition: 'right',    // 单手握持偏好 ('right' | 'left')
             autoCheckUpdate: true           // 自动检查新版本 (默认为开)
         };
     }
@@ -112,6 +114,8 @@ export class PlayerState {
             this.settings.betaDeepLinking = getBool('betaDeepLinking', true);
             this.settings.betaDbEndpoint = getValue('betaDbEndpoint', '') || '';
             this.settings.betaDbApiKey = getValue('betaDbApiKey', '') || '';
+            this.settings.betaSingleHandMode = getBool('betaSingleHandMode', false);
+            this.settings.singleHandPosition = getValue('singleHandPosition', 'right') || 'right';
         } catch (error) {
             console.error('[PlayerState] 加载设置失败:', error);
         }
@@ -193,6 +197,8 @@ export class PlayerState {
             setValue('betaDeepLinking', Boolean(this.settings.betaDeepLinking));
             setValue('betaDbEndpoint', this.settings.betaDbEndpoint || '');
             setValue('betaDbApiKey', this.settings.betaDbApiKey || '');
+            setValue('betaSingleHandMode', Boolean(this.settings.betaSingleHandMode));
+            setValue('singleHandPosition', this.settings.singleHandPosition || 'right');
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }

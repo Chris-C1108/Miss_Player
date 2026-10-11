@@ -16,6 +16,21 @@ export class I18n {
      */
     static strings = {
         'en': {
+            singleHandMode: 'One-Handed Mode (Beta)',
+            singleHandModeDesc: 'Optimize portrait layout by docking controls within comfortable thumb reach',
+            singleHandPref: 'Hand Preference',
+            singleHandRight: 'Right Hand',
+            singleHandLeft: 'Left Hand',
+            screenTooNarrowForSingleHand: 'Screen too narrow for one-handed mode',
+            switchHandLeft: 'Left Hand',
+            switchHandRight: 'Right Hand',
+            expandFullWidth: 'Full Width',
+            collapseSingleHand: 'One-Hand',
+            switchedToRightHand: 'Switched to Right-Handed mode',
+            switchedToLeftHand: 'Switched to Left-Handed mode',
+            restoredFullWidth: 'Restored full width layout',
+            enteredSingleHand: 'Entered one-handed mode',
+
             // 元数据
             scriptName: 'Miss Player | Cinema Mode (One-handed Player)',
             scriptDescription: 'MissAV ad-free|One-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|Custom player supporting jable po*nhub etc',
@@ -130,6 +145,21 @@ export class I18n {
             login_autoLogin: 'Auto Login'
         },
         'zh-CN': {
+            singleHandMode: '竖屏单手模式 (Beta)',
+            singleHandModeDesc: '针对大屏竖屏握持优化，将控制面板收拢至单手舒适触控区',
+            singleHandPref: '单手惯用手偏好',
+            singleHandRight: '右手单手 (默认)',
+            singleHandLeft: '左手单手',
+            screenTooNarrowForSingleHand: '屏幕较窄，无需开启单手模式',
+            switchHandLeft: '切左手',
+            switchHandRight: '切右手',
+            expandFullWidth: '全宽',
+            collapseSingleHand: '单手',
+            switchedToRightHand: '已切换至右手单手模式',
+            switchedToLeftHand: '已切换至左手单手模式',
+            restoredFullWidth: '已还原为全宽模式',
+            enteredSingleHand: '已开启单手模式',
+
             // 元数据
             scriptName: 'Miss Player | 影院模式 (单手播放器)',
             scriptDescription: 'MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器 支持 jable po*nhub 等通用',
@@ -244,6 +274,21 @@ export class I18n {
             login_autoLogin: '自动登录'
         },
         'zh-TW': {
+            singleHandMode: '豎屏單手模式 (Beta)',
+            singleHandModeDesc: '針對大屏豎屏握持優化，將控制面板收攏至單手舒適觸控區',
+            singleHandPref: '單手慣用手偏好',
+            singleHandRight: '右手單手 (默認)',
+            singleHandLeft: '左手單手',
+            screenTooNarrowForSingleHand: '螢幕較窄，無需開啟單手模式',
+            switchHandLeft: '切左手',
+            switchHandRight: '切右手',
+            expandFullWidth: '全寬',
+            collapseSingleHand: '單手',
+            switchedToRightHand: '已切換至右手單手模式',
+            switchedToLeftHand: '已切換至左手單手模式',
+            restoredFullWidth: '已還原為全寬模式',
+            enteredSingleHand: '已開啟單手模式',
+
             // 元数据
             scriptName: 'Miss Player | 影院模式 (單手播放器)',
             scriptDescription: 'MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器 支持 jable po*nhub 等通用',
@@ -358,6 +403,21 @@ export class I18n {
             login_autoLogin: '自動登錄'
         },
         'ja': {
+            singleHandMode: '片手操作モード (Beta)',
+            singleHandModeDesc: '縦画面で大画面スマホを片手で快適に操作できるようにパネルを寄せます',
+            singleHandPref: '利き手設定',
+            singleHandRight: '右手 (デフォルト)',
+            singleHandLeft: '左手',
+            screenTooNarrowForSingleHand: '画面サイズが小さいため片手モードは不要です',
+            switchHandLeft: '左手へ',
+            switchHandRight: '右手へ',
+            expandFullWidth: '全体幅',
+            collapseSingleHand: '片手',
+            switchedToRightHand: '右手モードに切り替えました',
+            switchedToLeftHand: '左手モードに切り替えました',
+            restoredFullWidth: '全体幅表示に戻しました',
+            enteredSingleHand: '片手モードに切り替えました',
+
             // 元数据
             scriptName: 'Miss Player | シネマモード (片手プレーヤー)',
             scriptDescription: 'MissAV広告なし|片手モード|MissAV自動詳細展開|MissAV自動高画質|MissAVリダイレクトサポート|MissAV自動ログイン|jable po*nhub などをサポートするカスタムプレーヤー',
@@ -471,6 +531,21 @@ export class I18n {
             login_autoLogin: '自動ログイン'
         },
         'vi': {
+            singleHandMode: 'Chế độ một tay (Beta)',
+            singleHandModeDesc: 'Thu gọn bảng điều khiển về phía ngón tay cái để dễ thao tác một tay',
+            singleHandPref: 'Tay thuận',
+            singleHandRight: 'Tay phải (Mặc định)',
+            singleHandLeft: 'Tay trái',
+            screenTooNarrowForSingleHand: 'Màn hình nhỏ, không cần chế độ một tay',
+            switchHandLeft: 'Tay trái',
+            switchHandRight: 'Tay phải',
+            expandFullWidth: 'Toàn màn',
+            collapseSingleHand: 'Một tay',
+            switchedToRightHand: 'Đã chuyển sang chế độ tay phải',
+            switchedToLeftHand: 'Đã chuyển sang chế độ tay trái',
+            restoredFullWidth: 'Đã khôi phục toàn chiều rộng',
+            enteredSingleHand: 'Đã chuyển sang chế độ một tay',
+
             // 元数据
             scriptName: 'Miss Player | Chế độ Rạp chiếu phim (Trình phát một tay)',
             scriptDescription: 'MissAV không quảng cáo|Chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|Đăng nhập tự động MissAV|Trình phát tùy chỉnh hỗ trợ jable po*nhub v.v.',

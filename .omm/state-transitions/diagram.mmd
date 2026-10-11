@@ -1,0 +1,8 @@
+graph LR
+    idle-state["就绪态\nIdle"] -->|"用户或深链Seek"| lock-state["挂起跳转锁\n_isSeekingCapsule = true"]
+    lock-state -->|"设置currentTime"| native-seeking["原生异步解码\nvideo.seeking"]
+    native-seeking -->|"触发seeked事件"| buffer-delay["缓冲稳定等待\n额外350ms缓冲延时"]
+    buffer-delay -->|"释放跳转锁"| playing-state["播放态\nPlaying"]
+    playing-state -->|"检测到达B点循环"| lock-state
+    playing-state -->|"用户暂停"| paused-state["暂停态\nPaused"]
+    paused-state -->|"继续播放"| playing-state

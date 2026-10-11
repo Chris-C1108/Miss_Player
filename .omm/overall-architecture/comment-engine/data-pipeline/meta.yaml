@@ -1,0 +1,9 @@
+created: 2026-10-09T08:09:57.914Z
+updated: 2026-10-09T08:09:57.915Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: data-pipeline
+children: []
+parentPath:
+  - comment-engine

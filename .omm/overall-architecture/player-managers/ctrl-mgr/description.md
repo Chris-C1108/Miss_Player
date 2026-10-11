@@ -1,0 +1,1 @@
+主控制栏装配器 (src/player/managers/ControlManager.js)，集成92px一体化居中播放胶囊、倍速菜单与清晰度调节。

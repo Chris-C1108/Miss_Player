@@ -1,0 +1,7 @@
+graph LR
+    userscript-runtime["脚本管理器沙箱\nTampermonkey/ScriptCat"] -->|"挂载执行"| miss-player["Miss Player 客户端"]
+    miss-player -->|"跨域DOM嗅探/劫持"| video-sites["视频宿主站点\nJable/MissAV等"]
+    miss-player -->|"API/HTML抓取评论"| data-sources["外部数据源\nJavDB/JavLibrary"]
+    miss-player -->|"JSONB RPC存储"| supabase-cloud["云端数据库\nSupabase"]
+    miss-player -->|"PROPFIND/PUT落盘"| webdav-servers["私有网盘\nWebDAV"]
+    miss-player -->|"检查更新/合规分发"| distribution-hubs["分发平台\nSleazyFork/GreasyFork"]

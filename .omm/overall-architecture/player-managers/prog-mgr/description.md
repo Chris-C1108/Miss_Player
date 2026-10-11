@@ -1,0 +1,1 @@
+进度管理器 (src/player/managers/ProgressManager.js)，处理进度条平滑渲染、微秒级精准Seek以及Minimap缩略图联动。

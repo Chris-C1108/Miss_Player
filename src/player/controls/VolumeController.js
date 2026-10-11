@@ -28,7 +28,6 @@ export class VolumeController {
     createVolumeSlider(container) {
         const volumeControl = document.createElement('div');
         volumeControl.className = 'tm-volume-control';
-        volumeControl.style.cssText = 'display: flex; align-items: center; justify-content: center; width: auto; height: 100%; margin: 0; padding: 0;';
 
         const volumeButton = document.createElement('button');
         volumeButton.className = 'tm-volume-button';

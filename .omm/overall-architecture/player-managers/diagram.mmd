@@ -1,0 +1,19 @@
+graph LR
+    ui-mgr["UI管理器\nsrc/player/ui/UIManager.js"]
+    ctrl-mgr["主控制栏管理\nsrc/player/managers/ControlManager.js"]
+    prog-mgr["微秒进度管理\nsrc/player/managers/ProgressManager.js"]
+    loop-mgr["A-B循环胶囊\nsrc/player/managers/LoopManager.js"]
+    marker-sheet["胶囊管理抽屉\nsrc/player/managers/MarkerBottomSheet.js"]
+    single-hand["单手操控模式\nsrc/player/managers/SingleHandManager.js"]
+    settings-mgr["Apple设置面板\nsrc/player/managers/SettingsManager.js"]
+    event-mgr["事件与全屏委托\nsrc/player/managers/EventManager.js"]
+    blur-mgr["失焦播放守卫\nsrc/player/managers/BlurPlaybackManager.js"]
+
+    ui-mgr -->|"挂载控件容器"| ctrl-mgr
+    ctrl-mgr -->|"时间轴驱动"| prog-mgr
+    ctrl-mgr -->|"片段打点触发"| loop-mgr
+    loop-mgr -->|"唤起标签与管理"| marker-sheet
+    ctrl-mgr -->|"切换竖屏布局"| single-hand
+    ctrl-mgr -->|"打开偏好设置"| settings-mgr
+    event-mgr -->|"分发全局快捷键"| ctrl-mgr
+    blur-mgr -->|"拦截宿主恶意偷停"| ctrl-mgr

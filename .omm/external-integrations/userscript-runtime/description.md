@@ -1,0 +1,1 @@
+油猴脚本运行时（Tampermonkey、Violentmonkey、ScriptCat、Stay 等），提供 GM_xmlhttpRequest 与沙箱执行环境。

@@ -1,0 +1,1 @@
+JavDB抓取器 (JavDbCommentProvider.js)，支持跨域评分与精准番号评论抓取。

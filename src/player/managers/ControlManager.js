@@ -4,6 +4,7 @@ import { CommentPanel } from '../controls/CommentPanel.js';
 import { VolumeController } from '../controls/VolumeController.js';
 import { SeekController } from '../controls/SeekController.js';
 import { PlaybackController } from '../controls/PlaybackController.js';
+import { SingleHandManager } from './SingleHandManager.js';
 
 /**
  * 控制管理器类 - 负责播放器控制按钮和相关功能 (重构后的 Facade 编排器)
@@ -25,8 +26,12 @@ export class ControlManager {
         this.seekController = new SeekController(playerCore, this);
         this.playbackController = new PlaybackController(playerCore, this);
         
-        // 控制按钮容器和元素
-        this.controlButtonsContainer = null; // 控制按钮容器
+        // 单手模式管理器 (Beta)
+        this.singleHandManager = new SingleHandManager(playerCore, this, uiManager);
+
+        // 控制面板与控制按钮容器
+        this.controlPanel = null;          // 控制面板总容器 (.tm-control-panel)
+        this.controlButtonsContainer = null; // 控制按钮容器 (.tm-control-buttons)
         this.progressControlsContainer = null; // 进度控制容器
 
         // 共享元素引用 (暴露给 ProgressManager 和 LoopManager)
@@ -64,6 +69,9 @@ export class ControlManager {
         this.uiManager = uiManager;
         if (this.commentPanel && typeof this.commentPanel.setUiManager === 'function') {
             this.commentPanel.setUiManager(uiManager);
+        }
+        if (this.singleHandManager && typeof this.singleHandManager.setUiManager === 'function') {
+            this.singleHandManager.setUiManager(uiManager);
         }
     }
 
@@ -135,7 +143,15 @@ export class ControlManager {
         
         // 创建控制按钮容器
         this.controlButtonsContainer = this.createControlButtonsContainer();
+
+        // 创建统一控制面板外层容器 (tm-control-panel)
+        this.controlPanel = this.createControlPanel();
         
+        // 初始化单手模式管理器
+        if (this.singleHandManager) {
+            this.singleHandManager.init();
+        }
+
         // 初始化控制面板内按钮的 Material 风格粉色水波纹动画
         this.initRippleEffect();
 
@@ -144,9 +160,25 @@ export class ControlManager {
         
         // 返回创建的元素
         return {
+            controlPanel: this.controlPanel,
             progressControlsContainer: this.progressControlsContainer,
             controlButtonsContainer: this.controlButtonsContainer
         };
+    }
+
+    /**
+     * 创建控制面板总容器 (tm-control-panel)
+     * 包裹主控制按钮栏 (.tm-control-buttons) 与单手辅助立柱 (.tm-single-hand-gutter)
+     */
+    createControlPanel() {
+        this.controlPanel = document.createElement('div');
+        this.controlPanel.className = 'tm-control-panel';
+
+        if (this.controlButtonsContainer) {
+            this.controlPanel.appendChild(this.controlButtonsContainer);
+        }
+
+        return this.controlPanel;
     }
 
     /**
@@ -280,35 +312,35 @@ export class ControlManager {
         loopControlRow.appendChild(this.tabAddBtn);
         this.controlButtonsContainer.appendChild(loopControlRow);
 
-        // 5. 播放控制行：与上层按钮行左右严密对齐，统一 40px 高度
+        // 5. 播放控制行：双层叠加架构 (底层为 100% 宽度 switcher，上层为可左右滑动隐退的左/右控制组件)
         const playbackControlRow = document.createElement('div');
         playbackControlRow.className = 'tm-playback-control-row';
-        playbackControlRow.style.cssText = 'display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0; margin: 0; box-sizing: border-box;';
+        this.playbackControlRow = playbackControlRow;
+
+        // 底层：Switcher 占满 100% 宽度
+        const bottomLayer = document.createElement('div');
+        bottomLayer.className = 'tm-playback-bottom-layer tm-center-controls';
+
+        // 委托 PlaybackController 创建一体化居中播放与模式按钮 (挂载到底层全宽轨道)
+        this.playbackController.createPlayPauseButton(bottomLayer);
+
+        // 上层：[左&右] 控制浮层 (静止时位于两侧，滑动 switcher 时动画移出并隐藏)
+        const topLayer = document.createElement('div');
+        topLayer.className = 'tm-playback-top-layer';
 
         const leftControlsArea = document.createElement('div');
         leftControlsArea.className = 'tm-left-controls';
-        leftControlsArea.style.cssText = 'display: flex; align-items: center; justify-content: flex-start; height: 40px; margin: 0; padding: 0;';
-
-        // 委托 VolumeController 创建音量滑杆 (40px 高度)
         this.volumeController.createVolumeSlider(leftControlsArea);
-
-        const centerControlsArea = document.createElement('div');
-        centerControlsArea.className = 'tm-center-controls';
-        centerControlsArea.style.cssText = 'display: flex; align-items: center; justify-content: center; height: 40px; margin: 0; padding: 0; flex: 1 1 auto;';
-
-        // 委托 PlaybackController 创建一体化居中播放与模式按钮 (40px 高度，透明外轨)
-        this.playbackController.createPlayPauseButton(centerControlsArea);
 
         const rightControlsArea = document.createElement('div');
         rightControlsArea.className = 'tm-right-controls';
-        rightControlsArea.style.cssText = 'display: flex; align-items: center; justify-content: flex-end; height: 40px; margin: 0; padding: 0;';
-
-        // 委托 PlaybackController 创建倍速滑块
         this.playbackController.createPlaybackRateSlider(rightControlsArea);
 
-        playbackControlRow.appendChild(leftControlsArea);
-        playbackControlRow.appendChild(centerControlsArea);
-        playbackControlRow.appendChild(rightControlsArea);
+        topLayer.appendChild(leftControlsArea);
+        topLayer.appendChild(rightControlsArea);
+
+        playbackControlRow.appendChild(bottomLayer);
+        playbackControlRow.appendChild(topLayer);
         this.controlButtonsContainer.appendChild(playbackControlRow);
 
         // 点击或触摸控制面板 -> 评论区变暗以突出显示控制栏
@@ -407,6 +439,9 @@ export class ControlManager {
 
         if (this.volumeController) {
             this.volumeController.cleanup();
+        }
+        if (this.singleHandManager) {
+            this.singleHandManager.destroy();
         }
         if (this.playbackController) {
             this.playbackController.cleanup();

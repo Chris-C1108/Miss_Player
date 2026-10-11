@@ -1,0 +1,1 @@
+设置管理器 (src/player/managers/SettingsManager.js)，Apple风格偏好面板，承载Beta实验室特性与WebDAV云端配置。

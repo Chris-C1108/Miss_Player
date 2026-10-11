@@ -1,0 +1,16 @@
+graph TD
+    read-pipeline["读取优先级管道"]
+    idb-local["1. 本地IndexedDB\nsrc/utils/indexedDB.js"]
+    supa-bundle["2. Supabase高密度仓储\nsrc/services/SupabaseService.js"]
+    webdav-file["3. WebDAV独立文件\nsrc/sync/WebDavClient.js"]
+    provider-fetch["4. 源站实时爬虫\nsrc/player/controls/CommentScraper.js"]
+    sync-manager["分布式同步协调器\nsrc/sync/SyncManager.js"]
+
+    read-pipeline -->|"优先命中"| idb-local
+    idb-local -.->|"未命中穿透"| supa-bundle
+    supa-bundle -.->|"未命中穿透"| webdav-file
+    webdav-file -.->|"未命中穿透"| provider-fetch
+    provider-fetch -->|"写回落盘"| sync-manager
+    sync-manager -->|"原子RPC UPSERT"| supa-bundle
+    sync-manager -->|"PUT独立JSON"| webdav-file
+    sync-manager -->|"快速离线存储"| idb-local

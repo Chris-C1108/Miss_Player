@@ -1,0 +1,1 @@
+1. 设置 currentTime 时必须挂起 _isSeekingCapsule 锁并监听 seeked；2. seeked 后必须额外等待 350ms 缓冲后才释放锁；3. timeupdate 触发时若处于 seeking 状态必须立即 return。

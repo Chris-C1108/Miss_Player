@@ -1,0 +1,28 @@
+created: 2026-10-09T08:11:26.051Z
+updated: 2026-10-09T08:11:47.215Z
+update_count: 5
+last_field: diagram
+prev_diagram: |
+  stateDiagram-v2
+      [*] --> Idle: 播放器就绪
+      Idle --> Seeking: 触发胶囊循环或拖拽跳转
+      state Seeking {
+          LockState: 挂起 _isSeekingCapsule 锁
+          DispatchTime: 设置 video.currentTime = startTime
+          WaitSeeked: 等待 video 'seeked' 事件
+          BufferDelay: 额外留出 350ms 解码缓冲
+          LockState --> DispatchTime
+          DispatchTime --> WaitSeeked
+          WaitSeeked --> BufferDelay
+      }
+      Seeking --> Playing: 释放锁并恢复监听
+      Playing --> Seeking: 达到 B 点或用户触发跳转
+      Playing --> Paused: 用户暂停或切后台
+      Paused --> Playing: 用户恢复播放
+children:
+  - buffer-delay
+  - idle-state
+  - lock-state
+  - native-seeking
+  - paused-state
+  - playing-state

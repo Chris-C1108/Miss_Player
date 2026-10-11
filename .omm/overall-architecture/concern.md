@@ -1,0 +1,1 @@
+宿主网站反爬防外链机制、页面SPA无刷新跳转导致Video元素重建、跨域网络请求受CORS/油猴GM_xmlhttpRequest权限限制、多设备并发写入Supabase与WebDAV时的合并冲突。

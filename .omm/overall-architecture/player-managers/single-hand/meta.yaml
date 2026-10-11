@@ -1,0 +1,9 @@
+created: 2026-10-09T08:09:36.764Z
+updated: 2026-10-09T08:09:36.765Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: single-hand
+children: []
+parentPath:
+  - player-managers

@@ -1,0 +1,1 @@
+单手模式管理器 (src/player/managers/SingleHandManager.js)，提供竖屏侧边辅助条 (Utility Gutter) 挂载与左右手镜像切换。

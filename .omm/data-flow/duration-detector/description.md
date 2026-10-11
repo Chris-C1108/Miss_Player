@@ -1,0 +1,1 @@
+多层级物理时长提取漏斗，依次穿透video.duration、OpenGraph Meta标头、播放器UI文本与详情面板，杜绝NaN与0。

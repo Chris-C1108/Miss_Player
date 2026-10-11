@@ -1,0 +1,1 @@
+胶囊标签抽屉 (src/player/managers/MarkerBottomSheet.js)，提供多维语义标签选择、60秒软删除撤销与批量分享导出。

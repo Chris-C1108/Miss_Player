@@ -1,0 +1,9 @@
+created: 2026-10-09T08:09:36.433Z
+updated: 2026-10-09T08:09:36.434Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: prog-mgr
+children: []
+parentPath:
+  - player-managers

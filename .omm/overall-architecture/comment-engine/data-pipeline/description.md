@@ -1,0 +1,1 @@
+纯函数数据管道 (CommentDataPipeline.js)，处理灌水过滤、黑名单识别、时间戳提取、倒数时间校准与BBCode高亮。
