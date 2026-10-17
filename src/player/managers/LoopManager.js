@@ -122,7 +122,7 @@ export class LoopManager {
             const quickBtn = document.createElement('button');
             quickBtn.className = 'tm-tab-quick-plus-btn';
             quickBtn.innerHTML = '+';
-            quickBtn.title = '添加当前时间胶囊';
+            quickBtn.title = __('quickMark') || '快速标记';
             quickBtn.style.cssText = 'width: 28px; height: 28px; border-radius: 50%; background: hsla(var(--shadcn-primary) / 0.2); border: 1px solid hsla(var(--shadcn-primary) / 0.4); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; margin-right: 6px; flex-shrink: 0;';
             quickBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -233,8 +233,8 @@ export class LoopManager {
             const emptyWideBtn = document.createElement('div');
             emptyWideBtn.className = 'tm-tab-empty-wide-btn';
             emptyWideBtn.style.cssText = 'padding: 4px 16px; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px dashed rgba(255,255,255,0.3); color: rgba(255,255,255,0.8); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; user-select: none;';
-            emptyWideBtn.innerHTML = '<span>+ 添加首个精彩片段</span>';
-            emptyWideBtn.title = '以当前播放进度添加胶囊';
+            emptyWideBtn.innerHTML = `<span>+ ${__('addHighlight') || '添加高光'}</span>`;
+            emptyWideBtn.title = __('addHighlight') || '添加高光';
             emptyWideBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (this.targetVideo) {
@@ -499,7 +499,7 @@ export class LoopManager {
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'tm-draft-action cancel';
         cancelBtn.innerHTML = SVG_CROSS;
-        cancelBtn.title = '取消草稿';
+        cancelBtn.title = __('cancel') || '取消';
         cancelBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             this._resetDraftTab();
@@ -854,7 +854,7 @@ export class LoopManager {
 
         popover.innerHTML = `
             <div class="tm-inline-remark-body">
-                <input type="text" class="tm-inline-remark-input" placeholder="输入高光或区间备注..." value="${tab.comment || ''}" />
+                <input type="text" class="tm-inline-remark-input" placeholder="${__('addRemarkPlaceholder') || '输入高光备注...'}" value="${tab.comment || ''}" />
                 <div class="tm-inline-remark-footer">
                     <button type="button" class="tm-inline-remark-btn cancel">SKIP</button>
                     <button type="button" class="tm-inline-remark-btn submit">SAVE</button>
@@ -1664,7 +1664,7 @@ export class LoopManager {
                 window.history.replaceState(null, '', cleanUrl);
             }
 
-            Toast(`已识别到外部分享时间胶囊 (${data.t.length}条)，可在评论区或侧栏一键导入`, 4000, 'info');
+            Toast(`已识别到外部分享高光片段 (${data.t.length} 条)，可在评论区一键导入`, 4000, 'info');
         } catch (e) {
             console.warn('[DeepLinking] 解析胶囊参数异常:', e);
         }

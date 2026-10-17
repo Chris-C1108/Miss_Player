@@ -86,10 +86,82 @@ Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感�
 
 1. **毛玻璃与深度层级**：统一采用 `backdrop-filter: blur(20px) saturate(180%)` 与半透明材质（`-apple-system` 风格），避免生硬纯色。
 2. **GPU 零重排流畅度**：所有位移与缩放手势交互（如 Minimap 拖拽）一律采用 `transform: translate3d()`，杜绝触发 DOM Reflow。
-3. **一体化居中宽胶囊**：主控播放按键采用 92px 纯净 Apple 蓝描边宽胶囊，正常模式居中展示 SVG 图标，预览/重温模式直接显示文字，并在背景自左向右以半透粉红平滑推进倒计时进度条。
+3. **一体化居中宽胶囊**：主控播放按键采用 92px 纯净 Apple 蓝描边宽胶囊，正常播放模式居中展示 SVG 图标，快览/连播模式直接显示紧凑文字（“快览” / “连播”），并在背景自左向右以半透粉红平滑推进倒计时进度条。
 4. **单手操作至上**：核心控件（播放/暂停、快进/退、A-B 循环、清晰度切换）集中布局在屏幕下半部大拇指易触及区域。
 5. **全屏与安全区适配**：全量适配 iOS Safari `env(safe-area-inset-bottom)`，监听 `visualViewport` 动态压缩视口避让软键盘。
 6. **资产集中化**：禁止在业务组件内散落内联 SVG 字符串，所有图标必须集中在 `src/constants/icons.js`；所有面向用户的文案必须通过 `__('key')` 从 `src/constants/i18n.js` 读取。
+7. **苹果人本化文案哲学 (HIG & Don't Make Me Think)**：
+   - 彻底去技术黑话（严禁在面向用户界面出现“时序纠正”、“语料预热”、“微秒滑块”、“REST API”等内部概念）；
+   - 功能名称严格收敛至 **2–4 字**；辅助说明精炼在 **20 字以内**直击给用户带来的核心收益；
+   - 核心心智定稿对齐：面向用户统称“高光 / 高光片段”（消除胶囊理解门槛）、“转为正序 / 显示倒数”（直接陈述操作结果）、“快览 / 正常 / 连播”（以强动词驱动心智）。
+
+---
+
+## 💅 CSS 架构与样式治理准则 (CSS Governance & Architecture)
+
+Miss Player 运行于复杂的多域名第三方宿主环境（Jable、MissAV、JavDB 等），必须在 SleazyFork/GreasyFork 单文件无混淆（`mangle: false`）、体积 1.0MB 安全线及 Shadow DOM 隔离的强约束下运行。所有样式开发与重构必须严格遵守以下法则：
+
+### 1. 核心技术红线与禁令 (Blacklist & Mandates)
+* **严禁引入 Tailwind CSS 及外部大型原子化框架**：
+  - 严禁引入 Tailwind 等构建链及通用原子类（如 `.flex`, `.text-sm`），防止宿主页面非 Shadow DOM 元素产生灾难性样式污染；
+  - 严格保持 100% 原生现代 CSS + CSS 自定义属性（Tokens）体系，杜绝打包体积膨胀。
+* **严禁 HTML 模板字符串内联样式**：
+  - 严禁在 JS 模版字符串中编写 `style="..."` 行内样式；所有视觉表现必须通过语义化类名由 CSS 文件统一声明。
+* **严格治理 `!important` 滥用**：
+  - 播放器主体已受 `<miss-player-root>` Shadow DOM 物理隔离保护，宿主样式无法穿透，内部组件严禁滥用 `!important` 争夺特异度；
+  - 只有用于最高优先级全局可见性切换的状态类（如 `.is-hidden { display: none !important; }`）才允许使用 `!important`，其余场景一律通过正确的媒体查询与选择器层级管理。
+* **统一 Z-Index 标尺系统，消灭魔法数字**：
+  - 严禁随意书写 `z-index: 2000000000` 或 `9999` 等无序魔法数字；
+  - 所有层级必须统一引用 `--z-*` 标尺（10~60 级）：
+    `--z-player-base: 10;` ➔ `--z-controls: 20;` ➔ `--z-sidebar: 30;` ➔ `--z-popover: 40;` ➔ `--z-modal: 50;` ➔ `--z-toast: 60;`。
+
+### 2. JS 样式动静分离契约 (Dynamic vs Static Styles Contract)
+在操作 DOM 样式时，必须严格区分“真动态数学逻辑”与“伪动态表现逻辑”：
+* 🔴 **坚决禁止：JS 直接修改静态表现属性（伪动态）**
+  - 禁止在 JS 中通过 `el.style.display = 'flex'`、`el.style.position = 'absolute'`、`el.style.opacity = '0.7'` 等操控布局或状态；
+  - 必须统一封装为 CSS 状态类，通过 `el.classList.add('is-active')`、`el.classList.toggle('is-collapsed')` 进行声明式调度。
+* 🔴 **坚决禁止：状态类吸附停靠时遗留行内绝对坐标 (Docked State Isolation)**
+  - FORBIDDEN: 在 JS 拖拽组件进入状态类吸附停靠（如 `tm-controls-docked-*`）后，继续保留 DOM 上的行内定位样式（`style.left`, `style.top`） -> USE: 进入状态类调度时立即清空所有行内绝对坐标（置为空字符串），让 CSS 规则原生接管。
+* 🟢 **严格规范：连续数学计算与响应式注入（真动态）**
+  - 进度条/滑块物理位移：允许使用 `progressBar.style.transform = 'scaleX(...)'`；
+  - 手势与 Minimap 拖拽：必须使用 `el.style.transform = 'translate3d(x, y, 0)'`（GPU 加速，杜绝 Reflow）；
+  - 动态时间点百分比定位：允许使用 `marker.style.left = `${percent}%``；
+  - 响应式环境上下文注入：允许使用 `root.style.setProperty('--keyboard-height', `${h}px`)`。
+
+### 3. 宿主与 Shadow DOM 双轨分层拓扑 (Two-Track Style Topology)
+杜绝全量 CSS 双重解析浪费（原 7,700 行 CSS 同时塞入宿主 `<head>` 与 Shadow DOM）：
+* **宿主轨 (`_host.css` / 极轻量)**：
+  - 仅包含脱离 Shadow DOM 挂载在 `document.body` 上的浮动唤醒按钮样式、全屏时宿主滚动条隐藏补丁；
+  - 严格限制在 3 KB 以内，彻底阻断对第三方宿主网站的全局样式污染。
+* **Shadow 轨 (`shadow.css` / 播放器全量样式)**：
+  - 播放器所有控制条、评论面板、高光切片底栏、设置卡片等复杂 UI 样式，统一注入 `<miss-player-root>` 的 `ShadowRoot`（优先采用 `CSSStyleSheet` + `adoptedStyleSheets`，降级为内部 `<style>` 标签）；
+  - 内部样式享有天然作用域隔离。
+
+### 4. 样式目录拓扑与模块规划 (Styles Topology)
+解构原 3000 行 `_player.css` 巨石文件，按单一职责清晰划分为四层结构：
+```
+src/player/ui/styles/
+├── 00_tokens/           # 设计令牌层：基础颜色、Apple 毛玻璃材质、Z-Index 标尺
+│   ├── _tokens.css
+│   └── _zindex.css
+├── 01_core/             # 核心基础层：视窗容器、布局骨架、动画关键帧
+│   ├── _host.css        # 宿主极轻量样式 (<3KB)
+│   ├── _layout.css      # 播放器视窗容器、全屏遮罩与 Safe Area 适配
+│   └── _common.css      # 统一 Keyframes 动画、通用排版微类
+├── 02_components/       # 业务组件层 (解构巨石，高内聚拆分)
+│   ├── _controls.css    # 一体化居中播放胶囊、快进退、音量、进度条
+│   ├── _comments.css    # 评论面板、评论卡片、抓取器状态、过滤栏
+│   ├── _marker_sheet.css# A-B 点高光片段底栏 (MarkerBottomSheet)
+│   └── _settings_apple.css # Apple 风格设置卡片、开关、分段选择器
+└── 03_responsive/       # 响应式与模式适配层
+    ├── _landscape.css   # PC 桌面端与移动端横屏适配 (彻底合并旧 legacy 冲突)
+    └── _single_hand.css # 竖屏单手模式辅助条与左右手镜像布局
+```
+
+### 5. 命名规范与命名空间收拢
+* 新增与重构的样式类名统一采用 `mp-`（Miss Player）前缀；
+* 状态类统一采用 `is-*` 或 `has-*` 前缀（如 `.is-active`, `.is-collapsed`, `.is-dimmed`, `.has-badge`）；
+* 逐步替换历史遗留且含义混杂的 `tm-` 与 `jc-` 前缀。
 
 ---
 
@@ -206,22 +278,29 @@ Miss Player 严格执行性能棘轮与零长任务守卫。完整测试方法�
 
 ## 🔄 会话交接与知识沉淀工作流 (Handoff & Lesson Workflow)
 
+> **知识总账前置约束**：
+> - `Review docs/handoff/handoff-readme.md before major refactors, complex bug fixes, or session start.`
+> - `FORBIDDEN: Repeating documented past mistakes -> USE: Consult docs/handoff/*-lesson.md or run handoff2docs.`
+
 当会话结束、阶段性里程碑达成或需要跨 Agent 交接工作时，**必须执行以下标准化沉淀工作流**，严禁仅将信息停留在会话对话中：
 
 1. **交接文档归档 (Handoff)**：
-   - 必须生成完整的交接文档并写入：`002.devlog/yyyy-mm-dd-hhmm-handoff.md`；
+   - 必须生成完整的交接文档并写入：`docs/handoff/yyyy-mm-dd-hhmmss-handoff.md` 与 `002.devlog/` 镜像归档；
    - 记录当前稳定版本号、Git Commit、已完成的核心成果拓扑、关键文件变动及下一阶段（For Next Session）任务清单；
    - 标明推荐后续 Agent 调用的关键 Skills 清单。
 2. **经验教训沉淀 (Lesson Learned)**：
-   - 必须将本阶段排查出的致命 Bug、隐藏陷阱、反模式及技术解决方案同步写入：`002.devlog/yyyy-mm-dd-hhmm-lesson.md`；
-   - 重点记录平台合规红线教训、构建语法陷阱、Shadow DOM 隔离边界及异步调试经验。
-3. **两份文档强关联与时间戳一致性**：
-   - `yyyy-mm-dd-hhmm` 统一采用当前系统的精确本地时间戳（如 `2026-09-24-1838`）；
+   - 必须将本阶段排查出的致命 Bug、隐藏陷阱、反模式及技术解决方案同步写入：`docs/handoff/yyyy-mm-dd-hhmmss-lesson.md`；
+   - 重点记录平台合规红线教训、构建语法陷阱、Shadow DOM 隔离边界及异步调试经验；
+   - 严格落实成对反模式禁令规范：`FORBIDDEN: X -> USE: Y`。
+3. **全局总账维护 (Update Ledger)**：
+   - 将新归档的条目倒序追加至 `docs/handoff/handoff-readme.md` 顶行，更新频次与状态追踪。
+4. **两份文档强关联与时间戳一致性**：
+   - `yyyy-mm-dd-hhmmss` 统一采用当前系统的精确本地时间戳（如 `2026-10-14-180701`）；
    - 生成后同步提交 Git 仓库进行版本受控。
-4. **技能库自我成长与沉淀机制 (Skill Self-Evolution Protocol)**：
-   - 自动定位本地全局技能库目录：`C:\Users\chenahao\.agents\skills\modern-userscript`；
-   - 将提炼出的架构设计哲学、合规红线约束与开箱即用的标准实现模板同步更新至技能的 `SKILL.md` 与 `references/` 对应专题目次；
-   - 确保沉淀的内容高度通用化、解耦具体业务逻辑，使未来所有基于 `$modern-userscript` 规范的油猴项目均可直接受益。
+5. **技能库自我成长与沉淀机制 (Skill Self-Evolution Protocol)**：
+   - 自动定位本地全局技能库目录：`~/.pi/agent/skills/` 或 `C:\Users\chenahao\.agents\skills\modern-userscript`；
+   - 将提炼出的架构设计哲学、合规红线约束与开箱即用的标准实现模板同步更新至技能对应专题目次；
+   - 确保沉淀的内容高度通用化、解耦具体业务逻辑，使未来所有油猴项目均可直接受益。
 
 ---
 

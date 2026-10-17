@@ -1,0 +1,76 @@
+/* ==========================================================================
+   Comment Composer 组件样式
+   ========================================================================== */
+
+/* 模态框按钮容器 */
+.mp-composer-modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    width: 100%;
+}
+
+/* 表单后紧跟的按钮行上间距 */
+.mp-composer-form + .mp-composer-modal-buttons {
+    margin-top: 20px;
+}
+
+/* 模态框标题微调 */
+.mp-composer-modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: hsl(var(--shadcn-foreground));
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* 模态框表单容器 */
+.mp-composer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+/* 表单字段项 */
+.mp-composer-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* 表单标签 */
+.mp-composer-label {
+    font-size: 11px;
+    color: hsl(var(--shadcn-muted-foreground));
+}
+
+/* 复选框行 */
+.mp-composer-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+/* 复选框 */
+.mp-composer-checkbox {
+    cursor: pointer;
+}
+
+/* 复选框文案 */
+.mp-composer-checkbox-label {
+    font-size: 12px;
+    color: hsl(var(--shadcn-muted-foreground));
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 发布按钮提交状态 */
+.tm-comments-panel-publish-btn.is-submitting,
+.mp-composer-publish-btn.is-submitting {
+    opacity: 0.7;
+}

@@ -1,5 +1,6 @@
 import { AppleCard } from '../components/AppleCard.js';
 import { getCurrentVersion } from '../../../../services/SleazyForkService.js';
+import { __ } from '../../../../constants/i18n.js';
 
 export class AboutSection {
     constructor(settingsManager) {
@@ -27,7 +28,7 @@ export class AboutSection {
         const titleDiv = document.createElement('div');
         titleDiv.className = 'tm-apple-accordion-title';
         titleDiv.innerHTML = `
-            <span>ℹ️ 关于与更新</span>
+            <span>ℹ️ ${__('aboutGroupTitle') || '关于播放器'}</span>
         `;
 
         const metaDiv = document.createElement('div');
@@ -62,6 +63,18 @@ export class AboutSection {
             bodyWrap.style.display = this.isExpanded ? 'block' : 'none';
             const arrow = metaDiv.querySelector('.tm-apple-accordion-arrow');
             if (arrow) arrow.classList.toggle('expanded', this.isExpanded);
+
+            if (this.isExpanded) {
+                requestAnimationFrame(() => {
+                    const scrollContainer = this.element.closest('.tm-settings-panel') || this.element.closest('.tm-settings-apple-container') || this.element.parentElement;
+                    if (scrollContainer) {
+                        scrollContainer.scrollTo({
+                            top: scrollContainer.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            }
         });
 
         this.element.appendChild(card.getElement());

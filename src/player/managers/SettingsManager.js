@@ -69,6 +69,8 @@ export class SettingsManager {
             crazyScrapeMode: false,
             pauseOnBlur: true,
             buttonSoundEnabled: true,
+            defaultMuted: false,
+            muteResetMinutes: 5,
             autoCheckUpdate: true,
             betaMode: false,
             betaFirstCapsulePlay: false,
@@ -76,7 +78,6 @@ export class SettingsManager {
             previewDurationSeconds: 5,
             climaxDurationSeconds: 60,
             betaColorPlayMode: 'preview',
-            betaSafariMuteStyle: true,
             betaCapsuleUndo: true,
             betaDeepLinking: true,
             betaDbEndpoint: '',
@@ -813,13 +814,13 @@ export class SettingsManager {
         const reinstallBtn = document.createElement('button');
         reinstallBtn.className = 'tm-about-btn tm-about-btn--reinstall';
         reinstallBtn.style.cssText = 'background: rgba(255, 149, 0, 0.18); border: 1px solid rgba(255, 149, 0, 0.45); color: #ff9500; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
-        reinstallBtn.innerHTML = '<span>⚡ 强制重新安装</span>';
-        reinstallBtn.title = '无论版本号是否变化，直接唤起油猴重新安装最新发布代码 (带时间戳刷新缓存，开发测试利器)';
+        reinstallBtn.innerHTML = `<span>⚡ ${__('reinstallScript') || '重新安装'}</span>`;
+        reinstallBtn.title = __('reinstallScriptDesc') || '刷新本地缓存并强制重新安装当前版本';
         reinstallBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const timestamp = Date.now();
             const installUrl = 'https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js?_t=' + timestamp;
-            Toast('正在跳转油猴强制重新安装...', 2000, 'info');
+            Toast(__('updating') || '正在跳转油猴重新安装...', 2000, 'info');
             if (typeof GM_openInTab === 'function') {
                 GM_openInTab(installUrl, { active: true });
             } else {
@@ -926,11 +927,15 @@ export class SettingsManager {
         const subPanel = document.createElement('div');
         subPanel.className = 'tm-settings-seek-steps-subpanel';
 
-        // 鼠标滚轮转横向滚动
+        // 鼠标滚轮转横向滚动（仅在有溢出滚动时拦截，防垂直滚轮阻塞）
         subPanel.addEventListener('wheel', (e) => {
-            if (e.deltaY !== 0) {
-                e.preventDefault();
-                subPanel.scrollLeft += e.deltaY;
+            if (e.deltaY !== 0 && subPanel.scrollWidth > subPanel.clientWidth) {
+                const atLeft = subPanel.scrollLeft <= 0 && e.deltaY < 0;
+                const atRight = subPanel.scrollLeft + subPanel.clientWidth >= subPanel.scrollWidth - 1 && e.deltaY > 0;
+                if (!atLeft && !atRight) {
+                    e.preventDefault();
+                    subPanel.scrollLeft += e.deltaY;
+                }
             }
         }, { passive: false });
 
@@ -1252,6 +1257,8 @@ export class SettingsManager {
             this.settings.crazyScrapeMode = getBool('crazyScrapeMode', false);
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
+            this.settings.defaultMuted = getBool('defaultMuted', false);
+            this.settings.muteResetMinutes = parseInt(getValue('muteResetMinutes', 5), 10) || 5;
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
             const rawPm = getValue('betaPlayMode', 'normal');
             this.settings.betaPlayMode = (rawPm === 'preview' || rawPm === 'climax') ? rawPm : 'normal';
@@ -1261,7 +1268,6 @@ export class SettingsManager {
             this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
             const rawPlayMode = getValue('betaColorPlayMode', 'preview');
             this.settings.betaColorPlayMode = (rawPlayMode === 'review') ? 'review' : 'preview';
-            this.settings.betaSafariMuteStyle = getBool('betaSafariMuteStyle', true);
             this.settings.betaCapsuleUndo = getBool('betaCapsuleUndo', true);
             this.settings.betaDeepLinking = getBool('betaDeepLinking', true);
             this.settings.betaDbEndpoint = getValue('betaDbEndpoint', '') || '';
@@ -1290,6 +1296,8 @@ export class SettingsManager {
             setValue('crazyScrapeMode', Boolean(this.settings.crazyScrapeMode));
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
+            setValue('defaultMuted', Boolean(this.settings.defaultMuted));
+            setValue('muteResetMinutes', this.settings.muteResetMinutes || 5);
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
             setValue('betaPlayMode', this.settings.betaPlayMode || 'normal');
             setValue('previewDurationSeconds', this.settings.previewDurationSeconds || 5);
@@ -1297,7 +1305,6 @@ export class SettingsManager {
             setValue('betaMode', Boolean(this.settings.betaMode));
             setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));
             setValue('betaColorPlayMode', this.settings.betaColorPlayMode || 'preview');
-            setValue('betaSafariMuteStyle', Boolean(this.settings.betaSafariMuteStyle));
             setValue('betaCapsuleUndo', Boolean(this.settings.betaCapsuleUndo));
             setValue('betaDeepLinking', Boolean(this.settings.betaDeepLinking));
             setValue('betaDbEndpoint', this.settings.betaDbEndpoint || '');
@@ -1353,6 +1360,12 @@ export class SettingsManager {
         
         if (key.startsWith('show') && key.endsWith('Row')) {
             this.updateControlRowsVisibility();
+        }
+
+        if (key === 'defaultMuted' || key === 'muteResetMinutes') {
+            if (this.controlManager?.volumeController) {
+                this.controlManager.volumeController.onSettingsChanged();
+            }
         }
     }
 }

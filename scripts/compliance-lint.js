@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const parser = require('@babel/parser');
+const postcss = require('postcss');
 
 const DIST_FILE = path.resolve(__dirname, '../dist/miss_player.user.js');
 const META_FILE = path.resolve(__dirname, '../dist/miss_player.meta.js');
@@ -110,7 +111,7 @@ function runCheck() {
     }
 
     // 4. 代码可读性与语法树审计 (AST Anti-Obfuscation Check)
-    console.log('\n🔍 [4/4] 抽象语法树 (AST) 与混淆特征审查:');
+    console.log('\n🔍 [4/5] 抽象语法树 (AST) 与混淆特征审查:');
     
     // 语法分号检查
     if (code.includes('"use strict"(function')) {
@@ -134,6 +135,106 @@ function runCheck() {
     } catch (parseErr) {
         console.error('   ❌ AST 解析失败: ' + parseErr.message);
         hasErrors = true;
+    }
+
+    // 5. CSS 架构规范与内联样式防御 (CSS Architecture & Inline Styles Guard)
+    console.log('\n🎨 [5/5] CSS 架构规范与内联样式牛皮癣防御:');
+    const MAX_ALLOWED_IMPORTANT = 101; // 当前清洗后基线，严禁任何新增
+    const MAX_ALLOWED_INLINE_STYLES = 20; // 严控 JS 模板内联样式牛皮癣
+
+    // 5.1 CSS 文件审计
+    const cssDir = path.resolve(__dirname, '../src/player/ui');
+    function getCssFiles(dir) {
+        let results = [];
+        fs.readdirSync(dir, { withFileTypes: true }).forEach(d => {
+            const p = path.join(dir, d.name);
+            if (d.isDirectory()) results.push(...getCssFiles(p));
+            else if (d.name.endsWith('.css')) results.push(p);
+        });
+        return results;
+    }
+
+    const cssFiles = getCssFiles(cssDir);
+    let totalImportant = 0;
+    let deepSelectors = [];
+
+    cssFiles.forEach(f => {
+        const content = fs.readFileSync(f, 'utf8');
+        const impCount = (content.match(/!important/g) || []).length;
+        totalImportant += impCount;
+
+        try {
+            const root = postcss.parse(content, { from: f });
+            root.walkRules(rule => {
+                if (rule.parent && rule.parent.type === 'atrule' && rule.parent.name === 'keyframes') return;
+                rule.selectors?.forEach(sel => {
+                    const parts = sel.trim().split(/[\s>+~]+/).filter(Boolean);
+                    if (parts.length > 3) {
+                        deepSelectors.push({
+                            file: path.relative(path.resolve(__dirname, '..'), f),
+                            sel: sel.trim(),
+                            depth: parts.length
+                        });
+                    }
+                });
+            });
+        } catch (cssErr) {
+            console.error(`   ❌ CSS 解析错误 (${path.basename(f)}): ${cssErr.message}`);
+            hasErrors = true;
+        }
+    });
+
+    if (totalImportant > MAX_ALLOWED_IMPORTANT) {
+        console.error(`   ❌ !important 超标: 当前 ${totalImportant} 处，超出基线限额 ${MAX_ALLOWED_IMPORTANT} 处！严禁新增 !important。`);
+        hasErrors = true;
+    } else {
+        console.log(`   ✅ !important 数量健康 (当前 ${totalImportant} 处 / 上限 ${MAX_ALLOWED_IMPORTANT} 处)`);
+    }
+
+    if (deepSelectors.length > 0) {
+        console.error(`   ❌ 选择器嵌套深度违规: 检测到 ${deepSelectors.length} 处选择器深度 > 3 层:`);
+        deepSelectors.slice(0, 5).forEach(s => console.error(`      - [${s.file}] (深度 ${s.depth}): ${s.sel}`));
+        hasErrors = true;
+    } else {
+        console.log('   ✅ 选择器嵌套深度健康 (所有选择器均 ≤ 3 层)');
+    }
+
+    // 5.2 JS 模板字符串内联样式审计
+    function getJsFiles(dir) {
+        let results = [];
+        fs.readdirSync(dir, { withFileTypes: true }).forEach(d => {
+            const p = path.join(dir, d.name);
+            if (d.isDirectory() && d.name !== 'node_modules' && d.name !== 'dist' && d.name !== '.git') {
+                results.push(...getJsFiles(p));
+            } else if (d.name.endsWith('.js')) {
+                results.push(p);
+            }
+        });
+        return results;
+    }
+
+    const jsFiles = getJsFiles(path.resolve(__dirname, '../src'));
+    let totalInlineStyles = 0;
+    const inlineViolations = [];
+
+    jsFiles.forEach(f => {
+        const content = fs.readFileSync(f, 'utf8');
+        const matches = content.match(/style\s*=\s*["'`][^"'`]*["'`]/gi) || [];
+        if (matches.length > 0) {
+            totalInlineStyles += matches.length;
+            inlineViolations.push({
+                file: path.relative(path.resolve(__dirname, '..'), f),
+                count: matches.length
+            });
+        }
+    });
+
+    if (totalInlineStyles > MAX_ALLOWED_INLINE_STYLES) {
+        console.error(`   ❌ JS 模板内联样式超标: 当前 ${totalInlineStyles} 处，超出限额 ${MAX_ALLOWED_INLINE_STYLES} 处！`);
+        inlineViolations.forEach(v => console.error(`      - ${v.file}: ${v.count} 处`));
+        hasErrors = true;
+    } else {
+        console.log(`   ✅ JS 模板行内样式受控 (当前 ${totalInlineStyles} 处 / 豁免上限 ${MAX_ALLOWED_INLINE_STYLES} 处)`);
     }
 
     console.log('\n====================================================');

@@ -1,0 +1,694 @@
+/* ===== Tab Scroll Container ===== */
+/* ===== Tab Scroll Container ===== */
+.tm-tab-scroll-container {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    height: 38px;
+    padding: 0 44px 0 0;
+    margin: 0;
+    box-sizing: border-box;
+    align-items: center;
+    mask-image: linear-gradient(to right, black calc(100% - 36px), transparent);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 36px), transparent);
+    touch-action: pan-x;
+}
+.tm-tab-scroll-container::-webkit-scrollbar { display: none; }
+
+/* ===== Tab Pill ===== */
+.tm-tab-pill {
+    position: relative;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 38px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border-radius: 9999px;
+    background-color: hsla(0, 0%, 15%, 0.12);
+    border: 1px solid hsla(0, 0%, 20%, 0.35);
+    color: hsl(var(--shadcn-foreground));
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, color 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+}
+/* 状态 1：默认状态（半透明背景色、无边框、无高亮） */
+.tm-tab-pill {
+    background-color: hsla(var(--tab-color), 0.12);
+    border: 1px solid transparent;
+    color: hsla(var(--tab-color), 0.82);
+    box-shadow: none;
+    transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tm-tab-pill:active {
+    transform: scale(0.96);
+}
+
+/* 状态 2：当前视频进度附近 ±5s 时（半透明背景色、颜色边框、文字高亮） */
+.tm-tab-pill.near {
+    background-color: hsla(var(--tab-color), 0.22);
+    border-color: hsla(var(--tab-color), 0.75);
+    color: #ffffff;
+    font-weight: 600;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
+}
+
+/* 状态 3：区间循环播放时（半透明背景色、颜色边框、文字高亮、外发光呼吸灯） */
+@keyframes tm-tab-loop-pulse {
+    0%, 100% {
+        box-shadow: 0 0 6px hsla(var(--tab-color), 0.45), 0 0 14px hsla(var(--tab-color), 0.25);
+        border-color: hsla(var(--tab-color), 0.75);
+    }
+    50% {
+        box-shadow: 0 0 12px hsla(var(--tab-color), 0.9), 0 0 24px hsla(var(--tab-color), 0.55);
+        border-color: hsl(var(--tab-color));
+    }
+}
+
+.tm-tab-pill.looping {
+    background-color: hsla(var(--tab-color), 0.32);
+    border-color: hsl(var(--tab-color));
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    animation: tm-tab-loop-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 激活态兜底 */
+.tm-tab-pill.active:not(.looping):not(.near) {
+    background-color: hsla(var(--tab-color), 0.2);
+    border-color: hsla(var(--tab-color), 0.55);
+    color: #ffffff;
+}
+
+.tm-tab-time-text {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.tm-tab-loop-overlay {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 60%;
+    z-index: 2;
+    pointer-events: none;
+    border: none;
+    background: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.tm-tab-loop-overlay svg {
+    display: block;
+    height: 100%;
+    width: auto;
+    color: #ffffff;
+    fill: #ffffff;
+    stroke: #ffffff;
+    stroke-width: 0.8px;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+/* Draft tab (dashed border, dynamic tint) */
+.tm-tab-pill.draft {
+    background-color: hsla(var(--tab-color), 0.08);
+    border-color: hsla(var(--tab-color), 0.45);
+    border-style: dashed;
+    gap: 5px;
+    padding: 0 8px;
+}
+/* Highlight active editing or active drafting state */
+.tm-tab-pill.draft.editing,
+.tm-tab-pill.draft:not(.placeholder) {
+    background-color: hsla(var(--tab-color), 0.22);
+    border-color: hsla(var(--tab-color), 0.75);
+}
+.tm-tab-pill.draft .tm-draft-label {
+    font-weight: 600;
+    font-size: 11px;
+}
+.tm-tab-pill.draft .tm-draft-label.a { color: #fff; }
+.tm-tab-pill.draft .tm-draft-label.b { color: #fff; }
+.tm-tab-pill.draft .tm-draft-time {
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+}
+.tm-tab-pill.draft .tm-draft-time.placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+.tm-draft-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    width: 32px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+}
+.tm-draft-action:active {
+    transform: scale(0.96);
+}
+.tm-draft-action.save {
+    background-color: hsla(var(--tab-color), 0.18);
+    color: hsl(var(--tab-color));
+}
+.tm-draft-action.save:hover {
+    background-color: hsla(var(--tab-color), 0.28);
+}
+.tm-draft-action.cancel {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+.tm-draft-action.cancel:hover {
+    background-color: rgba(239, 68, 68, 0.25);
+}
+.tm-draft-action.edit-comment {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+.tm-draft-action.edit-comment:hover {
+    background-color: rgba(245, 158, 11, 0.25);
+}
+
+/* ===== List Button (fixed right) ===== */
+.tm-tab-list-btn {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: hsla(var(--shadcn-secondary) / 0.5);
+    border: 1px solid hsla(var(--shadcn-border) / 0.15);
+    color: hsl(var(--shadcn-foreground));
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.tm-tab-list-btn:active { transform: scale(0.96); }
+.tm-tab-list-btn:hover {
+    background-color: hsla(var(--shadcn-secondary) / 0.8);
+    border-color: hsla(var(--shadcn-border) / 0.3);
+}
+
+/* ===== Bottom Sheet / Tag Manager Popover Modal ===== */
+.tm-bottom-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: transparent;
+    z-index: 9990;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--anim-smooth);
+
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: none;
+}
+.tm-bottom-sheet-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.tm-bottom-sheet-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: calc(100vh - 120px);
+    background-color: rgba(18, 18, 20, 0.94);
+    box-shadow: 
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 12px 32px rgba(0, 0, 0, 0.6);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 9995;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px) scale(0.98);
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 10px 14px 12px;
+    touch-action: pan-y;
+    contain: paint layout;
+}
+.tm-bottom-sheet-panel.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+/* 紧凑标题栏 */
+.tm-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 2px 6px 2px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+}
+
+.tm-bottom-sheet-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+    letter-spacing: 0.2px;
+}
+
+.tm-sheet-count-badge {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.08);
+    padding: 1px 6px;
+    border-radius: 8px;
+}
+
+.tm-sheet-close-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 0 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+.tm-sheet-close-btn:hover {
+    color: #ffffff;
+}
+
+/* 列表区域 - 无边框独立卡片 */
+.tm-bottom-sheet-list {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 2px;
+}
+.tm-bottom-sheet-list::-webkit-scrollbar {
+    width: 4px;
+}
+.tm-bottom-sheet-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+/* 行样式：视觉高度统一为 32px */
+.tm-sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
+    background: transparent;
+    border: none;
+    height: 32px;
+    box-sizing: border-box;
+    touch-action: pan-y;
+}
+
+.tm-sheet-item-time-container {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    height: 32px;
+}
+
+/* 时间胶囊（统一高度 32px） */
+.tm-sheet-time-pill {
+    height: 32px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    border-radius: 16px;
+    background: hsla(var(--tab-color, 200 100% 55%), 0.15);
+    border: 1px solid hsla(var(--tab-color, 200 100% 55%), 0.4);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, background-color 0.2s;
+}
+.tm-sheet-time-pill:hover {
+    transform: scale(1.02);
+    background: hsla(var(--tab-color, 200 100% 55%), 0.28);
+}
+
+/* AB 时间片段宽胶囊样式 */
+.tm-sheet-time-pill.interval {
+    position: relative;
+    overflow: hidden;
+    padding: 0 10px;
+    gap: 4px;
+}
+.tm-sheet-time-pill.interval .tm-time-part {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background-color 0.15s, color 0.15s;
+}
+.tm-sheet-time-pill.interval .tm-time-part:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+.tm-sheet-time-pill.interval .tm-time-sep {
+    opacity: 0.6;
+    font-weight: 400;
+    user-select: none;
+    padding: 0 1px;
+}
+
+/* 备注文本框（统一高度 32px） */
+.tm-sheet-item-comment-input {
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0 10px;
+    color: #ffffff;
+    font-size: 16px;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    transition: border-color 0.2s, background 0.2s;
+}
+.tm-sheet-item-comment-input:focus {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+}
+.tm-sheet-item-comment-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* 删除按钮（统一高度 32px） */
+.tm-sheet-delete-btn {
+    width: 32px;
+    height: 32px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 60, 60, 0.25);
+    background: rgba(255, 60, 60, 0.12);
+    color: #ff5252;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.15s;
+}
+.tm-sheet-delete-btn:hover {
+    background: rgba(255, 60, 60, 0.28);
+    transform: scale(1.05);
+}
+
+.tm-bottom-sheet-empty {
+    padding: 16px;
+    text-align: center;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* ===== Sheet Header Actions & Title ===== */
+.mp-sheet-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mp-sheet-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mp-sheet-undo-btn,
+.tm-sheet-undo-btn {
+    display: none;
+    align-items: center;
+    background: rgba(255, 149, 0, 0.2);
+    border: 1px solid rgba(255, 149, 0, 0.5);
+    color: #ff9500;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.mp-sheet-undo-btn:hover,
+.tm-sheet-undo-btn:hover {
+    background: rgba(255, 149, 0, 0.3);
+}
+
+.mp-sheet-undo-btn.is-active,
+.tm-sheet-undo-btn.is-active {
+    display: inline-flex;
+}
+
+/* ===== Sheet Toolbar ===== */
+.mp-sheet-toolbar,
+.tm-sheet-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    flex-shrink: 0;
+}
+
+.mp-sheet-select-all {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.mp-sheet-share-btn,
+.tm-sheet-share-btn {
+    background: rgba(0, 122, 255, 0.2);
+    border: 1px solid rgba(0, 122, 255, 0.5);
+    color: #007aff;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.mp-sheet-share-btn:hover,
+.tm-sheet-share-btn:hover {
+    background: rgba(0, 122, 255, 0.32);
+}
+
+/* ===== Sheet Item Elements ===== */
+.mp-sheet-row-checkbox,
+.tm-sheet-row-checkbox {
+    margin-right: 4px;
+    cursor: pointer;
+}
+
+.mp-sheet-remark-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.mp-sheet-input-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.mp-sheet-save-btn,
+.tm-sheet-save-btn {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.mp-sheet-save-btn:hover,
+.tm-sheet-save-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.mp-sheet-tag-toggle-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.mp-sheet-tag-drawer,
+.tm-sheet-tag-drawer {
+    display: none;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    margin-top: 2px;
+}
+
+.mp-sheet-tag-drawer.is-open,
+.tm-sheet-tag-drawer.is-open {
+    display: flex;
+}
+
+.mp-sheet-tag-chip,
+.tm-tag-chip {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #dddddd;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.mp-sheet-tag-chip:hover,
+.tm-tag-chip:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+/* ===== Share Modal ===== */
+.mp-sheet-share-desc {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 12px;
+}
+
+.mp-sheet-share-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.mp-sheet-share-btn-copy-url {
+    background: #007aff;
+    color: #ffffff;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.mp-sheet-share-btn-copy-url:hover {
+    background: #0062cc;
+}
+
+.mp-sheet-share-btn-copy-md {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.mp-sheet-share-btn-copy-md:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.mp-sheet-share-btn-close {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    transition: color 0.2s;
+}
+
+.mp-sheet-share-btn-close:hover {
+    color: #ffffff;
+}

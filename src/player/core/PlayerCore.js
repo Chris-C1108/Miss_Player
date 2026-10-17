@@ -48,7 +48,7 @@ export class PlayerCore {
             console.error('[PlayerCore] 未找到视频元素');
             // 如果是从浮动按钮调用的，则重新显示按钮
             if (this.callingButton) {
-                this.callingButton.style.display = 'flex';
+                this.callingButton.classList.remove('is-hidden');
             }
             return;
         }
@@ -104,8 +104,7 @@ export class PlayerCore {
         try {
             if (this.originalParent && !this.videoPlaceholder) {
                 this.videoPlaceholder = document.createElement('div');
-                this.videoPlaceholder.className = 'tm-video-placeholder';
-                this.videoPlaceholder.style.cssText = 'width: 100%; height: 100%; min-height: 200px; aspect-ratio: 16/9; visibility: hidden; pointer-events: none;';
+                this.videoPlaceholder.className = 'mp-video-placeholder';
                 this.originalParent.insertBefore(this.videoPlaceholder, this.targetVideo);
             }
         } catch (_) {}
@@ -174,9 +173,10 @@ export class PlayerCore {
                             if (mutedPromise !== undefined) {
                                 mutedPromise.then(() => {
                                     console.log('[PlayerCore] 静音自动起播成功');
-                                    // 挂载全局一次性交互监听，用户一旦点击/触碰屏幕立即尝试解除静音
+                                    // 挂载全局一次性交互监听，用户一旦点击/触碰屏幕尝试解除静音 (受默认静音设置保护)
                                     const unmuteOnInteract = () => {
-                                        if (this.targetVideo) {
+                                        const isDefaultMutedEnabled = Boolean(getValue('defaultMuted', false));
+                                        if (!isDefaultMutedEnabled && this.targetVideo) {
                                             this.targetVideo.muted = false;
                                         }
                                         document.removeEventListener('click', unmuteOnInteract, true);
@@ -318,7 +318,7 @@ export class PlayerCore {
         
         // 如果是从浮动按钮调用的，则重新显示按钮
         if (this.callingButton) {
-            this.callingButton.style.display = 'flex';
+            this.callingButton.classList.remove('is-hidden');
         }
     }
 } 

@@ -121,7 +121,7 @@ export function createSettingsButtonElement() {
 export function createSidebarControlButtons(sidebarPosition, isSidebarHidden) {
     const sidebarPosBtn = document.createElement('button');
     sidebarPosBtn.className = 'tm-sidebar-pos-button tm-control-button-base';
-    sidebarPosBtn.style.display = 'flex';
+    sidebarPosBtn.style.display = 'none'; // 默认隐藏，由 UIManager.updateSidebarButtonsVisibility 按屏幕方向与宽度接管
     sidebarPosBtn.innerHTML = sidebarPosition === 'right' ? LAYOUT_LEFT : LAYOUT_RIGHT;
     sidebarPosBtn.title = sidebarPosition === 'right' ? '切换侧边栏到左侧' : '切换侧边栏到右侧';
 
@@ -141,10 +141,6 @@ export function createSidebarControlButtons(sidebarPosition, isSidebarHidden) {
 export function createButtonContainerElement() {
     const buttonContainer = document.createElement('div');
     buttonContainer.className = 'tm-button-container';
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.alignItems = 'center';
-    buttonContainer.style.gap = '10px';
-    buttonContainer.style.zIndex = '99999';
     return buttonContainer;
 }
 

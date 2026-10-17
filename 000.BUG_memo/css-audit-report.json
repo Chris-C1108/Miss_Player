@@ -1,0 +1,6603 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-12T05:06:29.099Z",
+    "durationMs": 503,
+    "cssFileCount": 8,
+    "jsFileCount": 86
+  },
+  "summary": {
+    "totalCssLines": 7820,
+    "totalRules": 899,
+    "totalSelectors": 903,
+    "totalClasses": 488,
+    "totalIds": 4,
+    "totalKeyframes": 19,
+    "totalCssVarsDeclared": 57,
+    "totalRootHostVars": 57,
+    "totalImportantCount": 82,
+    "deadCodeSummary": {
+      "zeroHitClassesTotal": 97,
+      "zeroHitClassesMissPlayer": 89,
+      "zeroHitClassesExternal": 8,
+      "deadSelectorsGrade1": 114,
+      "deadSelectorsLeafZero": 8,
+      "deadSelectorsTotalSuspect": 122,
+      "unusedKeyframesCount": 1,
+      "unusedCssVarsCount": 15
+    },
+    "duplicateSummary": {
+      "totalDuplicateSelectors": 97,
+      "crossFileDuplicates": 45,
+      "sameFileDuplicates": 52
+    }
+  },
+  "fileBreakdown": {
+    "src/player/ui/style.css": {
+      "lineCount": 13,
+      "size": 474,
+      "ruleCount": 0,
+      "selectorCount": 0,
+      "classes": [],
+      "importantCount": 0
+    },
+    "src/player/ui/styles/_comments.css": {
+      "lineCount": 2049,
+      "size": 50042,
+      "ruleCount": 240,
+      "selectorCount": 258,
+      "classes": [
+        "is-hidden",
+        "tm-comments-panel",
+        "tm-handle-container",
+        "is-dimmed",
+        "tm-player-container",
+        "tm-comments-panel-action-bar",
+        "tm-action-bar-left",
+        "tm-action-bar-right",
+        "tm-comment-count",
+        "tm-comment-copy-all-btn",
+        "tm-comment-filter-label",
+        "tm-tag-checkbox",
+        "tm-comment-filter-checkbox",
+        "tm-comments-panel-list",
+        "tm-comments-list",
+        "tm-comment-submit-bar-wrapper",
+        "tm-floating-comment-panel",
+        "tm-custom-modal-cancel-btn",
+        "tm-custom-modal-submit-btn",
+        "tm-custom-modal-login-btn",
+        "tm-comment-input-textarea",
+        "tm-comment-submit-bar",
+        "tm-comment-add-tag-btn",
+        "tm-comment-text-input",
+        "tm-comment-send-btn",
+        "tm-comment-tag-select-modal",
+        "visible",
+        "tm-tag-select-header",
+        "tm-tag-select-btn-group",
+        "tm-tag-select-all-btn",
+        "tm-tag-deselect-all-btn",
+        "tm-tag-select-close-btn",
+        "tm-tag-select-list",
+        "tm-tag-select-item",
+        "tm-tag-remark-input",
+        "tm-tag-select-empty",
+        "tm-custom-modal-overlay",
+        "active",
+        "tm-custom-modal-content",
+        "tm-custom-modal-title",
+        "tm-custom-modal-message",
+        "tm-custom-modal-close-btn",
+        "jc-hdr",
+        "jc-hdr-left",
+        "jc-hdr-right",
+        "jc-site",
+        "jc-site-jable",
+        "jc-site-javlib",
+        "jc-skeleton",
+        "skeleton-block",
+        "mp-skeleton-card",
+        "mp-skeleton-header",
+        "mp-skeleton-title-block",
+        "mp-skeleton-meta-block",
+        "mp-skeleton-line",
+        "jc-card",
+        "jc-bd",
+        "jc-u",
+        "jc-t",
+        "jc-body-text",
+        "jc-c-sep",
+        "jc-spam",
+        "jc-spam-badge",
+        "jc-time-link",
+        "jc-time-text",
+        "jc-time-star-btn",
+        "jc-star-icon",
+        "jc-star-filled",
+        "jc-star-outline",
+        "show-star-btn",
+        "is-favorited",
+        "jc-countdown-btn",
+        "jc-countdown-btn--active",
+        "jc-code-link",
+        "jc-emoji",
+        "tm-comment-loading",
+        "tm-comment-error",
+        "mp-comments-error",
+        "mp-comments-loading",
+        "mp-error-card",
+        "mp-error-title",
+        "mp-error-detail",
+        "mp-error-detail-title",
+        "mp-error-retry-btn",
+        "mp-cf-card",
+        "mp-cf-title",
+        "mp-cf-desc",
+        "mp-cf-verify-btn",
+        "mp-cf-retry-btn",
+        "tm-comment-loader-graphic",
+        "dot",
+        "tm-comments-tabs",
+        "tm-comments-tab-btn",
+        "jc-score-badge",
+        "jc-body-text--collapsible",
+        "jc-body-text-content",
+        "jc-toggle-expand-btn",
+        "jc-site-javlib-review",
+        "tm-comment-section",
+        "is-collapsed",
+        "tm-comment-section-body",
+        "tm-comment-section-title",
+        "tm-comment-section-hdr",
+        "tm-comment-login-badge",
+        "is-logged-in",
+        "is-not-logged-in",
+        "is-checking",
+        "tm-comment-status-badge",
+        "tm-status-badge-loading",
+        "tm-status-badge-unreachable",
+        "tm-status-badge-not_found",
+        "tm-status-badge-mobile_unsupported",
+        "tm-status-badge-empty",
+        "tm-status-badge-cf_shield",
+        "tm-status-badge-loaded",
+        "jc-comment-link",
+        "jc-card-highlight-flash",
+        "tm-show-controls-float-btn",
+        "controls-hidden",
+        "jc-action-btn",
+        "jc-report-btn",
+        "tm-report-modal-overlay",
+        "tm-report-modal-dialog",
+        "jc-code-preview-popover",
+        "jc-code-preview-video-wrap",
+        "jc-code-preview-video",
+        "jc-code-preview-loading",
+        "jc-code-preview-fallback",
+        "mp-preview-fallback-icon",
+        "jc-code-preview-spinner",
+        "jc-code-preview-header",
+        "jc-code-preview-title",
+        "jc-code-preview-badge",
+        "tm-code-action-dialog",
+        "tm-code-action-title",
+        "tm-code-action-code",
+        "tm-code-action-buttons",
+        "tm-code-action-btn",
+        "tm-code-action-btn--primary",
+        "tm-code-action-btn--secondary",
+        "jc-code-preview-hover-hint"
+      ],
+      "importantCount": 45
+    },
+    "src/player/ui/styles/_common.css": {
+      "lineCount": 160,
+      "size": 3580,
+      "ruleCount": 21,
+      "selectorCount": 21,
+      "classes": [
+        "tm-floating-button",
+        "tm-toast",
+        "visible",
+        "tm-toast-icon",
+        "tm-toast-content",
+        "tm-toast--top",
+        "tm-toast--bottom",
+        "tm-toast--center",
+        "tm-toast--error",
+        "tm-toast--success",
+        "tm-toast--info"
+      ],
+      "importantCount": 0
+    },
+    "src/player/ui/styles/_controls.css": {
+      "lineCount": 1553,
+      "size": 36740,
+      "ruleCount": 168,
+      "selectorCount": 186,
+      "classes": [
+        "tm-time-indicator",
+        "tm-volume-control",
+        "tm-volume-control-no-slider",
+        "tm-volume-button",
+        "is-muted",
+        "tm-volume-slider-container",
+        "tm-volume-slider-container-disabled",
+        "dragging",
+        "tm-volume-slider-track",
+        "tm-volume-slider-level",
+        "tm-volume-value",
+        "tm-toggle-switch",
+        "tm-toggle-slider",
+        "checked",
+        "tm-playback-rate-button",
+        "fast",
+        "medium",
+        "normal",
+        "tm-progress-controls",
+        "tm-progress-bar-container",
+        "tm-progress-bar",
+        "tm-progress-bar-expanded",
+        "tm-progress-bar-normal",
+        "tm-dragging",
+        "tm-progress-indicator",
+        "tm-progress-handle",
+        "tm-settings-label",
+        "tm-playback-control-row",
+        "tm-control-button",
+        "tm-play-icon",
+        "tm-time-control-button-hover",
+        "tm-time-control-button-active",
+        "tm-time-control-button-default",
+        "tm-time-control-button-after-active",
+        "tm-modal-overlay",
+        "visible",
+        "tm-comment-modal",
+        "tm-modal-header",
+        "tm-modal-title",
+        "tm-modal-close",
+        "tm-floating-panel-close",
+        "tm-modal-content",
+        "tm-comment-textarea",
+        "error",
+        "tm-modal-footer",
+        "tm-modal-button",
+        "tm-modal-cancel",
+        "tm-modal-submit",
+        "tm-video-minimap",
+        "tm-video-minimap-viewport",
+        "tm-video-wrapper",
+        "is-swiping",
+        "tm-floating-comment-panel",
+        "tm-floating-panel-header",
+        "tm-floating-panel-title",
+        "tm-floating-panel-content",
+        "tm-comment-placeholder",
+        "tm-floating-panel-input-area",
+        "tm-floating-panel-input",
+        "tm-floating-panel-submit",
+        "tm-speed-indicator",
+        "mp-pause-indicator",
+        "ripple-btn",
+        "tm-control-buttons",
+        "tm-show-controls-float-btn",
+        "tm-tab-list-btn",
+        "tm-tab-pill",
+        "tm-bottom-sheet-panel",
+        "tm-sheet-tab-pill",
+        "ripple",
+        "tm-ripple",
+        "tm-color-capsule-play-btn",
+        "is-active",
+        "tm-play-mode-btn",
+        "mode-normal",
+        "mode-preview",
+        "mode-climax",
+        "tm-integrated-play-btn",
+        "tm-play-mode-text",
+        "mp-switcher-wrapper",
+        "mp-switcher-capsule",
+        "mp-switcher-indicator",
+        "mp-switcher-track",
+        "mp-switcher-item",
+        "mp-switcher-label",
+        "is-hidden",
+        "mp-switcher-variant-slot",
+        "is-visible",
+        "mp-switcher-action-btn",
+        "mp-switcher-play-icon",
+        "is-paused",
+        "mp-switcher-replay-icon",
+        "mp-switcher-btn-text",
+        "mp-switcher-btn-cancel",
+        "mp-switcher-status-dot",
+        "mp-switcher-status-play",
+        "tm-single-hand-gutter",
+        "tm-gutter-btn-top",
+        "tm-gutter-icon-wrap",
+        "tm-gutter-btn-bottom",
+        "tm-gutter-switch-icon-wrap",
+        "controls-hidden",
+        "tm-player-container",
+        "tm-control-panel",
+        "tm-single-hand-right",
+        "tm-single-hand-left"
+      ],
+      "importantCount": 6
+    },
+    "src/player/ui/styles/_landscape_pc.css": {
+      "lineCount": 594,
+      "size": 17308,
+      "ruleCount": 69,
+      "selectorCount": 94,
+      "classes": [
+        "tm-control-drag-handle",
+        "tm-player-container",
+        "tm-comments-panel",
+        "tm-button-container",
+        "tm-sidebar-hidden",
+        "tm-sidebar-left",
+        "tm-sidebar-toggle-button",
+        "tm-close-button",
+        "tm-video-container",
+        "tm-video-wrapper",
+        "tm-video-minimap",
+        "video-portrait",
+        "tm-comments-panel-list",
+        "tm-comments-list",
+        "tm-comment-section",
+        "is-collapsed",
+        "tm-comment-section-body",
+        "tm-comments-panel-action-bar",
+        "tm-comment-submit-bar-wrapper",
+        "tm-comments-panel-publish-btn",
+        "tm-handle-container",
+        "tm-control-buttons",
+        "dragging",
+        "controls-hidden",
+        "tm-video-overlay",
+        "tm-settings-panel",
+        "tm-controls-docked-br",
+        "tm-controls-docked-bl",
+        "tm-controls-docked-tr",
+        "tm-controls-docked-tl",
+        "tm-sidebar-pos-button",
+        "tm-settings-options",
+        "tm-player-title",
+        "tm-time-display",
+        "tm-tab-pill",
+        "tm-seek-control-row",
+        "tm-loop-control-row",
+        "tm-playback-control-row"
+      ],
+      "importantCount": 14
+    },
+    "src/player/ui/styles/_player.css": {
+      "lineCount": 3003,
+      "size": 75966,
+      "ruleCount": 355,
+      "selectorCount": 402,
+      "classes": [
+        "tm-video-overlay",
+        "tm-player-container",
+        "tm-button-container",
+        "tm-video-container",
+        "tm-video-wrapper",
+        "tm-speed-indicator",
+        "tm-video-minimap",
+        "tm-inline-remark-popover",
+        "tm-handle-container",
+        "tm-resize-handle",
+        "dragging",
+        "tm-control-button-base",
+        "tm-close-button",
+        "tm-settings-button",
+        "tm-sidebar-pos-button",
+        "tm-sidebar-toggle-button",
+        "tm-settings-panel",
+        "active",
+        "tm-settings-active",
+        "tm-comments-list",
+        "tm-comments-panel",
+        "tm-settings-menu-container",
+        "tm-settings-section",
+        "tm-settings-section-header",
+        "collapsible",
+        "tm-settings-header-arrow",
+        "expanded",
+        "tm-settings-section-divider",
+        "tm-settings-option-row",
+        "tm-settings-label-wrapper",
+        "tm-settings-text-wrapper",
+        "tm-settings-label",
+        "tm-settings-subtext",
+        "tm-settings-seek-steps-subpanel",
+        "tm-settings-sources-subpanel",
+        "tm-seek-step-badge",
+        "tm-source-badge",
+        "enabled",
+        "disabled",
+        "tm-seek-step-add-btn",
+        "tm-seek-step-input",
+        "tm-settings-webdav-card",
+        "tm-webdav-form-row",
+        "tm-webdav-label",
+        "tm-webdav-input-group",
+        "tm-webdav-input",
+        "has-eye",
+        "tm-webdav-eye-btn",
+        "tm-webdav-switch-row",
+        "tm-webdav-switch-info",
+        "tm-webdav-switch-title",
+        "tm-webdav-switch-desc",
+        "tm-webdav-device-badge",
+        "tm-webdav-actions-container",
+        "tm-webdav-sub-actions",
+        "tm-webdav-btn",
+        "tm-webdav-btn-primary",
+        "tm-webdav-btn-secondary",
+        "tm-webdav-status-bar",
+        "tm-webdav-status-badge",
+        "success",
+        "error",
+        "running",
+        "tm-spinner-sm",
+        "tm-settings-about-card",
+        "tm-about-header-row",
+        "tm-about-brand-wrap",
+        "tm-about-brand-title",
+        "tm-about-version-badge",
+        "is-update",
+        "tm-about-link-btn",
+        "tm-about-stats-grid",
+        "tm-about-stat-box",
+        "tm-about-stat-val",
+        "tm-about-stat-lbl",
+        "tm-about-update-banner",
+        "tm-about-update-title",
+        "tm-about-update-desc",
+        "tm-about-update-actions",
+        "tm-about-check-row",
+        "tm-about-btn",
+        "tm-about-btn--check",
+        "is-loading",
+        "tm-about-btn--primary",
+        "tm-about-btn--secondary",
+        "has-update-badge",
+        "tm-toggle-input",
+        "tm-start-time-container",
+        "tm-end-time-container",
+        "tm-set-loop-start-label",
+        "tm-set-loop-end-label",
+        "tm-loop-start-position",
+        "tm-loop-end-position",
+        "tm-loop-toggle-button",
+        "tm-loop-range",
+        "tm-progress-bar-container",
+        "tm-loop-marker",
+        "tm-loop-start-marker",
+        "tm-loop-end-marker",
+        "tm-start-time-container-hover",
+        "tm-start-time-container-default",
+        "tm-end-time-container-hover",
+        "tm-end-time-container-default",
+        "tm-loop-button-hover",
+        "tm-loop-button-active",
+        "tm-loop-button-default",
+        "tm-indicator-base",
+        "visible",
+        "tm-pause-indicator",
+        "tm-progress-row",
+        "tm-seek-control-row",
+        "tm-loop-control-row",
+        "tm-inline-remark-body",
+        "tm-inline-remark-input",
+        "tm-inline-remark-footer",
+        "tm-inline-remark-btn",
+        "cancel",
+        "submit",
+        "tm-playback-control-row",
+        "tm-playback-bottom-layer",
+        "tm-center-controls",
+        "tm-playback-top-layer",
+        "tm-left-controls",
+        "tm-right-controls",
+        "is-sliding",
+        "tm-has-layers",
+        "tm-volume-control",
+        "tm-time-display",
+        "tm-time-display-container",
+        "tm-current-time",
+        "tm-total-duration",
+        "tm-tab-scroll-container",
+        "tm-tab-pill",
+        "near",
+        "looping",
+        "tm-tab-time-text",
+        "tm-tab-loop-overlay",
+        "draft",
+        "editing",
+        "placeholder",
+        "tm-draft-label",
+        "a",
+        "b",
+        "tm-draft-time",
+        "tm-draft-action",
+        "save",
+        "edit-comment",
+        "tm-tab-list-btn",
+        "tm-bottom-sheet-overlay",
+        "tm-bottom-sheet-panel",
+        "tm-sheet-header",
+        "tm-bottom-sheet-title",
+        "tm-sheet-count-badge",
+        "tm-sheet-close-btn",
+        "tm-bottom-sheet-list",
+        "tm-sheet-item",
+        "tm-sheet-item-time-container",
+        "tm-sheet-time-pill",
+        "interval",
+        "tm-time-part",
+        "tm-time-sep",
+        "tm-sheet-item-comment-input",
+        "tm-sheet-delete-btn",
+        "tm-bottom-sheet-empty",
+        "tm-rewind-group",
+        "tm-forward-group",
+        "tm-rewind-buttons-container",
+        "tm-forward-buttons-container",
+        "tm-time-control-button",
+        "tm-time-control-button-active",
+        "tm-time-control-button-after-active",
+        "tm-time-control-button-inner",
+        "tm-rewind-icon",
+        "tm-forward-icon",
+        "tm-time-text-margin-left",
+        "tm-time-text-margin-right",
+        "tm-control-button-hover",
+        "tm-control-button-default",
+        "tm-control-panel",
+        "tm-control-buttons",
+        "controls-hidden",
+        "tm-control-button",
+        "tm-control-row",
+        "hidden",
+        "tm-comment-row",
+        "tm-comment-container",
+        "tm-comment-header",
+        "tm-comment-left",
+        "tm-comment-title",
+        "tm-comment-count",
+        "tm-comment-actions",
+        "tm-comment-button",
+        "tm-comment-write",
+        "tm-comment-placeholder",
+        "tm-player-title",
+        "tm-single-hand-right",
+        "tm-single-hand-gutter",
+        "tm-single-hand-left",
+        "tm-single-hand-active",
+        "tm-swiping-down",
+        "tm-jump-active",
+        "tm-sidebar-hidden",
+        "tm-player-active",
+        "header",
+        "navbar",
+        "top-nav",
+        "tm-progress-markers-container",
+        "tm-progress-marker-tick",
+        "tm-progress-marker-range",
+        "tm-active-loop-played",
+        "tm-active-loop-unplayed",
+        "tm-active-loop-boundary",
+        "start",
+        "end",
+        "tm-debug-log-panel-container",
+        "tm-debug-log-pill",
+        "tm-debug-pill-icon",
+        "tm-debug-pill-title",
+        "tm-debug-pill-status",
+        "level-success",
+        "level-warn",
+        "level-error",
+        "tm-debug-pill-arrow",
+        "tm-debug-log-box",
+        "tm-debug-box-header",
+        "tm-debug-box-title",
+        "tm-debug-box-count",
+        "tm-debug-box-actions",
+        "tm-debug-btn",
+        "tm-debug-log-list",
+        "tm-debug-log-empty",
+        "tm-debug-log-row",
+        "tm-log-time",
+        "level-info",
+        "tm-log-msg"
+      ],
+      "importantCount": 16
+    },
+    "src/player/ui/styles/_settings_apple.css": {
+      "lineCount": 346,
+      "size": 8025,
+      "ruleCount": 41,
+      "selectorCount": 42,
+      "classes": [
+        "tm-settings-apple-container",
+        "tm-settings-apple-header",
+        "tm-settings-apple-title-wrap",
+        "tm-settings-apple-title",
+        "tm-settings-apple-close-btn",
+        "tm-settings-group",
+        "tm-settings-group-header",
+        "tm-apple-card",
+        "tm-apple-row",
+        "tm-apple-row-left",
+        "tm-apple-row-title",
+        "tm-apple-row-subtext",
+        "tm-apple-row-right",
+        "tm-apple-switch",
+        "active",
+        "tm-settings-sources-subpanel",
+        "tm-comment-source-badge",
+        "enabled",
+        "disabled",
+        "tm-apple-accordion-header",
+        "tm-apple-accordion-title",
+        "tm-apple-accordion-meta",
+        "tm-apple-accordion-arrow",
+        "expanded",
+        "tm-apple-duration-row",
+        "tm-apple-duration-input",
+        "tm-settings-skeleton-card"
+      ],
+      "importantCount": 0
+    },
+    "src/player/ui/styles/_variables.css": {
+      "lineCount": 102,
+      "size": 3442,
+      "ruleCount": 5,
+      "selectorCount": 26,
+      "classes": [
+        "tm-video-overlay",
+        "tm-comment-text-input",
+        "tm-comment-input-textarea",
+        "tm-tag-remark-input",
+        "tm-sheet-item-comment-input",
+        "tm-inline-remark-input",
+        "tm-seek-step-input",
+        "tm-floating-panel-input"
+      ],
+      "importantCount": 1
+    }
+  },
+  "topDuplicates": [
+    {
+      "selector": ".tm-control-buttons",
+      "totalDeclarations": 8,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 297,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 498,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 518,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 580,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2264,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2743,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2753,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2759,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ":host",
+      "totalDeclarations": 6,
+      "fileCount": 4,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css",
+        "src/player/ui/styles/_settings_apple.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 34,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 38,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 43,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 6,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 2,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comments-panel",
+      "totalDeclarations": 5,
+      "fileCount": 3,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 10,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1344,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 195,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 368,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2764,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ":root",
+      "totalDeclarations": 5,
+      "fileCount": 3,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_settings_apple.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 34,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 38,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 43,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 6,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 2,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-control-drag-handle",
+      "totalDeclarations": 4,
+      "fileCount": 1,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 4,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 321,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 503,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 542,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-floating-comment-panel",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_controls.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 248,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 785,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 864,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-input-textarea",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 296,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1774,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 85,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-volume-control",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_controls.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 30,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 227,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1622,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-modal",
+      "totalDeclarations": 3,
+      "fileCount": 1,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_controls.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 565,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 714,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 727,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-video-container",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 142,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 78,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 98,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container.controls-hidden .tm-control-buttons",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 334,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 547,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2305,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ":host(.controls-hidden) .tm-control-buttons",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 334,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 547,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2305,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container:not(.controls-hidden) .tm-control-buttons",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 340,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 553,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2312,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ":host(:not(.controls-hidden)) .tm-control-buttons",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 340,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 553,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2312,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-tab-pill",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 509,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1693,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1718,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-settings-sources-subpanel",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_player.css",
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 465,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 581,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 210,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comments-panel::after",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 219,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comments-panel-action-bar",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 70,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 263,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-copy-all-btn",
+      "totalDeclarations": 2,
+      "fileCount": 1,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_comments.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 120,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1617,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-copy-all-btn:hover",
+      "totalDeclarations": 2,
+      "fileCount": 1,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_comments.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 136,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1630,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "crossFileDuplicates": [
+    {
+      "selector": ".tm-control-buttons",
+      "totalDeclarations": 8,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 297,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 498,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 518,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 580,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2264,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2743,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2753,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2759,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ":host",
+      "totalDeclarations": 6,
+      "fileCount": 4,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css",
+        "src/player/ui/styles/_settings_apple.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 34,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 38,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 43,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 6,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 2,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comments-panel",
+      "totalDeclarations": 5,
+      "fileCount": 3,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 10,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1344,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 195,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 368,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2764,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ":root",
+      "totalDeclarations": 5,
+      "fileCount": 3,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_settings_apple.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 34,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 38,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 43,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 6,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 2,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-floating-comment-panel",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_controls.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 248,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 785,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 864,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-input-textarea",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 296,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1774,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 85,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-volume-control",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_controls.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 30,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 227,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1622,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-video-container",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 142,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 78,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 98,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container.controls-hidden .tm-control-buttons",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 334,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 547,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2305,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ":host(.controls-hidden) .tm-control-buttons",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 334,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 547,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2305,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container:not(.controls-hidden) .tm-control-buttons",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 340,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 553,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2312,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ":host(:not(.controls-hidden)) .tm-control-buttons",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 340,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 553,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2312,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-tab-pill",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 509,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1693,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1718,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-settings-sources-subpanel",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_player.css",
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 465,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 581,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 210,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comments-panel::after",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 219,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comments-panel-action-bar",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 70,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 263,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comments-panel-list.tm-comments-list",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 205,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 224,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-submit-bar-wrapper",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 236,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 273,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-text-input",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 358,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 85,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-tag-remark-input",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 536,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 85,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-section",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1403,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 238,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-section:not(.is-collapsed)",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1414,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 246,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-section-body",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_comments.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1418,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 254,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-settings-label",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_controls.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 456,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 430,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-time-control-button-active",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_controls.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 526,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2203,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-time-control-button-after-active",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_controls.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 536,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2208,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-video-minimap",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_controls.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 738,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 171,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-floating-panel-input",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_controls.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 884,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 85,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-control-buttons .tm-tab-pill",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_controls.css",
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 996,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 589,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container.controls-hidden .tm-control-panel",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_controls.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1533,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2642,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ":host(.controls-hidden) .tm-control-panel",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_controls.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1533,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2642,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 51,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 33,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-video-wrapper",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 159,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 104,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-video-wrapper video",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 177,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 134,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-handle-container",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 292,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 146,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-control-buttons.dragging",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 326,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2299,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-video-overlay",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 347,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-sidebar-pos-button",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 465,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2709,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-sidebar-toggle-button",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 465,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2709,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-title",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 479,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2488,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-time-display",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 506,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1633,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-button-container",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css",
+        "src/player/ui/styles/_player.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 563,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 61,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-seek-step-input",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_player.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 564,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 85,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-inline-remark-input",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_player.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1444,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 85,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-sheet-item-comment-input",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/_player.css",
+        "src/player/ui/styles/_variables.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2083,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 85,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "rootHostVariables": [
+    {
+      "varName": "--sidebar-width",
+      "declarationCount": 3,
+      "isMultiple": true,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_landscape_pc.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 35,
+          "value": "clamp(350px, 28vw, 420px)",
+          "selector": ":root, :host"
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 39,
+          "value": "clamp(350px, 28vw, 420px)",
+          "selector": ":root, :host"
+        },
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 44,
+          "value": "clamp(380px, 22vw, 560px)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-card-bg",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 7,
+          "value": "rgba(255, 255, 255, 0.05)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-card-border",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 8,
+          "value": "rgba(255, 255, 255, 0.08)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-card-radius",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 9,
+          "value": "12px",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-row-height",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 10,
+          "value": "44px",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-divider",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 11,
+          "value": "rgba(255, 255, 255, 0.06)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-text-primary",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 12,
+          "value": "#ffffff",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-text-secondary",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 13,
+          "value": "rgba(255, 255, 255, 0.55)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-text-muted",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 14,
+          "value": "rgba(255, 255, 255, 0.38)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-switch-active",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 15,
+          "value": "#0a84ff",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-switch-track",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 16,
+          "value": "rgba(255, 255, 255, 0.16)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-switch-thumb",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_settings_apple.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 17,
+          "value": "#ffffff",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--brand-pink",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 4,
+          "value": "rgb(254, 98, 142)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--brand-pink-rgb",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 5,
+          "value": "254, 98, 142",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-background",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 8,
+          "value": "0 0% 0%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 9,
+          "value": "0 0% 100%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-card",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 10,
+          "value": "0 0% 5%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-card-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 11,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-popover",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 12,
+          "value": "0 0% 10%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-popover-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 13,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-primary",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 14,
+          "value": "210 10% 90%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-primary-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 15,
+          "value": "210 20% 10%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-secondary",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 16,
+          "value": "0 0% 15%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-secondary-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 17,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-muted",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 18,
+          "value": "0 0% 30%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-muted-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 19,
+          "value": "0 0% 70%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-accent",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 20,
+          "value": "212 40% 30%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-accent-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 21,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-destructive",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 22,
+          "value": "0 50% 40%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-destructive-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 23,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-border",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 24,
+          "value": "0 0% 30%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-input",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 25,
+          "value": "0 0% 15%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-ring",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 26,
+          "value": "212 70% 45%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-green",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 29,
+          "value": "142 50% 45%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-green-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 30,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-blue",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 31,
+          "value": "211 70% 55%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-blue-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 32,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-red",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 33,
+          "value": "0 60% 50%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-red-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 34,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-orange",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 35,
+          "value": "25 80% 50%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-orange-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 36,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-purple",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 37,
+          "value": "262 60% 60%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-purple-foreground",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 38,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-radius",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 41,
+          "value": "0.5rem",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-radius-sm",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 42,
+          "value": "0.3rem",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadcn-radius-lg",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 43,
+          "value": "0.8rem",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--button-sm",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 46,
+          "value": "20px",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--button-md",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 47,
+          "value": "32px",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--button-lg",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 48,
+          "value": "40px",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--button-xl",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 49,
+          "value": "48px",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--anim-quick",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 52,
+          "value": "0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--anim-smooth",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 53,
+          "value": "0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--anim-bounce",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 54,
+          "value": "0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadow-sm",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 57,
+          "value": "0 2px 5px rgba(0, 0, 0, 0.2)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadow-md",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 58,
+          "value": "0 4px 10px rgba(0, 0, 0, 0.25)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--shadow-lg",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 59,
+          "value": "0 8px 20px rgba(0, 0, 0, 0.3)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--font-sans",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/_variables.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 62,
+          "value": "\"SF Pro Display\", \"SF Pro\", \"Segoe UI\", \"Microsoft YaHei\", \"微软雅黑\", \"PingFang SC\", \"苹方\", \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\"",
+          "selector": ":root, :host"
+        }
+      ]
+    }
+  ],
+  "deadSelectorsGrade1": [
+    {
+      "selector": ".tm-custom-modal-content",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 590,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-custom-modal-content"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".jc-site",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 669,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "jc-site"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".jc-site-jable",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 681,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "jc-site-jable"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".jc-site-javlib",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 687,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "jc-site-javlib"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".jc-c-sep",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 848,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "jc-c-sep"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".jc-emoji",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1090,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "jc-emoji"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comments-tab-btn",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1295,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comments-tab-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comments-tab-btn:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1309,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comments-tab-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comments-tab-btn:active",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1314,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comments-tab-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".jc-site-javlib-review",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1394,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "jc-site-javlib-review"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-status-badge-loading",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1554,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-status-badge-loading"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-status-badge-unreachable",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1561,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-status-badge-unreachable"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-status-badge-not_found",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1567,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-status-badge-not_found"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-status-badge-mobile_unsupported",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1573,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-status-badge-mobile_unsupported"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-status-badge-empty",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1579,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-status-badge-empty"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-status-badge-cf_shield",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1585,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-status-badge-cf_shield"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-status-badge-loaded",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1591,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-status-badge-loaded"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".jc-card-highlight-flash",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1648,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "jc-card-highlight-flash"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-code-action-dialog",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1933,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-code-action-dialog"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-code-action-title",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1953,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-code-action-title"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-code-action-code",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1960,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-code-action-code"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-code-action-buttons",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1974,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-code-action-buttons"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-code-action-btn",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1981,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-code-action-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-code-action-btn:active",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1996,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-code-action-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-code-action-btn--primary",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 2000,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-code-action-btn--primary"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-code-action-btn--primary:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 2006,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-code-action-btn--primary"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-code-action-btn--secondary",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 2010,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-code-action-btn--secondary"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-code-action-btn--secondary:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 2016,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-code-action-btn--secondary"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-toast--top",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_common.css",
+          "line": 119,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-toast--top"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-toast--bottom",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_common.css",
+          "line": 127,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-toast--bottom"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-toast--center",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_common.css",
+          "line": 135,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-toast--center"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-time-indicator",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 4,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-time-indicator"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-volume-control-no-slider",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 45,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-volume-control-no-slider"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-volume-slider-container",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 147,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-volume-slider-container"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-volume-slider-container-disabled",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 155,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-volume-slider-container-disabled"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-volume-slider-track",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 181,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 231,
+          "column": 5
+        }
+      ],
+      "classes": [
+        "tm-volume-slider-track"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-volume-slider-level",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 191,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 238,
+          "column": 5
+        }
+      ],
+      "classes": [
+        "tm-volume-slider-level"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-volume-value",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 203,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-volume-value"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-progress-handle",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 432,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-progress-handle"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-progress-handle:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 449,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-progress-handle"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-header",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 586,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 718,
+          "column": 5
+        }
+      ],
+      "classes": [
+        "tm-modal-header"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-title",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 594,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-title"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-close",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 601,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-close"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-close::after",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 616,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-close"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-close::after",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 616,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-close"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-close:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 625,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-close"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-close:active",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 630,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-close"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-content",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 634,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 718,
+          "column": 5
+        }
+      ],
+      "classes": [
+        "tm-modal-content"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-textarea",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 639,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 732,
+          "column": 5
+        }
+      ],
+      "classes": [
+        "tm-comment-textarea"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-textarea:focus",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 655,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-textarea"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-textarea::placeholder",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 661,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-textarea"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-footer",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 670,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 718,
+          "column": 5
+        }
+      ],
+      "classes": [
+        "tm-modal-footer"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-button",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 678,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-button"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-cancel",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 688,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-cancel"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-cancel:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 693,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-cancel"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-submit",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 698,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-submit"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-submit:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 703,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-submit"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-modal-button:active",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 709,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-modal-button"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-header",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 812,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-header"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-title",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 821,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-title"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-close",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 828,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-close"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-close:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 842,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-close"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-content",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 847,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-content"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-content .tm-comment-placeholder",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 854,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-content",
+        "tm-comment-placeholder"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-input-area",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 873,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 945,
+          "column": 5
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-input-area"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-input",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 884,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 85,
+          "column": 5
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-input"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-input:focus",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 896,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-input"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-input::placeholder",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 902,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-input"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-submit",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 911,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-submit"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-submit:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 926,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-submit"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-submit:active",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 932,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-submit"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-floating-panel-submit svg",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 936,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-floating-panel-submit"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-color-capsule-play-btn",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1051,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-color-capsule-play-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-color-capsule-play-btn:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1057,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-color-capsule-play-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-play-mode-btn",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1079,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-play-mode-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-play-mode-btn.mode-normal",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1095,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-play-mode-btn",
+        "mode-normal"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-play-mode-btn.mode-preview",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1101,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-play-mode-btn",
+        "mode-preview"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-play-mode-btn.mode-climax",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1109,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-play-mode-btn",
+        "mode-climax"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-integrated-play-btn",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1129,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-integrated-play-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-integrated-play-btn.mode-normal",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1149,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-integrated-play-btn",
+        "mode-normal"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-integrated-play-btn.mode-normal svg",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1154,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-integrated-play-btn",
+        "mode-normal"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-integrated-play-btn.mode-preview",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1163,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-integrated-play-btn",
+        "mode-preview"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-integrated-play-btn.mode-climax",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1163,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-integrated-play-btn",
+        "mode-climax"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-integrated-play-btn .tm-play-mode-text",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1174,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-integrated-play-btn",
+        "tm-play-mode-text"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-integrated-play-btn:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1183,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-integrated-play-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-integrated-play-btn:active",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1188,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-integrated-play-btn"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-time-display",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 506,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1633,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-time-display"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-settings-section",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 354,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-settings-section"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-loop-toggle-button:active",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1203,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-loop-toggle-button"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-start-time-container-hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1315,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-start-time-container-hover"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-start-time-container-default",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1320,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-start-time-container-default"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-end-time-container-hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1325,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-end-time-container-hover"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-end-time-container-default",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1330,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-end-time-container-default"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-loop-button-hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1336,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-loop-button-hover"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-loop-button-active",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1341,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-loop-button-active"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-loop-button-default",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1345,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-loop-button-default"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-indicator-base",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1351,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-indicator-base"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-pause-indicator",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1377,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-pause-indicator"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-control-button-hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2236,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-control-button-hover"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-control-button-default",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2241,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-control-button-default"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-control-row",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2372,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-control-row"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-row",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2391,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-row"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-container",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2400,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2479,
+          "column": 5
+        }
+      ],
+      "classes": [
+        "tm-comment-container"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-header",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2408,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-header"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-left",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2417,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-left"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-title",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2422,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-title"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-actions",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2431,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-actions"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-button",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2436,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-button"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-button:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2447,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-button"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-button:active",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2452,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-button"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-write",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2456,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-write"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-write:hover",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2461,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-comment-write"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-comment-placeholder",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2465,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2483,
+          "column": 5
+        }
+      ],
+      "classes": [
+        "tm-comment-placeholder"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    },
+    {
+      "selector": ".tm-apple-duration-row",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 308,
+          "column": 1
+        }
+      ],
+      "classes": [
+        "tm-apple-duration-row"
+      ],
+      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
+    }
+  ],
+  "deadClassesMissPlayer": [
+    {
+      "className": "tm-custom-modal-content",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 590,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 604,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "jc-site",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 669,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "jc-site-jable",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 681,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "jc-site-javlib",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 687,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "jc-c-sep",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 848,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "jc-spam",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 857,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 862,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "jc-emoji",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1090,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-comments-tab-btn",
+      "cssDeclarations": 4,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1295,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1309,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1314,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1318,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "jc-site-javlib-review",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1394,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-status-badge-loading",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1554,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-status-badge-unreachable",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1561,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-status-badge-not_found",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1567,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-status-badge-mobile_unsupported",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1573,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-status-badge-empty",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1579,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-status-badge-cf_shield",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1585,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-status-badge-loaded",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1591,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "jc-card-highlight-flash",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1648,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-code-action-dialog",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1933,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1949,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-code-action-title",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1953,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-code-action-code",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1960,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-code-action-buttons",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1974,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-code-action-btn",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1981,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1996,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-code-action-btn--primary",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 2000,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 2006,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-code-action-btn--secondary",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 2010,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 2016,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-toast--top",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_common.css",
+          "line": 119,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_common.css",
+          "line": 123,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-toast--bottom",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_common.css",
+          "line": 127,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_common.css",
+          "line": 131,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-toast--center",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_common.css",
+          "line": 135,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_common.css",
+          "line": 139,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-time-indicator",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 4,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-volume-control-no-slider",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 45,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 50,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-volume-slider-container",
+      "cssDeclarations": 3,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 147,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 168,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 175,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-volume-slider-container-disabled",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 155,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-volume-slider-track",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 181,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 231,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-volume-slider-level",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 191,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 238,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-volume-value",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 203,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 221,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-progress-handle",
+      "cssDeclarations": 3,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 432,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 449,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 449,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-modal-header",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 586,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 718,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-modal-title",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 594,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-modal-close",
+      "cssDeclarations": 4,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 601,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 616,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 625,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 630,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-floating-panel-close",
+      "cssDeclarations": 3,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 616,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 828,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 842,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-modal-content",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 634,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 718,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-comment-textarea",
+      "cssDeclarations": 5,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 639,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 655,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 661,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 665,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 732,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-modal-footer",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 670,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 718,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-modal-button",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 678,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 709,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-modal-cancel",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 688,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 693,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-modal-submit",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 698,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 703,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-floating-panel-header",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 812,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-floating-panel-title",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 821,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-floating-panel-content",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 847,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 854,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-comment-placeholder",
+      "cssDeclarations": 3,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 854,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2465,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2483,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-floating-panel-input-area",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 873,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 945,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-floating-panel-input",
+      "cssDeclarations": 5,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 884,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 896,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 902,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 906,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 85,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-floating-panel-submit",
+      "cssDeclarations": 4,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 911,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 926,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 932,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 936,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-sheet-tab-pill",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 996,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-color-capsule-play-btn",
+      "cssDeclarations": 3,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1051,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1057,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1061,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-play-mode-btn",
+      "cssDeclarations": 4,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1079,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1095,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1101,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1109,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-integrated-play-btn",
+      "cssDeclarations": 8,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1129,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1149,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1154,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1163,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1163,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1174,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1183,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1188,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-play-mode-text",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_controls.css",
+          "line": 1174,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-settings-options",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 474,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-time-display",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_landscape_pc.css",
+          "line": 506,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1633,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-settings-section",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 354,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-start-time-container",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1145,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1150,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-end-time-container",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1156,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1161,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-set-loop-start-label",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1167,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1172,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-set-loop-end-label",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1177,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1182,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-loop-start-position",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1187,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1192,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-loop-end-position",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1187,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1192,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-loop-toggle-button",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1198,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1203,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-start-time-container-hover",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1315,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-start-time-container-default",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1320,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-end-time-container-hover",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1325,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-end-time-container-default",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1330,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-loop-button-hover",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1336,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-loop-button-active",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1341,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-loop-button-default",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1345,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-indicator-base",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1351,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1370,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-pause-indicator",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1377,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-has-layers",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1601,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 1611,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-control-button-hover",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2236,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-control-button-default",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2241,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-control-row",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2372,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2384,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-comment-row",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2391,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-comment-container",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2400,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2479,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "className": "tm-comment-header",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2408,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-comment-left",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2417,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-comment-title",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2422,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-comment-actions",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2431,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-comment-button",
+      "cssDeclarations": 3,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2436,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2447,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2452,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-comment-write",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2456,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/_player.css",
+          "line": 2461,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "className": "tm-apple-duration-row",
+      "cssDeclarations": 1,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 308,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "unusedKeyframes": [
+    {
+      "name": "tmShake",
+      "locations": [
+        {
+          "file": "src/player/ui/styles/_comments.css",
+          "line": 1267
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    }
+  ],
+  "unusedCssVars": [
+    {
+      "varName": "--mp-settings-switch-active",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 15,
+          "value": "#0a84ff",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--mp-settings-switch-track",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 16,
+          "value": "rgba(255, 255, 255, 0.16)",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--mp-settings-switch-thumb",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_settings_apple.css",
+          "line": 17,
+          "value": "#ffffff",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--shadcn-popover",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 12,
+          "value": "0 0% 10%",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--shadcn-popover-foreground",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 13,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--shadcn-primary-foreground",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 15,
+          "value": "210 20% 10%",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--shadcn-accent-foreground",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 21,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--shadcn-input",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 25,
+          "value": "0 0% 15%",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--shadcn-ring",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 26,
+          "value": "212 70% 45%",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--shadcn-green-foreground",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 30,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--shadcn-red-foreground",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 34,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--shadcn-orange-foreground",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 36,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--shadcn-purple-foreground",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 38,
+          "value": "0 0% 95%",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--button-sm",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 46,
+          "value": "20px",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    },
+    {
+      "varName": "--anim-bounce",
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/_variables.css",
+          "line": 54,
+          "value": "0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+          "selector": ":root, :host"
+        }
+      ],
+      "usedInCss": false,
+      "jsHits": 0,
+      "jsFiles": []
+    }
+  ]
+}

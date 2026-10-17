@@ -9,8 +9,10 @@
     "dev:webpack": "webpack --mode development --watch",
     "lint:compliance": "node scripts/compliance-lint.js",
     "ci:check": "node scripts/ci-test.js",
-    "test:ui": "node tests/ui/run.js"
-    ,"test:perf": "node tests/perf/run-perf.js"
+    "test:ui": "node tests/ui/run.js",
+    "test:perf": "node tests/perf/run-perf.js",
+    "test:screenshot": "node tests/ui-screenshots/screenshot.js",
+    "test:screenshot:open": "node tests/ui-screenshots/screenshot.js --open"
   },
   "keywords": [
     "油猴脚本",
@@ -21,6 +23,7 @@
   "devDependencies": {
     "@babel/core": "^7.23.2",
     "@babel/preset-env": "^7.23.2",
+    "@playwright/test": "^1.64.0",
     "babel-loader": "^9.1.3",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "babel-plugin-transform-remove-debugger": "^6.9.4",

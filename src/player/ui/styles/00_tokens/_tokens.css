@@ -1,0 +1,213 @@
+/* =========================================================================
+   Miss Player - 设计系统令牌 (Design System Tokens)
+   遵循 Apple Human Interface Guidelines (HIG) 设计规范与 AGENTS.md 准则
+   ========================================================================= */
+
+:root, :host {
+    /* -------------------------------------------------------------------------
+       1. 品牌色与 Apple 纯黑底色 (Brand & Base Surface)
+       ------------------------------------------------------------------------- */
+    --brand-pink: rgb(254, 98, 142);
+    --brand-pink-rgb: 254, 98, 142;
+
+    /* Apple 纯黑底色与界面层级 */
+    --mp-color-black: #000000;
+    --mp-color-white: #ffffff;
+    --mp-bg-pure-black: #000000;
+    --mp-bg-surface: rgba(20, 20, 20, 0.75);
+    --mp-bg-surface-elevated: rgba(30, 30, 30, 0.85);
+    --mp-bg-overlay: rgba(0, 0, 0, 0.65);
+
+    /* -------------------------------------------------------------------------
+       2. 颜色系统 (Shadcn 兼容色系 - 符合 Apple Dark Mode 规范)
+       ------------------------------------------------------------------------- */
+    --shadcn-background: 0 0% 0%; /* 纯黑色背景 */
+    --shadcn-foreground: 0 0% 100%; /* 纯白色前景 */
+    --shadcn-card: 0 0% 5%; /* 深灰色卡片背景 */
+    --shadcn-card-foreground: 0 0% 95%; /* 淡灰白色卡片前景 */
+    --shadcn-popover: 0 0% 10%; /* 深灰色弹出层背景 */
+    --shadcn-popover-foreground: 0 0% 95%; /* 淡灰白色弹出层前景 */
+    --shadcn-primary: 210 10% 90%; /* 淡蓝灰色主色 */
+    --shadcn-primary-foreground: 210 20% 10%; /* 深蓝灰色主色前景 */
+    --shadcn-secondary: 0 0% 15%; /* 次要颜色为深灰色 */
+    --shadcn-secondary-foreground: 0 0% 95%; /* 淡灰白色次要前景 */
+    --shadcn-muted: 0 0% 30%; /* 柔和的深灰色 */
+    --shadcn-muted-foreground: 0 0% 70%; /* 柔和的浅灰色前景 */
+    --shadcn-accent: 212 40% 30%; /* 柔和的蓝灰色强调色 */
+    --shadcn-accent-foreground: 0 0% 95%; /* 淡灰白色强调前景 */
+    --shadcn-destructive: 0 50% 40%; /* 柔和的红色 */
+    --shadcn-destructive-foreground: 0 0% 95%; /* 淡灰白色破坏性操作前景 */
+    --shadcn-border: 0 0% 30%; /* 深灰色边框 */
+    --shadcn-input: 0 0% 15%; /* 深灰色输入框 */
+    --shadcn-ring: 212 70% 45%; /* 蓝色环 */
+
+    /* -------------------------------------------------------------------------
+       3. 状态颜色 (Status Colors - 柔和色调与 Apple HIG 标准色)
+       ------------------------------------------------------------------------- */
+    --shadcn-green: 142 50% 45%; /* 柔和的绿色 */
+    --shadcn-green-foreground: 0 0% 95%; /* 淡灰白色绿色前景 */
+    --shadcn-blue: 211 70% 55%; /* 柔和的蓝色 */
+    --shadcn-blue-foreground: 0 0% 95%; /* 淡灰白色蓝色前景 */
+    --shadcn-red: 0 60% 50%; /* 柔和的红色 */
+    --shadcn-red-foreground: 0 0% 95%; /* 淡灰白色红色前景 */
+    --shadcn-orange: 25 80% 50%; /* 柔和的橙色 */
+    --shadcn-orange-foreground: 0 0% 95%; /* 淡灰白色橙色前景 */
+    --shadcn-purple: 262 60% 60%; /* 柔和的紫色 */
+    --shadcn-purple-foreground: 0 0% 95%; /* 淡灰白色紫色前景 */
+
+    /* Apple HIG 官方系统状态色 */
+    --mp-color-system-blue: #0a84ff;
+    --mp-color-system-green: #30d158;
+    --mp-color-system-red: #ff453a;
+    --mp-color-system-orange: #ff9f0a;
+    --mp-color-system-yellow: #ffd60a;
+    --mp-color-system-purple: #bf5af2;
+    --mp-color-system-pink: #ff375f;
+    --mp-color-system-gray: #8e8e93;
+
+    /* -------------------------------------------------------------------------
+       4. Apple 毛玻璃材质与卡片半透明度 (Frosted Glass & Translucency)
+       ------------------------------------------------------------------------- */
+    /* AGENTS.md 准则：统一采用 backdrop-filter: blur(20px) saturate(180%) */
+    --mp-blur-glass: blur(20px) saturate(180%);
+    --mp-blur-glass-subtle: blur(12px) saturate(150%);
+    --mp-blur-glass-heavy: blur(30px) saturate(190%);
+
+    /* 卡片半透明度等级 */
+    --mp-card-bg-subtle: rgba(255, 255, 255, 0.04);
+    --mp-card-bg: rgba(255, 255, 255, 0.06);
+    --mp-card-bg-elevated: rgba(255, 255, 255, 0.10);
+    --mp-card-bg-active: rgba(255, 255, 255, 0.16);
+    --mp-card-border: rgba(255, 255, 255, 0.08);
+    --mp-card-border-subtle: rgba(255, 255, 255, 0.05);
+    --mp-card-border-hover: rgba(255, 255, 255, 0.16);
+
+    /* Apple 设置卡片变量收拢 (向后兼容 _settings_apple.css) */
+    --mp-settings-card-bg: rgba(255, 255, 255, 0.05);
+    --mp-settings-card-border: rgba(255, 255, 255, 0.08);
+    --mp-settings-card-radius: 12px;
+    --mp-settings-row-height: 44px;
+    --mp-settings-divider: rgba(255, 255, 255, 0.06);
+    --mp-settings-text-primary: #ffffff;
+    --mp-settings-text-secondary: rgba(255, 255, 255, 0.55);
+    --mp-settings-text-muted: rgba(255, 255, 255, 0.38);
+    --mp-settings-switch-active: #0a84ff; /* Apple System Blue */
+    --mp-settings-switch-track: rgba(255, 255, 255, 0.16);
+    --mp-settings-switch-thumb: #ffffff;
+
+    /* -------------------------------------------------------------------------
+       5. 莫兰迪色彩序列 (Morandi Colors - A-B 循环与胶囊标签语义色彩)
+       ------------------------------------------------------------------------- */
+    --mp-morandi-sky-blue: 200, 100%, 55%;
+    --mp-morandi-emerald: 145, 80%, 48%;
+    --mp-morandi-indigo: 260, 85%, 62%;
+    --mp-morandi-coral: 15, 95%, 58%;
+    --mp-morandi-rose: 330, 90%, 60%;
+    --mp-morandi-mint: 170, 85%, 42%;
+    --mp-morandi-amber: 45, 95%, 52%;
+    --mp-morandi-lavender: 280, 85%, 65%;
+    --mp-morandi-cyan: 190, 90%, 45%;
+    --mp-morandi-crimson: 350, 85%, 60%;
+
+    /* 莫兰迪 1-10 索引序列 */
+    --mp-color-morandi-1: var(--mp-morandi-sky-blue);
+    --mp-color-morandi-2: var(--mp-morandi-emerald);
+    --mp-color-morandi-3: var(--mp-morandi-indigo);
+    --mp-color-morandi-4: var(--mp-morandi-coral);
+    --mp-color-morandi-5: var(--mp-morandi-rose);
+    --mp-color-morandi-6: var(--mp-morandi-mint);
+    --mp-color-morandi-7: var(--mp-morandi-amber);
+    --mp-color-morandi-8: var(--mp-morandi-lavender);
+    --mp-color-morandi-9: var(--mp-morandi-cyan);
+    --mp-color-morandi-10: var(--mp-morandi-crimson);
+
+    /* -------------------------------------------------------------------------
+       6. 文字排版与基础字号系统 (Typography & Font Hierarchy)
+       ------------------------------------------------------------------------- */
+    --font-sans: "SF Pro Display", "SF Pro", "Segoe UI", "Microsoft YaHei", "微软雅黑", "PingFang SC", "苹方", "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --mp-font-sans: var(--font-sans);
+    --mp-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+
+    /* 基础字号标尺 (Font Sizes) */
+    --mp-text-2xs: 10px;
+    --mp-text-xs: 11px;
+    --mp-text-sm: 12px;
+    --mp-text-base: 13px;
+    --mp-text-md: 14px;
+    --mp-text-lg: 15px;
+    --mp-text-xl: 17px;
+    --mp-text-2xl: 20px;
+    --mp-text-3xl: 24px;
+
+    /* 字重标尺 (Font Weights) */
+    --mp-font-weight-regular: 400;
+    --mp-font-weight-medium: 500;
+    --mp-font-weight-semibold: 600;
+    --mp-font-weight-bold: 700;
+
+    /* 行高 (Line Heights) */
+    --mp-line-height-tight: 1.2;
+    --mp-line-height-normal: 1.4;
+    --mp-line-height-relaxed: 1.6;
+
+    /* -------------------------------------------------------------------------
+       7. 圆角半径体系 (Border Radii)
+       ------------------------------------------------------------------------- */
+    /* 向后兼容 shadcn */
+    --shadcn-radius: 0.5rem;   /* ~8px */
+    --shadcn-radius-sm: 0.3rem; /* ~4.8px */
+    --shadcn-radius-lg: 0.8rem; /* ~12.8px */
+
+    /* Apple 阶梯圆角体系 */
+    --mp-radius-xs: 4px;
+    --mp-radius-sm: 6px;
+    --mp-radius-md: 8px;
+    --mp-radius-lg: 12px;
+    --mp-radius-xl: 16px;
+    --mp-radius-2xl: 20px;
+    --mp-radius-full: 9999px;
+
+    /* -------------------------------------------------------------------------
+       8. 控件尺寸与响应式参数 (Sizes, Spacing & Layout)
+       ------------------------------------------------------------------------- */
+    /* 按钮尺寸向后兼容 */
+    --button-sm: 20px;
+    --button-md: 32px;
+    --button-lg: 40px;
+    --button-xl: 48px;
+
+    /* Apple HIG 最小触控靶区 */
+    --mp-touch-target-min: 44px;
+
+    /* 响应式侧边栏宽度 (收拢自 _landscape_pc.css) */
+    --sidebar-width: clamp(350px, 28vw, 420px);
+
+    /* -------------------------------------------------------------------------
+       9. 常用动画与过渡曲线 (Animations & Easing)
+       ------------------------------------------------------------------------- */
+    --anim-quick: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --anim-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    --anim-bounce: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    /* Apple 物理弹簧与平滑曲线 */
+    --mp-ease-apple-spring: cubic-bezier(0.25, 1, 0.5, 1);
+    --mp-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* -------------------------------------------------------------------------
+       10. 阴影系统 (Shadows)
+       ------------------------------------------------------------------------- */
+    --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.3);
+
+    /* Apple 柔和弥散阴影 */
+    --mp-shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.45);
+    --mp-shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* 宽屏超大分辨率下的侧边栏宽度响应式增强 (同步自 _landscape_pc.css) */
+@media screen and (min-width: 1440px) and (orientation: landscape) {
+    :root, :host {
+        --sidebar-width: clamp(380px, 22vw, 560px);
+    }
+}

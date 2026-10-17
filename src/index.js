@@ -1,5 +1,5 @@
 import { mediaSniffer } from './network/MediaSniffer.js';
-import './player/ui/style.css';
+import './player/ui/styles/01_core/_host.css';
 
 import { FloatingButton } from './player/ui/FloatingButton.js';
 import { PlayerState } from './player/state/PlayerState.js';

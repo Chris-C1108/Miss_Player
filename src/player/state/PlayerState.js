@@ -38,6 +38,8 @@ export class PlayerState {
             preferredPlaybackRate: 1.0,     // 默认/首选播放速度
             pauseOnBlur: true,              // 页面离开/失焦后停止播放 (默认为开)
             buttonSoundEnabled: true,       // 控制面板按钮点击音效 (默认为开)
+            defaultMuted: false,            // 默认静音播放
+            muteResetMinutes: 5,            // 取消静音后重置超时的分钟数 (默认 5 分钟)
             betaSingleHandMode: false,      // 竖屏单手模式 (Beta 默认关闭)
             singleHandPosition: 'right',    // 单手握持偏好 ('right' | 'left')
             autoCheckUpdate: true           // 自动检查新版本 (默认为开)
@@ -91,14 +93,9 @@ export class PlayerState {
             this.settings.preferredPlaybackRate = (!isNaN(rawSpeed) && rawSpeed >= 0.5 && rawSpeed <= 4.0) ? rawSpeed : 1.0;
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
-            this.settings.autoCheckUpdate = getBool('autoCheckUpdate',
-            'betaMode',
-            'betaFirstCapsulePlay',
-            'betaPlayMode',
-            'betaColorPlayMode',
-            'betaSafariMuteStyle',
-            'betaCapsuleUndo',
-            'betaDeepLinking', true);
+            this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
+            this.settings.defaultMuted = getBool('defaultMuted', false);
+            this.settings.muteResetMinutes = Math.max(1, Math.min(120, parseInt(getValue('muteResetMinutes', 5), 10) || 5));
             this.settings.betaMode = getBool('betaMode', false);
             this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
             const rawPlayMode = getValue('betaPlayMode', 'normal');
@@ -109,7 +106,6 @@ export class PlayerState {
             this.settings.climaxDurationSeconds = (!isNaN(rawClimaxSec) && rawClimaxSec >= 5 && rawClimaxSec <= 300) ? rawClimaxSec : 60;
             const rawColorMode = getValue('betaColorPlayMode', 'preview');
             this.settings.betaColorPlayMode = (rawPlayMode === 'review') ? 'review' : 'preview';
-            this.settings.betaSafariMuteStyle = getBool('betaSafariMuteStyle', true);
             this.settings.betaCapsuleUndo = getBool('betaCapsuleUndo', true);
             this.settings.betaDeepLinking = getBool('betaDeepLinking', true);
             this.settings.betaDbEndpoint = getValue('betaDbEndpoint', '') || '';
@@ -143,6 +139,8 @@ export class PlayerState {
             'preferredPlaybackRate',
             'pauseOnBlur',
             'buttonSoundEnabled',
+            'defaultMuted',
+            'muteResetMinutes',
             'autoCheckUpdate'
         ];
 
@@ -185,6 +183,8 @@ export class PlayerState {
             setValue('preferredPlaybackRate', this.settings.preferredPlaybackRate);
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
+            setValue('defaultMuted', Boolean(this.settings.defaultMuted));
+            setValue('muteResetMinutes', this.settings.muteResetMinutes || 5);
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
             setValue('betaMode', Boolean(this.settings.betaMode));
             setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));
@@ -192,7 +192,6 @@ export class PlayerState {
             setValue('previewDurationSeconds', this.settings.previewDurationSeconds || 5);
             setValue('climaxDurationSeconds', this.settings.climaxDurationSeconds || 60);
             setValue('betaColorPlayMode', this.settings.betaColorPlayMode || 'preview');
-            setValue('betaSafariMuteStyle', Boolean(this.settings.betaSafariMuteStyle));
             setValue('betaCapsuleUndo', Boolean(this.settings.betaCapsuleUndo));
             setValue('betaDeepLinking', Boolean(this.settings.betaDeepLinking));
             setValue('betaDbEndpoint', this.settings.betaDbEndpoint || '');

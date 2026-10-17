@@ -45,6 +45,18 @@ export function getValue(key, defaultValue = null, useGM = true) {
 }
 
 /**
+ * 获取布尔类型的存储值
+ * @param {string} key - 存储键名
+ * @param {boolean} [defaultValue=false] - 默认值
+ * @param {boolean} [useGM=true] - 是否优先使用 GM API
+ * @returns {boolean}
+ */
+export function getBool(key, defaultValue = false, useGM = true) {
+    const v = getValue(key, defaultValue, useGM);
+    return typeof v === 'boolean' ? v : (v === 'true' ? true : (v === 'false' ? false : defaultValue));
+}
+
+/**
  * 设置存储值 (自动识别 GM API / localStorage 降级)
  * @param {string} key - 存储键名
  * @param {any} value - 要存储的数据值

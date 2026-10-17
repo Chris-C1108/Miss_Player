@@ -1,10 +1,12 @@
+@import "./styles/00_tokens/_tokens.css";
+@import "./styles/00_tokens/_zindex.css";
 @import "./styles/_variables.css";
 @import "./styles/_common.css";
 @import "./styles/_player.css";
 @import "./styles/_controls.css";
 @import "./styles/_comments.css";
-@import "./styles/_landscape_legacy.css";
 @import "./styles/_landscape_pc.css";
-
-
 @import "./styles/_settings_apple.css";
+@import "./styles/02_components/_marker_sheet.css";
+@import "./styles/02_components/_debug.css";
+@import "./styles/02_components/_composer.css";

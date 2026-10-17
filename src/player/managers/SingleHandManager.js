@@ -268,12 +268,13 @@ export class SingleHandManager {
 
     /**
      * 判断当前屏幕宽度是否支持单手模式
-     * 限制更窄的屏幕 (如 <380px 的 iPhone SE、mini 及老旧窄屏设备) 不支持开启单手模式
-     * iPhone 标准版 (390px+) 及 Pro、大屏竖屏手机支持
+     * 限制更窄的屏幕 (如 <380px 的 iPhone SE、mini 及老旧窄屏设备) 不支持开启单手模式；
+     * 限制中大屏平板及桌面视口 (>600px，如 600~942px iPad 竖屏) 坚决不开启单手模式；
+     * 仅支持 380px ~ 600px 的标准手机及大屏竖屏手机。
      */
     isSupportedScreenWidth() {
         const width = window.innerWidth || document.documentElement?.clientWidth || 0;
-        return width >= 380;
+        return width >= 380 && width <= 600;
     }
 
     _syncHeight() {

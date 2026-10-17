@@ -21,16 +21,24 @@
     -webkit-backdrop-filter: blur(8px);
 }
 
-/* 音量控制容器 */
+/* ==========================================================================
+   音量 / 静音控制按钮组件 (Volume & Mute Button)
+   统一管理正常态与静音态交互与样式规范，静音状态统一为 Apple 风格红底白字 (icon)
+   ========================================================================== */
+
+/* 音量控制外层容器 */
 .tm-volume-control {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 40px !important;
-    height: 40px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    background-color: transparent !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+    box-sizing: border-box;
 }
 
 /* 不支持音量控制的设备上的样式 */
@@ -43,38 +51,105 @@
     margin: 0 8px;
 }
 
-/* 音量按钮 */
+/* 音量按钮基础样式 (普通未静音状态) */
 .tm-volume-button {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    padding: 4px;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    color: #fff;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.70);
+    box-shadow: none;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
 }
 
-.tm-volume-button:hover {
-    background-color: hsla(var(--shadcn-secondary) / 0.2);
+/* 未静音状态悬浮效果 */
+.tm-volume-button:not(.is-muted):hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+    transform: scale(1.04);
 }
 
+/* 未静音状态按压效果 */
+.tm-volume-button:not(.is-muted):active {
+    background: rgba(255, 255, 255, 0.20);
+    transform: scale(0.95);
+}
+
+/* 未静音状态图标 */
 .tm-volume-button svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    pointer-events: none;
+    transition: stroke 0.15s ease, color 0.15s ease;
+}
+
+/* 兼容 SVG 内 path 含有 fill="currentColor" 的喇叭主体 */
+.tm-volume-button svg path[fill="currentColor"] {
+    fill: currentColor;
+}
+
+/* --------------------------------------------------------------------------
+   静音状态 (.is-muted) 统一规范：红底白字 (icon)
+   无论暗黑模式、悬停还是按压，始终保持醒目红底 + 纯白图标
+   -------------------------------------------------------------------------- */
+.tm-volume-button.is-muted {
+    background-color: #ff3b30;
+    border-color: rgba(255, 59, 48, 0.85);
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 59, 48, 0.45);
+}
+
+.tm-volume-button.is-muted:hover {
+    background-color: #ff453a;
+    border-color: #ff453a;
+    color: #ffffff;
+    box-shadow: 0 0 14px rgba(255, 69, 58, 0.65);
+    transform: scale(1.04);
+}
+
+.tm-volume-button.is-muted:active {
+    background-color: #d70015;
+    border-color: #d70015;
+    color: #ffffff;
+    box-shadow: 0 0 6px rgba(215, 0, 21, 0.6);
+    transform: scale(0.95);
+}
+
+.tm-volume-button.is-muted svg {
+    color: #ffffff;
+    stroke: #ffffff;
+}
+
+.tm-volume-button.is-muted svg path {
+    stroke: #ffffff;
+}
+
+.tm-volume-button.is-muted svg path[fill="currentColor"] {
+    fill: #ffffff;
 }
 
 /* 滑杆容器 */
 .tm-volume-slider-container {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+    display: none;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .tm-volume-slider-container-disabled {
@@ -150,16 +225,11 @@
 /* 触摸设备适配 */
 @media (hover: none) {
     .tm-volume-control {
-        touch-action: none;
+        touch-action: manipulation;
     }
     
     .tm-volume-slider-track {
         height: 6px; /* 更大的点击区域 */
-    }
-    
-    .tm-volume-button {
-        width: 40px;
-        height: 40px;
     }
 }
 
@@ -167,10 +237,6 @@
 @media (prefers-color-scheme: dark) {
     .tm-volume-slider-level {
         background-color: hsl(var(--shadcn-primary));
-    }
-    
-    .tm-volume-button svg {
-        stroke: hsl(var(--shadcn-primary));
     }
 }
 
@@ -223,80 +289,55 @@
 
 /* 播放速率切换按钮 */
 .tm-playback-rate-button {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin: 0 !important;
-    height: 40px !important;
-    width: auto !important;
-    min-width: 58px !important;
-    padding: 0 14px !important; /* 经典 Apple 优雅胶囊形态 */
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: rgba(255, 255, 255, 0.85) !important;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    font-variant-numeric: tabular-nums !important;
-    letter-spacing: -0.2px !important;
-    border-radius: 9999px !important;
-    box-shadow: none !important;
-    box-sizing: border-box !important;
-    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    cursor: pointer !important;
-    text-align: center !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    height: 40px;
+    width: auto;
+    min-width: 58px;
+    padding: 0 14px; /* 经典 Apple 优雅胶囊形态 */
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.2px;
+    border-radius: 9999px;
+    box-shadow: none;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    text-align: center;
 }
 
 .tm-playback-rate-button:hover {
-    background: rgba(255, 255, 255, 0.12) !important;
-    color: #ffffff !important;
-    transform: scale(1.03) !important;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    transform: scale(1.03);
 }
 
 .tm-playback-rate-button:active {
-    transform: scale(0.95) !important;
-    background: rgba(255, 255, 255, 0.16) !important;
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.16);
 }
 
 .tm-playback-rate-button.fast {
-    color: #ff9f0a !important;
+    color: #ff9f0a;
+    border-color: rgba(255, 159, 10, 0.35);
+    background: rgba(255, 159, 10, 0.12);
 }
 
 .tm-playback-rate-button.medium {
-    color: #64d2ff !important;
+    color: #64d2ff;
+    border-color: rgba(100, 210, 255, 0.35);
+    background: rgba(100, 210, 255, 0.12);
 }
 
 .tm-playback-rate-button.normal {
-    color: rgba(255, 255, 255, 0.70) !important;
-}
-
-.tm-playback-rate-button:hover {
-    background: hsla(var(--shadcn-secondary) / 0.8);
-    border-color: hsla(var(--shadcn-border) / 0.3);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.tm-playback-rate-button:active {
-    transform: scale(0.96);
-    background: hsla(var(--shadcn-secondary) / 0.9);
-}
-
-/* 速度颜色状态 */
-.tm-playback-rate-button.fast {
-    color: hsl(var(--shadcn-orange));
-    border-color: hsla(var(--shadcn-orange) / 0.3);
-    background: hsla(var(--shadcn-orange) / 0.1);
-}
-
-.tm-playback-rate-button.medium {
-    color: hsl(var(--shadcn-blue));
-    border-color: hsla(var(--shadcn-blue) / 0.3);
-    background: hsla(var(--shadcn-blue) / 0.1);
-}
-
-.tm-playback-rate-button.normal {
-    color: hsl(var(--shadcn-foreground));
+    color: rgba(255, 255, 255, 0.70);
 }
 
 /* 进度条控制组件 */
@@ -347,16 +388,16 @@
 
 /* 添加进度条交互状态样式 */
 .tm-progress-bar-expanded {
-    height: 16px !important;
+    height: 16px;
 }
 
 .tm-progress-bar-normal {
-    height: 8px !important;
+    height: 8px;
 }
 
 /* 进度条拖动状态 */
 .tm-progress-bar.tm-dragging {
-    height: 16px !important;
+    height: 16px;
     background-color: hsla(var(--shadcn-muted-foreground) / 0.7);
     cursor: grabbing;
 }
@@ -422,8 +463,7 @@
 
 /* =========== 播放控制行按钮样式 =========== */
 /* 播放控制行按钮基础样式 */
-.tm-playback-control-row .tm-control-button,
-.tm-playback-control-row .tm-volume-button {
+.tm-playback-control-row .tm-control-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -435,59 +475,16 @@
     cursor: pointer;
     transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease;
     -webkit-tap-highlight-color: transparent;
-}
-
-.tm-playback-control-row .tm-control-button {
     width: 42px;
     height: 42px;
 }
 
-.tm-playback-control-row .tm-volume-button {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    max-width: 40px !important;
-    border-radius: 9999px !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: rgba(255, 255, 255, 0.70) !important;
-    box-shadow: none !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.tm-playback-control-row .tm-volume-button:hover {
-    background: rgba(255, 255, 255, 0.12) !important;
-    color: #ffffff !important;
-    transform: scale(1.03) !important;
-}
-
-.tm-playback-control-row .tm-volume-button:active {
-    transform: scale(0.95) !important;
-    background: rgba(255, 255, 255, 0.16) !important;
-}
-
-.tm-playback-control-row .tm-volume-button svg {
-    width: 17px !important;
-    height: 17px !important;
-    fill: none !important;
-    stroke: currentColor !important;
-}
-
-.tm-playback-control-row .tm-control-button:hover,
-.tm-playback-control-row .tm-volume-button:hover {
+.tm-playback-control-row .tm-control-button:hover {
     background-color: hsla(var(--shadcn-secondary) / 0.2);
     transform: scale(1.05);
 }
 
-.tm-playback-control-row .tm-control-button:active,
-.tm-playback-control-row .tm-volume-button:active {
+.tm-playback-control-row .tm-control-button:active {
     transform: scale(0.96);
 }
 
@@ -504,30 +501,17 @@
     margin-left: 2px;
 }
 
-.tm-playback-control-row .tm-volume-button svg {
-    width: 20px;
-    height: 20px;
-    stroke: currentColor;
-    stroke-width: 2;
-    fill: none;
-}
-
 /* 移动端适配 */
 @media (hover: none) {
     .tm-playback-control-row .tm-control-button {
         width: 44px;
         height: 44px;
     }
-    .tm-playback-control-row .tm-volume-button {
-        width: 40px;
-        height: 40px;
-    }
 }
 
 /* 暗色主题适配 */
 @media (prefers-color-scheme: dark) {
-    .tm-playback-control-row .tm-control-button svg,
-    .tm-playback-control-row .tm-volume-button svg {
+    .tm-playback-control-row .tm-control-button svg {
         stroke: hsl(var(--shadcn-secondary-foreground));
     }
 }
@@ -564,7 +548,7 @@
     background-color: hsla(var(--shadcn-background) / 0.7);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    z-index: 2000000010 !important;
+    z-index: var(--z-modal, 50);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -752,49 +736,49 @@
 
 /* 视频当前画面显示区域微缩指示器 (Minimap) - 默认彻底隐藏，仅在拖拽/平移画面时临时淡入显示 */
 .tm-video-minimap {
-    position: absolute !important;
-    bottom: 20px !important;
-    left: 20px !important;
-    top: auto !important;
-    right: auto !important;
-    margin: 0 !important;
-    transform: none !important;
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    top: auto;
+    right: auto;
+    margin: 0;
+    transform: none;
     width: 80px;
     height: 45px; /* JS 结合视频宽高比例在 80x45 范围内自适应计算 */
-    background-color: rgba(0, 0, 0, 0.65) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    border-radius: 4px !important;
-    overflow: hidden !important;
-    z-index: 9998 !important;
-    pointer-events: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    transition: opacity 0.3s ease, visibility 0.3s ease !important;
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+    background-color: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    z-index: var(--z-popover, 40);
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .tm-video-minimap-viewport {
-    position: absolute !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
     width: 100%;
-    height: 100% !important;
-    box-sizing: border-box !important;
-    border: 1.5px solid hsl(var(--shadcn-blue)) !important;
-    background-color: hsla(var(--shadcn-blue) / 0.15) !important;
-    border-radius: 2px !important;
+    height: 100%;
+    box-sizing: border-box;
+    border: 1.5px solid hsl(var(--shadcn-blue));
+    background-color: hsla(var(--shadcn-blue) / 0.15);
+    border-radius: 2px;
     will-change: transform;
-    transition: none !important; /* 拖拽过程中无延迟，实现 100% 实时跟手 */
+    transition: none; /* 拖拽过程中无延迟，实现 100% 实时跟手 */
 }
 
 /* 仅在画面正在拖拽/平移 (.is-swiping) 状态下临时淡入显示 Minimap */
 .tm-video-wrapper.is-swiping .tm-video-minimap {
-    opacity: 1 !important;
-    visibility: visible !important;
-    border-color: rgba(255, 255, 255, 0.45) !important;
+    opacity: 1;
+    visibility: visible;
+    border-color: rgba(255, 255, 255, 0.45);
 }
 
 /* 浮动评论面板样式 */
@@ -979,6 +963,34 @@
     z-index: 9999;
 }
 
+/* 居中暂停指示器 */
+.mp-pause-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    width: 80px;
+    height: 80px;
+    background-color: hsla(var(--shadcn-card) / 0.6);
+    color: hsl(var(--shadcn-card-foreground));
+    border-radius: var(--shadcn-radius);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: var(--shadow-md);
+    border: 1px solid hsla(var(--shadcn-border) / 0.1);
+    opacity: 0;
+    transition: opacity var(--anim-smooth);
+    z-index: var(--z-popover, 40);
+}
+
+.mp-pause-indicator.visible {
+    opacity: 1;
+}
+
 /* =========== Material 风格粉色水波纹 (Ripple Effect) =========== */
 /* 控制面板内所有按钮具备溢出裁切与相对定位基底 */
 .ripple-btn,
@@ -987,13 +999,13 @@
 .tm-control-buttons .tm-tab-pill,
 .tm-bottom-sheet-panel button,
 .tm-bottom-sheet-panel .tm-sheet-tab-pill {
-    position: relative !important;
-    overflow: hidden !important;
+    position: relative;
+    overflow: hidden;
     isolation: isolate;
 }
 
 .tm-control-buttons .tm-show-controls-float-btn {
-    overflow: hidden !important;
+    overflow: hidden;
     isolation: isolate;
 }
 
@@ -1032,17 +1044,7 @@
 }
 
 
-/* Safari 风格高对比度红色静音按钮 */
-.tm-volume-button.is-muted {
-    background-color: #ff3b30 !important;
-    color: #ffffff !important;
-    box-shadow: 0 0 10px rgba(255, 59, 48, 0.45) !important;
-    border-radius: 50% !important;
-}
 
-.tm-volume-button.is-muted svg {
-    stroke: #ffffff !important;
-}
 
 
 /* 彩色胶囊连播按钮 */
@@ -1075,40 +1077,40 @@
 
 /* 播放模式切换按钮 (正常模式 / 预览模式 / 精彩欣赏) */
 .tm-play-mode-btn {
-    display: inline-flex !important;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     height: 32px;
-    padding: 0 10px !important;
-    border-radius: 16px !important;
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
+    padding: 0 10px;
+    border-radius: 16px;
+    font-size: 11.5px;
+    font-weight: 600;
     cursor: pointer;
     user-select: none;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
     white-space: nowrap;
 }
 
 .tm-play-mode-btn.mode-normal {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.22) !important;
-    color: rgba(255, 255, 255, 0.85) !important;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .tm-play-mode-btn.mode-preview {
-    background: rgba(0, 201, 255, 0.18) !important;
-    border: 1px solid rgba(0, 201, 255, 0.6) !important;
-    color: #00c9ff !important;
-    box-shadow: 0 0 10px rgba(0, 201, 255, 0.45) !important;
+    background: rgba(0, 201, 255, 0.18);
+    border: 1px solid rgba(0, 201, 255, 0.6);
+    color: #00c9ff;
+    box-shadow: 0 0 10px rgba(0, 201, 255, 0.45);
     animation: tm-mode-pulse-cyan 2s infinite ease-in-out;
 }
 
 .tm-play-mode-btn.mode-climax {
-    background: rgba(255, 90, 95, 0.2) !important;
-    border: 1px solid rgba(255, 90, 95, 0.7) !important;
-    color: #ff5a5f !important;
-    box-shadow: 0 0 12px rgba(255, 90, 95, 0.5) !important;
+    background: rgba(255, 90, 95, 0.2);
+    border: 1px solid rgba(255, 90, 95, 0.7);
+    color: #ff5a5f;
+    box-shadow: 0 0 12px rgba(255, 90, 95, 0.5);
     animation: tm-mode-pulse-gold 2s infinite ease-in-out;
 }
 
@@ -1125,35 +1127,35 @@
 
 /* ===== 一体化居中播放与模式按钮 (Apple 宽胶囊设计规范) ===== */
 .tm-integrated-play-btn {
-    position: relative !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-sizing: border-box !important;
-    height: 36px !important;
-    min-width: 92px !important; /* 统一宽胶囊设计 */
-    padding: 0 16px !important;
-    border-radius: 9999px !important; /* 经典 Apple 全圆角胶囊 */
-    border: 1.5px solid rgba(0, 122, 255, 0.75) !important; /* 优雅的 Apple 标志蓝描边 */
-    cursor: pointer !important;
-    user-select: none !important;
-    overflow: hidden !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 36px;
+    min-width: 92px; /* 统一宽胶囊设计 */
+    padding: 0 16px;
+    border-radius: 9999px; /* 经典 Apple 全圆角胶囊 */
+    border: 1.5px solid rgba(0, 122, 255, 0.75); /* 优雅的 Apple 标志蓝描边 */
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
 }
 
 /* 状态 1: 正常模式 (宽胶囊居中展示 Apple 蓝播放/暂停 SVG 图标) */
 .tm-integrated-play-btn.mode-normal {
-    background: rgba(255, 255, 255, 0.12) !important;
-    color: #007aff !important;
+    background: rgba(255, 255, 255, 0.12);
+    color: #007aff;
 }
 
 .tm-integrated-play-btn.mode-normal svg {
-    width: 20px !important;
-    height: 20px !important;
-    fill: #007aff !important;
-    stroke: none !important;
+    width: 20px;
+    height: 20px;
+    fill: #007aff;
+    stroke: none;
     transition: transform 0.12s ease;
 }
 
@@ -1161,127 +1163,127 @@
 .tm-integrated-play-btn.mode-preview,
 .tm-integrated-play-btn.mode-climax {
     background: rgba(255, 255, 255, 0.12);
-    color: #007aff !important;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    letter-spacing: -0.01em !important;
-    white-space: nowrap !important;
+    color: #007aff;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
 }
 
 .tm-integrated-play-btn .tm-play-mode-text {
-    position: relative !important;
-    z-index: 2 !important;
-    color: #007aff !important;
-    letter-spacing: 0.5px !important;
-    user-select: none !important;
+    position: relative;
+    z-index: 2;
+    color: #007aff;
+    letter-spacing: 0.5px;
+    user-select: none;
 }
 
 /* Apple 微动效与悬浮微光 */
 .tm-integrated-play-btn:hover {
-    transform: scale(1.04) !important;
-    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.35) !important;
+    transform: scale(1.04);
+    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.35);
 }
 
 .tm-integrated-play-btn:active {
-    transform: scale(0.96) !important;
+    transform: scale(0.96);
 }
 
 /* ===== 极简透明 3 状态切换器 (底层 100% 全宽) ===== */
 .mp-switcher-wrapper {
-    position: relative !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    width: 100% !important;
-    height: 40px !important;
-    box-sizing: border-box !important;
-    flex-shrink: 0 !important;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    width: 100%;
+    height: 40px;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .mp-switcher-capsule {
-    position: relative !important;
-    width: 100% !important;
-    height: 40px !important;
-    background: transparent !important;
-    border-radius: 9999px !important;
-    overflow: hidden !important;
-    border: none !important;
-    box-shadow: none !important;
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%) !important;
-    mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%) !important;
-    cursor: grab !important;
-    touch-action: none !important;
-    box-sizing: border-box !important;
+    position: relative;
+    width: 100%;
+    height: 40px;
+    background: transparent;
+    border-radius: 9999px;
+    overflow: hidden;
+    border: none;
+    box-shadow: none;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
+    cursor: grab;
+    touch-action: none;
+    box-sizing: border-box;
 }
 
 .mp-switcher-indicator {
-    pointer-events: none !important;
-    z-index: 10 !important;
-    box-sizing: border-box !important;
-    background: #ffffff33 !important;
-    border: none !important;
-    border-radius: 9999px !important;
-    width: 94px !important;
-    height: 36px !important;
-    box-shadow: inset 0 1px 0 0 #ffffff38 !important;
-    transition: transform .2s cubic-bezier(.16, 1, .3, 1), box-shadow .2s ease !important;
-    position: absolute !important;
-    top: 2px !important;
-    left: 50% !important;
-    overflow: hidden !important;
-    transform: translate(-50%) scale(1) !important;
+    pointer-events: none;
+    z-index: 10;
+    box-sizing: border-box;
+    background: #ffffff33;
+    border: none;
+    border-radius: 9999px;
+    width: 94px;
+    height: 36px;
+    box-shadow: inset 0 1px 0 0 #ffffff38;
+    transition: transform .2s cubic-bezier(.16, 1, .3, 1), box-shadow .2s ease;
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    overflow: hidden;
+    transform: translate(-50%) scale(1);
 }
 
 .mp-switcher-capsule:hover .mp-switcher-indicator {
-    transform: translate(-50%) scale(1.02) !important;
-    box-shadow: inset 0 1px 0 0 #ffffff4d !important;
+    transform: translate(-50%) scale(1.02);
+    box-shadow: inset 0 1px 0 0 #ffffff4d;
 }
 
 .mp-switcher-capsule:active .mp-switcher-indicator {
-    transform: translate(-50%) scale(0.97) !important;
-    box-shadow: inset 0 1px 0 0 #ffffff29 !important;
+    transform: translate(-50%) scale(0.97);
+    box-shadow: inset 0 1px 0 0 #ffffff29;
 }
 
 .mp-switcher-track {
-    display: flex !important;
-    height: 100% !important;
-    position: relative !important;
-    z-index: 20 !important;
-    align-items: center !important;
-    will-change: transform !important;
+    display: flex;
+    height: 100%;
+    position: relative;
+    z-index: 20;
+    align-items: center;
+    will-change: transform;
 }
 
 .mp-switcher-item {
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    height: 100% !important;
-    width: 78px !important;
-    flex-shrink: 0 !important;
-    cursor: pointer !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 78px;
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .mp-switcher-label {
-    font-size: 12px !important;
-    white-space: nowrap !important;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif !important;
-    font-weight: 500 !important;
-    color: rgba(255, 255, 255, 0.45) !important;
-    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease !important;
-    pointer-events: none !important;
-    letter-spacing: -0.1px !important;
+    font-size: 12px;
+    white-space: nowrap;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.45);
+    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
+    pointer-events: none;
+    letter-spacing: -0.1px;
 }
 
 .mp-switcher-label.is-active {
-    color: #ffffff !important;
-    font-weight: 600 !important;
+    color: #ffffff;
+    font-weight: 600;
 }
 
 .mp-switcher-label.is-hidden {
@@ -1289,14 +1291,14 @@
 }
 
 .mp-switcher-variant-slot {
-    position: absolute !important;
-    inset: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .mp-switcher-variant-slot.is-visible {
@@ -1305,102 +1307,102 @@
 }
 
 .mp-switcher-action-btn {
-    position: relative !important;
-    z-index: 30 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: transparent !important;
-    border: none !important;
-    outline: none !important;
-    cursor: pointer !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    gap: 4px !important;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif !important;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    gap: 4px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .mp-switcher-action-btn:hover {
-    transform: scale(1.04) !important;
+    transform: scale(1.04);
 }
 
 .mp-switcher-action-btn:active {
-    transform: scale(0.95) !important;
+    transform: scale(0.95);
 }
 
 .mp-switcher-action-btn svg,
 .mp-switcher-action-btn svg path {
-    color: #ffffff !important;
+    color: #ffffff;
 }
 
 .mp-switcher-action-btn svg {
-    display: block !important;
-    color: #ffffff !important;
+    display: block;
+    color: #ffffff;
 }
 
 .mp-switcher-play-icon {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .mp-switcher-play-icon.is-paused svg {
-    margin-left: 1.5px !important;
+    margin-left: 1.5px;
 }
 
 .mp-switcher-play-icon svg {
-    width: 15px !important;
-    height: 15px !important;
-    fill: #ffffff !important;
-    stroke: none !important;
-    color: #ffffff !important;
-    display: block !important;
+    width: 15px;
+    height: 15px;
+    fill: #ffffff;
+    stroke: none;
+    color: #ffffff;
+    display: block;
 }
 
 .mp-switcher-replay-icon svg {
-    width: 11px !important;
-    height: 11px !important;
-    stroke: #ffffff !important;
-    fill: none !important;
-    color: #ffffff !important;
-    display: block !important;
+    width: 11px;
+    height: 11px;
+    stroke: #ffffff;
+    fill: none;
+    color: #ffffff;
+    display: block;
 }
 
 .mp-switcher-btn-text {
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
-    color: #ffffff !important;
-    display: flex !important;
-    align-items: center !important;
-    white-space: nowrap !important;
-    letter-spacing: -0.2px !important;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    letter-spacing: -0.2px;
 }
 
 .mp-switcher-btn-cancel {
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    color: #ff453a !important;
-    white-space: nowrap !important;
-    letter-spacing: -0.2px !important;
+    font-size: 11px;
+    font-weight: 600;
+    color: #ff453a;
+    white-space: nowrap;
+    letter-spacing: -0.2px;
 }
 
 .mp-switcher-status-dot {
-    display: inline-block !important;
-    width: 4px !important;
-    height: 4px !important;
-    border-radius: 50% !important;
-    background: #30d158 !important;
-    box-shadow: 0 0 5px rgba(48, 209, 88, 0.8) !important;
-    margin-left: 2px !important;
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #30d158;
+    box-shadow: 0 0 5px rgba(48, 209, 88, 0.8);
+    margin-left: 2px;
 }
 
 .mp-switcher-status-play {
-    font-size: 8px !important;
-    margin-left: 2px !important;
-    opacity: 0.8 !important;
+    font-size: 8px;
+    margin-left: 2px;
+    opacity: 0.8;
 }
 
 
@@ -1412,7 +1414,7 @@
 /* 辅助侧边立柱外壳 (深灰圆角按钮容器，无额外外边距与内边距) */
 .tm-single-hand-gutter {
     position: absolute;
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    bottom: max(16px, env(safe-area-inset-bottom, 0px));
     width: 44px;
     display: none;
     flex-direction: column;
@@ -1420,49 +1422,49 @@
     gap: 8px;
     z-index: 9998;
     pointer-events: auto;
-    background: transparent !important;
-    border: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-sizing: border-box !important;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-sizing: border-box;
     transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 1. 上部：“还原”全宽按钮 (深灰色背景#202020 圆角矩形) */
 .tm-gutter-btn-top {
-    width: 100% !important;
-    height: 44px !important;
-    border-radius: 12px !important;
-    background: #202020 !important;
-    border: 1px solid hsl(var(--shadcn-border) / .1) !important;
-    color: rgba(255, 255, 255, 0.85) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s !important;
-    outline: none !important;
-    padding: 0 !important;
-    flex-shrink: 0 !important;
-    box-sizing: border-box !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
-    -webkit-tap-highlight-color: transparent !important;
+    width: 100%;
+    height: 44px;
+    border-radius: 12px;
+    background: #202020;
+    border: 1px solid hsl(var(--shadcn-border) / .1);
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
+    outline: none;
+    padding: 0;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .tm-gutter-btn-top:hover {
-    color: #ffffff !important;
-    background: #2a2a2a !important;
-    border-color: hsl(var(--shadcn-border) / .25) !important;
+    color: #ffffff;
+    background: #2a2a2a;
+    border-color: hsl(var(--shadcn-border) / .25);
 }
 
 .tm-gutter-btn-top:active {
-    transform: scale(0.92) !important;
-    color: #ffffff !important;
-    background: #181818 !important;
+    transform: scale(0.92);
+    color: #ffffff;
+    background: #181818;
 }
 
 .tm-gutter-icon-wrap {
@@ -1481,36 +1483,36 @@
 
 /* 2. 下部：“切换左右”超大触控靶心按钮 (深灰色背景#202020 圆角矩形) */
 .tm-gutter-btn-bottom {
-    width: 100% !important;
-    flex: 1 1 auto !important;
-    min-height: 80px !important;
-    border-radius: 12px !important;
-    background: #202020 !important;
-    border: 1px solid hsl(var(--shadcn-border) / .1) !important;
-    color: rgba(255, 255, 255, 0.85) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
-    transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s !important;
-    outline: none !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
-    -webkit-tap-highlight-color: transparent !important;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 80px;
+    border-radius: 12px;
+    background: #202020;
+    border: 1px solid hsl(var(--shadcn-border) / .1);
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
+    outline: none;
+    padding: 0;
+    box-sizing: border-box;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .tm-gutter-btn-bottom:hover {
-    color: #ffffff !important;
-    background: #2a2a2a !important;
-    border-color: hsl(var(--shadcn-border) / .25) !important;
+    color: #ffffff;
+    background: #2a2a2a;
+    border-color: hsl(var(--shadcn-border) / .25);
 }
 
 .tm-gutter-btn-bottom:active {
-    transform: scale(0.92) !important;
-    color: #ffffff !important;
-    background: #181818 !important;
+    transform: scale(0.92);
+    color: #ffffff;
+    background: #181818;
 }
 
 .tm-gutter-switch-icon-wrap {
@@ -1527,24 +1529,30 @@
     display: block;
 }
 
-/* 控制界面隐藏时，侧边栏与总控制面板联动隐藏 */
-body.controls-hidden .tm-player-container .tm-single-hand-gutter,
-.tm-player-container.controls-hidden .tm-single-hand-gutter,
-:host(.controls-hidden) .tm-single-hand-gutter,
-body.controls-hidden .tm-player-container .tm-control-panel,
-.tm-player-container.controls-hidden .tm-control-panel,
-:host(.controls-hidden) .tm-control-panel {
+/* 控制界面隐藏时，侧边栏与总控制面板联动隐藏 (侧边栏停靠状态保持常驻不隐藏) */
+body.controls-hidden .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
+.tm-player-container.controls-hidden:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
+:host(.controls-hidden) .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
+body.controls-hidden .tm-player-container:not([class*="tm-controls-docked-"]) .tm-control-panel,
+.tm-player-container.controls-hidden:not([class*="tm-controls-docked-"]) .tm-control-panel,
+:host(.controls-hidden) .tm-player-container:not([class*="tm-controls-docked-"]) .tm-control-panel {
     opacity: 0 !important;
     transform: translateY(20px) !important;
     pointer-events: none !important;
 }
 
-/* 竖屏与窄屏视口下的单手模式布局
-   ★ 移动端竖屏 (≤480px) 的完整布局已由 _player.css 中 tm-control-panel iOS 底板统一管控 */
-@media screen and (orientation: portrait), screen and (max-width: 600px) {
+/* 竖屏移动端手机视口下的单手模式布局 (仅在 <= 600px 竖屏手机下生效) */
+@media screen and (max-width: 600px) and (orientation: portrait) {
     /* 左右单手模式：显示 gutter */
     .tm-player-container.tm-single-hand-right .tm-single-hand-gutter,
     .tm-player-container.tm-single-hand-left .tm-single-hand-gutter {
-        display: flex !important;
+        display: flex;
+    }
+}
+
+/* 坚决杜绝中大屏视口 (>600px，如 600~942px iPad/平板竖屏及 PC 横屏) 误显单手辅助侧栏立柱 */
+@media screen and (min-width: 601px) {
+    .tm-single-hand-gutter {
+        display: none !important;
     }
 }

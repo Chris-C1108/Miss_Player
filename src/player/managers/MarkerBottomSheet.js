@@ -2,6 +2,7 @@ import { SEMANTIC_TAG_TAXONOMY } from './tagTaxonomy.js';
 import { copyToClipboard, Toast, createModal } from '../../utils/index.js';
 import { formatTimeWithHours } from '../../utils/index.js';
 import { SyncManager } from '../../sync/index.js';
+import { __ } from '../../constants/i18n.js';
 import { LOOP_INTERVAL } from '../../constants/icons.js';
 
 /**
@@ -161,13 +162,11 @@ export class MarkerBottomSheet {
         header.className = 'tm-sheet-header';
 
         const titleWrapper = document.createElement('div');
-        titleWrapper.style.display = 'flex';
-        titleWrapper.style.alignItems = 'center';
-        titleWrapper.style.gap = '8px';
+        titleWrapper.className = 'mp-sheet-title-wrap';
 
         const title = document.createElement('div');
         title.className = 'tm-bottom-sheet-title';
-        title.textContent = '标签管理';
+        title.textContent = __('sheetTitle') || '片段列表';
 
         const countBadge = document.createElement('span');
         countBadge.className = 'tm-sheet-count-badge';
@@ -179,21 +178,17 @@ export class MarkerBottomSheet {
         const closeBtn = document.createElement('button');
         closeBtn.className = 'tm-sheet-close-btn';
         closeBtn.innerHTML = '✕';
-        closeBtn.title = '关闭';
+        closeBtn.title = __('cancel') || '关闭';
         closeBtn.addEventListener('click', () => this.close());
 
         header.appendChild(titleWrapper);
 
         const headerActions = document.createElement('div');
-        headerActions.style.display = 'flex';
-        headerActions.style.alignItems = 'center';
-        headerActions.style.gap = '8px';
+        headerActions.className = 'mp-sheet-header-actions';
 
         const undoBtn = document.createElement('button');
-        undoBtn.className = 'tm-sheet-undo-btn';
-        undoBtn.style.display = 'none';
-        undoBtn.title = '撤销上次删除';
-        undoBtn.style.cssText = 'background: rgba(255, 149, 0, 0.2); border: 1px solid rgba(255, 149, 0, 0.5); color: #ff9500; font-size: 11px; padding: 2px 8px; border-radius: 10px; cursor: pointer; display: none;';
+        undoBtn.className = 'tm-sheet-undo-btn mp-sheet-undo-btn';
+        undoBtn.title = __('undoDelete') || '撤销删除';
         this._undoBtn = undoBtn;
 
         undoBtn.addEventListener('click', (e) => {
@@ -207,10 +202,10 @@ export class MarkerBottomSheet {
                 this.loopManager._saveTabs();
                 this.loopManager.renderTabs();
                 this.updateBottomSheet();
-                Toast('已撤销并恢复胶囊', 1200, 'success');
+                Toast(__('undoRestored') || '已恢复片段', 1200, 'success');
             }
             if (this._deletedHistory.length === 0) {
-                undoBtn.style.display = 'none';
+                undoBtn.classList.remove('is-active');
                 if (this._undoTimer) clearInterval(this._undoTimer);
             }
         });
@@ -227,11 +222,10 @@ export class MarkerBottomSheet {
 
         // 批量操作工具栏 (全选/反选与分享)
         const toolbar = document.createElement('div');
-        toolbar.className = 'tm-sheet-toolbar';
-        toolbar.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: rgba(255, 255, 255, 0.04); border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 12px; color: rgba(255,255,255,0.7); flex-shrink: 0;';
+        toolbar.className = 'tm-sheet-toolbar mp-sheet-toolbar';
 
         const selectAllLabel = document.createElement('label');
-        selectAllLabel.style.cssText = 'display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;';
+        selectAllLabel.className = 'mp-sheet-select-all';
         const selectAllCheckbox = document.createElement('input');
         selectAllCheckbox.type = 'checkbox';
         selectAllCheckbox.className = 'tm-sheet-select-all';
@@ -250,14 +244,13 @@ export class MarkerBottomSheet {
         });
 
         const shareBtn = document.createElement('button');
-        shareBtn.className = 'tm-sheet-share-btn';
-        shareBtn.style.cssText = 'background: rgba(0, 122, 255, 0.2); border: 1px solid rgba(0, 122, 255, 0.5); color: #007aff; font-size: 11px; padding: 3px 10px; border-radius: 12px; cursor: pointer; font-weight: 600;';
-        shareBtn.textContent = '🔗 分享选中胶囊';
+        shareBtn.className = 'tm-sheet-share-btn mp-sheet-share-btn';
+        shareBtn.textContent = '🔗 ' + (__('shareSelected') || '分享片段');
         shareBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const selected = this.tabs.filter(t => this._selectedTabIds.has(t.id));
             if (selected.length === 0) {
-                Toast('请先勾选需要分享的时间胶囊', 1500, 'info');
+                Toast(__('selectToShare') || '请先勾选需要分享的片段', 1500, 'info');
                 return;
             }
             this._showShareModal(selected);
@@ -369,9 +362,8 @@ export class MarkerBottomSheet {
             // 复选框
             const rowCheckbox = document.createElement('input');
             rowCheckbox.type = 'checkbox';
-            rowCheckbox.className = 'tm-sheet-row-checkbox';
+            rowCheckbox.className = 'tm-sheet-row-checkbox mp-sheet-row-checkbox';
             rowCheckbox.checked = this._selectedTabIds.has(tab.id);
-            rowCheckbox.style.marginRight = '4px';
             rowCheckbox.addEventListener('change', (e) => {
                 e.stopPropagation();
                 if (e.target.checked) {
@@ -383,10 +375,10 @@ export class MarkerBottomSheet {
 
             // 2. 备注文本框与保存按钮
             const remarkWrapper = document.createElement('div');
-            remarkWrapper.style.cssText = 'flex: 1; display: flex; flex-direction: column; gap: 4px;';
+            remarkWrapper.className = 'mp-sheet-remark-wrap';
 
             const inputRow = document.createElement('div');
-            inputRow.style.cssText = 'display: flex; align-items: center; gap: 4px; width: 100%;';
+            inputRow.className = 'mp-sheet-input-row';
 
             const input = document.createElement('input');
             input.type = 'text';
@@ -443,10 +435,9 @@ export class MarkerBottomSheet {
 
             // 保存按钮 (显式保存备注)
             const saveBtn = document.createElement('button');
-            saveBtn.className = 'tm-sheet-save-btn';
+            saveBtn.className = 'tm-sheet-save-btn mp-sheet-save-btn';
             saveBtn.textContent = '保存';
             saveBtn.title = '保存备注修改';
-            saveBtn.style.cssText = 'background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 4px; cursor: pointer; flex-shrink: 0;';
             saveBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 tab.comment = input.value.trim();
@@ -458,23 +449,21 @@ export class MarkerBottomSheet {
 
             // 语义标签展开按钮
             const tagToggleBtn = document.createElement('button');
+            tagToggleBtn.className = 'mp-sheet-tag-toggle-btn';
             tagToggleBtn.textContent = '🏷️';
             tagToggleBtn.title = '选择多维语义标签';
-            tagToggleBtn.style.cssText = 'background: transparent; border: none; cursor: pointer; font-size: 13px; padding: 0 2px;';
             inputRow.appendChild(tagToggleBtn);
 
             remarkWrapper.appendChild(inputRow);
 
             // 多维快捷标签选择抽屉 (点击 🏷️ 展开)
             const tagDrawer = document.createElement('div');
-            tagDrawer.className = 'tm-sheet-tag-drawer';
-            tagDrawer.style.cssText = 'display: none; flex-wrap: wrap; gap: 4px; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 6px; margin-top: 2px;';
+            tagDrawer.className = 'tm-sheet-tag-drawer mp-sheet-tag-drawer';
             SEMANTIC_TAG_TAXONOMY.forEach(cat => {
                 cat.tags.forEach(t => {
                     const chip = document.createElement('span');
-                    chip.className = 'tm-tag-chip';
+                    chip.className = 'tm-tag-chip mp-sheet-tag-chip';
                     chip.textContent = t;
-                    chip.style.cssText = 'font-size: 10px; padding: 2px 6px; border-radius: 8px; background: rgba(255,255,255,0.1); color: #ddd; cursor: pointer; user-select: none;';
                     chip.addEventListener('click', (e) => {
                         e.stopPropagation();
                         const cur = input.value.trim();
@@ -489,7 +478,7 @@ export class MarkerBottomSheet {
 
             tagToggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                tagDrawer.style.display = (tagDrawer.style.display === 'none') ? 'flex' : 'none';
+                tagDrawer.classList.toggle('is-open');
             });
             remarkWrapper.appendChild(tagDrawer);
 
@@ -502,6 +491,10 @@ export class MarkerBottomSheet {
     }
 
     cleanup() {
+        if (this._undoTimer) {
+            clearInterval(this._undoTimer);
+            this._undoTimer = null;
+        }
         if (this._sheetOverlay) {
             this._sheetOverlay.remove();
             this._sheetOverlay = null;
@@ -511,6 +504,7 @@ export class MarkerBottomSheet {
             this._sheetPanel = null;
             this._sheetList = null;
             this._sheetCountBadge = null;
+            this._undoBtn = null;
         }
     }
 
@@ -520,17 +514,17 @@ export class MarkerBottomSheet {
         const updateText = () => {
             const latest = this._deletedHistory[this._deletedHistory.length - 1];
             if (!latest) {
-                this._undoBtn.style.display = 'none';
+                this._undoBtn.classList.remove('is-active');
                 if (this._undoTimer) clearInterval(this._undoTimer);
                 return;
             }
             const remaining = Math.max(0, Math.ceil((latest.expireAt - Date.now()) / 1000));
             if (remaining <= 0) {
                 this._deletedHistory.pop();
-                this._undoBtn.style.display = 'none';
+                this._undoBtn.classList.remove('is-active');
                 if (this._undoTimer) clearInterval(this._undoTimer);
             } else {
-                this._undoBtn.style.display = 'flex';
+                this._undoBtn.classList.add('is-active');
                 this._undoBtn.textContent = `撤销 (${remaining}s)`;
             }
         };
@@ -559,7 +553,7 @@ export class MarkerBottomSheet {
         const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(jsonStr))));
         const deepLinkUrl = `${currentUrl}#mp_capsules=${encoded}`;
 
-        let mdText = `### 🎬 ${videoCode} 精彩时间胶囊分享\n\n`;
+        let mdText = `### 🎬 ${videoCode} 精彩高光片段分享\n\n`;
         if (posterUrl) mdText += `![封面](${posterUrl})\n\n`;
         mdText += `> 推荐播放倍速: **${currentSpeed}x**\n\n`;
         selectedTabs.forEach((tab, i) => {
@@ -572,12 +566,12 @@ export class MarkerBottomSheet {
         mdText += `*由 Miss Player 单手播放器生成*\n`;
 
         const { modal, close } = createModal(`
-            <div class="tm-custom-modal-title">时间胶囊分享 (共 ${selectedTabs.length} 条)</div>
-            <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 12px;">已生成包含深链参数的胶囊文本，支持一键载入</div>
-            <div class="tm-modal-buttons" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
-                <button class="tm-custom-modal-copy-url-btn" style="background: #007aff; color: #fff; padding: 8px; border-radius: 6px; border: none; cursor: pointer;">复制深链分享链接 (推荐)</button>
-                <button class="tm-custom-modal-copy-md-btn" style="background: rgba(255,255,255,0.15); color: #fff; padding: 8px; border-radius: 6px; border: none; cursor: pointer;">复制 Markdown 图文排版</button>
-                <button class="tm-custom-modal-close-btn" style="background: transparent; color: rgba(255,255,255,0.6); padding: 6px; border: none; cursor: pointer;">关闭</button>
+            <div class="tm-custom-modal-title">高光片段分享 (共 ${selectedTabs.length} 条)</div>
+            <div class="mp-sheet-share-desc">已生成包含分享链接的片段文本，支持一键载入</div>
+            <div class="tm-modal-buttons mp-sheet-share-actions">
+                <button class="tm-custom-modal-copy-url-btn mp-sheet-share-btn-copy-url">复制分享链接 (推荐)</button>
+                <button class="tm-custom-modal-copy-md-btn mp-sheet-share-btn-copy-md">复制 Markdown 图文排版</button>
+                <button class="tm-custom-modal-close-btn mp-sheet-share-btn-close">关闭</button>
             </div>
         `);
 

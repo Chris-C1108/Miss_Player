@@ -1,4 +1,5 @@
 import { PLAY, PAUSE, REPLAY } from '../../constants/icons.js';
+import { __ } from '../../constants/i18n.js';
 
 /**
  * VideoStateSwitcher
@@ -27,9 +28,9 @@ export class VideoStateSwitcher {
         this.onDragStateChange = options.onDragStateChange || (() => {});
 
         this.modes = [
-            { id: 'preview', title: '快速预览', shortTitle: '预览' },
-            { id: 'normal',  title: '正常模式', shortTitle: '正常' },
-            { id: 'climax',  title: '精彩重温', shortTitle: '重温' }
+            { id: 'preview', title: __('modePreview') || '快览片段', shortTitle: __('modePreviewShort') || '快览' },
+            { id: 'normal',  title: __('modeNormal') || '正常播放', shortTitle: __('modeNormalShort') || '正常' },
+            { id: 'climax',  title: __('modeReplay') || '连播高光', shortTitle: __('modeReplayShort') || '连播' }
         ];
 
         this.currentIndex = this.modes.findIndex(m => m.id === this.initialMode);
@@ -223,10 +224,10 @@ export class VideoStateSwitcher {
                         btn.title = '点击取消单片段循环';
                         btn.innerHTML = `<span class="mp-switcher-btn-cancel">取消循环</span>`;
                     } else if (this.runtimeState.isTourEnded) {
-                        btn.title = '从第一个胶囊重新播放';
+                        btn.title = '从第 1 个高光重新播放';
                         btn.innerHTML = `<span class="mp-switcher-btn-text"><span class="mp-switcher-replay-icon">${REPLAY || ''}</span> 重播</span>`;
                     } else {
-                        const modeText = (curMode === 'preview') ? '快速预览' : '精彩重温';
+                        const modeText = (curMode === 'preview') ? (__('modePreviewShort') || '快览') : (__('modeReplayShort') || '连播');
                         const statusDot = this.runtimeState.isPlaying 
                             ? '<span class="mp-switcher-status-dot"></span>'
                             : '<span class="mp-switcher-status-play">▶</span>';

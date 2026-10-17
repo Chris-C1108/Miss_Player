@@ -25,9 +25,13 @@ export class SeekStepEditor {
         this.element.innerHTML = '';
 
         this.element.addEventListener('wheel', (e) => {
-            if (e.deltaY !== 0) {
-                e.preventDefault();
-                this.element.scrollLeft += e.deltaY;
+            if (e.deltaY !== 0 && this.element.scrollWidth > this.element.clientWidth) {
+                const atLeft = this.element.scrollLeft <= 0 && e.deltaY < 0;
+                const atRight = this.element.scrollLeft + this.element.clientWidth >= this.element.scrollWidth - 1 && e.deltaY > 0;
+                if (!atLeft && !atRight) {
+                    e.preventDefault();
+                    this.element.scrollLeft += e.deltaY;
+                }
             }
         }, { passive: false });
 

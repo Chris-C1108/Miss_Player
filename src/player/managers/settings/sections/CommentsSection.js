@@ -1,5 +1,6 @@
 import { AppleCard } from '../components/AppleCard.js';
 import { ToggleRow } from '../components/ToggleRow.js';
+import { __ } from '../../../../constants/i18n.js';
 
 export class CommentsSection {
     constructor(settingsManager) {
@@ -15,7 +16,7 @@ export class CommentsSection {
 
         const header = document.createElement('div');
         header.className = 'tm-settings-group-header';
-        header.textContent = '评论与数据聚合';
+        header.textContent = __('commentsGroupTitle') || '影片评论';
         this.element.appendChild(header);
 
         const card = new AppleCard();
@@ -25,8 +26,8 @@ export class CommentsSection {
         subpanelWrapper.style.display = this.settings.showCommentsSection ? 'block' : 'none';
 
         const commentsToggle = new ToggleRow({
-            title: '展示评论与侧边栏',
-            subtext: '在播放器侧边或底部聚合多源弹幕与高赞评论',
+            title: __('showComments') || '显示评论',
+            subtext: __('showCommentsDesc') || '在侧栏或底部展示网友热评与弹幕',
             checked: this.settings.showCommentsSection,
             onChange: (checked) => {
                 this.sm.updateSetting('showCommentsSection', checked);
@@ -53,10 +54,10 @@ export class CommentsSection {
 
         const sourcesTop = document.createElement('div');
         sourcesTop.className = 'tm-apple-row-title';
-        sourcesTop.textContent = '多数据源抓取策略';
+        sourcesTop.textContent = __('commentSources') || '评论来源';
         const sourcesSub = document.createElement('div');
         sourcesSub.className = 'tm-apple-row-subtext';
-        sourcesSub.textContent = '按需选择参与评论提取的站点来源';
+        sourcesSub.textContent = __('commentSourcesDesc') || '勾选参与聚合的外部站点';
         sourcesRow.appendChild(sourcesTop);
         sourcesRow.appendChild(sourcesSub);
 
@@ -97,8 +98,8 @@ export class CommentsSection {
         subpanelWrapper.appendChild(sourcesRow);
 
         const numFilterToggle = new ToggleRow({
-            title: '只看时间点评论',
-            subtext: '自动过滤纯文本水评，仅保留包含数字与时间戳的发言',
+            title: __('filterTimeOnly') || '只看时间',
+            subtext: __('filterTimeOnlyDesc') || '自动过滤纯水评，仅看带时间标记',
             checked: Boolean(this.settings.debugFilterHasNumbers),
             onChange: (checked) => {
                 this.sm.updateSetting('debugFilterHasNumbers', checked);

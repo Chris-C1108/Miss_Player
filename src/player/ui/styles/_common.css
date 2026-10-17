@@ -3,16 +3,21 @@
 /* 浮动按钮 */
 .tm-floating-button {
     position: fixed;
-    bottom: 30px;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px));
     left: 50%;
+    right: auto;
     transform: translateX(-50%);
     padding: 0;
+    margin: 0;
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background-color: transparent;
+    background: transparent;
     color: var(--brand-pink);
     border: none;
+    outline: none;
+    box-shadow: none;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -20,6 +25,8 @@
     cursor: pointer;
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: visible;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .tm-floating-button svg {
@@ -44,14 +51,11 @@
 
 /* 增强呼吸发光动画效果 (仅调节投影光晕，保持 transform 纯净以便平滑插值) */
 @keyframes breathing-glow {
-    0% {
+    0%, 100% {
         filter: drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7));
     }
     50% {
         filter: drop-shadow(0 0 22px rgba(var(--brand-pink-rgb), 1.0));
-    }
-    100% {
-        filter: drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7));
     }
 }
 
@@ -59,7 +63,8 @@
 @media screen and (orientation: landscape) {
     .tm-floating-button {
         left: auto;
-        right: 20px;
+        right: max(20px, env(safe-area-inset-right, 20px));
+        bottom: max(20px, env(safe-area-inset-bottom, 20px));
         transform: none;
     }
     

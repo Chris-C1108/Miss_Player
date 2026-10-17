@@ -1,0 +1,104 @@
+/* Miss Player - 宿主轨样式 (< 3KB) */
+:root {
+  --brand-pink: rgb(254, 98, 142);
+  --brand-pink-rgb: 254, 98, 142;
+}
+
+miss-player-root { display: contents !important; }
+
+html.tm-player-active,
+body.tm-player-active {
+  overscroll-behavior: none !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+html.tm-player-active::-webkit-scrollbar,
+body.tm-player-active::-webkit-scrollbar {
+  display: none !important;
+}
+body.tm-player-active header,
+body.tm-player-active .header,
+body.tm-player-active navbar,
+body.tm-player-active .navbar,
+body.tm-player-active #header-top,
+body.tm-player-active .top-nav,
+body.tm-player-active [class*=header--sticky],
+body.tm-player-active [class*=navbar-fixed] {
+  display: none !important;
+}
+body.controls-hidden {
+  cursor: none !important;
+}
+body.tm-swiping-down {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  touch-action: none !important;
+}
+body.tm-settings-active {
+  touch-action: pan-y !important;
+}
+
+/* 浮动唤醒按钮 */
+.tm-floating-button {
+  position: fixed !important;
+  bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  padding: 0;
+  margin: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: transparent !important;
+  color: var(--brand-pink);
+  border: none !important;
+  outline: none !important;
+  box-shadow: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9980;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: visible;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.tm-floating-button svg {
+  width: 48px;
+  height: 48px;
+  filter: drop-shadow(0 0 10px rgba(var(--brand-pink-rgb), 0.9));
+  transition: filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: breathing-glow 3s infinite ease-in-out;
+}
+
+.tm-floating-button:hover {
+  transform: translateX(-50%) scale(1.08);
+}
+
+.tm-floating-button:hover svg {
+  filter: drop-shadow(0 0 20px rgba(var(--brand-pink-rgb), 1.0));
+}
+
+.tm-floating-button:active {
+  transform: translateX(-50%) scale(0.96);
+}
+
+@keyframes breathing-glow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7)); }
+  50% { filter: drop-shadow(0 0 22px rgba(var(--brand-pink-rgb), 1.0)); }
+}
+
+@media screen and (orientation: landscape) {
+  .tm-floating-button {
+    left: auto;
+    right: max(20px, env(safe-area-inset-right, 20px));
+    bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    transform: none;
+  }
+  .tm-floating-button:hover { transform: scale(1.08); }
+  .tm-floating-button:active { transform: scale(0.96); }
+}

@@ -1,0 +1,15 @@
+/* =========================================================================
+   Miss Player - Z-Index 标尺系统 (Z-Index Tokens)
+   遵循 AGENTS.md 准则：消灭魔法数字，严格收敛于 10~60 级统一步进标尺
+   --z-player-base: 10 ➔ --z-controls: 20 ➔ --z-sidebar: 30 ➔
+   --z-popover: 40 ➔ --z-modal: 50 ➔ --z-toast: 60
+   ========================================================================= */
+
+:root, :host {
+    --z-player-base: 10;
+    --z-controls: 20;
+    --z-sidebar: 30;
+    --z-popover: 40;
+    --z-modal: 50;
+    --z-toast: 60;
+}

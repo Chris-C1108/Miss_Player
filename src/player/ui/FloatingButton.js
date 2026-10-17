@@ -14,6 +14,8 @@ export class FloatingButton {
         this.playerState = options.playerState || null;
         this.videoCheckInterval = null;
         this.mutationObserver = null;
+        this._listenersAttached = false;
+        this._handleResize = this.handleResize.bind(this);
     }
 
     /**
@@ -28,11 +30,8 @@ export class FloatingButton {
             // 创建新按钮
             this.createButton();
             
-            // 监听窗口大小变化，更新按钮位置
-            window.addEventListener('resize', this.handleResize.bind(this));
-            
-            // 监听屏幕方向变化
-            window.matchMedia("(orientation: portrait)").addEventListener("change", this.handleResize.bind(this));
+            // 监听窗口大小变化与屏幕方向变化
+            this.setupOrientationListeners();
             
             // 监听DOM变化，处理视频元素的动态添加/移除
             this.setupMutationObserver();
@@ -46,6 +45,30 @@ export class FloatingButton {
             
             // 监听DOM变化，处理视频元素的动态添加
             this.setupMutationObserver();
+        }
+    }
+    
+    /**
+     * 统一绑定屏幕方向与视口变化监听器
+     */
+    setupOrientationListeners() {
+        if (this._listenersAttached) return;
+        this._listenersAttached = true;
+        
+        window.addEventListener('resize', this._handleResize);
+        window.addEventListener('orientationchange', this._handleResize);
+        
+        if (window.matchMedia) {
+            this._portraitMediaQuery = window.matchMedia('(orientation: portrait)');
+            if (this._portraitMediaQuery.addEventListener) {
+                this._portraitMediaQuery.addEventListener('change', this._handleResize);
+            } else if (this._portraitMediaQuery.addListener) {
+                this._portraitMediaQuery.addListener(this._handleResize);
+            }
+        }
+        
+        if (window.screen && window.screen.orientation && window.screen.orientation.addEventListener) {
+            window.screen.orientation.addEventListener('change', this._handleResize);
         }
     }
     
@@ -81,13 +104,7 @@ export class FloatingButton {
             // 如果有视频元素但没有按钮，创建按钮
             if (hasVideo && !this.button) {
                 this.createButton();
-                
-                // 监听窗口大小变化，更新按钮位置
-                window.addEventListener('resize', this.handleResize.bind(this));
-                
-                // 监听屏幕方向变化
-                window.matchMedia("(orientation: portrait)").addEventListener("change", this.handleResize.bind(this));
-                
+                this.setupOrientationListeners();
                 console.log('[FloatingButton] DOM变化检测到视频元素，已创建浮动按钮');
             } 
             // 如果有按钮但没有视频元素，隐藏按钮
@@ -95,9 +112,10 @@ export class FloatingButton {
                 this.button.style.display = 'none';
                 console.log('[FloatingButton] DOM变化检测到视频元素已移除，已隐藏浮动按钮');
             }
-            // 如果有视频元素且有按钮，确保按钮显示
+            // 如果有视频元素且有按钮，确保按钮显示并更新位置
             else if (hasVideo && this.button && this.button.style.display === 'none') {
                 this.button.style.display = 'flex';
+                this.updateButtonPosition();
                 console.log('[FloatingButton] DOM变化检测到视频元素已添加，已显示浮动按钮');
             }
         }, 300);
@@ -120,17 +138,12 @@ export class FloatingButton {
                 if (!this.button) {
                     // 找到视频元素，创建按钮
                     this.createButton();
-                    
-                    // 监听窗口大小变化，更新按钮位置
-                    window.addEventListener('resize', this.handleResize.bind(this));
-                    
-                    // 监听屏幕方向变化
-                    window.matchMedia("(orientation: portrait)").addEventListener("change", this.handleResize.bind(this));
-                    
+                    this.setupOrientationListeners();
                     console.log('[FloatingButton] 定时检测到视频元素，已创建浮动按钮');
                 } else if (this.button.style.display === 'none') {
-                    // 按钮存在但被隐藏，重新显示
+                    // 按钮存在但被隐藏，重新显示并更新位置
                     this.button.style.display = 'flex';
+                    this.updateButtonPosition();
                     console.log('[FloatingButton] 定时检测到视频元素，已显示浮动按钮');
                 }
                 
@@ -160,32 +173,35 @@ export class FloatingButton {
     }
 
     /**
-     * 处理窗口大小变化
+     * 处理窗口大小与屏幕方向变化
      */
     handleResize() {
-        // 使用节流函数限制调用频率
+        // 第一时间立即刷新定位，防止转屏过渡闪烁
+        if (this.button && this.button.style.display !== 'none') {
+            this.updateButtonPosition();
+        }
+        
+        // 使用节流防抖限制高频重排，并在视口尺寸稳定后再次确认位置
         if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
         
         this.resizeTimeout = setTimeout(() => {
             // 检查页面是否存在视频元素
             if (findVideoElement(true)) {
-                // 无论横屏还是竖屏都显示按钮
-                this.button.style.display = 'flex';
-                
-                // 更新按钮位置
-                this.updateButtonPosition();
-            } else {
-                // 没有视频元素，隐藏按钮
-                if (this.button) this.button.style.display = 'none';
+                if (this.button) {
+                    this.button.style.display = 'flex';
+                    this.updateButtonPosition();
+                }
+            } else if (this.button) {
+                this.button.style.display = 'none';
             }
-        }, 200);
+        }, 150);
     }
 
     /**
      * 创建浮动按钮
      */
     createButton() {
-        // 创建浮动按钮 - 使用CSS类而不是内联样式
+        // 创建浮动按钮 - 使用CSS类同时设置内联样式防御
         this.button = createElementWithStyle('button', 'tm-floating-button');
 
         this.button.innerHTML = FLOATING_PLAY;
@@ -198,11 +214,11 @@ export class FloatingButton {
         // 显示按钮
         this.button.style.display = 'flex';
 
+        // 初始位置与关键防御样式
+        this.updateButtonPosition();
+
         // 添加到文档
         document.body.appendChild(this.button);
-
-        // 初始位置
-        this.updateButtonPosition();
 
         return this.button;
     }
@@ -213,25 +229,39 @@ export class FloatingButton {
     updateButtonPosition() {
         if (!this.button) return;
         
+        // 核心规范：确保 position: fixed !important 与无系统背景/边框 (严格防御宿主样式污染)
+        this.button.style.setProperty('position', 'fixed', 'important');
+        this.button.style.setProperty('background', 'transparent', 'important');
+        this.button.style.setProperty('background-color', 'transparent', 'important');
+        this.button.style.setProperty('border', 'none', 'important');
+        this.button.style.setProperty('outline', 'none', 'important');
+        this.button.style.setProperty('box-shadow', 'none', 'important');
+        this.button.style.setProperty('padding', '0', 'important');
+        this.button.style.setProperty('margin', '0', 'important');
+        this.button.style.setProperty('width', '56px', 'important');
+        this.button.style.setProperty('height', '56px', 'important');
+        this.button.style.setProperty('border-radius', '50%', 'important');
+        this.button.style.setProperty('box-sizing', 'border-box', 'important');
+        this.button.style.setProperty('z-index', '9980', 'important');
+        this.button.style.setProperty('-webkit-appearance', 'none', 'important');
+        this.button.style.setProperty('appearance', 'none', 'important');
+        
         // 获取当前屏幕方向
         const isPortraitValue = isPortrait();
         
         if (isPortraitValue) {
-            // 竖屏模式 - 按钮在底部居中，通过 CSS env() 纯原生适配安全区域
+            // 竖屏模式 (portrait)：正居中贴近屏幕底部，纯原生适配安全区域
             this.button.style.bottom = 'max(20px, env(safe-area-inset-bottom, 20px))';
-            this.button.style.right = 'auto';
             this.button.style.left = '50%';
+            this.button.style.right = 'auto';
             this.button.style.transform = 'translateX(-50%)';
         } else {
-            // 横屏模式 - 按钮在右下角且加大安全距离
-            this.button.style.bottom = 'max(20px, calc(env(safe-area-inset-bottom, 20px) + 10px))';
-            this.button.style.right = 'max(20px, calc(env(safe-area-inset-right, 20px) + 10px))';
+            // 横屏模式 (landscape)：停泊在右下角
+            this.button.style.bottom = 'max(20px, env(safe-area-inset-bottom, 20px))';
+            this.button.style.right = 'max(20px, env(safe-area-inset-right, 20px))';
             this.button.style.left = 'auto';
-            this.button.style.transform = 'translateX(0)';
+            this.button.style.transform = 'none';
         }
-        
-        // 确保z-index始终正确设置，防止在屏幕旋转时被覆盖
-        this.button.style.zIndex = '9980';
     }
 
     /**
@@ -312,10 +342,34 @@ export class FloatingButton {
             this.button.parentNode.removeChild(this.button);
         }
         
-        // 移除事件监听器
-        window.removeEventListener('resize', this.handleResize);
+        // 移除屏幕方向与视口监听器
+        if (this._listenersAttached) {
+            window.removeEventListener('resize', this._handleResize);
+            window.removeEventListener('orientationchange', this._handleResize);
+            
+            if (this._portraitMediaQuery) {
+                if (this._portraitMediaQuery.removeEventListener) {
+                    this._portraitMediaQuery.removeEventListener('change', this._handleResize);
+                } else if (this._portraitMediaQuery.removeListener) {
+                    this._portraitMediaQuery.removeListener(this._handleResize);
+                }
+            }
+            
+            if (window.screen && window.screen.orientation && window.screen.orientation.removeEventListener) {
+                window.screen.orientation.removeEventListener('change', this._handleResize);
+            }
+            this._listenersAttached = false;
+        }
         
         // 清除计时器
+        if (this.resizeTimeout) {
+            clearTimeout(this.resizeTimeout);
+            this.resizeTimeout = null;
+        }
+        if (this.mutationTimeout) {
+            clearTimeout(this.mutationTimeout);
+            this.mutationTimeout = null;
+        }
         if (this.videoCheckInterval) {
             clearInterval(this.videoCheckInterval);
             this.videoCheckInterval = null;

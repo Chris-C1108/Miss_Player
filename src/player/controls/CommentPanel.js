@@ -430,11 +430,11 @@ export class CommentPanel {
         if (!this.commentsPanel) return;
         const actionBar = this.commentsPanel.querySelector('.tm-comments-panel-action-bar');
         if (actionBar) {
-            actionBar.style.display = debugMode ? 'flex' : 'none';
+            actionBar.classList.toggle('is-hidden', !debugMode);
         }
         const reportBtns = this.commentsPanel.querySelectorAll('.jc-report-btn');
         reportBtns.forEach(btn => {
-            btn.style.display = debugMode ? 'inline-block' : 'none';
+            btn.classList.toggle('is-hidden', !debugMode);
         });
         // 当 debugMode 改变时重新计算数字过滤
         this.applyFilter();
@@ -453,14 +453,11 @@ export class CommentPanel {
         const uiManager = this.playerCore?.uiManager;
 
         if (playerContainer) {
+            this.commentsPanel.classList.toggle('is-hidden', !showCommentsSection);
             if (!showCommentsSection) {
                 playerContainer.classList.add('tm-sidebar-hidden');
-                this.commentsPanel.style.display = 'none';
-            } else {
-                this.commentsPanel.style.display = 'flex';
-                if (!state?.settings?.sidebarHidden) {
-                    playerContainer.classList.remove('tm-sidebar-hidden');
-                }
+            } else if (!state?.settings?.sidebarHidden) {
+                playerContainer.classList.remove('tm-sidebar-hidden');
             }
         }
 
@@ -532,7 +529,7 @@ export class CommentPanel {
                         imp.capsules.forEach(c => {
                             lm.addTabFromTime(c.endTime ? [c.startTime, c.endTime] : c.startTime, c.comment);
                         });
-                        Toast(`已将 ${imp.capsules.length} 条外部分享胶囊导入时间轴`, 2000, "success");
+                        Toast(`已将 ${imp.capsules.length} 条外部分享高光导入时间轴`, 2000, "success");
                     }
                     window.__mp_imported_capsules = null;
                     this.renderCommentsList();
@@ -550,7 +547,7 @@ export class CommentPanel {
                         comment.timestamps.forEach(ts => {
                             lm.addTabFromTime(ts.seconds, comment.rawText ? comment.rawText.slice(0, 30) : (comment.text || "").slice(0, 30));
                         });
-                        Toast(`已转存 ${comment.timestamps.length} 个时间片段至胶囊列表`, 2000, "success");
+                        Toast(`已转存 ${comment.timestamps.length} 个高光片段至片段列表`, 2000, "success");
                     }
                 }
                 return;
@@ -926,14 +923,14 @@ export class CommentPanel {
             const isConverted = Boolean(comment.countdownApplied);
             btn.classList.toggle('jc-countdown-btn--active', isConverted);
             btn.textContent = isConverted 
-                ? (__('commentCountdownReverted') || '还原时序') 
-                : (__('commentCountdownConvert') || '纠正时序');
+                ? (__('commentCountdownReverted') || '显示倒数') 
+                : (__('commentCountdownConvert') || '转为正序');
             btn.title = isConverted 
-                ? '当前已纠正时序为正向播放时间，点击还原时序' 
-                : '若评论作者使用的是倒计时间，点击纠正时序为正向播放时间';
+                ? '当前已换算为实际播放时间，点击恢复显示原始倒数' 
+                : '若评论内容为剩余倒数时间，点击换算为实际播放时间';
         }
 
-        const toastMsg = comment.countdownApplied ? '已纠正评论时序为正向播放时间' : '已还原为原始评论时序';
+        const toastMsg = comment.countdownApplied ? '已换算为实际播放时间' : '已恢复显示原始倒数';
         Toast(toastMsg, 1500, 'info');
 
         // 收集用户手动微调倒数时间样本 (Ground Truth)
@@ -1453,9 +1450,9 @@ export class CommentPanel {
                 <div class="jc-code-preview-spinner"></div>
                 <span>${loadingText}</span>
             </div>
-            <video class="jc-code-preview-video" loop muted playsinline referrerpolicy="no-referrer" style="display:none;"></video>
-            <div class="jc-code-preview-fallback" style="display:none;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="opacity:0.6;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            <video class="jc-code-preview-video is-hidden" loop muted playsinline referrerpolicy="no-referrer"></video>
+            <div class="jc-code-preview-fallback is-hidden">
+                <svg class="mp-preview-fallback-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                 <span>${notFoundText}</span>
             </div>
             <div class="jc-code-preview-hover-hint">
@@ -1557,9 +1554,9 @@ export class CommentPanel {
             if (reqId !== this._currentPreviewReqId) return;
 
             if (candidateIndex >= candidates.length) {
-                if (loadingEl) loadingEl.style.display = 'none';
-                if (videoEl) videoEl.style.display = 'none';
-                if (fallbackEl) fallbackEl.style.display = 'flex';
+                if (loadingEl) loadingEl.classList.toggle('is-hidden', true);
+                if (videoEl) videoEl.classList.toggle('is-hidden', true);
+                if (fallbackEl) fallbackEl.classList.toggle('is-hidden', false);
                 return;
             }
 
@@ -1584,9 +1581,9 @@ export class CommentPanel {
 
         videoEl.oncanplay = () => {
             if (reqId !== this._currentPreviewReqId) return;
-            if (loadingEl) loadingEl.style.display = 'none';
-            if (fallbackEl) fallbackEl.style.display = 'none';
-            videoEl.style.display = 'block';
+            if (loadingEl) loadingEl.classList.toggle('is-hidden', true);
+            if (fallbackEl) fallbackEl.classList.toggle('is-hidden', true);
+            videoEl.classList.toggle('is-hidden', false);
             videoEl.play().catch(() => {});
         };
 
@@ -1710,20 +1707,16 @@ export class CommentPanel {
      */
     showCloudflarePrompt(failedDomain) {
         const targetDomain = failedDomain || `https://${SITE_DOMAINS.JAVLIBRARY.primary}`;
-        if (this.loadingElement) this.loadingElement.style.display = 'none';
-        if (this.commentsList) this.commentsList.style.display = 'none';
+        if (this.loadingElement) this.loadingElement.classList.add('is-hidden');
+        if (this.commentsList) this.commentsList.classList.add('is-hidden');
         if (this.errorElement) {
-            this.errorElement.style.display = 'flex';
-            this.errorElement.style.flexDirection = 'column';
-            this.errorElement.style.alignItems = 'center';
-            this.errorElement.style.justifyContent = 'center';
-            this.errorElement.style.gap = '8px';
+            this.errorElement.className = 'mp-comments-error';
             this.errorElement.innerHTML = `
-                <div style="text-align: center; padding: 12px; font-size: 13px; color: hsl(var(--shadcn-destructive));">
-                    <p style="margin: 0 0 6px 0; font-weight: 600;">触发 JAVLibrary 防火墙验证</p>
-                    <p style="margin: 0 0 12px 0; font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">需要您先去 JAVLibrary 完成人机验证以获得授权Cookie。</p>
-                    <a href="${targetDomain}/cn/" target="_blank" class="tm-comments-verify-link" style="display: inline-block; padding: 6px 16px; font-size: 11px; background-color: hsl(var(--shadcn-blue)); color: white; border-radius: 14px; text-decoration: none; font-weight: 600; box-shadow: 0 2px 6px hsla(var(--shadcn-blue)/0.3); transition: all 0.2s;">去验证 (验证后返回重试)</a>
-                    <button class="tm-comment-retry-btn" style="display: block; margin: 10px auto 0 auto; padding: 4px 12px; font-size: 10px; background-color: hsla(var(--shadcn-muted) / 0.1); border: 1px solid hsla(var(--shadcn-border) / 0.3); color: hsl(var(--shadcn-foreground)); border-radius: 4px; cursor: pointer; transition: all 0.2s;">我已验证，点击重试</button>
+                <div class="mp-cf-card">
+                    <p class="mp-cf-title">触发 JAVLibrary 防火墙验证</p>
+                    <p class="mp-cf-desc">需要您先去 JAVLibrary 完成人机验证以获得授权Cookie。</p>
+                    <a href="${targetDomain}/cn/" target="_blank" class="tm-comments-verify-link mp-cf-verify-btn">去验证 (验证后返回重试)</a>
+                    <button class="tm-comment-retry-btn mp-cf-retry-btn">我已验证，点击重试</button>
                 </div>
             `;
         }
@@ -1915,8 +1908,8 @@ export class CommentPanel {
 
         this.commentsPanel.innerHTML = `
             <div class="tm-comments-list tm-comments-panel-list"></div>
-            <div class="tm-comment-loading tm-comments-panel-loading" style="display: none;"></div>
-            <div class="tm-comment-error tm-comments-panel-error" style="display: none;"></div>
+            <div class="tm-comment-loading tm-comments-panel-loading is-hidden"></div>
+            <div class="tm-comment-error tm-comments-panel-error is-hidden"></div>
             <div class="tm-comment-submit-bar-wrapper">
                 <div class="tm-comment-tag-select-modal">
                     <div class="tm-tag-select-header">
@@ -1936,7 +1929,7 @@ export class CommentPanel {
                     <button type="button" class="tm-comment-send-btn">${__('send')}</button>
                 </div>
             </div>
-            <div class="tm-comments-panel-action-bar" style="display: none;">
+            <div class="tm-comments-panel-action-bar is-hidden">
                 <div class="tm-action-bar-left">
                     <span class="tm-comment-count">共 0 条评论</span>
                     <button class="tm-comment-copy-all-btn" title="一键复制所有加载的原始评论">${__('commentsCopyAll')}</button>
@@ -2373,7 +2366,7 @@ export class CommentPanel {
 
     updatePosition() {
         if (!this.commentsPanel) return;
-        this.commentsPanel.style.display = 'flex';
+        this.commentsPanel.classList.toggle('is-hidden', false);
     }
 
     /**
@@ -2381,78 +2374,69 @@ export class CommentPanel {
      */
     showLoading() {
         if (this.loadingElement) {
-            this.loadingElement.style.display = 'flex';
-            this.loadingElement.style.flexDirection = 'column';
-            this.loadingElement.style.gap = '12px';
-            this.loadingElement.style.padding = '16px';
+            this.loadingElement.className = 'mp-comments-loading';
             this.loadingElement.innerHTML = `
-                <div class="jc-card jc-skeleton" style="margin-bottom: 8px; width: 100%;">
+                <div class="jc-card jc-skeleton mp-skeleton-card">
                     <div class="jc-bd">
-                        <div class="jc-hdr" style="display: flex; justify-content: space-between; margin-bottom: 6px; width: 100%;">
-                            <div class="skeleton-block" style="width: 80px; height: 12px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out;"></div>
-                            <div class="skeleton-block" style="width: 60px; height: 10px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out;"></div>
+                        <div class="jc-hdr mp-skeleton-header">
+                            <div class="skeleton-block mp-skeleton-title-block"></div>
+                            <div class="skeleton-block mp-skeleton-meta-block"></div>
                         </div>
                         <div class="jc-body-text">
-                            <div class="skeleton-block" style="width: 90%; height: 14px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out; margin-bottom: 6px;"></div>
-                            <div class="skeleton-block" style="width: 50%; height: 14px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out;"></div>
+                            <div class="skeleton-block mp-skeleton-line"></div>
+                            <div class="skeleton-block mp-skeleton-line"></div>
                         </div>
                     </div>
                 </div>
-                <div class="jc-card jc-skeleton" style="margin-bottom: 8px; width: 100%;">
+                <div class="jc-card jc-skeleton mp-skeleton-card">
                     <div class="jc-bd">
-                        <div class="jc-hdr" style="display: flex; justify-content: space-between; margin-bottom: 6px; width: 100%;">
-                            <div class="skeleton-block" style="width: 100px; height: 12px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out;"></div>
-                            <div class="skeleton-block" style="width: 45px; height: 10px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out;"></div>
+                        <div class="jc-hdr mp-skeleton-header">
+                            <div class="skeleton-block mp-skeleton-title-block"></div>
+                            <div class="skeleton-block mp-skeleton-meta-block"></div>
                         </div>
                         <div class="jc-body-text">
-                            <div class="skeleton-block" style="width: 80%; height: 14px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out; margin-bottom: 6px;"></div>
-                            <div class="skeleton-block" style="width: 40%; height: 14px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out;"></div>
+                            <div class="skeleton-block mp-skeleton-line"></div>
+                            <div class="skeleton-block mp-skeleton-line"></div>
                         </div>
                     </div>
                 </div>
-                <div class="jc-card jc-skeleton" style="margin-bottom: 8px; width: 100%;">
+                <div class="jc-card jc-skeleton mp-skeleton-card">
                     <div class="jc-bd">
-                        <div class="jc-hdr" style="display: flex; justify-content: space-between; margin-bottom: 6px; width: 100%;">
-                            <div class="skeleton-block" style="width: 70px; height: 12px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out;"></div>
-                            <div class="skeleton-block" style="width: 55px; height: 10px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out;"></div>
+                        <div class="jc-hdr mp-skeleton-header">
+                            <div class="skeleton-block mp-skeleton-title-block"></div>
+                            <div class="skeleton-block mp-skeleton-meta-block"></div>
                         </div>
                         <div class="jc-body-text">
-                            <div class="skeleton-block" style="width: 95%; height: 14px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out; margin-bottom: 6px;"></div>
-                            <div class="skeleton-block" style="width: 70%; height: 14px; background: var(--skeleton-bg); border-radius: 4px; animation: skeleton-loading 1.5s infinite ease-in-out;"></div>
+                            <div class="skeleton-block mp-skeleton-line"></div>
+                            <div class="skeleton-block mp-skeleton-line"></div>
                         </div>
                     </div>
                 </div>
             `;
         }
-        if (this.errorElement) this.errorElement.style.display = 'none';
-        if (this.commentsList) this.commentsList.style.display = 'none';
+        if (this.errorElement) this.errorElement.classList.add('is-hidden');
+        if (this.commentsList) this.commentsList.classList.add('is-hidden');
     }
 
     /**
      * 显示错误提示与重试按钮
      */
     showError(msg) {
-        if (this.loadingElement) this.loadingElement.style.display = 'none';
-        if (this.commentsList) this.commentsList.style.display = 'none';
+        if (this.loadingElement) this.loadingElement.classList.add('is-hidden');
+        if (this.commentsList) this.commentsList.classList.add('is-hidden');
         if (this.errorElement) {
-            this.errorElement.style.display = 'flex';
-            this.errorElement.style.flexDirection = 'column';
-            this.errorElement.style.alignItems = 'center';
-            this.errorElement.style.justifyContent = 'center';
-            this.errorElement.style.gap = '10px';
-            this.errorElement.style.padding = '20px';
-            this.errorElement.style.boxSizing = 'border-box';
+            this.errorElement.className = 'mp-comments-error';
 
             this.errorElement.innerHTML = `
-                <div style="text-align: center; color: hsl(var(--shadcn-destructive)); font-size: 12px; max-width: 280px; line-height: 1.5;">
-                    <p style="margin: 0 0 8px 0; font-weight: 600; font-size: 13px;">${msg}</p>
-                    <div style="text-align: left; background: hsla(var(--shadcn-destructive)/0.05); border: 1px solid hsla(var(--shadcn-destructive)/0.15); border-radius: 8px; padding: 10px; font-size: 11px; color: hsl(var(--shadcn-muted-foreground)); margin-bottom: 12px; box-sizing: border-box; line-height: 1.6;">
-                        <span style="font-weight: 600; color: hsl(var(--shadcn-destructive)); display: block; margin-bottom: 4px;">可能的原因：</span>
+                <div class="mp-error-card">
+                    <p class="mp-error-title">${msg}</p>
+                    <div class="mp-error-detail">
+                        <span class="mp-error-detail-title">可能的原因：</span>
                         1. 目标网站（Jable/JAVLibrary）当前不可达或网络受限。<br>
                         2. 跨域网络请求未获得脚本管理器授权（请在 Tampermonkey 弹窗中选择“总是允许”）。<br>
                         3. 被 Cloudflare 防火墙人机挑战拦截。
                     </div>
-                    <button class="tm-comment-retry-btn" style="padding: 6px 16px; font-size: 11px; background-color: hsla(var(--shadcn-destructive) / 0.1); border: 1px solid hsla(var(--shadcn-destructive) / 0.3); color: hsl(var(--shadcn-destructive)); border-radius: 12px; cursor: pointer; transition: all 0.2s; font-weight: 600; outline: none;">重新采集</button>
+                    <button class="tm-comment-retry-btn mp-error-retry-btn">重新采集</button>
                 </div>
             `;
         }
@@ -2521,49 +2505,49 @@ export class CommentPanel {
         let contentHtml = '';
         if (site.status === 'loading') {
             contentHtml = `
-                <div class="tm-comment-loader-graphic" style="display: flex; gap: 5px; padding: 16px; justify-content: center;">
-                    <div class="dot" style="width: 6px; height: 6px; border-radius: 50%; background-color: hsl(var(--shadcn-blue)); animation: tmDotPulse 1.4s infinite ease-in-out both;"></div>
-                    <div class="dot" style="width: 6px; height: 6px; border-radius: 50%; background-color: hsl(var(--shadcn-blue)); animation: tmDotPulse 1.4s infinite ease-in-out both; animation-delay: -0.16s;"></div>
-                    <div class="dot" style="width: 6px; height: 6px; border-radius: 50%; background-color: hsl(var(--shadcn-blue)); animation: tmDotPulse 1.4s infinite ease-in-out both; animation-delay: -0.32s;"></div>
+                <div class="tm-comment-loader-graphic">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
                 </div>
             `;
         } else if (site.status === 'unreachable') {
             contentHtml = `
-                <div style="padding: 16px; text-align: center; color: hsl(var(--shadcn-destructive)); font-size: 12px; pointer-events: auto;">
-                    <p style="margin: 0; font-weight: 500;">⚠️ 无法连接到 ${site.name}</p>
-                    <p style="margin: 4px 0 0 0; font-size: 11px; color: hsl(var(--shadcn-muted-foreground));">请检查网络代理，或该站点在当前环境不可达。</p>
+                <div class="tm-comment-status-box is-unreachable">
+                    <p class="tm-comment-status-title">⚠️ 无法连接到 ${site.name}</p>
+                    <p class="tm-comment-status-desc">请检查网络代理，或该站点在当前环境不可达。</p>
                 </div>
             `;
         } else if (site.status === 'mobile_unsupported') {
             contentHtml = `
-                <div style="padding: 16px; text-align: center; color: hsl(var(--shadcn-muted-foreground)); font-size: 12px; pointer-events: auto;">
-                    <p style="margin: 0; font-weight: 500;">📱 该站点评论采集在移动端不可用</p>
-                    <p style="margin: 4px 0 0 0; font-size: 11px; opacity: 0.8; line-height: 1.5;">JAVLibrary 采集需使用后台独立标签页（影子通道），移动端浏览器不支持后台静默多标签页协同。请在 PC 端浏览器查看该站点评论。</p>
+                <div class="tm-comment-status-box is-unsupported">
+                    <p class="tm-comment-status-title">📱 该站点评论采集在移动端不可用</p>
+                    <p class="tm-comment-status-desc">JAVLibrary 采集需使用后台独立标签页（影子通道），移动端浏览器不支持后台静默多标签页协同。请在 PC 端浏览器查看该站点评论。</p>
                 </div>
             `;
         } else if (site.status === 'not_found') {
             contentHtml = `
-                <div style="padding: 16px; text-align: center; color: hsl(var(--shadcn-muted-foreground)); font-size: 12px;">
-                    <p style="margin: 0;">此影片在 ${site.name} 上未找到评论。</p>
+                <div class="tm-comment-status-box">
+                    <p class="tm-comment-status-title">此影片在 ${site.name} 上未找到评论。</p>
                 </div>
             `;
         } else if (site.status === 'empty') {
             contentHtml = `
-                <div style="padding: 16px; text-align: center; color: hsl(var(--shadcn-muted-foreground)); font-size: 12px;">
-                    <p style="margin: 0;">暂无评论</p>
+                <div class="tm-comment-status-box">
+                    <p class="tm-comment-status-title">暂无评论</p>
                 </div>
             `;
         } else if (site.status === 'cf_shield') {
             if (siteKey === 'javlib' && this.javlibVerifyingStatus === 'verifying') {
                 contentHtml = `
-                    <div class="tm-comments-cf-warning" style="border-radius: 6px; padding: 10px 14px; background-color: hsla(var(--shadcn-blue)/0.08); border: 1px solid hsla(var(--shadcn-blue)/0.15); font-size: 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: hsl(var(--shadcn-blue)); box-sizing: border-box; width: 100%; pointer-events: auto;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="tm-comment-loader-graphic" style="display: flex; gap: 3px; padding: 0; width: auto; min-height: 0;">
-                                <div class="dot" style="width: 4px; height: 4px; border-radius: 50%; background-color: hsl(var(--shadcn-blue)); animation: tmDotPulse 1.4s infinite ease-in-out both;"></div>
-                                <div class="dot" style="width: 4px; height: 4px; border-radius: 50%; background-color: hsl(var(--shadcn-blue)); animation: tmDotPulse 1.4s infinite ease-in-out both; animation-delay: -0.16s;"></div>
-                                <div class="dot" style="width: 4px; height: 4px; border-radius: 50%; background-color: hsl(var(--shadcn-blue)); animation: tmDotPulse 1.4s infinite ease-in-out both; animation-delay: -0.32s;"></div>
+                    <div class="tm-comments-cf-warning is-verifying">
+                        <div class="tm-comments-cf-actions">
+                            <div class="tm-comment-loader-graphic">
+                                <div class="dot"></div>
+                                <div class="dot"></div>
+                                <div class="dot"></div>
                             </div>
-                            <span style="font-weight: 500;">正在后台尝试自动通过 JAVLibrary 验证，请稍候...</span>
+                            <span class="tm-comment-status-title">正在后台尝试自动通过 JAVLibrary 验证，请稍候...</span>
                         </div>
                     </div>
                 `;
@@ -2574,12 +2558,12 @@ export class CommentPanel {
                 const retryBtnClass = siteKey === 'jable' ? 'tm-jable-verify-retry-btn' :
                                       (siteKey === 'javlib' ? 'tm-comments-verify-retry-btn' : 'tm-javdb-verify-retry-btn');
                 contentHtml = `
-                    <div class="tm-comments-cf-warning" style="border-radius: 6px; padding: 10px 14px; background-color: hsla(var(--shadcn-destructive)/0.08); border: 1px solid hsla(var(--shadcn-destructive)/0.15); font-size: 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: hsl(var(--shadcn-destructive)); box-sizing: border-box; width: 100%; pointer-events: auto;">
+                    <div class="tm-comments-cf-warning">
                         <span>${site.name} 评论抓取受阻 (Cloudflare 拦截)</span>
-                        <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
-                            <a href="${targetDomain}/" target="_blank" class="tm-comments-verify-link" style="padding: 4px 10px; background-color: hsl(var(--shadcn-destructive)); color: white; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 10px; white-space: nowrap;">去验证</a>
-                            <button class="${retryBtnClass}" style="padding: 4px 10px; background-color: hsla(var(--shadcn-muted) / 0.15); border: 1px solid hsla(var(--shadcn-border) / 0.3); color: hsl(var(--shadcn-foreground)); border-radius: 12px; font-weight: 600; font-size: 10px; cursor: pointer; white-space: nowrap; outline: none; transition: all 0.2s;">重新加载</button>
-                            ${siteKey === 'javlib' ? '<button class="tm-comments-verify-copy-logs-btn" style="padding: 4px 10px; background-color: hsla(var(--shadcn-muted) / 0.15); border: 1px solid hsla(var(--shadcn-border) / 0.3); color: hsl(var(--shadcn-foreground)); border-radius: 12px; font-weight: 600; font-size: 10px; cursor: pointer; white-space: nowrap; outline: none; transition: all 0.2s;">复制日志</button>' : ''}
+                        <div class="tm-comments-cf-actions">
+                            <a href="${targetDomain}/" target="_blank" class="tm-comments-verify-link">去验证</a>
+                            <button class="${retryBtnClass} tm-comments-verify-btn">重新加载</button>
+                            ${siteKey === 'javlib' ? '<button class="tm-comments-verify-copy-logs-btn tm-comments-verify-btn">复制日志</button>' : ''}
                         </div>
                     </div>
                 `;
@@ -2600,7 +2584,7 @@ export class CommentPanel {
                 `;
             } else if (!site.hasMore) {
                 contentHtml += `
-                    <div class="tm-comment-end-marker" style="text-align: center; padding: 4px; font-size: 10px; color: hsl(var(--shadcn-muted-foreground)); opacity: 0.6;">-end-</div>
+                    <div class="tm-comment-end-marker">-end-</div>
                 `;
             }
         }
@@ -2706,11 +2690,11 @@ export class CommentPanel {
                 const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
         const isConverted = !!c.countdownApplied;
         const btnText = isConverted 
-            ? (__('commentCountdownReverted') || '还原时序') 
-            : (__('commentCountdownConvert') || '纠正时序');
+            ? (__('commentCountdownReverted') || '显示倒数') 
+            : (__('commentCountdownConvert') || '转为正序');
         const btnTitle = isConverted 
-            ? '当前已纠正时序为正向播放时间，点击还原时序' 
-            : '若评论作者使用的是倒计时间，点击纠正时序为正向播放时间';
+            ? '当前已换算为实际播放时间，点击恢复显示原始倒数' 
+            : '若评论内容为剩余倒数时间，点击换算为实际播放时间';
 
         const countdownBtn = hasTimestamps
             ? `<button class="jc-countdown-btn${isConverted ? ' jc-countdown-btn--active' : ''}" title="${btnTitle}">${btnText}</button>`
@@ -2726,8 +2710,8 @@ export class CommentPanel {
                         </div>
                         <div class="jc-hdr-right">
                             ${countdownBtn}
-                            ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="转存所有时间" data-comment-id="${c.id}" style="background: rgba(0,201,255,0.15); border: 1px solid rgba(0,201,255,0.4); color: #00c9ff; font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-right: 4px;">📌 转存</button>` : ""}
-                            <button class="jc-action-btn jc-report-btn" title="上报该评论" data-comment-id="${c.id}" style="display: ${(this.playerCore?.options?.playerState?.settings?.debugMode || Boolean(getValue('debugMode', false))) ? 'inline-block' : 'none'}; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #aaa; font-size: 10px; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-right: 4px;">🐛 上报</button>
+                            ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${__('saveAllHighlights') || '转存高光'}" data-comment-id="${c.id}">📌 转存</button>` : ""}
+                            <button class="jc-action-btn jc-report-btn" title="上报该评论" data-comment-id="${c.id}" ${(this.playerCore?.options?.playerState?.settings?.debugMode || Boolean(getValue('debugMode', false))) ? '' : 'hidden'}>🐛 上报</button>
                             ${userHtml}
                             ${scoreHtml}
                             ${spamHtml}
@@ -2742,9 +2726,9 @@ export class CommentPanel {
     }
 
     renderCommentsList() {
-        if (this.loadingElement) this.loadingElement.style.display = 'none';
-        if (this.errorElement) this.errorElement.style.display = 'none';
-        if (this.commentsList) this.commentsList.style.display = 'flex';
+        if (this.loadingElement) this.loadingElement.classList.add('is-hidden');
+        if (this.errorElement) this.errorElement.classList.add('is-hidden');
+        if (this.commentsList) this.commentsList.classList.remove('is-hidden');
 
         // 自动触发 JAVLibrary 校验监测
         if (this.javlibStatus === 'cf_shield' && !this.javlibAutoVerifyAttempted) {
@@ -2754,7 +2738,7 @@ export class CommentPanel {
         let importedCardHtml = "";
         if (typeof window !== "undefined" && window.__mp_imported_capsules && window.__mp_imported_capsules.capsules && window.__mp_imported_capsules.capsules.length > 0) {
             const imp = window.__mp_imported_capsules;
-            importedCardHtml = `<div class="jc-card jc-imported-share-card" style="border: 1px solid rgba(0, 201, 255, 0.4); background: rgba(0, 201, 255, 0.08); margin-bottom: 10px; border-radius: 8px; padding: 10px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><span style="font-weight: 700; color: #00c9ff;">🌟 外部分享胶囊导入 (${imp.capsules.length} 条)</span><span style="font-size: 11px; color: rgba(255,255,255,0.6);">推荐倍速: ${imp.speed}x</span></div><div style="font-size: 12px; color: rgba(255,255,255,0.8); margin-bottom: 8px;">检测到来自 URL 的时间胶囊分享，点击一键转存到当前视频时间轴：</div><button class="tm-import-deep-link-btn" style="background: #00c9ff; color: #000; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px;">一键导入全部胶囊到时间轴</button></div>`;
+            importedCardHtml = `<div class="jc-card jc-imported-share-card"><div class="jc-imported-share-title-row"><span class="jc-imported-share-title">🌟 外部分享片段导入 (${imp.capsules.length} 条)</span><span class="jc-imported-share-speed">推荐倍速: ${imp.speed}x</span></div><div class="jc-imported-share-desc">检测到来自分享链接的高光片段，点击一键转存到当前视频时间轴：</div><button class="tm-import-deep-link-btn">一键导入全部高光到时间轴</button></div>`;
         }
         // 动态渲染三大数据源 Section HTML
         const sectionHtmlMap = {
@@ -3025,12 +3009,12 @@ export class CommentPanel {
             if (isFavorited) {
                 link.classList.add('is-favorited');
                 if (starBtn) {
-                    starBtn.title = '此时间已收藏在片段标记中 (误差 ≤ 3s)';
+                    starBtn.title = '此时间已收藏在片段列表中 (误差 ≤ 3s)';
                 }
             } else {
                 link.classList.remove('is-favorited');
                 if (starBtn) {
-                    starBtn.title = '添加收藏至控制栏草稿胶囊并跳转播放';
+                    starBtn.title = '收藏为高光片段并跳转播放';
                 }
             }
         });
@@ -3101,7 +3085,7 @@ export class CommentPanel {
         } else if (isLoggedIn === false) {
             return `<span class="tm-comment-login-badge is-not-logged-in" title="点击登录" data-site="${siteKey}">未登录</span>`;
         } else {
-            return `<span class="tm-comment-login-badge is-checking" style="opacity: 0.6; cursor: default;">检测中...</span>`;
+            return `<span class="tm-comment-login-badge is-checking">检测中...</span>`;
         }
     }
 
@@ -3288,12 +3272,12 @@ export class CommentPanel {
 
     _showCommentReportModal(comment) {
         let selectedReason = "时间解析错误";
-        const { modal, close } = createModal(`<div class="tm-report-modal-dialog"><div class="tm-custom-modal-title">评论问题上报</div><div style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px;">问题将上报至 Supabase 数据库用于算法分析与模型微调</div><div style="font-size: 12px; background: rgba(255,255,255,0.06); padding: 8px; border-radius: 6px; margin-bottom: 10px; max-height: 80px; overflow-y: auto;">${esc(comment.rawText || comment.text || "")}</div><div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;"><span class="tm-report-chip active" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #007aff; color: #fff; cursor: pointer;">时间解析错误</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">倒序时间需过滤</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">垃圾水贴</span><span class="tm-report-chip" style="font-size: 11px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,0.1); color: #ccc; cursor: pointer;">漏抓关键片段</span></div><textarea class="tm-report-note" placeholder="附加补充说明 (可选)..." style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 6px; color: #fff; font-size: 12px; height: 60px; margin-bottom: 10px;"></textarea><div class="tm-modal-buttons" style="display: flex; gap: 8px; justify-content: flex-end;"><button class="tm-custom-modal-cancel-btn" style="background: rgba(255,255,255,0.1); color: #ccc; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">取消</button><button class="tm-custom-modal-submit-btn" style="background: #007aff; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer;">提交上报</button></div></div>`, { extraClass: "tm-report-modal-overlay" });
+        const { modal, close } = createModal(`<div class="tm-report-modal-dialog"><div class="tm-custom-modal-title">评论问题上报</div><div class="tm-report-modal-hint">问题将上报至 Supabase 数据库用于算法分析与模型微调</div><div class="tm-report-modal-preview">${esc(comment.rawText || comment.text || "")}</div><div class="tm-report-chip-group"><span class="tm-report-chip active">时间解析错误</span><span class="tm-report-chip">倒序时间需过滤</span><span class="tm-report-chip">垃圾水贴</span><span class="tm-report-chip">漏抓关键片段</span></div><textarea class="tm-report-note" placeholder="附加补充说明 (可选)..."></textarea><div class="tm-report-modal-buttons"><button class="tm-custom-modal-cancel-btn">取消</button><button class="tm-custom-modal-submit-btn">提交上报</button></div></div>`, { extraClass: "tm-report-modal-overlay" });
         const chips = modal.querySelectorAll(".tm-report-chip");
         chips.forEach(chip => {
             chip.addEventListener("click", () => {
-                chips.forEach(c => { c.style.background = "rgba(255,255,255,0.1)"; c.style.color = "#ccc"; });
-                chip.style.background = "#007aff"; chip.style.color = "#fff";
+                chips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
                 selectedReason = chip.textContent;
             });
         });

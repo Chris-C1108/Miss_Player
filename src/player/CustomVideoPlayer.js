@@ -196,7 +196,7 @@ export class CustomVideoPlayer {
             if (this.playerCore.targetVideo) {
                 this.playerCore.targetVideo.currentTime = targetTime;
                 if (prevTime > 0 && Math.abs(prevTime - targetTime) > 3) {
-                    Toast('已从第 1 个胶囊开播，点击恢复上次断点', 5000, 'info', () => {
+                    Toast('已从第 1 个高光开播，点击恢复上次断点', 5000, 'info', () => {
                         if (this.playerCore.targetVideo) {
                             this.playerCore.targetVideo.currentTime = prevTime;
                         }

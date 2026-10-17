@@ -453,12 +453,28 @@ export class DragManager {
                 this.controlButtonsContainer.style.right = 'auto';
                 this.controlButtonsContainer.style.transform = 'none';
                 
-                // 更新 docking 状态
+                // 更新 docking 状态 (若判定为侧栏吸附，会在内部清空行内定位样式)
                 this.updateDockedState(anchorName, didSnap);
+                return;
             } catch (err) {
                 console.error('[DragManager] 恢复控制面板位置出错:', err);
             }
         }
+        
+        // 默认无存储位置时：
+        // 若处于 PC 大屏横屏分栏模式，默认直接吸附嵌入在侧边栏底端
+        const isPC = window.innerWidth >= 930 && window.matchMedia('(orientation: landscape)').matches;
+        if (isPC) {
+            const playerContainer = this.controlButtonsContainer.closest('.tm-player-container');
+            const isSidebarHidden = playerContainer?.classList.contains('tm-sidebar-hidden');
+            if (!isSidebarHidden) {
+                const sidebarPosition = this.playerCore?.options?.playerState?.settings?.sidebarPosition || 'right';
+                const defaultAnchor = sidebarPosition === 'left' ? 'BL' : 'BR';
+                this.updateDockedState(defaultAnchor, true);
+                return;
+            }
+        }
+        this.clearControlPanelInlineStyles();
     }
     
     /**
@@ -489,8 +505,15 @@ export class DragManager {
         const isDocked = isPC && didSnap && (isRightDock || isLeftDock) && !isSidebarHidden;
         
         if (isDocked) {
+            // 一旦吸附停靠，彻底清空行内绝对像素定位，交由 CSS docked 规则实现 100% 满铺贴合
+            this.controlButtonsContainer.style.left = '';
+            this.controlButtonsContainer.style.top = '';
+            this.controlButtonsContainer.style.bottom = '';
+            this.controlButtonsContainer.style.right = '';
+            this.controlButtonsContainer.style.transform = '';
+
             const rect = this.controlButtonsContainer.getBoundingClientRect();
-            const h = rect.height || 180;
+            const h = rect.height || 220;
             // 停靠后100%填满无边距，因此间距仅为控制面板高度本身
             playerContainer.style.setProperty('--docked-controls-height', h + 'px');
             playerContainer.classList.add(`tm-controls-docked-${anchorName.toLowerCase()}`);
@@ -517,6 +540,19 @@ export class DragManager {
                 }
             } catch (e) {
                 console.error('[DragManager] 重新应用吸附排版状态出错:', e);
+            }
+        }
+        
+        // 若无保存记录，但在 PC 大屏横屏模式下，默认应用侧边栏底端吸附
+        const isPC = window.innerWidth >= 930 && window.matchMedia('(orientation: landscape)').matches;
+        if (isPC) {
+            const playerContainer = this.controlButtonsContainer ? this.controlButtonsContainer.closest('.tm-player-container') : null;
+            const isSidebarHidden = playerContainer?.classList.contains('tm-sidebar-hidden');
+            if (!isSidebarHidden) {
+                const sidebarPosition = this.playerCore?.options?.playerState?.settings?.sidebarPosition || 'right';
+                const defaultAnchor = sidebarPosition === 'left' ? 'BL' : 'BR';
+                this.updateDockedState(defaultAnchor, true);
+                return;
             }
         }
         this.updateDockedState(null, false);
@@ -546,6 +582,13 @@ export class DragManager {
         localStorage.removeItem('tm-control-panel-pos-portrait');
         localStorage.removeItem('tm-control-panel-pos-landscape');
         this.clearControlPanelInlineStyles();
-        console.log('[DragManager] 悬浮窗位置已重置并清除本地记忆');
+        
+        const isPC = window.innerWidth >= 930 && window.matchMedia('(orientation: landscape)').matches;
+        if (isPC) {
+            const sidebarPosition = this.playerCore?.options?.playerState?.settings?.sidebarPosition || 'right';
+            const defaultAnchor = sidebarPosition === 'left' ? 'BL' : 'BR';
+            this.updateDockedState(defaultAnchor, true);
+        }
+        console.log('[DragManager] 悬浮窗位置已重置并恢复默认侧边栏停靠');
     }
 } 

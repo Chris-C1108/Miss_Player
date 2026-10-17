@@ -17,13 +17,14 @@
     --mp-settings-switch-thumb: #ffffff;
 }
 
-/* 设置主菜单容器 */
+/* 设置主菜单容器与底部呼吸留白 */
 .tm-settings-apple-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
     width: 100%;
     box-sizing: border-box;
+    padding-bottom: 24px;
 }
 
 /* 顶部 Header：标题与关闭按钮快捷栏 */
@@ -342,4 +343,42 @@
 @keyframes tm-skeleton-pulse {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
+}
+
+/* 设置面板全局滚动边界与弹性高度保护 */
+.tm-settings-panel {
+    max-height: calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 60px);
+    overflow-y: auto;
+    overflow-y: overlay;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* 矮屏幕横屏视口 (如 iPhone/Android 横屏观影，高度 <= 500px) 特别适配 */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .tm-player-container .tm-settings-panel,
+    .tm-player-container.tm-sidebar-left .tm-settings-panel,
+    .tm-settings-panel {
+        top: 12px;
+        bottom: 12px;
+        max-height: calc(100dvh - 24px);
+        left: 50%;
+        right: auto;
+        transform: translate(-50%, -10px);
+        width: min(520px, calc(100vw - env(safe-area-inset-left, 16px) - env(safe-area-inset-right, 16px) - 32px));
+        max-width: min(520px, calc(100vw - env(safe-area-inset-left, 16px) - env(safe-area-inset-right, 16px) - 32px));
+        min-width: 280px;
+        padding: 10px 14px 20px 14px;
+        z-index: 100005;
+        overflow-y: auto;
+        overflow-y: overlay;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+
+    .tm-player-container .tm-settings-panel.active,
+    .tm-player-container.tm-sidebar-left .tm-settings-panel.active,
+    .tm-settings-panel.active {
+        transform: translate(-50%, 0);
+    }
 }

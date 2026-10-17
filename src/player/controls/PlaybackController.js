@@ -128,7 +128,7 @@ export class PlaybackController {
         const loopManager = this.controlManager?.loopManager;
         const tabs = loopManager?.tabs || [];
         if (tabs.length === 0) {
-            Toast('当前视频暂无胶囊片段，请先在时间轴添加', 2000, 'info');
+            Toast('当前视频暂无高光片段，请先在时间轴添加', 2000, 'info');
             if (isPaused) {
                 this.targetVideo.play().catch(() => {});
             } else {
@@ -262,14 +262,7 @@ export class PlaybackController {
         }
         
         this.pauseIndicator = document.createElement('div');
-        this.pauseIndicator.className = 'tm-indicator-base tm-pause-indicator';
-        this.pauseIndicator.style.position = 'absolute';
-        this.pauseIndicator.style.top = '50%';
-        this.pauseIndicator.style.left = '50%';
-        this.pauseIndicator.style.transform = 'translate(-50%, -50%)';
-        this.pauseIndicator.style.display = 'flex';
-        this.pauseIndicator.style.justifyContent = 'center';
-        this.pauseIndicator.style.alignItems = 'center';
+        this.pauseIndicator.className = 'mp-pause-indicator';
         
         this.pauseIndicator.innerHTML = PLAY_CENTER;
         this.uiElements.videoWrapper.appendChild(this.pauseIndicator);
@@ -371,7 +364,7 @@ export class PlaybackController {
         if (!this._isCapsuleLoopPlaying || this._capsulePlayIndex >= tabs.length) {
             this._isTourEnded = true;
             this.stopCapsulePlayback(true);
-            Toast('全部精彩胶囊已播放完毕', 2500, 'success');
+            Toast('全部高光片段已播放完毕', 2500, 'success');
             return;
         }
 

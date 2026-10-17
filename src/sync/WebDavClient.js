@@ -1,18 +1,24 @@
 /**
- * 针对云端大文件或异常畸变空对象进行预清洗，防止 JSON.parse 导致主线程严重卡死
+ * 针对历史版本遗留的数组连续空对象畸变进行安全清洗
+ * 仅在原生 JSON.parse 失败时作为容错降级触发，严格限定在数组上下文，绝不破坏键值对象中的合法空对象 {}
  * @param {string} text 
  * @returns {string}
  */
-function sanitizeIncomingJsonText(text) {
+function sanitizeArrayEmptyObjects(text) {
     if (!text || typeof text !== 'string') return text;
-    // 当检测到大量空对象畸变或体积异常膨胀时，极速剔除空对象占位
-    if (text.length > 100 * 1024 || text.includes('{},')) {
-        console.warn('[WebDavClient] 检测到云端 JSON 包含大量异常空对象畸变，启动流式预清洗...');
-        let cleaned = text.replace(/\{\s*\},?\s*/g, '');
-        cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
-        return cleaned;
-    }
-    return text;
+    if (!text.includes('{}')) return text;
+
+    let prev;
+    let cleaned = text;
+    // 循环剔除数组内部（以 [ 或 , 开头）的连续空对象占位，绝不匹配冒号 : 后面的合法空对象值
+    do {
+        prev = cleaned;
+        cleaned = cleaned.replace(/(\[|,)\s*\{\s*\}\s*(?=[,\]])/g, '$1');
+    } while (cleaned !== prev);
+
+    // 清理可能产生的 [, 与多余的连续逗号
+    cleaned = cleaned.replace(/\[\s*,+/g, '[').replace(/,(\s*,)+/g, ',');
+    return cleaned;
 }
 
 /**
@@ -479,23 +485,39 @@ export class WebDavClient {
                 if (!res.data || !res.data.trim()) {
                     return null;
                 }
-                const sanitizedData = sanitizeIncomingJsonText(res.data.trim());
+                const rawText = res.data.trim();
+
+                // 1. 优先采用原生 JSON.parse（零污染、零损耗、速度极快，绝不误伤合法数据）
                 try {
-                    const parsed = JSON.parse(sanitizedData);
+                    const parsed = JSON.parse(rawText);
                     if (parsed && typeof parsed === 'object') {
                         return parsed;
                     }
                     throw new Error('云端备份文件内容格式畸变');
-                } catch (jsonErr) {
-                    console.error('[WebDavClient] 云端 JSON 解析失败:', jsonErr);
-                    // 尝试智能补全因截断导致的未闭合结构
+                } catch (primaryErr) {
+                    // 仅当原生解析确实失败时，才启动容错降级管道
+                    console.warn('[WebDavClient] 原生 JSON 解析未通过，尝试安全容错清洗与补全...', primaryErr.message);
+
+                    // 2. 尝试清洗可能存在于数组内部的畸变空对象 (仅限数组环境，绝不误伤 "key": {})
                     try {
-                        const repaired = tryRepairTruncatedJson(sanitizedData);
+                        const cleaned = sanitizeArrayEmptyObjects(rawText);
+                        const parsedCleaned = JSON.parse(cleaned);
+                        if (parsedCleaned && typeof parsedCleaned === 'object') {
+                            console.warn('[WebDavClient] 成功清洗数组畸变空对象并安全恢复数据');
+                            return parsedCleaned;
+                        }
+                    } catch (_) {}
+
+                    // 3. 尝试智能修复因网络传输截断导致的未闭合结构
+                    try {
+                        const repaired = tryRepairTruncatedJson(rawText);
                         if (repaired && typeof repaired === 'object' && (repaired.settings || repaired.markers)) {
                             console.warn('[WebDavClient] 成功智能补全截断云端备份 JSON 并安全恢复数据');
                             return repaired;
                         }
                     } catch (_) {}
+
+                    console.error('[WebDavClient] 云端备份数据损坏或被截断，已终止读取:', primaryErr);
                     throw new Error('云端备份数据损坏或被截断，已终止读取');
                 }
             }

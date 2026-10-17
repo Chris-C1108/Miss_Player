@@ -12,7 +12,7 @@
     height: 100vh;
     height: 100dvh;
     background-color: #0b0b0e;
-    z-index: 2000000000 !important;
+    z-index: 2000000000;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -44,7 +44,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    z-index: 2000000001 !important;
+    z-index: 2000000001;
     overflow: hidden;
     pointer-events: auto;
     transition: bottom 0.15s ease-out, height 0.15s ease-out;
@@ -57,14 +57,14 @@
     overscroll-behavior: none;
 }
 
-/* 按钮容器 - 放置在视频容器顶部外面 */
+/* 顶部标题与控制栏容器 - 放置在视频容器顶部外面 */
 .tm-button-container {
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    padding: 6px 10px;
+    gap: 12px;
+    padding: calc(env(safe-area-inset-top, 0px) + 6px) calc(env(safe-area-inset-right, 0px) + 12px) 6px calc(env(safe-area-inset-left, 0px) + 12px);
     box-sizing: border-box;
     z-index: 99999;
     /* 保持在顶部 */
@@ -73,6 +73,23 @@
     left: 0;
     transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     touch-action: none; /* 按钮区域隔离触摸 */
+    pointer-events: none;
+}
+
+.tm-button-container > * {
+    pointer-events: auto;
+}
+
+.tm-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    pointer-events: auto;
+}
+
+.tm-top-actions > * {
+    pointer-events: auto;
 }
 
 .tm-video-container {
@@ -96,8 +113,8 @@
 
 @media screen and (orientation: portrait) {
     .tm-video-container {
-        max-height: calc(100dvh - var(--keyboard-height, 0px) - 130px) !important;
-        min-height: 0 !important;
+        max-height: calc(100dvh - var(--keyboard-height, 0px) - 130px);
+        min-height: 0;
     }
 }
 
@@ -276,18 +293,19 @@
 /* 设置面板 (自适应视口高度并支持原生平滑滚动) */
 .tm-settings-panel {
     position: absolute;
-    top: calc(env(safe-area-inset-top, 8px) + 60px);
+    top: calc(env(safe-area-inset-top, 8px) + 52px);
     right: 16px;
     background-color: rgba(22, 22, 28, 0.78);
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    padding: 14px 16px;
-    z-index: 100000 !important; /* 层级高于控制面板(9997)与标题(9998) */
+    padding: 14px 16px 20px 16px;
+    z-index: 100000; /* 层级高于控制面板(9997)与标题(9998) */
     min-width: 275px;
-    max-width: 325px;
-    max-height: calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 80px);
+    max-width: 330px;
+    max-height: calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 64px);
     overflow-y: auto;
+    overflow-y: overlay;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
@@ -324,19 +342,19 @@
 .tm-player-container.tm-settings-active .tm-comments-list,
 .tm-settings-panel.active ~ .tm-comments-panel .tm-comments-list,
 body.tm-settings-active .tm-comments-panel .tm-comments-list {
-    opacity: 0.15 !important;
-    filter: blur(3px) !important;
-    pointer-events: none !important;
-    transition: opacity var(--anim-smooth), filter var(--anim-smooth) !important;
+    opacity: 0.15;
+    filter: blur(3px);
+    pointer-events: none;
+    transition: opacity var(--anim-smooth), filter var(--anim-smooth);
 }
 
 /* 竖屏与窄屏视口下设置面板全宽自适应 */
 @media screen and (max-width: 929px), screen and (orientation: portrait) {
     .tm-settings-panel {
-        right: 12px !important;
-        left: 12px !important;
-        width: calc(100% - 24px) !important;
-        max-width: calc(100% - 24px) !important;
+        right: 12px;
+        left: 12px;
+        width: calc(100% - 24px);
+        max-width: calc(100% - 24px);
     }
 }
 
@@ -440,25 +458,30 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     line-height: 1.25;
 }
 
-/* 快进/快退 步进 Badges 面板 (横向滑动不换行设计) */
+/* 快进/快退 步进 Badges 面板 (横向平滑滚动，杜绝挤压裁切) */
 .tm-settings-seek-steps-subpanel {
     display: flex;
     flex-wrap: nowrap;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
-    padding: 6px 2px 4px 2px;
-    margin-top: 2px;
-    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    padding: 6px 2px 6px 2px;
+    margin-top: 2px;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
 
 .tm-settings-seek-steps-subpanel::-webkit-scrollbar {
-    display: none; /* WebKit */
+    height: 3px;
+}
+
+.tm-settings-seek-steps-subpanel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
 }
 
 /* 评论源 Badges 面板 */
@@ -478,10 +501,10 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 500;
-    padding: 0 12px;
-    height: 28px;
+    padding: 0 6px;
+    height: 26px;
     line-height: 1;
     border-radius: 6px;
     box-sizing: border-box;
@@ -489,8 +512,25 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     cursor: pointer;
     user-select: none;
     flex-shrink: 0;
+    white-space: nowrap;
+    min-width: max-content;
     transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
     -webkit-tap-highlight-color: transparent;
+}
+
+.tm-seek-step-badge.tm-seek-step-add-badge {
+    border: 1px dashed rgba(255, 255, 255, 0.28);
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.75);
+    flex-shrink: 0;
+    min-width: max-content;
+}
+
+.tm-seek-step-badge.tm-seek-step-add-badge:hover {
+    border-style: solid;
+    border-color: rgba(10, 132, 255, 0.8);
+    background-color: rgba(10, 132, 255, 0.18);
+    color: #ffffff;
 }
 
 /* 启用/亮起状态 (参考 tm-time-control-button) */
@@ -1518,115 +1558,115 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 
 /* 播放控制行：双层叠加架构 (底层为 100% 宽度 switcher，上层为可左右滑动隐退的左/右控制组件) */
 .tm-playback-control-row {
-    position: relative !important;
-    width: 100% !important;
-    height: 40px !important;
-    max-height: 40px !important;
-    box-sizing: border-box !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: hidden !important;
+    position: relative;
+    width: 100%;
+    height: 40px;
+    max-height: 40px;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
 /* 底层：Switcher 占满 100% 宽度 */
 .tm-playback-bottom-layer,
 .tm-playback-control-row .tm-center-controls {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 1 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 /* 上层：左右控制浮层，容器穿透放行给底层，子元素捕获点击 */
 .tm-playback-top-layer {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 2 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    pointer-events: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .tm-playback-top-layer .tm-left-controls,
 .tm-playback-top-layer .tm-right-controls {
-    pointer-events: auto !important;
-    display: flex !important;
-    align-items: center !important;
-    height: 100% !important;
-    flex: 0 0 auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease !important;
-    will-change: transform, opacity !important;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+    will-change: transform, opacity;
 }
 
 .tm-playback-top-layer .tm-left-controls {
-    justify-content: flex-start !important;
+    justify-content: flex-start;
 }
 
 .tm-playback-top-layer .tm-right-controls {
-    justify-content: flex-end !important;
+    justify-content: flex-end;
 }
 
 /* 左右滑动 Switcher 时，上层 [左&右] 组件做动画向两侧移出并淡出隐藏 */
 .tm-playback-control-row.is-sliding .tm-left-controls {
-    transform: translateX(-120%) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+    transform: translateX(-120%);
+    opacity: 0;
+    pointer-events: none;
 }
 
 .tm-playback-control-row.is-sliding .tm-right-controls {
-    transform: translateX(120%) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+    transform: translateX(120%);
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* 兼容未包含在 top-layer 下的直接子元素降级选择器 */
 .tm-playback-control-row:not(.tm-has-layers) > .tm-left-controls {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    height: 40px !important;
-    flex: 0 0 auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 40px;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
 }
 
 .tm-playback-control-row:not(.tm-has-layers) > .tm-right-controls {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    height: 40px !important;
-    flex: 0 0 auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 40px;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
 }
 
 /* 静音外层组件容器 */
 .tm-volume-control {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: auto !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 /* 时间显示 */
@@ -1899,7 +1939,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     position: fixed;
     inset: 0;
     background-color: transparent;
-    z-index: 9990 !important;
+    z-index: 9990;
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--anim-smooth);
@@ -1927,7 +1967,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
         0 12px 32px rgba(0, 0, 0, 0.6);
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 9995 !important;
+    z-index: 9995;
     opacity: 0;
     pointer-events: none;
     transform: translateY(8px) scale(0.98);
@@ -1937,7 +1977,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     overflow: hidden;
     box-sizing: border-box;
     padding: 10px 14px 12px;
-    touch-action: pan-y !important;
+    touch-action: pan-y;
     contain: paint layout;
 }
 .tm-bottom-sheet-panel.visible {
@@ -1997,7 +2037,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    touch-action: pan-y !important;
+    touch-action: pan-y;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -2021,7 +2061,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     border: none;
     height: 32px;
     box-sizing: border-box;
-    touch-action: pan-y !important;
+    touch-action: pan-y;
 }
 
 .tm-sheet-item-time-container {
@@ -2252,7 +2292,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 9997 !important;
+    z-index: 9997;
     box-sizing: border-box;
 }
 
@@ -2263,13 +2303,13 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 /* 控制面板容器 */
 .tm-control-buttons {
     position: absolute;
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px)); /* 保持距离底部10px，同时考虑iOS安全区域 */
+    bottom: max(16px, env(safe-area-inset-bottom, 0px)); /* 保持距离底部至少16px，充分考虑iOS安全区域指示条 */
     left: 50%;
     transform: translateX(-50%);
     width: min(94vw, 560px);
     max-width: 560px;
     box-sizing: border-box;
-    z-index: 9997 !important;
+    z-index: 9997;
     padding: 16px 16px 14px;
     border-radius: 16px;
     background-color: rgba(22, 22, 28, 0.76); /* 降低透明度，允许环境色（如宿主紫色）自然折射渗透 */
@@ -2292,13 +2332,13 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    overflow: visible !important;
+    overflow: visible;
     touch-action: none; /* 控制面板隔离触摸 */
 }
 
 .tm-control-buttons.dragging {
-    transition: none !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+    transition: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 /* 控制界面隐藏时的动画效果 - 更新选择器 */
@@ -2486,11 +2526,13 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
 }
 
 .tm-player-title {
-    position: absolute !important;
-    top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    max-width: calc(100% - 110px) !important;
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
     text-align: center;
     font-size: 14px;
     font-weight: 600;
@@ -2499,16 +2541,30 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
     overflow: hidden;
     text-overflow: ellipsis;
     user-select: none;
-    z-index: 9998 !important;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5) !important;
-    pointer-events: none !important;
-    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    z-index: 9998;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    margin: 0 4px;
 }
 
-body.controls-hidden .tm-player-title, .tm-player-container.controls-hidden .tm-player-title, :host(.controls-hidden) .tm-player-title {
-    opacity: 0 !important;
-    transform: translate(-50%, -20px) !important;
-    pointer-events: none !important;
+/* 独立挂载在 playerContainer 下时的降级/大屏分栏绝对定位 */
+.tm-player-container > .tm-player-title {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100% - 110px);
+    margin: 0;
+}
+
+/* 仅针对独立挂载在 playerContainer 下的绝对定位标题应用 translate(-50%, -20px) 隐藏动画 */
+body.controls-hidden .tm-player-container > .tm-player-title,
+.tm-player-container.controls-hidden > .tm-player-title,
+:host(.controls-hidden) > .tm-player-title {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+    pointer-events: none;
 }
 
 /* 移动端竖屏状态下（iPhone Pro Max 及以下宽度：<=480px / 竖屏）
@@ -2519,122 +2575,128 @@ body.controls-hidden .tm-player-title, .tm-player-container.controls-hidden .tm-
 */
 @media screen and (max-width: 480px), screen and (max-width: 600px) and (orientation: portrait) {
     .tm-control-panel {
-        top: auto !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100% !important;
-        height: auto !important;
-        max-width: 100vw !important;
-        border-top-left-radius: 20px !important;
-        border-top-right-radius: 20px !important;
-        border-bottom-left-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-        background-image: linear-gradient(#1a1a20e0, #000000) !important;
-        backdrop-filter: blur(36px) saturate(190%) !important;
-        -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
-        border: none !important;
-        box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18), 0 -4px 24px rgba(0, 0, 0, 0.38) !important;
-        padding-top: 10px !important;
-        padding-left: calc(10px + env(safe-area-inset-left, 0px)) !important;
-        padding-right: calc(10px + env(safe-area-inset-right, 0px)) !important;
-        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
-        pointer-events: auto !important;
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease !important;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: auto;
+        max-width: 100vw;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        background-image: linear-gradient(#1a1a20e0, #000000);
+        backdrop-filter: blur(36px) saturate(190%);
+        -webkit-backdrop-filter: blur(36px) saturate(190%);
+        border: none;
+        box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18), 0 -4px 24px rgba(0, 0, 0, 0.38);
+        padding-top: 10px;
+        padding-left: calc(10px + env(safe-area-inset-left, 0px));
+        padding-right: calc(10px + env(safe-area-inset-right, 0px));
+        padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        pointer-events: auto;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
     }
 
-    /* 当作为 iOS 键盘底板时，里面的 tm-control-buttons 与底板融为一体，取消自身 padding 由外层 tm-control-panel 统一提供 */
+    /* 当作为 iOS 键盘底板时，里面的 tm-control-buttons 与底板融为一体，取消自身 padding 由外层 tm-control-panel 统一提供，通过高特异度选择器自然重置 transform 杜绝左侧平移裁切 */
+    .tm-player-container:not(.controls-hidden) .tm-control-panel .tm-control-buttons,
+    :host(:not(.controls-hidden)) .tm-control-panel .tm-control-buttons,
     .tm-control-panel .tm-control-buttons {
-        position: relative !important;
-        bottom: 0 !important;
-        left: auto !important;
-        right: auto !important;
-        transform: none !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        box-shadow: none !important;
-        border: none !important;
-        padding: 0 !important;
+        position: relative;
+        bottom: 0;
+        left: auto;
+        right: auto;
+        transform: none;
+        width: min(calc(100% - 24px), 520px);
+        max-width: 520px;
+        min-width: 0;
+        margin: 0 auto;
+        border-radius: 0;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        box-sizing: border-box;
     }
 
     /* 竖屏单手模式下的 iOS 键盘外形适配：主控制区与侧栏立柱在 iOS 底板内部并排，通过 gap 统一控制间距 */
     /* 1. 右手单手模式：主面板靠右，Gutter 靠左并占满剩余空间 (由于 DOM 先 buttons 后 gutter，使用 row-reverse 反向排列) */
     .tm-player-container.tm-single-hand-right .tm-control-panel {
-        display: flex !important;
-        flex-direction: row-reverse !important;
-        align-items: flex-end !important;
-        justify-content: flex-start !important;
-        gap: 8px !important;
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: flex-end;
+        justify-content: flex-start;
+        gap: 8px;
     }
 
     .tm-player-container.tm-single-hand-right .tm-control-panel .tm-single-hand-gutter {
-        position: relative !important;
-        bottom: 0 !important;
-        left: auto !important;
-        right: auto !important;
-        flex: 1 1 auto !important;
-        width: auto !important;
-        min-width: 44px !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        position: relative;
+        bottom: 0;
+        left: auto;
+        right: auto;
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 44px;
+        margin: 0;
+        padding: 0;
     }
 
     .tm-player-container.tm-single-hand-right .tm-control-panel .tm-control-buttons {
-        flex: 0 0 auto !important;
-        width: 320px !important;
-        max-width: 320px !important;
-        min-width: 320px !important;
+        flex: 0 0 auto;
+        width: 320px;
+        max-width: 320px;
+        min-width: 320px;
+        transform: none;
     }
 
     /* 2. 左手单手模式：主面板靠左，Gutter 靠右并占满剩余空间 (由于 DOM 先 buttons 后 gutter，使用 row 正向排列) */
     .tm-player-container.tm-single-hand-left .tm-control-panel {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: flex-end !important;
-        justify-content: flex-start !important;
-        gap: 8px !important;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: flex-start;
+        gap: 8px;
     }
 
     .tm-player-container.tm-single-hand-left .tm-control-panel .tm-single-hand-gutter {
-        position: relative !important;
-        bottom: 0 !important;
-        right: auto !important;
-        left: auto !important;
-        flex: 1 1 auto !important;
-        width: auto !important;
-        min-width: 44px !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        position: relative;
+        bottom: 0;
+        right: auto;
+        left: auto;
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 44px;
+        margin: 0;
+        padding: 0;
     }
 
     .tm-player-container.tm-single-hand-left .tm-control-panel .tm-control-buttons {
-        flex: 0 0 auto !important;
-        width: 320px !important;
-        max-width: 320px !important;
-        min-width: 320px !important;
+        flex: 0 0 auto;
+        width: 320px;
+        max-width: 320px;
+        min-width: 320px;
+        transform: none;
     }
 
     /* 单手模式下确保 tm-seek-control-row 充分填满自适应剩余空间，保证 6 个快进快退按钮在 320px 下稳定排 2 行 */
     .tm-player-container.tm-single-hand-active .tm-seek-control-row {
-        width: 100% !important;
-        box-sizing: border-box !important;
+        width: 100%;
+        box-sizing: border-box;
     }
 }
 
 /* 更窄的屏幕 (<380px，如 iPhone SE、mini 及紧凑屏幕) 限制不支持开启单手模式，始终保持全宽 */
 @media screen and (max-width: 379px) {
     .tm-player-container .tm-control-panel .tm-single-hand-gutter {
-        display: none !important;
+        display: none;
     }
     .tm-player-container .tm-control-panel .tm-control-buttons {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
     }
 }
 
@@ -2642,9 +2704,9 @@ body.controls-hidden .tm-player-title, .tm-player-container.controls-hidden .tm-
 body.controls-hidden .tm-control-panel,
 .tm-player-container.controls-hidden .tm-control-panel,
 :host(.controls-hidden) .tm-control-panel {
-    opacity: 0 !important;
-    transform: translateY(100%) !important;
-    pointer-events: none !important;
+    opacity: 0;
+    transform: translateY(100%);
+    pointer-events: none;
 }
 
 /* 下滑手势拖动时，隐藏所有播放器控制和面板组件，实现极致沉浸感 */
@@ -2654,9 +2716,9 @@ body.tm-swiping-down .tm-comments-panel,
 body.tm-swiping-down .tm-control-panel,
 body.tm-swiping-down .tm-control-buttons,
 body.tm-swiping-down .tm-settings-panel {
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ==========================================================================
@@ -2715,7 +2777,7 @@ body.tm-swiping-down .tm-settings-panel {
     background-color: hsla(var(--shadcn-secondary) / 0.7);
     color: hsl(var(--shadcn-secondary-foreground));
     border: 1px solid hsla(var(--shadcn-border) / 0.2);
-    display: none !important; /* 移动端默认隐藏 */
+    display: none; /* 移动端默认隐藏 */
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -2735,16 +2797,106 @@ body.tm-swiping-down .tm-settings-panel {
 
 /* 隐藏评论区后，位置按钮隐藏 */
 .tm-sidebar-hidden .tm-sidebar-pos-button {
-    display: none !important;
+    display: none;
+}
+
+/* 竖屏模式兜底保护：彻底隐藏侧边栏位置切换按钮 (无论是手机还是 iPad 竖屏) */
+@media screen and (orientation: portrait) {
+    .tm-sidebar-pos-button {
+        display: none !important;
+    }
+}
+
+/* 通用隐藏评论区状态：手柄彻底隐藏，消除多余占位 */
+.tm-player-container.tm-sidebar-hidden .tm-handle-container {
+    display: none;
+}
+
+/* 竖屏模式 (orientation: portrait) 下隐藏评论区 (tm-sidebar-hidden) 的沉浸式全屏展示适配 */
+@media screen and (orientation: portrait) {
+    .tm-player-container.tm-sidebar-hidden .tm-comments-panel {
+        display: none;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-handle-container {
+        display: none;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-video-container {
+        height: 100%;
+        max-height: 100%;
+        margin-top: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background-color: #000;
+        flex: 1 1 auto;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-video-wrapper {
+        border-radius: 0;
+        height: 100%;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-video-wrapper video {
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-video-wrapper.video-portrait video {
+        width: auto;
+        height: 100%;
+        max-width: 100%;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-button-container > button,
+    .tm-player-container.tm-sidebar-hidden .tm-top-actions > button {
+        background-color: hsla(var(--shadcn-card) / 0.8);
+        border: 1px solid hsla(var(--shadcn-border) / 0.2);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--button-md);
+        height: var(--button-md);
+        pointer-events: auto;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-top-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        width: auto;
+        height: auto;
+        pointer-events: auto;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-button-container .tm-player-title {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        width: auto;
+        height: auto;
+        pointer-events: none;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+    }
 }
 
 /* 移动端与竖屏手机控制面板宽度约束 (保持优雅触控比例，非内嵌在 tm-control-panel 下的降级适配) */
 @media screen and (min-width: 481px) and (max-width: 600px) and (orientation: landscape) {
     .tm-control-buttons {
-        width: calc(100vw - 24px) !important;
-        max-width: 480px !important;
-        min-width: 0 !important;
-        border-radius: 16px !important;
+        width: calc(100vw - 24px);
+        max-width: 480px;
+        min-width: 0;
+        border-radius: 16px;
     }
 }
 

@@ -21,7 +21,7 @@ export class BetaSection {
 
         const header = document.createElement('div');
         header.className = 'tm-settings-group-header';
-        header.textContent = '实验室与高级排错';
+        header.textContent = __('betaGroupTitle') || '实验特性';
         this.element.appendChild(header);
 
         const card = new AppleCard();
@@ -31,8 +31,8 @@ export class BetaSection {
         betaSubWrap.style.display = Boolean(this.settings.betaMode) ? 'block' : 'none';
 
         const betaMainToggle = new ToggleRow({
-            title: 'Beta 实验室',
-            subtext: '抢先体验前沿实验特性，由用户主动选择受控启用',
+            title: __('betaLabTitle') || '实验功能',
+            subtext: __('betaLabDesc') || '探索开发中的新玩法与高级工具',
             checked: Boolean(this.settings.betaMode),
             onChange: (checked) => {
                 this.sm.updateSetting('betaMode', checked);
@@ -40,14 +40,14 @@ export class BetaSection {
                     this.sm.controlManager.singleHandManager.updateState();
                 }
                 betaSubWrap.style.display = checked ? 'block' : 'none';
-                Toast(checked ? '已开启 Beta 实验室' : '已关闭 Beta 实验室', 1200, 'info');
+                Toast(checked ? `已开启 ${__('betaLabTitle') || '实验功能'}` : `已关闭 ${__('betaLabTitle') || '实验功能'}`, 1200, 'info');
             }
         });
         card.appendChild(betaMainToggle.getElement());
 
         const singleHandToggle = new ToggleRow({
-            title: __('singleHandMode') || '竖屏单手模式 (Beta)',
-            subtext: __('singleHandModeDesc') || '针对大屏手机单手握持优化，将控制面板收拢至单手舒适触控区',
+            title: __('singleHandMode') || '单手模式',
+            subtext: __('singleHandModeDesc') || '控件收拢至下半屏，大拇指轻松触达',
             checked: Boolean(this.settings.betaSingleHandMode),
             onChange: (checked) => {
                 this.sm.updateSetting('betaSingleHandMode', checked);
@@ -68,14 +68,14 @@ export class BetaSection {
         handPrefRow.style.justifyContent = 'space-between';
         handPrefRow.innerHTML = `
             <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title">${__('singleHandPref') || '单手惯用手偏好'}</div>
+                <div class="tm-apple-row-title">${__('singleHandPref') || '惯用手'}</div>
                 <div class="tm-apple-row-subtext">选择单手控制面板贴靠方向</div>
             </div>
         `;
         const segmentedControl = new SegmentedControl({
             options: [
-                { value: 'right', label: __('singleHandRight') || '右手单手 (默认)' },
-                { value: 'left', label: __('singleHandLeft') || '左手单手' }
+                { value: 'right', label: __('singleHandRight') || '右手' },
+                { value: 'left', label: __('singleHandLeft') || '左手' }
             ],
             value: this.settings.singleHandPosition || 'right',
             onChange: (val) => {
@@ -90,8 +90,8 @@ export class BetaSection {
         betaSubWrap.appendChild(singleHandPrefWrap);
 
         const firstCapToggle = new ToggleRow({
-            title: '智能跳过片头',
-            subtext: '载入视频时优先从第 1 个精彩时间胶囊开播，无胶囊恢复进度',
+            title: __('betaSkipIntro') || '跳过片头',
+            subtext: __('betaSkipIntroDesc') || '开播直接跳转至第 1 个精彩高光',
             checked: Boolean(this.settings.betaFirstCapsulePlay),
             onChange: (checked) => {
                 this.sm.updateSetting('betaFirstCapsulePlay', checked);
@@ -99,19 +99,9 @@ export class BetaSection {
         });
         betaSubWrap.appendChild(firstCapToggle.getElement());
 
-        const safariMuteToggle = new ToggleRow({
-            title: '高对比度静音标志',
-            subtext: '音量归零或静音时，以 Safari 标志性红底白图标直观呈现',
-            checked: this.settings.betaSafariMuteStyle !== false,
-            onChange: (checked) => {
-                this.sm.updateSetting('betaSafariMuteStyle', checked);
-            }
-        });
-        betaSubWrap.appendChild(safariMuteToggle.getElement());
-
         const undoToggle = new ToggleRow({
-            title: '胶囊误删安全保护',
-            subtext: '删除关键时间胶囊后 60 秒内在面板提供一键撤销恢复按钮',
+            title: __('betaCapsuleUndo') || '防误删除',
+            subtext: __('betaCapsuleUndoDesc') || '误删高光后提供 60 秒撤销时间',
             checked: this.settings.betaCapsuleUndo !== false,
             onChange: (checked) => {
                 this.sm.updateSetting('betaCapsuleUndo', checked);
@@ -120,8 +110,8 @@ export class BetaSection {
         betaSubWrap.appendChild(undoToggle.getElement());
 
         const deepLinkToggle = new ToggleRow({
-            title: '深链时间胶囊识别',
-            subtext: '自动提取并挂载分享 URL 中的时间轴与倍速播放参数',
+            title: __('betaDeepLinking') || '链接还原',
+            subtext: __('betaDeepLinkingDesc') || '打开分享链接时自动加载对应高光',
             checked: this.settings.betaDeepLinking !== false,
             onChange: (checked) => {
                 this.sm.updateSetting('betaDeepLinking', checked);
@@ -135,8 +125,8 @@ export class BetaSection {
         dbRow.style.alignItems = 'stretch';
         dbRow.style.gap = '6px';
         dbRow.innerHTML = `
-            <div class="tm-apple-row-title">自建评论远端数据库 (REST API)</div>
-            <div class="tm-apple-row-subtext">配置个人数据库端点，优先于公共源查询聚合评论</div>
+            <div class="tm-apple-row-title">${__('betaCustomApi') || '自建接口'}</div>
+            <div class="tm-apple-row-subtext">${__('betaCustomApiDesc') || '连接个人私人评论库服务器'}</div>
             <input type="text" class="tm-settings-input tm-beta-db-url" placeholder="https://your-api.domain.com/comments" value="${this.settings.betaDbEndpoint || ''}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 11.5px; outline: none;" />
             <input type="password" class="tm-settings-input tm-beta-db-key" placeholder="API Key / Token (可选)" value="${this.settings.betaDbApiKey || ''}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 11.5px; outline: none;" />
         `;
@@ -158,8 +148,8 @@ export class BetaSection {
         debugSubWrap.style.display = Boolean(this.settings.debugMode) ? 'block' : 'none';
 
         const debugToggle = new ToggleRow({
-            title: '开发者排错日志',
-            subtext: '开启底层运行状态追踪、单条抓取审查与网络诊断',
+            title: __('betaDebugLog') || '运行日志',
+            subtext: __('betaDebugLogDesc') || '查看底层抓取排错与网络诊断信息',
             checked: Boolean(this.settings.debugMode),
             onChange: (checked) => {
                 this.sm.updateSetting('debugMode', checked);
@@ -178,8 +168,8 @@ export class BetaSection {
         card.appendChild(debugToggle.getElement());
 
         const crazyToggle = new ToggleRow({
-            title: '关联影片评论自动预热',
-            subtext: '扫描宿主页面所有可见番号，低速防爬排队预取评论语料',
+            title: __('betaPreloadComments') || '预载评论',
+            subtext: __('betaPreloadCommentsDesc') || '后台静默抓取页面其他影片的热评',
             checked: Boolean(this.settings.crazyScrapeMode),
             onChange: (checked) => {
                 this.sm.updateSetting('crazyScrapeMode', checked);
@@ -197,8 +187,8 @@ export class BetaSection {
         clearRow.style.justifyContent = 'space-between';
         clearRow.innerHTML = `
             <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title" style="color: #ff453a;">清空本地评论离线库</div>
-                <div class="tm-apple-row-subtext">重置本地 IndexedDB 已收录缓存与去重记录</div>
+                <div class="tm-apple-row-title" style="color: #ff453a;">${__('betaClearCache') || '清除缓存'}</div>
+                <div class="tm-apple-row-subtext">${__('betaClearCacheDesc') || '释放本地存储并清空离线评论'}</div>
             </div>
             <button type="button" class="tm-clear-cache-btn" style="background: rgba(255, 69, 58, 0.15); border: 1px solid rgba(255, 69, 58, 0.35); color: #ff453a; font-size: 11px; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 600;">清空</button>
         `;
