@@ -2284,7 +2284,7 @@ export class CommentPanel {
      */
     showLoading() {
         if (this.loadingElement) {
-            this.loadingElement.className = 'mp-comments-loading';
+            this.loadingElement.className = 'tm-comment-loading mp-comments-loading';
             this.loadingElement.innerHTML = `
                 <div class="jc-card jc-skeleton mp-skeleton-card">
                     <div class="jc-bd">

@@ -18,7 +18,10 @@
     flex-direction: column;
     box-sizing: border-box;
     overflow: hidden;
-    pointer-events: none; /* 让点击穿透视频区域 */
+    overflow-x: hidden;
+    touch-action: pan-y;
+    overscroll-behavior-x: none;
+    pointer-events: none; /* 让点击穿透视频区域，子容器显式接管交互 */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 
@@ -115,6 +118,8 @@
     width: 100%;
     max-height: none;
     overflow-y: auto;
+    overflow-x: hidden;
+    touch-action: pan-y;
     box-sizing: border-box;
     padding: 8px 16px 0px 16px;
     mask-image: linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);
@@ -127,6 +132,7 @@
     pointer-events: auto;
     background-color: transparent;
     overscroll-behavior-y: contain;
+    overscroll-behavior-x: none;
 }
 
 /* 隐藏滚动条 */
@@ -1197,6 +1203,9 @@
     width: 100%;
     text-align: center;
     pointer-events: auto;
+    touch-action: pan-y;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
 }
 
 .mp-comments-loading {
@@ -1206,6 +1215,15 @@
     padding: 16px;
     box-sizing: border-box;
     width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+    overscroll-behavior-x: none;
+    pointer-events: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .mp-error-card {
