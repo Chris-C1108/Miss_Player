@@ -460,8 +460,8 @@ export class UIManager {
                 return;
             }
             
-            // 确保点击事件不是从控制按钮冒泡上来的
-            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel')) {
+            // 确保点击事件不是从控制按钮或预览弹窗冒泡上来的
+            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .jc-code-preview-popover')) {
                 return;
             }
             
@@ -979,10 +979,9 @@ export class UIManager {
         // 确保overlay已创建
         if (!this.overlay) return;
         
-        // 使用事件委托处理鼠标移动和触摸移动
         // 使用事件委托处理鼠标移动和触摸移动，绑定到整个 playerContainer 以支持隐藏侧栏或竖屏模式下的控制恢复
         this.playerContainer.addEventListener('mousemove', (e) => {
-            if (e && e.target && e.target.closest && e.target.closest('.tm-comments-panel')) {
+            if (e && e.target && e.target.closest && e.target.closest('.tm-comments-panel, .jc-code-preview-popover')) {
                 return;
             }
             this.showControls();
@@ -992,7 +991,7 @@ export class UIManager {
         });
         
         this.playerContainer.addEventListener('touchmove', (e) => {
-            if (e && e.target && e.target.closest && e.target.closest('.tm-comments-panel')) {
+            if (e && e.target && e.target.closest && e.target.closest('.tm-comments-panel, .jc-code-preview-popover')) {
                 return;
             }
             this.showControls();

@@ -2068,7 +2068,7 @@
 				e.stopPropagation();
 				if (isLongPress) return;
 				if (this.swipeManager && typeof this.swipeManager.wasRecentlyDragging === "function" && this.swipeManager.wasRecentlyDragging()) return;
-				if (e.target.closest(".tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel")) return;
+				if (e.target.closest(".tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .jc-code-preview-popover")) return;
 				const togglePlayPause = () => {
 					if (!this.playerCore.targetVideo) return;
 					if (this.playerCore.targetVideo.paused) this.playerCore.targetVideo.play();
@@ -2362,12 +2362,12 @@
 			console.log("[UIManager] 设置交互事件监听器");
 			if (!this.overlay) return;
 			this.playerContainer.addEventListener("mousemove", (e) => {
-				if (e && e.target && e.target.closest && e.target.closest(".tm-comments-panel")) return;
+				if (e && e.target && e.target.closest && e.target.closest(".tm-comments-panel, .jc-code-preview-popover")) return;
 				this.showControls();
 				if (this.isLandscape) this.autoHideControls();
 			});
 			this.playerContainer.addEventListener("touchmove", (e) => {
-				if (e && e.target && e.target.closest && e.target.closest(".tm-comments-panel")) return;
+				if (e && e.target && e.target.closest && e.target.closest(".tm-comments-panel, .jc-code-preview-popover")) return;
 				this.showControls();
 				if (this.isLandscape) this.autoHideControls();
 			}, { passive: true });
@@ -10210,6 +10210,13 @@
 			if (!this._codePreviewPopover) {
 				this._codePreviewPopover = document.createElement("div");
 				this._codePreviewPopover.className = "jc-code-preview-popover";
+				const stopPop = (e) => e.stopPropagation();
+				this._codePreviewPopover.addEventListener("pointerdown", stopPop);
+				this._codePreviewPopover.addEventListener("mousedown", stopPop);
+				this._codePreviewPopover.addEventListener("touchstart", stopPop, { passive: true });
+				this._codePreviewPopover.addEventListener("touchmove", stopPop, { passive: true });
+				this._codePreviewPopover.addEventListener("mousemove", stopPop);
+				this._codePreviewPopover.addEventListener("click", stopPop);
 				this._codePreviewPopover.addEventListener("mouseenter", () => {
 					if (this._codePreviewLeaveTimer) {
 						clearTimeout(this._codePreviewLeaveTimer);
@@ -10225,7 +10232,7 @@
 				};
 				document.addEventListener("pointerdown", this._onDocumentClickForPreview, true);
 			}
-			const targetParent = this.commentsPanel?.closest(".tm-player-container") || this.uiElements?.playerContainer || document.querySelector("miss-player-root")?.shadowRoot?.querySelector(".tm-player-container") || this.commentsPanel || document.body;
+			const targetParent = this.commentsPanel || this.commentsPanel?.closest(".tm-player-container") || this.uiElements?.playerContainer || document.querySelector("miss-player-root")?.shadowRoot?.querySelector(".tm-player-container") || document.body;
 			if (this._codePreviewPopover.parentNode !== targetParent) targetParent.appendChild(this._codePreviewPopover);
 			const pop = this._codePreviewPopover;
 			pop.setAttribute("data-current-code", cleanCode);
@@ -10253,14 +10260,18 @@
 			const videoWrap = pop.querySelector(".jc-code-preview-video-wrap");
 			if (videoWrap) {
 				videoWrap.style.cursor = "pointer";
-				videoWrap.addEventListener("click", (e) => {
-					e.stopPropagation();
-					e.preventDefault();
+				const doOpenVideo = (e) => {
+					if (e) {
+						e.stopPropagation();
+						e.stopImmediatePropagation();
+						if (e.cancelable) e.preventDefault();
+					}
 					const targetUrl = `https://missav.ai/${cleanCode.toLowerCase()}`;
 					if (typeof GM_openInTab === "function") GM_openInTab(targetUrl, { active: true });
 					else window.open(targetUrl, "_blank");
 					this.hideCodePreview();
-				});
+				};
+				videoWrap.addEventListener("click", doOpenVideo);
 			}
 			const rect = targetEl.getBoundingClientRect();
 			const popWidth = 256;

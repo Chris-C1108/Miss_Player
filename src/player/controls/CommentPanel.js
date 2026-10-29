@@ -1411,6 +1411,15 @@ export class CommentPanel {
             this._codePreviewPopover = document.createElement('div');
             this._codePreviewPopover.className = 'jc-code-preview-popover';
 
+            // 严禁预览浮层内部的所有点击与触摸交互冒泡给视频层或控制层，彻底杜绝被误判为视频点击或唤醒控制栏
+            const stopPop = (e) => e.stopPropagation();
+            this._codePreviewPopover.addEventListener('pointerdown', stopPop);
+            this._codePreviewPopover.addEventListener('mousedown', stopPop);
+            this._codePreviewPopover.addEventListener('touchstart', stopPop, { passive: true });
+            this._codePreviewPopover.addEventListener('touchmove', stopPop, { passive: true });
+            this._codePreviewPopover.addEventListener('mousemove', stopPop);
+            this._codePreviewPopover.addEventListener('click', stopPop);
+
             // 鼠标移入浮层本身时保持显示，移出时隐藏
             this._codePreviewPopover.addEventListener('mouseenter', () => {
                 if (this._codePreviewLeaveTimer) {
@@ -1437,11 +1446,11 @@ export class CommentPanel {
             document.addEventListener('pointerdown', this._onDocumentClickForPreview, true);
         }
 
-        // 确保挂载在播放器视窗容器内部 (Shadow DOM 内)，以原生享有完整 CSS 样式与层叠上下文
-        const targetParent = this.commentsPanel?.closest('.tm-player-container') ||
+        // 优先挂载在评论区容器内部 (天然隶属于评论区事件免扰范围)，并享有 Shadow DOM 完整样式
+        const targetParent = this.commentsPanel ||
+                             this.commentsPanel?.closest('.tm-player-container') ||
                              this.uiElements?.playerContainer ||
                              document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container') ||
-                             this.commentsPanel ||
                              document.body;
 
         if (this._codePreviewPopover.parentNode !== targetParent) {
@@ -1477,9 +1486,12 @@ export class CommentPanel {
         const videoWrap = pop.querySelector('.jc-code-preview-video-wrap');
         if (videoWrap) {
             videoWrap.style.cursor = 'pointer';
-            videoWrap.addEventListener('click', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
+            const doOpenVideo = (e) => {
+                if (e) {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    if (e.cancelable) e.preventDefault();
+                }
                 const targetUrl = `https://missav.ai/${cleanCode.toLowerCase()}`;
                 if (typeof GM_openInTab === 'function') {
                     GM_openInTab(targetUrl, { active: true });
@@ -1487,7 +1499,9 @@ export class CommentPanel {
                     window.open(targetUrl, '_blank');
                 }
                 this.hideCodePreview();
-            });
+            };
+
+            videoWrap.addEventListener('click', doOpenVideo);
         }
 
         // 计算定位
