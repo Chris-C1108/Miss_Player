@@ -28,16 +28,40 @@
 * **多语言映射**：在 `webpack.config.js` 的 `i18n` 配置中已定义各语言名称（`en`, `zh-CN`, `zh-TW`, `ja`, `vi`），必须保持一致。
 * **原因**：修改主脚本名称会导致分发平台（SleazyFork / GreasyFork）以及客户端管理器判定脚本标识发生漂移。
 
-### 3. 发版版本号五处强同步规范 (5-Place Version Sync)
-每次发布新版本时，必须且只能同步递增以下 **5 处**版本号，任何一处脱节都将被 `npm run ci:check` 强制阻断：
+### 3. 发版版本号五处强同步规范 (5-Place Version Sync) 与自动递增
+每次发布新版本或向 GitHub 推送测试更新时，必须且只能同步递增以下 **5 处**版本号，任何一处脱节都将被 `npm run ci:check` 强制阻断：
 1. `package.json` 中的 `"version"`
 2. `webpack.config.js` 中的 `headers.version`
 3. `src/telemetry/EventCollector.js` 中 `getScriptVersion()` 函数内的 fallback 版本字符串
 4. `src/sync/SyncManager.js` 中 fallback `SCRIPT_VERSION` 字符串
 5. `src/services/SleazyForkService.js` 中 fallback `SCRIPT_VERSION` 字符串
+* **自动化推荐**：严禁手动逐个文件修改版本号，必须使用 `npm run bump` 执行原子自增（默认递增 +0.0.1 Patch 版本），或 `npm run bump -- <版本号>` 指定版本，确保 5 处强一致。
 
 ### 4. 构建产物提交规范
 * 修改代码或更新版本后，必须执行 `npm run build`，确保 `dist/miss_player.user.js`、`dist/miss_player.meta.js`、`dist/miss_player.proxy.user.js` 同步生成并一并提交 Git。
+
+### 5. GitHub 直链元数据与 Raw URL 规范 (@downloadURL & @updateURL)
+脚本元数据头必须永久声明指向 GitHub 仓库 main 分支的 Raw 资源直链：
+* **固定直链值**：
+  - `// @downloadURL https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js`
+  - `// @updateURL   https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js`
+* **严禁包含空格或使用 Web 前端路径 (CRITICAL)**：
+  - FORBIDDEN: `https://github.com/.../tree/main/...` 或 `blob/main/...` 或 URL 中携带空格 ➔ 此类路径返回的是 GitHub 的 HTML 网页，油猴管理器拉取时会因语法错误解析失败而中断更新。
+  - USE: 必须使用 `raw.githubusercontent.com/...` 纯文本直链，保证油猴管理器能轻量读取 `meta.js` 检查版本，并在版本更新时拉取 `user.js`。
+
+### 6. GitHub Rolling 与 SleazyFork Tag Release 双轨发布架构 (Dual-Track Release Architecture)
+本项目采用“**GitHub 主干滚动测试 + SleazyFork Tag 稳定分发**”的双轨架构：
+* **轨 1：GitHub 开发测试轨 (Rolling Release)**
+  - 适用对象：开发者、尝鲜与测试用户；
+  - 更新机制：日常开发中每次向 GitHub main 分支推送更新前，执行 `npm run bump` 递增 patch 版本号（+0.0.1），打包后提交并推送。从 GitHub 安装的用户油猴管理器内保留上述 `@updateURL`，会自动即时检测并接收最新测试更新；
+* **轨 2：SleazyFork 生产稳定轨 (Stable Tag Release)**
+  - 适用对象：全网广大正式版普通用户；
+  - 隔离与重写机制：SleazyFork 后台设置为从 GitHub Releases / Tags 同步。SleazyFork 平台服务端分发脚本时，**会自动强行将 `@downloadURL` 与 `@updateURL` 重写为其内部 CDN 源**；
+  - 发版操作：日常提交不会打扰正式版用户；只有当阶段性功能完成且经测试验证稳定后，在 GitHub 执行一次打 Tag 与发布 Release（如 `git tag v5.8.0 && git push origin v5.8.0`），SleazyFork 监听到 Release 事件自动拉取该版本上线，正式推向全网；
+* **脚本内自动与手动检查更新分流通道 (Update Channel)**：
+  - **通道定义**：设置面板内提供 `updateChannel` 切换分段（`'stable'` 正式版 / `'beta'` 测试版）；
+  - **默认规则**：普通用户默认走 `'stable'` 正式版通道，从 SleazyFork 官方 JSON API / CDN 拉取更新；
+  - **测试通道**：选择 `'beta'` 测试版通道后，静默闲时检查更新与手动点击检查更新将直接从 GitHub Raw `meta.js` 解析最新滚动版本，且“立即更新”与“重新安装”无缝直连 GitHub Raw `miss_player.user.js`。
 
 ---
 
@@ -345,5 +369,10 @@ Miss Player 严格执行性能棘轮与零长任务守卫。完整测试方法�
 ## 🚀 开发与构建命令
 
 * **开发监听构建**：`npm run dev`
+* **版本自增同步**：`npm run bump`（Patch +0.0.1 并原子同步 5 处）或 `npm run bump -- <version>`
 * **生产发布打包**：`npm run build`（生成 `dist/miss_player.user.js`、`dist/miss_player.meta.js`、`dist/miss_player.proxy.user.js`）
 * **自动化门禁质检**：`npm run ci:check`（版本五处强同步核验、打包、体积审计、合规 Lint、SleazyFork 测试与沙箱启动验证）
+* **GitHub 测试版推送工作流**：
+  `npm run bump && npm run ci:check && git add . && git commit -m "feat/fix: xxx" && git push origin main`
+* **SleazyFork 正式发版工作流**：
+  `git tag vX.Y.Z && git push origin vX.Y.Z`（在 GitHub 创建 Release，SleazyFork 自动抓取同步上线）

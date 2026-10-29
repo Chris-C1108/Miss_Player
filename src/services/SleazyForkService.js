@@ -14,7 +14,15 @@ import { getValue, setValue } from '../utils/storage.js';
 export const OFFICIAL_SCRIPT_ID = 453300;
 export const CACHE_KEY_DATA = 'mp_sleazyfork_meta_cache';
 export const CACHE_KEY_TIME = 'mp_sleazyfork_last_check';
+export const CACHE_KEY_DATA_STABLE = 'mp_update_meta_cache_stable';
+export const CACHE_KEY_TIME_STABLE = 'mp_update_last_check_stable';
+export const CACHE_KEY_DATA_BETA = 'mp_update_meta_cache_beta';
+export const CACHE_KEY_TIME_BETA = 'mp_update_last_check_beta';
 export const CACHE_TTL = 12 * 60 * 60 * 1000;
+
+export const GITHUB_RAW_META_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js';
+export const GITHUB_RAW_USER_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js';
+export const GITHUB_COMMITS_URL = 'https://github.com/Chris-C1108/Miss_Player/commits/main';
 
 export function getCurrentVersion() {
     try {
@@ -22,7 +30,7 @@ export function getCurrentVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.7.4';
+    return '5.7.5';
 }
 
 export function compareVersions(v1, v2) {
@@ -88,17 +96,78 @@ export class SleazyForkService {
         throw lastErr || new Error('FETCH_FAILED');
     }
 
-    static async checkUpdate(force = false, scriptId = OFFICIAL_SCRIPT_ID) {
+    /**
+     * 从 GitHub Raw meta.js 获取最新测试版元数据
+     */
+    static async fetchGitHubMeta() {
+        const timestamp = Date.now();
+        const urls = [
+            `${GITHUB_RAW_META_URL}?_t=${timestamp}`,
+            `https://github.com/Chris-C1108/Miss_Player/raw/main/dist/miss_player.meta.js?_t=${timestamp}`,
+            `https://cdn.jsdelivr.net/gh/Chris-C1108/Miss_Player@main/dist/miss_player.meta.js?_t=${timestamp}`
+        ];
+        let lastErr = null;
+        for (const url of urls) {
+            try {
+                const res = await fetchWithTransport(url, {
+                    method: 'GET',
+                    headers: { 'Accept': 'text/plain, */*' },
+                    timeout: 8000
+                });
+                if (res.status >= 200 && res.status < 400 && res.html) {
+                    const text = res.html;
+                    const match = text.match(/@version\s+([\w\.\-]+)/i);
+                    if (match && match[1]) {
+                        const version = match[1].trim();
+                        return {
+                            id: 'github-main',
+                            channel: 'beta',
+                            name: 'Miss Player | 影院模式 (单手播放器)',
+                            version,
+                            code_url: GITHUB_RAW_USER_URL,
+                            url: GITHUB_COMMITS_URL,
+                            changelog_url: GITHUB_COMMITS_URL,
+                            code_updated_at: new Date().toISOString()
+                        };
+                    }
+                }
+            } catch (err) {
+                lastErr = err;
+            }
+        }
+        throw lastErr || new Error('FETCH_GITHUB_META_FAILED');
+    }
+
+    static async checkUpdate(force = false, channelOrScriptId = 'stable', scriptId = OFFICIAL_SCRIPT_ID) {
+        let channel = 'stable';
+        let targetScriptId = OFFICIAL_SCRIPT_ID;
+
+        if (typeof channelOrScriptId === 'number' || (typeof channelOrScriptId === 'string' && /^\d+$/.test(channelOrScriptId))) {
+            targetScriptId = Number(channelOrScriptId);
+            channel = 'stable';
+        } else if (typeof channelOrScriptId === 'string') {
+            channel = channelOrScriptId.toLowerCase() === 'beta' ? 'beta' : 'stable';
+            if (scriptId) targetScriptId = Number(scriptId) || OFFICIAL_SCRIPT_ID;
+        }
+
+        const isBeta = channel === 'beta';
+        const cacheKeyData = isBeta ? CACHE_KEY_DATA_BETA : CACHE_KEY_DATA_STABLE;
+        const cacheKeyTime = isBeta ? CACHE_KEY_TIME_BETA : CACHE_KEY_TIME_STABLE;
         const currentVersion = getCurrentVersion();
+
         if (!force) {
             try {
-                const lastCheck = getValue(CACHE_KEY_TIME, 0);
-                const cached = getValue(CACHE_KEY_DATA, null);
+                const lastCheck = getValue(cacheKeyTime, 0);
+                let cached = getValue(cacheKeyData, null);
+                if (!cached && !isBeta) {
+                    cached = getValue(CACHE_KEY_DATA, null);
+                }
                 if (cached && lastCheck && (Date.now() - Number(lastCheck) < CACHE_TTL)) {
                     const latestVersion = cached.version || currentVersion;
                     const hasUpdate = compareVersions(latestVersion, currentVersion) > 0 && !cached.deleted;
                     return {
                         success: true,
+                        channel,
                         hasUpdate,
                         currentVersion,
                         latestVersion,
@@ -109,13 +178,19 @@ export class SleazyForkService {
             } catch (_) {}
         }
         try {
-            const meta = await this.fetchScriptMeta(scriptId);
+            const meta = isBeta ? await this.fetchGitHubMeta() : await this.fetchScriptMeta(targetScriptId);
+            meta.channel = channel;
             const latestVersion = meta.version || currentVersion;
             const hasUpdate = compareVersions(latestVersion, currentVersion) > 0 && !meta.deleted;
-            setValue(CACHE_KEY_TIME, Date.now());
-            setValue(CACHE_KEY_DATA, meta);
+            setValue(cacheKeyTime, Date.now());
+            setValue(cacheKeyData, meta);
+            if (!isBeta) {
+                setValue(CACHE_KEY_DATA, meta);
+                setValue(CACHE_KEY_TIME, Date.now());
+            }
             return {
                 success: true,
+                channel,
                 hasUpdate,
                 currentVersion,
                 latestVersion,
@@ -123,11 +198,12 @@ export class SleazyForkService {
                 fromCache: false
             };
         } catch (err) {
-            const cached = getValue(CACHE_KEY_DATA, null);
+            const cached = getValue(cacheKeyData, null) || (!isBeta ? getValue(CACHE_KEY_DATA, null) : null);
             if (cached) {
                 const latestVersion = cached.version || currentVersion;
                 return {
                     success: true,
+                    channel,
                     hasUpdate: compareVersions(latestVersion, currentVersion) > 0,
                     currentVersion,
                     latestVersion,
@@ -138,6 +214,7 @@ export class SleazyForkService {
             }
             return {
                 success: false,
+                channel,
                 hasUpdate: false,
                 currentVersion,
                 latestVersion: currentVersion,

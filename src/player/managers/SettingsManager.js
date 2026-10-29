@@ -4,6 +4,7 @@ import { CommentsSection } from "./settings/sections/CommentsSection.js";
 import { BetaSection } from "./settings/sections/BetaSection.js";
 import { CloudSyncSection } from "./settings/sections/CloudSyncSection.js";
 import { AboutSection } from "./settings/sections/AboutSection.js";
+import { SegmentedControl } from "./settings/components/SegmentedControl.js";
 function sanitizeSeekStepList(arr, isCustom = false) {
     if (!Array.isArray(arr)) return isCustom ? [] : ['5s', '10s', '30s', '1m', '5m', '10m'];
     const valid = arr.filter(s => typeof s === 'string' && /^\d+[sm]$/i.test(s.trim())).map(s => s.trim().toLowerCase());
@@ -114,7 +115,8 @@ export class SettingsManager {
         if (this.settings.autoCheckUpdate !== false) {
             const runSilentCheck = async () => {
                 try {
-                    const res = await SleazyForkService.checkUpdate(false);
+                    const channel = this.settings.updateChannel || 'stable';
+                    const res = await SleazyForkService.checkUpdate(false, channel);
                     if (res && res.success) {
                         this._latestUpdateInfo = res;
                         if (res.hasUpdate) {
@@ -644,12 +646,14 @@ export class SettingsManager {
         card.className = 'tm-settings-about-card';
 
         const currentVersion = getCurrentVersion();
+        const currentChannel = this.settings.updateChannel || 'stable';
+        const isBeta = currentChannel === 'beta';
         const updateInfo = this._latestUpdateInfo;
         const meta = updateInfo?.meta;
         const hasUpdate = Boolean(updateInfo?.hasUpdate);
         const latestVer = updateInfo?.latestVersion || currentVersion;
 
-        // 1. 顶部 Header (品牌名 + 版本徽章 + SleazyFork 快捷跳转)
+        // 1. 顶部 Header (品牌名 + 版本徽章 + SleazyFork / GitHub 快捷跳转)
         const headerRow = document.createElement('div');
         headerRow.className = 'tm-about-header-row';
 
@@ -670,19 +674,58 @@ export class SettingsManager {
         brandWrap.appendChild(titleSpan);
         brandWrap.appendChild(versionBadge);
 
-        const sleazyLink = document.createElement('a');
-        sleazyLink.className = 'tm-about-link-btn';
-        sleazyLink.href = meta?.url || 'https://sleazyfork.org/scripts/453300';
-        sleazyLink.target = '_blank';
-        sleazyLink.rel = 'noopener noreferrer';
-        sleazyLink.title = __('viewRelease') || 'SleazyFork 主页';
-        sleazyLink.innerHTML = `<span>SleazyFork</span> ${ICON_EXTERNAL_LINK}`;
+        const platformLink = document.createElement('a');
+        platformLink.className = 'tm-about-link-btn';
+        platformLink.href = isBeta
+            ? (meta?.url || 'https://github.com/Chris-C1108/Miss_Player')
+            : (meta?.url || 'https://sleazyfork.org/scripts/453300');
+        platformLink.target = '_blank';
+        platformLink.rel = 'noopener noreferrer';
+        platformLink.title = isBeta ? 'GitHub 仓库' : (__('viewRelease') || 'SleazyFork 主页');
+        platformLink.innerHTML = `<span>${isBeta ? 'GitHub' : 'SleazyFork'}</span> ${ICON_EXTERNAL_LINK}`;
 
         headerRow.appendChild(brandWrap);
-        headerRow.appendChild(sleazyLink);
+        headerRow.appendChild(platformLink);
         card.appendChild(headerRow);
 
-        // 2. 社区活跃度指标（来自 SleazyFork JSON API）
+        // 2. 更新通道切换分段选择器 (Apple 极简风格)
+        const channelRow = document.createElement('div');
+        channelRow.className = 'tm-about-channel-row';
+        channelRow.style.cssText = 'display: flex; align-items: center; justify-content: space-between; margin: 10px 0 8px 0; gap: 8px;';
+
+        const channelLabel = document.createElement('span');
+        channelLabel.style.cssText = 'font-size: 12.5px; font-weight: 500; color: rgba(255, 255, 255, 0.75);';
+        channelLabel.textContent = __('updateChannel') || '更新通道';
+
+        const segControl = new SegmentedControl({
+            options: [
+                { label: __('channelStable') || '正式版', value: 'stable' },
+                { label: __('channelBeta') || '测试版', value: 'beta' }
+            ],
+            value: currentChannel,
+            onChange: async (nextVal) => {
+                if (nextVal === this.settings.updateChannel) return;
+                this.updateSetting('updateChannel', nextVal);
+                this._isCheckingUpdate = true;
+                this.createSettingsPanel();
+                try {
+                    const res = await SleazyForkService.checkUpdate(true, nextVal);
+                    this._latestUpdateInfo = res;
+                    if (res && res.hasUpdate) {
+                        Toast.show(`${__('updateFound') || '发现新版本'}: v${res.latestVersion}`, 3500, 'success');
+                    }
+                } catch (_) {} finally {
+                    this._isCheckingUpdate = false;
+                    this.createSettingsPanel();
+                }
+            }
+        });
+
+        channelRow.appendChild(channelLabel);
+        channelRow.appendChild(segControl.element);
+        card.appendChild(channelRow);
+
+        // 3. 统计与通道信息指标 Grid
         const statsGrid = document.createElement('div');
         statsGrid.className = 'tm-about-stats-grid';
 
@@ -710,12 +753,18 @@ export class SettingsManager {
             return box;
         };
 
-        statsGrid.appendChild(createStatBox(totalInstalls, __('statsInstalls') || '总安装量'));
-        statsGrid.appendChild(createStatBox(fanScore, __('statsRating') || '好评评分'));
-        statsGrid.appendChild(createStatBox(updatedDate, __('statsUpdated') || '代码更新'));
+        if (isBeta) {
+            statsGrid.appendChild(createStatBox('main', '测试分支'));
+            statsGrid.appendChild(createStatBox('GitHub', '更新渠道'));
+            statsGrid.appendChild(createStatBox(updatedDate, __('statsUpdated') || '代码更新'));
+        } else {
+            statsGrid.appendChild(createStatBox(totalInstalls, __('statsInstalls') || '总安装量'));
+            statsGrid.appendChild(createStatBox(fanScore, __('statsRating') || '好评评分'));
+            statsGrid.appendChild(createStatBox(updatedDate, __('statsUpdated') || '代码更新'));
+        }
         card.appendChild(statsGrid);
 
-        // 3. 若检测到新版本，渲染高亮提醒与立即升级区域
+        // 4. 若检测到新版本，渲染高亮提醒与立即升级区域
         if (hasUpdate) {
             const updateBanner = document.createElement('div');
             updateBanner.className = 'tm-about-update-banner';
@@ -726,7 +775,7 @@ export class SettingsManager {
 
             const bannerDesc = document.createElement('div');
             bannerDesc.className = 'tm-about-update-desc';
-            bannerDesc.textContent = `当前安装为 v${currentVersion}，新版本已在 SleazyFork 发布 (${updatedDate})。`;
+            bannerDesc.textContent = `当前安装为 v${currentVersion}，新版本已在 ${isBeta ? 'GitHub (main)' : 'SleazyFork'} 发布 (${updatedDate})。`;
 
             const bannerActions = document.createElement('div');
             bannerActions.className = 'tm-about-update-actions';
@@ -735,7 +784,9 @@ export class SettingsManager {
             updateNowBtn.className = 'tm-about-btn tm-about-btn--primary';
             updateNowBtn.innerHTML = `${ICON_DOWNLOAD} <span>${__('updateNow') || '立即更新'}</span>`;
             updateNowBtn.addEventListener('click', () => {
-                const codeUrl = meta?.code_url || `https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js`;
+                const codeUrl = meta?.code_url || (isBeta
+                    ? 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js'
+                    : 'https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js');
                 if (typeof GM_openInTab === 'function') {
                     GM_openInTab(codeUrl, { active: true });
                 } else {
@@ -748,11 +799,13 @@ export class SettingsManager {
             changelogBtn.className = 'tm-about-btn tm-about-btn--secondary';
             changelogBtn.innerHTML = `${ICON_EXTERNAL_LINK} <span>${__('updateChangelog') || '版本日志'}</span>`;
             changelogBtn.addEventListener('click', () => {
-                const versionsUrl = 'https://sleazyfork.org/scripts/453300/versions';
+                const logUrl = isBeta
+                    ? 'https://github.com/Chris-C1108/Miss_Player/commits/main'
+                    : 'https://sleazyfork.org/scripts/453300/versions';
                 if (typeof GM_openInTab === 'function') {
-                    GM_openInTab(versionsUrl, { active: true });
+                    GM_openInTab(logUrl, { active: true });
                 } else {
-                    window.open(versionsUrl, '_blank');
+                    window.open(logUrl, '_blank');
                 }
             });
 
@@ -764,7 +817,7 @@ export class SettingsManager {
             card.appendChild(updateBanner);
         }
 
-        // 4. 手动检查更新操作行
+        // 5. 手动检查更新操作行
         const checkRow = document.createElement('div');
         checkRow.className = 'tm-about-check-row';
 
@@ -784,7 +837,8 @@ export class SettingsManager {
             checkBtn.innerHTML = `${ICON_REFRESH} <span>${__('checkingUpdate') || '正在检查...'}</span>`;
 
             try {
-                const res = await SleazyForkService.checkUpdate(true);
+                const channel = this.settings.updateChannel || 'stable';
+                const res = await SleazyForkService.checkUpdate(true, channel);
                 this._latestUpdateInfo = res;
                 if (res.success) {
                     if (res.hasUpdate) {
@@ -819,7 +873,9 @@ export class SettingsManager {
         reinstallBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const timestamp = Date.now();
-            const installUrl = 'https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js?_t=' + timestamp;
+            const installUrl = isBeta
+                ? `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js?_t=${timestamp}`
+                : `https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js?_t=${timestamp}`;
             Toast(__('updating') || '正在跳转油猴重新安装...', 2000, 'info');
             if (typeof GM_openInTab === 'function') {
                 GM_openInTab(installUrl, { active: true });
@@ -832,7 +888,7 @@ export class SettingsManager {
         checkRow.appendChild(reinstallBtn);
         card.appendChild(checkRow);
 
-        // 5. 自动检查更新开关行
+        // 6. 自动检查更新开关行
         const autoCheckOption = this._createToggleOption(
             __('autoCheckUpdate') || '自动检查更新',
             'autoCheckUpdate',

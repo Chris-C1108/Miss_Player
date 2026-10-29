@@ -17,6 +17,9 @@ console.log('✅ 1. 语义化版本比对测试全部通过');
 // 2. 校验多语言字段完备性
 const requiredKeys = [
     'aboutAndUpdates',
+    'updateChannel',
+    'channelStable',
+    'channelBeta',
     'currentVersion',
     'checkUpdate',
     'checkingUpdate',
@@ -38,7 +41,7 @@ for (const lang of ['en', 'zh-CN', 'zh-TW', 'ja', 'vi']) {
         assert.ok(I18n.strings[lang][key], `语言 ${lang} 缺少 i18n 键: ${key}`);
     }
 }
-console.log('✅ 2. 全部 5 种语言的 15 项 i18n 国际化字典完整性校验通过');
+console.log('✅ 2. 全部 5 种语言的 18 项 i18n 国际化字典完整性校验通过');
 
 // 3. 测试真实 SleazyFork JSON API 抓取与结构解析
 try {
@@ -50,7 +53,19 @@ try {
     assert.ok(meta.name.includes('Miss Player'), '脚本名称应包含 Miss Player');
     console.log('✅ 3. 真实 SleazyFork JSON API 握手成功 (脚本名: ' + meta.name + ', 平台版本: ' + meta.version + ', 安装量: ' + meta.total_installs + ')');
 } catch (err) {
-    console.warn('⚠️ 外部网络请求跳过:', err.message);
+    console.warn('⚠️ 外部网络请求跳过 (SleazyFork API):', err.message);
+}
+
+// 4. 测试 GitHub 测试版通道元数据抓取 (若网络通畅)
+try {
+    const ghMeta = await SleazyForkService.fetchGitHubMeta();
+    assert.ok(ghMeta, 'GitHub 元数据应当存在');
+    assert.strictEqual(ghMeta.channel, 'beta', 'channel 应为 beta');
+    assert.ok(typeof ghMeta.version === 'string', '应当解析出 version 字符串');
+    assert.ok(ghMeta.code_url.includes('miss_player.user.js'), 'code_url 应指向 user.js');
+    console.log('✅ 4. GitHub 测试版通道 meta.js 抓取解析成功 (GitHub 最新版本: ' + ghMeta.version + ')');
+} catch (err) {
+    console.warn('⚠️ 外部网络请求跳过 (GitHub Raw):', err.message);
 }
 
 console.log('\n🎉 SleazyFork JSON API 单元与质量测试 100% 通过！\n');

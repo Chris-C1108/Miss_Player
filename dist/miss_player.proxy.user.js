@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.4
+// @version            5.7.5
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -16,6 +16,8 @@
 // @description:vi     MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @license            MIT
 // @icon               https://missav.ws/img/favicon.ico
+// @downloadURL        https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js
+// @updateURL          https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js
 // @match              *://*.missav.ws/*
 // @match              *://missav.ws/*
 // @match              *://*.missav.ai/*
@@ -40,6 +42,9 @@
 // @connect            sleazyfork.org
 // @connect            greasyfork.org
 // @connect            update.sleazyfork.org
+// @connect            raw.githubusercontent.com
+// @connect            github.com
+// @connect            cdn.jsdelivr.net
 // @grant              GM.openInTab
 // @grant              GM.xmlHttpRequest
 // @grant              GM_addStyle

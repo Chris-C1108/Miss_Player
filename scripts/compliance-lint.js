@@ -99,6 +99,22 @@ function runCheck() {
         console.log(`   ✅ 版本号一致 (${currentVer})`);
     }
 
+    // DownloadURL & UpdateURL 检查 (GitHub 直连更新通道)
+    const EXPECTED_DOWNLOAD_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js';
+    const EXPECTED_UPDATE_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js';
+    if (!meta.includes(EXPECTED_DOWNLOAD_URL)) {
+        console.error(`   ❌ 缺失或错误的 @downloadURL: 必须指向 GitHub raw 直链 ${EXPECTED_DOWNLOAD_URL}`);
+        hasErrors = true;
+    } else {
+        console.log(`   ✅ @downloadURL 配置正确`);
+    }
+    if (!meta.includes(EXPECTED_UPDATE_URL)) {
+        console.error(`   ❌ 缺失或错误的 @updateURL: 必须指向 GitHub raw 直链 ${EXPECTED_UPDATE_URL}`);
+        hasErrors = true;
+    } else {
+        console.log(`   ✅ @updateURL 配置正确`);
+    }
+
     // Match root domains check
     const requiredRootMatches = ['*://missav.ai/*', '*://missav.ws/*', '*://jable.tv/*'];
     const missingMatches = requiredRootMatches.filter(m => !meta.includes(m));

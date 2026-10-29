@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.4
+// @version            5.7.5
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -16,6 +16,8 @@
 // @description:vi     MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @license            MIT
 // @icon               https://missav.ws/img/favicon.ico
+// @downloadURL        https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js
+// @updateURL          https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js
 // @match              *://*.missav.ws/*
 // @match              *://missav.ws/*
 // @match              *://*.missav.ai/*
@@ -40,6 +42,9 @@
 // @connect            sleazyfork.org
 // @connect            greasyfork.org
 // @connect            update.sleazyfork.org
+// @connect            raw.githubusercontent.com
+// @connect            github.com
+// @connect            cdn.jsdelivr.net
 // @grant              GM.openInTab
 // @grant              GM.xmlHttpRequest
 // @grant              GM_addStyle
@@ -1237,7 +1242,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.4";
+		return "5.7.5";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2788,6 +2793,9 @@
 			betaClearCacheDesc: "Free storage and reset cached offline comments.",
 			aboutGroupTitle: "About Player",
 			aboutAndUpdates: "About Player",
+			updateChannel: "Update Channel",
+			channelStable: "Stable",
+			channelBeta: "Beta",
 			currentVersion: "Current Version",
 			checkUpdate: "Check Updates",
 			checkingUpdate: "Checking updates...",
@@ -2974,6 +2982,9 @@
 			betaClearCacheDesc: "释放本地存储并清空离线评论。",
 			aboutGroupTitle: "关于播放器",
 			aboutAndUpdates: "关于播放器",
+			updateChannel: "更新通道",
+			channelStable: "正式版",
+			channelBeta: "测试版",
 			currentVersion: "当前版本",
 			checkUpdate: "检查更新",
 			checkingUpdate: "正在检查更新...",
@@ -3160,6 +3171,9 @@
 			betaClearCacheDesc: "釋放本地儲存並清空離線評論。",
 			aboutGroupTitle: "關於播放器",
 			aboutAndUpdates: "關於播放器",
+			updateChannel: "更新通道",
+			channelStable: "正式版",
+			channelBeta: "測試版",
 			currentVersion: "當前版本",
 			checkUpdate: "檢查更新",
 			checkingUpdate: "正在檢查更新...",
@@ -3346,6 +3360,9 @@
 			betaClearCacheDesc: "ローカル保存されたオフラインコメントを全消去。",
 			aboutGroupTitle: "プレーヤーについて",
 			aboutAndUpdates: "プレーヤーについて",
+			updateChannel: "更新チャンネル",
+			channelStable: "安定版",
+			channelBeta: "ベータ版",
 			currentVersion: "現在のバージョン",
 			checkUpdate: "更新を確認",
 			checkingUpdate: "更新を確認中...",
@@ -3531,6 +3548,9 @@
 			betaClearCacheDesc: "Giải phóng bộ nhớ và xóa bình luận đã lưu.",
 			aboutGroupTitle: "Giới thiệu",
 			aboutAndUpdates: "Giới thiệu",
+			updateChannel: "Kênh cập nhật",
+			channelStable: "Chính thức",
+			channelBeta: "Thử nghiệm",
 			currentVersion: "Phiên bản hiện tại",
 			checkUpdate: "Kiểm tra cập nhật",
 			checkingUpdate: "Đang kiểm tra...",
@@ -4241,7 +4261,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.4";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.5";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -17015,11 +17035,18 @@
 	var OFFICIAL_SCRIPT_ID = 453300;
 	var CACHE_KEY_DATA = "mp_sleazyfork_meta_cache";
 	var CACHE_KEY_TIME = "mp_sleazyfork_last_check";
+	var CACHE_KEY_DATA_STABLE = "mp_update_meta_cache_stable";
+	var CACHE_KEY_TIME_STABLE = "mp_update_last_check_stable";
+	var CACHE_KEY_DATA_BETA = "mp_update_meta_cache_beta";
+	var CACHE_KEY_TIME_BETA = "mp_update_last_check_beta";
+	var GITHUB_RAW_META_URL = "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js";
+	var GITHUB_RAW_USER_URL = "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js";
+	var GITHUB_COMMITS_URL = "https://github.com/Chris-C1108/Miss_Player/commits/main";
 	function getCurrentVersion() {
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.4";
+		return "5.7.5";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -17074,16 +17101,63 @@
 			}
 			throw lastErr || new Error("FETCH_FAILED");
 		}
-		static async checkUpdate(force = false, scriptId = OFFICIAL_SCRIPT_ID) {
+		static async fetchGitHubMeta() {
+			const timestamp = Date.now();
+			const urls = [
+				`${GITHUB_RAW_META_URL}?_t=${timestamp}`,
+				`https://github.com/Chris-C1108/Miss_Player/raw/main/dist/miss_player.meta.js?_t=${timestamp}`,
+				`https://cdn.jsdelivr.net/gh/Chris-C1108/Miss_Player@main/dist/miss_player.meta.js?_t=${timestamp}`
+			];
+			let lastErr = null;
+			for (const url of urls) try {
+				const res = await fetchWithTransport(url, {
+					method: "GET",
+					headers: { "Accept": "text/plain, */*" },
+					timeout: 8e3
+				});
+				if (res.status >= 200 && res.status < 400 && res.html) {
+					const match = res.html.match(/@version\s+([\w\.\-]+)/i);
+					if (match && match[1]) return {
+						id: "github-main",
+						channel: "beta",
+						name: "Miss Player | 影院模式 (单手播放器)",
+						version: match[1].trim(),
+						code_url: GITHUB_RAW_USER_URL,
+						url: GITHUB_COMMITS_URL,
+						changelog_url: GITHUB_COMMITS_URL,
+						code_updated_at: new Date().toISOString()
+					};
+				}
+			} catch (err) {
+				lastErr = err;
+			}
+			throw lastErr || new Error("FETCH_GITHUB_META_FAILED");
+		}
+		static async checkUpdate(force = false, channelOrScriptId = "stable", scriptId = OFFICIAL_SCRIPT_ID) {
+			let channel = "stable";
+			let targetScriptId = OFFICIAL_SCRIPT_ID;
+			if (typeof channelOrScriptId === "number" || typeof channelOrScriptId === "string" && /^\d+$/.test(channelOrScriptId)) {
+				targetScriptId = Number(channelOrScriptId);
+				channel = "stable";
+			} else if (typeof channelOrScriptId === "string") {
+				channel = channelOrScriptId.toLowerCase() === "beta" ? "beta" : "stable";
+				if (scriptId) targetScriptId = Number(scriptId) || 453300;
+			}
+			const isBeta = channel === "beta";
+			const cacheKeyData = isBeta ? CACHE_KEY_DATA_BETA : CACHE_KEY_DATA_STABLE;
+			const cacheKeyTime = isBeta ? CACHE_KEY_TIME_BETA : CACHE_KEY_TIME_STABLE;
 			const currentVersion = getCurrentVersion();
 			if (!force) try {
-				const lastCheck = getValue(CACHE_KEY_TIME, 0);
-				const cached = getValue(CACHE_KEY_DATA, null);
+				const lastCheck = getValue(cacheKeyTime, 0);
+				let cached = getValue(cacheKeyData, null);
+				if (!cached && !isBeta) cached = getValue(CACHE_KEY_DATA, null);
 				if (cached && lastCheck && Date.now() - Number(lastCheck) < 432e5) {
 					const latestVersion = cached.version || currentVersion;
+					const hasUpdate = compareVersions(latestVersion, currentVersion) > 0 && !cached.deleted;
 					return {
 						success: true,
-						hasUpdate: compareVersions(latestVersion, currentVersion) > 0 && !cached.deleted,
+						channel,
+						hasUpdate,
 						currentVersion,
 						latestVersion,
 						meta: cached,
@@ -17092,13 +17166,19 @@
 				}
 			} catch (_) {}
 			try {
-				const meta = await this.fetchScriptMeta(scriptId);
+				const meta = isBeta ? await this.fetchGitHubMeta() : await this.fetchScriptMeta(targetScriptId);
+				meta.channel = channel;
 				const latestVersion = meta.version || currentVersion;
 				const hasUpdate = compareVersions(latestVersion, currentVersion) > 0 && !meta.deleted;
-				setValue(CACHE_KEY_TIME, Date.now());
-				setValue(CACHE_KEY_DATA, meta);
+				setValue(cacheKeyTime, Date.now());
+				setValue(cacheKeyData, meta);
+				if (!isBeta) {
+					setValue(CACHE_KEY_DATA, meta);
+					setValue(CACHE_KEY_TIME, Date.now());
+				}
 				return {
 					success: true,
+					channel,
 					hasUpdate,
 					currentVersion,
 					latestVersion,
@@ -17106,11 +17186,12 @@
 					fromCache: false
 				};
 			} catch (err) {
-				const cached = getValue(CACHE_KEY_DATA, null);
+				const cached = getValue(cacheKeyData, null) || (!isBeta ? getValue("mp_sleazyfork_meta_cache", null) : null);
 				if (cached) {
 					const latestVersion = cached.version || currentVersion;
 					return {
 						success: true,
+						channel,
 						hasUpdate: compareVersions(latestVersion, currentVersion) > 0,
 						currentVersion,
 						latestVersion,
@@ -17121,6 +17202,7 @@
 				}
 				return {
 					success: false,
+					channel,
 					hasUpdate: false,
 					currentVersion,
 					latestVersion: currentVersion,
@@ -17278,7 +17360,8 @@
 			if (this.settings.autoCheckUpdate !== false) {
 				const runSilentCheck = async () => {
 					try {
-						const res = await SleazyForkService.checkUpdate(false);
+						const channel = this.settings.updateChannel || "stable";
+						const res = await SleazyForkService.checkUpdate(false, channel);
 						if (res && res.success) {
 							this._latestUpdateInfo = res;
 							if (res.hasUpdate) {
@@ -17679,6 +17762,8 @@
 			const card = document.createElement("div");
 			card.className = "tm-settings-about-card";
 			const currentVersion = getCurrentVersion();
+			const currentChannel = this.settings.updateChannel || "stable";
+			const isBeta = currentChannel === "beta";
 			const updateInfo = this._latestUpdateInfo;
 			const meta = updateInfo?.meta;
 			const hasUpdate = Boolean(updateInfo?.hasUpdate);
@@ -17696,16 +17781,49 @@
 			versionBadge.title = hasUpdate ? `可升级至 v${latestVer}` : `当前运行版本 v${currentVersion}`;
 			brandWrap.appendChild(titleSpan);
 			brandWrap.appendChild(versionBadge);
-			const sleazyLink = document.createElement("a");
-			sleazyLink.className = "tm-about-link-btn";
-			sleazyLink.href = meta?.url || "https://sleazyfork.org/scripts/453300";
-			sleazyLink.target = "_blank";
-			sleazyLink.rel = "noopener noreferrer";
-			sleazyLink.title = __("viewRelease") || "SleazyFork 主页";
-			sleazyLink.innerHTML = `<span>SleazyFork</span> ${ICON_EXTERNAL_LINK}`;
+			const platformLink = document.createElement("a");
+			platformLink.className = "tm-about-link-btn";
+			platformLink.href = isBeta ? meta?.url || "https://github.com/Chris-C1108/Miss_Player" : meta?.url || "https://sleazyfork.org/scripts/453300";
+			platformLink.target = "_blank";
+			platformLink.rel = "noopener noreferrer";
+			platformLink.title = isBeta ? "GitHub 仓库" : __("viewRelease") || "SleazyFork 主页";
+			platformLink.innerHTML = `<span>${isBeta ? "GitHub" : "SleazyFork"}</span> ${ICON_EXTERNAL_LINK}`;
 			headerRow.appendChild(brandWrap);
-			headerRow.appendChild(sleazyLink);
+			headerRow.appendChild(platformLink);
 			card.appendChild(headerRow);
+			const channelRow = document.createElement("div");
+			channelRow.className = "tm-about-channel-row";
+			channelRow.style.cssText = "display: flex; align-items: center; justify-content: space-between; margin: 10px 0 8px 0; gap: 8px;";
+			const channelLabel = document.createElement("span");
+			channelLabel.style.cssText = "font-size: 12.5px; font-weight: 500; color: rgba(255, 255, 255, 0.75);";
+			channelLabel.textContent = __("updateChannel") || "更新通道";
+			const segControl = new SegmentedControl({
+				options: [{
+					label: __("channelStable") || "正式版",
+					value: "stable"
+				}, {
+					label: __("channelBeta") || "测试版",
+					value: "beta"
+				}],
+				value: currentChannel,
+				onChange: async (nextVal) => {
+					if (nextVal === this.settings.updateChannel) return;
+					this.updateSetting("updateChannel", nextVal);
+					this._isCheckingUpdate = true;
+					this.createSettingsPanel();
+					try {
+						const res = await SleazyForkService.checkUpdate(true, nextVal);
+						this._latestUpdateInfo = res;
+						if (res && res.hasUpdate) Toast.show(`${__("updateFound") || "发现新版本"}: v${res.latestVersion}`, 3500, "success");
+					} catch (_) {} finally {
+						this._isCheckingUpdate = false;
+						this.createSettingsPanel();
+					}
+				}
+			});
+			channelRow.appendChild(channelLabel);
+			channelRow.appendChild(segControl.element);
+			card.appendChild(channelRow);
 			const statsGrid = document.createElement("div");
 			statsGrid.className = "tm-about-stats-grid";
 			const formatNumber = (num) => {
@@ -17729,9 +17847,15 @@
 				box.appendChild(lblEl);
 				return box;
 			};
-			statsGrid.appendChild(createStatBox(totalInstalls, __("statsInstalls") || "总安装量"));
-			statsGrid.appendChild(createStatBox(fanScore, __("statsRating") || "好评评分"));
-			statsGrid.appendChild(createStatBox(updatedDate, __("statsUpdated") || "代码更新"));
+			if (isBeta) {
+				statsGrid.appendChild(createStatBox("main", "测试分支"));
+				statsGrid.appendChild(createStatBox("GitHub", "更新渠道"));
+				statsGrid.appendChild(createStatBox(updatedDate, __("statsUpdated") || "代码更新"));
+			} else {
+				statsGrid.appendChild(createStatBox(totalInstalls, __("statsInstalls") || "总安装量"));
+				statsGrid.appendChild(createStatBox(fanScore, __("statsRating") || "好评评分"));
+				statsGrid.appendChild(createStatBox(updatedDate, __("statsUpdated") || "代码更新"));
+			}
 			card.appendChild(statsGrid);
 			if (hasUpdate) {
 				const updateBanner = document.createElement("div");
@@ -17741,14 +17865,14 @@
 				bannerTitle.innerHTML = `${ICON_SPARKLES} <strong>${__("updateFound") || "发现新版本"} v${latestVer}</strong>`;
 				const bannerDesc = document.createElement("div");
 				bannerDesc.className = "tm-about-update-desc";
-				bannerDesc.textContent = `当前安装为 v${currentVersion}，新版本已在 SleazyFork 发布 (${updatedDate})。`;
+				bannerDesc.textContent = `当前安装为 v${currentVersion}，新版本已在 ${isBeta ? "GitHub (main)" : "SleazyFork"} 发布 (${updatedDate})。`;
 				const bannerActions = document.createElement("div");
 				bannerActions.className = "tm-about-update-actions";
 				const updateNowBtn = document.createElement("button");
 				updateNowBtn.className = "tm-about-btn tm-about-btn--primary";
 				updateNowBtn.innerHTML = `${ICON_DOWNLOAD} <span>${__("updateNow") || "立即更新"}</span>`;
 				updateNowBtn.addEventListener("click", () => {
-					const codeUrl = meta?.code_url || `https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js`;
+					const codeUrl = meta?.code_url || (isBeta ? "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js" : "https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js");
 					if (typeof GM_openInTab === "function") GM_openInTab(codeUrl, { active: true });
 					else window.open(codeUrl, "_blank");
 					Toast.show(__("updating") || "已触发脚本更新安装", 3e3, "success");
@@ -17757,9 +17881,9 @@
 				changelogBtn.className = "tm-about-btn tm-about-btn--secondary";
 				changelogBtn.innerHTML = `${ICON_EXTERNAL_LINK} <span>${__("updateChangelog") || "版本日志"}</span>`;
 				changelogBtn.addEventListener("click", () => {
-					const versionsUrl = "https://sleazyfork.org/scripts/453300/versions";
-					if (typeof GM_openInTab === "function") GM_openInTab(versionsUrl, { active: true });
-					else window.open(versionsUrl, "_blank");
+					const logUrl = isBeta ? "https://github.com/Chris-C1108/Miss_Player/commits/main" : "https://sleazyfork.org/scripts/453300/versions";
+					if (typeof GM_openInTab === "function") GM_openInTab(logUrl, { active: true });
+					else window.open(logUrl, "_blank");
 				});
 				bannerActions.appendChild(updateNowBtn);
 				bannerActions.appendChild(changelogBtn);
@@ -17784,7 +17908,8 @@
 				checkBtn.classList.add("is-loading");
 				checkBtn.innerHTML = `${ICON_REFRESH} <span>${__("checkingUpdate") || "正在检查..."}</span>`;
 				try {
-					const res = await SleazyForkService.checkUpdate(true);
+					const channel = this.settings.updateChannel || "stable";
+					const res = await SleazyForkService.checkUpdate(true, channel);
 					this._latestUpdateInfo = res;
 					if (res.success) {
 						if (res.hasUpdate) {
@@ -17814,7 +17939,8 @@
 			reinstallBtn.title = __("reinstallScriptDesc") || "刷新本地缓存并强制重新安装当前版本";
 			reinstallBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
-				const installUrl = "https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js?_t=" + Date.now();
+				const timestamp = Date.now();
+				const installUrl = isBeta ? `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js?_t=${timestamp}` : `https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js?_t=${timestamp}`;
 				Toast(__("updating") || "正在跳转油猴重新安装...", 2e3, "info");
 				if (typeof GM_openInTab === "function") GM_openInTab(installUrl, { active: true });
 				else window.open(installUrl, "_blank");
@@ -19355,7 +19481,8 @@
 				muteResetMinutes: 5,
 				betaSingleHandMode: false,
 				singleHandPosition: "right",
-				autoCheckUpdate: true
+				autoCheckUpdate: true,
+				updateChannel: "stable"
 			};
 		}
 		loadSettings() {
@@ -19393,6 +19520,8 @@
 				this.settings.pauseOnBlur = getBool("pauseOnBlur", true);
 				this.settings.buttonSoundEnabled = getBool("buttonSoundEnabled", true);
 				this.settings.autoCheckUpdate = getBool("autoCheckUpdate", true);
+				const rawChannel = getValue("updateChannel", "stable");
+				this.settings.updateChannel = rawChannel === "beta" ? "beta" : "stable";
 				this.settings.defaultMuted = getBool("defaultMuted", false);
 				this.settings.muteResetMinutes = Math.max(1, Math.min(120, parseInt(getValue("muteResetMinutes", 5), 10) || 5));
 				this.settings.betaMode = getBool("betaMode", false);
@@ -19431,7 +19560,8 @@
 				"buttonSoundEnabled",
 				"defaultMuted",
 				"muteResetMinutes",
-				"autoCheckUpdate"
+				"autoCheckUpdate",
+				"updateChannel"
 			];
 			this._reactiveStore = new ReactiveStore(this.settings);
 			this._reactiveStore.enableCrossTabSync(MONITORED_SETTINGS);
@@ -19469,6 +19599,7 @@
 				setValue("defaultMuted", Boolean(this.settings.defaultMuted));
 				setValue("muteResetMinutes", this.settings.muteResetMinutes || 5);
 				setValue("autoCheckUpdate", this.settings.autoCheckUpdate !== false);
+				setValue("updateChannel", this.settings.updateChannel === "beta" ? "beta" : "stable");
 				setValue("betaMode", Boolean(this.settings.betaMode));
 				setValue("betaFirstCapsulePlay", Boolean(this.settings.betaFirstCapsulePlay));
 				setValue("betaPlayMode", this.settings.betaPlayMode || "normal");

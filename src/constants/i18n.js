@@ -144,6 +144,9 @@ export class I18n {
             // 八、设置面板 - 关于播放器
             aboutGroupTitle: 'About Player',
             aboutAndUpdates: 'About Player',
+            updateChannel: 'Update Channel',
+            channelStable: 'Stable',
+            channelBeta: 'Beta',
             currentVersion: 'Current Version',
             checkUpdate: 'Check Updates',
             checkingUpdate: 'Checking updates...',
@@ -347,6 +350,9 @@ export class I18n {
             // 八、设置面板 - 关于播放器
             aboutGroupTitle: '关于播放器',
             aboutAndUpdates: '关于播放器',
+            updateChannel: '更新通道',
+            channelStable: '正式版',
+            channelBeta: '测试版',
             currentVersion: '当前版本',
             checkUpdate: '检查更新',
             checkingUpdate: '正在检查更新...',
@@ -550,6 +556,9 @@ export class I18n {
             // 八、设置面板 - 关于播放器
             aboutGroupTitle: '關於播放器',
             aboutAndUpdates: '關於播放器',
+            updateChannel: '更新通道',
+            channelStable: '正式版',
+            channelBeta: '測試版',
             currentVersion: '當前版本',
             checkUpdate: '檢查更新',
             checkingUpdate: '正在檢查更新...',
@@ -753,6 +762,9 @@ export class I18n {
             // 八、设置面板 - 关于播放器
             aboutGroupTitle: 'プレーヤーについて',
             aboutAndUpdates: 'プレーヤーについて',
+            updateChannel: '更新チャンネル',
+            channelStable: '安定版',
+            channelBeta: 'ベータ版',
             currentVersion: '現在のバージョン',
             checkUpdate: '更新を確認',
             checkingUpdate: '更新を確認中...',
@@ -955,6 +967,9 @@ export class I18n {
             // 八、设置面板 - 关于播放器
             aboutGroupTitle: 'Giới thiệu',
             aboutAndUpdates: 'Giới thiệu',
+            updateChannel: 'Kênh cập nhật',
+            channelStable: 'Chính thức',
+            channelBeta: 'Thử nghiệm',
             currentVersion: 'Phiên bản hiện tại',
             checkUpdate: 'Kiểm tra cập nhật',
             checkingUpdate: 'Đang kiểm tra...',

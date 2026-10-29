@@ -73,10 +73,15 @@ export default defineConfig({
           'fourhoi.com',
           'sleazyfork.org',
           'greasyfork.org',
-          'update.sleazyfork.org'
+          'update.sleazyfork.org',
+          'raw.githubusercontent.com',
+          'github.com',
+          'cdn.jsdelivr.net'
         ],
         'run-at': 'document-start',
-        license: pkg.license
+        license: pkg.license,
+        downloadURL: 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js',
+        updateURL: 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js'
       },
       build: {
         fileName: 'miss_player.user.js',

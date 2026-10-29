@@ -30,7 +30,7 @@ console.log('🚀 Miss Player 自动化 CI 构建与质量检验流程');
 console.log('====================================================\n');
 
 // 1. 版本一致性检查
-runStep('版本号三处强同步校验', () => {
+runStep('版本号五处强同步校验', () => {
     const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
     const version = pkg.version;
 
@@ -47,6 +47,11 @@ runStep('版本号三处强同步校验', () => {
     const sm = fs.readFileSync('src/sync/SyncManager.js', 'utf8');
     if (!sm.includes(`'${version}'`)) {
         throw new Error(`src/sync/SyncManager.js 未同步版本 ${version}`);
+    }
+
+    const sfs = fs.readFileSync('src/services/SleazyForkService.js', 'utf8');
+    if (!sfs.includes(`'${version}'`)) {
+        throw new Error(`src/services/SleazyForkService.js fallback 未同步版本 ${version}`);
     }
 });
 

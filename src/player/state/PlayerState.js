@@ -42,7 +42,8 @@ export class PlayerState {
             muteResetMinutes: 5,            // 取消静音后重置超时的分钟数 (默认 5 分钟)
             betaSingleHandMode: false,      // 竖屏单手模式 (Beta 默认关闭)
             singleHandPosition: 'right',    // 单手握持偏好 ('right' | 'left')
-            autoCheckUpdate: true           // 自动检查新版本 (默认为开)
+            autoCheckUpdate: true,          // 自动检查新版本 (默认为开)
+            updateChannel: 'stable'         // 检查更新通道 ('stable' 正式版 | 'beta' 测试版)
         };
     }
 
@@ -94,6 +95,8 @@ export class PlayerState {
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
+            const rawChannel = getValue('updateChannel', 'stable');
+            this.settings.updateChannel = (rawChannel === 'beta') ? 'beta' : 'stable';
             this.settings.defaultMuted = getBool('defaultMuted', false);
             this.settings.muteResetMinutes = Math.max(1, Math.min(120, parseInt(getValue('muteResetMinutes', 5), 10) || 5));
             this.settings.betaMode = getBool('betaMode', false);
@@ -141,7 +144,8 @@ export class PlayerState {
             'buttonSoundEnabled',
             'defaultMuted',
             'muteResetMinutes',
-            'autoCheckUpdate'
+            'autoCheckUpdate',
+            'updateChannel'
         ];
 
         this._reactiveStore = new ReactiveStore(this.settings);
@@ -186,6 +190,7 @@ export class PlayerState {
             setValue('defaultMuted', Boolean(this.settings.defaultMuted));
             setValue('muteResetMinutes', this.settings.muteResetMinutes || 5);
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
+            setValue('updateChannel', this.settings.updateChannel === 'beta' ? 'beta' : 'stable');
             setValue('betaMode', Boolean(this.settings.betaMode));
             setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));
             setValue('betaPlayMode', this.settings.betaPlayMode || 'normal');

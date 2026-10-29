@@ -1,8 +1,9 @@
 {
   "name": "miss-player",
-  "version": "5.7.4",
+  "version": "5.7.5",
   "main": "dist/miss_player.user.js",
   "scripts": {
+    "bump": "node scripts/bump-version.js",
     "build": "vite build",
     "dev": "vite",
     "build:webpack": "webpack --mode production",

@@ -30,6 +30,7 @@ Thumbs.db
 
 # other
 .pass
+graphify-out/
 
 # 测试产物
 tests/ui/reports/artifacts/
