@@ -1,6 +1,6 @@
 {
   "name": "miss-player",
-  "version": "5.7.1",
+  "version": "5.7.2",
   "main": "dist/miss_player.user.js",
   "scripts": {
     "build": "vite build",
