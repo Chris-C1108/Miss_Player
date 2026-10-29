@@ -94,6 +94,29 @@ Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感�
    - 彻底去技术黑话（严禁在面向用户界面出现“时序纠正”、“语料预热”、“微秒滑块”、“REST API”等内部概念）；
    - 功能名称严格收敛至 **2–4 字**；辅助说明精炼在 **20 字以内**直击给用户带来的核心收益；
    - 核心心智定稿对齐：面向用户统称“高光 / 高光片段”（消除胶囊理解门槛）、“转为正序 / 显示倒数”（直接陈述操作结果）、“快览 / 正常 / 连播”（以强动词驱动心智）。
+8. **移动端竖屏「双态视口自适应机」(Adaptive Portrait Viewport)**：
+   - 用户触摸/滑动评论区专注阅读时（`hideControls`），视频区域自动平滑收缩至天然物理宽高比（`naturalHeight`），最大化释放评论滚动空间；
+   - 呼出控制面板（`showControls`）时，高度通过 Apple 物理阻尼曲线（`0.28s cubic-bezier(0.16, 1, 0.3, 1)`）平滑恢复为用户拖拽调整或默认的展开高度；
+   - 竖屏展示评论区时，**顶部顶栏（标题、返回箭头与设置按键）始终常驻显示**，绝对不可随控制面板收缩隐藏。
+9. **移动端评论发表 FAB 架构 (Floating Action Button)**：
+   - 评论区底部严禁常驻占用整行的静态输入条，评论列表直通安全区底部以释放最大滚动可视面积；
+   - 默认状态下右下角悬浮 42px 纯圆实色发评按钮（`.tm-comment-fab-btn`）；
+   - 点击 FAB 触发底部半透明遮罩与毛玻璃抽屉输入底栏滑出并自动聚焦输入框，调起软键盘；发送完成或点击遮罩/关闭/ESC 后自动收起；
+   - 联动 `visualViewport` 实现 iOS 软键盘动态避让推起。
+10. **浮动圆钮统一实色化与握持偏好横向调度 (Solid Material & Hand Preference)**：
+    - 悬浮发评圆钮与竖屏控制栏唤醒圆钮采用**统一实色极夜深空黑（`#1e2025`）**，严禁使用半透明背景，杜绝底层滚动内容穿透产生视觉杂质；
+    - 唤醒控制栏圆钮仅在移动端竖屏且控制栏隐藏时展示，**桌面端（横屏或 PC 大屏）坚决隐藏（`display: none !important;`）**；
+    - 所有浮动圆钮依据用户左右手握持偏好自动左右镜像对齐（右手靠右 `right: 16px`，左手靠左 `left: 16px`）。
+11. **对称几何美学与微排版 (Symmetric Geometry & Micro-Typography)**：
+    - 左右对称控件（如左侧静音键与右侧倍速键）必须保持外框绝对正圆（40px × 40px）；
+    - 倍速文字（如 `1.0x`, `1.5x`）严禁降低字号，必须保持 13px 加粗（`700`），并通过微负字距（`letter-spacing: -0.6px`）实现正圆内切居中。
+12. **高光操作工具圆角矩形非对称分工 (Twin-Action Tool)**：
+    - 右侧高光操作组采用高度 38px、`border-radius: 8px` 的圆角矩形，在形状语义上与左侧全圆角（`9999px`）切片数据胶囊严格区分；
+    - 遵循菲茨定律，面积采用非对称分配：高频打点按键（`+`）分配 60% 大靶心，低频列表管理（`☰`）分配 40% 紧凑入口。
+13. **切片时序混排与色彩持久性架构闭环 (Color Permanence & Chronological Slices)**：
+    - 新建草稿胶囊必须按其物理开始时间戳在胶囊序列中即时混排插入，彻底消灭“打点在末尾，保存后突然瞬移回前面”的严重画面跳跃闪变；
+    - 实体色彩唯一权威：切片颜色必须以 `tab.color` 为绝对持久属性，严禁倒退为基于数组索引动态计算；
+    - 草稿打点瞬间通过智能相邻避让算法分配专属莫兰迪色，打点态与保存态色彩完全同源，全列表零色彩漂移。
 
 ---
 
@@ -114,6 +137,15 @@ Miss Player 运行于复杂的多域名第三方宿主环境（Jable、MissAV、
   - 严禁随意书写 `z-index: 2000000000` 或 `9999` 等无序魔法数字；
   - 所有层级必须统一引用 `--z-*` 标尺（10~60 级）：
     `--z-player-base: 10;` ➔ `--z-controls: 20;` ➔ `--z-sidebar: 30;` ➔ `--z-popover: 40;` ➔ `--z-modal: 50;` ➔ `--z-toast: 60;`。
+* **严禁向 `document.body` 挂载无样式的裸 DOM 节点（Shadow DOM 挂载隔离红线）**：
+  - Miss Player 内部所有组件样式（除了 `<3KB` 的 `_host.css`）全部作用域封装在 `<miss-player-root>` 的 `ShadowRoot` 内部；
+  - 新增组件（如 `DebugLogPanel`、弹窗、气泡提示等）必须挂载在 `playerContainer` 或 `shadowRoot` 内部，严禁直接 `document.body.appendChild(container)`；
+  - 若特殊场景必须脱离 Shadow DOM 挂载至宿主 `document.body`，该组件必须自包含内嵌 `<style>` 标签或注入宿主轨，绝不允许裸节点运行。
+* **第三方脚本高 Z-Index 浮动挂件生命周期声明式压制 (Third-Party Widget Suppression)**：
+  - 针对宿主页面上其他第三方油猴脚本（如 Peach JAV 入库 `#peach-jav-action` 等）设置理论最大值 `z-index: 2147483647` 破坏界面的行为，严禁盲目通过提升自身 Z-Index 争抢；
+  - 必须利用 Miss Player 的生命周期状态（`body.tm-player-active`），在宿主轨 `_host.css` 中声明 `display: none !important;` 进行无感隐形隔离；退出播放器时瞬间原样恢复，实现零破坏良性共存。
+* **严禁在滚动容器中遗留历史死留白 (Zombie Padding Elimination)**：
+  - 横向 Flex 滚动容器（如 `tm-tab-scroll-container`）内严禁使用历史遗留的大内边距（如 `padding-right: 44px`）替代布局间距，必须结合 `flex: 1` 和轻量呼吸边距释放最大可视面积。
 
 ### 2. JS 样式动静分离契约 (Dynamic vs Static Styles Contract)
 在操作 DOM 样式时，必须严格区分“真动态数学逻辑”与“伪动态表现逻辑”：
