@@ -146,6 +146,12 @@ Miss Player 运行于复杂的多域名第三方宿主环境（Jable、MissAV、
   - 必须利用 Miss Player 的生命周期状态（`body.tm-player-active`），在宿主轨 `_host.css` 中声明 `display: none !important;` 进行无感隐形隔离；退出播放器时瞬间原样恢复，实现零破坏良性共存。
 * **严禁在滚动容器中遗留历史死留白 (Zombie Padding Elimination)**：
   - 横向 Flex 滚动容器（如 `tm-tab-scroll-container`）内严禁使用历史遗留的大内边距（如 `padding-right: 44px`）替代布局间距，必须结合 `flex: 1` 和轻量呼吸边距释放最大可视面积。
+* **全宽容器盒模型强制闭合约束 (Box-Sizing Enforcement)**：
+  - 凡在组件样式中声明 `width: 100%` 并带有 `padding` 或 `border` 时，必须强制声明 `box-sizing: border-box; max-width: 100%;`，严禁依赖默认 `content-box` 导致实际物理宽度（`100% + padding*2`）撑爆父容器产生横向溢出与左右晃动。
+* **纵向滚动容器手势硬约束与防击穿 (Touch Action Pan-Y & Overflow-X Lock)**：
+  - 所有垂直滚动区域（如评论列表、骨架屏、状态盒）必须显式声明 `touch-action: pan-y; overflow-x: hidden; overscroll-behavior-x: none;`；Loading 骨架屏必须具备 `pointer-events: auto`，严禁触控穿透至底层宿主页面引发横向位移与橡皮筋晃动。
+* **浮层组件事件全生命周期硬隔离 (Overlay Event Boundary Guard)**：
+  - 所有绝对/固定定位的浮层组件（如预览浮窗、气泡提示、模态框）必须在根节点上彻底阻断所有指针事件冒泡（`pointerdown`, `touchstart`, `click`），且外部视频与控制层监听必须将其加入排除白名单，严禁点击被底层机制消费导致误唤醒控制栏。
 
 ### 2. JS 样式动静分离契约 (Dynamic vs Static Styles Contract)
 在操作 DOM 样式时，必须严格区分“真动态数学逻辑”与“伪动态表现逻辑”：
