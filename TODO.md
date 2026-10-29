@@ -24,6 +24,7 @@
 | **Phase 12** | 控制面板单手模式组件聚合与竖屏重构 | **达成 ✅** | [Phase 0~12 历史里程碑归档](./docs/todo/history-phases-0-to-12.md) |
 | **Phase 14** | **CSS 样式架构重构与治理专项** | **达成 ✅** | **[Phase 14 专属规划方案](./docs/todo/phase-14-css-refactor.md)** |
 | **Phase 13** | **苹果人本化文案重构与五国母语对齐** | **达成 ✅** | **[Phase 13 专属规划方案](./docs/todo/phase-13-copywriting.md)** |
+| **Phase 15** | **UI/UX 深度优化与第三方脚本适配专项 (v5.7.1)** | **达成 ✅** | 详见 Release v5.7.1 |
 
 ---
 
