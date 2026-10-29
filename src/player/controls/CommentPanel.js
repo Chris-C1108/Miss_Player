@@ -1410,7 +1410,6 @@ export class CommentPanel {
         if (!this._codePreviewPopover) {
             this._codePreviewPopover = document.createElement('div');
             this._codePreviewPopover.className = 'jc-code-preview-popover';
-            document.body.appendChild(this._codePreviewPopover);
 
             // 鼠标移入浮层本身时保持显示，移出时隐藏
             this._codePreviewPopover.addEventListener('mouseenter', () => {
@@ -1423,14 +1422,30 @@ export class CommentPanel {
                 this.hideCodePreview();
             });
 
-            // 点击外部区域自动收起预览浮层（适配移动端和点击交互）
+            // 点击外部区域自动收起预览浮层（适配移动端和点击交互，兼容 Shadow DOM 事件穿透路径 composedPath）
             this._onDocumentClickForPreview = (e) => {
                 if (!this._codePreviewPopover || !this._codePreviewPopover.classList.contains('active')) return;
-                if (!e.target.closest('.jc-code-preview-popover') && !e.target.closest('.jc-code-link')) {
+                const path = e.composedPath ? e.composedPath() : [];
+                const isInside = path.some(el => el && el.classList && (
+                    el.classList.contains('jc-code-preview-popover') || 
+                    el.classList.contains('jc-code-link')
+                ));
+                if (!isInside) {
                     this.hideCodePreview();
                 }
             };
             document.addEventListener('pointerdown', this._onDocumentClickForPreview, true);
+        }
+
+        // 确保挂载在播放器视窗容器内部 (Shadow DOM 内)，以原生享有完整 CSS 样式与层叠上下文
+        const targetParent = this.commentsPanel?.closest('.tm-player-container') ||
+                             this.uiElements?.playerContainer ||
+                             document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container') ||
+                             this.commentsPanel ||
+                             document.body;
+
+        if (this._codePreviewPopover.parentNode !== targetParent) {
+            targetParent.appendChild(this._codePreviewPopover);
         }
 
         const pop = this._codePreviewPopover;

@@ -10210,7 +10210,6 @@
 			if (!this._codePreviewPopover) {
 				this._codePreviewPopover = document.createElement("div");
 				this._codePreviewPopover.className = "jc-code-preview-popover";
-				document.body.appendChild(this._codePreviewPopover);
 				this._codePreviewPopover.addEventListener("mouseenter", () => {
 					if (this._codePreviewLeaveTimer) {
 						clearTimeout(this._codePreviewLeaveTimer);
@@ -10222,10 +10221,12 @@
 				});
 				this._onDocumentClickForPreview = (e) => {
 					if (!this._codePreviewPopover || !this._codePreviewPopover.classList.contains("active")) return;
-					if (!e.target.closest(".jc-code-preview-popover") && !e.target.closest(".jc-code-link")) this.hideCodePreview();
+					if (!(e.composedPath ? e.composedPath() : []).some((el) => el && el.classList && (el.classList.contains("jc-code-preview-popover") || el.classList.contains("jc-code-link")))) this.hideCodePreview();
 				};
 				document.addEventListener("pointerdown", this._onDocumentClickForPreview, true);
 			}
+			const targetParent = this.commentsPanel?.closest(".tm-player-container") || this.uiElements?.playerContainer || document.querySelector("miss-player-root")?.shadowRoot?.querySelector(".tm-player-container") || this.commentsPanel || document.body;
+			if (this._codePreviewPopover.parentNode !== targetParent) targetParent.appendChild(this._codePreviewPopover);
 			const pop = this._codePreviewPopover;
 			pop.setAttribute("data-current-code", cleanCode);
 			const loadingText = __("previewLoading") || "正在加载预览...";
