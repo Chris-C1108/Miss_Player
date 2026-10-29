@@ -165,9 +165,14 @@ export class SingleHandManager {
 
         // 1. Touch 触控事件 (移动端核心)
         this._swipeTouchStartHandler = (e) => {
-            if (!this.isBetaEnabled || !this.isPortrait()) return;
+            if (!this.isPortrait()) return;
             const target = e.target;
-            if (!target?.closest?.('.tm-seek-control-row')) {
+            // 排除拖动进度条滑块的情况
+            if (target?.closest?.('.tm-progress-bar-container, .tm-slider-handle')) {
+                this._isSwipeTracking = false;
+                return;
+            }
+            if (!target?.closest?.('.tm-control-buttons, .tm-control-panel, .tm-seek-control-row')) {
                 this._isSwipeTracking = false;
                 return;
             }
@@ -184,8 +189,8 @@ export class SingleHandManager {
             if (!touch) return;
             const dx = touch.clientX - this._touchStartX;
             const dy = touch.clientY - this._touchStartY;
-            // 水平滑移主导时阻止原生上下滚动，保持纯净滑动交互
-            if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+            // 水平滑移主导或明显的向下手势时阻止原生滚动，保持纯净手势交互
+            if ((Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) || (dy > 10 && dy > Math.abs(dx))) {
                 if (e.cancelable) {
                     e.preventDefault();
                 }
@@ -205,9 +210,10 @@ export class SingleHandManager {
         // 2. Pointer 事件 (支持桌面 DevTools 触控模拟与鼠标拖动测试)
         this._swipePointerDownHandler = (e) => {
             if (e.pointerType === 'touch') return;
-            if (!this.isBetaEnabled || !this.isPortrait()) return;
+            if (!this.isPortrait()) return;
             if (e.button !== 0) return;
-            if (!e.target?.closest?.('.tm-seek-control-row')) return;
+            if (e.target?.closest?.('.tm-progress-bar-container, .tm-slider-handle')) return;
+            if (!e.target?.closest?.('.tm-control-buttons, .tm-control-panel, .tm-seek-control-row')) return;
             this._pointerStartX = e.clientX;
             this._pointerStartY = e.clientY;
             this._isPointerTracking = true;
@@ -239,8 +245,23 @@ export class SingleHandManager {
     }
 
     _triggerSwipeAction(dx, dy) {
-        const minDistance = 35; // 触发单手模式的最小水平滑动位移阈值
-        if (Math.abs(dx) >= minDistance && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        const minDistance = 35; // 触发手势的最小位移阈值
+
+        // 1. 下滑手势：在控制面板上向下滑动，快速收起/隐藏控制面板
+        if (dy >= minDistance && dy > Math.abs(dx) * 1.1) {
+            this._preventClickUntil = Date.now() + 350;
+            if (window.navigator?.vibrate) {
+                window.navigator.vibrate(5);
+            }
+            const uiManager = this.uiManager || this.playerCore?.uiManager;
+            if (uiManager) {
+                uiManager.hideControls(true);
+            }
+            return;
+        }
+
+        // 2. 左右滑动手势：在开启 Beta 单手模式时，向左/向右滑动切换左手/右手布局
+        if (this.isBetaEnabled && Math.abs(dx) >= minDistance && Math.abs(dx) > Math.abs(dy) * 1.2) {
             this._preventClickUntil = Date.now() + 350;
             playTapSound();
 
@@ -301,6 +322,18 @@ export class SingleHandManager {
         const parentPanel = this.controlManager?.controlPanel;
         if (!container) return;
 
+        // 始终同步用户的握持手偏好类名 (供浮动按钮、控制按钮左右横向对齐调度)
+        const pos = this.handPosition;
+        const isLeft = pos === 'left';
+        container.classList.toggle('tm-hand-left', isLeft);
+        container.classList.toggle('tm-hand-right', !isLeft);
+
+        const commentsPanel = this.controlManager?.commentPanel?.commentsPanel;
+        if (commentsPanel) {
+            commentsPanel.classList.toggle('tm-hand-left', isLeft);
+            commentsPanel.classList.toggle('tm-hand-right', !isLeft);
+        }
+
         // 若 DOM 尚未挂载，优先挂载至 tm-control-panel，兜底主容器
         if (this.gutterElement) {
             if (parentPanel && !parentPanel.contains(this.gutterElement)) {
@@ -340,8 +373,6 @@ export class SingleHandManager {
         if (this.btnRestore) {
             this.btnRestore.title = __('expandFullWidth');
         }
-
-        const pos = this.handPosition;
 
         if (pos === 'left') {
             container.classList.remove('tm-single-hand-right');

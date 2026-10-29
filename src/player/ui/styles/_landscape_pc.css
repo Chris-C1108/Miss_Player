@@ -34,7 +34,7 @@
 :root, :host {
     --sidebar-width: clamp(350px, 28vw, 420px);
 }
-@media screen and (min-width: 930px) and (orientation: landscape) {
+@media screen and (min-width: 1024px) and (orientation: landscape) {
     :root, :host {
         --sidebar-width: clamp(350px, 28vw, 420px);
     }
@@ -45,8 +45,8 @@
     }
 }
 
-/* 2. 横屏分栏基础样式 (仅限 PC 及大屏设备 >= 930px) */
-@media screen and (min-width: 930px) and (orientation: landscape) {
+/* 2. 横屏分栏基础样式 (仅限 PC 及大屏设备 >= 1024px) */
+@media screen and (min-width: 1024px) and (orientation: landscape) {
     /* 调整播放器容器为 Grid 双分栏布局 */
     .tm-player-container {
         display: grid;
@@ -68,30 +68,8 @@
         z-index: 2000000001;
     }
 
-    /* 评论区内的按钮栏样式 */
-    .tm-comments-panel .tm-button-container {
-        grid-area: auto;
-        position: relative;
-        width: 100%;
-        height: 44px;
-        padding: 0 16px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background-color: transparent;
-        border-bottom: 1px solid hsla(var(--shadcn-border) / 0.1);
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-        box-shadow: none;
-        z-index: 10000;
-        transform: none;
-        opacity: 1;
-        pointer-events: auto;
-        box-sizing: border-box;
-    }
-
-    /* 评论区隐藏时，按钮栏横跨顶部，左右按钮悬浮分布，中间标题居中 */
-    .tm-player-container.tm-sidebar-hidden .tm-button-container {
+    /* PC 大屏横屏统合顶栏样式 (顶栏作为主容器稳固子项，无论侧栏显示或隐藏均零抖动、零拔插) */
+    .tm-player-container .tm-button-container {
         position: fixed;
         top: 16px;
         left: 16px;
@@ -112,11 +90,12 @@
         transform: none;
         opacity: 1;
         pointer-events: none;
+        box-sizing: border-box;
     }
 
     /* 精准定向按钮元素，严禁使用 > * 污染标题与操作区容器 */
-    .tm-player-container.tm-sidebar-hidden .tm-button-container > button,
-    .tm-player-container.tm-sidebar-hidden .tm-top-actions > button {
+    .tm-player-container .tm-button-container > button,
+    .tm-player-container .tm-top-actions > button {
         pointer-events: auto;
         /* 给各个按钮加上背景和阴影以悬浮美观 */
         background-color: hsla(var(--shadcn-card) / 0.8);
@@ -128,10 +107,12 @@
         justify-content: center;
         width: var(--button-md);
         height: var(--button-md);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
     }
 
     /* 右侧操作区包装器保持自适应流式排版 */
-    .tm-player-container.tm-sidebar-hidden .tm-top-actions {
+    .tm-player-container .tm-top-actions {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -145,7 +126,7 @@
     }
 
     /* 标题保持居中、自适应宽度、透明背景与纯净文字阴影，彻底消除黑色畸变条 */
-    .tm-player-container.tm-sidebar-hidden .tm-button-container .tm-player-title {
+    .tm-player-container .tm-button-container .tm-player-title {
         background: transparent;
         border: none;
         box-shadow: none;
@@ -157,10 +138,10 @@
     }
 
     /* 评论区居左时对调退出与操作区按钮布局顺序 */
-    .tm-player-container.tm-sidebar-hidden.tm-sidebar-left .tm-top-actions {
+    .tm-player-container.tm-sidebar-left .tm-top-actions {
         order: -1;
     }
-    .tm-player-container.tm-sidebar-hidden.tm-sidebar-left .tm-close-button {
+    .tm-player-container.tm-sidebar-left .tm-close-button {
         order: 1;
     }
 
@@ -239,6 +220,7 @@
         overflow: hidden;
         visibility: visible;
         opacity: 1;
+        padding-top: 56px; /* 顶部避让悬浮操作栏，避免物理遮挡 */
     }
 
     /* 覆盖底部的半透明暗化遮罩，PC端双栏时不需要暗化整个评论区 */
@@ -285,25 +267,14 @@
         padding-bottom: 4px;
     }
 
-    /* 桌面端发表栏与功能栏按 Flex 布局自然贴合在右侧评论区边栏最底部 */
-    .tm-comments-panel-action-bar {
-        position: relative;
-        bottom: auto;
-        left: auto;
-        right: auto;
-        flex: 0 0 auto;
-        flex-shrink: 0;
-        z-index: 9995;
-    }
-
+    /* 桌面端发表栏浮动贴合在右侧评论区边栏最底部 */
     .tm-comment-submit-bar-wrapper {
-        position: relative;
-        bottom: auto;
-        left: auto;
-        right: auto;
-        flex: 0 0 auto;
-        flex-shrink: 0;
-        z-index: 9996;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 9998;
     }
 
     /* PC 端全屏评论面板发布按钮微调 */
@@ -312,6 +283,11 @@
         left: 50%;
         transform: translateX(-50%);
         z-index: 9995;
+    }
+
+    /* PC 桌面模式坚决不需要展示移动端唤醒控制栏按钮 */
+    .tm-show-controls-float-btn {
+        display: none !important;
     }
 
     /* 隐藏原有的竖屏垂直手柄容器 */
@@ -532,28 +508,9 @@
     }
 }
 
-/* 3. 针对 930px - 1023px 窄屏分栏环境的微调 */
-@media screen and (min-width: 930px) and (max-width: 1023px) and (orientation: landscape) {
-    .tm-control-buttons {
-        padding: 6px 8px 10px 8px;
-        gap: 6px;
-        border-radius: 12px;
-    }
-    .tm-control-drag-handle {
-        height: 10px;
-    }
-    .tm-time-display {
-        font-size: 11px;
-    }
-    .tm-tab-pill {
-        padding: 3px 8px;
-        font-size: 0.7rem;
-    }
-}
-
-/* 4. iPad 竖屏及中低宽屏横屏自适应样式 */
-/* 4.1 中低宽屏横屏：控制面板作为右下角紧凑悬浮卡片 */
-@media screen and (min-width: 480px) and (max-width: 929px) and (orientation: landscape) {
+/* 3. iPad 竖屏及中低宽屏横屏自适应样式 */
+/* 3.1 中低宽屏横屏 (480px - 1023px)：控制面板作为右下角紧凑悬浮卡片 */
+@media screen and (min-width: 480px) and (max-width: 1023px) and (orientation: landscape) {
     .tm-control-buttons {
         position: fixed;
         bottom: 16px;
@@ -578,7 +535,7 @@
     }
 }
 
-/* 4.2 iPad 竖屏：控制面板向上避让底部评论输入栏与发送按钮，彻底杜绝交互遮挡阻断 (中大屏平板 >=601px 竖屏) */
+/* 3.2 iPad 竖屏：控制面板向上避让底部评论输入栏与发送按钮，彻底杜绝交互遮挡阻断 (中大屏平板 >=601px 竖屏) */
 @media screen and (min-width: 601px) and (orientation: portrait) {
     .tm-control-buttons {
         position: fixed;
@@ -604,9 +561,9 @@
     }
 }
 
-/* 4.3 悬浮卡片通用拖动句柄与显隐过渡 */
+/* 3.3 悬浮卡片通用拖动句柄与显隐过渡 */
 @media screen and (min-width: 601px) and (orientation: portrait),
-       screen and (min-width: 480px) and (max-width: 929px) and (orientation: landscape) {
+       screen and (min-width: 480px) and (max-width: 1023px) and (orientation: landscape) {
     /* 激活拖动句柄的显示 */
     .tm-control-drag-handle {
         display: flex;
@@ -630,8 +587,8 @@
     }
 }
 
-/* 5. 移动端横屏 (max-width: 929px) 全宽纯净观影与安全区优化 */
-@media screen and (max-width: 929px) and (orientation: landscape) {
+/* 4. 移动端/小屏横屏 (max-width: 1023px) 全宽纯净观影与安全区优化 */
+@media screen and (max-width: 1023px) and (orientation: landscape) {
     /* 播放器容器全屏充满，不分栏，消除侧边栏纯黑死区 */
     .tm-player-container {
         display: flex;

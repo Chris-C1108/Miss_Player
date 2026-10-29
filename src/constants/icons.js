@@ -141,6 +141,13 @@ export const COMMENTS_HIDE = `
     </svg>
 `;
 
+export const ICON_COMMENT_WRITE = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20h9"/>
+        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+    </svg>
+`;
+
 export const ICON_CLOUD_SYNC = `
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21.5 15a4.5 4.5 0 0 0-4-6.5h-1a7 7 0 0 0-13 3.5 4.5 4.5 0 0 0 4.5 4.5"/>

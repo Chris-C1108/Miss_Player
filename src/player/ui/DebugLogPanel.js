@@ -10,6 +10,7 @@ import { WebDavClient } from '../../sync/WebDavClient.js';
  */
 
 import { copyToClipboard, Toast } from '../../utils/index.js';
+import debugStyles from './styles/02_components/_debug.css?inline';
 
 export class DebugLogPanel {
     static _container = null;
@@ -34,11 +35,30 @@ export class DebugLogPanel {
      * 确保面板 DOM 结构就绪
      */
     static ensurePanel() {
-        if (this._container || typeof document === 'undefined') return;
+        if (typeof document === 'undefined') return;
+
+        const missRoot = document.querySelector('miss-player-root');
+        const shadow = missRoot?.shadowRoot;
+        const playerContainer = shadow?.querySelector('.tm-player-container');
+        const mountTarget = playerContainer || shadow || document.body;
+
+        if (this._container) {
+            // 如果容器已创建但挂载目标更新，自动迁移至播放器内部
+            if (!this._container.parentNode || (playerContainer && this._container.parentNode !== playerContainer)) {
+                mountTarget.appendChild(this._container);
+            }
+            return;
+        }
 
         const container = document.createElement('div');
         container.className = 'tm-debug-log-panel-container';
-        container.innerHTML = `
+
+        // 注入自包含内嵌样式，无论挂载在 Shadow DOM 内部还是外部宿主环境，样式 100% 绝对生效
+        const style = document.createElement('style');
+        style.textContent = debugStyles;
+        container.appendChild(style);
+
+        container.insertAdjacentHTML('beforeend', `
             <div class="tm-debug-log-pill" title="点击展开/收起 DEBUG 精简日志">
                 <span class="tm-debug-pill-icon">🐛</span>
                 <span class="tm-debug-pill-title">DEBUG 日志</span>
@@ -62,10 +82,9 @@ export class DebugLogPanel {
                     <div class="tm-debug-log-empty">暂无调试日志</div>
                 </div>
             </div>
-        `;
+        `);
 
-        container.style.zIndex = '2147483647';
-        document.body.appendChild(container);
+        mountTarget.appendChild(container);
         this._container = container;
         this._bindEvents();
     }
@@ -190,6 +209,11 @@ export class DebugLogPanel {
 
         // 更新状态文字
         if (this._container) {
+            const playerContainer = document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
+            if (playerContainer && this._container.parentNode !== playerContainer) {
+                playerContainer.appendChild(this._container);
+            }
+
             const statusEl = this._container.querySelector('#tm-debug-status-text');
             if (statusEl) {
                 statusEl.textContent = entry.text.slice(0, 24) + (entry.text.length > 24 ? '...' : '');

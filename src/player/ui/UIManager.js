@@ -51,16 +51,28 @@ export class UIManager {
         this.sidebarPosBtn = null;       // 侧栏位置切换按钮
         this.sidebarToggleBtn = null;    // 侧栏显示隐藏按钮
         
+        // 屏幕方向状态
+        this.isLandscape = typeof window !== 'undefined' ? (window.innerWidth > window.innerHeight) : false;
+
         // 侧边栏布局状态
         const state = this.playerCore.options.playerState;
-        this.isSidebarHidden = state ? state.settings.sidebarHidden : false;
         this.sidebarPosition = state ? state.settings.sidebarPosition : 'right';
+        this._userManuallyToggledLandscapeSidebar = false;
+
+        // 严格遵循业务准则设定初始显隐：
+        // 1. 竖屏模式：默认展示评论区，且坚决不支持关闭
+        // 2. 横屏 < 1024px：默认不展示评论区 (纯净全屏观影)
+        // 3. PC 横屏 >= 1024px：默认展示评论区 (根据用户保存偏好或默认显示)
+        if (!this.isLandscape) {
+            this.isSidebarHidden = false;
+        } else if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+            this.isSidebarHidden = true;
+        } else {
+            this.isSidebarHidden = state ? state.settings.sidebarHidden : false;
+        }
         
         // 窗口和安全区
         this.safeArea = { top: 44, bottom: 34 };  // 默认安全区域值
-        
-        // 屏幕方向状态
-        this.isLandscape = typeof window !== 'undefined' ? window.innerWidth > window.innerHeight : false;
         
         // 控制界面状态
         this.controlsVisible = true;
@@ -227,12 +239,8 @@ export class UIManager {
      * 创建遮罩和容器
      */
     createOverlayAndContainer() {
-        const maxAllowedHeight = window.innerHeight * 0.8;
-        const defaultHeight = Math.min(window.innerWidth * (4/5), maxAllowedHeight);
-        const defaultMinHeight = Math.min(window.innerWidth * (9/16), maxAllowedHeight);
-
         this.overlay = createOverlayElement();
-        this.container = createContainerElement(defaultHeight, defaultMinHeight);
+        this.container = createContainerElement();
         
         console.log('[UIManager] Container element created:', this.container);
         console.log('[UIManager] createOverlayAndContainer finished.');
@@ -243,6 +251,9 @@ export class UIManager {
      */
     createPlayerContainer() {
         this.playerContainer = createPlayerContainerElement(this.isSidebarHidden, this.sidebarPosition);
+        const handPos = this.playerCore?.options?.playerState?.settings?.singleHandPosition || 'right';
+        this.playerContainer.classList.toggle('tm-hand-left', handPos === 'left');
+        this.playerContainer.classList.toggle('tm-hand-right', handPos !== 'left');
         console.log('[UIManager] Player container created:', this.playerContainer);
     }
 
@@ -497,51 +508,18 @@ export class UIManager {
         this.handleContainer = handleContainer;
         this.handle = handle;
 
-        // 悬停效果
-        this.handle.addEventListener('mouseenter', () => {
-            this.handle.style.opacity = '1';
-            this.handle.style.backgroundColor = 'hsla(var(--shadcn-foreground) / 0.8)';
-        });
-
-        this.handle.addEventListener('mouseleave', () => {
-            if (!this.isDraggingHandle) {
-                this.handle.style.opacity = '0.5';
-                this.handle.style.backgroundColor = 'hsla(var(--shadcn-foreground) / 0.6)';
-            }
-        });
-
-        // 添加拖动时的 grabbing 光标
+        // 触觉反馈 (交互状态与视觉样式由 CSS :hover, :active, .dragging 纯粹接管)
         this.handle.addEventListener('mousedown', () => { 
-            this.handle.style.cursor = 'grabbing'; 
-            // 添加震动反馈
             if (window.navigator.vibrate) {
                 window.navigator.vibrate(5);
             }
         });
-        
-        // 鼠标松开或移出手柄时恢复 grab
-        document.addEventListener('mouseup', () => { 
-            if (!this.isDraggingHandle) {
-                this.handle.style.cursor = 'grab'; 
-            }
-        });
 
-        // 添加触摸事件处理
         this.handle.addEventListener('touchstart', () => {
-            this.handle.style.opacity = '1';
-            this.handle.style.backgroundColor = 'hsla(var(--shadcn-foreground) / 0.8)';
-            // 添加震动反馈
             if (window.navigator.vibrate) {
                 window.navigator.vibrate(5);
             }
         }, { passive: true });
-
-        this.handle.addEventListener('touchend', () => {
-            if (!this.isDraggingHandle) {
-                this.handle.style.opacity = '0.5';
-                this.handle.style.backgroundColor = 'hsla(var(--shadcn-foreground) / 0.6)';
-            }
-        });
     }
 
     /**
@@ -599,7 +577,8 @@ export class UIManager {
     /**
      * 更新侧栏控制按钮 (位置与显隐按钮) 的可见性
      * - 当 showCommentsSection 为 false 时完全隐藏
-     * - 侧栏位置切换按钮 (sidebarPosBtn) 仅在 PC 大屏横屏分栏模式 (isLandscape && innerWidth >= 930 且未隐藏侧栏) 下显示
+     * - 侧栏显隐切换按钮 (sidebarToggleBtn)：仅在横屏模式下显示；竖屏坚决隐藏 (不支持关闭)
+     * - 侧栏位置切换按钮 (sidebarPosBtn)：仅在 PC 大屏横屏分栏模式 (isLandscape && innerWidth >= 1024 且未隐藏侧栏) 下显示
      * - 在所有竖屏模式 (手机、iPad) 及小屏横屏下坚决隐藏
      */
     updateSidebarButtonsVisibility() {
@@ -607,11 +586,13 @@ export class UIManager {
         const showCommentsSection = state?.settings?.showCommentsSection ?? true;
 
         if (this.sidebarToggleBtn) {
-            this.sidebarToggleBtn.style.display = showCommentsSection ? 'flex' : 'none';
+            // 竖屏下坚决不显示（不支持关闭）；仅横屏模式下允许切换显隐
+            const shouldShowToggle = showCommentsSection && this.isLandscape;
+            this.sidebarToggleBtn.style.display = shouldShowToggle ? 'flex' : 'none';
         }
 
         if (this.sidebarPosBtn) {
-            const isPcLandscape = this.isLandscape && window.innerWidth >= 930;
+            const isPcLandscape = this.isLandscape && window.innerWidth >= 1024;
             const shouldShowPosBtn = showCommentsSection && isPcLandscape && !this.isSidebarHidden;
             this.sidebarPosBtn.style.display = shouldShowPosBtn ? 'flex' : 'none';
         }
@@ -690,9 +671,61 @@ export class UIManager {
     }
 
     /**
+     * 响应式屏幕形态评估与侧栏显隐状态自适应机
+     * 严格遵守规则：
+     * 1. 竖屏 (Portrait): 默认展示评论区，且坚决不支持关闭；
+     * 2. 横屏 < 1024px: 默认隐藏评论区 (纯净观影)；
+     * 3. PC 横屏 >= 1024px: 默认展示侧边栏 (双分栏模式)。
+     */
+    evaluateSidebarVisibilityOnLayout() {
+        const isLandscapeNow = typeof window !== 'undefined' ? (window.innerWidth > window.innerHeight) : false;
+        const width = typeof window !== 'undefined' ? window.innerWidth : 1024;
+        this.isLandscape = isLandscapeNow;
+
+        if (!this.isLandscape) {
+            // 竖屏模式：默认展示评论区，且坚决不支持关闭！
+            this.isSidebarHidden = false;
+            if (this.playerContainer) {
+                this.playerContainer.classList.remove('tm-sidebar-hidden');
+            }
+        } else {
+            // 横屏模式
+            if (width < 1024) {
+                // 横屏 < 1024px (手机/平板小屏横屏)：默认不要展示评论区 (纯净全屏观影)
+                if (!this._userManuallyToggledLandscapeSidebar) {
+                    this.isSidebarHidden = true;
+                    if (this.playerContainer) {
+                        this.playerContainer.classList.add('tm-sidebar-hidden');
+                    }
+                }
+            } else {
+                // PC 大屏横屏 >= 1024px：默认展示侧边栏
+                if (!this._userManuallyToggledLandscapeSidebar) {
+                    const saved = this.playerCore?.options?.playerState?.settings?.sidebarHidden ?? false;
+                    this.isSidebarHidden = saved;
+                    if (this.playerContainer) {
+                        this.playerContainer.classList.toggle('tm-sidebar-hidden', this.isSidebarHidden);
+                    }
+                }
+            }
+        }
+
+        // 统一更新按钮可见性与图标
+        this.updateSidebarButtonsVisibility();
+        this.updateSidebarToggleButtonIcon();
+    }
+
+    /**
      * 切换侧栏显示/隐藏
      */
     toggleSidebarVisibility() {
+        // 核心红线：竖屏模式下坚决不支持关闭/隐藏评论区！
+        if (!this.isLandscape) {
+            console.log('[UIManager] 竖屏模式不支持关闭评论区');
+            return;
+        }
+
+        this._userManuallyToggledLandscapeSidebar = true;
         this.isSidebarHidden = !this.isSidebarHidden;
         
         // 更新容器类名
@@ -727,13 +760,13 @@ export class UIManager {
             }
         }
         
-        // 动态调换按钮容器的挂载父节点，确保隐藏侧栏后按钮依然可用
+        // 维护顶栏结构一致性
         this.updateButtonContainerParent();
 
         // 统一更新侧栏按钮可见性 (PC 横屏下隐藏侧栏时同步隐藏位置切换按钮)
         this.updateSidebarButtonsVisibility();
 
-        // 触发竖屏容器高度与视频自适应重绘
+        // 触发自适应重绘
         this.updateContainerMinHeight();
         this.updateVideoAspectRatio();
         if (this.progressManager) {
@@ -741,84 +774,43 @@ export class UIManager {
             this.progressManager.updateCurrentTimeDisplay();
         }
         
-        // 保存状态
-        const state = this.playerCore.options.playerState;
-        if (state) {
-            state.updateSetting('sidebarHidden', this.isSidebarHidden);
+        // 仅在 >= 1024px 的 PC 大屏横屏模式下保存用户偏好到存储
+        if (this.isLandscape && window.innerWidth >= 1024) {
+            const state = this.playerCore.options.playerState;
+            if (state) {
+                state.updateSetting('sidebarHidden', this.isSidebarHidden);
+            }
         }
         
         console.log('[UIManager] 切换侧栏显示状态:', this.isSidebarHidden ? '隐藏' : '显示');
     }
 
     /**
-     * 动态调换按钮容器的挂载父节点，确保隐藏侧栏后按钮依然可见并可被点击
+     * 维护顶栏与标题的结构一致性 (顶栏始终稳固作为主容器直接子项，彻底消灭跨父节点拔插 DOM)
      */
     updateButtonContainerParent() {
         if (!this.buttonContainer) return;
         
-        const commentPanel = this.controlManager && this.controlManager.commentPanel;
-        const commentsPanelEl = commentPanel && commentPanel.commentsPanel;
-        const isPcLandscape = this.isLandscape && window.innerWidth >= 930;
-        
-        const targetParent = (commentsPanelEl && isPcLandscape && !this.isSidebarHidden)
-            ? commentsPanelEl
-            : this.playerContainer;
-        
-        // 动态调换标题与按钮容器的挂载逻辑：
-        // 在 PC 大屏横屏分栏模式下，标题独立悬浮在视频区，按钮栏移入评论区顶部；
-        // 在移动端与全屏观影模式下，标题收纳进统一 Flex 顶栏内部，保证自适应防重叠。
-        if (targetParent === commentsPanelEl) {
-            if (this.titleEl && this.titleEl.parentNode !== this.playerContainer) {
-                this.playerContainer.appendChild(this.titleEl);
-            }
-        } else {
-            if (this.titleEl && this.buttonContainer && this.titleEl.parentNode !== this.buttonContainer) {
-                if (this.topActionsContainer && this.buttonContainer.contains(this.topActionsContainer)) {
-                    this.buttonContainer.insertBefore(this.titleEl, this.topActionsContainer);
-                } else {
-                    this.buttonContainer.appendChild(this.titleEl);
-                }
+        // 确保标题稳定在顶栏内部居中 (左: closeBtn, 中: titleEl, 右: topActionsContainer)
+        if (this.titleEl && this.titleEl.parentNode !== this.buttonContainer) {
+            if (this.topActionsContainer && this.buttonContainer.contains(this.topActionsContainer)) {
+                this.buttonContainer.insertBefore(this.titleEl, this.topActionsContainer);
+            } else {
+                this.buttonContainer.appendChild(this.titleEl);
             }
         }
 
-        // 如果目标父节点相同，跳过
-        if (this.buttonContainer.parentNode === targetParent) {
-            this.buttonContainer.style.opacity = '1';
-            return;
-        }
-        
-        // 先淡出
-        this.buttonContainer.style.opacity = '0';
-        this.buttonContainer.style.transition = 'opacity 0.15s ease';
-        
-        // 在下一帧执行迁移
-        requestAnimationFrame(() => {
-            if (!this.buttonContainer) return;
-            
-            if (targetParent === commentsPanelEl) {
-                commentsPanelEl.insertBefore(this.buttonContainer, commentsPanelEl.firstChild);
-                console.log('[UIManager] 按钮容器挂载到评论区顶部');
+        // 确保顶栏稳定挂载在 playerContainer 顶部 (位于 container 之前)
+        if (this.playerContainer && this.buttonContainer.parentNode !== this.playerContainer) {
+            if (this.container && this.container.parentNode === this.playerContainer) {
+                this.playerContainer.insertBefore(this.buttonContainer, this.container);
             } else {
-                if (commentsPanelEl && commentsPanelEl.parentNode === this.playerContainer) {
-                    this.playerContainer.insertBefore(this.buttonContainer, commentsPanelEl);
-                } else {
-                    this.playerContainer.appendChild(this.buttonContainer);
-                }
-                console.log('[UIManager] 按钮容器挂载到主容器');
+                this.playerContainer.appendChild(this.buttonContainer);
             }
-            
-            // 迁移后在下一帧淡入
-            requestAnimationFrame(() => {
-                if (!this.buttonContainer) return;
-                this.buttonContainer.style.opacity = '1';
-                // 清理过渡样式
-                setTimeout(() => {
-                    if (this.buttonContainer) {
-                        this.buttonContainer.style.transition = '';
-                    }
-                }, 200);
-            });
-        });
+        }
+
+        this.buttonContainer.style.opacity = '1';
+        this.updateSidebarButtonsVisibility();
     }
     
     /**
@@ -912,8 +904,8 @@ export class UIManager {
                 const vv = window.visualViewport;
                 const keyboardHeight = Math.max(0, window.innerHeight - vv.height);
                 const playerContainer = this.playerContainer || document.querySelector('.tm-player-container');
-                const commentSubmitBar = document.querySelector('.tm-comment-submit-bar-wrapper');
-                const activeModal = document.querySelector('.tm-custom-modal') || document.querySelector('.tm-comment-tag-select-modal');
+                const commentSubmitBar = this.shadowRoot?.querySelector('.tm-comment-submit-bar-wrapper') || document.querySelector('.tm-comment-submit-bar-wrapper');
+                const activeModal = this.shadowRoot?.querySelector('.tm-custom-modal, .tm-comment-tag-select-modal') || document.querySelector('.tm-custom-modal, .tm-comment-tag-select-modal');
 
                 if (keyboardHeight > 100) {
                     if (playerContainer) playerContainer.classList.add('tm-ios-keyboard-open');
@@ -1089,8 +1081,8 @@ export class UIManager {
             this.isLandscape = isLandscapeNow;
             this.handleOrientationChange();
         } else {
-            // 无论方向是否变化，统一维护侧栏按钮可见性规则 (视口宽度可能变化)
-            this.updateSidebarButtonsVisibility();
+            // 无论方向是否变化，统一维护侧栏评估与按钮规则 (视口宽度可能变化)
+            this.evaluateSidebarVisibilityOnLayout();
         }
     }
     
@@ -1100,18 +1092,22 @@ export class UIManager {
     handleOrientationChange() {
         console.log('[UIManager] 屏幕方向变化:', this.isLandscape ? '横屏' : '竖屏');
         
+        // 重新评估侧栏显隐状态自适应机 (保证竖屏强制常驻，横屏 < 1024 默认隐藏)
+        this.evaluateSidebarVisibilityOnLayout();
+
         // 恢复或清除对应方向下的高度
         if (!this.isLandscape) {
             if (this.isSidebarHidden) {
-                this.container.style.minHeight = '0px';
-                this.container.style.height = '100%';
+                this.container.style.minHeight = '';
+                this.container.style.height = '';
             } else if (this.isCustomResizedPortrait && this.customHeightPortrait) {
                 this.container.style.height = this.customHeightPortrait;
                 console.log('[UIManager] 恢复用户手动调整的竖屏高度:', this.customHeightPortrait);
             }
         } else {
-            // 横屏高度由 CSS 样式控制，移除行内 height
+            // 横屏高度完全由 CSS 样式控制，清空行内 height 与 minHeight
             this.container.style.height = '';
+            this.container.style.minHeight = '';
         }
         
         // 方向变化时更新容器最小高度
@@ -1137,9 +1133,9 @@ export class UIManager {
             this.dragManager.restoreControlPanelPosition();
         }
         
-        // 横屏模式下自动隐藏控制界面（如果是手机横屏，即宽 < 930px），或显示并定时隐藏（PC大屏 >= 930px）
+        // 横屏模式下自动隐藏控制界面（如果是小屏横屏，即宽 < 1024px），或显示并定时隐藏（PC大屏 >= 1024px）
         if (this.isLandscape) {
-            if (window.innerWidth < 930) {
+            if (window.innerWidth < 1024) {
                 this.hideControls(true);
             } else {
                 this.showControls();
@@ -1155,11 +1151,8 @@ export class UIManager {
             }
         }
         
-        // 屏幕方向改变时同步调整按钮栏的挂载位置
+        // 维护顶栏结构
         this.updateButtonContainerParent();
-
-        // 统一更新侧边栏控制按钮可见性
-        this.updateSidebarButtonsVisibility();
     }
     
     /**
@@ -1176,50 +1169,24 @@ export class UIManager {
         const seekControlRow = controlButtons.querySelector('.tm-seek-control-row');
         const loopControlRow = controlButtons.querySelector('.tm-loop-control-row');
         const playbackControlRow = controlButtons.querySelector('.tm-playback-control-row');
-        
-        if (this.isLandscape) {
-            // 横屏模式下，显示所有控制行
-            if (progressRow) {
-                progressRow.style.display = 'flex';
-                progressRow.style.backgroundColor = 'transparent';
-            }
-            
-            if (seekControlRow) {
-                seekControlRow.style.display = 'flex';
-                seekControlRow.style.backgroundColor = 'transparent';
-            }
-            
-            if (loopControlRow) {
-                loopControlRow.style.display = 'flex';
-                loopControlRow.style.backgroundColor = 'transparent';
-            }
-            
-            if (playbackControlRow) {
-                playbackControlRow.style.display = 'flex';
-                playbackControlRow.style.backgroundColor = 'transparent';
-            }
-            
-            // 设置按钮也显示
-            if (this.settingsBtn) {
-                this.settingsBtn.style.display = 'flex';
-                this.settingsBtn.style.backgroundColor = 'hsla(var(--shadcn-secondary) / 0.3)';
-                this.settingsBtn.style.backdropFilter = 'blur(4px)';
-            }
-        } else {
-            // 竖屏模式下恢复默认显示
-            if (progressRow) progressRow.style.display = '';
-            if (seekControlRow) {
-                seekControlRow.style.display = '';
-            }
-            if (loopControlRow) loopControlRow.style.display = '';
-            if (playbackControlRow) playbackControlRow.style.display = '';
-            
-            // 恢复设置按钮样式
-            if (this.settingsBtn) {
-                this.settingsBtn.style.display = '';
-                this.settingsBtn.style.backgroundColor = '';
-                this.settingsBtn.style.backdropFilter = '';
-            }
+
+        // 统一尊重用户设置状态，彻底消灭伪动态行内样式覆盖
+        const settings = this.playerCore?.options?.playerState?.settings;
+        const showProgressBar = settings?.showProgressBar ?? true;
+        const showSeekControlRow = settings?.showSeekControlRow ?? true;
+        const showLoopControlRow = settings?.showLoopControlRow ?? true;
+        const showPlaybackControlRow = settings?.showPlaybackControlRow ?? true;
+
+        if (progressRow) progressRow.style.display = showProgressBar ? 'flex' : 'none';
+        if (seekControlRow) seekControlRow.style.display = showSeekControlRow ? 'flex' : 'none';
+        if (loopControlRow) loopControlRow.style.display = showLoopControlRow ? 'flex' : 'none';
+        if (playbackControlRow) playbackControlRow.style.display = showPlaybackControlRow ? 'flex' : 'none';
+
+        // 恢复设置按钮样式（纯由 CSS 掌控）
+        if (this.settingsBtn) {
+            this.settingsBtn.style.display = '';
+            this.settingsBtn.style.backgroundColor = '';
+            this.settingsBtn.style.backdropFilter = '';
         }
     }
     
@@ -1265,7 +1232,7 @@ export class UIManager {
             this.controlsHideTimerId = null;
         }
 
-        // 手机竖屏场景下：控制面板显示时 评论区与拖动手柄同步变暗
+        // 手机竖屏场景下：控制面板显示时 评论区与拖动手柄同步变暗，并还原舒展/用户定制视频高度
         if (!this.isLandscape) {
             const commentPanel = this.controlManager && this.controlManager.commentPanel;
             if (commentPanel && commentPanel.commentsPanel) {
@@ -1273,6 +1240,9 @@ export class UIManager {
             }
             if (this.handleContainer) {
                 this.handleContainer.classList.add('is-dimmed');
+            }
+            if (!this.isSidebarHidden) {
+                this.updatePortraitVideoHeight();
             }
         }
     }
@@ -1297,7 +1267,7 @@ export class UIManager {
         document.body.classList.add('controls-hidden');
         this.controlsVisible = false;
 
-        // 手机竖屏场景下：控制面板隐藏时评论区与手柄同步变亮 (解除变暗)
+        // 手机竖屏场景下：控制面板隐藏时评论区与手柄同步变亮 (解除变暗)，并临时缩小视频区域到自然比例
         if (!this.isLandscape) {
             const commentPanel = this.controlManager && this.controlManager.commentPanel;
             if (commentPanel && commentPanel.commentsPanel) {
@@ -1305,6 +1275,9 @@ export class UIManager {
             }
             if (this.handleContainer) {
                 this.handleContainer.classList.remove('is-dimmed');
+            }
+            if (!this.isSidebarHidden) {
+                this.updatePortraitVideoHeight();
             }
         }
     }
@@ -1353,52 +1326,75 @@ export class UIManager {
     }
 
     /**
-     * 更新视频容器的最小高度
+     * 计算视频真实物理比例对应的最小高度
+     * @returns {number}
      */
-    updateContainerMinHeight() {
-        if (!this.container || !this.targetVideo) return;
-        
-        // 横屏模式下不需要设置最小高度，CSS会处理
-        if (this.isLandscape) {
-            console.log('[UIManager] 横屏模式，使用CSS样式控制高度');
-            return;
-        }
-        
-        // 竖屏且侧栏隐藏（纯视频全屏模式）时，高度自适应填满屏幕，清空行内高度限制
-        if (this.isSidebarHidden) {
-            this.container.style.minHeight = '0px';
-            this.container.style.height = '100%';
-            console.log('[UIManager] 竖屏纯视频模式，容器高度自适应全屏');
-            return;
-        }
-        
+    getNaturalVideoHeight() {
         const maxAllowedHeight = window.innerHeight * 0.8;
-        let minHeight = window.innerWidth * (9/16); // 默认16:9比例
-        const videoWidth = this.targetVideo.videoWidth || this.targetVideo.naturalWidth || 0;
-        const videoHeight = this.targetVideo.videoHeight || this.targetVideo.naturalHeight || 0;
+        let naturalHeight = window.innerWidth * (9 / 16); // 默认 16:9
+        const videoWidth = this.targetVideo?.videoWidth || this.targetVideo?.naturalWidth || 0;
+        const videoHeight = this.targetVideo?.videoHeight || this.targetVideo?.naturalHeight || 0;
         if (videoWidth && videoHeight) {
-            minHeight = window.innerWidth * (videoHeight / videoWidth);
+            naturalHeight = window.innerWidth * (videoHeight / videoWidth);
         }
-        minHeight = Math.min(minHeight, maxAllowedHeight);
-        
-        this.container.style.minHeight = `${minHeight}px`;
-        
-        if (!this.isCustomResized) {
-            const defaultHeight = Math.min(window.innerWidth * (4/5), maxAllowedHeight);
-            this.container.style.height = `${defaultHeight}px`;
-            console.log('[UIManager] 自动更新容器高度为默认比例高度:', defaultHeight);
-        } else if (this.customHeightPortrait) {
-            const currentHeight = parseFloat(this.customHeightPortrait);
-            if (currentHeight < minHeight) {
-                this.container.style.height = `${minHeight}px`;
-                this.customHeightPortrait = `${minHeight}px`;
-            } else {
-                const clampedHeight = Math.min(currentHeight, maxAllowedHeight);
-                this.container.style.height = `${clampedHeight}px`;
+        return Math.round(Math.min(naturalHeight, maxAllowedHeight));
+    }
+
+    /**
+     * 计算控制态下的舒展/用户定制视频高度
+     * @returns {number}
+     */
+    getExpandedVideoHeight() {
+        const maxAllowedHeight = window.innerHeight * 0.8;
+        const minHeight = this.getNaturalVideoHeight();
+        if (this.customHeightPortrait) {
+            const current = parseFloat(this.customHeightPortrait);
+            if (!isNaN(current) && current >= minHeight) {
+                return Math.round(Math.min(current, maxAllowedHeight));
             }
         }
-        
-        console.log('[UIManager] 更新容器高度和最小高度:', this.container.style.height, minHeight);
+        const defaultHeight = Math.max(minHeight, Math.min(window.innerWidth * (4 / 5), maxAllowedHeight));
+        return Math.round(defaultHeight);
+    }
+
+    /**
+     * 响应式调度竖屏视频高度 (紧凑自然比例态 vs 展开舒展态)
+     */
+    updatePortraitVideoHeight() {
+        if (!this.container) return;
+
+        // 横屏模式或侧栏隐藏（纯视频全屏模式）时，容器高度完全由 CSS 规则（Grid 100% / Flex 100%）接管，清空所有行内高度与最小高度限制
+        if (this.isLandscape || this.isSidebarHidden) {
+            if (this.container.style.height || this.container.style.minHeight) {
+                this.container.style.height = '';
+                this.container.style.minHeight = '';
+            }
+            this.container.classList.remove('is-collapsed-ratio');
+            return;
+        }
+
+        const minHeight = this.getNaturalVideoHeight();
+        this.container.style.minHeight = `${minHeight}px`;
+
+        if (!this.controlsVisible) {
+            // 控制面板隐藏（用户浏览评论）：临时缩小视频区域到最小（物理原始比例）高度，最大化评论可视区域
+            this.container.style.height = `${minHeight}px`;
+            this.container.classList.add('is-collapsed-ratio');
+            console.log('[UIManager] 竖屏刷评论态：临时缩小视频高度到自然比例:', minHeight);
+        } else {
+            // 控制面板显示：平滑还原用户之前手动调整或默认舒展比例高度
+            const expandedHeight = this.getExpandedVideoHeight();
+            this.container.style.height = `${expandedHeight}px`;
+            this.container.classList.remove('is-collapsed-ratio');
+            console.log('[UIManager] 竖屏控制态：还原视频高度为舒展比例:', expandedHeight);
+        }
+    }
+
+    /**
+     * 更新视频容器的最小高度与自适应高度
+     */
+    updateContainerMinHeight() {
+        this.updatePortraitVideoHeight();
     }
 
     /**
@@ -1407,11 +1403,6 @@ export class UIManager {
     assembleDOM() {
         // 确保先将视频包装器添加到容器
         this.container.appendChild(this.videoWrapper);
-        
-        // 将标题加到播放器容器中 (居中置顶，防止在竖屏下被视频遮挡)
-        if (this.titleEl) {
-            this.playerContainer.appendChild(this.titleEl);
-        }
         
         // 创建顶部功能操作按键组 (右侧紧凑对齐，杜绝与居中标题物理重叠)
         this.topActionsContainer = document.createElement('div');
@@ -1431,13 +1422,16 @@ export class UIManager {
         }
         this.buttonContainer.appendChild(this.topActionsContainer);
         
-        // 将容器添加到播放器容器
+        // 1. 将全局统合顶栏挂载到主播放器容器顶部 (稳定独立拓扑)
+        this.playerContainer.appendChild(this.buttonContainer);
+
+        // 2. 将视频容器添加到播放器容器
         this.playerContainer.appendChild(this.container);
         
-        // 将手柄容器添加到播放器容器
+        // 3. 将手柄容器添加到播放器容器 (仅竖屏使用)
         this.playerContainer.appendChild(this.handleContainer);
         
-        // 将评论区挂载到播放器容器，并动态挂载按钮容器到正确的位置
+        // 4. 将评论区挂载到播放器容器 (纯粹侧栏/下栏)
         const commentPanel = this.controlManager && this.controlManager.commentPanel;
         if (commentPanel && commentPanel.commentsPanel) {
             this.playerContainer.appendChild(commentPanel.commentsPanel);
@@ -1449,10 +1443,10 @@ export class UIManager {
         }
         this.updateButtonContainerParent();
         
-        // 添加设置面板到播放器容器
+        // 5. 添加设置面板到播放器容器
         this.playerContainer.appendChild(this.settingsPanel);
         
-        // 挂载控制面板：优先挂载外层总组件 tm-control-panel (包含 tm-single-hand-gutter 与 tm-control-buttons)，兼容降级至 controlButtonsContainer
+        // 6. 挂载控制面板：优先挂载外层总组件 tm-control-panel (包含 tm-single-hand-gutter 与 tm-control-buttons)，兼容降级至 controlButtonsContainer
         const controlPanelEl = this.controlManager?.controlPanel || this.controlManager?.controlButtonsContainer;
         if (controlPanelEl) {
             this.playerContainer.appendChild(controlPanelEl);

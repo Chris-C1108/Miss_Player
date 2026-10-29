@@ -287,53 +287,61 @@
     transform: translateX(16px);
 }
 
-/* 播放速率切换按钮 */
+/* 播放速率切换按钮 (严格与左侧静音按键对称的 40px 正圆设计) */
 .tm-playback-rate-button {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0;
+    width: 40px;
     height: 40px;
-    width: auto;
-    min-width: 58px;
-    padding: 0 14px; /* 经典 Apple 优雅胶囊形态 */
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.85);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.2px;
+    min-width: 40px;
+    max-width: 40px;
+    padding: 0;
+    margin: 0;
     border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", -apple-system-subheadline, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.6px;
+    line-height: 1;
+    white-space: nowrap;
+    text-align: center;
     box-shadow: none;
     box-sizing: border-box;
-    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
     cursor: pointer;
-    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
 }
 
 .tm-playback-rate-button:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.22);
     color: #ffffff;
-    transform: scale(1.03);
+    transform: scale(1.04);
 }
 
 .tm-playback-rate-button:active {
+    background: rgba(255, 255, 255, 0.20);
     transform: scale(0.95);
-    background: rgba(255, 255, 255, 0.16);
 }
 
 .tm-playback-rate-button.fast {
     color: #ff9f0a;
-    border-color: rgba(255, 159, 10, 0.35);
-    background: rgba(255, 159, 10, 0.12);
+    border-color: rgba(255, 159, 10, 0.45);
+    background: rgba(255, 159, 10, 0.16);
+    box-shadow: 0 0 10px rgba(255, 159, 10, 0.3);
 }
 
 .tm-playback-rate-button.medium {
     color: #64d2ff;
-    border-color: rgba(100, 210, 255, 0.35);
-    background: rgba(100, 210, 255, 0.12);
+    border-color: rgba(100, 210, 255, 0.45);
+    background: rgba(100, 210, 255, 0.16);
+    box-shadow: 0 0 10px rgba(100, 210, 255, 0.3);
 }
 
 .tm-playback-rate-button.normal {

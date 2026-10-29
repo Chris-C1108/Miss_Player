@@ -66,101 +66,8 @@
     pointer-events: none; /* 遮罩层仅做纯视觉变暗渲染，不阻断下方子元素事件 */
 }
 
-/* 评论面板底部次要功能栏 (共X条评论、一键复制、过滤灌水) */
-.tm-comments-panel-action-bar {
-    position: relative;
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    height: calc(26px + env(safe-area-inset-bottom, 0px));
-    padding: 0 16px calc(0px + env(safe-area-inset-bottom, 0px)) 16px;
-    box-sizing: border-box;
-    background-color: rgba(10, 10, 12, 0.98);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    pointer-events: auto;
-    font-size: 0.72rem;
-    line-height: 1;
-    color: rgba(255, 255, 255, 0.45);
-    z-index: 9995;
-    white-space: nowrap;
-}
-
-.tm-comments-panel-action-bar .tm-action-bar-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 100%;
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.tm-comments-panel-action-bar .tm-action-bar-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 100%;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
-.tm-comments-panel-action-bar .tm-comment-count {
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.45);
-    line-height: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-}
-
-.tm-comment-copy-all-btn {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    color: rgba(255, 255, 255, 0.55);
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    cursor: pointer;
-    transition: background-color 0.15s, color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
-    outline: none;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-.tm-comment-copy-all-btn:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.12);
-}
-.tm-comment-copy-all-btn:active {
-    transform: scale(0.96);
-}
-
-.tm-comments-panel-action-bar .tm-comment-filter-label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
-    user-select: none;
-    color: rgba(255, 255, 255, 0.55);
-    font-size: 0.7rem;
-    line-height: 1;
-    transition: color 0.15s;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-.tm-comments-panel-action-bar .tm-comment-filter-label:hover {
-    color: #ffffff;
-}
-
 /* 圆形复选框全剧样式 */
-.tm-tag-checkbox,
-.tm-comment-filter-checkbox {
+.tm-tag-checkbox {
     appearance: none;
     -webkit-appearance: none;
     width: 18px;
@@ -232,17 +139,182 @@
     border-radius: 2px;
 }
 
-/* 评论区底部悬浮发表组件 [加号，文本框，发送按钮] */
+/* 评论区底部悬浮发表组件 [加号，文本框，发送按钮，收起] */
 .tm-comment-submit-bar-wrapper {
-    position: relative;
-    flex: 0 0 auto;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     width: 100%;
-    padding: 8px 16px max(10px, env(safe-area-inset-bottom, 10px)) 16px;
+    padding: 10px 16px max(12px, env(safe-area-inset-bottom, 12px)) 16px;
     box-sizing: border-box;
-    background: linear-gradient(to top, rgba(10, 10, 12, 0.98) 0%, rgba(10, 10, 12, 0.85) 60%, rgba(10, 10, 12, 0) 100%);
-    border-top: none;
+    background: rgba(14, 16, 22, 0.96);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
     z-index: 9998;
     pointer-events: auto !important;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+.tm-comment-submit-bar-wrapper.is-collapsed {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none !important;
+}
+.tm-comment-submit-bar-wrapper:not(.is-collapsed) {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto !important;
+}
+
+/* 评论区半透明遮罩 (点击收起发评浮动栏) */
+.tm-comment-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 9997;
+    opacity: 1;
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+}
+.tm-comment-backdrop.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+/* 评论区悬浮按钮组统一实色 Apple 质感设计 (FAB 发评圆钮 & 唤醒控制栏圆钮) */
+.tm-comment-fab-btn,
+.tm-show-controls-float-btn {
+    position: absolute;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: #1e2025 !important; /* 彻底实色，绝无透明度，杜绝底部内容穿透干扰 */
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    box-sizing: border-box;
+    pointer-events: auto;
+    z-index: 9996;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.15s,
+                box-shadow 0.2s,
+                left 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                right 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.2s ease;
+}
+
+.tm-comment-fab-btn::after,
+.tm-show-controls-float-btn::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    pointer-events: auto;
+}
+
+.tm-comment-fab-btn:hover,
+.tm-show-controls-float-btn:hover {
+    background-color: #2a2d35 !important;
+    color: #ffffff;
+    transform: scale(1.06);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+}
+
+.tm-comment-fab-btn:active,
+.tm-show-controls-float-btn:active {
+    transform: scale(0.92);
+}
+
+.tm-comment-fab-btn svg,
+.tm-show-controls-float-btn svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+/* 纵向层叠定位：发评按钮在下，唤醒控制栏按钮在上 */
+.tm-comment-fab-btn {
+    bottom: max(16px, env(safe-area-inset-bottom, 16px));
+}
+
+.tm-show-controls-float-btn {
+    bottom: max(68px, calc(68px + env(safe-area-inset-bottom, 0px)));
+    z-index: 9997;
+    display: none;
+}
+
+.tm-show-controls-float-btn svg path {
+    fill: currentColor !important;
+    stroke: none !important;
+}
+
+/* 竖屏模式：按钮跟随用户的左右手握持习惯进行横向调度 */
+/* 右手习惯 (默认靠右) */
+.tm-comment-fab-btn,
+.tm-show-controls-float-btn,
+.tm-player-container.tm-hand-right .tm-comment-fab-btn,
+.tm-player-container.tm-hand-right .tm-show-controls-float-btn,
+.tm-comments-panel.tm-hand-right .tm-comment-fab-btn,
+.tm-comments-panel.tm-hand-right .tm-show-controls-float-btn {
+    right: 16px;
+    left: auto;
+}
+
+/* 左手习惯 (靠左对齐) */
+.tm-player-container.tm-hand-left .tm-comment-fab-btn,
+.tm-player-container.tm-hand-left .tm-show-controls-float-btn,
+.tm-player-container.tm-single-hand-left .tm-comment-fab-btn,
+.tm-player-container.tm-single-hand-left .tm-show-controls-float-btn,
+.tm-comments-panel.tm-hand-left .tm-comment-fab-btn,
+.tm-comments-panel.tm-hand-left .tm-show-controls-float-btn {
+    left: 16px;
+    right: auto;
+}
+
+/* 发评抽屉激活时隐藏发评按钮 */
+.tm-comment-fab-btn.is-hidden,
+.tm-comments-panel.has-composer-open .tm-comment-fab-btn {
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none !important;
+}
+
+.tm-comment-close-bar-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    padding: 0;
+    outline: none;
+    margin-left: 2px;
+}
+.tm-comment-close-bar-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.18);
+}
+.tm-comment-close-bar-btn:active {
+    transform: scale(0.94);
 }
 
 .tm-floating-comment-panel {
@@ -1597,28 +1669,6 @@
     color: hsl(var(--shadcn-blue) / 0.8);
 }
 
-.tm-comment-copy-all-btn {
-    margin-left: 10px;
-    cursor: pointer;
-    background-color: hsla(var(--shadcn-muted) / 0.15);
-    border: 1px solid hsla(var(--shadcn-border) / 0.2);
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 10px;
-    font-weight: 600;
-    color: hsl(var(--shadcn-muted-foreground));
-    outline: none;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s;
-}
-.tm-comment-copy-all-btn:hover {
-    color: hsl(var(--shadcn-foreground));
-    background-color: hsla(var(--shadcn-muted) / 0.3);
-    border-color: hsla(var(--shadcn-border) / 0.4);
-}
-.tm-comment-copy-all-btn:active {
-    transform: scale(0.96);
-}
-
 /* 新增加载评论高亮闪烁效果 */
 @keyframes jcCardHighlightFlash {
     0% {
@@ -1640,77 +1690,18 @@
     }
 }
 
-/* 手机端右下角唤起控制面板的浮动按钮 */
-.tm-show-controls-float-btn {
-    position: absolute;
-    bottom: calc(96px + env(safe-area-inset-bottom, 0px)); /* 上移放置于发表栏（Send按钮）上方 */
-    right: 16px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(18, 18, 20, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.85);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    z-index: 9997;
-    cursor: pointer;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
-    padding: 0;
-    outline: none;
-    box-sizing: border-box;
-    pointer-events: auto;
-}
-.tm-show-controls-float-btn::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 50%;
-    pointer-events: auto;
-}
-.tm-show-controls-float-btn:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.06);
-}
-.tm-show-controls-float-btn:active {
-    transform: scale(0.96);
-}
-.tm-show-controls-float-btn svg {
-    height: 18px; /* 视觉高度适中，防止太大 */
-    width: auto;
-    display: block;
-    fill: none !important;
-}
-.tm-show-controls-float-btn svg path {
-    fill: currentColor !important;
-    stroke: none !important;
-}
-
-/* 仅在移动端（竖屏且非PC大屏模式）且控制面板隐藏时展示悬浮唤醒按钮 */
-body.controls-hidden .tm-show-controls-float-btn,
-.tm-player-container.controls-hidden .tm-show-controls-float-btn,
-:host(.controls-hidden) .tm-show-controls-float-btn {
-    display: flex !important;
-    animation: tm-float-btn-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes tm-float-btn-pop {
-    0% {
-        opacity: 0;
-        transform: scale(0.7);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1);
+/* 仅在移动端竖屏且控制面板隐藏时展示悬浮唤醒按钮，桌面横屏模式坚决隐藏 */
+@media screen and (orientation: portrait) {
+    body.controls-hidden .tm-show-controls-float-btn,
+    .tm-player-container.controls-hidden .tm-show-controls-float-btn,
+    :host(.controls-hidden) .tm-show-controls-float-btn {
+        display: flex !important;
+        animation: tm-float-btn-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 }
 
-@media screen and (orientation: landscape), screen and (min-width: 930px) {
+@media screen and (orientation: landscape), screen and (min-width: 1024px) {
+    .tm-show-controls-float-btn,
     body.controls-hidden .tm-show-controls-float-btn,
     .tm-player-container.controls-hidden .tm-show-controls-float-btn,
     :host(.controls-hidden) .tm-show-controls-float-btn {

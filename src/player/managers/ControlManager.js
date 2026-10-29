@@ -1,4 +1,5 @@
 import { formatTime, createRipple, playTapSound } from '../../utils/index.js';
+import { __ } from '../../constants/i18n.js';
 
 import { CommentPanel } from '../controls/CommentPanel.js';
 import { VolumeController } from '../controls/VolumeController.js';
@@ -297,7 +298,7 @@ export class ControlManager {
         const seekControlRow = this.seekController.createSeekControlRow();
         this.controlButtonsContainer.appendChild(seekControlRow);
 
-        // 4. 标签页导航行 (Tab-Style Marker Bar)
+        // 4. 标签页导航行 (Tab-Style Marker Bar: 二合一高维一体化操作胶囊)
         const loopControlRow = document.createElement('div');
         loopControlRow.className = 'tm-loop-control-row';
 
@@ -305,8 +306,18 @@ export class ControlManager {
         this.tabScrollContainer.className = 'tm-tab-scroll-container';
 
         this.tabAddBtn = document.createElement('div');
-        this.tabAddBtn.className = 'tm-tab-list-btn';
-        this.tabAddBtn.textContent = '☰';
+        this.tabAddBtn.className = 'tm-tab-actions-capsule tm-tab-list-btn';
+        this.tabAddBtn.setAttribute('role', 'group');
+        this.tabAddBtn.setAttribute('aria-label', __('highlights') || '高光片段操作');
+        this.tabAddBtn.innerHTML = `
+            <button type="button" class="tm-tab-capsule-item tm-tab-capsule-plus" title="${__('quickMark') || '快速打点当前时间'}">
+                <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 1v10M1 6h10"/></svg>
+            </button>
+            <div class="tm-tab-capsule-divider"></div>
+            <button type="button" class="tm-tab-capsule-item tm-tab-capsule-list" title="${__('highlights') || '高光列表管理'}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+        `;
 
         loopControlRow.appendChild(this.tabScrollContainer);
         loopControlRow.appendChild(this.tabAddBtn);

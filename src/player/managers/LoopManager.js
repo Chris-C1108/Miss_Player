@@ -117,31 +117,39 @@ export class LoopManager {
         // Render tab bar
         this.renderTabs();
 
-        // Bind list button
-        if (this.tabAddBtn && !this.tabQuickAddBtn && this.tabAddBtn.parentElement) {
-            const quickBtn = document.createElement('button');
-            quickBtn.className = 'tm-tab-quick-plus-btn';
-            quickBtn.innerHTML = '+';
-            quickBtn.title = __('quickMark') || '快速标记';
-            quickBtn.style.cssText = 'width: 28px; height: 28px; border-radius: 50%; background: hsla(var(--shadcn-primary) / 0.2); border: 1px solid hsla(var(--shadcn-primary) / 0.4); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; margin-right: 6px; flex-shrink: 0;';
-            quickBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (this.targetVideo) {
-                    this.draftTab.startTime = this.targetVideo.currentTime;
-                    this.renderTabs();
-                    setTimeout(() => {
-                        const selector = '.tm-draft-pill';
-                        const el = this.tabScrollContainer?.querySelector(selector);
-                        if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-                    }, 50);
-                }
-            });
-            this.tabAddBtn.parentElement.insertBefore(quickBtn, this.tabAddBtn);
-            this.tabQuickAddBtn = quickBtn;
-        }
-
+        // Bind Twin-Action Capsule events (快速打点 + 列表管理一体化胶囊)
         if (this.tabAddBtn) {
+            const plusBtn = this.tabAddBtn.querySelector('.tm-tab-capsule-plus');
+            if (plusBtn) {
+                plusBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (this.targetVideo) {
+                        this.draftTab.startTime = this.targetVideo.currentTime;
+                        this.draftTab.color = this._allocateDraftColor();
+                        this.renderTabs();
+                        if (window.navigator && window.navigator.vibrate) {
+                            window.navigator.vibrate(5);
+                        }
+                        setTimeout(() => {
+                            const selector = '.tm-draft-pill';
+                            const el = this.tabScrollContainer?.querySelector(selector);
+                            if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                        }, 50);
+                    }
+                });
+            }
+
+            const listBtn = this.tabAddBtn.querySelector('.tm-tab-capsule-list');
+            if (listBtn) {
+                listBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this._toggleBottomSheet();
+                });
+            }
+
+            // 兜底点击胶囊整体边框区域触发列表打开
             this.tabAddBtn.addEventListener('click', (e) => {
+                if (e.target.closest('.tm-tab-capsule-plus')) return;
                 e.stopPropagation();
                 this._toggleBottomSheet();
             });
@@ -239,31 +247,46 @@ export class LoopManager {
                 e.stopPropagation();
                 if (this.targetVideo) {
                     this.draftTab.startTime = this.targetVideo.currentTime;
+                    this.draftTab.color = this._allocateDraftColor();
                     this.renderTabs();
                 }
             });
             this.tabScrollContainer.appendChild(emptyWideBtn);
-            if (this.tabQuickAddBtn) this.tabQuickAddBtn.style.display = 'none';
             return;
-        } else {
-            if (this.tabQuickAddBtn) this.tabQuickAddBtn.style.display = 'flex';
         }
-
-        this.tabs.forEach(tab => {
-            const pill = (this.editingTabId === tab.id)
-                ? this._createEditPill(tab)
-                : this._createTabPill(tab);
-            this.tabScrollContainer.appendChild(pill);
-        });
 
         // 2. Make sure draftTab is initialized
         if (!this.draftTab) {
             this._resetDraftTab();
         }
 
-        // 3. Always append the draft tab (which is either a gray placeholder or an active draft capsule) at the end
+        const isDraftActive = this.draftTab && (this.draftTab.startTime !== null || this.draftTab.endTime !== null);
+        const draftStartTime = isDraftActive ? (this.draftTab.startTime ?? this.draftTab.endTime) : null;
+        let draftInserted = false;
+
         const draftPill = this._createDraftPill();
-        this.tabScrollContainer.appendChild(draftPill);
+
+        this.tabs.forEach(tab => {
+            const currentTabStartTime = (this.editingTabId === tab.id && this.editingTabCopy?.startTime !== null)
+                ? this.editingTabCopy.startTime
+                : tab.startTime;
+
+            // 当活跃草稿的起始时间戳早于当前切片的时间戳时，按照真实时序在当前切片前插入草稿胶囊
+            if (isDraftActive && !draftInserted && draftStartTime < currentTabStartTime) {
+                this.tabScrollContainer.appendChild(draftPill);
+                draftInserted = true;
+            }
+
+            const pill = (this.editingTabId === tab.id)
+                ? this._createEditPill(tab)
+                : this._createTabPill(tab);
+            this.tabScrollContainer.appendChild(pill);
+        });
+
+        // 若草稿尚未插入（时间戳在所有切片之后，或草稿为未打点的占位态），自然放置在序列末尾
+        if (!draftInserted) {
+            this.tabScrollContainer.appendChild(draftPill);
+        }
 
         this._updateActiveTabProgress();
     }
@@ -271,7 +294,7 @@ export class LoopManager {
     _createTabPill(tab) {
         if (!tab) return document.createElement('div');
         const index = this.tabs.findIndex(t => t && t.id === tab.id);
-        const color = index !== -1 ? this.tabColors[index % this.tabColors.length] : this.tabColors[0];
+        const color = tab.color || (index !== -1 ? this.tabColors[index % this.tabColors.length] : this.tabColors[0]);
 
         const pill = document.createElement('div');
         pill.className = 'tm-tab-pill';
@@ -415,10 +438,10 @@ export class LoopManager {
         const isPlaceholder = (this.draftTab.startTime === null && this.draftTab.endTime === null);
         const color = isPlaceholder 
             ? '0, 0%, 55%' 
-            : this.tabColors[this.tabs.length % this.tabColors.length];
+            : (this.draftTab.color || (this.draftTab.color = this._allocateDraftColor()));
 
         const pill = document.createElement('div');
-        pill.className = 'tm-tab-pill draft';
+        pill.className = 'tm-tab-pill draft tm-draft-pill';
         if (isPlaceholder) {
             pill.classList.add('placeholder');
         }
@@ -445,6 +468,7 @@ export class LoopManager {
         const aContainer = this._createABTimeContainer('A', this.draftTab.startTime, false, () => {
             if (!this.targetVideo) return;
             this.draftTab.startTime = this.targetVideo.currentTime;
+            this.draftTab.color = this._allocateDraftColor();
             this.renderTabs();
             if (window.navigator.vibrate) window.navigator.vibrate(10);
         });
@@ -452,6 +476,7 @@ export class LoopManager {
         const bContainer = this._createABTimeContainer('B', this.draftTab.endTime, this.draftTab.startTime === null, () => {
             if (!this.targetVideo) return;
             this.draftTab.endTime = this.targetVideo.currentTime;
+            this.draftTab.color = this._allocateDraftColor();
             this.renderTabs();
             if (window.navigator.vibrate) window.navigator.vibrate(10);
         });
@@ -512,7 +537,7 @@ export class LoopManager {
 
     _createEditPill(tab) {
         const index = this.tabs.findIndex(t => t.id === tab.id);
-        const color = index !== -1 ? this.tabColors[index % this.tabColors.length] : this.tabColors[0];
+        const color = tab.color || (index !== -1 ? this.tabColors[index % this.tabColors.length] : this.tabColors[0]);
 
         const pill = document.createElement('div');
         pill.className = 'tm-tab-pill draft editing';
@@ -733,8 +758,59 @@ export class LoopManager {
             type: 'interval',
             startTime: null,
             endTime: null,
-            comment: ''
+            comment: '',
+            color: null
         };
+    }
+
+    /**
+     * 智能分配草稿与新切片专属色彩：
+     * 1. 探测其在时间轴上的物理插入位置 (insertIndex)
+     * 2. 提取其前后相邻胶囊的颜色，形成避让黑名单，确保绝对不与相邻胶囊撞色
+     * 3. 统计整个列表中各颜色的使用频次，优先挑选使用频次最少的莫兰迪色
+     */
+    _allocateDraftColor() {
+        const draftTime = this.draftTab?.startTime ?? this.draftTab?.endTime ?? 0;
+        return this._allocateColorForTime(draftTime);
+    }
+
+    _allocateColorForTime(timeInSec) {
+        const tabs = this.tabs || [];
+        let insertIndex = tabs.length;
+        for (let i = 0; i < tabs.length; i++) {
+            if (tabs[i] && tabs[i].startTime !== null && timeInSec < tabs[i].startTime) {
+                insertIndex = i;
+                break;
+            }
+        }
+
+        const prevColor = insertIndex > 0 ? (tabs[insertIndex - 1]?.color || this.tabColors[(insertIndex - 1) % this.tabColors.length]) : null;
+        const nextColor = insertIndex < tabs.length ? (tabs[insertIndex]?.color || this.tabColors[insertIndex % this.tabColors.length]) : null;
+
+        const colorUsage = {};
+        this.tabColors.forEach(c => { colorUsage[c] = 0; });
+        tabs.forEach((t, i) => {
+            const c = t?.color || this.tabColors[i % this.tabColors.length];
+            if (colorUsage[c] !== undefined) colorUsage[c]++;
+        });
+
+        let candidates = this.tabColors.filter(c => c !== prevColor && c !== nextColor);
+        if (candidates.length === 0) {
+            candidates = this.tabColors.filter(c => c !== prevColor);
+        }
+        if (candidates.length === 0) {
+            candidates = [...this.tabColors];
+        }
+
+        candidates.sort((a, b) => (colorUsage[a] || 0) - (colorUsage[b] || 0));
+        return candidates[0] || this.tabColors[0];
+    }
+
+    _ensureDraftColor() {
+        if (!this.draftTab) return;
+        if (!this.draftTab.color) {
+            this.draftTab.color = this._allocateDraftColor();
+        }
     }
 
     /**
@@ -793,6 +869,7 @@ export class LoopManager {
                 type: 'interval',
                 startTime,
                 endTime,
+                color: this._allocateColorForTime(startTime),
                 comment,
                 createdAt: now,
                 updatedAt: now
@@ -803,6 +880,7 @@ export class LoopManager {
                 id,
                 type: 'highlight',
                 startTime,
+                color: this._allocateColorForTime(startTime),
                 comment,
                 createdAt: now,
                 updatedAt: now
@@ -935,7 +1013,8 @@ export class LoopManager {
                     duration_sec: (this.draftTab.endTime && this.draftTab.startTime) ? Math.round(this.draftTab.endTime - this.draftTab.startTime) : 0
                 });
                 const now = Date.now();
-                const newTab = { ...this.draftTab, color: getRandomCapsuleColor(), comment, createdAt: now, updatedAt: now };
+                const tabColor = this.draftTab.color || this._allocateDraftColor();
+                const newTab = { ...this.draftTab, color: tabColor, comment, createdAt: now, updatedAt: now };
                 this.tabs.push(newTab);
                 if (newTab.id) {
                     SyncManager.clearTombstone('markers', newTab.id);
@@ -1470,7 +1549,7 @@ export class LoopManager {
         }
 
         this.tabs.forEach((tab, index) => {
-            const color = this.tabColors[index % this.tabColors.length];
+            const color = tab.color || this.tabColors[index % this.tabColors.length];
             const startPct = (tab.startTime / duration) * 100;
 
             if (tab.type === 'highlight') {
@@ -1594,11 +1673,12 @@ export class LoopManager {
         const now = Date.now();
         this.tabs = (Array.isArray(saved) ? saved : [])
             .filter(t => t && typeof t === 'object')
-            .map(t => {
+            .map((t, index) => {
                 const item = { ...t };
                 if (!item.id) item.id = this._generateId();
                 if (!item.createdAt) item.createdAt = now;
                 if (!item.updatedAt) item.updatedAt = item.createdAt;
+                if (!item.color) item.color = this.tabColors[index % this.tabColors.length];
                 return item;
             });
         this._sortTabs();

@@ -150,10 +150,42 @@ export class CommentComposer {
         const deselectAllBtn = container.querySelector('.tm-tag-deselect-all-btn');
         const closeBtn = container.querySelector('.tm-tag-select-close-btn');
         const tagSelectList = container.querySelector('.tm-tag-select-list');
+        const fabBtn = container.querySelector('.tm-comment-fab-btn');
+        const backdrop = container.querySelector('.tm-comment-backdrop');
+        const submitBarWrapper = container.querySelector('.tm-comment-submit-bar-wrapper');
+        const closeBarBtn = container.querySelector('.tm-comment-close-bar-btn');
 
         this.commentInput = commentInput;
         this.tagSelectModal = tagSelectModal;
         this.tagSelectList = tagSelectList;
+        this.fabBtn = fabBtn;
+        this.backdrop = backdrop;
+        this.submitBarWrapper = submitBarWrapper;
+        this.closeBarBtn = closeBarBtn;
+
+        // 绑定悬浮评论按钮 (FAB) 点击唤起输入底栏
+        if (fabBtn) {
+            fabBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openComposer();
+            });
+        }
+
+        // 绑定背景遮罩点击收起
+        if (backdrop) {
+            backdrop.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeComposer();
+            });
+        }
+
+        // 绑定输入栏右侧收起按钮
+        if (closeBarBtn) {
+            closeBarBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeComposer();
+            });
+        }
 
         // 阻止快捷键冒泡
         if (commentInput) {
@@ -173,6 +205,9 @@ export class CommentComposer {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     sendBtn?.click();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    this.closeComposer();
                 }
             });
         }
@@ -224,6 +259,41 @@ export class CommentComposer {
                 this.closeTagSelectModal();
             });
         }
+    }
+
+    /**
+     * 展开评论输入底栏抽屉
+     */
+    openComposer() {
+        if (!this.submitBarWrapper) return;
+        this.submitBarWrapper.classList.remove('is-collapsed');
+        if (this.backdrop) this.backdrop.classList.remove('is-hidden');
+        if (this.panel?.commentsPanel) {
+            this.panel.commentsPanel.classList.add('has-composer-open');
+        }
+        if (this.fabBtn) this.fabBtn.classList.add('is-hidden');
+        setTimeout(() => {
+            if (this.commentInput) {
+                this.commentInput.focus();
+            }
+        }, 80);
+    }
+
+    /**
+     * 收起评论输入底栏抽屉
+     */
+    closeComposer() {
+        if (!this.submitBarWrapper) return;
+        if (this.commentInput) {
+            this.commentInput.blur();
+        }
+        this.closeTagSelectModal();
+        this.submitBarWrapper.classList.add('is-collapsed');
+        if (this.backdrop) this.backdrop.classList.add('is-hidden');
+        if (this.panel?.commentsPanel) {
+            this.panel.commentsPanel.classList.remove('has-composer-open');
+        }
+        if (this.fabBtn) this.fabBtn.classList.remove('is-hidden');
     }
 
     toggleTagSelectModal() {
@@ -475,6 +545,7 @@ export class CommentComposer {
                 if (this.commentInput) this.commentInput.value = '';
                 this.selectedTagIds.clear();
                 this.closeTagSelectModal();
+                this.closeComposer();
                 setTimeout(() => this.panel.handleRetry(), 500);
             }
         } catch (err) {

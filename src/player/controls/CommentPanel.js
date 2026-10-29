@@ -3,7 +3,7 @@ import { SupabaseService } from '../../services/SupabaseService.js';
 import { SyncManager } from '../../sync/index.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
 import { __ } from '../../constants/i18n.js';
-import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK } from '../../constants/icons.js';
+import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT_WRITE } from '../../constants/icons.js';
 import { Toast, isMobile, createModal, copyToClipboard, getValue } from '../../utils/index.js';
 import { isSiteDomain, SITE_DOMAINS, checkSiteReachability } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
@@ -332,8 +332,6 @@ export class CommentPanel {
         this.commentsList = null;
         this.loadingElement = null;
         this.errorElement = null;
-        this.countSpan = null;
-        this.filterCheckbox = null;
 
         this.composer = new CommentComposer(this);
 
@@ -428,10 +426,6 @@ export class CommentPanel {
 
     updateDebugMode(debugMode) {
         if (!this.commentsPanel) return;
-        const actionBar = this.commentsPanel.querySelector('.tm-comments-panel-action-bar');
-        if (actionBar) {
-            actionBar.classList.toggle('is-hidden', !debugMode);
-        }
         const reportBtns = this.commentsPanel.querySelectorAll('.jc-report-btn');
         reportBtns.forEach(btn => {
             btn.classList.toggle('is-hidden', !debugMode);
@@ -1618,90 +1612,6 @@ export class CommentPanel {
         }
     }
 
-
-    handleCopyAllComments() {
-        const totalJable = this.jableComments ? this.jableComments.length : 0;
-        const totalJavlib = this.javlibComments ? this.javlibComments.length : 0;
-
-        if (totalJable === 0 && totalJavlib === 0) {
-            Toast('暂无已加载的评论可复制', 2000, 'warning');
-            return;
-        }
-
-        let lines = [];
-        lines.push(`=== Miss Player Comments Copy (AVCode: ${this.videoCode || 'unknown'}) ===`);
-        lines.push(`Exported At: ${new Date().toISOString()}`);
-        lines.push(`Total Jable Comments: ${totalJable}`);
-        lines.push(`Total JAVLibrary Comments: ${totalJavlib}`);
-        lines.push('');
-
-        lines.push('--- JABLE.TV COMMENTS ---');
-        if (totalJable === 0) {
-            lines.push('(No Jable comments loaded)');
-        } else {
-            this.jableComments.forEach((c, index) => {
-                lines.push(`[Comment #${index + 1}]`);
-                lines.push(`User: ${c.user}`);
-                lines.push(`Time: ${c.time}`);
-                lines.push(`Spam: ${c.spam.label}${c.spam.reason ? ` (Reason: ${c.spam.reason})` : ''}`);
-                lines.push(`Content:`);
-                lines.push(c.text);
-                lines.push('--------------------');
-            });
-        }
-        lines.push('');
-
-        lines.push('--- JAVLIBRARY COMMENTS ---');
-        if (totalJavlib === 0) {
-            lines.push('(No JAVLibrary comments loaded)');
-        } else {
-            this.javlibComments.forEach((c, index) => {
-                lines.push(`[Comment #${index + 1}]`);
-                lines.push(`User: ${c.user}`);
-                lines.push(`Time: ${c.time}`);
-                lines.push(`Spam: ${c.spam.label}${c.spam.reason ? ` (Reason: ${c.spam.reason})` : ''}`);
-                if (c.score) lines.push(`Score: ${c.score}`);
-                lines.push(`Content:`);
-                lines.push(c.text);
-                lines.push('--------------------');
-            });
-        }
-
-        const fullText = lines.join('\n');
-
-        const doCopy = (text) => {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                return navigator.clipboard.writeText(text);
-            } else {
-                return new Promise((resolve, reject) => {
-                    try {
-                        const textarea = document.createElement('textarea');
-                        textarea.value = text;
-                        textarea.style.position = 'fixed';
-                        textarea.style.opacity = '0';
-                        document.body.appendChild(textarea);
-                        textarea.select();
-                        const success = document.execCommand('copy');
-                        document.body.removeChild(textarea);
-                        if (success) resolve();
-                        else reject(new Error('execCommand failed'));
-                    } catch (e) {
-                        reject(e);
-                    }
-                });
-            }
-        };
-
-        doCopy(fullText).then(() => {
-            Toast('所有已加载的原始评论已复制到剪贴板！', 2000, 'success');
-        }).catch(err => {
-            console.error('Failed to copy all comments:', err);
-            Toast('复制失败，请尝试在浏览器控制台手动复制', 3000, 'error');
-        });
-    }
-
-
-
     /**
      * 显示 Cloudflare 防火墙验证提示
      */
@@ -1910,7 +1820,8 @@ export class CommentPanel {
             <div class="tm-comments-list tm-comments-panel-list"></div>
             <div class="tm-comment-loading tm-comments-panel-loading is-hidden"></div>
             <div class="tm-comment-error tm-comments-panel-error is-hidden"></div>
-            <div class="tm-comment-submit-bar-wrapper">
+            <div class="tm-comment-backdrop is-hidden"></div>
+            <div class="tm-comment-submit-bar-wrapper is-collapsed">
                 <div class="tm-comment-tag-select-modal">
                     <div class="tm-tag-select-header">
                         <div class="tm-tag-select-btn-group">
@@ -1925,42 +1836,21 @@ export class CommentPanel {
                     <button type="button" class="tm-comment-add-tag-btn" title="插入/勾选高光标签">
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>
                     </button>
-                    <input type="text" class="tm-comment-text-input" placeholder="Comment" />
+                    <input type="text" class="tm-comment-text-input" placeholder="发表评论..." />
                     <button type="button" class="tm-comment-send-btn">${__('send')}</button>
+                    <button type="button" class="tm-comment-close-bar-btn" title="收起">✕</button>
                 </div>
             </div>
-            <div class="tm-comments-panel-action-bar is-hidden">
-                <div class="tm-action-bar-left">
-                    <span class="tm-comment-count">共 0 条评论</span>
-                    <button class="tm-comment-copy-all-btn" title="一键复制所有加载的原始评论">${__('commentsCopyAll')}</button>
-                </div>
-                <div class="tm-action-bar-right">
-                    <label class="tm-comment-filter-label">
-                        <input type="checkbox" class="tm-comment-filter-checkbox" ${this.filterSpam ? 'checked' : ''} />
-                        <span>${__('commentsFilterSpam')}</span>
-                    </label>
-                </div>
-            </div>
+            <button class="tm-comment-fab-btn" title="发表评论">${ICON_COMMENT_WRITE}</button>
             <button class="tm-show-controls-float-btn" title="显示控制面板">${KEYBOARD}</button>
         `;
 
         this.commentsList = this.commentsPanel.querySelector('.tm-comments-list');
         this.loadingElement = this.commentsPanel.querySelector('.tm-comment-loading');
         this.errorElement = this.commentsPanel.querySelector('.tm-comment-error');
-        this.countSpan = this.commentsPanel.querySelector('.tm-comment-count');
-        this.filterCheckbox = this.commentsPanel.querySelector('.tm-comment-filter-checkbox');
 
         // 初始化评论提交栏及其事件
         this.initCommentSubmitBar();
-
-        // 绑定过滤器事件
-        if (this.filterCheckbox) {
-            this.filterCheckbox.addEventListener('change', (e) => {
-                this.filterSpam = e.target.checked;
-                this.applyFilter();
-                this.renderCommentsList();
-            });
-        }
 
         // 绑定显示控制面板的浮动键盘按钮事件
         const showControlsBtn = this.commentsPanel.querySelector('.tm-show-controls-float-btn');
@@ -1971,15 +1861,6 @@ export class CommentPanel {
                     this.uiManager.showControls();
                     this.uiManager.autoHideControls();
                 }
-            });
-        }
-
-        // 绑定复制按钮事件
-        const copyBtn = this.commentsPanel.querySelector('.tm-comment-copy-all-btn');
-        if (copyBtn) {
-            copyBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.handleCopyAllComments();
             });
         }
 
@@ -2181,7 +2062,7 @@ export class CommentPanel {
                 return;
             }
 
-            const isSubmitBar = !!e.target.closest('.jc-report-btn, .jc-save-all-btn, .jc-action-btn, .tm-comment-submit-bar-wrapper, .tm-comment-tag-select-modal, .tm-floating-comment-panel, .tm-comment-text-input, .tm-comment-add-tag-btn, .tm-comment-send-btn');
+            const isSubmitBar = !!e.target.closest('.jc-report-btn, .jc-save-all-btn, .jc-action-btn, .tm-comment-submit-bar-wrapper, .tm-comment-tag-select-modal, .tm-floating-comment-panel, .tm-comment-text-input, .tm-comment-add-tag-btn, .tm-comment-send-btn, .tm-comment-fab-btn, .tm-comment-backdrop, .tm-comment-close-bar-btn');
 
             // 只要评论区是变暗状态，任何触摸或点击都应立即激活它并移除 is-dimmed
             if (this.commentsPanel.classList.contains('is-dimmed')) {
@@ -2206,7 +2087,7 @@ export class CommentPanel {
                 this.setDimmed(false);
             } else if (controlsVisible) {
                 // 手机端：若控制面板已显示，用户点击/触摸评论区（排除时间戳链接与发表栏）时，立即隐藏控制面板以防止误触
-                if (!e.target.closest('.jc-time-link, .tm-comment-submit-bar-wrapper, .tm-comment-tag-select-modal, .tm-floating-comment-panel')) {
+                if (!e.target.closest('.jc-time-link, .tm-comment-submit-bar-wrapper, .tm-comment-tag-select-modal, .tm-floating-comment-panel, .tm-comment-fab-btn, .tm-comment-backdrop')) {
                     this.uiManager.hideControls(true);
                 }
             }
@@ -2663,17 +2544,6 @@ export class CommentPanel {
     updateCommentsCount() {
         this.totalCount = (this.jableTotalCount || 0) + (this.javlibTotalCount || 0) + (this.javdbTotalCount || 0);
         this.hasMore = (this.jableHasMore || false) || (this.javlibHasMore || false) || (this.javdbHasMore || false);
-        if (this.countSpan) {
-            let text = (__('commentsCount') || '共 {n} 条评论').replace('{n}', this.totalCount);
-            const loadings = [];
-            if (this.jableLoading) loadings.push('Jable');
-            if (this.javlibLoading) loadings.push('JAVLibrary');
-            if (this.javdbLoading) loadings.push('JavDB');
-            if (loadings.length > 0) {
-                text += ` (正在采集 ${loadings.join('/')}...)`;
-            }
-            this.countSpan.textContent = text;
-        }
     }
 
     renderCommentCard(c, isNew = false) {

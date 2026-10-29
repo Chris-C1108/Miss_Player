@@ -61,6 +61,14 @@ export class DragManager {
     startHandleDrag(e) {
         this.isDraggingHandle = true;
         this.handle.classList.add('dragging');
+        if (this.container) {
+            this.container.classList.add('is-resizing');
+        }
+
+        // 如果在收起态下拖拽手柄，立即唤醒控制栏
+        if (this.uiManager && !this.uiManager.controlsVisible) {
+            this.uiManager.showControls();
+        }
 
         // 添加震动反馈
         if (window.navigator && window.navigator.vibrate) {
@@ -112,6 +120,7 @@ export class DragManager {
         // 标记用户手动调整了高度，防止被 resize 事件重置，同时保存对应方向的高数值
         if (this.uiManager) {
             this.uiManager.isCustomResized = true;
+            this.uiManager.isCustomResizedPortrait = true;
             if (!this.uiManager.isLandscape) {
                 this.uiManager.customHeightPortrait = newHeight + 'px';
             } else {
@@ -129,6 +138,9 @@ export class DragManager {
         if (!this.isDraggingHandle) return;
         this.isDraggingHandle = false;
         this.handle.classList.remove('dragging');
+        if (this.container) {
+            this.container.classList.remove('is-resizing');
+        }
 
         // 移除监听器
         document.removeEventListener('touchmove', this.handleMoveHandler);

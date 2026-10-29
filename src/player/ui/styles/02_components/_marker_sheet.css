@@ -3,7 +3,7 @@
 .tm-tab-scroll-container {
     display: flex;
     flex: 1;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
     overflow-y: visible;
     padding-top: 4px;
@@ -12,12 +12,12 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     height: 38px;
-    padding: 0 44px 0 0;
+    padding: 0 4px 0 0;
     margin: 0;
     box-sizing: border-box;
     align-items: center;
-    mask-image: linear-gradient(to right, black calc(100% - 36px), transparent);
-    -webkit-mask-image: linear-gradient(to right, black calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to right, black calc(100% - 12px), transparent);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 12px), transparent);
     touch-action: pan-x;
 }
 .tm-tab-scroll-container::-webkit-scrollbar { display: none; }
@@ -204,27 +204,99 @@
     background-color: rgba(245, 158, 11, 0.25);
 }
 
-/* ===== List Button (fixed right) ===== */
+/* ===== 一体化操作组件 (Twin-Action Tool: 圆角矩形非对称高频大靶心设计) ===== */
+.tm-tab-actions-capsule,
 .tm-tab-list-btn {
     flex-shrink: 0;
-    width: 38px;
     height: 38px;
+    width: 64px;
+    min-width: 64px;
+    max-width: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    border-radius: 8px; /* 高级微圆角矩形，与左侧切片数据胶囊形成鲜明语义分层，且消除圆弧死角并最大化触控面积 */
+    background-color: #1e2025; /* 实色高级 Apple 材质，与控制区语言一致 */
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.15s,
+                border-color 0.15s,
+                box-shadow 0.15s;
+}
+
+.tm-tab-actions-capsule:hover,
+.tm-tab-list-btn:hover {
+    background-color: #262932;
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.tm-tab-actions-capsule:active,
+.tm-tab-list-btn:active {
+    transform: scale(0.96);
+}
+
+/* 胶囊内部非对称子按键：高频打点(左)占 60% 大靶心，低频列表(右)占 40% 紧凑入口 */
+.tm-tab-capsule-item {
+    appearance: none;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: inherit;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    background-color: hsla(var(--shadcn-secondary) / 0.5);
-    border: 1px solid hsla(var(--shadcn-border) / 0.15);
-    color: hsl(var(--shadcn-foreground));
-    font-size: 1.1rem;
     cursor: pointer;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s;
-    -webkit-tap-highlight-color: transparent;
+    padding: 0;
+    margin: 0;
+    transition: background-color 0.12s ease, color 0.12s ease;
 }
-.tm-tab-list-btn:active { transform: scale(0.96); }
-.tm-tab-list-btn:hover {
-    background-color: hsla(var(--shadcn-secondary) / 0.8);
-    border-color: hsla(var(--shadcn-border) / 0.3);
+
+/* 左侧：高频 Quick Mark 快速标记 (大靶心核心操作) */
+.tm-tab-capsule-plus {
+    flex: 1.5 1 0%;
+    color: #ffffff;
+}
+
+/* 右侧：低频高光列表管理 (紧凑入口) */
+.tm-tab-capsule-list {
+    flex: 1 1 0%;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.tm-tab-capsule-item:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+.tm-tab-capsule-item:active {
+    background-color: rgba(255, 255, 255, 0.22);
+}
+
+.tm-tab-capsule-item svg {
+    display: block;
+    pointer-events: none;
+}
+
+/* 中间微发丝半透分割线 */
+.tm-tab-capsule-divider {
+    width: 1px;
+    height: 16px;
+    background-color: rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+    pointer-events: none;
 }
 
 /* ===== Bottom Sheet / Tag Manager Popover Modal ===== */

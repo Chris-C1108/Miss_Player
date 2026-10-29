@@ -23,7 +23,11 @@ body.tm-player-active .navbar,
 body.tm-player-active #header-top,
 body.tm-player-active .top-nav,
 body.tm-player-active [class*=header--sticky],
-body.tm-player-active [class*=navbar-fixed] {
+body.tm-player-active [class*=navbar-fixed],
+body.tm-player-active #peach-jav-action,
+body.tm-player-active [id*="peach-jav"],
+body.tm-player-active aside[aria-label*="Peach"],
+body.tm-player-active aside[data-panel-mode] {
   display: none !important;
 }
 body.controls-hidden {

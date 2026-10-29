@@ -1,7 +1,7 @@
 /* ===== 顶部居中 DEBUG 精简日志面板样式 ===== */
 .tm-debug-log-panel-container {
     position: fixed;
-    top: 10px;
+    top: 48px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 999999;

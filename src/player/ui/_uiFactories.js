@@ -17,15 +17,11 @@ export function createOverlayElement() {
 
 /**
  * 创建视频容器元素
- * @param {number} defaultHeight 默认高度
- * @param {number} defaultMinHeight 默认最小高度
  * @returns {HTMLDivElement}
  */
-export function createContainerElement(defaultHeight, defaultMinHeight) {
+export function createContainerElement() {
     const container = document.createElement('div');
     container.className = 'tm-video-container';
-    container.style.height = `${defaultHeight}px`;
-    container.style.minHeight = `${defaultMinHeight}px`;
     return container;
 }
 
@@ -38,7 +34,6 @@ export function createContainerElement(defaultHeight, defaultMinHeight) {
 export function createPlayerContainerElement(isSidebarHidden, sidebarPosition) {
     const playerContainer = document.createElement('div');
     playerContainer.className = 'tm-player-container';
-    playerContainer.style.zIndex = '2000000001';
 
     if (isSidebarHidden) {
         playerContainer.classList.add('tm-sidebar-hidden');
@@ -60,16 +55,7 @@ export function createResizeHandleElement() {
     const handle = document.createElement('div');
     handle.className = 'tm-resize-handle';
 
-    handle.insertAdjacentHTML('beforeend', `
-        <div style="
-            position: absolute;
-            left: -10px;
-            right: -10px;
-            top: -15px;
-            bottom: -15px;
-            background: transparent;
-        "></div>
-    `);
+    handle.insertAdjacentHTML('beforeend', '<div class="tm-resize-handle-hitarea"></div>');
 
     handleContainer.appendChild(handle);
     return { handleContainer, handle };
@@ -163,17 +149,6 @@ export function createSpeedIndicatorElement(text = '3x') {
     const speedIndicator = document.createElement('div');
     speedIndicator.className = 'tm-speed-indicator';
     speedIndicator.textContent = text;
-    speedIndicator.style.position = 'absolute';
-    speedIndicator.style.top = '50%';
-    speedIndicator.style.left = '50%';
-    speedIndicator.style.transform = 'translate(-50%, -50%)';
-    speedIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    speedIndicator.style.color = 'white';
-    speedIndicator.style.padding = '8px 16px';
-    speedIndicator.style.borderRadius = '4px';
-    speedIndicator.style.fontSize = '24px';
-    speedIndicator.style.fontWeight = 'bold';
-    speedIndicator.style.zIndex = '9999';
     return speedIndicator;
 }
 
