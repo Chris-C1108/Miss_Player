@@ -90,6 +90,48 @@ export class SettingsManager {
         this.isAboutExpanded = true;
         this._latestUpdateInfo = null;
         this._isCheckingUpdate = false;
+
+        // 维护手风琴分段的展开状态（在页面生命周期及重绘中持久保持）
+        this._sectionExpandedStates = {
+            cloudSync: false,
+            about: false
+        };
+        this.aboutSection = null;
+        this.cloudSyncSection = null;
+    }
+
+    isSectionExpanded(sectionId, defaultVal = false) {
+        if (!this._sectionExpandedStates) {
+            this._sectionExpandedStates = { cloudSync: false, about: false };
+        }
+        return this._sectionExpandedStates[sectionId] !== undefined
+            ? this._sectionExpandedStates[sectionId]
+            : defaultVal;
+    }
+
+    setSectionExpanded(sectionId, isExpanded) {
+        if (!this._sectionExpandedStates) {
+            this._sectionExpandedStates = { cloudSync: false, about: false };
+        }
+        this._sectionExpandedStates[sectionId] = Boolean(isExpanded);
+    }
+
+    refreshAboutSection() {
+        if (this.aboutSection && typeof this.aboutSection.refresh === 'function') {
+            this.aboutSection.refresh();
+            return true;
+        }
+        this.createSettingsPanel();
+        return false;
+    }
+
+    refreshCloudSyncSection() {
+        if (this.cloudSyncSection && typeof this.cloudSyncSection.refresh === 'function') {
+            this.cloudSyncSection.refresh();
+            return true;
+        }
+        this.createSettingsPanel();
+        return false;
     }
 
     setManagers(managers = {}) {
@@ -158,8 +200,14 @@ export class SettingsManager {
     /**
      * 创建设置面板内容（根据截图分区设计）
      */
-    createSettingsPanel() {
+    createSettingsPanel(options = {}) {
         if (!this.settingsPanel) return;
+
+        // 记忆当前的滚动条位置
+        const previousScrollTop = (options && options.scrollTop !== undefined)
+            ? options.scrollTop
+            : (this.settingsPanel ? this.settingsPanel.scrollTop : 0);
+
         this.syncState();
         this.settingsPanel.innerHTML = "";
 
@@ -212,16 +260,46 @@ export class SettingsManager {
         // 分段 3: 实验特性与高级排错 (空闲时间追加)
         this._scheduler.register("beta", () => new BetaSection(this).getElement(), { defer: "idle" });
 
-        // 分段 4: 云端同步 WebDAV (视口感知延迟水合)
-        this._scheduler.register("cloudSync", () => new CloudSyncSection(this).getElement(), { defer: "viewport" });
+        // 分段 4: 云端同步 WebDAV (若已展开则同步挂载，保证物理高度并杜绝滚动跳变；未展开则延迟水合)
+        const isCloudSyncExpanded = this.isSectionExpanded('cloudSync', false);
+        if (isCloudSyncExpanded) {
+            this.cloudSyncSection = new CloudSyncSection(this);
+            container.appendChild(this.cloudSyncSection.getElement());
+        } else {
+            this._scheduler.register("cloudSync", () => {
+                this.cloudSyncSection = new CloudSyncSection(this);
+                return this.cloudSyncSection.getElement();
+            }, { defer: "viewport" });
+        }
 
-        // 分段 5: 关于与更新 (视口感知延迟水合)
-        this._scheduler.register("about", () => new AboutSection(this).getElement(), { defer: "viewport" });
+        // 分段 5: 关于与更新 (若已展开则同步挂载，保证物理高度并杜绝滚动跳变；未展开则延迟水合)
+        const isAboutExpanded = this.isSectionExpanded('about', false);
+        if (isAboutExpanded) {
+            this.aboutSection = new AboutSection(this);
+            container.appendChild(this.aboutSection.getElement());
+        } else {
+            this._scheduler.register("about", () => {
+                this.aboutSection = new AboutSection(this);
+                return this.aboutSection.getElement();
+            }, { defer: "viewport" });
+        }
 
         this.settingsPanel.appendChild(container);
 
         // 启动流式异步装配流水线
         this._scheduler.start();
+
+        // 恢复滚动条位置
+        if (previousScrollTop > 0) {
+            const restoreScroll = () => {
+                if (this.settingsPanel) {
+                    this.settingsPanel.scrollTop = previousScrollTop;
+                }
+            };
+            requestAnimationFrame(restoreScroll);
+            setTimeout(restoreScroll, 50);
+            setTimeout(restoreScroll, 180);
+        }
     }
 
     /**
@@ -707,7 +785,7 @@ export class SettingsManager {
                 if (nextVal === this.settings.updateChannel) return;
                 this.updateSetting('updateChannel', nextVal);
                 this._isCheckingUpdate = true;
-                this.createSettingsPanel();
+                this.refreshAboutSection();
                 try {
                     const res = await SleazyForkService.checkUpdate(true, nextVal);
                     this._latestUpdateInfo = res;
@@ -716,7 +794,7 @@ export class SettingsManager {
                     }
                 } catch (_) {} finally {
                     this._isCheckingUpdate = false;
-                    this.createSettingsPanel();
+                    this.refreshAboutSection();
                 }
             }
         });
@@ -857,7 +935,7 @@ export class SettingsManager {
                 Toast.show(err.message || __('fetchFailed') || '检查更新失败', 3000, 'error');
             } finally {
                 this._isCheckingUpdate = false;
-                this.createSettingsPanel();
+                this.refreshAboutSection();
             }
         });
 

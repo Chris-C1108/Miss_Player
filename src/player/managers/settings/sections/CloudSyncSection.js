@@ -5,9 +5,14 @@ import { __ } from '../../../../constants/i18n.js';
 export class CloudSyncSection {
     constructor(settingsManager) {
         this.sm = settingsManager;
-        this.isExpanded = false;
+        this.isExpanded = this.sm ? this.sm.isSectionExpanded('cloudSync', false) : false;
         this.element = document.createElement('div');
         this.element.className = 'tm-settings-group';
+        this._render();
+    }
+
+    refresh() {
+        this.isExpanded = this.sm ? this.sm.isSectionExpanded('cloudSync', true) : true;
         this._render();
     }
 
@@ -58,6 +63,9 @@ export class CloudSyncSection {
         headerRow.addEventListener('click', (e) => {
             e.stopPropagation();
             this.isExpanded = !this.isExpanded;
+            if (this.sm) {
+                this.sm.setSectionExpanded('cloudSync', this.isExpanded);
+            }
             bodyWrap.style.display = this.isExpanded ? 'block' : 'none';
             const arrow = metaDiv.querySelector('.tm-apple-accordion-arrow');
             if (arrow) arrow.classList.toggle('expanded', this.isExpanded);

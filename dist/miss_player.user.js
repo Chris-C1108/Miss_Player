@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.5
+// @version            5.7.6
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1242,7 +1242,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.5";
+		return "5.7.6";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4261,7 +4261,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.5";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.6";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -16975,9 +16975,13 @@
 	var CloudSyncSection = class {
 		constructor(settingsManager) {
 			this.sm = settingsManager;
-			this.isExpanded = false;
+			this.isExpanded = this.sm ? this.sm.isSectionExpanded("cloudSync", false) : false;
 			this.element = document.createElement("div");
 			this.element.className = "tm-settings-group";
+			this._render();
+		}
+		refresh() {
+			this.isExpanded = this.sm ? this.sm.isSectionExpanded("cloudSync", true) : true;
 			this._render();
 		}
 		_render() {
@@ -17015,6 +17019,7 @@
 			headerRow.addEventListener("click", (e) => {
 				e.stopPropagation();
 				this.isExpanded = !this.isExpanded;
+				if (this.sm) this.sm.setSectionExpanded("cloudSync", this.isExpanded);
 				bodyWrap.style.display = this.isExpanded ? "block" : "none";
 				const arrow = metaDiv.querySelector(".tm-apple-accordion-arrow");
 				if (arrow) arrow.classList.toggle("expanded", this.isExpanded);
@@ -17046,7 +17051,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.5";
+		return "5.7.6";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -17216,9 +17221,13 @@
 	var AboutSection = class {
 		constructor(settingsManager) {
 			this.sm = settingsManager;
-			this.isExpanded = false;
+			this.isExpanded = this.sm ? this.sm.isSectionExpanded("about", false) : false;
 			this.element = document.createElement("div");
 			this.element.className = "tm-settings-group";
+			this._render();
+		}
+		refresh() {
+			this.isExpanded = this.sm ? this.sm.isSectionExpanded("about", true) : true;
 			this._render();
 		}
 		_render() {
@@ -17258,6 +17267,7 @@
 			headerRow.addEventListener("click", (e) => {
 				e.stopPropagation();
 				this.isExpanded = !this.isExpanded;
+				if (this.sm) this.sm.setSectionExpanded("about", this.isExpanded);
 				bodyWrap.style.display = this.isExpanded ? "block" : "none";
 				const arrow = metaDiv.querySelector(".tm-apple-accordion-arrow");
 				if (arrow) arrow.classList.toggle("expanded", this.isExpanded);
@@ -17347,6 +17357,42 @@
 			this.isAboutExpanded = true;
 			this._latestUpdateInfo = null;
 			this._isCheckingUpdate = false;
+			this._sectionExpandedStates = {
+				cloudSync: false,
+				about: false
+			};
+			this.aboutSection = null;
+			this.cloudSyncSection = null;
+		}
+		isSectionExpanded(sectionId, defaultVal = false) {
+			if (!this._sectionExpandedStates) this._sectionExpandedStates = {
+				cloudSync: false,
+				about: false
+			};
+			return this._sectionExpandedStates[sectionId] !== void 0 ? this._sectionExpandedStates[sectionId] : defaultVal;
+		}
+		setSectionExpanded(sectionId, isExpanded) {
+			if (!this._sectionExpandedStates) this._sectionExpandedStates = {
+				cloudSync: false,
+				about: false
+			};
+			this._sectionExpandedStates[sectionId] = Boolean(isExpanded);
+		}
+		refreshAboutSection() {
+			if (this.aboutSection && typeof this.aboutSection.refresh === "function") {
+				this.aboutSection.refresh();
+				return true;
+			}
+			this.createSettingsPanel();
+			return false;
+		}
+		refreshCloudSyncSection() {
+			if (this.cloudSyncSection && typeof this.cloudSyncSection.refresh === "function") {
+				this.cloudSyncSection.refresh();
+				return true;
+			}
+			this.createSettingsPanel();
+			return false;
 		}
 		setManagers(managers = {}) {
 			if (managers.uiManager) this.uiManager = managers.uiManager;
@@ -17385,8 +17431,9 @@
 			if (state && state.settings) this.settings = state.settings;
 			else this.loadSettings();
 		}
-		createSettingsPanel() {
+		createSettingsPanel(options = {}) {
 			if (!this.settingsPanel) return;
+			const previousScrollTop = options && options.scrollTop !== void 0 ? options.scrollTop : this.settingsPanel ? this.settingsPanel.scrollTop : 0;
 			this.syncState();
 			this.settingsPanel.innerHTML = "";
 			if (this._scheduler) {
@@ -17421,10 +17468,30 @@
 			this._scheduler = new SettingsStreamScheduler(container, this);
 			this._scheduler.register("comments", () => new CommentsSection(this).getElement(), { defer: "idle" });
 			this._scheduler.register("beta", () => new BetaSection(this).getElement(), { defer: "idle" });
-			this._scheduler.register("cloudSync", () => new CloudSyncSection(this).getElement(), { defer: "viewport" });
-			this._scheduler.register("about", () => new AboutSection(this).getElement(), { defer: "viewport" });
+			if (this.isSectionExpanded("cloudSync", false)) {
+				this.cloudSyncSection = new CloudSyncSection(this);
+				container.appendChild(this.cloudSyncSection.getElement());
+			} else this._scheduler.register("cloudSync", () => {
+				this.cloudSyncSection = new CloudSyncSection(this);
+				return this.cloudSyncSection.getElement();
+			}, { defer: "viewport" });
+			if (this.isSectionExpanded("about", false)) {
+				this.aboutSection = new AboutSection(this);
+				container.appendChild(this.aboutSection.getElement());
+			} else this._scheduler.register("about", () => {
+				this.aboutSection = new AboutSection(this);
+				return this.aboutSection.getElement();
+			}, { defer: "viewport" });
 			this.settingsPanel.appendChild(container);
 			this._scheduler.start();
+			if (previousScrollTop > 0) {
+				const restoreScroll = () => {
+					if (this.settingsPanel) this.settingsPanel.scrollTop = previousScrollTop;
+				};
+				requestAnimationFrame(restoreScroll);
+				setTimeout(restoreScroll, 50);
+				setTimeout(restoreScroll, 180);
+			}
 		}
 		_createSectionHeader(titleText, collapsible = false, isExpanded = true, onToggle = null) {
 			const sectionHeaderWrap = document.createElement("div");
@@ -17810,14 +17877,14 @@
 					if (nextVal === this.settings.updateChannel) return;
 					this.updateSetting("updateChannel", nextVal);
 					this._isCheckingUpdate = true;
-					this.createSettingsPanel();
+					this.refreshAboutSection();
 					try {
 						const res = await SleazyForkService.checkUpdate(true, nextVal);
 						this._latestUpdateInfo = res;
 						if (res && res.hasUpdate) Toast.show(`${__("updateFound") || "发现新版本"}: v${res.latestVersion}`, 3500, "success");
 					} catch (_) {} finally {
 						this._isCheckingUpdate = false;
-						this.createSettingsPanel();
+						this.refreshAboutSection();
 					}
 				}
 			});
@@ -17926,7 +17993,7 @@
 					Toast.show(err.message || __("fetchFailed") || "检查更新失败", 3e3, "error");
 				} finally {
 					this._isCheckingUpdate = false;
-					this.createSettingsPanel();
+					this.refreshAboutSection();
 				}
 			});
 			checkRow.style.display = "flex";
