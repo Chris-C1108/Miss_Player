@@ -28,9 +28,14 @@ try {
     // 允许规则库未就绪时的兜底运行
 }
 
-const DEFAULT_SUPABASE_URL = process.env.SUPABASE_URL || 'https://daosvqbphybjsgvpujil.supabase.co';
-const DEFAULT_SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_OFt3-Uybbs8x0JOrbkucRg_v58QaxVJ';
+const DEFAULT_SUPABASE_URL = process.env.SUPABASE_URL;
+const DEFAULT_SUPABASE_KEY = process.env.SUPABASE_KEY;
 const STATE_FILE = path.join(ROOT_DIR, '.extract_llm_state.json');
+
+if (!DEFAULT_SUPABASE_URL || !DEFAULT_SUPABASE_KEY) {
+    console.error('[Extractor Error] 缺少必要环境变量 SUPABASE_URL / SUPABASE_KEY，已终止运行以避免使用硬编码凭据。');
+    process.exit(1);
+}
 
 const args = process.argv.slice(2);
 function getArg(flag, fallback = null) {
