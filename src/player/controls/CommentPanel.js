@@ -229,6 +229,7 @@ export class CommentPanel {
         this.comments = [];          // 所有采集的原始评论数据（向下兼容）
         this.filteredComments = [];  // 经过过滤后的评论数据（向下兼容）
         this.renderedCommentIds = new Set(); // 追踪已渲染的评论ID以实现新加载高亮
+        this.expandedCommentIds = new Set(); // 追踪已手动展开全文的评论ID，杜绝新评论加载时折叠
         this.totalCount = 0;         // 评论总数
         this.currentPage = 1;
         this.hasMore = false;
@@ -1323,7 +1324,11 @@ export class CommentPanel {
         } finally {
             site.loading = false;
             this.applyFilter();
-            this.renderCommentsList();
+            // 优先尝试就地增量更新，杜绝重新渲染导致已展开卡片被折叠
+            const patched = this.patchSectionContent(siteKey);
+            if (!patched) {
+                this.renderCommentsList();
+            }
             this.updateCommentsCount();
             this.hideBottomLoader(siteKey);
         }
@@ -2023,8 +2028,19 @@ export class CommentPanel {
             if (toggleExpandBtn && collapsible) {
                 e.stopPropagation();
                 const isCollapsed = collapsible.getAttribute('data-collapsed') === 'true';
-                collapsible.setAttribute('data-collapsed', isCollapsed ? 'false' : 'true');
-                toggleExpandBtn.textContent = isCollapsed ? (__('commentsCollapse') || '收起') : (__('commentsExpand') || '展开');
+                const nextCollapsed = !isCollapsed;
+                collapsible.setAttribute('data-collapsed', nextCollapsed ? 'true' : 'false');
+                toggleExpandBtn.textContent = nextCollapsed ? (__('commentsExpand') || '展开') : (__('commentsCollapse') || '收起');
+
+                const card = collapsible.closest('.jc-card');
+                const cid = card ? card.getAttribute('data-id') : null;
+                if (cid) {
+                    if (!nextCollapsed) {
+                        this.expandedCommentIds.add(cid);
+                    } else {
+                        this.expandedCommentIds.delete(cid);
+                    }
+                }
                 return;
             }
 
@@ -2036,6 +2052,11 @@ export class CommentPanel {
                     const btn = collapsible.querySelector('.jc-toggle-expand-btn');
                     if (btn) {
                         btn.textContent = __('commentsCollapse') || '收起';
+                    }
+                    const card = collapsible.closest('.jc-card');
+                    const cid = card ? card.getAttribute('data-id') : null;
+                    if (cid) {
+                        this.expandedCommentIds.add(cid);
                     }
                     return;
                 }
@@ -2400,6 +2421,99 @@ export class CommentPanel {
     triggerLoadMoreJavlib() { return this.triggerLoadMore('javlib'); }
     triggerLoadMoreJavdb() { return this.triggerLoadMore('javdb'); }
 
+    /**
+     * 智能增量更新指定数据源的评论列表（杜绝已展开卡片被重新渲染折叠与滚动跳变）
+     * @param {string} siteKey - 数据源键名
+     * @returns {boolean} - 是否成功增量更新
+     */
+    patchSectionContent(siteKey) {
+        const site = this.sites[siteKey];
+        if (!site || !this.commentsList) return false;
+
+        const sectionEl = this.commentsList.querySelector(`#tm-comment-section-${siteKey}`);
+        if (!sectionEl) return false;
+
+        const bodyEl = sectionEl.querySelector('.tm-comment-section-body');
+        if (!bodyEl) return false;
+
+        // 更新 Badge 状态文本
+        const badgeEl = sectionEl.querySelector('.tm-comment-status-badge');
+        if (badgeEl) {
+            const badgeTextMap = {
+                'loading': '采集中...',
+                'unreachable': '不可达',
+                'not_found': '未收录',
+                'empty': '暂无评论',
+                'cf_shield': '需验证',
+                'mobile_unsupported': '移动端浏览器不支持',
+                'loaded': `共 ${site.filteredComments.length}${site.hasMore ? '+' : ''} 条`
+            };
+            badgeEl.textContent = badgeTextMap[site.status] || '';
+            badgeEl.className = `tm-comment-status-badge tm-status-badge-${site.status}`;
+        }
+
+        if (site.status === 'loaded') {
+            const existingCards = bodyEl.querySelectorAll('.jc-card[data-id]');
+            const existingIdSet = new Set();
+            existingCards.forEach(card => {
+                const id = card.getAttribute('data-id');
+                if (id) existingIdSet.add(id);
+            });
+
+            // 检查新增的评论卡片
+            const newComments = site.filteredComments.filter(c => !existingIdSet.has(c.id));
+            if (existingCards.length > 0 && newComments.length > 0) {
+                // 清理旧的 end-marker 与 loader
+                const endMarker = bodyEl.querySelector('.tm-comment-end-marker');
+                if (endMarker) endMarker.remove();
+                const bottomLoader = bodyEl.querySelector('.tm-comment-bottom-loader');
+                if (bottomLoader) bottomLoader.remove();
+
+                // 增量追加新卡片
+                const fragment = document.createDocumentFragment();
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newComments.map(c => this.renderCommentCard(c, true)).join('');
+                while (tempDiv.firstChild) {
+                    fragment.appendChild(tempDiv.firstChild);
+                }
+                bodyEl.appendChild(fragment);
+
+                // 根据加载态追加状态指示器
+                if (site.loading) {
+                    const loader = document.createElement('div');
+                    loader.className = 'tm-comment-bottom-loader tm-comment-loader-graphic';
+                    loader.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+                    bodyEl.appendChild(loader);
+                } else if (!site.hasMore) {
+                    const endDiv = document.createElement('div');
+                    endDiv.className = 'tm-comment-end-marker';
+                    endDiv.textContent = '-end-';
+                    bodyEl.appendChild(endDiv);
+                }
+
+                // 记录新渲染卡片 ID
+                newComments.forEach(c => this.renderedCommentIds.add(c.id));
+                setTimeout(() => this.updateFavoriteBadges(), 50);
+                return true;
+            } else if (existingCards.length > 0 && newComments.length === 0) {
+                // 内容无新卡片，仅更新加载器与 end-marker 状态
+                const existingBottomLoader = bodyEl.querySelector('.tm-comment-bottom-loader');
+                if (!site.loading && existingBottomLoader) {
+                    existingBottomLoader.remove();
+                }
+                if (!site.hasMore && !bodyEl.querySelector('.tm-comment-end-marker')) {
+                    const endDiv = document.createElement('div');
+                    endDiv.className = 'tm-comment-end-marker';
+                    endDiv.textContent = '-end-';
+                    bodyEl.appendChild(endDiv);
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     renderSectionHtml(siteKey) {
         const site = this.sites[siteKey];
         if (!site) return '';
@@ -2576,9 +2690,12 @@ export class CommentPanel {
     }
 
     renderCommentCard(c, isNew = false) {
-        const textClass = c.text && c.text.length > 200 ? 'jc-body-text jc-body-text--collapsible' : 'jc-body-text';
-        const expandBtn = c.text && c.text.length > 200
-            ? `<div class="jc-body-text-content">${c.textHtml}</div><button class="jc-toggle-expand-btn">${__('commentsExpand') || '展开'}</button>`
+        const isLongText = c.text && c.text.length > 200;
+        const isExpanded = this.expandedCommentIds ? (this.expandedCommentIds.has(c.id) || Boolean(c.isExpanded)) : false;
+        const textClass = isLongText ? 'jc-body-text jc-body-text--collapsible' : 'jc-body-text';
+        const expandBtnText = isExpanded ? (__('commentsCollapse') || '收起') : (__('commentsExpand') || '展开');
+        const expandBtn = isLongText
+            ? `<div class="jc-body-text-content">${c.textHtml}</div><button class="jc-toggle-expand-btn">${expandBtnText}</button>`
             : c.textHtml;
 
         const userHtml = c.userUrl
@@ -2586,7 +2703,7 @@ export class CommentPanel {
             : `<span class="jc-u">${c.user}</span>`;
 
         const scoreHtml = c.score ? `<span class="jc-score-badge" title="评分">${c.score}</span>` : '';
-                const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
+        const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
         const isConverted = !!c.countdownApplied;
         const btnText = isConverted 
             ? (__('commentCountdownReverted') || '显示倒数') 
@@ -2616,7 +2733,7 @@ export class CommentPanel {
                             ${spamHtml}
                         </div>
                     </div>
-                    <div class="${textClass}" ${c.text && c.text.length > 200 ? 'data-collapsed="true"' : ''}>
+                    <div class="${textClass}" ${isLongText ? `data-collapsed="${isExpanded ? 'false' : 'true'}"` : ''}>
                         ${expandBtn}
                     </div>
                 </div>
@@ -2647,7 +2764,19 @@ export class CommentPanel {
         };
 
         if (this.commentsList) {
-            // 保存每个 Section 体内部的 scrollTop 状态
+            // 自动同步当前 DOM 中所有实际处于展开状态的评论 ID，杜绝刷新列表时折叠
+            if (!this.expandedCommentIds) {
+                this.expandedCommentIds = new Set();
+            }
+            const expandedEls = this.commentsList.querySelectorAll('.jc-card[data-id] .jc-body-text--collapsible[data-collapsed="false"]');
+            expandedEls.forEach(el => {
+                const card = el.closest('.jc-card');
+                const cid = card ? card.getAttribute('data-id') : null;
+                if (cid) this.expandedCommentIds.add(cid);
+            });
+
+            // 保存外层滚动容器与各 Section 体内部的滚动状态
+            const listScrollTop = this.commentsList.scrollTop;
             const scrollPositions = {};
             const sectionBodies = this.commentsList.querySelectorAll('.tm-comment-section-body');
             sectionBodies.forEach(body => {
@@ -2675,7 +2804,7 @@ export class CommentPanel {
             // 绑定登录 Badge 点击事件
             this.bindAllLoginBadgeEvents();
 
-            // 还原各板块内部滚动高度
+            // 还原各板块内部滚动高度与外层列表滚动高度
             const newSectionBodies = this.commentsList.querySelectorAll('.tm-comment-section-body');
             newSectionBodies.forEach(body => {
                 const section = body.closest('.tm-comment-section');
@@ -2683,6 +2812,9 @@ export class CommentPanel {
                     body.scrollTop = scrollPositions[section.id];
                 }
             });
+            if (listScrollTop > 0) {
+                this.commentsList.scrollTop = listScrollTop;
+            }
 
             // 绑定去手动验证链接的点击事件
             const verifyLinks = this.commentsList.querySelectorAll('.tm-comments-verify-link');

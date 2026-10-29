@@ -78,6 +78,11 @@ runStep('执行 VolumeController 与静音重置策略单元测试', () => {
     execSync('node tests/volume.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.2 评论展开与增量更新状态单元测试
+runStep('执行评论展开状态与增量更新单元测试', () => {
+    execSync('node tests/comment-expansion.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

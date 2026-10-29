@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.6
+// @version            5.7.7
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1242,7 +1242,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.6";
+		return "5.7.7";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4261,7 +4261,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.6";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.7";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -9356,6 +9356,7 @@
 			this.comments = [];
 			this.filteredComments = [];
 			this.renderedCommentIds = new Set();
+			this.expandedCommentIds = new Set();
 			this.totalCount = 0;
 			this.currentPage = 1;
 			this.hasMore = false;
@@ -10175,7 +10176,7 @@
 			} finally {
 				site.loading = false;
 				this.applyFilter();
-				this.renderCommentsList();
+				if (!this.patchSectionContent(siteKey)) this.renderCommentsList();
 				this.updateCommentsCount();
 				this.hideBottomLoader(siteKey);
 			}
@@ -10674,9 +10675,15 @@
 				const collapsible = e.target.closest(".jc-body-text--collapsible");
 				if (toggleExpandBtn && collapsible) {
 					e.stopPropagation();
-					const isCollapsed = collapsible.getAttribute("data-collapsed") === "true";
-					collapsible.setAttribute("data-collapsed", isCollapsed ? "false" : "true");
-					toggleExpandBtn.textContent = isCollapsed ? __("commentsCollapse") || "收起" : __("commentsExpand") || "展开";
+					const nextCollapsed = !(collapsible.getAttribute("data-collapsed") === "true");
+					collapsible.setAttribute("data-collapsed", nextCollapsed ? "true" : "false");
+					toggleExpandBtn.textContent = nextCollapsed ? __("commentsExpand") || "展开" : __("commentsCollapse") || "收起";
+					const card = collapsible.closest(".jc-card");
+					const cid = card ? card.getAttribute("data-id") : null;
+					if (cid) {
+						if (!nextCollapsed) this.expandedCommentIds.add(cid);
+						else this.expandedCommentIds.delete(cid);
+					}
 					return;
 				}
 				if (collapsible && !interactive) {
@@ -10685,6 +10692,9 @@
 						collapsible.setAttribute("data-collapsed", "false");
 						const btn = collapsible.querySelector(".jc-toggle-expand-btn");
 						if (btn) btn.textContent = __("commentsCollapse") || "收起";
+						const card = collapsible.closest(".jc-card");
+						const cid = card ? card.getAttribute("data-id") : null;
+						if (cid) this.expandedCommentIds.add(cid);
 						return;
 					}
 				}
@@ -10939,6 +10949,72 @@
 		triggerLoadMoreJavdb() {
 			return this.triggerLoadMore("javdb");
 		}
+		patchSectionContent(siteKey) {
+			const site = this.sites[siteKey];
+			if (!site || !this.commentsList) return false;
+			const sectionEl = this.commentsList.querySelector(`#tm-comment-section-${siteKey}`);
+			if (!sectionEl) return false;
+			const bodyEl = sectionEl.querySelector(".tm-comment-section-body");
+			if (!bodyEl) return false;
+			const badgeEl = sectionEl.querySelector(".tm-comment-status-badge");
+			if (badgeEl) {
+				badgeEl.textContent = {
+					"loading": "采集中...",
+					"unreachable": "不可达",
+					"not_found": "未收录",
+					"empty": "暂无评论",
+					"cf_shield": "需验证",
+					"mobile_unsupported": "移动端浏览器不支持",
+					"loaded": `共 ${site.filteredComments.length}${site.hasMore ? "+" : ""} 条`
+				}[site.status] || "";
+				badgeEl.className = `tm-comment-status-badge tm-status-badge-${site.status}`;
+			}
+			if (site.status === "loaded") {
+				const existingCards = bodyEl.querySelectorAll(".jc-card[data-id]");
+				const existingIdSet = new Set();
+				existingCards.forEach((card) => {
+					const id = card.getAttribute("data-id");
+					if (id) existingIdSet.add(id);
+				});
+				const newComments = site.filteredComments.filter((c) => !existingIdSet.has(c.id));
+				if (existingCards.length > 0 && newComments.length > 0) {
+					const endMarker = bodyEl.querySelector(".tm-comment-end-marker");
+					if (endMarker) endMarker.remove();
+					const bottomLoader = bodyEl.querySelector(".tm-comment-bottom-loader");
+					if (bottomLoader) bottomLoader.remove();
+					const fragment = document.createDocumentFragment();
+					const tempDiv = document.createElement("div");
+					tempDiv.innerHTML = newComments.map((c) => this.renderCommentCard(c, true)).join("");
+					while (tempDiv.firstChild) fragment.appendChild(tempDiv.firstChild);
+					bodyEl.appendChild(fragment);
+					if (site.loading) {
+						const loader = document.createElement("div");
+						loader.className = "tm-comment-bottom-loader tm-comment-loader-graphic";
+						loader.innerHTML = "<div class=\"dot\"></div><div class=\"dot\"></div><div class=\"dot\"></div>";
+						bodyEl.appendChild(loader);
+					} else if (!site.hasMore) {
+						const endDiv = document.createElement("div");
+						endDiv.className = "tm-comment-end-marker";
+						endDiv.textContent = "-end-";
+						bodyEl.appendChild(endDiv);
+					}
+					newComments.forEach((c) => this.renderedCommentIds.add(c.id));
+					setTimeout(() => this.updateFavoriteBadges(), 50);
+					return true;
+				} else if (existingCards.length > 0 && newComments.length === 0) {
+					const existingBottomLoader = bodyEl.querySelector(".tm-comment-bottom-loader");
+					if (!site.loading && existingBottomLoader) existingBottomLoader.remove();
+					if (!site.hasMore && !bodyEl.querySelector(".tm-comment-end-marker")) {
+						const endDiv = document.createElement("div");
+						endDiv.className = "tm-comment-end-marker";
+						endDiv.textContent = "-end-";
+						bodyEl.appendChild(endDiv);
+					}
+					return true;
+				}
+			}
+			return false;
+		}
 		renderSectionHtml(siteKey) {
 			const site = this.sites[siteKey];
 			if (!site) return "";
@@ -11080,8 +11156,11 @@
 			this.hasMore = this.jableHasMore || this.javlibHasMore || this.javdbHasMore || false;
 		}
 		renderCommentCard(c, isNew = false) {
-			const textClass = c.text && c.text.length > 200 ? "jc-body-text jc-body-text--collapsible" : "jc-body-text";
-			const expandBtn = c.text && c.text.length > 200 ? `<div class="jc-body-text-content">${c.textHtml}</div><button class="jc-toggle-expand-btn">${__("commentsExpand") || "展开"}</button>` : c.textHtml;
+			const isLongText = c.text && c.text.length > 200;
+			const isExpanded = this.expandedCommentIds ? this.expandedCommentIds.has(c.id) || Boolean(c.isExpanded) : false;
+			const textClass = isLongText ? "jc-body-text jc-body-text--collapsible" : "jc-body-text";
+			const expandBtnText = isExpanded ? __("commentsCollapse") || "收起" : __("commentsExpand") || "展开";
+			const expandBtn = isLongText ? `<div class="jc-body-text-content">${c.textHtml}</div><button class="jc-toggle-expand-btn">${expandBtnText}</button>` : c.textHtml;
 			const userHtml = c.userUrl ? `<a href="${c.userUrl}" target="_blank" class="jc-u">${c.user}</a>` : `<span class="jc-u">${c.user}</span>`;
 			const scoreHtml = c.score ? `<span class="jc-score-badge" title="评分">${c.score}</span>` : "";
 			const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
@@ -11105,7 +11184,7 @@
                             ${spamHtml}
                         </div>
                     </div>
-                    <div class="${textClass}" ${c.text && c.text.length > 200 ? "data-collapsed=\"true\"" : ""}>
+                    <div class="${textClass}" ${isLongText ? `data-collapsed="${isExpanded ? "false" : "true"}"` : ""}>
                         ${expandBtn}
                     </div>
                 </div>
@@ -11127,6 +11206,13 @@
 				javlib: this.renderSectionHtml("javlib")
 			};
 			if (this.commentsList) {
+				if (!this.expandedCommentIds) this.expandedCommentIds = new Set();
+				this.commentsList.querySelectorAll(".jc-card[data-id] .jc-body-text--collapsible[data-collapsed=\"false\"]").forEach((el) => {
+					const card = el.closest(".jc-card");
+					const cid = card ? card.getAttribute("data-id") : null;
+					if (cid) this.expandedCommentIds.add(cid);
+				});
+				const listScrollTop = this.commentsList.scrollTop;
 				const scrollPositions = {};
 				this.commentsList.querySelectorAll(".tm-comment-section-body").forEach((body) => {
 					const section = body.closest(".tm-comment-section");
@@ -11160,6 +11246,7 @@
 					const section = body.closest(".tm-comment-section");
 					if (section && section.id && scrollPositions[section.id] !== void 0) body.scrollTop = scrollPositions[section.id];
 				});
+				if (listScrollTop > 0) this.commentsList.scrollTop = listScrollTop;
 				this.commentsList.querySelectorAll(".tm-comments-verify-link").forEach((link) => {
 					link.addEventListener("click", () => {
 						if (typeof GM_setValue === "function") {
@@ -17051,7 +17138,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.6";
+		return "5.7.7";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
