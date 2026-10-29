@@ -12516,6 +12516,7 @@
 			this._touchStartX = 0;
 			this._touchStartY = 0;
 			this._isSwipeTracking = false;
+			this._isFromCapsuleScroll = false;
 			this._pointerStartX = 0;
 			this._pointerStartY = 0;
 			this._isPointerTracking = false;
@@ -12626,6 +12627,7 @@
 				this._touchStartX = touch.clientX;
 				this._touchStartY = touch.clientY;
 				this._isSwipeTracking = true;
+				this._isFromCapsuleScroll = Boolean(target?.closest?.(".tm-tab-scroll-container"));
 			};
 			this._swipeTouchMoveHandler = (e) => {
 				if (!this._isSwipeTracking) return;
@@ -12633,6 +12635,11 @@
 				if (!touch) return;
 				const dx = touch.clientX - this._touchStartX;
 				const dy = touch.clientY - this._touchStartY;
+				if (this._isFromCapsuleScroll) {
+					if (Math.abs(dx) >= Math.abs(dy)) return;
+					if (dy > 15 && dy > Math.abs(dx) * 1.5 && e.cancelable) e.preventDefault();
+					return;
+				}
 				if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) || dy > 10 && dy > Math.abs(dx)) {
 					if (e.cancelable) e.preventDefault();
 				}
@@ -12655,6 +12662,7 @@
 				this._pointerStartX = e.clientX;
 				this._pointerStartY = e.clientY;
 				this._isPointerTracking = true;
+				this._isFromCapsuleScroll = Boolean(e.target?.closest?.(".tm-tab-scroll-container"));
 			};
 			this._swipePointerUpHandler = (e) => {
 				if (!this._isPointerTracking) return;
@@ -12679,13 +12687,14 @@
 		}
 		_triggerSwipeAction(dx, dy) {
 			const minDistance = 35;
-			if (dy >= minDistance && dy > Math.abs(dx) * 1.1) {
+			if (dy >= minDistance && dy > Math.abs(dx) * 1.2) {
 				this._preventClickUntil = Date.now() + 350;
 				if (window.navigator?.vibrate) window.navigator.vibrate(5);
 				const uiManager = this.uiManager || this.playerCore?.uiManager;
 				if (uiManager) uiManager.hideControls(true);
 				return;
 			}
+			if (this._isFromCapsuleScroll) return;
 			if (this.isBetaEnabled && Math.abs(dx) >= minDistance && Math.abs(dx) > Math.abs(dy) * 1.2) {
 				this._preventClickUntil = Date.now() + 350;
 				playTapSound();

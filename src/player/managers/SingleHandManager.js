@@ -31,6 +31,7 @@ export class SingleHandManager {
         this._touchStartX = 0;
         this._touchStartY = 0;
         this._isSwipeTracking = false;
+        this._isFromCapsuleScroll = false;
         this._pointerStartX = 0;
         this._pointerStartY = 0;
         this._isPointerTracking = false;
@@ -181,6 +182,8 @@ export class SingleHandManager {
             this._touchStartX = touch.clientX;
             this._touchStartY = touch.clientY;
             this._isSwipeTracking = true;
+            // 记录触摸是否源自高光胶囊横向滚动区 (保留胶囊原生横向滚动，坚决不被左右手切换干扰)
+            this._isFromCapsuleScroll = Boolean(target?.closest?.('.tm-tab-scroll-container'));
         };
 
         this._swipeTouchMoveHandler = (e) => {
@@ -189,7 +192,20 @@ export class SingleHandManager {
             if (!touch) return;
             const dx = touch.clientX - this._touchStartX;
             const dy = touch.clientY - this._touchStartY;
-            // 水平滑移主导或明显的向下手势时阻止原生滚动，保持纯净手势交互
+
+            // 核心保护：若触摸源自胶囊横向滚动区，水平滑动必须完全放行给浏览器原生滚动，绝不阻止默认行为
+            if (this._isFromCapsuleScroll) {
+                if (Math.abs(dx) >= Math.abs(dy)) {
+                    return;
+                }
+                // 仅在明确向下轻扫时才拦截原生纵向滚动
+                if (dy > 15 && dy > Math.abs(dx) * 1.5 && e.cancelable) {
+                    e.preventDefault();
+                }
+                return;
+            }
+
+            // 在控制面板其他非胶囊滚动区：水平滑移主导或明显的向下手势时阻止原生滚动，保持纯净手势交互
             if ((Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) || (dy > 10 && dy > Math.abs(dx))) {
                 if (e.cancelable) {
                     e.preventDefault();
@@ -217,6 +233,7 @@ export class SingleHandManager {
             this._pointerStartX = e.clientX;
             this._pointerStartY = e.clientY;
             this._isPointerTracking = true;
+            this._isFromCapsuleScroll = Boolean(e.target?.closest?.('.tm-tab-scroll-container'));
         };
 
         this._swipePointerUpHandler = (e) => {
@@ -248,7 +265,7 @@ export class SingleHandManager {
         const minDistance = 35; // 触发手势的最小位移阈值
 
         // 1. 下滑手势：在控制面板上向下滑动，快速收起/隐藏控制面板
-        if (dy >= minDistance && dy > Math.abs(dx) * 1.1) {
+        if (dy >= minDistance && dy > Math.abs(dx) * 1.2) {
             this._preventClickUntil = Date.now() + 350;
             if (window.navigator?.vibrate) {
                 window.navigator.vibrate(5);
@@ -260,7 +277,12 @@ export class SingleHandManager {
             return;
         }
 
-        // 2. 左右滑动手势：在开启 Beta 单手模式时，向左/向右滑动切换左手/右手布局
+        // 核心保护：若手势源自胶囊横向滚动区，绝对不触发左右手模式切换，保证胶囊横向浏览 100% 顺畅自由
+        if (this._isFromCapsuleScroll) {
+            return;
+        }
+
+        // 2. 左右滑动手势：在开启 Beta 单手模式时，向左/向右滑动切换左手/右手布局 (仅在非胶囊滚动区触发)
         if (this.isBetaEnabled && Math.abs(dx) >= minDistance && Math.abs(dx) > Math.abs(dy) * 1.2) {
             this._preventClickUntil = Date.now() + 350;
             playTapSound();
