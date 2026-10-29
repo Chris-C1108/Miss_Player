@@ -1545,6 +1545,7 @@ body.controls-hidden .tm-player-container:not([class*="tm-controls-docked-"]) .t
 .tm-player-container.controls-hidden:not([class*="tm-controls-docked-"]) .tm-control-panel,
 :host(.controls-hidden) .tm-player-container:not([class*="tm-controls-docked-"]) .tm-control-panel {
     opacity: 0 !important;
+    visibility: hidden;
     transform: translateY(20px) !important;
     pointer-events: none !important;
 }

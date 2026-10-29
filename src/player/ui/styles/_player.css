@@ -2471,7 +2471,17 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 /* 控制界面隐藏时的动画效果 - 更新选择器 */
 body.controls-hidden .tm-player-container .tm-control-buttons, .tm-player-container.controls-hidden .tm-control-buttons, :host(.controls-hidden) .tm-control-buttons {
     opacity: 0;
+    visibility: hidden;
     transform: translateX(-50%) translateY(calc(100% + 30px));
+    pointer-events: none;
+}
+
+body.controls-hidden .tm-control-buttons *,
+.tm-player-container.controls-hidden .tm-control-buttons *,
+:host(.controls-hidden) .tm-control-buttons *,
+body.controls-hidden .tm-control-panel *,
+.tm-player-container.controls-hidden .tm-control-panel *,
+:host(.controls-hidden) .tm-control-panel * {
     pointer-events: none;
 }
 
@@ -2832,6 +2842,7 @@ body.controls-hidden .tm-control-panel,
 .tm-player-container.controls-hidden .tm-control-panel,
 :host(.controls-hidden) .tm-control-panel {
     opacity: 0;
+    visibility: hidden;
     transform: translateY(100%);
     pointer-events: none;
 }

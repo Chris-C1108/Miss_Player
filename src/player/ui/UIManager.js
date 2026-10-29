@@ -483,20 +483,20 @@ export class UIManager {
                 }
             };
             
-            // 移动端触摸操作时：如果控制界面当前是隐藏状态，则先唤醒显示控制界面
-            const isTouchPointer = e.pointerType === 'touch' || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-            if (!this.controlsVisible && isTouchPointer) {
+            // 控制面板未展示时：严格仅唤醒显示控制面板，严禁点击穿透触发播放/暂停！
+            if (!this.controlsVisible) {
                 this.showControls();
-                this.autoHideControls();
+                if (this.isLandscape) {
+                    this.autoHideControls();
+                }
                 return;
             }
             
-            // 切换播放/暂停状态，并保证控制栏状态与自动隐藏计时器同步
+            // 仅当控制面板当前已经处于展示状态时，点击才切换播放/暂停状态
             togglePlayPause();
-            if (!this.controlsVisible) {
-                this.showControls();
+            if (this.isLandscape) {
+                this.autoHideControls();
             }
-            this.autoHideControls();
         });
     }
 
