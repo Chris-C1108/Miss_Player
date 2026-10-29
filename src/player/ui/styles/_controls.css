@@ -1000,16 +1000,26 @@
 }
 
 /* =========== Material 风格粉色水波纹 (Ripple Effect) =========== */
-/* 控制面板内所有按钮具备溢出裁切与相对定位基底 */
 .ripple-btn,
-.tm-control-buttons button:not(.tm-show-controls-float-btn),
-.tm-control-buttons .tm-tab-list-btn,
-.tm-control-buttons .tm-tab-pill,
-.tm-bottom-sheet-panel button,
+.tm-bottom-sheet-panel button:not(.has-glow),
 .tm-bottom-sheet-panel .tm-sheet-tab-pill {
     position: relative;
     overflow: hidden;
     isolation: isolate;
+}
+
+/* 控制面板内所有按钮具备相对定位基底，保持 overflow: visible，确保边框高光、呼吸灯与投影渐变不被裁切 */
+.tm-control-buttons button,
+.tm-control-buttons .tm-tab-list-btn,
+.tm-control-buttons .tm-tab-pill,
+.tm-tab-actions-capsule,
+.tm-volume-button,
+.tm-playback-rate-button,
+.tm-integrated-play-btn,
+.tm-color-capsule-play-btn,
+.tm-play-mode-btn {
+    position: relative;
+    overflow: visible;
 }
 
 .tm-control-buttons .tm-show-controls-float-btn {
@@ -1020,7 +1030,7 @@
 .ripple,
 .tm-ripple {
     position: absolute;
-    border-radius: 50%;
+    border-radius: inherit;
     background: rgba(var(--brand-pink-rgb, 254, 98, 142), 0.4);
     transform: scale(0);
     animation: tm-ripple-out 0.6s ease-out;
@@ -1147,7 +1157,7 @@
     border: 1.5px solid rgba(0, 122, 255, 0.75); /* 优雅的 Apple 标志蓝描边 */
     cursor: pointer;
     user-select: none;
-    overflow: hidden;
+    overflow: visible;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
@@ -1207,9 +1217,12 @@
     user-select: none;
     -webkit-user-select: none;
     width: 100%;
-    height: 40px;
+    height: 44px;
+    min-height: 44px;
+    padding: 2px 0;
     box-sizing: border-box;
     flex-shrink: 0;
+    overflow: visible;
 }
 
 .mp-switcher-capsule {
@@ -1218,7 +1231,7 @@
     height: 40px;
     background: transparent;
     border-radius: 9999px;
-    overflow: hidden;
+    overflow: visible;
     border: none;
     box-shadow: none;
     -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
@@ -1242,7 +1255,7 @@
     position: absolute;
     top: 2px;
     left: 50%;
-    overflow: hidden;
+    overflow: visible;
     transform: translate(-50%) scale(1);
 }
 

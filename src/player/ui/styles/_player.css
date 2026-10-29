@@ -1574,15 +1574,14 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 .tm-playback-control-row {
     position: relative;
     width: 100%;
-    height: 40px;
-    max-height: 40px;
+    min-height: 44px;
     box-sizing: border-box;
-    padding: 0;
+    padding: 2px 0;
     margin: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* 底层：Switcher 占满 100% 宽度 */
@@ -1599,6 +1598,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    overflow: visible;
 }
 
 /* 上层：左右控制浮层，容器穿透放行给底层，子元素捕获点击 */
@@ -1615,6 +1615,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    overflow: visible;
 }
 
 .tm-playback-top-layer .tm-left-controls,
@@ -1720,21 +1721,19 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 /* ===== Tab Scroll Container ===== */
-/* ===== Tab Scroll Container ===== */
 .tm-tab-scroll-container {
     display: flex;
     flex: 1;
     gap: 6px;
     overflow-x: auto;
     overflow-y: visible;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    min-height: 46px;
+    height: 46px;
+    padding: 4px 6px 4px 2px;
+    margin: -4px 0;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    height: 38px;
-    padding: 0 4px 0 0;
-    margin: 0;
     box-sizing: border-box;
     align-items: center;
     mask-image: linear-gradient(to right, black calc(100% - 12px), transparent);
@@ -1945,7 +1944,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     color: rgba(255, 255, 255, 0.9);
     cursor: pointer;
-    overflow: hidden;
+    overflow: visible;
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
@@ -2555,13 +2554,14 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
     opacity: 1;
     transition: opacity var(--anim-quick), height var(--anim-quick);
     height: auto;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .tm-control-row.hidden {
     opacity: 0;
     height: 0;
     margin: 0;
+    overflow: hidden;
 }
 
 /* 评论区样式 */

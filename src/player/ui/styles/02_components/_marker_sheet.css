@@ -1,19 +1,17 @@
 /* ===== Tab Scroll Container ===== */
-/* ===== Tab Scroll Container ===== */
 .tm-tab-scroll-container {
     display: flex;
     flex: 1;
     gap: 6px;
     overflow-x: auto;
     overflow-y: visible;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    min-height: 46px;
+    height: 46px;
+    padding: 4px 6px 4px 2px;
+    margin: -4px 0;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    height: 38px;
-    padding: 0 4px 0 0;
-    margin: 0;
     box-sizing: border-box;
     align-items: center;
     mask-image: linear-gradient(to right, black calc(100% - 12px), transparent);
