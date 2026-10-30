@@ -449,19 +449,29 @@
     cursor: grabbing;
 }
 
-/* 真实已下载可直接播放的缓冲条 (微小灰度色差：清晰可辨的中浅灰微光 0.58) */
+/* 真实已下载可直接播放的多段缓冲容器 */
+.tm-progress-buffer-container,
 .tm-progress-buffer {
     position: absolute;
     left: 0;
     top: 0;
+    width: 100%;
     height: 100%;
-    width: 0%;
-    background-color: rgba(255, 255, 255, 0.58);
-    border-radius: 6px;
     z-index: 1;
     pointer-events: none;
-    transition: width 0.2s linear;
     overflow: hidden;
+    border-radius: 0; /* 缓冲层自身不带圆角，由外层 .tm-progress-bar 的 overflow:hidden 统一裁剪约束 */
+}
+
+/* 离散多段缓冲实体切片 (纯平平直切面，严禁单独内圆角，清晰可辨的中浅灰微光 0.58) */
+.tm-buffer-segment {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.58);
+    border-radius: 0;
+    pointer-events: none;
+    transition: width 0.2s linear, left 0.2s linear;
 }
 
 /* 进度指示器 (覆盖在缓冲条上方，纯亮高光白) */

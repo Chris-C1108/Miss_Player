@@ -1,6 +1,41 @@
 import { formatTime } from '../../utils/index.js';
 
 /**
+ * 合并相邻或微小缝隙 (<2s) 的已缓冲区间，消除流媒体切片缝隙引起的忽闪
+ * 并完整保留离散多段缓冲 (如用户跳看 30 分钟后返回 20 分钟)
+ */
+export function getMergedBufferedRanges(buffered, duration) {
+    if (!buffered || !buffered.length || !duration || isNaN(duration) || duration <= 0) return [];
+
+    const rawRanges = [];
+    for (let i = 0; i < buffered.length; i++) {
+        const s = Math.max(0, buffered.start(i));
+        const e = Math.min(duration, buffered.end(i));
+        if (e > s) {
+            rawRanges.push({ start: s, end: e });
+        }
+    }
+    if (rawRanges.length === 0) return [];
+
+    rawRanges.sort((a, b) => a.start - b.start);
+
+    const merged = [rawRanges[0]];
+    for (let i = 1; i < rawRanges.length; i++) {
+        const curr = rawRanges[i];
+        const prev = merged[merged.length - 1];
+
+        // 2.0 秒内微切片公差桥接合并，杜绝切片交接时的微小忽闪
+        if (curr.start <= prev.end + 2.0) {
+            prev.end = Math.max(prev.end, curr.end);
+        } else {
+            merged.push(curr);
+        }
+    }
+
+    return merged;
+}
+
+/**
  * 进度管理器类 - 负责进度条和时间显示功能
  */
 export class ProgressManager {
@@ -98,71 +133,66 @@ export class ProgressManager {
     }
 
     /**
-     * 更新真实可直接播放的缓冲条进度
-     * (寻找覆盖或紧邻当前播放时间点的有效连续已缓冲区间)
+     * 更新真实全量多段直接可播放缓冲条
+     * 1. 真实展示多段离散缓冲（如先看 30 分钟再跳回 20 分钟，两处缓冲同时可见）；
+     * 2. 平滑桥接切片微缝隙，彻底消除“一会儿出现一会儿消失”；
+     * 3. 针对当前活动段注入长片最小可辨前探补偿；
+     * 4. 纯平切直角无内圆角，由父容器裁切约束。
      */
     updateBufferProgress() {
         if (!this.targetVideo || !this.progressBufferIndicator) return;
 
         const duration = this.targetVideo.duration;
         if (isNaN(duration) || duration <= 0) {
-            this.progressBufferIndicator.style.width = '0%';
+            this.progressBufferIndicator.innerHTML = '';
             return;
         }
 
         const currentTime = this.targetVideo.currentTime || 0;
         const buffered = this.targetVideo.buffered;
-        let bufferEnd = 0;
+        const mergedRanges = getMergedBufferedRanges(buffered, duration);
 
-        if (buffered && buffered.length > 0) {
-            // 优先寻找包含当前播放进度的已缓冲区间 (真实可直接播放段)
-            for (let i = 0; i < buffered.length; i++) {
-                const start = buffered.start(i);
-                const end = buffered.end(i);
-                if (currentTime >= start - 1.0 && currentTime <= end) {
-                    bufferEnd = end;
-                    break;
-                }
-            }
-
-            // 若当前点未命中任何区间（例如刚触发跳转），取紧邻当前点之后的最近区间或最大已缓冲端
-            if (bufferEnd === 0) {
-                for (let i = 0; i < buffered.length; i++) {
-                    const start = buffered.start(i);
-                    const end = buffered.end(i);
-                    if (start >= currentTime && (bufferEnd === 0 || start < bufferEnd)) {
-                        bufferEnd = end;
-                    }
-                }
-            }
-
-            // 兜底：若前两者未覆盖，取最后一个分段的结束端
-            if (bufferEnd === 0 && buffered.length > 0) {
-                bufferEnd = buffered.end(buffered.length - 1);
-            }
-        }
-
-        if (bufferEnd <= 0) {
-            this.progressBufferIndicator.style.width = '0%';
+        if (mergedRanges.length === 0) {
+            this.progressBufferIndicator.innerHTML = '';
             return;
         }
 
         const barWidth = this.progressBarElement?.offsetWidth || 340;
         const playedRatio = Math.min(1.0, Math.max(0, currentTime / duration));
-        const rawBufferRatio = Math.min(1.0, Math.max(0, bufferEnd / duration));
+        const container = this.progressBufferIndicator;
 
-        // 核心视觉补偿：长片 (如 2~4 小时) 下，真实下载的 15~30 秒数据在物理像素上极短 (可能 < 1px)，会被白色高光圆角阴影完全吞没。
-        // 若当前点前方确实存在有效已下载数据 (bufferEnd > currentTime + 0.5s)，确保缓冲条向前探出至少 7px 可辨识纯灰微光带！
-        let finalPercent = rawBufferRatio * 100;
-        if (bufferEnd > currentTime + 0.5 && barWidth > 0) {
-            const playedPx = playedRatio * barWidth;
-            const rawBufferPx = rawBufferRatio * barWidth;
-            const minVisibleLeadPx = 7; // 视觉探出 7px，保证穿透白色高光阴影
-            const targetBufferPx = Math.max(rawBufferPx, Math.min(barWidth, playedPx + minVisibleLeadPx));
-            finalPercent = (targetBufferPx / barWidth) * 100;
+        if (typeof document !== 'undefined') {
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < mergedRanges.length; i++) {
+                const range = mergedRanges[i];
+                const startRatio = Math.min(1.0, Math.max(0, range.start / duration));
+                let endRatio = Math.min(1.0, Math.max(0, range.end / duration));
+
+                // 若当前播放点落在此区间内，且前方有已下载数据，注入最小 7px 可视前探保障
+                if (currentTime >= range.start - 0.5 && currentTime <= range.end) {
+                    if (range.end > currentTime + 0.5 && barWidth > 0) {
+                        const playedPx = playedRatio * barWidth;
+                        const rawEndPx = endRatio * barWidth;
+                        const minVisibleLeadPx = 7;
+                        const targetEndPx = Math.max(rawEndPx, Math.min(barWidth, playedPx + minVisibleLeadPx));
+                        endRatio = targetEndPx / barWidth;
+                    }
+                }
+
+                const leftPct = (startRatio * 100).toFixed(2);
+                const widthPct = (Math.max(0, endRatio - startRatio) * 100).toFixed(2);
+
+                if (parseFloat(widthPct) > 0) {
+                    const seg = document.createElement('div');
+                    seg.className = 'tm-buffer-segment';
+                    seg.style.left = `${leftPct}%`;
+                    seg.style.width = `${widthPct}%`;
+                    fragment.appendChild(seg);
+                }
+            }
+            container.innerHTML = '';
+            container.appendChild(fragment);
         }
-
-        this.progressBufferIndicator.style.width = `${Math.min(100, finalPercent).toFixed(2)}%`;
     }
     
     /**
