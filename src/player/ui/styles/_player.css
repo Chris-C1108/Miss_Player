@@ -1579,7 +1579,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     min-height: 48px;
     height: 48px;
     box-sizing: border-box;
-    padding: 4px 6px;
+    padding: 4px 0;
     margin: 0;
     display: flex;
     align-items: center;
@@ -1616,7 +1616,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     justify-content: space-between;
     pointer-events: none;
     margin: 0;
-    padding: 0 4px;
+    padding: 0;
     box-sizing: border-box;
     overflow: visible;
 }
@@ -1735,7 +1735,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     overflow-y: hidden;
     min-height: 48px;
     height: 48px;
-    padding: 5px 8px;
+    padding: 5px 0;
     margin: 0;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
