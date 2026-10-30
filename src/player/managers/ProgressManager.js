@@ -12,6 +12,7 @@ export class ProgressManager {
         // UI元素引用
         this.uiElements = uiElements;
         this.progressBarElement = null;  // 进度条元素
+        this.progressBufferIndicator = null; // 真实可直接播放缓冲指示器
         this.progressIndicator = null;   // 进度指示器
         this.currentTimeDisplay = null;  // 当前时间显示
         this.totalDurationDisplay = null; // 总时长显示
@@ -22,7 +23,7 @@ export class ProgressManager {
         this.progressHandleMoveHandler = null; // 进度条移动事件处理函数
         this.progressHandleUpHandler = null;   // 进度条释放事件处理函数
         this.lastDragX = 0; // 上次拖动位置的X坐标
-        this.isTouchDevice = 'ontouchstart' in window; // 检测是否为触摸设备
+        this.isTouchDevice = typeof window !== 'undefined' && 'ontouchstart' in window; // 检测是否为触摸设备
         this._loopManager = null; // 循环管理器引用
     }
 
@@ -40,6 +41,7 @@ export class ProgressManager {
     init(progressElements) {
         this.progressBarElement = progressElements.progressBarElement;
         if (this.uiElements) { this.uiElements.progressBar = this.progressBarElement; }
+        this.progressBufferIndicator = progressElements.progressBufferIndicator || null;
         this.progressIndicator = progressElements.progressIndicator;
         this.currentTimeDisplay = progressElements.currentTimeDisplay;
         this.totalDurationDisplay = progressElements.totalDurationDisplay;
@@ -55,9 +57,19 @@ export class ProgressManager {
         this.progressBarContainer.addEventListener('mousedown', this.startProgressDrag.bind(this));
         this.progressBarContainer.addEventListener('touchstart', this.startProgressDrag.bind(this), { passive: false });
         
-        // 监听视频时间更新
-        this.targetVideo.addEventListener('timeupdate', this.updateProgressBar.bind(this));
+        // 绑定事件处理器
+        this._timeUpdateHandler = this.updateProgressBar.bind(this);
+        this._bufferProgressHandler = this.updateBufferProgress.bind(this);
+
+        // 监听视频时间与缓冲下载更新
+        this.targetVideo.addEventListener('timeupdate', this._timeUpdateHandler);
+        this.targetVideo.addEventListener('progress', this._bufferProgressHandler);
+        this.targetVideo.addEventListener('seeked', this._bufferProgressHandler);
+        this.targetVideo.addEventListener('loadedmetadata', this._bufferProgressHandler);
         
+        // 初始更新缓冲
+        this.updateBufferProgress();
+
         return this;
     }
     
@@ -78,8 +90,60 @@ export class ProgressManager {
         // 更新进度指示器的宽度
         this.progressIndicator.style.width = `${progressPercent}%`;
         
+        // 同步更新已下载缓冲进度
+        this.updateBufferProgress();
+
         // 更新时间显示
         this.updateCurrentTimeDisplay();
+    }
+
+    /**
+     * 更新真实可直接播放的缓冲条进度
+     * (寻找覆盖或紧邻当前播放时间点的有效连续已缓冲区间)
+     */
+    updateBufferProgress() {
+        if (!this.targetVideo || !this.progressBufferIndicator) return;
+
+        const duration = this.targetVideo.duration;
+        if (isNaN(duration) || duration <= 0) {
+            this.progressBufferIndicator.style.width = '0%';
+            return;
+        }
+
+        const currentTime = this.targetVideo.currentTime;
+        const buffered = this.targetVideo.buffered;
+        let bufferEnd = 0;
+
+        if (buffered && buffered.length > 0) {
+            // 优先寻找包含当前播放进度的已缓冲区间 (真实可直接播放段)
+            for (let i = 0; i < buffered.length; i++) {
+                const start = buffered.start(i);
+                const end = buffered.end(i);
+                if (currentTime >= start - 1.0 && currentTime <= end) {
+                    bufferEnd = end;
+                    break;
+                }
+            }
+
+            // 若当前点未命中任何区间（例如刚触发跳转），取紧邻当前点之后的最近区间或最大已缓冲端
+            if (bufferEnd === 0) {
+                for (let i = 0; i < buffered.length; i++) {
+                    const start = buffered.start(i);
+                    const end = buffered.end(i);
+                    if (start >= currentTime && (bufferEnd === 0 || start < bufferEnd)) {
+                        bufferEnd = end;
+                    }
+                }
+            }
+
+            // 兜底：若前两者未覆盖，取最后一个分段的结束端
+            if (bufferEnd === 0 && buffered.length > 0) {
+                bufferEnd = buffered.end(buffered.length - 1);
+            }
+        }
+
+        const bufferPercent = Math.min(100, Math.max(0, (bufferEnd / duration) * 100));
+        this.progressBufferIndicator.style.width = `${bufferPercent.toFixed(2)}%`;
     }
     
     /**
@@ -371,5 +435,20 @@ export class ProgressManager {
         
         // 更新指示器内容
         this.timeIndicator.textContent = `${formatTime(time)} / ${formatTime(duration)}`;
+    }
+
+    /**
+     * 清理所有事件监听器
+     */
+    cleanup() {
+        if (this.targetVideo) {
+            if (this._timeUpdateHandler) this.targetVideo.removeEventListener('timeupdate', this._timeUpdateHandler);
+            if (this._bufferProgressHandler) {
+                this.targetVideo.removeEventListener('progress', this._bufferProgressHandler);
+                this.targetVideo.removeEventListener('seeked', this._bufferProgressHandler);
+                this.targetVideo.removeEventListener('loadedmetadata', this._bufferProgressHandler);
+            }
+        }
+        this.removeProgressEventListeners();
     }
 } 

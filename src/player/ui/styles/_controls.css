@@ -415,7 +415,7 @@
 .tm-progress-bar {
     width: 100%;
     height: 6px;
-    background-color: rgba(255, 255, 255, 0.28);
+    background-color: rgba(255, 255, 255, 0.20); /* 未缓冲底槽：柔和暗灰 */
     border: none;
     box-shadow: none;
     border-radius: 6px;
@@ -449,7 +449,22 @@
     cursor: grabbing;
 }
 
-/* 进度指示器 */
+/* 真实已下载可直接播放的缓冲条 (微小灰度色差：介于底槽 0.20 与已播放 1.0 之间的中性微光灰度 0.42) */
+.tm-progress-buffer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0%;
+    background-color: rgba(255, 255, 255, 0.42);
+    border-radius: 6px;
+    z-index: 1;
+    pointer-events: none;
+    transition: width 0.25s linear;
+    overflow: hidden;
+}
+
+/* 进度指示器 (覆盖在缓冲条上方，100% 亮白) */
 .tm-progress-indicator {
     height: 100%;
     width: 0%;
@@ -459,6 +474,7 @@
     position: absolute;
     left: 0;
     top: 0;
+    z-index: 2;
     transition: width 0.1s linear;
     overflow: hidden;
 }

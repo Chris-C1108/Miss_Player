@@ -99,4 +99,40 @@ assert.ok(hm.bins[2] > 0.9, `桶 2 应静默记录 1 秒播放时间 (实际: ${
 hm.destroy();
 console.log('✅ 5. 展示开关关闭时后台静默记录断言测试通过');
 
-console.log('\n🎉 全部 5 项视频播放热度与探索足迹测试 100% 通过！\n');
+// 6. 真实可直接播放缓冲条计算断言 (Playable Buffer Progress Test)
+import { ProgressManager } from '../src/player/managers/ProgressManager.js';
+const mockBufferVideo = {
+    currentTime: 30,
+    duration: 100,
+    buffered: {
+        length: 2,
+        start(i) { return i === 0 ? 0 : 70; },
+        end(i) { return i === 0 ? 45 : 85; }
+    },
+    addEventListener() {},
+    removeEventListener() {}
+};
+const mockBufferIndicator = { style: { width: '0%' } };
+const mockProgressElements = {
+    progressBarElement: { parentElement: { addEventListener() {} }, addEventListener() {}, classList: { add() {}, remove() {}, contains() { return false; } } },
+    progressIndicator: { style: { width: '0%' } },
+    progressBufferIndicator: mockBufferIndicator,
+    currentTimeDisplay: { textContent: '' },
+    totalDurationDisplay: { textContent: '' },
+    timeIndicator: { style: {} }
+};
+const pm = new ProgressManager({ targetVideo: mockBufferVideo }, {});
+pm.init(mockProgressElements);
+pm.updateBufferProgress();
+
+// 当前 30 秒命中区间 0 [0, 45]，已下载可直接播放端为 45 秒，百分比应为 45.00%
+assert.strictEqual(mockBufferIndicator.style.width, '45.00%', '缓冲条应精准计算覆盖当前播放点的有效直接可播端点 (45%)');
+
+// 模拟跳转到 75 秒，命中区间 1 [70, 85]，直接可播端应为 85 秒 (85%)
+mockBufferVideo.currentTime = 75;
+pm.updateBufferProgress();
+assert.strictEqual(mockBufferIndicator.style.width, '85.00%', '跳转后缓冲条应精准识别命中区间 1 的有效直接可播端点 (85%)');
+pm.cleanup();
+console.log('✅ 6. 真实可直接播放缓冲条计算断言测试通过');
+
+console.log('\n🎉 全部 6 项视频播放热度、探索足迹与缓冲条测试 100% 通过！\n');
