@@ -14,7 +14,7 @@ export function hasGMApi() {
 }
 
 /**
- * 获取存储值 (自动识别 GM API / localStorage 降级)
+ * 获取存储值 (支持 GM API 与 localStorage 穿透互愈双读)
  * @param {string} key - 存储键名
  * @param {any} defaultValue - 默认值
  * @param {boolean} [useGM=true] - 是否优先使用 GM API
@@ -22,22 +22,46 @@ export function hasGMApi() {
  */
 export function getValue(key, defaultValue = null, useGM = true) {
     try {
-        if (useGM && hasGMApi()) {
-            const val = GM_getValue(key, defaultValue);
-            return val !== undefined ? val : defaultValue;
-        }
-        let item = localStorage.getItem(LOCAL_STORAGE_PREFIX + key);
-        if (item === null) {
-            item = localStorage.getItem(LEGACY_STORAGE_PREFIX + key);
-        }
-        if (item !== null) {
+        let gmVal = undefined;
+        const gmAvailable = useGM && hasGMApi();
+
+        if (gmAvailable) {
             try {
-                return JSON.parse(item);
-            } catch (e) {
-                return item;
+                gmVal = GM_getValue(key, undefined);
+            } catch (_) {}
+            if (gmVal !== undefined && gmVal !== null) {
+                return gmVal;
             }
         }
-        return defaultValue;
+
+        // 穿透灾备：若 GM 存储未就绪或未读出有效值，穿透尝试从本地 localStorage 读取
+        let localVal = defaultValue;
+        let item = null;
+        try {
+            if (typeof localStorage !== 'undefined') {
+                item = localStorage.getItem(LOCAL_STORAGE_PREFIX + key);
+                if (item === null) {
+                    item = localStorage.getItem(LEGACY_STORAGE_PREFIX + key);
+                }
+            }
+        } catch (_) {}
+
+        if (item !== null) {
+            try {
+                localVal = JSON.parse(item);
+            } catch (e) {
+                localVal = item;
+            }
+            // 自动自愈回写：将本地读出的健康值补写回 GM 存储，完成双向自愈
+            if (gmAvailable && localVal !== undefined && localVal !== null) {
+                try {
+                    GM_setValue(key, localVal);
+                } catch (_) {}
+            }
+            return localVal;
+        }
+
+        return gmVal !== undefined ? gmVal : defaultValue;
     } catch (e) {
         console.error(`[Storage] 获取存储键 ${key} 失败:`, e);
         return defaultValue;
@@ -57,19 +81,29 @@ export function getBool(key, defaultValue = false, useGM = true) {
 }
 
 /**
- * 设置存储值 (自动识别 GM API / localStorage 降级)
+ * 设置存储值 (支持 GM API 与 localStorage 镜像双写持久化，彻底杜绝换域名/沙箱抖动配置丢失)
  * @param {string} key - 存储键名
  * @param {any} value - 要存储的数据值
  * @param {boolean} [useGM=true] - 是否优先使用 GM API
  */
 export function setValue(key, value, useGM = true) {
     try {
+        // 1. 若支持 GM API，写入油猴全局跨域持久化存储
         if (useGM && hasGMApi()) {
-            GM_setValue(key, value);
-            return;
+            try {
+                GM_setValue(key, value);
+            } catch (gmErr) {
+                console.warn(`[Storage] GM_setValue 写入异常:`, gmErr);
+            }
         }
-        const serializedValue = typeof value === 'object' ? JSON.stringify(value) : value;
-        localStorage.setItem(LOCAL_STORAGE_PREFIX + key, serializedValue);
+
+        // 2. 同时镜像双写至 localStorage，作为无条件同域灾备
+        if (typeof localStorage !== 'undefined') {
+            try {
+                const serializedValue = typeof value === 'object' ? JSON.stringify(value) : value;
+                localStorage.setItem(LOCAL_STORAGE_PREFIX + key, serializedValue);
+            } catch (_) {}
+        }
     } catch (e) {
         console.error(`[Storage] 设置存储键 ${key} 失败:`, e);
     }

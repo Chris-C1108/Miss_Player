@@ -123,6 +123,11 @@ runStep('执行控制面板各行左右垂直基准对齐单元测试', () => {
     execSync('node tests/controls-alignment.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.11 实验功能与自建端点防抹杀单元测试
+runStep('执行实验功能与自建端点防抹杀单元测试', () => {
+    execSync('node tests/beta-settings-preservation.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

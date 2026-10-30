@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.19
+// @version            5.7.20
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -412,18 +412,34 @@
 	}
 	function getValue(key, defaultValue = null, useGM = true) {
 		try {
-			if (useGM && hasGMApi()) {
-				const val = GM_getValue(key, defaultValue);
-				return val !== void 0 ? val : defaultValue;
+			let gmVal = void 0;
+			const gmAvailable = useGM && hasGMApi();
+			if (gmAvailable) {
+				try {
+					gmVal = GM_getValue(key, void 0);
+				} catch (_) {}
+				if (gmVal !== void 0 && gmVal !== null) return gmVal;
 			}
-			let item = localStorage.getItem(LOCAL_STORAGE_PREFIX + key);
-			if (item === null) item = localStorage.getItem(LEGACY_STORAGE_PREFIX + key);
-			if (item !== null) try {
-				return JSON.parse(item);
-			} catch (e) {
-				return item;
+			let localVal = defaultValue;
+			let item = null;
+			try {
+				if (typeof localStorage !== "undefined") {
+					item = localStorage.getItem(LOCAL_STORAGE_PREFIX + key);
+					if (item === null) item = localStorage.getItem(LEGACY_STORAGE_PREFIX + key);
+				}
+			} catch (_) {}
+			if (item !== null) {
+				try {
+					localVal = JSON.parse(item);
+				} catch (e) {
+					localVal = item;
+				}
+				if (gmAvailable && localVal !== void 0 && localVal !== null) try {
+					GM_setValue(key, localVal);
+				} catch (_) {}
+				return localVal;
 			}
-			return defaultValue;
+			return gmVal !== void 0 ? gmVal : defaultValue;
 		} catch (e) {
 			console.error(`[Storage] 获取存储键 ${key} 失败:`, e);
 			return defaultValue;
@@ -435,12 +451,15 @@
 	}
 	function setValue(key, value, useGM = true) {
 		try {
-			if (useGM && hasGMApi()) {
+			if (useGM && hasGMApi()) try {
 				GM_setValue(key, value);
-				return;
+			} catch (gmErr) {
+				console.warn(`[Storage] GM_setValue 写入异常:`, gmErr);
 			}
-			const serializedValue = typeof value === "object" ? JSON.stringify(value) : value;
-			localStorage.setItem(LOCAL_STORAGE_PREFIX + key, serializedValue);
+			if (typeof localStorage !== "undefined") try {
+				const serializedValue = typeof value === "object" ? JSON.stringify(value) : value;
+				localStorage.setItem(LOCAL_STORAGE_PREFIX + key, serializedValue);
+			} catch (_) {}
 		} catch (e) {
 			console.error(`[Storage] 设置存储键 ${key} 失败:`, e);
 		}
@@ -1242,7 +1261,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.19";
+		return "5.7.20";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4261,7 +4280,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.19";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.20";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -4569,6 +4588,11 @@
 					mergedSettingTimestamps[key] = localTimestamps[key] || now;
 					continue;
 				}
+				if (key === "betaMode" && localSettings.betaMode === true && !remoteSettings.betaMode) {
+					mergedSettings.betaMode = true;
+					mergedSettingTimestamps.betaMode = localTimestamps.betaMode || now;
+					continue;
+				}
 				const lTime = localTimestamps[key] || localData.lastModified || 0;
 				const rTime = remoteTimestamps[key] || remoteMigrated.lastModified || 0;
 				if (lTime >= rTime) {
@@ -4654,7 +4678,15 @@
 		static applyDataToLocal(data, playerState = null) {
 			if (!data) return;
 			const { settings, settingTimestamps, markers, deviceLayouts, tombstones } = data;
-			if (settings && typeof settings === "object") for (const [k, v] of Object.entries(settings)) setValue(k, v);
+			if (settings && typeof settings === "object") for (const [k, v] of Object.entries(settings)) {
+				if ((k === "betaDbEndpoint" || k === "betaDbApiKey") && !v) {
+					if (getValue(k, "")) continue;
+				}
+				if (k === "betaMode" && v === false) {
+					if (getBool("betaMode", false)) continue;
+				}
+				setValue(k, v);
+			}
 			if (settingTimestamps && typeof settingTimestamps === "object") setValue(SETTING_TIMESTAMPS_KEY, settingTimestamps);
 			if (tombstones && typeof tombstones === "object") this.saveLocalTombstones(tombstones);
 			const currentDeviceType = getDeviceType();
@@ -17169,7 +17201,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.19";
+		return "5.7.20";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;

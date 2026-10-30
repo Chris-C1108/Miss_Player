@@ -5,7 +5,7 @@ function sanitizeSeekStepList(arr, isCustom = false) {
     return isCustom ? unique.slice(0, 30) : (unique.length > 0 ? unique : ['5s', '10s', '30s', '1m', '5m', '10m']);
 }
 
-import { getValue, setValue, deleteValue, hasGMApi } from '../utils/storage.js';
+import { getValue, setValue, deleteValue, hasGMApi, getBool } from '../utils/storage.js';
 import { WebDavClient } from './WebDavClient.js';
 
 const CLIENT_ID_KEY = 'mp_client_id';
@@ -16,7 +16,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.19';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.20';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -481,6 +481,13 @@ export class SyncManager {
                 continue;
             }
 
+            // 实验功能开启保护：若本地明确开启了 betaMode，而远端未开启，坚决保护本地开启意图
+            if (key === 'betaMode' && localSettings.betaMode === true && !remoteSettings.betaMode) {
+                mergedSettings.betaMode = true;
+                mergedSettingTimestamps.betaMode = localTimestamps.betaMode || now;
+                continue;
+            }
+
             const lTime = localTimestamps[key] || localData.lastModified || 0;
             const rTime = remoteTimestamps[key] || remoteMigrated.lastModified || 0;
 
@@ -604,9 +611,19 @@ export class SyncManager {
 
         const { settings, settingTimestamps, markers, deviceLayouts, tombstones } = data;
 
-        // 1. 持久化共通核心设置项
+        // 1. 持久化共通核心设置项 (具备自建库凭据与实验功能防抹杀强保护)
         if (settings && typeof settings === 'object') {
             for (const [k, v] of Object.entries(settings)) {
+                // 自建端点与凭据防抹杀保护：若云端传回空值，而本地已有有效配置，坚决不被空值抹除
+                if ((k === 'betaDbEndpoint' || k === 'betaDbApiKey') && !v) {
+                    const localVal = getValue(k, '');
+                    if (localVal) continue;
+                }
+                // 实验功能开启保护：若本地已开启，云端关闭值绝不可将本地静默关停
+                if (k === 'betaMode' && v === false) {
+                    const localBeta = getBool('betaMode', false);
+                    if (localBeta) continue;
+                }
                 setValue(k, v);
             }
         }
