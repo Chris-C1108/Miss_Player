@@ -113,6 +113,11 @@ runStep('执行单手模式立柱加宽与排版防挤压单元测试', () => {
     execSync('node tests/single-hand-gutter.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.9 空标签时展示空草稿胶囊单元测试
+runStep('执行空标签时展示空草稿胶囊单元测试', () => {
+    execSync('node tests/empty-tabs-draft.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

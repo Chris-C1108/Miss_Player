@@ -295,26 +295,7 @@ export class LoopManager {
         // Render progress markers too
         this.renderProgressMarkers();
 
-        // 1. Render all saved tabs (or their inline edit pills if currently editing)
-        if (this.tabs.length === 0 && (!this.draftTab || (this.draftTab.startTime === null && this.draftTab.endTime === null))) {
-            const emptyWideBtn = document.createElement('div');
-            emptyWideBtn.className = 'tm-tab-empty-wide-btn';
-            emptyWideBtn.style.cssText = 'padding: 4px 16px; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px dashed rgba(255,255,255,0.3); color: rgba(255,255,255,0.8); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; user-select: none;';
-            emptyWideBtn.innerHTML = `<span>+ ${__('addHighlight') || '添加高光'}</span>`;
-            emptyWideBtn.title = __('addHighlight') || '添加高光';
-            emptyWideBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (this.targetVideo) {
-                    this.draftTab.startTime = this.targetVideo.currentTime;
-                    this.draftTab.color = this._allocateDraftColor();
-                    this.renderTabs();
-                }
-            });
-            this.tabScrollContainer.appendChild(emptyWideBtn);
-            return;
-        }
-
-        // 2. Make sure draftTab is initialized
+        // 1. 确保 draftTab 已初始化
         if (!this.draftTab) {
             this._resetDraftTab();
         }

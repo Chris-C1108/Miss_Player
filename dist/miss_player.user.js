@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.17
+// @version            5.7.18
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1242,7 +1242,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.17";
+		return "5.7.18";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4261,7 +4261,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.17";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.18";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -14350,23 +14350,6 @@
 			if (!this.tabScrollContainer) return;
 			this.tabScrollContainer.innerHTML = "";
 			this.renderProgressMarkers();
-			if (this.tabs.length === 0 && (!this.draftTab || this.draftTab.startTime === null && this.draftTab.endTime === null)) {
-				const emptyWideBtn = document.createElement("div");
-				emptyWideBtn.className = "tm-tab-empty-wide-btn";
-				emptyWideBtn.style.cssText = "padding: 4px 16px; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px dashed rgba(255,255,255,0.3); color: rgba(255,255,255,0.8); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; user-select: none;";
-				emptyWideBtn.innerHTML = `<span>+ ${__("addHighlight") || "添加高光"}</span>`;
-				emptyWideBtn.title = __("addHighlight") || "添加高光";
-				emptyWideBtn.addEventListener("click", (e) => {
-					e.stopPropagation();
-					if (this.targetVideo) {
-						this.draftTab.startTime = this.targetVideo.currentTime;
-						this.draftTab.color = this._allocateDraftColor();
-						this.renderTabs();
-					}
-				});
-				this.tabScrollContainer.appendChild(emptyWideBtn);
-				return;
-			}
 			if (!this.draftTab) this._resetDraftTab();
 			const isDraftActive = this.draftTab && (this.draftTab.startTime !== null || this.draftTab.endTime !== null);
 			const draftStartTime = isDraftActive ? this.draftTab.startTime ?? this.draftTab.endTime : null;
@@ -17186,7 +17169,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.17";
+		return "5.7.18";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
