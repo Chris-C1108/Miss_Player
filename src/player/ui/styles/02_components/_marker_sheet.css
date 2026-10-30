@@ -5,20 +5,19 @@
     gap: 6px;
     overflow-x: auto;
     overflow-y: hidden;
-    min-height: 62px;
-    height: 62px;
-    padding: 12px 6px;
-    margin: -12px 0;
+    min-height: 48px;
+    height: 48px;
+    padding: 5px 8px;
+    margin: 0;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     box-sizing: border-box;
     align-items: center;
     touch-action: pan-x;
-    pointer-events: none;
+    pointer-events: auto;
 }
 .tm-tab-scroll-container::-webkit-scrollbar { display: none; }
-.tm-tab-scroll-container > * { pointer-events: auto; }
 
 /* ===== Tab Pill ===== */
 .tm-tab-pill {

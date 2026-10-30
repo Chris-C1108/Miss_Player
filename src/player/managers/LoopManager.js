@@ -193,6 +193,65 @@ export class LoopManager {
                     }, 600);
                 }
             }, { passive: false });
+
+            // 触控与鼠标拖拽滑动强化支持 (确保移动端触控滑动与 PC 拖拽 100% 灵敏顺畅)
+            let isDown = false;
+            let startX = 0;
+            let scrollLeftStart = 0;
+            let hasDragged = false;
+
+            this.tabScrollContainer.addEventListener('touchstart', () => {
+                this._isUserInteractingWithTabs = true;
+                if (this._userScrollTimer) clearTimeout(this._userScrollTimer);
+            }, { passive: true });
+
+            this.tabScrollContainer.addEventListener('touchmove', () => {
+                this._isUserInteractingWithTabs = true;
+            }, { passive: true });
+
+            this.tabScrollContainer.addEventListener('touchend', () => {
+                if (this._userScrollTimer) clearTimeout(this._userScrollTimer);
+                this._userScrollTimer = setTimeout(() => {
+                    this._isUserInteractingWithTabs = false;
+                }, 3000);
+            }, { passive: true });
+
+            this.tabScrollContainer.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                isDown = true;
+                hasDragged = false;
+                startX = e.pageX - this.tabScrollContainer.offsetLeft;
+                scrollLeftStart = this.tabScrollContainer.scrollLeft;
+                this._isUserInteractingWithTabs = true;
+                if (this._userScrollTimer) clearTimeout(this._userScrollTimer);
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDown || !this.tabScrollContainer) return;
+                const x = e.pageX - this.tabScrollContainer.offsetLeft;
+                const walk = (x - startX) * 1.2;
+                if (Math.abs(walk) > 4) {
+                    hasDragged = true;
+                }
+                this.tabScrollContainer.scrollLeft = scrollLeftStart - walk;
+            }, { passive: true });
+
+            window.addEventListener('mouseup', () => {
+                if (!isDown) return;
+                isDown = false;
+                if (this._userScrollTimer) clearTimeout(this._userScrollTimer);
+                this._userScrollTimer = setTimeout(() => {
+                    this._isUserInteractingWithTabs = false;
+                }, 1500);
+            }, { passive: true });
+
+            this.tabScrollContainer.addEventListener('click', (e) => {
+                if (hasDragged) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    hasDragged = false;
+                }
+            }, true);
         }
 
         // 监听视频进度：检测进度附近 ±5s 胶囊高亮与自动居中滚动

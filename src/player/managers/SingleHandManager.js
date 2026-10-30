@@ -183,7 +183,7 @@ export class SingleHandManager {
             this._touchStartY = touch.clientY;
             this._isSwipeTracking = true;
             // 记录触摸是否源自高光胶囊横向滚动区 (保留胶囊原生横向滚动，坚决不被左右手切换干扰)
-            this._isFromCapsuleScroll = Boolean(target?.closest?.('.tm-tab-scroll-container'));
+            this._isFromCapsuleScroll = Boolean(target?.closest?.('.tm-tab-scroll-container, .tm-tab-pill, .tm-tab-actions-capsule, .tm-loop-control-row'));
         };
 
         this._swipeTouchMoveHandler = (e) => {
@@ -233,7 +233,7 @@ export class SingleHandManager {
             this._pointerStartX = e.clientX;
             this._pointerStartY = e.clientY;
             this._isPointerTracking = true;
-            this._isFromCapsuleScroll = Boolean(e.target?.closest?.('.tm-tab-scroll-container'));
+            this._isFromCapsuleScroll = Boolean(e.target?.closest?.('.tm-tab-scroll-container, .tm-tab-pill, .tm-tab-actions-capsule, .tm-loop-control-row'));
         };
 
         this._swipePointerUpHandler = (e) => {
