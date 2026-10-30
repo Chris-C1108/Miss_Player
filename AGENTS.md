@@ -49,19 +49,25 @@
   - FORBIDDEN: `https://github.com/.../tree/main/...` 或 `blob/main/...` 或 URL 中携带空格 ➔ 此类路径返回的是 GitHub 的 HTML 网页，油猴管理器拉取时会因语法错误解析失败而中断更新。
   - USE: 必须使用 `raw.githubusercontent.com/...` 纯文本直链，保证油猴管理器能轻量读取 `meta.js` 检查版本，并在版本更新时拉取 `user.js`。
 
-### 6. GitHub Rolling 与 SleazyFork Tag Release 双轨发布架构 (Dual-Track Release Architecture)
-本项目采用“**GitHub 主干滚动测试 + SleazyFork Tag 稳定分发**”的双轨架构：
-* **轨 1：GitHub 开发测试轨 (Rolling Release)**
-  - 适用对象：开发者、尝鲜与测试用户；
-  - 更新机制：日常开发中每次向 GitHub main 分支推送更新前，执行 `npm run bump` 递增 patch 版本号（+0.0.1），打包后提交并推送。从 GitHub 安装的用户油猴管理器内保留上述 `@updateURL`，会自动即时检测并接收最新测试更新；
-* **轨 2：SleazyFork 生产稳定轨 (Stable Tag Release)**
-  - 适用对象：全网广大正式版普通用户；
-  - 隔离与重写机制：SleazyFork 后台设置为从 GitHub Releases / Tags 同步。SleazyFork 平台服务端分发脚本时，**会自动强行将 `@downloadURL` 与 `@updateURL` 重写为其内部 CDN 源**；
-  - 发版操作：日常提交不会打扰正式版用户；只有当阶段性功能完成且经测试验证稳定后，在 GitHub 执行一次打 Tag 与发布 Release（如 `git tag v5.8.0 && git push origin v5.8.0`），SleazyFork 监听到 Release 事件自动拉取该版本上线，正式推向全网；
-* **脚本内自动与手动检查更新分流通道 (Update Channel)**：
-  - **通道定义**：设置面板内提供 `updateChannel` 切换分段（`'stable'` 正式版 / `'beta'` 测试版）；
-  - **默认规则**：普通用户默认走 `'stable'` 正式版通道，从 SleazyFork 官方 JSON API / CDN 拉取更新；
-  - **测试通道**：选择 `'beta'` 测试版通道后，静默闲时检查更新与手动点击检查更新将直接从 GitHub Raw `meta.js` 解析最新滚动版本，且“立即更新”与“重新安装”无缝直连 GitHub Raw `miss_player.user.js`。
+### 6. 独立 release 分支双轨发版协议与绝不切换默认分支红线 (Isolated Release Branch Protocol)
+本项目采用“**GitHub main 主干滚动测试 + 远程 release 独立分支驱动 SleazyFork 正式发版**”的双轨架构：
+* **双分支拓扑模型**：
+  - `main` 分支：**项目唯一的全局默认分支 (Default Branch)**，也是本地工作区常驻开发分支。日常开发、快速迭代与测试更新均在 `main` 上执行，推送到 `origin main`。从 GitHub 安装测试版的用户油猴内通过 `@updateURL` 直接从 main 接收热更新；
+  - `release` 分支：**生产正式发版专有分支，远程独立存在**。SleazyFork 后台设置为监听该分支的 Webhook：
+    `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/release/dist/miss_player.user.js`
+* **绝对红线：严禁切换默认分支 (Never Switch Default Branch)**：
+  - 本地与远程的默认分支必须**永久保持为 `main`**！
+  - **严禁在本地执行 `git checkout release`** 或将工作区指向其他分支；
+  - 必须使用原子映射推送指令：`git push origin main:release`，直接将本地经过验证的 `main` 分支代码同步至远程 `release` 分支，本地零切换、无污染！
+* **用户发版意图自动化执行规则 (Trigger Word: "发版")**：
+  - **只要用户在对话中指示“发版”（无论是否携带具体版本号），Agent 必须且只需按照以下 7 步标准 SOP 全自动化执行**：
+    1. **门禁质检**：执行 `npm run ci:check`，确保全部自动化单元测试与合规门禁 100% 通过；
+    2. **版本自增（若需要）**：执行 `npm run bump`（Patch +0.0.1）或按用户指定版本强同步 5 处；
+    3. **构建产物**：执行 `npm run build`，确保 `dist/` 产物最新且无未提交修改；
+    4. **提交并推送 main**：`git add . && git commit -m "..." && git push origin main`；
+    5. **无缝镜像同步至 release 分支（绝不切换分支）**：执行 `git push origin main:release`，瞬间触发 SleazyFork Webhook 自动抓取上线；
+    6. **创建 GitHub Tag 与 Release**：执行 `git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z && gh release create vX.Y.Z dist/miss_player.user.js dist/miss_player.meta.js ...`；
+    7. **确认状态**：确认工作区 clean，当前分支保持为 `main`。
 
 ---
 
@@ -388,7 +394,11 @@ Miss Player 严格执行性能棘轮与零长任务守卫。完整测试方法�
 * **版本自增同步**：`npm run bump`（Patch +0.0.1 并原子同步 5 处）或 `npm run bump -- <version>`
 * **生产发布打包**：`npm run build`（生成 `dist/miss_player.user.js`、`dist/miss_player.meta.js`、`dist/miss_player.proxy.user.js`）
 * **自动化门禁质检**：`npm run ci:check`（版本五处强同步核验、打包、体积审计、合规 Lint、SleazyFork 测试与沙箱启动验证）
-* **GitHub 测试版推送工作流**：
+* **GitHub 开发测试版推送工作流 (仅推 main)**：
   `npm run bump && npm run ci:check && git add . && git commit -m "feat/fix: xxx" && git push origin main`
-* **SleazyFork 正式发版工作流**：
-  `git tag vX.Y.Z && git push origin vX.Y.Z`（在 GitHub 创建 Release，SleazyFork 自动抓取同步上线）
+* **正式发版标准 SOP (用户只要说“发版”即按此流水线全自动执行，绝不切换默认分支)**：
+  1. `npm run ci:check`（全项门禁检验通过）
+  2. `git push origin main`（确保 main 最新）
+  3. `git push origin main:release`（将 main 代码镜像直推远程 release 分支，瞬间触发 SleazyFork Webhook 自动上线，本地分支依然留在 main）
+  4. `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z`（打 Tag 并推送）
+  5. `gh release create vX.Y.Z dist/miss_player.user.js dist/miss_player.meta.js --title "vX.Y.Z ..." --notes "..."`（创建 GitHub Release）
