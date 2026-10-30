@@ -188,12 +188,15 @@
 
 .tm-resize-handle {
     position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate3d(-50%, -50%, 0);
     height: 4px;
     width: 134px;
     max-width: 134px;
     background-color: hsla(var(--shadcn-foreground) / 0.6);
     border-radius: 2px;
-    cursor: grab;
+    cursor: row-resize;
     touch-action: none;
     opacity: 0.5;
     will-change: transform;
