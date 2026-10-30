@@ -463,24 +463,24 @@
     border-radius: 0; /* 缓冲层自身不带圆角，由外层 .tm-progress-bar 的 overflow:hidden 统一裁剪约束 */
 }
 
-/* 离散多段缓冲实体切片 (纯平平直切面，严禁单独内圆角，清晰高亮的微光浅灰 0.72) */
+/* 离散多段缓冲实体切片 (纯平平直切面，严禁单独内圆角，临时醒目玫红便于 Debug 实机观察) */
 .tm-buffer-segment {
     position: absolute;
     top: 0;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.72);
+    background-color: #ff2d55; /* 调试专属高饱和度玫红，一眼可辨 */
     border-radius: 0;
     pointer-events: none;
     transition: width 0.2s linear, left 0.2s linear;
 }
 
-/* 进度指示器 (覆盖在缓冲条上方，纯亮高光白) */
+/* 进度指示器 (纯平平直切面，严禁内圆角，由父级 .tm-progress-bar 统一裁剪圆角) */
 .tm-progress-indicator {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, #ffffff 100%);
-    box-shadow: 0 0 3px rgba(255, 255, 255, 0.35);
-    border-radius: 6px;
+    background-color: #ffffff; /* 纯平亮白，接缝清晰分明 */
+    box-shadow: none; /* 移除发光阴影，杜绝边缘光晕干扰缓冲层辨识 */
+    border-radius: 0; /* 纯平视角，杜绝药丸内圆角 */
     position: absolute;
     left: 0;
     top: 0;
