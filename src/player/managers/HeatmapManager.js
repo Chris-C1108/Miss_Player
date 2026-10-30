@@ -8,7 +8,19 @@ export const HEATMAP_CONSTANTS = {
 };
 
 /**
- * 下采样与平滑算法（保留峰值的局部最大值 + 高斯加权平滑）
+ * 片头偏置平滑衰减因子 (Intro Bias Soft Attenuation)
+ * 抑制因默认从 0 秒开播或试看导致的片头非喜好虚假波峰
+ */
+function getIntroDecayFactor(binIdx, warmupBins) {
+    if (binIdx >= warmupBins) return 1.0;
+    const t = binIdx / warmupBins;
+    // Cubic smoothstep: 3t^2 - 2t^3
+    const smoothT = t * t * (3 - 2 * t);
+    return 0.32 + (0.68 * smoothT);
+}
+
+/**
+ * 下采样与平滑算法（保留峰值的局部最大值 + 高斯加权平滑 + 片头偏置衰减）
  * @param {Float32Array|Array<number>} rawBins 物理分桶数据
  * @param {number} targetPoints 目标采样点数
  * @returns {Float32Array} 归一化后的点数组 (0.0 ~ 1.0)
@@ -22,7 +34,10 @@ export function resampleAndSmoothBins(rawBins, targetPoints = HEATMAP_CONSTANTS.
     const sampled = new Float32Array(targetPoints);
     const step = rawLen / targetPoints;
 
-    // 1. 保留短峰的动态下采样 (75% Max + 25% Avg)
+    // 片头偏置缓冲区间：最大 60 秒 (12 个桶)，且不超过总片长 5%
+    const warmupBins = Math.min(12, Math.max(2, Math.floor(rawLen * 0.05)));
+
+    // 1. 保留短峰的动态下采样 (75% Max + 25% Avg) + 片头防伪峰衰减
     for (let i = 0; i < targetPoints; i++) {
         const start = Math.floor(i * step);
         const end = Math.min(rawLen, Math.floor((i + 1) * step));
@@ -32,7 +47,8 @@ export function resampleAndSmoothBins(rawBins, targetPoints = HEATMAP_CONSTANTS.
         let count = 0;
 
         for (let j = start; j < end; j++) {
-            const v = rawBins[j];
+            const decay = getIntroDecayFactor(j, warmupBins);
+            const v = (rawBins[j] || 0) * decay;
             if (v > maxVal) maxVal = v;
             sumVal += v;
             count++;
@@ -229,36 +245,9 @@ export class HeatmapManager {
         svg.setAttribute('preserveAspectRatio', 'none');
         svg.setAttribute('aria-hidden', 'true');
 
-        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
-        grad.setAttribute('id', 'mp-heatmap-grad');
-        grad.setAttribute('x1', '0');
-        grad.setAttribute('y1', '0');
-        grad.setAttribute('x2', '0');
-        grad.setAttribute('y2', '1');
-
-        const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-        stop1.setAttribute('offset', '0%');
-        stop1.setAttribute('stop-color', 'rgba(255, 255, 255, 0.48)');
-
-        const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-        stop2.setAttribute('offset', '70%');
-        stop2.setAttribute('stop-color', 'rgba(255, 255, 255, 0.16)');
-
-        const stop3 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-        stop3.setAttribute('offset', '100%');
-        stop3.setAttribute('stop-color', 'rgba(255, 255, 255, 0.01)');
-
-        grad.appendChild(stop1);
-        grad.appendChild(stop2);
-        grad.appendChild(stop3);
-        defs.appendChild(grad);
-        svg.appendChild(defs);
-
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('class', 'tm-heatmap-path');
         path.setAttribute('d', '');
-        path.setAttribute('fill', 'url(#mp-heatmap-grad)');
         svg.appendChild(path);
 
         this.svgElement = svg;

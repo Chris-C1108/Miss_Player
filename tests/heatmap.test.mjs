@@ -55,4 +55,18 @@ assert.ok(pathD.endsWith('L 100 100 Z'), 'SVG Path 必须以 L 100 100 Z 闭合'
 assert.ok(pathD.includes('Q '), '平滑曲线必须包含二次贝塞尔控制点指令 Q');
 console.log('✅ 3. SVG 平滑贝塞尔曲线格式与闭合断言测试通过');
 
-console.log('\n🎉 全部 3 项视频播放热度与探索足迹测试 100% 通过！\n');
+// 4. 片头自然偏置衰减测试 (Intro Bias Soft Attenuation)
+// 模拟场景：用户多次点开视频试看片头（第 0 桶累积 15 秒），但中段第 100 桶是真正反复看的高潮（18 秒）
+const introBiasBins = new Float32Array(500);
+introBiasBins[0] = 15; // 片头 0 秒开播累计
+introBiasBins[100] = 18; // 中段真实高潮
+
+const introSampled = resampleAndSmoothBins(introBiasBins, 120);
+const introHeadVal = introSampled[0];
+const middlePeakVal = introSampled[Math.floor(100 / (500 / 120))];
+
+// 中段真实高潮必须高于片头试看
+assert.ok(middlePeakVal > introHeadVal * 1.5, `片头开播偏置应被平滑衰减，中段高光 (${middlePeakVal}) 必须明显高于片头 (${introHeadVal})`);
+console.log('✅ 4. 片头自然偏置平滑衰减断言测试通过');
+
+console.log('\n🎉 全部 4 项视频播放热度与探索足迹测试 100% 通过！\n');
