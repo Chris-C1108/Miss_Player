@@ -41,15 +41,21 @@ export class PlaybackController {
     _bindVideoPlaybackGuards() {
         if (!this.targetVideo) return;
         this._autoPlayGuardHandler = () => {
-            if (this._userPauseIntent && !this.targetVideo.paused) {
+            const isPausedByUser = this._userPauseIntent || this.playerCore?.userPauseIntent;
+            if (isPausedByUser) {
                 this.targetVideo.pause();
-                this.updatePlayPauseButton();
+                Promise.resolve().then(() => {
+                    if (this._userPauseIntent || this.playerCore?.userPauseIntent) {
+                        this.targetVideo.pause();
+                        this.updatePlayPauseButton();
+                    }
+                });
             }
         };
-        this.targetVideo.addEventListener('play', this._autoPlayGuardHandler);
-        this.targetVideo.addEventListener('playing', this._autoPlayGuardHandler);
-        this.targetVideo.addEventListener('loadeddata', this._autoPlayGuardHandler);
-        this.targetVideo.addEventListener('canplay', this._autoPlayGuardHandler);
+        this.targetVideo.addEventListener('play', this._autoPlayGuardHandler, true);
+        this.targetVideo.addEventListener('playing', this._autoPlayGuardHandler, true);
+        this.targetVideo.addEventListener('loadeddata', this._autoPlayGuardHandler, true);
+        this.targetVideo.addEventListener('canplay', this._autoPlayGuardHandler, true);
     }
 
     /**
@@ -132,24 +138,17 @@ export class PlaybackController {
         const isCurrentlyPlaying = this.targetVideo && !this.targetVideo.paused && !this.targetVideo.ended;
 
         if (mode === 'normal') {
-            if (isCurrentlyPlaying) {
-                // 用户想要暂停
+            if (isCurrentlyPlaying || !this._userPauseIntent) {
+                // 用户想要暂停 (无论正在播放还是加载缓冲期)
                 this._userPauseIntent = true;
+                if (this.playerCore) this.playerCore.userPauseIntent = true;
                 this.targetVideo.pause();
                 Toast('已暂停播放', 1200, 'info');
             } else {
-                // 当前处于暂停，或视频流尚未就绪时
-                const isStreamPending = this.targetVideo && this.targetVideo.readyState < 2;
-                if (!this._userPauseIntent && isStreamPending) {
-                    // 用户在加载阶段主动点击：锁定为临时暂停！
-                    this._userPauseIntent = true;
-                    this.targetVideo.pause();
-                    Toast('已临时暂停，待就绪后保持静止', 1500, 'info');
-                } else {
-                    // 用户确认开播
-                    this._userPauseIntent = false;
-                    this.targetVideo.play().catch(() => {});
-                }
+                // 用户确认开播
+                this._userPauseIntent = false;
+                if (this.playerCore) this.playerCore.userPauseIntent = false;
+                this.targetVideo.play().catch(() => {});
             }
             this.updatePlayPauseButton();
             telemetry.track('play_toggle', { is_playing: !this._userPauseIntent });

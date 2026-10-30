@@ -28,6 +28,9 @@ export class PlayerCore {
         // 保存调用按钮
         this.callingButton = this.options.callingButton || null;
         
+        // 用户主动临时暂停意图锁 (若用户在开播/缓冲期点击暂停，坚决阻断任何后续自动起播与宿主偷跑)
+        this.userPauseIntent = false;
+
         // 状态标记
         this.initialized = false;
     }
@@ -153,6 +156,11 @@ export class PlayerCore {
             // 主动触发自动起播 (支持有声尝试 -> 静音降级 -> 首次触摸唤醒)
             const attemptPlay = () => {
                 if (!this.targetVideo) return;
+                // 核心熔断：若用户已提前表达了临时暂停意图，坚决放弃任何起播尝试！
+                if (this.userPauseIntent) {
+                    console.log('[PlayerCore] 用户已提前设定临时暂停，放弃自动起播');
+                    return;
+                }
                 
                 // 确保 playsinline 属性就绪，防止被移动端全屏劫持
                 this.targetVideo.setAttribute('playsinline', 'true');
@@ -199,6 +207,10 @@ export class PlayerCore {
             // 若视频尚未完全就绪 (readyState < 2)，在 canplay / loadeddata 时再次确保触发起播
             if (this.targetVideo.readyState < 2) {
                 const onReadyToPlay = () => {
+                    if (this.userPauseIntent) {
+                        console.log('[PlayerCore] 视频就绪但检测到用户已主动暂停，坚决拦截起播');
+                        return;
+                    }
                     attemptPlay();
                     this.targetVideo.removeEventListener('canplay', onReadyToPlay);
                     this.targetVideo.removeEventListener('loadeddata', onReadyToPlay);

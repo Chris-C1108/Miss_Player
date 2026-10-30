@@ -110,7 +110,7 @@ export class ProgressManager {
             return;
         }
 
-        const currentTime = this.targetVideo.currentTime;
+        const currentTime = this.targetVideo.currentTime || 0;
         const buffered = this.targetVideo.buffered;
         let bufferEnd = 0;
 
@@ -142,8 +142,27 @@ export class ProgressManager {
             }
         }
 
-        const bufferPercent = Math.min(100, Math.max(0, (bufferEnd / duration) * 100));
-        this.progressBufferIndicator.style.width = `${bufferPercent.toFixed(2)}%`;
+        if (bufferEnd <= 0) {
+            this.progressBufferIndicator.style.width = '0%';
+            return;
+        }
+
+        const barWidth = this.progressBarElement?.offsetWidth || 340;
+        const playedRatio = Math.min(1.0, Math.max(0, currentTime / duration));
+        const rawBufferRatio = Math.min(1.0, Math.max(0, bufferEnd / duration));
+
+        // 核心视觉补偿：长片 (如 2~4 小时) 下，真实下载的 15~30 秒数据在物理像素上极短 (可能 < 1px)，会被白色高光圆角阴影完全吞没。
+        // 若当前点前方确实存在有效已下载数据 (bufferEnd > currentTime + 0.5s)，确保缓冲条向前探出至少 7px 可辨识纯灰微光带！
+        let finalPercent = rawBufferRatio * 100;
+        if (bufferEnd > currentTime + 0.5 && barWidth > 0) {
+            const playedPx = playedRatio * barWidth;
+            const rawBufferPx = rawBufferRatio * barWidth;
+            const minVisibleLeadPx = 7; // 视觉探出 7px，保证穿透白色高光阴影
+            const targetBufferPx = Math.max(rawBufferPx, Math.min(barWidth, playedPx + minVisibleLeadPx));
+            finalPercent = (targetBufferPx / barWidth) * 100;
+        }
+
+        this.progressBufferIndicator.style.width = `${Math.min(100, finalPercent).toFixed(2)}%`;
     }
     
     /**
