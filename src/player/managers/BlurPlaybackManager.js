@@ -244,8 +244,10 @@ export class BlurPlaybackManager {
 
         // 尝试自动恢复起播
         const attemptAutoResume = (triggerReason = 'stall') => {
-            if (!targetVideo.paused || targetVideo.ended || userInteracted || !wasPlaying) {
+            // 核心熔断：若用户已点击暂停或表达暂停意图，坚决彻底放弃任何自动恢复起播！
+            if (playerCore?.userPauseIntent || !targetVideo.paused || targetVideo.ended || userInteracted || !wasPlaying) {
                 cancelRecovery();
+                wasPlaying = false;
                 return;
             }
 
@@ -297,6 +299,11 @@ export class BlurPlaybackManager {
 
         // 当视频底层缓冲充盈触发 canplay / canplaythrough 时，若处于非用户主动暂停且恢复中，立即触发起播
         const onBufferReady = () => {
+            if (playerCore?.userPauseIntent) {
+                cancelRecovery();
+                wasPlaying = false;
+                return;
+            }
             if (isRecovering && targetVideo.paused && !userInteracted && wasPlaying && !targetVideo.ended) {
                 attemptAutoResume('canplay_ready');
             }
@@ -341,8 +348,8 @@ export class BlurPlaybackManager {
             DebugLogPanel.addLog('[PAUSE] 视频暂停: [' + triggerSource + '] 进度=' + diagInfo.currentTime + 's', triggerSource === 'HOST_SCRIPT_TRIGGERED' ? 'warn' : 'info');
             console.warn('[MissPlayer Diagnostic] 自动暂停分析 【' + triggerSource + '】: 进度=' + diagInfo.currentTime + 's, 就绪=' + diagInfo.readyState + ', 缓冲=' + diagInfo.networkState + ', 失焦=' + diagInfo.documentHidden + ', 焦点=' + diagInfo.hasFocus, diagInfo, '\nStack:', stack);
 
-            // 1. 若是用户主动交互暂停、视频正常播放结束、或 MissPlayer 内部控制器主动调用的暂停：
-            if (triggerSource === 'USER_INTERACTION' || triggerSource === 'VIDEO_ENDED' || triggerSource === 'MISS_PLAYER_INTERNAL') {
+            // 1. 若是用户主动交互暂停、用户预设了暂停意图、视频正常播放结束、或 MissPlayer 内部控制器主动调用的暂停：
+            if (playerCore?.userPauseIntent || triggerSource === 'USER_INTERACTION' || triggerSource === 'VIDEO_ENDED' || triggerSource === 'MISS_PLAYER_INTERNAL') {
                 cancelRecovery();
                 wasPlaying = false;
                 return;

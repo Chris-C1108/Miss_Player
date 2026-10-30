@@ -43,10 +43,10 @@ export class PlaybackController {
         this._autoPlayGuardHandler = () => {
             const isPausedByUser = this._userPauseIntent || this.playerCore?.userPauseIntent;
             if (isPausedByUser) {
-                this.targetVideo.pause();
+                try { this.targetVideo.pause(); } catch (_) {}
                 Promise.resolve().then(() => {
                     if (this._userPauseIntent || this.playerCore?.userPauseIntent) {
-                        this.targetVideo.pause();
+                        try { this.targetVideo.pause(); } catch (_) {}
                         this.updatePlayPauseButton();
                     }
                 });
@@ -56,6 +56,13 @@ export class PlaybackController {
         this.targetVideo.addEventListener('playing', this._autoPlayGuardHandler, true);
         this.targetVideo.addEventListener('loadeddata', this._autoPlayGuardHandler, true);
         this.targetVideo.addEventListener('canplay', this._autoPlayGuardHandler, true);
+        this.targetVideo.addEventListener('canplaythrough', this._autoPlayGuardHandler, true);
+        this.targetVideo.addEventListener('timeupdate', () => {
+            if ((this._userPauseIntent || this.playerCore?.userPauseIntent) && !this.targetVideo.paused) {
+                try { this.targetVideo.pause(); } catch (_) {}
+                this.updatePlayPauseButton();
+            }
+        }, true);
     }
 
     /**
@@ -162,9 +169,11 @@ export class PlaybackController {
             Toast('当前视频暂无高光片段，请先在时间轴添加', 2000, 'info');
             if (isCurrentlyPlaying) {
                 this._userPauseIntent = true;
+                if (this.playerCore) this.playerCore.userPauseIntent = true;
                 this.targetVideo.pause();
             } else {
                 this._userPauseIntent = false;
+                if (this.playerCore) this.playerCore.userPauseIntent = false;
                 this.targetVideo.play().catch(() => {});
             }
             this.updatePlayPauseButton();
@@ -174,15 +183,18 @@ export class PlaybackController {
         if (this._isTourEnded) {
             this._isTourEnded = false;
             this._userPauseIntent = false;
+            if (this.playerCore) this.playerCore.userPauseIntent = false;
             this.startCapsulePlayback(0);
             return;
         }
 
         if (isCurrentlyPlaying) {
             this._userPauseIntent = true;
+            if (this.playerCore) this.playerCore.userPauseIntent = true;
             this.targetVideo.pause();
         } else {
             this._userPauseIntent = false;
+            if (this.playerCore) this.playerCore.userPauseIntent = false;
             if (!this._isCapsuleLoopPlaying) {
                 this.startCapsulePlaybackFromCurrentTime();
             } else {
