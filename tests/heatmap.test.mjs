@@ -99,33 +99,59 @@ assert.ok(hm.bins[2] > 0.9, `桶 2 应静默记录 1 秒播放时间 (实际: ${
 hm.destroy();
 console.log('✅ 5. 展示开关关闭时后台静默记录断言测试通过');
 
-// 6. 真实可直接播放多段缓冲计算与缝隙合并断言 (Playable Multi-Segment Buffer Test)
-import { ProgressManager, getMergedBufferedRanges } from '../src/player/managers/ProgressManager.js';
+// 6. 网络等待缓冲流动条纹状态机断言 (Buffering Stall State Machine Test)
+import { ProgressManager } from '../src/player/managers/ProgressManager.js';
 
-// 6.1 离散多段保留断言 (例如先看30分钟再跳回20分钟，两处缓冲同时有效保留)
-const multiBuffered = {
-    length: 2,
-    start(i) { return i === 0 ? 1200 : 1800; },
-    end(i) { return i === 0 ? 1260 : 1860; }
+let isBufferingClassPresent = false;
+const mockEventHandlers = {};
+const mockVideoForBuffer = {
+    currentTime: 10,
+    duration: 100,
+    paused: false,
+    readyState: 2,
+    addEventListener(evt, handler) {
+        mockEventHandlers[evt] = handler;
+    },
+    removeEventListener(evt) {
+        delete mockEventHandlers[evt];
+    }
 };
-const discreteRanges = getMergedBufferedRanges(multiBuffered, 7200);
-assert.strictEqual(discreteRanges.length, 2, '离散的多段已缓冲区间必须同时完整保留');
-assert.strictEqual(discreteRanges[0].start, 1200);
-assert.strictEqual(discreteRanges[0].end, 1260);
-assert.strictEqual(discreteRanges[1].start, 1800);
-assert.strictEqual(discreteRanges[1].end, 1860);
 
-// 6.2 流媒体切片缝隙 (<2s) 自动桥接合并断言 (彻底消灭切片交接时的忽闪)
-const gapBuffered = {
-    length: 2,
-    start(i) { return i === 0 ? 0 : 6.1; },
-    end(i) { return i === 0 ? 6.0 : 12.0; }
+const mockProgressBar = {
+    parentElement: { addEventListener() {} },
+    addEventListener() {},
+    classList: {
+        add(cls) { if (cls === 'is-buffering') isBufferingClassPresent = true; },
+        remove(cls) { if (cls === 'is-buffering') isBufferingClassPresent = false; },
+        contains(cls) { return cls === 'is-buffering' && isBufferingClassPresent; }
+    }
 };
-const mergedGaps = getMergedBufferedRanges(gapBuffered, 7200);
-assert.strictEqual(mergedGaps.length, 1, '流媒体切片微小缝隙必须被平滑桥接合并为一个连续段，杜绝忽闪');
-assert.strictEqual(mergedGaps[0].start, 0);
-assert.strictEqual(mergedGaps[0].end, 12.0);
 
-console.log('✅ 6. 真实全量多段缓冲保留与切片缝隙合并断言测试通过');
+const pm = new ProgressManager({ targetVideo: mockVideoForBuffer }, {});
+pm.init({
+    progressBarElement: mockProgressBar,
+    progressIndicator: { style: {} },
+    currentTimeDisplay: { textContent: '' },
+    totalDurationDisplay: { textContent: '' },
+    timeIndicator: { style: {} }
+});
 
-console.log('\n🎉 全部 6 项视频播放热度、探索足迹与缓冲条测试 100% 通过！\n');
+// 6.1 当视频遭遇网络等待卡顿 (waiting) 时，自动激活 .is-buffering 条纹流动动画
+assert.strictEqual(isBufferingClassPresent, false, '初始正常态不应激活缓冲条纹');
+if (mockEventHandlers.waiting) mockEventHandlers.waiting();
+assert.strictEqual(isBufferingClassPresent, true, '网络卡顿等待时必须激活 .is-buffering 条纹动画告知用户未假死');
+
+// 6.2 当视频恢复播放 (playing) 时，瞬间解除 .is-buffering 条纹动画
+if (mockEventHandlers.playing) mockEventHandlers.playing();
+assert.strictEqual(isBufferingClassPresent, false, '恢复播放时必须即刻移除 .is-buffering 保持纯净底槽');
+
+// 6.3 当用户主动暂停时，也必须确保条纹动画静止
+if (mockEventHandlers.waiting) mockEventHandlers.waiting();
+assert.strictEqual(isBufferingClassPresent, true);
+if (mockEventHandlers.pause) mockEventHandlers.pause();
+assert.strictEqual(isBufferingClassPresent, false, '用户主动暂停时必须取消缓冲条纹保持静止');
+
+pm.cleanup();
+console.log('✅ 6. 网络等待缓冲流动条纹状态机测试全部通过');
+
+console.log('\n🎉 全部 6 项视频播放热度、探索足迹与缓冲等待状态测试 100% 通过！\n');

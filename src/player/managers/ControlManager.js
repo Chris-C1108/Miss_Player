@@ -37,8 +37,6 @@ export class ControlManager {
 
         // 共享元素引用 (暴露给 ProgressManager 和 LoopManager)
         this.progressBarElement = null;  // 进度条元素
-        this.progressBufferContainer = null; // 真实可直接播放多段缓冲容器
-        this.progressBufferIndicator = null; // 兼容旧别名引用
         this.progressIndicator = null;   // 进度指示器
         this.currentTimeDisplay = null;  // 当前时间显示
         this.totalDurationDisplay = null; // 总时长显示
@@ -211,10 +209,6 @@ export class ControlManager {
         this.progressBarElement = document.createElement('div');
         this.progressBarElement.className = 'tm-progress-bar';
 
-        this.progressBufferContainer = document.createElement('div');
-        this.progressBufferContainer.className = 'tm-progress-buffer-container';
-        this.progressBufferIndicator = this.progressBufferContainer;
-
         this.progressIndicator = document.createElement('div');
         this.progressIndicator.className = 'tm-progress-indicator';
 
@@ -259,7 +253,6 @@ export class ControlManager {
         timeDisplayContainer.appendChild(this.currentTimeDisplay);
         timeDisplayContainer.appendChild(this.totalDurationDisplay);
 
-        this.progressBarElement.appendChild(this.progressBufferContainer);
         this.progressBarElement.appendChild(this.progressIndicator);
         progressBarContainer.appendChild(this.progressBarElement);
 

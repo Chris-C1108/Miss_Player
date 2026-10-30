@@ -1,42 +1,7 @@
 import { formatTime } from '../../utils/index.js';
 
 /**
- * 合并相邻或微小缝隙 (<2s) 的已缓冲区间，消除流媒体切片缝隙引起的忽闪
- * 并完整保留离散多段缓冲 (如用户跳看 30 分钟后返回 20 分钟)
- */
-export function getMergedBufferedRanges(buffered, duration) {
-    if (!buffered || !buffered.length || !duration || isNaN(duration) || duration <= 0) return [];
-
-    const rawRanges = [];
-    for (let i = 0; i < buffered.length; i++) {
-        const s = Math.max(0, buffered.start(i));
-        const e = Math.min(duration, buffered.end(i));
-        if (e > s) {
-            rawRanges.push({ start: s, end: e });
-        }
-    }
-    if (rawRanges.length === 0) return [];
-
-    rawRanges.sort((a, b) => a.start - b.start);
-
-    const merged = [rawRanges[0]];
-    for (let i = 1; i < rawRanges.length; i++) {
-        const curr = rawRanges[i];
-        const prev = merged[merged.length - 1];
-
-        // 2.0 秒内微切片公差桥接合并，杜绝切片交接时的微小忽闪
-        if (curr.start <= prev.end + 2.0) {
-            prev.end = Math.max(prev.end, curr.end);
-        } else {
-            merged.push(curr);
-        }
-    }
-
-    return merged;
-}
-
-/**
- * 进度管理器类 - 负责进度条和时间显示功能
+ * 进度管理器类 - 负责进度条、时间显示与网络缓冲等待条纹状态机
  */
 export class ProgressManager {
     constructor(playerCore, uiElements) {
@@ -47,7 +12,6 @@ export class ProgressManager {
         // UI元素引用
         this.uiElements = uiElements;
         this.progressBarElement = null;  // 进度条元素
-        this.progressBufferIndicator = null; // 真实可直接播放缓冲指示器
         this.progressIndicator = null;   // 进度指示器
         this.currentTimeDisplay = null;  // 当前时间显示
         this.totalDurationDisplay = null; // 总时长显示
@@ -60,6 +24,15 @@ export class ProgressManager {
         this.lastDragX = 0; // 上次拖动位置的X坐标
         this.isTouchDevice = typeof window !== 'undefined' && 'ontouchstart' in window; // 检测是否为触摸设备
         this._loopManager = null; // 循环管理器引用
+
+        // 缓冲状态监听引用
+        this._onWaiting = null;
+        this._onStalled = null;
+        this._onPlaying = null;
+        this._onCanPlay = null;
+        this._onPause = null;
+        this._onSeeking = null;
+        this._onSeeked = null;
     }
 
     setLoopManager(loopManager) {
@@ -76,7 +49,6 @@ export class ProgressManager {
     init(progressElements) {
         this.progressBarElement = progressElements.progressBarElement;
         if (this.uiElements) { this.uiElements.progressBar = this.progressBarElement; }
-        this.progressBufferIndicator = progressElements.progressBufferIndicator || null;
         this.progressIndicator = progressElements.progressIndicator;
         this.currentTimeDisplay = progressElements.currentTimeDisplay;
         this.totalDurationDisplay = progressElements.totalDurationDisplay;
@@ -92,20 +64,64 @@ export class ProgressManager {
         this.progressBarContainer.addEventListener('mousedown', this.startProgressDrag.bind(this));
         this.progressBarContainer.addEventListener('touchstart', this.startProgressDrag.bind(this), { passive: false });
         
-        // 绑定事件处理器
+        // 监听视频时间更新
         this._timeUpdateHandler = this.updateProgressBar.bind(this);
-        this._bufferProgressHandler = this.updateBufferProgress.bind(this);
-
-        // 监听视频时间与缓冲下载更新
         this.targetVideo.addEventListener('timeupdate', this._timeUpdateHandler);
-        this.targetVideo.addEventListener('progress', this._bufferProgressHandler);
-        this.targetVideo.addEventListener('seeked', this._bufferProgressHandler);
-        this.targetVideo.addEventListener('loadedmetadata', this._bufferProgressHandler);
-        
-        // 初始更新缓冲
-        this.updateBufferProgress();
+
+        // 绑定网络等待与缓冲状态机监听 (通知用户当前在等待缓冲，绝非假死)
+        this._onWaiting = () => {
+            if (this.targetVideo && !this.targetVideo.paused) {
+                this._setBuffering(true);
+            }
+        };
+        this._onStalled = () => {
+            if (this.targetVideo && !this.targetVideo.paused) {
+                this._setBuffering(true);
+            }
+        };
+        this._onPlaying = () => {
+            this._setBuffering(false);
+        };
+        this._onCanPlay = () => {
+            this._setBuffering(false);
+        };
+        this._onPause = () => {
+            this._setBuffering(false);
+        };
+        this._onSeeking = () => {
+            if (this.targetVideo && this.targetVideo.readyState < 3) {
+                this._setBuffering(true);
+            }
+        };
+        this._onSeeked = () => {
+            if (this.targetVideo && this.targetVideo.readyState >= 3) {
+                this._setBuffering(false);
+            }
+        };
+
+        this.targetVideo.addEventListener('waiting', this._onWaiting);
+        this.targetVideo.addEventListener('stalled', this._onStalled);
+        this.targetVideo.addEventListener('playing', this._onPlaying);
+        this.targetVideo.addEventListener('canplay', this._onCanPlay);
+        this.targetVideo.addEventListener('canplaythrough', this._onCanPlay);
+        this.targetVideo.addEventListener('pause', this._onPause);
+        this.targetVideo.addEventListener('seeking', this._onSeeking);
+        this.targetVideo.addEventListener('seeked', this._onSeeked);
 
         return this;
+    }
+
+    /**
+     * 切换缓冲等待状态 (驱动进度条底槽流动条纹动画)
+     * @param {boolean} isBuffering 是否正在等待网络缓冲
+     */
+    _setBuffering(isBuffering) {
+        if (!this.progressBarElement) return;
+        if (isBuffering) {
+            this.progressBarElement.classList.add('is-buffering');
+        } else {
+            this.progressBarElement.classList.remove('is-buffering');
+        }
     }
     
     /**
@@ -124,99 +140,11 @@ export class ProgressManager {
         
         // 更新进度指示器的宽度
         this.progressIndicator.style.width = `${progressPercent}%`;
-        
-        // 同步更新已下载缓冲进度
-        this.updateBufferProgress();
 
         // 更新时间显示
         this.updateCurrentTimeDisplay();
     }
 
-    /**
-     * 更新真实全量多段直接可播放缓冲条
-     * 1. 真实展示多段离散缓冲（如先看 30 分钟再跳回 20 分钟，两处缓冲同时可见）；
-     * 2. 平滑桥接切片微缝隙，彻底消除“一会儿出现一会儿消失”；
-     * 3. 针对当前活动段注入长片最小可辨前探补偿；
-     * 4. 纯平切直角无内圆角，由父容器裁切约束。
-     */
-    updateBufferProgress() {
-        if (!this.targetVideo || !this.progressBufferIndicator) return;
-
-        const duration = this.targetVideo.duration;
-        if (isNaN(duration) || duration <= 0) {
-            this.progressBufferIndicator.innerHTML = '';
-            return;
-        }
-
-        const currentTime = this.targetVideo.currentTime || 0;
-        const buffered = this.targetVideo.buffered;
-        const mergedRanges = getMergedBufferedRanges(buffered, duration);
-
-        if (mergedRanges.length === 0) {
-            this.progressBufferIndicator.innerHTML = '';
-            return;
-        }
-
-        const barWidth = this.progressBarElement?.offsetWidth || 340;
-        const playedRatio = Math.min(1.0, Math.max(0, currentTime / duration));
-        const container = this.progressBufferIndicator;
-
-        if (typeof document !== 'undefined') {
-            const renderSegments = [];
-            const minW = barWidth > 0 ? (6 / barWidth) * 100 : 1.8;
-            const minLeadPct = barWidth > 0 ? (8 / barWidth) * 100 : 2.4;
-
-            for (let i = 0; i < mergedRanges.length; i++) {
-                const range = mergedRanges[i];
-                const startPct = Math.min(100, Math.max(0, (range.start / duration) * 100));
-                let endPct = Math.min(100, Math.max(0, (range.end / duration) * 100));
-
-                // 判断是否为包含或紧邻当前播放点的活动缓冲段
-                const isActiveRange = (currentTime >= range.start - 1.5 && currentTime <= range.end + 0.5);
-
-                if (isActiveRange) {
-                    // 若当前点前方有已缓冲数据，确保至少探出当前白条 8px
-                    if (range.end > currentTime) {
-                        endPct = Math.max(endPct, playedPct + minLeadPct);
-                    }
-                } else {
-                    // 孤岛历史段落 (如用户跳看过的历史缓冲)：保底至少 6px 宽度，确保清晰可见！
-                    if (endPct - startPct < minW) {
-                        endPct = Math.min(100, startPct + minW);
-                    }
-                }
-
-                const widthPct = Math.max(0, endPct - startPct);
-                if (widthPct > 0) {
-                    renderSegments.push({
-                        left: startPct,
-                        width: widthPct
-                    });
-                }
-            }
-
-            // 复用 DOM 节点池，杜绝每一帧清空 innerHTML 导致的 WebKit 渲染丢帧与频闪
-            const requiredCount = renderSegments.length;
-            while (container.children.length < requiredCount) {
-                const seg = document.createElement('div');
-                seg.className = 'tm-buffer-segment';
-                container.appendChild(seg);
-            }
-            while (container.children.length > requiredCount) {
-                container.removeChild(container.lastChild);
-            }
-
-            for (let i = 0; i < requiredCount; i++) {
-                const segData = renderSegments[i];
-                const seg = container.children[i];
-                const leftStr = `${segData.left.toFixed(2)}%`;
-                const widthStr = `${segData.width.toFixed(2)}%`;
-                if (seg.style.left !== leftStr) seg.style.left = leftStr;
-                if (seg.style.width !== widthStr) seg.style.width = widthStr;
-            }
-        }
-    }
-    
     /**
      * 更新当前时间显示
      */
@@ -514,12 +442,18 @@ export class ProgressManager {
     cleanup() {
         if (this.targetVideo) {
             if (this._timeUpdateHandler) this.targetVideo.removeEventListener('timeupdate', this._timeUpdateHandler);
-            if (this._bufferProgressHandler) {
-                this.targetVideo.removeEventListener('progress', this._bufferProgressHandler);
-                this.targetVideo.removeEventListener('seeked', this._bufferProgressHandler);
-                this.targetVideo.removeEventListener('loadedmetadata', this._bufferProgressHandler);
+            if (this._onWaiting) this.targetVideo.removeEventListener('waiting', this._onWaiting);
+            if (this._onStalled) this.targetVideo.removeEventListener('stalled', this._onStalled);
+            if (this._onPlaying) this.targetVideo.removeEventListener('playing', this._onPlaying);
+            if (this._onCanPlay) {
+                this.targetVideo.removeEventListener('canplay', this._onCanPlay);
+                this.targetVideo.removeEventListener('canplaythrough', this._onCanPlay);
             }
+            if (this._onPause) this.targetVideo.removeEventListener('pause', this._onPause);
+            if (this._onSeeking) this.targetVideo.removeEventListener('seeking', this._onSeeking);
+            if (this._onSeeked) this.targetVideo.removeEventListener('seeked', this._onSeeked);
         }
+        this._setBuffering(false);
         this.removeProgressEventListeners();
     }
 } 

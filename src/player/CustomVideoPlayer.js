@@ -165,7 +165,6 @@ export class CustomVideoPlayer {
         progressManager.init({
             progressBarElement: controlManager.progressBarElement,
             progressIndicator: controlManager.progressIndicator,
-            progressBufferIndicator: controlManager.progressBufferIndicator,
             currentTimeDisplay: controlManager.currentTimeDisplay,
             totalDurationDisplay: controlManager.totalDurationDisplay,
             timeIndicator: controlManager.timeIndicator
