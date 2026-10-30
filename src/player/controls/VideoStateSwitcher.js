@@ -440,6 +440,10 @@ export class VideoStateSwitcher {
                 if (this.isDragging || this.hasDragged) return;
                 if (idx !== this.currentIndex) {
                     this.snapToIndex(idx, true, true);
+                } else {
+                    // 当点击当前激活的居中胶囊时，无论是否处于 morph 就绪期，100% 响应播放/暂停变体操作！
+                    this.playHapticSound('click');
+                    this.handleVariantClick(this.modes[idx].id);
                 }
             });
         });

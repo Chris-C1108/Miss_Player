@@ -125,8 +125,8 @@ export class VideoSwipeManager {
 
         // 添加手柄事件监听
         if (this.handle) {
-            this.handle.style.willChange = 'transform, left'; // 优化性能
-            this.handle.style.transition = 'left 0.2s cubic-bezier(0.215, 0.61, 0.355, 1), width 0.2s ease';
+            this.handle.style.willChange = 'transform'; // 优化性能，纯 GPU transform 驱动
+            this.handle.style.left = '0px';
             this.handle.addEventListener('pointerdown', this._handlePointerDownHandler);
         }
 
@@ -351,7 +351,7 @@ export class VideoSwipeManager {
     }
 
     /**
-     * 更新手柄位置
+     * 更新手柄位置 (完全使用 GPU transform: translate3d，绝不触发 Reflow)
      */
     _updateHandlePosition() {
         if (!this.handle) return;
@@ -359,38 +359,23 @@ export class VideoSwipeManager {
         const handleContainer = this.handle.parentElement;
         if (!handleContainer) return;
 
-        // 如果视频宽度不超过容器，居中显示手柄
-        if (this.maxOffset <= 0) {
-            // 居中手柄
-            this.handle.style.left = '50%';
-            this.handle.style.transform = 'translateX(-50%)';
-            return;
-        }
-
         const containerWidth = handleContainer.offsetWidth;
         const handleWidth = this.handle.offsetWidth;
 
-        // 计算手柄可移动的范围
+        this.handle.style.left = '0px';
+
+        // 如果视频宽度不超过容器，居中显示手柄
+        if (this.maxOffset <= 0 || containerWidth <= handleWidth) {
+            const centerX = Math.max(0, (containerWidth - handleWidth) / 2);
+            this.handle.style.transform = `translate3d(${centerX}px, 0, 0)`;
+            return;
+        }
+
         const handleMovableRange = containerWidth - handleWidth;
-
-        // 视频偏移范围: [-maxOffset, maxOffset]
-        // 手柄位置范围: [0, handleMovableRange]
-        // 调整为反向移动：当视频偏移为最大负值时，手柄位置为最右侧，反之亦然
         const offsetRatio = 1 - ((this.offset + this.maxOffset) / (2 * this.maxOffset));
-        const handleLeftPx = offsetRatio * handleMovableRange;
+        const handleLeftPx = Math.max(0, Math.min(handleMovableRange, offsetRatio * handleMovableRange));
 
-        // 更新手柄位置 (使用百分比让布局更灵活)
-        const handleLeftPercent = (handleLeftPx / containerWidth) * 100;
-        
-        // // 平滑过渡
-        // if (!this.isHandleDragging) {
-        //     this.handle.style.transition = 'left 0.2s cubic-bezier(0.215, 0.61, 0.355, 1)';
-        // } else {
-        //     this.handle.style.transition = 'none';
-        // }
-        
-        this.handle.style.left = `${handleLeftPercent}%`;
-        this.handle.style.transform = ''; // 清除可能存在的transform
+        this.handle.style.transform = `translate3d(${handleLeftPx}px, 0, 0)`;
     }
 
     /**
@@ -737,10 +722,7 @@ export class VideoSwipeManager {
      */
     _handleHandlePointerDown(e) {
         // 如果视频宽度不超过容器，则不处理
-        if (this.maxOffset <= 0) return;
-
-        // 只处理主指针
-        if (!e.isPrimary) return;
+        if (this.maxOffset <= 0 || !e.isPrimary) return;
 
         // 停止可能正在进行的动画
         if (this.animation.active) {
@@ -751,28 +733,28 @@ export class VideoSwipeManager {
         // 初始化拖动状态
         this.isHandleDragging = true;
         this.startX = e.clientX;
-        this.dragDistance = 0;  // 重置拖动距离
+        this.dragDistance = 0;
 
-        // 记录初始偏移和手柄位置
-        this.startOffset = this.offset;
+        // 一次性读取并固化几何尺寸，杜绝高频 pointermove 中读取触发强制重排
         const handleContainer = this.handle.parentElement;
-        const containerWidth = handleContainer ? handleContainer.offsetWidth : 0;
+        this._cachedContainerW = handleContainer ? handleContainer.offsetWidth : 0;
+        this._cachedHandleW = this.handle.offsetWidth;
+        this._cachedMaxTravel = Math.max(0, this._cachedContainerW - this._cachedHandleW);
 
-        // 如果手柄容器有效，计算手柄位置比例
-        if (containerWidth > 0) {
-            const handleRect = this.handle.getBoundingClientRect();
-            this.startHandleLeft = handleRect.left - (handleContainer.getBoundingClientRect().left);
-            this.startHandleLeftPercent = (this.startHandleLeft / containerWidth) * 100;
-        } else {
-            this.startHandleLeft = 0;
-            this.startHandleLeftPercent = 0;
-        }
+        // 获取当前物理 translate3d 对应的像素位置
+        const currentRatio = this.maxOffset > 0 ? (1 - ((this.offset + this.maxOffset) / (2 * this.maxOffset))) : 0.5;
+        this._startHandleX = Math.max(0, Math.min(this._cachedMaxTravel, currentRatio * this._cachedMaxTravel));
 
-        // 更新视觉状态
+        // 更新视觉状态与硬件加速模式
         this.handle.style.cursor = 'grabbing';
         this.handle.style.transition = 'none';
+        this.video.style.transition = 'none';
 
-        // 如果支持指针捕获，捕获指针
+        // 唤醒小窗 Minimap，与把手同步呈现
+        if (this.container) {
+            this.container.classList.add('is-swiping');
+        }
+
         if (this.handle.setPointerCapture) {
             this.handle.setPointerCapture(e.pointerId);
         }
@@ -782,94 +764,36 @@ export class VideoSwipeManager {
         this.handle.addEventListener('pointerup', this._handlePointerUpHandler);
         this.handle.addEventListener('pointercancel', this._handlePointerUpHandler);
 
-        // 触觉反馈 (如果设备支持)
-        if (window.navigator.vibrate) {
-            window.navigator.vibrate(5);
-        }
-
-        // 阻止默认行为
         e.preventDefault();
     }
 
     /**
-     * 处理手柄的指针移动事件
+     * 处理手柄的指针移动事件 (纯 GPU transform，100% 毫秒级跟手与 Minimap 镜像同步)
      * @param {PointerEvent} e - 指针事件
      */
     _handleHandlePointerMove(e) {
         if (!this.isHandleDragging || !e.isPrimary) return;
+        if (!this._cachedMaxTravel || this._cachedMaxTravel <= 0) return;
 
-        const handleContainer = this.handle.parentElement;
-        if (!handleContainer) return;
-
-        const containerWidth = handleContainer.offsetWidth;
-        const handleWidth = this.handle.offsetWidth;
-
-        // 如果容器或手柄宽度无效，则不处理
-        if (containerWidth <= 0 || handleWidth <= 0) return;
-
-        // 计算位移
+        // 计算位移与最大拖动距离
         const deltaX = e.clientX - this.startX;
-        this.dragDistance = Math.max(this.dragDistance, Math.abs(deltaX));  // 更新最大拖动距离
+        this.dragDistance = Math.max(this.dragDistance, Math.abs(deltaX));
 
-        // 计算手柄新位置 (像素)
-        let newHandleLeft = this.startHandleLeft + deltaX;
+        // 纯内存数学计算，零 DOM 几何测量
+        const newHandleX = Math.max(0, Math.min(this._cachedMaxTravel, this._startHandleX + deltaX));
 
-        // 限制手柄位置在容器范围内
-        const maxHandleLeft = containerWidth - handleWidth;
-        newHandleLeft = Math.max(0, Math.min(newHandleLeft, maxHandleLeft));
+        // GPU 硬件加速手柄位移
+        this.handle.style.transform = `translate3d(${newHandleX}px, 0, 0)`;
 
-        // 记录位置用于计算手柄速度
-        this._trackHandleVelocity(newHandleLeft);
-
-        // 定义吸附位置和阈值
-        const snapPositions = [
-            0,                  // 左侧
-            maxHandleLeft / 2,  // 中间
-            maxHandleLeft       // 右侧
-        ];
-        const snapThreshold = 15; // 吸附阈值（像素）
-        let didSnap = false;
-
-        // 检查是否需要吸附
-        for (const snapPos of snapPositions) {
-            if (Math.abs(newHandleLeft - snapPos) < snapThreshold) {
-                // 距离小于阈值，进行吸附
-                newHandleLeft = snapPos;
-                didSnap = true;
-
-                // 如果设备支持触觉反馈且之前未吸附到此位置
-                if (window.navigator.vibrate && (!this.lastSnapPosition || this.lastSnapPosition !== snapPos)) {
-                    window.navigator.vibrate(15); // 较强的震动表示吸附
-                    this.lastSnapPosition = snapPos;
-                }
-                break;
-            }
-        }
-
-        // 如果未吸附，重置上次吸附位置记录
-        if (!didSnap) {
-            this.lastSnapPosition = null;
-        }
-
-        // 计算手柄位置百分比
-        const newHandleLeftPercent = (newHandleLeft / containerWidth) * 100;
-
-        // 应用手柄位置
-        this.handle.style.left = `${newHandleLeftPercent}%`;
-
-        // 将手柄位置映射回视频偏移 - 反向移动
-        // 手柄位置范围: [0, maxHandleLeft]
-        // 视频偏移范围: [-this.maxOffset, this.maxOffset]
-        const handleRatio = maxHandleLeft > 0 ? newHandleLeft / maxHandleLeft : 0; // 0 到 1, 避免除零
-        // 改为反向映射 (1 - handleRatio) 来反转方向
+        // 反向映射回视频物理偏移
+        const handleRatio = newHandleX / this._cachedMaxTravel;
         const newOffset = ((1 - handleRatio) * 2 * this.maxOffset) - this.maxOffset;
 
-        // 应用视频偏移
+        // 应用视频偏移并同步更新内部小窗 (Minimap) 视口
         this.video.style.transform = `translateX(${newOffset}px)`;
-        this.video.style.transition = 'none';
         this.offset = newOffset;
+        this._updateMinimapViewport();
 
-        // 阻止默认行为
         e.preventDefault();
     }
 
@@ -880,10 +804,7 @@ export class VideoSwipeManager {
     _handleHandlePointerUp(e) {
         if (!this.isHandleDragging || !e.isPrimary) return;
 
-        // 更新状态
         this.isHandleDragging = false;
-        
-        // 只有当拖动距离超过最小值时才设置拖动标记
         if (this.dragDistance > this.minDragDistance) {
             this.wasDragging = true;
             this.dragEndTimestamp = Date.now();
@@ -891,26 +812,23 @@ export class VideoSwipeManager {
             this.wasDragging = false;
         }
 
-        // 重置上次吸附位置记录，以便下次拖动时能正确触发震动
-        this.lastSnapPosition = null;
-
-        // 释放指针捕获
         if (this.handle.releasePointerCapture) {
             this.handle.releasePointerCapture(e.pointerId);
         }
 
-        // 移除事件监听
         this.handle.removeEventListener('pointermove', this._handlePointerMoveHandler);
         this.handle.removeEventListener('pointerup', this._handlePointerUpHandler);
         this.handle.removeEventListener('pointercancel', this._handlePointerUpHandler);
 
-        // 恢复视觉状态
         this.handle.style.cursor = 'grab';
-        
-        // 应用手柄惯性
-        this._applyHandleInertia();
 
-        // 阻止默认行为
+        // 延迟 400ms 移除 is-swiping，使小窗平滑淡出隐藏
+        setTimeout(() => {
+            if (!this.isDragging && !this.isHandleDragging && this.container) {
+                this.container.classList.remove('is-swiping');
+            }
+        }, 400);
+
         e.preventDefault();
     }
 

@@ -32,6 +32,24 @@ export class PlaybackController {
 
         this.dragHandler = null;
         this.upHandler = null;
+
+        // 用户主动临时暂停意图锁 (即使视频流未加载，一旦用户点击暂停，就坚决拦截后续自动播放)
+        this._userPauseIntent = false;
+        this._bindVideoPlaybackGuards();
+    }
+
+    _bindVideoPlaybackGuards() {
+        if (!this.targetVideo) return;
+        this._autoPlayGuardHandler = () => {
+            if (this._userPauseIntent && !this.targetVideo.paused) {
+                this.targetVideo.pause();
+                this.updatePlayPauseButton();
+            }
+        };
+        this.targetVideo.addEventListener('play', this._autoPlayGuardHandler);
+        this.targetVideo.addEventListener('playing', this._autoPlayGuardHandler);
+        this.targetVideo.addEventListener('loadeddata', this._autoPlayGuardHandler);
+        this.targetVideo.addEventListener('canplay', this._autoPlayGuardHandler);
     }
 
     /**
@@ -111,16 +129,30 @@ export class PlaybackController {
 
     handleMainPlayButtonClick() {
         const mode = this.getPlayMode();
-        const isPaused = this.targetVideo.paused;
+        const isCurrentlyPlaying = this.targetVideo && !this.targetVideo.paused && !this.targetVideo.ended;
 
         if (mode === 'normal') {
-            if (isPaused) {
-                this.targetVideo.play().catch(() => {});
-            } else {
+            if (isCurrentlyPlaying) {
+                // 用户想要暂停
+                this._userPauseIntent = true;
                 this.targetVideo.pause();
+                Toast('已暂停播放', 1200, 'info');
+            } else {
+                // 当前处于暂停，或视频流尚未就绪时
+                const isStreamPending = this.targetVideo && this.targetVideo.readyState < 2;
+                if (!this._userPauseIntent && isStreamPending) {
+                    // 用户在加载阶段主动点击：锁定为临时暂停！
+                    this._userPauseIntent = true;
+                    this.targetVideo.pause();
+                    Toast('已临时暂停，待就绪后保持静止', 1500, 'info');
+                } else {
+                    // 用户确认开播
+                    this._userPauseIntent = false;
+                    this.targetVideo.play().catch(() => {});
+                }
             }
             this.updatePlayPauseButton();
-            telemetry.track('play_toggle', { is_playing: isPaused });
+            telemetry.track('play_toggle', { is_playing: !this._userPauseIntent });
             return;
         }
 
@@ -129,10 +161,12 @@ export class PlaybackController {
         const tabs = loopManager?.tabs || [];
         if (tabs.length === 0) {
             Toast('当前视频暂无高光片段，请先在时间轴添加', 2000, 'info');
-            if (isPaused) {
-                this.targetVideo.play().catch(() => {});
-            } else {
+            if (isCurrentlyPlaying) {
+                this._userPauseIntent = true;
                 this.targetVideo.pause();
+            } else {
+                this._userPauseIntent = false;
+                this.targetVideo.play().catch(() => {});
             }
             this.updatePlayPauseButton();
             return;
@@ -140,24 +174,28 @@ export class PlaybackController {
 
         if (this._isTourEnded) {
             this._isTourEnded = false;
+            this._userPauseIntent = false;
             this.startCapsulePlayback(0);
             return;
         }
 
-        if (isPaused) {
+        if (isCurrentlyPlaying) {
+            this._userPauseIntent = true;
+            this.targetVideo.pause();
+        } else {
+            this._userPauseIntent = false;
             if (!this._isCapsuleLoopPlaying) {
                 this.startCapsulePlaybackFromCurrentTime();
             } else {
                 this.targetVideo.play().catch(() => {});
             }
-        } else {
-            this.targetVideo.pause();
         }
         this.updatePlayPauseButton();
     }
 
     updatePlayPauseButton() {
-        const isPaused = this.targetVideo ? this.targetVideo.paused : true;
+        // 如果用户已预设暂停意图，无论底层 video 状态如何，界面均显示为暂停态
+        const isPaused = this._userPauseIntent || (this.targetVideo ? this.targetVideo.paused : true);
         const loopManager = this.controlManager?.loopManager;
         const isCapsuleLocked = Boolean(loopManager && loopManager.loopActive && loopManager.activeTabId);
 
@@ -429,6 +467,16 @@ export class PlaybackController {
     _setProgressFill(pct) {
         if (this.stateSwitcher) {
             this.stateSwitcher.setProgressFill(pct);
+        }
+    }
+
+    cleanup() {
+        if (this._autoPlayGuardHandler && this.targetVideo) {
+            this.targetVideo.removeEventListener('play', this._autoPlayGuardHandler);
+            this.targetVideo.removeEventListener('playing', this._autoPlayGuardHandler);
+            this.targetVideo.removeEventListener('loadeddata', this._autoPlayGuardHandler);
+            this.targetVideo.removeEventListener('canplay', this._autoPlayGuardHandler);
+            this._autoPlayGuardHandler = null;
         }
     }
 }
