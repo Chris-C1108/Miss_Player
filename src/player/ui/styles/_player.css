@@ -222,17 +222,16 @@
     cursor: grabbing;
 }
 
-/* 画面已完整呈现、无左右平移余地时的锁定态手柄 */
+/* 画面已完整呈现、无左右平移余地时的锁定态手柄 (仅锁定水平平移，垂直拉伸调节高度与放大 100% 保持可用) */
 .tm-resize-handle.is-locked {
-    opacity: 0.22;
-    cursor: default !important;
-    pointer-events: none;
+    opacity: 0.35;
+    cursor: row-resize;
     box-shadow: none;
-    background-color: hsla(var(--shadcn-foreground) / 0.35);
+    background-color: hsla(var(--shadcn-foreground) / 0.45);
 }
 
 .tm-handle-container.is-locked {
-    cursor: default !important;
+    cursor: row-resize;
 }
 
 /* 激活态手柄 (超宽或放大、画面存在可移动溢出空间) */

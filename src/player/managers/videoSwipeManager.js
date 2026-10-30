@@ -320,27 +320,21 @@ export class VideoSwipeManager {
         const handleContainer = this.handle.parentElement;
 
         if (enabled && this.maxOffset > 0) {
-            // 画面超宽/放大，存在可移动余地：激活拖动手柄
+            // 画面超宽/放大，存在可移动余地：激活水平拖动手柄
             this.handle.classList.remove('is-locked');
             this.handle.classList.add('is-active');
-            this.handle.style.cursor = 'grab';
-            this.handle.style.pointerEvents = 'auto';
             this.video.style.cursor = 'grab';
 
             if (handleContainer) {
-                handleContainer.style.cursor = 'grab';
                 handleContainer.classList.remove('is-locked');
             }
         } else {
-            // 画面无左右移动余地 (maxOffset <= 0)：彻底锁定手柄，禁止移动
+            // 画面无左右移动余地 (maxOffset <= 0)：仅锁定水平平移，手柄垂直拉伸放大视频保持 100% 可用！
             this.handle.classList.add('is-locked');
             this.handle.classList.remove('is-active');
-            this.handle.style.cursor = 'default';
-            this.handle.style.pointerEvents = 'none';
             this.video.style.cursor = 'default';
 
             if (handleContainer) {
-                handleContainer.style.cursor = 'default';
                 handleContainer.classList.add('is-locked');
             }
         }
@@ -765,6 +759,8 @@ export class VideoSwipeManager {
         // 初始化拖动状态
         this.isHandleDragging = true;
         this.startX = e.clientX;
+        this.startY = e.clientY;
+        this.isDirectionLocked = false;
         this.dragDistance = 0;
 
         // 一次性读取并固化几何尺寸，杜绝高频 pointermove 中读取触发强制重排
@@ -807,8 +803,21 @@ export class VideoSwipeManager {
         if (!this.isHandleDragging || !e.isPrimary) return;
         if (!this._cachedMaxTravel || this._cachedMaxTravel <= 0) return;
 
-        // 计算位移与最大拖动距离
         const deltaX = e.clientX - this.startX;
+        const deltaY = e.clientY - this.startY;
+
+        // 方向仲裁：若垂直位移优先发生，说明用户意图是下滑调节视频高度与放大，主动让出控制权！
+        if (!this.isDirectionLocked) {
+            if (Math.abs(deltaY) > 8 && Math.abs(deltaY) > Math.abs(deltaX)) {
+                this._handleHandlePointerUp(e);
+                return;
+            }
+            if (Math.abs(deltaX) > 6) {
+                this.isDirectionLocked = true;
+            }
+        }
+
+        // 计算位移与最大拖动距离
         this.dragDistance = Math.max(this.dragDistance, Math.abs(deltaX));
 
         // 纯内存数学计算，零 DOM 几何测量
