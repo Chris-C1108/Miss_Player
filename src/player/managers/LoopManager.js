@@ -667,14 +667,47 @@ export class LoopManager {
     }
 
     _handleOutsideClickForEdit(e) {
-        const editingPill = this.tabScrollContainer?.querySelector('.tm-tab-pill.draft.editing');
-        if (editingPill && !editingPill.contains(e.target)) {
-            // Check if clicking inside player container, comment modal, overlays, bottom sheet, etc.
-            if (e.target.closest('.tm-player-container, .tm-modal-overlay, .tm-comment-modal, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay')) {
-                return; // don't close if interacting with player controls/video/dialogs
-            }
-            this._exitEditMode();
+        if (!this.editingTabId) return;
+
+        // 获取包含 Shadow DOM 穿透的真实事件路径，杜绝事件冒泡至 document 时被重定向为 miss-player-root 导致误判退出
+        const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+
+        // 1. 若点击在正在编辑的胶囊内部，保持编辑态
+        const isClickInsideEditingPill = path.some(el =>
+            el instanceof HTMLElement && el.classList?.contains('editing') && el.classList?.contains('tm-tab-pill')
+        );
+        if (isClickInsideEditingPill) return;
+
+        // 2. 若点击在播放器控制条、进度条、时间轴、快进退、模态弹窗等任何播放器组件内部，坚决不退出编辑态
+        const isClickInsidePlayerOrControls = path.some(el => {
+            if (!(el instanceof HTMLElement)) return false;
+            const cls = typeof el.className === 'string' ? el.className : '';
+            const tag = el.tagName ? el.tagName.toLowerCase() : '';
+            return (
+                tag === 'miss-player-root' ||
+                cls.includes('tm-player-container') ||
+                cls.includes('tm-control-panel') ||
+                cls.includes('tm-control-buttons') ||
+                cls.includes('tm-progress-controls') ||
+                cls.includes('tm-progress-bar') ||
+                cls.includes('tm-progress-markers-container') ||
+                cls.includes('tm-seek-control-row') ||
+                cls.includes('tm-loop-control-row') ||
+                cls.includes('tm-playback-control-row') ||
+                cls.includes('tm-tab-scroll-container') ||
+                cls.includes('tm-modal-overlay') ||
+                cls.includes('tm-comment-modal') ||
+                cls.includes('tm-bottom-sheet-panel') ||
+                cls.includes('tm-bottom-sheet-overlay')
+            );
+        });
+
+        if (isClickInsidePlayerOrControls) {
+            return;
         }
+
+        // 仅当用户真正点击了播放器完全外部的网页空白区域时，才退出编辑态
+        this._exitEditMode();
     }
 
     // =====================================================================
@@ -1115,6 +1148,11 @@ export class LoopManager {
      * @returns {boolean} 是否跳出了循环播放
      */
     checkAndExitLoopIfOutside(targetTime) {
+        // 关键守卫：若当前正处于胶囊编辑状态，严禁因时间跳转超出区间而打断或退出编辑！
+        if (this.editingTabId) {
+            return false;
+        }
+
         if (!this.loopActive || this.loopStartTime === null || this.loopEndTime === null) {
             return false;
         }
@@ -1560,6 +1598,10 @@ export class LoopManager {
                 tick.style.setProperty('--tab-color', color);
                 tick.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    if (this.editingTabId) {
+                        if (this.targetVideo) this.targetVideo.currentTime = tab.startTime;
+                        return;
+                    }
                     this._handleTabClick(tab);
                 });
                 this.progressMarkersContainer.appendChild(tick);
@@ -1611,6 +1653,10 @@ export class LoopManager {
                     range.style.setProperty('--tab-color', color);
                     range.addEventListener('click', (e) => {
                         e.stopPropagation();
+                        if (this.editingTabId) {
+                            if (this.targetVideo) this.targetVideo.currentTime = tab.startTime;
+                            return;
+                        }
                         this._handleTabClick(tab);
                     });
                     this.progressMarkersContainer.appendChild(range);

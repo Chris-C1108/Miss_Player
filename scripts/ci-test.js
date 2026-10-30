@@ -83,6 +83,11 @@ runStep('执行评论展开状态与增量更新单元测试', () => {
     execSync('node tests/comment-expansion.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.3 胶囊编辑状态时间跳转免疫单元测试
+runStep('执行胶囊编辑状态时间跳转免疫与点击守卫单元测试', () => {
+    execSync('node tests/loop-edit-state.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

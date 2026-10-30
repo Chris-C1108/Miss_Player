@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.10
+// @version            5.7.11
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1242,7 +1242,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.10";
+		return "5.7.11";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4261,7 +4261,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.10";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.11";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -14606,11 +14606,15 @@
 			this.renderTabs();
 		}
 		_handleOutsideClickForEdit(e) {
-			const editingPill = this.tabScrollContainer?.querySelector(".tm-tab-pill.draft.editing");
-			if (editingPill && !editingPill.contains(e.target)) {
-				if (e.target.closest(".tm-player-container, .tm-modal-overlay, .tm-comment-modal, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay")) return;
-				this._exitEditMode();
-			}
+			if (!this.editingTabId) return;
+			const path = typeof e.composedPath === "function" ? e.composedPath() : [];
+			if (path.some((el) => el instanceof HTMLElement && el.classList?.contains("editing") && el.classList?.contains("tm-tab-pill"))) return;
+			if (path.some((el) => {
+				if (!(el instanceof HTMLElement)) return false;
+				const cls = typeof el.className === "string" ? el.className : "";
+				return (el.tagName ? el.tagName.toLowerCase() : "") === "miss-player-root" || cls.includes("tm-player-container") || cls.includes("tm-control-panel") || cls.includes("tm-control-buttons") || cls.includes("tm-progress-controls") || cls.includes("tm-progress-bar") || cls.includes("tm-progress-markers-container") || cls.includes("tm-seek-control-row") || cls.includes("tm-loop-control-row") || cls.includes("tm-playback-control-row") || cls.includes("tm-tab-scroll-container") || cls.includes("tm-modal-overlay") || cls.includes("tm-comment-modal") || cls.includes("tm-bottom-sheet-panel") || cls.includes("tm-bottom-sheet-overlay");
+			})) return;
+			this._exitEditMode();
 		}
 		_handleTabClick(tab) {
 			playTapSound();
@@ -14919,6 +14923,7 @@
 			this.controlManager?.updatePlayPauseButton();
 		}
 		checkAndExitLoopIfOutside(targetTime) {
+			if (this.editingTabId) return false;
 			if (!this.loopActive || this.loopStartTime === null || this.loopEndTime === null) return false;
 			if (targetTime < this.loopStartTime - .05 || targetTime > this.loopEndTime + .05) {
 				this.disableLoop();
@@ -15227,6 +15232,10 @@
 					tick.style.setProperty("--tab-color", color);
 					tick.addEventListener("click", (e) => {
 						e.stopPropagation();
+						if (this.editingTabId) {
+							if (this.targetVideo) this.targetVideo.currentTime = tab.startTime;
+							return;
+						}
 						this._handleTabClick(tab);
 					});
 					this.progressMarkersContainer.appendChild(tick);
@@ -15268,6 +15277,10 @@
 						range.style.setProperty("--tab-color", color);
 						range.addEventListener("click", (e) => {
 							e.stopPropagation();
+							if (this.editingTabId) {
+								if (this.targetVideo) this.targetVideo.currentTime = tab.startTime;
+								return;
+							}
 							this._handleTabClick(tab);
 						});
 						this.progressMarkersContainer.appendChild(range);
@@ -17138,7 +17151,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.10";
+		return "5.7.11";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
