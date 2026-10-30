@@ -2475,18 +2475,29 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-/* 控制界面隐藏时的动画效果 - 保持 X 轴 -50% 绝对居中，纯垂直 20px 微沉降微缩放，杜绝斜角飞入 */
-body.controls-hidden .tm-player-container .tm-control-buttons:not([class*="tm-controls-docked-"]),
-.tm-player-container.controls-hidden .tm-control-buttons:not([class*="tm-controls-docked-"]),
-:host(.controls-hidden) .tm-control-buttons:not([class*="tm-controls-docked-"]) {
-    opacity: 0;
-    visibility: hidden;
-    transform: translate3d(-50%, 20px, 0) scale(0.96);
-    pointer-events: none;
-    transition: 
-        opacity 0.22s cubic-bezier(0.4, 0, 1, 1), 
-        transform 0.26s cubic-bezier(0.4, 0, 1, 1),
-        visibility 0.26s;
+/* 控制界面显隐动画效果 (大屏与横屏居中悬浮模式：保持 X 轴 -50% 绝对居中，纯垂直 20px 微沉降微缩放) */
+@media screen and (min-width: 601px), screen and (orientation: landscape) {
+    body.controls-hidden .tm-player-container .tm-control-buttons:not([class*="tm-controls-docked-"]),
+    .tm-player-container.controls-hidden .tm-control-buttons:not([class*="tm-controls-docked-"]),
+    :host(.controls-hidden) .tm-control-buttons:not([class*="tm-controls-docked-"]) {
+        opacity: 0;
+        visibility: hidden;
+        transform: translate3d(-50%, 20px, 0) scale(0.96);
+        pointer-events: none;
+        transition: 
+            opacity 0.22s cubic-bezier(0.4, 0, 1, 1), 
+            transform 0.26s cubic-bezier(0.4, 0, 1, 1),
+            visibility 0.26s;
+    }
+
+    body:not(.controls-hidden) .tm-player-container .tm-control-buttons:not([class*="tm-controls-docked-"]),
+    .tm-player-container:not(.controls-hidden) .tm-control-buttons:not([class*="tm-controls-docked-"]),
+    :host(:not(.controls-hidden)) .tm-control-buttons:not([class*="tm-controls-docked-"]) {
+        opacity: 1;
+        visibility: visible;
+        transform: translate3d(-50%, 0, 0) scale(1);
+        pointer-events: auto;
+    }
 }
 
 body.controls-hidden .tm-control-buttons *,
@@ -2496,16 +2507,6 @@ body.controls-hidden .tm-control-panel *,
 .tm-player-container.controls-hidden .tm-control-panel *,
 :host(.controls-hidden) .tm-control-panel * {
     pointer-events: none;
-}
-
-/* 控制界面显示时的动画效果 - Apple 物理弹性舒展 */
-body:not(.controls-hidden) .tm-player-container .tm-control-buttons:not([class*="tm-controls-docked-"]),
-.tm-player-container:not(.controls-hidden) .tm-control-buttons:not([class*="tm-controls-docked-"]),
-:host(:not(.controls-hidden)) .tm-control-buttons:not([class*="tm-controls-docked-"]) {
-    opacity: 1;
-    visibility: visible;
-    transform: translate3d(-50%, 0, 0) scale(1);
-    pointer-events: auto;
 }
 
 /* 控制界面隐藏时的动画效果 - 更新选择器 */
@@ -2797,18 +2798,19 @@ body.controls-hidden .tm-player-container > .tm-player-title,
         bottom: 0;
         left: auto;
         right: auto;
-        flex: 1 1 auto;
-        width: auto;
+        flex: 0 0 44px;
+        width: 44px;
         min-width: 44px;
+        max-width: 44px;
         margin: 0;
         padding: 0;
     }
 
     .tm-player-container.tm-single-hand-right .tm-control-panel .tm-control-buttons {
-        flex: 0 0 auto;
-        width: 320px;
-        max-width: 320px;
-        min-width: 320px;
+        flex: 1 1 auto;
+        width: calc(100% - 52px);
+        max-width: 380px;
+        min-width: 300px;
         transform: none;
     }
 
@@ -2826,18 +2828,19 @@ body.controls-hidden .tm-player-container > .tm-player-title,
         bottom: 0;
         right: auto;
         left: auto;
-        flex: 1 1 auto;
-        width: auto;
+        flex: 0 0 44px;
+        width: 44px;
         min-width: 44px;
+        max-width: 44px;
         margin: 0;
         padding: 0;
     }
 
     .tm-player-container.tm-single-hand-left .tm-control-panel .tm-control-buttons {
-        flex: 0 0 auto;
-        width: 320px;
-        max-width: 320px;
-        min-width: 320px;
+        flex: 1 1 auto;
+        width: calc(100% - 52px);
+        max-width: 380px;
+        min-width: 300px;
         transform: none;
     }
 
