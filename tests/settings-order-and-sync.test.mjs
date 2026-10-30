@@ -17,6 +17,7 @@ console.log('🧪 开始执行设置菜单防丢失与固定插槽顺序单元�
 // 1. 验证 PlayerState 构造函数完整预置 Beta 与自建库字段
 const ps = new PlayerState();
 assert.strictEqual(typeof ps.settings.betaMode, 'boolean', 'betaMode 必须在 settings 中预置为 boolean');
+assert.strictEqual(typeof ps.settings.betaHeatmap, 'boolean', 'betaHeatmap 必须在 settings 中预置为 boolean');
 assert.strictEqual(typeof ps.settings.betaDbEndpoint, 'string', 'betaDbEndpoint 必须在 settings 中预置为 string');
 assert.strictEqual(typeof ps.settings.betaDbApiKey, 'string', 'betaDbApiKey 必须在 settings 中预置为 string');
 assert.strictEqual(typeof ps.settings.crazyScrapeMode, 'boolean', 'crazyScrapeMode 必须在 settings 中预置为 boolean');

@@ -52,6 +52,20 @@ export class BetaSection {
         });
         betaSubWrap.appendChild(firstCapToggle.getElement());
 
+        const heatmapToggle = new ToggleRow({
+            title: __('betaHeatmap') || '播放热度',
+            subtext: __('betaHeatmapDesc') || '在进度条呈现探索足迹与反复观看波形',
+            checked: Boolean(this.settings.betaHeatmap),
+            onChange: (checked) => {
+                this.sm.updateSetting('betaHeatmap', checked);
+                const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
+                if (hm) {
+                    hm.setEnabled(checked);
+                }
+            }
+        });
+        betaSubWrap.appendChild(heatmapToggle.getElement());
+
         const undoToggle = new ToggleRow({
             title: __('betaCapsuleUndo') || '防误删除',
             subtext: __('betaCapsuleUndoDesc') || '误删高光后提供 60 秒撤销时间',

@@ -37,8 +37,10 @@
 5. `src/services/SleazyForkService.js` 中 fallback `SCRIPT_VERSION` 字符串
 * **自动化推荐**：严禁手动逐个文件修改版本号，必须使用 `npm run bump` 执行原子自增（默认递增 +0.0.1 Patch 版本），或 `npm run bump -- <版本号>` 指定版本，确保 5 处强一致。
 
-### 4. 构建产物提交规范
-* 修改代码或更新版本后，必须执行 `npm run build`，确保 `dist/miss_player.user.js`、`dist/miss_player.meta.js`、`dist/miss_player.proxy.user.js` 同步生成并一并提交 Git。
+### 4. 每次构筑版本递增与 GitHub 推送刚性规范 (Build Auto-Bump & Mobile Test Sync)
+* **移动端真机测试闭环要求**：手机端油猴管理器（Safari Stay、Userscripts、Tampermonkey 等）依赖 GitHub main 分支 Raw 链接的 `miss_player.meta.js` 检查版本更新。如果构筑代码后版本号未变，手机端将因版本无变化而无法拉取新代码进行测试。
+* **构筑自增刚性约束**：每次完成功能编写、Bug 修复或代码构筑准备提交时，**必须且只能执行 `npm run bump` 自增版本号 +0.0.1（强同步 5 处）**，随后执行 `npm run ci:check` 验证并生成最新 `dist/` 产物，最后必须**立即提交并推送到 GitHub `main` 分支**（`git push origin main`），实现手机端无缝即时检测更新与真机调试。
+* **构建产物随源码同步提交**：构建生成的 `dist/miss_player.user.js`、`dist/miss_player.meta.js`、`dist/miss_player.proxy.user.js` 必须一并加入 Git 暂存区并推送到远程 main 分支，杜绝提交无产物的半成品。
 
 ### 5. GitHub 直链元数据与 Raw URL 规范 (@downloadURL & @updateURL)
 脚本元数据头必须永久声明指向 GitHub 仓库 main 分支的 Raw 资源直链：
@@ -90,6 +92,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **EventManager**：集中式事件委托、快捷键绑定与全屏监听
 * **SettingsManager**：Apple 风格设置面板、遥控器运行模式控制、Beta 实验室、WebDAV 配置
 * **SingleHandManager**：竖屏单手操控模式管理器、侧边辅助条 (Utility Gutter) 挂载、左右手镜像与全宽还原状态机
+* **HeatmapManager**：视频观看热度与足迹探索管理器、5秒物理自适应分桶、局部峰值保留下采样与 SVG 贝塞尔波形渲染
 
 ### 3. 增强业务功能
 * **评论系统**：`src/player/controls/CommentPanel.js` 与 `CommentScraper.js`（多源异步抓取 Jable / JavDB / JavLibrary、时间戳解析、逆向倒数时间校准、单条问题上报）

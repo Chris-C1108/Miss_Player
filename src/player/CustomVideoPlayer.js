@@ -6,6 +6,7 @@ import { LoopManager } from './managers/LoopManager.js';
 import { ProgressManager } from './managers/ProgressManager.js';
 import { EventManager } from './managers/EventManager.js';
 import { SettingsManager } from './managers/SettingsManager.js';
+import { HeatmapManager } from './managers/HeatmapManager.js';
 import { VideoSwipeManager } from './managers/videoSwipeManager.js';
 import { updateSafariThemeColor, Toast } from '../utils/index.js';
 import { __ } from '../constants/i18n.js';
@@ -169,6 +170,13 @@ export class CustomVideoPlayer {
             timeIndicator: controlManager.timeIndicator
         });
         this.managers.progressManager = progressManager;
+
+        // 创建播放热度与探索足迹管理器
+        const heatmapManager = new HeatmapManager(this.playerCore, controlManager);
+        heatmapManager.init();
+        this.managers.heatmapManager = heatmapManager;
+        controlManager.heatmapManager = heatmapManager;
+        this.playerCore.heatmapManager = heatmapManager;
         
         // 创建循环管理器 (注入 controlManager)
         const loopManager = new LoopManager(this.playerCore, uiElements, controlManager);

@@ -380,6 +380,32 @@
     touch-action: none; /* 防止触摸设备上的默认行为 */
 }
 
+/* 观看热度与足迹探索波形 (Heatmap & Exploration) */
+.tm-heatmap-svg {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 100%;
+    height: 24px;
+    margin-bottom: 2px;
+    pointer-events: none;
+    z-index: 1;
+    overflow: visible;
+    opacity: 0.65;
+    transform: translateY(1px);
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tm-progress-bar-container:hover .tm-heatmap-svg,
+.tm-progress-bar-container:has(.tm-dragging) .tm-heatmap-svg {
+    opacity: 0.95;
+    transform: translateY(0);
+}
+
+.tm-heatmap-path {
+    transition: d 0.3s ease;
+}
+
 /* 进度条 */
 .tm-progress-bar {
     width: 100%;

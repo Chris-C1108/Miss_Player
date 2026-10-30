@@ -46,6 +46,7 @@ export class PlayerState {
             updateChannel: 'stable',        // 检查更新通道 ('stable' 正式版 | 'beta' 测试版)
             // Beta 实验室与自建数据库 (Beta Labs & Supabase)
             betaMode: false,
+            betaHeatmap: false,
             betaFirstCapsulePlay: false,
             betaPlayMode: 'normal',
             previewDurationSeconds: 5,
@@ -112,6 +113,7 @@ export class PlayerState {
             this.settings.defaultMuted = getBool('defaultMuted', false);
             this.settings.muteResetMinutes = Math.max(1, Math.min(120, parseInt(getValue('muteResetMinutes', 5), 10) || 5));
             this.settings.betaMode = getBool('betaMode', false);
+            this.settings.betaHeatmap = getBool('betaHeatmap', false);
             this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
             const rawPlayMode = getValue('betaPlayMode', 'normal');
             this.settings.betaPlayMode = (rawPlayMode === 'preview' || rawPlayMode === 'climax') ? rawPlayMode : 'normal';
@@ -159,6 +161,7 @@ export class PlayerState {
             'autoCheckUpdate',
             'updateChannel',
             'betaMode',
+            'betaHeatmap',
             'betaDbEndpoint',
             'betaDbApiKey',
             'crazyScrapeMode',
@@ -210,6 +213,7 @@ export class PlayerState {
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
             setValue('updateChannel', this.settings.updateChannel === 'beta' ? 'beta' : 'stable');
             setValue('betaMode', Boolean(this.settings.betaMode));
+            setValue('betaHeatmap', Boolean(this.settings.betaHeatmap));
             setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));
             setValue('betaPlayMode', this.settings.betaPlayMode || 'normal');
             setValue('previewDurationSeconds', this.settings.previewDurationSeconds || 5);
