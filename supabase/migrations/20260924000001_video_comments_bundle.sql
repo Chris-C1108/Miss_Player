@@ -20,11 +20,10 @@ alter table public.video_comments_bundle enable row level security;
 create policy "Allow anon read video_comments_bundle" 
     on public.video_comments_bundle for select to anon using (true);
 
-create policy "Allow anon insert video_comments_bundle" 
-    on public.video_comments_bundle for insert to anon with check (true);
-
-create policy "Allow anon update video_comments_bundle" 
-    on public.video_comments_bundle for update to anon using (true) with check (true);
+-- 注意：不授予 anon 直接 insert/update 权限。
+-- 所有写入必须经过下方 SECURITY DEFINER 函数 upsert_comment_bundle，
+-- 该函数以表属主身份运行（可绕过 RLS），从而强制执行合并/去重逻辑，
+-- 避免匿名客户端绕过校验直接覆盖或污染任意番号的评论数据。
 
 -- 高性能 RPC 函数：支持服务端原子增量去重合并与统计 (避免并发写覆盖与多次网络往返)
 create or replace function public.upsert_comment_bundle(
