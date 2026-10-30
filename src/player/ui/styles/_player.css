@@ -1456,7 +1456,9 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     width: 100%;
     box-sizing: border-box;
     position: relative;
+    z-index: 3;
     gap: 6px;
+    overflow: visible !important;
 }
 
 /* 控制面板内嵌入式备注模态框 (替代全屏遮罩 tm-comment-modal) */
@@ -1730,19 +1732,21 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     flex: 1;
     gap: 6px;
     overflow-x: auto;
-    overflow-y: visible;
-    min-height: 50px;
-    height: 50px;
-    padding: 6px 8px;
-    margin: -6px 0;
+    overflow-y: hidden;
+    min-height: 62px;
+    height: 62px;
+    padding: 12px 6px;
+    margin: -12px 0;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     box-sizing: border-box;
     align-items: center;
     touch-action: pan-x;
+    pointer-events: none;
 }
 .tm-tab-scroll-container::-webkit-scrollbar { display: none; }
+.tm-tab-scroll-container > * { pointer-events: auto; }
 
 /* ===== Tab Pill ===== */
 .tm-tab-pill {
@@ -1798,11 +1802,11 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 /* 状态 3：区间循环播放时（半透明背景色、颜色边框、文字高亮、Apple 级聚焦光晕呼吸灯） */
 @keyframes tm-tab-loop-pulse {
     0%, 100% {
-        box-shadow: 0 0 0 1px hsla(var(--tab-color), 0.65), 0 0 6px hsla(var(--tab-color), 0.4);
+        box-shadow: 0 0 0 1px hsla(var(--tab-color), 0.7), 0 0 5px hsla(var(--tab-color), 0.35);
         border-color: hsla(var(--tab-color), 0.85);
     }
     50% {
-        box-shadow: 0 0 0 1.5px hsla(var(--tab-color), 0.95), 0 0 10px hsla(var(--tab-color), 0.65);
+        box-shadow: 0 0 0 1.5px hsla(var(--tab-color), 0.95), 0 0 8px hsla(var(--tab-color), 0.55);
         border-color: hsl(var(--tab-color));
     }
 }
