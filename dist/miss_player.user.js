@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.29
+// @version            5.7.30
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1263,7 +1263,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.29";
+		return "5.7.30";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4292,7 +4292,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.29";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.30";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -17275,7 +17275,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.29";
+		return "5.7.30";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -19415,7 +19415,7 @@
 			e.preventDefault();
 		}
 		_handleHandlePointerDown(e) {
-			if (this.maxOffset <= 0 || !e.isPrimary) return;
+			if (!e.isPrimary) return;
 			if (this.animation.active) {
 				cancelAnimationFrame(this.animation.rafId);
 				this.animation.active = false;
@@ -19423,7 +19423,6 @@
 			this.isHandleDragging = true;
 			this.startX = e.clientX;
 			this.startY = e.clientY;
-			this.isDirectionLocked = false;
 			this.dragDistance = 0;
 			const handleContainer = this.handle.parentElement;
 			this._cachedContainerW = handleContainer ? handleContainer.offsetWidth : 0;
@@ -19434,33 +19433,23 @@
 			this.handle.style.cursor = "grabbing";
 			this.handle.style.transition = "none";
 			this.video.style.transition = "none";
-			if (this.container) this.container.classList.add("is-swiping");
-			if (this.handle.setPointerCapture) this.handle.setPointerCapture(e.pointerId);
-			this.handle.addEventListener("pointermove", this._handlePointerMoveHandler);
-			this.handle.addEventListener("pointerup", this._handlePointerUpHandler);
-			this.handle.addEventListener("pointercancel", this._handlePointerUpHandler);
-			e.preventDefault();
+			if (this.maxOffset > 0 && this.container) this.container.classList.add("is-swiping");
+			window.addEventListener("pointermove", this._handlePointerMoveHandler);
+			window.addEventListener("pointerup", this._handlePointerUpHandler);
+			window.addEventListener("pointercancel", this._handlePointerUpHandler);
 		}
 		_handleHandlePointerMove(e) {
 			if (!this.isHandleDragging || !e.isPrimary) return;
-			if (!this._cachedMaxTravel || this._cachedMaxTravel <= 0) return;
 			const deltaX = e.clientX - this.startX;
-			const deltaY = e.clientY - this.startY;
-			if (!this.isDirectionLocked) {
-				if (Math.abs(deltaY) > 8 && Math.abs(deltaY) > Math.abs(deltaX)) {
-					this._handleHandlePointerUp(e);
-					return;
-				}
-				if (Math.abs(deltaX) > 6) this.isDirectionLocked = true;
-			}
 			this.dragDistance = Math.max(this.dragDistance, Math.abs(deltaX));
-			const newHandleX = Math.max(0, Math.min(this._cachedMaxTravel, this._startHandleX + deltaX));
-			this.handle.style.transform = `translate3d(${newHandleX}px, 0, 0)`;
-			const newOffset = (1 - newHandleX / this._cachedMaxTravel) * 2 * this.maxOffset - this.maxOffset;
-			this.video.style.transform = `translateX(${newOffset}px)`;
-			this.offset = newOffset;
-			this._updateMinimapViewport();
-			e.preventDefault();
+			if (this.maxOffset > 0 && this._cachedMaxTravel > 0) {
+				const newHandleX = Math.max(0, Math.min(this._cachedMaxTravel, this._startHandleX + deltaX));
+				this.handle.style.transform = `translate3d(${newHandleX}px, 0, 0)`;
+				const newOffset = (1 - newHandleX / this._cachedMaxTravel) * 2 * this.maxOffset - this.maxOffset;
+				this.video.style.transform = `translateX(${newOffset}px)`;
+				this.offset = newOffset;
+				this._updateMinimapViewport();
+			}
 		}
 		_handleHandlePointerUp(e) {
 			if (!this.isHandleDragging || !e.isPrimary) return;
@@ -19469,15 +19458,13 @@
 				this.wasDragging = true;
 				this.dragEndTimestamp = Date.now();
 			} else this.wasDragging = false;
-			if (this.handle.releasePointerCapture) this.handle.releasePointerCapture(e.pointerId);
-			this.handle.removeEventListener("pointermove", this._handlePointerMoveHandler);
-			this.handle.removeEventListener("pointerup", this._handlePointerUpHandler);
-			this.handle.removeEventListener("pointercancel", this._handlePointerUpHandler);
-			this.handle.style.cursor = "grab";
+			window.removeEventListener("pointermove", this._handlePointerMoveHandler);
+			window.removeEventListener("pointerup", this._handlePointerUpHandler);
+			window.removeEventListener("pointercancel", this._handlePointerUpHandler);
+			this.handle.style.cursor = this.maxOffset > 0 ? "grab" : "row-resize";
 			setTimeout(() => {
 				if (!this.isDragging && !this.isHandleDragging && this.container) this.container.classList.remove("is-swiping");
 			}, 400);
-			e.preventDefault();
 		}
 		_trackHandleVelocity(position) {
 			this._updateVelocityTracker(this.handleVelocityTracker, position);
@@ -19556,6 +19543,9 @@
 			}
 			if (this.handle) {
 				this.handle.removeEventListener("pointerdown", this._handlePointerDownHandler);
+				window.removeEventListener("pointermove", this._handlePointerMoveHandler);
+				window.removeEventListener("pointerup", this._handlePointerUpHandler);
+				window.removeEventListener("pointercancel", this._handlePointerUpHandler);
 				this.handle.style.willChange = "";
 				this.handle.style.transition = "";
 				this.handle.style.left = "";

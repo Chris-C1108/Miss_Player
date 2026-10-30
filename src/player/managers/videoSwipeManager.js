@@ -743,12 +743,11 @@ export class VideoSwipeManager {
     }
 
     /**
-     * 处理手柄的指针按下事件
+     * 处理手柄的指针按下事件 (支持与 DragManager 垂直拉伸双轴并行协同)
      * @param {PointerEvent} e - 指针事件
      */
     _handleHandlePointerDown(e) {
-        // 如果视频宽度不超过容器，则不处理
-        if (this.maxOffset <= 0 || !e.isPrimary) return;
+        if (!e.isPrimary) return;
 
         // 停止可能正在进行的动画
         if (this.animation.active) {
@@ -756,11 +755,10 @@ export class VideoSwipeManager {
             this.animation.active = false;
         }
 
-        // 初始化拖动状态
+        // 初始化手柄拖拽状态
         this.isHandleDragging = true;
         this.startX = e.clientX;
         this.startY = e.clientY;
-        this.isDirectionLocked = false;
         this.dragDistance = 0;
 
         // 一次性读取并固化几何尺寸，杜绝高频 pointermove 中读取触发强制重排
@@ -778,64 +776,48 @@ export class VideoSwipeManager {
         this.handle.style.transition = 'none';
         this.video.style.transition = 'none';
 
-        // 唤醒小窗 Minimap，与把手同步呈现
-        if (this.container) {
+        // 若当前有可移动溢出空间，唤醒小窗 Minimap
+        if (this.maxOffset > 0 && this.container) {
             this.container.classList.add('is-swiping');
         }
 
-        if (this.handle.setPointerCapture) {
-            this.handle.setPointerCapture(e.pointerId);
-        }
+        // 向 window 注册全局移动与释放监听，保证斜向大范围划动时永不丢帧，且不使用 setPointerCapture 破坏 Touch 事件流
+        window.addEventListener('pointermove', this._handlePointerMoveHandler);
+        window.addEventListener('pointerup', this._handlePointerUpHandler);
+        window.addEventListener('pointercancel', this._handlePointerUpHandler);
 
-        // 添加事件监听
-        this.handle.addEventListener('pointermove', this._handlePointerMoveHandler);
-        this.handle.addEventListener('pointerup', this._handlePointerUpHandler);
-        this.handle.addEventListener('pointercancel', this._handlePointerUpHandler);
-
-        e.preventDefault();
+        // 绝不在此处调用 e.preventDefault()，确保触摸事件同时顺畅传递至 DragManager 处理垂直拉伸放大
     }
 
     /**
-     * 处理手柄的指针移动事件 (纯 GPU transform，100% 毫秒级跟手与 Minimap 镜像同步)
+     * 处理手柄的指针移动事件 (双轴独立解耦，支持任意斜向连续手势，绝不单向锁死)
      * @param {PointerEvent} e - 指针事件
      */
     _handleHandlePointerMove(e) {
         if (!this.isHandleDragging || !e.isPrimary) return;
-        if (!this._cachedMaxTravel || this._cachedMaxTravel <= 0) return;
 
         const deltaX = e.clientX - this.startX;
-        const deltaY = e.clientY - this.startY;
-
-        // 方向仲裁：若垂直位移优先发生，说明用户意图是下滑调节视频高度与放大，主动让出控制权！
-        if (!this.isDirectionLocked) {
-            if (Math.abs(deltaY) > 8 && Math.abs(deltaY) > Math.abs(deltaX)) {
-                this._handleHandlePointerUp(e);
-                return;
-            }
-            if (Math.abs(deltaX) > 6) {
-                this.isDirectionLocked = true;
-            }
-        }
-
-        // 计算位移与最大拖动距离
         this.dragDistance = Math.max(this.dragDistance, Math.abs(deltaX));
 
-        // 纯内存数学计算，零 DOM 几何测量
-        const newHandleX = Math.max(0, Math.min(this._cachedMaxTravel, this._startHandleX + deltaX));
+        // 仅在存在水平溢出平移余地时，响应水平位移与小窗同步
+        if (this.maxOffset > 0 && this._cachedMaxTravel > 0) {
+            // 纯内存数学计算，零 DOM 测量
+            const newHandleX = Math.max(0, Math.min(this._cachedMaxTravel, this._startHandleX + deltaX));
 
-        // GPU 硬件加速手柄位移
-        this.handle.style.transform = `translate3d(${newHandleX}px, 0, 0)`;
+            // GPU 硬件加速手柄位移
+            this.handle.style.transform = `translate3d(${newHandleX}px, 0, 0)`;
 
-        // 反向映射回视频物理偏移
-        const handleRatio = newHandleX / this._cachedMaxTravel;
-        const newOffset = ((1 - handleRatio) * 2 * this.maxOffset) - this.maxOffset;
+            // 反向映射回视频物理偏移
+            const handleRatio = newHandleX / this._cachedMaxTravel;
+            const newOffset = ((1 - handleRatio) * 2 * this.maxOffset) - this.maxOffset;
 
-        // 应用视频偏移并同步更新内部小窗 (Minimap) 视口
-        this.video.style.transform = `translateX(${newOffset}px)`;
-        this.offset = newOffset;
-        this._updateMinimapViewport();
+            // 应用视频偏移并同步更新内部小窗 (Minimap) 视口
+            this.video.style.transform = `translateX(${newOffset}px)`;
+            this.offset = newOffset;
+            this._updateMinimapViewport();
+        }
 
-        e.preventDefault();
+        // 保持双轴自由流动：纵向拉伸由 DragManager 并行响应，手势全方向顺滑连贯
     }
 
     /**
@@ -853,15 +835,11 @@ export class VideoSwipeManager {
             this.wasDragging = false;
         }
 
-        if (this.handle.releasePointerCapture) {
-            this.handle.releasePointerCapture(e.pointerId);
-        }
+        window.removeEventListener('pointermove', this._handlePointerMoveHandler);
+        window.removeEventListener('pointerup', this._handlePointerUpHandler);
+        window.removeEventListener('pointercancel', this._handlePointerUpHandler);
 
-        this.handle.removeEventListener('pointermove', this._handlePointerMoveHandler);
-        this.handle.removeEventListener('pointerup', this._handlePointerUpHandler);
-        this.handle.removeEventListener('pointercancel', this._handlePointerUpHandler);
-
-        this.handle.style.cursor = 'grab';
+        this.handle.style.cursor = this.maxOffset > 0 ? 'grab' : 'row-resize';
 
         // 延迟 400ms 移除 is-swiping，使小窗平滑淡出隐藏
         setTimeout(() => {
@@ -869,8 +847,6 @@ export class VideoSwipeManager {
                 this.container.classList.remove('is-swiping');
             }
         }, 400);
-
-        e.preventDefault();
     }
 
     /**
@@ -1025,6 +1001,9 @@ export class VideoSwipeManager {
         
         if (this.handle) {
             this.handle.removeEventListener('pointerdown', this._handlePointerDownHandler);
+            window.removeEventListener('pointermove', this._handlePointerMoveHandler);
+            window.removeEventListener('pointerup', this._handlePointerUpHandler);
+            window.removeEventListener('pointercancel', this._handlePointerUpHandler);
             this.handle.style.willChange = '';
             this.handle.style.transition = '';
             this.handle.style.left = '';
