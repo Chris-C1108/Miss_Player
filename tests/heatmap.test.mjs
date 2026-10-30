@@ -136,17 +136,20 @@ pm.init({
     timeIndicator: { style: {} }
 });
 
-// 6.1 当视频遭遇网络等待卡顿 (waiting) 时，自动激活 .is-buffering 条纹流动动画
+// 6.1 当视频遭遇网络等待卡顿 (waiting) 时，防抖激活 .is-buffering 条纹流动动画
 assert.strictEqual(isBufferingClassPresent, false, '初始正常态不应激活缓冲条纹');
 if (mockEventHandlers.waiting) mockEventHandlers.waiting();
-assert.strictEqual(isBufferingClassPresent, true, '网络卡顿等待时必须激活 .is-buffering 条纹动画告知用户未假死');
+await new Promise(r => setTimeout(r, 220));
+assert.strictEqual(isBufferingClassPresent, true, '网络卡顿等待持续 180ms 时必须激活 .is-buffering 条纹动画告知用户未假死');
 
-// 6.2 当视频恢复播放 (playing) 时，瞬间解除 .is-buffering 条纹动画
-if (mockEventHandlers.playing) mockEventHandlers.playing();
-assert.strictEqual(isBufferingClassPresent, false, '恢复播放时必须即刻移除 .is-buffering 保持纯净底槽');
+// 6.2 当视频播放头推进 (timeupdate) 或恢复播放 (playing) 时，看门狗瞬间解除 .is-buffering 条纹动画
+mockVideoForBuffer.currentTime = 12;
+pm.updateProgressBar();
+assert.strictEqual(isBufferingClassPresent, false, '正常顺畅播放前进时看门狗必须即刻移除 .is-buffering 保持纯净底槽');
 
 // 6.3 当用户主动暂停时，也必须确保条纹动画静止
 if (mockEventHandlers.waiting) mockEventHandlers.waiting();
+await new Promise(r => setTimeout(r, 220));
 assert.strictEqual(isBufferingClassPresent, true);
 if (mockEventHandlers.pause) mockEventHandlers.pause();
 assert.strictEqual(isBufferingClassPresent, false, '用户主动暂停时必须取消缓冲条纹保持静止');

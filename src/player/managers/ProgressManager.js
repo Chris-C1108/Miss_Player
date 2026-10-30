@@ -25,9 +25,13 @@ export class ProgressManager {
         this.isTouchDevice = typeof window !== 'undefined' && 'ontouchstart' in window; // 检测是否为触摸设备
         this._loopManager = null; // 循环管理器引用
 
+        // 真实卡顿缓冲状态机
+        this._isBufferingActive = false;
+        this._bufferingTimer = null;
+        this._lastCurrentTime = -1;
+
         // 缓冲状态监听引用
         this._onWaiting = null;
-        this._onStalled = null;
         this._onPlaying = null;
         this._onCanPlay = null;
         this._onPause = null;
@@ -68,39 +72,33 @@ export class ProgressManager {
         this._timeUpdateHandler = this.updateProgressBar.bind(this);
         this.targetVideo.addEventListener('timeupdate', this._timeUpdateHandler);
 
-        // 绑定网络等待与缓冲状态机监听 (通知用户当前在等待缓冲，绝非假死)
+        // 绑定真实网络卡顿等待状态机监听 (严格剔除造成假阳性的 stalled 事件)
         this._onWaiting = () => {
             if (this.targetVideo && !this.targetVideo.paused) {
-                this._setBuffering(true);
-            }
-        };
-        this._onStalled = () => {
-            if (this.targetVideo && !this.targetVideo.paused) {
-                this._setBuffering(true);
+                this._scheduleBufferingCheck();
             }
         };
         this._onPlaying = () => {
-            this._setBuffering(false);
+            this._cancelBuffering();
         };
         this._onCanPlay = () => {
-            this._setBuffering(false);
+            this._cancelBuffering();
         };
         this._onPause = () => {
-            this._setBuffering(false);
+            this._cancelBuffering();
         };
         this._onSeeking = () => {
             if (this.targetVideo && this.targetVideo.readyState < 3) {
-                this._setBuffering(true);
+                this._scheduleBufferingCheck();
             }
         };
         this._onSeeked = () => {
             if (this.targetVideo && this.targetVideo.readyState >= 3) {
-                this._setBuffering(false);
+                this._cancelBuffering();
             }
         };
 
         this.targetVideo.addEventListener('waiting', this._onWaiting);
-        this.targetVideo.addEventListener('stalled', this._onStalled);
         this.targetVideo.addEventListener('playing', this._onPlaying);
         this.targetVideo.addEventListener('canplay', this._onCanPlay);
         this.targetVideo.addEventListener('canplaythrough', this._onCanPlay);
@@ -112,11 +110,39 @@ export class ProgressManager {
     }
 
     /**
+     * 调度缓冲卡顿确认 (180ms 防抖，严格判定物理停滞，杜绝顺播误报)
+     */
+    _scheduleBufferingCheck() {
+        if (this._bufferingTimer) clearTimeout(this._bufferingTimer);
+        this._bufferingTimer = setTimeout(() => {
+            if (!this.targetVideo) return;
+            const isPlayingIntent = !this.targetVideo.paused && !this.targetVideo.ended;
+            const isDataLacking = this.targetVideo.readyState < 3;
+            if (isPlayingIntent && isDataLacking) {
+                this._setBuffering(true);
+            }
+        }, 180);
+    }
+
+    /**
+     * 立即取消缓冲条纹
+     */
+    _cancelBuffering() {
+        if (this._bufferingTimer) {
+            clearTimeout(this._bufferingTimer);
+            this._bufferingTimer = null;
+        }
+        this._setBuffering(false);
+    }
+
+    /**
      * 切换缓冲等待状态 (驱动进度条底槽流动条纹动画)
      * @param {boolean} isBuffering 是否正在等待网络缓冲
      */
     _setBuffering(isBuffering) {
         if (!this.progressBarElement) return;
+        if (this._isBufferingActive === isBuffering) return;
+        this._isBufferingActive = isBuffering;
         if (isBuffering) {
             this.progressBarElement.classList.add('is-buffering');
         } else {
@@ -134,6 +160,12 @@ export class ProgressManager {
         const duration = this.targetVideo.duration;
         
         if (isNaN(duration) || duration <= 0) return;
+
+        // 核心看门狗：如果播放头在正常物理前进且视频未暂停，100% 证明在顺畅播放，瞬间扑灭任何缓冲条纹！
+        if (this._lastCurrentTime !== currentTime && !this.targetVideo.paused) {
+            this._cancelBuffering();
+        }
+        this._lastCurrentTime = currentTime;
         
         // 计算进度百分比
         const progressPercent = (currentTime / duration) * 100;
@@ -440,10 +472,13 @@ export class ProgressManager {
      * 清理所有事件监听器
      */
     cleanup() {
+        if (this._bufferingTimer) {
+            clearTimeout(this._bufferingTimer);
+            this._bufferingTimer = null;
+        }
         if (this.targetVideo) {
             if (this._timeUpdateHandler) this.targetVideo.removeEventListener('timeupdate', this._timeUpdateHandler);
             if (this._onWaiting) this.targetVideo.removeEventListener('waiting', this._onWaiting);
-            if (this._onStalled) this.targetVideo.removeEventListener('stalled', this._onStalled);
             if (this._onPlaying) this.targetVideo.removeEventListener('playing', this._onPlaying);
             if (this._onCanPlay) {
                 this.targetVideo.removeEventListener('canplay', this._onCanPlay);

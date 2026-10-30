@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.39
+// @version            5.7.40
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1263,7 +1263,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.39";
+		return "5.7.40";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4301,7 +4301,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.39";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.40";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -15583,8 +15583,10 @@
 			this.lastDragX = 0;
 			this.isTouchDevice = typeof window !== "undefined" && "ontouchstart" in window;
 			this._loopManager = null;
+			this._isBufferingActive = false;
+			this._bufferingTimer = null;
+			this._lastCurrentTime = -1;
 			this._onWaiting = null;
-			this._onStalled = null;
 			this._onPlaying = null;
 			this._onCanPlay = null;
 			this._onPause = null;
@@ -15611,28 +15613,24 @@
 			this._timeUpdateHandler = this.updateProgressBar.bind(this);
 			this.targetVideo.addEventListener("timeupdate", this._timeUpdateHandler);
 			this._onWaiting = () => {
-				if (this.targetVideo && !this.targetVideo.paused) this._setBuffering(true);
-			};
-			this._onStalled = () => {
-				if (this.targetVideo && !this.targetVideo.paused) this._setBuffering(true);
+				if (this.targetVideo && !this.targetVideo.paused) this._scheduleBufferingCheck();
 			};
 			this._onPlaying = () => {
-				this._setBuffering(false);
+				this._cancelBuffering();
 			};
 			this._onCanPlay = () => {
-				this._setBuffering(false);
+				this._cancelBuffering();
 			};
 			this._onPause = () => {
-				this._setBuffering(false);
+				this._cancelBuffering();
 			};
 			this._onSeeking = () => {
-				if (this.targetVideo && this.targetVideo.readyState < 3) this._setBuffering(true);
+				if (this.targetVideo && this.targetVideo.readyState < 3) this._scheduleBufferingCheck();
 			};
 			this._onSeeked = () => {
-				if (this.targetVideo && this.targetVideo.readyState >= 3) this._setBuffering(false);
+				if (this.targetVideo && this.targetVideo.readyState >= 3) this._cancelBuffering();
 			};
 			this.targetVideo.addEventListener("waiting", this._onWaiting);
-			this.targetVideo.addEventListener("stalled", this._onStalled);
 			this.targetVideo.addEventListener("playing", this._onPlaying);
 			this.targetVideo.addEventListener("canplay", this._onCanPlay);
 			this.targetVideo.addEventListener("canplaythrough", this._onCanPlay);
@@ -15641,8 +15639,26 @@
 			this.targetVideo.addEventListener("seeked", this._onSeeked);
 			return this;
 		}
+		_scheduleBufferingCheck() {
+			if (this._bufferingTimer) clearTimeout(this._bufferingTimer);
+			this._bufferingTimer = setTimeout(() => {
+				if (!this.targetVideo) return;
+				const isPlayingIntent = !this.targetVideo.paused && !this.targetVideo.ended;
+				const isDataLacking = this.targetVideo.readyState < 3;
+				if (isPlayingIntent && isDataLacking) this._setBuffering(true);
+			}, 180);
+		}
+		_cancelBuffering() {
+			if (this._bufferingTimer) {
+				clearTimeout(this._bufferingTimer);
+				this._bufferingTimer = null;
+			}
+			this._setBuffering(false);
+		}
 		_setBuffering(isBuffering) {
 			if (!this.progressBarElement) return;
+			if (this._isBufferingActive === isBuffering) return;
+			this._isBufferingActive = isBuffering;
 			if (isBuffering) this.progressBarElement.classList.add("is-buffering");
 			else this.progressBarElement.classList.remove("is-buffering");
 		}
@@ -15651,6 +15667,8 @@
 			const currentTime = this.targetVideo.currentTime;
 			const duration = this.targetVideo.duration;
 			if (isNaN(duration) || duration <= 0) return;
+			if (this._lastCurrentTime !== currentTime && !this.targetVideo.paused) this._cancelBuffering();
+			this._lastCurrentTime = currentTime;
 			const progressPercent = currentTime / duration * 100;
 			this.progressIndicator.style.width = `${progressPercent}%`;
 			this.updateCurrentTimeDisplay();
@@ -15793,10 +15811,13 @@
 			this.timeIndicator.textContent = `${formatTime(time)} / ${formatTime(duration)}`;
 		}
 		cleanup() {
+			if (this._bufferingTimer) {
+				clearTimeout(this._bufferingTimer);
+				this._bufferingTimer = null;
+			}
 			if (this.targetVideo) {
 				if (this._timeUpdateHandler) this.targetVideo.removeEventListener("timeupdate", this._timeUpdateHandler);
 				if (this._onWaiting) this.targetVideo.removeEventListener("waiting", this._onWaiting);
-				if (this._onStalled) this.targetVideo.removeEventListener("stalled", this._onStalled);
 				if (this._onPlaying) this.targetVideo.removeEventListener("playing", this._onPlaying);
 				if (this._onCanPlay) {
 					this.targetVideo.removeEventListener("canplay", this._onCanPlay);
@@ -17367,7 +17388,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.39";
+		return "5.7.40";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
