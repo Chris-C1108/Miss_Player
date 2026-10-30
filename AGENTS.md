@@ -141,6 +141,16 @@ Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感�
     - 新建草稿胶囊必须按其物理开始时间戳在胶囊序列中即时混排插入，彻底消灭“打点在末尾，保存后突然瞬移回前面”的严重画面跳跃闪变；
     - 实体色彩唯一权威：切片颜色必须以 `tab.color` 为绝对持久属性，严禁倒退为基于数组索引动态计算；
     - 草稿打点瞬间通过智能相邻避让算法分配专属莫兰迪色，打点态与保存态色彩完全同源，全列表零色彩漂移。
+14. **动效坐标单一轴向约束与媒体查询绝对隔离 (Single-Axis Pure Motion)**：
+    - 控制面板显隐动效严禁出现 X/Y 轴斜向复合飞入；居中悬浮模式 X 轴锁死 `-50%`，仅纯垂直 20px 微沉降与微缩放；
+    - 移动端竖屏底板锁定 `transform: none`，显隐 100% 委托外层底板纯垂直 Y 轴直起直落；
+    - 带有横向偏移的规则必须严格收拢在大屏/横屏媒体查询内，绝不污染手机竖屏。
+15. **Shadow DOM 跨边界事件穿透检测规范 (ComposedPath Event Piercing)**：
+    - 在宿主 `document` 或顶级容器上监听交互时，严禁直接使用会被 Shadow DOM 隔离重定向为 `<miss-player-root>` 的 `e.target.closest()`；
+    - 必须通过 `e.composedPath()` 遍历真实事件完整路径，防止误退编辑态。
+16. **异步微前端容器固定插槽保序架构 (Order-Preserved Slots)**：
+    - 严禁混合使用同步与异步 `appendChild` 直接追加主容器子节点；
+    - 必须预先在 DOM 中建立物理顺序绝对锁定的专属 Slot 插槽，所有分段定向装填至专属插槽内，彻底杜绝顺位错位。
 
 ---
 
@@ -270,6 +280,12 @@ src/player/ui/styles/
 * **严禁单一大文件合并**：严禁将全量番号评论塞入单一全局大文件；
 * **按番号独立存放**：每个番号全量评论独立写入 `/MissPlayer/comments/[AVCODE].json`，单次原子 `PUT` 极速落盘，各影片彻底解耦；
 * **PROPFIND 415 避坑**：发送空 Body 的 PROPFIND 请求时，**严禁携带 `Content-Type: application/xml` 标头**；必须将 415 与 405、207 一并视为目录已就绪，防止多余发起 `MKCOL` 导致刷屏黄告警。
+
+### 5. 配置存储双写镜像与穿透互愈双轨备份 (Dual-Store Sync & Anti-Erase)
+* **镜像双写持久化**：`storage.js` 中的 `setValue` 必须同时写入 `GM_setValue`（油猴跨域持久化）与 `localStorage`（本地同源灾备）；
+* **穿透互愈双读机制**：`getValue` 优先读取 GM API；若读取为空或默认值，自动穿透读取 `localStorage`，读出健康值后自动反向补写修复 GM，彻底免疫换域名、沙箱就绪时序抖动；
+* **云端合并凭据非空防抹杀**：WebDAV 云端合并（`mergeData`）与下载落盘（`applyDataToLocal`）必须对私有自建凭据（`betaDbEndpoint`, `betaDbApiKey`）执行绝对非空保护，只要本地已有有效配置，严禁用云端空值抹除；
+* **实验特性开启防覆盖**：只要本地开启了 `betaMode`，绝不允许云端未开启状态覆盖关停。
 
 ---
 
