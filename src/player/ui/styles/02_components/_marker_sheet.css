@@ -5,17 +5,15 @@
     gap: 6px;
     overflow-x: auto;
     overflow-y: visible;
-    min-height: 46px;
-    height: 46px;
-    padding: 4px 6px 4px 2px;
-    margin: -4px 0;
+    min-height: 50px;
+    height: 50px;
+    padding: 6px 8px;
+    margin: -6px 0;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     box-sizing: border-box;
     align-items: center;
-    mask-image: linear-gradient(to right, black calc(100% - 12px), transparent);
-    -webkit-mask-image: linear-gradient(to right, black calc(100% - 12px), transparent);
     touch-action: pan-x;
 }
 .tm-tab-scroll-container::-webkit-scrollbar { display: none; }
@@ -71,14 +69,14 @@
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
 }
 
-/* 状态 3：区间循环播放时（半透明背景色、颜色边框、文字高亮、外发光呼吸灯） */
+/* 状态 3：区间循环播放时（半透明背景色、颜色边框、文字高亮、Apple 级聚焦光晕呼吸灯） */
 @keyframes tm-tab-loop-pulse {
     0%, 100% {
-        box-shadow: 0 0 6px hsla(var(--tab-color), 0.45), 0 0 14px hsla(var(--tab-color), 0.25);
-        border-color: hsla(var(--tab-color), 0.75);
+        box-shadow: 0 0 0 1px hsla(var(--tab-color), 0.65), 0 0 6px hsla(var(--tab-color), 0.4);
+        border-color: hsla(var(--tab-color), 0.85);
     }
     50% {
-        box-shadow: 0 0 12px hsla(var(--tab-color), 0.9), 0 0 24px hsla(var(--tab-color), 0.55);
+        box-shadow: 0 0 0 1.5px hsla(var(--tab-color), 0.95), 0 0 10px hsla(var(--tab-color), 0.65);
         border-color: hsl(var(--tab-color));
     }
 }
