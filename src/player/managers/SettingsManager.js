@@ -658,11 +658,13 @@ export class SettingsManager {
                     playerState: this.playerCore?.options?.playerState
                 });
                 Toast(res.message || '云端多端合并同步成功！', 3000);
-                this._lastWebDavStatus = { text: '同步成功', type: 'success', time: Date.now() };
-                this.createSettingsPanel(); // 刷新面板显示最新合并设置与状态徽标
+                updateStatus('同步成功', 'success');
+                renderTimeText();
+                this.syncState();
             } catch (err) {
                 Toast((__('webdavSyncFailed') || '同步失败: ') + err.message, 4500);
                 updateStatus(err.message ? `同步失败: ${err.message}` : '同步失败', 'error');
+            } finally {
                 syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__('webdavSyncMerge') || '智能合并同步'}</span>`;
                 setButtonsDisabled(false);
             }
@@ -721,11 +723,13 @@ export class SettingsManager {
                     playerState: this.playerCore?.options?.playerState
                 });
                 Toast(res.message || '已成功从云端覆盖本地！', 3000);
-                this._lastWebDavStatus = { text: '已下载覆盖', type: 'success', time: Date.now() };
-                this.createSettingsPanel(); // 刷新面板显示最新覆盖设置与状态徽标
+                updateStatus('已下载覆盖', 'success');
+                renderTimeText();
+                this.syncState();
             } catch (err) {
                 Toast((__('webdavSyncFailed') || '下载失败: ') + err.message, 4500);
                 updateStatus(err.message ? `下载失败: ${err.message}` : '下载失败', 'error');
+            } finally {
                 downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '下载覆盖'}</span>`;
                 setButtonsDisabled(false);
             }

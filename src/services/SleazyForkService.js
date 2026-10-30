@@ -30,7 +30,7 @@ export function getCurrentVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.7.15';
+    return '5.7.16';
 }
 
 export function compareVersions(v1, v2) {

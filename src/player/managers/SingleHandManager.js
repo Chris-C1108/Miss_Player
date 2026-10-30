@@ -1,6 +1,6 @@
 import { DOCK_SWITCH_LEFT, DOCK_SWITCH_RIGHT, EXPAND_FULL } from '../../constants/icons.js';
 import { __ } from '../../constants/i18n.js';
-import { Toast, playTapSound } from '../../utils/index.js';
+import { Toast, playTapSound, getValue, setValue } from '../../utils/index.js';
 
 /**
  * SingleHandManager - 竖屏单手操控模式管理器
@@ -19,8 +19,8 @@ export class SingleHandManager {
         this.uiManager = uiManager;
         this.playerState = playerCore?.options?.playerState;
 
-        // 运行时状态
-        this.isCollapsed = false; // 是否处于全宽状态 (true: 全宽隐藏立柱, false: 单手立柱激活)
+        // 运行时状态 (默认处于全宽模式，通过在控制面板任意区域左滑/右滑即可随时随地触发单手模式)
+        this.isCollapsed = getValue('singleHandCollapsed', true);
         this.gutterElement = null;
         this.btnRestore = null;
         this.btnSwitchHand = null;
@@ -96,6 +96,7 @@ export class SingleHandManager {
             e.stopPropagation();
             playTapSound();
             this.isCollapsed = true;
+            setValue('singleHandCollapsed', true);
             this.updateState();
             Toast(__('restoredFullWidth') || '已还原为全宽模式', 1200, 'info');
         });
@@ -282,8 +283,8 @@ export class SingleHandManager {
             return;
         }
 
-        // 2. 左右滑动手势：在开启 Beta 单手模式时，向左/向右滑动切换左手/右手布局 (仅在非胶囊滚动区触发)
-        if (this.isBetaEnabled && Math.abs(dx) >= minDistance && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        // 2. 左右滑动手势：随时随地在控制面板左右滑动，无缝切换左手/右手单手模式 (仅在非胶囊滚动区触发)
+        if (Math.abs(dx) >= minDistance && Math.abs(dx) > Math.abs(dy) * 1.2) {
             this._preventClickUntil = Date.now() + 350;
             playTapSound();
 
@@ -297,12 +298,14 @@ export class SingleHandManager {
                 // 向左滑动 -> 开启左手单手模式
                 this.handPosition = 'left';
                 this.isCollapsed = false;
+                setValue('singleHandCollapsed', false);
                 this.updateState();
                 Toast(__('switchedToLeftHand') || '已切换至左手模式', 1200, 'info');
             } else {
                 // 向右滑动 -> 开启右手单手模式
                 this.handPosition = 'right';
                 this.isCollapsed = false;
+                setValue('singleHandCollapsed', false);
                 this.updateState();
                 Toast(__('switchedToRightHand') || '已切换至右手模式', 1200, 'info');
             }
@@ -367,9 +370,9 @@ export class SingleHandManager {
 
         const isPortrait = this.isPortrait();
         const supportedWidth = this.isSupportedScreenWidth();
-        const active = this.isBetaEnabled && isPortrait && supportedWidth;
+        const active = isPortrait && supportedWidth && !this.isCollapsed;
 
-        if (!active || this.isCollapsed) {
+        if (!active) {
             // 全宽模式或更窄屏幕：移除所有单手类名，彻底隐藏侧栏立柱，取消单独悬浮角标方案
             container.classList.remove('tm-single-hand-active', 'tm-single-hand-right', 'tm-single-hand-left', 'tm-single-hand-full');
             if (this.gutterElement) {

@@ -36,58 +36,11 @@ export class BetaSection {
             checked: Boolean(this.settings.betaMode),
             onChange: (checked) => {
                 this.sm.updateSetting('betaMode', checked);
-                if (this.sm.controlManager?.singleHandManager) {
-                    this.sm.controlManager.singleHandManager.updateState();
-                }
                 betaSubWrap.style.display = checked ? 'block' : 'none';
                 Toast(checked ? `已开启 ${__('betaLabTitle') || '实验功能'}` : `已关闭 ${__('betaLabTitle') || '实验功能'}`, 1200, 'info');
             }
         });
         card.appendChild(betaMainToggle.getElement());
-
-        const singleHandToggle = new ToggleRow({
-            title: __('singleHandMode') || '单手模式',
-            subtext: __('singleHandModeDesc') || '控件收拢至下半屏，大拇指轻松触达',
-            checked: Boolean(this.settings.betaSingleHandMode),
-            onChange: (checked) => {
-                this.sm.updateSetting('betaSingleHandMode', checked);
-                if (this.sm.controlManager?.singleHandManager) {
-                    this.sm.controlManager.singleHandManager.updateState();
-                }
-                singleHandPrefWrap.style.display = checked ? 'block' : 'none';
-            }
-        });
-        betaSubWrap.appendChild(singleHandToggle.getElement());
-
-        const singleHandPrefWrap = document.createElement('div');
-        singleHandPrefWrap.className = 'tm-settings-subpanel-wrap';
-        singleHandPrefWrap.style.display = Boolean(this.settings.betaSingleHandMode) ? 'block' : 'none';
-
-        const handPrefRow = document.createElement('div');
-        handPrefRow.className = 'tm-apple-row';
-        handPrefRow.style.justifyContent = 'space-between';
-        handPrefRow.innerHTML = `
-            <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title">${__('singleHandPref') || '惯用手'}</div>
-                <div class="tm-apple-row-subtext">选择单手控制面板贴靠方向</div>
-            </div>
-        `;
-        const segmentedControl = new SegmentedControl({
-            options: [
-                { value: 'right', label: __('singleHandRight') || '右手' },
-                { value: 'left', label: __('singleHandLeft') || '左手' }
-            ],
-            value: this.settings.singleHandPosition || 'right',
-            onChange: (val) => {
-                this.sm.updateSetting('singleHandPosition', val);
-                if (this.sm.controlManager?.singleHandManager) {
-                    this.sm.controlManager.singleHandManager.updateState();
-                }
-            }
-        });
-        handPrefRow.appendChild(segmentedControl.getElement());
-        singleHandPrefWrap.appendChild(handPrefRow);
-        betaSubWrap.appendChild(singleHandPrefWrap);
 
         const firstCapToggle = new ToggleRow({
             title: __('betaSkipIntro') || '跳过片头',

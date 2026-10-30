@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.15
+// @version            5.7.16
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1242,7 +1242,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.15";
+		return "5.7.16";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4261,7 +4261,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.15";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.16";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -12648,7 +12648,7 @@
 			this.controlManager = controlManager;
 			this.uiManager = uiManager;
 			this.playerState = playerCore?.options?.playerState;
-			this.isCollapsed = false;
+			this.isCollapsed = getValue("singleHandCollapsed", true);
 			this.gutterElement = null;
 			this.btnRestore = null;
 			this.btnSwitchHand = null;
@@ -12707,6 +12707,7 @@
 				e.stopPropagation();
 				playTapSound();
 				this.isCollapsed = true;
+				setValue("singleHandCollapsed", true);
 				this.updateState();
 				Toast(__("restoredFullWidth") || "已还原为全宽模式", 1200, "info");
 			});
@@ -12836,7 +12837,7 @@
 				return;
 			}
 			if (this._isFromCapsuleScroll) return;
-			if (this.isBetaEnabled && Math.abs(dx) >= minDistance && Math.abs(dx) > Math.abs(dy) * 1.2) {
+			if (Math.abs(dx) >= minDistance && Math.abs(dx) > Math.abs(dy) * 1.2) {
 				this._preventClickUntil = Date.now() + 350;
 				playTapSound();
 				if (!this.isSupportedScreenWidth()) {
@@ -12846,11 +12847,13 @@
 				if (dx < 0) {
 					this.handPosition = "left";
 					this.isCollapsed = false;
+					setValue("singleHandCollapsed", false);
 					this.updateState();
 					Toast(__("switchedToLeftHand") || "已切换至左手模式", 1200, "info");
 				} else {
 					this.handPosition = "right";
 					this.isCollapsed = false;
+					setValue("singleHandCollapsed", false);
 					this.updateState();
 					Toast(__("switchedToRightHand") || "已切换至右手模式", 1200, "info");
 				}
@@ -12892,7 +12895,7 @@
 			}
 			const isPortrait = this.isPortrait();
 			const supportedWidth = this.isSupportedScreenWidth();
-			if (!(this.isBetaEnabled && isPortrait && supportedWidth) || this.isCollapsed) {
+			if (!(isPortrait && supportedWidth && !this.isCollapsed)) {
 				container.classList.remove("tm-single-hand-active", "tm-single-hand-right", "tm-single-hand-left", "tm-single-hand-full");
 				if (this.gutterElement) {
 					this.gutterElement.style.display = "none";
@@ -16992,52 +16995,11 @@
 				checked: Boolean(this.settings.betaMode),
 				onChange: (checked) => {
 					this.sm.updateSetting("betaMode", checked);
-					if (this.sm.controlManager?.singleHandManager) this.sm.controlManager.singleHandManager.updateState();
 					betaSubWrap.style.display = checked ? "block" : "none";
 					Toast(checked ? `已开启 ${__("betaLabTitle") || "实验功能"}` : `已关闭 ${__("betaLabTitle") || "实验功能"}`, 1200, "info");
 				}
 			});
 			card.appendChild(betaMainToggle.getElement());
-			const singleHandToggle = new ToggleRow({
-				title: __("singleHandMode") || "单手模式",
-				subtext: __("singleHandModeDesc") || "控件收拢至下半屏，大拇指轻松触达",
-				checked: Boolean(this.settings.betaSingleHandMode),
-				onChange: (checked) => {
-					this.sm.updateSetting("betaSingleHandMode", checked);
-					if (this.sm.controlManager?.singleHandManager) this.sm.controlManager.singleHandManager.updateState();
-					singleHandPrefWrap.style.display = checked ? "block" : "none";
-				}
-			});
-			betaSubWrap.appendChild(singleHandToggle.getElement());
-			const singleHandPrefWrap = document.createElement("div");
-			singleHandPrefWrap.className = "tm-settings-subpanel-wrap";
-			singleHandPrefWrap.style.display = Boolean(this.settings.betaSingleHandMode) ? "block" : "none";
-			const handPrefRow = document.createElement("div");
-			handPrefRow.className = "tm-apple-row";
-			handPrefRow.style.justifyContent = "space-between";
-			handPrefRow.innerHTML = `
-            <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title">${__("singleHandPref") || "惯用手"}</div>
-                <div class="tm-apple-row-subtext">选择单手控制面板贴靠方向</div>
-            </div>
-        `;
-			const segmentedControl = new SegmentedControl({
-				options: [{
-					value: "right",
-					label: __("singleHandRight") || "右手"
-				}, {
-					value: "left",
-					label: __("singleHandLeft") || "左手"
-				}],
-				value: this.settings.singleHandPosition || "right",
-				onChange: (val) => {
-					this.sm.updateSetting("singleHandPosition", val);
-					if (this.sm.controlManager?.singleHandManager) this.sm.controlManager.singleHandManager.updateState();
-				}
-			});
-			handPrefRow.appendChild(segmentedControl.getElement());
-			singleHandPrefWrap.appendChild(handPrefRow);
-			betaSubWrap.appendChild(singleHandPrefWrap);
 			const firstCapToggle = new ToggleRow({
 				title: __("betaSkipIntro") || "跳过片头",
 				subtext: __("betaSkipIntroDesc") || "开播直接跳转至第 1 个精彩高光",
@@ -17224,7 +17186,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.15";
+		return "5.7.16";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -17945,15 +17907,13 @@
 						config: currentCfg,
 						playerState: this.playerCore?.options?.playerState
 					})).message || "云端多端合并同步成功！", 3e3);
-					this._lastWebDavStatus = {
-						text: "同步成功",
-						type: "success",
-						time: Date.now()
-					};
-					this.createSettingsPanel();
+					updateStatus("同步成功", "success");
+					renderTimeText();
+					this.syncState();
 				} catch (err) {
 					Toast((__("webdavSyncFailed") || "同步失败: ") + err.message, 4500);
 					updateStatus(err.message ? `同步失败: ${err.message}` : "同步失败", "error");
+				} finally {
 					syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__("webdavSyncMerge") || "智能合并同步"}</span>`;
 					setButtonsDisabled(false);
 				}
@@ -18002,15 +17962,13 @@
 						config: currentCfg,
 						playerState: this.playerCore?.options?.playerState
 					})).message || "已成功从云端覆盖本地！", 3e3);
-					this._lastWebDavStatus = {
-						text: "已下载覆盖",
-						type: "success",
-						time: Date.now()
-					};
-					this.createSettingsPanel();
+					updateStatus("已下载覆盖", "success");
+					renderTimeText();
+					this.syncState();
 				} catch (err) {
 					Toast((__("webdavSyncFailed") || "下载失败: ") + err.message, 4500);
 					updateStatus(err.message ? `下载失败: ${err.message}` : "下载失败", "error");
+				} finally {
 					downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__("webdavDownloadOverwrite") || "下载覆盖"}</span>`;
 					setButtonsDisabled(false);
 				}
