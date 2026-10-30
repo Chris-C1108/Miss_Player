@@ -1557,16 +1557,13 @@
     display: block;
 }
 
-/* 控制界面隐藏时，侧边栏与总控制面板联动隐藏 (侧边栏停靠状态保持常驻不隐藏) */
+/* 控制界面隐藏时，单手辅助立柱联动隐藏 (停靠状态保持常驻不隐藏) */
 body.controls-hidden .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
 .tm-player-container.controls-hidden:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
-:host(.controls-hidden) .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
-body.controls-hidden .tm-player-container:not([class*="tm-controls-docked-"]) .tm-control-panel,
-.tm-player-container.controls-hidden:not([class*="tm-controls-docked-"]) .tm-control-panel,
-:host(.controls-hidden) .tm-player-container:not([class*="tm-controls-docked-"]) .tm-control-panel {
+:host(.controls-hidden) .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter {
     opacity: 0 !important;
     visibility: hidden;
-    transform: translateY(20px) !important;
+    transform: translate3d(0, 20px, 0) !important;
     pointer-events: none !important;
 }
 

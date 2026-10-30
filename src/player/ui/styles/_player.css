@@ -2432,12 +2432,13 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     pointer-events: auto;
 }
 
-/* 控制面板容器 */
+/* 控制面板容器 (默认居中悬浮) */
 .tm-control-buttons {
     position: absolute;
     bottom: max(16px, env(safe-area-inset-bottom, 0px)); /* 保持距离底部至少16px，充分考虑iOS安全区域指示条 */
     left: 50%;
-    transform: translateX(-50%);
+    transform-origin: 50% 100%;
+    transform: translate3d(-50%, 0, 0) scale(1);
     width: min(94vw, 560px);
     max-width: 560px;
     box-sizing: border-box;
@@ -2449,23 +2450,24 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     -webkit-backdrop-filter: blur(32px) saturate(200%);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);            /* 外层弥散阴影 */
     border: 1px solid rgba(255, 255, 255, 0.14);
+    opacity: 1;
+    visibility: visible;
     transition: 
-        opacity 0.3s ease, 
-        transform 0.3s ease, 
-        width 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
-        left 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
-        bottom 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
+        opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), 
+        transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), 
+        width 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+        left 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+        bottom 0.35s cubic-bezier(0.16, 1, 0.5, 1), 
         right 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
         border-radius 0.3s ease;
     gap: 10px;
-    
-    /* 添加 flex 布局属性 */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     overflow: visible;
     touch-action: none; /* 控制面板隔离触摸 */
+    will-change: transform, opacity;
 }
 
 .tm-control-buttons.dragging {
@@ -2473,12 +2475,18 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-/* 控制界面隐藏时的动画效果 - 更新选择器 */
-body.controls-hidden .tm-player-container .tm-control-buttons, .tm-player-container.controls-hidden .tm-control-buttons, :host(.controls-hidden) .tm-control-buttons {
+/* 控制界面隐藏时的动画效果 - 保持 X 轴 -50% 绝对居中，纯垂直 20px 微沉降微缩放，杜绝斜角飞入 */
+body.controls-hidden .tm-player-container .tm-control-buttons:not([class*="tm-controls-docked-"]),
+.tm-player-container.controls-hidden .tm-control-buttons:not([class*="tm-controls-docked-"]),
+:host(.controls-hidden) .tm-control-buttons:not([class*="tm-controls-docked-"]) {
     opacity: 0;
     visibility: hidden;
-    transform: translateX(-50%) translateY(calc(100% + 30px));
+    transform: translate3d(-50%, 20px, 0) scale(0.96);
     pointer-events: none;
+    transition: 
+        opacity 0.22s cubic-bezier(0.4, 0, 1, 1), 
+        transform 0.26s cubic-bezier(0.4, 0, 1, 1),
+        visibility 0.26s;
 }
 
 body.controls-hidden .tm-control-buttons *,
@@ -2490,10 +2498,13 @@ body.controls-hidden .tm-control-panel *,
     pointer-events: none;
 }
 
-/* 控制界面显示时的动画效果 - 更新选择器 */
-body:not(.controls-hidden) .tm-player-container .tm-control-buttons, .tm-player-container:not(.controls-hidden) .tm-control-buttons, :host(:not(.controls-hidden)) .tm-control-buttons {
+/* 控制界面显示时的动画效果 - Apple 物理弹性舒展 */
+body:not(.controls-hidden) .tm-player-container .tm-control-buttons:not([class*="tm-controls-docked-"]),
+.tm-player-container:not(.controls-hidden) .tm-control-buttons:not([class*="tm-controls-docked-"]),
+:host(:not(.controls-hidden)) .tm-control-buttons:not([class*="tm-controls-docked-"]) {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    visibility: visible;
+    transform: translate3d(-50%, 0, 0) scale(1);
     pointer-events: auto;
 }
 
@@ -2739,18 +2750,24 @@ body.controls-hidden .tm-player-container > .tm-player-title,
         padding-right: calc(10px + env(safe-area-inset-right, 0px));
         padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
         pointer-events: auto;
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
+        visibility: visible;
+        transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: transform, opacity;
     }
 
-    /* 当作为 iOS 键盘底板时，里面的 tm-control-buttons 与底板融为一体，取消自身 padding 由外层 tm-control-panel 统一提供，通过高特异度选择器自然重置 transform 杜绝左侧平移裁切 */
-    .tm-player-container:not(.controls-hidden) .tm-control-panel .tm-control-buttons,
-    :host(:not(.controls-hidden)) .tm-control-panel .tm-control-buttons,
-    .tm-control-panel .tm-control-buttons {
+    /* 当作为 iOS 键盘底板时，里面的 tm-control-buttons 与底板融为一体，保持纯正垂直位置，锁定 transform: none，杜绝任何斜向漂移 */
+    .tm-control-panel .tm-control-buttons,
+    .controls-hidden .tm-control-panel .tm-control-buttons {
         position: relative;
         bottom: 0;
         left: auto;
         right: auto;
         transform: none;
+        opacity: 1;
+        visibility: visible;
+        transition: none;
         width: min(calc(100% - 24px), 520px);
         max-width: 520px;
         min-width: 0;
@@ -2843,14 +2860,15 @@ body.controls-hidden .tm-player-container > .tm-player-title,
     }
 }
 
-/* 隐藏控制界面时的动画过渡 */
+/* 隐藏控制界面时的动画过渡 (iOS 键盘底板纯垂直利落下沉) */
 body.controls-hidden .tm-control-panel,
 .tm-player-container.controls-hidden .tm-control-panel,
 :host(.controls-hidden) .tm-control-panel {
     opacity: 0;
     visibility: hidden;
-    transform: translateY(100%);
+    transform: translate3d(0, calc(100% + 24px), 0);
     pointer-events: none;
+    transition: transform 0.26s cubic-bezier(0.4, 0, 1, 1), opacity 0.2s cubic-bezier(0.4, 0, 1, 1), visibility 0.26s;
 }
 
 /* 下滑手势拖动时，隐藏所有播放器控制和面板组件，实现极致沉浸感 */

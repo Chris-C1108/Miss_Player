@@ -332,17 +332,19 @@
         border: 1px solid rgba(255, 255, 255, 0.14);
     }
 
-    /* PC 端控制栏隐藏时的动画过渡 */
+    /* PC 端控制栏隐藏时的动画过渡 (垂直微沉降，极轻微缩放，纯正 Y 轴动效) */
     body.controls-hidden .tm-control-buttons, .tm-player-container.controls-hidden .tm-control-buttons, :host(.controls-hidden) .tm-control-buttons {
-        opacity: 0 !important;
-        transform: translateY(20px) !important;
-        pointer-events: none !important;
+        opacity: 0;
+        transform: translate3d(0, 18px, 0) scale(0.97);
+        pointer-events: none;
+        transition: opacity 0.22s cubic-bezier(0.4, 0, 1, 1), transform 0.24s cubic-bezier(0.4, 0, 1, 1);
     }
 
     body:not(.controls-hidden) .tm-control-buttons, .tm-player-container:not(.controls-hidden) .tm-control-buttons, :host(:not(.controls-hidden)) .tm-control-buttons {
         opacity: 1;
-        transform: none;
+        transform: translate3d(0, 0, 0) scale(1);
         pointer-events: auto;
+        transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     /* 调整播放器遮罩层样式 */
@@ -569,21 +571,23 @@
         display: flex;
     }
 
-    /* 控制栏隐藏时的动画过渡 */
+    /* 控制栏隐藏时的动画过渡 (垂直微沉降，极轻微缩放，纯正 Y 轴动效) */
     body.controls-hidden .tm-control-buttons,
     .tm-player-container.controls-hidden .tm-control-buttons,
     :host(.controls-hidden) .tm-control-buttons {
-        opacity: 0 !important;
-        transform: translateY(20px) !important;
-        pointer-events: none !important;
+        opacity: 0;
+        transform: translate3d(0, 18px, 0) scale(0.97);
+        pointer-events: none;
+        transition: opacity 0.22s cubic-bezier(0.4, 0, 1, 1), transform 0.24s cubic-bezier(0.4, 0, 1, 1);
     }
 
     body:not(.controls-hidden) .tm-control-buttons,
     .tm-player-container:not(.controls-hidden) .tm-control-buttons,
     :host(:not(.controls-hidden)) .tm-control-buttons {
         opacity: 1;
-        transform: none;
+        transform: translate3d(0, 0, 0) scale(1);
         pointer-events: auto;
+        transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
     }
 }
 

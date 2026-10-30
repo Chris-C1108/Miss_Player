@@ -88,6 +88,11 @@ runStep('执行胶囊编辑状态时间跳转免疫与点击守卫单元测试',
     execSync('node tests/loop-edit-state.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.4 控制面板显隐纯垂直动效单元测试
+runStep('执行控制面板显隐纯垂直动效与防斜飞单元测试', () => {
+    execSync('node tests/controls-motion.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');
