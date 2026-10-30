@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.14
+// @version            5.7.15
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1242,7 +1242,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.14";
+		return "5.7.15";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4261,7 +4261,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.14";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.15";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -4398,7 +4398,7 @@
 			const now = Date.now();
 			const tombstones = this.getLocalTombstones();
 			const settingTimestamps = this.getLocalSettingTimestamps();
-			const settings = playerState?.settings || {
+			const baseSettings = {
 				showProgressBar: getValue("showProgressBar", true),
 				showSeekControlRow: getValue("showSeekControlRow", true),
 				showLoopControlRow: getValue("showLoopControlRow", true),
@@ -4423,9 +4423,28 @@
 				preferredPlaybackRate: parseFloat(getValue("preferredPlaybackRate", 1)) || 1,
 				pauseOnBlur: getValue("pauseOnBlur", true),
 				buttonSoundEnabled: getValue("buttonSoundEnabled", true),
+				defaultMuted: getValue("defaultMuted", false),
+				muteResetMinutes: parseInt(getValue("muteResetMinutes", 5), 10) || 5,
+				autoCheckUpdate: getValue("autoCheckUpdate", true),
+				updateChannel: getValue("updateChannel", "stable"),
 				telemetryEnabled: false,
-				debugMode: getValue("debugMode", false)
+				debugMode: getValue("debugMode", false),
+				betaMode: getValue("betaMode", false),
+				betaFirstCapsulePlay: getValue("betaFirstCapsulePlay", false),
+				betaPlayMode: getValue("betaPlayMode", "normal"),
+				previewDurationSeconds: parseInt(getValue("previewDurationSeconds", 5), 10) || 5,
+				climaxDurationSeconds: parseInt(getValue("climaxDurationSeconds", 60), 10) || 60,
+				betaColorPlayMode: getValue("betaColorPlayMode", "preview"),
+				betaCapsuleUndo: getValue("betaCapsuleUndo", true),
+				betaDeepLinking: getValue("betaDeepLinking", true),
+				betaDbEndpoint: getValue("betaDbEndpoint", "") || "",
+				betaDbApiKey: getValue("betaDbApiKey", "") || "",
+				betaSingleHandMode: getValue("betaSingleHandMode", false),
+				singleHandPosition: getValue("singleHandPosition", "right") || "right",
+				crazyScrapeMode: getValue("crazyScrapeMode", false),
+				crazyForceRescrape: getValue("crazyForceRescrape", false)
 			};
+			const settings = Object.assign({}, baseSettings, playerState?.settings || {});
 			const markers = {};
 			try {
 				const processList = (cleanKey, val) => {
@@ -4545,6 +4564,11 @@
 			const allSettingKeys = Array.from(new Set([...Object.keys(localSettings), ...Object.keys(remoteSettings)]));
 			for (const key of allSettingKeys) {
 				if (key === "customUserSeekSteps" || key === "enabledSeekSteps" || key === "enabledCommentSources") continue;
+				if ((key === "betaDbEndpoint" || key === "betaDbApiKey") && localSettings[key] && !remoteSettings[key]) {
+					mergedSettings[key] = localSettings[key];
+					mergedSettingTimestamps[key] = localTimestamps[key] || now;
+					continue;
+				}
 				const lTime = localTimestamps[key] || localData.lastModified || 0;
 				const rTime = remoteTimestamps[key] || remoteMigrated.lastModified || 0;
 				if (lTime >= rTime) {
@@ -16111,11 +16135,12 @@
 			this.isScheduled = false;
 			this.observer = null;
 		}
-		register(id, factory, { defer = "idle" } = {}) {
+		register(id, factory, { defer = "idle", targetSlot = null } = {}) {
 			this.sectionsQueue.push({
 				id,
 				factory,
-				defer
+				defer,
+				targetSlot
 			});
 		}
 		start() {
@@ -16125,12 +16150,13 @@
 				if (this.sectionsQueue.length === 0) return;
 				const item = this.sectionsQueue.shift();
 				if (!item) return;
+				const mountParent = item.targetSlot || this.container;
 				if (item.defer === "viewport" && "IntersectionObserver" in window) {
 					const skeleton = document.createElement("div");
 					skeleton.className = "tm-settings-skeleton-card";
 					skeleton.dataset.sectionId = item.id;
 					skeleton.style.margin = "4px 0";
-					this.container.appendChild(skeleton);
+					mountParent.appendChild(skeleton);
 					const scrollRoot = this.container.closest(".tm-settings-panel") || null;
 					const obs = new IntersectionObserver((entries) => {
 						entries.forEach((entry) => {
@@ -16148,7 +16174,7 @@
 					this._next(processQueue);
 				} else {
 					const sectionNode = item.factory(this.sm);
-					if (sectionNode) this.container.appendChild(sectionNode);
+					if (sectionNode) mountParent.appendChild(sectionNode);
 					this._next(processQueue);
 				}
 			};
@@ -17198,7 +17224,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.14";
+		return "5.7.15";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -17610,25 +17636,52 @@
 			headerRow.appendChild(titleWrap);
 			headerRow.appendChild(closeBtn);
 			container.appendChild(headerRow);
+			const slotPlayback = document.createElement("div");
+			slotPlayback.className = "tm-settings-slot tm-slot-playback";
+			const slotComments = document.createElement("div");
+			slotComments.className = "tm-settings-slot tm-slot-comments";
+			const slotBeta = document.createElement("div");
+			slotBeta.className = "tm-settings-slot tm-slot-beta";
+			const slotCloudSync = document.createElement("div");
+			slotCloudSync.className = "tm-settings-slot tm-slot-cloud-sync";
+			const slotAbout = document.createElement("div");
+			slotAbout.className = "tm-settings-slot tm-slot-about";
+			container.appendChild(slotPlayback);
+			container.appendChild(slotComments);
+			container.appendChild(slotBeta);
+			container.appendChild(slotCloudSync);
+			container.appendChild(slotAbout);
 			const playbackSection = new PlaybackSection(this);
-			container.appendChild(playbackSection.getElement());
+			slotPlayback.appendChild(playbackSection.getElement());
 			this._scheduler = new SettingsStreamScheduler(container, this);
-			this._scheduler.register("comments", () => new CommentsSection(this).getElement(), { defer: "idle" });
-			this._scheduler.register("beta", () => new BetaSection(this).getElement(), { defer: "idle" });
+			this._scheduler.register("comments", () => new CommentsSection(this).getElement(), {
+				defer: "idle",
+				targetSlot: slotComments
+			});
+			this._scheduler.register("beta", () => new BetaSection(this).getElement(), {
+				defer: "idle",
+				targetSlot: slotBeta
+			});
 			if (this.isSectionExpanded("cloudSync", false)) {
 				this.cloudSyncSection = new CloudSyncSection(this);
-				container.appendChild(this.cloudSyncSection.getElement());
+				slotCloudSync.appendChild(this.cloudSyncSection.getElement());
 			} else this._scheduler.register("cloudSync", () => {
 				this.cloudSyncSection = new CloudSyncSection(this);
 				return this.cloudSyncSection.getElement();
-			}, { defer: "viewport" });
+			}, {
+				defer: "viewport",
+				targetSlot: slotCloudSync
+			});
 			if (this.isSectionExpanded("about", false)) {
 				this.aboutSection = new AboutSection(this);
-				container.appendChild(this.aboutSection.getElement());
+				slotAbout.appendChild(this.aboutSection.getElement());
 			} else this._scheduler.register("about", () => {
 				this.aboutSection = new AboutSection(this);
 				return this.aboutSection.getElement();
-			}, { defer: "viewport" });
+			}, {
+				defer: "viewport",
+				targetSlot: slotAbout
+			});
 			this.settingsPanel.appendChild(container);
 			this._scheduler.start();
 			if (previousScrollTop > 0) {
@@ -19696,7 +19749,18 @@
 				betaSingleHandMode: false,
 				singleHandPosition: "right",
 				autoCheckUpdate: true,
-				updateChannel: "stable"
+				updateChannel: "stable",
+				betaMode: false,
+				betaFirstCapsulePlay: false,
+				betaPlayMode: "normal",
+				previewDurationSeconds: 5,
+				climaxDurationSeconds: 60,
+				betaColorPlayMode: "preview",
+				betaCapsuleUndo: true,
+				betaDeepLinking: true,
+				betaDbEndpoint: "",
+				betaDbApiKey: "",
+				betaSingleHandMode: false
 			};
 		}
 		loadSettings() {
@@ -19775,7 +19839,13 @@
 				"defaultMuted",
 				"muteResetMinutes",
 				"autoCheckUpdate",
-				"updateChannel"
+				"updateChannel",
+				"betaMode",
+				"betaDbEndpoint",
+				"betaDbApiKey",
+				"crazyScrapeMode",
+				"betaSingleHandMode",
+				"singleHandPosition"
 			];
 			this._reactiveStore = new ReactiveStore(this.settings);
 			this._reactiveStore.enableCrossTabSync(MONITORED_SETTINGS);
@@ -19831,13 +19901,11 @@
 			}
 		}
 		updateSetting(key, value) {
-			if (key in this.settings) {
-				this.settings[key] = value;
-				this.saveSettings();
-				try {
-					SyncManager.recordSettingUpdate(key);
-				} catch (_) {}
-			}
+			this.settings[key] = value;
+			this.saveSettings();
+			try {
+				SyncManager.recordSettingUpdate(key);
+			} catch (_) {}
 		}
 	};
 	var COOLDOWN_DURATION = 18e5;

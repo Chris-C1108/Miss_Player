@@ -98,6 +98,11 @@ runStep('执行胶囊区域左右滑动手势守卫单元测试', () => {
     execSync('node tests/capsule-scroll.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.6 设置菜单防丢失与固定插槽顺序单元测试
+runStep('执行设置菜单防丢失与固定插槽顺序单元测试', () => {
+    execSync('node tests/settings-order-and-sync.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

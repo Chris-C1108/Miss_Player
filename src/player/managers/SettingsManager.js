@@ -247,41 +247,69 @@ export class SettingsManager {
         headerRow.appendChild(closeBtn);
         container.appendChild(headerRow);
 
+        // 建立 5 大固定顺序的分段插槽，物理锁定渲染顺序，彻底杜绝任何同步/异步混用导致的错位漂移
+        const slotPlayback = document.createElement("div");
+        slotPlayback.className = "tm-settings-slot tm-slot-playback";
+
+        const slotComments = document.createElement("div");
+        slotComments.className = "tm-settings-slot tm-slot-comments";
+
+        const slotBeta = document.createElement("div");
+        slotBeta.className = "tm-settings-slot tm-slot-beta";
+
+        const slotCloudSync = document.createElement("div");
+        slotCloudSync.className = "tm-settings-slot tm-slot-cloud-sync";
+
+        const slotAbout = document.createElement("div");
+        slotAbout.className = "tm-settings-slot tm-slot-about";
+
+        container.appendChild(slotPlayback);
+        container.appendChild(slotComments);
+        container.appendChild(slotBeta);
+        container.appendChild(slotCloudSync);
+        container.appendChild(slotAbout);
+
         // 1. 同步挂载第一分段 (控制与手势) —— 首屏极其快速 (<= 3ms / < 30 个 DOM 节点)
         const playbackSection = new PlaybackSection(this);
-        container.appendChild(playbackSection.getElement());
+        slotPlayback.appendChild(playbackSection.getElement());
 
         // 2. 初始化流式异步装配调度器
         this._scheduler = new SettingsStreamScheduler(container, this);
 
-        // 分段 2: 评论与数据源 (空闲时间追加)
-        this._scheduler.register("comments", () => new CommentsSection(this).getElement(), { defer: "idle" });
+        // 分段 2: 评论与数据源 (挂载至专属插槽 slotComments)
+        this._scheduler.register("comments", () => new CommentsSection(this).getElement(), {
+            defer: "idle",
+            targetSlot: slotComments
+        });
 
-        // 分段 3: 实验特性与高级排错 (空闲时间追加)
-        this._scheduler.register("beta", () => new BetaSection(this).getElement(), { defer: "idle" });
+        // 分段 3: 实验特性与高级排错 (挂载至专属插槽 slotBeta)
+        this._scheduler.register("beta", () => new BetaSection(this).getElement(), {
+            defer: "idle",
+            targetSlot: slotBeta
+        });
 
-        // 分段 4: 云端同步 WebDAV (若已展开则同步挂载，保证物理高度并杜绝滚动跳变；未展开则延迟水合)
+        // 分段 4: 云端同步 WebDAV (挂载至专属插槽 slotCloudSync，无论同步或异步顺序绝对锁定)
         const isCloudSyncExpanded = this.isSectionExpanded('cloudSync', false);
         if (isCloudSyncExpanded) {
             this.cloudSyncSection = new CloudSyncSection(this);
-            container.appendChild(this.cloudSyncSection.getElement());
+            slotCloudSync.appendChild(this.cloudSyncSection.getElement());
         } else {
             this._scheduler.register("cloudSync", () => {
                 this.cloudSyncSection = new CloudSyncSection(this);
                 return this.cloudSyncSection.getElement();
-            }, { defer: "viewport" });
+            }, { defer: "viewport", targetSlot: slotCloudSync });
         }
 
-        // 分段 5: 关于与更新 (若已展开则同步挂载，保证物理高度并杜绝滚动跳变；未展开则延迟水合)
+        // 分段 5: 关于与更新 (挂载至专属插槽 slotAbout)
         const isAboutExpanded = this.isSectionExpanded('about', false);
         if (isAboutExpanded) {
             this.aboutSection = new AboutSection(this);
-            container.appendChild(this.aboutSection.getElement());
+            slotAbout.appendChild(this.aboutSection.getElement());
         } else {
             this._scheduler.register("about", () => {
                 this.aboutSection = new AboutSection(this);
                 return this.aboutSection.getElement();
-            }, { defer: "viewport" });
+            }, { defer: "viewport", targetSlot: slotAbout });
         }
 
         this.settingsPanel.appendChild(container);

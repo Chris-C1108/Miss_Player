@@ -43,7 +43,19 @@ export class PlayerState {
             betaSingleHandMode: false,      // 竖屏单手模式 (Beta 默认关闭)
             singleHandPosition: 'right',    // 单手握持偏好 ('right' | 'left')
             autoCheckUpdate: true,          // 自动检查新版本 (默认为开)
-            updateChannel: 'stable'         // 检查更新通道 ('stable' 正式版 | 'beta' 测试版)
+            updateChannel: 'stable',        // 检查更新通道 ('stable' 正式版 | 'beta' 测试版)
+            // Beta 实验室与自建数据库 (Beta Labs & Supabase)
+            betaMode: false,
+            betaFirstCapsulePlay: false,
+            betaPlayMode: 'normal',
+            previewDurationSeconds: 5,
+            climaxDurationSeconds: 60,
+            betaColorPlayMode: 'preview',
+            betaCapsuleUndo: true,
+            betaDeepLinking: true,
+            betaDbEndpoint: '',
+            betaDbApiKey: '',
+            betaSingleHandMode: false
         };
     }
 
@@ -145,7 +157,13 @@ export class PlayerState {
             'defaultMuted',
             'muteResetMinutes',
             'autoCheckUpdate',
-            'updateChannel'
+            'updateChannel',
+            'betaMode',
+            'betaDbEndpoint',
+            'betaDbApiKey',
+            'crazyScrapeMode',
+            'betaSingleHandMode',
+            'singleHandPosition'
         ];
 
         this._reactiveStore = new ReactiveStore(this.settings);
@@ -214,12 +232,10 @@ export class PlayerState {
      * @param {any} value - 设置值
      */
     updateSetting(key, value) {
-        if (key in this.settings) {
-            this.settings[key] = value;
-            this.saveSettings();
-            try {
-                SyncManager.recordSettingUpdate(key);
-            } catch (_) {}
-        }
+        this.settings[key] = value;
+        this.saveSettings();
+        try {
+            SyncManager.recordSettingUpdate(key);
+        } catch (_) {}
     }
 } 

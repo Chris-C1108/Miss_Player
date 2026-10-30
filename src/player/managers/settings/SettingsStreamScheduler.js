@@ -7,8 +7,8 @@ export class SettingsStreamScheduler {
         this.observer = null;
     }
 
-    register(id, factory, { defer = 'idle' } = {}) {
-        this.sectionsQueue.push({ id, factory, defer });
+    register(id, factory, { defer = 'idle', targetSlot = null } = {}) {
+        this.sectionsQueue.push({ id, factory, defer, targetSlot });
     }
 
     start() {
@@ -21,12 +21,14 @@ export class SettingsStreamScheduler {
             const item = this.sectionsQueue.shift();
             if (!item) return;
 
+            const mountParent = item.targetSlot || this.container;
+
             if (item.defer === 'viewport' && 'IntersectionObserver' in window) {
                 const skeleton = document.createElement('div');
                 skeleton.className = 'tm-settings-skeleton-card';
                 skeleton.dataset.sectionId = item.id;
                 skeleton.style.margin = '4px 0';
-                this.container.appendChild(skeleton);
+                mountParent.appendChild(skeleton);
 
                 const scrollRoot = this.container.closest('.tm-settings-panel') || null;
                 const obs = new IntersectionObserver((entries) => {
@@ -46,7 +48,7 @@ export class SettingsStreamScheduler {
             } else {
                 const sectionNode = item.factory(this.sm);
                 if (sectionNode) {
-                    this.container.appendChild(sectionNode);
+                    mountParent.appendChild(sectionNode);
                 }
                 this._next(processQueue);
             }

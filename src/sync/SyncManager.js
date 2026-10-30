@@ -16,7 +16,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.14';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.15';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -257,8 +257,8 @@ export class SyncManager {
         const tombstones = this.getLocalTombstones();
         const settingTimestamps = this.getLocalSettingTimestamps();
 
-        // 1. 收集 Settings 配置
-        const settings = playerState?.settings || {
+        // 1. 收集 Settings 配置 (完备支持 Beta 实验室与自建库端点凭据)
+        const baseSettings = {
             showProgressBar: getValue('showProgressBar', true),
             showSeekControlRow: getValue('showSeekControlRow', true),
             showLoopControlRow: getValue('showLoopControlRow', true),
@@ -272,9 +272,28 @@ export class SyncManager {
             preferredPlaybackRate: parseFloat(getValue('preferredPlaybackRate', 1.0)) || 1.0,
             pauseOnBlur: getValue('pauseOnBlur', true),
             buttonSoundEnabled: getValue('buttonSoundEnabled', true),
+            defaultMuted: getValue('defaultMuted', false),
+            muteResetMinutes: parseInt(getValue('muteResetMinutes', 5), 10) || 5,
+            autoCheckUpdate: getValue('autoCheckUpdate', true),
+            updateChannel: getValue('updateChannel', 'stable'),
             telemetryEnabled: false,
-            debugMode: getValue('debugMode', false)
+            debugMode: getValue('debugMode', false),
+            betaMode: getValue('betaMode', false),
+            betaFirstCapsulePlay: getValue('betaFirstCapsulePlay', false),
+            betaPlayMode: getValue('betaPlayMode', 'normal'),
+            previewDurationSeconds: parseInt(getValue('previewDurationSeconds', 5), 10) || 5,
+            climaxDurationSeconds: parseInt(getValue('climaxDurationSeconds', 60), 10) || 60,
+            betaColorPlayMode: getValue('betaColorPlayMode', 'preview'),
+            betaCapsuleUndo: getValue('betaCapsuleUndo', true),
+            betaDeepLinking: getValue('betaDeepLinking', true),
+            betaDbEndpoint: getValue('betaDbEndpoint', '') || '',
+            betaDbApiKey: getValue('betaDbApiKey', '') || '',
+            betaSingleHandMode: getValue('betaSingleHandMode', false),
+            singleHandPosition: getValue('singleHandPosition', 'right') || 'right',
+            crazyScrapeMode: getValue('crazyScrapeMode', false),
+            crazyForceRescrape: getValue('crazyForceRescrape', false)
         };
+        const settings = Object.assign({}, baseSettings, playerState?.settings || {});
 
         // 2. 收集所有视频打点数据 (tabs_*)，规范化补全 id / createdAt / updatedAt
         const markers = {};
@@ -452,6 +471,13 @@ export class SyncManager {
 
         for (const key of allSettingKeys) {
             if (key === 'customUserSeekSteps' || key === 'enabledSeekSteps' || key === 'enabledCommentSources') {
+                continue;
+            }
+
+            // 自建端点与凭据防抹杀保护：若本地已有配置而远端为空，优先保留本地已有凭据
+            if ((key === 'betaDbEndpoint' || key === 'betaDbApiKey') && localSettings[key] && !remoteSettings[key]) {
+                mergedSettings[key] = localSettings[key];
+                mergedSettingTimestamps[key] = localTimestamps[key] || now;
                 continue;
             }
 
