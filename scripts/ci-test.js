@@ -108,6 +108,11 @@ runStep('执行单手手势随时触发与设置项清理单元测试', () => {
     execSync('node tests/single-hand-gesture.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.8 单手模式立柱加宽与排版防挤压单元测试
+runStep('执行单手模式立柱加宽与排版防挤压单元测试', () => {
+    execSync('node tests/single-hand-gutter.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

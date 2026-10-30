@@ -1443,7 +1443,7 @@
 .tm-single-hand-gutter {
     position: absolute;
     bottom: max(16px, env(safe-area-inset-bottom, 0px));
-    width: 44px;
+    width: 48px;
     display: none;
     flex-direction: column;
     justify-content: space-between;
@@ -1462,10 +1462,10 @@
     transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* 1. 上部：“还原”全宽按钮 (深灰色背景#202020 圆角矩形) */
+/* 1. 上部：“还原”全宽按钮 (深灰色背景#202020 圆角矩形，加宽触控靶心) */
 .tm-gutter-btn-top {
     width: 100%;
-    height: 44px;
+    height: 46px;
     border-radius: 12px;
     background: #202020;
     border: 1px solid hsl(var(--shadcn-border) / .1);
