@@ -206,12 +206,16 @@ export class HeatmapManager {
             }
         }
 
-        document.addEventListener('visibilitychange', this.onVisibilityChange);
-        window.addEventListener('beforeunload', this.onBeforeUnload);
+        if (typeof document !== 'undefined') {
+            document.addEventListener('visibilitychange', this.onVisibilityChange);
+        }
+        if (typeof window !== 'undefined') {
+            window.addEventListener('beforeunload', this.onBeforeUnload);
+        }
 
-        // 启动后台定时刷盘 (15 秒节流)
+        // 启动后台定时刷盘 (15 秒节流，无论展示开关是否开启均静默持久化)
         this.saveTimer = setInterval(() => {
-            if (this.isDirty && this.isEnabled) {
+            if (this.isDirty) {
                 this.saveToDb();
             }
         }, HEATMAP_CONSTANTS.SAVE_INTERVAL_MS);
@@ -233,6 +237,7 @@ export class HeatmapManager {
     }
 
     _buildDom() {
+        if (typeof document === 'undefined') return;
         const container = this.controlManager?.progressBarContainer;
         if (!container) return;
 
@@ -285,7 +290,8 @@ export class HeatmapManager {
     }
 
     onTimeUpdate() {
-        if (!this.isEnabled || !this.bins || !this.targetVideo) return;
+        // 无论展示开关是否开启，均在后台静默记录用户播放频率
+        if (!this.bins || !this.targetVideo) return;
         if (this.targetVideo.paused || this.targetVideo.seeking) {
             this.lastCurrentTime = null;
             return;
@@ -311,27 +317,31 @@ export class HeatmapManager {
     }
 
     onPause() {
-        if (this.isDirty && this.isEnabled) {
+        if (this.isDirty) {
             this.saveToDb();
+        }
+        if (this.isEnabled) {
             this.renderSvg();
         }
     }
 
     onEnded() {
-        if (this.isDirty && this.isEnabled) {
+        if (this.isDirty) {
             this.saveToDb();
+        }
+        if (this.isEnabled) {
             this.renderSvg();
         }
     }
 
     onVisibilityChange() {
-        if (document.hidden && this.isDirty && this.isEnabled) {
+        if (document.hidden && this.isDirty) {
             this.saveToDb();
         }
     }
 
     onBeforeUnload() {
-        if (this.isDirty && this.isEnabled) {
+        if (this.isDirty) {
             this.saveToDb();
         }
     }
@@ -353,7 +363,7 @@ export class HeatmapManager {
     }
 
     renderSvg() {
-        if (!this.pathElement || !this.bins) return;
+        if (!this.isEnabled || !this.pathElement || !this.bins) return;
         try {
             const normalized = resampleAndSmoothBins(this.bins, HEATMAP_CONSTANTS.RENDER_POINTS);
             const pathD = generateSvgPath(normalized);
@@ -384,7 +394,7 @@ export class HeatmapManager {
             this.saveTimer = null;
         }
 
-        if (this.isDirty && this.isEnabled) {
+        if (this.isDirty) {
             this.saveToDb();
         }
 
@@ -395,8 +405,12 @@ export class HeatmapManager {
             this.targetVideo.removeEventListener('ended', this.onEnded);
         }
 
-        document.removeEventListener('visibilitychange', this.onVisibilityChange);
-        window.removeEventListener('beforeunload', this.onBeforeUnload);
+        if (typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', this.onVisibilityChange);
+        }
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('beforeunload', this.onBeforeUnload);
+        }
 
         if (this.svgElement && this.svgElement.parentNode) {
             this.svgElement.parentNode.removeChild(this.svgElement);

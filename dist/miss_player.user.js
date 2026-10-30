@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.25
+// @version            5.7.26
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1263,7 +1263,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.25";
+		return "5.7.26";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4292,7 +4292,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.25";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.26";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -17224,7 +17224,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.25";
+		return "5.7.26";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -18816,10 +18816,10 @@
 				this.targetVideo.addEventListener("ended", this.onEnded);
 				if (this.targetVideo.duration && !isNaN(this.targetVideo.duration)) this.onLoadedMetadata();
 			}
-			document.addEventListener("visibilitychange", this.onVisibilityChange);
-			window.addEventListener("beforeunload", this.onBeforeUnload);
+			if (typeof document !== "undefined") document.addEventListener("visibilitychange", this.onVisibilityChange);
+			if (typeof window !== "undefined") window.addEventListener("beforeunload", this.onBeforeUnload);
 			this.saveTimer = setInterval(() => {
-				if (this.isDirty && this.isEnabled) this.saveToDb();
+				if (this.isDirty) this.saveToDb();
 			}, HEATMAP_CONSTANTS.SAVE_INTERVAL_MS);
 			this._updateVisibility();
 			return this;
@@ -18833,6 +18833,7 @@
 			this.storageKey = `HEATMAP_${(code || "GLOBAL").toUpperCase()}`;
 		}
 		_buildDom() {
+			if (typeof document === "undefined") return;
 			const container = this.controlManager?.progressBarContainer;
 			if (!container) return;
 			if (this.svgElement && this.svgElement.parentNode) return;
@@ -18866,7 +18867,7 @@
 			this.renderSvg();
 		}
 		onTimeUpdate() {
-			if (!this.isEnabled || !this.bins || !this.targetVideo) return;
+			if (!this.bins || !this.targetVideo) return;
 			if (this.targetVideo.paused || this.targetVideo.seeking) {
 				this.lastCurrentTime = null;
 				return;
@@ -18887,22 +18888,18 @@
 			}
 		}
 		onPause() {
-			if (this.isDirty && this.isEnabled) {
-				this.saveToDb();
-				this.renderSvg();
-			}
+			if (this.isDirty) this.saveToDb();
+			if (this.isEnabled) this.renderSvg();
 		}
 		onEnded() {
-			if (this.isDirty && this.isEnabled) {
-				this.saveToDb();
-				this.renderSvg();
-			}
+			if (this.isDirty) this.saveToDb();
+			if (this.isEnabled) this.renderSvg();
 		}
 		onVisibilityChange() {
-			if (document.hidden && this.isDirty && this.isEnabled) this.saveToDb();
+			if (document.hidden && this.isDirty) this.saveToDb();
 		}
 		onBeforeUnload() {
-			if (this.isDirty && this.isEnabled) this.saveToDb();
+			if (this.isDirty) this.saveToDb();
 		}
 		async saveToDb() {
 			if (!this.storageKey || !this.bins) return;
@@ -18920,7 +18917,7 @@
 			}
 		}
 		renderSvg() {
-			if (!this.pathElement || !this.bins) return;
+			if (!this.isEnabled || !this.pathElement || !this.bins) return;
 			try {
 				const pathD = generateSvgPath(resampleAndSmoothBins(this.bins, HEATMAP_CONSTANTS.RENDER_POINTS));
 				this.pathElement.setAttribute("d", pathD);
@@ -18943,15 +18940,15 @@
 				clearInterval(this.saveTimer);
 				this.saveTimer = null;
 			}
-			if (this.isDirty && this.isEnabled) this.saveToDb();
+			if (this.isDirty) this.saveToDb();
 			if (this.targetVideo) {
 				this.targetVideo.removeEventListener("timeupdate", this.onTimeUpdate);
 				this.targetVideo.removeEventListener("loadedmetadata", this.onLoadedMetadata);
 				this.targetVideo.removeEventListener("pause", this.onPause);
 				this.targetVideo.removeEventListener("ended", this.onEnded);
 			}
-			document.removeEventListener("visibilitychange", this.onVisibilityChange);
-			window.removeEventListener("beforeunload", this.onBeforeUnload);
+			if (typeof document !== "undefined") document.removeEventListener("visibilitychange", this.onVisibilityChange);
+			if (typeof window !== "undefined") window.removeEventListener("beforeunload", this.onBeforeUnload);
 			if (this.svgElement && this.svgElement.parentNode) this.svgElement.parentNode.removeChild(this.svgElement);
 		}
 		cleanup() {

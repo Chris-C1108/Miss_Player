@@ -69,4 +69,34 @@ const middlePeakVal = introSampled[Math.floor(100 / (500 / 120))];
 assert.ok(middlePeakVal > introHeadVal * 1.5, `片头开播偏置应被平滑衰减，中段高光 (${middlePeakVal}) 必须明显高于片头 (${introHeadVal})`);
 console.log('✅ 4. 片头自然偏置平滑衰减断言测试通过');
 
-console.log('\n🎉 全部 4 项视频播放热度与探索足迹测试 100% 通过！\n');
+// 5. 展示开关关闭时后台静默记录断言 (Silent Tracking when Display Disabled)
+import { HeatmapManager } from '../src/player/managers/HeatmapManager.js';
+const mockVideo = {
+    currentTime: 10,
+    duration: 600,
+    paused: false,
+    seeking: false,
+    addEventListener() {},
+    removeEventListener() {}
+};
+const mockCore = { targetVideo: mockVideo, options: { playerState: { settings: { betaMode: false, betaHeatmap: false } } } };
+const mockControl = { progressBarContainer: { insertBefore() {}, firstChild: null } };
+
+const hm = new HeatmapManager(mockCore, mockControl);
+hm.init();
+hm.bins = new Float32Array(120);
+assert.strictEqual(hm.isEnabled, false, '未开启设置时展示状态应为 false');
+
+// 模拟第一次 timeupdate 建立基线
+mockVideo.currentTime = 10;
+hm.onTimeUpdate();
+// 模拟顺播流逝 1.0 秒
+mockVideo.currentTime = 11;
+hm.onTimeUpdate();
+
+assert.ok(hm.isDirty, '即使展示开关关闭，也必须标记 isDirty 为 true 进行静默记录');
+assert.ok(hm.bins[2] > 0.9, `桶 2 应静默记录 1 秒播放时间 (实际: ${hm.bins[2]})`);
+hm.destroy();
+console.log('✅ 5. 展示开关关闭时后台静默记录断言测试通过');
+
+console.log('\n🎉 全部 5 项视频播放热度与探索足迹测试 100% 通过！\n');
