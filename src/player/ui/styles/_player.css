@@ -1729,7 +1729,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     justify-content: space-between;
     width: 100%;
     padding: 0px 1px;
-    margin-bottom: 6px;
+    margin-bottom: 9px;
 }
 
 .tm-current-time, .tm-total-duration {

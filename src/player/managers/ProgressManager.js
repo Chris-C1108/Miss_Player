@@ -162,9 +162,62 @@ export class ProgressManager {
         const container = this.progressBufferIndicator;
 
         if (typeof document !== 'undefined') {
-            const requiredCount = mergedRanges.length;
+            const renderSegments = [];
 
-            // 复用 DOM 节点池，杜绝每一帧清空 innerHTML 导致的 WebKit 渲染丢帧与频闪
+            // 1. 寻找覆盖当前播放点的活动主缓冲段
+            let activeEnd = 0;
+            for (let i = 0; i < mergedRanges.length; i++) {
+                const range = mergedRanges[i];
+                // 容差 2.0s 覆盖当前点
+                if (currentTime >= range.start - 2.0 && currentTime <= range.end + 0.5) {
+                    activeEnd = Math.max(activeEnd, range.end);
+                }
+            }
+
+            // 若找到了活动段且前方有已下载数据
+            if (activeEnd > currentTime) {
+                const forwardSec = activeEnd - currentTime;
+                const rawForwardPct = (forwardSec / duration) * 100;
+                // 长片最小 8px 前向视觉探出
+                const minLeadPct = barWidth > 0 ? (8 / barWidth) * 100 : 2.5;
+                const leadPct = Math.max(rawForwardPct, minLeadPct);
+                const bufferEndPct = Math.min(100, playedRatio * 100 + leadPct);
+
+                renderSegments.push({
+                    left: 0,
+                    width: bufferEndPct
+                });
+            }
+
+            // 2. 收集非当前播放点的孤岛离散段 (保留用户跳看历史缓冲)
+            for (let i = 0; i < mergedRanges.length; i++) {
+                const range = mergedRanges[i];
+                if (activeEnd > 0 && range.start <= activeEnd && range.end <= activeEnd) {
+                    continue;
+                }
+                const startRatio = Math.min(1.0, Math.max(0, range.start / duration));
+                let endRatio = Math.min(1.0, Math.max(0, range.end / duration));
+
+                if (barWidth > 0) {
+                    const startPx = startRatio * barWidth;
+                    const endPx = endRatio * barWidth;
+                    if (endPx - startPx < 6) {
+                        endRatio = Math.min(1.0, (startPx + 6) / barWidth);
+                    }
+                }
+
+                const leftPct = startRatio * 100;
+                const widthPct = Math.max(0, (endRatio - startRatio) * 100);
+                if (widthPct > 0) {
+                    renderSegments.push({
+                        left: leftPct,
+                        width: widthPct
+                    });
+                }
+            }
+
+            // 3. 复用 DOM 节点池，杜绝每一帧清空 innerHTML 导致的 WebKit 渲染丢帧与频闪
+            const requiredCount = renderSegments.length;
             while (container.children.length < requiredCount) {
                 const seg = document.createElement('div');
                 seg.className = 'tm-buffer-segment';
@@ -175,34 +228,12 @@ export class ProgressManager {
             }
 
             for (let i = 0; i < requiredCount; i++) {
-                const range = mergedRanges[i];
-                const startRatio = Math.min(1.0, Math.max(0, range.start / duration));
-                let endRatio = Math.min(1.0, Math.max(0, range.end / duration));
-
-                // 核心视觉保障：若当前播放点落在此区间内，且前方有已下载数据，注入最小 10px 可视前探保障
-                if (currentTime >= range.start - 0.5 && currentTime <= range.end) {
-                    if (range.end > currentTime + 0.3 && barWidth > 0) {
-                        const playedPx = playedRatio * barWidth;
-                        const rawEndPx = endRatio * barWidth;
-                        const minVisibleLeadPx = 10;
-                        const targetEndPx = Math.max(rawEndPx, Math.min(barWidth, playedPx + minVisibleLeadPx));
-                        endRatio = targetEndPx / barWidth;
-                    }
-                } else if (barWidth > 0) {
-                    // 孤岛离散段 (如先看30分钟再跳回)：保证最小 6px 视觉宽度，防长片缩为看不见的极细发丝
-                    const startPx = startRatio * barWidth;
-                    const endPx = endRatio * barWidth;
-                    if (endPx - startPx < 6) {
-                        endRatio = Math.min(1.0, (startPx + 6) / barWidth);
-                    }
-                }
-
-                const leftPct = (startRatio * 100).toFixed(2);
-                const widthPct = (Math.max(0, endRatio - startRatio) * 100).toFixed(2);
+                const segData = renderSegments[i];
                 const seg = container.children[i];
-
-                if (seg.style.left !== `${leftPct}%`) seg.style.left = `${leftPct}%`;
-                if (seg.style.width !== `${widthPct}%`) seg.style.width = `${widthPct}%`;
+                const leftStr = `${segData.left.toFixed(2)}%`;
+                const widthStr = `${segData.width.toFixed(2)}%`;
+                if (seg.style.left !== leftStr) seg.style.left = leftStr;
+                if (seg.style.width !== widthStr) seg.style.width = widthStr;
             }
         }
     }
