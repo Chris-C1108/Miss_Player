@@ -30,7 +30,7 @@ export function getCurrentVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.7.24';
+    return '5.7.25';
 }
 
 export function compareVersions(v1, v2) {
@@ -97,22 +97,59 @@ export class SleazyForkService {
     }
 
     /**
-     * 从 GitHub Raw meta.js 获取最新测试版元数据
+     * 从 GitHub API 或多源 Raw 直链获取最新测试版元数据
      */
     static async fetchGitHubMeta() {
         const timestamp = Date.now();
+        let lastErr = null;
+
+        // 1. 优先尝试 GitHub 官方 REST API (直连 GitHub 数据库，绝对无 CDN 缓存延迟)
+        try {
+            const apiUrl = 'https://api.github.com/repos/Chris-C1108/Miss_Player/contents/package.json?ref=main';
+            const apiRes = await fetchWithTransport(apiUrl, {
+                method: 'GET',
+                headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'MissPlayer' },
+                timeout: 5000
+            });
+            if (apiRes.status >= 200 && apiRes.status < 400 && apiRes.html) {
+                const json = JSON.parse(apiRes.html);
+                if (json && json.content) {
+                    const decoded = typeof atob === 'function'
+                        ? atob(json.content.replace(/\s/g, ''))
+                        : Buffer.from(json.content, 'base64').toString('utf8');
+                    const pkg = JSON.parse(decoded);
+                    if (pkg && pkg.version) {
+                        return {
+                            id: 'github-main',
+                            channel: 'beta',
+                            name: 'Miss Player | 影院模式 (单手播放器)',
+                            version: String(pkg.version).trim(),
+                            code_url: GITHUB_RAW_USER_URL,
+                            url: GITHUB_COMMITS_URL,
+                            changelog_url: GITHUB_COMMITS_URL,
+                            code_updated_at: new Date().toISOString()
+                        };
+                    }
+                }
+            }
+        } catch (e) {
+            lastErr = e;
+        }
+
+        // 2. 备用：从 GitHub Raw 及多个镜像加速节点解析 meta.js
         const urls = [
             `${GITHUB_RAW_META_URL}?_t=${timestamp}`,
-            `https://github.com/Chris-C1108/Miss_Player/raw/main/dist/miss_player.meta.js?_t=${timestamp}`,
-            `https://cdn.jsdelivr.net/gh/Chris-C1108/Miss_Player@main/dist/miss_player.meta.js?_t=${timestamp}`
+            `https://fastly.jsdelivr.net/gh/Chris-C1108/Miss_Player@main/dist/miss_player.meta.js?_t=${timestamp}`,
+            `https://cdn.jsdelivr.net/gh/Chris-C1108/Miss_Player@main/dist/miss_player.meta.js?_t=${timestamp}`,
+            `https://github.com/Chris-C1108/Miss_Player/raw/main/dist/miss_player.meta.js?_t=${timestamp}`
         ];
-        let lastErr = null;
+
         for (const url of urls) {
             try {
                 const res = await fetchWithTransport(url, {
                     method: 'GET',
-                    headers: { 'Accept': 'text/plain, */*' },
-                    timeout: 8000
+                    headers: { 'Accept': 'text/plain, */*', 'Cache-Control': 'no-cache' },
+                    timeout: 7000
                 });
                 if (res.status >= 200 && res.status < 400 && res.html) {
                     const text = res.html;

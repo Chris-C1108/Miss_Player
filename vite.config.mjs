@@ -76,7 +76,9 @@ export default defineConfig({
           'update.sleazyfork.org',
           'raw.githubusercontent.com',
           'github.com',
-          'cdn.jsdelivr.net'
+          'api.github.com',
+          'cdn.jsdelivr.net',
+          'fastly.jsdelivr.net'
         ],
         'run-at': 'document-start',
         license: pkg.license,

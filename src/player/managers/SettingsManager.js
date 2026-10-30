@@ -73,6 +73,7 @@ export class SettingsManager {
             defaultMuted: false,
             muteResetMinutes: 5,
             autoCheckUpdate: true,
+            updateChannel: 'stable',
             betaMode: false,
             betaFirstCapsulePlay: false,
             betaPlayMode: 'normal',
@@ -823,6 +824,8 @@ export class SettingsManager {
                     this._latestUpdateInfo = res;
                     if (res && res.hasUpdate) {
                         Toast.show(`${__('updateFound') || '发现新版本'}: v${res.latestVersion}`, 3500, 'success');
+                    } else if (res && res.success) {
+                        Toast.show(`${__('alreadyLatest') || '当前已是最新版本'} (v${currentVersion})`, 2500, 'info');
                     }
                 } catch (_) {} finally {
                     this._isCheckingUpdate = false;

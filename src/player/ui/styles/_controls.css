@@ -383,21 +383,22 @@
 /* 观看热度与足迹探索波形 (Heatmap & Exploration) */
 .tm-heatmap-svg {
     position: absolute;
-    bottom: 100%;
+    bottom: calc(50% + 3px); /* 严丝合缝紧贴 6px 进度条上边缘，消灭任何悬空缝隙 */
     left: 0;
     width: 100%;
-    height: 24px;
-    margin-bottom: 2px;
+    height: 18px; /* 精致高度，彻底防止遮挡上方时间数字 */
+    margin-bottom: 0;
     pointer-events: none;
     z-index: 1;
     overflow: visible;
-    transform: translateY(1px);
-    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: bottom 0.15s ease, opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* 进度条展开或拖拽态（半高 8px）时自适应保持无缝吸附 */
 .tm-progress-bar-container:hover .tm-heatmap-svg,
+.tm-progress-bar-container:has(.tm-progress-bar-expanded) .tm-heatmap-svg,
 .tm-progress-bar-container:has(.tm-dragging) .tm-heatmap-svg {
-    transform: translateY(0);
+    bottom: calc(50% + 8px);
 }
 
 .tm-heatmap-path {
