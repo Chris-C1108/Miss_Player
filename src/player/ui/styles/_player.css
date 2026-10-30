@@ -222,6 +222,26 @@
     cursor: grabbing;
 }
 
+/* 画面已完整呈现、无左右平移余地时的锁定态手柄 */
+.tm-resize-handle.is-locked {
+    opacity: 0.22;
+    cursor: default !important;
+    pointer-events: none;
+    box-shadow: none;
+    background-color: hsla(var(--shadcn-foreground) / 0.35);
+}
+
+.tm-handle-container.is-locked {
+    cursor: default !important;
+}
+
+/* 激活态手柄 (超宽或放大、画面存在可移动溢出空间) */
+.tm-resize-handle.is-active {
+    opacity: 0.65;
+    cursor: grab;
+    background-color: hsla(var(--shadcn-foreground) / 0.85);
+}
+
 /* 控制按钮基础样式 */
 .tm-control-button-base {
     color: hsl(var(--shadcn-secondary-foreground));

@@ -308,45 +308,77 @@ export class VideoSwipeManager {
     }
 
     /**
-     * 更新手柄状态
-     * @param {boolean} enabled - 手柄是否应该启用
+     * 更新手柄状态与物理可用性
+     * @param {boolean} enabled - 画面是否存在可平移溢出空间 (maxOffset > 0)
      */
     _updateHandleState(enabled) {
         if (!this.handle) return;
 
-        // 更新手柄宽度
+        // 动态计算并更新手柄物理宽度 (与视口占比及缩放倍数严格关联)
         this._updateHandleWidth();
 
-        if (enabled) {
+        const handleContainer = this.handle.parentElement;
+
+        if (enabled && this.maxOffset > 0) {
+            // 画面超宽/放大，存在可移动余地：激活拖动手柄
+            this.handle.classList.remove('is-locked');
+            this.handle.classList.add('is-active');
             this.handle.style.cursor = 'grab';
+            this.handle.style.pointerEvents = 'auto';
             this.video.style.cursor = 'grab';
 
-            // 只有在视频比容器宽时才允许移动
-            const handleContainer = this.handle.parentElement;
             if (handleContainer) {
                 handleContainer.style.cursor = 'grab';
+                handleContainer.classList.remove('is-locked');
             }
         } else {
-            // 视频完全可见或未超出容器时，手柄宽度适应但禁用拖动
+            // 画面无左右移动余地 (maxOffset <= 0)：彻底锁定手柄，禁止移动
+            this.handle.classList.add('is-locked');
+            this.handle.classList.remove('is-active');
             this.handle.style.cursor = 'default';
+            this.handle.style.pointerEvents = 'none';
             this.video.style.cursor = 'default';
-            // 不再设置手柄位置，使用_updateHandlePosition方法统一处理
+
+            if (handleContainer) {
+                handleContainer.style.cursor = 'default';
+                handleContainer.classList.add('is-locked');
+            }
         }
 
-        // 立即更新手柄位置以反映视频偏移
+        // 立即更新手柄物理位移
         this._updateHandlePosition();
     }
 
     /**
-     * 更新手柄宽度
+     * 动态计算手柄宽度 (Dynamic Viewport-to-Content Ratio)
+     * 严格遵循工业级视口滚动模型：
+     * 1. 当视频未溢出容器时：手柄居中静止锁定，向用户直观传达“已无移动余地”；
+     * 2. 当视频溢出或缩放放大时：手柄宽度等于 可视视口 / 视频物理渲染宽度，放得越大，把手越短，可滑空间越广！
      */
     _updateHandleWidth() {
         if (!this.handle) return;
 
-        // 使用固定的手柄宽度，不再动态计算
-        const handleWidthPercent = 30; // 固定宽度30%
+        // 如果画面无溢出 (无需也不能左右移动)
+        if (this.maxOffset <= 0 || !this.containerWidth) {
+            // 锁定态：宽度设为轨道固定基准条 72px，居中静止
+            this.handle.style.width = '72px';
+            return;
+        }
 
-        // 应用手柄宽度
+        // 视频实际渲染宽度
+        const videoAspect = (this.videoWidth && this.videoHeight) ? (this.videoWidth / this.videoHeight) : (16 / 9);
+        const renderedVideoWidth = (this.containerHeight * videoAspect) || this.containerWidth;
+
+        if (renderedVideoWidth <= this.containerWidth) {
+            this.handle.style.width = '72px';
+            return;
+        }
+
+        // 视口占比 (0.0 ~ 1.0)
+        const viewportRatio = this.containerWidth / renderedVideoWidth;
+        // 限制在 18% ~ 75% 之间，既真实反映视口比例，又确保手指有舒适的操作靶心
+        const handleWidthPercent = Math.max(18, Math.min(75, Math.round(viewportRatio * 100)));
+
         this.handle.style.width = `${handleWidthPercent}%`;
     }
 
