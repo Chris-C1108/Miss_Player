@@ -902,12 +902,15 @@ export class UIManager {
         if (typeof window !== 'undefined' && window.visualViewport) {
             this.visualViewportListener = () => {
                 const vv = window.visualViewport;
-                const keyboardHeight = Math.max(0, window.innerHeight - vv.height);
                 const playerContainer = this.playerContainer || document.querySelector('.tm-player-container');
+                const containerHeight = playerContainer ? playerContainer.getBoundingClientRect().height : (window.innerHeight || 0);
+                // 键盘真实占用的高度：物理播放器容器底部到 visualViewport 视口底部的真实相对差值，消除 Safari 底部地址栏 84px 偏差
+                const keyboardHeight = Math.max(0, Math.round(containerHeight - vv.height));
+
                 const commentSubmitBar = this.shadowRoot?.querySelector('.tm-comment-submit-bar-wrapper') || document.querySelector('.tm-comment-submit-bar-wrapper');
                 const activeModal = this.shadowRoot?.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay') || document.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay');
 
-                if (keyboardHeight > 100) {
+                if (keyboardHeight > 60) {
                     document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
                     if (playerContainer) {
                         playerContainer.classList.add('tm-ios-keyboard-open');

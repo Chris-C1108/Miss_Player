@@ -53,8 +53,13 @@ function setupViewport() {
     if (window.visualViewport) {
         const updateKeyboardHeight = () => {
             if (!document.body || !document.body.classList.contains('tm-player-active')) return;
-            const keyboardHeight = Math.max(0, window.innerHeight - window.visualViewport.height);
-            document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+            const docHeight = document.documentElement.clientHeight || window.innerHeight;
+            const keyboardHeight = Math.max(0, Math.round(docHeight - window.visualViewport.height));
+            if (keyboardHeight > 60) {
+                document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+            } else {
+                document.documentElement.style.setProperty('--keyboard-height', '0px');
+            }
             if (window.scrollY !== 0 || window.scrollX !== 0) {
                 window.scrollTo(0, 0);
             }
@@ -63,10 +68,9 @@ function setupViewport() {
         window.visualViewport.addEventListener('scroll', updateKeyboardHeight);
     }
 
-    // 监听输入框失焦事件：当软键盘收起后，重置键盘高度，并软复位宿主滚动条以防顶部被裁剪
+    // 监听输入框失焦事件：软复位宿主滚动条以防顶部被裁剪，键盘高度由 visualViewport 唯一接管
     document.addEventListener('focusout', (e) => {
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
-            document.documentElement.style.setProperty('--keyboard-height', '0px');
             if (window.scrollY !== 0 && document.body && document.body.classList.contains('tm-player-active')) {
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
             }

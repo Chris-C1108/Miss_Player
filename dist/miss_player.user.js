@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.44
+// @version            5.7.45
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1296,7 +1296,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.44";
+		return "5.7.45";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2376,11 +2376,12 @@
 			if (typeof window !== "undefined" && window.visualViewport) {
 				this.visualViewportListener = () => {
 					const vv = window.visualViewport;
-					const keyboardHeight = Math.max(0, window.innerHeight - vv.height);
 					const playerContainer = this.playerContainer || document.querySelector(".tm-player-container");
+					const containerHeight = playerContainer ? playerContainer.getBoundingClientRect().height : window.innerHeight || 0;
+					const keyboardHeight = Math.max(0, Math.round(containerHeight - vv.height));
 					const commentSubmitBar = this.shadowRoot?.querySelector(".tm-comment-submit-bar-wrapper") || document.querySelector(".tm-comment-submit-bar-wrapper");
 					const activeModal = this.shadowRoot?.querySelector(".tm-comment-tag-select-modal, .tm-custom-modal-overlay") || document.querySelector(".tm-comment-tag-select-modal, .tm-custom-modal-overlay");
-					if (keyboardHeight > 100) {
+					if (keyboardHeight > 60) {
 						document.documentElement.style.setProperty("--keyboard-height", `${keyboardHeight}px`);
 						if (playerContainer) {
 							playerContainer.classList.add("tm-ios-keyboard-open");
@@ -4346,7 +4347,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.44";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.45";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -8219,6 +8220,10 @@
 				e.stopPropagation();
 				this.closeComposer();
 			});
+			if (submitBarWrapper) {
+				submitBarWrapper.addEventListener("click", (e) => e.stopPropagation());
+				submitBarWrapper.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
+			}
 			if (commentInput) {
 				const stopProp = (e) => e.stopPropagation();
 				commentInput.addEventListener("keydown", stopProp);
@@ -17437,7 +17442,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.44";
+		return "5.7.45";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -21111,8 +21116,10 @@
 		if (window.visualViewport) {
 			const updateKeyboardHeight = () => {
 				if (!document.body || !document.body.classList.contains("tm-player-active")) return;
-				const keyboardHeight = Math.max(0, window.innerHeight - window.visualViewport.height);
-				document.documentElement.style.setProperty("--keyboard-height", `${keyboardHeight}px`);
+				const docHeight = document.documentElement.clientHeight || window.innerHeight;
+				const keyboardHeight = Math.max(0, Math.round(docHeight - window.visualViewport.height));
+				if (keyboardHeight > 60) document.documentElement.style.setProperty("--keyboard-height", `${keyboardHeight}px`);
+				else document.documentElement.style.setProperty("--keyboard-height", "0px");
 				if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
 			};
 			window.visualViewport.addEventListener("resize", updateKeyboardHeight);
@@ -21120,7 +21127,6 @@
 		}
 		document.addEventListener("focusout", (e) => {
 			if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) {
-				document.documentElement.style.setProperty("--keyboard-height", "0px");
 				if (window.scrollY !== 0 && document.body && document.body.classList.contains("tm-player-active")) window.scrollTo({
 					top: 0,
 					left: 0,

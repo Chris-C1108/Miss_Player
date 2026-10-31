@@ -187,6 +187,12 @@ export class CommentComposer {
             });
         }
 
+        // 阻断输入栏内部点击与触控冒泡至背景遮罩，防止误触发收起
+        if (submitBarWrapper) {
+            submitBarWrapper.addEventListener('click', (e) => e.stopPropagation());
+            submitBarWrapper.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+        }
+
         // 阻止快捷键冒泡
         if (commentInput) {
             const stopProp = (e) => e.stopPropagation();
