@@ -33,12 +33,11 @@
 .tm-player-container {
     position: fixed;
     top: 0;
-    bottom: var(--keyboard-height, 0px);
     left: 0;
     right: 0;
+    bottom: 0;
     width: 100%;
-    height: calc(100% - var(--keyboard-height, 0px));
-    height: calc(100dvh - var(--keyboard-height, 0px));
+    height: 100%;
     background-color: #0b0b0e;
     display: flex;
     flex-direction: column;
@@ -47,7 +46,6 @@
     z-index: 2000000001;
     overflow: hidden;
     pointer-events: auto;
-    transition: bottom 0.15s ease-out, height 0.15s ease-out;
     
     /* 全局触摸、滚动、选择隔离 */
     touch-action: pan-y;
@@ -117,8 +115,14 @@
 
 @media screen and (orientation: portrait) {
     .tm-video-container {
-        max-height: calc(100dvh - var(--keyboard-height, 0px) - 130px);
+        max-height: calc(100dvh - 130px);
         min-height: 0;
+    }
+
+    /* 竖屏单手模式：虚拟键盘弹起时控制面板整体上浮避让，保障打点备注输入框完全可见 */
+    .tm-ios-keyboard-open .tm-control-buttons {
+        transform: translateY(calc(-1 * var(--keyboard-height, 0px)));
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     /* 竖屏展示评论区时，顶栏稳定常驻，即使控制面板处于 controls-hidden 也绝对不隐藏 */
@@ -2142,6 +2146,12 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     -webkit-backdrop-filter: blur(24px);
 }
 
+/* 移动端虚拟键盘弹起时高光管理底栏避让 */
+.tm-ios-keyboard-open .tm-bottom-sheet-panel.visible {
+    transform: translateY(calc(-1 * var(--keyboard-height, 0px))) scale(1);
+    max-height: calc(100vh - var(--keyboard-height, 0px) - 120px);
+}
+
 /* 紧凑标题栏 */
 .tm-sheet-header {
     display: flex;
@@ -3120,7 +3130,7 @@ body.tm-swiping-down .tm-settings-panel {
     }
 }
 
-/* 激活播放器时，拦截 Safari 边缘橡皮筋回弹，但保持宿主网页正常渲染以允许上滑穿透滚动 */
+/* 激活播放器时，拦截 Safari 边缘橡皮筋回弹 */
 html.tm-player-active,
 body.tm-player-active {
     overscroll-behavior: none !important;

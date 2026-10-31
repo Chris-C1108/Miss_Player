@@ -45,8 +45,22 @@ export class CustomVideoPlayer {
         performance.mark('mp:theater-init-start');
         
         // 标记播放器激活状态，以便 CSS 隐藏宿主干扰元素
+        this._originScrollX = window.scrollX;
+        this._originScrollY = window.scrollY;
+        window.scrollTo(0, 0);
+
         document.body.classList.add('tm-player-active');
         document.documentElement.classList.add('tm-player-active');
+        
+        // 宿主滚动绝对锁定守卫：杜绝 iOS Safari 虚拟键盘弹起时原生滚动破坏播放器视口
+        this._windowScrollLock = () => {
+            if (document.body && document.body.classList.contains('tm-player-active')) {
+                if (window.scrollY !== 0 || window.scrollX !== 0) {
+                    window.scrollTo(0, 0);
+                }
+            }
+        };
+        window.addEventListener('scroll', this._windowScrollLock, { passive: true });
         
         // 保存并隐藏网页浏览器滚动条，同时禁用默认的橡皮筋弹性滚动效果
         this._scrollbarStyle = document.createElement('style');
@@ -55,7 +69,15 @@ export class CustomVideoPlayer {
             html::-webkit-scrollbar, body::-webkit-scrollbar {
                 display: none !important;
             }
-            html, body {
+            html.tm-player-active, body.tm-player-active {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                overflow: hidden !important;
                 scrollbar-width: none !important;
                 -ms-overflow-style: none !important;
                 overscroll-behavior: none !important;
@@ -328,7 +350,11 @@ export class CustomVideoPlayer {
         const sessionSec = this._sessionStartTime ? Math.round((Date.now() - this._sessionStartTime) / 1000) : playSec;
         telemetry.track('player_close', { duration_sec: playSec || sessionSec });
 
-        // 恢复网页浏览器滚动条
+        // 恢复网页浏览器滚动条与滚动监听
+        if (this._windowScrollLock) {
+            window.removeEventListener('scroll', this._windowScrollLock);
+            this._windowScrollLock = null;
+        }
         if (this._scrollbarStyle) {
             this._scrollbarStyle.remove();
             this._scrollbarStyle = null;
@@ -337,6 +363,11 @@ export class CustomVideoPlayer {
         // 移除播放器激活状态标记
         document.body.classList.remove('tm-player-active');
         document.documentElement.classList.remove('tm-player-active');
+
+        // 恢复宿主页面原有滚动位置
+        if (typeof this._originScrollY === 'number') {
+            window.scrollTo(this._originScrollX || 0, this._originScrollY);
+        }
 
         // 调用PlayerCore的close方法
         this.playerCore.close(

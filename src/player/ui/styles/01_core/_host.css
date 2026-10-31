@@ -8,6 +8,11 @@ miss-player-root { display: contents !important; }
 
 html.tm-player-active,
 body.tm-player-active {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
   overscroll-behavior: none !important;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;

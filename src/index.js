@@ -55,6 +55,9 @@ function setupViewport() {
             if (!document.body || !document.body.classList.contains('tm-player-active')) return;
             const keyboardHeight = Math.max(0, window.innerHeight - window.visualViewport.height);
             document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+            if (window.scrollY !== 0 || window.scrollX !== 0) {
+                window.scrollTo(0, 0);
+            }
         };
         window.visualViewport.addEventListener('resize', updateKeyboardHeight);
         window.visualViewport.addEventListener('scroll', updateKeyboardHeight);

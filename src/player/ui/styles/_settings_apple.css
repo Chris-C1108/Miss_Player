@@ -373,6 +373,11 @@
     overscroll-behavior: contain;
 }
 
+/* 移动端软键盘弹起时，为设置面板底部预留足够的键盘避让留白，确保长列表项完全可滚出 */
+.tm-ios-keyboard-open .tm-settings-panel {
+    padding-bottom: calc(var(--keyboard-height, 0px) + 32px);
+}
+
 /* 矮屏幕横屏视口 (如 iPhone/Android 横屏观影，高度 <= 500px) 特别适配 */
 @media screen and (max-height: 500px) and (orientation: landscape) {
     .tm-player-container .tm-settings-panel,

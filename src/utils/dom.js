@@ -291,33 +291,54 @@ export function parseDurationFromBadge(txt) {
 
 /**
  * 移动端/iOS Safari 软键盘避让：确保输入框在聚焦后平滑滚动到可视视口合适位置
- * 避免被弹起的虚拟键盘遮挡
+ * 避免被弹起的虚拟键盘遮挡，优先滚动局部容器，彻底阻断 Safari 滚动宿主页面
  * @param {HTMLElement} inputEl - 目标输入框 (input/textarea)
  * @param {Object} [options]
  * @param {number} [options.delay=280] - 延时等待键盘动画完成时间(ms)
- * @param {ScrollLogicalPosition} [options.block='center'] - 滚动对齐位置
  */
 export function ensureInputVisibleOnFocus(inputEl, options = {}) {
     if (!inputEl || typeof inputEl.addEventListener !== 'function') return;
-    const { delay = 280, block = 'center' } = options;
+    const { delay = 280 } = options;
 
     inputEl.addEventListener('focus', () => {
         const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
         if (!isTouch) return;
 
+        // 立即锁定全局 window 滚动，阻断 iOS Safari 尝试滚动宿主页面的默认行为
+        if (window.scrollY !== 0 || window.scrollX !== 0) {
+            window.scrollTo(0, 0);
+        }
+
         setTimeout(() => {
             try {
-                if (typeof inputEl.scrollIntoView === 'function') {
-                    inputEl.scrollIntoView({
-                        behavior: 'smooth',
-                        block,
-                        inline: 'nearest'
+                // 寻找局部可滚动容器 (如 MarkerBottomSheet、SettingsPanel、TagSelectList)
+                let parent = inputEl.parentElement;
+                let scrollParent = null;
+                while (parent && parent !== document.body && parent !== document.documentElement) {
+                    const style = window.getComputedStyle(parent);
+                    const overflowY = style.overflowY;
+                    if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') {
+                        scrollParent = parent;
+                        break;
+                    }
+                    parent = parent.parentElement;
+                }
+
+                if (scrollParent) {
+                    const inputRect = inputEl.getBoundingClientRect();
+                    const parentRect = scrollParent.getBoundingClientRect();
+                    const relativeTop = inputRect.top - parentRect.top;
+                    const targetScroll = scrollParent.scrollTop + relativeTop - (parentRect.height / 2) + (inputRect.height / 2);
+                    scrollParent.scrollTo({
+                        top: Math.max(0, targetScroll),
+                        behavior: 'smooth'
                     });
                 }
-            } catch (_) {
-                try {
-                    inputEl.scrollIntoView(false);
-                } catch (__) {}
+            } catch (_) {}
+
+            // 再次确保宿主 window 停在 0，彻底根绝露底
+            if (window.scrollY !== 0 || window.scrollX !== 0) {
+                window.scrollTo(0, 0);
             }
         }, delay);
     });

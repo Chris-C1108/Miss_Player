@@ -172,9 +172,14 @@
     pointer-events: none !important;
 }
 .tm-comment-submit-bar-wrapper:not(.is-collapsed) {
-    transform: translateY(0);
+    transform: translateY(calc(-1 * var(--keyboard-height, 0px)));
     opacity: 1;
     pointer-events: auto !important;
+}
+
+/* 软键盘打开时，评论列表底部自动留出键盘与发评栏高度的呼吸空间 */
+.tm-ios-keyboard-open .tm-comments-panel-list {
+    padding-bottom: calc(var(--keyboard-height, 0px) + 70px);
 }
 
 /* 评论区半透明遮罩 (点击收起发评浮动栏) */

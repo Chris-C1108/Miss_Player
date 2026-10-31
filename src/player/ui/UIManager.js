@@ -908,6 +908,7 @@ export class UIManager {
                 const activeModal = this.shadowRoot?.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay') || document.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay');
 
                 if (keyboardHeight > 100) {
+                    document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
                     if (playerContainer) {
                         playerContainer.classList.add('tm-ios-keyboard-open');
                         playerContainer.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
@@ -915,14 +916,18 @@ export class UIManager {
                     if (this.shadowRoot?.host) {
                         this.shadowRoot.host.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
                     }
-                    // 彻底移除 JS 行内 translateY 破坏性位移，由外层容器自适应压缩与 CSS 规范原生对齐，杜绝双重位移
+                    // 彻底移除 JS 行内 translateY 破坏性位移，由 CSS 规范原生对齐
                     if (commentSubmitBar) {
                         commentSubmitBar.style.transform = '';
                     }
                     if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';
                     }
+                    if (window.scrollY !== 0 || window.scrollX !== 0) {
+                        window.scrollTo(0, 0);
+                    }
                 } else {
+                    document.documentElement.style.setProperty('--keyboard-height', '0px');
                     if (playerContainer) {
                         playerContainer.classList.remove('tm-ios-keyboard-open');
                         playerContainer.style.removeProperty('--keyboard-height');
@@ -935,6 +940,9 @@ export class UIManager {
                     }
                     if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';
+                    }
+                    if (window.scrollY !== 0 || window.scrollX !== 0) {
+                        window.scrollTo(0, 0);
                     }
                 }
             };
