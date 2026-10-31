@@ -2146,10 +2146,11 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     -webkit-backdrop-filter: blur(24px);
 }
 
-/* 移动端虚拟键盘弹起时高光管理底栏避让 */
+/* 移动端虚拟键盘弹起时高光管理底栏避让：底边贴齐键盘顶端，高度弹性压缩绝不遮挡视频 */
 .tm-ios-keyboard-open .tm-bottom-sheet-panel.visible {
-    transform: translateY(calc(-1 * var(--keyboard-height, 0px))) scale(1);
-    max-height: calc(100vh - var(--keyboard-height, 0px) - 120px);
+    bottom: var(--keyboard-height, 0px);
+    transform: translateY(0) scale(1);
+    max-height: calc(100vh - var(--keyboard-height, 0px) - 220px);
 }
 
 /* 紧凑标题栏 */

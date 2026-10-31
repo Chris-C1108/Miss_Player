@@ -904,8 +904,9 @@ export class UIManager {
                 const vv = window.visualViewport;
                 const playerContainer = this.playerContainer || document.querySelector('.tm-player-container');
                 const containerHeight = playerContainer ? playerContainer.getBoundingClientRect().height : (window.innerHeight || 0);
-                // 键盘真实占用的高度：物理播放器容器底部到 visualViewport 视口底部的真实相对差值，消除 Safari 底部地址栏 84px 偏差
-                const keyboardHeight = Math.max(0, Math.round(containerHeight - vv.height));
+                const offsetTop = vv.offsetTop || 0;
+                // 键盘真实占用的高度：物理容器底部到 visualViewport 底部的绝对相对差值，减去 offsetTop 彻底消除悬浮药丸/地址栏导致的虚假空隙
+                const keyboardHeight = Math.max(0, Math.round(containerHeight - vv.height - offsetTop));
 
                 const commentSubmitBar = this.shadowRoot?.querySelector('.tm-comment-submit-bar-wrapper') || document.querySelector('.tm-comment-submit-bar-wrapper');
                 const activeModal = this.shadowRoot?.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay') || document.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay');
@@ -926,9 +927,6 @@ export class UIManager {
                     if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';
                     }
-                    if (window.scrollY !== 0 || window.scrollX !== 0) {
-                        window.scrollTo(0, 0);
-                    }
                 } else {
                     document.documentElement.style.setProperty('--keyboard-height', '0px');
                     if (playerContainer) {
@@ -943,9 +941,6 @@ export class UIManager {
                     }
                     if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';
-                    }
-                    if (window.scrollY !== 0 || window.scrollX !== 0) {
-                        window.scrollTo(0, 0);
                     }
                 }
             };

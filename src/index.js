@@ -53,15 +53,14 @@ function setupViewport() {
     if (window.visualViewport) {
         const updateKeyboardHeight = () => {
             if (!document.body || !document.body.classList.contains('tm-player-active')) return;
+            const vv = window.visualViewport;
             const docHeight = document.documentElement.clientHeight || window.innerHeight;
-            const keyboardHeight = Math.max(0, Math.round(docHeight - window.visualViewport.height));
+            const offsetTop = vv ? (vv.offsetTop || 0) : 0;
+            const keyboardHeight = Math.max(0, Math.round(docHeight - (vv ? vv.height : docHeight) - offsetTop));
             if (keyboardHeight > 60) {
                 document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
             } else {
                 document.documentElement.style.setProperty('--keyboard-height', '0px');
-            }
-            if (window.scrollY !== 0 || window.scrollX !== 0) {
-                window.scrollTo(0, 0);
             }
         };
         window.visualViewport.addEventListener('resize', updateKeyboardHeight);
