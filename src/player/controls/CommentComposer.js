@@ -187,20 +187,17 @@ export class CommentComposer {
             });
         }
 
-        // 阻断输入栏内部点击与触控冒泡至背景遮罩，防止误触发收起
+        // 阻断输入栏内部点击冒泡至背景遮罩，防止误触发收起
         if (submitBarWrapper) {
             submitBarWrapper.addEventListener('click', (e) => e.stopPropagation());
-            submitBarWrapper.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
         }
 
-        // 阻止快捷键冒泡
+        // 阻止播放快捷键冒泡，放行 touchstart/mousedown 以确保 iOS Safari 原生点击聚焦链路 100% 畅通
         if (commentInput) {
-            const stopProp = (e) => e.stopPropagation();
-            commentInput.addEventListener('keydown', stopProp);
-            commentInput.addEventListener('keyup', stopProp);
-            commentInput.addEventListener('keypress', stopProp);
-            commentInput.addEventListener('mousedown', stopProp);
-            commentInput.addEventListener('touchstart', stopProp);
+            const stopKeyProp = (e) => e.stopPropagation();
+            commentInput.addEventListener('keydown', stopKeyProp);
+            commentInput.addEventListener('keyup', stopKeyProp);
+            commentInput.addEventListener('keypress', stopKeyProp);
 
             // 聚焦输入框时触发检测
             commentInput.addEventListener('focus', () => {
@@ -278,11 +275,15 @@ export class CommentComposer {
             this.panel.commentsPanel.classList.add('has-composer-open');
         }
         if (this.fabBtn) this.fabBtn.classList.add('is-hidden');
-        setTimeout(() => {
-            if (this.commentInput) {
+        
+        // 在用户手势同步调用栈内即时聚焦，保障 iOS Safari 真正赋予输入光标与打字选区
+        if (this.commentInput) {
+            try {
+                this.commentInput.focus({ preventScroll: true });
+            } catch (_) {
                 this.commentInput.focus();
             }
-        }, 80);
+        }
     }
 
     /**

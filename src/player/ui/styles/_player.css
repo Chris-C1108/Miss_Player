@@ -1536,6 +1536,11 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     outline: none;
     box-sizing: border-box;
     transition: border-color 0.2s, background 0.2s;
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+    caret-color: #ffffff;
+    cursor: text;
 }
 
 .tm-inline-remark-input:focus {
@@ -2300,6 +2305,11 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     display: inline-flex;
     align-items: center;
     transition: border-color 0.2s, background 0.2s;
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+    caret-color: #ffffff;
+    cursor: text;
 }
 .tm-sheet-item-comment-input:focus {
     border-color: rgba(255, 255, 255, 0.3);
