@@ -1,5 +1,5 @@
 import { __ } from '../../constants/i18n.js';
-import { Toast, createModal } from '../../utils/index.js';
+import { Toast, createModal, ensureInputVisibleOnFocus } from '../../utils/index.js';
 import { isSiteDomain, getSiteUrls } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { formatSeconds } from '../comments/index.js';
@@ -394,6 +394,7 @@ export class CommentComposer {
             input.className = 'tm-tag-remark-input';
             input.placeholder = '添加备注...';
             input.value = tab.comment || '';
+            ensureInputVisibleOnFocus(input);
 
             const stopProp = (e) => e.stopPropagation();
             input.addEventListener('keydown', stopProp);

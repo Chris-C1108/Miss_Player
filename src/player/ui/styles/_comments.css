@@ -161,7 +161,10 @@
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
     z-index: 9998;
     pointer-events: auto !important;
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, padding-bottom 0.15s ease-out;
+}
+.tm-ios-keyboard-open .tm-comment-submit-bar-wrapper {
+    padding-bottom: 10px;
 }
 .tm-comment-submit-bar-wrapper.is-collapsed {
     transform: translateY(100%);
@@ -648,7 +651,7 @@
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: var(--keyboard-height, 0px);
     background-color: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -657,7 +660,7 @@
     align-items: center;
     z-index: 2000000020 !important;
     opacity: 0;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.25s ease, bottom 0.2s ease-out;
     pointer-events: auto;
 }
 

@@ -12,7 +12,7 @@ function sanitizeSeekStepList(arr, isCustom = false) {
     return isCustom ? unique.slice(0, 30) : (unique.length > 0 ? unique : ['5s', '10s', '30s', '1m', '5m', '10m']);
 }
 
-import { getValue, setValue, Toast, playTapSound } from '../../utils/index.js';
+import { getValue, setValue, Toast, playTapSound, ensureInputVisibleOnFocus } from '../../utils/index.js';
 import { telemetry } from '../../telemetry';
 import { __ } from '../../constants/i18n.js';
 import { SyncManager, WebDavClient, getOrCreateClientId, getDeviceName } from '../../sync/index.js';
@@ -394,6 +394,7 @@ export class SettingsManager {
         urlInput.type = 'text';
         urlInput.placeholder = 'https://dav.jianguoyun.com/dav/';
         urlInput.value = config.url || '';
+        ensureInputVisibleOnFocus(urlInput);
         urlInput.addEventListener('change', () => {
             config.url = urlInput.value.trim();
             SyncManager.saveWebDavConfig(config);
@@ -412,6 +413,7 @@ export class SettingsManager {
         userInput.type = 'text';
         userInput.placeholder = 'username@example.com';
         userInput.value = config.user || '';
+        ensureInputVisibleOnFocus(userInput);
         userInput.addEventListener('change', () => {
             config.user = userInput.value.trim();
             SyncManager.saveWebDavConfig(config);
@@ -434,6 +436,7 @@ export class SettingsManager {
         passInput.type = 'password';
         passInput.placeholder = '••••••••••••';
         passInput.value = config.pass || '';
+        ensureInputVisibleOnFocus(passInput);
         passInput.addEventListener('change', () => {
             config.pass = passInput.value;
             SyncManager.saveWebDavConfig(config);
@@ -470,6 +473,7 @@ export class SettingsManager {
         pathInput.type = 'text';
         pathInput.placeholder = '/MissPlayer/';
         pathInput.value = config.path || '/MissPlayer/';
+        ensureInputVisibleOnFocus(pathInput);
         pathInput.addEventListener('change', () => {
             config.path = pathInput.value.trim() || '/MissPlayer/';
             SyncManager.saveWebDavConfig(config);
@@ -1197,6 +1201,7 @@ export class SettingsManager {
             input.type = 'text';
             input.className = 'tm-seek-step-input';
             input.placeholder = '_s / _m';
+            ensureInputVisibleOnFocus(input);
 
             let isSubmitted = false;
 

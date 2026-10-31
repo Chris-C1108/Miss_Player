@@ -60,10 +60,13 @@ function setupViewport() {
         window.visualViewport.addEventListener('scroll', updateKeyboardHeight);
     }
 
-    // 监听输入框失焦事件：当软键盘收起后，重置键盘高度
+    // 监听输入框失焦事件：当软键盘收起后，重置键盘高度，并软复位宿主滚动条以防顶部被裁剪
     document.addEventListener('focusout', (e) => {
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
             document.documentElement.style.setProperty('--keyboard-height', '0px');
+            if (window.scrollY !== 0 && document.body && document.body.classList.contains('tm-player-active')) {
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            }
         }
     });
 

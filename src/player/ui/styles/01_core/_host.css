@@ -106,3 +106,12 @@ body.tm-settings-active {
   .tm-floating-button:hover { transform: scale(1.08); }
   .tm-floating-button:active { transform: scale(0.96); }
 }
+
+/* 宿主轨：移动端模态弹窗输入框 16px 防放大兜底 */
+@media screen and (max-width: 1024px), (pointer: coarse) {
+  body.tm-player-active .tm-custom-modal-overlay input,
+  body.tm-player-active .tm-custom-modal-overlay textarea {
+    font-size: 16px !important;
+  }
+}
+

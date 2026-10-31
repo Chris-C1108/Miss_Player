@@ -2,7 +2,7 @@ import { AppleCard } from '../components/AppleCard.js';
 import { ToggleRow } from '../components/ToggleRow.js';
 import { SegmentedControl } from '../components/SegmentedControl.js';
 import { __ } from '../../../../constants/i18n.js';
-import { Toast } from '../../../../utils/index.js';
+import { Toast, ensureInputVisibleOnFocus } from '../../../../utils/index.js';
 import { CrazyScraper } from '../../../comments/CrazyScraper.js';
 import { CommentCacheManager } from "../../../comments/CommentCacheManager.js";
 import { DebugLogPanel } from '../../../ui/DebugLogPanel.js';
@@ -94,11 +94,13 @@ export class BetaSection {
         dbRow.innerHTML = `
             <div class="tm-apple-row-title">${__('betaCustomApi') || '自建接口'}</div>
             <div class="tm-apple-row-subtext">${__('betaCustomApiDesc') || '连接个人私人评论库服务器'}</div>
-            <input type="text" class="tm-settings-input tm-beta-db-url" placeholder="https://your-api.domain.com/comments" value="${this.settings.betaDbEndpoint || ''}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 11.5px; outline: none;" />
-            <input type="password" class="tm-settings-input tm-beta-db-key" placeholder="API Key / Token (可选)" value="${this.settings.betaDbApiKey || ''}" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 11.5px; outline: none;" />
+            <input type="text" class="tm-settings-input tm-beta-db-url" placeholder="https://your-api.domain.com/comments" value="${this.settings.betaDbEndpoint || ''}" />
+            <input type="password" class="tm-settings-input tm-beta-db-key" placeholder="API Key / Token (可选)" value="${this.settings.betaDbApiKey || ''}" />
         `;
         const dbUrlInput = dbRow.querySelector('.tm-beta-db-url');
         const dbKeyInput = dbRow.querySelector('.tm-beta-db-key');
+        ensureInputVisibleOnFocus(dbUrlInput);
+        ensureInputVisibleOnFocus(dbKeyInput);
         const saveDb = () => {
             this.sm.updateSetting('betaDbEndpoint', dbUrlInput.value.trim());
             this.sm.updateSetting('betaDbApiKey', dbKeyInput.value.trim());

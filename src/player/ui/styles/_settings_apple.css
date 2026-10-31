@@ -330,6 +330,25 @@
     border-color: #0a84ff;
 }
 
+/* Apple 设置项文本输入框 (自建接口 URL、API Key 等) */
+.tm-settings-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: #ffffff;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.tm-settings-input:focus {
+    border-color: #0a84ff;
+    background: rgba(0, 0, 0, 0.45);
+}
+
 /* 骨架占位屏 (Skeleton Screen) */
 .tm-settings-skeleton-card {
     height: 48px;

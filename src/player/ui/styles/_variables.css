@@ -95,7 +95,13 @@ html, body, button, input, select, textarea {
     .tm-sheet-item-comment-input,
     .tm-inline-remark-input,
     .tm-seek-step-input,
-    .tm-floating-panel-input {
+    .tm-floating-panel-input,
+    .tm-settings-input,
+    .tm-webdav-input,
+    .tm-apple-duration-input,
+    .tm-login-username,
+    .tm-login-password,
+    .tm-report-note {
         font-size: 16px !important;
     }
 }

@@ -288,3 +288,37 @@ export function parseDurationFromBadge(txt) {
     }
     return 0;
 }
+
+/**
+ * 移动端/iOS Safari 软键盘避让：确保输入框在聚焦后平滑滚动到可视视口合适位置
+ * 避免被弹起的虚拟键盘遮挡
+ * @param {HTMLElement} inputEl - 目标输入框 (input/textarea)
+ * @param {Object} [options]
+ * @param {number} [options.delay=280] - 延时等待键盘动画完成时间(ms)
+ * @param {ScrollLogicalPosition} [options.block='center'] - 滚动对齐位置
+ */
+export function ensureInputVisibleOnFocus(inputEl, options = {}) {
+    if (!inputEl || typeof inputEl.addEventListener !== 'function') return;
+    const { delay = 280, block = 'center' } = options;
+
+    inputEl.addEventListener('focus', () => {
+        const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+        if (!isTouch) return;
+
+        setTimeout(() => {
+            try {
+                if (typeof inputEl.scrollIntoView === 'function') {
+                    inputEl.scrollIntoView({
+                        behavior: 'smooth',
+                        block,
+                        inline: 'nearest'
+                    });
+                }
+            } catch (_) {
+                try {
+                    inputEl.scrollIntoView(false);
+                } catch (__) {}
+            }
+        }, delay);
+    });
+}

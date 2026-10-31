@@ -1,5 +1,5 @@
 import { SEMANTIC_TAG_TAXONOMY } from './tagTaxonomy.js';
-import { copyToClipboard, Toast, createModal } from '../../utils/index.js';
+import { copyToClipboard, Toast, createModal, ensureInputVisibleOnFocus } from '../../utils/index.js';
 import { formatTimeWithHours } from '../../utils/index.js';
 import { SyncManager } from '../../sync/index.js';
 import { __ } from '../../constants/i18n.js';
@@ -385,6 +385,7 @@ export class MarkerBottomSheet {
             input.className = 'tm-sheet-item-comment-input';
             input.placeholder = '添加备注...';
             input.value = tab.comment || '';
+            ensureInputVisibleOnFocus(input);
 
             // 阻止按键冒泡，防止触发视频播放快捷键
             const stopProp = (e) => e.stopPropagation();

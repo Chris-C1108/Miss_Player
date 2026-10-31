@@ -905,22 +905,35 @@ export class UIManager {
                 const keyboardHeight = Math.max(0, window.innerHeight - vv.height);
                 const playerContainer = this.playerContainer || document.querySelector('.tm-player-container');
                 const commentSubmitBar = this.shadowRoot?.querySelector('.tm-comment-submit-bar-wrapper') || document.querySelector('.tm-comment-submit-bar-wrapper');
-                const activeModal = this.shadowRoot?.querySelector('.tm-custom-modal, .tm-comment-tag-select-modal') || document.querySelector('.tm-custom-modal, .tm-comment-tag-select-modal');
+                const activeModal = this.shadowRoot?.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay') || document.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay');
 
                 if (keyboardHeight > 100) {
-                    if (playerContainer) playerContainer.classList.add('tm-ios-keyboard-open');
-                    if (commentSubmitBar) {
-                        commentSubmitBar.style.transform = `translateY(-${keyboardHeight}px)`;
+                    if (playerContainer) {
+                        playerContainer.classList.add('tm-ios-keyboard-open');
+                        playerContainer.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
                     }
-                    if (activeModal) {
-                        activeModal.style.transform = `translate(-50%, -${keyboardHeight / 2}px)`;
+                    if (this.shadowRoot?.host) {
+                        this.shadowRoot.host.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
                     }
-                } else {
-                    if (playerContainer) playerContainer.classList.remove('tm-ios-keyboard-open');
+                    // 彻底移除 JS 行内 translateY 破坏性位移，由外层容器自适应压缩与 CSS 规范原生对齐，杜绝双重位移
                     if (commentSubmitBar) {
                         commentSubmitBar.style.transform = '';
                     }
-                    if (activeModal) {
+                    if (activeModal && activeModal.style.transform) {
+                        activeModal.style.transform = '';
+                    }
+                } else {
+                    if (playerContainer) {
+                        playerContainer.classList.remove('tm-ios-keyboard-open');
+                        playerContainer.style.removeProperty('--keyboard-height');
+                    }
+                    if (this.shadowRoot?.host) {
+                        this.shadowRoot.host.style.removeProperty('--keyboard-height');
+                    }
+                    if (commentSubmitBar) {
+                        commentSubmitBar.style.transform = '';
+                    }
+                    if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';
                     }
                 }
