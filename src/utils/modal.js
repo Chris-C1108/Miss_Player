@@ -38,7 +38,12 @@ export function createModal(contentHTML, options = {}) {
         }
     });
 
-    document.body.appendChild(modal);
+    // 优先挂载在 Shadow DOM 内部的 playerContainer 中，确保继承播放器全部样式作用域、键盘自适应与 z-index 最高层级
+    const shadowHost = document.querySelector('miss-player-root');
+    const playerContainer = shadowHost?.shadowRoot?.querySelector('.tm-player-container') ||
+                            document.querySelector('.tm-player-container');
+    const targetParent = playerContainer || shadowHost?.shadowRoot || document.body;
+    targetParent.appendChild(modal);
 
     requestAnimationFrame(() => {
         modal.classList.add('active');

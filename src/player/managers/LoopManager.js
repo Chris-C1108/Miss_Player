@@ -1,5 +1,5 @@
 import { getRandomCapsuleColor } from './tagTaxonomy.js';
-import { formatTimeWithHours, getValue, setValue, Toast, playTapSound } from '../../utils/index.js';
+import { formatTimeWithHours, getValue, setValue, Toast, playTapSound, ensureInputVisibleOnFocus } from '../../utils/index.js';
 import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { __ } from '../../constants/i18n.js';
 import { LOOP_INTERVAL } from '../../constants/icons.js';
@@ -1017,13 +1017,12 @@ export class LoopManager {
         const skipBtn = popover.querySelector('.tm-inline-remark-btn.cancel');
         const saveBtn = popover.querySelector('.tm-inline-remark-btn.submit');
 
-        // 阻止快捷键与摸碰冒泡
-        const stopProp = (e) => e.stopPropagation();
-        input.addEventListener('keydown', stopProp);
-        input.addEventListener('keyup', stopProp);
-        input.addEventListener('keypress', stopProp);
-        input.addEventListener('mousedown', stopProp);
-        input.addEventListener('touchstart', stopProp);
+        // 阻止播放快捷键冒泡，放行 touchstart/mousedown 确保 Safari 正常获取焦点
+        const stopKeyProp = (e) => e.stopPropagation();
+        input.addEventListener('keydown', stopKeyProp);
+        input.addEventListener('keyup', stopKeyProp);
+        input.addEventListener('keypress', stopKeyProp);
+        ensureInputVisibleOnFocus(input);
 
         popover.addEventListener('click', (e) => e.stopPropagation());
 

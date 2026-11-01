@@ -263,12 +263,13 @@ export class MarkerBottomSheet {
         this._sheetPanel.appendChild(this._sheetList);
 
         const playerContainer = this.uiElements?.playerContainer ||
+                                this.loopManager?.controlManager?.playerCore?.uiManager?.playerContainer ||
                                 document.querySelector('.tm-player-container') ||
                                 document.body;
         playerContainer.appendChild(this._sheetOverlay);
 
-        // 挂载到控制面板容器中，保证宽度 100% 与控制面板完全对齐
-        parentContainer.appendChild(this._sheetPanel);
+        // 统一直接挂载到播放器顶级容器内，彻底摆脱控制栏局部层叠上下文与单手紧凑宽度限制，成为标准全宽 BottomSheet
+        playerContainer.appendChild(this._sheetPanel);
     }
 
     updateBottomSheet() {

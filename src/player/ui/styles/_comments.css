@@ -522,6 +522,11 @@
     transform: translateY(0);
 }
 
+/* 键盘弹起时标签选择弹窗弹性高度保护，避免遮挡顶部视频 */
+.tm-ios-keyboard-open .tm-comment-tag-select-modal {
+    max-height: calc(100vh - var(--keyboard-height, 0px) - 240px);
+}
+
 .tm-tag-select-header {
     display: flex;
     align-items: center;
