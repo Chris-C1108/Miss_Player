@@ -905,9 +905,8 @@ export class UIManager {
                 const vv = window.visualViewport;
                 const playerContainer = this.playerContainer || document.querySelector('.tm-player-container');
                 const containerHeight = playerContainer ? playerContainer.getBoundingClientRect().height : (window.innerHeight || 0);
-                const offsetTop = vv.offsetTop || 0;
-                // 键盘真实占用的高度：物理容器底部到 visualViewport 底部的绝对相对差值，减去 offsetTop 彻底消除悬浮药丸/地址栏导致的虚假空隙
-                const keyboardHeight = Math.max(0, Math.round(containerHeight - vv.height - offsetTop));
+                // 键盘真实占用的高度：物理容器底部到 visualViewport 底部的绝对相对差值
+                const keyboardHeight = Math.max(0, Math.round(containerHeight - vv.height));
 
                 const commentSubmitBar = this.shadowRoot?.querySelector('.tm-comment-submit-bar-wrapper') || document.querySelector('.tm-comment-submit-bar-wrapper');
                 const activeModal = this.shadowRoot?.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay') || document.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay');

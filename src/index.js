@@ -55,8 +55,7 @@ function setupViewport() {
             if (!document.body || !document.body.classList.contains('tm-player-active')) return;
             const vv = window.visualViewport;
             const docHeight = document.documentElement.clientHeight || window.innerHeight;
-            const offsetTop = vv ? (vv.offsetTop || 0) : 0;
-            const keyboardHeight = Math.max(0, Math.round(docHeight - (vv ? vv.height : docHeight) - offsetTop));
+            const keyboardHeight = Math.max(0, Math.round(docHeight - (vv ? vv.height : docHeight)));
             if (keyboardHeight > 60) {
                 document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
             } else {

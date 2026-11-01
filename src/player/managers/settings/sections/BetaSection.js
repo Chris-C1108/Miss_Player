@@ -2,7 +2,7 @@ import { AppleCard } from '../components/AppleCard.js';
 import { ToggleRow } from '../components/ToggleRow.js';
 import { SegmentedControl } from '../components/SegmentedControl.js';
 import { __ } from '../../../../constants/i18n.js';
-import { Toast, ensureInputVisibleOnFocus } from '../../../../utils/index.js';
+import { Toast } from '../../../../utils/index.js';
 import { CrazyScraper } from '../../../comments/CrazyScraper.js';
 import { CommentCacheManager } from "../../../comments/CommentCacheManager.js";
 import { DebugLogPanel } from '../../../ui/DebugLogPanel.js';
@@ -99,8 +99,6 @@ export class BetaSection {
         `;
         const dbUrlInput = dbRow.querySelector('.tm-beta-db-url');
         const dbKeyInput = dbRow.querySelector('.tm-beta-db-key');
-        ensureInputVisibleOnFocus(dbUrlInput);
-        ensureInputVisibleOnFocus(dbKeyInput);
         const saveDb = () => {
             this.sm.updateSetting('betaDbEndpoint', dbUrlInput.value.trim());
             this.sm.updateSetting('betaDbApiKey', dbKeyInput.value.trim());

@@ -1,5 +1,5 @@
 import { getRandomCapsuleColor } from './tagTaxonomy.js';
-import { formatTimeWithHours, getValue, setValue, Toast, playTapSound, ensureInputVisibleOnFocus } from '../../utils/index.js';
+import { formatTimeWithHours, getValue, setValue, Toast, playTapSound } from '../../utils/index.js';
 import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { __ } from '../../constants/i18n.js';
 import { LOOP_INTERVAL } from '../../constants/icons.js';
@@ -1022,7 +1022,6 @@ export class LoopManager {
         input.addEventListener('keydown', stopKeyProp);
         input.addEventListener('keyup', stopKeyProp);
         input.addEventListener('keypress', stopKeyProp);
-        ensureInputVisibleOnFocus(input);
 
         popover.addEventListener('click', (e) => e.stopPropagation());
 
