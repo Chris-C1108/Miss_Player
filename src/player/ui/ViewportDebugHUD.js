@@ -295,6 +295,28 @@ export class ViewportDebugHUD {
         const isInput = activeEl && /^(INPUT|TEXTAREA|SELECT)$/i.test(activeEl.tagName);
         const activeRect = isInput ? activeEl.getBoundingClientRect() : null;
 
+        // 计算各核心组件的 computed z-index 与 position 层叠上下文
+        const getZ = (el) => {
+            if (!el) return 'none';
+            try {
+                const cs = window.getComputedStyle(el);
+                return `z:${cs.zIndex || 'auto'} (${cs.position || 'static'})`;
+            } catch (_) {
+                return 'err';
+            }
+        };
+
+        const zIndexes = {
+            container: getZ(playerContainer),
+            video: getZ(shadow?.querySelector('.tm-video-container')),
+            controlButtons: getZ(shadow?.querySelector('.tm-control-buttons')),
+            submitBar: getZ(submitBar),
+            sheetPanel: getZ(sheetPanel),
+            popover: getZ(shadow?.querySelector('.tm-inline-remark-popover')),
+            modal: getZ(shadow?.querySelector('.tm-custom-modal-overlay') || document.querySelector('.tm-custom-modal-overlay')),
+            activeInput: isInput ? getZ(activeEl) : 'none'
+        };
+
         // 计算差值：发评栏底边距离当前可视视口底部的差值 (0 为绝对贴齐，正数=被键盘覆盖，负数=悬空)
         let gapToVisualBottom = null;
         if (submitBarRect && vv) {
@@ -351,7 +373,8 @@ export class ViewportDebugHUD {
                 top: Math.round(modalRect.top),
                 bottom: Math.round(modalRect.bottom),
                 h: Math.round(modalRect.height)
-            } : null
+            } : null,
+            zIndexes
         };
     }
 
@@ -480,6 +503,7 @@ export class ViewportDebugHUD {
         }
 
         const activeStr = act ? `${act.tag}.${(act.cls || '').split(' ')[0]} ${act.rect}` : '<span class="tm-hud-val">无激活输入框</span>';
+        const z = snap.zIndexes;
 
         metricsEl.innerHTML = `
             <div class="tm-hud-row">
@@ -497,6 +521,10 @@ export class ViewportDebugHUD {
             </div>
             <div class="tm-hud-row">
                 <span class="tm-hud-lbl">[当前激活]</span> <span class="tm-hud-val">${activeStr}</span>
+            </div>
+            <div class="tm-hud-row">
+                <span class="tm-hud-lbl">[Z标尺]</span>
+                <span class="tm-hud-val">发评:${z?.submitBar} 底栏:${z?.sheetPanel} 弹窗:${z?.modal} 输入框:${z?.activeInput}</span>
             </div>
         `;
     }
@@ -553,7 +581,18 @@ export class ViewportDebugHUD {
             md += `- Modal Dialog: class=${cur.modal.cls}, [top:${cur.modal.top}, bottom:${cur.modal.bottom}, h:${cur.modal.h}]\n`;
         }
 
-        md += `\n### 2. 事件序列日志 (Event Sequence - Recent ${this._logs.length})\n`;
+        const z = cur.zIndexes;
+        md += `\n### 2. 各组件计算 Z-Index 与层叠上下文审计 (Z-Index Hierarchy)\n`;
+        md += `- Player Container: ${z?.container}\n`;
+        md += `- Video Container: ${z?.video}\n`;
+        md += `- Control Buttons: ${z?.controlButtons}\n`;
+        md += `- Submit Bar: ${z?.submitBar}\n`;
+        md += `- Sheet Panel (高光底栏): ${z?.sheetPanel}\n`;
+        md += `- Inline Popover (打点气泡): ${z?.popover}\n`;
+        md += `- Modal Dialog (登录/弹窗): ${z?.modal}\n`;
+        md += `- Active Input: ${z?.activeInput}\n`;
+
+        md += `\n### 3. 事件序列日志 (Event Sequence - Recent ${this._logs.length})\n`;
         this._logs.forEach((item, index) => {
             const s = item.snapshot;
             const v = s.visualViewport;

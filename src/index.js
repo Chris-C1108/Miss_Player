@@ -66,14 +66,22 @@ function setupViewport() {
         window.visualViewport.addEventListener('scroll', updateKeyboardHeight);
     }
 
-    // 监听输入框失焦事件：软复位宿主滚动条以防顶部被裁剪，键盘高度由 visualViewport 唯一接管
+    // 监听输入框聚焦与失焦事件：确保宿主页面始终锁定在 (0, 0)，杜绝 Safari 原生滚动露底与位移
+    document.addEventListener('focusin', (e) => {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
+            if (window.scrollY !== 0 && document.body && document.body.classList.contains('tm-player-active')) {
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            }
+        }
+    }, { passive: true });
+
     document.addEventListener('focusout', (e) => {
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
             if (window.scrollY !== 0 && document.body && document.body.classList.contains('tm-player-active')) {
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
             }
         }
-    });
+    }, { passive: true });
 
     console.log(`[${__('scriptName')}] ${__('viewportConfigured')}`);
 }

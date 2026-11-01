@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.53
+// @version            5.7.54
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.53";
+		return "5.7.54";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1849,7 +1849,27 @@
 			const activeModal = shadow?.querySelector(".tm-custom-modal-content, .tm-comment-tag-select-modal") || document.querySelector(".tm-custom-modal-content, .tm-comment-tag-select-modal");
 			const modalRect = activeModal ? activeModal.getBoundingClientRect() : null;
 			const activeEl = this.getDeepActiveElement();
-			const activeRect = activeEl && /^(INPUT|TEXTAREA|SELECT)$/i.test(activeEl.tagName) ? activeEl.getBoundingClientRect() : null;
+			const isInput = activeEl && /^(INPUT|TEXTAREA|SELECT)$/i.test(activeEl.tagName);
+			const activeRect = isInput ? activeEl.getBoundingClientRect() : null;
+			const getZ = (el) => {
+				if (!el) return "none";
+				try {
+					const cs = window.getComputedStyle(el);
+					return `z:${cs.zIndex || "auto"} (${cs.position || "static"})`;
+				} catch (_) {
+					return "err";
+				}
+			};
+			const zIndexes = {
+				container: getZ(playerContainer),
+				video: getZ(shadow?.querySelector(".tm-video-container")),
+				controlButtons: getZ(shadow?.querySelector(".tm-control-buttons")),
+				submitBar: getZ(submitBar),
+				sheetPanel: getZ(sheetPanel),
+				popover: getZ(shadow?.querySelector(".tm-inline-remark-popover")),
+				modal: getZ(shadow?.querySelector(".tm-custom-modal-overlay") || document.querySelector(".tm-custom-modal-overlay")),
+				activeInput: isInput ? getZ(activeEl) : "none"
+			};
 			let gapToVisualBottom = null;
 			if (submitBarRect && vv) {
 				const visualBottom = (vv.offsetTop || 0) + vv.height;
@@ -1902,7 +1922,8 @@
 					top: Math.round(modalRect.top),
 					bottom: Math.round(modalRect.bottom),
 					h: Math.round(modalRect.height)
-				} : null
+				} : null,
+				zIndexes
 			};
 		}
 		static recordEvent(eventName, details = "") {
@@ -1993,6 +2014,7 @@
 				else gapHtml = `<span class="tm-hud-highlight">${sb.gap}px (悬空过多)</span>`;
 			}
 			const activeStr = act ? `${act.tag}.${(act.cls || "").split(" ")[0]} ${act.rect}` : "<span class=\"tm-hud-val\">无激活输入框</span>";
+			const z = snap.zIndexes;
 			metricsEl.innerHTML = `
             <div class="tm-hud-row">
                 <span class="tm-hud-lbl">[VV]</span>
@@ -2009,6 +2031,10 @@
             </div>
             <div class="tm-hud-row">
                 <span class="tm-hud-lbl">[当前激活]</span> <span class="tm-hud-val">${activeStr}</span>
+            </div>
+            <div class="tm-hud-row">
+                <span class="tm-hud-lbl">[Z标尺]</span>
+                <span class="tm-hud-val">发评:${z?.submitBar} 底栏:${z?.sheetPanel} 弹窗:${z?.modal} 输入框:${z?.activeInput}</span>
             </div>
         `;
 		}
@@ -2044,7 +2070,17 @@
 			md += `- Submit Bar: [top:${sb?.top}, bottom:${sb?.bottom}, h:${sb?.height}], gapToKeyboard: ${sb?.gap}px, collapsed=${sb?.isCollapsed}\n`;
 			if (cur.sheetPanel) md += `- Sheet Panel: [top:${cur.sheetPanel.top}, bottom:${cur.sheetPanel.bottom}, h:${cur.sheetPanel.h}]\n`;
 			if (cur.modal) md += `- Modal Dialog: class=${cur.modal.cls}, [top:${cur.modal.top}, bottom:${cur.modal.bottom}, h:${cur.modal.h}]\n`;
-			md += `\n### 2. 事件序列日志 (Event Sequence - Recent ${this._logs.length})\n`;
+			const z = cur.zIndexes;
+			md += `\n### 2. 各组件计算 Z-Index 与层叠上下文审计 (Z-Index Hierarchy)\n`;
+			md += `- Player Container: ${z?.container}\n`;
+			md += `- Video Container: ${z?.video}\n`;
+			md += `- Control Buttons: ${z?.controlButtons}\n`;
+			md += `- Submit Bar: ${z?.submitBar}\n`;
+			md += `- Sheet Panel (高光底栏): ${z?.sheetPanel}\n`;
+			md += `- Inline Popover (打点气泡): ${z?.popover}\n`;
+			md += `- Modal Dialog (登录/弹窗): ${z?.modal}\n`;
+			md += `- Active Input: ${z?.activeInput}\n`;
+			md += `\n### 3. 事件序列日志 (Event Sequence - Recent ${this._logs.length})\n`;
 			this._logs.forEach((item, index) => {
 				const s = item.snapshot;
 				const v = s.visualViewport;
@@ -4853,7 +4889,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.53";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.54";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -17951,7 +17987,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.53";
+		return "5.7.54";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -21631,6 +21667,15 @@
 			window.visualViewport.addEventListener("resize", updateKeyboardHeight);
 			window.visualViewport.addEventListener("scroll", updateKeyboardHeight);
 		}
+		document.addEventListener("focusin", (e) => {
+			if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) {
+				if (window.scrollY !== 0 && document.body && document.body.classList.contains("tm-player-active")) window.scrollTo({
+					top: 0,
+					left: 0,
+					behavior: "instant"
+				});
+			}
+		}, { passive: true });
 		document.addEventListener("focusout", (e) => {
 			if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) {
 				if (window.scrollY !== 0 && document.body && document.body.classList.contains("tm-player-active")) window.scrollTo({
@@ -21639,7 +21684,7 @@
 					behavior: "instant"
 				});
 			}
-		});
+		}, { passive: true });
 		console.log(`[${__("scriptName")}] ${__("viewportConfigured")}`);
 	}
 	(function() {
