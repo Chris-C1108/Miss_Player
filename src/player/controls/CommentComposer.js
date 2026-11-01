@@ -199,11 +199,6 @@ export class CommentComposer {
             commentInput.addEventListener('keyup', stopKeyProp);
             commentInput.addEventListener('keypress', stopKeyProp);
 
-            // 聚焦输入框时触发检测
-            commentInput.addEventListener('focus', () => {
-                this.checkCanComment();
-            });
-
             commentInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -666,20 +661,24 @@ export class CommentComposer {
 
     showTipModal(title, message) {
         const { modal, close } = createModal(`
-            <div class="tm-custom-modal-title">${title}</div>
-            <div class="tm-custom-modal-message">${message}</div>
-            <button class="tm-custom-modal-close-btn">确定</button>
+            <div class="tm-custom-modal-content">
+                <div class="tm-custom-modal-title">${title}</div>
+                <div class="tm-custom-modal-message">${message}</div>
+                <button class="tm-custom-modal-close-btn">确定</button>
+            </div>
         `);
         modal.querySelector('.tm-custom-modal-close-btn').addEventListener('click', close);
     }
 
     showLoginPromptModal(domain) {
         const { modal, close } = createModal(`
-            <div class="tm-custom-modal-title">发表评论</div>
-            <div class="tm-custom-modal-message">需要有 Jable 登录态才能发表评论，请先登录。</div>
-            <div class="mp-composer-modal-buttons">
-                <button class="tm-custom-modal-cancel-btn">取消</button>
-                <button class="tm-custom-modal-login-btn">去登录</button>
+            <div class="tm-custom-modal-content">
+                <div class="tm-custom-modal-title">发表评论</div>
+                <div class="tm-custom-modal-message">需要有 Jable 登录态才能发表评论，请先登录。</div>
+                <div class="mp-composer-modal-buttons">
+                    <button class="tm-custom-modal-cancel-btn">取消</button>
+                    <button class="tm-custom-modal-login-btn">去登录</button>
+                </div>
             </div>
         `);
 
@@ -701,24 +700,26 @@ export class CommentComposer {
         const siteTitle = provider ? (provider.siteKey === 'JABLE' ? 'Jable.tv' : provider.siteKey === 'MISSAV' ? 'MissAV' : provider.siteKey) : 'Jable.tv';
 
         const { modal, close } = createModal(`
-            <div class="mp-composer-modal-title">登录 ${siteTitle}</div>
-            <div class="mp-composer-form">
-                <div class="mp-composer-form-field">
-                    <label class="mp-composer-label">用户名 / 邮箱</label>
-                    <input type="text" class="tm-login-username" placeholder="请输入用户名或邮箱" />
+            <div class="tm-custom-modal-content mp-composer-modal-card">
+                <div class="mp-composer-modal-title">登录 ${siteTitle}</div>
+                <div class="mp-composer-form">
+                    <div class="mp-composer-form-field">
+                        <label class="mp-composer-label">用户名 / 邮箱</label>
+                        <input type="text" class="tm-login-username" placeholder="请输入用户名或邮箱" />
+                    </div>
+                    <div class="mp-composer-form-field">
+                        <label class="mp-composer-label">密码</label>
+                        <input type="password" class="tm-login-password" placeholder="请输入密码" />
+                    </div>
+                    <div class="mp-composer-checkbox-row">
+                        <input type="checkbox" id="tm-login-remember" class="mp-composer-checkbox" checked />
+                        <label for="tm-login-remember" class="mp-composer-checkbox-label">记住密码并开启自动登录</label>
+                    </div>
                 </div>
-                <div class="mp-composer-form-field">
-                    <label class="mp-composer-label">密码</label>
-                    <input type="password" class="tm-login-password" placeholder="请输入密码" />
+                <div class="mp-composer-modal-buttons">
+                    <button class="tm-custom-modal-cancel-btn">取消</button>
+                    <button class="tm-custom-modal-submit-btn">登录</button>
                 </div>
-                <div class="mp-composer-checkbox-row">
-                    <input type="checkbox" id="tm-login-remember" class="mp-composer-checkbox" checked />
-                    <label for="tm-login-remember" class="mp-composer-checkbox-label">记住密码并开启自动登录</label>
-                </div>
-            </div>
-            <div class="mp-composer-modal-buttons">
-                <button class="tm-custom-modal-cancel-btn">取消</button>
-                <button class="tm-custom-modal-submit-btn">登录</button>
             </div>
         `);
 
@@ -802,11 +803,13 @@ export class CommentComposer {
 
     showCommentInputModal(commentForm, targetUrl, domain) {
         const { modal, close } = createModal(`
-            <div class="tm-custom-modal-title">发表评论</div>
-            <textarea class="tm-comment-input-textarea" placeholder="写下你的精彩评论..." maxlength="1000"></textarea>
-            <div class="mp-composer-modal-buttons">
-                <button class="tm-custom-modal-cancel-btn">取消</button>
-                <button class="tm-custom-modal-submit-btn">提交</button>
+            <div class="tm-custom-modal-content">
+                <div class="tm-custom-modal-title">发表评论</div>
+                <textarea class="tm-comment-input-textarea" placeholder="写下你的精彩评论..." maxlength="1000"></textarea>
+                <div class="mp-composer-modal-buttons">
+                    <button class="tm-custom-modal-cancel-btn">取消</button>
+                    <button class="tm-custom-modal-submit-btn">提交</button>
+                </div>
             </div>
         `);
 
