@@ -1,4 +1,5 @@
 import playerStyles from './style.css?inline';
+import { ViewportDebugHUD } from './ViewportDebugHUD.js';
 /**
  * UI管理器类 - 负责创建和管理播放器UI元素
  */
@@ -987,6 +988,9 @@ export class UIManager {
             clearTimeout(this.controlsHideTimerId);
             this.controlsHideTimerId = null;
         }
+
+        // 清理视口调试探针
+        ViewportDebugHUD.destroy();
     }
     
     /**
@@ -1488,6 +1492,9 @@ export class UIManager {
         // 立即更新容器最小高度
         this.updateContainerMinHeight();
         
+        // 挂载移动端视口物理探针 HUD (支持实时指标测量与一键拷贝完整日志)
+        ViewportDebugHUD.init(this.playerContainer, this.shadowRoot);
+
         // 在DOM组装完成后设置交互监听器
         this.setupInteractionListeners();
         
