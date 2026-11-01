@@ -4,10 +4,10 @@
  * 职责：
  * 1. 实时显示 window.visualViewport、window.innerHeight、playerContainer、activeElement 以及 submitBar 的真实像素坐标与差值；
  * 2. 深度穿透 Shadow DOM 实时监听捕获所有 input/textarea 的 focus、blur 以及视口 resize/scroll 事件；
- * 3. 记录事件时间序列与几何快照，支持一键将完整日志拷贝至剪贴板，供排查 iOS Safari 键盘避让物理数值。
+ * 3. 记录事件时间序列与几何快照，支持一键将完整日志拷贝至剪贴板，并自带就地可视化长文本框双重保障。
  */
 
-import { copyToClipboard, Toast } from '../../utils/index.js';
+import { Toast } from '../../utils/index.js';
 
 export class ViewportDebugHUD {
     static _container = null;
@@ -33,7 +33,7 @@ export class ViewportDebugHUD {
         // 如果已存在先销毁
         this.destroy();
 
-        // 仅在存在 DOM 时创建
+        // 挂载目标优先选用 playerContainer 或 shadowRoot
         const mountTarget = playerContainer || shadowRoot || document.body;
         this._container = document.createElement('div');
         this._container.className = 'tm-viewport-debug-hud';
@@ -43,16 +43,16 @@ export class ViewportDebugHUD {
         style.textContent = `
             .tm-viewport-debug-hud {
                 position: absolute;
-                top: max(46px, env(safe-area-inset-top, 46px));
+                top: max(48px, env(safe-area-inset-top, 48px));
                 left: 6px;
                 right: 6px;
                 z-index: 2000000030;
-                background: rgba(12, 14, 18, 0.94);
+                background: rgba(12, 14, 18, 0.95);
                 backdrop-filter: blur(20px) saturate(180%);
                 -webkit-backdrop-filter: blur(20px) saturate(180%);
-                border: 1px solid rgba(255, 255, 255, 0.16);
+                border: 1px solid rgba(255, 255, 255, 0.18);
                 border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75);
                 color: #e2e8f0;
                 font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
                 font-size: 10px;
@@ -98,12 +98,14 @@ export class ViewportDebugHUD {
                 background: rgba(255, 255, 255, 0.12);
                 border: 1px solid rgba(255, 255, 255, 0.2);
                 color: #ffffff;
-                padding: 2px 7px;
+                padding: 4px 8px;
                 border-radius: 6px;
                 font-size: 10px;
                 cursor: pointer;
                 outline: none;
                 transition: background 0.15s, transform 0.1s;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
             }
             .tm-hud-btn:active {
                 transform: scale(0.95);
@@ -114,11 +116,15 @@ export class ViewportDebugHUD {
                 font-weight: 700;
                 color: #ffffff;
             }
+            .tm-hud-btn-copy.is-copied {
+                background: #16a34a;
+                border-color: #4ade80;
+            }
             .tm-hud-body {
                 display: flex;
                 flex-direction: column;
                 gap: 3px;
-                max-height: 140px;
+                max-height: 125px;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
             }
@@ -154,17 +160,48 @@ export class ViewportDebugHUD {
                 border-top: 1px dashed rgba(255, 255, 255, 0.1);
                 color: #cbd5e1;
                 font-size: 9px;
-                max-height: 52px;
+                max-height: 44px;
                 overflow-y: auto;
             }
+            .tm-hud-export-wrap {
+                margin-top: 6px;
+                padding-top: 6px;
+                border-top: 1px solid rgba(56, 189, 248, 0.4);
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .tm-hud-export-title {
+                color: #38bdf8;
+                font-size: 10px;
+                font-weight: 700;
+            }
+            .tm-hud-export-area {
+                width: 100%;
+                height: 100px;
+                box-sizing: border-box;
+                background: #000000;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 6px;
+                color: #4ade80;
+                font-family: inherit;
+                font-size: 10px;
+                padding: 6px;
+                outline: none;
+                resize: none;
+                -webkit-user-select: text;
+                user-select: text;
+            }
             .tm-hud-collapsed .tm-hud-body,
-            .tm-hud-collapsed .tm-hud-logs-preview {
+            .tm-hud-collapsed .tm-hud-logs-preview,
+            .tm-hud-collapsed .tm-hud-export-wrap {
                 display: none;
             }
         `;
         this._container.appendChild(style);
 
-        this._container.innerHTML += `
+        const contentWrap = document.createElement('div');
+        contentWrap.innerHTML = `
             <div class="tm-hud-header">
                 <div class="tm-hud-title-wrap">
                     <span>🔍 视口探针 HUD</span>
@@ -182,29 +219,42 @@ export class ViewportDebugHUD {
             <div class="tm-hud-logs-preview" id="tm-hud-logs-list">
                 [就绪] 正在监听所有 input 聚焦与键盘视口变化...
             </div>
+            <div class="tm-hud-export-wrap" id="tm-hud-export-wrap" style="display: none;">
+                <div class="tm-hud-export-title">📋 导出的纯文本日志 (已全选，可直接长按拷贝):</div>
+                <textarea class="tm-hud-export-area" id="tm-hud-export-text" readonly></textarea>
+            </div>
         `;
+        this._container.appendChild(contentWrap);
 
         mountTarget.appendChild(this._container);
 
-        // 绑定按钮事件
+        // 统一移动端触控/点击绑定工具 (优先 touchend，保证 100% 触发且不被底层手势吞掉)
+        const bindTap = (el, handler) => {
+            if (!el) return;
+            let handled = false;
+            el.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+            }, { passive: true });
+            el.addEventListener('touchend', (e) => {
+                e.stopPropagation();
+                handled = true;
+                handler(e);
+                setTimeout(() => { handled = false; }, 300);
+            });
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (handled) return;
+                handler(e);
+            });
+        };
+
         const copyBtn = this._container.querySelector('#tm-hud-copy-btn');
         const clearBtn = this._container.querySelector('#tm-hud-clear-btn');
         const toggleBtn = this._container.querySelector('#tm-hud-toggle-btn');
 
-        if (copyBtn) copyBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.copyLogs();
-        });
-
-        if (clearBtn) clearBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.clearLogs();
-        });
-
-        if (toggleBtn) toggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.toggleCollapse();
-        });
+        bindTap(copyBtn, () => this.copyLogs());
+        bindTap(clearBtn, () => this.clearLogs());
+        bindTap(toggleBtn, () => this.toggleCollapse());
 
         // 启动全局事件追踪与周期性指标更新
         this._bindEventListeners();
@@ -471,12 +521,14 @@ export class ViewportDebugHUD {
         this._logs = [];
         this.recordEvent('LOG_CLEARED', '已清空历史日志');
         Toast('探针日志已清空', 1200, 'info');
+        const exportWrap = this._container?.querySelector('#tm-hud-export-wrap');
+        if (exportWrap) exportWrap.style.display = 'none';
     }
 
     /**
-     * 一键将全量结构化物理日志复制到剪贴板
+     * 生成完整的 Markdown 调试报告文本
      */
-    static copyLogs() {
+    static generateReportMarkdown() {
         const cur = this.getMetricsSnapshot();
         const vv = cur.visualViewport;
         const w = cur.window;
@@ -512,10 +564,92 @@ export class ViewportDebugHUD {
         });
 
         md += `\n=== End of Report ===\n`;
+        return md;
+    }
 
-        copyToClipboard(md);
-        Toast('📋 视口探针日志已复制！请直接在对话中粘贴反馈', 2800, 'success');
-        console.log('[ViewportDebugHUD] Log copied:\n', md);
+    /**
+     * iOS Safari 专用安全剪贴板写入工具 (多重降级兜底)
+     */
+    static _safeCopy(text) {
+        // 1. GM API
+        if (typeof GM_setClipboard === 'function') {
+            try {
+                GM_setClipboard(text);
+                return true;
+            } catch (_) {}
+        }
+
+        // 2. 现代 Clipboard API
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            try {
+                navigator.clipboard.writeText(text);
+                return true;
+            } catch (_) {}
+        }
+
+        // 3. iOS 专用可见微小文本框选区复制 (严禁使用 -9999px 负坐标，必须位于视口内)
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.top = '10px';
+            ta.style.left = '10px';
+            ta.style.width = '10px';
+            ta.style.height = '10px';
+            ta.style.opacity = '0.01';
+            ta.style.zIndex = '2147483647';
+            ta.setAttribute('readonly', '');
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            ta.setSelectionRange(0, text.length);
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            return ok;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    /**
+     * 一键将全量结构化物理日志复制到剪贴板，并展开就地文本框提供手动长按拷贝
+     */
+    static copyLogs() {
+        const md = this.generateReportMarkdown();
+        const copyBtn = this._container?.querySelector('#tm-hud-copy-btn');
+        const exportWrap = this._container?.querySelector('#tm-hud-export-wrap');
+        const exportText = this._container?.querySelector('#tm-hud-export-text');
+
+        // 无论自动复制是否成功，都在 HUD 下方就地展开全选文本框（绝对兜底）
+        if (exportWrap && exportText) {
+            exportWrap.style.display = 'flex';
+            exportText.value = md;
+            try {
+                exportText.focus();
+                exportText.select();
+                exportText.setSelectionRange(0, md.length);
+            } catch (_) {}
+        }
+
+        // 执行多重剪贴板写入
+        const success = this._safeCopy(md);
+
+        if (copyBtn) {
+            copyBtn.classList.add('is-copied');
+            copyBtn.textContent = '✅ 已生成/拷贝！';
+            setTimeout(() => {
+                copyBtn.classList.remove('is-copied');
+                copyBtn.textContent = `📋 复制日志 (${this._logs.length})`;
+            }, 3000);
+        }
+
+        if (success) {
+            Toast('✅ 日志已复制到剪贴板！(若未生效可长按下方文本框)', 3000, 'success');
+        } else {
+            Toast('⚠️ 请直接长按下方已全选的文本框进行拷贝', 3500, 'warning');
+        }
+
+        console.log('[ViewportDebugHUD] Generated report:\n', md);
     }
 
     /**

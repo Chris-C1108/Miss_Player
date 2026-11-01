@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.50
+// @version            5.7.51
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1297,7 +1297,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.50";
+		return "5.7.51";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1653,16 +1653,16 @@
 			style.textContent = `
             .tm-viewport-debug-hud {
                 position: absolute;
-                top: max(46px, env(safe-area-inset-top, 46px));
+                top: max(48px, env(safe-area-inset-top, 48px));
                 left: 6px;
                 right: 6px;
                 z-index: 2000000030;
-                background: rgba(12, 14, 18, 0.94);
+                background: rgba(12, 14, 18, 0.95);
                 backdrop-filter: blur(20px) saturate(180%);
                 backdrop-filter: blur(20px) saturate(180%);-webkit-backdrop-filter: blur(20px) saturate(180%);
-                border: 1px solid rgba(255, 255, 255, 0.16);
+                border: 1px solid rgba(255, 255, 255, 0.18);
                 border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75);
                 color: #e2e8f0;
                 font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
                 font-size: 10px;
@@ -1708,12 +1708,14 @@
                 background: rgba(255, 255, 255, 0.12);
                 border: 1px solid rgba(255, 255, 255, 0.2);
                 color: #ffffff;
-                padding: 2px 7px;
+                padding: 4px 8px;
                 border-radius: 6px;
                 font-size: 10px;
                 cursor: pointer;
                 outline: none;
                 transition: background 0.15s, transform 0.1s;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
             }
             .tm-hud-btn:active {
                 transform: scale(0.95);
@@ -1724,11 +1726,15 @@
                 font-weight: 700;
                 color: #ffffff;
             }
+            .tm-hud-btn-copy.is-copied {
+                background: #16a34a;
+                border-color: #4ade80;
+            }
             .tm-hud-body {
                 display: flex;
                 flex-direction: column;
                 gap: 3px;
-                max-height: 140px;
+                max-height: 125px;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
             }
@@ -1764,16 +1770,47 @@
                 border-top: 1px dashed rgba(255, 255, 255, 0.1);
                 color: #cbd5e1;
                 font-size: 9px;
-                max-height: 52px;
+                max-height: 44px;
                 overflow-y: auto;
             }
+            .tm-hud-export-wrap {
+                margin-top: 6px;
+                padding-top: 6px;
+                border-top: 1px solid rgba(56, 189, 248, 0.4);
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .tm-hud-export-title {
+                color: #38bdf8;
+                font-size: 10px;
+                font-weight: 700;
+            }
+            .tm-hud-export-area {
+                width: 100%;
+                height: 100px;
+                box-sizing: border-box;
+                background: #000000;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 6px;
+                color: #4ade80;
+                font-family: inherit;
+                font-size: 10px;
+                padding: 6px;
+                outline: none;
+                resize: none;
+                -webkit-user-select: text;
+                user-select: text;
+            }
             .tm-hud-collapsed .tm-hud-body,
-            .tm-hud-collapsed .tm-hud-logs-preview {
+            .tm-hud-collapsed .tm-hud-logs-preview,
+            .tm-hud-collapsed .tm-hud-export-wrap {
                 display: none;
             }
         `;
 			this._container.appendChild(style);
-			this._container.innerHTML += `
+			const contentWrap = document.createElement("div");
+			contentWrap.innerHTML = `
             <div class="tm-hud-header">
                 <div class="tm-hud-title-wrap">
                     <span>🔍 视口探针 HUD</span>
@@ -1791,23 +1828,39 @@
             <div class="tm-hud-logs-preview" id="tm-hud-logs-list">
                 [就绪] 正在监听所有 input 聚焦与键盘视口变化...
             </div>
+            <div class="tm-hud-export-wrap" id="tm-hud-export-wrap" style="display: none;">
+                <div class="tm-hud-export-title">📋 导出的纯文本日志 (已全选，可直接长按拷贝):</div>
+                <textarea class="tm-hud-export-area" id="tm-hud-export-text" readonly></textarea>
+            </div>
         `;
+			this._container.appendChild(contentWrap);
 			mountTarget.appendChild(this._container);
+			const bindTap = (el, handler) => {
+				if (!el) return;
+				let handled = false;
+				el.addEventListener("touchstart", (e) => {
+					e.stopPropagation();
+				}, { passive: true });
+				el.addEventListener("touchend", (e) => {
+					e.stopPropagation();
+					handled = true;
+					handler(e);
+					setTimeout(() => {
+						handled = false;
+					}, 300);
+				});
+				el.addEventListener("click", (e) => {
+					e.stopPropagation();
+					if (handled) return;
+					handler(e);
+				});
+			};
 			const copyBtn = this._container.querySelector("#tm-hud-copy-btn");
 			const clearBtn = this._container.querySelector("#tm-hud-clear-btn");
 			const toggleBtn = this._container.querySelector("#tm-hud-toggle-btn");
-			if (copyBtn) copyBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
-				this.copyLogs();
-			});
-			if (clearBtn) clearBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
-				this.clearLogs();
-			});
-			if (toggleBtn) toggleBtn.addEventListener("click", (e) => {
-				e.stopPropagation();
-				this.toggleCollapse();
-			});
+			bindTap(copyBtn, () => this.copyLogs());
+			bindTap(clearBtn, () => this.clearLogs());
+			bindTap(toggleBtn, () => this.toggleCollapse());
 			this._bindEventListeners();
 			this._startPolling();
 			this.recordEvent("HUD_READY", "探针初始化就绪");
@@ -2003,8 +2056,10 @@
 			this._logs = [];
 			this.recordEvent("LOG_CLEARED", "已清空历史日志");
 			Toast("探针日志已清空", 1200, "info");
+			const exportWrap = this._container?.querySelector("#tm-hud-export-wrap");
+			if (exportWrap) exportWrap.style.display = "none";
 		}
-		static copyLogs() {
+		static generateReportMarkdown() {
 			const cur = this.getMetricsSnapshot();
 			const vv = cur.visualViewport;
 			const w = cur.window;
@@ -2032,9 +2087,65 @@
 				md += `   VV:[h:${v?.h}, top:${v?.offsetTop}] | Win:[innerH:${s.window.inner}, scrollY:${s.window.scrollY}] | Input:${a ? `${a.tag}.${(a.cls || "").split(" ")[0]} ${a.rect}` : "None"} | SubmitBarGap:${b?.gap}px\n`;
 			});
 			md += `\n=== End of Report ===\n`;
-			copyToClipboard(md);
-			Toast("📋 视口探针日志已复制！请直接在对话中粘贴反馈", 2800, "success");
-			console.log("[ViewportDebugHUD] Log copied:\n", md);
+			return md;
+		}
+		static _safeCopy(text) {
+			if (typeof GM_setClipboard === "function") try {
+				GM_setClipboard(text);
+				return true;
+			} catch (_) {}
+			if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") try {
+				navigator.clipboard.writeText(text);
+				return true;
+			} catch (_) {}
+			try {
+				const ta = document.createElement("textarea");
+				ta.value = text;
+				ta.style.position = "fixed";
+				ta.style.top = "10px";
+				ta.style.left = "10px";
+				ta.style.width = "10px";
+				ta.style.height = "10px";
+				ta.style.opacity = "0.01";
+				ta.style.zIndex = "2147483647";
+				ta.setAttribute("readonly", "");
+				document.body.appendChild(ta);
+				ta.focus();
+				ta.select();
+				ta.setSelectionRange(0, text.length);
+				const ok = document.execCommand("copy");
+				document.body.removeChild(ta);
+				return ok;
+			} catch (_) {
+				return false;
+			}
+		}
+		static copyLogs() {
+			const md = this.generateReportMarkdown();
+			const copyBtn = this._container?.querySelector("#tm-hud-copy-btn");
+			const exportWrap = this._container?.querySelector("#tm-hud-export-wrap");
+			const exportText = this._container?.querySelector("#tm-hud-export-text");
+			if (exportWrap && exportText) {
+				exportWrap.style.display = "flex";
+				exportText.value = md;
+				try {
+					exportText.focus();
+					exportText.select();
+					exportText.setSelectionRange(0, md.length);
+				} catch (_) {}
+			}
+			const success = this._safeCopy(md);
+			if (copyBtn) {
+				copyBtn.classList.add("is-copied");
+				copyBtn.textContent = "✅ 已生成/拷贝！";
+				setTimeout(() => {
+					copyBtn.classList.remove("is-copied");
+					copyBtn.textContent = `📋 复制日志 (${this._logs.length})`;
+				}, 3e3);
+			}
+			if (success) Toast("✅ 日志已复制到剪贴板！(若未生效可长按下方文本框)", 3e3, "success");
+			else Toast("⚠️ 请直接长按下方已全选的文本框进行拷贝", 3500, "warning");
+			console.log("[ViewportDebugHUD] Generated report:\n", md);
 		}
 		static destroy() {
 			if (this._timerId) {
@@ -4772,7 +4883,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.50";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.51";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -17868,7 +17979,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.50";
+		return "5.7.51";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
