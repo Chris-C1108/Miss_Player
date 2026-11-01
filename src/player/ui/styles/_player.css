@@ -1516,11 +1516,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     -webkit-backdrop-filter: blur(24px);
 }
 
-/* 键盘打开时打点备注气泡精准吸附键盘顶端 */
-.tm-ios-keyboard-open .tm-inline-remark-popover {
-    bottom: calc(var(--keyboard-height, 0px) + 16px);
-}
-
 .tm-inline-remark-body {
     display: flex;
     flex-direction: column;

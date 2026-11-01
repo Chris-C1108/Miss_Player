@@ -148,7 +148,7 @@
 /* 评论区底部悬浮发表组件 [加号，文本框，发送按钮，收起] */
 .tm-comment-submit-bar-wrapper {
     position: absolute;
-    bottom: 0;
+    bottom: var(--keyboard-height, 0px);
     left: 0;
     right: 0;
     width: 100%;
@@ -161,10 +161,10 @@
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
     z-index: 9998;
     pointer-events: auto !important;
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, padding-bottom 0.15s ease-out;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-ios-keyboard-open .tm-comment-submit-bar-wrapper {
-    padding-bottom: 10px;
+    padding-bottom: 8px;
 }
 .tm-comment-submit-bar-wrapper.is-collapsed {
     transform: translateY(100%);
@@ -172,7 +172,7 @@
     pointer-events: none !important;
 }
 .tm-comment-submit-bar-wrapper:not(.is-collapsed) {
-    transform: translateY(calc(-1 * var(--keyboard-height, 0px)));
+    transform: translateY(0);
     opacity: 1;
     pointer-events: auto !important;
 }

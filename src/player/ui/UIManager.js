@@ -920,13 +920,13 @@ export class UIManager {
                     if (this.shadowRoot?.host) {
                         this.shadowRoot.host.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
                     }
-                    // 直接由 JS 行内赋予平移，彻底击穿 iOS WebKit 针对 Shadow DOM 内 CSS calc(var()) 的静态忽略 Bug
-                    if (commentSubmitBar && !commentSubmitBar.classList.contains('is-collapsed')) {
-                        commentSubmitBar.style.transform = `translateY(-${keyboardHeight}px)`;
+                    // 彻底清空所有行内 translateY，由统一底边 bottom: var(--keyboard-height) 调度，杜绝双重平移飞天
+                    if (commentSubmitBar) {
+                        commentSubmitBar.style.transform = '';
                     }
                     const sheetPanel = this.shadowRoot?.querySelector('.tm-bottom-sheet-panel');
-                    if (sheetPanel && sheetPanel.classList.contains('visible')) {
-                        sheetPanel.style.transform = `translateY(-${keyboardHeight}px)`;
+                    if (sheetPanel) {
+                        sheetPanel.style.transform = '';
                     }
                     if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';
@@ -940,12 +940,12 @@ export class UIManager {
                     if (this.shadowRoot?.host) {
                         this.shadowRoot.host.style.removeProperty('--keyboard-height');
                     }
-                    if (commentSubmitBar && !commentSubmitBar.classList.contains('is-collapsed')) {
-                        commentSubmitBar.style.transform = 'translateY(0)';
+                    if (commentSubmitBar) {
+                        commentSubmitBar.style.transform = '';
                     }
                     const sheetPanel = this.shadowRoot?.querySelector('.tm-bottom-sheet-panel');
-                    if (sheetPanel && sheetPanel.classList.contains('visible')) {
-                        sheetPanel.style.transform = 'translateY(0)';
+                    if (sheetPanel) {
+                        sheetPanel.style.transform = '';
                     }
                     if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';

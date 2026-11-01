@@ -270,15 +270,6 @@ export class CommentComposer {
             this.panel.commentsPanel.classList.add('has-composer-open');
         }
         if (this.fabBtn) this.fabBtn.classList.add('is-hidden');
-
-        // 若键盘当前已开启，同步即时平移吸附在键盘上方
-        const rootHost = document.querySelector('miss-player-root');
-        const playerContainer = rootHost?.shadowRoot?.querySelector('.tm-player-container');
-        const kbVar = playerContainer ? window.getComputedStyle(playerContainer).getPropertyValue('--keyboard-height').trim() : '';
-        const kbHeight = parseInt(kbVar, 10) || 0;
-        if (kbHeight > 60) {
-            this.submitBarWrapper.style.transform = `translateY(-${kbHeight}px)`;
-        }
         
         // 在用户手势同步调用栈内即时聚焦，保障 iOS Safari 真正赋予输入光标与打字选区
         if (this.commentInput) {
