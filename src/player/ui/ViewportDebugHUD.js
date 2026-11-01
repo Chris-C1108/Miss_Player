@@ -8,6 +8,7 @@
  */
 
 import { Toast } from '../../utils/index.js';
+import { getCurrentVersion } from '../../services/SleazyForkService.js';
 
 export class ViewportDebugHUD {
     static _container = null;
@@ -205,7 +206,7 @@ export class ViewportDebugHUD {
             <div class="tm-hud-header">
                 <div class="tm-hud-title-wrap">
                     <span>🔍 视口探针 HUD</span>
-                    <span class="tm-hud-badge">实时</span>
+                    <span class="tm-hud-badge">v${getCurrentVersion()}</span>
                 </div>
                 <div class="tm-hud-actions">
                     <button type="button" class="tm-hud-btn tm-hud-btn-copy" id="tm-hud-copy-btn">📋 复制日志 (0)</button>
@@ -565,6 +566,7 @@ export class ViewportDebugHUD {
         const act = cur.activeInput;
 
         let md = `=== Miss Player iOS Viewport Debug Report ===\n`;
+        md += `Script Version: v${getCurrentVersion()}\n`;
         md += `Report Time: ${cur.timestamp}\n`;
         md += `UserAgent: ${navigator.userAgent}\n\n`;
 

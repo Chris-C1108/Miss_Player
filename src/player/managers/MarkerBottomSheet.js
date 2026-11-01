@@ -91,6 +91,14 @@ export class MarkerBottomSheet {
 
     updatePanelPosition() {
         if (!this._sheetPanel) return;
+        const isLandscape = (typeof window !== 'undefined' && window.innerWidth > window.innerHeight);
+        if (!isLandscape) {
+            // 移动端竖屏下：作为标准的顶级全宽 BottomSheet，清空所有行内绝对坐标，完全交由纯 CSS 规则与键盘自适应调度
+            this._sheetPanel.style.bottom = '';
+            this._sheetPanel.style.maxHeight = '';
+            return;
+        }
+
         const parentContainer = this.tabAddBtn?.closest('.tm-control-buttons') ||
                                 this.loopManager?.controlManager?.controlButtonsContainer ||
                                 this.uiElements?.controlButtons ||
