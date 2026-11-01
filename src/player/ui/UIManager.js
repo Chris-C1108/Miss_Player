@@ -920,9 +920,13 @@ export class UIManager {
                     if (this.shadowRoot?.host) {
                         this.shadowRoot.host.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
                     }
-                    // 彻底移除 JS 行内 translateY 破坏性位移，由 CSS 规范原生对齐
-                    if (commentSubmitBar) {
-                        commentSubmitBar.style.transform = '';
+                    // 直接由 JS 行内赋予平移，彻底击穿 iOS WebKit 针对 Shadow DOM 内 CSS calc(var()) 的静态忽略 Bug
+                    if (commentSubmitBar && !commentSubmitBar.classList.contains('is-collapsed')) {
+                        commentSubmitBar.style.transform = `translateY(-${keyboardHeight}px)`;
+                    }
+                    const sheetPanel = this.shadowRoot?.querySelector('.tm-bottom-sheet-panel');
+                    if (sheetPanel && sheetPanel.classList.contains('visible')) {
+                        sheetPanel.style.transform = `translateY(-${keyboardHeight}px)`;
                     }
                     if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';
@@ -936,8 +940,12 @@ export class UIManager {
                     if (this.shadowRoot?.host) {
                         this.shadowRoot.host.style.removeProperty('--keyboard-height');
                     }
-                    if (commentSubmitBar) {
-                        commentSubmitBar.style.transform = '';
+                    if (commentSubmitBar && !commentSubmitBar.classList.contains('is-collapsed')) {
+                        commentSubmitBar.style.transform = 'translateY(0)';
+                    }
+                    const sheetPanel = this.shadowRoot?.querySelector('.tm-bottom-sheet-panel');
+                    if (sheetPanel && sheetPanel.classList.contains('visible')) {
+                        sheetPanel.style.transform = 'translateY(0)';
                     }
                     if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';

@@ -262,13 +262,15 @@ export class MarkerBottomSheet {
 
         this._sheetPanel.appendChild(this._sheetList);
 
-        const playerContainer = this.uiElements?.playerContainer ||
+        const rootHost = document.querySelector('miss-player-root');
+        const shadow = rootHost?.shadowRoot;
+        const playerContainer = shadow?.querySelector('.tm-player-container') ||
                                 this.loopManager?.controlManager?.playerCore?.uiManager?.playerContainer ||
-                                document.querySelector('.tm-player-container') ||
-                                document.body;
+                                shadow;
+        if (!playerContainer) return;
         playerContainer.appendChild(this._sheetOverlay);
 
-        // 统一直接挂载到播放器顶级容器内，彻底摆脱控制栏局部层叠上下文与单手紧凑宽度限制，成为标准全宽 BottomSheet
+        // 统一直接挂载到 Shadow DOM 内部顶级容器，彻底阻断挂在宿主 document.body 导致的 Safari 原生滚动暴走
         playerContainer.appendChild(this._sheetPanel);
     }
 

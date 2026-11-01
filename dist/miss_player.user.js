@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.52
+// @version            5.7.53
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.52";
+		return "5.7.53";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2920,7 +2920,9 @@
 							playerContainer.style.setProperty("--keyboard-height", `${keyboardHeight}px`);
 						}
 						if (this.shadowRoot?.host) this.shadowRoot.host.style.setProperty("--keyboard-height", `${keyboardHeight}px`);
-						if (commentSubmitBar) commentSubmitBar.style.transform = "";
+						if (commentSubmitBar && !commentSubmitBar.classList.contains("is-collapsed")) commentSubmitBar.style.transform = `translateY(-${keyboardHeight}px)`;
+						const sheetPanel = this.shadowRoot?.querySelector(".tm-bottom-sheet-panel");
+						if (sheetPanel && sheetPanel.classList.contains("visible")) sheetPanel.style.transform = `translateY(-${keyboardHeight}px)`;
 						if (activeModal && activeModal.style.transform) activeModal.style.transform = "";
 					} else {
 						document.documentElement.style.setProperty("--keyboard-height", "0px");
@@ -2929,7 +2931,9 @@
 							playerContainer.style.removeProperty("--keyboard-height");
 						}
 						if (this.shadowRoot?.host) this.shadowRoot.host.style.removeProperty("--keyboard-height");
-						if (commentSubmitBar) commentSubmitBar.style.transform = "";
+						if (commentSubmitBar && !commentSubmitBar.classList.contains("is-collapsed")) commentSubmitBar.style.transform = "translateY(0)";
+						const sheetPanel = this.shadowRoot?.querySelector(".tm-bottom-sheet-panel");
+						if (sheetPanel && sheetPanel.classList.contains("visible")) sheetPanel.style.transform = "translateY(0)";
 						if (activeModal && activeModal.style.transform) activeModal.style.transform = "";
 					}
 				};
@@ -4849,7 +4853,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.52";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.53";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -8772,6 +8776,10 @@
 			if (this.backdrop) this.backdrop.classList.remove("is-hidden");
 			if (this.panel?.commentsPanel) this.panel.commentsPanel.classList.add("has-composer-open");
 			if (this.fabBtn) this.fabBtn.classList.add("is-hidden");
+			const playerContainer = document.querySelector("miss-player-root")?.shadowRoot?.querySelector(".tm-player-container");
+			const kbVar = playerContainer ? window.getComputedStyle(playerContainer).getPropertyValue("--keyboard-height").trim() : "";
+			const kbHeight = parseInt(kbVar, 10) || 0;
+			if (kbHeight > 60) this.submitBarWrapper.style.transform = `translateY(-${kbHeight}px)`;
 			if (this.commentInput) try {
 				this.commentInput.focus({ preventScroll: true });
 			} catch (_) {
@@ -8783,6 +8791,7 @@
 			if (this.commentInput) this.commentInput.blur();
 			this.closeTagSelectModal();
 			this.submitBarWrapper.classList.add("is-collapsed");
+			this.submitBarWrapper.style.transform = "";
 			if (this.backdrop) this.backdrop.classList.add("is-hidden");
 			if (this.panel?.commentsPanel) this.panel.commentsPanel.classList.remove("has-composer-open");
 			if (this.fabBtn) this.fabBtn.classList.remove("is-hidden");
@@ -14556,7 +14565,9 @@
 			toolbar.appendChild(shareBtn);
 			this._sheetPanel.appendChild(toolbar);
 			this._sheetPanel.appendChild(this._sheetList);
-			const playerContainer = this.uiElements?.playerContainer || this.loopManager?.controlManager?.playerCore?.uiManager?.playerContainer || document.querySelector(".tm-player-container") || document.body;
+			const shadow = document.querySelector("miss-player-root")?.shadowRoot;
+			const playerContainer = shadow?.querySelector(".tm-player-container") || this.loopManager?.controlManager?.playerCore?.uiManager?.playerContainer || shadow;
+			if (!playerContainer) return;
 			playerContainer.appendChild(this._sheetOverlay);
 			playerContainer.appendChild(this._sheetPanel);
 		}
@@ -17940,7 +17951,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.52";
+		return "5.7.53";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
