@@ -1482,12 +1482,12 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     overflow: visible !important;
 }
 
-/* 新建高光打点备注弹窗 (居中优雅悬浮卡片) */
+/* 新建高光打点备注弹窗 (居中偏上悬浮卡片，确保物理 Y 坐标 <= 160px，彻底避开键盘遮挡区) */
 .tm-inline-remark-popover {
     position: absolute;
-    top: 50%;
+    top: max(84px, calc(env(safe-area-inset-top, 44px) + 40px));
     left: 50%;
-    transform: translate(-50%, -50%) scale(0.96);
+    transform: translate(-50%, 0) scale(0.96);
     width: min(92vw, 400px);
     max-width: 400px;
     background: rgba(18, 18, 20, 0.96);
@@ -1498,20 +1498,15 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     z-index: 100005;
     pointer-events: auto;
     opacity: 0;
-    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s ease;
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
 }
 
 .tm-inline-remark-popover.visible {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, 0) scale(1);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-}
-
-/* 键盘打开时，打点气泡居中在键盘上方的剩余空间中，彻底杜绝被键盘遮挡与飞出天花板 */
-.tm-ios-keyboard-open .tm-inline-remark-popover.visible {
-    top: calc((100% - var(--keyboard-height, 0px)) / 2);
 }
 
 .tm-inline-remark-body {

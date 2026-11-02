@@ -51,6 +51,18 @@ export class CustomVideoPlayer {
 
         document.body.classList.add('tm-player-active');
         document.documentElement.classList.add('tm-player-active');
+
+        // 核心滚动劫持守卫：在播放器激活期间，绝对禁止 Safari WebKit 或外部代码将 window 滚离 (0, 0)
+        if (!this._originalScrollTo) {
+            this._originalScrollTo = window.scrollTo;
+            const self = this;
+            window.scrollTo = function(x, y) {
+                if (document.body && document.body.classList.contains('tm-player-active')) {
+                    return self._originalScrollTo.call(window, 0, 0);
+                }
+                return self._originalScrollTo.apply(window, arguments);
+            };
+        }
         
         // 宿主滚动绝对锁定守卫：杜绝 iOS Safari 虚拟键盘弹起时原生滚动破坏播放器视口
         this._windowScrollLock = () => {
@@ -366,9 +378,13 @@ export class CustomVideoPlayer {
         document.body.classList.remove('tm-player-active');
         document.documentElement.classList.remove('tm-player-active');
 
-        // 恢复宿主页面原有滚动位置
-        if (typeof this._originScrollY === 'number') {
-            window.scrollTo(this._originScrollX || 0, this._originScrollY);
+        // 恢复原生 window.scrollTo 并复原宿主原有浏览位置
+        if (this._originalScrollTo) {
+            window.scrollTo = this._originalScrollTo;
+            if (typeof this._originScrollY === 'number') {
+                this._originalScrollTo.call(window, this._originScrollX || 0, this._originScrollY);
+            }
+            this._originalScrollTo = null;
         }
 
         // 调用PlayerCore的close方法
