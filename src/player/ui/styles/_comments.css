@@ -164,6 +164,7 @@
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-ios-keyboard-open .tm-comment-submit-bar-wrapper {
+    bottom: var(--keyboard-height, 0px);
     padding-bottom: 8px;
 }
 .tm-comment-submit-bar-wrapper.is-collapsed {
@@ -522,9 +523,23 @@
     transform: translateY(0);
 }
 
-/* 键盘弹起时标签选择弹窗弹性高度保护，避免遮挡顶部视频 */
-.tm-ios-keyboard-open .tm-comment-tag-select-modal {
-    max-height: calc(100vh - var(--keyboard-height, 0px) - 240px);
+/* 移动端竖屏：标签选择弹窗直接定位在屏幕上半区，物理坐标 <= 220px，彻底避开键盘 334px 遮挡线阻断滚动 */
+@media screen and (max-width: 600px), screen and (orientation: portrait) {
+    .tm-comment-tag-select-modal {
+        position: fixed;
+        top: max(80px, calc(env(safe-area-inset-top, 44px) + 36px));
+        bottom: auto;
+        left: 12px;
+        right: 12px;
+        width: calc(100% - 24px);
+        max-width: 480px;
+        max-height: 220px;
+        z-index: 100004 !important;
+        transform: translateY(-8px);
+    }
+    .tm-comment-tag-select-modal.visible {
+        transform: translateY(0);
+    }
 }
 
 .tm-tag-select-header {
