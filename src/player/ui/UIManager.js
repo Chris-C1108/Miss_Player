@@ -907,9 +907,10 @@ export class UIManager {
                 const containerHeight = playerContainer ? playerContainer.getBoundingClientRect().height : (window.innerHeight || 0);
                 // 键盘真实占用的高度：物理容器底部到 visualViewport 底部的绝对相对差值
                 const keyboardHeight = Math.max(0, Math.round(containerHeight - vv.height));
-                ViewportDebugHUD.recordEvent('UI_VV_UPDATE', `kbH=${keyboardHeight}, cH=${Math.round(containerHeight)}, vvH=${Math.round(vv.height)}`);
-
                 const commentSubmitBar = this.shadowRoot?.querySelector('.tm-comment-submit-bar-wrapper') || document.querySelector('.tm-comment-submit-bar-wrapper');
+                const hasSubmitBar = !!commentSubmitBar;
+                const isCollapsed = commentSubmitBar ? commentSubmitBar.classList.contains('is-collapsed') : null;
+                ViewportDebugHUD.recordEvent('UI_VV_UPDATE', `kbH=${keyboardHeight}, bar=${hasSubmitBar ? (isCollapsed ? 'col' : 'open') : 'none'}, bot=${commentSubmitBar?.style?.bottom || '0'}`);
                 const activeModal = this.shadowRoot?.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay') || document.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay');
 
                 if (keyboardHeight > 60) {

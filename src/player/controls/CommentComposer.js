@@ -199,6 +199,15 @@ export class CommentComposer {
             commentInput.addEventListener('keyup', stopKeyProp);
             commentInput.addEventListener('keypress', stopKeyProp);
 
+            // 聚焦瞬间零延迟将底栏提升至键盘上方，彻底杜绝输入框落在键盘遮挡区触发 Safari 滚动
+            commentInput.addEventListener('focus', () => {
+                const vv = window.visualViewport;
+                const kb = (vv && window.innerHeight - vv.height > 60) ? Math.round(window.innerHeight - vv.height) : 380;
+                if (this.submitBarWrapper) {
+                    this.submitBarWrapper.style.bottom = `${kb}px`;
+                }
+            });
+
             commentInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -410,12 +419,20 @@ export class CommentComposer {
             input.placeholder = '添加备注...';
             input.value = tab.comment || '';
 
-            const stopProp = (e) => e.stopPropagation();
-            input.addEventListener('keydown', stopProp);
-            input.addEventListener('keyup', stopProp);
-            input.addEventListener('keypress', stopProp);
-            input.addEventListener('mousedown', stopProp);
-            input.addEventListener('touchstart', stopProp);
+            // 阻止播放快捷键冒泡，放行 touchstart/mousedown 确保 Safari 正常获取焦点
+            const stopKeyProp = (e) => e.stopPropagation();
+            input.addEventListener('keydown', stopKeyProp);
+            input.addEventListener('keyup', stopKeyProp);
+            input.addEventListener('keypress', stopKeyProp);
+
+            // 聚焦瞬间同步将发评栏提升，确保标签弹窗内的输入框同步处于视口上方，杜绝 Safari 原生滚动
+            input.addEventListener('focus', () => {
+                const vv = window.visualViewport;
+                const kb = (vv && window.innerHeight - vv.height > 60) ? Math.round(window.innerHeight - vv.height) : 380;
+                if (this.submitBarWrapper) {
+                    this.submitBarWrapper.style.bottom = `${kb}px`;
+                }
+            });
 
             input.addEventListener('input', (e) => {
                 tab.comment = e.target.value;

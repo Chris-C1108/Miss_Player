@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.61
+// @version            5.7.62
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.61";
+		return "5.7.62";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1591,7 +1591,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.61";
+		return "5.7.62";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3164,8 +3164,10 @@
 					const playerContainer = this.playerContainer || document.querySelector(".tm-player-container");
 					const containerHeight = playerContainer ? playerContainer.getBoundingClientRect().height : window.innerHeight || 0;
 					const keyboardHeight = Math.max(0, Math.round(containerHeight - vv.height));
-					ViewportDebugHUD.recordEvent("UI_VV_UPDATE", `kbH=${keyboardHeight}, cH=${Math.round(containerHeight)}, vvH=${Math.round(vv.height)}`);
 					const commentSubmitBar = this.shadowRoot?.querySelector(".tm-comment-submit-bar-wrapper") || document.querySelector(".tm-comment-submit-bar-wrapper");
+					const hasSubmitBar = !!commentSubmitBar;
+					const isCollapsed = commentSubmitBar ? commentSubmitBar.classList.contains("is-collapsed") : null;
+					ViewportDebugHUD.recordEvent("UI_VV_UPDATE", `kbH=${keyboardHeight}, bar=${hasSubmitBar ? isCollapsed ? "col" : "open" : "none"}, bot=${commentSubmitBar?.style?.bottom || "0"}`);
 					const activeModal = this.shadowRoot?.querySelector(".tm-comment-tag-select-modal, .tm-custom-modal-overlay") || document.querySelector(".tm-comment-tag-select-modal, .tm-custom-modal-overlay");
 					if (keyboardHeight > 60) {
 						document.documentElement.style.setProperty("--keyboard-height", `${keyboardHeight}px`);
@@ -5119,7 +5121,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.61";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.62";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -8998,6 +9000,11 @@
 				commentInput.addEventListener("keydown", stopKeyProp);
 				commentInput.addEventListener("keyup", stopKeyProp);
 				commentInput.addEventListener("keypress", stopKeyProp);
+				commentInput.addEventListener("focus", () => {
+					const vv = window.visualViewport;
+					const kb = vv && window.innerHeight - vv.height > 60 ? Math.round(window.innerHeight - vv.height) : 380;
+					if (this.submitBarWrapper) this.submitBarWrapper.style.bottom = `${kb}px`;
+				});
 				commentInput.addEventListener("keydown", (e) => {
 					if (e.key === "Enter") {
 						e.preventDefault();
@@ -9137,12 +9144,15 @@
 				input.className = "tm-tag-remark-input";
 				input.placeholder = "添加备注...";
 				input.value = tab.comment || "";
-				const stopProp = (e) => e.stopPropagation();
-				input.addEventListener("keydown", stopProp);
-				input.addEventListener("keyup", stopProp);
-				input.addEventListener("keypress", stopProp);
-				input.addEventListener("mousedown", stopProp);
-				input.addEventListener("touchstart", stopProp);
+				const stopKeyProp = (e) => e.stopPropagation();
+				input.addEventListener("keydown", stopKeyProp);
+				input.addEventListener("keyup", stopKeyProp);
+				input.addEventListener("keypress", stopKeyProp);
+				input.addEventListener("focus", () => {
+					const vv = window.visualViewport;
+					const kb = vv && window.innerHeight - vv.height > 60 ? Math.round(window.innerHeight - vv.height) : 380;
+					if (this.submitBarWrapper) this.submitBarWrapper.style.bottom = `${kb}px`;
+				});
 				input.addEventListener("input", (e) => {
 					tab.comment = e.target.value;
 					if (lm) {
