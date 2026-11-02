@@ -3,6 +3,7 @@ import { Toast, createModal } from '../../utils/index.js';
 import { isSiteDomain, getSiteUrls } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { formatSeconds } from '../comments/index.js';
+import { UIManager } from '../ui/UIManager.js';
 
 const JABLE_DOMAINS = getSiteUrls('JABLE');
 
@@ -199,14 +200,21 @@ export class CommentComposer {
             commentInput.addEventListener('keyup', stopKeyProp);
             commentInput.addEventListener('keypress', stopKeyProp);
 
-            // 聚焦瞬间零延迟将底栏提升至键盘上方，彻底杜绝输入框落在键盘遮挡区触发 Safari 滚动
-            commentInput.addEventListener('focus', () => {
-                const vv = window.visualViewport;
-                const kb = (vv && window.innerHeight - vv.height > 60) ? Math.round(window.innerHeight - vv.height) : 380;
-                if (this.submitBarWrapper) {
+            // 核心 Pre-Lift：在用户触碰/点击瞬间（抢先于 Safari 原生 focus 判定），将发评栏升至键盘高度并阻止默认 scroll
+            const triggerInputPreLift = (e) => {
+                const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+                if (isTouch && this.submitBarWrapper) {
+                    const kb = UIManager.lastKnownKeyboardHeight || 380;
                     this.submitBarWrapper.style.bottom = `${kb}px`;
+                    this.submitBarWrapper.style.transform = '';
                 }
-            });
+                commentInput.focus({ preventScroll: true });
+                if (e.cancelable && e.type === 'mousedown') {
+                    e.preventDefault();
+                }
+            };
+            commentInput.addEventListener('mousedown', triggerInputPreLift);
+            commentInput.addEventListener('touchstart', triggerInputPreLift, { passive: true });
 
             commentInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
@@ -280,15 +288,12 @@ export class CommentComposer {
         }
         if (this.fabBtn) this.fabBtn.classList.add('is-hidden');
 
-        // 同步继承当前键盘物理高度
-        const rootHost = document.querySelector('miss-player-root');
-        const playerContainer = rootHost?.shadowRoot?.querySelector('.tm-player-container');
-        const kbVar = playerContainer ? window.getComputedStyle(playerContainer).getPropertyValue('--keyboard-height').trim() : '';
-        const kbHeight = parseInt(kbVar, 10) || 0;
-        if (kbHeight > 60) {
-            this.submitBarWrapper.style.bottom = `${kbHeight}px`;
-        } else {
-            this.submitBarWrapper.style.bottom = '0px';
+        // 核心 Pre-Lift 预升降：在 focus 触发之前，立即将发评栏预升降到键盘预期高度，彻底避免 Safari 判定未在视口内触发 document scroll
+        const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+        if (isTouch && this.submitBarWrapper) {
+            const kb = UIManager.lastKnownKeyboardHeight || 380;
+            this.submitBarWrapper.style.bottom = `${kb}px`;
+            this.submitBarWrapper.style.transform = '';
         }
         
         // 在用户手势同步调用栈内即时聚焦，保障 iOS Safari 真正赋予输入光标与打字选区
@@ -425,14 +430,21 @@ export class CommentComposer {
             input.addEventListener('keyup', stopKeyProp);
             input.addEventListener('keypress', stopKeyProp);
 
-            // 聚焦瞬间同步将发评栏提升，确保标签弹窗内的输入框同步处于视口上方，杜绝 Safari 原生滚动
-            input.addEventListener('focus', () => {
-                const vv = window.visualViewport;
-                const kb = (vv && window.innerHeight - vv.height > 60) ? Math.round(window.innerHeight - vv.height) : 380;
-                if (this.submitBarWrapper) {
+            // 核心 Pre-Lift：在标签输入框获得焦点前，抢先确保发评底栏已经处于键盘上方，杜绝 Safari 原生滚动
+            const triggerTagPreLift = (e) => {
+                const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+                if (isTouch && this.submitBarWrapper) {
+                    const kb = UIManager.lastKnownKeyboardHeight || 380;
                     this.submitBarWrapper.style.bottom = `${kb}px`;
+                    this.submitBarWrapper.style.transform = '';
                 }
-            });
+                input.focus({ preventScroll: true });
+                if (e.cancelable && e.type === 'mousedown') {
+                    e.preventDefault();
+                }
+            };
+            input.addEventListener('mousedown', triggerTagPreLift);
+            input.addEventListener('touchstart', triggerTagPreLift, { passive: true });
 
             input.addEventListener('input', (e) => {
                 tab.comment = e.target.value;
@@ -759,6 +771,20 @@ export class CommentComposer {
         const usernameInput = modal.querySelector('.tm-login-username');
         const passwordInput = modal.querySelector('.tm-login-password');
 
+        const bindModalInput = (inputEl) => {
+            if (!inputEl) return;
+            const handleFocus = (e) => {
+                inputEl.focus({ preventScroll: true });
+                if (e.cancelable && e.type === 'mousedown') {
+                    e.preventDefault();
+                }
+            };
+            inputEl.addEventListener('mousedown', handleFocus);
+            inputEl.addEventListener('touchstart', handleFocus, { passive: true });
+        };
+        bindModalInput(usernameInput);
+        bindModalInput(passwordInput);
+
         if (window.loginManager) {
             usernameInput.value = window.loginManager.userEmail || '';
             passwordInput.value = window.loginManager.userPassword || '';
@@ -843,6 +869,15 @@ export class CommentComposer {
         `);
 
         const textarea = modal.querySelector('.tm-comment-input-textarea');
+        const handleTextareaFocus = (e) => {
+            textarea.focus({ preventScroll: true });
+            if (e.cancelable && e.type === 'mousedown') {
+                e.preventDefault();
+            }
+        };
+        textarea.addEventListener('mousedown', handleTextareaFocus);
+        textarea.addEventListener('touchstart', handleTextareaFocus, { passive: true });
+
         try {
             textarea.focus({ preventScroll: true });
         } catch (_) {

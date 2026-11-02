@@ -477,6 +477,22 @@ export class SettingsManager {
         pathRow.appendChild(pathLabel);
         pathRow.appendChild(pathInput);
 
+        const bindSettingsFocus = (el) => {
+            if (!el) return;
+            const h = (e) => {
+                el.focus({ preventScroll: true });
+                if (e.cancelable && e.type === 'mousedown') {
+                    e.preventDefault();
+                }
+            };
+            el.addEventListener('mousedown', h);
+            el.addEventListener('touchstart', h, { passive: true });
+        };
+        bindSettingsFocus(urlInput);
+        bindSettingsFocus(userInput);
+        bindSettingsFocus(passInput);
+        bindSettingsFocus(pathInput);
+
         // 5. 自动同步开关行 (Auto Sync Switch with title + subtitle)
         const autoSyncRow = document.createElement('div');
         autoSyncRow.className = 'tm-webdav-switch-row';
@@ -1235,7 +1251,19 @@ export class SettingsManager {
             });
 
             subPanel.replaceChild(input, addBtn);
-            input.focus();
+            const handleFocus = (evt) => {
+                input.focus({ preventScroll: true });
+                if (evt.cancelable && evt.type === 'mousedown') {
+                    evt.preventDefault();
+                }
+            };
+            input.addEventListener('mousedown', handleFocus);
+            input.addEventListener('touchstart', handleFocus, { passive: true });
+            try {
+                input.focus({ preventScroll: true });
+            } catch (_) {
+                input.focus();
+            }
         });
 
         subPanel.appendChild(addBtn);

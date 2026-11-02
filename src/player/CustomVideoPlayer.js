@@ -75,6 +75,39 @@ export class CustomVideoPlayer {
             }
         };
         window.addEventListener('scroll', this._windowScrollLock, { passive: true });
+
+        // 宿主长页面物理级坍塌隔离：显式将 document.body 下所有非播放器元素隐藏，彻底清空万级像素 scrollHeight
+        this._hiddenHostElements = new Set();
+        this._collapseHostElement = (node) => {
+            if (!node || node.nodeType !== 1) return;
+            const tag = node.tagName ? node.tagName.toUpperCase() : '';
+            if (tag === 'MISS-PLAYER-ROOT' || tag === 'SCRIPT' || tag === 'STYLE' || node.id === 'tm-hide-scrollbar-style') {
+                return;
+            }
+            if (!this._hiddenHostElements.has(node)) {
+                const prevDisplay = node.style.display;
+                node.setAttribute('data-mp-prev-display', prevDisplay);
+                node.style.setProperty('display', 'none', 'important');
+                this._hiddenHostElements.add(node);
+            }
+        };
+
+        if (document.body) {
+            Array.from(document.body.children).forEach(this._collapseHostElement);
+            if (typeof MutationObserver !== 'undefined') {
+                this._hostMutationObserver = new MutationObserver((mutations) => {
+                    if (!document.body || !document.body.classList.contains('tm-player-active')) return;
+                    for (const m of mutations) {
+                        for (const node of m.addedNodes) {
+                            if (node && node.nodeType === 1) {
+                                this._collapseHostElement(node);
+                            }
+                        }
+                    }
+                });
+                this._hostMutationObserver.observe(document.body, { childList: true });
+            }
+        }
         
         // 保存并隐藏网页浏览器滚动条，同时禁用默认的橡皮筋弹性滚动效果
         this._scrollbarStyle = document.createElement('style');
@@ -377,6 +410,27 @@ export class CustomVideoPlayer {
         // 移除播放器激活状态标记
         document.body.classList.remove('tm-player-active');
         document.documentElement.classList.remove('tm-player-active');
+
+        // 物理恢复宿主长页面所有隐藏元素
+        if (this._hostMutationObserver) {
+            this._hostMutationObserver.disconnect();
+            this._hostMutationObserver = null;
+        }
+        if (this._hiddenHostElements && this._hiddenHostElements.size > 0) {
+            this._hiddenHostElements.forEach(node => {
+                if (node && node.parentNode) {
+                    const prevDisplay = node.getAttribute('data-mp-prev-display');
+                    if (prevDisplay !== null && prevDisplay !== undefined) {
+                        node.style.display = prevDisplay;
+                    } else {
+                        node.style.removeProperty('display');
+                    }
+                    node.removeAttribute('data-mp-prev-display');
+                }
+            });
+            this._hiddenHostElements.clear();
+            this._hiddenHostElements = null;
+        }
 
         // 恢复原生 window.scrollTo 并复原宿主原有浏览位置
         if (this._originalScrollTo) {

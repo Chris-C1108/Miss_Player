@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.62
+// @version            5.7.63
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.62";
+		return "5.7.63";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1591,7 +1591,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.62";
+		return "5.7.63";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2684,7 +2684,7 @@
 			this.attachShadow({ mode: "open" });
 		}
 	});
-	var UIManager = class {
+	var UIManager = class UIManager {
 		constructor(playerCore) {
 			this.playerCore = playerCore;
 			this.targetVideo = playerCore.targetVideo;
@@ -3142,6 +3142,7 @@
 				screen.orientation.addEventListener("change", this.screenOrientationListener);
 			}
 			this.orientationListener = () => {
+				UIManager.lastKnownKeyboardHeight = this.isLandscape ? 0 : 380;
 				scheduleLayoutUpdate(200);
 			};
 			window.addEventListener("orientationchange", this.orientationListener);
@@ -3170,6 +3171,7 @@
 					ViewportDebugHUD.recordEvent("UI_VV_UPDATE", `kbH=${keyboardHeight}, bar=${hasSubmitBar ? isCollapsed ? "col" : "open" : "none"}, bot=${commentSubmitBar?.style?.bottom || "0"}`);
 					const activeModal = this.shadowRoot?.querySelector(".tm-comment-tag-select-modal, .tm-custom-modal-overlay") || document.querySelector(".tm-comment-tag-select-modal, .tm-custom-modal-overlay");
 					if (keyboardHeight > 60) {
+						UIManager.lastKnownKeyboardHeight = keyboardHeight;
 						document.documentElement.style.setProperty("--keyboard-height", `${keyboardHeight}px`);
 						if (playerContainer) {
 							playerContainer.classList.add("tm-ios-keyboard-open");
@@ -3519,6 +3521,7 @@
 			});
 		}
 	};
+	_defineProperty(UIManager, "lastKnownKeyboardHeight", 380);
 	var I18n = class {
 		static get userLang() {
 			return navigator.languages && navigator.languages[0] || navigator.language || "en";
@@ -5121,7 +5124,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.62";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.63";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -9000,11 +9003,17 @@
 				commentInput.addEventListener("keydown", stopKeyProp);
 				commentInput.addEventListener("keyup", stopKeyProp);
 				commentInput.addEventListener("keypress", stopKeyProp);
-				commentInput.addEventListener("focus", () => {
-					const vv = window.visualViewport;
-					const kb = vv && window.innerHeight - vv.height > 60 ? Math.round(window.innerHeight - vv.height) : 380;
-					if (this.submitBarWrapper) this.submitBarWrapper.style.bottom = `${kb}px`;
-				});
+				const triggerInputPreLift = (e) => {
+					if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0) && this.submitBarWrapper) {
+						const kb = UIManager.lastKnownKeyboardHeight || 380;
+						this.submitBarWrapper.style.bottom = `${kb}px`;
+						this.submitBarWrapper.style.transform = "";
+					}
+					commentInput.focus({ preventScroll: true });
+					if (e.cancelable && e.type === "mousedown") e.preventDefault();
+				};
+				commentInput.addEventListener("mousedown", triggerInputPreLift);
+				commentInput.addEventListener("touchstart", triggerInputPreLift, { passive: true });
 				commentInput.addEventListener("keydown", (e) => {
 					if (e.key === "Enter") {
 						e.preventDefault();
@@ -9049,11 +9058,11 @@
 			if (this.backdrop) this.backdrop.classList.remove("is-hidden");
 			if (this.panel?.commentsPanel) this.panel.commentsPanel.classList.add("has-composer-open");
 			if (this.fabBtn) this.fabBtn.classList.add("is-hidden");
-			const playerContainer = document.querySelector("miss-player-root")?.shadowRoot?.querySelector(".tm-player-container");
-			const kbVar = playerContainer ? window.getComputedStyle(playerContainer).getPropertyValue("--keyboard-height").trim() : "";
-			const kbHeight = parseInt(kbVar, 10) || 0;
-			if (kbHeight > 60) this.submitBarWrapper.style.bottom = `${kbHeight}px`;
-			else this.submitBarWrapper.style.bottom = "0px";
+			if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0) && this.submitBarWrapper) {
+				const kb = UIManager.lastKnownKeyboardHeight || 380;
+				this.submitBarWrapper.style.bottom = `${kb}px`;
+				this.submitBarWrapper.style.transform = "";
+			}
 			if (this.commentInput) try {
 				this.commentInput.focus({ preventScroll: true });
 			} catch (_) {
@@ -9148,11 +9157,17 @@
 				input.addEventListener("keydown", stopKeyProp);
 				input.addEventListener("keyup", stopKeyProp);
 				input.addEventListener("keypress", stopKeyProp);
-				input.addEventListener("focus", () => {
-					const vv = window.visualViewport;
-					const kb = vv && window.innerHeight - vv.height > 60 ? Math.round(window.innerHeight - vv.height) : 380;
-					if (this.submitBarWrapper) this.submitBarWrapper.style.bottom = `${kb}px`;
-				});
+				const triggerTagPreLift = (e) => {
+					if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0) && this.submitBarWrapper) {
+						const kb = UIManager.lastKnownKeyboardHeight || 380;
+						this.submitBarWrapper.style.bottom = `${kb}px`;
+						this.submitBarWrapper.style.transform = "";
+					}
+					input.focus({ preventScroll: true });
+					if (e.cancelable && e.type === "mousedown") e.preventDefault();
+				};
+				input.addEventListener("mousedown", triggerTagPreLift);
+				input.addEventListener("touchstart", triggerTagPreLift, { passive: true });
 				input.addEventListener("input", (e) => {
 					tab.comment = e.target.value;
 					if (lm) {
@@ -9421,6 +9436,17 @@
 			const submitBtn = modal.querySelector(".tm-custom-modal-submit-btn");
 			const usernameInput = modal.querySelector(".tm-login-username");
 			const passwordInput = modal.querySelector(".tm-login-password");
+			const bindModalInput = (inputEl) => {
+				if (!inputEl) return;
+				const handleFocus = (e) => {
+					inputEl.focus({ preventScroll: true });
+					if (e.cancelable && e.type === "mousedown") e.preventDefault();
+				};
+				inputEl.addEventListener("mousedown", handleFocus);
+				inputEl.addEventListener("touchstart", handleFocus, { passive: true });
+			};
+			bindModalInput(usernameInput);
+			bindModalInput(passwordInput);
 			if (window.loginManager) {
 				usernameInput.value = window.loginManager.userEmail || "";
 				passwordInput.value = window.loginManager.userPassword || "";
@@ -9486,6 +9512,12 @@
             </div>
         `);
 			const textarea = modal.querySelector(".tm-comment-input-textarea");
+			const handleTextareaFocus = (e) => {
+				textarea.focus({ preventScroll: true });
+				if (e.cancelable && e.type === "mousedown") e.preventDefault();
+			};
+			textarea.addEventListener("mousedown", handleTextareaFocus);
+			textarea.addEventListener("touchstart", handleTextareaFocus, { passive: true });
 			try {
 				textarea.focus({ preventScroll: true });
 			} catch (_) {
@@ -12517,6 +12549,15 @@
 					selectedReason = chip.textContent;
 				});
 			});
+			const reportNote = modal.querySelector(".tm-report-note");
+			if (reportNote) {
+				const handleNoteFocus = (e) => {
+					reportNote.focus({ preventScroll: true });
+					if (e.cancelable && e.type === "mousedown") e.preventDefault();
+				};
+				reportNote.addEventListener("mousedown", handleNoteFocus);
+				reportNote.addEventListener("touchstart", handleNoteFocus, { passive: true });
+			}
 			modal.querySelector(".tm-custom-modal-cancel-btn").addEventListener("click", close);
 			const submitBtn = modal.querySelector(".tm-custom-modal-submit-btn");
 			submitBtn.addEventListener("click", async () => {
@@ -14938,12 +14979,21 @@
 				input.className = "tm-sheet-item-comment-input";
 				input.placeholder = "添加备注...";
 				input.value = tab.comment || "";
-				const stopProp = (e) => e.stopPropagation();
-				input.addEventListener("keydown", stopProp);
-				input.addEventListener("keyup", stopProp);
-				input.addEventListener("keypress", stopProp);
-				input.addEventListener("mousedown", stopProp);
-				input.addEventListener("touchstart", stopProp);
+				const stopKeyProp = (e) => e.stopPropagation();
+				input.addEventListener("keydown", stopKeyProp);
+				input.addEventListener("keyup", stopKeyProp);
+				input.addEventListener("keypress", stopKeyProp);
+				const triggerSheetInputPreLift = (e) => {
+					if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0) && this._sheetPanel) {
+						const kb = UIManager.lastKnownKeyboardHeight || 380;
+						this._sheetPanel.style.bottom = `${kb}px`;
+						this._sheetPanel.style.transform = "";
+					}
+					input.focus({ preventScroll: true });
+					if (e.cancelable && e.type === "mousedown") e.preventDefault();
+				};
+				input.addEventListener("mousedown", triggerSheetInputPreLift);
+				input.addEventListener("touchstart", triggerSheetInputPreLift, { passive: true });
 				input.addEventListener("input", (e) => {
 					tab.comment = e.target.value;
 					this.loopManager._saveTabs();
@@ -15814,6 +15864,12 @@
 			input.addEventListener("keydown", stopKeyProp);
 			input.addEventListener("keyup", stopKeyProp);
 			input.addEventListener("keypress", stopKeyProp);
+			const triggerPopoverInputPreLift = (e) => {
+				input.focus({ preventScroll: true });
+				if (e.cancelable && e.type === "mousedown") e.preventDefault();
+			};
+			input.addEventListener("mousedown", triggerPopoverInputPreLift);
+			input.addEventListener("touchstart", triggerPopoverInputPreLift, { passive: true });
 			popover.addEventListener("click", (e) => e.stopPropagation());
 			parentContainer.appendChild(popover);
 			requestAnimationFrame(() => {
@@ -18088,6 +18144,17 @@
         `;
 			const dbUrlInput = dbRow.querySelector(".tm-beta-db-url");
 			const dbKeyInput = dbRow.querySelector(".tm-beta-db-key");
+			const bindFocus = (el) => {
+				if (!el) return;
+				const h = (e) => {
+					el.focus({ preventScroll: true });
+					if (e.cancelable && e.type === "mousedown") e.preventDefault();
+				};
+				el.addEventListener("mousedown", h);
+				el.addEventListener("touchstart", h, { passive: true });
+			};
+			bindFocus(dbUrlInput);
+			bindFocus(dbKeyInput);
 			const saveDb = () => {
 				this.sm.updateSetting("betaDbEndpoint", dbUrlInput.value.trim());
 				this.sm.updateSetting("betaDbApiKey", dbKeyInput.value.trim());
@@ -18637,6 +18704,19 @@
 			});
 			pathRow.appendChild(pathLabel);
 			pathRow.appendChild(pathInput);
+			const bindSettingsFocus = (el) => {
+				if (!el) return;
+				const h = (e) => {
+					el.focus({ preventScroll: true });
+					if (e.cancelable && e.type === "mousedown") e.preventDefault();
+				};
+				el.addEventListener("mousedown", h);
+				el.addEventListener("touchstart", h, { passive: true });
+			};
+			bindSettingsFocus(urlInput);
+			bindSettingsFocus(userInput);
+			bindSettingsFocus(passInput);
+			bindSettingsFocus(pathInput);
 			const autoSyncRow = document.createElement("div");
 			autoSyncRow.className = "tm-webdav-switch-row";
 			const autoSyncInfo = document.createElement("div");
@@ -19207,7 +19287,17 @@
 					submitValue();
 				});
 				subPanel.replaceChild(input, addBtn);
-				input.focus();
+				const handleFocus = (evt) => {
+					input.focus({ preventScroll: true });
+					if (evt.cancelable && evt.type === "mousedown") evt.preventDefault();
+				};
+				input.addEventListener("mousedown", handleFocus);
+				input.addEventListener("touchstart", handleFocus, { passive: true });
+				try {
+					input.focus({ preventScroll: true });
+				} catch (_) {
+					input.focus();
+				}
 			});
 			subPanel.appendChild(addBtn);
 			return subPanel;
@@ -20358,6 +20448,28 @@
 				}
 			};
 			window.addEventListener("scroll", this._windowScrollLock, { passive: true });
+			this._hiddenHostElements = new Set();
+			this._collapseHostElement = (node) => {
+				if (!node || node.nodeType !== 1) return;
+				const tag = node.tagName ? node.tagName.toUpperCase() : "";
+				if (tag === "MISS-PLAYER-ROOT" || tag === "SCRIPT" || tag === "STYLE" || node.id === "tm-hide-scrollbar-style") return;
+				if (!this._hiddenHostElements.has(node)) {
+					const prevDisplay = node.style.display;
+					node.setAttribute("data-mp-prev-display", prevDisplay);
+					node.style.setProperty("display", "none", "important");
+					this._hiddenHostElements.add(node);
+				}
+			};
+			if (document.body) {
+				Array.from(document.body.children).forEach(this._collapseHostElement);
+				if (typeof MutationObserver !== "undefined") {
+					this._hostMutationObserver = new MutationObserver((mutations) => {
+						if (!document.body || !document.body.classList.contains("tm-player-active")) return;
+						for (const m of mutations) for (const node of m.addedNodes) if (node && node.nodeType === 1) this._collapseHostElement(node);
+					});
+					this._hostMutationObserver.observe(document.body, { childList: true });
+				}
+			}
 			this._scrollbarStyle = document.createElement("style");
 			this._scrollbarStyle.id = "tm-hide-scrollbar-style";
 			this._scrollbarStyle.innerHTML = `
@@ -20560,6 +20672,22 @@
 			}
 			document.body.classList.remove("tm-player-active");
 			document.documentElement.classList.remove("tm-player-active");
+			if (this._hostMutationObserver) {
+				this._hostMutationObserver.disconnect();
+				this._hostMutationObserver = null;
+			}
+			if (this._hiddenHostElements && this._hiddenHostElements.size > 0) {
+				this._hiddenHostElements.forEach((node) => {
+					if (node && node.parentNode) {
+						const prevDisplay = node.getAttribute("data-mp-prev-display");
+						if (prevDisplay !== null && prevDisplay !== void 0) node.style.display = prevDisplay;
+						else node.style.removeProperty("display");
+						node.removeAttribute("data-mp-prev-display");
+					}
+				});
+				this._hiddenHostElements.clear();
+				this._hiddenHostElements = null;
+			}
 			if (this._originalScrollTo) {
 				window.scrollTo = this._originalScrollTo;
 				if (typeof this._originScrollY === "number") this._originalScrollTo.call(window, this._originScrollX || 0, this._originScrollY);

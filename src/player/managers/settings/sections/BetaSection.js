@@ -99,6 +99,21 @@ export class BetaSection {
         `;
         const dbUrlInput = dbRow.querySelector('.tm-beta-db-url');
         const dbKeyInput = dbRow.querySelector('.tm-beta-db-key');
+
+        const bindFocus = (el) => {
+            if (!el) return;
+            const h = (e) => {
+                el.focus({ preventScroll: true });
+                if (e.cancelable && e.type === 'mousedown') {
+                    e.preventDefault();
+                }
+            };
+            el.addEventListener('mousedown', h);
+            el.addEventListener('touchstart', h, { passive: true });
+        };
+        bindFocus(dbUrlInput);
+        bindFocus(dbKeyInput);
+
         const saveDb = () => {
             this.sm.updateSetting('betaDbEndpoint', dbUrlInput.value.trim());
             this.sm.updateSetting('betaDbApiKey', dbKeyInput.value.trim());

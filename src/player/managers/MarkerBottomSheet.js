@@ -4,6 +4,7 @@ import { formatTimeWithHours } from '../../utils/index.js';
 import { SyncManager } from '../../sync/index.js';
 import { __ } from '../../constants/i18n.js';
 import { LOOP_INTERVAL } from '../../constants/icons.js';
+import { UIManager } from '../ui/UIManager.js';
 
 /**
  * MarkerBottomSheet — 循环片段与时间戳标签管理底部浮层面板
@@ -398,12 +399,26 @@ export class MarkerBottomSheet {
             input.value = tab.comment || '';
 
             // 阻止按键冒泡，防止触发视频播放快捷键
-            const stopProp = (e) => e.stopPropagation();
-            input.addEventListener('keydown', stopProp);
-            input.addEventListener('keyup', stopProp);
-            input.addEventListener('keypress', stopProp);
-            input.addEventListener('mousedown', stopProp);
-            input.addEventListener('touchstart', stopProp);
+            const stopKeyProp = (e) => e.stopPropagation();
+            input.addEventListener('keydown', stopKeyProp);
+            input.addEventListener('keyup', stopKeyProp);
+            input.addEventListener('keypress', stopKeyProp);
+
+            // 核心 Pre-Lift：在切片备注输入框获得焦点前，将高光底栏面板提前升至键盘高度，杜绝 Safari 判定遮挡触发原生滚动
+            const triggerSheetInputPreLift = (e) => {
+                const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+                if (isTouch && this._sheetPanel) {
+                    const kb = UIManager.lastKnownKeyboardHeight || 380;
+                    this._sheetPanel.style.bottom = `${kb}px`;
+                    this._sheetPanel.style.transform = '';
+                }
+                input.focus({ preventScroll: true });
+                if (e.cancelable && e.type === 'mousedown') {
+                    e.preventDefault();
+                }
+            };
+            input.addEventListener('mousedown', triggerSheetInputPreLift);
+            input.addEventListener('touchstart', triggerSheetInputPreLift, { passive: true });
 
             // 直接修改备注
             input.addEventListener('input', (e) => {

@@ -30,6 +30,8 @@ if (typeof customElements !== 'undefined' && !customElements.get('miss-player-ro
 }
 
 export class UIManager {
+    static lastKnownKeyboardHeight = 380;
+
     constructor(playerCore) {
         // 核心播放器引用
         this.playerCore = playerCore;
@@ -877,6 +879,7 @@ export class UIManager {
         
         // 2. orientationchange 监听 (iOS Safari 兼容)
         this.orientationListener = () => {
+            UIManager.lastKnownKeyboardHeight = this.isLandscape ? 0 : 380;
             // 在旋转完成后单次延迟更新，确保能捕获到 iOS Safari 最终稳定的尺寸
             scheduleLayoutUpdate(200);
         };
@@ -914,6 +917,7 @@ export class UIManager {
                 const activeModal = this.shadowRoot?.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay') || document.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay');
 
                 if (keyboardHeight > 60) {
+                    UIManager.lastKnownKeyboardHeight = keyboardHeight;
                     document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
                     if (playerContainer) {
                         playerContainer.classList.add('tm-ios-keyboard-open');

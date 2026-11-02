@@ -3312,6 +3312,18 @@ export class CommentPanel {
                 selectedReason = chip.textContent;
             });
         });
+        const reportNote = modal.querySelector(".tm-report-note");
+        if (reportNote) {
+            const handleNoteFocus = (e) => {
+                reportNote.focus({ preventScroll: true });
+                if (e.cancelable && e.type === 'mousedown') {
+                    e.preventDefault();
+                }
+            };
+            reportNote.addEventListener('mousedown', handleNoteFocus);
+            reportNote.addEventListener('touchstart', handleNoteFocus, { passive: true });
+        }
+
         modal.querySelector(".tm-custom-modal-cancel-btn").addEventListener("click", close);
         const submitBtn = modal.querySelector(".tm-custom-modal-submit-btn");
         submitBtn.addEventListener("click", async () => {

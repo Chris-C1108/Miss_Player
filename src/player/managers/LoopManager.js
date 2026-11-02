@@ -1022,6 +1022,15 @@ export class LoopManager {
         input.addEventListener('keyup', stopKeyProp);
         input.addEventListener('keypress', stopKeyProp);
 
+        const triggerPopoverInputPreLift = (e) => {
+            input.focus({ preventScroll: true });
+            if (e.cancelable && e.type === 'mousedown') {
+                e.preventDefault();
+            }
+        };
+        input.addEventListener('mousedown', triggerPopoverInputPreLift);
+        input.addEventListener('touchstart', triggerPopoverInputPreLift, { passive: true });
+
         popover.addEventListener('click', (e) => e.stopPropagation());
 
         parentContainer.appendChild(popover);
