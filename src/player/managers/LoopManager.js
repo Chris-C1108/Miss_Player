@@ -986,14 +986,13 @@ export class LoopManager {
         const tab = isEdit ? existingTab : this.draftTab;
         if (!tab) return;
 
-        // 获取控制面板容器 (.tm-control-buttons)
-        const parentContainer = this.controlManager?.controlButtonsContainer || 
-                                this.tabScrollContainer?.closest('.tm-control-buttons') || 
-                                this.tabAddBtn?.closest('.tm-control-buttons') || 
-                                this.uiElements?.controlButtonsContainer || 
-                                this.playerCore?.uiManager?.shadowRoot?.querySelector('.tm-control-buttons') || 
-                                this.uiElements?.controlPanel || 
-                                document.querySelector('.tm-control-buttons');
+        // 获取顶级挂载容器，优先挂载于 playerContainer，确保居中在视频下方黄金区，彻底摆脱控制栏单手紧凑宽度限制
+        const shadow = this.playerCore?.uiManager?.shadowRoot || document.querySelector('miss-player-root')?.shadowRoot;
+        const playerContainer = shadow?.querySelector('.tm-player-container') || document.querySelector('.tm-player-container');
+        const parentContainer = playerContainer || 
+                                this.controlManager?.controlButtonsContainer || 
+                                document.querySelector('.tm-control-buttons') ||
+                                document.body;
         if (!parentContainer) return;
 
         // 移除已存在的嵌入式弹窗

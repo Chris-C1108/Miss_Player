@@ -119,12 +119,6 @@
         min-height: 0;
     }
 
-    /* 竖屏单手模式：虚拟键盘弹起时控制面板整体上浮避让，保障打点备注输入框完全可见 */
-    .tm-ios-keyboard-open .tm-control-buttons {
-        transform: translateY(calc(-1 * var(--keyboard-height, 0px)));
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
     /* 竖屏展示评论区时，顶栏稳定常驻，即使控制面板处于 controls-hidden 也绝对不隐藏 */
     .tm-player-container:not(.tm-sidebar-hidden).controls-hidden .tm-button-container,
     body.controls-hidden .tm-player-container:not(.tm-sidebar-hidden) .tm-button-container,
@@ -1488,32 +1482,36 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     overflow: visible !important;
 }
 
-/* 控制面板内嵌入式备注模态框 (替代全屏遮罩 tm-comment-modal) */
+/* 新建高光打点备注弹窗 (居中优雅悬浮卡片) */
 .tm-inline-remark-popover {
     position: absolute;
-    bottom: calc(45px + 42px + 10px);
-    left: 12px;
-    right: 12px;
-    width: calc(100% - 24px);
-    margin: 0 auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.96);
+    width: min(92vw, 400px);
+    max-width: 400px;
     background: rgba(18, 18, 20, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 20px;
-    padding: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-    z-index: 100000;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+    z-index: 100005;
     pointer-events: auto;
     opacity: 0;
-    transform: translateY(8px) scale(0.98);
-    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s ease;
     box-sizing: border-box;
 }
 
 .tm-inline-remark-popover.visible {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate(-50%, -50%) scale(1);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
+}
+
+/* 键盘打开时，打点气泡居中在键盘上方的剩余空间中，彻底杜绝被键盘遮挡与飞出天花板 */
+.tm-ios-keyboard-open .tm-inline-remark-popover.visible {
+    top: calc((100% - var(--keyboard-height, 0px)) / 2);
 }
 
 .tm-inline-remark-body {
