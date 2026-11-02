@@ -921,12 +921,14 @@ export class UIManager {
                     if (this.shadowRoot?.host) {
                         this.shadowRoot.host.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
                     }
-                    // 彻底清空所有行内 translateY，由统一底边 bottom: var(--keyboard-height) 调度，杜绝双重平移飞天
-                    if (commentSubmitBar) {
+                    // 直接由 JS 行内赋予真实物理 bottom 避让，彻底突破 WebKit 对 Shadow DOM 内 CSS 变量的忽略延迟
+                    if (commentSubmitBar && !commentSubmitBar.classList.contains('is-collapsed')) {
+                        commentSubmitBar.style.bottom = `${keyboardHeight}px`;
                         commentSubmitBar.style.transform = '';
                     }
                     const sheetPanel = this.shadowRoot?.querySelector('.tm-bottom-sheet-panel');
-                    if (sheetPanel) {
+                    if (sheetPanel && sheetPanel.classList.contains('visible')) {
+                        sheetPanel.style.bottom = `${keyboardHeight}px`;
                         sheetPanel.style.transform = '';
                     }
                     if (activeModal && activeModal.style.transform) {
@@ -941,11 +943,13 @@ export class UIManager {
                     if (this.shadowRoot?.host) {
                         this.shadowRoot.host.style.removeProperty('--keyboard-height');
                     }
-                    if (commentSubmitBar) {
+                    if (commentSubmitBar && !commentSubmitBar.classList.contains('is-collapsed')) {
+                        commentSubmitBar.style.bottom = '0px';
                         commentSubmitBar.style.transform = '';
                     }
                     const sheetPanel = this.shadowRoot?.querySelector('.tm-bottom-sheet-panel');
-                    if (sheetPanel) {
+                    if (sheetPanel && sheetPanel.classList.contains('visible')) {
+                        sheetPanel.style.bottom = '0px';
                         sheetPanel.style.transform = '';
                     }
                     if (activeModal && activeModal.style.transform) {

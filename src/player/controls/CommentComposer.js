@@ -270,6 +270,17 @@ export class CommentComposer {
             this.panel.commentsPanel.classList.add('has-composer-open');
         }
         if (this.fabBtn) this.fabBtn.classList.add('is-hidden');
+
+        // 同步继承当前键盘物理高度
+        const rootHost = document.querySelector('miss-player-root');
+        const playerContainer = rootHost?.shadowRoot?.querySelector('.tm-player-container');
+        const kbVar = playerContainer ? window.getComputedStyle(playerContainer).getPropertyValue('--keyboard-height').trim() : '';
+        const kbHeight = parseInt(kbVar, 10) || 0;
+        if (kbHeight > 60) {
+            this.submitBarWrapper.style.bottom = `${kbHeight}px`;
+        } else {
+            this.submitBarWrapper.style.bottom = '0px';
+        }
         
         // 在用户手势同步调用栈内即时聚焦，保障 iOS Safari 真正赋予输入光标与打字选区
         if (this.commentInput) {
@@ -291,6 +302,7 @@ export class CommentComposer {
         }
         this.closeTagSelectModal();
         this.submitBarWrapper.classList.add('is-collapsed');
+        this.submitBarWrapper.style.bottom = '0px';
         this.submitBarWrapper.style.transform = '';
         if (this.backdrop) this.backdrop.classList.add('is-hidden');
         if (this.panel?.commentsPanel) {
