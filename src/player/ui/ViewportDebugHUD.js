@@ -356,6 +356,7 @@ export class ViewportDebugHUD {
                 bottom: Math.round(submitBarRect.bottom),
                 height: Math.round(submitBarRect.height),
                 transform: submitBar.style.transform || 'none',
+                inlineBottom: submitBar.style.bottom || 'none',
                 isCollapsed: submitBar.classList.contains('is-collapsed'),
                 gap: gapToVisualBottom
             } : null,
@@ -367,6 +368,7 @@ export class ViewportDebugHUD {
             sheetPanel: sheetRect ? {
                 top: Math.round(sheetRect.top),
                 bottom: Math.round(sheetRect.bottom),
+                inlineBottom: sheetPanel.style.bottom || 'none',
                 h: Math.round(sheetRect.height)
             } : null,
             modal: modalRect ? {
@@ -575,9 +577,9 @@ export class ViewportDebugHUD {
         md += `- Window/Screen: inner=${w.inner}, screen=${w.screen}, docClient=${w.docClient}, scrollY=${w.scrollY}\n`;
         md += `- Container: height=${c?.height}, --keyboard-height=${c?.kbVar}, isOpenClass=${c?.isOpenClass}\n`;
         md += `- Active Input: ${act ? `${act.tag}.${act.cls} ${act.rect}` : 'None'}\n`;
-        md += `- Submit Bar: [top:${sb?.top}, bottom:${sb?.bottom}, h:${sb?.height}], gapToKeyboard: ${sb?.gap}px, collapsed=${sb?.isCollapsed}\n`;
+        md += `- Submit Bar: [top:${sb?.top}, bottom:${sb?.bottom}, h:${sb?.height}], inlineBottom=${sb?.inlineBottom}, gapToKeyboard: ${sb?.gap}px, collapsed=${sb?.isCollapsed}\n`;
         if (cur.sheetPanel) {
-            md += `- Sheet Panel: [top:${cur.sheetPanel.top}, bottom:${cur.sheetPanel.bottom}, h:${cur.sheetPanel.h}]\n`;
+            md += `- Sheet Panel: [top:${cur.sheetPanel.top}, bottom:${cur.sheetPanel.bottom}, h:${cur.sheetPanel.h}], inlineBottom=${cur.sheetPanel.inlineBottom}\n`;
         }
         if (cur.modal) {
             md += `- Modal Dialog: class=${cur.modal.cls}, [top:${cur.modal.top}, bottom:${cur.modal.bottom}, h:${cur.modal.h}]\n`;

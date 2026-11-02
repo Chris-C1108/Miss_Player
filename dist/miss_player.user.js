@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.60
+// @version            5.7.61
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.60";
+		return "5.7.61";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1591,7 +1591,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.60";
+		return "5.7.61";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2118,6 +2118,7 @@
 					bottom: Math.round(submitBarRect.bottom),
 					height: Math.round(submitBarRect.height),
 					transform: submitBar.style.transform || "none",
+					inlineBottom: submitBar.style.bottom || "none",
 					isCollapsed: submitBar.classList.contains("is-collapsed"),
 					gap: gapToVisualBottom
 				} : null,
@@ -2129,6 +2130,7 @@
 				sheetPanel: sheetRect ? {
 					top: Math.round(sheetRect.top),
 					bottom: Math.round(sheetRect.bottom),
+					inlineBottom: sheetPanel.style.bottom || "none",
 					h: Math.round(sheetRect.height)
 				} : null,
 				modal: modalRect ? {
@@ -2282,8 +2284,8 @@
 			md += `- Window/Screen: inner=${w.inner}, screen=${w.screen}, docClient=${w.docClient}, scrollY=${w.scrollY}\n`;
 			md += `- Container: height=${c?.height}, --keyboard-height=${c?.kbVar}, isOpenClass=${c?.isOpenClass}\n`;
 			md += `- Active Input: ${act ? `${act.tag}.${act.cls} ${act.rect}` : "None"}\n`;
-			md += `- Submit Bar: [top:${sb?.top}, bottom:${sb?.bottom}, h:${sb?.height}], gapToKeyboard: ${sb?.gap}px, collapsed=${sb?.isCollapsed}\n`;
-			if (cur.sheetPanel) md += `- Sheet Panel: [top:${cur.sheetPanel.top}, bottom:${cur.sheetPanel.bottom}, h:${cur.sheetPanel.h}]\n`;
+			md += `- Submit Bar: [top:${sb?.top}, bottom:${sb?.bottom}, h:${sb?.height}], inlineBottom=${sb?.inlineBottom}, gapToKeyboard: ${sb?.gap}px, collapsed=${sb?.isCollapsed}\n`;
+			if (cur.sheetPanel) md += `- Sheet Panel: [top:${cur.sheetPanel.top}, bottom:${cur.sheetPanel.bottom}, h:${cur.sheetPanel.h}], inlineBottom=${cur.sheetPanel.inlineBottom}\n`;
 			if (cur.modal) md += `- Modal Dialog: class=${cur.modal.cls}, [top:${cur.modal.top}, bottom:${cur.modal.bottom}, h:${cur.modal.h}]\n`;
 			const z = cur.zIndexes;
 			md += `\n### 2. 各组件计算 Z-Index 与层叠上下文审计 (Z-Index Hierarchy)\n`;
@@ -5117,7 +5119,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.60";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.61";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
