@@ -1856,8 +1856,15 @@ export class CommentPanel {
             <div class="tm-comment-error tm-comments-panel-error is-hidden"></div>
             <div class="tm-comment-backdrop is-hidden"></div>
             <div class="tm-comment-submit-bar-wrapper is-collapsed">
-                <div class="tm-comment-tag-chips-bar is-hidden">
-                    <div class="tm-comment-tag-chips-scroll"></div>
+                <div class="tm-comment-tag-select-modal">
+                    <div class="tm-tag-select-header">
+                        <div class="tm-tag-select-btn-group">
+                            <button type="button" class="tm-tag-select-all-btn">全选</button>
+                            <button type="button" class="tm-tag-deselect-all-btn">取消全选</button>
+                        </div>
+                        <button type="button" class="tm-tag-select-close-btn" title="关闭">✕</button>
+                    </div>
+                    <div class="tm-tag-select-list"></div>
                 </div>
                 <div class="tm-comment-submit-bar">
                     <button type="button" class="tm-comment-add-tag-btn" title="插入/勾选高光标签">

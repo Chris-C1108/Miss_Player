@@ -1026,14 +1026,16 @@ export class LoopManager {
 
         parentContainer.appendChild(popover);
 
+        // 同步立即聚焦：iOS Safari 必须在用户直接点击手势同步调用栈内执行 focus，光标直接进入输入框，减少用户点击
+        try {
+            input.focus({ preventScroll: true });
+        } catch (_) {
+            input.focus();
+        }
+        input.select();
+
         requestAnimationFrame(() => {
             popover.classList.add('visible');
-            try {
-                input.focus({ preventScroll: true });
-            } catch (_) {
-                input.focus();
-            }
-            input.select();
         });
 
         let isClosed = false;

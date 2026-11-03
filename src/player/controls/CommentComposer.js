@@ -147,16 +147,19 @@ export class CommentComposer {
         const addTagBtn = container.querySelector('.tm-comment-add-tag-btn');
         const commentInput = container.querySelector('.tm-comment-text-input');
         const sendBtn = container.querySelector('.tm-comment-send-btn');
-        const tagChipsBar = container.querySelector('.tm-comment-tag-chips-bar');
-        const tagChipsScroll = container.querySelector('.tm-comment-tag-chips-scroll');
+        const tagSelectModal = container.querySelector('.tm-comment-tag-select-modal');
+        const selectAllBtn = container.querySelector('.tm-tag-select-all-btn');
+        const deselectAllBtn = container.querySelector('.tm-tag-deselect-all-btn');
+        const closeBtn = container.querySelector('.tm-tag-select-close-btn');
+        const tagSelectList = container.querySelector('.tm-tag-select-list');
         const fabBtn = container.querySelector('.tm-comment-fab-btn');
         const backdrop = container.querySelector('.tm-comment-backdrop');
         const submitBarWrapper = container.querySelector('.tm-comment-submit-bar-wrapper');
         const closeBarBtn = container.querySelector('.tm-comment-close-bar-btn');
 
         this.commentInput = commentInput;
-        this.tagChipsBar = tagChipsBar;
-        this.tagChipsScroll = tagChipsScroll;
+        this.tagSelectModal = tagSelectModal;
+        this.tagSelectList = tagSelectList;
         this.fabBtn = fabBtn;
         this.backdrop = backdrop;
         this.submitBarWrapper = submitBarWrapper;
@@ -226,11 +229,11 @@ export class CommentComposer {
             });
         }
 
-        // 加号 (+) 按钮事件：展开/收起横向时间戳标签胶囊栏
+        // 加号 (+) 按钮事件：展开/收起高光时间戳标签选择浮层
         if (addTagBtn) {
             addTagBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.toggleTagChipsBar();
+                this.toggleTagSelectModal();
             });
         }
 
@@ -244,6 +247,33 @@ export class CommentComposer {
                 if (!canComment) return;
 
                 this.handleSendComment();
+            });
+        }
+
+        // 全选按钮
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const tabs = this.getTabs();
+                this.selectedTagIds = new Set(tabs.map(t => t.id));
+                this.renderTagSelectList();
+            });
+        }
+
+        // 取消全选按钮
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.selectedTagIds.clear();
+                this.renderTagSelectList();
+            });
+        }
+
+        // 关闭标签选择浮层按钮
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeTagSelectModal();
             });
         }
     }
@@ -265,11 +295,10 @@ export class CommentComposer {
         }
         if (this.fabBtn) this.fabBtn.classList.add('is-hidden');
 
-        // 默认自动展示已有的高光时间戳标签胶囊
+        // 预设默认勾选全部已有标签，方便用户直接一键附带高光发评
         const tabs = this.getTabs();
-        if (tabs.length > 0) {
-            this.renderTagChips();
-            if (this.tagChipsBar) this.tagChipsBar.classList.remove('is-hidden');
+        if (this.selectedTagIds.size === 0 && tabs.length > 0) {
+            this.selectedTagIds = new Set(tabs.map(t => t.id));
         }
 
         // 原生无阻碍聚焦输入框
@@ -290,7 +319,7 @@ export class CommentComposer {
         if (this.commentInput) {
             this.commentInput.blur();
         }
-        this.closeTagChipsBar();
+        this.closeTagSelectModal();
         this.submitBarWrapper.classList.add('is-collapsed');
         if (this.backdrop) this.backdrop.classList.add('is-hidden');
         if (this.panel?.commentsPanel) {
@@ -303,30 +332,33 @@ export class CommentComposer {
         if (this.fabBtn) this.fabBtn.classList.remove('is-hidden');
     }
 
-    toggleTagChipsBar() {
-        if (!this.tagChipsBar) return;
-        const isHidden = this.tagChipsBar.classList.contains('is-hidden');
-        if (isHidden) {
-            this.openTagChipsBar();
+    toggleTagSelectModal() {
+        if (!this.tagSelectModal) return;
+        if (this.tagSelectModal.classList.contains('visible')) {
+            this.closeTagSelectModal();
         } else {
-            this.closeTagChipsBar();
+            this.openTagSelectModal();
         }
     }
 
-    openTagChipsBar() {
-        if (!this.tagChipsBar) return;
-        this.renderTagChips();
-        this.tagChipsBar.classList.remove('is-hidden');
+    openTagSelectModal() {
+        if (!this.tagSelectModal) return;
+        const tabs = this.getTabs();
+        if (this.selectedTagIds.size === 0 && tabs.length > 0) {
+            this.selectedTagIds = new Set(tabs.map(t => t.id));
+        }
+        this.renderTagSelectList();
+        this.tagSelectModal.classList.add('visible');
     }
 
-    closeTagChipsBar() {
-        if (!this.tagChipsBar) return;
-        this.tagChipsBar.classList.add('is-hidden');
+    closeTagSelectModal() {
+        if (!this.tagSelectModal) return;
+        this.tagSelectModal.classList.remove('visible');
     }
 
-    renderTagChips() {
-        if (!this.tagChipsScroll) return;
-        this.tagChipsScroll.innerHTML = '';
+    renderTagSelectList() {
+        if (!this.tagSelectList) return;
+        this.tagSelectList.innerHTML = '';
 
         const tabs = this.getTabs();
         const lm = this.getLoopManager();
@@ -334,37 +366,102 @@ export class CommentComposer {
         if (tabs.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'tm-tag-select-empty';
-            empty.textContent = '暂无时间戳片段 (可先在播放器中点击+打点)';
-            this.tagChipsScroll.appendChild(empty);
+            empty.textContent = '暂无时间戳标签，可在播放控制器添加';
+            this.tagSelectList.appendChild(empty);
             return;
         }
 
         tabs.forEach((tab, index) => {
             const color = tab.color || (lm ? lm.tabColors[index % lm.tabColors.length] : '200, 100%, 55%');
-            const chip = document.createElement('button');
-            chip.type = 'button';
-            chip.className = `tm-comment-tag-chip${this.selectedTagIds.has(tab.id) ? ' active' : ''}`;
-            chip.style.setProperty('--chip-color', color);
+            const row = document.createElement('div');
+            row.className = 'tm-tag-select-item';
 
-            const timeStr = tab.type === 'highlight'
-                ? formatSeconds(tab.startTime)
-                : `${formatSeconds(tab.startTime)}~${formatSeconds(tab.endTime)}`;
-            const remark = (tab.comment || '').trim();
-
-            chip.innerHTML = `<span class="tm-chip-time">${timeStr}</span>${remark ? `<span class="tm-chip-text">${remark}</span>` : ''}`;
-
-            chip.addEventListener('click', (e) => {
+            // 勾选复选框
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'tm-tag-checkbox';
+            checkbox.checked = this.selectedTagIds.has(tab.id);
+            checkbox.addEventListener('change', (e) => {
                 e.stopPropagation();
-                if (this.selectedTagIds.has(tab.id)) {
-                    this.selectedTagIds.delete(tab.id);
-                    chip.classList.remove('active');
-                } else {
+                if (checkbox.checked) {
                     this.selectedTagIds.add(tab.id);
-                    chip.classList.add('active');
+                } else {
+                    this.selectedTagIds.delete(tab.id);
                 }
             });
 
-            this.tagChipsScroll.appendChild(chip);
+            // 时间胶囊
+            const timeContainer = document.createElement('div');
+            timeContainer.className = 'tm-sheet-item-time-container';
+
+            if (tab.type === 'highlight') {
+                const pill = document.createElement('button');
+                pill.type = 'button';
+                pill.className = 'tm-sheet-time-pill';
+                pill.style.setProperty('--tab-color', color);
+                pill.textContent = formatSeconds(tab.startTime);
+                timeContainer.appendChild(pill);
+            } else {
+                const pill = document.createElement('div');
+                pill.className = 'tm-sheet-time-pill interval';
+                pill.style.setProperty('--tab-color', color);
+
+                const startSpan = document.createElement('span');
+                startSpan.className = 'tm-time-part start';
+                startSpan.textContent = formatSeconds(tab.startTime);
+
+                const sepSpan = document.createElement('span');
+                sepSpan.className = 'tm-time-sep';
+                sepSpan.textContent = '~';
+
+                const endSpan = document.createElement('span');
+                endSpan.className = 'tm-time-part end';
+                endSpan.textContent = formatSeconds(tab.endTime);
+
+                pill.appendChild(startSpan);
+                pill.appendChild(sepSpan);
+                pill.appendChild(endSpan);
+                timeContainer.appendChild(pill);
+            }
+
+            // 可修改备注文本框 (让用户清晰知道自己发送的时间备注了什么，并允许当场修订)
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'tm-tag-remark-input';
+            input.placeholder = '添加备注...';
+            input.value = tab.comment || '';
+
+            // 阻止播放快捷键冒泡，放行原生触控与打字
+            const stopKeyProp = (e) => e.stopPropagation();
+            input.addEventListener('keydown', stopKeyProp);
+            input.addEventListener('keyup', stopKeyProp);
+            input.addEventListener('keypress', stopKeyProp);
+            input.addEventListener('touchstart', () => {
+                this._lastInputTouchTime = Date.now();
+            }, { passive: true });
+            input.addEventListener('mousedown', () => {
+                this._lastInputTouchTime = Date.now();
+            });
+
+            input.addEventListener('input', (e) => {
+                tab.comment = e.target.value;
+                if (lm) {
+                    lm._saveTabs();
+                    lm.renderTabs();
+                }
+            });
+
+            input.addEventListener('change', () => {
+                if (lm) {
+                    lm._saveTabs();
+                    lm.renderTabs();
+                }
+            });
+
+            row.appendChild(checkbox);
+            row.appendChild(timeContainer);
+            row.appendChild(input);
+            this.tagSelectList.appendChild(row);
         });
     }
 
