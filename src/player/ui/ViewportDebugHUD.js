@@ -20,6 +20,7 @@ export class ViewportDebugHUD {
     static _listeners = [];
     static _playerContainer = null;
     static _shadowRoot = null;
+    static _uiMutationObserver = null;
 
     /**
      * 初始化并在播放器顶部注入调试 HUD 探针
@@ -466,18 +467,49 @@ export class ViewportDebugHUD {
     }
 
     /**
-     * 绑定全局事件拦截器
+     * 绑定全局事件拦截器与全链路用户手势感知、UI 状态机、DOM 销毁/闪退捕获
      */
     static _bindEventListeners() {
-        const onFocusIn = (e) => {
-            const deepActive = this.getDeepActiveElement();
-            const tag = deepActive ? deepActive.tagName : (e.target?.tagName || '');
-            const cls = deepActive ? deepActive.className : (e.target?.className || '');
-            this.recordEvent('FOCUS_IN', `<${tag.toLowerCase()} class="${cls}">`);
+        let lastTappedNodeDesc = 'none';
+        let lastTapTime = 0;
+
+        const getNodeDescriptor = (node) => {
+            if (!node || node.nodeType !== 1) return 'non-element';
+            const tag = node.tagName.toLowerCase();
+            const id = node.id ? `#${node.id}` : '';
+            const cls = node.className && typeof node.className === 'string'
+                ? `.${node.className.trim().split(/\s+/).slice(0, 2).join('.')}`
+                : '';
+            const text = (node.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 10);
+            const textSnippet = text && !tag.includes('input') && !tag.includes('textarea') ? ` "${text}"` : '';
+            return `<${tag}${id}${cls}${textSnippet}>`;
         };
 
+        // 1. 穿透捕获用户全量触碰与点击手势 (capture: true，早于冒泡与默认行为)
+        const onPointerDown = (e) => {
+            const path = e.composedPath ? e.composedPath() : [];
+            const target = path[0] || e.target;
+            if (!target) return;
+            // 排除 HUD 自身按钮，防止调试操作自身日志刷屏
+            if (target.closest && target.closest('.tm-viewport-debug-hud')) return;
+
+            lastTappedNodeDesc = getNodeDescriptor(target);
+            lastTapTime = Date.now();
+            this.recordEvent('USER_TAP', lastTappedNodeDesc);
+        };
+
+        const onFocusIn = (e) => {
+            const deepActive = this.getDeepActiveElement();
+            const target = deepActive || (e.composedPath ? e.composedPath()[0] : e.target);
+            this.recordEvent('FOCUS_IN', getNodeDescriptor(target));
+        };
+
+        // 2. 深入捕获失焦与失焦根因 (为什么会失焦？失焦流向了何处？失焦前触碰了什么？)
         const onFocusOut = (e) => {
-            this.recordEvent('FOCUS_OUT', `<${(e.target?.tagName || '').toLowerCase()}>`);
+            const target = e.composedPath ? e.composedPath()[0] : e.target;
+            const relTarget = e.relatedTarget ? getNodeDescriptor(e.relatedTarget) : 'null (键盘收起/空白点击)';
+            const recentTapContext = (Date.now() - lastTapTime < 350) ? ` [点按后失焦: ${lastTappedNodeDesc}]` : '';
+            this.recordEvent('FOCUS_OUT', `${getNodeDescriptor(target)} -> focusTo: ${relTarget}${recentTapContext}`);
         };
 
         const onVvResize = () => {
@@ -499,6 +531,69 @@ export class ViewportDebugHUD {
             }
         };
 
+        // 3. UI 状态机与 DOM 节点增删/闪退实时监听 (MutationObserver)
+        const observeTarget = this._shadowRoot || this._playerContainer;
+        if (observeTarget && typeof MutationObserver !== 'undefined') {
+            this._uiMutationObserver = new MutationObserver((mutations) => {
+                for (const m of mutations) {
+                    // 监听核心 UI 组件 class 属性变化 (显隐、收起、展开)
+                    if (m.type === 'attributes' && m.attributeName === 'class' && m.target) {
+                        const node = m.target;
+                        const cls = node.className || '';
+                        if (typeof cls === 'string') {
+                            if (cls.includes('tm-comment-submit-bar-wrapper')) {
+                                const isCol = cls.includes('is-collapsed');
+                                this.recordEvent('UI_STATE', `发评栏 ${isCol ? '收起(COLLAPSED)' : '展开(OPENED)'} [bot:${node.style.bottom || '0'}]`);
+                            } else if (cls.includes('tm-comment-tag-select-modal')) {
+                                const isVis = cls.includes('visible');
+                                this.recordEvent('UI_STATE', `标签选择弹窗 ${isVis ? '展开(VISIBLE)' : '关闭(HIDDEN)'}`);
+                            } else if (cls.includes('tm-bottom-sheet-panel')) {
+                                const isVis = cls.includes('visible');
+                                this.recordEvent('UI_STATE', `高光切片底栏 ${isVis ? '展开(VISIBLE)' : '关闭(HIDDEN)'}`);
+                            } else if (cls.includes('tm-inline-remark-popover')) {
+                                const isVis = cls.includes('visible');
+                                this.recordEvent('UI_STATE', `打点备注气泡 ${isVis ? '展示(VISIBLE)' : '隐藏(HIDDEN)'}`);
+                            } else if (cls.includes('tm-custom-modal-overlay')) {
+                                const isAct = cls.includes('active');
+                                this.recordEvent('UI_STATE', `全屏模态弹窗 ${isAct ? '激活(ACTIVE)' : '关闭(INACTIVE)'}`);
+                            }
+                        }
+                    }
+                    // 监听 DOM 节点新增与销毁/闪退
+                    if (m.type === 'childList') {
+                        if (m.removedNodes && m.removedNodes.length > 0) {
+                            m.removedNodes.forEach(node => {
+                                if (node.nodeType === 1) {
+                                    const cls = typeof node.className === 'string' ? node.className : '';
+                                    if (cls.includes('popover') || cls.includes('modal') || cls.includes('sheet') || cls.includes('submit-bar')) {
+                                        this.recordEvent('DOM_REMOVED', `节点被从DOM树移除(闪退/销毁): ${getNodeDescriptor(node)}`);
+                                    }
+                                }
+                            });
+                        }
+                        if (m.addedNodes && m.addedNodes.length > 0) {
+                            m.addedNodes.forEach(node => {
+                                if (node.nodeType === 1) {
+                                    const cls = typeof node.className === 'string' ? node.className : '';
+                                    if (cls.includes('popover') || cls.includes('modal') || cls.includes('sheet') || cls.includes('submit-bar')) {
+                                        this.recordEvent('DOM_ADDED', `新节点插入DOM树: ${getNodeDescriptor(node)}`);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+
+            this._uiMutationObserver.observe(observeTarget, {
+                attributes: true,
+                attributeFilter: ['class'],
+                childList: true,
+                subtree: true
+            });
+        }
+
+        window.addEventListener('pointerdown', onPointerDown, { capture: true, passive: true });
         window.addEventListener('focusin', onFocusIn, { capture: true, passive: true });
         window.addEventListener('focusout', onFocusOut, { capture: true, passive: true });
         if (window.visualViewport) {
@@ -508,6 +603,7 @@ export class ViewportDebugHUD {
         window.addEventListener('scroll', onWinScroll, { passive: true });
 
         this._listeners = [
+            () => window.removeEventListener('pointerdown', onPointerDown, { capture: true }),
             () => window.removeEventListener('focusin', onFocusIn, { capture: true }),
             () => window.removeEventListener('focusout', onFocusOut, { capture: true }),
             () => {
@@ -787,6 +883,11 @@ export class ViewportDebugHUD {
      * 销毁探针与监听器
      */
     static destroy() {
+        if (this._uiMutationObserver) {
+            this._uiMutationObserver.disconnect();
+            this._uiMutationObserver = null;
+        }
+
         if (this._timerId) {
             clearInterval(this._timerId);
             this._timerId = null;

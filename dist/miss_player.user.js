@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.65
+// @version            5.7.66
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.65";
+		return "5.7.66";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1591,7 +1591,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.65";
+		return "5.7.66";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2214,14 +2214,33 @@
 			}
 		}
 		static _bindEventListeners() {
+			let lastTappedNodeDesc = "none";
+			let lastTapTime = 0;
+			const getNodeDescriptor = (node) => {
+				if (!node || node.nodeType !== 1) return "non-element";
+				const tag = node.tagName.toLowerCase();
+				const id = node.id ? `#${node.id}` : "";
+				const cls = node.className && typeof node.className === "string" ? `.${node.className.trim().split(/\s+/).slice(0, 2).join(".")}` : "";
+				const text = (node.textContent || "").trim().replace(/\s+/g, " ").slice(0, 10);
+				return `<${tag}${id}${cls}${text && !tag.includes("input") && !tag.includes("textarea") ? ` "${text}"` : ""}>`;
+			};
+			const onPointerDown = (e) => {
+				const target = (e.composedPath ? e.composedPath() : [])[0] || e.target;
+				if (!target) return;
+				if (target.closest && target.closest(".tm-viewport-debug-hud")) return;
+				lastTappedNodeDesc = getNodeDescriptor(target);
+				lastTapTime = Date.now();
+				this.recordEvent("USER_TAP", lastTappedNodeDesc);
+			};
 			const onFocusIn = (e) => {
-				const deepActive = this.getDeepActiveElement();
-				const tag = deepActive ? deepActive.tagName : e.target?.tagName || "";
-				const cls = deepActive ? deepActive.className : e.target?.className || "";
-				this.recordEvent("FOCUS_IN", `<${tag.toLowerCase()} class="${cls}">`);
+				const target = this.getDeepActiveElement() || (e.composedPath ? e.composedPath()[0] : e.target);
+				this.recordEvent("FOCUS_IN", getNodeDescriptor(target));
 			};
 			const onFocusOut = (e) => {
-				this.recordEvent("FOCUS_OUT", `<${(e.target?.tagName || "").toLowerCase()}>`);
+				const target = e.composedPath ? e.composedPath()[0] : e.target;
+				const relTarget = e.relatedTarget ? getNodeDescriptor(e.relatedTarget) : "null (键盘收起/空白点击)";
+				const recentTapContext = Date.now() - lastTapTime < 350 ? ` [点按后失焦: ${lastTappedNodeDesc}]` : "";
+				this.recordEvent("FOCUS_OUT", `${getNodeDescriptor(target)} -> focusTo: ${relTarget}${recentTapContext}`);
 			};
 			const onVvResize = () => {
 				const vv = window.visualViewport;
@@ -2237,6 +2256,59 @@
 			const onWinScroll = () => {
 				if (window.scrollY !== 0 || window.scrollX !== 0) this.recordEvent("WIN_SCROLL", `scrollY=${window.scrollY}, scrollX=${window.scrollX}`);
 			};
+			const observeTarget = this._shadowRoot || this._playerContainer;
+			if (observeTarget && typeof MutationObserver !== "undefined") {
+				this._uiMutationObserver = new MutationObserver((mutations) => {
+					for (const m of mutations) {
+						if (m.type === "attributes" && m.attributeName === "class" && m.target) {
+							const node = m.target;
+							const cls = node.className || "";
+							if (typeof cls === "string") {
+								if (cls.includes("tm-comment-submit-bar-wrapper")) {
+									const isCol = cls.includes("is-collapsed");
+									this.recordEvent("UI_STATE", `发评栏 ${isCol ? "收起(COLLAPSED)" : "展开(OPENED)"} [bot:${node.style.bottom || "0"}]`);
+								} else if (cls.includes("tm-comment-tag-select-modal")) {
+									const isVis = cls.includes("visible");
+									this.recordEvent("UI_STATE", `标签选择弹窗 ${isVis ? "展开(VISIBLE)" : "关闭(HIDDEN)"}`);
+								} else if (cls.includes("tm-bottom-sheet-panel")) {
+									const isVis = cls.includes("visible");
+									this.recordEvent("UI_STATE", `高光切片底栏 ${isVis ? "展开(VISIBLE)" : "关闭(HIDDEN)"}`);
+								} else if (cls.includes("tm-inline-remark-popover")) {
+									const isVis = cls.includes("visible");
+									this.recordEvent("UI_STATE", `打点备注气泡 ${isVis ? "展示(VISIBLE)" : "隐藏(HIDDEN)"}`);
+								} else if (cls.includes("tm-custom-modal-overlay")) {
+									const isAct = cls.includes("active");
+									this.recordEvent("UI_STATE", `全屏模态弹窗 ${isAct ? "激活(ACTIVE)" : "关闭(INACTIVE)"}`);
+								}
+							}
+						}
+						if (m.type === "childList") {
+							if (m.removedNodes && m.removedNodes.length > 0) m.removedNodes.forEach((node) => {
+								if (node.nodeType === 1) {
+									const cls = typeof node.className === "string" ? node.className : "";
+									if (cls.includes("popover") || cls.includes("modal") || cls.includes("sheet") || cls.includes("submit-bar")) this.recordEvent("DOM_REMOVED", `节点被从DOM树移除(闪退/销毁): ${getNodeDescriptor(node)}`);
+								}
+							});
+							if (m.addedNodes && m.addedNodes.length > 0) m.addedNodes.forEach((node) => {
+								if (node.nodeType === 1) {
+									const cls = typeof node.className === "string" ? node.className : "";
+									if (cls.includes("popover") || cls.includes("modal") || cls.includes("sheet") || cls.includes("submit-bar")) this.recordEvent("DOM_ADDED", `新节点插入DOM树: ${getNodeDescriptor(node)}`);
+								}
+							});
+						}
+					}
+				});
+				this._uiMutationObserver.observe(observeTarget, {
+					attributes: true,
+					attributeFilter: ["class"],
+					childList: true,
+					subtree: true
+				});
+			}
+			window.addEventListener("pointerdown", onPointerDown, {
+				capture: true,
+				passive: true
+			});
 			window.addEventListener("focusin", onFocusIn, {
 				capture: true,
 				passive: true
@@ -2251,6 +2323,7 @@
 			}
 			window.addEventListener("scroll", onWinScroll, { passive: true });
 			this._listeners = [
+				() => window.removeEventListener("pointerdown", onPointerDown, { capture: true }),
 				() => window.removeEventListener("focusin", onFocusIn, { capture: true }),
 				() => window.removeEventListener("focusout", onFocusOut, { capture: true }),
 				() => {
@@ -2438,6 +2511,10 @@
 			console.log("[ViewportDebugHUD] Report:\n", md);
 		}
 		static destroy() {
+			if (this._uiMutationObserver) {
+				this._uiMutationObserver.disconnect();
+				this._uiMutationObserver = null;
+			}
 			if (this._timerId) {
 				clearInterval(this._timerId);
 				this._timerId = null;
@@ -2464,6 +2541,7 @@
 	_defineProperty(ViewportDebugHUD, "_listeners", []);
 	_defineProperty(ViewportDebugHUD, "_playerContainer", null);
 	_defineProperty(ViewportDebugHUD, "_shadowRoot", null);
+	_defineProperty(ViewportDebugHUD, "_uiMutationObserver", null);
 	var FLOATING_PLAY = `
     <svg width="48" height="48" viewBox="0 0 68 48" fill="none">
         <path class="tm-play-button-bg" d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="rgb(254, 98, 142)"></path>
@@ -5198,7 +5276,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.65";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.66";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
