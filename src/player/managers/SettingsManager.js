@@ -479,11 +479,7 @@ export class SettingsManager {
 
         const bindSettingsFocus = (el) => {
             if (!el) return;
-            const h = (e) => {
-                el.focus({ preventScroll: true });
-                if (e.cancelable && e.type === 'mousedown') {
-                    e.preventDefault();
-                }
+            const h = () => {
                 const panel = el.closest('.tm-settings-panel');
                 if (panel) {
                     setTimeout(() => {
@@ -494,8 +490,7 @@ export class SettingsManager {
                     }, 120);
                 }
             };
-            el.addEventListener('mousedown', h);
-            el.addEventListener('touchstart', h, { passive: true });
+            el.addEventListener('focus', h);
         };
         bindSettingsFocus(urlInput);
         bindSettingsFocus(userInput);
@@ -1260,14 +1255,6 @@ export class SettingsManager {
             });
 
             subPanel.replaceChild(input, addBtn);
-            const handleFocus = (evt) => {
-                input.focus({ preventScroll: true });
-                if (evt.cancelable && evt.type === 'mousedown') {
-                    evt.preventDefault();
-                }
-            };
-            input.addEventListener('mousedown', handleFocus);
-            input.addEventListener('touchstart', handleFocus, { passive: true });
             try {
                 input.focus({ preventScroll: true });
             } catch (_) {

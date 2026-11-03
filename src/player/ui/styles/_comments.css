@@ -492,187 +492,74 @@
     transform: scale(0.96);
 }
 
-/* 标签勾选弹出模态框 (与标签管理模态框类似，悬浮于评论输入栏上方) */
-.tm-comment-tag-select-modal {
-    position: absolute;
-    bottom: calc(100% + 4px);
-    left: 16px;
-    right: 16px;
-    width: calc(100% - 32px);
-    max-width: 650px;
-    margin: 0 auto;
-    max-height: 280px;
-    background: rgba(18, 18, 20, 0.96);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
-    padding: 10px 14px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    z-index: var(--z-composer);
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(16px);
-    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.tm-comment-tag-select-modal.visible {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
-}
-
-/* 移动端竖屏：标签选择弹窗在发评底栏正上方紧凑展开，随底栏同步平滑升降 */
-@media screen and (max-width: 600px), screen and (orientation: portrait) {
-    .tm-comment-tag-select-modal {
-        position: absolute;
-        bottom: calc(100% + 8px);
-        left: 10px;
-        right: 10px;
-        width: calc(100% - 20px);
-        max-width: 480px;
-        max-height: 200px;
-        z-index: var(--z-composer);
-        transform: translateY(8px);
-    }
-    .tm-comment-tag-select-modal.visible {
-        transform: translateY(0);
-    }
-}
-
-.tm-tag-select-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+/* 发评抽屉内嵌横向滑动高光胶囊栏 (极简单层抽屉架构) */
+.tm-comment-tag-chips-bar {
+    width: 100%;
+    overflow: hidden;
     padding-bottom: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 2px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    flex-shrink: 0;
+}
+.tm-comment-tag-chips-bar.is-hidden {
+    display: none !important;
 }
 
-.tm-tag-select-btn-group {
+.tm-comment-tag-chips-scroll {
     display: flex;
     align-items: center;
-    gap: 8px;
-}
-
-.tm-tag-select-all-btn {
-    padding: 3px 12px;
-    border-radius: 12px;
-    background: rgba(255, 80, 80, 0.18);
-    border: 1px solid rgba(255, 80, 80, 0.45);
-    color: #ff6b6b;
-    font-size: 0.78rem;
-    font-weight: 600;
-    cursor: pointer;
-    outline: none;
-    transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.tm-tag-select-all-btn:hover {
-    background: rgba(255, 80, 80, 0.3);
-}
-.tm-tag-select-all-btn:active {
-    transform: scale(0.96);
-}
-
-.tm-tag-deselect-all-btn {
-    padding: 3px 12px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.78rem;
-    font-weight: 600;
-    cursor: pointer;
-    outline: none;
-    transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.tm-tag-deselect-all-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-.tm-tag-deselect-all-btn:active {
-    transform: scale(0.96);
-}
-
-.tm-tag-select-close-btn {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.95rem;
-    cursor: pointer;
-    padding: 0 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.15s;
-}
-.tm-tag-select-close-btn:hover {
-    color: #ffffff;
-}
-
-.tm-tag-select-list {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
     gap: 6px;
-    padding-right: 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 0;
 }
-.tm-tag-select-list::-webkit-scrollbar {
-    width: 4px;
-}
-.tm-tag-select-list::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-}
-
-.tm-tag-select-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 32px;
-    box-sizing: border-box;
+.tm-comment-tag-chips-scroll::-webkit-scrollbar {
+    display: none;
 }
 
-.tm-tag-checkbox {
-    width: 18px;
-    height: 18px;
-    accent-color: #ff5252;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.tm-tag-remark-input {
-    flex: 1;
-    min-width: 0;
-    height: 32px;
-    box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 0 10px;
-    color: #ffffff;
-    font-size: 16px;
-    outline: none;
+/* 标签胶囊按钮 */
+.tm-comment-tag-chip {
     display: inline-flex;
     align-items: center;
-    transition: border-color 0.2s, background 0.2s;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    user-select: none;
+    -webkit-user-select: none;
 }
-.tm-tag-remark-input:focus {
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.1);
+.tm-comment-tag-chip:active {
+    transform: scale(0.96);
 }
-.tm-tag-remark-input::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+.tm-comment-tag-chip.active {
+    background: hsla(var(--chip-color, 200, 100%, 55%) / 0.25);
+    border-color: hsla(var(--chip-color, 200, 100%, 55%) / 0.8);
+    color: #ffffff;
+    box-shadow: 0 0 10px hsla(var(--chip-color, 200, 100%, 55%) / 0.4);
 }
-
+.tm-chip-time {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 700;
+}
+.tm-chip-text {
+    opacity: 0.9;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .tm-tag-select-empty {
-    padding: 16px;
+    padding: 6px 12px;
     text-align: center;
-    font-size: 0.82rem;
-    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.4);
 }
 
 /* 自定义气泡/拟态模态框 */

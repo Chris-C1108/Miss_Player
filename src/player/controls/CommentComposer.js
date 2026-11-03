@@ -147,19 +147,16 @@ export class CommentComposer {
         const addTagBtn = container.querySelector('.tm-comment-add-tag-btn');
         const commentInput = container.querySelector('.tm-comment-text-input');
         const sendBtn = container.querySelector('.tm-comment-send-btn');
-        const tagSelectModal = container.querySelector('.tm-comment-tag-select-modal');
-        const selectAllBtn = container.querySelector('.tm-tag-select-all-btn');
-        const deselectAllBtn = container.querySelector('.tm-tag-deselect-all-btn');
-        const closeBtn = container.querySelector('.tm-tag-select-close-btn');
-        const tagSelectList = container.querySelector('.tm-tag-select-list');
+        const tagChipsBar = container.querySelector('.tm-comment-tag-chips-bar');
+        const tagChipsScroll = container.querySelector('.tm-comment-tag-chips-scroll');
         const fabBtn = container.querySelector('.tm-comment-fab-btn');
         const backdrop = container.querySelector('.tm-comment-backdrop');
         const submitBarWrapper = container.querySelector('.tm-comment-submit-bar-wrapper');
         const closeBarBtn = container.querySelector('.tm-comment-close-bar-btn');
 
         this.commentInput = commentInput;
-        this.tagSelectModal = tagSelectModal;
-        this.tagSelectList = tagSelectList;
+        this.tagChipsBar = tagChipsBar;
+        this.tagChipsScroll = tagChipsScroll;
         this.fabBtn = fabBtn;
         this.backdrop = backdrop;
         this.submitBarWrapper = submitBarWrapper;
@@ -204,29 +201,19 @@ export class CommentComposer {
             }, { passive: true });
         }
 
-        // 阻止播放快捷键冒泡，放行 touchstart/mousedown 以确保 iOS Safari 原生点击聚焦链路 100% 畅通
+        // 阻止播放快捷键冒泡，放行原生打字与手势链路
         if (commentInput) {
             const stopKeyProp = (e) => e.stopPropagation();
             commentInput.addEventListener('keydown', stopKeyProp);
             commentInput.addEventListener('keyup', stopKeyProp);
             commentInput.addEventListener('keypress', stopKeyProp);
 
-            // 核心 Pre-Lift：在用户触碰/点击瞬间（抢先于 Safari 原生 focus 判定），将发评栏升至键盘高度并阻止默认 scroll
-            const triggerInputPreLift = (e) => {
+            commentInput.addEventListener('touchstart', () => {
                 this._lastInputTouchTime = Date.now();
-                const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
-                if (isTouch && this.submitBarWrapper) {
-                    const kb = UIManager.lastKnownKeyboardHeight || 380;
-                    this.submitBarWrapper.style.bottom = `${kb}px`;
-                    this.submitBarWrapper.style.transform = '';
-                }
-                commentInput.focus({ preventScroll: true });
-                if (e.cancelable && e.type === 'mousedown') {
-                    e.preventDefault();
-                }
-            };
-            commentInput.addEventListener('mousedown', triggerInputPreLift);
-            commentInput.addEventListener('touchstart', triggerInputPreLift, { passive: true });
+            }, { passive: true });
+            commentInput.addEventListener('mousedown', () => {
+                this._lastInputTouchTime = Date.now();
+            });
 
             commentInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
@@ -239,11 +226,11 @@ export class CommentComposer {
             });
         }
 
-        // 加号 (+) 按钮事件：即时零延迟弹出模态框
+        // 加号 (+) 按钮事件：展开/收起横向时间戳标签胶囊栏
         if (addTagBtn) {
             addTagBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.toggleTagSelectModal();
+                this.toggleTagChipsBar();
             });
         }
 
@@ -305,15 +292,14 @@ export class CommentComposer {
         }
         if (this.fabBtn) this.fabBtn.classList.add('is-hidden');
 
-        // 核心 Pre-Lift 预升降：在 focus 触发之前，立即将发评栏预升降到键盘预期高度，彻底避免 Safari 判定未在视口内触发 document scroll
-        const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
-        if (isTouch && this.submitBarWrapper) {
-            const kb = UIManager.lastKnownKeyboardHeight || 380;
-            this.submitBarWrapper.style.bottom = `${kb}px`;
-            this.submitBarWrapper.style.transform = '';
+        // 默认自动展示已有的高光时间戳标签胶囊
+        const tabs = this.getTabs();
+        if (tabs.length > 0) {
+            this.renderTagChips();
+            if (this.tagChipsBar) this.tagChipsBar.classList.remove('is-hidden');
         }
-        
-        // 在用户手势同步调用栈内即时聚焦，保障 iOS Safari 真正赋予输入光标与打字选区
+
+        // 原生无阻碍聚焦输入框
         if (this.commentInput) {
             try {
                 this.commentInput.focus({ preventScroll: true });
@@ -331,10 +317,8 @@ export class CommentComposer {
         if (this.commentInput) {
             this.commentInput.blur();
         }
-        this.closeTagSelectModal();
+        this.closeTagChipsBar();
         this.submitBarWrapper.classList.add('is-collapsed');
-        this.submitBarWrapper.style.bottom = '0px';
-        this.submitBarWrapper.style.transform = '';
         if (this.backdrop) this.backdrop.classList.add('is-hidden');
         if (this.panel?.commentsPanel) {
             this.panel.commentsPanel.classList.remove('has-composer-open');
@@ -346,33 +330,30 @@ export class CommentComposer {
         if (this.fabBtn) this.fabBtn.classList.remove('is-hidden');
     }
 
-    toggleTagSelectModal() {
-        if (!this.tagSelectModal) return;
-        if (this.tagSelectModal.classList.contains('visible')) {
-            this.closeTagSelectModal();
+    toggleTagChipsBar() {
+        if (!this.tagChipsBar) return;
+        const isHidden = this.tagChipsBar.classList.contains('is-hidden');
+        if (isHidden) {
+            this.openTagChipsBar();
         } else {
-            this.openTagSelectModal();
+            this.closeTagChipsBar();
         }
     }
 
-    openTagSelectModal() {
-        if (!this.tagSelectModal) return;
-        const tabs = this.getTabs();
-        if (this.selectedTagIds.size === 0 && tabs.length > 0) {
-            this.selectedTagIds = new Set(tabs.map(t => t.id));
-        }
-        this.renderTagSelectList();
-        this.tagSelectModal.classList.add('visible');
+    openTagChipsBar() {
+        if (!this.tagChipsBar) return;
+        this.renderTagChips();
+        this.tagChipsBar.classList.remove('is-hidden');
     }
 
-    closeTagSelectModal() {
-        if (!this.tagSelectModal) return;
-        this.tagSelectModal.classList.remove('visible');
+    closeTagChipsBar() {
+        if (!this.tagChipsBar) return;
+        this.tagChipsBar.classList.add('is-hidden');
     }
 
-    renderTagSelectList() {
-        if (!this.tagSelectList) return;
-        this.tagSelectList.innerHTML = '';
+    renderTagChips() {
+        if (!this.tagChipsScroll) return;
+        this.tagChipsScroll.innerHTML = '';
 
         const tabs = this.getTabs();
         const lm = this.getLoopManager();
@@ -380,113 +361,37 @@ export class CommentComposer {
         if (tabs.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'tm-tag-select-empty';
-            empty.textContent = '暂无时间戳标签，可在播放控制器添加';
-            this.tagSelectList.appendChild(empty);
+            empty.textContent = '暂无时间戳片段 (可先在播放器中点击+打点)';
+            this.tagChipsScroll.appendChild(empty);
             return;
         }
 
         tabs.forEach((tab, index) => {
-            const color = lm ? lm.tabColors[index % lm.tabColors.length] : '200, 100%, 55%';
-            const row = document.createElement('div');
-            row.className = 'tm-tag-select-item';
+            const color = tab.color || (lm ? lm.tabColors[index % lm.tabColors.length] : '200, 100%, 55%');
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = `tm-comment-tag-chip${this.selectedTagIds.has(tab.id) ? ' active' : ''}`;
+            chip.style.setProperty('--chip-color', color);
 
-            // 勾选复选框
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.className = 'tm-tag-checkbox';
-            checkbox.checked = this.selectedTagIds.has(tab.id);
-            checkbox.addEventListener('change', (e) => {
+            const timeStr = tab.type === 'highlight'
+                ? formatSeconds(tab.startTime)
+                : `${formatSeconds(tab.startTime)}~${formatSeconds(tab.endTime)}`;
+            const remark = (tab.comment || '').trim();
+
+            chip.innerHTML = `<span class="tm-chip-time">${timeStr}</span>${remark ? `<span class="tm-chip-text">${remark}</span>` : ''}`;
+
+            chip.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (checkbox.checked) {
-                    this.selectedTagIds.add(tab.id);
-                } else {
+                if (this.selectedTagIds.has(tab.id)) {
                     this.selectedTagIds.delete(tab.id);
+                    chip.classList.remove('active');
+                } else {
+                    this.selectedTagIds.add(tab.id);
+                    chip.classList.add('active');
                 }
             });
 
-            // 时间胶囊
-            const timeContainer = document.createElement('div');
-            timeContainer.className = 'tm-sheet-item-time-container';
-
-            if (tab.type === 'highlight') {
-                const pill = document.createElement('button');
-                pill.type = 'button';
-                pill.className = 'tm-sheet-time-pill';
-                pill.style.setProperty('--tab-color', color);
-                pill.textContent = formatSeconds(tab.startTime);
-                timeContainer.appendChild(pill);
-            } else {
-                const pill = document.createElement('div');
-                pill.className = 'tm-sheet-time-pill interval';
-                pill.style.setProperty('--tab-color', color);
-
-                const startSpan = document.createElement('span');
-                startSpan.className = 'tm-time-part start';
-                startSpan.textContent = formatSeconds(tab.startTime);
-
-                const sepSpan = document.createElement('span');
-                sepSpan.className = 'tm-time-sep';
-                sepSpan.textContent = '~';
-
-                const endSpan = document.createElement('span');
-                endSpan.className = 'tm-time-part end';
-                endSpan.textContent = formatSeconds(tab.endTime);
-
-                pill.appendChild(startSpan);
-                pill.appendChild(sepSpan);
-                pill.appendChild(endSpan);
-                timeContainer.appendChild(pill);
-            }
-
-            // 可修改备注文本框
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'tm-tag-remark-input';
-            input.placeholder = '添加备注...';
-            input.value = tab.comment || '';
-
-            // 阻止播放快捷键冒泡，放行 touchstart/mousedown 确保 Safari 正常获取焦点
-            const stopKeyProp = (e) => e.stopPropagation();
-            input.addEventListener('keydown', stopKeyProp);
-            input.addEventListener('keyup', stopKeyProp);
-            input.addEventListener('keypress', stopKeyProp);
-
-            // 核心 Pre-Lift：在标签输入框获得焦点前，抢先确保发评底栏已经处于键盘上方，杜绝 Safari 原生滚动
-            const triggerTagPreLift = (e) => {
-                this._lastInputTouchTime = Date.now();
-                const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
-                if (isTouch && this.submitBarWrapper) {
-                    const kb = UIManager.lastKnownKeyboardHeight || 380;
-                    this.submitBarWrapper.style.bottom = `${kb}px`;
-                    this.submitBarWrapper.style.transform = '';
-                }
-                input.focus({ preventScroll: true });
-                if (e.cancelable && e.type === 'mousedown') {
-                    e.preventDefault();
-                }
-            };
-            input.addEventListener('mousedown', triggerTagPreLift);
-            input.addEventListener('touchstart', triggerTagPreLift, { passive: true });
-
-            input.addEventListener('input', (e) => {
-                tab.comment = e.target.value;
-                if (lm) {
-                    lm._saveTabs();
-                    lm.renderTabs();
-                }
-            });
-
-            input.addEventListener('change', () => {
-                if (lm) {
-                    lm._saveTabs();
-                    lm.renderTabs();
-                }
-            });
-
-            row.appendChild(checkbox);
-            row.appendChild(timeContainer);
-            row.appendChild(input);
-            this.tagSelectList.appendChild(row);
+            this.tagChipsScroll.appendChild(chip);
         });
     }
 

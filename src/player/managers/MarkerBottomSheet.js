@@ -420,28 +420,18 @@ export class MarkerBottomSheet {
             input.placeholder = '添加备注...';
             input.value = tab.comment || '';
 
-            // 阻止按键冒泡，防止触发视频播放快捷键
+            // 阻止按键冒泡，放行原生打字与手势链路
             const stopKeyProp = (e) => e.stopPropagation();
             input.addEventListener('keydown', stopKeyProp);
             input.addEventListener('keyup', stopKeyProp);
             input.addEventListener('keypress', stopKeyProp);
 
-            // 核心 Pre-Lift：在切片备注输入框获得焦点前，将高光底栏面板提前升至键盘高度，杜绝 Safari 判定遮挡触发原生滚动
-            const triggerSheetInputPreLift = (e) => {
+            input.addEventListener('touchstart', () => {
                 this._lastInputTouchTime = Date.now();
-                const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
-                if (isTouch && this._sheetPanel) {
-                    const kb = UIManager.lastKnownKeyboardHeight || 380;
-                    this._sheetPanel.style.bottom = `${kb}px`;
-                    this._sheetPanel.style.transform = '';
-                }
-                input.focus({ preventScroll: true });
-                if (e.cancelable && e.type === 'mousedown') {
-                    e.preventDefault();
-                }
-            };
-            input.addEventListener('mousedown', triggerSheetInputPreLift);
-            input.addEventListener('touchstart', triggerSheetInputPreLift, { passive: true });
+            }, { passive: true });
+            input.addEventListener('mousedown', () => {
+                this._lastInputTouchTime = Date.now();
+            });
 
             // 直接修改备注
             input.addEventListener('input', (e) => {

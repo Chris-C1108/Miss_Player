@@ -310,7 +310,7 @@ export class ViewportDebugHUD {
         const submitBarRect = submitBar ? submitBar.getBoundingClientRect() : null;
         const sheetPanel = shadow?.querySelector('.tm-bottom-sheet-panel') || document.querySelector('.tm-bottom-sheet-panel');
         const sheetRect = sheetPanel ? sheetPanel.getBoundingClientRect() : null;
-        const activeModal = shadow?.querySelector('.tm-custom-modal-content, .tm-comment-tag-select-modal') || document.querySelector('.tm-custom-modal-content, .tm-comment-tag-select-modal');
+        const activeModal = shadow?.querySelector('.tm-custom-modal-content') || document.querySelector('.tm-custom-modal-content');
         const modalRect = activeModal ? activeModal.getBoundingClientRect() : null;
 
         const activeEl = this.getDeepActiveElement();
@@ -544,9 +544,9 @@ export class ViewportDebugHUD {
                             if (cls.includes('tm-comment-submit-bar-wrapper')) {
                                 const isCol = cls.includes('is-collapsed');
                                 this.recordEvent('UI_STATE', `发评栏 ${isCol ? '收起(COLLAPSED)' : '展开(OPENED)'} [bot:${node.style.bottom || '0'}]`);
-                            } else if (cls.includes('tm-comment-tag-select-modal')) {
-                                const isVis = cls.includes('visible');
-                                this.recordEvent('UI_STATE', `标签选择弹窗 ${isVis ? '展开(VISIBLE)' : '关闭(HIDDEN)'}`);
+                            } else if (cls.includes('tm-comment-tag-chips-bar')) {
+                                const isHidden = cls.includes('is-hidden');
+                                this.recordEvent('UI_STATE', `高光标签胶囊栏 ${isHidden ? '隐藏(HIDDEN)' : '展开(VISIBLE)'}`);
                             } else if (cls.includes('tm-bottom-sheet-panel')) {
                                 const isVis = cls.includes('visible');
                                 this.recordEvent('UI_STATE', `高光切片底栏 ${isVis ? '展开(VISIBLE)' : '关闭(HIDDEN)'}`);

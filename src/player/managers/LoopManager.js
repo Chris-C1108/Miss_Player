@@ -1016,20 +1016,11 @@ export class LoopManager {
         const skipBtn = popover.querySelector('.tm-inline-remark-btn.cancel');
         const saveBtn = popover.querySelector('.tm-inline-remark-btn.submit');
 
-        // 阻止播放快捷键冒泡，放行 touchstart/mousedown 确保 Safari 正常获取焦点
+        // 阻止播放快捷键冒泡，放行原生打字与手势链路
         const stopKeyProp = (e) => e.stopPropagation();
         input.addEventListener('keydown', stopKeyProp);
         input.addEventListener('keyup', stopKeyProp);
         input.addEventListener('keypress', stopKeyProp);
-
-        const triggerPopoverInputPreLift = (e) => {
-            input.focus({ preventScroll: true });
-            if (e.cancelable && e.type === 'mousedown') {
-                e.preventDefault();
-            }
-        };
-        input.addEventListener('mousedown', triggerPopoverInputPreLift);
-        input.addEventListener('touchstart', triggerPopoverInputPreLift, { passive: true });
 
         popover.addEventListener('click', (e) => e.stopPropagation());
 

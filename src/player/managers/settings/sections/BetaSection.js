@@ -102,11 +102,7 @@ export class BetaSection {
 
         const bindFocus = (el) => {
             if (!el) return;
-            const h = (e) => {
-                el.focus({ preventScroll: true });
-                if (e.cancelable && e.type === 'mousedown') {
-                    e.preventDefault();
-                }
+            const h = () => {
                 const panel = el.closest('.tm-settings-panel');
                 if (panel) {
                     setTimeout(() => {
@@ -117,8 +113,7 @@ export class BetaSection {
                     }, 120);
                 }
             };
-            el.addEventListener('mousedown', h);
-            el.addEventListener('touchstart', h, { passive: true });
+            el.addEventListener('focus', h);
         };
         bindFocus(dbUrlInput);
         bindFocus(dbKeyInput);

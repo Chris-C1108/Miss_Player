@@ -914,7 +914,7 @@ export class UIManager {
                 const hasSubmitBar = !!commentSubmitBar;
                 const isCollapsed = commentSubmitBar ? commentSubmitBar.classList.contains('is-collapsed') : null;
                 ViewportDebugHUD.recordEvent('UI_VV_UPDATE', `kbH=${keyboardHeight}, bar=${hasSubmitBar ? (isCollapsed ? 'col' : 'open') : 'none'}, bot=${commentSubmitBar?.style?.bottom || '0'}`);
-                const activeModal = this.shadowRoot?.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay') || document.querySelector('.tm-comment-tag-select-modal, .tm-custom-modal-overlay');
+                const activeModal = this.shadowRoot?.querySelector('.tm-custom-modal-overlay') || document.querySelector('.tm-custom-modal-overlay');
 
                 if (keyboardHeight > 60) {
                     UIManager.lastKnownKeyboardHeight = keyboardHeight;
