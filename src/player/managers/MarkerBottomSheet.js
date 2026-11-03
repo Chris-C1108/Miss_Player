@@ -134,11 +134,19 @@ export class MarkerBottomSheet {
         this.updatePanelPosition();
         if (this._sheetOverlay) this._sheetOverlay.classList.add('visible');
         if (this._sheetPanel) this._sheetPanel.classList.add('visible');
+        const playerContainer = document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
+        if (playerContainer) {
+            playerContainer.classList.add('has-sheet-open');
+        }
     }
 
     close() {
         if (this._sheetOverlay) this._sheetOverlay.classList.remove('visible');
         if (this._sheetPanel) this._sheetPanel.classList.remove('visible');
+        const playerContainer = document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
+        if (playerContainer) {
+            playerContainer.classList.remove('has-sheet-open');
+        }
     }
 
     createBottomSheet() {

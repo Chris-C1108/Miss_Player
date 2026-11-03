@@ -300,7 +300,9 @@
 .tm-bottom-sheet-overlay {
     position: fixed;
     inset: 0;
-    background-color: transparent;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: calc(var(--z-drawer) - 1);
     opacity: 0;
     pointer-events: none;
