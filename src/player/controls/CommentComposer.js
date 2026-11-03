@@ -165,6 +165,13 @@ export class CommentComposer {
         this.submitBarWrapper = submitBarWrapper;
         this.closeBarBtn = closeBarBtn;
 
+        // 阻断高光标签列表纵向触控滑动冒泡至外层播放器视口容器，确保丝滑 60fps 原生滚动
+        if (tagSelectModal) {
+            tagSelectModal.addEventListener('touchmove', (e) => {
+                e.stopPropagation();
+            }, { passive: true });
+        }
+
         // 绑定悬浮评论按钮 (FAB) 点击唤起输入底栏
         if (fabBtn) {
             fabBtn.addEventListener('click', (e) => {
@@ -216,6 +223,11 @@ export class CommentComposer {
             }, { passive: true });
             commentInput.addEventListener('mousedown', () => {
                 this._lastInputTouchTime = Date.now();
+            });
+
+            // 评论暂存功能：输入即自动静默暂存至 sessionStorage，防止用户误退丢失心得
+            commentInput.addEventListener('input', () => {
+                this.saveCommentDraft();
             });
 
             commentInput.addEventListener('keydown', (e) => {
@@ -301,6 +313,9 @@ export class CommentComposer {
             this.selectedTagIds = new Set(tabs.map(t => t.id));
         }
 
+        // 自动恢复未发送的评论暂存草稿
+        this.restoreCommentDraft();
+
         // 原生无阻碍聚焦输入框
         if (this.commentInput) {
             try {
@@ -330,6 +345,51 @@ export class CommentComposer {
             playerContainer.classList.remove('has-composer-active');
         }
         if (this.fabBtn) this.fabBtn.classList.remove('is-hidden');
+    }
+
+    /**
+     * 获取评论暂存的 Storage Key (基于当前影片番号独立隔离)
+     */
+    getDraftStorageKey() {
+        const avcode = this.panel?.videoCode || this.videoCode || (typeof getVideoCodeFromUrl === 'function' ? getVideoCodeFromUrl() : '') || 'default';
+        return 'mp_comment_draft_' + String(avcode).toLowerCase().trim();
+    }
+
+    /**
+     * 保存评论暂存草稿
+     */
+    saveCommentDraft() {
+        if (!this.commentInput) return;
+        try {
+            const val = this.commentInput.value;
+            if (val && val.trim()) {
+                sessionStorage.setItem(this.getDraftStorageKey(), val);
+            } else {
+                sessionStorage.removeItem(this.getDraftStorageKey());
+            }
+        } catch (_) {}
+    }
+
+    /**
+     * 恢复未发送的评论暂存草稿
+     */
+    restoreCommentDraft() {
+        if (!this.commentInput) return;
+        try {
+            const draft = sessionStorage.getItem(this.getDraftStorageKey());
+            if (draft && !this.commentInput.value) {
+                this.commentInput.value = draft;
+            }
+        } catch (_) {}
+    }
+
+    /**
+     * 清理评论草稿
+     */
+    clearCommentDraft() {
+        try {
+            sessionStorage.removeItem(this.getDraftStorageKey());
+        } catch (_) {}
     }
 
     toggleTagSelectModal() {
@@ -390,9 +450,23 @@ export class CommentComposer {
                 }
             });
 
-            // 时间胶囊
+            // 时间胶囊 (支持点击即时跳转视频对应进度)
             const timeContainer = document.createElement('div');
             timeContainer.className = 'tm-sheet-item-time-container';
+            timeContainer.style.cursor = 'pointer';
+            timeContainer.title = '点击跳转到此高光时间';
+
+            const onSeek = (e) => {
+                e.stopPropagation();
+                const targetVid = this.panel?.videoPlayer?.playerCore?.targetVideo || 
+                                  document.querySelector('miss-player-root')?.shadowRoot?.querySelector('video') || 
+                                  document.querySelector('video');
+                if (targetVid && tab.startTime !== null && tab.startTime !== undefined) {
+                    targetVid.currentTime = tab.startTime;
+                    Toast(`已跳转至 ${formatSeconds(tab.startTime)}`, 1500, 'info');
+                }
+            };
+            timeContainer.addEventListener('click', onSeek);
 
             if (tab.type === 'highlight') {
                 const pill = document.createElement('button');
@@ -584,8 +658,9 @@ export class CommentComposer {
             resetBtn();
             if (success) {
                 if (this.commentInput) this.commentInput.value = '';
+                this.clearCommentDraft();
                 this.selectedTagIds.clear();
-                this.closeTagChipsBar();
+                this.closeTagSelectModal();
                 this.closeComposer();
                 setTimeout(() => this.panel.handleRetry(), 500);
             }

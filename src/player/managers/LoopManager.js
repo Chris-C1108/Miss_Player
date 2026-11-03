@@ -1022,7 +1022,10 @@ export class LoopManager {
         input.addEventListener('keyup', stopKeyProp);
         input.addEventListener('keypress', stopKeyProp);
 
-        popover.addEventListener('click', (e) => e.stopPropagation());
+        const stopProp = (e) => e.stopPropagation();
+        popover.addEventListener('click', stopProp);
+        popover.addEventListener('touchend', stopProp);
+        popover.addEventListener('pointerdown', stopProp);
 
         parentContainer.appendChild(popover);
 
@@ -1042,7 +1045,8 @@ export class LoopManager {
         const close = () => {
             if (isClosed) return;
             isClosed = true;
-            document.removeEventListener('click', handleOutsideClick, true);
+            document.removeEventListener('click', handleOutsideClick, false);
+            document.removeEventListener('touchend', handleOutsideClick, false);
             popover.classList.remove('visible');
             let removed = false;
             const cleanup = () => {
@@ -1056,13 +1060,18 @@ export class LoopManager {
         };
 
         const handleOutsideClick = (e) => {
-            if (!popover.contains(e.target)) {
-                close();
+            const path = e.composedPath ? e.composedPath() : [];
+            if (path.length > 0) {
+                if (path.includes(popover)) return;
+            } else if (popover.contains(e.target)) {
+                return;
             }
+            close();
         };
         setTimeout(() => {
-            document.addEventListener('click', handleOutsideClick, true);
-        }, 50);
+            document.addEventListener('click', handleOutsideClick, false);
+            document.addEventListener('touchend', handleOutsideClick, false);
+        }, 150);
 
         const save = (comment) => {
             tab.comment = comment;

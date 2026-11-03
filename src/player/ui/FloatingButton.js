@@ -92,9 +92,24 @@ export class FloatingButton {
     }
     
     /**
+     * 判断播放器当前是否处于激活状态
+     */
+    isPlayerActive() {
+        return Boolean(
+            (document.body && document.body.classList.contains('tm-player-active')) ||
+            (document.documentElement && document.documentElement.classList.contains('tm-player-active')) ||
+            document.querySelector('miss-player-root')
+        );
+    }
+
+    /**
      * 处理DOM变化
      */
     handleDomMutations() {
+        if (this.isPlayerActive()) {
+            if (this.button) this.button.style.display = 'none';
+            return;
+        }
         // 使用防抖函数限制调用频率
         if (this.mutationTimeout) clearTimeout(this.mutationTimeout);
         
@@ -133,6 +148,10 @@ export class FloatingButton {
         
         // 设置新计时器，每2秒检查一次
         this.videoCheckInterval = setInterval(() => {
+            if (this.isPlayerActive()) {
+                if (this.button) this.button.style.display = 'none';
+                return;
+            }
             if (findVideoElement(true)) {
                 // 只有当按钮不存在时才创建
                 if (!this.button) {
@@ -176,6 +195,10 @@ export class FloatingButton {
      * 处理窗口大小与屏幕方向变化
      */
     handleResize() {
+        if (this.isPlayerActive()) {
+            if (this.button) this.button.style.display = 'none';
+            return;
+        }
         // 第一时间立即刷新定位，防止转屏过渡闪烁
         if (this.button && this.button.style.display !== 'none') {
             this.updateButtonPosition();
@@ -239,6 +262,10 @@ export class FloatingButton {
      */
     updateButtonPosition() {
         if (!this.button) return;
+        if (this.isPlayerActive()) {
+            this.button.style.display = 'none';
+            return;
+        }
         
         // 核心规范：确保 position: fixed !important 与无系统背景/边框 (严格防御宿主样式污染)
         this.button.style.setProperty('position', 'fixed', 'important');

@@ -183,22 +183,14 @@
     padding-bottom: calc(var(--keyboard-height, 0px) + 70px);
 }
 
-/* 评论区半透明遮罩 (点击收起发评浮动栏) */
+/* 评论区半透明遮罩 (按用户要求彻底移除模糊层，确保输入时可清晰查看视频画面与评论区) */
 .tm-comment-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
-    z-index: calc(var(--z-composer) - 1);
-    opacity: 1;
-    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: auto;
+    display: none;
+    pointer-events: none;
 }
 .tm-comment-backdrop.is-hidden {
-    opacity: 0;
+    display: none;
     pointer-events: none;
-    visibility: hidden;
 }
 
 /* 评论区悬浮按钮组统一实色 Apple 质感设计 (FAB 发评圆钮 & 唤醒控制栏圆钮) */
@@ -604,9 +596,13 @@
     flex-direction: column;
     gap: 8px;
     overflow-y: auto;
+    overflow-x: hidden;
     max-height: 180px;
     padding-right: 2px;
     scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
 }
 
 .tm-tag-select-item {

@@ -17,6 +17,10 @@ body.tm-player-active {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
+html.tm-player-active .tm-floating-button,
+body.tm-player-active .tm-floating-button {
+  display: none !important;
+}
 html.tm-player-active::-webkit-scrollbar,
 body.tm-player-active::-webkit-scrollbar {
   display: none !important;
