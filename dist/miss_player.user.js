@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.73
+// @version            5.7.74
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -287,6 +287,7 @@
 			"iframe[src*=\"payload=\"]",
 			"iframe[src*=\"/embed/\"]",
 			"iframe[src*=\"video\"]",
+			"iframe[src*=\"plyr\"]",
 			".player iframe",
 			"#player iframe",
 			".video-player iframe",
@@ -298,7 +299,7 @@
 		const allIframes = Array.from(document.querySelectorAll("iframe"));
 		for (const ifr of allIframes) {
 			const src = (ifr.getAttribute("src") || "").toLowerCase();
-			if (src.includes("player") || src.includes("embed") || src.includes("video") || src.includes("payload=")) return ifr;
+			if (src.includes("player") || src.includes("embed") || src.includes("video") || src.includes("payload=") || src.includes("plyr")) return ifr;
 		}
 		return null;
 	}
@@ -1264,7 +1265,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.73";
+		return "5.7.74";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1596,7 +1597,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.73";
+		return "5.7.74";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -5281,7 +5282,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.73";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.74";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

@@ -78,6 +78,7 @@ export function findVideoIframeElement() {
         'iframe[src*="payload="]',
         'iframe[src*="/embed/"]',
         'iframe[src*="video"]',
+        'iframe[src*="plyr"]',
         '.player iframe',
         '#player iframe',
         '.video-player iframe',
@@ -93,7 +94,7 @@ export function findVideoIframeElement() {
     const allIframes = Array.from(document.querySelectorAll('iframe'));
     for (const ifr of allIframes) {
         const src = (ifr.getAttribute('src') || '').toLowerCase();
-        if (src.includes('player') || src.includes('embed') || src.includes('video') || src.includes('payload=')) {
+        if (src.includes('player') || src.includes('embed') || src.includes('video') || src.includes('payload=') || src.includes('plyr')) {
             return ifr;
         }
     }
