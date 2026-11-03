@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.67
+// @version            5.7.68
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.67";
+		return "5.7.68";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1591,7 +1591,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.67";
+		return "5.7.68";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -5276,7 +5276,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.67";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.68";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -18330,6 +18330,16 @@
 				const h = (e) => {
 					el.focus({ preventScroll: true });
 					if (e.cancelable && e.type === "mousedown") e.preventDefault();
+					const panel = el.closest(".tm-settings-panel");
+					if (panel) setTimeout(() => {
+						const elRect = el.getBoundingClientRect();
+						const panelRect = panel.getBoundingClientRect();
+						const targetScrollTop = panel.scrollTop + (elRect.top - panelRect.top) - 70;
+						panel.scrollTo({
+							top: Math.max(0, targetScrollTop),
+							behavior: "smooth"
+						});
+					}, 120);
 				};
 				el.addEventListener("mousedown", h);
 				el.addEventListener("touchstart", h, { passive: true });
@@ -18890,6 +18900,16 @@
 				const h = (e) => {
 					el.focus({ preventScroll: true });
 					if (e.cancelable && e.type === "mousedown") e.preventDefault();
+					const panel = el.closest(".tm-settings-panel");
+					if (panel) setTimeout(() => {
+						const elRect = el.getBoundingClientRect();
+						const panelRect = panel.getBoundingClientRect();
+						const targetScrollTop = panel.scrollTop + (elRect.top - panelRect.top) - 70;
+						panel.scrollTo({
+							top: Math.max(0, targetScrollTop),
+							behavior: "smooth"
+						});
+					}, 120);
 				};
 				el.addEventListener("mousedown", h);
 				el.addEventListener("touchstart", h, { passive: true });

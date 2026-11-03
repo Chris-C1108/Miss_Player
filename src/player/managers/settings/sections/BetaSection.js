@@ -107,6 +107,15 @@ export class BetaSection {
                 if (e.cancelable && e.type === 'mousedown') {
                     e.preventDefault();
                 }
+                const panel = el.closest('.tm-settings-panel');
+                if (panel) {
+                    setTimeout(() => {
+                        const elRect = el.getBoundingClientRect();
+                        const panelRect = panel.getBoundingClientRect();
+                        const targetScrollTop = panel.scrollTop + (elRect.top - panelRect.top) - 70;
+                        panel.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+                    }, 120);
+                }
             };
             el.addEventListener('mousedown', h);
             el.addEventListener('touchstart', h, { passive: true });
