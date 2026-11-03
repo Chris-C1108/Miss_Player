@@ -6,6 +6,7 @@ import { Toast } from '../../../../utils/index.js';
 import { CrazyScraper } from '../../../comments/CrazyScraper.js';
 import { CommentCacheManager } from "../../../comments/CommentCacheManager.js";
 import { DebugLogPanel } from '../../../ui/DebugLogPanel.js';
+import { ViewportDebugHUD } from '../../../ui/ViewportDebugHUD.js';
 
 export class BetaSection {
     constructor(settingsManager) {
@@ -167,6 +168,24 @@ export class BetaSection {
             }
         });
         debugSubWrap.appendChild(crazyToggle.getElement());
+
+        const viewportHudToggle = new ToggleRow({
+            title: '全景视口探针',
+            subtext: '实时测量物理视口变化、键盘高度与触摸日志',
+            checked: Boolean(this.settings.viewportDebugEnabled),
+            onChange: (checked) => {
+                this.sm.updateSetting('viewportDebugEnabled', checked);
+                if (checked) {
+                    const uiManager = this.sm.uiManager || this.sm.playerCore?.uiManager;
+                    if (uiManager && uiManager.playerContainer && uiManager.shadowRoot) {
+                        ViewportDebugHUD.init(uiManager.playerContainer, uiManager.shadowRoot);
+                    }
+                } else {
+                    ViewportDebugHUD.destroy();
+                }
+            }
+        });
+        debugSubWrap.appendChild(viewportHudToggle.getElement());
 
         const clearRow = document.createElement('div');
         clearRow.className = 'tm-apple-row';

@@ -74,6 +74,7 @@ export class SettingsManager {
             muteResetMinutes: 5,
             autoCheckUpdate: true,
             updateChannel: 'stable',
+            viewportDebugEnabled: false,
             betaMode: false,
             betaFirstCapsulePlay: false,
             betaPlayMode: 'normal',
@@ -162,15 +163,17 @@ export class SettingsManager {
                     const res = await SleazyForkService.checkUpdate(false, channel);
                     if (res && res.success) {
                         this._latestUpdateInfo = res;
-                        if (res.hasUpdate) {
-                            const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
-                            if (btn) {
-                                btn.classList.add('has-update-badge');
+                        const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
+                        if (btn) {
+                            btn.classList.toggle('has-update-badge', Boolean(res.hasUpdate));
+                            if (res.hasUpdate) {
                                 btn.setAttribute('title', `${__('updateFound') || '发现新版本'}: v${res.latestVersion}`);
+                            } else {
+                                btn.removeAttribute('title');
                             }
-                            if (this.settingsPanel && this.settingsPanel.children.length) {
-                                this.createSettingsPanel();
-                            }
+                        }
+                        if (res.hasUpdate && this.settingsPanel && this.settingsPanel.children.length) {
+                            this.createSettingsPanel();
                         }
                     }
                 } catch (_) {}
@@ -842,6 +845,15 @@ export class SettingsManager {
                 try {
                     const res = await SleazyForkService.checkUpdate(true, nextVal);
                     this._latestUpdateInfo = res;
+                    const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
+                    if (btn) {
+                        btn.classList.toggle('has-update-badge', Boolean(res && res.hasUpdate));
+                        if (res && res.hasUpdate) {
+                            btn.setAttribute('title', `${__('updateFound') || '发现新版本'}: v${res.latestVersion}`);
+                        } else {
+                            btn.removeAttribute('title');
+                        }
+                    }
                     if (res && res.hasUpdate) {
                         Toast.show(`${__('updateFound') || '发现新版本'}: v${res.latestVersion}`, 3500, 'success');
                     } else if (res && res.success) {
@@ -913,6 +925,23 @@ export class SettingsManager {
             const bannerActions = document.createElement('div');
             bannerActions.className = 'tm-about-update-actions';
 
+            const detectScriptHandler = () => {
+                try {
+                    if (typeof GM_info !== 'undefined' && GM_info) {
+                        const handler = (GM_info.scriptHandler || '').toLowerCase();
+                        if (handler.includes('stay')) return 'stay';
+                        if (handler.includes('tampermonkey')) return 'tampermonkey';
+                        if (handler.includes('scriptcat')) return 'scriptcat';
+                        if (handler.includes('violentmonkey')) return 'violentmonkey';
+                        if (handler.includes('userscripts')) return 'userscripts';
+                    }
+                } catch (_) {}
+                const isIOS = (typeof navigator !== 'undefined') && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+                if (isIOS) return 'stay';
+                return 'unknown';
+            };
+            const detectedHandler = detectScriptHandler();
+
             const updateNowBtn = document.createElement('button');
             updateNowBtn.className = 'tm-about-btn tm-about-btn--primary';
             updateNowBtn.innerHTML = `${ICON_DOWNLOAD} <span>${__('updateNow') || '立即更新'}</span>`;
@@ -920,12 +949,23 @@ export class SettingsManager {
                 const codeUrl = meta?.code_url || (isBeta
                     ? 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js'
                     : 'https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js');
-                if (typeof GM_openInTab === 'function') {
-                    GM_openInTab(codeUrl, { active: true });
+                if (detectedHandler === 'stay') {
+                    Toast.show('正在唤起 Stay 一键更新...', 2500, 'info');
+                    window.location.href = 'stay://x-callback-url/open-install?url=' + encodeURIComponent(codeUrl);
+                } else if (detectedHandler === 'tampermonkey') {
+                    Toast.show('正在跳转 Tampermonkey 一键更新...', 2500, 'info');
+                    window.open('https://www.tampermonkey.net/script_installation.php#url=' + encodeURIComponent(codeUrl), '_blank');
+                } else if (detectedHandler === 'scriptcat') {
+                    Toast.show('正在跳转脚本猫一键更新...', 2500, 'info');
+                    window.open('https://docs.scriptcat.org/docs/script_installation/#url=' + encodeURIComponent(codeUrl), '_blank');
                 } else {
-                    window.open(codeUrl, '_blank');
+                    if (typeof GM_openInTab === 'function') {
+                        GM_openInTab(codeUrl, { active: true });
+                    } else {
+                        window.open(codeUrl, '_blank');
+                    }
+                    Toast.show(__('updating') || '已触发脚本更新安装', 3000, 'success');
                 }
-                Toast.show(__('updating') || '已触发脚本更新安装', 3000, 'success');
             });
 
             const changelogBtn = document.createElement('button');
@@ -997,28 +1037,81 @@ export class SettingsManager {
         checkRow.style.display = 'flex';
         checkRow.style.gap = '8px';
         checkRow.style.flexWrap = 'wrap';
-
-        const reinstallBtn = document.createElement('button');
-        reinstallBtn.className = 'tm-about-btn tm-about-btn--reinstall';
-        reinstallBtn.style.cssText = 'background: rgba(255, 149, 0, 0.18); border: 1px solid rgba(255, 149, 0, 0.45); color: #ff9500; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
-        reinstallBtn.innerHTML = `<span>⚡ ${__('reinstallScript') || '重新安装'}</span>`;
-        reinstallBtn.title = __('reinstallScriptDesc') || '刷新本地缓存并强制重新安装当前版本';
-        reinstallBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const timestamp = Date.now();
-            const installUrl = isBeta
-                ? `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js?_t=${timestamp}`
-                : `https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js?_t=${timestamp}`;
-            Toast(__('updating') || '正在跳转油猴重新安装...', 2000, 'info');
-            if (typeof GM_openInTab === 'function') {
-                GM_openInTab(installUrl, { active: true });
-            } else {
-                window.open(installUrl, '_blank');
-            }
-        });
-
         checkRow.appendChild(checkBtn);
-        checkRow.appendChild(reinstallBtn);
+
+        const detectHandler = () => {
+            try {
+                if (typeof GM_info !== 'undefined' && GM_info) {
+                    const handler = (GM_info.scriptHandler || '').toLowerCase();
+                    if (handler.includes('stay')) return 'stay';
+                    if (handler.includes('tampermonkey')) return 'tampermonkey';
+                    if (handler.includes('scriptcat')) return 'scriptcat';
+                    if (handler.includes('violentmonkey')) return 'violentmonkey';
+                    if (handler.includes('userscripts')) return 'userscripts';
+                }
+            } catch (_) {}
+            const isIOS = (typeof navigator !== 'undefined') && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+            if (isIOS) return 'stay';
+            return 'unknown';
+        };
+        const currentHandler = detectHandler();
+
+        const timestamp = Date.now();
+        const installUrl = isBeta
+            ? `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js?_t=${timestamp}`
+            : `https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js?_t=${timestamp}`;
+
+        const stayInstallUrl = 'stay://x-callback-url/open-install?url=' + encodeURIComponent(installUrl);
+        const tmInstallUrl = 'https://www.tampermonkey.net/script_installation.php#url=' + encodeURIComponent(installUrl);
+
+        const createStayBtn = () => {
+            const btn = document.createElement('button');
+            btn.className = 'tm-about-btn tm-about-btn--stay';
+            btn.style.cssText = 'background: rgba(10, 132, 255, 0.16); border: 1px solid rgba(10, 132, 255, 0.45); color: #0a84ff; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
+            btn.innerHTML = `<span>🚀 Stay 一键安装 (${isBeta ? '测试版' : '正式版'})</span>`;
+            btn.title = '通过 Stay URL Scheme 一键导入或更新脚本';
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                Toast.show('正在唤起 Stay 一键安装...', 2500, 'info');
+                window.location.href = stayInstallUrl;
+            });
+            return btn;
+        };
+
+        const createTmBtn = () => {
+            const btn = document.createElement('button');
+            btn.className = 'tm-about-btn tm-about-btn--tampermonkey';
+            btn.style.cssText = 'background: rgba(48, 209, 88, 0.16); border: 1px solid rgba(48, 209, 88, 0.45); color: #30d158; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
+            btn.innerHTML = `<span>🐒 Tampermonkey 一键安装 (${isBeta ? '测试版' : '正式版'})</span>`;
+            btn.title = '通过 Tampermonkey 官方入口一键安装或更新脚本';
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                Toast.show('正在跳转 Tampermonkey 一键安装...', 2500, 'info');
+                window.open(tmInstallUrl, '_blank');
+            });
+            return btn;
+        };
+
+        if (currentHandler === 'stay') {
+            checkRow.appendChild(createStayBtn());
+        } else if (currentHandler === 'tampermonkey') {
+            checkRow.appendChild(createTmBtn());
+        } else if (currentHandler === 'scriptcat') {
+            const scBtn = document.createElement('button');
+            scBtn.className = 'tm-about-btn tm-about-btn--scriptcat';
+            scBtn.style.cssText = 'background: rgba(255, 159, 10, 0.16); border: 1px solid rgba(255, 159, 10, 0.45); color: #ff9f0a; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
+            scBtn.innerHTML = `<span>🐱 脚本猫一键安装 (${isBeta ? '测试版' : '正式版'})</span>`;
+            scBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.open('https://docs.scriptcat.org/docs/script_installation/#url=' + encodeURIComponent(installUrl), '_blank');
+            });
+            checkRow.appendChild(scBtn);
+        } else {
+            // 未识别或多环境支持：同时展示 Stay 与 Tampermonkey
+            checkRow.appendChild(createStayBtn());
+            checkRow.appendChild(createTmBtn());
+        }
+
         card.appendChild(checkRow);
 
         // 6. 自动检查更新开关行
@@ -1465,6 +1558,7 @@ export class SettingsManager {
             this.settings.betaDeepLinking = getBool('betaDeepLinking', true);
             this.settings.betaDbEndpoint = getValue('betaDbEndpoint', '') || '';
             this.settings.betaDbApiKey = getValue('betaDbApiKey', '') || '';
+            this.settings.viewportDebugEnabled = getBool('viewportDebugEnabled', false);
         }
     }
     
@@ -1502,6 +1596,7 @@ export class SettingsManager {
             setValue('betaDeepLinking', Boolean(this.settings.betaDeepLinking));
             setValue('betaDbEndpoint', this.settings.betaDbEndpoint || '');
             setValue('betaDbApiKey', this.settings.betaDbApiKey || '');
+            setValue('viewportDebugEnabled', Boolean(this.settings.viewportDebugEnabled));
         }
     }
     

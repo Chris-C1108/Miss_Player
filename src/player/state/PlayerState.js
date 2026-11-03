@@ -44,6 +44,7 @@ export class PlayerState {
             singleHandPosition: 'right',    // 单手握持偏好 ('right' | 'left')
             autoCheckUpdate: true,          // 自动检查新版本 (默认为开)
             updateChannel: 'stable',        // 检查更新通道 ('stable' 正式版 | 'beta' 测试版)
+            viewportDebugEnabled: false,    // 视口全景探针功能 (默认关闭)
             // Beta 实验室与自建数据库 (Beta Labs & Supabase)
             betaMode: false,
             betaHeatmap: false,
@@ -129,6 +130,7 @@ export class PlayerState {
             this.settings.betaDbApiKey = getValue('betaDbApiKey', '') || '';
             this.settings.betaSingleHandMode = getBool('betaSingleHandMode', false);
             this.settings.singleHandPosition = getValue('singleHandPosition', 'right') || 'right';
+            this.settings.viewportDebugEnabled = getBool('viewportDebugEnabled', false);
         } catch (error) {
             console.error('[PlayerState] 加载设置失败:', error);
         }
@@ -166,7 +168,8 @@ export class PlayerState {
             'betaDbApiKey',
             'crazyScrapeMode',
             'betaSingleHandMode',
-            'singleHandPosition'
+            'singleHandPosition',
+            'viewportDebugEnabled'
         ];
 
         this._reactiveStore = new ReactiveStore(this.settings);
@@ -225,6 +228,7 @@ export class PlayerState {
             setValue('betaDbApiKey', this.settings.betaDbApiKey || '');
             setValue('betaSingleHandMode', Boolean(this.settings.betaSingleHandMode));
             setValue('singleHandPosition', this.settings.singleHandPosition || 'right');
+            setValue('viewportDebugEnabled', Boolean(this.settings.viewportDebugEnabled));
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }

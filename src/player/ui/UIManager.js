@@ -1515,8 +1515,10 @@ export class UIManager {
         // 立即更新容器最小高度
         this.updateContainerMinHeight();
         
-        // 挂载移动端视口物理探针 HUD (支持实时指标测量与一键拷贝完整日志)
-        ViewportDebugHUD.init(this.playerContainer, this.shadowRoot);
+        // 挂载移动端视口物理探针 HUD (默认受控于设置菜单 Debug 区域开关，默认关闭)
+        if (this.playerCore?.options?.playerState?.settings?.viewportDebugEnabled) {
+            ViewportDebugHUD.init(this.playerContainer, this.shadowRoot);
+        }
 
         // 在DOM组装完成后设置交互监听器
         this.setupInteractionListeners();
