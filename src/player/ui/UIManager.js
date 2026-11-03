@@ -948,12 +948,12 @@ export class UIManager {
                     if (this.shadowRoot?.host) {
                         this.shadowRoot.host.style.removeProperty('--keyboard-height');
                     }
-                    if (commentSubmitBar && !commentSubmitBar.classList.contains('is-collapsed')) {
+                    if (commentSubmitBar) {
                         commentSubmitBar.style.bottom = '0px';
                         commentSubmitBar.style.transform = '';
                     }
                     const sheetPanel = this.shadowRoot?.querySelector('.tm-bottom-sheet-panel');
-                    if (sheetPanel && sheetPanel.classList.contains('visible')) {
+                    if (sheetPanel) {
                         sheetPanel.style.bottom = '0px';
                         sheetPanel.style.transform = '';
                     }

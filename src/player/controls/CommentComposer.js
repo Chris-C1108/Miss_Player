@@ -21,6 +21,7 @@ export class CommentComposer {
         this.tagSelectModal = null;
         this.tagSelectList = null;
         this._lastStatusCheckTime = 0;
+        this._lastInputTouchTime = 0;
     }
 
     get playerCore() {
@@ -176,6 +177,10 @@ export class CommentComposer {
         if (backdrop) {
             backdrop.addEventListener('click', (e) => {
                 e.stopPropagation();
+                // 幽灵误触防御 (Ghost Click Guard): 若 450ms 内触碰过输入框或面板刚刚位移，严禁意外关闭发评底栏
+                if (Date.now() - (this._lastInputTouchTime || 0) < 450) {
+                    return;
+                }
                 this.closeComposer();
             });
         }
@@ -188,9 +193,15 @@ export class CommentComposer {
             });
         }
 
-        // 阻断输入栏内部点击冒泡至背景遮罩，防止误触发收起
+        // 阻断输入栏内部点击冒泡至背景遮罩，并记录最后触碰时间
         if (submitBarWrapper) {
             submitBarWrapper.addEventListener('click', (e) => e.stopPropagation());
+            submitBarWrapper.addEventListener('touchstart', () => {
+                this._lastInputTouchTime = Date.now();
+            }, { passive: true });
+            submitBarWrapper.addEventListener('pointerdown', () => {
+                this._lastInputTouchTime = Date.now();
+            }, { passive: true });
         }
 
         // 阻止播放快捷键冒泡，放行 touchstart/mousedown 以确保 iOS Safari 原生点击聚焦链路 100% 畅通
@@ -202,6 +213,7 @@ export class CommentComposer {
 
             // 核心 Pre-Lift：在用户触碰/点击瞬间（抢先于 Safari 原生 focus 判定），将发评栏升至键盘高度并阻止默认 scroll
             const triggerInputPreLift = (e) => {
+                this._lastInputTouchTime = Date.now();
                 const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
                 if (isTouch && this.submitBarWrapper) {
                     const kb = UIManager.lastKnownKeyboardHeight || 380;
@@ -281,6 +293,7 @@ export class CommentComposer {
      */
     openComposer() {
         if (!this.submitBarWrapper) return;
+        this._lastInputTouchTime = Date.now();
         this.submitBarWrapper.classList.remove('is-collapsed');
         if (this.backdrop) this.backdrop.classList.remove('is-hidden');
         if (this.panel?.commentsPanel) {
@@ -440,6 +453,7 @@ export class CommentComposer {
 
             // 核心 Pre-Lift：在标签输入框获得焦点前，抢先确保发评底栏已经处于键盘上方，杜绝 Safari 原生滚动
             const triggerTagPreLift = (e) => {
+                this._lastInputTouchTime = Date.now();
                 const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
                 if (isTouch && this.submitBarWrapper) {
                     const kb = UIManager.lastKnownKeyboardHeight || 380;

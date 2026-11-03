@@ -23,6 +23,7 @@ export class MarkerBottomSheet {
         this._undoTimer = null;
         this._deletedHistory = [];
         this._selectedTabIds = new Set();
+        this._lastInputTouchTime = 0;
     }
 
     get tabs() {
@@ -153,7 +154,14 @@ export class MarkerBottomSheet {
         // 蒙版背景
         this._sheetOverlay = document.createElement('div');
         this._sheetOverlay.className = 'tm-bottom-sheet-overlay';
-        this._sheetOverlay.addEventListener('click', () => this.close());
+        this._sheetOverlay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // 幽灵误触防御 (Ghost Click Guard): 若 450ms 内触碰过输入框或面板刚刚位移，严禁意外关闭高光底栏
+            if (Date.now() - (this._lastInputTouchTime || 0) < 450) {
+                return;
+            }
+            this.close();
+        });
 
         this._sheetOverlay.addEventListener('touchmove', (e) => {
             if (e.cancelable) {
@@ -161,10 +169,16 @@ export class MarkerBottomSheet {
             }
         }, { passive: false });
 
-        // 模态框面板 (挂载于控制面板容器内，宽度与控制面板一致，底部与 tm-loop-control-row 对齐)
+        // 模态框面板
         this._sheetPanel = document.createElement('div');
         this._sheetPanel.className = 'tm-bottom-sheet-panel';
         this._sheetPanel.addEventListener('click', (e) => e.stopPropagation());
+        this._sheetPanel.addEventListener('touchstart', () => {
+            this._lastInputTouchTime = Date.now();
+        }, { passive: true });
+        this._sheetPanel.addEventListener('pointerdown', () => {
+            this._lastInputTouchTime = Date.now();
+        }, { passive: true });
 
         // 头部标题与关闭按钮
         const header = document.createElement('div');
@@ -406,6 +420,7 @@ export class MarkerBottomSheet {
 
             // 核心 Pre-Lift：在切片备注输入框获得焦点前，将高光底栏面板提前升至键盘高度，杜绝 Safari 判定遮挡触发原生滚动
             const triggerSheetInputPreLift = (e) => {
+                this._lastInputTouchTime = Date.now();
                 const isTouch = (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
                 if (isTouch && this._sheetPanel) {
                     const kb = UIManager.lastKnownKeyboardHeight || 380;

@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.66
+// @version            5.7.67
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.66";
+		return "5.7.67";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1591,7 +1591,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.66";
+		return "5.7.67";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3343,12 +3343,12 @@
 							playerContainer.style.removeProperty("--keyboard-height");
 						}
 						if (this.shadowRoot?.host) this.shadowRoot.host.style.removeProperty("--keyboard-height");
-						if (commentSubmitBar && !commentSubmitBar.classList.contains("is-collapsed")) {
+						if (commentSubmitBar) {
 							commentSubmitBar.style.bottom = "0px";
 							commentSubmitBar.style.transform = "";
 						}
 						const sheetPanel = this.shadowRoot?.querySelector(".tm-bottom-sheet-panel");
-						if (sheetPanel && sheetPanel.classList.contains("visible")) {
+						if (sheetPanel) {
 							sheetPanel.style.bottom = "0px";
 							sheetPanel.style.transform = "";
 						}
@@ -5276,7 +5276,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.66";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.67";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -9017,6 +9017,7 @@
 			this.tagSelectModal = null;
 			this.tagSelectList = null;
 			this._lastStatusCheckTime = 0;
+			this._lastInputTouchTime = 0;
 		}
 		get playerCore() {
 			return this.panel.playerCore;
@@ -9143,19 +9144,29 @@
 			});
 			if (backdrop) backdrop.addEventListener("click", (e) => {
 				e.stopPropagation();
+				if (Date.now() - (this._lastInputTouchTime || 0) < 450) return;
 				this.closeComposer();
 			});
 			if (closeBarBtn) closeBarBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
 				this.closeComposer();
 			});
-			if (submitBarWrapper) submitBarWrapper.addEventListener("click", (e) => e.stopPropagation());
+			if (submitBarWrapper) {
+				submitBarWrapper.addEventListener("click", (e) => e.stopPropagation());
+				submitBarWrapper.addEventListener("touchstart", () => {
+					this._lastInputTouchTime = Date.now();
+				}, { passive: true });
+				submitBarWrapper.addEventListener("pointerdown", () => {
+					this._lastInputTouchTime = Date.now();
+				}, { passive: true });
+			}
 			if (commentInput) {
 				const stopKeyProp = (e) => e.stopPropagation();
 				commentInput.addEventListener("keydown", stopKeyProp);
 				commentInput.addEventListener("keyup", stopKeyProp);
 				commentInput.addEventListener("keypress", stopKeyProp);
 				const triggerInputPreLift = (e) => {
+					this._lastInputTouchTime = Date.now();
 					if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0) && this.submitBarWrapper) {
 						const kb = UIManager.lastKnownKeyboardHeight || 380;
 						this.submitBarWrapper.style.bottom = `${kb}px`;
@@ -9206,6 +9217,7 @@
 		}
 		openComposer() {
 			if (!this.submitBarWrapper) return;
+			this._lastInputTouchTime = Date.now();
 			this.submitBarWrapper.classList.remove("is-collapsed");
 			if (this.backdrop) this.backdrop.classList.remove("is-hidden");
 			if (this.panel?.commentsPanel) this.panel.commentsPanel.classList.add("has-composer-open");
@@ -9314,6 +9326,7 @@
 				input.addEventListener("keyup", stopKeyProp);
 				input.addEventListener("keypress", stopKeyProp);
 				const triggerTagPreLift = (e) => {
+					this._lastInputTouchTime = Date.now();
 					if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0) && this.submitBarWrapper) {
 						const kb = UIManager.lastKnownKeyboardHeight || 380;
 						this.submitBarWrapper.style.bottom = `${kb}px`;
@@ -14866,6 +14879,7 @@
 			this._undoTimer = null;
 			this._deletedHistory = [];
 			this._selectedTabIds = new Set();
+			this._lastInputTouchTime = 0;
 		}
 		get tabs() {
 			return this.loopManager.tabs;
@@ -14959,13 +14973,23 @@
 			if (this._sheetPanel) this._sheetPanel.remove();
 			this._sheetOverlay = document.createElement("div");
 			this._sheetOverlay.className = "tm-bottom-sheet-overlay";
-			this._sheetOverlay.addEventListener("click", () => this.close());
+			this._sheetOverlay.addEventListener("click", (e) => {
+				e.stopPropagation();
+				if (Date.now() - (this._lastInputTouchTime || 0) < 450) return;
+				this.close();
+			});
 			this._sheetOverlay.addEventListener("touchmove", (e) => {
 				if (e.cancelable) e.preventDefault();
 			}, { passive: false });
 			this._sheetPanel = document.createElement("div");
 			this._sheetPanel.className = "tm-bottom-sheet-panel";
 			this._sheetPanel.addEventListener("click", (e) => e.stopPropagation());
+			this._sheetPanel.addEventListener("touchstart", () => {
+				this._lastInputTouchTime = Date.now();
+			}, { passive: true });
+			this._sheetPanel.addEventListener("pointerdown", () => {
+				this._lastInputTouchTime = Date.now();
+			}, { passive: true });
 			const header = document.createElement("div");
 			header.className = "tm-sheet-header";
 			const titleWrapper = document.createElement("div");
@@ -15140,6 +15164,7 @@
 				input.addEventListener("keyup", stopKeyProp);
 				input.addEventListener("keypress", stopKeyProp);
 				const triggerSheetInputPreLift = (e) => {
+					this._lastInputTouchTime = Date.now();
 					if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0) && this._sheetPanel) {
 						const kb = UIManager.lastKnownKeyboardHeight || 380;
 						this._sheetPanel.style.bottom = `${kb}px`;
