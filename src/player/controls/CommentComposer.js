@@ -246,33 +246,6 @@ export class CommentComposer {
                 this.handleSendComment();
             });
         }
-
-        // 全选按钮
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const tabs = this.getTabs();
-                this.selectedTagIds = new Set(tabs.map(t => t.id));
-                this.renderTagSelectList();
-            });
-        }
-
-        // 取消全选按钮
-        if (deselectAllBtn) {
-            deselectAllBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.selectedTagIds.clear();
-                this.renderTagSelectList();
-            });
-        }
-
-        // 关闭模态框按钮
-        if (closeBtn) {
-            closeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.closeTagSelectModal();
-            });
-        }
     }
 
     /**
@@ -515,7 +488,7 @@ export class CommentComposer {
             if (success) {
                 if (this.commentInput) this.commentInput.value = '';
                 this.selectedTagIds.clear();
-                this.closeTagSelectModal();
+                this.closeTagChipsBar();
                 this.closeComposer();
                 setTimeout(() => this.panel.handleRetry(), 500);
             }
