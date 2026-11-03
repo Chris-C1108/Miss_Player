@@ -206,10 +206,21 @@ export class FloatingButton {
 
         this.button.innerHTML = FLOATING_PLAY;
 
-        // 添加点击事件处理器
-        this.button.addEventListener('click', () => {
+        // 添加点击与触控事件处理器 (移动端 touchend + 桌面端 click 双轨触发与防重点击)
+        let isHandlingClick = false;
+        const onTrigger = (e) => {
+            if (isHandlingClick) return;
+            isHandlingClick = true;
+            if (e && e.cancelable && e.type === 'touchend') {
+                e.preventDefault();
+            }
+            if (e) e.stopPropagation();
             this.handleButtonClick();
-        });
+            setTimeout(() => { isHandlingClick = false; }, 800);
+        };
+
+        this.button.addEventListener('touchend', onTrigger, { passive: false });
+        this.button.addEventListener('click', onTrigger);
 
         // 显示按钮
         this.button.style.display = 'flex';
@@ -242,7 +253,9 @@ export class FloatingButton {
         this.button.style.setProperty('height', '56px', 'important');
         this.button.style.setProperty('border-radius', '50%', 'important');
         this.button.style.setProperty('box-sizing', 'border-box', 'important');
-        this.button.style.setProperty('z-index', '9980', 'important');
+        this.button.style.setProperty('z-index', '2147483640', 'important');
+        this.button.style.setProperty('pointer-events', 'auto', 'important');
+        this.button.style.setProperty('touch-action', 'manipulation', 'important');
         this.button.style.setProperty('-webkit-appearance', 'none', 'important');
         this.button.style.setProperty('appearance', 'none', 'important');
         
@@ -300,6 +313,23 @@ export class FloatingButton {
 
         // 在用户直接点击手势的调用栈顶端尝试预热激活视频元素 (必须先设置 playsinline 属性，防止 Safari 自动跳入系统全屏播放器)
         const preTargetVideo = (targetNode && targetNode.tagName === 'VIDEO') ? targetNode : findVideoElement(false);
+        
+        // 若当前页面尚未完成视频渲染挂载，启动极速探针重试，避免静默失败
+        if (!preTargetVideo) {
+            console.warn('[FloatingButton] 初始未找到视频元素，等待异步渲染...');
+            Toast(__('loadingVideo') || '正在定位视频源...', 1500, 'info');
+            setTimeout(() => {
+                const retryVideo = findVideoElement(false);
+                if (retryVideo) {
+                    this.handleButtonClick();
+                } else {
+                    Toast(__('videoNotFound') || '未检测到视频，请确认视频已在页面上加载', 3000, 'warning');
+                    this.button.style.display = 'flex';
+                }
+            }, 600);
+            return;
+        }
+
         if (preTargetVideo) {
             preTargetVideo.setAttribute('playsinline', 'true');
             preTargetVideo.setAttribute('webkit-playsinline', 'true');

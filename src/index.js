@@ -104,14 +104,15 @@ function setupViewport() {
         isInIframe = true;
     }
 
-    // 识别是否是播放器相关 iframe (如 Javrate, Supjav, Dood, Streamtape 等)
+    // 识别是否是播放器相关 iframe (如 Javrate, Supjav, Dood, Streamtape, Plyr 等)
     const isPlayerIframe = isInIframe && (
         window.location.pathname.includes('/player/') ||
         window.location.pathname.includes('/embed/') ||
         window.location.search.includes('payload=') ||
         window.location.search.includes('video=') ||
         window.location.href.includes('avking') ||
-        window.location.href.includes('videocdn')
+        window.location.href.includes('videocdn') ||
+        window.location.href.includes('plyr')
     );
 
     if (isInIframe && !isSiteDomain('JAVLIBRARY') && !isPlayerIframe) {

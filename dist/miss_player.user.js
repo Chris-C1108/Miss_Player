@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.72
+// @version            5.7.73
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -521,7 +521,7 @@
 			return defaultValue;
 		}
 	}
-	function Toast(msg, duration = 3e3, bgColor = "", textColor = "", position = "top") {
+	function Toast$1(msg, duration = 3e3, bgColor = "", textColor = "", position = "top") {
 		const toast = document.createElement("div");
 		toast.className = `tm-toast tm-toast--${position}`;
 		let type = "normal";
@@ -580,7 +580,7 @@
 			}, 300);
 		}, duration);
 	}
-	Toast.show = (msg, duration = 3e3, type = "") => Toast(msg, duration, type);
+	Toast$1.show = (msg, duration = 3e3, type = "") => Toast$1(msg, duration, type);
 	var domains_exports = __exportAll({
 		SITE_DOMAINS: () => SITE_DOMAINS,
 		checkSiteReachability: () => checkSiteReachability,
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.72";
+		return "5.7.73";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1394,7 +1394,10 @@
 			this.targetVideo = this.options.targetVideo || this.findTargetVideo();
 			if (!this.targetVideo) {
 				console.error("[PlayerCore] 未找到视频元素");
-				if (this.callingButton) this.callingButton.classList.remove("is-hidden");
+				if (this.callingButton) {
+					this.callingButton.classList.remove("is-hidden");
+					this.callingButton.style.display = "flex";
+				}
 				return;
 			}
 			this.saveVideoState();
@@ -1593,7 +1596,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.72";
+		return "5.7.73";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2402,7 +2405,7 @@
 		static clearLogs() {
 			this._logs = [];
 			this.recordEvent("LOG_CLEARED", "已清空历史日志");
-			Toast("探针日志已清空", 1200, "info");
+			Toast$1("探针日志已清空", 1200, "info");
 			const exportWrap = this._container?.querySelector("#tm-hud-export-wrap");
 			if (exportWrap) exportWrap.style.display = "none";
 		}
@@ -2459,12 +2462,12 @@
 					title: "Miss Player Debug Report",
 					text: md
 				});
-				Toast("✅ 已调起系统原生面板，点击“拷贝”即可！", 2500, "success");
+				Toast$1("✅ 已调起系统原生面板，点击“拷贝”即可！", 2500, "success");
 				return true;
 			} catch (err) {
 				if (err && err.name === "AbortError") return false;
 			}
-			Toast("⚠️ 请直接长按下方已全选的文本框并点“拷贝”", 3e3, "warning");
+			Toast$1("⚠️ 请直接长按下方已全选的文本框并点“拷贝”", 3e3, "warning");
 			return false;
 		}
 		static _showExportTextarea(text) {
@@ -2508,8 +2511,8 @@
 					copyBtn.textContent = `📋 复制日志 (${this._logs.length})`;
 				}, 3e3);
 			}
-			if (copied) Toast("✅ 日志已复制到剪贴板！", 2200, "success");
-			else Toast("⚠️ 系统拦截了静默写入，请直接长按下方文本框并点“拷贝”", 3500, "warning");
+			if (copied) Toast$1("✅ 日志已复制到剪贴板！", 2200, "success");
+			else Toast$1("⚠️ 系统拦截了静默写入，请直接长按下方文本框并点“拷贝”", 3500, "warning");
 			console.log("[ViewportDebugHUD] Report:\n", md);
 		}
 		static destroy() {
@@ -4640,7 +4643,7 @@
 			login_autoLogin: "Đăng nhập tự động"
 		}
 	});
-	function __(id, lang = "") {
+	function __$1(id, lang = "") {
 		return I18n.translate(id, lang);
 	}
 	function md5cycle(x, k) {
@@ -5278,7 +5281,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.72";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.73";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -5927,12 +5930,12 @@
 			if (uploadBtn) uploadBtn.addEventListener("click", async (e) => {
 				e.stopPropagation();
 				if (this._logs.length === 0) {
-					Toast("暂无日志可上传", 1500, "info");
+					Toast$1("暂无日志可上传", 1500, "info");
 					return;
 				}
 				const config = SyncManager.getWebDavConfig();
 				if (!config || !config.url) {
-					Toast("请先在设置中配置 WebDAV 服务器", 2e3, "error");
+					Toast$1("请先在设置中配置 WebDAV 服务器", 2e3, "error");
 					return;
 				}
 				try {
@@ -5943,9 +5946,9 @@
 					const subPath = `logs/debug/${(typeof window !== "undefined" ? window.location.pathname.split("/").filter(Boolean).pop() || "GLOBAL" : "GLOBAL").toUpperCase()}_${ts}.txt`;
 					const fullText = this._logs.map((l) => `[${l.time}] [${l.level.toUpperCase()}] ${l.text}`).join("\n");
 					await WebDavClient.uploadFile(config, subPath, fullText, "text/plain; charset=utf-8");
-					Toast(`日志已上传至 WebDAV: ${subPath}`, 2500, "success");
+					Toast$1(`日志已上传至 WebDAV: ${subPath}`, 2500, "success");
 				} catch (err) {
-					Toast(`上传日志失败: ${err.message || err}`, 2500, "error");
+					Toast$1(`上传日志失败: ${err.message || err}`, 2500, "error");
 				} finally {
 					uploadBtn.textContent = "上传";
 				}
@@ -5954,12 +5957,12 @@
 				e.stopPropagation();
 				this._logs = [];
 				this._renderLogs();
-				Toast("已清空调试日志", 1200, "info");
+				Toast$1("已清空调试日志", 1200, "info");
 			});
 			copyBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
 				if (this._logs.length === 0) {
-					Toast("暂无日志可复制", 1500, "info");
+					Toast$1("暂无日志可复制", 1500, "info");
 					return;
 				}
 				const fullText = this._logs.map((l) => `[${l.time}] [${l.level.toUpperCase()}] ${l.text}`).join("\n");
@@ -5969,7 +5972,7 @@
 				} catch (_) {
 					copyToClipboard(fullText);
 				}
-				Toast("调试日志已复制到剪贴板", 1500, "success");
+				Toast$1("调试日志已复制到剪贴板", 1500, "success");
 			});
 		}
 		static addLog(text, level = "info") {
@@ -6363,14 +6366,14 @@
 				};
 				const timeoutId = setTimeout(() => {
 					cleanUp();
-					Toast(`影子通道 [${siteKey}] 操作超时，请检查该站点的标签页是否开启`, 3e3, "error");
+					Toast$1(`影子通道 [${siteKey}] 操作超时，请检查该站点的标签页是否开启`, 3e3, "error");
 					resolve(false);
 				}, timeout);
 				const handleResponse = (res) => {
 					cleanUp();
 					if (res.status === "SUCCESS") resolve(res.result !== void 0 ? res.result : true);
 					else {
-						Toast(`通过影子页提交失败: ${res.error || "执行失败"}`, 3e3, "error");
+						Toast$1(`通过影子页提交失败: ${res.error || "执行失败"}`, 3e3, "error");
 						resolve(false);
 					}
 				};
@@ -6672,7 +6675,7 @@
 				autoLoginContainer.style.gap = "8px";
 				autoLoginContainer.innerHTML = `
                 <input id="mp_auto_login" type="checkbox" style="cursor: pointer; width: 16px; height: 16px;">
-                <label for="mp_auto_login" style="cursor: pointer; font-size: 13px; color: #ccc;">${__("login_autoLogin") || "自动登录 (Miss Player)"}</label>
+                <label for="mp_auto_login" style="cursor: pointer; font-size: 13px; color: #ccc;">${__$1("login_autoLogin") || "自动登录 (Miss Player)"}</label>
             `;
 				const submitBtn = selectors.submitBtn ? form.querySelector(selectors.submitBtn) : form.querySelector("button[type=\"submit\"]") || form.querySelector("input[type=\"submit\"]");
 				if (submitBtn && submitBtn.parentNode) submitBtn.parentNode.insertBefore(autoLoginContainer, submitBtn);
@@ -6830,7 +6833,7 @@
 			}
 			const activeDomain = this.getActiveDomain(domain);
 			if (!username || !password) {
-				if (!silent) Toast("用户名和密码不能为空", 2e3, "error");
+				if (!silent) Toast$1("用户名和密码不能为空", 2e3, "error");
 				return false;
 			}
 			try {
@@ -6857,19 +6860,19 @@
 				console.log("[JableLoginProvider] 登录响应结果:", result);
 				if (result.status === "success" || result.html && !result.html.includes("error-field")) {
 					this.cacheLoginStatus(true);
-					if (!silent) Toast("Jable.tv 登录成功", 2e3, "success");
+					if (!silent) Toast$1("Jable.tv 登录成功", 2e3, "success");
 					return true;
 				} else if (result.errors) {
 					const errMsg = formatErrorMessage(result.errors, "登录失败");
-					if (!silent) Toast(`登录失败: ${errMsg}`, 3e3, "error");
+					if (!silent) Toast$1(`登录失败: ${errMsg}`, 3e3, "error");
 					return false;
 				} else {
-					if (!silent) Toast("登录失败，请检查账号和密码", 3e3, "error");
+					if (!silent) Toast$1("登录失败，请检查账号和密码", 3e3, "error");
 					return false;
 				}
 			} catch (error) {
 				console.error("[JableLoginProvider] 登录发生异常:", error);
-				if (!silent) Toast(`登录出错: ${error.message}`, 2e3, "error");
+				if (!silent) Toast$1(`登录出错: ${error.message}`, 2e3, "error");
 				return false;
 			}
 		}
@@ -6899,11 +6902,11 @@
 		}
 		async publishComment(commentText, { videoCode, videoId, commentForm, targetUrl, domain }) {
 			if (!commentText) {
-				Toast("评论内容不能为空", 2e3, "warning");
+				Toast$1("评论内容不能为空", 2e3, "warning");
 				return false;
 			}
 			if (commentText.length < 3) {
-				Toast("评论内容太少，至少输入3个字", 2e3, "warning");
+				Toast$1("评论内容太少，至少输入3个字", 2e3, "warning");
 				return false;
 			}
 			if (!this.isSupportedSite()) {
@@ -6959,10 +6962,10 @@
 						const json = JSON.parse(resHtml);
 						console.log("[JableLoginProvider] 评论发表接口 JSON 响应:", json);
 						if (json.status === "success") {
-							Toast("评论发表成功！", 2e3, "success");
+							Toast$1("评论发表成功！", 2e3, "success");
 							return true;
 						} else if (json.errors) {
-							Toast(`提交失败: ${formatErrorMessage(json.errors, "评论发表失败")}`, 3e3, "error");
+							Toast$1(`提交失败: ${formatErrorMessage(json.errors, "评论发表失败")}`, 3e3, "error");
 							return false;
 						}
 					} catch (e) {
@@ -6971,19 +6974,19 @@
 					if (resHtml.includes("error-field") || resHtml.includes("class=\"error\"") || resHtml.includes("class=\"err\"")) {
 						const docErr = new DOMParser().parseFromString(resHtml, "text/html");
 						const errEl = docErr.querySelector(".error") || docErr.querySelector(".err") || docErr.querySelector(".message-error");
-						Toast(errEl ? errEl.textContent.trim() : "评论提交失败，可能包含敏感词或触发了频率限制。", 3e3, "error");
+						Toast$1(errEl ? errEl.textContent.trim() : "评论提交失败，可能包含敏感词或触发了频率限制。", 3e3, "error");
 						return false;
 					} else {
-						Toast("评论发表成功！", 2e3, "success");
+						Toast$1("评论发表成功！", 2e3, "success");
 						return true;
 					}
 				} else {
-					Toast(`提交失败: HTTP ${response.status}`, 2e3, "error");
+					Toast$1(`提交失败: HTTP ${response.status}`, 2e3, "error");
 					return false;
 				}
 			} catch (err) {
 				console.error("[JableLoginProvider] 发表评论失败:", err);
-				Toast("网络请求出错，请重试", 2e3, "error");
+				Toast$1("网络请求出错，请重试", 2e3, "error");
 				return false;
 			}
 		}
@@ -7017,7 +7020,7 @@
 		async login(email, password, options = {}) {
 			const { reload = true, silent = false } = options;
 			if (!email || !password) {
-				if (!silent) Toast(__("login_accountNull") || "账号和密码不能为空", 2e3, "error");
+				if (!silent) Toast$1(__$1("login_accountNull") || "账号和密码不能为空", 2e3, "error");
 				return false;
 			}
 			try {
@@ -7044,18 +7047,18 @@
 						statusText: response.statusText,
 						responseText: errorText
 					});
-					if (!silent) Toast(`登录失败: ${errorText}`, 2e3, "error");
-					throw new Error(__("login_networkFailed") || "网络请求失败");
+					if (!silent) Toast$1(`登录失败: ${errorText}`, 2e3, "error");
+					throw new Error(__$1("login_networkFailed") || "网络请求失败");
 				}
 				const data = await response.json();
 				console.log("[MissavLoginProvider] 登录成功:", data);
-				if (!silent) Toast(__("login_success") || "登录成功", 2e3, "success");
+				if (!silent) Toast$1(__$1("login_success") || "登录成功", 2e3, "success");
 				if (reload) setTimeout(() => {
 					location.reload();
 				}, 1e3);
 				return true;
 			} catch (error) {
-				if (!silent) Toast(`错误发生: ${error.message}`, 2e3, "error");
+				if (!silent) Toast$1(`错误发生: ${error.message}`, 2e3, "error");
 				return false;
 			}
 		}
@@ -7067,7 +7070,7 @@
 			const loginButton = document.querySelector("button[x-on\\:click=\"currentPage = 'login'\"]") || document.querySelector("button[x-on\\:click*=\"login\"]") || document.querySelector("a[href*=\"login\"]");
 			if (loginButton) {
 				loginButton.click();
-				Toast("请在页面登录窗口中完成登录", 3e3, "info");
+				Toast$1("请在页面登录窗口中完成登录", 3e3, "info");
 			} else {
 				const redirectUrl = `${activeDomain}/cn/login`;
 				if (typeof GM_openInTab === "function") GM_openInTab(redirectUrl, {
@@ -9044,7 +9047,7 @@
 		}
 		async checkCanComment() {
 			if (!this.videoCode) {
-				Toast("无法获取影片番号，无法发表评论", 2e3, "error");
+				Toast$1("无法获取影片番号，无法发表评论", 2e3, "error");
 				return null;
 			}
 			const domain = this.jableWorkingDomain || JABLE_DOMAINS[0];
@@ -9058,7 +9061,7 @@
 						if (req && typeof req.abort === "function") try {
 							req.abort();
 						} catch (e) {}
-						Toast("检测评论环境超时，请稍后重试", 2e3, "error");
+						Toast$1("检测评论环境超时，请稍后重试", 2e3, "error");
 						resolve(null);
 					}
 				}, 6e3);
@@ -9095,7 +9098,7 @@
 								domain
 							});
 						} else {
-							Toast(`检测失败: HTTP ${response.status}`, 2e3, "error");
+							Toast$1(`检测失败: HTTP ${response.status}`, 2e3, "error");
 							resolve(null);
 						}
 					},
@@ -9104,14 +9107,14 @@
 						completed = true;
 						clearTimeout(timer);
 						logger.error("[CommentComposer] 检测 Jable 失败:", err);
-						Toast("网络请求失败，请稍后重试", 2e3, "error");
+						Toast$1("网络请求失败，请稍后重试", 2e3, "error");
 						resolve(null);
 					},
 					ontimeout: () => {
 						if (completed) return;
 						completed = true;
 						clearTimeout(timer);
-						Toast("网络请求超时，请稍后重试", 2e3, "error");
+						Toast$1("网络请求超时，请稍后重试", 2e3, "error");
 						resolve(null);
 					}
 				});
@@ -9290,7 +9293,7 @@
 			const selectedTabs = this.getTabs().filter((t) => this.selectedTagIds.has(t.id));
 			const commentText = (this.commentInput ? this.commentInput.value : "").trim();
 			if (selectedTabs.length === 0 && !commentText) {
-				Toast("请勾选时间戳标签或输入评论内容", 2e3, "warning");
+				Toast$1("请勾选时间戳标签或输入评论内容", 2e3, "warning");
 				return;
 			}
 			const lines = [];
@@ -9322,7 +9325,7 @@
 			const resetBtn = () => {
 				if (sendBtn) {
 					sendBtn.disabled = false;
-					sendBtn.textContent = __("send");
+					sendBtn.textContent = __$1("send");
 				}
 			};
 			const provider = window.loginManager && window.loginManager.providers.find((p) => p.domains.some((d) => domain.includes(d)));
@@ -9363,20 +9366,20 @@
 								if (resHtml.includes("error-field") || resHtml.includes("class=\"error\"") || resHtml.includes("class=\"err\"")) {
 									const docErr = new DOMParser().parseFromString(resHtml, "text/html");
 									const errEl = docErr.querySelector(".error") || docErr.querySelector(".err") || docErr.querySelector(".message-error");
-									Toast(errEl ? errEl.textContent.trim() : "评论提交失败，可能包含敏感词或触发了频率限制。", 3e3, "error");
+									Toast$1(errEl ? errEl.textContent.trim() : "评论提交失败，可能包含敏感词或触发了频率限制。", 3e3, "error");
 									resolve(false);
 								} else {
-									Toast("评论发表成功！", 2e3, "success");
+									Toast$1("评论发表成功！", 2e3, "success");
 									resolve(true);
 								}
 							} else {
-								Toast(`提交失败: HTTP ${res.status}`, 2e3, "error");
+								Toast$1(`提交失败: HTTP ${res.status}`, 2e3, "error");
 								resolve(false);
 							}
 						},
 						onerror: (err) => {
 							logger.error("[CommentComposer] 提交评论失败:", err);
-							Toast("网络请求出错，请重试", 2e3, "error");
+							Toast$1("网络请求出错，请重试", 2e3, "error");
 							resolve(false);
 						}
 					});
@@ -9392,12 +9395,12 @@
 			} catch (err) {
 				resetBtn();
 				logger.error("[CommentComposer] 发表评论过程出现异常:", err);
-				Toast("发表评论失败", 2e3, "error");
+				Toast$1("发表评论失败", 2e3, "error");
 			}
 		}
 		async handlePublishComment() {
 			if (!this.videoCode) {
-				Toast("无法获取影片番号，无法发表评论", 2e3, "error");
+				Toast$1("无法获取影片番号，无法发表评论", 2e3, "error");
 				return;
 			}
 			const domain = this.jableWorkingDomain || JABLE_DOMAINS[0];
@@ -9427,7 +9430,7 @@
 						req.abort();
 					} catch (e) {}
 					logger.error("[CommentComposer] 检测 Jable 页面超时");
-					Toast("网络请求超时，请稍后重试", 2e3, "error");
+					Toast$1("网络请求超时，请稍后重试", 2e3, "error");
 				}
 			}, 6e3);
 			req = GM_xmlhttpRequest({
@@ -9456,7 +9459,7 @@
 						const commentForm = Array.from(doc.querySelectorAll("form")).find((form) => form.querySelector("input[name=\"action\"][value=\"add_comment\"]") || form.querySelector("input[name=\"action\"][value=\"add_comment_video\"]")) || doc.querySelector("form[id*=\"comment\"]") || doc.querySelector("form[action*=\"comment\"]");
 						if (!commentForm) this.showLoginPromptModal(domain);
 						else this.showCommentInputModal(commentForm, targetUrl, domain);
-					} else Toast(`检测失败: HTTP ${response.status}`, 2e3, "error");
+					} else Toast$1(`检测失败: HTTP ${response.status}`, 2e3, "error");
 				},
 				onerror: (err) => {
 					if (completed) return;
@@ -9464,7 +9467,7 @@
 					clearTimeout(timer);
 					resetBtn();
 					logger.error("[CommentComposer] 检测 Jable 失败:", err);
-					Toast("网络请求失败，请稍后重试", 2e3, "error");
+					Toast$1("网络请求失败，请稍后重试", 2e3, "error");
 				},
 				ontimeout: () => {
 					if (completed) return;
@@ -9472,7 +9475,7 @@
 					clearTimeout(timer);
 					resetBtn();
 					logger.error("[CommentComposer] 检测 Jable 超时");
-					Toast("网络请求超时，请稍后重试", 2e3, "error");
+					Toast$1("网络请求超时，请稍后重试", 2e3, "error");
 				}
 			});
 		}
@@ -9555,7 +9558,7 @@
 				const password = passwordInput.value.trim();
 				const remember = modal.querySelector("#tm-login-remember").checked;
 				if (!username || !password) {
-					Toast("用户名和密码不能为空", 2e3, "warning");
+					Toast$1("用户名和密码不能为空", 2e3, "warning");
 					return;
 				}
 				usernameInput.disabled = true;
@@ -9584,7 +9587,7 @@
 					}
 				} catch (err) {
 					console.error("[CommentComposer] 弹窗登录失败:", err);
-					Toast("登录失败，请重试", 2e3, "error");
+					Toast$1("登录失败，请重试", 2e3, "error");
 					usernameInput.disabled = false;
 					passwordInput.disabled = false;
 					submitBtn.disabled = false;
@@ -9628,11 +9631,11 @@
 			submitBtn.addEventListener("click", () => {
 				const commentText = textarea.value.trim();
 				if (!commentText) {
-					Toast("评论内容不能为空", 2e3, "warning");
+					Toast$1("评论内容不能为空", 2e3, "warning");
 					return;
 				}
 				if (commentText.length < 3) {
-					Toast("评论内容太少，至少输入3个字", 2e3, "warning");
+					Toast$1("评论内容太少，至少输入3个字", 2e3, "warning");
 					return;
 				}
 				textarea.disabled = true;
@@ -9678,20 +9681,20 @@
 										if (resHtml.includes("error-field") || resHtml.includes("class=\"error\"") || resHtml.includes("class=\"err\"")) {
 											const docErr = new DOMParser().parseFromString(resHtml, "text/html");
 											const errEl = docErr.querySelector(".error") || docErr.querySelector(".err") || docErr.querySelector(".message-error");
-											Toast(errEl ? errEl.textContent.trim() : "评论提交失败，可能包含敏感词或触发了频率限制。", 3e3, "error");
+											Toast$1(errEl ? errEl.textContent.trim() : "评论提交失败，可能包含敏感词或触发了频率限制。", 3e3, "error");
 											resolve(false);
 										} else {
-											Toast("评论发表成功！", 2e3, "success");
+											Toast$1("评论发表成功！", 2e3, "success");
 											resolve(true);
 										}
 									} else {
-										Toast(`提交失败: HTTP ${res.status}`, 2e3, "error");
+										Toast$1(`提交失败: HTTP ${res.status}`, 2e3, "error");
 										resolve(false);
 									}
 								},
 								onerror: (err) => {
 									logger.error("[CommentComposer] 提交评论失败:", err);
-									Toast("网络请求出错，请重试", 2e3, "error");
+									Toast$1("网络请求出错，请重试", 2e3, "error");
 									resolve(false);
 								}
 							});
@@ -10641,7 +10644,7 @@
 							imp.capsules.forEach((c) => {
 								lm.addTabFromTime(c.endTime ? [c.startTime, c.endTime] : c.startTime, c.comment);
 							});
-							Toast(`已将 ${imp.capsules.length} 条外部分享高光导入时间轴`, 2e3, "success");
+							Toast$1(`已将 ${imp.capsules.length} 条外部分享高光导入时间轴`, 2e3, "success");
 						}
 						window.__mp_imported_capsules = null;
 						this.renderCommentsList();
@@ -10658,7 +10661,7 @@
 							comment.timestamps.forEach((ts) => {
 								lm.addTabFromTime(ts.seconds, comment.rawText ? comment.rawText.slice(0, 30) : (comment.text || "").slice(0, 30));
 							});
-							Toast(`已转存 ${comment.timestamps.length} 个高光片段至片段列表`, 2e3, "success");
+							Toast$1(`已转存 ${comment.timestamps.length} 个高光片段至片段列表`, 2e3, "success");
 						}
 					}
 					return;
@@ -10860,7 +10863,7 @@
 			if (this.targetVideo) {
 				this.targetVideo.currentTime = targetSecs;
 				this.targetVideo.play().catch(() => {});
-				Toast(isRange && secs.length >= 2 ? `已跳转至区间 ${formatSeconds(secs[0])} ~ ${formatSeconds(secs[1])}` : `已跳转至 ${formatSeconds(targetSecs)}`, 2e3, "info");
+				Toast$1(isRange && secs.length >= 2 ? `已跳转至区间 ${formatSeconds(secs[0])} ~ ${formatSeconds(secs[1])}` : `已跳转至 ${formatSeconds(targetSecs)}`, 2e3, "info");
 				const lm = this.getLoopManager();
 				if (isRange && secs.length >= 2 && lm && typeof lm.setLoopRange === "function") lm.setLoopRange(secs[0], secs[1]);
 				if (this.uiManager) this.uiManager.showControls();
@@ -10878,12 +10881,12 @@
 			}
 			if (this.uiManager) this.uiManager.showControls();
 			if (isFavorited) {
-				Toast("该时间已在片段标记中", 1500, "info");
+				Toast$1("该时间已在片段标记中", 1500, "info");
 				return;
 			}
 			if (lm && typeof lm.setDraftTabFromTime === "function") {
 				lm.setDraftTabFromTime(secs);
-				Toast(Array.isArray(secs) && secs.length >= 2 ? `已添加区间 ${formatSeconds(secs[0])} ~ ${formatSeconds(secs[1])} 至草稿并跳转播放` : `已添加时间 ${formatSeconds(targetSecs)} 至草稿并跳转播放`, 2e3, "success");
+				Toast$1(Array.isArray(secs) && secs.length >= 2 ? `已添加区间 ${formatSeconds(secs[0])} ~ ${formatSeconds(secs[1])} 至草稿并跳转播放` : `已添加时间 ${formatSeconds(targetSecs)} 至草稿并跳转播放`, 2e3, "success");
 			}
 		}
 		toggleCommentCountdown(commentId, card, btn) {
@@ -10904,10 +10907,10 @@
 			if (btn) {
 				const isConverted = Boolean(comment.countdownApplied);
 				btn.classList.toggle("jc-countdown-btn--active", isConverted);
-				btn.textContent = isConverted ? __("commentCountdownReverted") || "显示倒数" : __("commentCountdownConvert") || "转为正序";
+				btn.textContent = isConverted ? __$1("commentCountdownReverted") || "显示倒数" : __$1("commentCountdownConvert") || "转为正序";
 				btn.title = isConverted ? "当前已换算为实际播放时间，点击恢复显示原始倒数" : "若评论内容为剩余倒数时间，点击换算为实际播放时间";
 			}
-			Toast(comment.countdownApplied ? "已换算为实际播放时间" : "已恢复显示原始倒数", 1500, "info");
+			Toast$1(comment.countdownApplied ? "已换算为实际播放时间" : "已恢复显示原始倒数", 1500, "info");
 			CommentDebugCollector.recordCountdownAdjustment(this.videoCode, comment, duration);
 		}
 		findCommentById(commentId) {
@@ -11260,7 +11263,7 @@
 		}
 		_doCopyCode(code) {
 			if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(() => {
-				Toast(`番号已复制: ${code}`, 2e3, "success");
+				Toast$1(`番号已复制: ${code}`, 2e3, "success");
 			}).catch((err) => {
 				console.error("Failed to copy code:", err);
 				this.fallbackCopyText(code);
@@ -11269,8 +11272,8 @@
 		}
 		fallbackCopyText(text) {
 			copyToClipboard(text).then((success) => {
-				if (success) Toast(`番号已复制: ${text}`, 2e3, "success");
-				else Toast(`复制失败，请手动复制: ${text}`, 3e3, "warning");
+				if (success) Toast$1(`番号已复制: ${text}`, 2e3, "success");
+				else Toast$1(`复制失败，请手动复制: ${text}`, 3e3, "warning");
 			});
 		}
 		showCodePreview(code, targetEl) {
@@ -11306,9 +11309,9 @@
 			if (this._codePreviewPopover.parentNode !== targetParent) targetParent.appendChild(this._codePreviewPopover);
 			const pop = this._codePreviewPopover;
 			pop.setAttribute("data-current-code", cleanCode);
-			const loadingText = __("previewLoading") || "正在加载预览...";
-			const notFoundText = __("previewNotFound") || "暂无预览小视频";
-			const jumpTip = __("goToVideo") || "点击跳转到视频页面";
+			const loadingText = __$1("previewLoading") || "正在加载预览...";
+			const notFoundText = __$1("previewNotFound") || "暂无预览小视频";
+			const jumpTip = __$1("goToVideo") || "点击跳转到视频页面";
 			pop.innerHTML = `<div class="jc-code-preview-video-wrap" title="${esc(jumpTip)}">
             <div class="jc-code-preview-loading">
                 <div class="jc-code-preview-spinner"></div>
@@ -11609,7 +11612,7 @@
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>
                     </button>
                     <input type="text" class="tm-comment-text-input" placeholder="发表评论..." />
-                    <button type="button" class="tm-comment-send-btn">${__("send")}</button>
+                    <button type="button" class="tm-comment-send-btn">${__$1("send")}</button>
                     <button type="button" class="tm-comment-close-bar-btn" title="收起">✕</button>
                 </div>
             </div>
@@ -11719,7 +11722,7 @@
 					e.stopPropagation();
 					const nextCollapsed = !(collapsible.getAttribute("data-collapsed") === "true");
 					collapsible.setAttribute("data-collapsed", nextCollapsed ? "true" : "false");
-					toggleExpandBtn.textContent = nextCollapsed ? __("commentsExpand") || "展开" : __("commentsCollapse") || "收起";
+					toggleExpandBtn.textContent = nextCollapsed ? __$1("commentsExpand") || "展开" : __$1("commentsCollapse") || "收起";
 					const card = collapsible.closest(".jc-card");
 					const cid = card ? card.getAttribute("data-id") : null;
 					if (cid) {
@@ -11733,7 +11736,7 @@
 						e.stopPropagation();
 						collapsible.setAttribute("data-collapsed", "false");
 						const btn = collapsible.querySelector(".jc-toggle-expand-btn");
-						if (btn) btn.textContent = __("commentsCollapse") || "收起";
+						if (btn) btn.textContent = __$1("commentsCollapse") || "收起";
 						const card = collapsible.closest(".jc-card");
 						const cid = card ? card.getAttribute("data-id") : null;
 						if (cid) this.expandedCommentIds.add(cid);
@@ -12201,13 +12204,13 @@
 			const isLongText = c.text && c.text.length > 200;
 			const isExpanded = this.expandedCommentIds ? this.expandedCommentIds.has(c.id) || Boolean(c.isExpanded) : false;
 			const textClass = isLongText ? "jc-body-text jc-body-text--collapsible" : "jc-body-text";
-			const expandBtnText = isExpanded ? __("commentsCollapse") || "收起" : __("commentsExpand") || "展开";
+			const expandBtnText = isExpanded ? __$1("commentsCollapse") || "收起" : __$1("commentsExpand") || "展开";
 			const expandBtn = isLongText ? `<div class="jc-body-text-content">${c.textHtml}</div><button class="jc-toggle-expand-btn">${expandBtnText}</button>` : c.textHtml;
 			const userHtml = c.userUrl ? `<a href="${c.userUrl}" target="_blank" class="jc-u">${c.user}</a>` : `<span class="jc-u">${c.user}</span>`;
 			const scoreHtml = c.score ? `<span class="jc-score-badge" title="评分">${c.score}</span>` : "";
 			const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
 			const isConverted = !!c.countdownApplied;
-			const btnText = isConverted ? __("commentCountdownReverted") || "显示倒数" : __("commentCountdownConvert") || "转为正序";
+			const btnText = isConverted ? __$1("commentCountdownReverted") || "显示倒数" : __$1("commentCountdownConvert") || "转为正序";
 			const countdownBtn = hasTimestamps ? `<button class="jc-countdown-btn${isConverted ? " jc-countdown-btn--active" : ""}" title="${isConverted ? "当前已换算为实际播放时间，点击恢复显示原始倒数" : "若评论内容为剩余倒数时间，点击换算为实际播放时间"}">${btnText}</button>` : "";
 			const spamHtml = c.spam && c.spam.label === "SPAM" ? `<span class="jc-spam-badge" title="${c.spam.reason}">灌水: ${c.spam.category}</span>` : "";
 			return `
@@ -12219,7 +12222,7 @@
                         </div>
                         <div class="jc-hdr-right">
                             ${countdownBtn}
-                            ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${__("saveAllHighlights") || "转存高光"}" data-comment-id="${c.id}">📌 转存</button>` : ""}
+                            ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${__$1("saveAllHighlights") || "转存高光"}" data-comment-id="${c.id}">📌 转存</button>` : ""}
                             <button class="jc-action-btn jc-report-btn" title="上报该评论" data-comment-id="${c.id}" ${this.playerCore?.options?.playerState?.settings?.debugMode || Boolean(getValue("debugMode", false)) ? "" : "hidden"}>🐛 上报</button>
                             ${userHtml}
                             ${scoreHtml}
@@ -12333,8 +12336,8 @@
 							"shadow"
 						] : ["jable", "fs1.app"];
 						const siteName = isJavlibSection ? "JAVLibrary" : "Jable.tv";
-						if (logger.copyLogs(filterKeywords)) Toast(`${siteName} 调试日志已复制到剪贴板，请发送给开发者分析！`, 3e3, "success");
-						else Toast("复制日志失败，请手动打开控制台查看。", 3e3, "error");
+						if (logger.copyLogs(filterKeywords)) Toast$1(`${siteName} 调试日志已复制到剪贴板，请发送给开发者分析！`, 3e3, "success");
+						else Toast$1("复制日志失败，请手动打开控制台查看。", 3e3, "error");
 					});
 				});
 				const jableHdr = this.commentsList.querySelector("#tm-comment-section-jable .tm-comment-section-hdr");
@@ -12560,7 +12563,7 @@
 					const loginButton = document.querySelector("button[x-on\\:click*=\"login\"]") || document.querySelector("a[href*=\"login\"]");
 					if (loginButton) {
 						loginButton.click();
-						Toast("请在页面登录窗口中完成登录", 3e3, "info");
+						Toast$1("请在页面登录窗口中完成登录", 3e3, "info");
 					} else if (typeof GM_openInTab === "function") GM_openInTab(`https://${SITE_DOMAINS.MISSAV.primary}/cn/login`, {
 						active: true,
 						insert: true,
@@ -12568,7 +12571,7 @@
 					});
 					else window.open(`https://${SITE_DOMAINS.MISSAV.primary}/cn/login`, "_blank");
 				} else if (isSiteDomain("JABLE")) window.location.href = "/login/";
-				else Toast("未检测到当前站点的登录入口", 2e3, "error");
+				else Toast$1("未检测到当前站点的登录入口", 2e3, "error");
 			} catch (e) {
 				console.error("[CommentPanel] Login redirect error:", e);
 			}
@@ -12681,8 +12684,8 @@
 					const subPath = "logs/comment_report/" + this.videoCode + "_" + ts + ".json";
 					await WebDavClient.uploadFile(webdavConfig, subPath, reportPayload, "application/json; charset=utf-8");
 				} catch (_) {}
-				if (reportedToDb) Toast("上报成功！已同步至云端数据库用于改进", 2200, "success");
-				else Toast("已记录上报信息至调试日志", 2e3, "info");
+				if (reportedToDb) Toast$1("上报成功！已同步至云端数据库用于改进", 2200, "success");
+				else Toast$1("已记录上报信息至调试日志", 2e3, "info");
 				close();
 			});
 		}
@@ -12849,7 +12852,7 @@
 			volumeButton.type = "button";
 			volumeButton.className = "tm-volume-button";
 			volumeButton.innerHTML = this.getVolumeIcon(this.targetVideo ? this.targetVideo.volume : 1);
-			volumeButton.title = __("mute") || "静音";
+			volumeButton.title = __$1("mute") || "静音";
 			volumeButton.addEventListener("click", (e) => {
 				e.stopPropagation();
 				this.toggleMute();
@@ -12875,7 +12878,7 @@
 			const isMuted = Boolean(this.targetVideo.muted || volume === 0);
 			if (volumeButton) {
 				volumeButton.classList.toggle("is-muted", isMuted);
-				volumeButton.title = isMuted ? __("unmute") || "取消静音" : __("mute") || "静音";
+				volumeButton.title = isMuted ? __$1("unmute") || "取消静音" : __$1("mute") || "静音";
 				const newIconHtml = this.getVolumeIcon(volume);
 				const currentSvg = volumeButton.querySelector("svg");
 				if (currentSvg) {
@@ -13028,18 +13031,18 @@
 			this.modes = [
 				{
 					id: "preview",
-					title: __("modePreview") || "快览片段",
-					shortTitle: __("modePreviewShort") || "快览"
+					title: __$1("modePreview") || "快览片段",
+					shortTitle: __$1("modePreviewShort") || "快览"
 				},
 				{
 					id: "normal",
-					title: __("modeNormal") || "正常播放",
-					shortTitle: __("modeNormalShort") || "正常"
+					title: __$1("modeNormal") || "正常播放",
+					shortTitle: __$1("modeNormalShort") || "正常"
 				},
 				{
 					id: "climax",
-					title: __("modeReplay") || "连播高光",
-					shortTitle: __("modeReplayShort") || "连播"
+					title: __$1("modeReplay") || "连播高光",
+					shortTitle: __$1("modeReplayShort") || "连播"
 				}
 			];
 			this.currentIndex = this.modes.findIndex((m) => m.id === this.initialMode);
@@ -13180,7 +13183,7 @@
 						btn.title = "从第 1 个高光重新播放";
 						btn.innerHTML = `<span class="mp-switcher-btn-text"><span class="mp-switcher-replay-icon">${REPLAY || ""}</span> 重播</span>`;
 					} else {
-						const modeText = curMode === "preview" ? __("modePreviewShort") || "快览" : __("modeReplayShort") || "连播";
+						const modeText = curMode === "preview" ? __$1("modePreviewShort") || "快览" : __$1("modeReplayShort") || "连播";
 						const statusDot = this.runtimeState.isPlaying ? "<span class=\"mp-switcher-status-dot\"></span>" : "<span class=\"mp-switcher-status-play\">▶</span>";
 						btn.title = modeText + " (点击" + (this.runtimeState.isPlaying ? "暂停" : "继续") + ")";
 						btn.innerHTML = `<span class="mp-switcher-btn-text">${modeText}${statusDot}</span>`;
@@ -13481,7 +13484,7 @@
 							if (typeof loopManager.renderTabs === "function") loopManager.renderTabs();
 						}
 						this.updatePlayPauseButton();
-						Toast("已取消单片段循环锁定", 1800, "info");
+						Toast$1("已取消单片段循环锁定", 1800, "info");
 					}
 				}
 			});
@@ -13501,7 +13504,7 @@
 					this._userPauseIntent = true;
 					if (this.playerCore) this.playerCore.userPauseIntent = true;
 					this.targetVideo.pause();
-					Toast("已暂停播放", 1200, "info");
+					Toast$1("已暂停播放", 1200, "info");
 				} else {
 					this._userPauseIntent = false;
 					if (this.playerCore) this.playerCore.userPauseIntent = false;
@@ -13512,7 +13515,7 @@
 				return;
 			}
 			if (((this.controlManager?.loopManager)?.tabs || []).length === 0) {
-				Toast("当前视频暂无高光片段，请先在时间轴添加", 2e3, "info");
+				Toast$1("当前视频暂无高光片段，请先在时间轴添加", 2e3, "info");
 				if (isCurrentlyPlaying) {
 					this._userPauseIntent = true;
 					if (this.playerCore) this.playerCore.userPauseIntent = true;
@@ -13682,7 +13685,7 @@
 			if (!this._isCapsuleLoopPlaying || this._capsulePlayIndex >= tabs.length) {
 				this._isTourEnded = true;
 				this.stopCapsulePlayback(true);
-				Toast("全部高光片段已播放完毕", 2500, "success");
+				Toast$1("全部高光片段已播放完毕", 2500, "success");
 				return;
 			}
 			const tab = tabs[this._capsulePlayIndex];
@@ -13794,7 +13797,7 @@
 			this.btnRestore = document.createElement("button");
 			this.btnRestore.type = "button";
 			this.btnRestore.className = "tm-gutter-btn-top";
-			this.btnRestore.title = __("expandFullWidth");
+			this.btnRestore.title = __$1("expandFullWidth");
 			this.restoreIconContainer = document.createElement("div");
 			this.restoreIconContainer.className = "tm-gutter-icon-wrap";
 			this.restoreIconContainer.innerHTML = EXPAND_FULL;
@@ -13805,12 +13808,12 @@
 				this.isCollapsed = true;
 				setValue("singleHandCollapsed", true);
 				this.updateState();
-				Toast(__("restoredFullWidth") || "已还原为全宽模式", 1200, "info");
+				Toast$1(__$1("restoredFullWidth") || "已还原为全宽模式", 1200, "info");
 			});
 			this.btnSwitchHand = document.createElement("button");
 			this.btnSwitchHand.type = "button";
 			this.btnSwitchHand.className = "tm-gutter-btn-bottom";
-			this.btnSwitchHand.title = __("switchHandLeft");
+			this.btnSwitchHand.title = __$1("switchHandLeft");
 			this.switchIconContainer = document.createElement("div");
 			this.switchIconContainer.className = "tm-gutter-switch-icon-wrap";
 			this.switchIconContainer.innerHTML = this.handPosition === "right" ? DOCK_SWITCH_LEFT : DOCK_SWITCH_RIGHT;
@@ -13821,7 +13824,7 @@
 				const nextPos = this.handPosition === "right" ? "left" : "right";
 				this.handPosition = nextPos;
 				this.updateState();
-				Toast(nextPos === "right" ? __("switchedToRightHand") : __("switchedToLeftHand"), 1200, "info");
+				Toast$1(nextPos === "right" ? __$1("switchedToRightHand") : __$1("switchedToLeftHand"), 1200, "info");
 			});
 			this.gutterElement.appendChild(this.btnRestore);
 			this.gutterElement.appendChild(this.btnSwitchHand);
@@ -13937,7 +13940,7 @@
 				this._preventClickUntil = Date.now() + 350;
 				playTapSound();
 				if (!this.isSupportedScreenWidth()) {
-					Toast(__("screenTooNarrowForSingleHand") || "屏幕较窄，无需开启单手模式", 1500, "info");
+					Toast$1(__$1("screenTooNarrowForSingleHand") || "屏幕较窄，无需开启单手模式", 1500, "info");
 					return;
 				}
 				if (dx < 0) {
@@ -13945,13 +13948,13 @@
 					this.isCollapsed = false;
 					setValue("singleHandCollapsed", false);
 					this.updateState();
-					Toast(__("switchedToLeftHand") || "已切换至左手模式", 1200, "info");
+					Toast$1(__$1("switchedToLeftHand") || "已切换至左手模式", 1200, "info");
 				} else {
 					this.handPosition = "right";
 					this.isCollapsed = false;
 					setValue("singleHandCollapsed", false);
 					this.updateState();
-					Toast(__("switchedToRightHand") || "已切换至右手模式", 1200, "info");
+					Toast$1(__$1("switchedToRightHand") || "已切换至右手模式", 1200, "info");
 				}
 			}
 		}
@@ -14004,17 +14007,17 @@
 			container.classList.remove("tm-single-hand-full");
 			if (this.btnSwitchHand) this.btnSwitchHand.style.display = "flex";
 			if (this.restoreIconContainer) this.restoreIconContainer.innerHTML = EXPAND_FULL;
-			if (this.btnRestore) this.btnRestore.title = __("expandFullWidth");
+			if (this.btnRestore) this.btnRestore.title = __$1("expandFullWidth");
 			if (pos === "left") {
 				container.classList.remove("tm-single-hand-right");
 				container.classList.add("tm-single-hand-left");
 				if (this.switchIconContainer) this.switchIconContainer.innerHTML = DOCK_SWITCH_RIGHT;
-				if (this.btnSwitchHand) this.btnSwitchHand.title = __("switchHandRight");
+				if (this.btnSwitchHand) this.btnSwitchHand.title = __$1("switchHandRight");
 			} else {
 				container.classList.remove("tm-single-hand-left");
 				container.classList.add("tm-single-hand-right");
 				if (this.switchIconContainer) this.switchIconContainer.innerHTML = DOCK_SWITCH_LEFT;
-				if (this.btnSwitchHand) this.btnSwitchHand.title = __("switchHandLeft");
+				if (this.btnSwitchHand) this.btnSwitchHand.title = __$1("switchHandLeft");
 			}
 			this._syncHeight();
 		}
@@ -14212,13 +14215,13 @@
 			this.tabAddBtn = document.createElement("div");
 			this.tabAddBtn.className = "tm-tab-actions-capsule tm-tab-list-btn";
 			this.tabAddBtn.setAttribute("role", "group");
-			this.tabAddBtn.setAttribute("aria-label", __("highlights") || "高光片段操作");
+			this.tabAddBtn.setAttribute("aria-label", __$1("highlights") || "高光片段操作");
 			this.tabAddBtn.innerHTML = `
-            <button type="button" class="tm-tab-capsule-item tm-tab-capsule-plus" title="${__("quickMark") || "快速打点当前时间"}">
+            <button type="button" class="tm-tab-capsule-item tm-tab-capsule-plus" title="${__$1("quickMark") || "快速打点当前时间"}">
                 <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 1v10M1 6h10"/></svg>
             </button>
             <div class="tm-tab-capsule-divider"></div>
-            <button type="button" class="tm-tab-capsule-item tm-tab-capsule-list" title="${__("highlights") || "高光列表管理"}">
+            <button type="button" class="tm-tab-capsule-item tm-tab-capsule-list" title="${__$1("highlights") || "高光列表管理"}">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
         `;
@@ -14923,7 +14926,7 @@
 			titleWrapper.className = "mp-sheet-title-wrap";
 			const title = document.createElement("div");
 			title.className = "tm-bottom-sheet-title";
-			title.textContent = __("sheetTitle") || "片段列表";
+			title.textContent = __$1("sheetTitle") || "片段列表";
 			const countBadge = document.createElement("span");
 			countBadge.className = "tm-sheet-count-badge";
 			this._sheetCountBadge = countBadge;
@@ -14932,14 +14935,14 @@
 			const closeBtn = document.createElement("button");
 			closeBtn.className = "tm-sheet-close-btn";
 			closeBtn.innerHTML = "✕";
-			closeBtn.title = __("cancel") || "关闭";
+			closeBtn.title = __$1("cancel") || "关闭";
 			closeBtn.addEventListener("click", () => this.close());
 			header.appendChild(titleWrapper);
 			const headerActions = document.createElement("div");
 			headerActions.className = "mp-sheet-header-actions";
 			const undoBtn = document.createElement("button");
 			undoBtn.className = "tm-sheet-undo-btn mp-sheet-undo-btn";
-			undoBtn.title = __("undoDelete") || "撤销删除";
+			undoBtn.title = __$1("undoDelete") || "撤销删除";
 			this._undoBtn = undoBtn;
 			undoBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
@@ -14950,7 +14953,7 @@
 					this.loopManager._saveTabs();
 					this.loopManager.renderTabs();
 					this.updateBottomSheet();
-					Toast(__("undoRestored") || "已恢复片段", 1200, "success");
+					Toast$1(__$1("undoRestored") || "已恢复片段", 1200, "success");
 				}
 				if (this._deletedHistory.length === 0) {
 					undoBtn.classList.remove("is-active");
@@ -14982,12 +14985,12 @@
 			});
 			const shareBtn = document.createElement("button");
 			shareBtn.className = "tm-sheet-share-btn mp-sheet-share-btn";
-			shareBtn.textContent = "🔗 " + (__("shareSelected") || "分享片段");
+			shareBtn.textContent = "🔗 " + (__$1("shareSelected") || "分享片段");
 			shareBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
 				const selected = this.tabs.filter((t) => this._selectedTabIds.has(t.id));
 				if (selected.length === 0) {
-					Toast(__("selectToShare") || "请先勾选需要分享的片段", 1500, "info");
+					Toast$1(__$1("selectToShare") || "请先勾选需要分享的片段", 1500, "info");
 					return;
 				}
 				this._showShareModal(selected);
@@ -15139,7 +15142,7 @@
 					tab.comment = input.value.trim();
 					this.loopManager._saveTabs();
 					this.loopManager.renderTabs();
-					Toast("备注已保存", 1e3, "success");
+					Toast$1("备注已保存", 1e3, "success");
 				});
 				inputRow.appendChild(saveBtn);
 				const tagToggleBtn = document.createElement("button");
@@ -15255,12 +15258,12 @@
         `);
 			modal.querySelector(".tm-custom-modal-copy-url-btn").addEventListener("click", () => {
 				copyToClipboard(deepLinkUrl);
-				Toast("深链分享链接已复制！打开自动载入", 2e3, "success");
+				Toast$1("深链分享链接已复制！打开自动载入", 2e3, "success");
 				close();
 			});
 			modal.querySelector(".tm-custom-modal-copy-md-btn").addEventListener("click", () => {
 				copyToClipboard(mdText);
-				Toast("Markdown 图文排版已复制！", 2e3, "success");
+				Toast$1("Markdown 图文排版已复制！", 2e3, "success");
 				close();
 			});
 			modal.querySelector(".tm-custom-modal-close-btn").addEventListener("click", close);
@@ -15648,12 +15651,12 @@
 			saveBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
 				if (this.draftTab.startTime === null && this.draftTab.endTime === null) {
-					Toast("请至少设置一个时间点", 2e3, "error");
+					Toast$1("请至少设置一个时间点", 2e3, "error");
 					return;
 				}
 				if (this.draftTab.startTime !== null && this.draftTab.endTime !== null) {
 					if (this.draftTab.endTime <= this.draftTab.startTime) {
-						Toast("结束点 (B) 必须大于开始点 (A)", 2e3, "error");
+						Toast$1("结束点 (B) 必须大于开始点 (A)", 2e3, "error");
 						return;
 					}
 					this.draftTab.type = "interval";
@@ -15670,7 +15673,7 @@
 			const cancelBtn = document.createElement("button");
 			cancelBtn.className = "tm-draft-action cancel";
 			cancelBtn.innerHTML = SVG_CROSS;
-			cancelBtn.title = __("cancel") || "取消";
+			cancelBtn.title = __$1("cancel") || "取消";
 			cancelBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
 				this._resetDraftTab();
@@ -15721,12 +15724,12 @@
 			saveBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
 				if (copy.startTime === null && copy.endTime === null) {
-					Toast("请至少设置一个时间点", 2e3, "error");
+					Toast$1("请至少设置一个时间点", 2e3, "error");
 					return;
 				}
 				if (copy.startTime !== null && copy.endTime !== null) {
 					if (copy.endTime <= copy.startTime) {
-						Toast("结束点 (B) 必须大于开始点 (A)", 2e3, "error");
+						Toast$1("结束点 (B) 必须大于开始点 (A)", 2e3, "error");
 						return;
 					}
 					copy.type = "interval";
@@ -15952,7 +15955,7 @@
 			popover.className = "tm-inline-remark-popover";
 			popover.innerHTML = `
             <div class="tm-inline-remark-body">
-                <input type="text" class="tm-inline-remark-input" placeholder="${__("addRemarkPlaceholder") || "输入高光备注..."}" value="${tab.comment || ""}" />
+                <input type="text" class="tm-inline-remark-input" placeholder="${__$1("addRemarkPlaceholder") || "输入高光备注..."}" value="${tab.comment || ""}" />
                 <div class="tm-inline-remark-footer">
                     <button type="button" class="tm-inline-remark-btn cancel">SKIP</button>
                     <button type="button" class="tm-inline-remark-btn submit">SAVE</button>
@@ -16031,7 +16034,7 @@
 					this._saveTabs();
 					this._sortTabs();
 					this.renderTabs();
-					Toast("已保存片段标记", 1500, "success");
+					Toast$1("已保存片段标记", 1500, "success");
 					if (this.tabScrollContainer) setTimeout(() => {
 						const selector = "[data-tab-id=\"" + newTab.id + "\"]";
 						const pill = this.tabScrollContainer.querySelector(selector);
@@ -16559,7 +16562,7 @@
 					const cleanUrl = window.location.href.split("#")[0];
 					window.history.replaceState(null, "", cleanUrl);
 				}
-				Toast(`已识别到外部分享高光片段 (${data.t.length} 条)，可在评论区一键导入`, 4e3, "info");
+				Toast$1(`已识别到外部分享高光片段 (${data.t.length} 条)，可在评论区一键导入`, 4e3, "info");
 			} catch (e) {
 				console.warn("[DeepLinking] 解析胶囊参数异常:", e);
 			}
@@ -17508,7 +17511,7 @@
 					isLongPressTriggered = false;
 					longPressTimer = setTimeout(() => {
 						isLongPressTriggered = true;
-						if (isDefault) Toast("默认 6 个预设步进不支持删除", 2e3, "warning");
+						if (isDefault) Toast$1("默认 6 个预设步进不支持删除", 2e3, "warning");
 						else if (typeof this.onDeleteStep === "function") this.onDeleteStep(stepKey);
 					}, 600);
 				};
@@ -17616,7 +17619,7 @@
 					let enabled = [...this.settings.enabledSeekSteps || []];
 					if (enabled.includes(stepKey)) {
 						if (enabled.length <= 1) {
-							Toast("至少保留 1 个生效步进", 1500, "warning");
+							Toast$1("至少保留 1 个生效步进", 1500, "warning");
 							return;
 						}
 						enabled = enabled.filter((s) => s !== stepKey);
@@ -17627,7 +17630,7 @@
 				},
 				onAddStep: (newStep) => {
 					if (!/^\d+[sm]$/i.test(newStep)) {
-						Toast("格式无效！请使用数字+单位，如 15s 或 2m", 2500, "warning");
+						Toast$1("格式无效！请使用数字+单位，如 15s 或 2m", 2500, "warning");
 						return;
 					}
 					const formatted = newStep.toLowerCase();
@@ -17642,7 +17645,7 @@
 						enabledSteps: enabled
 					});
 					this.sm.rebuildControlPanelSeekRow();
-					Toast("已添加自定义步进: " + formatted, 1800, "success");
+					Toast$1("已添加自定义步进: " + formatted, 1800, "success");
 				},
 				onDeleteStep: (stepKey) => {
 					let custom = (this.settings.customUserSeekSteps || []).filter((s) => s !== stepKey);
@@ -17655,15 +17658,15 @@
 						enabledSteps: enabled
 					});
 					this.sm.rebuildControlPanelSeekRow();
-					Toast("已删除自定义步进: " + stepKey, 1800, "info");
+					Toast$1("已删除自定义步进: " + stepKey, 1800, "info");
 				}
 			});
 			stepPanelWrapper.appendChild(this.stepEditor.getElement());
 			seekContainer.appendChild(stepPanelWrapper);
 			card.appendChild(seekContainer);
 			const loopToggle = new ToggleRow({
-				title: __("loopControlRow") || "片段循环",
-				subtext: __("loopControlRowDesc") || "循环播放 A-B 指定区间片段",
+				title: __$1("loopControlRow") || "片段循环",
+				subtext: __$1("loopControlRowDesc") || "循环播放 A-B 指定区间片段",
 				checked: this.settings.showLoopControlRow,
 				onChange: (checked) => {
 					this.sm.updateSetting("showLoopControlRow", checked);
@@ -17675,8 +17678,8 @@
 			prevDurRow.className = "tm-apple-row";
 			prevDurRow.innerHTML = `
             <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title">${__("previewDuration") || "快览时长"}</div>
-                <div class="tm-apple-row-subtext">${__("previewDurationDesc") || "快览模式下每个片段停留秒数"}</div>
+                <div class="tm-apple-row-title">${__$1("previewDuration") || "快览时长"}</div>
+                <div class="tm-apple-row-subtext">${__$1("previewDurationDesc") || "快览模式下每个片段停留秒数"}</div>
             </div>
             <div class="tm-apple-row-right">
                 <input type="number" class="tm-apple-duration-input tm-preview-dur-input" min="1" max="30" value="${this.settings.previewDurationSeconds || 5}" />
@@ -17688,15 +17691,15 @@
 				const val = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 5));
 				this.sm.updateSetting("previewDurationSeconds", val);
 				prevInput.value = val;
-				Toast(`${__("previewDuration") || "快览时长"}已设为: ${val} 秒`, 1500, "info");
+				Toast$1(`${__$1("previewDuration") || "快览时长"}已设为: ${val} 秒`, 1500, "info");
 			});
 			card.appendChild(prevDurRow);
 			const climaxDurRow = document.createElement("div");
 			climaxDurRow.className = "tm-apple-row";
 			climaxDurRow.innerHTML = `
             <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title">${__("climaxDuration") || "高光时长"}</div>
-                <div class="tm-apple-row-subtext">${__("climaxDurationDesc") || "连播模式下单个时间点的播放时长"}</div>
+                <div class="tm-apple-row-title">${__$1("climaxDuration") || "高光时长"}</div>
+                <div class="tm-apple-row-subtext">${__$1("climaxDurationDesc") || "连播模式下单个时间点的播放时长"}</div>
             </div>
             <div class="tm-apple-row-right">
                 <input type="number" class="tm-apple-duration-input tm-climax-dur-input" min="5" max="180" value="${this.settings.climaxDurationSeconds || 60}" />
@@ -17708,12 +17711,12 @@
 				const val = Math.max(5, Math.min(180, parseInt(e.target.value, 10) || 60));
 				this.sm.updateSetting("climaxDurationSeconds", val);
 				climaxInput.value = val;
-				Toast(`${__("climaxDuration") || "高光时长"}已设为: ${val} 秒`, 1500, "info");
+				Toast$1(`${__$1("climaxDuration") || "高光时长"}已设为: ${val} 秒`, 1500, "info");
 			});
 			card.appendChild(climaxDurRow);
 			const pauseBlurToggle = new ToggleRow({
-				title: __("pauseOnBlur") || "离开暂停",
-				subtext: __("pauseOnBlurDesc") || "切换网页或最小化时自动暂停播放",
+				title: __$1("pauseOnBlur") || "离开暂停",
+				subtext: __$1("pauseOnBlurDesc") || "切换网页或最小化时自动暂停播放",
 				checked: this.settings.pauseOnBlur !== false,
 				onChange: (checked) => {
 					this.sm.updateSetting("pauseOnBlur", checked);
@@ -17727,12 +17730,12 @@
 			muteResetRow.className = "tm-apple-row";
 			muteResetRow.innerHTML = `
             <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title">${__("muteResetMinutes") || "静音重置"}</div>
-                <div class="tm-apple-row-subtext">${__("muteResetMinutesDesc") || "取消静音超时后自动恢复默认静音"}</div>
+                <div class="tm-apple-row-title">${__$1("muteResetMinutes") || "静音重置"}</div>
+                <div class="tm-apple-row-subtext">${__$1("muteResetMinutesDesc") || "取消静音超时后自动恢复默认静音"}</div>
             </div>
             <div class="tm-apple-row-right">
                 <input type="number" class="tm-apple-duration-input tm-mute-reset-input" min="1" max="120" value="${this.settings.muteResetMinutes || 5}" />
-                <span style="font-size: 11px; color: rgba(255,255,255,0.4); margin-left: 6px;">${__("minutesUnit") || "分钟"}</span>
+                <span style="font-size: 11px; color: rgba(255,255,255,0.4); margin-left: 6px;">${__$1("minutesUnit") || "分钟"}</span>
             </div>
         `;
 			const muteResetInput = muteResetRow.querySelector(".tm-mute-reset-input");
@@ -17740,12 +17743,12 @@
 				const val = Math.max(1, Math.min(120, parseInt(e.target.value, 10) || 5));
 				this.sm.updateSetting("muteResetMinutes", val);
 				muteResetInput.value = val;
-				Toast(`${__("muteResetMinutes") || "静音重置"}已设为: ${val} ${__("minutesUnit") || "分钟"}`, 1500, "info");
+				Toast$1(`${__$1("muteResetMinutes") || "静音重置"}已设为: ${val} ${__$1("minutesUnit") || "分钟"}`, 1500, "info");
 			});
 			muteResetSubWrap.appendChild(muteResetRow);
 			const defaultMutedToggle = new ToggleRow({
-				title: __("defaultMuted") || "默认静音",
-				subtext: __("defaultMutedDesc") || "打开播放器默认静音播放",
+				title: __$1("defaultMuted") || "默认静音",
+				subtext: __$1("defaultMutedDesc") || "打开播放器默认静音播放",
 				checked: Boolean(this.settings.defaultMuted),
 				onChange: (checked) => {
 					this.sm.updateSetting("defaultMuted", checked);
@@ -17755,8 +17758,8 @@
 			card.appendChild(defaultMutedToggle.getElement());
 			card.appendChild(muteResetSubWrap);
 			const soundToggle = new ToggleRow({
-				title: __("buttonSound") || "按键音效",
-				subtext: __("buttonSoundDesc") || "点击核心按钮时播放轻脆触感声音",
+				title: __$1("buttonSound") || "按键音效",
+				subtext: __$1("buttonSoundDesc") || "点击核心按钮时播放轻脆触感声音",
 				checked: this.settings.buttonSoundEnabled !== false,
 				onChange: (checked) => {
 					this.sm.updateSetting("buttonSoundEnabled", checked);
@@ -17781,15 +17784,15 @@
 			this.element.innerHTML = "";
 			const header = document.createElement("div");
 			header.className = "tm-settings-group-header";
-			header.textContent = __("commentsGroupTitle") || "影片评论";
+			header.textContent = __$1("commentsGroupTitle") || "影片评论";
 			this.element.appendChild(header);
 			const card = new AppleCard();
 			const subpanelWrapper = document.createElement("div");
 			subpanelWrapper.className = "tm-settings-subpanel-wrap";
 			subpanelWrapper.style.display = this.settings.showCommentsSection ? "block" : "none";
 			const commentsToggle = new ToggleRow({
-				title: __("showComments") || "显示评论",
-				subtext: __("showCommentsDesc") || "在侧栏或底部展示网友热评与弹幕",
+				title: __$1("showComments") || "显示评论",
+				subtext: __$1("showCommentsDesc") || "在侧栏或底部展示网友热评与弹幕",
 				checked: this.settings.showCommentsSection,
 				onChange: (checked) => {
 					this.sm.updateSetting("showCommentsSection", checked);
@@ -17812,10 +17815,10 @@
 			sourcesRow.style.gap = "8px";
 			const sourcesTop = document.createElement("div");
 			sourcesTop.className = "tm-apple-row-title";
-			sourcesTop.textContent = __("commentSources") || "评论来源";
+			sourcesTop.textContent = __$1("commentSources") || "评论来源";
 			const sourcesSub = document.createElement("div");
 			sourcesSub.className = "tm-apple-row-subtext";
-			sourcesSub.textContent = __("commentSourcesDesc") || "勾选参与聚合的外部站点";
+			sourcesSub.textContent = __$1("commentSourcesDesc") || "勾选参与聚合的外部站点";
 			sourcesRow.appendChild(sourcesTop);
 			sourcesRow.appendChild(sourcesSub);
 			const badgesContainer = document.createElement("div");
@@ -17855,8 +17858,8 @@
 			sourcesRow.appendChild(badgesContainer);
 			subpanelWrapper.appendChild(sourcesRow);
 			const numFilterToggle = new ToggleRow({
-				title: __("filterTimeOnly") || "只看时间",
-				subtext: __("filterTimeOnlyDesc") || "自动过滤纯水评，仅看带时间标记",
+				title: __$1("filterTimeOnly") || "只看时间",
+				subtext: __$1("filterTimeOnlyDesc") || "自动过滤纯水评，仅看带时间标记",
 				checked: Boolean(this.settings.debugFilterHasNumbers),
 				onChange: (checked) => {
 					this.sm.updateSetting("debugFilterHasNumbers", checked);
@@ -18172,26 +18175,26 @@
 			this.element.innerHTML = "";
 			const header = document.createElement("div");
 			header.className = "tm-settings-group-header";
-			header.textContent = __("betaGroupTitle") || "实验特性";
+			header.textContent = __$1("betaGroupTitle") || "实验特性";
 			this.element.appendChild(header);
 			const card = new AppleCard();
 			const betaSubWrap = document.createElement("div");
 			betaSubWrap.className = "tm-settings-subpanel-wrap";
 			betaSubWrap.style.display = Boolean(this.settings.betaMode) ? "block" : "none";
 			const betaMainToggle = new ToggleRow({
-				title: __("betaLabTitle") || "实验功能",
-				subtext: __("betaLabDesc") || "探索开发中的新玩法与高级工具",
+				title: __$1("betaLabTitle") || "实验功能",
+				subtext: __$1("betaLabDesc") || "探索开发中的新玩法与高级工具",
 				checked: Boolean(this.settings.betaMode),
 				onChange: (checked) => {
 					this.sm.updateSetting("betaMode", checked);
 					betaSubWrap.style.display = checked ? "block" : "none";
-					Toast(checked ? `已开启 ${__("betaLabTitle") || "实验功能"}` : `已关闭 ${__("betaLabTitle") || "实验功能"}`, 1200, "info");
+					Toast$1(checked ? `已开启 ${__$1("betaLabTitle") || "实验功能"}` : `已关闭 ${__$1("betaLabTitle") || "实验功能"}`, 1200, "info");
 				}
 			});
 			card.appendChild(betaMainToggle.getElement());
 			const firstCapToggle = new ToggleRow({
-				title: __("betaSkipIntro") || "跳过片头",
-				subtext: __("betaSkipIntroDesc") || "开播直接跳转至第 1 个精彩高光",
+				title: __$1("betaSkipIntro") || "跳过片头",
+				subtext: __$1("betaSkipIntroDesc") || "开播直接跳转至第 1 个精彩高光",
 				checked: Boolean(this.settings.betaFirstCapsulePlay),
 				onChange: (checked) => {
 					this.sm.updateSetting("betaFirstCapsulePlay", checked);
@@ -18199,8 +18202,8 @@
 			});
 			betaSubWrap.appendChild(firstCapToggle.getElement());
 			const heatmapToggle = new ToggleRow({
-				title: __("betaHeatmap") || "播放热度",
-				subtext: __("betaHeatmapDesc") || "在进度条呈现探索足迹与反复观看波形",
+				title: __$1("betaHeatmap") || "播放热度",
+				subtext: __$1("betaHeatmapDesc") || "在进度条呈现探索足迹与反复观看波形",
 				checked: Boolean(this.settings.betaHeatmap),
 				onChange: (checked) => {
 					this.sm.updateSetting("betaHeatmap", checked);
@@ -18210,8 +18213,8 @@
 			});
 			betaSubWrap.appendChild(heatmapToggle.getElement());
 			const undoToggle = new ToggleRow({
-				title: __("betaCapsuleUndo") || "防误删除",
-				subtext: __("betaCapsuleUndoDesc") || "误删高光后提供 60 秒撤销时间",
+				title: __$1("betaCapsuleUndo") || "防误删除",
+				subtext: __$1("betaCapsuleUndoDesc") || "误删高光后提供 60 秒撤销时间",
 				checked: this.settings.betaCapsuleUndo !== false,
 				onChange: (checked) => {
 					this.sm.updateSetting("betaCapsuleUndo", checked);
@@ -18219,8 +18222,8 @@
 			});
 			betaSubWrap.appendChild(undoToggle.getElement());
 			const deepLinkToggle = new ToggleRow({
-				title: __("betaDeepLinking") || "链接还原",
-				subtext: __("betaDeepLinkingDesc") || "打开分享链接时自动加载对应高光",
+				title: __$1("betaDeepLinking") || "链接还原",
+				subtext: __$1("betaDeepLinkingDesc") || "打开分享链接时自动加载对应高光",
 				checked: this.settings.betaDeepLinking !== false,
 				onChange: (checked) => {
 					this.sm.updateSetting("betaDeepLinking", checked);
@@ -18233,8 +18236,8 @@
 			dbRow.style.alignItems = "stretch";
 			dbRow.style.gap = "6px";
 			dbRow.innerHTML = `
-            <div class="tm-apple-row-title">${__("betaCustomApi") || "自建接口"}</div>
-            <div class="tm-apple-row-subtext">${__("betaCustomApiDesc") || "连接个人私人评论库服务器"}</div>
+            <div class="tm-apple-row-title">${__$1("betaCustomApi") || "自建接口"}</div>
+            <div class="tm-apple-row-subtext">${__$1("betaCustomApiDesc") || "连接个人私人评论库服务器"}</div>
             <input type="text" class="tm-settings-input tm-beta-db-url" placeholder="https://your-api.domain.com/comments" value="${this.settings.betaDbEndpoint || ""}" />
             <input type="password" class="tm-settings-input tm-beta-db-key" placeholder="API Key / Token (可选)" value="${this.settings.betaDbApiKey || ""}" />
         `;
@@ -18261,7 +18264,7 @@
 			const saveDb = () => {
 				this.sm.updateSetting("betaDbEndpoint", dbUrlInput.value.trim());
 				this.sm.updateSetting("betaDbApiKey", dbKeyInput.value.trim());
-				Toast("已保存自建数据库端点配置", 1500, "info");
+				Toast$1("已保存自建数据库端点配置", 1500, "info");
 			};
 			dbUrlInput.addEventListener("change", saveDb);
 			dbKeyInput.addEventListener("change", saveDb);
@@ -18271,8 +18274,8 @@
 			debugSubWrap.className = "tm-settings-subpanel-wrap";
 			debugSubWrap.style.display = Boolean(this.settings.debugMode) ? "block" : "none";
 			const debugToggle = new ToggleRow({
-				title: __("betaDebugLog") || "运行日志",
-				subtext: __("betaDebugLogDesc") || "查看底层抓取排错与网络诊断信息",
+				title: __$1("betaDebugLog") || "运行日志",
+				subtext: __$1("betaDebugLogDesc") || "查看底层抓取排错与网络诊断信息",
 				checked: Boolean(this.settings.debugMode),
 				onChange: (checked) => {
 					this.sm.updateSetting("debugMode", checked);
@@ -18285,8 +18288,8 @@
 			});
 			card.appendChild(debugToggle.getElement());
 			const crazyToggle = new ToggleRow({
-				title: __("betaPreloadComments") || "预载评论",
-				subtext: __("betaPreloadCommentsDesc") || "后台静默抓取页面其他影片的热评",
+				title: __$1("betaPreloadComments") || "预载评论",
+				subtext: __$1("betaPreloadCommentsDesc") || "后台静默抓取页面其他影片的热评",
 				checked: Boolean(this.settings.crazyScrapeMode),
 				onChange: (checked) => {
 					this.sm.updateSetting("crazyScrapeMode", checked);
@@ -18300,8 +18303,8 @@
 			clearRow.style.justifyContent = "space-between";
 			clearRow.innerHTML = `
             <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title" style="color: #ff453a;">${__("betaClearCache") || "清除缓存"}</div>
-                <div class="tm-apple-row-subtext">${__("betaClearCacheDesc") || "释放本地存储并清空离线评论"}</div>
+                <div class="tm-apple-row-title" style="color: #ff453a;">${__$1("betaClearCache") || "清除缓存"}</div>
+                <div class="tm-apple-row-subtext">${__$1("betaClearCacheDesc") || "释放本地存储并清空离线评论"}</div>
             </div>
             <button type="button" class="tm-clear-cache-btn" style="background: rgba(255, 69, 58, 0.15); border: 1px solid rgba(255, 69, 58, 0.35); color: #ff453a; font-size: 11px; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 600;">清空</button>
         `;
@@ -18315,7 +18318,7 @@
 				CrazyScraper._scannedCodes.clear();
 				CrazyScraper._avcodeDurations.clear();
 				clearBtn.textContent = "已清空";
-				Toast("已彻底清空本地 IndexedDB 评论缓存", 2e3, "success");
+				Toast$1("已彻底清空本地 IndexedDB 评论缓存", 2e3, "success");
 			});
 			debugSubWrap.appendChild(clearRow);
 			card.appendChild(debugSubWrap);
@@ -18347,7 +18350,7 @@
 			const titleDiv = document.createElement("div");
 			titleDiv.className = "tm-apple-accordion-title";
 			titleDiv.innerHTML = `
-            <span>☁️ ${__("webdavTitle") || "云端同步"}</span>
+            <span>☁️ ${__$1("webdavTitle") || "云端同步"}</span>
         `;
 			const metaDiv = document.createElement("div");
 			metaDiv.className = "tm-apple-accordion-meta";
@@ -18414,7 +18417,7 @@
 			const titleDiv = document.createElement("div");
 			titleDiv.className = "tm-apple-accordion-title";
 			titleDiv.innerHTML = `
-            <span>ℹ️ ${__("aboutGroupTitle") || "关于播放器"}</span>
+            <span>ℹ️ ${__$1("aboutGroupTitle") || "关于播放器"}</span>
         `;
 			const metaDiv = document.createElement("div");
 			metaDiv.className = "tm-apple-accordion-meta";
@@ -18587,7 +18590,7 @@
 								const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
 								if (btn) {
 									btn.classList.add("has-update-badge");
-									btn.setAttribute("title", `${__("updateFound") || "发现新版本"}: v${res.latestVersion}`);
+									btn.setAttribute("title", `${__$1("updateFound") || "发现新版本"}: v${res.latestVersion}`);
 								}
 								if (this.settingsPanel && this.settingsPanel.children.length) this.createSettingsPanel();
 							}
@@ -18623,7 +18626,7 @@
 			headerRow.className = "tm-settings-apple-header";
 			const titleWrap = document.createElement("div");
 			titleWrap.className = "tm-settings-apple-title-wrap";
-			titleWrap.innerHTML = `<span class="tm-settings-apple-title">${__("settings") || "设置"}</span>`;
+			titleWrap.innerHTML = `<span class="tm-settings-apple-title">${__$1("settings") || "设置"}</span>`;
 			const closeBtn = document.createElement("button");
 			closeBtn.type = "button";
 			closeBtn.className = "tm-settings-apple-close-btn";
@@ -18729,7 +18732,7 @@
 			urlRow.className = "tm-webdav-form-row";
 			const urlLabel = document.createElement("label");
 			urlLabel.className = "tm-webdav-label";
-			urlLabel.textContent = __("webdavServerUrl") || "服务器地址";
+			urlLabel.textContent = __$1("webdavServerUrl") || "服务器地址";
 			const urlInput = document.createElement("input");
 			urlInput.className = "tm-webdav-input";
 			urlInput.type = "text";
@@ -18745,7 +18748,7 @@
 			userRow.className = "tm-webdav-form-row";
 			const userLabel = document.createElement("label");
 			userLabel.className = "tm-webdav-label";
-			userLabel.textContent = __("webdavUsername") || "用户名";
+			userLabel.textContent = __$1("webdavUsername") || "用户名";
 			const userInput = document.createElement("input");
 			userInput.className = "tm-webdav-input";
 			userInput.type = "text";
@@ -18761,7 +18764,7 @@
 			passRow.className = "tm-webdav-form-row";
 			const passLabel = document.createElement("label");
 			passLabel.className = "tm-webdav-label";
-			passLabel.textContent = __("webdavPassword") || "密码 / 应用授权码";
+			passLabel.textContent = __$1("webdavPassword") || "密码 / 应用授权码";
 			const passInputGroup = document.createElement("div");
 			passInputGroup.className = "tm-webdav-input-group";
 			const passInput = document.createElement("input");
@@ -18795,7 +18798,7 @@
 			pathRow.className = "tm-webdav-form-row";
 			const pathLabel = document.createElement("label");
 			pathLabel.className = "tm-webdav-label";
-			pathLabel.textContent = __("webdavBackupPath") || "备份目录路径";
+			pathLabel.textContent = __$1("webdavBackupPath") || "备份目录路径";
 			const pathInput = document.createElement("input");
 			pathInput.className = "tm-webdav-input";
 			pathInput.type = "text";
@@ -18833,10 +18836,10 @@
 			autoSyncInfo.className = "tm-webdav-switch-info";
 			const autoSyncTitle = document.createElement("span");
 			autoSyncTitle.className = "tm-webdav-switch-title";
-			autoSyncTitle.textContent = __("webdavAutoSync") || "自动同步";
+			autoSyncTitle.textContent = __$1("webdavAutoSync") || "自动同步";
 			const autoSyncDesc = document.createElement("span");
 			autoSyncDesc.className = "tm-webdav-switch-desc";
-			autoSyncDesc.textContent = __("webdavAutoSyncDesc") || "启动及打点修改时自动在后台静默合并";
+			autoSyncDesc.textContent = __$1("webdavAutoSyncDesc") || "启动及打点修改时自动在后台静默合并";
 			autoSyncInfo.appendChild(autoSyncTitle);
 			autoSyncInfo.appendChild(autoSyncDesc);
 			const autoSyncSwitch = document.createElement("label");
@@ -18857,26 +18860,26 @@
 			autoSyncRow.appendChild(autoSyncSwitch);
 			const deviceBadge = document.createElement("div");
 			deviceBadge.className = "tm-webdav-device-badge";
-			deviceBadge.innerHTML = `${ICON_SERVER} <span>${__("webdavCurrentDevice") || "当前设备"}: ${deviceName} (${clientId.slice(-6)})</span>`;
+			deviceBadge.innerHTML = `${ICON_SERVER} <span>${__$1("webdavCurrentDevice") || "当前设备"}: ${deviceName} (${clientId.slice(-6)})</span>`;
 			const actionsContainer = document.createElement("div");
 			actionsContainer.className = "tm-webdav-actions-container";
 			const syncMergeBtn = document.createElement("button");
 			syncMergeBtn.className = "tm-webdav-btn tm-webdav-btn-primary";
-			syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__("webdavSyncMerge") || "智能合并同步"}</span>`;
+			syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__$1("webdavSyncMerge") || "智能合并同步"}</span>`;
 			const subActions = document.createElement("div");
 			subActions.className = "tm-webdav-sub-actions";
 			const testBtn = document.createElement("button");
 			testBtn.className = "tm-webdav-btn tm-webdav-btn-secondary";
 			testBtn.title = "测试 WebDAV 服务器连通性并创建目录";
-			testBtn.innerHTML = `${ICON_CHECK} <span>${__("webdavTestConnection") || "测试连接"}</span>`;
+			testBtn.innerHTML = `${ICON_CHECK} <span>${__$1("webdavTestConnection") || "测试连接"}</span>`;
 			const uploadBtn = document.createElement("button");
 			uploadBtn.className = "tm-webdav-btn tm-webdav-btn-secondary";
 			uploadBtn.title = "将当前本地配置与打点覆盖到云端";
-			uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__("webdavUploadOverwrite") || "上传覆盖"}</span>`;
+			uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__$1("webdavUploadOverwrite") || "上传覆盖"}</span>`;
 			const downloadBtn = document.createElement("button");
 			downloadBtn.className = "tm-webdav-btn tm-webdav-btn-secondary";
 			downloadBtn.title = "从云端拉取配置覆盖当前设备";
-			downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__("webdavDownloadOverwrite") || "下载覆盖"}</span>`;
+			downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__$1("webdavDownloadOverwrite") || "下载覆盖"}</span>`;
 			subActions.appendChild(testBtn);
 			subActions.appendChild(uploadBtn);
 			subActions.appendChild(downloadBtn);
@@ -18887,8 +18890,8 @@
 			const timeSpan = document.createElement("span");
 			const renderTimeText = () => {
 				const lastSyncTime = SyncManager.getLastSyncTime();
-				const timeText = lastSyncTime > 0 ? new Date(lastSyncTime).toLocaleString() : __("webdavNeverSynced") || "尚未同步";
-				timeSpan.textContent = `${__("webdavLastSync") || "上次同步"}: ${timeText}`;
+				const timeText = lastSyncTime > 0 ? new Date(lastSyncTime).toLocaleString() : __$1("webdavNeverSynced") || "尚未同步";
+				timeSpan.textContent = `${__$1("webdavLastSync") || "上次同步"}: ${timeText}`;
 			};
 			renderTimeText();
 			const statusBadge = document.createElement("span");
@@ -18931,36 +18934,36 @@
 			testBtn.addEventListener("click", async () => {
 				const currentCfg = persistCurrentInputs();
 				if (!currentCfg.url) {
-					Toast(__("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
+					Toast$1(__$1("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
 					updateStatus("请输入服务器地址", "error");
 					return;
 				}
 				setButtonsDisabled(true);
-				testBtn.innerHTML = `<span>${__("webdavTesting") || "正在测试..."}</span>`;
+				testBtn.innerHTML = `<span>${__$1("webdavTesting") || "正在测试..."}</span>`;
 				updateStatus("正在测试连接...", "running");
 				try {
-					Toast((await WebDavClient.testConnection(currentCfg)).message || "连接成功！", 3e3);
+					Toast$1((await WebDavClient.testConnection(currentCfg)).message || "连接成功！", 3e3);
 					updateStatus("连接正常", "success");
 				} catch (err) {
-					Toast((__("webdavTestFailed") || "连接失败: ") + err.message, 4e3);
+					Toast$1((__$1("webdavTestFailed") || "连接失败: ") + err.message, 4e3);
 					updateStatus(err.message ? `连接失败: ${err.message}` : "连接失败", "error");
 				} finally {
-					testBtn.innerHTML = `${ICON_CHECK} <span>${__("webdavTestConnection") || "测试连接"}</span>`;
+					testBtn.innerHTML = `${ICON_CHECK} <span>${__$1("webdavTestConnection") || "测试连接"}</span>`;
 					setButtonsDisabled(false);
 				}
 			});
 			syncMergeBtn.addEventListener("click", async () => {
 				const currentCfg = persistCurrentInputs();
 				if (!currentCfg.url) {
-					Toast(__("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
+					Toast$1(__$1("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
 					updateStatus("请输入服务器地址", "error");
 					return;
 				}
 				setButtonsDisabled(true);
-				syncMergeBtn.innerHTML = `<span>${__("webdavSyncing") || "正在同步..."}</span>`;
+				syncMergeBtn.innerHTML = `<span>${__$1("webdavSyncing") || "正在同步..."}</span>`;
 				updateStatus("正在智能合并同步...", "running");
 				try {
-					Toast((await SyncManager.executeSync({
+					Toast$1((await SyncManager.executeSync({
 						mode: "merge",
 						config: currentCfg,
 						playerState: this.playerCore?.options?.playerState
@@ -18969,26 +18972,26 @@
 					renderTimeText();
 					this.syncState();
 				} catch (err) {
-					Toast((__("webdavSyncFailed") || "同步失败: ") + err.message, 4500);
+					Toast$1((__$1("webdavSyncFailed") || "同步失败: ") + err.message, 4500);
 					updateStatus(err.message ? `同步失败: ${err.message}` : "同步失败", "error");
 				} finally {
-					syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__("webdavSyncMerge") || "智能合并同步"}</span>`;
+					syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__$1("webdavSyncMerge") || "智能合并同步"}</span>`;
 					setButtonsDisabled(false);
 				}
 			});
 			uploadBtn.addEventListener("click", async () => {
 				const currentCfg = persistCurrentInputs();
 				if (!currentCfg.url) {
-					Toast(__("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
+					Toast$1(__$1("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
 					updateStatus("请输入服务器地址", "error");
 					return;
 				}
-				if (!window.confirm(__("webdavConfirmUpload") || "确定要将当前本地配置强制覆盖到云端吗？")) return;
+				if (!window.confirm(__$1("webdavConfirmUpload") || "确定要将当前本地配置强制覆盖到云端吗？")) return;
 				setButtonsDisabled(true);
-				uploadBtn.innerHTML = `<span>${__("webdavSyncing") || "正在上传..."}</span>`;
+				uploadBtn.innerHTML = `<span>${__$1("webdavSyncing") || "正在上传..."}</span>`;
 				updateStatus("正在上传覆盖云端...", "running");
 				try {
-					Toast((await SyncManager.executeSync({
+					Toast$1((await SyncManager.executeSync({
 						mode: "upload",
 						config: currentCfg,
 						playerState: this.playerCore?.options?.playerState
@@ -18996,26 +18999,26 @@
 					updateStatus("已上传覆盖", "success");
 					renderTimeText();
 				} catch (err) {
-					Toast((__("webdavSyncFailed") || "上传失败: ") + err.message, 4500);
+					Toast$1((__$1("webdavSyncFailed") || "上传失败: ") + err.message, 4500);
 					updateStatus(err.message ? `上传失败: ${err.message}` : "上传失败", "error");
 				} finally {
-					uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__("webdavUploadOverwrite") || "上传覆盖"}</span>`;
+					uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__$1("webdavUploadOverwrite") || "上传覆盖"}</span>`;
 					setButtonsDisabled(false);
 				}
 			});
 			downloadBtn.addEventListener("click", async () => {
 				const currentCfg = persistCurrentInputs();
 				if (!currentCfg.url) {
-					Toast(__("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
+					Toast$1(__$1("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
 					updateStatus("请输入服务器地址", "error");
 					return;
 				}
-				if (!window.confirm(__("webdavConfirmDownload") || "确定要从云端拉取配置并覆盖本地吗？")) return;
+				if (!window.confirm(__$1("webdavConfirmDownload") || "确定要从云端拉取配置并覆盖本地吗？")) return;
 				setButtonsDisabled(true);
-				downloadBtn.innerHTML = `<span>${__("webdavSyncing") || "正在下载..."}</span>`;
+				downloadBtn.innerHTML = `<span>${__$1("webdavSyncing") || "正在下载..."}</span>`;
 				updateStatus("正在从云端拉取覆盖...", "running");
 				try {
-					Toast((await SyncManager.executeSync({
+					Toast$1((await SyncManager.executeSync({
 						mode: "download",
 						config: currentCfg,
 						playerState: this.playerCore?.options?.playerState
@@ -19024,10 +19027,10 @@
 					renderTimeText();
 					this.syncState();
 				} catch (err) {
-					Toast((__("webdavSyncFailed") || "下载失败: ") + err.message, 4500);
+					Toast$1((__$1("webdavSyncFailed") || "下载失败: ") + err.message, 4500);
 					updateStatus(err.message ? `下载失败: ${err.message}` : "下载失败", "error");
 				} finally {
-					downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__("webdavDownloadOverwrite") || "下载覆盖"}</span>`;
+					downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__$1("webdavDownloadOverwrite") || "下载覆盖"}</span>`;
 					setButtonsDisabled(false);
 				}
 			});
@@ -19069,7 +19072,7 @@
 			platformLink.href = isBeta ? meta?.url || "https://github.com/Chris-C1108/Miss_Player" : meta?.url || "https://sleazyfork.org/scripts/453300";
 			platformLink.target = "_blank";
 			platformLink.rel = "noopener noreferrer";
-			platformLink.title = isBeta ? "GitHub 仓库" : __("viewRelease") || "SleazyFork 主页";
+			platformLink.title = isBeta ? "GitHub 仓库" : __$1("viewRelease") || "SleazyFork 主页";
 			platformLink.innerHTML = `<span>${isBeta ? "GitHub" : "SleazyFork"}</span> ${ICON_EXTERNAL_LINK}`;
 			headerRow.appendChild(brandWrap);
 			headerRow.appendChild(platformLink);
@@ -19079,13 +19082,13 @@
 			channelRow.style.cssText = "display: flex; align-items: center; justify-content: space-between; margin: 10px 0 8px 0; gap: 8px;";
 			const channelLabel = document.createElement("span");
 			channelLabel.style.cssText = "font-size: 12.5px; font-weight: 500; color: rgba(255, 255, 255, 0.75);";
-			channelLabel.textContent = __("updateChannel") || "更新通道";
+			channelLabel.textContent = __$1("updateChannel") || "更新通道";
 			const segControl = new SegmentedControl({
 				options: [{
-					label: __("channelStable") || "正式版",
+					label: __$1("channelStable") || "正式版",
 					value: "stable"
 				}, {
-					label: __("channelBeta") || "测试版",
+					label: __$1("channelBeta") || "测试版",
 					value: "beta"
 				}],
 				value: currentChannel,
@@ -19097,8 +19100,8 @@
 					try {
 						const res = await SleazyForkService.checkUpdate(true, nextVal);
 						this._latestUpdateInfo = res;
-						if (res && res.hasUpdate) Toast.show(`${__("updateFound") || "发现新版本"}: v${res.latestVersion}`, 3500, "success");
-						else if (res && res.success) Toast.show(`${__("alreadyLatest") || "当前已是最新版本"} (v${currentVersion})`, 2500, "info");
+						if (res && res.hasUpdate) Toast$1.show(`${__$1("updateFound") || "发现新版本"}: v${res.latestVersion}`, 3500, "success");
+						else if (res && res.success) Toast$1.show(`${__$1("alreadyLatest") || "当前已是最新版本"} (v${currentVersion})`, 2500, "info");
 					} catch (_) {} finally {
 						this._isCheckingUpdate = false;
 						this.refreshAboutSection();
@@ -19134,11 +19137,11 @@
 			if (isBeta) {
 				statsGrid.appendChild(createStatBox("main", "测试分支"));
 				statsGrid.appendChild(createStatBox("GitHub", "更新渠道"));
-				statsGrid.appendChild(createStatBox(updatedDate, __("statsUpdated") || "代码更新"));
+				statsGrid.appendChild(createStatBox(updatedDate, __$1("statsUpdated") || "代码更新"));
 			} else {
-				statsGrid.appendChild(createStatBox(totalInstalls, __("statsInstalls") || "总安装量"));
-				statsGrid.appendChild(createStatBox(fanScore, __("statsRating") || "好评评分"));
-				statsGrid.appendChild(createStatBox(updatedDate, __("statsUpdated") || "代码更新"));
+				statsGrid.appendChild(createStatBox(totalInstalls, __$1("statsInstalls") || "总安装量"));
+				statsGrid.appendChild(createStatBox(fanScore, __$1("statsRating") || "好评评分"));
+				statsGrid.appendChild(createStatBox(updatedDate, __$1("statsUpdated") || "代码更新"));
 			}
 			card.appendChild(statsGrid);
 			if (hasUpdate) {
@@ -19146,7 +19149,7 @@
 				updateBanner.className = "tm-about-update-banner";
 				const bannerTitle = document.createElement("div");
 				bannerTitle.className = "tm-about-update-title";
-				bannerTitle.innerHTML = `${ICON_SPARKLES} <strong>${__("updateFound") || "发现新版本"} v${latestVer}</strong>`;
+				bannerTitle.innerHTML = `${ICON_SPARKLES} <strong>${__$1("updateFound") || "发现新版本"} v${latestVer}</strong>`;
 				const bannerDesc = document.createElement("div");
 				bannerDesc.className = "tm-about-update-desc";
 				bannerDesc.textContent = `当前安装为 v${currentVersion}，新版本已在 ${isBeta ? "GitHub (main)" : "SleazyFork"} 发布 (${updatedDate})。`;
@@ -19154,16 +19157,16 @@
 				bannerActions.className = "tm-about-update-actions";
 				const updateNowBtn = document.createElement("button");
 				updateNowBtn.className = "tm-about-btn tm-about-btn--primary";
-				updateNowBtn.innerHTML = `${ICON_DOWNLOAD} <span>${__("updateNow") || "立即更新"}</span>`;
+				updateNowBtn.innerHTML = `${ICON_DOWNLOAD} <span>${__$1("updateNow") || "立即更新"}</span>`;
 				updateNowBtn.addEventListener("click", () => {
 					const codeUrl = meta?.code_url || (isBeta ? "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js" : "https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js");
 					if (typeof GM_openInTab === "function") GM_openInTab(codeUrl, { active: true });
 					else window.open(codeUrl, "_blank");
-					Toast.show(__("updating") || "已触发脚本更新安装", 3e3, "success");
+					Toast$1.show(__$1("updating") || "已触发脚本更新安装", 3e3, "success");
 				});
 				const changelogBtn = document.createElement("button");
 				changelogBtn.className = "tm-about-btn tm-about-btn--secondary";
-				changelogBtn.innerHTML = `${ICON_EXTERNAL_LINK} <span>${__("updateChangelog") || "版本日志"}</span>`;
+				changelogBtn.innerHTML = `${ICON_EXTERNAL_LINK} <span>${__$1("updateChangelog") || "版本日志"}</span>`;
 				changelogBtn.addEventListener("click", () => {
 					const logUrl = isBeta ? "https://github.com/Chris-C1108/Miss_Player/commits/main" : "https://sleazyfork.org/scripts/453300/versions";
 					if (typeof GM_openInTab === "function") GM_openInTab(logUrl, { active: true });
@@ -19180,7 +19183,7 @@
 			checkRow.className = "tm-about-check-row";
 			const checkBtn = document.createElement("button");
 			checkBtn.className = "tm-about-btn tm-about-btn--check";
-			checkBtn.innerHTML = `${ICON_REFRESH} <span>${this._isCheckingUpdate ? __("checkingUpdate") || "正在检查..." : __("checkUpdate") || "检查更新"}</span>`;
+			checkBtn.innerHTML = `${ICON_REFRESH} <span>${this._isCheckingUpdate ? __$1("checkingUpdate") || "正在检查..." : __$1("checkUpdate") || "检查更新"}</span>`;
 			if (this._isCheckingUpdate) {
 				checkBtn.disabled = true;
 				checkBtn.classList.add("is-loading");
@@ -19190,24 +19193,24 @@
 				this._isCheckingUpdate = true;
 				checkBtn.disabled = true;
 				checkBtn.classList.add("is-loading");
-				checkBtn.innerHTML = `${ICON_REFRESH} <span>${__("checkingUpdate") || "正在检查..."}</span>`;
+				checkBtn.innerHTML = `${ICON_REFRESH} <span>${__$1("checkingUpdate") || "正在检查..."}</span>`;
 				try {
 					const channel = this.settings.updateChannel || "stable";
 					const res = await SleazyForkService.checkUpdate(true, channel);
 					this._latestUpdateInfo = res;
 					if (res.success) {
 						if (res.hasUpdate) {
-							Toast.show(`${__("updateFound") || "发现新版本"}: v${res.latestVersion}`, 3500, "success");
+							Toast$1.show(`${__$1("updateFound") || "发现新版本"}: v${res.latestVersion}`, 3500, "success");
 							const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
 							if (btn) btn.classList.add("has-update-badge");
 						} else {
-							Toast.show(`${__("alreadyLatest") || "当前已是最新版本"} (v${currentVersion})`, 3e3, "success");
+							Toast$1.show(`${__$1("alreadyLatest") || "当前已是最新版本"} (v${currentVersion})`, 3e3, "success");
 							const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
 							if (btn) btn.classList.remove("has-update-badge");
 						}
-					} else Toast.show(res.error || __("fetchFailed") || "检查更新失败", 3e3, "error");
+					} else Toast$1.show(res.error || __$1("fetchFailed") || "检查更新失败", 3e3, "error");
 				} catch (err) {
-					Toast.show(err.message || __("fetchFailed") || "检查更新失败", 3e3, "error");
+					Toast$1.show(err.message || __$1("fetchFailed") || "检查更新失败", 3e3, "error");
 				} finally {
 					this._isCheckingUpdate = false;
 					this.refreshAboutSection();
@@ -19219,22 +19222,22 @@
 			const reinstallBtn = document.createElement("button");
 			reinstallBtn.className = "tm-about-btn tm-about-btn--reinstall";
 			reinstallBtn.style.cssText = "background: rgba(255, 149, 0, 0.18); border: 1px solid rgba(255, 149, 0, 0.45); color: #ff9500; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;";
-			reinstallBtn.innerHTML = `<span>⚡ ${__("reinstallScript") || "重新安装"}</span>`;
-			reinstallBtn.title = __("reinstallScriptDesc") || "刷新本地缓存并强制重新安装当前版本";
+			reinstallBtn.innerHTML = `<span>⚡ ${__$1("reinstallScript") || "重新安装"}</span>`;
+			reinstallBtn.title = __$1("reinstallScriptDesc") || "刷新本地缓存并强制重新安装当前版本";
 			reinstallBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
 				const timestamp = Date.now();
 				const installUrl = isBeta ? `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js?_t=${timestamp}` : `https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js?_t=${timestamp}`;
-				Toast(__("updating") || "正在跳转油猴重新安装...", 2e3, "info");
+				Toast$1(__$1("updating") || "正在跳转油猴重新安装...", 2e3, "info");
 				if (typeof GM_openInTab === "function") GM_openInTab(installUrl, { active: true });
 				else window.open(installUrl, "_blank");
 			});
 			checkRow.appendChild(checkBtn);
 			checkRow.appendChild(reinstallBtn);
 			card.appendChild(checkRow);
-			const autoCheckOption = this._createToggleOption(__("autoCheckUpdate") || "自动检查更新", "autoCheckUpdate", this.settings.autoCheckUpdate !== false, (checked) => {
+			const autoCheckOption = this._createToggleOption(__$1("autoCheckUpdate") || "自动检查更新", "autoCheckUpdate", this.settings.autoCheckUpdate !== false, (checked) => {
 				this.updateSetting("autoCheckUpdate", checked);
-			}, null, __("autoCheckUpdateDesc") || "启动时定期静默检查并在设置按钮提示新版本");
+			}, null, __$1("autoCheckUpdateDesc") || "启动时定期静默检查并在设置按钮提示新版本");
 			card.appendChild(autoCheckOption);
 			return card;
 		}
@@ -19330,7 +19333,7 @@
 					isLongPressTriggered = false;
 					longPressTimer = setTimeout(() => {
 						isLongPressTriggered = true;
-						if (isDefault) Toast("默认 6 个预设步进不支持删除", 2e3, "warning");
+						if (isDefault) Toast$1("默认 6 个预设步进不支持删除", 2e3, "warning");
 						else this._deleteCustomSeekStep(stepKey);
 					}, 600);
 				};
@@ -19378,7 +19381,7 @@
 						return;
 					}
 					if (!/^\d+[sm]$/.test(rawVal)) {
-						Toast("格式错误，请填写如 15s 或 2m", 2500, "warning");
+						Toast$1("格式错误，请填写如 15s 或 2m", 2500, "warning");
 						this.createSettingsPanel();
 						return;
 					}
@@ -19416,7 +19419,7 @@
 			this.updateSetting("enabledSeekSteps", enabledSteps);
 			this.rebuildControlPanelSeekRow();
 			this.createSettingsPanel();
-			Toast(`已添加自定义步进 ${newStep}`, 2e3, "success");
+			Toast$1(`已添加自定义步进 ${newStep}`, 2e3, "success");
 		}
 		_deleteCustomSeekStep(targetStep) {
 			let customSteps = Array.isArray(this.settings.customUserSeekSteps) ? [...this.settings.customUserSeekSteps] : [];
@@ -19428,7 +19431,7 @@
 			this.updateSetting("enabledSeekSteps", enabledSteps);
 			this.rebuildControlPanelSeekRow();
 			this.createSettingsPanel();
-			Toast(`已删除自定义步进 ${targetStep}`, 2e3, "info");
+			Toast$1(`已删除自定义步进 ${targetStep}`, 2e3, "info");
 		}
 		rebuildControlPanelSeekRow() {
 			const controlManager = this.controlManager;
@@ -20586,7 +20589,7 @@
 				if (!this.playerCore.targetVideo) {
 					console.error("[CustomVideoPlayer] 核心初始化失败: 未找到视频元素");
 					telemetry.track("player_open_fail");
-					Toast(__("loadingError") || "Failed to load video", 3e3, "error");
+					Toast$1(__$1("loadingError") || "Failed to load video", 3e3, "error");
 					if (this.callingButton) this.callingButton.style.display = "flex";
 					return;
 				}
@@ -20671,7 +20674,7 @@
 					const prevTime = this.playerCore.videoState?.currentTime || 0;
 					if (this.playerCore.targetVideo) {
 						this.playerCore.targetVideo.currentTime = targetTime;
-						if (prevTime > 0 && Math.abs(prevTime - targetTime) > 3) Toast("已从第 1 个高光开播，点击恢复上次断点", 5e3, "info", () => {
+						if (prevTime > 0 && Math.abs(prevTime - targetTime) > 3) Toast$1("已从第 1 个高光开播，点击恢复上次断点", 5e3, "info", () => {
 							if (this.playerCore.targetVideo) this.playerCore.targetVideo.currentTime = prevTime;
 						});
 					}
@@ -20725,7 +20728,7 @@
 			} catch (err) {
 				console.error("[CustomVideoPlayer] 初始化发生异常:", err);
 				telemetry.track("player_open_error", { error: String(err) });
-				Toast("播放器载入失败: " + (err.message || err), 4e3, "error");
+				Toast$1("播放器载入失败: " + (err.message || err), 4e3, "error");
 				if (this.callingButton) this.callingButton.style.display = "flex";
 			}
 		}
@@ -20885,9 +20888,19 @@
 		createButton() {
 			this.button = createElementWithStyle("button", "tm-floating-button");
 			this.button.innerHTML = FLOATING_PLAY;
-			this.button.addEventListener("click", () => {
+			let isHandlingClick = false;
+			const onTrigger = (e) => {
+				if (isHandlingClick) return;
+				isHandlingClick = true;
+				if (e && e.cancelable && e.type === "touchend") e.preventDefault();
+				if (e) e.stopPropagation();
 				this.handleButtonClick();
-			});
+				setTimeout(() => {
+					isHandlingClick = false;
+				}, 800);
+			};
+			this.button.addEventListener("touchend", onTrigger, { passive: false });
+			this.button.addEventListener("click", onTrigger);
 			this.button.style.display = "flex";
 			this.updateButtonPosition();
 			document.body.appendChild(this.button);
@@ -20907,7 +20920,9 @@
 			this.button.style.setProperty("height", "56px", "important");
 			this.button.style.setProperty("border-radius", "50%", "important");
 			this.button.style.setProperty("box-sizing", "border-box", "important");
-			this.button.style.setProperty("z-index", "9980", "important");
+			this.button.style.setProperty("z-index", "2147483640", "important");
+			this.button.style.setProperty("pointer-events", "auto", "important");
+			this.button.style.setProperty("touch-action", "manipulation", "important");
 			this.button.style.setProperty("-webkit-appearance", "none", "important");
 			this.button.style.setProperty("appearance", "none", "important");
 			if (isPortrait()) {
@@ -20949,6 +20964,18 @@
 				return;
 			}
 			const preTargetVideo = targetNode && targetNode.tagName === "VIDEO" ? targetNode : findVideoElement(false);
+			if (!preTargetVideo) {
+				console.warn("[FloatingButton] 初始未找到视频元素，等待异步渲染...");
+				Toast(__("loadingVideo") || "正在定位视频源...", 1500, "info");
+				setTimeout(() => {
+					if (findVideoElement(false)) this.handleButtonClick();
+					else {
+						Toast(__("videoNotFound") || "未检测到视频，请确认视频已在页面上加载", 3e3, "warning");
+						this.button.style.display = "flex";
+					}
+				}, 600);
+				return;
+			}
 			if (preTargetVideo) {
 				preTargetVideo.setAttribute("playsinline", "true");
 				preTargetVideo.setAttribute("webkit-playsinline", "true");
@@ -21932,7 +21959,7 @@
 				});
 			}
 		}, { passive: true });
-		console.log(`[${__("scriptName")}] ${__("viewportConfigured")}`);
+		console.log(`[${__$1("scriptName")}] ${__$1("viewportConfigured")}`);
 	}
 	(function() {
 		"use strict";
@@ -21942,13 +21969,13 @@
 		} catch (_) {
 			isInIframe = true;
 		}
-		const isPlayerIframe = isInIframe && (window.location.pathname.includes("/player/") || window.location.pathname.includes("/embed/") || window.location.search.includes("payload=") || window.location.search.includes("video=") || window.location.href.includes("avking") || window.location.href.includes("videocdn"));
+		const isPlayerIframe = isInIframe && (window.location.pathname.includes("/player/") || window.location.pathname.includes("/embed/") || window.location.search.includes("payload=") || window.location.search.includes("video=") || window.location.href.includes("avking") || window.location.href.includes("videocdn") || window.location.href.includes("plyr"));
 		if (isInIframe && !isSiteDomain("JAVLIBRARY") && !isPlayerIframe) return;
 		let playerState = null;
 		function injectStyles() {
 			if (document.getElementById("tm-player-styles")) return;
 			setupViewport();
-			console.log(`[${__("scriptName")}] ${__("stylesInjected")}`);
+			console.log(`[${__$1("scriptName")}] ${__$1("stylesInjected")}`);
 		}
 		async function startScript() {
 			try {
@@ -21958,7 +21985,7 @@
 				}
 				injectStyles();
 				initUserExperienceEnhancer(true);
-				console.log(`[${__("scriptName")}] ${__("enhancerInitialized")}`);
+				console.log(`[${__$1("scriptName")}] ${__$1("enhancerInitialized")}`);
 				playerState = new PlayerState();
 				performance.mark("mp:state-created");
 				playerState.loadSettings();
@@ -21996,9 +22023,9 @@
 				initAutoLogin().then((loginManager) => {
 					if (loginManager) window.loginManager = loginManager;
 				}).catch(() => {});
-				console.log(`[${__("scriptName")}] ${__("initializationComplete")}`);
+				console.log(`[${__$1("scriptName")}] ${__$1("initializationComplete")}`);
 			} catch (error) {
-				console.error(`[${__("scriptName")}] ${__("initializationFailed")}:`, error);
+				console.error(`[${__$1("scriptName")}] ${__$1("initializationFailed")}:`, error);
 			}
 		}
 		function handleJavLibraryVerification() {

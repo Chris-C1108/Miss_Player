@@ -52,6 +52,7 @@ export class PlayerCore {
             // 如果是从浮动按钮调用的，则重新显示按钮
             if (this.callingButton) {
                 this.callingButton.classList.remove('is-hidden');
+                this.callingButton.style.display = 'flex';
             }
             return;
         }
