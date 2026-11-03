@@ -13,7 +13,7 @@
     flex: 1;
     min-height: 0; /* 允许 Flexbox 子元素收缩并正常触发 overflow-y 滚动 */
     background-color: transparent;
-    z-index: 9990; /* 基础层级，坐落在控制面板（9997）与变暗遮罩（9993）下方 */
+    z-index: var(--z-base); /* 基础层级，坐落在控制面板与变暗遮罩下方 */
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -39,7 +39,7 @@
     pointer-events: none; /* 允许点击与滑动穿透 */
     opacity: 0;
     transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 9993; /* 盖在评论列表和输入框上方，但在控制面板下方 */
+    z-index: calc(var(--z-base) + 1); /* 盖在评论列表上方，但在控制面板下方 */
 }
 
 /* 移动端手柄区域 (.tm-handle-container) 变暗遮罩 */
@@ -56,7 +56,7 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 9993;
+    z-index: calc(var(--z-base) + 1);
 }
 
 .tm-handle-container.is-dimmed::after,
@@ -159,7 +159,7 @@
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
-    z-index: 9998;
+    z-index: var(--z-composer);
     pointer-events: auto !important;
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -190,7 +190,7 @@
     background: rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
-    z-index: 9997;
+    z-index: calc(var(--z-composer) - 1);
     opacity: 1;
     transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: auto;
@@ -217,6 +217,7 @@
     justify-content: center;
     cursor: pointer;
     padding: 0;
+    z-index: var(--z-controls);
     margin: 0;
     outline: none;
     box-sizing: border-box;
@@ -511,7 +512,7 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    z-index: 9998 !important;
+    z-index: var(--z-composer);
     opacity: 0;
     pointer-events: none;
     transform: translateY(16px);
@@ -533,7 +534,7 @@
         width: calc(100% - 20px);
         max-width: 480px;
         max-height: 200px;
-        z-index: 100004 !important;
+        z-index: var(--z-composer);
         transform: translateY(8px);
     }
     .tm-comment-tag-select-modal.visible {
@@ -687,7 +688,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000000020 !important;
+    z-index: var(--z-modal) !important;
     opacity: 0;
     transition: opacity 0.25s ease, bottom 0.2s ease-out;
     pointer-events: auto;
@@ -1836,7 +1837,7 @@
     z-index: 9994 !important;
 }
 .tm-custom-modal-overlay.tm-report-modal-overlay {
-    z-index: 2000000050 !important;
+    z-index: var(--z-modal) !important;
 }
 .tm-report-modal-dialog {
     background: rgba(28, 28, 30, 0.95);
@@ -1869,7 +1870,7 @@
 /* ujS�����_9BNp�Q�d�O_9z�h7_ */
 .jc-code-preview-popover {
     position: fixed;
-    z-index: 2000000040;
+    z-index: var(--z-composer);
     width: 256px;
     background: rgba(20, 20, 24, 0.88);
     backdrop-filter: blur(20px) saturate(180%);

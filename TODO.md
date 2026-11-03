@@ -25,6 +25,47 @@
 | **Phase 14** | **CSS 样式架构重构与治理专项** | **达成 ✅** | **[Phase 14 专属规划方案](./docs/todo/phase-14-css-refactor.md)** |
 | **Phase 13** | **苹果人本化文案重构与五国母语对齐** | **达成 ✅** | **[Phase 13 专属规划方案](./docs/todo/phase-13-copywriting.md)** |
 | **Phase 15** | **UI/UX 深度优化与第三方脚本适配专项 (v5.7.1 ~ v5.7.4)** | **达成 ✅** | 详见 Release v5.7.4 |
+| **Phase 16** | **全局输入框与双模层叠上下文架构重构 (内外两界隔离与端态自适应)** | **达成 ✅** | 详见 Release v5.7.64 |
+
+---
+
+## 🏗️ 正在实施：Phase 16 - 全局输入框与双模层叠上下文架构重构
+
+> **目标**：彻底消灭宿主侵入遮挡、移动端虚拟键盘穿透闪跳、各组件魔法 Z-Index 打架及 PC 宽屏 Web 端逻辑错位问题，建立现代化微前端层叠与输入架构。
+
+- [x] **16.1 外部宿主防线与生存隔离 (External Stacking Defense) (已达成 ✅)**
+  - [x] 宿主 Body 物理坍塌（`display: none !important`）与动态注入 `MutationObserver` 守卫；
+  - [x] `<miss-player-root>` 宿主轨与播放器外壳固定层级确立为次极限值 `z-index: 2147483646`，浮动唤醒按钮确立为 `2147483640`，绝对压制第三方流氓挂件（如 Peach JAV `2147483647`）。
+- [x] **16.2 内部王国 Z-Index 标尺收敛 (Internal Tokens Governance) (已达成 ✅)**
+  - [x] 收敛 `src/player/ui/styles/00_tokens/_zindex.css`，正式固化内外两界与 10~60 规范步进标尺：
+    `--z-base: 10` ➔ `--z-controls: 20` ➔ `--z-drawer: 30` ➔ `--z-composer: 40` ➔ `--z-modal: 50` ➔ `--z-toast: 60`；
+  - [x] 全量清洗各组件样式（`_player.css`, `_comments.css`, `_controls.css`, `_landscape_pc.css`, `_common.css`, `_settings_apple.css`, `_marker_sheet.css` 等）中的散落魔法数字（9985, 9990, 9997, 9998, 100000, 100004, 100005, 2000000020, 2000000050 等），统一映射至 `--z-*`。
+- [x] **16.3 DOM 拓扑解耦与分层插槽拍平 (Viewport Slot Routing) (已达成 ✅)**
+  - [x] 发评底栏抽屉（`.tm-comment-submit-bar-wrapper`）与半透明遮罩从局部滚动容器 `.tm-comments-panel` 迁出，直接挂载到 `.tm-player-container` 根级插槽，彻底摆脱父级盒模型与 `overflow: hidden` 裁剪；
+  - [x] 高光切片管理底栏（`.tm-bottom-sheet-panel`）彻底脱离单手控制栏 `transform` 隔离区，挂载在顶级插槽享受全宽；
+  - [x] 打点即时备注气泡（`.tm-inline-remark-popover`）脱离控制栏，挂载至顶级并在上半区黄金带居中展示。
+- [x] **16.4 双模响应式端态自适应分流 (Dual-Mode Responsive Adaptation) (已达成 ✅)**
+  - [x] **移动端竖屏**：发评底栏全宽吸底、随虚拟键盘物理平移、触控 Pre-Lift 预升降 0 毫秒阻断 Safari 滚动扫描；
+  - [x] **PC 宽屏 Web 端**：发评底栏严格嵌合在右侧 380px 边栏最底部（`bottom: 0px !important; width: var(--sidebar-width);`），严禁横跨全屏侵犯左侧视频主舞台；双栏鼠标可并行交互。
+- [x] **16.5 活动层状态机与声明式防穿透锁 (Active Layer Pointer Guard) (已达成 ✅)**
+  - [x] 建立 `.has-composer-active` 容器状态类联动机制；
+  - [x] 声明式在移动触控下禁用底层非活动区 `pointer-events: none`，消除长达 12 项的脆弱 JS `closest` 白名单，彻底杜绝打字与选词时的误触收起与点击穿透；
+  - [x] 桌面端保持 `pointer-events: auto`，保障键鼠并行操作体验。
+- [x] **16.6 自动化门禁巡检、构建体积审计与发版验证 (已达成 ✅)**
+  - [x] 运行 `npm run lint:compliance` 与 `npm run ci:check` 确保全项 100% 通过（!important 保持 97 处低位，14 项单元测试全过）；
+  - [x] `npm run bump` 发版并推送 GitHub `main` 分支。
+
+---
+
+## 🛡️ 已达成里程碑：Phase 16 - 全局输入框与双模层叠上下文架构重构 (v5.7.64)
+
+> 完整架构方案与双模自适应契约见：AGENTS.md & TODO.md Phase 16
+
+- [x] **外部宿主防线与生存隔离**：次极限值 `z-index: 2147483646` 绝对压制第三方流氓挂件（如 Peach JAV `2147483647`），宿主 Body 物理坍塌（`display: none !important`）与 `MutationObserver` 守卫彻底消除万级像素滚动空间；
+- [x] **内部王国 Z-Index 标尺收敛**：`00_tokens/_zindex.css` 正式固化 10~60 规范步进标尺（`--z-base: 10` ➔ `--z-controls: 20` ➔ `--z-drawer: 30` ➔ `--z-composer: 40` ➔ `--z-modal: 50` ➔ `--z-toast: 60`），全面消灭散落的万级魔法数字；
+- [x] **DOM 拓扑解耦与分层插槽拍平**：发评底栏抽屉（`.tm-comment-submit-bar-wrapper`）与遮罩从局部滚动容器拍平外移至 `playerContainer` 顶级插槽，彻底摆脱父级 `overflow: hidden` 裁剪；高光底栏脱离单手控制栏 `transform` 隔离区；
+- [x] **双模响应式端态自适应分流**：移动端全宽分时吸底与 Pre-Lift 预升降；PC 宽屏 Web 端严格嵌合在右侧 380px 边栏最底部（`width: var(--sidebar-width); bottom: 0;`），严禁横跨全屏侵犯左侧视频主舞台；
+- [x] **活动层状态机与声明式防穿透锁**：移动触控下声明式禁用底层非活动区 `pointer-events: none`，消除长达 12 项的脆弱 JS `closest` 白名单，彻底杜绝打字与选词时的误触收起与点击穿透；PC 端保持全区域可交互。
 
 ---
 

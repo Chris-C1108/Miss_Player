@@ -47,7 +47,7 @@ export class ViewportDebugHUD {
                 top: max(48px, env(safe-area-inset-top, 48px));
                 left: 6px;
                 right: 6px;
-                z-index: 2000000030;
+                z-index: var(--z-toast, 60);
                 background: rgba(12, 14, 18, 0.95);
                 backdrop-filter: blur(20px) saturate(180%);
                 -webkit-backdrop-filter: blur(20px) saturate(180%);

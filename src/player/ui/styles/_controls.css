@@ -11,7 +11,7 @@
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     pointer-events: none;
-    z-index: 9995;
+    z-index: var(--z-controls);
     opacity: 0;
     transform: translateY(-8px);
     transition: opacity 0.2s, transform 0.2s;
@@ -360,7 +360,7 @@
     right: 0;
     display: flex;
     flex-direction: column;
-    z-index: 9991;
+    z-index: var(--z-controls);
     border-radius: 0 0 var(--shadcn-radius-lg) var(--shadcn-radius-lg);
     font-family: var(--font-sans);
     transition: opacity var(--anim-smooth);
@@ -853,7 +853,7 @@
     background-color: hsla(var(--shadcn-card) / 0.95);
     border-radius: 12px 12px 0 0;
     box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
-    z-index: 9996;
+    z-index: var(--z-composer);
     opacity: 0;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
                 opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1021,7 +1021,7 @@
     border-radius: 4px;
     font-size: 24px;
     font-weight: bold;
-    z-index: 9999;
+    z-index: var(--z-drawer);
 }
 
 /* 居中暂停指示器 */
@@ -1498,7 +1498,7 @@
     flex-direction: column;
     justify-content: space-between;
     gap: 8px;
-    z-index: 9998;
+    z-index: var(--z-controls);
     pointer-events: auto;
     background: transparent;
     border: none;

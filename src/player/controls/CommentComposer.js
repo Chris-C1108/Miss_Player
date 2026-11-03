@@ -286,6 +286,10 @@ export class CommentComposer {
         if (this.panel?.commentsPanel) {
             this.panel.commentsPanel.classList.add('has-composer-open');
         }
+        const playerContainer = document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
+        if (playerContainer) {
+            playerContainer.classList.add('has-composer-active');
+        }
         if (this.fabBtn) this.fabBtn.classList.add('is-hidden');
 
         // 核心 Pre-Lift 预升降：在 focus 触发之前，立即将发评栏预升降到键盘预期高度，彻底避免 Safari 判定未在视口内触发 document scroll
@@ -321,6 +325,10 @@ export class CommentComposer {
         if (this.backdrop) this.backdrop.classList.add('is-hidden');
         if (this.panel?.commentsPanel) {
             this.panel.commentsPanel.classList.remove('has-composer-open');
+        }
+        const playerContainer = document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
+        if (playerContainer) {
+            playerContainer.classList.remove('has-composer-active');
         }
         if (this.fabBtn) this.fabBtn.classList.remove('is-hidden');
     }

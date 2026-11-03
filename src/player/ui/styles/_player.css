@@ -12,7 +12,7 @@
     height: 100vh;
     height: 100dvh;
     background-color: #0b0b0e;
-    z-index: 2000000000;
+    z-index: var(--z-host-overlay, 2147483645);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -43,7 +43,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    z-index: 2000000001;
+    z-index: var(--z-host-player, 2147483646);
     overflow: hidden;
     pointer-events: auto;
     
@@ -64,7 +64,7 @@
     gap: 12px;
     padding: calc(env(safe-area-inset-top, 0px) + 6px) calc(env(safe-area-inset-right, 0px) + 12px) 6px calc(env(safe-area-inset-left, 0px) + 12px);
     box-sizing: border-box;
-    z-index: 99999;
+    z-index: var(--z-controls);
     /* 保持在顶部 */
     position: absolute;
     top: 0;
@@ -103,7 +103,7 @@
     background-color: hsl(var(--shadcn-card));
     border-radius: var(--shadcn-radius-lg);
     box-shadow: var(--shadow-lg);
-    z-index: 9985;
+    z-index: var(--z-base);
     touch-action: pan-y; /* 仅允许纵向原生手势以支持单向滚动穿透 */
     flex-shrink: 1;
     transition: height 0.28s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1495,7 +1495,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     border-radius: 16px;
     padding: 16px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
-    z-index: 100005;
+    z-index: var(--z-composer);
     pointer-events: auto;
     opacity: 0;
     transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2125,7 +2125,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     border-radius: 20px 20px 0 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-bottom: none;
-    z-index: 9999;
+    z-index: var(--z-drawer);
     opacity: 0;
     pointer-events: none;
     transform: translateY(100%);
@@ -2462,7 +2462,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 9997;
+    z-index: var(--z-controls);
     box-sizing: border-box;
 }
 
@@ -2480,7 +2480,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     width: min(94vw, 560px);
     max-width: 560px;
     box-sizing: border-box;
-    z-index: 9997;
+    z-index: var(--z-controls);
     padding: 16px 16px 14px;
     border-radius: 16px;
     background-color: rgba(22, 22, 28, 0.76); /* 降低透明度，允许环境色（如宿主紫色）自然折射渗透 */
@@ -2729,7 +2729,7 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
     overflow: hidden;
     text-overflow: ellipsis;
     user-select: none;
-    z-index: 9998;
+    z-index: var(--z-controls);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
     pointer-events: none;
     transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);

@@ -1474,6 +1474,12 @@ export class UIManager {
         const commentPanel = this.controlManager && this.controlManager.commentPanel;
         if (commentPanel && commentPanel.commentsPanel) {
             this.playerContainer.appendChild(commentPanel.commentsPanel);
+
+            // 4.1 分层解耦：将发评底栏与遮罩从评论内容容器拍平外移至 playerContainer，彻底摆脱 overflow:hidden 裁剪与空间限制
+            const commentSubmitBar = commentPanel.commentsPanel.querySelector('.tm-comment-submit-bar-wrapper');
+            const commentBackdrop = commentPanel.commentsPanel.querySelector('.tm-comment-backdrop');
+            if (commentBackdrop) this.playerContainer.appendChild(commentBackdrop);
+            if (commentSubmitBar) this.playerContainer.appendChild(commentSubmitBar);
             
             // 手机竖屏场景下，初始化且控制面板显示时，评论区应是变暗的
             if (!this.isLandscape && this.controlsVisible) {

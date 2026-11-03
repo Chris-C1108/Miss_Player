@@ -80,7 +80,7 @@
 /* Toast 消息提示 */
 .tm-toast {
     position: fixed;
-    z-index: 100000;
+    z-index: var(--z-toast, 60);
     left: 50%;
     padding: 10px 20px;
     border-radius: var(--shadcn-radius);

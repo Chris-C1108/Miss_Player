@@ -65,7 +65,7 @@
         bottom: 0;
         left: 0;
         right: 0;
-        z-index: 2000000001;
+        z-index: var(--z-host-player, 2147483646);
     }
 
     /* PC 大屏横屏统合顶栏样式 (顶栏作为主容器稳固子项，无论侧栏显示或隐藏均零抖动、零拔插) */
@@ -86,7 +86,7 @@
         box-shadow: none;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
-        z-index: 10000;
+        z-index: var(--z-controls);
         transform: none;
         opacity: 1;
         pointer-events: none;
@@ -214,7 +214,7 @@
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         box-sizing: border-box;
-        z-index: 9990;
+        z-index: var(--z-base);
         pointer-events: auto;
         flex-direction: column;
         overflow: hidden;
@@ -267,14 +267,35 @@
         padding-bottom: 4px;
     }
 
-    /* 桌面端发表栏浮动贴合在右侧评论区边栏最底部 */
-    .tm-comment-submit-bar-wrapper {
-        position: absolute;
-        bottom: 0;
-        left: 0;
+    /* 桌面端发表栏浮动贴合在右侧评论区边栏最底部，严格限制在侧栏宽度内 */
+    .tm-player-container .tm-comment-submit-bar-wrapper {
+        position: fixed;
+        bottom: 0px;
         right: 0;
-        width: 100%;
-        z-index: 9998;
+        left: auto;
+        width: var(--sidebar-width);
+        z-index: var(--z-composer);
+        transform: translateY(0);
+    }
+    .tm-player-container .tm-comment-submit-bar-wrapper.is-collapsed {
+        transform: translateY(100%);
+    }
+
+    /* 桌面端背景遮罩也仅覆盖右侧评论区 */
+    .tm-player-container .tm-comment-backdrop {
+        position: fixed;
+        right: 0;
+        left: auto;
+        width: var(--sidebar-width);
+        top: 0;
+        bottom: 0;
+        z-index: calc(var(--z-composer) - 1);
+    }
+
+    /* PC 宽屏桌面端：完全保持全区域可交互，打字时左侧视频控制不被禁用 */
+    .tm-player-container.has-composer-active .tm-comments-panel-list,
+    .tm-player-container.has-composer-active .tm-control-panel {
+        pointer-events: auto;
     }
 
     /* PC 端全屏评论面板发布按钮微调 */
@@ -282,7 +303,7 @@
         bottom: 56px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 9995;
+        z-index: var(--z-controls);
     }
 
     /* PC 桌面模式坚决不需要展示移动端唤醒控制栏按钮 */
@@ -311,7 +332,7 @@
         backdrop-filter: blur(32px) saturate(200%);
         -webkit-backdrop-filter: blur(32px) saturate(200%);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-        z-index: 10001;
+        z-index: var(--z-controls);
         padding: 8px 12px 12px 12px;
         transition: opacity 0.3s ease, transform 0.3s ease;
         display: flex;
@@ -528,7 +549,7 @@
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        z-index: 10001;
+        z-index: var(--z-controls);
         padding: 8px 12px 12px 12px;
         transition: opacity 0.3s ease, transform 0.3s ease;
         display: flex;
@@ -554,7 +575,7 @@
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        z-index: 9995;
+        z-index: var(--z-controls);
         padding: 8px 12px 12px 12px;
         transition: opacity 0.3s ease, transform 0.3s ease;
         display: flex;
@@ -608,7 +629,7 @@
         bottom: 0;
         left: 0;
         right: 0;
-        z-index: 2000000001;
+        z-index: var(--z-host-player, 2147483646);
     }
 
     /* 视频容器 100% 充满，消除死黑区域 */
@@ -724,7 +745,7 @@
         max-width: min(520px, calc(100vw - env(safe-area-inset-left, 16px) - env(safe-area-inset-right, 16px) - 32px));
         min-width: 280px;
         padding: 10px 14px 20px 14px;
-        z-index: 100005;
+        z-index: var(--z-drawer);
         overflow-y: auto;
         overflow-y: overlay;
         -webkit-overflow-scrolling: touch;

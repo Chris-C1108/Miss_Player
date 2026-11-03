@@ -301,7 +301,7 @@
     position: fixed;
     inset: 0;
     background-color: transparent;
-    z-index: 9990;
+    z-index: calc(var(--z-drawer) - 1);
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--anim-smooth);
@@ -329,7 +329,7 @@
         0 12px 32px rgba(0, 0, 0, 0.6);
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 9995;
+    z-index: var(--z-drawer);
     opacity: 0;
     pointer-events: none;
     transform: translateY(8px) scale(0.98);

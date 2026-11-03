@@ -1,15 +1,25 @@
 /* =========================================================================
    Miss Player - Z-Index 标尺系统 (Z-Index Tokens)
-   遵循 AGENTS.md 准则：消灭魔法数字，严格收敛于 10~60 级统一步进标尺
-   --z-player-base: 10 ➔ --z-controls: 20 ➔ --z-sidebar: 30 ➔
-   --z-popover: 40 ➔ --z-modal: 50 ➔ --z-toast: 60
+   遵循 AGENTS.md 准则：消灭魔法数字，严格收敛于内外两界隔离与 10~60 级统一步进标尺
+   --z-base: 10 ➔ --z-controls: 20 ➔ --z-drawer: 30 ➔
+   --z-composer: 40 ➔ --z-modal: 50 ➔ --z-toast: 60
    ========================================================================= */
 
 :root, :host {
-    --z-player-base: 10;
-    --z-controls: 20;
-    --z-sidebar: 30;
-    --z-popover: 40;
-    --z-modal: 50;
-    --z-toast: 60;
+    /* 1. 对外宿主防线层级 (External Host Defense - 绝对压制宿主广告与第三方流氓插件) */
+    --z-host-overlay: 2147483645;
+    --z-host-player: 2147483646;
+
+    /* 2. 内部纯净王国标尺 (Internal Clean Kingdom Scale) */
+    --z-base: 10;        /* 视频底板、内容视口、评论列表滚动区 */
+    --z-controls: 20;    /* 常驻主控栏、固定顶栏、浮动操作圆钮 */
+    --z-drawer: 30;      /* 功能抽屉：高光切片底栏、设置侧滑抽屉 */
+    --z-composer: 40;    /* 输入交互：发评底栏抽屉、标签选择弹窗、打点即时气泡 */
+    --z-modal: 50;       /* 全屏模态对话框：登录表单、问题上报、二次确认 */
+    --z-toast: 60;       /* 最高系统通知：Toast 提示、调试 HUD 探针 */
+
+    /* 历史语义别名平滑兼容 */
+    --z-player-base: var(--z-base);
+    --z-sidebar: var(--z-drawer);
+    --z-popover: var(--z-composer);
 }
