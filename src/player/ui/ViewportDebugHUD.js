@@ -1,10 +1,11 @@
 /**
- * ViewportDebugHUD — 移动端视口与输入框物理坐标实时探针浮层
+ * ViewportDebugHUD — 移动端视口、宿主长页面、UI 层级与虚拟键盘挤压高精度探针
  * 
- * 职责：
- * 1. 实时显示 window.visualViewport、window.innerHeight、playerContainer、activeElement 以及 submitBar 的真实像素坐标与差值；
- * 2. 深度穿透 Shadow DOM 实时监听捕获所有 input/textarea 的 focus、blur 以及视口 resize/scroll 事件；
- * 3. 记录事件时间序列与几何快照，支持一键将完整日志拷贝至剪贴板，并自带就地可视化长文本框双重保障。
+ * 升级版核心能力：
+ * 1. 【宿主长页面物理诊断】：实时监控 document.body/documentElement 的 scrollHeight、scrollTop、宿主坍塌元素数量与溢出高度；
+ * 2. 【UI 层级与包含块审计】：实时获取各组件的 computed z-index、position、transform、包含块归属父节点以及 Shadow DOM 边界；
+ * 3. 【iOS 虚拟键盘挤压与安全间距】：实时计算 activeInputClearance = (vv.top + vv.h) - input.bottom，直观呈现输入框是否被键盘遮挡；
+ * 4. 【iOS 原生拷贝全兼容支持】：优先调起 iOS 系统的 navigator.share 原生 Action Sheet（自带系统“拷贝”），配合多重 Clipboard 降级与就地全选文本框。
  */
 
 import { Toast } from '../../utils/index.js';
@@ -39,21 +40,21 @@ export class ViewportDebugHUD {
         this._container = document.createElement('div');
         this._container.className = 'tm-viewport-debug-hud';
 
-        // 注入自包含内联样式 (完全独立，零污染，零外部 !important 占用)
+        // 注入自包含内联样式 (完全独立，零外部污染)
         const style = document.createElement('style');
         style.textContent = `
             .tm-viewport-debug-hud {
                 position: absolute;
-                top: max(48px, env(safe-area-inset-top, 48px));
+                top: max(46px, env(safe-area-inset-top, 46px));
                 left: 6px;
                 right: 6px;
                 z-index: var(--z-toast, 60);
-                background: rgba(12, 14, 18, 0.95);
-                backdrop-filter: blur(20px) saturate(180%);
-                -webkit-backdrop-filter: blur(20px) saturate(180%);
-                border: 1px solid rgba(255, 255, 255, 0.18);
+                background: rgba(10, 12, 16, 0.96);
+                backdrop-filter: blur(24px) saturate(180%);
+                -webkit-backdrop-filter: blur(24px) saturate(180%);
+                border: 1px solid rgba(56, 189, 248, 0.35);
                 border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75);
+                box-shadow: 0 10px 36px rgba(0, 0, 0, 0.85);
                 color: #e2e8f0;
                 font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
                 font-size: 10px;
@@ -71,7 +72,7 @@ export class ViewportDebugHUD {
                 justify-content: space-between;
                 gap: 6px;
                 padding-bottom: 4px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.12);
                 margin-bottom: 4px;
             }
             .tm-hud-title-wrap {
@@ -93,15 +94,16 @@ export class ViewportDebugHUD {
             .tm-hud-actions {
                 display: flex;
                 align-items: center;
-                gap: 6px;
+                gap: 5px;
             }
             .tm-hud-btn {
                 background: rgba(255, 255, 255, 0.12);
                 border: 1px solid rgba(255, 255, 255, 0.2);
                 color: #ffffff;
-                padding: 4px 8px;
+                padding: 3px 8px;
                 border-radius: 6px;
                 font-size: 10px;
+                font-weight: 600;
                 cursor: pointer;
                 outline: none;
                 transition: background 0.15s, transform 0.1s;
@@ -125,7 +127,7 @@ export class ViewportDebugHUD {
                 display: flex;
                 flex-direction: column;
                 gap: 3px;
-                max-height: 125px;
+                max-height: 140px;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
             }
@@ -147,11 +149,11 @@ export class ViewportDebugHUD {
                 color: #fbbf24;
                 font-weight: 700;
             }
-            .tm-hud-gap-perfect {
+            .tm-hud-perfect {
                 color: #4ade80;
                 font-weight: 700;
             }
-            .tm-hud-gap-warn {
+            .tm-hud-warn {
                 color: #f87171;
                 font-weight: 700;
             }
@@ -161,7 +163,7 @@ export class ViewportDebugHUD {
                 border-top: 1px dashed rgba(255, 255, 255, 0.1);
                 color: #cbd5e1;
                 font-size: 9px;
-                max-height: 44px;
+                max-height: 40px;
                 overflow-y: auto;
             }
             .tm-hud-export-wrap {
@@ -172,17 +174,20 @@ export class ViewportDebugHUD {
                 flex-direction: column;
                 gap: 4px;
             }
-            .tm-hud-export-title {
+            .tm-hud-export-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
                 color: #38bdf8;
                 font-size: 10px;
                 font-weight: 700;
             }
             .tm-hud-export-area {
                 width: 100%;
-                height: 100px;
+                height: 90px;
                 box-sizing: border-box;
                 background: #000000;
-                border: 1px solid rgba(255, 255, 255, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.25);
                 border-radius: 6px;
                 color: #4ade80;
                 font-family: inherit;
@@ -205,11 +210,12 @@ export class ViewportDebugHUD {
         contentWrap.innerHTML = `
             <div class="tm-hud-header">
                 <div class="tm-hud-title-wrap">
-                    <span>🔍 视口探针 HUD</span>
+                    <span>🔍 视口全景探针</span>
                     <span class="tm-hud-badge">v${getCurrentVersion()}</span>
                 </div>
                 <div class="tm-hud-actions">
                     <button type="button" class="tm-hud-btn tm-hud-btn-copy" id="tm-hud-copy-btn">📋 复制日志 (0)</button>
+                    <button type="button" class="tm-hud-btn" id="tm-hud-share-btn" title="调起 iOS 系统原生拷贝菜单">📲 系统拷贝</button>
                     <button type="button" class="tm-hud-btn" id="tm-hud-clear-btn">清空</button>
                     <button type="button" class="tm-hud-btn" id="tm-hud-toggle-btn">折叠</button>
                 </div>
@@ -218,18 +224,21 @@ export class ViewportDebugHUD {
                 <div class="tm-hud-row">正在初始化视口测量数据...</div>
             </div>
             <div class="tm-hud-logs-preview" id="tm-hud-logs-list">
-                [就绪] 正在监听所有 input 聚焦与键盘视口变化...
+                [就绪] 正在监听所有 input 聚焦、键盘视口与宿主高度变化...
             </div>
             <div class="tm-hud-export-wrap" id="tm-hud-export-wrap" style="display: none;">
-                <div class="tm-hud-export-title">📋 导出的纯文本日志 (已全选，可直接长按拷贝):</div>
-                <textarea class="tm-hud-export-area" id="tm-hud-export-text" readonly></textarea>
+                <div class="tm-hud-export-header">
+                    <span>📋 导出的纯文本日志 (长按直接点系统“拷贝”):</span>
+                    <button type="button" class="tm-hud-btn" id="tm-hud-select-btn">全选文本</button>
+                </div>
+                <textarea class="tm-hud-export-area" id="tm-hud-export-text"></textarea>
             </div>
         `;
         this._container.appendChild(contentWrap);
 
         mountTarget.appendChild(this._container);
 
-        // 统一移动端触控/点击绑定工具 (优先 touchend，保证 100% 触发且不被底层手势吞掉)
+        // 统一移动端触控/点击绑定工具
         const bindTap = (el, handler) => {
             if (!el) return;
             let handled = false;
@@ -250,19 +259,30 @@ export class ViewportDebugHUD {
         };
 
         const copyBtn = this._container.querySelector('#tm-hud-copy-btn');
+        const shareBtn = this._container.querySelector('#tm-hud-share-btn');
         const clearBtn = this._container.querySelector('#tm-hud-clear-btn');
         const toggleBtn = this._container.querySelector('#tm-hud-toggle-btn');
+        const selectBtn = this._container.querySelector('#tm-hud-select-btn');
 
         bindTap(copyBtn, () => this.copyLogs());
+        bindTap(shareBtn, () => this.triggerNativeShareCopy());
         bindTap(clearBtn, () => this.clearLogs());
         bindTap(toggleBtn, () => this.toggleCollapse());
+        bindTap(selectBtn, () => {
+            const ta = this._container.querySelector('#tm-hud-export-text');
+            if (ta) {
+                ta.focus();
+                ta.select();
+                ta.setSelectionRange(0, ta.value.length);
+            }
+        });
 
         // 启动全局事件追踪与周期性指标更新
         this._bindEventListeners();
         this._startPolling();
 
         // 记录初始就绪事件
-        this.recordEvent('HUD_READY', '探针初始化就绪');
+        this.recordEvent('HUD_READY', '全景探针初始化就绪');
     }
 
     /**
@@ -277,7 +297,7 @@ export class ViewportDebugHUD {
     }
 
     /**
-     * 获取当前物理指标快照对象
+     * 获取当前物理指标快照对象 (全维度：宿主、视口、包含块、Z-Index、键盘间距)
      */
     static getMetricsSnapshot() {
         const vv = (typeof window !== 'undefined' && window.visualViewport) ? window.visualViewport : null;
@@ -288,7 +308,7 @@ export class ViewportDebugHUD {
         const submitBar = shadow?.querySelector('.tm-comment-submit-bar-wrapper') || document.querySelector('.tm-comment-submit-bar-wrapper');
         const submitBarRect = submitBar ? submitBar.getBoundingClientRect() : null;
         const sheetPanel = shadow?.querySelector('.tm-bottom-sheet-panel') || document.querySelector('.tm-bottom-sheet-panel');
-        const sheetRect = (sheetPanel && sheetPanel.classList.contains('visible')) ? sheetPanel.getBoundingClientRect() : null;
+        const sheetRect = sheetPanel ? sheetPanel.getBoundingClientRect() : null;
         const activeModal = shadow?.querySelector('.tm-custom-modal-content, .tm-comment-tag-select-modal') || document.querySelector('.tm-custom-modal-content, .tm-comment-tag-select-modal');
         const modalRect = activeModal ? activeModal.getBoundingClientRect() : null;
 
@@ -296,33 +316,57 @@ export class ViewportDebugHUD {
         const isInput = activeEl && /^(INPUT|TEXTAREA|SELECT)$/i.test(activeEl.tagName);
         const activeRect = isInput ? activeEl.getBoundingClientRect() : null;
 
-        // 计算各核心组件的 computed z-index 与 position 层叠上下文
-        const getZ = (el) => {
-            if (!el) return 'none';
+        // 计算宿主长页面物理高度与坍塌状态
+        const docEl = document.documentElement;
+        const docBody = document.body;
+        const hostScrollHeight = Math.max(docEl?.scrollHeight || 0, docBody?.scrollHeight || 0);
+        const hostClientHeight = docEl?.clientHeight || window.innerHeight;
+        const hostScrollableOverflow = Math.max(0, hostScrollHeight - hostClientHeight);
+        const collapsedCount = document.querySelectorAll('[data-mp-prev-display]').length;
+
+        // 计算包含块与 Z-Index 层叠详情
+        const inspectNode = (el) => {
+            if (!el) return { exists: false, z: 'none', parent: 'none', display: 'none' };
             try {
                 const cs = window.getComputedStyle(el);
-                return `z:${cs.zIndex || 'auto'} (${cs.position || 'static'})`;
+                const parentTag = el.parentElement ? `${el.parentElement.tagName.toLowerCase()}${el.parentElement.className ? `.${el.parentElement.className.split(' ')[0]}` : ''}` : 'null';
+                return {
+                    exists: true,
+                    z: cs.zIndex || 'auto',
+                    pos: cs.position || 'static',
+                    display: cs.display || 'block',
+                    parent: parentTag,
+                    inShadow: el.getRootNode() instanceof ShadowRoot
+                };
             } catch (_) {
-                return 'err';
+                return { exists: true, z: 'err', parent: 'err', display: 'err' };
             }
         };
 
-        const zIndexes = {
-            container: getZ(playerContainer),
-            video: getZ(shadow?.querySelector('.tm-video-container')),
-            controlButtons: getZ(shadow?.querySelector('.tm-control-buttons')),
-            submitBar: getZ(submitBar),
-            sheetPanel: getZ(sheetPanel),
-            popover: getZ(shadow?.querySelector('.tm-inline-remark-popover')),
-            modal: getZ(shadow?.querySelector('.tm-custom-modal-overlay') || document.querySelector('.tm-custom-modal-overlay')),
-            activeInput: isInput ? getZ(activeEl) : 'none'
+        const hierarchy = {
+            container: inspectNode(playerContainer),
+            video: inspectNode(shadow?.querySelector('.tm-video-container')),
+            controls: inspectNode(shadow?.querySelector('.tm-control-buttons')),
+            submitBar: inspectNode(submitBar),
+            sheetPanel: inspectNode(sheetPanel),
+            popover: inspectNode(shadow?.querySelector('.tm-inline-remark-popover')),
+            modal: inspectNode(shadow?.querySelector('.tm-custom-modal-overlay') || document.querySelector('.tm-custom-modal-overlay')),
+            activeInput: isInput ? inspectNode(activeEl) : null
         };
 
-        // 计算差值：发评栏底边距离当前可视视口底部的差值 (0 为绝对贴齐，正数=被键盘覆盖，负数=悬空)
+        // 计算发评栏对齐差值：底边距离当前可视视口底部的差值
         let gapToVisualBottom = null;
         if (submitBarRect && vv) {
             const visualBottom = (vv.offsetTop || 0) + vv.height;
             gapToVisualBottom = Math.round(submitBarRect.bottom - visualBottom);
+        }
+
+        // 计算核心安全间距 (Active Input Clearance)：
+        // 可视视口底边 - 输入框底边。>= 0 说明输入框在键盘上方(完全可见)；< 0 说明被键盘遮挡(Safari 必触发原生滚动！)
+        let activeInputClearance = null;
+        if (activeRect && vv) {
+            const visualBottom = (vv.offsetTop || 0) + vv.height;
+            activeInputClearance = Math.round(visualBottom - activeRect.bottom);
         }
 
         // 计算当前 CSS 变量与类名
@@ -331,12 +375,13 @@ export class ViewportDebugHUD {
 
         return {
             timestamp: new Date().toLocaleTimeString('zh-CN', { hour12: false }) + '.' + String(Date.now() % 1000).padStart(3, '0'),
-            window: {
-                inner: `${window.innerWidth}x${window.innerHeight}`,
-                screen: `${window.screen.width}x${window.screen.height}`,
-                docClient: `${document.documentElement.clientWidth}x${document.documentElement.clientHeight}`,
-                scrollY: window.scrollY,
-                scrollX: window.scrollX
+            host: {
+                scrollHeight: hostScrollHeight,
+                clientHeight: hostClientHeight,
+                overflow: hostScrollableOverflow,
+                collapsedCount,
+                scrollY: window.scrollY || window.pageYOffset || 0,
+                docScrollTop: docEl?.scrollTop || docBody?.scrollTop || 0
             },
             visualViewport: vv ? {
                 w: Math.round(vv.width),
@@ -355,7 +400,6 @@ export class ViewportDebugHUD {
                 top: Math.round(submitBarRect.top),
                 bottom: Math.round(submitBarRect.bottom),
                 height: Math.round(submitBarRect.height),
-                transform: submitBar.style.transform || 'none',
                 inlineBottom: submitBar.style.bottom || 'none',
                 isCollapsed: submitBar.classList.contains('is-collapsed'),
                 gap: gapToVisualBottom
@@ -363,13 +407,15 @@ export class ViewportDebugHUD {
             activeInput: activeRect ? {
                 tag: activeEl.tagName.toLowerCase(),
                 cls: (activeEl.className || '').replace(/is-[\w-]+/g, '').trim(),
-                rect: `[t:${Math.round(activeRect.top)}, b:${Math.round(activeRect.bottom)}, h:${Math.round(activeRect.height)}]`
+                rect: `[t:${Math.round(activeRect.top)}, b:${Math.round(activeRect.bottom)}, h:${Math.round(activeRect.height)}]`,
+                clearance: activeInputClearance
             } : null,
             sheetPanel: sheetRect ? {
                 top: Math.round(sheetRect.top),
                 bottom: Math.round(sheetRect.bottom),
+                h: Math.round(sheetRect.height),
                 inlineBottom: sheetPanel.style.bottom || 'none',
-                h: Math.round(sheetRect.height)
+                visible: sheetPanel.classList.contains('visible')
             } : null,
             modal: modalRect ? {
                 cls: activeModal.className,
@@ -377,7 +423,7 @@ export class ViewportDebugHUD {
                 bottom: Math.round(modalRect.bottom),
                 h: Math.round(modalRect.height)
             } : null,
-            zIndexes
+            hierarchy
         };
     }
 
@@ -409,7 +455,11 @@ export class ViewportDebugHUD {
 
             const previewEl = this._container.querySelector('#tm-hud-logs-list');
             if (previewEl) {
-                const recentText = this._logs.slice(0, 3).map(l => `[${l.time}] ${l.event}: ${l.details}`).join('<br>');
+                const recentText = this._logs.slice(0, 3).map(l => {
+                    const c = l.snapshot.activeInput?.clearance;
+                    const cStr = c !== null && c !== undefined ? ` (安全距:${c}px)` : '';
+                    return `[${l.time}] ${l.event}: ${l.details}${cStr}`;
+                }).join('<br>');
                 previewEl.innerHTML = recentText || '暂无日志';
             }
         }
@@ -489,45 +539,65 @@ export class ViewportDebugHUD {
         if (!metricsEl) return;
 
         const snap = this.getMetricsSnapshot();
+        const h = snap.host;
         const vv = snap.visualViewport;
         const c = snap.playerContainer;
         const sb = snap.submitBar;
         const act = snap.activeInput;
+        const z = snap.hierarchy;
 
+        // 宿主坍塌状态评估
+        let hostStatusHtml = '';
+        if (h.overflow === 0) {
+            hostStatusHtml = `<span class="tm-hud-perfect">0px 坍塌成功 (${h.collapsedCount}个节点)</span>`;
+        } else {
+            hostStatusHtml = `<span class="tm-hud-warn">+${h.overflow}px 溢出未坍塌! (总高:${h.scrollHeight})</span>`;
+        }
+
+        // 发评对齐评估
         let gapHtml = '<span class="tm-hud-val">无发评栏</span>';
         if (sb && sb.gap !== null) {
             if (Math.abs(sb.gap) <= 4) {
-                gapHtml = `<span class="tm-hud-gap-perfect">${sb.gap}px (完美对齐)</span>`;
+                gapHtml = `<span class="tm-hud-perfect">${sb.gap}px (贴合)</span>`;
             } else if (sb.gap > 4) {
-                gapHtml = `<span class="tm-hud-gap-warn">+${sb.gap}px (掉入键盘下方)</span>`;
+                gapHtml = `<span class="tm-hud-warn">+${sb.gap}px (掉入键盘下方)</span>`;
             } else {
-                gapHtml = `<span class="tm-hud-highlight">${sb.gap}px (悬空过多)</span>`;
+                gapHtml = `<span class="tm-hud-highlight">${sb.gap}px (悬空)</span>`;
+            }
+        }
+
+        // 输入框安全间距评估
+        let clearanceHtml = '<span class="tm-hud-val">无焦点</span>';
+        if (act && act.clearance !== null) {
+            if (act.clearance >= 0) {
+                clearanceHtml = `<span class="tm-hud-perfect">+${act.clearance}px (键盘上方安全)</span>`;
+            } else {
+                clearanceHtml = `<span class="tm-hud-warn">${act.clearance}px (被键盘盖住! 引发滚动)</span>`;
             }
         }
 
         const activeStr = act ? `${act.tag}.${(act.cls || '').split(' ')[0]} ${act.rect}` : '<span class="tm-hud-val">无激活输入框</span>';
-        const z = snap.zIndexes;
 
         metricsEl.innerHTML = `
             <div class="tm-hud-row">
-                <span class="tm-hud-lbl">[VV]</span>
-                <span class="tm-hud-val">h:${vv?.h || 0} top:${vv?.offsetTop || 0}</span>
-                <span class="tm-hud-lbl">[WIN]</span>
-                <span class="tm-hud-val">innerH:${window.innerHeight} scrY:${window.scrollY}</span>
+                <span class="tm-hud-lbl">[宿主]</span> 溢出: ${hostStatusHtml}
+                <span class="tm-hud-lbl">scrY:</span><span class="tm-hud-val">${h.scrollY}</span>
             </div>
             <div class="tm-hud-row">
-                <span class="tm-hud-lbl">[容器]</span>
-                <span class="tm-hud-val">H:${c?.height || 0} --kb:${c?.kbVar || '0px'} 类:${c?.isOpenClass ? 'open' : 'off'}</span>
+                <span class="tm-hud-lbl">[视口]</span>
+                <span class="tm-hud-val">vv.h:${vv?.h || 0} top:${vv?.offsetTop || 0} | win:${window.innerHeight}</span>
+                <span class="tm-hud-lbl">--kb:</span><span class="tm-hud-val">${c?.kbVar || '0px'}</span>
             </div>
             <div class="tm-hud-row">
                 <span class="tm-hud-lbl">[发评对齐GAP]</span> ${gapHtml}
+                <span class="tm-hud-lbl">[输入框安全距]</span> ${clearanceHtml}
             </div>
             <div class="tm-hud-row">
-                <span class="tm-hud-lbl">[当前激活]</span> <span class="tm-hud-val">${activeStr}</span>
+                <span class="tm-hud-lbl">[焦点]</span> <span class="tm-hud-val">${activeStr}</span>
             </div>
             <div class="tm-hud-row">
                 <span class="tm-hud-lbl">[Z标尺]</span>
-                <span class="tm-hud-val">发评:${z?.submitBar} 底栏:${z?.sheetPanel} 弹窗:${z?.modal} 输入框:${z?.activeInput}</span>
+                <span class="tm-hud-val">发评:z:${z.submitBar.z} (${z.submitBar.parent}) | 底栏:z:${z.sheetPanel.z} (${z.sheetPanel.parent})</span>
             </div>
         `;
     }
@@ -557,53 +627,56 @@ export class ViewportDebugHUD {
     }
 
     /**
-     * 生成完整的 Markdown 调试报告文本
+     * 生成全量 Markdown 诊断报告 (四维全面审计：宿主、包含块、视口间距、时序)
      */
     static generateReportMarkdown() {
         const cur = this.getMetricsSnapshot();
+        const h = cur.host;
         const vv = cur.visualViewport;
-        const w = cur.window;
         const c = cur.playerContainer;
         const sb = cur.submitBar;
         const act = cur.activeInput;
+        const z = cur.hierarchy;
 
         let md = `=== Miss Player iOS Viewport Debug Report ===\n`;
         md += `Script Version: v${getCurrentVersion()}\n`;
         md += `Report Time: ${cur.timestamp}\n`;
         md += `UserAgent: ${navigator.userAgent}\n\n`;
 
-        md += `### 1. 当前物理视口快照 (Current Snapshot)\n`;
+        md += `### 1. 宿主长页面物理坍塌状态 (Host Page Collapse Audit)\n`;
+        md += `- Host Scrollable Overflow: ${h.overflow}px (${h.overflow === 0 ? '✅ 物理坍塌成功，无滚动空间' : '❌ 存在宿主长页面滚动空间！'})\n`;
+        md += `- Host scrollHeight: ${h.scrollHeight}px vs clientHeight: ${h.clientHeight}px\n`;
+        md += `- Host window.scrollY: ${h.scrollY}px | docScrollTop: ${h.docScrollTop}px\n`;
+        md += `- Collapsed Host Elements Count: ${h.collapsedCount}\n\n`;
+
+        md += `### 2. 物理视口与虚拟键盘挤压 (Visual Viewport Squeeze)\n`;
         md += `- VisualViewport: width=${vv?.w}, height=${vv?.h}, offsetTop=${vv?.offsetTop}, pageTop=${vv?.pageTop}\n`;
-        md += `- Window/Screen: inner=${w.inner}, screen=${w.screen}, docClient=${w.docClient}, scrollY=${w.scrollY}\n`;
         md += `- Container: height=${c?.height}, --keyboard-height=${c?.kbVar}, isOpenClass=${c?.isOpenClass}\n`;
-        md += `- Active Input: ${act ? `${act.tag}.${act.cls} ${act.rect}` : 'None'}\n`;
         md += `- Submit Bar: [top:${sb?.top}, bottom:${sb?.bottom}, h:${sb?.height}], inlineBottom=${sb?.inlineBottom}, gapToKeyboard: ${sb?.gap}px, collapsed=${sb?.isCollapsed}\n`;
-        if (cur.sheetPanel) {
-            md += `- Sheet Panel: [top:${cur.sheetPanel.top}, bottom:${cur.sheetPanel.bottom}, h:${cur.sheetPanel.h}], inlineBottom=${cur.sheetPanel.inlineBottom}\n`;
-        }
-        if (cur.modal) {
-            md += `- Modal Dialog: class=${cur.modal.cls}, [top:${cur.modal.top}, bottom:${cur.modal.bottom}, h:${cur.modal.h}]\n`;
+        md += `- Active Input Clearance: ${act ? `${act.clearance}px (${act.clearance >= 0 ? '✅ 在键盘上方安全可见' : '❌ 被键盘覆盖，将触发Safari强滚'})` : 'None'}\n`;
+        md += `- Active Input Rect: ${act ? `${act.tag}.${act.cls} ${act.rect}` : 'None'}\n\n`;
+
+        md += `### 3. 组件层叠上下文与包含块归属审计 (Stacking Context Hierarchy)\n`;
+        md += `- Player Container: z:${z.container.z} (${z.container.pos}) | Parent: ${z.container.parent} | ShadowDOM: ${z.container.inShadow}\n`;
+        md += `- Video Container: z:${z.video.z} (${z.video.pos}) | Parent: ${z.video.parent}\n`;
+        md += `- Control Buttons: z:${z.controls.z} (${z.controls.pos}) | Parent: ${z.controls.parent}\n`;
+        md += `- Submit Bar: z:${z.submitBar.z} (${z.submitBar.pos}) | Parent: ${z.submitBar.parent}\n`;
+        md += `- Sheet Panel (高光底栏): z:${z.sheetPanel.z} (${z.sheetPanel.pos}) | Parent: ${z.sheetPanel.parent} | Visible: ${cur.sheetPanel?.visible}\n`;
+        md += `- Inline Popover (打点气泡): z:${z.popover.z} (${z.popover.pos}) | Parent: ${z.popover.parent}\n`;
+        md += `- Modal Dialog (登录/弹窗): z:${z.modal.z} (${z.modal.pos}) | Parent: ${z.modal.parent}\n`;
+        if (z.activeInput) {
+            md += `- Active Input Context: z:${z.activeInput.z} (${z.activeInput.pos}) | Parent: ${z.activeInput.parent}\n`;
         }
 
-        const z = cur.zIndexes;
-        md += `\n### 2. 各组件计算 Z-Index 与层叠上下文审计 (Z-Index Hierarchy)\n`;
-        md += `- Player Container: ${z?.container}\n`;
-        md += `- Video Container: ${z?.video}\n`;
-        md += `- Control Buttons: ${z?.controlButtons}\n`;
-        md += `- Submit Bar: ${z?.submitBar}\n`;
-        md += `- Sheet Panel (高光底栏): ${z?.sheetPanel}\n`;
-        md += `- Inline Popover (打点气泡): ${z?.popover}\n`;
-        md += `- Modal Dialog (登录/弹窗): ${z?.modal}\n`;
-        md += `- Active Input: ${z?.activeInput}\n`;
-
-        md += `\n### 3. 事件序列日志 (Event Sequence - Recent ${this._logs.length})\n`;
+        md += `\n### 4. 事件序列日志 (Event Sequence - Recent ${this._logs.length})\n`;
         this._logs.forEach((item, index) => {
             const s = item.snapshot;
             const v = s.visualViewport;
             const a = s.activeInput;
             const b = s.submitBar;
+            const cStr = a && a.clearance !== null ? ` | Clearance:${a.clearance}px` : '';
             md += `${index + 1}. [${item.time}] ${item.event} -> ${item.details}\n`;
-            md += `   VV:[h:${v?.h}, top:${v?.offsetTop}] | Win:[innerH:${s.window.inner}, scrollY:${s.window.scrollY}] | Input:${a ? `${a.tag}.${(a.cls||'').split(' ')[0]} ${a.rect}` : 'None'} | SubmitBarGap:${b?.gap}px\n`;
+            md += `   VV:[h:${v?.h}, top:${v?.offsetTop}] | Host:[overflow:${s.host.overflow}px, scrollY:${s.host.scrollY}] | Input:${a ? `${a.tag}.${(a.cls||'').split(' ')[0]} ${a.rect}` : 'None'}${cStr} | SubmitBarGap:${b?.gap}px\n`;
         });
 
         md += `\n=== End of Report ===\n`;
@@ -611,71 +684,86 @@ export class ViewportDebugHUD {
     }
 
     /**
-     * iOS Safari 专用安全剪贴板写入工具 (多重降级兜底)
+     * 调起 iOS 系统的原生 Action Sheet 分享与拷贝面板 (100% 成功率保证)
      */
-    static _safeCopy(text) {
-        // 1. GM API
-        if (typeof GM_setClipboard === 'function') {
+    static async triggerNativeShareCopy() {
+        const md = this.generateReportMarkdown();
+
+        // 展开就地文本框
+        this._showExportTextarea(md);
+
+        if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
             try {
-                GM_setClipboard(text);
+                await navigator.share({
+                    title: 'Miss Player Debug Report',
+                    text: md
+                });
+                Toast('✅ 已调起系统原生面板，点击“拷贝”即可！', 2500, 'success');
                 return true;
-            } catch (_) {}
+            } catch (err) {
+                // 用户主动关闭或取消分享，不报 error
+                if (err && err.name === 'AbortError') return false;
+            }
         }
 
-        // 2. 现代 Clipboard API
-        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-            try {
-                navigator.clipboard.writeText(text);
-                return true;
-            } catch (_) {}
-        }
+        // 降级为手动长按
+        Toast('⚠️ 请直接长按下方已全选的文本框并点“拷贝”', 3000, 'warning');
+        return false;
+    }
 
-        // 3. iOS 专用可见微小文本框选区复制 (严禁使用 -9999px 负坐标，必须位于视口内)
-        try {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.top = '10px';
-            ta.style.left = '10px';
-            ta.style.width = '10px';
-            ta.style.height = '10px';
-            ta.style.opacity = '0.01';
-            ta.style.zIndex = '2147483647';
-            ta.setAttribute('readonly', '');
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            ta.setSelectionRange(0, text.length);
-            const ok = document.execCommand('copy');
-            document.body.removeChild(ta);
-            return ok;
-        } catch (_) {
-            return false;
+    /**
+     * 显示就地文本框并全选内容
+     */
+    static _showExportTextarea(text) {
+        const exportWrap = this._container?.querySelector('#tm-hud-export-wrap');
+        const exportText = this._container?.querySelector('#tm-hud-export-text');
+        if (exportWrap && exportText) {
+            exportWrap.style.display = 'flex';
+            exportText.value = text;
+            try {
+                exportText.focus();
+                exportText.select();
+                exportText.setSelectionRange(0, text.length);
+            } catch (_) {}
         }
     }
 
     /**
-     * 一键将全量结构化物理日志复制到剪贴板，并展开就地文本框提供手动长按拷贝
+     * 一键将全量结构化物理日志复制到剪贴板，支持 iOS Web Share 原生联动
      */
-    static copyLogs() {
+    static async copyLogs() {
         const md = this.generateReportMarkdown();
         const copyBtn = this._container?.querySelector('#tm-hud-copy-btn');
-        const exportWrap = this._container?.querySelector('#tm-hud-export-wrap');
-        const exportText = this._container?.querySelector('#tm-hud-export-text');
 
-        // 无论自动复制是否成功，都在 HUD 下方就地展开全选文本框（绝对兜底）
-        if (exportWrap && exportText) {
-            exportWrap.style.display = 'flex';
-            exportText.value = md;
+        // 展开并全选就地文本框
+        this._showExportTextarea(md);
+
+        // 尝试通过浏览器原生 API 拷贝
+        let copied = false;
+        if (typeof GM_setClipboard === 'function') {
             try {
-                exportText.focus();
-                exportText.select();
-                exportText.setSelectionRange(0, md.length);
+                GM_setClipboard(md);
+                copied = true;
             } catch (_) {}
         }
 
-        // 执行多重剪贴板写入
-        const success = this._safeCopy(md);
+        if (!copied && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            try {
+                await navigator.clipboard.writeText(md);
+                copied = true;
+            } catch (_) {}
+        }
+
+        // 如果上述静默 API 均受 iOS 限制，自动尝试调起系统原生 Action Sheet 拷贝
+        if (!copied && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+            try {
+                await navigator.share({
+                    title: 'Miss Player Debug Report',
+                    text: md
+                });
+                copied = true;
+            } catch (_) {}
+        }
 
         if (copyBtn) {
             copyBtn.classList.add('is-copied');
@@ -686,13 +774,13 @@ export class ViewportDebugHUD {
             }, 3000);
         }
 
-        if (success) {
-            Toast('✅ 日志已复制到剪贴板！(若未生效可长按下方文本框)', 3000, 'success');
+        if (copied) {
+            Toast('✅ 日志已复制到剪贴板！', 2200, 'success');
         } else {
-            Toast('⚠️ 请直接长按下方已全选的文本框进行拷贝', 3500, 'warning');
+            Toast('⚠️ 系统拦截了静默写入，请直接长按下方文本框并点“拷贝”', 3500, 'warning');
         }
 
-        console.log('[ViewportDebugHUD] Generated report:\n', md);
+        console.log('[ViewportDebugHUD] Report:\n', md);
     }
 
     /**
