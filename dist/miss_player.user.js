@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.70
+// @version            5.7.71
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -197,7 +197,7 @@
 		}
 	};
 	var mediaSniffer = new MediaSniffer();
-	_css(":root{--brand-pink:#fe628e;--brand-pink-rgb:254, 98, 142}miss-player-root{display:contents!important}html.tm-player-active,body.tm-player-active{overscroll-behavior:none!important;scrollbar-width:none!important;-ms-overflow-style:none!important;width:100%!important;height:100%!important;position:fixed!important;top:0!important;bottom:0!important;left:0!important;right:0!important;overflow:hidden!important}html.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active>:not(miss-player-root),body.tm-player-active #peach-jav-action,body.tm-player-active [id*=peach-jav]{display:none!important}body.controls-hidden{cursor:none!important}body.tm-swiping-down{-webkit-user-select:none!important;user-select:none!important;touch-action:none!important}body.tm-settings-active{touch-action:pan-y!important}.tm-floating-button{bottom:max(20px, env(safe-area-inset-bottom,20px));width:56px;height:56px;color:var(--brand-pink);box-shadow:none;box-sizing:border-box;z-index:2147483640;cursor:pointer;-webkit-appearance:none;appearance:none;border-radius:50%;justify-content:center;align-items:center;margin:0;padding:0;transition:transform .25s cubic-bezier(.16,1,.3,1),filter .25s cubic-bezier(.16,1,.3,1);display:flex;left:50%;right:auto;overflow:visible;transform:translate(-50%);background:0 0!important;border:none!important;outline:none!important;position:fixed!important}.tm-floating-button svg{width:48px;height:48px;filter:drop-shadow(0 0 10px rgba(var(--brand-pink-rgb), .9));transition:filter .25s cubic-bezier(.16,1,.3,1);animation:3s ease-in-out infinite breathing-glow}.tm-floating-button:hover{transform:translate(-50%)scale(1.08)}.tm-floating-button:hover svg{filter:drop-shadow(0 0 20px rgba(var(--brand-pink-rgb), 1))}.tm-floating-button:active{transform:translate(-50%)scale(.96)}@keyframes breathing-glow{0%,to{filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), .7))}50%{filter:drop-shadow(0 0 22px rgba(var(--brand-pink-rgb), 1))}}@media screen and (orientation:landscape){.tm-floating-button{left:auto;right:max(20px, env(safe-area-inset-right,20px));bottom:max(20px, env(safe-area-inset-bottom,20px));transform:none}.tm-floating-button:hover{transform:scale(1.08)}.tm-floating-button:active{transform:scale(.96)}}@media screen and (max-width:1024px),(pointer:coarse){body.tm-player-active .tm-custom-modal-overlay input,body.tm-player-active .tm-custom-modal-overlay textarea{font-size:16px!important}}");
+	_css(":root{--brand-pink:#fe628e;--brand-pink-rgb:254, 98, 142}miss-player-root{display:contents!important}html.tm-player-active,body.tm-player-active{overscroll-behavior:none!important;scrollbar-width:none!important;-ms-overflow-style:none!important;width:100%!important;height:100%!important;position:fixed!important;top:0!important;bottom:0!important;left:0!important;right:0!important;overflow:hidden!important}html.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active header,body.tm-player-active .header,body.tm-player-active navbar,body.tm-player-active .navbar,body.tm-player-active #header-top,body.tm-player-active .top-nav,body.tm-player-active [class*=header--sticky],body.tm-player-active [class*=navbar-fixed],body.tm-player-active #peach-jav-action,body.tm-player-active [id*=peach-jav],body.tm-player-active aside[aria-label*=Peach],body.tm-player-active aside[data-panel-mode]{display:none!important}body.controls-hidden{cursor:none!important}body.tm-swiping-down{-webkit-user-select:none!important;user-select:none!important;touch-action:none!important}body.tm-settings-active{touch-action:pan-y!important}.tm-floating-button{bottom:max(20px, env(safe-area-inset-bottom,20px));width:56px;height:56px;color:var(--brand-pink);box-shadow:none;box-sizing:border-box;z-index:2147483640;cursor:pointer;-webkit-appearance:none;appearance:none;border-radius:50%;justify-content:center;align-items:center;margin:0;padding:0;transition:transform .25s cubic-bezier(.16,1,.3,1),filter .25s cubic-bezier(.16,1,.3,1);display:flex;left:50%;right:auto;overflow:visible;transform:translate(-50%);background:0 0!important;border:none!important;outline:none!important;position:fixed!important}.tm-floating-button svg{width:48px;height:48px;filter:drop-shadow(0 0 10px rgba(var(--brand-pink-rgb), .9));transition:filter .25s cubic-bezier(.16,1,.3,1);animation:3s ease-in-out infinite breathing-glow}.tm-floating-button:hover{transform:translate(-50%)scale(1.08)}.tm-floating-button:hover svg{filter:drop-shadow(0 0 20px rgba(var(--brand-pink-rgb), 1))}.tm-floating-button:active{transform:translate(-50%)scale(.96)}@keyframes breathing-glow{0%,to{filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), .7))}50%{filter:drop-shadow(0 0 22px rgba(var(--brand-pink-rgb), 1))}}@media screen and (orientation:landscape){.tm-floating-button{left:auto;right:max(20px, env(safe-area-inset-right,20px));bottom:max(20px, env(safe-area-inset-bottom,20px));transform:none}.tm-floating-button:hover{transform:scale(1.08)}.tm-floating-button:active{transform:scale(.96)}}@media screen and (max-width:1024px),(pointer:coarse){body.tm-player-active .tm-custom-modal-overlay input,body.tm-player-active .tm-custom-modal-overlay textarea{font-size:16px!important}}");
 	function formatTime(seconds) {
 		if (isNaN(seconds) || seconds < 0) return "0:00";
 		const hours = Math.floor(seconds / 3600);
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.70";
+		return "5.7.71";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1591,7 +1591,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.70";
+		return "5.7.71";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -5276,7 +5276,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.70";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.71";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -20550,28 +20550,6 @@
 				}
 			};
 			window.addEventListener("scroll", this._windowScrollLock, { passive: true });
-			this._hiddenHostElements = new Set();
-			this._collapseHostElement = (node) => {
-				if (!node || node.nodeType !== 1) return;
-				const tag = node.tagName ? node.tagName.toUpperCase() : "";
-				if (tag === "MISS-PLAYER-ROOT" || tag === "SCRIPT" || tag === "STYLE" || node.id === "tm-hide-scrollbar-style") return;
-				if (!this._hiddenHostElements.has(node)) {
-					const prevDisplay = node.style.display;
-					node.setAttribute("data-mp-prev-display", prevDisplay);
-					node.style.setProperty("display", "none", "important");
-					this._hiddenHostElements.add(node);
-				}
-			};
-			if (document.body) {
-				Array.from(document.body.children).forEach(this._collapseHostElement);
-				if (typeof MutationObserver !== "undefined") {
-					this._hostMutationObserver = new MutationObserver((mutations) => {
-						if (!document.body || !document.body.classList.contains("tm-player-active")) return;
-						for (const m of mutations) for (const node of m.addedNodes) if (node && node.nodeType === 1) this._collapseHostElement(node);
-					});
-					this._hostMutationObserver.observe(document.body, { childList: true });
-				}
-			}
 			this._scrollbarStyle = document.createElement("style");
 			this._scrollbarStyle.id = "tm-hide-scrollbar-style";
 			this._scrollbarStyle.innerHTML = `
@@ -20774,22 +20752,6 @@
 			}
 			document.body.classList.remove("tm-player-active");
 			document.documentElement.classList.remove("tm-player-active");
-			if (this._hostMutationObserver) {
-				this._hostMutationObserver.disconnect();
-				this._hostMutationObserver = null;
-			}
-			if (this._hiddenHostElements && this._hiddenHostElements.size > 0) {
-				this._hiddenHostElements.forEach((node) => {
-					if (node && node.parentNode) {
-						const prevDisplay = node.getAttribute("data-mp-prev-display");
-						if (prevDisplay !== null && prevDisplay !== void 0) node.style.display = prevDisplay;
-						else node.style.removeProperty("display");
-						node.removeAttribute("data-mp-prev-display");
-					}
-				});
-				this._hiddenHostElements.clear();
-				this._hiddenHostElements = null;
-			}
 			if (this._originalScrollTo) {
 				window.scrollTo = this._originalScrollTo;
 				if (typeof this._originScrollY === "number") this._originalScrollTo.call(window, this._originScrollX || 0, this._originScrollY);
