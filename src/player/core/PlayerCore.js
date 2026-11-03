@@ -44,8 +44,8 @@ export class PlayerCore {
         // 清理可能存在的旧overlay
         this.cleanupExistingOverlays();
         
-        // 查找目标视频
-        this.targetVideo = this.findTargetVideo();
+        // 查找目标视频 (优先使用外部透传的已探测目标视频，若无则自动在 DOM 中探测)
+        this.targetVideo = this.options.targetVideo || this.findTargetVideo();
         
         if (!this.targetVideo) {
             console.error('[PlayerCore] 未找到视频元素');
@@ -71,7 +71,16 @@ export class PlayerCore {
      */
     cleanupExistingOverlays() {
         const existingRoots = document.querySelectorAll('miss-player-root');
-        existingRoots.forEach(r => { try { r.remove(); } catch (_) {} });
+        existingRoots.forEach(r => {
+            try {
+                // 深度抢救：如果旧的 miss-player-root 内部还包含着被劫持的目标视频，先放回宿主 body，防止视频元素被彻底销毁
+                const innerVideo = r.shadowRoot?.querySelector('video');
+                if (innerVideo && innerVideo.parentNode) {
+                    document.body.appendChild(innerVideo);
+                }
+                r.remove();
+            } catch (_) {}
+        });
         // 查找所有现有的overlay元素
         const existingOverlays = document.querySelectorAll('.tm-video-overlay');
         
@@ -91,7 +100,7 @@ export class PlayerCore {
      * @returns {HTMLVideoElement|null} 找到的视频元素或null
      */
     findTargetVideo() {
-        return findVideoElement();
+        return findVideoElement(true);
     }
 
     /**

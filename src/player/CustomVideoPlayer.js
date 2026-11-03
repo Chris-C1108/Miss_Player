@@ -42,7 +42,8 @@ export class CustomVideoPlayer {
      */
     init() {
         if (this.initialized) return;
-        performance.mark('mp:theater-init-start');
+        try {
+            performance.mark('mp:theater-init-start');
         
         // 标记播放器激活状态，以便 CSS 隐藏宿主干扰元素
         this._originScrollX = window.scrollX;
@@ -330,6 +331,14 @@ export class CustomVideoPlayer {
         performance.mark('mp:theater-ready');
         performance.measure('mp:theater-init', 'mp:theater-init-start', 'mp:theater-ready');
         console.log('[CustomVideoPlayer] 初始化完成');
+        } catch (err) {
+            console.error('[CustomVideoPlayer] 初始化发生异常:', err);
+            telemetry.track('player_open_error', { error: String(err) });
+            Toast('播放器载入失败: ' + (err.message || err), 4000, 'error');
+            if (this.callingButton) {
+                this.callingButton.style.display = 'flex';
+            }
+        }
     }
 
     /**

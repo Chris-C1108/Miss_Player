@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.71
+// @version            5.7.72
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1264,7 +1264,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.71";
+		return "5.7.72";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1391,7 +1391,7 @@
 		init() {
 			if (this.initialized) return;
 			this.cleanupExistingOverlays();
-			this.targetVideo = this.findTargetVideo();
+			this.targetVideo = this.options.targetVideo || this.findTargetVideo();
 			if (!this.targetVideo) {
 				console.error("[PlayerCore] 未找到视频元素");
 				if (this.callingButton) this.callingButton.classList.remove("is-hidden");
@@ -1405,6 +1405,8 @@
 		cleanupExistingOverlays() {
 			document.querySelectorAll("miss-player-root").forEach((r) => {
 				try {
+					const innerVideo = r.shadowRoot?.querySelector("video");
+					if (innerVideo && innerVideo.parentNode) document.body.appendChild(innerVideo);
 					r.remove();
 				} catch (_) {}
 			});
@@ -1417,7 +1419,7 @@
 			}
 		}
 		findTargetVideo() {
-			return findVideoElement();
+			return findVideoElement(true);
 		}
 		saveVideoState() {
 			if (!this.targetVideo) return;
@@ -1591,7 +1593,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.71";
+		return "5.7.72";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -5276,7 +5278,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.71";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.72";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -20528,31 +20530,32 @@
 		}
 		init() {
 			if (this.initialized) return;
-			performance.mark("mp:theater-init-start");
-			this._originScrollX = window.scrollX;
-			this._originScrollY = window.scrollY;
-			window.scrollTo(0, 0);
-			document.body.classList.add("tm-player-active");
-			document.documentElement.classList.add("tm-player-active");
-			if (!this._originalScrollTo) {
-				this._originalScrollTo = window.scrollTo;
-				const self = this;
-				window.scrollTo = function(x, y) {
-					if (document.body && document.body.classList.contains("tm-player-active")) return self._originalScrollTo.call(window, 0, 0);
-					return self._originalScrollTo.apply(window, arguments);
-				};
-			}
-			this._windowScrollLock = () => {
-				if (document.body && document.body.classList.contains("tm-player-active")) {
-					if (window.scrollY > 1 || window.scrollX > 1) requestAnimationFrame(() => {
-						window.scrollTo(0, 0);
-					});
+			try {
+				performance.mark("mp:theater-init-start");
+				this._originScrollX = window.scrollX;
+				this._originScrollY = window.scrollY;
+				window.scrollTo(0, 0);
+				document.body.classList.add("tm-player-active");
+				document.documentElement.classList.add("tm-player-active");
+				if (!this._originalScrollTo) {
+					this._originalScrollTo = window.scrollTo;
+					const self = this;
+					window.scrollTo = function(x, y) {
+						if (document.body && document.body.classList.contains("tm-player-active")) return self._originalScrollTo.call(window, 0, 0);
+						return self._originalScrollTo.apply(window, arguments);
+					};
 				}
-			};
-			window.addEventListener("scroll", this._windowScrollLock, { passive: true });
-			this._scrollbarStyle = document.createElement("style");
-			this._scrollbarStyle.id = "tm-hide-scrollbar-style";
-			this._scrollbarStyle.innerHTML = `
+				this._windowScrollLock = () => {
+					if (document.body && document.body.classList.contains("tm-player-active")) {
+						if (window.scrollY > 1 || window.scrollX > 1) requestAnimationFrame(() => {
+							window.scrollTo(0, 0);
+						});
+					}
+				};
+				window.addEventListener("scroll", this._windowScrollLock, { passive: true });
+				this._scrollbarStyle = document.createElement("style");
+				this._scrollbarStyle.id = "tm-hide-scrollbar-style";
+				this._scrollbarStyle.innerHTML = `
             html::-webkit-scrollbar, body::-webkit-scrollbar {
                 display: none !important;
             }
@@ -20571,154 +20574,160 @@
                 overscroll-behavior-y: none !important;
             }
         `;
-			document.head.appendChild(this._scrollbarStyle);
-			if (!this.playerCore) this.playerCore = new PlayerCore({ callingButton: this.callingButton });
-			this._sessionStartTime = Date.now();
-			this.playerCore.init();
-			performance.mark("mp:video-hijacked");
-			if (this.playerCore && this.playerCore.options && this.playerCore.options.playerState) this.playerCore.options.playerState.initReactiveSync((key, newVal) => {
-				if (this.managers.settingsManager) this.managers.settingsManager.updateControlRowsVisibility();
-				if (key === "buttonSoundEnabled" && this.managers.settingsManager) this.managers.settingsManager.settings.buttonSoundEnabled = newVal;
-			});
-			if (!this.playerCore.targetVideo) {
-				console.error("[CustomVideoPlayer] 核心初始化失败: 未找到视频元素");
-				telemetry.track("player_open_fail");
-				Toast(__("loadingError") || "Failed to load video", 3e3, "error");
-				if (this.callingButton) this.callingButton.style.display = "flex";
-				return;
-			}
-			const videoElem = this.playerCore.targetVideo;
-			telemetry.track("player_open_success", {
-				video_duration: videoElem.duration || 0,
-				video_width: videoElem.videoWidth || 0,
-				video_height: videoElem.videoHeight || 0,
-				video_src_domain: (function() {
-					try {
-						return new URL(videoElem.src).hostname;
-					} catch (_) {
-						return "";
+				document.head.appendChild(this._scrollbarStyle);
+				if (!this.playerCore) this.playerCore = new PlayerCore({ callingButton: this.callingButton });
+				this._sessionStartTime = Date.now();
+				this.playerCore.init();
+				performance.mark("mp:video-hijacked");
+				if (this.playerCore && this.playerCore.options && this.playerCore.options.playerState) this.playerCore.options.playerState.initReactiveSync((key, newVal) => {
+					if (this.managers.settingsManager) this.managers.settingsManager.updateControlRowsVisibility();
+					if (key === "buttonSoundEnabled" && this.managers.settingsManager) this.managers.settingsManager.settings.buttonSoundEnabled = newVal;
+				});
+				if (!this.playerCore.targetVideo) {
+					console.error("[CustomVideoPlayer] 核心初始化失败: 未找到视频元素");
+					telemetry.track("player_open_fail");
+					Toast(__("loadingError") || "Failed to load video", 3e3, "error");
+					if (this.callingButton) this.callingButton.style.display = "flex";
+					return;
+				}
+				const videoElem = this.playerCore.targetVideo;
+				telemetry.track("player_open_success", {
+					video_duration: videoElem.duration || 0,
+					video_width: videoElem.videoWidth || 0,
+					video_height: videoElem.videoHeight || 0,
+					video_src_domain: (function() {
+						try {
+							return new URL(videoElem.src).hostname;
+						} catch (_) {
+							return "";
+						}
+					})()
+				});
+				this._activePlayStartTime = !videoElem.paused ? Date.now() : null;
+				this._activePlayDurationSec = 0;
+				this._lastVideoCurrentTime = 0;
+				this._replayCount = 0;
+				this._onPlay = () => {
+					this._activePlayStartTime = Date.now();
+				};
+				this._onPauseOrEnded = () => {
+					if (this._activePlayStartTime) {
+						this._activePlayDurationSec += (Date.now() - this._activePlayStartTime) / 1e3;
+						this._activePlayStartTime = null;
 					}
-				})()
-			});
-			this._activePlayStartTime = !videoElem.paused ? Date.now() : null;
-			this._activePlayDurationSec = 0;
-			this._lastVideoCurrentTime = 0;
-			this._replayCount = 0;
-			this._onPlay = () => {
-				this._activePlayStartTime = Date.now();
-			};
-			this._onPauseOrEnded = () => {
-				if (this._activePlayStartTime) {
-					this._activePlayDurationSec += (Date.now() - this._activePlayStartTime) / 1e3;
-					this._activePlayStartTime = null;
+				};
+				this._onTimeUpdate = () => {
+					if (videoElem && !videoElem.paused) {
+						if (!this._activePlayStartTime) this._activePlayStartTime = Date.now();
+						const cur = videoElem.currentTime;
+						if (this._lastVideoCurrentTime > 0 && this._lastVideoCurrentTime - cur > 2.5) this._replayCount++;
+						this._lastVideoCurrentTime = cur;
+					}
+				};
+				videoElem.addEventListener("play", this._onPlay);
+				videoElem.addEventListener("pause", this._onPauseOrEnded);
+				videoElem.addEventListener("ended", this._onPauseOrEnded);
+				videoElem.addEventListener("timeupdate", this._onTimeUpdate);
+				const uiManager = new UIManager(this.playerCore);
+				const uiElements = uiManager.createUI();
+				this.managers.uiManager = uiManager;
+				const controlManager = new ControlManager(this.playerCore, uiElements, uiManager);
+				controlManager.init();
+				this.managers.controlManager = controlManager;
+				const settingsManager = new SettingsManager(this.playerCore, uiElements, uiManager, controlManager);
+				settingsManager.init();
+				this.managers.settingsManager = settingsManager;
+				const progressManager = new ProgressManager(this.playerCore, uiElements);
+				progressManager.init({
+					progressBarElement: controlManager.progressBarElement,
+					progressIndicator: controlManager.progressIndicator,
+					currentTimeDisplay: controlManager.currentTimeDisplay,
+					totalDurationDisplay: controlManager.totalDurationDisplay,
+					timeIndicator: controlManager.timeIndicator
+				});
+				this.managers.progressManager = progressManager;
+				const heatmapManager = new HeatmapManager(this.playerCore, controlManager);
+				heatmapManager.init();
+				this.managers.heatmapManager = heatmapManager;
+				controlManager.heatmapManager = heatmapManager;
+				this.playerCore.heatmapManager = heatmapManager;
+				const loopManager = new LoopManager(this.playerCore, uiElements, controlManager);
+				loopManager.init({
+					loopStartMarker: controlManager.loopStartMarker,
+					loopEndMarker: controlManager.loopEndMarker,
+					loopRangeElement: controlManager.loopRangeElement,
+					progressMarkersContainer: controlManager.progressMarkersContainer,
+					tabScrollContainer: controlManager.tabScrollContainer,
+					tabAddBtn: controlManager.tabAddBtn
+				});
+				this.managers.loopManager = loopManager;
+				controlManager.setLoopManager(loopManager);
+				progressManager.setLoopManager(loopManager);
+				this.playerCore.loopManager = loopManager;
+				const playerSettings = this.playerCore.options?.playerState?.settings;
+				if (playerSettings && playerSettings.betaMode && playerSettings.betaFirstCapsulePlay && loopManager.tabs.length > 0) {
+					const firstTab = loopManager.tabs[0];
+					const targetTime = firstTab.startTime !== void 0 && firstTab.startTime !== null ? firstTab.startTime : firstTab.time || 0;
+					const prevTime = this.playerCore.videoState?.currentTime || 0;
+					if (this.playerCore.targetVideo) {
+						this.playerCore.targetVideo.currentTime = targetTime;
+						if (prevTime > 0 && Math.abs(prevTime - targetTime) > 3) Toast("已从第 1 个高光开播，点击恢复上次断点", 5e3, "info", () => {
+							if (this.playerCore.targetVideo) this.playerCore.targetVideo.currentTime = prevTime;
+						});
+					}
 				}
-			};
-			this._onTimeUpdate = () => {
-				if (videoElem && !videoElem.paused) {
-					if (!this._activePlayStartTime) this._activePlayStartTime = Date.now();
-					const cur = videoElem.currentTime;
-					if (this._lastVideoCurrentTime > 0 && this._lastVideoCurrentTime - cur > 2.5) this._replayCount++;
-					this._lastVideoCurrentTime = cur;
+				const dragManager = new DragManager(this.playerCore, uiElements, uiManager, controlManager);
+				dragManager.init();
+				this.managers.dragManager = dragManager;
+				if (this.playerCore.targetVideo && uiElements.videoWrapper && uiElements.handle) {
+					console.log("[CustomVideoPlayer] 初始化SwipeManager...");
+					this.swipeManager = new VideoSwipeManager(this.playerCore.targetVideo, uiElements.videoWrapper, uiElements.handle, uiElements, () => this.close(), uiManager);
+					this.swipeManager.playerCore = this.playerCore;
+					this.managers.swipeManager = this.swipeManager;
 				}
-			};
-			videoElem.addEventListener("play", this._onPlay);
-			videoElem.addEventListener("pause", this._onPauseOrEnded);
-			videoElem.addEventListener("ended", this._onPauseOrEnded);
-			videoElem.addEventListener("timeupdate", this._onTimeUpdate);
-			const uiManager = new UIManager(this.playerCore);
-			const uiElements = uiManager.createUI();
-			this.managers.uiManager = uiManager;
-			const controlManager = new ControlManager(this.playerCore, uiElements, uiManager);
-			controlManager.init();
-			this.managers.controlManager = controlManager;
-			const settingsManager = new SettingsManager(this.playerCore, uiElements, uiManager, controlManager);
-			settingsManager.init();
-			this.managers.settingsManager = settingsManager;
-			const progressManager = new ProgressManager(this.playerCore, uiElements);
-			progressManager.init({
-				progressBarElement: controlManager.progressBarElement,
-				progressIndicator: controlManager.progressIndicator,
-				currentTimeDisplay: controlManager.currentTimeDisplay,
-				totalDurationDisplay: controlManager.totalDurationDisplay,
-				timeIndicator: controlManager.timeIndicator
-			});
-			this.managers.progressManager = progressManager;
-			const heatmapManager = new HeatmapManager(this.playerCore, controlManager);
-			heatmapManager.init();
-			this.managers.heatmapManager = heatmapManager;
-			controlManager.heatmapManager = heatmapManager;
-			this.playerCore.heatmapManager = heatmapManager;
-			const loopManager = new LoopManager(this.playerCore, uiElements, controlManager);
-			loopManager.init({
-				loopStartMarker: controlManager.loopStartMarker,
-				loopEndMarker: controlManager.loopEndMarker,
-				loopRangeElement: controlManager.loopRangeElement,
-				progressMarkersContainer: controlManager.progressMarkersContainer,
-				tabScrollContainer: controlManager.tabScrollContainer,
-				tabAddBtn: controlManager.tabAddBtn
-			});
-			this.managers.loopManager = loopManager;
-			controlManager.setLoopManager(loopManager);
-			progressManager.setLoopManager(loopManager);
-			this.playerCore.loopManager = loopManager;
-			const playerSettings = this.playerCore.options?.playerState?.settings;
-			if (playerSettings && playerSettings.betaMode && playerSettings.betaFirstCapsulePlay && loopManager.tabs.length > 0) {
-				const firstTab = loopManager.tabs[0];
-				const targetTime = firstTab.startTime !== void 0 && firstTab.startTime !== null ? firstTab.startTime : firstTab.time || 0;
-				const prevTime = this.playerCore.videoState?.currentTime || 0;
-				if (this.playerCore.targetVideo) {
-					this.playerCore.targetVideo.currentTime = targetTime;
-					if (prevTime > 0 && Math.abs(prevTime - targetTime) > 3) Toast("已从第 1 个高光开播，点击恢复上次断点", 5e3, "info", () => {
-						if (this.playerCore.targetVideo) this.playerCore.targetVideo.currentTime = prevTime;
-					});
-				}
+				uiManager.setManagers({
+					controlManager,
+					progressManager,
+					dragManager,
+					loopManager,
+					swipeManager: this.swipeManager
+				});
+				const eventManager = new EventManager(this.playerCore, uiElements, this.managers);
+				eventManager.init();
+				this.managers.eventManager = eventManager;
+				uiManager.assembleDOM();
+				settingsManager.updateControlRowsVisibility();
+				this.playerCore.restoreVideoState();
+				progressManager.updateProgressBar();
+				progressManager.updateCurrentTimeDisplay();
+				updateSafariThemeColor("#000000", true);
+				const runUIUpdates = () => {
+					if (this.swipeManager) this.swipeManager.updateSize();
+					dragManager.updateHandlePosition();
+					if (loopManager) {
+						loopManager._updateUI();
+						loopManager.updateLoopTimeDisplay();
+						loopManager.updateLoopMarkers();
+					}
+					if (progressManager) {
+						progressManager.updateProgressBar();
+						progressManager.updateCurrentTimeDisplay();
+					}
+				};
+				if (this.playerCore.targetVideo.readyState >= 1) requestAnimationFrame(() => {
+					setTimeout(runUIUpdates, 50);
+				});
+				else this.playerCore.targetVideo.addEventListener("loadedmetadata", runUIUpdates, { once: true });
+				this.initialized = true;
+				performance.mark("mp:theater-ready");
+				performance.measure("mp:theater-init", "mp:theater-init-start", "mp:theater-ready");
+				console.log("[CustomVideoPlayer] 初始化完成");
+			} catch (err) {
+				console.error("[CustomVideoPlayer] 初始化发生异常:", err);
+				telemetry.track("player_open_error", { error: String(err) });
+				Toast("播放器载入失败: " + (err.message || err), 4e3, "error");
+				if (this.callingButton) this.callingButton.style.display = "flex";
 			}
-			const dragManager = new DragManager(this.playerCore, uiElements, uiManager, controlManager);
-			dragManager.init();
-			this.managers.dragManager = dragManager;
-			if (this.playerCore.targetVideo && uiElements.videoWrapper && uiElements.handle) {
-				console.log("[CustomVideoPlayer] 初始化SwipeManager...");
-				this.swipeManager = new VideoSwipeManager(this.playerCore.targetVideo, uiElements.videoWrapper, uiElements.handle, uiElements, () => this.close(), uiManager);
-				this.swipeManager.playerCore = this.playerCore;
-				this.managers.swipeManager = this.swipeManager;
-			}
-			uiManager.setManagers({
-				controlManager,
-				progressManager,
-				dragManager,
-				loopManager,
-				swipeManager: this.swipeManager
-			});
-			const eventManager = new EventManager(this.playerCore, uiElements, this.managers);
-			eventManager.init();
-			this.managers.eventManager = eventManager;
-			uiManager.assembleDOM();
-			settingsManager.updateControlRowsVisibility();
-			this.playerCore.restoreVideoState();
-			progressManager.updateProgressBar();
-			progressManager.updateCurrentTimeDisplay();
-			updateSafariThemeColor("#000000", true);
-			const runUIUpdates = () => {
-				if (this.swipeManager) this.swipeManager.updateSize();
-				dragManager.updateHandlePosition();
-				if (loopManager) {
-					loopManager._updateUI();
-					loopManager.updateLoopTimeDisplay();
-					loopManager.updateLoopMarkers();
-				}
-				if (progressManager) {
-					progressManager.updateProgressBar();
-					progressManager.updateCurrentTimeDisplay();
-				}
-			};
-			if (this.playerCore.targetVideo.readyState >= 1) requestAnimationFrame(() => {
-				setTimeout(runUIUpdates, 50);
-			});
-			else this.playerCore.targetVideo.addEventListener("loadedmetadata", runUIUpdates, { once: true });
-			this.initialized = true;
-			performance.mark("mp:theater-ready");
-			performance.measure("mp:theater-init", "mp:theater-init-start", "mp:theater-ready");
-			console.log("[CustomVideoPlayer] 初始化完成");
 		}
 		close() {
 			if (this._activePlayStartTime) {
@@ -20958,7 +20967,8 @@
 			requestAnimationFrame(() => {
 				this.videoPlayer = new CustomVideoPlayer$1({
 					playerState: this.playerState,
-					callingButton: this.button
+					callingButton: this.button,
+					targetVideo: preTargetVideo
 				});
 				this.videoPlayer.init();
 			});
