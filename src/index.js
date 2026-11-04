@@ -18,6 +18,7 @@ import { logger } from './utils/logger.js';
 import { telemetry } from './telemetry';
 import { SyncManager } from './sync/index.js';
 import { CommentCacheManager } from './player/comments/CommentCacheManager.js';
+import { PeachWebBridge } from './player/bridge/PeachWebBridge.js';
 
 // 1. 最早执行广告与弹窗拦截 (确保在宿主脚本加载前劫持 window.open 与广告请求)
 const earlyAdBlocker = new AdBlocker();
@@ -148,6 +149,12 @@ function setupViewport() {
             if (isSiteDomain('JAVLIBRARY')) {
                 handleJavLibraryVerification();
                 return; // 提前退出，不在 JAVLibrary 注入播放器等无关逻辑
+            }
+
+            // 检查是否在用户配置的 Peach Web 实例上
+            if (PeachWebBridge.isPeachInstance()) {
+                PeachWebBridge.init();
+                return;
             }
 
             // 首先注入样式

@@ -281,3 +281,11 @@ export const DOCK_SWITCH_RIGHT = `
         <path d="M8 9l4 3-4 3" stroke-width="2"/>
     </svg>
 `;
+
+export const ICON_PEACH = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21c-4.5 0-8-3.5-8-8 0-4 3.5-7.5 7.5-8.5.5-.1 1-.1 1.5 0 4 1 7 4.5 7 8.5 0 4.5-3.5 8-8 8z"/>
+        <path d="M12 4.5V2c2 0 3.5 1 4 2"/>
+        <path d="M12 11c0 3 1.5 5 3.5 6"/>
+    </svg>
+`;

@@ -26,34 +26,38 @@
 | **Phase 13** | **苹果人本化文案重构与五国母语对齐** | **达成 ✅** | **[Phase 13 专属规划方案](./docs/todo/phase-13-copywriting.md)** |
 | **Phase 15** | **UI/UX 深度优化与第三方脚本适配专项 (v5.7.1 ~ v5.7.4)** | **达成 ✅** | 详见 Release v5.7.4 |
 | **Phase 16** | **全局输入框与双模层叠上下文架构重构 (内外两界隔离与端态自适应)** | **达成 ✅** | 详见 Release v5.7.64 |
+| **Phase 17** | **Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环** | **实施中 🟡** | **[Phase 17 专属规划方案](./docs/todo/phase-17-peach-strm-integration.md)** |
 
 ---
 
-## 🏗️ 正在实施：Phase 16 - 全局输入框与双模层叠上下文架构重构
+## 🏗️ 正在实施：Phase 17 - Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环
 
-> **目标**：彻底消灭宿主侵入遮挡、移动端虚拟键盘穿透闪跳、各组件魔法 Z-Index 打架及 PC 宽屏 Web 端逻辑错位问题，建立现代化微前端层叠与输入架构。
+> **目标**：在 Miss Player 中集成 Peach 配对与管理，颠覆传统数十 GB 磁力离线下载模式，实现「WebDAV 秒级生成 `avcode.strm` 虚拟视频入库 + Peach Web 跨站动态寻源播放接力」双向闭环。
 
-- [x] **16.1 外部宿主防线与生存隔离 (External Stacking Defense) (已达成 ✅)**
-  - [x] 宿主 Body 物理坍塌（`display: none !important`）与动态注入 `MutationObserver` 守卫；
-  - [x] `<miss-player-root>` 宿主轨与播放器外壳固定层级确立为次极限值 `z-index: 2147483646`，浮动唤醒按钮确立为 `2147483640`，绝对压制第三方流氓挂件（如 Peach JAV `2147483647`）。
-- [x] **16.2 内部王国 Z-Index 标尺收敛 (Internal Tokens Governance) (已达成 ✅)**
-  - [x] 收敛 `src/player/ui/styles/00_tokens/_zindex.css`，正式固化内外两界与 10~60 规范步进标尺：
-    `--z-base: 10` ➔ `--z-controls: 20` ➔ `--z-drawer: 30` ➔ `--z-composer: 40` ➔ `--z-modal: 50` ➔ `--z-toast: 60`；
-  - [x] 全量清洗各组件样式（`_player.css`, `_comments.css`, `_controls.css`, `_landscape_pc.css`, `_common.css`, `_settings_apple.css`, `_marker_sheet.css` 等）中的散落魔法数字（9985, 9990, 9997, 9998, 100000, 100004, 100005, 2000000020, 2000000050 等），统一映射至 `--z-*`。
-- [x] **16.3 DOM 拓扑解耦与分层插槽拍平 (Viewport Slot Routing) (已达成 ✅)**
-  - [x] 发评底栏抽屉（`.tm-comment-submit-bar-wrapper`）与半透明遮罩从局部滚动容器 `.tm-comments-panel` 迁出，直接挂载到 `.tm-player-container` 根级插槽，彻底摆脱父级盒模型与 `overflow: hidden` 裁剪；
-  - [x] 高光切片管理底栏（`.tm-bottom-sheet-panel`）彻底脱离单手控制栏 `transform` 隔离区，挂载在顶级插槽享受全宽；
-  - [x] 打点即时备注气泡（`.tm-inline-remark-popover`）脱离控制栏，挂载至顶级并在上半区黄金带居中展示。
-- [x] **16.4 双模响应式端态自适应分流 (Dual-Mode Responsive Adaptation) (已达成 ✅)**
-  - [x] **移动端竖屏**：发评底栏全宽吸底、随虚拟键盘物理平移、触控 Pre-Lift 预升降 0 毫秒阻断 Safari 滚动扫描；
-  - [x] **PC 宽屏 Web 端**：发评底栏严格嵌合在右侧 380px 边栏最底部（`bottom: 0px !important; width: var(--sidebar-width);`），严禁横跨全屏侵犯左侧视频主舞台；双栏鼠标可并行交互。
-- [x] **16.5 活动层状态机与声明式防穿透锁 (Active Layer Pointer Guard) (已达成 ✅)**
-  - [x] 建立 `.has-composer-active` 容器状态类联动机制；
-  - [x] 声明式在移动触控下禁用底层非活动区 `pointer-events: none`，消除长达 12 项的脆弱 JS `closest` 白名单，彻底杜绝打字与选词时的误触收起与点击穿透；
-  - [x] 桌面端保持 `pointer-events: auto`，保障键鼠并行操作体验。
-- [x] **16.6 自动化门禁巡检、构建体积审计与发版验证 (已达成 ✅)**
-  - [x] 运行 `npm run lint:compliance` 与 `npm run ci:check` 确保全项 100% 通过（!important 保持 97 处低位，14 项单元测试全过）；
-  - [x] `npm run bump` 发版并推送 GitHub `main` 分支。
+- [x] **17.1 核心通信与数据服务层 (`src/services/PeachService.js`)**
+  - [x] 官方标准 JSON 配对解析、双写存储镜像（`mp_peach_base`, `mp_peach_token`, `mp_peach_strm_dir`）；
+  - [x] 连通性握手测试 API (`GET /api/jav-browser?code=TEST-001`)；
+  - [x] 馆藏状态查询 API (`GET /api/jav-browser?code=${avcode}`)；
+  - [x] 资源同步对账触发器 (`POST /api/resource-sync/scan`)。
+- [x] **17.2 STRM 虚拟文件生成与 WebDAV 写入管道 (`src/services/StrmIngestPipeline.js`)**
+  - [x] 联动 `MediaSniffer` 智能捕获当前有效播放流；
+  - [x] 遵循 Peach 规范生成合规 `.strm` 文本（首行流地址 + 元数据注释行）；
+  - [x] 复用 `WebDavClient` 直写用户指定 NAS 目录；支持浏览器下载平民降级；
+  - [x] 一键式全自动化联动。
+- [x] **17.3 设置面板集成与 Beta 实验室卡片 (`src/player/managers/settings/sections/PeachSection.js`)**
+  - [x] 受控于 `settings.betaMode`，默认关闭（Default OFF）；
+  - [x] 一键粘贴配对框、密码掩码切换、连接状态指示灯与测试按键；
+  - [x] 入库路径配置，符合 AppleCard 规范。
+- [x] **17.4 播放器 UI 交互：入库胶囊控件与状态机**
+  - [x] 控制栏挂载「入库 Peach」胶囊；
+  - [x] 自动感应在库状态，避免重复写入；
+  - [x] 动态进度反馈与轻量 Apple 风格 Toast。
+- [x] **17.5 Peach Web 跨站识别与动态寻源播放接力 (`src/player/bridge/PeachWebBridge.js`)**
+  - [x] Peach Web 播放页面检测与播放器视口接管；
+  - [x] 跨站动态即时寻源引擎 (Stream Resolver)，规避 Token 过期与防盗链 403；
+  - [x] GM 网络栈注入 Referer 彻底消灭死链。
+- [x] **17.6 自动化门禁巡检、版本强同步与质量验收**
+  - [x] `npm run lint:compliance`、`npm run bump` 与 `npm run ci:check` 全部 100% 通过 (v5.7.81)。
 
 ---
 

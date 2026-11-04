@@ -7,6 +7,7 @@ import { CrazyScraper } from '../../../comments/CrazyScraper.js';
 import { CommentCacheManager } from "../../../comments/CommentCacheManager.js";
 import { DebugLogPanel } from '../../../ui/DebugLogPanel.js';
 import { ViewportDebugHUD } from '../../../ui/ViewportDebugHUD.js';
+import { PeachSection } from './PeachSection.js';
 
 export class BetaSection {
     constructor(settingsManager) {
@@ -127,6 +128,9 @@ export class BetaSection {
         dbUrlInput.addEventListener('change', saveDb);
         dbKeyInput.addEventListener('change', saveDb);
         betaSubWrap.appendChild(dbRow);
+
+        const peachSection = new PeachSection(this.sm);
+        betaSubWrap.appendChild(peachSection.getElement());
 
         card.appendChild(betaSubWrap);
 

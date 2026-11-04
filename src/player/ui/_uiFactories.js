@@ -80,6 +80,19 @@ export function createCloseButtonElement() {
 }
 
 /**
+ * 创建 Peach STRM 虚拟入库快捷按钮
+ * @returns {HTMLButtonElement}
+ */
+export function createPeachIngestButtonElement() {
+    const peachBtn = document.createElement('button');
+    peachBtn.className = 'tm-peach-ingest-button tm-control-button-base';
+    peachBtn.innerHTML = ICON_PEACH;
+    peachBtn.title = '加入 Peach 馆藏 (STRM)';
+    peachBtn.setAttribute('aria-label', '加入 Peach 馆藏');
+    return peachBtn;
+}
+
+/**
  * 创建设置按钮
  * @returns {HTMLButtonElement}
  */

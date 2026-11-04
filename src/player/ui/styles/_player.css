@@ -325,6 +325,46 @@
     transform: scale(0.96);
 }
 
+/* Peach STRM 虚拟入库按钮 */
+.tm-peach-ingest-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.7);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s, box-shadow 0.2s;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-sm);
+}
+
+.tm-peach-ingest-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.9);
+    transform: scale(1.08);
+    box-shadow: var(--shadow-md);
+}
+
+.tm-peach-ingest-button:active {
+    transform: scale(0.96);
+}
+
+.tm-peach-ingest-button.is-ingested {
+    color: #30d158;
+    border-color: rgba(48, 209, 88, 0.4);
+    background-color: rgba(48, 209, 88, 0.15);
+}
+
+.tm-peach-ingest-button.is-busy svg {
+    animation: tm-spin 1s linear infinite;
+}
+
 /* 设置面板 (自适应视口高度并支持原生平滑滚动) */
 .tm-settings-panel {
     position: absolute;

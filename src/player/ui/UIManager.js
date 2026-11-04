@@ -12,12 +12,16 @@ import {
     createResizeHandleElement,
     createCloseButtonElement,
     createSettingsButtonElement,
+    createPeachIngestButtonElement,
     createSidebarControlButtons,
     createButtonContainerElement,
     createSettingsPanelElement,
     createSpeedIndicatorElement,
     getVideoTitle
 } from './_uiFactories.js';
+import { StrmIngestPipeline } from '../../services/StrmIngestPipeline.js';
+import { PeachService } from '../../services/PeachService.js';
+import { Toast } from '../../utils/index.js';
 
 
 if (typeof customElements !== 'undefined' && !customElements.get('miss-player-root')) {
@@ -48,6 +52,7 @@ export class UIManager {
         this.handle = null;              // 句柄元素
         this.closeBtn = null;            // 关闭按钮
         this.settingsBtn = null;         // 设置按钮
+        this.peachIngestBtn = null;      // Peach 虚拟入库按钮
         this.settingsPanel = null;       // 设置面板
         this.buttonContainer = null;     // 按钮容器
         this.titleEl = null;             // 播放器顶部标题
@@ -206,6 +211,9 @@ export class UIManager {
 
         // 创建设置按钮
         this.createSettingsButton();
+        
+        // 创建 Peach 虚拟入库按钮
+        this.createPeachIngestButton();
         
         // 创建侧边栏控制按钮
         this.createSidebarControls();
@@ -537,6 +545,61 @@ export class UIManager {
      */
     createSettingsButton() {
         this.settingsBtn = createSettingsButtonElement();
+    }
+
+    /**
+     * 创建 Peach STRM 虚拟入库快捷按钮与事件绑定
+     */
+    createPeachIngestButton() {
+        this.peachIngestBtn = createPeachIngestButtonElement();
+        this.peachIngestBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (this.peachIngestBtn.classList.contains('is-busy')) return;
+
+            const avcode = this.playerCore?.options?.videoCode || this.playerCore?.videoCode || '';
+            if (!avcode) {
+                Toast('未能识别当前影片番号', 1800, 'error');
+                return;
+            }
+
+            this.peachIngestBtn.classList.add('is-busy');
+            try {
+                const res = await StrmIngestPipeline.ingest({
+                    avcode,
+                    videoEl: this.targetVideo
+                });
+                if (res && res.success) {
+                    this.peachIngestBtn.classList.remove('is-busy');
+                    this.peachIngestBtn.classList.add('is-ingested');
+                    this.peachIngestBtn.title = `已入库 Peach: ${res.path}`;
+                    Toast(res.message, 2500, 'success');
+                }
+            } catch (err) {
+                this.peachIngestBtn.classList.remove('is-busy');
+                Toast(err.message || '入库失败，请在设置中检查配置', 3000, 'error');
+            }
+        });
+
+        // 异步检查当前番号是否已在 Peach 馆藏
+        const avcode = this.playerCore?.options?.videoCode || this.playerCore?.videoCode || '';
+        if (avcode) {
+            setTimeout(() => this.checkPeachStatus(avcode), 1200);
+        }
+    }
+
+    /**
+     * 异步检测番号在 Peach 馆藏状态
+     */
+    checkPeachStatus(avcode) {
+        if (!this.peachIngestBtn || !avcode) return;
+        const config = PeachService.getConfig();
+        if (!config.enabled || !config.base || !config.token) return;
+        PeachService.checkCodeStatus(avcode).then(res => {
+            if (res && res.inLibrary) {
+                this.peachIngestBtn.classList.add('is-ingested');
+                this.peachIngestBtn.title = `已在 Peach 馆藏 (${res.state})`;
+            }
+        }).catch(() => {});
     }
 
     /**
@@ -1456,6 +1519,9 @@ export class UIManager {
         }
         if (this.sidebarToggleBtn) {
             this.topActionsContainer.appendChild(this.sidebarToggleBtn);
+        }
+        if (this.peachIngestBtn) {
+            this.topActionsContainer.appendChild(this.peachIngestBtn);
         }
         this.topActionsContainer.appendChild(this.settingsBtn);
 

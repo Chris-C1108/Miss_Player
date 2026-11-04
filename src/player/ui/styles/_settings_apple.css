@@ -411,3 +411,73 @@
         transform: translate(-50%, 0);
     }
 }
+
+/* Peach 联动设置面板类名规范 */
+.tm-peach-status-badge {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+}
+
+.tm-peach-status-badge.is-connected {
+    color: #30d158;
+}
+
+.tm-peach-field-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 10px 0;
+}
+
+.tm-peach-token-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tm-peach-token-wrap .tm-settings-input {
+    flex: 1;
+}
+
+.tm-peach-token-toggle {
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.tm-peach-action-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.tm-peach-action-btn {
+    flex: 1;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+/* Peach Web 接力浮动按键 */
+.tm-peach-relay-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 2000;
+    background: rgba(30, 32, 37, 0.85);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    transition: all 0.2s ease;
+}
+
+.tm-peach-relay-btn:hover {
+    transform: scale(1.05);
+    border-color: #0071e3;
+}
