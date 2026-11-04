@@ -160,6 +160,12 @@ Miss Player 严格遵循 Apple 界面交互设计哲学，注重毛玻璃质感�
 16. **异步微前端容器固定插槽保序架构 (Order-Preserved Slots)**：
     - 严禁混合使用同步与异步 `appendChild` 直接追加主容器子节点；
     - 必须预先在 DOM 中建立物理顺序绝对锁定的专属 Slot 插槽，所有分段定向装填至专属插槽内，彻底杜绝顺位错位。
+17. **多功能复合手柄双向联动准则 (Dual-Purpose Handle Synchronization)**：
+    - 当单一手柄同时承载视口物理尺寸拉伸（`DragManager`）与画面微缩指示器（`VideoSwipeManager` / Minimap）显示时，拉伸管理器必须在手势开始、移动与释放全生命周期主动驱动微缩图管理器的几何约束重算与显隐状态；
+    - 在 Minimap 淡出定时器中必须加入跨管理器拉伸状态互锁守卫（`!dragManager.isDraggingHandle`），杜绝由于状态孤岛导致辅助指示器偶尔丢失或被提前强制关闭。
+18. **全局手势源头白名单隔离 (Gesture Origin Whitelisting)**：
+    - 单手模式等全局控制栏横向切换手势，必须严格限制在专属目标行（如仅限 `.tm-seek-control-row` 时间快速跳转行）发起触发；
+    - 进度条行与底部模式切换行必须采用严格的白名单事件放行逻辑，严禁全局冒泡误触发，确保各控件原生操作体验 100% 纯净跟手。
 
 ---
 
