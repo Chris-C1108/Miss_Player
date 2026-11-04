@@ -1,6 +1,6 @@
 {
   "name": "miss-player",
-  "version": "5.7.87",
+  "version": "5.7.88",
   "main": "dist/miss_player.user.js",
   "scripts": {
     "bump": "node scripts/bump-version.js",

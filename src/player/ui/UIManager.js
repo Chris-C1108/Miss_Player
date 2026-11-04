@@ -1580,8 +1580,14 @@ export class UIManager {
         this.shadowRoot.appendChild(this.overlay);
         this.shadowRoot.appendChild(this.playerContainer);
         
-        // 将 rootHost 一次性挂载到 document.body
-        document.body.appendChild(this.rootHost);
+        // 智能挂载：如果页面存在处于 Top Layer 顶层的原生模态 <dialog open> (如 Peach 作品详情舞台)，
+        // 必须将 rootHost 挂载至该 <dialog> 内部，以继承 Top Layer 渲染层级，彻底解决被宿主 dialog 遮挡问题！
+        const activeTopDialog = document.querySelector('dialog[open], [data-stage-host] dialog');
+        if (activeTopDialog && activeTopDialog.isConnected) {
+            activeTopDialog.appendChild(this.rootHost);
+        } else {
+            document.body.appendChild(this.rootHost);
+        }
         
         // 立即更新容器最小高度
         this.updateContainerMinHeight();

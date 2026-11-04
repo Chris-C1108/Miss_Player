@@ -1,4 +1,6 @@
 import { restoreSafariThemeColor, findVideoElement, getValue, setValue } from '../../utils/index.js';
+import { PeachWebBridge } from '../bridge/PeachWebBridge.js';
+import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 
 /**
  * 播放器核心类 - 负责播放器的基本功能和状态管理
@@ -192,6 +194,15 @@ export class PlayerCore {
                 if (playPromise !== undefined) {
                     playPromise.catch(error => {
                         console.warn('[PlayerCore] 正常起播被浏览器策略拦截:', error);
+                        // 当 Peach 虚拟 STRM 流因过期或不支持返回 NotSupportedError 时，自动启动现场动态寻源接力
+                        if (error.name === 'NotSupportedError' && PeachWebBridge.isPeachInstance()) {
+                            console.log('[PlayerCore] Peach 原生流不可用，自动启动现场动态寻源接力...');
+                            const avcode = getVideoCodeFromUrl(this.targetVideo);
+                            if (avcode) {
+                                PeachWebBridge.takeOverPlayback(this.targetVideo, avcode);
+                            }
+                            return;
+                        }
                         // 如果因为浏览器自动播放策略阻止有声播放，降级为静音自动起播
                         if (error.name === 'NotAllowedError' || !this.targetVideo.muted) {
                             console.log('[PlayerCore] 尝试降级为静音自动起播...');

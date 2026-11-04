@@ -227,6 +227,8 @@ export function getVideoCodeFromUrl(urlOrElement = (typeof window !== 'undefined
             targetVideo.getAttribute('data-id'),
             targetVideo.getAttribute('data-video-id'),
             targetVideo.title,
+            targetVideo.poster,
+            targetVideo.getAttribute('poster'),
             targetVideo.currentSrc,
             targetVideo.src
         ];
@@ -235,14 +237,18 @@ export function getVideoCodeFromUrl(urlOrElement = (typeof window !== 'undefined
         for (const s of childSources) {
             if (s.src) videoCandidates.push(s.src);
         }
-        // 检查邻近父容器
+        // 检查邻近父容器 (支持向上穿透 ShadowRoot)
         let parent = targetVideo.parentElement;
         let depth = 0;
-        while (parent && depth < 3) {
+        while (parent && depth < 6) {
             const pCode = parent.getAttribute('data-code') || parent.getAttribute('data-avcode') || parent.getAttribute('data-id');
             if (pCode) videoCandidates.push(pCode);
+            if (!parent.parentElement && parent.parentNode && parent.parentNode.host) {
+                parent = parent.parentNode.host;
+            } else {
+                parent = parent.parentElement;
+            }
             depth++;
-            parent = parent.parentElement;
         }
         for (const candidate of videoCandidates) {
             if (candidate) {
@@ -365,6 +371,13 @@ export function getVideoCodeFromUrl(urlOrElement = (typeof window !== 'undefined
             // D. document.title 智能清洗回退
             if (document.title) {
                 const code = matchAvCodeFromText(document.title);
+                if (code) return code;
+            }
+
+            // E. Peach Web 作品详情页标题与番号节点识别
+            const peachDetailNode = document.querySelector('[data-stage-side], [data-item-detail], dialog#stage, [data-stage-host]');
+            if (peachDetailNode && peachDetailNode.textContent) {
+                const code = matchAvCodeFromText(peachDetailNode.textContent);
                 if (code) return code;
             }
         }

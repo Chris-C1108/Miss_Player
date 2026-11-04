@@ -11,7 +11,8 @@
 
 import { PeachService, PEACH_KEY_DISMISSED_LIB_ADVICE } from '../../services/PeachService.js';
 import { fetchWithTransport } from '../../utils/http.js';
-import { matchAvCodeFromText } from '../../utils/videoCode.js';
+import { findVideoElement } from '../../utils/dom.js';
+import { matchAvCodeFromText, getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { getValue, setValue } from '../../utils/storage.js';
 import { Toast } from '../../utils/index.js';
 
@@ -315,24 +316,20 @@ export class PeachWebBridge {
     }
 
     /**
-     * 监听 Peach Web 内部的视频播放动作与错误状态
+     * 监听 Peach Web 内部的视频播放动作与错误状态 (穿透 Shadow DOM)
      */
     static _setupPlaybackWatcher() {
-        const observer = new MutationObserver(() => {
-            const video = document.querySelector('video');
+        const check = () => {
+            const video = findVideoElement();
             if (video && !video.dataset.mpBridged) {
                 video.dataset.mpBridged = 'true';
                 this._bindVideoEvents(video);
             }
-        });
+        };
 
+        const observer = new MutationObserver(check);
         observer.observe(document.body, { childList: true, subtree: true });
-
-        const video = document.querySelector('video');
-        if (video && !video.dataset.mpBridged) {
-            video.dataset.mpBridged = 'true';
-            this._bindVideoEvents(video);
-        }
+        check();
     }
 
     /**
@@ -353,7 +350,8 @@ export class PeachWebBridge {
     static _injectRelayButton(video) {
         if (document.querySelector('.tm-peach-relay-btn')) return;
 
-        const container = video.parentElement;
+        // 优先挂载至 Peach 媒体主舞台区域，否则挂载至视频父容器
+        const container = document.querySelector('[data-stage-media]') || video.parentElement;
         if (!container) return;
 
         const relayBtn = document.createElement('button');
@@ -372,20 +370,21 @@ export class PeachWebBridge {
     /**
      * 提取当前 Peach 播放界面的番号
      */
-    static extractCurrentAvCode() {
-        const urlMatch = matchAvCodeFromText(window.location.href);
-        if (urlMatch) return urlMatch;
+    static extractCurrentAvCode(video = null) {
+        // 1. 优先使用统一全景番号解析漏斗 (包含 poster/DOM 穿透)
+        const targetVideo = video || findVideoElement();
+        const code = getVideoCodeFromUrl(targetVideo);
+        if (code) return code;
 
-        const titleMatch = matchAvCodeFromText(document.title);
-        if (titleMatch) return titleMatch;
-
-        const codeElement = document.querySelector('.code, [data-code], h1, h2');
-        if (codeElement && codeElement.textContent) {
-            const domMatch = matchAvCodeFromText(codeElement.textContent);
-            if (domMatch) return domMatch;
+        // 2. 从 Peach 详情页特定节点深度提取
+        const peachNodes = document.querySelectorAll('[data-stage-side], [data-item-detail], dialog#stage, [data-stage-host], .code, [data-code]');
+        for (const el of peachNodes) {
+            const m = matchAvCodeFromText(el.textContent || '');
+            if (m) return m;
         }
 
-        return '';
+        // 3. 从网页标题与 URL 提取
+        return matchAvCodeFromText(document.title) || matchAvCodeFromText(window.location.href) || '';
     }
 
     /**
