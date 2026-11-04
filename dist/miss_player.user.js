@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.89
+// @version            5.7.90
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.89";
+		return "5.7.90";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1952,11 +1952,53 @@
 				console.warn("[PeachWebBridge] Jable 寻源失败:", jableErr.message);
 			}
 			try {
+				console.log(`[PeachWebBridge] 正在尝试从 123AV 寻源: ${cleanCode}`);
+				const av123Stream = await this._search123AvStream(cleanCode);
+				if (av123Stream) return av123Stream;
+			} catch (av123Err) {
+				console.warn("[PeachWebBridge] 123AV 寻源失败:", av123Err.message);
+			}
+			try {
 				console.log(`[PeachWebBridge] 正在尝试从 MissAV 寻源: ${cleanCode}`);
 				const missavStream = await this._searchMissavStream(cleanCode);
 				if (missavStream) return missavStream;
 			} catch (missavErr) {
 				console.warn("[PeachWebBridge] MissAV 寻源失败:", missavErr.message);
+			}
+			return null;
+		}
+		static async _search123AvStream(code) {
+			const detailUrl = `https://123av.com/cn/v/${code.toLowerCase().trim()}`;
+			const ua = typeof navigator !== "undefined" && navigator.userAgent && !navigator.userAgent.includes("Node") ? navigator.userAgent : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+			const res = await fetchWithTransport(detailUrl, {
+				headers: {
+					"User-Agent": ua,
+					"Referer": "https://123av.com/"
+				},
+				timeout: 8e3
+			});
+			if (res.status >= 200 && res.status < 400 && res.html) {
+				const match = res.html.replace(/\\+\//g, "/").match(/https:\/\/([^\/"]+)\/e\/([a-zA-Z0-9_-]+)/i);
+				if (match) {
+					const domain = match[1];
+					const hashId = match[2];
+					const apiRes = await fetchWithTransport(`https://${domain}/stream?id=${hashId}`, {
+						headers: {
+							"Referer": `https://${domain}/e/${hashId}`,
+							"User-Agent": ua,
+							"Accept": "application/json"
+						},
+						timeout: 8e3
+					});
+					if (apiRes.status >= 200 && apiRes.html) try {
+						const data = JSON.parse(apiRes.html);
+						if (data && data.media && data.media.stream) return {
+							url: data.media.stream,
+							source: "123AV",
+							referer: `https://${domain}/`
+						};
+					} catch (_) {}
+				}
 			}
 			return null;
 		}
@@ -2346,7 +2388,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.89";
+		return "5.7.90";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -4048,7 +4090,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.89";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.90";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

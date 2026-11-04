@@ -443,12 +443,12 @@ export class PeachWebBridge {
 
     /**
      * 现场多源动态寻源引擎 (Stream Resolver)
-     * 先查 Jable，失败则备选查 MissAV
+     * 首选 Jable，其次 123AV (免盾且收录冷门/合辑片，如 PBD-491)，兜底 MissAV
      */
     static async resolveDynamicStream(avcode) {
         const cleanCode = avcode.trim().toUpperCase();
 
-        // 1. 首选 Jable 寻源 (稳定性高，免复杂 CF 拦截)
+        // 1. 首选 Jable 寻源 (稳定性高)
         try {
             console.log(`[PeachWebBridge] 正在尝试从 Jable 寻源: ${cleanCode}`);
             const jableStream = await this._searchJableStream(cleanCode);
@@ -457,13 +457,79 @@ export class PeachWebBridge {
             console.warn('[PeachWebBridge] Jable 寻源失败:', jableErr.message);
         }
 
-        // 2. 备选 MissAV 寻源
+        // 2. 次选 123AV 寻源 (无 Cloudflare 盾，收录极全，支持 PBD-491 等冷门/合辑作品)
+        try {
+            console.log(`[PeachWebBridge] 正在尝试从 123AV 寻源: ${cleanCode}`);
+            const av123Stream = await this._search123AvStream(cleanCode);
+            if (av123Stream) return av123Stream;
+        } catch (av123Err) {
+            console.warn('[PeachWebBridge] 123AV 寻源失败:', av123Err.message);
+        }
+
+        // 3. 备选 MissAV 寻源 (兜底)
         try {
             console.log(`[PeachWebBridge] 正在尝试从 MissAV 寻源: ${cleanCode}`);
             const missavStream = await this._searchMissavStream(cleanCode);
             if (missavStream) return missavStream;
         } catch (missavErr) {
             console.warn('[PeachWebBridge] MissAV 寻源失败:', missavErr.message);
+        }
+
+        return null;
+    }
+
+    /**
+     * 从 123AV 动态检索视频流 (无 Cloudflare 盾，收录 PBD-491 等大量长片与合辑)
+     */
+    static async _search123AvStream(code) {
+        const cleanCode = code.toLowerCase().trim();
+        const detailUrl = `https://123av.com/cn/v/${cleanCode}`;
+        const ua = (typeof navigator !== 'undefined' && navigator.userAgent && !navigator.userAgent.includes('Node'))
+            ? navigator.userAgent
+            : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+        const res = await fetchWithTransport(detailUrl, {
+            headers: {
+                'User-Agent': ua,
+                'Referer': 'https://123av.com/'
+            },
+            timeout: 8000
+        });
+
+        if (res.status >= 200 && res.status < 400 && res.html) {
+            // 归一化 HTML 中的 JSON 转义斜杠 (\/)
+            const cleanHtml = res.html.replace(/\\+\//g, '/');
+            // 提取播放器 embed url (例如: https://sadie-shop.site/e/KXDGPWY2)
+            const match = cleanHtml.match(/https:\/\/([^\/"]+)\/e\/([a-zA-Z0-9_-]+)/i);
+            
+            if (match) {
+                const domain = match[1];
+                const hashId = match[2];
+                const streamApiUrl = `https://${domain}/stream?id=${hashId}`;
+                const embedPageUrl = `https://${domain}/e/${hashId}`;
+
+                const apiRes = await fetchWithTransport(streamApiUrl, {
+                    headers: {
+                        'Referer': embedPageUrl,
+                        'User-Agent': ua,
+                        'Accept': 'application/json'
+                    },
+                    timeout: 8000
+                });
+
+                if (apiRes.status >= 200 && apiRes.html) {
+                    try {
+                        const data = JSON.parse(apiRes.html);
+                        if (data && data.media && data.media.stream) {
+                            return {
+                                url: data.media.stream,
+                                source: '123AV',
+                                referer: `https://${domain}/`
+                            };
+                        }
+                    } catch (_) {}
+                }
+            }
         }
 
         return null;
