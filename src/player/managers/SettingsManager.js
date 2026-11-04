@@ -18,7 +18,13 @@ import { __ } from '../../constants/i18n.js';
 import { SyncManager, WebDavClient, getOrCreateClientId, getDeviceName } from '../../sync/index.js';
 import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 import { CrazyScraper } from '../comments/CrazyScraper.js';
-import { SleazyForkService, getCurrentVersion } from '../../services/SleazyForkService.js';
+import { 
+    SleazyForkService, 
+    getCurrentVersion,
+    detectScriptHandler,
+    getCleanScriptUrl,
+    dispatchScriptInstall
+} from '../../services/SleazyForkService.js';
 import {
     ICON_CLOUD_SYNC,
     ICON_CLOUD_UPLOAD,
@@ -925,47 +931,18 @@ export class SettingsManager {
             const bannerActions = document.createElement('div');
             bannerActions.className = 'tm-about-update-actions';
 
-            const detectScriptHandler = () => {
-                try {
-                    if (typeof GM_info !== 'undefined' && GM_info) {
-                        const handler = (GM_info.scriptHandler || '').toLowerCase();
-                        if (handler.includes('stay')) return 'stay';
-                        if (handler.includes('tampermonkey')) return 'tampermonkey';
-                        if (handler.includes('scriptcat')) return 'scriptcat';
-                        if (handler.includes('violentmonkey')) return 'violentmonkey';
-                        if (handler.includes('userscripts')) return 'userscripts';
-                    }
-                } catch (_) {}
-                const isIOS = (typeof navigator !== 'undefined') && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
-                if (isIOS) return 'stay';
-                return 'unknown';
-            };
             const detectedHandler = detectScriptHandler();
 
             const updateNowBtn = document.createElement('button');
             updateNowBtn.className = 'tm-about-btn tm-about-btn--primary';
             updateNowBtn.innerHTML = `${ICON_DOWNLOAD} <span>${__('updateNow') || '立即更新'}</span>`;
             updateNowBtn.addEventListener('click', () => {
-                const codeUrl = meta?.code_url || (isBeta
-                    ? 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js'
-                    : 'https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js');
-                if (detectedHandler === 'stay') {
-                    Toast.show('正在唤起 Stay 一键更新...', 2500, 'info');
-                    window.location.href = 'stay://x-callback-url/open-install?url=' + encodeURIComponent(codeUrl);
-                } else if (detectedHandler === 'tampermonkey') {
-                    Toast.show('正在跳转 Tampermonkey 一键更新...', 2500, 'info');
-                    window.open('https://www.tampermonkey.net/script_installation.php#url=' + encodeURIComponent(codeUrl), '_blank');
-                } else if (detectedHandler === 'scriptcat') {
-                    Toast.show('正在跳转脚本猫一键更新...', 2500, 'info');
-                    window.open('https://docs.scriptcat.org/docs/script_installation/#url=' + encodeURIComponent(codeUrl), '_blank');
-                } else {
-                    if (typeof GM_openInTab === 'function') {
-                        GM_openInTab(codeUrl, { active: true });
-                    } else {
-                        window.open(codeUrl, '_blank');
-                    }
-                    Toast.show(__('updating') || '已触发脚本更新安装', 3000, 'success');
-                }
+                const targetChannel = this.settings.updateChannel || (isBeta ? 'beta' : 'stable');
+                const cleanCodeUrl = getCleanScriptUrl(targetChannel, meta);
+                dispatchScriptInstall(detectedHandler, cleanCodeUrl, {
+                    isUpdate: true,
+                    onToast: (msg, type) => Toast.show(msg, 2500, type)
+                });
             });
 
             const changelogBtn = document.createElement('button');
@@ -1039,41 +1016,22 @@ export class SettingsManager {
         checkRow.style.flexWrap = 'wrap';
         checkRow.appendChild(checkBtn);
 
-        const detectHandler = () => {
-            try {
-                if (typeof GM_info !== 'undefined' && GM_info) {
-                    const handler = (GM_info.scriptHandler || '').toLowerCase();
-                    if (handler.includes('stay')) return 'stay';
-                    if (handler.includes('tampermonkey')) return 'tampermonkey';
-                    if (handler.includes('scriptcat')) return 'scriptcat';
-                    if (handler.includes('violentmonkey')) return 'violentmonkey';
-                    if (handler.includes('userscripts')) return 'userscripts';
-                }
-            } catch (_) {}
-            const isIOS = (typeof navigator !== 'undefined') && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
-            if (isIOS) return 'stay';
-            return 'unknown';
-        };
-        const currentHandler = detectHandler();
-
-        const timestamp = Date.now();
-        const installUrl = isBeta
-            ? `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js?_t=${timestamp}`
-            : `https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js?_t=${timestamp}`;
-
-        const stayInstallUrl = 'stay://x-callback-url/open-install?url=' + encodeURIComponent(installUrl);
-        const tmInstallUrl = 'https://www.tampermonkey.net/script_installation.php#url=' + encodeURIComponent(installUrl);
+        const currentHandler = detectScriptHandler();
+        const targetChannel = this.settings.updateChannel || (isBeta ? 'beta' : 'stable');
+        const cleanInstallUrl = getCleanScriptUrl(targetChannel, this._latestUpdateInfo?.meta || meta);
 
         const createStayBtn = () => {
             const btn = document.createElement('button');
             btn.className = 'tm-about-btn tm-about-btn--stay';
             btn.style.cssText = 'background: rgba(10, 132, 255, 0.16); border: 1px solid rgba(10, 132, 255, 0.45); color: #0a84ff; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
-            btn.innerHTML = `<span>🚀 Stay 一键安装 (${isBeta ? '测试版' : '正式版'})</span>`;
+            btn.innerHTML = `<span>🚀 Stay 一键${hasUpdate ? '更新' : '安装'} (${isBeta ? '测试版' : '正式版'})</span>`;
             btn.title = '通过 Stay URL Scheme 一键导入或更新脚本';
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                Toast.show('正在唤起 Stay 一键安装...', 2500, 'info');
-                window.location.href = stayInstallUrl;
+                dispatchScriptInstall('stay', cleanInstallUrl, {
+                    isUpdate: hasUpdate,
+                    onToast: (msg, type) => Toast.show(msg, 2500, type)
+                });
             });
             return btn;
         };
@@ -1082,12 +1040,30 @@ export class SettingsManager {
             const btn = document.createElement('button');
             btn.className = 'tm-about-btn tm-about-btn--tampermonkey';
             btn.style.cssText = 'background: rgba(48, 209, 88, 0.16); border: 1px solid rgba(48, 209, 88, 0.45); color: #30d158; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
-            btn.innerHTML = `<span>🐒 Tampermonkey 一键安装 (${isBeta ? '测试版' : '正式版'})</span>`;
+            btn.innerHTML = `<span>🐒 Tampermonkey 一键${hasUpdate ? '更新' : '安装'} (${isBeta ? '测试版' : '正式版'})</span>`;
             btn.title = '通过 Tampermonkey 官方入口一键安装或更新脚本';
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                Toast.show('正在跳转 Tampermonkey 一键安装...', 2500, 'info');
-                window.open(tmInstallUrl, '_blank');
+                dispatchScriptInstall('tampermonkey', cleanInstallUrl, {
+                    isUpdate: hasUpdate,
+                    onToast: (msg, type) => Toast.show(msg, 2500, type)
+                });
+            });
+            return btn;
+        };
+
+        const createScBtn = () => {
+            const btn = document.createElement('button');
+            btn.className = 'tm-about-btn tm-about-btn--scriptcat';
+            btn.style.cssText = 'background: rgba(255, 159, 10, 0.16); border: 1px solid rgba(255, 159, 10, 0.45); color: #ff9f0a; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
+            btn.innerHTML = `<span>🐱 脚本猫一键${hasUpdate ? '更新' : '安装'} (${isBeta ? '测试版' : '正式版'})</span>`;
+            btn.title = '通过脚本猫官方入口一键安装或更新脚本';
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dispatchScriptInstall('scriptcat', cleanInstallUrl, {
+                    isUpdate: hasUpdate,
+                    onToast: (msg, type) => Toast.show(msg, 2500, type)
+                });
             });
             return btn;
         };
@@ -1097,15 +1073,7 @@ export class SettingsManager {
         } else if (currentHandler === 'tampermonkey') {
             checkRow.appendChild(createTmBtn());
         } else if (currentHandler === 'scriptcat') {
-            const scBtn = document.createElement('button');
-            scBtn.className = 'tm-about-btn tm-about-btn--scriptcat';
-            scBtn.style.cssText = 'background: rgba(255, 159, 10, 0.16); border: 1px solid rgba(255, 159, 10, 0.45); color: #ff9f0a; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
-            scBtn.innerHTML = `<span>🐱 脚本猫一键安装 (${isBeta ? '测试版' : '正式版'})</span>`;
-            scBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                window.open('https://docs.scriptcat.org/docs/script_installation/#url=' + encodeURIComponent(installUrl), '_blank');
-            });
-            checkRow.appendChild(scBtn);
+            checkRow.appendChild(createScBtn());
         } else {
             // 未识别或多环境支持：同时展示 Stay 与 Tampermonkey
             checkRow.appendChild(createStayBtn());
