@@ -217,28 +217,8 @@ export class VideoSwipeManager {
         const dimensionsUpdated = this._updateVideoDimensions();
 
         // 如果尺寸计算失败或视频宽度不超过容器，则无需移动
-        if (!dimensionsUpdated || this.maxOffset <= 0) {
-            // 重置到居中位置
-            this._applyOffset(0, false);
-            // 更新手柄状态为禁用移动，但宽度相应设置
-            this._updateHandleState(false);
-            if (this.minimap) {
-                this.minimap.style.visibility = '';
-            }
-            return false;
-        }
-
-        // 限制当前偏移量在新的范围内
-        this.offset = Math.max(-this.maxOffset, Math.min(this.offset, this.maxOffset));
-
-        // 应用可能调整后的偏移量
-        this._applyOffset(this.offset, false);
-
-        // 更新手柄状态为可用
-        this._updateHandleState(true);
-
-        // 计算微缩地图尺寸比例
-        if (this.minimap) {
+        // 无论是否有横向移动余地，只要视频宽高比有效，预先计算并固化 Minimap 的基础尺寸与比例
+        if (this.minimap && this.videoWidth > 0 && this.videoHeight > 0) {
             this.minimap.style.visibility = '';
             const ratio = this.videoWidth / this.videoHeight;
             if (ratio > 0) {
@@ -258,10 +238,28 @@ export class VideoSwipeManager {
                 if (videoRenderedWidth > 0 && this.minimapViewport) {
                     const viewportW = Math.min(miniW, (this.containerWidth / videoRenderedWidth) * miniW);
                     this.minimapViewport.style.width = `${viewportW}px`;
-                    this.minimapMaxTravel = miniW - viewportW;
+                    this.minimapMaxTravel = Math.max(0, miniW - viewportW);
                 }
             }
         }
+
+        if (!dimensionsUpdated || this.maxOffset <= 0) {
+            // 重置到居中位置
+            this._applyOffset(0, false);
+            // 更新手柄状态为禁用移动，但宽度相应设置
+            this._updateHandleState(false);
+            return false;
+        }
+
+        // 限制当前偏移量在新的范围内
+        this.offset = Math.max(-this.maxOffset, Math.min(this.offset, this.maxOffset));
+
+        // 应用可能调整后的偏移量
+        this._applyOffset(this.offset, false);
+
+        // 更新手柄状态为可用
+        this._updateHandleState(true);
+
         this._updateMinimapViewport();
 
         return true;
@@ -764,6 +762,9 @@ export class VideoSwipeManager {
         this.startOffset = this.offset;
         this.dragDistance = 0;
 
+        // 确保使用当前最新的视口几何约束计算 maxOffset
+        this._doUpdateConstraints();
+
         // 一次性读取并固化几何尺寸，杜绝高频 pointermove 中读取触发强制重排
         const handleContainer = this.handle.parentElement;
         const containerW = handleContainer ? handleContainer.offsetWidth : 0;
@@ -813,6 +814,10 @@ export class VideoSwipeManager {
         const offsetX = Math.round(-ratio * this._cachedHalfTravel);
         this.handle.style.transform = `translate3d(calc(-50% + ${offsetX}px), -50%, 0)`;
 
+        if (this.container && !this.container.classList.contains('is-swiping')) {
+            this.container.classList.add('is-swiping');
+        }
+
         this._updateMinimapViewport();
     }
 
@@ -841,9 +846,11 @@ export class VideoSwipeManager {
             this.handle.style.transform = 'translate3d(-50%, -50%, 0)';
         }
 
-        // 延迟 400ms 移除 is-swiping，使小窗平滑淡出隐藏
+        // 延迟 400ms 移除 is-swiping，使小窗平滑淡出隐藏 (需确认手柄高度拉伸也已结束)
         setTimeout(() => {
-            if (!this.isDragging && !this.isHandleDragging && this.container) {
+            const dragManager = this.uiManager?.dragManager || this.playerCore?.dragManager;
+            const isStillResizing = Boolean(dragManager && dragManager.isDraggingHandle);
+            if (!this.isDragging && !this.isHandleDragging && !isStillResizing && this.container) {
                 this.container.classList.remove('is-swiping');
             }
         }, 400);

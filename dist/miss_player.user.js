@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.79
+// @version            5.7.80
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1265,7 +1265,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.79";
+		return "5.7.80";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1602,7 +1602,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.79";
+		return "5.7.80";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -5288,7 +5288,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.79";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.80";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -14491,6 +14491,11 @@
 				this.uiManager.showControls();
 				if (isCollapsed && this.container && currentVisibleHeight > 0) this.container.style.height = `${currentVisibleHeight}px`;
 			}
+			const swipeManager = this.uiManager?.swipeManager || this.playerCore?.swipeManager;
+			if (swipeManager) {
+				swipeManager._doUpdateConstraints();
+				if (swipeManager.maxOffset > 0 && swipeManager.container) swipeManager.container.classList.add("is-swiping");
+			}
 			if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(5);
 			const touch = e.type.includes("touch");
 			this.startY = touch ? e.touches[0].clientY : e.clientY;
@@ -14522,6 +14527,16 @@
 				if (!this.uiManager.isLandscape) this.uiManager.customHeightPortrait = newHeight + "px";
 				else this.uiManager.customHeightLandscape = newHeight + "px";
 			}
+			const swipeManager = this.uiManager?.swipeManager || this.playerCore?.swipeManager;
+			if (swipeManager) {
+				swipeManager._doUpdateConstraints();
+				if (swipeManager.container) {
+					if (swipeManager.maxOffset > 0) {
+						swipeManager.container.classList.add("is-swiping");
+						swipeManager._updateMinimapViewport();
+					} else swipeManager.container.classList.remove("is-swiping");
+				}
+			}
 		}
 		_handleDragEnd(e) {
 			if (!this.isDraggingHandle) return;
@@ -14535,6 +14550,10 @@
 			document.removeEventListener("mouseup", this.handleEndHandler);
 			this.handleMoveHandler = null;
 			this.handleEndHandler = null;
+			const swipeManager = this.uiManager?.swipeManager || this.playerCore?.swipeManager;
+			if (swipeManager && swipeManager.container) setTimeout(() => {
+				if (!this.isDraggingHandle && !swipeManager.isDragging && !swipeManager.isHandleDragging) swipeManager.container.classList.remove("is-swiping");
+			}, 600);
 			if (e.type.startsWith("touch")) e.preventDefault();
 		}
 		initControlPanelDrag() {
@@ -20323,16 +20342,8 @@
 		}
 		_doUpdateConstraints() {
 			if (!this.container || !this.video) return false;
-			if (!this._updateVideoDimensions() || this.maxOffset <= 0) {
-				this._applyOffset(0, false);
-				this._updateHandleState(false);
-				if (this.minimap) this.minimap.style.visibility = "";
-				return false;
-			}
-			this.offset = Math.max(-this.maxOffset, Math.min(this.offset, this.maxOffset));
-			this._applyOffset(this.offset, false);
-			this._updateHandleState(true);
-			if (this.minimap) {
+			const dimensionsUpdated = this._updateVideoDimensions();
+			if (this.minimap && this.videoWidth > 0 && this.videoHeight > 0) {
 				this.minimap.style.visibility = "";
 				const ratio = this.videoWidth / this.videoHeight;
 				if (ratio > 0) {
@@ -20350,10 +20361,18 @@
 					if (videoRenderedWidth > 0 && this.minimapViewport) {
 						const viewportW = Math.min(miniW, this.containerWidth / videoRenderedWidth * miniW);
 						this.minimapViewport.style.width = `${viewportW}px`;
-						this.minimapMaxTravel = miniW - viewportW;
+						this.minimapMaxTravel = Math.max(0, miniW - viewportW);
 					}
 				}
 			}
+			if (!dimensionsUpdated || this.maxOffset <= 0) {
+				this._applyOffset(0, false);
+				this._updateHandleState(false);
+				return false;
+			}
+			this.offset = Math.max(-this.maxOffset, Math.min(this.offset, this.maxOffset));
+			this._applyOffset(this.offset, false);
+			this._updateHandleState(true);
 			this._updateMinimapViewport();
 			return true;
 		}
@@ -20611,6 +20630,7 @@
 			this.startY = e.clientY;
 			this.startOffset = this.offset;
 			this.dragDistance = 0;
+			this._doUpdateConstraints();
 			const handleContainer = this.handle.parentElement;
 			const containerW = handleContainer ? handleContainer.offsetWidth : 0;
 			const handleW = this.handle.offsetWidth;
@@ -20638,6 +20658,7 @@
 			const ratio = newOffset / this.maxOffset;
 			const offsetX = Math.round(-ratio * this._cachedHalfTravel);
 			this.handle.style.transform = `translate3d(calc(-50% + ${offsetX}px), -50%, 0)`;
+			if (this.container && !this.container.classList.contains("is-swiping")) this.container.classList.add("is-swiping");
 			this._updateMinimapViewport();
 		}
 		_handleHandlePointerUp(e) {
@@ -20653,7 +20674,9 @@
 			this.handle.style.cursor = "row-resize";
 			if (this.maxOffset <= 0) this.handle.style.transform = "translate3d(-50%, -50%, 0)";
 			setTimeout(() => {
-				if (!this.isDragging && !this.isHandleDragging && this.container) this.container.classList.remove("is-swiping");
+				const dragManager = this.uiManager?.dragManager || this.playerCore?.dragManager;
+				const isStillResizing = Boolean(dragManager && dragManager.isDraggingHandle);
+				if (!this.isDragging && !this.isHandleDragging && !isStillResizing && this.container) this.container.classList.remove("is-swiping");
 			}, 400);
 		}
 		_trackHandleVelocity(position) {

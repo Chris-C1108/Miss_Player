@@ -92,6 +92,15 @@ export class DragManager {
             }
         }
 
+        // 核心同步：拖动手柄时即时更新 SwipeManager 约束，并按需唤醒 Minimap 微缩指示器
+        const swipeManager = this.uiManager?.swipeManager || this.playerCore?.swipeManager;
+        if (swipeManager) {
+            swipeManager._doUpdateConstraints();
+            if (swipeManager.maxOffset > 0 && swipeManager.container) {
+                swipeManager.container.classList.add('is-swiping');
+            }
+        }
+
         // 添加震动反馈
         if (window.navigator && window.navigator.vibrate) {
             window.navigator.vibrate(5);
@@ -149,6 +158,20 @@ export class DragManager {
             }
         }
 
+        // 随着手柄垂直拉伸高度，视频有效渲染尺寸动态发生变化，即时同步 SwipeManager 几何约束并刷新 Minimap
+        const swipeManager = this.uiManager?.swipeManager || this.playerCore?.swipeManager;
+        if (swipeManager) {
+            swipeManager._doUpdateConstraints();
+            if (swipeManager.container) {
+                if (swipeManager.maxOffset > 0) {
+                    swipeManager.container.classList.add('is-swiping');
+                    swipeManager._updateMinimapViewport();
+                } else {
+                    swipeManager.container.classList.remove('is-swiping');
+                }
+            }
+        }
+
         // updateHandlePosition会被ResizeObserver自动调用
      }
 
@@ -173,6 +196,16 @@ export class DragManager {
         // 清理存储的引用
         this.handleMoveHandler = null;
         this.handleEndHandler = null;
+
+        // 拖动结束：平滑淡出 Minimap
+        const swipeManager = this.uiManager?.swipeManager || this.playerCore?.swipeManager;
+        if (swipeManager && swipeManager.container) {
+            setTimeout(() => {
+                if (!this.isDraggingHandle && !swipeManager.isDragging && !swipeManager.isHandleDragging) {
+                    swipeManager.container.classList.remove('is-swiping');
+                }
+            }, 600);
+        }
 
         if (e.type.startsWith('touch')) {
             e.preventDefault();

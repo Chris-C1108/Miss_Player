@@ -110,4 +110,37 @@ assert.ok(
 );
 console.log('✅ 5. DragManager 视口调整基准保持验证通过');
 
-console.log('\n🎉 全部 5 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 6. 验证手柄拖拽时 Minimap 尺寸前置计算与双向协同唤醒
+// ---------------------------------------------------------
+console.log('▶ 6. 验证手柄拖拽与 Minimap 状态联动...');
+const videoSwipeCode = fs.readFileSync('src/player/managers/videoSwipeManager.js', 'utf8');
+
+// 验证无论 maxOffset 是否大于 0，均前置计算 Minimap 尺寸与比例
+assert.ok(
+    videoSwipeCode.includes('if (this.minimap && this.videoWidth > 0 && this.videoHeight > 0)'),
+    'VideoSwipeManager 必须前置计算 Minimap 尺寸，杜绝尺寸未定义空盒'
+);
+
+// 验证按住手柄时即时刷新几何约束
+assert.ok(
+    videoSwipeCode.includes('this._doUpdateConstraints();') &&
+    videoSwipeCode.includes("this.container.classList.add('is-swiping');"),
+    'VideoSwipeManager 必须在手柄按压时即时刷新约束并按需唤醒 is-swiping'
+);
+
+// 验证 DragManager 在拉伸高度时即时同步刷新 Minimap
+assert.ok(
+    dragManagerCode.includes('swipeManager._doUpdateConstraints();') &&
+    dragManagerCode.includes("swipeManager.container.classList.add('is-swiping');"),
+    'DragManager 必须在手柄拉伸时同步驱动 Minimap 显隐与视口刷新'
+);
+
+// 验证 VideoSwipeManager 延迟移除时守卫 DragManager 状态
+assert.ok(
+    videoSwipeCode.includes('const isStillResizing = Boolean(dragManager && dragManager.isDraggingHandle);'),
+    'VideoSwipeManager 必须在拖拽拉伸进行中禁止过早移除 is-swiping'
+);
+console.log('✅ 6. 手柄拖拽与 Minimap 联动守卫验证通过');
+
+console.log('\n🎉 全部 6 大核心修复与人机工程验证单元测试 100% 通过！\n');
