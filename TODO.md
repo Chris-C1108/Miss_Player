@@ -58,6 +58,11 @@
   - [x] GM 网络栈注入 Referer 彻底消灭死链。
 - [x] **17.6 自动化门禁巡检、版本强同步与质量验收**
   - [x] `npm run lint:compliance`、`npm run bump` 与 `npm run ci:check` 全部 100% 通过 (v5.7.81)。
+- [x] **17.7 多网络入口智能池化、访问 Peach Web 自动配对与媒体源巡检提醒**
+  - [x] 多 Origin 候选地址池与自愈故障转移（公网域名/局域网IP/本地域名兼顾）；
+  - [x] 访问 Peach Web 零输入自动配对（同源会话自动签发 Token 并落盘）；
+  - [x] Peach 服务端网络拓扑自探测（自动扩充 local/lan/ip 候选池）；
+  - [x] WebDAV 媒体源智能巡检与 Apple 风格挂载引导卡片。
 
 ---
 

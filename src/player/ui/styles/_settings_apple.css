@@ -458,6 +458,11 @@
     cursor: pointer;
 }
 
+.tm-peach-origins-text {
+    color: #0071e3;
+    margin-top: 2px;
+}
+
 /* Peach Web 接力浮动按键 */
 .tm-peach-relay-btn {
     position: absolute;
@@ -480,4 +485,118 @@
 .tm-peach-relay-btn:hover {
     transform: scale(1.05);
     border-color: #0071e3;
+}
+
+/* Peach Web 媒体库建议浮动卡片 */
+.tm-peach-advisor-card {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: min(380px, calc(100vw - 32px));
+    z-index: 9999;
+    background: rgba(22, 22, 28, 0.88);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: tm-advisor-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes tm-advisor-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.tm-peach-advisor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tm-peach-advisor-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tm-peach-advisor-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+}
+
+.tm-peach-advisor-close:hover {
+    color: #fff;
+}
+
+.tm-peach-advisor-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.tm-peach-advisor-path {
+    display: inline-block;
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #0071e3;
+    font-family: monospace;
+    font-weight: 600;
+}
+
+.tm-peach-advisor-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.tm-peach-advisor-btn-primary {
+    flex: 1;
+    background: #0071e3;
+    color: #fff;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.tm-peach-advisor-btn-primary:hover {
+    background: #0077ed;
+}
+
+.tm-peach-advisor-btn-sub {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.tm-peach-advisor-btn-sub:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
 }

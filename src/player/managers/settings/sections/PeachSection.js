@@ -89,10 +89,14 @@ export class PeachSection {
         // 2.3 服务器地址 (Base URL)
         const baseRow = document.createElement('div');
         baseRow.className = 'tm-apple-row tm-peach-field-row';
+        const knownOriginsText = (config.origins && config.origins.length > 1)
+            ? `<div class="tm-apple-row-subtext tm-peach-origins-text">已自动纳管候选入口: ${config.origins.join(' · ')}</div>`
+            : '';
         baseRow.innerHTML = `
             <div class="tm-apple-row-title">Peach 服务端地址</div>
-            <div class="tm-apple-row-subtext">自托管实例的 Web 访问地址 (支持 HTTPS 或本机局域网)</div>
+            <div class="tm-apple-row-subtext">自托管实例的 Web 访问地址（支持自动感知：访问过的公网映射、局域网IP均会自动池化并自愈切换）</div>
             <input type="text" class="tm-settings-input tm-peach-base-input" placeholder="https://peach.example.com 或 http://192.168.1.x:8000" value="${config.base || ''}" />
+            ${knownOriginsText}
         `;
         const baseInput = baseRow.querySelector('.tm-peach-base-input');
         bodyWrap.appendChild(baseRow);

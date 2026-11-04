@@ -62,5 +62,11 @@
 
 ### 17.6 门禁巡检、版本强同步与质量验收
 - [x] **17.6.1 合规与样式门禁**：执行 `npm run lint:compliance` 确保 100% 通过；
-- [x] **17.6.2 版本强同步自增**：执行 `npm run bump` 同步 5 处版本至 5.7.81；
+- [x] **17.6.2 版本强同步自增**：执行 `npm run bump` 同步 5 处版本；
 - [x] **17.6.3 生产构建验证**：执行 `npm run ci:check` 验证完整包体积与打包无误。
+
+### 17.7 多网络入口智能池化、访问 Peach Web 自动配对与媒体源巡检提醒
+- [x] **17.7.1 多 Origin 智能地址池 (`PeachService.js`)**：支持管理公网域名、局域网 IP、mDNS、localhost 等多候选地址（`mp_peach_origins`），并发/顺位故障自愈（Failover）；
+- [x] **17.7.2 访问 Peach Web 零输入自动配对 (`PeachWebBridge.js`)**：检测到访问 Peach Web 时，以同源会话自动签发/获取 Dedicated Token，自动开启 Peach 联动，消除手动复制粘贴繁琐流程；
+- [x] **17.7.3 多网络地址池动态自扩充**：读取 Peach 服务端 `network_payload`（`local_url` / `lan_url` / `ip_url`），自动将当前设备多网络入口注入地址池；
+- [x] **17.7.4 WebDAV 媒体源智能巡检与提醒引导**：查询 Peach 已登记媒体库（`/api/libraries`），若未包含 STRM 虚拟视频目录，以 Apple 毛玻璃卡片提醒并引导一键跳转 `/settings/library`。
