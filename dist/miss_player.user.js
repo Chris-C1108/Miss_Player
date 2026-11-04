@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.86
+// @version            5.7.87
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -308,6 +308,21 @@
 		}
 		return null;
 	}
+	function queryAllVideosDeep(root = document, maxDepth = 4) {
+		if (!root || maxDepth < 0) return [];
+		const videos = [];
+		try {
+			if (typeof root.querySelectorAll === "function") {
+				videos.push(...Array.from(root.querySelectorAll("video")));
+				const elements = root.querySelectorAll("*");
+				for (let i = 0; i < elements.length; i++) {
+					const shadow = elements[i].shadowRoot;
+					if (shadow) videos.push(...queryAllVideosDeep(shadow, maxDepth - 1));
+				}
+			}
+		} catch (_) {}
+		return videos;
+	}
 	function findVideoElement(includeIframe = false) {
 		let potentialVideo = null;
 		for (const selector of [
@@ -322,7 +337,12 @@
 			potentialVideo = document.querySelector(selector);
 			if (potentialVideo) return potentialVideo;
 		}
-		const allVideos = Array.from(document.querySelectorAll("video"));
+		const customPlayerHost = document.querySelector("hlsjs-video, video-player, media-container");
+		if (customPlayerHost && customPlayerHost.shadowRoot) {
+			const shadowVideo = customPlayerHost.shadowRoot.querySelector("video");
+			if (shadowVideo) return shadowVideo;
+		}
+		const allVideos = queryAllVideosDeep(document);
 		if (allVideos.length === 1) return allVideos[0];
 		if (allVideos.length > 1) {
 			const visibleVideos = allVideos.map((video) => ({
@@ -1272,7 +1292,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.86";
+		return "5.7.87";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1609,7 +1629,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.86";
+		return "5.7.87";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3341,7 +3361,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.86";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.87";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -21725,6 +21745,15 @@
 		isPlayerActive() {
 			return Boolean(document.body && document.body.classList.contains("tm-player-active") || document.documentElement && document.documentElement.classList.contains("tm-player-active") || document.querySelector("miss-player-root"));
 		}
+		ensureTopLayerMount() {
+			if (!this.button) return;
+			try {
+				const activeDialog = document.querySelector("dialog[open], [data-stage-host] dialog");
+				if (activeDialog && activeDialog.isConnected) {
+					if (this.button.parentElement !== activeDialog) activeDialog.appendChild(this.button);
+				} else if (this.button.parentElement !== document.body && document.body) document.body.appendChild(this.button);
+			} catch (_) {}
+		}
 		handleDomMutations() {
 			if (this.isPlayerActive()) {
 				if (this.button) this.button.style.display = "none";
@@ -21732,6 +21761,7 @@
 			}
 			if (this.mutationTimeout) clearTimeout(this.mutationTimeout);
 			this.mutationTimeout = setTimeout(() => {
+				this.ensureTopLayerMount();
 				const hasVideo = findVideoElement(true);
 				if (hasVideo && !this.button) {
 					this.createButton();
@@ -21811,8 +21841,8 @@
 			this.button.addEventListener("touchend", onTrigger, { passive: false });
 			this.button.addEventListener("click", onTrigger);
 			this.button.style.display = "flex";
+			this.ensureTopLayerMount();
 			this.updateButtonPosition();
-			document.body.appendChild(this.button);
 			return this.button;
 		}
 		updateButtonPosition() {
@@ -21821,6 +21851,7 @@
 				this.button.style.display = "none";
 				return;
 			}
+			this.ensureTopLayerMount();
 			this.button.style.setProperty("position", "fixed", "important");
 			this.button.style.setProperty("background", "transparent", "important");
 			this.button.style.setProperty("background-color", "transparent", "important");
@@ -23198,7 +23229,7 @@
 					handleJavLibraryVerification();
 					return;
 				}
-				if (PeachWebBridge.detectAndStart()) return;
+				PeachWebBridge.detectAndStart();
 				injectStyles();
 				initUserExperienceEnhancer(true);
 				console.log(`[${__$1("scriptName")}] ${__$1("enhancerInitialized")}`);

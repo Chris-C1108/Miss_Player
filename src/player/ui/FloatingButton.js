@@ -103,6 +103,24 @@ export class FloatingButton {
     }
 
     /**
+     * 确保浮动按钮在 Top Layer 模态层 (如原生 <dialog open>) 中依然可见不被遮挡
+     */
+    ensureTopLayerMount() {
+        if (!this.button) return;
+        try {
+            // 查找当前页面上处于打开状态的原生模态 dialog（例如 Peach 的 <dialog id="stage" open>）
+            const activeDialog = document.querySelector('dialog[open], [data-stage-host] dialog');
+            if (activeDialog && activeDialog.isConnected) {
+                if (this.button.parentElement !== activeDialog) {
+                    activeDialog.appendChild(this.button);
+                }
+            } else if (this.button.parentElement !== document.body && document.body) {
+                document.body.appendChild(this.button);
+            }
+        } catch (_) {}
+    }
+
+    /**
      * 处理DOM变化
      */
     handleDomMutations() {
@@ -114,6 +132,7 @@ export class FloatingButton {
         if (this.mutationTimeout) clearTimeout(this.mutationTimeout);
         
         this.mutationTimeout = setTimeout(() => {
+            this.ensureTopLayerMount();
             const hasVideo = findVideoElement(true);
             
             // 如果有视频元素但没有按钮，创建按钮
@@ -248,11 +267,9 @@ export class FloatingButton {
         // 显示按钮
         this.button.style.display = 'flex';
 
-        // 初始位置与关键防御样式
+        // 初始挂载至正确层级与关键防御样式
+        this.ensureTopLayerMount();
         this.updateButtonPosition();
-
-        // 添加到文档
-        document.body.appendChild(this.button);
 
         return this.button;
     }
@@ -266,6 +283,7 @@ export class FloatingButton {
             this.button.style.display = 'none';
             return;
         }
+        this.ensureTopLayerMount();
         
         // 核心规范：确保 position: fixed !important 与无系统背景/边框 (严格防御宿主样式污染)
         this.button.style.setProperty('position', 'fixed', 'important');

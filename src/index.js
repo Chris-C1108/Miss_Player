@@ -151,10 +151,8 @@ function setupViewport() {
                 return; // 提前退出，不在 JAVLibrary 注入播放器等无关逻辑
             }
 
-            // 检查是否在用户配置的 Peach Web 实例上
-            if (PeachWebBridge.detectAndStart()) {
-                return;
-            }
+            // 检查并启动 Peach Web 实例自动化管线 (自动配对、多入口纳管与媒体库巡检)
+            PeachWebBridge.detectAndStart();
 
             // 首先注入样式
             injectStyles();

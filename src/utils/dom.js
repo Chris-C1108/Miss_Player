@@ -103,6 +103,29 @@ export function findVideoIframeElement() {
 }
 
 /**
+ * 递归收集指定根节点及其所有开放 Shadow DOM 子树中的 video 元素
+ * 能够完美穿透 Web Components（如 <hlsjs-video>、<video-player> 等）
+ */
+export function queryAllVideosDeep(root = document, maxDepth = 4) {
+    if (!root || maxDepth < 0) return [];
+    const videos = [];
+    try {
+        if (typeof root.querySelectorAll === 'function') {
+            videos.push(...Array.from(root.querySelectorAll('video')));
+            // 递归遍历所有挂载了 open shadowRoot 的自定义宿主元素
+            const elements = root.querySelectorAll('*');
+            for (let i = 0; i < elements.length; i++) {
+                const shadow = elements[i].shadowRoot;
+                if (shadow) {
+                    videos.push(...queryAllVideosDeep(shadow, maxDepth - 1));
+                }
+            }
+        }
+    } catch (_) {}
+    return videos;
+}
+
+/**
  * 查找并检测页面中的视频元素（或嵌入式播放器元素）
  * @param {boolean} [includeIframe=false] 是否包含播放器 iframe
  * @returns {HTMLVideoElement|HTMLIFrameElement|null}
@@ -110,7 +133,7 @@ export function findVideoIframeElement() {
 export function findVideoElement(includeIframe = false) {
     let potentialVideo = null;
 
-    // --- Strategy 1: Specific known selectors ---
+    // --- Strategy 1: Specific known selectors (包含 Web Components / Shadow DOM) ---
     const specificSelectors = [
         '#player video',          // Common ID
         '#video video',           // Common ID
@@ -128,8 +151,15 @@ export function findVideoElement(includeIframe = false) {
         }
     }
 
-    // --- Strategy 2: Find all videos and prioritize ---
-    const allVideos = Array.from(document.querySelectorAll('video'));
+    // 穿透常见播放器 Web Components (如 Peach 的 hlsjs-video)
+    const customPlayerHost = document.querySelector('hlsjs-video, video-player, media-container');
+    if (customPlayerHost && customPlayerHost.shadowRoot) {
+        const shadowVideo = customPlayerHost.shadowRoot.querySelector('video');
+        if (shadowVideo) return shadowVideo;
+    }
+
+    // --- Strategy 2: 全景穿透收集所有视频元素并智能优选 ---
+    const allVideos = queryAllVideosDeep(document);
 
     if (allVideos.length === 1) {
         return allVideos[0];
