@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.88
+// @version            5.7.89
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.88";
+		return "5.7.89";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1900,14 +1900,24 @@
 			}
 			return matchAvCodeFromText(document.title) || matchAvCodeFromText(window.location.href) || "";
 		}
+		static extractCurrentAssetId() {
+			const urlMatch = window.location.pathname.match(/\/assets\/(\d+)/);
+			if (urlMatch) return parseInt(urlMatch[1], 10);
+			const video = findVideoElement();
+			if (video && video.src) {
+				const idMatch = video.src.match(/[?&]id=(\d+)/);
+				if (idMatch) return parseInt(idMatch[1], 10);
+			}
+			return 0;
+		}
 		static async _handlePlaybackError(video) {
-			const avcode = this.extractCurrentAvCode();
+			const avcode = this.extractCurrentAvCode(video);
 			if (!avcode) return;
 			Toast$1(`Peach 原生流已失效，Miss Player 正在现场寻源 [${avcode}]...`, 2500, "info");
 			await this.takeOverPlayback(video, avcode);
 		}
 		static async takeOverPlayback(video, targetCode = "") {
-			const avcode = targetCode || this.extractCurrentAvCode();
+			const avcode = targetCode || this.extractCurrentAvCode(video);
 			if (!avcode) {
 				Toast$1("未能识别当前作品番号", 2e3, "error");
 				return;
@@ -1922,8 +1932,10 @@
 				video.src = streamInfo.url;
 				video.play().then(() => {
 					Toast$1(`已获取新鲜视频流 (${streamInfo.source})，流畅起播！`, 2500, "success");
+					this.startProgressTracking(video);
 				}).catch((playErr) => {
 					console.warn("[PeachWebBridge] 自动起播受限，等待用户交互:", playErr);
+					this.startProgressTracking(video);
 				});
 			} catch (err) {
 				console.error("[PeachWebBridge] 现场寻源异常:", err);
@@ -1933,10 +1945,18 @@
 		static async resolveDynamicStream(avcode) {
 			const cleanCode = avcode.trim().toUpperCase();
 			try {
+				console.log(`[PeachWebBridge] 正在尝试从 Jable 寻源: ${cleanCode}`);
 				const jableStream = await this._searchJableStream(cleanCode);
 				if (jableStream) return jableStream;
 			} catch (jableErr) {
 				console.warn("[PeachWebBridge] Jable 寻源失败:", jableErr.message);
+			}
+			try {
+				console.log(`[PeachWebBridge] 正在尝试从 MissAV 寻源: ${cleanCode}`);
+				const missavStream = await this._searchMissavStream(cleanCode);
+				if (missavStream) return missavStream;
+			} catch (missavErr) {
+				console.warn("[PeachWebBridge] MissAV 寻源失败:", missavErr.message);
 			}
 			return null;
 		}
@@ -1973,8 +1993,121 @@
 			}
 			return null;
 		}
+		static async _searchMissavStream(code) {
+			for (const origin of ["https://missav.ai", "https://missav.ws"]) try {
+				const searchUrl = `${origin}/search/${encodeURIComponent(code)}`;
+				const res = await fetchWithTransport(searchUrl, {
+					headers: {
+						"Referer": origin,
+						"User-Agent": navigator.userAgent
+					},
+					timeout: 8e3
+				});
+				if (res.status >= 200 && res.status < 400 && res.html) {
+					const detailRegex = new RegExp(`href="(${origin}\\/cn\\/[^"]*${code.toLowerCase()}[^"]*)"`, "i");
+					const match = res.html.match(detailRegex);
+					const detailRes = await fetchWithTransport(match ? match[1] : `${origin}/cn/${code.toLowerCase()}`, {
+						headers: {
+							"Referer": searchUrl,
+							"User-Agent": navigator.userAgent
+						},
+						timeout: 8e3
+					});
+					if (detailRes.status >= 200 && detailRes.html) {
+						const m3u8Match = detailRes.html.match(/(https?:\/\/[^'"]+playlist\.m3u8[^'"]*)/i) || detailRes.html.match(/urls\s*:\s*\[['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]\]/i);
+						if (m3u8Match && m3u8Match[1]) return {
+							url: m3u8Match[1],
+							source: "MissAV",
+							referer: origin
+						};
+					}
+				}
+			} catch (_) {}
+			return null;
+		}
+		static startProgressTracking(video) {
+			if (!video) return;
+			const assetId = this.extractCurrentAssetId();
+			if (!assetId) {
+				console.log("[PeachWebBridge] 未能解析到当前 Peach assetId，跳过进度回写");
+				return;
+			}
+			this._currentAssetId = assetId;
+			this._lastReportTime = video.currentTime || 0;
+			this._accumulatedDelta = 0;
+			this._seeksCount = 0;
+			fetchWithTransport(`${window.location.origin}/api/play`, {
+				method: "POST",
+				body: JSON.stringify({ id: assetId }),
+				timeout: 5e3
+			}).catch(() => {});
+			const flushActivity = (ended = false) => {
+				if (!this._currentAssetId || !video) return;
+				const pos = Math.round(video.currentTime || 0);
+				const dur = Math.round(video.duration || 0);
+				const delta = Math.round(this._accumulatedDelta);
+				try {
+					localStorage.setItem(`peach.playback.v1:item:${this._currentAssetId}`, String(pos));
+				} catch (_) {}
+				if (delta <= 0 && !ended && this._seeksCount === 0) return;
+				fetchWithTransport(`${window.location.origin}/api/activity`, {
+					method: "POST",
+					body: JSON.stringify({
+						id: this._currentAssetId,
+						position: pos,
+						duration: dur,
+						delta: Math.max(0, delta),
+						ended: Boolean(ended),
+						seeks: this._seeksCount
+					}),
+					timeout: 5e3
+				}).then((res) => {
+					if (res.status >= 200 && res.status < 300) try {
+						const data = JSON.parse(res.html);
+						if (data && data.real_ratio != null) {
+							const realTxt = document.getElementById("realTxt");
+							const realBar = document.getElementById("realBar");
+							const percent = Math.min(data.real_ratio, 1) * 100;
+							if (realTxt) realTxt.textContent = `${percent.toFixed(0)}%`;
+							if (realBar) realBar.style.width = `${percent.toFixed(1)}%`;
+						}
+					} catch (_) {}
+				}).catch(() => {});
+				this._accumulatedDelta = 0;
+				this._seeksCount = 0;
+			};
+			if (this._progressTimer) clearInterval(this._progressTimer);
+			this._progressTimer = setInterval(() => {
+				if (!video.paused && !video.seeking) flushActivity(false);
+			}, 1e4);
+			video.addEventListener("timeupdate", () => {
+				const cur = video.currentTime;
+				const diff = cur - this._lastReportTime;
+				if (!video.paused && !video.seeking && diff > 0 && diff < 3) this._accumulatedDelta += diff;
+				this._lastReportTime = cur;
+			});
+			video.addEventListener("seeking", () => {
+				this._seeksCount++;
+			});
+			video.addEventListener("pause", () => flushActivity(false));
+			video.addEventListener("ended", () => flushActivity(true));
+			window.addEventListener("pagehide", () => flushActivity(false));
+			console.log(`[PeachWebBridge] 已建立 Peach 服务端进度回写管线 (assetId: ${assetId})`);
+		}
+		static stopProgressTracking() {
+			if (this._progressTimer) {
+				clearInterval(this._progressTimer);
+				this._progressTimer = null;
+			}
+		}
 	};
 	_defineProperty(PeachWebBridge, "initialized", false);
+	_defineProperty(PeachWebBridge, "_progressTrackerActive", false);
+	_defineProperty(PeachWebBridge, "_progressTimer", null);
+	_defineProperty(PeachWebBridge, "_lastReportTime", 0);
+	_defineProperty(PeachWebBridge, "_accumulatedDelta", 0);
+	_defineProperty(PeachWebBridge, "_seeksCount", 0);
+	_defineProperty(PeachWebBridge, "_currentAssetId", 0);
 	var PlayerCore = class {
 		constructor(options = {}) {
 			console.log("[PlayerCore] 初始化...");
@@ -2213,7 +2346,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.88";
+		return "5.7.89";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3915,7 +4048,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.88";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.89";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -21956,6 +22089,7 @@
 			}
 		}
 		close() {
+			if (PeachWebBridge.isPeachInstance()) PeachWebBridge.stopProgressTracking();
 			if (this._activePlayStartTime) {
 				this._activePlayDurationSec += (Date.now() - this._activePlayStartTime) / 1e3;
 				this._activePlayStartTime = null;

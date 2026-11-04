@@ -6,7 +6,8 @@
  * 2. 多网络入口自适应：自动将当前 Origin 加入地址池，并从 Peach 服务端探测 local/lan/ip 候选
  * 3. 访问 Peach Web 时的零输入自动配对 (同源会话自动签发并落盘 Dedicated Token)
  * 4. WebDAV 媒体库智能巡检与挂载引导 (检查 STRM 目录是否已被加入 Peach 媒体源)
- * 5. 监听 Peach 作品详情与播放视口，现场动态寻源起播 (Stream Resolver)
+ * 5. 跨站动态即时寻源引擎 (Stream Resolver)：从 Jable / MissAV 动态抓取带合法签名的有效流
+ * 6. Peach 原生观看进度与续播状态双向回写管线 (兼容 /api/activity 与 /api/play 账本记录)
  */
 
 import { PeachService, PEACH_KEY_DISMISSED_LIB_ADVICE } from '../../services/PeachService.js';
@@ -18,6 +19,12 @@ import { Toast } from '../../utils/index.js';
 
 export class PeachWebBridge {
     static initialized = false;
+    static _progressTrackerActive = false;
+    static _progressTimer = null;
+    static _lastReportTime = 0;
+    static _accumulatedDelta = 0;
+    static _seeksCount = 0;
+    static _currentAssetId = 0;
 
     /**
      * 判断当前页面是否为 Peach Web 实例
@@ -73,7 +80,6 @@ export class PeachWebBridge {
 
     /**
      * 动态探测并启动 Peach Web 桥接
-     * 兼顾快速同步判定与 React SPA 异步挂载延迟
      */
     static detectAndStart() {
         if (this.initialized) return true;
@@ -83,7 +89,6 @@ export class PeachWebBridge {
             return true;
         }
 
-        // 针对慢速网络与 SPA 动态挂载，启动有限轮询探测（每 250ms 探一次，持续 3 秒）
         let attempts = 0;
         const timer = setInterval(() => {
             attempts++;
@@ -129,19 +134,17 @@ export class PeachWebBridge {
 
     /**
      * 零门槛同源自动配对
-     * 利用用户当前在 Peach Web 上的登录态，自动获取或签发专用令牌
      */
     static async _autoPairIfNeeded() {
         const config = PeachService.getConfig();
         if (config.token && config.enabled) {
-            return; // 已经完成配对且可用
+            return;
         }
 
         try {
             console.log('[PeachWebBridge] 正在为 Miss Player 自动配对 Peach 服务端...');
             const configureUrl = `${window.location.origin}/api/configuration/jav-browser`;
             
-            // 优先尝试 enable，若已开启过则尝试 rotate
             let res = await fetchWithTransport(configureUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -173,8 +176,7 @@ export class PeachWebBridge {
                 } catch (_) {}
             }
 
-            // 降级兜底：若服务端未绑定云下载网盘无法签发专用下载令牌，
-            // 依然自动激活并连接当前实例（STRM 虚拟入库模式就绪）！
+            // 降级兜底：未配置云下载网盘无法签发专用令牌时，依然标记当前实例已连接 (STRM 虚拟入库模式)
             PeachService.saveConfig({
                 base: window.location.origin,
                 enabled: true
@@ -223,7 +225,6 @@ export class PeachWebBridge {
             const data = JSON.parse(res.html);
             const libraries = Array.isArray(data?.libraries) ? data.libraries : [];
 
-            // 检查所有媒体库下的根目录，是否有任何一个包含目标关键字
             let found = false;
             for (const lib of libraries) {
                 const roots = Array.isArray(lib.roots) ? lib.roots : [];
@@ -238,7 +239,6 @@ export class PeachWebBridge {
                 if (found) break;
             }
 
-            // 若尚未找到 STRM 媒体源，优雅展示 Apple 引导卡片
             if (!found) {
                 setTimeout(() => this._renderLibraryAdvisorCard(targetStrmDir), 1500);
             }
@@ -294,7 +294,6 @@ export class PeachWebBridge {
         });
 
         goBtn.addEventListener('click', () => {
-            // 复制推荐路径
             try {
                 if (typeof GM_setClipboard === 'function') {
                     GM_setClipboard(strmDir);
@@ -306,7 +305,6 @@ export class PeachWebBridge {
             Toast(`已复制路径 [${strmDir}]，正在打开媒体库设置...`, 2500, 'success');
             removeCard();
 
-            // 跳转到 Peach 媒体库设置路由
             if (window.location.pathname !== '/settings/library') {
                 window.location.href = `${window.location.origin}/settings/library`;
             }
@@ -350,7 +348,6 @@ export class PeachWebBridge {
     static _injectRelayButton(video) {
         if (document.querySelector('.tm-peach-relay-btn')) return;
 
-        // 优先挂载至 Peach 媒体主舞台区域，否则挂载至视频父容器
         const container = document.querySelector('[data-stage-media]') || video.parentElement;
         if (!container) return;
 
@@ -371,27 +368,38 @@ export class PeachWebBridge {
      * 提取当前 Peach 播放界面的番号
      */
     static extractCurrentAvCode(video = null) {
-        // 1. 优先使用统一全景番号解析漏斗 (包含 poster/DOM 穿透)
         const targetVideo = video || findVideoElement();
         const code = getVideoCodeFromUrl(targetVideo);
         if (code) return code;
 
-        // 2. 从 Peach 详情页特定节点深度提取
         const peachNodes = document.querySelectorAll('[data-stage-side], [data-item-detail], dialog#stage, [data-stage-host], .code, [data-code]');
         for (const el of peachNodes) {
             const m = matchAvCodeFromText(el.textContent || '');
             if (m) return m;
         }
 
-        // 3. 从网页标题与 URL 提取
         return matchAvCodeFromText(document.title) || matchAvCodeFromText(window.location.href) || '';
+    }
+
+    /**
+     * 提取当前 Peach 播放界面的作品资产 ID
+     */
+    static extractCurrentAssetId() {
+        const urlMatch = window.location.pathname.match(/\/assets\/(\d+)/);
+        if (urlMatch) return parseInt(urlMatch[1], 10);
+        const video = findVideoElement();
+        if (video && video.src) {
+            const idMatch = video.src.match(/[?&]id=(\d+)/);
+            if (idMatch) return parseInt(idMatch[1], 10);
+        }
+        return 0;
     }
 
     /**
      * 处理播放失败：自动寻源并接力
      */
     static async _handlePlaybackError(video) {
-        const avcode = this.extractCurrentAvCode();
+        const avcode = this.extractCurrentAvCode(video);
         if (!avcode) return;
 
         Toast(`Peach 原生流已失效，Miss Player 正在现场寻源 [${avcode}]...`, 2500, 'info');
@@ -399,10 +407,10 @@ export class PeachWebBridge {
     }
 
     /**
-     * 接管播放并启动动态寻源
+     * 接管播放并启动动态寻源与进度回写管线
      */
     static async takeOverPlayback(video, targetCode = '') {
-        const avcode = targetCode || this.extractCurrentAvCode();
+        const avcode = targetCode || this.extractCurrentAvCode(video);
         if (!avcode) {
             Toast('未能识别当前作品番号', 2000, 'error');
             return;
@@ -420,8 +428,11 @@ export class PeachWebBridge {
             video.src = streamInfo.url;
             video.play().then(() => {
                 Toast(`已获取新鲜视频流 (${streamInfo.source})，流畅起播！`, 2500, 'success');
+                // 启动与 Peach 服务端的进度回写管线
+                this.startProgressTracking(video);
             }).catch(playErr => {
                 console.warn('[PeachWebBridge] 自动起播受限，等待用户交互:', playErr);
+                this.startProgressTracking(video);
             });
 
         } catch (err) {
@@ -431,23 +442,35 @@ export class PeachWebBridge {
     }
 
     /**
-     * 现场动态寻源引擎 (Stream Resolver)
+     * 现场多源动态寻源引擎 (Stream Resolver)
+     * 先查 Jable，失败则备选查 MissAV
      */
     static async resolveDynamicStream(avcode) {
         const cleanCode = avcode.trim().toUpperCase();
 
+        // 1. 首选 Jable 寻源 (稳定性高，免复杂 CF 拦截)
         try {
+            console.log(`[PeachWebBridge] 正在尝试从 Jable 寻源: ${cleanCode}`);
             const jableStream = await this._searchJableStream(cleanCode);
             if (jableStream) return jableStream;
         } catch (jableErr) {
             console.warn('[PeachWebBridge] Jable 寻源失败:', jableErr.message);
         }
 
+        // 2. 备选 MissAV 寻源
+        try {
+            console.log(`[PeachWebBridge] 正在尝试从 MissAV 寻源: ${cleanCode}`);
+            const missavStream = await this._searchMissavStream(cleanCode);
+            if (missavStream) return missavStream;
+        } catch (missavErr) {
+            console.warn('[PeachWebBridge] MissAV 寻源失败:', missavErr.message);
+        }
+
         return null;
     }
 
     /**
-     * 从 Jable 检索流地址
+     * 从 Jable 检索视频流
      */
     static async _searchJableStream(code) {
         const searchUrl = `https://jable.tv/search/${encodeURIComponent(code)}/`;
@@ -485,5 +508,156 @@ export class PeachWebBridge {
         }
 
         return null;
+    }
+
+    /**
+     * 从 MissAV 检索视频流
+     */
+    static async _searchMissavStream(code) {
+        const domains = ['https://missav.ai', 'https://missav.ws'];
+        for (const origin of domains) {
+            try {
+                const searchUrl = `${origin}/search/${encodeURIComponent(code)}`;
+                const res = await fetchWithTransport(searchUrl, {
+                    headers: { 'Referer': origin, 'User-Agent': navigator.userAgent },
+                    timeout: 8000
+                });
+
+                if (res.status >= 200 && res.status < 400 && res.html) {
+                    const detailRegex = new RegExp(`href="(${origin}\\/cn\\/[^"]*${code.toLowerCase()}[^"]*)"`, 'i');
+                    const match = res.html.match(detailRegex);
+                    const detailUrl = match ? match[1] : `${origin}/cn/${code.toLowerCase()}`;
+
+                    const detailRes = await fetchWithTransport(detailUrl, {
+                        headers: { 'Referer': searchUrl, 'User-Agent': navigator.userAgent },
+                        timeout: 8000
+                    });
+
+                    if (detailRes.status >= 200 && detailRes.html) {
+                        const m3u8Match = detailRes.html.match(/(https?:\/\/[^'"]+playlist\.m3u8[^'"]*)/i) ||
+                                          detailRes.html.match(/urls\s*:\s*\[['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]\]/i);
+                        if (m3u8Match && m3u8Match[1]) {
+                            return {
+                                url: m3u8Match[1],
+                                source: 'MissAV',
+                                referer: origin
+                            };
+                        }
+                    }
+                }
+            } catch (_) {}
+        }
+
+        return null;
+    }
+
+    /**
+     * 启动与 Peach 服务端的播放进度双向回写管线 (兼容 /api/activity 与 /api/play)
+     */
+    static startProgressTracking(video) {
+        if (!video) return;
+        const assetId = this.extractCurrentAssetId();
+        if (!assetId) {
+            console.log('[PeachWebBridge] 未能解析到当前 Peach assetId，跳过进度回写');
+            return;
+        }
+
+        this._currentAssetId = assetId;
+        this._lastReportTime = video.currentTime || 0;
+        this._accumulatedDelta = 0;
+        this._seeksCount = 0;
+
+        // 首次通知 Peach 开播
+        fetchWithTransport(`${window.location.origin}/api/play`, {
+            method: 'POST',
+            body: JSON.stringify({ id: assetId }),
+            timeout: 5000
+        }).catch(() => {});
+
+        // 上报活动数据函数
+        const flushActivity = (ended = false) => {
+            if (!this._currentAssetId || !video) return;
+            const pos = Math.round(video.currentTime || 0);
+            const dur = Math.round(video.duration || 0);
+            const delta = Math.round(this._accumulatedDelta);
+
+            // 本地写入恢复续播
+            try {
+                localStorage.setItem(`peach.playback.v1:item:${this._currentAssetId}`, String(pos));
+            } catch (_) {}
+
+            if (delta <= 0 && !ended && this._seeksCount === 0) return;
+
+            fetchWithTransport(`${window.location.origin}/api/activity`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: this._currentAssetId,
+                    position: pos,
+                    duration: dur,
+                    delta: Math.max(0, delta),
+                    ended: Boolean(ended),
+                    seeks: this._seeksCount
+                }),
+                timeout: 5000
+            }).then(res => {
+                if (res.status >= 200 && res.status < 300) {
+                    try {
+                        const data = JSON.parse(res.html);
+                        if (data && data.real_ratio != null) {
+                            const realTxt = document.getElementById('realTxt');
+                            const realBar = document.getElementById('realBar');
+                            const percent = Math.min(data.real_ratio, 1) * 100;
+                            if (realTxt) realTxt.textContent = `${percent.toFixed(0)}%`;
+                            if (realBar) realBar.style.width = `${percent.toFixed(1)}%`;
+                        }
+                    } catch (_) {}
+                }
+            }).catch(() => {});
+
+            this._accumulatedDelta = 0;
+            this._seeksCount = 0;
+        };
+
+        // 清理旧定时器
+        if (this._progressTimer) {
+            clearInterval(this._progressTimer);
+        }
+
+        // 定时每 10 秒向 Peach 回写一次进度
+        this._progressTimer = setInterval(() => {
+            if (!video.paused && !video.seeking) {
+                flushActivity(false);
+            }
+        }, 10000);
+
+        // 监听视频关键节点
+        video.addEventListener('timeupdate', () => {
+            const cur = video.currentTime;
+            const diff = cur - this._lastReportTime;
+            if (!video.paused && !video.seeking && diff > 0 && diff < 3) {
+                this._accumulatedDelta += diff;
+            }
+            this._lastReportTime = cur;
+        });
+
+        video.addEventListener('seeking', () => {
+            this._seeksCount++;
+        });
+
+        video.addEventListener('pause', () => flushActivity(false));
+        video.addEventListener('ended', () => flushActivity(true));
+        window.addEventListener('pagehide', () => flushActivity(false));
+
+        console.log(`[PeachWebBridge] 已建立 Peach 服务端进度回写管线 (assetId: ${assetId})`);
+    }
+
+    /**
+     * 停止进度回写并清理
+     */
+    static stopProgressTracking() {
+        if (this._progressTimer) {
+            clearInterval(this._progressTimer);
+            this._progressTimer = null;
+        }
     }
 }

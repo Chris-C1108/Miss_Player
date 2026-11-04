@@ -12,6 +12,7 @@ import { updateSafariThemeColor, Toast } from '../utils/index.js';
 import { __ } from '../constants/i18n.js';
 import { telemetry } from '../telemetry/index.js';
 import { getVideoCodeFromUrl } from '../utils/videoCode.js';
+import { PeachWebBridge } from './bridge/PeachWebBridge.js';
 
 /**
  * 自定义视频播放器控制器 - 模块化重构版本
@@ -345,6 +346,10 @@ export class CustomVideoPlayer {
      * 关闭播放器
      */
     close() {
+        if (PeachWebBridge.isPeachInstance()) {
+            PeachWebBridge.stopProgressTracking();
+        }
+
         if (this._activePlayStartTime) {
             this._activePlayDurationSec += (Date.now() - this._activePlayStartTime) / 1000;
             this._activePlayStartTime = null;
