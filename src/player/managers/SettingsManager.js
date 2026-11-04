@@ -70,7 +70,7 @@ export class SettingsManager {
             crazyScrapeMode: false,
             pauseOnBlur: true,
             buttonSoundEnabled: true,
-            defaultMuted: false,
+            defaultMuted: true,
             muteResetMinutes: 5,
             autoCheckUpdate: true,
             updateChannel: 'stable',
@@ -1543,7 +1543,7 @@ export class SettingsManager {
             this.settings.crazyScrapeMode = getBool('crazyScrapeMode', false);
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
-            this.settings.defaultMuted = getBool('defaultMuted', false);
+            this.settings.defaultMuted = getBool('defaultMuted', true);
             this.settings.muteResetMinutes = parseInt(getValue('muteResetMinutes', 5), 10) || 5;
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
             const rawPm = getValue('betaPlayMode', 'normal');

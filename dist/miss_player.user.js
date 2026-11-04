@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.78
+// @version            5.7.79
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1265,7 +1265,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.78";
+		return "5.7.79";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1453,6 +1453,11 @@
 				const savedSpeed = parseFloat(getValue("preferredPlaybackRate", 1));
 				const validSpeed = !isNaN(savedSpeed) && savedSpeed >= .5 && savedSpeed <= 4 ? savedSpeed : this.defaultPlaybackRate;
 				this.targetVideo.playbackRate = validSpeed;
+				const restoreSpeedOnReady = () => {
+					if (this.targetVideo && this.targetVideo.playbackRate !== validSpeed) this.targetVideo.playbackRate = validSpeed;
+				};
+				this.targetVideo.addEventListener("loadedmetadata", restoreSpeedOnReady, { once: true });
+				this.targetVideo.addEventListener("canplay", restoreSpeedOnReady, { once: true });
 				if (this.videoState && this.videoState.currentTime > 0) {
 					if (this.targetVideo.readyState >= 1) try {
 						this.targetVideo.currentTime = this.videoState.currentTime;
@@ -1487,7 +1492,7 @@
 							if (mutedPromise !== void 0) mutedPromise.then(() => {
 								console.log("[PlayerCore] 静音自动起播成功");
 								const unmuteOnInteract = () => {
-									if (!Boolean(getValue("defaultMuted", false)) && this.targetVideo) this.targetVideo.muted = false;
+									if (!Boolean(getValue("defaultMuted", true)) && this.targetVideo) this.targetVideo.muted = false;
 									document.removeEventListener("click", unmuteOnInteract, true);
 									document.removeEventListener("touchstart", unmuteOnInteract, true);
 								};
@@ -1597,7 +1602,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.78";
+		return "5.7.79";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3608,6 +3613,7 @@
 		}
 		updatePortraitVideoHeight() {
 			if (!this.container) return;
+			if (this.dragManager && this.dragManager.isDraggingHandle) return;
 			if (this.isLandscape || this.isSidebarHidden) {
 				if (this.container.style.height || this.container.style.minHeight) {
 					this.container.style.height = "";
@@ -5282,7 +5288,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.78";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.79";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -5444,7 +5450,7 @@
 				preferredPlaybackRate: parseFloat(getValue("preferredPlaybackRate", 1)) || 1,
 				pauseOnBlur: getValue("pauseOnBlur", true),
 				buttonSoundEnabled: getValue("buttonSoundEnabled", true),
-				defaultMuted: getValue("defaultMuted", false),
+				defaultMuted: getValue("defaultMuted", true),
 				muteResetMinutes: parseInt(getValue("muteResetMinutes", 5), 10) || 5,
 				autoCheckUpdate: getValue("autoCheckUpdate", true),
 				updateChannel: getValue("updateChannel", "stable"),
@@ -12862,7 +12868,7 @@
 		_getSettings() {
 			const s = (this.playerCore?.options?.playerState)?.settings;
 			return {
-				defaultMuted: s ? Boolean(s.defaultMuted) : getBool("defaultMuted", false),
+				defaultMuted: s ? s.defaultMuted !== void 0 ? Boolean(s.defaultMuted) : getBool("defaultMuted", true) : getBool("defaultMuted", true),
 				muteResetMinutes: s ? parseInt(s.muteResetMinutes, 10) || 5 : parseInt(getValue("muteResetMinutes", 5), 10) || 5
 			};
 		}
@@ -13674,6 +13680,9 @@
 				if (this.targetVideo.playbackRate !== 1) {
 					this.targetVideo.playbackRate = 1;
 					setValue("preferredPlaybackRate", 1);
+					const playerState = this.playerCore?.options?.playerState;
+					if (playerState) playerState.updateSetting("preferredPlaybackRate", 1);
+					if (this.playerCore?.videoState) this.playerCore.videoState.playbackRate = 1;
 					this.syncPlaybackRateSlider(1);
 					if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(5);
 				}
@@ -13688,6 +13697,9 @@
 				else nextSpeed = 1;
 				this.targetVideo.playbackRate = nextSpeed;
 				setValue("preferredPlaybackRate", nextSpeed);
+				const playerState = this.playerCore?.options?.playerState;
+				if (playerState) playerState.updateSetting("preferredPlaybackRate", nextSpeed);
+				if (this.playerCore?.videoState) this.playerCore.videoState.playbackRate = nextSpeed;
 				this.syncPlaybackRateSlider(nextSpeed);
 				telemetry.recordFeatureAction("speed_change");
 				if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(5);
@@ -13788,12 +13800,13 @@
 			const tabs = loopManager?.tabs || [];
 			const mode = this.getPlayMode();
 			const playerState = this.playerCore?.options?.playerState;
-			if (!this._isCapsuleLoopPlaying || this._capsulePlayIndex >= tabs.length) {
+			if (!this._isCapsuleLoopPlaying) return;
+			if (tabs.length === 0) {
 				this._isTourEnded = true;
 				this.stopCapsulePlayback(true);
-				Toast$1("全部高光片段已播放完毕", 2500, "success");
 				return;
 			}
+			if (this._capsulePlayIndex >= tabs.length || this._capsulePlayIndex < 0) this._capsulePlayIndex = 0;
 			const tab = tabs[this._capsulePlayIndex];
 			const startTime = tab.startTime !== void 0 && tab.startTime !== null ? tab.startTime : tab.time || 0;
 			this._currentCapsuleStartTime = startTime;
@@ -13961,7 +13974,7 @@
 			this._swipeTouchStartHandler = (e) => {
 				if (!this.isPortrait()) return;
 				const target = e.target;
-				if (target?.closest?.(".tm-progress-bar-container, .tm-slider-handle")) {
+				if (target?.closest?.(".tm-progress-row, .tm-progress-bar-container, .tm-slider-handle, .tm-progress-controls")) {
 					this._isSwipeTracking = false;
 					return;
 				}
@@ -13974,7 +13987,9 @@
 				this._touchStartX = touch.clientX;
 				this._touchStartY = touch.clientY;
 				this._isSwipeTracking = true;
+				this._isFromSeekRow = Boolean(target?.closest?.(".tm-seek-control-row"));
 				this._isFromCapsuleScroll = Boolean(target?.closest?.(".tm-tab-scroll-container, .tm-tab-pill, .tm-tab-actions-capsule, .tm-loop-control-row"));
+				this._isFromPlaybackRow = Boolean(target?.closest?.(".tm-playback-control-row, .mp-switcher-wrapper, .mp-switcher-capsule, .tm-center-controls, .tm-playback-bottom-layer, .tm-playback-top-layer"));
 			};
 			this._swipeTouchMoveHandler = (e) => {
 				if (!this._isSwipeTracking) return;
@@ -13982,7 +13997,7 @@
 				if (!touch) return;
 				const dx = touch.clientX - this._touchStartX;
 				const dy = touch.clientY - this._touchStartY;
-				if (this._isFromCapsuleScroll) {
+				if (this._isFromCapsuleScroll || this._isFromPlaybackRow) {
 					if (Math.abs(dx) >= Math.abs(dy)) return;
 					if (dy > 15 && dy > Math.abs(dx) * 1.5 && e.cancelable) e.preventDefault();
 					return;
@@ -14004,12 +14019,14 @@
 				if (e.pointerType === "touch") return;
 				if (!this.isPortrait()) return;
 				if (e.button !== 0) return;
-				if (e.target?.closest?.(".tm-progress-bar-container, .tm-slider-handle")) return;
+				if (e.target?.closest?.(".tm-progress-row, .tm-progress-bar-container, .tm-slider-handle, .tm-progress-controls")) return;
 				if (!e.target?.closest?.(".tm-control-buttons, .tm-control-panel, .tm-seek-control-row")) return;
 				this._pointerStartX = e.clientX;
 				this._pointerStartY = e.clientY;
 				this._isPointerTracking = true;
+				this._isFromSeekRow = Boolean(e.target?.closest?.(".tm-seek-control-row"));
 				this._isFromCapsuleScroll = Boolean(e.target?.closest?.(".tm-tab-scroll-container, .tm-tab-pill, .tm-tab-actions-capsule, .tm-loop-control-row"));
+				this._isFromPlaybackRow = Boolean(e.target?.closest?.(".tm-playback-control-row, .mp-switcher-wrapper, .mp-switcher-capsule, .tm-center-controls, .tm-playback-bottom-layer, .tm-playback-top-layer"));
 			};
 			this._swipePointerUpHandler = (e) => {
 				if (!this._isPointerTracking) return;
@@ -14041,7 +14058,8 @@
 				if (uiManager) uiManager.hideControls(true);
 				return;
 			}
-			if (this._isFromCapsuleScroll) return;
+			if (this._isFromCapsuleScroll || this._isFromPlaybackRow) return;
+			if (this._isFromSeekRow !== void 0 && !this._isFromSeekRow) return;
 			if (Math.abs(dx) >= minDistance && Math.abs(dx) > Math.abs(dy) * 1.2) {
 				this._preventClickUntil = Date.now() + 350;
 				playTapSound();
@@ -14455,11 +14473,27 @@
 			this.isDraggingHandle = true;
 			this.handle.classList.add("dragging");
 			if (this.container) this.container.classList.add("is-resizing");
-			if (this.uiManager && !this.uiManager.controlsVisible) this.uiManager.showControls();
+			const isCollapsed = !this.uiManager?.controlsVisible || this.container && this.container.classList.contains("is-collapsed-ratio");
+			const currentVisibleHeight = this.container ? this.container.offsetHeight : 0;
+			if (isCollapsed && currentVisibleHeight > 0) {
+				this.startHeight = currentVisibleHeight;
+				if (this.uiManager) {
+					this.uiManager.customHeightPortrait = `${currentVisibleHeight}px`;
+					this.uiManager.isCustomResized = true;
+					this.uiManager.isCustomResizedPortrait = true;
+				}
+				if (this.container) {
+					this.container.classList.remove("is-collapsed-ratio");
+					this.container.style.height = `${currentVisibleHeight}px`;
+				}
+			} else this.startHeight = this.container ? this.container.offsetHeight : 0;
+			if (this.uiManager && !this.uiManager.controlsVisible) {
+				this.uiManager.showControls();
+				if (isCollapsed && this.container && currentVisibleHeight > 0) this.container.style.height = `${currentVisibleHeight}px`;
+			}
 			if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(5);
 			const touch = e.type.includes("touch");
 			this.startY = touch ? e.touches[0].clientY : e.clientY;
-			this.startHeight = this.container.offsetHeight;
 			const moveHandler = this._handleDragMove.bind(this);
 			const endHandler = this._handleDragEnd.bind(this);
 			if (touch) {
@@ -18642,7 +18676,7 @@
 				crazyScrapeMode: false,
 				pauseOnBlur: true,
 				buttonSoundEnabled: true,
-				defaultMuted: false,
+				defaultMuted: true,
 				muteResetMinutes: 5,
 				autoCheckUpdate: true,
 				updateChannel: "stable",
@@ -19748,7 +19782,7 @@
 				this.settings.crazyScrapeMode = getBool("crazyScrapeMode", false);
 				this.settings.pauseOnBlur = getBool("pauseOnBlur", true);
 				this.settings.buttonSoundEnabled = getBool("buttonSoundEnabled", true);
-				this.settings.defaultMuted = getBool("defaultMuted", false);
+				this.settings.defaultMuted = getBool("defaultMuted", true);
 				this.settings.muteResetMinutes = parseInt(getValue("muteResetMinutes", 5), 10) || 5;
 				this.settings.autoCheckUpdate = getBool("autoCheckUpdate", true);
 				const rawPm = getValue("betaPlayMode", "normal");
@@ -21391,7 +21425,7 @@
 				preferredPlaybackRate: 1,
 				pauseOnBlur: true,
 				buttonSoundEnabled: true,
-				defaultMuted: false,
+				defaultMuted: true,
 				muteResetMinutes: 5,
 				betaSingleHandMode: false,
 				singleHandPosition: "right",
@@ -21449,7 +21483,7 @@
 				this.settings.autoCheckUpdate = getBool("autoCheckUpdate", true);
 				const rawChannel = getValue("updateChannel", "stable");
 				this.settings.updateChannel = rawChannel === "beta" ? "beta" : "stable";
-				this.settings.defaultMuted = getBool("defaultMuted", false);
+				this.settings.defaultMuted = getBool("defaultMuted", true);
 				this.settings.muteResetMinutes = Math.max(1, Math.min(120, parseInt(getValue("muteResetMinutes", 5), 10) || 5));
 				this.settings.betaMode = getBool("betaMode", false);
 				this.settings.betaHeatmap = getBool("betaHeatmap", false);

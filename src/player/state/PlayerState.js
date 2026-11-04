@@ -38,7 +38,7 @@ export class PlayerState {
             preferredPlaybackRate: 1.0,     // 默认/首选播放速度
             pauseOnBlur: true,              // 页面离开/失焦后停止播放 (默认为开)
             buttonSoundEnabled: true,       // 控制面板按钮点击音效 (默认为开)
-            defaultMuted: false,            // 默认静音播放
+            defaultMuted: true,             // 默认静音播放 (带超时重置记忆)
             muteResetMinutes: 5,            // 取消静音后重置超时的分钟数 (默认 5 分钟)
             betaSingleHandMode: false,      // 竖屏单手模式 (Beta 默认关闭)
             singleHandPosition: 'right',    // 单手握持偏好 ('right' | 'left')
@@ -111,7 +111,7 @@ export class PlayerState {
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
             const rawChannel = getValue('updateChannel', 'stable');
             this.settings.updateChannel = (rawChannel === 'beta') ? 'beta' : 'stable';
-            this.settings.defaultMuted = getBool('defaultMuted', false);
+            this.settings.defaultMuted = getBool('defaultMuted', true);
             this.settings.muteResetMinutes = Math.max(1, Math.min(120, parseInt(getValue('muteResetMinutes', 5), 10) || 5));
             this.settings.betaMode = getBool('betaMode', false);
             this.settings.betaHeatmap = getBool('betaHeatmap', false);

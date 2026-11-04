@@ -236,6 +236,13 @@ export class PlaybackController {
             if (this.targetVideo.playbackRate !== 1.0) {
                 this.targetVideo.playbackRate = 1.0;
                 setValue('preferredPlaybackRate', 1.0);
+                const playerState = this.playerCore?.options?.playerState;
+                if (playerState) {
+                    playerState.updateSetting('preferredPlaybackRate', 1.0);
+                }
+                if (this.playerCore?.videoState) {
+                    this.playerCore.videoState.playbackRate = 1.0;
+                }
                 this.syncPlaybackRateSlider(1.0);
                 if (window.navigator && window.navigator.vibrate) {
                     window.navigator.vibrate(5);
@@ -256,6 +263,13 @@ export class PlaybackController {
             
             this.targetVideo.playbackRate = nextSpeed;
             setValue('preferredPlaybackRate', nextSpeed);
+            const playerState = this.playerCore?.options?.playerState;
+            if (playerState) {
+                playerState.updateSetting('preferredPlaybackRate', nextSpeed);
+            }
+            if (this.playerCore?.videoState) {
+                this.playerCore.videoState.playbackRate = nextSpeed;
+            }
             this.syncPlaybackRateSlider(nextSpeed);
             telemetry.recordFeatureAction('speed_change');
             
@@ -410,11 +424,19 @@ export class PlaybackController {
         const mode = this.getPlayMode();
         const playerState = this.playerCore?.options?.playerState;
 
-        if (!this._isCapsuleLoopPlaying || this._capsulePlayIndex >= tabs.length) {
+        if (!this._isCapsuleLoopPlaying) {
+            return;
+        }
+
+        if (tabs.length === 0) {
             this._isTourEnded = true;
             this.stopCapsulePlayback(true);
-            Toast('全部高光片段已播放完毕', 2500, 'success');
             return;
+        }
+
+        // 默认播放完所有胶囊后继续从第一个胶囊循环播放
+        if (this._capsulePlayIndex >= tabs.length || this._capsulePlayIndex < 0) {
+            this._capsulePlayIndex = 0;
         }
 
         const tab = tabs[this._capsulePlayIndex];

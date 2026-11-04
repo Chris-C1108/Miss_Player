@@ -169,8 +169,8 @@ export class SingleHandManager {
         this._swipeTouchStartHandler = (e) => {
             if (!this.isPortrait()) return;
             const target = e.target;
-            // 排除拖动进度条滑块的情况
-            if (target?.closest?.('.tm-progress-bar-container, .tm-slider-handle')) {
+            // 排除进度条整行及滑块、热度条、时间显示等所有子元素
+            if (target?.closest?.('.tm-progress-row, .tm-progress-bar-container, .tm-slider-handle, .tm-progress-controls')) {
                 this._isSwipeTracking = false;
                 return;
             }
@@ -183,8 +183,12 @@ export class SingleHandManager {
             this._touchStartX = touch.clientX;
             this._touchStartY = touch.clientY;
             this._isSwipeTracking = true;
+            // 记录触摸是否源自时间快速跳转行 (仅此行支持左右滑动切换左右手模式)
+            this._isFromSeekRow = Boolean(target?.closest?.('.tm-seek-control-row'));
             // 记录触摸是否源自高光胶囊横向滚动区 (保留胶囊原生横向滚动，坚决不被左右手切换干扰)
             this._isFromCapsuleScroll = Boolean(target?.closest?.('.tm-tab-scroll-container, .tm-tab-pill, .tm-tab-actions-capsule, .tm-loop-control-row'));
+            // 记录触摸是否源自底部播放控制行 / 播放模式切换区 (保留模式切换横向滑动，坚决不被左右手切换干扰)
+            this._isFromPlaybackRow = Boolean(target?.closest?.('.tm-playback-control-row, .mp-switcher-wrapper, .mp-switcher-capsule, .tm-center-controls, .tm-playback-bottom-layer, .tm-playback-top-layer'));
         };
 
         this._swipeTouchMoveHandler = (e) => {
@@ -194,8 +198,8 @@ export class SingleHandManager {
             const dx = touch.clientX - this._touchStartX;
             const dy = touch.clientY - this._touchStartY;
 
-            // 核心保护：若触摸源自胶囊横向滚动区，水平滑动必须完全放行给浏览器原生滚动，绝不阻止默认行为
-            if (this._isFromCapsuleScroll) {
+            // 核心保护：若触摸源自胶囊横向滚动区或底部播放模式切换区，水平滑动必须完全放行给浏览器或组件自身原生滑动，绝不阻止默认行为
+            if (this._isFromCapsuleScroll || this._isFromPlaybackRow) {
                 if (Math.abs(dx) >= Math.abs(dy)) {
                     return;
                 }
@@ -206,7 +210,7 @@ export class SingleHandManager {
                 return;
             }
 
-            // 在控制面板其他非胶囊滚动区：水平滑移主导或明显的向下手势时阻止原生滚动，保持纯净手势交互
+            // 在控制面板其他非胶囊/模式切换滚动区：水平滑移主导或明显的向下手势时阻止原生滚动，保持纯净手势交互
             if ((Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) || (dy > 10 && dy > Math.abs(dx))) {
                 if (e.cancelable) {
                     e.preventDefault();
@@ -229,12 +233,14 @@ export class SingleHandManager {
             if (e.pointerType === 'touch') return;
             if (!this.isPortrait()) return;
             if (e.button !== 0) return;
-            if (e.target?.closest?.('.tm-progress-bar-container, .tm-slider-handle')) return;
+            if (e.target?.closest?.('.tm-progress-row, .tm-progress-bar-container, .tm-slider-handle, .tm-progress-controls')) return;
             if (!e.target?.closest?.('.tm-control-buttons, .tm-control-panel, .tm-seek-control-row')) return;
             this._pointerStartX = e.clientX;
             this._pointerStartY = e.clientY;
             this._isPointerTracking = true;
+            this._isFromSeekRow = Boolean(e.target?.closest?.('.tm-seek-control-row'));
             this._isFromCapsuleScroll = Boolean(e.target?.closest?.('.tm-tab-scroll-container, .tm-tab-pill, .tm-tab-actions-capsule, .tm-loop-control-row'));
+            this._isFromPlaybackRow = Boolean(e.target?.closest?.('.tm-playback-control-row, .mp-switcher-wrapper, .mp-switcher-capsule, .tm-center-controls, .tm-playback-bottom-layer, .tm-playback-top-layer'));
         };
 
         this._swipePointerUpHandler = (e) => {
@@ -278,12 +284,17 @@ export class SingleHandManager {
             return;
         }
 
-        // 核心保护：若手势源自胶囊横向滚动区，绝对不触发左右手模式切换，保证胶囊横向浏览 100% 顺畅自由
-        if (this._isFromCapsuleScroll) {
+        // 核心保护：若手势源自胶囊横向滚动区或底部播放模式切换区，绝对不触发左右手模式切换，保证胶囊与模式横向操作 100% 顺畅自由
+        if (this._isFromCapsuleScroll || this._isFromPlaybackRow) {
             return;
         }
 
-        // 2. 左右滑动手势：随时随地在控制面板左右滑动，无缝切换左手/右手单手模式 (仅在非胶囊滚动区触发)
+        // 左右手模式的切换仅限于时间快速跳转那一行 (tm-seek-control-row) 可以左右滑动切换左右手模式
+        if (this._isFromSeekRow !== undefined && !this._isFromSeekRow) {
+            return;
+        }
+
+        // 2. 左右滑动手势：在时间快速跳转行左右滑动，无缝切换左手/右手单手模式
         if (Math.abs(dx) >= minDistance && Math.abs(dx) > Math.abs(dy) * 1.2) {
             this._preventClickUntil = Date.now() + 350;
             playTapSound();

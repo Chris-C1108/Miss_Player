@@ -38,7 +38,7 @@ export class VolumeController {
         const playerState = this.playerCore?.options?.playerState;
         const s = playerState?.settings;
         return {
-            defaultMuted: s ? Boolean(s.defaultMuted) : getBool('defaultMuted', false),
+            defaultMuted: s ? (s.defaultMuted !== undefined ? Boolean(s.defaultMuted) : getBool('defaultMuted', true)) : getBool('defaultMuted', true),
             muteResetMinutes: s ? (parseInt(s.muteResetMinutes, 10) || 5) : (parseInt(getValue('muteResetMinutes', 5), 10) || 5)
         };
     }

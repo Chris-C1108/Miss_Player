@@ -145,6 +145,15 @@ export class PlayerCore {
             const validSpeed = (!isNaN(savedSpeed) && savedSpeed >= 0.5 && savedSpeed <= 4.0) ? savedSpeed : this.defaultPlaybackRate;
             this.targetVideo.playbackRate = validSpeed;
             
+            // 防止宿主或浏览器在元数据加载/可播放时强制将 playbackRate 重置为 1.0
+            const restoreSpeedOnReady = () => {
+                if (this.targetVideo && this.targetVideo.playbackRate !== validSpeed) {
+                    this.targetVideo.playbackRate = validSpeed;
+                }
+            };
+            this.targetVideo.addEventListener('loadedmetadata', restoreSpeedOnReady, { once: true });
+            this.targetVideo.addEventListener('canplay', restoreSpeedOnReady, { once: true });
+            
             // 仅在已有实际进度时安全恢复播放位置，避免未就绪时抛出异常或打断流加载
             if (this.videoState && this.videoState.currentTime > 0) {
                 if (this.targetVideo.readyState >= 1) {
@@ -193,7 +202,7 @@ export class PlayerCore {
                                     console.log('[PlayerCore] 静音自动起播成功');
                                     // 挂载全局一次性交互监听，用户一旦点击/触碰屏幕尝试解除静音 (受默认静音设置保护)
                                     const unmuteOnInteract = () => {
-                                        const isDefaultMutedEnabled = Boolean(getValue('defaultMuted', false));
+                                        const isDefaultMutedEnabled = Boolean(getValue('defaultMuted', true));
                                         if (!isDefaultMutedEnabled && this.targetVideo) {
                                             this.targetVideo.muted = false;
                                         }

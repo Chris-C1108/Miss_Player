@@ -133,6 +133,11 @@ runStep('执行视频播放热度与探索足迹单元测试', () => {
     execSync('node tests/heatmap.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.13 控制栏手势防冲突、胶囊无限循环、倍速持久化与手柄基准保持单元测试
+runStep('执行控制栏手势防冲突、胶囊循环与视口基准单元测试', () => {
+    execSync('node tests/player-fixes-verification.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

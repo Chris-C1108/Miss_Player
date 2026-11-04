@@ -1402,6 +1402,11 @@ export class UIManager {
     updatePortraitVideoHeight() {
         if (!this.container) return;
 
+        // 正在拖拽手柄调整大小时，高度由手柄手势完全控制，绝对不在此处进行重置或覆盖
+        if (this.dragManager && this.dragManager.isDraggingHandle) {
+            return;
+        }
+
         // 横屏模式或侧栏隐藏（纯视频全屏模式）时，容器高度完全由 CSS 规则（Grid 100% / Flex 100%）接管，清空所有行内高度与最小高度限制
         if (this.isLandscape || this.isSidebarHidden) {
             if (this.container.style.height || this.container.style.minHeight) {

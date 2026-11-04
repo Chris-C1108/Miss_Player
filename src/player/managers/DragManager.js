@@ -65,9 +65,31 @@ export class DragManager {
             this.container.classList.add('is-resizing');
         }
 
+        const isCollapsed = !this.uiManager?.controlsVisible || (this.container && this.container.classList.contains('is-collapsed-ratio'));
+        const currentVisibleHeight = this.container ? this.container.offsetHeight : 0;
+
+        if (isCollapsed && currentVisibleHeight > 0) {
+            // 用户在收缩态下拖动手柄：保持当前看到的大小状态作为基准调整，绝不瞬移跳回历史展开大小
+            this.startHeight = currentVisibleHeight;
+            if (this.uiManager) {
+                this.uiManager.customHeightPortrait = `${currentVisibleHeight}px`;
+                this.uiManager.isCustomResized = true;
+                this.uiManager.isCustomResizedPortrait = true;
+            }
+            if (this.container) {
+                this.container.classList.remove('is-collapsed-ratio');
+                this.container.style.height = `${currentVisibleHeight}px`;
+            }
+        } else {
+            this.startHeight = this.container ? this.container.offsetHeight : 0;
+        }
+
         // 如果在收起态下拖拽手柄，立即唤醒控制栏
         if (this.uiManager && !this.uiManager.controlsVisible) {
             this.uiManager.showControls();
+            if (isCollapsed && this.container && currentVisibleHeight > 0) {
+                this.container.style.height = `${currentVisibleHeight}px`;
+            }
         }
 
         // 添加震动反馈
@@ -77,7 +99,6 @@ export class DragManager {
 
         const touch = e.type.includes('touch');
         this.startY = touch ? e.touches[0].clientY : e.clientY;
-        this.startHeight = this.container.offsetHeight;
 
         const moveHandler = this._handleDragMove.bind(this);
         const endHandler = this._handleDragEnd.bind(this);
