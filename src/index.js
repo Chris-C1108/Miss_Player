@@ -152,8 +152,7 @@ function setupViewport() {
             }
 
             // 检查是否在用户配置的 Peach Web 实例上
-            if (PeachWebBridge.isPeachInstance()) {
-                PeachWebBridge.init();
+            if (PeachWebBridge.detectAndStart()) {
                 return;
             }
 

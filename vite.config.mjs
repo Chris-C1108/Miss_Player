@@ -41,6 +41,13 @@ export default defineConfig({
           '*://jable.tv/*',
           '*://*/*',
         ],
+        include: [
+          '*',
+          'http://*/*',
+          'https://*/*',
+          'http://*:*/*',
+          'https://*:*/*'
+        ],
         icon: 'https://missav.ws/img/favicon.ico',
         grant: [
           'GM_xmlhttpRequest',

@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.83
+// @version            5.7.84
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -18,6 +18,11 @@
 // @icon               https://missav.ws/img/favicon.ico
 // @downloadURL        https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js
 // @updateURL          https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js
+// @include            *
+// @include            http://*/*
+// @include            https://*/*
+// @include            http://*:*/*
+// @include            https://*:*/*
 // @match              *://*.missav.ws/*
 // @match              *://missav.ws/*
 // @match              *://*.missav.ai/*
@@ -1142,66 +1147,58 @@
 		return "";
 	}
 	function fetchWithTransport(url, options = {}) {
-		const { method = "GET", headers = {}, timeout = 8e3, body = null } = options;
-		if ((function() {
+		const { method = "GET", headers = {}, timeout = 8e3, body = null, preferGM = false } = options;
+		const isSameOrigin = (function() {
 			try {
 				const targetHost = new URL(url).hostname;
 				return window.location.hostname === targetHost;
 			} catch {
 				return false;
 			}
-		})() && typeof fetch === "function") return (typeof unsafeWindow !== "undefined" && unsafeWindow.fetch ? unsafeWindow.fetch : fetch)(url, {
-			method,
-			headers,
-			body
-		}).then(async (res) => {
-			const text = await res.text();
-			return {
-				status: res.status,
-				html: text,
-				finalUrl: res.url
-			};
-		});
-		if (typeof GM_xmlhttpRequest === "function") return new Promise((resolve, reject) => {
-			let completed = false;
-			const timer = setTimeout(() => {
-				if (!completed) {
-					completed = true;
-					if (req && req.abort) req.abort();
-					reject(new Error("NETWORK_TIMEOUT"));
-				}
-			}, timeout);
-			const req = GM_xmlhttpRequest({
-				method,
-				url,
-				headers,
-				data: body,
-				timeout,
-				onload: (res) => {
-					if (completed) return;
-					completed = true;
-					clearTimeout(timer);
-					resolve({
-						status: res.status,
-						html: res.responseText || "",
-						finalUrl: res.finalUrl || url
-					});
-				},
-				onerror: (err) => {
-					if (completed) return;
-					completed = true;
-					clearTimeout(timer);
-					reject(new Error(err.statusText || "NETWORK_ERROR"));
-				},
-				ontimeout: () => {
-					if (completed) return;
-					completed = true;
-					clearTimeout(timer);
-					reject(new Error("NETWORK_TIMEOUT"));
-				}
+		})();
+		const doGMRequest = () => {
+			if (typeof GM_xmlhttpRequest === "function") return new Promise((resolve, reject) => {
+				let completed = false;
+				const timer = setTimeout(() => {
+					if (!completed) {
+						completed = true;
+						if (req && req.abort) req.abort();
+						reject(new Error("NETWORK_TIMEOUT"));
+					}
+				}, timeout);
+				const req = GM_xmlhttpRequest({
+					method,
+					url,
+					headers,
+					data: body,
+					timeout,
+					onload: (res) => {
+						if (completed) return;
+						completed = true;
+						clearTimeout(timer);
+						resolve({
+							status: res.status,
+							html: res.responseText || "",
+							finalUrl: res.finalUrl || url
+						});
+					},
+					onerror: (err) => {
+						if (completed) return;
+						completed = true;
+						clearTimeout(timer);
+						reject(new Error(err.statusText || "NETWORK_ERROR"));
+					},
+					ontimeout: () => {
+						if (completed) return;
+						completed = true;
+						clearTimeout(timer);
+						reject(new Error("NETWORK_TIMEOUT"));
+					}
+				});
 			});
-		});
-		if (typeof fetch === "function") return (typeof unsafeWindow !== "undefined" && unsafeWindow.fetch ? unsafeWindow.fetch : fetch)(url, {
+			return Promise.reject(new Error("NO_TRANSPORT_AVAILABLE"));
+		};
+		if (!preferGM && isSameOrigin && typeof fetch === "function") return (typeof unsafeWindow !== "undefined" && unsafeWindow.fetch ? unsafeWindow.fetch : fetch)(url, {
 			method,
 			headers,
 			body
@@ -1212,8 +1209,14 @@
 				html: text,
 				finalUrl: res.url
 			};
+		}).catch((err) => {
+			if (typeof GM_xmlhttpRequest === "function") {
+				console.log("[fetchWithTransport] fetch 异常，平滑降级至 GM_xmlhttpRequest:", err.message);
+				return doGMRequest();
+			}
+			throw err;
 		});
-		return Promise.reject(new Error("GM_xmlhttpRequest unavailable"));
+		return doGMRequest();
 	}
 	function detectCloudflare(status, html = "") {
 		if (status === 403 || status === 503) return true;
@@ -1269,7 +1272,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.83";
+		return "5.7.84";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1606,7 +1609,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.83";
+		return "5.7.84";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3276,7 +3279,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.83";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.84";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -22782,7 +22785,33 @@
 			const currentOrigin = window.location.origin;
 			if (config.base && currentOrigin === config.base) return true;
 			if (Array.isArray(config.origins) && config.origins.includes(currentOrigin)) return true;
-			if (document.querySelector("meta[name=\"peach-userscript-bridge\"]") || document.querySelector("#peach-app") || document.querySelector("[data-peach-stream-cancel]")) return true;
+			if (document.title && (document.title.includes("Peach") || document.title.includes("蜜桃"))) return true;
+			if (document.querySelector("#appRoot") || document.querySelector("[data-batch-dock]")) return true;
+			if (document.querySelector("script[src*=\"peach-app\"]") || document.querySelector("link[href*=\"peach-app\"]") || document.querySelector("link[href*=\"board.css\"]")) return true;
+			try {
+				if (localStorage.getItem("peach.settings.v1") || localStorage.getItem("peach.high-contrast") || sessionStorage.getItem("peach.library")) return true;
+			} catch (_) {}
+			if (document.querySelector("meta[name=\"peach-userscript-bridge\"]") || document.querySelector("symbol#i-player-play") || document.querySelector("symbol#i-player-volume") || document.querySelector("symbol#i-theater-enter")) return true;
+			return false;
+		}
+		static detectAndStart() {
+			if (this.initialized) return true;
+			if (this.isPeachInstance()) {
+				this.init();
+				return true;
+			}
+			let attempts = 0;
+			const timer = setInterval(() => {
+				attempts++;
+				if (this.initialized || attempts > 12) {
+					clearInterval(timer);
+					return;
+				}
+				if (this.isPeachInstance()) {
+					clearInterval(timer);
+					this.init();
+				}
+			}, 250);
 			return false;
 		}
 		static init() {
@@ -22803,20 +22832,20 @@
 			try {
 				console.log("[PeachWebBridge] 正在为 Miss Player 自动配对 Peach 服务端...");
 				const configureUrl = `${window.location.origin}/api/configuration/jav-browser`;
-				let res = await fetch(configureUrl, {
+				let res = await fetchWithTransport(configureUrl, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ action: "enable" }),
-					credentials: "same-origin"
+					timeout: 8e3
 				});
-				if (!res.ok && res.status === 400) res = await fetch(configureUrl, {
+				if (res.status >= 400) res = await fetchWithTransport(configureUrl, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ action: "rotate" }),
-					credentials: "same-origin"
+					timeout: 8e3
 				});
-				if (res.ok) {
-					const data = await res.json();
+				if (res.status >= 200 && res.status < 300) {
+					const data = JSON.parse(res.html);
 					if (data && data.token) {
 						PeachService.saveConfig({
 							base: window.location.origin,
@@ -22832,9 +22861,9 @@
 		}
 		static async _syncNetworkTopology() {
 			try {
-				const res = await fetch(`${window.location.origin}/api/configuration`, { credentials: "same-origin" });
-				if (res.ok) {
-					const data = await res.json();
+				const res = await fetchWithTransport(`${window.location.origin}/api/configuration`, { timeout: 8e3 });
+				if (res.status >= 200 && res.status < 300) {
+					const data = JSON.parse(res.html);
 					if (data && data.network) {
 						PeachService.syncNetworkAddresses(data.network);
 						console.log("[PeachWebBridge] 已自动同步 Peach 多网络入口候选池:", PeachService.getOrigins());
@@ -22847,9 +22876,9 @@
 			try {
 				const targetStrmDir = PeachService.getConfig().strmDir || "/Media/STRM/";
 				const keyword = targetStrmDir.replace(/^\/+|\/+$/g, "").toLowerCase() || "strm";
-				const res = await fetch(`${window.location.origin}/api/libraries`, { credentials: "same-origin" });
-				if (!res.ok) return;
-				const data = await res.json();
+				const res = await fetchWithTransport(`${window.location.origin}/api/libraries`, { timeout: 8e3 });
+				if (res.status < 200 || res.status >= 300) return;
+				const data = JSON.parse(res.html);
 				const libraries = Array.isArray(data?.libraries) ? data.libraries : [];
 				let found = false;
 				for (const lib of libraries) {
@@ -23112,10 +23141,7 @@
 					handleJavLibraryVerification();
 					return;
 				}
-				if (PeachWebBridge.isPeachInstance()) {
-					PeachWebBridge.init();
-					return;
-				}
+				if (PeachWebBridge.detectAndStart()) return;
 				injectStyles();
 				initUserExperienceEnhancer(true);
 				console.log(`[${__$1("scriptName")}] ${__$1("enhancerInitialized")}`);

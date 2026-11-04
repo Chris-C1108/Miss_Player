@@ -20,25 +20,81 @@ export class PeachWebBridge {
 
     /**
      * 判断当前页面是否为 Peach Web 实例
+     * 基于 Peach 官方静态 HTML 骨架、DOM 结构、本地存储与脚本标识多维交叉判定
      */
     static isPeachInstance() {
         const config = PeachService.getConfig();
         const currentOrigin = window.location.origin;
 
+        // 1. 已配置或已纳管的 Origin 地址池直接命中
         if (config.base && currentOrigin === config.base) {
             return true;
         }
-
         if (Array.isArray(config.origins) && config.origins.includes(currentOrigin)) {
             return true;
         }
 
-        // 特征探测：Peach Web 专属 DOM 标识
-        if (document.querySelector('meta[name="peach-userscript-bridge"]') ||
-            document.querySelector('#peach-app') ||
-            document.querySelector('[data-peach-stream-cancel]')) {
+        // 2. 网页标题核心特征（Peach 官方静态模板固定包含 "Peach" 或 "蜜桃"）
+        if (document.title && (document.title.includes('Peach') || document.title.includes('蜜桃'))) {
             return true;
         }
+
+        // 3. 官方真实 DOM 骨架特征（web/index.html 源码实证）
+        if (document.querySelector('#appRoot') || document.querySelector('[data-batch-dock]')) {
+            return true;
+        }
+
+        if (document.querySelector('script[src*="peach-app"]') || 
+            document.querySelector('link[href*="peach-app"]') ||
+            document.querySelector('link[href*="board.css"]')) {
+            return true;
+        }
+
+        // 4. 本地存储特征（Peach 初始化时必然写入）
+        try {
+            if (localStorage.getItem('peach.settings.v1') || 
+                localStorage.getItem('peach.high-contrast') ||
+                sessionStorage.getItem('peach.library')) {
+                return true;
+            }
+        } catch (_) {}
+
+        // 5. Peach 官方元数据与专属 SVG 符号特征
+        if (document.querySelector('meta[name="peach-userscript-bridge"]') ||
+            document.querySelector('symbol#i-player-play') ||
+            document.querySelector('symbol#i-player-volume') ||
+            document.querySelector('symbol#i-theater-enter')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 动态探测并启动 Peach Web 桥接
+     * 兼顾快速同步判定与 React SPA 异步挂载延迟
+     */
+    static detectAndStart() {
+        if (this.initialized) return true;
+
+        if (this.isPeachInstance()) {
+            this.init();
+            return true;
+        }
+
+        // 针对慢速网络与 SPA 动态挂载，启动有限轮询探测（每 250ms 探一次，持续 3 秒）
+        let attempts = 0;
+        const timer = setInterval(() => {
+            attempts++;
+            if (this.initialized || attempts > 12) {
+                clearInterval(timer);
+                return;
+            }
+            if (this.isPeachInstance()) {
+                clearInterval(timer);
+                this.init();
+            }
+        }, 250);
 
         return false;
     }
@@ -85,24 +141,24 @@ export class PeachWebBridge {
             const configureUrl = `${window.location.origin}/api/configuration/jav-browser`;
             
             // 优先尝试 enable，若已开启过则尝试 rotate
-            let res = await fetch(configureUrl, {
+            let res = await fetchWithTransport(configureUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'enable' }),
-                credentials: 'same-origin'
+                timeout: 8000
             });
 
-            if (!res.ok && res.status === 400) {
-                res = await fetch(configureUrl, {
+            if (res.status >= 400) {
+                res = await fetchWithTransport(configureUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'rotate' }),
-                    credentials: 'same-origin'
+                    timeout: 8000
                 });
             }
 
-            if (res.ok) {
-                const data = await res.json();
+            if (res.status >= 200 && res.status < 300) {
+                const data = JSON.parse(res.html);
                 if (data && data.token) {
                     PeachService.saveConfig({
                         base: window.location.origin,
@@ -122,11 +178,11 @@ export class PeachWebBridge {
      */
     static async _syncNetworkTopology() {
         try {
-            const res = await fetch(`${window.location.origin}/api/configuration`, {
-                credentials: 'same-origin'
+            const res = await fetchWithTransport(`${window.location.origin}/api/configuration`, {
+                timeout: 8000
             });
-            if (res.ok) {
-                const data = await res.json();
+            if (res.status >= 200 && res.status < 300) {
+                const data = JSON.parse(res.html);
                 if (data && data.network) {
                     PeachService.syncNetworkAddresses(data.network);
                     console.log('[PeachWebBridge] 已自动同步 Peach 多网络入口候选池:', PeachService.getOrigins());
@@ -147,12 +203,12 @@ export class PeachWebBridge {
             const targetStrmDir = config.strmDir || '/Media/STRM/';
             const keyword = targetStrmDir.replace(/^\/+|\/+$/g, '').toLowerCase() || 'strm';
 
-            const res = await fetch(`${window.location.origin}/api/libraries`, {
-                credentials: 'same-origin'
+            const res = await fetchWithTransport(`${window.location.origin}/api/libraries`, {
+                timeout: 8000
             });
 
-            if (!res.ok) return;
-            const data = await res.json();
+            if (res.status < 200 || res.status >= 300) return;
+            const data = JSON.parse(res.html);
             const libraries = Array.isArray(data?.libraries) ? data.libraries : [];
 
             // 检查所有媒体库下的根目录，是否有任何一个包含目标关键字

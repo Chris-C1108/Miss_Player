@@ -9,7 +9,7 @@
  * @returns {Promise<{status: number, html: string, finalUrl: string}>}
  */
 export function fetchWithTransport(url, options = {}) {
-    const { method = 'GET', headers = {}, timeout = 8000, body = null } = options;
+    const { method = 'GET', headers = {}, timeout = 8000, body = null, preferGM = false } = options;
     const isSameOrigin = (function() {
         try {
             const targetHost = new URL(url).hostname;
@@ -19,67 +19,67 @@ export function fetchWithTransport(url, options = {}) {
         }
     })();
 
-    if (isSameOrigin && typeof fetch === 'function') {
+    const doGMRequest = () => {
+        if (typeof GM_xmlhttpRequest === 'function') {
+            return new Promise((resolve, reject) => {
+                let completed = false;
+                const timer = setTimeout(() => {
+                    if (!completed) {
+                        completed = true;
+                        if (req && req.abort) req.abort();
+                        reject(new Error('NETWORK_TIMEOUT'));
+                    }
+                }, timeout);
+
+                const req = GM_xmlhttpRequest({
+                    method,
+                    url,
+                    headers,
+                    data: body,
+                    timeout,
+                    onload: (res) => {
+                        if (completed) return;
+                        completed = true;
+                        clearTimeout(timer);
+                        resolve({ status: res.status, html: res.responseText || '', finalUrl: res.finalUrl || url });
+                    },
+                    onerror: (err) => {
+                        if (completed) return;
+                        completed = true;
+                        clearTimeout(timer);
+                        reject(new Error(err.statusText || 'NETWORK_ERROR'));
+                    },
+                    ontimeout: () => {
+                        if (completed) return;
+                        completed = true;
+                        clearTimeout(timer);
+                        reject(new Error('NETWORK_TIMEOUT'));
+                    }
+                });
+            });
+        }
+        return Promise.reject(new Error('NO_TRANSPORT_AVAILABLE'));
+    };
+
+    if (!preferGM && isSameOrigin && typeof fetch === 'function') {
         const fetchFn = (typeof unsafeWindow !== 'undefined' && unsafeWindow.fetch) ? unsafeWindow.fetch : fetch;
         return fetchFn(url, { method, headers, body })
             .then(async res => {
                 const text = await res.text();
                 return { status: res.status, html: text, finalUrl: res.url };
+            })
+            .catch(err => {
+                // 当同源 fetch 因私有网络访问策略 (PNA) 或混合内容阻断时，平滑降级至 GM 栈
+                if (typeof GM_xmlhttpRequest === 'function') {
+                    console.log('[fetchWithTransport] fetch 异常，平滑降级至 GM_xmlhttpRequest:', err.message);
+                    return doGMRequest();
+                }
+                throw err;
             });
     }
 
-    // 跨域场景优先使用 GM_xmlhttpRequest
-    if (typeof GM_xmlhttpRequest === 'function') {
-        return new Promise((resolve, reject) => {
-
-        let completed = false;
-        const timer = setTimeout(() => {
-            if (!completed) {
-                completed = true;
-                if (req && req.abort) req.abort();
-                reject(new Error('NETWORK_TIMEOUT'));
-            }
-        }, timeout);
-
-        const req = GM_xmlhttpRequest({
-            method,
-            url,
-            headers,
-            data: body,
-            timeout,
-            onload: (res) => {
-                if (completed) return;
-                completed = true;
-                clearTimeout(timer);
-                resolve({ status: res.status, html: res.responseText || '', finalUrl: res.finalUrl || url });
-            },
-            onerror: (err) => {
-                if (completed) return;
-                completed = true;
-                clearTimeout(timer);
-                reject(new Error(err.statusText || 'NETWORK_ERROR'));
-            },
-            ontimeout: () => {
-                if (completed) return;
-                completed = true;
-                clearTimeout(timer);
-                reject(new Error('NETWORK_TIMEOUT'));
-            }
-        });
-    });
-    }
-
-    // 环境降级：如果在非油猴纯标准环境（如测试），降级使用标准 fetch
-    if (typeof fetch === 'function') {
-        const fetchFn = (typeof unsafeWindow !== 'undefined' && unsafeWindow.fetch) ? unsafeWindow.fetch : fetch;
-        return fetchFn(url, { method, headers, body })
-            .then(async res => {
-                const text = await res.text();
-                return { status: res.status, html: text, finalUrl: res.url };
-            });
-    }
-
-    return Promise.reject(new Error('GM_xmlhttpRequest unavailable'));
+    // 跨域或优先 GM 场景直接使用 GM_xmlhttpRequest
+    return doGMRequest();
 }
 
 /**
