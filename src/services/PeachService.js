@@ -145,7 +145,7 @@ export class PeachService {
             origins,
             token: String(token || '').trim(),
             strmDir: String(strmDir || PEACH_DEFAULT_STRM_DIR).trim(),
-            enabled: enabled && Boolean(token && (base || origins.length > 0))
+            enabled: enabled && Boolean(base || origins.length > 0)
         };
     }
 
@@ -197,10 +197,6 @@ export class PeachService {
      */
     static async request(path, options = {}) {
         const config = this.getConfig();
-        if (!config.token) {
-            throw new Error('Peach 未配置专用令牌');
-        }
-
         const candidateOrigins = Array.from(new Set([config.base, ...config.origins])).filter(Boolean);
         if (candidateOrigins.length === 0) {
             throw new Error('Peach 候选地址池为空');
@@ -214,10 +210,13 @@ export class PeachService {
             const origin = candidateOrigins[i];
             const url = `${origin}${relativePath}`;
             const headers = {
-                'Authorization': `Bearer ${config.token}`,
                 'Accept': 'application/json',
                 ...(options.headers || {})
             };
+
+            if (config.token) {
+                headers['Authorization'] = `Bearer ${config.token}`;
+            }
 
             if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
                 headers['Content-Type'] = 'application/json';
@@ -269,19 +268,43 @@ export class PeachService {
      */
     static async testConnection() {
         const config = this.getConfig();
-        if (!config.token || (!config.base && config.origins.length === 0)) {
-            return { ok: false, message: '请先填写完整地址与专用令牌' };
+        const candidateOrigins = Array.from(new Set([config.base, ...config.origins])).filter(Boolean);
+        if (candidateOrigins.length === 0) {
+            return { ok: false, message: '请先填写 Peach 服务端地址' };
         }
 
-        try {
-            const data = await this.request('/api/jav-browser?code=TEST-001', { timeout: 6000 });
-            if (data && (data.ok === true || typeof data.state === 'string' || data.detail)) {
-                return { ok: true, message: `连接成功 (当前通道: ${this.getConfig().base})` };
-            }
-            return { ok: true, message: '连接成功' };
-        } catch (err) {
-            return { ok: false, message: err.message || '无法连接到 Peach 服务端' };
+        // 1. 首先探测通用健康检查端点 /healthz (所有 Peach 实例均支持，无任何鉴权门槛)
+        let healthOk = false;
+        let activeUrl = '';
+        for (const origin of candidateOrigins) {
+            try {
+                const res = await fetchWithTransport(`${origin}/healthz`, { timeout: 4000 });
+                if (res.status >= 200 && res.status < 400) {
+                    healthOk = true;
+                    activeUrl = origin;
+                    this.setActiveBase(origin);
+                    break;
+                }
+            } catch (_) {}
         }
+
+        if (!healthOk) {
+            return { ok: false, message: '无法连接到 Peach 服务端，请检查 IP、端口或网络连通性' };
+        }
+
+        // 2. 若配置了专用令牌，进一步校验番号状态查询能力
+        if (config.token) {
+            try {
+                const data = await this.request('/api/jav-browser?code=TEST-001', { timeout: 5000 });
+                if (data && (data.ok === true || typeof data.state === 'string' || data.detail)) {
+                    return { ok: true, message: `连接成功 (全功能就绪: ${activeUrl})` };
+                }
+            } catch (err) {
+                return { ok: true, message: `Peach 服务端在线 (STRM 就绪，专用令牌未生效: ${err.message})` };
+            }
+        }
+
+        return { ok: true, message: `连接成功！Peach 服务端在线就绪 (${activeUrl})` };
     }
 
     /**
@@ -289,6 +312,11 @@ export class PeachService {
      */
     static async checkCodeStatus(avcode) {
         if (!avcode) return { inLibrary: false, state: 'unknown', raw: null };
+        const config = this.getConfig();
+        if (!config.token) {
+            // 没有令牌时静默跳过状态查询，不影响 STRM 虚拟入库
+            return { inLibrary: false, state: 'no_token', raw: null };
+        }
         try {
             const data = await this.request(`/api/jav-browser?code=${encodeURIComponent(avcode)}`, { timeout: 5000 });
             if (data && data.ok === true) {

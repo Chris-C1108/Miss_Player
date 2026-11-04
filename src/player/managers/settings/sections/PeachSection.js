@@ -22,7 +22,7 @@ export class PeachSection {
 
     async _checkInitialStatus() {
         const config = PeachService.getConfig();
-        if (config.base && config.token) {
+        if (config.base || config.origins.length > 0) {
             const res = await PeachService.testConnection();
             this.isConnected = Boolean(res && res.ok);
             this._updateStatusBadge();
@@ -105,10 +105,10 @@ export class PeachSection {
         const tokenRow = document.createElement('div');
         tokenRow.className = 'tm-apple-row tm-peach-field-row';
         tokenRow.innerHTML = `
-            <div class="tm-apple-row-title">专用令牌 (Token)</div>
-            <div class="tm-apple-row-subtext">在 Peach 配置 → 下载渠道 → 浏览器添加 JAV 生成的专用凭据</div>
+            <div class="tm-apple-row-title">专用令牌 (Token - 可选)</div>
+            <div class="tm-apple-row-subtext">用于查询番号是否已在馆藏；若未在 Peach 绑定网盘云下载可留空，不影响 STRM 虚拟入库</div>
             <div class="tm-peach-token-wrap">
-                <input type="password" class="tm-settings-input tm-peach-token-input" placeholder="粘贴专用令牌" value="${config.token || ''}" />
+                <input type="password" class="tm-settings-input tm-peach-token-input" placeholder="留空或粘贴专用令牌" value="${config.token || ''}" />
                 <button type="button" class="tm-settings-btn tm-peach-token-toggle">显示</button>
             </div>
         `;

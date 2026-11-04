@@ -158,16 +158,27 @@ export class PeachWebBridge {
             }
 
             if (res.status >= 200 && res.status < 300) {
-                const data = JSON.parse(res.html);
-                if (data && data.token) {
-                    PeachService.saveConfig({
-                        base: window.location.origin,
-                        token: data.token,
-                        enabled: true
-                    });
-                    Toast('🎉 Miss Player 已自动完成 Peach 服务端无缝配对！', 3500, 'success');
-                }
+                try {
+                    const data = JSON.parse(res.html);
+                    if (data && data.token) {
+                        PeachService.saveConfig({
+                            base: window.location.origin,
+                            token: data.token,
+                            enabled: true
+                        });
+                        Toast('🎉 Miss Player 已自动完成 Peach 全功能配对！', 3500, 'success');
+                        return;
+                    }
+                } catch (_) {}
             }
+
+            // 降级兜底：若服务端未绑定云下载网盘无法签发专用下载令牌，
+            // 依然自动激活并连接当前实例（STRM 虚拟入库模式就绪）！
+            PeachService.saveConfig({
+                base: window.location.origin,
+                enabled: true
+            });
+            Toast('🎉 已连接 Peach 服务端（STRM 虚拟入库就绪）', 3000, 'success');
         } catch (err) {
             console.warn('[PeachWebBridge] 自动配对轻量提示:', err.message);
         }

@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.84
+// @version            5.7.85
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1272,7 +1272,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.84";
+		return "5.7.85";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1609,7 +1609,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.84";
+		return "5.7.85";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3279,7 +3279,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.84";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.85";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -3932,7 +3932,7 @@
 				origins,
 				token: String(token || "").trim(),
 				strmDir: String(strmDir || "/Media/STRM/").trim(),
-				enabled: enabled && Boolean(token && (base || origins.length > 0))
+				enabled: enabled && Boolean(base || origins.length > 0)
 			};
 		}
 		static saveConfig({ base, token, strmDir, enabled }) {
@@ -3963,7 +3963,6 @@
 		}
 		static async request(path, options = {}) {
 			const config = this.getConfig();
-			if (!config.token) throw new Error("Peach 未配置专用令牌");
 			const candidateOrigins = Array.from(new Set([config.base, ...config.origins])).filter(Boolean);
 			if (candidateOrigins.length === 0) throw new Error("Peach 候选地址池为空");
 			const relativePath = path.startsWith("/") ? path : "/" + path;
@@ -3972,10 +3971,10 @@
 				const origin = candidateOrigins[i];
 				const url = `${origin}${relativePath}`;
 				const headers = {
-					"Authorization": `Bearer ${config.token}`,
 					"Accept": "application/json",
 					...options.headers || {}
 				};
+				if (config.token) headers["Authorization"] = `Bearer ${config.token}`;
 				if (options.body && typeof options.body === "object" && !(options.body instanceof FormData)) {
 					headers["Content-Type"] = "application/json";
 					options.body = JSON.stringify(options.body);
@@ -4011,31 +4010,52 @@
 		}
 		static async testConnection() {
 			const config = this.getConfig();
-			if (!config.token || !config.base && config.origins.length === 0) return {
+			const candidateOrigins = Array.from(new Set([config.base, ...config.origins])).filter(Boolean);
+			if (candidateOrigins.length === 0) return {
 				ok: false,
-				message: "请先填写完整地址与专用令牌"
+				message: "请先填写 Peach 服务端地址"
 			};
-			try {
-				const data = await this.request("/api/jav-browser?code=TEST-001", { timeout: 6e3 });
+			let healthOk = false;
+			let activeUrl = "";
+			for (const origin of candidateOrigins) try {
+				const res = await fetchWithTransport(`${origin}/healthz`, { timeout: 4e3 });
+				if (res.status >= 200 && res.status < 400) {
+					healthOk = true;
+					activeUrl = origin;
+					this.setActiveBase(origin);
+					break;
+				}
+			} catch (_) {}
+			if (!healthOk) return {
+				ok: false,
+				message: "无法连接到 Peach 服务端，请检查 IP、端口或网络连通性"
+			};
+			if (config.token) try {
+				const data = await this.request("/api/jav-browser?code=TEST-001", { timeout: 5e3 });
 				if (data && (data.ok === true || typeof data.state === "string" || data.detail)) return {
 					ok: true,
-					message: `连接成功 (当前通道: ${this.getConfig().base})`
-				};
-				return {
-					ok: true,
-					message: "连接成功"
+					message: `连接成功 (全功能就绪: ${activeUrl})`
 				};
 			} catch (err) {
 				return {
-					ok: false,
-					message: err.message || "无法连接到 Peach 服务端"
+					ok: true,
+					message: `Peach 服务端在线 (STRM 就绪，专用令牌未生效: ${err.message})`
 				};
 			}
+			return {
+				ok: true,
+				message: `连接成功！Peach 服务端在线就绪 (${activeUrl})`
+			};
 		}
 		static async checkCodeStatus(avcode) {
 			if (!avcode) return {
 				inLibrary: false,
 				state: "unknown",
+				raw: null
+			};
+			if (!this.getConfig().token) return {
+				inLibrary: false,
+				state: "no_token",
 				raw: null
 			};
 			try {
@@ -18738,7 +18758,7 @@
 		}
 		async _checkInitialStatus() {
 			const config = PeachService.getConfig();
-			if (config.base && config.token) {
+			if (config.base || config.origins.length > 0) {
 				const res = await PeachService.testConnection();
 				this.isConnected = Boolean(res && res.ok);
 				this._updateStatusBadge();
@@ -18805,10 +18825,10 @@
 			const tokenRow = document.createElement("div");
 			tokenRow.className = "tm-apple-row tm-peach-field-row";
 			tokenRow.innerHTML = `
-            <div class="tm-apple-row-title">专用令牌 (Token)</div>
-            <div class="tm-apple-row-subtext">在 Peach 配置 → 下载渠道 → 浏览器添加 JAV 生成的专用凭据</div>
+            <div class="tm-apple-row-title">专用令牌 (Token - 可选)</div>
+            <div class="tm-apple-row-subtext">用于查询番号是否已在馆藏；若未在 Peach 绑定网盘云下载可留空，不影响 STRM 虚拟入库</div>
             <div class="tm-peach-token-wrap">
-                <input type="password" class="tm-settings-input tm-peach-token-input" placeholder="粘贴专用令牌" value="${config.token || ""}" />
+                <input type="password" class="tm-settings-input tm-peach-token-input" placeholder="留空或粘贴专用令牌" value="${config.token || ""}" />
                 <button type="button" class="tm-settings-btn tm-peach-token-toggle">显示</button>
             </div>
         `;
@@ -22844,7 +22864,7 @@
 					body: JSON.stringify({ action: "rotate" }),
 					timeout: 8e3
 				});
-				if (res.status >= 200 && res.status < 300) {
+				if (res.status >= 200 && res.status < 300) try {
 					const data = JSON.parse(res.html);
 					if (data && data.token) {
 						PeachService.saveConfig({
@@ -22852,9 +22872,15 @@
 							token: data.token,
 							enabled: true
 						});
-						Toast$1("🎉 Miss Player 已自动完成 Peach 服务端无缝配对！", 3500, "success");
+						Toast$1("🎉 Miss Player 已自动完成 Peach 全功能配对！", 3500, "success");
+						return;
 					}
-				}
+				} catch (_) {}
+				PeachService.saveConfig({
+					base: window.location.origin,
+					enabled: true
+				});
+				Toast$1("🎉 已连接 Peach 服务端（STRM 虚拟入库就绪）", 3e3, "success");
 			} catch (err) {
 				console.warn("[PeachWebBridge] 自动配对轻量提示:", err.message);
 			}
