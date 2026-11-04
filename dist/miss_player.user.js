@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.81
+// @version            5.7.82
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1269,7 +1269,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.81";
+		return "5.7.82";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1606,7 +1606,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.81";
+		return "5.7.82";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2748,6 +2748,13 @@
         <path d="M8 9l4 3-4 3" stroke-width="2"/>
     </svg>
 `;
+	var ICON_PEACH = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21c-4.5 0-8-3.5-8-8 0-4 3.5-7.5 7.5-8.5.5-.1 1-.1 1.5 0 4 1 7 4.5 7 8.5 0 4.5-3.5 8-8 8z"/>
+        <path d="M12 4.5V2c2 0 3.5 1 4 2"/>
+        <path d="M12 11c0 3 1.5 5 3.5 6"/>
+    </svg>
+`;
 	function createOverlayElement() {
 		const overlay = document.createElement("div");
 		overlay.className = "tm-video-overlay";
@@ -3269,7 +3276,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.81";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.82";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

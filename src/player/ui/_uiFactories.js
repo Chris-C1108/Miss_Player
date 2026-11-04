@@ -1,4 +1,4 @@
-import { LAYOUT_LEFT, LAYOUT_RIGHT, COMMENTS_SHOW, COMMENTS_HIDE } from '../../constants/icons.js';
+import { LAYOUT_LEFT, LAYOUT_RIGHT, COMMENTS_SHOW, COMMENTS_HIDE, ICON_PEACH } from '../../constants/icons.js';
 
 /**
  * _uiFactories.js — UIManager 的纯 DOM 构建工厂函数集合
