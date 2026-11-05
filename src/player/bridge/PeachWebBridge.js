@@ -46,6 +46,16 @@ class GMHlsLoader {
         const responseType = context.responseType;
         const referer = GMHlsLoader.currentReferer || '';
 
+        const gmXhr = (typeof GM_xmlhttpRequest === 'function' ? GM_xmlhttpRequest : null) ||
+                      (typeof GM === 'object' && typeof GM.xmlHttpRequest === 'function' ? GM.xmlHttpRequest : null) ||
+                      (typeof window !== 'undefined' && window.GM_xmlhttpRequest);
+
+        if (!gmXhr) {
+            PeachStreamHUD.log('STREAM', '[GMHlsLoader] GM_xmlhttpRequest 不可用', 'error');
+            callbacks.onError({ code: 0, text: 'GM_xmlhttpRequest unavailable' }, context, null);
+            return;
+        }
+
         const headers = {
             'User-Agent': (typeof navigator !== 'undefined' && navigator.userAgent)
                 ? navigator.userAgent
@@ -61,7 +71,7 @@ class GMHlsLoader {
 
         const tStart = performance.now();
 
-        this.request = GM_xmlhttpRequest({
+        this.request = gmXhr({
             method: 'GET',
             url: url,
             headers: headers,
@@ -101,15 +111,19 @@ class GMHlsLoader {
                         loaded: byteLen,
                         total: byteLen
                     };
+                    PeachStreamHUD.log('STREAM', `[GMHlsLoader] ${responseType === 'arraybuffer' ? '切片/Key' : 'm3u8'} 下载完成 (${byteLen}B)`, 'info');
                     callbacks.onSuccess(response, stats, context);
                 } else {
+                    PeachStreamHUD.log('STREAM', `[GMHlsLoader] HTTP ${res.status}: ${url.slice(0, 48)}`, 'warn');
                     callbacks.onError({ code: res.status, text: res.statusText }, context, null);
                 }
             },
             onerror: (err) => {
+                PeachStreamHUD.log('STREAM', `[GMHlsLoader] 网络错误: ${err.statusText || 'Network Error'}`, 'error');
                 callbacks.onError({ code: 0, text: 'Network Error' }, context, null);
             },
             ontimeout: () => {
+                PeachStreamHUD.log('STREAM', `[GMHlsLoader] 请求超时: ${url.slice(0, 48)}`, 'warn');
                 callbacks.onTimeout({ code: 0, text: 'Timeout' }, context, null);
             }
         });
@@ -743,7 +757,7 @@ export class PeachWebBridge {
             this._hlsInstance = new HlsClass({
                 fLoader: GMHlsLoader,
                 pLoader: GMHlsLoader,
-                enableWorker: true,
+                enableWorker: false, // 禁用 Web Worker，确保 GMHlsLoader 在页面主线程油猴特权沙箱中执行
                 lowLatencyMode: true
             });
 

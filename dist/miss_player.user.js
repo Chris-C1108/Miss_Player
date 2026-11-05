@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.99
+// @version            5.7.100
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.99";
+		return "5.7.100";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.99";
+		return "5.7.100";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2432,6 +2432,15 @@
 			const url = context.url;
 			const responseType = context.responseType;
 			const referer = GMHlsLoader.currentReferer || "";
+			const gmXhr = (typeof GM_xmlhttpRequest === "function" ? GM_xmlhttpRequest : null) || (typeof GM === "object" && typeof GM.xmlHttpRequest === "function" ? GM.xmlHttpRequest : null) || typeof window !== "undefined" && window.GM_xmlhttpRequest;
+			if (!gmXhr) {
+				PeachStreamHUD.log("STREAM", "[GMHlsLoader] GM_xmlhttpRequest 不可用", "error");
+				callbacks.onError({
+					code: 0,
+					text: "GM_xmlhttpRequest unavailable"
+				}, context, null);
+				return;
+			}
 			const headers = { "User-Agent": typeof navigator !== "undefined" && navigator.userAgent ? navigator.userAgent : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" };
 			if (referer) {
 				headers["Referer"] = referer;
@@ -2440,7 +2449,7 @@
 				} catch (_) {}
 			}
 			const tStart = performance.now();
-			this.request = GM_xmlhttpRequest({
+			this.request = gmXhr({
 				method: "GET",
 				url,
 				headers,
@@ -2471,19 +2480,25 @@
 							loaded: byteLen,
 							total: byteLen
 						};
+						PeachStreamHUD.log("STREAM", `[GMHlsLoader] ${responseType === "arraybuffer" ? "切片/Key" : "m3u8"} 下载完成 (${byteLen}B)`, "info");
 						callbacks.onSuccess(response, stats, context);
-					} else callbacks.onError({
-						code: res.status,
-						text: res.statusText
-					}, context, null);
+					} else {
+						PeachStreamHUD.log("STREAM", `[GMHlsLoader] HTTP ${res.status}: ${url.slice(0, 48)}`, "warn");
+						callbacks.onError({
+							code: res.status,
+							text: res.statusText
+						}, context, null);
+					}
 				},
 				onerror: (err) => {
+					PeachStreamHUD.log("STREAM", `[GMHlsLoader] 网络错误: ${err.statusText || "Network Error"}`, "error");
 					callbacks.onError({
 						code: 0,
 						text: "Network Error"
 					}, context, null);
 				},
 				ontimeout: () => {
+					PeachStreamHUD.log("STREAM", `[GMHlsLoader] 请求超时: ${url.slice(0, 48)}`, "warn");
 					callbacks.onTimeout({
 						code: 0,
 						text: "Timeout"
@@ -2941,7 +2956,7 @@
 				this._hlsInstance = new HlsClass({
 					fLoader: GMHlsLoader,
 					pLoader: GMHlsLoader,
-					enableWorker: true,
+					enableWorker: false,
 					lowLatencyMode: true
 				});
 				this._hlsInstance.on(HlsClass.Events.ERROR, (event, data) => {
@@ -5068,7 +5083,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.99";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.100";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
