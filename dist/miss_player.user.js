@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.103
+// @version            5.7.104
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.103";
+		return "5.7.104";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.103";
+		return "5.7.104";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2418,12 +2418,17 @@
 		constructor(config) {
 			this.config = config;
 			this.request = null;
+			this.abortController = null;
 		}
 		destroy() {
 			if (this.request && this.request.abort) try {
 				this.request.abort();
 			} catch (_) {}
+			if (this.abortController) try {
+				this.abortController.abort();
+			} catch (_) {}
 			this.request = null;
+			this.abortController = null;
 		}
 		abort() {
 			this.destroy();
@@ -2433,12 +2438,51 @@
 			const responseType = context.responseType;
 			const referer = GMHlsLoader.currentReferer || "";
 			const gmXhr = (typeof GM_xmlhttpRequest === "function" ? GM_xmlhttpRequest : null) || (typeof GM === "object" && typeof GM.xmlHttpRequest === "function" ? GM.xmlHttpRequest : null) || typeof window !== "undefined" && window.GM_xmlhttpRequest;
+			const tStart = performance.now();
+			const tryNativeFetchFallback = async (reason = "") => {
+				PeachStreamHUD.log("STREAM", `[GMHlsLoader] 启动原生 fetch 逃逸通道 (${reason})`, "warn");
+				try {
+					this.abortController = new AbortController();
+					const fetchRes = await fetch(url, {
+						method: "GET",
+						signal: this.abortController.signal
+					});
+					if (fetchRes.status >= 200 && fetchRes.status < 300) {
+						const tEnd = performance.now();
+						let data;
+						if (responseType === "arraybuffer") data = await fetchRes.arrayBuffer();
+						else data = await fetchRes.text();
+						const byteLen = data && data.byteLength || data && data.length || 0;
+						if (byteLen > 0) {
+							const response = {
+								url: fetchRes.url || url,
+								data
+							};
+							const stats = {
+								trequest: tStart,
+								tfirst: tEnd,
+								tload: tEnd,
+								loaded: byteLen,
+								total: byteLen
+							};
+							PeachStreamHUD.log("STREAM", `[GMHlsLoader] 原生 fetch 成功接力 (${byteLen}B)`, "success");
+							callbacks.onSuccess(response, stats, context);
+							return true;
+						}
+					}
+				} catch (fetchErr) {
+					PeachStreamHUD.log("STREAM", `[GMHlsLoader] 原生 fetch 逃逸未果: ${fetchErr.message}`, "warn");
+				}
+				return false;
+			};
 			if (!gmXhr) {
-				PeachStreamHUD.log("STREAM", "[GMHlsLoader] GM_xmlhttpRequest 不可用", "error");
-				callbacks.onError({
-					code: 0,
-					text: "GM_xmlhttpRequest unavailable"
-				}, context, null);
+				PeachStreamHUD.log("STREAM", "[GMHlsLoader] GM_xmlhttpRequest 不可用，直接转原生 fetch", "warn");
+				tryNativeFetchFallback("GM不可用").then((ok) => {
+					if (!ok) callbacks.onError({
+						code: 0,
+						text: "Network Error"
+					}, context, null);
+				});
 				return;
 			}
 			const headers = { "User-Agent": typeof navigator !== "undefined" && navigator.userAgent ? navigator.userAgent : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" };
@@ -2448,14 +2492,13 @@
 					headers["Origin"] = new URL(referer).origin;
 				} catch (_) {}
 			}
-			const tStart = performance.now();
 			const reqOpts = {
 				method: "GET",
 				url,
 				headers,
 				responseType: "arraybuffer",
 				timeout: config.timeout || 15e3,
-				onload: (res) => {
+				onload: async (res) => {
 					const tEnd = performance.now();
 					if (res.status >= 200 && res.status < 300) {
 						let data = res.response;
@@ -2474,11 +2517,15 @@
 						}
 						else if (typeof res.responseText === "string" && res.responseText.length > 0) data = res.responseText;
 						else if (typeof data === "string") {} else data = "";
+						const byteLen = data && data.byteLength || data && data.length || 0;
+						if (byteLen === 0) {
+							PeachStreamHUD.log("STREAM", `[GMHlsLoader] GM 返回 0B (耗时 ${Math.round(tEnd - tStart)}ms)，自动触发原生 fetch 逃逸...`, "warn");
+							if (await tryNativeFetchFallback("GM空包0B逃逸")) return;
+						}
 						const response = {
 							url: res.finalUrl || url,
 							data
 						};
-						const byteLen = data && data.byteLength || data && data.length || 0;
 						const stats = {
 							trequest: tStart,
 							tfirst: tEnd,
@@ -2490,28 +2537,27 @@
 						callbacks.onSuccess(response, stats, context);
 					} else {
 						PeachStreamHUD.log("STREAM", `[GMHlsLoader] HTTP ${res.status}: ${url.slice(0, 48)}`, "warn");
-						callbacks.onError({
+						if (!await tryNativeFetchFallback(`HTTP ${res.status}`)) callbacks.onError({
 							code: res.status,
 							text: res.statusText
 						}, context, null);
 					}
 				},
-				onerror: (err) => {
-					PeachStreamHUD.log("STREAM", `[GMHlsLoader] 网络错误: ${err.statusText || "Network Error"}`, "error");
-					callbacks.onError({
+				onerror: async (err) => {
+					PeachStreamHUD.log("STREAM", `[GMHlsLoader] GM网络错误: ${err.statusText || "Error"}，尝试原生 fetch 逃逸...`, "warn");
+					if (!await tryNativeFetchFallback("GM网络错误")) callbacks.onError({
 						code: 0,
 						text: "Network Error"
 					}, context, null);
 				},
-				ontimeout: () => {
-					PeachStreamHUD.log("STREAM", `[GMHlsLoader] 请求超时: ${url.slice(0, 48)}`, "warn");
-					callbacks.onTimeout({
+				ontimeout: async () => {
+					PeachStreamHUD.log("STREAM", `[GMHlsLoader] GM超时，尝试原生 fetch 逃逸...`, "warn");
+					if (!await tryNativeFetchFallback("GM超时")) callbacks.onTimeout({
 						code: 0,
 						text: "Timeout"
 					}, context, null);
 				}
 			};
-			if (responseType === "arraybuffer") reqOpts.responseType = "arraybuffer";
 			this.request = gmXhr(reqOpts);
 		}
 	};
@@ -3217,6 +3263,21 @@
 				} else if (searchRes.status === 403) PeachStreamHUD.log("SCRAPE", `[JAVVerse] 搜索触发安全防护拦截 (HTTP 403)，请在设置中点击「前往 JAVVerse 登录 / 授权」`, "warn");
 			} catch (searchErr) {
 				PeachStreamHUD.log("SCRAPE", `[JAVVerse] 搜索异常: ${searchErr.message}`, "warn");
+			}
+			if (!workId) {
+				const config = PeachService.getConfig();
+				if (config.remoteScraper) try {
+					const remoteRes = await fetchWithTransport(`${config.remoteScraper}${config.remoteScraper.includes("?") ? "&" : "?"}code=${encodeURIComponent(cleanCode)}&target=javverse`, { timeout: 6e3 });
+					if (remoteRes.status >= 200 && remoteRes.html) {
+						const rData = JSON.parse(remoteRes.html);
+						if (rData && rData.workId) workId = parseInt(rData.workId, 10);
+						if (rData && rData.url) return {
+							url: rData.url,
+							source: rData.variant === "uncensored-leak" ? "JAVVerse (无码流出)" : "JAVVerse",
+							referer: `${origin}/`
+						};
+					}
+				} catch (_) {}
 			}
 			if (!workId) return null;
 			const sessionUrl = `${origin}/api/video/sessions`;
@@ -5207,7 +5268,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.103";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.104";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

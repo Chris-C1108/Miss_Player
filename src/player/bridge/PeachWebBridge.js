@@ -28,13 +28,18 @@ class GMHlsLoader {
     constructor(config) {
         this.config = config;
         this.request = null;
+        this.abortController = null;
     }
 
     destroy() {
         if (this.request && this.request.abort) {
             try { this.request.abort(); } catch (_) {}
         }
+        if (this.abortController) {
+            try { this.abortController.abort(); } catch (_) {}
+        }
         this.request = null;
+        this.abortController = null;
     }
 
     abort() {
@@ -50,9 +55,56 @@ class GMHlsLoader {
                       (typeof GM === 'object' && typeof GM.xmlHttpRequest === 'function' ? GM.xmlHttpRequest : null) ||
                       (typeof window !== 'undefined' && window.GM_xmlhttpRequest);
 
+        const tStart = performance.now();
+
+        // 核心双轨自愈：原生 fetch 逃逸通道 (当 GM 沙箱遭遇权限拦截、域阻断或返回 0B 时无缝接管)
+        const tryNativeFetchFallback = async (reason = '') => {
+            PeachStreamHUD.log('STREAM', `[GMHlsLoader] 启动原生 fetch 逃逸通道 (${reason})`, 'warn');
+            try {
+                this.abortController = new AbortController();
+                const fetchRes = await fetch(url, {
+                    method: 'GET',
+                    signal: this.abortController.signal
+                });
+
+                if (fetchRes.status >= 200 && fetchRes.status < 300) {
+                    const tEnd = performance.now();
+                    let data;
+                    if (responseType === 'arraybuffer') {
+                        data = await fetchRes.arrayBuffer();
+                    } else {
+                        data = await fetchRes.text();
+                    }
+
+                    const byteLen = (data && data.byteLength) || (data && data.length) || 0;
+                    if (byteLen > 0) {
+                        const response = {
+                            url: fetchRes.url || url,
+                            data: data
+                        };
+                        const stats = {
+                            trequest: tStart,
+                            tfirst: tEnd,
+                            tload: tEnd,
+                            loaded: byteLen,
+                            total: byteLen
+                        };
+                        PeachStreamHUD.log('STREAM', `[GMHlsLoader] 原生 fetch 成功接力 (${byteLen}B)`, 'success');
+                        callbacks.onSuccess(response, stats, context);
+                        return true;
+                    }
+                }
+            } catch (fetchErr) {
+                PeachStreamHUD.log('STREAM', `[GMHlsLoader] 原生 fetch 逃逸未果: ${fetchErr.message}`, 'warn');
+            }
+            return false;
+        };
+
         if (!gmXhr) {
-            PeachStreamHUD.log('STREAM', '[GMHlsLoader] GM_xmlhttpRequest 不可用', 'error');
-            callbacks.onError({ code: 0, text: 'GM_xmlhttpRequest unavailable' }, context, null);
+            PeachStreamHUD.log('STREAM', '[GMHlsLoader] GM_xmlhttpRequest 不可用，直接转原生 fetch', 'warn');
+            tryNativeFetchFallback('GM不可用').then(ok => {
+                if (!ok) callbacks.onError({ code: 0, text: 'Network Error' }, context, null);
+            });
             return;
         }
 
@@ -69,15 +121,13 @@ class GMHlsLoader {
             } catch (_) {}
         }
 
-        const tStart = performance.now();
-
         const reqOpts = {
             method: 'GET',
             url: url,
             headers: headers,
             responseType: 'arraybuffer',
             timeout: config.timeout || 15000,
-            onload: (res) => {
+            onload: async (res) => {
                 const tEnd = performance.now();
                 if (res.status >= 200 && res.status < 300) {
                     let data = res.response;
@@ -112,11 +162,19 @@ class GMHlsLoader {
                         }
                     }
 
+                    const byteLen = (data && data.byteLength) || (data && data.length) || 0;
+
+                    // 核心防御：若 GM 返回了 0B 假数据 (通常由沙箱跨域未授权或解压失真引起)，立即触发原生 fetch 逃逸接力！
+                    if (byteLen === 0) {
+                        PeachStreamHUD.log('STREAM', `[GMHlsLoader] GM 返回 0B (耗时 ${Math.round(tEnd - tStart)}ms)，自动触发原生 fetch 逃逸...`, 'warn');
+                        const rescued = await tryNativeFetchFallback('GM空包0B逃逸');
+                        if (rescued) return;
+                    }
+
                     const response = {
                         url: res.finalUrl || url,
                         data: data
                     };
-                    const byteLen = (data && data.byteLength) || (data && data.length) || 0;
                     const stats = {
                         trequest: tStart,
                         tfirst: tEnd,
@@ -128,23 +186,27 @@ class GMHlsLoader {
                     callbacks.onSuccess(response, stats, context);
                 } else {
                     PeachStreamHUD.log('STREAM', `[GMHlsLoader] HTTP ${res.status}: ${url.slice(0, 48)}`, 'warn');
-                    callbacks.onError({ code: res.status, text: res.statusText }, context, null);
+                    const rescued = await tryNativeFetchFallback(`HTTP ${res.status}`);
+                    if (!rescued) {
+                        callbacks.onError({ code: res.status, text: res.statusText }, context, null);
+                    }
                 }
             },
-            onerror: (err) => {
-                PeachStreamHUD.log('STREAM', `[GMHlsLoader] 网络错误: ${err.statusText || 'Network Error'}`, 'error');
-                callbacks.onError({ code: 0, text: 'Network Error' }, context, null);
+            onerror: async (err) => {
+                PeachStreamHUD.log('STREAM', `[GMHlsLoader] GM网络错误: ${err.statusText || 'Error'}，尝试原生 fetch 逃逸...`, 'warn');
+                const rescued = await tryNativeFetchFallback('GM网络错误');
+                if (!rescued) {
+                    callbacks.onError({ code: 0, text: 'Network Error' }, context, null);
+                }
             },
-            ontimeout: () => {
-                PeachStreamHUD.log('STREAM', `[GMHlsLoader] 请求超时: ${url.slice(0, 48)}`, 'warn');
-                callbacks.onTimeout({ code: 0, text: 'Timeout' }, context, null);
+            ontimeout: async () => {
+                PeachStreamHUD.log('STREAM', `[GMHlsLoader] GM超时，尝试原生 fetch 逃逸...`, 'warn');
+                const rescued = await tryNativeFetchFallback('GM超时');
+                if (!rescued) {
+                    callbacks.onTimeout({ code: 0, text: 'Timeout' }, context, null);
+                }
             }
         };
-
-        // 仅在明确需要二进制切片或密钥时设置 arraybuffer；文本模式绝不传非法 'text' 避免油猴清空响应体
-        if (responseType === 'arraybuffer') {
-            reqOpts.responseType = 'arraybuffer';
-        }
 
         this.request = gmXhr(reqOpts);
     }
@@ -983,6 +1045,28 @@ export class PeachWebBridge {
             }
         } catch (searchErr) {
             PeachStreamHUD.log('SCRAPE', `[JAVVerse] 搜索异常: ${searchErr.message}`, 'warn');
+        }
+
+        // 若本地检索受盾阻断，尝试自建无盾采集端解析 workId
+        if (!workId) {
+            const config = PeachService.getConfig();
+            if (config.remoteScraper) {
+                try {
+                    const scraperUrl = `${config.remoteScraper}${config.remoteScraper.includes('?') ? '&' : '?'}code=${encodeURIComponent(cleanCode)}&target=javverse`;
+                    const remoteRes = await fetchWithTransport(scraperUrl, { timeout: 6000 });
+                    if (remoteRes.status >= 200 && remoteRes.html) {
+                        const rData = JSON.parse(remoteRes.html);
+                        if (rData && rData.workId) workId = parseInt(rData.workId, 10);
+                        if (rData && rData.url) {
+                            return {
+                                url: rData.url,
+                                source: rData.variant === 'uncensored-leak' ? 'JAVVerse (无码流出)' : 'JAVVerse',
+                                referer: `${origin}/`
+                            };
+                        }
+                    }
+                } catch (_) {}
+            }
         }
 
         if (!workId) return null;
