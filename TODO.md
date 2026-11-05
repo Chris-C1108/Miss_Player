@@ -45,7 +45,7 @@
 - [x] **19.6** `migrate` 子命令，迁移 NAS 上现有 292 个 `.strm`（实机 292 个文件 54ms 完成全量迁移，经 Peach `/stream?id=281` 原生点播实测 200 OK 跑通）
 
 - [x] **19.7** 黄金集 + 端到端测试 + 验收（20 番号实机端到端 100% 成功，冷启动 P95 2034ms、热启动 P95 11ms、切片首包 P95 580ms 全绿通关）
-- [ ] **19.8** Miss Player：`.strm` 拼接网关地址；Peach 入库 WebDAV 三种模式（复用同步配置 + `peach-media` 默认目录 / 复用 + 自定义目录 / 单独配置）
+- [x] **19.8** Miss Player：`.strm` 拼接网关地址；Peach 入库 WebDAV 三种模式（复用同步配置 + `peach-media` 默认目录 / 复用 + 自定义目录 / 单独配置，15 项 CI 全通）
 - [ ] **19.9** 删除 `PeachWebBridge` 中的寻源与接力代码，收缩 `@connect`，产物 < 1.0 MB
 
 ---

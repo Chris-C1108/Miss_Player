@@ -98,24 +98,27 @@ export class StrmIngestPipeline {
         }
 
         const normalizedCode = cleanAvCode(avcode) || avcode.trim().toUpperCase();
-        const streamUrl = customStreamUrl || this.resolveStreamUrl(videoEl);
+
+        // 1. 优先使用流网关构建永久稳定播放地址；未配置时降级走当前播放流嗅探
+        const gatewayPlayUrl = PeachService.buildGatewayPlayUrl(normalizedCode);
+        const streamUrl = customStreamUrl || gatewayPlayUrl || this.resolveStreamUrl(videoEl);
 
         if (!streamUrl) {
-            throw new Error('未嗅探到有效视频流地址，请等待视频开始缓冲播放后重试');
+            throw new Error('未配置流网关且未嗅探到有效视频流地址，请先在设置中配置流网关');
         }
 
         const strmContent = this.generateStrmContent(streamUrl, normalizedCode);
         const fileName = `${normalizedCode}.strm`;
 
-        // 检查 WebDAV 配置
-        const webDavConfig = SyncManager.getWebDavConfig();
+        // 2. 依据三种模式解析生效的 WebDAV 写入端点与目录
+        const effectiveWebDav = PeachService.getEffectiveWebDavConfig();
+        const webDavConfig = effectiveWebDav.config;
         const hasWebDav = Boolean(webDavConfig && webDavConfig.url && webDavConfig.user);
         const peachConfig = PeachService.getConfig();
 
         // 优先路径 1：配置了 WebDAV 且未强制下载
         if (hasWebDav && !forceDownload) {
-            const targetDir = peachConfig.strmDir || '/Media/STRM/';
-            const targetPath = `${targetDir.endsWith('/') ? targetDir : targetDir + '/'}${fileName}`;
+            const targetPath = `${effectiveWebDav.targetDir}${fileName}`;
             
             try {
                 // 利用 WebDavClient 上传文件

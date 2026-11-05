@@ -477,11 +477,53 @@
     flex: 1;
 }
 
+.tm-peach-gateway-wrap {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.tm-peach-gateway-wrap .tm-peach-gateway-base-input {
+    flex: 2;
+}
+
+.tm-peach-gateway-wrap .tm-peach-gateway-token-input {
+    flex: 1;
+}
+
 .tm-peach-test-scraper-btn {
     padding: 6px 14px;
     font-size: 12px;
     cursor: pointer;
     white-space: nowrap;
+}
+
+.tm-peach-mode-notice {
+    font-size: 12px;
+    color: var(--apple-blue, #0071e3);
+    background: rgba(0, 113, 227, 0.08);
+    border: 1px solid rgba(0, 113, 227, 0.2);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-top: 6px;
+    line-height: 1.4;
+    word-break: break-all;
+}
+
+.tm-peach-subpanel {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tm-peach-grid-2 {
+    display: flex;
+    gap: 8px;
+}
+
+.tm-peach-grid-2 .tm-settings-input {
+    flex: 1;
 }
 
 .tm-peach-jv-login-btn {

@@ -11,15 +11,30 @@
 
 import { fetchWithTransport } from '../utils/http.js';
 import { getValue, setValue } from '../utils/storage.js';
+import { SyncManager } from '../sync/SyncManager.js';
+import { cleanAvCode } from '../utils/videoCode.js';
 
 export const PEACH_KEY_BASE = 'mp_peach_base';
 export const PEACH_KEY_ORIGINS = 'mp_peach_origins';
 export const PEACH_KEY_TOKEN = 'mp_peach_token';
 export const PEACH_KEY_STRM_DIR = 'mp_peach_strm_dir';
 export const PEACH_KEY_REMOTE_SCRAPER = 'mp_peach_remote_scraper';
+export const PEACH_KEY_GATEWAY_BASE = 'mp_peach_gateway_base';
+export const PEACH_KEY_GATEWAY_TOKEN = 'mp_peach_gateway_token';
 export const PEACH_KEY_ENABLED = 'mp_peach_enabled';
 export const PEACH_KEY_DISMISSED_LIB_ADVICE = 'mp_peach_dismissed_lib_advice';
 export const PEACH_DEFAULT_STRM_DIR = '/Media/STRM/';
+
+export const PEACH_KEY_WEBDAV_MODE = 'mp_peach_webdav_mode';
+export const PEACH_KEY_WEBDAV_CUSTOM_DIR = 'mp_peach_webdav_custom_dir';
+export const PEACH_KEY_WEBDAV_STANDALONE_URL = 'mp_peach_webdav_standalone_url';
+export const PEACH_KEY_WEBDAV_STANDALONE_USER = 'mp_peach_webdav_standalone_user';
+export const PEACH_KEY_WEBDAV_STANDALONE_PASS = 'mp_peach_webdav_standalone_pass';
+export const PEACH_KEY_WEBDAV_STANDALONE_DIR = 'mp_peach_webdav_standalone_dir';
+
+export const PEACH_WEBDAV_MODE_SYNC_DEFAULT = 'sync_default'; // 模式 A: 复用同步 + 默认 /MissPlayer/peach-media/
+export const PEACH_WEBDAV_MODE_SYNC_CUSTOM = 'sync_custom';   // 模式 B: 复用同步 + 自定义目录
+export const PEACH_WEBDAV_MODE_STANDALONE = 'standalone';     // 模式 C: 独立 WebDAV 配置
 
 export class PeachService {
     /**
@@ -139,8 +154,17 @@ export class PeachService {
         const token = getValue(PEACH_KEY_TOKEN, '');
         const strmDir = getValue(PEACH_KEY_STRM_DIR, PEACH_DEFAULT_STRM_DIR);
         const remoteScraper = getValue(PEACH_KEY_REMOTE_SCRAPER, '');
+        const gatewayBase = getValue(PEACH_KEY_GATEWAY_BASE, '') || remoteScraper || '';
+        const gatewayToken = getValue(PEACH_KEY_GATEWAY_TOKEN, 'dev');
         const enabled = Boolean(getValue(PEACH_KEY_ENABLED, false));
         const origins = this.getOrigins();
+
+        const webdavMode = getValue(PEACH_KEY_WEBDAV_MODE, PEACH_WEBDAV_MODE_SYNC_DEFAULT);
+        const webdavCustomDir = getValue(PEACH_KEY_WEBDAV_CUSTOM_DIR, '') || strmDir || '/Media/STRM/';
+        const webdavStandaloneUrl = getValue(PEACH_KEY_WEBDAV_STANDALONE_URL, '');
+        const webdavStandaloneUser = getValue(PEACH_KEY_WEBDAV_STANDALONE_USER, '');
+        const webdavStandalonePass = getValue(PEACH_KEY_WEBDAV_STANDALONE_PASS, '');
+        const webdavStandaloneDir = getValue(PEACH_KEY_WEBDAV_STANDALONE_DIR, '/Media/STRM/');
 
         return {
             base: this.sanitizeBaseUrl(base) || (origins[0] || ''),
@@ -148,14 +172,36 @@ export class PeachService {
             token: String(token || '').trim(),
             strmDir: String(strmDir || PEACH_DEFAULT_STRM_DIR).trim(),
             remoteScraper: String(remoteScraper || '').trim(),
-            enabled: enabled && Boolean(base || origins.length > 0)
+            gatewayBase: String(gatewayBase || '').trim(),
+            gatewayToken: String(gatewayToken || 'dev').trim(),
+            enabled: enabled && Boolean(base || origins.length > 0),
+            webdavMode,
+            webdavCustomDir,
+            webdavStandaloneUrl,
+            webdavStandaloneUser,
+            webdavStandalonePass,
+            webdavStandaloneDir
         };
     }
 
     /**
      * 保存 Peach 配置并落盘双写镜像
      */
-    static saveConfig({ base, token, strmDir, remoteScraper, enabled }) {
+    static saveConfig({
+        base,
+        token,
+        strmDir,
+        remoteScraper,
+        gatewayBase,
+        gatewayToken,
+        enabled,
+        webdavMode,
+        webdavCustomDir,
+        webdavStandaloneUrl,
+        webdavStandaloneUser,
+        webdavStandalonePass,
+        webdavStandaloneDir
+    }) {
         if (typeof base === 'string') {
             const clean = this.sanitizeBaseUrl(base);
             if (clean) {
@@ -169,14 +215,169 @@ export class PeachService {
         if (typeof remoteScraper === 'string') {
             setValue(PEACH_KEY_REMOTE_SCRAPER, remoteScraper.trim());
         }
+        if (typeof gatewayBase === 'string') {
+            setValue(PEACH_KEY_GATEWAY_BASE, gatewayBase.trim());
+        }
+        if (typeof gatewayToken === 'string') {
+            setValue(PEACH_KEY_GATEWAY_TOKEN, gatewayToken.trim());
+        }
         if (typeof strmDir === 'string') {
             let normalized = strmDir.trim();
             if (!normalized.startsWith('/')) normalized = '/' + normalized;
             if (!normalized.endsWith('/')) normalized = normalized + '/';
             setValue(PEACH_KEY_STRM_DIR, normalized);
         }
+        if (typeof webdavMode === 'string') {
+            setValue(PEACH_KEY_WEBDAV_MODE, webdavMode);
+        }
+        if (typeof webdavCustomDir === 'string') {
+            let normalized = webdavCustomDir.trim();
+            if (normalized && !normalized.startsWith('/')) normalized = '/' + normalized;
+            if (normalized && !normalized.endsWith('/')) normalized = normalized + '/';
+            setValue(PEACH_KEY_WEBDAV_CUSTOM_DIR, normalized);
+        }
+        if (typeof webdavStandaloneUrl === 'string') {
+            setValue(PEACH_KEY_WEBDAV_STANDALONE_URL, webdavStandaloneUrl.trim());
+        }
+        if (typeof webdavStandaloneUser === 'string') {
+            setValue(PEACH_KEY_WEBDAV_STANDALONE_USER, webdavStandaloneUser.trim());
+        }
+        if (typeof webdavStandalonePass === 'string') {
+            setValue(PEACH_KEY_WEBDAV_STANDALONE_PASS, webdavStandalonePass);
+        }
+        if (typeof webdavStandaloneDir === 'string') {
+            let normalized = webdavStandaloneDir.trim();
+            if (normalized && !normalized.startsWith('/')) normalized = '/' + normalized;
+            if (normalized && !normalized.endsWith('/')) normalized = normalized + '/';
+            setValue(PEACH_KEY_WEBDAV_STANDALONE_DIR, normalized);
+        }
         if (typeof enabled === 'boolean') {
             setValue(PEACH_KEY_ENABLED, enabled);
+        }
+    }
+
+    /**
+     * 构建符合流网关契约的永久稳定播放地址
+     * 格式: {gatewayBase}/v1/{token}/play/{AVCODE}.m3u8
+     */
+    static buildGatewayPlayUrl(avcode) {
+        if (!avcode) return '';
+        const config = this.getConfig();
+        let base = config.gatewayBase || config.remoteScraper || '';
+        if (!base) return '';
+
+        base = base.replace(/\/api\/resolve\/?.*$/, '').replace(/\/+$/, '');
+        const token = config.gatewayToken || 'dev';
+        const cleanCode = (cleanAvCode(avcode) || avcode).toUpperCase().trim();
+
+        return `${base}/v1/${token}/play/${cleanCode}.m3u8`;
+    }
+
+    /**
+     * 计算当前生效的 WebDAV 入库存储配置与目标目录 (三种模式)
+     */
+    static getEffectiveWebDavConfig() {
+        const peachConfig = this.getConfig();
+        const syncWebDav = SyncManager.getWebDavConfig();
+        const hasSync = Boolean(syncWebDav && syncWebDav.url && syncWebDav.user);
+
+        let mode = peachConfig.webdavMode || PEACH_WEBDAV_MODE_SYNC_DEFAULT;
+        if (!hasSync && mode !== PEACH_WEBDAV_MODE_STANDALONE) {
+            mode = PEACH_WEBDAV_MODE_STANDALONE;
+        }
+
+        if (mode === PEACH_WEBDAV_MODE_SYNC_DEFAULT && hasSync) {
+            const basePath = syncWebDav.path || '/MissPlayer/';
+            const normBase = basePath.endsWith('/') ? basePath : basePath + '/';
+            return {
+                mode: PEACH_WEBDAV_MODE_SYNC_DEFAULT,
+                config: syncWebDav,
+                targetDir: normBase + 'peach-media/'
+            };
+        } else if (mode === PEACH_WEBDAV_MODE_SYNC_CUSTOM && hasSync) {
+            let customDir = peachConfig.webdavCustomDir || peachConfig.strmDir || '/Media/STRM/';
+            if (!customDir.startsWith('/')) customDir = '/' + customDir;
+            if (!customDir.endsWith('/')) customDir = customDir + '/';
+            return {
+                mode: PEACH_WEBDAV_MODE_SYNC_CUSTOM,
+                config: syncWebDav,
+                targetDir: customDir
+            };
+        } else {
+            let standaloneDir = peachConfig.webdavStandaloneDir || '/Media/STRM/';
+            if (!standaloneDir.startsWith('/')) standaloneDir = '/' + standaloneDir;
+            if (!standaloneDir.endsWith('/')) standaloneDir = standaloneDir + '/';
+            return {
+                mode: PEACH_WEBDAV_MODE_STANDALONE,
+                config: {
+                    url: peachConfig.webdavStandaloneUrl,
+                    user: peachConfig.webdavStandaloneUser,
+                    pass: peachConfig.webdavStandalonePass,
+                    path: standaloneDir
+                },
+                targetDir: standaloneDir
+            };
+        }
+    }
+
+    /**
+     * 测试流网关服务连通性与播放端点就绪状态
+     */
+    static async testGatewayConnection(customBase = '', customToken = '') {
+        const config = this.getConfig();
+        let base = customBase || config.gatewayBase || config.remoteScraper || '';
+        if (!base) {
+            return { ok: false, error: '未配置流网关地址' };
+        }
+
+        base = base.replace(/\/api\/resolve\/?.*$/, '').replace(/\/+$/, '');
+        const token = customToken || config.gatewayToken || 'dev';
+
+        // 1. 测试 /health
+        const healthUrl = `${base}/health`;
+        let healthOk = false;
+        try {
+            const hRes = await fetchWithTransport(healthUrl, { timeout: 4000 });
+            if (hRes.status >= 200 && hRes.status < 400) {
+                healthOk = true;
+            }
+        } catch (_) {}
+
+        // 2. 测试样本 /play/STARS-256.m3u8
+        const playUrl = `${base}/v1/${token}/play/STARS-256.m3u8`;
+        const t0 = performance.now();
+        try {
+            const pRes = await fetchWithTransport(playUrl, { timeout: 8000 });
+            const elapsed = Math.round(performance.now() - t0);
+
+            if (pRes.status >= 200 && pRes.status < 400 && pRes.html && pRes.html.includes('#EXTM3U')) {
+                return {
+                    ok: true,
+                    elapsed,
+                    message: `流网关运行正常！HLS 清单就绪 (耗时: ${elapsed}ms)`
+                };
+            }
+
+            if (healthOk) {
+                return {
+                    ok: true,
+                    elapsed,
+                    message: `网关服务在线 (Health OK)，测试样本已响应`
+                };
+            }
+
+            return {
+                ok: false,
+                error: `连接异常 (HTTP ${pRes.status}): 请检查地址与 Token`
+            };
+        } catch (err) {
+            if (healthOk) {
+                return {
+                    ok: true,
+                    message: `网关服务在线，但测试样本暂未返回清单: ${err.message}`
+                };
+            }
+            return { ok: false, error: `网络连接失败: ${err.message}` };
         }
     }
 

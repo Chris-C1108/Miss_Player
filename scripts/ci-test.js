@@ -138,6 +138,11 @@ runStep('执行控制栏手势防冲突、胶囊循环与视口基准单元测�
     execSync('node tests/player-fixes-verification.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.14 流网关播放地址构建与 WebDAV 三种模式入库单元测试
+runStep('执行流网关播放地址构建与 WebDAV 三种模式入库单元测试', () => {
+    execSync('node tests/peach-gateway-ingest.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');
