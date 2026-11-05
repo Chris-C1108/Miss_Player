@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.95
+// @version            5.7.96
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.95";
+		return "5.7.96";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.95";
+		return "5.7.96";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2414,6 +2414,75 @@
 		playerState: "idle",
 		sourcesPipeline: []
 	});
+	var GMHlsLoader = class GMHlsLoader {
+		constructor(config) {
+			this.config = config;
+			this.request = null;
+		}
+		destroy() {
+			if (this.request && this.request.abort) try {
+				this.request.abort();
+			} catch (_) {}
+			this.request = null;
+		}
+		abort() {
+			this.destroy();
+		}
+		load(context, config, callbacks) {
+			const url = context.url;
+			const responseType = context.responseType;
+			const referer = GMHlsLoader.currentReferer || "";
+			const headers = { "User-Agent": typeof navigator !== "undefined" && navigator.userAgent ? navigator.userAgent : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" };
+			if (referer) {
+				headers["Referer"] = referer;
+				try {
+					headers["Origin"] = new URL(referer).origin;
+				} catch (_) {}
+			}
+			const tStart = performance.now();
+			this.request = GM_xmlhttpRequest({
+				method: "GET",
+				url,
+				headers,
+				responseType: responseType === "arraybuffer" ? "arraybuffer" : "text",
+				timeout: config.timeout || 15e3,
+				onload: (res) => {
+					const tEnd = performance.now();
+					if (res.status >= 200 && res.status < 300) {
+						const data = responseType === "arraybuffer" ? res.response : res.responseText || res.response;
+						const response = {
+							url: res.finalUrl || url,
+							data
+						};
+						const stats = {
+							trequest: tStart,
+							tfirst: tEnd,
+							tload: tEnd,
+							loaded: data && data.byteLength || data && data.length || 0,
+							total: data && data.byteLength || data && data.length || 0
+						};
+						callbacks.onSuccess(response, stats, context);
+					} else callbacks.onError({
+						code: res.status,
+						text: res.statusText
+					}, context, null);
+				},
+				onerror: (err) => {
+					callbacks.onError({
+						code: 0,
+						text: "Network Error"
+					}, context, null);
+				},
+				ontimeout: () => {
+					callbacks.onTimeout({
+						code: 0,
+						text: "Timeout"
+					}, context, null);
+				}
+			});
+		}
+	};
+	_defineProperty(GMHlsLoader, "currentReferer", "");
 	var PeachWebBridge = class {
 		static isPeachInstance() {
 			const config = PeachService.getConfig();
@@ -2794,7 +2863,7 @@
 				video.addEventListener("timeupdate", onTimeUpdate);
 				video.addEventListener("error", onError);
 				try {
-					await this.mountHlsStream(video, streamInfo.url);
+					await this.mountHlsStream(video, streamInfo);
 					const p = video.play();
 					if (p !== void 0) p.then(() => {
 						onSettled(true);
@@ -2830,8 +2899,38 @@
 				}, 2200);
 			});
 		}
-		static async mountHlsStream(video, streamUrl) {
-			if (!video || !streamUrl) return;
+		static async mountHlsStream(video, streamInfo) {
+			if (!video || !streamInfo) return;
+			const streamUrl = typeof streamInfo === "string" ? streamInfo : streamInfo.url;
+			const referer = typeof streamInfo === "object" && streamInfo.referer ? streamInfo.referer : "";
+			GMHlsLoader.currentReferer = referer;
+			PeachStreamHUD.log("PLAYER", `设置防盗链 Referer: ${referer || "无"}`, "info");
+			let HlsClass = typeof window !== "undefined" && window.Hls || typeof unsafeWindow !== "undefined" && unsafeWindow.Hls;
+			if (!HlsClass) try {
+				await this._loadHlsScript();
+				HlsClass = window.Hls || (typeof unsafeWindow !== "undefined" ? unsafeWindow.Hls : null);
+			} catch (_) {}
+			if (HlsClass && HlsClass.isSupported()) {
+				PeachStreamHUD.log("PLAYER", "启动 GM 防盗链 Hls.js 引擎加载切片", "success");
+				if (this._hlsInstance) try {
+					this._hlsInstance.destroy();
+				} catch (_) {}
+				this._hlsInstance = new HlsClass({
+					fLoader: GMHlsLoader,
+					pLoader: GMHlsLoader,
+					enableWorker: true,
+					lowLatencyMode: true
+				});
+				this._hlsInstance.on(HlsClass.Events.ERROR, (event, data) => {
+					if (data && data.fatal) {
+						console.warn("[PeachWebBridge] Hls.js fatal error:", data.type, data.details);
+						PeachStreamHUD.log("PLAYER", `Hls.js 错误: ${data.details}`, "error");
+					}
+				});
+				this._hlsInstance.loadSource(streamUrl);
+				this._hlsInstance.attachMedia(video);
+				return;
+			}
 			let hlsHost = null;
 			try {
 				const rootNode = video.getRootNode ? video.getRootNode() : null;
@@ -2839,8 +2938,7 @@
 				if (!hlsHost) hlsHost = video.closest("hlsjs-video") || document.querySelector("hlsjs-video");
 			} catch (_) {}
 			if (hlsHost) {
-				console.log("[PeachWebBridge] 检测到 Peach hlsjs-video 宿主组件，赋给组件驱动内部引擎");
-				PeachStreamHUD.log("PLAYER", "注入 Peach hlsjs-video 宿主组件", "info");
+				PeachStreamHUD.log("PLAYER", "降级注入 Peach hlsjs-video 宿主组件", "info");
 				hlsHost.src = streamUrl;
 				hlsHost.setAttribute("src", streamUrl);
 				try {
@@ -2848,39 +2946,6 @@
 				} catch (_) {}
 				return;
 			}
-			if (video.canPlayType && video.canPlayType("application/vnd.apple.mpegurl")) {
-				PeachStreamHUD.log("PLAYER", "原生支持 HLS，直接加载", "info");
-				video.src = streamUrl;
-				return;
-			}
-			const HlsClass = typeof window !== "undefined" && window.Hls || typeof unsafeWindow !== "undefined" && unsafeWindow.Hls;
-			if (HlsClass && HlsClass.isSupported()) {
-				PeachStreamHUD.log("PLAYER", "唤醒环境自带 Hls.js 引擎解码切片", "info");
-				if (this._hlsInstance) try {
-					this._hlsInstance.destroy();
-				} catch (_) {}
-				this._hlsInstance = new HlsClass({
-					enableWorker: true,
-					lowLatencyMode: true
-				});
-				this._hlsInstance.loadSource(streamUrl);
-				this._hlsInstance.attachMedia(video);
-				return;
-			}
-			try {
-				await this._loadHlsScript();
-				const FreshHls = window.Hls || (typeof unsafeWindow !== "undefined" ? unsafeWindow.Hls : null);
-				if (FreshHls && FreshHls.isSupported()) {
-					PeachStreamHUD.log("PLAYER", "动态加载 Hls.js 成功并接管起播", "success");
-					if (this._hlsInstance) try {
-						this._hlsInstance.destroy();
-					} catch (_) {}
-					this._hlsInstance = new FreshHls();
-					this._hlsInstance.loadSource(streamUrl);
-					this._hlsInstance.attachMedia(video);
-					return;
-				}
-			} catch (_) {}
 			video.src = streamUrl;
 		}
 		static _loadHlsScript() {
@@ -3144,8 +3209,9 @@
 			return null;
 		}
 		static async _searchMissavStream(code) {
+			const cleanCode = code.toLowerCase().trim();
 			for (const origin of ["https://missav.ai", "https://missav.ws"]) try {
-				const searchUrl = `${origin}/search/${encodeURIComponent(code)}`;
+				const searchUrl = `${origin}/search/${encodeURIComponent(cleanCode)}`;
 				const res = await fetchWithTransport(searchUrl, {
 					headers: {
 						"Referer": origin,
@@ -3154,9 +3220,10 @@
 					timeout: 8e3
 				});
 				if (res.status >= 200 && res.status < 400 && res.html) {
-					const detailRegex = new RegExp(`href="(${origin}\\/cn\\/[^"]*${code.toLowerCase()}[^"]*)"`, "i");
+					const detailRegex = new RegExp(`href="((?:https?:\\/\\/[^"\\/]+)?\\/(?:cn\\/)?[^"\\/]*${cleanCode}[^"\\/]*)"`, "i");
 					const match = res.html.match(detailRegex);
-					const detailRes = await fetchWithTransport(match ? match[1] : `${origin}/cn/${code.toLowerCase()}`, {
+					const detailPath = match ? match[1] : `/cn/${cleanCode}`;
+					const detailRes = await fetchWithTransport(detailPath.startsWith("http") ? detailPath : new URL(detailPath, origin).href, {
 						headers: {
 							"Referer": searchUrl,
 							"User-Agent": navigator.userAgent
@@ -4930,7 +4997,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.95";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.96";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

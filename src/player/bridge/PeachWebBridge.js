@@ -18,6 +18,85 @@ import { getValue, setValue } from '../../utils/storage.js';
 import { Toast } from '../../utils/index.js';
 import { PeachStreamHUD } from '../ui/PeachStreamHUD.js';
 
+/**
+ * 基于 GM_xmlhttpRequest 的 HLS 切片与元数据加载器
+ * 核心黑科技：穿透所有上游视频 CDN 的 Referer 防盗链校验 (解决 403 Forbidden 与 MEDIA_ERR_SRC_NOT_SUPPORTED)
+ */
+class GMHlsLoader {
+    static currentReferer = '';
+
+    constructor(config) {
+        this.config = config;
+        this.request = null;
+    }
+
+    destroy() {
+        if (this.request && this.request.abort) {
+            try { this.request.abort(); } catch (_) {}
+        }
+        this.request = null;
+    }
+
+    abort() {
+        this.destroy();
+    }
+
+    load(context, config, callbacks) {
+        const url = context.url;
+        const responseType = context.responseType;
+        const referer = GMHlsLoader.currentReferer || '';
+
+        const headers = {
+            'User-Agent': (typeof navigator !== 'undefined' && navigator.userAgent)
+                ? navigator.userAgent
+                : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        };
+
+        if (referer) {
+            headers['Referer'] = referer;
+            try {
+                headers['Origin'] = new URL(referer).origin;
+            } catch (_) {}
+        }
+
+        const tStart = performance.now();
+
+        this.request = GM_xmlhttpRequest({
+            method: 'GET',
+            url: url,
+            headers: headers,
+            responseType: responseType === 'arraybuffer' ? 'arraybuffer' : 'text',
+            timeout: config.timeout || 15000,
+            onload: (res) => {
+                const tEnd = performance.now();
+                if (res.status >= 200 && res.status < 300) {
+                    const data = responseType === 'arraybuffer' ? res.response : (res.responseText || res.response);
+                    const response = {
+                        url: res.finalUrl || url,
+                        data: data
+                    };
+                    const stats = {
+                        trequest: tStart,
+                        tfirst: tEnd,
+                        tload: tEnd,
+                        loaded: (data && data.byteLength) || (data && data.length) || 0,
+                        total: (data && data.byteLength) || (data && data.length) || 0
+                    };
+                    callbacks.onSuccess(response, stats, context);
+                } else {
+                    callbacks.onError({ code: res.status, text: res.statusText }, context, null);
+                }
+            },
+            onerror: (err) => {
+                callbacks.onError({ code: 0, text: 'Network Error' }, context, null);
+            },
+            ontimeout: () => {
+                callbacks.onTimeout({ code: 0, text: 'Timeout' }, context, null);
+            }
+        });
+    }
+}
+
 export class PeachWebBridge {
     static initialized = false;
     static _progressTrackerActive = false;
@@ -554,9 +633,9 @@ export class PeachWebBridge {
             video.addEventListener('timeupdate', onTimeUpdate);
             video.addEventListener('error', onError);
 
-            // 挂载流
+            // 挂载流 (透传完整 streamInfo 以提取防盗链 referer)
             try {
-                await this.mountHlsStream(video, streamInfo.url);
+                await this.mountHlsStream(video, streamInfo);
                 
                 // 尝试起播：针对 iOS Safari 异步请求后受阻，提供自动静音兜底起播
                 const p = video.play();
@@ -595,12 +674,54 @@ export class PeachWebBridge {
     }
 
     /**
-     * 跨浏览器全兼容 HLS 挂载适配器
+     * 跨浏览器全兼容 HLS 挂载适配器 (通过 GMHlsLoader 彻底攻克 CDN 403 防盗链)
      */
-    static async mountHlsStream(video, streamUrl) {
-        if (!video || !streamUrl) return;
+    static async mountHlsStream(video, streamInfo) {
+        if (!video || !streamInfo) return;
+        const streamUrl = typeof streamInfo === 'string' ? streamInfo : streamInfo.url;
+        const referer = (typeof streamInfo === 'object' && streamInfo.referer) ? streamInfo.referer : '';
 
-        // 1. 如果视频属于 Peach 的 <hlsjs-video> Web Component，直接赋给组件驱动内部引擎
+        // 设置全域 GM 切片加载器的伪造 Referer
+        GMHlsLoader.currentReferer = referer;
+        PeachStreamHUD.log('PLAYER', `设置防盗链 Referer: ${referer || '无'}`, 'info');
+
+        // 1. 优先使用 Hls.js + GMHlsLoader 加载 (全浏览器通用，100% 免疫 Referer 403)
+        let HlsClass = (typeof window !== 'undefined' && window.Hls) || 
+                        (typeof unsafeWindow !== 'undefined' && unsafeWindow.Hls);
+
+        if (!HlsClass) {
+            try {
+                await this._loadHlsScript();
+                HlsClass = window.Hls || (typeof unsafeWindow !== 'undefined' ? unsafeWindow.Hls : null);
+            } catch (_) {}
+        }
+
+        if (HlsClass && HlsClass.isSupported()) {
+            PeachStreamHUD.log('PLAYER', '启动 GM 防盗链 Hls.js 引擎加载切片', 'success');
+            if (this._hlsInstance) {
+                try { this._hlsInstance.destroy(); } catch (_) {}
+            }
+
+            this._hlsInstance = new HlsClass({
+                fLoader: GMHlsLoader,
+                pLoader: GMHlsLoader,
+                enableWorker: true,
+                lowLatencyMode: true
+            });
+
+            this._hlsInstance.on(HlsClass.Events.ERROR, (event, data) => {
+                if (data && data.fatal) {
+                    console.warn('[PeachWebBridge] Hls.js fatal error:', data.type, data.details);
+                    PeachStreamHUD.log('PLAYER', `Hls.js 错误: ${data.details}`, 'error');
+                }
+            });
+
+            this._hlsInstance.loadSource(streamUrl);
+            this._hlsInstance.attachMedia(video);
+            return;
+        }
+
+        // 2. 降级：如果属于 Peach 的 <hlsjs-video> Web Component，直接赋给组件
         let hlsHost = null;
         try {
             const rootNode = video.getRootNode ? video.getRootNode() : null;
@@ -613,55 +734,14 @@ export class PeachWebBridge {
         } catch (_) {}
 
         if (hlsHost) {
-            console.log('[PeachWebBridge] 检测到 Peach hlsjs-video 宿主组件，赋给组件驱动内部引擎');
-            PeachStreamHUD.log('PLAYER', '注入 Peach hlsjs-video 宿主组件', 'info');
+            PeachStreamHUD.log('PLAYER', '降级注入 Peach hlsjs-video 宿主组件', 'info');
             hlsHost.src = streamUrl;
             hlsHost.setAttribute('src', streamUrl);
             try { video.src = streamUrl; } catch (_) {}
             return;
         }
 
-        // 2. 浏览器原生支持 HLS (如 Safari)
-        if (video.canPlayType && video.canPlayType('application/vnd.apple.mpegurl')) {
-            PeachStreamHUD.log('PLAYER', '原生支持 HLS，直接加载', 'info');
-            video.src = streamUrl;
-            return;
-        }
-
-        // 3. 非 Safari 浏览器 (Chrome / Edge / Firefox) 使用 Hls.js 解码切片
-        const HlsClass = (typeof window !== 'undefined' && window.Hls) || 
-                         (typeof unsafeWindow !== 'undefined' && unsafeWindow.Hls);
-        if (HlsClass && HlsClass.isSupported()) {
-            PeachStreamHUD.log('PLAYER', '唤醒环境自带 Hls.js 引擎解码切片', 'info');
-            if (this._hlsInstance) {
-                try { this._hlsInstance.destroy(); } catch (_) {}
-            }
-            this._hlsInstance = new HlsClass({
-                enableWorker: true,
-                lowLatencyMode: true
-            });
-            this._hlsInstance.loadSource(streamUrl);
-            this._hlsInstance.attachMedia(video);
-            return;
-        }
-
-        // 4. 动态载入轻量 Hls.js 库
-        try {
-            await this._loadHlsScript();
-            const FreshHls = window.Hls || (typeof unsafeWindow !== 'undefined' ? unsafeWindow.Hls : null);
-            if (FreshHls && FreshHls.isSupported()) {
-                PeachStreamHUD.log('PLAYER', '动态加载 Hls.js 成功并接管起播', 'success');
-                if (this._hlsInstance) {
-                    try { this._hlsInstance.destroy(); } catch (_) {}
-                }
-                this._hlsInstance = new FreshHls();
-                this._hlsInstance.loadSource(streamUrl);
-                this._hlsInstance.attachMedia(video);
-                return;
-            }
-        } catch (_) {}
-
-        // 兜底直接赋值
+        // 3. 兜底直接赋值 (如 Safari 原生)
         video.src = streamUrl;
     }
 
@@ -923,19 +1003,22 @@ export class PeachWebBridge {
      * 从 MissAV 检索视频流
      */
     static async _searchMissavStream(code) {
+        const cleanCode = code.toLowerCase().trim();
         const domains = ['https://missav.ai', 'https://missav.ws'];
         for (const origin of domains) {
             try {
-                const searchUrl = `${origin}/search/${encodeURIComponent(code)}`;
+                const searchUrl = `${origin}/search/${encodeURIComponent(cleanCode)}`;
                 const res = await fetchWithTransport(searchUrl, {
                     headers: { 'Referer': origin, 'User-Agent': navigator.userAgent },
                     timeout: 8000
                 });
 
                 if (res.status >= 200 && res.status < 400 && res.html) {
-                    const detailRegex = new RegExp(`href="(${origin}\\/cn\\/[^"]*${code.toLowerCase()}[^"]*)"`, 'i');
+                    // 支持相对路径 (/cn/xxx 或 /xxx) 与绝对路径
+                    const detailRegex = new RegExp(`href="((?:https?:\\/\\/[^"\\/]+)?\\/(?:cn\\/)?[^"\\/]*${cleanCode}[^"\\/]*)"`, 'i');
                     const match = res.html.match(detailRegex);
-                    const detailUrl = match ? match[1] : `${origin}/cn/${code.toLowerCase()}`;
+                    const detailPath = match ? match[1] : `/cn/${cleanCode}`;
+                    const detailUrl = detailPath.startsWith('http') ? detailPath : new URL(detailPath, origin).href;
 
                     const detailRes = await fetchWithTransport(detailUrl, {
                         headers: { 'Referer': searchUrl, 'User-Agent': navigator.userAgent },
