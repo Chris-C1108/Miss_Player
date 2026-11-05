@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.102
+// @version            5.7.103
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.102";
+		return "5.7.103";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.102";
+		return "5.7.103";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2453,13 +2453,13 @@
 				method: "GET",
 				url,
 				headers,
+				responseType: "arraybuffer",
 				timeout: config.timeout || 15e3,
 				onload: (res) => {
 					const tEnd = performance.now();
 					if (res.status >= 200 && res.status < 300) {
-						let data = "";
+						let data = res.response;
 						if (responseType === "arraybuffer") {
-							data = res.response;
 							if (data instanceof ArrayBuffer) {} else if (data && data.buffer instanceof ArrayBuffer) data = data.buffer;
 							else if (typeof data === "string") {
 								const buf = new ArrayBuffer(data.length);
@@ -2467,15 +2467,13 @@
 								for (let i = 0; i < data.length; i++) view[i] = data.charCodeAt(i) & 255;
 								data = buf;
 							}
-						} else {
+						} else if (data instanceof ArrayBuffer && data.byteLength > 0) try {
+							data = new TextDecoder("utf-8").decode(data);
+						} catch (_) {
 							data = res.responseText || "";
-							if (!data && res.response) {
-								if (typeof res.response === "string") data = res.response;
-								else if (res.response instanceof ArrayBuffer) try {
-									data = new TextDecoder("utf-8").decode(res.response);
-								} catch (_) {}
-							}
 						}
+						else if (typeof res.responseText === "string" && res.responseText.length > 0) data = res.responseText;
+						else if (typeof data === "string") {} else data = "";
 						const response = {
 							url: res.finalUrl || url,
 							data
@@ -3209,7 +3207,6 @@
 				const searchRes = await fetchWithTransport(`${origin}/en/search?q=${encodeURIComponent(cleanCode)}`, {
 					headers: {
 						"Referer": `${origin}/`,
-						"Origin": origin,
 						"User-Agent": ua
 					},
 					timeout: 8e3
@@ -3217,7 +3214,7 @@
 				if (searchRes.status >= 200 && searchRes.status < 400 && searchRes.html) {
 					const match = searchRes.html.match(/\/(?:[a-z]{2}\/)?work\/(\d+)/i);
 					if (match && match[1]) workId = parseInt(match[1], 10);
-				} else if (searchRes.status === 403) PeachStreamHUD.log("SCRAPE", `[JAVVerse] 搜索触发安全防护拦截 (HTTP 403)`, "warn");
+				} else if (searchRes.status === 403) PeachStreamHUD.log("SCRAPE", `[JAVVerse] 搜索触发安全防护拦截 (HTTP 403)，请在设置中点击「前往 JAVVerse 登录 / 授权」`, "warn");
 			} catch (searchErr) {
 				PeachStreamHUD.log("SCRAPE", `[JAVVerse] 搜索异常: ${searchErr.message}`, "warn");
 			}
@@ -5210,7 +5207,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.102";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.103";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

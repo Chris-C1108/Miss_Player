@@ -75,13 +75,13 @@ class GMHlsLoader {
             method: 'GET',
             url: url,
             headers: headers,
+            responseType: 'arraybuffer',
             timeout: config.timeout || 15000,
             onload: (res) => {
                 const tEnd = performance.now();
                 if (res.status >= 200 && res.status < 300) {
-                    let data = '';
+                    let data = res.response;
                     if (responseType === 'arraybuffer') {
-                        data = res.response;
                         if (data instanceof ArrayBuffer) {
                             // 标准原生 ArrayBuffer
                         } else if (data && data.buffer instanceof ArrayBuffer) {
@@ -96,16 +96,19 @@ class GMHlsLoader {
                             data = buf;
                         }
                     } else {
-                        // 文本模式 (如 .m3u8 播放列表)：优先读取 responseText，兜底解码 ArrayBuffer
-                        data = res.responseText || '';
-                        if (!data && res.response) {
-                            if (typeof res.response === 'string') {
-                                data = res.response;
-                            } else if (res.response instanceof ArrayBuffer) {
-                                try {
-                                    data = new TextDecoder('utf-8').decode(res.response);
-                                } catch (_) {}
+                        // 文本模式 (如 .m3u8 播放列表)：将 ArrayBuffer 统一解码为 utf-8 字符串，防 Brotli/压缩 0B
+                        if (data instanceof ArrayBuffer && data.byteLength > 0) {
+                            try {
+                                data = new TextDecoder('utf-8').decode(data);
+                            } catch (_) {
+                                data = res.responseText || '';
                             }
+                        } else if (typeof res.responseText === 'string' && res.responseText.length > 0) {
+                            data = res.responseText;
+                        } else if (typeof data === 'string') {
+                            // 原生已是文本字符串
+                        } else {
+                            data = '';
                         }
                     }
 
@@ -958,14 +961,13 @@ export class PeachWebBridge {
             ? navigator.userAgent
             : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-        // 1. 跨站搜索获取 workId
+        // 1. 跨站搜索获取 workId (GET 请求不带 Origin 避免触发 Cloudflare WAF 异常标头防护)
         let workId = null;
         try {
             const searchUrl = `${origin}/en/search?q=${encodeURIComponent(cleanCode)}`;
             const searchRes = await fetchWithTransport(searchUrl, {
                 headers: {
                     'Referer': `${origin}/`,
-                    'Origin': origin,
                     'User-Agent': ua
                 },
                 timeout: 8000
@@ -977,7 +979,7 @@ export class PeachWebBridge {
                     workId = parseInt(match[1], 10);
                 }
             } else if (searchRes.status === 403) {
-                PeachStreamHUD.log('SCRAPE', `[JAVVerse] 搜索触发安全防护拦截 (HTTP 403)`, 'warn');
+                PeachStreamHUD.log('SCRAPE', `[JAVVerse] 搜索触发安全防护拦截 (HTTP 403)，请在设置中点击「前往 JAVVerse 登录 / 授权」`, 'warn');
             }
         } catch (searchErr) {
             PeachStreamHUD.log('SCRAPE', `[JAVVerse] 搜索异常: ${searchErr.message}`, 'warn');
