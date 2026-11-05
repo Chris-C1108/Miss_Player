@@ -16,6 +16,7 @@ export const PEACH_KEY_BASE = 'mp_peach_base';
 export const PEACH_KEY_ORIGINS = 'mp_peach_origins';
 export const PEACH_KEY_TOKEN = 'mp_peach_token';
 export const PEACH_KEY_STRM_DIR = 'mp_peach_strm_dir';
+export const PEACH_KEY_REMOTE_SCRAPER = 'mp_peach_remote_scraper';
 export const PEACH_KEY_ENABLED = 'mp_peach_enabled';
 export const PEACH_KEY_DISMISSED_LIB_ADVICE = 'mp_peach_dismissed_lib_advice';
 export const PEACH_DEFAULT_STRM_DIR = '/Media/STRM/';
@@ -137,6 +138,7 @@ export class PeachService {
         const base = getValue(PEACH_KEY_BASE, '');
         const token = getValue(PEACH_KEY_TOKEN, '');
         const strmDir = getValue(PEACH_KEY_STRM_DIR, PEACH_DEFAULT_STRM_DIR);
+        const remoteScraper = getValue(PEACH_KEY_REMOTE_SCRAPER, '');
         const enabled = Boolean(getValue(PEACH_KEY_ENABLED, false));
         const origins = this.getOrigins();
 
@@ -145,6 +147,7 @@ export class PeachService {
             origins,
             token: String(token || '').trim(),
             strmDir: String(strmDir || PEACH_DEFAULT_STRM_DIR).trim(),
+            remoteScraper: String(remoteScraper || '').trim(),
             enabled: enabled && Boolean(base || origins.length > 0)
         };
     }
@@ -152,7 +155,7 @@ export class PeachService {
     /**
      * 保存 Peach 配置并落盘双写镜像
      */
-    static saveConfig({ base, token, strmDir, enabled }) {
+    static saveConfig({ base, token, strmDir, remoteScraper, enabled }) {
         if (typeof base === 'string') {
             const clean = this.sanitizeBaseUrl(base);
             if (clean) {
@@ -162,6 +165,9 @@ export class PeachService {
         }
         if (typeof token === 'string') {
             setValue(PEACH_KEY_TOKEN, token.trim());
+        }
+        if (typeof remoteScraper === 'string') {
+            setValue(PEACH_KEY_REMOTE_SCRAPER, remoteScraper.trim());
         }
         if (typeof strmDir === 'string') {
             let normalized = strmDir.trim();

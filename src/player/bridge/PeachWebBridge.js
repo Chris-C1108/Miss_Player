@@ -16,6 +16,7 @@ import { findVideoElement } from '../../utils/dom.js';
 import { matchAvCodeFromText, getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { getValue, setValue } from '../../utils/storage.js';
 import { Toast } from '../../utils/index.js';
+import { PeachStreamHUD } from '../ui/PeachStreamHUD.js';
 
 export class PeachWebBridge {
     static initialized = false;
@@ -416,65 +417,172 @@ export class PeachWebBridge {
             return;
         }
 
+        const assetId = this.extractCurrentAssetId();
+        PeachStreamHUD.init();
+        PeachStreamHUD.updateMeta({ avcode, assetId, sourcesPipeline: [] });
+        PeachStreamHUD.log('STREAM', `启动现场即时寻源流水线 [${avcode}]`, 'info');
         Toast(`正在现场检索最新可用视频流: ${avcode}`, 2000, 'info');
 
         try {
             const streamInfo = await this.resolveDynamicStream(avcode);
             if (!streamInfo || !streamInfo.url) {
+                PeachStreamHUD.log('STREAM', `所有源站寻源均未成功 [${avcode}]`, 'error');
                 Toast(`现场寻源未找到有效流地址: ${avcode}`, 3000, 'error');
                 return;
             }
 
+            PeachStreamHUD.updateMeta({
+                streamUrl: streamInfo.url,
+                streamSource: streamInfo.source
+            });
+            PeachStreamHUD.log('STREAM', `已锁定视频流: ${streamInfo.url} (来源: ${streamInfo.source})`, 'success');
+
+            // 监听视频生命周期事件
+            this._bindPlayerLifecycleForHUD(video);
+
             video.src = streamInfo.url;
             video.play().then(() => {
+                PeachStreamHUD.log('PLAYER', '视频成功起播！', 'success');
                 Toast(`已获取新鲜视频流 (${streamInfo.source})，流畅起播！`, 2500, 'success');
-                // 启动与 Peach 服务端的进度回写管线
                 this.startProgressTracking(video);
             }).catch(playErr => {
+                PeachStreamHUD.log('PLAYER', `自动播放被浏览器策略限制: ${playErr.name || playErr.message}`, 'warn');
                 console.warn('[PeachWebBridge] 自动起播受限，等待用户交互:', playErr);
                 this.startProgressTracking(video);
             });
 
         } catch (err) {
+            PeachStreamHUD.log('STREAM', `寻源异常: ${err.message}`, 'error');
             console.error('[PeachWebBridge] 现场寻源异常:', err);
             Toast(`寻源失败: ${err.message}`, 3000, 'error');
         }
     }
 
     /**
+     * 监控播放器原生生命周期并输出至 HUD
+     */
+    static _bindPlayerLifecycleForHUD(video) {
+        if (!video || video.dataset.mpHudBound) return;
+        video.dataset.mpHudBound = 'true';
+
+        video.addEventListener('loadstart', () => PeachStreamHUD.log('PLAYER', 'video: loadstart (开始加载元数据)', 'info'));
+        video.addEventListener('loadedmetadata', () => PeachStreamHUD.log('PLAYER', `video: loadedmetadata (时长: ${Math.round(video.duration || 0)}s, 尺寸: ${video.videoWidth}x${video.videoHeight})`, 'success'));
+        video.addEventListener('canplay', () => PeachStreamHUD.log('PLAYER', 'video: canplay (已完成初始缓冲，可播放)', 'info'));
+        video.addEventListener('playing', () => PeachStreamHUD.log('PLAYER', 'video: playing (正在播放中)', 'success'));
+        video.addEventListener('waiting', () => PeachStreamHUD.log('PLAYER', 'video: waiting (缓冲卡顿等待数据)', 'warn'));
+        video.addEventListener('error', (e) => {
+            const err = video.error;
+            const codeMap = { 1: 'MEDIA_ERR_ABORTED', 2: 'MEDIA_ERR_NETWORK', 3: 'MEDIA_ERR_DECODE', 4: 'MEDIA_ERR_SRC_NOT_SUPPORTED' };
+            const desc = err ? `${codeMap[err.code] || 'UNKNOWN'} (${err.message || '格式不支持或上游 CDN 防盗链拦截'})` : '未知错误';
+            PeachStreamHUD.log('PLAYER', `video 播放异常: ${desc}`, 'error');
+        });
+    }
+
+    /**
      * 现场多源动态寻源引擎 (Stream Resolver)
-     * 首选 Jable，其次 123AV (免盾且收录冷门/合辑片，如 PBD-491)，兜底 MissAV
+     * 支持本地直连 (Jable/123AV) 与自建独立无盾采集端 (Remote Scraper API) 动静分离回退
      */
     static async resolveDynamicStream(avcode) {
         const cleanCode = avcode.trim().toUpperCase();
+        const config = PeachService.getConfig();
 
-        // 1. 首选 Jable 寻源 (稳定性高)
+        // 1. 首选 Jable 寻源 (本地直连)
+        const t0 = performance.now();
         try {
             console.log(`[PeachWebBridge] 正在尝试从 Jable 寻源: ${cleanCode}`);
             const jableStream = await this._searchJableStream(cleanCode);
-            if (jableStream) return jableStream;
+            const elapsed = Math.round(performance.now() - t0);
+            if (jableStream) {
+                PeachStreamHUD.recordSourceResult('Jable', { status: 200, elapsedMs: elapsed, success: true, detail: jableStream.url });
+                return jableStream;
+            }
+            PeachStreamHUD.recordSourceResult('Jable', { status: 404, elapsedMs: elapsed, success: false, detail: '未收录' });
         } catch (jableErr) {
+            const elapsed = Math.round(performance.now() - t0);
+            PeachStreamHUD.recordSourceResult('Jable', { status: 0, elapsedMs: elapsed, success: false, detail: jableErr.message });
             console.warn('[PeachWebBridge] Jable 寻源失败:', jableErr.message);
         }
 
-        // 2. 次选 123AV 寻源 (无 Cloudflare 盾，收录极全，支持 PBD-491 等冷门/合辑作品)
+        // 2. 次选 123AV 寻源 (本地免盾直连，收录极全长片/合辑，如 PBD-491)
+        const t1 = performance.now();
         try {
             console.log(`[PeachWebBridge] 正在尝试从 123AV 寻源: ${cleanCode}`);
             const av123Stream = await this._search123AvStream(cleanCode);
-            if (av123Stream) return av123Stream;
+            const elapsed = Math.round(performance.now() - t1);
+            if (av123Stream) {
+                PeachStreamHUD.recordSourceResult('123AV', { status: 200, elapsedMs: elapsed, success: true, detail: av123Stream.url });
+                return av123Stream;
+            }
+            PeachStreamHUD.recordSourceResult('123AV', { status: 404, elapsedMs: elapsed, success: false, detail: '未收录' });
         } catch (av123Err) {
+            const elapsed = Math.round(performance.now() - t1);
+            PeachStreamHUD.recordSourceResult('123AV', { status: 0, elapsedMs: elapsed, success: false, detail: av123Err.message });
             console.warn('[PeachWebBridge] 123AV 寻源失败:', av123Err.message);
         }
 
-        // 3. 备选 MissAV 寻源 (兜底)
+        // 3. 动静分离独立采集端 (Remote Scraper API)
+        // 彻底解决本地客户端代理触发 Cloudflare 盾牌的问题，由远端采集端解析 HTML，客户端直连 CDN 切片
+        if (config.remoteScraper) {
+            const t2 = performance.now();
+            try {
+                console.log(`[PeachWebBridge] 正在尝试从自建独立采集端寻源: ${config.remoteScraper}`);
+                const remoteStream = await this._searchRemoteScraperStream(cleanCode, config.remoteScraper);
+                const elapsed = Math.round(performance.now() - t2);
+                if (remoteStream) {
+                    PeachStreamHUD.recordSourceResult('自建采集端', { status: 200, elapsedMs: elapsed, success: true, detail: remoteStream.url });
+                    return remoteStream;
+                }
+                PeachStreamHUD.recordSourceResult('自建采集端', { status: 404, elapsedMs: elapsed, success: false, detail: '未解析到流' });
+            } catch (remoteErr) {
+                const elapsed = Math.round(performance.now() - t2);
+                PeachStreamHUD.recordSourceResult('自建采集端', { status: 0, elapsedMs: elapsed, success: false, detail: remoteErr.message });
+                console.warn('[PeachWebBridge] 独立采集端寻源失败:', remoteErr.message);
+            }
+        }
+
+        // 4. 备选 MissAV 本地寻源 (兜底)
+        const t3 = performance.now();
         try {
             console.log(`[PeachWebBridge] 正在尝试从 MissAV 寻源: ${cleanCode}`);
             const missavStream = await this._searchMissavStream(cleanCode);
-            if (missavStream) return missavStream;
+            const elapsed = Math.round(performance.now() - t3);
+            if (missavStream) {
+                PeachStreamHUD.recordSourceResult('MissAV', { status: 200, elapsedMs: elapsed, success: true, detail: missavStream.url });
+                return missavStream;
+            }
+            PeachStreamHUD.recordSourceResult('MissAV', { status: 403, elapsedMs: elapsed, success: false, isCfBlocked: true, detail: 'Cloudflare 盾牌拦截或未收录' });
         } catch (missavErr) {
+            const elapsed = Math.round(performance.now() - t3);
+            PeachStreamHUD.recordSourceResult('MissAV', { status: 0, elapsedMs: elapsed, success: false, isCfBlocked: true, detail: missavErr.message });
             console.warn('[PeachWebBridge] MissAV 寻源失败:', missavErr.message);
         }
 
+        return null;
+    }
+
+    /**
+     * 从独立自建采集端 (Remote Scraper API) 获取流地址 (动静分离架构)
+     */
+    static async _searchRemoteScraperStream(code, endpoint) {
+        const url = endpoint.includes('?') ? `${endpoint}&code=${encodeURIComponent(code)}` : `${endpoint}?code=${encodeURIComponent(code)}`;
+        const res = await fetchWithTransport(url, {
+            headers: { 'Accept': 'application/json' },
+            timeout: 10000
+        });
+
+        if (res.status >= 200 && res.status < 400 && res.html) {
+            try {
+                const data = JSON.parse(res.html);
+                const streamUrl = data.url || data.stream || data.streamUrl || data.m3u8;
+                if (streamUrl && typeof streamUrl === 'string') {
+                    return {
+                        url: streamUrl,
+                        source: data.source || '自建采集端',
+                        referer: data.referer || ''
+                    };
+                }
+            } catch (_) {}
+        }
         return null;
     }
 
@@ -667,6 +775,7 @@ export class PeachWebBridge {
                 timeout: 5000
             }).then(res => {
                 if (res.status >= 200 && res.status < 300) {
+                    PeachStreamHUD.log('PEACH', `观看进度已同步至账本: pos=${pos}s, delta=+${delta}s`, 'success');
                     try {
                         const data = JSON.parse(res.html);
                         if (data && data.real_ratio != null) {
@@ -678,7 +787,9 @@ export class PeachWebBridge {
                         }
                     } catch (_) {}
                 }
-            }).catch(() => {});
+            }).catch(err => {
+                PeachStreamHUD.log('PEACH', `进度上报异常: ${err.message}`, 'warn');
+            });
 
             this._accumulatedDelta = 0;
             this._seeksCount = 0;

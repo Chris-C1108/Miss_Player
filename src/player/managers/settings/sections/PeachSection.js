@@ -3,6 +3,7 @@ import { ToggleRow } from '../components/ToggleRow.js';
 import { PeachService } from '../../../../services/PeachService.js';
 import { Toast } from '../../../../utils/index.js';
 import { __ } from '../../../../constants/i18n.js';
+import { PeachStreamHUD } from '../../../ui/PeachStreamHUD.js';
 
 export class PeachSection {
     constructor(settingsManager) {
@@ -132,15 +133,28 @@ export class PeachSection {
         const dirInput = dirRow.querySelector('.tm-peach-dir-input');
         bodyWrap.appendChild(dirRow);
 
-        // 2.6 操作按键区
+        // 2.6 独立流采集端点 (可选 · 动静分离)
+        const scraperRow = document.createElement('div');
+        scraperRow.className = 'tm-apple-row tm-peach-field-row';
+        scraperRow.innerHTML = `
+            <div class="tm-apple-row-title">独立流采集端点 (可选 · 动静分离)</div>
+            <div class="tm-apple-row-subtext">若本地代理常触发 Cloudflare 5秒盾，可填入自建无盾采集服务 (如 https://my-vps.com/resolve?code=)</div>
+            <input type="text" class="tm-settings-input tm-peach-scraper-input" placeholder="留空默认本地直连，或填入远端无盾端点" value="${config.remoteScraper || ''}" />
+        `;
+        const scraperInput = scraperRow.querySelector('.tm-peach-scraper-input');
+        bodyWrap.appendChild(scraperRow);
+
+        // 2.7 操作按键区
         const actionRow = document.createElement('div');
         actionRow.className = 'tm-peach-action-row';
         actionRow.innerHTML = `
             <button type="button" class="tm-settings-btn tm-peach-action-btn tm-peach-test-btn">测试连接</button>
             <button type="button" class="tm-settings-btn tm-peach-action-btn tm-peach-scan-btn">通知 Peach 扫描</button>
+            <button type="button" class="tm-settings-btn tm-peach-action-btn tm-peach-hud-btn" title="查看寻源耗时、代理状态与播放事件">流诊断探针</button>
         `;
         const testBtn = actionRow.querySelector('.tm-peach-test-btn');
         const scanBtn = actionRow.querySelector('.tm-peach-scan-btn');
+        const hudBtn = actionRow.querySelector('.tm-peach-hud-btn');
         bodyWrap.appendChild(actionRow);
 
         // 事件处理
@@ -148,12 +162,14 @@ export class PeachSection {
             PeachService.saveConfig({
                 base: baseInput.value.trim(),
                 token: tokenInput.value.trim(),
-                strmDir: dirInput.value.trim()
+                strmDir: dirInput.value.trim(),
+                remoteScraper: scraperInput.value.trim()
             });
         };
         baseInput.addEventListener('change', handleSave);
         tokenInput.addEventListener('change', handleSave);
         dirInput.addEventListener('change', handleSave);
+        scraperInput.addEventListener('change', handleSave);
 
         // 配对信息自动识别
         pasteInput.addEventListener('paste', () => {
@@ -206,6 +222,11 @@ export class PeachSection {
                 scanBtn.disabled = false;
                 scanBtn.textContent = '通知 Peach 扫描';
             }
+        });
+
+        hudBtn.addEventListener('click', () => {
+            PeachStreamHUD.init();
+            Toast('已打开视频流采集与播放诊断探针', 1800, 'info');
         });
 
         // 3. Header 点击手风琴展开/折叠
