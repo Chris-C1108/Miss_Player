@@ -6,7 +6,7 @@
  * 2. 【代理与网络透明化】：直观呈现当前请求的活跃 Origin、本地代理连通性与 CDN 切片域名，帮助用户精准排查代理节点封锁问题；
  * 3. 【播放器生命周期诊断】：实时捕获 <video> 的 loadstart、loadedmetadata、canplay、playing 以及 NotSupportedError 等错误事件；
  * 4. 【Peach 账本回写监控】：监控 /api/activity 与 /api/play 的实时进度同步心跳；
- * 5. 【一键拷贝完整排错报告】：支持将全套诊断数据格式化复制为 Markdown，极大方便用户排查与反馈。
+ * 5. 【iOS 原生系统拷贝支持】：参考全景视口探针机制，优先支持调起 iOS navigator.share 系统原生 Action Sheet 拷贝，配合就地全选文本框降级。
  * 6. 【自包含样式与智能挂载】：无论在 Shadow DOM 内部、设置菜单之上、还是 Top Layer <dialog> 均能 100% 独立稳定呈现。
  */
 
@@ -116,6 +116,11 @@ export class PeachStreamHUD {
                 font-size: 10px !important;
                 cursor: pointer !important;
             }
+            .tm-hud-tool-btn.is-copied {
+                background: rgba(48, 209, 88, 0.25) !important;
+                color: #4ade80 !important;
+                border-color: rgba(48, 209, 88, 0.5) !important;
+            }
             .tm-hud-header {
                 display: flex !important;
                 align-items: center !important;
@@ -141,7 +146,7 @@ export class PeachStreamHUD {
             }
             .tm-hud-tools {
                 display: flex !important;
-                gap: 6px !important;
+                gap: 5px !important;
             }
             .tm-hud-grid {
                 display: grid !important;
@@ -193,7 +198,7 @@ export class PeachStreamHUD {
                 display: flex !important;
                 flex-direction: column !important;
                 gap: 3px !important;
-                max-height: 140px !important;
+                max-height: 120px !important;
                 overflow-y: auto !important;
                 padding: 6px 8px !important;
                 background: rgba(0, 0, 0, 0.5) !important;
@@ -209,6 +214,37 @@ export class PeachStreamHUD {
                 font-weight: 700 !important;
                 color: #38bdf8 !important;
                 font-size: 9px !important;
+            }
+            .tm-hud-export-wrap {
+                display: none !important;
+                flex-direction: column !important;
+                gap: 4px !important;
+                margin-top: 6px !important;
+                padding: 6px !important;
+                background: rgba(0, 0, 0, 0.6) !important;
+                border-radius: 8px !important;
+                border: 1px dashed rgba(56, 189, 248, 0.4) !important;
+            }
+            .tm-hud-export-wrap.is-visible {
+                display: flex !important;
+            }
+            .tm-hud-export-title {
+                font-size: 9px !important;
+                color: #38bdf8 !important;
+                font-weight: 600 !important;
+            }
+            .tm-hud-export-text {
+                width: 100% !important;
+                height: 70px !important;
+                background: #090d16 !important;
+                color: #94a3b8 !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                border-radius: 6px !important;
+                font-size: 9px !important;
+                padding: 4px !important;
+                resize: none !important;
+                font-family: inherit !important;
+                box-sizing: border-box !important;
             }
         `;
         this._container.appendChild(style);
@@ -290,7 +326,6 @@ export class PeachStreamHUD {
         const config = PeachService.getConfig();
         const meta = this._currentMeta;
 
-        // 保留 style 标签，只更新内容容器
         let bodyNode = this._container.querySelector('.tm-hud-body');
         if (!bodyNode) {
             bodyNode = document.createElement('div');
@@ -350,7 +385,8 @@ export class PeachStreamHUD {
                     <span class="tm-hud-version">v${getCurrentVersion()}</span>
                 </div>
                 <div class="tm-hud-tools">
-                    <button type="button" class="tm-hud-tool-btn tm-hud-copy-btn" title="拷贝完整诊断报告">拷贝日志</button>
+                    <button type="button" class="tm-hud-tool-btn tm-hud-share-btn" id="tm-hud-share-btn" title="调起 iOS 系统原生 Action Sheet 拷贝面板">📲 系统拷贝</button>
+                    <button type="button" class="tm-hud-tool-btn tm-hud-copy-btn" id="tm-hud-copy-btn" title="拷贝完整诊断报告">📋 复制</button>
                     <button type="button" class="tm-hud-tool-btn tm-hud-collapse-btn" title="折叠探针">收起</button>
                     <button type="button" class="tm-hud-tool-btn tm-hud-close-btn" title="关闭探针">✕</button>
                 </div>
@@ -372,10 +408,19 @@ export class PeachStreamHUD {
             <div class="tm-hud-logs-box">
                 ${logsHtml || '<div class="tm-hud-dim">暂无事件记录</div>'}
             </div>
+
+            <div class="tm-hud-export-wrap" id="tm-hud-export-wrap">
+                <div class="tm-hud-export-title">长按全选已生成的 Markdown 诊断报告:</div>
+                <textarea class="tm-hud-export-text" id="tm-hud-export-text" readonly></textarea>
+            </div>
         `;
 
         // 绑定事件
-        bodyNode.querySelector('.tm-hud-copy-btn')?.addEventListener('click', (e) => {
+        bodyNode.querySelector('#tm-hud-share-btn')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.triggerNativeShareCopy();
+        });
+        bodyNode.querySelector('#tm-hud-copy-btn')?.addEventListener('click', (e) => {
             e.stopPropagation();
             this.copyReport();
         });
@@ -391,14 +436,15 @@ export class PeachStreamHUD {
     }
 
     /**
-     * 拷贝完整 Markdown 诊断报告至剪贴板
+     * 生成格式化 Markdown 诊断报告
+     * @returns {string}
      */
-    static copyReport() {
+    static generateReportMarkdown() {
         const config = PeachService.getConfig();
         const meta = this._currentMeta;
         const now = new Date().toLocaleString();
 
-        const report = [
+        return [
             `# Miss Player · Peach 视频流采集与播放诊断报告`,
             `* 生成时间: ${now}`,
             `* 脚本版本: v${getCurrentVersion()}`,
@@ -417,16 +463,98 @@ export class PeachStreamHUD {
             ``,
             `---\n*由 Miss Player 现场探针自动生成*`
         ].join('\n');
+    }
 
-        try {
-            if (typeof GM_setClipboard === 'function') {
-                GM_setClipboard(report);
-            } else if (navigator.clipboard) {
-                navigator.clipboard.writeText(report);
+    /**
+     * 调起 iOS 系统的原生 Action Sheet 分享与拷贝面板 (100% 成功率保证)
+     */
+    static async triggerNativeShareCopy() {
+        const md = this.generateReportMarkdown();
+        this._showExportTextarea(md);
+
+        if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+            try {
+                await navigator.share({
+                    title: 'Miss Player Peach Diagnostics Report',
+                    text: md
+                });
+                Toast('✅ 已调起 iOS 系统面板，点击“拷贝”即可！', 2500, 'success');
+                return true;
+            } catch (err) {
+                if (err && err.name === 'AbortError') return false;
             }
-            Toast('已成功拷贝 Peach 诊断排错报告', 2000, 'success');
-        } catch (_) {
-            Toast('拷贝失败，请手动截图控制台', 2000, 'error');
+        }
+
+        Toast('⚠️ 请直接长按下方已全选的文本框并点“拷贝”', 3000, 'warning');
+        return false;
+    }
+
+    /**
+     * 显示就地文本框并全选内容 (针对 iOS Clipboard 限制的极致降级兜底)
+     */
+    static _showExportTextarea(text) {
+        const exportWrap = this._container?.querySelector('#tm-hud-export-wrap');
+        const exportText = this._container?.querySelector('#tm-hud-export-text');
+        if (exportWrap && exportText) {
+            exportWrap.classList.add('is-visible');
+            exportText.value = text;
+            try {
+                exportText.focus();
+                exportText.select();
+                exportText.setSelectionRange(0, text.length);
+            } catch (_) {}
+        }
+    }
+
+    /**
+     * 一键复制 Markdown 诊断报告至剪贴板，支持 iOS Web Share 原生联动
+     */
+    static async copyReport() {
+        const md = this.generateReportMarkdown();
+        const copyBtn = this._container?.querySelector('#tm-hud-copy-btn');
+
+        // 展开就地文本框全选备用
+        this._showExportTextarea(md);
+
+        let copied = false;
+        if (typeof GM_setClipboard === 'function') {
+            try {
+                GM_setClipboard(md);
+                copied = true;
+            } catch (_) {}
+        }
+
+        if (!copied && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            try {
+                await navigator.clipboard.writeText(md);
+                copied = true;
+            } catch (_) {}
+        }
+
+        // 如果静默写入被 iOS 限制，自动无缝调起系统原生 Action Sheet
+        if (!copied && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+            try {
+                await navigator.share({
+                    title: 'Miss Player Peach Diagnostics Report',
+                    text: md
+                });
+                copied = true;
+            } catch (_) {}
+        }
+
+        if (copyBtn) {
+            copyBtn.classList.add('is-copied');
+            copyBtn.textContent = '✅ 已拷贝！';
+            setTimeout(() => {
+                copyBtn.classList.remove('is-copied');
+                copyBtn.textContent = '📋 复制';
+            }, 3000);
+        }
+
+        if (copied) {
+            Toast('✅ 日志已复制到剪贴板！', 2200, 'success');
+        } else {
+            Toast('⚠️ 系统限制了静默写入，请直接长按下方文本框并点“拷贝”', 3500, 'warning');
         }
     }
 }

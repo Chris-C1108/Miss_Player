@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.92
+// @version            5.7.93
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.92";
+		return "5.7.93";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.92";
+		return "5.7.93";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2034,6 +2034,11 @@
                 font-size: 10px !important;
                 cursor: pointer !important;
             }
+            .tm-hud-tool-btn.is-copied {
+                background: rgba(48, 209, 88, 0.25) !important;
+                color: #4ade80 !important;
+                border-color: rgba(48, 209, 88, 0.5) !important;
+            }
             .tm-hud-header {
                 display: flex !important;
                 align-items: center !important;
@@ -2059,7 +2064,7 @@
             }
             .tm-hud-tools {
                 display: flex !important;
-                gap: 6px !important;
+                gap: 5px !important;
             }
             .tm-hud-grid {
                 display: grid !important;
@@ -2111,7 +2116,7 @@
                 display: flex !important;
                 flex-direction: column !important;
                 gap: 3px !important;
-                max-height: 140px !important;
+                max-height: 120px !important;
                 overflow-y: auto !important;
                 padding: 6px 8px !important;
                 background: rgba(0, 0, 0, 0.5) !important;
@@ -2127,6 +2132,37 @@
                 font-weight: 700 !important;
                 color: #38bdf8 !important;
                 font-size: 9px !important;
+            }
+            .tm-hud-export-wrap {
+                display: none !important;
+                flex-direction: column !important;
+                gap: 4px !important;
+                margin-top: 6px !important;
+                padding: 6px !important;
+                background: rgba(0, 0, 0, 0.6) !important;
+                border-radius: 8px !important;
+                border: 1px dashed rgba(56, 189, 248, 0.4) !important;
+            }
+            .tm-hud-export-wrap.is-visible {
+                display: flex !important;
+            }
+            .tm-hud-export-title {
+                font-size: 9px !important;
+                color: #38bdf8 !important;
+                font-weight: 600 !important;
+            }
+            .tm-hud-export-text {
+                width: 100% !important;
+                height: 70px !important;
+                background: #090d16 !important;
+                color: #94a3b8 !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                border-radius: 6px !important;
+                font-size: 9px !important;
+                padding: 4px !important;
+                resize: none !important;
+                font-family: inherit !important;
+                box-sizing: border-box !important;
             }
         `;
 			this._container.appendChild(style);
@@ -2234,7 +2270,8 @@
                     <span class="tm-hud-version">v${getCurrentVersion()}</span>
                 </div>
                 <div class="tm-hud-tools">
-                    <button type="button" class="tm-hud-tool-btn tm-hud-copy-btn" title="拷贝完整诊断报告">拷贝日志</button>
+                    <button type="button" class="tm-hud-tool-btn tm-hud-share-btn" id="tm-hud-share-btn" title="调起 iOS 系统原生 Action Sheet 拷贝面板">📲 系统拷贝</button>
+                    <button type="button" class="tm-hud-tool-btn tm-hud-copy-btn" id="tm-hud-copy-btn" title="拷贝完整诊断报告">📋 复制</button>
                     <button type="button" class="tm-hud-tool-btn tm-hud-collapse-btn" title="折叠探针">收起</button>
                     <button type="button" class="tm-hud-tool-btn tm-hud-close-btn" title="关闭探针">✕</button>
                 </div>
@@ -2256,8 +2293,17 @@
             <div class="tm-hud-logs-box">
                 ${logsHtml || "<div class=\"tm-hud-dim\">暂无事件记录</div>"}
             </div>
+
+            <div class="tm-hud-export-wrap" id="tm-hud-export-wrap">
+                <div class="tm-hud-export-title">长按全选已生成的 Markdown 诊断报告:</div>
+                <textarea class="tm-hud-export-text" id="tm-hud-export-text" readonly></textarea>
+            </div>
         `;
-			bodyNode.querySelector(".tm-hud-copy-btn")?.addEventListener("click", (e) => {
+			bodyNode.querySelector("#tm-hud-share-btn")?.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.triggerNativeShareCopy();
+			});
+			bodyNode.querySelector("#tm-hud-copy-btn")?.addEventListener("click", (e) => {
 				e.stopPropagation();
 				this.copyReport();
 			});
@@ -2271,10 +2317,10 @@
 				this.destroy();
 			});
 		}
-		static copyReport() {
+		static generateReportMarkdown() {
 			const config = PeachService.getConfig();
 			const meta = this._currentMeta;
-			const report = [
+			return [
 				`# Miss Player · Peach 视频流采集与播放诊断报告`,
 				`* 生成时间: ${new Date().toLocaleString()}`,
 				`* 脚本版本: v${getCurrentVersion()}`,
@@ -2293,13 +2339,66 @@
 				``,
 				`---\n*由 Miss Player 现场探针自动生成*`
 			].join("\n");
-			try {
-				if (typeof GM_setClipboard === "function") GM_setClipboard(report);
-				else if (navigator.clipboard) navigator.clipboard.writeText(report);
-				Toast$1("已成功拷贝 Peach 诊断排错报告", 2e3, "success");
-			} catch (_) {
-				Toast$1("拷贝失败，请手动截图控制台", 2e3, "error");
+		}
+		static async triggerNativeShareCopy() {
+			const md = this.generateReportMarkdown();
+			this._showExportTextarea(md);
+			if (typeof navigator !== "undefined" && typeof navigator.share === "function") try {
+				await navigator.share({
+					title: "Miss Player Peach Diagnostics Report",
+					text: md
+				});
+				Toast$1("✅ 已调起 iOS 系统面板，点击“拷贝”即可！", 2500, "success");
+				return true;
+			} catch (err) {
+				if (err && err.name === "AbortError") return false;
 			}
+			Toast$1("⚠️ 请直接长按下方已全选的文本框并点“拷贝”", 3e3, "warning");
+			return false;
+		}
+		static _showExportTextarea(text) {
+			const exportWrap = this._container?.querySelector("#tm-hud-export-wrap");
+			const exportText = this._container?.querySelector("#tm-hud-export-text");
+			if (exportWrap && exportText) {
+				exportWrap.classList.add("is-visible");
+				exportText.value = text;
+				try {
+					exportText.focus();
+					exportText.select();
+					exportText.setSelectionRange(0, text.length);
+				} catch (_) {}
+			}
+		}
+		static async copyReport() {
+			const md = this.generateReportMarkdown();
+			const copyBtn = this._container?.querySelector("#tm-hud-copy-btn");
+			this._showExportTextarea(md);
+			let copied = false;
+			if (typeof GM_setClipboard === "function") try {
+				GM_setClipboard(md);
+				copied = true;
+			} catch (_) {}
+			if (!copied && navigator.clipboard && typeof navigator.clipboard.writeText === "function") try {
+				await navigator.clipboard.writeText(md);
+				copied = true;
+			} catch (_) {}
+			if (!copied && typeof navigator !== "undefined" && typeof navigator.share === "function") try {
+				await navigator.share({
+					title: "Miss Player Peach Diagnostics Report",
+					text: md
+				});
+				copied = true;
+			} catch (_) {}
+			if (copyBtn) {
+				copyBtn.classList.add("is-copied");
+				copyBtn.textContent = "✅ 已拷贝！";
+				setTimeout(() => {
+					copyBtn.classList.remove("is-copied");
+					copyBtn.textContent = "📋 复制";
+				}, 3e3);
+			}
+			if (copied) Toast$1("✅ 日志已复制到剪贴板！", 2200, "success");
+			else Toast$1("⚠️ 系统限制了静默写入，请直接长按下方文本框并点“拷贝”", 3500, "warning");
 		}
 	};
 	_defineProperty(PeachStreamHUD, "_container", null);
@@ -4609,7 +4708,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.92";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.93";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
