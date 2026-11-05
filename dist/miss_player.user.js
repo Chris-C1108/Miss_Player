@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.93
+// @version            5.7.94
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.93";
+		return "5.7.94";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.93";
+		return "5.7.94";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2618,6 +2618,8 @@
 			relayBtn.textContent = "✨ Miss Player 接力起播";
 			relayBtn.addEventListener("click", (e) => {
 				e.stopPropagation();
+				this._failedStreamUrls.clear();
+				this._isResolving = false;
 				this.takeOverPlayback(video);
 			});
 			container.appendChild(relayBtn);
@@ -2643,14 +2645,26 @@
 			return 0;
 		}
 		static async _handlePlaybackError(video) {
+			if (this._isResolving) {
+				console.log("[PeachWebBridge] 当前已在寻源流水线中，跳过重入触发");
+				return;
+			}
+			const currentSrc = video?.currentSrc || video?.src || "";
+			if (currentSrc && currentSrc.includes(".m3u8")) {
+				this._failedStreamUrls.add(currentSrc);
+				console.log("[PeachWebBridge] 已将当前失效流加入黑名单:", currentSrc);
+			}
 			const avcode = this.extractCurrentAvCode(video);
 			if (!avcode) return;
 			Toast$1(`Peach 原生流已失效，Miss Player 正在现场寻源 [${avcode}]...`, 2500, "info");
 			await this.takeOverPlayback(video, avcode);
 		}
 		static async takeOverPlayback(video, targetCode = "") {
+			if (this._isResolving) return;
+			this._isResolving = true;
 			const avcode = targetCode || this.extractCurrentAvCode(video);
 			if (!avcode) {
+				this._isResolving = false;
 				Toast$1("未能识别当前作品番号", 2e3, "error");
 				return;
 			}
@@ -2668,6 +2682,7 @@
 				if (!streamInfo || !streamInfo.url) {
 					PeachStreamHUD.log("STREAM", `所有源站寻源均未成功 [${avcode}]`, "error");
 					Toast$1(`现场寻源未找到有效流地址: ${avcode}`, 3e3, "error");
+					this._isResolving = false;
 					return;
 				}
 				PeachStreamHUD.updateMeta({
@@ -2676,21 +2691,89 @@
 				});
 				PeachStreamHUD.log("STREAM", `已锁定视频流: ${streamInfo.url} (来源: ${streamInfo.source})`, "success");
 				this._bindPlayerLifecycleForHUD(video);
-				video.src = streamInfo.url;
+				await this.mountHlsStream(video, streamInfo.url);
 				video.play().then(() => {
 					PeachStreamHUD.log("PLAYER", "视频成功起播！", "success");
 					Toast$1(`已获取新鲜视频流 (${streamInfo.source})，流畅起播！`, 2500, "success");
 					this.startProgressTracking(video);
+					setTimeout(() => {
+						this._isResolving = false;
+					}, 3e3);
 				}).catch((playErr) => {
 					PeachStreamHUD.log("PLAYER", `自动播放被浏览器策略限制: ${playErr.name || playErr.message}`, "warn");
 					console.warn("[PeachWebBridge] 自动起播受限，等待用户交互:", playErr);
 					this.startProgressTracking(video);
+					setTimeout(() => {
+						this._isResolving = false;
+					}, 3e3);
 				});
 			} catch (err) {
 				PeachStreamHUD.log("STREAM", `寻源异常: ${err.message}`, "error");
 				console.error("[PeachWebBridge] 现场寻源异常:", err);
 				Toast$1(`寻源失败: ${err.message}`, 3e3, "error");
+				setTimeout(() => {
+					this._isResolving = false;
+				}, 3e3);
 			}
+		}
+		static async mountHlsStream(video, streamUrl) {
+			if (!video || !streamUrl) return;
+			let hlsHost = video.closest("hlsjs-video");
+			if (!hlsHost && video.parentNode && video.parentNode.host && video.parentNode.host.tagName === "HLSJS-VIDEO") hlsHost = video.parentNode.host;
+			if (hlsHost) {
+				console.log("[PeachWebBridge] 检测到 Peach hlsjs-video 宿主，直接赋给组件驱动内部引擎");
+				PeachStreamHUD.log("PLAYER", "注入 Peach hlsjs-video 宿主组件驱动", "info");
+				hlsHost.src = streamUrl;
+				hlsHost.setAttribute("src", streamUrl);
+				try {
+					video.src = streamUrl;
+				} catch (_) {}
+				return;
+			}
+			if (video.canPlayType && video.canPlayType("application/vnd.apple.mpegurl")) {
+				PeachStreamHUD.log("PLAYER", "原生支持 HLS，直接加载", "info");
+				video.src = streamUrl;
+				return;
+			}
+			const HlsClass = typeof window !== "undefined" && window.Hls || typeof unsafeWindow !== "undefined" && unsafeWindow.Hls;
+			if (HlsClass && HlsClass.isSupported()) {
+				PeachStreamHUD.log("PLAYER", "唤醒环境自带 Hls.js 引擎解码切片", "info");
+				if (this._hlsInstance) try {
+					this._hlsInstance.destroy();
+				} catch (_) {}
+				this._hlsInstance = new HlsClass({
+					enableWorker: true,
+					lowLatencyMode: true
+				});
+				this._hlsInstance.loadSource(streamUrl);
+				this._hlsInstance.attachMedia(video);
+				return;
+			}
+			try {
+				await this._loadHlsScript();
+				const FreshHls = window.Hls || (typeof unsafeWindow !== "undefined" ? unsafeWindow.Hls : null);
+				if (FreshHls && FreshHls.isSupported()) {
+					PeachStreamHUD.log("PLAYER", "动态加载 Hls.js 成功并接管起播", "success");
+					if (this._hlsInstance) try {
+						this._hlsInstance.destroy();
+					} catch (_) {}
+					this._hlsInstance = new FreshHls();
+					this._hlsInstance.loadSource(streamUrl);
+					this._hlsInstance.attachMedia(video);
+					return;
+				}
+			} catch (_) {}
+			video.src = streamUrl;
+		}
+		static _loadHlsScript() {
+			return new Promise((resolve, reject) => {
+				if (window.Hls || typeof unsafeWindow !== "undefined" && unsafeWindow.Hls) return resolve();
+				const script = document.createElement("script");
+				script.src = "https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.7/hls.min.js";
+				script.onload = () => resolve();
+				script.onerror = () => reject(new Error("Hls.js CDN 加载失败"));
+				document.head.appendChild(script);
+			});
 		}
 		static _bindPlayerLifecycleForHUD(video) {
 			if (!video || video.dataset.mpHudBound) return;
@@ -2720,15 +2803,24 @@
 				const jableStream = await this._searchJableStream(cleanCode);
 				const elapsed = Math.round(performance.now() - t0);
 				if (jableStream) {
-					PeachStreamHUD.recordSourceResult("Jable", {
-						status: 200,
-						elapsedMs: elapsed,
-						success: true,
-						detail: jableStream.url
-					});
-					return jableStream;
-				}
-				PeachStreamHUD.recordSourceResult("Jable", {
+					if (this._failedStreamUrls.has(jableStream.url)) {
+						console.warn(`[PeachWebBridge] Jable 流已在黑名单中，自动顺位回退下一个源: ${jableStream.url}`);
+						PeachStreamHUD.recordSourceResult("Jable", {
+							status: 400,
+							elapsedMs: elapsed,
+							success: false,
+							detail: "流已在失败黑名单，顺位回退"
+						});
+					} else {
+						PeachStreamHUD.recordSourceResult("Jable", {
+							status: 200,
+							elapsedMs: elapsed,
+							success: true,
+							detail: jableStream.url
+						});
+						return jableStream;
+					}
+				} else PeachStreamHUD.recordSourceResult("Jable", {
 					status: 404,
 					elapsedMs: elapsed,
 					success: false,
@@ -2750,15 +2842,24 @@
 				const av123Stream = await this._search123AvStream(cleanCode);
 				const elapsed = Math.round(performance.now() - t1);
 				if (av123Stream) {
-					PeachStreamHUD.recordSourceResult("123AV", {
-						status: 200,
-						elapsedMs: elapsed,
-						success: true,
-						detail: av123Stream.url
-					});
-					return av123Stream;
-				}
-				PeachStreamHUD.recordSourceResult("123AV", {
+					if (this._failedStreamUrls.has(av123Stream.url)) {
+						console.warn(`[PeachWebBridge] 123AV 流已在黑名单中，自动顺位回退下一个源: ${av123Stream.url}`);
+						PeachStreamHUD.recordSourceResult("123AV", {
+							status: 400,
+							elapsedMs: elapsed,
+							success: false,
+							detail: "流已在失败黑名单，顺位回退"
+						});
+					} else {
+						PeachStreamHUD.recordSourceResult("123AV", {
+							status: 200,
+							elapsedMs: elapsed,
+							success: true,
+							detail: av123Stream.url
+						});
+						return av123Stream;
+					}
+				} else PeachStreamHUD.recordSourceResult("123AV", {
 					status: 404,
 					elapsedMs: elapsed,
 					success: false,
@@ -3044,6 +3145,9 @@
 	_defineProperty(PeachWebBridge, "_accumulatedDelta", 0);
 	_defineProperty(PeachWebBridge, "_seeksCount", 0);
 	_defineProperty(PeachWebBridge, "_currentAssetId", 0);
+	_defineProperty(PeachWebBridge, "_failedStreamUrls", new Set());
+	_defineProperty(PeachWebBridge, "_isResolving", false);
+	_defineProperty(PeachWebBridge, "_hlsInstance", null);
 	var PlayerCore = class {
 		constructor(options = {}) {
 			console.log("[PlayerCore] 初始化...");
@@ -4708,7 +4812,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.93";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.94";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
