@@ -1,12 +1,15 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	"miss-gateway/internal/migrator"
 	"miss-gateway/internal/server"
 	"miss-gateway/internal/source"
 )
@@ -32,6 +35,32 @@ func parseTokens(raw string) []string {
 }
 
 func main() {
+	// 检查是否运行 migrate 一次性迁移子命令
+	if len(os.Args) > 1 && os.Args[1] == "migrate" {
+		fs := flag.NewFlagSet("migrate", flag.ExitOnError)
+		dir := fs.String("dir", "/media", "STRM 媒体文件所在目录")
+		base := fs.String("base", "http://host.docker.internal:8765", "流网关播放基准地址")
+		token := fs.String("token", "dev", "写入 STRM 的安全播放 Token")
+		cat := fs.String("catalog", "data/catalog.json", "Catalog 持久化元数据路径")
+		dry := fs.Bool("dry-run", false, "模拟执行，不落盘修改真实文件")
+		_ = fs.Parse(os.Args[2:])
+
+		log.Printf("🚀 启动 .strm 批量迁移工具: dir=%s, base=%s, token=%s, dry-run=%v", *dir, *base, *token, *dry)
+		rep, err := migrator.RunMigrate(migrator.MigrateOptions{
+			Dir:         *dir,
+			BaseURL:     *base,
+			Token:       *token,
+			CatalogPath: *cat,
+			DryRun:      *dry,
+		})
+		if err != nil {
+			log.Fatalf("❌ 迁移失败: %v", err)
+		}
+		fmt.Printf("✅ 迁移执行完毕! 总计: %d, 已迁移: %d, 已跳过: %d, 失败: %d (耗时: %dms)\n",
+			rep.Total, rep.Migrated, rep.Skipped, rep.Failed, rep.ElapsedMs)
+		return
+	}
+
 	port := getEnv("PORT", "8765")
 	proxyURL := getEnv("PROXY_URL", "http://192.168.2.250:7890")
 	tokensRaw := getEnv("TOKENS", "")

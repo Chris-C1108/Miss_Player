@@ -42,7 +42,7 @@
 - [x] **19.4** 实测分数调度 + 熔断 + `/metrics` + 管理面（EWMA 动态打分自适应排序、连续失败熔断、Prometheus 监控与 Bearer Token 管理面，18 项测试全通）
 
 - [x] **19.5** MissAV 适配器（纯 Go Dean Edwards 解包混淆、可替换 PageFetcher 支持 direct/FlareSolverr、Cloudflare 盾牌 30 分钟快速熔断，21 项测试全通）
-- [ ] **19.6** `migrate` 子命令，迁移 NAS 上现有 292 个 `.strm`
+- [x] **19.6** `migrate` 子命令，迁移 NAS 上现有 292 个 `.strm`（实机 292 个文件 54ms 完成全量迁移，经 Peach `/stream?id=281` 原生点播实测 200 OK 跑通）
 
 - [ ] **19.7** 黄金集 + 端到端测试 + 验收（冷启动 P95 ≤ 4.0 s）
 - [ ] **19.8** Miss Player：`.strm` 拼接网关地址；Peach 入库 WebDAV 三种模式（复用同步配置 + `peach-media` 默认目录 / 复用 + 自定义目录 / 单独配置）
