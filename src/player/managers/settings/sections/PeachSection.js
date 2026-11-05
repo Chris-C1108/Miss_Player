@@ -224,8 +224,12 @@ export class PeachSection {
             }
         });
 
-        hudBtn.addEventListener('click', () => {
-            PeachStreamHUD.init();
+        hudBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const uiManager = this.sm?.uiManager || this.sm?.playerCore?.uiManager;
+            const container = uiManager?.playerContainer;
+            const shadow = uiManager?.shadowRoot;
+            PeachStreamHUD.init(container, shadow);
             Toast('已打开视频流采集与播放诊断探针', 1800, 'info');
         });
 

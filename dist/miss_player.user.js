@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.91
+// @version            5.7.92
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.91";
+		return "5.7.92";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.91";
+		return "5.7.92";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -1963,19 +1963,176 @@
 		}) : e[r] = t, e;
 	}
 	var PeachStreamHUD = class {
-		static init() {
+		static init(playerContainer = null, shadowRoot = null) {
 			if (typeof window === "undefined" || typeof document === "undefined") return;
+			const rootHost = document.querySelector("miss-player-root");
+			const effectiveShadow = shadowRoot || rootHost?.shadowRoot;
+			const effectiveContainer = playerContainer || effectiveShadow?.querySelector(".tm-player-container");
+			const activeDialog = document.querySelector("dialog[open], [data-stage-host] dialog");
+			const mountTarget = effectiveContainer || effectiveShadow || (activeDialog && activeDialog.isConnected ? activeDialog : document.body);
 			if (this._container && this._container.isConnected) {
 				this._container.style.display = "block";
+				if (this._container.parentElement !== mountTarget) mountTarget.appendChild(this._container);
 				this.updateDisplay();
 				return;
 			}
 			this._container = document.createElement("div");
 			this._container.className = "tm-peach-stream-hud";
-			const activeDialog = document.querySelector("dialog[open], [data-stage-host] dialog");
-			(activeDialog && activeDialog.isConnected ? activeDialog : document.body).appendChild(this._container);
+			const style = document.createElement("style");
+			style.textContent = `
+            .tm-peach-stream-hud {
+                position: fixed !important;
+                top: max(56px, env(safe-area-inset-top, 56px)) !important;
+                left: 12px !important;
+                right: 12px !important;
+                max-width: 440px !important;
+                max-height: 82vh !important;
+                overflow-y: auto !important;
+                z-index: 2147483647 !important;
+                background: rgba(12, 14, 20, 0.96) !important;
+                backdrop-filter: blur(24px) saturate(180%) !important;
+                backdrop-filter: blur(24px) saturate(180%) !important;-webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+                border: 1px solid rgba(56, 189, 248, 0.45) !important;
+                border-radius: 14px !important;
+                padding: 12px 14px !important;
+                box-shadow: 0 16px 48px rgba(0, 0, 0, 0.9) !important;
+                color: #e2e8f0 !important;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+                font-size: 11px !important;
+                line-height: 1.4 !important;
+                box-sizing: border-box !important;
+                pointer-events: auto !important;
+                user-select: text !important;
+                -webkit-user-select: text !important;
+            }
+            .tm-hud-collapsed-bar {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                font-size: 11px !important;
+                font-weight: 600 !important;
+                color: #38bdf8 !important;
+                cursor: pointer !important;
+            }
+            .tm-hud-dot {
+                width: 8px !important;
+                height: 8px !important;
+                border-radius: 50% !important;
+                background: #ef4444 !important;
+            }
+            .tm-hud-dot.is-active {
+                background: #30d158 !important;
+            }
+            .tm-hud-expand-btn,
+            .tm-hud-close-btn,
+            .tm-hud-tool-btn {
+                background: rgba(255, 255, 255, 0.12) !important;
+                color: #e2e8f0 !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                border-radius: 6px !important;
+                padding: 3px 8px !important;
+                font-size: 10px !important;
+                cursor: pointer !important;
+            }
+            .tm-hud-header {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding-bottom: 8px !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+                margin-bottom: 8px !important;
+            }
+            .tm-hud-title {
+                display: flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+                font-size: 12px !important;
+                font-weight: 700 !important;
+                color: #38bdf8 !important;
+            }
+            .tm-hud-version {
+                font-size: 9px !important;
+                padding: 1px 4px !important;
+                border-radius: 4px !important;
+                background: rgba(56, 189, 248, 0.2) !important;
+                color: #38bdf8 !important;
+            }
+            .tm-hud-tools {
+                display: flex !important;
+                gap: 6px !important;
+            }
+            .tm-hud-grid {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 6px 12px !important;
+                padding: 8px !important;
+                background: rgba(0, 0, 0, 0.4) !important;
+                border-radius: 8px !important;
+                margin-bottom: 8px !important;
+            }
+            .tm-hud-cell {
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+            .tm-hud-label { color: #94a3b8 !important; }
+            .tm-hud-val { color: #cbd5e1 !important; }
+            .tm-hud-val-highlight { color: #38bdf8 !important; }
+            .tm-hud-section-title {
+                font-weight: 700 !important;
+                color: #94a3b8 !important;
+                margin: 6px 0 4px 0 !important;
+                font-size: 10px !important;
+            }
+            .tm-hud-pipeline-box {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 4px !important;
+                padding: 6px 8px !important;
+                background: rgba(0, 0, 0, 0.4) !important;
+                border-radius: 8px !important;
+                margin-bottom: 8px !important;
+            }
+            .tm-hud-pipeline-item {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+            }
+            .tm-hud-pipeline-name {
+                font-weight: 600 !important;
+                min-width: 65px !important;
+                color: #e2e8f0 !important;
+            }
+            .tm-hud-dim {
+                color: #64748b !important;
+                font-size: 10px !important;
+            }
+            .tm-hud-logs-box {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 3px !important;
+                max-height: 140px !important;
+                overflow-y: auto !important;
+                padding: 6px 8px !important;
+                background: rgba(0, 0, 0, 0.5) !important;
+                border-radius: 8px !important;
+            }
+            .tm-hud-log-line {
+                font-size: 10px !important;
+                display: flex !important;
+                gap: 6px !important;
+                align-items: baseline !important;
+            }
+            .tm-hud-tag {
+                font-weight: 700 !important;
+                color: #38bdf8 !important;
+                font-size: 9px !important;
+            }
+        `;
+			this._container.appendChild(style);
+			mountTarget.appendChild(this._container);
 			this.updateDisplay();
-			console.log("[PeachStreamHUD] 视频流采集与播放诊断探针已启动");
+			console.log("[PeachStreamHUD] 视频流采集与播放诊断探针已成功挂载至:", mountTarget);
 		}
 		static destroy() {
 			if (this._container && this._container.parentNode) this._container.parentNode.removeChild(this._container);
@@ -2018,8 +2175,14 @@
 			if (!this._container) return;
 			const config = PeachService.getConfig();
 			const meta = this._currentMeta;
+			let bodyNode = this._container.querySelector(".tm-hud-body");
+			if (!bodyNode) {
+				bodyNode = document.createElement("div");
+				bodyNode.className = "tm-hud-body";
+				this._container.appendChild(bodyNode);
+			}
 			if (this._isCollapsed) {
-				this._container.innerHTML = `
+				bodyNode.innerHTML = `
                 <div class="tm-hud-collapsed-bar" title="点击展开 Peach 流采集探针">
                     <span class="tm-hud-dot ${meta.streamUrl ? "is-active" : ""}"></span>
                     <span>🍑 流采集探针 [${meta.avcode || "未识别"}]</span>
@@ -2027,11 +2190,13 @@
                     <button type="button" class="tm-hud-close-btn">✕</button>
                 </div>
             `;
-				this._container.querySelector(".tm-hud-expand-btn")?.addEventListener("click", () => {
+				bodyNode.querySelector(".tm-hud-expand-btn")?.addEventListener("click", (e) => {
+					e.stopPropagation();
 					this._isCollapsed = false;
 					this.updateDisplay();
 				});
-				this._container.querySelector(".tm-hud-close-btn")?.addEventListener("click", () => {
+				bodyNode.querySelector(".tm-hud-close-btn")?.addEventListener("click", (e) => {
+					e.stopPropagation();
 					this.destroy();
 				});
 				return;
@@ -2062,7 +2227,7 @@
                 </div>
             `;
 			}).join("");
-			this._container.innerHTML = `
+			bodyNode.innerHTML = `
             <div class="tm-hud-header">
                 <div class="tm-hud-title">
                     <span>🍑 视频流采集与播放诊断探针</span>
@@ -2092,14 +2257,17 @@
                 ${logsHtml || "<div class=\"tm-hud-dim\">暂无事件记录</div>"}
             </div>
         `;
-			this._container.querySelector(".tm-hud-copy-btn")?.addEventListener("click", () => {
+			bodyNode.querySelector(".tm-hud-copy-btn")?.addEventListener("click", (e) => {
+				e.stopPropagation();
 				this.copyReport();
 			});
-			this._container.querySelector(".tm-hud-collapse-btn")?.addEventListener("click", () => {
+			bodyNode.querySelector(".tm-hud-collapse-btn")?.addEventListener("click", (e) => {
+				e.stopPropagation();
 				this._isCollapsed = true;
 				this.updateDisplay();
 			});
-			this._container.querySelector(".tm-hud-close-btn")?.addEventListener("click", () => {
+			bodyNode.querySelector(".tm-hud-close-btn")?.addEventListener("click", (e) => {
+				e.stopPropagation();
 				this.destroy();
 			});
 		}
@@ -4441,7 +4609,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.91";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.92";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -19844,8 +20012,12 @@
 					scanBtn.textContent = "通知 Peach 扫描";
 				}
 			});
-			hudBtn.addEventListener("click", () => {
-				PeachStreamHUD.init();
+			hudBtn.addEventListener("click", (e) => {
+				e.stopPropagation();
+				const uiManager = this.sm?.uiManager || this.sm?.playerCore?.uiManager;
+				const container = uiManager?.playerContainer;
+				const shadow = uiManager?.shadowRoot;
+				PeachStreamHUD.init(container, shadow);
 				Toast$1("已打开视频流采集与播放诊断探针", 1800, "info");
 			});
 			headerRow.addEventListener("click", (e) => {
