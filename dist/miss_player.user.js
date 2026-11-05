@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.104
+// @version            5.7.105
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.104";
+		return "5.7.105";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.104";
+		return "5.7.105";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2441,6 +2441,10 @@
 			const tStart = performance.now();
 			const tryNativeFetchFallback = async (reason = "") => {
 				PeachStreamHUD.log("STREAM", `[GMHlsLoader] 启动原生 fetch 逃逸通道 (${reason})`, "warn");
+				let data = null;
+				let byteLen = 0;
+				let finalUrl = url;
+				let tEnd = performance.now();
 				try {
 					this.abortController = new AbortController();
 					const fetchRes = await fetch(url, {
@@ -2448,30 +2452,52 @@
 						signal: this.abortController.signal
 					});
 					if (fetchRes.status >= 200 && fetchRes.status < 300) {
-						const tEnd = performance.now();
-						let data;
+						tEnd = performance.now();
+						finalUrl = fetchRes.url || url;
 						if (responseType === "arraybuffer") data = await fetchRes.arrayBuffer();
 						else data = await fetchRes.text();
-						const byteLen = data && data.byteLength || data && data.length || 0;
-						if (byteLen > 0) {
-							const response = {
-								url: fetchRes.url || url,
-								data
-							};
-							const stats = {
-								trequest: tStart,
-								tfirst: tEnd,
-								tload: tEnd,
-								loaded: byteLen,
-								total: byteLen
-							};
-							PeachStreamHUD.log("STREAM", `[GMHlsLoader] 原生 fetch 成功接力 (${byteLen}B)`, "success");
-							callbacks.onSuccess(response, stats, context);
-							return true;
-						}
-					}
+						byteLen = data && data.byteLength || data && data.length || 0;
+					} else PeachStreamHUD.log("STREAM", `[GMHlsLoader] 原生 fetch HTTP ${fetchRes.status}: ${url.slice(0, 48)}`, "warn");
 				} catch (fetchErr) {
-					PeachStreamHUD.log("STREAM", `[GMHlsLoader] 原生 fetch 逃逸未果: ${fetchErr.message}`, "warn");
+					PeachStreamHUD.log("STREAM", `[GMHlsLoader] 原生 fetch 网络异常: ${fetchErr.message}`, "warn");
+					return false;
+				}
+				if (data && byteLen > 0) {
+					const response = {
+						url: finalUrl,
+						data
+					};
+					const stats = {
+						trequest: tStart,
+						tfirst: tEnd,
+						tload: tEnd,
+						loaded: byteLen,
+						total: byteLen,
+						retry: 0,
+						chunkCount: 0,
+						bwEstimate: 0,
+						loading: {
+							start: tStart,
+							first: tEnd,
+							end: tEnd
+						},
+						parsing: {
+							start: 0,
+							end: 0
+						},
+						buffering: {
+							start: 0,
+							first: 0,
+							end: 0
+						}
+					};
+					PeachStreamHUD.log("STREAM", `[GMHlsLoader] 原生 fetch 成功接力 (${byteLen}B · 耗时 ${Math.round(tEnd - tStart)}ms)`, "success");
+					try {
+						callbacks.onSuccess(response, stats, context);
+					} catch (consumeErr) {
+						PeachStreamHUD.log("PLAYER", `Hls.js 消费数据异常: ${consumeErr.message}`, "error");
+					}
+					return true;
 				}
 				return false;
 			};
@@ -2531,10 +2557,31 @@
 							tfirst: tEnd,
 							tload: tEnd,
 							loaded: byteLen,
-							total: byteLen
+							total: byteLen,
+							retry: 0,
+							chunkCount: 0,
+							bwEstimate: 0,
+							loading: {
+								start: tStart,
+								first: tEnd,
+								end: tEnd
+							},
+							parsing: {
+								start: 0,
+								end: 0
+							},
+							buffering: {
+								start: 0,
+								first: 0,
+								end: 0
+							}
 						};
 						PeachStreamHUD.log("STREAM", `[GMHlsLoader] ${responseType === "arraybuffer" ? "切片/Key" : "m3u8"} 下载完成 (${byteLen}B)`, "info");
-						callbacks.onSuccess(response, stats, context);
+						try {
+							callbacks.onSuccess(response, stats, context);
+						} catch (hlsErr) {
+							PeachStreamHUD.log("PLAYER", `Hls.js 消费 GM 数据异常: ${hlsErr.message}`, "error");
+						}
 					} else {
 						PeachStreamHUD.log("STREAM", `[GMHlsLoader] HTTP ${res.status}: ${url.slice(0, 48)}`, "warn");
 						if (!await tryNativeFetchFallback(`HTTP ${res.status}`)) callbacks.onError({
@@ -3020,8 +3067,24 @@
 				this._hlsInstance.on(HlsClass.Events.ERROR, (event, data) => {
 					if (data && data.fatal) {
 						console.warn("[PeachWebBridge] Hls.js fatal error:", data.type, data.details);
-						PeachStreamHUD.log("PLAYER", `Hls.js 错误: ${data.details}`, "error");
+						PeachStreamHUD.log("PLAYER", `Hls.js 致命错误: ${data.details}`, "error");
 					}
+				});
+				this._hlsInstance.on(HlsClass.Events.MANIFEST_PARSED, (evt, data) => {
+					PeachStreamHUD.log("PLAYER", `Hls.js 索引解析就绪 (档位: ${data?.levels?.length || 1})`, "success");
+				});
+				this._hlsInstance.on(HlsClass.Events.LEVEL_LOADED, (evt, data) => {
+					const dur = data?.details?.totalduration ? `时长 ${Math.round(data.details.totalduration)}s · ` : "";
+					PeachStreamHUD.log("PLAYER", `Hls.js 档位就绪: ${dur}切片数: ${data?.details?.fragments?.length || 0}`, "info");
+				});
+				if (HlsClass.Events.KEY_LOADED) this._hlsInstance.on(HlsClass.Events.KEY_LOADED, () => {
+					PeachStreamHUD.log("PLAYER", "Hls.js 密钥 (AES-128 Key) 加载成功", "success");
+				});
+				if (HlsClass.Events.FRAG_LOADED) this._hlsInstance.once(HlsClass.Events.FRAG_LOADED, (evt, data) => {
+					PeachStreamHUD.log("PLAYER", `Hls.js 首切片 #${data?.frag?.sn ?? 0} 加载完成`, "success");
+				});
+				if (HlsClass.Events.BUFFER_APPENDED) this._hlsInstance.once(HlsClass.Events.BUFFER_APPENDED, () => {
+					PeachStreamHUD.log("PLAYER", "Hls.js 缓冲帧已灌入解码器", "success");
 				});
 				this._hlsInstance.loadSource(streamUrl);
 				this._hlsInstance.attachMedia(video);
@@ -5268,7 +5331,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.104";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.105";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
