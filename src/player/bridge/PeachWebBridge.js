@@ -105,7 +105,6 @@ export class PeachWebBridge {
     static _accumulatedDelta = 0;
     static _seeksCount = 0;
     static _currentAssetId = 0;
-    static _failedStreamUrls = new Set();
     static _isResolving = false;
     static _hlsInstance = null;
 
@@ -481,18 +480,12 @@ export class PeachWebBridge {
     }
 
     /**
-     * 处理播放失败：自动寻源并接力 (包含防死循环熔断保护)
+     * 处理播放失败：自动寻源并接力
      */
     static async _handlePlaybackError(video) {
         if (this._isResolving) {
             console.log('[PeachWebBridge] 当前已在寻源流水线中，跳过重入触发');
             return;
-        }
-
-        const currentSrc = video?.currentSrc || video?.src || '';
-        if (currentSrc && currentSrc.includes('.m3u8')) {
-            this._failedStreamUrls.add(currentSrc);
-            console.log('[PeachWebBridge] 已将当前失效流加入黑名单:', currentSrc);
         }
 
         const avcode = this.extractCurrentAvCode(video);
@@ -537,6 +530,7 @@ export class PeachWebBridge {
         ];
 
         let playSuccess = false;
+        const currentRoundFailed = new Set(); // 本轮已试播失败的流，单轮防重，绝不跨轮次永久污染
 
         for (const source of sources) {
             PeachStreamHUD.log('STREAM', `正在尝试 [${source.name}]...`, 'info');
@@ -548,12 +542,12 @@ export class PeachWebBridge {
                 const elapsed = Math.round(performance.now() - t0);
 
                 if (!streamInfo || !streamInfo.url) {
-                    PeachStreamHUD.recordSourceResult(source.name, { status: 404, elapsedMs: elapsed, success: false, detail: '未收录' });
+                    PeachStreamHUD.recordSourceResult(source.name, { status: 404, elapsedMs: elapsed, success: false, detail: '未检索到有效流' });
                     continue;
                 }
 
-                if (this._failedStreamUrls.has(streamInfo.url)) {
-                    PeachStreamHUD.recordSourceResult(source.name, { status: 400, elapsedMs: elapsed, success: false, detail: '流已在失败黑名单，顺位尝试下一个源' });
+                if (currentRoundFailed.has(streamInfo.url)) {
+                    PeachStreamHUD.recordSourceResult(source.name, { status: 400, elapsedMs: elapsed, success: false, detail: '本轮已试播失败，顺位尝试下一个源' });
                     continue;
                 }
 
@@ -579,8 +573,8 @@ export class PeachWebBridge {
                 this.startProgressTracking(video);
                 break; // 起播成功，退出瀑布流！
             } else {
-                this._failedStreamUrls.add(streamInfo.url);
-                PeachStreamHUD.log('PLAYER', `[${source.name}] 起播失败，自动顺位无缝尝试下一个源...`, 'warn');
+                currentRoundFailed.add(streamInfo.url);
+                PeachStreamHUD.log('PLAYER', `[${source.name}] 试播失败，自动顺位无缝尝试下一个源...`, 'warn');
             }
         }
 
@@ -589,7 +583,7 @@ export class PeachWebBridge {
             Toast(`所有源站均未能成功起播，请在设置中配置独立采集端或检查代理`, 3500, 'error');
         }
 
-        setTimeout(() => { this._isResolving = false; }, 3000);
+        setTimeout(() => { this._isResolving = false; }, 2000);
     }
 
     /**
@@ -683,9 +677,18 @@ export class PeachWebBridge {
 
         // 设置全域 GM 切片加载器的伪造 Referer
         GMHlsLoader.currentReferer = referer;
-        PeachStreamHUD.log('PLAYER', `设置防盗链 Referer: ${referer || '无'}`, 'info');
+        PeachStreamHUD.log('PLAYER', `配置防盗链 Referer: ${referer || '无'}`, 'info');
 
-        // 1. 优先使用 Hls.js + GMHlsLoader 加载 (全浏览器通用，100% 免疫 Referer 403)
+        // 0. 清理 Peach 宿主组件 <hlsjs-video> 原生无 Referer 的 src 干扰
+        try {
+            const rootNode = video.getRootNode ? video.getRootNode() : null;
+            const hlsHost = rootNode?.host || video.closest('hlsjs-video') || document.querySelector('hlsjs-video');
+            if (hlsHost && hlsHost.removeAttribute) {
+                hlsHost.removeAttribute('src');
+            }
+        } catch (_) {}
+
+        // 1. 优先使用 Hls.js + GMHlsLoader 挂载 (全浏览器通用，100% 免疫 Referer 403)
         let HlsClass = (typeof window !== 'undefined' && window.Hls) || 
                         (typeof unsafeWindow !== 'undefined' && unsafeWindow.Hls);
 
@@ -697,7 +700,7 @@ export class PeachWebBridge {
         }
 
         if (HlsClass && HlsClass.isSupported()) {
-            PeachStreamHUD.log('PLAYER', '启动 GM 防盗链 Hls.js 引擎加载切片', 'success');
+            PeachStreamHUD.log('PLAYER', '启动 GM 强注 Referer Hls.js 引擎加载切片', 'success');
             if (this._hlsInstance) {
                 try { this._hlsInstance.destroy(); } catch (_) {}
             }
@@ -721,27 +724,7 @@ export class PeachWebBridge {
             return;
         }
 
-        // 2. 降级：如果属于 Peach 的 <hlsjs-video> Web Component，直接赋给组件
-        let hlsHost = null;
-        try {
-            const rootNode = video.getRootNode ? video.getRootNode() : null;
-            if (rootNode && rootNode.host && rootNode.host.tagName && rootNode.host.tagName.toLowerCase().includes('hls')) {
-                hlsHost = rootNode.host;
-            }
-            if (!hlsHost) {
-                hlsHost = video.closest('hlsjs-video') || document.querySelector('hlsjs-video');
-            }
-        } catch (_) {}
-
-        if (hlsHost) {
-            PeachStreamHUD.log('PLAYER', '降级注入 Peach hlsjs-video 宿主组件', 'info');
-            hlsHost.src = streamUrl;
-            hlsHost.setAttribute('src', streamUrl);
-            try { video.src = streamUrl; } catch (_) {}
-            return;
-        }
-
-        // 3. 兜底直接赋值 (如 Safari 原生)
+        // 2. 兜底直接赋值 (原生环境)
         video.src = streamUrl;
     }
 

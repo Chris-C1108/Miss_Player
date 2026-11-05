@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.96
+// @version            5.7.97
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.96";
+		return "5.7.97";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.96";
+		return "5.7.97";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2718,11 +2718,6 @@
 				console.log("[PeachWebBridge] 当前已在寻源流水线中，跳过重入触发");
 				return;
 			}
-			const currentSrc = video?.currentSrc || video?.src || "";
-			if (currentSrc && currentSrc.includes(".m3u8")) {
-				this._failedStreamUrls.add(currentSrc);
-				console.log("[PeachWebBridge] 已将当前失效流加入黑名单:", currentSrc);
-			}
 			const avcode = this.extractCurrentAvCode(video);
 			if (!avcode) return;
 			Toast$1(`Peach 原生流已失效，Miss Player 正在现场寻源 [${avcode}]...`, 2500, "info");
@@ -2768,6 +2763,7 @@
 				}
 			];
 			let playSuccess = false;
+			const currentRoundFailed = new Set();
 			for (const source of sources) {
 				PeachStreamHUD.log("STREAM", `正在尝试 [${source.name}]...`, "info");
 				const t0 = performance.now();
@@ -2780,16 +2776,16 @@
 							status: 404,
 							elapsedMs: elapsed,
 							success: false,
-							detail: "未收录"
+							detail: "未检索到有效流"
 						});
 						continue;
 					}
-					if (this._failedStreamUrls.has(streamInfo.url)) {
+					if (currentRoundFailed.has(streamInfo.url)) {
 						PeachStreamHUD.recordSourceResult(source.name, {
 							status: 400,
 							elapsedMs: elapsed,
 							success: false,
-							detail: "流已在失败黑名单，顺位尝试下一个源"
+							detail: "本轮已试播失败，顺位尝试下一个源"
 						});
 						continue;
 					}
@@ -2821,8 +2817,8 @@
 					this.startProgressTracking(video);
 					break;
 				} else {
-					this._failedStreamUrls.add(streamInfo.url);
-					PeachStreamHUD.log("PLAYER", `[${source.name}] 起播失败，自动顺位无缝尝试下一个源...`, "warn");
+					currentRoundFailed.add(streamInfo.url);
+					PeachStreamHUD.log("PLAYER", `[${source.name}] 试播失败，自动顺位无缝尝试下一个源...`, "warn");
 				}
 			}
 			if (!playSuccess) {
@@ -2831,7 +2827,7 @@
 			}
 			setTimeout(() => {
 				this._isResolving = false;
-			}, 3e3);
+			}, 2e3);
 		}
 		static async _verifyAndMountStream(video, streamInfo) {
 			if (!video || !streamInfo || !streamInfo.url) return false;
@@ -2904,14 +2900,18 @@
 			const streamUrl = typeof streamInfo === "string" ? streamInfo : streamInfo.url;
 			const referer = typeof streamInfo === "object" && streamInfo.referer ? streamInfo.referer : "";
 			GMHlsLoader.currentReferer = referer;
-			PeachStreamHUD.log("PLAYER", `设置防盗链 Referer: ${referer || "无"}`, "info");
+			PeachStreamHUD.log("PLAYER", `配置防盗链 Referer: ${referer || "无"}`, "info");
+			try {
+				const hlsHost = (video.getRootNode ? video.getRootNode() : null)?.host || video.closest("hlsjs-video") || document.querySelector("hlsjs-video");
+				if (hlsHost && hlsHost.removeAttribute) hlsHost.removeAttribute("src");
+			} catch (_) {}
 			let HlsClass = typeof window !== "undefined" && window.Hls || typeof unsafeWindow !== "undefined" && unsafeWindow.Hls;
 			if (!HlsClass) try {
 				await this._loadHlsScript();
 				HlsClass = window.Hls || (typeof unsafeWindow !== "undefined" ? unsafeWindow.Hls : null);
 			} catch (_) {}
 			if (HlsClass && HlsClass.isSupported()) {
-				PeachStreamHUD.log("PLAYER", "启动 GM 防盗链 Hls.js 引擎加载切片", "success");
+				PeachStreamHUD.log("PLAYER", "启动 GM 强注 Referer Hls.js 引擎加载切片", "success");
 				if (this._hlsInstance) try {
 					this._hlsInstance.destroy();
 				} catch (_) {}
@@ -2929,21 +2929,6 @@
 				});
 				this._hlsInstance.loadSource(streamUrl);
 				this._hlsInstance.attachMedia(video);
-				return;
-			}
-			let hlsHost = null;
-			try {
-				const rootNode = video.getRootNode ? video.getRootNode() : null;
-				if (rootNode && rootNode.host && rootNode.host.tagName && rootNode.host.tagName.toLowerCase().includes("hls")) hlsHost = rootNode.host;
-				if (!hlsHost) hlsHost = video.closest("hlsjs-video") || document.querySelector("hlsjs-video");
-			} catch (_) {}
-			if (hlsHost) {
-				PeachStreamHUD.log("PLAYER", "降级注入 Peach hlsjs-video 宿主组件", "info");
-				hlsHost.src = streamUrl;
-				hlsHost.setAttribute("src", streamUrl);
-				try {
-					video.src = streamUrl;
-				} catch (_) {}
 				return;
 			}
 			video.src = streamUrl;
@@ -3330,7 +3315,6 @@
 	_defineProperty(PeachWebBridge, "_accumulatedDelta", 0);
 	_defineProperty(PeachWebBridge, "_seeksCount", 0);
 	_defineProperty(PeachWebBridge, "_currentAssetId", 0);
-	_defineProperty(PeachWebBridge, "_failedStreamUrls", new Set());
 	_defineProperty(PeachWebBridge, "_isResolving", false);
 	_defineProperty(PeachWebBridge, "_hlsInstance", null);
 	var PlayerCore = class {
@@ -4997,7 +4981,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.96";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.97";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
