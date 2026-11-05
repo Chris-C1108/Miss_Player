@@ -266,6 +266,15 @@ src/player/ui/styles/
    - 监听 `loadedmetadata` 事件，当视频真实时长就绪后，自动向 Supabase 追写更新 `duration_seconds`。
 3. **失焦与后台播放白名单**：
    - 在 `BlurPlaybackManager` 中精准追踪用户手势真实交互，通过堆栈诊断拦截宿主外部脚本恶意偷停。
+4. **HTML5 Top Layer 模态层穿透挂载准则 (Top Layer Dialog Inheritance)**：
+   - 凡需在包含模态弹窗的第三方页面（如 Peach Web 作品详情舞台、Bootstrap Modal 等）展示全屏浮层、播放器视口或浮动控制按钮时，严禁盲目直接 `document.body.appendChild`；
+   - 必须优先检查当前 DOM 是否存在处于激活状态的原生模态 `<dialog open>`，若存在，必须将组件动态提升挂载至该 `<dialog>` 内部以继承 Top Layer 最高渲染层级，彻底杜绝被宿主模态层强制压制遮挡；
+5. **Web Components 深度穿透探测规范 (Deep Shadow DOM Piercing)**：
+   - 探测宿主音视频媒体元素时，严禁依赖单一层级的 `document.querySelectorAll('video')`；
+   - 必须采用递归深度遍历算法（`queryAllVideosDeep`），穿透所有开放的 `element.shadowRoot`，彻底解决组件化播放器（如 `<hlsjs-video>`）内部视频元素漏检问题；
+6. **油猴特权 HLS 切片加载器主线程收敛纪律 (Main-Thread GMHlsLoader Constraint)**：
+   - 在使用 `GM_xmlhttpRequest` 自定义 Hls.js 的切片加载器（`fLoader` / `pLoader`）注入防盗链 Referer 时，必须强制设置 `enableWorker: false`；
+   - 严禁开启 Web Worker 导致子线程因缺失 `GM_*` API 静默崩溃挂起；文本清单请求严禁传递非法 `responseType: 'text'` 导致返回体被置空为 0B。
 
 ---
 
