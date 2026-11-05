@@ -27,7 +27,7 @@
 | **Phase 15** | **UI/UX 深度优化与第三方脚本适配专项 (v5.7.1 ~ v5.7.4)** | **达成 ✅** | 详见 Release v5.7.4 |
 | **Phase 16** | **全局输入框与双模层叠上下文架构重构 (内外两界隔离与端态自适应)** | **达成 ✅** | 详见 Release v5.7.64 |
 | **Phase 17** | **Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环** | **达成 ✅** | **[Phase 17 专属规划方案](./docs/todo/phase-17-peach-strm-integration.md)** |
-| **Phase 19** | **流网关 (Miss Stream Gateway) 与脚本职责收敛为「只入库」** | **实施中 🟡** | **[Phase 19 设计方案](./docs/todo/phase-19-stream-gateway.md)** |
+| **Phase 19** | **流网关 (Miss Stream Gateway) 与脚本职责收敛为「只入库」** | **达成 ✅** | **[Phase 19 设计方案](./docs/todo/phase-19-stream-gateway.md)** |
 
 ---
 
@@ -46,7 +46,7 @@
 
 - [x] **19.7** 黄金集 + 端到端测试 + 验收（20 番号实机端到端 100% 成功，冷启动 P95 2034ms、热启动 P95 11ms、切片首包 P95 580ms 全绿通关）
 - [x] **19.8** Miss Player：`.strm` 拼接网关地址；Peach 入库 WebDAV 三种模式（复用同步配置 + `peach-media` 默认目录 / 复用 + 自定义目录 / 单独配置，15 项 CI 全通）
-- [ ] **19.9** 删除 `PeachWebBridge` 中的寻源与接力代码，收缩 `@connect`，产物 < 1.0 MB
+- [x] **19.9** 删除 `PeachWebBridge` 中的寻源与接力代码，收缩 `@connect`（清洗 1350 行死代码，移除 5 大临时 CDN 跨域白名单，15 项 CI 全通）
 
 ---
 
