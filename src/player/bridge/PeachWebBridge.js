@@ -24,6 +24,7 @@ import { PeachStreamHUD } from '../ui/PeachStreamHUD.js';
  */
 class GMHlsLoader {
     static currentReferer = '';
+    static failedDomains = new Set(); // 记忆已失效/空包域名，一旦触发过逃逸，后续切片零延迟直连原生 fetch
 
     constructor(config) {
         this.config = config;
@@ -65,9 +66,8 @@ class GMHlsLoader {
         const responseType = context.responseType;
         const referer = GMHlsLoader.currentReferer || '';
 
-        const gmXhr = (typeof GM_xmlhttpRequest === 'function' ? GM_xmlhttpRequest : null) ||
-                      (typeof GM === 'object' && typeof GM.xmlHttpRequest === 'function' ? GM.xmlHttpRequest : null) ||
-                      (typeof window !== 'undefined' && window.GM_xmlhttpRequest);
+        let urlHost = '';
+        try { urlHost = new URL(url).hostname; } catch (_) {}
 
         const tStart = performance.now();
         this.stats.trequest = tStart;
@@ -106,6 +106,11 @@ class GMHlsLoader {
             }
 
             if (data && byteLen > 0) {
+                // 标记该域为失效/空包域，后续同域切片直接走原生 fetch，免除死等惩罚！
+                if (urlHost) {
+                    GMHlsLoader.failedDomains.add(urlHost);
+                }
+
                 const response = {
                     url: finalUrl,
                     data: data
@@ -130,6 +135,16 @@ class GMHlsLoader {
 
             return false;
         };
+
+        // 1. 若当前域名之前在 GM 中发生过 0B 空响应或超时，绝不再受死等惩罚，直接走原生 fetch 极速直连！
+        if (urlHost && GMHlsLoader.failedDomains.has(urlHost)) {
+            tryNativeFetchFallback('记忆失效域极速直连');
+            return;
+        }
+
+        const gmXhr = (typeof GM_xmlhttpRequest === 'function' ? GM_xmlhttpRequest : null) ||
+                      (typeof GM === 'object' && typeof GM.xmlHttpRequest === 'function' ? GM.xmlHttpRequest : null) ||
+                      (typeof window !== 'undefined' && window.GM_xmlhttpRequest);
 
         if (!gmXhr) {
             PeachStreamHUD.log('STREAM', '[GMHlsLoader] GM_xmlhttpRequest 不可用，直接转原生 fetch', 'warn');
@@ -157,7 +172,7 @@ class GMHlsLoader {
             url: url,
             headers: headers,
             responseType: 'arraybuffer',
-            timeout: config.timeout || 15000,
+            timeout: Math.min(config.timeout || 3500, 3500),
             onload: async (res) => {
                 const tEnd = performance.now();
                 if (res.status >= 200 && res.status < 300) {

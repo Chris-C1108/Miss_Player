@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.108
+// @version            5.7.109
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.108";
+		return "5.7.109";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.108";
+		return "5.7.109";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2461,7 +2461,10 @@
 			const url = context.url;
 			const responseType = context.responseType;
 			const referer = GMHlsLoader.currentReferer || "";
-			const gmXhr = (typeof GM_xmlhttpRequest === "function" ? GM_xmlhttpRequest : null) || (typeof GM === "object" && typeof GM.xmlHttpRequest === "function" ? GM.xmlHttpRequest : null) || typeof window !== "undefined" && window.GM_xmlhttpRequest;
+			let urlHost = "";
+			try {
+				urlHost = new URL(url).hostname;
+			} catch (_) {}
 			const tStart = performance.now();
 			this.stats.trequest = tStart;
 			this.stats.loading.start = tStart;
@@ -2489,6 +2492,7 @@
 					return false;
 				}
 				if (data && byteLen > 0) {
+					if (urlHost) GMHlsLoader.failedDomains.add(urlHost);
 					const response = {
 						url: finalUrl,
 						data
@@ -2509,6 +2513,11 @@
 				}
 				return false;
 			};
+			if (urlHost && GMHlsLoader.failedDomains.has(urlHost)) {
+				tryNativeFetchFallback("记忆失效域极速直连");
+				return;
+			}
+			const gmXhr = (typeof GM_xmlhttpRequest === "function" ? GM_xmlhttpRequest : null) || (typeof GM === "object" && typeof GM.xmlHttpRequest === "function" ? GM.xmlHttpRequest : null) || typeof window !== "undefined" && window.GM_xmlhttpRequest;
 			if (!gmXhr) {
 				PeachStreamHUD.log("STREAM", "[GMHlsLoader] GM_xmlhttpRequest 不可用，直接转原生 fetch", "warn");
 				tryNativeFetchFallback("GM不可用").then((ok) => {
@@ -2531,7 +2540,7 @@
 				url,
 				headers,
 				responseType: "arraybuffer",
-				timeout: config.timeout || 15e3,
+				timeout: Math.min(config.timeout || 3500, 3500),
 				onload: async (res) => {
 					const tEnd = performance.now();
 					if (res.status >= 200 && res.status < 300) {
@@ -2599,6 +2608,7 @@
 		}
 	};
 	_defineProperty(GMHlsLoader, "currentReferer", "");
+	_defineProperty(GMHlsLoader, "failedDomains", new Set());
 	var PeachWebBridge = class {
 		static isPeachInstance() {
 			const config = PeachService.getConfig();
@@ -5362,7 +5372,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.108";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.109";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

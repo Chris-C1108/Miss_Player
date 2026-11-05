@@ -79,13 +79,13 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":  "ok",
 		"service": "miss-stream-resolver",
-		"version": "1.1.0",
+		"version": "1.2.0",
 		"proxy":   proxyURL,
 		"time":    time.Now().Format(time.RFC3339),
 	})
 }
 
-// 辅助函数：嗅探并解析 M3U8 中的 AES-128 密钥元数据
+// 嗅探并解析 M3U8 中的 AES-128 密钥元数据
 func enrichHlsEncryptionMetadata(ctx context.Context, m3u8URL, referer string, res *StreamResult) {
 	req, err := http.NewRequestWithContext(ctx, "GET", m3u8URL, nil)
 	if err != nil {
@@ -111,14 +111,12 @@ func enrichHlsEncryptionMetadata(ctx context.Context, m3u8URL, referer string, r
 	}
 
 	content := string(bodyBytes)
-	// 检查 #EXT-X-KEY 标签
 	keyRe := regexp.MustCompile(`#EXT-X-KEY:METHOD=([A-Z0-9\-]+)(?:,URI="([^"]+)")?(?:,IV=([0-9a-fA-FxX]+))?`)
 	matches := keyRe.FindStringSubmatch(content)
 	if len(matches) > 1 {
 		res.KeyMethod = matches[1]
 		if len(matches) > 2 && matches[2] != "" {
 			rawURI := matches[2]
-			// 解析为绝对地址
 			if strings.HasPrefix(rawURI, "http") {
 				res.KeyURL = rawURI
 			} else {
@@ -129,7 +127,7 @@ func enrichHlsEncryptionMetadata(ctx context.Context, m3u8URL, referer string, r
 				}
 			}
 
-			// 服务端预拉取 16 字节密钥并输出 HEX
+			// 预拉取 16 字节密钥并输出 HEX
 			if res.KeyURL != "" {
 				kReq, _ := http.NewRequestWithContext(ctx, "GET", res.KeyURL, nil)
 				if referer != "" {
@@ -153,7 +151,7 @@ func enrichHlsEncryptionMetadata(ctx context.Context, m3u8URL, referer string, r
 	}
 }
 
-// 123AV 源解析器 (免盾高稳定，包含高清与无码泄露版)
+// 123AV 源解析器 (免盾纯明文，优先无码泄露版)
 func resolve123Av(ctx context.Context, code string) (*StreamResult, error) {
 	cleanCode := strings.ToLower(strings.TrimSpace(code))
 	variants := []struct {
@@ -191,9 +189,11 @@ func resolve123Av(ctx context.Context, code string) (*StreamResult, error) {
 			continue
 		}
 
-		bodyStr := string(bodyBytes)
-		re := regexp.MustCompile(`https://([a-zA-Z0-9_\-\.]+)/e/([a-zA-Z0-9_\-]+)`)
-		match := re.FindStringSubmatch(bodyStr)
+		// 彻底剥除 JSON 转义斜杠，确保正则无损命中
+		cleanBody := strings.ReplaceAll(string(bodyBytes), `\`, "")
+
+		re := regexp.MustCompile(`https?://([a-zA-Z0-9_\-\.]+)/e/([a-zA-Z0-9_\-]+)`)
+		match := re.FindStringSubmatch(cleanBody)
 		if len(match) < 3 {
 			continue
 		}
@@ -231,7 +231,7 @@ func resolve123Av(ctx context.Context, code string) (*StreamResult, error) {
 		}
 
 		if err := json.Unmarshal(apiBytes, &mediaData); err == nil && mediaData.Media.Stream != "" {
-			res := &StreamResult{
+			return &StreamResult{
 				Success:   true,
 				Code:      strings.ToUpper(code),
 				Source:    fmt.Sprintf("123AV (%s)", v.variant),
@@ -240,12 +240,100 @@ func resolve123Av(ctx context.Context, code string) (*StreamResult, error) {
 				VTT:       mediaData.Media.VTT,
 				Variant:   v.variant,
 				KeyMethod: "NONE", // 123AV 纯明文无加密
-			}
-			return res, nil
+			}, nil
 		}
 	}
 
 	return nil, fmt.Errorf("123av未收录")
+}
+
+// JAVVerse 源解析器 (免盾会话接口)
+func resolveJavVerse(ctx context.Context, code string) (*StreamResult, error) {
+	cleanCode := strings.ToUpper(strings.TrimSpace(code))
+	origin := "https://javverse.com"
+	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+	// 1. 尝试从轻量检索提取 workId
+	searchURL := fmt.Sprintf("%s/en/search?q=%s", origin, url.QueryEscape(cleanCode))
+	sReq, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	sReq.Header.Set("User-Agent", ua)
+	sReq.Header.Set("Referer", origin+"/")
+
+	sResp, err := client.Do(sReq)
+	if err != nil || sResp.StatusCode >= 400 {
+		if sResp != nil {
+			sResp.Body.Close()
+		}
+		return nil, fmt.Errorf("javverse搜索受限")
+	}
+
+	sBody, _ := io.ReadAll(sResp.Body)
+	sResp.Body.Close()
+
+	re := regexp.MustCompile(`/(?:[a-z]{2}/)?work/(\d+)`)
+	match := re.FindStringSubmatch(string(sBody))
+	if len(match) < 2 {
+		return nil, fmt.Errorf("javverse未找到作品ID")
+	}
+
+	workID := match[1]
+
+	// 2. 伪造 Referer 与 Origin 请求免盾播放会话
+	sessionURL := fmt.Sprintf("%s/api/video/sessions", origin)
+	payload := fmt.Sprintf(`{"workId":%s,"code":"%s","variant":"uncensored-leak"}`, workID, cleanCode)
+
+	sessReq, err := http.NewRequestWithContext(ctx, "POST", sessionURL, strings.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+	sessReq.Header.Set("Content-Type", "application/json")
+	sessReq.Header.Set("Origin", origin)
+	sessReq.Header.Set("Referer", fmt.Sprintf("%s/work/%s", origin, workID))
+	sessReq.Header.Set("User-Agent", ua)
+
+	sessResp, err := client.Do(sessReq)
+	if err != nil || sessResp.StatusCode >= 400 {
+		if sessResp != nil {
+			sessResp.Body.Close()
+		}
+		return nil, fmt.Errorf("javverse会话受阻")
+	}
+
+	sessBody, _ := io.ReadAll(sessResp.Body)
+	sessResp.Body.Close()
+
+	var data struct {
+		Success     bool   `json:"success"`
+		PlaylistURL string `json:"playlistUrl"`
+		Variant     string `json:"variant"`
+	}
+
+	if err := json.Unmarshal(sessBody, &data); err == nil && data.Success && data.PlaylistURL != "" {
+		streamURL := data.PlaylistURL
+		if !strings.HasPrefix(streamURL, "http") {
+			streamURL = origin + streamURL
+		}
+		isUncensored := data.Variant == "uncensored-leak" || data.Variant == "reduced-mosaic"
+		sourceName := "JAVVerse"
+		if isUncensored {
+			sourceName = "JAVVerse (无码流出)"
+		}
+
+		return &StreamResult{
+			Success:   true,
+			Code:      cleanCode,
+			Source:    sourceName,
+			URL:       streamURL,
+			Referer:   origin + "/",
+			Variant:   data.Variant,
+			KeyMethod: "NONE", // JAVVerse 纯明文 MPEG-TS
+		}, nil
+	}
+
+	return nil, fmt.Errorf("javverse未能获取有效播放地址")
 }
 
 // Jable 源解析器 (带 AES-128 解密元数据嗅探)
@@ -288,7 +376,6 @@ func resolveJable(ctx context.Context, code string) (*StreamResult, error) {
 				Referer: domain + "/",
 				Variant: "普通版",
 			}
-			// 嗅探并提取 AES-128 密钥元数据
 			enrichHlsEncryptionMetadata(ctx, res.URL, res.Referer, res)
 			return res, nil
 		}
@@ -297,97 +384,7 @@ func resolveJable(ctx context.Context, code string) (*StreamResult, error) {
 	return nil, fmt.Errorf("jable未检索到流")
 }
 
-// JAVVerse 源解析器 (免盾会话接口)
-func resolveJavVerse(ctx context.Context, code string) (*StreamResult, error) {
-	cleanCode := strings.ToUpper(strings.TrimSpace(code))
-	origin := "https://javverse.com"
-	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-
-	// 1. 尝试从检索提取 workId
-	searchURL := fmt.Sprintf("%s/en/search?q=%s", origin, url.QueryEscape(cleanCode))
-	sReq, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
-	if err != nil {
-		return nil, err
-	}
-	sReq.Header.Set("User-Agent", ua)
-	sReq.Header.Set("Referer", origin+"/")
-
-	sResp, err := client.Do(sReq)
-	if err != nil || sResp.StatusCode >= 400 {
-		if sResp != nil {
-			sResp.Body.Close()
-		}
-		return nil, fmt.Errorf("javverse搜索不可达")
-	}
-
-	sBody, _ := io.ReadAll(sResp.Body)
-	sResp.Body.Close()
-
-	re := regexp.MustCompile(`/(?:[a-z]{2}/)?work/(\d+)`)
-	match := re.FindStringSubmatch(string(sBody))
-	if len(match) < 2 {
-		return nil, fmt.Errorf("javverse未找到对应作品ID")
-	}
-
-	workID := match[1]
-
-	// 2. 伪造 Referer 与 Origin 请求免盾播放会话
-	sessionURL := fmt.Sprintf("%s/api/video/sessions", origin)
-	payload := fmt.Sprintf(`{"workId":%s,"code":"%s","variant":"uncensored-leak"}`, workID, cleanCode)
-
-	sessReq, err := http.NewRequestWithContext(ctx, "POST", sessionURL, strings.NewReader(payload))
-	if err != nil {
-		return nil, err
-	}
-	sessReq.Header.Set("Content-Type", "application/json")
-	sessReq.Header.Set("Origin", origin)
-	sessReq.Header.Set("Referer", fmt.Sprintf("%s/work/%s", origin, workID))
-	sessReq.Header.Set("User-Agent", ua)
-
-	sessResp, err := client.Do(sessReq)
-	if err != nil || sessResp.StatusCode >= 400 {
-		if sessResp != nil {
-			sessResp.Body.Close()
-		}
-		return nil, fmt.Errorf("javverse播放会话获取失败")
-	}
-
-	sessBody, _ := io.ReadAll(sessResp.Body)
-	sessResp.Body.Close()
-
-	var data struct {
-		Success     bool   `json:"success"`
-		PlaylistURL string `json:"playlistUrl"`
-		Variant     string `json:"variant"`
-	}
-
-	if err := json.Unmarshal(sessBody, &data); err == nil && data.Success && data.PlaylistURL != "" {
-		streamURL := data.PlaylistURL
-		if !strings.HasPrefix(streamURL, "http") {
-			streamURL = origin + streamURL
-		}
-		isUncensored := data.Variant == "uncensored-leak" || data.Variant == "reduced-mosaic"
-		sourceName := "JAVVerse"
-		if isUncensored {
-			sourceName = "JAVVerse (无码流出)"
-		}
-
-		res := &StreamResult{
-			Success:   true,
-			Code:      cleanCode,
-			Source:    sourceName,
-			URL:       streamURL,
-			Referer:   origin + "/",
-			Variant:   data.Variant,
-			KeyMethod: "NONE", // JAVVerse 纯明文 MPEG-TS
-		}
-		return res, nil
-	}
-
-	return nil, fmt.Errorf("javverse未能获取有效播放地址")
-}
-
-// 调度入口：多源并发竞速与瀑布流协同调度
+// 调度入口：加权优先级竞速与智能瀑布流
 func handleResolve(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
 	if r.Method == "OPTIONS" {
@@ -412,43 +409,75 @@ func handleResolve(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
+	// 核心加权机制：
+	// T0 纯明文/无码免解密源 (123AV / JAVVerse) 享有绝对优先权
+	// T1 加密源 (Jable) 仅作为兜底候选
 	type resolverFunc func(context.Context, string) (*StreamResult, error)
-	resolvers := []struct {
+
+	var finalResult *StreamResult
+	var mu sync.Mutex
+
+	// 第一梯队 (纯明文/无码) 并发抢跑
+	primaryResolvers := []struct {
 		name string
 		fn   resolverFunc
 	}{
 		{"123AV", resolve123Av},
-		{"Jable", resolveJable},
 		{"JAVVerse", resolveJavVerse},
 	}
 
-	resultChan := make(chan *StreamResult, len(resolvers))
-	var wg sync.WaitGroup
+	primaryChan := make(chan *StreamResult, len(primaryResolvers))
+	var wgPrimary sync.WaitGroup
 
-	for _, res := range resolvers {
-		wg.Add(1)
+	for _, res := range primaryResolvers {
+		wgPrimary.Add(1)
 		go func(name string, fn resolverFunc) {
-			defer wg.Done()
+			defer wgPrimary.Done()
 			if res, err := fn(ctx, cleanCode); err == nil && res != nil && res.URL != "" {
 				select {
-				case resultChan <- res:
+				case primaryChan <- res:
 				default:
 				}
 			}
 		}(res.name, res.fn)
 	}
 
+	// 收集第一梯队结果 (最多等待 2.5 秒)
+	primaryDone := make(chan struct{})
 	go func() {
-		wg.Wait()
-		close(resultChan)
+		wgPrimary.Wait()
+		close(primaryChan)
+		close(primaryDone)
 	}()
 
-	var finalResult *StreamResult
-	for res := range resultChan {
-		if res != nil && res.Success && res.URL != "" {
+	select {
+	case res := <-primaryChan:
+		if res != nil {
+			mu.Lock()
 			finalResult = res
+			mu.Unlock()
 			cancel()
-			break
+		}
+	case <-time.After(2500 * time.Millisecond):
+		// 第一梯队未能在 2.5s 内返回，立即启动 Jable 兜底
+	case <-primaryDone:
+		// 第一梯队快速执行完成
+	}
+
+	// 若第一梯队未命中，尝试 Jable 兜底
+	if finalResult == nil {
+		for res := range primaryChan {
+			if res != nil && res.Success && res.URL != "" {
+				finalResult = res
+				break
+			}
+		}
+	}
+
+	if finalResult == nil {
+		// 启动 Jable 兜底检索
+		if jableRes, err := resolveJable(ctx, cleanCode); err == nil && jableRes != nil {
+			finalResult = jableRes
 		}
 	}
 
