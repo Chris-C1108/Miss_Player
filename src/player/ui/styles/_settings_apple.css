@@ -463,6 +463,21 @@
     margin-top: 2px;
 }
 
+.tm-peach-source-action-wrap {
+    margin-top: 8px;
+}
+
+.tm-peach-jv-login-btn {
+    background: rgba(254, 98, 142, 0.15);
+    color: var(--brand-pink, #fe628e);
+    border: 1px solid rgba(254, 98, 142, 0.35);
+}
+
+.tm-peach-jv-login-btn:hover {
+    background: rgba(254, 98, 142, 0.25);
+    border-color: rgba(254, 98, 142, 0.55);
+}
+
 /* Peach Web 接力浮动按键 */
 .tm-peach-relay-btn {
     position: absolute;

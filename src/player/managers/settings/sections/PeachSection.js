@@ -144,7 +144,36 @@ export class PeachSection {
         const scraperInput = scraperRow.querySelector('.tm-peach-scraper-input');
         bodyWrap.appendChild(scraperRow);
 
-        // 2.7 操作按键区
+        // 2.7 外部片源与授权 (JAVVerse)
+        const jvRow = document.createElement('div');
+        jvRow.className = 'tm-apple-row tm-peach-field-row';
+        jvRow.innerHTML = `
+            <div class="tm-apple-row-title">外部片源：JAVVerse (无码流出 / 高清)</div>
+            <div class="tm-apple-row-subtext">优先寻获独家无码流出。若遇访客频控，点击前往登录以同步免登凭据</div>
+            <div class="tm-peach-source-action-wrap">
+                <button type="button" class="tm-settings-btn tm-peach-jv-login-btn">
+                    前往 JAVVerse 登录 / 授权
+                </button>
+            </div>
+        `;
+        const jvLoginBtn = jvRow.querySelector('.tm-peach-jv-login-btn');
+        jvLoginBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const openUrl = 'https://javverse.com/en/auth/login';
+            try {
+                if (typeof GM_openInTab === 'function') {
+                    GM_openInTab(openUrl, { active: true });
+                } else {
+                    window.open(openUrl, '_blank');
+                }
+            } catch (_) {
+                window.open(openUrl, '_blank');
+            }
+            Toast('已打开 JAVVerse 登录页，登录完成后即可畅享无码流出版', 3500, 'info');
+        });
+        bodyWrap.appendChild(jvRow);
+
+        // 2.8 操作按键区
         const actionRow = document.createElement('div');
         actionRow.className = 'tm-peach-action-row';
         actionRow.innerHTML = `

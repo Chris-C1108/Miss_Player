@@ -571,8 +571,9 @@ export class PeachWebBridge {
         const cleanCode = avcode.trim().toUpperCase();
         const config = PeachService.getConfig();
 
-        // 构造有序候选源清单
+        // 构造有序候选源清单 (JAVVerse 优先提取无码流出与高清源)
         const sources = [
+            { name: 'JAVVerse', fn: () => this._searchJavVerseStream(cleanCode) },
             { name: 'Jable', fn: () => this._searchJableStream(cleanCode) },
             { name: '123AV', fn: () => this._search123AvStream(cleanCode) },
             ...(config.remoteScraper ? [{ name: '自建采集端', fn: () => this._searchRemoteScraperStream(cleanCode, config.remoteScraper) }] : []),
@@ -838,7 +839,30 @@ export class PeachWebBridge {
         const cleanCode = avcode.trim().toUpperCase();
         const config = PeachService.getConfig();
 
-        // 1. 首选 Jable 寻源 (本地直连)
+        // 1. 首选 JAVVerse 寻源 (优先无码流出版 / 高清)
+        const t0_jv = performance.now();
+        try {
+            console.log(`[PeachWebBridge] 正在尝试从 JAVVerse 寻源: ${cleanCode}`);
+            const jvStream = await this._searchJavVerseStream(cleanCode);
+            const elapsed = Math.round(performance.now() - t0_jv);
+            if (jvStream) {
+                if (this._failedStreamUrls.has(jvStream.url)) {
+                    console.warn(`[PeachWebBridge] JAVVerse 流已在黑名单中，自动顺位回退下一个源: ${jvStream.url}`);
+                    PeachStreamHUD.recordSourceResult('JAVVerse', { status: 400, elapsedMs: elapsed, success: false, detail: '流已在失败黑名单，顺位回退' });
+                } else {
+                    PeachStreamHUD.recordSourceResult('JAVVerse', { status: 200, elapsedMs: elapsed, success: true, detail: jvStream.url });
+                    return jvStream;
+                }
+            } else {
+                PeachStreamHUD.recordSourceResult('JAVVerse', { status: 404, elapsedMs: elapsed, success: false, detail: '未收录或未登录' });
+            }
+        } catch (jvErr) {
+            const elapsed = Math.round(performance.now() - t0_jv);
+            PeachStreamHUD.recordSourceResult('JAVVerse', { status: 0, elapsedMs: elapsed, success: false, detail: jvErr.message });
+            console.warn('[PeachWebBridge] JAVVerse 寻源失败:', jvErr.message);
+        }
+
+        // 2. 次选 Jable 寻源 (本地直连)
         const t0 = performance.now();
         try {
             console.log(`[PeachWebBridge] 正在尝试从 Jable 寻源: ${cleanCode}`);
@@ -861,7 +885,7 @@ export class PeachWebBridge {
             console.warn('[PeachWebBridge] Jable 寻源失败:', jableErr.message);
         }
 
-        // 2. 次选 123AV 寻源 (本地免盾直连，收录极全长片/合辑，如 PBD-491)
+        // 3. 次选 123AV 寻源 (本地免盾直连，收录极全长片/合辑，如 PBD-491)
         const t1 = performance.now();
         try {
             console.log(`[PeachWebBridge] 正在尝试从 123AV 寻源: ${cleanCode}`);
@@ -919,6 +943,113 @@ export class PeachWebBridge {
             const elapsed = Math.round(performance.now() - t3);
             PeachStreamHUD.recordSourceResult('MissAV', { status: 0, elapsedMs: elapsed, success: false, isCfBlocked: true, detail: missavErr.message });
             console.warn('[PeachWebBridge] MissAV 寻源失败:', missavErr.message);
+        }
+
+        return null;
+    }
+
+    /**
+     * 从 JAVVerse 检索视频流 (优先获取独家无码流出版与高清源，无 AES-128 加密)
+     */
+    static async _searchJavVerseStream(code) {
+        const cleanCode = code.toUpperCase().trim();
+        const origin = 'https://javverse.com';
+        const ua = (typeof navigator !== 'undefined' && navigator.userAgent)
+            ? navigator.userAgent
+            : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+        // 1. 跨站搜索获取 workId
+        let workId = null;
+        try {
+            const searchUrl = `${origin}/en/search?q=${encodeURIComponent(cleanCode)}`;
+            const searchRes = await fetchWithTransport(searchUrl, {
+                headers: {
+                    'Referer': `${origin}/`,
+                    'Origin': origin,
+                    'User-Agent': ua
+                },
+                timeout: 8000
+            });
+
+            if (searchRes.status >= 200 && searchRes.status < 400 && searchRes.html) {
+                const match = searchRes.html.match(/\/(?:[a-z]{2}\/)?work\/(\d+)/i);
+                if (match && match[1]) {
+                    workId = parseInt(match[1], 10);
+                }
+            } else if (searchRes.status === 403) {
+                PeachStreamHUD.log('SCRAPE', `[JAVVerse] 搜索触发安全防护拦截 (HTTP 403)`, 'warn');
+            }
+        } catch (searchErr) {
+            PeachStreamHUD.log('SCRAPE', `[JAVVerse] 搜索异常: ${searchErr.message}`, 'warn');
+        }
+
+        if (!workId) return null;
+
+        // 2. 伪造 Referer 与 Origin 请求播放会话 (优先请求无码流出版)
+        const sessionUrl = `${origin}/api/video/sessions`;
+        const headers = {
+            'Content-Type': 'application/json',
+            'Referer': `${origin}/work/${workId}`,
+            'Origin': origin,
+            'User-Agent': ua
+        };
+
+        let data = null;
+        try {
+            const sessionRes = await fetchWithTransport(sessionUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    workId,
+                    code: cleanCode,
+                    variant: 'uncensored-leak'
+                }),
+                timeout: 8000
+            });
+
+            if (sessionRes.status >= 200 && sessionRes.status < 400 && sessionRes.html) {
+                try { data = JSON.parse(sessionRes.html); } catch (_) {}
+            }
+        } catch (e) {}
+
+        // 若无码流出未收录或报错，尝试普通版 (standard) 降级
+        if (!data || !data.success || !data.playlistUrl) {
+            try {
+                const fallbackRes = await fetchWithTransport(sessionUrl, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        workId,
+                        code: cleanCode,
+                        variant: 'standard'
+                    }),
+                    timeout: 8000
+                });
+                if (fallbackRes.status >= 200 && fallbackRes.status < 400 && fallbackRes.html) {
+                    try { data = JSON.parse(fallbackRes.html); } catch (_) {}
+                }
+            } catch (_) {}
+        }
+
+        if (data && data.success && data.playlistUrl) {
+            const streamUrl = data.playlistUrl.startsWith('http')
+                ? data.playlistUrl
+                : `${origin}${data.playlistUrl}`;
+
+            const isUncensored = data.variant === 'uncensored-leak' || data.variant === 'reduced-mosaic';
+            PeachStreamHUD.log('SCRAPE', `[JAVVerse] 解析成功: ${isUncensored ? '无码流出版' : '普通版'} (workId: ${workId})`, 'success');
+
+            return {
+                url: streamUrl,
+                source: isUncensored ? 'JAVVerse (无码流出)' : 'JAVVerse',
+                referer: `${origin}/`
+            };
+        }
+
+        if (data && data.status === 'cross_site') {
+            PeachStreamHUD.log('SCRAPE', `[JAVVerse] 跨站安全检查未通过 (${data.error || 'cross_site'})`, 'error');
+        } else if (data && (data.requireLogin || data.status === 'guest_limit' || data.status === 'auth_required')) {
+            PeachStreamHUD.log('SCRAPE', `[JAVVerse] 需登录授权: ${data.error || '访客受限'}，请在设置中登录`, 'warn');
         }
 
         return null;
