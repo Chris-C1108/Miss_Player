@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.106
+// @version            5.7.107
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.106";
+		return "5.7.107";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.106";
+		return "5.7.107";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2419,6 +2419,30 @@
 			this.config = config;
 			this.request = null;
 			this.abortController = null;
+			this.stats = {
+				trequest: 0,
+				tfirst: 0,
+				tload: 0,
+				loaded: 0,
+				total: 0,
+				retry: 0,
+				chunkCount: 0,
+				bwEstimate: 0,
+				loading: {
+					start: 0,
+					first: 0,
+					end: 0
+				},
+				parsing: {
+					start: 0,
+					end: 0
+				},
+				buffering: {
+					start: 0,
+					first: 0,
+					end: 0
+				}
+			};
 		}
 		destroy() {
 			if (this.request && this.request.abort) try {
@@ -2439,6 +2463,8 @@
 			const referer = GMHlsLoader.currentReferer || "";
 			const gmXhr = (typeof GM_xmlhttpRequest === "function" ? GM_xmlhttpRequest : null) || (typeof GM === "object" && typeof GM.xmlHttpRequest === "function" ? GM.xmlHttpRequest : null) || typeof window !== "undefined" && window.GM_xmlhttpRequest;
 			const tStart = performance.now();
+			this.stats.trequest = tStart;
+			this.stats.loading.start = tStart;
 			const tryNativeFetchFallback = async (reason = "") => {
 				PeachStreamHUD.log("STREAM", `[GMHlsLoader] 启动原生 fetch 逃逸通道 (${reason})`, "warn");
 				let data = null;
@@ -2467,33 +2493,15 @@
 						url: finalUrl,
 						data
 					};
-					const stats = {
-						trequest: tStart,
-						tfirst: tEnd,
-						tload: tEnd,
-						loaded: byteLen,
-						total: byteLen,
-						retry: 0,
-						chunkCount: 0,
-						bwEstimate: 0,
-						loading: {
-							start: tStart,
-							first: tEnd,
-							end: tEnd
-						},
-						parsing: {
-							start: 0,
-							end: 0
-						},
-						buffering: {
-							start: 0,
-							first: 0,
-							end: 0
-						}
-					};
+					this.stats.tfirst = tEnd;
+					this.stats.tload = tEnd;
+					this.stats.loaded = byteLen;
+					this.stats.total = byteLen;
+					this.stats.loading.first = tEnd;
+					this.stats.loading.end = tEnd;
 					PeachStreamHUD.log("STREAM", `[GMHlsLoader] 原生 fetch 成功接力 (${byteLen}B · 耗时 ${Math.round(tEnd - tStart)}ms)`, "success");
 					try {
-						callbacks.onSuccess(response, stats, context);
+						callbacks.onSuccess(response, this.stats, context);
 					} catch (consumeErr) {
 						PeachStreamHUD.log("PLAYER", `Hls.js 消费数据异常: ${consumeErr.message}`, "error");
 					}
@@ -2552,33 +2560,15 @@
 							url: res.finalUrl || url,
 							data
 						};
-						const stats = {
-							trequest: tStart,
-							tfirst: tEnd,
-							tload: tEnd,
-							loaded: byteLen,
-							total: byteLen,
-							retry: 0,
-							chunkCount: 0,
-							bwEstimate: 0,
-							loading: {
-								start: tStart,
-								first: tEnd,
-								end: tEnd
-							},
-							parsing: {
-								start: 0,
-								end: 0
-							},
-							buffering: {
-								start: 0,
-								first: 0,
-								end: 0
-							}
-						};
+						this.stats.tfirst = tEnd;
+						this.stats.tload = tEnd;
+						this.stats.loaded = byteLen;
+						this.stats.total = byteLen;
+						this.stats.loading.first = tEnd;
+						this.stats.loading.end = tEnd;
 						PeachStreamHUD.log("STREAM", `[GMHlsLoader] ${responseType === "arraybuffer" ? "切片/Key" : "m3u8"} 下载完成 (${byteLen}B)`, "info");
 						try {
-							callbacks.onSuccess(response, stats, context);
+							callbacks.onSuccess(response, this.stats, context);
 						} catch (hlsErr) {
 							PeachStreamHUD.log("PLAYER", `Hls.js 消费 GM 数据异常: ${hlsErr.message}`, "error");
 						}
@@ -3066,8 +3056,10 @@
 				});
 				this._hlsInstance.on(HlsClass.Events.ERROR, (event, data) => {
 					if (data && data.fatal) {
-						console.warn("[PeachWebBridge] Hls.js fatal error:", data.type, data.details);
-						PeachStreamHUD.log("PLAYER", `Hls.js 致命错误: ${data.details}`, "error");
+						const errDetail = data.error ? data.error.stack || data.error.message || String(data.error) : data.err ? data.err.message || String(data.err) : "";
+						const evtStr = data.event ? ` [事件: ${data.event}]` : "";
+						console.warn("[PeachWebBridge] Hls.js fatal error:", data.type, data.details, errDetail);
+						PeachStreamHUD.log("PLAYER", `Hls.js 致命错误: ${data.details}${evtStr} - ${errDetail}`, "error");
 					}
 				});
 				this._hlsInstance.on(HlsClass.Events.MANIFEST_PARSED, (evt, data) => {
@@ -5370,7 +5362,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.106";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.107";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

@@ -29,6 +29,20 @@ class GMHlsLoader {
         this.config = config;
         this.request = null;
         this.abortController = null;
+        // 必须在构造函数中完整初始化 Hls.js LoaderStats 规范结构，供 frag.stats 与 bwEstimator 消费
+        this.stats = {
+            trequest: 0,
+            tfirst: 0,
+            tload: 0,
+            loaded: 0,
+            total: 0,
+            retry: 0,
+            chunkCount: 0,
+            bwEstimate: 0,
+            loading: { start: 0, first: 0, end: 0 },
+            parsing: { start: 0, end: 0 },
+            buffering: { start: 0, first: 0, end: 0 }
+        };
     }
 
     destroy() {
@@ -56,6 +70,8 @@ class GMHlsLoader {
                       (typeof window !== 'undefined' && window.GM_xmlhttpRequest);
 
         const tStart = performance.now();
+        this.stats.trequest = tStart;
+        this.stats.loading.start = tStart;
 
         // 核心双轨自愈：原生 fetch 逃逸通道 (当 GM 沙箱遭遇权限拦截、域阻断或返回 0B 时无缝接管)
         const tryNativeFetchFallback = async (reason = '') => {
@@ -94,24 +110,18 @@ class GMHlsLoader {
                     url: finalUrl,
                     data: data
                 };
-                const stats = {
-                    trequest: tStart,
-                    tfirst: tEnd,
-                    tload: tEnd,
-                    loaded: byteLen,
-                    total: byteLen,
-                    retry: 0,
-                    chunkCount: 0,
-                    bwEstimate: 0,
-                    loading: { start: tStart, first: tEnd, end: tEnd },
-                    parsing: { start: 0, end: 0 },
-                    buffering: { start: 0, first: 0, end: 0 }
-                };
+                this.stats.tfirst = tEnd;
+                this.stats.tload = tEnd;
+                this.stats.loaded = byteLen;
+                this.stats.total = byteLen;
+                this.stats.loading.first = tEnd;
+                this.stats.loading.end = tEnd;
+
                 PeachStreamHUD.log('STREAM', `[GMHlsLoader] 原生 fetch 成功接力 (${byteLen}B · 耗时 ${Math.round(tEnd - tStart)}ms)`, 'success');
                 
                 // 安全调用 Hls 回调，隔离消费层异常
                 try {
-                    callbacks.onSuccess(response, stats, context);
+                    callbacks.onSuccess(response, this.stats, context);
                 } catch (consumeErr) {
                     PeachStreamHUD.log('PLAYER', `Hls.js 消费数据异常: ${consumeErr.message}`, 'error');
                 }
@@ -196,22 +206,16 @@ class GMHlsLoader {
                         url: res.finalUrl || url,
                         data: data
                     };
-                    const stats = {
-                        trequest: tStart,
-                        tfirst: tEnd,
-                        tload: tEnd,
-                        loaded: byteLen,
-                        total: byteLen,
-                        retry: 0,
-                        chunkCount: 0,
-                        bwEstimate: 0,
-                        loading: { start: tStart, first: tEnd, end: tEnd },
-                        parsing: { start: 0, end: 0 },
-                        buffering: { start: 0, first: 0, end: 0 }
-                    };
+                    this.stats.tfirst = tEnd;
+                    this.stats.tload = tEnd;
+                    this.stats.loaded = byteLen;
+                    this.stats.total = byteLen;
+                    this.stats.loading.first = tEnd;
+                    this.stats.loading.end = tEnd;
+
                     PeachStreamHUD.log('STREAM', `[GMHlsLoader] ${responseType === 'arraybuffer' ? '切片/Key' : 'm3u8'} 下载完成 (${byteLen}B)`, 'info');
                     try {
-                        callbacks.onSuccess(response, stats, context);
+                        callbacks.onSuccess(response, this.stats, context);
                     } catch (hlsErr) {
                         PeachStreamHUD.log('PLAYER', `Hls.js 消费 GM 数据异常: ${hlsErr.message}`, 'error');
                     }
@@ -877,8 +881,10 @@ export class PeachWebBridge {
 
             this._hlsInstance.on(HlsClass.Events.ERROR, (event, data) => {
                 if (data && data.fatal) {
-                    console.warn('[PeachWebBridge] Hls.js fatal error:', data.type, data.details);
-                    PeachStreamHUD.log('PLAYER', `Hls.js 致命错误: ${data.details}`, 'error');
+                    const errDetail = data.error ? (data.error.stack || data.error.message || String(data.error)) : (data.err ? (data.err.message || String(data.err)) : '');
+                    const evtStr = data.event ? ` [事件: ${data.event}]` : '';
+                    console.warn('[PeachWebBridge] Hls.js fatal error:', data.type, data.details, errDetail);
+                    PeachStreamHUD.log('PLAYER', `Hls.js 致命错误: ${data.details}${evtStr} - ${errDetail}`, 'error');
                 }
             });
 
