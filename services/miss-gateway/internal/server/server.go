@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -12,26 +13,30 @@ import (
 	"strings"
 	"time"
 
+	"miss-gateway/internal/cache"
 	"miss-gateway/internal/hls"
 	"miss-gateway/internal/registry"
 	"miss-gateway/internal/source"
 )
 
 type Config struct {
-	Port       string
-	ProxyURL   string
-	Version    string
-	WaitWindow time.Duration
-	Timeout    time.Duration
-	Tokens     []string
+	Port        string
+	ProxyURL    string
+	Version     string
+	CatalogPath string
+	WaitWindow  time.Duration
+	Timeout     time.Duration
+	Tokens      []string
 }
 
 type Server struct {
-	cfg      Config
-	manager  *source.Manager
-	registry *registry.Registry
-	mux      *http.ServeMux
-	client   *http.Client
+	cfg          Config
+	manager      *source.Manager
+	registry     *registry.Registry
+	catalog      *cache.Catalog
+	singleflight *cache.Group
+	mux          *http.ServeMux
+	client       *http.Client
 }
 
 func NewServer(cfg Config, mgr *source.Manager) *Server {
@@ -44,13 +49,18 @@ func NewServer(cfg Config, mgr *source.Manager) *Server {
 	if cfg.Version == "" {
 		cfg.Version = "2.0.0"
 	}
+	if cfg.CatalogPath == "" {
+		cfg.CatalogPath = "data/catalog.json"
+	}
 
 	s := &Server{
-		cfg:      cfg,
-		manager:  mgr,
-		registry: registry.NewRegistry(2 * time.Hour),
-		mux:      http.NewServeMux(),
-		client:   mgr.Client(),
+		cfg:          cfg,
+		manager:      mgr,
+		registry:     registry.NewRegistry(2 * time.Hour),
+		catalog:      cache.NewCatalog(cfg.CatalogPath),
+		singleflight: cache.NewGroup(),
+		mux:          http.NewServeMux(),
+		client:       mgr.Client(),
 	}
 
 	if s.client == nil {
@@ -146,97 +156,185 @@ func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. 检查注册表缓存
+	// 1. 检查负缓存，如果在冷却期内直接 404
+	if s.catalog.IsNegative(cleanCode) {
+		http.Error(w, "Stream not found (negative cache cooling)", http.StatusNotFound)
+		return
+	}
+
+	// 2. 检查注册表已就绪缓存
 	session, exists := s.registry.Get(cleanCode)
 	if exists && session != nil {
-		if v, ok := session.Variants["0"]; ok && v.M3U8URL != "" {
-			// 直接返回已改写的缓存清单
+		if v, ok := session.Variants["0"]; ok && len(v.RewrittenM3U8) > 0 {
 			w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
 			w.Header().Set("Cache-Control", "no-store")
-			_, _ = w.Write(v.RewrittenM3U8)
+			if r.Method != http.MethodHead {
+				_, _ = w.Write(v.RewrittenM3U8)
+			}
 			return
 		}
 	}
 
-	// 2. 缓存未命中，调用加权竞速寻源
-	ctx, cancel := context.WithTimeout(r.Context(), s.cfg.Timeout)
-	defer cancel()
+	// 3. 缓存未命中，使用 Singleflight 合并并发寻源请求
+	val, err := s.singleflight.Do("play:"+cleanCode, func() (interface{}, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), s.cfg.Timeout)
+		defer cancel()
 
-	res, err := s.manager.ResolveWeighted(ctx, cleanCode, s.cfg.WaitWindow)
-	if err != nil || res == nil || res.URL == "" {
+		res, err := s.manager.ResolveWeighted(ctx, cleanCode, s.cfg.WaitWindow)
+		if err != nil || res == nil || res.URL == "" {
+			s.catalog.MarkNegative(cleanCode, 30*time.Minute)
+			return nil, fmt.Errorf("stream not found")
+		}
+
+		// 拉取上游原始 M3U8 清单
+		mReq, err := http.NewRequestWithContext(ctx, "GET", res.URL, nil)
+		if err != nil {
+			return nil, err
+		}
+		if res.Referer != "" {
+			mReq.Header.Set("Referer", res.Referer)
+		}
+		mReq.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+
+		mResp, err := s.client.Do(mReq)
+		if err != nil || mResp.StatusCode >= 400 {
+			if mResp != nil {
+				mResp.Body.Close()
+			}
+			return nil, fmt.Errorf("upstream m3u8 fetch failed")
+		}
+
+		mBytes, err := io.ReadAll(mResp.Body)
+		mResp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		sourceSlug := strings.ToLower(strings.Split(res.Source, " ")[0])
+		rewritten, err := hls.RewriteM3U8(mBytes, res.URL, hls.RewriteOptions{
+			Token:    token,
+			Code:     cleanCode,
+			SourceID: sourceSlug,
+			Variant:  "0",
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// 存入注册表
+		newSession := &registry.StreamSession{
+			Code:         cleanCode,
+			SourceID:     sourceSlug,
+			UpstreamM3U8: res.URL,
+			Referer:      res.Referer,
+			Variants: map[string]*registry.VariantSession{
+				"0": {
+					VariantID:     "0",
+					M3U8URL:       res.URL,
+					Sublists:      rewritten.Sublists,
+					Segments:      rewritten.Segments,
+					Keys:          rewritten.Keys,
+					Maps:          rewritten.Maps,
+					RewrittenM3U8: rewritten.Rewritten,
+				},
+			},
+		}
+		s.registry.Set(newSession)
+
+		// 记录至持久化 Catalog
+		s.catalog.Set(cache.CatalogEntry{
+			Code:     cleanCode,
+			SourceID: sourceSlug,
+			PageURL:  res.Referer,
+		})
+		go func() { _ = s.catalog.Save() }()
+
+		return rewritten.Rewritten, nil
+	})
+
+	if err != nil {
 		log.Printf("[Play] %s 寻源失败: %v", cleanCode, err)
 		http.Error(w, "Stream not found", http.StatusNotFound)
 		return
 	}
 
-	// 3. 拉取上游原始 M3U8 清单
-	mReq, err := http.NewRequestWithContext(ctx, "GET", res.URL, nil)
-	if err != nil {
-		http.Error(w, "Failed to create upstream request", http.StatusInternalServerError)
-		return
-	}
-	if res.Referer != "" {
-		mReq.Header.Set("Referer", res.Referer)
-	}
-	mReq.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
-
-	mResp, err := s.client.Do(mReq)
-	if err != nil || mResp.StatusCode >= 400 {
-		if mResp != nil {
-			mResp.Body.Close()
-		}
-		log.Printf("[Play] %s 上游清单获取失败: %v", cleanCode, err)
-		http.Error(w, "Failed to fetch upstream playlist", http.StatusBadGateway)
-		return
-	}
-
-	mBytes, err := io.ReadAll(mResp.Body)
-	mResp.Body.Close()
-	if err != nil {
-		http.Error(w, "Failed to read upstream playlist", http.StatusBadGateway)
-		return
-	}
-
-	// 4. 改写 M3U8 清单内容
-	sourceSlug := strings.ToLower(strings.Split(res.Source, " ")[0])
-	rewritten, err := hls.RewriteM3U8(mBytes, res.URL, hls.RewriteOptions{
-		Token:    token,
-		Code:     cleanCode,
-		SourceID: sourceSlug,
-		Variant:  "0",
-	})
-	if err != nil {
-		log.Printf("[Play] %s 清单改写失败: %v", cleanCode, err)
-		http.Error(w, "Failed to rewrite playlist", http.StatusInternalServerError)
-		return
-	}
-
-	// 5. 保存进会话注册表
-	newSession := &registry.StreamSession{
-		Code:         cleanCode,
-		SourceID:     sourceSlug,
-		UpstreamM3U8: res.URL,
-		Referer:      res.Referer,
-		Variants: map[string]*registry.VariantSession{
-			"0": {
-				VariantID:     "0",
-				M3U8URL:       res.URL,
-				Sublists:      rewritten.Sublists,
-				Segments:      rewritten.Segments,
-				Keys:          rewritten.Keys,
-				Maps:          rewritten.Maps,
-				RewrittenM3U8: rewritten.Rewritten,
-			},
-		},
-	}
-	s.registry.Set(newSession)
-
-	// 6. 返回改写后的清单
+	rewrittenBytes := val.([]byte)
 	w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
 	w.Header().Set("Cache-Control", "no-store")
 	if r.Method != http.MethodHead {
-		_, _ = w.Write(rewritten.Rewritten)
+		_, _ = w.Write(rewrittenBytes)
 	}
+}
+
+// refreshStreamSession 上游 403 过期自愈刷新
+func (s *Server) refreshStreamSession(ctx context.Context, code string) (*registry.StreamSession, error) {
+	val, err := s.singleflight.Do("refresh:"+code, func() (interface{}, error) {
+		res, err := s.manager.ResolveWeighted(ctx, code, s.cfg.WaitWindow)
+		if err != nil || res == nil || res.URL == "" {
+			return nil, fmt.Errorf("re-resolve failed: %w", err)
+		}
+
+		mReq, err := http.NewRequestWithContext(ctx, "GET", res.URL, nil)
+		if err != nil {
+			return nil, err
+		}
+		if res.Referer != "" {
+			mReq.Header.Set("Referer", res.Referer)
+		}
+		mReq.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+
+		mResp, err := s.client.Do(mReq)
+		if err != nil || mResp.StatusCode >= 400 {
+			if mResp != nil {
+				mResp.Body.Close()
+			}
+			return nil, fmt.Errorf("re-fetch upstream playlist failed")
+		}
+
+		mBytes, err := io.ReadAll(mResp.Body)
+		mResp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		sourceSlug := strings.ToLower(strings.Split(res.Source, " ")[0])
+		rewritten, err := hls.RewriteM3U8(mBytes, res.URL, hls.RewriteOptions{
+			Token:    "refreshed",
+			Code:     code,
+			SourceID: sourceSlug,
+			Variant:  "0",
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		newSession := &registry.StreamSession{
+			Code:         code,
+			SourceID:     sourceSlug,
+			UpstreamM3U8: res.URL,
+			Referer:      res.Referer,
+			Variants: map[string]*registry.VariantSession{
+				"0": {
+					VariantID:     "0",
+					M3U8URL:       res.URL,
+					Sublists:      rewritten.Sublists,
+					Segments:      rewritten.Segments,
+					Keys:          rewritten.Keys,
+					Maps:          rewritten.Maps,
+					RewrittenM3U8: rewritten.Rewritten,
+				},
+			},
+		}
+
+		s.registry.Set(newSession)
+		log.Printf("✨ [Self-Healing] 成功自愈刷新番号 %s 的流列表 (分片数: %d)", code, len(rewritten.Segments))
+		return newSession, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return val.(*registry.StreamSession), nil
 }
 
 // handlePlaylist 多清晰度子清单 (/v1/{token}/pl/{code}/{src}/{var}.m3u8)
@@ -300,7 +398,6 @@ func (s *Server) handlePlaylist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 补充变体进注册表
 	_ = s.registry.SetVariant(code, &registry.VariantSession{
 		VariantID:     varParam,
 		M3U8URL:       upstreamSublist,
@@ -343,8 +440,21 @@ func (s *Server) handleSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 流式透传请求至上游 CDN
-	s.proxyUpstreamResource(w, r, upstreamURL, referer, "video/mp2t")
+	// 首次尝试代理拉取
+	status := s.proxyUpstreamResource(w, r, upstreamURL, referer, "video/mp2t")
+
+	// 若遭遇上游 403 或 410 (Token 过期)，启动弹性自愈刷新并重试一次
+	if status == http.StatusForbidden || status == http.StatusGone {
+		log.Printf("⚠️ [Segment 403] %s 上游 Token 过期，尝试现场自愈...", code)
+		ctx, cancel := context.WithTimeout(r.Context(), s.cfg.Timeout)
+		defer cancel()
+
+		if _, rErr := s.refreshStreamSession(ctx, code); rErr == nil {
+			if freshURL, freshRef, freshOk := s.registry.GetSegment(code, variant, idx); freshOk && freshURL != "" {
+				s.proxyUpstreamResource(w, r, freshURL, freshRef, "video/mp2t")
+			}
+		}
+	}
 }
 
 // handleKey AES-128 密钥代理 (/v1/{token}/key/{code}/{src}/{var}/{file})
@@ -405,21 +515,19 @@ func (s *Server) handleMap(w http.ResponseWriter, r *http.Request) {
 	s.proxyUpstreamResource(w, r, upstreamURL, referer, "video/mp4")
 }
 
-// proxyUpstreamResource 流式代理上游媒体资源
-func (s *Server) proxyUpstreamResource(w http.ResponseWriter, r *http.Request, upstreamURL, referer, fallbackMime string) {
+// proxyUpstreamResource 流式代理上游媒体资源，返回上游 HTTP 状态码
+func (s *Server) proxyUpstreamResource(w http.ResponseWriter, r *http.Request, upstreamURL, referer, fallbackMime string) int {
 	uReq, err := http.NewRequestWithContext(r.Context(), r.Method, upstreamURL, nil)
 	if err != nil {
 		http.Error(w, "Failed to create upstream request", http.StatusInternalServerError)
-		return
+		return http.StatusInternalServerError
 	}
 
-	// 注入合规防护头
 	if referer != "" {
 		uReq.Header.Set("Referer", referer)
 	}
 	uReq.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
 
-	// 透传客户端 Range 与 If-Range 标头 (保证 Apple TV / Safari / Infuse 拖动进度流畅)
 	if rangeHeader := r.Header.Get("Range"); rangeHeader != "" {
 		uReq.Header.Set("Range", rangeHeader)
 	}
@@ -430,11 +538,14 @@ func (s *Server) proxyUpstreamResource(w http.ResponseWriter, r *http.Request, u
 	uResp, err := s.client.Do(uReq)
 	if err != nil {
 		http.Error(w, "Upstream request failed", http.StatusBadGateway)
-		return
+		return http.StatusBadGateway
 	}
 	defer uResp.Body.Close()
 
-	// 复制关键头部
+	if uResp.StatusCode >= 400 {
+		return uResp.StatusCode
+	}
+
 	contentType := uResp.Header.Get("Content-Type")
 	if contentType == "" || strings.HasPrefix(contentType, "image/") {
 		contentType = fallbackMime
@@ -453,9 +564,10 @@ func (s *Server) proxyUpstreamResource(w http.ResponseWriter, r *http.Request, u
 	w.WriteHeader(uResp.StatusCode)
 
 	if r.Method != http.MethodHead {
-		buf := make([]byte, 32*1024) // 32KB 流式小缓冲，边读边发杜绝延迟
+		buf := make([]byte, 32*1024)
 		_, _ = io.CopyBuffer(w, uResp.Body, buf)
 	}
+	return uResp.StatusCode
 }
 
 // handleResolve 现有 JSON 解析诊断接口 (兼容历史调用)

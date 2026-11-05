@@ -38,8 +38,9 @@
 - [x] **19.1** 拆分 `main.go` 为 `internal/source` 与 `internal/server`（行为 100% 兼容 + 8 项单元测试全通）
 - [x] **19.2** 播放面 `/play`、`/pl`、`/seg`、`/key`、`/map` + 路径 token（支持同源改写、流式分片代理与 Referer 伪造，12 项测试全通）
 
-- [ ] **19.3** 缓存、catalog 持久化、上游 403 自愈、singleflight
+- [x] **19.3** 缓存、catalog 持久化、上游 403 自愈、singleflight（零外部依赖合并并发请求、30分钟负缓存与切片 403 现场自愈重试，17 项测试全通）
 - [ ] **19.4** 实测分数调度 + 熔断 + `/metrics` + 管理面
+
 - [ ] **19.5** MissAV 适配器（先采样验证；可替换 PageFetcher、unpacker、验证页熔断）
 - [ ] **19.6** `migrate` 子命令，迁移 NAS 上现有 292 个 `.strm`
 - [ ] **19.7** 黄金集 + 端到端测试 + 验收（冷启动 P95 ≤ 4.0 s）

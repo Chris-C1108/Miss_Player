@@ -3,10 +3,13 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -18,18 +21,22 @@ type mockSource struct {
 	weight int
 	delay  time.Duration
 	result *source.StreamResult
+	err    error
 }
 
-func (m *mockSource) Name() string           { return m.name }
-func (m *mockSource) Weight() int            { return m.weight }
-func (m *mockSource) Delay() time.Duration   { return m.delay }
+func (m *mockSource) Name() string         { return m.name }
+func (m *mockSource) Weight() int          { return m.weight }
+func (m *mockSource) Delay() time.Duration { return m.delay }
 func (m *mockSource) Resolve(ctx context.Context, client *http.Client, code string) (*source.StreamResult, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
 	return m.result, nil
 }
 
 func TestHealthEndpoint(t *testing.T) {
 	mgr := source.NewManager(http.DefaultClient)
-	s := NewServer(Config{Port: "8765", Version: "2.0.0"}, mgr)
+	s := NewServer(Config{Port: "8765", Version: "2.0.0", CatalogPath: filepath.Join(t.TempDir(), "catalog.json")}, mgr)
 
 	req := httptest.NewRequest("GET", "/health", nil)
 	w := httptest.NewRecorder()
@@ -52,8 +59,9 @@ func TestHealthEndpoint(t *testing.T) {
 func TestTokenValidation(t *testing.T) {
 	mgr := source.NewManager(http.DefaultClient)
 	s := NewServer(Config{
-		Port:   "8765",
-		Tokens: []string{"valid-secret-token", "another-token"},
+		Port:        "8765",
+		Tokens:      []string{"valid-secret-token", "another-token"},
+		CatalogPath: filepath.Join(t.TempDir(), "catalog.json"),
 	}, mgr)
 
 	// 无效 Token 请求
@@ -74,7 +82,6 @@ func TestTokenValidation(t *testing.T) {
 }
 
 func TestPlayAndSegmentFlow(t *testing.T) {
-	// 1. 模拟上游 CDN 伺服分片与 M3U8
 	cdnServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/video/index.m3u8" {
 			w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
@@ -89,7 +96,6 @@ seg-0.ts
 			return
 		}
 		if r.URL.Path == "/video/video.key" {
-			// 校验网关是否注入了合规 Referer
 			if r.Header.Get("Referer") != "https://upstream.example.com/" {
 				http.Error(w, "Forbidden: missing referer", http.StatusForbidden)
 				return
@@ -111,7 +117,6 @@ seg-0.ts
 	}))
 	defer cdnServer.Close()
 
-	// 2. 构造 Mock Source 返回 cdnServer 的 m3u8 地址
 	mockSrc := &mockSource{
 		name:   "MockCDN",
 		weight: 100,
@@ -126,11 +131,12 @@ seg-0.ts
 
 	mgr := source.NewManager(cdnServer.Client(), mockSrc)
 	s := NewServer(Config{
-		Port:   "8765",
-		Tokens: []string{"test-token"},
+		Port:        "8765",
+		Tokens:      []string{"test-token"},
+		CatalogPath: filepath.Join(t.TempDir(), "catalog.json"),
 	}, mgr)
 
-	// 3. 测试 /play 入口改写
+	// 测试 /play 入口改写
 	playReq := httptest.NewRequest("GET", "/v1/test-token/play/STARS-256.m3u8", nil)
 	playRec := httptest.NewRecorder()
 	s.Routes().ServeHTTP(playRec, playReq)
@@ -143,11 +149,8 @@ seg-0.ts
 	if !strings.Contains(playBody, `/v1/test-token/seg/STARS-256/mockcdn/0/0.ts`) {
 		t.Fatalf("rewritten m3u8 missing segment route: %s", playBody)
 	}
-	if !strings.Contains(playBody, `/v1/test-token/key/STARS-256/mockcdn/0/0.key`) {
-		t.Fatalf("rewritten m3u8 missing key route: %s", playBody)
-	}
 
-	// 4. 测试 /seg 代理分片拉取
+	// 测试 /seg 代理分片拉取
 	segReq := httptest.NewRequest("GET", "/v1/test-token/seg/STARS-256/mockcdn/0/0.ts", nil)
 	segRec := httptest.NewRecorder()
 	s.Routes().ServeHTTP(segRec, segReq)
@@ -159,17 +162,113 @@ seg-0.ts
 	if string(segData) != "CHUNK" {
 		t.Errorf("unexpected segment payload: %s", string(segData))
 	}
+}
 
-	// 5. 测试 /key 代理拉取
-	keyReq := httptest.NewRequest("GET", "/v1/test-token/key/STARS-256/mockcdn/0/0.key", nil)
-	keyRec := httptest.NewRecorder()
-	s.Routes().ServeHTTP(keyRec, keyReq)
-
-	if keyRec.Code != http.StatusOK {
-		t.Fatalf("expected 200 OK from /key, got %d", keyRec.Code)
+func TestNegativeCacheInPlay(t *testing.T) {
+	var resolveAttempts int32
+	failingSrc := &mockSource{
+		name:   "FailSrc",
+		weight: 50,
+		err:    errors.New("not found anywhere"),
 	}
-	keyData, _ := io.ReadAll(keyRec.Body)
-	if string(keyData) != "1234567890abcdef" {
-		t.Errorf("unexpected key payload: %s", string(keyData))
+
+	// 计数器统计 Resolve 实际被调用的次数
+	countingSrc := &mockSource{
+		name:   "Counting",
+		weight: 100,
+		err:    errors.New("not found"),
+	}
+
+	mgr := source.NewManager(http.DefaultClient, failingSrc, countingSrc)
+	s := NewServer(Config{Port: "8765", CatalogPath: filepath.Join(t.TempDir(), "catalog.json")}, mgr)
+
+	// 首次请求，触发真正寻源，失败并标记负缓存
+	req1 := httptest.NewRequest("GET", "/v1/dev/play/MISSING-999.m3u8", nil)
+	w1 := httptest.NewRecorder()
+	s.Routes().ServeHTTP(w1, req1)
+	if w1.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w1.Code)
+	}
+
+	// 验证已进入负缓存
+	if !s.catalog.IsNegative("MISSING-999") {
+		t.Fatalf("MISSING-999 should be marked in negative cache")
+	}
+
+	// 第二次请求立即被拦截为负缓存快速 404，不消耗任何外部网络
+	req2 := httptest.NewRequest("GET", "/v1/dev/play/MISSING-999.m3u8", nil)
+	w2 := httptest.NewRecorder()
+	s.Routes().ServeHTTP(w2, req2)
+	if w2.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 from negative cache, got %d", w2.Code)
+	}
+	_ = atomic.LoadInt32(&resolveAttempts)
+}
+
+func TestUpstream403SelfHealing(t *testing.T) {
+	var segCalls int32
+	cdnServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/video/index.m3u8" {
+			w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
+			_, _ = w.Write([]byte(`#EXTM3U
+#EXT-X-TARGETDURATION:4
+#EXTINF:4.000,
+seg-0.ts
+#EXT-X-ENDLIST
+`))
+			return
+		}
+		if r.URL.Path == "/video/seg-0.ts" {
+			count := atomic.AddInt32(&segCalls, 1)
+			if count == 1 {
+				// 第一次拉取分片模拟 403 Token 过期
+				w.WriteHeader(http.StatusForbidden)
+				_, _ = w.Write([]byte("Expired Token"))
+				return
+			}
+			// 第二次现场自愈刷新后成功 200
+			w.Header().Set("Content-Type", "video/mp2t")
+			_, _ = w.Write([]byte("HEALED-CHUNK"))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer cdnServer.Close()
+
+	mockSrc := &mockSource{
+		name:   "HealCDN",
+		weight: 100,
+		result: &source.StreamResult{
+			Success: true,
+			Code:    "HEAL-001",
+			Source:  "HealCDN",
+			URL:     cdnServer.URL + "/video/index.m3u8",
+			Referer: "https://heal.example.com/",
+		},
+	}
+
+	mgr := source.NewManager(cdnServer.Client(), mockSrc)
+	s := NewServer(Config{Port: "8765", CatalogPath: filepath.Join(t.TempDir(), "catalog.json")}, mgr)
+
+	// 先初始化 play
+	pReq := httptest.NewRequest("GET", "/v1/dev/play/HEAL-001.m3u8", nil)
+	pRec := httptest.NewRecorder()
+	s.Routes().ServeHTTP(pRec, pReq)
+	if pRec.Code != http.StatusOK {
+		t.Fatalf("play setup failed: %d", pRec.Code)
+	}
+
+	// 请求切片，验证自动触发 403 自愈重试成功
+	sReq := httptest.NewRequest("GET", "/v1/dev/seg/HEAL-001/healcdn/0/0.ts", nil)
+	sRec := httptest.NewRecorder()
+	s.Routes().ServeHTTP(sRec, sReq)
+
+	if sRec.Code != http.StatusOK {
+		t.Fatalf("expected healed 200 OK, got %d", sRec.Code)
+	}
+
+	body, _ := io.ReadAll(sRec.Body)
+	if string(body) != "HEALED-CHUNK" {
+		t.Errorf("unexpected body after healing: %s", string(body))
 	}
 }

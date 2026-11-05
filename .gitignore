@@ -26,6 +26,7 @@ build/
 /services/miss-gateway/miss-gateway
 /services/miss-resolver/miss-resolver
 services/**/*.test
+services/**/data/
 
 # 操作系统文件
 .DS_Store
