@@ -424,7 +424,7 @@ export class PeachWebBridge {
     }
 
     /**
-     * 接管播放并启动动态寻源与进度回写管线
+     * 接管播放：多源即时试播与瀑布流无缝故障转移 (Jable ➔ 123AV ➔ 独立采集端 ➔ MissAV)
      */
     static async takeOverPlayback(video, targetCode = '') {
         if (this._isResolving) return;
@@ -440,65 +440,181 @@ export class PeachWebBridge {
         const assetId = this.extractCurrentAssetId();
         PeachStreamHUD.init();
         PeachStreamHUD.updateMeta({ avcode, assetId, sourcesPipeline: [] });
-        PeachStreamHUD.log('STREAM', `启动现场即时寻源流水线 [${avcode}]`, 'info');
+        PeachStreamHUD.log('STREAM', `启动多源瀑布寻源与播放检验 [${avcode}]`, 'info');
         Toast(`正在现场检索最新可用视频流: ${avcode}`, 2000, 'info');
 
-        try {
-            const streamInfo = await this.resolveDynamicStream(avcode);
-            if (!streamInfo || !streamInfo.url) {
-                PeachStreamHUD.log('STREAM', `所有源站寻源均未成功 [${avcode}]`, 'error');
-                Toast(`现场寻源未找到有效流地址: ${avcode}`, 3000, 'error');
-                this._isResolving = false;
-                return;
+        // 监听视频生命周期事件
+        this._bindPlayerLifecycleForHUD(video);
+
+        const cleanCode = avcode.trim().toUpperCase();
+        const config = PeachService.getConfig();
+
+        // 构造有序候选源清单
+        const sources = [
+            { name: 'Jable', fn: () => this._searchJableStream(cleanCode) },
+            { name: '123AV', fn: () => this._search123AvStream(cleanCode) },
+            ...(config.remoteScraper ? [{ name: '自建采集端', fn: () => this._searchRemoteScraperStream(cleanCode, config.remoteScraper) }] : []),
+            { name: 'MissAV', fn: () => this._searchMissavStream(cleanCode) }
+        ];
+
+        let playSuccess = false;
+
+        for (const source of sources) {
+            PeachStreamHUD.log('STREAM', `正在尝试 [${source.name}]...`, 'info');
+            const t0 = performance.now();
+            let streamInfo = null;
+
+            try {
+                streamInfo = await source.fn();
+                const elapsed = Math.round(performance.now() - t0);
+
+                if (!streamInfo || !streamInfo.url) {
+                    PeachStreamHUD.recordSourceResult(source.name, { status: 404, elapsedMs: elapsed, success: false, detail: '未收录' });
+                    continue;
+                }
+
+                if (this._failedStreamUrls.has(streamInfo.url)) {
+                    PeachStreamHUD.recordSourceResult(source.name, { status: 400, elapsedMs: elapsed, success: false, detail: '流已在失败黑名单，顺位尝试下一个源' });
+                    continue;
+                }
+
+                PeachStreamHUD.recordSourceResult(source.name, { status: 200, elapsedMs: elapsed, success: true, detail: streamInfo.url });
+            } catch (err) {
+                const elapsed = Math.round(performance.now() - t0);
+                PeachStreamHUD.recordSourceResult(source.name, { status: 0, elapsedMs: elapsed, success: false, detail: err.message });
+                continue;
             }
 
-            PeachStreamHUD.updateMeta({
-                streamUrl: streamInfo.url,
-                streamSource: streamInfo.source
-            });
-            PeachStreamHUD.log('STREAM', `已锁定视频流: ${streamInfo.url} (来源: ${streamInfo.source})`, 'success');
+            // 现场试播检验：尝试挂载并起播该流
+            PeachStreamHUD.log('PLAYER', `检验 [${source.name}] 流起播状态: ${streamInfo.url}`, 'info');
+            const verified = await this._verifyAndMountStream(video, streamInfo);
 
-            // 监听视频生命周期事件
-            this._bindPlayerLifecycleForHUD(video);
-
-            // 使用跨浏览器 HLS 适配器起播 (支持 Chrome / Edge / Safari / Web Component 宿主)
-            await this.mountHlsStream(video, streamInfo.url);
-
-            video.play().then(() => {
-                PeachStreamHUD.log('PLAYER', '视频成功起播！', 'success');
+            if (verified) {
+                playSuccess = true;
+                PeachStreamHUD.updateMeta({
+                    streamUrl: streamInfo.url,
+                    streamSource: streamInfo.source
+                });
+                PeachStreamHUD.log('STREAM', `🎉 [${source.name}] 成功起播！`, 'success');
                 Toast(`已获取新鲜视频流 (${streamInfo.source})，流畅起播！`, 2500, 'success');
                 this.startProgressTracking(video);
-                setTimeout(() => { this._isResolving = false; }, 3000);
-            }).catch(playErr => {
-                PeachStreamHUD.log('PLAYER', `自动播放被浏览器策略限制: ${playErr.name || playErr.message}`, 'warn');
-                console.warn('[PeachWebBridge] 自动起播受限，等待用户交互:', playErr);
-                this.startProgressTracking(video);
-                setTimeout(() => { this._isResolving = false; }, 3000);
-            });
-
-        } catch (err) {
-            PeachStreamHUD.log('STREAM', `寻源异常: ${err.message}`, 'error');
-            console.error('[PeachWebBridge] 现场寻源异常:', err);
-            Toast(`寻源失败: ${err.message}`, 3000, 'error');
-            setTimeout(() => { this._isResolving = false; }, 3000);
+                break; // 起播成功，退出瀑布流！
+            } else {
+                this._failedStreamUrls.add(streamInfo.url);
+                PeachStreamHUD.log('PLAYER', `[${source.name}] 起播失败，自动顺位无缝尝试下一个源...`, 'warn');
+            }
         }
+
+        if (!playSuccess) {
+            PeachStreamHUD.log('STREAM', `所有备选源均未能成功起播 [${avcode}]`, 'error');
+            Toast(`所有源站均未能成功起播，请在设置中配置独立采集端或检查代理`, 3500, 'error');
+        }
+
+        setTimeout(() => { this._isResolving = false; }, 3000);
+    }
+
+    /**
+     * 挂载候选流并进行播放检验 (超时 2 秒内必须获得就绪/播放信号，否则视为该源失败并返回 false)
+     * @param {HTMLVideoElement} video 
+     * @param {Object} streamInfo 
+     * @returns {Promise<boolean>}
+     */
+    static async _verifyAndMountStream(video, streamInfo) {
+        if (!video || !streamInfo || !streamInfo.url) return false;
+
+        return new Promise(async (resolve) => {
+            let settled = false;
+            let timer = null;
+
+            const onSettled = (ok) => {
+                if (settled) return;
+                settled = true;
+                if (timer) clearTimeout(timer);
+                video.removeEventListener('playing', onPlaying);
+                video.removeEventListener('loadedmetadata', onReady);
+                video.removeEventListener('timeupdate', onTimeUpdate);
+                video.removeEventListener('error', onError);
+                resolve(ok);
+            };
+
+            const onPlaying = () => onSettled(true);
+            const onReady = () => {
+                // 已成功解析出元数据与时长，说明流解析成功！
+                if (video.duration > 0) onSettled(true);
+            };
+            const onTimeUpdate = () => {
+                if (video.currentTime > 0) onSettled(true);
+            };
+            const onError = () => {
+                onSettled(false);
+            };
+
+            video.addEventListener('playing', onPlaying);
+            video.addEventListener('loadedmetadata', onReady);
+            video.addEventListener('timeupdate', onTimeUpdate);
+            video.addEventListener('error', onError);
+
+            // 挂载流
+            try {
+                await this.mountHlsStream(video, streamInfo.url);
+                
+                // 尝试起播：针对 iOS Safari 异步请求后受阻，提供自动静音兜底起播
+                const p = video.play();
+                if (p !== undefined) {
+                    p.then(() => {
+                        onSettled(true);
+                    }).catch(async (playErr) => {
+                        console.warn('[PeachWebBridge] 有声起播被拦截，尝试静音起播:', playErr.name);
+                        try {
+                            video.muted = true;
+                            await video.play();
+                            onSettled(true);
+                            // 挂载单次点击解除静音
+                            const unmuteOnce = () => {
+                                if (video) video.muted = false;
+                                document.removeEventListener('click', unmuteOnce, true);
+                                document.removeEventListener('touchstart', unmuteOnce, true);
+                            };
+                            document.addEventListener('click', unmuteOnce, { once: true, capture: true });
+                            document.addEventListener('touchstart', unmuteOnce, { once: true, capture: true });
+                        } catch (err2) {
+                            console.error('[PeachWebBridge] 静音起播仍受限:', err2);
+                        }
+                    });
+                }
+            } catch (mountErr) {
+                console.warn('[PeachWebBridge] 挂载流发生异常:', mountErr.message);
+                onSettled(false);
+            }
+
+            // 2.2 秒看门狗：如果 2.2 秒内既没有起播也没有报错，说明卡顿死链，超时自动判定失败换源
+            timer = setTimeout(() => {
+                onSettled(video.readyState >= 2 || video.currentTime > 0);
+            }, 2200);
+        });
     }
 
     /**
      * 跨浏览器全兼容 HLS 挂载适配器
-     * 解决 Chrome/Firefox 直接给 video.src 赋 .m3u8 报 MEDIA_ERR_SRC_NOT_SUPPORTED 的问题
      */
     static async mountHlsStream(video, streamUrl) {
         if (!video || !streamUrl) return;
 
         // 1. 如果视频属于 Peach 的 <hlsjs-video> Web Component，直接赋给组件驱动内部引擎
-        let hlsHost = video.closest('hlsjs-video');
-        if (!hlsHost && video.parentNode && video.parentNode.host && video.parentNode.host.tagName === 'HLSJS-VIDEO') {
-            hlsHost = video.parentNode.host;
-        }
+        let hlsHost = null;
+        try {
+            const rootNode = video.getRootNode ? video.getRootNode() : null;
+            if (rootNode && rootNode.host && rootNode.host.tagName && rootNode.host.tagName.toLowerCase().includes('hls')) {
+                hlsHost = rootNode.host;
+            }
+            if (!hlsHost) {
+                hlsHost = video.closest('hlsjs-video') || document.querySelector('hlsjs-video');
+            }
+        } catch (_) {}
+
         if (hlsHost) {
-            console.log('[PeachWebBridge] 检测到 Peach hlsjs-video 宿主，直接赋给组件驱动内部引擎');
-            PeachStreamHUD.log('PLAYER', '注入 Peach hlsjs-video 宿主组件驱动', 'info');
+            console.log('[PeachWebBridge] 检测到 Peach hlsjs-video 宿主组件，赋给组件驱动内部引擎');
+            PeachStreamHUD.log('PLAYER', '注入 Peach hlsjs-video 宿主组件', 'info');
             hlsHost.src = streamUrl;
             hlsHost.setAttribute('src', streamUrl);
             try { video.src = streamUrl; } catch (_) {}

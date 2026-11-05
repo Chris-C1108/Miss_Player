@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.94
+// @version            5.7.95
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.94";
+		return "5.7.95";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.94";
+		return "5.7.95";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2675,54 +2675,172 @@
 				assetId,
 				sourcesPipeline: []
 			});
-			PeachStreamHUD.log("STREAM", `启动现场即时寻源流水线 [${avcode}]`, "info");
+			PeachStreamHUD.log("STREAM", `启动多源瀑布寻源与播放检验 [${avcode}]`, "info");
 			Toast$1(`正在现场检索最新可用视频流: ${avcode}`, 2e3, "info");
-			try {
-				const streamInfo = await this.resolveDynamicStream(avcode);
-				if (!streamInfo || !streamInfo.url) {
-					PeachStreamHUD.log("STREAM", `所有源站寻源均未成功 [${avcode}]`, "error");
-					Toast$1(`现场寻源未找到有效流地址: ${avcode}`, 3e3, "error");
-					this._isResolving = false;
-					return;
+			this._bindPlayerLifecycleForHUD(video);
+			const cleanCode = avcode.trim().toUpperCase();
+			const config = PeachService.getConfig();
+			const sources = [
+				{
+					name: "Jable",
+					fn: () => this._searchJableStream(cleanCode)
+				},
+				{
+					name: "123AV",
+					fn: () => this._search123AvStream(cleanCode)
+				},
+				...config.remoteScraper ? [{
+					name: "自建采集端",
+					fn: () => this._searchRemoteScraperStream(cleanCode, config.remoteScraper)
+				}] : [],
+				{
+					name: "MissAV",
+					fn: () => this._searchMissavStream(cleanCode)
 				}
-				PeachStreamHUD.updateMeta({
-					streamUrl: streamInfo.url,
-					streamSource: streamInfo.source
-				});
-				PeachStreamHUD.log("STREAM", `已锁定视频流: ${streamInfo.url} (来源: ${streamInfo.source})`, "success");
-				this._bindPlayerLifecycleForHUD(video);
-				await this.mountHlsStream(video, streamInfo.url);
-				video.play().then(() => {
-					PeachStreamHUD.log("PLAYER", "视频成功起播！", "success");
+			];
+			let playSuccess = false;
+			for (const source of sources) {
+				PeachStreamHUD.log("STREAM", `正在尝试 [${source.name}]...`, "info");
+				const t0 = performance.now();
+				let streamInfo = null;
+				try {
+					streamInfo = await source.fn();
+					const elapsed = Math.round(performance.now() - t0);
+					if (!streamInfo || !streamInfo.url) {
+						PeachStreamHUD.recordSourceResult(source.name, {
+							status: 404,
+							elapsedMs: elapsed,
+							success: false,
+							detail: "未收录"
+						});
+						continue;
+					}
+					if (this._failedStreamUrls.has(streamInfo.url)) {
+						PeachStreamHUD.recordSourceResult(source.name, {
+							status: 400,
+							elapsedMs: elapsed,
+							success: false,
+							detail: "流已在失败黑名单，顺位尝试下一个源"
+						});
+						continue;
+					}
+					PeachStreamHUD.recordSourceResult(source.name, {
+						status: 200,
+						elapsedMs: elapsed,
+						success: true,
+						detail: streamInfo.url
+					});
+				} catch (err) {
+					const elapsed = Math.round(performance.now() - t0);
+					PeachStreamHUD.recordSourceResult(source.name, {
+						status: 0,
+						elapsedMs: elapsed,
+						success: false,
+						detail: err.message
+					});
+					continue;
+				}
+				PeachStreamHUD.log("PLAYER", `检验 [${source.name}] 流起播状态: ${streamInfo.url}`, "info");
+				if (await this._verifyAndMountStream(video, streamInfo)) {
+					playSuccess = true;
+					PeachStreamHUD.updateMeta({
+						streamUrl: streamInfo.url,
+						streamSource: streamInfo.source
+					});
+					PeachStreamHUD.log("STREAM", `🎉 [${source.name}] 成功起播！`, "success");
 					Toast$1(`已获取新鲜视频流 (${streamInfo.source})，流畅起播！`, 2500, "success");
 					this.startProgressTracking(video);
-					setTimeout(() => {
-						this._isResolving = false;
-					}, 3e3);
-				}).catch((playErr) => {
-					PeachStreamHUD.log("PLAYER", `自动播放被浏览器策略限制: ${playErr.name || playErr.message}`, "warn");
-					console.warn("[PeachWebBridge] 自动起播受限，等待用户交互:", playErr);
-					this.startProgressTracking(video);
-					setTimeout(() => {
-						this._isResolving = false;
-					}, 3e3);
-				});
-			} catch (err) {
-				PeachStreamHUD.log("STREAM", `寻源异常: ${err.message}`, "error");
-				console.error("[PeachWebBridge] 现场寻源异常:", err);
-				Toast$1(`寻源失败: ${err.message}`, 3e3, "error");
-				setTimeout(() => {
-					this._isResolving = false;
-				}, 3e3);
+					break;
+				} else {
+					this._failedStreamUrls.add(streamInfo.url);
+					PeachStreamHUD.log("PLAYER", `[${source.name}] 起播失败，自动顺位无缝尝试下一个源...`, "warn");
+				}
 			}
+			if (!playSuccess) {
+				PeachStreamHUD.log("STREAM", `所有备选源均未能成功起播 [${avcode}]`, "error");
+				Toast$1(`所有源站均未能成功起播，请在设置中配置独立采集端或检查代理`, 3500, "error");
+			}
+			setTimeout(() => {
+				this._isResolving = false;
+			}, 3e3);
+		}
+		static async _verifyAndMountStream(video, streamInfo) {
+			if (!video || !streamInfo || !streamInfo.url) return false;
+			return new Promise(async (resolve) => {
+				let settled = false;
+				let timer = null;
+				const onSettled = (ok) => {
+					if (settled) return;
+					settled = true;
+					if (timer) clearTimeout(timer);
+					video.removeEventListener("playing", onPlaying);
+					video.removeEventListener("loadedmetadata", onReady);
+					video.removeEventListener("timeupdate", onTimeUpdate);
+					video.removeEventListener("error", onError);
+					resolve(ok);
+				};
+				const onPlaying = () => onSettled(true);
+				const onReady = () => {
+					if (video.duration > 0) onSettled(true);
+				};
+				const onTimeUpdate = () => {
+					if (video.currentTime > 0) onSettled(true);
+				};
+				const onError = () => {
+					onSettled(false);
+				};
+				video.addEventListener("playing", onPlaying);
+				video.addEventListener("loadedmetadata", onReady);
+				video.addEventListener("timeupdate", onTimeUpdate);
+				video.addEventListener("error", onError);
+				try {
+					await this.mountHlsStream(video, streamInfo.url);
+					const p = video.play();
+					if (p !== void 0) p.then(() => {
+						onSettled(true);
+					}).catch(async (playErr) => {
+						console.warn("[PeachWebBridge] 有声起播被拦截，尝试静音起播:", playErr.name);
+						try {
+							video.muted = true;
+							await video.play();
+							onSettled(true);
+							const unmuteOnce = () => {
+								if (video) video.muted = false;
+								document.removeEventListener("click", unmuteOnce, true);
+								document.removeEventListener("touchstart", unmuteOnce, true);
+							};
+							document.addEventListener("click", unmuteOnce, {
+								once: true,
+								capture: true
+							});
+							document.addEventListener("touchstart", unmuteOnce, {
+								once: true,
+								capture: true
+							});
+						} catch (err2) {
+							console.error("[PeachWebBridge] 静音起播仍受限:", err2);
+						}
+					});
+				} catch (mountErr) {
+					console.warn("[PeachWebBridge] 挂载流发生异常:", mountErr.message);
+					onSettled(false);
+				}
+				timer = setTimeout(() => {
+					onSettled(video.readyState >= 2 || video.currentTime > 0);
+				}, 2200);
+			});
 		}
 		static async mountHlsStream(video, streamUrl) {
 			if (!video || !streamUrl) return;
-			let hlsHost = video.closest("hlsjs-video");
-			if (!hlsHost && video.parentNode && video.parentNode.host && video.parentNode.host.tagName === "HLSJS-VIDEO") hlsHost = video.parentNode.host;
+			let hlsHost = null;
+			try {
+				const rootNode = video.getRootNode ? video.getRootNode() : null;
+				if (rootNode && rootNode.host && rootNode.host.tagName && rootNode.host.tagName.toLowerCase().includes("hls")) hlsHost = rootNode.host;
+				if (!hlsHost) hlsHost = video.closest("hlsjs-video") || document.querySelector("hlsjs-video");
+			} catch (_) {}
 			if (hlsHost) {
-				console.log("[PeachWebBridge] 检测到 Peach hlsjs-video 宿主，直接赋给组件驱动内部引擎");
-				PeachStreamHUD.log("PLAYER", "注入 Peach hlsjs-video 宿主组件驱动", "info");
+				console.log("[PeachWebBridge] 检测到 Peach hlsjs-video 宿主组件，赋给组件驱动内部引擎");
+				PeachStreamHUD.log("PLAYER", "注入 Peach hlsjs-video 宿主组件", "info");
 				hlsHost.src = streamUrl;
 				hlsHost.setAttribute("src", streamUrl);
 				try {
@@ -4812,7 +4930,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.94";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.95";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
