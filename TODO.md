@@ -35,8 +35,9 @@
 
 > **目标**：`services/miss-resolver` 升级为 `miss-gateway`，接手寻源、Referer 注入、m3u8 改写与分片代理；`.strm` 固定写 `{base}/v1/{token}/play/{CODE}.m3u8`；Miss Player 只负责通过 WebDAV 写入 `.strm`，客户端播放接力代码下线。详见 [设计方案](./docs/todo/phase-19-stream-gateway.md)。
 
-- [ ] **19.1** 拆分 `main.go` 为 `internal/source`、`hls`、`cache`、`server`（行为不变 + 单元测试）
+- [x] **19.1** 拆分 `main.go` 为 `internal/source` 与 `internal/server`（行为 100% 兼容 + 8 项单元测试全通）
 - [ ] **19.2** 播放面 `/play`、`/pl`、`/seg`、`/key`、`/map` + 路径 token
+
 - [ ] **19.3** 缓存、catalog 持久化、上游 403 自愈、singleflight
 - [ ] **19.4** 实测分数调度 + 熔断 + `/metrics` + 管理面
 - [ ] **19.5** MissAV 适配器（先采样验证；可替换 PageFetcher、unpacker、验证页熔断）
