@@ -133,15 +133,69 @@ export class PeachSection {
         const dirInput = dirRow.querySelector('.tm-peach-dir-input');
         bodyWrap.appendChild(dirRow);
 
-        // 2.6 独立流采集端点 (可选 · 动静分离)
+        // 2.6 外部解析服务器 URL (动静分离 · 独立解析器)
         const scraperRow = document.createElement('div');
         scraperRow.className = 'tm-apple-row tm-peach-field-row';
         scraperRow.innerHTML = `
-            <div class="tm-apple-row-title">独立流采集端点 (可选 · 动静分离)</div>
-            <div class="tm-apple-row-subtext">若本地代理常触发 Cloudflare 5秒盾，可填入自建无盾采集服务 (如 https://my-vps.com/resolve?code=)</div>
-            <input type="text" class="tm-settings-input tm-peach-scraper-input" placeholder="留空默认本地直连，或填入远端无盾端点" value="${config.remoteScraper || ''}" />
+            <div class="tm-apple-row-title">外部解析服务器 URL (动静分离 · 独立解析器)</div>
+            <div class="tm-apple-row-subtext">通过自建或 NAS 运行的 miss-resolver 进行多源并发解析 (如 http://192.168.2.250:8765/api/resolve)</div>
+            <div class="tm-peach-scraper-wrap">
+                <input type="text" class="tm-settings-input tm-peach-scraper-input" placeholder="http://192.168.2.250:8765/api/resolve" value="${config.remoteScraper || ''}" />
+                <button type="button" class="tm-settings-btn tm-peach-test-scraper-btn">测试解析</button>
+            </div>
         `;
         const scraperInput = scraperRow.querySelector('.tm-peach-scraper-input');
+        const testScraperBtn = scraperRow.querySelector('.tm-peach-test-scraper-btn');
+
+        testScraperBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const endpoint = scraperInput.value.trim();
+            if (!endpoint) {
+                Toast('请先输入外部解析服务器地址', 2000, 'warning');
+                return;
+            }
+
+            testScraperBtn.disabled = true;
+            testScraperBtn.textContent = '测试中…';
+
+            try {
+                // 1. 优先测试 health 健康检查
+                const healthUrl = endpoint.replace(/\/api\/resolve\/?.*$/, '/health');
+                let healthOk = false;
+                try {
+                    const hRes = await fetchWithTransport(healthUrl, { timeout: 4000 });
+                    if (hRes.status >= 200 && hRes.status < 400) healthOk = true;
+                } catch (_) {}
+
+                // 2. 实测解析样本番号 STARS-256
+                const testUrl = endpoint.includes('?') ? `${endpoint}&code=STARS-256` : `${endpoint}?code=STARS-256`;
+                const t0 = performance.now();
+                const res = await fetchWithTransport(testUrl, { timeout: 8000 });
+                const elapsed = Math.round(performance.now() - t0);
+
+                if (res.status >= 200 && res.status < 400 && res.html) {
+                    const data = JSON.parse(res.html);
+                    if (data && (data.url || data.stream || data.streamUrl || data.m3u8)) {
+                        Toast(`🎉 解析服务运行正常！[${data.source || '外部源'}] 耗时: ${elapsed}ms`, 3500, 'success');
+                        PeachService.saveConfig({ remoteScraper: endpoint });
+                        return;
+                    }
+                }
+                
+                if (healthOk) {
+                    Toast(`服务在线 (Health OK)，但测试样本未命中，配置已保存`, 3000, 'info');
+                    PeachService.saveConfig({ remoteScraper: endpoint });
+                } else {
+                    Toast(`连接失败 (HTTP ${res.status}): 请检查 IP 与端口是否通畅`, 3500, 'error');
+                }
+            } catch (err) {
+                Toast(`测试失败: ${err.message}`, 3500, 'error');
+            } finally {
+                testScraperBtn.disabled = false;
+                testScraperBtn.textContent = '测试解析';
+            }
+        });
+
         bodyWrap.appendChild(scraperRow);
 
         // 2.7 外部片源与授权 (JAVVerse)

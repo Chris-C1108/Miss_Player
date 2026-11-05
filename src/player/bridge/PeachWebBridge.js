@@ -667,12 +667,12 @@ export class PeachWebBridge {
         const cleanCode = avcode.trim().toUpperCase();
         const config = PeachService.getConfig();
 
-        // 构造有序候选源清单 (JAVVerse 优先提取无码流出与高清源)
+        // 构造有序候选源清单 (自建外部解析端优先，JAVVerse/Jable/123AV本地兜底)
         const sources = [
+            ...(config.remoteScraper ? [{ name: '外部解析服务 (NAS)', fn: () => this._searchRemoteScraperStream(cleanCode, config.remoteScraper) }] : []),
             { name: 'JAVVerse', fn: () => this._searchJavVerseStream(cleanCode) },
             { name: 'Jable', fn: () => this._searchJableStream(cleanCode) },
             { name: '123AV', fn: () => this._search123AvStream(cleanCode) },
-            ...(config.remoteScraper ? [{ name: '自建采集端', fn: () => this._searchRemoteScraperStream(cleanCode, config.remoteScraper) }] : []),
             { name: 'MissAV', fn: () => this._searchMissavStream(cleanCode) }
         ];
 
@@ -962,7 +962,26 @@ export class PeachWebBridge {
         const cleanCode = avcode.trim().toUpperCase();
         const config = PeachService.getConfig();
 
-        // 1. 首选 JAVVerse 寻源 (优先无码流出版 / 高清)
+        // 1. 首选自建外部解析服务 (NAS 容器端 / 动静分离 · 避盾极速并发)
+        if (config.remoteScraper) {
+            const t0 = performance.now();
+            try {
+                console.log(`[PeachWebBridge] 正在尝试从自建外部解析服务寻源: ${config.remoteScraper}`);
+                const remoteStream = await this._searchRemoteScraperStream(cleanCode, config.remoteScraper);
+                const elapsed = Math.round(performance.now() - t0);
+                if (remoteStream) {
+                    PeachStreamHUD.recordSourceResult('外部解析服务 (NAS)', { status: 200, elapsedMs: elapsed, success: true, detail: remoteStream.url });
+                    return remoteStream;
+                }
+                PeachStreamHUD.recordSourceResult('外部解析服务 (NAS)', { status: 404, elapsedMs: elapsed, success: false, detail: '未解析到流' });
+            } catch (remoteErr) {
+                const elapsed = Math.round(performance.now() - t0);
+                PeachStreamHUD.recordSourceResult('外部解析服务 (NAS)', { status: 0, elapsedMs: elapsed, success: false, detail: remoteErr.message });
+                console.warn('[PeachWebBridge] 独立解析端寻源失败:', remoteErr.message);
+            }
+        }
+
+        // 2. 次选 JAVVerse 寻源 (优先无码流出版 / 高清)
         const t0_jv = performance.now();
         try {
             console.log(`[PeachWebBridge] 正在尝试从 JAVVerse 寻源: ${cleanCode}`);
@@ -1200,7 +1219,7 @@ export class PeachWebBridge {
     }
 
     /**
-     * 从独立自建采集端 (Remote Scraper API) 获取流地址 (动静分离架构)
+     * 从独立自建采集端 (Remote Scraper API) 获取流地址 (动静分离架构 · 接收流与解密密钥元数据)
      */
     static async _searchRemoteScraperStream(code, endpoint) {
         const url = endpoint.includes('?') ? `${endpoint}&code=${encodeURIComponent(code)}` : `${endpoint}?code=${encodeURIComponent(code)}`;
@@ -1214,10 +1233,17 @@ export class PeachWebBridge {
                 const data = JSON.parse(res.html);
                 const streamUrl = data.url || data.stream || data.streamUrl || data.m3u8;
                 if (streamUrl && typeof streamUrl === 'string') {
+                    if (data.keyHex) {
+                        PeachStreamHUD.log('STREAM', `[外部解析] 获取到 AES-128 解密密钥 KeyHex: ${data.keyHex.slice(0, 8)}... (IV: ${data.keyIv || '默认'})`, 'success');
+                    }
                     return {
                         url: streamUrl,
-                        source: data.source || '自建采集端',
-                        referer: data.referer || ''
+                        source: data.source || '自建解析端',
+                        referer: data.referer || '',
+                        keyHex: data.keyHex || '',
+                        keyUrl: data.keyUrl || '',
+                        keyIv: data.keyIv || '',
+                        keyMethod: data.keyMethod || ''
                     };
                 }
             } catch (_) {}

@@ -467,6 +467,23 @@
     margin-top: 8px;
 }
 
+.tm-peach-scraper-wrap {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.tm-peach-scraper-wrap .tm-peach-scraper-input {
+    flex: 1;
+}
+
+.tm-peach-test-scraper-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
 .tm-peach-jv-login-btn {
     background: rgba(254, 98, 142, 0.15);
     color: var(--brand-pink, #fe628e);
