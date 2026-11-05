@@ -79,7 +79,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":  "ok",
 		"service": "miss-stream-resolver",
-		"version": "1.3.0",
+		"version": "1.4.0",
 		"proxy":   proxyURL,
 		"time":    time.Now().Format(time.RFC3339),
 	})
@@ -258,7 +258,6 @@ func resolve123Av(ctx context.Context, code string) (*StreamResult, error) {
 			sResp.Body.Close()
 			sHTML := string(sBytes)
 
-			// 匹配搜索结果中的 /cn/v/ 链接
 			reLink := regexp.MustCompile(`/cn/v/([a-zA-Z0-9_\-]+)`)
 			links := reLink.FindAllStringSubmatch(sHTML, 5)
 			for _, lMatch := range links {
@@ -504,7 +503,6 @@ func handleResolve(w http.ResponseWriter, r *http.Request) {
 	var bestResult *StreamResult
 	bestWeight := 0
 
-	// 动态权重仲裁
 	timer := time.NewTimer(3500 * time.Millisecond)
 	defer timer.Stop()
 
@@ -519,7 +517,6 @@ func handleResolve(w http.ResponseWriter, r *http.Request) {
 			if wr.result != nil && wr.weight > bestWeight {
 				bestResult = wr.result
 				bestWeight = wr.weight
-				// 若最高权重 (123AV 无码/明文) 命中，立即熔断出货！
 				if bestWeight >= 100 {
 					cancel()
 					running = false
@@ -527,7 +524,6 @@ func handleResolve(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		case <-timer.C:
-			// 3.5s 快速超时线：已有结果直接出货，不等兜底
 			if bestResult != nil {
 				cancel()
 				running = false
@@ -563,8 +559,17 @@ func handleResolve(w http.ResponseWriter, r *http.Request) {
 func main() {
 	initClient()
 
+	// 兼容任意前缀路径：/health, /api/resolve, /resolve 以及带 ?code= 的根路径 /
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/api/resolve", handleResolve)
+	http.HandleFunc("/resolve", handleResolve)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("code") != "" {
+			handleResolve(w, r)
+		} else {
+			handleHealth(w, r)
+		}
+	})
 
 	log.Printf("🚀 Miss Player 外部流解析服务启动于 :%s (代理: %s)", port, proxyURL)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

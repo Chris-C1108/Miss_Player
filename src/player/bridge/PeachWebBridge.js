@@ -1243,7 +1243,12 @@ export class PeachWebBridge {
      * 从独立自建采集端 (Remote Scraper API) 获取流地址 (动静分离架构 · 接收流与解密密钥元数据)
      */
     static async _searchRemoteScraperStream(code, endpoint) {
-        const url = endpoint.includes('?') ? `${endpoint}&code=${encodeURIComponent(code)}` : `${endpoint}?code=${encodeURIComponent(code)}`;
+        let cleanEndpoint = String(endpoint || '').trim().replace(/\/+$/, '');
+        if (!cleanEndpoint.includes('/api/resolve') && !cleanEndpoint.includes('/resolve')) {
+            cleanEndpoint += '/api/resolve';
+        }
+        const url = cleanEndpoint.includes('?') ? `${cleanEndpoint}&code=${encodeURIComponent(code)}` : `${cleanEndpoint}?code=${encodeURIComponent(code)}`;
+        PeachStreamHUD.log('STREAM', `[外部解析] 正在请求端点: ${cleanEndpoint}?code=${code}`, 'info');
         const res = await fetchWithTransport(url, {
             headers: { 'Accept': 'application/json' },
             timeout: 10000
