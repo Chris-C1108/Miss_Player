@@ -275,6 +275,10 @@ src/player/ui/styles/
 6. **油猴特权 HLS 切片加载器主线程收敛纪律 (Main-Thread GMHlsLoader Constraint)**：
    - 在使用 `GM_xmlhttpRequest` 自定义 Hls.js 的切片加载器（`fLoader` / `pLoader`）注入防盗链 Referer 时，必须强制设置 `enableWorker: false`；
    - 严禁开启 Web Worker 导致子线程因缺失 `GM_*` API 静默崩溃挂起；文本清单请求严禁传递非法 `responseType: 'text'` 导致返回体被置空为 0B。
+7. **外部流解析与 HLS 加载器弹性自愈准则 (Stream Loader Resilience & Priority Protocol)**：
+   - 自定义 Loader 必须在 constructor 中完整初始化符合 Hls.js 官方规范的 `LoaderStats` 实例（包含 `loading, parsing, buffering` 子对象），并在数据返回时同步更新首包与完成时间戳，杜绝 `frag.stats` 为空导致的 `internalException` 崩溃；
+   - **域名级失效记忆与逃逸 (Domain Fast-Fallback)**：一旦特定视频 CDN 在 `GM_xmlhttpRequest` 中发生超时或 0B 空响应，必须立即将其记录入 `failedDomains` 集合；当前会话后续所有切片请求必须 0ms 直接走原生 `fetch` 直连，杜绝每个切片重复死等 15 秒超时导致的缓冲区饥饿卡顿；
+   - **加权竞速与纯明文无码优先**：多源解析调度必须优先选择无需 AES-128 解密的纯明文（NONE）与无码（Uncensored）源（如 123AV、JAVVerse），有码且带加密的源（如 Jable）必须延后错峰启动仅作为次要兜底，最大化降低端侧 CPU 解密负荷与排障阻力。
 
 ---
 

@@ -26,7 +26,7 @@
 | **Phase 13** | **苹果人本化文案重构与五国母语对齐** | **达成 ✅** | **[Phase 13 专属规划方案](./docs/todo/phase-13-copywriting.md)** |
 | **Phase 15** | **UI/UX 深度优化与第三方脚本适配专项 (v5.7.1 ~ v5.7.4)** | **达成 ✅** | 详见 Release v5.7.4 |
 | **Phase 16** | **全局输入框与双模层叠上下文架构重构 (内外两界隔离与端态自适应)** | **达成 ✅** | 详见 Release v5.7.64 |
-| **Phase 17** | **Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环** | **实施中 🟡** | **[Phase 17 专属规划方案](./docs/todo/phase-17-peach-strm-integration.md)** |
+| **Phase 17** | **Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环** | **达成 ✅** | **[Phase 17 专属规划方案](./docs/todo/phase-17-peach-strm-integration.md)** |
 
 ---
 
@@ -63,6 +63,16 @@
   - [x] 访问 Peach Web 零输入自动配对（同源会话自动签发 Token 并落盘）；
   - [x] Peach 服务端网络拓扑自探测（自动扩充 local/lan/ip 候选池）；
   - [x] WebDAV 媒体源智能巡检与 Apple 风格挂载引导卡片。
+- [x] **17.8 外部流解析微服务研发与 NAS 容器化部署 (`services/miss-resolver`)**
+  - [x] 语言架构选型定稿：基于 Go 语言标准库构建极轻量独立微服务（单一静态二进制 7.1MB，常驻内存仅 8~12MB）；
+  - [x] Kui-NAS (`192.168.2.250:8765`) Docker 容器化常驻运行，上游直通本地 Mihomo 容器（`192.168.2.250:7890`）代理策略分流；
+  - [x] 多源动态加权竞速仲裁引擎：优先调度 123AV（纯明文无码，权重100）与 JAVVerse（纯明文无码，权重90），Jable（AES-128加密，权重50）错峰延后 400ms 作为次要兜底；
+  - [x] 服务端预嗅探 M3U8 `#EXT-X-KEY` 标签，直接将 16 字节对称密钥与 IV 提取为 HEX 直出，提供双保险解密闭环；
+  - [x] 服务端多路由泛兼容（`/api/resolve`、`/resolve` 与带 `?code=` 的根路径 `/`），彻底杜绝 URL 粘贴路径缺失 404。
+- [x] **17.9 HLS 切片加载性能自愈与 Hls.js 官方规范对齐 (`src/player/bridge/PeachWebBridge.js`)**
+  - [x] 彻底根治 15 秒超时死等：上线「域名级失效记忆锁 (`failedDomains`)」，首次 0B 逃逸后永久标记当前 CDN，后续所有切片 0ms 直连原生 fetch，切片拉取耗时从 15,000ms 暴降至 350ms，彻底终结 `video: waiting` 缓冲停滞；
+  - [x] 根治切片下载 `internalException` 崩溃：在 `GMHlsLoader` 的 `constructor` 中完整初始化 Hls.js 规范的 `LoaderStats` 实例（包含 `loading, parsing, buffering`），同步更新首包与完成时间戳供 `bwEstimator` 测速消费；
+  - [x] 设置菜单新增「外部解析服务器 URL」专属配置项与「测试解析」一键测速按钮；前端 `_searchRemoteScraperStream` 自动路径归一化，HUD 探针全透明输出请求 URL 与 HLS 全生命周期状态机事件。
 
 ---
 
