@@ -70,17 +70,36 @@ class GMHlsLoader {
             onload: (res) => {
                 const tEnd = performance.now();
                 if (res.status >= 200 && res.status < 300) {
-                    const data = responseType === 'arraybuffer' ? res.response : (res.responseText || res.response);
+                    let data = res.response;
+                    if (responseType === 'arraybuffer') {
+                        if (data instanceof ArrayBuffer) {
+                            // 标准原生 ArrayBuffer
+                        } else if (data && data.buffer instanceof ArrayBuffer) {
+                            data = data.buffer;
+                        } else if (typeof data === 'string') {
+                            // 针对特定油猴管理器返回二进制字符串的严密防御性转换
+                            const buf = new ArrayBuffer(data.length);
+                            const view = new Uint8Array(buf);
+                            for (let i = 0; i < data.length; i++) {
+                                view[i] = data.charCodeAt(i) & 0xff;
+                            }
+                            data = buf;
+                        }
+                    } else {
+                        data = res.responseText || res.response || '';
+                    }
+
                     const response = {
                         url: res.finalUrl || url,
                         data: data
                     };
+                    const byteLen = (data && data.byteLength) || (data && data.length) || 0;
                     const stats = {
                         trequest: tStart,
                         tfirst: tEnd,
                         tload: tEnd,
-                        loaded: (data && data.byteLength) || (data && data.length) || 0,
-                        total: (data && data.byteLength) || (data && data.length) || 0
+                        loaded: byteLen,
+                        total: byteLen
                     };
                     callbacks.onSuccess(response, stats, context);
                 } else {
@@ -631,6 +650,22 @@ export class PeachWebBridge {
             try {
                 await this.mountHlsStream(video, streamInfo);
                 
+                // 监听 Hls.js 核心事件：一旦解析完成或切片到达，立即确认流有效成功！
+                if (this._hlsInstance) {
+                    const HlsClass = (typeof window !== 'undefined' && window.Hls) || 
+                                    (typeof unsafeWindow !== 'undefined' && unsafeWindow.Hls);
+                    if (HlsClass && HlsClass.Events) {
+                        this._hlsInstance.once(HlsClass.Events.MANIFEST_PARSED, (evt, data) => {
+                            PeachStreamHUD.log('PLAYER', `Hls.js 播放列表解析就绪 (档位: ${data?.levels?.length || 1})`, 'success');
+                            onSettled(true);
+                        });
+                        this._hlsInstance.once(HlsClass.Events.FRAG_LOADED, () => {
+                            PeachStreamHUD.log('PLAYER', 'Hls.js 首个视频分片加载完成', 'success');
+                            onSettled(true);
+                        });
+                    }
+                }
+
                 // 尝试起播：针对 iOS Safari 异步请求后受阻，提供自动静音兜底起播
                 const p = video.play();
                 if (p !== undefined) {
@@ -660,10 +695,10 @@ export class PeachWebBridge {
                 onSettled(false);
             }
 
-            // 2.2 秒看门狗：如果 2.2 秒内既没有起播也没有报错，说明卡顿死链，超时自动判定失败换源
+            // 8 秒看门狗：给跨国代理与 AES-128 解密足够的首包缓冲时间
             timer = setTimeout(() => {
-                onSettled(video.readyState >= 2 || video.currentTime > 0);
-            }, 2200);
+                onSettled(video.readyState >= 1 || video.currentTime > 0);
+            }, 8000);
         });
     }
 
@@ -889,53 +924,58 @@ export class PeachWebBridge {
      */
     static async _search123AvStream(code) {
         const cleanCode = code.toLowerCase().trim();
-        const detailUrl = `https://123av.com/cn/v/${cleanCode}`;
+        const domains = ['https://123av.com', 'https://1av.to'];
         const ua = (typeof navigator !== 'undefined' && navigator.userAgent && !navigator.userAgent.includes('Node'))
             ? navigator.userAgent
             : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-        const res = await fetchWithTransport(detailUrl, {
-            headers: {
-                'User-Agent': ua,
-                'Referer': 'https://123av.com/'
-            },
-            timeout: 8000
-        });
-
-        if (res.status >= 200 && res.status < 400 && res.html) {
-            // 归一化 HTML 中的 JSON 转义斜杠 (\/)
-            const cleanHtml = res.html.replace(/\\+\//g, '/');
-            // 提取播放器 embed url (例如: https://sadie-shop.site/e/KXDGPWY2)
-            const match = cleanHtml.match(/https:\/\/([^\/"]+)\/e\/([a-zA-Z0-9_-]+)/i);
-            
-            if (match) {
-                const domain = match[1];
-                const hashId = match[2];
-                const streamApiUrl = `https://${domain}/stream?id=${hashId}`;
-                const embedPageUrl = `https://${domain}/e/${hashId}`;
-
-                const apiRes = await fetchWithTransport(streamApiUrl, {
+        for (const origin of domains) {
+            try {
+                const detailUrl = `${origin}/cn/v/${cleanCode}`;
+                const res = await fetchWithTransport(detailUrl, {
                     headers: {
-                        'Referer': embedPageUrl,
                         'User-Agent': ua,
-                        'Accept': 'application/json'
+                        'Referer': `${origin}/`
                     },
                     timeout: 8000
                 });
 
-                if (apiRes.status >= 200 && apiRes.html) {
-                    try {
-                        const data = JSON.parse(apiRes.html);
-                        if (data && data.media && data.media.stream) {
-                            return {
-                                url: data.media.stream,
-                                source: '123AV',
-                                referer: `https://${domain}/`
-                            };
+                if (res.status >= 200 && res.status < 400 && res.html) {
+                    // 归一化 HTML 中的 JSON 转义斜杠 (\/)
+                    const cleanHtml = res.html.replace(/\\+\//g, '/');
+                    // 提取播放器 embed url (例如: https://sadie-shop.site/e/KXDGPWY2)
+                    const match = cleanHtml.match(/https:\/\/([^\/"]+)\/e\/([a-zA-Z0-9_-]+)/i);
+                    
+                    if (match) {
+                        const domain = match[1];
+                        const hashId = match[2];
+                        const streamApiUrl = `https://${domain}/stream?id=${hashId}`;
+                        const embedPageUrl = `https://${domain}/e/${hashId}`;
+
+                        const apiRes = await fetchWithTransport(streamApiUrl, {
+                            headers: {
+                                'Referer': embedPageUrl,
+                                'User-Agent': ua,
+                                'Accept': 'application/json'
+                            },
+                            timeout: 8000
+                        });
+
+                        if (apiRes.status >= 200 && apiRes.html) {
+                            try {
+                                const data = JSON.parse(apiRes.html);
+                                if (data && data.media && data.media.stream) {
+                                    return {
+                                        url: data.media.stream,
+                                        source: '123AV',
+                                        referer: `https://${domain}/`
+                                    };
+                                }
+                            } catch (_) {}
                         }
-                    } catch (_) {}
+                    }
                 }
-            }
+            } catch (_) {}
         }
 
         return null;

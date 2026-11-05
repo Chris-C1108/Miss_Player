@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.97
+// @version            5.7.98
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.97";
+		return "5.7.98";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.97";
+		return "5.7.98";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2449,17 +2449,27 @@
 				onload: (res) => {
 					const tEnd = performance.now();
 					if (res.status >= 200 && res.status < 300) {
-						const data = responseType === "arraybuffer" ? res.response : res.responseText || res.response;
+						let data = res.response;
+						if (responseType === "arraybuffer") {
+							if (data instanceof ArrayBuffer) {} else if (data && data.buffer instanceof ArrayBuffer) data = data.buffer;
+							else if (typeof data === "string") {
+								const buf = new ArrayBuffer(data.length);
+								const view = new Uint8Array(buf);
+								for (let i = 0; i < data.length; i++) view[i] = data.charCodeAt(i) & 255;
+								data = buf;
+							}
+						} else data = res.responseText || res.response || "";
 						const response = {
 							url: res.finalUrl || url,
 							data
 						};
+						const byteLen = data && data.byteLength || data && data.length || 0;
 						const stats = {
 							trequest: tStart,
 							tfirst: tEnd,
 							tload: tEnd,
-							loaded: data && data.byteLength || data && data.length || 0,
-							total: data && data.byteLength || data && data.length || 0
+							loaded: byteLen,
+							total: byteLen
 						};
 						callbacks.onSuccess(response, stats, context);
 					} else callbacks.onError({
@@ -2860,6 +2870,19 @@
 				video.addEventListener("error", onError);
 				try {
 					await this.mountHlsStream(video, streamInfo);
+					if (this._hlsInstance) {
+						const HlsClass = typeof window !== "undefined" && window.Hls || typeof unsafeWindow !== "undefined" && unsafeWindow.Hls;
+						if (HlsClass && HlsClass.Events) {
+							this._hlsInstance.once(HlsClass.Events.MANIFEST_PARSED, (evt, data) => {
+								PeachStreamHUD.log("PLAYER", `Hls.js 播放列表解析就绪 (档位: ${data?.levels?.length || 1})`, "success");
+								onSettled(true);
+							});
+							this._hlsInstance.once(HlsClass.Events.FRAG_LOADED, () => {
+								PeachStreamHUD.log("PLAYER", "Hls.js 首个视频分片加载完成", "success");
+								onSettled(true);
+							});
+						}
+					}
 					const p = video.play();
 					if (p !== void 0) p.then(() => {
 						onSettled(true);
@@ -2891,8 +2914,8 @@
 					onSettled(false);
 				}
 				timer = setTimeout(() => {
-					onSettled(video.readyState >= 2 || video.currentTime > 0);
-				}, 2200);
+					onSettled(video.readyState >= 1 || video.currentTime > 0);
+				}, 8e3);
 			});
 		}
 		static async mountHlsStream(video, streamInfo) {
@@ -3126,38 +3149,41 @@
 			return null;
 		}
 		static async _search123AvStream(code) {
-			const detailUrl = `https://123av.com/cn/v/${code.toLowerCase().trim()}`;
+			const cleanCode = code.toLowerCase().trim();
+			const domains = ["https://123av.com", "https://1av.to"];
 			const ua = typeof navigator !== "undefined" && navigator.userAgent && !navigator.userAgent.includes("Node") ? navigator.userAgent : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-			const res = await fetchWithTransport(detailUrl, {
-				headers: {
-					"User-Agent": ua,
-					"Referer": "https://123av.com/"
-				},
-				timeout: 8e3
-			});
-			if (res.status >= 200 && res.status < 400 && res.html) {
-				const match = res.html.replace(/\\+\//g, "/").match(/https:\/\/([^\/"]+)\/e\/([a-zA-Z0-9_-]+)/i);
-				if (match) {
-					const domain = match[1];
-					const hashId = match[2];
-					const apiRes = await fetchWithTransport(`https://${domain}/stream?id=${hashId}`, {
-						headers: {
-							"Referer": `https://${domain}/e/${hashId}`,
-							"User-Agent": ua,
-							"Accept": "application/json"
-						},
-						timeout: 8e3
-					});
-					if (apiRes.status >= 200 && apiRes.html) try {
-						const data = JSON.parse(apiRes.html);
-						if (data && data.media && data.media.stream) return {
-							url: data.media.stream,
-							source: "123AV",
-							referer: `https://${domain}/`
-						};
-					} catch (_) {}
+			for (const origin of domains) try {
+				const res = await fetchWithTransport(`${origin}/cn/v/${cleanCode}`, {
+					headers: {
+						"User-Agent": ua,
+						"Referer": `${origin}/`
+					},
+					timeout: 8e3
+				});
+				if (res.status >= 200 && res.status < 400 && res.html) {
+					const match = res.html.replace(/\\+\//g, "/").match(/https:\/\/([^\/"]+)\/e\/([a-zA-Z0-9_-]+)/i);
+					if (match) {
+						const domain = match[1];
+						const hashId = match[2];
+						const apiRes = await fetchWithTransport(`https://${domain}/stream?id=${hashId}`, {
+							headers: {
+								"Referer": `https://${domain}/e/${hashId}`,
+								"User-Agent": ua,
+								"Accept": "application/json"
+							},
+							timeout: 8e3
+						});
+						if (apiRes.status >= 200 && apiRes.html) try {
+							const data = JSON.parse(apiRes.html);
+							if (data && data.media && data.media.stream) return {
+								url: data.media.stream,
+								source: "123AV",
+								referer: `https://${domain}/`
+							};
+						} catch (_) {}
+					}
 				}
-			}
+			} catch (_) {}
 			return null;
 		}
 		static async _searchJableStream(code) {
@@ -4981,7 +5007,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.97";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.98";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
