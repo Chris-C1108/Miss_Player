@@ -71,17 +71,17 @@ class GMHlsLoader {
 
         const tStart = performance.now();
 
-        this.request = gmXhr({
+        const reqOpts = {
             method: 'GET',
             url: url,
             headers: headers,
-            responseType: responseType === 'arraybuffer' ? 'arraybuffer' : 'text',
             timeout: config.timeout || 15000,
             onload: (res) => {
                 const tEnd = performance.now();
                 if (res.status >= 200 && res.status < 300) {
-                    let data = res.response;
+                    let data = '';
                     if (responseType === 'arraybuffer') {
+                        data = res.response;
                         if (data instanceof ArrayBuffer) {
                             // 标准原生 ArrayBuffer
                         } else if (data && data.buffer instanceof ArrayBuffer) {
@@ -96,7 +96,17 @@ class GMHlsLoader {
                             data = buf;
                         }
                     } else {
-                        data = res.responseText || res.response || '';
+                        // 文本模式 (如 .m3u8 播放列表)：优先读取 responseText，兜底解码 ArrayBuffer
+                        data = res.responseText || '';
+                        if (!data && res.response) {
+                            if (typeof res.response === 'string') {
+                                data = res.response;
+                            } else if (res.response instanceof ArrayBuffer) {
+                                try {
+                                    data = new TextDecoder('utf-8').decode(res.response);
+                                } catch (_) {}
+                            }
+                        }
                     }
 
                     const response = {
@@ -126,7 +136,14 @@ class GMHlsLoader {
                 PeachStreamHUD.log('STREAM', `[GMHlsLoader] 请求超时: ${url.slice(0, 48)}`, 'warn');
                 callbacks.onTimeout({ code: 0, text: 'Timeout' }, context, null);
             }
-        });
+        };
+
+        // 仅在明确需要二进制切片或密钥时设置 arraybuffer；文本模式绝不传非法 'text' 避免油猴清空响应体
+        if (responseType === 'arraybuffer') {
+            reqOpts.responseType = 'arraybuffer';
+        }
+
+        this.request = gmXhr(reqOpts);
     }
 }
 
