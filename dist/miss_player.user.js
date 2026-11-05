@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.98
+// @version            5.7.99
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.98";
+		return "5.7.99";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1670,7 +1670,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.98";
+		return "5.7.99";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3187,70 +3187,131 @@
 			return null;
 		}
 		static async _searchJableStream(code) {
-			const searchUrl = `https://jable.tv/search/${encodeURIComponent(code)}/`;
-			const res = await fetchWithTransport(searchUrl, {
-				headers: {
-					"Referer": "https://jable.tv/",
-					"User-Agent": navigator.userAgent
-				},
-				timeout: 8e3
-			});
-			if (res.status >= 200 && res.status < 400 && res.html) {
-				const detailRegex = new RegExp(`href="(https:\\/\\/jable\\.tv\\/videos\\/[^"]*${code.toLowerCase()}[^"]*\\/)"`, "i");
-				const match = res.html.match(detailRegex);
-				const detailUrl = match ? match[1] : null;
-				if (detailUrl) {
-					const detailRes = await fetchWithTransport(detailUrl, {
+			const cleanCode = code.toLowerCase().trim();
+			const domains = ["https://jable.tv", "https://fs1.app"];
+			const ua = typeof navigator !== "undefined" && navigator.userAgent ? navigator.userAgent : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+			for (const origin of domains) {
+				try {
+					const directUrl = `${origin}/videos/${cleanCode}/`;
+					const directRes = await fetchWithTransport(directUrl, {
 						headers: {
-							"Referer": searchUrl,
-							"User-Agent": navigator.userAgent
+							"Referer": `${origin}/`,
+							"User-Agent": ua
 						},
 						timeout: 8e3
 					});
-					if (detailRes.status >= 200 && detailRes.html) {
-						const hlsMatch = detailRes.html.match(/hlsUrl\s*=\s*['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i) || detailRes.html.match(/<source\s+src=['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i);
-						if (hlsMatch && hlsMatch[1]) return {
-							url: hlsMatch[1],
-							source: "Jable",
-							referer: "https://jable.tv/"
-						};
+					if (directRes.status >= 200 && directRes.status < 400 && directRes.html) {
+						const hlsMatch = directRes.html.match(/hlsUrl\s*=\s*['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i) || directRes.html.match(/<source\s+src=['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i);
+						if (hlsMatch && hlsMatch[1]) {
+							PeachStreamHUD.log("SCRAPE", `[Jable] 直达详情页解析成功: ${directUrl}`, "success");
+							return {
+								url: hlsMatch[1],
+								source: "Jable",
+								referer: `${origin}/`
+							};
+						}
 					}
-				}
+				} catch (_) {}
+				try {
+					const searchUrl = `${origin}/search/${encodeURIComponent(cleanCode)}/`;
+					const res = await fetchWithTransport(searchUrl, {
+						headers: {
+							"Referer": `${origin}/`,
+							"User-Agent": ua
+						},
+						timeout: 8e3
+					});
+					if (res.status >= 200 && res.status < 400 && res.html) {
+						const detailRegex = new RegExp(`href="((?:https?:\\/\\/[^"\\/]+)?\\/videos\\/[^"\\/]*${cleanCode}[^"\\/]*\\/)"`, "i");
+						const match = res.html.match(detailRegex);
+						const detailPath = match ? match[1] : null;
+						if (detailPath) {
+							const detailUrl = detailPath.startsWith("http") ? detailPath : new URL(detailPath, origin).href;
+							const detailRes = await fetchWithTransport(detailUrl, {
+								headers: {
+									"Referer": searchUrl,
+									"User-Agent": ua
+								},
+								timeout: 8e3
+							});
+							if (detailRes.status >= 200 && detailRes.html) {
+								const hlsMatch = detailRes.html.match(/hlsUrl\s*=\s*['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i) || detailRes.html.match(/<source\s+src=['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i);
+								if (hlsMatch && hlsMatch[1]) {
+									PeachStreamHUD.log("SCRAPE", `[Jable] 搜索详情页解析成功: ${detailUrl}`, "success");
+									return {
+										url: hlsMatch[1],
+										source: "Jable",
+										referer: `${origin}/`
+									};
+								}
+							}
+						}
+					}
+				} catch (_) {}
 			}
 			return null;
 		}
 		static async _searchMissavStream(code) {
 			const cleanCode = code.toLowerCase().trim();
-			for (const origin of ["https://missav.ai", "https://missav.ws"]) try {
-				const searchUrl = `${origin}/search/${encodeURIComponent(cleanCode)}`;
-				const res = await fetchWithTransport(searchUrl, {
-					headers: {
-						"Referer": origin,
-						"User-Agent": navigator.userAgent
-					},
-					timeout: 8e3
-				});
-				if (res.status >= 200 && res.status < 400 && res.html) {
-					const detailRegex = new RegExp(`href="((?:https?:\\/\\/[^"\\/]+)?\\/(?:cn\\/)?[^"\\/]*${cleanCode}[^"\\/]*)"`, "i");
-					const match = res.html.match(detailRegex);
-					const detailPath = match ? match[1] : `/cn/${cleanCode}`;
-					const detailRes = await fetchWithTransport(detailPath.startsWith("http") ? detailPath : new URL(detailPath, origin).href, {
+			const domains = ["https://missav.ai", "https://missav.ws"];
+			const ua = typeof navigator !== "undefined" && navigator.userAgent ? navigator.userAgent : "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+			for (const origin of domains) {
+				for (const pathPrefix of [`/cn/${cleanCode}`, `/${cleanCode}`]) try {
+					const directUrl = `${origin}${pathPrefix}`;
+					const directRes = await fetchWithTransport(directUrl, {
 						headers: {
-							"Referer": searchUrl,
-							"User-Agent": navigator.userAgent
+							"Referer": `${origin}/`,
+							"User-Agent": ua
 						},
 						timeout: 8e3
 					});
-					if (detailRes.status >= 200 && detailRes.html) {
-						const m3u8Match = detailRes.html.match(/(https?:\/\/[^'"]+playlist\.m3u8[^'"]*)/i) || detailRes.html.match(/urls\s*:\s*\[['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]\]/i);
-						if (m3u8Match && m3u8Match[1]) return {
-							url: m3u8Match[1],
-							source: "MissAV",
-							referer: origin
-						};
+					if (directRes.status >= 200 && directRes.status < 400 && directRes.html) {
+						const m3u8Match = directRes.html.match(/(https?:\/\/[^'"]+playlist\.m3u8[^'"]*)/i) || directRes.html.match(/urls\s*:\s*\[['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]\]/i);
+						if (m3u8Match && m3u8Match[1]) {
+							PeachStreamHUD.log("SCRAPE", `[MissAV] 直达详情页解析成功: ${directUrl}`, "success");
+							return {
+								url: m3u8Match[1],
+								source: "MissAV",
+								referer: `${origin}/`
+							};
+						}
 					}
-				}
-			} catch (_) {}
+				} catch (_) {}
+				try {
+					const searchUrl = `${origin}/search/${encodeURIComponent(cleanCode)}`;
+					const res = await fetchWithTransport(searchUrl, {
+						headers: {
+							"Referer": `${origin}/`,
+							"User-Agent": ua
+						},
+						timeout: 8e3
+					});
+					if (res.status >= 200 && res.status < 400 && res.html) {
+						const detailRegex = new RegExp(`href="((?:https?:\\/\\/[^"\\/]+)?\\/(?:cn\\/)?[^"\\/]*${cleanCode}[^"\\/]*)"`, "i");
+						const match = res.html.match(detailRegex);
+						const detailPath = match ? match[1] : `/cn/${cleanCode}`;
+						const detailUrl = detailPath.startsWith("http") ? detailPath : new URL(detailPath, origin).href;
+						const detailRes = await fetchWithTransport(detailUrl, {
+							headers: {
+								"Referer": searchUrl,
+								"User-Agent": ua
+							},
+							timeout: 8e3
+						});
+						if (detailRes.status >= 200 && detailRes.html) {
+							const m3u8Match = detailRes.html.match(/(https?:\/\/[^'"]+playlist\.m3u8[^'"]*)/i) || detailRes.html.match(/urls\s*:\s*\[['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]\]/i);
+							if (m3u8Match && m3u8Match[1]) {
+								PeachStreamHUD.log("SCRAPE", `[MissAV] 搜索页解析成功: ${detailUrl}`, "success");
+								return {
+									url: m3u8Match[1],
+									source: "MissAV",
+									referer: `${origin}/`
+								};
+							}
+						}
+					}
+				} catch (_) {}
+			}
 			return null;
 		}
 		static startProgressTracking(video) {
@@ -5007,7 +5068,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.98";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.99";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

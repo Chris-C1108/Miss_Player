@@ -982,69 +982,129 @@ export class PeachWebBridge {
     }
 
     /**
-     * 从 Jable 检索视频流
+     * 从 Jable 检索视频流 (支持直接直达与搜索双通道)
      */
     static async _searchJableStream(code) {
-        const searchUrl = `https://jable.tv/search/${encodeURIComponent(code)}/`;
-        const res = await fetchWithTransport(searchUrl, {
-            headers: {
-                'Referer': 'https://jable.tv/',
-                'User-Agent': navigator.userAgent
-            },
-            timeout: 8000
-        });
+        const cleanCode = code.toLowerCase().trim();
+        const domains = ['https://jable.tv', 'https://fs1.app'];
+        const ua = (typeof navigator !== 'undefined' && navigator.userAgent)
+            ? navigator.userAgent
+            : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-        if (res.status >= 200 && res.status < 400 && res.html) {
-            const detailRegex = new RegExp(`href="(https:\\/\\/jable\\.tv\\/videos\\/[^"]*${code.toLowerCase()}[^"]*\\/)"`, 'i');
-            const match = res.html.match(detailRegex);
-            const detailUrl = match ? match[1] : null;
-
-            if (detailUrl) {
-                const detailRes = await fetchWithTransport(detailUrl, {
-                    headers: { 'Referer': searchUrl, 'User-Agent': navigator.userAgent },
+        for (const origin of domains) {
+            // 通道 1: 直接直达详情页 (Jable 95% 规范番号格式都是 /videos/code/)
+            try {
+                const directUrl = `${origin}/videos/${cleanCode}/`;
+                const directRes = await fetchWithTransport(directUrl, {
+                    headers: { 'Referer': `${origin}/`, 'User-Agent': ua },
                     timeout: 8000
                 });
 
-                if (detailRes.status >= 200 && detailRes.html) {
-                    const hlsMatch = detailRes.html.match(/hlsUrl\s*=\s*['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i) ||
-                                     detailRes.html.match(/<source\s+src=['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i);
+                if (directRes.status >= 200 && directRes.status < 400 && directRes.html) {
+                    const hlsMatch = directRes.html.match(/hlsUrl\s*=\s*['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i) ||
+                                     directRes.html.match(/<source\s+src=['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i);
                     if (hlsMatch && hlsMatch[1]) {
+                        PeachStreamHUD.log('SCRAPE', `[Jable] 直达详情页解析成功: ${directUrl}`, 'success');
                         return {
                             url: hlsMatch[1],
                             source: 'Jable',
-                            referer: 'https://jable.tv/'
+                            referer: `${origin}/`
                         };
                     }
                 }
-            }
+            } catch (_) {}
+
+            // 通道 2: 搜索页检索匹配
+            try {
+                const searchUrl = `${origin}/search/${encodeURIComponent(cleanCode)}/`;
+                const res = await fetchWithTransport(searchUrl, {
+                    headers: { 'Referer': `${origin}/`, 'User-Agent': ua },
+                    timeout: 8000
+                });
+
+                if (res.status >= 200 && res.status < 400 && res.html) {
+                    const detailRegex = new RegExp(`href="((?:https?:\\/\\/[^"\\/]+)?\\/videos\\/[^"\\/]*${cleanCode}[^"\\/]*\\/)"`, 'i');
+                    const match = res.html.match(detailRegex);
+                    const detailPath = match ? match[1] : null;
+
+                    if (detailPath) {
+                        const detailUrl = detailPath.startsWith('http') ? detailPath : new URL(detailPath, origin).href;
+                        const detailRes = await fetchWithTransport(detailUrl, {
+                            headers: { 'Referer': searchUrl, 'User-Agent': ua },
+                            timeout: 8000
+                        });
+
+                        if (detailRes.status >= 200 && detailRes.html) {
+                            const hlsMatch = detailRes.html.match(/hlsUrl\s*=\s*['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i) ||
+                                             detailRes.html.match(/<source\s+src=['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i);
+                            if (hlsMatch && hlsMatch[1]) {
+                                PeachStreamHUD.log('SCRAPE', `[Jable] 搜索详情页解析成功: ${detailUrl}`, 'success');
+                                return {
+                                    url: hlsMatch[1],
+                                    source: 'Jable',
+                                    referer: `${origin}/`
+                                };
+                            }
+                        }
+                    }
+                }
+            } catch (_) {}
         }
 
         return null;
     }
 
     /**
-     * 从 MissAV 检索视频流
+     * 从 MissAV 检索视频流 (支持直接直达与搜索双通道)
      */
     static async _searchMissavStream(code) {
         const cleanCode = code.toLowerCase().trim();
         const domains = ['https://missav.ai', 'https://missav.ws'];
+        const ua = (typeof navigator !== 'undefined' && navigator.userAgent)
+            ? navigator.userAgent
+            : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
         for (const origin of domains) {
+            // 通道 1: 尝试直达详情页 (/cn/code 或 /code)
+            for (const pathPrefix of [`/cn/${cleanCode}`, `/${cleanCode}`]) {
+                try {
+                    const directUrl = `${origin}${pathPrefix}`;
+                    const directRes = await fetchWithTransport(directUrl, {
+                        headers: { 'Referer': `${origin}/`, 'User-Agent': ua },
+                        timeout: 8000
+                    });
+
+                    if (directRes.status >= 200 && directRes.status < 400 && directRes.html) {
+                        const m3u8Match = directRes.html.match(/(https?:\/\/[^'"]+playlist\.m3u8[^'"]*)/i) ||
+                                          directRes.html.match(/urls\s*:\s*\[['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]\]/i);
+                        if (m3u8Match && m3u8Match[1]) {
+                            PeachStreamHUD.log('SCRAPE', `[MissAV] 直达详情页解析成功: ${directUrl}`, 'success');
+                            return {
+                                url: m3u8Match[1],
+                                source: 'MissAV',
+                                referer: `${origin}/`
+                            };
+                        }
+                    }
+                } catch (_) {}
+            }
+
+            // 通道 2: 搜索页检索
             try {
                 const searchUrl = `${origin}/search/${encodeURIComponent(cleanCode)}`;
                 const res = await fetchWithTransport(searchUrl, {
-                    headers: { 'Referer': origin, 'User-Agent': navigator.userAgent },
+                    headers: { 'Referer': `${origin}/`, 'User-Agent': ua },
                     timeout: 8000
                 });
 
                 if (res.status >= 200 && res.status < 400 && res.html) {
-                    // 支持相对路径 (/cn/xxx 或 /xxx) 与绝对路径
                     const detailRegex = new RegExp(`href="((?:https?:\\/\\/[^"\\/]+)?\\/(?:cn\\/)?[^"\\/]*${cleanCode}[^"\\/]*)"`, 'i');
                     const match = res.html.match(detailRegex);
                     const detailPath = match ? match[1] : `/cn/${cleanCode}`;
                     const detailUrl = detailPath.startsWith('http') ? detailPath : new URL(detailPath, origin).href;
 
                     const detailRes = await fetchWithTransport(detailUrl, {
-                        headers: { 'Referer': searchUrl, 'User-Agent': navigator.userAgent },
+                        headers: { 'Referer': searchUrl, 'User-Agent': ua },
                         timeout: 8000
                     });
 
@@ -1052,10 +1112,11 @@ export class PeachWebBridge {
                         const m3u8Match = detailRes.html.match(/(https?:\/\/[^'"]+playlist\.m3u8[^'"]*)/i) ||
                                           detailRes.html.match(/urls\s*:\s*\[['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]\]/i);
                         if (m3u8Match && m3u8Match[1]) {
+                            PeachStreamHUD.log('SCRAPE', `[MissAV] 搜索页解析成功: ${detailUrl}`, 'success');
                             return {
                                 url: m3u8Match[1],
                                 source: 'MissAV',
-                                referer: origin
+                                referer: `${origin}/`
                             };
                         }
                     }
