@@ -79,7 +79,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":  "ok",
 		"service": "miss-stream-resolver",
-		"version": "1.2.0",
+		"version": "1.3.0",
 		"proxy":   proxyURL,
 		"time":    time.Now().Format(time.RFC3339),
 	})
@@ -127,7 +127,6 @@ func enrichHlsEncryptionMetadata(ctx context.Context, m3u8URL, referer string, r
 				}
 			}
 
-			// 预拉取 16 字节密钥并输出 HEX
 			if res.KeyURL != "" {
 				kReq, _ := http.NewRequestWithContext(ctx, "GET", res.KeyURL, nil)
 				if referer != "" {
@@ -151,9 +150,69 @@ func enrichHlsEncryptionMetadata(ctx context.Context, m3u8URL, referer string, r
 	}
 }
 
-// 123AV 源解析器 (免盾纯明文，优先无码泄露版)
+// 123AV 解析：从详情页 HTML 提取并请求流地址
+func extract123AvFromHTML(ctx context.Context, bodyStr, code, variant string) *StreamResult {
+	cleanBody := strings.ReplaceAll(bodyStr, `\`, "")
+	re := regexp.MustCompile(`https?://([a-zA-Z0-9_\-\.]+)/e/([a-zA-Z0-9_\-]+)`)
+	match := re.FindStringSubmatch(cleanBody)
+	if len(match) < 3 {
+		return nil
+	}
+
+	domain := match[1]
+	hashID := match[2]
+	streamAPI := fmt.Sprintf("https://%s/stream?id=%s", domain, hashID)
+	embedReferer := fmt.Sprintf("https://%s/e/%s", domain, hashID)
+	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+	apiReq, err := http.NewRequestWithContext(ctx, "GET", streamAPI, nil)
+	if err != nil {
+		return nil
+	}
+	apiReq.Header.Set("User-Agent", ua)
+	apiReq.Header.Set("Referer", embedReferer)
+	apiReq.Header.Set("Accept", "application/json")
+
+	apiResp, err := client.Do(apiReq)
+	if err != nil || apiResp.StatusCode >= 400 {
+		if apiResp != nil {
+			apiResp.Body.Close()
+		}
+		return nil
+	}
+
+	apiBytes, _ := io.ReadAll(apiResp.Body)
+	apiResp.Body.Close()
+
+	var mediaData struct {
+		Status string `json:"status"`
+		Media  struct {
+			Stream string `json:"stream"`
+			VTT    string `json:"vtt"`
+		} `json:"media"`
+	}
+
+	if err := json.Unmarshal(apiBytes, &mediaData); err == nil && mediaData.Media.Stream != "" {
+		return &StreamResult{
+			Success:   true,
+			Code:      strings.ToUpper(code),
+			Source:    fmt.Sprintf("123AV (%s)", variant),
+			URL:       mediaData.Media.Stream,
+			Referer:   embedReferer,
+			VTT:       mediaData.Media.VTT,
+			Variant:   variant,
+			KeyMethod: "NONE", // 纯明文无加密
+		}
+	}
+	return nil
+}
+
+// 123AV 源解析器 (双通道：直达详情页 + 搜索兜底)
 func resolve123Av(ctx context.Context, code string) (*StreamResult, error) {
 	cleanCode := strings.ToLower(strings.TrimSpace(code))
+	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+	// 通道 1: 直达详情页 (优先无码流出，其次普通版)
 	variants := []struct {
 		suffix  string
 		variant string
@@ -161,8 +220,6 @@ func resolve123Av(ctx context.Context, code string) (*StreamResult, error) {
 		{"-uncensored-leaked", "无码流出"},
 		{"", "普通版"},
 	}
-
-	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 	for _, v := range variants {
 		targetCode := cleanCode + v.suffix
@@ -176,71 +233,59 @@ func resolve123Av(ctx context.Context, code string) (*StreamResult, error) {
 		req.Header.Set("Referer", "https://123av.com/")
 
 		resp, err := client.Do(req)
-		if err != nil || resp.StatusCode >= 400 {
-			if resp != nil {
-				resp.Body.Close()
+		if err == nil && resp.StatusCode == 200 {
+			bodyBytes, bErr := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if bErr == nil {
+				if res := extract123AvFromHTML(ctx, string(bodyBytes), code, v.variant); res != nil {
+					return res, nil
+				}
 			}
-			continue
+		} else if resp != nil {
+			resp.Body.Close()
 		}
+	}
 
-		bodyBytes, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			continue
-		}
+	// 通道 2: 搜索页检索匹配兜底 (解决番号前后缀不规范问题，如带0或特殊符号)
+	searchURL := fmt.Sprintf("https://123av.com/cn/search?keyword=%s", url.QueryEscape(cleanCode))
+	sReq, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
+	if err == nil {
+		sReq.Header.Set("User-Agent", ua)
+		sReq.Header.Set("Referer", "https://123av.com/")
+		sResp, sErr := client.Do(sReq)
+		if sErr == nil && sResp.StatusCode == 200 {
+			sBytes, _ := io.ReadAll(sResp.Body)
+			sResp.Body.Close()
+			sHTML := string(sBytes)
 
-		// 彻底剥除 JSON 转义斜杠，确保正则无损命中
-		cleanBody := strings.ReplaceAll(string(bodyBytes), `\`, "")
-
-		re := regexp.MustCompile(`https?://([a-zA-Z0-9_\-\.]+)/e/([a-zA-Z0-9_\-]+)`)
-		match := re.FindStringSubmatch(cleanBody)
-		if len(match) < 3 {
-			continue
-		}
-
-		domain := match[1]
-		hashID := match[2]
-		streamAPI := fmt.Sprintf("https://%s/stream?id=%s", domain, hashID)
-		embedReferer := fmt.Sprintf("https://%s/e/%s", domain, hashID)
-
-		apiReq, err := http.NewRequestWithContext(ctx, "GET", streamAPI, nil)
-		if err != nil {
-			continue
-		}
-		apiReq.Header.Set("User-Agent", ua)
-		apiReq.Header.Set("Referer", embedReferer)
-		apiReq.Header.Set("Accept", "application/json")
-
-		apiResp, err := client.Do(apiReq)
-		if err != nil || apiResp.StatusCode >= 400 {
-			if apiResp != nil {
-				apiResp.Body.Close()
+			// 匹配搜索结果中的 /cn/v/ 链接
+			reLink := regexp.MustCompile(`/cn/v/([a-zA-Z0-9_\-]+)`)
+			links := reLink.FindAllStringSubmatch(sHTML, 5)
+			for _, lMatch := range links {
+				if len(lMatch) > 1 {
+					subCode := lMatch[1]
+					subURL := fmt.Sprintf("https://123av.com/cn/v/%s", subCode)
+					subReq, _ := http.NewRequestWithContext(ctx, "GET", subURL, nil)
+					subReq.Header.Set("User-Agent", ua)
+					subReq.Header.Set("Referer", searchURL)
+					subResp, subErr := client.Do(subReq)
+					if subErr == nil && subResp.StatusCode == 200 {
+						subBytes, _ := io.ReadAll(subResp.Body)
+						subResp.Body.Close()
+						variantName := "普通版"
+						if strings.Contains(subCode, "uncensored") {
+							variantName = "无码流出"
+						}
+						if res := extract123AvFromHTML(ctx, string(subBytes), code, variantName); res != nil {
+							return res, nil
+						}
+					} else if subResp != nil {
+						subResp.Body.Close()
+					}
+				}
 			}
-			continue
-		}
-
-		apiBytes, _ := io.ReadAll(apiResp.Body)
-		apiResp.Body.Close()
-
-		var mediaData struct {
-			Status string `json:"status"`
-			Media  struct {
-				Stream string `json:"stream"`
-				VTT    string `json:"vtt"`
-			} `json:"media"`
-		}
-
-		if err := json.Unmarshal(apiBytes, &mediaData); err == nil && mediaData.Media.Stream != "" {
-			return &StreamResult{
-				Success:   true,
-				Code:      strings.ToUpper(code),
-				Source:    fmt.Sprintf("123AV (%s)", v.variant),
-				URL:       mediaData.Media.Stream,
-				Referer:   embedReferer,
-				VTT:       mediaData.Media.VTT,
-				Variant:   v.variant,
-				KeyMethod: "NONE", // 123AV 纯明文无加密
-			}, nil
+		} else if sResp != nil {
+			sResp.Body.Close()
 		}
 	}
 
@@ -406,89 +451,102 @@ func handleResolve(w http.ResponseWriter, r *http.Request) {
 
 	tStart := time.Now()
 	cleanCode := strings.ToUpper(strings.TrimSpace(code))
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
 	defer cancel()
 
-	// 核心加权机制：
-	// T0 纯明文/无码免解密源 (123AV / JAVVerse) 享有绝对优先权
-	// T1 加密源 (Jable) 仅作为兜底候选
-	type resolverFunc func(context.Context, string) (*StreamResult, error)
-
-	var finalResult *StreamResult
-	var mu sync.Mutex
-
-	// 第一梯队 (纯明文/无码) 并发抢跑
-	primaryResolvers := []struct {
-		name string
-		fn   resolverFunc
-	}{
-		{"123AV", resolve123Av},
-		{"JAVVerse", resolveJavVerse},
+	type WeightedResult struct {
+		result *StreamResult
+		weight int
 	}
 
-	primaryChan := make(chan *StreamResult, len(primaryResolvers))
-	var wgPrimary sync.WaitGroup
+	resultChan := make(chan WeightedResult, 4)
+	var wg sync.WaitGroup
 
-	for _, res := range primaryResolvers {
-		wgPrimary.Add(1)
-		go func(name string, fn resolverFunc) {
-			defer wgPrimary.Done()
-			if res, err := fn(ctx, cleanCode); err == nil && res != nil && res.URL != "" {
-				select {
-				case primaryChan <- res:
-				default:
-				}
-			}
-		}(res.name, res.fn)
-	}
-
-	// 收集第一梯队结果 (最多等待 2.5 秒)
-	primaryDone := make(chan struct{})
+	// 1. 123AV (权重 100: 纯明文/免解密/支持无码)
+	wg.Add(1)
 	go func() {
-		wgPrimary.Wait()
-		close(primaryChan)
-		close(primaryDone)
+		defer wg.Done()
+		if res, err := resolve123Av(ctx, cleanCode); err == nil && res != nil && res.URL != "" {
+			resultChan <- WeightedResult{result: res, weight: 100}
+		}
 	}()
 
-	select {
-	case res := <-primaryChan:
-		if res != nil {
-			mu.Lock()
-			finalResult = res
-			mu.Unlock()
-			cancel()
+	// 2. JAVVerse (权重 90: 纯明文/支持无码流出)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if res, err := resolveJavVerse(ctx, cleanCode); err == nil && res != nil && res.URL != "" {
+			resultChan <- WeightedResult{result: res, weight: 90}
 		}
-	case <-time.After(2500 * time.Millisecond):
-		// 第一梯队未能在 2.5s 内返回，立即启动 Jable 兜底
-	case <-primaryDone:
-		// 第一梯队快速执行完成
-	}
+	}()
 
-	// 若第一梯队未命中，尝试 Jable 兜底
-	if finalResult == nil {
-		for res := range primaryChan {
-			if res != nil && res.Success && res.URL != "" {
-				finalResult = res
+	// 3. Jable (权重 50: AES-128 加密备选，延后 400ms 错峰启动给明文源优先窗口)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		select {
+		case <-time.After(400 * time.Millisecond):
+		case <-ctx.Done():
+			return
+		}
+		if res, err := resolveJable(ctx, cleanCode); err == nil && res != nil && res.URL != "" {
+			resultChan <- WeightedResult{result: res, weight: 50}
+		}
+	}()
+
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(resultChan)
+		close(done)
+	}()
+
+	var bestResult *StreamResult
+	bestWeight := 0
+
+	// 动态权重仲裁
+	timer := time.NewTimer(3500 * time.Millisecond)
+	defer timer.Stop()
+
+	running := true
+	for running {
+		select {
+		case wr, ok := <-resultChan:
+			if !ok {
+				running = false
 				break
 			}
-		}
-	}
-
-	if finalResult == nil {
-		// 启动 Jable 兜底检索
-		if jableRes, err := resolveJable(ctx, cleanCode); err == nil && jableRes != nil {
-			finalResult = jableRes
+			if wr.result != nil && wr.weight > bestWeight {
+				bestResult = wr.result
+				bestWeight = wr.weight
+				// 若最高权重 (123AV 无码/明文) 命中，立即熔断出货！
+				if bestWeight >= 100 {
+					cancel()
+					running = false
+					break
+				}
+			}
+		case <-timer.C:
+			// 3.5s 快速超时线：已有结果直接出货，不等兜底
+			if bestResult != nil {
+				cancel()
+				running = false
+				break
+			}
+		case <-done:
+			running = false
+			break
 		}
 	}
 
 	elapsed := time.Since(tStart).Milliseconds()
 
-	if finalResult != nil {
-		finalResult.ElapsedMs = elapsed
+	if bestResult != nil {
+		bestResult.ElapsedMs = elapsed
 		log.Printf("[Success] %s -> %s (%s) [加密: %s, KeyHex: %s] 耗时: %dms",
-			cleanCode, finalResult.Source, finalResult.URL, finalResult.KeyMethod, finalResult.KeyHex, elapsed)
+			cleanCode, bestResult.Source, bestResult.URL, bestResult.KeyMethod, bestResult.KeyHex, elapsed)
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(finalResult)
+		_ = json.NewEncoder(w).Encode(bestResult)
 		return
 	}
 
