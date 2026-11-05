@@ -42,11 +42,22 @@ func main() {
 	// 1. 初始化 HTTP 传输管道（支持 Mihomo 代理分流）
 	client := source.NewHTTPClient(proxyURL, 12*time.Second)
 
-	// 2. 装配外部片源适配器 (123AV: 100, JAVVerse: 90, Jable: 50)
+	// 2. 初始化 MissAV 抓取器 (支持 direct 或 flaresolverr)
+	var missavFetcher source.PageFetcher = &source.DirectFetcher{}
+	if getEnv("MISSAV_FETCHER", "") == "flaresolverr" {
+		flaresolverrURL := getEnv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
+		missavFetcher = source.NewFlareSolverrFetcher(flaresolverrURL)
+		log.Printf("🛡️ MissAV 启用 FlareSolverr 自动过盾: %s", flaresolverrURL)
+	}
+	missavDomains := parseTokens(getEnv("MISSAV_DOMAINS", "missav.ai,missav.ws"))
+	missavSource := source.NewSourceMissAv(missavDomains, missavFetcher)
+
+	// 3. 装配外部片源适配器 (123AV: 100, JAVVerse: 90, MissAV: 80, Jable: 50)
 	manager := source.NewManager(
 		client,
 		source.NewSource123Av(),
 		source.NewSourceJavVerse(),
+		missavSource,
 		source.NewSourceJable(),
 	)
 
@@ -57,7 +68,7 @@ func main() {
 		log.Printf("⚙️ 启用用户指定固定片源优先级: %v", order)
 	}
 
-	// 3. 构建 HTTP 路由与服务
+	// 4. 构建 HTTP 路由与服务
 	cfg := server.Config{
 		Port:       port,
 		ProxyURL:   proxyURL,

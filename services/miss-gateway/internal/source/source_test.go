@@ -2,6 +2,7 @@ package source
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -120,6 +121,49 @@ func TestManagerResolveWeighted(t *testing.T) {
 	}
 }
 
+// TestUnpackJavaScript 测试解包 Dean Edwards 混淆代码
+func TestUnpackJavaScript(t *testing.T) {
+	// 简单 packed 样本: eval(function(p,a,c,k,e,d)...}('0 1 2 3',4,4,'hello|world|foo|bar'.split('|')))
+	packed := `eval(function(p,a,c,k,e,d){return p}('0 1 2 3',4,4,'hello|world|foo|bar'.split('|'),0,{}))`
+	unpacked := UnpackJavaScript(packed)
+	expected := "hello world foo bar"
+	if !strings.Contains(unpacked, expected) {
+		t.Errorf("unpacked result mismatch: expected %q, got %q", expected, unpacked)
+	}
+}
+
+// TestMissavExtraction 测试 MissAV 页面解析与解包提取
+func TestMissavExtraction(t *testing.T) {
+	// 1. 测试直接包含 surrit.com 的页面
+	htmlDirect := `<div><script>const hlsUrl = "https://surrit.com/abcdef12-3456-7890-abcd-ef1234567890/playlist.m3u8";</script></div>`
+	res1 := extractMissavPlaylist(htmlDirect)
+	if res1 != "https://surrit.com/abcdef12-3456-7890-abcd-ef1234567890/playlist.m3u8" {
+		t.Errorf("unexpected direct extraction: %s", res1)
+	}
+
+	// 2. 测试混淆在 packed 脚本里的 UUID
+	htmlPacked := `eval(function(p,a,c,k,e,d){return p}('0=\'1-2-3-4-5\'',6,6,'uuid|12345678|1234|1234|1234|1234567890ab'.split('|'),0,{}))`
+	res2 := extractMissavPlaylist(htmlPacked)
+	if res2 != "https://surrit.com/12345678-1234-1234-1234-1234567890ab/playlist.m3u8" {
+		t.Errorf("unexpected packed uuid extraction: %s", res2)
+	}
+}
+
+// TestMissavCloudflareChallenge 测试识别 Cloudflare 验证盾牌并返回 ErrChallenged
+func TestMissavCloudflareChallenge(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte(`<!DOCTYPE html><html><head><title>Just a moment...</title></head><body>cf-chl-widget</body></html>`))
+	}))
+	defer ts.Close()
+
+	missav := NewSourceMissAv([]string{ts.URL}, &DirectFetcher{})
+	_, err := missav.Resolve(context.Background(), ts.Client(), "TEST-CHL")
+	if !errors.Is(err, ErrChallenged) {
+		t.Errorf("expected ErrChallenged, got: %v", err)
+	}
+}
+
 // TestTrackerAndCircuitBreaker 测试动态打分与熔断状态机
 func TestTrackerAndCircuitBreaker(t *testing.T) {
 	tracker := NewTracker()
@@ -132,9 +176,9 @@ func TestTrackerAndCircuitBreaker(t *testing.T) {
 	}
 
 	// 连续 3 次失败触发熔断
-	tracker.RecordFailure("test-src")
-	tracker.RecordFailure("test-src")
-	tracker.RecordFailure("test-src")
+	tracker.RecordFailure("test-src", errors.New("fail"))
+	tracker.RecordFailure("test-src", errors.New("fail"))
+	tracker.RecordFailure("test-src", errors.New("fail"))
 
 	if tracker.CanExecute("test-src") {
 		t.Errorf("source should be circuit-broken after 3 failures")
@@ -159,5 +203,11 @@ func TestTrackerAndCircuitBreaker(t *testing.T) {
 
 	if score := tracker.Score(src); score <= 0 {
 		t.Errorf("expected positive score after recovery, got %f", score)
+	}
+
+	// 测试 ErrChallenged 立即熔断
+	tracker.RecordFailure("chl-src", ErrChallenged)
+	if tracker.CanExecute("chl-src") {
+		t.Errorf("ErrChallenged should immediately trip circuit breaker")
 	}
 }

@@ -41,8 +41,9 @@
 - [x] **19.3** 缓存、catalog 持久化、上游 403 自愈、singleflight（零外部依赖合并并发请求、30分钟负缓存与切片 403 现场自愈重试，17 项测试全通）
 - [x] **19.4** 实测分数调度 + 熔断 + `/metrics` + 管理面（EWMA 动态打分自适应排序、连续失败熔断、Prometheus 监控与 Bearer Token 管理面，18 项测试全通）
 
-- [ ] **19.5** MissAV 适配器（先采样验证；可替换 PageFetcher、unpacker、验证页熔断）
+- [x] **19.5** MissAV 适配器（纯 Go Dean Edwards 解包混淆、可替换 PageFetcher 支持 direct/FlareSolverr、Cloudflare 盾牌 30 分钟快速熔断，21 项测试全通）
 - [ ] **19.6** `migrate` 子命令，迁移 NAS 上现有 292 个 `.strm`
+
 - [ ] **19.7** 黄金集 + 端到端测试 + 验收（冷启动 P95 ≤ 4.0 s）
 - [ ] **19.8** Miss Player：`.strm` 拼接网关地址；Peach 入库 WebDAV 三种模式（复用同步配置 + `peach-media` 默认目录 / 复用 + 自定义目录 / 单独配置）
 - [ ] **19.9** 删除 `PeachWebBridge` 中的寻源与接力代码，收缩 `@connect`，产物 < 1.0 MB

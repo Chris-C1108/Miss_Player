@@ -1,6 +1,7 @@
 package source
 
 import (
+	"errors"
 	"math"
 	"sync"
 	"time"
@@ -118,8 +119,8 @@ func (t *Tracker) RecordSuccess(name string, latency time.Duration) {
 	st.EwmaSuccessRate = (t.decay * 1.0) + ((1.0 - t.decay) * st.EwmaSuccessRate)
 }
 
-// RecordFailure 记录一次失败请求
-func (t *Tracker) RecordFailure(name string) {
+// RecordFailure 记录一次失败请求 (若为 Cloudflare 盾牌挑战则直接熔断 30 分钟)
+func (t *Tracker) RecordFailure(name string, err error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -130,7 +131,14 @@ func (t *Tracker) RecordFailure(name string) {
 
 	st.EwmaSuccessRate = (t.decay * 0.0) + ((1.0 - t.decay) * st.EwmaSuccessRate)
 
-	// 达到连续失败阈值，触发熔断
+	// 若遭遇 Cloudflare Managed Challenge 盾牌拦截，立即熔断 30 分钟
+	if errors.Is(err, ErrChallenged) {
+		st.state = StateOpen
+		st.openUntil = time.Now().Add(30 * time.Minute)
+		return
+	}
+
+	// 达到连续失败阈值，触发常规 10 分钟熔断
 	if st.ConsecutiveFails >= t.failThreshold || st.state == StateHalfOpen {
 		st.state = StateOpen
 		st.openUntil = time.Now().Add(t.cooldown)

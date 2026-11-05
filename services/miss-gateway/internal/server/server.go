@@ -379,7 +379,7 @@ func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
 			SourceID: sourceSlug,
 			PageURL:  res.Referer,
 		})
-		go func() { _ = s.catalog.Save() }()
+		_ = s.catalog.Save()
 
 		return rewritten.Rewritten, nil
 	})

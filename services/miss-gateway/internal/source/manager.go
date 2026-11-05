@@ -128,7 +128,7 @@ func (m *Manager) ResolveWeighted(ctx context.Context, code string, waitWindow t
 				case <-raceCtx.Done():
 				}
 			} else {
-				m.tracker.RecordFailure(s.Name())
+				m.tracker.RecordFailure(s.Name(), err)
 			}
 		}()
 	}
