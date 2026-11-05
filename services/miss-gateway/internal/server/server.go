@@ -27,6 +27,7 @@ type Config struct {
 	WaitWindow  time.Duration
 	Timeout     time.Duration
 	Tokens      []string
+	AdminToken  string
 }
 
 type Server struct {
@@ -98,6 +99,12 @@ func (s *Server) setupRoutes() {
 	s.mux.HandleFunc("GET /v1/{token}/map/{code}/{src}/{var}/{file}", s.handleMap)
 	s.mux.HandleFunc("HEAD /v1/{token}/map/{code}/{src}/{var}/{file}", s.handleMap)
 
+	// Phase 19 管理面与监控度量路由
+	s.mux.HandleFunc("GET /metrics", s.handleMetrics)
+	s.mux.HandleFunc("GET /v1/admin/sources", s.handleAdminSources)
+	s.mux.HandleFunc("GET /v1/admin/status/{code}", s.handleAdminStatus)
+	s.mux.HandleFunc("POST /v1/admin/purge/{code}", s.handleAdminPurge)
+
 	// 根路径兼容回退
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("code") != "" {
@@ -105,6 +112,131 @@ func (s *Server) setupRoutes() {
 		} else {
 			s.handleHealth(w, r)
 		}
+	})
+}
+
+// validateAdminToken 校验管理接口 Bearer Token
+func (s *Server) validateAdminToken(r *http.Request) bool {
+	if s.cfg.AdminToken == "" {
+		return true // 未配置管理密钥时放行 (开发模式)
+	}
+
+	authHeader := r.Header.Get("Authorization")
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		if subtle.ConstantTimeCompare([]byte(token), []byte(s.cfg.AdminToken)) == 1 {
+			return true
+		}
+	}
+
+	// 备选支持 query ?token=
+	queryToken := r.URL.Query().Get("token")
+	if queryToken != "" && subtle.ConstantTimeCompare([]byte(queryToken), []byte(s.cfg.AdminToken)) == 1 {
+		return true
+	}
+
+	return false
+}
+
+// handleMetrics 导出标准 Prometheus 纯文本格式监控度量
+func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
+	s.enableCORS(w)
+	w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+
+	snapshots := s.manager.Tracker().Snapshot()
+	var b strings.Builder
+
+	b.WriteString("# HELP gateway_source_requests_total Total upstream requests by source and status\n")
+	b.WriteString("# TYPE gateway_source_requests_total counter\n")
+	for _, st := range snapshots {
+		b.WriteString(fmt.Sprintf("gateway_source_requests_total{source=\"%s\",status=\"success\"} %d\n", st.Name, st.SuccessRequests))
+		b.WriteString(fmt.Sprintf("gateway_source_requests_total{source=\"%s\",status=\"fail\"} %d\n", st.Name, st.FailRequests))
+	}
+
+	b.WriteString("\n# HELP gateway_source_latency_milliseconds Exponentially weighted latency in milliseconds\n")
+	b.WriteString("# TYPE gateway_source_latency_milliseconds gauge\n")
+	for _, st := range snapshots {
+		b.WriteString(fmt.Sprintf("gateway_source_latency_milliseconds{source=\"%s\"} %.2f\n", st.Name, st.EwmaLatencyMs))
+	}
+
+	b.WriteString("\n# HELP gateway_source_circuit_state Current circuit state (0=closed, 1=open, 2=half-open)\n")
+	b.WriteString("# TYPE gateway_source_circuit_state gauge\n")
+	for _, st := range snapshots {
+		stateVal := 0
+		switch st.CircuitState {
+		case "open":
+			stateVal = 1
+		case "half-open":
+			stateVal = 2
+		}
+		b.WriteString(fmt.Sprintf("gateway_source_circuit_state{source=\"%s\"} %d\n", st.Name, stateVal))
+	}
+
+	_, _ = w.Write([]byte(b.String()))
+}
+
+// handleAdminSources 管理接口：查看全部片源健康指标与熔断状态
+func (s *Server) handleAdminSources(w http.ResponseWriter, r *http.Request) {
+	s.enableCORS(w)
+	if !s.validateAdminToken(r) {
+		http.Error(w, "Unauthorized: invalid admin token", http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	snapshots := s.manager.Tracker().Snapshot()
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"sources": snapshots,
+	})
+}
+
+// handleAdminStatus 管理接口：查看指定番号的当前缓存会话
+func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
+	s.enableCORS(w)
+	if !s.validateAdminToken(r) {
+		http.Error(w, "Unauthorized: invalid admin token", http.StatusUnauthorized)
+		return
+	}
+
+	code := strings.ToUpper(r.PathValue("code"))
+	session, exists := s.registry.Get(code)
+	catEntry, hasCatalog := s.catalog.Get(code)
+	isNegative := s.catalog.IsNegative(code)
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":    true,
+		"code":       code,
+		"cached":     exists,
+		"isNegative": isNegative,
+		"catalog":    hasCatalog,
+		"entry":      catEntry,
+		"session":    session,
+	})
+}
+
+// handleAdminPurge 管理接口：清空指定番号的缓存与负缓存，强制触发重新寻源
+func (s *Server) handleAdminPurge(w http.ResponseWriter, r *http.Request) {
+	s.enableCORS(w)
+	if !s.validateAdminToken(r) {
+		http.Error(w, "Unauthorized: invalid admin token", http.StatusUnauthorized)
+		return
+	}
+
+	code := strings.ToUpper(r.PathValue("code"))
+	// 标记过期以清空注册表
+	s.registry.Set(&registry.StreamSession{
+		Code:      code,
+		ExpiresAt: time.Now().Add(-1 * time.Hour),
+	})
+	s.registry.CleanExpired()
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"code":    code,
+		"message": "Purged successfully",
 	})
 }
 

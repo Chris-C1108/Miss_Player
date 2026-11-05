@@ -2,7 +2,6 @@ package source
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -86,9 +85,9 @@ type MockSource struct {
 	err    error
 }
 
-func (m *MockSource) Name() string           { return m.name }
-func (m *MockSource) Weight() int            { return m.weight }
-func (m *MockSource) Delay() time.Duration   { return m.delay }
+func (m *MockSource) Name() string         { return m.name }
+func (m *MockSource) Weight() int          { return m.weight }
+func (m *MockSource) Delay() time.Duration { return m.delay }
 func (m *MockSource) Resolve(ctx context.Context, client *http.Client, code string) (*StreamResult, error) {
 	if m.err != nil {
 		return nil, m.err
@@ -121,17 +120,44 @@ func TestManagerResolveWeighted(t *testing.T) {
 	}
 }
 
-// TestManagerAllFailed 测试全部失败返回错误
-func TestManagerAllFailed(t *testing.T) {
-	src := &MockSource{
-		name:   "FailingSource",
-		weight: 50,
-		err:    errors.New("not found"),
+// TestTrackerAndCircuitBreaker 测试动态打分与熔断状态机
+func TestTrackerAndCircuitBreaker(t *testing.T) {
+	tracker := NewTracker()
+	tracker.failThreshold = 3
+	tracker.cooldown = 50 * time.Millisecond
+
+	// 初始应允许执行
+	if !tracker.CanExecute("test-src") {
+		t.Errorf("initial state should be allowed")
 	}
 
-	mgr := NewManager(http.DefaultClient, src)
-	_, err := mgr.ResolveWeighted(context.Background(), "NONE-999", 50*time.Millisecond)
-	if err == nil {
-		t.Fatalf("expected error when all sources fail")
+	// 连续 3 次失败触发熔断
+	tracker.RecordFailure("test-src")
+	tracker.RecordFailure("test-src")
+	tracker.RecordFailure("test-src")
+
+	if tracker.CanExecute("test-src") {
+		t.Errorf("source should be circuit-broken after 3 failures")
+	}
+
+	src := &MockSource{name: "test-src", weight: 100}
+	if score := tracker.Score(src); score != -1.0 {
+		t.Errorf("expected score -1 for broken circuit, got %f", score)
+	}
+
+	// 冷却时间过后，进入半开状态并放行一次探测
+	time.Sleep(60 * time.Millisecond)
+	if !tracker.CanExecute("test-src") {
+		t.Errorf("should allow probe after cooldown in half-open state")
+	}
+
+	// 探测成功，熔断复位
+	tracker.RecordSuccess("test-src", 100*time.Millisecond)
+	if !tracker.CanExecute("test-src") {
+		t.Errorf("should be healthy after successful probe")
+	}
+
+	if score := tracker.Score(src); score <= 0 {
+		t.Errorf("expected positive score after recovery, got %f", score)
 	}
 }

@@ -172,7 +172,6 @@ func TestNegativeCacheInPlay(t *testing.T) {
 		err:    errors.New("not found anywhere"),
 	}
 
-	// 计数器统计 Resolve 实际被调用的次数
 	countingSrc := &mockSource{
 		name:   "Counting",
 		weight: 100,
@@ -221,12 +220,10 @@ seg-0.ts
 		if r.URL.Path == "/video/seg-0.ts" {
 			count := atomic.AddInt32(&segCalls, 1)
 			if count == 1 {
-				// 第一次拉取分片模拟 403 Token 过期
 				w.WriteHeader(http.StatusForbidden)
 				_, _ = w.Write([]byte("Expired Token"))
 				return
 			}
-			// 第二次现场自愈刷新后成功 200
 			w.Header().Set("Content-Type", "video/mp2t")
 			_, _ = w.Write([]byte("HEALED-CHUNK"))
 			return
@@ -250,7 +247,6 @@ seg-0.ts
 	mgr := source.NewManager(cdnServer.Client(), mockSrc)
 	s := NewServer(Config{Port: "8765", CatalogPath: filepath.Join(t.TempDir(), "catalog.json")}, mgr)
 
-	// 先初始化 play
 	pReq := httptest.NewRequest("GET", "/v1/dev/play/HEAL-001.m3u8", nil)
 	pRec := httptest.NewRecorder()
 	s.Routes().ServeHTTP(pRec, pReq)
@@ -258,7 +254,6 @@ seg-0.ts
 		t.Fatalf("play setup failed: %d", pRec.Code)
 	}
 
-	// 请求切片，验证自动触发 403 自愈重试成功
 	sReq := httptest.NewRequest("GET", "/v1/dev/seg/HEAL-001/healcdn/0/0.ts", nil)
 	sRec := httptest.NewRecorder()
 	s.Routes().ServeHTTP(sRec, sReq)
@@ -270,5 +265,57 @@ seg-0.ts
 	body, _ := io.ReadAll(sRec.Body)
 	if string(body) != "HEALED-CHUNK" {
 		t.Errorf("unexpected body after healing: %s", string(body))
+	}
+}
+
+func TestPrometheusMetricsAndAdminEndpoints(t *testing.T) {
+	mockSrc := &mockSource{
+		name:   "Src1",
+		weight: 100,
+		result: &source.StreamResult{Success: true, Code: "TEST-ADMIN", URL: "http://example.com/play.m3u8"},
+	}
+	mgr := source.NewManager(http.DefaultClient, mockSrc)
+	s := NewServer(Config{
+		Port:        "8765",
+		AdminToken:  "super-secret-admin",
+		CatalogPath: filepath.Join(t.TempDir(), "catalog.json"),
+	}, mgr)
+
+	// 1. 测试未授权访问管理接口 ➔ 401
+	unauthReq := httptest.NewRequest("GET", "/v1/admin/sources", nil)
+	unauthRec := httptest.NewRecorder()
+	s.Routes().ServeHTTP(unauthRec, unauthReq)
+	if unauthRec.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 for unauthenticated admin access, got %d", unauthRec.Code)
+	}
+
+	// 2. 带有效 Bearer Token 请求 /v1/admin/sources ➔ 200
+	authReq := httptest.NewRequest("GET", "/v1/admin/sources", nil)
+	authReq.Header.Set("Authorization", "Bearer super-secret-admin")
+	authRec := httptest.NewRecorder()
+	s.Routes().ServeHTTP(authRec, authReq)
+	if authRec.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for admin sources, got %d", authRec.Code)
+	}
+
+	// 3. 测试 /metrics Prometheus 输出
+	mReq := httptest.NewRequest("GET", "/metrics", nil)
+	mRec := httptest.NewRecorder()
+	s.Routes().ServeHTTP(mRec, mReq)
+	if mRec.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for /metrics, got %d", mRec.Code)
+	}
+	mText := mRec.Body.String()
+	if !strings.Contains(mText, "gateway_source_requests_total") {
+		t.Errorf("metrics missing gateway_source_requests_total: %s", mText)
+	}
+
+	// 4. 测试 /v1/admin/purge/{code}
+	pReq := httptest.NewRequest("POST", "/v1/admin/purge/TEST-ADMIN", nil)
+	pReq.Header.Set("Authorization", "Bearer super-secret-admin")
+	pRec := httptest.NewRecorder()
+	s.Routes().ServeHTTP(pRec, pReq)
+	if pRec.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for admin purge, got %d", pRec.Code)
 	}
 }
