@@ -27,10 +27,29 @@
 | **Phase 15** | **UI/UX 深度优化与第三方脚本适配专项 (v5.7.1 ~ v5.7.4)** | **达成 ✅** | 详见 Release v5.7.4 |
 | **Phase 16** | **全局输入框与双模层叠上下文架构重构 (内外两界隔离与端态自适应)** | **达成 ✅** | 详见 Release v5.7.64 |
 | **Phase 17** | **Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环** | **达成 ✅** | **[Phase 17 专属规划方案](./docs/todo/phase-17-peach-strm-integration.md)** |
+| **Phase 19** | **流网关 (Miss Stream Gateway) 与脚本职责收敛为「只入库」** | **实施中 🟡** | **[Phase 19 设计方案](./docs/todo/phase-19-stream-gateway.md)** |
 
 ---
 
-## 🏗️ 正在实施：Phase 17 - Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环
+## 🏗️ 正在实施：Phase 19 - 流网关与脚本职责收敛
+
+> **目标**：`services/miss-resolver` 升级为 `miss-gateway`，接手寻源、Referer 注入、m3u8 改写与分片代理；`.strm` 固定写 `{base}/v1/{token}/play/{CODE}.m3u8`；Miss Player 只负责通过 WebDAV 写入 `.strm`，客户端播放接力代码下线。详见 [设计方案](./docs/todo/phase-19-stream-gateway.md)。
+
+- [ ] **19.1** 拆分 `main.go` 为 `internal/source`、`hls`、`cache`、`server`（行为不变 + 单元测试）
+- [ ] **19.2** 播放面 `/play`、`/pl`、`/seg`、`/key`、`/map` + 路径 token
+- [ ] **19.3** 缓存、catalog 持久化、上游 403 自愈、singleflight
+- [ ] **19.4** 实测分数调度 + 熔断 + `/metrics` + 管理面
+- [ ] **19.5** MissAV 适配器（先采样验证；可替换 PageFetcher、unpacker、验证页熔断）
+- [ ] **19.6** `migrate` 子命令，迁移 NAS 上现有 292 个 `.strm`
+- [ ] **19.7** 黄金集 + 端到端测试 + 验收（冷启动 P95 ≤ 4.0 s）
+- [ ] **19.8** Miss Player：`.strm` 拼接网关地址；Peach 入库 WebDAV 三种模式（复用同步配置 + `peach-media` 默认目录 / 复用 + 自定义目录 / 单独配置）
+- [ ] **19.9** 删除 `PeachWebBridge` 中的寻源与接力代码，收缩 `@connect`，产物 < 1.0 MB
+
+---
+
+## 🏗️ 已达成：Phase 17 - Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环
+
+> **注**：17.5（Peach Web 播放接力）、17.8（外部解析服务）、17.9（GMHlsLoader）将由 Phase 19 流网关取代，客户端代码在 19.9 下线。
 
 > **目标**：在 Miss Player 中集成 Peach 配对与管理，颠覆传统数十 GB 磁力离线下载模式，实现「WebDAV 秒级生成 `avcode.strm` 虚拟视频入库 + Peach Web 跨站动态寻源播放接力」双向闭环。
 

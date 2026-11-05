@@ -100,6 +100,10 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **多维语义标签库**：`src/player/managers/tagTaxonomy.js`（体位姿势、相貌身材、行为特征等系统化标签矩阵）
 * **自动登录**：`src/autologin/`（多站点凭据管理、跨域 iframe 签名桥接）
 * **广告拦截**：`src/adblock/`（DOM 净化与弹窗拦截）
+* **Peach 入库 (Beta)**：`src/services/PeachService.js`（配对、在库状态、触发扫描）与 `src/services/StrmIngestPipeline.js`（拼接网关地址 → WebDAV 写入 `.strm`）。`src/player/bridge/PeachWebBridge.js` 中的寻源/接力/GMHlsLoader 为过渡代码，Phase 19.9 下线
+
+### 3.5 自托管服务端组件 (`services/`，不打包进脚本)
+* **流网关**：`services/miss-gateway/`（由 `services/miss-resolver/` 升级，Go 单静态二进制）— 按番号寻源（123AV / JAVVerse / Jable / MissAV）、注入 Referer、改写 m3u8、代理分片与 key。设计与契约见 [docs/todo/phase-19-stream-gateway.md](./docs/todo/phase-19-stream-gateway.md)
 
 ### 4. 服务与数据通道 (`src/services/` & `src/sync/`)
 * **Supabase 服务**：`src/services/SupabaseService.js` — 方案 1 高密度 JSONB 聚合仓储读取与服务端 RPC 原子合并
@@ -278,7 +282,29 @@ src/player/ui/styles/
 7. **外部流解析与 HLS 加载器弹性自愈准则 (Stream Loader Resilience & Priority Protocol)**：
    - 自定义 Loader 必须在 constructor 中完整初始化符合 Hls.js 官方规范的 `LoaderStats` 实例（包含 `loading, parsing, buffering` 子对象），并在数据返回时同步更新首包与完成时间戳，杜绝 `frag.stats` 为空导致的 `internalException` 崩溃；
    - **域名级失效记忆与逃逸 (Domain Fast-Fallback)**：一旦特定视频 CDN 在 `GM_xmlhttpRequest` 中发生超时或 0B 空响应，必须立即将其记录入 `failedDomains` 集合；当前会话后续所有切片请求必须 0ms 直接走原生 `fetch` 直连，杜绝每个切片重复死等 15 秒超时导致的缓冲区饥饿卡顿；
-   - **加权竞速与纯明文无码优先**：多源解析调度必须优先选择无需 AES-128 解密的纯明文（NONE）与无码（Uncensored）源（如 123AV、JAVVerse），有码且带加密的源（如 Jable）必须延后错峰启动仅作为次要兜底，最大化降低端侧 CPU 解密负荷与排障阻力。
+   - **加权竞速与纯明文无码优先**：多源解析调度必须优先选择无需 AES-128 解密的纯明文（NONE）与无码（Uncensored）源（如 123AV、JAVVerse），有码且带加密的源（如 Jable）必须延后错峰启动仅作为次要兜底。（Phase 19 起由流网关按实测成功率 × 延迟打分取代固定权重；本条第 6、7 项客户端规则在 19.9 后随代码一并废止。）
+
+---
+
+## 🛰️ 流网关与 STRM 入库架构准则 (Phase 19)
+
+> 事实依据来自 Peach 容器源码实测（`strm.py`、`strm_stream.py`、`follow_stream.py`、`ledger.db`），详见设计方案 §0。
+
+1. **职责边界（脚本只入库）**：
+   - FORBIDDEN: 在脚本中新增寻源、流地址嗅探入库、Referer 伪造或跨站播放接力 -> USE: 脚本只识别番号、拼接 `.strm`、经 WebDAV 写入；一切流处理交给流网关。
+   - Peach 自身不接入网盘，只读取已挂载的本地路径；`.strm` 存放在网盘时，由 CloudDrive2 / Rclone / Alist 挂载给 Peach。
+2. **`.strm` URL 契约（写入后永不修改）**：
+   - 格式固定为 `{GATEWAY_BASE}/v1/{TOKEN}/play/{AVCODE}.m3u8`，只有一行非 `#` 内容；
+   - FORBIDDEN: 将 token 放在 query 或请求头（Peach 会剥掉 Authorization，`urljoin` 会丢掉 query） -> USE: token 放在路径里；
+   - FORBIDDEN: 写入会过期的 CDN 直链、网页地址或环境变量占位符 -> USE: 只写网关地址；
+   - `GATEWAY_BASE` 只需 **Peach 服务端**能访问（浏览器只连 Peach 的 `/stream?id=`）；与 Peach 同一台 Docker 宿主时优先写 `http://host.docker.internal:8765`。
+3. **网关实现红线**：
+   - m3u8 中**所有** URI 必须改写为与入口同源、以 `/` 开头的绝对路径；FORBIDDEN: 302 跳转到 CDN 或在 URL 中放入上游地址；
+   - 同一 `(code, src, var, n)` 的子资源 URL 至少 6 小时稳定可用；上游签名过期由网关内部刷新；
+   - 冷启动入口必须在 4.5 秒内返回响应头（Peach httpx 默认每阶段 5 秒超时），分片必须边收边发，禁止整段缓冲；
+   - 公网部署必须启用 token；FORBIDDEN: 用 Cloudflare Worker 等 CDN 代理视频分片（违反服务条款）。
+4. **MissAV 适配器**：页面常受 Cloudflare 验证拦截，必须识别验证页并快速熔断；页面获取方式可替换（`direct` / 可选 `flaresolverr`），但只用于取 HTML，从不传输视频。
+5. **合规边界**：流网关是用户自托管的可选组件，不属于脚本发布物；脚本中的 Peach 入库功能属于 Beta 实验室，默认关闭；脚本不向任何非用户配置的端点发送数据。
 
 ---
 
@@ -307,6 +333,7 @@ src/player/ui/styles/
 ### 4. WebDAV 独立文件拓扑规范
 * **严禁单一大文件合并**：严禁将全量番号评论塞入单一全局大文件；
 * **按番号独立存放**：每个番号全量评论独立写入 `/MissPlayer/comments/[AVCODE].json`，单次原子 `PUT` 极速落盘，各影片彻底解耦；
+* **Peach 入库目录**：`.strm` 默认写入 `/MissPlayer/peach-media/[AVCODE].strm`（复用同步 WebDAV），也可自定义目录或单独配置 WebDAV；该目录必须由 Peach 挂载。第三方同步盘批量写入时串行，间隔 ≥ 300 ms；
 * **PROPFIND 415 避坑**：发送空 Body 的 PROPFIND 请求时，**严禁携带 `Content-Type: application/xml` 标头**；必须将 415 与 405、207 一并视为目录已就绪，防止多余发起 `MKCOL` 导致刷屏黄告警。
 
 ### 5. 配置存储双写镜像与穿透互愈双轨备份 (Dual-Store Sync & Anti-Erase)
@@ -370,7 +397,7 @@ Miss Player 严格执行性能棘轮与零长任务守卫。完整测试方法�
 所有代码编写、模块设计、依赖引入与版本发布，必须无条件遵从根目录的 **[GreasyFork&sleazyfork_rules.md](./GreasyFork&sleazyfork_rules.md)** 规范。开发过程中必须严格落实以下红线约束：
 
 1. **绝对禁止隐瞒负面功能 (Zero Undisclosed Antifeatures)**：
-   - 脚本必须保持 100% 纯本地运行，严禁加入任何用户行为监听、视频历史收集、设备指纹抓取或私有分析接口回传；
+   - 脚本必须保持 100% 纯本地运行，严禁加入任何用户行为监听、视频历史收集、设备指纹抓取或私有分析接口回传；用户自行配置的自托管端点（WebDAV、Peach、流网关）不属于此类，但必须默认关闭并在设置中明确展示；
    - 严禁在元信息 `@connect` 中声明未经披露或不必要的私有收集端点。
 2. **严禁代码混淆与压缩 (No Obfuscation / No Mangling)**：
    - `webpack.config.js` 与 Vite 打包必须永久保持 `mangle: false`，确保编译后变量名与函数名清晰透明、完全可审计；
