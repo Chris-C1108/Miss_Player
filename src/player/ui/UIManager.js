@@ -22,6 +22,7 @@ import {
 import { StrmIngestPipeline } from '../../services/StrmIngestPipeline.js';
 import { PeachService } from '../../services/PeachService.js';
 import { Toast } from '../../utils/index.js';
+import { enforceInlinePlayback } from '../../utils/iosInline.js';
 
 
 if (typeof customElements !== 'undefined' && !customElements.get('miss-player-root')) {
@@ -294,11 +295,7 @@ export class UIManager {
             });
         }
 
-        this.targetVideo.setAttribute('playsinline', 'true');
-        this.targetVideo.setAttribute('webkit-playsinline', 'true');
-        this.targetVideo.setAttribute('x5-playsinline', 'true');
-        this.targetVideo.playsInline = true;
-        this.targetVideo.webkitPlaysInline = true;
+        enforceInlinePlayback(this.targetVideo);
 
         // 若处于 Safari 原生系统全屏中，主动退出
         if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === 'function') {

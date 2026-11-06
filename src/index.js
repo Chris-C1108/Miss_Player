@@ -19,6 +19,10 @@ import { telemetry } from './telemetry';
 import { SyncManager } from './sync/index.js';
 import { CommentCacheManager } from './player/comments/CommentCacheManager.js';
 import { PeachWebBridge } from './player/bridge/PeachWebBridge.js';
+import { initIosInlinePlaybackGuard } from './utils/iosInline.js';
+
+// 0. 最早启动 iOS Safari 行内播放守卫 (在宿主脚本加载前注入 playsinline/webkit-playsinline，彻底阻断 AVPlayerViewController 系统全屏劫持)
+initIosInlinePlaybackGuard();
 
 // 1. 最早执行广告与弹窗拦截 (确保在宿主脚本加载前劫持 window.open 与广告请求)
 const earlyAdBlocker = new AdBlocker();

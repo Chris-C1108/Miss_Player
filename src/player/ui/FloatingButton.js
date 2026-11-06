@@ -1,4 +1,5 @@
 import { findVideoElement, createElementWithStyle, getSafeAreaInsets, isPortrait } from '../../utils/index.js';
+import { enforceInlinePlayback } from '../../utils/iosInline.js';
 import { CustomVideoPlayer } from '../index.js';
 import { FLOATING_PLAY } from '../../constants/icons.js';
 import { telemetry } from '../../telemetry';
@@ -376,11 +377,7 @@ export class FloatingButton {
         }
 
         if (preTargetVideo) {
-            preTargetVideo.setAttribute('playsinline', 'true');
-            preTargetVideo.setAttribute('webkit-playsinline', 'true');
-            preTargetVideo.setAttribute('x5-playsinline', 'true');
-            preTargetVideo.playsInline = true;
-            preTargetVideo.webkitPlaysInline = true;
+            enforceInlinePlayback(preTargetVideo);
 
             // 如果处于 Safari 系统全屏播放中，主动退出
             if (preTargetVideo.webkitDisplayingFullscreen && typeof preTargetVideo.webkitExitFullscreen === 'function') {

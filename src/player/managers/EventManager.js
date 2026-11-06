@@ -1,4 +1,5 @@
 import { BlurPlaybackManager } from './BlurPlaybackManager.js';
+import { enforceInlinePlayback } from '../../utils/iosInline.js';
 
 /**
  * 事件管理器类 - 负责事件监听和处理
@@ -263,11 +264,7 @@ export class EventManager {
         this.handlePlayBound = () => {
             // 每次播放时二次强化 inline 播放属性，防止宿主脚本动态移除或重构导致 iOS 进入默认全屏
             if (this.targetVideo) {
-                this.targetVideo.setAttribute('playsinline', 'true');
-                this.targetVideo.setAttribute('webkit-playsinline', 'true');
-                this.targetVideo.setAttribute('x5-playsinline', 'true');
-                this.targetVideo.playsInline = true;
-                this.targetVideo.webkitPlaysInline = true;
+                enforceInlinePlayback(this.targetVideo);
             }
 
             if (this.managers.controlManager) {

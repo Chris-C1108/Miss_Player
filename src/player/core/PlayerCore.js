@@ -1,6 +1,7 @@
 import { restoreSafariThemeColor, findVideoElement, getValue, setValue } from '../../utils/index.js';
 import { PeachWebBridge } from '../bridge/PeachWebBridge.js';
 import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
+import { enforceInlinePlayback } from '../../utils/iosInline.js';
 
 /**
  * 播放器核心类 - 负责播放器的基本功能和状态管理
@@ -184,11 +185,7 @@ export class PlayerCore {
                 }
                 
                 // 确保 playsinline 属性就绪，防止被移动端全屏劫持
-                this.targetVideo.setAttribute('playsinline', 'true');
-                this.targetVideo.setAttribute('webkit-playsinline', 'true');
-                this.targetVideo.setAttribute('x5-playsinline', 'true');
-                this.targetVideo.playsInline = true;
-                this.targetVideo.webkitPlaysInline = true;
+                enforceInlinePlayback(this.targetVideo);
 
                 const playPromise = this.targetVideo.play();
                 if (playPromise !== undefined) {
@@ -291,11 +288,7 @@ export class PlayerCore {
                 this.targetVideo.style.position = '';
 
                 // 始终保持 playsinline 属性，防止 Safari / 移动端在退出播放器或二次加载时被系统全屏劫持
-                this.targetVideo.setAttribute('playsinline', 'true');
-                this.targetVideo.setAttribute('webkit-playsinline', 'true');
-                this.targetVideo.setAttribute('x5-playsinline', 'true');
-                this.targetVideo.playsInline = true;
-                this.targetVideo.webkitPlaysInline = true;
+                enforceInlinePlayback(this.targetVideo);
 
                 // 若处于 Safari 原生系统全屏中，主动退出
                 if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === 'function') {

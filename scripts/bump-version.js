@@ -18,9 +18,17 @@ const SYNC_MANAGER_PATH = path.join(ROOT_DIR, 'src/sync/SyncManager.js');
 const SLEAZYFORK_SERVICE_PATH = path.join(ROOT_DIR, 'src/services/SleazyForkService.js');
 
 function bumpPatch(version) {
+    // 支持 5.7.113-001 格式的自增 (保持三位补零)
+    const dashMatch = version.match(/^(\d+\.\d+\.\d+)-(\d+)$/);
+    if (dashMatch) {
+        const base = dashMatch[1];
+        const num = parseInt(dashMatch[2], 10) + 1;
+        const padded = String(num).padStart(dashMatch[2].length, '0');
+        return `${base}-${padded}`;
+    }
     const parts = version.split('.').map(n => parseInt(n, 10));
     if (parts.length !== 3 || parts.some(isNaN)) {
-        throw new Error(`非法版本号格式: ${version}，期望格式如 5.7.4`);
+        throw new Error(`非法版本号格式: ${version}，期望格式如 5.7.4 或 5.7.113-001`);
     }
     parts[2] += 1;
     return parts.join('.');

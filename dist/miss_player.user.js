@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.113
+// @version            5.7.113-001
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113";
+		return "5.7.113-001";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1403,6 +1403,67 @@
 					gain.disconnect();
 				} catch (_) {}
 			};
+		} catch (_) {}
+	}
+	function enforceInlinePlayback(video) {
+		if (!video || !(video instanceof HTMLVideoElement)) return;
+		if (video._mpInlineEnforced) return;
+		video._mpInlineEnforced = true;
+		video.setAttribute("playsinline", "");
+		video.setAttribute("webkit-playsinline", "");
+		video.setAttribute("x5-playsinline", "");
+		video.playsInline = true;
+		video.webkitPlaysInline = true;
+		video.setAttribute("disablepictureinpicture", "");
+		if (typeof video.webkitEnterFullscreen === "function" && !video._mpHookedFullscreen) {
+			video._mpHookedFullscreen = true;
+			video._origWebkitEnterFullscreen = video.webkitEnterFullscreen;
+			video.webkitEnterFullscreen = function() {
+				console.log("[MissPlayer] 拦截到 webkitEnterFullscreen，保持在行内播放");
+			};
+		}
+		if (typeof video.webkitEnterFullScreen === "function" && !video._mpHookedFullScreen) {
+			video._mpHookedFullScreen = true;
+			video._origWebkitEnterFullScreen = video.webkitEnterFullScreen;
+			video.webkitEnterFullScreen = function() {
+				console.log("[MissPlayer] 拦截到 webkitEnterFullScreen，保持在行内播放");
+			};
+		}
+		if (typeof video.webkitSetPresentationMode === "function") try {
+			video.webkitSetPresentationMode("inline");
+		} catch (_) {}
+		video.addEventListener("webkitpresentationmodechanged", () => {
+			if (video.webkitPresentationMode && video.webkitPresentationMode !== "inline") try {
+				video.webkitSetPresentationMode("inline");
+			} catch (_) {}
+		}, { passive: true });
+	}
+	function initIosInlinePlaybackGuard() {
+		document.querySelectorAll("video").forEach(enforceInlinePlayback);
+		const processNode = (node) => {
+			if (!node || node.nodeType !== 1) return;
+			if (node.tagName === "VIDEO") enforceInlinePlayback(node);
+			else if (typeof node.querySelectorAll === "function") node.querySelectorAll("video").forEach(enforceInlinePlayback);
+			if (node.shadowRoot && typeof node.shadowRoot.querySelectorAll === "function") node.shadowRoot.querySelectorAll("video").forEach(enforceInlinePlayback);
+		};
+		try {
+			const observer = new MutationObserver((mutations) => {
+				for (let i = 0; i < mutations.length; i++) {
+					const added = mutations[i].addedNodes;
+					for (let j = 0; j < added.length; j++) processNode(added[j]);
+				}
+			});
+			const target = document.documentElement || document.body;
+			if (target) observer.observe(target, {
+				childList: true,
+				subtree: true
+			});
+			else document.addEventListener("DOMContentLoaded", () => {
+				if (document.documentElement) observer.observe(document.documentElement, {
+					childList: true,
+					subtree: true
+				});
+			}, { once: true });
 		} catch (_) {}
 	}
 	function sanitizeArrayEmptyObjects(text) {
@@ -1825,7 +1886,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-001";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -3088,11 +3149,7 @@
 						console.log("[PlayerCore] 用户已提前设定临时暂停，放弃自动起播");
 						return;
 					}
-					this.targetVideo.setAttribute("playsinline", "true");
-					this.targetVideo.setAttribute("webkit-playsinline", "true");
-					this.targetVideo.setAttribute("x5-playsinline", "true");
-					this.targetVideo.playsInline = true;
-					this.targetVideo.webkitPlaysInline = true;
+					enforceInlinePlayback(this.targetVideo);
 					const playPromise = this.targetVideo.play();
 					if (playPromise !== void 0) playPromise.catch((error) => {
 						console.warn("[PlayerCore] 正常起播被浏览器策略拦截:", error);
@@ -3164,11 +3221,7 @@
 					this.targetVideo.style.maxHeight = "";
 					this.targetVideo.style.margin = "";
 					this.targetVideo.style.position = "";
-					this.targetVideo.setAttribute("playsinline", "true");
-					this.targetVideo.setAttribute("webkit-playsinline", "true");
-					this.targetVideo.setAttribute("x5-playsinline", "true");
-					this.targetVideo.playsInline = true;
-					this.targetVideo.webkitPlaysInline = true;
+					enforceInlinePlayback(this.targetVideo);
 					if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === "function") try {
 						this.targetVideo.webkitExitFullscreen();
 					} catch (_) {}
@@ -3219,7 +3272,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113";
+		return "5.7.113-001";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -4751,11 +4804,7 @@
 					} catch (e) {}
 				});
 			}
-			this.targetVideo.setAttribute("playsinline", "true");
-			this.targetVideo.setAttribute("webkit-playsinline", "true");
-			this.targetVideo.setAttribute("x5-playsinline", "true");
-			this.targetVideo.playsInline = true;
-			this.targetVideo.webkitPlaysInline = true;
+			enforceInlinePlayback(this.targetVideo);
 			if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === "function") try {
 				this.targetVideo.webkitExitFullscreen();
 			} catch (_) {}
@@ -18232,13 +18281,7 @@
 			};
 			this.targetVideo.addEventListener("resize", this.handleVideoResizeBound);
 			this.handlePlayBound = () => {
-				if (this.targetVideo) {
-					this.targetVideo.setAttribute("playsinline", "true");
-					this.targetVideo.setAttribute("webkit-playsinline", "true");
-					this.targetVideo.setAttribute("x5-playsinline", "true");
-					this.targetVideo.playsInline = true;
-					this.targetVideo.webkitPlaysInline = true;
-				}
+				if (this.targetVideo) enforceInlinePlayback(this.targetVideo);
 				if (this.managers.controlManager) this.managers.controlManager.updatePlayPauseButton();
 				if (this.managers.uiManager && this.managers.uiManager.isLandscape) this.managers.uiManager.autoHideControls();
 			};
@@ -22864,11 +22907,7 @@
 				return;
 			}
 			if (preTargetVideo) {
-				preTargetVideo.setAttribute("playsinline", "true");
-				preTargetVideo.setAttribute("webkit-playsinline", "true");
-				preTargetVideo.setAttribute("x5-playsinline", "true");
-				preTargetVideo.playsInline = true;
-				preTargetVideo.webkitPlaysInline = true;
+				enforceInlinePlayback(preTargetVideo);
 				if (preTargetVideo.webkitDisplayingFullscreen && typeof preTargetVideo.webkitExitFullscreen === "function") try {
 					preTargetVideo.webkitExitFullscreen();
 				} catch (_) {}
@@ -23806,6 +23845,7 @@
 	}
 	init_domains();
 	performance.mark("mp:module-loaded");
+	initIosInlinePlaybackGuard();
 	new AdBlocker().init();
 	performance.mark("mp:adblock-done");
 	mediaSniffer.init();
