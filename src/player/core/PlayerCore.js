@@ -113,15 +113,20 @@ export class PlayerCore {
     saveVideoState() {
         if (!this.targetVideo) return;
 
-        this.originalParent = this.targetVideo.parentNode;
-        this.originalIndex = Array.from(this.originalParent.children).indexOf(this.targetVideo);
+        // 智能探测自定义媒体宿主容器 (Web Components / 框架播放器包装层如 hlsjs-video, dash-video, mux-video)
+        // 核心原则：若视频托管在 Custom Media Element 内部，绝不能强行拔除 video 破坏内部 slot 绑定与流引擎管道！
+        const customHost = this.targetVideo.closest('hlsjs-video, dash-video, mux-video, [data-media-host]');
+        this.mediaHostElement = customHost || this.targetVideo;
 
-        // 插入原位隐藏占位符，防止将 targetVideo 移入播放器浮层后原网页布局发生高度塌陷 (消除 CLS 累计布局偏移)
+        this.originalParent = this.mediaHostElement.parentNode;
+        this.originalIndex = this.originalParent ? Array.from(this.originalParent.children).indexOf(this.mediaHostElement) : -1;
+
+        // 插入原位隐藏占位符，防止将 mediaHostElement 移入播放器浮层后原网页布局发生高度塌陷 (消除 CLS 累计布局偏移)
         try {
             if (this.originalParent && !this.videoPlaceholder) {
                 this.videoPlaceholder = document.createElement('div');
                 this.videoPlaceholder.className = 'mp-video-placeholder';
-                this.originalParent.insertBefore(this.videoPlaceholder, this.targetVideo);
+                this.originalParent.insertBefore(this.videoPlaceholder, this.mediaHostElement);
             }
         } catch (_) {}
 
@@ -187,9 +192,24 @@ export class PlayerCore {
                 // 确保 playsinline 属性就绪，防止被移动端全屏劫持
                 enforceInlinePlayback(this.targetVideo);
 
+                // iOS WebKit 行内播放关键防线：起播初期锁定静音，建立稳定行内图层，彻底阻断系统全屏弹出
+                const originalMuted = this.targetVideo.muted;
+                const needTempMute = !originalMuted;
+                if (needTempMute) {
+                    this.targetVideo.muted = true;
+                }
+
                 const playPromise = this.targetVideo.play();
                 if (playPromise !== undefined) {
-                    playPromise.catch(error => {
+                    playPromise.then(() => {
+                        if (needTempMute && this.targetVideo) {
+                            setTimeout(() => {
+                                if (this.targetVideo && !this.userPauseIntent) {
+                                    this.targetVideo.muted = originalMuted;
+                                }
+                            }, 100);
+                        }
+                    }).catch(error => {
                         console.warn('[PlayerCore] 正常起播被浏览器策略拦截:', error);
                         // 当 Peach 虚拟 STRM 流因过期或不支持返回 NotSupportedError 时，自动启动现场动态寻源接力
                         if (error.name === 'NotSupportedError' && PeachWebBridge.isPeachInstance()) {
@@ -267,25 +287,31 @@ export class PlayerCore {
             this.targetVideo.pause();
         }
         
-        // 恢复原始的视频样式和属性
-        if (this.originalParent && this.targetVideo) {
-            if (this.targetVideo.parentNode !== this.originalParent) {
-                // 优先替换原位置占位符
-                if (this.videoPlaceholder && this.videoPlaceholder.parentNode) {
-                    this.videoPlaceholder.parentNode.replaceChild(this.targetVideo, this.videoPlaceholder);
-                    this.videoPlaceholder = null;
-                } else if (this.originalIndex !== -1 && this.originalParent.childNodes.length > this.originalIndex) {
-                    this.originalParent.insertBefore(this.targetVideo, this.originalParent.childNodes[this.originalIndex]);
+        // 恢复原始的视频或媒体宿主容器样式和属性
+        const nodeToRestore = this.mediaHostElement || this.targetVideo;
+        if (this.originalParent && nodeToRestore) {
+            if (nodeToRestore.parentNode !== this.originalParent) {
+                if (this.originalParent.isConnected) {
+                    // 优先替换原位置占位符
+                    if (this.videoPlaceholder && this.videoPlaceholder.parentNode) {
+                        this.videoPlaceholder.parentNode.replaceChild(nodeToRestore, this.videoPlaceholder);
+                        this.videoPlaceholder = null;
+                    } else if (this.originalIndex !== -1 && this.originalParent.childNodes.length > this.originalIndex) {
+                        this.originalParent.insertBefore(nodeToRestore, this.originalParent.childNodes[this.originalIndex]);
+                    } else {
+                        this.originalParent.appendChild(nodeToRestore);
+                    }
                 } else {
-                    this.originalParent.appendChild(this.targetVideo);
+                    // 若原宿主容器已在单页路由中被销毁，安全将视频放回 body 避免节点孤立
+                    try { document.body.appendChild(nodeToRestore); } catch (_) {}
                 }
                 
                 // 移除自定义样式
-                this.targetVideo.style.width = '';
-                this.targetVideo.style.height = '';
-                this.targetVideo.style.maxHeight = '';
-                this.targetVideo.style.margin = '';
-                this.targetVideo.style.position = '';
+                nodeToRestore.style.width = '';
+                nodeToRestore.style.height = '';
+                nodeToRestore.style.maxHeight = '';
+                nodeToRestore.style.margin = '';
+                nodeToRestore.style.position = '';
 
                 // 始终保持 playsinline 属性，防止 Safari / 移动端在退出播放器或二次加载时被系统全屏劫持
                 enforceInlinePlayback(this.targetVideo);

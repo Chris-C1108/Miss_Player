@@ -109,6 +109,11 @@ export class FloatingButton {
     ensureTopLayerMount() {
         if (!this.button) return;
         try {
+            // 若脱离 DOM 树，先救回挂载
+            if (!this.button.isConnected && document.body) {
+                document.body.appendChild(this.button);
+            }
+
             // 查找当前页面上处于打开状态的原生模态 dialog（例如 Peach 的 <dialog id="stage" open>）
             const activeDialog = document.querySelector('dialog[open], [data-stage-host] dialog');
             if (activeDialog && activeDialog.isConnected) {
@@ -299,7 +304,7 @@ export class FloatingButton {
         this.button.style.setProperty('height', '56px', 'important');
         this.button.style.setProperty('border-radius', '50%', 'important');
         this.button.style.setProperty('box-sizing', 'border-box', 'important');
-        this.button.style.setProperty('z-index', '2147483640', 'important');
+        this.button.style.setProperty('z-index', '2147483647', 'important');
         this.button.style.setProperty('pointer-events', 'auto', 'important');
         this.button.style.setProperty('touch-action', 'manipulation', 'important');
         this.button.style.setProperty('-webkit-appearance', 'none', 'important');
@@ -309,17 +314,17 @@ export class FloatingButton {
         const isPortraitValue = isPortrait();
         
         if (isPortraitValue) {
-            // 竖屏模式 (portrait)：正居中贴近屏幕底部，纯原生适配安全区域
-            this.button.style.bottom = 'max(20px, env(safe-area-inset-bottom, 20px))';
-            this.button.style.left = '50%';
-            this.button.style.right = 'auto';
-            this.button.style.transform = 'translateX(-50%)';
+            // 竖屏模式 (portrait)：右下角避开底部栏与中轴标签
+            this.button.style.setProperty('bottom', 'max(80px, calc(env(safe-area-inset-bottom, 20px) + 60px))', 'important');
+            this.button.style.setProperty('right', 'max(16px, env(safe-area-inset-right, 16px))', 'important');
+            this.button.style.setProperty('left', 'auto', 'important');
+            this.button.style.setProperty('transform', 'none', 'important');
         } else {
             // 横屏模式 (landscape)：停泊在右下角
-            this.button.style.bottom = 'max(20px, env(safe-area-inset-bottom, 20px))';
-            this.button.style.right = 'max(20px, env(safe-area-inset-right, 20px))';
-            this.button.style.left = 'auto';
-            this.button.style.transform = 'none';
+            this.button.style.setProperty('bottom', 'max(20px, env(safe-area-inset-bottom, 20px))', 'important');
+            this.button.style.setProperty('right', 'max(20px, env(safe-area-inset-right, 20px))', 'important');
+            this.button.style.setProperty('left', 'auto', 'important');
+            this.button.style.setProperty('transform', 'none', 'important');
         }
     }
 
@@ -383,11 +388,6 @@ export class FloatingButton {
             if (preTargetVideo.webkitDisplayingFullscreen && typeof preTargetVideo.webkitExitFullscreen === 'function') {
                 try { preTargetVideo.webkitExitFullscreen(); } catch (_) {}
             }
-
-            try {
-                const p = preTargetVideo.play();
-                if (p !== undefined) p.catch(() => {});
-            } catch (_) {}
         }
 
         // 立即隐藏按钮，给用户极速的交互反馈

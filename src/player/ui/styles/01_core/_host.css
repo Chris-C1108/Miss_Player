@@ -54,17 +54,17 @@ body.tm-settings-active {
 /* 浮动唤醒按钮 */
 .tm-floating-button {
   position: fixed !important;
-  bottom: max(20px, env(safe-area-inset-bottom, 20px));
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
+  bottom: max(80px, calc(env(safe-area-inset-bottom, 20px) + 60px));
+  right: max(16px, env(safe-area-inset-right, 16px));
+  left: auto;
+  transform: none;
   padding: 0;
   margin: 0;
   width: 56px;
   height: 56px;
   border-radius: 50%;
   background: transparent !important;
-  color: var(--brand-pink);
+  color: var(--brand-pink, rgb(254, 98, 142));
   border: none !important;
   outline: none !important;
   box-shadow: none;
@@ -72,7 +72,7 @@ body.tm-settings-active {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2147483640;
+  z-index: 2147483647;
   cursor: pointer;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: visible;
@@ -83,26 +83,26 @@ body.tm-settings-active {
 .tm-floating-button svg {
   width: 48px;
   height: 48px;
-  filter: drop-shadow(0 0 10px rgba(var(--brand-pink-rgb), 0.9));
+  filter: drop-shadow(0 0 10px rgba(var(--brand-pink-rgb, 254, 98, 142), 0.9));
   transition: filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   animation: breathing-glow 3s infinite ease-in-out;
 }
 
 .tm-floating-button:hover {
-  transform: translateX(-50%) scale(1.08);
+  transform: scale(1.08);
 }
 
 .tm-floating-button:hover svg {
-  filter: drop-shadow(0 0 20px rgba(var(--brand-pink-rgb), 1.0));
+  filter: drop-shadow(0 0 20px rgba(var(--brand-pink-rgb, 254, 98, 142), 1.0));
 }
 
 .tm-floating-button:active {
-  transform: translateX(-50%) scale(0.96);
+  transform: scale(0.96);
 }
 
 @keyframes breathing-glow {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7)); }
-  50% { filter: drop-shadow(0 0 22px rgba(var(--brand-pink-rgb), 1.0)); }
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(var(--brand-pink-rgb, 254, 98, 142), 0.7)); }
+  50% { filter: drop-shadow(0 0 22px rgba(var(--brand-pink-rgb, 254, 98, 142), 1.0)); }
 }
 
 @media screen and (orientation: landscape) {
@@ -122,5 +122,21 @@ body.tm-settings-active {
   body.tm-player-active .tm-custom-modal-overlay textarea {
     font-size: 16px !important;
   }
+}
+
+/* 宿主轨：当播放器激活时，适配打开的原生模态 dialog[open]，使其全屏展开且隐藏其原有内部子节点 */
+body.tm-player-active dialog[open] {
+  padding: 0;
+  margin: 0;
+  border: none;
+  max-width: 100vw;
+  max-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+  background: #0b0b0e;
+  overflow: hidden;
+}
+body.tm-player-active dialog[open] > *:not(miss-player-root):not(.tm-floating-button) {
+  display: none !important;
 }
 

@@ -302,8 +302,9 @@ export class UIManager {
             try { this.targetVideo.webkitExitFullscreen(); } catch (_) {}
         }
 
-        // 添加视频到包装器
-        this.videoWrapper.appendChild(this.targetVideo);
+        // 添加视频或自定义媒体宿主容器到包装器 (若视频托管在 Custom Media Element 内，整装挂载以维持 slot 绑定与流引擎)
+        const nodeToMount = this.playerCore?.mediaHostElement || this.targetVideo;
+        this.videoWrapper.appendChild(nodeToMount);
         
         // 添加视频元数据加载事件，用于检测视频比例
         this.targetVideo.addEventListener('loadedmetadata', () => {

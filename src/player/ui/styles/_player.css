@@ -143,8 +143,8 @@
     touch-action: pan-y; /* 仅允许纵向原生手势以支持单向滚动穿透 */
 }
 
-/* 视频画面区域严格隔离：除 video 与脚本自定义 UI 控件外，强制隐藏原站挂载的任何元素 */
-.tm-video-wrapper > *:not(video):not(.tm-speed-indicator):not(.tm-video-minimap):not(.tm-inline-remark-popover) {
+/* 视频画面区域严格隔离：除 video、自定义媒体容器与脚本自定义 UI 控件外，强制隐藏原站挂载的任何元素 */
+.tm-video-wrapper > *:not(video):not(hlsjs-video):not(dash-video):not(.tm-speed-indicator):not(.tm-video-minimap):not(.tm-inline-remark-popover) {
     display: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
@@ -159,12 +159,14 @@
     pointer-events: none !important;
 }
 
-/* 确保视频元素随容器高度变化 */
-.tm-video-wrapper video {
-    width: auto !important; 
+/* 确保视频元素随容器高度变化 (支持标准 video 与 Web Components 媒体容器) */
+.tm-video-wrapper video,
+.tm-video-wrapper hlsjs-video,
+.tm-video-wrapper dash-video {
+    width: 100% !important; 
     height: 100% !important; 
     max-height: 100% !important; 
-    max-width: none !important; 
+    max-width: 100% !important; 
     object-fit: contain !important; 
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     touch-action: pan-y; /* 更改为 pan-y 以允许上滑穿透冒泡 */
