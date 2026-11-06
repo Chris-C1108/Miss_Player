@@ -276,9 +276,12 @@ export class UIManager {
         this.videoWrapper = document.createElement('div');
         this.videoWrapper.className = 'tm-video-wrapper';
 
-        // 如果已经存在视频元素，先从父节点移除
-        if (this.targetVideo && this.targetVideo.parentNode) {
-            this.targetVideo.parentNode.removeChild(this.targetVideo);
+        // 获取待挂载的媒体节点 (若托管在自定义组件如 hlsjs-video 内，整装迁移容器以维持 slot 绑定与流引擎)
+        const nodeToMount = this.playerCore?.mediaHostElement || this.targetVideo;
+
+        // 如果节点已经在其他父容器中，从其父节点中迁移 (保持内部 slot 结构与子节点完整)
+        if (nodeToMount && nodeToMount.parentNode && nodeToMount.parentNode !== this.videoWrapper) {
+            nodeToMount.parentNode.removeChild(nodeToMount);
         }
 
         // 禁用原生视频控件并移除 controls 属性
@@ -302,8 +305,7 @@ export class UIManager {
             try { this.targetVideo.webkitExitFullscreen(); } catch (_) {}
         }
 
-        // 添加视频或自定义媒体宿主容器到包装器 (若视频托管在 Custom Media Element 内，整装挂载以维持 slot 绑定与流引擎)
-        const nodeToMount = this.playerCore?.mediaHostElement || this.targetVideo;
+        // 添加视频或自定义媒体宿主容器到包装器
         this.videoWrapper.appendChild(nodeToMount);
         
         // 添加视频元数据加载事件，用于检测视频比例

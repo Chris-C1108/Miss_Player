@@ -23,6 +23,8 @@ pids
 
 # 构建输出
 build/
+ios-screen-record-debug/*.mp4
+ios-screen-record-debug/*.mov
 /services/miss-gateway/miss-gateway
 /services/miss-resolver/miss-resolver
 services/**/*.test
