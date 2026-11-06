@@ -427,6 +427,16 @@ export class CustomVideoPlayer {
             }
             this.managers[key] = null;
         }
+
+        // 重新恢复浮动唤醒按钮显示并更新位置与模态层挂载
+        if (this.callingButton) {
+            this.callingButton.classList.remove('is-hidden');
+            this.callingButton.style.display = 'flex';
+            if (this.callingButton._floatingButtonInstance) {
+                this.callingButton._floatingButtonInstance.ensureTopLayerMount();
+                this.callingButton._floatingButtonInstance.updateButtonPosition();
+            }
+        }
         
         // 重置状态
         this.initialized = false;

@@ -272,6 +272,7 @@ export class FloatingButton {
 
         // 显示按钮
         this.button.style.display = 'flex';
+        this.button._floatingButtonInstance = this;
 
         // 初始挂载至正确层级与关键防御样式
         this.ensureTopLayerMount();

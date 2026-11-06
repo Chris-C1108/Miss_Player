@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.113-003
+// @version            5.7.113-004
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1300,7 +1300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-003";
+		return "5.7.113-004";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1886,7 +1886,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-003";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-004";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -3230,11 +3230,25 @@
 					} else try {
 						document.body.appendChild(nodeToRestore);
 					} catch (_) {}
-					nodeToRestore.style.width = "";
-					nodeToRestore.style.height = "";
-					nodeToRestore.style.maxHeight = "";
-					nodeToRestore.style.margin = "";
-					nodeToRestore.style.position = "";
+					const clearMediaStyles = (el) => {
+						if (!el || !el.style) return;
+						el.style.removeProperty("width");
+						el.style.removeProperty("height");
+						el.style.removeProperty("max-width");
+						el.style.removeProperty("max-height");
+						el.style.removeProperty("margin");
+						el.style.removeProperty("position");
+						el.style.removeProperty("transform");
+						el.style.removeProperty("opacity");
+						el.style.removeProperty("visibility");
+						el.style.removeProperty("transition");
+						el.style.removeProperty("display");
+						el.style.removeProperty("cursor");
+						el.style.removeProperty("will-change");
+						el.style.removeProperty("object-fit");
+					};
+					clearMediaStyles(nodeToRestore);
+					if (this.targetVideo && this.targetVideo !== nodeToRestore) clearMediaStyles(this.targetVideo);
 					enforceInlinePlayback(this.targetVideo);
 					if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === "function") try {
 						this.targetVideo.webkitExitFullscreen();
@@ -3286,7 +3300,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-003";
+		return "5.7.113-004";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -22247,6 +22261,16 @@
 						this.uiElements.overlay.style.opacity = "0";
 					}
 					setTimeout(() => {
+						if (this.uiElements && this.uiElements.playerContainer) {
+							this.uiElements.playerContainer.style.transform = "";
+							this.uiElements.playerContainer.style.opacity = "";
+							this.uiElements.playerContainer.style.transition = "";
+						}
+						if (this.video) {
+							this.video.style.transform = "";
+							this.video.style.opacity = "";
+							this.video.style.transition = "";
+						}
 						if (this.onClose) this.onClose();
 					}, 350);
 				} else {
@@ -22694,6 +22718,14 @@
 				if (this.managers[key] && typeof this.managers[key].cleanup === "function") this.managers[key].cleanup();
 				this.managers[key] = null;
 			}
+			if (this.callingButton) {
+				this.callingButton.classList.remove("is-hidden");
+				this.callingButton.style.display = "flex";
+				if (this.callingButton._floatingButtonInstance) {
+					this.callingButton._floatingButtonInstance.ensureTopLayerMount();
+					this.callingButton._floatingButtonInstance.updateButtonPosition();
+				}
+			}
 			this.initialized = false;
 			this.managers = {};
 			this.playerCore = null;
@@ -22843,6 +22875,7 @@
 			this.button.addEventListener("touchend", onTrigger, { passive: false });
 			this.button.addEventListener("click", onTrigger);
 			this.button.style.display = "flex";
+			this.button._floatingButtonInstance = this;
 			this.ensureTopLayerMount();
 			this.updateButtonPosition();
 			return this.button;

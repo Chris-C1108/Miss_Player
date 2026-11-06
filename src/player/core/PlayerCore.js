@@ -306,12 +306,28 @@ export class PlayerCore {
                     try { document.body.appendChild(nodeToRestore); } catch (_) {}
                 }
                 
-                // 移除自定义样式
-                nodeToRestore.style.width = '';
-                nodeToRestore.style.height = '';
-                nodeToRestore.style.maxHeight = '';
-                nodeToRestore.style.margin = '';
-                nodeToRestore.style.position = '';
+                // 彻底清空宿主视频及容器上可能残留的所有内联拖拽/动画样式，防止下滑退出后产生黑屏或位移残留
+                const clearMediaStyles = (el) => {
+                    if (!el || !el.style) return;
+                    el.style.removeProperty('width');
+                    el.style.removeProperty('height');
+                    el.style.removeProperty('max-width');
+                    el.style.removeProperty('max-height');
+                    el.style.removeProperty('margin');
+                    el.style.removeProperty('position');
+                    el.style.removeProperty('transform');
+                    el.style.removeProperty('opacity');
+                    el.style.removeProperty('visibility');
+                    el.style.removeProperty('transition');
+                    el.style.removeProperty('display');
+                    el.style.removeProperty('cursor');
+                    el.style.removeProperty('will-change');
+                    el.style.removeProperty('object-fit');
+                };
+                clearMediaStyles(nodeToRestore);
+                if (this.targetVideo && this.targetVideo !== nodeToRestore) {
+                    clearMediaStyles(this.targetVideo);
+                }
 
                 // 始终保持 playsinline 属性，防止 Safari / 移动端在退出播放器或二次加载时被系统全屏劫持
                 enforceInlinePlayback(this.targetVideo);

@@ -711,6 +711,16 @@ export class VideoSwipeManager {
                 
                 // 动画完成后关闭播放器
                 setTimeout(() => {
+                    if (this.uiElements && this.uiElements.playerContainer) {
+                        this.uiElements.playerContainer.style.transform = '';
+                        this.uiElements.playerContainer.style.opacity = '';
+                        this.uiElements.playerContainer.style.transition = '';
+                    }
+                    if (this.video) {
+                        this.video.style.transform = '';
+                        this.video.style.opacity = '';
+                        this.video.style.transition = '';
+                    }
                     if (this.onClose) {
                         this.onClose();
                     }
