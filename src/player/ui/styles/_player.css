@@ -163,14 +163,21 @@
 .tm-video-wrapper video,
 .tm-video-wrapper hlsjs-video,
 .tm-video-wrapper dash-video {
-    width: 100% !important; 
+    width: auto !important; 
     height: 100% !important; 
     max-height: 100% !important; 
-    max-width: 100% !important; 
+    max-width: none !important; 
     object-fit: contain !important; 
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     touch-action: pan-y; /* 更改为 pan-y 以允许上滑穿透冒泡 */
     cursor: grab; 
+}
+
+.tm-video-wrapper hlsjs-video,
+.tm-video-wrapper dash-video {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* 调整手柄 (精致高度 18px，大幅释放竖屏宝贵阅读空间) */

@@ -1,7 +1,5 @@
 import { restoreSafariThemeColor, findVideoElement, getValue, setValue } from '../../utils/index.js';
-import { PeachWebBridge } from '../bridge/PeachWebBridge.js';
-import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
-import { enforceInlinePlayback } from '../../utils/iosInline.js';
+import { enforceInlinePlayback, isIosDevice } from '../../utils/iosInline.js';
 
 /**
  * 播放器核心类 - 负责播放器的基本功能和状态管理
@@ -80,7 +78,11 @@ export class PlayerCore {
                 // 深度抢救：如果旧的 miss-player-root 内部还包含着被劫持的目标视频，先放回宿主 body，防止视频元素被彻底销毁
                 const innerVideo = r.shadowRoot?.querySelector('video');
                 if (innerVideo && innerVideo.parentNode) {
-                    document.body.appendChild(innerVideo);
+                    const mountHost = innerVideo.closest('hlsjs-video, dash-video, mux-video, [data-media-host]');
+                    const nodeToRescue = mountHost || innerVideo;
+                    if (nodeToRescue.parentNode) {
+                        document.body.appendChild(nodeToRescue);
+                    }
                 }
                 r.remove();
             } catch (_) {}
@@ -192,9 +194,9 @@ export class PlayerCore {
                 // 确保 playsinline 属性就绪，防止被移动端全屏劫持
                 enforceInlinePlayback(this.targetVideo);
 
-                // iOS WebKit 行内播放关键防线：起播初期锁定静音，建立稳定行内图层，彻底阻断系统全屏弹出
+                // iOS WebKit 行内播放关键防线：仅在 iOS 移动端触控环境下起播初期锁定静音，建立稳定行内图层，彻底阻断系统全屏弹出
                 const originalMuted = this.targetVideo.muted;
-                const needTempMute = !originalMuted;
+                const needTempMute = isIosDevice() && !originalMuted;
                 if (needTempMute) {
                     this.targetVideo.muted = true;
                 }
@@ -211,15 +213,6 @@ export class PlayerCore {
                         }
                     }).catch(error => {
                         console.warn('[PlayerCore] 正常起播被浏览器策略拦截:', error);
-                        // 当 Peach 虚拟 STRM 流因过期或不支持返回 NotSupportedError 时，自动启动现场动态寻源接力
-                        if (error.name === 'NotSupportedError' && PeachWebBridge.isPeachInstance()) {
-                            console.log('[PlayerCore] Peach 原生流不可用，自动启动现场动态寻源接力...');
-                            const avcode = getVideoCodeFromUrl(this.targetVideo);
-                            if (avcode) {
-                                PeachWebBridge.takeOverPlayback(this.targetVideo, avcode);
-                            }
-                            return;
-                        }
                         // 如果因为浏览器自动播放策略阻止有声播放，降级为静音自动起播
                         if (error.name === 'NotAllowedError' || !this.targetVideo.muted) {
                             console.log('[PlayerCore] 尝试降级为静音自动起播...');

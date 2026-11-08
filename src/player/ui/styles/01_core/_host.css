@@ -137,6 +137,7 @@ body.tm-player-active dialog[open] {
   overflow: hidden;
 }
 body.tm-player-active dialog[open] > *:not(miss-player-root):not(.tm-floating-button) {
-  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 

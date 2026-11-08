@@ -71,6 +71,17 @@ export class FloatingButton {
         if (window.screen && window.screen.orientation && window.screen.orientation.addEventListener) {
             window.screen.orientation.addEventListener('change', this._handleResize);
         }
+
+        // 监听原生 <dialog> 关闭或取消事件，及时将浮钮归位至 body
+        if (!this._dialogCloseHandler) {
+            this._dialogCloseHandler = (e) => {
+                if (e && e.target && e.target.tagName === 'DIALOG') {
+                    this.ensureTopLayerMount();
+                }
+            };
+            document.addEventListener('close', this._dialogCloseHandler, true);
+            document.addEventListener('cancel', this._dialogCloseHandler, true);
+        }
     }
     
     /**
@@ -85,10 +96,12 @@ export class FloatingButton {
         // 创建新的观察者
         this.mutationObserver = new MutationObserver(this.handleDomMutations.bind(this));
         
-        // 开始观察整个文档的变化
+        // 开始观察整个文档的变化 (包含子树增删与关键模态属性变动)
         this.mutationObserver.observe(document.body, {
             childList: true,
-            subtree: true
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['open', 'src']
         });
     }
     
@@ -431,6 +444,11 @@ export class FloatingButton {
             
             if (window.screen && window.screen.orientation && window.screen.orientation.removeEventListener) {
                 window.screen.orientation.removeEventListener('change', this._handleResize);
+            }
+            if (this._dialogCloseHandler) {
+                document.removeEventListener('close', this._dialogCloseHandler, true);
+                document.removeEventListener('cancel', this._dialogCloseHandler, true);
+                this._dialogCloseHandler = null;
             }
             this._listenersAttached = false;
         }

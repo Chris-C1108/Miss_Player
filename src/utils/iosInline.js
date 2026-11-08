@@ -8,6 +8,15 @@
  * 4. 监听 webkitpresentationmodechanged 事件，一旦检测到脱离行内模式立即拉回 inline
  */
 
+/**
+ * 判断当前是否运行在 iOS (iPhone / iPad / iPod) 或 iPadOS 环境
+ */
+export function isIosDevice() {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent || '';
+    return /iPad|iPhone|iPod/.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua));
+}
+
 export function enforceInlinePlayback(video) {
     if (!video || !(video instanceof HTMLVideoElement)) return;
     if (video._mpInlineEnforced) return;

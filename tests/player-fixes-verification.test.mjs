@@ -143,4 +143,71 @@ assert.ok(
 );
 console.log('✅ 6. 手柄拖拽与 Minimap 联动守卫验证通过');
 
-console.log('\n🎉 全部 6 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 7. 验证通用媒体盒模型缩放与 Web Components 挂载解耦
+// ---------------------------------------------------------
+console.log('▶ 7. 验证通用媒体盒模型缩放与 Web Components 挂载解耦...');
+const playerCssCode = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
+assert.ok(
+    playerCssCode.includes('width: auto !important;') &&
+    playerCssCode.includes('max-width: none !important;'),
+    '_player.css 必须保持 width: auto !important 与 max-width: none !important，保障竖屏下拉等比放大'
+);
+
+const hostCssCode = fs.readFileSync('src/player/ui/styles/01_core/_host.css', 'utf8');
+assert.ok(
+    hostCssCode.includes('body.tm-player-active dialog[open] > *:not(miss-player-root):not(.tm-floating-button) {\n  visibility: hidden !important;\n  pointer-events: none !important;\n}'),
+    '_host.css 必须使用 visibility: hidden 与 pointer-events: none 保护宿主 dialog[open] 几何尺寸'
+);
+console.log('✅ 7. 通用媒体盒模型缩放与 Web Components 挂载解耦验证通过');
+
+// ---------------------------------------------------------
+// 8. 验证播放器关闭单一出口漏斗与死代码清理
+// ---------------------------------------------------------
+console.log('▶ 8. 验证播放器关闭单一出口漏斗与死代码清理...');
+const eventManagerCode = fs.readFileSync('src/player/managers/EventManager.js', 'utf8');
+assert.ok(
+    eventManagerCode.includes("if (typeof this.onClose === 'function') {\n            this.onClose();") &&
+    eventManagerCode.includes('this.uiElements.rootHost'),
+    'EventManager 必须优先调用 onClose 回调并在降级路径下完整传递 rootHost'
+);
+
+const customPlayerCode = fs.readFileSync('src/player/CustomVideoPlayer.js', 'utf8');
+assert.ok(
+    !customPlayerCode.includes('PeachWebBridge.stopProgressTracking'),
+    'CustomVideoPlayer 严禁调用已废弃的 PeachWebBridge.stopProgressTracking'
+);
+assert.ok(
+    !playerCoreCode.includes('PeachWebBridge.takeOverPlayback'),
+    'PlayerCore 严禁调用已废弃的 PeachWebBridge.takeOverPlayback'
+);
+assert.ok(
+    playerCoreCode.includes("const mountHost = innerVideo.closest('hlsjs-video, dash-video, mux-video, [data-media-host]');") &&
+    playerCoreCode.includes('const nodeToRescue = mountHost || innerVideo;'),
+    'PlayerCore.cleanupExistingOverlays 必须优先救回 mediaHostElement，杜绝拔除裸 video'
+);
+console.log('✅ 8. 播放器关闭单一出口漏斗与死代码清理验证通过');
+
+// ---------------------------------------------------------
+// 9. 验证 Top Layer 模态栈感知与 iOS 起播互锁收窄
+// ---------------------------------------------------------
+console.log('▶ 9. 验证 Top Layer 模态栈感知与 iOS 起播互锁收窄...');
+const floatingBtnCode = fs.readFileSync('src/player/ui/FloatingButton.js', 'utf8');
+assert.ok(
+    floatingBtnCode.includes("document.addEventListener('close', this._dialogCloseHandler, true);") &&
+    floatingBtnCode.includes("attributeFilter: ['open', 'src']"),
+    'FloatingButton 必须实时监听 dialog close/cancel 与 open/src 属性变动'
+);
+
+const iosInlineCode = fs.readFileSync('src/utils/iosInline.js', 'utf8');
+assert.ok(
+    iosInlineCode.includes('export function isIosDevice()'),
+    'iosInline.js 必须导出 isIosDevice 精确判定'
+);
+assert.ok(
+    playerCoreCode.includes('const needTempMute = isIosDevice() && !originalMuted;'),
+    'PlayerCore 必须将起播强制静音防全屏互锁仅限定在 iOS 环境'
+);
+console.log('✅ 9. Top Layer 模态栈感知与 iOS 起播互锁收窄验证通过');
+
+console.log('\n🎉 全部 9 大核心修复与人机工程验证单元测试 100% 通过！\n');

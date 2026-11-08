@@ -1015,6 +1015,12 @@ export class VideoSwipeManager {
             this.video.style.transition = '';
             this.video.style.cursor = '';
         }
+        if (this.playerCore?.mediaHostElement && this.playerCore.mediaHostElement !== this.video) {
+            this.playerCore.mediaHostElement.style.transform = '';
+            this.playerCore.mediaHostElement.style.willChange = '';
+            this.playerCore.mediaHostElement.style.transition = '';
+            this.playerCore.mediaHostElement.style.cursor = '';
+        }
         
         if (this.handle) {
             this.handle.removeEventListener('pointerdown', this._handlePointerDownHandler);

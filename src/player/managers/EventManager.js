@@ -5,7 +5,7 @@ import { enforceInlinePlayback } from '../../utils/iosInline.js';
  * 事件管理器类 - 负责事件监听和处理
  */
 export class EventManager {
-    constructor(playerCore, uiElements, managers) {
+    constructor(playerCore, uiElements, managers, onClose = null) {
         // 核心引用
         this.playerCore = playerCore;
         this.targetVideo = playerCore.targetVideo;
@@ -15,6 +15,9 @@ export class EventManager {
         
         // 管理器引用
         this.managers = managers;
+
+        // 统一关闭回调 (优先调用 CustomVideoPlayer.close() 执行完整注销)
+        this.onClose = onClose;
         
         // 状态变量
         this.resizeObserver = null;      // ResizeObserver 实例
@@ -296,8 +299,6 @@ export class EventManager {
      */
     handleCloseButtonClick() {
         console.log('[EventManager] 处理关闭按钮点击');
-        // 先移除所有事件监听器
-        this.cleanup();
 
         // 通知父页面折叠 iframe 全屏
         try {
@@ -306,12 +307,18 @@ export class EventManager {
             }
         } catch (_) {}
 
-        // 然后关闭播放器
-        this.playerCore.close(
-            this.uiElements.overlay, 
-            this.uiElements.container,
-            this.uiElements.playerContainer
-        );
+        if (typeof this.onClose === 'function') {
+            this.onClose();
+        } else {
+            // 降级兜底：先移除所有事件监听器，再关闭播放器核心并完整传递 rootHost
+            this.cleanup();
+            this.playerCore.close(
+                this.uiElements.overlay, 
+                this.uiElements.container,
+                this.uiElements.playerContainer,
+                this.uiElements.rootHost
+            );
+        }
     }
     
     /**
