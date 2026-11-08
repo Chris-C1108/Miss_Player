@@ -2,6 +2,7 @@
 
 | 日期时间 (Timestamp) | 规则提炼 / 主题 (Lesson / Topic) | 频次 (Seen Count) | 状态 (Status) | 交接 (Handoff) | 教训 (Lesson) | 核心标签 (Tags) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-11-09 00:59:17 | 通用媒体盒模型缩放解耦、播放器退出单一出口漏斗闭环与 Web Components 挂载防护避坑总账 | Seen 1× (2026-11-09) | 观察中 | [2026-11-09-005917-handoff.md](2026-11-09-005917-handoff.md) | [2026-11-09-005917-lesson.md](2026-11-09-005917-lesson.md) | `媒体盒模型`, `等比缩放`, `Minimap平移`, `单一退出漏斗`, `SingleCloseFunnel`, `WebComponents抢救`, `TopLayer无损隐藏`, `死代码清理`, `iOS起播互锁收窄` |
 | 2026-11-08 22:39:02 | iOS WebKit 原生全屏劫持、HTML5 :modal inert 锁死与 Web Components 媒体容器抽离崩解避坑总账 | Seen 1× (2026-11-08) | 观察中 | [2026-11-08-223902-handoff.md](2026-11-08-223902-handoff.md) | [2026-11-08-223902-lesson.md](2026-11-08-223902-lesson.md) | `iOS全屏劫持`, `TopLayer穿透`, `:modal`, `inert锁死`, `WebComponents`, `hlsjs-video`, `slot解绑断流`, `浮钮恢复`, `下滑退出样式残留` |
 | 2026-11-05 13:42:50 | HLS 状态机切片崩溃、切片 15s 悬挂死等破除、源站纯明文加权竞速与 Go 外部解析服务避坑总账 | Seen 1× (2026-11-05) | 观察中 | [2026-11-05-134250-handoff.md](2026-11-05-134250-handoff.md) | [2026-11-05-134250-lesson.md](2026-11-05-134250-lesson.md) | `Hls.js状态机`, `LoaderStats规范`, `切片卡顿自愈`, `域名级记忆失效锁`, `Go微服务`, `Docker`, `Mihomo代理分流`, `123AV纯明文无码`, `JAVVerse免盾会话`, `加权竞速仲裁` |
 | 2026-11-05 13:14:24 | Peach Web 跨站流接力、Top Layer 穿透、GM 加载器与防盗链解码实战避坑总账 | Seen 1× (2026-11-05) | 观察中 | [2026-11-05-131424-handoff.md](2026-11-05-131424-handoff.md) | [2026-11-05-131424-lesson.md](2026-11-05-131424-lesson.md) | `TopLayer穿透`, `ShadowDOM递归`, `GMHlsLoader`, `Referer防盗链`, `AES-128硬件解密`, `PNA私网降级`, `0B切片避坑`, `动态寻源瀑布流` |
