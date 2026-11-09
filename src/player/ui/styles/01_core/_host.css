@@ -148,3 +148,16 @@ body.tm-player-active dialog[open] > *:not(miss-player-root):not(.tm-floating-bu
   pointer-events: none !important;
 }
 
+/* 宿主轨：当原生模态 dialog 承载唤醒浮钮时，打破内部包含块陷阱与层级遮盖 */
+dialog[open]:has(.tm-floating-button),
+dialog#stage:has(.tm-floating-button) {
+  contain: none !important;
+}
+
+dialog[open] .tm-floating-button,
+dialog#stage .tm-floating-button {
+  z-index: 2147483647;
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+}

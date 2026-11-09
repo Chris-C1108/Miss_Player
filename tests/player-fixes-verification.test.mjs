@@ -345,5 +345,31 @@ assert.ok(
 );
 console.log('✅ 14. 显式 UISurfaceMachine 状态机与全项目隐式状态机收口治理验证通过');
 
-console.log('\n🎉 全部 14 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 15. 验证 Peach Web / SPA 浮动按钮长效心跳巡检、Shadow DOM 视频穿透与模态层破壁包含块防护
+// ---------------------------------------------------------
+console.log('▶ 15. 验证 Peach Web / SPA 浮动按钮长效心跳巡检与模态层破壁防护...');
+const domJsCode = fs.readFileSync('src/utils/dom.js', 'utf8');
+
+assert.ok(
+    domJsCode.includes("const activeDialog = document.querySelector('dialog[open], dialog#stage, [data-stage-host] dialog, [data-stage-dialog]');") &&
+    domJsCode.includes("const customPlayerHosts = document.querySelectorAll('hlsjs-video, video-player, media-container, [data-media-host]');"),
+    'dom.js 必须支持激活模态 dialog 优先定位并深度穿透检查所有播放器 Web Components 宿主'
+);
+
+assert.ok(
+    floatingBtnCode.includes('getActiveDialog()') &&
+    floatingBtnCode.includes("document.addEventListener('toggle', this._dialogCloseHandler, true);"),
+    'FloatingButton 必须集成 getActiveDialog 模态可见性判定与原生 toggle/close 事件多重监听'
+);
+
+assert.ok(
+    hostCssCode.includes('dialog[open]:has(.tm-floating-button)') &&
+    hostCssCode.includes('contain: none !important;'),
+    '_host.css 必须打破模态 dialog[open] 内部包含块陷阱，防止唤醒浮钮定位变形被宿主裁剪'
+);
+
+console.log('✅ 15. Peach Web / SPA 浮动按钮长效心跳巡检与模态层破壁防护验证通过');
+
+console.log('\n🎉 全部 15 大核心修复与人机工程验证单元测试 100% 通过！\n');
 

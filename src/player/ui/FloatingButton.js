@@ -75,12 +75,13 @@ export class FloatingButton {
         // 监听原生 <dialog> 关闭或取消事件，及时将浮钮归位至 body
         if (!this._dialogCloseHandler) {
             this._dialogCloseHandler = (e) => {
-                if (e && e.target && e.target.tagName === 'DIALOG') {
+                if (e && e.target && (e.target.tagName === 'DIALOG' || e.target.id === 'stage')) {
                     this.ensureTopLayerMount();
                 }
             };
             document.addEventListener('close', this._dialogCloseHandler, true);
             document.addEventListener('cancel', this._dialogCloseHandler, true);
+            document.addEventListener('toggle', this._dialogCloseHandler, true);
         }
     }
     
@@ -117,13 +118,31 @@ export class FloatingButton {
     }
 
     /**
+     * 获取当前处于打开/激活状态的原生模态 dialog (例如 Peach 的 <dialog id="stage">)
+     */
+    getActiveDialog() {
+        const candidates = document.querySelectorAll('dialog[open], dialog#stage, [data-stage-host] dialog, [data-stage-dialog]');
+        for (const d of candidates) {
+            if (!d || !d.isConnected) continue;
+            if (d.open || d.hasAttribute('open')) return d;
+            try {
+                const style = window.getComputedStyle(d);
+                if (style && style.display !== 'none' && style.visibility !== 'hidden') {
+                    return d;
+                }
+            } catch (_) {}
+        }
+        return null;
+    }
+
+    /**
      * 确保浮动按钮在 Top Layer 模态层 (如原生 <dialog open>) 中依然可见不被遮挡，并保持容器末位子节点以获得同级最高绘制顺位
      */
     ensureTopLayerMount() {
         if (!this.button) return;
         try {
             // 查找当前页面上处于打开状态的原生模态 dialog（例如 Peach 的 <dialog id="stage" open>）
-            const activeDialog = document.querySelector('dialog[open], [data-stage-host] dialog');
+            const activeDialog = this.getActiveDialog();
             const targetContainer = (activeDialog && activeDialog.isConnected) ? activeDialog : document.body;
             if (!targetContainer) return;
 
@@ -247,6 +266,12 @@ export class FloatingButton {
             if (this.button) this.button.style.display = 'none';
             return;
         }
+
+        // 持续守护心跳：确保 SPA 页面切换或视频关闭后巡检计时器始终常驻
+        if (!this.videoCheckInterval) {
+            this.startVideoElementCheck();
+        }
+
         // 使用防抖函数限制调用频率
         if (this.mutationTimeout) clearTimeout(this.mutationTimeout);
         
@@ -273,12 +298,12 @@ export class FloatingButton {
                 }
                 this.updateButtonPosition();
             }
-        }, 300);
+        }, 250);
     }
 
     /**
      * 开始周期性检查视频元素
-     * 针对动态加载视频的网站，可能初始加载时没有视频，但后续会加载
+     * 针对动态加载视频的网站 (尤其是 Peach Web / YouTube 等 SPA 架构)，保持心跳巡检，确保跨页点播时浮钮即时就绪
      */
     startVideoElementCheck() {
         // 清除可能存在的旧计时器
@@ -286,31 +311,33 @@ export class FloatingButton {
             clearInterval(this.videoCheckInterval);
         }
         
-        // 设置新计时器，每2秒检查一次
+        // 设置新计时器，每 1.5 秒心跳巡检一次
         this.videoCheckInterval = setInterval(() => {
             if (this.isPlayerActive()) {
                 if (this.button) this.button.style.display = 'none';
                 return;
             }
-            if (findVideoElement(true)) {
+            const hasVideo = findVideoElement(true);
+            if (hasVideo) {
                 // 只有当按钮不存在时才创建
                 if (!this.button) {
                     // 找到视频元素，创建按钮
                     this.createButton();
                     this.setupOrientationListeners();
                     console.log('[FloatingButton] 定时检测到视频元素，已创建浮动按钮');
-                } else if (this.button.style.display === 'none') {
-                    // 按钮存在但被隐藏，重新显示并更新位置
-                    this.button.style.display = 'flex';
+                } else {
+                    if (this.button.style.display === 'none') {
+                        // 按钮存在但被隐藏，重新显示并更新位置
+                        this.button.style.display = 'flex';
+                        console.log('[FloatingButton] 定时检测到视频元素，已显示浮动按钮');
+                    }
+                    this.ensureTopLayerMount();
                     this.updateButtonPosition();
-                    console.log('[FloatingButton] 定时检测到视频元素，已显示浮动按钮');
                 }
-                
-                // 停止检查
-                clearInterval(this.videoCheckInterval);
-                this.videoCheckInterval = null;
+            } else if (this.button && this.button.style.display !== 'none') {
+                this.button.style.display = 'none';
             }
-        }, 2000);
+        }, 1500);
     }
 
     /**
@@ -532,6 +559,7 @@ export class FloatingButton {
             if (this._dialogCloseHandler) {
                 document.removeEventListener('close', this._dialogCloseHandler, true);
                 document.removeEventListener('cancel', this._dialogCloseHandler, true);
+                document.removeEventListener('toggle', this._dialogCloseHandler, true);
                 this._dialogCloseHandler = null;
             }
             this._listenersAttached = false;

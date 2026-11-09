@@ -151,11 +151,37 @@ export function findVideoElement(includeIframe = false) {
         }
     }
 
-    // 穿透常见播放器 Web Components (如 Peach 的 hlsjs-video)
-    const customPlayerHost = document.querySelector('hlsjs-video, video-player, media-container');
-    if (customPlayerHost && customPlayerHost.shadowRoot) {
-        const shadowVideo = customPlayerHost.shadowRoot.querySelector('video');
-        if (shadowVideo) return shadowVideo;
+    // 穿透优先：如果页面存在激活打开的模态 dialog (如 Peach 的 stage 舞台)，优先在 dialog 内定位视频
+    const activeDialog = document.querySelector('dialog[open], dialog#stage, [data-stage-host] dialog, [data-stage-dialog]');
+    if (activeDialog && activeDialog.isConnected) {
+        const isDialogOpen = activeDialog.open || activeDialog.hasAttribute('open');
+        let isDialogVisible = isDialogOpen;
+        if (!isDialogVisible) {
+            try {
+                const s = window.getComputedStyle(activeDialog);
+                if (s && s.display !== 'none' && s.visibility !== 'hidden') isDialogVisible = true;
+            } catch (_) {}
+        }
+        if (isDialogVisible) {
+            const dialogVideos = queryAllVideosDeep(activeDialog);
+            if (dialogVideos.length > 0) {
+                return dialogVideos[0];
+            }
+        }
+    }
+
+    // 穿透常见播放器 Web Components (如 Peach 的 hlsjs-video、media-container、video-player 等)
+    const customPlayerHosts = document.querySelectorAll('hlsjs-video, video-player, media-container, [data-media-host]');
+    for (const host of customPlayerHosts) {
+        if (!host) continue;
+        const lightVideo = host.querySelector('video');
+        if (lightVideo) return lightVideo;
+        if (host.shadowRoot) {
+            const shadowVideo = host.shadowRoot.querySelector('video');
+            if (shadowVideo) return shadowVideo;
+            const deepVideos = queryAllVideosDeep(host.shadowRoot);
+            if (deepVideos.length > 0) return deepVideos[0];
+        }
     }
 
     // --- Strategy 2: 全景穿透收集所有视频元素并智能优选 ---
@@ -170,13 +196,15 @@ export function findVideoElement(includeIframe = false) {
             .map(video => ({
                 element: video,
                 rect: video.getBoundingClientRect(),
+                hasSrc: Boolean(video.currentSrc || video.src || video.querySelector('source')),
+                inDialog: Boolean(video.closest('dialog[open], dialog#stage, [data-stage-host] dialog'))
             }))
-            .filter(item => item.rect.width > 50 && item.rect.height > 50)
+            .filter(item => item.rect.width > 30 && item.rect.height > 30)
             .map(item => ({
                 ...item,
-                area: item.rect.width * item.rect.height
+                score: (item.inDialog ? 1000000 : 0) + (item.hasSrc ? 100000 : 0) + (item.rect.width * item.rect.height)
             }))
-            .sort((a, b) => b.area - a.area);
+            .sort((a, b) => b.score - a.score);
 
         if (visibleVideos.length > 0) {
             return visibleVideos[0].element;
