@@ -696,7 +696,22 @@ export class CommentComposer {
             input.addEventListener('focus', () => {
                 this._lastInputTouchTime = Date.now();
                 setTimeout(() => {
-                    row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    if (this.tagSelectList && typeof this.tagSelectList.scrollTo === 'function') {
+                        const relativeTop = row.offsetTop - this.tagSelectList.offsetTop;
+                        this.tagSelectList.scrollTo({
+                            top: Math.max(0, relativeTop - (this.tagSelectList.clientHeight / 2) + (row.clientHeight / 2)),
+                            behavior: 'smooth'
+                        });
+                    }
+                    const shadow = this.playerCore?.uiManager?.shadowRoot || document.querySelector('miss-player-root')?.shadowRoot;
+                    const container = shadow?.querySelector('.tm-player-container');
+                    if (container && (container.scrollTop !== 0 || container.scrollLeft !== 0)) {
+                        container.scrollTop = 0;
+                        container.scrollLeft = 0;
+                    }
+                    if (window.scrollY !== 0 || window.scrollX !== 0) {
+                        window.scrollTo(0, 0);
+                    }
                 }, 150);
             });
 

@@ -66,27 +66,39 @@ function setupViewport() {
             } else {
                 document.documentElement.style.setProperty('--keyboard-height', '0px');
             }
+            if (window.scrollY !== 0 || window.scrollX !== 0) {
+                window.scrollTo(0, 0);
+            }
+            const shadow = document.querySelector('miss-player-root')?.shadowRoot;
+            const playerContainer = shadow?.querySelector('.tm-player-container');
+            if (playerContainer && (playerContainer.scrollTop !== 0 || playerContainer.scrollLeft !== 0)) {
+                playerContainer.scrollTop = 0;
+                playerContainer.scrollLeft = 0;
+            }
         };
         window.visualViewport.addEventListener('resize', updateKeyboardHeight);
         window.visualViewport.addEventListener('scroll', updateKeyboardHeight);
     }
 
-    // 监听输入框聚焦与失焦事件：确保宿主页面始终锁定在 (0, 0)，杜绝 Safari 原生滚动露底与位移
-    document.addEventListener('focusin', (e) => {
-        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
-            if (window.scrollY !== 0 && document.body && document.body.classList.contains('tm-player-active')) {
-                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    // 监听输入框聚焦与失焦事件：通过 composedPath 穿透 Shadow DOM，确保宿主页面与播放器容器锁定在 (0, 0)
+    const resetViewportScroll = (e) => {
+        const target = (e.composedPath && e.composedPath()[0]) || e.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+            if (document.body && document.body.classList.contains('tm-player-active')) {
+                if (window.scrollY !== 0 || window.scrollX !== 0) {
+                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                }
+                const shadow = document.querySelector('miss-player-root')?.shadowRoot;
+                const playerContainer = shadow?.querySelector('.tm-player-container');
+                if (playerContainer && (playerContainer.scrollTop !== 0 || playerContainer.scrollLeft !== 0)) {
+                    playerContainer.scrollTop = 0;
+                    playerContainer.scrollLeft = 0;
+                }
             }
         }
-    }, { passive: true });
-
-    document.addEventListener('focusout', (e) => {
-        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
-            if (window.scrollY !== 0 && document.body && document.body.classList.contains('tm-player-active')) {
-                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-            }
-        }
-    }, { passive: true });
+    };
+    document.addEventListener('focusin', resetViewportScroll, { passive: true });
+    document.addEventListener('focusout', resetViewportScroll, { passive: true });
 
     console.log(`[${__('scriptName')}] ${__('viewportConfigured')}`);
 }

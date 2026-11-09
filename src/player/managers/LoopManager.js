@@ -134,7 +134,7 @@ export class LoopManager {
                         setTimeout(() => {
                             const selector = '.tm-draft-pill';
                             const el = this.tabScrollContainer?.querySelector(selector);
-                            if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                            if (el) this._scrollToCenterPill(el, true);
                         }, 50);
                     }
                 });
@@ -977,7 +977,7 @@ export class LoopManager {
                 const selector = '[data-tab-id="' + id + '"]';
                 const pill = this.tabScrollContainer.querySelector(selector);
                 if (pill) {
-                    pill.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                    this._scrollToCenterPill(pill, true);
                 }
             }, 60);
         }
@@ -1039,6 +1039,22 @@ export class LoopManager {
 
         parentContainer.appendChild(popover);
 
+        // 移动端竖屏预留软键盘高度，使输入框初始渲染在安全高位，杜绝 iOS Safari 唤起键盘时误判距离底边过近而自动滚屏
+        const isMobilePortrait = window.innerWidth <= 600 || (window.matchMedia && window.matchMedia('(orientation: portrait)').matches);
+        const estimatedKb = (typeof UIManager !== 'undefined' && UIManager.lastKnownKeyboardHeight) ? UIManager.lastKnownKeyboardHeight : (isMobilePortrait ? 280 : 0);
+        if (isMobilePortrait && estimatedKb > 0) {
+            popover.style.bottom = `${estimatedKb + 12}px`;
+        }
+
+        // 锁定视口与播放器容器零偏移
+        if (playerContainer) {
+            playerContainer.scrollTop = 0;
+            playerContainer.scrollLeft = 0;
+        }
+        if (window.scrollY !== 0 || window.scrollX !== 0) {
+            window.scrollTo(0, 0);
+        }
+
         // 同步立即聚焦：iOS Safari 必须在用户直接点击手势同步调用栈内执行 focus，光标直接进入输入框，减少用户点击
         try {
             input.focus({ preventScroll: true });
@@ -1068,6 +1084,13 @@ export class LoopManager {
                 if (!removed) {
                     removed = true;
                     popover.remove();
+                }
+                if (playerContainer) {
+                    playerContainer.scrollTop = 0;
+                    playerContainer.scrollLeft = 0;
+                }
+                if (window.scrollY !== 0 || window.scrollX !== 0) {
+                    window.scrollTo(0, 0);
                 }
             };
             popover.addEventListener('transitionend', cleanup, { once: true });
@@ -1142,7 +1165,7 @@ export class LoopManager {
                         const selector = '[data-tab-id="' + newTab.id + '"]';
                         const pill = this.tabScrollContainer.querySelector(selector);
                         if (pill) {
-                            pill.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                            this._scrollToCenterPill(pill, true);
                         }
                     }, 60);
                 }
@@ -1317,9 +1340,12 @@ export class LoopManager {
      * 将目标胶囊平滑滚动到容器的水平居中位置
      * @param {HTMLElement} pill 
      * @private
+    /**
+     * 将指定胶囊居中滚动到视口中央 (纯横向动力学计算，绝对不触碰纵向轴与祖先容器，杜绝 Safari 视口错位)
      */
-    _scrollToCenterPill(pill) {
-        if (!pill || !this.tabScrollContainer || this._isUserInteractingWithTabs) return;
+    _scrollToCenterPill(pill, force = false) {
+        if (!pill || !this.tabScrollContainer) return;
+        if (!force && this._isUserInteractingWithTabs) return;
         const container = this.tabScrollContainer;
         const pillLeft = pill.offsetLeft;
         const pillWidth = pill.offsetWidth;

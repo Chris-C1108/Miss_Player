@@ -65,13 +65,19 @@ export class CustomVideoPlayer {
             };
         }
         
-        // 宿主滚动绝对锁定守卫：杜绝 iOS Safari 虚拟键盘弹起时原生滚动破坏播放器视口
+        // 宿主与播放器容器绝对锁定守卫：杜绝 iOS Safari 虚拟键盘弹起时原生滚动破坏播放器视口
         this._windowScrollLock = () => {
             if (document.body && document.body.classList.contains('tm-player-active')) {
-                if (window.scrollY > 1 || window.scrollX > 1) {
+                if (window.scrollY > 0 || window.scrollX > 0) {
                     requestAnimationFrame(() => {
                         window.scrollTo(0, 0);
                     });
+                }
+                const shadow = this.uiManager?.shadowRoot || document.querySelector('miss-player-root')?.shadowRoot;
+                const container = shadow?.querySelector('.tm-player-container');
+                if (container && (container.scrollTop !== 0 || container.scrollLeft !== 0)) {
+                    container.scrollTop = 0;
+                    container.scrollLeft = 0;
                 }
             }
         };

@@ -483,7 +483,7 @@ export class MarkerBottomSheet {
                 this._lastInputTouchTime = Date.now();
                 setTimeout(() => {
                     if (this._sheetPanel?.classList.contains('visible')) {
-                        row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                        this._scrollToRow(row);
                     }
                 }, 160);
             });
@@ -592,7 +592,7 @@ export class MarkerBottomSheet {
                 tagToggleBtn.classList.toggle('is-active', isOpen);
                 if (isOpen) {
                     setTimeout(() => {
-                        row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                        this._scrollToRow(row);
                     }, 180);
                 }
             }, () => input, {
@@ -711,6 +711,28 @@ export class MarkerBottomSheet {
         });
 
         modal.querySelector('.tm-custom-modal-close-btn').addEventListener('click', close);
+    }
+
+    /**
+     * 将指定项目行平滑滚动至抽屉列表视口中央 (局部列表滚动，绝不触发祖先容器滚动)
+     */
+    _scrollToRow(row) {
+        if (!row || !this._sheetList) return;
+        const list = this._sheetList;
+        const relativeTop = row.offsetTop - list.offsetTop;
+        list.scrollTo({
+            top: Math.max(0, relativeTop - (list.clientHeight / 2) + (row.clientHeight / 2)),
+            behavior: 'smooth'
+        });
+        const shadow = this.loopManager?.playerCore?.uiManager?.shadowRoot || document.querySelector('miss-player-root')?.shadowRoot;
+        const container = shadow?.querySelector('.tm-player-container');
+        if (container && (container.scrollTop !== 0 || container.scrollLeft !== 0)) {
+            container.scrollTop = 0;
+            container.scrollLeft = 0;
+        }
+        if (window.scrollY !== 0 || window.scrollX !== 0) {
+            window.scrollTo(0, 0);
+        }
     }
 
 }

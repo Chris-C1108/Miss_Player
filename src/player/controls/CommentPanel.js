@@ -533,6 +533,7 @@ export class CommentPanel {
             }
 
             if (saveAllBtn) {
+                e.preventDefault();
                 e.stopPropagation();
                 const commentId = saveAllBtn.getAttribute("data-comment-id");
                 const comment = this.findCommentById(commentId);
@@ -543,6 +544,15 @@ export class CommentPanel {
                             lm.addTabFromTime(ts.seconds, comment.rawText ? comment.rawText.slice(0, 30) : (comment.text || "").slice(0, 30));
                         });
                         Toast(`已转存 ${comment.timestamps.length} 个高光片段至片段列表`, 2000, "success");
+                    }
+                    const shadow = this.playerCore?.uiManager?.shadowRoot || document.querySelector('miss-player-root')?.shadowRoot;
+                    const container = shadow?.querySelector('.tm-player-container');
+                    if (container && (container.scrollTop !== 0 || container.scrollLeft !== 0)) {
+                        container.scrollTop = 0;
+                        container.scrollLeft = 0;
+                    }
+                    if (window.scrollY !== 0 || window.scrollX !== 0) {
+                        window.scrollTo(0, 0);
                     }
                 }
                 return;

@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.113-010
+// @version            5.7.113-011
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1337,7 +1337,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-010";
+		return "5.7.113-011";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1780,7 +1780,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-010";
+		return "5.7.113-011";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3551,7 +3551,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-010";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-011";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -4821,7 +4821,7 @@
 			this.attachShadow({ mode: "open" });
 		}
 	});
-	var UIManager = class UIManager {
+	var UIManager$1 = class UIManager$1 {
 		constructor(playerCore) {
 			this.playerCore = playerCore;
 			this.targetVideo = playerCore.targetVideo;
@@ -4956,6 +4956,10 @@
 			const handPos = this.playerCore?.options?.playerState?.settings?.singleHandPosition || "right";
 			this.playerContainer.classList.toggle("tm-hand-left", handPos === "left");
 			this.playerContainer.classList.toggle("tm-hand-right", handPos !== "left");
+			this.playerContainer.addEventListener("scroll", () => {
+				if (this.playerContainer.scrollTop !== 0) this.playerContainer.scrollTop = 0;
+				if (this.playerContainer.scrollLeft !== 0) this.playerContainer.scrollLeft = 0;
+			}, { passive: true });
 			console.log("[UIManager] Player container created:", this.playerContainer);
 		}
 		createVideoWrapper() {
@@ -5339,7 +5343,7 @@
 				screen.orientation.addEventListener("change", this.screenOrientationListener);
 			}
 			this.orientationListener = () => {
-				UIManager.lastKnownKeyboardHeight = this.isLandscape ? 0 : 380;
+				UIManager$1.lastKnownKeyboardHeight = this.isLandscape ? 0 : 380;
 				scheduleLayoutUpdate(200);
 			};
 			window.addEventListener("orientationchange", this.orientationListener);
@@ -5375,8 +5379,14 @@
 					const inlinePopover = this.shadowRoot?.querySelector(".tm-inline-remark-popover") || document.querySelector(".tm-inline-remark-popover");
 					const wasKeyboardOpen = Boolean(playerContainer?.classList.contains("tm-ios-keyboard-open"));
 					if (keyboardHeight > 60) {
-						if (vvOffsetTop > 0 && document.body?.classList.contains("tm-player-active")) window.scrollTo(0, 0);
-						UIManager.lastKnownKeyboardHeight = keyboardHeight;
+						if (document.body?.classList.contains("tm-player-active")) {
+							if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
+						}
+						if (playerContainer && (playerContainer.scrollTop !== 0 || playerContainer.scrollLeft !== 0)) {
+							playerContainer.scrollTop = 0;
+							playerContainer.scrollLeft = 0;
+						}
+						UIManager$1.lastKnownKeyboardHeight = keyboardHeight;
 						document.documentElement.style.setProperty("--keyboard-height", `${keyboardHeight}px`);
 						if (playerContainer) {
 							playerContainer.classList.add("tm-ios-keyboard-open");
@@ -5400,6 +5410,13 @@
 						if (playerContainer) {
 							playerContainer.classList.remove("tm-ios-keyboard-open");
 							playerContainer.style.removeProperty("--keyboard-height");
+							if (playerContainer.scrollTop !== 0 || playerContainer.scrollLeft !== 0) {
+								playerContainer.scrollTop = 0;
+								playerContainer.scrollLeft = 0;
+							}
+						}
+						if (document.body?.classList.contains("tm-player-active")) {
+							if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
 						}
 						if (this.shadowRoot?.host) this.shadowRoot.host.style.removeProperty("--keyboard-height");
 						if (commentSubmitBar) {
@@ -5754,7 +5771,7 @@
 			});
 		}
 	};
-	_defineProperty(UIManager, "lastKnownKeyboardHeight", 380);
+	_defineProperty(UIManager$1, "lastKnownKeyboardHeight", 380);
 	var I18n = class {
 		static get userLang() {
 			return navigator.languages && navigator.languages[0] || navigator.language || "en";
@@ -10605,10 +10622,19 @@
 				input.addEventListener("focus", () => {
 					this._lastInputTouchTime = Date.now();
 					setTimeout(() => {
-						row.scrollIntoView({
-							block: "nearest",
-							behavior: "smooth"
-						});
+						if (this.tagSelectList && typeof this.tagSelectList.scrollTo === "function") {
+							const relativeTop = row.offsetTop - this.tagSelectList.offsetTop;
+							this.tagSelectList.scrollTo({
+								top: Math.max(0, relativeTop - this.tagSelectList.clientHeight / 2 + row.clientHeight / 2),
+								behavior: "smooth"
+							});
+						}
+						const container = (this.playerCore?.uiManager?.shadowRoot || document.querySelector("miss-player-root")?.shadowRoot)?.querySelector(".tm-player-container");
+						if (container && (container.scrollTop !== 0 || container.scrollLeft !== 0)) {
+							container.scrollTop = 0;
+							container.scrollLeft = 0;
+						}
+						if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
 					}, 150);
 				});
 				input.addEventListener("input", (e) => {
@@ -11985,6 +12011,7 @@
 					return;
 				}
 				if (saveAllBtn) {
+					e.preventDefault();
 					e.stopPropagation();
 					const commentId = saveAllBtn.getAttribute("data-comment-id");
 					const comment = this.findCommentById(commentId);
@@ -11996,6 +12023,12 @@
 							});
 							Toast$1(`已转存 ${comment.timestamps.length} 个高光片段至片段列表`, 2e3, "success");
 						}
+						const container = (this.playerCore?.uiManager?.shadowRoot || document.querySelector("miss-player-root")?.shadowRoot)?.querySelector(".tm-player-container");
+						if (container && (container.scrollTop !== 0 || container.scrollLeft !== 0)) {
+							container.scrollTop = 0;
+							container.scrollLeft = 0;
+						}
+						if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
 					}
 					return;
 				}
@@ -16530,10 +16563,7 @@
 				input.addEventListener("focus", () => {
 					this._lastInputTouchTime = Date.now();
 					setTimeout(() => {
-						if (this._sheetPanel?.classList.contains("visible")) row.scrollIntoView({
-							block: "nearest",
-							behavior: "smooth"
-						});
+						if (this._sheetPanel?.classList.contains("visible")) this._scrollToRow(row);
 					}, 160);
 				});
 				let saveFeedbackTimer = null;
@@ -16627,10 +16657,7 @@
 					const isOpen = tagDrawer.classList.toggle("is-open");
 					tagToggleBtn.classList.toggle("is-active", isOpen);
 					if (isOpen) setTimeout(() => {
-						row.scrollIntoView({
-							block: "nearest",
-							behavior: "smooth"
-						});
+						this._scrollToRow(row);
 					}, 180);
 				}, () => input, {
 					alwaysFocus: false,
@@ -16736,6 +16763,21 @@
 			});
 			modal.querySelector(".tm-custom-modal-close-btn").addEventListener("click", close);
 		}
+		_scrollToRow(row) {
+			if (!row || !this._sheetList) return;
+			const list = this._sheetList;
+			const relativeTop = row.offsetTop - list.offsetTop;
+			list.scrollTo({
+				top: Math.max(0, relativeTop - list.clientHeight / 2 + row.clientHeight / 2),
+				behavior: "smooth"
+			});
+			const container = (this.loopManager?.playerCore?.uiManager?.shadowRoot || document.querySelector("miss-player-root")?.shadowRoot)?.querySelector(".tm-player-container");
+			if (container && (container.scrollTop !== 0 || container.scrollLeft !== 0)) {
+				container.scrollTop = 0;
+				container.scrollLeft = 0;
+			}
+			if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
+		}
 	};
 	var LoopManager = class {
 		constructor(playerCore, uiElements, controlManager = null) {
@@ -16824,10 +16866,7 @@
 						if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(5);
 						setTimeout(() => {
 							const el = this.tabScrollContainer?.querySelector(".tm-draft-pill");
-							if (el) el.scrollIntoView({
-								behavior: "smooth",
-								inline: "center"
-							});
+							if (el) this._scrollToCenterPill(el, true);
 						}, 50);
 					}
 				});
@@ -17414,10 +17453,7 @@
 			if (this.tabScrollContainer) setTimeout(() => {
 				const selector = "[data-tab-id=\"" + id + "\"]";
 				const pill = this.tabScrollContainer.querySelector(selector);
-				if (pill) pill.scrollIntoView({
-					behavior: "smooth",
-					inline: "center"
-				});
+				if (pill) this._scrollToCenterPill(pill, true);
 			}, 60);
 			return newTab;
 		}
@@ -17425,7 +17461,8 @@
 			const isEdit = existingTab !== null;
 			const tab = isEdit ? existingTab : this.draftTab;
 			if (!tab) return;
-			const parentContainer = (this.playerCore?.uiManager?.shadowRoot || document.querySelector("miss-player-root")?.shadowRoot)?.querySelector(".tm-player-container") || document.querySelector(".tm-player-container") || this.controlManager?.controlButtonsContainer || document.querySelector(".tm-control-buttons") || document.body;
+			const playerContainer = (this.playerCore?.uiManager?.shadowRoot || document.querySelector("miss-player-root")?.shadowRoot)?.querySelector(".tm-player-container") || document.querySelector(".tm-player-container");
+			const parentContainer = playerContainer || this.controlManager?.controlButtonsContainer || document.querySelector(".tm-control-buttons") || document.body;
 			if (!parentContainer) return;
 			if (this._activeRemarkClose) this._activeRemarkClose();
 			const existingPopover = parentContainer.querySelector(".tm-inline-remark-popover");
@@ -17453,6 +17490,14 @@
 			popover.addEventListener("touchend", stopProp);
 			popover.addEventListener("pointerdown", stopProp);
 			parentContainer.appendChild(popover);
+			const isMobilePortrait = window.innerWidth <= 600 || window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
+			const estimatedKb = typeof UIManager !== "undefined" && UIManager.lastKnownKeyboardHeight ? UIManager.lastKnownKeyboardHeight : isMobilePortrait ? 280 : 0;
+			if (isMobilePortrait && estimatedKb > 0) popover.style.bottom = `${estimatedKb + 12}px`;
+			if (playerContainer) {
+				playerContainer.scrollTop = 0;
+				playerContainer.scrollLeft = 0;
+			}
+			if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
 			try {
 				input.focus({ preventScroll: true });
 			} catch (_) {
@@ -17480,6 +17525,11 @@
 						removed = true;
 						popover.remove();
 					}
+					if (playerContainer) {
+						playerContainer.scrollTop = 0;
+						playerContainer.scrollLeft = 0;
+					}
+					if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
 				};
 				popover.addEventListener("transitionend", cleanup, { once: true });
 				setTimeout(cleanup, 250);
@@ -17541,10 +17591,7 @@
 					if (this.tabScrollContainer) setTimeout(() => {
 						const selector = "[data-tab-id=\"" + newTab.id + "\"]";
 						const pill = this.tabScrollContainer.querySelector(selector);
-						if (pill) pill.scrollIntoView({
-							behavior: "smooth",
-							inline: "center"
-						});
+						if (pill) this._scrollToCenterPill(pill, true);
 					}, 60);
 				}
 				close();
@@ -17663,8 +17710,9 @@
 				}
 			} else this._currentNearTabId = null;
 		}
-		_scrollToCenterPill(pill) {
-			if (!pill || !this.tabScrollContainer || this._isUserInteractingWithTabs) return;
+		_scrollToCenterPill(pill, force = false) {
+			if (!pill || !this.tabScrollContainer) return;
+			if (!force && this._isUserInteractingWithTabs) return;
 			const container = this.tabScrollContainer;
 			const pillLeft = pill.offsetLeft;
 			const pillWidth = pill.offsetWidth;
@@ -22986,9 +23034,14 @@
 				}
 				this._windowScrollLock = () => {
 					if (document.body && document.body.classList.contains("tm-player-active")) {
-						if (window.scrollY > 1 || window.scrollX > 1) requestAnimationFrame(() => {
+						if (window.scrollY > 0 || window.scrollX > 0) requestAnimationFrame(() => {
 							window.scrollTo(0, 0);
 						});
+						const container = (this.uiManager?.shadowRoot || document.querySelector("miss-player-root")?.shadowRoot)?.querySelector(".tm-player-container");
+						if (container && (container.scrollTop !== 0 || container.scrollLeft !== 0)) {
+							container.scrollTop = 0;
+							container.scrollLeft = 0;
+						}
 					}
 				};
 				window.addEventListener("scroll", this._windowScrollLock, { passive: true });
@@ -23067,7 +23120,7 @@
 				videoElem.addEventListener("pause", this._onPauseOrEnded);
 				videoElem.addEventListener("ended", this._onPauseOrEnded);
 				videoElem.addEventListener("timeupdate", this._onTimeUpdate);
-				const uiManager = new UIManager(this.playerCore);
+				const uiManager = new UIManager$1(this.playerCore);
 				const uiElements = uiManager.createUI();
 				this.managers.uiManager = uiManager;
 				const controlManager = new ControlManager(this.playerCore, uiElements, uiManager);
@@ -24663,28 +24716,35 @@
 				const keyboardHeight = Math.max(0, Math.round(docHeight - (vv ? vv.height : docHeight)));
 				if (keyboardHeight > 60) document.documentElement.style.setProperty("--keyboard-height", `${keyboardHeight}px`);
 				else document.documentElement.style.setProperty("--keyboard-height", "0px");
+				if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
+				const playerContainer = (document.querySelector("miss-player-root")?.shadowRoot)?.querySelector(".tm-player-container");
+				if (playerContainer && (playerContainer.scrollTop !== 0 || playerContainer.scrollLeft !== 0)) {
+					playerContainer.scrollTop = 0;
+					playerContainer.scrollLeft = 0;
+				}
 			};
 			window.visualViewport.addEventListener("resize", updateKeyboardHeight);
 			window.visualViewport.addEventListener("scroll", updateKeyboardHeight);
 		}
-		document.addEventListener("focusin", (e) => {
-			if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) {
-				if (window.scrollY !== 0 && document.body && document.body.classList.contains("tm-player-active")) window.scrollTo({
-					top: 0,
-					left: 0,
-					behavior: "instant"
-				});
+		const resetViewportScroll = (e) => {
+			const target = e.composedPath && e.composedPath()[0] || e.target;
+			if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")) {
+				if (document.body && document.body.classList.contains("tm-player-active")) {
+					if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo({
+						top: 0,
+						left: 0,
+						behavior: "instant"
+					});
+					const playerContainer = (document.querySelector("miss-player-root")?.shadowRoot)?.querySelector(".tm-player-container");
+					if (playerContainer && (playerContainer.scrollTop !== 0 || playerContainer.scrollLeft !== 0)) {
+						playerContainer.scrollTop = 0;
+						playerContainer.scrollLeft = 0;
+					}
+				}
 			}
-		}, { passive: true });
-		document.addEventListener("focusout", (e) => {
-			if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) {
-				if (window.scrollY !== 0 && document.body && document.body.classList.contains("tm-player-active")) window.scrollTo({
-					top: 0,
-					left: 0,
-					behavior: "instant"
-				});
-			}
-		}, { passive: true });
+		};
+		document.addEventListener("focusin", resetViewportScroll, { passive: true });
+		document.addEventListener("focusout", resetViewportScroll, { passive: true });
 		console.log(`[${__$1("scriptName")}] ${__$1("viewportConfigured")}`);
 	}
 	(function() {

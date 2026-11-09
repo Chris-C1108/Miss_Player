@@ -276,6 +276,17 @@ export class UIManager {
         const handPos = this.playerCore?.options?.playerState?.settings?.singleHandPosition || 'right';
         this.playerContainer.classList.toggle('tm-hand-left', handPos === 'left');
         this.playerContainer.classList.toggle('tm-hand-right', handPos !== 'left');
+
+        // 核心滚动守卫：playerContainer 作为全屏固定视口，绝对禁止任何纵向或横向位移滚动
+        this.playerContainer.addEventListener('scroll', () => {
+            if (this.playerContainer.scrollTop !== 0) {
+                this.playerContainer.scrollTop = 0;
+            }
+            if (this.playerContainer.scrollLeft !== 0) {
+                this.playerContainer.scrollLeft = 0;
+            }
+        }, { passive: true });
+
         console.log('[UIManager] Player container created:', this.playerContainer);
     }
 
@@ -1019,8 +1030,14 @@ export class UIManager {
                 const wasKeyboardOpen = Boolean(playerContainer?.classList.contains('tm-ios-keyboard-open'));
 
                 if (keyboardHeight > 60) {
-                    if (vvOffsetTop > 0 && document.body?.classList.contains('tm-player-active')) {
-                        window.scrollTo(0, 0);
+                    if (document.body?.classList.contains('tm-player-active')) {
+                        if (window.scrollY !== 0 || window.scrollX !== 0) {
+                            window.scrollTo(0, 0);
+                        }
+                    }
+                    if (playerContainer && (playerContainer.scrollTop !== 0 || playerContainer.scrollLeft !== 0)) {
+                        playerContainer.scrollTop = 0;
+                        playerContainer.scrollLeft = 0;
                     }
                     UIManager.lastKnownKeyboardHeight = keyboardHeight;
                     document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
@@ -1055,6 +1072,15 @@ export class UIManager {
                     if (playerContainer) {
                         playerContainer.classList.remove('tm-ios-keyboard-open');
                         playerContainer.style.removeProperty('--keyboard-height');
+                        if (playerContainer.scrollTop !== 0 || playerContainer.scrollLeft !== 0) {
+                            playerContainer.scrollTop = 0;
+                            playerContainer.scrollLeft = 0;
+                        }
+                    }
+                    if (document.body?.classList.contains('tm-player-active')) {
+                        if (window.scrollY !== 0 || window.scrollX !== 0) {
+                            window.scrollTo(0, 0);
+                        }
                     }
                     if (this.shadowRoot?.host) {
                         this.shadowRoot.host.style.removeProperty('--keyboard-height');

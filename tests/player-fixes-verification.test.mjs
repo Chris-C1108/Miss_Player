@@ -371,5 +371,51 @@ assert.ok(
 
 console.log('✅ 15. Peach Web / SPA 浮动按钮长效心跳巡检与模态层破壁防护验证通过');
 
-console.log('\n🎉 全部 15 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 16. 验证高光备注弹窗与转存操作零视口纵向位移 (Zero-Displacement Pill Center & Container Scroll Lock)
+// ---------------------------------------------------------
+console.log('▶ 16. 验证高光备注与转存零视口纵向位移与容器滚动防失真守卫...');
+const updatedLoopManagerJs = fs.readFileSync('src/player/managers/LoopManager.js', 'utf8');
+const updatedCommentPanelJs = fs.readFileSync('src/player/controls/CommentPanel.js', 'utf8');
+const updatedUiManagerJs = fs.readFileSync('src/player/ui/UIManager.js', 'utf8');
+const updatedIndexJs = fs.readFileSync('src/index.js', 'utf8');
+const composerJsCode = fs.readFileSync('src/player/controls/CommentComposer.js', 'utf8');
+const markerSheetJsCode = fs.readFileSync('src/player/managers/MarkerBottomSheet.js', 'utf8');
+
+// 验证全代码库已彻底清除未受控的 native scrollIntoView 调用
+assert.ok(
+    !updatedLoopManagerJs.includes('scrollIntoView') &&
+    !updatedCommentPanelJs.includes('scrollIntoView') &&
+    !composerJsCode.includes('scrollIntoView') &&
+    !markerSheetJsCode.includes('scrollIntoView'),
+    '全项目业务组件必须彻底杜绝调用原生 scrollIntoView，防止破坏 iOS Safari 祖先容器垂直滚动轴'
+);
+
+// 验证 LoopManager 采用纯横向动力学居中 _scrollToCenterPill
+assert.ok(
+    updatedLoopManagerJs.includes('_scrollToCenterPill(pill, force = false)') &&
+    updatedLoopManagerJs.includes('this._scrollToCenterPill(el, true)') &&
+    updatedLoopManagerJs.includes('this._scrollToCenterPill(pill, true)'),
+    'LoopManager 必须通过纯横向 _scrollToCenterPill 进行胶囊居中，且支持 force 强制滚动'
+);
+
+// 验证转存操作阻止默认行为并重置滚动位移
+assert.ok(
+    updatedCommentPanelJs.includes('e.preventDefault();') &&
+    updatedCommentPanelJs.includes('container.scrollTop = 0;'),
+    'CommentPanel 的 saveAllBtn 转存点击必须阻止默认行为并强行重置容器 scrollTop 为 0'
+);
+
+// 验证 UIManager 与 src/index.js 守卫全屏 playerContainer 滚动零偏移
+assert.ok(
+    updatedUiManagerJs.includes("this.playerContainer.addEventListener('scroll'") &&
+    updatedUiManagerJs.includes('this.playerContainer.scrollTop = 0') &&
+    updatedIndexJs.includes('resetViewportScroll'),
+    'UIManager 必须直接监听 playerContainer 滚动并自愈归零，且 index.js 必须通过 composedPath 穿透重置视口'
+);
+
+console.log('✅ 16. 高光备注与转存零视口纵向位移与容器滚动防失真守卫验证通过');
+
+console.log('\n🎉 全部 16 大核心修复与人机工程验证单元测试 100% 通过！\n');
+
 
