@@ -187,10 +187,17 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9986;
+    z-index: calc(var(--z-base) + 2);
     width: 100%;
     flex-shrink: 0; /* 防止 Flex 布局下高度被压缩 */
     touch-action: none; /* 手指在手柄区滑动不产生背景滚动 */
+}
+
+/* 输入栏、底栏抽屉或虚拟键盘激活时，禁用手柄触控，严防越级遮挡或误触拖拽 */
+.tm-player-container.has-composer-active .tm-handle-container,
+.tm-player-container.has-sheet-open .tm-handle-container,
+.tm-player-container.tm-ios-keyboard-open .tm-handle-container {
+    pointer-events: none;
 }
 
 .tm-resize-handle {
@@ -279,7 +286,7 @@
     justify-content: center;
     cursor: pointer;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
-    z-index: 9994;
+    z-index: var(--z-controls);
 }
 
 /* 扩充触控与移动端最小点击热区至 44x44px */
@@ -316,7 +323,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9993;
+    z-index: var(--z-controls);
     cursor: pointer;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
     backdrop-filter: blur(8px);
@@ -384,7 +391,7 @@
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     padding: 14px 16px 20px 16px;
-    z-index: 100000; /* 层级高于控制面板(9997)与标题(9998) */
+    z-index: var(--z-modal);
     min-width: 275px;
     max-width: 330px;
     max-height: calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 64px);
@@ -1486,7 +1493,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     transform: translateY(20px);
     transition: opacity var(--anim-smooth), transform var(--anim-smooth);
     pointer-events: none;
-    z-index: 9994;
+    z-index: var(--z-controls);
     font-size: 15px;
     font-weight: 500;
 }
@@ -1549,6 +1556,10 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     opacity: 0;
     transition: bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
+}
+
+.tm-ios-keyboard-open .tm-inline-remark-popover {
+    bottom: calc(var(--keyboard-height, 0px) + 12px);
 }
 
 .tm-inline-remark-popover.visible {

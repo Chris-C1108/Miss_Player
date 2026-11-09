@@ -305,12 +305,20 @@
     pointer-events: none !important;
 }
 
+/* 评论发表栏展开时，自动退避隐藏控制面板，杜绝评论输入栏与播放控制栏产生层级重叠冲突 */
+.tm-player-container.has-composer-active .tm-control-panel,
+.tm-player-container.has-composer-active .tm-control-buttons {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 /* 手机竖屏下：当主控面板展开时隐藏评论 FAB，仅在专注阅读评论（controls-hidden）时优雅浮现 */
-@media screen and (max-width: 767px) and (orientation: portrait) {
+@media screen and (max-width: 600px) and (orientation: portrait) {
     .tm-player-container:not(.controls-hidden) .tm-comment-fab-btn {
         transform: scale(0.85);
         opacity: 0;
-        pointer-events: none !important;
+        pointer-events: none;
     }
 }
 
@@ -1452,7 +1460,7 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     pointer-events: auto; /* 允许点击 */
-    z-index: 9994;
+    z-index: calc(var(--z-base) + 1);
     overflow-x: auto;
     scrollbar-width: none; /* Firefox */
     overscroll-behavior: contain;

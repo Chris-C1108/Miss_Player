@@ -243,13 +243,70 @@ export class CommentComposer {
             });
         }
 
-        // 加号 (+) 按钮事件：展开/收起高光时间戳标签选择浮层
-        if (addTagBtn) {
-            addTagBtn.addEventListener('click', (e) => {
+        // 辅助绑定：在 iOS Safari 下点击工具按钮时不抢夺输入框焦点，防止虚拟键盘闪烁收起
+        const bindToolbarBtn = (btn, handler) => {
+            if (!btn) return;
+            let lastTouchExecTime = 0;
+            let activeInputBeforePress = null;
+
+            btn.addEventListener('mousedown', (e) => {
                 e.stopPropagation();
-                this.toggleTagSelectModal();
+                this._lastInputTouchTime = Date.now();
+                if (e.cancelable) e.preventDefault();
             });
-        }
+
+            btn.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+                activeInputBeforePress = this.getActiveInputElement();
+                if (e.pointerType === 'mouse' && e.cancelable) {
+                    e.preventDefault();
+                }
+            });
+
+            btn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+                activeInputBeforePress = this.getActiveInputElement();
+                if (e.cancelable) e.preventDefault();
+            }, { passive: false });
+
+            btn.addEventListener('touchend', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+                if (e.cancelable) e.preventDefault();
+                lastTouchExecTime = Date.now();
+                handler(e);
+                const targetInput = activeInputBeforePress || this.commentInput;
+                if (targetInput && !this.submitBarWrapper?.classList.contains('is-collapsed')) {
+                    try {
+                        targetInput.focus({ preventScroll: true });
+                    } catch (_) {
+                        targetInput.focus();
+                    }
+                }
+            }, { passive: false });
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+                if (Date.now() - lastTouchExecTime < 450) return;
+                handler(e);
+                const targetInput = activeInputBeforePress || this.commentInput;
+                if (targetInput && !this.submitBarWrapper?.classList.contains('is-collapsed')) {
+                    try {
+                        targetInput.focus({ preventScroll: true });
+                    } catch (_) {
+                        targetInput.focus();
+                    }
+                }
+            });
+        };
+
+        // 加号 (+) 按钮事件：展开/收起高光时间戳标签选择浮层（保持输入框焦点与 iOS 键盘常驻）
+        bindToolbarBtn(addTagBtn, () => {
+            this.toggleTagSelectModal();
+        });
 
         // 发送 (Send) 按钮事件：触发检测并发表评论
         if (sendBtn) {
@@ -265,35 +322,38 @@ export class CommentComposer {
         }
 
         // 全选按钮
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const tabs = this.getTabs();
-                this.selectedTagIds = new Set(tabs.map(t => t.id));
-                this.renderTagSelectList();
-                this.updateTagButtonBadge();
-            });
-        }
+        bindToolbarBtn(selectAllBtn, () => {
+            const tabs = this.getTabs();
+            this.selectedTagIds = new Set(tabs.map(t => t.id));
+            this.renderTagSelectList();
+            this.updateTagButtonBadge();
+        });
 
         // 取消全选按钮
-        if (deselectAllBtn) {
-            deselectAllBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.selectedTagIds.clear();
-                this.renderTagSelectList();
-                this.updateTagButtonBadge();
-            });
-        }
+        bindToolbarBtn(deselectAllBtn, () => {
+            this.selectedTagIds.clear();
+            this.renderTagSelectList();
+            this.updateTagButtonBadge();
+        });
 
         // 关闭标签选择浮层按钮
-        if (closeBtn) {
-            closeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.closeTagSelectModal();
-            });
-        }
+        bindToolbarBtn(closeBtn, () => {
+            this.closeTagSelectModal();
+        });
 
         this.updateTagButtonBadge();
+    }
+
+    /**
+     * 获取当前在评论发表栏内处于聚焦状态的输入框（兼容 Shadow DOM）
+     */
+    getActiveInputElement() {
+        const root = this.submitBarWrapper?.getRootNode?.();
+        const active = (root && root.activeElement) ? root.activeElement : document.activeElement;
+        if (active && this.submitBarWrapper?.contains(active) && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+            return active;
+        }
+        return this.commentInput || null;
     }
 
     /**
@@ -328,7 +388,14 @@ export class CommentComposer {
         if (this.panel?.commentsPanel) {
             this.panel.commentsPanel.classList.add('has-composer-open');
         }
-        const playerContainer = document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
+        if (typeof this.panel?.setDimmed === 'function') {
+            this.panel.setDimmed(false);
+        }
+        if (this.panel?.uiManager && !this.panel.uiManager.isLandscape) {
+            this.panel.uiManager.hideControls(true);
+        }
+        const playerContainer = this.submitBarWrapper.closest('.tm-player-container') ||
+            document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
         if (playerContainer) {
             playerContainer.classList.add('has-composer-active');
         }
@@ -368,7 +435,8 @@ export class CommentComposer {
         if (this.panel?.commentsPanel) {
             this.panel.commentsPanel.classList.remove('has-composer-open');
         }
-        const playerContainer = document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
+        const playerContainer = this.submitBarWrapper.closest('.tm-player-container') ||
+            document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
         if (playerContainer) {
             playerContainer.classList.remove('has-composer-active');
         }
@@ -467,28 +535,63 @@ export class CommentComposer {
             const row = document.createElement('div');
             row.className = 'tm-tag-select-item';
 
-            // 勾选复选框
+            // 勾选复选框（保持输入框焦点不丢失）
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.className = 'tm-tag-checkbox';
             checkbox.checked = this.selectedTagIds.has(tab.id);
+            let activeInputBeforeCheck = null;
+            checkbox.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+                activeInputBeforeCheck = this.getActiveInputElement();
+                if (e.cancelable) e.preventDefault();
+            });
+            checkbox.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+                activeInputBeforeCheck = this.getActiveInputElement();
+            }, { passive: true });
             checkbox.addEventListener('change', (e) => {
                 e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
                 if (checkbox.checked) {
                     this.selectedTagIds.add(tab.id);
                 } else {
                     this.selectedTagIds.delete(tab.id);
                 }
                 this.updateTagButtonBadge();
+                if (activeInputBeforeCheck && !this.submitBarWrapper?.classList.contains('is-collapsed')) {
+                    try {
+                        activeInputBeforeCheck.focus({ preventScroll: true });
+                    } catch (_) {
+                        activeInputBeforeCheck.focus();
+                    }
+                }
             });
 
-            // 时间胶囊 (支持点击即时跳转视频对应进度)
+            // 时间胶囊 (支持点击即时跳转视频对应进度，同时保持输入框焦点)
             const timeContainer = document.createElement('div');
             timeContainer.className = 'tm-sheet-item-time-container';
             timeContainer.title = '点击跳转到此高光时间';
 
+            let activeInputBeforeSeek = null;
+            timeContainer.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+                activeInputBeforeSeek = this.getActiveInputElement();
+                if (e.cancelable) e.preventDefault();
+            });
+            timeContainer.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+                activeInputBeforeSeek = this.getActiveInputElement();
+                if (e.cancelable) e.preventDefault();
+            }, { passive: false });
+
             const onSeek = (e) => {
                 e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
                 const targetVid = this.panel?.videoPlayer?.playerCore?.targetVideo || 
                                   document.querySelector('miss-player-root')?.shadowRoot?.querySelector('video') || 
                                   document.querySelector('video');
@@ -496,8 +599,25 @@ export class CommentComposer {
                     targetVid.currentTime = tab.startTime;
                     Toast(`已跳转至 ${formatSeconds(tab.startTime)}`, 1500, 'info');
                 }
+                const targetInput = activeInputBeforeSeek || this.commentInput;
+                if (targetInput && !this.submitBarWrapper?.classList.contains('is-collapsed')) {
+                    try {
+                        targetInput.focus({ preventScroll: true });
+                    } catch (_) {
+                        targetInput.focus();
+                    }
+                }
             };
-            timeContainer.addEventListener('click', onSeek);
+            let lastSeekTouchTime = 0;
+            timeContainer.addEventListener('touchend', (e) => {
+                if (e.cancelable) e.preventDefault();
+                lastSeekTouchTime = Date.now();
+                onSeek(e);
+            }, { passive: false });
+            timeContainer.addEventListener('click', (e) => {
+                if (Date.now() - lastSeekTouchTime < 450) return;
+                onSeek(e);
+            });
 
             if (tab.type === 'highlight') {
                 const pill = document.createElement('button');

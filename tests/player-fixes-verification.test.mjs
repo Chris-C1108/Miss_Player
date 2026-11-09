@@ -284,4 +284,30 @@ assert.ok(
 );
 console.log('✅ 12. 高光列表、评论发表栏、附带片段抽屉、登录模态框与 iOS 键盘适配验证通过');
 
-console.log('\n🎉 全部 12 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 13. 验证手柄栏层级、评论栏与控制面板互斥关系、以及点击 + 号保持 iOS 虚拟键盘焦点
+// ---------------------------------------------------------
+console.log('▶ 13. 验证手柄栏层级、评论栏与控制面板互斥关系、以及点击 + 号保持 iOS 虚拟键盘焦点...');
+const uiManagerJs = fs.readFileSync('src/player/ui/UIManager.js', 'utf8');
+assert.ok(
+    !playerCssCode.includes('z-index: 9986') &&
+    playerCssCode.includes('z-index: calc(var(--z-base) + 2);') &&
+    playerCssCode.includes('.tm-player-container.has-composer-active .tm-handle-container'),
+    '视频下方拖动手柄栏 .tm-handle-container 严禁使用 9986 魔法层级遮挡输入框，必须在激活输入或虚拟键盘时低于 --z-composer 并禁用手势拦截'
+);
+assert.ok(
+    commentsCss.includes('.tm-player-container.has-composer-active .tm-control-panel') &&
+    commentsCss.includes('.tm-player-container.has-composer-active .tm-control-buttons') &&
+    uiManagerJs.includes('.tm-comment-submit-bar-wrapper') &&
+    commentComposerJs.includes('this.panel.uiManager.hideControls(true)'),
+    '评论发表栏与播放控制面板必须严格互斥，在评论输入栏内滑动或点击严禁误唤醒控制面板'
+);
+assert.ok(
+    commentComposerJs.includes('const bindToolbarBtn = (btn, handler) =>') &&
+    commentComposerJs.includes('targetInput.focus({ preventScroll: true });') &&
+    commentComposerJs.includes('getActiveInputElement()'),
+    '点击评论栏 + 号及工具按钮必须阻止默认失焦并保持输入框焦点，杜绝 iOS Safari 虚拟键盘闪退消失'
+);
+console.log('✅ 13. 手柄栏层级、评论栏与控制面板互斥关系、以及点击 + 号保持 iOS 虚拟键盘焦点验证通过');
+
+console.log('\n🎉 全部 13 大核心修复与人机工程验证单元测试 100% 通过！\n');

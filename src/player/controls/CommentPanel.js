@@ -2076,6 +2076,14 @@ export class CommentPanel {
 
             e.stopPropagation();
 
+            // 如果评论发表栏正处于展开态，点击评论列表空白处自动收起评论发表栏与虚拟键盘
+            if (this.composer && this.composer.submitBarWrapper && !this.composer.submitBarWrapper.classList.contains('is-collapsed')) {
+                if (Date.now() - (this.composer._lastInputTouchTime || 0) >= 450) {
+                    this.composer.closeComposer();
+                    return;
+                }
+            }
+
             if (this.uiManager) {
                 // 大屏设备/悬浮窗模式下（iPad 竖屏及 PC 横屏），评论区与控制面板共存，点击空白使评论区变亮
                 if (this.uiManager.isFloatingControlPanel) {

@@ -1096,9 +1096,11 @@ export class UIManager {
         // 确保overlay已创建
         if (!this.overlay) return;
         
+        const nonControlOverlaySelector = '.tm-comments-panel, .tm-comment-submit-bar-wrapper, .tm-comment-backdrop, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-custom-modal-overlay, .tm-settings-panel, .tm-inline-remark-popover, .jc-code-preview-popover';
+
         // 使用事件委托处理鼠标移动和触摸移动，绑定到整个 playerContainer 以支持隐藏侧栏或竖屏模式下的控制恢复
         this.playerContainer.addEventListener('mousemove', (e) => {
-            if (e && e.target && e.target.closest && e.target.closest('.tm-comments-panel, .jc-code-preview-popover')) {
+            if (e && e.target && e.target.closest && e.target.closest(nonControlOverlaySelector)) {
                 return;
             }
             this.showControls();
@@ -1108,7 +1110,7 @@ export class UIManager {
         });
         
         this.playerContainer.addEventListener('touchmove', (e) => {
-            if (e && e.target && e.target.closest && e.target.closest('.tm-comments-panel, .jc-code-preview-popover')) {
+            if (e && e.target && e.target.closest && e.target.closest(nonControlOverlaySelector)) {
                 return;
             }
             this.showControls();
@@ -1155,12 +1157,12 @@ export class UIManager {
         const w = window.innerWidth;
         const h = window.innerHeight;
         
-        // 1. 虚拟键盘激活状态下，忽略方向变更（防止键盘弹起高度骤降误判为横屏）
+        // 1. 虚拟键盘激活状态下，忽略方向变更（防止键盘弹起高度骤降误判为横屏，兼容 Shadow DOM activeElement）
         const isKeyboardActive = () => {
-            const el = document.activeElement;
-            if (!el) return false;
+            const el = this.shadowRoot?.activeElement || document.activeElement;
+            if (!el || !el.tagName) return false;
             const tagName = el.tagName.toLowerCase();
-            return tagName === 'textarea' || (tagName === 'input' && ['text', 'search', 'url', 'email', 'number'].includes(el.type));
+            return tagName === 'textarea' || (tagName === 'input' && ['text', 'search', 'url', 'email', 'number', 'password'].includes(el.type));
         };
         
         if (isKeyboardActive()) {
@@ -1335,6 +1337,19 @@ export class UIManager {
      */
     showControls() {
         if (!this.overlay) return;
+
+        // 当评论发表栏处于激活态时：若刚刚在评论输入栏内发生触控（500ms内），忽略误触发；否则自动收起评论发表栏以实现与控制面板的干净互斥
+        if (this.playerContainer && this.playerContainer.classList.contains('has-composer-active')) {
+            const composer = this.controlManager?.commentPanel?.composer;
+            if (composer) {
+                if (Date.now() - (composer._lastInputTouchTime || 0) < 500) {
+                    return;
+                }
+                if (typeof composer.closeComposer === 'function') {
+                    composer.closeComposer();
+                }
+            }
+        }
         
         this.overlay.classList.remove('controls-hidden');
         if (this.playerContainer) this.playerContainer.classList.remove('controls-hidden');

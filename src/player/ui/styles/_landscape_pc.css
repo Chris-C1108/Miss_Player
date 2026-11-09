@@ -300,9 +300,8 @@
         right: auto;
     }
 
-    /* PC 宽屏桌面端：完全保持全区域可交互，打字时左侧视频控制不被禁用 */
-    .tm-player-container.has-composer-active .tm-comments-panel-list,
-    .tm-player-container.has-composer-active .tm-control-panel {
+    /* PC 宽屏桌面端：完全保持评论列表可交互 */
+    .tm-player-container.has-composer-active .tm-comments-panel-list {
         pointer-events: auto;
     }
 
@@ -374,6 +373,12 @@
         transform: translate3d(0, 0, 0) scale(1);
         pointer-events: auto;
         transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tm-player-container.has-composer-active .tm-control-buttons {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
     }
 
     /* 调整播放器遮罩层样式 */
@@ -621,6 +626,12 @@
         transform: translate3d(0, 0, 0) scale(1);
         pointer-events: auto;
         transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tm-player-container.has-composer-active .tm-control-buttons {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
     }
 }
 
