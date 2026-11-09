@@ -3,7 +3,7 @@ import { SupabaseService } from '../../services/SupabaseService.js';
 import { SyncManager } from '../../sync/index.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
 import { __ } from '../../constants/i18n.js';
-import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT_WRITE } from '../../constants/icons.js';
+import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT_WRITE, ICON_PLUS } from '../../constants/icons.js';
 import { Toast, isMobile, createModal, copyToClipboard, getValue } from '../../utils/index.js';
 import { isSiteDomain, SITE_DOMAINS, checkSiteReachability } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
@@ -654,8 +654,13 @@ export class CommentPanel {
             }
         });
 
-        // 监听控制栏标签变动事件，实时刷新评论区已收藏实心金星 (★)
-        this._onTabsUpdatedBound = () => this.updateFavoriteBadges();
+        // 监听控制栏标签变动事件，实时刷新评论区已收藏实心金星 (★) 及发评栏高光计数徽标
+        this._onTabsUpdatedBound = () => {
+            this.updateFavoriteBadges();
+            if (this.composer && typeof this.composer.updateTagButtonBadge === 'function') {
+                this.composer.updateTagButtonBadge();
+            }
+        };
         window.addEventListener('mp_tabs_updated', this._onTabsUpdatedBound);
 
         // 移动端长按时间胶囊显示内部右侧五角星按钮 (延迟 10 秒自动收起)
@@ -1858,21 +1863,23 @@ export class CommentPanel {
             <div class="tm-comment-submit-bar-wrapper is-collapsed">
                 <div class="tm-comment-tag-select-modal">
                     <div class="tm-tag-select-header">
+                        <span class="tm-tag-select-title">附带高光片段</span>
                         <div class="tm-tag-select-btn-group">
                             <button type="button" class="tm-tag-select-all-btn">全选</button>
-                            <button type="button" class="tm-tag-deselect-all-btn">取消全选</button>
+                            <button type="button" class="tm-tag-deselect-all-btn">清空</button>
+                            <button type="button" class="tm-tag-select-close-btn" title="收起片段列表">${CLOSE_LINE}</button>
                         </div>
-                        <button type="button" class="tm-tag-select-close-btn" title="关闭">✕</button>
                     </div>
                     <div class="tm-tag-select-list"></div>
                 </div>
                 <div class="tm-comment-submit-bar">
-                    <button type="button" class="tm-comment-add-tag-btn" title="插入/勾选高光标签">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>
+                    <button type="button" class="tm-comment-add-tag-btn" title="附带高光片段">
+                        ${ICON_PLUS}
+                        <span class="tm-add-tag-badge is-hidden">0</span>
                     </button>
-                    <input type="text" class="tm-comment-text-input" placeholder="发表评论..." />
+                    <input type="text" class="tm-comment-text-input" placeholder="写下你的评论..." />
                     <button type="button" class="tm-comment-send-btn">${__('send')}</button>
-                    <button type="button" class="tm-comment-close-bar-btn" title="收起">✕</button>
+                    <button type="button" class="tm-comment-close-bar-btn" title="收起">${CLOSE_LINE}</button>
                 </div>
             </div>
             <button class="tm-comment-fab-btn" title="发表评论">${ICON_COMMENT_WRITE}</button>
@@ -2624,7 +2631,6 @@ export class CommentPanel {
         };
         const badgeText = badgeTextMap[site.status] || '';
         const isCollapsed = (site.status === 'unreachable' || site.status === 'not_found' || site.status === 'mobile_unsupported' || site.collapsed);
-        const bodyDisplay = isCollapsed ? 'none' : 'block';
         const loginSiteKey = siteKey === 'jable' ? 'JABLE' : (siteKey === 'javlib' ? 'JAVLIBRARY' : '');
         const loginBadgeHtml = loginSiteKey ? this.renderLoginBadgeHtml(loginSiteKey) : '';
         const titleMap = { jable: '■ Jable.tv', javlib: '■ JAVLibrary', javdb: '■ JavDB' };
@@ -2633,12 +2639,12 @@ export class CommentPanel {
             <div class="tm-comment-section${isCollapsed ? ' is-collapsed' : ''}" id="tm-comment-section-${siteKey}">
                 <div class="tm-comment-section-hdr" title="点击展开/折叠">
                     <span class="tm-comment-section-title">${titleMap[siteKey]}</span>
-                    <div class="tm-comment-hdr-right" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <div class="tm-comment-hdr-right">
                         ${loginBadgeHtml}
                         <span class="tm-comment-status-badge tm-status-badge-${site.status}">${badgeText}</span>
                     </div>
                 </div>
-                <div class="tm-comment-section-body" style="display: ${bodyDisplay}; pointer-events: auto;">
+                <div class="tm-comment-section-body">
                     ${contentHtml}
                 </div>
             </div>
@@ -2887,11 +2893,9 @@ export class CommentPanel {
             const jableHdr = this.commentsList.querySelector('#tm-comment-section-jable .tm-comment-section-hdr');
             if (jableHdr) {
                 jableHdr.addEventListener('click', () => {
-                    const body = this.commentsList.querySelector('#tm-comment-section-jable .tm-comment-section-body');
                     const section = this.commentsList.querySelector('#tm-comment-section-jable');
-                    if (body && section) {
+                    if (section) {
                         this.jableCollapsed = !this.jableCollapsed;
-                        body.style.display = this.jableCollapsed ? 'none' : 'block';
                         section.classList.toggle('is-collapsed', this.jableCollapsed);
                         localStorage.setItem('tm-comment-jable-collapsed', this.jableCollapsed);
 
@@ -2916,11 +2920,9 @@ export class CommentPanel {
             const javlibHdr = this.commentsList.querySelector('#tm-comment-section-javlib .tm-comment-section-hdr');
             if (javlibHdr) {
                 javlibHdr.addEventListener('click', () => {
-                    const body = this.commentsList.querySelector('#tm-comment-section-javlib .tm-comment-section-body');
                     const section = this.commentsList.querySelector('#tm-comment-section-javlib');
-                    if (body && section) {
+                    if (section) {
                         this.javlibCollapsed = !this.javlibCollapsed;
-                        body.style.display = this.javlibCollapsed ? 'none' : 'block';
                         section.classList.toggle('is-collapsed', this.javlibCollapsed);
                         localStorage.setItem('tm-comment-javlib-collapsed', this.javlibCollapsed);
 
@@ -2945,11 +2947,9 @@ export class CommentPanel {
             const javdbHdr = this.commentsList.querySelector('#tm-comment-section-javdb .tm-comment-section-hdr');
             if (javdbHdr) {
                 javdbHdr.addEventListener('click', () => {
-                    const body = this.commentsList.querySelector('#tm-comment-section-javdb .tm-comment-section-body');
                     const section = this.commentsList.querySelector('#tm-comment-section-javdb');
-                    if (body && section) {
+                    if (section) {
                         this.javdbCollapsed = !this.javdbCollapsed;
-                        body.style.display = this.javdbCollapsed ? 'none' : 'block';
                         section.classList.toggle('is-collapsed', this.javdbCollapsed);
                         localStorage.setItem('tm-comment-javdb-collapsed', this.javdbCollapsed);
 

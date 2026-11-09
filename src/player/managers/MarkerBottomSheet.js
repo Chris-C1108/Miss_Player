@@ -3,7 +3,7 @@ import { copyToClipboard, Toast, createModal } from '../../utils/index.js';
 import { formatTimeWithHours } from '../../utils/index.js';
 import { SyncManager } from '../../sync/index.js';
 import { __ } from '../../constants/i18n.js';
-import { LOOP_INTERVAL } from '../../constants/icons.js';
+import { LOOP_INTERVAL, CLOSE_LINE, ICON_TAG, ICON_TRASH, ICON_SHARE_LINK, ICON_UNDO } from '../../constants/icons.js';
 import { UIManager } from '../ui/UIManager.js';
 
 /**
@@ -19,6 +19,8 @@ export class MarkerBottomSheet {
         this._sheetPanel = null;
         this._sheetList = null;
         this._sheetCountBadge = null;
+        this._selectAllCheckbox = null;
+        this._shareBtn = null;
         this._undoBtn = null;
         this._undoTimer = null;
         this._deletedHistory = [];
@@ -188,31 +190,40 @@ export class MarkerBottomSheet {
             this._lastInputTouchTime = Date.now();
         }, { passive: true });
 
-        // 头部标题与关闭按钮
+        // 统一单行顶栏：全选 + 标题 + 数量徽标 | 撤销 + 分享 + 关闭
         const header = document.createElement('div');
         header.className = 'tm-sheet-header';
 
         const titleWrapper = document.createElement('div');
         titleWrapper.className = 'mp-sheet-title-wrap';
 
+        const selectAllCheckbox = document.createElement('input');
+        selectAllCheckbox.type = 'checkbox';
+        selectAllCheckbox.className = 'tm-sheet-select-all tm-tag-checkbox';
+        selectAllCheckbox.title = '全选 / 取消全选';
+        this._selectAllCheckbox = selectAllCheckbox;
+
+        selectAllCheckbox.addEventListener('change', (e) => {
+            e.stopPropagation();
+            const checked = e.target.checked;
+            this._selectedTabIds.clear();
+            if (checked) {
+                this.tabs.forEach(t => this._selectedTabIds.add(t.id));
+            }
+            this.updateBottomSheet();
+        });
+
         const title = document.createElement('div');
         title.className = 'tm-bottom-sheet-title';
-        title.textContent = __('sheetTitle') || '片段列表';
+        title.textContent = __('sheetTitle') || '高光片段';
 
         const countBadge = document.createElement('span');
         countBadge.className = 'tm-sheet-count-badge';
         this._sheetCountBadge = countBadge;
 
+        titleWrapper.appendChild(selectAllCheckbox);
         titleWrapper.appendChild(title);
         titleWrapper.appendChild(countBadge);
-
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'tm-sheet-close-btn';
-        closeBtn.innerHTML = '✕';
-        closeBtn.title = __('cancel') || '关闭';
-        closeBtn.addEventListener('click', () => this.close());
-
-        header.appendChild(titleWrapper);
 
         const headerActions = document.createElement('div');
         headerActions.className = 'mp-sheet-header-actions';
@@ -241,45 +252,21 @@ export class MarkerBottomSheet {
             }
         });
 
-        headerActions.appendChild(undoBtn);
-        headerActions.appendChild(closeBtn);
-        header.appendChild(headerActions);
-
-        // 滚动列表容器
-        this._sheetList = document.createElement('div');
-        this._sheetList.className = 'tm-bottom-sheet-list';
-
-        this._sheetPanel.appendChild(header);
-
-        // 批量操作工具栏 (全选/反选与分享)
-        const toolbar = document.createElement('div');
-        toolbar.className = 'tm-sheet-toolbar mp-sheet-toolbar';
-
-        const selectAllLabel = document.createElement('label');
-        selectAllLabel.className = 'mp-sheet-select-all';
-        const selectAllCheckbox = document.createElement('input');
-        selectAllCheckbox.type = 'checkbox';
-        selectAllCheckbox.className = 'tm-sheet-select-all';
-        selectAllLabel.appendChild(selectAllCheckbox);
-        const selectAllText = document.createElement('span');
-        selectAllText.textContent = '全选';
-        selectAllLabel.appendChild(selectAllText);
-
-        selectAllCheckbox.addEventListener('change', (e) => {
-            const checked = e.target.checked;
-            this._selectedTabIds.clear();
-            if (checked) {
-                this.tabs.forEach(t => this._selectedTabIds.add(t.id));
-            }
-            this.updateBottomSheet();
-        });
-
         const shareBtn = document.createElement('button');
         shareBtn.className = 'tm-sheet-share-btn mp-sheet-share-btn';
-        shareBtn.textContent = '🔗 ' + (__('shareSelected') || '分享片段');
+        shareBtn.title = __('shareSelected') || '分享高光片段';
+        this._shareBtn = shareBtn;
+        this._syncShareBtnLabel();
+
         shareBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const selected = this.tabs.filter(t => this._selectedTabIds.has(t.id));
+            if (this.tabs.length === 0) {
+                Toast('暂无可分享的高光片段', 1400, 'info');
+                return;
+            }
+            const selected = this._selectedTabIds.size > 0
+                ? this.tabs.filter(t => this._selectedTabIds.has(t.id))
+                : [...this.tabs];
             if (selected.length === 0) {
                 Toast(__('selectToShare') || '请先勾选需要分享的片段', 1500, 'info');
                 return;
@@ -287,10 +274,24 @@ export class MarkerBottomSheet {
             this._showShareModal(selected);
         });
 
-        toolbar.appendChild(selectAllLabel);
-        toolbar.appendChild(shareBtn);
-        this._sheetPanel.appendChild(toolbar);
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'tm-sheet-close-btn';
+        closeBtn.innerHTML = CLOSE_LINE;
+        closeBtn.title = __('cancel') || '关闭';
+        closeBtn.addEventListener('click', () => this.close());
 
+        headerActions.appendChild(undoBtn);
+        headerActions.appendChild(shareBtn);
+        headerActions.appendChild(closeBtn);
+
+        header.appendChild(titleWrapper);
+        header.appendChild(headerActions);
+
+        // 滚动列表容器
+        this._sheetList = document.createElement('div');
+        this._sheetList.className = 'tm-bottom-sheet-list';
+
+        this._sheetPanel.appendChild(header);
         this._sheetPanel.appendChild(this._sheetList);
 
         const rootHost = document.querySelector('miss-player-root');
@@ -305,31 +306,69 @@ export class MarkerBottomSheet {
         playerContainer.appendChild(this._sheetPanel);
     }
 
+    _syncShareBtnLabel() {
+        if (!this._shareBtn) return;
+        const selectedCount = this.tabs.filter(t => this._selectedTabIds.has(t.id)).length;
+        const label = selectedCount > 0 ? `分享 (${selectedCount})` : '分享';
+        this._shareBtn.innerHTML = `${ICON_SHARE_LINK}<span>${label}</span>`;
+        this._shareBtn.classList.toggle('is-disabled', this.tabs.length === 0);
+        if (this._selectAllCheckbox) {
+            const hasTabs = this.tabs.length > 0;
+            this._selectAllCheckbox.classList.toggle('is-hidden', !hasTabs);
+            this._selectAllCheckbox.checked = hasTabs && selectedCount === this.tabs.length;
+        }
+    }
+
     updateBottomSheet() {
         if (!this._sheetList) return;
         this._sheetList.innerHTML = '';
 
-        if (this._sheetCountBadge) {
-            this._sheetCountBadge.textContent = `共 ${this.tabs.length} 条`;
+        // 清理已不存在的选中 ID
+        const validIds = new Set(this.tabs.map(t => t.id));
+        for (const id of this._selectedTabIds) {
+            if (!validIds.has(id)) this._selectedTabIds.delete(id);
         }
+
+        if (this._sheetCountBadge) {
+            this._sheetCountBadge.textContent = `${this.tabs.length}`;
+        }
+        this._syncShareBtnLabel();
 
         if (this.tabs.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'tm-bottom-sheet-empty';
-            empty.textContent = '暂无标签';
+            empty.textContent = '暂无高光片段，点击进度条右上方 + 即可打点';
             this._sheetList.appendChild(empty);
             return;
         }
 
         this.tabs.forEach((tab, index) => {
-            const color = this.tabColors[index % this.tabColors.length];
+            const color = tab.color || this.tabColors[index % this.tabColors.length];
             const row = document.createElement('div');
             row.className = 'tm-sheet-item';
             if (this.activeTabId === tab.id) {
                 row.classList.add('active');
             }
 
-            // 1. 时间胶囊按钮容器
+            const mainRow = document.createElement('div');
+            mainRow.className = 'tm-sheet-item-main';
+
+            // 1. 圆形复选框
+            const rowCheckbox = document.createElement('input');
+            rowCheckbox.type = 'checkbox';
+            rowCheckbox.className = 'tm-sheet-row-checkbox mp-sheet-row-checkbox tm-tag-checkbox';
+            rowCheckbox.checked = this._selectedTabIds.has(tab.id);
+            rowCheckbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                if (e.target.checked) {
+                    this._selectedTabIds.add(tab.id);
+                } else {
+                    this._selectedTabIds.delete(tab.id);
+                }
+                this._syncShareBtnLabel();
+            });
+
+            // 2. 时间胶囊按钮容器
             const timeContainer = document.createElement('div');
             timeContainer.className = 'tm-sheet-item-time-container';
 
@@ -344,7 +383,6 @@ export class MarkerBottomSheet {
                 });
                 timeContainer.appendChild(pill);
             } else {
-                // AB 时间片段在一个宽胶囊内显示
                 const pill = document.createElement('div');
                 pill.className = 'tm-sheet-time-pill interval';
                 pill.style.setProperty('--tab-color', color);
@@ -377,7 +415,6 @@ export class MarkerBottomSheet {
                 pill.appendChild(sepSpan);
                 pill.appendChild(endSpan);
 
-                // 如果当前时间片段正在循环播放，叠加循环图标
                 if (this.loopManager.activeTabId === tab.id && this.loopManager.loopActive) {
                     pill.classList.add('looping');
                     const overlay = document.createElement('div');
@@ -393,24 +430,7 @@ export class MarkerBottomSheet {
                 timeContainer.appendChild(pill);
             }
 
-            // 复选框
-            const rowCheckbox = document.createElement('input');
-            rowCheckbox.type = 'checkbox';
-            rowCheckbox.className = 'tm-sheet-row-checkbox mp-sheet-row-checkbox';
-            rowCheckbox.checked = this._selectedTabIds.has(tab.id);
-            rowCheckbox.addEventListener('change', (e) => {
-                e.stopPropagation();
-                if (e.target.checked) {
-                    this._selectedTabIds.add(tab.id);
-                } else {
-                    this._selectedTabIds.delete(tab.id);
-                }
-            });
-
-            // 2. 备注文本框与保存按钮
-            const remarkWrapper = document.createElement('div');
-            remarkWrapper.className = 'mp-sheet-remark-wrap';
-
+            // 3. 备注输入框（实时自动保存 + 内嵌语义标签开关）
             const inputRow = document.createElement('div');
             inputRow.className = 'mp-sheet-input-row';
 
@@ -420,8 +440,13 @@ export class MarkerBottomSheet {
             input.placeholder = '添加备注...';
             input.value = tab.comment || '';
 
-            // 阻止按键冒泡，放行原生打字与手势链路
-            const stopKeyProp = (e) => e.stopPropagation();
+            const stopKeyProp = (e) => {
+                e.stopPropagation();
+                if (e.type === 'keydown' && e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                }
+            };
             input.addEventListener('keydown', stopKeyProp);
             input.addEventListener('keyup', stopKeyProp);
             input.addEventListener('keypress', stopKeyProp);
@@ -432,8 +457,22 @@ export class MarkerBottomSheet {
             input.addEventListener('mousedown', () => {
                 this._lastInputTouchTime = Date.now();
             });
+            input.addEventListener('focus', () => {
+                this._lastInputTouchTime = Date.now();
+                setTimeout(() => {
+                    if (this._sheetPanel?.classList.contains('visible')) {
+                        row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    }
+                }, 160);
+            });
 
-            // 直接修改备注
+            let saveFeedbackTimer = null;
+            const flashSaved = () => {
+                input.classList.add('is-saved');
+                if (saveFeedbackTimer) clearTimeout(saveFeedbackTimer);
+                saveFeedbackTimer = setTimeout(() => input.classList.remove('is-saved'), 650);
+            };
+
             input.addEventListener('input', (e) => {
                 tab.comment = e.target.value;
                 this.loopManager._saveTabs();
@@ -441,15 +480,28 @@ export class MarkerBottomSheet {
             });
 
             input.addEventListener('change', () => {
+                tab.comment = input.value.trim();
                 this.loopManager._saveTabs();
                 this.loopManager.renderTabs();
+                flashSaved();
             });
 
-            // 3. 删除按钮 (❌)
+            // 语义标签展开按钮（内嵌于输入框右侧）
+            const tagToggleBtn = document.createElement('button');
+            tagToggleBtn.type = 'button';
+            tagToggleBtn.className = 'mp-sheet-tag-toggle-btn';
+            tagToggleBtn.innerHTML = ICON_TAG;
+            tagToggleBtn.title = '快捷语义标签';
+
+            inputRow.appendChild(input);
+            inputRow.appendChild(tagToggleBtn);
+
+            // 4. 删除按钮 (精炼矢量图标)
             const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
             deleteBtn.className = 'tm-sheet-delete-btn';
-            deleteBtn.innerHTML = '❌';
-            deleteBtn.title = '删除标签';
+            deleteBtn.innerHTML = ICON_TRASH;
+            deleteBtn.title = '删除片段';
             deleteBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const removedIndex = this.loopManager.tabs.findIndex(t => t.id === tab.id);
@@ -470,61 +522,64 @@ export class MarkerBottomSheet {
                 this.updateBottomSheet();
             });
 
-            inputRow.appendChild(input);
-
-            // 保存按钮 (显式保存备注)
-            const saveBtn = document.createElement('button');
-            saveBtn.className = 'tm-sheet-save-btn mp-sheet-save-btn';
-            saveBtn.textContent = '保存';
-            saveBtn.title = '保存备注修改';
-            saveBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                tab.comment = input.value.trim();
-                this.loopManager._saveTabs();
-                this.loopManager.renderTabs();
-                Toast('备注已保存', 1000, 'success');
-            });
-            inputRow.appendChild(saveBtn);
-
-            // 语义标签展开按钮
-            const tagToggleBtn = document.createElement('button');
-            tagToggleBtn.className = 'mp-sheet-tag-toggle-btn';
-            tagToggleBtn.textContent = '🏷️';
-            tagToggleBtn.title = '选择多维语义标签';
-            inputRow.appendChild(tagToggleBtn);
-
-            remarkWrapper.appendChild(inputRow);
-
-            // 多维快捷标签选择抽屉 (点击 🏷️ 展开)
+            // 多维快捷标签选择抽屉 (位于 mainRow 下方，展开时自然撑开行高，绝不裁切)
             const tagDrawer = document.createElement('div');
             tagDrawer.className = 'tm-sheet-tag-drawer mp-sheet-tag-drawer';
+
+            const syncChipSelectedState = () => {
+                const currentTokens = new Set((input.value || '').split(/\s+/).filter(Boolean));
+                tagDrawer.querySelectorAll('.mp-sheet-tag-chip').forEach(chipEl => {
+                    chipEl.classList.toggle('is-selected', currentTokens.has(chipEl.dataset.tag));
+                });
+            };
+
             SEMANTIC_TAG_TAXONOMY.forEach(cat => {
                 cat.tags.forEach(t => {
-                    const chip = document.createElement('span');
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
                     chip.className = 'tm-tag-chip mp-sheet-tag-chip';
+                    chip.dataset.tag = t;
                     chip.textContent = t;
                     chip.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const cur = input.value.trim();
-                        input.value = cur ? (cur + ' ' + t) : t;
+                        const tokens = (input.value || '').split(/\s+/).filter(Boolean);
+                        const idx = tokens.indexOf(t);
+                        if (idx >= 0) {
+                            tokens.splice(idx, 1);
+                        } else {
+                            tokens.push(t);
+                        }
+                        input.value = tokens.join(' ');
                         tab.comment = input.value;
                         this.loopManager._saveTabs();
                         this.loopManager.renderTabs();
+                        syncChipSelectedState();
+                        flashSaved();
                     });
                     tagDrawer.appendChild(chip);
                 });
             });
+            syncChipSelectedState();
+            input.addEventListener('input', syncChipSelectedState);
 
             tagToggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                tagDrawer.classList.toggle('is-open');
+                const isOpen = tagDrawer.classList.toggle('is-open');
+                tagToggleBtn.classList.toggle('is-active', isOpen);
+                if (isOpen) {
+                    setTimeout(() => {
+                        row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    }, 180);
+                }
             });
-            remarkWrapper.appendChild(tagDrawer);
 
-            row.prepend(rowCheckbox);
-            row.appendChild(timeContainer);
-            row.appendChild(remarkWrapper);
-            row.appendChild(deleteBtn);
+            mainRow.appendChild(rowCheckbox);
+            mainRow.appendChild(timeContainer);
+            mainRow.appendChild(inputRow);
+            mainRow.appendChild(deleteBtn);
+
+            row.appendChild(mainRow);
+            row.appendChild(tagDrawer);
             this._sheetList.appendChild(row);
         });
     }
@@ -543,6 +598,8 @@ export class MarkerBottomSheet {
             this._sheetPanel = null;
             this._sheetList = null;
             this._sheetCountBadge = null;
+            this._selectAllCheckbox = null;
+            this._shareBtn = null;
             this._undoBtn = null;
         }
     }
@@ -564,7 +621,7 @@ export class MarkerBottomSheet {
                 if (this._undoTimer) clearInterval(this._undoTimer);
             } else {
                 this._undoBtn.classList.add('is-active');
-                this._undoBtn.textContent = `撤销 (${remaining}s)`;
+                this._undoBtn.innerHTML = `${ICON_UNDO}<span>撤销 ${remaining}s</span>`;
             }
         };
         updateText();

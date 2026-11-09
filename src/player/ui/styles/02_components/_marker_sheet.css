@@ -296,18 +296,17 @@
     pointer-events: none;
 }
 
-/* ===== Bottom Sheet / Tag Manager Popover Modal ===== */
+/* ===== Bottom Sheet / Highlight Clip Manager ===== */
 .tm-bottom-sheet-overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.52);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: calc(var(--z-drawer) - 1);
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--anim-smooth);
-
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -318,93 +317,201 @@
     pointer-events: auto;
 }
 
+/* 高光管理底栏打开时，隐藏底层控制面板与悬浮圆钮，保持层级纯净 */
+.tm-player-container.has-sheet-open .tm-control-panel,
+.tm-player-container.has-sheet-open .tm-comment-fab-btn,
+.tm-player-container.has-sheet-open .tm-show-controls-float-btn {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+}
+
 .tm-bottom-sheet-panel {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
-    max-height: calc(100vh - 120px);
-    background-color: rgba(18, 18, 20, 0.94);
-    box-shadow: 
-        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-        0 12px 32px rgba(0, 0, 0, 0.6);
-    border-radius: 16px;
+    max-width: 560px;
+    margin: 0 auto;
+    max-height: min(68dvh, calc(100dvh - 88px));
+    background-color: rgba(22, 22, 26, 0.94);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 -12px 36px rgba(0, 0, 0, 0.55);
+    border-radius: 20px 20px 0 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
     z-index: var(--z-drawer);
     opacity: 0;
     pointer-events: none;
-    transform: translateY(8px) scale(0.98);
-    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translate3d(0, 100%, 0);
+    transition: opacity 0.24s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), bottom 0.24s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     box-sizing: border-box;
-    padding: 10px 14px 12px;
+    padding: 8px 14px max(14px, env(safe-area-inset-bottom, 14px));
     touch-action: pan-y;
-    contain: paint layout;
 }
+
+.tm-bottom-sheet-panel::before {
+    content: "";
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.22);
+    margin: 0 auto 6px auto;
+    flex-shrink: 0;
+}
+
 .tm-bottom-sheet-panel.visible {
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0) scale(1);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    transform: translate3d(0, 0, 0);
 }
 
-/* 紧凑标题栏 */
+/* iOS 虚拟键盘弹起时：底边贴合键盘上沿，高度自适应可视视口 */
+.tm-ios-keyboard-open .tm-bottom-sheet-panel.visible {
+    bottom: var(--keyboard-height, 0px);
+    transform: translate3d(0, 0, 0);
+    max-height: calc(var(--visual-viewport-height, 100dvh) - 40px);
+    padding-bottom: 10px;
+}
+
+/* 统一单行顶栏（合并原顶栏与冗余二级工具栏） */
 .tm-sheet-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 2px 2px 6px 2px;
-    margin-bottom: 6px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    gap: 8px;
+    padding: 2px 2px 10px 2px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     flex-shrink: 0;
 }
 
+.mp-sheet-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
 .tm-bottom-sheet-title {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.88);
-    letter-spacing: 0.2px;
+    color: rgba(255, 255, 255, 0.92);
+    letter-spacing: -0.1px;
+    white-space: nowrap;
 }
 
 .tm-sheet-count-badge {
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.45);
-    background: rgba(255, 255, 255, 0.08);
-    padding: 1px 6px;
-    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 7px;
+    border-radius: 999px;
 }
 
-.tm-sheet-close-btn {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 0.95rem;
-    cursor: pointer;
-    padding: 0 4px;
-    border-radius: 4px;
+.mp-sheet-header-actions {
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
+    gap: 6px;
+    flex-shrink: 0;
 }
-.tm-sheet-close-btn:hover {
+
+.mp-sheet-undo-btn,
+.tm-sheet-undo-btn {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    height: 28px;
+    background: rgba(255, 159, 10, 0.16);
+    border: 1px solid rgba(255, 159, 10, 0.4);
+    color: #ff9f0a;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    padding: 0 10px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background-color 0.18s ease, transform 0.15s ease;
+}
+
+.mp-sheet-undo-btn:hover,
+.tm-sheet-undo-btn:hover {
+    background: rgba(255, 159, 10, 0.26);
+}
+
+.mp-sheet-undo-btn.is-active,
+.tm-sheet-undo-btn.is-active {
+    display: inline-flex;
+}
+
+.mp-sheet-share-btn,
+.tm-sheet-share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 28px;
+    background: rgba(10, 132, 255, 0.18);
+    border: 1px solid rgba(10, 132, 255, 0.42);
+    color: #409cff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 11px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease, transform 0.15s ease;
+}
+
+.mp-sheet-share-btn:hover,
+.tm-sheet-share-btn:hover {
+    background: rgba(10, 132, 255, 0.28);
     color: #ffffff;
 }
 
-/* 列表区域 - 无边框独立卡片 */
+.tm-sheet-share-btn.is-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.tm-sheet-close-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: rgba(255, 255, 255, 0.65);
+    cursor: pointer;
+    padding: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+.tm-sheet-close-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+/* 列表区域 */
 .tm-bottom-sheet-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+    overscroll-behavior-x: none;
     touch-action: pan-y;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 0;
     padding-right: 2px;
 }
 .tm-bottom-sheet-list::-webkit-scrollbar {
@@ -415,38 +522,61 @@
     border-radius: 2px;
 }
 
-/* 行样式：视觉高度统一为 32px */
+/* 列表行：纵向弹性容器（主行 + 可展开语义标签抽屉），彻底修复固定 32px 裁切问题 */
 .tm-sheet-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 5px 0;
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    height: auto;
+    min-height: 40px;
+    box-sizing: border-box;
+    touch-action: pan-y;
+}
+
+.tm-sheet-item:last-child {
+    border-bottom: none;
+}
+
+.tm-sheet-item-main {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 2px 0;
-    background: transparent;
-    border: none;
-    height: 32px;
+    min-height: 32px;
+    width: 100%;
     box-sizing: border-box;
-    touch-action: pan-y;
+}
+
+.mp-sheet-row-checkbox,
+.tm-sheet-row-checkbox,
+.tm-sheet-select-all {
+    margin: 0;
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
 .tm-sheet-item-time-container {
     display: flex;
     align-items: center;
     flex-shrink: 0;
-    height: 32px;
+    height: 30px;
 }
 
-/* 时间胶囊（统一高度 32px） */
+/* 时间胶囊 */
 .tm-sheet-time-pill {
-    height: 32px;
+    height: 30px;
     box-sizing: border-box;
-    padding: 0 12px;
-    border-radius: 16px;
-    background: hsla(var(--tab-color, 200 100% 55%), 0.15);
-    border: 1px solid hsla(var(--tab-color, 200 100% 55%), 0.4);
+    padding: 0 10px;
+    border-radius: 15px;
+    background: hsla(var(--tab-color, 200 100% 55%), 0.16);
+    border: 1px solid hsla(var(--tab-color, 200 100% 55%), 0.42);
     color: #ffffff;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-family: inherit;
-    font-weight: 500;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     cursor: pointer;
     white-space: nowrap;
     display: inline-flex;
@@ -455,7 +585,6 @@
     transition: transform 0.15s ease, background-color 0.2s;
 }
 .tm-sheet-time-pill:hover {
-    transform: scale(1.02);
     background: hsla(var(--tab-color, 200 100% 55%), 0.28);
 }
 
@@ -463,221 +592,128 @@
 .tm-sheet-time-pill.interval {
     position: relative;
     overflow: hidden;
-    padding: 0 10px;
-    gap: 4px;
+    padding: 0 8px;
+    gap: 3px;
 }
 .tm-sheet-time-pill.interval .tm-time-part {
     cursor: pointer;
-    padding: 2px 4px;
+    padding: 2px 3px;
     border-radius: 4px;
     transition: background-color 0.15s, color 0.15s;
 }
 .tm-sheet-time-pill.interval .tm-time-part:hover {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.22);
     color: #ffffff;
 }
 .tm-sheet-time-pill.interval .tm-time-sep {
-    opacity: 0.6;
+    opacity: 0.55;
     font-weight: 400;
     user-select: none;
     padding: 0 1px;
 }
 
-/* 备注文本框（统一高度 32px） */
-.tm-sheet-item-comment-input {
+/* 备注输入区（内嵌右侧标签按钮，消除冗余外层嵌套框与多余保存键） */
+.mp-sheet-input-row {
+    position: relative;
     flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+}
+
+.tm-sheet-item-comment-input {
+    width: 100%;
     min-width: 0;
     height: 32px;
     box-sizing: border-box;
     background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 8px;
-    padding: 0 10px;
+    padding: 0 30px 0 10px;
     color: #ffffff;
     font-size: 16px;
     outline: none;
-    display: inline-flex;
-    align-items: center;
-    transition: border-color 0.2s, background 0.2s;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+    caret-color: #0a84ff;
 }
 .tm-sheet-item-comment-input:focus {
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(10, 132, 255, 0.65);
     background: rgba(255, 255, 255, 0.1);
 }
+.tm-sheet-item-comment-input.is-saved {
+    border-color: rgba(48, 209, 88, 0.7);
+    background: rgba(48, 209, 88, 0.08);
+}
 .tm-sheet-item-comment-input::placeholder {
-    color: rgba(255, 255, 255, 0.3);
-}
-
-/* 删除按钮（统一高度 32px） */
-.tm-sheet-delete-btn {
-    width: 32px;
-    height: 32px;
-    box-sizing: border-box;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 60, 60, 0.25);
-    background: rgba(255, 60, 60, 0.12);
-    color: #ff5252;
-    font-size: 0.85rem;
-    font-weight: bold;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: background 0.2s, transform 0.15s;
-}
-.tm-sheet-delete-btn:hover {
-    background: rgba(255, 60, 60, 0.28);
-    transform: scale(1.05);
-}
-
-.tm-bottom-sheet-empty {
-    padding: 16px;
-    text-align: center;
-    font-size: 0.82rem;
-    color: rgba(255, 255, 255, 0.35);
-}
-
-/* ===== Sheet Header Actions & Title ===== */
-.mp-sheet-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.mp-sheet-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.mp-sheet-undo-btn,
-.tm-sheet-undo-btn {
-    display: none;
-    align-items: center;
-    background: rgba(255, 149, 0, 0.2);
-    border: 1px solid rgba(255, 149, 0, 0.5);
-    color: #ff9500;
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.mp-sheet-undo-btn:hover,
-.tm-sheet-undo-btn:hover {
-    background: rgba(255, 149, 0, 0.3);
-}
-
-.mp-sheet-undo-btn.is-active,
-.tm-sheet-undo-btn.is-active {
-    display: inline-flex;
-}
-
-/* ===== Sheet Toolbar ===== */
-.mp-sheet-toolbar,
-.tm-sheet-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.04);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-    flex-shrink: 0;
-}
-
-.mp-sheet-select-all {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-.mp-sheet-share-btn,
-.tm-sheet-share-btn {
-    background: rgba(0, 122, 255, 0.2);
-    border: 1px solid rgba(0, 122, 255, 0.5);
-    color: #007aff;
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.mp-sheet-share-btn:hover,
-.tm-sheet-share-btn:hover {
-    background: rgba(0, 122, 255, 0.32);
-}
-
-/* ===== Sheet Item Elements ===== */
-.mp-sheet-row-checkbox,
-.tm-sheet-row-checkbox {
-    margin-right: 4px;
-    cursor: pointer;
-}
-
-.mp-sheet-remark-wrap {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-}
-
-.mp-sheet-input-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    width: 100%;
-}
-
-.mp-sheet-save-btn,
-.tm-sheet-save-btn {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: #ffffff;
-    font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-
-.mp-sheet-save-btn:hover,
-.tm-sheet-save-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.32);
 }
 
 .mp-sheet-tag-toggle-btn {
+    position: absolute;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
     background: transparent;
     border: none;
+    color: rgba(255, 255, 255, 0.42);
     cursor: pointer;
-    font-size: 13px;
-    padding: 0 2px;
+    padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    line-height: 1;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+.mp-sheet-tag-toggle-btn:hover,
+.mp-sheet-tag-toggle-btn.is-active {
+    color: #0a84ff;
+    background: rgba(10, 132, 255, 0.16);
 }
 
+/* 删除按钮（轻量幽灵图标按钮，告别刺眼红框 Emoji） */
+.tm-sheet-delete-btn {
+    width: 28px;
+    height: 28px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.38);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    transition: background-color 0.18s ease, color 0.18s ease, transform 0.15s ease;
+}
+.tm-sheet-delete-btn:hover,
+.tm-sheet-delete-btn:active {
+    background: rgba(255, 69, 58, 0.15);
+    color: #ff453a;
+}
+
+.tm-bottom-sheet-empty {
+    padding: 28px 16px;
+    text-align: center;
+    font-size: 0.84rem;
+    color: rgba(255, 255, 255, 0.38);
+}
+
+/* 多维语义标签抽屉 */
 .mp-sheet-tag-drawer,
 .tm-sheet-tag-drawer {
     display: none;
     flex-wrap: wrap;
-    gap: 4px;
-    padding: 4px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 6px;
-    margin-top: 2px;
+    gap: 6px;
+    padding: 8px 10px;
+    margin: 6px 0 2px 26px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
 }
 
 .mp-sheet-tag-drawer.is-open,
@@ -687,28 +723,39 @@
 
 .mp-sheet-tag-chip,
 .tm-tag-chip {
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #dddddd;
+    appearance: none;
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid transparent;
+    color: rgba(255, 255, 255, 0.78);
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
-    transition: background-color 0.15s, color 0.15s;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .mp-sheet-tag-chip:hover,
 .tm-tag-chip:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.mp-sheet-tag-chip.is-selected,
+.tm-tag-chip.is-selected {
+    background: rgba(10, 132, 255, 0.22);
+    border-color: rgba(10, 132, 255, 0.55);
     color: #ffffff;
 }
 
 /* ===== Share Modal ===== */
 .mp-sheet-share-desc {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 12px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 14px;
+    line-height: 1.45;
 }
 
 .mp-sheet-share-actions {
@@ -719,41 +766,44 @@
 }
 
 .mp-sheet-share-btn-copy-url {
-    background: #007aff;
+    background: #0a84ff;
     color: #ffffff;
-    padding: 8px;
-    border-radius: 6px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     transition: background-color 0.2s;
 }
 
 .mp-sheet-share-btn-copy-url:hover {
-    background: #0062cc;
+    background: #0070e0;
 }
 
 .mp-sheet-share-btn-copy-md {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.1);
     color: #ffffff;
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     transition: background-color 0.2s;
 }
 
 .mp-sheet-share-btn-copy-md:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .mp-sheet-share-btn-close {
     background: transparent;
-    color: rgba(255, 255, 255, 0.6);
-    padding: 6px;
+    color: rgba(255, 255, 255, 0.55);
+    height: 34px;
+    padding: 0 12px;
     border: none;
     cursor: pointer;
     font-size: 13px;

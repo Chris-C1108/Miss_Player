@@ -145,27 +145,30 @@
     border-radius: 2px;
 }
 
-/* 评论区底部悬浮发表组件 [加号，文本框，发送按钮，收起] */
+/* 评论区底部一体化发表抽屉 (上层可选挂载高光片段抽屉 + 下层输入栏，无框套框) */
 .tm-comment-submit-bar-wrapper {
     position: absolute;
     bottom: var(--keyboard-height, 0px);
     left: 0;
     right: 0;
     width: 100%;
-    padding: 10px 16px max(12px, env(safe-area-inset-bottom, 12px)) 16px;
+    padding: 0;
     box-sizing: border-box;
-    background: rgba(14, 16, 22, 0.96);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    background: rgba(22, 22, 26, 0.95);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
     border-top: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.55);
     z-index: var(--z-composer);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     pointer-events: auto !important;
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, bottom 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-ios-keyboard-open .tm-comment-submit-bar-wrapper {
     bottom: var(--keyboard-height, 0px);
-    padding-bottom: 8px;
 }
 .tm-comment-submit-bar-wrapper.is-collapsed {
     transform: translateY(100%);
@@ -183,7 +186,7 @@
     padding-bottom: calc(var(--keyboard-height, 0px) + 70px);
 }
 
-/* 评论区半透明遮罩 (按用户要求彻底移除模糊层，确保输入时可清晰查看视频画面与评论区) */
+/* 评论区半透明遮罩 (彻底移除模糊层，确保输入时可清晰查看视频画面与评论区) */
 .tm-comment-backdrop {
     display: none;
     pointer-events: none;
@@ -214,7 +217,6 @@
     outline: none;
     box-sizing: border-box;
     pointer-events: auto;
-    z-index: 9996;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
                 background-color 0.15s,
                 box-shadow 0.2s,
@@ -259,7 +261,7 @@
 
 .tm-show-controls-float-btn {
     bottom: max(68px, calc(68px + env(safe-area-inset-bottom, 0px)));
-    z-index: 9997;
+    z-index: var(--z-controls);
     display: none;
 }
 
@@ -291,60 +293,79 @@
     right: auto;
 }
 
-/* 发评抽屉激活时隐藏发评按钮 */
+/* 发评抽屉激活或高光抽屉打开时，自动隐藏悬浮圆钮，保持层级纯净 */
 .tm-comment-fab-btn.is-hidden,
-.tm-comments-panel.has-composer-open .tm-comment-fab-btn {
-    transform: scale(0);
+.tm-comments-panel.has-composer-open .tm-comment-fab-btn,
+.tm-player-container.has-composer-active .tm-comment-fab-btn,
+.tm-player-container.has-composer-active .tm-show-controls-float-btn,
+.tm-player-container.has-sheet-open .tm-comment-fab-btn,
+.tm-player-container.has-sheet-open .tm-show-controls-float-btn {
+    transform: scale(0.85);
     opacity: 0;
     pointer-events: none !important;
 }
 
+/* 手机竖屏下：当主控面板展开时隐藏评论 FAB，仅在专注阅读评论（controls-hidden）时优雅浮现 */
+@media screen and (max-width: 767px) and (orientation: portrait) {
+    .tm-player-container:not(.controls-hidden) .tm-comment-fab-btn {
+        transform: scale(0.85);
+        opacity: 0;
+        pointer-events: none !important;
+    }
+}
+
 .tm-comment-close-bar-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: none;
     background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.65);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 13px;
     flex-shrink: 0;
-    transition: all 0.15s;
+    transition: background-color 0.15s, color 0.15s, transform 0.15s;
     padding: 0;
     outline: none;
-    margin-left: 2px;
+}
+.tm-comment-close-bar-btn svg {
+    width: 15px;
+    height: 15px;
 }
 .tm-comment-close-bar-btn:hover {
     color: #ffffff;
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.16);
 }
 .tm-comment-close-bar-btn:active {
     transform: scale(0.94);
 }
 
 .tm-floating-comment-panel {
-    z-index: 9999;
+    z-index: var(--z-modal);
     pointer-events: auto !important;
 }
 
-/* 模态框通用按键与表单控件样式 */
+/* 模态框通用按键与表单控件样式 (Apple HIG 统一规范) */
 .tm-custom-modal-cancel-btn {
-    background-color: hsla(var(--shadcn-muted)/0.2);
-    color: hsl(var(--shadcn-foreground));
-    border: none;
-    border-radius: 18px;
-    padding: 7px 20px;
-    font-size: 12px;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 0 18px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     outline: none;
-    transition: background-color 0.2s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-custom-modal-cancel-btn:hover {
-    background-color: hsla(var(--shadcn-muted)/0.3);
+    background: rgba(255, 255, 255, 0.16);
 }
 .tm-custom-modal-cancel-btn:active {
     transform: scale(0.96);
@@ -352,21 +373,25 @@
 
 .tm-custom-modal-submit-btn,
 .tm-custom-modal-login-btn {
-    background-color: hsl(var(--shadcn-blue));
+    height: 38px;
+    background: #0a84ff;
     color: #ffffff;
     border: none;
-    border-radius: 18px;
-    padding: 7px 20px;
-    font-size: 12px;
+    border-radius: 10px;
+    padding: 0 20px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     outline: none;
-    box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3);
-    transition: background-color 0.2s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+    transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-custom-modal-submit-btn:hover,
 .tm-custom-modal-login-btn:hover {
-    background-color: hsl(var(--shadcn-blue)/0.9);
+    background: #0070e0;
 }
 .tm-custom-modal-submit-btn:active,
 .tm-custom-modal-login-btn:active {
@@ -377,17 +402,21 @@
     width: 100%;
     height: 90px;
     margin: 12px 0;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid hsla(var(--shadcn-border) / 0.3);
-    background-color: hsla(var(--shadcn-muted) / 0.1);
-    color: hsl(var(--shadcn-foreground));
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
     font-size: 16px;
     resize: none;
     box-sizing: border-box;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.15s, background-color 0.15s;
     pointer-events: auto;
+}
+.tm-comment-input-textarea:focus {
+    border-color: #0a84ff;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .tm-comment-submit-bar {
@@ -396,18 +425,22 @@
     gap: 8px;
     background: transparent;
     border: none;
-    padding: 0;
+    padding: 10px 14px max(12px, env(safe-area-inset-bottom, 12px)) 14px;
     box-sizing: border-box;
     width: 100%;
     max-width: 650px;
     margin: 0 auto;
 }
+.tm-ios-keyboard-open .tm-comment-submit-bar {
+    padding-bottom: 10px;
+}
 
 .tm-comment-add-tag-btn {
-    width: 34px;
-    height: 34px;
+    position: relative;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     background: rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.85);
     display: flex;
@@ -415,156 +448,180 @@
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background-color 0.2s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s;
+    transition: background-color 0.15s, border-color 0.15s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s;
     outline: none;
     padding: 0;
     margin: 0;
     box-sizing: border-box;
 }
 .tm-comment-add-tag-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.16);
     color: #ffffff;
-    transform: scale(1.05);
+}
+.tm-comment-add-tag-btn.is-open,
+.tm-comment-add-tag-btn.has-selected {
+    background: rgba(10, 132, 255, 0.18);
+    border-color: rgba(10, 132, 255, 0.48);
+    color: #0a84ff;
 }
 .tm-comment-add-tag-btn:active {
-    transform: scale(0.96);
+    transform: scale(0.94);
 }
 .tm-comment-add-tag-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     display: block;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tm-comment-add-tag-btn.is-open svg {
+    transform: rotate(45deg);
+}
+
+/* 附带高光片段数量角标 */
+.tm-add-tag-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #0a84ff;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+    pointer-events: none;
 }
 
 .tm-comment-text-input {
     flex: 1;
     min-width: 0;
-    height: 34px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 17px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
     padding: 0 14px;
     color: #ffffff;
     font-size: 16px;
     outline: none;
     box-sizing: border-box;
-    transition: border-color 0.2s, background 0.2s;
+    transition: border-color 0.15s, background-color 0.15s;
     -webkit-user-select: text;
     user-select: text;
     -webkit-touch-callout: default;
-    caret-color: #ffffff;
+    caret-color: #0a84ff;
     cursor: text;
 }
 .tm-comment-text-input:focus {
-    border-color: rgba(255, 255, 255, 0.25);
-    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(10, 132, 255, 0.55);
+    background: rgba(255, 255, 255, 0.12);
 }
 .tm-comment-text-input::placeholder {
-    color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.38);
 }
 
 .tm-comment-send-btn {
-    height: 34px;
-    padding: 0 18px;
-    border-radius: 17px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.12);
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 18px;
+    border: none;
+    background: #0a84ff;
     color: #ffffff;
-    font-size: 0.85rem;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background-color 0.2s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.15s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     outline: none;
 }
 .tm-comment-send-btn:hover {
-    background: rgba(255, 255, 255, 0.22);
-    transform: scale(1.03);
+    background: #0070e0;
 }
 .tm-comment-send-btn:active {
-    transform: scale(0.96);
+    transform: scale(0.95);
 }
 
-/* 标签勾选弹出模态框 (嵌套于评论输入栏内部上方，随输入栏整体平滑升降) */
+/* 附带高光片段内嵌抽屉 (无缝融于发表栏上半部，消除双层浮窗嵌套与键盘裁切) */
 .tm-comment-tag-select-modal {
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 12px;
-    right: 12px;
-    width: calc(100% - 24px);
+    position: relative;
+    width: 100%;
     max-width: 650px;
     margin: 0 auto;
-    max-height: 240px;
-    background: rgba(18, 18, 20, 0.96);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
-    padding: 10px 14px;
+    padding: 10px 14px 4px 14px;
     box-sizing: border-box;
-    display: flex;
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: none;
     flex-direction: column;
-    z-index: var(--z-composer);
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(12px);
-    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-comment-tag-select-modal.visible {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
+    display: flex;
+    max-height: min(200px, calc(var(--visual-viewport-height, 100dvh) - 106px));
 }
 
 .tm-tag-select-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 8px;
-    margin-bottom: 6px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     flex-shrink: 0;
+}
+
+.tm-tag-select-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: -0.1px;
 }
 
 .tm-tag-select-btn-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .tm-tag-select-all-btn {
-    padding: 3px 12px;
-    border-radius: 12px;
-    background: rgba(255, 80, 80, 0.18);
-    border: 1px solid rgba(255, 80, 80, 0.45);
-    color: #ff6b6b;
-    font-size: 0.78rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(10, 132, 255, 0.14);
+    border: none;
+    color: #0a84ff;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     outline: none;
-    transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.15s, transform 0.12s;
 }
 .tm-tag-select-all-btn:hover {
-    background: rgba(255, 80, 80, 0.3);
+    background: rgba(10, 132, 255, 0.24);
 }
 .tm-tag-select-all-btn:active {
     transform: scale(0.96);
 }
 
 .tm-tag-deselect-all-btn {
-    padding: 3px 12px;
-    border-radius: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.78rem;
-    font-weight: 600;
+    border: none;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
     outline: none;
-    transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.15s, transform 0.12s;
 }
 .tm-tag-deselect-all-btn:hover {
     background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
 }
 .tm-tag-deselect-all-btn:active {
     transform: scale(0.96);
@@ -575,29 +632,33 @@
     height: 24px;
     border-radius: 50%;
     border: none;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 11px;
-    transition: all 0.15s;
+    transition: background-color 0.15s, color 0.15s;
     outline: none;
     padding: 0;
 }
+.tm-tag-select-close-btn svg {
+    width: 12px;
+    height: 12px;
+}
 .tm-tag-select-close-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.18);
     color: #ffffff;
 }
 
 .tm-tag-select-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    max-height: 180px;
     padding-right: 2px;
     scrollbar-width: thin;
     -webkit-overflow-scrolling: touch;
@@ -609,66 +670,61 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 4px 6px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.04);
-    transition: background-color 0.15s;
+    padding: 6px 2px;
+    border-radius: 0;
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
-.tm-tag-select-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.tm-tag-checkbox {
-    width: 16px;
-    height: 16px;
-    accent-color: #ff5050;
-    cursor: pointer;
-    flex-shrink: 0;
-    margin: 0;
+.tm-tag-select-item:last-child {
+    border-bottom: none;
 }
 
 .tm-tag-remark-input {
     flex: 1;
     min-width: 0;
-    height: 28px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 6px;
-    padding: 0 8px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 7px;
+    padding: 0 10px;
     color: #ffffff;
-    font-size: 12px;
+    font-size: 16px;
     outline: none;
-    transition: border-color 0.15s, background 0.15s;
+    box-sizing: border-box;
+    transition: border-color 0.15s, background-color 0.15s;
     user-select: text;
     -webkit-user-select: text;
+    caret-color: #0a84ff;
 }
 .tm-tag-remark-input:focus {
-    border-color: rgba(255, 255, 255, 0.35);
-    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(10, 132, 255, 0.55);
+    background: rgba(255, 255, 255, 0.11);
 }
 .tm-tag-select-empty {
-    padding: 6px 12px;
+    padding: 12px;
     text-align: center;
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.42);
 }
 
-/* 自定义气泡/拟态模态框 */
+/* 自定义拟态模态框 (登录 / 确认 / 提示统一 Apple 暗色毛玻璃材质) */
 .tm-custom-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: var(--keyboard-height, 0px);
-    background-color: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(0, 0, 0, 0.52);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 16px;
+    box-sizing: border-box;
     z-index: var(--z-modal) !important;
     opacity: 0;
-    transition: opacity 0.25s ease, bottom 0.2s ease-out;
+    transition: opacity 0.22s ease, bottom 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: auto;
 }
 
@@ -677,17 +733,22 @@
 }
 
 .tm-custom-modal-content {
-    background-color: hsl(var(--shadcn-card));
-    border: 1px solid hsla(var(--shadcn-border) / 0.15);
-    border-radius: 16px;
-    padding: 24px;
-    width: 85%;
-    max-width: 280px;
+    background: rgba(26, 26, 30, 0.96);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 18px;
+    padding: 20px 22px;
+    width: min(90vw, 330px);
+    max-width: 330px;
+    max-height: calc(var(--visual-viewport-height, 100dvh) - 32px);
+    overflow-y: auto;
+    box-sizing: border-box;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    transform: scale(0.9);
-    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-    color: hsl(var(--shadcn-foreground));
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.6);
+    transform: scale(0.94);
+    transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #ffffff;
 }
 
 .tm-custom-modal-overlay.active .tm-custom-modal-content {
@@ -695,35 +756,39 @@
 }
 
 .tm-custom-modal-title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     margin-bottom: 6px;
+    letter-spacing: -0.2px;
 }
 
 .tm-custom-modal-message {
     font-size: 13px;
-    color: hsl(var(--shadcn-muted-foreground));
+    color: rgba(255, 255, 255, 0.68);
     margin-bottom: 18px;
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 .tm-custom-modal-close-btn {
-    background-color: hsl(var(--shadcn-blue));
+    height: 38px;
+    background: #0a84ff;
     color: #ffffff;
     border: none;
-    border-radius: 18px;
-    padding: 7px 28px;
-    font-size: 12px;
+    border-radius: 10px;
+    padding: 0 24px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     outline: none;
-    box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3);
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
 }
 
 .tm-custom-modal-close-btn:hover {
-    background-color: hsl(var(--shadcn-blue) / 0.9);
-    transform: translateY(-1px);
+    background: #0070e0;
 }
 
 .tm-custom-modal-close-btn:active {
@@ -1505,6 +1570,10 @@
     flex: 1; /* 展开状态下伸展占据剩余高度 */
 }
 
+.tm-comment-section.is-collapsed .tm-comment-section-body {
+    display: none;
+}
+
 .tm-comment-section-body {
     flex: 1;
     min-height: 0;
@@ -1580,6 +1649,12 @@
     box-sizing: border-box;
     cursor: pointer;
     user-select: none;
+}
+
+.tm-comment-hdr-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .tm-comment-section-title {
@@ -1749,70 +1824,15 @@
     }
 }
 
-/* 模态框通用按键与表单控件样式 */
-.tm-custom-modal-cancel-btn {
-    background-color: hsla(var(--shadcn-muted)/0.2);
-    color: hsl(var(--shadcn-foreground));
-    border: none;
-    border-radius: 18px;
-    padding: 7px 20px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    outline: none;
-    transition: background-color 0.2s;
-}
-.tm-custom-modal-cancel-btn:hover {
-    background-color: hsla(var(--shadcn-muted)/0.3);
-}
-
-.tm-custom-modal-submit-btn,
-.tm-custom-modal-login-btn {
-    background-color: hsl(var(--shadcn-blue));
-    color: #ffffff;
-    border: none;
-    border-radius: 18px;
-    padding: 7px 20px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    outline: none;
-    box-shadow: 0 4px 10px hsla(var(--shadcn-blue) / 0.3);
-    transition: background-color 0.2s;
-}
-.tm-custom-modal-submit-btn:hover,
-.tm-custom-modal-login-btn:hover {
-    background-color: hsl(var(--shadcn-blue)/0.9);
-}
-
-.tm-comment-input-textarea {
-    width: 100%;
-    height: 90px;
-    margin: 12px 0;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid hsla(var(--shadcn-border) / 0.3);
-    background-color: hsla(var(--shadcn-muted) / 0.1);
-    color: hsl(var(--shadcn-foreground));
-    font-size: 13px;
-    resize: none;
-    box-sizing: border-box;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-
-
-
 /* 评论区上报按钮与弹窗样式 */
 .jc-action-btn.jc-report-btn {
     pointer-events: auto !important;
     position: relative;
-    z-index: 10;
+    z-index: var(--z-base);
 }
 .tm-comments-panel.is-dimmed .jc-action-btn.jc-report-btn {
     pointer-events: auto !important;
-    z-index: 9994 !important;
+    z-index: calc(var(--z-base) + 2);
 }
 .tm-custom-modal-overlay.tm-report-modal-overlay {
     z-index: var(--z-modal) !important;
@@ -2218,22 +2238,18 @@
 }
 
 /* 评论上报弹窗组件 */
-.tm-report-modal-dialog {
-    padding: 4px;
-}
-
 .tm-report-modal-hint {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 8px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 10px;
 }
 
 .tm-report-modal-preview {
     font-size: 12px;
     background: rgba(255, 255, 255, 0.06);
-    padding: 8px;
-    border-radius: 6px;
-    margin-bottom: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
     max-height: 80px;
     overflow-y: auto;
 }
@@ -2242,58 +2258,41 @@
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .tm-report-chip {
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #ccc;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.15s, color 0.15s;
 }
 
 .tm-report-chip.active {
-    background: #007aff;
+    background: #0a84ff;
     color: #fff;
 }
 
 .tm-report-note {
     width: 100%;
     box-sizing: border-box;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    padding: 6px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    padding: 8px 10px;
     color: #fff;
-    font-size: 12px;
-    height: 60px;
-    margin-bottom: 10px;
+    font-size: 16px;
+    height: 68px;
+    margin-bottom: 14px;
     outline: none;
+    resize: none;
 }
 
 .tm-report-modal-buttons {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     justify-content: flex-end;
-}
-
-.tm-custom-modal-cancel-btn {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ccc;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.tm-custom-modal-submit-btn {
-    background: #007aff;
-    color: #fff;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 6px;
-    cursor: pointer;
 }

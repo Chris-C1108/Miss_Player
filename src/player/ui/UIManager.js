@@ -971,15 +971,29 @@ export class UIManager {
                 const vv = window.visualViewport;
                 const playerContainer = this.playerContainer || document.querySelector('.tm-player-container');
                 const containerHeight = playerContainer ? playerContainer.getBoundingClientRect().height : (window.innerHeight || 0);
-                // 键盘真实占用的高度：物理容器底部到 visualViewport 底部的绝对相对差值
-                const keyboardHeight = Math.max(0, Math.round(containerHeight - vv.height));
+                const vvHeight = Math.round(vv.height || containerHeight);
+                const vvOffsetTop = Math.max(0, Math.round(vv.offsetTop || 0));
+                // 键盘真实占用的高度：物理容器底部到 visualViewport 可见底部的绝对差值
+                const keyboardHeight = Math.max(0, Math.round(containerHeight - vvHeight - vvOffsetTop));
                 const commentSubmitBar = this.shadowRoot?.querySelector('.tm-comment-submit-bar-wrapper') || document.querySelector('.tm-comment-submit-bar-wrapper');
                 const hasSubmitBar = !!commentSubmitBar;
                 const isCollapsed = commentSubmitBar ? commentSubmitBar.classList.contains('is-collapsed') : null;
-                ViewportDebugHUD.recordEvent('UI_VV_UPDATE', `kbH=${keyboardHeight}, bar=${hasSubmitBar ? (isCollapsed ? 'col' : 'open') : 'none'}, bot=${commentSubmitBar?.style?.bottom || '0'}`);
+                ViewportDebugHUD.recordEvent('UI_VV_UPDATE', `kbH=${keyboardHeight}, vvH=${vvHeight}, bar=${hasSubmitBar ? (isCollapsed ? 'col' : 'open') : 'none'}`);
                 const activeModal = this.shadowRoot?.querySelector('.tm-custom-modal-overlay') || document.querySelector('.tm-custom-modal-overlay');
 
+                // 同步真实可视视口高度，供底部抽屉、标签面板、登录模态框动态收敛 max-height
+                document.documentElement.style.setProperty('--visual-viewport-height', `${vvHeight}px`);
+                if (playerContainer) {
+                    playerContainer.style.setProperty('--visual-viewport-height', `${vvHeight}px`);
+                }
+                if (this.shadowRoot?.host) {
+                    this.shadowRoot.host.style.setProperty('--visual-viewport-height', `${vvHeight}px`);
+                }
+
                 if (keyboardHeight > 60) {
+                    if (vvOffsetTop > 0 && document.body?.classList.contains('tm-player-active')) {
+                        window.scrollTo(0, 0);
+                    }
                     UIManager.lastKnownKeyboardHeight = keyboardHeight;
                     document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
                     if (playerContainer) {

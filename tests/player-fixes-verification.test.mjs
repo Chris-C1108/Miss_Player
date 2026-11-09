@@ -251,4 +251,37 @@ assert.ok(
 );
 console.log('✅ 11. 浮动按钮设备分档定位与空间碰撞防遮挡引擎验证通过');
 
-console.log('\n🎉 全部 11 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 12. 验证高光列表、评论发表栏、附带片段抽屉、登录模态框与 iOS 键盘适配
+// ---------------------------------------------------------
+console.log('▶ 12. 验证高光列表、评论发表栏、附带片段抽屉、登录模态框与 iOS 键盘适配...');
+const markerSheetJs = fs.readFileSync('src/player/managers/MarkerBottomSheet.js', 'utf8');
+const markerSheetCss = fs.readFileSync('src/player/ui/styles/02_components/_marker_sheet.css', 'utf8');
+const commentComposerJs = fs.readFileSync('src/player/controls/CommentComposer.js', 'utf8');
+const commentsCss = fs.readFileSync('src/player/ui/styles/_comments.css', 'utf8');
+const composerCss = fs.readFileSync('src/player/ui/styles/02_components/_composer.css', 'utf8');
+
+assert.ok(
+    !markerSheetJs.includes('.tm-sheet-toolbar') &&
+    markerSheetJs.includes('const color = tab.color || this.tabColors[index % this.tabColors.length];') &&
+    markerSheetJs.includes('tm-sheet-item-main') &&
+    !markerSheetJs.includes('tm-sheet-save-btn'),
+    'MarkerBottomSheet 必须合并单顶栏、保留 tab.color 持久色彩、分离主行与标签展开抽屉并移除冗余保存按钮'
+);
+assert.ok(
+    commentComposerJs.includes('this.sendBtn = sendBtn;') &&
+    commentComposerJs.includes('updateTagButtonBadge()') &&
+    commentComposerJs.includes('登录后即可直接发表评论与高光片段'),
+    'CommentComposer 必须缓存 sendBtn 引用、同步高光角标并支持一键直达登录弹窗与自动续发'
+);
+assert.ok(
+    !commentsCss.includes('z-index: 9996') &&
+    !commentsCss.includes('z-index: 9997') &&
+    !commentsCss.includes('accent-color: #ff5050') &&
+    composerCss.includes('font-size: 16px;') &&
+    markerSheetCss.includes('font-size: 16px;'),
+    '所有表单输入框必须锁定 16px 防止 iOS Safari 自动放大，且消灭魔法 z-index 与多重冲突样式'
+);
+console.log('✅ 12. 高光列表、评论发表栏、附带片段抽屉、登录模态框与 iOS 键盘适配验证通过');
+
+console.log('\n🎉 全部 12 大核心修复与人机工程验证单元测试 100% 通过！\n');

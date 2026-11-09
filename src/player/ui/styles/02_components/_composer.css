@@ -1,29 +1,29 @@
 /* ==========================================================================
-   Comment Composer 组件样式
+   Comment Composer & Login Modal 组件样式 (Apple HIG Dark Glass)
    ========================================================================== */
 
-/* 登录表单输入框统一 Apple 质感深色规范 */
+/* 登录表单输入框统一 Apple 质感深色规范 (16px 防 iOS Safari 自动放大) */
 .tm-login-username,
 .tm-login-password {
     width: 100%;
-    height: 38px;
+    height: 40px;
     box-sizing: border-box;
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     padding: 0 12px;
     color: #ffffff;
-    font-size: 14px;
+    font-size: 16px;
     outline: none;
-    transition: border-color 0.15s, background 0.15s;
+    transition: border-color 0.15s, background-color 0.15s;
     -webkit-user-select: text;
     user-select: text;
-    caret-color: #ffffff;
+    caret-color: #0a84ff;
 }
 
 .tm-login-username:focus,
 .tm-login-password:focus {
-    border-color: #0a84ff;
+    border-color: rgba(10, 132, 255, 0.65);
     background: rgba(255, 255, 255, 0.12);
 }
 
@@ -34,7 +34,7 @@
 
 /* 模态框卡片宽度自适应 */
 .tm-custom-modal-content.mp-composer-modal-card {
-    max-width: 340px;
+    max-width: 330px;
     padding: 20px 22px;
 }
 
@@ -46,25 +46,42 @@
     width: 100%;
 }
 
-/* 表单后紧跟的按钮行上间距 */
-.mp-composer-form + .mp-composer-modal-buttons {
-    margin-top: 20px;
+.mp-composer-modal-buttons > button {
+    flex: 1;
 }
 
-/* 模态框标题微调 */
+/* 表单后紧跟的按钮行上间距 */
+.mp-composer-form + .mp-composer-modal-buttons {
+    margin-top: 18px;
+}
+
+/* 模态框标题与副标题微调 */
 .mp-composer-modal-title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
-    color: hsl(var(--shadcn-foreground));
+    color: #ffffff;
     text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 14px;
+    letter-spacing: -0.2px;
+}
+
+.mp-composer-modal-card:has(.mp-composer-modal-subtitle) .mp-composer-modal-title {
+    margin-bottom: 4px;
+}
+
+.mp-composer-modal-subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    text-align: center;
+    margin: 0 0 14px 0;
+    line-height: 1.4;
 }
 
 /* 模态框表单容器 */
 .mp-composer-form {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     width: 100%;
     text-align: left;
     box-sizing: border-box;
@@ -74,32 +91,28 @@
 .mp-composer-form-field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
 }
 
 /* 表单标签 */
 .mp-composer-label {
-    font-size: 11px;
-    color: hsl(var(--shadcn-muted-foreground));
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.72);
 }
 
 /* 复选框行 */
 .mp-composer-checkbox-row {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 4px;
-}
-
-/* 复选框 */
-.mp-composer-checkbox {
-    cursor: pointer;
+    gap: 8px;
+    margin-top: 2px;
 }
 
 /* 复选框文案 */
 .mp-composer-checkbox-label {
     font-size: 12px;
-    color: hsl(var(--shadcn-muted-foreground));
+    color: rgba(255, 255, 255, 0.72);
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
@@ -110,3 +123,4 @@
 .mp-composer-publish-btn.is-submitting {
     opacity: 0.7;
 }
+

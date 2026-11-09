@@ -157,6 +157,8 @@ export class CommentComposer {
         const submitBarWrapper = container.querySelector('.tm-comment-submit-bar-wrapper');
         const closeBarBtn = container.querySelector('.tm-comment-close-bar-btn');
 
+        this.addTagBtn = addTagBtn;
+        this.sendBtn = sendBtn;
         this.commentInput = commentInput;
         this.tagSelectModal = tagSelectModal;
         this.tagSelectList = tagSelectList;
@@ -269,6 +271,7 @@ export class CommentComposer {
                 const tabs = this.getTabs();
                 this.selectedTagIds = new Set(tabs.map(t => t.id));
                 this.renderTagSelectList();
+                this.updateTagButtonBadge();
             });
         }
 
@@ -278,6 +281,7 @@ export class CommentComposer {
                 e.stopPropagation();
                 this.selectedTagIds.clear();
                 this.renderTagSelectList();
+                this.updateTagButtonBadge();
             });
         }
 
@@ -287,6 +291,29 @@ export class CommentComposer {
                 e.stopPropagation();
                 this.closeTagSelectModal();
             });
+        }
+
+        this.updateTagButtonBadge();
+    }
+
+    /**
+     * 同步更新加号按钮上的已勾选高光片段数量徽标与激活态
+     */
+    updateTagButtonBadge() {
+        const tabs = this.getTabs() || [];
+        const validIds = new Set(tabs.map(t => t.id));
+        for (const id of this.selectedTagIds) {
+            if (!validIds.has(id)) this.selectedTagIds.delete(id);
+        }
+        const count = this.selectedTagIds.size;
+        if (this.addTagBtn) {
+            this.addTagBtn.classList.toggle('has-selected', count > 0);
+            this.addTagBtn.classList.toggle('is-open', Boolean(this.tagSelectModal?.classList.contains('visible')));
+            const badge = this.addTagBtn.querySelector('.tm-add-tag-badge');
+            if (badge) {
+                badge.textContent = `${count}`;
+                badge.classList.toggle('is-hidden', count === 0);
+            }
         }
     }
 
@@ -307,11 +334,12 @@ export class CommentComposer {
         }
         if (this.fabBtn) this.fabBtn.classList.add('is-hidden');
 
-        // 预设默认勾选全部已有标签，方便用户直接一键附带高光发评
+        // 预设默认勾选全部已有标签，并通过徽标清晰告知用户已附带数量
         const tabs = this.getTabs();
         if (this.selectedTagIds.size === 0 && tabs.length > 0) {
             this.selectedTagIds = new Set(tabs.map(t => t.id));
         }
+        this.updateTagButtonBadge();
 
         // 自动恢复未发送的评论暂存草稿
         this.restoreCommentDraft();
@@ -409,11 +437,13 @@ export class CommentComposer {
         }
         this.renderTagSelectList();
         this.tagSelectModal.classList.add('visible');
+        this.updateTagButtonBadge();
     }
 
     closeTagSelectModal() {
         if (!this.tagSelectModal) return;
         this.tagSelectModal.classList.remove('visible');
+        this.updateTagButtonBadge();
     }
 
     renderTagSelectList() {
@@ -422,11 +452,12 @@ export class CommentComposer {
 
         const tabs = this.getTabs();
         const lm = this.getLoopManager();
+        this.updateTagButtonBadge();
 
         if (tabs.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'tm-tag-select-empty';
-            empty.textContent = '暂无时间戳标签，可在播放控制器添加';
+            empty.textContent = '暂无高光片段，可在播放控制栏点击 + 打点';
             this.tagSelectList.appendChild(empty);
             return;
         }
@@ -448,12 +479,12 @@ export class CommentComposer {
                 } else {
                     this.selectedTagIds.delete(tab.id);
                 }
+                this.updateTagButtonBadge();
             });
 
             // 时间胶囊 (支持点击即时跳转视频对应进度)
             const timeContainer = document.createElement('div');
             timeContainer.className = 'tm-sheet-item-time-container';
-            timeContainer.style.cursor = 'pointer';
             timeContainer.title = '点击跳转到此高光时间';
 
             const onSeek = (e) => {
@@ -498,15 +529,20 @@ export class CommentComposer {
                 timeContainer.appendChild(pill);
             }
 
-            // 可修改备注文本框 (让用户清晰知道自己发送的时间备注了什么，并允许当场修订)
+            // 可修改备注文本框 (16px 防 iOS 自动缩放)
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'tm-tag-remark-input';
-            input.placeholder = '添加备注...';
+            input.placeholder = '添加片段备注...';
             input.value = tab.comment || '';
 
-            // 阻止播放快捷键冒泡，放行原生触控与打字
-            const stopKeyProp = (e) => e.stopPropagation();
+            const stopKeyProp = (e) => {
+                e.stopPropagation();
+                if (e.type === 'keydown' && e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                }
+            };
             input.addEventListener('keydown', stopKeyProp);
             input.addEventListener('keyup', stopKeyProp);
             input.addEventListener('keypress', stopKeyProp);
@@ -515,6 +551,12 @@ export class CommentComposer {
             }, { passive: true });
             input.addEventListener('mousedown', () => {
                 this._lastInputTouchTime = Date.now();
+            });
+            input.addEventListener('focus', () => {
+                this._lastInputTouchTime = Date.now();
+                setTimeout(() => {
+                    row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }, 150);
             });
 
             input.addEventListener('input', (e) => {
@@ -545,7 +587,7 @@ export class CommentComposer {
         const commentText = (this.commentInput ? this.commentInput.value : '').trim();
 
         if (selectedTabs.length === 0 && !commentText) {
-            Toast('请勾选时间戳标签或输入评论内容', 2000, 'warning');
+            Toast('请勾选高光片段或输入评论内容', 2000, 'warning');
             return;
         }
 
@@ -576,10 +618,10 @@ export class CommentComposer {
         if (!checkRes) return;
         const { commentForm, targetUrl, domain } = checkRes;
 
-        const sendBtn = this.commentsPanel.querySelector('.tm-comment-send-btn');
+        const sendBtn = this.sendBtn || this.submitBarWrapper?.querySelector('.tm-comment-send-btn') || this.commentsPanel?.querySelector('.tm-comment-send-btn');
         if (sendBtn) {
             sendBtn.disabled = true;
-            sendBtn.textContent = 'Sending...';
+            sendBtn.textContent = '发送中...';
         }
 
         const resetBtn = () => {
@@ -784,25 +826,10 @@ export class CommentComposer {
     }
 
     showLoginPromptModal(domain) {
-        const { modal, close } = createModal(`
-            <div class="tm-custom-modal-content">
-                <div class="tm-custom-modal-title">发表评论</div>
-                <div class="tm-custom-modal-message">需要有 Jable 登录态才能发表评论，请先登录。</div>
-                <div class="mp-composer-modal-buttons">
-                    <button class="tm-custom-modal-cancel-btn">取消</button>
-                    <button class="tm-custom-modal-login-btn">去登录</button>
-                </div>
-            </div>
-        `);
-
-        modal.querySelector('.tm-custom-modal-cancel-btn').addEventListener('click', close);
-        modal.querySelector('.tm-custom-modal-login-btn').addEventListener('click', () => {
-            close();
-            this.showLoginModal(domain);
-        });
+        this.showLoginModal(domain, null, '登录后即可直接发表评论与高光片段');
     }
 
-    showLoginModal(domain, onSuccess) {
+    showLoginModal(domain, onSuccess, subtitleText = '') {
         let provider = null;
         if (window.loginManager && domain) {
             provider = window.loginManager.providers.find(p => p.domains.some(d => domain.includes(d)));
@@ -811,27 +838,31 @@ export class CommentComposer {
             provider = window.loginManager.getMatchingProvider();
         }
         const siteTitle = provider ? (provider.siteKey === 'JABLE' ? 'Jable.tv' : provider.siteKey === 'MISSAV' ? 'MissAV' : provider.siteKey) : 'Jable.tv';
+        const subtitleHtml = subtitleText
+            ? `<div class="mp-composer-modal-subtitle">${subtitleText}</div>`
+            : `<div class="mp-composer-modal-subtitle">输入账号凭据以同步站点登录态</div>`;
 
         const { modal, close } = createModal(`
             <div class="tm-custom-modal-content mp-composer-modal-card">
                 <div class="mp-composer-modal-title">登录 ${siteTitle}</div>
+                ${subtitleHtml}
                 <div class="mp-composer-form">
                     <div class="mp-composer-form-field">
-                        <label class="mp-composer-label">用户名 / 邮箱</label>
-                        <input type="text" class="tm-login-username" placeholder="请输入用户名或邮箱" />
+                        <label class="mp-composer-label">账号 / 邮箱</label>
+                        <input type="text" class="tm-login-username" placeholder="请输入用户名或邮箱" autocomplete="username" />
                     </div>
                     <div class="mp-composer-form-field">
                         <label class="mp-composer-label">密码</label>
-                        <input type="password" class="tm-login-password" placeholder="请输入密码" />
+                        <input type="password" class="tm-login-password" placeholder="请输入密码" autocomplete="current-password" />
                     </div>
-                    <div class="mp-composer-checkbox-row">
-                        <input type="checkbox" id="tm-login-remember" class="mp-composer-checkbox" checked />
-                        <label for="tm-login-remember" class="mp-composer-checkbox-label">记住密码并开启自动登录</label>
-                    </div>
+                    <label class="mp-composer-checkbox-row" for="tm-login-remember">
+                        <input type="checkbox" id="tm-login-remember" class="tm-tag-checkbox mp-composer-checkbox" checked />
+                        <span class="mp-composer-checkbox-label">记住密码并开启自动登录</span>
+                    </label>
                 </div>
                 <div class="mp-composer-modal-buttons">
-                    <button class="tm-custom-modal-cancel-btn">取消</button>
-                    <button class="tm-custom-modal-submit-btn">登录</button>
+                    <button type="button" class="tm-custom-modal-cancel-btn">取消</button>
+                    <button type="button" class="tm-custom-modal-submit-btn">登录</button>
                 </div>
             </div>
         `);
@@ -845,6 +876,10 @@ export class CommentComposer {
 
         const bindModalInput = (inputEl) => {
             if (!inputEl) return;
+            const stopKeyProp = (e) => e.stopPropagation();
+            inputEl.addEventListener('keydown', stopKeyProp);
+            inputEl.addEventListener('keyup', stopKeyProp);
+            inputEl.addEventListener('keypress', stopKeyProp);
             const handleFocus = (e) => {
                 inputEl.focus({ preventScroll: true });
                 if (e.cancelable && e.type === 'mousedown') {
@@ -899,8 +934,8 @@ export class CommentComposer {
                     close();
                     if (typeof onSuccess === 'function') {
                         onSuccess();
-                    } else {
-                        setTimeout(() => this.handlePublishComment(), 500);
+                    } else if ((this.commentInput && this.commentInput.value.trim()) || this.selectedTagIds.size > 0) {
+                        setTimeout(() => this.handleSendComment(), 350);
                     }
                 } else {
                     usernameInput.disabled = false;
