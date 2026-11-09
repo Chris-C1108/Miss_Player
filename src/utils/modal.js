@@ -17,8 +17,20 @@ export function createModal(contentHTML, options = {}) {
     modal.className = `tm-custom-modal-overlay ${extraClass}`.trim();
     modal.innerHTML = contentHTML;
 
+    const shadowHost = document.querySelector('miss-player-root');
+    const playerContainer = shadowHost?.shadowRoot?.querySelector('.tm-player-container') ||
+                            document.querySelector('.tm-player-container');
+
+    let isClosing = false;
     const close = () => {
+        if (isClosing) return;
+        isClosing = true;
         modal.classList.remove('active');
+        // 关闭模态框时主动释放内部输入框焦点，使 iOS 虚拟键盘平滑收起
+        const activeInput = modal.querySelector('input:focus, textarea:focus');
+        if (activeInput && typeof activeInput.blur === 'function') {
+            activeInput.blur();
+        }
         const removeModal = () => {
             if (modal.parentNode) {
                 modal.parentNode.removeChild(modal);
@@ -38,10 +50,28 @@ export function createModal(contentHTML, options = {}) {
         }
     });
 
+    // 防止 iOS Safari 虚拟键盘打开时点击模态框内按钮在 mousedown 阶段提前触发 input blur 导致弹窗瞬移丢失点击
+    modal.addEventListener('mousedown', (e) => {
+        const btn = e.target?.closest?.('button');
+        if (btn && modal.contains(btn) && e.cancelable) {
+            e.preventDefault();
+        }
+    });
+
+    // 阻止输入框内按键冒泡触发播放器快捷键，并支持 Escape 关闭当前模态框
+    modal.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            close();
+            return;
+        }
+        if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'TEXTAREA') {
+            e.stopPropagation();
+        }
+    });
+
     // 优先挂载在 Shadow DOM 内部的 playerContainer 中，确保继承播放器全部样式作用域、键盘自适应与 z-index 最高层级
-    const shadowHost = document.querySelector('miss-player-root');
-    const playerContainer = shadowHost?.shadowRoot?.querySelector('.tm-player-container') ||
-                            document.querySelector('.tm-player-container');
     const targetParent = playerContainer || shadowHost?.shadowRoot || document.body;
     targetParent.appendChild(modal);
 

@@ -196,6 +196,7 @@
 /* 输入栏、底栏抽屉或虚拟键盘激活时，禁用手柄触控，严防越级遮挡或误触拖拽 */
 .tm-player-container.has-composer-active .tm-handle-container,
 .tm-player-container.has-sheet-open .tm-handle-container,
+.tm-player-container.has-inline-remark-open .tm-handle-container,
 .tm-player-container.tm-ios-keyboard-open .tm-handle-container {
     pointer-events: none;
 }
@@ -2716,7 +2717,7 @@ body.tm-player-active {
     top: 48px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 999999;
+    z-index: var(--z-toast, 60);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, monospace;
     font-size: 11.5px;
     user-select: none;

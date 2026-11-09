@@ -806,6 +806,8 @@ export class CommentPanel {
         } catch (_) {}
 
         if (this.targetVideo) {
+            if (this.playerCore) this.playerCore.userPauseIntent = false;
+            if (this.controlManager?.playbackController) this.controlManager.playbackController._userPauseIntent = false;
             this.targetVideo.currentTime = targetSecs;
             this.targetVideo.play().catch(() => { });
 
@@ -852,6 +854,8 @@ export class CommentPanel {
 
         // 1. 同时跳转播放进度
         if (this.targetVideo && typeof targetSecs === 'number' && !isNaN(targetSecs)) {
+            if (this.playerCore) this.playerCore.userPauseIntent = false;
+            if (this.controlManager?.playbackController) this.controlManager.playbackController._userPauseIntent = false;
             this.targetVideo.currentTime = targetSecs;
             this.targetVideo.play().catch(() => {});
             if (this.controlManager && typeof this.controlManager.showJumpHint === 'function') {
@@ -3294,19 +3298,11 @@ export class CommentPanel {
             this.targetVideo.removeEventListener('loadedmetadata', this.handleMetadataLoadedBound);
         }
         this.cleanupJavlibVerification();
+        this.hideCodePreview();
         if (this._onTabsUpdatedBound) {
             window.removeEventListener('mp_tabs_updated', this._onTabsUpdatedBound);
             this._onTabsUpdatedBound = null;
         }
-    }
-    findCommentById(id) {
-        if (!id) return null;
-        for (const sKey of ["jable", "javlib", "javdb"]) {
-            const list = this.sites[sKey]?.comments || [];
-            const found = list.find(c => c && String(c.id) === String(id));
-            if (found) return found;
-        }
-        return null;
     }
 
     _showCommentReportModal(comment) {

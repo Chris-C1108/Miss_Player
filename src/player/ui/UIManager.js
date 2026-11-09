@@ -23,6 +23,7 @@ import { StrmIngestPipeline } from '../../services/StrmIngestPipeline.js';
 import { PeachService } from '../../services/PeachService.js';
 import { Toast } from '../../utils/index.js';
 import { enforceInlinePlayback } from '../../utils/iosInline.js';
+import { UISurfaceMachine, SURFACE_TYPES } from '../state/UISurfaceMachine.js';
 
 
 if (typeof customElements !== 'undefined' && !customElements.get('miss-player-root')) {
@@ -41,6 +42,11 @@ export class UIManager {
         // 核心播放器引用
         this.playerCore = playerCore;
         this.targetVideo = playerCore.targetVideo;
+        this.surfaceMachine = new UISurfaceMachine(this);
+        if (this.playerCore) {
+            this.playerCore.surfaceMachine = this.surfaceMachine;
+            this.playerCore.uiManager = this;
+        }
         
         // UI 元素引用
         this.rootHost = null;
@@ -228,6 +234,10 @@ export class UIManager {
         // 添加屏幕方向变化监听（只设置window事件，overlay相关事件在组装DOM后设置）
         this.setupOrientationListener();
 
+        if (this.surfaceMachine) {
+            this.surfaceMachine.init();
+        }
+
         console.log('[UIManager] UI基础元素创建完成');
         
         return {
@@ -363,9 +373,13 @@ export class UIManager {
                     window.navigator.vibrate(50);
                 }
                 
-                // 如果视频当前是暂停的，开始播放
+                // 如果视频当前是暂停的，清除用户暂停意图锁并开始播放
                 if (this.playerCore.targetVideo.paused) {
-                    this.playerCore.targetVideo.play();
+                    this.playerCore.userPauseIntent = false;
+                    if (this.controlManager?.playbackController) {
+                        this.controlManager.playbackController._userPauseIntent = false;
+                    }
+                    this.playerCore.targetVideo.play().catch(() => {});
                 }
             }, 800); // 800ms的长按时间，减少等待感
         };
@@ -471,18 +485,29 @@ export class UIManager {
                 return;
             }
             
-            // 确保点击事件不是从控制按钮或预览弹窗冒泡上来的
-            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .jc-code-preview-popover')) {
+            // 确保点击事件不是从控制按钮、浮层或预览弹窗冒泡上来的
+            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-inline-remark-popover, .tm-bottom-sheet-panel, .tm-comment-submit-bar-wrapper, .jc-code-preview-popover')) {
+                return;
+            }
+
+            // 若当前存在打开的浮层面板（如设置面板、评论发表栏、高光列表抽屉、打点备注框），点击视频画面优先干净收起浮层，绝不误触发视频暂停/播放！
+            if (this.surfaceMachine && this.surfaceMachine.activeSurface !== SURFACE_TYPES.NONE) {
+                this.surfaceMachine.closeActiveSurface();
                 return;
             }
             
-            // 播放/暂停切换函数
+            // 播放/暂停切换函数（与 PlaybackController 的 userPauseIntent 状态机强同步）
             const togglePlayPause = () => {
                 if (!this.playerCore.targetVideo) return;
+                const playbackCtrl = this.controlManager?.playbackController;
                 
                 if (this.playerCore.targetVideo.paused) {
-                    this.playerCore.targetVideo.play();
+                    this.playerCore.userPauseIntent = false;
+                    if (playbackCtrl) playbackCtrl._userPauseIntent = false;
+                    this.playerCore.targetVideo.play().catch(() => {});
                 } else {
+                    this.playerCore.userPauseIntent = true;
+                    if (playbackCtrl) playbackCtrl._userPauseIntent = true;
                     this.playerCore.targetVideo.pause();
                     if (this.controlManager) {
                         this.controlManager.showPauseIndicator();
@@ -990,6 +1015,9 @@ export class UIManager {
                     this.shadowRoot.host.style.setProperty('--visual-viewport-height', `${vvHeight}px`);
                 }
 
+                const inlinePopover = this.shadowRoot?.querySelector('.tm-inline-remark-popover') || document.querySelector('.tm-inline-remark-popover');
+                const wasKeyboardOpen = Boolean(playerContainer?.classList.contains('tm-ios-keyboard-open'));
+
                 if (keyboardHeight > 60) {
                     if (vvOffsetTop > 0 && document.body?.classList.contains('tm-player-active')) {
                         window.scrollTo(0, 0);
@@ -1013,8 +1041,14 @@ export class UIManager {
                         sheetPanel.style.bottom = `${keyboardHeight}px`;
                         sheetPanel.style.transform = '';
                     }
+                    if (inlinePopover && inlinePopover.classList.contains('visible')) {
+                        inlinePopover.style.bottom = `${keyboardHeight + 12}px`;
+                    }
                     if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';
+                    }
+                    if (!wasKeyboardOpen) {
+                        this.updatePortraitVideoHeight();
                     }
                 } else {
                     document.documentElement.style.setProperty('--keyboard-height', '0px');
@@ -1034,8 +1068,14 @@ export class UIManager {
                         sheetPanel.style.bottom = '0px';
                         sheetPanel.style.transform = '';
                     }
+                    if (inlinePopover) {
+                        inlinePopover.style.bottom = '';
+                    }
                     if (activeModal && activeModal.style.transform) {
                         activeModal.style.transform = '';
+                    }
+                    if (wasKeyboardOpen) {
+                        this.updatePortraitVideoHeight();
                     }
                 }
             };
@@ -1054,6 +1094,9 @@ export class UIManager {
      * 清理所有屏幕/大小监听器和定时器
      */
     cleanup() {
+        if (this.surfaceMachine) {
+            this.surfaceMachine.cleanup();
+        }
         if (this._cleanupLayoutSchedulers) {
             this._cleanupLayoutSchedulers();
         }
@@ -1081,6 +1124,11 @@ export class UIManager {
         if (this.controlsHideTimerId) {
             clearTimeout(this.controlsHideTimerId);
             this.controlsHideTimerId = null;
+        }
+        if (typeof document !== 'undefined') {
+            document.body?.classList.remove('controls-hidden');
+            document.documentElement?.style.removeProperty('--keyboard-height');
+            document.documentElement?.style.removeProperty('--visual-viewport-height');
         }
 
         // 清理视口调试探针
@@ -1512,11 +1560,19 @@ export class UIManager {
         const minHeight = this.getNaturalVideoHeight();
         this.container.style.minHeight = `${minHeight}px`;
 
-        if (!this.controlsVisible) {
-            // 控制面板隐藏（用户浏览评论）：临时缩小视频区域到最小（物理原始比例）高度，最大化评论可视区域
+        const isOverlayOrKeyboardActive = Boolean(
+            this.playerContainer && (
+                this.playerContainer.classList.contains('tm-ios-keyboard-open') ||
+                this.playerContainer.classList.contains('has-composer-active') ||
+                this.playerContainer.classList.contains('has-sheet-open')
+            )
+        );
+
+        if (!this.controlsVisible || isOverlayOrKeyboardActive) {
+            // 控制面板隐藏（浏览评论）或底部抽屉/键盘弹起时：临时缩小视频区域到物理原始比例高度，最大化可视与输入空间
             this.container.style.height = `${minHeight}px`;
             this.container.classList.add('is-collapsed-ratio');
-            console.log('[UIManager] 竖屏刷评论态：临时缩小视频高度到自然比例:', minHeight);
+            console.log('[UIManager] 竖屏紧凑态：缩小视频高度到自然比例:', minHeight);
         } else {
             // 控制面板显示：平滑还原用户之前手动调整或默认舒展比例高度
             const expandedHeight = this.getExpandedVideoHeight();

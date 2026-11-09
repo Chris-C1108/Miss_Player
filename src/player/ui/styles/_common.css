@@ -21,7 +21,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9980;
+    z-index: var(--z-floating-btn, 2147483647);
     cursor: pointer;
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: visible;

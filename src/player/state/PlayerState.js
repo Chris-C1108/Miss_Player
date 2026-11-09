@@ -123,7 +123,7 @@ export class PlayerState {
             const rawClimaxSec = parseInt(getValue('climaxDurationSeconds', 60), 10);
             this.settings.climaxDurationSeconds = (!isNaN(rawClimaxSec) && rawClimaxSec >= 5 && rawClimaxSec <= 300) ? rawClimaxSec : 60;
             const rawColorMode = getValue('betaColorPlayMode', 'preview');
-            this.settings.betaColorPlayMode = (rawPlayMode === 'review') ? 'review' : 'preview';
+            this.settings.betaColorPlayMode = (rawColorMode === 'review') ? 'review' : 'preview';
             this.settings.betaCapsuleUndo = getBool('betaCapsuleUndo', true);
             this.settings.betaDeepLinking = getBool('betaDeepLinking', true);
             this.settings.betaDbEndpoint = getValue('betaDbEndpoint', '') || '';

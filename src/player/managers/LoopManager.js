@@ -6,6 +6,7 @@ import { LOOP_INTERVAL } from '../../constants/icons.js';
 import { telemetry } from '../../telemetry/index.js';
 import { MarkerBottomSheet } from './MarkerBottomSheet.js';
 import { SyncManager } from '../../sync/index.js';
+import { SURFACE_TYPES, bindActionWithoutBlurShift } from '../state/UISurfaceMachine.js';
 
 /**
  * LoopManager — Tab-Style Marker & AB Loop controller
@@ -226,7 +227,7 @@ export class LoopManager {
                 if (this._userScrollTimer) clearTimeout(this._userScrollTimer);
             });
 
-            window.addEventListener('mousemove', (e) => {
+            this._onWindowMouseMoveBound = (e) => {
                 if (!isDown || !this.tabScrollContainer) return;
                 const x = e.pageX - this.tabScrollContainer.offsetLeft;
                 const walk = (x - startX) * 1.2;
@@ -234,16 +235,18 @@ export class LoopManager {
                     hasDragged = true;
                 }
                 this.tabScrollContainer.scrollLeft = scrollLeftStart - walk;
-            }, { passive: true });
+            };
+            window.addEventListener('mousemove', this._onWindowMouseMoveBound, { passive: true });
 
-            window.addEventListener('mouseup', () => {
+            this._onWindowMouseUpBound = () => {
                 if (!isDown) return;
                 isDown = false;
                 if (this._userScrollTimer) clearTimeout(this._userScrollTimer);
                 this._userScrollTimer = setTimeout(() => {
                     this._isUserInteractingWithTabs = false;
                 }, 1500);
-            }, { passive: true });
+            };
+            window.addEventListener('mouseup', this._onWindowMouseUpBound, { passive: true });
 
             this.tabScrollContainer.addEventListener('click', (e) => {
                 if (hasDragged) {
@@ -273,8 +276,8 @@ export class LoopManager {
         this._onSyncAppliedBound = () => {
             this._loadTabs();
             this.renderTabs();
-            if (this.markerBottomSheet) {
-                this.markerBottomSheet.updateBottomSheet();
+            if (this.bottomSheet) {
+                this.bottomSheet.updateBottomSheet();
             }
         };
         window.addEventListener('mp_sync_applied', this._onSyncAppliedBound);
@@ -773,6 +776,8 @@ export class LoopManager {
             // Jump to timestamp
             this.targetVideo.currentTime = tab.startTime;
             if (this.targetVideo.paused) {
+                if (this.playerCore) this.playerCore.userPauseIntent = false;
+                if (this.controlManager?.playbackController) this.controlManager.playbackController._userPauseIntent = false;
                 this.targetVideo.play().catch(() => {});
             }
             // Deactivate any current loop
@@ -811,6 +816,8 @@ export class LoopManager {
                 this.enableLoop();
 
                 if (this.targetVideo && this.targetVideo.paused) {
+                    if (this.playerCore) this.playerCore.userPauseIntent = false;
+                    if (this.controlManager?.playbackController) this.controlManager.playbackController._userPauseIntent = false;
                     this.targetVideo.play().catch(() => {});
                 }
                 this.renderTabs();
@@ -996,6 +1003,9 @@ export class LoopManager {
         if (!parentContainer) return;
 
         // 移除已存在的嵌入式弹窗
+        if (this._activeRemarkClose) {
+            this._activeRemarkClose();
+        }
         const existingPopover = parentContainer.querySelector('.tm-inline-remark-popover');
         if (existingPopover) existingPopover.remove();
 
@@ -1045,8 +1055,13 @@ export class LoopManager {
         const close = () => {
             if (isClosed) return;
             isClosed = true;
-            document.removeEventListener('click', handleOutsideClick, false);
-            document.removeEventListener('touchend', handleOutsideClick, false);
+            this._activeRemarkClose = null;
+            this.playerCore?.surfaceMachine?.deactivate(SURFACE_TYPES.INLINE_REMARK);
+            document.removeEventListener('pointerdown', handleOutsideClick, true);
+            document.removeEventListener('touchstart', handleOutsideClick, true);
+            try {
+                input.blur();
+            } catch (_) {}
             popover.classList.remove('visible');
             let removed = false;
             const cleanup = () => {
@@ -1059,6 +1074,17 @@ export class LoopManager {
             setTimeout(cleanup, 250);
         };
 
+        this._activeRemarkClose = close;
+        this.playerCore?.surfaceMachine?.activate(SURFACE_TYPES.INLINE_REMARK, () => {
+            if (!isClosed) {
+                if (!isEdit) {
+                    save(input.value.trim());
+                } else {
+                    close();
+                }
+            }
+        });
+
         const handleOutsideClick = (e) => {
             const path = e.composedPath ? e.composedPath() : [];
             if (path.length > 0) {
@@ -1066,11 +1092,17 @@ export class LoopManager {
             } else if (popover.contains(e.target)) {
                 return;
             }
-            close();
+            if (!isEdit) {
+                save(input.value.trim());
+            } else {
+                close();
+            }
         };
         setTimeout(() => {
-            document.addEventListener('click', handleOutsideClick, false);
-            document.addEventListener('touchend', handleOutsideClick, false);
+            if (!isClosed) {
+                document.addEventListener('pointerdown', handleOutsideClick, true);
+                document.addEventListener('touchstart', handleOutsideClick, true);
+            }
         }, 150);
 
         const save = (comment) => {
@@ -1118,12 +1150,12 @@ export class LoopManager {
             close();
         };
 
-        saveBtn.addEventListener('click', (e) => {
+        bindActionWithoutBlurShift(saveBtn, (e) => {
             e.stopPropagation();
             save(input.value.trim());
         });
 
-        skipBtn.addEventListener('click', (e) => {
+        bindActionWithoutBlurShift(skipBtn, (e) => {
             e.stopPropagation();
             if (!isEdit) {
                 // 跳过备注：直接保存新标签
@@ -1527,6 +1559,8 @@ export class LoopManager {
                 if (firstTabToActivate.type === 'highlight') {
                     this.targetVideo.currentTime = firstTabToActivate.startTime;
                     if (this.targetVideo.paused) {
+                        if (this.playerCore) this.playerCore.userPauseIntent = false;
+                        if (this.controlManager?.playbackController) this.controlManager.playbackController._userPauseIntent = false;
                         this.targetVideo.play().catch(() => {});
                     }
                     this.disableLoop();
@@ -1787,7 +1821,23 @@ export class LoopManager {
     // =====================================================================
     cleanup() {
         this.disableLoop();
+        if (this._activeRemarkClose) {
+            this._activeRemarkClose();
+            this._activeRemarkClose = null;
+        }
         document.removeEventListener('click', this._handleOutsideClickForEdit);
+        if (this._onSyncAppliedBound) {
+            window.removeEventListener('mp_sync_applied', this._onSyncAppliedBound);
+            this._onSyncAppliedBound = null;
+        }
+        if (this._onWindowMouseMoveBound) {
+            window.removeEventListener('mousemove', this._onWindowMouseMoveBound);
+            this._onWindowMouseMoveBound = null;
+        }
+        if (this._onWindowMouseUpBound) {
+            window.removeEventListener('mouseup', this._onWindowMouseUpBound);
+            this._onWindowMouseUpBound = null;
+        }
         if (this.targetVideo && this._onVideoTimeUpdateBound) {
             this.targetVideo.removeEventListener('timeupdate', this._onVideoTimeUpdateBound);
             this._onVideoTimeUpdateBound = null;

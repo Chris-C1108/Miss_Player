@@ -18,6 +18,7 @@ import { __ } from '../../constants/i18n.js';
 import { SyncManager, WebDavClient, getOrCreateClientId, getDeviceName } from '../../sync/index.js';
 import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 import { CrazyScraper } from '../comments/CrazyScraper.js';
+import { SURFACE_TYPES } from '../state/UISurfaceMachine.js';
 import { 
     SleazyForkService, 
     getCurrentVersion,
@@ -1433,24 +1434,49 @@ export class SettingsManager {
         if (isVisible) {
             this.closeSettingsPanel();
         } else {
+            const surfaceMachine = this.uiManager?.surfaceMachine || this.playerCore?.surfaceMachine;
+            if (surfaceMachine) {
+                surfaceMachine.activate(SURFACE_TYPES.SETTINGS, () => this.closeSettingsPanel());
+            }
             this.syncState();
             this.createSettingsPanel();
             this.settingsPanel.classList.add('active');
             document.body.classList.add('tm-settings-active');
             this.uiElements?.playerContainer?.classList.add('tm-settings-active');
             
-            // 点击外部遮罩或其它区域关闭设置面板
+            if (this.overlayClickHandler) {
+                document.removeEventListener('click', this.overlayClickHandler, true);
+                document.removeEventListener('touchstart', this.overlayClickHandler, true);
+            }
+
+            // 捕获阶段 + composedPath 穿透 Shadow DOM 检测外部点击，确保点击评论区/视频区也能关闭设置，且滚动设置面板或操作弹窗绝不误关
             this.overlayClickHandler = (e) => {
-                if (!this.settingsPanel.contains(e.target) && 
-                    !this.uiElements?.settingsBtn?.contains(e.target) &&
-                    e.target !== this.uiElements?.settingsBtn) {
-                    this.closeSettingsPanel();
+                const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+                if (path.length > 0) {
+                    const isInsideSettingsOrModal = path.some(el => {
+                        if (!(el instanceof HTMLElement)) return false;
+                        if (el === this.settingsPanel || el === this.uiElements?.settingsBtn) return true;
+                        const cls = typeof el.className === 'string' ? el.className : '';
+                        return cls.includes('tm-settings-panel') ||
+                               cls.includes('tm-settings-button') ||
+                               cls.includes('tm-custom-modal-overlay');
+                    });
+                    if (isInsideSettingsOrModal) return;
+                } else if (
+                    this.settingsPanel.contains(e.target) ||
+                    this.uiElements?.settingsBtn?.contains(e.target) ||
+                    e.target === this.uiElements?.settingsBtn
+                ) {
+                    return;
                 }
+                this.closeSettingsPanel();
             };
             
             setTimeout(() => {
-                document.addEventListener('click', this.overlayClickHandler);
-                document.addEventListener('touchstart', this.overlayClickHandler, { passive: true });
+                if (this.overlayClickHandler && this.settingsPanel?.classList.contains('active')) {
+                    document.addEventListener('click', this.overlayClickHandler, true);
+                    document.addEventListener('touchstart', this.overlayClickHandler, { capture: true, passive: true });
+                }
             }, 50);
         }
     }
@@ -1465,9 +1491,24 @@ export class SettingsManager {
         this.uiElements?.playerContainer?.classList.remove('tm-settings-active');
         
         if (this.overlayClickHandler) {
-            document.removeEventListener('click', this.overlayClickHandler);
-            document.removeEventListener('touchstart', this.overlayClickHandler);
+            document.removeEventListener('click', this.overlayClickHandler, true);
+            document.removeEventListener('touchstart', this.overlayClickHandler, true);
             this.overlayClickHandler = null;
+        }
+        const surfaceMachine = this.uiManager?.surfaceMachine || this.playerCore?.surfaceMachine;
+        if (surfaceMachine) {
+            surfaceMachine.deactivate(SURFACE_TYPES.SETTINGS);
+        }
+    }
+
+    /**
+     * 清理设置管理器资源与全局事件监听
+     */
+    cleanup() {
+        this.closeSettingsPanel();
+        if (this._scheduler) {
+            this._scheduler.destroy();
+            this._scheduler = null;
         }
     }
     
@@ -1520,8 +1561,8 @@ export class SettingsManager {
             this.settings.climaxDurationSeconds = parseInt(getValue('climaxDurationSeconds', 60), 10) || 60;
             this.settings.betaMode = getBool('betaMode', false);
             this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
-            const rawPlayMode = getValue('betaColorPlayMode', 'preview');
-            this.settings.betaColorPlayMode = (rawPlayMode === 'review') ? 'review' : 'preview';
+            const rawColorMode = getValue('betaColorPlayMode', 'preview');
+            this.settings.betaColorPlayMode = (rawColorMode === 'review') ? 'review' : 'preview';
             this.settings.betaCapsuleUndo = getBool('betaCapsuleUndo', true);
             this.settings.betaDeepLinking = getBool('betaDeepLinking', true);
             this.settings.betaDbEndpoint = getValue('betaDbEndpoint', '') || '';

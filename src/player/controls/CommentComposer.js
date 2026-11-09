@@ -196,6 +196,9 @@ export class CommentComposer {
 
         // 绑定输入栏右侧收起按钮
         if (closeBarBtn) {
+            closeBarBtn.addEventListener('mousedown', (e) => {
+                if (e.cancelable) e.preventDefault();
+            });
             closeBarBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.closeComposer();
@@ -308,10 +311,20 @@ export class CommentComposer {
             this.toggleTagSelectModal();
         });
 
-        // 发送 (Send) 按钮事件：触发检测并发表评论
+        // 发送 (Send) 按钮事件：防止 iOS Safari 在按压瞬间提前失焦导致底栏下沉丢失点击，随后触发检测并发表评论
         if (sendBtn) {
+            sendBtn.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+                if (e.cancelable) e.preventDefault();
+            });
+            sendBtn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+            }, { passive: true });
             sendBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
                 sendBtn.disabled = true;
                 const canComment = await this.checkCanComment();
                 sendBtn.disabled = false;
@@ -383,6 +396,10 @@ export class CommentComposer {
     openComposer() {
         if (!this.submitBarWrapper) return;
         this._lastInputTouchTime = Date.now();
+        const surfaceMachine = this.panel?.uiManager?.surfaceMachine || this.panel?.playerCore?.surfaceMachine;
+        if (surfaceMachine) {
+            surfaceMachine.activate('comment-composer', () => this.closeComposer());
+        }
         this.submitBarWrapper.classList.remove('is-collapsed');
         if (this.backdrop) this.backdrop.classList.remove('is-hidden');
         if (this.panel?.commentsPanel) {
@@ -441,6 +458,10 @@ export class CommentComposer {
             playerContainer.classList.remove('has-composer-active');
         }
         if (this.fabBtn) this.fabBtn.classList.remove('is-hidden');
+        const surfaceMachine = this.panel?.uiManager?.surfaceMachine || this.panel?.playerCore?.surfaceMachine;
+        if (surfaceMachine) {
+            surfaceMachine.deactivate('comment-composer');
+        }
     }
 
     /**

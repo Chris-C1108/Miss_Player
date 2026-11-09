@@ -5,6 +5,7 @@ import { SyncManager } from '../../sync/index.js';
 import { __ } from '../../constants/i18n.js';
 import { LOOP_INTERVAL, CLOSE_LINE, ICON_TAG, ICON_TRASH, ICON_SHARE_LINK, ICON_UNDO } from '../../constants/icons.js';
 import { UIManager } from '../ui/UIManager.js';
+import { SURFACE_TYPES, bindKeepFocusAction, bindActionWithoutBlurShift } from '../state/UISurfaceMachine.js';
 
 /**
  * MarkerBottomSheet — 循环片段与时间戳标签管理底部浮层面板
@@ -131,23 +132,40 @@ export class MarkerBottomSheet {
     }
 
     open() {
+        const surfaceMachine = this.loopManager?.playerCore?.surfaceMachine || this.loopManager?.controlManager?.uiManager?.surfaceMachine;
+        if (surfaceMachine) {
+            surfaceMachine.activate(SURFACE_TYPES.MARKER_SHEET, () => this.close());
+        }
         if (!this._sheetOverlay || !this._sheetPanel) this.createBottomSheet();
         this.updateBottomSheet();
         this.updatePanelPosition();
         if (this._sheetOverlay) this._sheetOverlay.classList.add('visible');
         if (this._sheetPanel) this._sheetPanel.classList.add('visible');
-        const playerContainer = document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
+        const playerContainer = this._sheetPanel?.closest?.('.tm-player-container') ||
+            document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
         if (playerContainer) {
             playerContainer.classList.add('has-sheet-open');
         }
     }
 
     close() {
+        if (this._sheetPanel) {
+            const root = this._sheetPanel.getRootNode?.();
+            const active = (root && root.activeElement) ? root.activeElement : document.activeElement;
+            if (active && this._sheetPanel.contains(active) && typeof active.blur === 'function') {
+                active.blur();
+            }
+            this._sheetPanel.classList.remove('visible');
+        }
         if (this._sheetOverlay) this._sheetOverlay.classList.remove('visible');
-        if (this._sheetPanel) this._sheetPanel.classList.remove('visible');
-        const playerContainer = document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
+        const playerContainer = this._sheetPanel?.closest?.('.tm-player-container') ||
+            document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container');
         if (playerContainer) {
             playerContainer.classList.remove('has-sheet-open');
+        }
+        const surfaceMachine = this.loopManager?.playerCore?.surfaceMachine || this.loopManager?.controlManager?.uiManager?.surfaceMachine;
+        if (surfaceMachine) {
+            surfaceMachine.deactivate(SURFACE_TYPES.MARKER_SHEET);
         }
     }
 
@@ -233,8 +251,7 @@ export class MarkerBottomSheet {
         undoBtn.title = __('undoDelete') || '撤销删除';
         this._undoBtn = undoBtn;
 
-        undoBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+        bindActionWithoutBlurShift(undoBtn, () => {
             const item = this._deletedHistory.pop();
             if (item && item.tab) {
                 if (item.tab.id) {
@@ -250,7 +267,7 @@ export class MarkerBottomSheet {
                 undoBtn.classList.remove('is-active');
                 if (this._undoTimer) clearInterval(this._undoTimer);
             }
-        });
+        }, (t) => { this._lastInputTouchTime = t; });
 
         const shareBtn = document.createElement('button');
         shareBtn.className = 'tm-sheet-share-btn mp-sheet-share-btn';
@@ -258,8 +275,7 @@ export class MarkerBottomSheet {
         this._shareBtn = shareBtn;
         this._syncShareBtnLabel();
 
-        shareBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+        bindActionWithoutBlurShift(shareBtn, () => {
             if (this.tabs.length === 0) {
                 Toast('暂无可分享的高光片段', 1400, 'info');
                 return;
@@ -272,13 +288,13 @@ export class MarkerBottomSheet {
                 return;
             }
             this._showShareModal(selected);
-        });
+        }, (t) => { this._lastInputTouchTime = t; });
 
         const closeBtn = document.createElement('button');
         closeBtn.className = 'tm-sheet-close-btn';
         closeBtn.innerHTML = CLOSE_LINE;
         closeBtn.title = __('cancel') || '关闭';
-        closeBtn.addEventListener('click', () => this.close());
+        bindActionWithoutBlurShift(closeBtn, () => this.close(), (t) => { this._lastInputTouchTime = t; });
 
         headerActions.appendChild(undoBtn);
         headerActions.appendChild(shareBtn);
@@ -358,8 +374,14 @@ export class MarkerBottomSheet {
             rowCheckbox.type = 'checkbox';
             rowCheckbox.className = 'tm-sheet-row-checkbox mp-sheet-row-checkbox tm-tag-checkbox';
             rowCheckbox.checked = this._selectedTabIds.has(tab.id);
+            rowCheckbox.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
+                if (e.cancelable) e.preventDefault();
+            });
             rowCheckbox.addEventListener('change', (e) => {
                 e.stopPropagation();
+                this._lastInputTouchTime = Date.now();
                 if (e.target.checked) {
                     this._selectedTabIds.add(tab.id);
                 } else {
@@ -502,8 +524,7 @@ export class MarkerBottomSheet {
             deleteBtn.className = 'tm-sheet-delete-btn';
             deleteBtn.innerHTML = ICON_TRASH;
             deleteBtn.title = '删除片段';
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
+            bindActionWithoutBlurShift(deleteBtn, () => {
                 const removedIndex = this.loopManager.tabs.findIndex(t => t.id === tab.id);
                 this._deletedHistory.push({ tab: { ...tab }, index: removedIndex, expireAt: Date.now() + 60000 });
                 this._selectedTabIds.delete(tab.id);
@@ -520,7 +541,7 @@ export class MarkerBottomSheet {
                 this.loopManager._saveTabs();
                 this.loopManager.renderTabs();
                 this.updateBottomSheet();
-            });
+            }, (t) => { this._lastInputTouchTime = t; });
 
             // 多维快捷标签选择抽屉 (位于 mainRow 下方，展开时自然撑开行高，绝不裁切)
             const tagDrawer = document.createElement('div');
@@ -540,8 +561,8 @@ export class MarkerBottomSheet {
                     chip.className = 'tm-tag-chip mp-sheet-tag-chip';
                     chip.dataset.tag = t;
                     chip.textContent = t;
-                    chip.addEventListener('click', (e) => {
-                        e.stopPropagation();
+                    // 若用户原本正聚焦输入框打字，点按语义标签芯片时保持 iOS 键盘与光标不消失
+                    bindKeepFocusAction(chip, () => {
                         const tokens = (input.value || '').split(/\s+/).filter(Boolean);
                         const idx = tokens.indexOf(t);
                         if (idx >= 0) {
@@ -555,6 +576,9 @@ export class MarkerBottomSheet {
                         this.loopManager.renderTabs();
                         syncChipSelectedState();
                         flashSaved();
+                    }, () => input, {
+                        alwaysFocus: false,
+                        onTouchTimestamp: (ts) => { this._lastInputTouchTime = ts; }
                     });
                     tagDrawer.appendChild(chip);
                 });
@@ -562,8 +586,8 @@ export class MarkerBottomSheet {
             syncChipSelectedState();
             input.addEventListener('input', syncChipSelectedState);
 
-            tagToggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
+            // 点击输入框右侧标签图标展开/收起语义标签抽屉：若当前输入框正处于聚焦态，保持焦点与 iOS 虚拟键盘不闪退
+            bindKeepFocusAction(tagToggleBtn, () => {
                 const isOpen = tagDrawer.classList.toggle('is-open');
                 tagToggleBtn.classList.toggle('is-active', isOpen);
                 if (isOpen) {
@@ -571,6 +595,9 @@ export class MarkerBottomSheet {
                         row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
                     }, 180);
                 }
+            }, () => input, {
+                alwaysFocus: false,
+                onTouchTimestamp: (ts) => { this._lastInputTouchTime = ts; }
             });
 
             mainRow.appendChild(rowCheckbox);

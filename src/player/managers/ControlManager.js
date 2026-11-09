@@ -457,5 +457,8 @@ export class ControlManager {
         if (this.playbackController) {
             this.playbackController.cleanup();
         }
+        if (this.commentPanel && typeof this.commentPanel.cleanup === 'function') {
+            this.commentPanel.cleanup();
+        }
     }
 }

@@ -310,4 +310,40 @@ assert.ok(
 );
 console.log('✅ 13. 手柄栏层级、评论栏与控制面板互斥关系、以及点击 + 号保持 iOS 虚拟键盘焦点验证通过');
 
-console.log('\n🎉 全部 13 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 14. 验证显式 UISurfaceMachine 状态机与全项目隐式状态机收口治理
+// ---------------------------------------------------------
+console.log('▶ 14. 验证显式 UISurfaceMachine 状态机与全项目隐式状态机收口治理...');
+const surfaceMachineJs = fs.readFileSync('src/player/state/UISurfaceMachine.js', 'utf8');
+const settingsManagerJs = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
+const loopManagerJs = fs.readFileSync('src/player/managers/LoopManager.js', 'utf8');
+const commentPanelJs = fs.readFileSync('src/player/controls/CommentPanel.js', 'utf8');
+const playerStateJs = fs.readFileSync('src/player/state/PlayerState.js', 'utf8');
+
+assert.ok(
+    surfaceMachineJs.includes('export class UISurfaceMachine') &&
+    surfaceMachineJs.includes('export function bindKeepFocusAction') &&
+    surfaceMachineJs.includes('export function bindActionWithoutBlurShift') &&
+    surfaceMachineJs.includes('container.dataset.activeSurface = this.activeSurface;'),
+    'UISurfaceMachine 必须提供显式浮层互斥状态机、焦点保持绑定与防失焦位移绑定，并同步更新 data-active-surface'
+);
+assert.ok(
+    settingsManagerJs.includes('SURFACE_TYPES.SETTINGS') &&
+    settingsManagerJs.includes("document.addEventListener('click', this.overlayClickHandler, true)") &&
+    loopManagerJs.includes('SURFACE_TYPES.INLINE_REMARK') &&
+    loopManagerJs.includes('bindActionWithoutBlurShift(saveBtn') &&
+    markerSheetJs.includes('SURFACE_TYPES.MARKER_SHEET') &&
+    markerSheetJs.includes('bindKeepFocusAction(tagToggleBtn'),
+    'SettingsManager、LoopManager、MarkerBottomSheet 必须统一接入 UISurfaceMachine 与 iOS 防失焦辅助函数，并使用捕获阶段 composedPath 处理外部点击'
+);
+assert.ok(
+    uiManagerJs.includes('this.playerCore.userPauseIntent = false;') &&
+    loopManagerJs.includes('this.playerCore.userPauseIntent = false;') &&
+    commentPanelJs.includes('this.playerCore.userPauseIntent = false;') &&
+    playerStateJs.includes("(rawColorMode === 'review') ? 'review' : 'preview'"),
+    '视频点击、高光胶囊与评论时间戳跳转播放时必须同步重置 userPauseIntent 防自锁，且 PlayerState 必须修正 rawColorMode 变量读取'
+);
+console.log('✅ 14. 显式 UISurfaceMachine 状态机与全项目隐式状态机收口治理验证通过');
+
+console.log('\n🎉 全部 14 大核心修复与人机工程验证单元测试 100% 通过！\n');
+
