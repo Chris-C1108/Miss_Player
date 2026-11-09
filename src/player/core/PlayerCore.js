@@ -123,11 +123,19 @@ export class PlayerCore {
         this.originalParent = this.mediaHostElement.parentNode;
         this.originalIndex = this.originalParent ? Array.from(this.originalParent.children).indexOf(this.mediaHostElement) : -1;
 
-        // 插入原位隐藏占位符，防止将 mediaHostElement 移入播放器浮层后原网页布局发生高度塌陷 (消除 CLS 累计布局偏移)
+        // 插入原位等尺寸占位符，防止将 mediaHostElement 移入播放器浮层后原网页视频容器发生高度塌陷或下拉透底时出现空白洞 (消除 CLS 累计布局偏移)
         try {
             if (this.originalParent && !this.videoPlaceholder) {
+                const hostRect = typeof this.mediaHostElement.getBoundingClientRect === 'function'
+                    ? this.mediaHostElement.getBoundingClientRect()
+                    : null;
                 this.videoPlaceholder = document.createElement('div');
                 this.videoPlaceholder.className = 'mp-video-placeholder';
+                if (hostRect && hostRect.height > 0) {
+                    this.videoPlaceholder.style.width = hostRect.width > 0 ? `${Math.round(hostRect.width)}px` : '100%';
+                    this.videoPlaceholder.style.height = `${Math.round(hostRect.height)}px`;
+                    this.videoPlaceholder.style.backgroundColor = '#000000';
+                }
                 this.originalParent.insertBefore(this.videoPlaceholder, this.mediaHostElement);
             }
         } catch (_) {}
@@ -264,28 +272,23 @@ export class PlayerCore {
     }
     
     /**
-     * 关闭播放器并恢复原始视频
+     * 立即将视频或自定义媒体宿主容器无损归还至原宿主 DOM 槽位（幂等，支持手势释放首帧 0ms 瞬时还原）
      */
-    close(overlay, container, playerContainer, rootHost) {
-        if (!overlay) return;
-        
+    restoreMediaToHost() {
+        if (!this.targetVideo) return;
+
         // 保存当前视频状态以便下次打开
         this.videoState.currentTime = this.targetVideo.currentTime;
         this.videoState.isPlaying = !this.targetVideo.paused;
         this.videoState.volume = this.targetVideo.volume;
         this.videoState.playbackRate = this.targetVideo.playbackRate;
-        
-        // 如果视频正在播放，暂停它
-        if (!this.targetVideo.paused) {
-            this.targetVideo.pause();
-        }
-        
-        // 恢复原始的视频或媒体宿主容器样式和属性
+
+        // 先在视频硬件合成表面处于活跃可见态时将其同步移回宿主原位，防止跨 Shadow DOM 边界移动已隐藏/已暂停节点触发 WebKit 重绑定黑屏
         const nodeToRestore = this.mediaHostElement || this.targetVideo;
         if (this.originalParent && nodeToRestore) {
             if (nodeToRestore.parentNode !== this.originalParent) {
                 if (this.originalParent.isConnected) {
-                    // 优先替换原位置占位符
+                    // 优先原位替换等尺寸占位符，实现 0ms 无重排无缝交接
                     if (this.videoPlaceholder && this.videoPlaceholder.parentNode) {
                         this.videoPlaceholder.parentNode.replaceChild(nodeToRestore, this.videoPlaceholder);
                         this.videoPlaceholder = null;
@@ -298,39 +301,63 @@ export class PlayerCore {
                     // 若原宿主容器已在单页路由中被销毁，安全将视频放回 body 避免节点孤立
                     try { document.body.appendChild(nodeToRestore); } catch (_) {}
                 }
-                
-                // 彻底清空宿主视频及容器上可能残留的所有内联拖拽/动画样式，防止下滑退出后产生黑屏或位移残留
-                const clearMediaStyles = (el) => {
-                    if (!el || !el.style) return;
-                    el.style.removeProperty('width');
-                    el.style.removeProperty('height');
-                    el.style.removeProperty('max-width');
-                    el.style.removeProperty('max-height');
-                    el.style.removeProperty('margin');
-                    el.style.removeProperty('position');
-                    el.style.removeProperty('transform');
-                    el.style.removeProperty('opacity');
-                    el.style.removeProperty('visibility');
-                    el.style.removeProperty('transition');
-                    el.style.removeProperty('display');
-                    el.style.removeProperty('cursor');
-                    el.style.removeProperty('will-change');
-                    el.style.removeProperty('object-fit');
-                };
-                clearMediaStyles(nodeToRestore);
-                if (this.targetVideo && this.targetVideo !== nodeToRestore) {
-                    clearMediaStyles(this.targetVideo);
-                }
+            }
+            if (this.videoPlaceholder && this.videoPlaceholder.parentNode) {
+                this.videoPlaceholder.parentNode.removeChild(this.videoPlaceholder);
+                this.videoPlaceholder = null;
+            }
 
-                // 始终保持 playsinline 属性，防止 Safari / 移动端在退出播放器或二次加载时被系统全屏劫持
-                enforceInlinePlayback(this.targetVideo);
+            // 彻底清空宿主视频及容器上可能残留的所有内联拖拽/动画样式，防止下滑退出后产生黑屏或位移残留
+            const clearMediaStyles = (el) => {
+                if (!el || !el.style) return;
+                el.style.removeProperty('width');
+                el.style.removeProperty('height');
+                el.style.removeProperty('max-width');
+                el.style.removeProperty('max-height');
+                el.style.removeProperty('margin');
+                el.style.removeProperty('position');
+                el.style.removeProperty('transform');
+                el.style.removeProperty('opacity');
+                el.style.removeProperty('visibility');
+                el.style.removeProperty('transition');
+                el.style.removeProperty('display');
+                el.style.removeProperty('cursor');
+                el.style.removeProperty('will-change');
+                el.style.removeProperty('object-fit');
+            };
+            clearMediaStyles(nodeToRestore);
+            if (this.targetVideo && this.targetVideo !== nodeToRestore) {
+                clearMediaStyles(this.targetVideo);
+            }
 
-                // 若处于 Safari 原生系统全屏中，主动退出
-                if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === 'function') {
-                    try { this.targetVideo.webkitExitFullscreen(); } catch (_) {}
-                }
+            // 恢复原始 controls 状态
+            if (this.videoState && typeof this.videoState.controls === 'boolean') {
+                this.targetVideo.controls = this.videoState.controls;
+            }
+
+            // 始终保持 playsinline 属性，防止 Safari / 移动端在退出播放器或二次加载时被系统全屏劫持
+            enforceInlinePlayback(this.targetVideo);
+
+            // 若处于 Safari 原生系统全屏中，主动退出
+            if (this.targetVideo.webkitDisplayingFullscreen && typeof this.targetVideo.webkitExitFullscreen === 'function') {
+                try { this.targetVideo.webkitExitFullscreen(); } catch (_) {}
             }
         }
+
+        // 在节点已完成 DOM 归位且保留首帧硬件合成画面后再暂停，消除解码层挂起空白
+        if (!this.targetVideo.paused) {
+            try { this.targetVideo.pause(); } catch (_) {}
+        }
+    }
+
+    /**
+     * 关闭播放器并恢复原始视频
+     */
+    close(overlay, container, playerContainer, rootHost) {
+        if (!overlay) return;
+
+        // 执行幂等媒体节点归位与样式净化
+        this.restoreMediaToHost();
         
         // 移除叠加层
         if (rootHost && rootHost.parentNode) {

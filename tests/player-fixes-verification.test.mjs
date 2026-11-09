@@ -156,8 +156,9 @@ assert.ok(
 
 const hostCssCode = fs.readFileSync('src/player/ui/styles/01_core/_host.css', 'utf8');
 assert.ok(
-    hostCssCode.includes('body.tm-player-active dialog[open] > *:not(miss-player-root):not(.tm-floating-button) {\n  visibility: hidden !important;\n  pointer-events: none !important;\n}'),
-    '_host.css 必须使用 visibility: hidden 与 pointer-events: none 保护宿主 dialog[open] 几何尺寸'
+    hostCssCode.includes('body.tm-player-active dialog[open] > *:not(miss-player-root):not(.tm-floating-button) {\n  pointer-events: none !important;\n}') &&
+    !hostCssCode.includes('visibility: hidden !important;'),
+    '_host.css 必须仅对 dialog[open] 子节点设置 pointer-events: none，严禁使用 visibility: hidden 抹空底层画面导致下拉时出现 1 秒黑屏'
 );
 console.log('✅ 7. 通用媒体盒模型缩放与 Web Components 挂载解耦验证通过');
 
@@ -210,4 +211,44 @@ assert.ok(
 );
 console.log('✅ 9. Top Layer 模态栈感知与 iOS 起播互锁收窄验证通过');
 
-console.log('\n🎉 全部 9 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 10. 验证下滑关闭 0ms 瞬时无空白还原 (Zero-Blank Swipe-Down Restoration)
+// ---------------------------------------------------------
+console.log('▶ 10. 验证下滑关闭 0ms 瞬时无空白还原...');
+assert.ok(
+    playerCoreCode.includes('restoreMediaToHost()') &&
+    playerCoreCode.includes('this.videoPlaceholder.style.height = `${Math.round(hostRect.height)}px`;'),
+    'PlayerCore 必须提供幂等 restoreMediaToHost() 方法并锁定占位符物理尺寸'
+);
+assert.ok(
+    videoSwipeCode.includes("this.uiElements.playerContainer.style.opacity = '1';") &&
+    videoSwipeCode.includes('this.playerCore.restoreMediaToHost()'),
+    'VideoSwipeManager 下拉时必须保持 playerContainer 不透明度为 1，并在释放首帧立即执行 restoreMediaToHost()'
+);
+assert.ok(
+    playerCssCode.includes('.tm-player-container') &&
+    playerCssCode.includes('background-color: transparent;'),
+    '_player.css 中 .tm-player-container 必须为 transparent 背景，由 .tm-video-overlay 统一承担背景渐隐'
+);
+console.log('✅ 10. 下滑关闭 0ms 瞬时无空白还原验证通过');
+
+// ---------------------------------------------------------
+// 11. 验证浮动按钮设备分档定位与空间碰撞防遮挡引擎
+// ---------------------------------------------------------
+console.log('▶ 11. 验证浮动按钮设备分档定位与空间碰撞防遮挡引擎...');
+assert.ok(
+    hostCssCode.includes('left: calc(50% + var(--mp-fab-offset-x, 0px));') &&
+    hostCssCode.includes('transform: translateX(-50%);') &&
+    hostCssCode.includes('@media screen and (min-width: 600px) and (min-height: 600px), (pointer: fine)'),
+    '_host.css 必须实现手机端底部居中与 iPad/PC 端右下角响应式分档定位'
+);
+assert.ok(
+    floatingBtnCode.includes('isTabletOrDesktop()') &&
+    floatingBtnCode.includes('_resolveCollisionOffsets()') &&
+    floatingBtnCode.includes('document.elementsFromPoint(px, py)') &&
+    floatingBtnCode.includes('targetContainer.lastElementChild !== this.button'),
+    'FloatingButton 必须具备 elementsFromPoint 空间碰撞避让引擎与容器末位节点挂载保障'
+);
+console.log('✅ 11. 浮动按钮设备分档定位与空间碰撞防遮挡引擎验证通过');
+
+console.log('\n🎉 全部 11 大核心修复与人机工程验证单元测试 100% 通过！\n');

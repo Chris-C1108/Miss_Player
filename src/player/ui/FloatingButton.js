@@ -117,26 +117,126 @@ export class FloatingButton {
     }
 
     /**
-     * 确保浮动按钮在 Top Layer 模态层 (如原生 <dialog open>) 中依然可见不被遮挡
+     * 确保浮动按钮在 Top Layer 模态层 (如原生 <dialog open>) 中依然可见不被遮挡，并保持容器末位子节点以获得同级最高绘制顺位
      */
     ensureTopLayerMount() {
         if (!this.button) return;
         try {
-            // 若脱离 DOM 树，先救回挂载
-            if (!this.button.isConnected && document.body) {
-                document.body.appendChild(this.button);
-            }
-
             // 查找当前页面上处于打开状态的原生模态 dialog（例如 Peach 的 <dialog id="stage" open>）
             const activeDialog = document.querySelector('dialog[open], [data-stage-host] dialog');
-            if (activeDialog && activeDialog.isConnected) {
-                if (this.button.parentElement !== activeDialog) {
-                    activeDialog.appendChild(this.button);
-                }
-            } else if (this.button.parentElement !== document.body && document.body) {
-                document.body.appendChild(this.button);
+            const targetContainer = (activeDialog && activeDialog.isConnected) ? activeDialog : document.body;
+            if (!targetContainer) return;
+
+            if (this.button.parentElement !== targetContainer || targetContainer.lastElementChild !== this.button) {
+                targetContainer.appendChild(this.button);
             }
         } catch (_) {}
+    }
+
+    /**
+     * 判定当前设备是否为 iPad 平板端（短边 ≥ 600px）或 PC 桌面端（精确指针）
+     * 手机端（短边 < 600px 的触屏设备，含横竖屏）返回 false -> 底部居中
+     * iPad 及 PC 端返回 true -> 右下角显示
+     */
+    isTabletOrDesktop() {
+        const vw = window.innerWidth || document.documentElement?.clientWidth || 0;
+        const vh = window.innerHeight || document.documentElement?.clientHeight || 0;
+        const hasFinePointer = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: fine)').matches;
+        return (vw >= 600 && vh >= 600) || hasFinePointer;
+    }
+
+    /**
+     * 空间碰撞检测与动态避让引擎 (Universal Spatial Hit-Test Anti-Occlusion)
+     * 探测基准锚点区域是否存在宿主固定底栏、批量操作坞 ([data-batch-dock]) 或第三方插件悬浮钮，动态计算避让偏移量
+     */
+    _resolveCollisionOffsets() {
+        if (typeof document === 'undefined' || typeof document.elementsFromPoint !== 'function') {
+            return { offsetX: 0, offsetY: 0 };
+        }
+
+        const vw = window.innerWidth || document.documentElement?.clientWidth || 0;
+        const vh = window.innerHeight || document.documentElement?.clientHeight || 0;
+        if (vw <= 0 || vh <= 0) {
+            return { offsetX: 0, offsetY: 0 };
+        }
+
+        const isCornerMode = this.isTabletOrDesktop();
+        const btnSize = 56;
+        const half = btnSize / 2;
+        const baseBottom = isCornerMode ? 24 : 20;
+        const baseRight = 24;
+
+        const baseCenterX = isCornerMode ? (vw - baseRight - half) : (vw / 2);
+        const baseCenterY = vh - baseBottom - half;
+
+        const probePoints = [
+            [baseCenterX, baseCenterY],
+            [baseCenterX - 18, baseCenterY + 18],
+            [baseCenterX + 18, baseCenterY + 18],
+            [baseCenterX - 18, baseCenterY - 18],
+            [baseCenterX + 18, baseCenterY - 18]
+        ];
+
+        const visited = new Set();
+        let maxLiftY = 0;
+
+        for (const [px, py] of probePoints) {
+            if (px < 0 || px > vw || py < 0 || py > vh) continue;
+            let hitElements = [];
+            try {
+                hitElements = document.elementsFromPoint(px, py) || [];
+            } catch (_) {
+                continue;
+            }
+
+            for (const rawEl of hitElements) {
+                if (!rawEl || rawEl === this.button || this.button?.contains(rawEl)) continue;
+
+                let node = rawEl;
+                for (let depth = 0; depth < 5 && node && node !== document.body && node !== document.documentElement; depth++, node = node.parentElement) {
+                    if (visited.has(node)) continue;
+                    const tag = (node.tagName || '').toUpperCase();
+                    if (tag === 'DIALOG' || tag === 'VIDEO' || tag === 'HLSJS-VIDEO' || tag === 'CANVAS' || tag === 'MISS-PLAYER-ROOT') {
+                        continue;
+                    }
+
+                    let style;
+                    try {
+                        style = window.getComputedStyle(node);
+                    } catch (_) {
+                        continue;
+                    }
+                    if (!style || style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0 || style.pointerEvents === 'none') {
+                        continue;
+                    }
+
+                    const rect = typeof node.getBoundingClientRect === 'function' ? node.getBoundingClientRect() : null;
+                    if (!rect || rect.width <= 0 || rect.height <= 0) continue;
+
+                    // 排除全屏背景容器或页面主体内容层
+                    if (rect.width >= vw * 0.95 && rect.height >= vh * 0.45) continue;
+
+                    const isFixedOrSticky = style.position === 'fixed' || style.position === 'sticky';
+                    const isExplicitDockOrControl = typeof node.matches === 'function' && node.matches(
+                        '[data-batch-dock], #peach-jav-action, [id*="peach-jav"], [class*="floating"], [class*="fab"], button, a[href], [role="button"]'
+                    );
+
+                    if ((isFixedOrSticky && rect.height < vh * 0.4) || (isExplicitDockOrControl && rect.width <= 420 && rect.height <= 140)) {
+                        visited.add(node);
+                        // 若障碍物位于视口下半区且与基准按钮区域发生垂直交叠，计算向上抬升避让距离 (留出 12px 呼吸间距)
+                        if (rect.top > vh * 0.45 && rect.bottom > (vh - baseBottom - btnSize)) {
+                            const neededLift = Math.round((vh - baseBottom) - rect.top + 12);
+                            if (neededLift > maxLiftY) {
+                                maxLiftY = neededLift;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        const safeLiftY = Math.max(0, Math.min(maxLiftY, Math.round(vh * 0.35)));
+        return { offsetX: 0, offsetY: safeLiftY };
     }
 
     /**
@@ -166,10 +266,12 @@ export class FloatingButton {
                 console.log('[FloatingButton] DOM变化检测到视频元素已移除，已隐藏浮动按钮');
             }
             // 如果有视频元素且有按钮，确保按钮显示并更新位置
-            else if (hasVideo && this.button && this.button.style.display === 'none') {
-                this.button.style.display = 'flex';
+            else if (hasVideo && this.button) {
+                if (this.button.style.display === 'none') {
+                    this.button.style.display = 'flex';
+                    console.log('[FloatingButton] DOM变化检测到视频元素已添加，已显示浮动按钮');
+                }
                 this.updateButtonPosition();
-                console.log('[FloatingButton] DOM变化检测到视频元素已添加，已显示浮动按钮');
             }
         }, 300);
     }
@@ -262,7 +364,7 @@ export class FloatingButton {
      * 创建浮动按钮
      */
     createButton() {
-        // 创建浮动按钮 - 使用CSS类同时设置内联样式防御
+        // 创建浮动按钮 - 由宿主轨 _host.css 统一管控布局，JS 仅注入防碰撞动态 CSS 变量
         this.button = createElementWithStyle('button', 'tm-floating-button');
 
         this.button.innerHTML = FLOATING_PLAY;
@@ -287,7 +389,7 @@ export class FloatingButton {
         this.button.style.display = 'flex';
         this.button._floatingButtonInstance = this;
 
-        // 初始挂载至正确层级与关键防御样式
+        // 初始挂载至正确层级与动态防遮挡位置更新
         this.ensureTopLayerMount();
         this.updateButtonPosition();
 
@@ -295,7 +397,8 @@ export class FloatingButton {
     }
 
     /**
-     * 更新按钮位置，考虑安全区域和屏幕方向
+     * 更新按钮位置：由 _host.css 响应式媒体查询负责设备分档锚点（手机端底部居中，iPad/PC 右下角），
+     * JS 仅负责 Top Layer 末位挂载与注入 --mp-fab-offset-x / --mp-fab-offset-y 空间避让令牌
      */
     updateButtonPosition() {
         if (!this.button) return;
@@ -304,41 +407,22 @@ export class FloatingButton {
             return;
         }
         this.ensureTopLayerMount();
-        
-        // 核心规范：确保 position: fixed !important 与无系统背景/边框 (严格防御宿主样式污染)
-        this.button.style.setProperty('position', 'fixed', 'important');
-        this.button.style.setProperty('background', 'transparent', 'important');
-        this.button.style.setProperty('background-color', 'transparent', 'important');
-        this.button.style.setProperty('border', 'none', 'important');
-        this.button.style.setProperty('outline', 'none', 'important');
-        this.button.style.setProperty('box-shadow', 'none', 'important');
-        this.button.style.setProperty('padding', '0', 'important');
-        this.button.style.setProperty('margin', '0', 'important');
-        this.button.style.setProperty('width', '56px', 'important');
-        this.button.style.setProperty('height', '56px', 'important');
-        this.button.style.setProperty('border-radius', '50%', 'important');
-        this.button.style.setProperty('box-sizing', 'border-box', 'important');
-        this.button.style.setProperty('z-index', '2147483647', 'important');
-        this.button.style.setProperty('pointer-events', 'auto', 'important');
-        this.button.style.setProperty('touch-action', 'manipulation', 'important');
-        this.button.style.setProperty('-webkit-appearance', 'none', 'important');
-        this.button.style.setProperty('appearance', 'none', 'important');
-        
-        // 获取当前屏幕方向
-        const isPortraitValue = isPortrait();
-        
-        if (isPortraitValue) {
-            // 竖屏模式 (portrait)：右下角避开底部栏与中轴标签
-            this.button.style.setProperty('bottom', 'max(80px, calc(env(safe-area-inset-bottom, 20px) + 60px))', 'important');
-            this.button.style.setProperty('right', 'max(16px, env(safe-area-inset-right, 16px))', 'important');
-            this.button.style.setProperty('left', 'auto', 'important');
-            this.button.style.setProperty('transform', 'none', 'important');
-        } else {
-            // 横屏模式 (landscape)：停泊在右下角
-            this.button.style.setProperty('bottom', 'max(20px, env(safe-area-inset-bottom, 20px))', 'important');
-            this.button.style.setProperty('right', 'max(20px, env(safe-area-inset-right, 20px))', 'important');
-            this.button.style.setProperty('left', 'auto', 'important');
-            this.button.style.setProperty('transform', 'none', 'important');
+
+        // 清理可能残留的历史行内坐标覆盖，交由 _host.css 声明式分档规则接管
+        this.button.style.removeProperty('left');
+        this.button.style.removeProperty('right');
+        this.button.style.removeProperty('bottom');
+        this.button.style.removeProperty('transform');
+
+        // 动态探测宿主固定底栏/悬浮按钮遮挡并注入避让偏移量（正值 offsetY 叠加在 bottom 上实现向上抬升避让）
+        const { offsetX, offsetY } = this._resolveCollisionOffsets();
+        const nextX = `${offsetX}px`;
+        const nextY = `${offsetY}px`;
+        if (this.button.style.getPropertyValue('--mp-fab-offset-x') !== nextX) {
+            this.button.style.setProperty('--mp-fab-offset-x', nextX);
+        }
+        if (this.button.style.getPropertyValue('--mp-fab-offset-y') !== nextY) {
+            this.button.style.setProperty('--mp-fab-offset-y', nextY);
         }
     }
 

@@ -33,10 +33,12 @@ body.tm-player-active #header-top,
 body.tm-player-active .top-nav,
 body.tm-player-active [class*=header--sticky],
 body.tm-player-active [class*=navbar-fixed],
-body.tm-player-active #peach-jav-action,
-body.tm-player-active [id*="peach-jav"],
 body.tm-player-active aside[aria-label*="Peach"],
 body.tm-player-active aside[data-panel-mode] {
+  pointer-events: none !important;
+}
+body.tm-player-active #peach-jav-action,
+body.tm-player-active [id*="peach-jav"] {
   display: none !important;
 }
 body.controls-hidden {
@@ -51,13 +53,13 @@ body.tm-settings-active {
   touch-action: pan-y !important;
 }
 
-/* 浮动唤醒按钮 */
+/* 浮动唤醒按钮 — 手机端默认底部居中，iPad 及 PC 端右下角停泊，支持动态防遮挡偏移令牌 */
 .tm-floating-button {
   position: fixed !important;
-  bottom: max(80px, calc(env(safe-area-inset-bottom, 20px) + 60px));
-  right: max(16px, env(safe-area-inset-right, 16px));
-  left: auto;
-  transform: none;
+  left: calc(50% + var(--mp-fab-offset-x, 0px));
+  right: auto;
+  bottom: calc(max(20px, env(safe-area-inset-bottom, 20px)) + var(--mp-fab-offset-y, 0px));
+  transform: translateX(-50%);
   padding: 0;
   margin: 0;
   width: 56px;
@@ -74,10 +76,12 @@ body.tm-settings-active {
   justify-content: center;
   z-index: 2147483647;
   cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s cubic-bezier(0.16, 1, 0.3, 1), bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1), right 0.25s cubic-bezier(0.16, 1, 0.3, 1), left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: visible;
   appearance: none;
   -webkit-appearance: none;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 .tm-floating-button svg {
@@ -89,7 +93,7 @@ body.tm-settings-active {
 }
 
 .tm-floating-button:hover {
-  transform: scale(1.08);
+  transform: translateX(-50%) scale(1.08);
 }
 
 .tm-floating-button:hover svg {
@@ -97,7 +101,7 @@ body.tm-settings-active {
 }
 
 .tm-floating-button:active {
-  transform: scale(0.96);
+  transform: translateX(-50%) scale(0.96);
 }
 
 @keyframes breathing-glow {
@@ -105,11 +109,12 @@ body.tm-settings-active {
   50% { filter: drop-shadow(0 0 22px rgba(var(--brand-pink-rgb, 254, 98, 142), 1.0)); }
 }
 
-@media screen and (orientation: landscape) {
+/* iPad 平板端（短边 ≥ 600px）及 PC 桌面端（精确指针）统一右下角显示 */
+@media screen and (min-width: 600px) and (min-height: 600px), (pointer: fine) {
   .tm-floating-button {
     left: auto;
-    right: max(20px, env(safe-area-inset-right, 20px));
-    bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    right: calc(max(24px, env(safe-area-inset-right, 24px)) + var(--mp-fab-offset-x, 0px));
+    bottom: calc(max(24px, env(safe-area-inset-bottom, 24px)) + var(--mp-fab-offset-y, 0px));
     transform: none;
   }
   .tm-floating-button:hover { transform: scale(1.08); }
@@ -124,7 +129,7 @@ body.tm-settings-active {
   }
 }
 
-/* 宿主轨：当播放器激活时，适配打开的原生模态 dialog[open]，使其全屏展开且隐藏其原有内部子节点 */
+/* 宿主轨：当播放器激活时，适配打开的原生模态 dialog[open]（消除包含块陷阱，保持底层 UI 原样可见以支撑 0ms 无空白下拉还原） */
 body.tm-player-active dialog[open] {
   padding: 0;
   margin: 0;
@@ -133,11 +138,13 @@ body.tm-player-active dialog[open] {
   max-height: 100vh;
   width: 100vw;
   height: 100vh;
-  background: #0b0b0e;
   overflow: hidden;
+  transform: none;
+  filter: none;
+  backdrop-filter: none;
+  contain: none;
 }
 body.tm-player-active dialog[open] > *:not(miss-player-root):not(.tm-floating-button) {
-  visibility: hidden !important;
   pointer-events: none !important;
 }
 

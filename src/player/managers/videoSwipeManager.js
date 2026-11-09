@@ -598,14 +598,14 @@ export class VideoSwipeManager {
                 // 向下滑动：添加正在下滑的标志 class 到 body，隐藏所有控制和面板组件
                 document.body.classList.add('tm-swiping-down');
                 
-                // 向下滑动：滑动位移，并同步修改背景和播放器容器透明度
+                // 向下滑动：仅平移 playerContainer 并保持 opacity=1（防止视频硬件合成层因半透明或移出屏幕被提前挂起），由底层 overlay 渐隐透出宿主原页面
                 if (this.uiElements && this.uiElements.playerContainer) {
-                    this.uiElements.playerContainer.style.transform = `translateY(${deltaY}px)`;
-                    this.uiElements.playerContainer.style.opacity = Math.max(0, 1 - deltaY / 350);
+                    this.uiElements.playerContainer.style.transform = `translate3d(0, ${deltaY}px, 0)`;
+                    this.uiElements.playerContainer.style.opacity = '1';
                     this.uiElements.playerContainer.style.transition = 'none';
                 }
                 if (this.uiElements && this.uiElements.overlay) {
-                    this.uiElements.overlay.style.opacity = Math.max(0.08, 1 - deltaY / 320);
+                    this.uiElements.overlay.style.opacity = Math.max(0.1, 1 - deltaY / 280);
                     this.uiElements.overlay.style.transition = 'none';
                 }
             } else {
@@ -614,7 +614,7 @@ export class VideoSwipeManager {
                 
                 // 向上滑动：不允许整体播放器向上拉起位移，直接归零以防止破坏与视口的视觉对齐
                 if (this.uiElements && this.uiElements.playerContainer) {
-                    this.uiElements.playerContainer.style.transform = 'translateY(0)';
+                    this.uiElements.playerContainer.style.transform = 'translate3d(0, 0, 0)';
                     this.uiElements.playerContainer.style.opacity = '1';
                     this.uiElements.playerContainer.style.transition = 'none';
                 }
@@ -695,21 +695,24 @@ export class VideoSwipeManager {
         if (this.dragDirection === 'vertical') {
             // 处理纵向下拉拖放释放逻辑
             if (this.deltaY > 120) {
-                // 拖动距离超过120px，执行滑出关闭动画
-                console.log('[VideoSwipeManager] 触发下拉关闭视频');
+                // 拖动距离超过120px，立即在第 0 帧将视频无损归还至宿主原位，彻底消除 1 秒空白期
+                console.log('[VideoSwipeManager] 触发下拉关闭视频（0ms 瞬时归位）');
                 document.body.classList.remove('tm-swiping-down');
                 
+                if (this.playerCore && typeof this.playerCore.restoreMediaToHost === 'function') {
+                    this.playerCore.restoreMediaToHost();
+                }
+
                 if (this.uiElements && this.uiElements.playerContainer) {
-                    this.uiElements.playerContainer.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
-                    this.uiElements.playerContainer.style.transform = 'translateY(100vh)';
+                    this.uiElements.playerContainer.style.transition = 'opacity 0.12s cubic-bezier(0.16, 1, 0.3, 1)';
                     this.uiElements.playerContainer.style.opacity = '0';
                 }
                 if (this.uiElements && this.uiElements.overlay) {
-                    this.uiElements.overlay.style.transition = 'opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+                    this.uiElements.overlay.style.transition = 'opacity 0.12s cubic-bezier(0.16, 1, 0.3, 1)';
                     this.uiElements.overlay.style.opacity = '0';
                 }
                 
-                // 动画完成后关闭播放器
+                // 极速淡出残余 UI 壳层后完成清理
                 setTimeout(() => {
                     if (this.uiElements && this.uiElements.playerContainer) {
                         this.uiElements.playerContainer.style.transform = '';
@@ -724,14 +727,14 @@ export class VideoSwipeManager {
                     if (this.onClose) {
                         this.onClose();
                     }
-                }, 350);
+                }, 120);
             } else {
                 // 拖动距离不足，回弹复位
                 document.body.classList.remove('tm-swiping-down');
                 
                 if (this.uiElements && this.uiElements.playerContainer) {
                     this.uiElements.playerContainer.style.transition = 'transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease';
-                    this.uiElements.playerContainer.style.transform = 'translateY(0)';
+                    this.uiElements.playerContainer.style.transform = 'translate3d(0, 0, 0)';
                     this.uiElements.playerContainer.style.opacity = '1';
                 }
                 if (this.uiElements && this.uiElements.overlay) {
