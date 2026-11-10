@@ -595,6 +595,10 @@
     color: #30d158;
 }
 
+.tm-peach-status-badge.is-testing {
+    color: #0a84ff;
+}
+
 .tm-peach-field-row {
     display: flex;
     flex-direction: column;
@@ -603,20 +607,32 @@
     padding: 10px 0;
 }
 
-.tm-peach-token-wrap {
+.tm-peach-input-with-action {
     display: flex;
     gap: 8px;
     align-items: center;
 }
 
-.tm-peach-token-wrap .tm-settings-input {
+.tm-peach-input-with-action .tm-settings-input {
     flex: 1;
 }
 
-.tm-peach-token-toggle {
+.tm-peach-delete-btn {
     padding: 6px 12px;
-    font-size: 12px;
+    font-size: 11.5px;
+    font-weight: 500;
+    background: rgba(255, 69, 58, 0.15);
+    color: #ff453a;
+    border: 1px solid rgba(255, 69, 58, 0.35);
+    border-radius: 6px;
     cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.tm-peach-delete-btn:hover {
+    background: rgba(255, 69, 58, 0.25);
+    border-color: rgba(255, 69, 58, 0.55);
 }
 
 .tm-peach-action-row {

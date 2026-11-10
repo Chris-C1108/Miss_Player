@@ -4,7 +4,6 @@ import { SegmentedControl } from '../components/SegmentedControl.js';
 import { PeachService, PEACH_WEBDAV_MODE_SYNC_DEFAULT, PEACH_WEBDAV_MODE_SYNC_CUSTOM, PEACH_WEBDAV_MODE_STANDALONE } from '../../../../services/PeachService.js';
 import { SyncManager } from '../../../../sync/SyncManager.js';
 import { Toast } from '../../../../utils/index.js';
-import { PeachStreamHUD } from '../../../ui/PeachStreamHUD.js';
 
 export class PeachSection {
     constructor(settingsManager) {
@@ -14,6 +13,7 @@ export class PeachSection {
         this.element.className = 'tm-settings-group tm-peach-section';
         this.isExpanded = this.sm ? this.sm.isSectionExpanded('peachSync', false) : false;
         this.isConnected = false;
+        this._checkDebounce = null;
         this._render();
         this._checkInitialStatus();
     }
@@ -31,9 +31,24 @@ export class PeachSection {
         }
     }
 
+    _autoCheckStatus() {
+        if (this._checkDebounce) clearTimeout(this._checkDebounce);
+        this._checkDebounce = setTimeout(async () => {
+            const badge = this.element.querySelector('.tm-peach-status-badge');
+            if (badge) {
+                badge.textContent = '测试中…';
+                badge.className = 'tm-peach-status-badge is-testing';
+            }
+            const res = await PeachService.testConnection();
+            this.isConnected = Boolean(res && res.ok);
+            this._updateStatusBadge();
+        }, 600);
+    }
+
     _updateStatusBadge() {
         const badge = this.element.querySelector('.tm-peach-status-badge');
         if (badge) {
+            badge.classList.remove('is-testing');
             badge.classList.toggle('is-connected', this.isConnected);
             badge.textContent = this.isConnected ? '● 已连接' : '○ 未连接';
         }
@@ -47,7 +62,7 @@ export class PeachSection {
 
         const card = new AppleCard();
 
-        // 1. 折叠 Header 行
+        // 1. 折叠 Header 行 (状态指示灯展示自动测试结果)
         const headerRow = document.createElement('div');
         headerRow.className = 'tm-apple-accordion-header';
         headerRow.innerHTML = `
@@ -71,7 +86,7 @@ export class PeachSection {
         // 2.1 主开关
         const mainToggle = new ToggleRow({
             title: '启用 Peach 联动',
-            subtext: '生成 .strm 文件并通知刮削',
+            subtext: '生成 .strm 文件写入媒体库',
             checked: Boolean(config.enabled),
             onChange: (checked) => {
                 PeachService.saveConfig({ enabled: checked });
@@ -80,98 +95,87 @@ export class PeachSection {
         });
         bodyWrap.appendChild(mainToggle.getElement());
 
-        // 2.2 一键配对快速粘贴区
-        const pasteRow = document.createElement('div');
-        pasteRow.className = 'tm-apple-row tm-peach-field-row';
-        pasteRow.innerHTML = `
-            <div class="tm-apple-row-title">一键配对</div>
-            <div class="tm-apple-row-subtext">粘贴 Peach 下载设置中的配对 JSON</div>
-            <input type="text" class="tm-settings-input tm-peach-paste-input" placeholder='{"peach_pairing":1, ...}' />
-        `;
-        const pasteInput = pasteRow.querySelector('.tm-peach-paste-input');
-        bodyWrap.appendChild(pasteRow);
-
-        // 2.3 服务器地址 (Base URL)
+        // 2.2 Peach 服务地址 (带记录删除按钮与直接粘贴配对 JSON 识别)
         const baseRow = document.createElement('div');
         baseRow.className = 'tm-apple-row tm-peach-field-row';
-        const knownOriginsText = (config.origins && config.origins.length > 1)
-            ? `<div class="tm-apple-row-subtext tm-peach-origins-text">已自动纳管候选入口: ${config.origins.join(' · ')}</div>`
-            : '';
         baseRow.innerHTML = `
             <div class="tm-apple-row-title">Peach 服务地址</div>
-            <div class="tm-apple-row-subtext">自托管实例 Web 地址</div>
-            <input type="text" class="tm-settings-input tm-peach-base-input" placeholder="http://192.168.1.x:8000" value="${config.base || ''}" />
-            ${knownOriginsText}
-        `;
-        const baseInput = baseRow.querySelector('.tm-peach-base-input');
-        bodyWrap.appendChild(baseRow);
-
-        // 2.4 专用令牌 (Token) + 显隐切换
-        const tokenRow = document.createElement('div');
-        tokenRow.className = 'tm-apple-row tm-peach-field-row';
-        tokenRow.innerHTML = `
-            <div class="tm-apple-row-title">专用令牌 (可选)</div>
-            <div class="tm-apple-row-subtext">用于馆藏查询，留空不影响入库</div>
-            <div class="tm-peach-token-wrap">
-                <input type="password" class="tm-settings-input tm-peach-token-input" placeholder="留空或粘贴专用令牌" value="${config.token || ''}" />
-                <button type="button" class="tm-settings-btn tm-peach-token-toggle">显示</button>
+            <div class="tm-apple-row-subtext">自托管实例 Web 地址 (支持直接粘贴配对 JSON)</div>
+            <div class="tm-peach-input-with-action">
+                <input type="text" class="tm-settings-input tm-peach-base-input" placeholder="http://192.168.1.x:8000" value="${config.base || ''}" />
+                <button type="button" class="tm-peach-delete-btn" style="display: ${config.base ? 'block' : 'none'};">删除</button>
             </div>
         `;
-        const tokenInput = tokenRow.querySelector('.tm-peach-token-input');
-        const tokenToggleBtn = tokenRow.querySelector('.tm-peach-token-toggle');
-        tokenToggleBtn.addEventListener('click', () => {
-            const isPwd = tokenInput.type === 'password';
-            tokenInput.type = isPwd ? 'text' : 'password';
-            tokenToggleBtn.textContent = isPwd ? '隐藏' : '显示';
-        });
-        bodyWrap.appendChild(tokenRow);
+        const baseInput = baseRow.querySelector('.tm-peach-base-input');
+        const deleteBtn = baseRow.querySelector('.tm-peach-delete-btn');
 
-        // 2.5 流网关配置 (Phase 19 升级)
+        // 删除按钮：清除已记录域名与 Token，重置连通状态
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            PeachService.clearBase();
+            baseInput.value = '';
+            deleteBtn.style.display = 'none';
+            this.isConnected = false;
+            this._updateStatusBadge();
+            Toast('已清除 Peach 服务地址', 1500, 'info');
+        });
+
+        // 地址输入变化与粘贴处理（支持 JSON 自动拆解）
+        const handleBaseChange = () => {
+            const rawVal = baseInput.value.trim();
+            deleteBtn.style.display = rawVal ? 'block' : 'none';
+
+            const parsed = PeachService.parsePairingText(rawVal);
+            if (parsed && parsed.base) {
+                baseInput.value = parsed.base;
+                PeachService.saveConfig({
+                    base: parsed.base,
+                    token: parsed.token || ''
+                });
+                Toast('已自动识别配对信息', 1800, 'success');
+            } else {
+                PeachService.saveConfig({ base: rawVal });
+            }
+            this._autoCheckStatus();
+        };
+
+        baseInput.addEventListener('change', handleBaseChange);
+        baseInput.addEventListener('input', () => {
+            deleteBtn.style.display = baseInput.value.trim() ? 'block' : 'none';
+        });
+        baseInput.addEventListener('paste', () => {
+            setTimeout(handleBaseChange, 50);
+        });
+
+        bodyWrap.appendChild(baseRow);
+
+        // 2.3 流网关配置 (Phase 19 核心：局域网/host.docker.internal，Token 环境变量配置默认 dev)
         const gatewayRow = document.createElement('div');
         gatewayRow.className = 'tm-apple-row tm-peach-field-row';
         gatewayRow.innerHTML = `
             <div class="tm-apple-row-title">流网关地址</div>
-            <div class="tm-apple-row-subtext">寻源与切片代理服务</div>
+            <div class="tm-apple-row-subtext">Peach 服务端可访问的网关地址（支持局域网 IP / host.docker.internal）。播放 Token 需在部署网关时环境变量配置（默认 dev）</div>
             <div class="tm-peach-gateway-wrap">
                 <input type="text" class="tm-settings-input tm-peach-gateway-base-input" placeholder="http://host.docker.internal:8765" value="${config.gatewayBase || ''}" />
                 <input type="text" class="tm-settings-input tm-peach-gateway-token-input" placeholder="播放 Token (默认 dev)" value="${config.gatewayToken || 'dev'}" />
-                <button type="button" class="tm-settings-btn tm-peach-test-scraper-btn tm-peach-test-gateway-btn">测试流网关</button>
             </div>
         `;
         const gatewayBaseInput = gatewayRow.querySelector('.tm-peach-gateway-base-input');
         const gatewayTokenInput = gatewayRow.querySelector('.tm-peach-gateway-token-input');
-        const testGatewayBtn = gatewayRow.querySelector('.tm-peach-test-gateway-btn');
 
-        testGatewayBtn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const baseVal = gatewayBaseInput.value.trim();
-            const tokenVal = gatewayTokenInput.value.trim() || 'dev';
-            if (!baseVal) {
-                Toast('请先输入流网关基准地址', 2000, 'warning');
-                return;
-            }
+        const handleGatewayChange = () => {
+            PeachService.saveConfig({
+                gatewayBase: gatewayBaseInput.value.trim(),
+                gatewayToken: gatewayTokenInput.value.trim()
+            });
+            this._autoCheckStatus();
+        };
+        gatewayBaseInput.addEventListener('change', handleGatewayChange);
+        gatewayTokenInput.addEventListener('change', handleGatewayChange);
 
-            testGatewayBtn.disabled = true;
-            testGatewayBtn.textContent = '测试中…';
-
-            try {
-                const res = await PeachService.testGatewayConnection(baseVal, tokenVal);
-                if (res.ok) {
-                    Toast(`🎉 ${res.message} (注：此测试仅代表本机连通)`, 3500, 'success');
-                    PeachService.saveConfig({ gatewayBase: baseVal, gatewayToken: tokenVal });
-                } else {
-                    Toast(`连接失败: ${res.error}`, 3500, 'error');
-                }
-            } catch (err) {
-                Toast(`测试失败: ${err.message}`, 3500, 'error');
-            } finally {
-                testGatewayBtn.disabled = false;
-                testGatewayBtn.textContent = '测试流网关';
-            }
-        });
         bodyWrap.appendChild(gatewayRow);
 
-        // 2.6 STRM 入库存储模式 (WebDAV · Phase 19.8 三种模式)
+        // 2.4 STRM 入库存储模式 (WebDAV · Phase 19.8 三种模式)
         const storageRow = document.createElement('div');
         storageRow.className = 'tm-apple-row tm-peach-field-row';
         storageRow.innerHTML = `
@@ -267,125 +271,7 @@ export class PeachSection {
         renderSubpanels(currentMode);
         bodyWrap.appendChild(storageRow);
 
-        // 2.7 外部片源与授权 (JAVVerse)
-        const jvRow = document.createElement('div');
-        jvRow.className = 'tm-apple-row tm-peach-field-row';
-        jvRow.innerHTML = `
-            <div class="tm-apple-row-title">外部片源：JAVVerse</div>
-            <div class="tm-apple-row-subtext">登录同步免登凭据 (优先无码流出)</div>
-            <div class="tm-peach-source-action-wrap">
-                <button type="button" class="tm-settings-btn tm-peach-jv-login-btn">
-                    前往 JAVVerse 登录 / 授权
-                </button>
-            </div>
-        `;
-        const jvLoginBtn = jvRow.querySelector('.tm-peach-jv-login-btn');
-        jvLoginBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const openUrl = 'https://javverse.com/en/auth/login';
-            try {
-                if (typeof GM_openInTab === 'function') {
-                    GM_openInTab(openUrl, { active: true });
-                } else {
-                    window.open(openUrl, '_blank');
-                }
-            } catch (_) {
-                window.open(openUrl, '_blank');
-            }
-            Toast('已打开 JAVVerse 登录页，登录完成后即可畅享无码流出版', 3500, 'info');
-        });
-        bodyWrap.appendChild(jvRow);
-
-        // 2.8 操作按键区
-        const actionRow = document.createElement('div');
-        actionRow.className = 'tm-peach-action-row';
-        actionRow.innerHTML = `
-            <button type="button" class="tm-settings-btn tm-peach-action-btn tm-peach-test-btn">测试 Peach 连接</button>
-            <button type="button" class="tm-settings-btn tm-peach-action-btn tm-peach-scan-btn">通知 Peach 扫描</button>
-            <button type="button" class="tm-settings-btn tm-peach-action-btn tm-peach-hud-btn" title="查看寻源耗时、代理状态与播放事件">流诊断探针</button>
-        `;
-        const testBtn = actionRow.querySelector('.tm-peach-test-btn');
-        const scanBtn = actionRow.querySelector('.tm-peach-scan-btn');
-        const hudBtn = actionRow.querySelector('.tm-peach-hud-btn');
-        bodyWrap.appendChild(actionRow);
-
-        // 事件处理
-        const handleSave = () => {
-            PeachService.saveConfig({
-                base: baseInput.value.trim(),
-                token: tokenInput.value.trim(),
-                gatewayBase: gatewayBaseInput.value.trim(),
-                gatewayToken: gatewayTokenInput.value.trim()
-            });
-        };
-        baseInput.addEventListener('change', handleSave);
-        tokenInput.addEventListener('change', handleSave);
-        gatewayBaseInput.addEventListener('change', handleSave);
-        gatewayTokenInput.addEventListener('change', handleSave);
-
-        // 配对信息自动识别
-        pasteInput.addEventListener('paste', () => {
-            setTimeout(() => {
-                const parsed = PeachService.parsePairingText(pasteInput.value);
-                if (parsed && parsed.base && parsed.token) {
-                    baseInput.value = parsed.base;
-                    tokenInput.value = parsed.token;
-                    PeachService.saveConfig({
-                        base: parsed.base,
-                        token: parsed.token
-                    });
-                    pasteInput.value = '';
-                    Toast('已成功解析并保存 Peach 配对信息', 1800, 'info');
-                    testBtn.click();
-                } else if (parsed && parsed.base) {
-                    baseInput.value = parsed.base;
-                    PeachService.saveConfig({ base: parsed.base });
-                    Toast('已填入服务器地址，请继续填入专用令牌', 1800, 'info');
-                }
-            }, 50);
-        });
-
-        testBtn.addEventListener('click', async () => {
-            handleSave();
-            testBtn.disabled = true;
-            testBtn.textContent = '测试中…';
-            try {
-                const res = await PeachService.testConnection();
-                this.isConnected = Boolean(res && res.ok);
-                this._updateStatusBadge();
-                Toast(res.message, 2500, res.ok ? 'info' : 'error');
-            } finally {
-                testBtn.disabled = false;
-                testBtn.textContent = '测试 Peach 连接';
-            }
-        });
-
-        scanBtn.addEventListener('click', async () => {
-            scanBtn.disabled = true;
-            scanBtn.textContent = '通知中…';
-            try {
-                const res = await PeachService.triggerScan();
-                if (res.ok) {
-                    Toast('已向 Peach 发送媒体扫描请求', 2000, 'info');
-                } else {
-                    Toast(`通知失败: ${res.error}`, 2500, 'error');
-                }
-            } finally {
-                scanBtn.disabled = false;
-                scanBtn.textContent = '通知 Peach 扫描';
-            }
-        });
-
-        hudBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const uiManager = this.sm?.uiManager || this.sm?.playerCore?.uiManager;
-            const container = uiManager?.playerContainer;
-            const shadow = uiManager?.shadowRoot;
-            PeachStreamHUD.init(container, shadow);
-            Toast('已打开视频流采集与播放诊断探针', 1800, 'info');
-        });
-
-        // 3. Header 点击手风琴展开/折叠
+        // 3. Header 点击手风琴展开/折叠 (展开时触发自动检查)
         headerRow.addEventListener('click', (e) => {
             e.stopPropagation();
             this.isExpanded = !this.isExpanded;
@@ -396,6 +282,9 @@ export class PeachSection {
             const arrow = headerRow.querySelector('.tm-apple-accordion-arrow');
             if (arrow) {
                 arrow.classList.toggle('expanded', this.isExpanded);
+            }
+            if (this.isExpanded) {
+                this._autoCheckStatus();
             }
         });
 

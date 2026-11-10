@@ -147,6 +147,30 @@ export class PeachService {
     }
 
     /**
+     * 清空当前所有 Peach 记录的地址和 Token
+     */
+    static clearBase() {
+        setValue(PEACH_KEY_BASE, '');
+        setValue(PEACH_KEY_ORIGINS, '[]');
+        setValue(PEACH_KEY_TOKEN, '');
+    }
+
+    /**
+     * 删除指定的 Origin（若同时为 activeBase 则清空或切换至下一个候选）
+     * @param {string} rawUrl 
+     */
+    static removeOrigin(rawUrl) {
+        const clean = this.sanitizeBaseUrl(rawUrl);
+        if (!clean) return;
+        const origins = this.getOrigins().filter(u => u !== clean);
+        setValue(PEACH_KEY_ORIGINS, JSON.stringify(origins));
+        const activeBase = getValue(PEACH_KEY_BASE, '');
+        if (activeBase === clean) {
+            setValue(PEACH_KEY_BASE, origins[0] || '');
+        }
+    }
+
+    /**
      * 获取当前保存的 Peach 配置
      */
     static getConfig() {
@@ -204,8 +228,8 @@ export class PeachService {
     }) {
         if (typeof base === 'string') {
             const clean = this.sanitizeBaseUrl(base);
+            setValue(PEACH_KEY_BASE, clean);
             if (clean) {
-                setValue(PEACH_KEY_BASE, clean);
                 this.addOrigin(clean);
             }
         }

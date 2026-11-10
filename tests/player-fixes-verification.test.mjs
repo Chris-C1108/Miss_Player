@@ -612,6 +612,49 @@ assert.ok(
 
 console.log('✅ 20. 设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与双轨外链跳转验证通过');
 
-console.log('\n🎉 全部 20 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 21. 验证 Peach 虚拟入库板块重构（操作按键精简自动测试、域名删除、边界切割与网关提示）
+// ---------------------------------------------------------
+console.log('▶ 21. 验证 Peach 虚拟入库板块重构...');
+const peachSectionCode = fs.readFileSync('src/player/managers/settings/sections/PeachSection.js', 'utf8');
+const peachServiceCode = fs.readFileSync('src/services/PeachService.js', 'utf8');
+const todoMdCode = fs.readFileSync('TODO.md', 'utf8');
+
+// 21.1 验证废弃功能彻底清除（无 JAVVerse、无 HUD 探针、无手动测试/扫描按键、无手动 Token 框）
+assert.ok(
+    !peachSectionCode.includes('javverse.com') &&
+    !peachSectionCode.includes('PeachStreamHUD') &&
+    !peachSectionCode.includes('tm-peach-hud-btn') &&
+    !peachSectionCode.includes('通知 Peach 扫描') &&
+    !peachSectionCode.includes('测试 Peach 连接') &&
+    !peachSectionCode.includes('tm-peach-token-input'),
+    'PeachSection 必须彻底清除 JAVVerse 登录、流诊断探针、手动测试/扫描按键及手动 Token 输入框'
+);
+
+// 21.2 验证 Peach 服务地址具备删除按钮与配对解析
+assert.ok(
+    peachSectionCode.includes('tm-peach-delete-btn') &&
+    peachSectionCode.includes('PeachService.clearBase()') &&
+    peachServiceCode.includes('static clearBase()') &&
+    peachServiceCode.includes('static removeOrigin(rawUrl)'),
+    'Peach 服务地址必须支持删除按钮以清除记录域名，且 PeachService 必须提供 clearBase 与 removeOrigin'
+);
+
+// 21.3 验证流网关配置说明规范（局域网地址与环境变量默认 dev）
+assert.ok(
+    peachSectionCode.includes('Peach 服务端可访问的网关地址（支持局域网 IP / host.docker.internal）。播放 Token 需在部署网关时环境变量配置（默认 dev）') &&
+    peachSectionCode.includes('_autoCheckStatus'),
+    '流网关必须清晰注明 Peach 可访问的地址与环境变量配置提示，且连通性测试必须改为自动进行'
+);
+
+// 21.4 验证 TODO.md 包含专用令牌自动获取待办 19.12
+assert.ok(
+    todoMdCode.includes('**19.12** Peach 专用令牌自动签发调研与实现'),
+    'TODO.md 必须包含 Phase 19.12 Peach 专用令牌自动获取调研待办'
+);
+
+console.log('✅ 21. Peach 虚拟入库板块重构验证通过');
+
+console.log('\n🎉 全部 21 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 
