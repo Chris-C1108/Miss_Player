@@ -1045,10 +1045,10 @@ export class UIManager {
                     return tag === 'input' || tag === 'textarea' || Boolean(active.isContentEditable);
                 };
 
-                const collapseKeyboardLayout = () => {
+                this.collapseKeyboardLayout = () => {
                     this._keyboardCloseTimer = null;
-                    // 二次守卫：若在防抖周期内已有新的输入框获得焦点，严禁收起键盘布局！
-                    if (isInputFocused()) {
+                    // 二次守卫：若处于系统级焦点锁定期或当前已有活动输入框，坚决不收起键盘布局！
+                    if (this.surfaceMachine?.isFocusLocked || isInputFocused()) {
                         return;
                     }
 
@@ -1088,6 +1088,19 @@ export class UIManager {
                         this.updatePortraitVideoHeight();
                     }
                 };
+
+                // 系统级焦点转移锁拦截：如果处于焦点锁定保护期（如同一面板内多个输入框切换），坚决锁死布局！
+                if (this.surfaceMachine?.isFocusLocked) {
+                    if (keyboardHeight > 60) {
+                        UIManager.lastKnownKeyboardHeight = keyboardHeight;
+                        document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+                        if (playerContainer) {
+                            playerContainer.classList.add('tm-ios-keyboard-open');
+                            playerContainer.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+                        }
+                    }
+                    return;
+                }
 
                 if (keyboardHeight > 60) {
                     if (this._keyboardCloseTimer) {
@@ -1134,19 +1147,19 @@ export class UIManager {
                     }
                 } else {
                     // 键盘高度 <= 60: 可能是真实收起，也可能是多输入框切换瞬间的微秒失焦 (Focus Handoff)
-                    // 若当前仍有输入框持有焦点，坚决不收起键盘布局
-                    if (isInputFocused()) {
+                    // 若当前处于系统级焦点锁定期或仍有输入框持有焦点，坚决不收起键盘布局
+                    if (this.surfaceMachine?.isFocusLocked || isInputFocused()) {
                         return;
                     }
 
-                    // 若此前键盘已是打开状态，等待 120ms 防抖缓冲。若是在同一组件内切换输入框，下一个 input focus 将直接取消收起，面板稳如泰山！
+                    // 若此前键盘已是打开状态，等待 300ms 缓冲。若是在同一组件内切换输入框，下一个 input focus 将直接取消收起，面板稳如泰山！
                     if (wasKeyboardOpen) {
                         if (this._keyboardCloseTimer) {
                             clearTimeout(this._keyboardCloseTimer);
                         }
-                        this._keyboardCloseTimer = setTimeout(collapseKeyboardLayout, 120);
+                        this._keyboardCloseTimer = setTimeout(this.collapseKeyboardLayout, 300);
                     } else {
-                        collapseKeyboardLayout();
+                        this.collapseKeyboardLayout();
                     }
                 }
             };

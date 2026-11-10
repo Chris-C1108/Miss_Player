@@ -30,12 +30,33 @@ export class UISurfaceMachine {
         this._modalStack = [];
         this._keyDownHandler = this._handleGlobalKeyDown.bind(this);
         this._initialized = false;
+
+        // 系统级焦点转移锁与输入交互时间戳 (Focus Staging Machine)
+        this.isFocusLocked = false;
+        this._focusLockTimer = null;
+        this._lastInputInteractionTime = 0;
+        this._eventSinkEl = null;
+
+        this._handleContainerCaptureTouch = this._handleContainerCaptureTouch.bind(this);
+        this._handleFocusIn = this._handleFocusIn.bind(this);
+        this._handleFocusOut = this._handleFocusOut.bind(this);
     }
 
     init() {
         if (this._initialized || typeof document === 'undefined') return;
         this._initialized = true;
         document.addEventListener('keydown', this._keyDownHandler, true);
+
+        // 系统级挂载全局事件黑洞与手势阻断壁垒
+        const container = this.playerContainer;
+        if (container) {
+            container.addEventListener('touchstart', this._handleContainerCaptureTouch, true);
+            container.addEventListener('pointerdown', this._handleContainerCaptureTouch, true);
+            container.addEventListener('contextmenu', this._handleContainerCaptureTouch, true);
+            container.addEventListener('focusin', this._handleFocusIn, true);
+            container.addEventListener('focusout', this._handleFocusOut, true);
+            this._ensureEventSink();
+        }
     }
 
     get playerContainer() {
@@ -44,6 +65,129 @@ export class UISurfaceMachine {
             document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container') ||
             document.querySelector('.tm-player-container')
         );
+    }
+
+    /**
+     * 判定当前 Shadow DOM 或宿主环境中是否有可编辑输入框处于活动状态
+     * @returns {HTMLElement|null}
+     */
+    getActiveEditableElement() {
+        const root = this.playerContainer?.getRootNode?.() || document;
+        const active = (root && root.activeElement) ? root.activeElement : document.activeElement;
+        if (!active) return null;
+        const tag = active.tagName?.toLowerCase();
+        return (tag === 'input' || tag === 'textarea' || Boolean(active.isContentEditable)) ? active : null;
+    }
+
+    /**
+     * 申请系统级焦点转移锁定 (进入防抖保护态，锁死键盘高度与面板物理坐标)
+     */
+    acquireFocusLock() {
+        this.isFocusLocked = true;
+        this._lastInputInteractionTime = Date.now();
+        if (this._focusLockTimer) {
+            clearTimeout(this._focusLockTimer);
+            this._focusLockTimer = null;
+        }
+    }
+
+    /**
+     * 释放系统级焦点转移锁定 (等待 350ms 焦点交接缓冲窗口)
+     * @param {number} [delay=350]
+     */
+    releaseFocusLock(delay = 350) {
+        if (this._focusLockTimer) {
+            clearTimeout(this._focusLockTimer);
+        }
+        this._focusLockTimer = setTimeout(() => {
+            this._focusLockTimer = null;
+            const active = this.getActiveEditableElement();
+            if (!active) {
+                this.isFocusLocked = false;
+                if (this.uiManager && typeof this.uiManager.collapseKeyboardLayout === 'function') {
+                    this.uiManager.collapseKeyboardLayout();
+                }
+            }
+        }, delay);
+    }
+
+    _handleContainerCaptureTouch(e) {
+        if (!this.hasAnySurfaceOpen()) return;
+
+        const target = e.target;
+        const tag = target?.tagName?.toLowerCase();
+        const isEditable = tag === 'input' || tag === 'textarea' || Boolean(target?.isContentEditable);
+        if (isEditable) {
+            this.acquireFocusLock();
+        }
+
+        // 核心：当浮层处于激活态时，阻断所有 Touch / Pointer / ContextMenu 事件穿透 Shadow DOM 边界冒泡至宿主 window！
+        // 彻底杜绝 Stay App 或宿主页面的全局长按监听器感知到触摸手势！
+        e.stopPropagation();
+
+        // 针对非输入框的 contextmenu 直接阻断，防止原生系统菜单或外挂触发
+        if (!isEditable && e.type === 'contextmenu') {
+            e.preventDefault();
+        }
+    }
+
+    _handleFocusIn(e) {
+        const target = e.target;
+        const tag = target?.tagName?.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || Boolean(target?.isContentEditable)) {
+            this.acquireFocusLock();
+        }
+    }
+
+    _handleFocusOut() {
+        // 当输入框失焦时，绝不立即收起布局，给予 350ms 焦点交接缓冲窗口 (Focus Transition Window)
+        this.releaseFocusLock(350);
+    }
+
+    /**
+     * 确保系统级全局事件黑洞网 (Event Sink Backdrop) 存在并挂载
+     */
+    _ensureEventSink() {
+        const container = this.playerContainer;
+        if (!container) return null;
+        let sink = container.querySelector('.tm-surface-event-sink');
+        if (!sink) {
+            sink = document.createElement('div');
+            sink.className = 'tm-surface-event-sink';
+
+            // 系统级黑洞吞噬：捕获阶段拦截并吞噬所有不需要的手势与长按穿透
+            const swallow = (e) => {
+                e.stopPropagation();
+                if (e.cancelable && e.type !== 'click') {
+                    e.preventDefault();
+                }
+            };
+
+            const events = [
+                'touchstart', 'touchmove', 'touchend', 'touchcancel',
+                'pointerdown', 'pointermove', 'pointerup', 'pointercancel',
+                'mousedown', 'mousemove', 'mouseup',
+                'contextmenu', 'gesturestart', 'gesturechange', 'gestureend'
+            ];
+            events.forEach(evt => {
+                sink.addEventListener(evt, swallow, true);
+            });
+
+            sink.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (Date.now() - (this._lastInputInteractionTime || 0) < 350) return;
+                this.dismissTopmost();
+            }, true);
+
+            const firstPanel = container.querySelector('.tm-settings-panel, .tm-bottom-sheet-panel, .tm-comment-submit-bar-wrapper, .tm-custom-modal-overlay');
+            if (firstPanel) {
+                container.insertBefore(sink, firstPanel);
+            } else {
+                container.appendChild(sink);
+            }
+        }
+        this._eventSinkEl = sink;
+        return sink;
     }
 
     /**
@@ -177,15 +321,30 @@ export class UISurfaceMachine {
 
     _syncContainerState() {
         const container = this.playerContainer;
+        const hasAny = this.hasAnySurfaceOpen();
         if (container) {
             container.dataset.activeSurface = this.activeSurface;
+            container.dataset.hasOverlay = hasAny ? 'true' : 'false';
             for (const [surface, cls] of Object.entries(SURFACE_CLASS_MAP)) {
                 container.classList.toggle(cls, this.activeSurface === surface);
             }
             container.classList.toggle('has-modal-open', this._modalStack.length > 0);
+            container.classList.toggle('has-any-surface-open', hasAny);
+
+            const sink = this._ensureEventSink();
+            if (sink) {
+                sink.classList.toggle('visible', hasAny);
+            }
         }
         if (typeof document !== 'undefined' && document.body) {
             document.body.classList.toggle('tm-settings-active', this.activeSurface === SURFACE_TYPES.SETTINGS);
+        }
+        if (!hasAny) {
+            this.isFocusLocked = false;
+            if (this._focusLockTimer) {
+                clearTimeout(this._focusLockTimer);
+                this._focusLockTimer = null;
+            }
         }
         if (this.uiManager && typeof this.uiManager.updatePortraitVideoHeight === 'function') {
             this.uiManager.updatePortraitVideoHeight();
@@ -197,6 +356,19 @@ export class UISurfaceMachine {
             document.removeEventListener('keydown', this._keyDownHandler, true);
             document.body?.classList.remove('tm-settings-active');
         }
+        const container = this.playerContainer;
+        if (container) {
+            container.removeEventListener('touchstart', this._handleContainerCaptureTouch, true);
+            container.removeEventListener('pointerdown', this._handleContainerCaptureTouch, true);
+            container.removeEventListener('contextmenu', this._handleContainerCaptureTouch, true);
+            container.removeEventListener('focusin', this._handleFocusIn, true);
+            container.removeEventListener('focusout', this._handleFocusOut, true);
+        }
+        if (this._focusLockTimer) {
+            clearTimeout(this._focusLockTimer);
+            this._focusLockTimer = null;
+        }
+        this.isFocusLocked = false;
         this._modalStack = [];
         this._surfaceClosers.clear();
         this.activeSurface = SURFACE_TYPES.NONE;

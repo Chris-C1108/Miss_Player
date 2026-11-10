@@ -210,8 +210,42 @@
 .tm-player-container.has-sheet-open .tm-video-wrapper video,
 .tm-player-container.has-inline-remark-open .tm-video-wrapper video,
 .tm-player-container.tm-settings-active .tm-video-wrapper video,
-.tm-player-container.has-modal-open .tm-video-wrapper video {
+.tm-player-container.has-modal-open .tm-video-wrapper video,
+.tm-player-container[data-has-overlay="true"] .tm-video-wrapper,
+.tm-player-container[data-has-overlay="true"] .tm-video-wrapper video,
+.tm-player-container[data-has-overlay="true"] .tm-video-container,
+.tm-player-container[data-has-overlay="true"] .tm-control-panel,
+.tm-player-container[data-has-overlay="true"] .tm-control-buttons,
+.tm-player-container[data-has-overlay="true"] .tm-handle-container,
+.tm-player-container[data-has-overlay="true"] .tm-comment-fab-btn,
+.tm-player-container[data-has-overlay="true"] .tm-show-controls-float-btn {
     pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 系统级全局事件黑洞遮罩 (System-Level Event Sink Backdrop) */
+.tm-surface-event-sink {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: calc(var(--z-drawer) - 1);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--anim-smooth);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: none;
+}
+
+.tm-surface-event-sink.visible {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .tm-resize-handle {
