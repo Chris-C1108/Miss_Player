@@ -495,13 +495,149 @@ export class PeachService {
     }
 
     /**
+     * 判断当前是否已配置并持有有效的专用令牌 (Dedicated Token)
+     */
+    static hasDedicatedToken() {
+        const config = this.getConfig();
+        return Boolean(config.token && config.token.length > 0);
+    }
+
+    /**
+     * 同源会话 API 无感自动获取与签发专用令牌 (Phase 19.12)
+     * 在 Peach Web 同源上下文或局域网免密模式下，直接与 /api/configuration/jav-browser 协商签发 Dedicated Token
+     * 
+     * @param {string} [customOrigin] - 目标 Origin (默认取 window.location.origin 或已配置 base)
+     * @returns {Promise<{ ok: boolean, token?: string, status?: 'full' | 'strm_only' | 'error', provider?: string, message: string }>}
+     */
+    static async acquireDedicatedToken(customOrigin = '') {
+        const targetOrigin = this.sanitizeBaseUrl(customOrigin) ||
+            (typeof window !== 'undefined' && window.location ? this.sanitizeBaseUrl(window.location.origin) : '') ||
+            this.getConfig().base;
+
+        if (!targetOrigin) {
+            return { ok: false, status: 'error', message: '未指定有效的 Peach 服务端地址' };
+        }
+
+        const configUrl = `${targetOrigin}/api/configuration/jav-browser`;
+
+        try {
+            // 1. 发起 GET 获取当前渠道配置与令牌启用状态
+            const getRes = await fetchWithTransport(configUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Sec-Fetch-Site': 'same-origin'
+                },
+                timeout: 6000
+            });
+
+            if (getRes.status === 401 || getRes.status === 403) {
+                return {
+                    ok: false,
+                    status: 'error',
+                    message: `Peach 鉴权受阻 (HTTP ${getRes.status}): 请在当前浏览器中登录 Peach Web`
+                };
+            }
+
+            if (getRes.status < 200 || getRes.status >= 300) {
+                return {
+                    ok: false,
+                    status: 'error',
+                    message: `获取 Peach 设置失败 (HTTP ${getRes.status})`
+                };
+            }
+
+            let initialData = {};
+            try {
+                initialData = JSON.parse(getRes.html);
+            } catch (_) {
+                return { ok: false, status: 'error', message: 'Peach 返回设置数据格式异常' };
+            }
+
+            // 2. 智能协商最佳下载渠道 (优先满足 configured && target 的可用渠道)
+            const providers = Array.isArray(initialData.providers) ? initialData.providers : [];
+            const readyProvider = providers.find(p => p.configured && p.target)?.key ||
+                (providers.some(p => p.key === initialData.active_provider) ? initialData.active_provider : '') ||
+                (providers.some(p => p.key === initialData.provider) ? initialData.provider : '') ||
+                providers[0]?.key || '';
+
+            // 若尚未在 Peach 下载渠道配置网盘，Peach 后端会拒绝生成 Token
+            if (!readyProvider) {
+                // 降级为 STRM 虚拟入库模式，依然纳管 Base 地址
+                this.saveConfig({
+                    base: targetOrigin,
+                    enabled: true
+                });
+                return {
+                    ok: false,
+                    status: 'strm_only',
+                    message: 'Peach 媒体库未配置网盘账号，STRM 虚拟入库已就绪（配置网盘后可自动启用在库感知）'
+                };
+            }
+
+            // 3. 发起 POST 请求自动签发专属 Dedicated Token
+            const action = initialData.enabled ? 'rotate' : 'enable';
+            const postRes = await fetchWithTransport(configUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Sec-Fetch-Site': 'same-origin'
+                },
+                body: JSON.stringify({
+                    action,
+                    provider: readyProvider
+                }),
+                timeout: 8000
+            });
+
+            if (postRes.status >= 200 && postRes.status < 300) {
+                try {
+                    const postData = JSON.parse(postRes.html);
+                    if (postData && postData.token) {
+                        this.saveConfig({
+                            base: targetOrigin,
+                            token: postData.token,
+                            enabled: true
+                        });
+                        return {
+                            ok: true,
+                            status: 'full',
+                            token: postData.token,
+                            provider: readyProvider,
+                            message: 'Peach 专用令牌自动签发成功！全功能已就绪'
+                        };
+                    }
+                } catch (_) {}
+            }
+
+            // 若 POST 遇到后端校验报错，安全降级
+            this.saveConfig({
+                base: targetOrigin,
+                enabled: true
+            });
+            return {
+                ok: false,
+                status: 'strm_only',
+                message: '已连接 Peach 服务端（STRM 虚拟入库就绪，专用令牌暂未签发）'
+            };
+        } catch (err) {
+            return {
+                ok: false,
+                status: 'error',
+                message: `自动签发请求失败: ${err.message}`
+            };
+        }
+    }
+
+    /**
      * 连通性握手测试
      */
     static async testConnection() {
         const config = this.getConfig();
         const candidateOrigins = Array.from(new Set([config.base, ...config.origins])).filter(Boolean);
         if (candidateOrigins.length === 0) {
-            return { ok: false, message: '请先填写 Peach 服务端地址' };
+            return { ok: false, status: 'error', message: '请先填写 Peach 服务端地址' };
         }
 
         // 1. 首先探测通用健康检查端点 /healthz (所有 Peach 实例均支持，无任何鉴权门槛)
@@ -520,22 +656,32 @@ export class PeachService {
         }
 
         if (!healthOk) {
-            return { ok: false, message: '无法连接到 Peach 服务端，请检查 IP、端口或网络连通性' };
+            return { ok: false, status: 'error', message: '无法连接到 Peach 服务端，请检查 IP、端口或网络连通性' };
         }
 
-        // 2. 若配置了专用令牌，进一步校验番号状态查询能力
+        // 2. 若配置了专用令牌，进一步校验番号状态查询能力 (全功能鉴权)
         if (config.token) {
             try {
                 const data = await this.request('/api/jav-browser?code=TEST-001', { timeout: 5000 });
                 if (data && (data.ok === true || typeof data.state === 'string' || data.detail)) {
-                    return { ok: true, message: `连接成功 (全功能就绪: ${activeUrl})` };
+                    return { ok: true, status: 'full', message: `连接成功 (全功能就绪: ${activeUrl})`, activeUrl };
                 }
             } catch (err) {
-                return { ok: true, message: `Peach 服务端在线 (STRM 就绪，专用令牌未生效: ${err.message})` };
+                return {
+                    ok: true,
+                    status: 'strm_only',
+                    message: `Peach 服务端在线 (STRM 就绪，专用令牌未生效: ${err.message})`,
+                    activeUrl
+                };
             }
         }
 
-        return { ok: true, message: `连接成功！Peach 服务端在线就绪 (${activeUrl})` };
+        return {
+            ok: true,
+            status: 'strm_only',
+            message: `连接成功！Peach 服务端在线就绪 (仅 STRM 模式: ${activeUrl})`,
+            activeUrl
+        };
     }
 
     /**

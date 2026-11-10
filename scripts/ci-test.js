@@ -143,6 +143,11 @@ runStep('执行流网关播放地址构建与 WebDAV 三种模式入库单元测
     execSync('node tests/peach-gateway-ingest.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.15 Peach 专用令牌自动签发与同源会话 API 单元测试
+runStep('执行 Peach 专用令牌自动签发与同源会话 API 单元测试', () => {
+    execSync('node tests/peach-dedicated-token.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

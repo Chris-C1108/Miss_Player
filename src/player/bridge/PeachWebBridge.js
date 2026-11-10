@@ -112,69 +112,115 @@ export class PeachWebBridge {
         PeachService.addOrigin(window.location.origin);
         PeachService.setActiveBase(window.location.origin);
 
-        // 2. 访问 Peach Web 时的零门槛自动配对
+        // 2. 访问 Peach Web 时的零门槛自动配对与专用令牌自动签发 (Phase 19.12)
         this._autoPairIfNeeded();
 
-        // 3. 异步获取服务端自报的网络拓扑入口 (自动扩充多通道地址池)
+        // 3. 实时感知 Peach 设置页 DOM 与剪贴板动态，兜底捕获手动生成的专用令牌
+        this._bindTokenDomWatcher();
+
+        // 4. 异步获取服务端自报的网络拓扑入口 (自动扩充多通道地址池)
         this._syncNetworkTopology();
 
-        // 4. WebDAV 媒体源巡检与引导
+        // 5. WebDAV 媒体源巡检与引导
         this._checkMediaLibraryAdvice();
     }
 
     /**
-     * 零门槛同源自动配对
+     * 零门槛同源自动配对 (Phase 19.12 专用令牌自动签发)
      */
     static async _autoPairIfNeeded() {
         const config = PeachService.getConfig();
-        if (config.token && config.enabled) {
-            return;
+        const currentOrigin = window.location.origin;
+
+        // 若本地已存在有效令牌，先行验证其是否仍有效（避免服务端 rotate 后本地失效）
+        if (config.token && config.enabled && (config.base === currentOrigin || config.origins.includes(currentOrigin))) {
+            const check = await PeachService.checkCodeStatus('TEST-001');
+            if (check.state !== 'error') {
+                return; // 令牌当前有效健康，无需重复打扰与无谓轮换
+            }
+            console.log('[PeachWebBridge] 当前专用令牌已失效，尝试通过同源会话自动自愈更新...');
         }
 
         try {
-            console.log('[PeachWebBridge] 正在为 Miss Player 自动配对 Peach 服务端...');
-            const configureUrl = `${window.location.origin}/api/configuration/jav-browser`;
-            
-            let res = await fetchWithTransport(configureUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'enable' }),
-                timeout: 8000
-            });
+            console.log('[PeachWebBridge] 正在为 Miss Player 自动协商/签发专用令牌...');
+            const result = await PeachService.acquireDedicatedToken(currentOrigin);
 
-            if (res.status >= 400) {
-                res = await fetchWithTransport(configureUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'rotate' }),
-                    timeout: 8000
-                });
+            if (result.ok && result.status === 'full') {
+                Toast('🎉 Miss Player 已通过同源会话自动签发专用令牌！', 3500, 'success');
+                return;
             }
 
-            if (res.status >= 200 && res.status < 300) {
+            if (result.status === 'strm_only') {
+                // 仅在首次纳管时弹出 STRM 就绪提示，避免页面反复刷新打扰
+                if (!config.enabled || !config.base) {
+                    Toast('🍑 已连接 Peach 服务端（STRM 虚拟入库就绪）', 3000, 'success');
+                }
+            }
+        } catch (err) {
+            console.warn('[PeachWebBridge] 专用令牌自动签发轻量异常:', err.message);
+        }
+    }
+
+    /**
+     * 监听 Peach 设置页 DOM 与复制行为，兜底捕获手动生成的专用令牌
+     */
+    static _bindTokenDomWatcher() {
+        // 1. 监听全局复制事件：若用户在 Peach Web 点击了“复制配对信息”，直接秒级同步存盘
+        window.addEventListener('copy', () => {
+            setTimeout(async () => {
                 try {
-                    const data = JSON.parse(res.html);
-                    if (data && data.token) {
-                        PeachService.saveConfig({
-                            base: window.location.origin,
-                            token: data.token,
-                            enabled: true
-                        });
-                        Toast('🎉 Miss Player 已自动完成 Peach 全功能配对！', 3500, 'success');
-                        return;
+                    const text = await navigator.clipboard.readText();
+                    const parsed = PeachService.parsePairingText(text);
+                    if (parsed && parsed.base && parsed.token) {
+                        const currentConfig = PeachService.getConfig();
+                        if (currentConfig.token !== parsed.token) {
+                            PeachService.saveConfig({
+                                base: parsed.base,
+                                token: parsed.token,
+                                enabled: true
+                            });
+                            Toast('🎉 已自动捕获并同步 Peach 专用令牌！', 2500, 'success');
+                        }
                     }
                 } catch (_) {}
-            }
+            }, 100);
+        });
 
-            // 降级兜底：未配置云下载网盘无法签发专用令牌时，依然标记当前实例已连接 (STRM 虚拟入库模式)
-            PeachService.saveConfig({
-                base: window.location.origin,
-                enabled: true
-            });
-            Toast('🎉 已连接 Peach 服务端（STRM 虚拟入库就绪）', 3000, 'success');
-        } catch (err) {
-            console.warn('[PeachWebBridge] 自动配对轻量提示:', err.message);
-        }
+        // 2. 监听 Peach Web 前端设置页可能生成的专用令牌密码框
+        const scanDomToken = () => {
+            try {
+                const passwordInputs = document.querySelectorAll('input[type="password"]');
+                for (const input of passwordInputs) {
+                    const val = (input.value || '').trim();
+                    // Peach 的 secrets.token_urlsafe(32) 长度约为 43 字符且为 URL 安全字符
+                    if (val && val.length >= 32 && val.length <= 64 && !val.includes(' ') && !val.includes('\n')) {
+                        const parent = input.closest('div') || input.parentElement;
+                        const labelText = parent ? (parent.textContent || '') : '';
+                        if (labelText.includes('令牌') || labelText.includes('token') || labelText.includes('浏览器添加')) {
+                            const config = PeachService.getConfig();
+                            if (config.token !== val) {
+                                PeachService.saveConfig({
+                                    base: window.location.origin,
+                                    token: val,
+                                    enabled: true
+                                });
+                                Toast('🎉 已自动同步当前生成的 Peach 专用令牌！', 2500, 'success');
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (_) {}
+        };
+
+        // 页面 DOM 发生重大变更（如用户在设置页点击生成）时扫描
+        const observer = new MutationObserver(() => {
+            scanDomToken();
+        });
+        observer.observe(document.body || document.documentElement, {
+            childList: true,
+            subtree: true
+        });
     }
 
     /**

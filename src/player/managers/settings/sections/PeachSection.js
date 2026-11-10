@@ -13,6 +13,7 @@ export class PeachSection {
         this.element.className = 'tm-settings-group tm-peach-section';
         this.isExpanded = this.sm ? this.sm.isSectionExpanded('peachSync', false) : false;
         this.isConnected = false;
+        this.connectionStatus = 'none'; // 'none' | 'strm_only' | 'full'
         this._checkDebounce = null;
         this._render();
         this._checkInitialStatus();
@@ -27,6 +28,7 @@ export class PeachSection {
         if (config.base || config.origins.length > 0) {
             const res = await PeachService.testConnection();
             this.isConnected = Boolean(res && res.ok);
+            this.connectionStatus = res && res.ok ? (res.status === 'full' ? 'full' : 'strm_only') : 'none';
             this._updateStatusBadge();
         }
     }
@@ -41,16 +43,88 @@ export class PeachSection {
             }
             const res = await PeachService.testConnection();
             this.isConnected = Boolean(res && res.ok);
+            this.connectionStatus = res && res.ok ? (res.status === 'full' ? 'full' : 'strm_only') : 'none';
             this._updateStatusBadge();
+            this._refreshActiveTokenWrap();
         }, 600);
     }
 
     _updateStatusBadge() {
         const badge = this.element.querySelector('.tm-peach-status-badge');
         if (badge) {
-            badge.classList.remove('is-testing');
-            badge.classList.toggle('is-connected', this.isConnected);
-            badge.textContent = this.isConnected ? '● 已连接' : '○ 未连接';
+            badge.classList.remove('is-testing', 'is-connected', 'is-strm-only');
+            if (this.connectionStatus === 'full') {
+                badge.classList.add('is-connected');
+                badge.textContent = '● 全功能就绪';
+            } else if (this.connectionStatus === 'strm_only') {
+                badge.classList.add('is-strm-only');
+                badge.textContent = '◐ 仅 STRM 模式';
+            } else {
+                badge.textContent = '○ 未连接';
+            }
+        }
+    }
+
+    _refreshActiveTokenWrap() {
+        const wrap = this.element.querySelector('.tm-peach-token-status-wrap');
+        if (wrap) {
+            this._renderTokenStatusWrap(wrap);
+        }
+    }
+
+    _renderTokenStatusWrap(container) {
+        container.innerHTML = '';
+        const config = PeachService.getConfig();
+        if (!config.base) return;
+
+        const hasToken = PeachService.hasDedicatedToken();
+
+        if (hasToken) {
+            const badgeRow = document.createElement('div');
+            badgeRow.className = 'tm-peach-token-badge-row';
+            badgeRow.innerHTML = `
+                <span class="tm-peach-token-tag">● 专用令牌已安全绑定 (全功能就绪)</span>
+                <button type="button" class="tm-peach-reissue-btn">重新获取</button>
+            `;
+            const reissueBtn = badgeRow.querySelector('.tm-peach-reissue-btn');
+            reissueBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                reissueBtn.disabled = true;
+                reissueBtn.textContent = '获取中…';
+                
+                const isSameOrigin = typeof window !== 'undefined' && window.location && window.location.origin === config.base;
+                if (isSameOrigin) {
+                    const res = await PeachService.acquireDedicatedToken(config.base);
+                    if (res && res.ok) {
+                        Toast('专用令牌已更新并持久化', 1500, 'success');
+                    } else {
+                        Toast(res?.message || '获取失败', 2000, 'warning');
+                    }
+                    this._autoCheckStatus();
+                } else {
+                    Toast('请在打开的 Peach 页面中完成自动签发', 2500, 'info');
+                    window.open(config.base, '_blank');
+                    reissueBtn.disabled = false;
+                    reissueBtn.textContent = '重新获取';
+                }
+            });
+            container.appendChild(badgeRow);
+        } else {
+            const tipWrap = document.createElement('div');
+            tipWrap.className = 'tm-peach-auto-token-tip';
+            tipWrap.innerHTML = `
+                <div class="tm-peach-auto-token-text">
+                    💡 <strong>免输入专用令牌</strong>：进入 Peach Web 即可通过同源会话无感自动获取并保存 Dedicated Token，享受在库状态秒级感知。
+                </div>
+                <button type="button" class="tm-peach-open-web-btn">🍑 打开 Peach 自动配对</button>
+            `;
+            const openBtn = tipWrap.querySelector('.tm-peach-open-web-btn');
+            openBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                Toast('正在前往 Peach Web，进入后将自动签发并配对', 2000, 'info');
+                window.open(config.base, '_blank');
+            });
+            container.appendChild(tipWrap);
         }
     }
 
@@ -100,14 +174,17 @@ export class PeachSection {
         baseRow.className = 'tm-apple-row tm-peach-field-row';
         baseRow.innerHTML = `
             <div class="tm-apple-row-title">Peach 服务地址</div>
-            <div class="tm-apple-row-subtext">自托管实例 Web 地址 (支持直接粘贴配对 JSON)</div>
+            <div class="tm-apple-row-subtext">自托管实例 Web 地址 (进入站点自动免输签发令牌)</div>
             <div class="tm-peach-input-with-action">
                 <input type="text" class="tm-settings-input tm-peach-base-input" placeholder="http://192.168.1.x:8000" value="${config.base || ''}" />
                 <button type="button" class="tm-peach-delete-btn" style="display: ${config.base ? 'block' : 'none'};">删除</button>
             </div>
+            <div class="tm-peach-token-status-wrap"></div>
         `;
         const baseInput = baseRow.querySelector('.tm-peach-base-input');
         const deleteBtn = baseRow.querySelector('.tm-peach-delete-btn');
+        const tokenStatusWrap = baseRow.querySelector('.tm-peach-token-status-wrap');
+        this._renderTokenStatusWrap(tokenStatusWrap);
 
         // 删除按钮：清除已记录域名与 Token，重置连通状态
         deleteBtn.addEventListener('click', (e) => {
@@ -116,11 +193,13 @@ export class PeachSection {
             baseInput.value = '';
             deleteBtn.style.display = 'none';
             this.isConnected = false;
+            this.connectionStatus = 'none';
             this._updateStatusBadge();
+            this._renderTokenStatusWrap(tokenStatusWrap);
             Toast('已清除 Peach 服务地址', 1500, 'info');
         });
 
-        // 地址输入变化与粘贴处理（支持 JSON 自动拆解）
+        // 地址输入变化与粘贴处理（支持 JSON 自动拆解与免密自动感知）
         const handleBaseChange = () => {
             const rawVal = baseInput.value.trim();
             deleteBtn.style.display = rawVal ? 'block' : 'none';
@@ -136,6 +215,7 @@ export class PeachSection {
             } else {
                 PeachService.saveConfig({ base: rawVal });
             }
+            this._renderTokenStatusWrap(tokenStatusWrap);
             this._autoCheckStatus();
         };
 
