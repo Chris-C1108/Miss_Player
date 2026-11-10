@@ -144,7 +144,8 @@ export class SettingsManager {
         this._isCheckingUpdate = true;
         this.refreshAboutSection();
         const currentVersion = getCurrentVersion();
-        const channel = this.settings.updateChannel || 'stable';
+        const defaultChannel = currentVersion.includes('-') ? 'beta' : 'stable';
+        const channel = this.settings.updateChannel || defaultChannel;
 
         try {
             const res = await SleazyForkService.checkUpdate(force, channel);
@@ -213,7 +214,9 @@ export class SettingsManager {
         if (this.settings.autoCheckUpdate !== false) {
             const runSilentCheck = async () => {
                 try {
-                    const channel = this.settings.updateChannel || 'stable';
+                    const currentVersion = getCurrentVersion();
+                    const defaultChannel = currentVersion.includes('-') ? 'beta' : 'stable';
+                    const channel = this.settings.updateChannel || defaultChannel;
                     const res = await SleazyForkService.checkUpdate(false, channel);
                     if (res && res.success) {
                         this._latestUpdateInfo = res;
@@ -850,7 +853,8 @@ export class SettingsManager {
         card.className = 'tm-settings-about-card';
 
         const currentVersion = getCurrentVersion();
-        const currentChannel = this.settings.updateChannel || 'stable';
+        const defaultChannel = currentVersion.includes('-') ? 'beta' : 'stable';
+        const currentChannel = this.settings.updateChannel || defaultChannel;
         const isBeta = currentChannel === 'beta';
         const updateInfo = this._latestUpdateInfo;
         const meta = updateInfo?.meta;

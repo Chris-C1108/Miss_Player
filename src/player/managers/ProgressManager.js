@@ -202,6 +202,12 @@ export class ProgressManager {
      * 处理进度条点击
      */
     handleProgressClick(e) {
+        // 确保进度条操作时收起任何残留的软键盘，杜绝弹出虚拟键盘 (BUG 5 铁律防线)
+        const activeEl = document.activeElement || this.playerCore?.uiManager?.shadowRoot?.activeElement;
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
+            try { activeEl.blur(); } catch (_) {}
+        }
+
         // 如果正在拖动进度条，则忽略点击事件
         if (this.isDraggingProgress) return;
         
@@ -249,6 +255,12 @@ export class ProgressManager {
      * 开始进度条拖动
      */
     startProgressDrag(e) {
+        // 确保进度条操作时收起任何残留的软键盘，杜绝弹出虚拟键盘 (BUG 5 铁律防线)
+        const activeEl = document.activeElement || this.playerCore?.uiManager?.shadowRoot?.activeElement;
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
+            try { activeEl.blur(); } catch (_) {}
+        }
+
         // 阻止默认行为，防止选择文本或触发其他事件
         e.preventDefault();
         e.stopPropagation();

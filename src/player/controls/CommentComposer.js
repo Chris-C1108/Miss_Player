@@ -165,6 +165,11 @@ export class CommentComposer {
         this.backdrop = backdrop;
         this.submitBarWrapper = submitBarWrapper;
 
+        // 默认收起状态下将输入框设置为 disabled，物理杜绝点击进度条或其他控件时被系统误聚焦弹出虚拟键盘
+        if (this.commentInput) {
+            this.commentInput.disabled = true;
+        }
+
         // 阻断高光标签列表纵向触控滑动冒泡至外层播放器视口容器，确保丝滑 60fps 原生滚动
         if (tagSelectModal) {
             tagSelectModal.addEventListener('touchmove', (e) => {
@@ -435,6 +440,7 @@ export class CommentComposer {
 
         // 原生无阻碍聚焦输入框
         if (this.commentInput) {
+            this.commentInput.disabled = false;
             try {
                 this.commentInput.focus({ preventScroll: true });
             } catch (_) {
@@ -449,7 +455,9 @@ export class CommentComposer {
                 // 极轻量防抖 (60ms)
                 if (Date.now() - (this._lastInputTouchTime || 0) < 60) return;
                 const path = e.composedPath ? e.composedPath() : [];
-                const isInsideComposer = path.includes(this.submitBarWrapper) || (e.target && this.submitBarWrapper?.contains(e.target));
+                const isInsideComposer = path.includes(this.submitBarWrapper) || 
+                    (e.target && this.submitBarWrapper?.contains(e.target)) ||
+                    path.some(el => el?.classList?.contains?.('tm-comment-submit-bar-wrapper') || el?.classList?.contains?.('tm-tag-select-modal') || el?.classList?.contains?.('tm-tag-remark-input'));
                 const isFab = path.includes(this.fabBtn) || (e.target && this.fabBtn?.contains(e.target));
                 if (!isInsideComposer && !isFab) {
                     this.closeComposer();
@@ -468,6 +476,7 @@ export class CommentComposer {
         if (!this.submitBarWrapper) return;
         if (this.commentInput) {
             this.commentInput.blur();
+            this.commentInput.disabled = true; // 彻底物理禁用，绝不误响应任何外部手势引起软键盘弹出
         }
         this.closeTagSelectModal();
         this.submitBarWrapper.classList.add('is-collapsed');
@@ -560,8 +569,10 @@ export class CommentComposer {
             this._outsideTagModalHandler = (e) => {
                 if (!this.tagSelectModal || !this.tagSelectModal.classList.contains('visible')) return;
                 const path = e.composedPath ? e.composedPath() : [];
-                // 关键修正 (BUG 4)：只要点击在整个评论发表抽屉内部 (submitBarWrapper，包括输入框、加号按钮等)，绝不关闭高光列表！
-                const isInsideComposer = path.includes(this.submitBarWrapper) || (e.target && this.submitBarWrapper?.contains(e.target));
+                // 关键修正 (BUG 3 & BUG 4)：只要点击在整个评论发表抽屉内部或任何备注输入框中，绝不关闭高光列表！
+                const isInsideComposer = path.includes(this.submitBarWrapper) || 
+                    (e.target && this.submitBarWrapper?.contains(e.target)) ||
+                    path.some(el => el?.classList?.contains?.('tm-comment-submit-bar-wrapper') || el?.classList?.contains?.('tm-tag-select-modal') || el?.classList?.contains?.('tm-tag-remark-input'));
                 if (!isInsideComposer) {
                     this.closeTagSelectModal();
                 }
@@ -761,11 +772,21 @@ export class CommentComposer {
             input.addEventListener('keydown', stopKeyProp);
             input.addEventListener('keyup', stopKeyProp);
             input.addEventListener('keypress', stopKeyProp);
-            input.addEventListener('touchstart', () => {
+            input.addEventListener('pointerdown', (e) => {
                 this._lastInputTouchTime = Date.now();
+                e.stopPropagation();
+            });
+            input.addEventListener('mousedown', (e) => {
+                this._lastInputTouchTime = Date.now();
+                e.stopPropagation();
+            });
+            input.addEventListener('touchstart', (e) => {
+                this._lastInputTouchTime = Date.now();
+                e.stopPropagation();
             }, { passive: true });
-            input.addEventListener('mousedown', () => {
+            input.addEventListener('click', (e) => {
                 this._lastInputTouchTime = Date.now();
+                e.stopPropagation();
             });
             input.addEventListener('focus', () => {
                 this._lastInputTouchTime = Date.now();

@@ -177,11 +177,13 @@
 .tm-comment-submit-bar-wrapper.is-collapsed {
     transform: translateY(100%);
     opacity: 0;
+    visibility: hidden;
     pointer-events: none !important;
 }
 .tm-comment-submit-bar-wrapper:not(.is-collapsed) {
     transform: translateY(0);
     opacity: 1;
+    visibility: visible;
     pointer-events: auto !important;
 }
 

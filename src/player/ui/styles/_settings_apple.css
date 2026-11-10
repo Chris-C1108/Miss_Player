@@ -713,6 +713,86 @@
     background: rgba(255, 255, 255, 0.08);
 }
 
+.tm-peach-origins-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+}
+
+.tm-peach-origins-title {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 500;
+}
+
+.tm-peach-origins-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tm-peach-origin-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.tm-peach-origin-item.is-active {
+    background: rgba(10, 132, 255, 0.12);
+    border: 1px solid rgba(10, 132, 255, 0.35);
+}
+
+.tm-peach-origin-url {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+.tm-peach-origin-item.is-active .tm-peach-origin-url {
+    color: #0a84ff;
+    font-weight: 500;
+}
+
+.tm-peach-origin-active-tag {
+    font-size: 9.5px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: #0a84ff;
+    color: #fff;
+    margin-right: 6px;
+    font-weight: 600;
+}
+
+.tm-peach-origin-del-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+
+.tm-peach-origin-del-btn:hover {
+    color: #ff453a;
+    background: rgba(255, 69, 58, 0.15);
+}
+
 .tm-peach-action-row {
     display: flex;
     gap: 10px;

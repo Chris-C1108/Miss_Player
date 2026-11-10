@@ -66,7 +66,22 @@ export function Toast(msg, duration = 3000, bgColor = '', textColor = '', positi
     
     toast.innerHTML = `${iconSvg}<span class="tm-toast-content">${msg}</span>`;
     
-    document.body.appendChild(toast);
+    // 优先挂载于 ShadowRoot 或播放器容器，确保作用域样式生效且在全屏下不被遮盖
+    const getToastContainer = () => {
+        try {
+            const shadowRoot = document.querySelector('miss-player-root')?.shadowRoot;
+            if (shadowRoot) {
+                const playerContainer = shadowRoot.querySelector('.tm-player-container');
+                return playerContainer || shadowRoot;
+            }
+            const directContainer = document.querySelector('.tm-player-container');
+            if (directContainer) return directContainer;
+        } catch (_) {}
+        return document.body;
+    };
+
+    const targetContainer = getToastContainer();
+    targetContainer.appendChild(toast);
     
     // Trigger transition using requestAnimationFrame
     requestAnimationFrame(() => {

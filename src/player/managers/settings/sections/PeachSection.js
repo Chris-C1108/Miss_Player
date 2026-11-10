@@ -67,15 +67,33 @@ export class PeachSection {
 
     _refreshActiveTokenWrap() {
         const wrap = this.element.querySelector('.tm-peach-token-status-wrap');
+        const baseInput = this.element.querySelector('.tm-peach-base-input');
         if (wrap) {
-            this._renderTokenStatusWrap(wrap);
+            this._renderTokenStatusWrap(wrap, baseInput);
         }
     }
 
-    _renderTokenStatusWrap(container) {
+    _openPeachWeb(targetUrl) {
+        const clean = PeachService.sanitizeBaseUrl(targetUrl);
+        if (!clean) {
+            Toast('请先填写或选择有效的 Peach 服务地址', 2000, 'warning');
+            return;
+        }
+        Toast('正在前往 Peach Web，进入后将自动签发并配对', 2000, 'info');
+        if (typeof GM_openInTab === 'function') {
+            GM_openInTab(clean, { active: true, insert: true });
+        } else if (typeof GM !== 'undefined' && GM && typeof GM.openInTab === 'function') {
+            GM.openInTab(clean, { active: true, insert: true });
+        } else {
+            window.open(clean, '_blank');
+        }
+    }
+
+    _renderTokenStatusWrap(container, baseInput = null) {
         container.innerHTML = '';
         const config = PeachService.getConfig();
-        if (!config.base) return;
+        const currentBase = (baseInput ? baseInput.value.trim() : '') || config.base;
+        if (!currentBase) return;
 
         const hasToken = PeachService.hasDedicatedToken();
 
@@ -92,9 +110,9 @@ export class PeachSection {
                 reissueBtn.disabled = true;
                 reissueBtn.textContent = '获取中…';
                 
-                const isSameOrigin = typeof window !== 'undefined' && window.location && window.location.origin === config.base;
+                const isSameOrigin = typeof window !== 'undefined' && window.location && window.location.origin === currentBase;
                 if (isSameOrigin) {
-                    const res = await PeachService.acquireDedicatedToken(config.base);
+                    const res = await PeachService.acquireDedicatedToken(currentBase);
                     if (res && res.ok) {
                         Toast('专用令牌已更新并持久化', 1500, 'success');
                     } else {
@@ -102,8 +120,7 @@ export class PeachSection {
                     }
                     this._autoCheckStatus();
                 } else {
-                    Toast('请在打开的 Peach 页面中完成自动签发', 2500, 'info');
-                    window.open(config.base, '_blank');
+                    this._openPeachWeb(currentBase);
                     reissueBtn.disabled = false;
                     reissueBtn.textContent = '重新获取';
                 }
@@ -121,11 +138,80 @@ export class PeachSection {
             const openBtn = tipWrap.querySelector('.tm-peach-open-web-btn');
             openBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                Toast('正在前往 Peach Web，进入后将自动签发并配对', 2000, 'info');
-                window.open(config.base, '_blank');
+                const latestBase = (baseInput ? baseInput.value.trim() : '') || config.base;
+                this._openPeachWeb(latestBase);
             });
             container.appendChild(tipWrap);
         }
+    }
+
+    _renderOriginsList(container, baseInput) {
+        container.innerHTML = '';
+        const origins = PeachService.getOrigins();
+        const activeBase = PeachService.getConfig().base;
+        if (!origins || origins.length === 0) return;
+
+        const listWrap = document.createElement('div');
+        listWrap.className = 'tm-peach-origins-wrap';
+
+        const title = document.createElement('div');
+        title.className = 'tm-peach-origins-title';
+        title.innerHTML = `<span>历史服务地址 (${origins.length})</span>`;
+        listWrap.appendChild(title);
+
+        const listEl = document.createElement('div');
+        listEl.className = 'tm-peach-origins-list';
+
+        origins.forEach(origin => {
+            const item = document.createElement('div');
+            item.className = 'tm-peach-origin-item' + (origin === activeBase ? ' is-active' : '');
+
+            if (origin === activeBase) {
+                const activeTag = document.createElement('span');
+                activeTag.className = 'tm-peach-origin-active-tag';
+                activeTag.textContent = '当前';
+                item.appendChild(activeTag);
+            }
+
+            const label = document.createElement('span');
+            label.className = 'tm-peach-origin-url';
+            label.textContent = origin;
+            label.title = origin === activeBase ? '当前活跃地址' : '点击切换为此地址';
+            label.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (origin !== activeBase) {
+                    PeachService.setActiveBase(origin);
+                    if (baseInput) baseInput.value = origin;
+                    this._autoCheckStatus();
+                    this._renderOriginsList(container, baseInput);
+                    this._refreshActiveTokenWrap();
+                    Toast(`已切换首选地址: ${origin}`, 1500, 'info');
+                }
+            });
+
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'tm-peach-origin-del-btn';
+            delBtn.title = '删除此记录';
+            delBtn.innerHTML = '×';
+            delBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                PeachService.removeOrigin(origin);
+                const newConfig = PeachService.getConfig();
+                if (baseInput) baseInput.value = newConfig.base || '';
+                this._autoCheckStatus();
+                this._renderOriginsList(container, baseInput);
+                this._refreshActiveTokenWrap();
+                Toast('已删除历史记录', 1200, 'info');
+            });
+
+            item.appendChild(label);
+            item.appendChild(delBtn);
+            listEl.appendChild(item);
+        });
+
+        listWrap.appendChild(listEl);
+        container.appendChild(listWrap);
     }
 
     _render() {
@@ -184,11 +270,14 @@ export class PeachSection {
                 <button type="button" class="tm-peach-delete-btn" style="display: ${config.base ? 'block' : 'none'};">删除</button>
             </div>
             <div class="tm-peach-token-status-wrap"></div>
+            <div class="tm-peach-origins-container"></div>
         `;
         const baseInput = baseRow.querySelector('.tm-peach-base-input');
         const deleteBtn = baseRow.querySelector('.tm-peach-delete-btn');
         const tokenStatusWrap = baseRow.querySelector('.tm-peach-token-status-wrap');
-        this._renderTokenStatusWrap(tokenStatusWrap);
+        const originsContainer = baseRow.querySelector('.tm-peach-origins-container');
+        this._renderTokenStatusWrap(tokenStatusWrap, baseInput);
+        this._renderOriginsList(originsContainer, baseInput);
 
         // 删除按钮：清除已记录域名与 Token，重置连通状态
         deleteBtn.addEventListener('click', (e) => {
@@ -199,7 +288,8 @@ export class PeachSection {
             this.isConnected = false;
             this.connectionStatus = 'none';
             this._updateStatusBadge();
-            this._renderTokenStatusWrap(tokenStatusWrap);
+            this._renderTokenStatusWrap(tokenStatusWrap, baseInput);
+            this._renderOriginsList(originsContainer, baseInput);
             const uiManager = this.sm?.uiManager || this.sm?.playerCore?.uiManager;
             if (uiManager && typeof uiManager.updatePeachButtonVisibility === 'function') {
                 uiManager.updatePeachButtonVisibility();
@@ -223,7 +313,8 @@ export class PeachSection {
             } else {
                 PeachService.saveConfig({ base: rawVal });
             }
-            this._renderTokenStatusWrap(tokenStatusWrap);
+            this._renderTokenStatusWrap(tokenStatusWrap, baseInput);
+            this._renderOriginsList(originsContainer, baseInput);
             this._autoCheckStatus();
         };
 
