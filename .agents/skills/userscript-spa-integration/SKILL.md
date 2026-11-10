@@ -71,3 +71,61 @@ description: 油猴脚本 (Userscript) 与现代单页应用 (SPA) 深度集成�
    - `@namespace`: 永久保持不变（如 `loadingi.local`），管理器以 `(@namespace, @name)` 为主键维护版本生命周期；
    - `@name`: 脚本主名称严禁漂移；
    - 发版必须严格执行多处版本号强同步（`package.json`, `webpack.config.js`, Fallback 常量）。
+
+---
+
+## 4. WebDAV 路径前缀防重叠自愈保护 (WebDAV Path Deduplication Guard)
+
+在油猴脚本与 WebDAV 服务器交互时，用户填写的服务器 Base URL 往往可能带有子路径（如 `https://dav.example.com/backup_configs/`），而上游配置或模块亦可能传递了绝对路径目录（如 `/backup_configs/MissPlayer/`），二者拼接极易产生路径重复叠加（如 `/backup_configs/MissPlayer/backup_configs/MissPlayer/`），导致服务器报 404/409 目录无法创建。
+
+### 核心实践：
+1. **Deduplication Guard 智能剥离算法**：
+   - 底层 `WebDavClient.uploadFile` 必须具备防御性路径自愈能力：
+     ```javascript
+     const normDirNoSlash = dirPath.replace(/^\/+|\/+$/g, '');
+     if (normDirNoSlash && targetPath.startsWith(normDirNoSlash + '/')) {
+         targetPath = targetPath.slice(normDirNoSlash.length + 1);
+     } else if (normDirNoSlash && targetPath.startsWith(normDirNoSlash)) {
+         targetPath = targetPath.slice(normDirNoSlash.length).replace(/^\/+/, '');
+     }
+     ```
+2. **上游参数解耦契约**：
+   - 上游业务调用时，基础目录绑定至 `config.path`，文件参数仅传递纯净文件名（如 `STARS-256.strm`），杜绝在上游自行拼接绝对路径引发叠加；
+3. **MKCOL 容灾人本化提示**：
+   - 当 MKCOL 创建目录遇到 403/409 无法创建时，必须向用户给出明确的操作指引（“请在 WebDAV 服务器上手动创建目录: /xxx/”），绝不可直接静默降级或吞噬报错。
+
+---
+
+## 5. 油猴特权 API `GM_openInTab` 避开移动端弹窗拦截器 (Popup Blocker)
+
+在 iOS Safari / Stay / Tampermonkey 环境下，由于单页应用中的异步请求、微任务延迟或 Shadow DOM 内部派发的事件脱离了直接用户手势的同步调用栈，调用原生 `window.open(url, '_blank')` 会被移动端浏览器内置的弹窗拦截器（Popup Blocker）静默拦截丢弃，导致用户点击按钮无任何反应。
+
+### 核心实践：
+- 跨标签页打开外部链接时，必须优先使用油猴管理器的特权 API：
+  ```javascript
+  function openExternalTab(url) {
+      if (typeof GM_openInTab === 'function') {
+          GM_openInTab(url, { active: true, insert: true });
+      } else if (typeof GM !== 'undefined' && GM && typeof GM.openInTab === 'function') {
+          GM.openInTab(url, { active: true, insert: true });
+      } else {
+          window.open(url, '_blank');
+      }
+  }
+  ```
+- `GM_openInTab` 享有扩展宿主的原生特权，完全免疫任何浏览器弹窗拦截策略，100% 成功唤起新标签页。
+
+---
+
+## 6. 自建媒体库虚拟入库在库状态轻量探测 (WebDAV .strm 嗅探)
+
+在跨站点场景下，强依赖复杂鉴权 API（如 Dedicated Token、OAuth）查询影片是否在库往往面临网络隔离、配置门槛过高或用户未开启高级服务的痛点。
+
+### 核心实践：
+1. **WebDAV .strm 轻量存在性嗅探**：
+   - 只要用户配置了 WebDAV 存储，播放器即可直接向目标目录发送轻量级 `PROPFIND (Depth: 0)` 或 `HEAD` 请求检测 `${targetDir}${avcode}.strm` 是否存在；
+   - 收到 `200` 或 `207` 状态码即 100% 确认该番号已入库；
+2. **优雅状态徽标**：
+   - 在入库按键右下角展示纯矢量 ✅ 状态微角标；
+   - 已入库状态下再次点击直观反馈在库状态，彻底消灭复杂 API Token 的前置依赖。
+

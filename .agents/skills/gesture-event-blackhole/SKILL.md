@@ -101,3 +101,76 @@ description: 移动端手势冲突消解、系统级全局事件黑洞、底层�
 - **防跳闪规范**：
   - 调用 `input.focus({ preventScroll: true })` 杜绝原生滚动；
   - 聚焦时限制容器内部滚动偏移：只在输入框被遮挡在可视区域外时，使用轻量防抖的 `panel.scrollTo` 平滑微调，绝不可触发 `window.scrollTo`。
+
+---
+
+## 5. iOS WebKit 动态布局展开光标脱节 (Caret Position Desync) 根治
+
+在 iOS Safari / WebKit 中，当输入框处于聚焦（软键盘已弹起）时，若其外层容器内突发高度动画（如向上展开抽屉、列表展开），WebKit 会缓存 0ms 时的屏幕绝对坐标，导致蓝色输入光标滞留浮空在旧位置。
+
+### 核心机制：
+1. **移除父级硬件合成层**：祖先元素严禁滥用 `will-change: transform`，避免将输入框 Caret Layer 剥离至独立纹理；
+2. **输入框自立合成层**：给 `<input>` 显式设置 `transform: translateZ(0);`；
+3. **分阶段微任务校准 (`realignCaret`)**：在动画过渡周期（rAF, 60ms, 180ms, 320ms）分阶段微任务重绘 Caret 矩形：
+   ```javascript
+   function realignCaret(input) {
+       if (!input || document.activeElement !== input) return;
+       const doSync = () => {
+           try {
+               const pos = input.selectionStart ?? input.value.length;
+               input.setSelectionRange(pos, pos);
+               input.blur();
+               input.focus({ preventScroll: true });
+           } catch (_) {}
+       };
+       requestAnimationFrame(doSync);
+       setTimeout(doSync, 80);
+       setTimeout(doSync, 200);
+       setTimeout(doSync, 340);
+   }
+   ```
+
+---
+
+## 6. 收起态输入框物理禁用锁 (Disabled Physical Shield)
+
+在移动端，抽屉收起时若仅使用 `transform: translateY(100%)` 隐藏，输入框在 DOM 中依然处于可交互状态。当用户点击底部进度条或其他控件时，iOS Safari 的触摸预测容易穿透命中隐藏输入框，或者因事件的 `e.preventDefault()` 阻止默认失焦，导致软键盘被误唤醒弹出。
+
+### 核心机制：
+1. **抽屉收起物理禁用**：
+   - 抽屉收起（`closeComposer()`）时强制执行：
+     ```javascript
+     if (this.input) {
+         this.input.blur();
+         this.input.disabled = true; // 彻底物理封印
+     }
+     ```
+   - 抽屉展开（`openComposer()`）时恢复 `this.input.disabled = false;`；
+2. **CSS 渲染树剥离**：收起态类名（`.is-collapsed`）必须同时带有 `visibility: hidden !important;`；
+3. **控件操作主动失焦**：在进度条点击（`handleProgressClick`）与拖拽（`startProgressDrag`）首行无条件检查并触发 `activeElement.blur()`。
+
+---
+
+## 7. 横屏手势上滑穿透宿主驱动 iOS Safari 原生全屏 (Safari Minimal UI)
+
+在 iOS Safari 横屏模式下，隐藏顶部紧凑地址栏与底部工具栏（进入 Minimal UI 模式）的唯一判据是检测到宿主页面发生了真正的纵向物理滚动。
+
+### 核心机制：
+1. **横屏上滑手势放行**：
+   - 全局手势拦截器在横屏上滑（`isLandscape && deltaY < 0`）时，**严禁阻止默认事件 (`e.preventDefault()`)**；
+   - 并在手势移动与抬手时主动联动 `window.scrollBy` 推动宿主窗口产生微滚动位移；
+2. **宿主页面横屏滚动余量**：
+   - 在宿主轨 CSS 中为横屏媒体查询释放固定定位并提供微量滚动空间：
+     ```css
+     @media screen and (orientation: landscape) {
+       html.tm-player-active,
+       body.tm-player-active {
+         position: static !important;
+         overflow-y: scroll !important;
+         -webkit-overflow-scrolling: touch !important;
+         min-height: calc(100vh + 80px) !important;
+       }
+     }
+     ```
+   - 宿主页面产生微位移的一瞬间，iOS Safari 立即折叠地址栏与工具栏，进入沉浸原生全屏。
+
