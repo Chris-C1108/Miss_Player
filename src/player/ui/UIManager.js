@@ -21,6 +21,7 @@ import {
 } from './_uiFactories.js';
 import { StrmIngestPipeline } from '../../services/StrmIngestPipeline.js';
 import { PeachService } from '../../services/PeachService.js';
+import { PeachWebBridge } from '../bridge/PeachWebBridge.js';
 import { Toast } from '../../utils/index.js';
 import { enforceInlinePlayback } from '../../utils/iosInline.js';
 import { UISurfaceMachine, SURFACE_TYPES } from '../state/UISurfaceMachine.js';
@@ -627,13 +628,47 @@ export class UIManager {
             if (this.peachIngestBtn.classList.contains('is-busy')) return;
 
             const avcode = this.playerCore?.options?.videoCode || this.playerCore?.videoCode || '';
-            if (!avcode) {
-                Toast('未能识别当前影片番号', 1800, 'error');
+
+            // 1. 场景 A: 运行在用户自托管的 Peach Web 实例页面内部
+            if (typeof PeachWebBridge !== 'undefined' && PeachWebBridge.isPeachInstance()) {
+                if (avcode) {
+                    this.peachIngestBtn.classList.add('is-ingested');
+                    this.peachIngestBtn.title = `Peach 媒体库中心 (${avcode})`;
+                    Toast(`🍑 当前处于 Peach 媒体中心 (影片 ${avcode} 已在库)`, 2500, 'info');
+                    try {
+                        await PeachService.triggerScan();
+                    } catch (_) {}
+                } else {
+                    Toast('🍑 当前处于自托管 Peach 媒体库中心', 2000, 'info');
+                }
                 return;
             }
 
+            // 2. 场景 B: 运行在外部视频源网站 (Jable / MissAV / JavDB 等)
+            if (!avcode) {
+                Toast('未能识别当前影片番号，无法执行入库', 2000, 'error');
+                return;
+            }
+
+            // 若已经处于 is-ingested 状态，点击直观提示当前在库状态
+            if (this.peachIngestBtn.classList.contains('is-ingested')) {
+                Toast(`🍑 影片 ${avcode} 已在 Peach 馆藏中 (STRM 虚拟入库已就绪)`, 2500, 'success');
+                return;
+            }
+
+            // 检查远端在库状态
             this.peachIngestBtn.classList.add('is-busy');
             try {
+                const status = await PeachService.checkCodeStatus(avcode);
+                if (status && status.inLibrary) {
+                    this.peachIngestBtn.classList.remove('is-busy');
+                    this.peachIngestBtn.classList.add('is-ingested');
+                    this.peachIngestBtn.title = `已在 Peach 馆藏 (${status.state || '已收录'})`;
+                    Toast(`🍑 影片 ${avcode} 已在 Peach 馆藏中 (${status.state || '已收录'})`, 2500, 'success');
+                    return;
+                }
+
+                // 尚未入库，执行入库流水线
                 const res = await StrmIngestPipeline.ingest({
                     avcode,
                     videoEl: this.targetVideo
@@ -646,7 +681,7 @@ export class UIManager {
                 }
             } catch (err) {
                 this.peachIngestBtn.classList.remove('is-busy');
-                Toast(err.message || '入库失败，请在设置中检查配置', 3000, 'error');
+                Toast(err.message || '入库失败，请在设置中检查配置', 4000, 'error');
             }
         });
 
@@ -676,6 +711,11 @@ export class UIManager {
      */
     checkPeachStatus(avcode) {
         if (!this.peachIngestBtn || !avcode) return;
+        if (typeof PeachWebBridge !== 'undefined' && PeachWebBridge.isPeachInstance()) {
+            this.peachIngestBtn.classList.add('is-ingested');
+            this.peachIngestBtn.title = `Peach 媒体库中心 (${avcode})`;
+            return;
+        }
         const config = PeachService.getConfig();
         if (!config.enabled || !config.base || !config.token) return;
         PeachService.checkCodeStatus(avcode).then(res => {

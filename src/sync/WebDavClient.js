@@ -378,6 +378,13 @@ export class WebDavClient {
                 console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到异常:`, err.message || err);
             }
         }
+
+        // 最终校验目标根目录是否就绪
+        const finalDirUrl = this.normalizeUrl(url, cleanPath, user);
+        const finalExists = await this.checkDirectoryExists(finalDirUrl, user, pass);
+        if (!finalExists) {
+            throw new Error(`WebDAV 目录不存在且无法自动创建，请在 WebDAV 服务器上手动创建目录: ${cleanPath}`);
+        }
     }
 
     /**
@@ -611,16 +618,22 @@ export class WebDavClient {
         let targetPath = subPath.trim();
         if (targetPath.startsWith('/')) targetPath = targetPath.slice(1);
 
-        // 确保上级目录存在
-        const lastSlash = targetPath.lastIndexOf('/');
-        if (lastSlash !== -1) {
-            const subDir = targetPath.slice(0, lastSlash + 1);
-            await this.ensureDirectory({ ...config, path: dirPath + subDir });
-        } else {
-            await this.ensureDirectory(config);
+        // 智能防重叠自愈：若 targetPath 已经包含了 dirPath 的前缀，自动剥离，防止重复拼接如 /MissPlayer/MissPlayer/
+        const normDirNoSlash = dirPath.replace(/^\/+|\/+$/g, '');
+        if (normDirNoSlash && targetPath.startsWith(normDirNoSlash + '/')) {
+            targetPath = targetPath.slice(normDirNoSlash.length + 1);
+        } else if (normDirNoSlash && targetPath.startsWith(normDirNoSlash)) {
+            targetPath = targetPath.slice(normDirNoSlash.length).replace(/^\/+/, '');
         }
 
-        const fileUrl = this.normalizeUrl(url, dirPath + targetPath, user);
+        // 确保上级目录存在
+        const lastSlash = targetPath.lastIndexOf('/');
+        const uploadDir = lastSlash !== -1 ? dirPath + targetPath.slice(0, lastSlash + 1) : dirPath;
+        const uploadFileName = lastSlash !== -1 ? targetPath.slice(lastSlash + 1) : targetPath;
+
+        await this.ensureDirectory({ ...config, path: uploadDir });
+
+        const fileUrl = this.normalizeUrl(url, uploadDir + uploadFileName, user);
         const data = typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content);
 
         const res = await this.request({
@@ -636,6 +649,9 @@ export class WebDavClient {
 
         if (res.status === 200 || res.status === 201 || res.status === 204) {
             return { success: true, status: res.status };
+        }
+        if (res.status === 404 || res.status === 409) {
+            throw new Error(`WebDAV 目录不存在或路径冲突 (HTTP ${res.status})，请在 WebDAV 服务器上手动创建目录: ${uploadDir}`);
         }
         throw new Error(`上传文件失败，状态码: ${res.status}`);
     }

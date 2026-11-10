@@ -1894,7 +1894,6 @@ export class CommentPanel {
                     </button>
                     <input type="text" class="tm-comment-text-input" placeholder="写下你的评论..." />
                     <button type="button" class="tm-comment-send-btn">${__('send')}</button>
-                    <button type="button" class="tm-comment-close-bar-btn" title="收起">${CLOSE_LINE}</button>
                 </div>
             </div>
             <button class="tm-comment-fab-btn" title="发表评论">${ICON_COMMENT_WRITE}</button>
@@ -2091,13 +2090,7 @@ export class CommentPanel {
 
             e.stopPropagation();
 
-            // 如果附带高光片段抽屉正处于展开态，点击评论列表空白处立即收起该抽屉
-            if (this.composer && this.composer.tagSelectModal && this.composer.tagSelectModal.classList.contains('visible')) {
-                this.composer.closeTagSelectModal();
-                return;
-            }
-
-            // 如果评论发表栏正处于展开态，点击评论列表空白处自动收起评论发表栏与虚拟键盘
+            // 如果评论发表栏正处于展开态，点击评论列表空白处或非交互区域立即自动收起评论发表栏（连同高光抽屉）
             if (this.composer && this.composer.submitBarWrapper && !this.composer.submitBarWrapper.classList.contains('is-collapsed')) {
                 if (Date.now() - (this.composer._lastInputTouchTime || 0) >= 60) {
                     this.composer.closeComposer();
@@ -2148,7 +2141,7 @@ export class CommentPanel {
                 return;
             }
 
-            const isSubmitBar = !!e.target.closest('.jc-report-btn, .jc-save-all-btn, .jc-action-btn, .tm-comment-submit-bar-wrapper, .tm-comment-tag-select-modal, .tm-floating-comment-panel, .tm-comment-text-input, .tm-comment-add-tag-btn, .tm-comment-send-btn, .tm-comment-fab-btn, .tm-comment-backdrop, .tm-comment-close-bar-btn');
+            const isSubmitBar = !!e.target.closest('.jc-report-btn, .jc-save-all-btn, .jc-action-btn, .tm-comment-submit-bar-wrapper, .tm-comment-tag-select-modal, .tm-floating-comment-panel, .tm-comment-text-input, .tm-comment-add-tag-btn, .tm-comment-send-btn, .tm-comment-fab-btn, .tm-comment-backdrop');
 
             // 只要评论区是变暗状态，任何触摸或点击都应立即激活它并移除 is-dimmed
             if (this.commentsPanel.classList.contains('is-dimmed')) {

@@ -166,7 +166,9 @@
     overflow: hidden;
     pointer-events: auto !important;
     transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform, opacity;
+    -webkit-touch-callout: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 .tm-ios-keyboard-open .tm-comment-submit-bar-wrapper {
     bottom: var(--keyboard-height, 0px);
@@ -338,34 +340,6 @@
         opacity: 0;
         pointer-events: none;
     }
-}
-
-.tm-comment-close-bar-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.65);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background-color 0.15s, color 0.15s, transform 0.15s;
-    padding: 0;
-    outline: none;
-}
-.tm-comment-close-bar-btn svg {
-    width: 15px;
-    height: 15px;
-}
-.tm-comment-close-bar-btn:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.16);
-}
-.tm-comment-close-bar-btn:active {
-    transform: scale(0.94);
 }
 
 .tm-floating-comment-panel {

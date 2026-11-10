@@ -121,10 +121,10 @@ export class StrmIngestPipeline {
             const targetPath = `${effectiveWebDav.targetDir}${fileName}`;
             
             try {
-                // 利用 WebDavClient 上传文件
+                // 利用 WebDavClient 上传文件 (精准绑定目标目录为配置路径，传独立 fileName 防重复叠合)
                 const uploadResult = await WebDavClient.uploadFile(
-                    webDavConfig,
-                    targetPath,
+                    { ...webDavConfig, path: effectiveWebDav.targetDir },
+                    fileName,
                     strmContent,
                     'text/plain; charset=utf-8'
                 );
@@ -150,8 +150,8 @@ export class StrmIngestPipeline {
                     };
                 }
             } catch (webDavErr) {
-                console.warn('[StrmIngestPipeline] WebDAV 写入失败，降级至浏览器下载:', webDavErr.message);
-                // 失败时降级走浏览器下载
+                console.error('[StrmIngestPipeline] WebDAV 写入失败:', webDavErr.message);
+                throw webDavErr;
             }
         }
 

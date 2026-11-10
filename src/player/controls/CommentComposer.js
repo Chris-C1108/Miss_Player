@@ -155,7 +155,6 @@ export class CommentComposer {
         const fabBtn = container.querySelector('.tm-comment-fab-btn');
         const backdrop = container.querySelector('.tm-comment-backdrop');
         const submitBarWrapper = container.querySelector('.tm-comment-submit-bar-wrapper');
-        const closeBarBtn = container.querySelector('.tm-comment-close-bar-btn');
 
         this.addTagBtn = addTagBtn;
         this.sendBtn = sendBtn;
@@ -165,7 +164,6 @@ export class CommentComposer {
         this.fabBtn = fabBtn;
         this.backdrop = backdrop;
         this.submitBarWrapper = submitBarWrapper;
-        this.closeBarBtn = closeBarBtn;
 
         // 阻断高光标签列表纵向触控滑动冒泡至外层播放器视口容器，确保丝滑 60fps 原生滚动
         if (tagSelectModal) {
@@ -194,17 +192,6 @@ export class CommentComposer {
             });
         }
 
-        // 绑定输入栏右侧收起按钮与顶部抽屉提手条
-        if (closeBarBtn) {
-            closeBarBtn.addEventListener('mousedown', (e) => {
-                if (e.cancelable) e.preventDefault();
-            });
-            closeBarBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.closeComposer();
-            });
-        }
-
         const drawerPill = submitBarWrapper?.querySelector('.tm-comment-drawer-pill');
         if (drawerPill) {
             drawerPill.addEventListener('click', (e) => {
@@ -213,14 +200,30 @@ export class CommentComposer {
             });
         }
 
-        // 阻断输入栏内部点击冒泡至背景遮罩，并记录最后触碰时间
+        // 阻断输入栏内部点击冒泡至背景遮罩，并防止 Stay app 长按下载视频
         if (submitBarWrapper) {
+            submitBarWrapper.setAttribute('data-stay-ignore', 'true');
+            submitBarWrapper.setAttribute('data-no-download', 'true');
+
+            // 彻底阻断 Stay app 或系统对视频的长按嗅探与上下文菜单弹窗 (BUG 3)
+            const blockStayLongPress = (e) => {
+                e.stopPropagation();
+                // 仅输入框放行系统文本复制粘贴与光标定位，其它区域阻止默认菜单
+                if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'TEXTAREA') {
+                    if (e.cancelable) e.preventDefault();
+                }
+            };
+            submitBarWrapper.addEventListener('contextmenu', blockStayLongPress, { capture: true });
+            submitBarWrapper.addEventListener('contextmenu', blockStayLongPress, false);
+
             submitBarWrapper.addEventListener('click', (e) => e.stopPropagation());
-            submitBarWrapper.addEventListener('touchstart', () => {
+            submitBarWrapper.addEventListener('touchstart', (e) => {
                 this._lastInputTouchTime = Date.now();
+                e.stopPropagation();
             }, { passive: true });
-            submitBarWrapper.addEventListener('pointerdown', () => {
+            submitBarWrapper.addEventListener('pointerdown', (e) => {
                 this._lastInputTouchTime = Date.now();
+                e.stopPropagation();
             }, { passive: true });
         }
 
@@ -438,6 +441,24 @@ export class CommentComposer {
                 this.commentInput.focus();
             }
         }
+
+        // 绑定全局点击抽屉外部区域收起发评抽屉 (BUG 5 闭环)
+        if (!this._outsideComposerHandler) {
+            this._outsideComposerHandler = (e) => {
+                if (!this.submitBarWrapper || this.submitBarWrapper.classList.contains('is-collapsed')) return;
+                // 极轻量防抖 (60ms)
+                if (Date.now() - (this._lastInputTouchTime || 0) < 60) return;
+                const path = e.composedPath ? e.composedPath() : [];
+                const isInsideComposer = path.includes(this.submitBarWrapper) || (e.target && this.submitBarWrapper?.contains(e.target));
+                const isFab = path.includes(this.fabBtn) || (e.target && this.fabBtn?.contains(e.target));
+                if (!isInsideComposer && !isFab) {
+                    this.closeComposer();
+                }
+            };
+        }
+        setTimeout(() => {
+            window.addEventListener('pointerdown', this._outsideComposerHandler, { capture: true });
+        }, 40);
     }
 
     /**
@@ -463,6 +484,9 @@ export class CommentComposer {
         const surfaceMachine = this.panel?.uiManager?.surfaceMachine || this.panel?.playerCore?.surfaceMachine;
         if (surfaceMachine) {
             surfaceMachine.deactivate('comment-composer');
+        }
+        if (this._outsideComposerHandler) {
+            window.removeEventListener('pointerdown', this._outsideComposerHandler, { capture: true });
         }
     }
 
@@ -536,9 +560,9 @@ export class CommentComposer {
             this._outsideTagModalHandler = (e) => {
                 if (!this.tagSelectModal || !this.tagSelectModal.classList.contains('visible')) return;
                 const path = e.composedPath ? e.composedPath() : [];
-                const isInsideModal = path.includes(this.tagSelectModal) || (e.target && this.tagSelectModal.contains(e.target));
-                const isAddTagBtn = path.includes(this.addTagBtn) || (e.target && this.addTagBtn?.contains(e.target));
-                if (!isInsideModal && !isAddTagBtn) {
+                // 关键修正 (BUG 4)：只要点击在整个评论发表抽屉内部 (submitBarWrapper，包括输入框、加号按钮等)，绝不关闭高光列表！
+                const isInsideComposer = path.includes(this.submitBarWrapper) || (e.target && this.submitBarWrapper?.contains(e.target));
+                if (!isInsideComposer) {
                     this.closeTagSelectModal();
                 }
             };

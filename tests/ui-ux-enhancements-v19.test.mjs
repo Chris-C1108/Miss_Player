@@ -51,10 +51,40 @@ assert.ok(uiManagerCode.includes("this.videoWrapper.addEventListener('contextmen
 assert.ok(uiManagerCode.includes('this._justFinishedLongPress'), '必须包含松手防误触 click 时间窗锁');
 console.log('✅ 4. 视频区域长按 3 倍速灵敏响应与手势防冲突验证通过');
 
-// 5. 验证 CommentComposer 中高光抽屉外部点击自动关闭与光标校准
+// 5. 验证 CommentComposer 中高光抽屉外部点击自动关闭与输入框打字防误关
 const composerCode = fs.readFileSync('src/player/controls/CommentComposer.js', 'utf8');
 assert.ok(composerCode.includes('_outsideTagModalHandler'), '必须注册高光抽屉外部点击自动关闭监听');
+assert.ok(composerCode.includes('_outsideComposerHandler'), '必须注册整个发表抽屉外部点击关闭监听');
+assert.ok(composerCode.includes('isInsideComposer'), '必须判定只要在 submitBarWrapper 内部(如输入框打字)就不关闭高光列表');
 assert.ok(composerCode.includes('realignCaret'), '必须包含 realignCaret 强制校准光标方法');
-console.log('✅ 5. 附带高光片段抽屉点击外部关闭与输入框光标校准验证通过');
+assert.ok(composerCode.includes('data-stay-ignore'), '必须带有 data-stay-ignore 防 Stay app 嗅探');
+console.log('✅ 5. 附带高光片段抽屉外部关闭、输入框打字保护与防 Stay 视频长按验证通过');
 
-console.log('🎉 全部 5 大 UI/UX 与交互修复专项单元测试 100% 通过！');
+// 6. 验证 CommentPanel 发评底栏关闭按钮已成功精简删除
+const panelCode = fs.readFileSync('src/player/controls/CommentPanel.js', 'utf8');
+assert.strictEqual(panelCode.includes('tm-comment-close-bar-btn'), false, '发评底栏关闭按钮已成功移除');
+console.log('✅ 6. 发评底栏关闭按钮成功精简移除验证通过');
+
+// 7. 验证 WebDavClient 路径防重复叠加自愈
+import { WebDavClient } from '../src/sync/WebDavClient.js';
+let calledUrl = '';
+WebDavClient.request = async (opts) => {
+    calledUrl = opts.url;
+    return { status: 200, data: '' };
+};
+WebDavClient.checkDirectoryExists = async () => true;
+
+// 模拟 targetPath 包含相同路径前缀
+await WebDavClient.uploadFile(
+    { url: 'https://dav.example.com', path: '/backup_configs/MissPlayer/' },
+    'backup_configs/MissPlayer/peach-media/STARS-256.strm',
+    'test'
+);
+assert.strictEqual(
+    calledUrl,
+    'https://dav.example.com/backup_configs/MissPlayer/peach-media/STARS-256.strm',
+    'WebDavClient 应当自动识别并剥离重复的路径前缀'
+);
+console.log('✅ 7. WebDAV 路径防重叠自愈保护验证通过');
+
+console.log('🎉 全部 7 大项 UI/UX、交互手势与 WebDAV 防重叠自愈单元测试 100% 通过！');
