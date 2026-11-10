@@ -235,6 +235,22 @@ export class SettingsManager {
         container.addEventListener("click", stopProp);
         container.addEventListener("mousedown", stopProp);
         container.addEventListener("touchstart", stopProp);
+        container.addEventListener("pointerdown", stopProp);
+
+        const stopContextMenu = (e) => {
+            const tag = e.target?.tagName?.toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || Boolean(e.target?.isContentEditable)) {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        container.addEventListener("contextmenu", stopContextMenu, true);
+        if (this.settingsPanel && !this.settingsPanel._contextMenuSuppressed) {
+            this.settingsPanel._contextMenuSuppressed = true;
+            this.settingsPanel.addEventListener("contextmenu", stopContextMenu, true);
+            this.settingsPanel.addEventListener("pointerdown", stopProp);
+        }
 
         // 顶部 Header 栏 (标题 + 快捷关闭按钮)
         const headerRow = document.createElement("div");

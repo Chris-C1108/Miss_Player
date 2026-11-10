@@ -57,9 +57,14 @@ export class EventManager {
             }
         };
 
-        // 阻止右键/长按菜单
+        // 阻止右键/长按菜单（输入框除外，捕获阶段全局拦截，彻底阻断 Stay App / 原生浏览器长按劫持视频）
         this.handleContextMenuBound = (e) => {
+            const tag = e.target?.tagName?.toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || Boolean(e.target?.isContentEditable)) {
+                return;
+            }
             e.preventDefault();
+            e.stopPropagation();
         };
 
         // 阻止穿透滚动逻辑：除视频画面区域和可滚动评论内容外，阻止默认的 touchmove/wheel 事件以防止穿透到原始网页
@@ -203,13 +208,29 @@ export class EventManager {
      */
     _toggleScrollListeners(add = true) {
         const method = add ? 'addEventListener' : 'removeEventListener';
-        [this.uiElements.playerContainer,
-            this.uiElements.rootHost, this.uiElements.overlay].forEach(el => {
+        const scrollElements = [
+            this.uiElements.playerContainer,
+            this.uiElements.rootHost,
+            this.uiElements.overlay
+        ];
+        scrollElements.forEach(el => {
             if (!el) return;
             el[method]('touchstart', this.handleTouchStartBound, { passive: true });
             el[method]('touchmove', this.handleScrollPreventionBound, { passive: false });
             el[method]('wheel', this.handleScrollPreventionBound, { passive: false });
-            el[method]('contextmenu', this.handleContextMenuBound);
+        });
+
+        // 在捕获阶段坚决拦截右键与长按菜单，覆盖全屏容器、覆盖层与视频层
+        const contextElements = [
+            this.uiElements.playerContainer,
+            this.uiElements.rootHost,
+            this.uiElements.overlay,
+            this.uiElements.videoWrapper,
+            this.targetVideo
+        ];
+        contextElements.forEach(el => {
+            if (!el) return;
+            el[method]('contextmenu', this.handleContextMenuBound, true);
         });
     }
     

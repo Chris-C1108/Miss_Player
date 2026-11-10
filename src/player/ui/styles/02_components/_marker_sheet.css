@@ -373,12 +373,13 @@
     transform: translate3d(0, 0, 0);
 }
 
-/* iOS 虚拟键盘弹起时：底边贴合键盘上沿，高度自适应可视视口 */
+/* iOS 虚拟键盘弹起时：底边贴合键盘上沿，高度自适应可视视口，并隔离 bottom 过渡动效防止多输入框切换时产生弹跳 */
 .tm-ios-keyboard-open .tm-bottom-sheet-panel.visible {
     bottom: var(--keyboard-height, 0px);
     transform: translate3d(0, 0, 0);
     max-height: calc(var(--visual-viewport-height, 100dvh) - 40px);
     padding-bottom: 10px;
+    transition: opacity 0.24s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 统一单行顶栏（合并原顶栏与冗余二级工具栏） */

@@ -171,6 +171,9 @@
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     touch-action: pan-y; /* 更改为 pan-y 以允许上滑穿透冒泡 */
     cursor: grab; 
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .tm-video-wrapper hlsjs-video,
@@ -193,11 +196,21 @@
     touch-action: none; /* 手指在手柄区滑动不产生背景滚动 */
 }
 
-/* 输入栏、底栏抽屉或虚拟键盘激活时，禁用手柄触控，严防越级遮挡或误触拖拽 */
+/* 输入栏、底栏抽屉、设置面板或虚拟键盘激活时，禁用手柄触控与视频层，严防越级遮挡或误触长按/下载 */
 .tm-player-container.has-composer-active .tm-handle-container,
 .tm-player-container.has-sheet-open .tm-handle-container,
 .tm-player-container.has-inline-remark-open .tm-handle-container,
+.tm-player-container.tm-settings-active .tm-handle-container,
+.tm-player-container.has-modal-open .tm-handle-container,
 .tm-player-container.tm-ios-keyboard-open .tm-handle-container {
+    pointer-events: none;
+}
+
+.tm-player-container.has-composer-active .tm-video-wrapper video,
+.tm-player-container.has-sheet-open .tm-video-wrapper video,
+.tm-player-container.has-inline-remark-open .tm-video-wrapper video,
+.tm-player-container.tm-settings-active .tm-video-wrapper video,
+.tm-player-container.has-modal-open .tm-video-wrapper video {
     pointer-events: none;
 }
 

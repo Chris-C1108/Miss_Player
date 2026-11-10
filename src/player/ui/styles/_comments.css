@@ -169,6 +169,7 @@
 }
 .tm-ios-keyboard-open .tm-comment-submit-bar-wrapper {
     bottom: var(--keyboard-height, 0px);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
 }
 .tm-comment-submit-bar-wrapper.is-collapsed {
     transform: translateY(100%);

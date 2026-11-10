@@ -208,6 +208,17 @@ export class MarkerBottomSheet {
             this._lastInputTouchTime = Date.now();
         }, { passive: true });
 
+        const stopContextMenu = (e) => {
+            const tag = e.target?.tagName?.toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || Boolean(e.target?.isContentEditable)) {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        this._sheetOverlay.addEventListener('contextmenu', stopContextMenu, true);
+        this._sheetPanel.addEventListener('contextmenu', stopContextMenu, true);
+
         // 统一单行顶栏：全选 + 标题 + 数量徽标 | 撤销 + 分享 + 关闭
         const header = document.createElement('div');
         header.className = 'tm-sheet-header';

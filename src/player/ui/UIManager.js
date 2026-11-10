@@ -344,8 +344,14 @@ export class UIManager {
         
         // 鼠标/触摸按下事件 - 开始检测长按
         const handlePointerDown = (e) => {
-            // 确保点击事件不是从控制按钮冒泡上来的
-            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button')) {
+            // 1. 若当前存在任何打开的互斥浮层面板或模态框，严禁触发长按 3 倍速！
+            if (this.surfaceMachine && (this.surfaceMachine.activeSurface !== SURFACE_TYPES.NONE || (Array.isArray(this.surfaceMachine._modalStack) && this.surfaceMachine._modalStack.length > 0))) {
+                return;
+            }
+
+            // 2. 确保点击事件不是从控制按钮、浮层面板或模态框冒泡上来的
+            const nonVideoOverlaySelector = '.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay, .tm-custom-modal, .jc-code-preview-popover';
+            if (e.target.closest(nonVideoOverlaySelector)) {
                 return;
             }
             
@@ -497,13 +503,13 @@ export class UIManager {
             }
             
             // 确保点击事件不是从控制按钮、浮层或预览弹窗冒泡上来的
-            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-inline-remark-popover, .tm-bottom-sheet-panel, .tm-comment-submit-bar-wrapper, .jc-code-preview-popover')) {
+            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-inline-remark-popover, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-custom-modal-overlay, .tm-custom-modal, .jc-code-preview-popover')) {
                 return;
             }
 
-            // 若当前存在打开的浮层面板（如设置面板、评论发表栏、高光列表抽屉、打点备注框），点击视频画面优先干净收起浮层，绝不误触发视频暂停/播放！
-            if (this.surfaceMachine && this.surfaceMachine.activeSurface !== SURFACE_TYPES.NONE) {
-                this.surfaceMachine.closeActiveSurface();
+            // 若当前存在打开的浮层面板或模态框（如设置面板、评论发表栏、高光列表抽屉、打点备注框），点击视频画面优先干净收起浮层，绝不误触发视频暂停/播放！
+            if (this.surfaceMachine && (this.surfaceMachine.activeSurface !== SURFACE_TYPES.NONE || (Array.isArray(this.surfaceMachine._modalStack) && this.surfaceMachine._modalStack.length > 0))) {
+                this.surfaceMachine.dismissTopmost();
                 return;
             }
             
@@ -1029,7 +1035,66 @@ export class UIManager {
                 const inlinePopover = this.shadowRoot?.querySelector('.tm-inline-remark-popover') || document.querySelector('.tm-inline-remark-popover');
                 const wasKeyboardOpen = Boolean(playerContainer?.classList.contains('tm-ios-keyboard-open'));
 
+                // 判定当前 Shadow DOM 或宿主页面是否有输入框持有焦点
+                const isInputFocused = () => {
+                    const shadowActive = this.shadowRoot?.activeElement;
+                    const docActive = document.activeElement;
+                    const active = shadowActive || docActive;
+                    if (!active) return false;
+                    const tag = active.tagName?.toLowerCase();
+                    return tag === 'input' || tag === 'textarea' || Boolean(active.isContentEditable);
+                };
+
+                const collapseKeyboardLayout = () => {
+                    this._keyboardCloseTimer = null;
+                    // 二次守卫：若在防抖周期内已有新的输入框获得焦点，严禁收起键盘布局！
+                    if (isInputFocused()) {
+                        return;
+                    }
+
+                    document.documentElement.style.setProperty('--keyboard-height', '0px');
+                    if (playerContainer) {
+                        playerContainer.classList.remove('tm-ios-keyboard-open');
+                        playerContainer.style.removeProperty('--keyboard-height');
+                        if (playerContainer.scrollTop !== 0 || playerContainer.scrollLeft !== 0) {
+                            playerContainer.scrollTop = 0;
+                            playerContainer.scrollLeft = 0;
+                        }
+                    }
+                    if (document.body?.classList.contains('tm-player-active')) {
+                        if (window.scrollY !== 0 || window.scrollX !== 0) {
+                            window.scrollTo(0, 0);
+                        }
+                    }
+                    if (this.shadowRoot?.host) {
+                        this.shadowRoot.host.style.removeProperty('--keyboard-height');
+                    }
+                    if (commentSubmitBar) {
+                        commentSubmitBar.style.bottom = '0px';
+                        commentSubmitBar.style.transform = '';
+                    }
+                    const sheetPanel = this.shadowRoot?.querySelector('.tm-bottom-sheet-panel');
+                    if (sheetPanel) {
+                        sheetPanel.style.bottom = '0px';
+                        sheetPanel.style.transform = '';
+                    }
+                    if (inlinePopover) {
+                        inlinePopover.style.bottom = '';
+                    }
+                    if (activeModal && activeModal.style.transform) {
+                        activeModal.style.transform = '';
+                    }
+                    if (wasKeyboardOpen) {
+                        this.updatePortraitVideoHeight();
+                    }
+                };
+
                 if (keyboardHeight > 60) {
+                    if (this._keyboardCloseTimer) {
+                        clearTimeout(this._keyboardCloseTimer);
+                        this._keyboardCloseTimer = null;
+                    }
+
                     if (document.body?.classList.contains('tm-player-active')) {
                         if (window.scrollY !== 0 || window.scrollX !== 0) {
                             window.scrollTo(0, 0);
@@ -1068,51 +1133,49 @@ export class UIManager {
                         this.updatePortraitVideoHeight();
                     }
                 } else {
-                    document.documentElement.style.setProperty('--keyboard-height', '0px');
-                    if (playerContainer) {
-                        playerContainer.classList.remove('tm-ios-keyboard-open');
-                        playerContainer.style.removeProperty('--keyboard-height');
-                        if (playerContainer.scrollTop !== 0 || playerContainer.scrollLeft !== 0) {
-                            playerContainer.scrollTop = 0;
-                            playerContainer.scrollLeft = 0;
-                        }
+                    // 键盘高度 <= 60: 可能是真实收起，也可能是多输入框切换瞬间的微秒失焦 (Focus Handoff)
+                    // 若当前仍有输入框持有焦点，坚决不收起键盘布局
+                    if (isInputFocused()) {
+                        return;
                     }
-                    if (document.body?.classList.contains('tm-player-active')) {
-                        if (window.scrollY !== 0 || window.scrollX !== 0) {
-                            window.scrollTo(0, 0);
-                        }
-                    }
-                    if (this.shadowRoot?.host) {
-                        this.shadowRoot.host.style.removeProperty('--keyboard-height');
-                    }
-                    if (commentSubmitBar) {
-                        commentSubmitBar.style.bottom = '0px';
-                        commentSubmitBar.style.transform = '';
-                    }
-                    const sheetPanel = this.shadowRoot?.querySelector('.tm-bottom-sheet-panel');
-                    if (sheetPanel) {
-                        sheetPanel.style.bottom = '0px';
-                        sheetPanel.style.transform = '';
-                    }
-                    if (inlinePopover) {
-                        inlinePopover.style.bottom = '';
-                    }
-                    if (activeModal && activeModal.style.transform) {
-                        activeModal.style.transform = '';
-                    }
+
+                    // 若此前键盘已是打开状态，等待 120ms 防抖缓冲。若是在同一组件内切换输入框，下一个 input focus 将直接取消收起，面板稳如泰山！
                     if (wasKeyboardOpen) {
-                        this.updatePortraitVideoHeight();
+                        if (this._keyboardCloseTimer) {
+                            clearTimeout(this._keyboardCloseTimer);
+                        }
+                        this._keyboardCloseTimer = setTimeout(collapseKeyboardLayout, 120);
+                    } else {
+                        collapseKeyboardLayout();
                     }
                 }
             };
             window.visualViewport.addEventListener('resize', this.visualViewportListener);
             window.visualViewport.addEventListener('scroll', this.visualViewportListener);
+
+            if (!this._focusInListener && this.shadowRoot) {
+                this._focusInListener = () => {
+                    if (this._keyboardCloseTimer) {
+                        clearTimeout(this._keyboardCloseTimer);
+                        this._keyboardCloseTimer = null;
+                    }
+                };
+                this.shadowRoot.addEventListener('focusin', this._focusInListener, true);
+            }
         }
         
         // 存储清理引用，以防多次初始化或在 cleanup() 中调用
         this._cleanupLayoutSchedulers = () => {
             if (rafId) cancelAnimationFrame(rafId);
             if (resizeTimer) clearTimeout(resizeTimer);
+            if (this._keyboardCloseTimer) {
+                clearTimeout(this._keyboardCloseTimer);
+                this._keyboardCloseTimer = null;
+            }
+            if (this._focusInListener && this.shadowRoot) {
+                this.shadowRoot.removeEventListener('focusin', this._focusInListener, true);
+                this._focusInListener = null;
+            }
         };
     }
 

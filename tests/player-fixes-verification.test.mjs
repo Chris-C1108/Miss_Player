@@ -416,6 +416,69 @@ assert.ok(
 
 console.log('✅ 16. 高光备注与转存零视口纵向位移与容器滚动防失真守卫验证通过');
 
-console.log('\n🎉 全部 16 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 17. 验证组件内多输入框切换零弹跳防抖与视频浮层长按/Stay拦截
+// ---------------------------------------------------------
+console.log('▶ 17. 验证组件内多输入框切换零弹跳防抖与视频浮层长按/Stay拦截...');
+const updatedEventManagerCode = fs.readFileSync('src/player/managers/EventManager.js', 'utf8');
+const settingsManagerCode = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
+const markerSheetCssCode = fs.readFileSync('src/player/ui/styles/02_components/_marker_sheet.css', 'utf8');
+const commentsCssCode = fs.readFileSync('src/player/ui/styles/_comments.css', 'utf8');
+const updatedPlayerCss = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
+
+// 17.1 验证 UIManager 多输入框切换焦点交接防抖 (Focus Handoff Guard & Debounce)
+assert.ok(
+    updatedUiManagerJs.includes('const isInputFocused = () =>') &&
+    updatedUiManagerJs.includes('this._keyboardCloseTimer = setTimeout(collapseKeyboardLayout, 120)') &&
+    updatedUiManagerJs.includes("this.shadowRoot.addEventListener('focusin', this._focusInListener, true)"),
+    'UIManager 必须具备 isInputFocused 焦点检测、120ms 防抖定时器与 focusin 及时取消机制，彻底消灭组件内多输入框切换弹跳'
+);
+
+// 17.2 验证 CSS 隔离 bottom 过渡动效
+assert.ok(
+    markerSheetCssCode.includes('.tm-ios-keyboard-open .tm-bottom-sheet-panel.visible') &&
+    markerSheetCssCode.includes('transition: opacity 0.24s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);') &&
+    commentsCssCode.includes('.tm-ios-keyboard-open .tm-comment-submit-bar-wrapper') &&
+    commentsCssCode.includes('transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;'),
+    '高光抽屉与评论发表栏在软键盘打开时必须隔离 bottom 过渡动效，防止跟随键盘高度变动产生弹跳动画'
+);
+
+// 17.3 验证 handlePointerDown 排除所有活动浮层与模态框
+assert.ok(
+    updatedUiManagerJs.includes('this.surfaceMachine.activeSurface !== SURFACE_TYPES.NONE') &&
+    updatedUiManagerJs.includes('.tm-settings-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay'),
+    'UIManager 的 handlePointerDown 必须全面排除 surfaceMachine 活动状态及所有浮层/模态框元素，严防长按 3 倍速误触'
+);
+
+// 17.4 验证捕获阶段全局拦截 contextmenu 并放行输入框
+assert.ok(
+    updatedEventManagerCode.includes("contextElements.forEach(el => {\n            if (!el) return;\n            el[method]('contextmenu', this.handleContextMenuBound, true);\n        });") ||
+    updatedEventManagerCode.includes("el[method]('contextmenu', this.handleContextMenuBound, true);"),
+    'EventManager 必须在捕获阶段全局拦截 contextmenu，覆盖全屏容器、覆盖层与视频层'
+);
+assert.ok(
+    updatedEventManagerCode.includes("tag === 'input' || tag === 'textarea' || Boolean(e.target?.isContentEditable)"),
+    'EventManager 的 contextmenu 拦截必须安全放行 input/textarea/contenteditable 以支持文本复制粘贴'
+);
+
+// 17.5 验证面板自包含捕获阶段 contextmenu 拦截
+assert.ok(
+    markerSheetJsCode.includes("this._sheetPanel.addEventListener('contextmenu', stopContextMenu, true);") &&
+    settingsManagerCode.includes('this.settingsPanel.addEventListener("contextmenu", stopContextMenu, true);'),
+    'MarkerBottomSheet 与 SettingsManager 必须在面板自身捕获阶段拦截 contextmenu，彻底阻断 Stay App 长按呼出'
+);
+
+// 17.6 验证 CSS 视频层屏蔽与 touch-callout 禁用
+assert.ok(
+    updatedPlayerCss.includes('-webkit-touch-callout: none;') &&
+    updatedPlayerCss.includes('.tm-player-container.has-sheet-open .tm-video-wrapper video') &&
+    updatedPlayerCss.includes('.tm-player-container.tm-settings-active .tm-video-wrapper video') &&
+    updatedPlayerCss.includes('pointer-events: none;'),
+    '_player.css 必须为视频设置 -webkit-touch-callout: none 且在面板激活时将视频 pointer-events 设为 none'
+);
+
+console.log('✅ 17. 组件内多输入框切换零弹跳防抖与视频浮层长按/Stay拦截验证通过');
+
+console.log('\n🎉 全部 17 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 

@@ -77,6 +77,14 @@ export class UISurfaceMachine {
     }
 
     /**
+     * 判断当前是否有任何互斥浮层或弹窗处于打开状态
+     * @returns {boolean}
+     */
+    hasAnySurfaceOpen() {
+        return this.activeSurface !== SURFACE_TYPES.NONE || (Array.isArray(this._modalStack) && this._modalStack.length > 0);
+    }
+
+    /**
      * 停用指定浮层并同步容器状态
      * @param {string} surfaceId
      */
