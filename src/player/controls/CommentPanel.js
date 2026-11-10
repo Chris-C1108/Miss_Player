@@ -1875,6 +1875,7 @@ export class CommentPanel {
             <div class="tm-comment-error tm-comments-panel-error is-hidden"></div>
             <div class="tm-comment-backdrop is-hidden"></div>
             <div class="tm-comment-submit-bar-wrapper is-collapsed">
+                <div class="tm-comment-drawer-pill" title="收起"></div>
                 <div class="tm-comment-tag-select-modal">
                     <div class="tm-tag-select-header">
                         <span class="tm-tag-select-title">附带高光片段</span>

@@ -194,12 +194,20 @@ export class CommentComposer {
             });
         }
 
-        // 绑定输入栏右侧收起按钮
+        // 绑定输入栏右侧收起按钮与顶部抽屉提手条
         if (closeBarBtn) {
             closeBarBtn.addEventListener('mousedown', (e) => {
                 if (e.cancelable) e.preventDefault();
             });
             closeBarBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeComposer();
+            });
+        }
+
+        const drawerPill = submitBarWrapper?.querySelector('.tm-comment-drawer-pill');
+        if (drawerPill) {
+            drawerPill.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.closeComposer();
             });
@@ -400,6 +408,8 @@ export class CommentComposer {
         if (surfaceMachine) {
             surfaceMachine.activate('comment-composer', () => this.closeComposer());
         }
+        // 关键设计规范：附加片段列表默认隐藏，仅在用户点击 + 号时再向上抽屉式展开
+        this.closeTagSelectModal();
         this.submitBarWrapper.classList.remove('is-collapsed');
         if (this.backdrop) this.backdrop.classList.remove('is-hidden');
         if (this.panel?.commentsPanel) {

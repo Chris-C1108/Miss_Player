@@ -145,7 +145,7 @@
     border-radius: 2px;
 }
 
-/* 评论区底部一体化发表抽屉 (上层可选挂载高光片段抽屉 + 下层输入栏，无框套框) */
+/* 评论区底部一体化发表抽屉 (底部向上弹出抽屉式设计 + 顶部抽屉把手，无框套框) */
 .tm-comment-submit-bar-wrapper {
     position: absolute;
     bottom: var(--keyboard-height, 0px);
@@ -158,18 +158,19 @@
     backdrop-filter: blur(28px) saturate(180%);
     -webkit-backdrop-filter: blur(28px) saturate(180%);
     border-top: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 18px 18px 0 0;
+    border-radius: 20px 20px 0 0;
     box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.55);
     z-index: var(--z-composer);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     pointer-events: auto !important;
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
 }
 .tm-ios-keyboard-open .tm-comment-submit-bar-wrapper {
     bottom: var(--keyboard-height, 0px);
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-comment-submit-bar-wrapper.is-collapsed {
     transform: translateY(100%);
@@ -180,6 +181,22 @@
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto !important;
+}
+
+/* 抽屉顶部 Apple 风格拖动与收起提手条 (Pill Handle) */
+.tm-comment-drawer-pill {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.24);
+    margin: 8px auto 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.tm-comment-drawer-pill:active {
+    background: rgba(255, 255, 255, 0.45);
+    transform: scale(0.95);
 }
 
 /* 软键盘打开时，评论列表底部自动留出键盘与发评栏高度的呼吸空间 */
@@ -556,22 +573,37 @@
     transform: scale(0.95);
 }
 
-/* 附带高光片段内嵌抽屉 (无缝融于发表栏上半部，消除双层浮窗嵌套与键盘裁切) */
+/* 附带高光片段内嵌抽屉 (向上抽屉式平滑展开与收起，消除双层浮窗嵌套与键盘裁切) */
 .tm-comment-tag-select-modal {
     position: relative;
     width: 100%;
     max-width: 650px;
     margin: 0 auto;
-    padding: 10px 14px 4px 14px;
     box-sizing: border-box;
     background: transparent;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    display: none;
+    border-bottom: 1px solid transparent;
+    display: flex;
     flex-direction: column;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding: 0 14px;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                padding 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s ease;
+    will-change: max-height, opacity, transform;
 }
 .tm-comment-tag-select-modal.visible {
-    display: flex;
-    max-height: min(200px, calc(var(--visual-viewport-height, 100dvh) - 106px));
+    max-height: min(220px, calc(var(--visual-viewport-height, 100dvh) - 106px));
+    opacity: 1;
+    padding: 8px 14px 4px 14px;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    pointer-events: auto;
+    transform: translateY(0);
 }
 
 .tm-tag-select-header {

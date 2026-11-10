@@ -527,6 +527,44 @@ assert.ok(
 
 console.log('✅ 18. 菜单栏上滑手势锁定与 iOS 虚拟键盘发评栏物理高度避让验证通过');
 
-console.log('\n🎉 全部 18 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 19. 验证评论栏底部向上弹出抽屉式、附加片段抽屉默认收起与无模糊遮罩
+// ---------------------------------------------------------
+console.log('▶ 19. 验证评论栏底部向上弹出抽屉式、附加片段抽屉默认收起与无模糊遮罩...');
+const commentComposerCode = fs.readFileSync('src/player/controls/CommentComposer.js', 'utf8');
+const commentPanelCode = fs.readFileSync('src/player/controls/CommentPanel.js', 'utf8');
+const latestCommentsCss = fs.readFileSync('src/player/ui/styles/_comments.css', 'utf8');
+const latestPlayerCssV19 = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
+
+// 19.1 验证发评栏具备底部抽屉圆角、提手条与丝滑曲线
+assert.ok(
+    commentPanelCode.includes('tm-comment-drawer-pill') &&
+    commentComposerCode.includes('.tm-comment-drawer-pill') &&
+    latestCommentsCss.includes('.tm-comment-drawer-pill') &&
+    latestCommentsCss.includes('border-radius: 20px 20px 0 0;') &&
+    latestCommentsCss.includes('transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1)'),
+    '评论发表栏必须采用底部向上弹出的抽屉式设计，包含 tm-comment-drawer-pill 提手条与 20px 圆角'
+);
+
+// 19.2 验证附加片段列表默认隐藏，并在展开时具备向上抽屉式平滑过渡
+assert.ok(
+    commentComposerCode.includes('this.closeTagSelectModal();\n        this.submitBarWrapper.classList.remove(\'is-collapsed\');') &&
+    latestCommentsCss.includes('.tm-comment-tag-select-modal {') &&
+    latestCommentsCss.includes('max-height: 0;') &&
+    latestCommentsCss.includes('transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1)') &&
+    latestCommentsCss.includes('.tm-comment-tag-select-modal.visible {') &&
+    latestCommentsCss.includes('max-height: min(220px,'),
+    '附加片段列表在打开评论栏时必须默认隐藏，且展开时通过 max-height 与 transform 向上抽屉式展开'
+);
+
+// 19.3 验证评论时不需要模糊遮罩层，保持全透明
+assert.ok(
+    latestPlayerCssV19.includes('.tm-player-container.has-composer-active .tm-surface-event-sink.visible {\n    background-color: transparent;\n    backdrop-filter: none;\n    -webkit-backdrop-filter: none;\n}'),
+    '评论时必须彻底移除模糊遮罩层 (background-color: transparent; backdrop-filter: none;)，确保视频与界面清晰可见'
+);
+
+console.log('✅ 19. 评论栏底部向上弹出抽屉式、附加片段抽屉默认收起与无模糊遮罩验证通过');
+
+console.log('\n🎉 全部 19 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 
