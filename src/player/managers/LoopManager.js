@@ -128,6 +128,7 @@ export class LoopManager {
                         this.draftTab.startTime = this.targetVideo.currentTime;
                         this.draftTab.color = this._allocateDraftColor();
                         this.renderTabs();
+                        Toast(`已打点当前时间: ${formatTimeWithHours(this.targetVideo.currentTime)}`, 'info');
                         if (window.navigator && window.navigator.vibrate) {
                             window.navigator.vibrate(5);
                         }
@@ -513,6 +514,7 @@ export class LoopManager {
             this.draftTab.startTime = this.targetVideo.currentTime;
             this.draftTab.color = this._allocateDraftColor();
             this.renderTabs();
+            Toast(`已标记 A 点: ${formatTimeWithHours(this.draftTab.startTime)}`, 'info');
             if (window.navigator.vibrate) window.navigator.vibrate(10);
         });
 
@@ -521,6 +523,7 @@ export class LoopManager {
             this.draftTab.endTime = this.targetVideo.currentTime;
             this.draftTab.color = this._allocateDraftColor();
             this.renderTabs();
+            Toast(`已标记 B 点: ${formatTimeWithHours(this.draftTab.endTime)}`, 'info');
             if (window.navigator.vibrate) window.navigator.vibrate(10);
         });
 
@@ -572,6 +575,7 @@ export class LoopManager {
             e.stopPropagation();
             this._resetDraftTab();
             this.renderTabs();
+            Toast('已取消打点草稿', 'info');
         });
         pill.appendChild(cancelBtn);
 
@@ -1243,6 +1247,7 @@ export class LoopManager {
         this.updateLoopMarkers();
         this.renderProgressMarkers();
         this.controlManager?.updatePlayPauseButton();
+        Toast('已退出循环播放', 'info');
     }
 
     /**

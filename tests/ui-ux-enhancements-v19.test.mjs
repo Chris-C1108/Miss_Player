@@ -125,4 +125,22 @@ assert.ok(hostCss.includes('@media screen and (orientation: landscape)'), '宿�
 assert.ok(hostCss.includes('min-height: calc(100vh + 80px)'), '横屏必须包含可滚动高度余量供 Safari 感知折叠');
 console.log('✅ 11. 横屏视频区域上滑穿透驱动 Safari 原生全屏验证通过');
 
-console.log('🎉 全部 11 大项 UI/UX、Peach状态、交互手势、Safari全屏与更新检查单元测试 100% 通过！');
+// 12. 验证标题栏左对齐、进入巡航跑马灯、控制面板功能Toast与科学时长算法
+import { calculateToastDuration, stripEmojis } from '../src/utils/ui-feedback.js';
+assert.strictEqual(stripEmojis('🍑 影片 STARS-256 🎉 已在库 ⏳'), '影片 STARS-256 已在库', 'stripEmojis 应当彻底过滤所有 emoji 字符');
+const durShort = calculateToastDuration('视频已暂停');
+assert.ok(durShort >= 1800 && durShort <= 2200, '短状态文本停留时长应当符合人机工程最佳实践 (约1.8~2.2s)');
+const durLong = calculateToastDuration('WebDAV 目录不存在且无法自动创建，请在 WebDAV 服务器上手动创建目录');
+assert.ok(durLong >= 3800, '长文本提示停留时长应当足够用户完整阅读 (>=3.8s)');
+
+const playerCssText = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
+assert.ok(playerCssText.includes('text-align: left;'), '标题栏必须改为左对齐');
+assert.ok(playerCssText.includes('justify-content: flex-start;'), '标题槽必须为 flex-start 左对齐');
+assert.ok(uiManagerCode.includes('triggerTitlePeekScroll'), 'UIManager 必须包含进入播放器时的标题向左巡航滚动方法');
+
+const volumeCode = fs.readFileSync('src/player/controls/VolumeController.js', 'utf8');
+assert.ok(volumeCode.includes("Toast('已静音'"), '静音切换必须包含 Toast 状态反馈');
+assert.ok(playbackCode.includes("Toast('播放倍速已恢复: 1.0x'"), '倍速重置必须包含 Toast 状态反馈');
+console.log('✅ 12. 标题栏左对齐、进入巡航跑马灯、控制面板功能Toast与科学时长算法验证通过');
+
+console.log('🎉 全部 12 大项 UI/UX、Peach状态、交互手势、Safari全屏与更新检查单元测试 100% 通过！');

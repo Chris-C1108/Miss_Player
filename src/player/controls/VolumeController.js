@@ -1,5 +1,6 @@
 import { MUTE, VOLUME_LOW, VOLUME_HIGH } from '../../constants/icons.js';
 import { getValue, setValue, getBool } from '../../utils/storage.js';
+import { Toast } from '../../utils/index.js';
 import { __ } from '../../constants/i18n.js';
 import { telemetry } from '../../telemetry/index.js';
 
@@ -154,6 +155,8 @@ export class VolumeController {
             if (!this.targetVideo.paused) {
                 this.startUnmuteHeartbeat();
             }
+            const currentVol = Math.round((this.targetVideo.volume || 1) * 100);
+            Toast(`已取消静音 (音量 ${currentVol}%)`, 'info');
         } else {
             // 手动静音
             if (this.supportsVolumeControl) {
@@ -164,6 +167,7 @@ export class VolumeController {
             this.stopUnmuteHeartbeat();
             // 用户主动静音，清空记忆时间戳，下一次打开必定静音
             setValue('lastUnmutedTime', 0);
+            Toast('已静音', 'info');
         }
 
         this.updateVolumeUI();

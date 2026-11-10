@@ -245,6 +245,7 @@ export class PlaybackController {
                     this.playerCore.videoState.playbackRate = 1.0;
                 }
                 this.syncPlaybackRateSlider(1.0);
+                Toast('播放倍速已恢复: 1.0x', 'info');
                 if (window.navigator && window.navigator.vibrate) {
                     window.navigator.vibrate(5);
                 }
@@ -272,6 +273,7 @@ export class PlaybackController {
                 this.playerCore.videoState.playbackRate = nextSpeed;
             }
             this.syncPlaybackRateSlider(nextSpeed);
+            Toast(`播放倍速: ${nextSpeed}x`, 'info');
             telemetry.recordFeatureAction('speed_change');
             
             if (window.navigator && window.navigator.vibrate) {

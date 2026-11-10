@@ -2354,7 +2354,10 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
 .tm-title-slot--toast {
     transform: translateY(100%);
     opacity: 0;
-    gap: 6px;
+    gap: 7px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 .tm-title-slot--toast.is-active {
     transform: translateY(0);
@@ -2384,22 +2387,22 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
     box-shadow: 0 0 6px rgba(255, 69, 58, 0.6);
 }
 
+.tm-title-slot--toast.tm-toast--info .tm-toast-indicator-dot {
+    background: #0a84ff;
+    box-shadow: 0 0 6px rgba(10, 132, 255, 0.6);
+}
+
 .tm-title-slot--toast .tm-toast-content {
     font-size: 13.5px;
     font-weight: 600;
     letter-spacing: -0.2px;
+    color: #ffffff;
 }
 
-.tm-title-slot--toast.tm-toast--success .tm-toast-content {
-    color: #30d158;
-}
-
-.tm-title-slot--toast.tm-toast--error .tm-toast-content {
-    color: #ff453a;
-}
-
+.tm-title-slot--toast.tm-toast--success .tm-toast-content,
+.tm-title-slot--toast.tm-toast--error .tm-toast-content,
 .tm-title-slot--toast.tm-toast--info .tm-toast-content {
-    color: #0a84ff;
+    color: #ffffff;
 }
 
 /* 独立挂载在 playerContainer 下时的降级/大屏分栏绝对定位 */

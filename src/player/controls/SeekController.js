@@ -1,4 +1,5 @@
 import { REWIND, FORWARD } from '../../constants/icons.js';
+import { Toast } from '../../utils/index.js';
 import { telemetry } from '../../telemetry';
 
 /**
@@ -27,6 +28,7 @@ export class SeekController {
         }
 
         this.targetVideo.currentTime = newTime;
+        Toast(`跳转 ${seconds > 0 ? '+' : ''}${seconds}s`, 'info');
 
         telemetry.track('seek_click', {
             seconds,

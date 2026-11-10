@@ -146,19 +146,19 @@
 }
 
 .tm-toast--error {
-    background: hsla(var(--shadcn-destructive) / 0.85);
-    border-color: hsla(var(--shadcn-destructive) / 0.3);
-    color: #fff;
+    background: rgba(22, 22, 26, 0.92);
+    border-color: rgba(255, 69, 58, 0.35);
+    color: #ffffff;
 }
 
 .tm-toast--success {
-    background: hsla(var(--shadcn-green) / 0.85);
-    border-color: hsla(var(--shadcn-green) / 0.3);
-    color: #fff;
+    background: rgba(22, 22, 26, 0.92);
+    border-color: rgba(48, 209, 88, 0.35);
+    color: #ffffff;
 }
 
 .tm-toast--info {
-    background: hsla(var(--shadcn-blue) / 0.85);
-    border-color: hsla(var(--shadcn-blue) / 0.3);
-    color: #fff;
+    background: rgba(22, 22, 26, 0.92);
+    border-color: rgba(10, 132, 255, 0.35);
+    color: #ffffff;
 }
