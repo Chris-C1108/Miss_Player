@@ -2091,9 +2091,15 @@ export class CommentPanel {
 
             e.stopPropagation();
 
+            // 如果附带高光片段抽屉正处于展开态，点击评论列表空白处立即收起该抽屉
+            if (this.composer && this.composer.tagSelectModal && this.composer.tagSelectModal.classList.contains('visible')) {
+                this.composer.closeTagSelectModal();
+                return;
+            }
+
             // 如果评论发表栏正处于展开态，点击评论列表空白处自动收起评论发表栏与虚拟键盘
             if (this.composer && this.composer.submitBarWrapper && !this.composer.submitBarWrapper.classList.contains('is-collapsed')) {
-                if (Date.now() - (this.composer._lastInputTouchTime || 0) >= 450) {
+                if (Date.now() - (this.composer._lastInputTouchTime || 0) >= 60) {
                     this.composer.closeComposer();
                     return;
                 }

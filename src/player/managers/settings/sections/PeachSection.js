@@ -164,6 +164,10 @@ export class PeachSection {
             checked: Boolean(config.enabled),
             onChange: (checked) => {
                 PeachService.saveConfig({ enabled: checked });
+                const uiManager = this.sm?.uiManager || this.sm?.playerCore?.uiManager;
+                if (uiManager && typeof uiManager.updatePeachButtonVisibility === 'function') {
+                    uiManager.updatePeachButtonVisibility();
+                }
                 Toast(checked ? '已开启 Peach 联动' : '已关闭 Peach 联动', 1200, 'info');
             }
         });
@@ -196,6 +200,10 @@ export class PeachSection {
             this.connectionStatus = 'none';
             this._updateStatusBadge();
             this._renderTokenStatusWrap(tokenStatusWrap);
+            const uiManager = this.sm?.uiManager || this.sm?.playerCore?.uiManager;
+            if (uiManager && typeof uiManager.updatePeachButtonVisibility === 'function') {
+                uiManager.updatePeachButtonVisibility();
+            }
             Toast('已清除 Peach 服务地址', 1500, 'info');
         });
 

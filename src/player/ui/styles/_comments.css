@@ -543,6 +543,8 @@
     -webkit-touch-callout: default;
     caret-color: #0a84ff;
     cursor: text;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 .tm-comment-text-input:focus {
     border-color: rgba(10, 132, 255, 0.55);
@@ -595,7 +597,6 @@
                 transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
                 padding 0.3s cubic-bezier(0.16, 1, 0.3, 1),
                 border-color 0.2s ease;
-    will-change: max-height, opacity, transform;
 }
 .tm-comment-tag-select-modal.visible {
     max-height: min(220px, calc(var(--visual-viewport-height, 100dvh) - 106px));
@@ -621,6 +622,8 @@
     font-weight: 600;
     color: rgba(255, 255, 255, 0.65);
     letter-spacing: -0.1px;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .tm-tag-select-btn-group {

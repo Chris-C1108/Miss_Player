@@ -432,8 +432,24 @@
     background-color: rgba(48, 209, 88, 0.15);
 }
 
-.tm-peach-ingest-button.is-busy svg {
+.tm-peach-ingest-button.is-busy svg,
+.tm-peach-ingest-button.is-busy .tm-peach-logo-img {
     animation: tm-spin 1s linear infinite;
+}
+
+.tm-peach-logo-img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, filter 0.2s ease;
+}
+
+.tm-peach-ingest-button.is-ingested .tm-peach-logo-img {
+    filter: drop-shadow(0 0 5px rgba(48, 209, 88, 0.75));
 }
 
 /* 设置面板 (自适应视口高度并支持原生平滑滚动) */

@@ -339,6 +339,7 @@ export class UIManager {
         let isLongPress = false;
         let originalPlaybackRate = 1.0;
         this.isLongPress = false; // 挂载到实例上，暴露给外部模块如 VideoSwipeManager
+        this._justFinishedLongPress = false;
         this.longPressStartX = 0;
         this.longPressStartY = 0;
         
@@ -371,7 +372,7 @@ export class UIManager {
             this.longPressStartX = touchObj ? touchObj.clientX : e.clientX;
             this.longPressStartY = touchObj ? touchObj.clientY : e.clientY;
             
-            // 设置长按定时器 (3秒)
+            // 设置长按定时器 (380ms 灵敏启动，符合人机工学)
             longPressTimer = setTimeout(() => {
                 // 触发长按事件
                 isLongPress = true;
@@ -387,7 +388,7 @@ export class UIManager {
                 
                 // 触觉反馈
                 if (window.navigator.vibrate) {
-                    window.navigator.vibrate(50);
+                    window.navigator.vibrate(40);
                 }
                 
                 // 如果视频当前是暂停的，清除用户暂停意图锁并开始播放
@@ -398,10 +399,10 @@ export class UIManager {
                     }
                     this.playerCore.targetVideo.play().catch(() => {});
                 }
-            }, 800); // 800ms的长按时间，减少等待感
+            }, 380);
         };
         
-        // 指针/触摸移动事件 - 解决与拖拽/滑动的冲突
+        // 指针/触摸移动事件 - 解决与拖拽/滑动的冲突 (放宽移动容差至 25px 防生理微颤)
         const handlePointerMove = (e) => {
             if (longPressTimer && !isLongPress) {
                 const touch = e.type.includes('touch');
@@ -415,8 +416,8 @@ export class UIManager {
                 const deltaY = currentY - this.longPressStartY;
                 const dist = Math.hypot(deltaX, deltaY);
                 
-                if (dist > 10) {
-                    // 滑动距离大于 10px，取消长按 3 倍速检测，防止与左右拖拽/向下滑动冲突
+                if (dist > 25) {
+                    // 滑动距离大于 25px，取消长按 3 倍速检测，防止与左右拖拽/向下滑动冲突
                     clearTimeout(longPressTimer);
                     longPressTimer = null;
                 }
@@ -442,11 +443,15 @@ export class UIManager {
                     speedIndicator.remove();
                 }
                 
-                // 防止触发点击事件
+                // 防止触发点击事件并加上时间窗保护
                 e.preventDefault();
                 e.stopPropagation();
                 isLongPress = false;
                 this.isLongPress = false;
+                this._justFinishedLongPress = true;
+                setTimeout(() => {
+                    this._justFinishedLongPress = false;
+                }, 240);
                 return;
             }
         };
@@ -474,6 +479,14 @@ export class UIManager {
             }
         };
         
+        // 阻止移动端长按弹出系统上下文菜单或放大镜导致的 touchcancel 中断
+        this.videoWrapper.addEventListener('contextmenu', (e) => {
+            if (isLongPress || longPressTimer || this._justFinishedLongPress) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+
         // 添加鼠标事件监听
         this.videoWrapper.addEventListener('mousedown', handlePointerDown);
         this.videoWrapper.addEventListener('mouseup', handlePointerUp);
@@ -491,8 +504,8 @@ export class UIManager {
             // 阻止冒泡至宿主页面，防止触发宿主站点的广告弹窗监听
             e.stopPropagation();
 
-            // 如果是长按触发的，不执行点击操作
-            if (isLongPress) {
+            // 如果是长按触发的或刚结束长按，绝对不执行点击操作
+            if (isLongPress || this._justFinishedLongPress) {
                 return;
             }
             
@@ -511,6 +524,21 @@ export class UIManager {
             if (this.surfaceMachine && (this.surfaceMachine.activeSurface !== SURFACE_TYPES.NONE || (Array.isArray(this.surfaceMachine._modalStack) && this.surfaceMachine._modalStack.length > 0))) {
                 this.surfaceMachine.dismissTopmost();
                 return;
+            }
+
+            // 兼容性双保险：若评论发评底栏或高光片段列表仍处于展开态，点击视频区域无条件关闭抽屉！
+            const commentComposer = this.controlManager?.commentPanel?.composer;
+            if (commentComposer) {
+                let handled = false;
+                if (commentComposer.tagSelectModal && commentComposer.tagSelectModal.classList.contains('visible')) {
+                    commentComposer.closeTagSelectModal();
+                    handled = true;
+                }
+                if (commentComposer.submitBarWrapper && !commentComposer.submitBarWrapper.classList.contains('is-collapsed')) {
+                    commentComposer.closeComposer();
+                    handled = true;
+                }
+                if (handled) return;
             }
             
             // 播放/暂停切换函数（与 PlaybackController 的 userPauseIntent 状态机强同步）
@@ -627,6 +655,20 @@ export class UIManager {
         if (avcode) {
             setTimeout(() => this.checkPeachStatus(avcode), 1200);
         }
+
+        // 初始显隐状态同步
+        this.updatePeachButtonVisibility();
+    }
+
+    /**
+     * 根据用户配置动态更新 Peach 虚拟入库按钮显隐
+     * 未开启 Peach 入库总开关时不显示，彻底免除非 Peach 用户的视觉干扰
+     */
+    updatePeachButtonVisibility() {
+        if (!this.peachIngestBtn) return;
+        const config = PeachService.getConfig();
+        const isEnabled = Boolean(config.enabled);
+        this.peachIngestBtn.style.display = isEnabled ? '' : 'none';
     }
 
     /**
@@ -1695,6 +1737,7 @@ export class UIManager {
             this.topActionsContainer.appendChild(this.sidebarToggleBtn);
         }
         if (this.peachIngestBtn) {
+            this.updatePeachButtonVisibility();
             this.topActionsContainer.appendChild(this.peachIngestBtn);
         }
         this.topActionsContainer.appendChild(this.settingsBtn);

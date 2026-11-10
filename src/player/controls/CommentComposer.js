@@ -186,8 +186,8 @@ export class CommentComposer {
         if (backdrop) {
             backdrop.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // 幽灵误触防御 (Ghost Click Guard): 若 450ms 内触碰过输入框或面板刚刚位移，严禁意外关闭发评底栏
-                if (Date.now() - (this._lastInputTouchTime || 0) < 450) {
+                // 极轻量防重复抖动 (60ms): 点击抽屉外部遮罩立即灵敏关闭
+                if (Date.now() - (this._lastInputTouchTime || 0) < 60) {
                     return;
                 }
                 this.closeComposer();
@@ -290,11 +290,7 @@ export class CommentComposer {
                 handler(e);
                 const targetInput = activeInputBeforePress || this.commentInput;
                 if (targetInput && !this.submitBarWrapper?.classList.contains('is-collapsed')) {
-                    try {
-                        targetInput.focus({ preventScroll: true });
-                    } catch (_) {
-                        targetInput.focus();
-                    }
+                    this.realignCaret(targetInput);
                 }
             }, { passive: false });
 
@@ -305,11 +301,7 @@ export class CommentComposer {
                 handler(e);
                 const targetInput = activeInputBeforePress || this.commentInput;
                 if (targetInput && !this.submitBarWrapper?.classList.contains('is-collapsed')) {
-                    try {
-                        targetInput.focus({ preventScroll: true });
-                    } catch (_) {
-                        targetInput.focus();
-                    }
+                    this.realignCaret(targetInput);
                 }
             });
         };
@@ -537,12 +529,60 @@ export class CommentComposer {
         this.renderTagSelectList();
         this.tagSelectModal.classList.add('visible');
         this.updateTagButtonBadge();
+        this.realignCaret();
+
+        // 绑定外部点击/触摸自动收起高光抽屉
+        if (!this._outsideTagModalHandler) {
+            this._outsideTagModalHandler = (e) => {
+                if (!this.tagSelectModal || !this.tagSelectModal.classList.contains('visible')) return;
+                const path = e.composedPath ? e.composedPath() : [];
+                const isInsideModal = path.includes(this.tagSelectModal) || (e.target && this.tagSelectModal.contains(e.target));
+                const isAddTagBtn = path.includes(this.addTagBtn) || (e.target && this.addTagBtn?.contains(e.target));
+                if (!isInsideModal && !isAddTagBtn) {
+                    this.closeTagSelectModal();
+                }
+            };
+        }
+        setTimeout(() => {
+            window.addEventListener('pointerdown', this._outsideTagModalHandler, { capture: true });
+        }, 30);
     }
 
     closeTagSelectModal() {
         if (!this.tagSelectModal) return;
         this.tagSelectModal.classList.remove('visible');
         this.updateTagButtonBadge();
+        this.realignCaret();
+
+        if (this._outsideTagModalHandler) {
+            window.removeEventListener('pointerdown', this._outsideTagModalHandler, { capture: true });
+        }
+    }
+
+    /**
+     * 校准光标在输入框内的真实物理位置 (iOS WebKit 避震与 Caret 图层强制对齐)
+     */
+    realignCaret(customInput) {
+        const input = customInput || this.commentInput;
+        if (!input) return;
+        const root = this.submitBarWrapper?.getRootNode?.() || document;
+        const isInputFocused = root.activeElement === input || document.activeElement === input;
+        if (!isInputFocused && !customInput) return;
+
+        const doSync = () => {
+            try {
+                const len = input.value.length;
+                const pos = input.selectionStart ?? len;
+                input.setSelectionRange(pos, pos);
+                input.blur();
+                input.focus({ preventScroll: true });
+            } catch (_) {}
+        };
+
+        requestAnimationFrame(doSync);
+        setTimeout(doSync, 60);
+        setTimeout(doSync, 180);
+        setTimeout(doSync, 320);
     }
 
     renderTagSelectList() {
