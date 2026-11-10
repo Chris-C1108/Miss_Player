@@ -13,9 +13,14 @@ export class VideoSwipeManager {
         this.onClose = onClose;
         this.uiManager = uiManager;
         this._touchPreventDefault = (e) => {
-            // 垂直拖拽时始终阻止浏览器默认滚动行为，杜绝全屏播放器容器发生纵向位移与底部产生黑边空白
+            // 垂直拖拽时始终阻止浏览器默认滚动行为 (横屏上滑放行穿透以驱动 Safari 原生全屏)
             if (this.isDragging && e.touches && e.touches.length > 0) {
-                if (this.dragDirection === 'vertical') {
+                const isLandscape = (typeof window !== 'undefined' && window.innerWidth > window.innerHeight) || (this.uiManager && this.uiManager.isLandscape);
+                // 横屏模式下，上滑手势放行穿透，杜绝 preventDefault，促使 Safari 感知滚动并折叠工具栏进入全屏模式
+                if (isLandscape && this.dragDirection === 'vertical' && this.deltaY < 0) {
+                    return;
+                }
+                if (this.dragDirection === 'vertical' && this.deltaY > 0) {
                     if (e.cancelable) {
                         e.preventDefault();
                     }
@@ -608,6 +613,18 @@ export class VideoSwipeManager {
                     this.uiElements.overlay.style.opacity = '1';
                     this.uiElements.overlay.style.transition = 'none';
                 }
+
+                // 横屏模式下上滑穿透：主动驱动宿主窗口产生垂直位移，触发 Safari 原生全屏模式 (隐藏顶部地址栏与底部工具栏)
+                const isLandscape = (typeof window !== 'undefined' && window.innerWidth > window.innerHeight) || (uiManager && uiManager.isLandscape);
+                if (isLandscape) {
+                    const scrollStep = Math.min(25, Math.round(Math.abs(deltaY - (this._lastScrollDeltaY || 0))));
+                    this._lastScrollDeltaY = deltaY;
+                    if (scrollStep > 0) {
+                        try {
+                            window.scrollBy(0, scrollStep);
+                        } catch (_) {}
+                    }
+                }
             }
         }
         
@@ -642,9 +659,20 @@ export class VideoSwipeManager {
                     distance: Math.round(this.dragDistance)
                 });
             }
+
+            // 横屏上滑结束时平滑滚动微调，巩固 Safari 工具栏折叠态
+            const isLandscape = (typeof window !== 'undefined' && window.innerWidth > window.innerHeight) || (this.uiManager && this.uiManager.isLandscape);
+            if (isLandscape && this.dragDirection === 'vertical' && this.deltaY < -20) {
+                try {
+                    window.scrollBy({ top: 50, behavior: 'smooth' });
+                } catch (_) {
+                    try { window.scrollBy(0, 50); } catch (_) {}
+                }
+            }
         } else {
             this.wasDragging = false;
         }
+        this._lastScrollDeltaY = 0;
         
         // 拖动结束时在横屏模式下触发自动隐藏
         const uiMgr = this.uiManager || (this.playerCore && this.playerCore.uiManager);

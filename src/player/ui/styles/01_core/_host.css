@@ -8,14 +8,31 @@ miss-player-root { display: contents !important; }
 
 html.tm-player-active,
 body.tm-player-active {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
-  overscroll-behavior: none !important;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overscroll-behavior: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+@media screen and (orientation: portrait) {
+  html.tm-player-active,
+  body.tm-player-active {
+    position: fixed !important;
+    overflow: hidden !important;
+  }
+}
+
+/* 横屏时为宿主提供微量滚动余量，确保上滑时穿透驱动宿主滚动，触发 iOS Safari 隐藏工具栏进入原生全屏 */
+@media screen and (orientation: landscape) {
+  html.tm-player-active,
+  body.tm-player-active {
+    position: static;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    min-height: calc(100vh + 80px);
+  }
 }
 html.tm-player-active .tm-floating-button,
 body.tm-player-active .tm-floating-button {

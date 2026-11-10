@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.113-024
+// @version            5.7.113-025
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -202,7 +202,7 @@
 		}
 	};
 	var mediaSniffer = new MediaSniffer();
-	_css(":root{--brand-pink:#fe628e;--brand-pink-rgb:254, 98, 142}miss-player-root{display:contents!important}html.tm-player-active,body.tm-player-active{overscroll-behavior:none!important;scrollbar-width:none!important;-ms-overflow-style:none!important;width:100%!important;height:100%!important;position:fixed!important;top:0!important;bottom:0!important;left:0!important;right:0!important;overflow:hidden!important}html.tm-player-active .tm-floating-button,body.tm-player-active .tm-floating-button{display:none!important}html.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active header,body.tm-player-active .header,body.tm-player-active navbar,body.tm-player-active .navbar,body.tm-player-active #header-top,body.tm-player-active .top-nav,body.tm-player-active [class*=header--sticky],body.tm-player-active [class*=navbar-fixed],body.tm-player-active aside[aria-label*=Peach],body.tm-player-active aside[data-panel-mode]{pointer-events:none!important}body.tm-player-active #peach-jav-action,body.tm-player-active [id*=peach-jav]{display:none!important}body.controls-hidden{cursor:none!important}body.tm-swiping-down{-webkit-user-select:none!important;user-select:none!important;touch-action:none!important}body.tm-settings-active{touch-action:pan-y!important}.tm-floating-button{left:calc(50% + var(--mp-fab-offset-x,0px));right:auto;bottom:calc(max(20px, env(safe-area-inset-bottom,20px)) + var(--mp-fab-offset-y,0px));width:56px;height:56px;color:var(--brand-pink,#fe628e);box-shadow:none;box-sizing:border-box;z-index:2147483647;cursor:pointer;-webkit-appearance:none;appearance:none;pointer-events:auto;touch-action:manipulation;border-radius:50%;justify-content:center;align-items:center;margin:0;padding:0;transition:transform .25s cubic-bezier(.16,1,.3,1),filter .25s cubic-bezier(.16,1,.3,1),bottom .25s cubic-bezier(.16,1,.3,1),right .25s cubic-bezier(.16,1,.3,1),left .25s cubic-bezier(.16,1,.3,1);display:flex;overflow:visible;transform:translate(-50%);background:0 0!important;border:none!important;outline:none!important;position:fixed!important}.tm-floating-button svg{width:48px;height:48px;filter:drop-shadow(0 0 10px rgba(var(--brand-pink-rgb,254, 98, 142), .9));transition:filter .25s cubic-bezier(.16,1,.3,1);animation:3s ease-in-out infinite breathing-glow}.tm-floating-button:hover{transform:translate(-50%)scale(1.08)}.tm-floating-button:hover svg{filter:drop-shadow(0 0 20px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}.tm-floating-button:active{transform:translate(-50%)scale(.96)}@keyframes breathing-glow{0%,to{filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb,254, 98, 142), .7))}50%{filter:drop-shadow(0 0 22px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}}@media screen and (min-width:600px) and (min-height:600px),(pointer:fine){.tm-floating-button{left:auto;right:calc(max(24px, env(safe-area-inset-right,24px)) + var(--mp-fab-offset-x,0px));bottom:calc(max(24px, env(safe-area-inset-bottom,24px)) + var(--mp-fab-offset-y,0px));transform:none}.tm-floating-button:hover{transform:scale(1.08)}.tm-floating-button:active{transform:scale(.96)}}@media screen and (max-width:1024px),(pointer:coarse){body.tm-player-active .tm-custom-modal-overlay input,body.tm-player-active .tm-custom-modal-overlay textarea{font-size:16px!important}}body.tm-player-active dialog[open]{filter:none;backdrop-filter:none;-webkit-backdrop-filter:none;backdrop-filter:none;contain:none;border:none;width:100vw;max-width:100vw;height:100vh;max-height:100vh;margin:0;padding:0;overflow:hidden;transform:none}body.tm-player-active dialog[open]>:not(miss-player-root):not(.tm-floating-button){pointer-events:none!important}dialog[open]:has(.tm-floating-button){contain:none!important}dialog#stage:has(.tm-floating-button){contain:none!important}dialog[open] .tm-floating-button,dialog#stage .tm-floating-button{z-index:2147483647;pointer-events:auto;opacity:1;visibility:visible}");
+	_css(":root{--brand-pink:#fe628e;--brand-pink-rgb:254, 98, 142}miss-player-root{display:contents!important}html.tm-player-active,body.tm-player-active{overscroll-behavior:none;scrollbar-width:none;-ms-overflow-style:none;width:100%;height:100%;top:0;bottom:0;left:0;right:0}@media screen and (orientation:portrait){html.tm-player-active,body.tm-player-active{position:fixed!important;overflow:hidden!important}}@media screen and (orientation:landscape){html.tm-player-active,body.tm-player-active{-webkit-overflow-scrolling:touch;min-height:calc(100vh + 80px);position:static;overflow-y:scroll}}html.tm-player-active .tm-floating-button,body.tm-player-active .tm-floating-button{display:none!important}html.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active header,body.tm-player-active .header,body.tm-player-active navbar,body.tm-player-active .navbar,body.tm-player-active #header-top,body.tm-player-active .top-nav,body.tm-player-active [class*=header--sticky],body.tm-player-active [class*=navbar-fixed],body.tm-player-active aside[aria-label*=Peach],body.tm-player-active aside[data-panel-mode]{pointer-events:none!important}body.tm-player-active #peach-jav-action,body.tm-player-active [id*=peach-jav]{display:none!important}body.controls-hidden{cursor:none!important}body.tm-swiping-down{-webkit-user-select:none!important;user-select:none!important;touch-action:none!important}body.tm-settings-active{touch-action:pan-y!important}.tm-floating-button{left:calc(50% + var(--mp-fab-offset-x,0px));right:auto;bottom:calc(max(20px, env(safe-area-inset-bottom,20px)) + var(--mp-fab-offset-y,0px));width:56px;height:56px;color:var(--brand-pink,#fe628e);box-shadow:none;box-sizing:border-box;z-index:2147483647;cursor:pointer;-webkit-appearance:none;appearance:none;pointer-events:auto;touch-action:manipulation;border-radius:50%;justify-content:center;align-items:center;margin:0;padding:0;transition:transform .25s cubic-bezier(.16,1,.3,1),filter .25s cubic-bezier(.16,1,.3,1),bottom .25s cubic-bezier(.16,1,.3,1),right .25s cubic-bezier(.16,1,.3,1),left .25s cubic-bezier(.16,1,.3,1);display:flex;overflow:visible;transform:translate(-50%);background:0 0!important;border:none!important;outline:none!important;position:fixed!important}.tm-floating-button svg{width:48px;height:48px;filter:drop-shadow(0 0 10px rgba(var(--brand-pink-rgb,254, 98, 142), .9));transition:filter .25s cubic-bezier(.16,1,.3,1);animation:3s ease-in-out infinite breathing-glow}.tm-floating-button:hover{transform:translate(-50%)scale(1.08)}.tm-floating-button:hover svg{filter:drop-shadow(0 0 20px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}.tm-floating-button:active{transform:translate(-50%)scale(.96)}@keyframes breathing-glow{0%,to{filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb,254, 98, 142), .7))}50%{filter:drop-shadow(0 0 22px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}}@media screen and (min-width:600px) and (min-height:600px),(pointer:fine){.tm-floating-button{left:auto;right:calc(max(24px, env(safe-area-inset-right,24px)) + var(--mp-fab-offset-x,0px));bottom:calc(max(24px, env(safe-area-inset-bottom,24px)) + var(--mp-fab-offset-y,0px));transform:none}.tm-floating-button:hover{transform:scale(1.08)}.tm-floating-button:active{transform:scale(.96)}}@media screen and (max-width:1024px),(pointer:coarse){body.tm-player-active .tm-custom-modal-overlay input,body.tm-player-active .tm-custom-modal-overlay textarea{font-size:16px!important}}body.tm-player-active dialog[open]{filter:none;backdrop-filter:none;-webkit-backdrop-filter:none;backdrop-filter:none;contain:none;border:none;width:100vw;max-width:100vw;height:100vh;max-height:100vh;margin:0;padding:0;overflow:hidden;transform:none}body.tm-player-active dialog[open]>:not(miss-player-root):not(.tm-floating-button){pointer-events:none!important}dialog[open]:has(.tm-floating-button){contain:none!important}dialog#stage:has(.tm-floating-button){contain:none!important}dialog[open] .tm-floating-button,dialog#stage .tm-floating-button{z-index:2147483647;pointer-events:auto;opacity:1;visibility:visible}");
 	function formatTime(seconds) {
 		if (isNaN(seconds) || seconds < 0) return "0:00";
 		const hours = Math.floor(seconds / 3600);
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-024";
+		return "5.7.113-025";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1799,7 +1799,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-024";
+		return "5.7.113-025";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3604,7 +3604,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-024";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-025";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -22803,7 +22803,8 @@
 			this.uiManager = uiManager;
 			this._touchPreventDefault = (e) => {
 				if (this.isDragging && e.touches && e.touches.length > 0) {
-					if (this.dragDirection === "vertical") {
+					if ((typeof window !== "undefined" && window.innerWidth > window.innerHeight || this.uiManager && this.uiManager.isLandscape) && this.dragDirection === "vertical" && this.deltaY < 0) return;
+					if (this.dragDirection === "vertical" && this.deltaY > 0) {
 						if (e.cancelable) e.preventDefault();
 					}
 				}
@@ -23132,6 +23133,13 @@
 						this.uiElements.overlay.style.opacity = "1";
 						this.uiElements.overlay.style.transition = "none";
 					}
+					if (typeof window !== "undefined" && window.innerWidth > window.innerHeight || uiManager && uiManager.isLandscape) {
+						const scrollStep = Math.min(25, Math.round(Math.abs(deltaY - (this._lastScrollDeltaY || 0))));
+						this._lastScrollDeltaY = deltaY;
+						if (scrollStep > 0) try {
+							window.scrollBy(0, scrollStep);
+						} catch (_) {}
+					}
 				}
 			}
 			const isUpwardSwipe = this.dragDirection === "vertical" && deltaY < 0;
@@ -23150,7 +23158,18 @@
 					direction: this.dragDirection,
 					distance: Math.round(this.dragDistance)
 				});
+				if ((typeof window !== "undefined" && window.innerWidth > window.innerHeight || this.uiManager && this.uiManager.isLandscape) && this.dragDirection === "vertical" && this.deltaY < -20) try {
+					window.scrollBy({
+						top: 50,
+						behavior: "smooth"
+					});
+				} catch (_) {
+					try {
+						window.scrollBy(0, 50);
+					} catch (_) {}
+				}
 			} else this.wasDragging = false;
+			this._lastScrollDeltaY = 0;
 			const uiMgr = this.uiManager || this.playerCore && this.playerCore.uiManager;
 			if (uiMgr && uiMgr.isLandscape) uiMgr.autoHideControls();
 			const dragTarget = this.uiElements && this.uiElements.videoWrapper ? this.uiElements.videoWrapper : this.video;

@@ -116,4 +116,13 @@ assert.ok(sleazyCode.includes('ghfast.top'), '必须包含 ghfast.top 镜像加�
 assert.ok(sleazyCode.includes('gh-proxy.com'), '必须包含 gh-proxy.com 镜像加速节点');
 console.log('✅ 10. GitHub 镜像加速节点全量集成验证通过');
 
-console.log('🎉 全部 10 大项 UI/UX、Peach状态、交互手势与更新检查单元测试 100% 通过！');
+// 11. 验证横屏模式视频区域上滑穿透与宿主滚动驱动 Safari 原生全屏
+const swipeManagerCode = fs.readFileSync('src/player/managers/videoSwipeManager.js', 'utf8');
+assert.ok(swipeManagerCode.includes('isLandscape && this.dragDirection === \'vertical\' && this.deltaY < 0'), '横屏上滑必须放行默认事件穿透');
+assert.ok(swipeManagerCode.includes('window.scrollBy'), '横屏上滑必须驱动宿主窗口滚动以折叠 Safari 工具栏');
+const hostCss = fs.readFileSync('src/player/ui/styles/01_core/_host.css', 'utf8');
+assert.ok(hostCss.includes('@media screen and (orientation: landscape)'), '宿主轨必须为横屏提供微量滚动余量');
+assert.ok(hostCss.includes('min-height: calc(100vh + 80px)'), '横屏必须包含可滚动高度余量供 Safari 感知折叠');
+console.log('✅ 11. 横屏视频区域上滑穿透驱动 Safari 原生全屏验证通过');
+
+console.log('🎉 全部 11 大项 UI/UX、Peach状态、交互手势、Safari全屏与更新检查单元测试 100% 通过！');
