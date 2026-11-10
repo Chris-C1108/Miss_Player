@@ -1,0 +1,103 @@
+---
+name: gesture-event-blackhole
+description: 移动端手势冲突消解、系统级全局事件黑洞、底层树物理冻结、长按穿透根治与 iOS 虚拟键盘 visualViewport 适配最佳实践。
+---
+
+# 移动端手势隔离与全局事件黑洞规范 (Gesture Event Blackhole)
+
+在移动端浏览器（尤其是 iOS WebKit / Safari Stay）中，复杂的 UI 层叠（视频、手柄、抽屉、输入框、模态面板）极易发生手势冲突、长按误触（触发 Stay 视频下载）、视口弹性推移及键盘遮挡。本规范提供系统级的全套解决方案。
+
+---
+
+## 1. 系统级全局事件黑洞 (Event Blackhole Architecture)
+
+当浮层（如设置面板、评论抽屉、标签管理面板）展示在视频区域上方时，用户手指轻微滑动或长按极易穿透到下方的 `<video>` 或宿主页面。
+
+### 核心机制：
+1. **底层 DOM 物理冻结 (Tree Freezing)**：
+   - 浮层激活时，顶级状态机（`UISurfaceMachine`）必须将底层非活动区域的指针事件完全置为 `none`：
+     ```javascript
+     if (this.videoContainer) this.videoContainer.style.pointerEvents = 'none';
+     ```
+2. **事件黑洞遮罩层 (Event Sink)**：
+   - 在活动浮层与底层树之间插入透明全屏事件黑洞层 `.tm-surface-event-sink`；
+   - 在**捕获阶段（Capture Phase）**对所有非活动浮层的手势全部拦截并阻止默认行为与冒泡：
+     ```javascript
+     const blackholeEvents = ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'contextmenu', 'mousedown', 'click'];
+     blackholeEvents.forEach(evtName => {
+         this.eventSink.addEventListener(evtName, (e) => {
+             // 仅放行活动浮层内部节点与可编辑元素
+             if (this._isInsideActiveSurface(e)) return;
+             e.stopPropagation();
+             if (evtName !== 'touchstart') e.preventDefault();
+         }, { capture: true, passive: false });
+     });
+     ```
+   - 彻底阻断 Stay App 悬浮长按气泡、浏览器原生右键菜单、以及底层进度条的意外触发。
+
+---
+
+## 2. 顶级固定视口锁定与手势溢出防护 (Viewport Lock)
+
+### 2.1 顶级容器 `touch-action: none`
+- **问题**：在菜单栏或设置面板向上滑动时，滑动事件冒泡到外层容器，整个播放器被向上推起，底部露出大面积宿主空白。
+- **根治方案**：
+  ```css
+  /* 顶级播放器容器绝对禁止整体位移与宿主橡皮筋滚动 */
+  .tm-player-container {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      touch-action: none; /* 彻底锁定 */
+  }
+  ```
+
+### 2.2 内部滚动容器专属手势白名单
+- 允许纵向滚动的子容器显式声明：
+  ```css
+  .tm-settings-panel,
+  .tm-comment-list-container {
+      touch-action: pan-y;
+      overscroll-behavior-y: contain; /* 阻止滚动溢出到父级 */
+      -webkit-overflow-scrolling: touch;
+  }
+  ```
+- 严格禁止在全景手势管理器中书写 `diffY < -5` 等放行上滑穿透滚动宿主的陈旧逻辑。
+
+---
+
+## 3. iOS 虚拟键盘 `visualViewport` 物理避让
+
+在 iOS Safari 中，软键盘弹起不会改变 `window.innerHeight`，只会压缩 `window.visualViewport`。
+
+### 核心机制：
+1. **实时物理高度映射**：
+   ```javascript
+   function onViewportResize() {
+       if (!window.visualViewport) return;
+       const vv = window.visualViewport;
+       const keyboardHeight = Math.max(0, window.innerHeight - vv.height);
+       
+       // 键盘弹出阈值通常为 60px
+       if (keyboardHeight > 60) {
+           targetBottomDrawer.style.bottom = `${keyboardHeight}px`;
+       } else {
+           targetBottomDrawer.style.bottom = '0px';
+       }
+   }
+   window.visualViewport.addEventListener('resize', onViewportResize);
+   window.visualViewport.addEventListener('scroll', onViewportResize);
+   ```
+2. **严禁在高度映射中加入条件锁**：
+   - 只要 `keyboardHeight > 60`，必须无阻碍直截了当地直接设置物理 `bottom`，绝不允许被面板锁或聚焦锁提前拦截阻断。
+
+---
+
+## 4. 多输入框聚焦防视口跳闪 (Focus Transfer Lock)
+
+### 核心机制：
+- 当一个面板内包含多个输入框（如打点备注、用户名/密码、配置项）时，用户在输入框之间切换焦点时，浏览器会反复触发软键盘重绘与 `scrollIntoView`；
+- **防跳闪规范**：
+  - 调用 `input.focus({ preventScroll: true })` 杜绝原生滚动；
+  - 聚焦时限制容器内部滚动偏移：只在输入框被遮挡在可视区域外时，使用轻量防抖的 `panel.scrollTo` 平滑微调，绝不可触发 `window.scrollTo`。
