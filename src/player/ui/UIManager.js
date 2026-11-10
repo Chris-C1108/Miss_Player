@@ -1089,19 +1089,6 @@ export class UIManager {
                     }
                 };
 
-                // 系统级焦点转移锁拦截：如果处于焦点锁定保护期（如同一面板内多个输入框切换），坚决锁死布局！
-                if (this.surfaceMachine?.isFocusLocked) {
-                    if (keyboardHeight > 60) {
-                        UIManager.lastKnownKeyboardHeight = keyboardHeight;
-                        document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
-                        if (playerContainer) {
-                            playerContainer.classList.add('tm-ios-keyboard-open');
-                            playerContainer.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
-                        }
-                    }
-                    return;
-                }
-
                 if (keyboardHeight > 60) {
                     if (this._keyboardCloseTimer) {
                         clearTimeout(this._keyboardCloseTimer);

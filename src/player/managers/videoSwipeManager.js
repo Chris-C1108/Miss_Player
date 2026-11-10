@@ -13,23 +13,9 @@ export class VideoSwipeManager {
         this.onClose = onClose;
         this.uiManager = uiManager;
         this._touchPreventDefault = (e) => {
-            // 只有当拖动方向为 vertical 且向下滑动时，阻止默认行为（用于下拉退出播放器）
-            // 如果是向上滑动，则不阻止，允许事件穿透到原始网页以滚动触发 iOS 工具栏隐藏
+            // 垂直拖拽时始终阻止浏览器默认滚动行为，杜绝全屏播放器容器发生纵向位移与底部产生黑边空白
             if (this.isDragging && e.touches && e.touches.length > 0) {
-                const currentY = e.touches[0].clientY;
-                const currentDeltaY = currentY - this.startY;
-                
                 if (this.dragDirection === 'vertical') {
-                    if (currentDeltaY < 0) {
-                        if (window.tmDebugLogger) {
-                            window.tmDebugLogger.log(`[_touchPreventDefault] Video swipe UP. deltaY: ${currentDeltaY}. Allowing penetration.`);
-                        }
-                        return;
-                    }
-                    
-                    if (window.tmDebugLogger) {
-                        window.tmDebugLogger.log(`[_touchPreventDefault] Video swipe DOWN. deltaY: ${currentDeltaY}. Preventing default!`);
-                    }
                     if (e.cancelable) {
                         e.preventDefault();
                     }

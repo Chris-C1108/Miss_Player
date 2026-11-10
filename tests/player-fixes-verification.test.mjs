@@ -477,6 +477,56 @@ assert.ok(
 
 console.log('✅ 17. 系统级全局事件黑洞、底层树物理冻结与焦点转移锁验证通过');
 
-console.log('\n🎉 全部 17 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 18. 验证菜单栏上滑手势锁定与 iOS 虚拟键盘发评栏物理高度避让
+// ---------------------------------------------------------
+console.log('▶ 18. 验证菜单栏上滑手势锁定与 iOS 虚拟键盘发评栏物理高度避让...');
+const singleHandJsCode = fs.readFileSync('src/player/managers/SingleHandManager.js', 'utf8');
+const latestUiManagerJs = fs.readFileSync('src/player/ui/UIManager.js', 'utf8');
+const latestPlayerCss = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
+const latestSurfaceMachine = fs.readFileSync('src/player/state/UISurfaceMachine.js', 'utf8');
+const latestEventManager = fs.readFileSync('src/player/managers/EventManager.js', 'utf8');
+const latestVideoSwipe = fs.readFileSync('src/player/managers/videoSwipeManager.js', 'utf8');
+
+// 18.1 验证 SingleHandManager 拦截控制面板上滑手势，杜绝上滑底部空白
+assert.ok(
+    singleHandJsCode.includes('Math.abs(dy) > 5') &&
+    singleHandJsCode.includes('坚决杜绝面板上滑产生底部空白'),
+    'SingleHandManager 必须拦截控制面板任意纵向滑动手势 (Math.abs(dy) > 5)，坚决杜绝面板上滑产生底部空白'
+);
+
+// 18.2 验证全屏播放器容器与视频层锁定 touch-action: none
+assert.ok(
+    latestPlayerCss.includes('.tm-player-container {\n    position: fixed;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n    width: 100%;\n    height: 100%;\n    background-color: transparent;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: flex-start;\n    z-index: var(--z-host-player, 2147483646);\n    overflow: hidden;\n    pointer-events: auto;\n    \n    /* 全局触摸、滚动、选择隔离 (固定视口禁止整体纵向位移) */\n    touch-action: none;') &&
+    latestPlayerCss.includes('touch-action: none; /* 播放器视频区域绝对禁止整体纵向位移 */'),
+    '_player.css 必须为 tm-player-container 与 tm-video-container 锁定 touch-action: none'
+);
+
+// 18.3 验证 UISurfaceMachine 捕获阶段放行活动面板内部元素与输入框
+assert.ok(
+    latestSurfaceMachine.includes('const isInsideActiveSurface = Boolean(') &&
+    latestSurfaceMachine.includes('if (isInsideActiveSurface || isEditable) {') &&
+    latestSurfaceMachine.includes('return;'),
+    'UISurfaceMachine 必须在捕获阶段放行活动面板内部元素与可编辑输入框，确保 iOS Safari 原生触摸聚焦与软键盘唤起'
+);
+
+// 18.4 验证 UIManager 在 keyboardHeight > 60 时无阻碍设置发评底栏与抽屉物理 bottom
+assert.ok(
+    latestUiManagerJs.includes("commentSubmitBar.style.bottom = `${keyboardHeight}px`;") &&
+    latestUiManagerJs.includes("sheetPanel.style.bottom = `${keyboardHeight}px`;") &&
+    !latestUiManagerJs.includes('if (this.surfaceMachine?.isFocusLocked) {\n                    if (keyboardHeight > 60)'),
+    'UIManager 必须在 keyboardHeight > 60 时无阻碍直接设置 commentSubmitBar 与 sheetPanel 行内物理 bottom'
+);
+
+// 18.5 验证视频区域阻止纵向滑动穿透
+assert.ok(
+    !latestEventManager.includes('diffY < -5') &&
+    latestVideoSwipe.includes('垂直拖拽时始终阻止浏览器默认滚动行为'),
+    'EventManager 与 videoSwipeManager 必须彻底移除允许上滑穿透滚动宿主的陈旧代码，杜绝视口错位'
+);
+
+console.log('✅ 18. 菜单栏上滑手势锁定与 iOS 虚拟键盘发评栏物理高度避让验证通过');
+
+console.log('\n🎉 全部 18 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 

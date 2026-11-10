@@ -67,43 +67,9 @@ export class EventManager {
             e.stopPropagation();
         };
 
-        // 阻止穿透滚动逻辑：除视频画面区域和可滚动评论内容外，阻止默认的 touchmove/wheel 事件以防止穿透到原始网页
+        // 阻止穿透滚动逻辑：全屏播放器模式下，视频区域任何纵向手势均阻止默认滚动，杜绝视口位移
         this.handleScrollPreventionBound = (e) => {
-            // 允许视频画面区域穿透（唯独上滑触发底层网页滚动，下滑用于推出播放器）
             if (e.target.closest('.tm-video-container')) {
-                if (e.type === 'touchmove') {
-                    if (e.touches && e.touches.length > 0) {
-                        const currentY = e.touches[0].clientY;
-                        const diffY = currentY - this._touchStartY;
-                        this._lastTouchY = currentY;
-
-                        // diffY < -5 表示手指向上滑动（Swiping Up），即网页向下滚动
-                        if (diffY < -5) {
-                            if (window.tmDebugLogger) {
-                                window.tmDebugLogger.log(`touchmove video [SWIPE UP]. diffY: ${diffY}, scrollY: ${window.scrollY}. Allow!`);
-                            }
-                            return; // 允许原生滚动穿透，获得完全丝滑的系统原生滚动体验且无任何闪跳！
-                        } else {
-                            if (window.tmDebugLogger) {
-                                window.tmDebugLogger.log(`touchmove video [SWIPE DOWN/OTHER]. diffY: ${diffY}, scrollY: ${window.scrollY}. Block!`);
-                            }
-                        }
-                    }
-                } else if (e.type === 'wheel') {
-                    // deltaY > 0 表示滚轮向下滚动，即页面向下移动（相当于上滑手势）
-                    if (e.deltaY > 0) {
-                        if (window.tmDebugLogger) {
-                            window.tmDebugLogger.log(`wheel video [DOWN]. delta: ${e.deltaY}, scrollY: ${window.scrollY}. Allow!`);
-                        }
-                        return; // 允许原生滚动穿透
-                    } else {
-                        if (window.tmDebugLogger) {
-                            window.tmDebugLogger.log(`wheel video [UP/OTHER]. delta: ${e.deltaY}, scrollY: ${window.scrollY}. Block!`);
-                        }
-                    }
-                }
-                
-                // 其他滑动方向（如向下滑动或向上滚轮）在视频区域被拦截，阻止穿透
                 if (e.cancelable) {
                     e.preventDefault();
                 }

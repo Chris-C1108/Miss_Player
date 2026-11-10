@@ -121,12 +121,21 @@ export class UISurfaceMachine {
             this.acquireFocusLock();
         }
 
-        // 核心：当浮层处于激活态时，阻断所有 Touch / Pointer / ContextMenu 事件穿透 Shadow DOM 边界冒泡至宿主 window！
-        // 彻底杜绝 Stay App 或宿主页面的全局长按监听器感知到触摸手势！
-        e.stopPropagation();
+        // 核心防护：针对当前活动面板内部元素（发评抽屉、底栏、标签抽屉、设置面板、模态框）的交互放行
+        // 确保子元素正常接收 touchstart/pointerdown 以触发 iOS Safari 原生触摸聚焦与软键盘唤起
+        const isInsideActiveSurface = Boolean(
+            target?.closest?.('.tm-comment-submit-bar-wrapper, .tm-bottom-sheet-panel, .tm-settings-panel, .tm-custom-modal-dialog, .tm-custom-modal-content, .tm-inline-remark-popover, .tm-tag-select-modal')
+        );
+        if (isInsideActiveSurface || isEditable) {
+            if (!isEditable && e.type === 'contextmenu') {
+                e.preventDefault();
+            }
+            return;
+        }
 
-        // 针对非输入框的 contextmenu 直接阻断，防止原生系统菜单或外挂触发
-        if (!isEditable && e.type === 'contextmenu') {
+        // 仅在点击背景遮罩或底层非活动区域时阻断事件冒泡穿透，杜绝 Stay App 或外部长按下载
+        e.stopPropagation();
+        if (e.type === 'contextmenu') {
             e.preventDefault();
         }
     }

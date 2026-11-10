@@ -47,8 +47,8 @@
     overflow: hidden;
     pointer-events: auto;
     
-    /* 全局触摸、滚动、选择隔离 */
-    touch-action: pan-y;
+    /* 全局触摸、滚动、选择隔离 (固定视口禁止整体纵向位移) */
+    touch-action: none;
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -104,7 +104,7 @@
     border-radius: var(--shadcn-radius-lg);
     box-shadow: var(--shadow-lg);
     z-index: var(--z-base);
-    touch-action: pan-y; /* 仅允许纵向原生手势以支持单向滚动穿透 */
+    touch-action: none; /* 播放器视频区域绝对禁止整体纵向位移 */
     flex-shrink: 1;
     transition: height 0.28s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -2320,6 +2320,7 @@ body.controls-hidden .tm-player-container > .tm-player-title,
         visibility: visible;
         transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
         will-change: transform, opacity;
+        touch-action: none;
     }
 
     /* 当作为 iOS 键盘底板时，里面的 tm-control-buttons 与底板融为一体，保持纯正垂直位置，锁定 transform: none，杜绝任何斜向漂移 */

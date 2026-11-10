@@ -203,15 +203,15 @@ export class SingleHandManager {
                 if (Math.abs(dx) >= Math.abs(dy)) {
                     return;
                 }
-                // 仅在明确向下轻扫时才拦截原生纵向滚动
-                if (dy > 15 && dy > Math.abs(dx) * 1.5 && e.cancelable) {
+                // 纵向手势时拦截原生纵向滚动，杜绝背景或容器滚动脱位
+                if (Math.abs(dy) > 10 && e.cancelable) {
                     e.preventDefault();
                 }
                 return;
             }
 
-            // 在控制面板其他非胶囊/模式切换滚动区：水平滑移主导或明显的向下手势时阻止原生滚动，保持纯净手势交互
-            if ((Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) || (dy > 10 && dy > Math.abs(dx))) {
+            // 在控制面板其他非胶囊/模式切换滚动区：任何手势（水平左右滑动、上滑、下滑）均拦截原生纵向滚动，保持纯净手势交互，坚决杜绝面板上滑产生底部空白！
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                 if (e.cancelable) {
                     e.preventDefault();
                 }
