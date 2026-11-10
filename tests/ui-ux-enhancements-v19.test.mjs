@@ -1,13 +1,15 @@
 import assert from 'assert';
 import fs from 'fs';
 
-console.log('🧪 开始执行 10 大 UI/UX、Peach状态与交互修复专项单元测试...');
+console.log('🧪 开始执行 10 大 UI/UX、Peach状态、顶栏广告翻滚Toast与交互修复专项单元测试...');
 
-// 1. 验证 ICON_PEACH 是否使用高清立体桃子图片
+// 1. 验证 ICON_PEACH 是否使用高清立体桃子图片与右下角状态角标
 import { ICON_PEACH } from '../src/constants/icons.js';
 assert.ok(ICON_PEACH.includes('tm-peach-logo-img'), 'ICON_PEACH 应当包含 tm-peach-logo-img 样式类');
 assert.ok(ICON_PEACH.includes('data:image/png;base64,'), 'ICON_PEACH 应当内联高清 PNG base64 数据');
-console.log('✅ 1. Peach 按钮使用高清立体桃子图片验证通过');
+const factoriesCode = fs.readFileSync('src/player/ui/_uiFactories.js', 'utf8');
+assert.ok(factoriesCode.includes('tm-peach-badge'), '桃子按钮工厂函数应当创建 tm-peach-badge 状态角标');
+console.log('✅ 1. Peach 按钮使用高清立体桃子图片与右下角状态角标验证通过');
 
 // 2. 验证 Peach 按钮按配置开关动态显隐
 const storageStore = new Map();
@@ -87,7 +89,7 @@ assert.strictEqual(
 );
 console.log('✅ 7. WebDAV 路径防重叠自愈保护验证通过');
 
-// 8. 验证 getVideoTitle 在 Peach 站过滤“全体媒体库”并提取 peachItem 番号
+// 8. 验证 getVideoTitle 在 Peach 站过滤“接着看”模块并精准提取
 import { getVideoTitle } from '../src/player/ui/_uiFactories.js';
 const mockPeachVideo = {
     peachItem: {
@@ -99,10 +101,13 @@ const peachTitle = getVideoTitle(mockPeachVideo);
 assert.strictEqual(peachTitle, 'STARS-256 桃子测试影片标题', 'Peach 站点应当优先从 peachItem 提取番号与标题');
 console.log('✅ 8. Peach 站点视频标题与番号精准提取验证通过');
 
-// 9. 验证 PlaybackController 暂停时不再弹出 Toast 骚扰
+// 9. 验证顶栏翻滚广告跑马灯 Toast 与播放/暂停/缓冲提示
 const playbackCode = fs.readFileSync('src/player/controls/PlaybackController.js', 'utf8');
-assert.strictEqual(playbackCode.includes("Toast('已暂停播放'"), false, '暂停播放时绝对不得弹出 Toast');
-console.log('✅ 9. 暂停播放无干扰（移除 Toast）验证通过');
+assert.ok(playbackCode.includes("Toast('⏸️ 视频已暂停', 1000, 'info')"), '暂停播放时应当以顶栏翻滚 Toast 提示');
+assert.ok(playbackCode.includes("Toast('▶️ 继续播放', 1000, 'info')"), '继续播放时应当以顶栏翻滚 Toast 提示');
+const progressCode = fs.readFileSync('src/player/managers/ProgressManager.js', 'utf8');
+assert.ok(progressCode.includes("Toast('⏳ 正在缓冲视频...', 1000, 'info')"), '视频卡顿缓冲时应当提示缓冲状态');
+console.log('✅ 9. 视频暂停、播放与缓冲状态顶栏翻滚 Toast 提示验证通过');
 
 // 10. 验证 SleazyForkService 包含指定的 GitHub 镜像加速站 (gh-proxy.org, ghfast.top, gh-proxy.com)
 const sleazyCode = fs.readFileSync('src/services/SleazyForkService.js', 'utf8');

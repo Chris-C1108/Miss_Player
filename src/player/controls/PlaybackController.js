@@ -150,11 +150,13 @@ export class PlaybackController {
                 this._userPauseIntent = true;
                 if (this.playerCore) this.playerCore.userPauseIntent = true;
                 this.targetVideo.pause();
+                Toast('⏸️ 视频已暂停', 1000, 'info');
             } else {
                 // 用户确认开播
                 this._userPauseIntent = false;
                 if (this.playerCore) this.playerCore.userPauseIntent = false;
                 this.targetVideo.play().catch(() => {});
+                Toast('▶️ 继续播放', 1000, 'info');
             }
             this.updatePlayPauseButton();
             telemetry.track('play_toggle', { is_playing: !this._userPauseIntent });

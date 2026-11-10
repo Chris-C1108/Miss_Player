@@ -86,7 +86,14 @@ export function createCloseButtonElement() {
 export function createPeachIngestButtonElement() {
     const peachBtn = document.createElement('button');
     peachBtn.className = 'tm-peach-ingest-button tm-control-button-base';
-    peachBtn.innerHTML = ICON_PEACH;
+    peachBtn.innerHTML = `
+        ${ICON_PEACH}
+        <span class="tm-peach-badge is-hidden" title="已在库">
+            <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2 6 5 9 10 3"></polyline>
+            </svg>
+        </span>
+    `;
     peachBtn.title = '加入 Peach 馆藏 (STRM)';
     peachBtn.setAttribute('aria-label', '加入 Peach 馆藏');
     return peachBtn;
@@ -173,44 +180,59 @@ export function createSpeedIndicatorElement(text = '3x') {
 export function getVideoTitle(targetVideo = null) {
     const videoEl = targetVideo || (typeof document !== 'undefined' ? (document.querySelector('.tm-video-wrapper video') || document.querySelector('video')) : null);
 
-    // 1. 优先适配自托管 Peach 站点 (从绑定的 peachItem 或打开的弹窗舞台中精准提取)
+    const TITLE_BLACKLIST = ['接着看', '全体媒体库', '暂无内容', 'Peach', '浏览馆藏', '返回关注', '全部媒体', '最近播放', '播放列表', '暂无接着看的内容'];
+    const isInvalidTitle = (str) => {
+        if (!str || typeof str !== 'string') return true;
+        const trimmed = str.trim();
+        if (!trimmed) return true;
+        return TITLE_BLACKLIST.some(bad => trimmed === bad || trimmed === `Peach · ${bad}` || trimmed === `Peach - ${bad}`);
+    };
+
+    // 1. 优先适配自托管 Peach 站点 (从 DOM 专属舞台详情、peachItem 精准提取，绝对排除“接着看”模块)
     try {
+        if (typeof document !== 'undefined') {
+            // A. Peach 详情页专属标题元素 [data-detail-title] / [data-stage-title]
+            const peachTitleEl = document.querySelector('[data-detail-title], [data-stage-title], [data-item-title]');
+            if (peachTitleEl) {
+                const text = peachTitleEl.textContent.trim();
+                if (text && !isInvalidTitle(text)) {
+                    return text;
+                }
+            }
+
+            // B. 检查 Peach 原生活动对话框中的标题
+            const activeDialog = document.querySelector('dialog[open], [data-stage-grid], [data-item-detail]');
+            if (activeDialog) {
+                const titleNode = activeDialog.querySelector('[data-detail-title], .detail-title, h1:not([data-item-related] *), h2:not([data-item-related] *)');
+                if (titleNode) {
+                    const text = titleNode.textContent.trim();
+                    if (text && !isInvalidTitle(text)) {
+                        return text;
+                    }
+                }
+            }
+        }
+
+        // C. 检查绑定的 peachItem
         const peachItem = videoEl?.peachItem || videoEl?.parentElement?.peachItem;
         if (peachItem && (peachItem.code || peachItem.title || peachItem.name)) {
             const code = (peachItem.code || '').trim();
             const name = (peachItem.title || peachItem.name || '').trim();
-            if (code && name) return `${code} ${name}`;
+            if (code && name && !isInvalidTitle(name)) return `${code} ${name}`;
             if (code) return code;
-            if (name) return name;
-        }
-
-        // 探测 Peach 的活动模态框或舞台
-        if (typeof document !== 'undefined') {
-            const activeDialog = document.querySelector('dialog[open], .vjs-tech');
-            if (activeDialog) {
-                const container = activeDialog.closest('dialog') || activeDialog.parentElement;
-                const codeEl = container?.querySelector('[data-code], .movie-code, .av-code');
-                const titleEl = container?.querySelector('h2, h3, .movie-title');
-                if (codeEl || titleEl) {
-                    const c = codeEl ? codeEl.textContent.trim() : '';
-                    const t = titleEl ? titleEl.textContent.trim() : '';
-                    if (c && t && !t.includes(c)) return `${c} ${t}`;
-                    if (c) return c;
-                    if (t && !t.includes('全体媒体库')) return t;
-                }
-            }
+            if (name && !isInvalidTitle(name)) return name;
         }
     } catch (_) {}
 
     // 2. 外部视频站常规提取 (h4 / h1 / document.title)
     if (typeof document !== 'undefined') {
         const h4 = document.querySelector('h4');
-        if (h4 && h4.textContent && !h4.textContent.includes('全体媒体库')) {
+        if (h4 && h4.textContent && !isInvalidTitle(h4.textContent)) {
             return h4.textContent.trim();
         }
         
         const h1 = document.querySelector('h1');
-        if (h1 && h1.textContent && !h1.textContent.includes('全体媒体库')) {
+        if (h1 && h1.textContent && !isInvalidTitle(h1.textContent)) {
             return h1.textContent.trim();
         }
     }
@@ -220,8 +242,7 @@ export function getVideoTitle(targetVideo = null) {
     title = title.replace(/\s*-\s*JAVLibrary.*$/i, '');
     title = title.replace(/Peach\s*[·•-]?\s*/gi, '');
 
-    // 若提取到的标题依然是“全体媒体库”，尝试调用番号提取作为降级兜底
-    if (!title || title.includes('全体媒体库')) {
+    if (isInvalidTitle(title)) {
         try {
             const avcode = videoEl?.getAttribute?.('data-code') || videoEl?.getAttribute?.('data-avcode') || '';
             if (avcode) return avcode;

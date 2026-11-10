@@ -452,6 +452,29 @@
     filter: drop-shadow(0 0 5px rgba(48, 209, 88, 0.75));
 }
 
+/* 桃子已入库右下角 ✅ 角标 */
+.tm-peach-badge {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #30d158;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+    z-index: 2;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+.tm-peach-badge.is-hidden {
+    display: none;
+}
+
 /* 设置面板 (自适应视口高度并支持原生平滑滚动) */
 .tm-settings-panel {
     position: absolute;
@@ -2288,6 +2311,68 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
     pointer-events: none;
     transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     margin: 0 4px;
+    height: 28px;
+    line-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-title-slot {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+    will-change: transform, opacity;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tm-title-slot--main {
+    transform: translateY(100%);
+    opacity: 0;
+}
+.tm-title-slot--main.is-active {
+    transform: translateY(0);
+    opacity: 1;
+}
+.tm-title-slot--main.is-exiting {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+.tm-title-slot--toast {
+    transform: translateY(100%);
+    opacity: 0;
+}
+.tm-title-slot--toast.is-active {
+    transform: translateY(0);
+    opacity: 1;
+}
+.tm-title-slot--toast.is-exiting {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+.tm-title-slot--toast .tm-toast-content {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+.tm-title-slot--toast.tm-toast--success .tm-toast-content {
+    color: #30d158;
+}
+
+.tm-title-slot--toast.tm-toast--error .tm-toast-content {
+    color: #ff453a;
+}
+
+.tm-title-slot--toast.tm-toast--info .tm-toast-content {
+    color: #0a84ff;
 }
 
 /* 独立挂载在 playerContainer 下时的降级/大屏分栏绝对定位 */

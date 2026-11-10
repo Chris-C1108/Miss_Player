@@ -22,6 +22,7 @@ import {
 import { StrmIngestPipeline } from '../../services/StrmIngestPipeline.js';
 import { PeachService } from '../../services/PeachService.js';
 import { PeachWebBridge } from '../bridge/PeachWebBridge.js';
+import { WebDavClient } from '../../sync/WebDavClient.js';
 import { Toast } from '../../utils/index.js';
 import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { enforceInlinePlayback } from '../../utils/iosInline.js';
@@ -48,6 +49,9 @@ export class UIManager {
         if (this.playerCore) {
             this.playerCore.surfaceMachine = this.surfaceMachine;
             this.playerCore.uiManager = this;
+        }
+        if (typeof window !== 'undefined') {
+            window.__missPlayerUIManager = this;
         }
         
         // UI 元素引用
@@ -553,10 +557,12 @@ export class UIManager {
                     this.playerCore.userPauseIntent = false;
                     if (playbackCtrl) playbackCtrl._userPauseIntent = false;
                     this.playerCore.targetVideo.play().catch(() => {});
+                    Toast('▶️ 继续播放', 1000, 'info');
                 } else {
                     this.playerCore.userPauseIntent = true;
                     if (playbackCtrl) playbackCtrl._userPauseIntent = true;
                     this.playerCore.targetVideo.pause();
+                    Toast('⏸️ 视频已暂停', 1000, 'info');
                     if (this.controlManager) {
                         this.controlManager.showPauseIndicator();
                     }
@@ -637,64 +643,58 @@ export class UIManager {
 
             // 1. 场景 A: 运行在用户自托管的 Peach Web 实例页面内部
             if (typeof PeachWebBridge !== 'undefined' && PeachWebBridge.isPeachInstance()) {
+                const badge = this.peachIngestBtn.querySelector('.tm-peach-badge');
+                this.peachIngestBtn.classList.add('is-ingested');
+                if (badge) badge.classList.remove('is-hidden');
                 if (avcode) {
-                    this.peachIngestBtn.classList.add('is-ingested');
                     this.peachIngestBtn.title = `Peach 媒体库中心 (${avcode})`;
-                    Toast(`🍑 当前处于 Peach 媒体中心 (影片 ${avcode} 已在库)`, 2500, 'info');
+                    Toast(`🍑 当前处于 Peach 媒体中心 (影片 ${avcode} 已在库)`, 1000, 'info');
                     try {
                         await PeachService.triggerScan();
                     } catch (_) {}
                 } else {
-                    Toast('🍑 当前处于自托管 Peach 媒体库中心', 2000, 'info');
+                    Toast('🍑 当前处于自托管 Peach 媒体库中心', 1000, 'info');
                 }
                 return;
             }
 
             // 2. 场景 B: 运行在外部视频源网站 (Jable / MissAV / JavDB 等)
             if (!avcode) {
-                Toast('未能识别当前影片番号，无法执行入库', 2000, 'error');
+                Toast('未能识别当前影片番号，无法执行入库', 1500, 'error');
                 return;
             }
 
             // 若已经处于 is-ingested 状态，点击直观提示当前在库状态
             if (this.peachIngestBtn.classList.contains('is-ingested')) {
-                Toast(`🍑 影片 ${avcode} 已在 Peach 馆藏中 (STRM 虚拟入库已就绪)`, 2500, 'success');
+                Toast(`🍑 影片 ${avcode} 已在库 (WebDAV .strm 就绪)`, 1000, 'success');
                 return;
             }
 
-            // 检查远端在库状态
+            // 执行入库流水线
             this.peachIngestBtn.classList.add('is-busy');
             try {
-                const status = await PeachService.checkCodeStatus(avcode);
-                if (status && status.inLibrary) {
-                    this.peachIngestBtn.classList.remove('is-busy');
-                    this.peachIngestBtn.classList.add('is-ingested');
-                    this.peachIngestBtn.title = `已在 Peach 馆藏 (${status.state || '已收录'})`;
-                    Toast(`🍑 影片 ${avcode} 已在 Peach 馆藏中 (${status.state || '已收录'})`, 2500, 'success');
-                    return;
-                }
-
-                // 尚未入库，执行入库流水线
                 const res = await StrmIngestPipeline.ingest({
                     avcode,
                     videoEl: this.targetVideo
                 });
                 if (res && res.success) {
+                    const badge = this.peachIngestBtn.querySelector('.tm-peach-badge');
                     this.peachIngestBtn.classList.remove('is-busy');
                     this.peachIngestBtn.classList.add('is-ingested');
+                    if (badge) badge.classList.remove('is-hidden');
                     this.peachIngestBtn.title = `已入库 Peach: ${res.path}`;
-                    Toast(res.message, 2500, 'success');
+                    Toast(res.message, 1500, 'success');
                 }
             } catch (err) {
                 this.peachIngestBtn.classList.remove('is-busy');
-                Toast(err.message || '入库失败，请在设置中检查配置', 4000, 'error');
+                Toast(err.message || '入库失败，请在设置中检查配置', 2500, 'error');
             }
         });
 
-        // 异步检查当前番号是否已在 Peach 馆藏
+        // 异步检查当前番号在 WebDAV 或 Peach 馆藏状态
         const avcode = getVideoCodeFromUrl(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || '';
         if (avcode) {
-            setTimeout(() => this.checkPeachStatus(avcode), 1200);
+            setTimeout(() => this.checkPeachStatus(avcode), 1000);
         }
 
         // 初始显隐状态同步
@@ -713,26 +713,55 @@ export class UIManager {
     }
 
     /**
-     * 异步检测番号在 Peach 馆藏状态
+     * 异步检测番号在 Peach / WebDAV 馆藏状态
+     * 统一策略：
+     * 1. 自托管 Peach 站点：直接判定为已入库，点亮右下角 ✅ 角标；
+     * 2. 非自托管站点：通过 WebDAV 检查对应的 .strm 文件是否存在，存在即点亮右下角 ✅ 角标。
      */
-    checkPeachStatus(avcodeParam = '') {
+    async checkPeachStatus(avcodeParam = '') {
         if (!this.peachIngestBtn) return;
         const avcode = avcodeParam || getVideoCodeFromUrl(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || '';
         if (!avcode) return;
 
+        const badge = this.peachIngestBtn.querySelector('.tm-peach-badge');
+
+        // 1. 自托管 Peach 站点：自身就是用户的媒体库，直接判定为已入库
         if (typeof PeachWebBridge !== 'undefined' && PeachWebBridge.isPeachInstance()) {
             this.peachIngestBtn.classList.add('is-ingested');
+            if (badge) badge.classList.remove('is-hidden');
             this.peachIngestBtn.title = `Peach 媒体库中心 (${avcode})`;
             return;
         }
-        const config = PeachService.getConfig();
-        if (!config.enabled || !config.base || !config.token) return;
-        PeachService.checkCodeStatus(avcode).then(res => {
-            if (res && res.inLibrary) {
-                this.peachIngestBtn.classList.add('is-ingested');
-                this.peachIngestBtn.title = `已在 Peach 馆藏 (${res.state})`;
+
+        // 2. 非自托管站点：通过 WebDAV 检查是否有对应的 .strm 文件存在来判断状态
+        try {
+            const effectiveWebDav = PeachService.getEffectiveWebDavConfig();
+            const webDavConfig = effectiveWebDav?.config;
+            if (webDavConfig && webDavConfig.url && webDavConfig.user) {
+                const targetFilePath = `${effectiveWebDav.targetDir}${avcode}.strm`;
+                const fileUrl = WebDavClient.normalizeUrl(webDavConfig.url, targetFilePath, webDavConfig.user);
+                
+                const checkRes = await WebDavClient.request({
+                    method: 'PROPFIND',
+                    url: fileUrl,
+                    user: webDavConfig.user,
+                    pass: webDavConfig.pass,
+                    headers: { 'Depth': '0' },
+                    timeout: 4000
+                });
+
+                if (checkRes.status === 200 || checkRes.status === 207) {
+                    this.peachIngestBtn.classList.add('is-ingested');
+                    if (badge) badge.classList.remove('is-hidden');
+                    this.peachIngestBtn.title = `已在 WebDAV 馆藏 (${avcode}.strm)`;
+                    return;
+                }
             }
-        }).catch(() => {});
+        } catch (_) {}
+
+        // 若未探测到存在，保持未入库状态
+        this.peachIngestBtn.classList.remove('is-ingested');
+        if (badge) badge.classList.add('is-hidden');
     }
 
     /**
@@ -749,17 +778,70 @@ export class UIManager {
         if (!this.titleEl) return;
         const newTitle = this.getVideoTitle();
         if (newTitle) {
-            this.titleEl.textContent = newTitle;
+            if (this.titleTextSpan) {
+                this.titleTextSpan.textContent = newTitle;
+            } else {
+                this.titleEl.textContent = newTitle;
+            }
         }
     }
 
     /**
-     * 创建播放器顶部标题
+     * 在顶栏标题区域以广告翻滚方式临时展示 Toast 消息 1 秒，随后平滑翻转还原为原始标题
+     * @param {string} msg - 提示文案
+     * @param {number} [duration=1000] - 停留时间 (默认 1000ms / 1秒)
+     * @param {'normal'|'success'|'error'|'info'} [type='normal'] - 消息类型
+     */
+    showRollingToast(msg, duration = 1000, type = 'normal') {
+        if (!this.titleEl || !this.titleMainSlot || !this.titleToastSlot) return;
+
+        if (this._rollingToastTimer) {
+            clearTimeout(this._rollingToastTimer);
+            this._rollingToastTimer = null;
+        }
+
+        this.titleToastContent.textContent = msg;
+        this.titleToastSlot.className = `tm-title-slot tm-title-slot--toast is-active tm-toast--${type}`;
+
+        this.titleMainSlot.classList.remove('is-active');
+        this.titleMainSlot.classList.add('is-exiting');
+
+        this._rollingToastTimer = setTimeout(() => {
+            this.titleToastSlot.classList.remove('is-active');
+            this.titleToastSlot.classList.add('is-exiting');
+
+            this.titleMainSlot.classList.remove('is-exiting');
+            this.titleMainSlot.classList.add('is-active');
+
+            setTimeout(() => {
+                this.titleToastSlot.classList.remove('is-exiting');
+                this._rollingToastTimer = null;
+            }, 300);
+        }, duration);
+    }
+
+    /**
+     * 创建播放器顶部标题 (双轨广告翻滚跑马灯结构)
      */
     createTitle() {
         this.titleEl = document.createElement('span');
         this.titleEl.className = 'tm-player-title';
-        this.titleEl.textContent = this.getVideoTitle();
+
+        this.titleMainSlot = document.createElement('span');
+        this.titleMainSlot.className = 'tm-title-slot tm-title-slot--main is-active';
+        this.titleTextSpan = document.createElement('span');
+        this.titleTextSpan.className = 'tm-player-title-text';
+        this.titleTextSpan.textContent = this.getVideoTitle();
+        this.titleMainSlot.appendChild(this.titleTextSpan);
+
+        this.titleToastSlot = document.createElement('span');
+        this.titleToastSlot.className = 'tm-title-slot tm-title-slot--toast';
+        this.titleToastContent = document.createElement('span');
+        this.titleToastContent.className = 'tm-toast-content';
+        this.titleToastSlot.appendChild(this.titleToastContent);
+
+        this.titleEl.appendChild(this.titleMainSlot);
+        this.titleEl.appendChild(this.titleToastSlot);
     }
     
     /**

@@ -10,14 +10,10 @@
  * @param {string} [textColor='#fff'] - 文字颜色
  * @param {string} [position='top'] - 位置(top/bottom/center)
  */
-export function Toast(msg, duration = 3000, bgColor = '', textColor = '', position = 'top') {
-    const toast = document.createElement('div');
-    toast.className = `tm-toast tm-toast--${position}`;
-    
+export function Toast(msg, duration = 1000, bgColor = '', textColor = '', position = 'top') {
+    if (typeof document === 'undefined') return;
+
     let type = 'normal';
-    let customBg = '';
-    let customText = '';
-    
     if (bgColor) {
         const lowerColor = bgColor.toLowerCase().trim();
         if (lowerColor === 'success' || lowerColor === 'rgb(18, 187, 2)' || lowerColor.includes('green') || lowerColor.includes('50% 45%')) {
@@ -26,12 +22,25 @@ export function Toast(msg, duration = 3000, bgColor = '', textColor = '', positi
             type = 'error';
         } else if (lowerColor === 'info' || lowerColor.includes('blue') || lowerColor.includes('anim-quick')) {
             type = 'info';
-        } else {
-            type = 'custom';
-            customBg = bgColor;
-            customText = textColor;
         }
     }
+
+    // 1. 优先使用顶栏广告翻滚跑马灯 (Rolling Billboard Toast)
+    try {
+        const uiManager = (typeof window !== 'undefined' && window.__missPlayerUIManager) ||
+            document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container')?.uiManager;
+        if (uiManager && typeof uiManager.showRollingToast === 'function') {
+            uiManager.showRollingToast(msg, duration || 1000, type);
+            return;
+        }
+    } catch (_) {}
+
+    // 2. 降级：播放器顶栏尚未就绪时，在 ShadowRoot 内部呈现轻量浮层
+    const toast = document.createElement('div');
+    toast.className = `tm-toast tm-toast--${position}`;
+    
+    let customBg = '';
+    let customText = '';
     
     let iconSvg = '';
     if (type === 'success') {

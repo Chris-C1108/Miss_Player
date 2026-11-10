@@ -1,4 +1,4 @@
-import { formatTime } from '../../utils/index.js';
+import { formatTime, Toast } from '../../utils/index.js';
 
 /**
  * 进度管理器类 - 负责进度条、时间显示与网络缓冲等待条纹状态机
@@ -145,6 +145,7 @@ export class ProgressManager {
         this._isBufferingActive = isBuffering;
         if (isBuffering) {
             this.progressBarElement.classList.add('is-buffering');
+            Toast('⏳ 正在缓冲视频...', 1000, 'info');
         } else {
             this.progressBarElement.classList.remove('is-buffering');
         }
