@@ -166,22 +166,68 @@ export function createSpeedIndicatorElement(text = '3x') {
 }
 
 /**
- * 获取视频标题
+ * 获取当前视频的播放标题与番号 (多策略提取，全量适配普通视频源站与自托管 Peach 站)
+ * @param {HTMLVideoElement} [targetVideo]
  * @returns {string}
  */
-export function getVideoTitle() {
-    const h4 = document.querySelector('h4');
-    if (h4 && h4.textContent) {
-        return h4.textContent.trim();
+export function getVideoTitle(targetVideo = null) {
+    const videoEl = targetVideo || (typeof document !== 'undefined' ? (document.querySelector('.tm-video-wrapper video') || document.querySelector('video')) : null);
+
+    // 1. 优先适配自托管 Peach 站点 (从绑定的 peachItem 或打开的弹窗舞台中精准提取)
+    try {
+        const peachItem = videoEl?.peachItem || videoEl?.parentElement?.peachItem;
+        if (peachItem && (peachItem.code || peachItem.title || peachItem.name)) {
+            const code = (peachItem.code || '').trim();
+            const name = (peachItem.title || peachItem.name || '').trim();
+            if (code && name) return `${code} ${name}`;
+            if (code) return code;
+            if (name) return name;
+        }
+
+        // 探测 Peach 的活动模态框或舞台
+        if (typeof document !== 'undefined') {
+            const activeDialog = document.querySelector('dialog[open], .vjs-tech');
+            if (activeDialog) {
+                const container = activeDialog.closest('dialog') || activeDialog.parentElement;
+                const codeEl = container?.querySelector('[data-code], .movie-code, .av-code');
+                const titleEl = container?.querySelector('h2, h3, .movie-title');
+                if (codeEl || titleEl) {
+                    const c = codeEl ? codeEl.textContent.trim() : '';
+                    const t = titleEl ? titleEl.textContent.trim() : '';
+                    if (c && t && !t.includes(c)) return `${c} ${t}`;
+                    if (c) return c;
+                    if (t && !t.includes('全体媒体库')) return t;
+                }
+            }
+        }
+    } catch (_) {}
+
+    // 2. 外部视频站常规提取 (h4 / h1 / document.title)
+    if (typeof document !== 'undefined') {
+        const h4 = document.querySelector('h4');
+        if (h4 && h4.textContent && !h4.textContent.includes('全体媒体库')) {
+            return h4.textContent.trim();
+        }
+        
+        const h1 = document.querySelector('h1');
+        if (h1 && h1.textContent && !h1.textContent.includes('全体媒体库')) {
+            return h1.textContent.trim();
+        }
     }
     
-    const h1 = document.querySelector('h1');
-    if (h1 && h1.textContent) {
-        return h1.textContent.trim();
-    }
-    
-    let title = document.title || '';
+    let title = (typeof document !== 'undefined' ? document.title : '') || '';
     title = title.replace(/\s*-\s*Jable\.tv.*$/i, '');
     title = title.replace(/\s*-\s*JAVLibrary.*$/i, '');
+    title = title.replace(/Peach\s*[·•-]?\s*/gi, '');
+
+    // 若提取到的标题依然是“全体媒体库”，尝试调用番号提取作为降级兜底
+    if (!title || title.includes('全体媒体库')) {
+        try {
+            const avcode = videoEl?.getAttribute?.('data-code') || videoEl?.getAttribute?.('data-avcode') || '';
+            if (avcode) return avcode;
+        } catch (_) {}
+        return '';
+    }
+
     return title.trim();
 }

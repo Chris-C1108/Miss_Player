@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.113-021
+// @version            5.7.113-022
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1346,7 +1346,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-021";
+		return "5.7.113-022";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1788,7 +1788,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-021";
+		return "5.7.113-022";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -1944,21 +1944,20 @@
 			}
 			throw lastErr || new Error("FETCH_GITHUB_META_FAILED");
 		}
-		static async checkUpdate(force = false, channelOrScriptId = null, scriptId = OFFICIAL_SCRIPT_ID) {
-			const currentVersion = getCurrentVersion();
-			const defaultChannel = currentVersion.includes("-") ? "beta" : "stable";
-			let channel = defaultChannel;
+		static async checkUpdate(force = false, channelOrScriptId = "stable", scriptId = OFFICIAL_SCRIPT_ID) {
+			let channel = "stable";
 			let targetScriptId = OFFICIAL_SCRIPT_ID;
 			if (typeof channelOrScriptId === "number" || typeof channelOrScriptId === "string" && /^\d+$/.test(channelOrScriptId)) {
 				targetScriptId = Number(channelOrScriptId);
 				channel = "stable";
 			} else if (typeof channelOrScriptId === "string" && channelOrScriptId) {
-				channel = channelOrScriptId.toLowerCase() === "beta" ? "beta" : channelOrScriptId.toLowerCase() === "stable" ? "stable" : defaultChannel;
+				channel = channelOrScriptId.toLowerCase() === "beta" ? "beta" : "stable";
 				if (scriptId) targetScriptId = Number(scriptId) || 453300;
 			}
 			const isBeta = channel === "beta";
 			const cacheKeyData = isBeta ? CACHE_KEY_DATA_BETA : CACHE_KEY_DATA_STABLE;
 			const cacheKeyTime = isBeta ? CACHE_KEY_TIME_BETA : CACHE_KEY_TIME_STABLE;
+			const currentVersion = getCurrentVersion();
 			if (!force) try {
 				const lastCheck = getValue(cacheKeyTime, 0);
 				let cached = getValue(cacheKeyData, null);
@@ -3098,14 +3097,50 @@
 		speedIndicator.textContent = text;
 		return speedIndicator;
 	}
-	function getVideoTitle() {
-		const h4 = document.querySelector("h4");
-		if (h4 && h4.textContent) return h4.textContent.trim();
-		const h1 = document.querySelector("h1");
-		if (h1 && h1.textContent) return h1.textContent.trim();
-		let title = document.title || "";
+	function getVideoTitle(targetVideo = null) {
+		const videoEl = targetVideo || (typeof document !== "undefined" ? document.querySelector(".tm-video-wrapper video") || document.querySelector("video") : null);
+		try {
+			const peachItem = videoEl?.peachItem || videoEl?.parentElement?.peachItem;
+			if (peachItem && (peachItem.code || peachItem.title || peachItem.name)) {
+				const code = (peachItem.code || "").trim();
+				const name = (peachItem.title || peachItem.name || "").trim();
+				if (code && name) return `${code} ${name}`;
+				if (code) return code;
+				if (name) return name;
+			}
+			if (typeof document !== "undefined") {
+				const activeDialog = document.querySelector("dialog[open], .vjs-tech");
+				if (activeDialog) {
+					const container = activeDialog.closest("dialog") || activeDialog.parentElement;
+					const codeEl = container?.querySelector("[data-code], .movie-code, .av-code");
+					const titleEl = container?.querySelector("h2, h3, .movie-title");
+					if (codeEl || titleEl) {
+						const c = codeEl ? codeEl.textContent.trim() : "";
+						const t = titleEl ? titleEl.textContent.trim() : "";
+						if (c && t && !t.includes(c)) return `${c} ${t}`;
+						if (c) return c;
+						if (t && !t.includes("全体媒体库")) return t;
+					}
+				}
+			}
+		} catch (_) {}
+		if (typeof document !== "undefined") {
+			const h4 = document.querySelector("h4");
+			if (h4 && h4.textContent && !h4.textContent.includes("全体媒体库")) return h4.textContent.trim();
+			const h1 = document.querySelector("h1");
+			if (h1 && h1.textContent && !h1.textContent.includes("全体媒体库")) return h1.textContent.trim();
+		}
+		let title = (typeof document !== "undefined" ? document.title : "") || "";
 		title = title.replace(/\s*-\s*Jable\.tv.*$/i, "");
 		title = title.replace(/\s*-\s*JAVLibrary.*$/i, "");
+		title = title.replace(/Peach\s*[·•-]?\s*/gi, "");
+		if (!title || title.includes("全体媒体库")) {
+			try {
+				const avcode = videoEl?.getAttribute?.("data-code") || videoEl?.getAttribute?.("data-avcode") || "";
+				if (avcode) return avcode;
+			} catch (_) {}
+			return "";
+		}
 		return title.trim();
 	}
 	function sanitizeArrayEmptyObjects(text) {
@@ -3533,7 +3568,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-021";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-022";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -5421,6 +5456,7 @@
 			this.videoWrapper.appendChild(nodeToMount);
 			this.targetVideo.addEventListener("loadedmetadata", () => {
 				this.updateVideoAspectRatio();
+				this.updateTitle();
 			});
 			let longPressTimer = null;
 			let isLongPress = false;
@@ -5584,7 +5620,7 @@
 			this.peachIngestBtn.addEventListener("click", async (e) => {
 				e.stopPropagation();
 				if (this.peachIngestBtn.classList.contains("is-busy")) return;
-				const avcode = this.playerCore?.options?.videoCode || this.playerCore?.videoCode || "";
+				const avcode = getVideoCodeFromUrl$1(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || this.playerCore?.options?.videoCode || "";
 				if (typeof PeachWebBridge !== "undefined" && PeachWebBridge.isPeachInstance()) {
 					if (avcode) {
 						this.peachIngestBtn.classList.add("is-ingested");
@@ -5629,7 +5665,7 @@
 					Toast$1(err.message || "入库失败，请在设置中检查配置", 4e3, "error");
 				}
 			});
-			const avcode = this.playerCore?.options?.videoCode || this.playerCore?.videoCode || "";
+			const avcode = getVideoCodeFromUrl$1(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || "";
 			if (avcode) setTimeout(() => this.checkPeachStatus(avcode), 1200);
 			this.updatePeachButtonVisibility();
 		}
@@ -5639,8 +5675,10 @@
 			const isEnabled = Boolean(config.enabled);
 			this.peachIngestBtn.style.display = isEnabled ? "" : "none";
 		}
-		checkPeachStatus(avcode) {
-			if (!this.peachIngestBtn || !avcode) return;
+		checkPeachStatus(avcodeParam = "") {
+			if (!this.peachIngestBtn) return;
+			const avcode = avcodeParam || getVideoCodeFromUrl$1(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || "";
+			if (!avcode) return;
 			if (typeof PeachWebBridge !== "undefined" && PeachWebBridge.isPeachInstance()) {
 				this.peachIngestBtn.classList.add("is-ingested");
 				this.peachIngestBtn.title = `Peach 媒体库中心 (${avcode})`;
@@ -5656,7 +5694,12 @@
 			}).catch(() => {});
 		}
 		getVideoTitle() {
-			return getVideoTitle();
+			return getVideoTitle(this.targetVideo);
+		}
+		updateTitle() {
+			if (!this.titleEl) return;
+			const newTitle = this.getVideoTitle();
+			if (newTitle) this.titleEl.textContent = newTitle;
 		}
 		createTitle() {
 			this.titleEl = document.createElement("span");
@@ -15489,7 +15532,6 @@
 					this._userPauseIntent = true;
 					if (this.playerCore) this.playerCore.userPauseIntent = true;
 					this.targetVideo.pause();
-					Toast$1("已暂停播放", 1200, "info");
 				} else {
 					this._userPauseIntent = false;
 					if (this.playerCore) this.playerCore.userPauseIntent = false;
@@ -21162,8 +21204,7 @@
 			this._isCheckingUpdate = true;
 			this.refreshAboutSection();
 			const currentVersion = getCurrentVersion();
-			const defaultChannel = currentVersion.includes("-") ? "beta" : "stable";
-			const channel = this.settings.updateChannel || defaultChannel;
+			const channel = this.settings.updateChannel || "stable";
 			try {
 				const res = await SleazyForkService.checkUpdate(force, channel);
 				this._latestUpdateInfo = res;
@@ -21208,8 +21249,7 @@
 			if (this.settings.autoCheckUpdate !== false) {
 				const runSilentCheck = async () => {
 					try {
-						const defaultChannel = getCurrentVersion().includes("-") ? "beta" : "stable";
-						const channel = this.settings.updateChannel || defaultChannel;
+						const channel = this.settings.updateChannel || "stable";
 						const res = await SleazyForkService.checkUpdate(false, channel);
 						if (res && res.success) {
 							this._latestUpdateInfo = res;
@@ -21687,8 +21727,7 @@
 			const card = document.createElement("div");
 			card.className = "tm-settings-about-card";
 			const currentVersion = getCurrentVersion();
-			const defaultChannel = currentVersion.includes("-") ? "beta" : "stable";
-			const currentChannel = this.settings.updateChannel || defaultChannel;
+			const currentChannel = this.settings.updateChannel || "stable";
 			const isBeta = currentChannel === "beta";
 			const updateInfo = this._latestUpdateInfo;
 			const meta = updateInfo?.meta;

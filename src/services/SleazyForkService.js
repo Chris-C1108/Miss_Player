@@ -31,7 +31,7 @@ export function getCurrentVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.7.113-021';
+    return '5.7.113-022';
 }
 
 export function compareVersions(v1, v2) {
@@ -255,23 +255,22 @@ export class SleazyForkService {
         throw lastErr || new Error('FETCH_GITHUB_META_FAILED');
     }
 
-    static async checkUpdate(force = false, channelOrScriptId = null, scriptId = OFFICIAL_SCRIPT_ID) {
-        const currentVersion = getCurrentVersion();
-        const defaultChannel = currentVersion.includes('-') ? 'beta' : 'stable';
-        let channel = defaultChannel;
+    static async checkUpdate(force = false, channelOrScriptId = 'stable', scriptId = OFFICIAL_SCRIPT_ID) {
+        let channel = 'stable';
         let targetScriptId = OFFICIAL_SCRIPT_ID;
 
         if (typeof channelOrScriptId === 'number' || (typeof channelOrScriptId === 'string' && /^\d+$/.test(channelOrScriptId))) {
             targetScriptId = Number(channelOrScriptId);
             channel = 'stable';
         } else if (typeof channelOrScriptId === 'string' && channelOrScriptId) {
-            channel = channelOrScriptId.toLowerCase() === 'beta' ? 'beta' : (channelOrScriptId.toLowerCase() === 'stable' ? 'stable' : defaultChannel);
+            channel = channelOrScriptId.toLowerCase() === 'beta' ? 'beta' : 'stable';
             if (scriptId) targetScriptId = Number(scriptId) || OFFICIAL_SCRIPT_ID;
         }
 
         const isBeta = channel === 'beta';
         const cacheKeyData = isBeta ? CACHE_KEY_DATA_BETA : CACHE_KEY_DATA_STABLE;
         const cacheKeyTime = isBeta ? CACHE_KEY_TIME_BETA : CACHE_KEY_TIME_STABLE;
+        const currentVersion = getCurrentVersion();
 
         if (!force) {
             try {

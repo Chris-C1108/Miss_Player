@@ -150,7 +150,6 @@ export class PlaybackController {
                 this._userPauseIntent = true;
                 if (this.playerCore) this.playerCore.userPauseIntent = true;
                 this.targetVideo.pause();
-                Toast('已暂停播放', 1200, 'info');
             } else {
                 // 用户确认开播
                 this._userPauseIntent = false;

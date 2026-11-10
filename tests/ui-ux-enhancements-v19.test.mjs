@@ -1,7 +1,7 @@
 import assert from 'assert';
 import fs from 'fs';
 
-console.log('🧪 开始执行 5 大 UI/UX 与交互修复专项单元测试...');
+console.log('🧪 开始执行 10 大 UI/UX、Peach状态与交互修复专项单元测试...');
 
 // 1. 验证 ICON_PEACH 是否使用高清立体桃子图片
 import { ICON_PEACH } from '../src/constants/icons.js';
@@ -49,7 +49,8 @@ assert.ok(uiManagerCode.includes('380);'), '长按等待定时器应当设置为
 assert.ok(uiManagerCode.includes('dist > 25'), '滑动容差阈值应当放宽至 25px 防止指腹微颤被误取消');
 assert.ok(uiManagerCode.includes("this.videoWrapper.addEventListener('contextmenu'"), '必须拦截 contextmenu 默认行为防止 touchcancel');
 assert.ok(uiManagerCode.includes('this._justFinishedLongPress'), '必须包含松手防误触 click 时间窗锁');
-console.log('✅ 4. 视频区域长按 3 倍速灵敏响应与手势防冲突验证通过');
+assert.ok(uiManagerCode.includes('getVideoCodeFromUrl'), 'Peach 按钮必须收敛统一调用 getVideoCodeFromUrl 获取权威番号');
+console.log('✅ 4. 视频区域长按 3 倍速灵敏响应与权威番号获取验证通过');
 
 // 5. 验证 CommentComposer 中高光抽屉外部点击自动关闭与输入框打字防误关
 const composerCode = fs.readFileSync('src/player/controls/CommentComposer.js', 'utf8');
@@ -74,7 +75,6 @@ WebDavClient.request = async (opts) => {
 };
 WebDavClient.checkDirectoryExists = async () => true;
 
-// 模拟 targetPath 包含相同路径前缀
 await WebDavClient.uploadFile(
     { url: 'https://dav.example.com', path: '/backup_configs/MissPlayer/' },
     'backup_configs/MissPlayer/peach-media/STARS-256.strm',
@@ -87,4 +87,28 @@ assert.strictEqual(
 );
 console.log('✅ 7. WebDAV 路径防重叠自愈保护验证通过');
 
-console.log('🎉 全部 7 大项 UI/UX、交互手势与 WebDAV 防重叠自愈单元测试 100% 通过！');
+// 8. 验证 getVideoTitle 在 Peach 站过滤“全体媒体库”并提取 peachItem 番号
+import { getVideoTitle } from '../src/player/ui/_uiFactories.js';
+const mockPeachVideo = {
+    peachItem: {
+        code: 'STARS-256',
+        title: '桃子测试影片标题'
+    }
+};
+const peachTitle = getVideoTitle(mockPeachVideo);
+assert.strictEqual(peachTitle, 'STARS-256 桃子测试影片标题', 'Peach 站点应当优先从 peachItem 提取番号与标题');
+console.log('✅ 8. Peach 站点视频标题与番号精准提取验证通过');
+
+// 9. 验证 PlaybackController 暂停时不再弹出 Toast 骚扰
+const playbackCode = fs.readFileSync('src/player/controls/PlaybackController.js', 'utf8');
+assert.strictEqual(playbackCode.includes("Toast('已暂停播放'"), false, '暂停播放时绝对不得弹出 Toast');
+console.log('✅ 9. 暂停播放无干扰（移除 Toast）验证通过');
+
+// 10. 验证 SleazyForkService 包含指定的 GitHub 镜像加速站 (gh-proxy.org, ghfast.top, gh-proxy.com)
+const sleazyCode = fs.readFileSync('src/services/SleazyForkService.js', 'utf8');
+assert.ok(sleazyCode.includes('gh-proxy.org'), '必须包含 gh-proxy.org 镜像加速节点');
+assert.ok(sleazyCode.includes('ghfast.top'), '必须包含 ghfast.top 镜像加速节点');
+assert.ok(sleazyCode.includes('gh-proxy.com'), '必须包含 gh-proxy.com 镜像加速节点');
+console.log('✅ 10. GitHub 镜像加速节点全量集成验证通过');
+
+console.log('🎉 全部 10 大项 UI/UX、Peach状态、交互手势与更新检查单元测试 100% 通过！');

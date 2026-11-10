@@ -23,6 +23,7 @@ import { StrmIngestPipeline } from '../../services/StrmIngestPipeline.js';
 import { PeachService } from '../../services/PeachService.js';
 import { PeachWebBridge } from '../bridge/PeachWebBridge.js';
 import { Toast } from '../../utils/index.js';
+import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import { enforceInlinePlayback } from '../../utils/iosInline.js';
 import { UISurfaceMachine, SURFACE_TYPES } from '../state/UISurfaceMachine.js';
 
@@ -330,9 +331,10 @@ export class UIManager {
         // 添加视频或自定义媒体宿主容器到包装器
         this.videoWrapper.appendChild(nodeToMount);
         
-        // 添加视频元数据加载事件，用于检测视频比例
+        // 添加视频元数据加载事件，用于检测视频比例并动态更新标题与番号
         this.targetVideo.addEventListener('loadedmetadata', () => {
             this.updateVideoAspectRatio();
+            this.updateTitle();
         });
         
         // 长按检测变量
@@ -627,7 +629,11 @@ export class UIManager {
             e.stopPropagation();
             if (this.peachIngestBtn.classList.contains('is-busy')) return;
 
-            const avcode = this.playerCore?.options?.videoCode || this.playerCore?.videoCode || '';
+            // 统一收敛权威番号获取漏斗：video元素 -> commentPanel -> URL/页面DOM
+            const avcode = getVideoCodeFromUrl(this.targetVideo) ||
+                this.controlManager?.commentPanel?.videoCode ||
+                this.playerCore?.options?.videoCode ||
+                '';
 
             // 1. 场景 A: 运行在用户自托管的 Peach Web 实例页面内部
             if (typeof PeachWebBridge !== 'undefined' && PeachWebBridge.isPeachInstance()) {
@@ -686,7 +692,7 @@ export class UIManager {
         });
 
         // 异步检查当前番号是否已在 Peach 馆藏
-        const avcode = this.playerCore?.options?.videoCode || this.playerCore?.videoCode || '';
+        const avcode = getVideoCodeFromUrl(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || '';
         if (avcode) {
             setTimeout(() => this.checkPeachStatus(avcode), 1200);
         }
@@ -709,8 +715,11 @@ export class UIManager {
     /**
      * 异步检测番号在 Peach 馆藏状态
      */
-    checkPeachStatus(avcode) {
-        if (!this.peachIngestBtn || !avcode) return;
+    checkPeachStatus(avcodeParam = '') {
+        if (!this.peachIngestBtn) return;
+        const avcode = avcodeParam || getVideoCodeFromUrl(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || '';
+        if (!avcode) return;
+
         if (typeof PeachWebBridge !== 'undefined' && PeachWebBridge.isPeachInstance()) {
             this.peachIngestBtn.classList.add('is-ingested');
             this.peachIngestBtn.title = `Peach 媒体库中心 (${avcode})`;
@@ -727,10 +736,21 @@ export class UIManager {
     }
 
     /**
-     * 获取视频标题
+     * 获取视频标题 (支持多策略提取与自托管 Peach 站适配)
      */
     getVideoTitle() {
-        return getVideoTitle();
+        return getVideoTitle(this.targetVideo);
+    }
+
+    /**
+     * 动态刷新播放器顶部标题
+     */
+    updateTitle() {
+        if (!this.titleEl) return;
+        const newTitle = this.getVideoTitle();
+        if (newTitle) {
+            this.titleEl.textContent = newTitle;
+        }
     }
 
     /**
