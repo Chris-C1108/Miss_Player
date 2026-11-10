@@ -20,9 +20,10 @@ export class AboutSection {
         this.element.innerHTML = '';
 
         const currentVersion = getCurrentVersion();
-        const updateInfo = this.sm._latestUpdateInfo;
+        const updateInfo = this.sm?._latestUpdateInfo;
         const hasUpdate = Boolean(updateInfo?.hasUpdate);
         const latestVer = updateInfo?.latestVersion || currentVersion;
+        const isChecking = Boolean(this.sm?._isCheckingUpdate);
 
         const card = new AppleCard();
 
@@ -33,14 +34,25 @@ export class AboutSection {
         const titleDiv = document.createElement('div');
         titleDiv.className = 'tm-apple-accordion-title';
         titleDiv.innerHTML = `
-            <span>ℹ️ ${__('aboutGroupTitle') || '关于播放器'}</span>
+            <span>ℹ️ ${__('aboutGroupTitle') || '版本信息'}</span>
         `;
 
         const metaDiv = document.createElement('div');
         metaDiv.className = 'tm-apple-accordion-meta';
+
+        let metaText = 'v' + currentVersion;
+        let metaColor = 'rgba(255, 255, 255, 0.5)';
+        if (isChecking) {
+            metaText = __('checkingUpdate') || '检查更新中...';
+            metaColor = '#0a84ff';
+        } else if (hasUpdate) {
+            metaText = '发现新版 v' + latestVer;
+            metaColor = '#ff9f0a';
+        }
+
         metaDiv.innerHTML = `
-            <span style="color: ${hasUpdate ? '#ff9f0a' : 'rgba(255,255,255,0.5)'}; font-weight: 500;">
-                ${hasUpdate ? ('发现新版 v' + latestVer) : ('v' + currentVersion)}
+            <span style="color: ${metaColor}; font-weight: 500;">
+                ${metaText}
             </span>
             <span class="tm-apple-accordion-arrow ${this.isExpanded ? 'expanded' : ''}">▼</span>
         `;
@@ -51,13 +63,10 @@ export class AboutSection {
 
         // 详细关于卡片容器 (默认隐藏)
         const bodyWrap = document.createElement('div');
+        bodyWrap.className = 'tm-apple-accordion-body';
         bodyWrap.style.display = this.isExpanded ? 'block' : 'none';
-        bodyWrap.style.borderTop = '1px solid rgba(255, 255, 255, 0.06)';
 
         const aboutCard = this.sm._createAboutCard();
-        aboutCard.style.padding = '10px 12px';
-        aboutCard.style.background = 'transparent';
-        aboutCard.style.border = 'none';
         bodyWrap.appendChild(aboutCard);
 
         card.appendChild(bodyWrap);
@@ -73,6 +82,11 @@ export class AboutSection {
             if (arrow) arrow.classList.toggle('expanded', this.isExpanded);
 
             if (this.isExpanded) {
+                // 展开时立即触发一次静默更新检查
+                if (this.sm && typeof this.sm.checkUpdate === 'function') {
+                    this.sm.checkUpdate(true, false);
+                }
+
                 requestAnimationFrame(() => {
                     const scrollContainer = this.element.closest('.tm-settings-panel') || this.element.closest('.tm-settings-apple-container') || this.element.parentElement;
                     if (scrollContainer) {

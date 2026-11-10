@@ -134,6 +134,53 @@ export class SettingsManager {
         return false;
     }
 
+    /**
+     * 统一更新检查方法 (支持折叠展开即查与手动点击)
+     * @param {boolean} force - 是否强制跳过缓存
+     * @param {boolean} notify - 是否弹出 Toast 提示
+     */
+    async checkUpdate(force = true, notify = true) {
+        if (this._isCheckingUpdate) return this._latestUpdateInfo;
+        this._isCheckingUpdate = true;
+        this.refreshAboutSection();
+        const currentVersion = getCurrentVersion();
+        const channel = this.settings.updateChannel || 'stable';
+
+        try {
+            const res = await SleazyForkService.checkUpdate(force, channel);
+            this._latestUpdateInfo = res;
+            const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
+            if (btn) {
+                btn.classList.toggle('has-update-badge', Boolean(res && res.hasUpdate));
+                if (res && res.hasUpdate) {
+                    btn.setAttribute('title', `${__('updateFound') || '发现新版本'}: v${res.latestVersion}`);
+                } else {
+                    btn.removeAttribute('title');
+                }
+            }
+            if (notify) {
+                if (res && res.success) {
+                    if (res.hasUpdate) {
+                        Toast.show(`${__('updateFound') || '发现新版本'}: v${res.latestVersion}`, 3500, 'success');
+                    } else {
+                        Toast.show(`${__('alreadyLatest') || '当前已是最新版本'} (v${currentVersion})`, 3000, 'info');
+                    }
+                } else {
+                    Toast.show(res?.error || __('fetchFailed') || '检查更新失败', 3000, 'error');
+                }
+            }
+            return res;
+        } catch (err) {
+            if (notify) {
+                Toast.show(err.message || __('fetchFailed') || '检查更新失败', 3000, 'error');
+            }
+            return null;
+        } finally {
+            this._isCheckingUpdate = false;
+            this.refreshAboutSection();
+        }
+    }
+
     refreshCloudSyncSection() {
         if (this.cloudSyncSection && typeof this.cloudSyncSection.refresh === 'function') {
             this.cloudSyncSection.refresh();
@@ -536,7 +583,7 @@ export class SettingsManager {
         
         const autoSyncDesc = document.createElement('span');
         autoSyncDesc.className = 'tm-webdav-switch-desc';
-        autoSyncDesc.textContent = __('webdavAutoSyncDesc') || '启动及打点修改时自动在后台静默合并';
+        autoSyncDesc.textContent = __('webdavAutoSyncDesc') || '数据变动时后台静默同步';
 
         autoSyncInfo.appendChild(autoSyncTitle);
         autoSyncInfo.appendChild(autoSyncDesc);
@@ -588,14 +635,14 @@ export class SettingsManager {
         // 向上覆盖 (Upload Overwrite)
         const uploadBtn = document.createElement('button');
         uploadBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
-        uploadBtn.title = '将当前本地配置与打点覆盖到云端';
-        uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '上传覆盖'}</span>`;
+        uploadBtn.title = __('webdavUploadOverwrite') || '上传本地配置覆盖云端';
+        uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '上传备份'}</span>`;
 
         // 向下覆盖 (Download Overwrite)
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
-        downloadBtn.title = '从云端拉取配置覆盖当前设备';
-        downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '下载覆盖'}</span>`;
+        downloadBtn.title = __('webdavDownloadOverwrite') || '从云端下载覆盖本地配置';
+        downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '恢复备份'}</span>`;
 
         subActions.appendChild(testBtn);
         subActions.appendChild(uploadBtn);
@@ -744,7 +791,7 @@ export class SettingsManager {
                 Toast((__('webdavSyncFailed') || '上传失败: ') + err.message, 4500);
                 updateStatus(err.message ? `上传失败: ${err.message}` : '上传失败', 'error');
             } finally {
-                uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '上传覆盖'}</span>`;
+                uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '上传备份'}</span>`;
                 setButtonsDisabled(false);
             }
         });
@@ -777,7 +824,7 @@ export class SettingsManager {
                 Toast((__('webdavSyncFailed') || '下载失败: ') + err.message, 4500);
                 updateStatus(err.message ? `下载失败: ${err.message}` : '下载失败', 'error');
             } finally {
-                downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '下载覆盖'}</span>`;
+                downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '恢复备份'}</span>`;
                 setButtonsDisabled(false);
             }
         });
@@ -834,11 +881,11 @@ export class SettingsManager {
         const platformLink = document.createElement('a');
         platformLink.className = 'tm-about-link-btn';
         platformLink.href = isBeta
-            ? (meta?.url || 'https://github.com/Chris-C1108/Miss_Player')
-            : (meta?.url || 'https://sleazyfork.org/scripts/453300');
+            ? 'https://github.com/Chris-C1108/Miss_Player'
+            : 'https://sleazyfork.org/scripts/453300';
         platformLink.target = '_blank';
         platformLink.rel = 'noopener noreferrer';
-        platformLink.title = isBeta ? 'GitHub 仓库' : (__('viewRelease') || 'SleazyFork 主页');
+        platformLink.title = isBeta ? '前往 GitHub 项目页' : '前往 SleazyFork 脚本页';
         platformLink.innerHTML = `<span>${isBeta ? 'GitHub' : 'SleazyFork'}</span> ${ICON_EXTERNAL_LINK}`;
 
         headerRow.appendChild(brandWrap);
@@ -848,10 +895,9 @@ export class SettingsManager {
         // 2. 更新通道切换分段选择器 (Apple 极简风格)
         const channelRow = document.createElement('div');
         channelRow.className = 'tm-about-channel-row';
-        channelRow.style.cssText = 'display: flex; align-items: center; justify-content: space-between; margin: 10px 0 8px 0; gap: 8px;';
 
         const channelLabel = document.createElement('span');
-        channelLabel.style.cssText = 'font-size: 12.5px; font-weight: 500; color: rgba(255, 255, 255, 0.75);';
+        channelLabel.className = 'tm-about-channel-label';
         channelLabel.textContent = __('updateChannel') || '更新通道';
 
         const segControl = new SegmentedControl({
@@ -863,29 +909,7 @@ export class SettingsManager {
             onChange: async (nextVal) => {
                 if (nextVal === this.settings.updateChannel) return;
                 this.updateSetting('updateChannel', nextVal);
-                this._isCheckingUpdate = true;
-                this.refreshAboutSection();
-                try {
-                    const res = await SleazyForkService.checkUpdate(true, nextVal);
-                    this._latestUpdateInfo = res;
-                    const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
-                    if (btn) {
-                        btn.classList.toggle('has-update-badge', Boolean(res && res.hasUpdate));
-                        if (res && res.hasUpdate) {
-                            btn.setAttribute('title', `${__('updateFound') || '发现新版本'}: v${res.latestVersion}`);
-                        } else {
-                            btn.removeAttribute('title');
-                        }
-                    }
-                    if (res && res.hasUpdate) {
-                        Toast.show(`${__('updateFound') || '发现新版本'}: v${res.latestVersion}`, 3500, 'success');
-                    } else if (res && res.success) {
-                        Toast.show(`${__('alreadyLatest') || '当前已是最新版本'} (v${currentVersion})`, 2500, 'info');
-                    }
-                } catch (_) {} finally {
-                    this._isCheckingUpdate = false;
-                    this.refreshAboutSection();
-                }
+                await this.checkUpdate(true, true);
             }
         });
 
@@ -984,7 +1008,15 @@ export class SettingsManager {
             card.appendChild(updateBanner);
         }
 
-        // 5. 手动检查更新操作行
+        // 5. 若已是最新且不在检查中，展示轻量状态指示
+        if (!hasUpdate && !this._isCheckingUpdate) {
+            const statusLine = document.createElement('div');
+            statusLine.className = 'tm-about-status-line';
+            statusLine.innerHTML = `<span>●</span> <span>${__('alreadyLatest') || '当前已是最新版本'}</span>`;
+            card.appendChild(statusLine);
+        }
+
+        // 6. 手动检查更新与一键安装操作行
         const checkRow = document.createElement('div');
         checkRow.className = 'tm-about-check-row';
 
@@ -997,40 +1029,9 @@ export class SettingsManager {
         }
 
         checkBtn.addEventListener('click', async () => {
-            if (this._isCheckingUpdate) return;
-            this._isCheckingUpdate = true;
-            checkBtn.disabled = true;
-            checkBtn.classList.add('is-loading');
-            checkBtn.innerHTML = `${ICON_REFRESH} <span>${__('checkingUpdate') || '正在检查...'}</span>`;
-
-            try {
-                const channel = this.settings.updateChannel || 'stable';
-                const res = await SleazyForkService.checkUpdate(true, channel);
-                this._latestUpdateInfo = res;
-                if (res.success) {
-                    if (res.hasUpdate) {
-                        Toast.show(`${__('updateFound') || '发现新版本'}: v${res.latestVersion}`, 3500, 'success');
-                        const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
-                        if (btn) btn.classList.add('has-update-badge');
-                    } else {
-                        Toast.show(`${__('alreadyLatest') || '当前已是最新版本'} (v${currentVersion})`, 3000, 'success');
-                        const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
-                        if (btn) btn.classList.remove('has-update-badge');
-                    }
-                } else {
-                    Toast.show(res.error || __('fetchFailed') || '检查更新失败', 3000, 'error');
-                }
-            } catch (err) {
-                Toast.show(err.message || __('fetchFailed') || '检查更新失败', 3000, 'error');
-            } finally {
-                this._isCheckingUpdate = false;
-                this.refreshAboutSection();
-            }
+            await this.checkUpdate(true, true);
         });
 
-        checkRow.style.display = 'flex';
-        checkRow.style.gap = '8px';
-        checkRow.style.flexWrap = 'wrap';
         checkRow.appendChild(checkBtn);
 
         const currentHandler = detectScriptHandler();
@@ -1040,7 +1041,6 @@ export class SettingsManager {
         const createStayBtn = () => {
             const btn = document.createElement('button');
             btn.className = 'tm-about-btn tm-about-btn--stay';
-            btn.style.cssText = 'background: rgba(10, 132, 255, 0.16); border: 1px solid rgba(10, 132, 255, 0.45); color: #0a84ff; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
             btn.innerHTML = `<span>🚀 Stay 一键${hasUpdate ? '更新' : '安装'} (${isBeta ? '测试版' : '正式版'})</span>`;
             btn.title = '通过 Stay URL Scheme 一键导入或更新脚本';
             btn.addEventListener('click', (e) => {
@@ -1056,7 +1056,6 @@ export class SettingsManager {
         const createTmBtn = () => {
             const btn = document.createElement('button');
             btn.className = 'tm-about-btn tm-about-btn--tampermonkey';
-            btn.style.cssText = 'background: rgba(48, 209, 88, 0.16); border: 1px solid rgba(48, 209, 88, 0.45); color: #30d158; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
             btn.innerHTML = `<span>🐒 Tampermonkey 一键${hasUpdate ? '更新' : '安装'} (${isBeta ? '测试版' : '正式版'})</span>`;
             btn.title = '通过 Tampermonkey 官方入口一键安装或更新脚本';
             btn.addEventListener('click', (e) => {
@@ -1072,7 +1071,6 @@ export class SettingsManager {
         const createScBtn = () => {
             const btn = document.createElement('button');
             btn.className = 'tm-about-btn tm-about-btn--scriptcat';
-            btn.style.cssText = 'background: rgba(255, 159, 10, 0.16); border: 1px solid rgba(255, 159, 10, 0.45); color: #ff9f0a; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600;';
             btn.innerHTML = `<span>🐱 脚本猫一键${hasUpdate ? '更新' : '安装'} (${isBeta ? '测试版' : '正式版'})</span>`;
             btn.title = '通过脚本猫官方入口一键安装或更新脚本';
             btn.addEventListener('click', (e) => {

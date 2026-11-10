@@ -305,6 +305,16 @@
     transform: rotate(180deg);
 }
 
+.tm-apple-accordion-body {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tm-apple-nested-card {
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+}
+
 /* 时长微调输入框行 */
 .tm-apple-duration-row {
     display: flex;
@@ -352,6 +362,169 @@
 .tm-settings-input:focus {
     border-color: #0a84ff;
     background: rgba(0, 0, 0, 0.45);
+}
+
+/* 标准设置子面板包裹与排版微调 */
+.tm-settings-subpanel-wrap {
+    padding: 4px 8px 10px 8px;
+    box-sizing: border-box;
+}
+
+.tm-apple-input-unit {
+    font-size: 11px;
+    color: var(--mp-settings-text-muted);
+    margin-left: 6px;
+    user-select: none;
+}
+
+.tm-apple-row--column {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.tm-text-danger {
+    color: #ff453a;
+}
+
+.tm-btn-danger {
+    background: rgba(255, 69, 58, 0.15);
+    border: 1px solid rgba(255, 69, 58, 0.35);
+    color: #ff453a;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.tm-btn-danger:hover {
+    background: rgba(255, 69, 58, 0.25);
+    border-color: rgba(255, 69, 58, 0.55);
+}
+
+/* 分段选择器 (SegmentedControl) 原生 Apple 风格 */
+.tm-segmented-control {
+    display: flex;
+    background: rgba(0, 0, 0, 0.28);
+    border-radius: 8px;
+    padding: 2px;
+    position: relative;
+    gap: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-sizing: border-box;
+}
+
+.tm-segmented-btn {
+    flex: 1;
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--mp-settings-text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    outline: none;
+}
+
+.tm-segmented-btn.active {
+    font-weight: 600;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* 关于页面轻量状态与通道排版 */
+.tm-about-channel-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 0;
+    gap: 8px;
+}
+
+.tm-about-channel-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--mp-settings-text-secondary);
+}
+
+.tm-about-status-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: #30d158;
+    padding: 6px 2px;
+    margin: 4px 0;
+}
+
+.tm-about-check-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.tm-about-btn--stay {
+    background: rgba(10, 132, 255, 0.16);
+    border: 1px solid rgba(10, 132, 255, 0.45);
+    color: #0a84ff;
+    font-size: 11.5px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    transition: background 0.15s ease;
+}
+
+.tm-about-btn--stay:hover {
+    background: rgba(10, 132, 255, 0.25);
+}
+
+.tm-about-btn--tampermonkey {
+    background: rgba(48, 209, 88, 0.16);
+    border: 1px solid rgba(48, 209, 88, 0.45);
+    color: #30d158;
+    font-size: 11.5px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    transition: background 0.15s ease;
+}
+
+.tm-about-btn--tampermonkey:hover {
+    background: rgba(48, 209, 88, 0.25);
+}
+
+.tm-about-btn--scriptcat {
+    background: rgba(255, 159, 10, 0.16);
+    border: 1px solid rgba(255, 159, 10, 0.45);
+    color: #ff9f0a;
+    font-size: 11.5px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    transition: background 0.15s ease;
+}
+
+.tm-about-btn--scriptcat:hover {
+    background: rgba(255, 159, 10, 0.25);
 }
 
 /* 骨架占位屏 (Skeleton Screen) */

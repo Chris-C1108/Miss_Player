@@ -19,7 +19,6 @@ export class SegmentedControl {
 
     _render() {
         this.element.innerHTML = '';
-        this.element.style.cssText = 'display: flex; background: rgba(0, 0, 0, 0.28); border-radius: 8px; padding: 2px; position: relative; gap: 2px; border: 1px solid rgba(255, 255, 255, 0.08);';
 
         this.options.forEach((opt) => {
             const btn = document.createElement('button');
@@ -27,22 +26,6 @@ export class SegmentedControl {
             btn.className = `tm-segmented-btn ${opt.value === this.value ? 'active' : ''}`;
             btn.textContent = opt.label;
             btn.dataset.value = opt.value;
-            
-            const isSelected = opt.value === this.value;
-            btn.style.cssText = `
-                flex: 1;
-                font-size: 11.5px;
-                font-weight: ${isSelected ? '600' : '400'};
-                color: ${isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.6)'};
-                background: ${isSelected ? 'rgba(255, 255, 255, 0.16)' : 'transparent'};
-                border: none;
-                border-radius: 6px;
-                padding: 6px 8px;
-                cursor: pointer;
-                transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-                white-space: nowrap;
-                outline: none;
-            `;
 
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -59,11 +42,7 @@ export class SegmentedControl {
 
         const btns = this.element.querySelectorAll('.tm-segmented-btn');
         btns.forEach((btn) => {
-            const isSelected = btn.dataset.value === this.value;
-            btn.classList.toggle('active', isSelected);
-            btn.style.fontWeight = isSelected ? '600' : '400';
-            btn.style.color = isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.6)';
-            btn.style.background = isSelected ? 'rgba(255, 255, 255, 0.16)' : 'transparent';
+            btn.classList.toggle('active', btn.dataset.value === this.value);
         });
 
         if (typeof this.onChange === 'function') {

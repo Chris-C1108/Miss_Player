@@ -49,13 +49,11 @@ export class CloudSyncSection {
 
         // 详细表单容器 (默认隐藏)
         const bodyWrap = document.createElement('div');
+        bodyWrap.className = 'tm-apple-accordion-body';
         bodyWrap.style.display = this.isExpanded ? 'block' : 'none';
-        bodyWrap.style.borderTop = '1px solid rgba(255, 255, 255, 0.06)';
 
         const webDavCard = this.sm._createWebDavSyncCard();
-        webDavCard.style.padding = '10px 12px';
-        webDavCard.style.background = 'transparent';
-        webDavCard.style.border = 'none';
+        webDavCard.classList.add('tm-apple-nested-card');
         bodyWrap.appendChild(webDavCard);
 
         card.appendChild(bodyWrap);

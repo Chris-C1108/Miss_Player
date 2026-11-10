@@ -18,15 +18,15 @@ export class PlaybackSection {
 
         const header = document.createElement('div');
         header.className = 'tm-settings-group-header';
-        header.textContent = '控制与播放行为';
+        header.textContent = __('playbackGroupTitle') || '播放控制';
         this.element.appendChild(header);
 
         const card = new AppleCard();
 
-        // 1. 进度条栏
+        // 1. 进度条
         const progressToggle = new ToggleRow({
-            title: '进度条栏',
-            subtext: '在底部展示主播放进度条与精准微调滑块',
+            title: __('showProgressBar') || '进度条',
+            subtext: __('showProgressBarDesc') || '',
             checked: this.settings.showProgressBar,
             onChange: (checked) => {
                 this.sm.updateSetting('showProgressBar', checked);
@@ -35,18 +35,17 @@ export class PlaybackSection {
         });
         card.appendChild(progressToggle.getElement());
 
-        // 2. 快捷跳转控制栏
+        // 2. 快捷跳转
         const seekContainer = document.createElement('div');
         seekContainer.className = 'tm-settings-seek-group-wrap';
 
         const stepPanelWrapper = document.createElement('div');
         stepPanelWrapper.className = 'tm-settings-subpanel-wrap';
         stepPanelWrapper.style.display = this.settings.showSeekControlRow ? 'block' : 'none';
-        stepPanelWrapper.style.padding = '4px 8px 10px 8px';
 
         const seekToggle = new ToggleRow({
-            title: '快捷跳转控制栏',
-            subtext: '在主控区显示快进/快退秒数按键',
+            title: __('showSeekControlRow') || '快捷跳转',
+            subtext: __('showSeekControlRowDesc') || '',
             checked: this.settings.showSeekControlRow,
             onChange: (checked) => {
                 this.sm.updateSetting('showSeekControlRow', checked);
@@ -109,10 +108,10 @@ export class PlaybackSection {
         seekContainer.appendChild(stepPanelWrapper);
         card.appendChild(seekContainer);
 
-        // 3. 片段循环栏
+        // 3. 片段循环
         const loopToggle = new ToggleRow({
             title: __('loopControlRow') || '片段循环',
-            subtext: __('loopControlRowDesc') || '循环播放 A-B 指定区间片段',
+            subtext: __('loopControlRowDesc') || 'A-B 区间循环',
             checked: this.settings.showLoopControlRow,
             onChange: (checked) => {
                 this.sm.updateSetting('showLoopControlRow', checked);
@@ -127,11 +126,11 @@ export class PlaybackSection {
         prevDurRow.innerHTML = `
             <div class="tm-apple-row-left">
                 <div class="tm-apple-row-title">${__('previewDuration') || '快览时长'}</div>
-                <div class="tm-apple-row-subtext">${__('previewDurationDesc') || '快览模式下每个片段停留秒数'}</div>
+                <div class="tm-apple-row-subtext">${__('previewDurationDesc') || '单片段预览秒数'}</div>
             </div>
             <div class="tm-apple-row-right">
                 <input type="number" class="tm-apple-duration-input tm-preview-dur-input" min="1" max="30" value="${this.settings.previewDurationSeconds || 5}" />
-                <span style="font-size: 11px; color: rgba(255,255,255,0.4); margin-left: 6px;">秒</span>
+                <span class="tm-apple-input-unit">秒</span>
             </div>
         `;
         const prevInput = prevDurRow.querySelector('.tm-preview-dur-input');
@@ -149,11 +148,11 @@ export class PlaybackSection {
         climaxDurRow.innerHTML = `
             <div class="tm-apple-row-left">
                 <div class="tm-apple-row-title">${__('climaxDuration') || '高光时长'}</div>
-                <div class="tm-apple-row-subtext">${__('climaxDurationDesc') || '连播模式下单个时间点的播放时长'}</div>
+                <div class="tm-apple-row-subtext">${__('climaxDurationDesc') || '连续播放单点时长'}</div>
             </div>
             <div class="tm-apple-row-right">
                 <input type="number" class="tm-apple-duration-input tm-climax-dur-input" min="5" max="180" value="${this.settings.climaxDurationSeconds || 60}" />
-                <span style="font-size: 11px; color: rgba(255,255,255,0.4); margin-left: 6px;">秒</span>
+                <span class="tm-apple-input-unit">秒</span>
             </div>
         `;
         const climaxInput = climaxDurRow.querySelector('.tm-climax-dur-input');
@@ -168,7 +167,7 @@ export class PlaybackSection {
         // 6. 离开暂停
         const pauseBlurToggle = new ToggleRow({
             title: __('pauseOnBlur') || '离开暂停',
-            subtext: __('pauseOnBlurDesc') || '切换网页或最小化时自动暂停播放',
+            subtext: __('pauseOnBlurDesc') || '切页面或后台时暂停',
             checked: this.settings.pauseOnBlur !== false,
             onChange: (checked) => {
                 this.sm.updateSetting('pauseOnBlur', checked);
@@ -186,11 +185,11 @@ export class PlaybackSection {
         muteResetRow.innerHTML = `
             <div class="tm-apple-row-left">
                 <div class="tm-apple-row-title">${__('muteResetMinutes') || '静音重置'}</div>
-                <div class="tm-apple-row-subtext">${__('muteResetMinutesDesc') || '取消静音超时后自动恢复默认静音'}</div>
+                <div class="tm-apple-row-subtext">${__('muteResetMinutesDesc') || '超时自动恢复静音'}</div>
             </div>
             <div class="tm-apple-row-right">
                 <input type="number" class="tm-apple-duration-input tm-mute-reset-input" min="1" max="120" value="${this.settings.muteResetMinutes || 5}" />
-                <span style="font-size: 11px; color: rgba(255,255,255,0.4); margin-left: 6px;">${__('minutesUnit') || '分钟'}</span>
+                <span class="tm-apple-input-unit">${__('minutesUnit') || '分钟'}</span>
             </div>
         `;
         const muteResetInput = muteResetRow.querySelector('.tm-mute-reset-input');
@@ -204,7 +203,7 @@ export class PlaybackSection {
 
         const defaultMutedToggle = new ToggleRow({
             title: __('defaultMuted') || '默认静音',
-            subtext: __('defaultMutedDesc') || '打开播放器默认静音播放',
+            subtext: __('defaultMutedDesc') || '',
             checked: Boolean(this.settings.defaultMuted),
             onChange: (checked) => {
                 this.sm.updateSetting('defaultMuted', checked);
@@ -217,7 +216,7 @@ export class PlaybackSection {
         // 8. 按键音效
         const soundToggle = new ToggleRow({
             title: __('buttonSound') || '按键音效',
-            subtext: __('buttonSoundDesc') || '点击核心按钮时播放轻脆触感声音',
+            subtext: __('buttonSoundDesc') || '',
             checked: this.settings.buttonSoundEnabled !== false,
             onChange: (checked) => {
                 this.sm.updateSetting('buttonSoundEnabled', checked);

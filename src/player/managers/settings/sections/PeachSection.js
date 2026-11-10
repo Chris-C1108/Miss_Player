@@ -52,7 +52,7 @@ export class PeachSection {
         headerRow.className = 'tm-apple-accordion-header';
         headerRow.innerHTML = `
             <div class="tm-apple-accordion-title">
-                <span>🍑 Peach 联动与虚拟入库</span>
+                <span>🍑 Peach 虚拟入库</span>
             </div>
             <div class="tm-apple-accordion-meta">
                 <span class="tm-peach-status-badge ${this.isConnected ? 'is-connected' : ''}">
@@ -71,7 +71,7 @@ export class PeachSection {
         // 2.1 主开关
         const mainToggle = new ToggleRow({
             title: '启用 Peach 联动',
-            subtext: '支持一键生成 .strm 虚拟文件落盘并通知 Peach 刮削',
+            subtext: '生成 .strm 文件并通知刮削',
             checked: Boolean(config.enabled),
             onChange: (checked) => {
                 PeachService.saveConfig({ enabled: checked });
@@ -84,9 +84,9 @@ export class PeachSection {
         const pasteRow = document.createElement('div');
         pasteRow.className = 'tm-apple-row tm-peach-field-row';
         pasteRow.innerHTML = `
-            <div class="tm-apple-row-title">一键配对信息</div>
-            <div class="tm-apple-row-subtext">在 Peach 下载设置中复制专用配对信息，在此粘贴自动填充</div>
-            <input type="text" class="tm-settings-input tm-peach-paste-input" placeholder='粘贴形如 {"peach_pairing":1, ...} 的配对内容' />
+            <div class="tm-apple-row-title">一键配对</div>
+            <div class="tm-apple-row-subtext">粘贴 Peach 下载设置中的配对 JSON</div>
+            <input type="text" class="tm-settings-input tm-peach-paste-input" placeholder='{"peach_pairing":1, ...}' />
         `;
         const pasteInput = pasteRow.querySelector('.tm-peach-paste-input');
         bodyWrap.appendChild(pasteRow);
@@ -98,9 +98,9 @@ export class PeachSection {
             ? `<div class="tm-apple-row-subtext tm-peach-origins-text">已自动纳管候选入口: ${config.origins.join(' · ')}</div>`
             : '';
         baseRow.innerHTML = `
-            <div class="tm-apple-row-title">Peach 服务端地址</div>
-            <div class="tm-apple-row-subtext">自托管实例的 Web 访问地址（支持自动感知：访问过的公网映射、局域网IP均会自动池化并自愈切换）</div>
-            <input type="text" class="tm-settings-input tm-peach-base-input" placeholder="https://peach.example.com 或 http://192.168.1.x:8000" value="${config.base || ''}" />
+            <div class="tm-apple-row-title">Peach 服务地址</div>
+            <div class="tm-apple-row-subtext">自托管实例 Web 地址</div>
+            <input type="text" class="tm-settings-input tm-peach-base-input" placeholder="http://192.168.1.x:8000" value="${config.base || ''}" />
             ${knownOriginsText}
         `;
         const baseInput = baseRow.querySelector('.tm-peach-base-input');
@@ -110,8 +110,8 @@ export class PeachSection {
         const tokenRow = document.createElement('div');
         tokenRow.className = 'tm-apple-row tm-peach-field-row';
         tokenRow.innerHTML = `
-            <div class="tm-apple-row-title">专用令牌 (Token - 可选)</div>
-            <div class="tm-apple-row-subtext">用于查询番号是否已在馆藏；若未在 Peach 绑定网盘云下载可留空，不影响 STRM 虚拟入库</div>
+            <div class="tm-apple-row-title">专用令牌 (可选)</div>
+            <div class="tm-apple-row-subtext">用于馆藏查询，留空不影响入库</div>
             <div class="tm-peach-token-wrap">
                 <input type="password" class="tm-settings-input tm-peach-token-input" placeholder="留空或粘贴专用令牌" value="${config.token || ''}" />
                 <button type="button" class="tm-settings-btn tm-peach-token-toggle">显示</button>
@@ -130,8 +130,8 @@ export class PeachSection {
         const gatewayRow = document.createElement('div');
         gatewayRow.className = 'tm-apple-row tm-peach-field-row';
         gatewayRow.innerHTML = `
-            <div class="tm-apple-row-title">流网关基准地址 (Stream Gateway)</div>
-            <div class="tm-apple-row-subtext">负责多源并发寻源、Referer 防盗链与 m3u8 切片代理 (同机推荐 http://host.docker.internal:8765)</div>
+            <div class="tm-apple-row-title">流网关地址</div>
+            <div class="tm-apple-row-subtext">寻源与切片代理服务</div>
             <div class="tm-peach-gateway-wrap">
                 <input type="text" class="tm-settings-input tm-peach-gateway-base-input" placeholder="http://host.docker.internal:8765" value="${config.gatewayBase || ''}" />
                 <input type="text" class="tm-settings-input tm-peach-gateway-token-input" placeholder="播放 Token (默认 dev)" value="${config.gatewayToken || 'dev'}" />
@@ -175,8 +175,8 @@ export class PeachSection {
         const storageRow = document.createElement('div');
         storageRow.className = 'tm-apple-row tm-peach-field-row';
         storageRow.innerHTML = `
-            <div class="tm-apple-row-title">STRM 入库存储方式 (WebDAV)</div>
-            <div class="tm-apple-row-subtext">生成 .strm 虚拟视频文件写入的 WebDAV 目录</div>
+            <div class="tm-apple-row-title">STRM 存储目录</div>
+            <div class="tm-apple-row-subtext">写入 .strm 虚拟文件的 WebDAV 路径</div>
             <div class="tm-peach-webdav-segmented-container"></div>
             <div class="tm-peach-webdav-subpanels"></div>
         `;
@@ -196,13 +196,13 @@ export class PeachSection {
                 const normSync = syncBase.endsWith('/') ? syncBase : syncBase + '/';
                 const p = document.createElement('div');
                 p.className = 'tm-peach-mode-notice';
-                p.innerHTML = `📂 <strong>模式 A（零配置默认）</strong>：复用当前同步配置，文件将直接写入：<br><code>${normSync}peach-media/</code><br><span style="color:rgba(255,255,255,0.5);font-size:11px;">请在 Peach 媒体库将该目录登记为来源</span>`;
+                p.innerHTML = `📂 <strong>模式 A</strong>：直接写入 <code>${normSync}peach-media/</code>`;
                 subpanelsContainer.appendChild(p);
             } else if (mode === PEACH_WEBDAV_MODE_SYNC_CUSTOM && hasSync) {
                 const p = document.createElement('div');
                 p.className = 'tm-peach-subpanel';
                 p.innerHTML = `
-                    <div class="tm-apple-row-subtext">模式 B：复用同步 WebDAV 账号，指定存储子目录</div>
+                    <div class="tm-apple-row-subtext">模式 B：指定存储子目录</div>
                     <input type="text" class="tm-settings-input tm-peach-custom-dir-input" placeholder="/Media/STRM/" value="${config.webdavCustomDir || config.strmDir || '/Media/STRM/'}" />
                 `;
                 const customInput = p.querySelector('.tm-peach-custom-dir-input');
@@ -214,7 +214,7 @@ export class PeachSection {
                 const p = document.createElement('div');
                 p.className = 'tm-peach-subpanel';
                 p.innerHTML = `
-                    <div class="tm-apple-row-subtext">模式 C：独立 WebDAV 存储端点 (如 NAS 独立 WebDAV 或 CloudDrive2/Alist)</div>
+                    <div class="tm-apple-row-subtext">模式 C：独立 WebDAV 存储端点</div>
                     <input type="text" class="tm-settings-input tm-peach-standalone-url" placeholder="WebDAV 服务地址 (如 http://192.168.2.250:5005)" value="${config.webdavStandaloneUrl || ''}" />
                     <div class="tm-peach-grid-2">
                         <input type="text" class="tm-settings-input tm-peach-standalone-user" placeholder="用户名" value="${config.webdavStandaloneUser || ''}" />
@@ -260,7 +260,7 @@ export class PeachSection {
         } else {
             const tip = document.createElement('div');
             tip.className = 'tm-apple-row-subtext';
-            tip.textContent = '检测到尚未配置主同步 WebDAV，已自动采用独立配置模式：';
+            tip.textContent = '检测到尚未配置主同步 WebDAV，已采用独立配置模式：';
             segmentedContainer.appendChild(tip);
         }
 
@@ -271,8 +271,8 @@ export class PeachSection {
         const jvRow = document.createElement('div');
         jvRow.className = 'tm-apple-row tm-peach-field-row';
         jvRow.innerHTML = `
-            <div class="tm-apple-row-title">外部片源：JAVVerse (无码流出 / 高清)</div>
-            <div class="tm-apple-row-subtext">优先寻获独家无码流出。若遇访客频控，点击前往登录以同步免登凭据</div>
+            <div class="tm-apple-row-title">外部片源：JAVVerse</div>
+            <div class="tm-apple-row-subtext">登录同步免登凭据 (优先无码流出)</div>
             <div class="tm-peach-source-action-wrap">
                 <button type="button" class="tm-settings-btn tm-peach-jv-login-btn">
                     前往 JAVVerse 登录 / 授权

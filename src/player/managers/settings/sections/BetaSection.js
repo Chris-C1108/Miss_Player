@@ -46,7 +46,7 @@ export class BetaSection {
 
         const firstCapToggle = new ToggleRow({
             title: __('betaSkipIntro') || '跳过片头',
-            subtext: __('betaSkipIntroDesc') || '开播直接跳转至第 1 个精彩高光',
+            subtext: __('betaSkipIntroDesc') || '开播直达首个高光',
             checked: Boolean(this.settings.betaFirstCapsulePlay),
             onChange: (checked) => {
                 this.sm.updateSetting('betaFirstCapsulePlay', checked);
@@ -56,7 +56,7 @@ export class BetaSection {
 
         const heatmapToggle = new ToggleRow({
             title: __('betaHeatmap') || '播放热度',
-            subtext: __('betaHeatmapDesc') || '在进度条呈现探索足迹与反复观看波形',
+            subtext: __('betaHeatmapDesc') || '进度条显示观看波形',
             checked: Boolean(this.settings.betaHeatmap),
             onChange: (checked) => {
                 this.sm.updateSetting('betaHeatmap', checked);
@@ -70,7 +70,7 @@ export class BetaSection {
 
         const undoToggle = new ToggleRow({
             title: __('betaCapsuleUndo') || '防误删除',
-            subtext: __('betaCapsuleUndoDesc') || '误删高光后提供 60 秒撤销时间',
+            subtext: __('betaCapsuleUndoDesc') || '删除保留 60 秒撤销',
             checked: this.settings.betaCapsuleUndo !== false,
             onChange: (checked) => {
                 this.sm.updateSetting('betaCapsuleUndo', checked);
@@ -80,7 +80,7 @@ export class BetaSection {
 
         const deepLinkToggle = new ToggleRow({
             title: __('betaDeepLinking') || '链接还原',
-            subtext: __('betaDeepLinkingDesc') || '打开分享链接时自动加载对应高光',
+            subtext: __('betaDeepLinkingDesc') || '打开分享链接载入高光',
             checked: this.settings.betaDeepLinking !== false,
             onChange: (checked) => {
                 this.sm.updateSetting('betaDeepLinking', checked);
@@ -89,13 +89,10 @@ export class BetaSection {
         betaSubWrap.appendChild(deepLinkToggle.getElement());
 
         const dbRow = document.createElement('div');
-        dbRow.className = 'tm-apple-row';
-        dbRow.style.flexDirection = 'column';
-        dbRow.style.alignItems = 'stretch';
-        dbRow.style.gap = '6px';
+        dbRow.className = 'tm-apple-row tm-apple-row--column';
         dbRow.innerHTML = `
-            <div class="tm-apple-row-title">${__('betaCustomApi') || '自建接口'}</div>
-            <div class="tm-apple-row-subtext">${__('betaCustomApiDesc') || '连接个人私人评论库服务器'}</div>
+            <div class="tm-apple-row-title">${__('betaCustomApi') || '自建评论接口'}</div>
+            <div class="tm-apple-row-subtext">${__('betaCustomApiDesc') || '连接私人评论服务器 (可选)'}</div>
             <input type="text" class="tm-settings-input tm-beta-db-url" placeholder="https://your-api.domain.com/comments" value="${this.settings.betaDbEndpoint || ''}" />
             <input type="password" class="tm-settings-input tm-beta-db-key" placeholder="API Key / Token (可选)" value="${this.settings.betaDbApiKey || ''}" />
         `;
@@ -139,8 +136,8 @@ export class BetaSection {
         debugSubWrap.style.display = Boolean(this.settings.debugMode) ? 'block' : 'none';
 
         const debugToggle = new ToggleRow({
-            title: __('betaDebugLog') || '运行日志',
-            subtext: __('betaDebugLogDesc') || '查看底层抓取排错与网络诊断信息',
+            title: __('betaDebugLog') || '调试日志',
+            subtext: __('betaDebugLogDesc') || '排错与网络抓取诊断',
             checked: Boolean(this.settings.debugMode),
             onChange: (checked) => {
                 this.sm.updateSetting('debugMode', checked);
@@ -160,7 +157,7 @@ export class BetaSection {
 
         const crazyToggle = new ToggleRow({
             title: __('betaPreloadComments') || '预载评论',
-            subtext: __('betaPreloadCommentsDesc') || '后台静默抓取页面其他影片的热评',
+            subtext: __('betaPreloadCommentsDesc') || '提前抓取关联影片评论',
             checked: Boolean(this.settings.crazyScrapeMode),
             onChange: (checked) => {
                 this.sm.updateSetting('crazyScrapeMode', checked);
@@ -174,8 +171,8 @@ export class BetaSection {
         debugSubWrap.appendChild(crazyToggle.getElement());
 
         const viewportHudToggle = new ToggleRow({
-            title: '全景视口探针',
-            subtext: '实时测量物理视口变化、键盘高度与触摸日志',
+            title: '视口探针',
+            subtext: '屏幕与触摸实时调试 HUD',
             checked: Boolean(this.settings.viewportDebugEnabled),
             onChange: (checked) => {
                 this.sm.updateSetting('viewportDebugEnabled', checked);
@@ -193,25 +190,24 @@ export class BetaSection {
 
         const clearRow = document.createElement('div');
         clearRow.className = 'tm-apple-row';
-        clearRow.style.justifyContent = 'space-between';
         clearRow.innerHTML = `
             <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title" style="color: #ff453a;">${__('betaClearCache') || '清除缓存'}</div>
-                <div class="tm-apple-row-subtext">${__('betaClearCacheDesc') || '释放本地存储并清空离线评论'}</div>
+                <div class="tm-apple-row-title tm-text-danger">${__('betaClearCache') || '清除缓存'}</div>
+                <div class="tm-apple-row-subtext">${__('betaClearCacheDesc') || '清空离线评论与本地缓存'}</div>
             </div>
-            <button type="button" class="tm-clear-cache-btn" style="background: rgba(255, 69, 58, 0.15); border: 1px solid rgba(255, 69, 58, 0.35); color: #ff453a; font-size: 11px; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: 600;">清空</button>
+            <button type="button" class="tm-clear-cache-btn tm-btn-danger">清空</button>
         `;
         const clearBtn = clearRow.querySelector('.tm-clear-cache-btn');
         clearBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            if (!confirm('确认彻底删除所有本地 IndexedDB 离线评论缓存？')) return;
+            if (!confirm('确认彻底删除所有本地离线评论缓存？')) return;
             clearBtn.textContent = '清理中...';
             await CommentCacheManager.clearAll();
             CrazyScraper._completedCodes.clear();
             CrazyScraper._scannedCodes.clear();
             CrazyScraper._avcodeDurations.clear();
             clearBtn.textContent = '已清空';
-            Toast('已彻底清空本地 IndexedDB 评论缓存', 2000, 'success');
+            Toast('已彻底清空本地评论缓存', 2000, 'success');
         });
         debugSubWrap.appendChild(clearRow);
 

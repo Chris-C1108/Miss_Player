@@ -565,6 +565,53 @@ assert.ok(
 
 console.log('✅ 19. 评论栏底部向上弹出抽屉式、附加片段抽屉默认收起与无模糊遮罩验证通过');
 
-console.log('\n🎉 全部 19 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 20. 验证设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与双轨外链跳转
+// ---------------------------------------------------------
+console.log('▶ 20. 验证设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与双轨外链跳转...');
+const aboutSectionCode = fs.readFileSync('src/player/managers/settings/sections/AboutSection.js', 'utf8');
+const settingsManagerCodeV20 = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
+const segmentedControlCode = fs.readFileSync('src/player/managers/settings/components/SegmentedControl.js', 'utf8');
+const settingsAppleCss = fs.readFileSync('src/player/ui/styles/_settings_apple.css', 'utf8');
+const i18nCode = fs.readFileSync('src/constants/i18n.js', 'utf8');
+
+// 20.1 验证版本信息展开时即触发更新检查
+assert.ok(
+    aboutSectionCode.includes("this.sm.checkUpdate(true, false);") &&
+    settingsManagerCodeV20.includes("async checkUpdate(force = true, notify = true) {"),
+    'AboutSection 展开时必须立即调用 checkUpdate(true, false) 执行静默更新检查，且 SettingsManager 必须提供统一 checkUpdate 方法'
+);
+
+// 20.2 验证外链跳转：正式版跳转 SleazyFork，测试版跳转 GitHub
+assert.ok(
+    settingsManagerCodeV20.includes("platformLink.href = isBeta\n            ? 'https://github.com/Chris-C1108/Miss_Player'\n            : 'https://sleazyfork.org/scripts/453300';") &&
+    settingsManagerCodeV20.includes("platformLink.title = isBeta ? '前往 GitHub 项目页' : '前往 SleazyFork 脚本页';"),
+    '版本信息卡片中的主链接必须双轨硬分流：测试版指向 GitHub 项目页，正式版指向 SleazyFork 脚本页'
+);
+
+// 20.3 验证 SegmentedControl 零行内样式，采用纯 CSS 类驱动
+assert.ok(
+    !segmentedControlCode.includes('style.cssText') &&
+    settingsAppleCss.includes('.tm-segmented-control {') &&
+    settingsAppleCss.includes('.tm-segmented-btn {'),
+    'SegmentedControl 必须彻底移除 inline cssText，采用标准化 .tm-segmented-* CSS 类'
+);
+
+// 20.4 验证设置项标准化类与 ADHD 高信噪比文案
+assert.ok(
+    settingsAppleCss.includes('.tm-about-channel-row {') &&
+    settingsAppleCss.includes('.tm-about-channel-label {') &&
+    settingsAppleCss.includes('.tm-about-status-line {') &&
+    settingsAppleCss.includes('.tm-about-btn--stay {') &&
+    settingsAppleCss.includes('.tm-about-btn--tampermonkey {') &&
+    settingsAppleCss.includes('.tm-about-btn--scriptcat {') &&
+    i18nCode.includes("aboutGroupTitle: '版本信息'") &&
+    i18nCode.includes("webdavAutoSyncDesc: '数据变动时后台静默同步'"),
+    '设置菜单样式与文案必须符合 Grice 准则与 ADHD 规范，具备标准化类且去除冗余技术黑话'
+);
+
+console.log('✅ 20. 设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与双轨外链跳转验证通过');
+
+console.log('\n🎉 全部 20 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 

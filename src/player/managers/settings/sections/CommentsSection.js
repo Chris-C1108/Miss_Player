@@ -27,7 +27,7 @@ export class CommentsSection {
 
         const commentsToggle = new ToggleRow({
             title: __('showComments') || '显示评论',
-            subtext: __('showCommentsDesc') || '在侧栏或底部展示网友热评与弹幕',
+            subtext: __('showCommentsDesc') || '',
             checked: this.settings.showCommentsSection,
             onChange: (checked) => {
                 this.sm.updateSetting('showCommentsSection', checked);
@@ -47,24 +47,23 @@ export class CommentsSection {
         card.appendChild(commentsToggle.getElement());
 
         const sourcesRow = document.createElement('div');
-        sourcesRow.className = 'tm-apple-row';
-        sourcesRow.style.flexDirection = 'column';
-        sourcesRow.style.alignItems = 'stretch';
-        sourcesRow.style.gap = '8px';
+        sourcesRow.className = 'tm-apple-row tm-apple-row--column';
 
         const sourcesTop = document.createElement('div');
         sourcesTop.className = 'tm-apple-row-title';
         sourcesTop.textContent = __('commentSources') || '评论来源';
-        const sourcesSub = document.createElement('div');
-        sourcesSub.className = 'tm-apple-row-subtext';
-        sourcesSub.textContent = __('commentSourcesDesc') || '勾选参与聚合的外部站点';
         sourcesRow.appendChild(sourcesTop);
-        sourcesRow.appendChild(sourcesSub);
+
+        const subtext = __('commentSourcesDesc') || '';
+        if (subtext) {
+            const sourcesSub = document.createElement('div');
+            sourcesSub.className = 'tm-apple-row-subtext';
+            sourcesSub.textContent = subtext;
+            sourcesRow.appendChild(sourcesSub);
+        }
 
         const badgesContainer = document.createElement('div');
         badgesContainer.className = 'tm-settings-sources-subpanel';
-        badgesContainer.style.display = 'flex';
-        badgesContainer.style.gap = '8px';
 
         const sources = [
             { key: 'jable', label: 'Jable' },
@@ -99,7 +98,7 @@ export class CommentsSection {
 
         const numFilterToggle = new ToggleRow({
             title: __('filterTimeOnly') || '只看时间',
-            subtext: __('filterTimeOnlyDesc') || '自动过滤纯水评，仅看带时间标记',
+            subtext: __('filterTimeOnlyDesc') || '仅显示含时间标记的评论',
             checked: Boolean(this.settings.debugFilterHasNumbers),
             onChange: (checked) => {
                 this.sm.updateSetting('debugFilterHasNumbers', checked);
