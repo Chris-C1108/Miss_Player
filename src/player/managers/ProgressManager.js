@@ -145,7 +145,7 @@ export class ProgressManager {
         this._isBufferingActive = isBuffering;
         if (isBuffering) {
             this.progressBarElement.classList.add('is-buffering');
-            Toast('⏳ 正在缓冲视频...', 1000, 'info');
+            Toast('正在缓冲视频...', 'info');
         } else {
             this.progressBarElement.classList.remove('is-buffering');
         }

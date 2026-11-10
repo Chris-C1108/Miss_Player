@@ -2298,24 +2298,23 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
     flex: 1 1 auto;
     min-width: 0;
     max-width: none;
-    text-align: center;
+    text-align: left;
     font-size: 14px;
     font-weight: 600;
     color: #ffffff;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
     user-select: none;
     z-index: var(--z-controls);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
     pointer-events: none;
     transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-    margin: 0 4px;
+    margin: 0 8px;
     height: 28px;
     line-height: 28px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 .tm-title-slot {
@@ -2323,12 +2322,20 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
     inset: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    text-align: left;
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
     will-change: transform, opacity;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.tm-player-title-text {
+    display: inline-block;
+    white-space: nowrap;
+    will-change: transform;
+    transform: translateX(0);
 }
 
 .tm-title-slot--main {
@@ -2347,6 +2354,7 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
 .tm-title-slot--toast {
     transform: translateY(100%);
     opacity: 0;
+    gap: 6px;
 }
 .tm-title-slot--toast.is-active {
     transform: translateY(0);
@@ -2355,6 +2363,25 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
 .tm-title-slot--toast.is-exiting {
     transform: translateY(-100%);
     opacity: 0;
+}
+
+.tm-title-slot--toast .tm-toast-indicator-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #0a84ff;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(10, 132, 255, 0.6);
+}
+
+.tm-title-slot--toast.tm-toast--success .tm-toast-indicator-dot {
+    background: #30d158;
+    box-shadow: 0 0 6px rgba(48, 209, 88, 0.6);
+}
+
+.tm-title-slot--toast.tm-toast--error .tm-toast-indicator-dot {
+    background: #ff453a;
+    box-shadow: 0 0 6px rgba(255, 69, 58, 0.6);
 }
 
 .tm-title-slot--toast .tm-toast-content {

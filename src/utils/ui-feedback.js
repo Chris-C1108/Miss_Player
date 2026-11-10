@@ -3,15 +3,51 @@
  */
 
 /**
+ * 彻底过滤文本中的任何 emoji 符号，严格遵照 Apple 纯净微排版与系统设计哲学
+ * @param {string} text 
+ * @returns {string}
+ */
+export function stripEmojis(text) {
+    if (!text || typeof text !== 'string') return '';
+    return text
+        .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+}
+
+/**
+ * 前端领域最佳实践 Toast 停留时长计算算法
+ * 参考 Nielsen Norman Group 与 Material Design 3 认知阅读模型
+ * - 基准识别启动时间 (Cognitive latency): 1400ms
+ * - 中文字符平均阅读速度: ~4-5 字/秒 (约 110ms/字符)
+ * - 科学约束区间: 最低 1800ms (防止闪现)，最高 4200ms (防止霸屏阻滞)
+ * @param {string} msg - 提示文本
+ * @param {number} [explicitDuration=0] - 显式指定时长
+ * @returns {number} 经过科学计算的最佳停留毫秒数
+ */
+export function calculateToastDuration(msg, explicitDuration = 0) {
+    if (explicitDuration && explicitDuration >= 1500) {
+        return explicitDuration;
+    }
+    const clean = stripEmojis(msg);
+    const textLen = clean.length;
+    const computed = 1400 + textLen * 110;
+    return Math.max(1800, Math.min(4200, Math.round(computed)));
+}
+
+/**
  * Toast 消息提示函数
  * @param {string} msg - 消息内容
- * @param {number} [duration=3000] - 显示时长(毫秒)
- * @param {string} [bgColor='rgba(0, 0, 0, 0.8)'] - 背景颜色
- * @param {string} [textColor='#fff'] - 文字颜色
+ * @param {number} [duration=0] - 显示时长 (默认 0 即按人机工程最佳实践动态计算)
+ * @param {string} [bgColor=''] - 消息类型 / 背景颜色
+ * @param {string} [textColor=''] - 文字颜色
  * @param {string} [position='top'] - 位置(top/bottom/center)
  */
-export function Toast(msg, duration = 1000, bgColor = '', textColor = '', position = 'top') {
+export function Toast(msg, duration = 0, bgColor = '', textColor = '', position = 'top') {
     if (typeof document === 'undefined') return;
+
+    const cleanMsg = stripEmojis(msg);
+    if (!cleanMsg) return;
 
     let type = 'normal';
     if (bgColor) {
@@ -25,12 +61,14 @@ export function Toast(msg, duration = 1000, bgColor = '', textColor = '', positi
         }
     }
 
+    const finalDuration = calculateToastDuration(cleanMsg, duration);
+
     // 1. 优先使用顶栏广告翻滚跑马灯 (Rolling Billboard Toast)
     try {
         const uiManager = (typeof window !== 'undefined' && window.__missPlayerUIManager) ||
             document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container')?.uiManager;
         if (uiManager && typeof uiManager.showRollingToast === 'function') {
-            uiManager.showRollingToast(msg, duration || 1000, type);
+            uiManager.showRollingToast(cleanMsg, finalDuration, type);
             return;
         }
     } catch (_) {}

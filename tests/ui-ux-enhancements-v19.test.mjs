@@ -101,13 +101,13 @@ const peachTitle = getVideoTitle(mockPeachVideo);
 assert.strictEqual(peachTitle, 'STARS-256 桃子测试影片标题', 'Peach 站点应当优先从 peachItem 提取番号与标题');
 console.log('✅ 8. Peach 站点视频标题与番号精准提取验证通过');
 
-// 9. 验证顶栏翻滚广告跑马灯 Toast 与播放/暂停/缓冲提示
+// 9. 验证顶栏翻滚广告跑马灯 Toast 与播放/暂停/缓冲提示 (无 emoji)
 const playbackCode = fs.readFileSync('src/player/controls/PlaybackController.js', 'utf8');
-assert.ok(playbackCode.includes("Toast('⏸️ 视频已暂停', 1000, 'info')"), '暂停播放时应当以顶栏翻滚 Toast 提示');
-assert.ok(playbackCode.includes("Toast('▶️ 继续播放', 1000, 'info')"), '继续播放时应当以顶栏翻滚 Toast 提示');
+assert.ok(playbackCode.includes("Toast('视频已暂停', 'info')"), '暂停播放时应当以顶栏翻滚 Toast 提示');
+assert.ok(playbackCode.includes("Toast('继续播放', 'info')"), '继续播放时应当以顶栏翻滚 Toast 提示');
 const progressCode = fs.readFileSync('src/player/managers/ProgressManager.js', 'utf8');
-assert.ok(progressCode.includes("Toast('⏳ 正在缓冲视频...', 1000, 'info')"), '视频卡顿缓冲时应当提示缓冲状态');
-console.log('✅ 9. 视频暂停、播放与缓冲状态顶栏翻滚 Toast 提示验证通过');
+assert.ok(progressCode.includes("Toast('正在缓冲视频...', 'info')"), '视频卡顿缓冲时应当提示缓冲状态');
+console.log('✅ 9. 视频暂停、播放与缓冲状态顶栏翻滚 Toast 纯净提示验证通过');
 
 // 10. 验证 SleazyForkService 包含指定的 GitHub 镜像加速站 (gh-proxy.org, ghfast.top, gh-proxy.com)
 const sleazyCode = fs.readFileSync('src/services/SleazyForkService.js', 'utf8');

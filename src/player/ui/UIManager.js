@@ -557,12 +557,12 @@ export class UIManager {
                     this.playerCore.userPauseIntent = false;
                     if (playbackCtrl) playbackCtrl._userPauseIntent = false;
                     this.playerCore.targetVideo.play().catch(() => {});
-                    Toast('▶️ 继续播放', 1000, 'info');
+                    Toast('继续播放', 1000, 'info');
                 } else {
                     this.playerCore.userPauseIntent = true;
                     if (playbackCtrl) playbackCtrl._userPauseIntent = true;
                     this.playerCore.targetVideo.pause();
-                    Toast('⏸️ 视频已暂停', 1000, 'info');
+                    Toast('视频已暂停', 1000, 'info');
                     if (this.controlManager) {
                         this.controlManager.showPauseIndicator();
                     }
@@ -648,12 +648,12 @@ export class UIManager {
                 if (badge) badge.classList.remove('is-hidden');
                 if (avcode) {
                     this.peachIngestBtn.title = `Peach 媒体库中心 (${avcode})`;
-                    Toast(`🍑 当前处于 Peach 媒体中心 (影片 ${avcode} 已在库)`, 1000, 'info');
+                    Toast(`当前处于 Peach 媒体中心 (影片 ${avcode} 已在库)`, 1500, 'info');
                     try {
                         await PeachService.triggerScan();
                     } catch (_) {}
                 } else {
-                    Toast('🍑 当前处于自托管 Peach 媒体库中心', 1000, 'info');
+                    Toast('当前处于自托管 Peach 媒体库中心', 1500, 'info');
                 }
                 return;
             }
@@ -666,7 +666,7 @@ export class UIManager {
 
             // 若已经处于 is-ingested 状态，点击直观提示当前在库状态
             if (this.peachIngestBtn.classList.contains('is-ingested')) {
-                Toast(`🍑 影片 ${avcode} 已在库 (WebDAV .strm 就绪)`, 1000, 'success');
+                Toast(`影片 ${avcode} 已在库 (WebDAV .strm 就绪)`, 1500, 'success');
                 return;
             }
 
@@ -683,7 +683,7 @@ export class UIManager {
                     this.peachIngestBtn.classList.add('is-ingested');
                     if (badge) badge.classList.remove('is-hidden');
                     this.peachIngestBtn.title = `已入库 Peach: ${res.path}`;
-                    Toast(res.message, 1500, 'success');
+                    Toast(res.message, 1800, 'success');
                 }
             } catch (err) {
                 this.peachIngestBtn.classList.remove('is-busy');
@@ -783,16 +783,65 @@ export class UIManager {
             } else {
                 this.titleEl.textContent = newTitle;
             }
+            this.triggerTitlePeekScroll();
         }
+    }
+
+    /**
+     * 进入播放器或标题更新时，检测标题是否超长发生截断；
+     * 若超长，先停留 800ms 展示番号，然后向左平滑匀速滚动展示全名，滚到底后停留 1.2 秒平滑归位至左对齐
+     */
+    triggerTitlePeekScroll() {
+        if (!this.titleTextSpan || !this.titleMainSlot) return;
+
+        if (this._peekScrollTimer) {
+            clearTimeout(this._peekScrollTimer);
+            this._peekScrollTimer = null;
+        }
+
+        this.titleTextSpan.style.transition = 'none';
+        this.titleTextSpan.style.transform = 'translateX(0)';
+
+        requestAnimationFrame(() => {
+            if (!this.titleTextSpan || !this.titleMainSlot) return;
+            const textWidth = this.titleTextSpan.scrollWidth;
+            const containerWidth = this.titleMainSlot.clientWidth;
+
+            if (textWidth <= containerWidth + 6) return;
+
+            const overflowDistance = textWidth - containerWidth + 12;
+            const scrollDuration = Math.max(2, Math.min(7, overflowDistance / 30));
+
+            this._peekScrollTimer = setTimeout(() => {
+                if (!this.titleTextSpan) return;
+
+                this.titleTextSpan.style.transition = `transform ${scrollDuration}s linear`;
+                this.titleTextSpan.style.transform = `translateX(-${overflowDistance}px)`;
+
+                this._peekScrollTimer = setTimeout(() => {
+                    if (!this.titleTextSpan) return;
+
+                    this.titleTextSpan.style.transition = 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)';
+                    this.titleTextSpan.style.transform = 'translateX(0)';
+
+                    this._peekScrollTimer = setTimeout(() => {
+                        if (this.titleTextSpan) {
+                            this.titleTextSpan.style.transition = 'none';
+                        }
+                        this._peekScrollTimer = null;
+                    }, 600);
+                }, scrollDuration * 1000 + 1200);
+            }, 800);
+        });
     }
 
     /**
      * 在顶栏标题区域以广告翻滚方式临时展示 Toast 消息 1 秒，随后平滑翻转还原为原始标题
      * @param {string} msg - 提示文案
-     * @param {number} [duration=1000] - 停留时间 (默认 1000ms / 1秒)
+     * @param {number} [duration=1800] - 停留时间 (默认按前端最佳实践计算)
      * @param {'normal'|'success'|'error'|'info'} [type='normal'] - 消息类型
      */
-    showRollingToast(msg, duration = 1000, type = 'normal') {
+    showRollingToast(msg, duration = 1800, type = 'normal') {
         if (!this.titleEl || !this.titleMainSlot || !this.titleToastSlot) return;
 
         if (this._rollingToastTimer) {
@@ -836,12 +885,20 @@ export class UIManager {
 
         this.titleToastSlot = document.createElement('span');
         this.titleToastSlot.className = 'tm-title-slot tm-title-slot--toast';
+        
+        const dot = document.createElement('span');
+        dot.className = 'tm-toast-indicator-dot';
+        this.titleToastSlot.appendChild(dot);
+
         this.titleToastContent = document.createElement('span');
         this.titleToastContent.className = 'tm-toast-content';
         this.titleToastSlot.appendChild(this.titleToastContent);
 
         this.titleEl.appendChild(this.titleMainSlot);
         this.titleEl.appendChild(this.titleToastSlot);
+
+        // 初始化时触发一次超长向左平滑巡航
+        this.triggerTitlePeekScroll();
     }
     
     /**
