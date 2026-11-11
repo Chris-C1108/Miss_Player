@@ -4,7 +4,13 @@
 
 import assert from 'assert';
 import { WebDavClient } from '../src/sync/WebDavClient.js';
+import { SyncManager } from '../src/sync/SyncManager.js';
+import { PeachService } from '../src/services/PeachService.js';
 import { setValue } from '../src/utils/storage.js';
+
+const __memStore = new Map();
+globalThis.GM_getValue = (k, def) => (__memStore.has(k) ? __memStore.get(k) : def);
+globalThis.GM_setValue = (k, v) => __memStore.set(k, v);
 
 console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover) 单元测试...\n');
 
@@ -47,7 +53,7 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
 // 测试 3: 主地址网络超时，自动切换备用地址并更新活跃记忆
 {
     console.log('▶ 测试 3: 主地址网络超时，自动切换备用地址并更新活跃记忆');
-    WebDavClient._activeUrlCache.clear();
+    WebDavClient.clearEndpointLease();
 
     const config = {
         url: 'https://dav.loadingi.fnos.net:443',
@@ -102,7 +108,7 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
 // 测试 5: 401 认证错误禁止盲目切换
 {
     console.log('▶ 测试 5: 401/403 认证错误快速抛出，禁止盲目切换');
-    WebDavClient._activeUrlCache.clear();
+    WebDavClient.clearEndpointLease();
 
     const config = {
         url: 'https://dav.loadingi.fnos.net:443',
@@ -132,7 +138,7 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
 // 测试 6: checkFileExists 带自动故障转移
 {
     console.log('▶ 测试 6: checkFileExists 具备双地址自适应');
-    WebDavClient._activeUrlCache.clear();
+    WebDavClient.clearEndpointLease();
 
     // Mock WebDavClient.request
     const origRequest = WebDavClient.request;
@@ -178,7 +184,7 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
 // 测试 8: testConnection 全流程自适应 (主地址超时，自动切换备用地址并返回局域网直连提示)
 {
     console.log('▶ 测试 8: testConnection 全流程自适应 (公网超时无缝切备用)');
-    WebDavClient._activeUrlCache.clear();
+    WebDavClient.clearEndpointLease();
 
     const origRequest = WebDavClient.request;
     const requestedUrls = [];
@@ -227,8 +233,7 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
 // 测试 10: 路由器 HTML 登录页劫持 (200 / 401 HTML) 精准识破并无缝切换内网
 {
     console.log('▶ 测试 10: 识破路由器 200/401 HTML 劫持并切往备用内网端点');
-    WebDavClient._activeUrlCache.clear();
-    setValue('mp_active_webdav_lease', {});
+    WebDavClient.clearEndpointLease();
 
     const origRequest = WebDavClient.request;
     const calledUrls = [];
@@ -272,8 +277,7 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
 // 测试 11: 终极目标路径优先直探，免疫父目录权限限制
 {
     console.log('▶ 测试 11: 终极目标路径优先直探，免疫 NAS 父目录共享权限拦截');
-    WebDavClient._activeUrlCache.clear();
-    setValue('mp_active_webdav_lease', {});
+    WebDavClient.clearEndpointLease();
 
     const origRequest = WebDavClient.request;
     const requestedPaths = [];
@@ -305,8 +309,7 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
 // 测试 12: 所有候选端点全部失败时，错误需聚合展示各端点的真实报错
 {
     console.log('▶ 测试 12: 全端点均失败时暴露全链路详细诊断误差');
-    WebDavClient._activeUrlCache.clear();
-    setValue('mp_active_webdav_lease', {});
+    WebDavClient.clearEndpointLease();
 
     const origRequest = WebDavClient.request;
     WebDavClient.request = async (opts) => {
@@ -337,4 +340,250 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
     console.log('  ✓ 多端点全失败聚合诊断输出测试通过\n');
 }
 
-console.log('🎉 WebDavClient 双地址自适应 (LAN/WAN Failover) 12 项单元测试全部通过！\n');
+// 测试 13: 统一协议守卫 _davRequest 覆盖 downloadBackup / uploadFile / checkFileExists 遇 HTML/502 无缝切备用
+{
+    console.log('▶ 测试 13: downloadBackup / uploadFile / checkFileExists 遇 HTML/502 全面切换至 lanUrl');
+    const origRequest = WebDavClient.request;
+
+    // 13a. downloadBackup 遇主地址返回 200 HTML 劫持 -> 无缝切内网拿真实 JSON
+    WebDavClient.clearEndpointLease();
+    WebDavClient.request = async (opts) => {
+        if (opts.url.includes('dav.loadingi.fnos.net')) {
+            return { status: 200, statusText: 'OK', data: '<html><body>Portal</body></html>' };
+        }
+        return { status: 200, statusText: 'OK', data: JSON.stringify({ markers: { a: 1 } }) };
+    };
+    const dlRes = await WebDavClient.downloadBackup({
+        url: 'https://dav.loadingi.fnos.net:443',
+        lanUrl: 'http://192.168.2.250:5005',
+        user: 'chen',
+        pass: 'pass'
+    }, 'heatmaps/WSP-101.json');
+    assert.deepStrictEqual(dlRes, { markers: { a: 1 } });
+
+    // 13b. uploadFile 遇主地址返回 502 Bad Gateway -> 无缝切内网完成上传
+    WebDavClient.clearEndpointLease();
+    const putTargets = [];
+    WebDavClient.request = async (opts) => {
+        if (opts.url.includes('dav.loadingi.fnos.net')) {
+            return { status: 502, statusText: 'Bad Gateway', data: '' };
+        }
+        putTargets.push(`${opts.method} ${opts.url}`);
+        if (opts.method === 'PROPFIND') return { status: 207, statusText: 'Multi-Status', data: '<D:multistatus/>' };
+        return { status: 201, statusText: 'Created', data: '' };
+    };
+    const upRes = await WebDavClient.uploadFile({
+        url: 'https://dav.loadingi.fnos.net:443',
+        lanUrl: 'http://192.168.2.250:5005',
+        user: 'chen',
+        pass: 'pass',
+        path: '/MissPlayer/'
+    }, 'comments/WSP-101.json', { hello: 'world' });
+    assert.strictEqual(upRes.success, true);
+    assert(putTargets.some(t => t.includes('PUT http://192.168.2.250:5005/MissPlayer/comments/WSP-101.json')));
+
+    // 13c. checkFileExists 遇主地址 302 重定向 -> 切内网探测返回 true
+    WebDavClient.clearEndpointLease();
+    WebDavClient.request = async (opts) => {
+        if (opts.url.includes('dav.loadingi.fnos.net')) {
+            return { status: 302, statusText: 'Found', data: '' };
+        }
+        return { status: 207, statusText: 'Multi-Status', data: '' };
+    };
+    const existsRes = await WebDavClient.checkFileExists({
+        url: 'https://dav.loadingi.fnos.net:443',
+        lanUrl: 'http://192.168.2.250:5005',
+        user: 'chen',
+        pass: 'pass'
+    }, '/Media/STRM/WSP-101.strm');
+    assert.strictEqual(existsRes, true);
+
+    WebDavClient.request = origRequest;
+    console.log('  ✓ 全链路子功能统一协议守卫切换测试通过\n');
+}
+
+// 测试 14: 中文及非 ASCII 路径 UTF-8 安全百分比编码 (防 Safari / Stay 静默失败且不二次编码)
+{
+    console.log('▶ 测试 14: 非 ASCII 路径段 UTF-8 百分比安全编码');
+    const url1 = WebDavClient.normalizeUrl('http://192.168.2.250:5005', '/我的文件/backup_configs/MissPlayer/');
+    assert.strictEqual(url1, 'http://192.168.2.250:5005/%E6%88%91%E7%9A%84%E6%96%87%E4%BB%B6/backup_configs/MissPlayer/');
+    // 已编码段不可被二次编码为 %25E6
+    const url2 = WebDavClient.normalizeUrl('http://192.168.2.250:5005', '/%E6%88%91%E7%9A%84%E6%96%87%E4%BB%B6/backup_configs/MissPlayer/');
+    assert.strictEqual(url2, url1);
+    // ASCII 路径保持原样不变
+    const url3 = WebDavClient.normalizeUrl('http://192.168.2.250:5005', '/MissPlayer/comments/WSP-101.json');
+    assert.strictEqual(url3, 'http://192.168.2.250:5005/MissPlayer/comments/WSP-101.json');
+    console.log('  ✓ UTF-8 路径百分比编码及防二次编码测试通过\n');
+}
+
+// 测试 15: 每 Origin 并发队列限流 (MAX_CONCURRENT_PER_ORIGIN = 2)
+{
+    console.log('▶ 测试 15: 每 Origin 并发限流 (Max 2 in-flight per origin)');
+    const origRaw = WebDavClient._rawRequest;
+    let currentActive = 0;
+    let peakActive = 0;
+    WebDavClient._rawRequest = async () => {
+        currentActive++;
+        if (currentActive > peakActive) peakActive = currentActive;
+        await new Promise(r => setTimeout(r, 25));
+        currentActive--;
+        return { status: 200, statusText: 'OK', data: '' };
+    };
+
+    await Promise.all([1, 2, 3, 4, 5].map(i =>
+        WebDavClient.request({ method: 'GET', url: `http://192.168.2.250:5005/file${i}.json` })
+    ));
+    assert(peakActive <= 2, `单 Origin 峰值并发不可超过 2，实际: ${peakActive}`);
+    assert.strictEqual(peakActive, 2, '应充分利用 2 路并发槽位');
+
+    WebDavClient._rawRequest = origRaw;
+    console.log('  ✓ 每 Origin 并发限流器测试通过\n');
+}
+
+// 测试 16: fnOS 根目录 MKCOL 405 智能自检诊断 (空可见范围 & 目录实为 /我的文件/ 子目录)
+{
+    console.log('▶ 测试 16: fnOS 根目录 MKCOL 405 智能自检诊断 (自动识别「我的文件」嵌套与可见范围)');
+    WebDavClient.clearEndpointLease();
+    const origRequest = WebDavClient.request;
+
+    // 16a. 根目录仅可见「我的文件」，且「backup_configs」实际正位于「/我的文件/」下
+    WebDavClient.request = async (opts) => {
+        const pathname = new URL(opts.url).pathname;
+        if (opts.method === 'PROPFIND' && opts.headers?.Depth === '1') {
+            if (pathname === '/') {
+                return {
+                    status: 207,
+                    data: `<?xml version="1.0" encoding="utf-8"?>
+                    <D:multistatus xmlns:D="DAV:">
+                        <D:response><D:href>/</D:href><D:propstat><D:prop><D:resourcetype><D:collection/></D:resourcetype></D:prop></D:propstat></D:response>
+                        <D:response><D:href>/%E6%88%91%E7%9A%84%E6%96%87%E4%BB%B6/</D:href><D:propstat><D:prop><D:resourcetype><D:collection/></D:resourcetype></D:prop></D:propstat></D:response>
+                    </D:multistatus>`
+                };
+            }
+            if (decodeURIComponent(pathname) === '/我的文件/') {
+                return {
+                    status: 207,
+                    data: `<?xml version="1.0" encoding="utf-8"?>
+                    <D:multistatus xmlns:D="DAV:">
+                        <D:response><D:href>/%E6%88%91%E7%9A%84%E6%96%87%E4%BB%B6/</D:href><D:propstat><D:prop><D:resourcetype><D:collection/></D:resourcetype></D:prop></D:propstat></D:response>
+                        <D:response><D:href>/%E6%88%91%E7%9A%84%E6%96%87%E4%BB%B6/backup_configs/</D:href><D:propstat><D:prop><D:resourcetype><D:collection/></D:resourcetype></D:prop></D:propstat></D:response>
+                    </D:multistatus>`
+                };
+            }
+        }
+        if (opts.method === 'PROPFIND') return { status: 404, data: '' };
+        if (opts.method === 'MKCOL') return { status: 405, data: '' };
+        return { status: 404, data: '' };
+    };
+
+    let errNested = null;
+    try {
+        await WebDavClient.testConnection({
+            url: 'https://dav.loadingi.fnos.net:443',
+            lanUrl: 'http://192.168.2.250:5005',
+            user: 'chen',
+            pass: 'pass',
+            path: '/backup_configs/MissPlayer/'
+        });
+    } catch (e) {
+        errNested = e;
+    }
+    assert(errNested && errNested.message.includes('/我的文件/backup_configs/MissPlayer/'), `应精准提示真实位于 /我的文件/ 下: ${errNested?.message}`);
+    // 验证相同报错在双端点下只保留一次完整说明，不刷屏重复两次
+    const matchCount = (errNested.message.match(/实际位于/g) || []).length;
+    assert.strictEqual(matchCount, 1, `相同错误双端点应合并去重展示: ${errNested.message}`);
+
+    // 16b. 根目录可见列表为空 (fnOS 可见文件夹范围未勾选或重置)
+    WebDavClient.clearEndpointLease();
+    WebDavClient.request = async (opts) => {
+        if (opts.method === 'PROPFIND' && opts.headers?.Depth === '1') {
+            return {
+                status: 207,
+                data: `<D:multistatus><D:response><D:href>/</D:href></D:response></D:multistatus>`
+            };
+        }
+        if (opts.method === 'PROPFIND') return { status: 404, data: '' };
+        if (opts.method === 'MKCOL') return { status: 405, data: '' };
+        return { status: 404, data: '' };
+    };
+    let errEmpty = null;
+    try {
+        await WebDavClient.ensureDirectory({
+            url: 'http://192.168.2.250:5005',
+            user: 'chen',
+            pass: 'pass',
+            path: '/backup_configs/MissPlayer/'
+        });
+    } catch (e) {
+        errEmpty = e;
+    }
+    assert(errEmpty && errEmpty.message.includes('可见文件夹范围'), `空根目录应提示检查飞牛可见文件夹范围: ${errEmpty?.message}`);
+
+    WebDavClient.request = origRequest;
+    console.log('  ✓ fnOS 根目录可见性诊断与错误去重合并测试通过\n');
+}
+
+// 测试 17: 无末尾斜杠 PROPFIND 容错匹配
+{
+    console.log('▶ 测试 17: 无末尾斜杠 PROPFIND 207 容错放行');
+    const origRequest = WebDavClient.request;
+    WebDavClient.request = async (opts) => {
+        if (opts.method === 'PROPFIND' && opts.url.endsWith('/MissPlayer/')) {
+            return { status: 404, data: '' };
+        }
+        if (opts.method === 'PROPFIND' && opts.url.endsWith('/MissPlayer')) {
+            return { status: 207, data: '<D:multistatus/>' };
+        }
+        return { status: 404, data: '' };
+    };
+    await WebDavClient.ensureDirectory({
+        url: 'http://192.168.2.250:5005',
+        user: 'chen',
+        pass: 'pass',
+        path: '/MissPlayer/'
+    });
+    WebDavClient.request = origRequest;
+    console.log('  ✓ 无末尾斜杠 PROPFIND 容错放行测试通过\n');
+}
+
+// 测试 18: PeachService.getEffectiveWebDavConfig 仅配 lanUrl 也能正常继承模式 A/B
+{
+    console.log('▶ 测试 18: PeachService 仅配置 lanUrl 时全局识别为有效同步端点');
+    const origSync = SyncManager.getWebDavConfig();
+    SyncManager.saveWebDavConfig({
+        url: '',
+        lanUrl: 'http://192.168.2.250:5005',
+        user: 'chen',
+        pass: 'pass',
+        path: '/我的文件/MissPlayer/',
+        autoSync: true
+    });
+    PeachService.saveConfig({ webdavMode: 'sync_default' });
+    const effective = PeachService.getEffectiveWebDavConfig();
+    assert.strictEqual(effective.mode, 'sync_default');
+    assert.strictEqual(effective.config.lanUrl, 'http://192.168.2.250:5005');
+    assert.strictEqual(effective.targetDir, '/我的文件/MissPlayer/peach-media/');
+    SyncManager.saveWebDavConfig(origSync);
+    console.log('  ✓ PeachService lanUrl 全局一致性识别测试通过\n');
+}
+
+// 测试 19: 修改 WebDAV 地址/用户名时自动清理活跃端点租约
+{
+    console.log('▶ 测试 19: SyncManager.saveWebDavConfig 端点变更自动清空租约');
+    WebDavClient._setActiveEndpoint('https://dav.example.com#chen', 'http://192.168.2.250:5005');
+    assert.strictEqual(
+        WebDavClient._getActiveEndpoint('https://dav.example.com#chen'),
+        'http://192.168.2.250:5005'
+    );
+    SyncManager.saveWebDavConfig({
+        url: 'https://new.example.com',
+        lanUrl: 'http://192.168.2.251:5005',
+        user: 'chen',
+        pass: 'pass',
+        path: '/MissPlayer/'
+    });
+    assert.strictEqual(WebDavClient._getActiveEndpoint('https://dav.example.com#chen'), null);
+    console.log('  ✓ 配置变更自动清空租约测试通过\n');
+}
+
+console.log('🎉 WebDavClient 全局双地址容灾与协议守卫 19 项单元测试全部通过！\n');

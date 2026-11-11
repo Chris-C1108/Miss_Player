@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.007
+// @version            5.7.118-beta.008
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.007";
+		return "5.7.118-beta.008";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3291,7 +3291,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.007";
+		return "5.7.118-beta.008";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -4504,6 +4504,41 @@
 		return null;
 	}
 	var WebDavClient = class {
+		static clearEndpointLease() {
+			this._activeUrlCache.clear();
+			try {
+				setValue(ACTIVE_ENDPOINT_STORAGE_KEY, {});
+			} catch (_) {}
+		}
+		static _getOriginKey(url) {
+			if (!url || typeof url !== "string") return "default";
+			const match = url.match(/^(https?:\/\/[^/]+)/i);
+			return match ? match[1].toLowerCase() : url.split("/")[0].toLowerCase();
+		}
+		static async _runWithOriginLimit(url, taskFn) {
+			const originKey = this._getOriginKey(url);
+			let state = this._originLimiters.get(originKey);
+			if (!state) {
+				state = {
+					active: 0,
+					queue: []
+				};
+				this._originLimiters.set(originKey, state);
+			}
+			if (state.active >= this.MAX_CONCURRENT_PER_ORIGIN) await new Promise((resolve) => {
+				state.queue.push(resolve);
+			});
+			state.active++;
+			try {
+				return await taskFn();
+			} finally {
+				state.active = Math.max(0, state.active - 1);
+				if (state.queue.length > 0) {
+					const next = state.queue.shift();
+					if (next) next();
+				} else if (state.active === 0) this._originLimiters.delete(originKey);
+			}
+		}
 		static _getActiveEndpoint(cacheKey) {
 			if (!cacheKey) return null;
 			if (this._activeUrlCache.has(cacheKey)) return this._activeUrlCache.get(cacheKey);
@@ -4572,7 +4607,7 @@
 		static _isNetworkError(err) {
 			if (!err) return false;
 			const msg = String(err?.message || err || "").toLowerCase();
-			if (msg.includes("网页拦截") || msg.includes("重定向拦截") || msg.includes("网关异常") || msg.includes("响应异常") || msg.includes("目录不存在且无法自动创建") || msg.includes("无法自动创建")) return true;
+			if (msg.includes("网页拦截") || msg.includes("重定向拦截") || msg.includes("网关异常") || msg.includes("响应异常") || msg.includes("目录不存在且无法自动创建") || msg.includes("无法自动创建") || msg.includes("禁止自动新建") || msg.includes("无任何可见文件夹") || msg.includes("大小写不匹配") || msg.includes("实际位于") || msg.includes("无权创建子目录")) return true;
 			if (msg.includes("认证失败") || msg.includes("401") || msg.includes("403") || msg.includes("unauthorized") || msg.includes("forbidden")) return false;
 			return msg.includes("超时") || msg.includes("timeout") || msg.includes("网络连接失败") || msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("connection refused") || msg.includes("econnrefused") || msg.includes("enotfound") || msg.includes("net::err") || msg.includes("status: 0") || msg.includes("http [0]") || msg.includes("abort") || msg.includes("terminated");
 		}
@@ -4589,7 +4624,7 @@
 			const cachedActive = this._getActiveEndpoint(cacheKey);
 			let orderedCandidates = [...candidates];
 			if (cachedActive && orderedCandidates.includes(cachedActive)) orderedCandidates = [cachedActive, ...orderedCandidates.filter((u) => u !== cachedActive)];
-			const attemptLogs = [];
+			const attemptRecords = [];
 			for (let i = 0; i < orderedCandidates.length; i++) {
 				const candidateUrl = orderedCandidates[i];
 				const isLast = i === orderedCandidates.length - 1;
@@ -4605,20 +4640,26 @@
 					this._setActiveEndpoint(cacheKey, candidateUrl);
 					return result;
 				} catch (err) {
-					attemptLogs.push(`[${candidateUrl}] ${err?.message || err}`);
+					const errMsg = String(err?.message || err || "未知错误");
+					attemptRecords.push({
+						url: candidateUrl,
+						msg: errMsg
+					});
 					if (!this._isNetworkError(err)) throw err;
 					if (isLast) {
-						if (attemptLogs.length > 1) {
-							const summaryErr = new Error(`所有端点均连接失败 (${attemptLogs.join(" | ")})`);
+						if (attemptRecords.length > 1) {
+							const firstMsg = attemptRecords[0].msg;
+							const summaryText = attemptRecords.every((r) => r.msg === firstMsg) ? `所有端点均连接失败 (${attemptRecords.map((r) => r.url).join(", ")}): ${firstMsg}` : `所有端点均连接失败 (${attemptRecords.map((r) => `[${r.url}] ${r.msg}`).join(" | ")})`;
+							const summaryErr = new Error(summaryText);
 							summaryErr.cause = err;
 							throw summaryErr;
 						}
 						throw err;
 					}
-					console.warn(`[WebDavClient] 端点 ${candidateUrl} 连接未响应 (${err.message})，正在自动无缝切换备用端点...`);
+					console.warn(`[WebDavClient] 端点 ${candidateUrl} 连接未响应 (${errMsg})，正在自动无缝切换备用端点...`);
 				}
 			}
-			throw new Error(attemptLogs.join(" | ") || "WebDAV 连接失败");
+			throw new Error(attemptRecords.map((r) => `[${r.url}] ${r.msg}`).join(" | ") || "WebDAV 连接失败");
 		}
 		static getAuthHeaders(user, pass) {
 			if (!user && !pass) return {};
@@ -4642,14 +4683,31 @@
 			if (/teracloud\.jp/i.test(url) && !/\/dav$/i.test(url)) url = `${url}/dav`;
 			return url;
 		}
+		static _encodePathSegments(rawPath) {
+			if (!rawPath || typeof rawPath !== "string") return "";
+			return rawPath.split("/").map((seg) => {
+				if (!seg) return "";
+				try {
+					return encodeURIComponent(decodeURIComponent(seg));
+				} catch (_) {
+					return encodeURIComponent(seg);
+				}
+			}).join("/");
+		}
 		static normalizeUrl(baseUrl, path = "", username = "") {
 			if (!baseUrl) return "";
-			const cleanBase = this.normalizeProviderUrl(baseUrl, username);
+			let cleanBase = this.normalizeProviderUrl(baseUrl, username);
+			const originMatch = cleanBase.match(/^(https?:\/\/[^/]+)(\/.*)$/i);
+			if (originMatch && /[^\x21-\x7E]/.test(originMatch[2])) cleanBase = originMatch[1] + this._encodePathSegments(originMatch[2]);
 			let cleanPath = (path || "").trim();
 			if (cleanPath && !cleanPath.startsWith("/")) cleanPath = "/" + cleanPath;
+			if (cleanPath) cleanPath = this._encodePathSegments(cleanPath);
 			return cleanBase + cleanPath;
 		}
 		static request(options) {
+			return this._runWithOriginLimit(options?.url, () => this._rawRequest(options));
+		}
+		static _rawRequest(options) {
 			const { method = "GET", url, user = "", pass = "", headers = {}, data = null, timeout = 15e3 } = options;
 			const authHeaders = this.getAuthHeaders(user, pass);
 			const mergedHeaders = Object.assign({}, authHeaders, headers);
@@ -4773,8 +4831,124 @@
 				}
 			});
 		}
+		static async _davRequest(options, guardOpts = {}) {
+			const { throwOn403 = true } = guardOpts;
+			const res = await this.request(options);
+			if (this._isHtmlResponse(res)) throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 端点返回了 HTML 而非 WebDAV 协议`);
+			if (res.status === 401 || res.status === 403 && throwOn403) throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
+			if (res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308) throw new Error(`WebDAV 重定向拦截 (HTTP ${res.status}): 请检查是否缺少内网回流或路径格式`);
+			if (res.status >= 500) throw new Error(`服务器网关异常 (HTTP ${res.status})`);
+			return res;
+		}
+		static _decodePathSafe(raw) {
+			if (!raw || typeof raw !== "string") return "";
+			try {
+				return decodeURIComponent(raw);
+			} catch (_) {
+				return raw;
+			}
+		}
+		static _parseWebDavChildDirs(xmlText, baseDirUrl) {
+			if (!xmlText || typeof xmlText !== "string") return [];
+			const rawBasePath = (baseDirUrl || "").replace(/^https?:\/\/[^/]+/i, "") || "/";
+			let decodedBase = this._decodePathSafe(rawBasePath).replace(/\/+$/, "") + "/";
+			if (!decodedBase.startsWith("/")) decodedBase = "/" + decodedBase;
+			const blocks = xmlText.match(/<(?:[a-zA-Z0-9_-]+:)?response\b[\s\S]*?<\/(?:[a-zA-Z0-9_-]+:)?response>/gi);
+			const items = blocks && blocks.length > 0 ? blocks : [xmlText];
+			const result = [];
+			const seen = new Set();
+			for (const block of items) {
+				const hrefMatches = [...block.matchAll(/<(?:[a-zA-Z0-9_-]+:)?href>([\s\S]*?)<\/(?:[a-zA-Z0-9_-]+:)?href>/gi)];
+				for (const m of hrefMatches) {
+					const rawHref = (m[1] || "").trim();
+					if (!rawHref) continue;
+					const isCollection = rawHref.endsWith("/") || /<(?:[a-zA-Z0-9_-]+:)?collection\b/i.test(block);
+					if (blocks && blocks.length > 0 && !isCollection) continue;
+					const hrefPathRaw = /^https?:\/\//i.test(rawHref) ? rawHref.replace(/^https?:\/\/[^/]+/i, "") || "/" : rawHref;
+					let decodedHref = this._decodePathSafe(hrefPathRaw);
+					if (!decodedHref.startsWith("/")) decodedHref = "/" + decodedHref;
+					const normHref = decodedHref.replace(/\/+$/, "") + "/";
+					if (normHref === decodedBase) continue;
+					if (normHref.startsWith(decodedBase)) {
+						const rel = normHref.slice(decodedBase.length).replace(/^\/+|\/+$/g, "");
+						if (rel && !rel.includes("/") && !seen.has(rel)) {
+							seen.add(rel);
+							result.push(rel);
+						}
+					}
+				}
+			}
+			return result;
+		}
+		static async _listDirectoryDirs(baseUrl, dirPath, user, pass, timeout = 5e3) {
+			const normPath = (dirPath || "/").replace(/\/+$/, "") + "/";
+			const targetUrl = this.normalizeUrl(baseUrl, normPath, user);
+			try {
+				const res = await this._davRequest({
+					method: "PROPFIND",
+					url: targetUrl,
+					user,
+					pass,
+					timeout: Math.min(timeout, 5e3),
+					headers: { "Depth": "1" }
+				});
+				if (res.status === 207 || res.status === 200) return {
+					ok: true,
+					dirs: this._parseWebDavChildDirs(res.data || "", targetUrl)
+				};
+				return {
+					ok: false,
+					dirs: []
+				};
+			} catch (err) {
+				if (this._isNetworkError(err) && !String(err?.message || "").includes("目录")) throw err;
+				return {
+					ok: false,
+					dirs: []
+				};
+			}
+		}
+		static async _diagnoseDirectoryFailure(baseUrl, user, pass, cleanPath, timeout, lastMkcolStatus) {
+			const statusHint = lastMkcolStatus ? ` (MKCOL HTTP ${lastMkcolStatus})` : "";
+			const segments = cleanPath.split("/").filter(Boolean);
+			const firstSeg = segments[0] || "";
+			try {
+				const rootListing = await this._listDirectoryDirs(baseUrl, "/", user, pass, timeout);
+				if (!rootListing.ok) return `WebDAV 目录不存在且无法自动创建${statusHint}，请在服务器手动创建: ${cleanPath}`;
+				const visibleRoots = rootListing.dirs;
+				if (visibleRoots.length === 0) return `WebDAV 根目录无任何可见文件夹${statusHint}。若使用飞牛 fnOS，请在「系统设置 → 文件共享协议 → WebDAV → 可见文件夹范围」重新勾选授权文件夹；或手动创建: ${cleanPath}`;
+				if (firstSeg) {
+					const exactRoot = visibleRoots.find((d) => d === firstSeg);
+					if (!exactRoot) {
+						const caseRoot = visibleRoots.find((d) => d.toLowerCase() === firstSeg.toLowerCase());
+						if (caseRoot) return `目录大小写不匹配${statusHint}：服务器根目录存在「/${caseRoot}/」，请将备份目录首段改为「/${caseRoot}/」`;
+						const wrapperCandidates = visibleRoots.filter((d) => /^(我的文件|my\s*files?|home|files|dav)$/i.test(d)).slice(0, 2);
+						for (const wrapper of wrapperCandidates) {
+							const subListing = await this._listDirectoryDirs(baseUrl, `/${wrapper}/`, user, pass, timeout);
+							if (subListing.ok) {
+								const matchedSub = subListing.dirs.find((d) => d.toLowerCase() === firstSeg.toLowerCase());
+								if (matchedSub) return `检测到「/${firstSeg}」实际位于「/${wrapper}/」下${statusHint}，请将备份目录改为: /${wrapper}/${[matchedSub, ...segments.slice(1)].join("/")}/`;
+							}
+						}
+						return `WebDAV 根目录禁止自动新建一级文件夹${statusHint}。当前可见根目录: [${visibleRoots.slice(0, 6).join(", ")}]，请将备份目录设为其中已有文件夹的子目录（如 /${visibleRoots[0]}${cleanPath}）或检查可见文件夹范围`;
+					}
+					if (segments.length >= 2) {
+						const subListing = await this._listDirectoryDirs(baseUrl, `/${exactRoot}/`, user, pass, timeout);
+						if (subListing.ok) {
+							const secondSeg = segments[1];
+							const caseSub = subListing.dirs.find((d) => d !== secondSeg && d.toLowerCase() === secondSeg.toLowerCase());
+							if (caseSub) return `子目录大小写不匹配${statusHint}：「/${exactRoot}/」下存在「${caseSub}」，请调整备份目录大小写`;
+						}
+					}
+					return `根目录「/${exactRoot}/」已存在但无法创建子目录${statusHint}，请检查账号「${user || ""}」对该目录是否有读写权限（勿设为只读），或手动创建: ${cleanPath}`;
+				}
+			} catch (diagErr) {
+				if (this._isNetworkError(diagErr) && !String(diagErr?.message || "").includes("目录")) throw diagErr;
+			}
+			return `WebDAV 目录不存在且无法自动创建${statusHint}，请在服务器手动创建: ${cleanPath}`;
+		}
 		static async checkDirectoryExists(dirUrl, user, pass, timeout = 15e3) {
-			const res = await this.request({
+			const res = await this._davRequest({
 				method: "PROPFIND",
 				url: dirUrl,
 				user,
@@ -4782,13 +4956,9 @@
 				timeout,
 				headers: { "Depth": "0" }
 			});
-			if (this._isHtmlResponse(res)) throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 端点返回了 HTML 而非 WebDAV 协议`);
-			if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
-			if (res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308) throw new Error(`WebDAV 重定向拦截 (HTTP ${res.status}): 请检查是否缺少内网回流或路径格式`);
 			if (res.status === 207 || res.status === 200) return true;
 			if (res.status === 404) return false;
 			if (res.status === 405 || res.status === 415) return true;
-			if (res.status >= 500) throw new Error(`服务器网关异常 (HTTP ${res.status})`);
 			throw new Error(`WebDAV 目录探测响应异常 (HTTP ${res.status})`);
 		}
 		static async _ensureDirectoryInternal(config) {
@@ -4799,6 +4969,20 @@
 			if (!cleanPath.endsWith("/")) cleanPath = cleanPath + "/";
 			const finalDirUrl = this.normalizeUrl(url, cleanPath, user);
 			if (await this.checkDirectoryExists(finalDirUrl, user, pass, reqTimeout)) return;
+			const noSlashUrl = finalDirUrl.replace(/\/+$/, "");
+			if (noSlashUrl && noSlashUrl !== finalDirUrl && cleanPath !== "/") try {
+				const altRes = await this._davRequest({
+					method: "PROPFIND",
+					url: noSlashUrl,
+					user,
+					pass,
+					timeout: reqTimeout,
+					headers: { "Depth": "0" }
+				});
+				if (altRes.status === 207 || altRes.status === 200) return;
+			} catch (altErr) {
+				if (this._isNetworkError(altErr) || String(altErr?.message || "").includes("认证失败")) throw altErr;
+			}
 			const segments = cleanPath.split("/").filter(Boolean);
 			let currentPath = "";
 			let lastMkcolStatus = null;
@@ -4807,17 +4991,19 @@
 				const dirUrlWithSlash = this.normalizeUrl(url, currentPath + "/", user);
 				if (await this.checkDirectoryExists(dirUrlWithSlash, user, pass, reqTimeout)) continue;
 				try {
-					const res = await this.request({
+					const res = await this._davRequest({
 						method: "MKCOL",
 						url: dirUrlWithSlash,
 						user,
 						pass,
 						timeout: reqTimeout
-					});
+					}, { throwOn403: false });
 					lastMkcolStatus = res.status;
-					if (this._isHtmlResponse(res)) throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 创建目录请求被拦截`);
-					if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 无法自动创建目录，请检查权限`);
-					if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204 || res.status === 415) continue;
+					if (res.status === 201 || res.status === 200 || res.status === 204 || res.status === 415) continue;
+					if (res.status === 405 || res.status === 403) {
+						console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 返回 HTTP ${res.status}`);
+						continue;
+					}
 					console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到状态码: ${res.status}`);
 				} catch (err) {
 					if (this._isNetworkError(err) || String(err?.message || "").includes("认证失败")) throw err;
@@ -4825,8 +5011,8 @@
 				}
 			}
 			if (!await this.checkDirectoryExists(finalDirUrl, user, pass, reqTimeout)) {
-				const statusHint = lastMkcolStatus ? ` (MKCOL HTTP ${lastMkcolStatus})` : "";
-				throw new Error(`WebDAV 目录不存在且无法自动创建${statusHint}，请在服务器手动创建: ${cleanPath}`);
+				const diagMessage = await this._diagnoseDirectoryFailure(url, user, pass, cleanPath, reqTimeout, lastMkcolStatus);
+				throw new Error(diagMessage);
 			}
 		}
 		static async ensureDirectory(config) {
@@ -4843,7 +5029,7 @@
 				await this._ensureDirectoryInternal(activeCfg);
 				const fileUrl = this.normalizeUrl(url, cleanPath + "miss_player_sync.json", user);
 				try {
-					const res = await this.request({
+					const res = await this._davRequest({
 						method: "GET",
 						url: fileUrl,
 						user,
@@ -4854,9 +5040,6 @@
 							"Pragma": "no-cache"
 						}
 					});
-					if (this._isHtmlResponse(res)) throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 文件探测返回了 HTML 网页而非 JSON`);
-					if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
-					if (res.status >= 500) throw new Error(`服务器内部错误 (${res.status})`);
 					const suffix = config.lanUrl && (this.sanitizeEndpointUrl(activeCfg.url) === this.sanitizeEndpointUrl(config.lanUrl) || this.isPrivateNetworkHost((activeCfg.url.split("://")[1] || activeCfg.url).split("/")[0])) ? " (局域网直连)" : " (公网域名)";
 					if (res.status === 200 || res.status === 204 || res.status === 207) return {
 						success: true,
@@ -4888,7 +5071,7 @@
 				if (!dirPath.endsWith("/")) dirPath = dirPath + "/";
 				const fileUrl = this.normalizeUrl(url, dirPath + filename, user);
 				try {
-					const res = await this.request({
+					const res = await this._davRequest({
 						method: "GET",
 						url: fileUrl,
 						user,
@@ -4900,7 +5083,6 @@
 						}
 					});
 					if (res.status === 404) return null;
-					if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 请检查用户名与应用授权码`);
 					if (res.status >= 200 && res.status < 300) {
 						if (!res.data || !res.data.trim()) return null;
 						const rawText = res.data.trim();
@@ -4929,7 +5111,7 @@
 							throw new Error("云端备份数据损坏或被截断，已终止读取");
 						}
 					}
-					throw new Error(`下载失败，服务器返回状态码: ${res.status}`);
+					throw new Error(`下载失败，WebDAV 响应异常 (HTTP ${res.status})`);
 				} catch (error) {
 					console.error("[WebDavClient] 下载备份失败:", error);
 					throw error;
@@ -4947,7 +5129,7 @@
 				const fileUrl = this.normalizeUrl(url, dirPath + filename, user);
 				const jsonString = JSON.stringify(data, null, 2);
 				try {
-					let res = await this.request({
+					let res = await this._davRequest({
 						method: "PUT",
 						url: fileUrl,
 						user,
@@ -4959,7 +5141,7 @@
 					if (res.status === 404 || res.status === 409) {
 						console.warn(`[WebDavClient] PUT 返回 ${res.status}，重试 ensureDirectory 并二次上传...`);
 						await this._ensureDirectoryInternal(activeCfg);
-						res = await this.request({
+						res = await this._davRequest({
 							method: "PUT",
 							url: fileUrl,
 							user,
@@ -4969,12 +5151,11 @@
 							data: jsonString
 						});
 					}
-					if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 权限不足或密码错误`);
 					if (res.status === 200 || res.status === 201 || res.status === 204) return {
 						success: true,
 						status: res.status
 					};
-					throw new Error(`上传失败，服务器返回状态码: ${res.status}`);
+					throw new Error(`上传失败，WebDAV 响应异常 (HTTP ${res.status})`);
 				} catch (error) {
 					console.error("[WebDavClient] 上传备份失败:", error);
 					throw error;
@@ -5005,7 +5186,7 @@
 				});
 				const fileUrl = this.normalizeUrl(url, uploadDir + uploadFileName, user);
 				const data = typeof content === "object" ? JSON.stringify(content, null, 2) : String(content);
-				const res = await this.request({
+				const res = await this._davRequest({
 					method: "PUT",
 					url: fileUrl,
 					user,
@@ -5019,7 +5200,7 @@
 					status: res.status
 				};
 				if (res.status === 404 || res.status === 409) throw new Error(`WebDAV 目录不存在或路径冲突 (HTTP ${res.status})，请在 WebDAV 服务器上手动创建目录: ${uploadDir}`);
-				throw new Error(`上传文件失败，状态码: ${res.status}`);
+				throw new Error(`上传文件失败，WebDAV 响应异常 (HTTP ${res.status})`);
 			});
 		}
 		static async checkFileExists(config, fullOrRelativePath, timeout = 3500) {
@@ -5027,7 +5208,7 @@
 				return await this.executeWithFailover(config, async (activeCfg) => {
 					const reqTimeout = activeCfg._failoverTimeout || timeout;
 					const fileUrl = this.normalizeUrl(activeCfg.url, fullOrRelativePath, activeCfg.user);
-					const res = await this.request({
+					const res = await this._davRequest({
 						method: "PROPFIND",
 						url: fileUrl,
 						user: activeCfg.user,
@@ -5043,6 +5224,8 @@
 		}
 	};
 	_defineProperty(WebDavClient, "_activeUrlCache", new Map());
+	_defineProperty(WebDavClient, "_originLimiters", new Map());
+	_defineProperty(WebDavClient, "MAX_CONCURRENT_PER_ORIGIN", 2);
 	function sanitizeSeekStepList$2(arr, isCustom = false) {
 		if (!Array.isArray(arr)) return isCustom ? [] : [
 			"5s",
@@ -5070,7 +5253,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.007";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.008";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -5114,7 +5297,9 @@
 			return Object.assign({}, defaultCfg, saved && typeof saved === "object" ? saved : {});
 		}
 		static saveWebDavConfig(config) {
+			const prev = this.getWebDavConfig();
 			setValue(WEBDAV_CONFIG_KEY, config);
+			if (prev.url !== (config?.url || "") || prev.lanUrl !== (config?.lanUrl || "") || prev.user !== (config?.user || "")) WebDavClient.clearEndpointLease();
 		}
 		static getLastSyncTime() {
 			return getValue(LAST_SYNC_TIME_KEY, 0);
@@ -5795,9 +5980,23 @@
 				if (normalized && !normalized.endsWith("/")) normalized = normalized + "/";
 				setValue(PEACH_KEY_WEBDAV_CUSTOM_DIR, normalized);
 			}
-			if (typeof webdavStandaloneUrl === "string") setValue(PEACH_KEY_WEBDAV_STANDALONE_URL, webdavStandaloneUrl.trim());
-			if (typeof webdavStandaloneLanUrl === "string") setValue(PEACH_KEY_WEBDAV_STANDALONE_LAN_URL, webdavStandaloneLanUrl.trim());
-			if (typeof webdavStandaloneUser === "string") setValue(PEACH_KEY_WEBDAV_STANDALONE_USER, webdavStandaloneUser.trim());
+			let endpointChanged = false;
+			if (typeof webdavStandaloneUrl === "string") {
+				const trimmed = webdavStandaloneUrl.trim();
+				if (trimmed !== getValue("mp_peach_webdav_standalone_url", "")) endpointChanged = true;
+				setValue(PEACH_KEY_WEBDAV_STANDALONE_URL, trimmed);
+			}
+			if (typeof webdavStandaloneLanUrl === "string") {
+				const trimmed = webdavStandaloneLanUrl.trim();
+				if (trimmed !== getValue("mp_peach_webdav_standalone_lan_url", "")) endpointChanged = true;
+				setValue(PEACH_KEY_WEBDAV_STANDALONE_LAN_URL, trimmed);
+			}
+			if (typeof webdavStandaloneUser === "string") {
+				const trimmed = webdavStandaloneUser.trim();
+				if (trimmed !== getValue("mp_peach_webdav_standalone_user", "")) endpointChanged = true;
+				setValue(PEACH_KEY_WEBDAV_STANDALONE_USER, trimmed);
+			}
+			if (endpointChanged) WebDavClient.clearEndpointLease();
 			if (typeof webdavStandalonePass === "string") setValue(PEACH_KEY_WEBDAV_STANDALONE_PASS, webdavStandalonePass);
 			if (typeof webdavStandaloneDir === "string") {
 				let normalized = webdavStandaloneDir.trim();
@@ -5820,7 +6019,7 @@
 		static getEffectiveWebDavConfig() {
 			const peachConfig = this.getConfig();
 			const syncWebDav = SyncManager.getWebDavConfig();
-			const hasSync = Boolean(syncWebDav && syncWebDav.url && syncWebDav.user);
+			const hasSync = Boolean(WebDavClient.hasValidEndpoint(syncWebDav) && syncWebDav.user);
 			let mode = peachConfig.webdavMode || "sync_default";
 			if (!hasSync && mode !== "standalone") mode = PEACH_WEBDAV_MODE_STANDALONE;
 			if (mode === "sync_default" && hasSync) {
@@ -21075,7 +21274,7 @@
 			this.element.innerHTML = "";
 			const config = PeachService.getConfig();
 			const syncWebDav = SyncManager.getWebDavConfig();
-			const hasSync = Boolean(syncWebDav && syncWebDav.url && syncWebDav.user);
+			const hasSync = Boolean(WebDavClient.hasValidEndpoint(syncWebDav) && syncWebDav.user);
 			const card = new AppleCard();
 			const headerRow = document.createElement("div");
 			headerRow.className = "tm-apple-accordion-header";
@@ -22149,10 +22348,19 @@
 				};
 				statusBadge.style.display = "inline-flex";
 				statusBadge.className = `tm-webdav-status-badge ${type}`;
-				if (type === "running") statusBadge.innerHTML = `<span class="tm-spinner-sm"></span> <span>${text}</span>`;
-				else if (type === "success") statusBadge.innerHTML = `<span>✓</span> <span>${text}</span>`;
-				else if (type === "error") statusBadge.innerHTML = `<span>✕</span> <span>${text}</span>`;
-				else statusBadge.textContent = text;
+				const iconSpan = document.createElement("span");
+				const textSpan = document.createElement("span");
+				textSpan.textContent = text;
+				if (type === "running") {
+					iconSpan.className = "tm-spinner-sm";
+					statusBadge.replaceChildren(iconSpan, document.createTextNode(" "), textSpan);
+				} else if (type === "success") {
+					iconSpan.textContent = "✓";
+					statusBadge.replaceChildren(iconSpan, document.createTextNode(" "), textSpan);
+				} else if (type === "error") {
+					iconSpan.textContent = "✕";
+					statusBadge.replaceChildren(iconSpan, document.createTextNode(" "), textSpan);
+				} else statusBadge.textContent = text;
 			};
 			if (this._lastWebDavStatus && Date.now() - this._lastWebDavStatus.time < 3e5) updateStatus(this._lastWebDavStatus.text, this._lastWebDavStatus.type);
 			const setButtonsDisabled = (disabled) => {

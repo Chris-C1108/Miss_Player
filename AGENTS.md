@@ -382,9 +382,11 @@ src/player/ui/styles/
 * **按番号独立存放**：每个番号全量评论独立写入 `/MissPlayer/comments/[AVCODE].json`，单次原子 `PUT` 极速落盘，各影片彻底解耦；个人播放热度足迹独立写入 `/MissPlayer/heatmaps/[AVCODE].json`，实现跨站点（如 Peach 与 MissAV）零冲突 Element-wise Max 漫游自愈；
 * **WebDAV 双地址自适应与全局故障转移契约 (Global LAN / WAN Dual-Host Failover)**：
   - **全局统一支持**：主云同步与 Peach 模式 C（独立 WebDAV）均支持配置主地址（`url`）与局域网备用地址（`lanUrl`）；全项目所有模块严禁私自校验 `config.url`，必须统一调用 `WebDavClient.hasValidEndpoint(config)`；
-  - **真异常透明上抛与防网页劫持红线**：`checkDirectoryExists` 与 `_ensureDirectoryInternal` 必须先通过 `_isHtmlResponse` 识别光猫/路由器劫持页（即使伴随 200/401/403/404），精准抛出触发 failover；严禁吞噬超时、3xx 重定向或非预期 HTTP 状态码返回 `false`；
-  - **终极目标路径优先直探**：`_ensureDirectoryInternal` 必须优先直接探测完整目标目录（`cleanPath`），若存在即瞬间放行，彻底免疫 NAS（飞牛 fnOS / 群晖）共享根挂载目录禁止列举/创建的权限拦截；
-  - **JS 硬熔断与私网敏感超时**：`GM_xmlhttpRequest` 请求外层附加 `timeout + 400ms` JS 硬熔断定时器与 `status === 0` 捕获；多候选模式首个候选私网超时 `1800ms`、公网 `3000ms`；全部失败时汇总抛出各端点的具体报错；
+  - **统一协议守卫与全功能覆盖 (`_davRequest`)**：所有 WebDAV 请求（`checkDirectoryExists`, `testConnection`, `downloadBackup`, `uploadBackup`, `uploadFile`, `checkFileExists`）必须统一经由 `_davRequest` 协议守卫，全局拦截路由器/光猫 HTML 劫持页（即使伴随 `200/401/403/404`）、`3xx` 重定向与 `5xx` 网关异常，确保所有业务线均具备完整容灾切换；
+  - **每 Origin 并发队列限流 (`MAX_CONCURRENT_PER_ORIGIN = 2`)**：在 `WebDavClient.request` 层实施单 Origin 最大 2 并发排队调度，防止飞牛 FN Connect 等通道在初始化瞬间并发过高触发限频掐断或假报 401/405；
+  - **中文路径 UTF-8 百分比安全编码**：`normalizeUrl` 必须对非 ASCII 路径分段执行安全解编码归并，解决 Safari/Stay 对 `/我的文件/...` 等中文目录静默失败且防止 `%XX` 二次编码；
+  - **根目录可见性自检与 NAS 容错**：`_ensureDirectoryInternal` 优先直探终极路径及无末尾斜杠容错；当遇到 `MKCOL 405/403` 且无法新建时，自动发起 `PROPFIND / Depth: 1` 自检服务器可见根目录（如识别飞牛可见范围被重置、`我的文件` 嵌套、大小写不匹配或只读权限），并给出可执行精准诊断；
+  - **JS 硬熔断、配置变更清理租约与私网灵敏超时**：`GM_xmlhttpRequest` 外层附加 `timeout + 400ms` JS 硬熔断与 `status === 0` 捕获；多候选首个私网 `1800ms`、公网 `3000ms`；保存配置变更端点或账号时自动调用 `clearEndpointLease()` 清空旧租约；多端同源报错去重合并；
   - **跨刷新持久化租约**：引入 `mp_active_webdav_lease`（2 小时 TTL），切换成功后跨标签、跨刷新 0ms 直连当前可用端点；
   - **私网协议智能补全**：`sanitizeEndpointUrl` 自动为内网 IP/本地域名（`192.168.*`, `10.*`, `172.16-31.*`, `.local`）补全 `http://`，为公网域名补全 `https://`；
   - **纯 WebDAV 鉴权快速熔断**：非 HTML 网页响应的 401/403 权限错误立即终止并提示，绝不盲目切换地址导致账号锁定；

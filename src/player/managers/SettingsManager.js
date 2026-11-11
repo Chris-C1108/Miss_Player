@@ -714,12 +714,18 @@ export class SettingsManager {
             this._lastWebDavStatus = { text, type, time: Date.now() };
             statusBadge.style.display = 'inline-flex';
             statusBadge.className = `tm-webdav-status-badge ${type}`;
+            const iconSpan = document.createElement('span');
+            const textSpan = document.createElement('span');
+            textSpan.textContent = text;
             if (type === 'running') {
-                statusBadge.innerHTML = `<span class="tm-spinner-sm"></span> <span>${text}</span>`;
+                iconSpan.className = 'tm-spinner-sm';
+                statusBadge.replaceChildren(iconSpan, document.createTextNode(' '), textSpan);
             } else if (type === 'success') {
-                statusBadge.innerHTML = `<span>✓</span> <span>${text}</span>`;
+                iconSpan.textContent = '✓';
+                statusBadge.replaceChildren(iconSpan, document.createTextNode(' '), textSpan);
             } else if (type === 'error') {
-                statusBadge.innerHTML = `<span>✕</span> <span>${text}</span>`;
+                iconSpan.textContent = '✕';
+                statusBadge.replaceChildren(iconSpan, document.createTextNode(' '), textSpan);
             } else {
                 statusBadge.textContent = text;
             }

@@ -12,6 +12,7 @@
 import { fetchWithTransport } from '../utils/http.js';
 import { getValue, setValue } from '../utils/storage.js';
 import { SyncManager } from '../sync/SyncManager.js';
+import { WebDavClient } from '../sync/WebDavClient.js';
 import { cleanAvCode } from '../utils/videoCode.js';
 
 export const PEACH_KEY_BASE = 'mp_peach_base';
@@ -264,14 +265,24 @@ export class PeachService {
             if (normalized && !normalized.endsWith('/')) normalized = normalized + '/';
             setValue(PEACH_KEY_WEBDAV_CUSTOM_DIR, normalized);
         }
+        let endpointChanged = false;
         if (typeof webdavStandaloneUrl === 'string') {
-            setValue(PEACH_KEY_WEBDAV_STANDALONE_URL, webdavStandaloneUrl.trim());
+            const trimmed = webdavStandaloneUrl.trim();
+            if (trimmed !== getValue(PEACH_KEY_WEBDAV_STANDALONE_URL, '')) endpointChanged = true;
+            setValue(PEACH_KEY_WEBDAV_STANDALONE_URL, trimmed);
         }
         if (typeof webdavStandaloneLanUrl === 'string') {
-            setValue(PEACH_KEY_WEBDAV_STANDALONE_LAN_URL, webdavStandaloneLanUrl.trim());
+            const trimmed = webdavStandaloneLanUrl.trim();
+            if (trimmed !== getValue(PEACH_KEY_WEBDAV_STANDALONE_LAN_URL, '')) endpointChanged = true;
+            setValue(PEACH_KEY_WEBDAV_STANDALONE_LAN_URL, trimmed);
         }
         if (typeof webdavStandaloneUser === 'string') {
-            setValue(PEACH_KEY_WEBDAV_STANDALONE_USER, webdavStandaloneUser.trim());
+            const trimmed = webdavStandaloneUser.trim();
+            if (trimmed !== getValue(PEACH_KEY_WEBDAV_STANDALONE_USER, '')) endpointChanged = true;
+            setValue(PEACH_KEY_WEBDAV_STANDALONE_USER, trimmed);
+        }
+        if (endpointChanged) {
+            WebDavClient.clearEndpointLease();
         }
         if (typeof webdavStandalonePass === 'string') {
             setValue(PEACH_KEY_WEBDAV_STANDALONE_PASS, webdavStandalonePass);
@@ -310,7 +321,7 @@ export class PeachService {
     static getEffectiveWebDavConfig() {
         const peachConfig = this.getConfig();
         const syncWebDav = SyncManager.getWebDavConfig();
-        const hasSync = Boolean(syncWebDav && syncWebDav.url && syncWebDav.user);
+        const hasSync = Boolean(WebDavClient.hasValidEndpoint(syncWebDav) && syncWebDav.user);
 
         let mode = peachConfig.webdavMode || PEACH_WEBDAV_MODE_SYNC_DEFAULT;
         if (!hasSync && mode !== PEACH_WEBDAV_MODE_STANDALONE) {

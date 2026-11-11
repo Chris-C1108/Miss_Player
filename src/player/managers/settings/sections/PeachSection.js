@@ -2,7 +2,7 @@ import { AppleCard } from '../components/AppleCard.js';
 import { ToggleRow } from '../components/ToggleRow.js';
 import { SegmentedControl } from '../components/SegmentedControl.js';
 import { PeachService, PEACH_WEBDAV_MODE_SYNC_DEFAULT, PEACH_WEBDAV_MODE_SYNC_CUSTOM, PEACH_WEBDAV_MODE_STANDALONE } from '../../../../services/PeachService.js';
-import { SyncManager } from '../../../../sync/SyncManager.js';
+import { SyncManager, WebDavClient } from '../../../../sync/index.js';
 import { Toast } from '../../../../utils/index.js';
 
 export class PeachSection {
@@ -218,7 +218,7 @@ export class PeachSection {
         this.element.innerHTML = '';
         const config = PeachService.getConfig();
         const syncWebDav = SyncManager.getWebDavConfig();
-        const hasSync = Boolean(syncWebDav && syncWebDav.url && syncWebDav.user);
+        const hasSync = Boolean(WebDavClient.hasValidEndpoint(syncWebDav) && syncWebDav.user);
 
         const card = new AppleCard();
 

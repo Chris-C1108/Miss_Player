@@ -16,7 +16,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.118-beta.007';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.118-beta.008';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -89,10 +89,18 @@ export class SyncManager {
     }
 
     /**
-     * 保存 WebDAV 连接配置
+     * 保存 WebDAV 连接配置 (当端点或用户名发生变更时主动清零活跃路由租约)
      */
     static saveWebDavConfig(config) {
+        const prev = this.getWebDavConfig();
         setValue(WEBDAV_CONFIG_KEY, config);
+        if (
+            prev.url !== (config?.url || '') ||
+            prev.lanUrl !== (config?.lanUrl || '') ||
+            prev.user !== (config?.user || '')
+        ) {
+            WebDavClient.clearEndpointLease();
+        }
     }
 
     /**
