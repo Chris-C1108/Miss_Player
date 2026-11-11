@@ -739,18 +739,9 @@ export class UIManager {
             const webDavConfig = effectiveWebDav?.config;
             if (webDavConfig && webDavConfig.url && webDavConfig.user) {
                 const targetFilePath = `${effectiveWebDav.targetDir}${avcode}.strm`;
-                const fileUrl = WebDavClient.normalizeUrl(webDavConfig.url, targetFilePath, webDavConfig.user);
-                
-                const checkRes = await WebDavClient.request({
-                    method: 'PROPFIND',
-                    url: fileUrl,
-                    user: webDavConfig.user,
-                    pass: webDavConfig.pass,
-                    headers: { 'Depth': '0' },
-                    timeout: 4000
-                });
+                const exists = await WebDavClient.checkFileExists(webDavConfig, targetFilePath, 3500);
 
-                if (checkRes.status === 200 || checkRes.status === 207) {
+                if (exists) {
                     this.peachIngestBtn.classList.add('is-ingested');
                     if (badge) badge.classList.remove('is-hidden');
                     this.peachIngestBtn.title = `已在 WebDAV 馆藏 (${avcode}.strm)`;

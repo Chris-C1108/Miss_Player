@@ -380,6 +380,10 @@ src/player/ui/styles/
 ### 4. WebDAV 独立文件拓扑规范
 * **严禁单一大文件合并**：严禁将全量番号评论塞入单一全局大文件；
 * **按番号独立存放**：每个番号全量评论独立写入 `/MissPlayer/comments/[AVCODE].json`，单次原子 `PUT` 极速落盘，各影片彻底解耦；个人播放热度足迹独立写入 `/MissPlayer/heatmaps/[AVCODE].json`，实现跨站点（如 Peach 与 MissAV）零冲突 Element-wise Max 漫游自愈；
+* **WebDAV 双地址自适应与自动故障转移 (LAN / WAN Dual-Host Failover)**：
+  - 支持配置公网主地址（`url`）与局域网备用地址（`lanUrl`）；
+  - `WebDavClient.executeWithFailover` 引擎在首选地址尝试时采用 3.5 秒灵敏超时快速截断，解决家庭路由器缺少 NAT 回流 (Hairpin NAT) 导致的局域网请求公网域名超时卡顿；
+  - 遇到超时/网络连接故障自动无缝切换至备用内网端点，并由会话级活跃记忆 (`_activeUrlCache`) 记录成功端点，后续请求 0ms 瞬间直连；401/403 鉴权错误快速抛出，绝不盲目试探重试；
 * **Peach 入库目录**：`.strm` 默认写入 `/MissPlayer/peach-media/[AVCODE].strm`（复用同步 WebDAV），也可自定义目录或单独配置 WebDAV；该目录必须由 Peach 挂载。第三方同步盘批量写入时串行，间隔 ≥ 300 ms；
 * **PROPFIND 415 避坑**：发送空 Body 的 PROPFIND 请求时，**严禁携带 `Content-Type: application/xml` 标头**；必须将 415 与 405、207 一并视为目录已就绪，防止多余发起 `MKCOL` 导致刷屏黄告警。
 

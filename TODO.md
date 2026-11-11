@@ -33,6 +33,7 @@
 - [x] **20.1** 120 分位定长字节量化编解码器 (`quantizeBinsTo120` / `expand120ToBins` / 水位线差分 / Base64 体积仅 160 字符，6 项测试全通)
 - [x] **20.2** 双轨波形渲染与 WebDAV 漫游整合 (`HeatmapManager` 双轨 SVG 贝塞尔曲线、Element-wise Max 逐槽位取最大值融合、8 项测试全通)
 - [x] **20.3** 播放热度跨站同步漏洞修复 (解决本地存量足迹冷启动零上云病灶、拆分 `isLocalDirty` 与 `isCloudDirty` 防 15s 定时器吞噬离散同步、新增 `durationchange` 与首帧自愈监听，v5.7.118-beta.004)
+- [x] **20.4** WebDAV 双地址自适应与自动故障转移 (解决局域网缺少 NAT 回流导致的公网域名访问超时、`WebDavClient.executeWithFailover` 3.5s 灵敏截断切换、`_activeUrlCache` 活跃端点会话记忆 0ms 直连、设置面板「局域网备用」配置与动态 IP 感知，v5.7.118-beta.005)
 
 ---
 

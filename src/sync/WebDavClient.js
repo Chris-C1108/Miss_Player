@@ -89,6 +89,113 @@ function tryRepairTruncatedJson(text) {
  */
 export class WebDavClient {
     /**
+     * 活跃端点会话级内存缓存 (键: `${config.url}#${config.user}`, 值: 当前成功连接的实际 baseUrl)
+     * @type {Map<string, string>}
+     */
+    static _activeUrlCache = new Map();
+
+    /**
+     * 获取 WebDAV 候选地址列表 (按主地址、局域网备用地址去重提取)
+     * @param {Object} config - { url, lanUrl }
+     * @returns {string[]}
+     */
+    static getCandidateUrls(config) {
+        if (!config) return [];
+        const candidates = [];
+        if (config.url && typeof config.url === 'string' && config.url.trim()) {
+            candidates.push(config.url.trim());
+        }
+        if (config.lanUrl && typeof config.lanUrl === 'string' && config.lanUrl.trim()) {
+            const lan = config.lanUrl.trim();
+            if (!candidates.includes(lan)) {
+                candidates.push(lan);
+            }
+        }
+        return candidates;
+    }
+
+    /**
+     * 判断是否为网络错误或超时错误 (可触发向备用地址故障转移)
+     * @param {Error|any} err 
+     * @returns {boolean}
+     */
+    static _isNetworkError(err) {
+        if (!err) return false;
+        const msg = String(err?.message || err || '').toLowerCase();
+        // 遇到 401/403 明确是账号密码权限错误，绝不可作为网络故障转移
+        if (msg.includes('认证失败') || msg.includes('401') || msg.includes('403') || msg.includes('unauthorized') || msg.includes('forbidden')) {
+            return false;
+        }
+        return msg.includes('超时') ||
+               msg.includes('timeout') ||
+               msg.includes('网络连接失败') ||
+               msg.includes('failed to fetch') ||
+               msg.includes('networkerror') ||
+               msg.includes('connection refused') ||
+               msg.includes('econnrefused') ||
+               msg.includes('enotfound') ||
+               msg.includes('net::err') ||
+               msg.includes('status: 0') ||
+               msg.includes('http [0]');
+    }
+
+    /**
+     * 执行带双地址自动故障转移 (LAN / WAN Failover) 的 WebDAV 操作
+     * @param {Object} config - WebDAV 配置 { url, lanUrl, user, pass, path }
+     * @param {Function} actionFn - 接收当前有效 activeConfig 并返回 Promise 的操作函数
+     * @returns {Promise<any>}
+     */
+    static async executeWithFailover(config, actionFn) {
+        if (!config || !config.url) {
+            throw new Error('WebDAV 服务器地址不能为空');
+        }
+        if (config._isFailoverActive) {
+            return actionFn(config);
+        }
+        const candidates = this.getCandidateUrls(config);
+        if (candidates.length <= 1) {
+            return actionFn(config);
+        }
+
+        const cacheKey = `${config.url}#${config.user || ''}`;
+        const cachedActive = this._activeUrlCache.get(cacheKey);
+
+        // 依据历史成功记录调整优先级
+        let orderedCandidates = [...candidates];
+        if (cachedActive && orderedCandidates.includes(cachedActive)) {
+            orderedCandidates = [cachedActive, ...orderedCandidates.filter(u => u !== cachedActive)];
+        }
+
+        let lastError = null;
+        for (let i = 0; i < orderedCandidates.length; i++) {
+            const candidateUrl = orderedCandidates[i];
+            const isLast = (i === orderedCandidates.length - 1);
+            // 多候选时，首选地址采用 3.5 秒灵敏超时快速截断，避免死等 15 秒；最后一个候选放宽到 15 秒
+            const timeout = isLast ? 15000 : 3500;
+            const activeConfig = Object.assign({}, config, {
+                url: candidateUrl,
+                _failoverTimeout: timeout,
+                _isFailoverActive: true
+            });
+
+            try {
+                const result = await actionFn(activeConfig);
+                // 成功，更新活跃记忆
+                this._activeUrlCache.set(cacheKey, candidateUrl);
+                return result;
+            } catch (err) {
+                lastError = err;
+                const canRetry = this._isNetworkError(err);
+                if (!canRetry || isLast) {
+                    throw err;
+                }
+                console.warn(`[WebDavClient] 端点 ${candidateUrl} 连接未响应 (${err.message})，正在自动无缝切换备用端点...`);
+            }
+        }
+
+        throw lastError;
+    }
+    /**
      * UTF-8 安全的标准 Basic Auth 编码 (避免 btoa 遇到中文/特殊字符报 InvalidCharacterError)
      * @param {string} user - 用户名
      * @param {string} pass - 密码 / 授权码
@@ -306,15 +413,17 @@ export class WebDavClient {
      * @param {string} dirUrl 目录完整 URL (以 / 结尾)
      * @param {string} user 用户名
      * @param {string} pass 密码
+     * @param {number} [timeout=15000] 超时时间
      * @returns {Promise<boolean>} true: 目录存在; false: 目录不存在 (404)
      */
-    static async checkDirectoryExists(dirUrl, user, pass) {
+    static async checkDirectoryExists(dirUrl, user, pass, timeout = 15000) {
         try {
             const res = await this.request({
                 method: 'PROPFIND',
                 url: dirUrl,
                 user,
                 pass,
+                timeout,
                 headers: {
                     'Depth': '0'
                 }
@@ -338,12 +447,12 @@ export class WebDavClient {
     }
 
     /**
-     * 逐级嗅探并创建 WebDAV 专用目录 (PROPFIND 嗅探 -> MKCOL 创建)
-     * 严格遵守 RFC 4918：目录 URL 末尾必须带 /，防止 301 重定向剥离鉴权头
-     * @param {Object} config - { url, user, pass, path }
+     * 逐级嗅探并创建 WebDAV 专用目录内部实现 (PROPFIND 嗅探 -> MKCOL 创建)
+     * @private
      */
-    static async ensureDirectory(config) {
-        const { url, user, pass, path = '/MissPlayer/' } = config;
+    static async _ensureDirectoryInternal(config) {
+        const { url, user, pass, path = '/MissPlayer/', _failoverTimeout } = config;
+        const reqTimeout = _failoverTimeout || 15000;
         let cleanPath = (path || '/MissPlayer/').trim();
         if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
         if (!cleanPath.endsWith('/')) cleanPath = cleanPath + '/';
@@ -356,7 +465,7 @@ export class WebDavClient {
             const dirUrlWithSlash = this.normalizeUrl(url, currentPath + '/', user);
 
             // 1. 目录级嗅探：先探测该层级目录是否存在
-            const exists = await this.checkDirectoryExists(dirUrlWithSlash, user, pass);
+            const exists = await this.checkDirectoryExists(dirUrlWithSlash, user, pass, reqTimeout);
             if (exists) {
                 continue; // 该层级已存在，继续检测下一级
             }
@@ -367,7 +476,8 @@ export class WebDavClient {
                     method: 'MKCOL',
                     url: dirUrlWithSlash,
                     user,
-                    pass
+                    pass,
+                    timeout: reqTimeout
                 });
                 // 201 Created: 成功创建; 405: 目录已存在; 200/204: 成功; 415: 已存在或网关不支持空body
                 if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204 || res.status === 415) {
@@ -381,229 +491,254 @@ export class WebDavClient {
 
         // 最终校验目标根目录是否就绪
         const finalDirUrl = this.normalizeUrl(url, cleanPath, user);
-        const finalExists = await this.checkDirectoryExists(finalDirUrl, user, pass);
+        const finalExists = await this.checkDirectoryExists(finalDirUrl, user, pass, reqTimeout);
         if (!finalExists) {
             throw new Error(`WebDAV 目录不存在且无法自动创建，请在 WebDAV 服务器上手动创建目录: ${cleanPath}`);
         }
     }
 
     /**
-     * 测试 WebDAV 连通性并自动嗅探预建目录
-     * @param {Object} config - { url, user, pass, path }
-     * @returns {Promise<{ success: boolean, message: string }>}
+     * 逐级嗅探并创建 WebDAV 专用目录 (带双地址自动故障转移)
+     * 严格遵守 RFC 4918：目录 URL 末尾必须带 /，防止 301 重定向剥离鉴权头
+     * @param {Object} config - { url, lanUrl, user, pass, path }
      */
-    static async testConnection(config) {
-        const { url, user, pass, path = '/MissPlayer/' } = config;
-        if (!url) {
-            throw new Error('WebDAV 服务器地址不能为空');
-        }
-
-        let cleanPath = (path || '/MissPlayer/').trim();
-        if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
-        if (!cleanPath.endsWith('/')) cleanPath = cleanPath + '/';
-
-        // 1. 优先执行目录级嗅探与自动创建
-        await this.ensureDirectory(config);
-
-        const fileUrl = this.normalizeUrl(url, cleanPath + 'miss_player_sync.json', user);
-
-        try {
-            // 发送 GET 探测备份文件是否存在或连通
-            const res = await this.request({
-                method: 'GET',
-                url: fileUrl,
-                user,
-                pass,
-                headers: {
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                }
-            });
-
-            if (res.status === 401 || res.status === 403) {
-                throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
-            }
-
-            if (res.status >= 500) {
-                throw new Error(`服务器内部错误 (${res.status})`);
-            }
-
-            // 200 (文件已存在) 或 404 (连接正常且目录就绪，文件尚未创建) 均代表认证及连通成功！
-            if (res.status === 200 || res.status === 204 || res.status === 207) {
-                return {
-                    success: true,
-                    message: 'WebDAV 连接成功，已检测到云端备份！'
-                };
-            }
-
-            if (res.status === 404) {
-                return {
-                    success: true,
-                    message: 'WebDAV 目录已自动就绪，随时可同步数据！'
-                };
-            }
-
-            return {
-                success: true,
-                message: `WebDAV 响应状态: ${res.status}`
-            };
-        } catch (error) {
-            console.error('[WebDavClient] 测试连接失败:', error);
-            throw error;
-        }
+    static async ensureDirectory(config) {
+        return this.executeWithFailover(config, (activeCfg) => this._ensureDirectoryInternal(activeCfg));
     }
 
     /**
-     * 从 WebDAV 下载备份 JSON 文件 (安全 JSON 解析与容错校验)
-     * @param {Object} config - { url, user, pass, path }
+     * 测试 WebDAV 连通性并自动嗅探预建目录 (带双地址自动故障转移)
+     * @param {Object} config - { url, lanUrl, user, pass, path }
+     * @returns {Promise<{ success: boolean, message: string }>}
+     */
+    static async testConnection(config) {
+        return this.executeWithFailover(config, async (activeCfg) => {
+            const { url, user, pass, path = '/MissPlayer/', _failoverTimeout } = activeCfg;
+            const reqTimeout = _failoverTimeout || 15000;
+            if (!url) {
+                throw new Error('WebDAV 服务器地址不能为空');
+            }
+
+            let cleanPath = (path || '/MissPlayer/').trim();
+            if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+            if (!cleanPath.endsWith('/')) cleanPath = cleanPath + '/';
+
+            // 1. 优先执行目录级嗅探与自动创建
+            await this._ensureDirectoryInternal(activeCfg);
+
+            const fileUrl = this.normalizeUrl(url, cleanPath + 'miss_player_sync.json', user);
+
+            try {
+                // 发送 GET 探测备份文件是否存在或连通
+                const res = await this.request({
+                    method: 'GET',
+                    url: fileUrl,
+                    user,
+                    pass,
+                    timeout: reqTimeout,
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
+                }
+
+                if (res.status >= 500) {
+                    throw new Error(`服务器内部错误 (${res.status})`);
+                }
+
+                const isLan = config.lanUrl && activeCfg.url === config.lanUrl.trim();
+                const suffix = isLan ? ' (局域网备用)' : '';
+
+                // 200 (文件已存在) 或 404 (连接正常且目录就绪，文件尚未创建) 均代表认证及连通成功！
+                if (res.status === 200 || res.status === 204 || res.status === 207) {
+                    return {
+                        success: true,
+                        message: `WebDAV 连接成功${suffix}，已检测到云端备份！`
+                    };
+                }
+
+                if (res.status === 404) {
+                    return {
+                        success: true,
+                        message: `WebDAV 目录已自动就绪${suffix}，随时可同步数据！`
+                    };
+                }
+
+                return {
+                    success: true,
+                    message: `WebDAV 响应状态: ${res.status}${suffix}`
+                };
+            } catch (error) {
+                console.error('[WebDavClient] 测试连接失败:', error);
+                throw error;
+            }
+        });
+    }
+
+    /**
+     * 从 WebDAV 下载备份 JSON 文件 (安全 JSON 解析与容错校验，带双地址自动故障转移)
+     * @param {Object} config - { url, lanUrl, user, pass, path }
      * @param {string} [filename='miss_player_sync.json'] - 文件名
      * @returns {Promise<Object|null>} 成功返回 JSON 数据对象，若文件不存在返回 null
      */
     static async downloadBackup(config, filename = 'miss_player_sync.json') {
-        const { url, user, pass, path = '/MissPlayer/' } = config;
-        let dirPath = (path || '/MissPlayer/').trim();
-        if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
-        if (!dirPath.endsWith('/')) dirPath = dirPath + '/';
+        return this.executeWithFailover(config, async (activeCfg) => {
+            const { url, user, pass, path = '/MissPlayer/', _failoverTimeout } = activeCfg;
+            const reqTimeout = _failoverTimeout || 15000;
+            let dirPath = (path || '/MissPlayer/').trim();
+            if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
+            if (!dirPath.endsWith('/')) dirPath = dirPath + '/';
 
-        const fileUrl = this.normalizeUrl(url, dirPath + filename, user);
+            const fileUrl = this.normalizeUrl(url, dirPath + filename, user);
 
-        try {
-            const res = await this.request({
-                method: 'GET',
-                url: fileUrl,
-                user,
-                pass,
-                headers: {
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                }
-            });
+            try {
+                const res = await this.request({
+                    method: 'GET',
+                    url: fileUrl,
+                    user,
+                    pass,
+                    timeout: reqTimeout,
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
 
-            if (res.status === 404) {
-                // 远端文件尚未创建
-                return null;
-            }
-
-            if (res.status === 401 || res.status === 403) {
-                throw new Error(`认证失败 (${res.status}): 请检查用户名与应用授权码`);
-            }
-
-            if (res.status >= 200 && res.status < 300) {
-                if (!res.data || !res.data.trim()) {
+                if (res.status === 404) {
+                    // 远端文件尚未创建
                     return null;
                 }
-                const rawText = res.data.trim();
 
-                // 1. 优先采用原生 JSON.parse（零污染、零损耗、速度极快，绝不误伤合法数据）
-                try {
-                    const parsed = JSON.parse(rawText);
-                    if (parsed && typeof parsed === 'object') {
-                        return parsed;
-                    }
-                    throw new Error('云端备份文件内容格式畸变');
-                } catch (primaryErr) {
-                    // 仅当原生解析确实失败时，才启动容错降级管道
-                    console.warn('[WebDavClient] 原生 JSON 解析未通过，尝试安全容错清洗与补全...', primaryErr.message);
-
-                    // 2. 尝试清洗可能存在于数组内部的畸变空对象 (仅限数组环境，绝不误伤 "key": {})
-                    try {
-                        const cleaned = sanitizeArrayEmptyObjects(rawText);
-                        const parsedCleaned = JSON.parse(cleaned);
-                        if (parsedCleaned && typeof parsedCleaned === 'object') {
-                            console.warn('[WebDavClient] 成功清洗数组畸变空对象并安全恢复数据');
-                            return parsedCleaned;
-                        }
-                    } catch (_) {}
-
-                    // 3. 尝试智能修复因网络传输截断导致的未闭合结构
-                    try {
-                        const repaired = tryRepairTruncatedJson(rawText);
-                        if (repaired && typeof repaired === 'object' && (repaired.settings || repaired.markers)) {
-                            console.warn('[WebDavClient] 成功智能补全截断云端备份 JSON 并安全恢复数据');
-                            return repaired;
-                        }
-                    } catch (_) {}
-
-                    console.error('[WebDavClient] 云端备份数据损坏或被截断，已终止读取:', primaryErr);
-                    throw new Error('云端备份数据损坏或被截断，已终止读取');
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error(`认证失败 (${res.status}): 请检查用户名与应用授权码`);
                 }
-            }
 
-            throw new Error(`下载失败，服务器返回状态码: ${res.status}`);
-        } catch (error) {
-            console.error('[WebDavClient] 下载备份失败:', error);
-            throw error;
-        }
+                if (res.status >= 200 && res.status < 300) {
+                    if (!res.data || !res.data.trim()) {
+                        return null;
+                    }
+                    const rawText = res.data.trim();
+
+                    // 1. 优先采用原生 JSON.parse（零污染、零损耗、速度极快，绝不误伤合法数据）
+                    try {
+                        const parsed = JSON.parse(rawText);
+                        if (parsed && typeof parsed === 'object') {
+                            return parsed;
+                        }
+                        throw new Error('云端备份文件内容格式畸变');
+                    } catch (primaryErr) {
+                        // 仅当原生解析确实失败时，才启动容错降级管道
+                        console.warn('[WebDavClient] 原生 JSON 解析未通过，尝试安全容错清洗与补全...', primaryErr.message);
+
+                        // 2. 尝试清洗可能存在于数组内部的畸变空对象 (仅限数组环境，绝不误伤 "key": {})
+                        try {
+                            const cleaned = sanitizeArrayEmptyObjects(rawText);
+                            const parsedCleaned = JSON.parse(cleaned);
+                            if (parsedCleaned && typeof parsedCleaned === 'object') {
+                                console.warn('[WebDavClient] 成功清洗数组畸变空对象并安全恢复数据');
+                                return parsedCleaned;
+                            }
+                        } catch (_) {}
+
+                        // 3. 尝试智能修复因网络传输截断导致的未闭合结构
+                        try {
+                            const repaired = tryRepairTruncatedJson(rawText);
+                            if (repaired && typeof repaired === 'object' && (repaired.settings || repaired.markers)) {
+                                console.warn('[WebDavClient] 成功智能补全截断云端备份 JSON 并安全恢复数据');
+                                return repaired;
+                            }
+                        } catch (_) {}
+
+                        console.error('[WebDavClient] 云端备份数据损坏或被截断，已终止读取:', primaryErr);
+                        throw new Error('云端备份数据损坏或被截断，已终止读取');
+                    }
+                }
+
+                throw new Error(`下载失败，服务器返回状态码: ${res.status}`);
+            } catch (error) {
+                console.error('[WebDavClient] 下载备份失败:', error);
+                throw error;
+            }
+        });
     }
 
     /**
-     * 上传备份 JSON 数据至 WebDAV (写入前主动确保目录就绪)
-     * @param {Object} config - { url, user, pass, path }
+     * 上传备份 JSON 数据至 WebDAV (写入前主动确保目录就绪，带双地址自动故障转移)
+     * @param {Object} config - { url, lanUrl, user, pass, path }
      * @param {Object} data - 要备份的完整 JSON 对象
      * @param {string} [filename='miss_player_sync.json'] - 文件名
      */
     static async uploadBackup(config, data, filename = 'miss_player_sync.json') {
-        const { url, user, pass, path = '/MissPlayer/' } = config;
+        return this.executeWithFailover(config, async (activeCfg) => {
+            const { url, user, pass, path = '/MissPlayer/', _failoverTimeout } = activeCfg;
+            const reqTimeout = _failoverTimeout || 15000;
 
-        // 1. 上传前主动确保所有父级目录存在
-        await this.ensureDirectory(config);
+            // 1. 上传前主动确保所有父级目录存在
+            await this._ensureDirectoryInternal(activeCfg);
 
-        let dirPath = (path || '/MissPlayer/').trim();
-        if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
-        if (!dirPath.endsWith('/')) dirPath = dirPath + '/';
+            let dirPath = (path || '/MissPlayer/').trim();
+            if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
+            if (!dirPath.endsWith('/')) dirPath = dirPath + '/';
 
-        const fileUrl = this.normalizeUrl(url, dirPath + filename, user);
-        const jsonString = JSON.stringify(data, null, 2);
+            const fileUrl = this.normalizeUrl(url, dirPath + filename, user);
+            const jsonString = JSON.stringify(data, null, 2);
 
-        try {
-            let res = await this.request({
-                method: 'PUT',
-                url: fileUrl,
-                user,
-                pass,
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8'
-                },
-                data: jsonString
-            });
-
-            // 遇到极端情况 404/409 时再次重试一次
-            if (res.status === 404 || res.status === 409) {
-                console.warn(`[WebDavClient] PUT 返回 ${res.status}，重试 ensureDirectory 并二次上传...`);
-                await this.ensureDirectory(config);
-                res = await this.request({
+            try {
+                let res = await this.request({
                     method: 'PUT',
                     url: fileUrl,
                     user,
                     pass,
+                    timeout: reqTimeout,
                     headers: {
                         'Content-Type': 'application/json; charset=utf-8'
                     },
                     data: jsonString
                 });
-            }
 
-            if (res.status === 401 || res.status === 403) {
-                throw new Error(`认证失败 (${res.status}): 权限不足或密码错误`);
-            }
+                // 遇到极端情况 404/409 时再次重试一次
+                if (res.status === 404 || res.status === 409) {
+                    console.warn(`[WebDavClient] PUT 返回 ${res.status}，重试 ensureDirectory 并二次上传...`);
+                    await this._ensureDirectoryInternal(activeCfg);
+                    res = await this.request({
+                        method: 'PUT',
+                        url: fileUrl,
+                        user,
+                        pass,
+                        timeout: reqTimeout,
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        data: jsonString
+                    });
+                }
 
-            if (res.status === 200 || res.status === 201 || res.status === 204) {
-                return {
-                    success: true,
-                    status: res.status
-                };
-            }
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error(`认证失败 (${res.status}): 权限不足或密码错误`);
+                }
 
-            throw new Error(`上传失败，服务器返回状态码: ${res.status}`);
-        } catch (error) {
-            console.error('[WebDavClient] 上传备份失败:', error);
-            throw error;
-        }
+                if (res.status === 200 || res.status === 201 || res.status === 204) {
+                    return {
+                        success: true,
+                        status: res.status
+                    };
+                }
+
+                throw new Error(`上传失败，服务器返回状态码: ${res.status}`);
+            } catch (error) {
+                console.error('[WebDavClient] 上传备份失败:', error);
+                throw error;
+            }
+        });
     }
 
     /**
      * 下载 WebDAV 指定子路径文件 (如 'heatmaps/WSP-101.json')
-     * @param {Object} config - { url, user, pass, path }
+     * @param {Object} config - { url, lanUrl, user, pass, path }
      * @param {string} subPath - 相对子路径
      * @returns {Promise<Object|string|null>} 成功返回解析后的 JSON，不存在返回 null
      */
@@ -612,58 +747,89 @@ export class WebDavClient {
     }
 
     /**
-     * 上传任意文本/JSON文件至 WebDAV 指定子目录
-     * @param {Object} config - { url, user, pass, path }
+     * 上传任意文本/JSON文件至 WebDAV 指定子目录 (带双地址自动故障转移)
+     * @param {Object} config - { url, lanUrl, user, pass, path }
      * @param {string} subPath - 相对子路径 (如 'logs/debug/xxx.txt' 或 'comments/xxx.json')
      * @param {string|Object} content - 文件文本或 JSON 对象
      * @param {string} [contentType='text/plain; charset=utf-8'] - MIME 类型
      * @returns {Promise<{ success: boolean, status: number }>}
      */
     static async uploadFile(config, subPath, content, contentType = 'text/plain; charset=utf-8') {
-        const { url, user, pass, path = '/MissPlayer/' } = config;
-        let dirPath = (path || '/MissPlayer/').trim();
-        if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
-        if (!dirPath.endsWith('/')) dirPath = dirPath + '/';
+        return this.executeWithFailover(config, async (activeCfg) => {
+            const { url, user, pass, path = '/MissPlayer/', _failoverTimeout } = activeCfg;
+            const reqTimeout = _failoverTimeout || 15000;
+            let dirPath = (path || '/MissPlayer/').trim();
+            if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
+            if (!dirPath.endsWith('/')) dirPath = dirPath + '/';
 
-        let targetPath = subPath.trim();
-        if (targetPath.startsWith('/')) targetPath = targetPath.slice(1);
+            let targetPath = subPath.trim();
+            if (targetPath.startsWith('/')) targetPath = targetPath.slice(1);
 
-        // 智能防重叠自愈：若 targetPath 已经包含了 dirPath 的前缀，自动剥离，防止重复拼接如 /MissPlayer/MissPlayer/
-        const normDirNoSlash = dirPath.replace(/^\/+|\/+$/g, '');
-        if (normDirNoSlash && targetPath.startsWith(normDirNoSlash + '/')) {
-            targetPath = targetPath.slice(normDirNoSlash.length + 1);
-        } else if (normDirNoSlash && targetPath.startsWith(normDirNoSlash)) {
-            targetPath = targetPath.slice(normDirNoSlash.length).replace(/^\/+/, '');
-        }
+            // 智能防重叠自愈：若 targetPath 已经包含了 dirPath 的前缀，自动剥离，防止重复拼接如 /MissPlayer/MissPlayer/
+            const normDirNoSlash = dirPath.replace(/^\/+|\/+$/g, '');
+            if (normDirNoSlash && targetPath.startsWith(normDirNoSlash + '/')) {
+                targetPath = targetPath.slice(normDirNoSlash.length + 1);
+            } else if (normDirNoSlash && targetPath.startsWith(normDirNoSlash)) {
+                targetPath = targetPath.slice(normDirNoSlash.length).replace(/^\/+/, '');
+            }
 
-        // 确保上级目录存在
-        const lastSlash = targetPath.lastIndexOf('/');
-        const uploadDir = lastSlash !== -1 ? dirPath + targetPath.slice(0, lastSlash + 1) : dirPath;
-        const uploadFileName = lastSlash !== -1 ? targetPath.slice(lastSlash + 1) : targetPath;
+            // 确保上级目录存在
+            const lastSlash = targetPath.lastIndexOf('/');
+            const uploadDir = lastSlash !== -1 ? dirPath + targetPath.slice(0, lastSlash + 1) : dirPath;
+            const uploadFileName = lastSlash !== -1 ? targetPath.slice(lastSlash + 1) : targetPath;
 
-        await this.ensureDirectory({ ...config, path: uploadDir });
+            await this._ensureDirectoryInternal({ ...activeCfg, path: uploadDir });
 
-        const fileUrl = this.normalizeUrl(url, uploadDir + uploadFileName, user);
-        const data = typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content);
+            const fileUrl = this.normalizeUrl(url, uploadDir + uploadFileName, user);
+            const data = typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content);
 
-        const res = await this.request({
-            method: 'PUT',
-            url: fileUrl,
-            user,
-            pass,
-            headers: {
-                'Content-Type': contentType
-            },
-            data
+            const res = await this.request({
+                method: 'PUT',
+                url: fileUrl,
+                user,
+                pass,
+                timeout: reqTimeout,
+                headers: {
+                    'Content-Type': contentType
+                },
+                data
+            });
+
+            if (res.status === 200 || res.status === 201 || res.status === 204) {
+                return { success: true, status: res.status };
+            }
+            if (res.status === 404 || res.status === 409) {
+                throw new Error(`WebDAV 目录不存在或路径冲突 (HTTP ${res.status})，请在 WebDAV 服务器上手动创建目录: ${uploadDir}`);
+            }
+            throw new Error(`上传文件失败，状态码: ${res.status}`);
         });
+    }
 
-        if (res.status === 200 || res.status === 201 || res.status === 204) {
-            return { success: true, status: res.status };
+    /**
+     * 探测 WebDAV 上指定文件是否存在 (带双地址自动故障转移)
+     * @param {Object} config - { url, lanUrl, user, pass }
+     * @param {string} fullOrRelativePath - 文件路径
+     * @param {number} [timeout=3500] - 单次探测超时
+     * @returns {Promise<boolean>}
+     */
+    static async checkFileExists(config, fullOrRelativePath, timeout = 3500) {
+        try {
+            return await this.executeWithFailover(config, async (activeCfg) => {
+                const reqTimeout = activeCfg._failoverTimeout || timeout;
+                const fileUrl = this.normalizeUrl(activeCfg.url, fullOrRelativePath, activeCfg.user);
+                const res = await this.request({
+                    method: 'PROPFIND',
+                    url: fileUrl,
+                    user: activeCfg.user,
+                    pass: activeCfg.pass,
+                    headers: { 'Depth': '0' },
+                    timeout: reqTimeout
+                });
+                return res.status === 200 || res.status === 207;
+            });
+        } catch (_) {
+            return false;
         }
-        if (res.status === 404 || res.status === 409) {
-            throw new Error(`WebDAV 目录不存在或路径冲突 (HTTP ${res.status})，请在 WebDAV 服务器上手动创建目录: ${uploadDir}`);
-        }
-        throw new Error(`上传文件失败，状态码: ${res.status}`);
     }
 
 }

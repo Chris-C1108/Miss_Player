@@ -475,6 +475,31 @@ export class SettingsManager {
         urlRow.appendChild(urlLabel);
         urlRow.appendChild(urlInput);
 
+        // 1.2 局域网备用地址 (LAN Fallback URL)
+        const lanUrlRow = document.createElement('div');
+        lanUrlRow.className = 'tm-webdav-form-row';
+        const lanUrlLabel = document.createElement('label');
+        lanUrlLabel.className = 'tm-webdav-label';
+        lanUrlLabel.textContent = __('webdavLanUrl') || '局域网备用';
+        const lanUrlInput = document.createElement('input');
+        lanUrlInput.className = 'tm-webdav-input';
+        lanUrlInput.type = 'text';
+        let defaultLanPlaceholder = __('webdavLanUrlPlaceholder') || '选填，如 http://192.168.2.250:5005';
+        try {
+            const host = window?.location?.hostname;
+            if (host && /^(?:192\.168\.|10\.|172\.(?:1[6-9]|2\d|3[01])\.)/.test(host)) {
+                defaultLanPlaceholder = `http://${host}:5005`;
+            }
+        } catch (_) {}
+        lanUrlInput.placeholder = defaultLanPlaceholder;
+        lanUrlInput.value = config.lanUrl || '';
+        lanUrlInput.addEventListener('change', () => {
+            config.lanUrl = lanUrlInput.value.trim();
+            SyncManager.saveWebDavConfig(config);
+        });
+        lanUrlRow.appendChild(lanUrlLabel);
+        lanUrlRow.appendChild(lanUrlInput);
+
         // 2. 用户名 (Username)
         const userRow = document.createElement('div');
         userRow.className = 'tm-webdav-form-row';
@@ -567,6 +592,7 @@ export class SettingsManager {
             el.addEventListener('focus', h);
         };
         bindSettingsFocus(urlInput);
+        bindSettingsFocus(lanUrlInput);
         bindSettingsFocus(userInput);
         bindSettingsFocus(passInput);
         bindSettingsFocus(pathInput);
@@ -676,6 +702,7 @@ export class SettingsManager {
         // 保存即时配置辅助函数
         const persistCurrentInputs = () => {
             config.url = urlInput.value.trim();
+            config.lanUrl = lanUrlInput.value.trim();
             config.user = userInput.value.trim();
             config.pass = passInput.value;
             config.path = pathInput.value.trim() || '/MissPlayer/';
@@ -832,6 +859,7 @@ export class SettingsManager {
 
         // 组装卡片
         card.appendChild(urlRow);
+        card.appendChild(lanUrlRow);
         card.appendChild(userRow);
         card.appendChild(passRow);
         card.appendChild(pathRow);
