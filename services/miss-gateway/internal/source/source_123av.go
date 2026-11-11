@@ -32,7 +32,7 @@ func (s *Source123Av) Delay() time.Duration {
 
 func (s *Source123Av) Resolve(ctx context.Context, client *http.Client, code string) (*StreamResult, error) {
 	cleanCode := strings.ToLower(strings.TrimSpace(code))
-	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+	ua := DefaultUserAgent
 
 	// 通道 1: 直达详情页 (优先无码流出，其次普通版)
 	variants := []struct {
@@ -151,7 +151,7 @@ func extract123AvFromHTML(ctx context.Context, client *http.Client, bodyStr, cod
 	hashID := match[3]
 	streamAPI := fmt.Sprintf("%s://%s/stream?id=%s", scheme, domain, hashID)
 	embedReferer := fmt.Sprintf("%s://%s/e/%s", scheme, domain, hashID)
-	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+	ua := DefaultUserAgent
 
 	apiReq, err := http.NewRequestWithContext(ctx, "GET", streamAPI, nil)
 	if err != nil {

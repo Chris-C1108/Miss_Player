@@ -34,6 +34,9 @@ type Source interface {
 }
 
 // NewHTTPClient 创建统一配置的 HTTP 客户端（支持可选分流代理）
+// DefaultUserAgent 统一的标准现代 Chrome 桌面端 User-Agent，规避 CDN WAF 识别与阻断
+const DefaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+
 func NewHTTPClient(proxyURL string, timeout time.Duration) *http.Client {
 	transport := &http.Transport{
 		MaxIdleConns:        100,

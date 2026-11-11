@@ -33,7 +33,7 @@ func (s *SourceJable) Delay() time.Duration {
 func (s *SourceJable) Resolve(ctx context.Context, client *http.Client, code string) (*StreamResult, error) {
 	cleanCode := strings.ToLower(strings.TrimSpace(code))
 	domains := []string{"https://fs1.app", "https://jable.tv"}
-	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+	ua := DefaultUserAgent
 
 	candidateSlugs := []string{cleanCode}
 	if core, ok := ExtractCodeCore(code); ok {
@@ -96,7 +96,7 @@ func enrichHlsEncryptionMetadata(ctx context.Context, client *http.Client, m3u8U
 	if referer != "" {
 		req.Header.Set("Referer", referer)
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+	req.Header.Set("User-Agent", DefaultUserAgent)
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode >= 400 {

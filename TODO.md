@@ -50,6 +50,11 @@
 - [x] **19.10 (v5.7.113-004)** iOS WebKit 原生全屏劫持彻底消解、HTML5 `:modal` inert 阻断突破、Web Components 媒体容器整装继承与退出浮钮/手势样式净化（彻底解决真机全屏抢占、黑屏与操作冻结，全量 15 项 CI 100% 通过）
 - [x] **19.11 (v5.7.113-005)** 通用媒体盒模型缩放与 Web Components 挂载解耦、播放器退出单一漏斗闭环、死代码清理与 Top Layer 模态栈感知（修复拉伸平移失效、左上角退出浮钮消失与下滑报错，9大核心验证 100% 通过）
 - [x] **19.12** Peach 专用令牌自动签发调研与实现：当用户进入 Peach Web 站点时，通过同源会话 API（`/api/configuration/jav-browser`）无感自动协商签发并持久化 Dedicated Token，设置面板彻底免除用户手动输入 Token 的认知负担，提供一键免输配对引导卡片与三态（未连接/仅STRM/全功能就绪）智能感知徽章。
+- [x] **19.13** 外部源番号校验器与多层流媒体探针分流闭环：
+  - 编写 `matcher.go` 结构化等价番号匹配算法，阻断 123AV/MissAV 模糊搜索张冠李戴；
+  - 修复 MissAV/Surrit Referer、默认 UA 与 FlareSolverr 常驻 Session 4 项缺陷；
+  - 深度排查定位 Cloudflare 机房脏 IP 拦截根因，并在 NAS 容器上成功实施挂载验证；
+  - 整理视频流媒体节点可用性测试方法论，向 `Chris-C1108/NodeMatrix` 提交 PR #1 闭环多层流媒体探针与 123AV 穿盾分流规则。
 
 ---
 

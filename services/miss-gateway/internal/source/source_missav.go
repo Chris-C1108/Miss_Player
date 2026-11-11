@@ -32,7 +32,7 @@ func (d *DirectFetcher) Fetch(ctx context.Context, client *http.Client, urlStr, 
 	if referer != "" {
 		req.Header.Set("Referer", referer)
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+	req.Header.Set("User-Agent", DefaultUserAgent)
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 
 	resp, err := client.Do(req)
@@ -53,13 +53,15 @@ func (d *DirectFetcher) Fetch(ctx context.Context, client *http.Client, urlStr, 
 type FlareSolverrFetcher struct {
 	apiURL       string
 	proxyURL     string
+	sessionID    string
 	directClient *http.Client
 }
 
 func NewFlareSolverrFetcher(apiURL, proxyURL string) *FlareSolverrFetcher {
 	return &FlareSolverrFetcher{
-		apiURL:   strings.TrimRight(apiURL, "/"),
-		proxyURL: proxyURL,
+		apiURL:    strings.TrimRight(apiURL, "/"),
+		proxyURL:  proxyURL,
+		sessionID: "miss_gateway_session",
 		directClient: &http.Client{
 			Timeout: 40 * time.Second,
 			Transport: &http.Transport{
@@ -69,23 +71,7 @@ func NewFlareSolverrFetcher(apiURL, proxyURL string) *FlareSolverrFetcher {
 	}
 }
 
-func (f *FlareSolverrFetcher) Fetch(ctx context.Context, _ *http.Client, urlStr, referer string) (int, string, error) {
-	endpoint := f.apiURL
-	if !strings.HasSuffix(endpoint, "/v1") {
-		endpoint += "/v1"
-	}
-
-	payload := map[string]interface{}{
-		"cmd":        "request.get",
-		"url":        urlStr,
-		"maxTimeout": 30000,
-	}
-	if f.proxyURL != "" {
-		payload["proxy"] = map[string]string{
-			"url": f.proxyURL,
-		}
-	}
-
+func (f *FlareSolverrFetcher) doPost(ctx context.Context, endpoint string, payload map[string]interface{}) (int, string, error) {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return 0, "", err
@@ -105,6 +91,7 @@ func (f *FlareSolverrFetcher) Fetch(ctx context.Context, _ *http.Client, urlStr,
 
 	var result struct {
 		Status   string `json:"status"`
+		Message  string `json:"message"`
 		Solution struct {
 			URL      string `json:"url"`
 			Status   int    `json:"status"`
@@ -120,7 +107,49 @@ func (f *FlareSolverrFetcher) Fetch(ctx context.Context, _ *http.Client, urlStr,
 		return result.Solution.Status, result.Solution.Response, nil
 	}
 
-	return 500, "", fmt.Errorf("flaresolverr error: %s", result.Status)
+	errMsg := result.Message
+	if errMsg == "" {
+		errMsg = result.Status
+	}
+	return 500, "", fmt.Errorf("flaresolverr error: %s", errMsg)
+}
+
+func (f *FlareSolverrFetcher) Fetch(ctx context.Context, _ *http.Client, urlStr, referer string) (int, string, error) {
+	endpoint := f.apiURL
+	if !strings.HasSuffix(endpoint, "/v1") {
+		endpoint += "/v1"
+	}
+
+	payload := map[string]interface{}{
+		"cmd":        "request.get",
+		"url":        urlStr,
+		"maxTimeout": 30000,
+		"session":    f.sessionID,
+	}
+	if f.proxyURL != "" {
+		payload["proxy"] = map[string]string{
+			"url": f.proxyURL,
+		}
+	}
+
+	status, body, err := f.doPost(ctx, endpoint, payload)
+	if err != nil && (strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "No session")) {
+		// Session 尚未创建或已过期失效，自动调用 sessions.create 创建常驻热 Session
+		createPayload := map[string]interface{}{
+			"cmd":     "sessions.create",
+			"session": f.sessionID,
+		}
+		if f.proxyURL != "" {
+			createPayload["proxy"] = map[string]string{
+				"url": f.proxyURL,
+			}
+		}
+		_, _, _ = f.doPost(ctx, endpoint, createPayload)
+		// 再次重试原请求，立刻享受热 session 零冷启动过盾
+		return f.doPost(ctx, endpoint, payload)
+	}
+
+	return status, body, err
 }
 
 // SourceMissAv MissAV 外部片源适配器
@@ -131,7 +160,7 @@ type SourceMissAv struct {
 
 func NewSourceMissAv(domains []string, fetcher PageFetcher) *SourceMissAv {
 	if len(domains) == 0 {
-		domains = []string{"https://missav.ai", "https://missav.ws"}
+		domains = []string{"https://missav.ws", "https://missav.ai"}
 	}
 	if fetcher == nil {
 		fetcher = &DirectFetcher{}
@@ -202,12 +231,16 @@ func (s *SourceMissAv) Resolve(ctx context.Context, client *http.Client, code st
 
 			if status >= 200 && status < 400 && body != "" {
 				if streamURL := extractMissavPlaylist(body); streamURL != "" {
+					referer := domain + "/"
+					if strings.Contains(streamURL, "surrit.com") {
+						referer = "https://missav.ws/"
+					}
 					return &StreamResult{
 						Success:   true,
 						Code:      strings.ToUpper(code),
 						Source:    "MissAV",
 						URL:       streamURL,
-						Referer:   domain + "/",
+						Referer:   referer,
 						Variant:   "普通版",
 						KeyMethod: "NONE", // surrit.com HLS 纯明文无 AES-128
 					}, nil
@@ -258,12 +291,16 @@ func (s *SourceMissAv) Resolve(ctx context.Context, client *http.Client, code st
 					dStatus, dBody, dErr := s.fetcher.Fetch(ctx, client, detailURL, searchURL)
 					if dErr == nil && dStatus == 200 && dBody != "" {
 						if streamURL := extractMissavPlaylist(dBody); streamURL != "" {
+							referer := domain + "/"
+							if strings.Contains(streamURL, "surrit.com") {
+								referer = "https://missav.ws/"
+							}
 							return &StreamResult{
 								Success:   true,
 								Code:      strings.ToUpper(code),
 								Source:    "MissAV",
 								URL:       streamURL,
-								Referer:   domain + "/",
+								Referer:   referer,
 								Variant:   "普通版",
 								KeyMethod: "NONE",
 							}, nil

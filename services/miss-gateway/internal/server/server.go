@@ -323,10 +323,14 @@ func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return nil, err
 		}
-		if res.Referer != "" {
-			mReq.Header.Set("Referer", res.Referer)
+		referer := res.Referer
+		if referer == "" && strings.Contains(res.URL, "surrit.com") {
+			referer = "https://missav.ws/"
 		}
-		mReq.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+		if referer != "" {
+			mReq.Header.Set("Referer", referer)
+		}
+		mReq.Header.Set("User-Agent", source.DefaultUserAgent)
 
 		mResp, err := s.client.Do(mReq)
 		if err != nil || mResp.StatusCode >= 400 {
@@ -410,10 +414,14 @@ func (s *Server) refreshStreamSession(ctx context.Context, code string) (*regist
 		if err != nil {
 			return nil, err
 		}
-		if res.Referer != "" {
-			mReq.Header.Set("Referer", res.Referer)
+		referer := res.Referer
+		if referer == "" && strings.Contains(res.URL, "surrit.com") {
+			referer = "https://missav.ws/"
 		}
-		mReq.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+		if referer != "" {
+			mReq.Header.Set("Referer", referer)
+		}
+		mReq.Header.Set("User-Agent", source.DefaultUserAgent)
 
 		mResp, err := s.client.Do(mReq)
 		if err != nil || mResp.StatusCode >= 400 {
@@ -502,10 +510,13 @@ func (s *Server) handlePlaylist(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Request error", http.StatusInternalServerError)
 		return
 	}
+	if referer == "" && strings.Contains(upstreamSublist, "surrit.com") {
+		referer = "https://missav.ws/"
+	}
 	if referer != "" {
 		pReq.Header.Set("Referer", referer)
 	}
-	pReq.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+	pReq.Header.Set("User-Agent", source.DefaultUserAgent)
 
 	pResp, err := s.client.Do(pReq)
 	if err != nil || pResp.StatusCode >= 400 {
@@ -655,10 +666,13 @@ func (s *Server) proxyUpstreamResource(w http.ResponseWriter, r *http.Request, u
 		return http.StatusInternalServerError
 	}
 
+	if referer == "" && strings.Contains(upstreamURL, "surrit.com") {
+		referer = "https://missav.ws/"
+	}
 	if referer != "" {
 		uReq.Header.Set("Referer", referer)
 	}
-	uReq.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+	uReq.Header.Set("User-Agent", source.DefaultUserAgent)
 
 	if rangeHeader := r.Header.Get("Range"); rangeHeader != "" {
 		uReq.Header.Set("Range", rangeHeader)

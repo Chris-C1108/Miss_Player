@@ -33,7 +33,7 @@ func (s *SourceJavVerse) Delay() time.Duration {
 func (s *SourceJavVerse) Resolve(ctx context.Context, client *http.Client, code string) (*StreamResult, error) {
 	cleanCode := strings.ToUpper(strings.TrimSpace(code))
 	origin := "https://javverse.com"
-	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+	ua := DefaultUserAgent
 
 	// 1. 尝试从轻量检索提取 workId
 	searchURL := fmt.Sprintf("%s/en/search?q=%s", origin, url.QueryEscape(cleanCode))
