@@ -100,7 +100,7 @@ export class WebDavClient {
     static _activeUrlCache = new Map();
 
     /**
-     * 每 Origin 并发限流队列 (防止 fnOS FN Connect 等对瞬间高并发限频掐断或假报 401/405)
+     * 每 Origin 并发限流队列 (防止部分 WebDAV 网关对瞬间高并发限频掐断或假报 401/405)
      * @type {Map<string, { active: number, queue: Function[] }>}
      */
     static _originLimiters = new Map();
@@ -709,7 +709,7 @@ export class WebDavClient {
             throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
         }
         if (res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308) {
-            throw new Error(`WebDAV 重定向拦截 (HTTP ${res.status}): 请检查是否缺少内网回流或路径格式`);
+            throw new Error(`WebDAV 重定向拦截 (HTTP ${res.status}): 请检查服务地址、HTTPS 或路径格式`);
         }
         if (res.status >= 500) {
             throw new Error(`服务器网关异常 (HTTP ${res.status})`);
@@ -831,7 +831,7 @@ export class WebDavClient {
 
             const visibleRoots = rootListing.dirs;
             if (visibleRoots.length === 0) {
-                return `WebDAV 根目录无任何可见文件夹${statusHint}。若使用飞牛 fnOS，请在「系统设置 → 文件共享协议 → WebDAV → 可见文件夹范围」重新勾选授权文件夹；或手动创建: ${cleanPath}`;
+                return `WebDAV 根目录无任何可见文件夹${statusHint}。请检查服务端 WebDAV 授权目录/可见范围设置，或在服务器手动创建: ${cleanPath}`;
             }
 
             if (firstSeg) {
@@ -842,7 +842,7 @@ export class WebDavClient {
                         return `目录大小写不匹配${statusHint}：服务器根目录存在「/${caseRoot}/」，请将备份目录首段改为「/${caseRoot}/」`;
                     }
 
-                    // 探测常见的个人默认根容器 (例如 fnOS「我的文件」、Nextcloud「files」等，最多 2 次轻探测)
+                    // 探测常见的个人默认根容器 (例如「我的文件」、「home」、「files」、「dav」等，最多 2 次轻探测)
                     const wrapperCandidates = visibleRoots.filter(d => /^(我的文件|my\s*files?|home|files|dav)$/i.test(d)).slice(0, 2);
                     for (const wrapper of wrapperCandidates) {
                         const subListing = await this._listDirectoryDirs(baseUrl, `/${wrapper}/`, user, pass, timeout);
@@ -985,7 +985,7 @@ export class WebDavClient {
                     continue;
                 }
                 if (res.status === 405 || res.status === 403) {
-                    // 某些网盘 (如 fnOS) 对根目录 MKCOL 返回 405，先记下状态码并继续检查或诊断
+                    // 部分 WebDAV 服务端对根目录或只读目录 MKCOL 返回 405/403，先记下状态码并继续检查或诊断
                     console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 返回 HTTP ${res.status}`);
                     continue;
                 }
@@ -1051,11 +1051,15 @@ export class WebDavClient {
                     }
                 });
 
-                const isLan = config.lanUrl && (
-                    this.sanitizeEndpointUrl(activeCfg.url) === this.sanitizeEndpointUrl(config.lanUrl) ||
-                    this.isPrivateNetworkHost((activeCfg.url.split('://')[1] || activeCfg.url).split('/')[0])
+                const activeHost = (activeCfg.url.split('://')[1] || activeCfg.url).split('/')[0];
+                const isPrivateHost = this.isPrivateNetworkHost(activeHost);
+                const isFallbackEndpoint = Boolean(
+                    config.lanUrl &&
+                    this.sanitizeEndpointUrl(activeCfg.url) === this.sanitizeEndpointUrl(config.lanUrl)
                 );
-                const suffix = isLan ? ' (局域网直连)' : ' (公网域名)';
+                const suffix = isPrivateHost
+                    ? ' (内网直连)'
+                    : (isFallbackEndpoint ? ' (备用地址)' : '');
 
                 // 200 (文件已存在) 或 404 (连接正常且目录就绪，文件尚未创建) 均代表认证及连通成功！
                 if (res.status === 200 || res.status === 204 || res.status === 207) {

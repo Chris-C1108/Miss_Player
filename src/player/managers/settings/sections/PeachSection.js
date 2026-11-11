@@ -398,8 +398,8 @@ export class PeachSection {
                 p.className = 'tm-peach-subpanel';
                 p.innerHTML = `
                     <div class="tm-apple-row-subtext">模式 C：独立 WebDAV 存储端点</div>
-                    <input type="text" class="tm-settings-input tm-peach-standalone-url" placeholder="主地址 (如 https://dav.example.com:443)" />
-                    <input type="text" class="tm-settings-input tm-peach-standalone-lan-url" placeholder="局域网备用 (选填，如 http://192.168.2.250:5005)" />
+                    <input type="text" class="tm-settings-input tm-peach-standalone-url" placeholder="主地址 (如 https://dav.example.com/dav/)" />
+                    <input type="text" class="tm-settings-input tm-peach-standalone-lan-url" placeholder="备用地址 (选填，如 http://192.168.1.x:8080)" />
                     <div class="tm-peach-grid-2">
                         <input type="text" class="tm-settings-input tm-peach-standalone-user" placeholder="用户名" />
                         <input type="password" class="tm-settings-input tm-peach-standalone-pass" placeholder="密码" />

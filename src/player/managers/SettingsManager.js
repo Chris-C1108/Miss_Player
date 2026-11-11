@@ -475,23 +475,16 @@ export class SettingsManager {
         urlRow.appendChild(urlLabel);
         urlRow.appendChild(urlInput);
 
-        // 1.2 局域网备用地址 (LAN Fallback URL)
+        // 1.2 备用 / 局域网地址 (Fallback / LAN URL)
         const lanUrlRow = document.createElement('div');
         lanUrlRow.className = 'tm-webdav-form-row';
         const lanUrlLabel = document.createElement('label');
         lanUrlLabel.className = 'tm-webdav-label';
-        lanUrlLabel.textContent = __('webdavLanUrl') || '局域网备用';
+        lanUrlLabel.textContent = __('webdavLanUrl') || '备用地址';
         const lanUrlInput = document.createElement('input');
         lanUrlInput.className = 'tm-webdav-input';
         lanUrlInput.type = 'text';
-        let defaultLanPlaceholder = __('webdavLanUrlPlaceholder') || '选填，如 http://192.168.2.250:5005';
-        try {
-            const host = window?.location?.hostname;
-            if (host && /^(?:192\.168\.|10\.|172\.(?:1[6-9]|2\d|3[01])\.)/.test(host)) {
-                defaultLanPlaceholder = `http://${host}:5005`;
-            }
-        } catch (_) {}
-        lanUrlInput.placeholder = defaultLanPlaceholder;
+        lanUrlInput.placeholder = __('webdavLanUrlPlaceholder') || '选填，如 http://192.168.1.x:8080';
         lanUrlInput.value = config.lanUrl || '';
         lanUrlInput.addEventListener('change', () => {
             config.lanUrl = lanUrlInput.value.trim();

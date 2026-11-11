@@ -48,7 +48,7 @@ mockGmHandler = (opts) => {
     }, 5);
 };
 
-const res401 = await PeachService.acquireDedicatedToken('http://192.168.2.250:8900');
+const res401 = await PeachService.acquireDedicatedToken('http://192.168.1.100:8900');
 assert.strictEqual(res401.ok, false);
 assert.strictEqual(res401.status, 'error');
 assert.ok(res401.message.includes('401'), '401 应给出鉴权未就绪错误说明');
@@ -77,11 +77,11 @@ mockGmHandler = (opts) => {
 };
 
 PeachService.clearBase();
-const resNoProvider = await PeachService.acquireDedicatedToken('http://192.168.2.250:8900');
+const resNoProvider = await PeachService.acquireDedicatedToken('http://192.168.1.100:8900');
 assert.strictEqual(resNoProvider.ok, false);
 assert.strictEqual(resNoProvider.status, 'strm_only');
 const cfgAfterB = PeachService.getConfig();
-assert.strictEqual(cfgAfterB.base, 'http://192.168.2.250:8900', '降级为 STRM 模式时仍应纳管 Base Origin');
+assert.strictEqual(cfgAfterB.base, 'http://192.168.1.100:8900', '降级为 STRM 模式时仍应纳管 Base Origin');
 assert.strictEqual(cfgAfterB.enabled, true, 'Base 纳管后应标记 enabled 为 true');
 assert.strictEqual(PeachService.hasDedicatedToken(), false, '无网盘渠道时不应存留虚假 Token');
 console.log('✅ 2.2 acquireDedicatedToken 无网盘渠道降级 STRM 模式测试通过');
@@ -125,7 +125,7 @@ mockGmHandler = (opts) => {
     }, 5);
 };
 
-const resSuccess = await PeachService.acquireDedicatedToken('http://192.168.2.250:8900');
+const resSuccess = await PeachService.acquireDedicatedToken('http://192.168.1.100:8900');
 assert.strictEqual(resSuccess.ok, true);
 assert.strictEqual(resSuccess.status, 'full');
 assert.strictEqual(resSuccess.token, '{{SECRET_x7h2x485}}');

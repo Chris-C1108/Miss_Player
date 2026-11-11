@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.008
+// @version            5.7.118-beta.009
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.008";
+		return "5.7.118-beta.009";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1886,8 +1886,8 @@
 			webdavBackupPath: "Backup Directory",
 			webdavPassword: "App Password",
 			webdavServerUrl: "Server URL",
-			webdavLanUrl: "LAN Fallback URL",
-			webdavLanUrlPlaceholder: "Optional, e.g. http://192.168.2.250:5005",
+			webdavLanUrl: "Backup URL",
+			webdavLanUrlPlaceholder: "Optional, e.g. http://192.168.1.x:8080",
 			webdavUsername: "Username",
 			webdavCurrentDevice: "Current Device",
 			webdavLastSync: "Last Sync",
@@ -2085,8 +2085,8 @@
 			webdavBackupPath: "备份目录",
 			webdavPassword: "应用密码",
 			webdavServerUrl: "服务器地址",
-			webdavLanUrl: "局域网备用",
-			webdavLanUrlPlaceholder: "选填，如 http://192.168.2.250:5005",
+			webdavLanUrl: "备用地址",
+			webdavLanUrlPlaceholder: "选填，如 http://192.168.1.x:8080",
 			webdavUsername: "用户名",
 			webdavCurrentDevice: "当前设备",
 			webdavLastSync: "上次同步",
@@ -2284,8 +2284,8 @@
 			webdavBackupPath: "備份目錄",
 			webdavPassword: "應用密碼",
 			webdavServerUrl: "伺服器位址",
-			webdavLanUrl: "區域網路備用",
-			webdavLanUrlPlaceholder: "選填，如 http://192.168.2.250:5005",
+			webdavLanUrl: "備用位址",
+			webdavLanUrlPlaceholder: "選填，如 http://192.168.1.x:8080",
 			webdavUsername: "用戶名",
 			webdavCurrentDevice: "當前設備",
 			webdavLastSync: "上次同步",
@@ -2483,8 +2483,8 @@
 			webdavBackupPath: "バックアップ先",
 			webdavPassword: "アプリパスワード",
 			webdavServerUrl: "サーバーアドレス",
-			webdavLanUrl: "LAN予備アドレス",
-			webdavLanUrlPlaceholder: "任意、例: http://192.168.2.250:5005",
+			webdavLanUrl: "予備アドレス",
+			webdavLanUrlPlaceholder: "任意、例: http://192.168.1.x:8080",
 			webdavUsername: "ユーザー名",
 			webdavCurrentDevice: "現在の端末",
 			webdavLastSync: "最終同期",
@@ -2681,8 +2681,8 @@
 			webdavBackupPath: "Thư mục sao lưu",
 			webdavPassword: "Mật khẩu ứng dụng",
 			webdavServerUrl: "Địa chỉ máy chủ",
-			webdavLanUrl: "Dự phòng LAN",
-			webdavLanUrlPlaceholder: "Tùy chọn, vd: http://192.168.2.250:5005",
+			webdavLanUrl: "Địa chỉ dự phòng",
+			webdavLanUrlPlaceholder: "Tùy chọn, vd: http://192.168.1.x:8080",
 			webdavUsername: "Tên người dùng",
 			webdavCurrentDevice: "Thiết bị này",
 			webdavLastSync: "Lần đồng bộ trước",
@@ -3291,7 +3291,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.008";
+		return "5.7.118-beta.009";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -4836,7 +4836,7 @@
 			const res = await this.request(options);
 			if (this._isHtmlResponse(res)) throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 端点返回了 HTML 而非 WebDAV 协议`);
 			if (res.status === 401 || res.status === 403 && throwOn403) throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
-			if (res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308) throw new Error(`WebDAV 重定向拦截 (HTTP ${res.status}): 请检查是否缺少内网回流或路径格式`);
+			if (res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308) throw new Error(`WebDAV 重定向拦截 (HTTP ${res.status}): 请检查服务地址、HTTPS 或路径格式`);
 			if (res.status >= 500) throw new Error(`服务器网关异常 (HTTP ${res.status})`);
 			return res;
 		}
@@ -4916,7 +4916,7 @@
 				const rootListing = await this._listDirectoryDirs(baseUrl, "/", user, pass, timeout);
 				if (!rootListing.ok) return `WebDAV 目录不存在且无法自动创建${statusHint}，请在服务器手动创建: ${cleanPath}`;
 				const visibleRoots = rootListing.dirs;
-				if (visibleRoots.length === 0) return `WebDAV 根目录无任何可见文件夹${statusHint}。若使用飞牛 fnOS，请在「系统设置 → 文件共享协议 → WebDAV → 可见文件夹范围」重新勾选授权文件夹；或手动创建: ${cleanPath}`;
+				if (visibleRoots.length === 0) return `WebDAV 根目录无任何可见文件夹${statusHint}。请检查服务端 WebDAV 授权目录/可见范围设置，或在服务器手动创建: ${cleanPath}`;
 				if (firstSeg) {
 					const exactRoot = visibleRoots.find((d) => d === firstSeg);
 					if (!exactRoot) {
@@ -5040,7 +5040,10 @@
 							"Pragma": "no-cache"
 						}
 					});
-					const suffix = config.lanUrl && (this.sanitizeEndpointUrl(activeCfg.url) === this.sanitizeEndpointUrl(config.lanUrl) || this.isPrivateNetworkHost((activeCfg.url.split("://")[1] || activeCfg.url).split("/")[0])) ? " (局域网直连)" : " (公网域名)";
+					const activeHost = (activeCfg.url.split("://")[1] || activeCfg.url).split("/")[0];
+					const isPrivateHost = this.isPrivateNetworkHost(activeHost);
+					const isFallbackEndpoint = Boolean(config.lanUrl && this.sanitizeEndpointUrl(activeCfg.url) === this.sanitizeEndpointUrl(config.lanUrl));
+					const suffix = isPrivateHost ? " (内网直连)" : isFallbackEndpoint ? " (备用地址)" : "";
 					if (res.status === 200 || res.status === 204 || res.status === 207) return {
 						success: true,
 						activeUrl: activeCfg.url,
@@ -5253,7 +5256,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.008";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.009";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -21421,8 +21424,8 @@
 					p.className = "tm-peach-subpanel";
 					p.innerHTML = `
                     <div class="tm-apple-row-subtext">模式 C：独立 WebDAV 存储端点</div>
-                    <input type="text" class="tm-settings-input tm-peach-standalone-url" placeholder="主地址 (如 https://dav.example.com:443)" />
-                    <input type="text" class="tm-settings-input tm-peach-standalone-lan-url" placeholder="局域网备用 (选填，如 http://192.168.2.250:5005)" />
+                    <input type="text" class="tm-settings-input tm-peach-standalone-url" placeholder="主地址 (如 https://dav.example.com/dav/)" />
+                    <input type="text" class="tm-settings-input tm-peach-standalone-lan-url" placeholder="备用地址 (选填，如 http://192.168.1.x:8080)" />
                     <div class="tm-peach-grid-2">
                         <input type="text" class="tm-settings-input tm-peach-standalone-user" placeholder="用户名" />
                         <input type="password" class="tm-settings-input tm-peach-standalone-pass" placeholder="密码" />
@@ -22158,16 +22161,11 @@
 			lanUrlRow.className = "tm-webdav-form-row";
 			const lanUrlLabel = document.createElement("label");
 			lanUrlLabel.className = "tm-webdav-label";
-			lanUrlLabel.textContent = __$1("webdavLanUrl") || "局域网备用";
+			lanUrlLabel.textContent = __$1("webdavLanUrl") || "备用地址";
 			const lanUrlInput = document.createElement("input");
 			lanUrlInput.className = "tm-webdav-input";
 			lanUrlInput.type = "text";
-			let defaultLanPlaceholder = __$1("webdavLanUrlPlaceholder") || "选填，如 http://192.168.2.250:5005";
-			try {
-				const host = window?.location?.hostname;
-				if (host && /^(?:192\.168\.|10\.|172\.(?:1[6-9]|2\d|3[01])\.)/.test(host)) defaultLanPlaceholder = `http://${host}:5005`;
-			} catch (_) {}
-			lanUrlInput.placeholder = defaultLanPlaceholder;
+			lanUrlInput.placeholder = __$1("webdavLanUrlPlaceholder") || "选填，如 http://192.168.1.x:8080";
 			lanUrlInput.value = config.lanUrl || "";
 			lanUrlInput.addEventListener("change", () => {
 				config.lanUrl = lanUrlInput.value.trim();

@@ -33,7 +33,7 @@ updatePeachButtonVisibility(mockBtn);
 assert.strictEqual(mockBtn.style.display, 'none', '未开启总开关时必须隐藏按钮');
 
 // 开启后显示
-PeachService.saveConfig({ enabled: true, base: 'http://192.168.2.250:8900' });
+PeachService.saveConfig({ enabled: true, base: 'http://192.168.1.100:8900' });
 updatePeachButtonVisibility(mockBtn);
 assert.strictEqual(mockBtn.style.display, '', '开启总开关后按钮应当正常展示');
 console.log('✅ 2. Peach 按钮按总开关显隐逻辑验证通过');

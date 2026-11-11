@@ -36,7 +36,8 @@
 - [x] **20.4** WebDAV 双地址自适应与自动故障转移 (解决局域网缺少 NAT 回流导致的公网域名访问超时、`WebDavClient.executeWithFailover` 3.5s 灵敏截断切换、`_activeUrlCache` 活跃端点会话记忆 0ms 直连、设置面板「局域网备用」配置与动态 IP 感知，v5.7.118-beta.005)
 - [x] **20.5** WebDAV 全局统一多地址架构彻底收敛 (真异常透明上抛拒绝假阴性、`checkDirectoryExists` 网络/认证异常精准抛出驱动 failover、GM_xmlhttpRequest 400ms JS 硬熔断防死挂、跨刷新 2h 持久化租约 `mp_active_webdav_lease`、私网 IP 智能协议清洗补全、Peach 模式 C 独立端点补齐 `lanUrl`、全项目 15 处 WebDAV 校验全局收口至 `WebDavClient.hasValidEndpoint`，9 项测试全通，v5.7.118-beta.006)
 - [x] **20.6** WebDAV 路由器 HTML 劫持防伪、终极目录直探与全链路诊断聚合 (防光猫/路由器返回 HTML 登录页伪装 200/401/404、优先直探目标终极路径免疫 NAS 共享根目录权限拦截、私网 1.8s 极速探测、多端点全部失败聚合汇总报错详情，12 项测试全通，v5.7.118-beta.007)
-- [x] **20.7** WebDAV 全局统一协议守卫 (`_davRequest`)、每 Origin 并发限流 (Max 2)、中文路径 UTF-8 百分比安全编码、`PeachService`/`PeachSection` 校验收口、配置变更自动清理租约与 fnOS 根目录可见性 (`Depth: 1`) 智能诊断 (精准识破飞牛可见文件夹范围未授权/重置与 `/我的文件/` 嵌套，19 项测试全通)
+- [x] **20.7** WebDAV 全局统一协议守卫 (`_davRequest`)、每 Origin 并发限流 (Max 2)、中文路径 UTF-8 百分比安全编码、`PeachService`/`PeachSection` 校验收口、配置变更自动清理租约与根目录可见性 (`Depth: 1`) 智能诊断 (19 项测试全通，v5.7.118-beta.008)
+- [x] **20.8** WebDAV placeholder 与提示信息去私有 IP 与无厂商绑定重构 (清除所有 `192.168.2.250` 与单一品牌限定字样，兼容坚果云、Alist、Nextcloud 及各类私有云/NAS，20 项测试全通)
 
 ---
 
