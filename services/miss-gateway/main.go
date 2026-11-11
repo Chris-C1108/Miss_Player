@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -74,9 +75,10 @@ func main() {
 	// 2. 初始化 MissAV 抓取器 (支持 direct 或 flaresolverr)
 	var missavFetcher source.PageFetcher = &source.DirectFetcher{}
 	if getEnv("MISSAV_FETCHER", "") == "flaresolverr" {
-		flaresolverrURL := getEnv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
-		missavFetcher = source.NewFlareSolverrFetcher(flaresolverrURL)
-		log.Printf("🛡️ MissAV 启用 FlareSolverr 自动过盾: %s", flaresolverrURL)
+		flaresolverrURL := getEnv("FLARESOLVERR_URL", "http://127.0.0.1:8191/v1")
+		flaresolverrProxy := getEnv("FLARESOLVERR_PROXY", proxyURL)
+		missavFetcher = source.NewFlareSolverrFetcher(flaresolverrURL, flaresolverrProxy)
+		log.Printf("🛡️ MissAV 启用 FlareSolverr 自动过盾: %s (出网代理: %s)", flaresolverrURL, flaresolverrProxy)
 	}
 	missavDomains := parseTokens(getEnv("MISSAV_DOMAINS", "missav.ai,missav.ws"))
 	missavSource := source.NewSourceMissAv(missavDomains, missavFetcher)
@@ -97,13 +99,20 @@ func main() {
 		log.Printf("⚙️ 启用用户指定固定片源优先级: %v", order)
 	}
 
-	// 4. 构建 HTTP 路由与服务
+	// 4. 构建 HTTP 路由与服务 (刚性红线: 冷启动必须在 4.5 秒内返回，严禁超时导致播放器崩溃)
+	timeoutDuration := 4500 * time.Millisecond
+	if tStr := getEnv("TIMEOUT", ""); tStr != "" {
+		if tVal, err := strconv.Atoi(tStr); err == nil && tVal > 0 {
+			timeoutDuration = time.Duration(tVal) * time.Millisecond
+		}
+	}
+
 	cfg := server.Config{
 		Port:       port,
 		ProxyURL:   proxyURL,
 		Version:    "2.0.0",
-		WaitWindow: 3500 * time.Millisecond,
-		Timeout:    12 * time.Second,
+		WaitWindow: 3200 * time.Millisecond, // 3.2s 加权竞速窗口
+		Timeout:    timeoutDuration,         // 4.5s 刚性硬超时
 		Tokens:     tokens,
 		AdminToken: adminToken,
 	}

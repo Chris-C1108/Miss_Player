@@ -81,28 +81,53 @@ func (s *Source123Av) Resolve(ctx context.Context, client *http.Client, code str
 			sHTML := string(sBytes)
 
 			reLink := regexp.MustCompile(`/cn/v/([a-zA-Z0-9_\-]+)`)
-			links := reLink.FindAllStringSubmatch(sHTML, 5)
+			links := reLink.FindAllStringSubmatch(sHTML, -1)
+			seen := make(map[string]bool)
+
+			var uncensoredCodes []string
+			var normalCodes []string
+
 			for _, lMatch := range links {
 				if len(lMatch) > 1 {
 					subCode := lMatch[1]
-					subURL := fmt.Sprintf("https://123av.com/cn/v/%s", subCode)
-					subReq, _ := http.NewRequestWithContext(ctx, "GET", subURL, nil)
-					subReq.Header.Set("User-Agent", ua)
-					subReq.Header.Set("Referer", searchURL)
-					subResp, subErr := client.Do(subReq)
-					if subErr == nil && subResp.StatusCode == 200 {
-						subBytes, _ := io.ReadAll(subResp.Body)
-						subResp.Body.Close()
-						variantName := "普通版"
-						if strings.Contains(subCode, "uncensored") {
-							variantName = "无码流出"
-						}
-						if res := extract123AvFromHTML(ctx, client, string(subBytes), code, variantName); res != nil {
-							return res, nil
-						}
-					} else if subResp != nil {
-						subResp.Body.Close()
+					if seen[subCode] {
+						continue
 					}
+					seen[subCode] = true
+
+					// 严格等价性核验：绝对拦截非目标番号 (如 wsp-160, nhdta-896 冒充 wsp-101)
+					if !IsEquivalentCode(code, subCode) {
+						continue
+					}
+
+					if strings.Contains(strings.ToLower(subCode), "uncensored") {
+						uncensoredCodes = append(uncensoredCodes, subCode)
+					} else {
+						normalCodes = append(normalCodes, subCode)
+					}
+				}
+			}
+
+			// 优先尝试无码流出，其次普通版
+			candidateCodes := append(uncensoredCodes, normalCodes...)
+			for _, subCode := range candidateCodes {
+				subURL := fmt.Sprintf("https://123av.com/cn/v/%s", subCode)
+				subReq, _ := http.NewRequestWithContext(ctx, "GET", subURL, nil)
+				subReq.Header.Set("User-Agent", ua)
+				subReq.Header.Set("Referer", searchURL)
+				subResp, subErr := client.Do(subReq)
+				if subErr == nil && subResp.StatusCode == 200 {
+					subBytes, _ := io.ReadAll(subResp.Body)
+					subResp.Body.Close()
+					variantName := "普通版"
+					if strings.Contains(strings.ToLower(subCode), "uncensored") {
+						variantName = "无码流出"
+					}
+					if res := extract123AvFromHTML(ctx, client, string(subBytes), code, variantName); res != nil {
+						return res, nil
+					}
+				} else if subResp != nil {
+					subResp.Body.Close()
 				}
 			}
 		} else if sResp != nil {

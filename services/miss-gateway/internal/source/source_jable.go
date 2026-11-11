@@ -35,42 +35,52 @@ func (s *SourceJable) Resolve(ctx context.Context, client *http.Client, code str
 	domains := []string{"https://fs1.app", "https://jable.tv"}
 	ua := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
+	candidateSlugs := []string{cleanCode}
+	if core, ok := ExtractCodeCore(code); ok {
+		normSlug := fmt.Sprintf("%s-%s", strings.ToLower(core.Prefix), core.Number)
+		if normSlug != cleanCode {
+			candidateSlugs = append(candidateSlugs, normSlug)
+		}
+	}
+
 	for _, domain := range domains {
-		directURL := fmt.Sprintf("%s/videos/%s/", domain, cleanCode)
-		req, err := http.NewRequestWithContext(ctx, "GET", directURL, nil)
-		if err != nil {
-			continue
-		}
-		req.Header.Set("User-Agent", ua)
-		req.Header.Set("Referer", domain+"/")
-
-		resp, err := client.Do(req)
-		if err != nil || resp.StatusCode >= 400 {
-			if resp != nil {
-				resp.Body.Close()
+		for _, slug := range candidateSlugs {
+			directURL := fmt.Sprintf("%s/videos/%s/", domain, slug)
+			req, err := http.NewRequestWithContext(ctx, "GET", directURL, nil)
+			if err != nil {
+				continue
 			}
-			continue
-		}
+			req.Header.Set("User-Agent", ua)
+			req.Header.Set("Referer", domain+"/")
 
-		bodyBytes, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			continue
-		}
-
-		re := regexp.MustCompile(`hlsUrl\s*=\s*['"](https?://[^'"]+\.m3u8[^'"]*)['"]`)
-		match := re.FindStringSubmatch(string(bodyBytes))
-		if len(match) > 1 && match[1] != "" {
-			res := &StreamResult{
-				Success: true,
-				Code:    strings.ToUpper(code),
-				Source:  "Jable",
-				URL:     match[1],
-				Referer: domain + "/",
-				Variant: "普通版",
+			resp, err := client.Do(req)
+			if err != nil || resp.StatusCode >= 400 {
+				if resp != nil {
+					resp.Body.Close()
+				}
+				continue
 			}
-			enrichHlsEncryptionMetadata(ctx, client, res.URL, res.Referer, res)
-			return res, nil
+
+			bodyBytes, err := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if err != nil {
+				continue
+			}
+
+			re := regexp.MustCompile(`hlsUrl\s*=\s*['"](https?://[^'"]+\.m3u8[^'"]*)['"]`)
+			match := re.FindStringSubmatch(string(bodyBytes))
+			if len(match) > 1 && match[1] != "" {
+				res := &StreamResult{
+					Success: true,
+					Code:    strings.ToUpper(code),
+					Source:  "Jable",
+					URL:     match[1],
+					Referer: domain + "/",
+					Variant: "普通版",
+				}
+				enrichHlsEncryptionMetadata(ctx, client, res.URL, res.Referer, res)
+				return res, nil
+			}
 		}
 	}
 

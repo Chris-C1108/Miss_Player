@@ -55,13 +55,10 @@ func (s *SourceJavVerse) Resolve(ctx context.Context, client *http.Client, code 
 	sBody, _ := io.ReadAll(sResp.Body)
 	sResp.Body.Close()
 
-	re := regexp.MustCompile(`/(?:[a-z]{2}/)?work/(\d+)`)
-	match := re.FindStringSubmatch(string(sBody))
-	if len(match) < 2 {
-		return nil, fmt.Errorf("javverse未找到作品ID")
+	workID := extractJavverseWorkID(string(sBody), cleanCode)
+	if workID == "" {
+		return nil, fmt.Errorf("javverse未找到匹配作品ID")
 	}
-
-	workID := match[1]
 
 	// 2. 伪造 Referer 与 Origin 请求免盾播放会话
 	sessionURL := fmt.Sprintf("%s/api/video/sessions", origin)
@@ -116,4 +113,50 @@ func (s *SourceJavVerse) Resolve(ctx context.Context, client *http.Client, code 
 	}
 
 	return nil, fmt.Errorf("javverse未能获取有效播放地址")
+}
+
+// extractJavverseWorkID 从搜索结果中安全提取与目标番号强关联的 workId
+func extractJavverseWorkID(html, code string) string {
+	cleanCode := strings.ToUpper(strings.TrimSpace(code))
+	core, hasCore := ExtractCodeCore(code)
+
+	// 1. 优先尝试直接在 <a> 标签内部匹配 (常见的包含缩略图与标题的卡片链接)
+	reLink := regexp.MustCompile(`(?i)<a[^>]+href="[^"]*/(?:[a-z]{2}/)?work/(\d+)"[^>]*>([\s\S]*?)</a>`)
+	for _, m := range reLink.FindAllStringSubmatch(html, -1) {
+		if len(m) > 2 {
+			workID := m[1]
+			content := strings.ToUpper(m[2])
+			if isContentMatching(content, cleanCode, core, hasCore) {
+				return workID
+			}
+		}
+	}
+
+	// 2. 次选：在相邻块级容器内匹配 (如 <div class="card">...<a href="...work/123">...</a>...<span>CODE</span>...</div>)
+	// 按卡片常用闭合边界分割，防止跨卡片污染
+	reBlock := regexp.MustCompile(`(?i)<(?:div|article|li)[^>]*>([\s\S]*?)</(?:div|article|li)>`)
+	reWork := regexp.MustCompile(`/(?:[a-z]{2}/)?work/(\d+)`)
+	for _, block := range reBlock.FindAllString(html, -1) {
+		if isContentMatching(strings.ToUpper(block), cleanCode, core, hasCore) {
+			if m := reWork.FindStringSubmatch(block); len(m) > 1 {
+				return m[1]
+			}
+		}
+	}
+
+	return ""
+}
+
+func isContentMatching(content, cleanCode string, core CodeCore, hasCore bool) bool {
+	if strings.Contains(content, cleanCode) {
+		return true
+	}
+	if hasCore {
+		compact := core.Prefix + core.Number
+		hyphen := core.Prefix + "-" + core.Number
+		if strings.Contains(content, hyphen) || strings.Contains(content, compact) {
+			return true
+		}
+	}
+	return false
 }

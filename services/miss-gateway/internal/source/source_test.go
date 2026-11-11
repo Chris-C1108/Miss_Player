@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -210,4 +211,118 @@ func TestTrackerAndCircuitBreaker(t *testing.T) {
 	if tracker.CanExecute("chl-src") {
 		t.Errorf("ErrChallenged should immediately trip circuit breaker")
 	}
+}
+
+// Test123AvRejectsMismatchedSearch 测试 123AV 拒绝搜索结果中的无关番号 (防止 WSP-160 冒充 WSP-101)
+func Test123AvRejectsMismatchedSearch(t *testing.T) {
+	detailRequested := false
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/cn/search") {
+			// 返回包含 WSP-160, NHDTA-896 等相似/推荐但非目标的搜索页
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`
+				<html><body>
+					<a href="/cn/v/wsp-160">WSP-160</a>
+					<a href="/cn/v/nhdta-896">NHDTA-896</a>
+				</body></html>
+			`))
+			return
+		}
+		if strings.Contains(r.URL.Path, "/cn/v/wsp-160") {
+			detailRequested = true
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`<div>iframe</div>`))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer ts.Close()
+
+	// 验证 123av 搜索逻辑严格核验
+	s123 := &Source123Av{}
+	// 这里通过 mockClient 替换目标主机进行测试
+	customClient := ts.Client()
+	customClient.Transport = &rewriteTransport{targetURL: ts.URL}
+
+	_, err := s123.Resolve(context.Background(), customClient, "WSP-101")
+	if err == nil {
+		t.Fatalf("expected error for uncollected code, but got success")
+	}
+	if detailRequested {
+		t.Errorf("expected detail page of WSP-160 NOT to be requested, but it was!")
+	}
+}
+
+// TestMissavSearchMatchesEquivalent 测试 MissAV 搜索准确命中等价番号并排除假阳性
+func TestMissavSearchMatchesEquivalent(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/search") {
+			w.WriteHeader(http.StatusOK)
+			// 页面包含:
+			// 1. /cn/wsp-1010 (子串假阳性干扰项)
+			// 2. /cn/dm13/wsp-101 (真正目标，带有分类目录)
+			_, _ = w.Write([]byte(`
+				<html><body>
+					<a href="/cn/wsp-1010">WSP-1010 Other</a>
+					<a href="/cn/dm13/wsp-101">WSP-101 Correct</a>
+				</body></html>
+			`))
+			return
+		}
+		if strings.HasPrefix(r.URL.Path, "/cn/dm13/wsp-101") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`<html><script>const hlsUrl = "https://surrit.com/target-uuid/playlist.m3u8";</script></html>`))
+			return
+		}
+		if strings.HasPrefix(r.URL.Path, "/cn/wsp-1010") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`<html><script>const hlsUrl = "https://surrit.com/wrong-uuid/playlist.m3u8";</script></html>`))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer ts.Close()
+
+	missav := NewSourceMissAv([]string{ts.URL}, &DirectFetcher{})
+	res, err := missav.Resolve(context.Background(), ts.Client(), "WSP-101")
+	if err != nil {
+		t.Fatalf("expected success, got error: %v", err)
+	}
+	if res.URL != "https://surrit.com/target-uuid/playlist.m3u8" {
+		t.Errorf("expected target-uuid playlist, got %s", res.URL)
+	}
+}
+
+// TestJavverseWorkIDExtraction 测试 JAVVerse 搜索 workID 强关联提取
+func TestJavverseWorkIDExtraction(t *testing.T) {
+	// 场景 1: HTML 中有推荐 work，但没有当前番号
+	unrelatedHTML := `
+		<div class="card"><a href="/en/work/99999"><span>ABC-001 Title</span></a></div>
+		<div class="card"><a href="/en/work/88888"><span>XYZ-999 Title</span></a></div>
+	`
+	id := extractJavverseWorkID(unrelatedHTML, "WSP-101")
+	if id != "" {
+		t.Errorf("expected empty workID for unrelated HTML, got: %s", id)
+	}
+
+	// 场景 2: HTML 中包含目标番号 WSP-101
+	matchedHTML := `
+		<div class="card"><a href="/en/work/99999"><span>ABC-001 Title</span></a></div>
+		<div class="card"><a href="/en/work/12345"><span>WSP-101 Debut Title</span></a></div>
+	`
+	id2 := extractJavverseWorkID(matchedHTML, "WSP-101")
+	if id2 != "12345" {
+		t.Errorf("expected workID 12345, got: %s", id2)
+	}
+}
+
+type rewriteTransport struct {
+	targetURL string
+}
+
+func (rt *rewriteTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	u, _ := url.Parse(rt.targetURL)
+	req.URL.Scheme = u.Scheme
+	req.URL.Host = u.Host
+	return http.DefaultTransport.RoundTrip(req)
 }

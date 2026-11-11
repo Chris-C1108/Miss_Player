@@ -356,6 +356,11 @@ export class CustomVideoPlayer {
      * 关闭播放器
      */
     close() {
+        // 记录退出时音频租约状态 (有声则延展记忆时间戳，静音则立即销毁)
+        if (this.managers?.controlManager?.volumeController) {
+            this.managers.controlManager.volumeController.recordExitState();
+        }
+
         if (this._activePlayStartTime) {
             this._activePlayDurationSec += (Date.now() - this._activePlayStartTime) / 1000;
             this._activePlayStartTime = null;

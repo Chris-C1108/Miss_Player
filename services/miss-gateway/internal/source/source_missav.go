@@ -51,16 +51,25 @@ func (d *DirectFetcher) Fetch(ctx context.Context, client *http.Client, urlStr, 
 
 // FlareSolverrFetcher 基于 FlareSolverr API 协议的过盾抓取器
 type FlareSolverrFetcher struct {
-	apiURL string
+	apiURL       string
+	proxyURL     string
+	directClient *http.Client
 }
 
-func NewFlareSolverrFetcher(apiURL string) *FlareSolverrFetcher {
+func NewFlareSolverrFetcher(apiURL, proxyURL string) *FlareSolverrFetcher {
 	return &FlareSolverrFetcher{
-		apiURL: strings.TrimRight(apiURL, "/"),
+		apiURL:   strings.TrimRight(apiURL, "/"),
+		proxyURL: proxyURL,
+		directClient: &http.Client{
+			Timeout: 40 * time.Second,
+			Transport: &http.Transport{
+				Proxy: nil, // 确保发往本地局域网 FlareSolverr 的请求强制直连，不绕代理
+			},
+		},
 	}
 }
 
-func (f *FlareSolverrFetcher) Fetch(ctx context.Context, client *http.Client, urlStr, referer string) (int, string, error) {
+func (f *FlareSolverrFetcher) Fetch(ctx context.Context, _ *http.Client, urlStr, referer string) (int, string, error) {
 	endpoint := f.apiURL
 	if !strings.HasSuffix(endpoint, "/v1") {
 		endpoint += "/v1"
@@ -70,6 +79,11 @@ func (f *FlareSolverrFetcher) Fetch(ctx context.Context, client *http.Client, ur
 		"cmd":        "request.get",
 		"url":        urlStr,
 		"maxTimeout": 30000,
+	}
+	if f.proxyURL != "" {
+		payload["proxy"] = map[string]string{
+			"url": f.proxyURL,
+		}
 	}
 
 	data, err := json.Marshal(payload)
@@ -83,7 +97,7 @@ func (f *FlareSolverrFetcher) Fetch(ctx context.Context, client *http.Client, ur
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(req)
+	resp, err := f.directClient.Do(req)
 	if err != nil {
 		return 0, "", err
 	}
@@ -149,12 +163,30 @@ func (s *SourceMissAv) Resolve(ctx context.Context, client *http.Client, code st
 		}
 		domain = strings.TrimRight(domain, "/")
 
-		// 候选路径：/cn/{code}、/{code}
-		paths := []string{
-			fmt.Sprintf("%s/cn/%s", domain, cleanCode),
-			fmt.Sprintf("%s/%s", domain, cleanCode),
+		// 检查是否启用了 FlareSolverr 自动过盾器
+		isFlareSolverr := false
+		if _, ok := s.fetcher.(*FlareSolverrFetcher); ok {
+			isFlareSolverr = true
 		}
 
+		// 候选直达路径：/cn/{code}、/{code}，以及规范化后的番号
+		paths := []string{
+			fmt.Sprintf("%s/cn/%s", domain, cleanCode),
+		}
+		if !isFlareSolverr {
+			paths = append(paths, fmt.Sprintf("%s/%s", domain, cleanCode))
+			if core, ok := ExtractCodeCore(code); ok {
+				normSlug := fmt.Sprintf("%s-%s", strings.ToLower(core.Prefix), core.Number)
+				if normSlug != cleanCode {
+					paths = append(paths,
+						fmt.Sprintf("%s/cn/%s", domain, normSlug),
+						fmt.Sprintf("%s/%s", domain, normSlug),
+					)
+				}
+			}
+		}
+
+		hitDirect := false
 		for _, pageURL := range paths {
 			status, body, err := s.fetcher.Fetch(ctx, client, pageURL, domain+"/")
 			if err != nil {
@@ -181,32 +213,61 @@ func (s *SourceMissAv) Resolve(ctx context.Context, client *http.Client, code st
 					}, nil
 				}
 			}
+			// FlareSolverr 模式下若直达未直接 200/命中，立即跳出尝试搜索，避免空耗超时
+			if isFlareSolverr && (status == 404 || status >= 400) {
+				break
+			}
+		}
+		if hitDirect {
+			continue
 		}
 
 		// 搜索兜底检索
 		searchURL := fmt.Sprintf("%s/search/%s", domain, url.QueryEscape(cleanCode))
 		status, body, err := s.fetcher.Fetch(ctx, client, searchURL, domain+"/")
 		if err == nil && status == 200 && body != "" {
-			reDetail := regexp.MustCompile(fmt.Sprintf(`href="((?:https?://[^"/]+)?/(?:cn/)?(?:[^"/]*%s[^"/]*))"`, cleanCode))
-			if match := reDetail.FindStringSubmatch(body); len(match) > 1 {
-				detailPath := match[1]
-				detailURL := detailPath
-				if !strings.HasPrefix(detailURL, "http") {
-					detailURL = domain + detailPath
-				}
+			reHref := regexp.MustCompile(`href="([^"]+)"`)
+			matches := reHref.FindAllStringSubmatch(body, -1)
+			seenPaths := make(map[string]bool)
 
-				dStatus, dBody, dErr := s.fetcher.Fetch(ctx, client, detailURL, searchURL)
-				if dErr == nil && dStatus == 200 && dBody != "" {
-					if streamURL := extractMissavPlaylist(dBody); streamURL != "" {
-						return &StreamResult{
-							Success:   true,
-							Code:      strings.ToUpper(code),
-							Source:    "MissAV",
-							URL:       streamURL,
-							Referer:   domain + "/",
-							Variant:   "普通版",
-							KeyMethod: "NONE",
-						}, nil
+			for _, m := range matches {
+				if len(m) > 1 {
+					rawLink := m[1]
+					if strings.HasSuffix(rawLink, ".css") || strings.HasSuffix(rawLink, ".js") || strings.HasSuffix(rawLink, ".png") || strings.HasSuffix(rawLink, ".jpg") {
+						continue
+					}
+
+					// 严格核验链接尾部 slug 与目标番号等价 (防止 wsp-1010 等子串假阳性，并支持 /cn/dm13/wsp-101 等分类路径)
+					if !IsEquivalentCode(code, rawLink) {
+						continue
+					}
+
+					detailURL := rawLink
+					if !strings.HasPrefix(detailURL, "http") {
+						if !strings.HasPrefix(detailURL, "/") {
+							detailURL = "/" + detailURL
+						}
+						detailURL = domain + detailURL
+					}
+
+					if seenPaths[detailURL] {
+						continue
+					}
+					seenPaths[detailURL] = true
+
+					dStatus, dBody, dErr := s.fetcher.Fetch(ctx, client, detailURL, searchURL)
+					if dErr == nil && dStatus == 200 && dBody != "" {
+						if streamURL := extractMissavPlaylist(dBody); streamURL != "" {
+							return &StreamResult{
+								Success:   true,
+								Code:      strings.ToUpper(code),
+								Source:    "MissAV",
+								URL:       streamURL,
+								Referer:   domain + "/",
+								Variant:   "普通版",
+								KeyMethod: "NONE",
+							}, nil
+						}
 					}
 				}
 			}

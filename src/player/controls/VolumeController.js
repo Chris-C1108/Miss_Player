@@ -20,10 +20,10 @@ export class VolumeController {
         this.lastVolume = 1;
         this.supportsVolumeControl = this.checkVolumeControlSupport();
 
-        this._unmuteHeartbeatTimer = null;
         this._onPlayHandler = null;
         this._onPauseHandler = null;
-        this._onEndedHandler = null;
+        this._onVisibilityChange = null;
+        this._onPageHide = null;
     }
 
     checkVolumeControlSupport() {
@@ -56,12 +56,12 @@ export class VolumeController {
 
         const lastUnmutedTime = Number(getValue('lastUnmutedTime', 0)) || 0;
         if (!lastUnmutedTime) {
-            return true; // 从未记录过取消静音或已被手动重置
+            return true; // 从未记录过取消静音或退出/手动时处于静音状态
         }
 
         const elapsed = Date.now() - lastUnmutedTime;
         const resetMs = Math.max(1, muteResetMinutes) * 60 * 1000;
-        return elapsed >= resetMs; // 距离上次取消静音超过指定分钟数
+        return elapsed >= resetMs; // 距离上次退出/活跃超过指定分钟数
     }
 
     /**
@@ -72,30 +72,31 @@ export class VolumeController {
     }
 
     /**
-     * 启动每 30 秒一次的时间戳心跳更新
+     * 退出或挂起时记录音频状态
+     * 遵循有声租约机制：
+     * 离开时若为有声播放，则保存当前退出时间戳以维持指定分钟内的有声连贯观影；
+     * 若离开时为静音状态（或音量为0），则清空时间戳为 0，确保下次打开无条件保持静音防打扰。
      */
-    startUnmuteHeartbeat() {
-        this.stopUnmuteHeartbeat();
+    recordExitState() {
         const { defaultMuted } = this._getSettings();
         if (!defaultMuted) return;
 
-        // 每 30 秒更新记录当前时间戳 X
-        this._unmuteHeartbeatTimer = setInterval(() => {
-            if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0 && !this.targetVideo.paused) {
-                this.recordUnmutedTime();
-            }
-        }, 30000);
+        if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) {
+            this.recordUnmutedTime();
+        } else {
+            setValue('lastUnmutedTime', 0);
+        }
     }
 
     /**
-     * 停止心跳计时器
+     * 保持 API 兼容的轻量空操作 (事件驱动替代高频轮询定时器)
      */
-    stopUnmuteHeartbeat() {
-        if (this._unmuteHeartbeatTimer) {
-            clearInterval(this._unmuteHeartbeatTimer);
-            this._unmuteHeartbeatTimer = null;
-        }
-    }
+    startUnmuteHeartbeat() {}
+
+    /**
+     * 保持 API 兼容的轻量空操作
+     */
+    stopUnmuteHeartbeat() {}
 
     /**
      * 应用初始静音策略
@@ -107,7 +108,6 @@ export class VolumeController {
         if (defaultMuted) {
             if (this.shouldDefaultMute()) {
                 this.targetVideo.muted = true;
-                this.stopUnmuteHeartbeat();
             } else {
                 // 处于取消静音记忆有效期内 (未超过指定分钟数)，保持有声播放
                 this.targetVideo.muted = false;
@@ -115,9 +115,6 @@ export class VolumeController {
                     this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
                 }
                 this.recordUnmutedTime();
-                if (!this.targetVideo.paused) {
-                    this.startUnmuteHeartbeat();
-                }
             }
         }
 
@@ -130,12 +127,9 @@ export class VolumeController {
     onSettingsChanged() {
         const { defaultMuted } = this._getSettings();
         if (!defaultMuted) {
-            this.stopUnmuteHeartbeat();
+            // 设置关闭
         } else if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) {
             this.recordUnmutedTime();
-            if (!this.targetVideo.paused) {
-                this.startUnmuteHeartbeat();
-            }
         }
     }
 
@@ -152,9 +146,6 @@ export class VolumeController {
                 this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
             }
             this.recordUnmutedTime();
-            if (!this.targetVideo.paused) {
-                this.startUnmuteHeartbeat();
-            }
             const currentVol = Math.round((this.targetVideo.volume || 1) * 100);
             Toast(`已取消静音 (音量 ${currentVol}%)`, 'info');
         } else {
@@ -164,8 +155,7 @@ export class VolumeController {
                 this.targetVideo.volume = 0;
             }
             this.targetVideo.muted = true;
-            this.stopUnmuteHeartbeat();
-            // 用户主动静音，清空记忆时间戳，下一次打开必定静音
+            // 用户主动静音，清空记忆时间戳，销毁有声租约，下一次打开必定静音
             setValue('lastUnmutedTime', 0);
             Toast('已静音', 'info');
         }
@@ -174,7 +164,7 @@ export class VolumeController {
     }
 
     /**
-     * 绑定视频播放生命周期事件以维护时间戳心跳
+     * 绑定视频播放生命周期与离开事件以维护时间戳
      * @private
      */
     _bindVideoLifecycleEvents() {
@@ -183,7 +173,6 @@ export class VolumeController {
         this._onPlayHandler = () => {
             if (!this.targetVideo.muted && this.targetVideo.volume > 0) {
                 this.recordUnmutedTime();
-                this.startUnmuteHeartbeat();
             }
         };
 
@@ -192,16 +181,28 @@ export class VolumeController {
                 // 暂停时刻封存最新时间戳，从此刻起开始计算离线/闲置时间
                 this.recordUnmutedTime();
             }
-            this.stopUnmuteHeartbeat();
         };
 
-        this._onEndedHandler = () => {
-            this.stopUnmuteHeartbeat();
+        this._onVisibilityChange = () => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+                this.recordExitState();
+            }
+        };
+
+        this._onPageHide = () => {
+            this.recordExitState();
         };
 
         this.targetVideo.addEventListener('play', this._onPlayHandler);
         this.targetVideo.addEventListener('pause', this._onPauseHandler);
-        this.targetVideo.addEventListener('ended', this._onEndedHandler);
+
+        if (typeof document !== 'undefined') {
+            document.addEventListener('visibilitychange', this._onVisibilityChange);
+        }
+        if (typeof window !== 'undefined') {
+            window.addEventListener('pagehide', this._onPageHide);
+            window.addEventListener('beforeunload', this._onPageHide);
+        }
     }
 
     /**
@@ -282,7 +283,7 @@ export class VolumeController {
     }
 
     cleanup() {
-        this.stopUnmuteHeartbeat();
+        this.recordExitState();
 
         if (this.targetVideo) {
             if (this._onPlayHandler) {
@@ -293,10 +294,17 @@ export class VolumeController {
                 this.targetVideo.removeEventListener('pause', this._onPauseHandler);
                 this._onPauseHandler = null;
             }
-            if (this._onEndedHandler) {
-                this.targetVideo.removeEventListener('ended', this._onEndedHandler);
-                this._onEndedHandler = null;
-            }
+        }
+
+        if (this._onVisibilityChange && typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', this._onVisibilityChange);
+            this._onVisibilityChange = null;
+        }
+
+        if (this._onPageHide && typeof window !== 'undefined') {
+            window.removeEventListener('pagehide', this._onPageHide);
+            window.removeEventListener('beforeunload', this._onPageHide);
+            this._onPageHide = null;
         }
 
         this.volumeSlider = null;

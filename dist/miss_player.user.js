@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.113-026
+// @version            5.7.113-027
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-026";
+		return "5.7.113-027";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1799,7 +1799,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-026";
+		return "5.7.113-027";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -3604,7 +3604,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-026";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-027";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -14898,10 +14898,10 @@
 			this.volumeButton = null;
 			this.lastVolume = 1;
 			this.supportsVolumeControl = this.checkVolumeControlSupport();
-			this._unmuteHeartbeatTimer = null;
 			this._onPlayHandler = null;
 			this._onPauseHandler = null;
-			this._onEndedHandler = null;
+			this._onVisibilityChange = null;
+			this._onPageHide = null;
 		}
 		checkVolumeControlSupport() {
 			return !(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
@@ -14923,43 +14923,30 @@
 		recordUnmutedTime() {
 			setValue("lastUnmutedTime", Date.now());
 		}
-		startUnmuteHeartbeat() {
-			this.stopUnmuteHeartbeat();
+		recordExitState() {
 			const { defaultMuted } = this._getSettings();
 			if (!defaultMuted) return;
-			this._unmuteHeartbeatTimer = setInterval(() => {
-				if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0 && !this.targetVideo.paused) this.recordUnmutedTime();
-			}, 3e4);
+			if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
+			else setValue("lastUnmutedTime", 0);
 		}
-		stopUnmuteHeartbeat() {
-			if (this._unmuteHeartbeatTimer) {
-				clearInterval(this._unmuteHeartbeatTimer);
-				this._unmuteHeartbeatTimer = null;
-			}
-		}
+		startUnmuteHeartbeat() {}
+		stopUnmuteHeartbeat() {}
 		applyInitialMutePolicy() {
 			if (!this.targetVideo) return;
 			const { defaultMuted } = this._getSettings();
 			if (defaultMuted) {
-				if (this.shouldDefaultMute()) {
-					this.targetVideo.muted = true;
-					this.stopUnmuteHeartbeat();
-				} else {
+				if (this.shouldDefaultMute()) this.targetVideo.muted = true;
+				else {
 					this.targetVideo.muted = false;
 					if (this.supportsVolumeControl && this.targetVideo.volume === 0) this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
 					this.recordUnmutedTime();
-					if (!this.targetVideo.paused) this.startUnmuteHeartbeat();
 				}
 			}
 			this.updateVolumeUI();
 		}
 		onSettingsChanged() {
 			const { defaultMuted } = this._getSettings();
-			if (!defaultMuted) this.stopUnmuteHeartbeat();
-			else if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) {
-				this.recordUnmutedTime();
-				if (!this.targetVideo.paused) this.startUnmuteHeartbeat();
-			}
+			if (!defaultMuted) {} else if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
 		}
 		toggleMute() {
 			if (!this.targetVideo) return;
@@ -14967,7 +14954,6 @@
 				this.targetVideo.muted = false;
 				if (this.supportsVolumeControl) this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
 				this.recordUnmutedTime();
-				if (!this.targetVideo.paused) this.startUnmuteHeartbeat();
 				Toast$1(`已取消静音 (音量 ${Math.round((this.targetVideo.volume || 1) * 100)}%)`, "info");
 			} else {
 				if (this.supportsVolumeControl) {
@@ -14975,7 +14961,6 @@
 					this.targetVideo.volume = 0;
 				}
 				this.targetVideo.muted = true;
-				this.stopUnmuteHeartbeat();
 				setValue("lastUnmutedTime", 0);
 				Toast$1("已静音", "info");
 			}
@@ -14984,21 +14969,24 @@
 		_bindVideoLifecycleEvents() {
 			if (!this.targetVideo) return;
 			this._onPlayHandler = () => {
-				if (!this.targetVideo.muted && this.targetVideo.volume > 0) {
-					this.recordUnmutedTime();
-					this.startUnmuteHeartbeat();
-				}
+				if (!this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
 			};
 			this._onPauseHandler = () => {
 				if (!this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
-				this.stopUnmuteHeartbeat();
 			};
-			this._onEndedHandler = () => {
-				this.stopUnmuteHeartbeat();
+			this._onVisibilityChange = () => {
+				if (typeof document !== "undefined" && document.visibilityState === "hidden") this.recordExitState();
+			};
+			this._onPageHide = () => {
+				this.recordExitState();
 			};
 			this.targetVideo.addEventListener("play", this._onPlayHandler);
 			this.targetVideo.addEventListener("pause", this._onPauseHandler);
-			this.targetVideo.addEventListener("ended", this._onEndedHandler);
+			if (typeof document !== "undefined") document.addEventListener("visibilitychange", this._onVisibilityChange);
+			if (typeof window !== "undefined") {
+				window.addEventListener("pagehide", this._onPageHide);
+				window.addEventListener("beforeunload", this._onPageHide);
+			}
 		}
 		createVolumeSlider(container) {
 			const volumeControl = document.createElement("div");
@@ -15050,7 +15038,7 @@
 			});
 		}
 		cleanup() {
-			this.stopUnmuteHeartbeat();
+			this.recordExitState();
 			if (this.targetVideo) {
 				if (this._onPlayHandler) {
 					this.targetVideo.removeEventListener("play", this._onPlayHandler);
@@ -15060,10 +15048,15 @@
 					this.targetVideo.removeEventListener("pause", this._onPauseHandler);
 					this._onPauseHandler = null;
 				}
-				if (this._onEndedHandler) {
-					this.targetVideo.removeEventListener("ended", this._onEndedHandler);
-					this._onEndedHandler = null;
-				}
+			}
+			if (this._onVisibilityChange && typeof document !== "undefined") {
+				document.removeEventListener("visibilitychange", this._onVisibilityChange);
+				this._onVisibilityChange = null;
+			}
+			if (this._onPageHide && typeof window !== "undefined") {
+				window.removeEventListener("pagehide", this._onPageHide);
+				window.removeEventListener("beforeunload", this._onPageHide);
+				this._onPageHide = null;
 			}
 			this.volumeSlider = null;
 			this.volumeButton = null;
@@ -23626,6 +23619,7 @@
 			}
 		}
 		close() {
+			if (this.managers?.controlManager?.volumeController) this.managers.controlManager.volumeController.recordExitState();
 			if (this._activePlayStartTime) {
 				this._activePlayDurationSec += (Date.now() - this._activePlayStartTime) / 1e3;
 				this._activePlayStartTime = null;

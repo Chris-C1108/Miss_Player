@@ -120,4 +120,50 @@ function createMockPlayerCore(video, defaultMuted = true, muteResetMinutes = 5) 
     console.log('✅ 5. 手动取消/恢复静音及时间戳生命周期测试通过');
 }
 
+// 测试用例 6: 退出时处于有声播放状态，应记录退出时间戳
+{
+    setValue('lastUnmutedTime', 0);
+    const video = createMockVideo();
+    video.muted = false;
+    video.volume = 0.8;
+    const playerCore = createMockPlayerCore(video, true, 5);
+    const vc = new VolumeController(playerCore, {});
+
+    const beforeExit = Date.now();
+    vc.recordExitState();
+    const recordedTime = getValue('lastUnmutedTime', 0);
+    assert.ok(recordedTime >= beforeExit, '退出时为有声状态应记录退出时间戳');
+    assert.strictEqual(vc.shouldDefaultMute(), false, '记录退出时间戳后，5分钟内再次进入不应被判定为静音');
+    console.log('✅ 6. 有声退出保留租约时间戳测试通过');
+}
+
+// 测试用例 7: 退出时本身处于静音状态，应清空时间戳 (销毁租约)
+{
+    setValue('lastUnmutedTime', Date.now()); // 预设曾有时间戳
+    const video = createMockVideo();
+    video.muted = true; // 退出时处于静音
+    video.volume = 0.8;
+    const playerCore = createMockPlayerCore(video, true, 5);
+    const vc = new VolumeController(playerCore, {});
+
+    vc.recordExitState();
+    assert.strictEqual(getValue('lastUnmutedTime', 0), 0, '退出时处于静音应销毁时间戳');
+    assert.strictEqual(vc.shouldDefaultMute(), true, '销毁时间戳后，下次进入必定静音');
+    console.log('✅ 7. 静音退出彻底销毁时间戳测试通过');
+}
+
+// 测试用例 8: cleanup 时自动调用 recordExitState 并解绑事件
+{
+    const video = createMockVideo();
+    video.muted = false;
+    video.volume = 1;
+    const playerCore = createMockPlayerCore(video, true, 5);
+    const vc = new VolumeController(playerCore, {});
+
+    const beforeCleanup = Date.now();
+    vc.cleanup();
+    assert.ok(getValue('lastUnmutedTime', 0) >= beforeCleanup, 'cleanup 应当自动触发退出状态记录');
+    console.log('✅ 8. cleanup 自动触发退出音频结算测试通过');
+}
+
 console.log('🎉 VolumeController 全部单元测试 100% 通过！');
