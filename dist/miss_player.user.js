@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.113-029
+// @version            5.7.113-030
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-029";
+		return "5.7.113-030";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3262,25 +3262,59 @@
 	var CACHE_KEY_TIME_STABLE = "mp_update_last_check_stable";
 	var CACHE_KEY_DATA_BETA = "mp_update_meta_cache_beta";
 	var CACHE_KEY_TIME_BETA = "mp_update_last_check_beta";
+	var CACHE_TTL_STABLE = 432e5;
+	var CACHE_TTL_BETA = 3e5;
 	var GITHUB_RAW_USER_URL = "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js";
 	var GITHUB_COMMITS_URL = "https://github.com/Chris-C1108/Miss_Player/commits/main";
 	function getCurrentVersion() {
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-029";
+		return "5.7.113-030";
 	}
 	function compareVersions(v1, v2) {
-		if (!v1 || !v2) return 0;
-		const clean = (v) => String(v).replace(/^v/i, "").split("-")[0].trim();
-		const p1 = clean(v1).split(".").map((n) => parseInt(n, 10) || 0);
-		const p2 = clean(v2).split(".").map((n) => parseInt(n, 10) || 0);
-		const len = Math.max(p1.length, p2.length);
-		for (let i = 0; i < len; i++) {
+		if (!v1 && !v2) return 0;
+		if (!v1) return -1;
+		if (!v2) return 1;
+		const s1 = String(v1).replace(/^v/i, "").trim();
+		const s2 = String(v2).replace(/^v/i, "").trim();
+		const [main1, ...pre1Arr] = s1.split("-");
+		const [main2, ...pre2Arr] = s2.split("-");
+		const pre1 = pre1Arr.length > 0 ? pre1Arr.join("-") : void 0;
+		const pre2 = pre2Arr.length > 0 ? pre2Arr.join("-") : void 0;
+		const p1 = main1.split(".").map((n) => parseInt(n, 10) || 0);
+		const p2 = main2.split(".").map((n) => parseInt(n, 10) || 0);
+		const maxLen = Math.max(p1.length, p2.length);
+		for (let i = 0; i < maxLen; i++) {
 			const num1 = p1[i] || 0;
 			const num2 = p2[i] || 0;
 			if (num1 > num2) return 1;
 			if (num1 < num2) return -1;
+		}
+		if (pre1 === void 0 && pre2 === void 0) return 0;
+		if (pre1 === void 0 && pre2 !== void 0) return 1;
+		if (pre1 !== void 0 && pre2 === void 0) return -1;
+		const parts1 = pre1.split(".");
+		const parts2 = pre2.split(".");
+		const preLen = Math.max(parts1.length, parts2.length);
+		for (let i = 0; i < preLen; i++) {
+			const part1 = parts1[i];
+			const part2 = parts2[i];
+			if (part1 === void 0) return -1;
+			if (part2 === void 0) return 1;
+			const isNum1 = /^\d+$/.test(part1);
+			const isNum2 = /^\d+$/.test(part2);
+			if (isNum1 && isNum2) {
+				const n1 = parseInt(part1, 10);
+				const n2 = parseInt(part2, 10);
+				if (n1 > n2) return 1;
+				if (n1 < n2) return -1;
+			} else if (isNum1 && !isNum2) return -1;
+			else if (!isNum1 && isNum2) return 1;
+			else {
+				if (part1 > part2) return 1;
+				if (part1 < part2) return -1;
+			}
 		}
 		return 0;
 	}
@@ -3391,18 +3425,17 @@
 			const rawTarget = "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js";
 			const candidateUrls = [
 				`${rawTarget}?_t=${timestamp}`,
-				`https://gh-proxy.org/${rawTarget}?_t=${timestamp}`,
 				`https://ghfast.top/${rawTarget}?_t=${timestamp}`,
-				`https://gh-proxy.com/${rawTarget}?_t=${timestamp}`,
-				`https://fastly.jsdelivr.net/gh/Chris-C1108/Miss_Player@main/dist/miss_player.meta.js?_t=${timestamp}`,
-				`https://cdn.jsdelivr.net/gh/Chris-C1108/Miss_Player@main/dist/miss_player.meta.js?_t=${timestamp}`
+				`https://gh-proxy.org/${rawTarget}?_t=${timestamp}`,
+				`https://gh-proxy.com/${rawTarget}?_t=${timestamp}`
 			];
 			for (const url of candidateUrls) try {
 				const res = await fetchWithTransport(url, {
 					method: "GET",
 					headers: {
 						"Accept": "text/plain, */*",
-						"Cache-Control": "no-cache, no-store"
+						"Cache-Control": "no-cache, no-store, max-age=0, must-revalidate",
+						"Pragma": "no-cache"
 					},
 					timeout: 5e3
 				});
@@ -3438,11 +3471,12 @@
 			const cacheKeyData = isBeta ? CACHE_KEY_DATA_BETA : CACHE_KEY_DATA_STABLE;
 			const cacheKeyTime = isBeta ? CACHE_KEY_TIME_BETA : CACHE_KEY_TIME_STABLE;
 			const currentVersion = getCurrentVersion();
+			const ttl = isBeta ? CACHE_TTL_BETA : CACHE_TTL_STABLE;
 			if (!force) try {
 				const lastCheck = getValue(cacheKeyTime, 0);
 				let cached = getValue(cacheKeyData, null);
 				if (!cached && !isBeta) cached = getValue(CACHE_KEY_DATA, null);
-				if (cached && lastCheck && Date.now() - Number(lastCheck) < 432e5) {
+				if (cached && lastCheck && Date.now() - Number(lastCheck) < ttl) {
 					const latestVersion = cached.version || currentVersion;
 					const hasUpdate = compareVersions(latestVersion, currentVersion) > 0 && !cached.deleted;
 					return {
@@ -4812,7 +4846,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-029";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-030";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

@@ -28,18 +28,36 @@
 * **多语言映射**：在 `webpack.config.js` 的 `i18n` 配置中已定义各语言名称（`en`, `zh-CN`, `zh-TW`, `ja`, `vi`），必须保持一致。
 * **原因**：修改主脚本名称会导致分发平台（SleazyFork / GreasyFork）以及客户端管理器判定脚本标识发生漂移。
 
-### 3. 发版版本号五处强同步规范 (5-Place Version Sync) 与自动递增
-每次发布新版本或向 GitHub 推送测试更新时，必须且只能同步递增以下 **5 处**版本号，任何一处脱节都将被 `npm run ci:check` 强制阻断：
-1. `package.json` 中的 `"version"`
-2. `webpack.config.js` 中的 `headers.version`
-3. `src/telemetry/EventCollector.js` 中 `getScriptVersion()` 函数内的 fallback 版本字符串
-4. `src/sync/SyncManager.js` 中 fallback `SCRIPT_VERSION` 字符串
-5. `src/services/SleazyForkService.js` 中 fallback `SCRIPT_VERSION` 字符串
-* **自动化推荐**：严禁手动逐个文件修改版本号，必须使用 `npm run bump` 执行原子自增（默认递增 +0.0.1 Patch 版本），或 `npm run bump -- <版本号>` 指定版本，确保 5 处强一致。
+### 3. 严格遵循 SemVer 2.0.0 规范与五处强同步 (SemVer 2.0.0 & 5-Place Sync)
+脚本全生命周期版本号严格遵循 **SemVer 2.0.0 (Semantic Versioning 2.0.0)** 规范，区分生产正式版与测试预发布版：
+* **生产正式版本 (Stable Release)**：
+  - 格式：`MAJOR.MINOR.PATCH`（如 `5.7.114`）；
+  - 仅在触发正式发版流水线（发布至 SleazyFork / GreasyFork）时晋升递增。
+* **开发测试版本 (Beta / Prerelease)**：
+  - 格式：`MAJOR.MINOR.PATCH-PRERELEASE`（如 `5.7.113-029`，补丁序号保持三位补零）；
+  - 日常向 GitHub `main` 分支提交功能迭代与真机测试时自增。
+* **版本比对算法绝对红线 (Strict SemVer Comparison)**：
+  - **FORBIDDEN: 严禁使用粗暴的 `split('-')[0]` 截断预发布后缀**（历史反模式，曾导致 `5.7.113-029` 与 `5.7.113-028` 被错误判定为同一版本从而丢失更新提醒）；
+  - **USE: 必须采用严格的 SemVer 2.0.0 比对引擎**：
+    1. 优先比对三段核心版本 (`MAJOR.MINOR.PATCH`)；
+    2. 核心版本相同时，正式版本优先级高于预发布版本（如 `5.7.113 > 5.7.113-029`）；
+    3. 两者均为预发布版时，按 `.` 拆分逐段比较，纯数字段按整型大小比对（`29 > 28`），非数字段按 ASCII 字典序比对。
+* **发版版本号五处强同步**：
+  每次发布新版本或向 GitHub 推送测试更新时，必须且只能同步递增以下 **5 处**版本号，任何一处脱节都将被 `npm run ci:check` 强制阻断：
+  1. `package.json` 中的 `"version"`
+  2. `webpack.config.js` 中的 `headers.version`
+  3. `src/telemetry/EventCollector.js` 中 `getScriptVersion()` 函数内的 fallback 版本字符串
+  4. `src/sync/SyncManager.js` 中 fallback `SCRIPT_VERSION` 字符串
+  5. `src/services/SleazyForkService.js` 中 fallback `SCRIPT_VERSION` 字符串
+* **自动化自增命令**：严禁手动逐个文件修改版本号，必须使用 `npm run bump` 执行原子自增（带 `-xxx` 预发布号时自动自增补丁序号，无后缀时默认递增 +0.0.1 Patch），或 `npm run bump -- <版本号>` 指定版本，确保 5 处强一致。
 
 ### 4. 每次构筑版本递增与 GitHub 推送刚性规范 (Build Auto-Bump & Mobile Test Sync)
 * **移动端真机测试闭环要求**：手机端油猴管理器（Safari Stay、Userscripts、Tampermonkey 等）依赖 GitHub main 分支 Raw 链接的 `miss_player.meta.js` 检查版本更新。如果构筑代码后版本号未变，手机端将因版本无变化而无法拉取新代码进行测试。
-* **构筑自增刚性约束**：每次完成功能编写、Bug 修复或代码构筑准备提交时，**必须且只能执行 `npm run bump` 自增版本号 +0.0.1（强同步 5 处）**，随后执行 `npm run ci:check` 验证并生成最新 `dist/` 产物，最后必须**立即提交并推送到 GitHub `main` 分支**（`git push origin main`），实现手机端无缝即时检测更新与真机调试。
+* **构筑自增刚性约束**：每次完成功能编写、Bug 修复或代码构筑准备提交时，**必须且只能执行 `npm run bump` 自增版本号（强同步 5 处）**，随后执行 `npm run ci:check` 验证并生成最新 `dist/` 产物，最后必须**立即提交并推送到 GitHub `main` 分支**（`git push origin main`），实现手机端无缝即时检测更新与真机调试。
+* **更新通道与 CDN 缓存穿透防阻断守卫**：
+  - 测试版通道本地缓存 TTL 严格限制在 5 分钟以内（`CACHE_TTL_BETA = 5min`），手动点击“检查更新”必须彻底穿透缓存；
+  - **严禁引入 jsdelivr 针对 `@main` 分支的引用作为更新检查源**（jsdelivr 对分支静态强缓存长达 12~24 小时，会导致真机测试失更）；
+  - 请求必须携带 `Cache-Control: no-cache, no-store, max-age=0, must-revalidate` 与 `Pragma: no-cache`。
 * **构建产物随源码同步提交**：构建生成的 `dist/miss_player.user.js`、`dist/miss_player.meta.js`、`dist/miss_player.proxy.user.js` 必须一并加入 Git 暂存区并推送到远程 main 分支，杜绝提交无产物的半成品。
 
 ### 5. GitHub 直链元数据与 Raw URL 规范 (@downloadURL & @updateURL)

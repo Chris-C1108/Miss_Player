@@ -18,7 +18,9 @@ export const CACHE_KEY_DATA_STABLE = 'mp_update_meta_cache_stable';
 export const CACHE_KEY_TIME_STABLE = 'mp_update_last_check_stable';
 export const CACHE_KEY_DATA_BETA = 'mp_update_meta_cache_beta';
 export const CACHE_KEY_TIME_BETA = 'mp_update_last_check_beta';
-export const CACHE_TTL = 12 * 60 * 60 * 1000;
+export const CACHE_TTL_STABLE = 12 * 60 * 60 * 1000;
+export const CACHE_TTL_BETA = 5 * 60 * 1000;
+export const CACHE_TTL = CACHE_TTL_STABLE;
 
 export const GITHUB_RAW_META_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js';
 export const GITHUB_RAW_USER_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js';
@@ -31,21 +33,70 @@ export function getCurrentVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.7.113-029';
+    return '5.7.113-030';
 }
 
 export function compareVersions(v1, v2) {
-    if (!v1 || !v2) return 0;
-    const clean = (v) => String(v).replace(/^v/i, '').split('-')[0].trim();
-    const p1 = clean(v1).split('.').map(n => parseInt(n, 10) || 0);
-    const p2 = clean(v2).split('.').map(n => parseInt(n, 10) || 0);
-    const len = Math.max(p1.length, p2.length);
-    for (let i = 0; i < len; i++) {
+    if (!v1 && !v2) return 0;
+    if (!v1) return -1;
+    if (!v2) return 1;
+
+    const s1 = String(v1).replace(/^v/i, '').trim();
+    const s2 = String(v2).replace(/^v/i, '').trim();
+
+    // 拆分核心版本 (Major.Minor.Patch) 与预发布/构建标识符 (Prerelease)
+    const [main1, ...pre1Arr] = s1.split('-');
+    const [main2, ...pre2Arr] = s2.split('-');
+    const pre1 = pre1Arr.length > 0 ? pre1Arr.join('-') : undefined;
+    const pre2 = pre2Arr.length > 0 ? pre2Arr.join('-') : undefined;
+
+    // 1. 比对三段式核心版本
+    const p1 = main1.split('.').map(n => parseInt(n, 10) || 0);
+    const p2 = main2.split('.').map(n => parseInt(n, 10) || 0);
+    const maxLen = Math.max(p1.length, p2.length);
+
+    for (let i = 0; i < maxLen; i++) {
         const num1 = p1[i] || 0;
         const num2 = p2[i] || 0;
         if (num1 > num2) return 1;
         if (num1 < num2) return -1;
-    } 
+    }
+
+    // 2. 核心版本完全一致，遵循 SemVer 2.0.0 规范比对预发布标识
+    // 规则 A: 正式版本优先级 高于 具有相同核心三段号的预发布版本 (如 5.7.113 > 5.7.113-029)
+    if (pre1 === undefined && pre2 === undefined) return 0;
+    if (pre1 === undefined && pre2 !== undefined) return 1;
+    if (pre1 !== undefined && pre2 === undefined) return -1;
+
+    // 规则 B: 两者均为预发布版本时，按句点 . 拆分逐标识符比对 (如 029 vs 028, 或 beta.2 vs beta.1)
+    const parts1 = pre1.split('.');
+    const parts2 = pre2.split('.');
+    const preLen = Math.max(parts1.length, parts2.length);
+
+    for (let i = 0; i < preLen; i++) {
+        const part1 = parts1[i];
+        const part2 = parts2[i];
+        if (part1 === undefined) return -1;
+        if (part2 === undefined) return 1;
+
+        const isNum1 = /^\d+$/.test(part1);
+        const isNum2 = /^\d+$/.test(part2);
+
+        if (isNum1 && isNum2) {
+            const n1 = parseInt(part1, 10);
+            const n2 = parseInt(part2, 10);
+            if (n1 > n2) return 1;
+            if (n1 < n2) return -1;
+        } else if (isNum1 && !isNum2) {
+            return -1; // 数字标识符低于非数字标识符
+        } else if (!isNum1 && isNum2) {
+            return 1;
+        } else {
+            if (part1 > part2) return 1;
+            if (part1 < part2) return -1;
+        }
+    }
+
     return 0;
 }
 
@@ -208,7 +259,8 @@ export class SleazyForkService {
 
     /**
      * 从 GitHub 直链或多源镜像加速节点获取最新测试版元数据
-     * 支持用户指定的专用镜像加速节点：gh-proxy.org, ghfast.top, gh-proxy.com
+     * 支持用户指定的专用镜像加速节点：ghfast.top, gh-proxy.org, gh-proxy.com
+     * 注意：严格剔除 jsdelivr 分支引用，防止其 12-24 小时静态强缓存阻断实时测试更新
      */
     static async fetchGitHubMeta() {
         const timestamp = Date.now();
@@ -217,18 +269,20 @@ export class SleazyForkService {
         const rawTarget = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js';
         const candidateUrls = [
             `${rawTarget}?_t=${timestamp}`,
-            `https://gh-proxy.org/${rawTarget}?_t=${timestamp}`,
             `https://ghfast.top/${rawTarget}?_t=${timestamp}`,
-            `https://gh-proxy.com/${rawTarget}?_t=${timestamp}`,
-            `https://fastly.jsdelivr.net/gh/Chris-C1108/Miss_Player@main/dist/miss_player.meta.js?_t=${timestamp}`,
-            `https://cdn.jsdelivr.net/gh/Chris-C1108/Miss_Player@main/dist/miss_player.meta.js?_t=${timestamp}`
+            `https://gh-proxy.org/${rawTarget}?_t=${timestamp}`,
+            `https://gh-proxy.com/${rawTarget}?_t=${timestamp}`
         ];
 
         for (const url of candidateUrls) {
             try {
                 const res = await fetchWithTransport(url, {
                     method: 'GET',
-                    headers: { 'Accept': 'text/plain, */*', 'Cache-Control': 'no-cache, no-store' },
+                    headers: { 
+                        'Accept': 'text/plain, */*', 
+                        'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+                        'Pragma': 'no-cache'
+                    },
                     timeout: 5000
                 });
                 if (res.status >= 200 && res.status < 400 && res.html) {
@@ -271,6 +325,7 @@ export class SleazyForkService {
         const cacheKeyData = isBeta ? CACHE_KEY_DATA_BETA : CACHE_KEY_DATA_STABLE;
         const cacheKeyTime = isBeta ? CACHE_KEY_TIME_BETA : CACHE_KEY_TIME_STABLE;
         const currentVersion = getCurrentVersion();
+        const ttl = isBeta ? CACHE_TTL_BETA : CACHE_TTL_STABLE;
 
         if (!force) {
             try {
@@ -279,7 +334,7 @@ export class SleazyForkService {
                 if (!cached && !isBeta) {
                     cached = getValue(CACHE_KEY_DATA, null);
                 }
-                if (cached && lastCheck && (Date.now() - Number(lastCheck) < CACHE_TTL)) {
+                if (cached && lastCheck && (Date.now() - Number(lastCheck) < ttl)) {
                     const latestVersion = cached.version || currentVersion;
                     const hasUpdate = compareVersions(latestVersion, currentVersion) > 0 && !cached.deleted;
                     return {

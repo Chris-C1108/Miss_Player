@@ -13,15 +13,24 @@ import { I18n } from '../src/constants/i18n.js';
 
 console.log('🧪 开始执行 SleazyFork JSON API 单元测试...');
 
-// 1. 测试语义化版本号比较
+// 1. 测试语义化版本号比较 (严格遵循 SemVer 2.0.0 规范)
 assert.strictEqual(compareVersions('5.6.24', '5.6.24'), 0, '相同版本应返回 0');
 assert.strictEqual(compareVersions('5.6.25', '5.6.24'), 1, 'Patch 高版本应返回 1');
 assert.strictEqual(compareVersions('5.7.0', '5.6.24'), 1, 'Minor 高版本应返回 1');
 assert.strictEqual(compareVersions('6.0.0', '5.6.24'), 1, 'Major 高版本应返回 1');
 assert.strictEqual(compareVersions('v5.6.25', '5.6.24'), 1, '带 v 前缀应正常比较');
 assert.strictEqual(compareVersions('5.6.23', '5.6.24'), -1, '低版本应返回 -1');
-assert.strictEqual(compareVersions('5.6.24-beta', '5.6.24'), 0, '带 prerelease 标记应提取主版本比对');
-console.log('✅ 1. 语义化版本比对测试全部通过');
+
+// SemVer 2.0.0 预发布与自增补丁序号测试矩阵
+assert.strictEqual(compareVersions('5.7.113-029', '5.7.113-028'), 1, '测试版 029 应高于 028');
+assert.strictEqual(compareVersions('5.7.113-028', '5.7.113-029'), -1, '测试版 028 应低于 029');
+assert.strictEqual(compareVersions('5.7.113-029', '5.7.113-029'), 0, '相同测试版应返回 0');
+assert.strictEqual(compareVersions('5.6.24', '5.6.24-beta'), 1, '同主版本正式版优先级高于预发布版本');
+assert.strictEqual(compareVersions('5.6.24-beta', '5.6.24'), -1, '预发布版本优先级低于正式版本');
+assert.strictEqual(compareVersions('5.7.114', '5.7.113-029'), 1, '更高主版本应直接判定为新版');
+assert.strictEqual(compareVersions('5.7.114-001', '5.7.113-029'), 1, '下一主版本的预发布版本应高于上一版本');
+assert.strictEqual(compareVersions('5.6.24-beta.2', '5.6.24-beta.1'), 1, '多级点号预发布版本应正常数值比较');
+console.log('✅ 1. SemVer 2.0.0 语义化版本比对测试全部通过');
 
 // 2. 校验多语言字段完备性
 const requiredKeys = [
