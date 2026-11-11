@@ -83,9 +83,9 @@ export class I18n {
             buttonSound: 'Button Sounds',
             buttonSoundDesc: '',
             defaultMuted: 'Default Muted',
-            defaultMutedDesc: '',
-            muteResetMinutes: 'Mute Timeout',
-            muteResetMinutesDesc: 'Auto re-mute on timeout',
+            defaultMutedDesc: 'Mute on enter, auto-reset after timeout',
+            muteResetMinutes: 'Mute Lease',
+            muteResetMinutesDesc: 'Auto re-mute when idle exceeds this',
             minutesUnit: 'min',
 
             // 五、设置面板 - 影片评论
@@ -295,9 +295,9 @@ export class I18n {
             buttonSound: '按键音效',
             buttonSoundDesc: '',
             defaultMuted: '默认静音',
-            defaultMutedDesc: '',
-            muteResetMinutes: '静音重置',
-            muteResetMinutesDesc: '超时自动恢复静音',
+            defaultMutedDesc: '进入时静音，离开超时恢复静音',
+            muteResetMinutes: '静音租约',
+            muteResetMinutesDesc: '离开超过此时间恢复静音',
             minutesUnit: '分钟',
 
             // 五、设置面板 - 影片评论
@@ -507,9 +507,9 @@ export class I18n {
             buttonSound: '按鍵音效',
             buttonSoundDesc: '',
             defaultMuted: '預設靜音',
-            defaultMutedDesc: '',
-            muteResetMinutes: '靜音重置',
-            muteResetMinutesDesc: '逾時自動恢復靜音',
+            defaultMutedDesc: '進入時靜音，離開逾時恢復靜音',
+            muteResetMinutes: '靜音租約',
+            muteResetMinutesDesc: '離開超過此時間恢復靜音',
             minutesUnit: '分鐘',
 
             // 五、设置面板 - 影片评论
@@ -719,9 +719,9 @@ export class I18n {
             buttonSound: 'ボタン効果音',
             buttonSoundDesc: '',
             defaultMuted: 'デフォルトミュート',
-            defaultMutedDesc: '',
-            muteResetMinutes: 'ミュート復帰時間',
-            muteResetMinutesDesc: '放置後に自動でミュート復帰',
+            defaultMutedDesc: '入場時ミュート、放置後に自動復帰',
+            muteResetMinutes: 'ミュート維持時間',
+            muteResetMinutesDesc: '離脱後に自動でミュート復帰',
             minutesUnit: '分',
 
             // 五、设置面板 - 影片评论
@@ -930,9 +930,9 @@ export class I18n {
             buttonSound: 'Âm thanh nút bấm',
             buttonSoundDesc: '',
             defaultMuted: 'Mặc định tắt tiếng',
-            defaultMutedDesc: '',
-            muteResetMinutes: 'Đặt lại tắt tiếng',
-            muteResetMinutesDesc: 'Tự tắt tiếng lại khi quá hạn',
+            defaultMutedDesc: 'Tắt tiếng khi vào, tự đặt lại sau khi quá hạn',
+            muteResetMinutes: 'Thời gian giữ tắt tiếng',
+            muteResetMinutesDesc: 'Tự tắt tiếng lại khi rời đi quá hạn',
             minutesUnit: 'phút',
 
             // 五、设置面板 - 影片评论

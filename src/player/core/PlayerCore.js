@@ -1,5 +1,6 @@
 import { restoreSafariThemeColor, findVideoElement, getValue, setValue } from '../../utils/index.js';
 import { enforceInlinePlayback, isIosDevice } from '../../utils/iosInline.js';
+import { checkShouldDefaultMute } from '../controls/VolumeController.js';
 
 /**
  * 播放器核心类 - 负责播放器的基本功能和状态管理
@@ -22,8 +23,7 @@ export class PlayerCore {
         
         // 配置和选项
         this.options = Object.assign({
-            containerId: 'tm-video-container',
-            startMuted: false,
+            containerId: 'tm-video-container'
         }, options);
         
         // 保存调用按钮
@@ -229,11 +229,12 @@ export class PlayerCore {
                             if (mutedPromise !== undefined) {
                                 mutedPromise.then(() => {
                                     console.log('[PlayerCore] 静音自动起播成功');
-                                    // 挂载全局一次性交互监听，用户一旦点击/触碰屏幕尝试解除静音 (受默认静音设置保护)
+                                    // 挂载全局一次性交互监听，用户一旦点击/触碰屏幕尝试解除静音 (受静音租约决策保护)
                                     const unmuteOnInteract = () => {
-                                        const isDefaultMutedEnabled = Boolean(getValue('defaultMuted', true));
-                                        if (!isDefaultMutedEnabled && this.targetVideo) {
+                                        const shouldMute = checkShouldDefaultMute(this.options.playerState);
+                                        if (!shouldMute && this.targetVideo) {
                                             this.targetVideo.muted = false;
+                                            setValue('lastUnmutedTime', Date.now());
                                         }
                                         document.removeEventListener('click', unmuteOnInteract, true);
                                         document.removeEventListener('touchstart', unmuteOnInteract, true);

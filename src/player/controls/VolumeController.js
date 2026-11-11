@@ -8,6 +8,29 @@ import { telemetry } from '../../telemetry/index.js';
  * 音量与静音控制器组件
  * 统一管理正常态与静音态交互与样式规范，支持默认静音播放及超时自动重置
  */
+/**
+ * 判定是否应该处于默认静音状态 (有声租约机制核心决策函数)
+ * @param {object|null} playerState
+ * @returns {boolean} true: 应当静音; false: 应当保持有声
+ */
+export function checkShouldDefaultMute(playerState = null) {
+    const s = playerState?.settings;
+    const defaultMuted = s ? (s.defaultMuted !== undefined ? Boolean(s.defaultMuted) : getBool('defaultMuted', true)) : getBool('defaultMuted', true);
+    if (!defaultMuted) {
+        return false;
+    }
+
+    const muteResetMinutes = s ? (parseInt(s.muteResetMinutes, 10) || 5) : (parseInt(getValue('muteResetMinutes', 5), 10) || 5);
+    const lastUnmutedTime = Number(getValue('lastUnmutedTime', 0)) || 0;
+    if (!lastUnmutedTime) {
+        return true; // 从未记录过取消静音或退出/手动时处于静音状态
+    }
+
+    const elapsed = Date.now() - lastUnmutedTime;
+    const resetMs = Math.max(1, muteResetMinutes) * 60 * 1000;
+    return elapsed >= resetMs; // 距离上次退出/活跃超过租约时间
+}
+
 export class VolumeController {
     constructor(playerCore, controlManager) {
         this.playerCore = playerCore;
@@ -49,19 +72,7 @@ export class VolumeController {
      * @returns {boolean}
      */
     shouldDefaultMute() {
-        const { defaultMuted, muteResetMinutes } = this._getSettings();
-        if (!defaultMuted) {
-            return false;
-        }
-
-        const lastUnmutedTime = Number(getValue('lastUnmutedTime', 0)) || 0;
-        if (!lastUnmutedTime) {
-            return true; // 从未记录过取消静音或退出/手动时处于静音状态
-        }
-
-        const elapsed = Date.now() - lastUnmutedTime;
-        const resetMs = Math.max(1, muteResetMinutes) * 60 * 1000;
-        return elapsed >= resetMs; // 距离上次退出/活跃超过指定分钟数
+        return checkShouldDefaultMute(this.playerCore?.options?.playerState);
     }
 
     /**

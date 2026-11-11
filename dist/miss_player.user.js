@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.113-027
+// @version            5.7.113-028
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-027";
+		return "5.7.113-028";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1528,6 +1528,1432 @@
 			}, { once: true });
 		} catch (_) {}
 	}
+	var FLOATING_PLAY = `
+    <svg width="48" height="48" viewBox="0 0 68 48" fill="none">
+        <path class="tm-play-button-bg" d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="rgb(254, 98, 142)"></path>
+        <path d="M 45,24 27,14 27,34" fill="#fff"></path>
+    </svg>
+`;
+	var PLAY = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="tm-play-icon" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 12L7 5V19L18 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+`;
+	var PAUSE = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 4H6V20H10V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18 4H14V20H18V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+`;
+	var PLAY_CENTER = `
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14,6v20c0,1.1-0.9,2-2,2H8c-1.1,0-2-0.9-2-2V6c0-1.1,0.9-2,2-2h4C13.1,4,14,4.9,14,6z M24,4h-4
+        c-1.1,0-2,0.9-2,2v20c0,1.1,0.9,2,2,2h4c1.1,0,2-0.9,2-2V6C26,4.9,25.1,4,24,4z" fill="white"/>
+    </svg>
+`;
+	var REPLAY = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+    </svg>
+`;
+	var MUTE = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+`;
+	var VOLUME_LOW = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+`;
+	var VOLUME_HIGH = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+`;
+	var REWIND = `
+    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>
+    </svg>
+`;
+	var FORWARD = `
+    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>
+    </svg>
+`;
+	var CLOSE_LINE = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+`;
+	var KEYBOARD = `
+    <svg viewBox="2 5 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5ZM6 10C6.55228 10 7 9.55228 7 9C7 8.44772 6.55228 8 6 8C5.44772 8 5 8.44772 5 9C5 9.55228 5.44772 10 6 10ZM6 13C6.55228 13 7 12.5523 7 12C7 11.4477 6.55228 11 6 11C5.44772 11 5 11.4477 5 12C5 12.5523 5.44772 13 6 13ZM9 13C9.55228 13 10 12.5523 10 12C10 11.4477 9.55228 11 9 11C8.44772 11 8 11.4477 8 12C8 12.5523 8.44772 13 9 13ZM9 10C9.55228 10 10 9.55228 10 9C10 8.44772 9.55228 8 9 8C8.44772 8 8 8.44772 8 9C8 9.55228 8.44772 10 9 10ZM12 10C12.5523 10 13 9.55228 13 9C13 8.44772 12.5523 8 12 8C11.4477 8 11 8.44772 11 9C11 9.55228 11.4477 10 12 10ZM12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13ZM15 10C15.5523 10 16 9.55228 16 9C16 8.44772 15.5523 8 15 8C14.4477 8 14 8.44772 14 9C14 9.55228 14.4477 10 15 10ZM15 13C15.5523 13 16 12.5523 16 12C16 11.4477 15.5523 11 15 11C14.4477 11 14 11.4477 14 12C14 12.5523 14.4477 13 15 13ZM18 10C18.5523 10 19 9.55228 19 9C19 8.44772 18.5523 8 18 8C17.4477 8 17 8.44772 17 9C17 9.55228 17.4477 10 18 10ZM18 13C18.5523 13 19 12.5523 19 12C19 11.4477 18.5523 11 18 11C17.4477 11 17 11.4477 17 12C17 12.5523 17.4477 13 18 13ZM17.75 16C17.75 16.4142 17.4142 16.75 17 16.75H7C6.58579 16.75 6.25 16.4142 6.25 16C6.25 15.5858 6.58579 15.25 7 15.25H17C17.4142 15.25 17.75 15.5858 17.75 16Z" fill="currentColor"/>
+    </svg>
+`;
+	var LAYOUT_LEFT = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="5"/>
+        <line x1="7.5" y1="3" x2="7.5" y2="21"/>
+        <path d="M15.5 9l-3 3 3 3"/>
+    </svg>
+`;
+	var LAYOUT_RIGHT = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="5"/>
+        <line x1="16.5" y1="3" x2="16.5" y2="21"/>
+        <path d="M8.5 9l3 3-3 3"/>
+    </svg>
+`;
+	var COMMENTS_SHOW = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+`;
+	var COMMENTS_HIDE = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" opacity="0.4"/>
+        <line x1="3" y1="3" x2="21" y2="21"/>
+    </svg>
+`;
+	var ICON_COMMENT_WRITE = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20h9"/>
+        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+    </svg>
+`;
+	var ICON_CLOUD_SYNC = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 15a4.5 4.5 0 0 0-4-6.5h-1a7 7 0 0 0-13 3.5 4.5 4.5 0 0 0 4.5 4.5"/>
+        <polyline points="17 19 21 19 21 15"/>
+        <path d="M21 19l-4-4"/>
+    </svg>
+`;
+	var ICON_CLOUD_UPLOAD = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+`;
+	var ICON_CLOUD_DOWNLOAD = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+`;
+	var ICON_EYE = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+    </svg>
+`;
+	var ICON_EYE_OFF = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+        <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+`;
+	var ICON_CHECK = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+    </svg>
+`;
+	var ICON_SERVER = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+        <line x1="6" y1="6" x2="6.01" y2="6"/>
+        <line x1="6" y1="18" x2="6.01" y2="18"/>
+    </svg>
+`;
+	var LOOP_INTERVAL = `
+    <svg viewBox="0 7 32 18" fill="currentColor" class="tm-loop-icon-svg" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20.462 10.824l-9.265 9.196 0.753 0.756 9.265-9.196z"/>
+        <path d="M6.937 21.864c-3.234 0-5.864-2.631-5.864-5.864s2.631-5.864 5.864-5.864c1.566 0 2.987 0.621 4.040 1.624l0.001-0.006 0.054 0.047 2.076 2.066h-1.905v1.066h3.732v-3.732h-1.066v1.918l-2.084-2.074-0.005 0.005c-1.251-1.224-2.959-1.982-4.842-1.982-3.821 0-6.931 3.109-6.931 6.931s3.109 6.931 6.931 6.931c1.971 0 3.747-0.831 5.011-2.156l-0.753-0.754c-1.070 1.132-2.581 1.844-4.258 1.844z"/>
+        <path d="M25.063 9.069c-1.765 0-3.373 0.668-4.597 1.759l0.753 0.753c1.030-0.898 2.373-1.446 3.844-1.446 3.234 0 5.864 2.631 5.864 5.864s-2.631 5.864-5.864 5.864c-1.56 0-2.976-0.616-4.028-1.613l-0.002 0.010-3.531-3.518-0.757 0.751 3.535 3.522 0.006-0.006c1.245 1.187 2.925 1.921 4.776 1.921 3.821 0 6.931-3.109 6.931-6.931s-3.109-6.931-6.931-6.931z"/>
+    </svg>
+`;
+	var ICON_REFRESH = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+    </svg>
+`;
+	var ICON_EXTERNAL_LINK = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <polyline points="15 3 21 3 21 9"/>
+        <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+`;
+	var ICON_DOWNLOAD = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+`;
+	var ICON_SPARKLES = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+    </svg>
+`;
+	var EXPAND_FULL = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+    </svg>
+`;
+	var DOCK_SWITCH_LEFT = `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="3"/>
+        <path d="M7 4v16" stroke-dasharray="2 2" opacity="0.4"/>
+        <path d="M16 9l-4 3 4 3" stroke-width="2"/>
+    </svg>
+`;
+	var DOCK_SWITCH_RIGHT = `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="3"/>
+        <path d="M17 4v16" stroke-dasharray="2 2" opacity="0.4"/>
+        <path d="M8 9l4 3-4 3" stroke-width="2"/>
+    </svg>
+`;
+	var ICON_PEACH = `<img class="tm-peach-logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACLz2ctAAAQAElEQVR4Aey9B6BsV1n2/7xrz8w596aQRksIXbpIU6oCEVBQEBBQwIKiWBAU+ASClIsN/EApEVAQEpEOAjbsBRsiJUiVkJCQXm4/dWb2Xu//96w5Nx+SQm4glL8ZZp299lpvf5/1rrX3XKDo2s+1Efg6RuBaAH4dg3+taulaAF6Lgq9rBK4F4Nc1/NcqvxaA12Lg6xqBawH4dQ3/tcr/9wLwq5T7k5/3jG9/7TOffOLvP/spz/idp/3YcV8lsf9rxFwLwKuZ6o+/+dVH/vELn3ri+p7z3rhyyTm/ufeCc35rum/jDb/99J+7x9UU+b+S7VoAXo20n/Z377r5+eec9ne7LjjrNzf377lN3880m2906yt7HrTz3LP++tef/tR7XQ2x/ytZrgXg1Uj7rrPOOGn3BWffZRhSVaF+qK1Nud+7b+Xwi84568U7duy4NrZXIbbXBukqBOmLST72Z+84bv/uS77TwKs1Jb4VgoH+dDrX+myui3fuuuvm3r03Zvja75eJwLUA/DIB+tLp+bQsAbqSKapf0qTMEEVQMyrg7tV17Z/XT08jLvpS3mvvLxuBbwoAPvodj+527Ljf6Em/f9fxgeZ7gBCXdemaHbnBoXVv6WJfZgq8yZXP/VqrVql+0zLZc8Pjb/rUl73sZRvXrCVXW/o3FOPXFYA+J/3OO5541Ivf8fhv3fGmBz7oeSff/3HPPfm7fvFZv/edL3nWa+/x2me+7tvf8YxX3/Fvj73oY/+y68jz/n20esm/dysXfDD2nvfvZ48/+68/+Rs3/bsn/Mbx7/mxHbd47Q8/55YvftyJxz7xsc++6ff+6HPveLMHP+WWS9dEpPul664rSgOggZesArfpfFBODt1zm7vf/Qff8Na3fuCa0P3/R5lfMwDuOPkJyy9+12Nv/8I3n/DoHW/87hc+/433eEd/4/f+68X7/ulTu3b/24fXVj/9V6trn3jz6spnXz6dfur/bKz990+vr5z56OnmhQ+Yrp9/z8218799Nt15t+nmzjtvbuy52+baxXefblx8wsa+ix6+uXHOT9f+7Gdtbl78B5vTXX+5snLuJydx8Ud/8BnHvf3hT73RLz78qTe+612fdNfxVyOBN33/+2f9MN/dSm8i0dsv1w0AeOQNb/g7r3zlq/+R0Wu/VzEC1xgA38G2+ZJ3PeyOL3zzvX7ueafc6Y82pv966q5L/v7U/Xs+9I79e//z+Su7P/rolf1n3HNjbd8NNtZ2Tabra9FvrmiYsbX1qX42Uz/d1GxzVcM8VOed5ptV842iYSYN87FmG6Ghp210jIf6ubjySmRj//bZxux2a/t2PWZ99YKXb6xf/MGj878/8uAnXfdl3/ek4+7/lVTH2LGjjrvxxUOl4rENuwoO/SCNlqbbj7jOn1zFuF9LthWBsnX9ql1+608eduvnn3KnE0/d85F/u+Ccf/zwzvP+89W7L/rYj6ztO+c2G6v7x7ONTYAVAEe0QfP5puowV9aOtk19v874nLEx1yU1sBmQ8577Kr/6GPoq1YlqDdV+mXPYCD7m5ts0zH0dA9ixsl+idRqmfTdsbH7rdH3XL21sXvwP0/3nf/S7n3DE80748eNvcXUcn0d3iXjqrQYgW3DlCaQsbTt9vY/Tro68/808XzUA/ua7H3jf5/3hHf/4/M/986k7z/34b+6+4My7r+2bjfvNMSAZqYKZpFDUvgMsm5oDjjnVrvZTZdY21lPNKpWlB2C9gTRQEQHnQEsz50QJ6AbkDMNUyhHp51JnjONKpQQaFOlrVQW9C8BKwywAflG/kZqvT2+3ubr/V+cbF55638cd/ubvfuxx9zwoEPTDmcn7v4ouNz+MdMtLnzzppJMw6qAkXSnxjh0qj99x98N/+Nl3uukPP/2Wd/6J593zvj/y/Ns+8PHPudWDn/DC2zz0CTtu+5AnvPAOD3zsr9z8Pj+y45Z3+amX3PpmP/eibz3yCTtuukxg2inhShV8A0ySta/Mil9/xwPu8yt/cJs/v+C0D/zDRWd86pGre9a2zQBdiupDCPx0WIcADIMqW1UFQNXVow5KEuhEDlSQOhSqm6ABqQPAygJoExrzCoCKeY8xr20YHczVRj/0vZJhXyuVUTmGdkZjPJHJWPVZrZfAMtUxNMwKQNRh09W1x1EV/+U+j9r+zvs/7pi7IvjLfvv55vm4IdtfKzago1s69Ct67XK/HfcbPeLJ33arH/jZWz3i4T9/yx0P+alj3/wfZx39L7vO/Own91xw2id27znng+ef9+F/3HX+GX+zf9eZ79t9wel/uueSM/5ide/n/2a+cf77p6vn/sfarvP+a//qWZ8a6iUf/YnfOPrvnvib13/bT73kuF9/0kuP/vGff/nN7/MLJ9362B07vrH+DejVBuArTr3nvV7wttu+58IzP/hPF3/+tO9b2zMtdVhS1wGOkJKkp5Oj2hZj5nbVagANMhiSapVDBUCpqIfAsA2eXpVy0oOSFH1AhQjoqxJAZtY2PwBkb7WV7bpWV9AlGQiiIsqVCbkDYAPfqlxrbz7xCehCnpM6CaB6fj6NbnN9/qj11X3/fq8fPOr37/noo6/0HxVM++GiCGRZAfpEHwPPR8FBfR/0o7e43vf85M0e870/dovfy0/81wcv+cLpH7v4zLPffeHnPv+C3edc+LiVi1bvtbF3/fiNfbNDN/cP4+lqxnSlamM1NeX822+mZmtVs/Wh9BvDeL4xPWy6sXnD+eb8thv79p+wubrrh2YrO39lvr56ymzjgn+er5/38UsOP/pfful3b/H7v3jSjX/kaa+60S2/3oA8aAC+5KN3vudLP3jTP935uU/+8+r+sx5elufd+MhlTQ4fq1uuyo5dKLiK12CxyAe4Iek9QDSiSNw8GzCyLq4VRPTzvRqGDVWAVkHFfL5JTicIWFLWkTIFj8cK/TmyxNUgokGVlKRqecNMadQK5VRVj2cO8lCiXvLDMDKGgbPjTJXqDN6FCX7ImWzs3/ukfn31P+7x8Os+BrGX+y2j5fOGTJBvgRiGqvFkvHa5xF8y+KAfveMh9/+h43/gux56/Tfvu+DCj1982rlvv/C0s35m5YKVu2zsmW/r14nPDH85qlQMnjtW2GiHsy7hR2C38HGiSqwG/IBM6QoPXQ5jfOlUiUfPkabnAW7WHtKGmE/7o2cbK/da3XfOk2abe/9oOt3zsd1HHfP+Z/z+TZ/9zNff+tZfYurX5LYclJZUnPvPK79+9gcueuja3nlXlkaaHNFp+zFF229YtO360vJ1paVjQpOjQqNDi8ryRM55WZpLJQVKpQAACfhEICMIKLlkSoAmRWCplLxUU1INhx66vghMElQCy/0wLwSZNh/JlbDnAaUS7Gp6kjDQKufEnntfk2SIliQsOR9mTWQjE/xUWkKUQ2WbJ/nomm7UG22u7X77Xb7v0JPu+tBjt+tLPhtldN6gsktZsX3AalHFo3mgK/i42t33kTd5zv7zzv3o3s9f9N69X9j1uLVL5tefAzhx5FB2qoCoslgwU0mMBt8Pwte0Kim88Iip/JkSk9Tg+ZpqfkCfteeIMcgLCrfgKyLUms+gJUY9/jl+0/Wp5hv9IdP1/fdZ33/+izbXzj31Ga++/p8+4/U3efCj3+HtwTqu+VYOSkUo184/4uO7TztCu087XHvPXtb67q45p25Qd2hq6Whp+/VD2wDituuntt2gavuxoaXrSWOAOTpqXZNjqsZHhyZHSOPDQ6PDisohUtkWislUsRTSEpYtpXLEO5dJz1gPsZTjVEyqyiS5nytHqegYH9EKPLCSB4IOr2gpEiWAQgNkg5PgpNHSQK0BlZM0ggfaBkiSxUPLbG39F3K25y/v/sijboTkS7+PO/HFe/s+T0O0hDKr7VUvA1QzPOwn733Y/X7w5s/eefqFp+753Hm/sXbB/lsZdEPtlOgecGvOourn0gJMXLGhGta1icc/nPK9UqVU/i7ug50mAitYsAaZDETkDQypmKaooqACysROV1PrgazJGPB/AJCVK6+0tm1urDx0vnbx+26885h/OvHkmzzE9l/TzbE7KB2pbX9eKemzS8ZaPbNo76c67f7EsnZ/eqx9Z4y0cm4BlOKdHAEYhUbbeo0Pk5auIy0flQA0W5VcPoYrgFwCiOOjpJHbkVLndkRVd/igQhsdEeoAajkkNDpUW4CVyiGpsj3V0Qqp77Yt+rHMnBtjBSCHgerWOXFVQw4aKBd9HTTnSbvvqwYAwC1GC1DQSFamFJSi2XT6XRsra39zl4dd95ba+oRJusknEzlm6AABY/8DpCY94dF3POHC0z79r3s+fc6Lprtmx/bTTj1gcWXmGKt+QDeK+qya9b3moGMGYKa81J5uzOR/3DCb9ZpR4ecwDG7WiTKDqCJLKjI2s8r4o4/hSmwPTAuZPCVGBBlE9Ew7gFLvGBVBA4tyQP9sWjmGjDlfrt9nfeWCv3jm7x/158875Xa31zX4wfqDk3789u793fIhH/J2oDpTckaZ7UttXLis1TOWtfeTy7rkIyNd8J+dzvuQdMEnQzs/l9p7bmhlp7S+T9pcS/GOWdNpEviBRAhQSE6Ezz3kRQOJcfAGA8TbB7HrCVqPvh7AzN2ninnMydmYzrS6Ptf+tZn2rs60Z99cu/fNtJPrrtW59qz2WtkYtE6QN5GxOccOrmvrVfv299q5a6pLdvnaa9fOufbuhZ7xaXv5Pb3tsL76F18MQmz4qCOXJNTp7fo5td8j0qMf/ejJfb7/Fr+2/7On/+3GBSt3nHNkmGHrOi/X92Hbzr0zXbJ3qoux7ZK96FodtMkWrKVlleVtmtCWth+ipe2Harx8iEaj7cpc0ubmSCsr0s7dc+2i7UHO/v0zrSFzhuw6oAS0dVF0YHE0i6hwJSZ0l6iIBVBWwMgtC6wafMSScDeeoU/1jM2mobWV1e9bWT3r3098/U1/Cepr5HvQANyx45/6yfIxr4ouVLqRymiZFlIEjo00YHi/PtL6ztTKOdLuz0oXfix19n+kPv/+0On/GDrt70Of43r6+6XP/4t0xr+lzvxA6qz/CJp09oerzvkI1w9lu573sdD5/xU692NVZ32k1+kfnOtz/zbXZ2in/2ev8z8Vml90PR06v51uedR367tu90N66H2eqCf/0G/o+U9+jV709Nfrd57zFr1yx5/oNb/+Pv3B//07/cFL/0av++2/ov2FXvPSd+sVLzpFL/211+l5v/wyPenHnqaHPuixuv1t7q2jDj9eMxJ/4YUbt9p7ya633+p+hx0jPvunGx9SdNNglRRAmJtrN2VY3/1jjzj6ov2nvnf9tLOfu7Z/VnYD/PMvnmrXnl7jpSN069vcU9//fY/TL/7Cc/SS3/w9/cGr3qo3/8Ff652n/Ivefcp/6D0nf0jvOeUjevfJH9Ufv/5Uveu1H9HbXvMhvfHlH9Drfuv9OumF79NLT3ybXvDUN+inH/MCfc99nqDb3+KBchKTHgAAEABJREFUOubwW0m8lN+/f9DefVOtr8/Uz+ekJRf5qb04+CpcMflbAaUrIMUe4EnGbjUgKSq179Wq4tBRDYfDV/ef+7Jnv+HYd5z4jjtzsNJX9XPQALT217/s3/5wtO16b4quA4SijRUckH0OzNKLlwUqBcc7lqNS9p2HWs1WpfU90srF0v7zAefZ0iVnSLs+J+08jf5/h3Z+LrjvtPeMTns+3+mS01PnfXqmsz85087PF3UrN9TND/8OPeDbHqmn/dBz9LJn/6FO/q336Z2v+Fu991V/qTe96E16+bN+V7/25P+rn/3hn9Fjv+cReuR3PkDf9x131wPveBvd73Y3072/5Qa6z61uqPve5jh99x1vpod8xx306AfcT49/6Pfp53/kx7XjGS/Qq3/jd/WnJ/+J/urtH9FbXvt+vfi5r9EJ93zkXQ7dtv11joFu8e2fXllb+ySOSiGNan+Tx/7Uj54wPe9jf77/s59/8IWXzLUyLbrtHe6pZzzr+XrrW/5c//C3H9Pfve+vdfLvvVbPP/EFeuKPPUGPfMiD9d33uLPuduub6DbHXVe3vOGRusnRh+n4I7bpRodNdDztJtfZrltd/0jd6WY30r3vcEc98O4P1A9892P00499lp73C6/Sq17wx3rdr/+rXvncf9GvPvmdeuLDf03ffrtH6IhtN9N0LbSyd5PqOZWyV/jcCNCS8yc3CjFMmjiZKKmErCcNzA292gNe5Sm6n3XsXLsePdt91j895423vQMsX7VvubqSth96nacuLR35r1lF5cNaBPWzKcYDQLvFuUgGH86xi7ZVBikjUuC1V564BhYQDyWDXVc0Gnft/DJn2+3KSMff4Hg94J731dN//El6zfNfone89FV6+0tert997vP0lMf/kL7/3nfVt9/kKB07WdO2PWeoXPgJ6ewPUVr/TfnZf1V+hva5/1R+7kPKz5+qeuZHVU/netpH1J/2Yc0++0FNP/Vv2vz4P2rz1L/W5kf/TLOP/bmG//5Hlc9/QEfs+aS+40bb9YRHPFyve9Fr9aevff/Dzzj3jJft2LGjzrvxv67s3aVhqBp19UbT8z73Nzs/deY9ZnGEfvgJP6d3/fHf6q/e+U4992k/qwfd5Sa60XC+ylkflj7379Kn/l76xD9In6F/+kekMz8unfVf0hmn0v8Yfd+7fYp7fDqL/hc8/1H4Pyid9m/QfkD6AvIu/LS2r1+omx1xuO79bffRYx/6NL3wyX+ok579fu342T/R4x70fN3iBvcGUGOtr22op8KNR4VaGOSlU8R2ZaZSQS7VWiZ9N5I28KAy46FsY2X1dpsr5/7tc//oTvfTV+lD+q+epNe8+F/3VC0/Urn9b5J3Tz0HZFsewYYEoirHkb4X28CicY5ufa+s3uWflZVck4N0cP4Z8a5mHEu6zuQw3fFmt9TjH/A9+rWferJe+UvP0m/9zFP0cw/5Pj3gtrfQTbeFllYvUp7/OdVzPq36hU8oLzhDeeEXlLvPU+5jbv8lyrVd0upuaX3vom3s47pHsUpb362ysUcjxiYb+zVZ368lX9f2aby6V2X/LuWeCzTsPFt53mnK00n6f/2t9Nl/0HH9Bbr5ZPUXc3rxJ572sj945Hc+4kc1nc00Q8Z050p36zt+h9751rfrt//Pz+vuh6+p+8w/qn7wfcpPf0B59iekC8+Qdp4j7btQWmMrWL1k0V+5QFrlfj9tL81X7NTGLmlj4Ueu7Wl+2bdc3SntRcbOc6VLzpIuYBs555PSmV58APP8T+jQuld3uuW3Achn6sW/+Kf61Z/+Sz3q/s/V9a5zG4A41yYH8S46gDhS8FfOhTq5qIgcKg1KGgNDOxt22ljdvMHavs+9+7lvvu0D9FX4lK9ExsknnXrJkdvLwwDQK/xrg0ogrrDlpgw0jiDtWgHaQKusqAY4HO1wNDhjjPk14rrbj9Jdb/wtetx3fpee/agf0nMf86N64gO+V995y1vquElo4gSsXKR+77kaVi4EZBeQCBIAiMJAWyNBsxW1PX5zv2LqtqJgz29tukp/jfF1xdxtQ7wEW7QZ4/2GYrahMt9QR3/E79MjzgwdLWbrCmRqDSDvAxgXnU6SOZT+9/vvcNxo5/E/+DM/rl966at1veNvrvvd6956zQt36Lj9Z+uSf36PVj/zUc0uAWwshADs0a+JPXGht1/f6q9yz/gm180V+oz39LFTrW0wRrMd0w0FNgkbeZJTYnvOoQWY7VxDjGTg7jxPuvhM6fzPSGdTXc/5kMq+M/Utx91MP/yQZ+lFP/uXevpj36Q7fstDeMKuLCAWHfkotCBHARyHnLueKNmOKy0Z95lxTjXcXOuPXN39hXc97y13vi8J/4q+5Svihvmkk06fvvWN5/7SZHzU40vtLhx43KusloHqlwYdzeBLQBe8+xrzNDam2nV1rBsfeQM97M7foac+6Hv0FM5Cj/z2e+hOxx6vY0ahbYBnwoFxabZPvnYArawTKIIdjMnNwIAuDMTNfQpAFCRKAIn3CSRunbYheWxKn19a/OQuAKaBM5ETOWxKHjfNgf4cQBggBkDPPMlQ5WoZgFkAXK5O5/OE9an368bHzPTk33ihnvAzP6GLPvEf+vxnPq41wLSxvoIp66rTNdoqi2a/Et5cp8Lu361c2akEnDnbq8TXVuHwpdFQjXMN0CNHAK35YFv6mYKVHfx8E+5zwE6CnRx/eBBS45ntl1iUuY+dYPcF0i4WwcXsEuf+FxX9I9pGZfyOO5ygZ//om2jv0l1u9zDlONTnJjWkAD8qYo6U5HfgXOhWuSYD1TvbLDRdn19n/67T3nzim253O8iu9rdcbc4vYXzbG7/wlugPu1sZll6bQzdPtlWDTqyqEaDb1m3T9timJbbZGx56XT3qLvfUsx7yUP0IVeNOx99E113apkMIJr9FaduwpiUq2rjfr44kFJIRGysS25xcKUhoAIZi8G2uSQaUEzWFxkmaT8Wjq9SqBcAxgDST6nxB28AHTbtnnETKNDwByv2BMfMayAaiAWC5BqHn6lQJYFtbAzxnfUbL535ER193u46/xwm8TZlouraqOXwDfgxs++KsqH1spyu7FSsrivVV2jptRVoFaK6Q+BcHmhcUYNU6c9axvk/pGNhfKmGzszcaBs7MIAPYJFWKQ7hycxP71ogXvA3Y1suOwfFEu87jyPJZ5bmnKvadodvf5M56+qNO1jMe83bd7tYPVM8vVjGuGo/G0tDxYCIl4msVOxtJpw8W2dk6fJwet77n7D960Z8/7khmLvf75QbLlyM4mPl3vvPc89777t0/09Wle4/z0Lds6w7ffxhnuiOWDtPh3SG64SHH6CG3u5ue/ZCH6XH3vJdudszR2oZDywBhO9VnO5VowjY1pvKMqDRlbYWz2hornirmqrTJFeDF5jpjAGsKiAy+Gf0GunW1SmHwIE8GzRwwUR1Ag2Ra0xlEHqeScDKXeDpkki+0BwB44GrZ6GTJi3ImGQCALwBx284BWWysSXsuUvAAcfRR23SrEx6iI7YvqbJY5iwMV8CB6ix0B+fFpJ+2Eb/FS2dt9mIvVNqfdXxEvryYVvdJBh39oImKnwC1LcSNVS1sMtgch7nCKDFaeKBTjJU8HDU5gDpZxFoFiD47UnkbEC86U3k+Dzb7Ttftj/92/fIj36qfeNArdPQNjuNov6FtPIGPJmPAJjlkFlcHwlWTB5lkfKTN1c27rFz88RcdDE6+mParCsADgv/sz3Z96H1/fvHjO22702HlOr983CHX/+d73eKOeuqDHqyfuNe9dMvrXldjgjWabmiZarKN7WTCdUzFGZPs4upAkqIBB3BRecrGpgoJixYJgOI59+GTgWbAGCzut7GpGuhc1dxMix4ZbGxZRI9IkngimlTe5CkpXVEAZUKXYq7xoAuwNnAAfBmALA5tLKqLtzqtUV1WLpH2s9197gO8klnTdb/17jp8+7IS0PXYVpGVGxtKwBWMGYzJgkr0hTe7Gfqsh19D2nYKGJP4JEBLqinlRgEYA1Cn9VNZDU7PNyDiu+MV8AtfBLBztKQsE9kGsVs0OvgNZBnIHGu050LlJTzAXfQJlfVz9V13eLye9fA/0z1u/1jpsKptRxdtO3IsNi5bSTXEWp8JXREBo+pEe3ae9qQdJ9/vfgfyfzDXawSABwz4sz/7wplve8/nXvqUBz38d38c4N3+qGM08jJiixiTlCVANCZgY94hjgBJAIYAHBEkg2vbMgFDJN4G3kK7WIpzyX1k8CinNuYt1DS+krg2D7BkwLm5j6wF8JClQTksmvUiRIqq7FIS+tCZNIgky+3mBH/G7aZynYoHMER1U7+ilky2unYuNBDP/K+2WA672R20bbIkYWfF3soCSn6xkcFChQ4qcrgSTntUpAJ9wSIIXkGFisJvFDhPC0Cl6by4vDDpJ/1aN1hkVH2fZQF2soAbHdcGWJ5ycUhJNcQj7GBRQsejrBogqahaZyG5Mu7l7cEln5cu+YSOmhyiJ97v1XrcvV+q5cOO1vKRqUOuN+Jn0FRZ7pQiQpU2BJWwqp/1sb553s8wfNDfctAcB8GQuaOsve/3n3fjw7a9+RDKtld7B7DGbF9jgjgCBGOAUTbWVVjxAUACUAT4iBwUACIK7jppJIE9Cu1VgiZdUagYeC9RRRZXAuw+vGJeAFokXmx7RKrxpsGI3sV9L6EjG/0gBNOQj02ety0KKb0gmlHQ+Fq4ikVgQLGIBJjksyIVSt7qVtjqeFqGVduP/RaNlyaIngNrAM7fBmz7M7OMGXNUeQO/kI5iLhoqmqm4n34lwnkMQ9QWpSsouoMmwN18JabNDmLo6tpATlxFlRXAFnJqjLTQTZxczV1ZW2Vc4eGFhyK/ftp1vnInD1erX9B9bvMjeup3v13XO/xOVMCqZarh+KiZxkdVdYcSKn5jrz535lhra7seuOONj7geowf1xeODor/KxKt/95brr/7Fse+pmyu/GtPZuCPRHYkb8TAwIvAjgDjivFIAWDHANmeKHkC4QjpgHUngKyojP+CSpJnkjHgeEAT84WRC04JqoDmpbD1iXAaVeQFhEv1EvwEZjCf6swA06zGtG6AW1UcjxjuHpXEhBiTYa9vmefib/PZ2PSV8sFxZP/pSVEjOsHJF3HOeonQaH3O8grOUdVZ0Vmxv9tiGqeXTDKQNrk0eNvANKmDBFuNS1faMVbsJ3kDnmG0ApBYT4mYwulEZ5TE3y2zVtufMDNipiEl1TWRpTjw57sgg5WldPsfyLjTXeKjay9P57i9Iuz+l44+6pX7hhDfqZoc+AJbQ5NDU+IjU5OhFG3MdHd7h3+ZRa5ufua1DdTCtHAzxVaWd/t07btfV+d93/ebDRuubKjgbVJ3OYCPAZSRFVIrPnMBMJUBCrNWS6Gqyvi5N51pUrqoWUANkSh/wqSXQCUmFAXEAHCFZVjvUG6gGpKsZSW8JBDQ5GxY0zfOEwfdcTcPSvRgAABAASURBVOMqZD7OpyLNwk55vAEP3b73OGMuSkm1CvxJ/HJf9MUchy582ZS8xfGiuZssa3TMcRJgVKPFdutxC0zo+DNHPguUu8WXmMg2mqcjwQBR9oXB5Pf3BiL7bjoDj2vYTsfC954zCBOguUozFwCyuFKySD3tmLRq6YrKjpQNhIsjRfLknj4f7vyMjti+XT//oNfpdqPH6eLTRpqxUGJS2ZKrlo6sGrkdMUQ5cvOGC+Ov+l+7eNWprwLl2t+86251tv7XPKndPgCdSGbhGptTBVthUCkKgfSqjnEnOYkjrpa9AeicQMApR8gJAhtOmgiaZfmaBFsE2vISoIZpncT2fmCQDFbmZUAgIwBibAGnycAmufL4yrys01UBDMgybA5Asa6mO2wcfxot/aBv2VROXpeJ1bTVHE7m+Jovnez29LpPo6VDVY64gXgrJUFW4a/mb75KmjDIuzjzSSE5QNC0vu/bVhcKfA9sDF5badJJ3IsFyYQyCJZb42vOqM1xvGlXQKhWEQ1KzrM1lIleCoSBGJxJFw8qayJ/ylXOh/uohhefpu2jTT35MS/RPY74KX3+H8a64KNL2n120cZqp+qiMJ4rDlk7Rgf5QftBclwJ+cbfvvN+Xd38S57abiScDgIT/gejBLmQ5LZCvf0Rm3QSKwHjIKuO0sJTruxIBpVvLm0CJFcFbzWCYcL4iIAh09UxOOslgWZE4Bu8VvlJdpFAeEkMdUZJ0BOgpUGKDU7+oqGbcTKAR/QNONO0BKLPIHbf4/L8gqzR227L8pXhNgZN2iffAxhMU5jGFWhOQnlgGR1+tLT9CNke22D7Ex1eUOkF1ECHAMIhFiY9vtiCbN9HBJJjMeYFmZwtRQqtB39FnIW8Bkr7Yv9so+NK9UOxctYrAVxQBIJKGSyq9IMOwBQATB8jeNBpT/t+Yl4DhK6Gu87SWHv0lJ/ZoQfc8Sd00SeP1O5Tb6ldH71FXnLqjWd7Pn/0mSsX9TzFYN5BfLH+IKivhHT9b992Dw4J79R885jgFUZQ0oMzR+CsHATz4nyZjFRGRWEAufQ7cA6WVzNbjStbo/f5yMAzAIaiNm65ADD83qyvxBqgyTDj6oQQTKFDGUoSGMh2k+W4InIvJ8kJtk6PC3B5HBUyaqiWoqrKNjuB6FFA42ujrXjCvXFgHu4ELAQ4ZBC5jZnEn1wqwhQliU4f9nlyLkdubcX2HxsSfxaLZFAtCCxUNdjbQqIrql2rhiw++R49EdDZdtvNb7kyH3IEqNTGsM++yB/stR8GqRuyw7R+SHNuWg6gsX/sUOINhatk8vDSXgNt8gsO7xG1wu/Ql5yt0bBHz3jK84eHPuCxJx552M0f0U1v9MDJ3tvfcfcXbnyHV/3EnvdZ48E0e3Iw9JdLu/oXb/pWVta71G8eY6NDAIIAtHdng4MxqJV3tl/HwO+5gqe1cJURADJwPOFAiQh5VTvgBo2B5RWMPPAnkaBF1XDQBskyeI0hB5WkpGWZ3mMGU2CyxzzvewPUADYfuhdJtY3IMzANHjdkyfa4CjMtAN3ubZdttV+wyED1nJvBZzDYBxaZAEvjsx4nnCfkADB56DFqwMOGgdZezwCcRFZFflrGCGN8NPHW3LKEI5bHRZwHw/rgkW30YTVAp+MFqGUaZIF8BXE70ATo5XEDlSOR2ktvzqpUvnbcIJyNxnPsYAKczpWrYfsVBvtz17la0mp34i89a/Wtr/+z977rD//q79/0hj/97J+99iMc3In1QX6bawfJ8z/I1/7k9cdSIN4S043jGqg4+AaBaAFykAhiRBCIkLiKVRdsi3ICXR4AonA41ziXwNcCZNAZJE6c+GzJaSAj4DFmzN/GC18lcgZFgAgeJJJ+mBe+BkiDSej3FWMXoECAVz3yPCxfSRajUg/i4JUB1diQayKDynMec2V2Mt0n9wuZhJNzbbJImn8HZDBsjFReqGv/JSpHHas63qaKv0l1rCyOdB8dCfhyDPhsr+ODPNmXZtjWH8uDTqax3YBY1tnB53tkeUq2zz5tNYffoJQXlWWwUHMdAALE8BbtOMLfCofv/T6V7TjZyfy0nDwl+zVT+lXN2s6X5ebeB+kr/NiMr0hEzdHvlqG/Q5B0J76BxMazeoLAho3nHJc4K85/Xk1ywpxT061sSK5M3q485lVKFVBgWpDdHjAYsH7l0BLBPYfnMNi8NZOgIHEyoE03IITAU1eJNbQOvucMasZbUkxj2ahoyWgJJAxz6K3PwDM4US8fs6zX954zgCGTwdH63KAjyXhriVDAkVSpNACxrz0sIDO8ONjOWkyufxNV9ObGXH4tNPCkmq5ExLGan6OKkNEWA/4KfjEu220AAZTwvO/tl30SuoXRroKuco4LtsnNNImP8Nn0A6AOMcjWm/xKI78bdPwZsk0+x8tz5NI7W9uW+SUoebrPlYtHdfWiV+f6eccj9Wp/bfHVZt7/njc+k7g8wtsJJU6B02mDCWICtqSKJUEW4+I9X4sPDDKYvLq8+qydKqnAFBLa6B2hGUBy0hnT6hSQUuW8fSJbXqmeA7QiyemzI4G1KJm3JYgoesD0B4BJbjzU+G2XoDmQHFc0J8z6TG9a6zB4TUdxUcEmzzvZ5kOYgS6SHgEDXx34GBxso6midB/whH0f87C0j9+ND7uuctt1eM05o/Xywq0kvzpWyKj4lMFKdVtGOX42IFmHdaFTHkMu5PBXtYWcQR+/vOAAYuCTQ6tgjFgEdkcgxHGynx7jeiB3gQ0BX5PNuFgYwXleXhz8wpJ+WDnw7nB91y3q5sZLm/6r+YesXz3OfW973T1KyRcocaw5N8hPVy0IACxc/TqC4jkHw9sXiYgkqLBUAuNvq0B21Ct0axtpIGRr0oFAwNLoLMdnO+LXAoTu9JibaQyWA8AyIF1ZD1Qt8Wl6ALKBZR7TGhSW53eMNshzkLYK4XlHyLZhsyzTOjzmc6LHAEgCBm+dwj+6kudxXTUkFlf4CqDEREF2lKkK56nuejeRX+Okz8boSux1X4AwoUt45ZgYLNw3ENlPLzzbjf8hKINJN1mp760lG3mzB7rmD2Bb+ACdffG4xyyLoWJibFmcDanMPU/MLLakqMjA847lLRkgtp1sbb+0tusxuf/cH8eCq/UtV4cr37FjEl28PCK2Ny85YLtEO3AxRqTB5pVJ6RYOpp0FCIFDYjsWK7c48k6YtxrPOxh++nT1stM2jKC0X0EMFt8jQ+s+8zFhHsbDQTdQDRKD3VfLQkYLeptPCbNkmzzvg30g0GCzTaZHlizfVc4VFrvlZFuO5douJwg2IU7eriPEd6HGMjyHb20wuLFOX+3niI7jwpZsnli5SOWQwxRUwsrCGFhYSfXxtrcAIQsawlY9Ba+b9dpv6JGu5g+diOAvXwPVdniRNHriZFDbN/sBiUzrefvO9MJ4/iLXr6parlgM8tHJ9jg+3s1oavfejfzP0TbV3hny82Nd2/XC3HkOj/dWcHDNITo4DqhX5td9apRy93AmnHw7TeMrO8EfvniH48HqCZyTV4+dabHyxlWhQZiT7MBBqw22IgtxwgFBEqT0nN8V+kryWtANFK9agiuC5ZjKwPK4A+0Eob4pMJA8ZvnQygAxbZJNX20butQqmsewyfT2ja4MPNO6eexAxPAj6bdhcdP0wWBjrIMh7sis/3Jj+20zIAzmI6eK2YrKMTyQUB0Tm5P4JDtH+l0cD3OOkgHYqqt1sKXrwCKy3Y5TOIBSRMj/sYmyzxiW9i+Yg8Q5CMaEzS4aST+3Fqcrr3cssd22o5Lj0fI1V/DQqAPgc0ExCH2lIibV0JUw13ffZNDGs3Q1PjbnoNj2vuF3bq4y/uUCZ/JexC9RhcGBUX6xKbaPauMBR/uVwo/znidgdriBymc/O7Ixk53XyImn2ZIln3eacIlkOGBbuzbJTLYs5ryC19lKYbk0OQarAebqRoJbEgxIJ57kWDQZQiZIwTZhkwoCnCRnzaBz4pAjA4XEtV9LTNMYkeBzaaDfiXfyzGtbGGo8vuKn30JBrQNjfm1kFZc27OGr9i+8DzlU3XV4OQ1TYr9BqCnbnxOPjsSXBKByM5MFO/iuqrYjGPA2vWWjb9Xo8I2r3W96IZN9ZCESRe6IA/an7QX47f0pc3JBQW9b0OQunYNGM6huYtfmlMpH9Wtnwql8Jgx+wou1XT+X6/vvieCD+jpkB8WgbvyMWJ5cT6yg4NeL2FzjJ5tVVTuBsUHwAmB51QRYqj7HEAEDLQ4EjdXuIMsOsyUnjlV4WmD8E9k6lXDolIXmCkTwg5bmc5JISlvFtpygJr9NqkUejJo+CD6VRgaSae0lVcDkrRk0BL8lxMGeQm9At0n61mM7LBM/GxDxwYtBnjOw7YvlH3glZD3mNw9+N90AQGYCtGl6x8LgsW2m57VM4ee67jrXVcWeym5RHQ+Dj5ZuTj7OJTJ0qTxsDAMIhcTDsZBl2h77aZuZtsl2L73YfNP44YG9+e6F6HhBlDRx3wBHcViQphxzj7VjAflN8my7hK3CPlF40m1t7yjXzn8m0g/q69RcZYY9r3/lt5XR+CcCjvbPpLiKZAYJL64UNpB+m0tWi5dfACICED7rteRR9aCTq42DaPDwKiI4/Abv9XJtHTAPTCdxDfk/VpPMBUlSDTm56QhRBOWK5QpqmSZs46EEmDJQzGMamrcdeTxMSMN250U+92G3oGnNPE4iJDrQT9/AuDWelm3mds+k6Zg2lXnsnpv7bQxPfJ/QVPcBS4ieq8f2w6TxsgYW5MB2N7CIk10knVhiVxGQDWCgy0A2qJHBctOl3WYLhCZ2DJDffGkAC2YBE3/N43wJ/rS/6JSPOL4PLT4NZDyAGPT07UOY1vwsCBcT22bwiby1BhjrvgsePt/Ye8JCyFX7W64a2YIqu/z5GHXbwpEkYW01YFjbJrLKIJEdWh4rqFjixahXXzrqOJN+FdPoWxiUBieJTCoeRx654skBx+kkOYJHQfBMM+5U/c9oyIGgtwQJBGYqLZ/K0gKLbc0OgJaWYdORAZEcyJYUg8WeO0lgp5F5LLlxc9987qNCLTHMWbcrF7zWFY2OSetHr3WkxxgK6ELwHJDjq8HDOF+JvuOmYUMF27vDD4cai1mklQqUADF99ZbYZBc5XhCrNRu1pauB0Ko6DKMFTVbSrii2H1xsn9qiM3HqUjoekGxLRigAemKP2H5dEMIxBmQVgDXg0XceK7lMxhoI22uauXwe7FYvfIpVXdWGxVeNdN8fveqWpZQfVpgl5ESGg+OzgAFj4K1S3Xh6qgSuuiJRpk1TqFDpd0egLDijhYoqgQDQoiv5BW0JOc4ajdVtM4BTyXZUW5BTMggBp6iWVis+XsEZIjE0EtL4DXBke0RerbS2PUEX5ncy7EJloDEjyFWDwLfkGHBfxE8ZFqIl7BOyWzOfrCGZTsnboO1EdhikzIkF4It874QGdG0gpA4DItQS7Rf0vHIqh/EY7OtSAAAQAElEQVROkLGebbByJBn8yxBxlCshDifykvlsCxt+Lx7um20W7XvLD/7Qwj7RxUDJMbDtvgbEyBIiNC5K/2YtxtARnuecmywC8zn+SQVN59Y8Bhy5XvhblfhdGcs25mNTr7r3/O/P2frdrfqqNJtxVejwof5YlNHhhA3FbK+860synmy1HgsCs7hHpANng0mIF1B7218xmCDUGdsr5z2vLvYcAkC0ti9Jow4ApqppAEcVmWMsCuM4KipCGJB+GT1CFkDkeYdDMJFm++evjAEHLrCrAQVZBmk7YBvAs5RjLWxpQSTZrWIXh8BzNGTJFeEACBmyD/I9pi6qJfrtH2OJLJM0IDQxENmQBg5m+LY5b3NtzNHCDAPGDfJwFVw6RJqMNRCftgU7sfib3o45frQHmSbff2BqQreuvpB/pEoHdHjMYHNg7DtN2GVzDGQIiTeTjq2wiYmEJ0Fui59zZ+AR5KBwiIqYqzx8kAc5vgQiAWoCvqTYJGfZdHXcWB0NK+f+pK7ip4X+y9Fe+MY3HkKgHxOdybHUwRHv41pmgjf5lF+MijEelEF+CMn9GIvxyepOJxpHg+y3PnLa6i8jRggboPKW43hlUwFIWYkGa8VxcU50JUwn3M2/jFAlNJKCXwnaQ4jvqbgVQFRWrQWnqxadJPhpwFh2l/K9oDNY0a4253vocUMNbJ1naLjrhSXzszCEjCQ5CaGbRqEwrcHOmJgzTZPtjCKTXEn8QbMyQjqwiwjh3KrfVBmP1C1tx5YB06gkJLV6IXMO9AJKqnea1n/cLLcBGBl8m86CcQHRFzdiLVqYlquw1Wpbo+q3GDnwjUdq96YVH8YSECZ2JPZbh/Mk/PS4GA9A117f0Bc2Y7xyz4WPzFy/zP9cHRIv88Xiy4xdZmB5tPa9pcStYzyW7DgG2J70P91hlbo6+R8UMCnZaAdkuVDNACZnhWaUV595vb0CmuYEyUoSV5nDdVVWuryqhFmufF79vKCt3MYhY1VvF7ymSd6HJdtHGIwA1bZYRwsqutO8IYsUKiRXNeuO5B4CCOm1frIwzOtRWVDTnwr+41vPBSCDBYF8U3Iy27z1A3ZXAUFge0xvsLatK8QHBifUyadrOosOg8hAxDfxOiuoMuNDOQdiZ0/Sq+0gtj5vJS/6RaIpAjJA0gISxkCBY8fFxxiHDTPUrkzLOgsdgy7QTJPpcczq1YJDJDzmGPlKPLLlZGCaRnGQiRN+5syfHsM2cd98N/iwTw2Ag7S5/5i6svuHcP7LfrHuy9Ko9sMjogN8YSso2x0eESSvTLEy7WhS5RJDgsC0l9GQBc4nzrQgOqCmwfj2qoHgI02CRlSfRF6SUJGA9jIUcAfWBQ80/jG/ArTwQ42DismOlXkqAFWrxATS9oUUyMAMAlgVyEyIk60tHfBWySosaLd8aE0v+ozArMUHurA87hofV9P4kswJPrniNxqUCv2EpeXKgpCHAWQNDus1iYHj5r55DUzuIxigCnaHHaay1GlAfo9fA80xFTtJa2x3BnerrpbvBj8aJKo8uKKLLDvvcet1o2+7LrUHEgjFsL9qc9iQrbA4NoCIXDVdAHMBMsYAWfIe0E3MV1qLBTqSvtgZvVCEnbn/4kdk+g2urvTTXLgyiv1v+f1jcsgHiqoTIF7s9drcUCu7HRFvr1c4gGCEAGDd8ByVTyTEv2z42uagaS+gfX4aFFSwMonFm3bk2ndVMsf7twR84uFmGELGt8/pWuvVksF8ZVs2oAiV0sCGLztcQU+6araVyKyB7QAa5CQ2DEZ+QoMMl9Hlewd+wB4bwJAzEtgsxPkiZ5XxBGjJIvEWFgaOhcAvMwhfkaMSkENsRvNLSsZN6kUQdCIs3XRtUo0HGYG/MVlWt/U6puesNeBH5ZqcmdvWZwBgK+QSIJX1W08gi/NyA6asn3vbwqV93W96uTOt+5z1MEe2Cyvb1/J8D3AUxNRACpQFcWzvbckHtxL3CciCKhiOPw9KwjbTy4sFwbm26579xp4v+2La5mPVFX9r0f2x93rOYdhJVyErcyDYGgKHw0Hi/CUHhURmGSs5kyUGCmPEmI1roSGRYmVXnBhw0lugwRiHT5RUhcrTmCYTzpXYtOWMz4KyHPi83ScgFAAOnq4FGJKHi9zvJ3C2DHCXpkVZRlGixzzCXt8rkIudNkkGlOdJEOQEdpCISFJN2rwHcbxCl9hqXZUtV+7jt9XI/hCg5jty5UHPW66FkCDLhNxfprOZkNZpPswRM2laZHWHHcqdCFeS00EDRxgDkBstkouPprAO6/LCw2c1/lhIc9/g5C49ZDr8Eny+T+ttPCnbhlo1/ZwJ7VtYZkBN/Co7WPONWiOqgfOV+JT4l9xXgKit6td2PuIsH6Vmm0Xre74PE67028y6Mgr8fIANNE0FeGmgteBhICW3rVBXCQgrRtmYYOXikQJAtX+ShZ9UUWk8UV3vZQAlW3HiXN22pIEAJSAOghY8CbbfXwEBGiRkJvISGsu088RRItnpXy+oeA6iK5QAZctum+MhyTLQ4WCJoLdrIbJyw6iti2XnAZBZH/6kZZDIxK+Ap1U9+r6vW3NRiIrHDEobhY1NlvtOhO+ti6vQ3xosBkBkNOyiQnRVIhVUkhEvpQtAqExU/PY1xVsHEt18t1w3pZQYYN2+x27Hh0HUhMTCRKjcEvtRK4XUGrzucuGeHl/7RR1v0wsfGAx0INd59ViTj7+NjynzCN2ec/MOyMrRAaDy89wJjPOoqCv84MEVzinf98qlnM/uGWyz6JMDJQKzAA9b6oTXJx6kSngLjLDRnVAqsWJsYLXBNNgkAwL6Bpa1TdWVDYJuQLJlU90SALbkwiu2Zx/tEoClz2+stkSPHCJWr8f8cNGAASCaPlZiAnChr1qGgwN9YlcDGNU17XEh1PBkCJ/oI0/QyPfwgj+leQ0c09FXGyQKHrNsiO2fSFCQKFglphmGl46TDq3nmu+NQAsa9DEFKYMHfLL8YaqytKTgXWilygyce30eHLxYZ/7d1UCkSjOX2IU0yaugIAeVsu34105ewRhf+eM5FHoIpXL8WxywOxmsDEZX+EssGDsAoMS3ZrDl22cWhAtMG/Mc4G9xojDJ914kPEwZlIHTubnvzvN9O7/NJlxRK1c04fE969e5tRS3loPE+c4ITxtBAv2ve+WEojCpMkFAEkNtdEJrJ8UqDI/BU0lidfVs2yqR6UYszk6Vl9fe2msN1WSc7dUAbls4gBLBJjKc/waq5xTfiSaV1WOKQrWvcmXgSMNQURi4BDGsV8kY4SX4tkub0NoObEWQqs+DBNE/HVqnWACwWuyCkzmDHMP4IZ6F4nkT1FT7BPZis3lbo4rC2KZShSsJRTcdq5PltH7jk7KD363dJxWxlxf7GBBWFutAEnsvPscEELZqyEIUPrDKBYOQoqbKALFy8OlYCF6c12Vaeij8p7Gq1kUfnxJfRNyU2C01VhcBd9I2QhPktoEQGhlw5NZHHOMibRdjHreNOZ+Ou/ne79KVfBylK5wOze+GqRMb1RKI8GQlChBVG+REAqrkXZ99d4vpVAEgebOg9FnOAMqi8LZCgiqGV3E2S/z3XHQAqCocNcshwOl/HLBllfV6G5cPwAZMZQJeEWihP8piwBXRZyUHIQmUKpZjoxdHEuT0GK9TwrwZxJh5bLHNqSAPKeCphX3oMG2JZluaCPthEgRMplq/cOmgQU7CzZ2aTaYnGdYZ9HFRuEwLeN3gh1cGNHaZRtggFrT7o0O2KZivLIBKrAfiXn1E4cgjJ5y4ZfMJ39HTbEKOWr+XiKG2PoEPTTcq03773iYwn1Q9LmhmchEYWytFyPlKHjKdl6AQhKQs5Io52Vfn3ZUPu4x1kQtIlNaNH4mdwUSu77/S/9Ei3DTb5beIuGviVFvdOCwAFHYUcl+RT48vc5Wf4AzEtFOFbZ/znjBcBC1dQSdLChxqwRJhZstt7w4BrIFT/c/3GauBqzhW19luGCP+SvMBCLHKiaEyCtWLikhFE+BudkSq2cq21QDMYLMbeYnNiY3pMXKGeimTIGOHx6gyaG1jTT4LKEhyo4Pf8eYHH1jQAT0doVYN3MSk+UQC0vYRDsFjfQgUHErPoTeZQ62HJcDHpJpe6FWCPhQ4PNq2XYXz7IAdw+agAVuSVreS3pKMTOFTq4IWio+WIRaE3N+SKWc4UOxxFIZpfc9QcN/m0SzApVIQh8UH5tGBRUrHnkUgAyvaiATQoitKFoltS+Lg+Dtu7drixJKe7f+O3Lv3Cv/3Awt2XO433/GOrq5vfFt4q8S44E19EiQHsyWEgMhKDTJ7Me4UNhjj01XJT0IOEA8VSUBahXIVcSBMY3k8VQ84kuaH10VQrnItIFuO2hF0OW61ZThlx2P7REJWkkgHqDp4vKQOL4BOxCrxq0rY4EAHPgh9DYQEPtHH6UGyTwVavhFFAZeKoKAlg4yQEm6qgslka0x0iqvlmlaMB/pd9SHkCy2DNr3iu0Ve2qBtffTKzULbNRXQBonutm1TR9wqya4IcYy8HTvRlflK+W9HHFuZSLPM1riBR9gvJ4l5x15cfZSwKszynRoNtBEhcV3Mp6JzC7VctD/ealKybcSs5dzncueE/AcxZZIjks/xvIlgLIm5KFwyTT+9fr+x8066gk8z9fLmVm9w6FE51NsG7/8SkBnVLXkEpLpq+RULlSo4r8jBNw2tvUSmkrWVgdF2mIMaKtgaAFAyJ69kA6+KadAiUVRi8UsHTiZy1VHuOyopFiZyKmegoKw7EANl3y9p4eKJugf4qQAQSfWrgCPd99XbdpaFbMDkRWD+QJ+/aXnQNV6CllScJHC4CE+jUJKEYoAo1cCESQlgEx2mAAtcgtnEHJrtxytXUsEX1otA+wCh4oBy39g3CJmGlwl/qTJisXTjJcbUYNSjq+K/bbNhlhUtfoDDzNguN6xoV/cxxbda/FGzE3uaTdZN7IXv7npMQrnH0CXHAfkeCv6EqxxzpEEGqlU2HsfKgGMHSXQm8pIKHi4+xMG6o/ahYXoXXcGHEFz+TO7e9S2suOukhZmqOYQVKGkrncRWlFYDysAj0BEQYiUxVdZQq2Z+iWoVHF5ztim1DCAMekGfpufterXDdogEBMYnjllEUuXClRM6hlUtHBuSILlfLQNxlcqQqIyCDfBAiC62AOQmtGHQmA8hplOrlIAc3qz8ITm4pDaHX1IKU2hcm60IT/znIubD/yCCa7p5HBE68OkBhmUiw/6aXa4yzC/6i47ZPB6W6T+WgdLAlm6ZCo8r1Tajww8jgx9G7KfjZPkIM0tDKX3hm3zFV+G32sRCl2wL3Thwtc4Wg7CJzPAlzumKxngsUxgCLmxZ6MAn7FEUm6wEqFl7iUXMGoWQr3ViV2KHj2Oesx0xbNwZ6Zf7LZc7ymDfz2+CrWSoiJiobkwlAw0FNiID6zDGTg+AtCUCG8XqTYyuAM5NrmJR5P+ydWybKOm3xVxpegAAEABJREFUoALcJLhSiBRL8NjRkAjbFj3VRnYUhwRfmyMZmaFCZQYOCv8+jJywnJBshzpk2s7KAOPtHhAq0cBQIi893xAw4B/jyLAvbXEhOHmNaHJBhzpVro0f/b4uZEiLbKjNNz8QpUAJNjDJBH8ZSwDYzMFPHfgwblqooWs3XMVQauydhaEefdX2EpV0GQPctt1bs+1wgmU/WoMBWhHRsPG0QK/8afZgISS+FUr5QnpgwKMpm84g35SIuf1LAwA8ylfHwYzOOfJVyBXjycJY2AGfaWiJ7RaYs9Xb5Ic/PNblfK4QgDleurVQFLTkBWlz1KCxYBxsb+atlFXTwAD600HiLFhZocHvZ8lWmU48MuRfRzYW54RARgjDmUtWUJKZnCdS8ZJ3YF6FrnyugsKAds+scDgCcHGtnEP835CrrSqQGmQ6P5Z34JcWB6AdGwwuo4iVbV1iSzHY2hmQHQKRkhPLeAI+YW9wjo2SCgPGYwQz0YFqWQ+uCtQp2kCqEEnTJ/dugnaxeOyXhCDZb8toc1Yi2StaKMNKGUCvEF54g9BZN7YPLMLabKtK7LDtcuzd2v0AI19ECP2W3/6tpfvwK5lzHzA2QOKXF0Sa3nqZJh3+20hl26r4NEZFs8MDbowBOEVj1gJ4jHkKW2xfkn+Bh+C+2TrfvJmOP+ooBF7mS9guM6b8x5OXy2zjeBtYAYgsCIWVbVEOLAGSjSLqScYSZcWVDjv8DxSaUOiCBw0HM+FL/6Tkc4yCIyGB9JOVEUBggvNecE3OlbWtYKmBF/qKnkRg5ae9SiISwFWC2v4hJdtFwmffLUPIqZz7KrrteFKxEx7fm+ZS4Ngx4pf4kba/9YkDi0m8Y0zSkJbBUCLfSQ3s5laEwReJiuK+p5vt6LE7WM4XCcTCahSQ029xwxfft3F0NDBgWDIQnoC0fStVWR0jAVtiZVVPXNzsizyfqeq8mAEf7K+ceIML2nbveUCHQVosOhtCI36iBfNtuhO6GOcbEZJzs+VfdEXR4sJ25Hw7pl4MNPM32Y4VutMFxfPYk8h25WzxUx7Rb65f+v82qi/6lC/qX9rdc8nsermydjMH1gZgndKrjR/00xs+ymRlWwsPu5WArFUjVyYnw69hAGAWHIqiNI//4Sn3FtGMZRtNHK4Ew/dyJURP+h8t2KllDuJc0/+owbIAnMFQoJf1N4vR7i86B1dcglQ9RxISXjm4BEMGMCvXSUsHCLMEbYoQcIgW/Kb3gwpkaj4T5MqDTZJskyV6k0pdkZumx3ZwRA4woGVSfBBcGYKWG1mO5IFspIt7aPTFH/Mv7oMYCPkdsQmS736zC27HqeKLWzYRoeRezNGR7LNttT6P009iIfrWnls2Bi4HeTBb48MoQiIuiyY+zKcHUgLvanTIF7a1vmVyn7Tq3cPCHA9fnWszEYOw4Kylbq5c7r8PxBSUfcl3PDnk0Mx6VOKlA54EGwtUefplKSoxKgmOEd5WVq2yIWHFTFaAIBS3KgZvIkfdGBpiRED8FFlxJAk2rDZZWThuMhc4pCWOC65m2FXZ9sOOUA0dtNw+VoUmvZ0zL1YntqoCJiEjLJDAZUNMsDCqHLQWfObCvPAlPjTF/sNqF0CVByE3GNVkCF4a+p1AempySE6bIPDtqZB5IVf2XwgmEREgxPLMhKwmm3u+bQQq4sFf6zMt5MaNgjE3FlvxcQR5jcc6iI/jnI4d980WT261ZqNtsi3Q2CYigL5UoMf/U9cmRWQba2ZZN4NhJDgO9Jsd0Mv6ElKqqmWJ+Mk09p9mO4wHWSBz6d3S9PQbfSIEWwKB8364OZIu87Xaywz227Ydg/DrBSCTFbWSIMUWkOSPS22gjaDnFEUkvwEHIAQt16Zqlcj8GDSwvToJwQvWZCwYc9W07YHTlQqaGFqxKNnOvdUG260sC0cq1SgPBNfvAP2USDByEUU5EEkla8BGntgxDMx0ELHXNgn7Td+2Sh7gEhsau1LphJmPYCd7dZJgeYy59rUc5hBFvKE3Lf4nAU4GWzOIsN//ODTxpcm0HNM2glREWBwcan2ZhzEJRuICmwxkDxUvLmys6OiRMVgW9ySi2dDsIzZpiUaY+CTN9xZkWlIT9gPxTRf9RJZJFlcYuG+2chVFwaZ4YYmtONwgIUBq/NjSwEXeZSPdFEpsS+YqObKsZlPrD6rYsTzpjtXlfGzWZYZjfeW6GHedJoQgB8IDKgOnojjdcCSSrRXgBdtFOrlUvsSIxKi0USn5t80GnCiycWILS+QlgBJXZaoSxAAwEThCpSS6SoxOy0LmANgryUl0mi+pjuqwCOAnwJU/3CZyhE4EatEcfSkBT3Uw0GcZ1XJppqmu0AeOEsxXmsU12xCW+FqxUbRwcrDBPjhRVmcZwlbP4zI+VqVloFr405IJbyLL9756uOnA5taH3man8B8/ZR0ZCo4d5jcPXjCcGrC7+Wka9+G16EttaR04PE92E9tQrwZaSQF9MGZ5IT7+gxHBQhdXOQ/mRbY8h3CkSfjTeAFk+1dHhUlvswhPH7vM40asF7HAF0iEPQEvP10djbbLfDHxMmPK2QzwiU2poJ55KqGDE4FEEinORaJf/WqGBCWKk/KbGGXAmSlYvWE+flIzrXC6gcXGkHRuTYZjiYJUxRKvlGSr9UjwekWWx1N14ae9wLGEyXPp/30YVzucd2BkYPhnOezwq6Igeck8bwrwPwEESgFqAuSMqlBlbGBOigiu0MAjG0GCkn6mx9CGD0IuceRSaZJ4UBGhEDTCRigXfkBnp+BSm8fears9GFCZvkqWJeYMVOtptNikAhtyMUlupRsp6VieRTdGgJHIFMlvvOLDZHqcXMh9ZDOKolS4H1tK4WFAWMJ0SuiCSHJOTUdL81unF6X1kCuzw+SvxMKHEzb+Nn+Qje1p3ZZj55Aj7BHXxkuM5tO1gwDgxvQYDJ80w6hULXEoyxYhdFsh7/nkoNoptmhsVrjKaetDwkX1aoZVxqBLXjGkgYphlpK8yKwYnlRFiaW3jYBzX3noqASiApi6NscPnAUI3jpjPJZ1warAMQEYnzmBhoL/JMCvhCodCNvMYkkHBhOYlgArw8oQIKyqAF7oSs6alV9gLNMtGwFEZuLJesEgdMKH7EqATeJzUhAH8ckktcx5TJjse0vwELu6rEfQQKoMZszHZHLNKAwH08hQZT4VXngJGz4aGJW4eZFD2OjEHB0JGYEPNjWhaZXKk/R9L+tEnYI/rc/V9Mwf4EOIxdIQij1BbN3EVcTUuRbVL7El8F1ayEjyKqpnsBMKO3zffKMftKR5fFTiMF3Ox15fZpiETjAcfpADIBoB+myEhSdPqsG2G0s8pXZUSScY5xycBHgVowZoKqsnCaIIqBIBvAbMFgBhExUIGvmBYxtv/QGxef0i2P/6xcBIy8W56v8SE7/z+t3fsH9D/ocLXonV4HIgscE2VoDs7SABboyQSfCcXBGsbE2qrGqbYDAk3if8eCm/d1QLoiQIkqXrrdc0sDIGVTIHTwOfAApDlYSYbsBWRtTeBTJXW5Jgi1TgumW62X/Ttf4BW6APwAA1IU45XHRUqLSwY2qq2Y2cWlMGgUyPDtsPhxxeiZ6/ZmKhW0Ybw87FlIGNEPxr4x5EhhexGPZtBB1i0s6AwSboe9O0HQnnIbQuxyXNgOykSDEs+WgU0BAT2/f/fA0pKmDRZT5QX2YM2uE6DlBYmMwMGYpaUAt9ns7E+cRbgZslVECQ0IbnO6rZ9mWJsbCz0RFT8zHeiDG9jNXAaZDgcFKJYrNXxCAnMRYeyj/IB4kaeI1i0CULwmaZvjkZVI1KSwvmj6sVQFrQcc8X8aoOolKWbZtrA+sgBV/bwNU+O7mVgLbEOsmm45oHGudOOQPEIy0Yt5DAED4N2fLaRDHnBIiPi4AnoOCOWcjEvBovQ/CZNtHRxmUCYetIrq4R+LdlY8KX0KWQ0+gS0RjjMeZkZcS8modr0+ExQeN7N2LY9CEDbjUa29JkQBeSQdmqmeOGfb4X86ZFtJzXsE2QioFkAVYKgoKCBJ3VSAFdSLZrGK46AEl6FxG4h3l8LcAxF59EqEhwXVv8rptYlIAOcmbgMSEtgv4oNLBVV2wQxtZK1UvJAJD/y0sVgWBAJFzL21S3LatirKuPlgp9MyJnPkW2FF5hkkOp6oppL90cPM6KtYMWmuTp2XLckvmgwSADqwJmCwvzNFv4Yzsq+pps7pkLfLCidPKaGaED8hIbDwA6g3GzcBXjbY6rrPNAC6AHDeLVxluCGPA8/TZGv8WFqEMub+OJoUOGxTaSyo5Sh9ySwYX5NJ/1GSjsPq5cDKkxcQ5Wkz+oApAmpE0KTi1oyItsO3nwpdF40fmGmAbz7VcV7ErrQF4iy3YkeTdvECM8hJW/yA9oJYJGX+7boRDlVJf5EOrLjMFjDikCIbSmCL/DztuAZhSszAVVTryzAg8a/A8P2FZbUBwMkh04gUAl5yvhQNsi4fFvwwkgKwCVD0jeMrwyUenXMD7jCaHZdIYqOqsdNi+yw6DBJo8Ptgle+5rMV16XpHUJzZb3RU0k0SBJbE+Pk7yKvEQGEUQlQURQOgQmQE9FFmTKAzYgN8LMW7TIHFhEiV408t0ah6kSA/MvcoHB9mlxgzqEI4tAK6EVIhcNfnSiUA0AyLcMg8gxYxYueM3DcUO+YpttTseLWKRBApXlOh9BFfCcebECfZjJbtPu8b0ix33niLLV9AZ2JnPy1fagJ+1nMxJqco0KwG2JGM83rTtCCT0UnobdE6C03f3PP6Dofw74rthiZKIXZjpUlmqwtEkqBUoMutqCm80AAyu8LTsQBMEGiHmNCnGksS07n4nxKRYDv5QE5z8b7MrkJ9vKy+VcZms2oG3ZIRPVqKo4LoClcUrIkZBHE+8DiaF7SgecYFmeByq2JitZ6KsGFAFBmFnxiRECSUc2hdzIPJCaUslW4nAld003ZzG6nubiUScvZLOaDEYbP0oxAVkJ7YEbScRD8j28yT30CXMCrCSubjAw4XkImq1VESGDoUbKNiZ/kri09DDVZIqO6ZEZyBRxsGEt/k6g+CDS7yaDHclzzktmFSzY5isEiGnkQWy5TW6y0TBvuYhpDKTO9rY4b9F5qvJTq7CDdEGWSttuGQTEXcykxpryfzbc+Z8Dvqs+eAjplKFESGV1eFwGF/dRQ9XVjsrhBCTjmCkeXiDDEzSmHXHzVs1L6GBrdKHzgd3GV1YPtsHO+bCGBngwEv6iQJ5wnq8KIBUPOwlgKluKk2F9CfPAT3ZNDo4riAyJtmxlyDIq466QQrD504FkMSlCC/n4CI0rexoM8IerLM0JJIyynBzwV2ZJ+dcEwS7ioAiAn0yE/B8JYAMAL6iKrIoDyZiUsu7cuudOMEhFfLhDVkIPkdqVUSTzlzkWMVIbbir04BUyZqFP+CCSL+kc2b9AG7HxuAiJwSJsGHwsMQ8Tjc9mA4nEh2YHMbduh3/zM0gAABAASURBVFHECM3SAXobi+xFjMi0CxD8lTFZF3YhFjsYbB3+YIfSfySPpmKD0ct8t1j/5zjKN2XDrADvWvBkYYgxaWK5r65UXNNABGCJMYstFToCZwfUHlh4IoWumYJc5Msr1XwLFSm5g4oE9BWdckBIWAV42YLLAwogkbds6ARI5HuaA+d/nCD/t/cQ1bZk9EWjGQgAg54jEZX3hYlt6eBgS0sotEKXE2MfIMMeyTSEWwPAd4VN6DWCmMFEZNpmbn3uqvhukIsrjGb2jATA07KdNM/RsjXs8pUkNxr8lvvmgl7IRg2mBKCUGqAZ87jw6IAOyxb0jmlilOlan8wm9JgJSyq4F/MtZsQ2qKpBHN0cPzmlyDHYubRdoBKcpDg0k9jJRL5b41WYmgxsY7ew72L381giMxsDf3xj3Hig5iYjl/narMsMRubeVFZXGnVFgTK8kHFnB2uEgspUQ6q8P1OiIaBbXmKcbRP69r/fAl11Q0O1MziQNoi+fMVAdCnQIfhTVMMemaIdeNkMWEQSK0BsNASqGpAE0LIybERqgD5JsscC2Unwq6OKbQ087ltuVBmAFRs8Hl0wij7ovd1ZV5Lg9LDBDX8xje2jX7GnQktXFmm6bBIEF0z4LgMLOsfFcwZG65sPX2Q7aaCKYbRhk5gTAMQtgTokwol+4QtS+Su1BBemqxqftmQp24DSV6yQqZlLYtbsFEyIk+fbOVWyH2hWsx/dRGUhn7cRcqLFhwVsoEpQWpCb5WK7xUEhOXcH9CEHUqWF0knUmia453y6x/0vbVskXzJcc39UNhsH3cJpB5LbVgsC7QCaFJOxSse5DSAMnAMWtgdTCVcIOUpeoWT71QRHCEb6HV1w1rBaHHIgEdl4HDREyRWtvaYJeBjww8WAHK/Aytmu8gtLdOhBS2KDSHqrVDheqciVh5pkLAlKZlF1I6FYJPksFCIJgyrBNL1IfjKfllnRSbLaKxuv8JQwQdbGsPxCHDfQJPrQIoOe7ENlC85MmV4GIUAXTHyxQZCRasbCNEruU2FGAzeQZX7bT0vIXc0b4Bst5GCNv2rC8E/EL2nW1a7YLmQjVGILFoothwvS+MKT6Jdp2gRj5ve9ZfN+txlvXmRVGJs/kCUro92bn7l0vBgXtplGzQcp0MFfScG3UzIe6nbpcj7lcsZE0vYqEO8nVwwQSQkMCwcKI8L/oMCMNhxlg5ONA0GZtnPJGDYpi73ACIyVjWV1hY0iMaRBiWxfWxUl4JXgB3ITcIkMUuyQERSMQQlA7GBFhu2p2JTot4z0f/MOeoM/AgnYIgEX9A4EK4NIo19jkbdUMp620TIAWHIvItHkUTUgkvAVcxqt773gPC/4MrCaRQBRm8eNdkWjLKfRNGPQZbtNQNxwRBWbzQcDF+xCXqWlm/iQrMQHZtRahiwCN1Txa6CRG8n0NNl2xtAkjyd+CE6rT8+5oTOJgReuF0+y+OUGbXrxBKyCy3aaHp2Wm4711n3znZgiWuK4JXTCISFbNjBC0fLdRpEmRYSEjoBp3uf5upwP05cdzVF3vkrZ7Rk7lpTiRFgliEHf57pgO0WDksSG+A+B09KEykWW6Zuv0k1HDkEVIx2AdkZ0dHAu/YDiccBdkevAuAI1n8l+RFFWTKTMJ82VKj0O0MVwhTBDJBVtxjp6qxjgPNJ0tUlkAKrKtm1bzVMrnvCrTMV2J83N9iW8aXtIVrJInIRqmdjbEkjQbYeIRVqGV4hC4BEjsAE95qPHvWRZMg9JShap2LMLMbRc8zda5LjvYdQQqaTxha/Zya3dSPuLfOsyXeK75ci2AhzrDBNif7bFgQxoPO7GnRptJBansG5hn2nsj/1lVOwOaSUGmeNseZbPfAJWumZVhU/wmcULI4lT4ks1Hf0GUvJnUY5Bif4M035pw60vHZJK110SKhcEgQsMMMKjGyk4fA7cD/xioS3Q1MCeKMqebBCgxDC+qhjX+iRefBr/8rJ8NhzCZRnVOOgkFGTKTAQ9AUWwknwmTx44XB2zPXHPWUfoQlalWkIqH3xtSwojaqgFIRJzqzzUAIAPOhA1JCTZsw5LcvV0ICtVsNr+ZBQ7kl87nEvhQygY5IuN3Erotq1Nv2VbpvjAy19TKxlPkqHWFnHxhMebHhJpm1qizYSwFDZjmyu86RiSbAvq29X9tkhhQG5YBoA2XzAn7KswNb3YJECYjCVP8EleBH16zHYS4wQosp3wGJhIlbtNF/TJ7/geUyGu0GvEHbwJUcs1siv81ml1cnCwT7RQLGyHRYxnFI1Kf44u51MuZ0w1un3ouihRkHYOIyoONEVdp/DWJZRAlFQ4bJKdq7xuSYgiwnZLifH0RUuAka4CyAqMhLU5XHFkMEAMRqWIrawyefKs07msy0+3BpsOWZJYCE1WIJ7XMCESZ9kE1Db6v0BOXuRhoX9AmIFpuXZBWRiGKwGGLES6NAH4q/ZJbKutKQJASYmAio7mL7YxgCjoAG6zFeEVGsfCDiSyqnWjor06ws/FODz4mySVi7iTtuYEc9Jv/mEH7OAmWzOtcMp2mE7mRJ/fJjQDfQ8/bGr8kSLvCqVgk/VFxyyCEpsVGMbtQjdU5EVu8JmW0KEG69Cx4IMYtFhmGqD412Qw5iNR880iLbc1JtrVg1rrh3I6Ei7zheoyY7redY7dmTXPLmx7mK/EgihULRwMjEwAJE/wJ/x6o8NQLHY1as6S2wHDhfQ2b0OEk5S1MAjhE7+QgAWJF8+xfYl3iL2sR9CmqyZP1KLiVssJBOG05yr+WLVpBsaCo4CTVslWwa4WfHQM/u8ew1ZpwyzleXuKCzLgQqGhvRurSv5TSUqC3GEYoMUBK2E8sVldwEMjeRU9fqkLu0Tf8uwHU6ZWOjHuMZFenNDI98gVRFFYMIBM9ov7ZLwBFHBX7IFUQoanB67NNlS70gzIrPAm4JWvVO6EsFUlaMW86YMCEe4zlgadX6Q7rvCIPGWLfSjJpfgkdthGt4od7f84iEVmPUnAk/gnfNX62jjxsd2OWYsTixo5i8XAADFvMcZu82Xfn7V82LYLTfKlzaRfOqZ4zGMGwPNZREkE0c4II8IGEz//6lFJsrdTAcwKEKpLT8BhAz2H8w1kEaretg44HwBZhMnzbOPqMB5Dw3077z6veARfck50oCuOSiEcUfLTh4FDTVfhlxAnqZqPoFeAmwQmE7e8MDzuhl1Bha3YMUBjetySVy6WSJjtVrExaZX7yuEl4fV92mfGsob8Se4FUdoHX2lOfmv0E1q/Gwx3LIP4ZLMrHU6zIgYi83NpIGpAEl5iDr7bnh6eannkGzLmisI5wIyKA4EhuAaDLv0k4KwAxSaSQyX9tH7kCH2JHuGjjUiuNtG6hJ0yHdu0WMhiYYd1UVGSfDaaIAcA0XMNxNghrBIfy6nuk0+hOMLIL3RDUfKT8S0PmUJ2mS8UlxlbDHSjz0XXKQKlBIIONtDHsPY7rg12VNygUSCKpFeoBCgFr4GZOO1K5sO7+5UAJECoBKrR2UlkWYwAkaLT4KDxXq/d2yEC4gpQDUTONE60X7nMkWPHI7DLckMkuLaWjMmyzYtHlYS1J2IY6CoBmOWQQ9mmSvVL5lp1E/LQ4/G0Ts6iSFaSDPN43E2MWI5VCfeFr0miDzRX32w09s4yq0zDnopOZritGJCOBTYygngGD9yT+AF5mNNmrS/aDfKMPPM6BqYPSNyYrwYRJJozhrjGZ/uIbxATr0/bGAag5UOPKLyDCbkWkxBVbFeYscj0CmbIv8htir7nPIYa7hTdSAaniHm6BaM0wvpRSC73Wy53lEEw9xlFWU2bFeG/8j8SEE+Y/u+sBiBLJz0hZn6RvE7ygwZbZ6jDRAzocB/HlSE/xJhP/LQWdkRSBXxsesqlrumoBBRx0hin3bEjFSv8whtag1gepxoV+AfoB+wQSUiFlP4u6AfGPJ/mpyV87V9aQ1a37h1k9yX0kZDac7UMohYRaAjZtzRqrR+ZDLSq7kXQ5giWQeQkWpePl60PfUWPLRIDSQN5WrRkCHSgEyX0k12LMfQm4DfpAKD52iVZzEJWpbhWBbJlWs9CRFdizPFJzAY/8DTvLF5tnDil7ywMBr7chUxPutTchcCnDi8s4at1JoSJ7Go9ECVNQfSrMCHQw5U8yXkWyiP4W8VF/kNMDh6Au47ed75CpweRCBtepWaArxiZAERoqLQkeWroH8kroEZyvupVzcchBBHyi+UB0CWGV4Ju4FUcigyVAkpxNl1tXImYNx2GI2cmX2VQm45tohKQdlaDp9jppkcSQQoCER0gcpDdAruR26oCJANPd7ZLCuwj4YWr+xhZablYBjBVVY4Tpk18dJYSOie22YMNIAEZtdmX5jUQmy3eM6sEzWI81XiaPcm4BCPN49BxLGgAIR4qxAKb7f8AfSKvbl3DV9h9L2RbRjJ24F//QIpgyXSiqon4SKkDvtOljz5kJPyOd/KbPBRKm5zRxDZbSsq+FuTjttIxIH8mSGIGuxCj9vEccRfjghjzJXWK6LjqvKVR92F3Lq+Vyxv02B0es4PMB8gNfMiFU6KPl8F5ytWwZpHLuAAMbsmvZpJ58+fySDXtEJ7BNkQRA/JrjCRRQaCTICWAcLAqgRAgjo5fVbpUdVJwDM2Sr8htCQlGKs2yuaZGykL1pF8V8AEI8UGf/3lUpggUBvBN7JT5ZPlVFWAu5rmnk4A5AbFbhdaJRSTCkFFpyKgsgOYj97YbvOJWymPpJIQVWvaiyfJsG/Y76RAvaA1Y62ROzAlb5HteAYlqi0R5QdiOwfZCh+SWh0CmAKvtbHqZM68s0+NbNthwhjA8kWXjA35u8Q1VEikxjVsaPB60LA+wfQfO14DeefIc481/YoBAQFuxjEHyIxa9oPc3ib26bjGX+R9x50fs1RV8vsiEy1IQgA94NAGMbKADzLWtQJIeVEEHvbYA4iTvB5OtMnEi2KrtfGU7CXiKgQadV5wwuAdgFbrGz8NGesV0Y2KfTIf8nwIgC7wt2JU0mJ9VOPB6JjEsoWq24aqvSfAHlrLlVvggZ0ZQFSU6DQB8UuMLAov3Bim99q0EufKUWmFMjE/uneQKODxWDY4MAh+qVBfMl6iS6eYb9CfJwQRV96FBjIQ8IauS+MFP5FzTcmwJdigwhGtq64Pt5pvz02OPHOFBEm81slRkyh+rTGQ43h4yjwLbaINBwzXMxGTyhF3Jo/1IywSk5osIJKjZWJtt9IUxNB9fErC3OGCzwSfGhe3V9ozGygq/zWEsSlEAxNbIU7hQKf9RV/IpVzKnTt0/q5QNVKAzmvAMl1VGUOhAZxapjBSc69KGRFF6jrMZE4gvGvz/dERiTJeTJRWcKRgXvA4AV6okWAAyNzfI1VxOVHtoQZ7PI5WrDOhuhLxOdlQEwIGp/FzYAsqMq01gtayLIDvAtQWwqgLagb5lD05EkjqAUQHPgD0VegxHNr6RnJpVMoBk5WJy0JzwAAAQAElEQVQKevoJb8KX0Bi8rSo7KRiZ+Gx7kz4MUFcafNy3MfSYR5bNmNw8RhAqfQ+LksqzBzGo6olJteyQHPbiPuYkNLJkxs3jOCRyLC9rAFDoCxTYKK4iH9GFYFWz277jW4VnwBf1kogNHIsvsajobvKYSuKZ5Mh6bE82oaVZIcvtihayURYhucmf2GT+79y7ogbHFU1Jx1zv+DNKN/ovexQKNSetPFCI4elrwI8RPUa3bZkxlcJWSMVirAXWV0wc1qfIqBS0QcLIZMyBKTy4VLZgA0SUbvO3ZPILiHg9U5Enkut/ilUJBMxKP5m6UuB5Sy50vnreaa8ELRxo2oD+cBLoO6gh/hPE2lWCPj0swRoSYn56ShKShDgBR+Kr+FRkmD+RV7GjtmpfVaEZ0FexRcG9QYosMdBorRceUKX0HPLM4+HKn0SXLqUnNoxV6AeQ6PmBuQQwHMvUYQeZQFTF7ATLKLVdxFNuEDCC6spcJQ9bdMgU8QpiaUBBIFcoHJf5zGNb0zppad/g4ass1khOsUF8EtTYrvB4cOPGeCS6FApy0fIY5f3L3/6YzzJ1hV+4r3CuvQ/EsL+00coewXhnZcSI3Chx3FuDmwChAuoSGkiOncEWaKraqp+MzELg5jxYMEZQBUENKfnN2CCM5Qkjobo+KJYm8sOMA+L/emdFpnUEifG/kkmikFQv2zAQLIMbqcqKDU7ECDkGrfvYnFRbsVIdItKGHalFn4UCIBy7ChDaGFfbn2SnIq9aJ1uYF4HvcVtYLdl45sV8BViVxJnWyYVAie4EnI3PNNAmV9voa4UnMTfxOs3AVRiQxMavmOZUIcuzHbjALFQweN46F1VL8nxFT4XPutN6oJbtMwuyTcPznVrLUDUNfvq+ogcymUXWL2DBDiXrgsaxEb6IT5NtPQBZ7ELiasAFD4kK+IixwIDpo+a7YbnSLxxXOq8a5a+k6MPGCGcRngI1oDz8wth9WukAWDM2hW9KKpmBEpwTqopymkrOgzmZSNvGaoDKqgDTA9VsoAKCKeJRWbWAtP3MBp8Hu5GEY5V+dQIJWAM7QY9IZDCfGNcUV6UBRWAGDxmEvs+Uq5STNyDDzSzJqq4EtGJL256oZOIek1tiEaG29RApX1urwn78yUHewjKEDU0aPMyhK7HFTdA2W4kRVO1v02MaN2ypXA1+22RgmIVQacoCc98BDWgCGwu+BH20I5q/qP1iPRWaA/dMYQ9/LQQwVuKVLBI/vYtPYmOFYuuLT9wFzpBHvGh+I050JACZxFQGnb2AzveYspiHTSzyIO/BfKjs6ft8n77Mp3yZed3g6Bt9JEp8yEbYcQfDYEgD0dppiUJvvwJs7pcOVAEYJ8sBVceKA1qFd33aSm74ASYlH8qjdqoAxa1fm8kJHfxgQoBasqzLzqNHvnqcxIlg0FWSFOtodjFgUIn5MC0OOrHpCioUOqKATlRI64FcFtvo7Qt8pIExhyZUkV0hqrYbfkjkc6O4t39ulepYvZ1D63uZqKBLSLI8XqxXql01AJBFKKSKfFCWTrbHxKfxhTKKevyfAxYvIg8LcbFlcDb6A+BTU1eDqx0x2KDlK8dO+GuboJZQ6emKwGz2S17ApmkPU20cjfbD/vRa8MBU/QCGAOtO8hsUIFkpQKw0AzQUC4ZuhO7ufdvv/yPnMnClX0y60vm2DQ813tmoUJQEx8ZHGVsJeQhVApMkuxyyLNkwPzAYHJUwMO45r47kycgOCDl10mE/LWkkRwBkwMkO50QLGvHgrEdAmAs778pnMHZURoJCDCXb4yDjeyWZtq9yX9tTdwu70vcBgfkU2C1htBLgGACNHlsbPyZb74BNPU+hYEYy71DVngrbPMpZVB5PE7eGSAOK5EkQWR7yDdw2TUKtU55nDivkWCCJa21FMgFcTwVmmuNuT0gGNfnIKwr+g2TzY4tzoPZJZj3uBuC585x1VhYaIkV6GmUDPuFU5ZbBiKBTqHwh6xSxNZDMa72JHstIAm0tiQUtHnAlshNbgvgHeXW+gvgu+lgboz+E7Mt+y5elgCBn3bswdVdau40GZA1UgKTQd2W0QTa2GgRstyojnLLZQQCoiJwRGj8afWZrPx1jsIhKUt516HYFsnoSNdBqDSVRCVoCwGFzpnaW4ryXgMOOg3614BDQhKcFjqC0p2DBTwCThAZBSvqDA5lOVKraTnEVdPCL+UpQMVqCrl1VPMs9QGAsuavYohKqtovXFvw0rYo9Dg05xebKPQ07YlIECwrh5N0mri7sxdDeupkWn0SvfU3sdEWyiinHkjkyKoHnC0BTic0oRmTCxZeLgSLkcScRT+9MItwoZShU2k6TqvAmOk3LyQFafEBvZZEJRKKaKca24qjScS+mwlw0rhSAJE7phYYVzCKnKMCBfM/VOYxu8m9L9z3t73UVPuUq0Oi4ZzzjHJT8cfv/MyP4Bl/zOYoS9Ld7guVguA2bU7YpAOMkBRoKEQFcjTY6BdVTZKvnjNMqYynEdaD1CipLGUe7VpSYpjoLdpyAI02Js7XbMp3xUJEDI2YaeEQP+abLCOSmKiDJugBG5YpoiaOjCH6LNH4JmU5gRY79SOQMTpLB5xuA6rnq+63xyjWxJ4NJj1NhGm/rM2ZZkahwM3eIgizrNx+eKgtWMBgpDSTXYPY7QF8tNrBDxLLjJizPYvFLbmKWry/NLutnfmDhtYcU4mNeUoVObECXz4DJkSfxPRtvyP8fQYnNWCIh14sVMUqMCpgzACRxBgfCzNbUdrpQkN8F8Mb0A/7R6yJ2mF1f7mNzvhxNm0fa64IN0QwlUKJQYFRVqBqEoN9GazxR2b4NZ6GcYBAe1tmMd4E0VmEFbBqPAQRuENT0w8e4LO4dFBKRJWTH08EDuLKjBCEmEzGtdNIBb2W+ImNgcJF0J7iFEJpBbQzrLQdtEiZpy3bbWr3aLYdkWU5SemprpMY6kJ/IttRkYVT64SQxVw1iEijGDPr0PbxqirDfMpE9YF8FbW24YowJQrAx4jlQxjT3izHb0DM+JS7W4aoJBsBMVTDuBiX0aUkWyBV9VUKUKjR0VbyYOsYQ7jgl18RfYTua4YGV3CTxsH3CV8G7cAkUkytefBBH9JAPwS+hx/lDttzoN0A6rtwHO1mMl/5ruatv11X8mPUqkR77lGd9OCJ4rCaxcBjxmClF4CylhFVQAIurXLXBGHSgnyISQcMpEfyag8rS6P8FYRMnQUdFBnnUsN6r8quKaX0mMSgMssoWMJjAE+0qCXCK+4ii7IpaoIhwAowGPLJi/iC41Q8D8CXBtDkK9I6ixT0BViqaTYmpkMgTgS9pm9Ht+4q/lXtBmUwkcrPpSnncyUwn2fKYa4l132OZsp6KHvE5wOdtnClVbDMLpJpxhh0ARRSsYrIgwy3ooxbtCOBvYg9Dze2CrUEIhJCEN+FJkzFmm9y1fQubvKyqFi+hmdmK3QBIaxJL5KpwpbjUJi8FtZxTN0GfHYHgGrTSETQKS47j5XH/n9hE4lX6YtpVotsi6n4HT+fCKDteeOoNQGNHDxgrgxBjkiB7NStQAUgyEOH/Npy4x+CKvf6HqP6nXQaWg5IQ1aDUI6MShGqHHORMlW4B2M5jBKYiLmwHwaFLcFL+50ctWAA9rAedgR1hmQIyA0vGiWHeVaFmMAifhSmUVOIkiWbFT1VMdcKSSiaSWWn21TpqH6qWBTtfNSBS9YStrYUTnLYe20xL30C1Ha6U6EnsaHzoMY/lDRE8kA6a+V+X11QcaJaLtIVtC7PbELxpmfyxO4utFIeIb5NJF1yr2nbo7If5/I5VTLhvvqRTscdjraErkeE5YVMl5knekr4Spdgf5CTIVWvMkaOPHTJefpvVXNWGpKtKKt3wqc/6zy7yj9CNTYGJJJAtt73bAxg1Q4G4xEj/VyXD/6rZ/+KZaideLCdOOKE+3ww8IQ4cgIetf/eX/FQmqkyy9SQKkrRluyeCAKASnES6r5VHOwcsnXDmkpKRBNjJicSulAbTg7cKjXUmvKLaCRvcTeysJIACiR9So0GfE4RqVSLTwGGQIT8iFB4DRK0KkTDBaTkMKdHn+5Z0jzO/kJ9K9AT6hGLbnzAkiyEjZF9RLvkeV4cheAIeqIA9UiTbQjjEOpcikSXGQ35Yabr5gyp5NN3hvrohy/LFWLPDFPR9tKksACSp4lf794/IrfYd/8TbiaSUJ3GDXEm8aqKPxS5AhhjMZXHZIOY8FhQYFx4A+dsHU/0syyp9vcqNYL40hn5vYEwrxQCvRYdgWshQU4GxGCMBzhpFbq50WaDA8Ihgi51yopyrcE6ERQlYk19LAnkGY5L4oMQnLzeroCeJdesJuHRFCeAcxNYGkBZJQAcNBJKu466BLVfoyiRg0KS3F86ZPWBhRIqWNuxLDWkdAgeVlhK6K4bhrwzsJButYUdaLnOy7IoMeE2EGlXsbnoYBynyJ5hPFlZFr+WZP518xsmmlWJv0uimtMn263eAQgZFCPWpQFDhr69ioo1YP+MqoSYK+ZXjjZJBfE1sGbBXW3wDvjcbilr8xKeygL1IAxqzJTIG5FdiLACG29xFa6miGovjVlo3DRGKrhN5++dDTt31Ft8fTMOUgyGXjn3a8z6D+a8QVajDyCQRzTBbj4FiW0622hohO18HJhIHyE57WKEaGmzd8jaMXuIBhq214D4vqR2rgUqYtVcAPAMoeSFLbBRVqkS2cgOWZL2VlVytH8AnlSOJloPhsSjIBERobw5adgs+d8WVELsqCUquBgHmKv1nKyIGkRozQXdSAEW1BdAPTCQGWV8iuFVPxhDNFyAdmGNdCJsqvmcNuY/5yo4uuqy/2WSaKuKV6gHmJm8R/B7SpixaKhIeN/hEnNOC0Cau7iPCXSU+Cxov9jYGEDFbSZwiAiF80dUeMHyLP/bbDz4V3TVDAfAsY3AVxHcxlhFcOlmXKBrRAcSOewpGjCdWtSN27ECyDupj/w6KwcSzafcyPPo41mBnkcu0f3bTZElpozDDQIhaFCqyI+o7hcFpg3lhPadsz6OokthwEgGeK56rZxrYzFeC46fABCiV92JROnBflfSFZHsd0NqOyk0EQRIBTmgcOCYaSEhCIKtA2wIJGMCI3NL02FupnEmzTm/fQwVItIptIiGQSMgQeiXkU03Ee0DigBxmsVG0ytFC0FmuihY8yCAUWMN9+4YYkprN0tDog7HUrISmvPO0DUBBEcETsNgpaxMnPkljosnDSq7ZeCsrM/o2iWiosD+4oEj2x75VoacBjVFoPV3ZWRw/22SazNAQBS+hRSvhksHpcW6tQMLOQo7c6L/hyB961pX+s6sF02X/OkSXHf0yI7d49rP3darPMhDSAQJUpVtUMuGgWsIKgZEyUIGh1Q0Amd5nP1EdSjdWTyKT5dpTzTIkIa8SlQqAgirogCUD1cnldU5BttClrpO37zStE+grdAgAEATO9B6vUgWQqBO3arLQBYt0CAAAEABJREFU2RICD19VJiCDTmqAlRM6kAAah8RKubBpaSGMQtS2sFoSytDA9ip6lm0hiTz7JxzKTp6Sxwd8rLbRDZ4BHyt2CiPMayD2gMMA9L3BEzhYiEkoFoIKlxJCtCwrGU+GvGgFXS6Y5ItNbb4DTIibDc026O3DvG2/KfvRhsxPp1XDir7oROiECfJxK5kXcZdzSh6CnJbR+LzSxa/BdrW+dudqMR7/9Of9FTvZqzre/ahDTCHSzTCMpp+AMl0Rxf1oLLHFOqjVFYIgRzAeVXaiFso5rZI4r8IovCd0NfK/9SMOFQv9W/NgmkLwua8AY4DGAe0CIqVasJCdTjABqmwhoh9s0fITLsKr55lLWCrJN01l3DyNHxvSEWcO3KkBCZ5KEhM688jMnQWgE6YQV+YSXVQDrOPLdDPIIONWyCzYmchqwGM80dFAAl8iv2LXnPE5fpuFCFH5slVACYHoRIysp9loeei2jLa6uDdZkwuhwdj8daUDpVV80NVYuEaJxpq1k+kqY9W+YUdih9dbuh8UE/iDfhiAHfkGfMETcDeZPO/Ixz/3C0i+Wl8kXS2+xpTz8jx8/pgNSRuFQe4LwGVlm6pYTfITR1VxohupGpgcZCtjXmT+p/uDz3zwJ45WLKqAqxLJ6vuKKmRUEiRaZat2spLkkXslBvRUE6EKFtSEPBYZMvAq1+R8KLbhNCDd4JEbPFGgQ6ecMFQN0EuMYaugAVrKgb/M2zbBU+0bCaqcgytzAW0qZBmV8cG0NVWxUchb2Ck+iaxB6Z756FToPACLEKcZx4uec29BXiEmHfZ1TBI9uPhaHgzma6zEJ5GVjo2vDCatzS/IBYrlscTuiiyfLyvQG7jHIuxMmmhcPdbkwEysSA1rGO04X4mHDDzeaHTL/OAwGb336J98wclQXu1vudqcMN7kxBP3hOrP01YLhvnf9GlpmfCIc1/KVau3M6z6JKAimL7MSUyymgq0FTC2asm9OhxlmyJGBG2kDO4psy7/cqUlyNl4xVxgAVeqoIQbXUdyxdZT29yAnEpLkmEeV15XtEBORcalzbahu/oKbXRSDeyH1xV2YJsa2LJTfJhfVB5o6Af2WV4DnPkhcoXwmMQNdqUsLBFIPACn7bFuL0pGRXblsTnAQkQ7/83x0+wFMOCZRNz4KkzARCKzgRobBChglZscOOxO+Kt1EXullOYzLf0B35lW2knGEppET2Uw6bvi+5oKpWVzFTuad6ogTnKAiHWMRmeTt6cTla/o2/w7IOHqXG/6tOd8oJR8jgNvUGUGYoq68bLkn85cDVXa6oosPECIObZYAkCsFHaqdBpwrCWaQ1OqyJUukJS0gUBVqusAeNSqIcFp4wQXXoNi8GqFzn0F8/RVBSBJvO+dQW9hjAfJCQtWqBpcvkduYpCBKu5FohIaVxIuGvCrDinfu5oyoMGHd2gTGRIbVgJ+6FrCnXTuK03BOKUksUP4a3kUeSX/YYbKN7T4zInBFJlePOKDuWJZtcatMFeETbigJgt5lm85nkt0GTyN0P6iqDLh1oBnh6IoIpT41xYOPjm+TR7x9cPkoBHuQQOt31yY3363/GJUYRfTeOmXbvDTv36mvsJP+Qr5G/vNn/YrJ3WlvDYAjgRsAJ14p2dAqRupGIilaI5D7X9NgTG/ie/JAotPeCsx7zNjJTiVQCXB8NVJD+ZKVxSl0+DoEwRFKBhz4JxEhZTw1TnpABQL+lBC35rHUySaVt2gM1NA43EAPJAMRJAc5gHQgHGZAUjRwBzCJGgZks9XdGXQurJmH226KSC5TnCaQLDYBp/DuCISntQWPtgpBkWYN9Vj98ZsU2YbBf7SKdwVBAUtTceYvHrsb0G2jxfYxrTsv6fT99jv+CXAr7ZHIeuutgGiCg2i1cNYmUvHdhDm1yanEvM+gz5K6CfN/0o9yGWMut859hde/B5c+4q/SP+KZTQB2/vy9K6Uf5FXx4TXMcUPFp2KwVaK5C0aUEZhTRP95sy2JVXuB+adbHWdBuYsMABZpeq134wJ/EBykrnoCkEhUNWNYDmqKmaRA9oa8kAq99BGYTbERRFcFRI36eCSDKlTK16MRyKH5LRqSjeECBYJU0qSKOaSxDmxbczz3Cuww30WTXJkUMCJX2atVFVBY3AMyKgcGaqvgsc+IdOgsH8zfv+e8gomzZ/poxsPIBDgN07gNzzYTKGjj0LUROeFRLOsPi1VFQLH03rSwKdVyBlmPjQAYEyCrqhiZxIPTGIBSHMmIJfzFeQSsEnMl+UlBbnsRt0/zdeO+hV9lT7lqyRHN/jlX17rx+XHu3H32QLQytKSDlS+GC9JGO8HkIE5O90nqqmUiZPJi028I09V4RfVHmeliWS2pImlybgAcQVcgx9ESJDBIAXJIDFGhwHQdXJCawRTJI9rq4BOImKSSseQCkENZJFhwaBCYhsWYWn80JEtOWkUNzmhPTROqkHVQGJBqMGEpst83tYS15pFQ7apNI173PsiYuCECx8gVc+NdUyHuaa8F/VYB0gW15AroJoQfEVnavFpfrWbRFTiRjayyrSHPT9g84AT3hkG9A2c9QbeX1YMcfUTcWBaA7Yl/Vgat1cuXtcJTS2dglwEsY9xd2ZE+emb7dhxlf+xAaZc6dc+XinBwUze5im/jIHdD4fKReIdXtm2XeLnuMUT8liyM/5/UDLoIlRJcunsMHNUOwFSb9F+Mm48ZaTaFWWFlkrSb8zkX0YSXmLZgJOUmRQfAuRtIv1EzG3NWASVqjDAG9xnlbKI8+Wg3OjpNE6lkB+iykmBYGM1oHVSWiKoLiXV7K3wB+fFGraLhEvIhJ95vgIF6IUZu4SQCsgTe3FBimQ68IGVwLnRVW/Avgpjn0XrG3Pei/aQJdVv0VCHdZL/pLhDFgarNUkV29hllVwb4IhpG8PwAWBX/El885GnzaOaIVmn41EtAxvlWOPTgPwKQ41OLR8hpQPSdZtRRk88/sRXX+7/zBpirtYXj64W3xUy3eppz/zYaNvSj0fXrasjSQUVgENUxIqDSQBExeu2LSs87mQ6WA4uWWpBgafS76fUkQH+oKoR2BZ007f5Sl1MJTIFb0vAkAQ2qFYSOXXOsDNb39tqz7zpkxn3q5OPPXUOKGosmGrCw7fjvnGSIsa8hQZTad22heZEpnXThB22PTlr+iElY8Gf/G58qW3IqbVqACy+usJWVLUq1Uvr6/7vRacKNhnwBRGBksBeuTUDEquwV5iLP9ywQBmzbYwRFGKgBkzHujK28LPKgLQfbQx/hwyqr9Q7DthbiW0mOSPewh/MkHexwmuXMu6eedMXvPZq/dqBCVf4JbtXOHe1J77lKf/nryNGP6nSzTtetdCXcKxja2VMlat/D65UPW9rwuF060J1yFYhfBWOJ2MD25K328r2avokGU72QOIH+l7djYaqUiv8rHwhp5Jo04Yra2KCA+0xQERApQgGuXRcySQkqk2fgY8cku+qkdC1SkK0/A8lalMOte+5NDnIDMsgu7Ap0TVQedMVmav4VOwyABL+DBJteogHYrPZpzanm3gkjSJpkt//2UCrEHSVljRKpDkb0AYAjbXKinZk2N5q32Hy1eNVQVwFAAVPcE1wSstQxbeB6zCELLrSF7lQ16lj9wpypK785s1/9ZSTcOGr/i1fdYlbAm/3zBPfPupGvyA7wENJuxZvtyOCJ1XosnTK4GFlsiyRwDmJUMd8xawgQR2N8cU5kXMkPCKY6THmRJAcrxbo6ORzFNOStsDjEkIioiYxLYoJjXOl/MYXqkBGoYndJkZF7pchyG+qGjQYCafUbSWHZLuquNVksoYUAW0lsTQPURkb8KwTOCWA96KoLI4s+Nt1kseQzxdTkifhqnUePma00vgkqISbdEL2sZ3XEs+CJj6+Nnuwlarr6gZrq2YDQATrmjPeU4FRpx6WBjRkVARW/EzsT1/xQa5+xFDY5/e3yb0mnbrJ6JRvedGbfgX2a+RbrhGpW0Jve+JzX1tG3VMKW644yKZXFE9T7pfRREGYF0GoSiJWurFi2zbpUJrPiQQqoRL9geRBIgfGY5XxlEQO1ABIP6O0+4GJoaaCDNY6qPLrggHQnCUp3iLJnxKaBg5usiIL8CQJ83hBnyLU/kMGPeYsRlcU6EnrG/xHgowHhZBEA/ReRxXDWrXChoQOVaoAo/o9HwYmtJZJlyf/kdan03b+K5IMvjAD/YJdaSLoK4oQu7DbNrlkQSMBQvo9k6iSjxcGd8VOhgC454syATPGVTSk5+AdYKgaqY9OFZ8HrkJX4Rqjpb/ZXJ4/Rdfgx/5eg+KlO5z4/N+N6J5aqIIBEGuh4rEF2+GhGynoVwITS1Q4ft7xtpwxUiXR4mnRQamZzcbCdu5tuYKWpGKJM2QS/FSokpzwfQnAzGhKA4mrBgBjwbY2gOBamUO2nwhry05S8ZxCGveYoqyBPhrJHwCkgSP6SWtgT6Z5yEojBdtiK5l0FYwX7t2HnAWRqtzwVUV/EvGgslTs6Mm+aWYoXff/jwo3Bd1ARYFfvpovmZdH0Isbsj3DnIWFPMscuCrRA5gGA1N8kMOQwPwiDp5DTs/44AbAshtLLgz0g7xE1yk6csLRpywvfyhqPv4OO965irRr7Es4rjHZlwr+1l95wUkajZ8qtuPSTaSCk83RJfmAOz70UCUAzK6DJyTAVeknAauFNGSS2BGVoqjnSTE9HgEmUgOg8RN3cp8kzVXF/YhQMpckOg0ItpQ2juwsoYIt0SEbHlVoU3xCAQjoqG2dHoOm0gbLSTT0tQGqZsBGo2oOVNUK2F2pckAAfVdfV8CKDW79FmAkdCI3GQdTQpw2KVezjU0FMgMdpaa6ZlcqSqGhhzHLHkBU0reNFtHs4r5nHDyr4sswBFVQtGzyh1oAYRArmoEIfVtM0FZiUzEkqX5ipwkasfnUMBo/6ta//dad1nNNtnJNCv9i2Xd69vNO6rryRJybBVtxt8w2CwgHJzdCKh0hLxr6qiToQ0+f6tM5FZNlVQBUu5Cooul3VQStZzsjRWoVpkp1fdr6gs4PJolcJ2sAEAJ0Qi4xV9A3wLwVt+0REKUbMhpthuabg0xTljpYiwLV1X+6TnQl02MfuWx0AjggSBX7B+vHeb8Exik52RgGXbIdDjIgPWbeHrBs4MdsOkNuip811SXM3FlfNp1oxGaPeqpyWyv+osvA95GWLg8WoV4F0HHFZ6+FzKKMxdhQg9h2LJwOmqKa0VoSWxGbTArDePwpXHzoHX7rj862vmu6lWtawRfLv9Ov/NobSox+pIwm6wJwXXQiOqxMtUAEY6I61tFYhe24BZtouDpW5iIKASzQU4moKFInn1mchBTBpKolCSM3GoZBPrgnBtTZTMPmXDDKwDH9gS1M8BkMxk8CnBwVdARmBTIk09ZSFNga6BfyDUzBELQyLhBV+Z2maZuOIRVDVaNTSMmXscpVW5+BG7vQI29tbQPaQXoge3IAABAASURBVB1jI2i6gn7TwerFZX/sFyJQm6rQubqiHkCncFWe8+KprsbIME8P4AZaTeQ120cS8U1iKRa/JksSMQuqnmgxGf+3NH7YbV76zq/4N16bf1VauSpEX02aO7/gV99ZojxSo/HOWOLpd3lZo0O2q/Bwkt1EMaGpqIw5B5axaulIDhElwnUgrASyUEEFXR1BRwCTYCZZrpD1rkokfYCv8tNW4ylFZvU8ZCRBiuWRElANUtvaBU8FDIiQk05XAUOdDmpj9J30YdY3EAjURgdYPR6SGmiwAmJX02EGHwipvkIT4Qnm7cdGlSuvK9e0D22sryNA6kJyQhDV/p8ShHG2xXplWYgY0FuRwVc9chluvlmW/xnhUEPuD7VTFa352CkL/rKYezS4b9Al90mMww+EVD6A+eA7vvwtn2/GfI3+2N+vkar/p+auv/qbf90tb/seLU/O9FNvuuItLSu2T9QdsqwkaD3BK9v4rZjVK7aIFizoEsBVN4IntmMBwkT0wMpPwBlsz96eRIaCe5kOcIv+QLYGrolMJ7VVEu6d3BlgHThHJXxCYNNngCE7e8DkQZIXQTKR6e01oa9sxXUwoAapBuB1EyDwWFVFXvW8Qv6mAUTUe8rfHP4NzrQb67z/Y20hGeBVJQ4AVUWEgsXDH+RiFHxgTkzLZz4e8DVjgNquPgt4LW0LHrCxqmiIESZ1W9cRC22kBjwAVwGeWLhe+DwAnjos6yF3fvnbztLX+INLX2ONW+ru9is7PsqL1geOlpZP9f+Sgnjyqt1YtaMCUhFH2zkj8mDihxQDLgEfgVJ7J6hQApxoQCyqhXtAUUun9JgTznzlKbonsQN9jZmDLgCsEyoDFlvCZcd7WHDjb6TCfSIzFJj9GzSyPTgYPKYhucm18non+17KBGiVbRigJraIxlirgsgyYAyWBCwMC6r2L4NmLLLVtU1Vzn94sSVVcMPPX9kQbK8Kryc1X+qiXzk7zun3Pfe1Y67bAhv3SBqiazGq3UgiJo6Lq11lXMRJ7DAxWVIZTd4/UXnw3X7rnV+TM5++5FO+5P5renu3X3/JGf24fi/A+ksBvE4Ei8BmFDnBAnReoYXziQxOAputkSDAZVANGaqJGw4oCXa1GUxD8nIhpYGD+qQAhBUPK+O+CjC2c9OQiqRRlerGoGHaC6GMhcAc1CEhjw5XMYa0wlyKG64Fe32PfgXwiqpw9aQNc7QhuyLI0wP2eoucD0n1Cq2traqAUDxXF8hSKIIrMit+cCPYBYkQwTXE+lKPnHktVLxOc2I2QDvUwMROadDRsoyUMVJVpwrw2riPL1TAJJ4xnvxFKcsP/9ZXvPUiPPm6fMnc10XvpUrvveOlFx/WbX+4RpPXBOfBAGyRHZVsIvcdWAevc4UEZEliohspOAOyM7aEOElOkJPS5k0HiCuJrIAgIkR+pCoZlMlckhBu5Gwm1lQEpCuhb6C3HFeNOlRVSk9mSF1IfOt8YGyQx7KEvG37TGcS0yeyDOw2jhIDr/ZpVeqRN0PerMbi9ct0A7GcZdEJbr0E0RGoCcx1Ez7SGKkoqNjXD6EZreJUEoshS6MdSqfBgKP1+FcBYGUsWcjJAk9XQubUjVWWlt+wetTSo+788lP26uv4+boD0L7fYceO2b1/66U/r0n3zLJtW5UBlEVZOglAisANJEjch/tdx9MfaKKKBGPspsquKJbGJICkAYoewU5WdCSTJ9UoIwAj0ii5A0bkebmsQC/09QADqcoo3AaASZkoIaxugMdnPiGlunVFlpOMJ7ymc3UzQAWYswekPTIS2CPTT749Y80XqtDGCk+/s0HAQR3yCnYEdLXig7Cbs6/1mD6hQIXmfQF8hS2805yxOYDydjtgf+V+UJFbRocPbvhNX91IARCDc3NMJi++xyvf/MT77zhlU1/nT/m66b8cxff5v694SRlPflDjycUB0ARoggATOTkBheQkiUmCHIXgQlMBIzyqBLkis2110AQgdpOTaPAyVuEZkFGR5v8qYh/SrE/NZ1UD47KMCNVSqGoIY/usBjmCExD53CgDER5XPFUkpdAND/PVCDEYB2mAhmnB2qpeX3vG2N4z1NdA56DNlRWNIWhJQG+2VhQAO/GrYlOFNrkilgVR2HJDgwpyO82HotlcmFVUbTvj6UZfhfO0r91I8iJmx+Ctw2Y3WX7qvX73zSfi3TfEt3xDWPFFRtzrt1/+3piM7tcdcsjHxXklCF4BTCIpQ4KY6FQIZqX5t2UBQle+5Ezoh5WYLEkkr5SRqkhMFrmCzEPKCKoCY8xXdKYBRmdOdmulA1iDhw6wQ7JTYFbJnwroxKCLZdtaLUeWR4Mt03JDBmsFfKZ3G+AzcCu8bS4TEKZUQ5s8+Q7zmboSnDWFliJhb3Lvyp/ZybqGxH6ANmduKEV9dFS+EfbRoKnMV+YqEnxN+w1N5SriJ8eDxln6wm4yfsQ9X/nGa+RftWD81fra66vFeE0y3fflr/7MrI8TusnS2x3EwSDjfFi2LWtYmqgClEyxe+YCIACgqqiy2v2/JZNUjNoVBcAdEktJiJM6dKGWqJ6rqx7NwGgVB1CBnQYiy+57wMLeXpGdJD59DWS5X0IJvQGZRhxSPV/bOHbBKytOZADsCpv11L6qNWza2JyqcPXWGxGCVYFsYWtVkXhAqlsVu2fSwJtprB5gDfg5sIj8RkD07W9yeqwxknmCRSsWqACeFyng+9ho0t3/Xi875a/0DfYp32D2XGrOA171ql33Pek1PxxL4xeUpeVhIPDpMwxnJwd9sa2MJcA5BMggIaIKFCeEfl86KkVpT5q8LQEwJEedhhreOdt1GABEhgLabMCmqgA6DVIBDAO0KSkNXEAQjDUwVY8yDtDAGK9RqpKf7oIbVzyfCU0C9pQAMbFLNI8N6PP7v2E6xZpQCRpyw60rGqJIXIUfKtiLL+2cR39uX/HfsegFLRKG4hhMsJGtlvhovKQcuU2k8UTE7o+67dtPuNdvn8KvHPqG+5RvOIu+xKD7veL3fzVGox/oRqPzFV1LTkRRsMLDoOkATeckkACS618DoowUJGxQSCRNJCbhrUOoZ8zgHLgXc0E19dXAEjyVqtmX1Jwn3Szw8639INFvgAVVfMWIKoCr6MxqUKcq4E1AOfhaU2Ker0A7fX9DEdJsY6pgVYyQWdBZGAwVCZsK+oVPFEvVYAyQZS1UvgnVbSzb7TZHZ6vSGar4P+BjdeXj3Wk6NpPJnC33OSe88g0/9p0vfs0efYN+7OE3qGn/z6wTTnrtX3Tj8X3LZPzPpYyUNAGefithzDUwJGDKUdFA1XASixNIwitJogQqykgqnVzRIkIjZKQKiQ4NRCJrtitTMnjIsQaFIKDKDfI2Gq5U1sN4DXhrhRSwuc8FEYoIWVYdhNpoT+wGbwMjAJ1x/suhKkqo0KIryrJopesUtGodgLFnfMDmSqWrMcLPTlWdBOhyNMFefKIfVL6Y8CsS4C2jybmjydJDT3jlyS/SN/iHsH+DW7hl3v1f/frTd++fPpCK9VsajTl6YXolEWWkKCQFMIoqEFQAJ29wAklGR5KCJFfkBPdBsgyEDCmhKR0yAMqojJUAgewqPckrnRSgADAD5agio+NFthSAoJpMBqj4VL9yyZSgiUAu10U/FMj2tmwZOaTmfeXhYq4RujqIC03ItI0dtpQoyMU321nGGjpABrgyRhq4p6xxHUllpBh7i6UywlehF/cxXvqruhzfecIrXvfX+ib44Ok3gZVbJj7mne+cPeANb3k2h+9HRded11EhBKj8BOyf7MT9QAILW9EwIpGTkZIxj1eS1Ic0AJRQp6R5O6YQAQipAjQnPyhhAzKqQWEgApqgn+anVTgNJP8jA4SpgkJXOsG3uJcyEhBLrpjDHA5AWESo0T2f8eQLYEcAb1SwZMSMwYjsUrCLq3UJvwZhfzfmoWvCebYDmJ2EbwnQBgAoZBTmxcJjvC+j8fOWr3/Thz745aecpW+ST/kmsfN/mPngU97ybi2N76PJ+H05GslNS1SC5SX5YSJLUdSijuQMhcRxHTEXJHcYQgbXkAXgFc2hzUmRAIPnBvhEtVF26Aw5yTnplAU+QJbIE40ZVd9XyTR0uZcMQhRIyRfwMkKHv4DF7w57zn+W3CEvAr20QF7BD9Gy3Y9UuQ6AsFIBawGE2C7uBQCDM15OljS0h40labJ02mg8+Z4Hv+bkX7//jh092r5pvkTgm8bW/2Hog09521kfvMXtH0o1+j81y4pirIhOxclxokhgssX6f8UpvC2rNCCUUYCRUEDTUR07aLKMG4jn/sVk+wQQ+74oO5rnFegOhcFKq9ylmEMHlwYWA8i3yirxNQDFnwCIwVU81MynczglL4RATkRIyPa9F5HtTeyqtOTokFS27HiapW+/ZDsH/IixOnwaLW9XN176w1KGez/k907+B30TfvDmm9DqLZN37NhRv/8d7/3t0o3vp9J9oFLponQqJK5s36bKz04qTmCngWS7ieR2jPt9YYw7sNLJPFVFNYInSq4FBV1RRFEC6lq5MmRceVsF9NzxTbWqBxuvW9hn+1TNUPrqrbdy7z2emuR/7uXtd8QC6EpRMZOvXacyGinKSEmrLKDaKht2T6jozdaxhG+VyhwaSdiU3eSCMh49/vv/4JQnPPS11/w/ndc19CnXkNyvqdiHvf3dHz10+TonxNLo+VVlxaARB/eIiQZFA4UTLCpJpaL03Uh1acyrjU4+OwaATYNNHfRFcqVxoruRwuNG3hCgTRQ4QNVXXrkwOEsJgIWB5rFMhYq4yD118EQoaf5HCAPA5EYqIZWiKJ2CChv0Rb+iz3YnttfRMjSj1gJ7qhcStgeALJPlt3U5uvtDX3vKQf+Pgusb7FO+wey52ubc/5RTNn/glHf92mhU7hWj0T8ZUOpG8kNIALDKwV38mpLbljW4X7oGQPGgMrD1OvkdFaYwHlSl5Fq5+pwnsOaHlJ5fTkAoAIsG6hqBvUVpoPmcqCI/5AxtXI0moZjzlDIMA7PcAdbSdRJVLNABAjWgtzI2dGP1tIHKF8uHSEuHKMbLCipixyuW0bblL5TlpUc98g1/+NiHn3zyOfpm+1yOvf+/AeAB377/j97zyYe+9b0nZFd+IcajS0ZLbGUAMJeWqHoTkjlSZwCy/ZausOWONLAF1iAUXdfmpUKhKuoBSQIGjccyIFUZVyffKwAhSsGm/CQMtLgCOuT4tctsOqjnIcRbtsErdAV6onQAuEjW1Y1UurGEfX1BR7eEzrGGMtGATqE7AF63vNx325ZO+v/YN7/fqIoojp9zZu7M/bF3t/4hIAYfMFFMIIViabu7RZ4MhJiY+GLQB030QTRG4q9USu2vNW3ZLQWpLYIYY0ygicQX9cFH39RgNRgwmhiJu3vH71wsER5In9Tstrmnc+f+mHPnziffc2Z211rZVqmdWILbjtmkY3ryj44wkSs3lt4hkvuZzRyZ0AnqICA+AAAEiElEQVQGNEOoaxHnMLUQnhnq4gCAGEPaQmlQtgNLuVoaS4LBd8aQ87AEATHCnw/pjgAiC2UMpxpAAkask1CGqigcRDiGG2ycHyOXEQujHSGHNsgvvQBGB/AymIfM+WcJDLHGYjIA9M/lxKJuv3KB7S1PzDzVPz73E1x01NaRAK6N0GBj8fu9J947RMbubIn6skWafKjFPgYWg50PuCYGhG3R1BTApA3CtocQxwEdwTwk/j7nz8Mc0MoAMwdoj5nacOhhZITyVob8MMMBJIIOH+E1/2jSnwDS38OM9uHHIaQCqtwP2QjK7H9+4C0kwjMJfCoTXWUTPtNzo/VgZWxyBS125CYd2as7OjU0Xb/0Wzt8SCn1pGj9nQAcDSXKAIMAONaW/GREQfHEK5ICfDBRAAbnGEA41P31DvsE+JyCmjmomocN9Qwg5nLnwy5EEKleHoIxRyEPrvOK97dPJwG1FUCHPxdG1EbJUF5vYuwNZcwxzea+6tj4iM9t7+hOR1W7AkA/YocwSdk3d2ZSsdsK+XuBTLCa/+pOBZQBJJ+LCSBhQo6WCTFrhEsLM0QGBgA9fAwAGSD5EmKH6zyEUMG2YAJC5PO/HFASLP1lAE0RoV0HsFvaUJYbQmsQE0UFcnFCAgh1GON0uKi12bZvcvbw0NjYKnXBn3RBH2/rYrV+9tqj8++/2iS3BQu/L7KxP7IEAAcgATrCviBUOoWcD+onPieDCSD0wDIA9CCSv0YUJg0M4XMAi/J9rDcDPKImzrdhmYcP+aTDBIN9TodcTxB2JcYMN46JwxhpZ/KBCu3Dw9P1/dWpma9ve+AOr3QdgGvjuX928edy7dTLbaO2qCh8XoXhtx4yBmhsoFCAj5QhCWA2IoJyMVSMUTpYW2nyMBLKzBtU1C9QO0DX8urn4AltqQg5HqCjICKVQ1cgilNySfo7h9FJpc32ytRcpTw++znu6LpN1tXjDr6oOtm4OlBrHLWquUUpeyCIohUdxW2xFvAFiKYapSGKEiLkaaQD1ENiG5KzOA7FpEwgf44cwrATH3JhUEoyIYmNyKudJAWE2hQQFn/QxdIbOky2VifnH+tW8NaQwptb2+3usnd68df+2lyjb2J2h2jzACA8BnhWBaAJcjWVFhEuASGAcsbmYFEQIvRqGEK4Rn6nAmpzkMOpioCtVKIsKZJOe34Jivec4yg5YFy4qTw9/+zQxMw33f3Gb/Z+A8Cb7+HWfyZye8ZrXzwyOnWYg2QTJgnDksZ1idMrUuwhLqQAMSKGurFBaWMoYZQb4VMWjrDmmJSuqUJ6WUo9b0shHc6CcPNgY6lcaSw29i4s/G+/nXzrJfyLOxsA3uVl942MXN/z1vHl3a8dP+gSfa8k6U7d0/OcSkozQZIuh2nxApTxQy4kdYmSlwIbPSFxuENK4eby2UvbK6c+erq6cH55+OTylbu46epTGwCuc/j7joxc3/3Kmxd3HR19vW90+vFdE/Xh3ndPD/TPnxscOvPJwaHzF48MfPxZrXLh8srQ6U9XvZKus+muvmwDwK4e/v++838BAAD//x+tQioAAAAGSURBVAMAKEtLaP/P8ToAAAAASUVORK5CYII=" width="20" height="20" alt="Peach" />`;
+	var ICON_TAG = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+        <line x1="7" y1="7" x2="7.01" y2="7"/>
+    </svg>
+`;
+	var ICON_TRASH = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M10 11v6"/>
+        <path d="M14 11v6"/>
+    </svg>
+`;
+	var ICON_SHARE_LINK = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+        <polyline points="16 6 12 2 8 6"/>
+        <line x1="12" y1="2" x2="12" y2="15"/>
+    </svg>
+`;
+	var ICON_UNDO = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7v6h6"/>
+        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
+    </svg>
+`;
+	var ICON_PLUS = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+`;
+	function _typeof(o) {
+		"@babel/helpers - typeof";
+		return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(o) {
+			return typeof o;
+		} : function(o) {
+			return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+		}, _typeof(o);
+	}
+	function toPrimitive(t, r) {
+		if ("object" != _typeof(t) || !t) return t;
+		var e = t[Symbol.toPrimitive];
+		if (void 0 !== e) {
+			var i = e.call(t, r || "default");
+			if ("object" != _typeof(i)) return i;
+			throw new TypeError("@@toPrimitive must return a primitive value.");
+		}
+		return ("string" === r ? String : Number)(t);
+	}
+	function toPropertyKey(t) {
+		var i = toPrimitive(t, "string");
+		return "symbol" == _typeof(i) ? i : i + "";
+	}
+	function _defineProperty(e, r, t) {
+		return (r = toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+			value: t,
+			enumerable: !0,
+			configurable: !0,
+			writable: !0
+		}) : e[r] = t, e;
+	}
+	var I18n = class {
+		static get userLang() {
+			return navigator.languages && navigator.languages[0] || navigator.language || "en";
+		}
+		static translate(id, lang = "") {
+			const selectedLang = lang || this.userLang;
+			return (this.strings[selectedLang] || this.strings[selectedLang.split("-")[0]] || this.strings.en)[id] || this.strings.en[id];
+		}
+	};
+	_defineProperty(I18n, "strings", {
+		"en": {
+			modeNormal: "Normal Play",
+			modeNormalShort: "Normal",
+			modeNormalDesc: "Play full video continuously.",
+			modePreview: "Preview Clips",
+			modePreviewShort: "Preview",
+			modePreviewDesc: "Briefly preview each highlight clip.",
+			modeReplay: "Play Highlights",
+			modeReplayShort: "Highlights",
+			modeReplayDesc: "Play all highlight clips back-to-back.",
+			loopControlRow: "Clip Loop",
+			loopControlRowDesc: "Loop specified A-B range clip.",
+			loopStart: "Start A",
+			loopEnd: "End B",
+			quickSeek: "Quick Seek",
+			quickSeekDesc: "Show custom jump buttons on control bar.",
+			progressBarRow: "Progress Bar",
+			progressBarRowDesc: "Show main progress bar and precision scrubber at the bottom.",
+			playProgress: "Progress",
+			playProgressDesc: "Show progress bar & precision scrubber.",
+			toggleMute: "Mute Toggle",
+			movePanel: "Move Panel",
+			singleHandMode: "One-Handed",
+			singleHandModeDesc: "Dock controls to bottom for easy thumb reach.",
+			singleHandPref: "Handedness",
+			singleHandRight: "Right Hand",
+			singleHandLeft: "Left Hand",
+			screenTooNarrowForSingleHand: "Screen too narrow for one-handed mode",
+			switchHandLeft: "Switch Left",
+			switchHandRight: "Switch Right",
+			expandFullWidth: "Full Width",
+			collapseSingleHand: "One-Handed",
+			switchedToRightHand: "Docked to right",
+			switchedToLeftHand: "Docked to left",
+			restoredFullWidth: "Restored full width",
+			enteredSingleHand: "Entered one-handed mode",
+			addHighlight: "Add Highlight",
+			quickMark: "Quick Mark",
+			sheetTitle: "Highlight List",
+			addRemark: "Add Note",
+			addRemarkPlaceholder: "Note this highlight...",
+			selectTag: "Select Tags",
+			undoDelete: "Undo Delete",
+			undoRestored: "Clip restored",
+			shareSelected: "Share Clips",
+			selectToShare: "Select clips to share first",
+			cancel: "Cancel",
+			playbackGroupTitle: "Playback",
+			showProgressBar: "Progress Bar",
+			showSeekControlRow: "Quick Seek",
+			loopControlRow: "Loop",
+			loopControlRowDesc: "A-B range loop",
+			previewDuration: "Preview Duration",
+			previewDurationDesc: "Seconds per clip",
+			climaxDuration: "Highlight Duration",
+			climaxDurationDesc: "Seconds per highlight",
+			pauseOnBlur: "Pause on Blur",
+			pauseOnBlurDesc: "Pause when switching tabs",
+			buttonSound: "Button Sounds",
+			buttonSoundDesc: "",
+			defaultMuted: "Default Muted",
+			defaultMutedDesc: "Mute on enter, auto-reset after timeout",
+			muteResetMinutes: "Mute Lease",
+			muteResetMinutesDesc: "Auto re-mute when idle exceeds this",
+			minutesUnit: "min",
+			commentsGroupTitle: "Comments",
+			showComments: "Show Comments",
+			showCommentsDesc: "",
+			commentSources: "Comment Sources",
+			commentSourcesDesc: "",
+			filterTimeOnly: "Time Marks Only",
+			filterTimeOnlyDesc: "Only show timestamped comments",
+			commentCountdownConvert: "Convert to Normal",
+			commentCountdownReverted: "Show Countdown",
+			filterSpam: "Block Spam",
+			saveAllHighlights: "Save Highlights",
+			copyCode: "Copy Code",
+			webdavTitle: "Cloud Sync",
+			webdavAutoSync: "Auto Sync",
+			webdavAutoSyncDesc: "Sync silently on data changes",
+			webdavSyncMerge: "Smart Merge",
+			webdavUploadOverwrite: "Backup to Cloud",
+			webdavDownloadOverwrite: "Restore Backup",
+			webdavTestConnection: "Test Connect",
+			webdavBackupPath: "Backup Directory",
+			webdavPassword: "App Password",
+			webdavServerUrl: "Server URL",
+			webdavUsername: "Username",
+			webdavCurrentDevice: "Current Device",
+			webdavLastSync: "Last Sync",
+			webdavNeverSynced: "Never synced",
+			webdavTesting: "Testing connection...",
+			webdavTestSuccess: "WebDAV connection verified!",
+			webdavTestFailed: "Connection failed, check URL or credentials",
+			webdavSyncing: "Syncing data...",
+			webdavSyncSuccess: "Cloud sync completed!",
+			webdavSyncFailed: "Sync failed: ",
+			webdavConfirmUpload: "Force overwrite cloud backup with local config?",
+			webdavConfirmDownload: "Download and overwrite local config with cloud backup?",
+			betaGroupTitle: "Labs",
+			betaLabTitle: "Experimental Labs",
+			betaLabDesc: "Try preview features",
+			betaSkipIntro: "Skip Intro",
+			betaSkipIntroDesc: "Jump to 1st highlight",
+			betaHeatmap: "Playback Heatmap",
+			betaHeatmapDesc: "Show viewer heatmap on seekbar",
+			betaCapsuleUndo: "Undo Protection",
+			betaCapsuleUndoDesc: "Recover deleted highlights within 60s",
+			betaDeepLinking: "Link Import",
+			betaDeepLinkingDesc: "Auto-load shared highlights",
+			betaCustomApi: "Custom Comments API",
+			betaCustomApiDesc: "Connect private comments server (optional)",
+			betaDebugLog: "Debug Log",
+			betaDebugLogDesc: "Scraping & network diagnostics",
+			betaPreloadComments: "Preload Comments",
+			betaPreloadCommentsDesc: "Prefetch comments in background",
+			betaClearCache: "Clear Cache",
+			betaClearCacheDesc: "Clear offline comments & cache",
+			aboutGroupTitle: "Version Info",
+			aboutAndUpdates: "Version Info",
+			updateChannel: "Update Channel",
+			channelStable: "Stable",
+			channelBeta: "Beta",
+			currentVersion: "Current Version",
+			checkUpdate: "Check Updates",
+			checkingUpdate: "Checking updates...",
+			alreadyLatest: "Already the latest version",
+			updateFound: "New Version Available",
+			updateNow: "Update Now",
+			viewRelease: "SleazyFork Page",
+			updateChangelog: "Changelog",
+			autoCheckUpdate: "Auto Check",
+			autoCheckUpdateDesc: "Check updates at launch.",
+			reinstallScript: "Reinstall",
+			reinstallScriptDesc: "Force reinstall current version.",
+			statsInstalls: "Total Installs",
+			statsRating: "Rating Score",
+			statsUpdated: "Code Updated",
+			fetchFailed: "Failed to check updates, please try again later",
+			scriptName: "Miss Player | Cinema Mode (One-handed Player)",
+			scriptDescription: "MissAV ad-free|One-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|Custom player supporting jable po*nhub etc",
+			viewportConfigured: "Viewport configured to support safe area",
+			stylesInjected: "Styles injected",
+			enhancerInitialized: "User experience enhancer module initialized",
+			loginModuleInitialized: "Auto login module initialized",
+			initializationComplete: "Initialization complete",
+			initializationFailed: "Initialization failed",
+			play: "Play",
+			pause: "Pause",
+			mute: "Mute",
+			unmute: "Unmute",
+			fullscreen: "Fullscreen",
+			exitFullscreen: "Exit Fullscreen",
+			settings: "Settings",
+			quality: "Quality",
+			speed: "Speed",
+			autoplay: "Auto Play",
+			loop: "Loop",
+			send: "Send",
+			commentsTitle: "Comments",
+			commentsCount: "{n} Comments",
+			commentsLeave: "Leave Comment",
+			commentsExpand: "Expand",
+			commentsCollapse: "Collapse",
+			commentsPlaceholder: "Write a comment...",
+			commentsFilterSpam: "Filter Spam",
+			commentsCopyAll: "Copy All",
+			commentsLoadMore: "Load More",
+			commentsLoading: "Loading comments...",
+			commentsNoComments: "No comments yet",
+			goToVideo: "Go to Video",
+			previewLoading: "Loading preview...",
+			previewNotFound: "No preview video available",
+			crazyScrapeTitle: "Aggressive Scrape Mode",
+			crazyScrapeDesc: "Scrape comments for all matched AV codes on host page with rate-limiting queue",
+			debugFilterHasNumbersTitle: "Numbers Only Comments",
+			debugFilterHasNumbersDesc: "Show only comments containing digits to inspect and verify timestamp parsing",
+			commentsError: "Failed to load comments",
+			tabJable: "Jable.tv Comments",
+			tabJavlibComment: "JAVLib Comments",
+			tabJavlibReview: "JAVLib Reviews",
+			tabComments: "Comments",
+			autoQuality: "Auto Quality",
+			helpImprove: "Help improve",
+			helpImproveDesc: "Collect necessary data to improve features",
+			loadingError: "Failed to load video",
+			networkError: "Network error",
+			loginSuccess: "Login successful",
+			loginFailed: "Login failed",
+			login_accountNull: "Error: Email or password is empty.",
+			login_success: "Login successful, refreshing the page.",
+			login_networkFailed: "Status code error.",
+			login_failed: "Login failed, incorrect email or password. Check console for error details.",
+			login_autoLogin: "Auto Login"
+		},
+		"zh-CN": {
+			modeNormal: "正常播放",
+			modeNormalShort: "正常",
+			modeNormalDesc: "连续播放完整视频。",
+			modePreview: "快览片段",
+			modePreviewShort: "快览",
+			modePreviewDesc: "轮流快速预览每个高光片段。",
+			modeReplay: "连播高光",
+			modeReplayShort: "连播",
+			modeReplayDesc: "连续播放所有精彩高光片段。",
+			loopControlRow: "片段循环",
+			loopControlRowDesc: "循环播放 A-B 指定区间片段。",
+			loopStart: "起点 A",
+			loopEnd: "终点 B",
+			quickSeek: "快进快退",
+			quickSeekDesc: "在控制栏显示自定义跳秒按键。",
+			progressBarRow: "进度条栏",
+			progressBarRowDesc: "在底部展示主播放进度条与精确定位滑块。",
+			playProgress: "播放进度",
+			playProgressDesc: "在底部展示主播放进度条与精确定位滑块。",
+			toggleMute: "静音切换",
+			movePanel: "移动面板",
+			singleHandMode: "单手模式",
+			singleHandModeDesc: "控件收拢至下半屏，大拇指轻松触达。",
+			singleHandPref: "惯用手",
+			singleHandRight: "右手",
+			singleHandLeft: "左手",
+			screenTooNarrowForSingleHand: "屏幕较窄，无需开启单手模式",
+			switchHandLeft: "切到左手",
+			switchHandRight: "切到右手",
+			expandFullWidth: "展开全宽",
+			collapseSingleHand: "收起单手",
+			switchedToRightHand: "已贴靠右手",
+			switchedToLeftHand: "已贴靠左手",
+			restoredFullWidth: "已恢复全宽",
+			enteredSingleHand: "已开启单手模式",
+			addHighlight: "添加高光",
+			quickMark: "快速标记",
+			sheetTitle: "片段列表",
+			addRemark: "添加备注",
+			addRemarkPlaceholder: "输入高光备注...",
+			selectTag: "选择标签",
+			undoDelete: "撤销删除",
+			undoRestored: "已恢复片段",
+			shareSelected: "分享片段",
+			selectToShare: "请先勾选需要分享的片段",
+			cancel: "取消",
+			playbackGroupTitle: "播放控制",
+			showProgressBar: "进度条",
+			showSeekControlRow: "快捷跳转",
+			loopControlRow: "片段循环",
+			loopControlRowDesc: "A-B 区间循环",
+			previewDuration: "快览时长",
+			previewDurationDesc: "单片段预览秒数",
+			climaxDuration: "高光时长",
+			climaxDurationDesc: "连续播放单点时长",
+			pauseOnBlur: "离开暂停",
+			pauseOnBlurDesc: "切页面或后台时暂停",
+			buttonSound: "按键音效",
+			buttonSoundDesc: "",
+			defaultMuted: "默认静音",
+			defaultMutedDesc: "进入时静音，离开超时恢复静音",
+			muteResetMinutes: "静音租约",
+			muteResetMinutesDesc: "离开超过此时间恢复静音",
+			minutesUnit: "分钟",
+			commentsGroupTitle: "影片评论",
+			showComments: "显示评论",
+			showCommentsDesc: "",
+			commentSources: "评论来源",
+			commentSourcesDesc: "",
+			filterTimeOnly: "只看时间",
+			filterTimeOnlyDesc: "仅显示含时间标记的评论",
+			commentCountdownConvert: "转为正序",
+			commentCountdownReverted: "显示倒数",
+			filterSpam: "屏蔽灌水",
+			saveAllHighlights: "转存高光",
+			copyCode: "复制番号",
+			webdavTitle: "云端同步",
+			webdavAutoSync: "自动同步",
+			webdavAutoSyncDesc: "数据变动时后台静默同步",
+			webdavSyncMerge: "智能合并同步",
+			webdavUploadOverwrite: "上传备份",
+			webdavDownloadOverwrite: "恢复备份",
+			webdavTestConnection: "测试连接",
+			webdavBackupPath: "备份目录",
+			webdavPassword: "应用密码",
+			webdavServerUrl: "服务器地址",
+			webdavUsername: "用户名",
+			webdavCurrentDevice: "当前设备",
+			webdavLastSync: "上次同步",
+			webdavNeverSynced: "尚未同步",
+			webdavTesting: "正在测试连接...",
+			webdavTestSuccess: "WebDAV 连接与目录创建成功！",
+			webdavTestFailed: "连接失败，请检查地址或账号密码",
+			webdavSyncing: "正在同步数据...",
+			webdavSyncSuccess: "云端同步成功完成！",
+			webdavSyncFailed: "同步失败: ",
+			webdavConfirmUpload: "确定要将当前本地配置强制覆盖到云端吗？这将替换 WebDAV 上的所有备份数据。",
+			webdavConfirmDownload: "确定要从云端拉取配置并覆盖本地吗？这将替换此设备上的当前设置与打点数据。",
+			betaGroupTitle: "实验特性",
+			betaLabTitle: "实验功能",
+			betaLabDesc: "探索预览中的新功能",
+			betaSkipIntro: "跳过片头",
+			betaSkipIntroDesc: "开播直达首个高光",
+			betaHeatmap: "播放热度",
+			betaHeatmapDesc: "进度条显示观看波形",
+			betaCapsuleUndo: "防误删除",
+			betaCapsuleUndoDesc: "删除保留 60 秒撤销",
+			betaDeepLinking: "链接还原",
+			betaDeepLinkingDesc: "打开分享链接载入高光",
+			betaCustomApi: "自建评论接口",
+			betaCustomApiDesc: "连接私人评论服务器 (可选)",
+			betaDebugLog: "调试日志",
+			betaDebugLogDesc: "排错与网络抓取诊断",
+			betaPreloadComments: "预载评论",
+			betaPreloadCommentsDesc: "提前抓取关联影片评论",
+			betaClearCache: "清除缓存",
+			betaClearCacheDesc: "清空离线评论与本地缓存",
+			aboutGroupTitle: "版本信息",
+			aboutAndUpdates: "版本信息",
+			updateChannel: "更新通道",
+			channelStable: "正式版",
+			channelBeta: "测试版",
+			currentVersion: "当前版本",
+			checkUpdate: "检查更新",
+			checkingUpdate: "正在检查更新...",
+			alreadyLatest: "当前已是最新版本",
+			updateFound: "发现新版本",
+			updateNow: "立即更新",
+			viewRelease: "SleazyFork 主页",
+			updateChangelog: "版本日志",
+			autoCheckUpdate: "自动检查",
+			autoCheckUpdateDesc: "启动时检查新版并在设置角标提醒。",
+			reinstallScript: "重新安装",
+			reinstallScriptDesc: "刷新本地缓存并强制重新安装当前版本。",
+			statsInstalls: "总安装量",
+			statsRating: "好评评分",
+			statsUpdated: "代码更新",
+			fetchFailed: "检查更新失败，请稍后重试",
+			scriptName: "Miss Player | 影院模式 (单手播放器)",
+			scriptDescription: "MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器 支持 jable po*nhub 等通用",
+			viewportConfigured: "已配置viewport以支持安全区域",
+			stylesInjected: "样式注入完成",
+			enhancerInitialized: "用户体验增强模块已初始化",
+			loginModuleInitialized: "自动登录模块已初始化",
+			initializationComplete: "初始化完成",
+			initializationFailed: "初始化失败",
+			play: "播放",
+			pause: "暂停",
+			mute: "静音",
+			unmute: "取消静音",
+			fullscreen: "全屏",
+			exitFullscreen: "退出全屏",
+			settings: "设置",
+			quality: "画质",
+			speed: "速度",
+			autoplay: "自动播放",
+			loop: "循环播放",
+			send: "发送",
+			commentsTitle: "评论区",
+			commentsCount: "共 {n} 条评论",
+			commentsLeave: "留言",
+			commentsExpand: "展开",
+			commentsCollapse: "收起",
+			commentsPlaceholder: "说点什么吧...",
+			commentsFilterSpam: "屏蔽灌水",
+			commentsCopyAll: "复制全部",
+			commentsLoadMore: "加载更多",
+			commentsLoading: "正在采集评论...",
+			commentsNoComments: "暂无评论",
+			goToVideo: "跳转到视频页面",
+			previewLoading: "正在加载预览...",
+			previewNotFound: "暂无预览小视频",
+			crazyScrapeTitle: "疯狂采集模式",
+			crazyScrapeDesc: "自动扫描宿主页面所有关联番号，低速防爬排队采集评论语料",
+			debugFilterHasNumbersTitle: "只看有数字的评论",
+			debugFilterHasNumbersDesc: "仅保留评论中包含数字的条目，便于排查与审查时间戳、区间与倒数解析效果",
+			commentsError: "评论采集失败",
+			tabJable: "Jable.tv 评论",
+			tabJavlibComment: "JAVLib 评论",
+			tabJavlibReview: "JAVLib 文章",
+			tabComments: "评论",
+			autoQuality: "自动画质",
+			helpImprove: "帮助改进",
+			helpImproveDesc: "收集必要数据用于改进功能",
+			loadingError: "视频加载失败",
+			networkError: "网络错误",
+			loginSuccess: "登录成功",
+			loginFailed: "登录失败",
+			login_accountNull: "邮箱或密码为空",
+			login_success: "登录成功，即将刷新页面。",
+			login_networkFailed: "状态码错误",
+			login_failed: "登录失败，邮箱或密码错误，可以在控制台查看错误信息。",
+			login_autoLogin: "自动登录"
+		},
+		"zh-TW": {
+			modeNormal: "正常播放",
+			modeNormalShort: "正常",
+			modeNormalDesc: "連續播放完整影片。",
+			modePreview: "快覽片段",
+			modePreviewShort: "快覽",
+			modePreviewDesc: "輪流快速預覽每個高光片段。",
+			modeReplay: "連播高光",
+			modeReplayShort: "連播",
+			modeReplayDesc: "連續播放所有精彩高光片段。",
+			loopControlRow: "片段循環",
+			loopControlRowDesc: "循環播放 A-B 指定區間片段。",
+			loopStart: "起點 A",
+			loopEnd: "終點 B",
+			quickSeek: "快進快退",
+			quickSeekDesc: "在控制欄顯示自訂跳秒按鍵。",
+			progressBarRow: "進度條欄",
+			progressBarRowDesc: "在底部展示主播放進度條與精確定位滑塊。",
+			playProgress: "播放進度",
+			playProgressDesc: "在底部展示主播放進度條與精確定位滑塊。",
+			toggleMute: "靜音切換",
+			movePanel: "移動面板",
+			singleHandMode: "單手模式",
+			singleHandModeDesc: "控制項收攏至下半螢幕，大拇指輕鬆觸達。",
+			singleHandPref: "慣用手",
+			singleHandRight: "右手",
+			singleHandLeft: "左手",
+			screenTooNarrowForSingleHand: "螢幕較窄，無需開啟單手模式",
+			switchHandLeft: "切到左手",
+			switchHandRight: "切到右手",
+			expandFullWidth: "展開全寬",
+			collapseSingleHand: "收起單手",
+			switchedToRightHand: "已貼靠右手",
+			switchedToLeftHand: "已貼靠左手",
+			restoredFullWidth: "已恢復全寬",
+			enteredSingleHand: "已開啟單手模式",
+			addHighlight: "新增高光",
+			quickMark: "快速標記",
+			sheetTitle: "片段清單",
+			addRemark: "新增備註",
+			addRemarkPlaceholder: "輸入高光備註...",
+			selectTag: "選擇標籤",
+			undoDelete: "復原刪除",
+			undoRestored: "已復原片段",
+			shareSelected: "分享片段",
+			selectToShare: "請先勾選需要分享的片段",
+			cancel: "取消",
+			playbackGroupTitle: "播放控制",
+			showProgressBar: "進度條",
+			showSeekControlRow: "快捷跳轉",
+			loopControlRow: "片段循環",
+			loopControlRowDesc: "A-B 區間循環",
+			previewDuration: "快覽時長",
+			previewDurationDesc: "單片段預覽秒數",
+			climaxDuration: "高光時長",
+			climaxDurationDesc: "連續播放單點時長",
+			pauseOnBlur: "離開暫停",
+			pauseOnBlurDesc: "切頁面或後台時暫停",
+			buttonSound: "按鍵音效",
+			buttonSoundDesc: "",
+			defaultMuted: "預設靜音",
+			defaultMutedDesc: "進入時靜音，離開逾時恢復靜音",
+			muteResetMinutes: "靜音租約",
+			muteResetMinutesDesc: "離開超過此時間恢復靜音",
+			minutesUnit: "分鐘",
+			commentsGroupTitle: "影片評論",
+			showComments: "顯示評論",
+			showCommentsDesc: "",
+			commentSources: "評論來源",
+			commentSourcesDesc: "",
+			filterTimeOnly: "只看時間",
+			filterTimeOnlyDesc: "僅顯示含時間標記的評論",
+			commentCountdownConvert: "轉為正序",
+			commentCountdownReverted: "顯示倒數",
+			filterSpam: "屏蔽灌水",
+			saveAllHighlights: "轉存高光",
+			copyCode: "複製番號",
+			webdavTitle: "雲端同步",
+			webdavAutoSync: "自動同步",
+			webdavAutoSyncDesc: "資料變動時後台靜默同步",
+			webdavSyncMerge: "智慧合併同步",
+			webdavUploadOverwrite: "上傳備份",
+			webdavDownloadOverwrite: "恢復備份",
+			webdavTestConnection: "測試連線",
+			webdavBackupPath: "備份目錄",
+			webdavPassword: "應用密碼",
+			webdavServerUrl: "伺服器位址",
+			webdavUsername: "用戶名",
+			webdavCurrentDevice: "當前設備",
+			webdavLastSync: "上次同步",
+			webdavNeverSynced: "尚未同步",
+			webdavTesting: "正在測試連線...",
+			webdavTestSuccess: "WebDAV 連線與目錄建立成功！",
+			webdavTestFailed: "連線失敗，請檢查位址或帳號密碼",
+			webdavSyncing: "正在同步資料...",
+			webdavSyncSuccess: "雲端同步成功完成！",
+			webdavSyncFailed: "同步失敗: ",
+			webdavConfirmUpload: "確定要將當前本地配置強制覆蓋到雲端嗎？這將替換 WebDAV 上的所有備份資料。",
+			webdavConfirmDownload: "確定要從雲端拉取配置並覆蓋本地嗎？這將替換此設備上的當前設置與打點資料。",
+			betaGroupTitle: "實驗特性",
+			betaLabTitle: "實驗功能",
+			betaLabDesc: "探索預覽中的新功能",
+			betaSkipIntro: "跳過片頭",
+			betaSkipIntroDesc: "開播直達首個高光",
+			betaHeatmap: "播放熱度",
+			betaHeatmapDesc: "進度條顯示觀看波形",
+			betaCapsuleUndo: "防誤刪除",
+			betaCapsuleUndoDesc: "刪除保留 60 秒復原",
+			betaDeepLinking: "連結還原",
+			betaDeepLinkingDesc: "打開分享連結載入高光",
+			betaCustomApi: "自建評論介面",
+			betaCustomApiDesc: "連接私人評論伺服器 (可選)",
+			betaDebugLog: "調試日誌",
+			betaDebugLogDesc: "排錯與網路抓取診斷",
+			betaPreloadComments: "預載評論",
+			betaPreloadCommentsDesc: "提前抓取關聯影片評論",
+			betaClearCache: "清除快取",
+			betaClearCacheDesc: "清空離線評論與本地快取",
+			aboutGroupTitle: "版本資訊",
+			aboutAndUpdates: "版本資訊",
+			updateChannel: "更新通道",
+			channelStable: "正式版",
+			channelBeta: "測試版",
+			currentVersion: "當前版本",
+			checkUpdate: "檢查更新",
+			checkingUpdate: "正在檢查更新...",
+			alreadyLatest: "當前已是最新版本",
+			updateFound: "發現新版本",
+			updateNow: "立即更新",
+			viewRelease: "SleazyFork 主頁",
+			updateChangelog: "版本日誌",
+			autoCheckUpdate: "自動檢查",
+			autoCheckUpdateDesc: "啟動時檢查新版並在設置角標提醒。",
+			reinstallScript: "重新安裝",
+			reinstallScriptDesc: "刷新本地快取並強制重新安裝當前版本。",
+			statsInstalls: "總安裝量",
+			statsRating: "好評評分",
+			statsUpdated: "代碼更新",
+			fetchFailed: "檢查更新失敗，請稍後重試",
+			scriptName: "Miss Player | 影院模式 (單手播放器)",
+			scriptDescription: "MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器 支持 jable po*nhub 等通用",
+			viewportConfigured: "已配置viewport以支持安全區域",
+			stylesInjected: "樣式注入完成",
+			enhancerInitialized: "用戶體驗增強模塊已初始化",
+			loginModuleInitialized: "自動登錄模塊已初始化",
+			initializationComplete: "初始化完成",
+			initializationFailed: "初始化失敗",
+			play: "播放",
+			pause: "暫停",
+			mute: "靜音",
+			unmute: "取消靜音",
+			fullscreen: "全屏",
+			exitFullscreen: "退出全屏",
+			settings: "設置",
+			quality: "畫質",
+			speed: "速度",
+			autoplay: "自動播放",
+			loop: "循環播放",
+			send: "發送",
+			commentsTitle: "評論區",
+			commentsCount: "共 {n} 條評論",
+			commentsLeave: "留言",
+			commentsExpand: "展開",
+			commentsCollapse: "收起",
+			commentsPlaceholder: "說點什麼吧...",
+			commentsFilterSpam: "過濾灌水",
+			commentsCopyAll: "複製全部",
+			commentsLoadMore: "載入更多",
+			commentsLoading: "正在採集評論...",
+			commentsNoComments: "暫無評論",
+			goToVideo: "跳轉到影片頁面",
+			previewLoading: "正在加載預覽...",
+			previewNotFound: "暫無預覽短片",
+			crazyScrapeTitle: "瘋狂採集模式",
+			crazyScrapeDesc: "自動掃描宿主頁面所有關聯番號，低速防爬排隊採集評論語料",
+			debugFilterHasNumbersTitle: "只看有數字的評論",
+			debugFilterHasNumbersDesc: "僅保留評論中包含數字的條目，便於排查與審查時間戳、區間與倒數解析效果",
+			commentsError: "評論採集失敗",
+			tabJable: "Jable.tv 評論",
+			tabJavlibComment: "JAVLib 評論",
+			tabJavlibReview: "JAVLib 文章",
+			tabComments: "評論",
+			autoQuality: "自動畫質",
+			helpImprove: "幫助改進",
+			helpImproveDesc: "收集必要數據用於改進功能",
+			loadingError: "視頻加載失敗",
+			networkError: "網絡錯誤",
+			loginSuccess: "登錄成功",
+			loginFailed: "登錄失敗",
+			login_accountNull: "郵箱或密碼為空",
+			login_success: "登錄成功，即將刷新頁面。",
+			login_networkFailed: "狀態碼錯誤",
+			login_failed: "登錄失敗，郵箱或密碼錯誤，可以在控制台查看錯誤信息。",
+			login_autoLogin: "自動登錄"
+		},
+		"ja": {
+			modeNormal: "通常再生",
+			modeNormalShort: "通常",
+			modeNormalDesc: "動画全体を連続再生。",
+			modePreview: "クリップ早見",
+			modePreviewShort: "早見",
+			modePreviewDesc: "各ハイライトを順に素早くプレビュー。",
+			modeReplay: "ハイライト連播",
+			modeReplayShort: "連播",
+			modeReplayDesc: "すべてのハイライトを連続再生。",
+			loopControlRow: "クリップループ",
+			loopControlRowDesc: "A-B 指定区間を繰り返し再生。",
+			loopStart: "開始点 A",
+			loopEnd: "終了点 B",
+			quickSeek: "スキップ",
+			quickSeekDesc: "コントロールバーに秒送りボタンを表示。",
+			progressBarRow: "プログレスバー",
+			progressBarRowDesc: "下部にメイン進捗バーと精密位置決めスライダーを表示。",
+			playProgress: "再生プログレス",
+			playProgressDesc: "下部にメイン進捗バーと精密位置決めスライダーを表示。",
+			toggleMute: "ミュート切替",
+			movePanel: "パネル移動",
+			singleHandMode: "片手モード",
+			singleHandModeDesc: "親指が届く画面下部にパネルを収縮。",
+			singleHandPref: "利き手",
+			singleHandRight: "右手",
+			singleHandLeft: "左手",
+			screenTooNarrowForSingleHand: "画面幅が小さいため片手モードは不要です",
+			switchHandLeft: "左手へ切替",
+			switchHandRight: "右手へ切替",
+			expandFullWidth: "全幅に拡大",
+			collapseSingleHand: "片手に収縮",
+			switchedToRightHand: "右手に寄せました",
+			switchedToLeftHand: "左手に寄せました",
+			restoredFullWidth: "全幅に戻しました",
+			enteredSingleHand: "片手モードに切り替えました",
+			addHighlight: "ハイライト追加",
+			quickMark: "クイックマーク",
+			sheetTitle: "クリップ一覧",
+			addRemark: "メモを追加",
+			addRemarkPlaceholder: "メモを入力...",
+			selectTag: "タグを選択",
+			undoDelete: "削除を取り消す",
+			undoRestored: "クリップを復元しました",
+			shareSelected: "クリップを共有",
+			selectToShare: "共有するクリップを選択してください",
+			cancel: "キャンセル",
+			playbackGroupTitle: "再生制御",
+			showProgressBar: "進捗バー",
+			showSeekControlRow: "クイックシーク",
+			loopControlRow: "ループ再生",
+			loopControlRowDesc: "A-B 区間ループ",
+			previewDuration: "早見の秒数",
+			previewDurationDesc: "クリップ毎のプレビュー秒数",
+			climaxDuration: "ハイライト秒数",
+			climaxDurationDesc: "マーク地点の再生秒数",
+			pauseOnBlur: "離脱時に一時停止",
+			pauseOnBlurDesc: "タブ切替や最小化時に停止",
+			buttonSound: "ボタン効果音",
+			buttonSoundDesc: "",
+			defaultMuted: "デフォルトミュート",
+			defaultMutedDesc: "入場時ミュート、放置後に自動復帰",
+			muteResetMinutes: "ミュート維持時間",
+			muteResetMinutesDesc: "離脱後に自動でミュート復帰",
+			minutesUnit: "分",
+			commentsGroupTitle: "動画コメント",
+			showComments: "コメント表示",
+			showCommentsDesc: "",
+			commentSources: "コメント取得元",
+			commentSourcesDesc: "",
+			filterTimeOnly: "時間付きのみ",
+			filterTimeOnlyDesc: "時間マーク付きコメントのみ表示",
+			commentCountdownConvert: "正順に変換",
+			commentCountdownReverted: "カウントダウン表示",
+			filterSpam: "スパム非表示",
+			saveAllHighlights: "ハイライト保存",
+			copyCode: "品番コピー",
+			webdavTitle: "クラウド同期",
+			webdavAutoSync: "自動同期",
+			webdavAutoSyncDesc: "データ変更時にバックグラウンド同期",
+			webdavSyncMerge: "スマート同期",
+			webdavUploadOverwrite: "クラウドへ退避",
+			webdavDownloadOverwrite: "バックアップ復元",
+			webdavTestConnection: "接続テスト",
+			webdavBackupPath: "バックアップ先",
+			webdavPassword: "アプリパスワード",
+			webdavServerUrl: "サーバーアドレス",
+			webdavUsername: "ユーザー名",
+			webdavCurrentDevice: "現在の端末",
+			webdavLastSync: "最終同期",
+			webdavNeverSynced: "未同期",
+			webdavTesting: "接続をテスト中...",
+			webdavTestSuccess: "WebDAV接続に成功しました！",
+			webdavTestFailed: "接続に失敗しました。URLまたは認証情報を確認してください",
+			webdavSyncing: "データを同期中...",
+			webdavSyncSuccess: "クラウド同期が完了しました！",
+			webdavSyncFailed: "同期に失敗しました: ",
+			webdavConfirmUpload: "現在のローカル設定をクラウドに強制上書きしますか？",
+			webdavConfirmDownload: "クラウドから設定をダウンロードしてローカルを上書きしますか？",
+			betaGroupTitle: "実験的機能",
+			betaLabTitle: "実験機能",
+			betaLabDesc: "開発中の新機能を試す",
+			betaSkipIntro: "OPスキップ",
+			betaSkipIntroDesc: "最初のハイライトへ直行",
+			betaHeatmap: "再生ヒートマップ",
+			betaHeatmapDesc: "シークバーにリプレイ波形を表示",
+			betaCapsuleUndo: "誤削除防止",
+			betaCapsuleUndoDesc: "削除後60秒間は復元可能",
+			betaDeepLinking: "リンク復元",
+			betaDeepLinkingDesc: "共有リンクを開いた時に展開",
+			betaCustomApi: "自前API",
+			betaCustomApiDesc: "プライベートコメントDBに接続 (任意)",
+			betaDebugLog: "実行ログ",
+			betaDebugLogDesc: "診断情報とネットワークログ",
+			betaPreloadComments: "コメント先読み",
+			betaPreloadCommentsDesc: "関連動画のコメントを先行取得",
+			betaClearCache: "キャッシュ消去",
+			betaClearCacheDesc: "オフラインコメントとキャッシュを消去",
+			aboutGroupTitle: "バージョン情報",
+			aboutAndUpdates: "バージョン情報",
+			updateChannel: "更新チャンネル",
+			channelStable: "安定版",
+			channelBeta: "ベータ版",
+			currentVersion: "現在のバージョン",
+			checkUpdate: "更新を確認",
+			checkingUpdate: "更新を確認中...",
+			alreadyLatest: "最新バージョンです",
+			updateFound: "新しいバージョンがあります",
+			updateNow: "今すぐ更新",
+			viewRelease: "SleazyFork ページ",
+			updateChangelog: "更新履歴",
+			autoCheckUpdate: "自動確認",
+			autoCheckUpdateDesc: "起動時に更新を確認しバッジで通知。",
+			reinstallScript: "再インストール",
+			reinstallScriptDesc: "キャッシュを更新して現行版を再インストール。",
+			statsInstalls: "総インストール数",
+			statsRating: "高評価スコア",
+			statsUpdated: "コード更新日",
+			fetchFailed: "更新確認に失敗しました。後でもう一度お試しください",
+			scriptName: "Miss Player | シネマモード (片手プレーヤー)",
+			scriptDescription: "MissAV広告なし|片手モード|MissAV自動詳細展開|MissAV自動高画質|MissAVリダイレクトサポート|MissAV自動ログイン|jable po*nhub などをサポートするカスタムプレーヤー",
+			viewportConfigured: "セーフエリアをサポートするためにビューポートを設定しました",
+			stylesInjected: "スタイルが注入されました",
+			enhancerInitialized: "ユーザー体験向上モジュールが初期化されました",
+			loginModuleInitialized: "自動ログインモジュールが初期化されました",
+			initializationComplete: "初期化が完了しました",
+			initializationFailed: "初期化に失敗しました",
+			play: "再生",
+			pause: "一時停止",
+			mute: "ミュート",
+			unmute: "ミュート解除",
+			fullscreen: "全画面",
+			exitFullscreen: "全画面解除",
+			settings: "設定",
+			quality: "画質",
+			speed: "速度",
+			autoplay: "自動再生",
+			loop: "ループ再生",
+			commentsTitle: "コメント欄",
+			commentsCount: "{n} 件のコメント",
+			commentsLeave: "コメント",
+			commentsExpand: "展開",
+			commentsCollapse: "折りたたむ",
+			commentsPlaceholder: "コメントを書く...",
+			commentsFilterSpam: "スパムを除外",
+			commentsCopyAll: "すべてコピー",
+			commentsLoadMore: "もっと読み込む",
+			commentsLoading: "コメントを読み込み中...",
+			commentsNoComments: "コメントはまだありません",
+			goToVideo: "動画ページへ",
+			previewLoading: "プレビュー読込中...",
+			previewNotFound: "プレビュー動画なし",
+			crazyScrapeTitle: "拡張収集モード",
+			crazyScrapeDesc: "ホストページ内の全関連品番コメントをアンチスクレイピング制御で順次収集",
+			debugFilterHasNumbersTitle: "数字を含むコメントのみ表示",
+			debugFilterHasNumbersDesc: "数字を含むコメントのみを残しタイムスタンプや区間の解析精度を検証",
+			commentsError: "コメントの読み込みに失敗しました",
+			tabJable: "Jable.tv コメント",
+			tabJavlibComment: "JAVLib コメント",
+			tabJavlibReview: "JAVLib レビュー",
+			tabComments: "コメント",
+			autoQuality: "自動画质",
+			helpImprove: "改善に協力",
+			helpImproveDesc: "機能改善のために必要なデータを収集します",
+			loadingError: "動画の読み込みに失敗しました",
+			networkError: "ネットワークエラー",
+			loginSuccess: "ログイン成功",
+			loginFailed: "ログイン失敗",
+			login_accountNull: "エラー：メールアドレスまたはパスワードが空です。",
+			login_success: "ログイン成功、ページを更新します。",
+			login_networkFailed: "ステータスコードエラー",
+			login_failed: "ログインに失敗しました。メールアドレスまたはパスワードが間違っています。エラーの詳細はコンソールで確認できます。",
+			login_autoLogin: "自動ログイン"
+		},
+		"vi": {
+			modeNormal: "Phát bình thường",
+			modeNormalShort: "Chuẩn",
+			modeNormalDesc: "Phát liên tục toàn bộ video.",
+			modePreview: "Xem lướt",
+			modePreviewShort: "Lướt",
+			modePreviewDesc: "Xem nhanh từng đoạn nổi bật.",
+			modeReplay: "Phát đoạn nổi bật",
+			modeReplayShort: "Nổi bật",
+			modeReplayDesc: "Phát liên tục các đoạn nổi bật.",
+			loopControlRow: "Lặp đoạn",
+			loopControlRowDesc: "Lặp đoạn video A-B chỉ định.",
+			loopStart: "Bắt đầu A",
+			loopEnd: "Kết thúc B",
+			quickSeek: "Tua nhanh",
+			quickSeekDesc: "Hiển thị nút tua nhanh tùy chỉnh.",
+			progressBarRow: "Thanh tiến trình",
+			progressBarRowDesc: "Hiển thị thanh tiến trình chính và con trượt định vị ở dưới cùng.",
+			playProgress: "Tiến trình",
+			playProgressDesc: "Hiển thị thanh tiến trình chính và con trượt định vị ở dưới cùng.",
+			toggleMute: "Bật/tắt tiếng",
+			movePanel: "Di chuyển bảng",
+			singleHandMode: "Chế độ một tay",
+			singleHandModeDesc: "Thu gọn bảng điều khiển trong tầm ngón cái.",
+			singleHandPref: "Tay thuận",
+			singleHandRight: "Tay phải",
+			singleHandLeft: "Tay trái",
+			screenTooNarrowForSingleHand: "Màn hình hẹp, không cần chế độ một tay",
+			switchHandLeft: "Sang tay trái",
+			switchHandRight: "Sang tay phải",
+			expandFullWidth: "Mở toàn chiều rộng",
+			collapseSingleHand: "Thu về một tay",
+			switchedToRightHand: "Đã gắn sang phải",
+			switchedToLeftHand: "Đã gắn sang trái",
+			restoredFullWidth: "Đã khôi phục toàn màn",
+			enteredSingleHand: "Đã chuyển sang chế độ một tay",
+			addHighlight: "Thêm đoạn nổi bật",
+			quickMark: "Đánh dấu nhanh",
+			sheetTitle: "Danh sách đoạn",
+			addRemark: "Thêm ghi chú",
+			addRemarkPlaceholder: "Nhập ghi chú đoạn...",
+			selectTag: "Chọn thẻ",
+			undoDelete: "Hoàn tác xóa",
+			undoRestored: "Đã khôi phục đoạn",
+			shareSelected: "Chia sẻ đoạn",
+			selectToShare: "Vui lòng chọn đoạn cần chia sẻ",
+			cancel: "Hủy",
+			playbackGroupTitle: "Điều khiển phát",
+			showProgressBar: "Thanh tiến trình",
+			showSeekControlRow: "Tua nhanh",
+			loopControlRow: "Lặp lại",
+			loopControlRowDesc: "Lặp lại đoạn A-B",
+			previewDuration: "Thời lượng lướt",
+			previewDurationDesc: "Số giây mỗi đoạn khi xem lướt",
+			climaxDuration: "Thời lượng nổi bật",
+			climaxDurationDesc: "Thời lượng phát mỗi mốc",
+			pauseOnBlur: "Dừng khi rời trang",
+			pauseOnBlurDesc: "Tự tạm dừng khi đổi tab",
+			buttonSound: "Âm thanh nút bấm",
+			buttonSoundDesc: "",
+			defaultMuted: "Mặc định tắt tiếng",
+			defaultMutedDesc: "Tắt tiếng khi vào, tự đặt lại sau khi quá hạn",
+			muteResetMinutes: "Thời gian giữ tắt tiếng",
+			muteResetMinutesDesc: "Tự tắt tiếng lại khi rời đi quá hạn",
+			minutesUnit: "phút",
+			commentsGroupTitle: "Bình luận video",
+			showComments: "Hiện bình luận",
+			showCommentsDesc: "",
+			commentSources: "Nguồn bình luận",
+			commentSourcesDesc: "",
+			filterTimeOnly: "Chỉ xem có giờ",
+			filterTimeOnlyDesc: "Chỉ hiển thị bình luận có mốc giờ",
+			commentCountdownConvert: "Chuyển sang xuôi",
+			commentCountdownReverted: "Hiện đếm ngược",
+			filterSpam: "Chặn spam",
+			saveAllHighlights: "Lưu đoạn nổi bật",
+			copyCode: "Chép mã số",
+			webdavTitle: "Đồng bộ đám mây",
+			webdavAutoSync: "Tự động đồng bộ",
+			webdavAutoSyncDesc: "Tự đồng bộ ngầm khi dữ liệu đổi",
+			webdavSyncMerge: "Đồng bộ thông minh",
+			webdavUploadOverwrite: "Tải lên sao lưu",
+			webdavDownloadOverwrite: "Khôi phục sao lưu",
+			webdavTestConnection: "Kiểm tra kết nối",
+			webdavBackupPath: "Thư mục sao lưu",
+			webdavPassword: "Mật khẩu ứng dụng",
+			webdavServerUrl: "Địa chỉ máy chủ",
+			webdavUsername: "Tên người dùng",
+			webdavCurrentDevice: "Thiết bị này",
+			webdavLastSync: "Lần đồng bộ trước",
+			webdavNeverSynced: "Chưa đồng bộ",
+			webdavTesting: "Đang kiểm tra kết nối...",
+			webdavTestSuccess: "Đã xác minh kết nối WebDAV!",
+			webdavTestFailed: "Kết nối thất bại, kiểm tra URL hoặc thông tin xác thực",
+			webdavSyncing: "Đang đồng bộ dữ liệu...",
+			webdavSyncSuccess: "Đồng bộ đám mây hoàn tất!",
+			webdavSyncFailed: "Đồng bộ thất bại: ",
+			webdavConfirmUpload: "Ghi đè cấu hình cục bộ lên đám mây?",
+			webdavConfirmDownload: "Tải xuống và ghi đè cấu hình cục bộ?",
+			betaGroupTitle: "Tính năng thử nghiệm",
+			betaLabTitle: "Chức năng thử nghiệm",
+			betaLabDesc: "Khám phá các tính năng xem trước",
+			betaSkipIntro: "Bỏ qua mở đầu",
+			betaSkipIntroDesc: "Bắt đầu phát ngay từ điểm đầu",
+			betaHeatmap: "Bản đồ nhiệt phát lại",
+			betaHeatmapDesc: "Hiển thị dạng sóng xem lại trên thanh trượt",
+			betaCapsuleUndo: "Chống xóa nhầm",
+			betaCapsuleUndoDesc: "Cho phép hoàn tác xóa trong 60 giây",
+			betaDeepLinking: "Mở từ liên kết",
+			betaDeepLinkingDesc: "Tự nạp đoạn nổi bật khi mở liên kết",
+			betaCustomApi: "API tự dựng",
+			betaCustomApiDesc: "Kết nối máy chủ bình luận riêng (tùy chọn)",
+			betaDebugLog: "Nhật ký chạy",
+			betaDebugLogDesc: "Xem chẩn đoán mạng và trích xuất",
+			betaPreloadComments: "Tải trước bình luận",
+			betaPreloadCommentsDesc: "Tải ngầm bình luận video liên quan",
+			betaClearCache: "Xóa bộ nhớ đệm",
+			betaClearCacheDesc: "Giải phóng bộ nhớ và xóa đệm",
+			aboutGroupTitle: "Thông tin phiên bản",
+			aboutAndUpdates: "Thông tin phiên bản",
+			updateChannel: "Kênh cập nhật",
+			channelStable: "Chính thức",
+			channelBeta: "Thử nghiệm",
+			currentVersion: "Phiên bản hiện tại",
+			checkUpdate: "Kiểm tra cập nhật",
+			checkingUpdate: "Đang kiểm tra...",
+			alreadyLatest: "Đã là phiên bản mới nhất",
+			updateFound: "Có phiên bản mới",
+			updateNow: "Cập nhật ngay",
+			viewRelease: "Trang SleazyFork",
+			updateChangelog: "Nhật ký thay đổi",
+			autoCheckUpdate: "Tự động kiểm tra",
+			autoCheckUpdateDesc: "Kiểm tra khi mở và hiện huy hiệu nhắc nhở.",
+			reinstallScript: "Cài đặt lại",
+			reinstallScriptDesc: "Xóa đệm cục bộ và cài lại phiên bản hiện tại.",
+			statsInstalls: "Tổng lượt cài",
+			statsRating: "Điểm đánh giá",
+			statsUpdated: "Cập nhật mã",
+			fetchFailed: "Kiểm tra cập nhật thất bại, vui lòng thử lại sau",
+			scriptName: "Miss Player | Chế độ Rạp chiếu phim (Trình phát một tay)",
+			scriptDescription: "MissAV không quảng cáo|Chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|Đăng nhập tự động MissAV|Trình phát tùy chỉnh hỗ trợ jable po*nhub v.v.",
+			viewportConfigured: "Đã cấu hình viewport để hỗ trợ vùng an toàn",
+			stylesInjected: "Đã tiêm CSS",
+			enhancerInitialized: "Đã khởi tạo mô-đun nâng cao trải nghiệm người dùng",
+			loginModuleInitialized: "Đã khởi tạo mô-đun đăng nhập tự động",
+			initializationComplete: "Khởi tạo hoàn tất",
+			initializationFailed: "Khởi tạo thất bại",
+			play: "Phát",
+			pause: "Tạm dừng",
+			mute: "Tắt tiếng",
+			unmute: "Bật tiếng",
+			fullscreen: "Toàn màn hình",
+			exitFullscreen: "Thoát toàn màn hình",
+			settings: "Cài đặt",
+			quality: "Chất lượng",
+			speed: "Tốc độ",
+			autoplay: "Tự động phát",
+			loop: "Lặp lại",
+			commentsTitle: "Bình luận",
+			commentsCount: "{n} bình luận",
+			commentsLeave: "Bình luận",
+			commentsExpand: "Mở rộng",
+			commentsCollapse: "Thu gọn",
+			commentsPlaceholder: "Viết bình luận...",
+			commentsFilterSpam: "Lọc rác",
+			commentsCopyAll: "Sao chép tất cả",
+			commentsLoadMore: "Tải thêm",
+			commentsLoading: "Đang tải bình luận...",
+			commentsNoComments: "Chưa có bình luận nào",
+			goToVideo: "Đi tới trang video",
+			previewLoading: "Đang tải bản xem trước...",
+			previewNotFound: "Không có video xem trước",
+			crazyScrapeTitle: "Chế độ cào mở rộng",
+			crazyScrapeDesc: "Tự động quét tất cả mã số trên trang và xếp hàng cào bình luận an toàn",
+			debugFilterHasNumbersTitle: "Chỉ xem bình luận có số",
+			debugFilterHasNumbersDesc: "Chỉ giữ lại các bình luận có chứa chữ số để kiểm tra phân tích mốc thời gian",
+			commentsError: "Không thể tải bình luận",
+			tabJable: "Bình luận Jable.tv",
+			tabJavlibComment: "Bình luận JAVLib",
+			tabJavlibReview: "Bài viết JAVLib",
+			tabComments: "Bình luận",
+			autoQuality: "Chất lượng tự động",
+			helpImprove: "Giúp cải thiện",
+			helpImproveDesc: "Thu thập dữ liệu cần thiết để cải thiện tính năng",
+			loadingError: "Không thể tải video",
+			networkError: "Lỗi mạng",
+			loginSuccess: "Đăng nhập thành công",
+			loginFailed: "Đăng nhập thất bại",
+			login_accountNull: "Lỗi: Email hoặc mật khẩu trống.",
+			login_success: "Đăng nhập thành công, đang làm mới trang.",
+			login_networkFailed: "Lỗi mã trạng thái.",
+			login_failed: "Đăng nhập không thành công, email hoặc mật khẩu không chính xác. Xem chi tiết lỗi trên bảng điều khiển.",
+			login_autoLogin: "Đăng nhập tự động"
+		}
+	});
+	function __$1(id, lang = "") {
+		return I18n.translate(id, lang);
+	}
+	function checkShouldDefaultMute(playerState = null) {
+		const s = playerState?.settings;
+		if (!(s ? s.defaultMuted !== void 0 ? Boolean(s.defaultMuted) : getBool("defaultMuted", true) : getBool("defaultMuted", true))) return false;
+		const muteResetMinutes = s ? parseInt(s.muteResetMinutes, 10) || 5 : parseInt(getValue("muteResetMinutes", 5), 10) || 5;
+		const lastUnmutedTime = Number(getValue("lastUnmutedTime", 0)) || 0;
+		if (!lastUnmutedTime) return true;
+		return Date.now() - lastUnmutedTime >= Math.max(1, muteResetMinutes) * 60 * 1e3;
+	}
+	var VolumeController = class {
+		constructor(playerCore, controlManager) {
+			this.playerCore = playerCore;
+			this.controlManager = controlManager;
+			this.targetVideo = playerCore.targetVideo;
+			this.uiElements = playerCore.uiElements || controlManager.uiElements;
+			this.volumeSlider = null;
+			this.volumeButton = null;
+			this.lastVolume = 1;
+			this.supportsVolumeControl = this.checkVolumeControlSupport();
+			this._onPlayHandler = null;
+			this._onPauseHandler = null;
+			this._onVisibilityChange = null;
+			this._onPageHide = null;
+		}
+		checkVolumeControlSupport() {
+			return !(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
+		}
+		_getSettings() {
+			const s = (this.playerCore?.options?.playerState)?.settings;
+			return {
+				defaultMuted: s ? s.defaultMuted !== void 0 ? Boolean(s.defaultMuted) : getBool("defaultMuted", true) : getBool("defaultMuted", true),
+				muteResetMinutes: s ? parseInt(s.muteResetMinutes, 10) || 5 : parseInt(getValue("muteResetMinutes", 5), 10) || 5
+			};
+		}
+		shouldDefaultMute() {
+			return checkShouldDefaultMute(this.playerCore?.options?.playerState);
+		}
+		recordUnmutedTime() {
+			setValue("lastUnmutedTime", Date.now());
+		}
+		recordExitState() {
+			const { defaultMuted } = this._getSettings();
+			if (!defaultMuted) return;
+			if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
+			else setValue("lastUnmutedTime", 0);
+		}
+		startUnmuteHeartbeat() {}
+		stopUnmuteHeartbeat() {}
+		applyInitialMutePolicy() {
+			if (!this.targetVideo) return;
+			const { defaultMuted } = this._getSettings();
+			if (defaultMuted) {
+				if (this.shouldDefaultMute()) this.targetVideo.muted = true;
+				else {
+					this.targetVideo.muted = false;
+					if (this.supportsVolumeControl && this.targetVideo.volume === 0) this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
+					this.recordUnmutedTime();
+				}
+			}
+			this.updateVolumeUI();
+		}
+		onSettingsChanged() {
+			const { defaultMuted } = this._getSettings();
+			if (!defaultMuted) {} else if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
+		}
+		toggleMute() {
+			if (!this.targetVideo) return;
+			if (this.targetVideo.volume === 0 || this.targetVideo.muted) {
+				this.targetVideo.muted = false;
+				if (this.supportsVolumeControl) this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
+				this.recordUnmutedTime();
+				Toast$1(`已取消静音 (音量 ${Math.round((this.targetVideo.volume || 1) * 100)}%)`, "info");
+			} else {
+				if (this.supportsVolumeControl) {
+					this.lastVolume = this.targetVideo.volume;
+					this.targetVideo.volume = 0;
+				}
+				this.targetVideo.muted = true;
+				setValue("lastUnmutedTime", 0);
+				Toast$1("已静音", "info");
+			}
+			this.updateVolumeUI();
+		}
+		_bindVideoLifecycleEvents() {
+			if (!this.targetVideo) return;
+			this._onPlayHandler = () => {
+				if (!this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
+			};
+			this._onPauseHandler = () => {
+				if (!this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
+			};
+			this._onVisibilityChange = () => {
+				if (typeof document !== "undefined" && document.visibilityState === "hidden") this.recordExitState();
+			};
+			this._onPageHide = () => {
+				this.recordExitState();
+			};
+			this.targetVideo.addEventListener("play", this._onPlayHandler);
+			this.targetVideo.addEventListener("pause", this._onPauseHandler);
+			if (typeof document !== "undefined") document.addEventListener("visibilitychange", this._onVisibilityChange);
+			if (typeof window !== "undefined") {
+				window.addEventListener("pagehide", this._onPageHide);
+				window.addEventListener("beforeunload", this._onPageHide);
+			}
+		}
+		createVolumeSlider(container) {
+			const volumeControl = document.createElement("div");
+			volumeControl.className = "tm-volume-control";
+			const volumeButton = document.createElement("button");
+			volumeButton.type = "button";
+			volumeButton.className = "tm-volume-button";
+			volumeButton.innerHTML = this.getVolumeIcon(this.targetVideo ? this.targetVideo.volume : 1);
+			volumeButton.title = __$1("mute") || "静音";
+			volumeButton.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.toggleMute();
+			});
+			volumeControl.appendChild(volumeButton);
+			this.volumeSlider = volumeControl;
+			this.volumeButton = volumeButton;
+			container.appendChild(volumeControl);
+			this._bindVideoLifecycleEvents();
+			this.applyInitialMutePolicy();
+		}
+		getVolumeIcon(volume) {
+			if (!this.targetVideo || this.targetVideo.muted || volume === 0) return MUTE;
+			else if (this.supportsVolumeControl && volume < .5) return VOLUME_LOW;
+			else return VOLUME_HIGH;
+		}
+		updateVolumeUI() {
+			if (!this.volumeSlider || !this.targetVideo) return;
+			let volume = 1;
+			if (this.supportsVolumeControl) volume = this.targetVideo.muted ? 0 : this.targetVideo.volume;
+			else volume = this.targetVideo.muted ? 0 : 1;
+			const volumeButton = this.volumeButton || this.volumeSlider.querySelector(".tm-volume-button");
+			const isMuted = Boolean(this.targetVideo.muted || volume === 0);
+			if (volumeButton) {
+				volumeButton.classList.toggle("is-muted", isMuted);
+				volumeButton.title = isMuted ? __$1("unmute") || "取消静音" : __$1("mute") || "静音";
+				const newIconHtml = this.getVolumeIcon(volume);
+				const currentSvg = volumeButton.querySelector("svg");
+				if (currentSvg) {
+					const temp = document.createElement("div");
+					temp.innerHTML = newIconHtml.trim();
+					const newSvg = temp.firstElementChild;
+					if (newSvg) volumeButton.replaceChild(newSvg, currentSvg);
+					else volumeButton.innerHTML = newIconHtml;
+				} else volumeButton.innerHTML = newIconHtml;
+			}
+			telemetry.track("volume_change", {
+				volume: Math.round(volume * 100) / 100,
+				is_muted: isMuted
+			});
+		}
+		cleanup() {
+			this.recordExitState();
+			if (this.targetVideo) {
+				if (this._onPlayHandler) {
+					this.targetVideo.removeEventListener("play", this._onPlayHandler);
+					this._onPlayHandler = null;
+				}
+				if (this._onPauseHandler) {
+					this.targetVideo.removeEventListener("pause", this._onPauseHandler);
+					this._onPauseHandler = null;
+				}
+			}
+			if (this._onVisibilityChange && typeof document !== "undefined") {
+				document.removeEventListener("visibilitychange", this._onVisibilityChange);
+				this._onVisibilityChange = null;
+			}
+			if (this._onPageHide && typeof window !== "undefined") {
+				window.removeEventListener("pagehide", this._onPageHide);
+				window.removeEventListener("beforeunload", this._onPageHide);
+				this._onPageHide = null;
+			}
+			this.volumeSlider = null;
+			this.volumeButton = null;
+		}
+	};
 	var PlayerCore = class {
 		constructor(options = {}) {
 			console.log("[PlayerCore] 初始化...");
@@ -1539,10 +2965,7 @@
 				volume: 1,
 				playbackRate: 1
 			};
-			this.options = Object.assign({
-				containerId: "tm-video-container",
-				startMuted: false
-			}, options);
+			this.options = Object.assign({ containerId: "tm-video-container" }, options);
 			this.callingButton = this.options.callingButton || null;
 			this.userPauseIntent = false;
 			this.initialized = false;
@@ -1664,7 +3087,10 @@
 							if (mutedPromise !== void 0) mutedPromise.then(() => {
 								console.log("[PlayerCore] 静音自动起播成功");
 								const unmuteOnInteract = () => {
-									if (!Boolean(getValue("defaultMuted", true)) && this.targetVideo) this.targetVideo.muted = false;
+									if (!checkShouldDefaultMute(this.options.playerState) && this.targetVideo) {
+										this.targetVideo.muted = false;
+										setValue("lastUnmutedTime", Date.now());
+									}
 									document.removeEventListener("click", unmuteOnInteract, true);
 									document.removeEventListener("touchstart", unmuteOnInteract, true);
 								};
@@ -1799,7 +3225,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-027";
+		return "5.7.113-028";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -2035,36 +3461,6 @@
 			}
 		}
 	};
-	function _typeof(o) {
-		"@babel/helpers - typeof";
-		return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(o) {
-			return typeof o;
-		} : function(o) {
-			return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
-		}, _typeof(o);
-	}
-	function toPrimitive(t, r) {
-		if ("object" != _typeof(t) || !t) return t;
-		var e = t[Symbol.toPrimitive];
-		if (void 0 !== e) {
-			var i = e.call(t, r || "default");
-			if ("object" != _typeof(i)) return i;
-			throw new TypeError("@@toPrimitive must return a primitive value.");
-		}
-		return ("string" === r ? String : Number)(t);
-	}
-	function toPropertyKey(t) {
-		var i = toPrimitive(t, "string");
-		return "symbol" == _typeof(i) ? i : i + "";
-	}
-	function _defineProperty(e, r, t) {
-		return (r = toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
-			value: t,
-			enumerable: !0,
-			configurable: !0,
-			writable: !0
-		}) : e[r] = t, e;
-	}
 	var ViewportDebugHUD = class {
 		static init(playerContainer, shadowRoot) {
 			if (typeof window === "undefined" || typeof document === "undefined") return;
@@ -2786,237 +4182,6 @@
 	_defineProperty(ViewportDebugHUD, "_playerContainer", null);
 	_defineProperty(ViewportDebugHUD, "_shadowRoot", null);
 	_defineProperty(ViewportDebugHUD, "_uiMutationObserver", null);
-	var FLOATING_PLAY = `
-    <svg width="48" height="48" viewBox="0 0 68 48" fill="none">
-        <path class="tm-play-button-bg" d="M66.52,7.74c-0.78-2.93-2.49-5.41-5.42-6.19C55.79,.13,34,0,34,0S12.21,.13,6.9,1.55 C3.97,2.33,2.27,4.81,1.48,7.74C0.06,13.05,0,24,0,24s0.06,10.95,1.48,16.26c0.78,2.93,2.49,5.41,5.42,6.19 C12.21,47.87,34,48,34,48s21.79-0.13,27.1-1.55c2.93-0.78,4.64-3.26,5.42-6.19C67.94,34.95,68,24,68,24S67.94,13.05,66.52,7.74z" fill="rgb(254, 98, 142)"></path>
-        <path d="M 45,24 27,14 27,34" fill="#fff"></path>
-    </svg>
-`;
-	var PLAY = `
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="tm-play-icon" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 12L7 5V19L18 12Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-`;
-	var PAUSE = `
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 4H6V20H10V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M18 4H14V20H18V4Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-`;
-	var PLAY_CENTER = `
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M14,6v20c0,1.1-0.9,2-2,2H8c-1.1,0-2-0.9-2-2V6c0-1.1,0.9-2,2-2h4C13.1,4,14,4.9,14,6z M24,4h-4
-        c-1.1,0-2,0.9-2,2v20c0,1.1,0.9,2,2,2h4c1.1,0,2-0.9,2-2V6C26,4.9,25.1,4,24,4z" fill="white"/>
-    </svg>
-`;
-	var REPLAY = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-        <path d="M3 3v5h5"/>
-    </svg>
-`;
-	var MUTE = `
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M23 9L17 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M17 9L23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-`;
-	var VOLUME_LOW = `
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-`;
-	var VOLUME_HIGH = `
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 5L6 9H2V15H6L11 19V5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M15.54 8.46C16.4774 9.39764 17.004 10.6692 17.004 11.995C17.004 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M18.54 5.46C20.4246 7.34535 21.4681 9.90302 21.4681 12.575C21.4681 15.247 20.4246 17.8047 18.54 19.69" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-`;
-	var REWIND = `
-    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-rewind-icon">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.70711 4.29289C3.31658 3.90237 2.68342 3.90237 2.29289 4.29289L-4.70711 11.2929C-5.09763 11.6834 -5.09763 12.3166 -4.70711 12.7071L2.29289 19.7071C2.68342 20.0976 3.31658 20.0976 3.70711 19.7071C4.09763 19.3166 4.09763 18.6834 3.70711 18.2929L-2.58579 12L3.70711 5.70711C4.09763 5.31658 4.09763 4.68342 3.70711 4.29289Z" fill="currentColor"/>
-    </svg>
-`;
-	var FORWARD = `
-    <svg width="14" height="14" viewBox="0 0 12 24" fill="none" class="tm-forward-icon">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"/>
-    </svg>
-`;
-	var CLOSE_LINE = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
-`;
-	var KEYBOARD = `
-    <svg viewBox="2 5 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5ZM6 10C6.55228 10 7 9.55228 7 9C7 8.44772 6.55228 8 6 8C5.44772 8 5 8.44772 5 9C5 9.55228 5.44772 10 6 10ZM6 13C6.55228 13 7 12.5523 7 12C7 11.4477 6.55228 11 6 11C5.44772 11 5 11.4477 5 12C5 12.5523 5.44772 13 6 13ZM9 13C9.55228 13 10 12.5523 10 12C10 11.4477 9.55228 11 9 11C8.44772 11 8 11.4477 8 12C8 12.5523 8.44772 13 9 13ZM9 10C9.55228 10 10 9.55228 10 9C10 8.44772 9.55228 8 9 8C8.44772 8 8 8.44772 8 9C8 9.55228 8.44772 10 9 10ZM12 10C12.5523 10 13 9.55228 13 9C13 8.44772 12.5523 8 12 8C11.4477 8 11 8.44772 11 9C11 9.55228 11.4477 10 12 10ZM12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13ZM15 10C15.5523 10 16 9.55228 16 9C16 8.44772 15.5523 8 15 8C14.4477 8 14 8.44772 14 9C14 9.55228 14.4477 10 15 10ZM15 13C15.5523 13 16 12.5523 16 12C16 11.4477 15.5523 11 15 11C14.4477 11 14 11.4477 14 12C14 12.5523 14.4477 13 15 13ZM18 10C18.5523 10 19 9.55228 19 9C19 8.44772 18.5523 8 18 8C17.4477 8 17 8.44772 17 9C17 9.55228 17.4477 10 18 10ZM18 13C18.5523 13 19 12.5523 19 12C19 11.4477 18.5523 11 18 11C17.4477 11 17 11.4477 17 12C17 12.5523 17.4477 13 18 13ZM17.75 16C17.75 16.4142 17.4142 16.75 17 16.75H7C6.58579 16.75 6.25 16.4142 6.25 16C6.25 15.5858 6.58579 15.25 7 15.25H17C17.4142 15.25 17.75 15.5858 17.75 16Z" fill="currentColor"/>
-    </svg>
-`;
-	var LAYOUT_LEFT = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="5"/>
-        <line x1="7.5" y1="3" x2="7.5" y2="21"/>
-        <path d="M15.5 9l-3 3 3 3"/>
-    </svg>
-`;
-	var LAYOUT_RIGHT = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="5"/>
-        <line x1="16.5" y1="3" x2="16.5" y2="21"/>
-        <path d="M8.5 9l3 3-3 3"/>
-    </svg>
-`;
-	var COMMENTS_SHOW = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-    </svg>
-`;
-	var COMMENTS_HIDE = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" opacity="0.4"/>
-        <line x1="3" y1="3" x2="21" y2="21"/>
-    </svg>
-`;
-	var ICON_COMMENT_WRITE = `
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 20h9"/>
-        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-    </svg>
-`;
-	var ICON_CLOUD_SYNC = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21.5 15a4.5 4.5 0 0 0-4-6.5h-1a7 7 0 0 0-13 3.5 4.5 4.5 0 0 0 4.5 4.5"/>
-        <polyline points="17 19 21 19 21 15"/>
-        <path d="M21 19l-4-4"/>
-    </svg>
-`;
-	var ICON_CLOUD_UPLOAD = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="17 8 12 3 7 8"/>
-        <line x1="12" y1="3" x2="12" y2="15"/>
-    </svg>
-`;
-	var ICON_CLOUD_DOWNLOAD = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-    </svg>
-`;
-	var ICON_EYE = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-        <circle cx="12" cy="12" r="3"/>
-    </svg>
-`;
-	var ICON_EYE_OFF = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-        <line x1="1" y1="1" x2="23" y2="23"/>
-    </svg>
-`;
-	var ICON_CHECK = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="20 6 9 17 4 12"/>
-    </svg>
-`;
-	var ICON_SERVER = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-        <line x1="6" y1="6" x2="6.01" y2="6"/>
-        <line x1="6" y1="18" x2="6.01" y2="18"/>
-    </svg>
-`;
-	var LOOP_INTERVAL = `
-    <svg viewBox="0 7 32 18" fill="currentColor" class="tm-loop-icon-svg" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20.462 10.824l-9.265 9.196 0.753 0.756 9.265-9.196z"/>
-        <path d="M6.937 21.864c-3.234 0-5.864-2.631-5.864-5.864s2.631-5.864 5.864-5.864c1.566 0 2.987 0.621 4.040 1.624l0.001-0.006 0.054 0.047 2.076 2.066h-1.905v1.066h3.732v-3.732h-1.066v1.918l-2.084-2.074-0.005 0.005c-1.251-1.224-2.959-1.982-4.842-1.982-3.821 0-6.931 3.109-6.931 6.931s3.109 6.931 6.931 6.931c1.971 0 3.747-0.831 5.011-2.156l-0.753-0.754c-1.070 1.132-2.581 1.844-4.258 1.844z"/>
-        <path d="M25.063 9.069c-1.765 0-3.373 0.668-4.597 1.759l0.753 0.753c1.030-0.898 2.373-1.446 3.844-1.446 3.234 0 5.864 2.631 5.864 5.864s-2.631 5.864-5.864 5.864c-1.56 0-2.976-0.616-4.028-1.613l-0.002 0.010-3.531-3.518-0.757 0.751 3.535 3.522 0.006-0.006c1.245 1.187 2.925 1.921 4.776 1.921 3.821 0 6.931-3.109 6.931-6.931s-3.109-6.931-6.931-6.931z"/>
-    </svg>
-`;
-	var ICON_REFRESH = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-    </svg>
-`;
-	var ICON_EXTERNAL_LINK = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-        <polyline points="15 3 21 3 21 9"/>
-        <line x1="10" y1="14" x2="21" y2="3"/>
-    </svg>
-`;
-	var ICON_DOWNLOAD = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-    </svg>
-`;
-	var ICON_SPARKLES = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-    </svg>
-`;
-	var EXPAND_FULL = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-    </svg>
-`;
-	var DOCK_SWITCH_LEFT = `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="16" rx="3"/>
-        <path d="M7 4v16" stroke-dasharray="2 2" opacity="0.4"/>
-        <path d="M16 9l-4 3 4 3" stroke-width="2"/>
-    </svg>
-`;
-	var DOCK_SWITCH_RIGHT = `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="16" rx="3"/>
-        <path d="M17 4v16" stroke-dasharray="2 2" opacity="0.4"/>
-        <path d="M8 9l4 3-4 3" stroke-width="2"/>
-    </svg>
-`;
-	var ICON_PEACH = `<img class="tm-peach-logo-img" src="data:image/png;base64,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" width="20" height="20" alt="Peach" />`;
-	var ICON_TAG = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-        <line x1="7" y1="7" x2="7.01" y2="7"/>
-    </svg>
-`;
-	var ICON_TRASH = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="3 6 5 6 21 6"/>
-        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-        <path d="M10 11v6"/>
-        <path d="M14 11v6"/>
-    </svg>
-`;
-	var ICON_SHARE_LINK = `
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-        <polyline points="16 6 12 2 8 6"/>
-        <line x1="12" y1="2" x2="12" y2="15"/>
-    </svg>
-`;
-	var ICON_UNDO = `
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 7v6h6"/>
-        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
-    </svg>
-`;
-	var ICON_PLUS = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"/>
-        <line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-`;
 	function createOverlayElement() {
 		const overlay = document.createElement("div");
 		overlay.className = "tm-video-overlay";
@@ -3604,7 +4769,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-027";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-028";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -6478,993 +7643,6 @@
 		}
 	};
 	_defineProperty(UIManager$1, "lastKnownKeyboardHeight", 380);
-	var I18n = class {
-		static get userLang() {
-			return navigator.languages && navigator.languages[0] || navigator.language || "en";
-		}
-		static translate(id, lang = "") {
-			const selectedLang = lang || this.userLang;
-			return (this.strings[selectedLang] || this.strings[selectedLang.split("-")[0]] || this.strings.en)[id] || this.strings.en[id];
-		}
-	};
-	_defineProperty(I18n, "strings", {
-		"en": {
-			modeNormal: "Normal Play",
-			modeNormalShort: "Normal",
-			modeNormalDesc: "Play full video continuously.",
-			modePreview: "Preview Clips",
-			modePreviewShort: "Preview",
-			modePreviewDesc: "Briefly preview each highlight clip.",
-			modeReplay: "Play Highlights",
-			modeReplayShort: "Highlights",
-			modeReplayDesc: "Play all highlight clips back-to-back.",
-			loopControlRow: "Clip Loop",
-			loopControlRowDesc: "Loop specified A-B range clip.",
-			loopStart: "Start A",
-			loopEnd: "End B",
-			quickSeek: "Quick Seek",
-			quickSeekDesc: "Show custom jump buttons on control bar.",
-			progressBarRow: "Progress Bar",
-			progressBarRowDesc: "Show main progress bar and precision scrubber at the bottom.",
-			playProgress: "Progress",
-			playProgressDesc: "Show progress bar & precision scrubber.",
-			toggleMute: "Mute Toggle",
-			movePanel: "Move Panel",
-			singleHandMode: "One-Handed",
-			singleHandModeDesc: "Dock controls to bottom for easy thumb reach.",
-			singleHandPref: "Handedness",
-			singleHandRight: "Right Hand",
-			singleHandLeft: "Left Hand",
-			screenTooNarrowForSingleHand: "Screen too narrow for one-handed mode",
-			switchHandLeft: "Switch Left",
-			switchHandRight: "Switch Right",
-			expandFullWidth: "Full Width",
-			collapseSingleHand: "One-Handed",
-			switchedToRightHand: "Docked to right",
-			switchedToLeftHand: "Docked to left",
-			restoredFullWidth: "Restored full width",
-			enteredSingleHand: "Entered one-handed mode",
-			addHighlight: "Add Highlight",
-			quickMark: "Quick Mark",
-			sheetTitle: "Highlight List",
-			addRemark: "Add Note",
-			addRemarkPlaceholder: "Note this highlight...",
-			selectTag: "Select Tags",
-			undoDelete: "Undo Delete",
-			undoRestored: "Clip restored",
-			shareSelected: "Share Clips",
-			selectToShare: "Select clips to share first",
-			cancel: "Cancel",
-			playbackGroupTitle: "Playback",
-			showProgressBar: "Progress Bar",
-			showSeekControlRow: "Quick Seek",
-			loopControlRow: "Loop",
-			loopControlRowDesc: "A-B range loop",
-			previewDuration: "Preview Duration",
-			previewDurationDesc: "Seconds per clip",
-			climaxDuration: "Highlight Duration",
-			climaxDurationDesc: "Seconds per highlight",
-			pauseOnBlur: "Pause on Blur",
-			pauseOnBlurDesc: "Pause when switching tabs",
-			buttonSound: "Button Sounds",
-			buttonSoundDesc: "",
-			defaultMuted: "Default Muted",
-			defaultMutedDesc: "",
-			muteResetMinutes: "Mute Timeout",
-			muteResetMinutesDesc: "Auto re-mute on timeout",
-			minutesUnit: "min",
-			commentsGroupTitle: "Comments",
-			showComments: "Show Comments",
-			showCommentsDesc: "",
-			commentSources: "Comment Sources",
-			commentSourcesDesc: "",
-			filterTimeOnly: "Time Marks Only",
-			filterTimeOnlyDesc: "Only show timestamped comments",
-			commentCountdownConvert: "Convert to Normal",
-			commentCountdownReverted: "Show Countdown",
-			filterSpam: "Block Spam",
-			saveAllHighlights: "Save Highlights",
-			copyCode: "Copy Code",
-			webdavTitle: "Cloud Sync",
-			webdavAutoSync: "Auto Sync",
-			webdavAutoSyncDesc: "Sync silently on data changes",
-			webdavSyncMerge: "Smart Merge",
-			webdavUploadOverwrite: "Backup to Cloud",
-			webdavDownloadOverwrite: "Restore Backup",
-			webdavTestConnection: "Test Connect",
-			webdavBackupPath: "Backup Directory",
-			webdavPassword: "App Password",
-			webdavServerUrl: "Server URL",
-			webdavUsername: "Username",
-			webdavCurrentDevice: "Current Device",
-			webdavLastSync: "Last Sync",
-			webdavNeverSynced: "Never synced",
-			webdavTesting: "Testing connection...",
-			webdavTestSuccess: "WebDAV connection verified!",
-			webdavTestFailed: "Connection failed, check URL or credentials",
-			webdavSyncing: "Syncing data...",
-			webdavSyncSuccess: "Cloud sync completed!",
-			webdavSyncFailed: "Sync failed: ",
-			webdavConfirmUpload: "Force overwrite cloud backup with local config?",
-			webdavConfirmDownload: "Download and overwrite local config with cloud backup?",
-			betaGroupTitle: "Labs",
-			betaLabTitle: "Experimental Labs",
-			betaLabDesc: "Try preview features",
-			betaSkipIntro: "Skip Intro",
-			betaSkipIntroDesc: "Jump to 1st highlight",
-			betaHeatmap: "Playback Heatmap",
-			betaHeatmapDesc: "Show viewer heatmap on seekbar",
-			betaCapsuleUndo: "Undo Protection",
-			betaCapsuleUndoDesc: "Recover deleted highlights within 60s",
-			betaDeepLinking: "Link Import",
-			betaDeepLinkingDesc: "Auto-load shared highlights",
-			betaCustomApi: "Custom Comments API",
-			betaCustomApiDesc: "Connect private comments server (optional)",
-			betaDebugLog: "Debug Log",
-			betaDebugLogDesc: "Scraping & network diagnostics",
-			betaPreloadComments: "Preload Comments",
-			betaPreloadCommentsDesc: "Prefetch comments in background",
-			betaClearCache: "Clear Cache",
-			betaClearCacheDesc: "Clear offline comments & cache",
-			aboutGroupTitle: "Version Info",
-			aboutAndUpdates: "Version Info",
-			updateChannel: "Update Channel",
-			channelStable: "Stable",
-			channelBeta: "Beta",
-			currentVersion: "Current Version",
-			checkUpdate: "Check Updates",
-			checkingUpdate: "Checking updates...",
-			alreadyLatest: "Already the latest version",
-			updateFound: "New Version Available",
-			updateNow: "Update Now",
-			viewRelease: "SleazyFork Page",
-			updateChangelog: "Changelog",
-			autoCheckUpdate: "Auto Check",
-			autoCheckUpdateDesc: "Check updates at launch.",
-			reinstallScript: "Reinstall",
-			reinstallScriptDesc: "Force reinstall current version.",
-			statsInstalls: "Total Installs",
-			statsRating: "Rating Score",
-			statsUpdated: "Code Updated",
-			fetchFailed: "Failed to check updates, please try again later",
-			scriptName: "Miss Player | Cinema Mode (One-handed Player)",
-			scriptDescription: "MissAV ad-free|One-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|Custom player supporting jable po*nhub etc",
-			viewportConfigured: "Viewport configured to support safe area",
-			stylesInjected: "Styles injected",
-			enhancerInitialized: "User experience enhancer module initialized",
-			loginModuleInitialized: "Auto login module initialized",
-			initializationComplete: "Initialization complete",
-			initializationFailed: "Initialization failed",
-			play: "Play",
-			pause: "Pause",
-			mute: "Mute",
-			unmute: "Unmute",
-			fullscreen: "Fullscreen",
-			exitFullscreen: "Exit Fullscreen",
-			settings: "Settings",
-			quality: "Quality",
-			speed: "Speed",
-			autoplay: "Auto Play",
-			loop: "Loop",
-			send: "Send",
-			commentsTitle: "Comments",
-			commentsCount: "{n} Comments",
-			commentsLeave: "Leave Comment",
-			commentsExpand: "Expand",
-			commentsCollapse: "Collapse",
-			commentsPlaceholder: "Write a comment...",
-			commentsFilterSpam: "Filter Spam",
-			commentsCopyAll: "Copy All",
-			commentsLoadMore: "Load More",
-			commentsLoading: "Loading comments...",
-			commentsNoComments: "No comments yet",
-			goToVideo: "Go to Video",
-			previewLoading: "Loading preview...",
-			previewNotFound: "No preview video available",
-			crazyScrapeTitle: "Aggressive Scrape Mode",
-			crazyScrapeDesc: "Scrape comments for all matched AV codes on host page with rate-limiting queue",
-			debugFilterHasNumbersTitle: "Numbers Only Comments",
-			debugFilterHasNumbersDesc: "Show only comments containing digits to inspect and verify timestamp parsing",
-			commentsError: "Failed to load comments",
-			tabJable: "Jable.tv Comments",
-			tabJavlibComment: "JAVLib Comments",
-			tabJavlibReview: "JAVLib Reviews",
-			tabComments: "Comments",
-			autoQuality: "Auto Quality",
-			helpImprove: "Help improve",
-			helpImproveDesc: "Collect necessary data to improve features",
-			loadingError: "Failed to load video",
-			networkError: "Network error",
-			loginSuccess: "Login successful",
-			loginFailed: "Login failed",
-			login_accountNull: "Error: Email or password is empty.",
-			login_success: "Login successful, refreshing the page.",
-			login_networkFailed: "Status code error.",
-			login_failed: "Login failed, incorrect email or password. Check console for error details.",
-			login_autoLogin: "Auto Login"
-		},
-		"zh-CN": {
-			modeNormal: "正常播放",
-			modeNormalShort: "正常",
-			modeNormalDesc: "连续播放完整视频。",
-			modePreview: "快览片段",
-			modePreviewShort: "快览",
-			modePreviewDesc: "轮流快速预览每个高光片段。",
-			modeReplay: "连播高光",
-			modeReplayShort: "连播",
-			modeReplayDesc: "连续播放所有精彩高光片段。",
-			loopControlRow: "片段循环",
-			loopControlRowDesc: "循环播放 A-B 指定区间片段。",
-			loopStart: "起点 A",
-			loopEnd: "终点 B",
-			quickSeek: "快进快退",
-			quickSeekDesc: "在控制栏显示自定义跳秒按键。",
-			progressBarRow: "进度条栏",
-			progressBarRowDesc: "在底部展示主播放进度条与精确定位滑块。",
-			playProgress: "播放进度",
-			playProgressDesc: "在底部展示主播放进度条与精确定位滑块。",
-			toggleMute: "静音切换",
-			movePanel: "移动面板",
-			singleHandMode: "单手模式",
-			singleHandModeDesc: "控件收拢至下半屏，大拇指轻松触达。",
-			singleHandPref: "惯用手",
-			singleHandRight: "右手",
-			singleHandLeft: "左手",
-			screenTooNarrowForSingleHand: "屏幕较窄，无需开启单手模式",
-			switchHandLeft: "切到左手",
-			switchHandRight: "切到右手",
-			expandFullWidth: "展开全宽",
-			collapseSingleHand: "收起单手",
-			switchedToRightHand: "已贴靠右手",
-			switchedToLeftHand: "已贴靠左手",
-			restoredFullWidth: "已恢复全宽",
-			enteredSingleHand: "已开启单手模式",
-			addHighlight: "添加高光",
-			quickMark: "快速标记",
-			sheetTitle: "片段列表",
-			addRemark: "添加备注",
-			addRemarkPlaceholder: "输入高光备注...",
-			selectTag: "选择标签",
-			undoDelete: "撤销删除",
-			undoRestored: "已恢复片段",
-			shareSelected: "分享片段",
-			selectToShare: "请先勾选需要分享的片段",
-			cancel: "取消",
-			playbackGroupTitle: "播放控制",
-			showProgressBar: "进度条",
-			showSeekControlRow: "快捷跳转",
-			loopControlRow: "片段循环",
-			loopControlRowDesc: "A-B 区间循环",
-			previewDuration: "快览时长",
-			previewDurationDesc: "单片段预览秒数",
-			climaxDuration: "高光时长",
-			climaxDurationDesc: "连续播放单点时长",
-			pauseOnBlur: "离开暂停",
-			pauseOnBlurDesc: "切页面或后台时暂停",
-			buttonSound: "按键音效",
-			buttonSoundDesc: "",
-			defaultMuted: "默认静音",
-			defaultMutedDesc: "",
-			muteResetMinutes: "静音重置",
-			muteResetMinutesDesc: "超时自动恢复静音",
-			minutesUnit: "分钟",
-			commentsGroupTitle: "影片评论",
-			showComments: "显示评论",
-			showCommentsDesc: "",
-			commentSources: "评论来源",
-			commentSourcesDesc: "",
-			filterTimeOnly: "只看时间",
-			filterTimeOnlyDesc: "仅显示含时间标记的评论",
-			commentCountdownConvert: "转为正序",
-			commentCountdownReverted: "显示倒数",
-			filterSpam: "屏蔽灌水",
-			saveAllHighlights: "转存高光",
-			copyCode: "复制番号",
-			webdavTitle: "云端同步",
-			webdavAutoSync: "自动同步",
-			webdavAutoSyncDesc: "数据变动时后台静默同步",
-			webdavSyncMerge: "智能合并同步",
-			webdavUploadOverwrite: "上传备份",
-			webdavDownloadOverwrite: "恢复备份",
-			webdavTestConnection: "测试连接",
-			webdavBackupPath: "备份目录",
-			webdavPassword: "应用密码",
-			webdavServerUrl: "服务器地址",
-			webdavUsername: "用户名",
-			webdavCurrentDevice: "当前设备",
-			webdavLastSync: "上次同步",
-			webdavNeverSynced: "尚未同步",
-			webdavTesting: "正在测试连接...",
-			webdavTestSuccess: "WebDAV 连接与目录创建成功！",
-			webdavTestFailed: "连接失败，请检查地址或账号密码",
-			webdavSyncing: "正在同步数据...",
-			webdavSyncSuccess: "云端同步成功完成！",
-			webdavSyncFailed: "同步失败: ",
-			webdavConfirmUpload: "确定要将当前本地配置强制覆盖到云端吗？这将替换 WebDAV 上的所有备份数据。",
-			webdavConfirmDownload: "确定要从云端拉取配置并覆盖本地吗？这将替换此设备上的当前设置与打点数据。",
-			betaGroupTitle: "实验特性",
-			betaLabTitle: "实验功能",
-			betaLabDesc: "探索预览中的新功能",
-			betaSkipIntro: "跳过片头",
-			betaSkipIntroDesc: "开播直达首个高光",
-			betaHeatmap: "播放热度",
-			betaHeatmapDesc: "进度条显示观看波形",
-			betaCapsuleUndo: "防误删除",
-			betaCapsuleUndoDesc: "删除保留 60 秒撤销",
-			betaDeepLinking: "链接还原",
-			betaDeepLinkingDesc: "打开分享链接载入高光",
-			betaCustomApi: "自建评论接口",
-			betaCustomApiDesc: "连接私人评论服务器 (可选)",
-			betaDebugLog: "调试日志",
-			betaDebugLogDesc: "排错与网络抓取诊断",
-			betaPreloadComments: "预载评论",
-			betaPreloadCommentsDesc: "提前抓取关联影片评论",
-			betaClearCache: "清除缓存",
-			betaClearCacheDesc: "清空离线评论与本地缓存",
-			aboutGroupTitle: "版本信息",
-			aboutAndUpdates: "版本信息",
-			updateChannel: "更新通道",
-			channelStable: "正式版",
-			channelBeta: "测试版",
-			currentVersion: "当前版本",
-			checkUpdate: "检查更新",
-			checkingUpdate: "正在检查更新...",
-			alreadyLatest: "当前已是最新版本",
-			updateFound: "发现新版本",
-			updateNow: "立即更新",
-			viewRelease: "SleazyFork 主页",
-			updateChangelog: "版本日志",
-			autoCheckUpdate: "自动检查",
-			autoCheckUpdateDesc: "启动时检查新版并在设置角标提醒。",
-			reinstallScript: "重新安装",
-			reinstallScriptDesc: "刷新本地缓存并强制重新安装当前版本。",
-			statsInstalls: "总安装量",
-			statsRating: "好评评分",
-			statsUpdated: "代码更新",
-			fetchFailed: "检查更新失败，请稍后重试",
-			scriptName: "Miss Player | 影院模式 (单手播放器)",
-			scriptDescription: "MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器 支持 jable po*nhub 等通用",
-			viewportConfigured: "已配置viewport以支持安全区域",
-			stylesInjected: "样式注入完成",
-			enhancerInitialized: "用户体验增强模块已初始化",
-			loginModuleInitialized: "自动登录模块已初始化",
-			initializationComplete: "初始化完成",
-			initializationFailed: "初始化失败",
-			play: "播放",
-			pause: "暂停",
-			mute: "静音",
-			unmute: "取消静音",
-			fullscreen: "全屏",
-			exitFullscreen: "退出全屏",
-			settings: "设置",
-			quality: "画质",
-			speed: "速度",
-			autoplay: "自动播放",
-			loop: "循环播放",
-			send: "发送",
-			commentsTitle: "评论区",
-			commentsCount: "共 {n} 条评论",
-			commentsLeave: "留言",
-			commentsExpand: "展开",
-			commentsCollapse: "收起",
-			commentsPlaceholder: "说点什么吧...",
-			commentsFilterSpam: "屏蔽灌水",
-			commentsCopyAll: "复制全部",
-			commentsLoadMore: "加载更多",
-			commentsLoading: "正在采集评论...",
-			commentsNoComments: "暂无评论",
-			goToVideo: "跳转到视频页面",
-			previewLoading: "正在加载预览...",
-			previewNotFound: "暂无预览小视频",
-			crazyScrapeTitle: "疯狂采集模式",
-			crazyScrapeDesc: "自动扫描宿主页面所有关联番号，低速防爬排队采集评论语料",
-			debugFilterHasNumbersTitle: "只看有数字的评论",
-			debugFilterHasNumbersDesc: "仅保留评论中包含数字的条目，便于排查与审查时间戳、区间与倒数解析效果",
-			commentsError: "评论采集失败",
-			tabJable: "Jable.tv 评论",
-			tabJavlibComment: "JAVLib 评论",
-			tabJavlibReview: "JAVLib 文章",
-			tabComments: "评论",
-			autoQuality: "自动画质",
-			helpImprove: "帮助改进",
-			helpImproveDesc: "收集必要数据用于改进功能",
-			loadingError: "视频加载失败",
-			networkError: "网络错误",
-			loginSuccess: "登录成功",
-			loginFailed: "登录失败",
-			login_accountNull: "邮箱或密码为空",
-			login_success: "登录成功，即将刷新页面。",
-			login_networkFailed: "状态码错误",
-			login_failed: "登录失败，邮箱或密码错误，可以在控制台查看错误信息。",
-			login_autoLogin: "自动登录"
-		},
-		"zh-TW": {
-			modeNormal: "正常播放",
-			modeNormalShort: "正常",
-			modeNormalDesc: "連續播放完整影片。",
-			modePreview: "快覽片段",
-			modePreviewShort: "快覽",
-			modePreviewDesc: "輪流快速預覽每個高光片段。",
-			modeReplay: "連播高光",
-			modeReplayShort: "連播",
-			modeReplayDesc: "連續播放所有精彩高光片段。",
-			loopControlRow: "片段循環",
-			loopControlRowDesc: "循環播放 A-B 指定區間片段。",
-			loopStart: "起點 A",
-			loopEnd: "終點 B",
-			quickSeek: "快進快退",
-			quickSeekDesc: "在控制欄顯示自訂跳秒按鍵。",
-			progressBarRow: "進度條欄",
-			progressBarRowDesc: "在底部展示主播放進度條與精確定位滑塊。",
-			playProgress: "播放進度",
-			playProgressDesc: "在底部展示主播放進度條與精確定位滑塊。",
-			toggleMute: "靜音切換",
-			movePanel: "移動面板",
-			singleHandMode: "單手模式",
-			singleHandModeDesc: "控制項收攏至下半螢幕，大拇指輕鬆觸達。",
-			singleHandPref: "慣用手",
-			singleHandRight: "右手",
-			singleHandLeft: "左手",
-			screenTooNarrowForSingleHand: "螢幕較窄，無需開啟單手模式",
-			switchHandLeft: "切到左手",
-			switchHandRight: "切到右手",
-			expandFullWidth: "展開全寬",
-			collapseSingleHand: "收起單手",
-			switchedToRightHand: "已貼靠右手",
-			switchedToLeftHand: "已貼靠左手",
-			restoredFullWidth: "已恢復全寬",
-			enteredSingleHand: "已開啟單手模式",
-			addHighlight: "新增高光",
-			quickMark: "快速標記",
-			sheetTitle: "片段清單",
-			addRemark: "新增備註",
-			addRemarkPlaceholder: "輸入高光備註...",
-			selectTag: "選擇標籤",
-			undoDelete: "復原刪除",
-			undoRestored: "已復原片段",
-			shareSelected: "分享片段",
-			selectToShare: "請先勾選需要分享的片段",
-			cancel: "取消",
-			playbackGroupTitle: "播放控制",
-			showProgressBar: "進度條",
-			showSeekControlRow: "快捷跳轉",
-			loopControlRow: "片段循環",
-			loopControlRowDesc: "A-B 區間循環",
-			previewDuration: "快覽時長",
-			previewDurationDesc: "單片段預覽秒數",
-			climaxDuration: "高光時長",
-			climaxDurationDesc: "連續播放單點時長",
-			pauseOnBlur: "離開暫停",
-			pauseOnBlurDesc: "切頁面或後台時暫停",
-			buttonSound: "按鍵音效",
-			buttonSoundDesc: "",
-			defaultMuted: "預設靜音",
-			defaultMutedDesc: "",
-			muteResetMinutes: "靜音重置",
-			muteResetMinutesDesc: "逾時自動恢復靜音",
-			minutesUnit: "分鐘",
-			commentsGroupTitle: "影片評論",
-			showComments: "顯示評論",
-			showCommentsDesc: "",
-			commentSources: "評論來源",
-			commentSourcesDesc: "",
-			filterTimeOnly: "只看時間",
-			filterTimeOnlyDesc: "僅顯示含時間標記的評論",
-			commentCountdownConvert: "轉為正序",
-			commentCountdownReverted: "顯示倒數",
-			filterSpam: "屏蔽灌水",
-			saveAllHighlights: "轉存高光",
-			copyCode: "複製番號",
-			webdavTitle: "雲端同步",
-			webdavAutoSync: "自動同步",
-			webdavAutoSyncDesc: "資料變動時後台靜默同步",
-			webdavSyncMerge: "智慧合併同步",
-			webdavUploadOverwrite: "上傳備份",
-			webdavDownloadOverwrite: "恢復備份",
-			webdavTestConnection: "測試連線",
-			webdavBackupPath: "備份目錄",
-			webdavPassword: "應用密碼",
-			webdavServerUrl: "伺服器位址",
-			webdavUsername: "用戶名",
-			webdavCurrentDevice: "當前設備",
-			webdavLastSync: "上次同步",
-			webdavNeverSynced: "尚未同步",
-			webdavTesting: "正在測試連線...",
-			webdavTestSuccess: "WebDAV 連線與目錄建立成功！",
-			webdavTestFailed: "連線失敗，請檢查位址或帳號密碼",
-			webdavSyncing: "正在同步資料...",
-			webdavSyncSuccess: "雲端同步成功完成！",
-			webdavSyncFailed: "同步失敗: ",
-			webdavConfirmUpload: "確定要將當前本地配置強制覆蓋到雲端嗎？這將替換 WebDAV 上的所有備份資料。",
-			webdavConfirmDownload: "確定要從雲端拉取配置並覆蓋本地嗎？這將替換此設備上的當前設置與打點資料。",
-			betaGroupTitle: "實驗特性",
-			betaLabTitle: "實驗功能",
-			betaLabDesc: "探索預覽中的新功能",
-			betaSkipIntro: "跳過片頭",
-			betaSkipIntroDesc: "開播直達首個高光",
-			betaHeatmap: "播放熱度",
-			betaHeatmapDesc: "進度條顯示觀看波形",
-			betaCapsuleUndo: "防誤刪除",
-			betaCapsuleUndoDesc: "刪除保留 60 秒復原",
-			betaDeepLinking: "連結還原",
-			betaDeepLinkingDesc: "打開分享連結載入高光",
-			betaCustomApi: "自建評論介面",
-			betaCustomApiDesc: "連接私人評論伺服器 (可選)",
-			betaDebugLog: "調試日誌",
-			betaDebugLogDesc: "排錯與網路抓取診斷",
-			betaPreloadComments: "預載評論",
-			betaPreloadCommentsDesc: "提前抓取關聯影片評論",
-			betaClearCache: "清除快取",
-			betaClearCacheDesc: "清空離線評論與本地快取",
-			aboutGroupTitle: "版本資訊",
-			aboutAndUpdates: "版本資訊",
-			updateChannel: "更新通道",
-			channelStable: "正式版",
-			channelBeta: "測試版",
-			currentVersion: "當前版本",
-			checkUpdate: "檢查更新",
-			checkingUpdate: "正在檢查更新...",
-			alreadyLatest: "當前已是最新版本",
-			updateFound: "發現新版本",
-			updateNow: "立即更新",
-			viewRelease: "SleazyFork 主頁",
-			updateChangelog: "版本日誌",
-			autoCheckUpdate: "自動檢查",
-			autoCheckUpdateDesc: "啟動時檢查新版並在設置角標提醒。",
-			reinstallScript: "重新安裝",
-			reinstallScriptDesc: "刷新本地快取並強制重新安裝當前版本。",
-			statsInstalls: "總安裝量",
-			statsRating: "好評評分",
-			statsUpdated: "代碼更新",
-			fetchFailed: "檢查更新失敗，請稍後重試",
-			scriptName: "Miss Player | 影院模式 (單手播放器)",
-			scriptDescription: "MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器 支持 jable po*nhub 等通用",
-			viewportConfigured: "已配置viewport以支持安全區域",
-			stylesInjected: "樣式注入完成",
-			enhancerInitialized: "用戶體驗增強模塊已初始化",
-			loginModuleInitialized: "自動登錄模塊已初始化",
-			initializationComplete: "初始化完成",
-			initializationFailed: "初始化失敗",
-			play: "播放",
-			pause: "暫停",
-			mute: "靜音",
-			unmute: "取消靜音",
-			fullscreen: "全屏",
-			exitFullscreen: "退出全屏",
-			settings: "設置",
-			quality: "畫質",
-			speed: "速度",
-			autoplay: "自動播放",
-			loop: "循環播放",
-			send: "發送",
-			commentsTitle: "評論區",
-			commentsCount: "共 {n} 條評論",
-			commentsLeave: "留言",
-			commentsExpand: "展開",
-			commentsCollapse: "收起",
-			commentsPlaceholder: "說點什麼吧...",
-			commentsFilterSpam: "過濾灌水",
-			commentsCopyAll: "複製全部",
-			commentsLoadMore: "載入更多",
-			commentsLoading: "正在採集評論...",
-			commentsNoComments: "暫無評論",
-			goToVideo: "跳轉到影片頁面",
-			previewLoading: "正在加載預覽...",
-			previewNotFound: "暫無預覽短片",
-			crazyScrapeTitle: "瘋狂採集模式",
-			crazyScrapeDesc: "自動掃描宿主頁面所有關聯番號，低速防爬排隊採集評論語料",
-			debugFilterHasNumbersTitle: "只看有數字的評論",
-			debugFilterHasNumbersDesc: "僅保留評論中包含數字的條目，便於排查與審查時間戳、區間與倒數解析效果",
-			commentsError: "評論採集失敗",
-			tabJable: "Jable.tv 評論",
-			tabJavlibComment: "JAVLib 評論",
-			tabJavlibReview: "JAVLib 文章",
-			tabComments: "評論",
-			autoQuality: "自動畫質",
-			helpImprove: "幫助改進",
-			helpImproveDesc: "收集必要數據用於改進功能",
-			loadingError: "視頻加載失敗",
-			networkError: "網絡錯誤",
-			loginSuccess: "登錄成功",
-			loginFailed: "登錄失敗",
-			login_accountNull: "郵箱或密碼為空",
-			login_success: "登錄成功，即將刷新頁面。",
-			login_networkFailed: "狀態碼錯誤",
-			login_failed: "登錄失敗，郵箱或密碼錯誤，可以在控制台查看錯誤信息。",
-			login_autoLogin: "自動登錄"
-		},
-		"ja": {
-			modeNormal: "通常再生",
-			modeNormalShort: "通常",
-			modeNormalDesc: "動画全体を連続再生。",
-			modePreview: "クリップ早見",
-			modePreviewShort: "早見",
-			modePreviewDesc: "各ハイライトを順に素早くプレビュー。",
-			modeReplay: "ハイライト連播",
-			modeReplayShort: "連播",
-			modeReplayDesc: "すべてのハイライトを連続再生。",
-			loopControlRow: "クリップループ",
-			loopControlRowDesc: "A-B 指定区間を繰り返し再生。",
-			loopStart: "開始点 A",
-			loopEnd: "終了点 B",
-			quickSeek: "スキップ",
-			quickSeekDesc: "コントロールバーに秒送りボタンを表示。",
-			progressBarRow: "プログレスバー",
-			progressBarRowDesc: "下部にメイン進捗バーと精密位置決めスライダーを表示。",
-			playProgress: "再生プログレス",
-			playProgressDesc: "下部にメイン進捗バーと精密位置決めスライダーを表示。",
-			toggleMute: "ミュート切替",
-			movePanel: "パネル移動",
-			singleHandMode: "片手モード",
-			singleHandModeDesc: "親指が届く画面下部にパネルを収縮。",
-			singleHandPref: "利き手",
-			singleHandRight: "右手",
-			singleHandLeft: "左手",
-			screenTooNarrowForSingleHand: "画面幅が小さいため片手モードは不要です",
-			switchHandLeft: "左手へ切替",
-			switchHandRight: "右手へ切替",
-			expandFullWidth: "全幅に拡大",
-			collapseSingleHand: "片手に収縮",
-			switchedToRightHand: "右手に寄せました",
-			switchedToLeftHand: "左手に寄せました",
-			restoredFullWidth: "全幅に戻しました",
-			enteredSingleHand: "片手モードに切り替えました",
-			addHighlight: "ハイライト追加",
-			quickMark: "クイックマーク",
-			sheetTitle: "クリップ一覧",
-			addRemark: "メモを追加",
-			addRemarkPlaceholder: "メモを入力...",
-			selectTag: "タグを選択",
-			undoDelete: "削除を取り消す",
-			undoRestored: "クリップを復元しました",
-			shareSelected: "クリップを共有",
-			selectToShare: "共有するクリップを選択してください",
-			cancel: "キャンセル",
-			playbackGroupTitle: "再生制御",
-			showProgressBar: "進捗バー",
-			showSeekControlRow: "クイックシーク",
-			loopControlRow: "ループ再生",
-			loopControlRowDesc: "A-B 区間ループ",
-			previewDuration: "早見の秒数",
-			previewDurationDesc: "クリップ毎のプレビュー秒数",
-			climaxDuration: "ハイライト秒数",
-			climaxDurationDesc: "マーク地点の再生秒数",
-			pauseOnBlur: "離脱時に一時停止",
-			pauseOnBlurDesc: "タブ切替や最小化時に停止",
-			buttonSound: "ボタン効果音",
-			buttonSoundDesc: "",
-			defaultMuted: "デフォルトミュート",
-			defaultMutedDesc: "",
-			muteResetMinutes: "ミュート復帰時間",
-			muteResetMinutesDesc: "放置後に自動でミュート復帰",
-			minutesUnit: "分",
-			commentsGroupTitle: "動画コメント",
-			showComments: "コメント表示",
-			showCommentsDesc: "",
-			commentSources: "コメント取得元",
-			commentSourcesDesc: "",
-			filterTimeOnly: "時間付きのみ",
-			filterTimeOnlyDesc: "時間マーク付きコメントのみ表示",
-			commentCountdownConvert: "正順に変換",
-			commentCountdownReverted: "カウントダウン表示",
-			filterSpam: "スパム非表示",
-			saveAllHighlights: "ハイライト保存",
-			copyCode: "品番コピー",
-			webdavTitle: "クラウド同期",
-			webdavAutoSync: "自動同期",
-			webdavAutoSyncDesc: "データ変更時にバックグラウンド同期",
-			webdavSyncMerge: "スマート同期",
-			webdavUploadOverwrite: "クラウドへ退避",
-			webdavDownloadOverwrite: "バックアップ復元",
-			webdavTestConnection: "接続テスト",
-			webdavBackupPath: "バックアップ先",
-			webdavPassword: "アプリパスワード",
-			webdavServerUrl: "サーバーアドレス",
-			webdavUsername: "ユーザー名",
-			webdavCurrentDevice: "現在の端末",
-			webdavLastSync: "最終同期",
-			webdavNeverSynced: "未同期",
-			webdavTesting: "接続をテスト中...",
-			webdavTestSuccess: "WebDAV接続に成功しました！",
-			webdavTestFailed: "接続に失敗しました。URLまたは認証情報を確認してください",
-			webdavSyncing: "データを同期中...",
-			webdavSyncSuccess: "クラウド同期が完了しました！",
-			webdavSyncFailed: "同期に失敗しました: ",
-			webdavConfirmUpload: "現在のローカル設定をクラウドに強制上書きしますか？",
-			webdavConfirmDownload: "クラウドから設定をダウンロードしてローカルを上書きしますか？",
-			betaGroupTitle: "実験的機能",
-			betaLabTitle: "実験機能",
-			betaLabDesc: "開発中の新機能を試す",
-			betaSkipIntro: "OPスキップ",
-			betaSkipIntroDesc: "最初のハイライトへ直行",
-			betaHeatmap: "再生ヒートマップ",
-			betaHeatmapDesc: "シークバーにリプレイ波形を表示",
-			betaCapsuleUndo: "誤削除防止",
-			betaCapsuleUndoDesc: "削除後60秒間は復元可能",
-			betaDeepLinking: "リンク復元",
-			betaDeepLinkingDesc: "共有リンクを開いた時に展開",
-			betaCustomApi: "自前API",
-			betaCustomApiDesc: "プライベートコメントDBに接続 (任意)",
-			betaDebugLog: "実行ログ",
-			betaDebugLogDesc: "診断情報とネットワークログ",
-			betaPreloadComments: "コメント先読み",
-			betaPreloadCommentsDesc: "関連動画のコメントを先行取得",
-			betaClearCache: "キャッシュ消去",
-			betaClearCacheDesc: "オフラインコメントとキャッシュを消去",
-			aboutGroupTitle: "バージョン情報",
-			aboutAndUpdates: "バージョン情報",
-			updateChannel: "更新チャンネル",
-			channelStable: "安定版",
-			channelBeta: "ベータ版",
-			currentVersion: "現在のバージョン",
-			checkUpdate: "更新を確認",
-			checkingUpdate: "更新を確認中...",
-			alreadyLatest: "最新バージョンです",
-			updateFound: "新しいバージョンがあります",
-			updateNow: "今すぐ更新",
-			viewRelease: "SleazyFork ページ",
-			updateChangelog: "更新履歴",
-			autoCheckUpdate: "自動確認",
-			autoCheckUpdateDesc: "起動時に更新を確認しバッジで通知。",
-			reinstallScript: "再インストール",
-			reinstallScriptDesc: "キャッシュを更新して現行版を再インストール。",
-			statsInstalls: "総インストール数",
-			statsRating: "高評価スコア",
-			statsUpdated: "コード更新日",
-			fetchFailed: "更新確認に失敗しました。後でもう一度お試しください",
-			scriptName: "Miss Player | シネマモード (片手プレーヤー)",
-			scriptDescription: "MissAV広告なし|片手モード|MissAV自動詳細展開|MissAV自動高画質|MissAVリダイレクトサポート|MissAV自動ログイン|jable po*nhub などをサポートするカスタムプレーヤー",
-			viewportConfigured: "セーフエリアをサポートするためにビューポートを設定しました",
-			stylesInjected: "スタイルが注入されました",
-			enhancerInitialized: "ユーザー体験向上モジュールが初期化されました",
-			loginModuleInitialized: "自動ログインモジュールが初期化されました",
-			initializationComplete: "初期化が完了しました",
-			initializationFailed: "初期化に失敗しました",
-			play: "再生",
-			pause: "一時停止",
-			mute: "ミュート",
-			unmute: "ミュート解除",
-			fullscreen: "全画面",
-			exitFullscreen: "全画面解除",
-			settings: "設定",
-			quality: "画質",
-			speed: "速度",
-			autoplay: "自動再生",
-			loop: "ループ再生",
-			commentsTitle: "コメント欄",
-			commentsCount: "{n} 件のコメント",
-			commentsLeave: "コメント",
-			commentsExpand: "展開",
-			commentsCollapse: "折りたたむ",
-			commentsPlaceholder: "コメントを書く...",
-			commentsFilterSpam: "スパムを除外",
-			commentsCopyAll: "すべてコピー",
-			commentsLoadMore: "もっと読み込む",
-			commentsLoading: "コメントを読み込み中...",
-			commentsNoComments: "コメントはまだありません",
-			goToVideo: "動画ページへ",
-			previewLoading: "プレビュー読込中...",
-			previewNotFound: "プレビュー動画なし",
-			crazyScrapeTitle: "拡張収集モード",
-			crazyScrapeDesc: "ホストページ内の全関連品番コメントをアンチスクレイピング制御で順次収集",
-			debugFilterHasNumbersTitle: "数字を含むコメントのみ表示",
-			debugFilterHasNumbersDesc: "数字を含むコメントのみを残しタイムスタンプや区間の解析精度を検証",
-			commentsError: "コメントの読み込みに失敗しました",
-			tabJable: "Jable.tv コメント",
-			tabJavlibComment: "JAVLib コメント",
-			tabJavlibReview: "JAVLib レビュー",
-			tabComments: "コメント",
-			autoQuality: "自動画质",
-			helpImprove: "改善に協力",
-			helpImproveDesc: "機能改善のために必要なデータを収集します",
-			loadingError: "動画の読み込みに失敗しました",
-			networkError: "ネットワークエラー",
-			loginSuccess: "ログイン成功",
-			loginFailed: "ログイン失敗",
-			login_accountNull: "エラー：メールアドレスまたはパスワードが空です。",
-			login_success: "ログイン成功、ページを更新します。",
-			login_networkFailed: "ステータスコードエラー",
-			login_failed: "ログインに失敗しました。メールアドレスまたはパスワードが間違っています。エラーの詳細はコンソールで確認できます。",
-			login_autoLogin: "自動ログイン"
-		},
-		"vi": {
-			modeNormal: "Phát bình thường",
-			modeNormalShort: "Chuẩn",
-			modeNormalDesc: "Phát liên tục toàn bộ video.",
-			modePreview: "Xem lướt",
-			modePreviewShort: "Lướt",
-			modePreviewDesc: "Xem nhanh từng đoạn nổi bật.",
-			modeReplay: "Phát đoạn nổi bật",
-			modeReplayShort: "Nổi bật",
-			modeReplayDesc: "Phát liên tục các đoạn nổi bật.",
-			loopControlRow: "Lặp đoạn",
-			loopControlRowDesc: "Lặp đoạn video A-B chỉ định.",
-			loopStart: "Bắt đầu A",
-			loopEnd: "Kết thúc B",
-			quickSeek: "Tua nhanh",
-			quickSeekDesc: "Hiển thị nút tua nhanh tùy chỉnh.",
-			progressBarRow: "Thanh tiến trình",
-			progressBarRowDesc: "Hiển thị thanh tiến trình chính và con trượt định vị ở dưới cùng.",
-			playProgress: "Tiến trình",
-			playProgressDesc: "Hiển thị thanh tiến trình chính và con trượt định vị ở dưới cùng.",
-			toggleMute: "Bật/tắt tiếng",
-			movePanel: "Di chuyển bảng",
-			singleHandMode: "Chế độ một tay",
-			singleHandModeDesc: "Thu gọn bảng điều khiển trong tầm ngón cái.",
-			singleHandPref: "Tay thuận",
-			singleHandRight: "Tay phải",
-			singleHandLeft: "Tay trái",
-			screenTooNarrowForSingleHand: "Màn hình hẹp, không cần chế độ một tay",
-			switchHandLeft: "Sang tay trái",
-			switchHandRight: "Sang tay phải",
-			expandFullWidth: "Mở toàn chiều rộng",
-			collapseSingleHand: "Thu về một tay",
-			switchedToRightHand: "Đã gắn sang phải",
-			switchedToLeftHand: "Đã gắn sang trái",
-			restoredFullWidth: "Đã khôi phục toàn màn",
-			enteredSingleHand: "Đã chuyển sang chế độ một tay",
-			addHighlight: "Thêm đoạn nổi bật",
-			quickMark: "Đánh dấu nhanh",
-			sheetTitle: "Danh sách đoạn",
-			addRemark: "Thêm ghi chú",
-			addRemarkPlaceholder: "Nhập ghi chú đoạn...",
-			selectTag: "Chọn thẻ",
-			undoDelete: "Hoàn tác xóa",
-			undoRestored: "Đã khôi phục đoạn",
-			shareSelected: "Chia sẻ đoạn",
-			selectToShare: "Vui lòng chọn đoạn cần chia sẻ",
-			cancel: "Hủy",
-			playbackGroupTitle: "Điều khiển phát",
-			showProgressBar: "Thanh tiến trình",
-			showSeekControlRow: "Tua nhanh",
-			loopControlRow: "Lặp lại",
-			loopControlRowDesc: "Lặp lại đoạn A-B",
-			previewDuration: "Thời lượng lướt",
-			previewDurationDesc: "Số giây mỗi đoạn khi xem lướt",
-			climaxDuration: "Thời lượng nổi bật",
-			climaxDurationDesc: "Thời lượng phát mỗi mốc",
-			pauseOnBlur: "Dừng khi rời trang",
-			pauseOnBlurDesc: "Tự tạm dừng khi đổi tab",
-			buttonSound: "Âm thanh nút bấm",
-			buttonSoundDesc: "",
-			defaultMuted: "Mặc định tắt tiếng",
-			defaultMutedDesc: "",
-			muteResetMinutes: "Đặt lại tắt tiếng",
-			muteResetMinutesDesc: "Tự tắt tiếng lại khi quá hạn",
-			minutesUnit: "phút",
-			commentsGroupTitle: "Bình luận video",
-			showComments: "Hiện bình luận",
-			showCommentsDesc: "",
-			commentSources: "Nguồn bình luận",
-			commentSourcesDesc: "",
-			filterTimeOnly: "Chỉ xem có giờ",
-			filterTimeOnlyDesc: "Chỉ hiển thị bình luận có mốc giờ",
-			commentCountdownConvert: "Chuyển sang xuôi",
-			commentCountdownReverted: "Hiện đếm ngược",
-			filterSpam: "Chặn spam",
-			saveAllHighlights: "Lưu đoạn nổi bật",
-			copyCode: "Chép mã số",
-			webdavTitle: "Đồng bộ đám mây",
-			webdavAutoSync: "Tự động đồng bộ",
-			webdavAutoSyncDesc: "Tự đồng bộ ngầm khi dữ liệu đổi",
-			webdavSyncMerge: "Đồng bộ thông minh",
-			webdavUploadOverwrite: "Tải lên sao lưu",
-			webdavDownloadOverwrite: "Khôi phục sao lưu",
-			webdavTestConnection: "Kiểm tra kết nối",
-			webdavBackupPath: "Thư mục sao lưu",
-			webdavPassword: "Mật khẩu ứng dụng",
-			webdavServerUrl: "Địa chỉ máy chủ",
-			webdavUsername: "Tên người dùng",
-			webdavCurrentDevice: "Thiết bị này",
-			webdavLastSync: "Lần đồng bộ trước",
-			webdavNeverSynced: "Chưa đồng bộ",
-			webdavTesting: "Đang kiểm tra kết nối...",
-			webdavTestSuccess: "Đã xác minh kết nối WebDAV!",
-			webdavTestFailed: "Kết nối thất bại, kiểm tra URL hoặc thông tin xác thực",
-			webdavSyncing: "Đang đồng bộ dữ liệu...",
-			webdavSyncSuccess: "Đồng bộ đám mây hoàn tất!",
-			webdavSyncFailed: "Đồng bộ thất bại: ",
-			webdavConfirmUpload: "Ghi đè cấu hình cục bộ lên đám mây?",
-			webdavConfirmDownload: "Tải xuống và ghi đè cấu hình cục bộ?",
-			betaGroupTitle: "Tính năng thử nghiệm",
-			betaLabTitle: "Chức năng thử nghiệm",
-			betaLabDesc: "Khám phá các tính năng xem trước",
-			betaSkipIntro: "Bỏ qua mở đầu",
-			betaSkipIntroDesc: "Bắt đầu phát ngay từ điểm đầu",
-			betaHeatmap: "Bản đồ nhiệt phát lại",
-			betaHeatmapDesc: "Hiển thị dạng sóng xem lại trên thanh trượt",
-			betaCapsuleUndo: "Chống xóa nhầm",
-			betaCapsuleUndoDesc: "Cho phép hoàn tác xóa trong 60 giây",
-			betaDeepLinking: "Mở từ liên kết",
-			betaDeepLinkingDesc: "Tự nạp đoạn nổi bật khi mở liên kết",
-			betaCustomApi: "API tự dựng",
-			betaCustomApiDesc: "Kết nối máy chủ bình luận riêng (tùy chọn)",
-			betaDebugLog: "Nhật ký chạy",
-			betaDebugLogDesc: "Xem chẩn đoán mạng và trích xuất",
-			betaPreloadComments: "Tải trước bình luận",
-			betaPreloadCommentsDesc: "Tải ngầm bình luận video liên quan",
-			betaClearCache: "Xóa bộ nhớ đệm",
-			betaClearCacheDesc: "Giải phóng bộ nhớ và xóa đệm",
-			aboutGroupTitle: "Thông tin phiên bản",
-			aboutAndUpdates: "Thông tin phiên bản",
-			updateChannel: "Kênh cập nhật",
-			channelStable: "Chính thức",
-			channelBeta: "Thử nghiệm",
-			currentVersion: "Phiên bản hiện tại",
-			checkUpdate: "Kiểm tra cập nhật",
-			checkingUpdate: "Đang kiểm tra...",
-			alreadyLatest: "Đã là phiên bản mới nhất",
-			updateFound: "Có phiên bản mới",
-			updateNow: "Cập nhật ngay",
-			viewRelease: "Trang SleazyFork",
-			updateChangelog: "Nhật ký thay đổi",
-			autoCheckUpdate: "Tự động kiểm tra",
-			autoCheckUpdateDesc: "Kiểm tra khi mở và hiện huy hiệu nhắc nhở.",
-			reinstallScript: "Cài đặt lại",
-			reinstallScriptDesc: "Xóa đệm cục bộ và cài lại phiên bản hiện tại.",
-			statsInstalls: "Tổng lượt cài",
-			statsRating: "Điểm đánh giá",
-			statsUpdated: "Cập nhật mã",
-			fetchFailed: "Kiểm tra cập nhật thất bại, vui lòng thử lại sau",
-			scriptName: "Miss Player | Chế độ Rạp chiếu phim (Trình phát một tay)",
-			scriptDescription: "MissAV không quảng cáo|Chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|Đăng nhập tự động MissAV|Trình phát tùy chỉnh hỗ trợ jable po*nhub v.v.",
-			viewportConfigured: "Đã cấu hình viewport để hỗ trợ vùng an toàn",
-			stylesInjected: "Đã tiêm CSS",
-			enhancerInitialized: "Đã khởi tạo mô-đun nâng cao trải nghiệm người dùng",
-			loginModuleInitialized: "Đã khởi tạo mô-đun đăng nhập tự động",
-			initializationComplete: "Khởi tạo hoàn tất",
-			initializationFailed: "Khởi tạo thất bại",
-			play: "Phát",
-			pause: "Tạm dừng",
-			mute: "Tắt tiếng",
-			unmute: "Bật tiếng",
-			fullscreen: "Toàn màn hình",
-			exitFullscreen: "Thoát toàn màn hình",
-			settings: "Cài đặt",
-			quality: "Chất lượng",
-			speed: "Tốc độ",
-			autoplay: "Tự động phát",
-			loop: "Lặp lại",
-			commentsTitle: "Bình luận",
-			commentsCount: "{n} bình luận",
-			commentsLeave: "Bình luận",
-			commentsExpand: "Mở rộng",
-			commentsCollapse: "Thu gọn",
-			commentsPlaceholder: "Viết bình luận...",
-			commentsFilterSpam: "Lọc rác",
-			commentsCopyAll: "Sao chép tất cả",
-			commentsLoadMore: "Tải thêm",
-			commentsLoading: "Đang tải bình luận...",
-			commentsNoComments: "Chưa có bình luận nào",
-			goToVideo: "Đi tới trang video",
-			previewLoading: "Đang tải bản xem trước...",
-			previewNotFound: "Không có video xem trước",
-			crazyScrapeTitle: "Chế độ cào mở rộng",
-			crazyScrapeDesc: "Tự động quét tất cả mã số trên trang và xếp hàng cào bình luận an toàn",
-			debugFilterHasNumbersTitle: "Chỉ xem bình luận có số",
-			debugFilterHasNumbersDesc: "Chỉ giữ lại các bình luận có chứa chữ số để kiểm tra phân tích mốc thời gian",
-			commentsError: "Không thể tải bình luận",
-			tabJable: "Bình luận Jable.tv",
-			tabJavlibComment: "Bình luận JAVLib",
-			tabJavlibReview: "Bài viết JAVLib",
-			tabComments: "Bình luận",
-			autoQuality: "Chất lượng tự động",
-			helpImprove: "Giúp cải thiện",
-			helpImproveDesc: "Thu thập dữ liệu cần thiết để cải thiện tính năng",
-			loadingError: "Không thể tải video",
-			networkError: "Lỗi mạng",
-			loginSuccess: "Đăng nhập thành công",
-			loginFailed: "Đăng nhập thất bại",
-			login_accountNull: "Lỗi: Email hoặc mật khẩu trống.",
-			login_success: "Đăng nhập thành công, đang làm mới trang.",
-			login_networkFailed: "Lỗi mã trạng thái.",
-			login_failed: "Đăng nhập không thành công, email hoặc mật khẩu không chính xác. Xem chi tiết lỗi trên bảng điều khiển.",
-			login_autoLogin: "Đăng nhập tự động"
-		}
-	});
-	function __$1(id, lang = "") {
-		return I18n.translate(id, lang);
-	}
 	function md5cycle(x, k) {
 		var a = x[0], b = x[1], c = x[2], d = x[3];
 		a = ff(a, b, c, d, k[0], 7, -680876936);
@@ -14888,180 +15066,6 @@
 		javdbMovieIdPromise: null,
 		javdbCommentsPromise: null
 	});
-	var VolumeController = class {
-		constructor(playerCore, controlManager) {
-			this.playerCore = playerCore;
-			this.controlManager = controlManager;
-			this.targetVideo = playerCore.targetVideo;
-			this.uiElements = playerCore.uiElements || controlManager.uiElements;
-			this.volumeSlider = null;
-			this.volumeButton = null;
-			this.lastVolume = 1;
-			this.supportsVolumeControl = this.checkVolumeControlSupport();
-			this._onPlayHandler = null;
-			this._onPauseHandler = null;
-			this._onVisibilityChange = null;
-			this._onPageHide = null;
-		}
-		checkVolumeControlSupport() {
-			return !(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
-		}
-		_getSettings() {
-			const s = (this.playerCore?.options?.playerState)?.settings;
-			return {
-				defaultMuted: s ? s.defaultMuted !== void 0 ? Boolean(s.defaultMuted) : getBool("defaultMuted", true) : getBool("defaultMuted", true),
-				muteResetMinutes: s ? parseInt(s.muteResetMinutes, 10) || 5 : parseInt(getValue("muteResetMinutes", 5), 10) || 5
-			};
-		}
-		shouldDefaultMute() {
-			const { defaultMuted, muteResetMinutes } = this._getSettings();
-			if (!defaultMuted) return false;
-			const lastUnmutedTime = Number(getValue("lastUnmutedTime", 0)) || 0;
-			if (!lastUnmutedTime) return true;
-			return Date.now() - lastUnmutedTime >= Math.max(1, muteResetMinutes) * 60 * 1e3;
-		}
-		recordUnmutedTime() {
-			setValue("lastUnmutedTime", Date.now());
-		}
-		recordExitState() {
-			const { defaultMuted } = this._getSettings();
-			if (!defaultMuted) return;
-			if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
-			else setValue("lastUnmutedTime", 0);
-		}
-		startUnmuteHeartbeat() {}
-		stopUnmuteHeartbeat() {}
-		applyInitialMutePolicy() {
-			if (!this.targetVideo) return;
-			const { defaultMuted } = this._getSettings();
-			if (defaultMuted) {
-				if (this.shouldDefaultMute()) this.targetVideo.muted = true;
-				else {
-					this.targetVideo.muted = false;
-					if (this.supportsVolumeControl && this.targetVideo.volume === 0) this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
-					this.recordUnmutedTime();
-				}
-			}
-			this.updateVolumeUI();
-		}
-		onSettingsChanged() {
-			const { defaultMuted } = this._getSettings();
-			if (!defaultMuted) {} else if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
-		}
-		toggleMute() {
-			if (!this.targetVideo) return;
-			if (this.targetVideo.volume === 0 || this.targetVideo.muted) {
-				this.targetVideo.muted = false;
-				if (this.supportsVolumeControl) this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
-				this.recordUnmutedTime();
-				Toast$1(`已取消静音 (音量 ${Math.round((this.targetVideo.volume || 1) * 100)}%)`, "info");
-			} else {
-				if (this.supportsVolumeControl) {
-					this.lastVolume = this.targetVideo.volume;
-					this.targetVideo.volume = 0;
-				}
-				this.targetVideo.muted = true;
-				setValue("lastUnmutedTime", 0);
-				Toast$1("已静音", "info");
-			}
-			this.updateVolumeUI();
-		}
-		_bindVideoLifecycleEvents() {
-			if (!this.targetVideo) return;
-			this._onPlayHandler = () => {
-				if (!this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
-			};
-			this._onPauseHandler = () => {
-				if (!this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
-			};
-			this._onVisibilityChange = () => {
-				if (typeof document !== "undefined" && document.visibilityState === "hidden") this.recordExitState();
-			};
-			this._onPageHide = () => {
-				this.recordExitState();
-			};
-			this.targetVideo.addEventListener("play", this._onPlayHandler);
-			this.targetVideo.addEventListener("pause", this._onPauseHandler);
-			if (typeof document !== "undefined") document.addEventListener("visibilitychange", this._onVisibilityChange);
-			if (typeof window !== "undefined") {
-				window.addEventListener("pagehide", this._onPageHide);
-				window.addEventListener("beforeunload", this._onPageHide);
-			}
-		}
-		createVolumeSlider(container) {
-			const volumeControl = document.createElement("div");
-			volumeControl.className = "tm-volume-control";
-			const volumeButton = document.createElement("button");
-			volumeButton.type = "button";
-			volumeButton.className = "tm-volume-button";
-			volumeButton.innerHTML = this.getVolumeIcon(this.targetVideo ? this.targetVideo.volume : 1);
-			volumeButton.title = __$1("mute") || "静音";
-			volumeButton.addEventListener("click", (e) => {
-				e.stopPropagation();
-				this.toggleMute();
-			});
-			volumeControl.appendChild(volumeButton);
-			this.volumeSlider = volumeControl;
-			this.volumeButton = volumeButton;
-			container.appendChild(volumeControl);
-			this._bindVideoLifecycleEvents();
-			this.applyInitialMutePolicy();
-		}
-		getVolumeIcon(volume) {
-			if (!this.targetVideo || this.targetVideo.muted || volume === 0) return MUTE;
-			else if (this.supportsVolumeControl && volume < .5) return VOLUME_LOW;
-			else return VOLUME_HIGH;
-		}
-		updateVolumeUI() {
-			if (!this.volumeSlider || !this.targetVideo) return;
-			let volume = 1;
-			if (this.supportsVolumeControl) volume = this.targetVideo.muted ? 0 : this.targetVideo.volume;
-			else volume = this.targetVideo.muted ? 0 : 1;
-			const volumeButton = this.volumeButton || this.volumeSlider.querySelector(".tm-volume-button");
-			const isMuted = Boolean(this.targetVideo.muted || volume === 0);
-			if (volumeButton) {
-				volumeButton.classList.toggle("is-muted", isMuted);
-				volumeButton.title = isMuted ? __$1("unmute") || "取消静音" : __$1("mute") || "静音";
-				const newIconHtml = this.getVolumeIcon(volume);
-				const currentSvg = volumeButton.querySelector("svg");
-				if (currentSvg) {
-					const temp = document.createElement("div");
-					temp.innerHTML = newIconHtml.trim();
-					const newSvg = temp.firstElementChild;
-					if (newSvg) volumeButton.replaceChild(newSvg, currentSvg);
-					else volumeButton.innerHTML = newIconHtml;
-				} else volumeButton.innerHTML = newIconHtml;
-			}
-			telemetry.track("volume_change", {
-				volume: Math.round(volume * 100) / 100,
-				is_muted: isMuted
-			});
-		}
-		cleanup() {
-			this.recordExitState();
-			if (this.targetVideo) {
-				if (this._onPlayHandler) {
-					this.targetVideo.removeEventListener("play", this._onPlayHandler);
-					this._onPlayHandler = null;
-				}
-				if (this._onPauseHandler) {
-					this.targetVideo.removeEventListener("pause", this._onPauseHandler);
-					this._onPauseHandler = null;
-				}
-			}
-			if (this._onVisibilityChange && typeof document !== "undefined") {
-				document.removeEventListener("visibilitychange", this._onVisibilityChange);
-				this._onVisibilityChange = null;
-			}
-			if (this._onPageHide && typeof window !== "undefined") {
-				window.removeEventListener("pagehide", this._onPageHide);
-				window.removeEventListener("beforeunload", this._onPageHide);
-				this._onPageHide = null;
-			}
-			this.volumeSlider = null;
-			this.volumeButton = null;
-		}
-	};
 	var SeekController = class {
 		constructor(playerCore, controlManager) {
 			this.playerCore = playerCore;
@@ -20093,15 +20097,16 @@
 				}
 			});
 			card.appendChild(pauseBlurToggle.getElement());
+			const isDefaultMuted = this.settings.defaultMuted !== false;
 			const muteResetSubWrap = document.createElement("div");
 			muteResetSubWrap.className = "tm-settings-subpanel-wrap";
-			muteResetSubWrap.style.display = Boolean(this.settings.defaultMuted) ? "block" : "none";
+			muteResetSubWrap.style.display = isDefaultMuted ? "block" : "none";
 			const muteResetRow = document.createElement("div");
 			muteResetRow.className = "tm-apple-row";
 			muteResetRow.innerHTML = `
             <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title">${__$1("muteResetMinutes") || "静音重置"}</div>
-                <div class="tm-apple-row-subtext">${__$1("muteResetMinutesDesc") || "超时自动恢复静音"}</div>
+                <div class="tm-apple-row-title">${__$1("muteResetMinutes") || "静音租约"}</div>
+                <div class="tm-apple-row-subtext">${__$1("muteResetMinutesDesc") || "离开超过此时间恢复静音"}</div>
             </div>
             <div class="tm-apple-row-right">
                 <input type="number" class="tm-apple-duration-input tm-mute-reset-input" min="1" max="120" value="${this.settings.muteResetMinutes || 5}" />
@@ -20113,13 +20118,13 @@
 				const val = Math.max(1, Math.min(120, parseInt(e.target.value, 10) || 5));
 				this.sm.updateSetting("muteResetMinutes", val);
 				muteResetInput.value = val;
-				Toast$1(`${__$1("muteResetMinutes") || "静音重置"}已设为: ${val} ${__$1("minutesUnit") || "分钟"}`, 1500, "info");
+				Toast$1(`${__$1("muteResetMinutes") || "静音租约"}已设为: ${val} ${__$1("minutesUnit") || "分钟"}`, 1500, "info");
 			});
 			muteResetSubWrap.appendChild(muteResetRow);
 			const defaultMutedToggle = new ToggleRow({
 				title: __$1("defaultMuted") || "默认静音",
 				subtext: __$1("defaultMutedDesc") || "",
-				checked: Boolean(this.settings.defaultMuted),
+				checked: isDefaultMuted,
 				onChange: (checked) => {
 					this.sm.updateSetting("defaultMuted", checked);
 					muteResetSubWrap.style.display = checked ? "block" : "none";

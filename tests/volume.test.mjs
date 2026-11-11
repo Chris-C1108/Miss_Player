@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { VolumeController } from '../src/player/controls/VolumeController.js';
+import { VolumeController, checkShouldDefaultMute } from '../src/player/controls/VolumeController.js';
 import { setValue, getValue } from '../src/utils/storage.js';
 
 console.log('🧪 开始执行 VolumeController 与静音重置策略单元测试...');
@@ -164,6 +164,24 @@ function createMockPlayerCore(video, defaultMuted = true, muteResetMinutes = 5) 
     vc.cleanup();
     assert.ok(getValue('lastUnmutedTime', 0) >= beforeCleanup, 'cleanup 应当自动触发退出状态记录');
     console.log('✅ 8. cleanup 自动触发退出音频结算测试通过');
+}
+
+// 测试用例 9: checkShouldDefaultMute 核心纯函数断言测试
+{
+    setValue('lastUnmutedTime', 0);
+    // 默认开启，无时间戳 -> 应当静音
+    assert.strictEqual(checkShouldDefaultMute({ settings: { defaultMuted: true, muteResetMinutes: 5 } }), true);
+    // 显式关闭 -> 不应静音
+    assert.strictEqual(checkShouldDefaultMute({ settings: { defaultMuted: false } }), false);
+
+    // 存在近期时间戳 (2 分钟前) -> 处于租约内，不应静音
+    setValue('lastUnmutedTime', Date.now() - 2 * 60 * 1000);
+    assert.strictEqual(checkShouldDefaultMute({ settings: { defaultMuted: true, muteResetMinutes: 5 } }), false);
+
+    // 存在超时时间戳 (10 分钟前) -> 超时租约失效，应当静音
+    setValue('lastUnmutedTime', Date.now() - 10 * 60 * 1000);
+    assert.strictEqual(checkShouldDefaultMute({ settings: { defaultMuted: true, muteResetMinutes: 5 } }), true);
+    console.log('✅ 9. checkShouldDefaultMute 纯函数断言测试通过');
 }
 
 console.log('🎉 VolumeController 全部单元测试 100% 通过！');

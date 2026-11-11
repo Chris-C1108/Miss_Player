@@ -175,17 +175,19 @@ export class PlaybackSection {
         });
         card.appendChild(pauseBlurToggle.getElement());
 
-        // 7. 默认静音播放与超时重置
+        // 7. 默认静音播放与超时重置 (有声租约)
+        const isDefaultMuted = this.settings.defaultMuted !== false;
+
         const muteResetSubWrap = document.createElement('div');
         muteResetSubWrap.className = 'tm-settings-subpanel-wrap';
-        muteResetSubWrap.style.display = Boolean(this.settings.defaultMuted) ? 'block' : 'none';
+        muteResetSubWrap.style.display = isDefaultMuted ? 'block' : 'none';
 
         const muteResetRow = document.createElement('div');
         muteResetRow.className = 'tm-apple-row';
         muteResetRow.innerHTML = `
             <div class="tm-apple-row-left">
-                <div class="tm-apple-row-title">${__('muteResetMinutes') || '静音重置'}</div>
-                <div class="tm-apple-row-subtext">${__('muteResetMinutesDesc') || '超时自动恢复静音'}</div>
+                <div class="tm-apple-row-title">${__('muteResetMinutes') || '静音租约'}</div>
+                <div class="tm-apple-row-subtext">${__('muteResetMinutesDesc') || '离开超过此时间恢复静音'}</div>
             </div>
             <div class="tm-apple-row-right">
                 <input type="number" class="tm-apple-duration-input tm-mute-reset-input" min="1" max="120" value="${this.settings.muteResetMinutes || 5}" />
@@ -197,14 +199,14 @@ export class PlaybackSection {
             const val = Math.max(1, Math.min(120, parseInt(e.target.value, 10) || 5));
             this.sm.updateSetting('muteResetMinutes', val);
             muteResetInput.value = val;
-            Toast(`${__('muteResetMinutes') || '静音重置'}已设为: ${val} ${__('minutesUnit') || '分钟'}`, 1500, 'info');
+            Toast(`${__('muteResetMinutes') || '静音租约'}已设为: ${val} ${__('minutesUnit') || '分钟'}`, 1500, 'info');
         });
         muteResetSubWrap.appendChild(muteResetRow);
 
         const defaultMutedToggle = new ToggleRow({
             title: __('defaultMuted') || '默认静音',
             subtext: __('defaultMutedDesc') || '',
-            checked: Boolean(this.settings.defaultMuted),
+            checked: isDefaultMuted,
             onChange: (checked) => {
                 this.sm.updateSetting('defaultMuted', checked);
                 muteResetSubWrap.style.display = checked ? 'block' : 'none';
