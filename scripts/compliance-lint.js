@@ -99,25 +99,27 @@ function runCheck() {
         console.log(`   ✅ 版本号一致 (${currentVer})`);
     }
 
-    // DownloadURL & UpdateURL 检查 (GitHub 直连更新通道，支持 dev 开发测试与 main 正式发版分支)
+    // DownloadURL & UpdateURL 检查 (GitHub 直连更新通道：测试版绑定 dev 分支，正式版绑定 main 分支)
+    const isPrerelease = pkg.version.includes('-');
+    const expectedBranch = isPrerelease ? 'dev' : 'main';
     const validDownloadPrefix = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/';
     const validDownloadSuffix = '/dist/miss_player.user.js';
-    const hasValidDownload = (meta.includes(`${validDownloadPrefix}dev${validDownloadSuffix}`) || meta.includes(`${validDownloadPrefix}main${validDownloadSuffix}`));
+    const hasValidDownload = meta.includes(`${validDownloadPrefix}${expectedBranch}${validDownloadSuffix}`);
 
     const validUpdateSuffix = '/dist/miss_player.meta.js';
-    const hasValidUpdate = (meta.includes(`${validDownloadPrefix}dev${validUpdateSuffix}`) || meta.includes(`${validDownloadPrefix}main${validUpdateSuffix}`));
+    const hasValidUpdate = meta.includes(`${validDownloadPrefix}${expectedBranch}${validUpdateSuffix}`);
 
     if (!hasValidDownload) {
-        console.error(`   ❌ 缺失或错误的 @downloadURL: 必须指向 GitHub raw 直链 (dev 或 main 分支)`);
+        console.error(`   ❌ 缺失或错误的 @downloadURL: 当前版本 ${pkg.version} (${expectedBranch}通道) 必须指向 ${expectedBranch} 分支直链`);
         hasErrors = true;
     } else {
-        console.log(`   ✅ @downloadURL 配置正确 (dev/main 分支适配)`);
+        console.log(`   ✅ @downloadURL 配置正确 (${expectedBranch} 分支适配)`);
     }
     if (!hasValidUpdate) {
-        console.error(`   ❌ 缺失或错误的 @updateURL: 必须指向 GitHub raw 直链 (dev 或 main 分支)`);
+        console.error(`   ❌ 缺失或错误的 @updateURL: 当前版本 ${pkg.version} (${expectedBranch}通道) 必须指向 ${expectedBranch} 分支直链`);
         hasErrors = true;
     } else {
-        console.log(`   ✅ @updateURL 配置正确 (dev/main 分支适配)`);
+        console.log(`   ✅ @updateURL 配置正确 (${expectedBranch} 分支适配)`);
     }
 
     // Match root domains check

@@ -6,12 +6,9 @@ import { execSync } from 'child_process';
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 
 const gitBranch = (() => {
-  try {
-    const b = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
-    return b === 'main' ? 'main' : 'dev';
-  } catch (_) {
-    return 'dev';
-  }
+  if (process.env.BUILD_TARGET_BRANCH) return process.env.BUILD_TARGET_BRANCH;
+  const isPrerelease = String(pkg.version).includes('-');
+  return isPrerelease ? 'dev' : 'main';
 })();
 
 export default defineConfig({

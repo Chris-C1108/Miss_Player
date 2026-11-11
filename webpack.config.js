@@ -3,16 +3,13 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const WebpackUserscript = require('webpack-userscript').default;
 const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const package = require('./package.json');
+const pkg = require('./package.json');
 const { execSync } = require('child_process');
 
 const gitBranch = (() => {
-  try {
-    const b = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
-    return b === 'main' ? 'main' : 'dev';
-  } catch (_) {
-    return 'dev';
-  }
+  if (process.env.BUILD_TARGET_BRANCH) return process.env.BUILD_TARGET_BRANCH;
+  const isPrerelease = String(pkg.version).includes('-');
+  return isPrerelease ? 'dev' : 'main';
 })();
 
 module.exports = {
@@ -94,7 +91,7 @@ module.exports = {
       headers: {
         name: 'Miss Player | 影院模式 (单手播放器)',
         namespace: 'loadingi.local',
-        version: '5.7.117-beta.002',
+        version: '5.7.117',
         downloadURL: `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/${gitBranch}/dist/miss_player.user.js`,
         updateURL: `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/${gitBranch}/dist/miss_player.meta.js`,
         description: "MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用",
@@ -152,7 +149,7 @@ module.exports = {
           'fastly.jsdelivr.net'
         ],
         'run-at': 'document-start',
-        license: package.license
+        license: pkg.license
       },
       proxyScript: {
         filename: '[basename].proxy.user.js',
