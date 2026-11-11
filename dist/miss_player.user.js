@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.006
+// @version            5.7.118-beta.007
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.006";
+		return "5.7.118-beta.007";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3291,7 +3291,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.006";
+		return "5.7.118-beta.007";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -4564,11 +4564,16 @@
 			}
 			return candidates;
 		}
+		static _isHtmlResponse(res) {
+			if (!res || typeof res.data !== "string") return false;
+			const head = res.data.trim().slice(0, 200).toLowerCase();
+			return head.startsWith("<!doctype html") || head.startsWith("<html") || head.includes("<head>") || head.includes("<title>");
+		}
 		static _isNetworkError(err) {
 			if (!err) return false;
 			const msg = String(err?.message || err || "").toLowerCase();
+			if (msg.includes("网页拦截") || msg.includes("重定向拦截") || msg.includes("网关异常") || msg.includes("响应异常") || msg.includes("目录不存在且无法自动创建") || msg.includes("无法自动创建")) return true;
 			if (msg.includes("认证失败") || msg.includes("401") || msg.includes("403") || msg.includes("unauthorized") || msg.includes("forbidden")) return false;
-			if (msg.includes("目录不存在且无法自动创建") || msg.includes("无法自动创建")) return true;
 			return msg.includes("超时") || msg.includes("timeout") || msg.includes("网络连接失败") || msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("connection refused") || msg.includes("econnrefused") || msg.includes("enotfound") || msg.includes("net::err") || msg.includes("status: 0") || msg.includes("http [0]") || msg.includes("abort") || msg.includes("terminated");
 		}
 		static async executeWithFailover(config, actionFn) {
@@ -4584,13 +4589,15 @@
 			const cachedActive = this._getActiveEndpoint(cacheKey);
 			let orderedCandidates = [...candidates];
 			if (cachedActive && orderedCandidates.includes(cachedActive)) orderedCandidates = [cachedActive, ...orderedCandidates.filter((u) => u !== cachedActive)];
-			let lastError = null;
+			const attemptLogs = [];
 			for (let i = 0; i < orderedCandidates.length; i++) {
 				const candidateUrl = orderedCandidates[i];
 				const isLast = i === orderedCandidates.length - 1;
+				const hostPart = (candidateUrl.split("://")[1] || candidateUrl).split("/")[0];
+				const isLanCandidate = this.isPrivateNetworkHost(hostPart);
 				const activeConfig = Object.assign({}, config, {
 					url: candidateUrl,
-					_failoverTimeout: isLast ? 15e3 : 3500,
+					_failoverTimeout: isLast ? 15e3 : isLanCandidate ? 1800 : 3e3,
 					_isFailoverActive: true
 				});
 				try {
@@ -4598,12 +4605,20 @@
 					this._setActiveEndpoint(cacheKey, candidateUrl);
 					return result;
 				} catch (err) {
-					lastError = err;
-					if (!this._isNetworkError(err) || isLast) throw err;
+					attemptLogs.push(`[${candidateUrl}] ${err?.message || err}`);
+					if (!this._isNetworkError(err)) throw err;
+					if (isLast) {
+						if (attemptLogs.length > 1) {
+							const summaryErr = new Error(`所有端点均连接失败 (${attemptLogs.join(" | ")})`);
+							summaryErr.cause = err;
+							throw summaryErr;
+						}
+						throw err;
+					}
 					console.warn(`[WebDavClient] 端点 ${candidateUrl} 连接未响应 (${err.message})，正在自动无缝切换备用端点...`);
 				}
 			}
-			throw lastError;
+			throw new Error(attemptLogs.join(" | ") || "WebDAV 连接失败");
 		}
 		static getAuthHeaders(user, pass) {
 			if (!user && !pass) return {};
@@ -4759,25 +4774,22 @@
 			});
 		}
 		static async checkDirectoryExists(dirUrl, user, pass, timeout = 15e3) {
-			try {
-				const res = await this.request({
-					method: "PROPFIND",
-					url: dirUrl,
-					user,
-					pass,
-					timeout,
-					headers: { "Depth": "0" }
-				});
-				if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 请检查用户名与密码/授权码`);
-				if (res.status === 207 || res.status === 200) return true;
-				if (res.status === 404) return false;
-				if (res.status === 405 || res.status === 415) return true;
-				if (res.status >= 500) throw new Error(`服务器网关异常 (HTTP ${res.status})`);
-				return false;
-			} catch (err) {
-				if (this._isNetworkError(err) || String(err?.message || "").includes("认证失败") || String(err?.message || "").includes("网关异常")) throw err;
-				return false;
-			}
+			const res = await this.request({
+				method: "PROPFIND",
+				url: dirUrl,
+				user,
+				pass,
+				timeout,
+				headers: { "Depth": "0" }
+			});
+			if (this._isHtmlResponse(res)) throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 端点返回了 HTML 而非 WebDAV 协议`);
+			if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
+			if (res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308) throw new Error(`WebDAV 重定向拦截 (HTTP ${res.status}): 请检查是否缺少内网回流或路径格式`);
+			if (res.status === 207 || res.status === 200) return true;
+			if (res.status === 404) return false;
+			if (res.status === 405 || res.status === 415) return true;
+			if (res.status >= 500) throw new Error(`服务器网关异常 (HTTP ${res.status})`);
+			throw new Error(`WebDAV 目录探测响应异常 (HTTP ${res.status})`);
 		}
 		static async _ensureDirectoryInternal(config) {
 			const { url, user, pass, path = "/MissPlayer/", _failoverTimeout } = config;
@@ -4785,8 +4797,11 @@
 			let cleanPath = (path || "/MissPlayer/").trim();
 			if (!cleanPath.startsWith("/")) cleanPath = "/" + cleanPath;
 			if (!cleanPath.endsWith("/")) cleanPath = cleanPath + "/";
+			const finalDirUrl = this.normalizeUrl(url, cleanPath, user);
+			if (await this.checkDirectoryExists(finalDirUrl, user, pass, reqTimeout)) return;
 			const segments = cleanPath.split("/").filter(Boolean);
 			let currentPath = "";
+			let lastMkcolStatus = null;
 			for (const seg of segments) {
 				currentPath += "/" + seg;
 				const dirUrlWithSlash = this.normalizeUrl(url, currentPath + "/", user);
@@ -4799,6 +4814,8 @@
 						pass,
 						timeout: reqTimeout
 					});
+					lastMkcolStatus = res.status;
+					if (this._isHtmlResponse(res)) throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 创建目录请求被拦截`);
 					if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 无法自动创建目录，请检查权限`);
 					if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204 || res.status === 415) continue;
 					console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到状态码: ${res.status}`);
@@ -4807,8 +4824,10 @@
 					console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到异常:`, err.message || err);
 				}
 			}
-			const finalDirUrl = this.normalizeUrl(url, cleanPath, user);
-			if (!await this.checkDirectoryExists(finalDirUrl, user, pass, reqTimeout)) throw new Error(`WebDAV 目录不存在且无法自动创建，请在 WebDAV 服务器上手动创建目录: ${cleanPath}`);
+			if (!await this.checkDirectoryExists(finalDirUrl, user, pass, reqTimeout)) {
+				const statusHint = lastMkcolStatus ? ` (MKCOL HTTP ${lastMkcolStatus})` : "";
+				throw new Error(`WebDAV 目录不存在且无法自动创建${statusHint}，请在服务器手动创建: ${cleanPath}`);
+			}
 		}
 		static async ensureDirectory(config) {
 			return this.executeWithFailover(config, (activeCfg) => this._ensureDirectoryInternal(activeCfg));
@@ -4835,6 +4854,7 @@
 							"Pragma": "no-cache"
 						}
 					});
+					if (this._isHtmlResponse(res)) throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 文件探测返回了 HTML 网页而非 JSON`);
 					if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
 					if (res.status >= 500) throw new Error(`服务器内部错误 (${res.status})`);
 					const suffix = config.lanUrl && (this.sanitizeEndpointUrl(activeCfg.url) === this.sanitizeEndpointUrl(config.lanUrl) || this.isPrivateNetworkHost((activeCfg.url.split("://")[1] || activeCfg.url).split("/")[0])) ? " (局域网直连)" : " (公网域名)";
@@ -5050,7 +5070,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.006";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.007";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

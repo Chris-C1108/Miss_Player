@@ -4,6 +4,7 @@
 
 import assert from 'assert';
 import { WebDavClient } from '../src/sync/WebDavClient.js';
+import { setValue } from '../src/utils/storage.js';
 
 console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover) 单元测试...\n');
 
@@ -223,4 +224,117 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
     console.log('  ✓ hasValidEndpoint 判定正确\n');
 }
 
-console.log('🎉 WebDavClient 双地址自适应 (LAN/WAN Failover) 9 项单元测试全部通过！\n');
+// 测试 10: 路由器 HTML 登录页劫持 (200 / 401 HTML) 精准识破并无缝切换内网
+{
+    console.log('▶ 测试 10: 识破路由器 200/401 HTML 劫持并切往备用内网端点');
+    WebDavClient._activeUrlCache.clear();
+    setValue('mp_active_webdav_lease', {});
+
+    const origRequest = WebDavClient.request;
+    const calledUrls = [];
+    WebDavClient.request = async (opts) => {
+        calledUrls.push(opts.url);
+        if (opts.url.includes('dav.loadingi.fnos.net')) {
+            // 模拟光猫/路由器在 443 返回了一个带 401 或 200 的网页登录界面
+            return {
+                status: 401,
+                statusText: 'Unauthorized',
+                data: '<!DOCTYPE html><html><head><title>Router Admin</title></head><body>Login</body></html>'
+            };
+        }
+        if (opts.method === 'PROPFIND') {
+            return { status: 207, statusText: 'Multi-Status', data: '<?xml version="1.0"?><D:multistatus/>' };
+        }
+        if (opts.method === 'GET') {
+            return { status: 404, statusText: 'Not Found', data: '' };
+        }
+        return { status: 200, statusText: 'OK', data: '' };
+    };
+
+    const config = {
+        url: 'https://dav.loadingi.fnos.net:443',
+        lanUrl: 'http://192.168.2.250:5005',
+        user: 'chen',
+        pass: 'pass',
+        path: '/backup_configs/MissPlayer/'
+    };
+
+    const res = await WebDavClient.testConnection(config);
+    assert.strictEqual(res.success, true);
+    assert(res.message.includes('局域网直连'), `应当切到局域网直连: ${res.message}`);
+    assert(calledUrls.some(u => u.includes('dav.loadingi.fnos.net')), '先探测了主地址');
+    assert(calledUrls.some(u => u.includes('192.168.2.250:5005')), '识破 HTML 劫持后切到内网地址');
+
+    WebDavClient.request = origRequest;
+    console.log('  ✓ 路由器 HTML 劫持识破与切换测试通过\n');
+}
+
+// 测试 11: 终极目标路径优先直探，免疫父目录权限限制
+{
+    console.log('▶ 测试 11: 终极目标路径优先直探，免疫 NAS 父目录共享权限拦截');
+    WebDavClient._activeUrlCache.clear();
+    setValue('mp_active_webdav_lease', {});
+
+    const origRequest = WebDavClient.request;
+    const requestedPaths = [];
+    WebDavClient.request = async (opts) => {
+        requestedPaths.push(opts.url);
+        if (opts.url.endsWith('/backup_configs/')) {
+            // 模拟共享根目录禁止列举，返回 403
+            return { status: 403, statusText: 'Forbidden', data: '' };
+        }
+        if (opts.url.endsWith('/backup_configs/MissPlayer/')) {
+            return { status: 207, statusText: 'Multi-Status', data: '<D:multistatus/>' };
+        }
+        return { status: 404, statusText: 'Not Found', data: '' };
+    };
+
+    await WebDavClient.ensureDirectory({
+        url: 'http://192.168.2.250:5005',
+        user: 'chen',
+        pass: 'pass',
+        path: '/backup_configs/MissPlayer/'
+    });
+
+    assert.deepStrictEqual(requestedPaths, ['http://192.168.2.250:5005/backup_configs/MissPlayer/']);
+
+    WebDavClient.request = origRequest;
+    console.log('  ✓ 目标目录优先直探免疫父目录拦截测试通过\n');
+}
+
+// 测试 12: 所有候选端点全部失败时，错误需聚合展示各端点的真实报错
+{
+    console.log('▶ 测试 12: 全端点均失败时暴露全链路详细诊断误差');
+    WebDavClient._activeUrlCache.clear();
+    setValue('mp_active_webdav_lease', {});
+
+    const origRequest = WebDavClient.request;
+    WebDavClient.request = async (opts) => {
+        if (opts.url.includes('dav.loadingi.fnos.net')) {
+            throw new Error('WebDAV 请求超时 (3000ms)');
+        }
+        throw new Error('网络连接失败 (HTTP [0]): 无法访问 http://192.168.2.250:5005');
+    };
+
+    let caughtErr = null;
+    try {
+        await WebDavClient.testConnection({
+            url: 'https://dav.loadingi.fnos.net:443',
+            lanUrl: 'http://192.168.2.250:5005',
+            user: 'chen',
+            pass: 'pass',
+            path: '/backup_configs/MissPlayer/'
+        });
+    } catch (e) {
+        caughtErr = e;
+    }
+
+    assert(caughtErr !== null, '必须抛出错误');
+    assert(caughtErr.message.includes('dav.loadingi.fnos.net'), `应包含主地址报错详情: ${caughtErr.message}`);
+    assert(caughtErr.message.includes('192.168.2.250:5005'), `应包含备用地址报错详情: ${caughtErr.message}`);
+
+    WebDavClient.request = origRequest;
+    console.log('  ✓ 多端点全失败聚合诊断输出测试通过\n');
+}
+
+console.log('🎉 WebDavClient 双地址自适应 (LAN/WAN Failover) 12 项单元测试全部通过！\n');

@@ -216,6 +216,20 @@ export class WebDavClient {
     }
 
     /**
+     * 判断响应体是否为 HTML 网页劫持（如路由器/光猫管理页、防火墙拦截页、Wi-Fi认证页）
+     * @param {Object} res
+     * @returns {boolean}
+     */
+    static _isHtmlResponse(res) {
+        if (!res || typeof res.data !== 'string') return false;
+        const head = res.data.trim().slice(0, 200).toLowerCase();
+        return head.startsWith('<!doctype html') ||
+               head.startsWith('<html') ||
+               head.includes('<head>') ||
+               head.includes('<title>');
+    }
+
+    /**
      * 判断是否为网络错误或超时错误 (可触发向备用地址故障转移)
      * @param {Error|any} err 
      * @returns {boolean}
@@ -223,13 +237,18 @@ export class WebDavClient {
     static _isNetworkError(err) {
         if (!err) return false;
         const msg = String(err?.message || err || '').toLowerCase();
-        // 遇到 401/403 明确是账号密码权限错误，绝不可作为网络故障转移
+        // 优先识别网关/路由器网页拦截或重定向拦截，允许无缝切换备用地址
+        if (msg.includes('网页拦截') ||
+            msg.includes('重定向拦截') ||
+            msg.includes('网关异常') ||
+            msg.includes('响应异常') ||
+            msg.includes('目录不存在且无法自动创建') ||
+            msg.includes('无法自动创建')) {
+            return true;
+        }
+        // 遇到真实 WebDAV 401/403 账号密码权限错误，绝不可作为网络故障转移
         if (msg.includes('认证失败') || msg.includes('401') || msg.includes('403') || msg.includes('unauthorized') || msg.includes('forbidden')) {
             return false;
-        }
-        // 如果错误提示目录无法创建，但其根源来自网络探测未通过，也允许触发故障转移
-        if (msg.includes('目录不存在且无法自动创建') || msg.includes('无法自动创建')) {
-            return true;
         }
         return msg.includes('超时') ||
                msg.includes('timeout') ||
@@ -280,12 +299,14 @@ export class WebDavClient {
             orderedCandidates = [cachedActive, ...orderedCandidates.filter(u => u !== cachedActive)];
         }
 
-        let lastError = null;
+        const attemptLogs = [];
         for (let i = 0; i < orderedCandidates.length; i++) {
             const candidateUrl = orderedCandidates[i];
             const isLast = (i === orderedCandidates.length - 1);
-            // 多候选时，首选地址采用 3.5 秒灵敏超时快速截断，避免死等 15 秒；最后一个候选放宽到 15 秒
-            const timeout = isLast ? 15000 : 3500;
+            const hostPart = (candidateUrl.split('://')[1] || candidateUrl).split('/')[0];
+            const isLanCandidate = this.isPrivateNetworkHost(hostPart);
+            // 多候选时：私网地址采用 1.8 秒极速探测，公网采用 3.0 秒灵敏超时截断；最后一个候选放宽到 15 秒
+            const timeout = isLast ? 15000 : (isLanCandidate ? 1800 : 3000);
             const activeConfig = Object.assign({}, config, {
                 url: candidateUrl,
                 _failoverTimeout: timeout,
@@ -298,16 +319,24 @@ export class WebDavClient {
                 this._setActiveEndpoint(cacheKey, candidateUrl);
                 return result;
             } catch (err) {
-                lastError = err;
+                attemptLogs.push(`[${candidateUrl}] ${err?.message || err}`);
                 const canRetry = this._isNetworkError(err);
-                if (!canRetry || isLast) {
+                if (!canRetry) {
+                    throw err;
+                }
+                if (isLast) {
+                    if (attemptLogs.length > 1) {
+                        const summaryErr = new Error(`所有端点均连接失败 (${attemptLogs.join(' | ')})`);
+                        summaryErr.cause = err;
+                        throw summaryErr;
+                    }
                     throw err;
                 }
                 console.warn(`[WebDavClient] 端点 ${candidateUrl} 连接未响应 (${err.message})，正在自动无缝切换备用端点...`);
             }
         }
 
-        throw lastError;
+        throw new Error(attemptLogs.join(' | ') || 'WebDAV 连接失败');
     }
     /**
      * UTF-8 安全的标准 Basic Auth 编码 (避免 btoa 遇到中文/特殊字符报 InvalidCharacterError)
@@ -559,48 +588,47 @@ export class WebDavClient {
      * @returns {Promise<boolean>} true: 目录存在; false: 目录不存在 (404)
      */
     static async checkDirectoryExists(dirUrl, user, pass, timeout = 15000) {
-        try {
-            const res = await this.request({
-                method: 'PROPFIND',
-                url: dirUrl,
-                user,
-                pass,
-                timeout,
-                headers: {
-                    'Depth': '0'
-                }
-            });
-            // 明确鉴权失败：必须直接抛出，禁止伪装为 false 导致上层误报
-            if (res.status === 401 || res.status === 403) {
-                throw new Error(`认证失败 (${res.status}): 请检查用户名与密码/授权码`);
+        const res = await this.request({
+            method: 'PROPFIND',
+            url: dirUrl,
+            user,
+            pass,
+            timeout,
+            headers: {
+                'Depth': '0'
             }
-            // 207 Multi-Status 或 200 OK 说明目录已存在且可访问
-            if (res.status === 207 || res.status === 200) {
-                return true;
-            }
-            // 404: 明确不存在，需要创建
-            if (res.status === 404) {
-                return false;
-            }
-            // 部分简易 WebDAV 网关对 PROPFIND 返回 405 或 415 (Unsupported Media Type)，说明目录存在或不支持探测，视为可能存在
-            if (res.status === 405 || res.status === 415) {
-                return true;
-            }
-            if (res.status >= 500) {
-                throw new Error(`服务器网关异常 (HTTP ${res.status})`);
-            }
-            return false;
-        } catch (err) {
-            // 致命网络/超时错误或认证失败必须向外冒泡触发故障转移或精准报错，禁止静默吞噬
-            if (this._isNetworkError(err) || String(err?.message || '').includes('认证失败') || String(err?.message || '').includes('网关异常')) {
-                throw err;
-            }
+        });
+        // 优先拦截路由器/光猫劫持页面或网页登录页 (PROPFIND 正常绝不返回 HTML，即使伴随 401/403/404/200)
+        if (this._isHtmlResponse(res)) {
+            throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 端点返回了 HTML 而非 WebDAV 协议`);
+        }
+        // 明确鉴权失败：必须直接抛出，禁止伪装为 false 导致上层误报
+        if (res.status === 401 || res.status === 403) {
+            throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
+        }
+        if (res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308) {
+            throw new Error(`WebDAV 重定向拦截 (HTTP ${res.status}): 请检查是否缺少内网回流或路径格式`);
+        }
+        // 207 Multi-Status 或 200 OK 说明目录已存在且可访问
+        if (res.status === 207 || res.status === 200) {
+            return true;
+        }
+        // 404: 明确不存在，需要创建
+        if (res.status === 404) {
             return false;
         }
+        // 部分简易 WebDAV 网关对 PROPFIND 返回 405 或 415 (Unsupported Media Type)，说明目录存在或不支持探测，视为可能存在
+        if (res.status === 405 || res.status === 415) {
+            return true;
+        }
+        if (res.status >= 500) {
+            throw new Error(`服务器网关异常 (HTTP ${res.status})`);
+        }
+        throw new Error(`WebDAV 目录探测响应异常 (HTTP ${res.status})`);
     }
 
     /**
-     * 逐级嗅探并创建 WebDAV 专用目录内部实现 (PROPFIND 嗅探 -> MKCOL 创建)
+     * 逐级嗅探并创建 WebDAV 专用目录内部实现 (优先直探目标终极路径 -> 404 时再逐级 PROPFIND/MKCOL 创建)
      * @private
      */
     static async _ensureDirectoryInternal(config) {
@@ -610,8 +638,16 @@ export class WebDavClient {
         if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
         if (!cleanPath.endsWith('/')) cleanPath = cleanPath + '/';
 
+        // 0. 终极目标路径优先直探：避免 NAS 共享文件夹根挂载点禁止 PROPFIND/MKCOL 误卡住已有子目录
+        const finalDirUrl = this.normalizeUrl(url, cleanPath, user);
+        const directExists = await this.checkDirectoryExists(finalDirUrl, user, pass, reqTimeout);
+        if (directExists) {
+            return;
+        }
+
         const segments = cleanPath.split('/').filter(Boolean);
         let currentPath = '';
+        let lastMkcolStatus = null;
 
         for (const seg of segments) {
             currentPath += '/' + seg;
@@ -632,6 +668,10 @@ export class WebDavClient {
                     pass,
                     timeout: reqTimeout
                 });
+                lastMkcolStatus = res.status;
+                if (this._isHtmlResponse(res)) {
+                    throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 创建目录请求被拦截`);
+                }
                 if (res.status === 401 || res.status === 403) {
                     throw new Error(`认证失败 (${res.status}): 无法自动创建目录，请检查权限`);
                 }
@@ -649,10 +689,10 @@ export class WebDavClient {
         }
 
         // 最终校验目标根目录是否就绪
-        const finalDirUrl = this.normalizeUrl(url, cleanPath, user);
         const finalExists = await this.checkDirectoryExists(finalDirUrl, user, pass, reqTimeout);
         if (!finalExists) {
-            throw new Error(`WebDAV 目录不存在且无法自动创建，请在 WebDAV 服务器上手动创建目录: ${cleanPath}`);
+            const statusHint = lastMkcolStatus ? ` (MKCOL HTTP ${lastMkcolStatus})` : '';
+            throw new Error(`WebDAV 目录不存在且无法自动创建${statusHint}，请在服务器手动创建: ${cleanPath}`);
         }
     }
 
@@ -700,6 +740,10 @@ export class WebDavClient {
                         'Pragma': 'no-cache'
                     }
                 });
+
+                if (this._isHtmlResponse(res)) {
+                    throw new Error(`网关或路由器网页拦截 (HTTP ${res.status}): 文件探测返回了 HTML 网页而非 JSON`);
+                }
 
                 if (res.status === 401 || res.status === 403) {
                     throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
