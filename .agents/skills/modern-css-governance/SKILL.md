@@ -78,3 +78,25 @@ description: Shadow DOM 隔离环境下的原生现代 CSS 架构、零 !importa
   - 虚拟键盘避让：`composer.style.bottom = `${keyboardHeight}px`;`
   - Minimap 拖拽位移：`el.style.transform = `translate3d(${x}px, ${y}px, 0)`;`
 - **注意**：手势释放或吸附后，必须清除行内绝对坐标，将表现归还 CSS 类。
+
+---
+
+## 4. Flexbox 折叠列表死留白治理与内容自适应收缩契约 (Hugs Content vs Full Stretch)
+
+### 4.1 核心反模式与灾难表现
+在手风琴（Accordion）或多源折叠列表（如评论分区、文件树、分类面板）中：
+- **反模式**：展开分区设置 `.section:not(.is-collapsed) { flex: 1; }`；
+- **后果**：Flexbox 规范中 `flex: 1`（`flex-grow: 1`）会无条件抢占父容器所有剩余可用空间。当某分区仅有寥寥数条内容（如 2~3 条评论，高度 100px）时，容器会被强行纵向拉伸至数百像素，将后续所有折叠卡片顶到底部边缘，中间留下长达数百像素的大面积死留白空洞（Zombie White/Black Space）。
+
+### 4.2 工业级弹性契约
+```css
+/* 展开分区自适应内容高度收缩包裹，超长时受限于父容器滚动 */
+.section:not(.is-collapsed) {
+    flex: 0 1 auto;   /* 拒绝主动争抢剩余空间，内容少时尺寸紧贴内容 (Hugs Content) */
+    max-height: 100%; /* 超长内容时严格限制在视口内，由内部 overflow-y: auto 接管 */
+}
+```
+- **核心收益**：
+  1. **内容少时**：高度随内容精准闭合，后续折叠面板紧随其后，视觉紧凑美观；
+  2. **内容多时**：在父容器内最大化展示并平滑滚动翻页，零布局跳跃。
+

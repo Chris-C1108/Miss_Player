@@ -223,6 +223,13 @@ Miss Player 运行于复杂的多域名第三方宿主环境（Jable、MissAV、
   - 所有垂直滚动区域（如评论列表、骨架屏、状态盒）必须显式声明 `touch-action: pan-y; overflow-x: hidden; overscroll-behavior-x: none;`；Loading 骨架屏必须具备 `pointer-events: auto`，严禁触控穿透至底层宿主页面引发横向位移与橡皮筋晃动。
 * **浮层组件事件全生命周期硬隔离 (Overlay Event Boundary Guard)**：
   - 所有绝对/固定定位的浮层组件（如预览浮窗、气泡提示、模态框）必须在根节点上彻底阻断所有指针事件冒泡（`pointerdown`, `touchstart`, `click`），且外部视频与控制层监听必须将其加入排除白名单，严禁点击被底层机制消费导致误唤醒控制栏。
+* **手风琴折叠列表展开分区自适应收缩规范 (Hugs Content vs Full Stretch)**：
+  - 手风琴或多源折叠列表（如评论列表、文件树等）的展开分区，严禁使用 `flex: 1` 强行索取父容器所有剩余可用空间，防止子项内容较少（如仅 2~3 条评论）时容器被拉大至全屏高度并产生数百像素的巨大死留白；
+  - 必须声明 `flex: 0 1 auto; max-height: 100%;`：内容少时尺寸随内容精准包裹（Hugs Content），使后续折叠卡片自然紧贴；内容多时由内部 `overflow-y: auto` 滚动承载。
+* **业务面板实体图层与 iOS WebKit 击穿防御 (Opaque Backing Store & Tap-Through Prevention)**：
+  - 承载业务内容的容器（如 `.tm-comments-panel`、列表包裹层）严禁使用 `pointer-events: none` 或纯透明背景；
+  - 必须显式声明实体深黑背景色（如 `#0b0b0e`）与 `pointer-events: auto`，在 iOS Compositor（合成器）层树上构建绝对不透明的物理 Backing Store，杜绝 WebKit Hit-Testing 击穿 Shadow DOM 命中宿主底层原生输入框误唤起虚拟软键盘；
+  - 面板容器在 `touchstart` 时必须对非交互区域（排除按钮、链接、文本输入框、展开折叠键）执行 `e.stopPropagation()` 阻断向宿主冒泡，且严禁调用 `e.preventDefault()` 以完整保留原生惯性滚动。
 
 ### 2. JS 样式动静分离契约 (Dynamic vs Static Styles Contract)
 在操作 DOM 样式时，必须严格区分“真动态数学逻辑”与“伪动态表现逻辑”：

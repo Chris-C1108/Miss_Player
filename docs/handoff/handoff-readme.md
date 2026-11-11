@@ -2,6 +2,7 @@
 
 | 日期时间 (Timestamp) | 规则提炼 / 主题 (Lesson / Topic) | 频次 (Seen Count) | 状态 (Status) | 交接 (Handoff) | 教训 (Lesson) | 核心标签 (Tags) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-11-11 17:27:11 | 移动端评论折叠死留白消除与 iOS WebKit 透明击穿软键盘防御避坑总账 | Seen 1× (2026-11-11) | 观察中 | [2026-11-11-172711-handoff.md](2026-11-11-172711-handoff.md) | [2026-11-11-172711-lesson.md](2026-11-11-172711-lesson.md) | `死留白消除`, `HugsContent`, `Flexbox收缩包裹`, `iOS击穿防御`, `TapThrough`, `实体图层`, `BackingStore`, `事件黑洞`, `虚拟键盘防误触` |
 | 2026-11-11 11:46:21 | 跨标签并发静音冲突、心跳轮询损耗与离散重入网关避坑总账 | Seen 1× (2026-11-11) | 观察中 | [2026-11-11-114621-handoff.md](2026-11-11-114621-handoff.md) | [2026-11-11-114621-lesson.md](2026-11-11-114621-lesson.md) | `有声租约`, `AudibleLease`, `跨标签状态机`, `重入网关`, `ReentryGate`, `活跃播放豁免`, `零轮询`, `后发意图覆盖`, `双时间戳账本` |
 | 2026-11-10 19:47:09 | WebDAV路径自愈、WebKit光标脱节、Safari横屏全屏与顶栏跑马灯Toast避坑总账 | Seen 1× (2026-11-10) | 观察中 | [2026-11-10-194709-handoff.md](2026-11-10-194709-handoff.md) | [2026-11-10-194709-lesson.md](2026-11-10-194709-lesson.md) | `WebDAV自愈`, `DeduplicationGuard`, `WebKit光标脱节`, `realignCaret`, `软键盘物理禁用`, `Safari横屏全屏`, `手势穿透`, `顶栏跑马灯Toast`, `去Emoji`, `科学时长算法`, `Peach在库嗅探` |
 | 2026-11-09 23:15:00 | 全局事件黑洞防穿透、iOS视口键盘抽屉适配、设置菜单ADHD标准化与Peach入库重构 | Seen 1× (2026-11-09) | 观察中 | [2026-11-09-231500-handoff.md](2026-11-09-231500-handoff.md) | [2026-11-09-231500-lesson.md](2026-11-09-231500-lesson.md) | `事件黑洞`, `UISurfaceMachine`, `手势防穿透`, `Stay视频下载防误触`, `visualViewport`, `iOS键盘避让`, `发评抽屉`, `ADHD去黑话`, `Grice准则`, `Peach重构`, `流网关规范` |

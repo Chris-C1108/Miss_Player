@@ -174,3 +174,28 @@ description: 移动端手势冲突消解、系统级全局事件黑洞、底层�
      ```
    - 宿主页面产生微位移的一瞬间，iOS Safari 立即折叠地址栏与工具栏，进入沉浸原生全屏。
 
+---
+
+## 8. iOS WebKit 透明图层点击击穿与宿主输入框唤起防御 (Opaque Backing Store & Touch Bubble Guard)
+
+### 8.1 现象与危害
+在 iOS Safari 中，当全屏/半屏播放器的某个业务面板（如评论列表、说明面板）内部内容较少或留白较大，且容器背景声明为 `transparent`、外层带有 `pointer-events: none` 时：
+1. WebKit 的合成器（Compositor）判定该区域**无物理实体渲染图层（Opaque Backing Store）**；
+2. 用户的触摸手势会直接击穿 Shadow DOM 甚至击穿整个固定视口，命中宿主第三方页面位于该物理坐标处的原生输入框（`<input type="text">` / `<textarea>`）；
+3. iOS 系统误判用户正在聚焦输入框，**直接强行弹出原生虚拟键盘**，严重破坏使用体验。
+
+### 8.2 根治机制与三层防线
+1. **Compositor 物理图层实体化 (Opaque Layer)**：
+   - 业务内容承载容器严禁依赖透明背景，必须声明物理实体背景色（如 `#0b0b0e` 或深色主题色）；
+   - 坚决将容器的 `pointer-events: none` 替换为 `pointer-events: auto`，在渲染树上明确声明接收并消费事件。
+2. **Touch 事件非交互区域黑洞吸收 (Non-interactive StopPropagation)**：
+   - 在面板容器的 `touchstart` 处理器中，对非交互控件（排除按钮、链接、文本输入框、展开折叠手柄）统一执行 `e.stopPropagation()`：
+     ```javascript
+     const isInteractive = !!e.target.closest('a, button, input, textarea, select, .interactive-btn, .header-toggle');
+     if (!isInteractive) {
+         e.stopPropagation(); // 阻止向父容器及宿主冒泡，杜绝击穿
+     }
+     ```
+   - **绝对红线**：严禁在此处调用 `e.preventDefault()`！调用 `preventDefault()` 会破坏容器内部的原生惯性平滑滚动与橡皮筋回弹；仅阻止冒泡即可彻底阻断击穿，同时 100% 保留原生顺滑手感。
+
+
