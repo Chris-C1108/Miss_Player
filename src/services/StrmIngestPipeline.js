@@ -113,7 +113,7 @@ export class StrmIngestPipeline {
         // 2. 依据三种模式解析生效的 WebDAV 写入端点与目录
         const effectiveWebDav = PeachService.getEffectiveWebDavConfig();
         const webDavConfig = effectiveWebDav.config;
-        const hasWebDav = Boolean(webDavConfig && webDavConfig.url && webDavConfig.user);
+        const hasWebDav = Boolean(WebDavClient.hasValidEndpoint(webDavConfig) && webDavConfig.user);
         const peachConfig = PeachService.getConfig();
 
         // 优先路径 1：配置了 WebDAV 且未强制下载

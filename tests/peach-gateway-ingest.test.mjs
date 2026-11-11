@@ -72,10 +72,11 @@ assert.strictEqual(effB.targetDir, '/Media/STRM/');
 assert.strictEqual(effB.config.url, 'https://dav.example.com');
 console.log('✅ 3. WebDAV 模式 B (同步自定义目录) 测试通过');
 
-// 4. 测试 WebDAV 入库存储 - 模式 C (独立 WebDAV 配置)
+// 4. 测试 WebDAV 入库存储 - 模式 C (独立 WebDAV 配置，支持局域网备用)
 PeachService.saveConfig({
     webdavMode: PEACH_WEBDAV_MODE_STANDALONE,
-    webdavStandaloneUrl: 'http://192.168.2.250:5005',
+    webdavStandaloneUrl: 'https://dav.loadingi.fnos.net:443',
+    webdavStandaloneLanUrl: 'http://192.168.2.250:5005',
     webdavStandaloneUser: 'admin',
     webdavStandalonePass: 'admin123',
     webdavStandaloneDir: 'CloudDrive/STRM'
@@ -84,9 +85,10 @@ PeachService.saveConfig({
 const effC = PeachService.getEffectiveWebDavConfig();
 assert.strictEqual(effC.mode, PEACH_WEBDAV_MODE_STANDALONE);
 assert.strictEqual(effC.targetDir, '/CloudDrive/STRM/');
-assert.strictEqual(effC.config.url, 'http://192.168.2.250:5005');
+assert.strictEqual(effC.config.url, 'https://dav.loadingi.fnos.net:443');
+assert.strictEqual(effC.config.lanUrl, 'http://192.168.2.250:5005');
 assert.strictEqual(effC.config.user, 'admin');
-console.log('✅ 4. WebDAV 模式 C (独立 WebDAV 配置) 测试通过');
+console.log('✅ 4. WebDAV 模式 C (独立 WebDAV 配置，支持局域网备用) 测试通过');
 
 // 5. 测试 StrmIngestPipeline 生成内容规范
 const strmText = StrmIngestPipeline.generateStrmContent(playUrl1, 'STARS-256', {

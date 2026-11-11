@@ -41,7 +41,7 @@ export class CommentDebugCollector {
     static isEnabled() {
         try {
             const config = SyncManager.getWebDavConfig();
-            return Boolean(config && config.url && config.url.trim());
+            return WebDavClient.hasValidEndpoint(config);
         } catch (_) {
             return false;
         }

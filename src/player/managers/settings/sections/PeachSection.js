@@ -398,27 +398,37 @@ export class PeachSection {
                 p.className = 'tm-peach-subpanel';
                 p.innerHTML = `
                     <div class="tm-apple-row-subtext">模式 C：独立 WebDAV 存储端点</div>
-                    <input type="text" class="tm-settings-input tm-peach-standalone-url" placeholder="WebDAV 服务地址 (如 http://192.168.2.250:5005)" value="${config.webdavStandaloneUrl || ''}" />
+                    <input type="text" class="tm-settings-input tm-peach-standalone-url" placeholder="主地址 (如 https://dav.example.com:443)" />
+                    <input type="text" class="tm-settings-input tm-peach-standalone-lan-url" placeholder="局域网备用 (选填，如 http://192.168.2.250:5005)" />
                     <div class="tm-peach-grid-2">
-                        <input type="text" class="tm-settings-input tm-peach-standalone-user" placeholder="用户名" value="${config.webdavStandaloneUser || ''}" />
-                        <input type="password" class="tm-settings-input tm-peach-standalone-pass" placeholder="密码" value="${config.webdavStandalonePass || ''}" />
+                        <input type="text" class="tm-settings-input tm-peach-standalone-user" placeholder="用户名" />
+                        <input type="password" class="tm-settings-input tm-peach-standalone-pass" placeholder="密码" />
                     </div>
-                    <input type="text" class="tm-settings-input tm-peach-standalone-dir" placeholder="存放子目录 (如 /Media/STRM/)" value="${config.webdavStandaloneDir || '/Media/STRM/'}" />
+                    <input type="text" class="tm-settings-input tm-peach-standalone-dir" placeholder="存放子目录 (如 /Media/STRM/)" />
                 `;
                 const urlIn = p.querySelector('.tm-peach-standalone-url');
+                const lanUrlIn = p.querySelector('.tm-peach-standalone-lan-url');
                 const userIn = p.querySelector('.tm-peach-standalone-user');
                 const passIn = p.querySelector('.tm-peach-standalone-pass');
                 const dirIn = p.querySelector('.tm-peach-standalone-dir');
 
+                urlIn.value = config.webdavStandaloneUrl || '';
+                lanUrlIn.value = config.webdavStandaloneLanUrl || '';
+                userIn.value = config.webdavStandaloneUser || '';
+                passIn.value = config.webdavStandalonePass || '';
+                dirIn.value = config.webdavStandaloneDir || '/Media/STRM/';
+
                 const saveStandalone = () => {
                     PeachService.saveConfig({
                         webdavStandaloneUrl: urlIn.value.trim(),
+                        webdavStandaloneLanUrl: lanUrlIn.value.trim(),
                         webdavStandaloneUser: userIn.value.trim(),
                         webdavStandalonePass: passIn.value,
                         webdavStandaloneDir: dirIn.value.trim()
                     });
                 };
                 urlIn.addEventListener('change', saveStandalone);
+                lanUrlIn.addEventListener('change', saveStandalone);
                 userIn.addEventListener('change', saveStandalone);
                 passIn.addEventListener('change', saveStandalone);
                 dirIn.addEventListener('change', saveStandalone);

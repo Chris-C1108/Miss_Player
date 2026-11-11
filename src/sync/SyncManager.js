@@ -16,7 +16,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.118-beta.005';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.118-beta.006';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -681,7 +681,7 @@ export class SyncManager {
             playerState = null
         } = options;
 
-        if (!config.url) {
+        if (!WebDavClient.hasValidEndpoint(config)) {
             throw new Error('未配置 WebDAV 服务器地址');
         }
 
@@ -761,7 +761,7 @@ export class SyncManager {
      */
     static triggerAutoSync(playerState = null, reason = 'startup') {
         const config = this.getWebDavConfig();
-        if (!config.url || config.autoSync === false) {
+        if (!WebDavClient.hasValidEndpoint(config) || config.autoSync === false) {
             return;
         }
 
@@ -835,7 +835,7 @@ export class SyncManager {
         if (this._periodicTimer) return;
         this._periodicTimer = setInterval(async () => {
             const config = this.getWebDavConfig();
-            if (!config.url || config.autoSync === false || this._isAutoSyncing) {
+            if (!WebDavClient.hasValidEndpoint(config) || config.autoSync === false || this._isAutoSyncing) {
                 return;
             }
             try {

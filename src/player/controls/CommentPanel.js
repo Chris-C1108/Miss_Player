@@ -1035,7 +1035,7 @@ export class CommentPanel {
         // 检查 WebDAV 独立评论文件 (/MissPlayer/comments/[AVCODE].json)
         try {
             const webdavConfig = SyncManager.getWebDavConfig();
-            if (webdavConfig && webdavConfig.url) {
+            if (WebDavClient.hasValidEndpoint(webdavConfig)) {
                 const subPath = 'comments/' + this.videoCode.toUpperCase() + '.json';
                 const wdData = await WebDavClient.downloadBackup(webdavConfig, subPath);
                 if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
@@ -3372,7 +3372,7 @@ export class CommentPanel {
 
             // 2. 同时支持 WebDAV 归档备份
             const webdavConfig = SyncManager.getWebDavConfig();
-            if (webdavConfig && webdavConfig.url) {
+            if (WebDavClient.hasValidEndpoint(webdavConfig)) {
                 try {
                     const now = new Date();
                     const pad = (n) => String(n).padStart(2, "0");

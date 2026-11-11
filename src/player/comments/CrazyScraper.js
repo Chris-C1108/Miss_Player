@@ -250,7 +250,7 @@ static async _scrapeSingleAvcode(code, index, total) {
             // 3. WebDAV 独立文件防重 (/MissPlayer/comments/[AVCODE].json 已收录则跳过)
             try {
                 const config = SyncManager.getWebDavConfig();
-                if (config && config.url) {
+                if (WebDavClient.hasValidEndpoint(config)) {
                     const subPath = `comments/${code.toUpperCase()}.json`;
                     const wdData = await WebDavClient.downloadBackup(config, subPath);
                     if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {

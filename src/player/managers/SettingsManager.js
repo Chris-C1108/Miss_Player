@@ -623,7 +623,7 @@ export class SettingsManager {
         autoSyncCheckbox.addEventListener('change', () => {
             config.autoSync = autoSyncCheckbox.checked;
             SyncManager.saveWebDavConfig(config);
-            if (config.autoSync && config.url) {
+            if (config.autoSync && WebDavClient.hasValidEndpoint(config)) {
                 SyncManager.triggerAutoSync(this.playerCore?.options?.playerState, 'startup');
             }
         });
@@ -741,7 +741,7 @@ export class SettingsManager {
         // 1. 测试连接
         testBtn.addEventListener('click', async () => {
             const currentCfg = persistCurrentInputs();
-            if (!currentCfg.url) {
+            if (!WebDavClient.hasValidEndpoint(currentCfg)) {
                 Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
                 updateStatus('请输入服务器地址', 'error');
                 return;
@@ -752,7 +752,8 @@ export class SettingsManager {
             try {
                 const res = await WebDavClient.testConnection(currentCfg);
                 Toast(res.message || '连接成功！', 3000);
-                updateStatus('连接正常', 'success');
+                const isLan = res.message && res.message.includes('局域网');
+                updateStatus(isLan ? '局域网直连成功' : '连接正常', 'success');
             } catch (err) {
                 Toast((__('webdavTestFailed') || '连接失败: ') + err.message, 4000);
                 updateStatus(err.message ? `连接失败: ${err.message}` : '连接失败', 'error');
@@ -765,7 +766,7 @@ export class SettingsManager {
         // 2. 智能合并同步
         syncMergeBtn.addEventListener('click', async () => {
             const currentCfg = persistCurrentInputs();
-            if (!currentCfg.url) {
+            if (!WebDavClient.hasValidEndpoint(currentCfg)) {
                 Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
                 updateStatus('请输入服务器地址', 'error');
                 return;
@@ -795,7 +796,7 @@ export class SettingsManager {
         // 3. 向上覆盖 (Upload Overwrite)
         uploadBtn.addEventListener('click', async () => {
             const currentCfg = persistCurrentInputs();
-            if (!currentCfg.url) {
+            if (!WebDavClient.hasValidEndpoint(currentCfg)) {
                 Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
                 updateStatus('请输入服务器地址', 'error');
                 return;
@@ -827,7 +828,7 @@ export class SettingsManager {
         // 4. 向下覆盖 (Download Overwrite)
         downloadBtn.addEventListener('click', async () => {
             const currentCfg = persistCurrentInputs();
-            if (!currentCfg.url) {
+            if (!WebDavClient.hasValidEndpoint(currentCfg)) {
                 Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
                 updateStatus('请输入服务器地址', 'error');
                 return;

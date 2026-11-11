@@ -1,3 +1,8 @@
+import { getValue, setValue } from '../utils/storage.js';
+
+const ACTIVE_ENDPOINT_STORAGE_KEY = 'mp_active_webdav_lease';
+const ACTIVE_LEASE_TTL_MS = 2 * 60 * 60 * 1000; // 2 小时租约有效期
+
 /**
  * 针对历史版本遗留的数组连续空对象畸变进行安全清洗
  * 仅在原生 JSON.parse 失败时作为容错降级触发，严格限定在数组上下文，绝不破坏键值对象中的合法空对象 {}
@@ -95,7 +100,102 @@ export class WebDavClient {
     static _activeUrlCache = new Map();
 
     /**
-     * 获取 WebDAV 候选地址列表 (按主地址、局域网备用地址去重提取)
+     * 获取指定配置当前缓存的活跃端点 (内存优先，持久化租约兜底)
+     * @param {string} cacheKey 
+     * @returns {string|null}
+     */
+    static _getActiveEndpoint(cacheKey) {
+        if (!cacheKey) return null;
+        if (this._activeUrlCache.has(cacheKey)) {
+            return this._activeUrlCache.get(cacheKey);
+        }
+        try {
+            const raw = getValue(ACTIVE_ENDPOINT_STORAGE_KEY, null);
+            if (raw && typeof raw === 'object' && raw[cacheKey]) {
+                const lease = raw[cacheKey];
+                if (lease && lease.url && Date.now() - (lease.time || 0) < ACTIVE_LEASE_TTL_MS) {
+                    this._activeUrlCache.set(cacheKey, lease.url);
+                    return lease.url;
+                }
+            }
+        } catch (_) {}
+        return null;
+    }
+
+    /**
+     * 设置指定配置的活跃端点 (同时更新内存与持久化租约)
+     * @param {string} cacheKey 
+     * @param {string} activeUrl 
+     */
+    static _setActiveEndpoint(cacheKey, activeUrl) {
+        if (!cacheKey || !activeUrl) return;
+        this._activeUrlCache.set(cacheKey, activeUrl);
+        try {
+            let record = getValue(ACTIVE_ENDPOINT_STORAGE_KEY, {});
+            if (!record || typeof record !== 'object') record = {};
+            record[cacheKey] = {
+                url: activeUrl,
+                time: Date.now()
+            };
+            setValue(ACTIVE_ENDPOINT_STORAGE_KEY, record);
+        } catch (_) {}
+    }
+
+    /**
+     * 判断主机名是否为私有局域网 IP、本地回环或私有域名
+     * @param {string} hostname 
+     * @returns {boolean}
+     */
+    static isPrivateNetworkHost(hostname) {
+        if (!hostname) return false;
+        const h = hostname.toLowerCase().split(':')[0];
+        return h === 'localhost' ||
+               h === '127.0.0.1' ||
+               h === '::1' ||
+               /^192\.168\.\d{1,3}\.\d{1,3}$/.test(h) ||
+               /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h) ||
+               /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(h) ||
+               h.endsWith('.local') ||
+               h.endsWith('.lan') ||
+               h.endsWith('.internal');
+    }
+
+    /**
+     * 全局唯一判定：WebDAV 配置是否至少包含一个有效端点 (主地址或局域网备用地址)
+     * @param {Object} config
+     * @returns {boolean}
+     */
+    static hasValidEndpoint(config) {
+        return Boolean(
+            config && (
+                (typeof config.url === 'string' && config.url.trim().length > 0) ||
+                (typeof config.lanUrl === 'string' && config.lanUrl.trim().length > 0)
+            )
+        );
+    }
+
+    /**
+     * 规范化与清洗端点 URL 格式，自动补齐缺省协议 (私网默认 http://，公网默认 https://)
+     * @param {string} rawUrl 
+     * @returns {string}
+     */
+    static sanitizeEndpointUrl(rawUrl) {
+        if (!rawUrl || typeof rawUrl !== 'string') return '';
+        let url = rawUrl.trim();
+        if (!url) return '';
+        if (!/^https?:\/\//i.test(url)) {
+            const hostPart = url.split('/')[0];
+            if (this.isPrivateNetworkHost(hostPart)) {
+                url = 'http://' + url;
+            } else {
+                url = 'https://' + url;
+            }
+        }
+        return url.replace(/\/+$/, '');
+    }
+
+    /**
+     * 获取 WebDAV 候选地址列表 (按主地址、局域网备用地址去重提取并规范化清洗)
      * @param {Object} config - { url, lanUrl }
      * @returns {string[]}
      */
@@ -103,12 +203,13 @@ export class WebDavClient {
         if (!config) return [];
         const candidates = [];
         if (config.url && typeof config.url === 'string' && config.url.trim()) {
-            candidates.push(config.url.trim());
+            const cleanMain = this.sanitizeEndpointUrl(config.url);
+            if (cleanMain) candidates.push(cleanMain);
         }
         if (config.lanUrl && typeof config.lanUrl === 'string' && config.lanUrl.trim()) {
-            const lan = config.lanUrl.trim();
-            if (!candidates.includes(lan)) {
-                candidates.push(lan);
+            const cleanLan = this.sanitizeEndpointUrl(config.lanUrl);
+            if (cleanLan && !candidates.includes(cleanLan)) {
+                candidates.push(cleanLan);
             }
         }
         return candidates;
@@ -126,6 +227,10 @@ export class WebDavClient {
         if (msg.includes('认证失败') || msg.includes('401') || msg.includes('403') || msg.includes('unauthorized') || msg.includes('forbidden')) {
             return false;
         }
+        // 如果错误提示目录无法创建，但其根源来自网络探测未通过，也允许触发故障转移
+        if (msg.includes('目录不存在且无法自动创建') || msg.includes('无法自动创建')) {
+            return true;
+        }
         return msg.includes('超时') ||
                msg.includes('timeout') ||
                msg.includes('网络连接失败') ||
@@ -136,7 +241,9 @@ export class WebDavClient {
                msg.includes('enotfound') ||
                msg.includes('net::err') ||
                msg.includes('status: 0') ||
-               msg.includes('http [0]');
+               msg.includes('http [0]') ||
+               msg.includes('abort') ||
+               msg.includes('terminated');
     }
 
     /**
@@ -146,19 +253,26 @@ export class WebDavClient {
      * @returns {Promise<any>}
      */
     static async executeWithFailover(config, actionFn) {
-        if (!config || !config.url) {
+        if (!config || (!config.url && !config.lanUrl)) {
             throw new Error('WebDAV 服务器地址不能为空');
         }
         if (config._isFailoverActive) {
             return actionFn(config);
         }
         const candidates = this.getCandidateUrls(config);
-        if (candidates.length <= 1) {
-            return actionFn(config);
+        if (candidates.length === 0) {
+            throw new Error('WebDAV 服务器地址不能为空');
+        }
+        if (candidates.length === 1) {
+            const singleCfg = Object.assign({}, config, {
+                url: candidates[0],
+                _isFailoverActive: true
+            });
+            return actionFn(singleCfg);
         }
 
-        const cacheKey = `${config.url}#${config.user || ''}`;
-        const cachedActive = this._activeUrlCache.get(cacheKey);
+        const cacheKey = `${candidates[0]}#${config.user || ''}`;
+        const cachedActive = this._getActiveEndpoint(cacheKey);
 
         // 依据历史成功记录调整优先级
         let orderedCandidates = [...candidates];
@@ -180,8 +294,8 @@ export class WebDavClient {
 
             try {
                 const result = await actionFn(activeConfig);
-                // 成功，更新活跃记忆
-                this._activeUrlCache.set(cacheKey, candidateUrl);
+                // 成功，更新活跃记忆与持久化租约
+                this._setActiveEndpoint(cacheKey, candidateUrl);
                 return result;
             } catch (err) {
                 lastError = err;
@@ -224,11 +338,8 @@ export class WebDavClient {
      */
     static normalizeProviderUrl(baseUrl, username = '') {
         if (!baseUrl) return '';
-        let url = baseUrl.trim();
-        if (!/^https?:\/\//i.test(url)) {
-            url = 'https://' + url;
-        }
-        url = url.replace(/\/+$/, '');
+        let url = this.sanitizeEndpointUrl(baseUrl);
+        if (!url) return '';
 
         // 1. 坚果云 (Jianguoyun)：要求根端点包含 /dav
         if (/jianguoyun\.com/i.test(url) && !/\/dav$/i.test(url)) {
@@ -332,8 +443,35 @@ export class WebDavClient {
             };
             const gmXhr = getGmXhr();
             if (gmXhr) {
+                let gmTimer = null;
+                let reqHandle = null;
+                const clearGmTimer = () => {
+                    if (gmTimer) {
+                        clearTimeout(gmTimer);
+                        gmTimer = null;
+                    }
+                };
+                const gmResolve = (res) => {
+                    clearGmTimer();
+                    safeResolve(res);
+                };
+                const gmReject = (err) => {
+                    clearGmTimer();
+                    safeReject(err);
+                };
+
                 try {
-                    gmXhr({
+                    // 硬熔断定时器：防止部分管理器 (如 Safari Stay) 忽略 timeout 参数导致长时间 hang 死
+                    gmTimer = setTimeout(() => {
+                        try {
+                            if (reqHandle && typeof reqHandle.abort === 'function') {
+                                reqHandle.abort();
+                            }
+                        } catch (_) {}
+                        gmReject(new Error(`WebDAV 请求超时 (${timeout}ms)`));
+                    }, timeout + 400);
+
+                    reqHandle = gmXhr({
                         method,
                         url,
                         headers: mergedHeaders,
@@ -341,7 +479,11 @@ export class WebDavClient {
                         timeout,
                         anonymous: false,
                         onload: (res) => {
-                            safeResolve({
+                            if (!res || res.status === 0) {
+                                gmReject(new Error(`网络连接失败 (HTTP [0]): 无法访问 ${url}`));
+                                return;
+                            }
+                            gmResolve({
                                 status: res.status,
                                 statusText: res.statusText,
                                 data: res.responseText || '',
@@ -349,18 +491,18 @@ export class WebDavClient {
                             });
                         },
                         ontimeout: () => {
-                            safeReject(new Error(`WebDAV 请求超时 (${timeout}ms)`));
+                            gmReject(new Error(`WebDAV 请求超时 (${timeout}ms)`));
                         },
                         onerror: (err) => {
                             const msg = err?.error || err?.statusText || (err?.status ? `HTTP [${err.status}]` : '网络连接失败，请检查服务器地址或跨域权限');
-                            safeReject(new Error(msg));
+                            gmReject(new Error(msg));
                         },
                         onabort: () => {
-                            safeReject(new Error('请求被中止'));
+                            gmReject(new Error('请求被中止'));
                         }
                     });
                 } catch (e) {
-                    safeReject(e);
+                    gmReject(e);
                 }
                 return;
             }
@@ -428,6 +570,10 @@ export class WebDavClient {
                     'Depth': '0'
                 }
             });
+            // 明确鉴权失败：必须直接抛出，禁止伪装为 false 导致上层误报
+            if (res.status === 401 || res.status === 403) {
+                throw new Error(`认证失败 (${res.status}): 请检查用户名与密码/授权码`);
+            }
             // 207 Multi-Status 或 200 OK 说明目录已存在且可访问
             if (res.status === 207 || res.status === 200) {
                 return true;
@@ -440,8 +586,15 @@ export class WebDavClient {
             if (res.status === 405 || res.status === 415) {
                 return true;
             }
+            if (res.status >= 500) {
+                throw new Error(`服务器网关异常 (HTTP ${res.status})`);
+            }
             return false;
-        } catch (_) {
+        } catch (err) {
+            // 致命网络/超时错误或认证失败必须向外冒泡触发故障转移或精准报错，禁止静默吞噬
+            if (this._isNetworkError(err) || String(err?.message || '').includes('认证失败') || String(err?.message || '').includes('网关异常')) {
+                throw err;
+            }
             return false;
         }
     }
@@ -464,7 +617,7 @@ export class WebDavClient {
             currentPath += '/' + seg;
             const dirUrlWithSlash = this.normalizeUrl(url, currentPath + '/', user);
 
-            // 1. 目录级嗅探：先探测该层级目录是否存在
+            // 1. 目录级嗅探：先探测该层级目录是否存在 (网络错误会直接抛出并触发故障转移)
             const exists = await this.checkDirectoryExists(dirUrlWithSlash, user, pass, reqTimeout);
             if (exists) {
                 continue; // 该层级已存在，继续检测下一级
@@ -479,12 +632,18 @@ export class WebDavClient {
                     pass,
                     timeout: reqTimeout
                 });
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error(`认证失败 (${res.status}): 无法自动创建目录，请检查权限`);
+                }
                 // 201 Created: 成功创建; 405: 目录已存在; 200/204: 成功; 415: 已存在或网关不支持空body
                 if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204 || res.status === 415) {
                     continue;
                 }
                 console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到状态码: ${res.status}`);
             } catch (err) {
+                if (this._isNetworkError(err) || String(err?.message || '').includes('认证失败')) {
+                    throw err;
+                }
                 console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到异常:`, err.message || err);
             }
         }
@@ -550,13 +709,17 @@ export class WebDavClient {
                     throw new Error(`服务器内部错误 (${res.status})`);
                 }
 
-                const isLan = config.lanUrl && activeCfg.url === config.lanUrl.trim();
-                const suffix = isLan ? ' (局域网备用)' : '';
+                const isLan = config.lanUrl && (
+                    this.sanitizeEndpointUrl(activeCfg.url) === this.sanitizeEndpointUrl(config.lanUrl) ||
+                    this.isPrivateNetworkHost((activeCfg.url.split('://')[1] || activeCfg.url).split('/')[0])
+                );
+                const suffix = isLan ? ' (局域网直连)' : ' (公网域名)';
 
                 // 200 (文件已存在) 或 404 (连接正常且目录就绪，文件尚未创建) 均代表认证及连通成功！
                 if (res.status === 200 || res.status === 204 || res.status === 207) {
                     return {
                         success: true,
+                        activeUrl: activeCfg.url,
                         message: `WebDAV 连接成功${suffix}，已检测到云端备份！`
                     };
                 }
@@ -564,12 +727,14 @@ export class WebDavClient {
                 if (res.status === 404) {
                     return {
                         success: true,
+                        activeUrl: activeCfg.url,
                         message: `WebDAV 目录已自动就绪${suffix}，随时可同步数据！`
                     };
                 }
 
                 return {
                     success: true,
+                    activeUrl: activeCfg.url,
                     message: `WebDAV 响应状态: ${res.status}${suffix}`
                 };
             } catch (error) {

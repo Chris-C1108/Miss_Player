@@ -1,5 +1,5 @@
 import { AppleCard } from '../components/AppleCard.js';
-import { SyncManager } from '../../../../sync/index.js';
+import { SyncManager, WebDavClient } from '../../../../sync/index.js';
 import { __ } from '../../../../constants/i18n.js';
 
 export class CloudSyncSection {
@@ -20,7 +20,7 @@ export class CloudSyncSection {
         this.element.innerHTML = '';
 
         const config = SyncManager.getWebDavConfig();
-        const hasConfig = Boolean(config.url);
+        const hasConfig = WebDavClient.hasValidEndpoint(config);
 
         const card = new AppleCard();
 

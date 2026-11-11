@@ -25,7 +25,7 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
     // 仅配置主地址
     const cfg3 = { url: 'https://dav.jianguoyun.com/dav/', lanUrl: '' };
     const candidates3 = WebDavClient.getCandidateUrls(cfg3);
-    assert.deepStrictEqual(candidates3, ['https://dav.jianguoyun.com/dav/']);
+    assert.deepStrictEqual(candidates3, ['https://dav.jianguoyun.com/dav']);
     console.log('  ✓ 候选地址提取与去重正确\n');
 }
 
@@ -160,4 +160,67 @@ console.log('🧪 开始运行 WebDavClient 双地址自适应 (LAN/WAN Failover
     console.log('  ✓ checkFileExists 双地址自适应测试通过\n');
 }
 
-console.log('🎉 WebDavClient 双地址自适应 (LAN/WAN Failover) 6 项单元测试全部通过！\n');
+// 测试 7: 私网 IP 智能协议补全与端点规范化
+{
+    console.log('▶ 测试 7: 私网 IP 智能协议补全与端点规范化');
+    // 内网 IP 缺省协议自动补充 http://
+    assert.strictEqual(WebDavClient.sanitizeEndpointUrl('192.168.2.250:5005'), 'http://192.168.2.250:5005');
+    assert.strictEqual(WebDavClient.sanitizeEndpointUrl('10.0.0.1:8080/'), 'http://10.0.0.1:8080');
+    assert.strictEqual(WebDavClient.sanitizeEndpointUrl('localhost:5005'), 'http://localhost:5005');
+    // 公网域名缺省协议自动补充 https://
+    assert.strictEqual(WebDavClient.sanitizeEndpointUrl('dav.loadingi.fnos.net:443'), 'https://dav.loadingi.fnos.net:443');
+    // 已带协议的保持原样
+    assert.strictEqual(WebDavClient.sanitizeEndpointUrl('http://nas.lan:5005/'), 'http://nas.lan:5005');
+    console.log('  ✓ 智能协议补全与规范化清洗正确\n');
+}
+
+// 测试 8: testConnection 全流程自适应 (主地址超时，自动切换备用地址并返回局域网直连提示)
+{
+    console.log('▶ 测试 8: testConnection 全流程自适应 (公网超时无缝切备用)');
+    WebDavClient._activeUrlCache.clear();
+
+    const origRequest = WebDavClient.request;
+    const requestedUrls = [];
+    WebDavClient.request = async (opts) => {
+        requestedUrls.push(opts.url);
+        // 模拟公网域名在内网发起 PROPFIND 或 GET 时网络超时
+        if (opts.url.includes('dav.loadingi.fnos.net')) {
+            throw new Error(`WebDAV 请求超时 (${opts.timeout}ms)`);
+        }
+        // 备用内网地址正常响应
+        if (opts.method === 'PROPFIND') {
+            return { status: 207, statusText: 'Multi-Status' };
+        }
+        if (opts.method === 'GET') {
+            return { status: 200, statusText: 'OK', data: '{}' };
+        }
+        return { status: 200, statusText: 'OK' };
+    };
+
+    const config = {
+        url: 'https://dav.loadingi.fnos.net:443',
+        lanUrl: '192.168.2.250:5005', // 测试未带 http:// 自动补全
+        user: 'admin',
+        pass: 'pass'
+    };
+
+    const result = await WebDavClient.testConnection(config);
+    assert.strictEqual(result.success, true);
+    assert(result.message.includes('局域网直连'), `提示消息应标明局域网直连: ${result.message}`);
+    assert(requestedUrls.some(u => u.includes('192.168.2.250:5005')), '必须成功调用内网备用地址');
+
+    WebDavClient.request = origRequest;
+    console.log('  ✓ testConnection 全流程自适应测试通过\n');
+}
+
+// 测试 9: hasValidEndpoint 校验
+{
+    console.log('▶ 测试 9: hasValidEndpoint 全局有效端点判定');
+    assert.strictEqual(WebDavClient.hasValidEndpoint({ url: 'https://foo.com' }), true);
+    assert.strictEqual(WebDavClient.hasValidEndpoint({ lanUrl: 'http://192.168.1.1' }), true);
+    assert.strictEqual(WebDavClient.hasValidEndpoint({ url: '', lanUrl: '' }), false);
+    assert.strictEqual(WebDavClient.hasValidEndpoint(null), false);
+    console.log('  ✓ hasValidEndpoint 判定正确\n');
+}
+
+console.log('🎉 WebDavClient 双地址自适应 (LAN/WAN Failover) 9 项单元测试全部通过！\n');

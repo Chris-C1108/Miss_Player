@@ -133,7 +133,7 @@ export class DebugLogPanel {
                     return;
                 }
                 const config = SyncManager.getWebDavConfig();
-                if (!config || !config.url) {
+                if (!WebDavClient.hasValidEndpoint(config)) {
                     Toast('请先在设置中配置 WebDAV 服务器', 2000, 'error');
                     return;
                 }

@@ -380,10 +380,13 @@ src/player/ui/styles/
 ### 4. WebDAV 独立文件拓扑规范
 * **严禁单一大文件合并**：严禁将全量番号评论塞入单一全局大文件；
 * **按番号独立存放**：每个番号全量评论独立写入 `/MissPlayer/comments/[AVCODE].json`，单次原子 `PUT` 极速落盘，各影片彻底解耦；个人播放热度足迹独立写入 `/MissPlayer/heatmaps/[AVCODE].json`，实现跨站点（如 Peach 与 MissAV）零冲突 Element-wise Max 漫游自愈；
-* **WebDAV 双地址自适应与自动故障转移 (LAN / WAN Dual-Host Failover)**：
-  - 支持配置公网主地址（`url`）与局域网备用地址（`lanUrl`）；
-  - `WebDavClient.executeWithFailover` 引擎在首选地址尝试时采用 3.5 秒灵敏超时快速截断，解决家庭路由器缺少 NAT 回流 (Hairpin NAT) 导致的局域网请求公网域名超时卡顿；
-  - 遇到超时/网络连接故障自动无缝切换至备用内网端点，并由会话级活跃记忆 (`_activeUrlCache`) 记录成功端点，后续请求 0ms 瞬间直连；401/403 鉴权错误快速抛出，绝不盲目试探重试；
+* **WebDAV 双地址自适应与全局故障转移契约 (Global LAN / WAN Dual-Host Failover)**：
+  - **全局统一支持**：主云同步与 Peach 模式 C（独立 WebDAV）均支持配置主地址（`url`）与局域网备用地址（`lanUrl`）；全项目所有模块严禁私自校验 `config.url`，必须统一调用 `WebDavClient.hasValidEndpoint(config)`；
+  - **真异常透明上抛红线**：`checkDirectoryExists` 与 `_ensureDirectoryInternal` 严禁吞噬网络超时或 401/403 认证异常返回 `false`（仅 404/409/410 视为不存在），必须精准上抛驱动 failover；
+  - **JS 硬熔断与 Safari Stay 兜底**：`GM_xmlhttpRequest` 请求外层附加 `timeout + 400ms` JS 硬熔断定时器与 `status === 0` 捕获，杜绝 iOS/macOS Stay 拦截响应导致死挂；
+  - **跨刷新持久化租约**：引入 `mp_active_webdav_lease`（2 小时 TTL），切换成功后跨标签、跨刷新 0ms 直连当前可用端点；
+  - **私网协议智能补全**：`sanitizeEndpointUrl` 自动为内网 IP/本地域名（`192.168.*`, `10.*`, `172.16-31.*`, `.local`）补全 `http://`，为公网域名补全 `https://`；
+  - **鉴权快速熔断**：401/403 权限错误立即终止并提示，绝不盲目切换地址导致账号锁定；
 * **Peach 入库目录**：`.strm` 默认写入 `/MissPlayer/peach-media/[AVCODE].strm`（复用同步 WebDAV），也可自定义目录或单独配置 WebDAV；该目录必须由 Peach 挂载。第三方同步盘批量写入时串行，间隔 ≥ 300 ms；
 * **PROPFIND 415 避坑**：发送空 Body 的 PROPFIND 请求时，**严禁携带 `Content-Type: application/xml` 标头**；必须将 415 与 405、207 一并视为目录已就绪，防止多余发起 `MKCOL` 导致刷屏黄告警。
 

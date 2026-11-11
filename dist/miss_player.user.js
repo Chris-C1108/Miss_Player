@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.005
+// @version            5.7.118-beta.006
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.005";
+		return "5.7.118-beta.006";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3291,7 +3291,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.005";
+		return "5.7.118-beta.006";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -4442,6 +4442,8 @@
 		}
 		return title.trim();
 	}
+	var ACTIVE_ENDPOINT_STORAGE_KEY = "mp_active_webdav_lease";
+	var ACTIVE_LEASE_TTL_MS = 72e5;
 	function sanitizeArrayEmptyObjects(text) {
 		if (!text || typeof text !== "string") return text;
 		if (!text.includes("{}")) return text;
@@ -4502,13 +4504,63 @@
 		return null;
 	}
 	var WebDavClient = class {
+		static _getActiveEndpoint(cacheKey) {
+			if (!cacheKey) return null;
+			if (this._activeUrlCache.has(cacheKey)) return this._activeUrlCache.get(cacheKey);
+			try {
+				const raw = getValue(ACTIVE_ENDPOINT_STORAGE_KEY, null);
+				if (raw && typeof raw === "object" && raw[cacheKey]) {
+					const lease = raw[cacheKey];
+					if (lease && lease.url && Date.now() - (lease.time || 0) < ACTIVE_LEASE_TTL_MS) {
+						this._activeUrlCache.set(cacheKey, lease.url);
+						return lease.url;
+					}
+				}
+			} catch (_) {}
+			return null;
+		}
+		static _setActiveEndpoint(cacheKey, activeUrl) {
+			if (!cacheKey || !activeUrl) return;
+			this._activeUrlCache.set(cacheKey, activeUrl);
+			try {
+				let record = getValue(ACTIVE_ENDPOINT_STORAGE_KEY, {});
+				if (!record || typeof record !== "object") record = {};
+				record[cacheKey] = {
+					url: activeUrl,
+					time: Date.now()
+				};
+				setValue(ACTIVE_ENDPOINT_STORAGE_KEY, record);
+			} catch (_) {}
+		}
+		static isPrivateNetworkHost(hostname) {
+			if (!hostname) return false;
+			const h = hostname.toLowerCase().split(":")[0];
+			return h === "localhost" || h === "127.0.0.1" || h === "::1" || /^192\.168\.\d{1,3}\.\d{1,3}$/.test(h) || /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h) || /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(h) || h.endsWith(".local") || h.endsWith(".lan") || h.endsWith(".internal");
+		}
+		static hasValidEndpoint(config) {
+			return Boolean(config && (typeof config.url === "string" && config.url.trim().length > 0 || typeof config.lanUrl === "string" && config.lanUrl.trim().length > 0));
+		}
+		static sanitizeEndpointUrl(rawUrl) {
+			if (!rawUrl || typeof rawUrl !== "string") return "";
+			let url = rawUrl.trim();
+			if (!url) return "";
+			if (!/^https?:\/\//i.test(url)) {
+				const hostPart = url.split("/")[0];
+				if (this.isPrivateNetworkHost(hostPart)) url = "http://" + url;
+				else url = "https://" + url;
+			}
+			return url.replace(/\/+$/, "");
+		}
 		static getCandidateUrls(config) {
 			if (!config) return [];
 			const candidates = [];
-			if (config.url && typeof config.url === "string" && config.url.trim()) candidates.push(config.url.trim());
+			if (config.url && typeof config.url === "string" && config.url.trim()) {
+				const cleanMain = this.sanitizeEndpointUrl(config.url);
+				if (cleanMain) candidates.push(cleanMain);
+			}
 			if (config.lanUrl && typeof config.lanUrl === "string" && config.lanUrl.trim()) {
-				const lan = config.lanUrl.trim();
-				if (!candidates.includes(lan)) candidates.push(lan);
+				const cleanLan = this.sanitizeEndpointUrl(config.lanUrl);
+				if (cleanLan && !candidates.includes(cleanLan)) candidates.push(cleanLan);
 			}
 			return candidates;
 		}
@@ -4516,15 +4568,20 @@
 			if (!err) return false;
 			const msg = String(err?.message || err || "").toLowerCase();
 			if (msg.includes("认证失败") || msg.includes("401") || msg.includes("403") || msg.includes("unauthorized") || msg.includes("forbidden")) return false;
-			return msg.includes("超时") || msg.includes("timeout") || msg.includes("网络连接失败") || msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("connection refused") || msg.includes("econnrefused") || msg.includes("enotfound") || msg.includes("net::err") || msg.includes("status: 0") || msg.includes("http [0]");
+			if (msg.includes("目录不存在且无法自动创建") || msg.includes("无法自动创建")) return true;
+			return msg.includes("超时") || msg.includes("timeout") || msg.includes("网络连接失败") || msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("connection refused") || msg.includes("econnrefused") || msg.includes("enotfound") || msg.includes("net::err") || msg.includes("status: 0") || msg.includes("http [0]") || msg.includes("abort") || msg.includes("terminated");
 		}
 		static async executeWithFailover(config, actionFn) {
-			if (!config || !config.url) throw new Error("WebDAV 服务器地址不能为空");
+			if (!config || !config.url && !config.lanUrl) throw new Error("WebDAV 服务器地址不能为空");
 			if (config._isFailoverActive) return actionFn(config);
 			const candidates = this.getCandidateUrls(config);
-			if (candidates.length <= 1) return actionFn(config);
-			const cacheKey = `${config.url}#${config.user || ""}`;
-			const cachedActive = this._activeUrlCache.get(cacheKey);
+			if (candidates.length === 0) throw new Error("WebDAV 服务器地址不能为空");
+			if (candidates.length === 1) return actionFn(Object.assign({}, config, {
+				url: candidates[0],
+				_isFailoverActive: true
+			}));
+			const cacheKey = `${candidates[0]}#${config.user || ""}`;
+			const cachedActive = this._getActiveEndpoint(cacheKey);
 			let orderedCandidates = [...candidates];
 			if (cachedActive && orderedCandidates.includes(cachedActive)) orderedCandidates = [cachedActive, ...orderedCandidates.filter((u) => u !== cachedActive)];
 			let lastError = null;
@@ -4538,7 +4595,7 @@
 				});
 				try {
 					const result = await actionFn(activeConfig);
-					this._activeUrlCache.set(cacheKey, candidateUrl);
+					this._setActiveEndpoint(cacheKey, candidateUrl);
 					return result;
 				} catch (err) {
 					lastError = err;
@@ -4561,9 +4618,8 @@
 		}
 		static normalizeProviderUrl(baseUrl, username = "") {
 			if (!baseUrl) return "";
-			let url = baseUrl.trim();
-			if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-			url = url.replace(/\/+$/, "");
+			let url = this.sanitizeEndpointUrl(baseUrl);
+			if (!url) return "";
 			if (/jianguoyun\.com/i.test(url) && !/\/dav$/i.test(url)) url = `${url}/dav`;
 			if (/(?:nextcloud|owncloud)/i.test(url)) {
 				if (!/\/remote\.php\/dav/i.test(url) && username) url = `${url}/remote.php/dav/files/${encodeURIComponent(username.trim())}`;
@@ -4614,8 +4670,30 @@
 				};
 				const gmXhr = getGmXhr();
 				if (gmXhr) {
+					let gmTimer = null;
+					let reqHandle = null;
+					const clearGmTimer = () => {
+						if (gmTimer) {
+							clearTimeout(gmTimer);
+							gmTimer = null;
+						}
+					};
+					const gmResolve = (res) => {
+						clearGmTimer();
+						safeResolve(res);
+					};
+					const gmReject = (err) => {
+						clearGmTimer();
+						safeReject(err);
+					};
 					try {
-						gmXhr({
+						gmTimer = setTimeout(() => {
+							try {
+								if (reqHandle && typeof reqHandle.abort === "function") reqHandle.abort();
+							} catch (_) {}
+							gmReject(new Error(`WebDAV 请求超时 (${timeout}ms)`));
+						}, timeout + 400);
+						reqHandle = gmXhr({
 							method,
 							url,
 							headers: mergedHeaders,
@@ -4623,7 +4701,11 @@
 							timeout,
 							anonymous: false,
 							onload: (res) => {
-								safeResolve({
+								if (!res || res.status === 0) {
+									gmReject(new Error(`网络连接失败 (HTTP [0]): 无法访问 ${url}`));
+									return;
+								}
+								gmResolve({
 									status: res.status,
 									statusText: res.statusText,
 									data: res.responseText || "",
@@ -4631,18 +4713,18 @@
 								});
 							},
 							ontimeout: () => {
-								safeReject(new Error(`WebDAV 请求超时 (${timeout}ms)`));
+								gmReject(new Error(`WebDAV 请求超时 (${timeout}ms)`));
 							},
 							onerror: (err) => {
 								const msg = err?.error || err?.statusText || (err?.status ? `HTTP [${err.status}]` : "网络连接失败，请检查服务器地址或跨域权限");
-								safeReject(new Error(msg));
+								gmReject(new Error(msg));
 							},
 							onabort: () => {
-								safeReject(new Error("请求被中止"));
+								gmReject(new Error("请求被中止"));
 							}
 						});
 					} catch (e) {
-						safeReject(e);
+						gmReject(e);
 					}
 					return;
 				}
@@ -4686,11 +4768,14 @@
 					timeout,
 					headers: { "Depth": "0" }
 				});
+				if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 请检查用户名与密码/授权码`);
 				if (res.status === 207 || res.status === 200) return true;
 				if (res.status === 404) return false;
 				if (res.status === 405 || res.status === 415) return true;
+				if (res.status >= 500) throw new Error(`服务器网关异常 (HTTP ${res.status})`);
 				return false;
-			} catch (_) {
+			} catch (err) {
+				if (this._isNetworkError(err) || String(err?.message || "").includes("认证失败") || String(err?.message || "").includes("网关异常")) throw err;
 				return false;
 			}
 		}
@@ -4714,9 +4799,11 @@
 						pass,
 						timeout: reqTimeout
 					});
+					if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 无法自动创建目录，请检查权限`);
 					if (res.status === 201 || res.status === 405 || res.status === 200 || res.status === 204 || res.status === 415) continue;
 					console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到状态码: ${res.status}`);
 				} catch (err) {
+					if (this._isNetworkError(err) || String(err?.message || "").includes("认证失败")) throw err;
 					console.warn(`[WebDavClient] MKCOL 创建目录 ${currentPath} 遇到异常:`, err.message || err);
 				}
 			}
@@ -4750,17 +4837,20 @@
 					});
 					if (res.status === 401 || res.status === 403) throw new Error(`认证失败 (${res.status}): 请检查用户名与应用密码/授权码`);
 					if (res.status >= 500) throw new Error(`服务器内部错误 (${res.status})`);
-					const suffix = config.lanUrl && activeCfg.url === config.lanUrl.trim() ? " (局域网备用)" : "";
+					const suffix = config.lanUrl && (this.sanitizeEndpointUrl(activeCfg.url) === this.sanitizeEndpointUrl(config.lanUrl) || this.isPrivateNetworkHost((activeCfg.url.split("://")[1] || activeCfg.url).split("/")[0])) ? " (局域网直连)" : " (公网域名)";
 					if (res.status === 200 || res.status === 204 || res.status === 207) return {
 						success: true,
+						activeUrl: activeCfg.url,
 						message: `WebDAV 连接成功${suffix}，已检测到云端备份！`
 					};
 					if (res.status === 404) return {
 						success: true,
+						activeUrl: activeCfg.url,
 						message: `WebDAV 目录已自动就绪${suffix}，随时可同步数据！`
 					};
 					return {
 						success: true,
+						activeUrl: activeCfg.url,
 						message: `WebDAV 响应状态: ${res.status}${suffix}`
 					};
 				} catch (error) {
@@ -4960,7 +5050,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.005";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.006";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -5389,7 +5479,7 @@
 		}
 		static async executeSync(options) {
 			const { mode = "merge", config = this.getWebDavConfig(), playerState = null } = options;
-			if (!config.url) throw new Error("未配置 WebDAV 服务器地址");
+			if (!WebDavClient.hasValidEndpoint(config)) throw new Error("未配置 WebDAV 服务器地址");
 			const clientId = getOrCreateClientId();
 			const localData = this.gatherLocalData(playerState);
 			if (mode === "upload") {
@@ -5446,7 +5536,7 @@
 		}
 		static triggerAutoSync(playerState = null, reason = "startup") {
 			const config = this.getWebDavConfig();
-			if (!config.url || config.autoSync === false) return;
+			if (!WebDavClient.hasValidEndpoint(config) || config.autoSync === false) return;
 			this.startPeriodicSync(playerState);
 			if (this._isAutoSyncing) return;
 			const now = Date.now();
@@ -5511,7 +5601,7 @@
 			if (this._periodicTimer) return;
 			this._periodicTimer = setInterval(async () => {
 				const config = this.getWebDavConfig();
-				if (!config.url || config.autoSync === false || this._isAutoSyncing) return;
+				if (!WebDavClient.hasValidEndpoint(config) || config.autoSync === false || this._isAutoSyncing) return;
 				try {
 					this._isAutoSyncing = true;
 					const remoteData = await WebDavClient.downloadBackup(config);
@@ -5544,6 +5634,7 @@
 	var PEACH_KEY_WEBDAV_MODE = "mp_peach_webdav_mode";
 	var PEACH_KEY_WEBDAV_CUSTOM_DIR = "mp_peach_webdav_custom_dir";
 	var PEACH_KEY_WEBDAV_STANDALONE_URL = "mp_peach_webdav_standalone_url";
+	var PEACH_KEY_WEBDAV_STANDALONE_LAN_URL = "mp_peach_webdav_standalone_lan_url";
 	var PEACH_KEY_WEBDAV_STANDALONE_USER = "mp_peach_webdav_standalone_user";
 	var PEACH_KEY_WEBDAV_STANDALONE_PASS = "mp_peach_webdav_standalone_pass";
 	var PEACH_KEY_WEBDAV_STANDALONE_DIR = "mp_peach_webdav_standalone_dir";
@@ -5639,6 +5730,7 @@
 			const webdavMode = getValue(PEACH_KEY_WEBDAV_MODE, PEACH_WEBDAV_MODE_SYNC_DEFAULT);
 			const webdavCustomDir = getValue("mp_peach_webdav_custom_dir", "") || strmDir || "/Media/STRM/";
 			const webdavStandaloneUrl = getValue(PEACH_KEY_WEBDAV_STANDALONE_URL, "");
+			const webdavStandaloneLanUrl = getValue(PEACH_KEY_WEBDAV_STANDALONE_LAN_URL, "");
 			const webdavStandaloneUser = getValue(PEACH_KEY_WEBDAV_STANDALONE_USER, "");
 			const webdavStandalonePass = getValue(PEACH_KEY_WEBDAV_STANDALONE_PASS, "");
 			const webdavStandaloneDir = getValue(PEACH_KEY_WEBDAV_STANDALONE_DIR, "/Media/STRM/");
@@ -5654,12 +5746,13 @@
 				webdavMode,
 				webdavCustomDir,
 				webdavStandaloneUrl,
+				webdavStandaloneLanUrl,
 				webdavStandaloneUser,
 				webdavStandalonePass,
 				webdavStandaloneDir
 			};
 		}
-		static saveConfig({ base, token, strmDir, remoteScraper, gatewayBase, gatewayToken, enabled, webdavMode, webdavCustomDir, webdavStandaloneUrl, webdavStandaloneUser, webdavStandalonePass, webdavStandaloneDir }) {
+		static saveConfig({ base, token, strmDir, remoteScraper, gatewayBase, gatewayToken, enabled, webdavMode, webdavCustomDir, webdavStandaloneUrl, webdavStandaloneLanUrl, webdavStandaloneUser, webdavStandalonePass, webdavStandaloneDir }) {
 			if (typeof base === "string") {
 				const clean = this.sanitizeBaseUrl(base);
 				setValue(PEACH_KEY_BASE, clean);
@@ -5683,6 +5776,7 @@
 				setValue(PEACH_KEY_WEBDAV_CUSTOM_DIR, normalized);
 			}
 			if (typeof webdavStandaloneUrl === "string") setValue(PEACH_KEY_WEBDAV_STANDALONE_URL, webdavStandaloneUrl.trim());
+			if (typeof webdavStandaloneLanUrl === "string") setValue(PEACH_KEY_WEBDAV_STANDALONE_LAN_URL, webdavStandaloneLanUrl.trim());
 			if (typeof webdavStandaloneUser === "string") setValue(PEACH_KEY_WEBDAV_STANDALONE_USER, webdavStandaloneUser.trim());
 			if (typeof webdavStandalonePass === "string") setValue(PEACH_KEY_WEBDAV_STANDALONE_PASS, webdavStandalonePass);
 			if (typeof webdavStandaloneDir === "string") {
@@ -5733,6 +5827,7 @@
 					mode: PEACH_WEBDAV_MODE_STANDALONE,
 					config: {
 						url: peachConfig.webdavStandaloneUrl,
+						lanUrl: peachConfig.webdavStandaloneLanUrl || "",
 						user: peachConfig.webdavStandaloneUser,
 						pass: peachConfig.webdavStandalonePass,
 						path: standaloneDir
@@ -6085,7 +6180,7 @@
 			const fileName = `${normalizedCode}.strm`;
 			const effectiveWebDav = PeachService.getEffectiveWebDavConfig();
 			const webDavConfig = effectiveWebDav.config;
-			const hasWebDav = Boolean(webDavConfig && webDavConfig.url && webDavConfig.user);
+			const hasWebDav = Boolean(WebDavClient.hasValidEndpoint(webDavConfig) && webDavConfig.user);
 			const peachConfig = PeachService.getConfig();
 			if (hasWebDav && !forceDownload) {
 				const targetPath = `${effectiveWebDav.targetDir}${fileName}`;
@@ -7081,7 +7176,7 @@
 			try {
 				const effectiveWebDav = PeachService.getEffectiveWebDavConfig();
 				const webDavConfig = effectiveWebDav?.config;
-				if (webDavConfig && webDavConfig.url && webDavConfig.user) {
+				if (WebDavClient.hasValidEndpoint(webDavConfig) && webDavConfig.user) {
 					const targetFilePath = `${effectiveWebDav.targetDir}${avcode}.strm`;
 					if (await WebDavClient.checkFileExists(webDavConfig, targetFilePath, 3500)) {
 						this.peachIngestBtn.classList.add("is-ingested");
@@ -12253,7 +12348,7 @@
 					return;
 				}
 				const config = SyncManager.getWebDavConfig();
-				if (!config || !config.url) {
+				if (!WebDavClient.hasValidEndpoint(config)) {
 					Toast$1("请先在设置中配置 WebDAV 服务器", 2e3, "error");
 					return;
 				}
@@ -12350,7 +12445,7 @@
 		static isEnabled() {
 			try {
 				const config = SyncManager.getWebDavConfig();
-				return Boolean(config && config.url && config.url.trim());
+				return WebDavClient.hasValidEndpoint(config);
 			} catch (_) {
 				return false;
 			}
@@ -13580,7 +13675,7 @@
 				} catch (_) {}
 				try {
 					const webdavConfig = SyncManager.getWebDavConfig();
-					if (webdavConfig && webdavConfig.url) {
+					if (WebDavClient.hasValidEndpoint(webdavConfig)) {
 						const subPath = "comments/" + this.videoCode.toUpperCase() + ".json";
 						const wdData = await WebDavClient.downloadBackup(webdavConfig, subPath);
 						if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
@@ -15268,7 +15363,7 @@
 					logger.warn("[Report] Supabase 上报异常:", err);
 				}
 				const webdavConfig = SyncManager.getWebDavConfig();
-				if (webdavConfig && webdavConfig.url) try {
+				if (WebDavClient.hasValidEndpoint(webdavConfig)) try {
 					const now = new Date();
 					const pad = (n) => String(n).padStart(2, "0");
 					const ts = "" + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + "_" + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
@@ -20676,7 +20771,7 @@
 				} catch (_) {}
 				try {
 					const config = SyncManager.getWebDavConfig();
-					if (config && config.url) {
+					if (WebDavClient.hasValidEndpoint(config)) {
 						const subPath = `comments/${code.toUpperCase()}.json`;
 						const wdData = await WebDavClient.downloadBackup(config, subPath);
 						if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
@@ -21107,26 +21202,35 @@
 					p.className = "tm-peach-subpanel";
 					p.innerHTML = `
                     <div class="tm-apple-row-subtext">模式 C：独立 WebDAV 存储端点</div>
-                    <input type="text" class="tm-settings-input tm-peach-standalone-url" placeholder="WebDAV 服务地址 (如 http://192.168.2.250:5005)" value="${config.webdavStandaloneUrl || ""}" />
+                    <input type="text" class="tm-settings-input tm-peach-standalone-url" placeholder="主地址 (如 https://dav.example.com:443)" />
+                    <input type="text" class="tm-settings-input tm-peach-standalone-lan-url" placeholder="局域网备用 (选填，如 http://192.168.2.250:5005)" />
                     <div class="tm-peach-grid-2">
-                        <input type="text" class="tm-settings-input tm-peach-standalone-user" placeholder="用户名" value="${config.webdavStandaloneUser || ""}" />
-                        <input type="password" class="tm-settings-input tm-peach-standalone-pass" placeholder="密码" value="${config.webdavStandalonePass || ""}" />
+                        <input type="text" class="tm-settings-input tm-peach-standalone-user" placeholder="用户名" />
+                        <input type="password" class="tm-settings-input tm-peach-standalone-pass" placeholder="密码" />
                     </div>
-                    <input type="text" class="tm-settings-input tm-peach-standalone-dir" placeholder="存放子目录 (如 /Media/STRM/)" value="${config.webdavStandaloneDir || "/Media/STRM/"}" />
+                    <input type="text" class="tm-settings-input tm-peach-standalone-dir" placeholder="存放子目录 (如 /Media/STRM/)" />
                 `;
 					const urlIn = p.querySelector(".tm-peach-standalone-url");
+					const lanUrlIn = p.querySelector(".tm-peach-standalone-lan-url");
 					const userIn = p.querySelector(".tm-peach-standalone-user");
 					const passIn = p.querySelector(".tm-peach-standalone-pass");
 					const dirIn = p.querySelector(".tm-peach-standalone-dir");
+					urlIn.value = config.webdavStandaloneUrl || "";
+					lanUrlIn.value = config.webdavStandaloneLanUrl || "";
+					userIn.value = config.webdavStandaloneUser || "";
+					passIn.value = config.webdavStandalonePass || "";
+					dirIn.value = config.webdavStandaloneDir || "/Media/STRM/";
 					const saveStandalone = () => {
 						PeachService.saveConfig({
 							webdavStandaloneUrl: urlIn.value.trim(),
+							webdavStandaloneLanUrl: lanUrlIn.value.trim(),
 							webdavStandaloneUser: userIn.value.trim(),
 							webdavStandalonePass: passIn.value,
 							webdavStandaloneDir: dirIn.value.trim()
 						});
 					};
 					urlIn.addEventListener("change", saveStandalone);
+					lanUrlIn.addEventListener("change", saveStandalone);
 					userIn.addEventListener("change", saveStandalone);
 					passIn.addEventListener("change", saveStandalone);
 					dirIn.addEventListener("change", saveStandalone);
@@ -21379,7 +21483,7 @@
 		_render() {
 			this.element.innerHTML = "";
 			const config = SyncManager.getWebDavConfig();
-			const hasConfig = Boolean(config.url);
+			const hasConfig = WebDavClient.hasValidEndpoint(config);
 			const card = new AppleCard();
 			const headerRow = document.createElement("div");
 			headerRow.className = "tm-apple-accordion-header";
@@ -21959,7 +22063,7 @@
 			autoSyncCheckbox.addEventListener("change", () => {
 				config.autoSync = autoSyncCheckbox.checked;
 				SyncManager.saveWebDavConfig(config);
-				if (config.autoSync && config.url) SyncManager.triggerAutoSync(this.playerCore?.options?.playerState, "startup");
+				if (config.autoSync && WebDavClient.hasValidEndpoint(config)) SyncManager.triggerAutoSync(this.playerCore?.options?.playerState, "startup");
 			});
 			const autoSyncSlider = document.createElement("span");
 			autoSyncSlider.className = "tm-slider round";
@@ -22043,7 +22147,7 @@
 			};
 			testBtn.addEventListener("click", async () => {
 				const currentCfg = persistCurrentInputs();
-				if (!currentCfg.url) {
+				if (!WebDavClient.hasValidEndpoint(currentCfg)) {
 					Toast$1(__$1("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
 					updateStatus("请输入服务器地址", "error");
 					return;
@@ -22052,8 +22156,10 @@
 				testBtn.innerHTML = `<span>${__$1("webdavTesting") || "正在测试..."}</span>`;
 				updateStatus("正在测试连接...", "running");
 				try {
-					Toast$1((await WebDavClient.testConnection(currentCfg)).message || "连接成功！", 3e3);
-					updateStatus("连接正常", "success");
+					const res = await WebDavClient.testConnection(currentCfg);
+					Toast$1(res.message || "连接成功！", 3e3);
+					const isLan = res.message && res.message.includes("局域网");
+					updateStatus(isLan ? "局域网直连成功" : "连接正常", "success");
 				} catch (err) {
 					Toast$1((__$1("webdavTestFailed") || "连接失败: ") + err.message, 4e3);
 					updateStatus(err.message ? `连接失败: ${err.message}` : "连接失败", "error");
@@ -22064,7 +22170,7 @@
 			});
 			syncMergeBtn.addEventListener("click", async () => {
 				const currentCfg = persistCurrentInputs();
-				if (!currentCfg.url) {
+				if (!WebDavClient.hasValidEndpoint(currentCfg)) {
 					Toast$1(__$1("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
 					updateStatus("请输入服务器地址", "error");
 					return;
@@ -22091,7 +22197,7 @@
 			});
 			uploadBtn.addEventListener("click", async () => {
 				const currentCfg = persistCurrentInputs();
-				if (!currentCfg.url) {
+				if (!WebDavClient.hasValidEndpoint(currentCfg)) {
 					Toast$1(__$1("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
 					updateStatus("请输入服务器地址", "error");
 					return;
@@ -22118,7 +22224,7 @@
 			});
 			downloadBtn.addEventListener("click", async () => {
 				const currentCfg = persistCurrentInputs();
-				if (!currentCfg.url) {
+				if (!WebDavClient.hasValidEndpoint(currentCfg)) {
 					Toast$1(__$1("webdavTestFailed") || "请输入 WebDAV 服务器地址", 2500);
 					updateStatus("请输入服务器地址", "error");
 					return;
@@ -23136,7 +23242,7 @@
 			if (!this.bins || this.bins.length === 0) return;
 			try {
 				const config = SyncManager.getWebDavConfig();
-				if (!config || !config.url) return;
+				if (!WebDavClient.hasValidEndpoint(config)) return;
 				this.isSyncingWebDav = true;
 				const subPath = `heatmaps/${this.avcode}.json`;
 				const remoteData = await WebDavClient.downloadFile(config, subPath);
@@ -23259,7 +23365,7 @@
 			this.lastWebDavSyncTime = now;
 			try {
 				const config = SyncManager.getWebDavConfig();
-				if (!config || !config.url) return;
+				if (!WebDavClient.hasValidEndpoint(config)) return;
 				const subPath = `heatmaps/${this.avcode}.json`;
 				const dataToUpload = payload || {
 					avcode: this.avcode,

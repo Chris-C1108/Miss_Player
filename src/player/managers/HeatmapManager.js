@@ -395,7 +395,7 @@ export class HeatmapManager {
 
         try {
             const config = SyncManager.getWebDavConfig();
-            if (!config || !config.url) return;
+            if (!WebDavClient.hasValidEndpoint(config)) return;
 
             this.isSyncingWebDav = true;
             const subPath = `heatmaps/${this.avcode}.json`;
@@ -595,7 +595,7 @@ export class HeatmapManager {
 
         try {
             const config = SyncManager.getWebDavConfig();
-            if (!config || !config.url) return;
+            if (!WebDavClient.hasValidEndpoint(config)) return;
 
             const subPath = `heatmaps/${this.avcode}.json`;
             const dataToUpload = payload || {

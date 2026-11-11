@@ -28,6 +28,7 @@ export const PEACH_DEFAULT_STRM_DIR = '/Media/STRM/';
 export const PEACH_KEY_WEBDAV_MODE = 'mp_peach_webdav_mode';
 export const PEACH_KEY_WEBDAV_CUSTOM_DIR = 'mp_peach_webdav_custom_dir';
 export const PEACH_KEY_WEBDAV_STANDALONE_URL = 'mp_peach_webdav_standalone_url';
+export const PEACH_KEY_WEBDAV_STANDALONE_LAN_URL = 'mp_peach_webdav_standalone_lan_url';
 export const PEACH_KEY_WEBDAV_STANDALONE_USER = 'mp_peach_webdav_standalone_user';
 export const PEACH_KEY_WEBDAV_STANDALONE_PASS = 'mp_peach_webdav_standalone_pass';
 export const PEACH_KEY_WEBDAV_STANDALONE_DIR = 'mp_peach_webdav_standalone_dir';
@@ -186,6 +187,7 @@ export class PeachService {
         const webdavMode = getValue(PEACH_KEY_WEBDAV_MODE, PEACH_WEBDAV_MODE_SYNC_DEFAULT);
         const webdavCustomDir = getValue(PEACH_KEY_WEBDAV_CUSTOM_DIR, '') || strmDir || '/Media/STRM/';
         const webdavStandaloneUrl = getValue(PEACH_KEY_WEBDAV_STANDALONE_URL, '');
+        const webdavStandaloneLanUrl = getValue(PEACH_KEY_WEBDAV_STANDALONE_LAN_URL, '');
         const webdavStandaloneUser = getValue(PEACH_KEY_WEBDAV_STANDALONE_USER, '');
         const webdavStandalonePass = getValue(PEACH_KEY_WEBDAV_STANDALONE_PASS, '');
         const webdavStandaloneDir = getValue(PEACH_KEY_WEBDAV_STANDALONE_DIR, '/Media/STRM/');
@@ -202,6 +204,7 @@ export class PeachService {
             webdavMode,
             webdavCustomDir,
             webdavStandaloneUrl,
+            webdavStandaloneLanUrl,
             webdavStandaloneUser,
             webdavStandalonePass,
             webdavStandaloneDir
@@ -222,6 +225,7 @@ export class PeachService {
         webdavMode,
         webdavCustomDir,
         webdavStandaloneUrl,
+        webdavStandaloneLanUrl,
         webdavStandaloneUser,
         webdavStandalonePass,
         webdavStandaloneDir
@@ -262,6 +266,9 @@ export class PeachService {
         }
         if (typeof webdavStandaloneUrl === 'string') {
             setValue(PEACH_KEY_WEBDAV_STANDALONE_URL, webdavStandaloneUrl.trim());
+        }
+        if (typeof webdavStandaloneLanUrl === 'string') {
+            setValue(PEACH_KEY_WEBDAV_STANDALONE_LAN_URL, webdavStandaloneLanUrl.trim());
         }
         if (typeof webdavStandaloneUser === 'string') {
             setValue(PEACH_KEY_WEBDAV_STANDALONE_USER, webdavStandaloneUser.trim());
@@ -335,6 +342,7 @@ export class PeachService {
                 mode: PEACH_WEBDAV_MODE_STANDALONE,
                 config: {
                     url: peachConfig.webdavStandaloneUrl,
+                    lanUrl: peachConfig.webdavStandaloneLanUrl || '',
                     user: peachConfig.webdavStandaloneUser,
                     pass: peachConfig.webdavStandalonePass,
                     path: standaloneDir

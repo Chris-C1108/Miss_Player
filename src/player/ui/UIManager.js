@@ -737,7 +737,7 @@ export class UIManager {
         try {
             const effectiveWebDav = PeachService.getEffectiveWebDavConfig();
             const webDavConfig = effectiveWebDav?.config;
-            if (webDavConfig && webDavConfig.url && webDavConfig.user) {
+            if (WebDavClient.hasValidEndpoint(webDavConfig) && webDavConfig.user) {
                 const targetFilePath = `${effectiveWebDav.targetDir}${avcode}.strm`;
                 const exists = await WebDavClient.checkFileExists(webDavConfig, targetFilePath, 3500);
 
