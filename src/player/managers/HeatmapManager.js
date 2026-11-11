@@ -184,7 +184,8 @@ export class HeatmapManager {
         this.avcode = '';
         this.storageKey = null;
 
-        this.isDirty = false;
+        this.isLocalDirty = false;
+        this.isCloudDirty = false;
         this.lastCurrentTime = null;
         this.saveTimer = null;
         this.isEnabled = false;
@@ -209,6 +210,15 @@ export class HeatmapManager {
         this.onBeforeUnload = this.onBeforeUnload.bind(this);
     }
 
+    get isDirty() {
+        return this.isLocalDirty || this.isCloudDirty;
+    }
+
+    set isDirty(val) {
+        this.isLocalDirty = Boolean(val);
+        this.isCloudDirty = Boolean(val);
+    }
+
     init() {
         const settings = this.playerCore?.options?.playerState?.settings;
         this.isEnabled = Boolean(settings?.betaMode && settings?.betaHeatmap);
@@ -220,10 +230,12 @@ export class HeatmapManager {
         if (this.targetVideo) {
             this.targetVideo.addEventListener('timeupdate', this.onTimeUpdate);
             this.targetVideo.addEventListener('loadedmetadata', this.onLoadedMetadata);
+            this.targetVideo.addEventListener('durationchange', this.onLoadedMetadata);
+            this.targetVideo.addEventListener('canplay', this.onLoadedMetadata);
             this.targetVideo.addEventListener('pause', this.onPause);
             this.targetVideo.addEventListener('ended', this.onEnded);
 
-            if (this.targetVideo.duration && !isNaN(this.targetVideo.duration)) {
+            if (this.targetVideo.duration && !isNaN(this.targetVideo.duration) && this.targetVideo.duration > 0) {
                 this.onLoadedMetadata();
             }
         }
@@ -237,8 +249,12 @@ export class HeatmapManager {
 
         // 启动后台定时刷盘 (15 秒节流，仅写本地 IndexedDB，避免频繁打满 WebDAV)
         this.saveTimer = setInterval(() => {
-            if (this.isDirty) {
+            if (this.isLocalDirty) {
                 this.saveToDb(false);
+            }
+            // 兜底长效云端同步：持续播放期间若累积了未上云增量且距上次同步超过 60 秒，平滑自动上传 WebDAV 与社区
+            if (this.isCloudDirty && (Date.now() - this.lastWebDavSyncTime >= 60000)) {
+                this.saveToDb(true);
             }
         }, HEATMAP_CONSTANTS.SAVE_INTERVAL_MS);
 
@@ -371,10 +387,12 @@ export class HeatmapManager {
     }
 
     /**
-     * 异步从 WebDAV 独立文件恢复私有足迹并执行 Element-wise Max 合并
+     * 异步从 WebDAV 独立文件恢复私有足迹并执行双向 Element-wise Max 互愈漫游
      */
     async _syncFromWebDav() {
         if (this.isSyncingWebDav || !this.avcode || this.avcode === 'GLOBAL' || this.avcode === 'UNKNOWN') return;
+        if (!this.bins || this.bins.length === 0) return;
+
         try {
             const config = SyncManager.getWebDavConfig();
             if (!config || !config.url) return;
@@ -384,17 +402,31 @@ export class HeatmapManager {
             const remoteData = await WebDavClient.downloadFile(config, subPath);
 
             if (remoteData && Array.isArray(remoteData.bins) && remoteData.bins.length > 0) {
-                let updated = false;
+                let localUpdated = false;
+                let needUploadBack = false;
                 const len = Math.min(this.bins.length, remoteData.bins.length);
+
                 for (let i = 0; i < len; i++) {
                     const rv = remoteData.bins[i] || 0;
                     if (rv > this.bins[i]) {
                         this.bins[i] = rv;
-                        updated = true;
+                        localUpdated = true;
+                    } else if (this.bins[i] > rv) {
+                        needUploadBack = true;
                     }
                 }
 
-                if (updated) {
+                // 若本地数组较远程更长，多出来的分段若有有效播放，也需回写补全云端
+                if (this.bins.length > remoteData.bins.length) {
+                    for (let i = remoteData.bins.length; i < this.bins.length; i++) {
+                        if (this.bins[i] > 0) {
+                            needUploadBack = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (localUpdated) {
                     // 同步抬高水位线基准
                     if (this.watermarkBins) {
                         for (let i = 0; i < Math.min(this.watermarkBins.length, this.bins.length); i++) {
@@ -406,6 +438,17 @@ export class HeatmapManager {
                     this.renderSvg();
                     // 异步更新本地 IndexedDB
                     await this.saveToDb(false);
+                    window.DebugLogPanel?.addLog?.(`[Heatmap] 已从 WebDAV 合并云端足迹: ${this.avcode}`, 'success');
+                }
+
+                // 🌟 双向自愈：若本地包含远程未收录的历史波峰，立即回写补全云端 WebDAV！
+                if (needUploadBack) {
+                    this._uploadToWebDav();
+                }
+            } else {
+                // 🌟 冷启动自愈：云端尚无副本 (404/空)，若本地已存在有效足迹，立即上云初始化！
+                if (this._hasValidFootprint(this.bins)) {
+                    this._uploadToWebDav();
                 }
             }
         } catch (_) {
@@ -413,6 +456,21 @@ export class HeatmapManager {
         } finally {
             this.isSyncingWebDav = false;
         }
+    }
+
+    /**
+     * 判断当前 bins 是否包含有效播放足迹 (> 2 秒有效累积)
+     */
+    _hasValidFootprint(bins) {
+        if (!bins || bins.length === 0) return false;
+        let sum = 0;
+        for (let i = 0; i < bins.length; i++) {
+            if (bins[i] > 0) {
+                sum += bins[i];
+                if (sum > 2) return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -433,8 +491,13 @@ export class HeatmapManager {
     }
 
     onTimeUpdate() {
-        // 无论展示开关是否开启，均在后台静默记录用户播放频率
-        if (!this.bins || !this.targetVideo) return;
+        if (!this.targetVideo) return;
+        // 自动自愈：若元数据未在早期就绪，第一帧流逝时立即补全 bins
+        if ((!this.bins || this.bins.length === 0) && this.targetVideo.duration > 0) {
+            this.onLoadedMetadata();
+        }
+        if (!this.bins) return;
+
         if (this.targetVideo.paused || this.targetVideo.seeking) {
             this.lastCurrentTime = null;
             return;
@@ -454,13 +517,14 @@ export class HeatmapManager {
             const idx = Math.floor(ct / this.binSeconds);
             if (idx >= 0 && idx < this.bins.length) {
                 this.bins[idx] += delta;
-                this.isDirty = true;
+                this.isLocalDirty = true;
+                this.isCloudDirty = true;
             }
         }
     }
 
     onPause() {
-        if (this.isDirty) {
+        if (this.isCloudDirty || this.isLocalDirty) {
             this.saveToDb(true);
         }
         if (this.isEnabled) {
@@ -469,7 +533,7 @@ export class HeatmapManager {
     }
 
     onEnded() {
-        if (this.isDirty) {
+        if (this.isCloudDirty || this.isLocalDirty) {
             this.saveToDb(true);
         }
         if (this.isEnabled) {
@@ -478,13 +542,13 @@ export class HeatmapManager {
     }
 
     onVisibilityChange() {
-        if (document.hidden && this.isDirty) {
+        if (document.hidden && (this.isCloudDirty || this.isLocalDirty)) {
             this.saveToDb(true);
         }
     }
 
     onBeforeUnload() {
-        if (this.isDirty) {
+        if (this.isCloudDirty || this.isLocalDirty) {
             this.saveToDb(true);
         }
     }
@@ -495,7 +559,7 @@ export class HeatmapManager {
      */
     async saveToDb(syncToCloud = false) {
         if (!this.storageKey || !this.bins) return;
-        this.isDirty = false;
+        this.isLocalDirty = false;
 
         const payload = {
             avcode: this.avcode,
@@ -505,34 +569,51 @@ export class HeatmapManager {
             updatedAt: Date.now()
         };
 
+        // 立即触发 WebDAV 上传与社区增量上报 (不被本地 IndexedDB 异步排队阻滞)
+        if (syncToCloud) {
+            this._uploadToWebDav(payload);
+            this._reportCrowdDelta();
+        }
+
         try {
             await idbSet(STORES.HEATMAP, this.storageKey, payload);
         } catch (err) {
             console.warn('[HeatmapManager] 存储热度失败:', err?.message);
-        }
-
-        // 仅在离散节点 (暂停/播完/切后台/卸载) 异步触发 WebDAV 上传与社区增量上报
-        if (syncToCloud) {
-            this._uploadToWebDav(payload);
-            this._reportCrowdDelta();
         }
     }
 
     /**
      * 异步上传私有足迹至 WebDAV 独立文件
      */
-    async _uploadToWebDav(payload) {
+    async _uploadToWebDav(payload = null) {
         if (!this.avcode || this.avcode === 'GLOBAL' || this.avcode === 'UNKNOWN') return;
+        if (!payload && (!this.storageKey || !this.bins)) return;
+
         const now = Date.now();
-        if (now - this.lastWebDavSyncTime < 8000) return; // 8秒内防并发重叠 PUT
+        if (now - this.lastWebDavSyncTime < 5000) return; // 5秒内防并发重叠 PUT
         this.lastWebDavSyncTime = now;
 
         try {
             const config = SyncManager.getWebDavConfig();
             if (!config || !config.url) return;
+
             const subPath = `heatmaps/${this.avcode}.json`;
-            await WebDavClient.uploadFile(config, subPath, payload, 'application/json; charset=utf-8');
-        } catch (_) {}
+            const dataToUpload = payload || {
+                avcode: this.avcode,
+                duration: this.duration,
+                binSeconds: this.binSeconds,
+                bins: Array.from(this.bins),
+                updatedAt: Date.now()
+            };
+
+            const res = await WebDavClient.uploadFile(config, subPath, dataToUpload, 'application/json; charset=utf-8');
+            if (res && (res.status === 200 || res.status === 201 || res.status === 204)) {
+                this.isCloudDirty = false;
+                window.DebugLogPanel?.addLog?.(`[Heatmap] 已向 WebDAV 漫游上传足迹: ${this.avcode}`, 'success');
+            }
+        } catch (err) {
+            console.warn('[HeatmapManager] WebDAV 上传异常:', err?.message);
+        }
     }
 
     /**
@@ -622,13 +703,15 @@ export class HeatmapManager {
             this.saveTimer = null;
         }
 
-        if (this.isDirty) {
+        if (this.isCloudDirty || this.isLocalDirty) {
             this.saveToDb(true);
         }
 
-        if (this.targetVideo) {
+        if (this.targetVideo && typeof this.targetVideo.removeEventListener === 'function') {
             this.targetVideo.removeEventListener('timeupdate', this.onTimeUpdate);
             this.targetVideo.removeEventListener('loadedmetadata', this.onLoadedMetadata);
+            this.targetVideo.removeEventListener('durationchange', this.onLoadedMetadata);
+            this.targetVideo.removeEventListener('canplay', this.onLoadedMetadata);
             this.targetVideo.removeEventListener('pause', this.onPause);
             this.targetVideo.removeEventListener('ended', this.onEnded);
         }

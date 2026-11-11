@@ -244,4 +244,52 @@ assert.ok(hmDualTrack.pathCrowdElement.getAttribute('d').length > 0, '社区高�
 hmDualTrack.destroy();
 console.log('✅ 7. 双轨波形渲染与 WebDAV Element-wise Max 合并测试全部通过');
 
-console.log('\n🎉 全部 7 项视频播放热度、探索足迹与双轨同步状态测试 100% 通过！\n');
+// 8. 验证冷启动存量足迹自动上云与脏标记解耦 (Two-Way Reconciliation & Dirty Decoupling)
+const hmSyncRecon = new HeatmapManager(mockCoreTrack, mockControlMgr);
+hmSyncRecon.init();
+hmSyncRecon.bins = new Float32Array(20);
+hmSyncRecon.bins[3] = 12; // 本地存量足迹
+
+// 8.1 验证有效足迹探测
+assert.strictEqual(hmSyncRecon._hasValidFootprint(hmSyncRecon.bins), true, '本地包含 12 秒流逝必须判定为有效足迹');
+assert.strictEqual(hmSyncRecon._hasValidFootprint(new Float32Array(20)), false, '全 0 数组不能判定为有效足迹');
+
+// 8.2 验证播放流逝时本地脏标记与云端脏标记同时激活
+hmSyncRecon.targetVideo = {
+    paused: false,
+    seeking: false,
+    currentTime: 25,
+    duration: 100,
+    addEventListener: () => {},
+    removeEventListener: () => {}
+};
+hmSyncRecon.lastCurrentTime = 24;
+hmSyncRecon.onTimeUpdate();
+assert.strictEqual(hmSyncRecon.isLocalDirty, true, '流逝推进时 isLocalDirty 必须置为 true');
+assert.strictEqual(hmSyncRecon.isCloudDirty, true, '流逝推进时 isCloudDirty 必须置为 true');
+
+// 8.3 验证 15 秒本地刷盘仅清除 isLocalDirty，保留 isCloudDirty
+let webDavUploadTriggered = false;
+let uploadedPayload = null;
+hmSyncRecon._uploadToWebDav = async (payload) => {
+    webDavUploadTriggered = true;
+    uploadedPayload = payload;
+    hmSyncRecon.isCloudDirty = false;
+};
+
+// 触发 saveToDb(false)，模拟 15 秒定时器仅保存本地 IndexedDB
+await hmSyncRecon.saveToDb(false);
+assert.strictEqual(hmSyncRecon.isLocalDirty, false, 'saveToDb(false) 必须清空 isLocalDirty');
+assert.strictEqual(hmSyncRecon.isCloudDirty, true, 'saveToDb(false) 绝不能误清空 isCloudDirty (防定时器吞噬离散同步)');
+assert.strictEqual(webDavUploadTriggered, false, 'saveToDb(false) 不得提前触发 WebDAV PUT');
+
+// 8.4 模拟用户点击暂停 (onPause)，必须由于 isCloudDirty 成功触发云端漫游上报
+hmSyncRecon.onPause();
+await new Promise(r => setTimeout(r, 10));
+assert.strictEqual(webDavUploadTriggered, true, 'onPause 时由于 isCloudDirty 必须成功触发 WebDAV 上传');
+assert.strictEqual(hmSyncRecon.isCloudDirty, false, '成功上传 WebDAV 后 isCloudDirty 必须安全归零');
+
+hmSyncRecon.destroy();
+console.log('✅ 8. 冷启动存量足迹自动上云与脏标记解耦自愈测试全部通过');
+
+console.log('\n🎉 全部 8 项视频播放热度、探索足迹与双轨同步状态测试 100% 通过！\n');

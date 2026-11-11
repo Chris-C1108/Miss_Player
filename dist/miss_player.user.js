@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.003
+// @version            5.7.118-beta.004
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.003";
+		return "5.7.118-beta.004";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3281,7 +3281,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.003";
+		return "5.7.118-beta.004";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -4860,7 +4860,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.003";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.004";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -22896,7 +22896,8 @@
 			this.duration = 0;
 			this.avcode = "";
 			this.storageKey = null;
-			this.isDirty = false;
+			this.isLocalDirty = false;
+			this.isCloudDirty = false;
 			this.lastCurrentTime = null;
 			this.saveTimer = null;
 			this.isEnabled = false;
@@ -22916,6 +22917,13 @@
 			this.onVisibilityChange = this.onVisibilityChange.bind(this);
 			this.onBeforeUnload = this.onBeforeUnload.bind(this);
 		}
+		get isDirty() {
+			return this.isLocalDirty || this.isCloudDirty;
+		}
+		set isDirty(val) {
+			this.isLocalDirty = Boolean(val);
+			this.isCloudDirty = Boolean(val);
+		}
 		init() {
 			const settings = this.playerCore?.options?.playerState?.settings;
 			this.isEnabled = Boolean(settings?.betaMode && settings?.betaHeatmap);
@@ -22925,14 +22933,17 @@
 			if (this.targetVideo) {
 				this.targetVideo.addEventListener("timeupdate", this.onTimeUpdate);
 				this.targetVideo.addEventListener("loadedmetadata", this.onLoadedMetadata);
+				this.targetVideo.addEventListener("durationchange", this.onLoadedMetadata);
+				this.targetVideo.addEventListener("canplay", this.onLoadedMetadata);
 				this.targetVideo.addEventListener("pause", this.onPause);
 				this.targetVideo.addEventListener("ended", this.onEnded);
-				if (this.targetVideo.duration && !isNaN(this.targetVideo.duration)) this.onLoadedMetadata();
+				if (this.targetVideo.duration && !isNaN(this.targetVideo.duration) && this.targetVideo.duration > 0) this.onLoadedMetadata();
 			}
 			if (typeof document !== "undefined") document.addEventListener("visibilitychange", this.onVisibilityChange);
 			if (typeof window !== "undefined") window.addEventListener("beforeunload", this.onBeforeUnload);
 			this.saveTimer = setInterval(() => {
-				if (this.isDirty) this.saveToDb(false);
+				if (this.isLocalDirty) this.saveToDb(false);
+				if (this.isCloudDirty && Date.now() - this.lastWebDavSyncTime >= 6e4) this.saveToDb(true);
 			}, HEATMAP_CONSTANTS.SAVE_INTERVAL_MS);
 			this._updateVisibility();
 			return this;
@@ -23006,6 +23017,7 @@
 		}
 		async _syncFromWebDav() {
 			if (this.isSyncingWebDav || !this.avcode || this.avcode === "GLOBAL" || this.avcode === "UNKNOWN") return;
+			if (!this.bins || this.bins.length === 0) return;
 			try {
 				const config = SyncManager.getWebDavConfig();
 				if (!config || !config.url) return;
@@ -23013,26 +23025,44 @@
 				const subPath = `heatmaps/${this.avcode}.json`;
 				const remoteData = await WebDavClient.downloadFile(config, subPath);
 				if (remoteData && Array.isArray(remoteData.bins) && remoteData.bins.length > 0) {
-					let updated = false;
+					let localUpdated = false;
+					let needUploadBack = false;
 					const len = Math.min(this.bins.length, remoteData.bins.length);
 					for (let i = 0; i < len; i++) {
 						const rv = remoteData.bins[i] || 0;
 						if (rv > this.bins[i]) {
 							this.bins[i] = rv;
-							updated = true;
+							localUpdated = true;
+						} else if (this.bins[i] > rv) needUploadBack = true;
+					}
+					if (this.bins.length > remoteData.bins.length) {
+						for (let i = remoteData.bins.length; i < this.bins.length; i++) if (this.bins[i] > 0) {
+							needUploadBack = true;
+							break;
 						}
 					}
-					if (updated) {
+					if (localUpdated) {
 						if (this.watermarkBins) {
 							for (let i = 0; i < Math.min(this.watermarkBins.length, this.bins.length); i++) if (this.bins[i] > this.watermarkBins[i]) this.watermarkBins[i] = this.bins[i];
 						}
 						this.renderSvg();
 						await this.saveToDb(false);
+						window.DebugLogPanel?.addLog?.(`[Heatmap] 已从 WebDAV 合并云端足迹: ${this.avcode}`, "success");
 					}
-				}
+					if (needUploadBack) this._uploadToWebDav();
+				} else if (this._hasValidFootprint(this.bins)) this._uploadToWebDav();
 			} catch (_) {} finally {
 				this.isSyncingWebDav = false;
 			}
+		}
+		_hasValidFootprint(bins) {
+			if (!bins || bins.length === 0) return false;
+			let sum = 0;
+			for (let i = 0; i < bins.length; i++) if (bins[i] > 0) {
+				sum += bins[i];
+				if (sum > 2) return true;
+			}
+			return false;
 		}
 		async _loadCrowdHeatmap() {
 			if (!this.isCrowdEnabled || !this.avcode || this.avcode === "GLOBAL" || this.avcode === "UNKNOWN") return;
@@ -23048,7 +23078,9 @@
 			} catch (_) {}
 		}
 		onTimeUpdate() {
-			if (!this.bins || !this.targetVideo) return;
+			if (!this.targetVideo) return;
+			if ((!this.bins || this.bins.length === 0) && this.targetVideo.duration > 0) this.onLoadedMetadata();
+			if (!this.bins) return;
 			if (this.targetVideo.paused || this.targetVideo.seeking) {
 				this.lastCurrentTime = null;
 				return;
@@ -23064,27 +23096,28 @@
 				const idx = Math.floor(ct / this.binSeconds);
 				if (idx >= 0 && idx < this.bins.length) {
 					this.bins[idx] += delta;
-					this.isDirty = true;
+					this.isLocalDirty = true;
+					this.isCloudDirty = true;
 				}
 			}
 		}
 		onPause() {
-			if (this.isDirty) this.saveToDb(true);
+			if (this.isCloudDirty || this.isLocalDirty) this.saveToDb(true);
 			if (this.isEnabled) this.renderSvg();
 		}
 		onEnded() {
-			if (this.isDirty) this.saveToDb(true);
+			if (this.isCloudDirty || this.isLocalDirty) this.saveToDb(true);
 			if (this.isEnabled) this.renderSvg();
 		}
 		onVisibilityChange() {
-			if (document.hidden && this.isDirty) this.saveToDb(true);
+			if (document.hidden && (this.isCloudDirty || this.isLocalDirty)) this.saveToDb(true);
 		}
 		onBeforeUnload() {
-			if (this.isDirty) this.saveToDb(true);
+			if (this.isCloudDirty || this.isLocalDirty) this.saveToDb(true);
 		}
 		async saveToDb(syncToCloud = false) {
 			if (!this.storageKey || !this.bins) return;
-			this.isDirty = false;
+			this.isLocalDirty = false;
 			const payload = {
 				avcode: this.avcode,
 				duration: this.duration,
@@ -23092,27 +23125,41 @@
 				bins: Array.from(this.bins),
 				updatedAt: Date.now()
 			};
+			if (syncToCloud) {
+				this._uploadToWebDav(payload);
+				this._reportCrowdDelta();
+			}
 			try {
 				await idbSet(STORES$1.HEATMAP, this.storageKey, payload);
 			} catch (err) {
 				console.warn("[HeatmapManager] 存储热度失败:", err?.message);
 			}
-			if (syncToCloud) {
-				this._uploadToWebDav(payload);
-				this._reportCrowdDelta();
-			}
 		}
-		async _uploadToWebDav(payload) {
+		async _uploadToWebDav(payload = null) {
 			if (!this.avcode || this.avcode === "GLOBAL" || this.avcode === "UNKNOWN") return;
+			if (!payload && (!this.storageKey || !this.bins)) return;
 			const now = Date.now();
-			if (now - this.lastWebDavSyncTime < 8e3) return;
+			if (now - this.lastWebDavSyncTime < 5e3) return;
 			this.lastWebDavSyncTime = now;
 			try {
 				const config = SyncManager.getWebDavConfig();
 				if (!config || !config.url) return;
 				const subPath = `heatmaps/${this.avcode}.json`;
-				await WebDavClient.uploadFile(config, subPath, payload, "application/json; charset=utf-8");
-			} catch (_) {}
+				const dataToUpload = payload || {
+					avcode: this.avcode,
+					duration: this.duration,
+					binSeconds: this.binSeconds,
+					bins: Array.from(this.bins),
+					updatedAt: Date.now()
+				};
+				const res = await WebDavClient.uploadFile(config, subPath, dataToUpload, "application/json; charset=utf-8");
+				if (res && (res.status === 200 || res.status === 201 || res.status === 204)) {
+					this.isCloudDirty = false;
+					window.DebugLogPanel?.addLog?.(`[Heatmap] 已向 WebDAV 漫游上传足迹: ${this.avcode}`, "success");
+				}
+			} catch (err) {
+				console.warn("[HeatmapManager] WebDAV 上传异常:", err?.message);
+			}
 		}
 		async _reportCrowdDelta() {
 			if (!this.isCrowdEnabled || !this.avcode || this.avcode === "GLOBAL" || this.avcode === "UNKNOWN") return;
@@ -23169,10 +23216,12 @@
 				clearInterval(this.saveTimer);
 				this.saveTimer = null;
 			}
-			if (this.isDirty) this.saveToDb(true);
-			if (this.targetVideo) {
+			if (this.isCloudDirty || this.isLocalDirty) this.saveToDb(true);
+			if (this.targetVideo && typeof this.targetVideo.removeEventListener === "function") {
 				this.targetVideo.removeEventListener("timeupdate", this.onTimeUpdate);
 				this.targetVideo.removeEventListener("loadedmetadata", this.onLoadedMetadata);
+				this.targetVideo.removeEventListener("durationchange", this.onLoadedMetadata);
+				this.targetVideo.removeEventListener("canplay", this.onLoadedMetadata);
 				this.targetVideo.removeEventListener("pause", this.onPause);
 				this.targetVideo.removeEventListener("ended", this.onEnded);
 			}
