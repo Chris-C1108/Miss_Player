@@ -62,4 +62,29 @@ assert.ok(c2CardHtml.includes('data-collapsed="false"'), '新评论加载重绘�
 assert.ok(c2CardHtml.includes('>收起</button>'), '新评论加载重绘后，老评论 c2 必须依然为“收起”');
 console.log('✅ 4. 新评论到达触发重绘时，已展开评论维持展开验证通过');
 
-console.log('\n🎉 全部 4 项评论展开与增量状态保持测试 100% 通过！\n');
+// 5. 验证 CSS 防击穿与自适应包裹规范 (Anti-Penetration & Gap Elimination Contract)
+import fs from 'fs';
+const commentsCss = fs.readFileSync('src/player/ui/styles/_comments.css', 'utf8');
+
+// 5.1 .tm-comments-panel 必须为 pointer-events: auto 且具备深色实体图层，禁止 pointer-events: none 导致 iOS WebKit 穿透呼出键盘
+assert.ok(commentsCss.includes('.tm-comments-panel {'), '必须包含 .tm-comments-panel 样式声明');
+const panelStyleBlock = commentsCss.split('.tm-comments-panel {')[1].split('}')[0];
+assert.ok(panelStyleBlock.includes('pointer-events: auto;'), 'tm-comments-panel 必须显式声明 pointer-events: auto; 阻断点击穿透');
+assert.ok(!panelStyleBlock.includes('pointer-events: none;'), 'tm-comments-panel 严禁出现 pointer-events: none;');
+assert.ok(panelStyleBlock.includes('background-color: #0b0b0e;') || panelStyleBlock.includes('background-color: var('), 'tm-comments-panel 必须具备实体背景色');
+console.log('✅ 5.1 tm-comments-panel 实体图层与防击穿属性验证通过');
+
+// 5.2 .tm-comment-section:not(.is-collapsed) 必须为 flex: 0 1 auto，拒绝 flex: 1 强行撑开巨大死留白
+const uncollapsedBlock = commentsCss.split('.tm-comment-section:not(.is-collapsed) {')[1].split('}')[0];
+assert.ok(uncollapsedBlock.includes('flex: 0 1 auto;'), '展开分区必须为 flex: 0 1 auto 自适应收缩包裹');
+assert.ok(uncollapsedBlock.includes('max-height: 100%;'), '展开分区必须设置 max-height 边界约束');
+assert.ok(!uncollapsedBlock.includes('flex: 1;'), '展开分区严禁使用 flex: 1 强行占满父容器产生空白');
+console.log('✅ 5.2 展开分区自适应包裹与死留白消除验证通过');
+
+// 6. 验证 CommentPanel.js 中的 touch 拦截与防击穿事件守卫
+const commentPanelJs = fs.readFileSync('src/player/controls/CommentPanel.js', 'utf8');
+assert.ok(commentPanelJs.includes('isInteractive'), 'CommentPanel 必须具备 isInteractive 交互元素检测');
+assert.ok(commentPanelJs.includes('!isInteractive && !isSubmitBar'), 'CommentPanel 必须对非交互区域的 touchstart 执行事件冒泡阻断');
+console.log('✅ 6. CommentPanel touch 事件防冒泡与防穿透守卫验证通过');
+
+console.log('\n🎉 全部 6 项评论防击穿、防虚拟键盘呼起与自适应包裹测试 100% 通过！\n');

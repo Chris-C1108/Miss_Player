@@ -2170,6 +2170,12 @@ export class CommentPanel {
                     this.uiManager.hideControls(true);
                 }
             }
+
+            // 物理防击穿：若触摸点落在非可交互区域（非输入、非按钮、非链接、非展开手柄），彻底阻断 touch 事件冒泡至宿主页面，杜绝 iOS Safari 唤起虚拟键盘
+            const isInteractive = !!e.target.closest('a, button, input, textarea, select, .jc-time-link, .jc-code-link, .jc-toggle-expand-btn, .tm-comment-retry-btn, .jc-report-btn, .jc-countdown-btn, .tm-comment-section-hdr');
+            if (!isInteractive && !isSubmitBar) {
+                e.stopPropagation();
+            }
         };
         this.commentsPanel.addEventListener('touchstart', handleCommentTouchStart, { passive: false });
         this.commentsPanel.addEventListener('mousedown', handleCommentTouchStart, { passive: false });
