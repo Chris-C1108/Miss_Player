@@ -17,11 +17,63 @@ const EVENT_COLLECTOR_PATH = path.join(ROOT_DIR, 'src/telemetry/EventCollector.j
 const SYNC_MANAGER_PATH = path.join(ROOT_DIR, 'src/sync/SyncManager.js');
 const SLEAZYFORK_SERVICE_PATH = path.join(ROOT_DIR, 'src/services/SleazyForkService.js');
 
-function bumpPatch(version) {
-    // 支持 5.7.113-001 格式的自增 (保持三位补零)
+/**
+ * SemVer 2.0.0 比对引擎 (防版本倒退卫兵)
+ */
+function parseSemVer(v) {
+    const raw = String(v).replace(/^v/i, '').trim();
+    const [core, ...preParts] = raw.split('-');
+    const prerelease = preParts.length > 0 ? preParts.join('-') : null;
+    const coreNums = core.split('.').map(n => parseInt(n, 10));
+    while (coreNums.length < 3) coreNums.push(0);
+    return {
+        core: coreNums.slice(0, 3),
+        prerelease: prerelease ? prerelease.split('.') : []
+    };
+}
+
+function compareVersions(v1, v2) {
+    const r1 = parseSemVer(v1);
+    const r2 = parseSemVer(v2);
+    for (let i = 0; i < 3; i++) {
+        if (r1.core[i] > r2.core[i]) return 1;
+        if (r1.core[i] < r2.core[i]) return -1;
+    }
+    if (r1.prerelease.length === 0 && r2.prerelease.length > 0) return 1;
+    if (r1.prerelease.length > 0 && r2.prerelease.length === 0) return -1;
+    if (r1.prerelease.length > 0 && r2.prerelease.length > 0) {
+        const len = Math.max(r1.prerelease.length, r2.prerelease.length);
+        for (let i = 0; i < len; i++) {
+            const p1 = r1.prerelease[i];
+            const p2 = r2.prerelease[i];
+            if (p1 === undefined) return -1;
+            if (p2 === undefined) return 1;
+            const n1 = /^\d+$/.test(p1) ? parseInt(p1, 10) : null;
+            const n2 = /^\d+$/.test(p2) ? parseInt(p2, 10) : null;
+            if (n1 !== null && n2 !== null) {
+                if (n1 > n2) return 1;
+                if (n1 < n2) return -1;
+            } else if (n1 !== null && n2 === null) {
+                return -1;
+            } else if (n1 === null && n2 !== null) {
+                return 1;
+            } else {
+                const cmp = p1.localeCompare(p2);
+                if (cmp !== 0) return cmp > 0 ? 1 : -1;
+            }
+        }
+    }
+    return 0;
+}
+
+function bumpPatch(version, isRelease = false) {
     const dashMatch = version.match(/^(\d+\.\d+\.\d+)-(\d+)$/);
     if (dashMatch) {
         const base = dashMatch[1];
+        if (isRelease) {
+            // 从测试版转正：直接剥离预发布后缀 (如 5.7.115-001 ➔ 5.7.115)
+            return base;
+        }
         const num = parseInt(dashMatch[2], 10) + 1;
         const padded = String(num).padStart(dashMatch[2].length, '0');
         return `${base}-${padded}`;
@@ -31,13 +83,34 @@ function bumpPatch(version) {
         throw new Error(`非法版本号格式: ${version}，期望格式如 5.7.4 或 5.7.113-001`);
     }
     parts[2] += 1;
-    return parts.join('.');
+    if (isRelease) {
+        return parts.join('.');
+    }
+    // 从无后缀的正式版开启新一轮日常开发测试：Patch + 1 并初始化为 -001
+    return `${parts.join('.')}-001`;
 }
 
 function run() {
     const pkg = JSON.parse(fs.readFileSync(PKG_PATH, 'utf8'));
     const oldVersion = pkg.version;
-    const targetVersion = process.argv[2] ? process.argv[2].trim() : bumpPatch(oldVersion);
+    const arg = process.argv[2] ? process.argv[2].trim() : '';
+    const isRelease = arg === '--release' || process.argv.includes('--release');
+    let targetVersion = '';
+
+    if (arg && arg !== '--release') {
+        targetVersion = arg;
+    } else {
+        targetVersion = bumpPatch(oldVersion, isRelease);
+    }
+
+    // 防版本倒退卫兵校验
+    const cmp = compareVersions(targetVersion, oldVersion);
+    if (cmp <= 0) {
+        console.error(`❌ [SemVer 防倒退阻断] 目标版本 ${targetVersion} 小于或等于当前版本 ${oldVersion}！`);
+        console.error(`   依据 SemVer 2.0.0 规范，具有相同主三段号时正式版高于预发布版 (例如 5.7.115 > 5.7.115-001)。`);
+        console.error(`   若需发布新测试版，请指定更高的主版本号 (如 5.7.116-001)。`);
+        process.exit(1);
+    }
 
     console.log(`🚀 开始执行版本号自增与五处原子同步: ${oldVersion} ➔ ${targetVersion}`);
 

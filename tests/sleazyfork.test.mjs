@@ -30,6 +30,10 @@ assert.strictEqual(compareVersions('5.6.24-beta', '5.6.24'), -1, '预发布版�
 assert.strictEqual(compareVersions('5.7.114', '5.7.113-029'), 1, '更高主版本应直接判定为新版');
 assert.strictEqual(compareVersions('5.7.114-001', '5.7.113-029'), 1, '下一主版本的预发布版本应高于上一版本');
 assert.strictEqual(compareVersions('5.6.24-beta.2', '5.6.24-beta.1'), 1, '多级点号预发布版本应正常数值比较');
+assert.strictEqual(compareVersions('5.7.115', '5.7.115-001'), 1, '正式版 5.7.115 严格高于同名测试版 5.7.115-001');
+assert.strictEqual(compareVersions('5.7.115-001', '5.7.115'), -1, '测试版 5.7.115-001 严格低于正式版 5.7.115');
+assert.strictEqual(compareVersions('5.7.116-001', '5.7.115'), 1, '下一代测试版 5.7.116-001 严格高于上一代正式版 5.7.115');
+assert.strictEqual(compareVersions('5.7.116-001', '5.7.115-001'), 1, '下一代测试版 5.7.116-001 严格高于 5.7.115-001');
 console.log('✅ 1. SemVer 2.0.0 语义化版本比对测试全部通过');
 
 // 2. 校验多语言字段完备性
