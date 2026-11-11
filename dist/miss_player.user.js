@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.113-028
+// @version            5.7.113-029
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-028";
+		return "5.7.113-029";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2776,13 +2776,17 @@
 	function __$1(id, lang = "") {
 		return I18n.translate(id, lang);
 	}
-	function checkShouldDefaultMute(playerState = null) {
+	function checkShouldDefaultMute(playerState = null, localAudibleTime = 0) {
 		const s = playerState?.settings;
 		if (!(s ? s.defaultMuted !== void 0 ? Boolean(s.defaultMuted) : getBool("defaultMuted", true) : getBool("defaultMuted", true))) return false;
-		const muteResetMinutes = s ? parseInt(s.muteResetMinutes, 10) || 5 : parseInt(getValue("muteResetMinutes", 5), 10) || 5;
+		const lastResetMinutes = s ? parseInt(s.muteResetMinutes, 10) || 5 : parseInt(getValue("muteResetMinutes", 5), 10) || 5;
 		const lastUnmutedTime = Number(getValue("lastUnmutedTime", 0)) || 0;
 		if (!lastUnmutedTime) return true;
-		return Date.now() - lastUnmutedTime >= Math.max(1, muteResetMinutes) * 60 * 1e3;
+		const lastExplicitMuteTime = Number(getValue("lastExplicitMuteTime", 0)) || 0;
+		if (lastExplicitMuteTime > lastUnmutedTime) return true;
+		if (Date.now() - lastUnmutedTime >= Math.max(1, lastResetMinutes) * 60 * 1e3) return true;
+		if (lastExplicitMuteTime > 0 && localAudibleTime > 0 && lastExplicitMuteTime > localAudibleTime) return true;
+		return false;
 	}
 	var VolumeController = class {
 		constructor(playerCore, controlManager) {
@@ -2794,6 +2798,7 @@
 			this.volumeButton = null;
 			this.lastVolume = 1;
 			this.supportsVolumeControl = this.checkVolumeControlSupport();
+			this._localLastAudibleTime = this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0 ? Date.now() : 0;
 			this._onPlayHandler = null;
 			this._onPauseHandler = null;
 			this._onVisibilityChange = null;
@@ -2810,7 +2815,7 @@
 			};
 		}
 		shouldDefaultMute() {
-			return checkShouldDefaultMute(this.playerCore?.options?.playerState);
+			return checkShouldDefaultMute(this.playerCore?.options?.playerState, this._localLastAudibleTime);
 		}
 		recordUnmutedTime() {
 			setValue("lastUnmutedTime", Date.now());
@@ -2818,8 +2823,32 @@
 		recordExitState() {
 			const { defaultMuted } = this._getSettings();
 			if (!defaultMuted) return;
-			if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
-			else setValue("lastUnmutedTime", 0);
+			if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) {
+				const now = Date.now();
+				this.recordUnmutedTime();
+				this._localLastAudibleTime = now;
+			} else {
+				setValue("lastUnmutedTime", 0);
+				this._localLastAudibleTime = 0;
+			}
+		}
+		onReentry() {
+			if (!this.targetVideo) return;
+			const { defaultMuted } = this._getSettings();
+			if (!defaultMuted) return;
+			if (this.shouldDefaultMute()) {
+				if (!this.targetVideo.muted) {
+					this.targetVideo.muted = true;
+					if (this.supportsVolumeControl) {
+						this.lastVolume = this.targetVideo.volume > 0 ? this.targetVideo.volume : 1;
+						this.targetVideo.volume = 0;
+					}
+					this.updateVolumeUI();
+				}
+			} else if (!this.targetVideo.muted && this.targetVideo.volume > 0) {
+				this.recordUnmutedTime();
+				this._localLastAudibleTime = Date.now();
+			}
 		}
 		startUnmuteHeartbeat() {}
 		stopUnmuteHeartbeat() {}
@@ -2832,6 +2861,7 @@
 					this.targetVideo.muted = false;
 					if (this.supportsVolumeControl && this.targetVideo.volume === 0) this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
 					this.recordUnmutedTime();
+					this._localLastAudibleTime = Date.now();
 				}
 			}
 			this.updateVolumeUI();
@@ -2845,7 +2875,9 @@
 			if (this.targetVideo.volume === 0 || this.targetVideo.muted) {
 				this.targetVideo.muted = false;
 				if (this.supportsVolumeControl) this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
+				const now = Date.now();
 				this.recordUnmutedTime();
+				this._localLastAudibleTime = now;
 				Toast$1(`已取消静音 (音量 ${Math.round((this.targetVideo.volume || 1) * 100)}%)`, "info");
 			} else {
 				if (this.supportsVolumeControl) {
@@ -2853,7 +2885,9 @@
 					this.targetVideo.volume = 0;
 				}
 				this.targetVideo.muted = true;
+				setValue("lastExplicitMuteTime", Date.now());
 				setValue("lastUnmutedTime", 0);
+				this._localLastAudibleTime = 0;
 				Toast$1("已静音", "info");
 			}
 			this.updateVolumeUI();
@@ -2861,13 +2895,22 @@
 		_bindVideoLifecycleEvents() {
 			if (!this.targetVideo) return;
 			this._onPlayHandler = () => {
-				if (!this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
+				if (!this.targetVideo.muted && this.targetVideo.volume > 0) {
+					this.recordUnmutedTime();
+					this._localLastAudibleTime = Date.now();
+				}
 			};
 			this._onPauseHandler = () => {
-				if (!this.targetVideo.muted && this.targetVideo.volume > 0) this.recordUnmutedTime();
+				if (!this.targetVideo.muted && this.targetVideo.volume > 0) {
+					const now = Date.now();
+					this.recordUnmutedTime();
+					this._localLastAudibleTime = now;
+				}
 			};
 			this._onVisibilityChange = () => {
-				if (typeof document !== "undefined" && document.visibilityState === "hidden") this.recordExitState();
+				if (typeof document === "undefined") return;
+				if (document.visibilityState === "hidden") this.recordExitState();
+				else if (document.visibilityState === "visible") this.onReentry();
 			};
 			this._onPageHide = () => {
 				this.recordExitState();
@@ -3225,7 +3268,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.113-028";
+		return "5.7.113-029";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 || !v2) return 0;
@@ -4769,7 +4812,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-028";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.113-029";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

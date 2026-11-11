@@ -9,26 +9,45 @@ import { telemetry } from '../../telemetry/index.js';
  * 统一管理正常态与静音态交互与样式规范，支持默认静音播放及超时自动重置
  */
 /**
- * 判定是否应该处于默认静音状态 (有声租约机制核心决策函数)
+ * 判定是否应该处于默认静音状态 (有声租约机制核心决策函数，支持多标签重入后发意图继承)
  * @param {object|null} playerState
+ * @param {number} [localAudibleTime=0] 本标签页上一次处于有声状态的时间戳
  * @returns {boolean} true: 应当静音; false: 应当保持有声
  */
-export function checkShouldDefaultMute(playerState = null) {
+export function checkShouldDefaultMute(playerState = null, localAudibleTime = 0) {
     const s = playerState?.settings;
     const defaultMuted = s ? (s.defaultMuted !== undefined ? Boolean(s.defaultMuted) : getBool('defaultMuted', true)) : getBool('defaultMuted', true);
     if (!defaultMuted) {
         return false;
     }
 
-    const muteResetMinutes = s ? (parseInt(s.muteResetMinutes, 10) || 5) : (parseInt(getValue('muteResetMinutes', 5), 10) || 5);
+    const lastResetMinutes = s ? (parseInt(s.muteResetMinutes, 10) || 5) : (parseInt(getValue('muteResetMinutes', 5), 10) || 5);
     const lastUnmutedTime = Number(getValue('lastUnmutedTime', 0)) || 0;
     if (!lastUnmutedTime) {
-        return true; // 从未记录过取消静音或退出/手动时处于静音状态
+        return true; // 从未记录过取消静音或全局已处于静音状态
     }
 
-    const elapsed = Date.now() - lastUnmutedTime;
-    const resetMs = Math.max(1, muteResetMinutes) * 60 * 1000;
-    return elapsed >= resetMs; // 距离上次退出/活跃超过租约时间
+    const lastExplicitMuteTime = Number(getValue('lastExplicitMuteTime', 0)) || 0;
+    // 如果全局记录的主动静音发生在最近一次取消静音之后，说明全局已被后发的主动静音覆盖
+    if (lastExplicitMuteTime > lastUnmutedTime) {
+        return true;
+    }
+
+    const now = Date.now();
+    const elapsed = now - lastUnmutedTime;
+    const resetMs = Math.max(1, lastResetMinutes) * 60 * 1000;
+    if (elapsed >= resetMs) {
+        return true; // 全局租约已超时，必须重置为静音防突发打扰
+    }
+
+    // 跨标签意图继承检查：
+    // 若外部其他标签页在当前标签最后一次有声之后执行了“明确的主动静音” (lastExplicitMuteTime)
+    // 说明用户后来发出了全局防打扰意图，重入时应当恢复静音
+    if (lastExplicitMuteTime > 0 && localAudibleTime > 0 && lastExplicitMuteTime > localAudibleTime) {
+        return true;
+    }
+
+    return false; // 处于有效租约内，且外部无后发主动静音意图
 }
 
 export class VolumeController {
@@ -42,6 +61,9 @@ export class VolumeController {
         this.volumeButton = null;
         this.lastVolume = 1;
         this.supportsVolumeControl = this.checkVolumeControlSupport();
+
+        // 标签页本地最后一次有声活跃时间戳 (内存变量，用于跨标签后发意图继承判定)
+        this._localLastAudibleTime = (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) ? Date.now() : 0;
 
         this._onPlayHandler = null;
         this._onPauseHandler = null;
@@ -72,7 +94,7 @@ export class VolumeController {
      * @returns {boolean}
      */
     shouldDefaultMute() {
-        return checkShouldDefaultMute(this.playerCore?.options?.playerState);
+        return checkShouldDefaultMute(this.playerCore?.options?.playerState, this._localLastAudibleTime);
     }
 
     /**
@@ -93,9 +115,40 @@ export class VolumeController {
         if (!defaultMuted) return;
 
         if (this.targetVideo && !this.targetVideo.muted && this.targetVideo.volume > 0) {
+            const now = Date.now();
             this.recordUnmutedTime();
+            this._localLastAudibleTime = now;
         } else {
             setValue('lastUnmutedTime', 0);
+            this._localLastAudibleTime = 0;
+        }
+    }
+
+    /**
+     * 重入网关决策 (页面切回前台或播放器唤醒重入)
+     * 遵循活跃播放豁免原则与跨标签后发意图继承
+     */
+    onReentry() {
+        if (!this.targetVideo) return;
+        const { defaultMuted } = this._getSettings();
+        if (!defaultMuted) return;
+
+        const shouldMute = this.shouldDefaultMute();
+        if (shouldMute) {
+            if (!this.targetVideo.muted) {
+                this.targetVideo.muted = true;
+                if (this.supportsVolumeControl) {
+                    this.lastVolume = this.targetVideo.volume > 0 ? this.targetVideo.volume : 1;
+                    this.targetVideo.volume = 0;
+                }
+                this.updateVolumeUI();
+            }
+        } else {
+            // 处于有效租约内，且外部无后发主动静音意图
+            if (!this.targetVideo.muted && this.targetVideo.volume > 0) {
+                this.recordUnmutedTime();
+                this._localLastAudibleTime = Date.now();
+            }
         }
     }
 
@@ -126,6 +179,7 @@ export class VolumeController {
                     this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
                 }
                 this.recordUnmutedTime();
+                this._localLastAudibleTime = Date.now();
             }
         }
 
@@ -156,7 +210,9 @@ export class VolumeController {
             if (this.supportsVolumeControl) {
                 this.targetVideo.volume = this.lastVolume > 0 ? this.lastVolume : 1;
             }
+            const now = Date.now();
             this.recordUnmutedTime();
+            this._localLastAudibleTime = now;
             const currentVol = Math.round((this.targetVideo.volume || 1) * 100);
             Toast(`已取消静音 (音量 ${currentVol}%)`, 'info');
         } else {
@@ -166,8 +222,11 @@ export class VolumeController {
                 this.targetVideo.volume = 0;
             }
             this.targetVideo.muted = true;
-            // 用户主动静音，清空记忆时间戳，销毁有声租约，下一次打开必定静音
+            const now = Date.now();
+            // 记录全局主动静音时间戳，并销毁全局租约时间戳与本地有声时间戳
+            setValue('lastExplicitMuteTime', now);
             setValue('lastUnmutedTime', 0);
+            this._localLastAudibleTime = 0;
             Toast('已静音', 'info');
         }
 
@@ -184,19 +243,25 @@ export class VolumeController {
         this._onPlayHandler = () => {
             if (!this.targetVideo.muted && this.targetVideo.volume > 0) {
                 this.recordUnmutedTime();
+                this._localLastAudibleTime = Date.now();
             }
         };
 
         this._onPauseHandler = () => {
             if (!this.targetVideo.muted && this.targetVideo.volume > 0) {
                 // 暂停时刻封存最新时间戳，从此刻起开始计算离线/闲置时间
+                const now = Date.now();
                 this.recordUnmutedTime();
+                this._localLastAudibleTime = now;
             }
         };
 
         this._onVisibilityChange = () => {
-            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+            if (typeof document === 'undefined') return;
+            if (document.visibilityState === 'hidden') {
                 this.recordExitState();
+            } else if (document.visibilityState === 'visible') {
+                this.onReentry();
             }
         };
 
