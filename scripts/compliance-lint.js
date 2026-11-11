@@ -99,20 +99,25 @@ function runCheck() {
         console.log(`   ✅ 版本号一致 (${currentVer})`);
     }
 
-    // DownloadURL & UpdateURL 检查 (GitHub 直连更新通道)
-    const EXPECTED_DOWNLOAD_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js';
-    const EXPECTED_UPDATE_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js';
-    if (!meta.includes(EXPECTED_DOWNLOAD_URL)) {
-        console.error(`   ❌ 缺失或错误的 @downloadURL: 必须指向 GitHub raw 直链 ${EXPECTED_DOWNLOAD_URL}`);
+    // DownloadURL & UpdateURL 检查 (GitHub 直连更新通道，支持 dev 开发测试与 main 正式发版分支)
+    const validDownloadPrefix = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/';
+    const validDownloadSuffix = '/dist/miss_player.user.js';
+    const hasValidDownload = (meta.includes(`${validDownloadPrefix}dev${validDownloadSuffix}`) || meta.includes(`${validDownloadPrefix}main${validDownloadSuffix}`));
+
+    const validUpdateSuffix = '/dist/miss_player.meta.js';
+    const hasValidUpdate = (meta.includes(`${validDownloadPrefix}dev${validUpdateSuffix}`) || meta.includes(`${validDownloadPrefix}main${validUpdateSuffix}`));
+
+    if (!hasValidDownload) {
+        console.error(`   ❌ 缺失或错误的 @downloadURL: 必须指向 GitHub raw 直链 (dev 或 main 分支)`);
         hasErrors = true;
     } else {
-        console.log(`   ✅ @downloadURL 配置正确`);
+        console.log(`   ✅ @downloadURL 配置正确 (dev/main 分支适配)`);
     }
-    if (!meta.includes(EXPECTED_UPDATE_URL)) {
-        console.error(`   ❌ 缺失或错误的 @updateURL: 必须指向 GitHub raw 直链 ${EXPECTED_UPDATE_URL}`);
+    if (!hasValidUpdate) {
+        console.error(`   ❌ 缺失或错误的 @updateURL: 必须指向 GitHub raw 直链 (dev 或 main 分支)`);
         hasErrors = true;
     } else {
-        console.log(`   ✅ @updateURL 配置正确`);
+        console.log(`   ✅ @updateURL 配置正确 (dev/main 分支适配)`);
     }
 
     // Match root domains check

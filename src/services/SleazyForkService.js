@@ -22,9 +22,9 @@ export const CACHE_TTL_STABLE = 12 * 60 * 60 * 1000;
 export const CACHE_TTL_BETA = 5 * 60 * 1000;
 export const CACHE_TTL = CACHE_TTL_STABLE;
 
-export const GITHUB_RAW_META_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js';
-export const GITHUB_RAW_USER_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js';
-export const GITHUB_COMMITS_URL = 'https://github.com/Chris-C1108/Miss_Player/commits/main';
+export const GITHUB_RAW_META_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.meta.js';
+export const GITHUB_RAW_USER_URL = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.user.js';
+export const GITHUB_COMMITS_URL = 'https://github.com/Chris-C1108/Miss_Player/commits/dev';
 export const SLEAZYFORK_RAW_USER_URL = 'https://update.sleazyfork.org/scripts/' + OFFICIAL_SCRIPT_ID + '/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js';
 
 export function getCurrentVersion() {
@@ -33,7 +33,7 @@ export function getCurrentVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.7.116';
+    return '5.7.117-beta.001';
 }
 
 export function compareVersions(v1, v2) {
@@ -266,7 +266,7 @@ export class SleazyForkService {
         const timestamp = Date.now();
         let lastErr = null;
 
-        const rawTarget = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js';
+        const rawTarget = GITHUB_RAW_META_URL;
         const candidateUrls = [
             `${rawTarget}?_t=${timestamp}`,
             `https://ghfast.top/${rawTarget}?_t=${timestamp}`,

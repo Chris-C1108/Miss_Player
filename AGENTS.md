@@ -62,41 +62,47 @@
 * **自动化自增命令**：严禁手动逐个文件修改版本号，必须使用 `npm run bump` 执行原子自增（测试版自动自增 `-beta.xxx` 补丁序号，正式发版执行 `npm run bump:release`），或 `npm run bump -- <版本号>` 指定版本，确保 5 处强一致与防倒退阻断。
 
 ### 4. 每次构筑版本递增与 GitHub 推送刚性规范 (Build Auto-Bump & Mobile Test Sync)
-* **移动端真机测试闭环要求**：手机端油猴管理器（Safari Stay、Userscripts、Tampermonkey 等）依赖 GitHub main 分支 Raw 链接的 `miss_player.meta.js` 检查版本更新。如果构筑代码后版本号未变，手机端将因版本无变化而无法拉取新代码进行测试。
-* **构筑自增刚性约束**：每次完成功能编写、Bug 修复或代码构筑准备提交时，**必须且只能执行 `npm run bump` 自增版本号（强同步 5 处）**，随后执行 `npm run ci:check` 验证并生成最新 `dist/` 产物，最后必须**立即提交并推送到 GitHub `main` 分支**（`git push origin main`），实现手机端无缝即时检测更新与真机调试。
+* **移动端真机测试闭环要求**：手机端油猴管理器（Safari Stay、Userscripts、Tampermonkey 等）依赖 GitHub `dev` 分支 Raw 链接的 `miss_player.meta.js` 检查版本更新。如果构筑代码后版本号未变，手机端将因版本无变化而无法拉取新代码进行测试。
+* **构筑自增刚性约束**：每次完成功能编写、Bug 修复或代码构筑准备提交时，**必须且只能执行 `npm run bump` 自增版本号（强同步 5 处）**，随后执行 `npm run ci:check` 验证并生成最新 `dist/` 产物，最后必须**立即提交并推送到 GitHub `dev` 分支**（`git push origin dev`），实现手机端无缝即时检测更新与真机调试。
 * **更新通道与 CDN 缓存穿透防阻断守卫**：
   - 测试版通道本地缓存 TTL 严格限制在 5 分钟以内（`CACHE_TTL_BETA = 5min`），手动点击“检查更新”必须彻底穿透缓存；
-  - **严禁引入 jsdelivr 针对 `@main` 分支的引用作为更新检查源**（jsdelivr 对分支静态强缓存长达 12~24 小时，会导致真机测试失更）；
+  - **严禁引入 jsdelivr 针对 `@dev` 或 `@main` 分支的引用作为更新检查源**（jsdelivr 对分支静态强缓存长达 12~24 小时，会导致真机测试失更）；
   - 请求必须携带 `Cache-Control: no-cache, no-store, max-age=0, must-revalidate` 与 `Pragma: no-cache`。
-* **构建产物随源码同步提交**：构建生成的 `dist/miss_player.user.js`、`dist/miss_player.meta.js`、`dist/miss_player.proxy.user.js` 必须一并加入 Git 暂存区并推送到远程 main 分支，杜绝提交无产物的半成品。
+* **构建产物随源码同步提交**：构建生成的 `dist/miss_player.user.js`、`dist/miss_player.meta.js`、`dist/miss_player.proxy.user.js` 必须一并加入 Git 暂存区并推送到远程 dev 分支，杜绝提交无产物的半成品。
 
 ### 5. GitHub 直链元数据与 Raw URL 规范 (@downloadURL & @updateURL)
-脚本元数据头必须永久声明指向 GitHub 仓库 main 分支的 Raw 资源直链：
+脚本元数据头根据所处分支声明指向 GitHub 仓库对应分支的 Raw 资源直链：
 * **固定直链值**：
-  - `// @downloadURL https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js`
-  - `// @updateURL   https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js`
+  - **测试版 (`dev` 分支)**：
+    - `// @downloadURL https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.user.js`
+    - `// @updateURL   https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.meta.js`
+  - **正式版 (`main` 分支)**：
+    - `// @downloadURL https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js`
+    - `// @updateURL   https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js`
 * **严禁包含空格或使用 Web 前端路径 (CRITICAL)**：
-  - FORBIDDEN: `https://github.com/.../tree/main/...` 或 `blob/main/...` 或 URL 中携带空格 ➔ 此类路径返回的是 GitHub 的 HTML 网页，油猴管理器拉取时会因语法错误解析失败而中断更新。
+  - FORBIDDEN: `https://github.com/.../tree/...` 或 `blob/...` 或 URL 中携带空格 ➔ 此类路径返回的是 GitHub 的 HTML 网页，油猴管理器拉取时会因语法错误解析失败而中断更新。
   - USE: 必须使用 `raw.githubusercontent.com/...` 纯文本直链，保证油猴管理器能轻量读取 `meta.js` 检查版本，并在版本更新时拉取 `user.js`。
 
-### 6. 独立 release 分支双轨发版协议与绝不切换默认分支红线 (Isolated Release Branch Protocol)
-本项目采用“**GitHub main 主干滚动测试 + 远程 release 独立分支驱动 SleazyFork 正式发版**”的双轨架构：
+### 6. 双分支双轨发版协议：dev 开发测试工作区 + main 生产正式专有分支 (Dual-Branch Architecture)
+本项目采用“**GitHub dev 分支滚动开发测试 + 远程 main 独立专有分支驱动 SleazyFork 正式发版**”的双轨架构：
 * **双分支拓扑模型**：
-  - `main` 分支：**项目唯一的全局默认分支 (Default Branch)**，也是本地工作区常驻开发分支。日常开发、快速迭代与测试更新均在 `main` 上执行，推送到 `origin main`。从 GitHub 安装测试版的用户油猴内通过 `@updateURL` 直接从 main 接收热更新；
-  - `release` 分支：**生产正式发版专有分支，远程独立存在**。SleazyFork 后台设置为监听该分支的 Webhook：
-    `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/release/dist/miss_player.user.js`
-* **绝对红线：严禁切换默认分支 (Never Switch Default Branch)**：
-  - 本地与远程的默认分支必须**永久保持为 `main`**！
-  - **严禁在本地执行 `git checkout release`** 或将工作区指向其他分支；
-  - 必须使用原子映射推送指令：`git push origin main:release`，直接将本地经过验证的 `main` 分支代码同步至远程 `release` 分支，本地零切换、无污染！
-* **用户发版意图自动化执行规则 (Trigger Word: "发版")**：
+  - `dev` 分支：**日常开发测试常驻工作区 (Development & Testing Workspace)**，也是本地常驻开发分支。日常开发、快速迭代与真机调试均在 `dev` 上执行，推送到 `origin dev`。从 GitHub 安装测试版的用户油猴内通过 `@updateURL` 直接从 `dev` 接收热更新；
+  - `main` 分支：**生产正式发版专有分支 (Production Stable Branch)**。SleazyFork 后台设置为监听该分支的 Webhook：
+    `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js`
+    严禁在日常开发时向 `main` 提交未经测试的草稿或散碎 commit。
+* **绝对红线：本地工作区常驻 `dev`，原子镜像同步至 `main` (Stay on dev, Atomic Push to main)**：
+  - 本地常驻开发分支必须**永久保持为 `dev`**！
+  - **严禁在本地手动切换或将工作区指向其他分支**；
+  - 必须使用原子映射推送指令：`git push origin dev:main`，直接将本地经过验证的正式发版代码同步至远程 `main` 分支，本地零切换、无污染、Git 历史纯粹线性连贯！
+* **用户发版意图自动化执行规则 (Trigger Word: "发版" / "发布正式版")**：
   - **只要用户在对话中指示“发版”（无论是否携带具体版本号），Agent 必须且只需按照以下 7 步标准 SOP 全自动化执行**：
-    1. **门禁质检**：执行 `npm run ci:check`，确保全部自动化单元测试与合规门禁 100% 通过；
-    2. **版本自增（若需要）**：执行 `npm run bump`（Patch +0.0.1）或按用户指定版本强同步 5 处；
-    3. **构建产物**：执行 `npm run build`，确保 `dist/` 产物最新且无未提交修改；
-    4. **提交并推送 main**：`git add . && git commit -m "..." && git push origin main`；
-    5. **无缝镜像同步至 release 分支（绝不切换分支）**：执行 `git push origin main:release`，瞬间触发 SleazyFork Webhook 自动抓取上线；
-    6. **创建 GitHub Tag 与 Release**：执行 `git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z && gh release create vX.Y.Z dist/miss_player.user.js dist/miss_player.meta.js ...`；
+    1. **转正版本**：在 `dev` 分支执行 `npm run bump:release`，自动剥离 `-beta.xxx` 后缀转正为正式版（如 `5.7.117-beta.003` ➔ `5.7.117`）；
+    2. **门禁质检**：执行 `npm run ci:check`，确保全部自动化单元测试与合规门禁 100% 通过并编译出最新 `dist/`；
+    3. **提交发版代码**：`git add . && git commit -m "chore(release): vX.Y.Z 正式版本发布"`；
+    4. **原子镜像直推 main 分支（绝不切换本地分支）**：执行 `git push origin dev:main`，瞬间触发 SleazyFork Webhook 自动抓取上线；
+    5. **创建 GitHub Tag 与 Release**：执行 `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z && gh release create vX.Y.Z dist/miss_player.user.js dist/miss_player.meta.js dist/miss_player.proxy.user.js --title "vX.Y.Z ..." --notes "..."`；
+    6. **dev 分支开启下一代测试版**：在 `dev` 分支执行 `npm run bump`，自动自增开启下一代测试版（`vX.Y.(Z+1)-beta.001`）；
+    7. **提交并推送 dev**：`npm run ci:check && git add . && git commit -m "chore(test): 开启下一代测试版本 vX.Y.(Z+1)-beta.001" && git push origin dev`，确保工作区 clean，当前分支保持为 `dev`。
     7. **确认状态**：确认工作区 clean，当前分支保持为 `main`。
 
 ---
@@ -483,11 +489,13 @@ Miss Player 严格执行性能棘轮与零长任务守卫。完整测试方法�
 * **版本自增同步**：`npm run bump`（Patch +0.0.1 并原子同步 5 处）或 `npm run bump -- <version>`
 * **生产发布打包**：`npm run build`（生成 `dist/miss_player.user.js`、`dist/miss_player.meta.js`、`dist/miss_player.proxy.user.js`）
 * **自动化门禁质检**：`npm run ci:check`（版本五处强同步核验、打包、体积审计、合规 Lint、SleazyFork 测试与沙箱启动验证）
-* **GitHub 开发测试版推送工作流 (仅推 main)**：
-  `npm run bump && npm run ci:check && git add . && git commit -m "feat/fix: xxx" && git push origin main`
-* **正式发版标准 SOP (用户只要说“发版”即按此流水线全自动执行，绝不切换默认分支)**：
-  1. `npm run ci:check`（全项门禁检验通过）
-  2. `git push origin main`（确保 main 最新）
-  3. `git push origin main:release`（将 main 代码镜像直推远程 release 分支，瞬间触发 SleazyFork Webhook 自动上线，本地分支依然留在 main）
-  4. `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z`（打 Tag 并推送）
-  5. `gh release create vX.Y.Z dist/miss_player.user.js dist/miss_player.meta.js --title "vX.Y.Z ..." --notes "..."`（创建 GitHub Release）
+* **GitHub 开发测试版推送工作流 (仅推 dev)**：
+  `npm run bump && npm run ci:check && git add . && git commit -m "feat/fix: xxx" && git push origin dev`
+* **正式发版标准 SOP (用户只要说“发版”即按此流水线全自动执行，绝不切换本地 dev 分支)**：
+  1. `npm run bump:release`（在 dev 上剥离预发布后缀转正为正式版）
+  2. `npm run ci:check`（全项门禁检验通过并构建生产产物）
+  3. `git add . && git commit -m "chore(release): vX.Y.Z 正式版本发布"`
+  4. `git push origin dev:main`（将 dev 代码镜像直推远程 main 分支，瞬间触发 SleazyFork Webhook 自动上线，本地分支依然留在 dev）
+  5. `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z`（打 Tag 并推送）
+  6. `gh release create vX.Y.Z dist/miss_player.user.js dist/miss_player.meta.js dist/miss_player.proxy.user.js --title "vX.Y.Z ..." --notes "..."`（创建 GitHub Release）
+  7. `npm run bump && npm run ci:check && git add . && git commit -m "chore(test): 开启下一代测试版本 vX.Y.(Z+1)-beta.001" && git push origin dev`（开启下一代测试版本）

@@ -76,7 +76,7 @@ console.log('✅ 2. 全部 5 种语言的 18 项 i18n 国际化字典完整性�
 // 3. 测试纯净 URL 提取与剥离时间戳
 assert.strictEqual(getCleanScriptUrl('beta'), GITHUB_RAW_USER_URL, 'Beta 默认提取 GitHub Raw URL');
 assert.strictEqual(getCleanScriptUrl('stable'), SLEAZYFORK_RAW_USER_URL, 'Stable 默认提取 SleazyFork URL');
-const dirtyUrl = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js?_t=1730000000000#debug';
+const dirtyUrl = 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.user.js?_t=1730000000000#debug';
 assert.strictEqual(
     getCleanScriptUrl('beta', { code_url: dirtyUrl }),
     GITHUB_RAW_USER_URL,

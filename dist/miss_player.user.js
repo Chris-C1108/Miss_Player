@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.116
+// @version            5.7.117-beta.001
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -16,8 +16,8 @@
 // @description:vi     MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @license            MIT
 // @icon               https://missav.ws/img/favicon.ico
-// @downloadURL        https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js
-// @updateURL          https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js
+// @downloadURL        https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.user.js
+// @updateURL          https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.meta.js
 // @include            *
 // @include            http://*/*
 // @include            https://*/*
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.116";
+		return "5.7.117-beta.001";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3264,13 +3264,14 @@
 	var CACHE_KEY_TIME_BETA = "mp_update_last_check_beta";
 	var CACHE_TTL_STABLE = 432e5;
 	var CACHE_TTL_BETA = 3e5;
-	var GITHUB_RAW_USER_URL = "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js";
-	var GITHUB_COMMITS_URL = "https://github.com/Chris-C1108/Miss_Player/commits/main";
+	var GITHUB_RAW_META_URL = "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.meta.js";
+	var GITHUB_RAW_USER_URL = "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.user.js";
+	var GITHUB_COMMITS_URL = "https://github.com/Chris-C1108/Miss_Player/commits/dev";
 	function getCurrentVersion() {
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.116";
+		return "5.7.117-beta.001";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -3333,7 +3334,7 @@
 		return "unknown";
 	}
 	function getCleanScriptUrl(channel = "stable", meta = null) {
-		const rawUrl = meta?.code_url || (channel === "beta" ? "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js" : "https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js");
+		const rawUrl = meta?.code_url || (channel === "beta" ? "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.user.js" : "https://update.sleazyfork.org/scripts/453300/Miss%20Player%20%7C%20%E5%BD%B1%E9%99%A2%E6%A8%A1%E5%BC%8F%20%28%E5%8D%95%E6%89%8B%E6%92%AD%E6%94%BE%E5%99%A8%29.user.js");
 		return String(rawUrl).split("?")[0].split("#")[0].trim();
 	}
 	function buildInstallProtocolUrl(handler, scriptUrl) {
@@ -3422,7 +3423,7 @@
 		static async fetchGitHubMeta() {
 			const timestamp = Date.now();
 			let lastErr = null;
-			const rawTarget = "https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js";
+			const rawTarget = GITHUB_RAW_META_URL;
 			const candidateUrls = [
 				`${rawTarget}?_t=${timestamp}`,
 				`https://ghfast.top/${rawTarget}?_t=${timestamp}`,
@@ -4846,7 +4847,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.116";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.117-beta.001";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;

@@ -1,8 +1,18 @@
 import { defineConfig } from 'vite';
 import monkey from 'vite-plugin-monkey';
 import fs from 'fs';
+import { execSync } from 'child_process';
 
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+
+const gitBranch = (() => {
+  try {
+    const b = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+    return b === 'main' ? 'main' : 'dev';
+  } catch (_) {
+    return 'dev';
+  }
+})();
 
 export default defineConfig({
   server: {
@@ -89,8 +99,8 @@ export default defineConfig({
         ],
         'run-at': 'document-start',
         license: pkg.license,
-        downloadURL: 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js',
-        updateURL: 'https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js'
+        downloadURL: `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/${gitBranch}/dist/miss_player.user.js`,
+        updateURL: `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/${gitBranch}/dist/miss_player.meta.js`
       },
       build: {
         fileName: 'miss_player.user.js',
