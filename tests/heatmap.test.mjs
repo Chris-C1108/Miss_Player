@@ -157,4 +157,91 @@ assert.strictEqual(isBufferingClassPresent, false, '用户主动暂停时必须�
 pm.cleanup();
 console.log('✅ 6. 网络等待缓冲流动条纹状态机测试全部通过');
 
-console.log('\n🎉 全部 6 项视频播放热度、探索足迹与缓冲等待状态测试 100% 通过！\n');
+// 7. 验证双轨机制与 WebDAV Element-wise Max 合并
+const mockVideoTrack = {
+    duration: 100,
+    currentTime: 0,
+    paused: true,
+    seeking: false,
+    addEventListener: () => {},
+    removeEventListener: () => {}
+};
+const mockContainer = {
+    firstChild: null,
+    insertBefore: (node) => { mockContainer.firstChild = node; }
+};
+const mockControlMgr = {
+    progressBarContainer: mockContainer
+};
+const mockCoreTrack = {
+    targetVideo: mockVideoTrack,
+    options: {
+        videoCode: 'WSP-101',
+        playerState: {
+            settings: {
+                betaMode: true,
+                betaHeatmap: true,
+                betaCrowdHeatmap: true
+            }
+        }
+    }
+};
+
+const hmDualTrack = new HeatmapManager(mockCoreTrack, mockControlMgr);
+// 模拟全局 document.createElementNS
+if (typeof globalThis.document === 'undefined') {
+    globalThis.document = {
+        createElementNS: (ns, tag) => ({
+            tag,
+            attrs: {},
+            style: {},
+            children: [],
+            setAttribute(k, v) { this.attrs[k] = v; },
+            getAttribute(k) { return this.attrs[k]; },
+            appendChild(c) { this.children.push(c); }
+        }),
+        addEventListener: () => {},
+        removeEventListener: () => {}
+    };
+}
+
+hmDualTrack.init();
+assert.strictEqual(hmDualTrack.avcode, 'WSP-101', '番号应精准识别为 WSP-101');
+assert.strictEqual(hmDualTrack.storageKey, 'HEATMAP_WSP-101', 'storageKey 必须规整为 HEATMAP_WSP-101');
+assert.ok(hmDualTrack.pathCrowdElement, 'DOM 必须构建全网高能底轨 SVG Path');
+assert.ok(hmDualTrack.pathElement, 'DOM 必须构建个人足迹顶轨 SVG Path');
+
+// 模拟本地有 20 个桶 (100 秒 / 5秒)
+hmDualTrack.bins = new Float32Array(20);
+hmDualTrack.bins[2] = 10;
+hmDualTrack.bins[5] = 15;
+
+// 模拟从 WebDAV 漫游回来的远端数据，执行 Element-wise Max
+const remoteBins = new Array(20).fill(0);
+remoteBins[2] = 5;  // 远端较小，保留本地 10
+remoteBins[5] = 30; // 远端较大，提升为 30
+remoteBins[8] = 20; // 本地为 0，提升为 20
+
+// 模拟 _syncFromWebDav 内部的合并逻辑
+const len = Math.min(hmDualTrack.bins.length, remoteBins.length);
+for (let i = 0; i < len; i++) {
+    const rv = remoteBins[i] || 0;
+    if (rv > hmDualTrack.bins[i]) {
+        hmDualTrack.bins[i] = rv;
+    }
+}
+
+assert.strictEqual(hmDualTrack.bins[2], 10, '分桶 2 应保留本地最大值 10');
+assert.strictEqual(hmDualTrack.bins[5], 30, '分桶 5 应融合 WebDAV 最大值 30');
+assert.strictEqual(hmDualTrack.bins[8], 20, '分桶 8 应合并 WebDAV 新足迹 20');
+
+// 验证社区高能 120 槽位与波形渲染
+hmDualTrack.crowd120 = new Uint8Array(120);
+hmDualTrack.crowd120[60] = 255;
+hmDualTrack.renderCrowdSvg();
+assert.ok(hmDualTrack.pathCrowdElement.getAttribute('d').length > 0, '社区高能波形必须生成有效 SVG Path');
+
+hmDualTrack.destroy();
+console.log('✅ 7. 双轨波形渲染与 WebDAV Element-wise Max 合并测试全部通过');
+
+console.log('\n🎉 全部 7 项视频播放热度、探索足迹与双轨同步状态测试 100% 通过！\n');

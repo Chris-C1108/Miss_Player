@@ -399,9 +399,19 @@
     transition: fill 0.2s ease, d 0.3s ease;
 }
 
+.tm-heatmap-crowd-path {
+    fill: rgba(255, 159, 10, 0.30); /* Apple 珊瑚金半透明，高能片段波形 */
+    transition: fill 0.2s ease, d 0.3s ease;
+}
+
 .tm-progress-bar-container:hover .tm-heatmap-path,
 .tm-progress-bar-container:has(.tm-dragging) .tm-heatmap-path {
     fill: rgba(174, 174, 178, 0.52); /* 悬浮或拖拽时轻微提亮纯灰色 */
+}
+
+.tm-progress-bar-container:hover .tm-heatmap-crowd-path,
+.tm-progress-bar-container:has(.tm-dragging) .tm-heatmap-crowd-path {
+    fill: rgba(255, 179, 64, 0.45);
 }
 
 /* 进度条 */

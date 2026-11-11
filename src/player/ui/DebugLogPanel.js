@@ -257,3 +257,7 @@ export class DebugLogPanel {
         }
     }
 }
+
+if (typeof window !== 'undefined') {
+    window.DebugLogPanel = DebugLogPanel;
+}

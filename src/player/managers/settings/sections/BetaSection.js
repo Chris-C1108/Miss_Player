@@ -68,6 +68,20 @@ export class BetaSection {
         });
         betaSubWrap.appendChild(heatmapToggle.getElement());
 
+        const crowdHeatmapToggle = new ToggleRow({
+            title: __('betaCrowdHeatmap') || '全网高能进度条',
+            subtext: __('betaCrowdHeatmapDesc') || '分享并获取精彩片段热度',
+            checked: Boolean(this.settings.betaCrowdHeatmap),
+            onChange: (checked) => {
+                this.sm.updateSetting('betaCrowdHeatmap', checked);
+                const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
+                if (hm) {
+                    hm.setCrowdEnabled(checked);
+                }
+            }
+        });
+        betaSubWrap.appendChild(crowdHeatmapToggle.getElement());
+
         const undoToggle = new ToggleRow({
             title: __('betaCapsuleUndo') || '防误删除',
             subtext: __('betaCapsuleUndoDesc') || '删除保留 60 秒撤销',

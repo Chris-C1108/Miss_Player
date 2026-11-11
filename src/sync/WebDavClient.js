@@ -602,6 +602,16 @@ export class WebDavClient {
     }
 
     /**
+     * 下载 WebDAV 指定子路径文件 (如 'heatmaps/WSP-101.json')
+     * @param {Object} config - { url, user, pass, path }
+     * @param {string} subPath - 相对子路径
+     * @returns {Promise<Object|string|null>} 成功返回解析后的 JSON，不存在返回 null
+     */
+    static async downloadFile(config, subPath) {
+        return this.downloadBackup(config, subPath);
+    }
+
+    /**
      * 上传任意文本/JSON文件至 WebDAV 指定子目录
      * @param {Object} config - { url, user, pass, path }
      * @param {string} subPath - 相对子路径 (如 'logs/debug/xxx.txt' 或 'comments/xxx.json')

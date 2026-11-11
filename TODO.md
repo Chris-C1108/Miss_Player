@@ -28,6 +28,7 @@
 | **Phase 16** | **全局输入框与双模层叠上下文架构重构 (内外两界隔离与端态自适应)** | **达成 ✅** | 详见 Release v5.7.64 |
 | **Phase 17** | **Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环** | **达成 ✅** | **[Phase 17 专属规划方案](./docs/todo/phase-17-peach-strm-integration.md)** |
 | **Phase 19** | **流网关 (Miss Stream Gateway) 与脚本职责收敛为「只入库」** | **达成 ✅** | **[Phase 19 设计方案](./docs/todo/phase-19-stream-gateway.md)** |
+| **Phase 20** | **双轨播放热度图 (私有 WebDAV 漫游 + 社区全网高能 120 槽位量化)** | **达成 ✅** | 双轨 SVG 贝塞尔波形、Element-wise Max 漫游自愈、水位线差分增量防刷量 |
 
 ---
 

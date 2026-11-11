@@ -126,7 +126,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **EventManager**：集中式事件委托、快捷键绑定与全屏监听
 * **SettingsManager**：Apple 风格设置面板、遥控器运行模式控制、Beta 实验室、WebDAV 配置
 * **SingleHandManager**：竖屏单手操控模式管理器、侧边辅助条 (Utility Gutter) 挂载、左右手镜像与全宽还原状态机
-* **HeatmapManager**：视频观看热度与足迹探索管理器、5秒物理自适应分桶、局部峰值保留下采样与 SVG 贝塞尔波形渲染
+* **HeatmapManager**：视频观看热度与足迹探索管理器、双轨架构（私有足迹白光顶轨 + 社区高能珊瑚金底轨）、5秒物理自适应分桶、120分位定长量化编解码 (`heatmapCodec.js`)、水位线差分增量防滚雪球上报、WebDAV 跨域漫游合并 (Element-wise Max) 与双层 SVG 贝塞尔波形渲染
 
 ### 3. 增强业务功能
 * **评论系统**：`src/player/controls/CommentPanel.js` 与 `CommentScraper.js`（多源异步抓取 Jable / JavDB / JavLibrary、时间戳解析、逆向倒数时间校准、单条问题上报）
@@ -138,6 +138,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 
 ### 3.5 自托管服务端组件 (`services/`，不打包进脚本)
 * **流网关**：`services/miss-gateway/`（由 `services/miss-resolver/` 升级，Go 单静态二进制）— 按番号寻源（123AV / JAVVerse / Jable / MissAV）、注入 Referer、改写 m3u8、代理分片与 key。设计与契约见 [docs/todo/phase-19-stream-gateway.md](./docs/todo/phase-19-stream-gateway.md)
+* **社区高能边缘缓存**：`services/cf-heatmap-cache/`（Cloudflare Worker）— 社区高能进度条边缘 24h 缓存只读网关，单番号恒定 160 字符 Base64，免费层 10 万次/天充沛覆盖。
 
 ### 4. 服务与数据通道 (`src/services/` & `src/sync/`)
 * **Supabase 服务**：`src/services/SupabaseService.js` — 方案 1 高密度 JSONB 聚合仓储读取与服务端 RPC 原子合并
@@ -378,7 +379,7 @@ src/player/ui/styles/
 
 ### 4. WebDAV 独立文件拓扑规范
 * **严禁单一大文件合并**：严禁将全量番号评论塞入单一全局大文件；
-* **按番号独立存放**：每个番号全量评论独立写入 `/MissPlayer/comments/[AVCODE].json`，单次原子 `PUT` 极速落盘，各影片彻底解耦；
+* **按番号独立存放**：每个番号全量评论独立写入 `/MissPlayer/comments/[AVCODE].json`，单次原子 `PUT` 极速落盘，各影片彻底解耦；个人播放热度足迹独立写入 `/MissPlayer/heatmaps/[AVCODE].json`，实现跨站点（如 Peach 与 MissAV）零冲突 Element-wise Max 漫游自愈；
 * **Peach 入库目录**：`.strm` 默认写入 `/MissPlayer/peach-media/[AVCODE].strm`（复用同步 WebDAV），也可自定义目录或单独配置 WebDAV；该目录必须由 Peach 挂载。第三方同步盘批量写入时串行，间隔 ≥ 300 ms；
 * **PROPFIND 415 避坑**：发送空 Body 的 PROPFIND 请求时，**严禁携带 `Content-Type: application/xml` 标头**；必须将 415 与 405、207 一并视为目录已就绪，防止多余发起 `MKCOL` 导致刷屏黄告警。
 

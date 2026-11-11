@@ -1,5 +1,16 @@
 import { idbGet, idbSet, STORES } from '../../utils/indexedDB.js';
-import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
+import { getVideoCodeFromUrl, matchAvCodeFromText } from '../../utils/videoCode.js';
+import { WebDavClient } from '../../sync/WebDavClient.js';
+import { SyncManager } from '../../sync/SyncManager.js';
+import { SupabaseService } from '../../services/SupabaseService.js';
+import {
+    quantizeBinsTo120,
+    expand120ToBins,
+    calculateWatermarkDelta,
+    uint8ArrayToBase64,
+    base64ToUint8Array,
+    CODEC_CONSTANTS
+} from '../../utils/heatmapCodec.js';
 
 export const HEATMAP_CONSTANTS = {
     BIN_SECONDS: 5,        // 物理采样精度：每 5 秒为一个独立 bucket
@@ -154,6 +165,9 @@ export function generateSvgPath(points) {
 
 /**
  * 观看热度与探索足迹管理器 (HeatmapManager)
+ * 具备双轨机制：
+ * 1. 本地私有足迹轨：Local-First (IndexedDB) + WebDAV 独立文件漫游，打通 Peach 与全站点；
+ * 2. 社区全网高能轨 (Beta Opt-in)：120 分位定长字节量化 + 水位线增量差分防膨胀上报。
  */
 export class HeatmapManager {
     constructor(playerCore, controlManager, options = {}) {
@@ -164,16 +178,24 @@ export class HeatmapManager {
 
         this.binSeconds = HEATMAP_CONSTANTS.BIN_SECONDS;
         this.bins = null;
+        this.watermarkBins = null; // 上次已上报或同步的水位线快照
+        this.crowd120 = null;       // 社区 120 槽位 Uint8Array
         this.duration = 0;
+        this.avcode = '';
         this.storageKey = null;
 
         this.isDirty = false;
         this.lastCurrentTime = null;
         this.saveTimer = null;
         this.isEnabled = false;
+        this.isCrowdEnabled = false;
 
         this.svgElement = null;
         this.pathElement = null;
+        this.pathCrowdElement = null;
+
+        this.isSyncingWebDav = false;
+        this.lastWebDavSyncTime = 0;
 
         this._bindMethods();
     }
@@ -189,8 +211,8 @@ export class HeatmapManager {
 
     init() {
         const settings = this.playerCore?.options?.playerState?.settings;
-        const isBeta = Boolean(settings?.betaMode && settings?.betaHeatmap);
-        this.isEnabled = isBeta;
+        this.isEnabled = Boolean(settings?.betaMode && settings?.betaHeatmap);
+        this.isCrowdEnabled = Boolean(settings?.betaMode && settings?.betaCrowdHeatmap);
 
         this._resolveStorageKey();
         this._buildDom();
@@ -213,10 +235,10 @@ export class HeatmapManager {
             window.addEventListener('beforeunload', this.onBeforeUnload);
         }
 
-        // 启动后台定时刷盘 (15 秒节流，无论展示开关是否开启均静默持久化)
+        // 启动后台定时刷盘 (15 秒节流，仅写本地 IndexedDB，避免频繁打满 WebDAV)
         this.saveTimer = setInterval(() => {
             if (this.isDirty) {
-                this.saveToDb();
+                this.saveToDb(false);
             }
         }, HEATMAP_CONSTANTS.SAVE_INTERVAL_MS);
 
@@ -226,14 +248,45 @@ export class HeatmapManager {
 
     _resolveStorageKey() {
         let code = '';
-        try {
-            code = getVideoCodeFromUrl() || '';
-        } catch (_) {}
-
-        if (!code && typeof window !== 'undefined') {
-            code = (window.location.pathname || '').split('/').filter(Boolean).pop() || 'UNKNOWN';
+        // 1. 优先读取上层播放器或评论面板已规整解析的权威番号
+        if (this.playerCore?.options?.videoCode) {
+            code = this.playerCore.options.videoCode;
+        } else if (this.controlManager?.commentPanel?.videoCode) {
+            code = this.controlManager.commentPanel.videoCode;
         }
-        this.storageKey = `HEATMAP_${(code || 'GLOBAL').toUpperCase()}`;
+
+        // 2. 尝试从目标视频 DOM 元素提取
+        if (!code && this.targetVideo) {
+            try {
+                if (typeof this.targetVideo.getAttribute === 'function') {
+                    code = getVideoCodeFromUrl(this.targetVideo) || '';
+                }
+            } catch (_) {}
+        }
+
+        // 3. 尝试从全局 URL 提取
+        if (!code) {
+            try {
+                code = getVideoCodeFromUrl() || '';
+            } catch (_) {}
+        }
+
+        // 4. Peach 站点或 SPA 模态舞台智能感知探测
+        if (!code && typeof window !== 'undefined') {
+            try {
+                const peachNode = document.querySelector('[data-stage-side], [data-item-detail], dialog#stage, [data-stage-host]');
+                if (peachNode && peachNode.textContent) {
+                    const matched = matchAvCodeFromText(peachNode.textContent);
+                    if (matched) code = matched;
+                }
+            } catch (_) {}
+
+            if (!code) {
+                code = (window.location.pathname || '').split('/').filter(Boolean).pop() || 'UNKNOWN';
+            }
+        }
+        this.avcode = (code || 'GLOBAL').toUpperCase();
+        this.storageKey = `HEATMAP_${this.avcode}`;
     }
 
     _buildDom() {
@@ -250,6 +303,16 @@ export class HeatmapManager {
         svg.setAttribute('preserveAspectRatio', 'none');
         svg.setAttribute('aria-hidden', 'true');
 
+        // 1. 底层：社区全网高能波形 (Apple 珊瑚金)
+        const crowdPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        crowdPath.setAttribute('class', 'tm-heatmap-crowd-path');
+        crowdPath.setAttribute('d', '');
+        if (!this.isCrowdEnabled) {
+            crowdPath.style.display = 'none';
+        }
+        svg.appendChild(crowdPath);
+
+        // 2. 顶层：个人探索足迹波形 (Apple 极光蓝/纯平浅灰)
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('class', 'tm-heatmap-path');
         path.setAttribute('d', '');
@@ -257,6 +320,7 @@ export class HeatmapManager {
 
         this.svgElement = svg;
         this.pathElement = path;
+        this.pathCrowdElement = crowdPath;
 
         // 插入在 progressBarContainer 的起始位置（位于进度条下方，背景上方）
         container.insertBefore(svg, container.firstChild);
@@ -270,12 +334,17 @@ export class HeatmapManager {
         this.duration = dur;
         const totalBins = Math.max(1, Math.ceil(dur / this.binSeconds));
 
+        // 若之前未能准确识别番号，元数据就绪后再次校准
+        if (!this.avcode || this.avcode === 'GLOBAL' || this.avcode === 'UNKNOWN') {
+            this._resolveStorageKey();
+        }
+
         // 仅在首次分配或视频时长变动过大时新建数组
         if (!this.bins || Math.abs(this.bins.length - totalBins) > 2) {
             this.bins = new Float32Array(totalBins);
         }
 
-        // 尝试从 IndexedDB 异步恢复历史热度
+        // 1. 本地优先：从 IndexedDB 0ms 极速恢复
         try {
             const savedData = await idbGet(STORES.HEATMAP, this.storageKey);
             if (savedData && Array.isArray(savedData.bins)) {
@@ -286,7 +355,81 @@ export class HeatmapManager {
             }
         } catch (_) {}
 
+        // 建立水位线基准快照 (用于防重复上报的增量差分计算)
+        this.watermarkBins = new Float32Array(this.bins);
+
+        // 渲染本地足迹波形
         this.renderSvg();
+
+        // 2. 异步漫游：从 WebDAV 读取私有足迹并双向融合
+        this._syncFromWebDav();
+
+        // 3. 社区高能：异步拉取 120 槽位全网高能数据
+        if (this.isCrowdEnabled) {
+            this._loadCrowdHeatmap();
+        }
+    }
+
+    /**
+     * 异步从 WebDAV 独立文件恢复私有足迹并执行 Element-wise Max 合并
+     */
+    async _syncFromWebDav() {
+        if (this.isSyncingWebDav || !this.avcode || this.avcode === 'GLOBAL' || this.avcode === 'UNKNOWN') return;
+        try {
+            const config = SyncManager.getWebDavConfig();
+            if (!config || !config.url) return;
+
+            this.isSyncingWebDav = true;
+            const subPath = `heatmaps/${this.avcode}.json`;
+            const remoteData = await WebDavClient.downloadFile(config, subPath);
+
+            if (remoteData && Array.isArray(remoteData.bins) && remoteData.bins.length > 0) {
+                let updated = false;
+                const len = Math.min(this.bins.length, remoteData.bins.length);
+                for (let i = 0; i < len; i++) {
+                    const rv = remoteData.bins[i] || 0;
+                    if (rv > this.bins[i]) {
+                        this.bins[i] = rv;
+                        updated = true;
+                    }
+                }
+
+                if (updated) {
+                    // 同步抬高水位线基准
+                    if (this.watermarkBins) {
+                        for (let i = 0; i < Math.min(this.watermarkBins.length, this.bins.length); i++) {
+                            if (this.bins[i] > this.watermarkBins[i]) {
+                                this.watermarkBins[i] = this.bins[i];
+                            }
+                        }
+                    }
+                    this.renderSvg();
+                    // 异步更新本地 IndexedDB
+                    await this.saveToDb(false);
+                }
+            }
+        } catch (_) {
+            // 静默容错
+        } finally {
+            this.isSyncingWebDav = false;
+        }
+    }
+
+    /**
+     * 异步拉取云端社区全网高能热度图
+     */
+    async _loadCrowdHeatmap() {
+        if (!this.isCrowdEnabled || !this.avcode || this.avcode === 'GLOBAL' || this.avcode === 'UNKNOWN') return;
+        try {
+            const crowdData = await SupabaseService.fetchCrowdHeatmap(this.avcode);
+            if (crowdData && crowdData.heatmapBase64) {
+                const uint8Arr = base64ToUint8Array(crowdData.heatmapBase64);
+                if (uint8Arr && uint8Arr.length === CODEC_CONSTANTS.QUANTIZE_SLOTS) {
+                    this.crowd120 = uint8Arr;
+                    this.renderCrowdSvg();
+                }
+            }
+        } catch (_) {}
     }
 
     onTimeUpdate() {
@@ -318,7 +461,7 @@ export class HeatmapManager {
 
     onPause() {
         if (this.isDirty) {
-            this.saveToDb();
+            this.saveToDb(true);
         }
         if (this.isEnabled) {
             this.renderSvg();
@@ -327,7 +470,7 @@ export class HeatmapManager {
 
     onEnded() {
         if (this.isDirty) {
-            this.saveToDb();
+            this.saveToDb(true);
         }
         if (this.isEnabled) {
             this.renderSvg();
@@ -336,30 +479,85 @@ export class HeatmapManager {
 
     onVisibilityChange() {
         if (document.hidden && this.isDirty) {
-            this.saveToDb();
+            this.saveToDb(true);
         }
     }
 
     onBeforeUnload() {
         if (this.isDirty) {
-            this.saveToDb();
+            this.saveToDb(true);
         }
     }
 
-    async saveToDb() {
+    /**
+     * 持久化足迹至数据库
+     * @param {boolean} [syncToCloud=false] 是否在离散重要时机触发 WebDAV 与社区高能增量同步
+     */
+    async saveToDb(syncToCloud = false) {
         if (!this.storageKey || !this.bins) return;
         this.isDirty = false;
+
+        const payload = {
+            avcode: this.avcode,
+            duration: this.duration,
+            binSeconds: this.binSeconds,
+            bins: Array.from(this.bins),
+            updatedAt: Date.now()
+        };
+
         try {
-            const payload = {
-                duration: this.duration,
-                binSeconds: this.binSeconds,
-                bins: Array.from(this.bins),
-                updatedAt: Date.now()
-            };
             await idbSet(STORES.HEATMAP, this.storageKey, payload);
         } catch (err) {
             console.warn('[HeatmapManager] 存储热度失败:', err?.message);
         }
+
+        // 仅在离散节点 (暂停/播完/切后台/卸载) 异步触发 WebDAV 上传与社区增量上报
+        if (syncToCloud) {
+            this._uploadToWebDav(payload);
+            this._reportCrowdDelta();
+        }
+    }
+
+    /**
+     * 异步上传私有足迹至 WebDAV 独立文件
+     */
+    async _uploadToWebDav(payload) {
+        if (!this.avcode || this.avcode === 'GLOBAL' || this.avcode === 'UNKNOWN') return;
+        const now = Date.now();
+        if (now - this.lastWebDavSyncTime < 8000) return; // 8秒内防并发重叠 PUT
+        this.lastWebDavSyncTime = now;
+
+        try {
+            const config = SyncManager.getWebDavConfig();
+            if (!config || !config.url) return;
+            const subPath = `heatmaps/${this.avcode}.json`;
+            await WebDavClient.uploadFile(config, subPath, payload, 'application/json; charset=utf-8');
+        } catch (_) {}
+    }
+
+    /**
+     * 社区全网高能增量差分上报 (带水位线防重复累计)
+     */
+    async _reportCrowdDelta() {
+        if (!this.isCrowdEnabled || !this.avcode || this.avcode === 'GLOBAL' || this.avcode === 'UNKNOWN') return;
+        if (!this.bins || !this.watermarkBins) return;
+
+        const { deltaBins, totalDeltaSeconds } = calculateWatermarkDelta(this.bins, this.watermarkBins);
+        if (totalDeltaSeconds < CODEC_CONSTANTS.MIN_ENGAGEMENT_SECONDS) {
+            return; // 增量未达 45 秒有效门槛，不上报
+        }
+
+        const delta120 = quantizeBinsTo120(deltaBins);
+        const deltaB64 = uint8ArrayToBase64(delta120);
+        if (!deltaB64) return;
+
+        try {
+            const success = await SupabaseService.reportCrowdHeatmapDelta(this.avcode, deltaB64, this.duration);
+            if (success) {
+                // 成功上报后立即推进水位线
+                this.watermarkBins = new Float32Array(this.bins);
+            }
+        } catch (_) {}
     }
 
     renderSvg() {
@@ -368,6 +566,21 @@ export class HeatmapManager {
             const normalized = resampleAndSmoothBins(this.bins, HEATMAP_CONSTANTS.RENDER_POINTS);
             const pathD = generateSvgPath(normalized);
             this.pathElement.setAttribute('d', pathD);
+        } catch (_) {}
+    }
+
+    renderCrowdSvg() {
+        if (!this.pathCrowdElement) return;
+        if (!this.isCrowdEnabled || !this.crowd120) {
+            this.pathCrowdElement.style.display = 'none';
+            return;
+        }
+        try {
+            this.pathCrowdElement.style.display = '';
+            const targetPoints = HEATMAP_CONSTANTS.RENDER_POINTS;
+            const expanded = expand120ToBins(this.crowd120, targetPoints);
+            const pathD = generateSvgPath(expanded);
+            this.pathCrowdElement.setAttribute('d', pathD);
         } catch (_) {}
     }
 
@@ -383,9 +596,24 @@ export class HeatmapManager {
         }
     }
 
+    setCrowdEnabled(enabled) {
+        this.isCrowdEnabled = Boolean(enabled);
+        if (this.isCrowdEnabled) {
+            if (this.crowd120) {
+                this.renderCrowdSvg();
+            } else if (this.avcode) {
+                this._loadCrowdHeatmap();
+            }
+        } else {
+            if (this.pathCrowdElement) {
+                this.pathCrowdElement.style.display = 'none';
+            }
+        }
+    }
+
     _updateVisibility() {
         if (!this.svgElement) return;
-        this.svgElement.style.display = this.isEnabled ? 'block' : 'none';
+        this.svgElement.style.display = (this.isEnabled || this.isCrowdEnabled) ? 'block' : 'none';
     }
 
     destroy() {
@@ -395,7 +623,7 @@ export class HeatmapManager {
         }
 
         if (this.isDirty) {
-            this.saveToDb();
+            this.saveToDb(true);
         }
 
         if (this.targetVideo) {

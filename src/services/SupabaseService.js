@@ -1,7 +1,14 @@
 import { getValue } from '../utils/index.js';
 import { md5 } from '../utils/md5.js';
 import { logger } from '../utils/logger.js';
-import { DebugLogPanel } from '../player/ui/DebugLogPanel.js';
+
+function addDebugLog(text, level = 'info') {
+    try {
+        if (typeof window !== 'undefined' && window.DebugLogPanel?.addLog) {
+            window.DebugLogPanel.addLog(text, level);
+        }
+    } catch (_) {}
+}
 
 /**
  * SupabaseService - 方案 1 高性能 JSONB 聚合仓储模式
@@ -84,7 +91,7 @@ export class SupabaseService {
                 if (rows.length > 0 && Array.isArray(rows[0].comments) && rows[0].comments.length > 0) {
                     const list = rows[0].comments;
                     logger.log('[Supabase] 方案 1 JSONB 命中: 瞬间恢复 ' + list.length + ' 条评论 (' + code + ')');
-                    DebugLogPanel.addLog('[Supabase] 命中 JSONB 聚合仓储: 获取 ' + list.length + ' 条评论 (' + code + ')', 'success');
+                    addDebugLog('[Supabase] 命中 JSONB 聚合仓储: 获取 ' + list.length + ' 条评论 (' + code + ')', 'success');
                     return list;
                 }
             }
@@ -105,7 +112,7 @@ export class SupabaseService {
             if (legacyRes.status >= 200 && legacyRes.status < 300) {
                 const list = JSON.parse(legacyRes.data || '[]');
                 if (list.length > 0) {
-                    DebugLogPanel.addLog('[Supabase] 命中单行表: 获取 ' + list.length + ' 条记录 (' + code + ')', 'success');
+                    addDebugLog('[Supabase] 命中单行表: 获取 ' + list.length + ' 条记录 (' + code + ')', 'success');
                     return list;
                 }
             }
@@ -172,7 +179,7 @@ export class SupabaseService {
 
             if (rpcRes.status >= 200 && rpcRes.status < 300) {
                 logger.log('[Supabase] 方案 1 JSONB 聚合成功: ' + rows.length + ' 条评论已原子合并 (' + code + ')');
-                DebugLogPanel.addLog('[Supabase] 方案1高密聚合: 成功入库 ' + rows.length + ' 条评论 (' + code + ')', 'success');
+                addDebugLog('[Supabase] 方案1高密聚合: 成功入库 ' + rows.length + ' 条评论 (' + code + ')', 'success');
                 return;
             }
         } catch (_) {}
@@ -200,7 +207,7 @@ export class SupabaseService {
                 })
             });
             if (bundleRes.status >= 200 && bundleRes.status < 300) {
-                DebugLogPanel.addLog('[Supabase] 成功直写 JSONB 仓储 (' + code + ')', 'success');
+                addDebugLog('[Supabase] 成功直写 JSONB 仓储 (' + code + ')', 'success');
                 return;
             }
         } catch (_) {}
@@ -220,7 +227,7 @@ export class SupabaseService {
                 data: JSON.stringify(rows)
             });
             if (legacyRes.status >= 200 && legacyRes.status < 300) {
-                DebugLogPanel.addLog('[Supabase] 单行降级入库 ' + rows.length + ' 条 (' + code + ')', 'success');
+                addDebugLog('[Supabase] 单行降级入库 ' + rows.length + ' 条 (' + code + ')', 'success');
             }
         } catch (err) {
             logger.warn('[Supabase] 写入数据库异常:', err.message || err);
@@ -262,7 +269,7 @@ export class SupabaseService {
                 })
             });
             if (rpcRes.status >= 200 && rpcRes.status < 300) {
-                DebugLogPanel.addLog('[Supabase] 评论问题上报成功 (RPC: ' + code + ')', 'success');
+                addDebugLog('[Supabase] 评论问题上报成功 (RPC: ' + code + ')', 'success');
                 return true;
             }
         } catch (_) {}
@@ -289,11 +296,99 @@ export class SupabaseService {
                 })
             });
             if (tableRes.status >= 200 && tableRes.status < 300) {
-                DebugLogPanel.addLog('[Supabase] 评论问题直接入库成功 (' + code + ')', 'success');
+                addDebugLog('[Supabase] 评论问题直接入库成功 (' + code + ')', 'success');
                 return true;
             }
         } catch (err) {
             logger.warn('[Supabase] 评论问题上报失败:', err.message || err);
+        }
+        return false;
+    }
+
+    /**
+     * 读取指定番号的社区全网高能热度图 (120 槽位 Base64)
+     * @param {string} videoCode
+     * @returns {Promise<{ found: boolean, avcode: string, heatmapBase64: string, totalSamples: number, durationSeconds: number }|null>}
+     */
+    static async fetchCrowdHeatmap(videoCode) {
+        const config = this.getConfig();
+        if (!config.isEnabled || !videoCode) return null;
+
+        const code = videoCode.toUpperCase();
+        try {
+            const url = config.baseUrl + '/video_crowd_heatmap?avcode=eq.' + encodeURIComponent(code) + '&select=avcode,heatmap,total_samples,duration_seconds';
+            const res = await this.request({
+                method: 'GET',
+                url,
+                headers: {
+                    'apikey': config.apiKey,
+                    'Authorization': 'Bearer ' + config.apiKey,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (res.status >= 200 && res.status < 300) {
+                const rows = JSON.parse(res.data);
+                if (Array.isArray(rows) && rows.length > 0) {
+                    const row = rows[0];
+                    let hexStr = (row.heatmap || '').replace(/^\\x/, '');
+                    let base64Data = '';
+                    if (hexStr) {
+                        const bytes = new Uint8Array(hexStr.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                        let binary = '';
+                        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+                        base64Data = btoa(binary);
+                    }
+                    return {
+                        found: true,
+                        avcode: row.avcode,
+                        heatmapBase64: base64Data,
+                        totalSamples: row.total_samples || 1,
+                        durationSeconds: row.duration_seconds || 0
+                    };
+                }
+            }
+        } catch (err) {
+            logger.warn('[Supabase] 获取社区高能热度失败:', err?.message || err);
+        }
+        return null;
+    }
+
+    /**
+     * 上报社区高能热度增量 (通过服务端原子 RPC upsert_crowd_heatmap 进行对数饱和增量合并)
+     * @param {string} videoCode 番号
+     * @param {string} deltaBase64 120 字节纯增量 Base64 (160 字符)
+     * @param {number} durationSeconds 视频时长 (秒)
+     * @returns {Promise<boolean>}
+     */
+    static async reportCrowdHeatmapDelta(videoCode, deltaBase64, durationSeconds = 0) {
+        const config = this.getConfig();
+        if (!config.isEnabled || !videoCode || !deltaBase64) return false;
+
+        const code = videoCode.toUpperCase();
+        try {
+            const rpcUrl = config.baseUrl + '/rpc/upsert_crowd_heatmap';
+            const rpcRes = await this.request({
+                method: 'POST',
+                url: rpcUrl,
+                headers: {
+                    'apikey': config.apiKey,
+                    'Authorization': 'Bearer ' + config.apiKey,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({
+                    p_avcode: code,
+                    p_delta_base64: String(deltaBase64),
+                    p_duration_seconds: Math.round(durationSeconds || 0)
+                })
+            });
+
+            if (rpcRes.status >= 200 && rpcRes.status < 300) {
+                addDebugLog('[Supabase] 社区高能热度增量上报成功 (RPC: ' + code + ')', 'success');
+                return true;
+            }
+        } catch (err) {
+            logger.warn('[Supabase] 社区高能热度增量上报失败:', err?.message || err);
         }
         return false;
     }
