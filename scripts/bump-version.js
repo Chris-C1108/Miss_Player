@@ -67,27 +67,45 @@ function compareVersions(v1, v2) {
 }
 
 function bumpPatch(version, isRelease = false) {
-    const dashMatch = version.match(/^(\d+\.\d+\.\d+)-(\d+)$/);
-    if (dashMatch) {
-        const base = dashMatch[1];
+    // 1. 匹配方案 A 标准格式：5.7.116-beta.001 (支持 dev, beta, alpha, rc 等)
+    const semverAlphaMatch = version.match(/^(\d+\.\d+\.\d+)-([a-zA-Z]+)\.(\d+)$/);
+    if (semverAlphaMatch) {
+        const base = semverAlphaMatch[1];
+        const tag = semverAlphaMatch[2];
         if (isRelease) {
-            // 从测试版转正：直接剥离预发布后缀 (如 5.7.115-001 ➔ 5.7.115)
+            // 从测试版转正：直接剥离预发布后缀 (如 5.7.116-beta.001 ➔ 5.7.116)
             return base;
         }
-        const num = parseInt(dashMatch[2], 10) + 1;
-        const padded = String(num).padStart(dashMatch[2].length, '0');
-        return `${base}-${padded}`;
+        const num = parseInt(semverAlphaMatch[3], 10) + 1;
+        const width = Math.max(semverAlphaMatch[3].length, 3);
+        const padded = String(num).padStart(width, '0');
+        return `${base}-${tag}.${padded}`;
     }
+
+    // 2. 兼容旧版纯数字预发布格式：5.7.116-001，自动升级为方案 A 标准格式 (5.7.116-beta.001)
+    const legacyDashMatch = version.match(/^(\d+\.\d+\.\d+)-(\d+)$/);
+    if (legacyDashMatch) {
+        const base = legacyDashMatch[1];
+        if (isRelease) {
+            return base;
+        }
+        const num = parseInt(legacyDashMatch[2], 10) + 1;
+        const width = Math.max(legacyDashMatch[2].length, 3);
+        const padded = String(num).padStart(width, '0');
+        return `${base}-beta.${padded}`;
+    }
+
+    // 3. 从无后缀的正式版 (如 5.7.115) 开启新一轮
     const parts = version.split('.').map(n => parseInt(n, 10));
     if (parts.length !== 3 || parts.some(isNaN)) {
-        throw new Error(`非法版本号格式: ${version}，期望格式如 5.7.4 或 5.7.113-001`);
+        throw new Error(`非法版本号格式: ${version}，期望格式如 5.7.116 或 5.7.116-beta.001`);
     }
     parts[2] += 1;
     if (isRelease) {
         return parts.join('.');
     }
-    // 从无后缀的正式版开启新一轮日常开发测试：Patch + 1 并初始化为 -001
-    return `${parts.join('.')}-001`;
+    // 开启新一轮日常开发测试：主版本号 Patch + 1 并初始化为 -beta.001
+    return `${parts.join('.')}-beta.001`;
 }
 
 function run() {

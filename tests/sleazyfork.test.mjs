@@ -34,6 +34,14 @@ assert.strictEqual(compareVersions('5.7.115', '5.7.115-001'), 1, '正式版 5.7.
 assert.strictEqual(compareVersions('5.7.115-001', '5.7.115'), -1, '测试版 5.7.115-001 严格低于正式版 5.7.115');
 assert.strictEqual(compareVersions('5.7.116-001', '5.7.115'), 1, '下一代测试版 5.7.116-001 严格高于上一代正式版 5.7.115');
 assert.strictEqual(compareVersions('5.7.116-001', '5.7.115-001'), 1, '下一代测试版 5.7.116-001 严格高于 5.7.115-001');
+// 方案 A 工业级标准测试版格式断言 (MAJOR.MINOR.PATCH-beta.XXX)
+assert.strictEqual(compareVersions('5.7.116-beta.002', '5.7.116-beta.001'), 1, '测试版 beta.002 严格高于 beta.001');
+assert.strictEqual(compareVersions('5.7.116-beta.001', '5.7.116-beta.002'), -1, '测试版 beta.001 严格低于 beta.002');
+assert.strictEqual(compareVersions('5.7.116', '5.7.116-beta.003'), 1, '正式转正版 5.7.116 严格高于 5.7.116-beta.003');
+assert.strictEqual(compareVersions('5.7.116-beta.001', '5.7.115'), 1, '下一代测试版 5.7.116-beta.001 严格高于上一代正式版 5.7.115');
+assert.strictEqual(compareVersions('5.7.116-beta.001', '5.7.115-001'), 1, '下一代测试版 5.7.116-beta.001 严格高于 5.7.115-001');
+assert.strictEqual(compareVersions('5.7.116-beta.001', '5.7.116-001'), 1, '带字母标识测试版 5.7.116-beta.001 高于纯数字旧测试版 5.7.116-001');
+assert.strictEqual(compareVersions('5.7.117-beta.001', '5.7.116'), 1, '下下代测试版 5.7.117-beta.001 严格高于 5.7.116');
 console.log('✅ 1. SemVer 2.0.0 语义化版本比对测试全部通过');
 
 // 2. 校验多语言字段完备性
