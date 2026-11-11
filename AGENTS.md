@@ -283,6 +283,11 @@ src/player/ui/styles/
    - 自定义 Loader 必须在 constructor 中完整初始化符合 Hls.js 官方规范的 `LoaderStats` 实例（包含 `loading, parsing, buffering` 子对象），并在数据返回时同步更新首包与完成时间戳，杜绝 `frag.stats` 为空导致的 `internalException` 崩溃；
    - **域名级失效记忆与逃逸 (Domain Fast-Fallback)**：一旦特定视频 CDN 在 `GM_xmlhttpRequest` 中发生超时或 0B 空响应，必须立即将其记录入 `failedDomains` 集合；当前会话后续所有切片请求必须 0ms 直接走原生 `fetch` 直连，杜绝每个切片重复死等 15 秒超时导致的缓冲区饥饿卡顿；
    - **加权竞速与纯明文无码优先**：多源解析调度必须优先选择无需 AES-128 解密的纯明文（NONE）与无码（Uncensored）源（如 123AV、JAVVerse），有码且带加密的源（如 Jable）必须延后错峰启动仅作为次要兜底。（Phase 19 起由流网关按实测成功率 × 延迟打分取代固定权重；本条第 6、7 项客户端规则在 19.9 后随代码一并废止。）
+8. **跨标签状态租约与离散重入网关准则 (Multi-Tab Lease & Re-entry Gate Protocol)**：
+   - **活跃播放自治豁免 (Active Playback Exemption)**：正在前台正常播放的视听媒体享有最高自治权，严禁使用 BroadcastChannel 或 storage 跨标签强行打断正在播放的内容；
+   - **零轮询有声租约 (Audible Lease Pattern with TTL)**：严禁采用定时器心跳刷新音频状态，一律采用 Audible Lease 模式，仅在切后台（`visibilitychange: hidden`）、暂停与退出时原子落盘；
+   - **离散重入网关 (Discrete Re-entry Gates)**：跨标签防打扰与静音继承必须且只能在离散重入网关（切回前台 `visibilitychange: visible`、播放器唤醒、冷启动）由判定引擎惰性结算；
+   - **双时间戳后发意图覆盖 (Later Explicit Intent Supersedes)**：维护 `lastUnmutedTime` 与 `lastExplicitMuteTime`，精准识别离开期间外部标签页发出的更晚主动静音，重入时恢复静音防突发打扰。
 
 ---
 
