@@ -33,7 +33,7 @@ export function getCurrentVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.7.117-beta.001';
+    return '5.7.117-beta.002';
 }
 
 export function compareVersions(v1, v2) {
@@ -291,7 +291,7 @@ export class SleazyForkService {
                     if (match && match[1]) {
                         const version = match[1].trim();
                         return {
-                            id: 'github-main',
+                            id: 'github-dev',
                             channel: 'beta',
                             name: 'Miss Player | 影院模式 (单手播放器)',
                             version,

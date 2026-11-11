@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.117-beta.001
+// @version            5.7.117-beta.002
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.117-beta.001";
+		return "5.7.117-beta.002";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3271,7 +3271,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.117-beta.001";
+		return "5.7.117-beta.002";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -3443,7 +3443,7 @@
 				if (res.status >= 200 && res.status < 400 && res.html) {
 					const match = res.html.match(/@version\s+([\w\.\-]+)/i);
 					if (match && match[1]) return {
-						id: "github-main",
+						id: "github-dev",
 						channel: "beta",
 						name: "Miss Player | 影院模式 (单手播放器)",
 						version: match[1].trim(),
@@ -4847,7 +4847,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.117-beta.001";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.117-beta.002";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -22054,7 +22054,7 @@
 				changelogBtn.className = "tm-about-btn tm-about-btn--secondary";
 				changelogBtn.innerHTML = `${ICON_EXTERNAL_LINK} <span>${__$1("updateChangelog") || "版本日志"}</span>`;
 				changelogBtn.addEventListener("click", () => {
-					const logUrl = isBeta ? "https://github.com/Chris-C1108/Miss_Player/commits/main" : "https://sleazyfork.org/scripts/453300/versions";
+					const logUrl = isBeta ? GITHUB_COMMITS_URL : "https://sleazyfork.org/scripts/453300/versions";
 					if (typeof GM_openInTab === "function") GM_openInTab(logUrl, { active: true });
 					else window.open(logUrl, "_blank");
 				});

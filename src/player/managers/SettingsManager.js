@@ -19,12 +19,13 @@ import { SyncManager, WebDavClient, getOrCreateClientId, getDeviceName } from '.
 import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 import { CrazyScraper } from '../comments/CrazyScraper.js';
 import { SURFACE_TYPES } from '../state/UISurfaceMachine.js';
-import { 
-    SleazyForkService, 
+import {
+    SleazyForkService,
     getCurrentVersion,
     detectScriptHandler,
     getCleanScriptUrl,
-    dispatchScriptInstall
+    dispatchScriptInstall,
+    GITHUB_COMMITS_URL
 } from '../../services/SleazyForkService.js';
 import {
     ICON_CLOUD_SYNC,
@@ -991,7 +992,7 @@ export class SettingsManager {
             changelogBtn.innerHTML = `${ICON_EXTERNAL_LINK} <span>${__('updateChangelog') || '版本日志'}</span>`;
             changelogBtn.addEventListener('click', () => {
                 const logUrl = isBeta
-                    ? 'https://github.com/Chris-C1108/Miss_Player/commits/main'
+                    ? GITHUB_COMMITS_URL
                     : 'https://sleazyfork.org/scripts/453300/versions';
                 if (typeof GM_openInTab === 'function') {
                     GM_openInTab(logUrl, { active: true });
