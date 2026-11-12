@@ -117,7 +117,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **状态机**：`src/player/state/PlayerState.js` — 集中管理播放器状态、全屏/浮层模式、Beta 特性开关及用户偏好
 
 ### 2. 播放器管理器 (`src/player/managers/`)
-* **UIManager**：模态与视窗 DOM 构建、横竖屏自适应、`visualViewport` 移动端软键盘避让
+* **UIManager**：模态与视窗 DOM 构建、横竖屏自适应（联动 `src/player/ui/ViewportKeyboardAdapter.js` 处理 `visualViewport` 软键盘避让与 `<dialog open>` Top-Layer 挂靠）
 * **ControlManager**：播放控制栏总装配、一体化居中播放胶囊挂载、清晰度与倍速调节
 * **ProgressManager**：进度条更新、时间格式化与微秒级 Seek
 * **LoopManager**：A-B 点片段循环、时间胶囊动态居中与莫兰迪随机色彩、URL 深链参数化装载
@@ -129,7 +129,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **HeatmapManager**：视频观看热度与足迹探索管理器、双轨架构（私有足迹白光顶轨 + 社区高能珊瑚金底轨）、5秒物理自适应分桶、120分位定长量化编解码 (`heatmapCodec.js`)、水位线差分增量防滚雪球上报、WebDAV 跨域漫游合并 (Element-wise Max) 与双层 SVG 贝塞尔波形渲染
 
 ### 3. 增强业务功能
-* **评论系统**：`src/player/controls/CommentPanel.js` 与 `CommentScraper.js`（多源异步抓取 Jable / JavDB / JavLibrary、时间戳解析、逆向倒数时间校准、单条问题上报）
+* **评论系统**：`src/player/controls/CommentPanel.js`、`CommentScraper.js` 与模块化视图/辅助组件（`src/player/comments/`：`CommentCardRenderer.js` 安全渲染、`CommentCodePreview.js` 番号预览、`CommentReportModal.js` 问题上报；多源异步抓取 Jable / JavDB / JavLibrary、时间戳解析、逆向倒数时间校准）
 * **疯狂采集引擎**：`src/player/comments/CrazyScraper.js`（宿主页面全量番号多页循环爬取、四级防重跳过）
 * **多维语义标签库**：`src/player/managers/tagTaxonomy.js`（体位姿势、相貌身材、行为特征等系统化标签矩阵）
 * **自动登录**：`src/autologin/`（多站点凭据管理、跨域 iframe 签名桥接）
@@ -271,23 +271,26 @@ Miss Player 运行于复杂的多域名第三方宿主环境（Jable、MissAV、
   - 内部样式享有天然作用域隔离。
 
 ### 4. 样式目录拓扑与模块规划 (Styles Topology)
-解构原 3000 行 `_player.css` 巨石文件，按单一职责清晰划分为四层结构：
+已将原巨石样式彻底解耦为单文件 ≤ 800 行的四层结构：
 ```
 src/player/ui/styles/
 ├── 00_tokens/           # 设计令牌层：基础颜色、Apple 毛玻璃材质、Z-Index 标尺
 │   ├── _tokens.css
 │   └── _zindex.css
-├── 01_core/             # 核心基础层：视窗容器、布局骨架、动画关键帧
-│   ├── _host.css        # 宿主极轻量样式 (<3KB)
+├── 01_core/             # 核心基础层：宿主防穿透、视窗骨架、通用工具与减动效
+│   ├── _host.css        # 宿主极轻量样式 (<5KB)
 │   ├── _layout.css      # 播放器视窗容器、全屏遮罩与 Safe Area 适配
-│   └── _common.css      # 统一 Keyframes 动画、通用排版微类
-├── 02_components/       # 业务组件层 (解构巨石，高内聚拆分)
-│   ├── _controls.css    # 一体化居中播放胶囊、快进退、音量、进度条
-│   ├── _comments.css    # 评论面板、评论卡片、抓取器状态、过滤栏
-│   ├── _marker_sheet.css# A-B 点高光片段底栏 (MarkerBottomSheet)
-│   └── _settings_apple.css # Apple 风格设置卡片、开关、分段选择器
+│   └── _common.css      # 统一 Keyframes 动画、.is-hidden 与减动效规则
+├── 02_components/       # 业务组件层 (高内聚拆分，单文件 ≤ 800 行)
+│   ├── _comments.css / _comments_sections.css  # 评论区、卡片与折叠分区
+│   ├── _composer.css    # 发评抽屉与登录面板
+│   ├── _control_panel.css / _controls.css / _switcher.css # 播放胶囊、快进退与模式切换
+│   ├── _debug.css       # 调试面板与悬浮日志
+│   ├── _marker_sheet.css / _modals.css         # A-B 高光底栏与通用弹窗
+│   ├── _peach.css       # Peach 入库联动胶囊与巡检卡片
+│   └── _settings_apple.css / _settings_cards.css / _settings_panels.css # 设置系统
 └── 03_responsive/       # 响应式与模式适配层
-    ├── _landscape.css   # PC 桌面端与移动端横屏适配 (彻底合并旧 legacy 冲突)
+    ├── _landscape.css   # PC 桌面端与移动端横屏适配
     └── _single_hand.css # 竖屏单手模式辅助条与左右手镜像布局
 ```
 
