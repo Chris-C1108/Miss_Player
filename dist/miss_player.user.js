@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.013
+// @version            5.7.118-beta.014
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.013";
+		return "5.7.118-beta.014";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3326,7 +3326,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.013";
+		return "5.7.118-beta.014";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -5291,7 +5291,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.013";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.014";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -5463,6 +5463,9 @@
 				telemetryEnabled: false,
 				debugMode: getValue("debugMode", false),
 				betaMode: getValue("betaMode", false),
+				dataMode: getValue("dataMode", "local") === "shared" ? "shared" : "local",
+				hidePrivateData: getValue("hidePrivateData", false),
+				betaHeatmap: getValue("betaHeatmap", false),
 				betaFirstCapsulePlay: getValue("betaFirstCapsulePlay", false),
 				betaPlayMode: getValue("betaPlayMode", "normal"),
 				previewDurationSeconds: parseInt(getValue("previewDurationSeconds", 5), 10) || 5,
@@ -5607,8 +5610,12 @@
 					mergedSettingTimestamps.betaMode = localTimestamps.betaMode || now;
 					continue;
 				}
-				const lTime = localTimestamps[key] || localData.lastModified || 0;
-				const rTime = remoteTimestamps[key] || remoteMigrated.lastModified || 0;
+				const hasLocalTs = typeof localTimestamps[key] === "number" && localTimestamps[key] > 0;
+				const hasRemoteTs = typeof remoteTimestamps[key] === "number" && remoteTimestamps[key] > 0;
+				let lTime = hasLocalTs ? localTimestamps[key] : localData.lastModified || 0;
+				let rTime = hasRemoteTs ? remoteTimestamps[key] : remoteMigrated.lastModified || 0;
+				if (!hasLocalTs && hasRemoteTs) lTime = 0;
+				else if (hasLocalTs && !hasRemoteTs) rTime = 0;
 				if (lTime >= rTime) {
 					mergedSettings[key] = localSettings[key] !== void 0 ? localSettings[key] : remoteSettings[key];
 					mergedSettingTimestamps[key] = lTime;
@@ -5698,6 +5705,10 @@
 				}
 				if (k === "betaMode" && v === false) {
 					if (getBool("betaMode", false)) continue;
+				}
+				if (k === "dataMode") {
+					setValue(k, v === "shared" ? "shared" : "local");
+					continue;
 				}
 				setValue(k, v);
 			}
@@ -21606,6 +21617,11 @@
 				onChange: (checked) => {
 					this.sm.updateSetting("betaMode", checked);
 					betaSubWrap.style.display = checked ? "block" : "none";
+					const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
+					if (hm) {
+						hm.setEnabled(Boolean(checked && this.settings.betaHeatmap));
+						hm.setCrowdEnabled(Boolean(checked && this.settings.dataMode === "shared"));
+					}
 					Toast$1(checked ? `已开启 ${__$1("betaLabTitle") || "实验功能"}` : `已关闭 ${__$1("betaLabTitle") || "实验功能"}`, 1200, "info");
 				}
 			});
@@ -21648,18 +21664,18 @@
 			updateDataModeDesc(currentDataMode);
 			const dataModeSeg = new SegmentedControl({
 				options: [{
-					label: __$1("dataModeShared") || "社区共享",
-					value: "shared"
-				}, {
 					label: __$1("dataModeLocal") || "本地私有",
 					value: "local"
+				}, {
+					label: __$1("dataModeShared") || "社区共享",
+					value: "shared"
 				}],
 				value: currentDataMode,
 				onChange: (val) => {
 					this.sm.updateSetting("dataMode", val);
 					updateDataModeDesc(val);
 					const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
-					if (hm) hm.setCrowdEnabled(val === "shared");
+					if (hm) hm.setCrowdEnabled(Boolean(this.settings.betaMode) && val === "shared");
 					Toast$1(val === "shared" ? "已切换至社区共享模式" : "已切换至本地私有模式", 1200, "info");
 				}
 			});
@@ -22492,6 +22508,7 @@
 					updateStatus("同步成功", "success");
 					renderTimeText();
 					this.syncState();
+					this.createSettingsPanel();
 				} catch (err) {
 					Toast$1((__$1("webdavSyncFailed") || "同步失败: ") + err.message, 4500);
 					updateStatus(err.message ? `同步失败: ${err.message}` : "同步失败", "error");
@@ -22547,6 +22564,7 @@
 					updateStatus("已下载覆盖", "success");
 					renderTimeText();
 					this.syncState();
+					this.createSettingsPanel();
 				} catch (err) {
 					Toast$1((__$1("webdavSyncFailed") || "下载失败: ") + err.message, 4500);
 					updateStatus(err.message ? `下载失败: ${err.message}` : "下载失败", "error");
@@ -23444,6 +23462,7 @@
 			this.onEnded = this.onEnded.bind(this);
 			this.onVisibilityChange = this.onVisibilityChange.bind(this);
 			this.onBeforeUnload = this.onBeforeUnload.bind(this);
+			this.onSyncApplied = this.onSyncApplied.bind(this);
 		}
 		get isDirty() {
 			return this.isLocalDirty || this.isCloudDirty;
@@ -23470,7 +23489,10 @@
 				if (this.targetVideo.duration && !isNaN(this.targetVideo.duration) && this.targetVideo.duration > 0) this.onLoadedMetadata();
 			}
 			if (typeof document !== "undefined") document.addEventListener("visibilitychange", this.onVisibilityChange);
-			if (typeof window !== "undefined") window.addEventListener("beforeunload", this.onBeforeUnload);
+			if (typeof window !== "undefined") {
+				window.addEventListener("beforeunload", this.onBeforeUnload);
+				window.addEventListener("mp_sync_applied", this.onSyncApplied);
+			}
 			this.saveTimer = setInterval(() => {
 				if (this.isLocalDirty) this.saveToDb(false);
 				if (this.isCloudDirty && Date.now() - this.lastWebDavSyncTime >= 6e4) this.saveToDb(true);
@@ -23736,8 +23758,20 @@
 				else this.renderSvg();
 			}
 		}
+		onSyncApplied() {
+			const playerState = this.playerCore?.options?.playerState;
+			const settings = playerState?.settings;
+			if (!settings) return;
+			const nextEnabled = Boolean(settings.betaMode && settings.betaHeatmap);
+			const nextCrowd = Boolean(typeof playerState.isSharedMode === "function" ? playerState.isSharedMode() : settings.betaMode && settings.dataMode === "shared");
+			const nextHidden = Boolean(settings.hidePrivateData);
+			if (nextEnabled !== this.isEnabled) this.setEnabled(nextEnabled);
+			if (nextCrowd !== this.isCrowdEnabled) this.setCrowdEnabled(nextCrowd);
+			if (nextHidden !== this.isPrivateDataHidden) this.setPrivateDataHidden(nextHidden);
+		}
 		setCrowdEnabled(enabled) {
 			this.isCrowdEnabled = Boolean(enabled);
+			this._updateVisibility();
 			if (this.isCrowdEnabled) {
 				if (this.crowd120) this.renderCrowdSvg();
 				else if (this.avcode) this._loadCrowdHeatmap();
@@ -23772,7 +23806,10 @@
 				this.targetVideo.removeEventListener("ended", this.onEnded);
 			}
 			if (typeof document !== "undefined") document.removeEventListener("visibilitychange", this.onVisibilityChange);
-			if (typeof window !== "undefined") window.removeEventListener("beforeunload", this.onBeforeUnload);
+			if (typeof window !== "undefined") {
+				window.removeEventListener("beforeunload", this.onBeforeUnload);
+				window.removeEventListener("mp_sync_applied", this.onSyncApplied);
+			}
 			if (this.svgElement && this.svgElement.parentNode) this.svgElement.parentNode.removeChild(this.svgElement);
 		}
 		cleanup() {

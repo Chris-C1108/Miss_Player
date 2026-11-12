@@ -209,6 +209,7 @@ export class HeatmapManager {
         this.onEnded = this.onEnded.bind(this);
         this.onVisibilityChange = this.onVisibilityChange.bind(this);
         this.onBeforeUnload = this.onBeforeUnload.bind(this);
+        this.onSyncApplied = this.onSyncApplied.bind(this);
     }
 
     get isDirty() {
@@ -250,6 +251,7 @@ export class HeatmapManager {
         }
         if (typeof window !== 'undefined') {
             window.addEventListener('beforeunload', this.onBeforeUnload);
+            window.addEventListener('mp_sync_applied', this.onSyncApplied);
         }
 
         // 启动后台定时刷盘 (15 秒节流，仅写本地 IndexedDB，避免频繁打满 WebDAV)
@@ -694,8 +696,31 @@ export class HeatmapManager {
         }
     }
 
+    onSyncApplied() {
+        const playerState = this.playerCore?.options?.playerState;
+        const settings = playerState?.settings;
+        if (!settings) return;
+
+        const nextEnabled = Boolean(settings.betaMode && settings.betaHeatmap);
+        const nextCrowd = Boolean(typeof playerState.isSharedMode === 'function'
+            ? playerState.isSharedMode()
+            : (settings.betaMode && settings.dataMode === 'shared'));
+        const nextHidden = Boolean(settings.hidePrivateData);
+
+        if (nextEnabled !== this.isEnabled) {
+            this.setEnabled(nextEnabled);
+        }
+        if (nextCrowd !== this.isCrowdEnabled) {
+            this.setCrowdEnabled(nextCrowd);
+        }
+        if (nextHidden !== this.isPrivateDataHidden) {
+            this.setPrivateDataHidden(nextHidden);
+        }
+    }
+
     setCrowdEnabled(enabled) {
         this.isCrowdEnabled = Boolean(enabled);
+        this._updateVisibility();
         if (this.isCrowdEnabled) {
             if (this.crowd120) {
                 this.renderCrowdSvg();
@@ -750,6 +775,7 @@ export class HeatmapManager {
         }
         if (typeof window !== 'undefined') {
             window.removeEventListener('beforeunload', this.onBeforeUnload);
+            window.removeEventListener('mp_sync_applied', this.onSyncApplied);
         }
 
         if (this.svgElement && this.svgElement.parentNode) {

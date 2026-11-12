@@ -16,7 +16,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.118-beta.013';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.118-beta.014';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -288,6 +288,9 @@ export class SyncManager {
             telemetryEnabled: false,
             debugMode: getValue('debugMode', false),
             betaMode: getValue('betaMode', false),
+            dataMode: getValue('dataMode', 'local') === 'shared' ? 'shared' : 'local',
+            hidePrivateData: getValue('hidePrivateData', false),
+            betaHeatmap: getValue('betaHeatmap', false),
             betaFirstCapsulePlay: getValue('betaFirstCapsulePlay', false),
             betaPlayMode: getValue('betaPlayMode', 'normal'),
             previewDurationSeconds: parseInt(getValue('previewDurationSeconds', 5), 10) || 5,
@@ -497,8 +500,18 @@ export class SyncManager {
                 continue;
             }
 
-            const lTime = localTimestamps[key] || localData.lastModified || 0;
-            const rTime = remoteTimestamps[key] || remoteMigrated.lastModified || 0;
+            const hasLocalTs = typeof localTimestamps[key] === 'number' && localTimestamps[key] > 0;
+            const hasRemoteTs = typeof remoteTimestamps[key] === 'number' && remoteTimestamps[key] > 0;
+
+            let lTime = hasLocalTs ? localTimestamps[key] : (localData.lastModified || 0);
+            let rTime = hasRemoteTs ? remoteTimestamps[key] : (remoteMigrated.lastModified || 0);
+
+            // 若仅一端记录了用户显式操作时间戳，另一端仅为冷启动默认值，优先尊重显式操作意图
+            if (!hasLocalTs && hasRemoteTs) {
+                lTime = 0;
+            } else if (hasLocalTs && !hasRemoteTs) {
+                rTime = 0;
+            }
 
             if (lTime >= rTime) {
                 mergedSettings[key] = localSettings[key] !== undefined ? localSettings[key] : remoteSettings[key];
@@ -632,6 +645,10 @@ export class SyncManager {
                 if (k === 'betaMode' && v === false) {
                     const localBeta = getBool('betaMode', false);
                     if (localBeta) continue;
+                }
+                if (k === 'dataMode') {
+                    setValue(k, v === 'shared' ? 'shared' : 'local');
+                    continue;
                 }
                 setValue(k, v);
             }

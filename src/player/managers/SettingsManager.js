@@ -783,6 +783,7 @@ export class SettingsManager {
                 updateStatus('同步成功', 'success');
                 renderTimeText();
                 this.syncState();
+                this.createSettingsPanel();
             } catch (err) {
                 Toast((__('webdavSyncFailed') || '同步失败: ') + err.message, 4500);
                 updateStatus(err.message ? `同步失败: ${err.message}` : '同步失败', 'error');
@@ -848,6 +849,7 @@ export class SettingsManager {
                 updateStatus('已下载覆盖', 'success');
                 renderTimeText();
                 this.syncState();
+                this.createSettingsPanel();
             } catch (err) {
                 Toast((__('webdavSyncFailed') || '下载失败: ') + err.message, 4500);
                 updateStatus(err.message ? `下载失败: ${err.message}` : '下载失败', 'error');

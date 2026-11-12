@@ -39,6 +39,11 @@ export class BetaSection {
             onChange: (checked) => {
                 this.sm.updateSetting('betaMode', checked);
                 betaSubWrap.style.display = checked ? 'block' : 'none';
+                const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
+                if (hm) {
+                    hm.setEnabled(Boolean(checked && this.settings.betaHeatmap));
+                    hm.setCrowdEnabled(Boolean(checked && this.settings.dataMode === 'shared'));
+                }
                 Toast(checked ? `已开启 ${__('betaLabTitle') || '实验功能'}` : `已关闭 ${__('betaLabTitle') || '实验功能'}`, 1200, 'info');
             }
         });
@@ -96,8 +101,8 @@ export class BetaSection {
 
         const dataModeSeg = new SegmentedControl({
             options: [
-                { label: __('dataModeShared') || '社区共享', value: 'shared' },
-                { label: __('dataModeLocal') || '本地私有', value: 'local' }
+                { label: __('dataModeLocal') || '本地私有', value: 'local' },
+                { label: __('dataModeShared') || '社区共享', value: 'shared' }
             ],
             value: currentDataMode,
             onChange: (val) => {
@@ -105,7 +110,7 @@ export class BetaSection {
                 updateDataModeDesc(val);
                 const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
                 if (hm) {
-                    hm.setCrowdEnabled(val === 'shared');
+                    hm.setCrowdEnabled(Boolean(this.settings.betaMode) && val === 'shared');
                 }
                 Toast(val === 'shared' ? '已切换至社区共享模式' : '已切换至本地私有模式', 1200, 'info');
             }
