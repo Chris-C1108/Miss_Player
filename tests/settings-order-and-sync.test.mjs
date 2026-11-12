@@ -17,13 +17,23 @@ console.log('🧪 开始执行设置菜单防丢失与固定插槽顺序单元�
 // 1. 验证 PlayerState 构造函数完整预置 Beta 与自建库字段
 const ps = new PlayerState();
 assert.strictEqual(typeof ps.settings.betaMode, 'boolean', 'betaMode 必须在 settings 中预置为 boolean');
+assert.strictEqual(typeof ps.settings.dataMode, 'string', 'dataMode 必须在 settings 中预置为 string');
+assert.strictEqual(ps.settings.dataMode, 'local', 'dataMode 默认必须严格为 local (本地私有)');
+assert.strictEqual(ps.isSharedMode(), false, '默认状态下 isSharedMode 必须为 false (物理熔断)');
+
+ps.settings.betaMode = true;
+ps.settings.dataMode = 'shared';
+assert.strictEqual(ps.isSharedMode(), true, '开启 betaMode 且 dataMode 为 shared 时 isSharedMode 为 true');
+ps.settings.dataMode = 'local';
+assert.strictEqual(ps.isSharedMode(), false, 'dataMode 为 local 时 isSharedMode 为 false');
+
 assert.strictEqual(typeof ps.settings.betaHeatmap, 'boolean', 'betaHeatmap 必须在 settings 中预置为 boolean');
 assert.strictEqual(typeof ps.settings.betaCrowdHeatmap, 'boolean', 'betaCrowdHeatmap 必须在 settings 中预置为 boolean');
 assert.strictEqual(typeof ps.settings.betaDbEndpoint, 'string', 'betaDbEndpoint 必须在 settings 中预置为 string');
 assert.strictEqual(typeof ps.settings.betaDbApiKey, 'string', 'betaDbApiKey 必须在 settings 中预置为 string');
 assert.strictEqual(typeof ps.settings.crazyScrapeMode, 'boolean', 'crazyScrapeMode 必须在 settings 中预置为 boolean');
 assert.strictEqual(typeof ps.settings.betaSingleHandMode, 'boolean', 'betaSingleHandMode 必须在 settings 中预置为 boolean');
-console.log('✅ 1. PlayerState 默认设置字段完备性校验通过');
+console.log('✅ 1. PlayerState 默认设置字段与二元数据模式完备性校验通过');
 
 // 2. 验证 updateSetting 能成功写入自建端点并支持动态更新
 ps.updateSetting('betaDbEndpoint', 'https://supabase.example.com/comments');

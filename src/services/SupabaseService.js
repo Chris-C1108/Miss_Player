@@ -17,6 +17,22 @@ function addDebugLog(text, level = 'info') {
  * 3. 降级兜底：兼容单行 comments 表直写与客户端合并。
  */
 export class SupabaseService {
+    static DEFAULT_SUPABASE_URL = 'https://daosvqbphybjsgvpujil.supabase.co/rest/v1';
+    static DEFAULT_SUPABASE_KEY = 'sb_publishable_OFt3-Uybbs8x0JOrbkucRg_v58QaxVJ';
+    static DEFAULT_EDGE_CACHE_URL = 'https://miss-heatmap-cache.chen-m1108.workers.dev';
+
+    /**
+     * 判断当前是否处于社区共享模式
+     * 只有同时开启 Beta 模式并显式选择 'shared' 时才为 true
+     * 默认是 'local'，物理熔断禁止一切公共请求与上报
+     * @returns {boolean}
+     */
+    static isSharedMode() {
+        const betaMode = getValue('betaMode', false);
+        const dataMode = getValue('dataMode', 'local');
+        return Boolean(betaMode && dataMode === 'shared');
+    }
+
     static normalizeBaseUrl(url) {
         if (!url) return '';
         let clean = url.trim().replace(/\/+$/, '');
@@ -29,9 +45,17 @@ export class SupabaseService {
     }
 
     static getConfig() {
-        const endpoint = getValue('betaDbEndpoint', '').trim();
-        const apiKey = getValue('betaDbApiKey', '').trim();
-        const baseUrl = this.normalizeBaseUrl(endpoint);
+        if (!this.isSharedMode()) {
+            return {
+                baseUrl: '',
+                apiKey: '',
+                isEnabled: false
+            };
+        }
+        const customEndpoint = getValue('betaDbEndpoint', '').trim();
+        const customApiKey = getValue('betaDbApiKey', '').trim();
+        const baseUrl = customEndpoint ? this.normalizeBaseUrl(customEndpoint) : this.DEFAULT_SUPABASE_URL;
+        const apiKey = customApiKey || this.DEFAULT_SUPABASE_KEY;
         return {
             baseUrl,
             apiKey,
@@ -69,8 +93,9 @@ export class SupabaseService {
      * @returns {Promise<Array>}
      */
     static async fetchComments(videoCode) {
+        if (!this.isSharedMode() || !videoCode) return [];
         const config = this.getConfig();
-        if (!config.isEnabled || !videoCode) return [];
+        if (!config.isEnabled) return [];
 
         const code = videoCode.toUpperCase();
         // 1. 优先查询方案 1: video_comments_bundle (单行返回压缩后的全部评论)
@@ -128,8 +153,9 @@ export class SupabaseService {
      * @param {Array} comments - 抓取的评论
      */
     static async uploadComments(videoCode, sourceSite, comments, durationSeconds = 0) {
+        if (!this.isSharedMode() || !videoCode || !Array.isArray(comments) || comments.length === 0) return;
         const config = this.getConfig();
-        if (!config.isEnabled || !videoCode || !Array.isArray(comments) || comments.length === 0) return;
+        if (!config.isEnabled) return;
 
         const code = videoCode.toUpperCase();
         const rows = [];
@@ -240,8 +266,9 @@ export class SupabaseService {
      * @returns {Promise<boolean>}
      */
     static async submitCommentReport(reportData) {
+        if (!this.isSharedMode() || !reportData) return false;
         const config = this.getConfig();
-        if (!config.isEnabled || !reportData) return false;
+        if (!config.isEnabled) return false;
 
         const { videoCode, commentId, userName, commentText, reason, userNote } = reportData;
         if (!videoCode || !reason) return false;
@@ -305,9 +332,6 @@ export class SupabaseService {
         return false;
     }
 
-    // 默认官方 Cloudflare Worker 社区高能热度图边缘缓存网关
-    static DEFAULT_EDGE_CACHE_URL = 'https://miss-heatmap-cache.chen-m1108.workers.dev';
-
     /**
      * 读取指定番号的社区全网高能热度图 (120 槽位 Base64)
      * (优先通过 Cloudflare Worker 边缘 Anycast 24h 缓存只读网关，异常时无缝降级直连 Supabase)
@@ -315,7 +339,7 @@ export class SupabaseService {
      * @returns {Promise<{ found: boolean, avcode: string, heatmapBase64: string, totalSamples: number, durationSeconds: number }|null>}
      */
     static async fetchCrowdHeatmap(videoCode) {
-        if (!videoCode) return null;
+        if (!this.isSharedMode() || !videoCode) return null;
         const code = videoCode.toUpperCase();
 
         // 1. 优先尝试 Cloudflare Worker 边缘 24h 缓存 (0 消耗 Supabase Egress 配额)
@@ -398,8 +422,9 @@ export class SupabaseService {
      * @returns {Promise<boolean>}
      */
     static async reportCrowdHeatmapDelta(videoCode, deltaBase64, durationSeconds = 0) {
+        if (!this.isSharedMode() || !videoCode || !deltaBase64) return false;
         const config = this.getConfig();
-        if (!config.isEnabled || !videoCode || !deltaBase64) return false;
+        if (!config.isEnabled) return false;
 
         const code = videoCode.toUpperCase();
         try {

@@ -68,19 +68,53 @@ export class BetaSection {
         });
         betaSubWrap.appendChild(heatmapToggle.getElement());
 
-        const crowdHeatmapToggle = new ToggleRow({
-            title: __('betaCrowdHeatmap') || '全网高能进度条',
-            subtext: __('betaCrowdHeatmapDesc') || '分享并获取精彩片段热度',
-            checked: Boolean(this.settings.betaCrowdHeatmap),
-            onChange: (checked) => {
-                this.sm.updateSetting('betaCrowdHeatmap', checked);
+        // 二元数据模式 (Data Mode: 'shared' 社区共享 vs 'local' 本地私有)
+        const dataModeRow = document.createElement('div');
+        dataModeRow.className = 'tm-apple-row tm-apple-row--column tm-data-mode-row';
+
+        const dataModeHeader = document.createElement('div');
+        dataModeHeader.className = 'tm-data-mode-header';
+
+        const dataModeTitle = document.createElement('div');
+        dataModeTitle.className = 'tm-apple-row-title';
+        dataModeTitle.textContent = __('dataMode') || '数据模式';
+        dataModeHeader.appendChild(dataModeTitle);
+
+        const currentDataMode = this.settings.dataMode === 'shared' ? 'shared' : 'local';
+
+        const dataModeDesc = document.createElement('div');
+        dataModeDesc.className = 'tm-apple-row-subtext tm-data-mode-desc';
+
+        const updateDataModeDesc = (val) => {
+            if (val === 'shared') {
+                dataModeDesc.textContent = __('dataModeSharedDesc') || '呈现全网观众高能波峰与热评，你的足迹亦将匿名共享。';
+            } else {
+                dataModeDesc.textContent = __('dataModeLocalDesc') || '断开公共网络通信，所有足迹与标记仅留存于本机与私有云盘。';
+            }
+        };
+        updateDataModeDesc(currentDataMode);
+
+        const dataModeSeg = new SegmentedControl({
+            options: [
+                { label: __('dataModeShared') || '社区共享', value: 'shared' },
+                { label: __('dataModeLocal') || '本地私有', value: 'local' }
+            ],
+            value: currentDataMode,
+            onChange: (val) => {
+                this.sm.updateSetting('dataMode', val);
+                updateDataModeDesc(val);
                 const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
                 if (hm) {
-                    hm.setCrowdEnabled(checked);
+                    hm.setCrowdEnabled(val === 'shared');
                 }
+                Toast(val === 'shared' ? '已切换至社区共享模式' : '已切换至本地私有模式', 1200, 'info');
             }
         });
-        betaSubWrap.appendChild(crowdHeatmapToggle.getElement());
+
+        dataModeHeader.appendChild(dataModeSeg.getElement());
+        dataModeRow.appendChild(dataModeHeader);
+        dataModeRow.appendChild(dataModeDesc);
+        betaSubWrap.appendChild(dataModeRow);
 
         const undoToggle = new ToggleRow({
             title: __('betaCapsuleUndo') || '防误删除',
@@ -101,44 +135,6 @@ export class BetaSection {
             }
         });
         betaSubWrap.appendChild(deepLinkToggle.getElement());
-
-        const dbRow = document.createElement('div');
-        dbRow.className = 'tm-apple-row tm-apple-row--column';
-        dbRow.innerHTML = `
-            <div class="tm-apple-row-title">${__('betaCustomApi') || '自建评论接口'}</div>
-            <div class="tm-apple-row-subtext">${__('betaCustomApiDesc') || '连接私人评论服务器 (可选)'}</div>
-            <input type="text" class="tm-settings-input tm-beta-db-url" placeholder="https://your-api.domain.com/comments" value="${this.settings.betaDbEndpoint || ''}" />
-            <input type="password" class="tm-settings-input tm-beta-db-key" placeholder="API Key / Token (可选)" value="${this.settings.betaDbApiKey || ''}" />
-        `;
-        const dbUrlInput = dbRow.querySelector('.tm-beta-db-url');
-        const dbKeyInput = dbRow.querySelector('.tm-beta-db-key');
-
-        const bindFocus = (el) => {
-            if (!el) return;
-            const h = () => {
-                const panel = el.closest('.tm-settings-panel');
-                if (panel) {
-                    setTimeout(() => {
-                        const elRect = el.getBoundingClientRect();
-                        const panelRect = panel.getBoundingClientRect();
-                        const targetScrollTop = panel.scrollTop + (elRect.top - panelRect.top) - 70;
-                        panel.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
-                    }, 120);
-                }
-            };
-            el.addEventListener('focus', h);
-        };
-        bindFocus(dbUrlInput);
-        bindFocus(dbKeyInput);
-
-        const saveDb = () => {
-            this.sm.updateSetting('betaDbEndpoint', dbUrlInput.value.trim());
-            this.sm.updateSetting('betaDbApiKey', dbKeyInput.value.trim());
-            Toast('已保存自建数据库端点配置', 1500, 'info');
-        };
-        dbUrlInput.addEventListener('change', saveDb);
-        dbKeyInput.addEventListener('change', saveDb);
-        betaSubWrap.appendChild(dbRow);
 
         const peachSection = new PeachSection(this.sm);
         betaSubWrap.appendChild(peachSection.getElement());

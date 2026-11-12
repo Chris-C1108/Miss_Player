@@ -179,8 +179,10 @@ const mockCoreTrack = {
     options: {
         videoCode: 'WSP-101',
         playerState: {
+            isSharedMode: () => true,
             settings: {
                 betaMode: true,
+                dataMode: 'shared',
                 betaHeatmap: true,
                 betaCrowdHeatmap: true
             }
@@ -297,8 +299,10 @@ console.log('✅ 8. 冷启动存量足迹自动上云与脏标记解耦自愈测
 {
     const originalRequest = SupabaseService.request;
     const originalGetConfig = SupabaseService.getConfig;
+    const originalIsShared = SupabaseService.isSharedMode;
     const requestedUrls = [];
 
+    SupabaseService.isSharedMode = () => true;
     SupabaseService.getConfig = () => ({
         baseUrl: 'https://daosvqbphybjsgvpujil.supabase.co/rest/v1',
         apiKey: 'test-key',
@@ -352,7 +356,70 @@ console.log('✅ 8. 冷启动存量足迹自动上云与脏标记解耦自愈测
 
     SupabaseService.request = originalRequest;
     SupabaseService.getConfig = originalGetConfig;
+    SupabaseService.isSharedMode = originalIsShared;
     console.log('✅ 9. Cloudflare 边缘缓存优先与 Supabase 直连自愈降级测试全部通过');
 }
 
-console.log('\n🎉 全部 9 项视频播放热度、探索足迹与双轨同步状态测试 100% 通过！\n');
+// 10. 验证二元数据模式 (Data Mode) 物理硬熔断与 WebDAV 双写并存保障
+{
+    const originalIsShared = SupabaseService.isSharedMode;
+    const originalRequest = SupabaseService.request;
+    let networkCallMade = false;
+    SupabaseService.request = async () => {
+        networkCallMade = true;
+        return { status: 200, data: '[]' };
+    };
+
+    // 10.1 本地私有模式 (Local Mode) 物理硬熔断
+    SupabaseService.isSharedMode = () => false;
+    networkCallMade = false;
+
+    const localComments = await SupabaseService.fetchComments('WSP-101');
+    assert.deepStrictEqual(localComments, [], '本地模式下 fetchComments 必须瞬间返回空列表');
+    assert.strictEqual(networkCallMade, false, '本地模式下 fetchComments 绝对不得发起网络请求');
+
+    const localHeatmap = await SupabaseService.fetchCrowdHeatmap('WSP-101');
+    assert.strictEqual(localHeatmap, null, '本地模式下 fetchCrowdHeatmap 必须瞬间返回 null');
+    assert.strictEqual(networkCallMade, false, '本地模式下 fetchCrowdHeatmap 绝对不得发起网络请求');
+
+    const localReportRes = await SupabaseService.reportCrowdHeatmapDelta('WSP-101', 'QUFB', 1800);
+    assert.strictEqual(localReportRes, false, '本地模式下 reportCrowdHeatmapDelta 必须瞬间返回 false');
+    assert.strictEqual(networkCallMade, false, '本地模式下 reportCrowdHeatmapDelta 绝对不得发起网络请求');
+
+    // 10.2 本地私有模式下 WebDAV 依然正常写入 (数据写 2 份保证)
+    const mockCoreLocal = {
+        targetVideo: mockVideoTrack,
+        options: {
+            videoCode: 'WSP-101',
+            playerState: {
+                isSharedMode: () => false,
+                settings: {
+                    betaMode: true,
+                    dataMode: 'local',
+                    betaHeatmap: true
+                }
+            }
+        }
+    };
+    const hmLocal = new HeatmapManager(mockCoreLocal, mockControlMgr);
+    hmLocal.init();
+    hmLocal.bins = new Float32Array(20);
+    hmLocal.bins[1] = 50;
+
+    let localWebDavUploaded = false;
+    let localCrowdDeltaReported = false;
+    hmLocal._uploadToWebDav = async () => { localWebDavUploaded = true; };
+    hmLocal._reportCrowdDelta = async () => { localCrowdDeltaReported = true; };
+
+    await hmLocal.saveToDb(true);
+    assert.strictEqual(localWebDavUploaded, true, '本地私有模式下只要配置了 WebDAV 必须正常上传备份');
+    assert.strictEqual(localCrowdDeltaReported, false, '本地私有模式下社区增量上报必须被物理熔断');
+    hmLocal.destroy();
+
+    // 10.3 恢复环境
+    SupabaseService.isSharedMode = originalIsShared;
+    SupabaseService.request = originalRequest;
+    console.log('✅ 10. 二元数据模式物理硬熔断与 WebDAV 双写保障测试全部通过');
+}
+
+console.log('\n🎉 全部 10 项视频播放热度、探索足迹与双轨同步状态测试 100% 通过！\n');

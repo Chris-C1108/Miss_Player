@@ -47,6 +47,7 @@ export class PlayerState {
             viewportDebugEnabled: false,    // 视口全景探针功能 (默认关闭)
             // Beta 实验室与自建数据库 (Beta Labs & Supabase)
             betaMode: false,
+            dataMode: 'local',              // 数据模式: 'shared' (社区共享) | 'local' (本地私有)，默认严格本地私有
             betaHeatmap: false,
             betaCrowdHeatmap: false,
             betaFirstCapsulePlay: false,
@@ -115,6 +116,14 @@ export class PlayerState {
             this.settings.defaultMuted = getBool('defaultMuted', true);
             this.settings.muteResetMinutes = Math.max(1, Math.min(120, parseInt(getValue('muteResetMinutes', 5), 10) || 5));
             this.settings.betaMode = getBool('betaMode', false);
+            const rawDataMode = getValue('dataMode', null);
+            if (rawDataMode === 'shared' || rawDataMode === 'local') {
+                this.settings.dataMode = rawDataMode;
+            } else {
+                const oldCrowd = getBool('betaCrowdHeatmap', false);
+                const oldEndpoint = getValue('betaDbEndpoint', '');
+                this.settings.dataMode = (oldCrowd && oldEndpoint) ? 'shared' : 'local';
+            }
             this.settings.betaHeatmap = getBool('betaHeatmap', false);
             this.settings.betaCrowdHeatmap = getBool('betaCrowdHeatmap', false);
             this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
@@ -165,6 +174,7 @@ export class PlayerState {
             'autoCheckUpdate',
             'updateChannel',
             'betaMode',
+            'dataMode',
             'betaHeatmap',
             'betaCrowdHeatmap',
             'betaDbEndpoint',
@@ -219,6 +229,7 @@ export class PlayerState {
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
             setValue('updateChannel', this.settings.updateChannel === 'beta' ? 'beta' : 'stable');
             setValue('betaMode', Boolean(this.settings.betaMode));
+            setValue('dataMode', this.settings.dataMode === 'shared' ? 'shared' : 'local');
             setValue('betaHeatmap', Boolean(this.settings.betaHeatmap));
             setValue('betaCrowdHeatmap', Boolean(this.settings.betaCrowdHeatmap));
             setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));
@@ -238,6 +249,14 @@ export class PlayerState {
         }
     }
     
+    /**
+     * 当前是否处于社区共享模式 (必须同时开启 Beta 模式且选择 shared)
+     * @returns {boolean}
+     */
+    isSharedMode() {
+        return Boolean(this.settings.betaMode && this.settings.dataMode === 'shared');
+    }
+
     /**
      * 更新设置
      * @param {string} key - 设置键名

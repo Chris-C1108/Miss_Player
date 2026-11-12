@@ -220,9 +220,12 @@ export class HeatmapManager {
     }
 
     init() {
-        const settings = this.playerCore?.options?.playerState?.settings;
+        const playerState = this.playerCore?.options?.playerState;
+        const settings = playerState?.settings;
         this.isEnabled = Boolean(settings?.betaMode && settings?.betaHeatmap);
-        this.isCrowdEnabled = Boolean(settings?.betaMode && settings?.betaCrowdHeatmap);
+        this.isCrowdEnabled = Boolean(typeof playerState?.isSharedMode === 'function' 
+            ? playerState.isSharedMode() 
+            : (settings?.betaMode && settings?.dataMode === 'shared'));
 
         this._resolveStorageKey();
         this._buildDom();
@@ -571,8 +574,12 @@ export class HeatmapManager {
 
         // 立即触发 WebDAV 上传与社区增量上报 (不被本地 IndexedDB 异步排队阻滞)
         if (syncToCloud) {
+            // 1. 私有云盘：只要配置了 WebDAV，无论处于哪种数据模式，始终同步写入权威备份 (数据写 2 份)
             this._uploadToWebDav(payload);
-            this._reportCrowdDelta();
+            // 2. 社区云端：仅在开启社区共享模式时上报 120 字节纯增量 (本地私有模式彻底物理阻断)
+            if (this.isCrowdEnabled) {
+                this._reportCrowdDelta();
+            }
         }
 
         try {
