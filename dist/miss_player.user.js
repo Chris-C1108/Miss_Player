@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.012
+// @version            5.7.118-beta.013
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.012";
+		return "5.7.118-beta.013";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -1912,6 +1912,8 @@
 			dataModeLocal: "Local",
 			dataModeSharedDesc: "Display crowd peaks and comments, anonymously sharing your footprints.",
 			dataModeLocalDesc: "Disconnect public network; footprints and markers stay local and on WebDAV.",
+			hidePrivateData: "Hide Private Data",
+			hidePrivateDataDesc: "Hide local & cloud footprints to inspect crowd heatmap",
 			betaCrowdHeatmap: "Crowd Heatmap",
 			betaCrowdHeatmapDesc: "Sync & highlight popular video segments",
 			betaCapsuleUndo: "Undo Protection",
@@ -2116,6 +2118,8 @@
 			dataModeLocal: "本地私有",
 			dataModeSharedDesc: "呈现全网观众高能波峰与热评，你的足迹亦将匿名共享。",
 			dataModeLocalDesc: "断开公共网络通信，所有足迹与标记仅留存于本机与私有云盘。",
+			hidePrivateData: "不显示私有数据",
+			hidePrivateDataDesc: "隐藏本机与云盘足迹，仅观察全网波形",
 			betaCrowdHeatmap: "全网高能进度条",
 			betaCrowdHeatmapDesc: "分享并获取精彩片段热度",
 			betaCapsuleUndo: "防误删除",
@@ -2320,6 +2324,8 @@
 			dataModeLocal: "本地私有",
 			dataModeSharedDesc: "呈現全網觀眾高能波峰與熱評，你的足跡亦將匿名共享。",
 			dataModeLocalDesc: "斷開公共網路通訊，所有足跡與標記僅留存於本機與私有雲端。",
+			hidePrivateData: "不顯示私有數據",
+			hidePrivateDataDesc: "隱藏本機與雲端足跡，僅觀察全網波形",
 			betaCrowdHeatmap: "全網高能進度條",
 			betaCrowdHeatmapDesc: "分享並獲取精彩片段熱度",
 			betaCapsuleUndo: "防誤刪除",
@@ -2524,6 +2530,8 @@
 			dataModeLocal: "ローカルプライベート",
 			dataModeSharedDesc: "みんなの見どころ波形とコメントを表示し、足跡も匿名で共有します。",
 			dataModeLocalDesc: "パブリック通信を切断し、すべての足跡とマークをローカルとWebDAVにのみ保持します。",
+			hidePrivateData: "プライベートデータを非表示",
+			hidePrivateDataDesc: "ローカルとクラウドの履歴を隠し、全体波形を確認",
 			betaCrowdHeatmap: "みんなの高ハイライト",
 			betaCrowdHeatmapDesc: "人気の見どころ区間を同期して表示",
 			betaCapsuleUndo: "誤削除防止",
@@ -2727,6 +2735,8 @@
 			dataModeLocal: "Cục bộ",
 			dataModeSharedDesc: "Hiển thị các đoạn nổi bật và bình luận từ cộng đồng, ẩn danh chia sẻ dấu chân.",
 			dataModeLocalDesc: "Ngắt kết nối mạng công cộng; toàn bộ dấu chân và đánh dấu chỉ lưu trên máy và WebDAV.",
+			hidePrivateData: "Ẩn dữ liệu riêng tư",
+			hidePrivateDataDesc: "Ẩn dấu vết cục bộ và đám mây để xem độ nóng cộng đồng",
 			betaCrowdHeatmap: "Đoạn nổi bật cộng đồng",
 			betaCrowdHeatmapDesc: "Đồng bộ và làm nổi bật các đoạn hay nhất",
 			betaCapsuleUndo: "Chống xóa nhầm",
@@ -3316,7 +3326,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.012";
+		return "5.7.118-beta.013";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -5281,7 +5291,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.012";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.013";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -21657,6 +21667,17 @@
 			dataModeRow.appendChild(dataModeHeader);
 			dataModeRow.appendChild(dataModeDesc);
 			betaSubWrap.appendChild(dataModeRow);
+			const hidePrivateDataToggle = new ToggleRow({
+				title: __$1("hidePrivateData") || "不显示私有数据",
+				subtext: __$1("hidePrivateDataDesc") || "隐藏本机与云盘足迹，仅观察全网波形",
+				checked: Boolean(this.settings.hidePrivateData),
+				onChange: (checked) => {
+					this.sm.updateSetting("hidePrivateData", checked);
+					const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
+					if (hm) hm.setPrivateDataHidden(checked);
+				}
+			});
+			betaSubWrap.appendChild(hidePrivateDataToggle.getElement());
 			const undoToggle = new ToggleRow({
 				title: __$1("betaCapsuleUndo") || "防误删除",
 				subtext: __$1("betaCapsuleUndoDesc") || "删除保留 60 秒撤销",
@@ -23408,6 +23429,7 @@
 			this.saveTimer = null;
 			this.isEnabled = false;
 			this.isCrowdEnabled = false;
+			this.isPrivateDataHidden = false;
 			this.svgElement = null;
 			this.pathElement = null;
 			this.pathCrowdElement = null;
@@ -23435,6 +23457,7 @@
 			const settings = playerState?.settings;
 			this.isEnabled = Boolean(settings?.betaMode && settings?.betaHeatmap);
 			this.isCrowdEnabled = Boolean(typeof playerState?.isSharedMode === "function" ? playerState.isSharedMode() : settings?.betaMode && settings?.dataMode === "shared");
+			this.isPrivateDataHidden = Boolean(settings?.hidePrivateData);
 			this._resolveStorageKey();
 			this._buildDom();
 			if (this.targetVideo) {
@@ -23496,6 +23519,7 @@
 			const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 			path.setAttribute("class", "tm-heatmap-path");
 			path.setAttribute("d", "");
+			if (this.isPrivateDataHidden) path.style.display = "none";
 			svg.appendChild(path);
 			this.svgElement = svg;
 			this.pathElement = path;
@@ -23681,6 +23705,11 @@
 		}
 		renderSvg() {
 			if (!this.isEnabled || !this.pathElement || !this.bins) return;
+			if (this.isPrivateDataHidden) {
+				this.pathElement.style.display = "none";
+				return;
+			}
+			this.pathElement.style.display = "";
 			try {
 				const pathD = generateSvgPath(resampleAndSmoothBins(this.bins, HEATMAP_CONSTANTS.RENDER_POINTS));
 				this.pathElement.setAttribute("d", pathD);
@@ -23713,6 +23742,16 @@
 				if (this.crowd120) this.renderCrowdSvg();
 				else if (this.avcode) this._loadCrowdHeatmap();
 			} else if (this.pathCrowdElement) this.pathCrowdElement.style.display = "none";
+		}
+		setPrivateDataHidden(hidden) {
+			this.isPrivateDataHidden = Boolean(hidden);
+			if (this.pathElement) {
+				if (this.isPrivateDataHidden) this.pathElement.style.display = "none";
+				else {
+					this.pathElement.style.display = "";
+					this.renderSvg();
+				}
+			}
 		}
 		_updateVisibility() {
 			if (!this.svgElement) return;
@@ -25121,6 +25160,7 @@
 				viewportDebugEnabled: false,
 				betaMode: false,
 				dataMode: "local",
+				hidePrivateData: false,
 				betaHeatmap: false,
 				betaCrowdHeatmap: false,
 				betaFirstCapsulePlay: false,
@@ -25182,6 +25222,7 @@
 					const oldEndpoint = getValue("betaDbEndpoint", "");
 					this.settings.dataMode = oldCrowd && oldEndpoint ? "shared" : "local";
 				}
+				this.settings.hidePrivateData = getBool("hidePrivateData", false);
 				this.settings.betaHeatmap = getBool("betaHeatmap", false);
 				this.settings.betaCrowdHeatmap = getBool("betaCrowdHeatmap", false);
 				this.settings.betaFirstCapsulePlay = getBool("betaFirstCapsulePlay", false);
@@ -25224,6 +25265,7 @@
 				"updateChannel",
 				"betaMode",
 				"dataMode",
+				"hidePrivateData",
 				"betaHeatmap",
 				"betaCrowdHeatmap",
 				"betaDbEndpoint",
@@ -25272,6 +25314,7 @@
 				setValue("updateChannel", this.settings.updateChannel === "beta" ? "beta" : "stable");
 				setValue("betaMode", Boolean(this.settings.betaMode));
 				setValue("dataMode", this.settings.dataMode === "shared" ? "shared" : "local");
+				setValue("hidePrivateData", Boolean(this.settings.hidePrivateData));
 				setValue("betaHeatmap", Boolean(this.settings.betaHeatmap));
 				setValue("betaCrowdHeatmap", Boolean(this.settings.betaCrowdHeatmap));
 				setValue("betaFirstCapsulePlay", Boolean(this.settings.betaFirstCapsulePlay));

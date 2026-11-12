@@ -422,4 +422,53 @@ console.log('✅ 8. 冷启动存量足迹自动上云与脏标记解耦自愈测
     console.log('✅ 10. 二元数据模式物理硬熔断与 WebDAV 双写保障测试全部通过');
 }
 
-console.log('\n🎉 全部 10 项视频播放热度、探索足迹与双轨同步状态测试 100% 通过！\n');
+// 11. 验证“不显示私有数据”(hidePrivateData) 独立检测全网波形特性
+{
+    const mockCoreTest = {
+        targetVideo: mockVideoTrack,
+        options: {
+            videoCode: 'WSP-101',
+            playerState: {
+                isSharedMode: () => true,
+                settings: {
+                    betaMode: true,
+                    dataMode: 'shared',
+                    betaHeatmap: true,
+                    hidePrivateData: false
+                }
+            }
+        }
+    };
+    const hmTest = new HeatmapManager(mockCoreTest, mockControlMgr);
+    hmTest.init();
+    hmTest.bins = new Float32Array(20);
+    hmTest.bins[5] = 100;
+    hmTest.crowd120 = new Uint8Array(120).fill(50);
+
+    // 默认状态：私有顶轨与全网底轨均渲染
+    hmTest.renderSvg();
+    hmTest.renderCrowdSvg();
+    assert.strictEqual(hmTest.pathElement.style.display, '', '默认状态下私有顶轨应当显示');
+    assert.strictEqual(hmTest.pathCrowdElement.style.display, '', '默认状态下全网底轨应当显示');
+    assert.strictEqual(hmTest.pathElement.getAttribute('d').length > 0, true, '私有顶轨应当有路径数据');
+
+    // 开启“不显示私有数据”开关
+    hmTest.setPrivateDataHidden(true);
+    assert.strictEqual(hmTest.isPrivateDataHidden, true, 'isPrivateDataHidden 必须更新为 true');
+    assert.strictEqual(hmTest.pathElement.style.display, 'none', '开启隐藏私有数据时私有顶轨必须被隐藏');
+    assert.strictEqual(hmTest.pathCrowdElement.style.display, '', '开启隐藏私有数据时全网底轨必须保持独占展示');
+
+    // 再次调用 renderSvg，确保不会被错误重置为可见
+    hmTest.renderSvg();
+    assert.strictEqual(hmTest.pathElement.style.display, 'none', '多次 renderSvg 依然保持隐藏');
+
+    // 关闭“不显示私有数据”开关，私有顶轨立即原样恢复
+    hmTest.setPrivateDataHidden(false);
+    assert.strictEqual(hmTest.isPrivateDataHidden, false, 'isPrivateDataHidden 必须更新为 false');
+    assert.strictEqual(hmTest.pathElement.style.display, '', '恢复后私有顶轨必须重现');
+
+    hmTest.destroy();
+    console.log('✅ 11. “不显示私有数据”隐匿私有足迹与独立检测全网波形测试全部通过');
+}
+
+console.log('\n🎉 全部 11 项视频播放热度、探索足迹与双轨同步状态测试 100% 通过！\n');

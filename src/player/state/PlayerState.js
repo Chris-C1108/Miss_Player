@@ -48,6 +48,7 @@ export class PlayerState {
             // Beta 实验室与自建数据库 (Beta Labs & Supabase)
             betaMode: false,
             dataMode: 'local',              // 数据模式: 'shared' (社区共享) | 'local' (本地私有)，默认严格本地私有
+            hidePrivateData: false,         // 不显示私有数据 (隐藏本机与网盘足迹，便于检验全网波形)
             betaHeatmap: false,
             betaCrowdHeatmap: false,
             betaFirstCapsulePlay: false,
@@ -124,6 +125,7 @@ export class PlayerState {
                 const oldEndpoint = getValue('betaDbEndpoint', '');
                 this.settings.dataMode = (oldCrowd && oldEndpoint) ? 'shared' : 'local';
             }
+            this.settings.hidePrivateData = getBool('hidePrivateData', false);
             this.settings.betaHeatmap = getBool('betaHeatmap', false);
             this.settings.betaCrowdHeatmap = getBool('betaCrowdHeatmap', false);
             this.settings.betaFirstCapsulePlay = getBool('betaFirstCapsulePlay', false);
@@ -175,6 +177,7 @@ export class PlayerState {
             'updateChannel',
             'betaMode',
             'dataMode',
+            'hidePrivateData',
             'betaHeatmap',
             'betaCrowdHeatmap',
             'betaDbEndpoint',
@@ -230,6 +233,7 @@ export class PlayerState {
             setValue('updateChannel', this.settings.updateChannel === 'beta' ? 'beta' : 'stable');
             setValue('betaMode', Boolean(this.settings.betaMode));
             setValue('dataMode', this.settings.dataMode === 'shared' ? 'shared' : 'local');
+            setValue('hidePrivateData', Boolean(this.settings.hidePrivateData));
             setValue('betaHeatmap', Boolean(this.settings.betaHeatmap));
             setValue('betaCrowdHeatmap', Boolean(this.settings.betaCrowdHeatmap));
             setValue('betaFirstCapsulePlay', Boolean(this.settings.betaFirstCapsulePlay));

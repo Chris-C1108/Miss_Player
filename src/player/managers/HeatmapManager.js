@@ -190,6 +190,7 @@ export class HeatmapManager {
         this.saveTimer = null;
         this.isEnabled = false;
         this.isCrowdEnabled = false;
+        this.isPrivateDataHidden = false;
 
         this.svgElement = null;
         this.pathElement = null;
@@ -226,6 +227,7 @@ export class HeatmapManager {
         this.isCrowdEnabled = Boolean(typeof playerState?.isSharedMode === 'function' 
             ? playerState.isSharedMode() 
             : (settings?.betaMode && settings?.dataMode === 'shared'));
+        this.isPrivateDataHidden = Boolean(settings?.hidePrivateData);
 
         this._resolveStorageKey();
         this._buildDom();
@@ -335,6 +337,9 @@ export class HeatmapManager {
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('class', 'tm-heatmap-path');
         path.setAttribute('d', '');
+        if (this.isPrivateDataHidden) {
+            path.style.display = 'none';
+        }
         svg.appendChild(path);
 
         this.svgElement = svg;
@@ -650,6 +655,11 @@ export class HeatmapManager {
 
     renderSvg() {
         if (!this.isEnabled || !this.pathElement || !this.bins) return;
+        if (this.isPrivateDataHidden) {
+            this.pathElement.style.display = 'none';
+            return;
+        }
+        this.pathElement.style.display = '';
         try {
             const normalized = resampleAndSmoothBins(this.bins, HEATMAP_CONSTANTS.RENDER_POINTS);
             const pathD = generateSvgPath(normalized);
@@ -695,6 +705,18 @@ export class HeatmapManager {
         } else {
             if (this.pathCrowdElement) {
                 this.pathCrowdElement.style.display = 'none';
+            }
+        }
+    }
+
+    setPrivateDataHidden(hidden) {
+        this.isPrivateDataHidden = Boolean(hidden);
+        if (this.pathElement) {
+            if (this.isPrivateDataHidden) {
+                this.pathElement.style.display = 'none';
+            } else {
+                this.pathElement.style.display = '';
+                this.renderSvg();
             }
         }
     }

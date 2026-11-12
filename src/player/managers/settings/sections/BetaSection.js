@@ -116,6 +116,20 @@ export class BetaSection {
         dataModeRow.appendChild(dataModeDesc);
         betaSubWrap.appendChild(dataModeRow);
 
+        const hidePrivateDataToggle = new ToggleRow({
+            title: __('hidePrivateData') || '不显示私有数据',
+            subtext: __('hidePrivateDataDesc') || '隐藏本机与云盘足迹，仅观察全网波形',
+            checked: Boolean(this.settings.hidePrivateData),
+            onChange: (checked) => {
+                this.sm.updateSetting('hidePrivateData', checked);
+                const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
+                if (hm) {
+                    hm.setPrivateDataHidden(checked);
+                }
+            }
+        });
+        betaSubWrap.appendChild(hidePrivateDataToggle.getElement());
+
         const undoToggle = new ToggleRow({
             title: __('betaCapsuleUndo') || '防误删除',
             subtext: __('betaCapsuleUndoDesc') || '删除保留 60 秒撤销',

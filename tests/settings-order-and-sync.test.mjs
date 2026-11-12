@@ -20,6 +20,8 @@ assert.strictEqual(typeof ps.settings.betaMode, 'boolean', 'betaMode 必须在 s
 assert.strictEqual(typeof ps.settings.dataMode, 'string', 'dataMode 必须在 settings 中预置为 string');
 assert.strictEqual(ps.settings.dataMode, 'local', 'dataMode 默认必须严格为 local (本地私有)');
 assert.strictEqual(ps.isSharedMode(), false, '默认状态下 isSharedMode 必须为 false (物理熔断)');
+assert.strictEqual(typeof ps.settings.hidePrivateData, 'boolean', 'hidePrivateData 必须在 settings 中预置为 boolean');
+assert.strictEqual(ps.settings.hidePrivateData, false, 'hidePrivateData 默认必须严格为 false');
 
 ps.settings.betaMode = true;
 ps.settings.dataMode = 'shared';
