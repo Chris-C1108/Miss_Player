@@ -1,0 +1,11 @@
+{
+  "name": "miss-heatmap-cache",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Cloudflare Worker 边缘 24 小时只读缓存层，用于社区高能播放热度图",
+  "main": "worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  }
+}

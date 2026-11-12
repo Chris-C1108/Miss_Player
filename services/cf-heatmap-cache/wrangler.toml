@@ -1,0 +1,9 @@
+name = "miss-heatmap-cache"
+main = "worker.js"
+compatibility_date = "2026-11-11"
+
+# 本地调试运行：wrangler dev (自动读取 .dev.vars)
+# 生产部署：wrangler deploy
+# 敏感变量推荐使用命令绑定到线上：
+# wrangler secret put SUPABASE_URL
+# wrangler secret put SUPABASE_ANON_KEY

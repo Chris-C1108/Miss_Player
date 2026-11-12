@@ -132,6 +132,7 @@ runStep('执行实验功能与自建端点防抹杀单元测试', () => {
 runStep('执行视频播放热度与探索足迹单元测试', () => {
     execSync('node tests/heatmap.test.mjs', { stdio: 'inherit' });
     execSync('node tests/heatmap-codec.test.mjs', { stdio: 'inherit' });
+    execSync('node tests/cf-heatmap-cache.test.mjs', { stdio: 'inherit' });
 });
 
 // 4.13 控制栏手势防冲突、胶囊无限循环、倍速持久化与手柄基准保持单元测试

@@ -73,7 +73,16 @@ export default {
             });
         }
 
-        const targetUrl = `${supabaseUrl.replace(/\/+$/, '')}/rest/v1/video_crowd_heatmap?avcode=eq.${encodeURIComponent(avcode)}&select=avcode,heatmap,total_samples,duration_seconds`;
+        // 智能清洗 Supabase URL：支持填入 base origin 或带有 /rest/v1/comments 的完整路径，自动提取 origin
+        let baseSupabaseUrl = supabaseUrl.trim().replace(/\/+$/, '');
+        try {
+            const parsed = new URL(baseSupabaseUrl);
+            baseSupabaseUrl = parsed.origin;
+        } catch {
+            baseSupabaseUrl = baseSupabaseUrl.replace(/\/rest\/v1.*$/i, '').replace(/\/+$/, '');
+        }
+
+        const targetUrl = `${baseSupabaseUrl}/rest/v1/video_crowd_heatmap?avcode=eq.${encodeURIComponent(avcode)}&select=avcode,heatmap,total_samples,duration_seconds`;
 
         try {
             const supaRes = await fetch(targetUrl, {

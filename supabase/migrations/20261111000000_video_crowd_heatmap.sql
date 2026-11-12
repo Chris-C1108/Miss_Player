@@ -16,10 +16,10 @@ create table if not exists public.video_crowd_heatmap (
 -- 开启行级安全策略 (RLS)
 alter table public.video_crowd_heatmap enable row level security;
 
--- 允许匿名读取
+-- 允许匿名与登录角色读取
 drop policy if exists "Allow anon read video_crowd_heatmap" on public.video_crowd_heatmap;
-create policy "Allow anon read video_crowd_heatmap" 
-    on public.video_crowd_heatmap for select to anon using (true);
+create policy "Allow anon read video_crowd_heatmap"
+    on public.video_crowd_heatmap for select to anon, authenticated using (true);
 
 -- 聚合与原子增量合并 RPC 函数
 create or replace function public.upsert_crowd_heatmap(
@@ -28,7 +28,7 @@ create or replace function public.upsert_crowd_heatmap(
     p_duration_seconds integer default 0
 ) returns jsonb as $$
 declare
-    v_norm_code text := upper(trim(p_avcode));
+    v_norm_code text := upper(trim(coalesce(p_avcode, '')));
     v_delta bytea;
     v_existing bytea;
     v_result bytea;
@@ -51,24 +51,25 @@ begin
         v_delta := decode(p_delta_base64, 'base64');
     exception when others then
         return jsonb_build_object('success', false, 'error', 'Invalid Base64 payload');
-    end if;
+    end;
 
-    v_len := length(v_delta);
+    v_len := octet_length(v_delta);
     if v_len <> 120 then
         return jsonb_build_object('success', false, 'error', 'Payload length must be exactly 120 bytes');
     end if;
 
-    -- 查找已有记录
+    -- 查找已有记录并加行级排他锁 (for update) 防止并发写丢失
     select heatmap, total_samples, coalesce(duration_seconds, 0)
     into v_existing, v_samples, v_old_dur
     from public.video_crowd_heatmap
-    where avcode = v_norm_code;
+    where avcode = v_norm_code
+    for update;
 
     if v_final_dur <= 0 then
         v_final_dur := v_old_dur;
     end if;
 
-    if not found or v_existing is null or length(v_existing) <> 120 then
+    if not found or v_existing is null or octet_length(v_existing) <> 120 then
         -- 首次入库：直接保存 120 字节并设置样本数为 1
         insert into public.video_crowd_heatmap (avcode, heatmap, total_samples, duration_seconds, updated_at)
         values (v_norm_code, v_delta, 1, v_final_dur, now())
@@ -89,7 +90,7 @@ begin
 
         if d_byte > 0 then
             -- 单次会话对数衰减贡献，最多单次 +3 点 (满分 255)，防刷量与指数爆炸
-            v_incr := least(3, greatest(1, ceil(ln(1 + d_byte))));
+            v_incr := least(3, greatest(1, ceil(ln(1.0 + d_byte))::int));
             v_merged_byte := least(255, e_byte + v_incr);
             v_result := set_byte(v_result, i, v_merged_byte);
         end if;
@@ -113,4 +114,4 @@ begin
 end;
 $$ language plpgsql security definer;
 
-grant execute on function public.upsert_crowd_heatmap(text, text, integer) to anon;
+grant execute on function public.upsert_crowd_heatmap(text, text, integer) to anon, authenticated;
