@@ -24,9 +24,9 @@ const volControlMatch = controlsCss.match(/\.tm-volume-control\s*\{([^}]+)\}/);
 assert.ok(volControlMatch, '必须包含 .tm-volume-control 样式定义');
 assert.ok(volControlMatch[1].includes('padding: 0'), '音量外层容器 padding 必须为 0');
 
-const volNoSliderMatch = controlsCss.match(/\.tm-volume-control-no-slider \.tm-volume-button\s*\{([^}]+)\}/);
-assert.ok(volNoSliderMatch, '必须包含 .tm-volume-control-no-slider .tm-volume-button 样式定义');
-assert.ok(volNoSliderMatch[1].includes('margin: 0'), '无滑块模式下音量按钮 margin 必须为 0，防止左侧缩进错位');
+const volBtnMatch = controlsCss.match(/\.tm-volume-button\s*\{([^}]+)\}/);
+assert.ok(volBtnMatch, '必须包含 .tm-volume-button 样式定义');
+assert.ok(volBtnMatch[1].includes('margin: 0'), '音量按钮 margin 必须为 0，防止左侧缩进错位');
 console.log('✅ 3. 音量按钮 .tm-volume-button 零外边距严格对齐基准线校验通过');
 
 // 4. 验证 .tm-tab-scroll-container 左右 padding 为 0

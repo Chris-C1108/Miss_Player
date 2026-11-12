@@ -716,7 +716,7 @@ export class UIManager {
         if (!this.peachIngestBtn) return;
         const config = PeachService.getConfig();
         const isEnabled = Boolean(config.enabled);
-        this.peachIngestBtn.style.display = isEnabled ? '' : 'none';
+        this.peachIngestBtn.classList.toggle('is-hidden', !isEnabled);
     }
 
     /**
@@ -1156,7 +1156,6 @@ export class UIManager {
             }
         }
 
-        this.buttonContainer.style.opacity = '1';
         this.updateSidebarButtonsVisibility();
     }
     
@@ -1671,14 +1670,14 @@ export class UIManager {
         const showLoopControlRow = settings?.showLoopControlRow ?? true;
         const showPlaybackControlRow = settings?.showPlaybackControlRow ?? true;
 
-        if (progressRow) progressRow.style.display = showProgressBar ? 'flex' : 'none';
-        if (seekControlRow) seekControlRow.style.display = showSeekControlRow ? 'flex' : 'none';
-        if (loopControlRow) loopControlRow.style.display = showLoopControlRow ? 'flex' : 'none';
-        if (playbackControlRow) playbackControlRow.style.display = showPlaybackControlRow ? 'flex' : 'none';
+        if (progressRow) progressRow.classList.toggle('is-hidden', !showProgressBar);
+        if (seekControlRow) seekControlRow.classList.toggle('is-hidden', !showSeekControlRow);
+        if (loopControlRow) loopControlRow.classList.toggle('is-hidden', !showLoopControlRow);
+        if (playbackControlRow) playbackControlRow.classList.toggle('is-hidden', !showPlaybackControlRow);
 
         // 恢复设置按钮样式（纯由 CSS 掌控）
         if (this.settingsBtn) {
-            this.settingsBtn.style.display = '';
+            this.settingsBtn.classList.remove('is-hidden');
             this.settingsBtn.style.backgroundColor = '';
             this.settingsBtn.style.backdropFilter = '';
         }

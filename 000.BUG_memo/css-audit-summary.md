@@ -1,7 +1,7 @@
 # Miss Player CSS 全局静态审计与摸排报告
 
-> 生成时间：2026-11-12T15:33:59.091Z  
-> 耗时：731ms | CSS 文件数：14 | JS 扫描文件数：96  
+> 生成时间：2026-11-12T16:18:59.682Z  
+> 耗时：695ms | CSS 文件数：14 | JS 扫描文件数：96  
 > 对应专项任务：Phase 14 (CSS Architecture Refactor) - 子任务 A
 
 ---
@@ -10,16 +10,16 @@
 
 | 维度指标 | 数值 | 状态/说明 |
 | :--- | :--- | :--- |
-| **CSS 源码总行数** | **10194** 行 | 包含 8 个子模块与 1 个入口 |
-| **CSS 规则总数 (Rules)** | **1154** 条 | PostCSS 解析规则总数 |
-| **独立规范化选择器数** | **1205** 个 | 拆分逗号后的单一选择器 |
-| **独立 CSS 类名数** | **631** 个 | 全部样式提取的 class 集合 |
-| **`!important` 标记总数** | **98** 处 | 待治理（目标 < 50 处） |
-| **0 引用自研类名嫌疑** | **70** 个 | `tm-*`, `mp-*`, `jc-*`, `is-*` 零引用 |
-| **Grade 1 确凿死选择器** | **99** 个 | 所含类名在 JS 中全部 0 命中 |
-| **重复声明选择器数** | **135** 个 | 其中跨文件重复 **87** 个 |
+| **CSS 源码总行数** | **9415** 行 | 包含 8 个子模块与 1 个入口 |
+| **CSS 规则总数 (Rules)** | **1064** 条 | PostCSS 解析规则总数 |
+| **独立规范化选择器数** | **1111** 个 | 拆分逗号后的单一选择器 |
+| **独立 CSS 类名数** | **577** 个 | 全部样式提取的 class 集合 |
+| **`!important` 标记总数** | **97** 处 | 待治理（目标 < 50 处） |
+| **0 引用自研类名嫌疑** | **12** 个 | `tm-*`, `mp-*`, `jc-*`, `is-*` 零引用 |
+| **Grade 1 确凿死选择器** | **11** 个 | 所含类名在 JS 中全部 0 命中 |
+| **重复声明选择器数** | **122** 个 | 其中跨文件重复 **85** 个 |
 | **散落 `:root, :host` 变量** | **142** 个 | 散落在 3 个文件中的全局变量 |
-| **无用 Keyframes 动画** | **1** 个 | CSS 与 JS 均未调用的动画 |
+| **无用 Keyframes 动画** | **0** 个 | CSS 与 JS 均未调用的动画 |
 | **无用 CSS 变量** | **81** 个 | 未在 `var()` 或 JS 调用的变量 |
 
 ---
@@ -35,13 +35,13 @@
 | `src/player/ui/styles/02_components/_composer.css` | 127 | 2.6 KB | 16 | 20 | 15 | **0** |
 | `src/player/ui/styles/02_components/_debug.css` | 128 | 3.9 KB | 25 | 25 | 21 | **0** |
 | `src/player/ui/styles/02_components/_marker_sheet.css` | 817 | 19.5 KB | 93 | 113 | 73 | **0** |
-| `src/player/ui/styles/_comments.css` | 2178 | 52.0 KB | 251 | 289 | 166 | **37** |
-| `src/player/ui/styles/_common.css` | 177 | 4.0 KB | 22 | 24 | 12 | **4** |
-| `src/player/ui/styles/_controls.css` | 1645 | 39.0 KB | 176 | 198 | 111 | **7** |
+| `src/player/ui/styles/_comments.css` | 2156 | 51.5 KB | 249 | 281 | 163 | **35** |
+| `src/player/ui/styles/_common.css` | 182 | 4.1 KB | 23 | 25 | 13 | **5** |
+| `src/player/ui/styles/_controls.css` | 1000 | 23.7 KB | 103 | 117 | 74 | **7** |
 | `src/player/ui/styles/_landscape_pc.css` | 784 | 22.7 KB | 87 | 119 | 42 | **9** |
-| `src/player/ui/styles/_player.css` | 2622 | 67.3 KB | 299 | 368 | 195 | **21** |
-| `src/player/ui/styles/_settings_apple.css` | 1229 | 25.9 KB | 152 | 161 | 120 | **0** |
-| `src/player/ui/styles/_variables.css` | 52 | 1.3 KB | 5 | 33 | 14 | **1** |
+| `src/player/ui/styles/_player.css` | 2590 | 66.7 KB | 295 | 360 | 190 | **21** |
+| `src/player/ui/styles/_settings_apple.css` | 1146 | 24.3 KB | 140 | 149 | 110 | **0** |
+| `src/player/ui/styles/_variables.css` | 50 | 1.2 KB | 5 | 31 | 12 | **1** |
 
 ---
 
@@ -60,7 +60,7 @@
 | 9 | **4 次** | ⚠️ 是 | `.tm-floating-button` | _host.css, _common.css |
 | 10 | **4 次** | ⚠️ 是 | `.tm-floating-button:hover` | _host.css, _common.css |
 
-### 🚨 跨文件重复选择器清单 (87 处)
+### 🚨 跨文件重复选择器清单 (85 处)
 - **`:root`** (声明 8 次，涉及 `_tokens.css`, `_zindex.css`, `_host.css`, `_landscape_pc.css`, `_settings_apple.css`)
 - **`:host`** (声明 8 次，涉及 `_tokens.css`, `_zindex.css`, `_landscape_pc.css`, `_player.css`, `_settings_apple.css`)
 - **`.tm-control-buttons`** (声明 8 次，涉及 `_landscape_pc.css`, `_player.css`)
@@ -76,8 +76,6 @@
 - **`.tm-player-container.tm-sidebar-left .tm-settings-panel`** (声明 4 次，涉及 `_landscape_pc.css`, `_settings_apple.css`)
 - **`.tm-sidebar-pos-button`** (声明 4 次，涉及 `_landscape_pc.css`, `_player.css`)
 - **`.tm-player-container.has-composer-active .tm-control-buttons`** (声明 3 次，涉及 `_comments.css`, `_landscape_pc.css`)
-- **`.tm-floating-comment-panel`** (声明 3 次，涉及 `_comments.css`, `_controls.css`)
-- **`.tm-volume-control`** (声明 3 次，涉及 `_controls.css`, `_player.css`)
 - **`.tm-video-minimap`** (声明 3 次，涉及 `_controls.css`, `_landscape_pc.css`)
 - **`.tm-player-container`** (声明 3 次，涉及 `_landscape_pc.css`, `_player.css`)
 - **`.tm-video-wrapper`** (声明 3 次，涉及 `_landscape_pc.css`, `_player.css`)
@@ -130,10 +128,10 @@
 - **`.tm-comment-section-body`** (声明 2 次，涉及 `_comments.css`, `_landscape_pc.css`)
 - **`.tm-report-note`** (声明 2 次，涉及 `_comments.css`, `_variables.css`)
 - **`.tm-video-overlay *`** (声明 2 次，涉及 `_common.css`, `_variables.css`)
+- **`.tm-volume-control`** (声明 2 次，涉及 `_controls.css`, `_player.css`)
 - **`.tm-settings-label`** (声明 2 次，涉及 `_controls.css`, `_player.css`)
 - **`.tm-time-control-button-active`** (声明 2 次，涉及 `_controls.css`, `_player.css`)
 - **`.tm-time-control-button-after-active`** (声明 2 次，涉及 `_controls.css`, `_player.css`)
-- **`.tm-floating-panel-input`** (声明 2 次，涉及 `_controls.css`, `_variables.css`)
 - **`.tm-control-buttons .tm-tab-pill`** (声明 2 次，涉及 `_controls.css`, `_landscape_pc.css`)
 - **`.tm-control-buttons.dragging`** (声明 2 次，涉及 `_landscape_pc.css`, `_player.css`)
 - **`.tm-video-overlay`** (声明 2 次，涉及 `_landscape_pc.css`, `_player.css`)
@@ -300,42 +298,24 @@
 
 ## ☠️ 五、死选择器与死类名候选清单 (Dead Code Candidates)
 
-### 1. Grade 1 确凿死选择器 (Top 25 展示 / 共 99 个)
+### 1. Grade 1 确凿死选择器 (Top 25 展示 / 共 11 个)
 > 定义：包含自研前缀（`tm-`, `mp-`, `jc-`, `is-` 等），但所包含的类名在全量 86 个 JS 源码中命中数为 0。
 
-- `.tm-comment-filter-checkbox:hover` → 声明于: _comments.css:92 (包含类名: .tm-comment-filter-checkbox)
-- `.tm-comment-filter-checkbox:checked` → 声明于: _comments.css:97 (包含类名: .tm-comment-filter-checkbox)
-- `.tm-comment-filter-checkbox:checked::after` → 声明于: _comments.css:103 (包含类名: .tm-comment-filter-checkbox)
-- `.tm-custom-modal-login-btn` → 声明于: _comments.css:376 (包含类名: .tm-custom-modal-login-btn)
-- `.tm-custom-modal-login-btn:hover` → 声明于: _comments.css:394 (包含类名: .tm-custom-modal-login-btn)
-- `.tm-custom-modal-login-btn:active` → 声明于: _comments.css:398 (包含类名: .tm-custom-modal-login-btn)
-- `.jc-site` → 声明于: _comments.css:843 (包含类名: .jc-site)
-- `.jc-site-jable` → 声明于: _comments.css:855 (包含类名: .jc-site-jable)
-- `.jc-site-javlib` → 声明于: _comments.css:861 (包含类名: .jc-site-javlib)
-- `.jc-c-sep` → 声明于: _comments.css:1022 (包含类名: .jc-c-sep)
-- `.jc-emoji` → 声明于: _comments.css:1264 (包含类名: .jc-emoji)
-- `.jc-site-javlib-review` → 声明于: _comments.css:1514 (包含类名: .jc-site-javlib-review)
-- `.tm-status-badge-loading` → 声明于: _comments.css:1692 (包含类名: .tm-status-badge-loading)
-- `.tm-status-badge-unreachable` → 声明于: _comments.css:1699 (包含类名: .tm-status-badge-unreachable)
-- `.tm-status-badge-not_found` → 声明于: _comments.css:1705 (包含类名: .tm-status-badge-not_found)
-- `.tm-status-badge-mobile_unsupported` → 声明于: _comments.css:1711 (包含类名: .tm-status-badge-mobile_unsupported)
-- `.tm-status-badge-empty` → 声明于: _comments.css:1717 (包含类名: .tm-status-badge-empty)
-- `.tm-status-badge-cf_shield` → 声明于: _comments.css:1723 (包含类名: .tm-status-badge-cf_shield)
-- `.tm-status-badge-loaded` → 声明于: _comments.css:1729 (包含类名: .tm-status-badge-loaded)
-- `.jc-card-highlight-flash` → 声明于: _comments.css:1764 (包含类名: .jc-card-highlight-flash)
-- `.tm-toast--top` → 声明于: _common.css:124 (包含类名: .tm-toast--top)
-- `.tm-toast--bottom` → 声明于: _common.css:132 (包含类名: .tm-toast--bottom)
-- `.tm-toast--center` → 声明于: _common.css:140 (包含类名: .tm-toast--center)
-- `.tm-time-indicator` → 声明于: _controls.css:4 (包含类名: .tm-time-indicator)
-- `.tm-volume-control-no-slider` → 声明于: _controls.css:45 (包含类名: .tm-volume-control-no-slider)
-
-*(更多 74 个详见 css-audit-report.json)*
+- `.jc-site` → 声明于: _comments.css:827 (包含类名: .jc-site)
+- `.jc-site-jable` → 声明于: _comments.css:839 (包含类名: .jc-site-jable)
+- `.jc-site-javlib` → 声明于: _comments.css:845 (包含类名: .jc-site-javlib)
+- `.jc-c-sep` → 声明于: _comments.css:1006 (包含类名: .jc-c-sep)
+- `.jc-emoji` → 声明于: _comments.css:1248 (包含类名: .jc-emoji)
+- `.jc-site-javlib-review` → 声明于: _comments.css:1492 (包含类名: .jc-site-javlib-review)
+- `.jc-card-highlight-flash` → 声明于: _comments.css:1742 (包含类名: .jc-card-highlight-flash)
+- `.tm-progress-handle` → 声明于: _controls.css:375 (包含类名: .tm-progress-handle)
+- `.tm-progress-handle:hover` → 声明于: _controls.css:392 (包含类名: .tm-progress-handle)
+- `.tm-peach-advisor-btn-sub` → 声明于: _settings_apple.css:951 (包含类名: .tm-peach-advisor-btn-sub)
+- `.tm-peach-advisor-btn-sub:hover` → 声明于: _settings_apple.css:961 (包含类名: .tm-peach-advisor-btn-sub)
 
 
-### 2. 0 引用自研类名清单 (共 70 个)
+### 2. 0 引用自研类名清单 (共 12 个)
 - `.mp-composer-publish-btn` (在 CSS 中声明 1 次)
-- `.tm-comment-filter-checkbox` (在 CSS 中声明 3 次)
-- `.tm-custom-modal-login-btn` (在 CSS 中声明 3 次)
 - `.jc-site` (在 CSS 中声明 1 次)
 - `.jc-site-jable` (在 CSS 中声明 1 次)
 - `.jc-site-javlib` (在 CSS 中声明 1 次)
@@ -343,69 +323,13 @@
 - `.jc-spam` (在 CSS 中声明 2 次)
 - `.jc-emoji` (在 CSS 中声明 1 次)
 - `.jc-site-javlib-review` (在 CSS 中声明 1 次)
-- `.tm-status-badge-loading` (在 CSS 中声明 1 次)
-- `.tm-status-badge-unreachable` (在 CSS 中声明 1 次)
-- `.tm-status-badge-not_found` (在 CSS 中声明 1 次)
-- `.tm-status-badge-mobile_unsupported` (在 CSS 中声明 1 次)
-- `.tm-status-badge-empty` (在 CSS 中声明 1 次)
-- `.tm-status-badge-cf_shield` (在 CSS 中声明 1 次)
-- `.tm-status-badge-loaded` (在 CSS 中声明 1 次)
 - `.jc-card-highlight-flash` (在 CSS 中声明 1 次)
-- `.tm-toast--top` (在 CSS 中声明 2 次)
-- `.tm-toast--bottom` (在 CSS 中声明 2 次)
-- `.tm-toast--center` (在 CSS 中声明 2 次)
-- `.tm-time-indicator` (在 CSS 中声明 1 次)
-- `.tm-volume-control-no-slider` (在 CSS 中声明 2 次)
-- `.tm-volume-slider-container` (在 CSS 中声明 3 次)
-- `.tm-volume-slider-container-disabled` (在 CSS 中声明 1 次)
-- `.tm-volume-slider-track` (在 CSS 中声明 2 次)
-- `.tm-volume-slider-level` (在 CSS 中声明 2 次)
-- `.tm-volume-value` (在 CSS 中声明 2 次)
 - `.tm-progress-handle` (在 CSS 中声明 3 次)
-- `.tm-modal-header` (在 CSS 中声明 2 次)
-- `.tm-modal-title` (在 CSS 中声明 1 次)
-- `.tm-modal-close` (在 CSS 中声明 4 次)
-- `.tm-floating-panel-close` (在 CSS 中声明 3 次)
-- `.tm-modal-content` (在 CSS 中声明 2 次)
-- `.tm-comment-textarea` (在 CSS 中声明 5 次)
-- `.tm-modal-footer` (在 CSS 中声明 2 次)
-- `.tm-modal-button` (在 CSS 中声明 2 次)
-- `.tm-modal-cancel` (在 CSS 中声明 2 次)
-- `.tm-modal-submit` (在 CSS 中声明 2 次)
-- `.tm-floating-panel-header` (在 CSS 中声明 1 次)
-- `.tm-floating-panel-title` (在 CSS 中声明 1 次)
-- `.tm-floating-panel-content` (在 CSS 中声明 2 次)
-- `.tm-comment-placeholder` (在 CSS 中声明 1 次)
-- `.tm-floating-panel-input-area` (在 CSS 中声明 2 次)
-- `.tm-floating-panel-input` (在 CSS 中声明 5 次)
-- `.tm-floating-panel-submit` (在 CSS 中声明 4 次)
-- `.has-glow` (在 CSS 中声明 1 次)
-- `.tm-sheet-tab-pill` (在 CSS 中声明 1 次)
-- `.tm-integrated-play-btn` (在 CSS 中声明 9 次)
-- `.tm-color-capsule-play-btn` (在 CSS 中声明 4 次)
-- `.tm-play-mode-btn` (在 CSS 中声明 5 次)
-- `.tm-play-mode-text` (在 CSS 中声明 1 次)
 - `.tm-settings-options` (在 CSS 中声明 1 次)
-- `.tm-source-badge` (在 CSS 中声明 4 次)
-- `.tm-pause-indicator` (在 CSS 中声明 1 次)
-- `.tm-time-display` (在 CSS 中声明 1 次)
-- `.tm-control-button-hover` (在 CSS 中声明 1 次)
-- `.tm-control-button-default` (在 CSS 中声明 1 次)
-- `.tm-apple-duration-row` (在 CSS 中声明 1 次)
-- `.tm-peach-action-row` (在 CSS 中声明 1 次)
-- `.tm-peach-action-btn` (在 CSS 中声明 1 次)
-- `.tm-peach-origins-text` (在 CSS 中声明 1 次)
-- `.tm-peach-source-action-wrap` (在 CSS 中声明 1 次)
-- `.tm-peach-scraper-wrap` (在 CSS 中声明 2 次)
-- `.tm-peach-scraper-input` (在 CSS 中声明 1 次)
-- `.tm-peach-test-scraper-btn` (在 CSS 中声明 1 次)
-- `.tm-peach-jv-login-btn` (在 CSS 中声明 2 次)
-- `.tm-peach-relay-btn` (在 CSS 中声明 2 次)
 - `.tm-peach-advisor-btn-sub` (在 CSS 中声明 2 次)
-- `.tm-seek-step-input` (在 CSS 中声明 1 次)
 
-### 3. 未引用的 Keyframes 动画 (1 个)
-- `@keyframes tmShake` (定义于 _comments.css:1457)
+### 3. 未引用的 Keyframes 动画 (0 个)
+- 无
 
 ### 4. 未引用的 CSS 变量 (81 个)
 - `--mp-color-black` (声明于 _tokens.css:15)

@@ -2,11 +2,6 @@
    统一全屏评论面板样式 (Comments UI Redesign)
    ===================================================================== */
 
-/* 通用高优先级隐藏状态类 */
-.is-hidden {
-    display: none !important;
-}
-
 .tm-comments-panel {
     position: relative;
     width: 100%;
@@ -89,19 +84,16 @@
     justify-content: center;
 }
 
-.tm-tag-checkbox:hover,
-.tm-comment-filter-checkbox:hover {
+.tm-tag-checkbox:hover {
     border-color: rgba(255, 255, 255, 0.6);
 }
 
-.tm-tag-checkbox:checked,
-.tm-comment-filter-checkbox:checked {
+.tm-tag-checkbox:checked {
     background: hsl(var(--shadcn-blue));
     border-color: hsl(var(--shadcn-blue));
 }
 
-.tm-tag-checkbox:checked::after,
-.tm-comment-filter-checkbox:checked::after {
+.tm-tag-checkbox:checked::after {
     content: '';
     width: 4px;
     height: 8px;
@@ -344,11 +336,6 @@
     }
 }
 
-.tm-floating-comment-panel {
-    z-index: var(--z-modal);
-    pointer-events: auto !important;
-}
-
 /* 模态框通用按键与表单控件样式 (Apple HIG 统一规范) */
 .tm-custom-modal-cancel-btn {
     height: 38px;
@@ -373,8 +360,7 @@
     transform: scale(0.96);
 }
 
-.tm-custom-modal-submit-btn,
-.tm-custom-modal-login-btn {
+.tm-custom-modal-submit-btn {
     height: 38px;
     background: #0a84ff;
     color: #ffffff;
@@ -391,12 +377,10 @@
     box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
     transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.tm-custom-modal-submit-btn:hover,
-.tm-custom-modal-login-btn:hover {
+.tm-custom-modal-submit-btn:hover {
     background: #0070e0;
 }
-.tm-custom-modal-submit-btn:active,
-.tm-custom-modal-login-btn:active {
+.tm-custom-modal-submit-btn:active {
     transform: scale(0.96);
 }
 
@@ -1452,12 +1436,6 @@
         transform: scale(1);
         opacity: 1;
     }
-}
-
-@keyframes tmShake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-4px); }
-    40%, 80% { transform: translateX(4px); }
 }
 
 /* 评分角标 (Score Badge) */

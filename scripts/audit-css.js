@@ -304,6 +304,23 @@ async function runAudit() {
   // --- 3. 扫描 JS 引用与匹配 ---
   console.log('🔍 开始扫描 JS 代码中的类名与选择器引用...');
 
+  // 收集 JS 中的动态模板/字符串拼接类名前缀（如 `tm-status-badge-${site.status}` / 'tm-toast--' + type）
+  const dynamicClassPrefixes = new Set();
+  const tplPrefixRegex = /([a-zA-Z0-9_-]+[-_])\$\{/g;
+  const concatPrefixRegex = /['"]([a-zA-Z0-9_-]+[-_])['"]\s*\+/g;
+  for (const js of jsDatabase) {
+    let m;
+    tplPrefixRegex.lastIndex = 0;
+    while ((m = tplPrefixRegex.exec(js.content)) !== null) {
+      if (isMissPlayerSpecific(m[1])) dynamicClassPrefixes.add(m[1]);
+    }
+    concatPrefixRegex.lastIndex = 0;
+    while ((m = concatPrefixRegex.exec(js.content)) !== null) {
+      if (isMissPlayerSpecific(m[1])) dynamicClassPrefixes.add(m[1]);
+    }
+  }
+  const dynamicPrefixList = Array.from(dynamicClassPrefixes);
+
   // 辅助：分析特定单词/名称在 JS 中的命中详情
   function searchExactTokenInJs(token) {
     const escaped = escapeRegex(token);
@@ -360,9 +377,22 @@ async function runAudit() {
       }
     }
 
+    // 动态模板前缀兜底匹配（如 `tm-status-badge-${site.status}`）
+    let dynamicPrefixMatch = null;
+    if (totalHits === 0) {
+      for (const prefix of dynamicPrefixList) {
+        if (token.startsWith(prefix)) {
+          dynamicPrefixMatch = prefix;
+          totalHits = 1;
+          break;
+        }
+      }
+    }
+
     return {
       token,
       totalHits,
+      dynamicPrefixMatch,
       fileCount: hitFiles.size,
       files: Array.from(hitFiles),
       sampleReferences: references
@@ -486,9 +516,14 @@ async function runAudit() {
     let status = 'active';
     let suspicionReason = '';
 
+    const isHostOnly = data.locations.every(l => l.file.endsWith('_host.css'));
+
     if (data.classes.length === 0 && data.ids.length === 0) {
       status = 'native-or-host';
       suspicionReason = '不包含自定义类名或ID (原生HTML标签或伪类)';
+    } else if (isHostOnly && !data.hasMissPlayerClass) {
+      status = 'host-suppression';
+      suspicionReason = '宿主第三方元素拦截或隔离规则 (_host.css 白名单)';
     } else if (data.hasMissPlayerClass && allClassHitsZero && totalIdHits === 0 && !fullSelectorInJs) {
       status = 'dead-grade-1';
       suspicionReason = '自研组件类名全部 0 引用 (高度嫌疑死选择器)';

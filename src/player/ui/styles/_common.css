@@ -1,5 +1,10 @@
 /* =========== 通用组件样式 =========== */
 
+/* 通用高优先级隐藏状态类 */
+.is-hidden {
+    display: none !important;
+}
+
 /* 浮动按钮 */
 .tm-floating-button {
     position: fixed;

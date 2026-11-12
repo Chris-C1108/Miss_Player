@@ -630,9 +630,8 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     margin-top: 2px;
 }
 
-/* 参考 tm-time-control-button 效果的步进/来源胶囊按键 (高度及字体上下精准居中) */
-.tm-seek-step-badge,
-.tm-source-badge {
+/* 参考 tm-time-control-button 效果的步进胶囊按键 (高度及字体上下精准居中) */
+.tm-seek-step-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -669,8 +668,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 /* 启用/亮起状态 (参考 tm-time-control-button) */
-.tm-seek-step-badge.enabled,
-.tm-source-badge.enabled {
+.tm-seek-step-badge.enabled {
     background-color: hsla(var(--shadcn-secondary) / 0.7);
     border-color: hsla(var(--shadcn-border) / 0.35);
     color: #ffffff;
@@ -679,8 +677,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 /* 禁用/变暗状态 */
-.tm-seek-step-badge.disabled,
-.tm-source-badge.disabled {
+.tm-seek-step-badge.disabled {
     background-color: hsla(var(--shadcn-secondary) / 0.15);
     border-color: hsla(var(--shadcn-border) / 0.08);
     color: hsla(var(--shadcn-muted-foreground) / 0.4);
@@ -688,8 +685,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 /* 悬停微交互 (参考 tm-time-control-button-hover) */
-.tm-seek-step-badge:hover,
-.tm-source-badge:hover {
+.tm-seek-step-badge:hover {
     background-color: hsla(var(--shadcn-accent) / 0.7);
     border-color: hsla(var(--shadcn-accent) / 0.9);
     color: #ffffff;
@@ -1344,13 +1340,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     transform: translateX(-50%) translateY(-4px);
 }
 
-/* 暂停指示器 */
-.tm-pause-indicator {
-    width: 80px;
-    height: 80px;
-}
-
-
 /* 进度条相关布局样式 */
 .tm-progress-row {
     display: flex;
@@ -1588,16 +1577,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 /* 时间显示 */
-.tm-time-display {
-    display: flex;
-    justify-content: space-between;
-    color: hsl(var(--shadcn-foreground) / 0.9);
-    font-size: 12px;
-    margin-top: -2px;
-    font-variant-numeric: tabular-nums;
-    gap: 8px;
-}
-
 .tm-time-display-container {
     display: flex;
     justify-content: space-between;
@@ -1736,17 +1715,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 
 .tm-time-text-margin-right {
     margin-right: 2px;
-}
-
-/* 控制按钮状态 */
-.tm-control-button-hover {
-    background-color: hsl(var(--shadcn-accent) / 0.3);
-    transform: none;
-}
-
-.tm-control-button-default {
-    background-color: hsl(var(--shadcn-secondary) / 0.5);
-    transform: none;
 }
 
 /* 控制面板总容器 (.tm-control-panel)

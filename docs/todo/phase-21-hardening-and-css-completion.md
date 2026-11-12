@@ -62,11 +62,14 @@
   - 保持 JS `minify: false` / `mangle: false` 不变，在 `vite.config.mjs` 启用 `cssMinify: true` 针对 `?inline` 导入剥离注释与多余空白，配合 Peach Base64 图片去重与 CSS 冗余精简。
 - [x] **21.3.2 模块级 `CSSStyleSheet` 单例缓存 (`src/player/ui/UIManager.js:181`)**
   - 将 `new CSSStyleSheet(); sheet.replaceSync(playerStyles);` 提升为模块级单例缓存，避免每次重新打开播放器重复解析万行 CSS（保留 `<style>` 降级以兼容 Safari 14–16.3）。
-- [x] **21.3.3 修正 `scripts/audit-css.js` 误报并收口 4 层 CSS 拓扑**
-  - 升级静态审计脚本支持递归扫描全部 14 个 CSS 文件（10,615 行），识别动态模板类名与内部白名单；
-  - 合并 `_variables.css` 与 `00_tokens/_tokens.css` 重复变量；
-  - 清理 `_player.css` 与 `_comments.css` 中确认 0 引用的废弃死选择器（如 `.tm-settings-section`、`.tm-comment-button`、`.tm-code-action-dialog`、`.tm-comments-tabs` 等）；
-  - 收敛 `FloatingButton.js:481` 魔法 `z-index: 2000000000` 至 `--z-host-player` 标尺。
+- [x] **21.3.3 修正 `scripts/audit-css.js` 误报、清理死 CSS 与动静分离收口**
+  - 升级静态审计脚本支持递归扫描全部 14 个 CSS 文件，自动识别 JS 动态模板类名前缀（如 `tm-status-badge-${...}`）与 `_host.css` 宿主压制白名单；
+  - 合并 `_variables.css` 与 `00_tokens/_tokens.css` 重复变量，复用 `ICON_PEACH` 消除重复 Base64；
+  - 逐一人工检索校验并清理 `_player.css`、`_controls.css`、`_comments.css`、`_settings_apple.css` 中确认 0 引用的废弃死选择器与 `@keyframes tmShake`（CSS 总量从 `10,766` 行降至 `9,415` 行，产物体积降至 `1273.25 KiB`）；
+  - 将 `UIManager.js`、`SettingsManager.js` 静态 `style.display`/`style.opacity` 切换统一迁移为 `.is-hidden` 状态类；收敛 `FloatingButton.js:481` 魔法 `z-index: 2000000000` 至 `--z-host-player` 标尺。
+- [ ] **21.3.4 大文件物理拆解与 1.0 MiB 体积压线收口**
+  - 将 `_player.css`（2,296 行）、`_comments.css`（2,117 行）、`_controls.css`（1,218 行）按 4 层结构拆解为单文件 ≤ 800 行，进一步治理跨文件重复规则与 `!important`（当前 97 处，目标 `< 50`）；
+  - 按用户选定的 Peach 图标优化方案（64×64 WebP 或 SVG）及冗余资源清理，将 `dist/miss_player.user.js` 压回 `1.0 MiB` 安全线内。
 
 ### 21.4 上帝类渐进解耦与打包债务清理 (P2)
 - [ ] **21.4.1 核心大文件拆解**

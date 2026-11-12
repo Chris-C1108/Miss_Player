@@ -65,14 +65,14 @@
 > **为什么不能直接按 `css-audit-summary.md` 删“114 个死选择器”**：经复核，`scripts/audit-css.js` 使用精确静态词边界匹配 JS 文本，会将模板插值类名（如 `tm-status-badge-${site.status}`）、宿主注入元素选择器误判为“0 引用”，必须先修复审计工具识别动态前缀与白名单，再结合实机 Coverage 验证后清理。
 
 - [ ] **2.1 令牌归并与 4 层目录拓扑最终收口**
-  - [ ] 消除 `_variables.css` 与 `00_tokens/_tokens.css` 的重复 `:root, :host` 变量声明，统一收归 `_tokens.css`；
-  - [ ] 将 `_player.css`(3026 行)、`_comments.css`(2319 行)、`_controls.css`(1644 行)、`_landscape_pc.css`(783 行) 物理拆分为 `01_core/_layout.css`、`01_core/_common.css`、`02_components/*`、`03_responsive/_landscape.css` 与 `03_responsive/_single_hand.css`（单文件 ≤ 800 行）。
-- [ ] **2.2 油猴专版审计工具修复与死代码清理**
-  - [ ] 升级 `scripts/audit-css.js`：支持动态前缀模板扫描（`tm-status-badge-` 等）及宿主注入/外部拦截选择器白名单（如 `#peach-jav-action`），重新生成精准报告；
-  - [ ] 清理经二次人工与运行时覆盖率双重确认的真正冗余 CSS，把样式总量与 `!important` 压回目标区间（`< 50` 处内部 `!important`）。
-- [ ] **2.3 JS 动静样式分离收口**
-  - [ ] 清除 `UIManager.js`（712/931/937/1667–1674）与 `SettingsManager.js`（690/708/1670–1682）残留的 `style.display` / `style.opacity` 静态布局切换，统一改用 `.is-hidden` / `.is-visible` 状态类；
-  - [ ] 将 `FloatingButton.js:481`（`2000000000`）与 `PeachStreamHUD.js:73`（`2147483647`）魔法数字收敛至 `--z-host-*` 语义体系。
+  - [x] 消除 `_variables.css` 与 `00_tokens/_tokens.css` 的重复 `:root, :host` 变量声明，统一收归 `_tokens.css`；
+  - [ ] 将 `_player.css`(2296 行)、`_comments.css`(2117 行)、`_controls.css`(1218 行)、`_landscape_pc.css`(783 行) 物理拆分为 `01_core/_layout.css`、`01_core/_common.css`、`02_components/*`、`03_responsive/_landscape.css` 与 `03_responsive/_single_hand.css`（单文件 ≤ 800 行）。
+- [x] **2.2 油猴专版审计工具修复与死代码清理**
+  - [x] 升级 `scripts/audit-css.js`：递归扫描子目录并支持动态前缀模板扫描（`tm-status-badge-` 等）及宿主注入/外部拦截选择器白名单（`_host.css`），重新生成精准报告（总 CSS 从 `10,766` 行降至 `9,415` 行，未用 `@keyframes` 清零）；
+  - [x] 清理经逐一校验确认 0 引用的冗余 CSS（旧版弹窗 `.tm-comment-modal*`/`.tm-floating-comment-panel*`、旧版音量滑杆、旧版按钮态、废弃 Peach 接力按键等，产物降至 `1273.25 KiB`）。
+- [x] **2.3 JS 动静样式分离收口**
+  - [x] 清除 `UIManager.js` 与 `SettingsManager.js` 可直接抽离的 `style.display` / `style.opacity` 静态布局切换，统一改用 `.is-hidden` 状态类（`01_core/_common.css`）；
+  - [x] 将 `FloatingButton.js:481` 魔法 `z-index: 2000000000` 收敛至 `--z-host-player` 语义体系（`PeachStreamHUD.js:73` 挂靠顶层原生常量 `2147483647` 保持）。
 
 ---
 

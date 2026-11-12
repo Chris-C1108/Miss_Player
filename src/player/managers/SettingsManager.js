@@ -645,8 +645,7 @@ export class SettingsManager {
         renderTimeText();
 
         const statusBadge = document.createElement('span');
-        statusBadge.className = 'tm-webdav-status-badge';
-        statusBadge.style.display = 'none';
+        statusBadge.className = 'tm-webdav-status-badge is-hidden';
 
         statusBar.appendChild(timeSpan);
         statusBar.appendChild(statusBadge);
@@ -664,7 +663,6 @@ export class SettingsManager {
 
         const updateStatus = (text, type = 'success') => {
             this._lastWebDavStatus = { text, type, time: Date.now() };
-            statusBadge.style.display = 'inline-flex';
             statusBadge.className = `tm-webdav-status-badge ${type}`;
             const iconSpan = document.createElement('span');
             const textSpan = document.createElement('span');
@@ -1388,19 +1386,19 @@ export class SettingsManager {
         const progressRow = controlButtonsContainer.querySelector('.tm-progress-row');
 
         if (progressRow) {
-            progressRow.style.display = this.settings.showProgressBar ? 'flex' : 'none';
+            progressRow.classList.toggle('is-hidden', !this.settings.showProgressBar);
         }
         
         if (seekControlRow) {
-            seekControlRow.style.display = this.settings.showSeekControlRow ? 'flex' : 'none';
+            seekControlRow.classList.toggle('is-hidden', !this.settings.showSeekControlRow);
         }
 
         if (loopControlRow) {
-            loopControlRow.style.display = this.settings.showLoopControlRow ? 'flex' : 'none';
+            loopControlRow.classList.toggle('is-hidden', !this.settings.showLoopControlRow);
         }
 
         if (playbackControlRow) {
-            playbackControlRow.style.display = this.settings.showPlaybackControlRow ? 'flex' : 'none';
+            playbackControlRow.classList.toggle('is-hidden', !this.settings.showPlaybackControlRow);
         }
     }
     
