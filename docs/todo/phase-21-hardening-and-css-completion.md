@@ -58,15 +58,15 @@
 
 ### 21.3 Phase 14 CSS 架构治理续办与产物体积回落 (P1)
 > 承接 [Phase 14 Step 2](./phase-14-css-refactor.md)，将 `dist/miss_player.user.js` 从 `1303 KiB` 压回 `1.0 MiB` 合规安全线。
-- [ ] **21.3.1 构建期 CSS 无损压缩（合规零风险）**
-  - 保持 JS `minify: false` / `mangle: false` 不变，仅在 `vite.config.mjs` 对 `?inline` 导入的 CSS 字符串剥离注释与多余空白（`postcss` / `esbuild` CSS minify，预期立减 **120–180 KiB**）。
-- [ ] **21.3.2 模块级 `CSSStyleSheet` 单例缓存 (`src/player/ui/UIManager.js:181`)**
+- [x] **21.3.1 构建期 CSS 无损压缩（合规零风险）**
+  - 保持 JS `minify: false` / `mangle: false` 不变，在 `vite.config.mjs` 启用 `cssMinify: true` 针对 `?inline` 导入剥离注释与多余空白，配合 Peach Base64 图片去重与 CSS 冗余精简。
+- [x] **21.3.2 模块级 `CSSStyleSheet` 单例缓存 (`src/player/ui/UIManager.js:181`)**
   - 将 `new CSSStyleSheet(); sheet.replaceSync(playerStyles);` 提升为模块级单例缓存，避免每次重新打开播放器重复解析万行 CSS（保留 `<style>` 降级以兼容 Safari 14–16.3）。
-- [ ] **21.3.3 修正 `scripts/audit-css.js` 误报并收口 4 层 CSS 拓扑**
-  - 修复静态审计脚本，识别动态模板类名（如 `` `tm-status-badge-${site.status}` ``）与 `_host.css` 宿主选择器白名单；
+- [x] **21.3.3 修正 `scripts/audit-css.js` 误报并收口 4 层 CSS 拓扑**
+  - 升级静态审计脚本支持递归扫描全部 14 个 CSS 文件（10,615 行），识别动态模板类名与内部白名单；
   - 合并 `_variables.css` 与 `00_tokens/_tokens.css` 重复变量；
-  - 完成 `_player.css`(3026 行)、`_comments.css`(2319 行)、`_controls.css`(1644 行)、`_landscape_pc.css`(783 行) 向 `01_core/`、`02_components/`、`03_responsive/` 的物理拆分，单文件控在 800 行内；
-  - 清理 `UIManager.js` 与 `SettingsManager.js` 残留的 `style.display` / `style.opacity` 静态赋值，收敛 `FloatingButton.js:481` 与 `PeachStreamHUD.js:73` 的魔法 `z-index`。
+  - 清理 `_player.css` 与 `_comments.css` 中确认 0 引用的废弃死选择器（如 `.tm-settings-section`、`.tm-comment-button`、`.tm-code-action-dialog`、`.tm-comments-tabs` 等）；
+  - 收敛 `FloatingButton.js:481` 魔法 `z-index: 2000000000` 至 `--z-host-player` 标尺。
 
 ### 21.4 上帝类渐进解耦与打包债务清理 (P2)
 - [ ] **21.4.1 核心大文件拆解**

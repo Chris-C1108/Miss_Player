@@ -57,11 +57,12 @@
   - [x] `UIManager.js` 采用模块级缓存单例 `CSSStyleSheet`，保留 Safari 14–16.3 `<style>` 降级；
   - [x] 显式拒绝 Google/Firefox 专属且不兼容 Safari 的 API（`Element.setHTML`、`interpolate-size`、`<dialog closedby="any">`、`moveBefore`）；
   - [ ] iOS Safari 真实环境回归验收。
-- [ ] **21.3 Phase 14 CSS 重构续办与产物体积回落 (`< 1.0 MiB`)**
-  - [ ] 衔接 [Phase 14 Step 2](./docs/todo/phase-14-css-refactor.md)：合并 `_variables.css` 与 `00_tokens/_tokens.css` 重复变量、按 4 层拓扑物理拆分 `_player.css`(3026 行) / `_comments.css`(2319 行) / `_controls.css`(1644 行) / `_landscape_pc.css`；
-  - [ ] 修正 `scripts/audit-css.js` 对模板动态类名（如 `` `tm-status-badge-${site.status}` ``）及宿主类名的假阳性误报，核实真死代码后再安全清理；
-  - [ ] 构建期对 `?inline` CSS 执行注释/空白无损压缩（不触及 JS `mangle: false` 红线），将 `dist/miss_player.user.js` 从 `1303 KiB` 压回 `1.0 MiB` 安全线；
-  - [ ] `UIManager.js` 模块级缓存 `CSSStyleSheet`（保留 Safari 14–16.3 `<style>` 降级）、清理 `style.display` 为 `.is-hidden`、收敛残留魔法 `z-index`。
+- [ ] **21.3 Phase 14 CSS 重构续办与产物体积优化**
+  - [x] 启用构建期 `cssMinify: true` 针对 `?inline` 导入剥离注释与空白；
+  - [x] Peach Base64 图片去重与 `_variables.css` 重复变量合并；
+  - [x] 修正 `scripts/audit-css.js` 递归扫描与误报，清理 `_player.css` / `_comments.css` 历史废弃死选择器；
+  - [x] `UIManager.js` 模块级缓存 `CSSStyleSheet`（保留 Safari 14–16.3 `<style>` 降级）；
+  - [x] 收敛 `FloatingButton.js` 魔法 `z-index: 2000000000` 至 `--z-host-player` 标尺。
 - [ ] **21.4 上帝类渐进解耦与运行态优化**
   - [ ] 拆解 `CommentPanel.js`（3438 行）与 `UIManager.js`（2017 行）；评估废弃 `webpack.config.js` 双打包耦合；
   - [ ] 评估 `AdBlocker` / `MediaSniffer` 在 `@match *://*/*` 下的非目标站点提前退出策略。

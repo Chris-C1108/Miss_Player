@@ -94,7 +94,7 @@ export class EventManager {
             };
 
             // 针对水平滚动容器（标签页栏与评论源选项卡），只允许水平滑动，阻止垂直滑动以防穿透
-            const horizontalScrollContainer = findInPath('.tm-tab-scroll-container, .tm-comments-tabs');
+            const horizontalScrollContainer = findInPath('.tm-tab-scroll-container');
             if (horizontalScrollContainer) {
                 if (e.type === 'touchmove') {
                     if (e.touches && e.touches.length > 0) {

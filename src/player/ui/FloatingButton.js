@@ -478,7 +478,7 @@ export class FloatingButton {
                         inset: 0 !important;
                         width: 100vw !important;
                         height: 100vh !important;
-                        z-index: 2000000000 !important;
+                        z-index: var(--z-host-player, 2147483646) !important;
                         border: none !important;
                     }
                 `;
