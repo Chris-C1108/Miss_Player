@@ -1,0 +1,308 @@
+/* 设置按钮 */
+
+.tm-settings-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.7);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-controls);
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-sm);
+}
+
+.tm-settings-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.9);
+    transform: scale(1.08) rotate(30deg);
+    box-shadow: var(--shadow-md);
+}
+
+.tm-settings-button:active {
+    transform: scale(0.96);
+}
+
+/* 设置面板 (自适应视口高度并支持原生平滑滚动) */
+
+.tm-settings-panel {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 8px) + 52px);
+    right: 16px;
+    background-color: rgba(22, 22, 28, 0.78);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    padding: 14px 16px 20px 16px;
+    z-index: var(--z-modal);
+    min-width: 275px;
+    max-width: 330px;
+    max-height: calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 64px);
+    overflow-y: auto;
+    overflow-y: overlay;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y; /* 允许纵向丝滑滚动 */
+    scrollbar-width: thin;
+    scrollbar-color: hsla(var(--shadcn-muted-foreground) / 0.3) transparent;
+    transform: translateY(-10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform var(--anim-smooth), opacity var(--anim-smooth);
+    box-sizing: border-box;
+    contain: paint layout;
+}
+
+.tm-settings-panel::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tm-settings-panel::-webkit-scrollbar-thumb {
+    background: hsla(var(--shadcn-muted-foreground) / 0.3);
+    border-radius: 4px;
+}
+
+.tm-settings-panel.active {
+    will-change: transform, opacity;
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+}
+
+/* 当设置面板处于激活态时，底层评论列表优雅暗化防干扰 */
+
+.tm-player-container.tm-settings-active .tm-comments-list,
+.tm-settings-panel.active ~ .tm-comments-panel .tm-comments-list,
+body.tm-settings-active .tm-comments-panel .tm-comments-list {
+    opacity: 0.15;
+    filter: blur(3px);
+    pointer-events: none;
+    transition: opacity var(--anim-smooth), filter var(--anim-smooth);
+}
+
+/* 竖屏与窄屏视口下设置面板全宽自适应 */
+
+@media screen and (max-width: 1023px), screen and (orientation: portrait) {
+    .tm-settings-panel {
+        right: 12px;
+        left: 12px;
+        width: calc(100% - 24px);
+        max-width: calc(100% - 24px);
+    }
+}
+
+/* 关联菜单主容器 */
+
+.tm-settings-menu-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    color: hsl(var(--shadcn-foreground));
+    user-select: none;
+    font-size: 13.5px;
+}
+
+/* 选项行与主要标题 (主级白字) */
+
+.tm-settings-option-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.tm-settings-option-row:hover {
+    background-color: hsla(var(--shadcn-muted) / 0.3);
+}
+
+.tm-settings-label-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tm-settings-text-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tm-settings-label {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: hsl(var(--shadcn-foreground));
+}
+
+.tm-settings-subtext {
+    font-size: 11px;
+    font-weight: 400;
+    color: hsla(var(--shadcn-muted-foreground) / 0.7);
+    line-height: 1.25;
+}
+
+/* 快进/快退 步进 Badges 面板 (横向平滑滚动，杜绝挤压裁切) */
+
+.tm-settings-seek-steps-subpanel {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px 2px 6px 2px;
+    margin-top: 2px;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.tm-settings-seek-steps-subpanel::-webkit-scrollbar {
+    height: 3px;
+}
+
+.tm-settings-seek-steps-subpanel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+/* 评论源 Badges 面板 */
+
+.tm-settings-sources-subpanel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 6px 2px 2px 2px;
+    margin-top: 2px;
+}
+
+/* 参考 tm-time-control-button 效果的步进胶囊按键 (高度及字体上下精准居中) */
+
+.tm-seek-step-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 0 6px;
+    height: 26px;
+    line-height: 1;
+    border-radius: 6px;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-width: max-content;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tm-seek-step-badge.tm-seek-step-add-badge {
+    border: 1px dashed rgba(255, 255, 255, 0.28);
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.75);
+    flex-shrink: 0;
+    min-width: max-content;
+}
+
+.tm-seek-step-badge.tm-seek-step-add-badge:hover {
+    border-style: solid;
+    border-color: rgba(10, 132, 255, 0.8);
+    background-color: rgba(10, 132, 255, 0.18);
+    color: #ffffff;
+}
+
+/* 启用/亮起状态 (参考 tm-time-control-button) */
+
+.tm-seek-step-badge.enabled {
+    background-color: hsla(var(--shadcn-secondary) / 0.7);
+    border-color: hsla(var(--shadcn-border) / 0.35);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* 禁用/变暗状态 */
+
+.tm-seek-step-badge.disabled {
+    background-color: hsla(var(--shadcn-secondary) / 0.15);
+    border-color: hsla(var(--shadcn-border) / 0.08);
+    color: hsla(var(--shadcn-muted-foreground) / 0.4);
+    font-weight: 400;
+}
+
+/* 悬停微交互 (参考 tm-time-control-button-hover) */
+
+.tm-seek-step-badge:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.7);
+    border-color: hsla(var(--shadcn-accent) / 0.9);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* 点击微交互 (统一 scale(0.96) 细腻触觉反馈) */
+
+.tm-seek-step-badge:active {
+    transform: scale(0.96);
+    box-shadow: none;
+}
+
+/* 设置齿轮按钮的更新红点徽章 */
+
+.tm-settings-button.has-update-badge {
+    position: relative;
+}
+
+.tm-settings-button.has-update-badge::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    background: #ff3b30;
+    border-radius: 50%;
+    border: 1.5px solid hsl(var(--shadcn-background));
+    box-shadow: 0 0 6px rgba(255, 59, 48, 0.8);
+    z-index: 10;
+    pointer-events: none;
+    animation: tm-pulse 2s infinite;
+}
+
+/* 切换开关输入框样式 */
+
+.tm-toggle-input {
+    position: absolute;
+    left: -9999px;
+}
+
+/* 下滑手势拖动时，隐藏所有播放器控制和面板组件，实现极致沉浸感 */
+
+body.tm-swiping-down .tm-button-container,
+body.tm-swiping-down .tm-handle-container,
+body.tm-swiping-down .tm-comments-panel,
+body.tm-swiping-down .tm-control-panel,
+body.tm-swiping-down .tm-control-buttons,
+body.tm-swiping-down .tm-settings-panel {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}

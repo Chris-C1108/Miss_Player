@@ -1,0 +1,333 @@
+body.controls-hidden .tm-control-buttons *,
+.tm-player-container.controls-hidden .tm-control-buttons *,
+:host(.controls-hidden) .tm-control-buttons *,
+body.controls-hidden .tm-control-panel *,
+.tm-player-container.controls-hidden .tm-control-panel *,
+:host(.controls-hidden) .tm-control-panel * {
+    pointer-events: none;
+}
+
+/* 移动端竖屏状态下（iPhone Pro Max 及以下宽度：<=480px / 竖屏）
+   tm-control-panel 样式参考 iOS 键盘：
+   1. 宽度与屏幕宽度完全一致 (100vw / 100%)
+   2. 左右上角为圆角 (20px)，左右下角为直角 (0)
+   3. 贴合底边，自适应 iOS 底部安全区
+*/
+
+@media screen and (max-width: 480px), screen and (max-width: 600px) and (orientation: portrait) {
+    .tm-control-panel {
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: auto;
+        max-width: 100vw;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        background-image: linear-gradient(#1a1a20e0, #000000);
+        backdrop-filter: blur(36px) saturate(190%);
+        -webkit-backdrop-filter: blur(36px) saturate(190%);
+        border: none;
+        box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18), 0 -4px 24px rgba(0, 0, 0, 0.38);
+        padding-top: 10px;
+        padding-left: calc(10px + env(safe-area-inset-left, 0px));
+        padding-right: calc(10px + env(safe-area-inset-right, 0px));
+        padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        pointer-events: auto;
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
+        visibility: visible;
+        transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: transform, opacity;
+        touch-action: none;
+    }
+
+    /* 当作为 iOS 键盘底板时，里面的 tm-control-buttons 与底板融为一体，保持纯正垂直位置，锁定 transform: none，杜绝任何斜向漂移 */
+    .tm-control-panel .tm-control-buttons,
+    .controls-hidden .tm-control-panel .tm-control-buttons {
+        position: relative;
+        bottom: 0;
+        left: auto;
+        right: auto;
+        transform: none;
+        opacity: 1;
+        visibility: visible;
+        transition: none;
+        width: min(calc(100% - 24px), 520px);
+        max-width: 520px;
+        min-width: 0;
+        margin: 0 auto;
+        border-radius: 0;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* 竖屏单手模式下的 iOS 键盘外形适配：主控制区与侧栏立柱在 iOS 底板内部并排，立柱加宽至 48px，间距加大至 12px */
+    /* 1. 右手单手模式：主面板靠右，Gutter 靠左并占满剩余空间 (由于 DOM 先 buttons 后 gutter，使用 row-reverse 反向排列) */
+    .tm-player-container.tm-single-hand-right .tm-control-panel {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: flex-end;
+        justify-content: flex-start;
+        gap: 12px;
+    }
+
+    .tm-player-container.tm-single-hand-right .tm-control-panel .tm-single-hand-gutter {
+        position: relative;
+        bottom: 0;
+        left: auto;
+        right: auto;
+        flex: 0 0 48px;
+        width: 48px;
+        min-width: 48px;
+        max-width: 48px;
+        margin: 0;
+        padding: 0;
+    }
+
+    .tm-player-container.tm-single-hand-right .tm-control-panel .tm-control-buttons {
+        flex: 1 1 auto;
+        width: calc(100% - 60px);
+        max-width: 380px;
+        min-width: 312px;
+        transform: none;
+    }
+
+    /* 2. 左手单手模式：主面板靠左，Gutter 靠右并占满剩余空间 (由于 DOM 先 buttons 后 gutter，使用 row 正向排列) */
+    .tm-player-container.tm-single-hand-left .tm-control-panel {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: flex-start;
+        gap: 12px;
+    }
+
+    .tm-player-container.tm-single-hand-left .tm-control-panel .tm-single-hand-gutter {
+        position: relative;
+        bottom: 0;
+        right: auto;
+        left: auto;
+        flex: 0 0 48px;
+        width: 48px;
+        min-width: 48px;
+        max-width: 48px;
+        margin: 0;
+        padding: 0;
+    }
+
+    .tm-player-container.tm-single-hand-left .tm-control-panel .tm-control-buttons {
+        flex: 1 1 auto;
+        width: calc(100% - 60px);
+        max-width: 380px;
+        min-width: 312px;
+        transform: none;
+    }
+
+    /* 单手模式下确保 tm-seek-control-row 充分填满自适应剩余空间，保证 6 个快进快退按钮在保持原有尺寸的前提下稳定排 2 行，绝不挤压成 3 行 */
+    .tm-player-container.tm-single-hand-active .tm-seek-control-row {
+        width: 100%;
+        box-sizing: border-box;
+        gap: 6px;
+    }
+
+    .tm-player-container.tm-single-hand-active .tm-rewind-buttons-container,
+    .tm-player-container.tm-single-hand-active .tm-forward-buttons-container {
+        gap: 4px;
+        width: 100%;
+        max-width: 100%;
+        flex-wrap: wrap;
+    }
+
+    /* 单手模式下适度优化底板左右安全留白，为右侧控制面板释放充裕内容宽度 */
+    .tm-player-container.tm-single-hand-active .tm-control-panel {
+        padding-left: calc(8px + env(safe-area-inset-left, 0px));
+        padding-right: calc(8px + env(safe-area-inset-right, 0px));
+    }
+}
+
+/* 更窄的屏幕 (<380px，如 iPhone SE、mini 及紧凑屏幕) 限制不支持开启单手模式，始终保持全宽 */
+
+@media screen and (max-width: 379px) {
+    .tm-player-container .tm-control-panel .tm-single-hand-gutter {
+        display: none;
+    }
+    .tm-player-container .tm-control-panel .tm-control-buttons {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+}
+
+/* 隐藏控制界面时的动画过渡 (iOS 键盘底板纯垂直利落下沉) */
+
+body.controls-hidden .tm-control-panel,
+.tm-player-container.controls-hidden .tm-control-panel,
+:host(.controls-hidden) .tm-control-panel {
+    opacity: 0;
+    visibility: hidden;
+    transform: translate3d(0, calc(100% + 24px), 0);
+    pointer-events: none;
+    transition: transform 0.26s cubic-bezier(0.4, 0, 1, 1), opacity 0.2s cubic-bezier(0.4, 0, 1, 1), visibility 0.26s;
+}
+
+/* ==============================================================
+   竖屏单手操控模式 (Single-Hand Ergonomic Mode) & 辅助侧边条 (Gutter)
+   借鉴微信输入法单手模式：上部“还原”按键 + 下部“切换左右”大按钮
+   ============================================================== */
+/* 辅助侧边立柱外壳 (深灰圆角按钮容器，无额外外边距与内边距) */
+
+.tm-single-hand-gutter {
+    position: absolute;
+    bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    width: 48px;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+    z-index: var(--z-controls);
+    pointer-events: auto;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-sizing: border-box;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 1. 上部：“还原”全宽按钮 (深灰色背景#202020 圆角矩形，加宽触控靶心) */
+
+.tm-gutter-btn-top {
+    width: 100%;
+    height: 46px;
+    border-radius: 12px;
+    background: #202020;
+    border: 1px solid hsl(var(--shadcn-border) / .1);
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
+    outline: none;
+    padding: 0;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tm-gutter-btn-top:hover {
+    color: #ffffff;
+    background: #2a2a2a;
+    border-color: hsl(var(--shadcn-border) / .25);
+}
+
+.tm-gutter-btn-top:active {
+    transform: scale(0.92);
+    color: #ffffff;
+    background: #181818;
+}
+
+.tm-gutter-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-gutter-icon-wrap svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    display: block;
+}
+
+/* 2. 下部：“切换左右”超大触控靶心按钮 (深灰色背景#202020 圆角矩形) */
+
+.tm-gutter-btn-bottom {
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 80px;
+    border-radius: 12px;
+    background: #202020;
+    border: 1px solid hsl(var(--shadcn-border) / .1);
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
+    outline: none;
+    padding: 0;
+    box-sizing: border-box;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tm-gutter-btn-bottom:hover {
+    color: #ffffff;
+    background: #2a2a2a;
+    border-color: hsl(var(--shadcn-border) / .25);
+}
+
+.tm-gutter-btn-bottom:active {
+    transform: scale(0.92);
+    color: #ffffff;
+    background: #181818;
+}
+
+.tm-gutter-switch-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-gutter-switch-icon-wrap svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    display: block;
+}
+
+/* 控制界面隐藏时，单手辅助立柱联动隐藏 (停靠状态保持常驻不隐藏) */
+
+body.controls-hidden .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
+.tm-player-container.controls-hidden:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
+:host(.controls-hidden) .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter {
+    opacity: 0 !important;
+    visibility: hidden;
+    transform: translate3d(0, 20px, 0) !important;
+    pointer-events: none !important;
+}
+
+/* 竖屏移动端手机视口下的单手模式布局 (仅在 <= 600px 竖屏手机下生效) */
+
+@media screen and (max-width: 600px) and (orientation: portrait) {
+    /* 左右单手模式：显示 gutter */
+    .tm-player-container.tm-single-hand-right .tm-single-hand-gutter,
+    .tm-player-container.tm-single-hand-left .tm-single-hand-gutter {
+        display: flex;
+    }
+}
+
+/* 坚决杜绝中大屏视口 (>600px，如 600~942px iPad/平板竖屏及 PC 横屏) 误显单手辅助侧栏立柱 */
+
+@media screen and (min-width: 601px) {
+    .tm-single-hand-gutter {
+        display: none !important;
+    }
+}

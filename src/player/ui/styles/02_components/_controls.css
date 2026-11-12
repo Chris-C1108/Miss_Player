@@ -1,11 +1,10 @@
 /* =========== 控制组件样式 =========== */
-
 /* ==========================================================================
    音量 / 静音控制按钮组件 (Volume & Mute Button)
    统一管理正常态与静音态交互与样式规范，静音状态统一为 Apple 风格红底白字 (icon)
    ========================================================================== */
-
 /* 音量控制外层容器 */
+
 .tm-volume-control {
     display: flex;
     align-items: center;
@@ -21,6 +20,7 @@
 }
 
 /* 音量按钮基础样式 (普通未静音状态) */
+
 .tm-volume-button {
     display: flex;
     align-items: center;
@@ -44,6 +44,7 @@
 }
 
 /* 未静音状态悬浮效果 */
+
 .tm-volume-button:not(.is-muted):hover {
     background: rgba(255, 255, 255, 0.14);
     border-color: rgba(255, 255, 255, 0.22);
@@ -52,12 +53,14 @@
 }
 
 /* 未静音状态按压效果 */
+
 .tm-volume-button:not(.is-muted):active {
     background: rgba(255, 255, 255, 0.20);
     transform: scale(0.95);
 }
 
 /* 未静音状态图标 */
+
 .tm-volume-button svg {
     width: 18px;
     height: 18px;
@@ -68,6 +71,7 @@
 }
 
 /* 兼容 SVG 内 path 含有 fill="currentColor" 的喇叭主体 */
+
 .tm-volume-button svg path[fill="currentColor"] {
     fill: currentColor;
 }
@@ -76,6 +80,7 @@
    静音状态 (.is-muted) 统一规范：红底白字 (icon)
    无论暗黑模式、悬停还是按压，始终保持醒目红底 + 纯白图标
    -------------------------------------------------------------------------- */
+
 .tm-volume-button.is-muted {
     background-color: #ff3b30;
     border-color: rgba(255, 59, 48, 0.9);
@@ -114,6 +119,7 @@
 }
 
 /* 切换开关 */
+
 .tm-toggle-switch {
     position: relative;
     display: inline-block;
@@ -161,6 +167,7 @@
 }
 
 /* 播放速率切换按钮 (严格与左侧静音按键对称的 40px 正圆设计) */
+
 .tm-playback-rate-button {
     display: flex;
     align-items: center;
@@ -224,6 +231,7 @@
 }
 
 /* 进度条控制组件 */
+
 .tm-progress-controls {
     position: relative;
     width: 100%;
@@ -239,6 +247,7 @@
 }
 
 /* 进度条容器 */
+
 .tm-progress-bar-container {
     position: relative;
     height: 12px;
@@ -253,6 +262,7 @@
 }
 
 /* 观看热度与足迹探索波形 (Heatmap & Exploration) */
+
 .tm-heatmap-svg {
     position: absolute;
     bottom: 9px; /* 锁死基准物理参考线，杜绝进度条触摸展开变粗时向上跳动挤压时间文字 */
@@ -287,6 +297,7 @@
 }
 
 /* 进度条 */
+
 .tm-progress-bar {
     width: 100%;
     height: 6px;
@@ -304,6 +315,7 @@
 }
 
 /* 添加进度条交互状态样式 */
+
 .tm-progress-bar-expanded {
     height: 16px;
 }
@@ -313,6 +325,7 @@
 }
 
 /* 进度条拖动状态 */
+
 .tm-progress-bar.tm-dragging {
     height: 16px;
     background-color: hsla(var(--shadcn-muted-foreground) / 0.7);
@@ -320,11 +333,13 @@
 }
 
 /* 容器在拖动时的样式 */
+
 .tm-progress-bar-container:has(.tm-dragging) {
     cursor: grabbing;
 }
 
 /* 进度条缓冲等待条纹动画 (网络不佳/缓冲等待时流动，明确告知用户视频正在缓冲，绝非假死) */
+
 .tm-progress-bar.is-buffering {
     background-image: linear-gradient(
         -45deg,
@@ -350,6 +365,7 @@
 }
 
 /* 进度指示器 (纯平平直切面，严禁内圆角，由父级 .tm-progress-bar 统一裁剪圆角) */
+
 .tm-progress-indicator {
     height: 100%;
     width: 0%;
@@ -365,37 +381,15 @@
 }
 
 /* 拖动时的进度指示器样式 */
+
 .tm-dragging .tm-progress-indicator {
     background-color: hsl(var(--shadcn-card-foreground));
     box-shadow: none;
     transition: none; /* 拖动时禁用过渡效果，使响应更即时 */
 }
 
-/* 进度条手柄 */
-.tm-progress-handle {
-    width: 12px;
-    height: 12px;
-    background-color: hsl(var(--shadcn-blue));
-    border: 2px solid hsl(var(--shadcn-card));
-    border-radius: 50%;
-    position: absolute;
-    top: 50%;
-    left: 0%;
-    transform: translate(0, -50%);
-    z-index: 2;
-    opacity: 1;
-    transition: opacity 0.15s, width 0.15s, height 0.15s, box-shadow 0.15s;
-    box-shadow: 0 0 0 4px hsl(var(--shadcn-blue) / 0.2);
-    cursor: grab;
-}
-
-.tm-progress-handle:hover,
-.tm-progress-handle.dragging {
-    transform: translate(0, -50%) scale(1.1);
-    box-shadow: 0 0 0 6px hsl(var(--shadcn-blue) / 0.3);
-}
-
 /* 设置标签样式 */
+
 .tm-settings-label {
     cursor: pointer;
     flex: 1;
@@ -406,6 +400,7 @@
 
 /* =========== 播放控制行按钮样式 =========== */
 /* 播放控制行按钮基础样式 */
+
 .tm-playback-control-row .tm-control-button {
     display: flex;
     align-items: center;
@@ -440,11 +435,13 @@
 }
 
 /* 播放三角形视觉重心偏左，向右光学微移 2px 达到真视觉居中 */
+
 .tm-playback-control-row .tm-control-button svg.tm-play-icon {
     margin-left: 2px;
 }
 
 /* 移动端适配 */
+
 @media (hover: none) {
     .tm-playback-control-row .tm-control-button {
         width: 44px;
@@ -453,6 +450,7 @@
 }
 
 /* 暗色主题适配 */
+
 @media (prefers-color-scheme: dark) {
     .tm-playback-control-row .tm-control-button svg {
         stroke: hsl(var(--shadcn-secondary-foreground));
@@ -460,6 +458,7 @@
 }
 
 /* 时间控制按钮状态 */
+
 .tm-time-control-button-hover {
     background-color: hsl(var(--shadcn-accent) / 0.6);
     transform: none;
@@ -482,6 +481,7 @@
 }
 
 /* 视频当前画面显示区域微缩指示器 (Minimap) - 默认彻底隐藏，仅在拖拽/平移画面时临时淡入显示 */
+
 .tm-video-minimap {
     position: absolute;
     bottom: 20px;
@@ -522,6 +522,7 @@
 }
 
 /* 仅在画面正在拖拽/平移 (.is-swiping) 状态下临时淡入显示 Minimap */
+
 .tm-video-wrapper.is-swiping .tm-video-minimap {
     opacity: 1;
     visibility: visible;
@@ -529,6 +530,7 @@
 }
 
 /* 长按加速提示 */
+
 .tm-speed-indicator {
     position: absolute;
     top: 50%;
@@ -544,6 +546,7 @@
 }
 
 /* 居中暂停指示器 */
+
 .mp-pause-indicator {
     position: absolute;
     top: 50%;
@@ -572,6 +575,7 @@
 }
 
 /* =========== Material 风格粉色水波纹 (Ripple Effect) =========== */
+
 .ripple-btn,
 .tm-bottom-sheet-panel button {
     position: relative;
@@ -580,6 +584,7 @@
 }
 
 /* 控制面板内所有按钮具备相对定位基底，保持 overflow: visible，确保边框高光、呼吸灯与投影渐变不被裁切 */
+
 .tm-control-buttons button,
 .tm-control-buttons .tm-tab-list-btn,
 .tm-control-buttons .tm-tab-pill,
@@ -626,374 +631,5 @@
     to {
         transform: scale(2.6);
         opacity: 0;
-    }
-}
-
-/* ===== 极简透明 3 状态切换器 (底层 100% 全宽) ===== */
-.mp-switcher-wrapper {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-    -webkit-user-select: none;
-    width: 100%;
-    height: 44px;
-    min-height: 44px;
-    padding: 2px 0;
-    box-sizing: border-box;
-    flex-shrink: 0;
-    overflow: visible;
-}
-
-.mp-switcher-capsule {
-    position: relative;
-    width: 100%;
-    height: 40px;
-    background: transparent;
-    border-radius: 9999px;
-    overflow: visible;
-    border: none;
-    box-shadow: none;
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
-    mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
-    cursor: grab;
-    touch-action: none;
-    box-sizing: border-box;
-}
-
-.mp-switcher-indicator {
-    pointer-events: none;
-    z-index: 10;
-    box-sizing: border-box;
-    background: #ffffff33;
-    border: none;
-    border-radius: 9999px;
-    width: 94px;
-    height: 36px;
-    box-shadow: inset 0 1px 0 0 #ffffff38;
-    transition: transform .2s cubic-bezier(.16, 1, .3, 1), box-shadow .2s ease;
-    position: absolute;
-    top: 2px;
-    left: 50%;
-    overflow: visible;
-    transform: translate(-50%) scale(1);
-}
-
-.mp-switcher-capsule:hover .mp-switcher-indicator {
-    transform: translate(-50%) scale(1.02);
-    box-shadow: inset 0 1px 0 0 #ffffff4d;
-}
-
-.mp-switcher-capsule:active .mp-switcher-indicator {
-    transform: translate(-50%) scale(0.97);
-    box-shadow: inset 0 1px 0 0 #ffffff29;
-}
-
-.mp-switcher-track {
-    display: flex;
-    height: 100%;
-    position: relative;
-    z-index: 20;
-    align-items: center;
-    will-change: transform;
-}
-
-.mp-switcher-item {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    width: 78px;
-    flex-shrink: 0;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-.mp-switcher-label {
-    font-size: 12px;
-    white-space: nowrap;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.45);
-    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
-    pointer-events: none;
-    letter-spacing: -0.1px;
-}
-
-.mp-switcher-label.is-active {
-    color: #ffffff;
-    font-weight: 600;
-}
-
-.mp-switcher-label.is-hidden {
-    opacity: 0 !important;
-}
-
-.mp-switcher-variant-slot {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.mp-switcher-variant-slot.is-visible {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-}
-
-.mp-switcher-action-btn {
-    position: relative;
-    z-index: 30;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 0;
-    margin: 0;
-    gap: 4px;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.mp-switcher-action-btn:hover {
-    transform: scale(1.04);
-}
-
-.mp-switcher-action-btn:active {
-    transform: scale(0.95);
-}
-
-.mp-switcher-action-btn svg,
-.mp-switcher-action-btn svg path {
-    color: #ffffff;
-}
-
-.mp-switcher-action-btn svg {
-    display: block;
-    color: #ffffff;
-}
-
-.mp-switcher-play-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mp-switcher-play-icon.is-paused svg {
-    margin-left: 1.5px;
-}
-
-.mp-switcher-play-icon svg {
-    width: 15px;
-    height: 15px;
-    fill: #ffffff;
-    stroke: none;
-    color: #ffffff;
-    display: block;
-}
-
-.mp-switcher-replay-icon svg {
-    width: 11px;
-    height: 11px;
-    stroke: #ffffff;
-    fill: none;
-    color: #ffffff;
-    display: block;
-}
-
-.mp-switcher-btn-text {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-    letter-spacing: -0.2px;
-}
-
-.mp-switcher-btn-cancel {
-    font-size: 11px;
-    font-weight: 600;
-    color: #ff453a;
-    white-space: nowrap;
-    letter-spacing: -0.2px;
-}
-
-.mp-switcher-status-dot {
-    display: inline-block;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: #30d158;
-    box-shadow: 0 0 5px rgba(48, 209, 88, 0.8);
-    margin-left: 2px;
-}
-
-.mp-switcher-status-play {
-    font-size: 8px;
-    margin-left: 2px;
-    opacity: 0.8;
-}
-
-
-/* ==============================================================
-   竖屏单手操控模式 (Single-Hand Ergonomic Mode) & 辅助侧边条 (Gutter)
-   借鉴微信输入法单手模式：上部“还原”按键 + 下部“切换左右”大按钮
-   ============================================================== */
-
-/* 辅助侧边立柱外壳 (深灰圆角按钮容器，无额外外边距与内边距) */
-.tm-single-hand-gutter {
-    position: absolute;
-    bottom: max(16px, env(safe-area-inset-bottom, 0px));
-    width: 48px;
-    display: none;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 8px;
-    z-index: var(--z-controls);
-    pointer-events: auto;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-sizing: border-box;
-    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* 1. 上部：“还原”全宽按钮 (深灰色背景#202020 圆角矩形，加宽触控靶心) */
-.tm-gutter-btn-top {
-    width: 100%;
-    height: 46px;
-    border-radius: 12px;
-    background: #202020;
-    border: 1px solid hsl(var(--shadcn-border) / .1);
-    color: rgba(255, 255, 255, 0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
-    outline: none;
-    padding: 0;
-    flex-shrink: 0;
-    box-sizing: border-box;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-    -webkit-tap-highlight-color: transparent;
-}
-
-.tm-gutter-btn-top:hover {
-    color: #ffffff;
-    background: #2a2a2a;
-    border-color: hsl(var(--shadcn-border) / .25);
-}
-
-.tm-gutter-btn-top:active {
-    transform: scale(0.92);
-    color: #ffffff;
-    background: #181818;
-}
-
-.tm-gutter-icon-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.tm-gutter-icon-wrap svg {
-    width: 18px;
-    height: 18px;
-    stroke: currentColor;
-    fill: none;
-    display: block;
-}
-
-/* 2. 下部：“切换左右”超大触控靶心按钮 (深灰色背景#202020 圆角矩形) */
-.tm-gutter-btn-bottom {
-    width: 100%;
-    flex: 1 1 auto;
-    min-height: 80px;
-    border-radius: 12px;
-    background: #202020;
-    border: 1px solid hsl(var(--shadcn-border) / .1);
-    color: rgba(255, 255, 255, 0.85);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
-    outline: none;
-    padding: 0;
-    box-sizing: border-box;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-    -webkit-tap-highlight-color: transparent;
-}
-
-.tm-gutter-btn-bottom:hover {
-    color: #ffffff;
-    background: #2a2a2a;
-    border-color: hsl(var(--shadcn-border) / .25);
-}
-
-.tm-gutter-btn-bottom:active {
-    transform: scale(0.92);
-    color: #ffffff;
-    background: #181818;
-}
-
-.tm-gutter-switch-icon-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.tm-gutter-switch-icon-wrap svg {
-    width: 22px;
-    height: 22px;
-    stroke: currentColor;
-    fill: none;
-    display: block;
-}
-
-/* 控制界面隐藏时，单手辅助立柱联动隐藏 (停靠状态保持常驻不隐藏) */
-body.controls-hidden .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
-.tm-player-container.controls-hidden:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
-:host(.controls-hidden) .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter {
-    opacity: 0 !important;
-    visibility: hidden;
-    transform: translate3d(0, 20px, 0) !important;
-    pointer-events: none !important;
-}
-
-/* 竖屏移动端手机视口下的单手模式布局 (仅在 <= 600px 竖屏手机下生效) */
-@media screen and (max-width: 600px) and (orientation: portrait) {
-    /* 左右单手模式：显示 gutter */
-    .tm-player-container.tm-single-hand-right .tm-single-hand-gutter,
-    .tm-player-container.tm-single-hand-left .tm-single-hand-gutter {
-        display: flex;
-    }
-}
-
-/* 坚决杜绝中大屏视口 (>600px，如 600~942px iPad/平板竖屏及 PC 横屏) 误显单手辅助侧栏立柱 */
-@media screen and (min-width: 601px) {
-    .tm-single-hand-gutter {
-        display: none !important;
     }
 }

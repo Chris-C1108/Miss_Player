@@ -1,0 +1,729 @@
+/* 视频画面区域严格隔离：除 video、自定义媒体容器与脚本自定义 UI 控件外，强制隐藏原站挂载的任何元素 */
+
+.tm-video-wrapper > *:not(video):not(hlsjs-video):not(dash-video):not(.tm-speed-indicator):not(.tm-video-minimap):not(.tm-inline-remark-popover) {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* 循环区间连接效果 */
+
+.tm-loop-range {
+    position: absolute;
+    height: 4px;
+    background: linear-gradient(90deg, 
+        hsla(var(--shadcn-green) / 0.3) 0%, 
+        hsla(var(--shadcn-orange) / 0.3) 100%);
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.tm-loop-range.active {
+    opacity: 0.7;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 循环区间悬停效果 */
+
+.tm-progress-bar-container:hover .tm-loop-range.active {
+    opacity: 0.9;
+    height: 6px;
+}
+
+/* 循环标记 - Apple Design风格优化 */
+
+.tm-loop-marker {
+    position: absolute;
+    width: 4px;
+    height: 100%; /* 与进度条等高 */
+    top: 0; /* 位于进度条上方，不是突出来的 */
+    transform: translateX(-50%);
+    z-index: 3;
+    transition: opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), 
+                transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                box-shadow 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* 循环开始标记(A) */
+
+.tm-loop-start-marker {
+    background-color: hsla(var(--shadcn-green) / 0.5);
+    border-radius: 2px;
+    box-shadow: 0 0 6px hsla(var(--shadcn-green) / 0.3);
+}
+
+/* 循环结束标记(B) */
+
+.tm-loop-end-marker {
+    background-color: hsla(var(--shadcn-orange) / 0.5);
+    border-radius: 2px;
+    box-shadow: 0 0 6px hsla(var(--shadcn-orange) / 0.3);
+}
+
+/* 循环标记悬停效果 */
+
+.tm-loop-marker:hover {
+    cursor: pointer;
+    z-index: 4;
+}
+
+.tm-loop-start-marker:hover {
+    background-color: hsla(var(--shadcn-green) / 0.7);
+    box-shadow: 0 0 10px hsla(var(--shadcn-green) / 0.5);
+}
+
+.tm-loop-end-marker:hover {
+    background-color: hsla(var(--shadcn-orange) / 0.7);
+    box-shadow: 0 0 10px hsla(var(--shadcn-orange) / 0.5);
+}
+
+/* 循环激活时的标记样式 */
+
+.tm-loop-marker.active {
+    opacity: 1;
+}
+
+.tm-loop-marker:not(.active) {
+    opacity: 0.7;
+}
+
+/* 添加标记的文本标签 */
+
+.tm-loop-marker::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: hsla(var(--shadcn-card) / 0.7);
+    color: hsl(var(--shadcn-card-foreground));
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsla(var(--shadcn-border) / 0.1);
+    white-space: nowrap;
+    z-index: 5;
+}
+
+.tm-loop-marker:hover::before {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
+}
+
+/* 进度条相关布局样式 */
+
+.tm-progress-row {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tm-seek-control-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tm-loop-control-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 3;
+    gap: 6px;
+    overflow: visible !important;
+}
+
+/* 新建/修改高光打点备注弹窗 (靠下吸附于控制栏与虚拟键盘上方，彻底杜绝顶部天际线割裂) */
+
+.tm-inline-remark-popover {
+    position: absolute;
+    bottom: calc(var(--keyboard-height, 0px) + 76px);
+    left: 50%;
+    transform: translate(-50%, 8px) scale(0.96);
+    width: min(92vw, 400px);
+    max-width: 400px;
+    background: rgba(18, 18, 20, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    z-index: var(--z-composer);
+    pointer-events: auto;
+    opacity: 0;
+    transition: bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+}
+
+.tm-ios-keyboard-open .tm-inline-remark-popover {
+    bottom: calc(var(--keyboard-height, 0px) + 12px);
+}
+
+.tm-inline-remark-popover.visible {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+.tm-inline-remark-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.tm-inline-remark-input {
+    width: 100%;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px; /* 同心圆角: 8px + 12px(padding) = 20px(outer) */
+    padding: 0 14px;
+    color: #ffffff;
+    font-size: 16px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s, background 0.2s;
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+    caret-color: #ffffff;
+    cursor: text;
+}
+
+.tm-inline-remark-input:focus {
+    border-color: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tm-inline-remark-input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.tm-inline-remark-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.tm-inline-remark-btn {
+    height: 32px;
+    padding: 0 20px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.18s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-inline-remark-btn:active {
+    transform: scale(0.96);
+}
+
+.tm-inline-remark-btn.cancel {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.tm-inline-remark-btn.cancel:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+.tm-inline-remark-btn.submit {
+    background: hsl(var(--shadcn-blue));
+    border: none;
+    color: #ffffff;
+    box-shadow: 0 4px 12px hsla(var(--shadcn-blue) / 0.4);
+}
+
+.tm-inline-remark-btn.submit:hover {
+    background: hsl(var(--shadcn-blue) / 0.9);
+    transform: scale(1.03);
+}
+
+.tm-inline-remark-btn.submit:active {
+    transform: scale(0.96);
+}
+
+/* 播放控制行：双层叠加架构 (底层为 100% 宽度 switcher，上层为可左右滑动隐退的左/右控制组件) */
+
+.tm-playback-control-row {
+    position: relative;
+    width: 100%;
+    min-height: 48px;
+    height: 48px;
+    box-sizing: border-box;
+    padding: 4px 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+
+/* 底层：Switcher 占满 100% 宽度 */
+
+.tm-playback-bottom-layer,
+.tm-playback-control-row .tm-center-controls {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: visible;
+}
+
+/* 上层：左右控制浮层，容器穿透放行给底层，子元素捕获点击 */
+
+.tm-playback-top-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: visible;
+}
+
+.tm-playback-top-layer .tm-left-controls,
+.tm-playback-top-layer .tm-right-controls {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+    will-change: transform, opacity;
+}
+
+.tm-playback-top-layer .tm-left-controls {
+    justify-content: flex-start;
+}
+
+.tm-playback-top-layer .tm-right-controls {
+    justify-content: flex-end;
+}
+
+/* 左右滑动 Switcher 时，上层 [左&右] 组件做动画向两侧移出并淡出隐藏 */
+
+.tm-playback-control-row.is-sliding .tm-left-controls {
+    transform: translateX(-120%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 兼容未包含在 top-layer 下的直接子元素降级选择器 */
+
+.tm-volume-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 40px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+}
+
+/* 时间显示 */
+
+.tm-time-display-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0px 1px;
+    margin-bottom: 9px;
+}
+
+.tm-current-time, .tm-total-duration {
+    color: hsla(var(--shadcn-foreground) / 0.55);
+    font-size: 12px;
+    min-width: 60px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.tm-current-time {
+    text-align: left;
+}
+
+.tm-total-duration {
+    text-align: right;
+}
+
+.tm-tab-scroll-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    flex: 1;
+    min-width: 0;
+    padding: 5px 0;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    pointer-events: auto;
+}
+
+/* 添加新的样式 */
+/* 快进/快退按钮组样式 */
+
+.tm-rewind-group, .tm-forward-group {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    gap: 8px;
+    align-items: center;
+}
+
+.tm-rewind-buttons-container {
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-end;
+    align-content: flex-start;
+    gap: 6px;
+}
+
+.tm-forward-buttons-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-end;
+    align-content: flex-start;
+    gap: 6px;
+}
+
+/* (Removed: old loop time display - replaced by tab pills) */
+/* 时间控制按钮基础样式 */
+
+.tm-time-control-button {
+    background-color: hsla(var(--shadcn-secondary) / var(--btn-opacity, 0.5));
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsl(var(--shadcn-border) / 0.1);
+    border-radius: 8px;
+    padding: 0;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    width: var(--button-xl);
+    height: var(--button-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.tm-time-control-button:hover {
+    background-color: hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.15));
+    border-color: hsla(var(--shadcn-border) / 0.3);
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.tm-time-control-button:active {
+    transform: scale(0.96);
+    background-color: hsla(var(--shadcn-secondary) / calc(var(--btn-opacity, 0.5) + 0.25));
+    box-shadow: none;
+}
+
+.tm-time-control-button-active {
+    transform: scale(0.96);
+    box-shadow: none;
+}
+
+.tm-time-control-button-after-active {
+    transform: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.tm-time-control-button-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-rewind-icon {
+    margin-right: -2px;
+}
+
+.tm-forward-icon {
+    margin-left: -2px;
+}
+
+.tm-time-text-margin-left {
+    margin-left: 2px;
+}
+
+.tm-time-text-margin-right {
+    margin-right: 2px;
+}
+
+/* 控制面板总容器 (.tm-control-panel)
+   包裹 .tm-control-buttons 与单手辅助立柱 .tm-single-hand-gutter */
+
+.tm-control-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: var(--z-controls);
+    box-sizing: border-box;
+}
+
+.tm-control-panel > * {
+    pointer-events: auto;
+}
+
+/* 控制面板容器 (默认居中悬浮) */
+
+.tm-control-buttons {
+    position: absolute;
+    bottom: max(16px, env(safe-area-inset-bottom, 0px)); /* 保持距离底部至少16px，充分考虑iOS安全区域指示条 */
+    left: 50%;
+    transform-origin: 50% 100%;
+    transform: translate3d(-50%, 0, 0) scale(1);
+    width: min(94vw, 560px);
+    max-width: 560px;
+    box-sizing: border-box;
+    z-index: var(--z-controls);
+    padding: 16px 16px 14px;
+    border-radius: 16px;
+    background-color: rgba(22, 22, 28, 0.76); /* 降低透明度，允许环境色（如宿主紫色）自然折射渗透 */
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);            /* 外层弥散阴影 */
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    opacity: 1;
+    visibility: visible;
+    transition: 
+        opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+        transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    touch-action: none; /* 控制面板隔离触摸 */
+    will-change: transform, opacity;
+}
+
+.tm-control-buttons.dragging {
+    transition: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* 控制界面显隐动画效果 (大屏与横屏居中悬浮模式：保持 X 轴 -50% 绝对居中，纯垂直 20px 微沉降微缩放) */
+
+@media screen and (min-width: 601px), screen and (orientation: landscape) {
+    body.controls-hidden .tm-player-container .tm-control-buttons:not([class*="tm-controls-docked-"]),
+    .tm-player-container.controls-hidden .tm-control-buttons:not([class*="tm-controls-docked-"]),
+    :host(.controls-hidden) .tm-control-buttons:not([class*="tm-controls-docked-"]) {
+        opacity: 0;
+        visibility: hidden;
+        transform: translate3d(-50%, 20px, 0) scale(0.96);
+        pointer-events: none;
+        transition: 
+            opacity 0.22s cubic-bezier(0.4, 0, 1, 1), 
+            transform 0.26s cubic-bezier(0.4, 0, 1, 1),
+            visibility 0.26s;
+    }
+
+    body:not(.controls-hidden) .tm-player-container .tm-control-buttons:not([class*="tm-controls-docked-"]),
+    .tm-player-container:not(.controls-hidden) .tm-control-buttons:not([class*="tm-controls-docked-"]),
+    :host(:not(.controls-hidden)) .tm-control-buttons:not([class*="tm-controls-docked-"]) {
+        opacity: 1;
+        visibility: visible;
+        transform: translate3d(-50%, 0, 0) scale(1);
+        pointer-events: auto;
+    }
+}
+
+/* ==========================================================================
+   时间戳跳转视觉提示样式 (Timestamp Jump Visual Cue)
+   ========================================================================== */
+/* 时间跳转指示标记 (类似 tm-loop-start-marker，但闪烁高亮 3 秒后消失) */
+
+.tm-jump-active {
+    position: absolute;
+    width: 4px;
+    height: 100%;
+    top: 0;
+    transform: translateX(-50%);
+    z-index: 5;
+    background-color: hsla(var(--shadcn-green) / 0.8);
+    border-radius: 2px;
+    box-shadow: 0 0 8px hsla(var(--shadcn-green) / 0.5);
+    pointer-events: none;
+    animation: tm-jump-flash-fade 3.0s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes tm-jump-flash-fade {
+    0%, 20%, 40%, 60%, 80% {
+        opacity: 1;
+        background-color: hsl(var(--shadcn-green));
+        box-shadow: 0 0 16px 4px hsl(var(--shadcn-green));
+        transform: translateX(-50%) scaleX(1.6);
+    }
+    10%, 30%, 50%, 70% {
+        opacity: 0.3;
+        background-color: hsla(var(--shadcn-green) / 0.4);
+        box-shadow: 0 0 4px hsla(var(--shadcn-green) / 0.2);
+        transform: translateX(-50%) scaleX(1.0);
+    }
+    90% {
+        opacity: 0.5;
+        background-color: hsla(var(--shadcn-green) / 0.5);
+        box-shadow: 0 0 6px hsla(var(--shadcn-green) / 0.3);
+        transform: translateX(-50%) scaleX(0.8);
+    }
+    100% {
+        opacity: 0;
+        background-color: transparent;
+        box-shadow: none;
+        transform: translateX(-50%) scaleX(0);
+    }
+}
+
+.tm-progress-markers-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.tm-progress-marker-tick {
+    position: absolute;
+    width: 6px;
+    height: 4px;
+    bottom: -4px;
+    transform: translateX(-50%);
+    background-color: hsla(var(--tab-color), 0.75);
+    border: 0.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    border-radius: 2px;
+    cursor: pointer;
+    z-index: 10;
+    pointer-events: auto;
+    transition: transform 0.15s, background-color 0.15s, height 0.15s, bottom 0.15s;
+}
+
+.tm-progress-marker-tick:hover {
+    height: 4px;
+    bottom: -5px;
+    background-color: hsla(var(--tab-color), 0.45);
+    transform: translateX(-50%) scale(1.1);
+}
+
+.tm-progress-marker-range {
+    position: absolute;
+    height: 4px;
+    bottom: -4px;
+    background-color: hsla(var(--tab-color), 0.55);
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    z-index: 9;
+    pointer-events: auto;
+    transition: background-color 0.15s, height 0.15s, bottom 0.15s;
+}
+
+.tm-progress-marker-range:hover {
+    height: 4px;
+    bottom: -5px;
+    background-color: hsla(var(--tab-color), 0.45);
+}
+
+.tm-active-loop-played {
+    position: absolute;
+    height: 100%;
+    top: 0;
+    background-color: hsla(var(--tab-color), 0.45);
+    z-index: 8;
+    pointer-events: none;
+    box-shadow: 0 0 4px hsla(var(--tab-color), 0.15);
+}
+
+.tm-active-loop-unplayed {
+    position: absolute;
+    height: 100%;
+    top: 0;
+    background-color: hsla(var(--tab-color), 0.15);
+    z-index: 7;
+    pointer-events: none;
+}
+
+.tm-active-loop-boundary {
+    position: absolute;
+    width: 4px;
+    height: 100%;
+    top: 0;
+    transform: translateX(-50%);
+    background-color: hsla(var(--tab-color), 0.75);
+    z-index: 9;
+    pointer-events: none;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+.tm-active-loop-boundary.start {
+    border-radius: 2px 0 0 2px;
+}
+
+.tm-active-loop-boundary.end {
+    border-radius: 0 2px 2px 0;
+}

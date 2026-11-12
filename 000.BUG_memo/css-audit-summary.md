@@ -1,7 +1,7 @@
 # Miss Player CSS 全局静态审计与摸排报告
 
-> 生成时间：2026-11-12T16:18:59.682Z  
-> 耗时：695ms | CSS 文件数：14 | JS 扫描文件数：96  
+> 生成时间：2026-11-12T16:35:32.096Z  
+> 耗时：663ms | CSS 文件数：21 | JS 扫描文件数：96  
 > 对应专项任务：Phase 14 (CSS Architecture Refactor) - 子任务 A
 
 ---
@@ -10,14 +10,14 @@
 
 | 维度指标 | 数值 | 状态/说明 |
 | :--- | :--- | :--- |
-| **CSS 源码总行数** | **9415** 行 | 包含 8 个子模块与 1 个入口 |
-| **CSS 规则总数 (Rules)** | **1064** 条 | PostCSS 解析规则总数 |
-| **独立规范化选择器数** | **1111** 个 | 拆分逗号后的单一选择器 |
-| **独立 CSS 类名数** | **577** 个 | 全部样式提取的 class 集合 |
-| **`!important` 标记总数** | **97** 处 | 待治理（目标 < 50 处） |
-| **0 引用自研类名嫌疑** | **12** 个 | `tm-*`, `mp-*`, `jc-*`, `is-*` 零引用 |
-| **Grade 1 确凿死选择器** | **11** 个 | 所含类名在 JS 中全部 0 命中 |
-| **重复声明选择器数** | **122** 个 | 其中跨文件重复 **85** 个 |
+| **CSS 源码总行数** | **9244** 行 | 包含 8 个子模块与 1 个入口 |
+| **CSS 规则总数 (Rules)** | **1013** 条 | PostCSS 解析规则总数 |
+| **独立规范化选择器数** | **1102** 个 | 拆分逗号后的单一选择器 |
+| **独立 CSS 类名数** | **567** 个 | 全部样式提取的 class 集合 |
+| **`!important` 标记总数** | **73** 处 | 待治理（目标 < 50 处） |
+| **0 引用自研类名嫌疑** | **2** 个 | `tm-*`, `mp-*`, `jc-*`, `is-*` 零引用 |
+| **Grade 1 确凿死选择器** | **0** 个 | 所含类名在 JS 中全部 0 命中 |
+| **重复声明选择器数** | **93** 个 | 其中跨文件重复 **51** 个 |
 | **散落 `:root, :host` 变量** | **142** 个 | 散落在 3 个文件中的全局变量 |
 | **无用 Keyframes 动画** | **0** 个 | CSS 与 JS 均未调用的动画 |
 | **无用 CSS 变量** | **81** 个 | 未在 `var()` 或 JS 调用的变量 |
@@ -28,20 +28,27 @@
 
 | 文件路径 | 行数 | 体积 | 规则数 | 选择器数 | 类名数 | !important |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `src/player/ui/style.css` | 13 | 0.5 KB | 0 | 0 | 0 | **0** |
+| `src/player/ui/style.css` | 20 | 0.9 KB | 0 | 0 | 0 | **0** |
 | `src/player/ui/styles/00_tokens/_tokens.css` | 215 | 8.8 KB | 2 | 4 | 0 | **0** |
 | `src/player/ui/styles/00_tokens/_zindex.css` | 26 | 1.0 KB | 1 | 2 | 0 | **0** |
+| `src/player/ui/styles/01_core/_common.css` | 154 | 3.4 KB | 20 | 48 | 23 | **6** |
 | `src/player/ui/styles/01_core/_host.css` | 181 | 4.9 KB | 25 | 43 | 9 | **19** |
+| `src/player/ui/styles/01_core/_layout.css` | 732 | 18.7 KB | 75 | 115 | 48 | **16** |
+| `src/player/ui/styles/02_components/_comments.css` | 744 | 18.0 KB | 76 | 108 | 47 | **7** |
+| `src/player/ui/styles/02_components/_comments_sections.css` | 709 | 15.9 KB | 87 | 87 | 62 | **0** |
 | `src/player/ui/styles/02_components/_composer.css` | 127 | 2.6 KB | 16 | 20 | 15 | **0** |
+| `src/player/ui/styles/02_components/_control_panel.css` | 730 | 17.3 KB | 75 | 83 | 59 | **5** |
+| `src/player/ui/styles/02_components/_controls.css` | 636 | 14.5 KB | 62 | 71 | 45 | **0** |
 | `src/player/ui/styles/02_components/_debug.css` | 128 | 3.9 KB | 25 | 25 | 21 | **0** |
-| `src/player/ui/styles/02_components/_marker_sheet.css` | 817 | 19.5 KB | 93 | 113 | 73 | **0** |
-| `src/player/ui/styles/_comments.css` | 2156 | 51.5 KB | 249 | 281 | 163 | **35** |
-| `src/player/ui/styles/_common.css` | 182 | 4.1 KB | 23 | 25 | 13 | **5** |
-| `src/player/ui/styles/_controls.css` | 1000 | 23.7 KB | 103 | 117 | 74 | **7** |
-| `src/player/ui/styles/_landscape_pc.css` | 784 | 22.7 KB | 87 | 119 | 42 | **9** |
-| `src/player/ui/styles/_player.css` | 2590 | 66.7 KB | 295 | 360 | 190 | **21** |
-| `src/player/ui/styles/_settings_apple.css` | 1146 | 24.3 KB | 140 | 149 | 110 | **0** |
-| `src/player/ui/styles/_variables.css` | 50 | 1.2 KB | 5 | 31 | 12 | **1** |
+| `src/player/ui/styles/02_components/_marker_sheet.css` | 753 | 18.2 KB | 85 | 105 | 68 | **0** |
+| `src/player/ui/styles/02_components/_modals.css` | 756 | 17.5 KB | 87 | 91 | 59 | **4** |
+| `src/player/ui/styles/02_components/_peach.css` | 601 | 12.1 KB | 77 | 82 | 66 | **0** |
+| `src/player/ui/styles/02_components/_settings_apple.css` | 587 | 12.2 KB | 67 | 67 | 48 | **0** |
+| `src/player/ui/styles/02_components/_settings_cards.css` | 499 | 11.3 KB | 64 | 64 | 44 | **0** |
+| `src/player/ui/styles/02_components/_settings_panels.css` | 309 | 7.6 KB | 31 | 38 | 26 | **0** |
+| `src/player/ui/styles/02_components/_switcher.css` | 220 | 4.6 KB | 25 | 26 | 18 | **3** |
+| `src/player/ui/styles/03_responsive/_landscape.css` | 783 | 22.5 KB | 84 | 113 | 41 | **9** |
+| `src/player/ui/styles/03_responsive/_single_hand.css` | 334 | 9.7 KB | 29 | 41 | 15 | **4** |
 
 ---
 
@@ -49,122 +56,77 @@
 
 | 排名 | 重复次数 | 跨文件 | 选择器名称 | 分布所在文件 |
 | :---: | :---: | :---: | :--- | :--- |
-| 1 | **8 次** | ⚠️ 是 | `:root` | _tokens.css, _zindex.css, _host.css, _landscape_pc.css, _settings_apple.css |
-| 2 | **8 次** | ⚠️ 是 | `:host` | _tokens.css, _zindex.css, _landscape_pc.css, _player.css, _settings_apple.css |
-| 3 | **8 次** | ⚠️ 是 | `.tm-control-buttons` | _landscape_pc.css, _player.css |
-| 4 | **5 次** | ⚠️ 是 | `.tm-comments-panel` | _comments.css, _landscape_pc.css, _player.css |
-| 5 | **5 次** | ⚠️ 是 | `.tm-show-controls-float-btn` | _comments.css, _landscape_pc.css |
-| 6 | **5 次** | ⚠️ 是 | `.tm-settings-panel` | _landscape_pc.css, _player.css, _settings_apple.css |
-| 7 | **4 次** | ⚠️ 是 | `html.tm-player-active` | _host.css, _player.css |
-| 8 | **4 次** | ⚠️ 是 | `body.tm-player-active` | _host.css, _player.css |
-| 9 | **4 次** | ⚠️ 是 | `.tm-floating-button` | _host.css, _common.css |
-| 10 | **4 次** | ⚠️ 是 | `.tm-floating-button:hover` | _host.css, _common.css |
+| 1 | **8 次** | ⚠️ 是 | `.tm-control-buttons` | _layout.css, _control_panel.css, _landscape.css |
+| 2 | **5 次** | ⚠️ 是 | `.tm-comments-panel` | _layout.css, _comments.css, _landscape.css |
+| 3 | **5 次** | ⚠️ 是 | `.tm-show-controls-float-btn` | _comments.css, _landscape.css |
+| 4 | **4 次** | ⚠️ 是 | `:root` | _tokens.css, _zindex.css, _host.css |
+| 5 | **4 次** | ⚠️ 是 | `:host` | _tokens.css, _zindex.css, _layout.css |
+| 6 | **4 次** | ⚠️ 是 | `html.tm-player-active` | _host.css, _layout.css |
+| 7 | **4 次** | ⚠️ 是 | `body.tm-player-active` | _host.css, _layout.css |
+| 8 | **4 次** | ⚠️ 是 | `.tm-video-container` | _layout.css, _landscape.css |
+| 9 | **4 次** | ⚠️ 是 | `.tm-sidebar-pos-button` | _layout.css, _landscape.css |
+| 10 | **4 次** | ⚠️ 是 | `.tm-settings-panel` | _settings_apple.css, _settings_panels.css, _landscape.css |
 
-### 🚨 跨文件重复选择器清单 (85 处)
-- **`:root`** (声明 8 次，涉及 `_tokens.css`, `_zindex.css`, `_host.css`, `_landscape_pc.css`, `_settings_apple.css`)
-- **`:host`** (声明 8 次，涉及 `_tokens.css`, `_zindex.css`, `_landscape_pc.css`, `_player.css`, `_settings_apple.css`)
-- **`.tm-control-buttons`** (声明 8 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-comments-panel`** (声明 5 次，涉及 `_comments.css`, `_landscape_pc.css`, `_player.css`)
-- **`.tm-show-controls-float-btn`** (声明 5 次，涉及 `_comments.css`, `_landscape_pc.css`)
-- **`.tm-settings-panel`** (声明 5 次，涉及 `_landscape_pc.css`, `_player.css`, `_settings_apple.css`)
-- **`html.tm-player-active`** (声明 4 次，涉及 `_host.css`, `_player.css`)
-- **`body.tm-player-active`** (声明 4 次，涉及 `_host.css`, `_player.css`)
-- **`.tm-floating-button`** (声明 4 次，涉及 `_host.css`, `_common.css`)
-- **`.tm-floating-button:hover`** (声明 4 次，涉及 `_host.css`, `_common.css`)
-- **`.tm-floating-button:active`** (声明 4 次，涉及 `_host.css`, `_common.css`)
-- **`.tm-video-container`** (声明 4 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-player-container.tm-sidebar-left .tm-settings-panel`** (声明 4 次，涉及 `_landscape_pc.css`, `_settings_apple.css`)
-- **`.tm-sidebar-pos-button`** (声明 4 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-player-container.has-composer-active .tm-control-buttons`** (声明 3 次，涉及 `_comments.css`, `_landscape_pc.css`)
-- **`.tm-video-minimap`** (声明 3 次，涉及 `_controls.css`, `_landscape_pc.css`)
-- **`.tm-player-container`** (声明 3 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-video-wrapper`** (声明 3 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-video-wrapper video`** (声明 3 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-handle-container`** (声明 3 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-player-container .tm-settings-panel`** (声明 3 次，涉及 `_landscape_pc.css`, `_settings_apple.css`)
-- **`.tm-sidebar-toggle-button`** (声明 3 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-settings-panel.active`** (声明 3 次，涉及 `_landscape_pc.css`, `_player.css`, `_settings_apple.css`)
-- **`.tm-floating-button svg`** (声明 2 次，涉及 `_host.css`, `_common.css`)
-- **`.tm-floating-button:hover svg`** (声明 2 次，涉及 `_host.css`, `_common.css`)
-- **`.tm-login-username`** (声明 2 次，涉及 `_composer.css`, `_variables.css`)
-- **`.tm-login-password`** (声明 2 次，涉及 `_composer.css`, `_variables.css`)
-- **`.tm-debug-log-panel-container`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-pill`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-pill:hover`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-pill-icon`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-pill-title`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-pill-status`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-pill-status.level-success`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-pill-status.level-warn`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-pill-status.level-error`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-pill-arrow`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-box`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-box-header`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-box-title`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-box-count`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-box-actions`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-btn`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-btn:hover`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-list`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-empty`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-row`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-row .tm-log-time`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-row.level-info .tm-log-msg`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-row.level-success .tm-log-msg`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-row.level-warn .tm-log-msg`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-debug-log-row.level-error .tm-log-msg`** (声明 2 次，涉及 `_debug.css`, `_player.css`)
-- **`.tm-tab-scroll-container`** (声明 2 次，涉及 `_marker_sheet.css`, `_player.css`)
-- **`.tm-tab-actions-capsule`** (声明 2 次，涉及 `_marker_sheet.css`, `_controls.css`)
-- **`.tm-player-container.has-sheet-open .tm-comment-fab-btn`** (声明 2 次，涉及 `_marker_sheet.css`, `_comments.css`)
-- **`.tm-player-container.has-sheet-open .tm-show-controls-float-btn`** (声明 2 次，涉及 `_marker_sheet.css`, `_comments.css`)
-- **`.tm-sheet-item-comment-input`** (声明 2 次，涉及 `_marker_sheet.css`, `_variables.css`)
-- **`.tm-comments-panel::after`** (声明 2 次，涉及 `_comments.css`, `_landscape_pc.css`)
-- **`.tm-comments-panel-list.tm-comments-list`** (声明 2 次，涉及 `_comments.css`, `_landscape_pc.css`)
-- **`.tm-comment-input-textarea`** (声明 2 次，涉及 `_comments.css`, `_variables.css`)
-- **`.tm-comment-text-input`** (声明 2 次，涉及 `_comments.css`, `_variables.css`)
-- **`.tm-tag-remark-input`** (声明 2 次，涉及 `_comments.css`, `_variables.css`)
-- **`.tm-comment-section`** (声明 2 次，涉及 `_comments.css`, `_landscape_pc.css`)
-- **`.tm-comment-section:not(.is-collapsed)`** (声明 2 次，涉及 `_comments.css`, `_landscape_pc.css`)
-- **`.tm-comment-section-body`** (声明 2 次，涉及 `_comments.css`, `_landscape_pc.css`)
-- **`.tm-report-note`** (声明 2 次，涉及 `_comments.css`, `_variables.css`)
-- **`.tm-video-overlay *`** (声明 2 次，涉及 `_common.css`, `_variables.css`)
-- **`.tm-volume-control`** (声明 2 次，涉及 `_controls.css`, `_player.css`)
-- **`.tm-settings-label`** (声明 2 次，涉及 `_controls.css`, `_player.css`)
-- **`.tm-time-control-button-active`** (声明 2 次，涉及 `_controls.css`, `_player.css`)
-- **`.tm-time-control-button-after-active`** (声明 2 次，涉及 `_controls.css`, `_player.css`)
-- **`.tm-control-buttons .tm-tab-pill`** (声明 2 次，涉及 `_controls.css`, `_landscape_pc.css`)
-- **`.tm-control-buttons.dragging`** (声明 2 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-video-overlay`** (声明 2 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-player-container.tm-sidebar-hidden .tm-comments-panel`** (声明 2 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-player-container > .tm-player-title`** (声明 2 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-button-container`** (声明 2 次，涉及 `_landscape_pc.css`, `_player.css`)
-- **`.tm-player-container .tm-settings-panel.active`** (声明 2 次，涉及 `_landscape_pc.css`, `_settings_apple.css`)
-- **`.tm-player-container.tm-sidebar-left .tm-settings-panel.active`** (声明 2 次，涉及 `_landscape_pc.css`, `_settings_apple.css`)
-- **`.tm-settings-sources-subpanel`** (声明 2 次，涉及 `_player.css`, `_settings_apple.css`)
-- **`.tm-webdav-input`** (声明 2 次，涉及 `_player.css`, `_variables.css`)
-- **`.tm-about-check-row`** (声明 2 次，涉及 `_player.css`, `_settings_apple.css`)
-- **`.tm-inline-remark-input`** (声明 2 次，涉及 `_player.css`, `_variables.css`)
-- **`.tm-apple-duration-input`** (声明 2 次，涉及 `_settings_apple.css`, `_variables.css`)
-- **`.tm-settings-input`** (声明 2 次，涉及 `_settings_apple.css`, `_variables.css`)
+### 🚨 跨文件重复选择器清单 (51 处)
+- **`.tm-control-buttons`** (声明 8 次，涉及 `_layout.css`, `_control_panel.css`, `_landscape.css`)
+- **`.tm-comments-panel`** (声明 5 次，涉及 `_layout.css`, `_comments.css`, `_landscape.css`)
+- **`.tm-show-controls-float-btn`** (声明 5 次，涉及 `_comments.css`, `_landscape.css`)
+- **`:root`** (声明 4 次，涉及 `_tokens.css`, `_zindex.css`, `_host.css`)
+- **`:host`** (声明 4 次，涉及 `_tokens.css`, `_zindex.css`, `_layout.css`)
+- **`html.tm-player-active`** (声明 4 次，涉及 `_host.css`, `_layout.css`)
+- **`body.tm-player-active`** (声明 4 次，涉及 `_host.css`, `_layout.css`)
+- **`.tm-video-container`** (声明 4 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-sidebar-pos-button`** (声明 4 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-settings-panel`** (声明 4 次，涉及 `_settings_apple.css`, `_settings_panels.css`, `_landscape.css`)
+- **`.tm-player-container`** (声明 3 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-video-wrapper`** (声明 3 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-video-wrapper video`** (声明 3 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-handle-container`** (声明 3 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-sidebar-toggle-button`** (声明 3 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-player-container.has-composer-active .tm-control-buttons`** (声明 3 次，涉及 `_comments.css`, `_landscape.css`)
+- **`.tm-video-minimap`** (声明 3 次，涉及 `_controls.css`, `_landscape.css`)
+- **`.tm-comment-text-input`** (声明 2 次，涉及 `_common.css`, `_modals.css`)
+- **`.tm-comment-input-textarea`** (声明 2 次，涉及 `_common.css`, `_modals.css`)
+- **`.tm-tag-remark-input`** (声明 2 次，涉及 `_common.css`, `_modals.css`)
+- **`.tm-sheet-item-comment-input`** (声明 2 次，涉及 `_common.css`, `_marker_sheet.css`)
+- **`.tm-inline-remark-input`** (声明 2 次，涉及 `_common.css`, `_control_panel.css`)
+- **`.tm-settings-input`** (声明 2 次，涉及 `_common.css`, `_settings_apple.css`)
+- **`.tm-webdav-input`** (声明 2 次，涉及 `_common.css`, `_settings_cards.css`)
+- **`.tm-apple-duration-input`** (声明 2 次，涉及 `_common.css`, `_settings_apple.css`)
+- **`.tm-login-username`** (声明 2 次，涉及 `_common.css`, `_composer.css`)
+- **`.tm-login-password`** (声明 2 次，涉及 `_common.css`, `_composer.css`)
+- **`.tm-report-note`** (声明 2 次，涉及 `_common.css`, `_modals.css`)
+- **`.tm-video-overlay`** (声明 2 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-button-container`** (声明 2 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-player-container > .tm-player-title`** (声明 2 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-player-container.tm-sidebar-hidden .tm-comments-panel`** (声明 2 次，涉及 `_layout.css`, `_landscape.css`)
+- **`.tm-comments-panel::after`** (声明 2 次，涉及 `_comments.css`, `_landscape.css`)
+- **`.tm-comments-panel-list.tm-comments-list`** (声明 2 次，涉及 `_comments.css`, `_landscape.css`)
+- **`.tm-player-container.has-sheet-open .tm-comment-fab-btn`** (声明 2 次，涉及 `_comments.css`, `_marker_sheet.css`)
+- **`.tm-player-container.has-sheet-open .tm-show-controls-float-btn`** (声明 2 次，涉及 `_comments.css`, `_marker_sheet.css`)
+- **`.tm-comment-section`** (声明 2 次，涉及 `_comments_sections.css`, `_landscape.css`)
+- **`.tm-comment-section:not(.is-collapsed)`** (声明 2 次，涉及 `_comments_sections.css`, `_landscape.css`)
+- **`.tm-comment-section-body`** (声明 2 次，涉及 `_comments_sections.css`, `_landscape.css`)
+- **`.tm-volume-control`** (声明 2 次，涉及 `_control_panel.css`, `_controls.css`)
+- **`.tm-tab-scroll-container`** (声明 2 次，涉及 `_control_panel.css`, `_marker_sheet.css`)
+- **`.tm-time-control-button-active`** (声明 2 次，涉及 `_control_panel.css`, `_controls.css`)
+- **`.tm-time-control-button-after-active`** (声明 2 次，涉及 `_control_panel.css`, `_controls.css`)
+- **`.tm-control-panel`** (声明 2 次，涉及 `_control_panel.css`, `_single_hand.css`)
+- **`.tm-control-buttons.dragging`** (声明 2 次，涉及 `_control_panel.css`, `_landscape.css`)
+- **`.tm-settings-label`** (声明 2 次，涉及 `_controls.css`, `_settings_panels.css`)
+- **`.tm-control-buttons .tm-tab-pill`** (声明 2 次，涉及 `_controls.css`, `_landscape.css`)
+- **`.tm-tab-actions-capsule`** (声明 2 次，涉及 `_controls.css`, `_marker_sheet.css`)
+- **`.tm-settings-sources-subpanel`** (声明 2 次，涉及 `_settings_apple.css`, `_settings_panels.css`)
+- **`.tm-about-check-row`** (声明 2 次，涉及 `_settings_apple.css`, `_settings_cards.css`)
+- **`.tm-settings-panel.active`** (声明 2 次，涉及 `_settings_panels.css`, `_landscape.css`)
 
 ---
 
 ## 🌐 四、`:root, :host` 变量散落与覆写分布 (142 处)
 
-- `--sidebar-width` ⚠️ (在 5 处被重复声明/媒体查询修改): 存在于 _tokens.css, _landscape_pc.css
 - `--brand-pink` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _host.css
 - `--brand-pink-rgb` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _host.css
-- `--mp-settings-card-bg` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
-- `--mp-settings-card-border` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
-- `--mp-settings-card-radius` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
-- `--mp-settings-row-height` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
-- `--mp-settings-divider` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
-- `--mp-settings-text-primary` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
-- `--mp-settings-text-secondary` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
-- `--mp-settings-text-muted` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
-- `--mp-settings-switch-active` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
-- `--mp-settings-switch-track` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
-- `--mp-settings-switch-thumb` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css, _settings_apple.css
+- `--sidebar-width` ⚠️ (在 2 处被重复声明/媒体查询修改): 存在于 _tokens.css
 - `--mp-color-black`: 存在于 _tokens.css
 - `--mp-color-white`: 存在于 _tokens.css
 - `--mp-bg-pure-black`: 存在于 _tokens.css
@@ -218,6 +180,17 @@
 - `--mp-card-border`: 存在于 _tokens.css
 - `--mp-card-border-subtle`: 存在于 _tokens.css
 - `--mp-card-border-hover`: 存在于 _tokens.css
+- `--mp-settings-card-bg`: 存在于 _tokens.css
+- `--mp-settings-card-border`: 存在于 _tokens.css
+- `--mp-settings-card-radius`: 存在于 _tokens.css
+- `--mp-settings-row-height`: 存在于 _tokens.css
+- `--mp-settings-divider`: 存在于 _tokens.css
+- `--mp-settings-text-primary`: 存在于 _tokens.css
+- `--mp-settings-text-secondary`: 存在于 _tokens.css
+- `--mp-settings-text-muted`: 存在于 _tokens.css
+- `--mp-settings-switch-active`: 存在于 _tokens.css
+- `--mp-settings-switch-track`: 存在于 _tokens.css
+- `--mp-settings-switch-thumb`: 存在于 _tokens.css
 - `--mp-morandi-sky-blue`: 存在于 _tokens.css
 - `--mp-morandi-emerald`: 存在于 _tokens.css
 - `--mp-morandi-indigo`: 存在于 _tokens.css
@@ -298,35 +271,15 @@
 
 ## ☠️ 五、死选择器与死类名候选清单 (Dead Code Candidates)
 
-### 1. Grade 1 确凿死选择器 (Top 25 展示 / 共 11 个)
+### 1. Grade 1 确凿死选择器 (Top 25 展示 / 共 0 个)
 > 定义：包含自研前缀（`tm-`, `mp-`, `jc-`, `is-` 等），但所包含的类名在全量 86 个 JS 源码中命中数为 0。
 
-- `.jc-site` → 声明于: _comments.css:827 (包含类名: .jc-site)
-- `.jc-site-jable` → 声明于: _comments.css:839 (包含类名: .jc-site-jable)
-- `.jc-site-javlib` → 声明于: _comments.css:845 (包含类名: .jc-site-javlib)
-- `.jc-c-sep` → 声明于: _comments.css:1006 (包含类名: .jc-c-sep)
-- `.jc-emoji` → 声明于: _comments.css:1248 (包含类名: .jc-emoji)
-- `.jc-site-javlib-review` → 声明于: _comments.css:1492 (包含类名: .jc-site-javlib-review)
-- `.jc-card-highlight-flash` → 声明于: _comments.css:1742 (包含类名: .jc-card-highlight-flash)
-- `.tm-progress-handle` → 声明于: _controls.css:375 (包含类名: .tm-progress-handle)
-- `.tm-progress-handle:hover` → 声明于: _controls.css:392 (包含类名: .tm-progress-handle)
-- `.tm-peach-advisor-btn-sub` → 声明于: _settings_apple.css:951 (包含类名: .tm-peach-advisor-btn-sub)
-- `.tm-peach-advisor-btn-sub:hover` → 声明于: _settings_apple.css:961 (包含类名: .tm-peach-advisor-btn-sub)
 
 
-### 2. 0 引用自研类名清单 (共 12 个)
-- `.mp-composer-publish-btn` (在 CSS 中声明 1 次)
-- `.jc-site` (在 CSS 中声明 1 次)
-- `.jc-site-jable` (在 CSS 中声明 1 次)
-- `.jc-site-javlib` (在 CSS 中声明 1 次)
-- `.jc-c-sep` (在 CSS 中声明 1 次)
+
+### 2. 0 引用自研类名清单 (共 2 个)
 - `.jc-spam` (在 CSS 中声明 2 次)
-- `.jc-emoji` (在 CSS 中声明 1 次)
-- `.jc-site-javlib-review` (在 CSS 中声明 1 次)
-- `.jc-card-highlight-flash` (在 CSS 中声明 1 次)
-- `.tm-progress-handle` (在 CSS 中声明 3 次)
-- `.tm-settings-options` (在 CSS 中声明 1 次)
-- `.tm-peach-advisor-btn-sub` (在 CSS 中声明 2 次)
+- `.mp-composer-publish-btn` (在 CSS 中声明 1 次)
 
 ### 3. 未引用的 Keyframes 动画 (0 个)
 - 无
@@ -366,9 +319,9 @@
 - `--mp-card-border` (声明于 _tokens.css:82)
 - `--mp-card-border-subtle` (声明于 _tokens.css:83)
 - `--mp-card-border-hover` (声明于 _tokens.css:84)
-- `--mp-settings-switch-active` (声明于 _tokens.css:95, _settings_apple.css:15)
-- `--mp-settings-switch-track` (声明于 _tokens.css:96, _settings_apple.css:16)
-- `--mp-settings-switch-thumb` (声明于 _tokens.css:97, _settings_apple.css:17)
+- `--mp-settings-switch-active` (声明于 _tokens.css:95)
+- `--mp-settings-switch-track` (声明于 _tokens.css:96)
+- `--mp-settings-switch-thumb` (声明于 _tokens.css:97)
 - `--mp-color-morandi-1` (声明于 _tokens.css:114)
 - `--mp-color-morandi-2` (声明于 _tokens.css:115)
 - `--mp-color-morandi-3` (声明于 _tokens.css:116)

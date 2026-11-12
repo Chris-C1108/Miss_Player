@@ -64,7 +64,8 @@ console.log('✅ 4. 新评论到达触发重绘时，已展开评论维持展开
 
 // 5. 验证 CSS 防击穿与自适应包裹规范 (Anti-Penetration & Gap Elimination Contract)
 import fs from 'fs';
-const commentsCss = fs.readFileSync('src/player/ui/styles/_comments.css', 'utf8');
+const commentsCss = fs.readFileSync('src/player/ui/styles/02_components/_comments.css', 'utf8');
+const commentsSectionsCss = fs.readFileSync('src/player/ui/styles/02_components/_comments_sections.css', 'utf8');
 
 // 5.1 .tm-comments-panel 必须为 pointer-events: auto 且具备深色实体图层，禁止 pointer-events: none 导致 iOS WebKit 穿透呼出键盘
 assert.ok(commentsCss.includes('.tm-comments-panel {'), '必须包含 .tm-comments-panel 样式声明');
@@ -75,7 +76,7 @@ assert.ok(panelStyleBlock.includes('background-color: #0b0b0e;') || panelStyleBl
 console.log('✅ 5.1 tm-comments-panel 实体图层与防击穿属性验证通过');
 
 // 5.2 .tm-comment-section:not(.is-collapsed) 必须为 flex: 0 1 auto，拒绝 flex: 1 强行撑开巨大死留白
-const uncollapsedBlock = commentsCss.split('.tm-comment-section:not(.is-collapsed) {')[1].split('}')[0];
+const uncollapsedBlock = commentsSectionsCss.split('.tm-comment-section:not(.is-collapsed) {')[1].split('}')[0];
 assert.ok(uncollapsedBlock.includes('flex: 0 1 auto;'), '展开分区必须为 flex: 0 1 auto 自适应收缩包裹');
 assert.ok(uncollapsedBlock.includes('max-height: 100%;'), '展开分区必须设置 max-height 边界约束');
 assert.ok(!uncollapsedBlock.includes('flex: 1;'), '展开分区严禁使用 flex: 1 强行占满父容器产生空白');

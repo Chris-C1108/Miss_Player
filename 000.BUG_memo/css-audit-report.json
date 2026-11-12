@@ -1,40 +1,40 @@
 {
   "meta": {
-    "generatedAt": "2026-11-12T16:18:59.682Z",
-    "durationMs": 695,
-    "cssFileCount": 14,
+    "generatedAt": "2026-11-12T16:35:32.096Z",
+    "durationMs": 663,
+    "cssFileCount": 21,
     "jsFileCount": 96
   },
   "summary": {
-    "totalCssLines": 9415,
-    "totalRules": 1064,
-    "totalSelectors": 1111,
-    "totalClasses": 577,
+    "totalCssLines": 9244,
+    "totalRules": 1013,
+    "totalSelectors": 1102,
+    "totalClasses": 567,
     "totalIds": 6,
-    "totalKeyframes": 16,
+    "totalKeyframes": 15,
     "totalCssVarsDeclared": 142,
     "totalRootHostVars": 142,
-    "totalImportantCount": 97,
+    "totalImportantCount": 73,
     "deadCodeSummary": {
-      "zeroHitClassesTotal": 17,
-      "zeroHitClassesMissPlayer": 12,
+      "zeroHitClassesTotal": 7,
+      "zeroHitClassesMissPlayer": 2,
       "zeroHitClassesExternal": 5,
-      "deadSelectorsGrade1": 11,
-      "deadSelectorsLeafZero": 2,
-      "deadSelectorsTotalSuspect": 13,
+      "deadSelectorsGrade1": 0,
+      "deadSelectorsLeafZero": 1,
+      "deadSelectorsTotalSuspect": 1,
       "unusedKeyframesCount": 0,
       "unusedCssVarsCount": 81
     },
     "duplicateSummary": {
-      "totalDuplicateSelectors": 122,
-      "crossFileDuplicates": 85,
-      "sameFileDuplicates": 37
+      "totalDuplicateSelectors": 93,
+      "crossFileDuplicates": 51,
+      "sameFileDuplicates": 42
     }
   },
   "fileBreakdown": {
     "src/player/ui/style.css": {
-      "lineCount": 13,
-      "size": 474,
+      "lineCount": 20,
+      "size": 917,
       "ruleCount": 0,
       "selectorCount": 0,
       "classes": [],
@@ -56,6 +56,38 @@
       "classes": [],
       "importantCount": 0
     },
+    "src/player/ui/styles/01_core/_common.css": {
+      "lineCount": 154,
+      "size": 3476,
+      "ruleCount": 20,
+      "selectorCount": 48,
+      "classes": [
+        "is-hidden",
+        "tm-video-overlay",
+        "tm-comment-text-input",
+        "tm-comment-input-textarea",
+        "tm-tag-remark-input",
+        "tm-sheet-item-comment-input",
+        "tm-inline-remark-input",
+        "tm-settings-input",
+        "tm-webdav-input",
+        "tm-apple-duration-input",
+        "tm-login-username",
+        "tm-login-password",
+        "tm-report-note",
+        "tm-toast",
+        "visible",
+        "tm-toast-icon",
+        "tm-toast-content",
+        "tm-toast--top",
+        "tm-toast--bottom",
+        "tm-toast--center",
+        "tm-toast--error",
+        "tm-toast--success",
+        "tm-toast--info"
+      ],
+      "importantCount": 6
+    },
     "src/player/ui/styles/01_core/_host.css": {
       "lineCount": 181,
       "size": 5060,
@@ -73,6 +105,190 @@
         "tm-custom-modal-overlay"
       ],
       "importantCount": 19
+    },
+    "src/player/ui/styles/01_core/_layout.css": {
+      "lineCount": 732,
+      "size": 19163,
+      "ruleCount": 75,
+      "selectorCount": 115,
+      "classes": [
+        "tm-video-overlay",
+        "tm-player-container",
+        "tm-button-container",
+        "tm-top-actions",
+        "tm-video-container",
+        "is-resizing",
+        "tm-sidebar-hidden",
+        "controls-hidden",
+        "tm-video-wrapper",
+        "tm-handle-container",
+        "has-composer-active",
+        "has-sheet-open",
+        "has-inline-remark-open",
+        "tm-settings-active",
+        "has-modal-open",
+        "tm-ios-keyboard-open",
+        "tm-control-panel",
+        "tm-control-buttons",
+        "tm-comment-fab-btn",
+        "tm-show-controls-float-btn",
+        "tm-close-button",
+        "tm-settings-button",
+        "tm-sidebar-pos-button",
+        "tm-sidebar-toggle-button",
+        "tm-surface-event-sink",
+        "visible",
+        "tm-resize-handle",
+        "tm-resize-handle-hitarea",
+        "dragging",
+        "is-locked",
+        "is-active",
+        "tm-control-button-base",
+        "tm-control-button",
+        "active",
+        "tm-player-title",
+        "tm-title-slot",
+        "tm-player-title-text",
+        "tm-title-slot--main",
+        "is-exiting",
+        "tm-title-slot--toast",
+        "tm-toast-indicator-dot",
+        "tm-toast--success",
+        "tm-toast--error",
+        "tm-toast--info",
+        "tm-toast-content",
+        "tm-comments-panel",
+        "video-portrait",
+        "tm-player-active"
+      ],
+      "importantCount": 16
+    },
+    "src/player/ui/styles/02_components/_comments.css": {
+      "lineCount": 744,
+      "size": 18422,
+      "ruleCount": 76,
+      "selectorCount": 108,
+      "classes": [
+        "tm-comments-panel",
+        "tm-handle-container",
+        "is-dimmed",
+        "tm-player-container",
+        "tm-tag-checkbox",
+        "tm-comments-panel-list",
+        "tm-comments-list",
+        "tm-comment-submit-bar-wrapper",
+        "tm-ios-keyboard-open",
+        "is-collapsed",
+        "tm-comment-drawer-pill",
+        "tm-comment-backdrop",
+        "is-hidden",
+        "tm-comment-fab-btn",
+        "tm-show-controls-float-btn",
+        "tm-hand-right",
+        "tm-hand-left",
+        "tm-single-hand-left",
+        "has-composer-open",
+        "has-composer-active",
+        "has-sheet-open",
+        "tm-control-panel",
+        "tm-control-buttons",
+        "controls-hidden",
+        "jc-hdr",
+        "jc-hdr-left",
+        "jc-hdr-right",
+        "jc-card",
+        "jc-bd",
+        "jc-u",
+        "jc-t",
+        "jc-body-text",
+        "jc-spam",
+        "jc-spam-badge",
+        "jc-time-link",
+        "jc-time-text",
+        "jc-time-star-btn",
+        "jc-star-icon",
+        "jc-star-filled",
+        "jc-star-outline",
+        "show-star-btn",
+        "is-favorited",
+        "jc-countdown-btn",
+        "jc-countdown-btn--active",
+        "jc-code-link",
+        "tm-comment-loading",
+        "tm-comment-error"
+      ],
+      "importantCount": 7
+    },
+    "src/player/ui/styles/02_components/_comments_sections.css": {
+      "lineCount": 709,
+      "size": 16316,
+      "ruleCount": 87,
+      "selectorCount": 87,
+      "classes": [
+        "mp-comments-error",
+        "mp-comments-loading",
+        "mp-error-card",
+        "mp-error-title",
+        "mp-error-detail",
+        "mp-error-detail-title",
+        "mp-error-retry-btn",
+        "mp-cf-card",
+        "mp-cf-title",
+        "mp-cf-desc",
+        "mp-cf-verify-btn",
+        "mp-cf-retry-btn",
+        "tm-comment-loader-graphic",
+        "dot",
+        "jc-score-badge",
+        "jc-body-text--collapsible",
+        "jc-body-text-content",
+        "jc-toggle-expand-btn",
+        "tm-comment-section",
+        "is-collapsed",
+        "tm-comment-section-body",
+        "tm-comment-section-title",
+        "tm-comment-section-hdr",
+        "tm-comment-hdr-right",
+        "tm-comment-login-badge",
+        "is-logged-in",
+        "is-not-logged-in",
+        "is-checking",
+        "tm-comment-status-badge",
+        "tm-status-badge-loading",
+        "tm-status-badge-unreachable",
+        "tm-status-badge-not_found",
+        "tm-status-badge-mobile_unsupported",
+        "tm-status-badge-empty",
+        "tm-status-badge-cf_shield",
+        "tm-status-badge-loaded",
+        "jc-comment-link",
+        "tm-comment-status-box",
+        "is-unreachable",
+        "tm-comment-status-title",
+        "tm-comment-status-desc",
+        "tm-comments-cf-warning",
+        "is-verifying",
+        "tm-comments-cf-actions",
+        "tm-comments-verify-link",
+        "tm-comments-verify-btn",
+        "tm-comment-end-marker",
+        "jc-save-all-btn",
+        "jc-report-btn",
+        "jc-imported-share-card",
+        "jc-imported-share-title-row",
+        "jc-imported-share-title",
+        "jc-imported-share-speed",
+        "jc-imported-share-desc",
+        "tm-import-deep-link-btn",
+        "jc-skeleton",
+        "skeleton-block",
+        "mp-skeleton-card",
+        "mp-skeleton-header",
+        "mp-skeleton-title-block",
+        "mp-skeleton-meta-block",
+        "mp-skeleton-line"
+      ],
+      "importantCount": 0
     },
     "src/player/ui/styles/02_components/_composer.css": {
       "lineCount": 127,
@@ -95,6 +311,128 @@
         "tm-comments-panel-publish-btn",
         "is-submitting",
         "mp-composer-publish-btn"
+      ],
+      "importantCount": 0
+    },
+    "src/player/ui/styles/02_components/_control_panel.css": {
+      "lineCount": 730,
+      "size": 17706,
+      "ruleCount": 75,
+      "selectorCount": 83,
+      "classes": [
+        "tm-video-wrapper",
+        "tm-speed-indicator",
+        "tm-video-minimap",
+        "tm-inline-remark-popover",
+        "tm-loop-range",
+        "active",
+        "tm-progress-bar-container",
+        "tm-loop-marker",
+        "tm-loop-start-marker",
+        "tm-loop-end-marker",
+        "tm-progress-row",
+        "tm-seek-control-row",
+        "tm-loop-control-row",
+        "tm-ios-keyboard-open",
+        "visible",
+        "tm-inline-remark-body",
+        "tm-inline-remark-input",
+        "tm-inline-remark-footer",
+        "tm-inline-remark-btn",
+        "cancel",
+        "submit",
+        "tm-playback-control-row",
+        "tm-playback-bottom-layer",
+        "tm-center-controls",
+        "tm-playback-top-layer",
+        "tm-left-controls",
+        "tm-right-controls",
+        "is-sliding",
+        "tm-volume-control",
+        "tm-time-display-container",
+        "tm-current-time",
+        "tm-total-duration",
+        "tm-tab-scroll-container",
+        "tm-rewind-group",
+        "tm-forward-group",
+        "tm-rewind-buttons-container",
+        "tm-forward-buttons-container",
+        "tm-time-control-button",
+        "tm-time-control-button-active",
+        "tm-time-control-button-after-active",
+        "tm-time-control-button-inner",
+        "tm-rewind-icon",
+        "tm-forward-icon",
+        "tm-time-text-margin-left",
+        "tm-time-text-margin-right",
+        "tm-control-panel",
+        "tm-control-buttons",
+        "dragging",
+        "controls-hidden",
+        "tm-player-container",
+        "tm-jump-active",
+        "tm-progress-markers-container",
+        "tm-progress-marker-tick",
+        "tm-progress-marker-range",
+        "tm-active-loop-played",
+        "tm-active-loop-unplayed",
+        "tm-active-loop-boundary",
+        "start",
+        "end"
+      ],
+      "importantCount": 5
+    },
+    "src/player/ui/styles/02_components/_controls.css": {
+      "lineCount": 636,
+      "size": 14800,
+      "ruleCount": 62,
+      "selectorCount": 71,
+      "classes": [
+        "tm-volume-control",
+        "tm-volume-button",
+        "is-muted",
+        "tm-toggle-switch",
+        "tm-toggle-slider",
+        "checked",
+        "tm-playback-rate-button",
+        "fast",
+        "medium",
+        "normal",
+        "tm-progress-controls",
+        "tm-progress-bar-container",
+        "tm-heatmap-svg",
+        "tm-heatmap-path",
+        "tm-heatmap-crowd-path",
+        "tm-dragging",
+        "tm-progress-bar",
+        "tm-progress-bar-expanded",
+        "tm-progress-bar-normal",
+        "is-buffering",
+        "tm-progress-indicator",
+        "tm-settings-label",
+        "tm-playback-control-row",
+        "tm-control-button",
+        "tm-play-icon",
+        "tm-time-control-button-hover",
+        "tm-time-control-button-active",
+        "tm-time-control-button-default",
+        "tm-time-control-button-after-active",
+        "tm-video-minimap",
+        "tm-video-minimap-viewport",
+        "tm-video-wrapper",
+        "is-swiping",
+        "tm-speed-indicator",
+        "mp-pause-indicator",
+        "visible",
+        "ripple-btn",
+        "tm-bottom-sheet-panel",
+        "tm-control-buttons",
+        "tm-tab-list-btn",
+        "tm-tab-pill",
+        "tm-tab-actions-capsule",
+        "tm-show-controls-float-btn",
+        "ripple",
+        "tm-ripple"
       ],
       "importantCount": 0
     },
@@ -129,10 +467,10 @@
       "importantCount": 0
     },
     "src/player/ui/styles/02_components/_marker_sheet.css": {
-      "lineCount": 817,
-      "size": 19944,
-      "ruleCount": 93,
-      "selectorCount": 113,
+      "lineCount": 753,
+      "size": 18671,
+      "ruleCount": 85,
+      "selectorCount": 105,
       "classes": [
         "tm-tab-scroll-container",
         "tm-tab-pill",
@@ -201,49 +539,21 @@
         "is-open",
         "mp-sheet-tag-chip",
         "tm-tag-chip",
-        "is-selected",
-        "mp-sheet-share-desc",
-        "mp-sheet-share-actions",
-        "mp-sheet-share-btn-copy-url",
-        "mp-sheet-share-btn-copy-md",
-        "mp-sheet-share-btn-close"
+        "is-selected"
       ],
       "importantCount": 0
     },
-    "src/player/ui/styles/_comments.css": {
-      "lineCount": 2156,
-      "size": 52750,
-      "ruleCount": 249,
-      "selectorCount": 281,
+    "src/player/ui/styles/02_components/_modals.css": {
+      "lineCount": 756,
+      "size": 17948,
+      "ruleCount": 87,
+      "selectorCount": 91,
       "classes": [
-        "tm-comments-panel",
-        "tm-handle-container",
-        "is-dimmed",
-        "tm-player-container",
-        "tm-tag-checkbox",
-        "tm-comments-panel-list",
-        "tm-comments-list",
-        "tm-comment-submit-bar-wrapper",
-        "tm-ios-keyboard-open",
-        "is-collapsed",
-        "tm-comment-drawer-pill",
-        "tm-comment-backdrop",
-        "is-hidden",
-        "tm-comment-fab-btn",
-        "tm-show-controls-float-btn",
-        "tm-hand-right",
-        "tm-hand-left",
-        "tm-single-hand-left",
-        "has-composer-open",
-        "has-composer-active",
-        "has-sheet-open",
-        "tm-control-panel",
-        "tm-control-buttons",
-        "controls-hidden",
         "tm-custom-modal-cancel-btn",
         "tm-custom-modal-submit-btn",
         "tm-comment-input-textarea",
         "tm-comment-submit-bar",
+        "tm-ios-keyboard-open",
         "tm-comment-add-tag-btn",
         "is-open",
         "has-selected",
@@ -268,83 +578,14 @@
         "tm-custom-modal-title",
         "tm-custom-modal-message",
         "tm-custom-modal-close-btn",
-        "jc-hdr",
-        "jc-hdr-left",
-        "jc-hdr-right",
-        "jc-site",
-        "jc-site-jable",
-        "jc-site-javlib",
-        "jc-skeleton",
-        "skeleton-block",
-        "mp-skeleton-card",
-        "mp-skeleton-header",
-        "mp-skeleton-title-block",
-        "mp-skeleton-meta-block",
-        "mp-skeleton-line",
-        "jc-card",
-        "jc-bd",
-        "jc-u",
-        "jc-t",
-        "jc-body-text",
-        "jc-c-sep",
-        "jc-spam",
-        "jc-spam-badge",
-        "jc-time-link",
-        "jc-time-text",
-        "jc-time-star-btn",
-        "jc-star-icon",
-        "jc-star-filled",
-        "jc-star-outline",
-        "show-star-btn",
-        "is-favorited",
-        "jc-countdown-btn",
-        "jc-countdown-btn--active",
-        "jc-code-link",
-        "jc-emoji",
-        "tm-comment-loading",
-        "tm-comment-error",
-        "mp-comments-error",
-        "mp-comments-loading",
-        "mp-error-card",
-        "mp-error-title",
-        "mp-error-detail",
-        "mp-error-detail-title",
-        "mp-error-retry-btn",
-        "mp-cf-card",
-        "mp-cf-title",
-        "mp-cf-desc",
-        "mp-cf-verify-btn",
-        "mp-cf-retry-btn",
-        "tm-comment-loader-graphic",
-        "dot",
-        "jc-score-badge",
-        "jc-body-text--collapsible",
-        "jc-body-text-content",
-        "jc-toggle-expand-btn",
-        "jc-site-javlib-review",
-        "tm-comment-section",
-        "tm-comment-section-body",
-        "tm-comment-section-title",
-        "tm-comment-section-hdr",
-        "tm-comment-hdr-right",
-        "tm-comment-login-badge",
-        "is-logged-in",
-        "is-not-logged-in",
-        "is-checking",
-        "tm-comment-status-badge",
-        "tm-status-badge-loading",
-        "tm-status-badge-unreachable",
-        "tm-status-badge-not_found",
-        "tm-status-badge-mobile_unsupported",
-        "tm-status-badge-empty",
-        "tm-status-badge-cf_shield",
-        "tm-status-badge-loaded",
-        "jc-comment-link",
-        "jc-card-highlight-flash",
         "jc-action-btn",
         "jc-report-btn",
+        "tm-comments-panel",
+        "is-dimmed",
         "tm-report-modal-overlay",
         "tm-report-modal-dialog",
+        "tm-comments-list",
+        "jc-card",
         "jc-code-preview-popover",
         "jc-code-preview-video-wrap",
         "jc-code-preview-video",
@@ -356,392 +597,100 @@
         "jc-code-preview-title",
         "jc-code-preview-badge",
         "jc-code-preview-hover-hint",
-        "tm-comment-status-box",
-        "is-unreachable",
-        "tm-comment-status-title",
-        "tm-comment-status-desc",
-        "tm-comments-cf-warning",
-        "is-verifying",
-        "tm-comments-cf-actions",
-        "tm-comments-verify-link",
-        "tm-comments-verify-btn",
-        "tm-comment-end-marker",
-        "jc-save-all-btn",
-        "jc-imported-share-card",
-        "jc-imported-share-title-row",
-        "jc-imported-share-title",
-        "jc-imported-share-speed",
-        "jc-imported-share-desc",
-        "tm-import-deep-link-btn",
         "tm-report-modal-hint",
         "tm-report-modal-preview",
         "tm-report-chip-group",
         "tm-report-chip",
         "tm-report-note",
-        "tm-report-modal-buttons"
+        "tm-report-modal-buttons",
+        "mp-sheet-share-desc",
+        "mp-sheet-share-actions",
+        "mp-sheet-share-btn-copy-url",
+        "mp-sheet-share-btn-copy-md",
+        "mp-sheet-share-btn-close"
       ],
-      "importantCount": 35
+      "importantCount": 4
     },
-    "src/player/ui/styles/_common.css": {
-      "lineCount": 182,
-      "size": 4166,
-      "ruleCount": 23,
-      "selectorCount": 25,
+    "src/player/ui/styles/02_components/_peach.css": {
+      "lineCount": 601,
+      "size": 12399,
+      "ruleCount": 77,
+      "selectorCount": 82,
       "classes": [
-        "is-hidden",
-        "tm-floating-button",
-        "tm-toast",
-        "visible",
-        "tm-toast-icon",
-        "tm-toast-content",
-        "tm-toast--top",
-        "tm-toast--bottom",
-        "tm-toast--center",
-        "tm-toast--error",
-        "tm-toast--success",
-        "tm-toast--info",
-        "tm-video-overlay"
-      ],
-      "importantCount": 5
-    },
-    "src/player/ui/styles/_controls.css": {
-      "lineCount": 1000,
-      "size": 24313,
-      "ruleCount": 103,
-      "selectorCount": 117,
-      "classes": [
-        "tm-volume-control",
-        "tm-volume-button",
-        "is-muted",
-        "tm-toggle-switch",
-        "tm-toggle-slider",
-        "checked",
-        "tm-playback-rate-button",
-        "fast",
-        "medium",
-        "normal",
-        "tm-progress-controls",
-        "tm-progress-bar-container",
-        "tm-heatmap-svg",
-        "tm-heatmap-path",
-        "tm-heatmap-crowd-path",
-        "tm-dragging",
-        "tm-progress-bar",
-        "tm-progress-bar-expanded",
-        "tm-progress-bar-normal",
-        "is-buffering",
-        "tm-progress-indicator",
-        "tm-progress-handle",
-        "dragging",
-        "tm-settings-label",
-        "tm-playback-control-row",
-        "tm-control-button",
-        "tm-play-icon",
-        "tm-time-control-button-hover",
-        "tm-time-control-button-active",
-        "tm-time-control-button-default",
-        "tm-time-control-button-after-active",
-        "tm-video-minimap",
-        "tm-video-minimap-viewport",
-        "tm-video-wrapper",
-        "is-swiping",
-        "tm-speed-indicator",
-        "mp-pause-indicator",
-        "visible",
-        "ripple-btn",
-        "tm-bottom-sheet-panel",
-        "tm-control-buttons",
-        "tm-tab-list-btn",
-        "tm-tab-pill",
-        "tm-tab-actions-capsule",
-        "tm-show-controls-float-btn",
-        "ripple",
-        "tm-ripple",
-        "mp-switcher-wrapper",
-        "mp-switcher-capsule",
-        "mp-switcher-indicator",
-        "mp-switcher-track",
-        "mp-switcher-item",
-        "mp-switcher-label",
-        "is-active",
-        "is-hidden",
-        "mp-switcher-variant-slot",
-        "is-visible",
-        "mp-switcher-action-btn",
-        "mp-switcher-play-icon",
-        "is-paused",
-        "mp-switcher-replay-icon",
-        "mp-switcher-btn-text",
-        "mp-switcher-btn-cancel",
-        "mp-switcher-status-dot",
-        "mp-switcher-status-play",
-        "tm-single-hand-gutter",
-        "tm-gutter-btn-top",
-        "tm-gutter-icon-wrap",
-        "tm-gutter-btn-bottom",
-        "tm-gutter-switch-icon-wrap",
-        "controls-hidden",
-        "tm-player-container",
-        "tm-single-hand-right",
-        "tm-single-hand-left"
-      ],
-      "importantCount": 7
-    },
-    "src/player/ui/styles/_landscape_pc.css": {
-      "lineCount": 784,
-      "size": 23288,
-      "ruleCount": 87,
-      "selectorCount": 119,
-      "classes": [
-        "tm-control-drag-handle",
-        "tm-player-container",
-        "tm-button-container",
-        "tm-top-actions",
-        "tm-player-title",
-        "tm-sidebar-left",
-        "tm-close-button",
-        "tm-video-container",
-        "tm-video-wrapper",
-        "tm-video-minimap",
-        "video-portrait",
-        "tm-comments-panel",
-        "tm-comments-panel-list",
-        "tm-comments-list",
-        "tm-comment-section",
-        "is-collapsed",
-        "tm-comment-section-body",
-        "tm-comment-submit-bar-wrapper",
-        "tm-comment-backdrop",
-        "has-composer-active",
-        "tm-comments-panel-publish-btn",
-        "tm-show-controls-float-btn",
-        "tm-handle-container",
-        "tm-control-buttons",
-        "dragging",
-        "controls-hidden",
-        "tm-video-overlay",
-        "tm-settings-panel",
-        "tm-controls-docked-br",
-        "tm-controls-docked-bl",
-        "tm-comment-fab-btn",
-        "tm-controls-docked-tr",
-        "tm-controls-docked-tl",
-        "tm-sidebar-hidden",
-        "tm-sidebar-pos-button",
-        "tm-sidebar-toggle-button",
-        "tm-settings-options",
-        "tm-seek-control-row",
-        "tm-loop-control-row",
-        "tm-playback-control-row",
-        "tm-tab-pill",
-        "active"
-      ],
-      "importantCount": 9
-    },
-    "src/player/ui/styles/_player.css": {
-      "lineCount": 2590,
-      "size": 68257,
-      "ruleCount": 295,
-      "selectorCount": 360,
-      "classes": [
-        "tm-video-overlay",
-        "tm-player-container",
-        "tm-button-container",
-        "tm-top-actions",
-        "tm-video-container",
-        "is-resizing",
-        "tm-sidebar-hidden",
-        "controls-hidden",
-        "tm-video-wrapper",
-        "tm-speed-indicator",
-        "tm-video-minimap",
-        "tm-inline-remark-popover",
-        "tm-handle-container",
-        "has-composer-active",
-        "has-sheet-open",
-        "has-inline-remark-open",
-        "tm-settings-active",
-        "has-modal-open",
-        "tm-ios-keyboard-open",
-        "tm-control-panel",
-        "tm-control-buttons",
-        "tm-comment-fab-btn",
-        "tm-show-controls-float-btn",
-        "tm-surface-event-sink",
-        "visible",
-        "tm-resize-handle",
-        "tm-resize-handle-hitarea",
-        "dragging",
-        "is-locked",
-        "is-active",
-        "tm-control-button-base",
-        "tm-close-button",
-        "tm-settings-button",
-        "tm-sidebar-pos-button",
-        "tm-sidebar-toggle-button",
         "tm-peach-ingest-button",
         "is-ingested",
         "is-busy",
         "tm-peach-logo-img",
         "tm-peach-badge",
         "is-hidden",
-        "tm-settings-panel",
-        "active",
-        "tm-comments-list",
-        "tm-comments-panel",
-        "tm-settings-menu-container",
-        "tm-settings-option-row",
-        "tm-settings-label-wrapper",
-        "tm-settings-text-wrapper",
-        "tm-settings-label",
-        "tm-settings-subtext",
-        "tm-settings-seek-steps-subpanel",
-        "tm-settings-sources-subpanel",
-        "tm-seek-step-badge",
-        "tm-seek-step-add-badge",
-        "enabled",
-        "disabled",
-        "tm-settings-webdav-card",
-        "tm-webdav-form-row",
-        "tm-webdav-label",
-        "tm-webdav-input-group",
-        "tm-webdav-input",
-        "has-eye",
-        "tm-webdav-eye-btn",
-        "tm-webdav-switch-row",
-        "tm-webdav-switch-info",
-        "tm-webdav-switch-title",
-        "tm-webdav-switch-desc",
-        "tm-webdav-device-badge",
-        "tm-webdav-actions-container",
-        "tm-webdav-sub-actions",
-        "tm-webdav-btn",
-        "tm-webdav-btn-primary",
-        "tm-webdav-btn-secondary",
-        "tm-webdav-status-bar",
-        "tm-webdav-status-badge",
-        "success",
-        "error",
-        "running",
-        "tm-spinner-sm",
-        "tm-settings-about-card",
-        "tm-about-header-row",
-        "tm-about-brand-wrap",
-        "tm-about-brand-title",
-        "tm-about-version-badge",
-        "is-update",
-        "tm-about-link-btn",
-        "tm-about-stats-grid",
-        "tm-about-stat-box",
-        "tm-about-stat-val",
-        "tm-about-stat-lbl",
-        "tm-about-update-banner",
-        "tm-about-update-title",
-        "tm-about-update-desc",
-        "tm-about-update-actions",
-        "tm-about-check-row",
-        "tm-about-btn",
-        "tm-about-btn--check",
-        "is-loading",
-        "tm-about-btn--primary",
-        "tm-about-btn--secondary",
-        "has-update-badge",
-        "tm-toggle-input",
-        "tm-loop-range",
-        "tm-progress-bar-container",
-        "tm-loop-marker",
-        "tm-loop-start-marker",
-        "tm-loop-end-marker",
-        "tm-progress-row",
-        "tm-seek-control-row",
-        "tm-loop-control-row",
-        "tm-inline-remark-body",
-        "tm-inline-remark-input",
-        "tm-inline-remark-footer",
-        "tm-inline-remark-btn",
-        "cancel",
-        "submit",
-        "tm-playback-control-row",
-        "tm-playback-bottom-layer",
-        "tm-center-controls",
-        "tm-playback-top-layer",
-        "tm-left-controls",
-        "tm-right-controls",
-        "is-sliding",
-        "tm-volume-control",
-        "tm-time-display-container",
-        "tm-current-time",
-        "tm-total-duration",
-        "tm-tab-scroll-container",
-        "tm-rewind-group",
-        "tm-forward-group",
-        "tm-rewind-buttons-container",
-        "tm-forward-buttons-container",
-        "tm-time-control-button",
-        "tm-time-control-button-active",
-        "tm-time-control-button-after-active",
-        "tm-time-control-button-inner",
-        "tm-rewind-icon",
-        "tm-forward-icon",
-        "tm-time-text-margin-left",
-        "tm-time-text-margin-right",
-        "tm-control-button",
-        "tm-player-title",
-        "tm-title-slot",
-        "tm-player-title-text",
-        "tm-title-slot--main",
-        "is-exiting",
-        "tm-title-slot--toast",
-        "tm-toast-indicator-dot",
-        "tm-toast--success",
-        "tm-toast--error",
-        "tm-toast--info",
-        "tm-toast-content",
-        "tm-single-hand-right",
-        "tm-single-hand-gutter",
-        "tm-single-hand-left",
-        "tm-single-hand-active",
-        "tm-swiping-down",
-        "tm-jump-active",
-        "video-portrait",
-        "tm-player-active",
-        "tm-progress-markers-container",
-        "tm-progress-marker-tick",
-        "tm-progress-marker-range",
-        "tm-active-loop-played",
-        "tm-active-loop-unplayed",
-        "tm-active-loop-boundary",
-        "start",
-        "end",
-        "tm-debug-log-panel-container",
-        "tm-debug-log-pill",
-        "tm-debug-pill-icon",
-        "tm-debug-pill-title",
-        "tm-debug-pill-status",
-        "level-success",
-        "level-warn",
-        "level-error",
-        "tm-debug-pill-arrow",
-        "tm-debug-log-box",
-        "tm-debug-box-header",
-        "tm-debug-box-title",
-        "tm-debug-box-count",
-        "tm-debug-box-actions",
-        "tm-debug-btn",
-        "tm-debug-log-list",
-        "tm-debug-log-empty",
-        "tm-debug-log-row",
-        "tm-log-time",
-        "level-info",
-        "tm-log-msg"
+        "tm-peach-status-badge",
+        "is-connected",
+        "is-strm-only",
+        "is-testing",
+        "tm-peach-field-row",
+        "tm-peach-input-with-action",
+        "tm-settings-input",
+        "tm-peach-delete-btn",
+        "tm-peach-token-status-wrap",
+        "tm-peach-auto-token-tip",
+        "tm-peach-auto-token-text",
+        "tm-peach-open-web-btn",
+        "tm-peach-token-badge-row",
+        "tm-peach-token-tag",
+        "tm-peach-reissue-btn",
+        "tm-peach-origins-wrap",
+        "tm-peach-origins-title",
+        "tm-peach-origins-list",
+        "tm-peach-origin-item",
+        "is-active",
+        "tm-peach-origin-url",
+        "tm-peach-origin-active-tag",
+        "tm-peach-origin-del-btn",
+        "tm-peach-gateway-wrap",
+        "tm-peach-gateway-base-input",
+        "tm-peach-gateway-token-input",
+        "tm-peach-mode-notice",
+        "tm-peach-subpanel",
+        "tm-peach-grid-2",
+        "tm-peach-advisor-card",
+        "tm-peach-advisor-header",
+        "tm-peach-advisor-title",
+        "tm-peach-advisor-close",
+        "tm-peach-advisor-desc",
+        "tm-peach-advisor-path",
+        "tm-peach-advisor-actions",
+        "tm-peach-advisor-btn-primary",
+        "tm-peach-stream-hud",
+        "tm-hud-collapsed-bar",
+        "tm-hud-dot",
+        "tm-hud-expand-btn",
+        "tm-hud-close-btn",
+        "tm-hud-tool-btn",
+        "tm-hud-header",
+        "tm-hud-title",
+        "tm-hud-version",
+        "tm-hud-tools",
+        "tm-hud-grid",
+        "tm-hud-cell",
+        "tm-hud-label",
+        "tm-hud-val",
+        "tm-hud-val-highlight",
+        "tm-hud-section-title",
+        "tm-hud-pipeline-box",
+        "tm-hud-pipeline-item",
+        "tm-hud-pipeline-name",
+        "tm-hud-dim",
+        "tm-hud-logs-box",
+        "tm-hud-log-line",
+        "tm-hud-tag"
       ],
-      "importantCount": 21
+      "importantCount": 0
     },
-    "src/player/ui/styles/_settings_apple.css": {
-      "lineCount": 1146,
-      "size": 24837,
-      "ruleCount": 140,
-      "selectorCount": 149,
+    "src/player/ui/styles/02_components/_settings_apple.css": {
+      "lineCount": 587,
+      "size": 12541,
+      "ruleCount": 67,
+      "selectorCount": 67,
       "classes": [
         "tm-settings-apple-container",
         "tm-settings-apple-header",
@@ -790,106 +739,338 @@
         "tm-about-btn--scriptcat",
         "tm-settings-skeleton-card",
         "tm-settings-panel",
-        "tm-ios-keyboard-open",
-        "tm-player-container",
-        "tm-sidebar-left",
-        "tm-peach-status-badge",
-        "is-connected",
-        "is-strm-only",
-        "is-testing",
-        "tm-peach-field-row",
-        "tm-peach-input-with-action",
-        "tm-peach-delete-btn",
-        "tm-peach-token-status-wrap",
-        "tm-peach-auto-token-tip",
-        "tm-peach-auto-token-text",
-        "tm-peach-open-web-btn",
-        "tm-peach-token-badge-row",
-        "tm-peach-token-tag",
-        "tm-peach-reissue-btn",
-        "tm-peach-origins-wrap",
-        "tm-peach-origins-title",
-        "tm-peach-origins-list",
-        "tm-peach-origin-item",
-        "is-active",
-        "tm-peach-origin-url",
-        "tm-peach-origin-active-tag",
-        "tm-peach-origin-del-btn",
-        "tm-peach-gateway-wrap",
-        "tm-peach-gateway-base-input",
-        "tm-peach-gateway-token-input",
-        "tm-peach-mode-notice",
-        "tm-peach-subpanel",
-        "tm-peach-grid-2",
-        "tm-peach-advisor-card",
-        "tm-peach-advisor-header",
-        "tm-peach-advisor-title",
-        "tm-peach-advisor-close",
-        "tm-peach-advisor-desc",
-        "tm-peach-advisor-path",
-        "tm-peach-advisor-actions",
-        "tm-peach-advisor-btn-primary",
-        "tm-peach-advisor-btn-sub",
-        "tm-peach-stream-hud",
-        "tm-hud-collapsed-bar",
-        "tm-hud-dot",
-        "tm-hud-expand-btn",
-        "tm-hud-close-btn",
-        "tm-hud-tool-btn",
-        "tm-hud-header",
-        "tm-hud-title",
-        "tm-hud-version",
-        "tm-hud-tools",
-        "tm-hud-grid",
-        "tm-hud-cell",
-        "tm-hud-label",
-        "tm-hud-val",
-        "tm-hud-val-highlight",
-        "tm-hud-section-title",
-        "tm-hud-pipeline-box",
-        "tm-hud-pipeline-item",
-        "tm-hud-pipeline-name",
-        "tm-hud-dim",
-        "tm-hud-logs-box",
-        "tm-hud-log-line",
-        "tm-hud-tag"
+        "tm-ios-keyboard-open"
       ],
       "importantCount": 0
     },
-    "src/player/ui/styles/_variables.css": {
-      "lineCount": 50,
-      "size": 1235,
-      "ruleCount": 5,
-      "selectorCount": 31,
+    "src/player/ui/styles/02_components/_settings_cards.css": {
+      "lineCount": 499,
+      "size": 11528,
+      "ruleCount": 64,
+      "selectorCount": 64,
       "classes": [
-        "tm-video-overlay",
-        "tm-comment-text-input",
-        "tm-comment-input-textarea",
-        "tm-tag-remark-input",
-        "tm-sheet-item-comment-input",
-        "tm-inline-remark-input",
-        "tm-settings-input",
+        "tm-settings-webdav-card",
+        "tm-webdav-form-row",
+        "tm-webdav-label",
+        "tm-webdav-input-group",
         "tm-webdav-input",
-        "tm-apple-duration-input",
-        "tm-login-username",
-        "tm-login-password",
-        "tm-report-note"
+        "has-eye",
+        "tm-webdav-eye-btn",
+        "tm-webdav-switch-row",
+        "tm-webdav-switch-info",
+        "tm-webdav-switch-title",
+        "tm-webdav-switch-desc",
+        "tm-webdav-device-badge",
+        "tm-webdav-actions-container",
+        "tm-webdav-sub-actions",
+        "tm-webdav-btn",
+        "tm-webdav-btn-primary",
+        "tm-webdav-btn-secondary",
+        "tm-webdav-status-bar",
+        "tm-webdav-status-badge",
+        "success",
+        "error",
+        "running",
+        "tm-spinner-sm",
+        "tm-settings-about-card",
+        "tm-about-header-row",
+        "tm-about-brand-wrap",
+        "tm-about-brand-title",
+        "tm-about-version-badge",
+        "is-update",
+        "tm-about-link-btn",
+        "tm-about-stats-grid",
+        "tm-about-stat-box",
+        "tm-about-stat-val",
+        "tm-about-stat-lbl",
+        "tm-about-update-banner",
+        "tm-about-update-title",
+        "tm-about-update-desc",
+        "tm-about-update-actions",
+        "tm-about-check-row",
+        "tm-about-btn",
+        "tm-about-btn--check",
+        "is-loading",
+        "tm-about-btn--primary",
+        "tm-about-btn--secondary"
       ],
-      "importantCount": 1
+      "importantCount": 0
+    },
+    "src/player/ui/styles/02_components/_settings_panels.css": {
+      "lineCount": 309,
+      "size": 7743,
+      "ruleCount": 31,
+      "selectorCount": 38,
+      "classes": [
+        "tm-settings-button",
+        "tm-settings-panel",
+        "active",
+        "tm-player-container",
+        "tm-settings-active",
+        "tm-comments-list",
+        "tm-comments-panel",
+        "tm-settings-menu-container",
+        "tm-settings-option-row",
+        "tm-settings-label-wrapper",
+        "tm-settings-text-wrapper",
+        "tm-settings-label",
+        "tm-settings-subtext",
+        "tm-settings-seek-steps-subpanel",
+        "tm-settings-sources-subpanel",
+        "tm-seek-step-badge",
+        "tm-seek-step-add-badge",
+        "enabled",
+        "disabled",
+        "has-update-badge",
+        "tm-toggle-input",
+        "tm-swiping-down",
+        "tm-button-container",
+        "tm-handle-container",
+        "tm-control-panel",
+        "tm-control-buttons"
+      ],
+      "importantCount": 0
+    },
+    "src/player/ui/styles/02_components/_switcher.css": {
+      "lineCount": 220,
+      "size": 4719,
+      "ruleCount": 25,
+      "selectorCount": 26,
+      "classes": [
+        "mp-switcher-wrapper",
+        "mp-switcher-capsule",
+        "mp-switcher-indicator",
+        "mp-switcher-track",
+        "mp-switcher-item",
+        "mp-switcher-label",
+        "is-active",
+        "is-hidden",
+        "mp-switcher-variant-slot",
+        "is-visible",
+        "mp-switcher-action-btn",
+        "mp-switcher-play-icon",
+        "is-paused",
+        "mp-switcher-replay-icon",
+        "mp-switcher-btn-text",
+        "mp-switcher-btn-cancel",
+        "mp-switcher-status-dot",
+        "mp-switcher-status-play"
+      ],
+      "importantCount": 3
+    },
+    "src/player/ui/styles/03_responsive/_landscape.css": {
+      "lineCount": 783,
+      "size": 23089,
+      "ruleCount": 84,
+      "selectorCount": 113,
+      "classes": [
+        "tm-control-drag-handle",
+        "tm-player-container",
+        "tm-button-container",
+        "tm-top-actions",
+        "tm-player-title",
+        "tm-sidebar-left",
+        "tm-close-button",
+        "tm-video-container",
+        "tm-video-wrapper",
+        "tm-video-minimap",
+        "video-portrait",
+        "tm-comments-panel",
+        "tm-comments-panel-list",
+        "tm-comments-list",
+        "tm-comment-section",
+        "is-collapsed",
+        "tm-comment-section-body",
+        "tm-comment-submit-bar-wrapper",
+        "tm-comment-backdrop",
+        "has-composer-active",
+        "tm-comments-panel-publish-btn",
+        "tm-show-controls-float-btn",
+        "tm-handle-container",
+        "tm-control-buttons",
+        "dragging",
+        "controls-hidden",
+        "tm-video-overlay",
+        "tm-settings-panel",
+        "tm-controls-docked-br",
+        "tm-controls-docked-bl",
+        "tm-comment-fab-btn",
+        "tm-controls-docked-tr",
+        "tm-controls-docked-tl",
+        "tm-sidebar-hidden",
+        "tm-sidebar-pos-button",
+        "tm-sidebar-toggle-button",
+        "tm-seek-control-row",
+        "tm-loop-control-row",
+        "tm-playback-control-row",
+        "tm-tab-pill",
+        "active"
+      ],
+      "importantCount": 9
+    },
+    "src/player/ui/styles/03_responsive/_single_hand.css": {
+      "lineCount": 334,
+      "size": 9967,
+      "ruleCount": 29,
+      "selectorCount": 41,
+      "classes": [
+        "controls-hidden",
+        "tm-control-buttons",
+        "tm-player-container",
+        "tm-control-panel",
+        "tm-single-hand-right",
+        "tm-single-hand-gutter",
+        "tm-single-hand-left",
+        "tm-single-hand-active",
+        "tm-seek-control-row",
+        "tm-rewind-buttons-container",
+        "tm-forward-buttons-container",
+        "tm-gutter-btn-top",
+        "tm-gutter-icon-wrap",
+        "tm-gutter-btn-bottom",
+        "tm-gutter-switch-icon-wrap"
+      ],
+      "importantCount": 4
     }
   },
   "topDuplicates": [
     {
-      "selector": ":root",
+      "selector": ".tm-control-buttons",
       "totalDeclarations": 8,
-      "fileCount": 5,
+      "fileCount": 3,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/02_components/_control_panel.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 705,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 711,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_control_panel.css",
+          "line": 531,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 313,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 537,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 564,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 728,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 776,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comments-panel",
+      "totalDeclarations": 5,
+      "fileCount": 3,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/02_components/_comments.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 716,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 5,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 188,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 391,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 689,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-show-controls-float-btn",
+      "totalDeclarations": 5,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_comments.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 229,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 292,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 306,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 737,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 303,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ":root",
+      "totalDeclarations": 4,
+      "fileCount": 3,
       "isCrossFile": true,
       "files": [
         "src/player/ui/styles/00_tokens/_tokens.css",
         "src/player/ui/styles/00_tokens/_zindex.css",
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_settings_apple.css"
+        "src/player/ui/styles/01_core/_host.css"
       ],
       "locations": [
         {
@@ -911,40 +1092,18 @@
           "file": "src/player/ui/styles/01_core/_host.css",
           "line": 2,
           "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 34,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 38,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 43,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 6,
-          "column": 1
         }
       ]
     },
     {
       "selector": ":host",
-      "totalDeclarations": 8,
-      "fileCount": 5,
+      "totalDeclarations": 4,
+      "fileCount": 3,
       "isCrossFile": true,
       "files": [
         "src/player/ui/styles/00_tokens/_tokens.css",
         "src/player/ui/styles/00_tokens/_zindex.css",
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css",
-        "src/player/ui/styles/_settings_apple.css"
+        "src/player/ui/styles/01_core/_layout.css"
       ],
       "locations": [
         {
@@ -963,194 +1122,9 @@
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 34,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 38,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 43,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
+          "file": "src/player/ui/styles/01_core/_layout.css",
           "line": 1,
           "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 6,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-control-buttons",
-      "totalDeclarations": 8,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 327,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 554,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 580,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 741,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1738,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2341,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2351,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2357,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-comments-panel",
-      "totalDeclarations": 5,
-      "fileCount": 3,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 5,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 202,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 406,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 703,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2362,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-show-controls-float-btn",
-      "totalDeclarations": 5,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 214,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 276,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 289,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1765,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 317,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-settings-panel",
-      "totalDeclarations": 5,
-      "fileCount": 3,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 758,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 479,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 538,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 560,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 575,
-          "column": 5
         }
       ]
     },
@@ -1161,7 +1135,7 @@
       "isCrossFile": true,
       "files": [
         "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css"
       ],
       "locations": [
         {
@@ -1180,8 +1154,8 @@
           "column": 3
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2373,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 728,
           "column": 1
         }
       ]
@@ -1193,7 +1167,7 @@
       "isCrossFile": true,
       "files": [
         "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css"
       ],
       "locations": [
         {
@@ -1212,105 +1186,9 @@
           "column": 3
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2373,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 728,
           "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-floating-button",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_common.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 74,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 131,
-          "column": 3
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 9,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 69,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-floating-button:hover",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_common.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 112,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 137,
-          "column": 3
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 45,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 76,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-floating-button:active",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_common.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 120,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 138,
-          "column": 3
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 53,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 80,
-          "column": 5
         }
       ]
     },
@@ -1320,60 +1198,28 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 149,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 659,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 93,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 96,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 117,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container.tm-sidebar-left .tm-settings-panel",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 399,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 120,
           "column": 5
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 479,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 135,
           "column": 5
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 758,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 575,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 645,
           "column": 5
         }
       ]
@@ -1384,775 +1230,113 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 505,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 712,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2217,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 577,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2251,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-comment-fab-btn",
-      "totalDeclarations": 3,
-      "fileCount": 1,
-      "isCrossFile": false,
-      "files": [
-        "src/player/ui/styles/_comments.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 214,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 272,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 289,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container.has-composer-active .tm-control-buttons",
-      "totalDeclarations": 3,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 323,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 378,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 613,
           "column": 5
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 631,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-video-minimap",
-      "totalDeclarations": 3,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_controls.css",
-        "src/player/ui/styles/_landscape_pc.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 485,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 178,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 490,
           "column": 5
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 718,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-control-drag-handle",
-      "totalDeclarations": 3,
-      "fileCount": 1,
-      "isCrossFile": false,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 4,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 351,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 608,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container",
-      "totalDeclarations": 3,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 51,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 641,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 33,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-video-wrapper",
-      "totalDeclarations": 3,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 166,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 676,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 132,
-          "column": 1
-        }
-      ]
-    }
-  ],
-  "crossFileDuplicates": [
-    {
-      "selector": ":root",
-      "totalDeclarations": 8,
-      "fileCount": 5,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/00_tokens/_zindex.css",
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 6,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 211,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/00_tokens/_zindex.css",
-          "line": 8,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 2,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 34,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 38,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 43,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 6,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ":host",
-      "totalDeclarations": 8,
-      "fileCount": 5,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/00_tokens/_zindex.css",
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 6,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 211,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/00_tokens/_zindex.css",
-          "line": 8,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 34,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 38,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 43,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 6,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-control-buttons",
-      "totalDeclarations": 8,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 327,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 554,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 580,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 741,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1738,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2341,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2351,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2357,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-comments-panel",
-      "totalDeclarations": 5,
-      "fileCount": 3,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 5,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 202,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 406,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 703,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2362,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-show-controls-float-btn",
-      "totalDeclarations": 5,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 214,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 276,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 289,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1765,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 317,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 698,
           "column": 5
         }
       ]
     },
     {
       "selector": ".tm-settings-panel",
-      "totalDeclarations": 5,
+      "totalDeclarations": 4,
       "fileCount": 3,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css",
-        "src/player/ui/styles/_settings_apple.css"
+        "src/player/ui/styles/02_components/_settings_apple.css",
+        "src/player/ui/styles/02_components/_settings_panels.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 758,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 479,
+          "file": "src/player/ui/styles/02_components/_settings_apple.css",
+          "line": 563,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 538,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 560,
+          "file": "src/player/ui/styles/02_components/_settings_panels.css",
+          "line": 34,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 575,
+          "file": "src/player/ui/styles/02_components/_settings_panels.css",
+          "line": 95,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 746,
           "column": 5
         }
       ]
     },
     {
-      "selector": "html.tm-player-active",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 9,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 20,
-          "column": 3
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 29,
-          "column": 3
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2373,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": "body.tm-player-active",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 9,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 20,
-          "column": 3
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 29,
-          "column": 3
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2373,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-floating-button",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_common.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 74,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 131,
-          "column": 3
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 9,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 69,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-floating-button:hover",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_common.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 112,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 137,
-          "column": 3
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 45,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 76,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-floating-button:active",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_common.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 120,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 138,
-          "column": 3
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 53,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 80,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-video-container",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 149,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 659,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 93,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 117,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container.tm-sidebar-left .tm-settings-panel",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 399,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 479,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 758,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 575,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-sidebar-pos-button",
-      "totalDeclarations": 4,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 505,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 712,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2217,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2251,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container.has-composer-active .tm-control-buttons",
+      "selector": "select",
       "totalDeclarations": 3,
-      "fileCount": 2,
-      "isCrossFile": true,
+      "fileCount": 1,
+      "isCrossFile": false,
       "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css"
+        "src/player/ui/styles/01_core/_common.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 323,
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 9,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 378,
-          "column": 5
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 27,
+          "column": 1
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 631,
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
           "column": 5
         }
       ]
     },
     {
-      "selector": ".tm-video-minimap",
+      "selector": "textarea",
       "totalDeclarations": 3,
-      "fileCount": 2,
-      "isCrossFile": true,
+      "fileCount": 1,
+      "isCrossFile": false,
       "files": [
-        "src/player/ui/styles/_controls.css",
-        "src/player/ui/styles/_landscape_pc.css"
+        "src/player/ui/styles/01_core/_common.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 485,
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 9,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 178,
-          "column": 5
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 27,
+          "column": 1
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 718,
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
           "column": 5
         }
       ]
@@ -2163,24 +1347,24 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 51,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 641,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 33,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 35,
           "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 37,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 627,
+          "column": 5
         }
       ]
     },
@@ -2190,24 +1374,24 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 166,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 676,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 132,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 135,
           "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 152,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 662,
+          "column": 5
         }
       ]
     },
@@ -2217,24 +1401,24 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 184,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 688,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 163,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 160,
           "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 170,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 674,
+          "column": 5
         }
       ]
     },
@@ -2244,50 +1428,23 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 322,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 707,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 187,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 185,
           "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container .tm-settings-panel",
-      "totalDeclarations": 3,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "locations": [
+        },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 392,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 308,
           "column": 5
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 758,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 575,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 693,
           "column": 5
         }
       ]
@@ -2298,865 +1455,649 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 505,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 577,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 490,
           "column": 5
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 712,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 698,
           "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-fab-btn",
+      "totalDeclarations": 3,
+      "fileCount": 1,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/02_components/_comments.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 229,
+          "column": 1
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2217,
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 288,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 306,
           "column": 1
         }
       ]
     },
     {
-      "selector": ".tm-settings-panel.active",
+      "selector": ".tm-player-container.has-composer-active .tm-control-buttons",
       "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_comments.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 343,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 364,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 616,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-video-minimap",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_controls.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_controls.css",
+          "line": 485,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 164,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 704,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "crossFileDuplicates": [
+    {
+      "selector": ".tm-control-buttons",
+      "totalDeclarations": 8,
       "fileCount": 3,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css",
-        "src/player/ui/styles/_settings_apple.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/02_components/_control_panel.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 778,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 705,
           "column": 5
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 517,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 711,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_control_panel.css",
+          "line": 531,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 595,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 313,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 537,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 564,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 728,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 776,
           "column": 5
         }
       ]
     },
     {
-      "selector": ".tm-floating-button svg",
-      "totalDeclarations": 2,
-      "fileCount": 2,
+      "selector": ".tm-comments-panel",
+      "totalDeclarations": 5,
+      "fileCount": 3,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_common.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/02_components/_comments.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 104,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 716,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 5,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 37,
-          "column": 1
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 188,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 391,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 689,
+          "column": 5
         }
       ]
     },
     {
-      "selector": ".tm-floating-button:hover svg",
-      "totalDeclarations": 2,
+      "selector": ".tm-show-controls-float-btn",
+      "totalDeclarations": 5,
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/01_core/_host.css",
-        "src/player/ui/styles/_common.css"
+        "src/player/ui/styles/02_components/_comments.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/01_core/_host.css",
-          "line": 116,
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 229,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 49,
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 292,
           "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 306,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 737,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 303,
+          "column": 5
         }
       ]
     },
     {
-      "selector": ".tm-login-username",
-      "totalDeclarations": 2,
-      "fileCount": 2,
+      "selector": ":root",
+      "totalDeclarations": 4,
+      "fileCount": 3,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/02_components/_composer.css",
-        "src/player/ui/styles/_variables.css"
+        "src/player/ui/styles/00_tokens/_tokens.css",
+        "src/player/ui/styles/00_tokens/_zindex.css",
+        "src/player/ui/styles/01_core/_host.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/02_components/_composer.css",
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
           "line": 6,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 29,
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 211,
           "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/00_tokens/_zindex.css",
+          "line": 8,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/01_core/_host.css",
+          "line": 2,
+          "column": 1
         }
       ]
     },
     {
-      "selector": ".tm-login-password",
-      "totalDeclarations": 2,
-      "fileCount": 2,
+      "selector": ":host",
+      "totalDeclarations": 4,
+      "fileCount": 3,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/02_components/_composer.css",
-        "src/player/ui/styles/_variables.css"
+        "src/player/ui/styles/00_tokens/_tokens.css",
+        "src/player/ui/styles/00_tokens/_zindex.css",
+        "src/player/ui/styles/01_core/_layout.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/02_components/_composer.css",
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
           "line": 6,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_variables.css",
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 211,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/00_tokens/_zindex.css",
+          "line": 8,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 1,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": "html.tm-player-active",
+      "totalDeclarations": 4,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_host.css",
+        "src/player/ui/styles/01_core/_layout.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_host.css",
+          "line": 9,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/01_core/_host.css",
+          "line": 20,
+          "column": 3
+        },
+        {
+          "file": "src/player/ui/styles/01_core/_host.css",
           "line": 29,
+          "column": 3
+        },
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 728,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": "body.tm-player-active",
+      "totalDeclarations": 4,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_host.css",
+        "src/player/ui/styles/01_core/_layout.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_host.css",
+          "line": 9,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/01_core/_host.css",
+          "line": 20,
+          "column": 3
+        },
+        {
+          "file": "src/player/ui/styles/01_core/_host.css",
+          "line": 29,
+          "column": 3
+        },
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 728,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-video-container",
+      "totalDeclarations": 4,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 96,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 120,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 135,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 645,
           "column": 5
         }
       ]
     },
     {
-      "selector": ".tm-debug-log-panel-container",
-      "totalDeclarations": 2,
+      "selector": ".tm-sidebar-pos-button",
+      "totalDeclarations": 4,
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 2,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 577,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2464,
-          "column": 1
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 613,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 490,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 698,
+          "column": 5
         }
       ]
     },
     {
-      "selector": ".tm-debug-log-pill",
-      "totalDeclarations": 2,
-      "fileCount": 2,
+      "selector": ".tm-settings-panel",
+      "totalDeclarations": 4,
+      "fileCount": 3,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/02_components/_settings_apple.css",
+        "src/player/ui/styles/02_components/_settings_panels.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 19,
+          "file": "src/player/ui/styles/02_components/_settings_apple.css",
+          "line": 563,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2481,
+          "file": "src/player/ui/styles/02_components/_settings_panels.css",
+          "line": 34,
           "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_settings_panels.css",
+          "line": 95,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 746,
+          "column": 5
         }
       ]
     },
     {
-      "selector": ".tm-debug-log-pill:hover",
-      "totalDeclarations": 2,
+      "selector": ".tm-player-container",
+      "totalDeclarations": 3,
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/02_components/_debug.css",
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 35,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
           "line": 37,
-          "column": 1
+          "column": 5
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2499,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-pill-icon",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 44,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2506,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-pill-title",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 45,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2507,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-pill-status",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 46,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2508,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-pill-status.level-success",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 53,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2515,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-pill-status.level-warn",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 54,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2516,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-pill-status.level-error",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 55,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2517,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-pill-arrow",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 56,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2518,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-log-box",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 59,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2521,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-box-header",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 81,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2543,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-box-title",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 89,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2551,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-box-count",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 90,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2552,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-box-actions",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 91,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2553,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-btn",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 93,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2555,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-btn:hover",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 105,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2567,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-log-list",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 107,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2569,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-log-empty",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 121,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2583,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-log-row",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 122,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2584,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-log-row .tm-log-time",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 123,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2585,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-log-row.level-info .tm-log-msg",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 124,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2586,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-log-row.level-success .tm-log-msg",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 125,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2587,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-log-row.level-warn .tm-log-msg",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 126,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2588,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-debug-log-row.level-error .tm-log-msg",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_debug.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_debug.css",
-          "line": 127,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2589,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-tab-scroll-container",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_marker_sheet.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_marker_sheet.css",
-          "line": 2,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1605,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-tab-actions-capsule",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_marker_sheet.css",
-        "src/player/ui/styles/_controls.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_marker_sheet.css",
-          "line": 205,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 583,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container.has-sheet-open .tm-comment-fab-btn",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_marker_sheet.css",
-        "src/player/ui/styles/_comments.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_marker_sheet.css",
-          "line": 321,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 311,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container.has-sheet-open .tm-show-controls-float-btn",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_marker_sheet.css",
-        "src/player/ui/styles/_comments.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_marker_sheet.css",
-          "line": 321,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 311,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-sheet-item-comment-input",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/02_components/_marker_sheet.css",
-        "src/player/ui/styles/_variables.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/02_components/_marker_sheet.css",
-          "line": 625,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 29,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 627,
           "column": 5
         }
       ]
     },
     {
-      "selector": ".tm-comments-panel::after",
-      "totalDeclarations": 2,
+      "selector": ".tm-video-wrapper",
+      "totalDeclarations": 3,
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 24,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 135,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 227,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 152,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 662,
           "column": 5
         }
       ]
     },
     {
-      "selector": ".tm-comments-panel-list.tm-comments-list",
-      "totalDeclarations": 2,
+      "selector": ".tm-video-wrapper video",
+      "totalDeclarations": 3,
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 107,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 160,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 232,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 170,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 674,
           "column": 5
         }
       ]
     },
     {
-      "selector": ".tm-comment-input-textarea",
-      "totalDeclarations": 2,
+      "selector": ".tm-handle-container",
+      "totalDeclarations": 3,
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_variables.css"
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 387,
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 185,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 29,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 308,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 693,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-sidebar-toggle-button",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 577,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 490,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 698,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container.has-composer-active .tm-control-buttons",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_comments.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 343,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 364,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 616,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-video-minimap",
+      "totalDeclarations": 3,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_controls.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_controls.css",
+          "line": 485,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 164,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 704,
           "column": 5
         }
       ]
@@ -3167,19 +2108,41 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_variables.css"
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_modals.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 488,
-          "column": 1
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
+          "column": 5
         },
         {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 29,
+          "file": "src/player/ui/styles/02_components/_modals.css",
+          "line": 150,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-input-textarea",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_modals.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
           "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_modals.css",
+          "line": 49,
+          "column": 1
         }
       ]
     },
@@ -3189,458 +2152,40 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_variables.css"
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_modals.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 686,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 29,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-comment-section",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1501,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 246,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-comment-section:not(.is-collapsed)",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1514,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 254,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-comment-section-body",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_landscape_pc.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1523,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 262,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-report-note",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_comments.css",
-        "src/player/ui/styles/_variables.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 2136,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 29,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-video-overlay *",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_common.css",
-        "src/player/ui/styles/_variables.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_common.css",
-          "line": 172,
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
           "column": 5
         },
         {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 15,
+          "file": "src/player/ui/styles/02_components/_modals.css",
+          "line": 348,
           "column": 1
         }
       ]
     },
     {
-      "selector": ".tm-volume-control",
+      "selector": ".tm-sheet-item-comment-input",
       "totalDeclarations": 2,
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_controls.css",
-        "src/player/ui/styles/_player.css"
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_marker_sheet.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 9,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1567,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-settings-label",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_controls.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 399,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 583,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-time-control-button-active",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_controls.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 469,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1688,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-time-control-button-after-active",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_controls.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 479,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1693,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-control-buttons .tm-tab-pill",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_controls.css",
-        "src/player/ui/styles/_landscape_pc.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 583,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 750,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-control-buttons.dragging",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 356,
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
           "column": 5
         },
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1770,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-video-overlay",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 385,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 5,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container.tm-sidebar-hidden .tm-comments-panel",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 490,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 2263,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container > .tm-player-title",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 519,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1972,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-button-container",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_player.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 724,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 59,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container .tm-settings-panel.active",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 778,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 595,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-player-container.tm-sidebar-left .tm-settings-panel.active",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_landscape_pc.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 778,
-          "column": 5
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 595,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-settings-sources-subpanel",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_player.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 623,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 211,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "selector": ".tm-webdav-input",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_player.css",
-        "src/player/ui/styles/_variables.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 737,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 29,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-about-check-row",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_player.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1132,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 480,
+          "file": "src/player/ui/styles/02_components/_marker_sheet.css",
+          "line": 625,
           "column": 1
         }
       ]
@@ -3651,41 +2196,19 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_player.css",
-        "src/player/ui/styles/_variables.css"
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_control_panel.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_player.css",
-          "line": 1408,
-          "column": 1
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
+          "column": 5
         },
         {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 29,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "selector": ".tm-apple-duration-input",
-      "totalDeclarations": 2,
-      "fileCount": 2,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/_settings_apple.css",
-        "src/player/ui/styles/_variables.css"
-      ],
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 318,
+          "file": "src/player/ui/styles/02_components/_control_panel.css",
+          "line": 192,
           "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 29,
-          "column": 5
         }
       ]
     },
@@ -3695,66 +2218,640 @@
       "fileCount": 2,
       "isCrossFile": true,
       "files": [
-        "src/player/ui/styles/_settings_apple.css",
-        "src/player/ui/styles/_variables.css"
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_settings_apple.css"
       ],
       "locations": [
         {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 336,
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_settings_apple.css",
+          "line": 333,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-webdav-input",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_settings_cards.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_settings_cards.css",
+          "line": 37,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-apple-duration-input",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_settings_apple.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_settings_apple.css",
+          "line": 314,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-login-username",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_composer.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_composer.css",
+          "line": 6,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-login-password",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_composer.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_composer.css",
+          "line": 6,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-report-note",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_common.css",
+        "src/player/ui/styles/02_components/_modals.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_common.css",
+          "line": 36,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_modals.css",
+          "line": 672,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-video-overlay",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 6,
           "column": 1
         },
         {
-          "file": "src/player/ui/styles/_variables.css",
-          "line": 29,
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 371,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-button-container",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 62,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 710,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container > .tm-player-title",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 556,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 501,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container.tm-sidebar-hidden .tm-comments-panel",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/01_core/_layout.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/01_core/_layout.css",
+          "line": 627,
+          "column": 5
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 475,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comments-panel::after",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_comments.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 25,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 213,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comments-panel-list.tm-comments-list",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_comments.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 111,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 218,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container.has-sheet-open .tm-comment-fab-btn",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_comments.css",
+        "src/player/ui/styles/02_components/_marker_sheet.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 330,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_marker_sheet.css",
+          "line": 321,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-player-container.has-sheet-open .tm-show-controls-float-btn",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_comments.css",
+        "src/player/ui/styles/02_components/_marker_sheet.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 330,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_marker_sheet.css",
+          "line": 321,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-section",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_comments_sections.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments_sections.css",
+          "line": 221,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 232,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-section:not(.is-collapsed)",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_comments_sections.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments_sections.css",
+          "line": 234,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 240,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-comment-section-body",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_comments_sections.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments_sections.css",
+          "line": 243,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 248,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-volume-control",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_control_panel.css",
+        "src/player/ui/styles/02_components/_controls.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_control_panel.css",
+          "line": 356,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_controls.css",
+          "line": 8,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-tab-scroll-container",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_control_panel.css",
+        "src/player/ui/styles/02_components/_marker_sheet.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_control_panel.css",
+          "line": 395,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_marker_sheet.css",
+          "line": 2,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-time-control-button-active",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_control_panel.css",
+        "src/player/ui/styles/02_components/_controls.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_control_panel.css",
+          "line": 479,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_controls.css",
+          "line": 468,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-time-control-button-after-active",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_control_panel.css",
+        "src/player/ui/styles/02_components/_controls.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_control_panel.css",
+          "line": 484,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_controls.css",
+          "line": 478,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-control-panel",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_control_panel.css",
+        "src/player/ui/styles/03_responsive/_single_hand.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_control_panel.css",
+          "line": 514,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_single_hand.css",
+          "line": 18,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-control-buttons.dragging",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_control_panel.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_control_panel.css",
+          "line": 563,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 342,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-settings-label",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_controls.css",
+        "src/player/ui/styles/02_components/_settings_panels.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_controls.css",
+          "line": 393,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_settings_panels.css",
+          "line": 142,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-control-buttons .tm-tab-pill",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_controls.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_controls.css",
+          "line": 588,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 737,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "selector": ".tm-tab-actions-capsule",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_controls.css",
+        "src/player/ui/styles/02_components/_marker_sheet.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_controls.css",
+          "line": 588,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_marker_sheet.css",
+          "line": 205,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-settings-sources-subpanel",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_settings_apple.css",
+        "src/player/ui/styles/02_components/_settings_panels.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_settings_apple.css",
+          "line": 206,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_settings_panels.css",
+          "line": 184,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-about-check-row",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_settings_apple.css",
+        "src/player/ui/styles/02_components/_settings_cards.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_settings_apple.css",
+          "line": 481,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_settings_cards.css",
+          "line": 423,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "selector": ".tm-settings-panel.active",
+      "totalDeclarations": 2,
+      "fileCount": 2,
+      "isCrossFile": true,
+      "files": [
+        "src/player/ui/styles/02_components/_settings_panels.css",
+        "src/player/ui/styles/03_responsive/_landscape.css"
+      ],
+      "locations": [
+        {
+          "file": "src/player/ui/styles/02_components/_settings_panels.css",
+          "line": 72,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/03_responsive/_landscape.css",
+          "line": 766,
           "column": 5
         }
       ]
     }
   ],
   "rootHostVariables": [
-    {
-      "varName": "--sidebar-width",
-      "declarationCount": 5,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_landscape_pc.css"
-      ],
-      "declarations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 184,
-          "value": "clamp(350px, 28vw, 420px)",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 212,
-          "value": "clamp(380px, 22vw, 560px)",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 35,
-          "value": "clamp(350px, 28vw, 420px)",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 39,
-          "value": "clamp(350px, 28vw, 420px)",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 44,
-          "value": "clamp(380px, 22vw, 560px)",
-          "selector": ":root, :host"
-        }
-      ]
-    },
     {
       "varName": "--brand-pink",
       "declarationCount": 2,
@@ -3804,265 +2901,24 @@
       ]
     },
     {
-      "varName": "--mp-settings-card-bg",
+      "varName": "--sidebar-width",
       "declarationCount": 2,
       "isMultiple": true,
-      "isCrossFile": true,
+      "isCrossFile": false,
       "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
+        "src/player/ui/styles/00_tokens/_tokens.css"
       ],
       "declarations": [
         {
           "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 87,
-          "value": "rgba(255, 255, 255, 0.05)",
+          "line": 184,
+          "value": "clamp(350px, 28vw, 420px)",
           "selector": ":root, :host"
         },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 7,
-          "value": "rgba(255, 255, 255, 0.05)",
-          "selector": ":root, :host"
-        }
-      ]
-    },
-    {
-      "varName": "--mp-settings-card-border",
-      "declarationCount": 2,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "declarations": [
         {
           "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 88,
-          "value": "rgba(255, 255, 255, 0.08)",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 8,
-          "value": "rgba(255, 255, 255, 0.08)",
-          "selector": ":root, :host"
-        }
-      ]
-    },
-    {
-      "varName": "--mp-settings-card-radius",
-      "declarationCount": 2,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "declarations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 89,
-          "value": "12px",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 9,
-          "value": "12px",
-          "selector": ":root, :host"
-        }
-      ]
-    },
-    {
-      "varName": "--mp-settings-row-height",
-      "declarationCount": 2,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "declarations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 90,
-          "value": "44px",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 10,
-          "value": "44px",
-          "selector": ":root, :host"
-        }
-      ]
-    },
-    {
-      "varName": "--mp-settings-divider",
-      "declarationCount": 2,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "declarations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 91,
-          "value": "rgba(255, 255, 255, 0.06)",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 11,
-          "value": "rgba(255, 255, 255, 0.06)",
-          "selector": ":root, :host"
-        }
-      ]
-    },
-    {
-      "varName": "--mp-settings-text-primary",
-      "declarationCount": 2,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "declarations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 92,
-          "value": "#ffffff",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 12,
-          "value": "#ffffff",
-          "selector": ":root, :host"
-        }
-      ]
-    },
-    {
-      "varName": "--mp-settings-text-secondary",
-      "declarationCount": 2,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "declarations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 93,
-          "value": "rgba(255, 255, 255, 0.55)",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 13,
-          "value": "rgba(255, 255, 255, 0.55)",
-          "selector": ":root, :host"
-        }
-      ]
-    },
-    {
-      "varName": "--mp-settings-text-muted",
-      "declarationCount": 2,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "declarations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 94,
-          "value": "rgba(255, 255, 255, 0.38)",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 14,
-          "value": "rgba(255, 255, 255, 0.38)",
-          "selector": ":root, :host"
-        }
-      ]
-    },
-    {
-      "varName": "--mp-settings-switch-active",
-      "declarationCount": 2,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "declarations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 95,
-          "value": "#0a84ff",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 15,
-          "value": "#0a84ff",
-          "selector": ":root, :host"
-        }
-      ]
-    },
-    {
-      "varName": "--mp-settings-switch-track",
-      "declarationCount": 2,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "declarations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 96,
-          "value": "rgba(255, 255, 255, 0.16)",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 16,
-          "value": "rgba(255, 255, 255, 0.16)",
-          "selector": ":root, :host"
-        }
-      ]
-    },
-    {
-      "varName": "--mp-settings-switch-thumb",
-      "declarationCount": 2,
-      "isMultiple": true,
-      "isCrossFile": true,
-      "files": [
-        "src/player/ui/styles/00_tokens/_tokens.css",
-        "src/player/ui/styles/_settings_apple.css"
-      ],
-      "declarations": [
-        {
-          "file": "src/player/ui/styles/00_tokens/_tokens.css",
-          "line": 97,
-          "value": "#ffffff",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 17,
-          "value": "#ffffff",
+          "line": 212,
+          "value": "clamp(380px, 22vw, 560px)",
           "selector": ":root, :host"
         }
       ]
@@ -4964,6 +3820,193 @@
           "file": "src/player/ui/styles/00_tokens/_tokens.css",
           "line": 84,
           "value": "rgba(255, 255, 255, 0.16)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-card-bg",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 87,
+          "value": "rgba(255, 255, 255, 0.05)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-card-border",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 88,
+          "value": "rgba(255, 255, 255, 0.08)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-card-radius",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 89,
+          "value": "12px",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-row-height",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 90,
+          "value": "44px",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-divider",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 91,
+          "value": "rgba(255, 255, 255, 0.06)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-text-primary",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 92,
+          "value": "#ffffff",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-text-secondary",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 93,
+          "value": "rgba(255, 255, 255, 0.55)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-text-muted",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 94,
+          "value": "rgba(255, 255, 255, 0.38)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-switch-active",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 95,
+          "value": "#0a84ff",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-switch-track",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 96,
+          "value": "rgba(255, 255, 255, 0.16)",
+          "selector": ":root, :host"
+        }
+      ]
+    },
+    {
+      "varName": "--mp-settings-switch-thumb",
+      "declarationCount": 1,
+      "isMultiple": false,
+      "isCrossFile": false,
+      "files": [
+        "src/player/ui/styles/00_tokens/_tokens.css"
+      ],
+      "declarations": [
+        {
+          "file": "src/player/ui/styles/00_tokens/_tokens.css",
+          "line": 97,
+          "value": "#ffffff",
           "selector": ":root, :host"
         }
       ]
@@ -6244,163 +5287,24 @@
       ]
     }
   ],
-  "deadSelectorsGrade1": [
-    {
-      "selector": ".jc-site",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 827,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "jc-site"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    },
-    {
-      "selector": ".jc-site-jable",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 839,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "jc-site-jable"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    },
-    {
-      "selector": ".jc-site-javlib",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 845,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "jc-site-javlib"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    },
-    {
-      "selector": ".jc-c-sep",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1006,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "jc-c-sep"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    },
-    {
-      "selector": ".jc-emoji",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1248,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "jc-emoji"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    },
-    {
-      "selector": ".jc-site-javlib-review",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1492,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "jc-site-javlib-review"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    },
-    {
-      "selector": ".jc-card-highlight-flash",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1742,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "jc-card-highlight-flash"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    },
-    {
-      "selector": ".tm-progress-handle",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 375,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "tm-progress-handle"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    },
-    {
-      "selector": ".tm-progress-handle:hover",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 392,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "tm-progress-handle"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    },
-    {
-      "selector": ".tm-peach-advisor-btn-sub",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 951,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "tm-peach-advisor-btn-sub"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    },
-    {
-      "selector": ".tm-peach-advisor-btn-sub:hover",
-      "locations": [
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 961,
-          "column": 1
-        }
-      ],
-      "classes": [
-        "tm-peach-advisor-btn-sub"
-      ],
-      "suspicionReason": "自研组件类名全部 0 引用 (高度嫌疑死选择器)"
-    }
-  ],
+  "deadSelectorsGrade1": [],
   "deadClassesMissPlayer": [
+    {
+      "className": "jc-spam",
+      "cssDeclarations": 2,
+      "cssLocations": [
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 443,
+          "column": 1
+        },
+        {
+          "file": "src/player/ui/styles/02_components/_comments.css",
+          "line": 448,
+          "column": 1
+        }
+      ]
+    },
     {
       "className": "mp-composer-publish-btn",
       "cssDeclarations": 1,
@@ -6408,147 +5312,6 @@
         {
           "file": "src/player/ui/styles/02_components/_composer.css",
           "line": 122,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "className": "jc-site",
-      "cssDeclarations": 1,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 827,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "className": "jc-site-jable",
-      "cssDeclarations": 1,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 839,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "className": "jc-site-javlib",
-      "cssDeclarations": 1,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 845,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "className": "jc-c-sep",
-      "cssDeclarations": 1,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1006,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "className": "jc-spam",
-      "cssDeclarations": 2,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1015,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1020,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "className": "jc-emoji",
-      "cssDeclarations": 1,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1248,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "className": "jc-site-javlib-review",
-      "cssDeclarations": 1,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1492,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "className": "jc-card-highlight-flash",
-      "cssDeclarations": 1,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_comments.css",
-          "line": 1742,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "className": "tm-progress-handle",
-      "cssDeclarations": 3,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 375,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 392,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_controls.css",
-          "line": 392,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "className": "tm-settings-options",
-      "cssDeclarations": 1,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_landscape_pc.css",
-          "line": 514,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "className": "tm-peach-advisor-btn-sub",
-      "cssDeclarations": 2,
-      "cssLocations": [
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 951,
-          "column": 1
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 961,
           "column": 1
         }
       ]
@@ -7040,12 +5803,6 @@
           "line": 95,
           "value": "#0a84ff",
           "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 15,
-          "value": "#0a84ff",
-          "selector": ":root, :host"
         }
       ],
       "usedInCss": false,
@@ -7060,12 +5817,6 @@
           "line": 96,
           "value": "rgba(255, 255, 255, 0.16)",
           "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 16,
-          "value": "rgba(255, 255, 255, 0.16)",
-          "selector": ":root, :host"
         }
       ],
       "usedInCss": false,
@@ -7078,12 +5829,6 @@
         {
           "file": "src/player/ui/styles/00_tokens/_tokens.css",
           "line": 97,
-          "value": "#ffffff",
-          "selector": ":root, :host"
-        },
-        {
-          "file": "src/player/ui/styles/_settings_apple.css",
-          "line": 17,
           "value": "#ffffff",
           "selector": ":root, :host"
         }

@@ -1,0 +1,755 @@
+/* 模态框通用按键与表单控件样式 (Apple HIG 统一规范) */
+.tm-custom-modal-cancel-btn {
+    height: 38px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tm-custom-modal-cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+}
+.tm-custom-modal-cancel-btn:active {
+    transform: scale(0.96);
+}
+
+.tm-custom-modal-submit-btn {
+    height: 38px;
+    background: #0a84ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+    transition: background-color 0.15s, transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tm-custom-modal-submit-btn:hover {
+    background: #0070e0;
+}
+.tm-custom-modal-submit-btn:active {
+    transform: scale(0.96);
+}
+
+.tm-comment-input-textarea {
+    width: 100%;
+    height: 90px;
+    margin: 12px 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+    font-size: 16px;
+    resize: none;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s, background-color 0.15s;
+    pointer-events: auto;
+}
+.tm-comment-input-textarea:focus {
+    border-color: #0a84ff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tm-comment-submit-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    padding: 10px 14px max(12px, env(safe-area-inset-bottom, 12px)) 14px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+}
+.tm-ios-keyboard-open .tm-comment-submit-bar {
+    padding-bottom: 10px;
+}
+
+.tm-comment-add-tag-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.15s, border-color 0.15s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+.tm-comment-add-tag-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+.tm-comment-add-tag-btn.is-open,
+.tm-comment-add-tag-btn.has-selected {
+    background: rgba(10, 132, 255, 0.18);
+    border-color: rgba(10, 132, 255, 0.48);
+    color: #0a84ff;
+}
+.tm-comment-add-tag-btn:active {
+    transform: scale(0.94);
+}
+.tm-comment-add-tag-btn svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tm-comment-add-tag-btn.is-open svg {
+    transform: rotate(45deg);
+}
+
+/* 附带高光片段数量角标 */
+.tm-add-tag-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #0a84ff;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.tm-comment-text-input {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    padding: 0 14px;
+    color: #ffffff;
+    font-size: 16px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s, background-color 0.15s;
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+    caret-color: #0a84ff;
+    cursor: text;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+.tm-comment-text-input:focus {
+    border-color: rgba(10, 132, 255, 0.55);
+    background: rgba(255, 255, 255, 0.12);
+}
+.tm-comment-text-input::placeholder {
+    color: rgba(255, 255, 255, 0.38);
+}
+
+.tm-comment-send-btn {
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 18px;
+    border: none;
+    background: #0a84ff;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.15s, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+}
+.tm-comment-send-btn:hover {
+    background: #0070e0;
+}
+.tm-comment-send-btn:active {
+    transform: scale(0.95);
+}
+
+/* 附带高光片段内嵌抽屉 (向上抽屉式平滑展开与收起，消除双层浮窗嵌套与键盘裁切) */
+.tm-comment-tag-select-modal {
+    position: relative;
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding: 0 14px;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                padding 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s ease;
+}
+.tm-comment-tag-select-modal.visible {
+    max-height: min(220px, calc(var(--visual-viewport-height, 100dvh) - 106px));
+    opacity: 1;
+    padding: 8px 14px 4px 14px;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.tm-tag-select-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+}
+
+.tm-tag-select-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: -0.1px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.tm-tag-select-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tm-tag-select-all-btn {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(10, 132, 255, 0.14);
+    border: none;
+    color: #0a84ff;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.15s, transform 0.12s;
+}
+.tm-tag-select-all-btn:hover {
+    background: rgba(10, 132, 255, 0.24);
+}
+.tm-tag-select-all-btn:active {
+    transform: scale(0.96);
+}
+
+.tm-tag-deselect-all-btn {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.15s, transform 0.12s;
+}
+.tm-tag-deselect-all-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+.tm-tag-deselect-all-btn:active {
+    transform: scale(0.96);
+}
+
+.tm-tag-select-close-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+    outline: none;
+    padding: 0;
+}
+.tm-tag-select-close-btn svg {
+    width: 12px;
+    height: 12px;
+}
+.tm-tag-select-close-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+}
+
+.tm-tag-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 2px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+}
+
+.tm-tag-select-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 2px;
+    border-radius: 0;
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.tm-tag-select-item:last-child {
+    border-bottom: none;
+}
+
+.tm-tag-remark-input {
+    flex: 1;
+    min-width: 0;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 7px;
+    padding: 0 10px;
+    color: #ffffff;
+    font-size: 16px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s, background-color 0.15s;
+    user-select: text;
+    -webkit-user-select: text;
+    caret-color: #0a84ff;
+}
+.tm-tag-remark-input:focus {
+    border-color: rgba(10, 132, 255, 0.55);
+    background: rgba(255, 255, 255, 0.11);
+}
+.tm-tag-select-empty {
+    padding: 12px;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.42);
+}
+
+/* 自定义拟态模态框 (登录 / 确认 / 提示统一 Apple 暗色毛玻璃材质) */
+.tm-custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: var(--keyboard-height, 0px);
+    background-color: rgba(0, 0, 0, 0.52);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    box-sizing: border-box;
+    z-index: var(--z-modal);
+    opacity: 0;
+    transition: opacity 0.22s ease, bottom 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+}
+
+.tm-custom-modal-overlay.active {
+    opacity: 1;
+}
+
+.tm-custom-modal-content {
+    background: rgba(26, 26, 30, 0.96);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 18px;
+    padding: 20px 22px;
+    width: min(90vw, 330px);
+    max-width: 330px;
+    max-height: calc(var(--visual-viewport-height, 100dvh) - 32px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    text-align: center;
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.6);
+    transform: scale(0.94);
+    transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #ffffff;
+}
+
+.tm-custom-modal-overlay.active .tm-custom-modal-content {
+    transform: scale(1);
+}
+
+.tm-custom-modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.2px;
+}
+
+.tm-custom-modal-message {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.68);
+    margin-bottom: 18px;
+    line-height: 1.45;
+}
+
+.tm-custom-modal-close-btn {
+    height: 38px;
+    background: #0a84ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
+}
+
+.tm-custom-modal-close-btn:hover {
+    background: #0070e0;
+}
+
+.tm-custom-modal-close-btn:active {
+    transform: scale(0.96);
+}
+
+/* 评论区上报按钮与弹窗样式 */
+.jc-action-btn.jc-report-btn {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: var(--z-base);
+}
+.tm-comments-panel.is-dimmed .jc-action-btn.jc-report-btn {
+    pointer-events: auto !important;
+    z-index: calc(var(--z-base) + 2);
+}
+.tm-custom-modal-overlay.tm-report-modal-overlay {
+    z-index: var(--z-modal);
+}
+.tm-report-modal-dialog {
+    background: rgba(28, 28, 30, 0.95);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 20px;
+    width: 90%;
+    max-width: 360px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    color: #fff;
+    text-align: left;
+    transform: scale(0.95);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tm-custom-modal-overlay.active .tm-report-modal-dialog {
+    transform: scale(1);
+}
+
+.tm-comments-panel.is-dimmed .tm-comments-list {
+    pointer-events: auto !important;
+}
+.tm-comments-panel.is-dimmed .jc-card,
+.tm-comments-panel.is-dimmed .jc-action-btn,
+.tm-comments-panel.is-dimmed .jc-report-btn {
+    pointer-events: auto !important;
+}
+
+/* 番号悬浮预览浮窗 */
+.jc-code-preview-popover {
+    position: fixed;
+    z-index: var(--z-composer);
+    width: 256px;
+    background: rgba(20, 20, 24, 0.88);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.jc-code-preview-popover.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.jc-code-preview-video-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    overflow: hidden;
+}
+
+.jc-code-preview-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.jc-code-preview-loading,
+.jc-code-preview-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(15, 15, 18, 0.95);
+    padding: 10px;
+    text-align: center;
+}
+
+.mp-preview-fallback-icon {
+    opacity: 0.6;
+}
+
+.jc-code-preview-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #007aff;
+    border-radius: 50%;
+    animation: jc-spin 0.8s linear infinite;
+}
+
+@keyframes jc-spin {
+    to { transform: rotate(360deg); }
+}
+
+.jc-code-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jc-code-preview-title {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: monospace;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+.jc-code-preview-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(0, 122, 255, 0.25);
+    color: #0a84ff;
+    font-weight: 600;
+}
+
+/* 番号悬浮预览浮窗 */
+/* 预览窗口悬浮跳转引导条与点击反馈 */
+.jc-code-preview-video-wrap {
+    cursor: pointer;
+}
+
+.jc-code-preview-hover-hint {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 4px 8px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 10px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.jc-code-preview-video-wrap:hover .jc-code-preview-hover-hint {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 评论上报弹窗组件 */
+.tm-report-modal-hint {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 10px;
+}
+
+.tm-report-modal-preview {
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    max-height: 80px;
+    overflow-y: auto;
+}
+
+.tm-report-chip-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.tm-report-chip {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.tm-report-chip.active {
+    background: #0a84ff;
+    color: #fff;
+}
+
+.tm-report-note {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: #fff;
+    font-size: 16px;
+    height: 68px;
+    margin-bottom: 14px;
+    outline: none;
+    resize: none;
+}
+
+.tm-report-modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* ===== Share Modal ===== */
+.mp-sheet-share-desc {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 14px;
+    line-height: 1.45;
+}
+
+.mp-sheet-share-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.mp-sheet-share-btn-copy-url {
+    background: #0a84ff;
+    color: #ffffff;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.mp-sheet-share-btn-copy-url:hover {
+    background: #0070e0;
+}
+
+.mp-sheet-share-btn-copy-md {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.mp-sheet-share-btn-copy-md:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.mp-sheet-share-btn-close {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    height: 34px;
+    padding: 0 12px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    transition: color 0.2s;
+}
+
+.mp-sheet-share-btn-close:hover {
+    color: #ffffff;
+}

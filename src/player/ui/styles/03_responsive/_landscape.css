@@ -1,6 +1,6 @@
 /* =========== PC 宽屏及大屏设备自适应样式 =========== */
-
 /* 全局默认隐藏拖动句柄，仅在悬浮窗模式下开启 */
+
 .tm-control-drag-handle {
     display: none;
     width: 100%;
@@ -30,22 +30,8 @@
     background-color: hsla(var(--shadcn-foreground) / 0.6);
 }
 
-/* 1. 响应式布局参数定义 */
-:root, :host {
-    --sidebar-width: clamp(350px, 28vw, 420px);
-}
-@media screen and (min-width: 1024px) and (orientation: landscape) {
-    :root, :host {
-        --sidebar-width: clamp(350px, 28vw, 420px);
-    }
-}
-@media screen and (min-width: 1440px) and (orientation: landscape) {
-    :root, :host {
-        --sidebar-width: clamp(380px, 22vw, 560px);
-    }
-}
-
 /* 2. 横屏分栏基础样式 (仅限 PC 及大屏设备 >= 1024px) */
+
 @media screen and (min-width: 1024px) and (orientation: landscape) {
     /* 调整播放器容器为 Grid 双分栏布局 */
     .tm-player-container {
@@ -401,7 +387,6 @@
         right: auto;
     }
 
-
     /* 控制栏吸附在评论区角落（TR/BR/TL/BL）时的防遮挡双容器排版 (采用 padding 规避 Grid stretch 计算缺陷) */
     .tm-comments-panel {
         transition: padding-top 0.25s cubic-bezier(0.25, 1, 0.5, 1), padding-bottom 0.25s cubic-bezier(0.25, 1, 0.5, 1);
@@ -511,9 +496,6 @@
     .tm-player-container[class*="tm-controls-docked-"] .tm-settings-panel {
         padding: 0px;
     }
-    .tm-player-container[class*="tm-controls-docked-"] .tm-settings-panel .tm-settings-options {
-        padding: 12px;
-    }
 
     /* 横屏分栏模式下，调整独立标题位置与宽度以居中在视频区并防止遮挡侧边栏 */
     .tm-player-container > .tm-player-title {
@@ -550,6 +532,7 @@
 
 /* 3. iPad 竖屏及中低宽屏横屏自适应样式 */
 /* 3.1 中低宽屏横屏 (480px - 1023px)：控制面板作为右下角紧凑悬浮卡片 */
+
 @media screen and (min-width: 480px) and (max-width: 1023px) and (orientation: landscape) {
     .tm-control-buttons {
         position: fixed;
@@ -576,6 +559,7 @@
 }
 
 /* 3.2 iPad 竖屏：控制面板向上避让底部评论输入栏与发送按钮，彻底杜绝交互遮挡阻断 (中大屏平板 >=601px 竖屏) */
+
 @media screen and (min-width: 601px) and (orientation: portrait) {
     .tm-control-buttons {
         position: fixed;
@@ -602,6 +586,7 @@
 }
 
 /* 3.3 悬浮卡片通用拖动句柄与显隐过渡 */
+
 @media screen and (min-width: 601px) and (orientation: portrait),
        screen and (min-width: 480px) and (max-width: 1023px) and (orientation: landscape) {
     /* 激活拖动句柄的显示 */
@@ -636,6 +621,7 @@
 }
 
 /* 4. 移动端/小屏横屏 (max-width: 1023px) 全宽纯净观影与安全区优化 */
+
 @media screen and (max-width: 1023px) and (orientation: landscape) {
     /* 播放器容器全屏充满，不分栏，消除侧边栏纯黑死区 */
     .tm-player-container {
@@ -737,6 +723,7 @@
 }
 
 /* 针对小屏或矮屏幕横屏（如手机横屏）的控制栏紧凑布局优化 */
+
 @media screen and (orientation: landscape) and (max-height: 480px) {
     .tm-control-buttons {
         padding: 6px 12px;
@@ -754,6 +741,7 @@
 }
 
 /* 针对矮屏幕横屏视口 (如 iPhone/Android 横屏观影，高度 <= 500px) 设置面板自适应居中与全高平滑滚动 */
+
 @media screen and (orientation: landscape) and (max-height: 500px) {
     .tm-player-container .tm-settings-panel,
     .tm-player-container.tm-sidebar-left .tm-settings-panel,
@@ -779,5 +767,16 @@
     .tm-player-container.tm-sidebar-left .tm-settings-panel.active,
     .tm-settings-panel.active {
         transform: translate(-50%, 0);
+    }
+}
+
+/* 移动端与竖屏手机控制面板宽度约束 (保持优雅触控比例，非内嵌在 tm-control-panel 下的降级适配) */
+
+@media screen and (min-width: 481px) and (max-width: 600px) and (orientation: landscape) {
+    .tm-control-buttons {
+        width: calc(100vw - 24px);
+        max-width: 480px;
+        min-width: 0;
+        border-radius: 16px;
     }
 }

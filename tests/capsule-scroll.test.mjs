@@ -3,17 +3,17 @@ import fs from 'fs';
 
 console.log('🧪 开始执行控制面板胶囊区域左右滑动手势守卫测试...');
 
-const playerCss = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
+const controlPanelCss = fs.readFileSync('src/player/ui/styles/02_components/_control_panel.css', 'utf8');
 const markerSheetCss = fs.readFileSync('src/player/ui/styles/02_components/_marker_sheet.css', 'utf8');
 
-// 1. 验证 _player.css 中 .tm-tab-scroll-container 的 pointer-events 必须为 auto，严禁为 none
-const playerScrollMatch = playerCss.match(/\.tm-tab-scroll-container\s*\{([^}]+)\}/);
-assert.ok(playerScrollMatch, '_player.css 必须包含 .tm-tab-scroll-container 定义');
+// 1. 验证 _control_panel.css 中 .tm-tab-scroll-container 的 pointer-events 必须为 auto，严禁为 none
+const playerScrollMatch = controlPanelCss.match(/\.tm-tab-scroll-container\s*\{([^}]+)\}/);
+assert.ok(playerScrollMatch, '_control_panel.css 必须包含 .tm-tab-scroll-container 定义');
 const playerRules = playerScrollMatch[1];
-assert.ok(!playerRules.includes('pointer-events: none'), '_player.css 严禁包含 pointer-events: none，否则直接杀死滑动手势！');
-assert.ok(playerRules.includes('pointer-events: auto'), '_player.css 必须明确声明 pointer-events: auto');
-assert.ok(playerRules.includes('touch-action: pan-x'), '_player.css 必须声明 touch-action: pan-x');
-console.log('✅ 1. _player.css 胶囊滚动容器 pointer-events: auto 与 touch-action: pan-x 校验通过');
+assert.ok(!playerRules.includes('pointer-events: none'), '_control_panel.css 严禁包含 pointer-events: none，否则直接杀死滑动手势！');
+assert.ok(playerRules.includes('pointer-events: auto'), '_control_panel.css 必须明确声明 pointer-events: auto');
+assert.ok(playerRules.includes('touch-action: pan-x'), '_control_panel.css 必须声明 touch-action: pan-x');
+console.log('✅ 1. _control_panel.css 胶囊滚动容器 pointer-events: auto 与 touch-action: pan-x 校验通过');
 
 // 2. 验证 _marker_sheet.css 中 .tm-tab-scroll-container 的 pointer-events 必须为 auto
 const sheetScrollMatch = markerSheetCss.match(/\.tm-tab-scroll-container\s*\{([^}]+)\}/);

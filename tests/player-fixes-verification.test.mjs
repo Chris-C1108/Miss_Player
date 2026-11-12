@@ -147,7 +147,7 @@ console.log('✅ 6. 手柄拖拽与 Minimap 联动守卫验证通过');
 // 7. 验证通用媒体盒模型缩放与 Web Components 挂载解耦
 // ---------------------------------------------------------
 console.log('▶ 7. 验证通用媒体盒模型缩放与 Web Components 挂载解耦...');
-const playerCssCode = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
+const playerCssCode = fs.readFileSync('src/player/ui/styles/01_core/_layout.css', 'utf8');
 assert.ok(
     playerCssCode.includes('width: auto !important;') &&
     playerCssCode.includes('max-width: none !important;'),
@@ -258,7 +258,7 @@ console.log('▶ 12. 验证高光列表、评论发表栏、附带片段抽屉�
 const markerSheetJs = fs.readFileSync('src/player/managers/MarkerBottomSheet.js', 'utf8');
 const markerSheetCss = fs.readFileSync('src/player/ui/styles/02_components/_marker_sheet.css', 'utf8');
 const commentComposerJs = fs.readFileSync('src/player/controls/CommentComposer.js', 'utf8');
-const commentsCss = fs.readFileSync('src/player/ui/styles/_comments.css', 'utf8');
+const commentsCss = fs.readFileSync('src/player/ui/styles/02_components/_comments.css', 'utf8');
 const composerCss = fs.readFileSync('src/player/ui/styles/02_components/_composer.css', 'utf8');
 
 assert.ok(
@@ -423,8 +423,8 @@ console.log('▶ 17. 验证系统级全局事件黑洞、底层树物理冻结�
 const updatedEventManagerCode = fs.readFileSync('src/player/managers/EventManager.js', 'utf8');
 const settingsManagerCode = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
 const markerSheetCssCode = fs.readFileSync('src/player/ui/styles/02_components/_marker_sheet.css', 'utf8');
-const commentsCssCode = fs.readFileSync('src/player/ui/styles/_comments.css', 'utf8');
-const updatedPlayerCss = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
+const commentsCssCode = fs.readFileSync('src/player/ui/styles/02_components/_comments.css', 'utf8');
+const updatedPlayerCss = fs.readFileSync('src/player/ui/styles/01_core/_layout.css', 'utf8');
 const surfaceMachineCode = fs.readFileSync('src/player/state/UISurfaceMachine.js', 'utf8');
 
 // 17.1 验证 UISurfaceMachine 系统级事件黑洞网 (Event Sink)
@@ -483,7 +483,7 @@ console.log('✅ 17. 系统级全局事件黑洞、底层树物理冻结与焦�
 console.log('▶ 18. 验证菜单栏上滑手势锁定与 iOS 虚拟键盘发评栏物理高度避让...');
 const singleHandJsCode = fs.readFileSync('src/player/managers/SingleHandManager.js', 'utf8');
 const latestUiManagerJs = fs.readFileSync('src/player/ui/UIManager.js', 'utf8');
-const latestPlayerCss = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
+const latestPlayerCss = fs.readFileSync('src/player/ui/styles/01_core/_layout.css', 'utf8');
 const latestSurfaceMachine = fs.readFileSync('src/player/state/UISurfaceMachine.js', 'utf8');
 const latestEventManager = fs.readFileSync('src/player/managers/EventManager.js', 'utf8');
 const latestVideoSwipe = fs.readFileSync('src/player/managers/videoSwipeManager.js', 'utf8');
@@ -533,8 +533,8 @@ console.log('✅ 18. 菜单栏上滑手势锁定与 iOS 虚拟键盘发评栏物
 console.log('▶ 19. 验证评论栏底部向上弹出抽屉式、附加片段抽屉默认收起与无模糊遮罩...');
 const commentComposerCode = fs.readFileSync('src/player/controls/CommentComposer.js', 'utf8');
 const commentPanelCode = fs.readFileSync('src/player/controls/CommentPanel.js', 'utf8');
-const latestCommentsCss = fs.readFileSync('src/player/ui/styles/_comments.css', 'utf8');
-const latestPlayerCssV19 = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
+const latestCommentsCss = fs.readFileSync('src/player/ui/styles/02_components/_comments.css', 'utf8') + '\n' + fs.readFileSync('src/player/ui/styles/02_components/_modals.css', 'utf8');
+const latestPlayerCssV19 = fs.readFileSync('src/player/ui/styles/01_core/_layout.css', 'utf8');
 
 // 19.1 验证发评栏具备底部抽屉圆角、提手条与丝滑曲线
 assert.ok(
@@ -572,7 +572,7 @@ console.log('▶ 20. 验证设置菜单标准化样式、ADHD高信噪比文案�
 const aboutSectionCode = fs.readFileSync('src/player/managers/settings/sections/AboutSection.js', 'utf8');
 const settingsManagerCodeV20 = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
 const segmentedControlCode = fs.readFileSync('src/player/managers/settings/components/SegmentedControl.js', 'utf8');
-const settingsAppleCss = fs.readFileSync('src/player/ui/styles/_settings_apple.css', 'utf8');
+const settingsAppleCss = fs.readFileSync('src/player/ui/styles/02_components/_settings_apple.css', 'utf8');
 const i18nCode = fs.readFileSync('src/constants/i18n.js', 'utf8');
 
 // 20.1 验证版本信息展开时即触发更新检查

@@ -6,7 +6,7 @@ console.log('🧪 开始执行 10 大 UI/UX、Peach状态、顶栏广告翻滚To
 // 1. 验证 ICON_PEACH 是否使用高清立体桃子图片与右下角状态角标
 import { ICON_PEACH } from '../src/constants/icons.js';
 assert.ok(ICON_PEACH.includes('tm-peach-logo-img'), 'ICON_PEACH 应当包含 tm-peach-logo-img 样式类');
-assert.ok(ICON_PEACH.includes('data:image/png;base64,'), 'ICON_PEACH 应当内联高清 PNG base64 数据');
+assert.ok(ICON_PEACH.includes('data:image/webp;base64,'), 'ICON_PEACH 应当内联高清 WebP base64 数据');
 const factoriesCode = fs.readFileSync('src/player/ui/_uiFactories.js', 'utf8');
 assert.ok(factoriesCode.includes('tm-peach-badge'), '桃子按钮工厂函数应当创建 tm-peach-badge 状态角标');
 console.log('✅ 1. Peach 按钮使用高清立体桃子图片与右下角状态角标验证通过');
@@ -133,9 +133,9 @@ assert.ok(durShort >= 1800 && durShort <= 2200, '短状态文本停留时长应�
 const durLong = calculateToastDuration('WebDAV 目录不存在且无法自动创建，请在 WebDAV 服务器上手动创建目录');
 assert.ok(durLong >= 3800, '长文本提示停留时长应当足够用户完整阅读 (>=3.8s)');
 
-const playerCssText = fs.readFileSync('src/player/ui/styles/_player.css', 'utf8');
-assert.ok(playerCssText.includes('text-align: left;'), '标题栏必须改为左对齐');
-assert.ok(playerCssText.includes('justify-content: flex-start;'), '标题槽必须为 flex-start 左对齐');
+const layoutCssText = fs.readFileSync('src/player/ui/styles/01_core/_layout.css', 'utf8');
+assert.ok(layoutCssText.includes('text-align: left;'), '标题栏必须改为左对齐');
+assert.ok(layoutCssText.includes('justify-content: flex-start;'), '标题槽必须为 flex-start 左对齐');
 assert.ok(uiManagerCode.includes('triggerTitlePeekScroll'), 'UIManager 必须包含进入播放器时的标题向左巡航滚动方法');
 
 const volumeCode = fs.readFileSync('src/player/controls/VolumeController.js', 'utf8');

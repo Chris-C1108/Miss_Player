@@ -22,7 +22,7 @@
 | **Phase 10** | 移动端 iOS 视口重构与番号合规收敛 | **达成 ✅** | [Phase 0~12 历史里程碑归档](./docs/todo/history-phases-0-to-12.md) |
 | **Phase 11** | 极致性能深水区与现代架构跃迁 | **达成 ✅** | [Phase 0~12 历史里程碑归档](./docs/todo/history-phases-0-to-12.md) |
 | **Phase 12** | 控制面板单手模式组件聚合与竖屏重构 | **达成 ✅** | [Phase 0~12 历史里程碑归档](./docs/todo/history-phases-0-to-12.md) |
-| **Phase 14** | **CSS 样式架构重构与治理专项** | **部分达成 ⚠️ (Step 2 未收口，转入 Phase 21.3 续办)** | **[Phase 14 专属规划方案](./docs/todo/phase-14-css-refactor.md)** |
+| **Phase 14** | **CSS 样式架构重构与治理专项** | **达成 ✅ (20 模块 4 层物理拆解与死代码治理已收口)** | **[Phase 14 专属规划方案](./docs/todo/phase-14-css-refactor.md)** |
 | **Phase 13** | **苹果人本化文案重构与五国母语对齐** | **达成 ✅** | **[Phase 13 专属规划方案](./docs/todo/phase-13-copywriting.md)** |
 | **Phase 15** | **UI/UX 深度优化与第三方脚本适配专项 (v5.7.1 ~ v5.7.4)** | **达成 ✅** | 详见 Release v5.7.4 |
 | **Phase 16** | **全局输入框与双模层叠上下文架构重构 (内外两界隔离与端态自适应)** | **达成 ✅** | 详见 Release v5.7.64 |
@@ -57,10 +57,10 @@
   - [x] `UIManager.js` 采用模块级缓存单例 `CSSStyleSheet`，保留 Safari 14–16.3 `<style>` 降级；
   - [x] 显式拒绝 Google/Firefox 专属且不兼容 Safari 的 API（`Element.setHTML`、`interpolate-size`、`<dialog closedby="any">`、`moveBefore`）；
   - [ ] iOS Safari 真实环境回归验收。
-- [ ] **21.3 Phase 14 CSS 重构续办与产物体积优化**
+- [x] **21.3 Phase 14 CSS 重构续办与产物体积优化**
   - [x] 启用构建期 `cssMinify: true` 针对 `?inline` 导入剥离注释与空白；
-  - [x] Peach Base64 图片去重与 `_variables.css` 重复变量合并；
-  - [x] 修正 `scripts/audit-css.js` 递归扫描与误报，清理 `_player.css` / `_comments.css` 历史废弃死选择器；
+  - [x] Peach 图标落地方案 3A（64×64 WebP Data URI 体积直降 96%，`-48.8 KiB`）与 `_variables.css` 重复变量合并；
+  - [x] 修正 `scripts/audit-css.js` 递归扫描与误报，按 4 层拓扑物理拆解为 20 个 CSS 模块（单文件均 ≤ 787 行，0 死选择器），`!important` 降至 73 处；
   - [x] `UIManager.js` 模块级缓存 `CSSStyleSheet`（保留 Safari 14–16.3 `<style>` 降级）；
   - [x] 收敛 `FloatingButton.js` 魔法 `z-index: 2000000000` 至 `--z-host-player` 标尺。
 - [ ] **21.4 上帝类渐进解耦与运行态优化**

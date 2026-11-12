@@ -1,0 +1,743 @@
+/* =====================================================================
+   统一全屏评论面板样式 (Comments UI Redesign)
+   ===================================================================== */
+
+.tm-comments-panel {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    min-height: 0; /* 允许 Flexbox 子元素收缩并正常触发 overflow-y 滚动 */
+    background-color: #0b0b0e;
+    z-index: var(--z-base); /* 基础层级，坐落在控制面板与变暗遮罩下方 */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    overscroll-behavior-x: none;
+    pointer-events: auto; /* 显式接收并消费事件，坚决禁止穿透到底层宿主页面 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+/* 评论区遮罩变暗效果，突出控制面板 (仅覆盖评论区与手柄，置于视频区域下方，确保视频区域清晰明亮不被遮暗) */
+
+.tm-comments-panel::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.45); /* 遮罩暗度 */
+    pointer-events: none; /* 允许点击与滑动穿透 */
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: calc(var(--z-base) + 1); /* 盖在评论列表上方，但在控制面板下方 */
+}
+
+/* 移动端手柄区域 (.tm-handle-container) 变暗遮罩 */
+
+.tm-handle-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: calc(var(--z-base) + 1);
+}
+
+.tm-handle-container.is-dimmed::after,
+.tm-player-container:has(.tm-comments-panel.is-dimmed) .tm-handle-container::after {
+    opacity: 1;
+}
+
+.tm-comments-panel.is-dimmed::after {
+    opacity: 1;
+    pointer-events: none; /* 遮罩层仅做纯视觉变暗渲染，不阻断下方子元素事件 */
+}
+
+/* 圆形复选框全剧样式 */
+
+.tm-tag-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    outline: none;
+    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-tag-checkbox:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.tm-tag-checkbox:checked {
+    background: hsl(var(--shadcn-blue));
+    border-color: hsl(var(--shadcn-blue));
+}
+
+.tm-tag-checkbox:checked::after {
+    content: '';
+    width: 4px;
+    height: 8px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(-0.5px, -1px);
+    display: block;
+}
+
+/* 列表滑动区域 */
+
+.tm-comments-panel-list.tm-comments-list {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    max-height: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    box-sizing: border-box;
+    padding: 8px 16px 0px 16px;
+    mask-image: linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+    pointer-events: auto;
+    background-color: #0b0b0e;
+    overscroll-behavior-y: contain;
+    overscroll-behavior-x: none;
+}
+
+/* 隐藏滚动条 */
+
+.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tm-comments-panel-list.tm-comments-list::-webkit-scrollbar-thumb {
+    background: hsla(var(--shadcn-muted-foreground) / 0.25);
+    border-radius: 2px;
+}
+
+/* 评论区底部一体化发表抽屉 (底部向上弹出抽屉式设计 + 顶部抽屉把手，无框套框) */
+
+.tm-comment-submit-bar-wrapper {
+    position: absolute;
+    bottom: var(--keyboard-height, 0px);
+    left: 0;
+    right: 0;
+    width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    background: rgba(22, 22, 26, 0.95);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.55);
+    z-index: var(--z-composer);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    pointer-events: auto;
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    -webkit-touch-callout: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.tm-ios-keyboard-open .tm-comment-submit-bar-wrapper {
+    bottom: var(--keyboard-height, 0px);
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tm-comment-submit-bar-wrapper.is-collapsed {
+    transform: translateY(100%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none !important;
+}
+
+.tm-comment-submit-bar-wrapper:not(.is-collapsed) {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto !important;
+}
+
+/* 抽屉顶部 Apple 风格拖动与收起提手条 (Pill Handle) */
+
+.tm-comment-drawer-pill {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.24);
+    margin: 8px auto 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.tm-comment-drawer-pill:active {
+    background: rgba(255, 255, 255, 0.45);
+    transform: scale(0.95);
+}
+
+/* 软键盘打开时，评论列表底部自动留出键盘与发评栏高度的呼吸空间 */
+
+.tm-ios-keyboard-open .tm-comments-panel-list {
+    padding-bottom: calc(var(--keyboard-height, 0px) + 70px);
+}
+
+/* 评论区半透明遮罩 (彻底移除模糊层，确保输入时可清晰查看视频画面与评论区) */
+
+.tm-comment-backdrop {
+    display: none;
+    pointer-events: none;
+}
+
+.tm-comment-backdrop.is-hidden {
+    display: none;
+    pointer-events: none;
+}
+
+/* 评论区悬浮按钮组统一实色 Apple 质感设计 (FAB 发评圆钮 & 唤醒控制栏圆钮) */
+
+.tm-comment-fab-btn,
+.tm-show-controls-float-btn {
+    position: absolute;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: #1e2025; /* 彻底实色，绝无透明度，杜绝底部内容穿透干扰 */
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    z-index: var(--z-controls);
+    margin: 0;
+    outline: none;
+    box-sizing: border-box;
+    pointer-events: auto;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.15s,
+                box-shadow 0.2s,
+                left 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                right 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.2s ease;
+}
+
+.tm-comment-fab-btn::after,
+.tm-show-controls-float-btn::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    pointer-events: auto;
+}
+
+.tm-comment-fab-btn:hover,
+.tm-show-controls-float-btn:hover {
+    background-color: #2a2d35;
+    color: #ffffff;
+    transform: scale(1.06);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+}
+
+.tm-comment-fab-btn:active,
+.tm-show-controls-float-btn:active {
+    transform: scale(0.92);
+}
+
+.tm-comment-fab-btn svg,
+.tm-show-controls-float-btn svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+/* 纵向层叠定位：发评按钮在下，唤醒控制栏按钮在上 */
+
+.tm-comment-fab-btn {
+    bottom: max(16px, env(safe-area-inset-bottom, 16px));
+}
+
+.tm-show-controls-float-btn {
+    bottom: max(68px, calc(68px + env(safe-area-inset-bottom, 0px)));
+    z-index: var(--z-controls);
+    display: none;
+}
+
+.tm-show-controls-float-btn svg path {
+    fill: currentColor;
+    stroke: none;
+}
+
+/* 竖屏模式：按钮跟随用户的左右手握持习惯进行横向调度 */
+/* 右手习惯 (默认靠右) */
+
+.tm-comment-fab-btn,
+.tm-show-controls-float-btn,
+.tm-player-container.tm-hand-right .tm-comment-fab-btn,
+.tm-player-container.tm-hand-right .tm-show-controls-float-btn,
+.tm-comments-panel.tm-hand-right .tm-comment-fab-btn,
+.tm-comments-panel.tm-hand-right .tm-show-controls-float-btn {
+    right: 16px;
+    left: auto;
+}
+
+/* 左手习惯 (靠左对齐) */
+
+.tm-player-container.tm-hand-left .tm-comment-fab-btn,
+.tm-player-container.tm-hand-left .tm-show-controls-float-btn,
+.tm-player-container.tm-single-hand-left .tm-comment-fab-btn,
+.tm-player-container.tm-single-hand-left .tm-show-controls-float-btn,
+.tm-comments-panel.tm-hand-left .tm-comment-fab-btn,
+.tm-comments-panel.tm-hand-left .tm-show-controls-float-btn {
+    left: 16px;
+    right: auto;
+}
+
+/* 发评抽屉激活或高光抽屉打开时，自动隐藏悬浮圆钮，保持层级纯净 */
+
+.tm-comment-fab-btn.is-hidden,
+.tm-comments-panel.has-composer-open .tm-comment-fab-btn,
+.tm-player-container.has-composer-active .tm-comment-fab-btn,
+.tm-player-container.has-composer-active .tm-show-controls-float-btn,
+.tm-player-container.has-sheet-open .tm-comment-fab-btn,
+.tm-player-container.has-sheet-open .tm-show-controls-float-btn {
+    transform: scale(0.85);
+    opacity: 0;
+    pointer-events: none !important;
+}
+
+/* 评论发表栏展开时，自动退避隐藏控制面板，杜绝评论输入栏与播放控制栏产生层级重叠冲突 */
+
+.tm-player-container.has-composer-active .tm-control-panel,
+.tm-player-container.has-composer-active .tm-control-buttons {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* 手机竖屏下：当主控面板展开时隐藏评论 FAB，仅在专注阅读评论（controls-hidden）时优雅浮现 */
+
+@media screen and (max-width: 600px) and (orientation: portrait) {
+    .tm-player-container:not(.controls-hidden) .tm-comment-fab-btn {
+        transform: scale(0.85);
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
+/* 评论头部布局 (Row-based Chat Flow) */
+
+.jc-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 3px;
+    box-sizing: border-box;
+}
+
+.jc-hdr-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.jc-hdr-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+/* 评论卡片样式 */
+
+.jc-card {
+    display: flex;
+    flex-direction: column;
+    padding: 5px 0;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: opacity 0.2s;
+    margin-bottom: 6px;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.jc-card .jc-bd {
+    width: 100%;
+}
+
+.jc-card .jc-u {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.65);
+    text-decoration: none;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12.5px;
+    display: inline-block;
+    vertical-align: middle;
+    transition: color var(--anim-quick);
+}
+
+.jc-card a.jc-u:hover {
+    text-decoration: underline;
+    color: hsl(var(--shadcn-blue));
+}
+
+.jc-card .jc-t {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 11px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.jc-card .jc-body-text {
+    font-size: 14.5px;
+    line-height: 1.55;
+    letter-spacing: 0.01em;
+    color: rgba(255, 255, 255, 0.88);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    margin-top: 4px;
+}
+
+/* 灌水/Spam状态 */
+
+.jc-card.jc-spam {
+    opacity: 0.35;
+    background-color: transparent;
+}
+
+.jc-card.jc-spam:hover {
+    opacity: 0.75;
+}
+
+.jc-spam-badge {
+    background-color: hsla(var(--shadcn-destructive) / 0.8);
+    color: hsl(var(--shadcn-destructive-foreground));
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+    margin-left: 4px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* 时间跳转与番号关联链接 */
+
+.jc-time-link {
+    position: relative;
+    color: hsl(142.1 70.6% 45.3%);
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, color 0.15s, box-shadow 0.15s;
+    padding: 2px 6px;
+    background-color: hsla(142.1 70.6% 45.3% / 0.16);
+    border: 1px solid hsla(142.1 70.6% 45.3% / 0.25);
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    margin: 0 2px;
+    font-family: monospace;
+    font-size: 12.5px;
+    overflow: visible;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.jc-time-link:hover {
+    background-color: hsla(142.1 70.6% 45.3% / 0.25);
+    color: hsl(142.1 76.2% 36.3%);
+    box-shadow: 0 1px 4px hsla(142.1 70.6% 45.3% / 0.15);
+}
+
+.jc-time-link:active {
+    transform: scale(0.96);
+}
+
+/* 胶囊内部文字 */
+
+.jc-time-text {
+    display: inline-block;
+    line-height: 1.2;
+}
+
+/* 胶囊内嵌右侧收藏图标按钮 (Inline Accessory Star) */
+
+.jc-time-star-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    line-height: 1;
+    color: inherit;
+    /* 未展开时平滑折叠收起 */
+    max-width: 0;
+    opacity: 0;
+    margin-left: -2px;
+    overflow: hidden;
+    transform: scale(0.65);
+    transition: max-width 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                margin 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.15s ease;
+    pointer-events: none;
+    vertical-align: middle;
+}
+
+/* 图标尺寸与矢量样式 */
+
+.jc-time-star-btn .jc-star-icon {
+    display: block;
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+/* 默认未收藏状态：展示空心五角星 (☆)，隐藏实心星 */
+
+.jc-time-star-btn .jc-star-filled {
+    display: none;
+}
+
+.jc-time-star-btn .jc-star-outline {
+    display: block;
+    color: hsla(142.1, 70.6%, 45.3%, 0.85);
+    stroke-width: 2.2px;
+}
+
+/* PC 端鼠标悬浮胶囊时：胶囊内右侧平滑展开露处空心五角星 */
+
+.jc-time-link:hover .jc-time-star-btn {
+    max-width: 22px;
+    opacity: 1;
+    margin-left: 3px;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+/* 移动端长按唤出：赋予 .show-star-btn 保持展开 (延迟 10 秒后自动收起) */
+
+.jc-time-link.show-star-btn .jc-time-star-btn {
+    max-width: 22px;
+    opacity: 1;
+    margin-left: 3px;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+/* 悬浮在空心星上的交互反馈与金色微光 */
+
+.jc-time-link:hover .jc-time-star-btn:hover,
+.jc-time-link.show-star-btn .jc-time-star-btn:hover,
+.jc-time-link.is-favorited .jc-time-star-btn:hover {
+    transform: scale(1.22);
+}
+
+.jc-time-star-btn:hover .jc-star-outline {
+    color: #fbbf24;
+    filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.6));
+}
+
+.jc-time-link:hover .jc-time-star-btn:active,
+.jc-time-link.show-star-btn .jc-time-star-btn:active,
+.jc-time-link.is-favorited .jc-time-star-btn:active {
+    transform: scale(0.9);
+}
+
+/* ===== 已收藏状态：实心金星 (★) 主动常驻展示 ===== */
+
+.jc-time-link.is-favorited .jc-time-star-btn {
+    max-width: 22px;
+    opacity: 1;
+    margin-left: 3px;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+.jc-time-link.is-favorited .jc-time-star-btn .jc-star-outline {
+    display: none;
+}
+
+.jc-time-link.is-favorited .jc-time-star-btn .jc-star-filled {
+    display: block;
+    color: #f59e0b;
+    filter: drop-shadow(0 1px 3px rgba(245, 158, 11, 0.5));
+}
+
+.jc-time-link.is-favorited .jc-time-star-btn:hover .jc-star-filled {
+    color: #fbbf24;
+    filter: drop-shadow(0 1px 5px rgba(251, 191, 36, 0.8));
+}
+
+/* 评论卡片：倒计换算按钮 (高度统一、双态协调的 Apple Glass 设计) */
+
+.jc-countdown-btn {
+    appearance: none;
+    outline: none;
+    height: 20px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    box-sizing: border-box;
+    /* 默认态：内敛轻透的暗色磨砂玻璃风格 */
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.jc-countdown-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    transform: translateY(-0.5px);
+}
+
+.jc-countdown-btn:active {
+    transform: scale(0.95);
+}
+
+/* 激活态（已自动识别或已手动转为正向时间）：与时间胶囊同色系的微透绿 */
+
+.jc-countdown-btn.jc-countdown-btn--active {
+    background: hsla(142.1, 70.6%, 45.3%, 0.16);
+    border-color: hsla(142.1, 70.6%, 45.3%, 0.45);
+    color: #4ade80;
+    font-weight: 600;
+}
+
+.jc-countdown-btn.jc-countdown-btn--active:hover {
+    background: hsla(142.1, 70.6%, 45.3%, 0.26);
+    border-color: hsla(142.1, 70.6%, 45.3%, 0.65);
+    color: #86efac;
+}
+
+.jc-code-link {
+    display: inline-block;
+    padding: 2px 6px;
+    margin: 0 2px;
+    background-color: hsla(var(--shadcn-blue) / 0.16);
+    border: 1px solid hsla(var(--shadcn-blue) / 0.35);
+    color: hsl(var(--shadcn-blue));
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: monospace;
+    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.jc-code-link:hover {
+    background-color: hsl(var(--shadcn-blue));
+    color: hsl(var(--shadcn-blue-foreground));
+    box-shadow: 0 2px 6px hsla(var(--shadcn-blue) / 0.3);
+}
+
+.jc-code-link:active {
+    transform: scale(0.96);
+}
+
+/* 状态提示与动画 */
+
+.tm-comment-loading,
+.tm-comment-error {
+    width: 100%;
+    padding: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: hsl(var(--shadcn-muted-foreground));
+    box-sizing: border-box;
+    pointer-events: auto; /* 恢复交互 */
+    background-color: transparent; /* 透明背景 */
+    flex: 1; /* 撑开容器 */
+}
+
+.tm-comment-error {
+    color: hsl(var(--shadcn-destructive));
+}
+
+/* 横屏端鼠标悬浮评论区时强制变亮 */
+
+@media screen and (orientation: landscape) {
+    .tm-comments-panel:hover::after {
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+}
+
+/* 仅在移动端竖屏且控制面板隐藏时展示悬浮唤醒按钮，桌面横屏模式坚决隐藏 */
+
+@media screen and (orientation: portrait) {
+    body.controls-hidden .tm-show-controls-float-btn,
+    .tm-player-container.controls-hidden .tm-show-controls-float-btn,
+    :host(.controls-hidden) .tm-show-controls-float-btn {
+        display: flex !important;
+        animation: tm-float-btn-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+}
+
+@media screen and (orientation: landscape), screen and (min-width: 1024px) {
+    .tm-show-controls-float-btn,
+    body.controls-hidden .tm-show-controls-float-btn,
+    .tm-player-container.controls-hidden .tm-show-controls-float-btn,
+    :host(.controls-hidden) .tm-show-controls-float-btn {
+        display: none !important;
+    }
+}

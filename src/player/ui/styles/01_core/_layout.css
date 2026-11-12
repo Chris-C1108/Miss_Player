@@ -1,0 +1,731 @@
+:host { display: contents !important; }
+
+/* =========== 视频播放器样式 =========== */
+/* 整体布局 */
+
+.tm-video-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background-color: #0b0b0e;
+    z-index: var(--z-host-overlay, 2147483645);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    padding: 0;
+    
+    /* 全局触摸、滚动、选择隔离 */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
+}
+
+/* 播放器容器 - 现在与视频覆盖层同级 */
+
+.tm-player-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    z-index: var(--z-host-player, 2147483646);
+    overflow: hidden;
+    pointer-events: auto;
+    
+    /* 全局触摸、滚动、选择隔离 (固定视口禁止整体纵向位移) */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
+}
+
+/* 顶部标题与控制栏容器 - 放置在视频容器顶部外面 */
+
+.tm-button-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: calc(env(safe-area-inset-top, 0px) + 6px) calc(env(safe-area-inset-right, 0px) + 12px) 6px calc(env(safe-area-inset-left, 0px) + 12px);
+    box-sizing: border-box;
+    z-index: var(--z-controls);
+    /* 保持在顶部 */
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    touch-action: none; /* 按钮区域隔离触摸 */
+    pointer-events: none;
+}
+
+.tm-button-container > * {
+    pointer-events: auto;
+}
+
+.tm-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    pointer-events: auto;
+}
+
+.tm-top-actions > * {
+    pointer-events: auto;
+}
+
+.tm-video-container {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: auto;
+    max-height: calc(100% - 130px);
+    margin-top: 44px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background-color: hsl(var(--shadcn-card));
+    border-radius: var(--shadcn-radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-base);
+    touch-action: none; /* 播放器视频区域绝对禁止整体纵向位移 */
+    flex-shrink: 1;
+    transition: height 0.28s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tm-video-container.is-resizing {
+    transition: none !important;
+}
+
+@media screen and (orientation: portrait) {
+    .tm-video-container {
+        max-height: calc(100dvh - 130px);
+        min-height: 0;
+    }
+
+    /* 竖屏展示评论区时，顶栏稳定常驻，即使控制面板处于 controls-hidden 也绝对不隐藏 */
+    .tm-player-container:not(.tm-sidebar-hidden).controls-hidden .tm-button-container,
+    body.controls-hidden .tm-player-container:not(.tm-sidebar-hidden) .tm-button-container,
+    :host(.controls-hidden) .tm-player-container:not(.tm-sidebar-hidden) .tm-button-container {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        pointer-events: auto !important;
+    }
+}
+
+.tm-video-wrapper {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 16 / 9; /* 兜底 16:9 比例，杜绝视频流未加载时画面塌陷与尺寸漂移 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    will-change: transform;
+    border-radius: var(--shadcn-radius) var(--shadcn-radius) 0 0;
+    touch-action: pan-y; /* 仅允许纵向原生手势以支持单向滚动穿透 */
+}
+
+/* video 标签内部隔离：强制隐藏原站注入在 video 内部的控制/遮罩层节点 */
+
+.tm-video-wrapper video > *:not(track):not(source) {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* 确保视频元素随容器高度变化 (支持标准 video 与 Web Components 媒体容器) */
+
+.tm-video-wrapper video,
+.tm-video-wrapper hlsjs-video,
+.tm-video-wrapper dash-video {
+    width: auto !important; 
+    height: 100% !important; 
+    max-height: 100% !important; 
+    max-width: none !important; 
+    object-fit: contain !important; 
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    touch-action: pan-y; /* 更改为 pan-y 以允许上滑穿透冒泡 */
+    cursor: grab; 
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.tm-video-wrapper hlsjs-video,
+.tm-video-wrapper dash-video {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 调整手柄 (精致高度 18px，大幅释放竖屏宝贵阅读空间) */
+
+.tm-handle-container {
+    position: relative;
+    height: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: calc(var(--z-base) + 2);
+    width: 100%;
+    flex-shrink: 0; /* 防止 Flex 布局下高度被压缩 */
+    touch-action: none; /* 手指在手柄区滑动不产生背景滚动 */
+}
+
+/* 输入栏、底栏抽屉、设置面板或虚拟键盘激活时，禁用手柄触控与视频层，严防越级遮挡或误触长按/下载 */
+
+.tm-player-container.has-composer-active .tm-handle-container,
+.tm-player-container.has-sheet-open .tm-handle-container,
+.tm-player-container.has-inline-remark-open .tm-handle-container,
+.tm-player-container.tm-settings-active .tm-handle-container,
+.tm-player-container.has-modal-open .tm-handle-container,
+.tm-player-container.tm-ios-keyboard-open .tm-handle-container {
+    pointer-events: none;
+}
+
+.tm-player-container.has-composer-active .tm-video-wrapper video,
+.tm-player-container.has-sheet-open .tm-video-wrapper video,
+.tm-player-container.has-inline-remark-open .tm-video-wrapper video,
+.tm-player-container.tm-settings-active .tm-video-wrapper video,
+.tm-player-container.has-modal-open .tm-video-wrapper video,
+.tm-player-container[data-has-overlay="true"] .tm-video-wrapper,
+.tm-player-container[data-has-overlay="true"] .tm-video-wrapper video,
+.tm-player-container[data-has-overlay="true"] .tm-video-container,
+.tm-player-container[data-has-overlay="true"] .tm-control-panel,
+.tm-player-container[data-has-overlay="true"] .tm-control-buttons,
+.tm-player-container[data-has-overlay="true"] .tm-handle-container,
+.tm-player-container[data-has-overlay="true"] .tm-comment-fab-btn,
+.tm-player-container[data-has-overlay="true"] .tm-show-controls-float-btn {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 扩充触控与移动端最小点击热区至 44x44px */
+
+.tm-close-button::after,
+.tm-settings-button::after,
+.tm-sidebar-pos-button::after,
+.tm-sidebar-toggle-button::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    pointer-events: auto;
+}
+
+/* 系统级全局事件黑洞遮罩 (System-Level Event Sink Backdrop) */
+
+.tm-surface-event-sink {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: calc(var(--z-drawer) - 1);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--anim-smooth);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: none;
+}
+
+.tm-surface-event-sink.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 评论发表时不需要模糊遮罩层，保持全透明且不失事件拦截保护 */
+
+.tm-player-container.has-composer-active .tm-surface-event-sink.visible {
+    background-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.tm-resize-handle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    height: 4px;
+    width: 134px;
+    max-width: 134px;
+    background-color: hsla(var(--shadcn-foreground) / 0.6);
+    border-radius: 2px;
+    cursor: row-resize;
+    touch-action: none;
+    opacity: 0.5;
+    will-change: transform;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
+    box-shadow: none;
+}
+
+.tm-resize-handle::after,
+.tm-resize-handle-hitarea {
+    content: '';
+    position: absolute;
+    left: -10px;
+    right: -10px;
+    top: -10px;
+    bottom: -10px;
+    background: transparent;
+}
+
+.tm-resize-handle:hover,
+.tm-resize-handle.dragging {
+    opacity: 1;
+    background-color: hsla(var(--shadcn-foreground) / 0.8);
+}
+
+.tm-resize-handle.dragging {
+    cursor: grabbing;
+}
+
+/* 画面已完整呈现、无左右平移余地时的锁定态手柄 (仅锁定水平平移，垂直拉伸调节高度与放大 100% 保持可用) */
+
+.tm-resize-handle.is-locked {
+    opacity: 0.35;
+    cursor: row-resize;
+    box-shadow: none;
+    background-color: hsla(var(--shadcn-foreground) / 0.45);
+}
+
+.tm-handle-container.is-locked {
+    cursor: row-resize;
+}
+
+/* 激活态手柄 (超宽或放大、画面存在可移动溢出空间) */
+
+.tm-resize-handle.is-active {
+    opacity: 0.65;
+    cursor: grab;
+    background-color: hsla(var(--shadcn-foreground) / 0.85);
+}
+
+/* 控制按钮基础样式 */
+
+.tm-control-button-base {
+    color: hsl(var(--shadcn-secondary-foreground));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s, box-shadow 0.2s;
+    backdrop-filter: blur(12px); /* 增加模糊效果 */
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* 关闭按钮 */
+
+.tm-close-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.5); /* 更透明的背景 */
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.1); /* 减少边框强度 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+    z-index: var(--z-controls);
+}
+
+.tm-close-button:hover {
+    background-color: hsl(var(--shadcn-destructive));
+    transform: scale(1.08);
+    box-shadow: var(--shadow-md);
+}
+
+.tm-close-button:active {
+    transform: scale(0.96);
+}
+
+@keyframes tm-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes tm-pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.04); opacity: 0.92; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 控制界面隐藏时的动画效果 - 更新选择器 */
+
+body.controls-hidden .tm-player-container .tm-button-container, .tm-player-container.controls-hidden .tm-button-container, :host(.controls-hidden) .tm-button-container {
+    opacity: 0;
+    transform: translateY(-60px);
+    pointer-events: none;
+}
+
+/* 控制界面显示时的动画效果 - 更新选择器 */
+
+body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player-container:not(.controls-hidden) .tm-button-container, :host(:not(.controls-hidden)) .tm-button-container {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* 控制按钮 */
+
+.tm-control-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.6);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, box-shadow 0.15s;
+}
+
+.tm-control-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.7);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.tm-control-button:active {
+    transform: scale(0.96);
+    box-shadow: none;
+}
+
+.tm-control-button.active {
+    background-color: hsla(var(--shadcn-blue) / 0.7);
+    color: hsl(var(--shadcn-blue-foreground));
+    box-shadow: 0 0 0 2px hsla(var(--shadcn-blue) / 0.3);
+}
+
+.tm-player-title {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    user-select: none;
+    z-index: var(--z-controls);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    margin: 0 8px;
+    height: 28px;
+    line-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.tm-title-slot {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+    will-change: transform, opacity;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+}
+
+.tm-player-title-text {
+    display: inline-block;
+    white-space: nowrap;
+    will-change: transform;
+    transform: translateX(0);
+}
+
+.tm-title-slot--main {
+    transform: translateY(100%);
+    opacity: 0;
+}
+
+.tm-title-slot--main.is-active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.tm-title-slot--main.is-exiting {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+.tm-title-slot--toast {
+    transform: translateY(100%);
+    opacity: 0;
+    gap: 7px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.tm-title-slot--toast.is-active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.tm-title-slot--toast.is-exiting {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+.tm-title-slot--toast .tm-toast-indicator-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #0a84ff;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px rgba(10, 132, 255, 0.6);
+}
+
+.tm-title-slot--toast.tm-toast--success .tm-toast-indicator-dot {
+    background: #30d158;
+    box-shadow: 0 0 6px rgba(48, 209, 88, 0.6);
+}
+
+.tm-title-slot--toast.tm-toast--error .tm-toast-indicator-dot {
+    background: #ff453a;
+    box-shadow: 0 0 6px rgba(255, 69, 58, 0.6);
+}
+
+.tm-title-slot--toast.tm-toast--info .tm-toast-indicator-dot {
+    background: #0a84ff;
+    box-shadow: 0 0 6px rgba(10, 132, 255, 0.6);
+}
+
+.tm-title-slot--toast .tm-toast-content {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: #ffffff;
+}
+
+.tm-title-slot--toast.tm-toast--success .tm-toast-content,
+.tm-title-slot--toast.tm-toast--error .tm-toast-content,
+.tm-title-slot--toast.tm-toast--info .tm-toast-content {
+    color: #ffffff;
+}
+
+/* 独立挂载在 playerContainer 下时的降级/大屏分栏绝对定位 */
+
+.tm-player-container > .tm-player-title {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100% - 110px);
+    margin: 0;
+}
+
+/* 仅针对独立挂载在 playerContainer 下的绝对定位标题应用 translate(-50%, -20px) 隐藏动画 */
+
+body.controls-hidden .tm-player-container > .tm-player-title,
+.tm-player-container.controls-hidden > .tm-player-title,
+:host(.controls-hidden) > .tm-player-title {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+    pointer-events: none;
+}
+
+/* 侧栏控制按钮 */
+
+.tm-sidebar-pos-button,
+.tm-sidebar-toggle-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.7);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+    display: none; /* 移动端默认隐藏 */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
+}
+
+.tm-sidebar-pos-button:hover,
+.tm-sidebar-toggle-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.9);
+    transform: scale(1.08);
+}
+
+.tm-sidebar-pos-button:active,
+.tm-sidebar-toggle-button:active {
+    transform: scale(0.96);
+}
+
+/* 隐藏评论区后，位置按钮隐藏 */
+
+.tm-sidebar-hidden .tm-sidebar-pos-button {
+    display: none;
+}
+
+/* 竖屏模式兜底保护：彻底隐藏侧边栏位置切换按钮 (无论是手机还是 iPad 竖屏) */
+
+@media screen and (orientation: portrait) {
+    .tm-sidebar-pos-button {
+        display: none !important;
+    }
+}
+
+/* 通用隐藏评论区状态：手柄彻底隐藏，消除多余占位 */
+
+.tm-player-container.tm-sidebar-hidden .tm-handle-container {
+    display: none;
+}
+
+/* 竖屏模式 (orientation: portrait) 下隐藏评论区 (tm-sidebar-hidden) 的沉浸式全屏展示适配 */
+
+@media screen and (orientation: portrait) {
+    .tm-player-container.tm-sidebar-hidden .tm-comments-panel {
+        display: none;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-handle-container {
+        display: none;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-video-container {
+        height: 100%;
+        max-height: 100%;
+        margin-top: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background-color: #000;
+        flex: 1 1 auto;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-video-wrapper {
+        border-radius: 0;
+        height: 100%;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-video-wrapper video {
+        width: 100%;
+        height: 100%;
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-video-wrapper.video-portrait video {
+        width: auto;
+        height: 100%;
+        max-width: 100%;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-button-container > button,
+    .tm-player-container.tm-sidebar-hidden .tm-top-actions > button {
+        background-color: hsla(var(--shadcn-card) / 0.8);
+        border: 1px solid hsla(var(--shadcn-border) / 0.2);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--button-md);
+        height: var(--button-md);
+        pointer-events: auto;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-top-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        width: auto;
+        height: auto;
+        pointer-events: auto;
+    }
+
+    .tm-player-container.tm-sidebar-hidden .tm-button-container .tm-player-title {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        width: auto;
+        height: auto;
+        pointer-events: none;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* 中大屏竖屏及折叠屏优化 */
+@media screen and (min-width: 480px) and (orientation: portrait) {
+    .tm-control-buttons {
+        max-width: 520px;
+    }
+}
+
+@media screen and (min-width: 768px) and (orientation: portrait) {
+    .tm-control-buttons {
+        max-width: 640px;
+    }
+
+    /* 大屏竖屏限制评论区宽度并居中，防止文字过宽影响排版 */
+    .tm-comments-panel {
+        max-width: 720px;
+        margin: 0 auto;
+        border-left: 1px solid hsla(var(--shadcn-border) / 0.1);
+        border-right: 1px solid hsla(var(--shadcn-border) / 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        background-color: hsla(var(--shadcn-card) / 0.02);
+    }
+}
+
+/* 激活播放器时，拦截 Safari 边缘橡皮筋回弹 */
+
+html.tm-player-active,
+body.tm-player-active {
+    overscroll-behavior: none !important;
+}

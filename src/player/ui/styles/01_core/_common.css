@@ -5,80 +5,53 @@
     display: none !important;
 }
 
-/* 浮动按钮 */
-.tm-floating-button {
-    position: fixed;
-    bottom: max(20px, env(safe-area-inset-bottom, 20px));
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    padding: 0;
-    margin: 0;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--brand-pink);
-    border: none;
-    outline: none;
-    box-shadow: none;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: var(--z-floating-btn, 2147483647);
-    cursor: pointer;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    overflow: visible;
-    appearance: none;
-    -webkit-appearance: none;
+/* 全局字体设置与 macOS 精致抗锯齿 */
+html, body, button, input, select, textarea {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-.tm-floating-button svg {
-    width: 48px;
-    height: 48px;
-    filter: drop-shadow(0 0 10px rgba(var(--brand-pink-rgb), 0.9));
-    transition: filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    animation: breathing-glow 3s infinite ease-in-out;
+/* 确保所有元素都使用全局字体 */
+*, *::before, *::after {
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-.tm-floating-button:hover {
-    transform: translateX(-50%) scale(1.08);
+.tm-video-overlay * {
+    font-family: var(--font-sans);
 }
 
-.tm-floating-button:hover svg {
-    filter: drop-shadow(0 0 20px rgba(var(--brand-pink-rgb), 1.0));
+/* 全局解禁所有输入控件的文本选区与触控交互，彻底阻断父级 user-select: none 导致的无法聚焦与无光标问题 */
+input, textarea, select {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+    pointer-events: auto;
 }
 
-.tm-floating-button:active {
-    transform: translateX(-50%) scale(0.96);
-}
-
-/* 增强呼吸发光动画效果 (仅调节投影光晕，保持 transform 纯净以便平滑插值) */
-@keyframes breathing-glow {
-    0%, 100% {
-        filter: drop-shadow(0 0 8px rgba(var(--brand-pink-rgb), 0.7));
-    }
-    50% {
-        filter: drop-shadow(0 0 22px rgba(var(--brand-pink-rgb), 1.0));
-    }
-}
-
-/* 确保在横屏模式下的浮动按钮样式一致 */
-@media screen and (orientation: landscape) {
-    .tm-floating-button {
-        left: auto;
-        right: max(20px, env(safe-area-inset-right, 20px));
-        bottom: max(20px, env(safe-area-inset-bottom, 20px));
-        transform: none;
-    }
-    
-    .tm-floating-button:hover {
-        transform: scale(1.08);
-    }
-    
-    .tm-floating-button:active {
-        transform: scale(0.96);
+/* 针对所有移动端/触控设备下的输入框，强制基准字体不低于 16px，彻底杜绝 iOS Safari 聚焦时自动放大视口 */
+@media screen and (max-width: 1024px), (pointer: coarse) {
+    input[type="text"],
+    input[type="number"],
+    input[type="search"],
+    input[type="password"],
+    input[type="email"],
+    textarea,
+    select,
+    .tm-comment-text-input,
+    .tm-comment-input-textarea,
+    .tm-tag-remark-input,
+    .tm-sheet-item-comment-input,
+    .tm-inline-remark-input,
+    .tm-settings-input,
+    .tm-webdav-input,
+    .tm-apple-duration-input,
+    .tm-login-username,
+    .tm-login-password,
+    .tm-report-note {
+        font-size: 16px !important;
     }
 }
 
@@ -178,4 +151,3 @@
         scroll-behavior: auto !important;
     }
 }
-

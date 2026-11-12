@@ -61,12 +61,12 @@
 
 > **⚠️ 复盘修正 (2026-11-12)**：2026-10-12 完成了 Step 0/1/3/4 后，**Step 2（组件物理拆解、动静分离全量收口与死代码核验清洗）未实际落地**，后续随 Phase 16~20 功能演进，CSS 源码已回涨至 **13 文件 / 10,766 行**，产物回升至 **1303 KiB**（超出 1.0 MiB 告警线），`!important` 基线被上调至 101（编译产物含 117 处）。Step 2 遗留债务已正式重开并纳入 **[Phase 21 专属规划方案](./phase-21-hardening-and-css-completion.md)** 续办跟踪。
 
-### Step 2: 巨石物理拆解、动静分离与可信死代码清洗 (未完成 ❌ → 转入 Phase 21.3 续办)
+### Step 2: 巨石物理拆解、动静分离与可信死代码清洗 (已达成 ✅)
 > **为什么不能直接按 `css-audit-summary.md` 删“114 个死选择器”**：经复核，`scripts/audit-css.js` 使用精确静态词边界匹配 JS 文本，会将模板插值类名（如 `tm-status-badge-${site.status}`）、宿主注入元素选择器误判为“0 引用”，必须先修复审计工具识别动态前缀与白名单，再结合实机 Coverage 验证后清理。
 
-- [ ] **2.1 令牌归并与 4 层目录拓扑最终收口**
-  - [x] 消除 `_variables.css` 与 `00_tokens/_tokens.css` 的重复 `:root, :host` 变量声明，统一收归 `_tokens.css`；
-  - [ ] 将 `_player.css`(2296 行)、`_comments.css`(2117 行)、`_controls.css`(1218 行)、`_landscape_pc.css`(783 行) 物理拆分为 `01_core/_layout.css`、`01_core/_common.css`、`02_components/*`、`03_responsive/_landscape.css` 与 `03_responsive/_single_hand.css`（单文件 ≤ 800 行）。
+- [x] **2.1 令牌归并与 4 层目录拓扑最终收口**
+  - [x] 消除 `_variables.css`、`_settings_apple.css` 与 `00_tokens/_tokens.css` 的重复 `:root, :host` 变量声明，统一收归 `_tokens.css`；
+  - [x] 将 `_player.css`、`_comments.css`、`_controls.css`、`_landscape_pc.css`、`_settings_apple.css`、`_common.css`、`_variables.css` 物理拆分为 `00_tokens/`、`01_core/`（`_host.css` / `_layout.css` / `_common.css`）、`02_components/`（`_comments.css` / `_comments_sections.css` / `_composer.css` / `_control_panel.css` / `_controls.css` / `_debug.css` / `_marker_sheet.css` / `_modals.css` / `_peach.css` / `_settings_apple.css` / `_settings_cards.css` / `_settings_panels.css` / `_switcher.css`）与 `03_responsive/`（`_landscape.css` / `_single_hand.css`），全库 20 个 CSS 文件单文件均 **≤ 787 行**（总行数 9,244 行），Grade 1 确凿死选择器 **0 个**、`!important` 降至 **73 处**（Shadow 内部 54 处）。
 - [x] **2.2 油猴专版审计工具修复与死代码清理**
   - [x] 升级 `scripts/audit-css.js`：递归扫描子目录并支持动态前缀模板扫描（`tm-status-badge-` 等）及宿主注入/外部拦截选择器白名单（`_host.css`），重新生成精准报告（总 CSS 从 `10,766` 行降至 `9,415` 行，未用 `@keyframes` 清零）；
   - [x] 清理经逐一校验确认 0 引用的冗余 CSS（旧版弹窗 `.tm-comment-modal*`/`.tm-floating-comment-panel*`、旧版音量滑杆、旧版按钮态、废弃 Peach 接力按键等，产物降至 `1273.25 KiB`）。
@@ -76,7 +76,7 @@
 
 ---
 
-### Step 3: 架构解耦与设计系统收拢 (部分达成 ⚠️ — 拆解未闭环，体积已回涨)
+### Step 3: 架构解耦与设计系统收拢 (已达成 ✅)
 > **目标**：拆解 3,000 行巨石，消除 946 处 `!important`，理顺 Shadow DOM 与宿主样式的关系。
 
 - [x] **3.1 建立设计系统 Tokens 与层级标尺**

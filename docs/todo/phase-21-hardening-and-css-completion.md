@@ -67,9 +67,10 @@
   - 合并 `_variables.css` 与 `00_tokens/_tokens.css` 重复变量，复用 `ICON_PEACH` 消除重复 Base64；
   - 逐一人工检索校验并清理 `_player.css`、`_controls.css`、`_comments.css`、`_settings_apple.css` 中确认 0 引用的废弃死选择器与 `@keyframes tmShake`（CSS 总量从 `10,766` 行降至 `9,415` 行，产物体积降至 `1273.25 KiB`）；
   - 将 `UIManager.js`、`SettingsManager.js` 静态 `style.display`/`style.opacity` 切换统一迁移为 `.is-hidden` 状态类；收敛 `FloatingButton.js:481` 魔法 `z-index: 2000000000` 至 `--z-host-player` 标尺。
-- [ ] **21.3.4 大文件物理拆解与 1.0 MiB 体积压线收口**
-  - 将 `_player.css`（2,296 行）、`_comments.css`（2,117 行）、`_controls.css`（1,218 行）按 4 层结构拆解为单文件 ≤ 800 行，进一步治理跨文件重复规则与 `!important`（当前 97 处，目标 `< 50`）；
-  - 按用户选定的 Peach 图标优化方案（64×64 WebP 或 SVG）及冗余资源清理，将 `dist/miss_player.user.js` 压回 `1.0 MiB` 安全线内。
+- [x] **21.3.4 大文件物理拆解、Peach 图标优化与重复规则治理**
+  - 将 `_player.css`、`_comments.css`、`_controls.css`、`_settings_apple.css`、`_landscape_pc.css` 物理拆解为 4 层 20 模块，全库单文件均 **≤ 787 行**，彻底移除根目录 7 个旧大文件；
+  - 清理重复规则（`_common.css` 75 行 `.tm-floating-button`、`_player.css` 127 行 `_debug.css`、`_settings_apple.css` `:root,:host` 变量、`_landscape.css` 重复矮屏与死规则）及 11 个 Grade-1 死选择器；`!important` 从 97 处降至 **73 处**（Shadow DOM 内部 54 处，宿主机外防穿透 19 处；`compliance-lint` 棘轮上限收紧至 80）；
+  - 落地 Peach 图标方案 3A（64×64 WebP Data URI，`50,966` 字符 ➔ `2,091` 字符，`-48.8 KiB`），`dist/miss_player.user.js` 降至 **1222.8 KiB**（注：因 GreasyFork 严禁 JS 压缩混淆 `minify: false`，1.0 MiB 以下收敛需结合 Phase 21.4 拆解/精简冗余源码进一步推进）。
 
 ### 21.4 上帝类渐进解耦与打包债务清理 (P2)
 - [ ] **21.4.1 核心大文件拆解**

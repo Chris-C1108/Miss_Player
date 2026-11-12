@@ -1,0 +1,219 @@
+/* ===== 极简透明 3 状态切换器 (底层 100% 全宽) ===== */
+
+.mp-switcher-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+    padding: 2px 0;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+.mp-switcher-capsule {
+    position: relative;
+    width: 100%;
+    height: 40px;
+    background: transparent;
+    border-radius: 9999px;
+    overflow: visible;
+    border: none;
+    box-shadow: none;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
+    cursor: grab;
+    touch-action: none;
+    box-sizing: border-box;
+}
+
+.mp-switcher-indicator {
+    pointer-events: none;
+    z-index: 10;
+    box-sizing: border-box;
+    background: #ffffff33;
+    border: none;
+    border-radius: 9999px;
+    width: 94px;
+    height: 36px;
+    box-shadow: inset 0 1px 0 0 #ffffff38;
+    transition: transform .2s cubic-bezier(.16, 1, .3, 1), box-shadow .2s ease;
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    overflow: visible;
+    transform: translate(-50%) scale(1);
+}
+
+.mp-switcher-capsule:hover .mp-switcher-indicator {
+    transform: translate(-50%) scale(1.02);
+    box-shadow: inset 0 1px 0 0 #ffffff4d;
+}
+
+.mp-switcher-capsule:active .mp-switcher-indicator {
+    transform: translate(-50%) scale(0.97);
+    box-shadow: inset 0 1px 0 0 #ffffff29;
+}
+
+.mp-switcher-track {
+    display: flex;
+    height: 100%;
+    position: relative;
+    z-index: 20;
+    align-items: center;
+    will-change: transform;
+}
+
+.mp-switcher-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 78px;
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.mp-switcher-label {
+    font-size: 12px;
+    white-space: nowrap;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.45);
+    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
+    pointer-events: none;
+    letter-spacing: -0.1px;
+}
+
+.mp-switcher-label.is-active {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.mp-switcher-label.is-hidden {
+    opacity: 0 !important;
+}
+
+.mp-switcher-variant-slot {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mp-switcher-variant-slot.is-visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+.mp-switcher-action-btn {
+    position: relative;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    gap: 4px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mp-switcher-action-btn:hover {
+    transform: scale(1.04);
+}
+
+.mp-switcher-action-btn:active {
+    transform: scale(0.95);
+}
+
+.mp-switcher-action-btn svg,
+.mp-switcher-action-btn svg path {
+    color: #ffffff;
+}
+
+.mp-switcher-action-btn svg {
+    display: block;
+    color: #ffffff;
+}
+
+.mp-switcher-play-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mp-switcher-play-icon.is-paused svg {
+    margin-left: 1.5px;
+}
+
+.mp-switcher-play-icon svg {
+    width: 15px;
+    height: 15px;
+    fill: #ffffff;
+    stroke: none;
+    color: #ffffff;
+    display: block;
+}
+
+.mp-switcher-replay-icon svg {
+    width: 11px;
+    height: 11px;
+    stroke: #ffffff;
+    fill: none;
+    color: #ffffff;
+    display: block;
+}
+
+.mp-switcher-btn-text {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    letter-spacing: -0.2px;
+}
+
+.mp-switcher-btn-cancel {
+    font-size: 11px;
+    font-weight: 600;
+    color: #ff453a;
+    white-space: nowrap;
+    letter-spacing: -0.2px;
+}
+
+.mp-switcher-status-dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #30d158;
+    box-shadow: 0 0 5px rgba(48, 209, 88, 0.8);
+    margin-left: 2px;
+}
+
+.mp-switcher-status-play {
+    font-size: 8px;
+    margin-left: 2px;
+    opacity: 0.8;
+}
