@@ -553,56 +553,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     font-size: 13.5px;
 }
 
-/* 分区 Block */
-.tm-settings-section {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-/* 分区标题：次级大写轻暗标题 */
-.tm-settings-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-    font-weight: 700;
-    color: hsla(var(--shadcn-muted-foreground) / 0.7);
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    padding-left: 2px;
-    user-select: none;
-}
-
-.tm-settings-section-header.collapsible {
-    cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: background 0.15s ease;
-}
-
-.tm-settings-section-header.collapsible:hover {
-    background: hsla(var(--shadcn-muted) / 0.2);
-    color: hsl(var(--shadcn-foreground));
-}
-
-.tm-settings-header-arrow {
-    font-size: 10px;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.tm-settings-header-arrow.expanded {
-    transform: rotate(180deg);
-}
-
-/* 分割线 */
-.tm-settings-section-divider {
-    height: 1px;
-    background: linear-gradient(90deg, hsla(var(--shadcn-border) / 0.3) 0%, hsla(var(--shadcn-border) / 0.05) 100%);
-    margin: 3px 0 6px 0;
-    border-radius: 1px;
-}
-
 /* 选项行与主要标题 (主级白字) */
 .tm-settings-option-row {
     display: flex;
@@ -748,87 +698,9 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 }
 
 /* 点击微交互 (统一 scale(0.96) 细腻触觉反馈) */
-.tm-seek-step-badge:active,
-.tm-source-badge:active {
+.tm-seek-step-badge:active {
     transform: scale(0.96);
     box-shadow: none;
-}
-
-/* '+' 增加步进按钮 (尺寸与质感统一) */
-.tm-seek-step-add-btn {
-    font-size: 14px;
-    font-weight: 600;
-    width: 32px;
-    height: 28px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: hsla(var(--shadcn-secondary) / 0.2);
-    border: 1px dashed hsla(var(--shadcn-border) / 0.35);
-    color: hsla(var(--shadcn-foreground) / 0.75);
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
-}
-
-.tm-seek-step-add-btn:hover {
-    background-color: hsla(var(--shadcn-accent) / 0.5);
-    border-style: solid;
-    border-color: hsla(var(--shadcn-accent) / 0.9);
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
-}
-
-.tm-seek-step-add-btn:active {
-    transform: scale(0.96);
-}
-
-/* 新增自定义步进输入框 */
-.tm-seek-step-input {
-    width: 60px;
-    height: 28px;
-    font-size: 16px;
-    font-weight: 500;
-    text-align: center;
-    border-radius: 6px;
-    border: 1px solid hsla(var(--shadcn-accent) / 0.8);
-    background-color: hsla(var(--shadcn-background) / 0.85);
-    color: #ffffff;
-    outline: none;
-    box-sizing: border-box;
-    flex-shrink: 0;
-    box-shadow: 0 0 8px hsla(var(--shadcn-accent) / 0.4);
-}
-
-/* 评论源 (Jable, JavDB, Javlibrary) Badges 子面板 */
-.tm-settings-sources-subpanel {
-    display: flex;
-    gap: 8px;
-    padding: 6px 2px 2px 2px;
-}
-
-.tm-source-badge {
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    cursor: pointer;
-    font-weight: 500;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.tm-source-badge.enabled {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.6);
-    color: #fca5a5;
-}
-
-.tm-source-badge.disabled {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.4);
 }
 
 /* =========================================================================
@@ -1702,34 +1574,7 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     pointer-events: none;
 }
 
-.tm-playback-control-row.is-sliding .tm-right-controls {
-    transform: translateX(120%);
-    opacity: 0;
-    pointer-events: none;
-}
-
 /* 兼容未包含在 top-layer 下的直接子元素降级选择器 */
-.tm-playback-control-row:not(.tm-has-layers) > .tm-left-controls {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    height: 40px;
-    flex: 0 0 auto;
-    margin: 0;
-    padding: 0;
-}
-
-.tm-playback-control-row:not(.tm-has-layers) > .tm-right-controls {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    height: 40px;
-    flex: 0 0 auto;
-    margin: 0;
-    padding: 0;
-}
-
-/* 静音外层组件容器 */
 .tm-volume-control {
     display: flex;
     align-items: center;
@@ -2038,130 +1883,6 @@ body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player
     background-color: hsla(var(--shadcn-blue) / 0.7);
     color: hsl(var(--shadcn-blue-foreground));
     box-shadow: 0 0 0 2px hsla(var(--shadcn-blue) / 0.3);
-}
-
-.tm-control-button svg,
-.tm-control-button img {
-    width: 16px;
-    height: 16px;
-}
-
-/* 控制行 */
-.tm-control-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin-top: 4px;
-    opacity: 1;
-    transition: opacity var(--anim-quick), height var(--anim-quick);
-    height: auto;
-    overflow: visible;
-}
-
-.tm-control-row.hidden {
-    opacity: 0;
-    height: 0;
-    margin: 0;
-    overflow: hidden;
-}
-
-/* 评论区样式 */
-.tm-comment-row {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 10px;
-    border-bottom: 1px solid hsla(var(--shadcn-border) / 0.2);
-    padding-bottom: 10px;
-}
-
-.tm-comment-container {
-    width: 100%;
-    min-height: 60px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.tm-comment-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 14px;
-    font-weight: 500;
-    color: hsl(var(--shadcn-foreground));
-}
-
-.tm-comment-left {
-    display: flex;
-    align-items: center;
-}
-
-.tm-comment-title {
-    margin-right: 5px;
-}
-
-.tm-comment-count {
-    color: hsl(var(--shadcn-muted-foreground));
-    font-size: 12px;
-}
-
-.tm-comment-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.tm-comment-button {
-    border: none;
-    background-color: hsla(var(--shadcn-secondary) / 0.5);
-    color: hsl(var(--shadcn-secondary-foreground));
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
-}
-
-.tm-comment-button:hover {
-    background-color: hsla(var(--shadcn-accent) / 0.6);
-    transform: translateY(-1px);
-}
-
-.tm-comment-button:active {
-    transform: scale(0.96);
-}
-
-.tm-comment-write {
-    background-color: hsla(var(--shadcn-blue) / 0.7);
-    color: hsl(var(--shadcn-blue-foreground));
-}
-
-.tm-comment-write:hover {
-    background-color: hsla(var(--shadcn-blue) / 0.8);
-}
-
-.tm-comment-placeholder {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    color: hsl(var(--shadcn-muted-foreground));
-    font-size: 13px;
-    background-color: hsla(var(--shadcn-muted) / 0.1);
-    border-radius: 6px;
-}
-
-/* 横屏模式下的评论区样式 */
-@media screen and (orientation: landscape) {
-    .tm-comment-container {
-        min-height: 50px;
-    }
-    
-    .tm-comment-placeholder {
-        padding: 8px;
-    }
 }
 
 .tm-player-title {

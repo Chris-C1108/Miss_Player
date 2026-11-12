@@ -58,18 +58,25 @@ function getJsFiles(dir) {
   return results;
 }
 
-// 辅助：获取所有待审计 CSS 文件
+// 辅助：递归获取所有待审计 CSS 文件
 function getCssFiles() {
   const files = [];
   if (fs.existsSync(CSS_ENTRY)) {
     files.push(CSS_ENTRY);
   }
-  if (fs.existsSync(CSS_DIR)) {
-    const list = fs.readdirSync(CSS_DIR)
-      .filter(f => f.endsWith('.css'))
-      .map(f => path.join(CSS_DIR, f));
-    files.push(...list);
+  function walkDir(dir) {
+    if (!fs.existsSync(dir)) return;
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walkDir(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith('.css')) {
+        files.push(fullPath);
+      }
+    }
   }
+  walkDir(CSS_DIR);
   return files;
 }
 
