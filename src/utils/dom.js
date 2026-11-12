@@ -18,6 +18,16 @@ export function createElementWithStyle(tag, className, styleCSS) {
 
 
 /**
+ * 判断键盘事件是否为“非输入法组合态”的确认 Enter（规避 Safari WebKit Bug 165004）
+ * @param {KeyboardEvent} event
+ * @returns {boolean}
+ */
+export function isImeConfirmEnter(event) {
+    if (!event || event.key !== 'Enter') return false;
+    return !event.isComposing && event.keyCode !== 229;
+}
+
+/**
  * 为元素添加事件委托
  * @param {HTMLElement} element - 父元素
  * @param {string} eventType - 事件类型

@@ -157,6 +157,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     minify: false,
+    cssMinify: true,
     target: 'es2020',
     rolldownOptions: {
       output: {

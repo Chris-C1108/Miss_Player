@@ -12,7 +12,7 @@ function sanitizeSeekStepList(arr, isCustom = false) {
     return isCustom ? unique.slice(0, 30) : (unique.length > 0 ? unique : ['5s', '10s', '30s', '1m', '5m', '10m']);
 }
 
-import { getValue, setValue, Toast, playTapSound } from '../../utils/index.js';
+import { getValue, setValue, Toast, playTapSound, isImeConfirmEnter } from '../../utils/index.js';
 import { telemetry } from '../../telemetry';
 import { __ } from '../../constants/i18n.js';
 import { SyncManager, WebDavClient, getOrCreateClientId, getDeviceName } from '../../sync/index.js';
@@ -1348,7 +1348,7 @@ export class SettingsManager {
             };
 
             input.addEventListener('keydown', (evt) => {
-                if (evt.key === 'Enter') {
+                if (isImeConfirmEnter(evt)) {
                     evt.preventDefault();
                     submitValue();
                 } else if (evt.key === 'Escape') {

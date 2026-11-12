@@ -1,5 +1,5 @@
 import { SEMANTIC_TAG_TAXONOMY } from './tagTaxonomy.js';
-import { copyToClipboard, Toast, createModal } from '../../utils/index.js';
+import { copyToClipboard, Toast, createModal, isImeConfirmEnter } from '../../utils/index.js';
 import { formatTimeWithHours } from '../../utils/index.js';
 import { SyncManager } from '../../sync/index.js';
 import { __ } from '../../constants/i18n.js';
@@ -475,7 +475,7 @@ export class MarkerBottomSheet {
 
             const stopKeyProp = (e) => {
                 e.stopPropagation();
-                if (e.type === 'keydown' && e.key === 'Enter') {
+                if (e.type === 'keydown' && isImeConfirmEnter(e)) {
                     e.preventDefault();
                     input.blur();
                 }

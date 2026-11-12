@@ -1,5 +1,5 @@
 import { __ } from '../../constants/i18n.js';
-import { Toast, createModal } from '../../utils/index.js';
+import { Toast, createModal, isImeConfirmEnter } from '../../utils/index.js';
 import { isSiteDomain, getSiteUrls } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { formatSeconds } from '../comments/index.js';
@@ -252,7 +252,7 @@ export class CommentComposer {
             });
 
             commentInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
+                if (isImeConfirmEnter(e)) {
                     e.preventDefault();
                     sendBtn?.click();
                 } else if (e.key === 'Escape') {
@@ -764,7 +764,7 @@ export class CommentComposer {
 
             const stopKeyProp = (e) => {
                 e.stopPropagation();
-                if (e.type === 'keydown' && e.key === 'Enter') {
+                if (e.type === 'keydown' && isImeConfirmEnter(e)) {
                     e.preventDefault();
                     input.blur();
                 }
@@ -1207,7 +1207,7 @@ export class CommentComposer {
         });
 
         passwordInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+            if (isImeConfirmEnter(e)) {
                 e.preventDefault();
                 submitBtn.click();
             }
@@ -1350,7 +1350,7 @@ export class CommentComposer {
         });
 
         textarea.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (isImeConfirmEnter(e) && !e.shiftKey) {
                 e.preventDefault();
                 submitBtn.click();
             }

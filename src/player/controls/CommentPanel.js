@@ -17,6 +17,7 @@ import { CommentCacheManager } from '../comments/CommentCacheManager.js';
 import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 import {
     esc,
+    sanitizeCommentUrl,
     getVideoCodeFromUrl,
     fetchJableComments,
     fetchJavLibraryVideoId,
@@ -2732,11 +2733,13 @@ export class CommentPanel {
             ? `<div class="jc-body-text-content">${c.textHtml}</div><button class="jc-toggle-expand-btn">${expandBtnText}</button>`
             : c.textHtml;
 
-        const userHtml = c.userUrl
-            ? `<a href="${c.userUrl}" target="_blank" class="jc-u">${c.user}</a>`
-            : `<span class="jc-u">${c.user}</span>`;
+        const safeUserUrl = c.userUrl ? sanitizeCommentUrl(c.userUrl) : '';
+        const safeUser = esc(c.user || '');
+        const userHtml = safeUserUrl
+            ? `<a href="${esc(safeUserUrl)}" target="_blank" rel="noopener noreferrer" class="jc-u">${safeUser}</a>`
+            : `<span class="jc-u">${safeUser}</span>`;
 
-        const scoreHtml = c.score ? `<span class="jc-score-badge" title="评分">${c.score}</span>` : '';
+        const scoreHtml = c.score ? `<span class="jc-score-badge" title="评分">${esc(c.score)}</span>` : '';
         const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
         const isConverted = !!c.countdownApplied;
         const btnText = isConverted 
@@ -2747,21 +2750,25 @@ export class CommentPanel {
             : '若评论内容为剩余倒数时间，点击换算为实际播放时间';
 
         const countdownBtn = hasTimestamps
-            ? `<button class="jc-countdown-btn${isConverted ? ' jc-countdown-btn--active' : ''}" title="${btnTitle}">${btnText}</button>`
+            ? `<button class="jc-countdown-btn${isConverted ? ' jc-countdown-btn--active' : ''}" title="${esc(btnTitle)}">${esc(btnText)}</button>`
             : '';
-        const spamHtml = (c.spam && c.spam.label === 'SPAM') ? `<span class="jc-spam-badge" title="${c.spam.reason}">灌水: ${c.spam.category}</span>` : '';
+        const spamHtml = (c.spam && c.spam.label === 'SPAM')
+            ? `<span class="jc-spam-badge" title="${esc(c.spam.reason || '')}">灌水: ${esc(c.spam.category || '')}</span>`
+            : '';
+        const safeCommentId = esc(c.id || '');
+        const safeTime = (c.time && !c.time.includes('Invalid')) ? esc(c.time) : '';
 
         return `
-            <div class="jc-card ${isNew ? 'jc-card--new' : ''}" data-id="${c.id}">
+            <div class="jc-card ${isNew ? 'jc-card--new' : ''}" data-id="${safeCommentId}">
                 <div class="jc-bd">
                     <div class="jc-hdr">
                         <div class="jc-hdr-left">
-                            <span class="jc-t">${(c.time && !c.time.includes('Invalid')) ? c.time : ''}</span>
+                            <span class="jc-t">${safeTime}</span>
                         </div>
                         <div class="jc-hdr-right">
                             ${countdownBtn}
-                            ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${__('saveAllHighlights') || '转存高光'}" data-comment-id="${c.id}">📌 转存</button>` : ""}
-                            <button class="jc-action-btn jc-report-btn" title="上报该评论" data-comment-id="${c.id}" ${(this.playerCore?.options?.playerState?.settings?.debugMode || Boolean(getValue('debugMode', false))) ? '' : 'hidden'}>🐛 上报</button>
+                            ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${esc(__('saveAllHighlights') || '转存高光')}" data-comment-id="${safeCommentId}">📌 转存</button>` : ""}
+                            <button class="jc-action-btn jc-report-btn" title="上报该评论" data-comment-id="${safeCommentId}" ${(this.playerCore?.options?.playerState?.settings?.debugMode || Boolean(getValue('debugMode', false))) ? '' : 'hidden'}>🐛 上报</button>
                             ${userHtml}
                             ${scoreHtml}
                             ${spamHtml}

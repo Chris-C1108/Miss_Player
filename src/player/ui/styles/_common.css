@@ -162,3 +162,15 @@
     border-color: rgba(10, 132, 255, 0.35);
     color: #ffffff;
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .tm-video-overlay *,
+    .tm-video-overlay *::before,
+    .tm-video-overlay *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+

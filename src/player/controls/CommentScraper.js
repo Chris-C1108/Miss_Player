@@ -28,6 +28,8 @@ export {
 export {
     CFG,
     esc,
+    sanitizeCommentUrl,
+    sanitizeCommentColor,
     normalizeText,
     stripEmojis,
     classifyComment,

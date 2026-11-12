@@ -221,12 +221,23 @@ function setupViewport() {
                     try {
                         window.top.postMessage({ type: 'MP_IFRAME_EXPAND' }, '*');
                     } catch (_) {}
-                } else if (data.type === 'MP_IFRAME_EXPAND' && !isInIframe) {
+                } else if ((data.type === 'MP_IFRAME_EXPAND' || data.type === 'MP_IFRAME_COLLAPSE') && !isInIframe) {
                     const ifr = findVideoIframeElement();
-                    if (ifr) ifr.classList.add('tm-iframe-expanded');
-                } else if (data.type === 'MP_IFRAME_COLLAPSE' && !isInIframe) {
-                    const ifr = findVideoIframeElement();
-                    if (ifr) ifr.classList.remove('tm-iframe-expanded');
+                    if (!ifr) return;
+                    let fromKnownIframe = true;
+                    try {
+                        if (event.source && ifr.contentWindow) {
+                            fromKnownIframe = event.source === ifr.contentWindow || event.source.parent === ifr.contentWindow;
+                        }
+                    } catch (_) {
+                        fromKnownIframe = false;
+                    }
+                    if (!fromKnownIframe) return;
+                    if (data.type === 'MP_IFRAME_EXPAND') {
+                        ifr.classList.add('tm-iframe-expanded');
+                    } else {
+                        ifr.classList.remove('tm-iframe-expanded');
+                    }
                 }
             });
 

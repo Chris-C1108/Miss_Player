@@ -22,13 +22,14 @@
 | **Phase 10** | 移动端 iOS 视口重构与番号合规收敛 | **达成 ✅** | [Phase 0~12 历史里程碑归档](./docs/todo/history-phases-0-to-12.md) |
 | **Phase 11** | 极致性能深水区与现代架构跃迁 | **达成 ✅** | [Phase 0~12 历史里程碑归档](./docs/todo/history-phases-0-to-12.md) |
 | **Phase 12** | 控制面板单手模式组件聚合与竖屏重构 | **达成 ✅** | [Phase 0~12 历史里程碑归档](./docs/todo/history-phases-0-to-12.md) |
-| **Phase 14** | **CSS 样式架构重构与治理专项** | **达成 ✅** | **[Phase 14 专属规划方案](./docs/todo/phase-14-css-refactor.md)** |
+| **Phase 14** | **CSS 样式架构重构与治理专项** | **部分达成 ⚠️ (Step 2 未收口，转入 Phase 21.3 续办)** | **[Phase 14 专属规划方案](./docs/todo/phase-14-css-refactor.md)** |
 | **Phase 13** | **苹果人本化文案重构与五国母语对齐** | **达成 ✅** | **[Phase 13 专属规划方案](./docs/todo/phase-13-copywriting.md)** |
 | **Phase 15** | **UI/UX 深度优化与第三方脚本适配专项 (v5.7.1 ~ v5.7.4)** | **达成 ✅** | 详见 Release v5.7.4 |
 | **Phase 16** | **全局输入框与双模层叠上下文架构重构 (内外两界隔离与端态自适应)** | **达成 ✅** | 详见 Release v5.7.64 |
 | **Phase 17** | **Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环** | **达成 ✅** | **[Phase 17 专属规划方案](./docs/todo/phase-17-peach-strm-integration.md)** |
 | **Phase 19** | **流网关 (Miss Stream Gateway) 与脚本职责收敛为「只入库」** | **达成 ✅** | **[Phase 19 设计方案](./docs/todo/phase-19-stream-gateway.md)** |
 | **Phase 20** | **双轨播放热度图 (私有 WebDAV 漫游 + 社区全网高能 120 槽位量化)** | **达成 ✅** | 双轨 SVG 贝塞尔波形、Element-wise Max 漫游自愈、水位线差分增量防刷量 |
+| **Phase 21** | **安全加固、Safari 全端兼容与 CSS 重构收口** | **规划中 📋** | **[Phase 21 专属规划方案](./docs/todo/phase-21-hardening-and-css-completion.md)** |
 
 - [x] **20.1** 120 分位定长字节量化编解码器 (`quantizeBinsTo120` / `expand120ToBins` / 水位线差分 / Base64 体积仅 160 字符，6 项测试全通)
 - [x] **20.2** 双轨波形渲染与 WebDAV 漫游整合 (`HeatmapManager` 双轨 SVG 贝塞尔曲线、Element-wise Max 逐槽位取最大值融合、8 项测试全通)
@@ -38,6 +39,32 @@
 - [x] **20.6** WebDAV 路由器 HTML 劫持防伪、终极目录直探与全链路诊断聚合 (防光猫/路由器返回 HTML 登录页伪装 200/401/404、优先直探目标终极路径免疫 NAS 共享根目录权限拦截、私网 1.8s 极速探测、多端点全部失败聚合汇总报错详情，12 项测试全通，v5.7.118-beta.007)
 - [x] **20.7** WebDAV 全局统一协议守卫 (`_davRequest`)、每 Origin 并发限流 (Max 2)、中文路径 UTF-8 百分比安全编码、`PeachService`/`PeachSection` 校验收口、配置变更自动清理租约与根目录可见性 (`Depth: 1`) 智能诊断 (19 项测试全通，v5.7.118-beta.008)
 - [x] **20.8** WebDAV placeholder 与提示信息去私有 IP 与无厂商绑定重构 (清除所有 `192.168.2.250` 与单一品牌限定字样，兼容坚果云、Alist、Nextcloud 及各类私有云/NAS，20 项测试全通)
+
+---
+
+## 📋 规划中：Phase 21 - 安全加固、Safari 全端兼容与 CSS 重构收口
+
+> **背景**：基于 2026-11-12 全面代码体检，结合**油猴脚本权限边界**与 **Safari / iOS Stay 全端兼容基线（Safari 14+ / iOS 16–18+）** 严谨校准，收口历史遗留的 Phase 14 半途工程并止血真实风险。详见 **[Phase 21 专属规划方案](./docs/todo/phase-21-hardening-and-css-completion.md)**。
+
+- [x] **21.1 油猴安全边界止血 (DOM XSS 与跨帧鉴权)**
+  - [x] 修复 `CommentDataPipeline.js` `esc()` 未转义 `"`/`'`、`parseBBCode()` `[url]`/`[color]` 注入风险（补全 `http/https` 白名单与 `rel="noopener noreferrer"`，不依赖 Safari 缺失的 `Element.setHTML()`）；
+  - [x] 修复 `CommentPanel.js:2728` `renderCommentCard()` 第三方评论元字段未转义直拼；
+  - [x] 收紧 `src/index.js:208` `MP_IFRAME_EXPAND/COLLAPSE` 的 `event.source` 校验（保留跨域 iframe 兼容性）；
+  - [x] 新增 `tests/xss-sanitization.test.mjs` 覆盖 XSS 载荷与 IME 输入测试并接入 CI。
+- [ ] **21.2 Safari / iOS Stay 输入与渲染兼容加固**
+  - [x] 抽取 `isImeConfirmEnter(e)`（`!e.isComposing && e.keyCode !== 229`）修复全库 7 处中文/日文输入法误提交（精准规避 Safari WebKit bug 165004）；
+  - [x] `:host` 显式声明 `color-scheme: dark;`（Safari 13+），`_common.css` 补齐 `prefers-reduced-motion: reduce`（Safari 10.1+）；
+  - [x] `UIManager.js` 采用模块级缓存单例 `CSSStyleSheet`，保留 Safari 14–16.3 `<style>` 降级；
+  - [x] 显式拒绝 Google/Firefox 专属且不兼容 Safari 的 API（`Element.setHTML`、`interpolate-size`、`<dialog closedby="any">`、`moveBefore`）；
+  - [ ] iOS Safari 真实环境回归验收。
+- [ ] **21.3 Phase 14 CSS 重构续办与产物体积回落 (`< 1.0 MiB`)**
+  - [ ] 衔接 [Phase 14 Step 2](./docs/todo/phase-14-css-refactor.md)：合并 `_variables.css` 与 `00_tokens/_tokens.css` 重复变量、按 4 层拓扑物理拆分 `_player.css`(3026 行) / `_comments.css`(2319 行) / `_controls.css`(1644 行) / `_landscape_pc.css`；
+  - [ ] 修正 `scripts/audit-css.js` 对模板动态类名（如 `` `tm-status-badge-${site.status}` ``）及宿主类名的假阳性误报，核实真死代码后再安全清理；
+  - [ ] 构建期对 `?inline` CSS 执行注释/空白无损压缩（不触及 JS `mangle: false` 红线），将 `dist/miss_player.user.js` 从 `1303 KiB` 压回 `1.0 MiB` 安全线；
+  - [ ] `UIManager.js` 模块级缓存 `CSSStyleSheet`（保留 Safari 14–16.3 `<style>` 降级）、清理 `style.display` 为 `.is-hidden`、收敛残留魔法 `z-index`。
+- [ ] **21.4 上帝类渐进解耦与运行态优化**
+  - [ ] 拆解 `CommentPanel.js`（3438 行）与 `UIManager.js`（2017 行）；评估废弃 `webpack.config.js` 双打包耦合；
+  - [ ] 评估 `AdBlocker` / `MediaSniffer` 在 `@match *://*/*` 下的非目标站点提前退出策略。
 
 ---
 

@@ -35,12 +35,72 @@ export const CFG = {
     }
 };
 
-// Escape HTML utility
-export const esc = s => {
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
+// Escape HTML utility (5-char attribute-safe escaping; works in DOM and Node)
+const HTML_ESCAPE_MAP = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
 };
+
+export const esc = (s) => {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, (ch) => HTML_ESCAPE_MAP[ch]);
+};
+
+function decodeBasicHtmlEntities(str) {
+    return String(str)
+        .replace(/&amp;/gi, '&')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>');
+}
+
+/**
+ * 校验并净化评论/用户外链，仅放行 http/https 协议（拦截 javascript:/data:/协议相对路径）
+ * @param {string} rawUrl
+ * @param {string} [fallbackOrigin='https://c97k.com']
+ * @returns {string}
+ */
+export function sanitizeCommentUrl(rawUrl, fallbackOrigin = 'https://c97k.com') {
+    if (typeof rawUrl !== 'string') return '';
+    const trimmed = decodeBasicHtmlEntities(rawUrl)
+        .trim()
+        .replace(/^["']|["']$/g, '')
+        .trim();
+    if (!trimmed) return '';
+    if (/[\u0000-\u001F\u007F]/.test(trimmed) || trimmed.startsWith('//')) {
+        return '';
+    }
+    try {
+        const candidate = trimmed.startsWith('/') ? `${fallbackOrigin}${trimmed}` : trimmed;
+        const parsed = new URL(candidate);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return '';
+        }
+        return parsed.href;
+    } catch (_) {
+        return '';
+    }
+}
+
+const SAFE_COLOR_REGEX = /^(?:#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|[a-zA-Z]{3,20}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\))$/;
+
+/**
+ * 校验并净化 BBCode [color=...] 色值，防止属性逃逸与 CSS 注入
+ * @param {string} rawColor
+ * @returns {string}
+ */
+export function sanitizeCommentColor(rawColor) {
+    if (typeof rawColor !== 'string') return '';
+    const cleaned = decodeBasicHtmlEntities(rawColor)
+        .trim()
+        .replace(/^["']|["']$/g, '')
+        .trim();
+    return SAFE_COLOR_REGEX.test(cleaned) ? cleaned : '';
+}
 
 // =====================================================================
 //  1. TEXT NORMALIZATION
@@ -1004,23 +1064,23 @@ export function parseBBCode(text) {
     // 1. Convert [b]...[/b] to <b>...</b>
     html = html.replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<b>$1</b>');
     
-    // 2. Convert [color=...]...[/color] to <span style="color: ...">...</span>
-    html = html.replace(/\[color=([^\]]+)\]([\s\S]*?)\[\/color\]/gi, '<span style="color: $1">$2</span>');
+    // 2. Convert [color=...]...[/color] to <span style="color: ...">...</span> (whitelist validated)
+    html = html.replace(/\[color=([^\]]+)\]([\s\S]*?)\[\/color\]/gi, (match, rawColor, innerText) => {
+        const safeColor = sanitizeCommentColor(rawColor);
+        if (!safeColor) return innerText;
+        return `<span style="color: ${safeColor}">${innerText}</span>`;
+    });
     
-    // 3. Convert [url=...]...[/url] to <a href="..." target="_blank">...</a>
+    // 3. Convert [url=...]...[/url] to <a href="..." target="_blank" rel="noopener noreferrer">...</a>
     html = html.replace(/\[url=([^\]]+)\]([\s\S]*?)\[\/url\]/gi, (match, url, linkText) => {
-        let targetUrl = url;
-        if (url.startsWith('/')) {
-            targetUrl = `https://c97k.com${url}`;
-        }
-        return `<a href="${targetUrl}" target="_blank" class="jc-comment-link">${linkText}</a>`;
+        const safeUrl = sanitizeCommentUrl(url);
+        if (!safeUrl) return linkText;
+        return `<a href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer" class="jc-comment-link">${linkText}</a>`;
     });
     html = html.replace(/\[url\]([\s\S]*?)\[\/url\]/gi, (match, url) => {
-        let targetUrl = url;
-        if (url.startsWith('/')) {
-            targetUrl = `https://c97k.com${url}`;
-        }
-        return `<a href="${targetUrl}" target="_blank" class="jc-comment-link">${url}</a>`;
+        const safeUrl = sanitizeCommentUrl(url);
+        if (!safeUrl) return url;
+        return `<a href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer" class="jc-comment-link">${url}</a>`;
     });
     
     // 4. Strip any other unparsed tags to be safe (like [i], [u], etc.)

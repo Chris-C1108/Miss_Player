@@ -1,4 +1,13 @@
 import playerStyles from './style.css?inline';
+
+let cachedShadowStyleSheet = null;
+function getCachedShadowStyleSheet() {
+    if (cachedShadowStyleSheet) return cachedShadowStyleSheet;
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(playerStyles);
+    cachedShadowStyleSheet = sheet;
+    return cachedShadowStyleSheet;
+}
 import { ViewportDebugHUD } from './ViewportDebugHUD.js';
 /**
  * UI管理器类 - 负责创建和管理播放器UI元素
@@ -179,9 +188,7 @@ export class UIManager {
         if (!shadowRoot) return;
         try {
             if (shadowRoot.adoptedStyleSheets && typeof CSSStyleSheet !== 'undefined') {
-                const sheet = new CSSStyleSheet();
-                sheet.replaceSync(playerStyles);
-                shadowRoot.adoptedStyleSheets = [sheet];
+                shadowRoot.adoptedStyleSheets = [getCachedShadowStyleSheet()];
                 return;
             }
         } catch (_) {}
