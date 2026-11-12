@@ -1365,70 +1365,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     left: -9999px;
 }
 
-/* 循环时间容器状态样式 - 优化版 */
-/* A按钮容器 - 两种状态 */
-.tm-start-time-container.active {
-    background-color: hsl(var(--shadcn-green) / 0.15);
-    border-color: hsl(var(--shadcn-green) / 0.4);
-}
-
-.tm-start-time-container:not(.active) {
-    background-color: hsl(var(--shadcn-secondary) / 0.5);
-    border-color: hsl(var(--shadcn-border) / 0.1);
-}
-
-/* B按钮容器 - 两种状态 */
-.tm-end-time-container.active {
-    background-color: hsl(var(--shadcn-orange) / 0.15);
-    border-color: hsl(var(--shadcn-orange) / 0.4);
-}
-
-.tm-end-time-container:not(.active) {
-    background-color: hsl(var(--shadcn-secondary) / 0.5);
-    border-color: hsl(var(--shadcn-border) / 0.1);
-}
-
-/* A按钮标签 - 两种状态 */
-.tm-set-loop-start-label.active {
-    color: hsl(var(--shadcn-green));
-    opacity: 1;
-}
-
-.tm-set-loop-start-label:not(.active) {
-    opacity: 0.9;
-}
-
-/* B按钮标签 - 两种状态 */
-.tm-set-loop-end-label.active {
-    color: hsl(var(--shadcn-orange));
-    opacity: 1;
-}
-
-.tm-set-loop-end-label:not(.active) {
-    opacity: 0.9;
-}
-
-/* 循环时间文本 - 两种状态 */
-.tm-loop-start-position.active, .tm-loop-end-position.active {
-    color: hsl(var(--shadcn-foreground));
-    opacity: 1;
-}
-
-.tm-loop-start-position:not(.active), .tm-loop-end-position:not(.active) {
-    color: hsl(var(--shadcn-muted-foreground));
-    opacity: 0.9;
-}
-
-/* 循环按钮 - 两种状态 */
-.tm-loop-toggle-button.active {
-    background-color: hsl(var(--shadcn-red) / 0.1);
-    border-color: hsl(var(--shadcn-red) / 0.3);
-}
-
-.tm-loop-toggle-button:active {
-    transform: scale(0.96);
-}
-
 /* 循环区间连接效果 */
 .tm-loop-range {
     position: absolute;
@@ -1534,68 +1470,6 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
 .tm-loop-marker:hover::before {
     opacity: 1;
     transform: translateX(-50%) translateY(-4px);
-}
-
-/* 时间容器状态样式 */
-.tm-start-time-container-hover {
-    background-color: hsl(var(--shadcn-green) / 0.1);
-    border-color: hsl(var(--shadcn-green) / 0.3);
-}
-
-.tm-start-time-container-default {
-    background-color: hsl(var(--shadcn-secondary) / 0.5);
-    border-color: hsl(var(--shadcn-border) / 0.1);
-}
-
-.tm-end-time-container-hover {
-    background-color: hsl(var(--shadcn-orange) / 0.1);
-    border-color: hsl(var(--shadcn-orange) / 0.3);
-}
-
-.tm-end-time-container-default {
-    background-color: hsl(var(--shadcn-secondary) / 0.5);
-    border-color: hsl(var(--shadcn-border) / 0.1);
-}
-
-/* 循环按钮状态 */
-.tm-loop-button-hover {
-    background-color: hsl(var(--shadcn-accent) / 0.3);
-    transform: translateY(-1px);
-}
-
-.tm-loop-button-active {
-    background-color: hsl(var(--shadcn-muted) / 0.7);
-}
-
-.tm-loop-button-default {
-    background-color: hsl(var(--shadcn-secondary) / 0.5);
-    transform: translateY(0);
-}
-
-/* 暂停/播放速度指示器 */
-.tm-indicator-base {
-    position: absolute;
-    padding: 8px 16px;
-    background-color: hsla(var(--shadcn-card) / 0.6); /* 更透明 */
-    color: hsl(var(--shadcn-card-foreground));
-    border-radius: var(--shadcn-radius);
-    opacity: 0;
-    backdrop-filter: blur(15px); /* 增强模糊效果 */
-    -webkit-backdrop-filter: blur(15px);
-    box-shadow: var(--shadow-md);
-    border: 1px solid hsla(var(--shadcn-border) / 0.1); /* 淡化边框 */
-    transform: translateY(20px);
-    transition: opacity var(--anim-smooth), transform var(--anim-smooth);
-    pointer-events: none;
-    z-index: var(--z-controls);
-    font-size: 15px;
-    font-weight: 500;
-}
-
-.tm-indicator-base.visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
 }
 
 /* 暂停指示器 */
