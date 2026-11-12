@@ -305,16 +305,52 @@ export class SupabaseService {
         return false;
     }
 
+    // 默认官方 Cloudflare Worker 社区高能热度图边缘缓存网关
+    static DEFAULT_EDGE_CACHE_URL = 'https://miss-heatmap-cache.chen-m1108.workers.dev';
+
     /**
      * 读取指定番号的社区全网高能热度图 (120 槽位 Base64)
+     * (优先通过 Cloudflare Worker 边缘 Anycast 24h 缓存只读网关，异常时无缝降级直连 Supabase)
      * @param {string} videoCode
      * @returns {Promise<{ found: boolean, avcode: string, heatmapBase64: string, totalSamples: number, durationSeconds: number }|null>}
      */
     static async fetchCrowdHeatmap(videoCode) {
-        const config = this.getConfig();
-        if (!config.isEnabled || !videoCode) return null;
-
+        if (!videoCode) return null;
         const code = videoCode.toUpperCase();
+
+        // 1. 优先尝试 Cloudflare Worker 边缘 24h 缓存 (0 消耗 Supabase Egress 配额)
+        const edgeUrl = getValue('betaCrowdHeatmapEdgeUrl', this.DEFAULT_EDGE_CACHE_URL).trim().replace(/\/+$/, '');
+        if (edgeUrl) {
+            try {
+                const edgeRes = await this.request({
+                    method: 'GET',
+                    url: `${edgeUrl}/v1/heatmap/${encodeURIComponent(code)}`,
+                    timeout: 4000
+                });
+                if (edgeRes.status === 200) {
+                    const data = JSON.parse(edgeRes.data);
+                    if (data && data.found) {
+                        return {
+                            found: true,
+                            avcode: data.avcode,
+                            heatmapBase64: data.heatmap,
+                            totalSamples: data.totalSamples || 1,
+                            durationSeconds: data.durationSeconds || 0
+                        };
+                    } else if (data && data.found === false) {
+                        // 边缘缓存明确指示该番号暂无社区热度数据
+                        return { found: false, avcode: code };
+                    }
+                }
+            } catch (edgeErr) {
+                logger.warn('[Supabase] 边缘热度缓存网关降级:', edgeErr?.message || edgeErr);
+            }
+        }
+
+        // 2. 边缘缓存未就绪或降级时：直连 Supabase 查询
+        const config = this.getConfig();
+        if (!config.isEnabled) return null;
+
         try {
             const url = config.baseUrl + '/video_crowd_heatmap?avcode=eq.' + encodeURIComponent(code) + '&select=avcode,heatmap,total_samples,duration_seconds';
             const res = await this.request({
@@ -349,7 +385,7 @@ export class SupabaseService {
                 }
             }
         } catch (err) {
-            logger.warn('[Supabase] 获取社区高能热度失败:', err?.message || err);
+            logger.warn('[Supabase] 直连获取社区高能热度失败:', err?.message || err);
         }
         return null;
     }

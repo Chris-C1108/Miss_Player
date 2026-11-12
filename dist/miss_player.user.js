@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.010
+// @version            5.7.118-beta.011
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1357,7 +1357,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.010";
+		return "5.7.118-beta.011";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3291,7 +3291,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.010";
+		return "5.7.118-beta.011";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -5256,7 +5256,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.010";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.011";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -8611,9 +8611,34 @@
 			return false;
 		}
 		static async fetchCrowdHeatmap(videoCode) {
-			const config = this.getConfig();
-			if (!config.isEnabled || !videoCode) return null;
+			if (!videoCode) return null;
 			const code = videoCode.toUpperCase();
+			const edgeUrl = getValue("betaCrowdHeatmapEdgeUrl", this.DEFAULT_EDGE_CACHE_URL).trim().replace(/\/+$/, "");
+			if (edgeUrl) try {
+				const edgeRes = await this.request({
+					method: "GET",
+					url: `${edgeUrl}/v1/heatmap/${encodeURIComponent(code)}`,
+					timeout: 4e3
+				});
+				if (edgeRes.status === 200) {
+					const data = JSON.parse(edgeRes.data);
+					if (data && data.found) return {
+						found: true,
+						avcode: data.avcode,
+						heatmapBase64: data.heatmap,
+						totalSamples: data.totalSamples || 1,
+						durationSeconds: data.durationSeconds || 0
+					};
+					else if (data && data.found === false) return {
+						found: false,
+						avcode: code
+					};
+				}
+			} catch (edgeErr) {
+				logger.warn("[Supabase] 边缘热度缓存网关降级:", edgeErr?.message || edgeErr);
+			}
+			const config = this.getConfig();
+			if (!config.isEnabled) return null;
 			try {
 				const url = config.baseUrl + "/video_crowd_heatmap?avcode=eq." + encodeURIComponent(code) + "&select=avcode,heatmap,total_samples,duration_seconds";
 				const res = await this.request({
@@ -8647,7 +8672,7 @@
 					}
 				}
 			} catch (err) {
-				logger.warn("[Supabase] 获取社区高能热度失败:", err?.message || err);
+				logger.warn("[Supabase] 直连获取社区高能热度失败:", err?.message || err);
 			}
 			return null;
 		}
@@ -8681,6 +8706,7 @@
 			return false;
 		}
 	};
+	_defineProperty(SupabaseService, "DEFAULT_EDGE_CACHE_URL", "https://miss-heatmap-cache.chen-m1108.workers.dev");
 	var CrossDomainBridge = class {
 		static async checkShadowActive(siteKey) {
 			try {

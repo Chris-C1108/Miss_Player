@@ -1,5 +1,6 @@
 import assert from 'assert';
 import { resampleAndSmoothBins, generateSvgPath, HEATMAP_CONSTANTS } from '../src/player/managers/HeatmapManager.js';
+import { SupabaseService } from '../src/services/SupabaseService.js';
 
 console.log('🧪 开始执行视频播放热度与探索足迹单元测试...');
 
@@ -292,4 +293,66 @@ assert.strictEqual(hmSyncRecon.isCloudDirty, false, '成功上传 WebDAV 后 isC
 hmSyncRecon.destroy();
 console.log('✅ 8. 冷启动存量足迹自动上云与脏标记解耦自愈测试全部通过');
 
-console.log('\n🎉 全部 8 项视频播放热度、探索足迹与双轨同步状态测试 100% 通过！\n');
+// 9. 验证 SupabaseService.fetchCrowdHeatmap 边缘缓存网关优先与直连自愈降级
+{
+    const originalRequest = SupabaseService.request;
+    const originalGetConfig = SupabaseService.getConfig;
+    const requestedUrls = [];
+
+    SupabaseService.getConfig = () => ({
+        baseUrl: 'https://daosvqbphybjsgvpujil.supabase.co/rest/v1',
+        apiKey: 'test-key',
+        isEnabled: true
+    });
+
+    // 9.1 Edge 正常 200 返回
+    SupabaseService.request = async (opts) => {
+        requestedUrls.push(opts.url);
+        return {
+            status: 200,
+            data: JSON.stringify({
+                found: true,
+                avcode: 'WSP-101',
+                heatmap: 'A'.repeat(160),
+                totalSamples: 10,
+                durationSeconds: 3600
+            })
+        };
+    };
+
+    const resEdge = await SupabaseService.fetchCrowdHeatmap('WSP-101');
+    assert.strictEqual(resEdge.found, true);
+    assert.strictEqual(resEdge.totalSamples, 10);
+    assert.ok(requestedUrls[0].includes('miss-heatmap-cache.chen-m1108.workers.dev'), '首选必须请求 Cloudflare 边缘缓存网关');
+
+    // 9.2 Edge 异常 500 时，自动降级直连 Supabase
+    requestedUrls.length = 0;
+    SupabaseService.request = async (opts) => {
+        requestedUrls.push(opts.url);
+        if (opts.url.includes('workers.dev')) {
+            return { status: 500, data: '{"error":"Supabase credentials not configured on worker"}' };
+        }
+        // 回源 Supabase 直连
+        return {
+            status: 200,
+            data: JSON.stringify([{
+                avcode: 'WSP-101',
+                heatmap: '\\x0001',
+                total_samples: 3,
+                duration_seconds: 1800
+            }])
+        };
+    };
+
+    const resFallback = await SupabaseService.fetchCrowdHeatmap('WSP-101');
+    assert.strictEqual(resFallback.found, true);
+    assert.strictEqual(resFallback.totalSamples, 3);
+    assert.strictEqual(requestedUrls.length, 2, '必须在 Edge 失败后自动发起直连请求');
+    assert.ok(requestedUrls[1].includes('/video_crowd_heatmap?'), '降级请求必须直连 Supabase REST API');
+
+    SupabaseService.request = originalRequest;
+    SupabaseService.getConfig = originalGetConfig;
+    console.log('✅ 9. Cloudflare 边缘缓存优先与 Supabase 直连自愈降级测试全部通过');
+}
+
+console.log('\n🎉 全部 9 项视频播放热度、探索足迹与双轨同步状态测试 100% 通过！\n');
