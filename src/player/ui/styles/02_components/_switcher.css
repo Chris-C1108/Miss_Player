@@ -100,7 +100,7 @@
 }
 
 .mp-switcher-label.is-hidden {
-    opacity: 0 !important;
+    opacity: 0;
 }
 
 .mp-switcher-variant-slot {
@@ -115,8 +115,8 @@
 }
 
 .mp-switcher-variant-slot.is-visible {
-    opacity: 1 !important;
-    pointer-events: auto !important;
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .mp-switcher-action-btn {

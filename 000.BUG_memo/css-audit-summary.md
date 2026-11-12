@@ -1,7 +1,7 @@
 # Miss Player CSS 全局静态审计与摸排报告
 
-> 生成时间：2026-11-12T16:35:32.096Z  
-> 耗时：663ms | CSS 文件数：21 | JS 扫描文件数：96  
+> 生成时间：2026-11-12T16:46:32.704Z  
+> 耗时：668ms | CSS 文件数：21 | JS 扫描文件数：100  
 > 对应专项任务：Phase 14 (CSS Architecture Refactor) - 子任务 A
 
 ---
@@ -10,11 +10,11 @@
 
 | 维度指标 | 数值 | 状态/说明 |
 | :--- | :--- | :--- |
-| **CSS 源码总行数** | **9244** 行 | 包含 8 个子模块与 1 个入口 |
+| **CSS 源码总行数** | **9247** 行 | 包含 8 个子模块与 1 个入口 |
 | **CSS 规则总数 (Rules)** | **1013** 条 | PostCSS 解析规则总数 |
-| **独立规范化选择器数** | **1102** 个 | 拆分逗号后的单一选择器 |
+| **独立规范化选择器数** | **1103** 个 | 拆分逗号后的单一选择器 |
 | **独立 CSS 类名数** | **567** 个 | 全部样式提取的 class 集合 |
-| **`!important` 标记总数** | **73** 处 | 待治理（目标 < 50 处） |
+| **`!important` 标记总数** | **45** 处 | 待治理（目标 < 50 处） |
 | **0 引用自研类名嫌疑** | **2** 个 | `tm-*`, `mp-*`, `jc-*`, `is-*` 零引用 |
 | **Grade 1 确凿死选择器** | **0** 个 | 所含类名在 JS 中全部 0 命中 |
 | **重复声明选择器数** | **93** 个 | 其中跨文件重复 **51** 个 |
@@ -33,22 +33,22 @@
 | `src/player/ui/styles/00_tokens/_zindex.css` | 26 | 1.0 KB | 1 | 2 | 0 | **0** |
 | `src/player/ui/styles/01_core/_common.css` | 154 | 3.4 KB | 20 | 48 | 23 | **6** |
 | `src/player/ui/styles/01_core/_host.css` | 181 | 4.9 KB | 25 | 43 | 9 | **19** |
-| `src/player/ui/styles/01_core/_layout.css` | 732 | 18.7 KB | 75 | 115 | 48 | **16** |
-| `src/player/ui/styles/02_components/_comments.css` | 744 | 18.0 KB | 76 | 108 | 47 | **7** |
+| `src/player/ui/styles/01_core/_layout.css` | 732 | 18.7 KB | 75 | 115 | 48 | **12** |
+| `src/player/ui/styles/02_components/_comments.css` | 747 | 18.1 KB | 76 | 109 | 47 | **2** |
 | `src/player/ui/styles/02_components/_comments_sections.css` | 709 | 15.9 KB | 87 | 87 | 62 | **0** |
 | `src/player/ui/styles/02_components/_composer.css` | 127 | 2.6 KB | 16 | 20 | 15 | **0** |
-| `src/player/ui/styles/02_components/_control_panel.css` | 730 | 17.3 KB | 75 | 83 | 59 | **5** |
+| `src/player/ui/styles/02_components/_control_panel.css` | 730 | 17.2 KB | 75 | 83 | 59 | **1** |
 | `src/player/ui/styles/02_components/_controls.css` | 636 | 14.5 KB | 62 | 71 | 45 | **0** |
 | `src/player/ui/styles/02_components/_debug.css` | 128 | 3.9 KB | 25 | 25 | 21 | **0** |
 | `src/player/ui/styles/02_components/_marker_sheet.css` | 753 | 18.2 KB | 85 | 105 | 68 | **0** |
-| `src/player/ui/styles/02_components/_modals.css` | 756 | 17.5 KB | 87 | 91 | 59 | **4** |
+| `src/player/ui/styles/02_components/_modals.css` | 756 | 17.5 KB | 87 | 91 | 59 | **0** |
 | `src/player/ui/styles/02_components/_peach.css` | 601 | 12.1 KB | 77 | 82 | 66 | **0** |
 | `src/player/ui/styles/02_components/_settings_apple.css` | 587 | 12.2 KB | 67 | 67 | 48 | **0** |
 | `src/player/ui/styles/02_components/_settings_cards.css` | 499 | 11.3 KB | 64 | 64 | 44 | **0** |
 | `src/player/ui/styles/02_components/_settings_panels.css` | 309 | 7.6 KB | 31 | 38 | 26 | **0** |
-| `src/player/ui/styles/02_components/_switcher.css` | 220 | 4.6 KB | 25 | 26 | 18 | **3** |
-| `src/player/ui/styles/03_responsive/_landscape.css` | 783 | 22.5 KB | 84 | 113 | 41 | **9** |
-| `src/player/ui/styles/03_responsive/_single_hand.css` | 334 | 9.7 KB | 29 | 41 | 15 | **4** |
+| `src/player/ui/styles/02_components/_switcher.css` | 220 | 4.6 KB | 25 | 26 | 18 | **0** |
+| `src/player/ui/styles/03_responsive/_landscape.css` | 783 | 22.5 KB | 84 | 113 | 41 | **4** |
+| `src/player/ui/styles/03_responsive/_single_hand.css` | 334 | 9.7 KB | 29 | 41 | 15 | **1** |
 
 ---
 

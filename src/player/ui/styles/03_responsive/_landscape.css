@@ -474,16 +474,16 @@
     }
     .tm-player-container.tm-sidebar-hidden .tm-comments-panel {
         position: absolute;
-        width: 0 !important;
-        height: 0 !important;
+        width: 0;
+        height: 0;
         border: none;
         overflow: visible;
         background: transparent;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
-        pointer-events: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
+        pointer-events: none;
+        visibility: hidden;
+        opacity: 0;
     }
 
     /* 侧边栏控制按钮显示 */

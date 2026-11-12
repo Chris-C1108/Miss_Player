@@ -308,10 +308,10 @@ body.controls-hidden .tm-control-panel,
 body.controls-hidden .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
 .tm-player-container.controls-hidden:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter,
 :host(.controls-hidden) .tm-player-container:not([class*="tm-controls-docked-"]) .tm-single-hand-gutter {
-    opacity: 0 !important;
+    opacity: 0;
     visibility: hidden;
-    transform: translate3d(0, 20px, 0) !important;
-    pointer-events: none !important;
+    transform: translate3d(0, 20px, 0);
+    pointer-events: none;
 }
 
 /* 竖屏移动端手机视口下的单手模式布局 (仅在 <= 600px 竖屏手机下生效) */

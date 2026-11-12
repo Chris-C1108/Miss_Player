@@ -4,7 +4,7 @@ import { SyncManager } from '../../sync/index.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
 import { __ } from '../../constants/i18n.js';
 import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT_WRITE, ICON_PLUS } from '../../constants/icons.js';
-import { Toast, isMobile, createModal, copyToClipboard, getValue } from '../../utils/index.js';
+import { Toast, isMobile, getValue } from '../../utils/index.js';
 import { isSiteDomain, SITE_DOMAINS, checkSiteReachability } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { CrossDomainBridge } from '../../autologin/CrossDomainBridge.js';
@@ -14,6 +14,9 @@ import { telemetry } from '../../telemetry/index.js';
 import { CommentComposer } from './CommentComposer.js';
 import { CommentDebugCollector } from '../comments/CommentDebugCollector.js';
 import { CommentCacheManager } from '../comments/CommentCacheManager.js';
+import { CommentCodePreview } from '../comments/CommentCodePreview.js';
+import { showCommentReportModal } from '../comments/CommentReportModal.js';
+import { renderCommentCardHtml, renderCommentSectionHtml, renderLoginBadgeHtml as renderLoginBadgeHtmlHelper } from '../comments/CommentCardRenderer.js';
 import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 import {
     esc,
@@ -225,6 +228,7 @@ export class CommentPanel {
         this.uiElements = playerCore?.uiElements || controlManager?.uiElements;
         this.targetVideo = playerCore?.targetVideo;
         this.loopManager = null;
+        this.codePreview = new CommentCodePreview(this);
 
         this.videoCode = '';
         this.comments = [];          // 所有采集的原始评论数据（向下兼容）
@@ -759,10 +763,7 @@ export class CommentPanel {
         this.uiElements.playerContainer.addEventListener('mouseover', (e) => {
             const codeLink = e.target.closest('.jc-code-link');
             if (codeLink) {
-                if (this._codePreviewLeaveTimer) {
-                    clearTimeout(this._codePreviewLeaveTimer);
-                    this._codePreviewLeaveTimer = null;
-                }
+                this.codePreview.cancelLeave();
                 const code = codeLink.getAttribute('data-code');
                 if (code) {
                     this._codePreviewHoverTimer = setTimeout(() => {
@@ -779,9 +780,7 @@ export class CommentPanel {
                     clearTimeout(this._codePreviewHoverTimer);
                     this._codePreviewHoverTimer = null;
                 }
-                this._codePreviewLeaveTimer = setTimeout(() => {
-                    this.hideCodePreview();
-                }, 250);
+                this.codePreview.scheduleLeave(250);
             }
         });
 
@@ -1376,294 +1375,18 @@ export class CommentPanel {
     }
 
     /**
-     * 处理评论中番号点击，复制并跳转搜索
-     * @param {string} code - 番号
-     */
-    /**
-     * 处理评论中番号点击，弹出操作模态框（拷贝番号 / 跳转到视频页面）
-     * @param {string} code - 番号
-     */
-    /**
      * 处理评论中番号点击：仅显示视频预览浮窗，同时自动拷贝番号
-     * @param {string} code - 番号
-     * @param {HTMLElement} [targetEl] - 触发元素
      */
     handleCodeClick(code, targetEl) {
-        const cleanCode = (code || '').toUpperCase().trim();
-        if (!cleanCode) return;
-
-        // 1. 静默拷贝番号并弹出 Toast
-        this._doCopyCode(cleanCode);
-
-        // 2. 触发或保持小视频预览浮窗
-        if (targetEl) {
-            this.showCodePreview(cleanCode, targetEl);
-        }
+        this.codePreview.handleCodeClick(code, targetEl);
     }
 
-    _doCopyCode(code) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(code).then(() => {
-                Toast(`番号已复制: ${code}`, 2000, 'success');
-            }).catch(err => {
-                console.error('Failed to copy code:', err);
-                this.fallbackCopyText(code);
-            });
-        } else {
-            this.fallbackCopyText(code);
-        }
-    }
-
-    fallbackCopyText(text) {
-        copyToClipboard(text).then(success => {
-            if (success) Toast(`番号已复制: ${text}`, 2000, 'success');
-            else Toast(`复制失败，请手动复制: ${text}`, 3000, 'warning');
-        });
-    }
-
-    /**
-     * 显示番号预览浮层 (PC端悬浮/点击 / 移动端长按/点击)
-     * 点击预览窗中的视频即可跳转到视频页面
-     * @param {string} code 
-     * @param {HTMLElement} targetEl 
-     */
     showCodePreview(code, targetEl) {
-        if (!code || !targetEl) return;
-        const cleanCode = code.toUpperCase().trim();
-        const lowCode = code.toLowerCase().trim();
-
-        if (!this._codePreviewPopover) {
-            this._codePreviewPopover = document.createElement('div');
-            this._codePreviewPopover.className = 'jc-code-preview-popover';
-
-            // 严禁预览浮层内部的所有点击与触摸交互冒泡给视频层或控制层，彻底杜绝被误判为视频点击或唤醒控制栏
-            const stopPop = (e) => e.stopPropagation();
-            this._codePreviewPopover.addEventListener('pointerdown', stopPop);
-            this._codePreviewPopover.addEventListener('mousedown', stopPop);
-            this._codePreviewPopover.addEventListener('touchstart', stopPop, { passive: true });
-            this._codePreviewPopover.addEventListener('touchmove', stopPop, { passive: true });
-            this._codePreviewPopover.addEventListener('mousemove', stopPop);
-            this._codePreviewPopover.addEventListener('click', stopPop);
-
-            // 鼠标移入浮层本身时保持显示，移出时隐藏
-            this._codePreviewPopover.addEventListener('mouseenter', () => {
-                if (this._codePreviewLeaveTimer) {
-                    clearTimeout(this._codePreviewLeaveTimer);
-                    this._codePreviewLeaveTimer = null;
-                }
-            });
-            this._codePreviewPopover.addEventListener('mouseleave', () => {
-                this.hideCodePreview();
-            });
-
-            // 点击外部区域自动收起预览浮层（适配移动端和点击交互，兼容 Shadow DOM 事件穿透路径 composedPath）
-            this._onDocumentClickForPreview = (e) => {
-                if (!this._codePreviewPopover || !this._codePreviewPopover.classList.contains('active')) return;
-                const path = e.composedPath ? e.composedPath() : [];
-                const isInside = path.some(el => el && el.classList && (
-                    el.classList.contains('jc-code-preview-popover') || 
-                    el.classList.contains('jc-code-link')
-                ));
-                if (!isInside) {
-                    this.hideCodePreview();
-                }
-            };
-            document.addEventListener('pointerdown', this._onDocumentClickForPreview, true);
-        }
-
-        // 优先挂载在评论区容器内部 (天然隶属于评论区事件免扰范围)，并享有 Shadow DOM 完整样式
-        const targetParent = this.commentsPanel ||
-                             this.commentsPanel?.closest('.tm-player-container') ||
-                             this.uiElements?.playerContainer ||
-                             document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container') ||
-                             document.body;
-
-        if (this._codePreviewPopover.parentNode !== targetParent) {
-            targetParent.appendChild(this._codePreviewPopover);
-        }
-
-        const pop = this._codePreviewPopover;
-        pop.setAttribute('data-current-code', cleanCode);
-        const loadingText = __('previewLoading') || '正在加载预览...';
-        const notFoundText = __('previewNotFound') || '暂无预览小视频';
-        const jumpTip = __('goToVideo') || '点击跳转到视频页面';
-
-        pop.innerHTML = `<div class="jc-code-preview-video-wrap" title="${esc(jumpTip)}">
-            <div class="jc-code-preview-loading">
-                <div class="jc-code-preview-spinner"></div>
-                <span>${loadingText}</span>
-            </div>
-            <video class="jc-code-preview-video is-hidden" loop muted playsinline referrerpolicy="no-referrer"></video>
-            <div class="jc-code-preview-fallback is-hidden">
-                <svg class="mp-preview-fallback-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                <span>${notFoundText}</span>
-            </div>
-            <div class="jc-code-preview-hover-hint">
-                <span>${esc(jumpTip)}</span>
-            </div>
-        </div>
-        <div class="jc-code-preview-header">
-            <span class="jc-code-preview-title">${esc(cleanCode)}</span>
-            <span class="jc-code-preview-badge">Preview</span>
-        </div>`;
-
-        // 点击预览窗中视频/卡片区域，跳转到 MissAV 对应视频页面
-        const videoWrap = pop.querySelector('.jc-code-preview-video-wrap');
-        if (videoWrap) {
-            videoWrap.style.cursor = 'pointer';
-            const doOpenVideo = (e) => {
-                if (e) {
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    if (e.cancelable) e.preventDefault();
-                }
-                const targetUrl = `https://missav.ai/${cleanCode.toLowerCase()}`;
-                if (typeof GM_openInTab === 'function') {
-                    GM_openInTab(targetUrl, { active: true });
-                } else {
-                    window.open(targetUrl, '_blank');
-                }
-                this.hideCodePreview();
-            };
-
-            videoWrap.addEventListener('click', doOpenVideo);
-        }
-
-        // 计算定位
-        const rect = targetEl.getBoundingClientRect();
-        const popWidth = 256;
-        const popHeight = 180;
-
-        let left = rect.left + (rect.width / 2) - (popWidth / 2);
-        let top = rect.top - popHeight - 10;
-
-        // 视口边界碰撞保护
-        if (left < 10) left = 10;
-        if (left + popWidth > window.innerWidth - 10) left = window.innerWidth - popWidth - 10;
-        if (top < 10) {
-            // 上方空间不足，显示在下方
-            top = rect.bottom + 10;
-        }
-
-        pop.style.left = `${Math.round(left)}px`;
-        pop.style.top = `${Math.round(top)}px`;
-
-        requestAnimationFrame(() => {
-            pop.classList.add('active');
-        });
-
-        const candidates = [
-            `https://fourhoi.com/${lowCode}/preview.mp4`,
-            `https://fourhoi.com/${lowCode}-uncensored-leak/preview.mp4`
-        ];
-
-        const videoEl = pop.querySelector('.jc-code-preview-video');
-        const loadingEl = pop.querySelector('.jc-code-preview-loading');
-        const fallbackEl = pop.querySelector('.jc-code-preview-fallback');
-
-        let candidateIndex = 0;
-        this._currentPreviewReqId = (this._currentPreviewReqId || 0) + 1;
-        const reqId = this._currentPreviewReqId;
-
-        const loadVideoBlob = (url) => {
-            return new Promise((resolve, reject) => {
-                if (typeof GM_xmlhttpRequest !== 'function') {
-                    // 非油猴环境直连
-                    resolve(url);
-                    return;
-                }
-                GM_xmlhttpRequest({
-                    method: 'GET',
-                    url: url,
-                    responseType: 'blob',
-                    headers: {
-                        'Referer': 'https://missav.ai/'
-                    },
-                    timeout: 8000,
-                    onload: (res) => {
-                        if (res.status === 200 && res.response) {
-                            try {
-                                const blobUrl = URL.createObjectURL(res.response);
-                                resolve(blobUrl);
-                            } catch (e) {
-                                reject(e);
-                            }
-                        } else {
-                            reject(new Error(`HTTP_${res.status}`));
-                        }
-                    },
-                    onerror: () => reject(new Error('NETWORK_ERROR')),
-                    ontimeout: () => reject(new Error('TIMEOUT'))
-                });
-            });
-        };
-
-        const tryNextCandidate = async () => {
-            if (reqId !== this._currentPreviewReqId) return;
-
-            if (candidateIndex >= candidates.length) {
-                if (loadingEl) loadingEl.classList.toggle('is-hidden', true);
-                if (videoEl) videoEl.classList.toggle('is-hidden', true);
-                if (fallbackEl) fallbackEl.classList.toggle('is-hidden', false);
-                return;
-            }
-
-            const currentSrc = candidates[candidateIndex++];
-            try {
-                const playUrl = await loadVideoBlob(currentSrc);
-                if (reqId !== this._currentPreviewReqId) {
-                    if (playUrl.startsWith('blob:')) URL.revokeObjectURL(playUrl);
-                    return;
-                }
-                if (this._currentBlobUrl && this._currentBlobUrl.startsWith('blob:')) {
-                    URL.revokeObjectURL(this._currentBlobUrl);
-                }
-                this._currentBlobUrl = playUrl;
-
-                videoEl.src = playUrl;
-                videoEl.load();
-            } catch (err) {
-                tryNextCandidate();
-            }
-        };
-
-        videoEl.oncanplay = () => {
-            if (reqId !== this._currentPreviewReqId) return;
-            if (loadingEl) loadingEl.classList.toggle('is-hidden', true);
-            if (fallbackEl) fallbackEl.classList.toggle('is-hidden', true);
-            videoEl.classList.toggle('is-hidden', false);
-            videoEl.play().catch(() => {});
-        };
-
-        videoEl.onerror = () => {
-            tryNextCandidate();
-        };
-
-        tryNextCandidate();
+        this.codePreview.show(code, targetEl);
     }
 
-    /**
-     * 隐藏番号预览浮层
-     */
     hideCodePreview() {
-        if (this._codePreviewLeaveTimer) {
-            clearTimeout(this._codePreviewLeaveTimer);
-            this._codePreviewLeaveTimer = null;
-        }
-        this._currentPreviewReqId = (this._currentPreviewReqId || 0) + 1;
-        if (this._currentBlobUrl && this._currentBlobUrl.startsWith('blob:')) {
-            URL.revokeObjectURL(this._currentBlobUrl);
-            this._currentBlobUrl = null;
-        }
-        if (this._codePreviewPopover) {
-            this._codePreviewPopover.classList.remove('active');
-            const videoEl = this._codePreviewPopover.querySelector('video');
-            if (videoEl) {
-                videoEl.pause();
-                videoEl.removeAttribute('src');
-                videoEl.load();
-            }
-        }
+        this.codePreview.hide();
     }
 
     /**
@@ -2551,133 +2274,16 @@ export class CommentPanel {
     }
 
     renderSectionHtml(siteKey) {
-        const site = this.sites[siteKey];
-        if (!site) return '';
-
-        const state = this.playerCore?.options?.playerState;
-        const enabledSources = state?.settings?.enabledCommentSources || { jable: true, javdb: true, javlibrary: false };
-        const isSiteEnabled = (siteKey === 'javlib')
-            ? (enabledSources.javlib !== false && enabledSources.javlibrary !== false)
-            : (enabledSources[siteKey] !== false);
-
-        if (!isSiteEnabled) return '';
-
-        let contentHtml = '';
-        if (site.status === 'loading') {
-            contentHtml = `
-                <div class="tm-comment-loader-graphic">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                </div>
-            `;
-        } else if (site.status === 'unreachable') {
-            contentHtml = `
-                <div class="tm-comment-status-box is-unreachable">
-                    <p class="tm-comment-status-title">⚠️ 无法连接到 ${site.name}</p>
-                    <p class="tm-comment-status-desc">请检查网络代理，或该站点在当前环境不可达。</p>
-                </div>
-            `;
-        } else if (site.status === 'mobile_unsupported') {
-            contentHtml = `
-                <div class="tm-comment-status-box is-unsupported">
-                    <p class="tm-comment-status-title">📱 该站点评论采集在移动端不可用</p>
-                    <p class="tm-comment-status-desc">JAVLibrary 采集需使用后台独立标签页（影子通道），移动端浏览器不支持后台静默多标签页协同。请在 PC 端浏览器查看该站点评论。</p>
-                </div>
-            `;
-        } else if (site.status === 'not_found') {
-            contentHtml = `
-                <div class="tm-comment-status-box">
-                    <p class="tm-comment-status-title">此影片在 ${site.name} 上未找到评论。</p>
-                </div>
-            `;
-        } else if (site.status === 'empty') {
-            contentHtml = `
-                <div class="tm-comment-status-box">
-                    <p class="tm-comment-status-title">暂无评论</p>
-                </div>
-            `;
-        } else if (site.status === 'cf_shield') {
-            if (siteKey === 'javlib' && this.javlibVerifyingStatus === 'verifying') {
-                contentHtml = `
-                    <div class="tm-comments-cf-warning is-verifying">
-                        <div class="tm-comments-cf-actions">
-                            <div class="tm-comment-loader-graphic">
-                                <div class="dot"></div>
-                                <div class="dot"></div>
-                                <div class="dot"></div>
-                            </div>
-                            <span class="tm-comment-status-title">正在后台尝试自动通过 JAVLibrary 验证，请稍候...</span>
-                        </div>
-                    </div>
-                `;
-            } else {
-                const targetDomain = siteKey === 'jable' ? (this.jableFailedDomain || `https://${SITE_DOMAINS.JABLE.primary}`) :
-                                     (siteKey === 'javlib' ? (this.javlibFailedDomain || `https://${SITE_DOMAINS.JAVLIBRARY.primary}`) :
-                                     `https://${SITE_DOMAINS.JAVDB.primary}`);
-                const retryBtnClass = siteKey === 'jable' ? 'tm-jable-verify-retry-btn' :
-                                      (siteKey === 'javlib' ? 'tm-comments-verify-retry-btn' : 'tm-javdb-verify-retry-btn');
-                contentHtml = `
-                    <div class="tm-comments-cf-warning">
-                        <span>${site.name} 评论抓取受阻 (Cloudflare 拦截)</span>
-                        <div class="tm-comments-cf-actions">
-                            <a href="${targetDomain}/" target="_blank" class="tm-comments-verify-link">去验证</a>
-                            <button class="${retryBtnClass} tm-comments-verify-btn">重新加载</button>
-                            ${siteKey === 'javlib' ? '<button class="tm-comments-verify-copy-logs-btn tm-comments-verify-btn">复制日志</button>' : ''}
-                        </div>
-                    </div>
-                `;
-            }
-        } else if (site.status === 'loaded') {
-            contentHtml = site.filteredComments.map(c => {
-                const isNew = this.renderedCommentIds.size > 0 && !this.renderedCommentIds.has(c.id);
-                return this.renderCommentCard(c, isNew);
-            }).join('');
-
-            if (site.loading) {
-                contentHtml += `
-                    <div class="tm-comment-bottom-loader tm-comment-loader-graphic">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                    </div>
-                `;
-            } else if (!site.hasMore) {
-                contentHtml += `
-                    <div class="tm-comment-end-marker">-end-</div>
-                `;
-            }
-        }
-
-        const badgeTextMap = {
-            'loading': '采集中...',
-            'unreachable': '不可达',
-            'not_found': '未收录',
-            'empty': '暂无评论',
-            'cf_shield': '需验证',
-            'mobile_unsupported': '移动端浏览器不支持',
-            'loaded': `共 ${site.filteredComments.length}${site.hasMore ? '+' : ''} 条`
-        };
-        const badgeText = badgeTextMap[site.status] || '';
-        const isCollapsed = (site.status === 'unreachable' || site.status === 'not_found' || site.status === 'mobile_unsupported' || site.collapsed);
-        const loginSiteKey = siteKey === 'jable' ? 'JABLE' : (siteKey === 'javlib' ? 'JAVLIBRARY' : '');
-        const loginBadgeHtml = loginSiteKey ? this.renderLoginBadgeHtml(loginSiteKey) : '';
-        const titleMap = { jable: '■ Jable.tv', javlib: '■ JAVLibrary', javdb: '■ JavDB' };
-
-        return `
-            <div class="tm-comment-section${isCollapsed ? ' is-collapsed' : ''}" id="tm-comment-section-${siteKey}">
-                <div class="tm-comment-section-hdr" title="点击展开/折叠">
-                    <span class="tm-comment-section-title">${titleMap[siteKey]}</span>
-                    <div class="tm-comment-hdr-right">
-                        ${loginBadgeHtml}
-                        <span class="tm-comment-status-badge tm-status-badge-${site.status}">${badgeText}</span>
-                    </div>
-                </div>
-                <div class="tm-comment-section-body">
-                    ${contentHtml}
-                </div>
-            </div>
-        `;
+        return renderCommentSectionHtml(siteKey, {
+            sites: this.sites,
+            playerCore: this.playerCore,
+            javlibVerifyingStatus: this.javlibVerifyingStatus,
+            jableFailedDomain: this.jableFailedDomain,
+            javlibFailedDomain: this.javlibFailedDomain,
+            renderedCommentIds: this.renderedCommentIds,
+            expandedCommentIds: this.expandedCommentIds,
+            renderLoginBadge: (loginSiteKey) => this.renderLoginBadgeHtml(loginSiteKey)
+        });
     }
 
     /**
@@ -2725,61 +2331,11 @@ export class CommentPanel {
     }
 
     renderCommentCard(c, isNew = false) {
-        const isLongText = c.text && c.text.length > 200;
-        const isExpanded = this.expandedCommentIds ? (this.expandedCommentIds.has(c.id) || Boolean(c.isExpanded)) : false;
-        const textClass = isLongText ? 'jc-body-text jc-body-text--collapsible' : 'jc-body-text';
-        const expandBtnText = isExpanded ? (__('commentsCollapse') || '收起') : (__('commentsExpand') || '展开');
-        const expandBtn = isLongText
-            ? `<div class="jc-body-text-content">${c.textHtml}</div><button class="jc-toggle-expand-btn">${expandBtnText}</button>`
-            : c.textHtml;
-
-        const safeUserUrl = c.userUrl ? sanitizeCommentUrl(c.userUrl) : '';
-        const safeUser = esc(c.user || '');
-        const userHtml = safeUserUrl
-            ? `<a href="${esc(safeUserUrl)}" target="_blank" rel="noopener noreferrer" class="jc-u">${safeUser}</a>`
-            : `<span class="jc-u">${safeUser}</span>`;
-
-        const scoreHtml = c.score ? `<span class="jc-score-badge" title="评分">${esc(c.score)}</span>` : '';
-        const hasTimestamps = Array.isArray(c.timestamps) && c.timestamps.length > 0;
-        const isConverted = !!c.countdownApplied;
-        const btnText = isConverted 
-            ? (__('commentCountdownReverted') || '显示倒数') 
-            : (__('commentCountdownConvert') || '转为正序');
-        const btnTitle = isConverted 
-            ? '当前已换算为实际播放时间，点击恢复显示原始倒数' 
-            : '若评论内容为剩余倒数时间，点击换算为实际播放时间';
-
-        const countdownBtn = hasTimestamps
-            ? `<button class="jc-countdown-btn${isConverted ? ' jc-countdown-btn--active' : ''}" title="${esc(btnTitle)}">${esc(btnText)}</button>`
-            : '';
-        const spamHtml = (c.spam && c.spam.label === 'SPAM')
-            ? `<span class="jc-spam-badge" title="${esc(c.spam.reason || '')}">灌水: ${esc(c.spam.category || '')}</span>`
-            : '';
-        const safeCommentId = esc(c.id || '');
-        const safeTime = (c.time && !c.time.includes('Invalid')) ? esc(c.time) : '';
-
-        return `
-            <div class="jc-card ${isNew ? 'jc-card--new' : ''}" data-id="${safeCommentId}">
-                <div class="jc-bd">
-                    <div class="jc-hdr">
-                        <div class="jc-hdr-left">
-                            <span class="jc-t">${safeTime}</span>
-                        </div>
-                        <div class="jc-hdr-right">
-                            ${countdownBtn}
-                            ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${esc(__('saveAllHighlights') || '转存高光')}" data-comment-id="${safeCommentId}">📌 转存</button>` : ""}
-                            <button class="jc-action-btn jc-report-btn" title="上报该评论" data-comment-id="${safeCommentId}" ${(this.playerCore?.options?.playerState?.settings?.debugMode || Boolean(getValue('debugMode', false))) ? '' : 'hidden'}>🐛 上报</button>
-                            ${userHtml}
-                            ${scoreHtml}
-                            ${spamHtml}
-                        </div>
-                    </div>
-                    <div class="${textClass}" ${isLongText ? `data-collapsed="${isExpanded ? 'false' : 'true'}"` : ''}>
-                        ${expandBtn}
-                    </div>
-                </div>
-            </div>
-        `;
+        return renderCommentCardHtml(c, {
+            isNew,
+            expandedCommentIds: this.expandedCommentIds,
+            playerCore: this.playerCore
+        });
     }
 
     renderCommentsList() {
@@ -3136,23 +2692,7 @@ export class CommentPanel {
      */
     renderLoginBadgeHtml(siteKey) {
         const provider = this.getLoginProviderForSite(siteKey);
-        if (!provider) return ''; // 非支持登录的站点，不显示登录指示器
-        
-        // 若当前仍为 undefined/null，同步读取 provider 的持久化缓存与凭据预测，实现 0 延迟渲染
-        if (this.siteLoginStates[siteKey] === undefined || this.siteLoginStates[siteKey] === null) {
-            if (typeof provider.getCachedLoginStatus === 'function') {
-                this.siteLoginStates[siteKey] = provider.getCachedLoginStatus();
-            }
-        }
-
-        const isLoggedIn = this.siteLoginStates[siteKey];
-        if (isLoggedIn === true) {
-            return `<span class="tm-comment-login-badge is-logged-in">已登录</span>`;
-        } else if (isLoggedIn === false) {
-            return `<span class="tm-comment-login-badge is-not-logged-in" title="点击登录" data-site="${siteKey}">未登录</span>`;
-        } else {
-            return `<span class="tm-comment-login-badge is-checking">检测中...</span>`;
-        }
+        return renderLoginBadgeHtmlHelper(siteKey, this.siteLoginStates, provider);
     }
 
     /**
@@ -3321,7 +2861,7 @@ export class CommentPanel {
             this.targetVideo.removeEventListener('loadedmetadata', this.handleMetadataLoadedBound);
         }
         this.cleanupJavlibVerification();
-        this.hideCodePreview();
+        this.codePreview.cleanup();
         if (this._onTabsUpdatedBound) {
             window.removeEventListener('mp_tabs_updated', this._onTabsUpdatedBound);
             this._onTabsUpdatedBound = null;
@@ -3329,73 +2869,7 @@ export class CommentPanel {
     }
 
     _showCommentReportModal(comment) {
-        let selectedReason = "时间解析错误";
-        const { modal, close } = createModal(`<div class="tm-report-modal-dialog"><div class="tm-custom-modal-title">评论问题上报</div><div class="tm-report-modal-hint">问题将上报至 Supabase 数据库用于算法分析与模型微调</div><div class="tm-report-modal-preview">${esc(comment.rawText || comment.text || "")}</div><div class="tm-report-chip-group"><span class="tm-report-chip active">时间解析错误</span><span class="tm-report-chip">倒序时间需过滤</span><span class="tm-report-chip">垃圾水贴</span><span class="tm-report-chip">漏抓关键片段</span></div><textarea class="tm-report-note" placeholder="附加补充说明 (可选)..."></textarea><div class="tm-report-modal-buttons"><button class="tm-custom-modal-cancel-btn">取消</button><button class="tm-custom-modal-submit-btn">提交上报</button></div></div>`, { extraClass: "tm-report-modal-overlay" });
-        const chips = modal.querySelectorAll(".tm-report-chip");
-        chips.forEach(chip => {
-            chip.addEventListener("click", () => {
-                chips.forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                selectedReason = chip.textContent;
-            });
-        });
-        const reportNote = modal.querySelector(".tm-report-note");
-        if (reportNote) {
-            const handleNoteFocus = (e) => {
-                reportNote.focus({ preventScroll: true });
-                if (e.cancelable && e.type === 'mousedown') {
-                    e.preventDefault();
-                }
-            };
-            reportNote.addEventListener('mousedown', handleNoteFocus);
-            reportNote.addEventListener('touchstart', handleNoteFocus, { passive: true });
-        }
-
-        modal.querySelector(".tm-custom-modal-cancel-btn").addEventListener("click", close);
-        const submitBtn = modal.querySelector(".tm-custom-modal-submit-btn");
-        submitBtn.addEventListener("click", async () => {
-            const note = modal.querySelector(".tm-report-note").value.trim();
-            const reportPayload = {
-                videoCode: this.videoCode,
-                commentId: comment.id,
-                userName: comment.user || "匿名",
-                commentText: comment.rawText || comment.text || "",
-                reason: selectedReason,
-                userNote: note || null,
-                timestamps: comment.timestamps || null,
-                reportedAt: new Date().toISOString()
-            };
-            DebugLogPanel.addLog("[REPORT] 评论上报: [" + selectedReason + "] id=" + comment.id + " (" + this.videoCode + ")", "warn");
-            submitBtn.textContent = "上报中...";
-            submitBtn.disabled = true;
-
-            // 1. 优先上报至 Supabase 数据库
-            let reportedToDb = false;
-            try {
-                reportedToDb = await SupabaseService.submitCommentReport(reportPayload);
-            } catch (err) {
-                logger.warn("[Report] Supabase 上报异常:", err);
-            }
-
-            // 2. 同时支持 WebDAV 归档备份
-            const webdavConfig = SyncManager.getWebDavConfig();
-            if (WebDavClient.hasValidEndpoint(webdavConfig)) {
-                try {
-                    const now = new Date();
-                    const pad = (n) => String(n).padStart(2, "0");
-                    const ts = "" + now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + "_" + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-                    const subPath = "logs/comment_report/" + this.videoCode + "_" + ts + ".json";
-                    await WebDavClient.uploadFile(webdavConfig, subPath, reportPayload, "application/json; charset=utf-8");
-                } catch (_) {}
-            }
-
-            if (reportedToDb) {
-                Toast("上报成功！已同步至云端数据库用于改进", 2200, "success");
-            } else {
-                Toast("已记录上报信息至调试日志", 2000, "info");
-            }
-            close();
-        });
+        showCommentReportModal({ comment, videoCode: this.videoCode });
     }
 
     _mergeRemoteComments(remoteList) {

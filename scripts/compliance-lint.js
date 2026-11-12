@@ -162,7 +162,7 @@ function runCheck() {
 
     // 5. CSS 架构规范与内联样式防御 (CSS Architecture & Inline Styles Guard)
     console.log('\n🎨 [5/5] CSS 架构规范与内联样式牛皮癣防御:');
-    const MAX_ALLOWED_IMPORTANT = 80; // 2026-11-13 CSS 4层拆分与去重收口后新棘轮上限 (当前 73)
+    const MAX_ALLOWED_IMPORTANT = 50; // 2026-11-13 CSS 4层拆分与 !important 治理收口后新棘轮上限 (< 50)
     const MAX_ALLOWED_INLINE_STYLES = 20; // 严控 JS 模板内联样式牛皮癣
 
     // 5.1 CSS 文件审计

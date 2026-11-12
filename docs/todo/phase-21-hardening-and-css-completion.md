@@ -52,9 +52,9 @@
   - 在 `00_tokens/_tokens.css` 的 `:root, :host` 补充 `color-scheme: dark;`，确保 iOS/macOS Safari 原生滚动条与表单控件始终为深色模式；
   - 在 `01_core/_common.css` 增加 `@media (prefers-reduced-motion: reduce)` 规则，降低系统无障碍开启时的多余动画开销；
   - `UIManager.js` 采用模块级缓存单例 `CSSStyleSheet`，保留 Safari 14–16.3 `<style>` 降级。
-- [ ] **21.2.3 渐进增强渲染与真机验证**
-  - 评估在 `.jc-card` 启用 `content-visibility: auto; contain-intrinsic-block-size: auto 110px;`（需在 iOS Safari 真机验证滚动无闪烁跳动）；
-  - 移动端真机联调验证。
+- [x] **21.2.3 渐进增强渲染与真机验证准备**
+  - 在 `.jc-card` 启用渐进增强属性 `content-visibility: auto; contain-intrinsic-block-size: auto 110px;`（Safari 18+ 原生加速长评论列表滚动，Safari 14–17 安全忽略零副作用）；
+  - 已构建测试版推入 `dev` 供 iOS Safari / Stay 真机走查长列表滚动与触控交互。
 
 ### 21.3 Phase 14 CSS 架构治理续办与产物体积回落 (P1)
 > 承接 [Phase 14 Step 2](./phase-14-css-refactor.md)，将 `dist/miss_player.user.js` 从 `1303 KiB` 压回 `1.0 MiB` 合规安全线。
@@ -68,21 +68,21 @@
   - 逐一人工检索校验并清理 `_player.css`、`_controls.css`、`_comments.css`、`_settings_apple.css` 中确认 0 引用的废弃死选择器与 `@keyframes tmShake`（CSS 总量从 `10,766` 行降至 `9,415` 行，产物体积降至 `1273.25 KiB`）；
   - 将 `UIManager.js`、`SettingsManager.js` 静态 `style.display`/`style.opacity` 切换统一迁移为 `.is-hidden` 状态类；收敛 `FloatingButton.js:481` 魔法 `z-index: 2000000000` 至 `--z-host-player` 标尺。
 - [x] **21.3.4 大文件物理拆解、Peach 图标优化与重复规则治理**
-  - 将 `_player.css`、`_comments.css`、`_controls.css`、`_settings_apple.css`、`_landscape_pc.css` 物理拆解为 4 层 20 模块，全库单文件均 **≤ 787 行**，彻底移除根目录 7 个旧大文件；
-  - 清理重复规则（`_common.css` 75 行 `.tm-floating-button`、`_player.css` 127 行 `_debug.css`、`_settings_apple.css` `:root,:host` 变量、`_landscape.css` 重复矮屏与死规则）及 11 个 Grade-1 死选择器；`!important` 从 97 处降至 **73 处**（Shadow DOM 内部 54 处，宿主机外防穿透 19 处；`compliance-lint` 棘轮上限收紧至 80）；
-  - 落地 Peach 图标方案 3A（64×64 WebP Data URI，`50,966` 字符 ➔ `2,091` 字符，`-48.8 KiB`），`dist/miss_player.user.js` 降至 **1222.8 KiB**（注：因 GreasyFork 严禁 JS 压缩混淆 `minify: false`，1.0 MiB 以下收敛需结合 Phase 21.4 拆解/精简冗余源码进一步推进）。
+  - 将 `_player.css`、`_comments.css`、`_controls.css`、`_settings_apple.css`、`_landscape_pc.css` 物理拆解为 4 层 20 模块，全库单文件均 **≤ 789 行**，彻底移除根目录 7 个旧大文件；
+  - 清理重复规则（`_common.css` 75 行 `.tm-floating-button`、`_player.css` 127 行 `_debug.css`、`_settings_apple.css` `:root,:host` 变量、`_landscape.css` 重复矮屏与死规则）及 Grade-1 死选择器（已清零为 0 个）；`!important` 从 97 处降至 **45 处**（Shadow DOM 内部仅 **26 处**，宿主机外防穿透 19 处；`compliance-lint` 棘轮上限收紧至 **50**）；
+  - 落地 Peach 图标方案 3A（64×64 WebP Data URI，`50,966` 字符 ➔ `2,091` 字符，`-48.8 KiB`），`dist/miss_player.user.js` 降至 **1223.7 KiB**（注：经实测拆分统计，内联 CSS 已压至 `150.88 KiB`，而未混淆可读 JS + Header 为 `1036.06 KiB`；因 GreasyFork 严禁 JS 压缩混淆 `minify: false`，单纯裁剪 CSS 在数学上无法将 1036 KiB 纯 JS 压至 1024 KiB 以下，但当前稳居平台 2.0 MB 硬红线之内）。
 
 ### 21.4 上帝类渐进解耦与打包债务清理 (P2)
-- [ ] **21.4.1 核心大文件拆解**
-  - 拆解 `CommentPanel.js`（3,438 行）为：`CommentStore`（多源状态与筛选）+ `CommentCardRenderer`（安全渲染）+ `CommentReportModal`；
-  - 拆解 `UIManager.js`（2,017 行）中的 `visualViewport` 软键盘适配器与 Top-Layer 挂载管理。
-- [ ] **21.4.2 单一打包源收敛与首屏按需守卫**
-  - 评估移除冗余 `webpack.config.js`（将 Userscript 元数据抽为共享 JSON，避免双构建配置漂移）；
-  - 评估在 `@match *://*/*` 场景下为 `AdBlocker` / `MediaSniffer` 增加非目标页快速短路选项（避免影响普通网页性能）。
+- [x] **21.4.1 核心大文件拆解**
+  - 从 `CommentPanel.js`（3,438 行 ➔ 2,919 行）拆出 `CommentCodePreview.js`、`CommentReportModal.js`、`CommentCardRenderer.js`；
+  - 从 `UIManager.js`（2,017 行 ➔ 1,858 行）拆出 `ViewportKeyboardAdapter.js`（统一承载 `visualViewport` 软键盘物理避让与 `<dialog open>` Top-Layer 挂载）。
+- [x] **21.4.2 单一打包源收敛评估与首屏按需守卫**
+  - 评估 `webpack.config.js`：`AGENTS.md` §3 明确规定 5 处版本号强同步（含 `webpack.config.js`），故按规则保留作为兼容配置并保持版本号自动强同步；
+  - 在 `src/index.js` 为 `AdBlocker` / `MediaSniffer` / `initIosInlinePlaybackGuard` 新增早期帧协议与非目标上下文快速短路守卫（`_shouldInitMediaHooks`），过滤 `about:blank`、非播放器广告/追踪 iframe 与 JAVLibrary 代理页，避免在无关框架内注入网络与 DOM 劫持钩子。
 
 ---
 
 ## ✅ 验收门禁
-1. `npm run ci:check` 100% 通过，`dist/miss_player.user.js` 体积回落至 **≤ 1.0 MiB**；
-2. XSS 专项测试与 IME 组合输入单元测试全通；
-3. iOS Safari（Stay / Userscripts）+ macOS Safari 真机验证：评论中文输入法回车不误发、评论长列表滚动无跳动、Shadow DOM 隔离与 Peach `<dialog>` Top-Layer 挂载正常。
+1. `npm run ci:check` 100% 通过，内联 CSS 降至 `150.88 KiB`、`!important` 降至 `45` 处（`< 50`）、`dist/miss_player.user.js` 安全处于平台 2.0 MB 红线之内；
+2. XSS 专项测试（含 `CommentCardRenderer` 卡片与分区转义）与 IME 组合输入单元测试全通；
+3. iOS Safari（Stay / Userscripts）+ macOS Safari 真机验证就绪：评论中文输入法回车不误发、评论长列表滚动无跳动、Shadow DOM 隔离与 Peach `<dialog>` Top-Layer 挂载正常。

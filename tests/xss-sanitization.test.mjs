@@ -8,6 +8,7 @@ import {
     highlightCommentText
 } from '../src/player/comments/CommentDataPipeline.js';
 import { isImeConfirmEnter } from '../src/utils/dom.js';
+import { renderCommentCardHtml, renderCommentSectionHtml } from '../src/player/comments/CommentCardRenderer.js';
 
 test('XSS 净化与 Safari IME 输入守卫单元测试', async (t) => {
     await t.test('1. esc() 对五种 HTML 关键字符全量转义', () => {
@@ -55,5 +56,51 @@ test('XSS 净化与 Safari IME 输入守卫单元测试', async (t) => {
         assert.equal(isImeConfirmEnter({ key: 'Enter', isComposing: false, keyCode: 229 }), false);
         assert.equal(isImeConfirmEnter({ key: 'a', isComposing: false, keyCode: 65 }), false);
         assert.equal(isImeConfirmEnter({ key: 'Enter', isComposing: false, keyCode: 13 }), true);
+    });
+
+    await t.test('6. CommentCardRenderer 对第三方评论元数据执行全量 XSS 转义与协议过滤', () => {
+        const cardHtml = renderCommentCardHtml({
+            id: 'c1" onclick="alert(1)',
+            user: '<script>alert(1)</script>',
+            userUrl: 'javascript:alert(1)',
+            score: '5"><svg onload=alert(1)>',
+            time: '2026-11-12"><img src=x onerror=alert(1)>',
+            text: '普通测试正文',
+            textHtml: '普通测试正文',
+            spam: { label: 'SPAM', reason: '" onmouseover="alert(1)', category: '<b>ad</b>' }
+        });
+        assert.equal(cardHtml.includes('<script>'), false);
+        assert.equal(cardHtml.includes('javascript:'), false);
+        assert.equal(cardHtml.includes('c1" onclick='), false);
+        assert.equal(cardHtml.includes('c1&quot; onclick=&quot;'), true);
+        assert.equal(cardHtml.includes('<svg'), false);
+        assert.equal(cardHtml.includes('<img'), false);
+        assert.equal(cardHtml.includes('" onmouseover='), false);
+        assert.equal(cardHtml.includes('&quot; onmouseover=&quot;'), true);
+
+        const safeCardHtml = renderCommentCardHtml({
+            id: 'c2',
+            user: 'Alice',
+            userUrl: 'https://jable.tv/users/alice/',
+            text: 'ok',
+            textHtml: 'ok'
+        });
+        assert.equal(safeCardHtml.includes('href="https://jable.tv/users/alice/"'), true);
+        assert.equal(safeCardHtml.includes('rel="noopener noreferrer"'), true);
+
+        const sectionHtml = renderCommentSectionHtml('jable', {
+            sites: {
+                jable: {
+                    key: 'jable',
+                    name: 'Jable<script>alert(1)</script>',
+                    status: 'not_found',
+                    filteredComments: []
+                }
+            },
+            renderedCommentIds: new Set(),
+            expandedCommentIds: new Set()
+        });
+        assert.equal(sectionHtml.includes('<script>'), false);
+        assert.equal(sectionHtml.includes('&lt;script&gt;'), true);
     });
 });

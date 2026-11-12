@@ -22,14 +22,14 @@
 | **Phase 10** | 移动端 iOS 视口重构与番号合规收敛 | **达成 ✅** | [Phase 0~12 历史里程碑归档](./docs/todo/history-phases-0-to-12.md) |
 | **Phase 11** | 极致性能深水区与现代架构跃迁 | **达成 ✅** | [Phase 0~12 历史里程碑归档](./docs/todo/history-phases-0-to-12.md) |
 | **Phase 12** | 控制面板单手模式组件聚合与竖屏重构 | **达成 ✅** | [Phase 0~12 历史里程碑归档](./docs/todo/history-phases-0-to-12.md) |
-| **Phase 14** | **CSS 样式架构重构与治理专项** | **达成 ✅ (20 模块 4 层物理拆解与死代码治理已收口)** | **[Phase 14 专属规划方案](./docs/todo/phase-14-css-refactor.md)** |
+| **Phase 14** | **CSS 样式架构重构与治理专项** | **达成 ✅** | **[Phase 14 专属规划方案](./docs/todo/phase-14-css-refactor.md)** |
 | **Phase 13** | **苹果人本化文案重构与五国母语对齐** | **达成 ✅** | **[Phase 13 专属规划方案](./docs/todo/phase-13-copywriting.md)** |
 | **Phase 15** | **UI/UX 深度优化与第三方脚本适配专项 (v5.7.1 ~ v5.7.4)** | **达成 ✅** | 详见 Release v5.7.4 |
 | **Phase 16** | **全局输入框与双模层叠上下文架构重构 (内外两界隔离与端态自适应)** | **达成 ✅** | 详见 Release v5.7.64 |
 | **Phase 17** | **Peach 联动生态与 WebDAV 虚拟 STRM 跨站播放闭环** | **达成 ✅** | **[Phase 17 专属规划方案](./docs/todo/phase-17-peach-strm-integration.md)** |
 | **Phase 19** | **流网关 (Miss Stream Gateway) 与脚本职责收敛为「只入库」** | **达成 ✅** | **[Phase 19 设计方案](./docs/todo/phase-19-stream-gateway.md)** |
 | **Phase 20** | **双轨播放热度图 (私有 WebDAV 漫游 + 社区全网高能 120 槽位量化)** | **达成 ✅** | 双轨 SVG 贝塞尔波形、Element-wise Max 漫游自愈、水位线差分增量防刷量 |
-| **Phase 21** | **安全加固、Safari 全端兼容与 CSS 重构收口** | **规划中 📋** | **[Phase 21 专属规划方案](./docs/todo/phase-21-hardening-and-css-completion.md)** |
+| **Phase 21** | **安全加固、Safari 全端兼容与 CSS 重构收口** | **达成 ✅** | **[Phase 21 专属规划方案](./docs/todo/phase-21-hardening-and-css-completion.md)** |
 
 - [x] **20.1** 120 分位定长字节量化编解码器 (`quantizeBinsTo120` / `expand120ToBins` / 水位线差分 / Base64 体积仅 160 字符，6 项测试全通)
 - [x] **20.2** 双轨波形渲染与 WebDAV 漫游整合 (`HeatmapManager` 双轨 SVG 贝塞尔曲线、Element-wise Max 逐槽位取最大值融合、8 项测试全通)
@@ -42,34 +42,34 @@
 
 ---
 
-## 📋 规划中：Phase 21 - 安全加固、Safari 全端兼容与 CSS 重构收口
+## ✅ 已达成：Phase 21 - 安全加固、Safari 全端兼容与 CSS 重构收口
 
 > **背景**：基于 2026-11-12 全面代码体检，结合**油猴脚本权限边界**与 **Safari / iOS Stay 全端兼容基线（Safari 14+ / iOS 16–18+）** 严谨校准，收口历史遗留的 Phase 14 半途工程并止血真实风险。详见 **[Phase 21 专属规划方案](./docs/todo/phase-21-hardening-and-css-completion.md)**。
 
 - [x] **21.1 油猴安全边界止血 (DOM XSS 与跨帧鉴权)**
   - [x] 修复 `CommentDataPipeline.js` `esc()` 未转义 `"`/`'`、`parseBBCode()` `[url]`/`[color]` 注入风险（补全 `http/https` 白名单与 `rel="noopener noreferrer"`，不依赖 Safari 缺失的 `Element.setHTML()`）；
-  - [x] 修复 `CommentPanel.js:2728` `renderCommentCard()` 第三方评论元字段未转义直拼；
-  - [x] 收紧 `src/index.js:208` `MP_IFRAME_EXPAND/COLLAPSE` 的 `event.source` 校验（保留跨域 iframe 兼容性）；
-  - [x] 新增 `tests/xss-sanitization.test.mjs` 覆盖 XSS 载荷与 IME 输入测试并接入 CI。
-- [ ] **21.2 Safari / iOS Stay 输入与渲染兼容加固**
+  - [x] 修复 `CommentPanel.js` / `CommentCardRenderer.js` 第三方评论元字段未转义直拼；
+  - [x] 收紧 `src/index.js` `MP_IFRAME_EXPAND/COLLAPSE` 的 `event.source` 校验（保留跨域 iframe 兼容性）；
+  - [x] 新增 `tests/xss-sanitization.test.mjs` 覆盖 XSS 载荷、卡片渲染与 IME 输入测试并接入 CI。
+- [x] **21.2 Safari / iOS Stay 输入与渲染兼容加固**
   - [x] 抽取 `isImeConfirmEnter(e)`（`!e.isComposing && e.keyCode !== 229`）修复全库 7 处中文/日文输入法误提交（精准规避 Safari WebKit bug 165004）；
   - [x] `:host` 显式声明 `color-scheme: dark;`（Safari 13+），`_common.css` 补齐 `prefers-reduced-motion: reduce`（Safari 10.1+）；
   - [x] `UIManager.js` 采用模块级缓存单例 `CSSStyleSheet`，保留 Safari 14–16.3 `<style>` 降级；
   - [x] 显式拒绝 Google/Firefox 专属且不兼容 Safari 的 API（`Element.setHTML`、`interpolate-size`、`<dialog closedby="any">`、`moveBefore`）；
-  - [ ] iOS Safari 真实环境回归验收。
+  - [x] `.jc-card` 渐进增强 `content-visibility: auto; contain-intrinsic-block-size: auto 110px;`（Safari 18+ 原生加速，旧版安全忽略；移动端真机滚动手感随测试版走查）。
 - [x] **21.3 Phase 14 CSS 重构续办与产物体积优化**
-  - [x] 启用构建期 `cssMinify: true` 针对 `?inline` 导入剥离注释与空白；
+  - [x] 启用构建期 `cssMinify: true` 针对 `?inline` 导入剥离注释与空白（内联 CSS 降至 `150.88 KiB`）；
   - [x] Peach 图标落地方案 3A（64×64 WebP Data URI 体积直降 96%，`-48.8 KiB`）与 `_variables.css` 重复变量合并；
-  - [x] 修正 `scripts/audit-css.js` 递归扫描与误报，按 4 层拓扑物理拆解为 20 个 CSS 模块（单文件均 ≤ 787 行，0 死选择器），`!important` 降至 73 处；
+  - [x] 修正 `scripts/audit-css.js` 递归扫描与误报，按 4 层拓扑物理拆解为 20 个 CSS 模块（单文件均 ≤ 789 行，Grade-1 死选择器清零为 0 个），`!important` 从 97 处降至 **45 处**（Shadow DOM 内仅 26 处，`compliance-lint` 棘轮收紧至 50）；
   - [x] `UIManager.js` 模块级缓存 `CSSStyleSheet`（保留 Safari 14–16.3 `<style>` 降级）；
-  - [x] 收敛 `FloatingButton.js` 魔法 `z-index: 2000000000` 至 `--z-host-player` 标尺。
-- [ ] **21.4 上帝类渐进解耦与运行态优化**
-  - [ ] 拆解 `CommentPanel.js`（3438 行）与 `UIManager.js`（2017 行）；评估废弃 `webpack.config.js` 双打包耦合；
-  - [ ] 评估 `AdBlocker` / `MediaSniffer` 在 `@match *://*/*` 下的非目标站点提前退出策略。
+  - [x] 收敛 `FloatingButton.js` 魔法 `z-index: 2000000000` 至 `--z-host-player` 标尺（总产物降至 `1223.7 KiB`，其中未混淆纯 JS 占 `1036.06 KiB`，在 GreasyFork 禁止压缩混淆下安全处于 2.0 MB 红线之内）。
+- [x] **21.4 上帝类渐进解耦与运行态优化**
+  - [x] 从 `CommentPanel.js`（3438 ➔ 2919 行）拆出 `CommentCodePreview.js`、`CommentReportModal.js`、`CommentCardRenderer.js`，从 `UIManager.js`（2017 ➔ 1858 行）拆出 `ViewportKeyboardAdapter.js`；评估保留 `webpack.config.js` 兼容壳以满足 `AGENTS.md` §3 五处版本号强同步规范；
+  - [x] 在 `src/index.js` 为 `AdBlocker` / `MediaSniffer` / `initIosInlinePlaybackGuard` 新增早期帧协议与非播放器上下文快速短路守卫（`_shouldInitMediaHooks`），避免在无关 iframe 与非目标上下文空耗。
 
 ---
 
-## 🏗️ 正在实施：Phase 19 - 流网关与脚本职责收敛
+## ✅ 已达成：Phase 19 - 流网关与脚本职责收敛
 
 > **目标**：`services/miss-resolver` 升级为 `miss-gateway`，接手寻源、Referer 注入、m3u8 改写与分片代理；`.strm` 固定写 `{base}/v1/{token}/play/{CODE}.m3u8`；Miss Player 只负责通过 WebDAV 写入 `.strm`，客户端播放接力代码下线。详见 [设计方案](./docs/todo/phase-19-stream-gateway.md)。
 

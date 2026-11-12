@@ -1,20 +1,20 @@
 {
   "meta": {
-    "generatedAt": "2026-11-12T16:35:32.096Z",
-    "durationMs": 663,
+    "generatedAt": "2026-11-12T16:46:32.704Z",
+    "durationMs": 668,
     "cssFileCount": 21,
-    "jsFileCount": 96
+    "jsFileCount": 100
   },
   "summary": {
-    "totalCssLines": 9244,
+    "totalCssLines": 9247,
     "totalRules": 1013,
-    "totalSelectors": 1102,
+    "totalSelectors": 1103,
     "totalClasses": 567,
     "totalIds": 6,
     "totalKeyframes": 15,
     "totalCssVarsDeclared": 142,
     "totalRootHostVars": 142,
-    "totalImportantCount": 73,
+    "totalImportantCount": 45,
     "deadCodeSummary": {
       "zeroHitClassesTotal": 7,
       "zeroHitClassesMissPlayer": 2,
@@ -108,7 +108,7 @@
     },
     "src/player/ui/styles/01_core/_layout.css": {
       "lineCount": 732,
-      "size": 19163,
+      "size": 19119,
       "ruleCount": 75,
       "selectorCount": 115,
       "classes": [
@@ -161,13 +161,13 @@
         "video-portrait",
         "tm-player-active"
       ],
-      "importantCount": 16
+      "importantCount": 12
     },
     "src/player/ui/styles/02_components/_comments.css": {
-      "lineCount": 744,
-      "size": 18422,
+      "lineCount": 747,
+      "size": 18490,
       "ruleCount": 76,
-      "selectorCount": 108,
+      "selectorCount": 109,
       "classes": [
         "tm-comments-panel",
         "tm-handle-container",
@@ -217,7 +217,7 @@
         "tm-comment-loading",
         "tm-comment-error"
       ],
-      "importantCount": 7
+      "importantCount": 2
     },
     "src/player/ui/styles/02_components/_comments_sections.css": {
       "lineCount": 709,
@@ -316,7 +316,7 @@
     },
     "src/player/ui/styles/02_components/_control_panel.css": {
       "lineCount": 730,
-      "size": 17706,
+      "size": 17662,
       "ruleCount": 75,
       "selectorCount": 83,
       "classes": [
@@ -380,7 +380,7 @@
         "start",
         "end"
       ],
-      "importantCount": 5
+      "importantCount": 1
     },
     "src/player/ui/styles/02_components/_controls.css": {
       "lineCount": 636,
@@ -545,7 +545,7 @@
     },
     "src/player/ui/styles/02_components/_modals.css": {
       "lineCount": 756,
-      "size": 17948,
+      "size": 17904,
       "ruleCount": 87,
       "selectorCount": 91,
       "classes": [
@@ -609,7 +609,7 @@
         "mp-sheet-share-btn-copy-md",
         "mp-sheet-share-btn-close"
       ],
-      "importantCount": 4
+      "importantCount": 0
     },
     "src/player/ui/styles/02_components/_peach.css": {
       "lineCount": 601,
@@ -833,7 +833,7 @@
     },
     "src/player/ui/styles/02_components/_switcher.css": {
       "lineCount": 220,
-      "size": 4719,
+      "size": 4686,
       "ruleCount": 25,
       "selectorCount": 26,
       "classes": [
@@ -856,11 +856,11 @@
         "mp-switcher-status-dot",
         "mp-switcher-status-play"
       ],
-      "importantCount": 3
+      "importantCount": 0
     },
     "src/player/ui/styles/03_responsive/_landscape.css": {
       "lineCount": 783,
-      "size": 23089,
+      "size": 23034,
       "ruleCount": 84,
       "selectorCount": 113,
       "classes": [
@@ -906,11 +906,11 @@
         "tm-tab-pill",
         "active"
       ],
-      "importantCount": 9
+      "importantCount": 4
     },
     "src/player/ui/styles/03_responsive/_single_hand.css": {
       "lineCount": 334,
-      "size": 9967,
+      "size": 9934,
       "ruleCount": 29,
       "selectorCount": 41,
       "classes": [
@@ -930,7 +930,7 @@
         "tm-gutter-btn-bottom",
         "tm-gutter-switch-icon-wrap"
       ],
-      "importantCount": 4
+      "importantCount": 1
     }
   },
   "topDuplicates": [
@@ -1052,7 +1052,7 @@
         },
         {
           "file": "src/player/ui/styles/02_components/_comments.css",
-          "line": 737,
+          "line": 740,
           "column": 5
         },
         {
@@ -1676,7 +1676,7 @@
         },
         {
           "file": "src/player/ui/styles/02_components/_comments.css",
-          "line": 737,
+          "line": 740,
           "column": 5
         },
         {
@@ -5295,12 +5295,12 @@
       "cssLocations": [
         {
           "file": "src/player/ui/styles/02_components/_comments.css",
-          "line": 443,
+          "line": 445,
           "column": 1
         },
         {
           "file": "src/player/ui/styles/02_components/_comments.css",
-          "line": 448,
+          "line": 450,
           "column": 1
         }
       ]

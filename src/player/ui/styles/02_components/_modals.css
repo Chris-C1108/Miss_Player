@@ -463,12 +463,12 @@
 
 /* 评论区上报按钮与弹窗样式 */
 .jc-action-btn.jc-report-btn {
-    pointer-events: auto !important;
+    pointer-events: auto;
     position: relative;
     z-index: var(--z-base);
 }
 .tm-comments-panel.is-dimmed .jc-action-btn.jc-report-btn {
-    pointer-events: auto !important;
+    pointer-events: auto;
     z-index: calc(var(--z-base) + 2);
 }
 .tm-custom-modal-overlay.tm-report-modal-overlay {
@@ -494,12 +494,12 @@
 }
 
 .tm-comments-panel.is-dimmed .tm-comments-list {
-    pointer-events: auto !important;
+    pointer-events: auto;
 }
 .tm-comments-panel.is-dimmed .jc-card,
 .tm-comments-panel.is-dimmed .jc-action-btn,
 .tm-comments-panel.is-dimmed .jc-report-btn {
-    pointer-events: auto !important;
+    pointer-events: auto;
 }
 
 /* 番号悬浮预览浮窗 */

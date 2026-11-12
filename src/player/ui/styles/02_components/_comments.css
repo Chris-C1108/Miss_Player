@@ -178,14 +178,14 @@
     transform: translateY(100%);
     opacity: 0;
     visibility: hidden;
-    pointer-events: none !important;
+    pointer-events: none;
 }
 
 .tm-comment-submit-bar-wrapper:not(.is-collapsed) {
     transform: translateY(0);
     opacity: 1;
     visibility: visible;
-    pointer-events: auto !important;
+    pointer-events: auto;
 }
 
 /* 抽屉顶部 Apple 风格拖动与收起提手条 (Pill Handle) */
@@ -335,7 +335,7 @@
 .tm-player-container.has-sheet-open .tm-show-controls-float-btn {
     transform: scale(0.85);
     opacity: 0;
-    pointer-events: none !important;
+    pointer-events: none;
 }
 
 /* 评论发表栏展开时，自动退避隐藏控制面板，杜绝评论输入栏与播放控制栏产生层级重叠冲突 */
@@ -396,6 +396,8 @@
     text-align: left;
     width: 100%;
     box-sizing: border-box;
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 110px;
 }
 
 .jc-card .jc-bd {
@@ -716,9 +718,10 @@
 /* 横屏端鼠标悬浮评论区时强制变亮 */
 
 @media screen and (orientation: landscape) {
+    .tm-comments-panel.is-dimmed:hover::after,
     .tm-comments-panel:hover::after {
-        opacity: 0 !important;
-        pointer-events: none !important;
+        opacity: 0;
+        pointer-events: none;
     }
 }
 

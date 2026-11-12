@@ -453,11 +453,12 @@ assert.ok(
     'UISurfaceMachine 必须具备 acquireFocusLock 与 releaseFocusLock 焦点转移锁'
 );
 
-// 17.4 验证 UIManager 视口监听器响应系统级焦点锁
+// 17.4 验证 ViewportKeyboardAdapter 视口监听器响应系统级焦点锁
+const latestViewportKeyboardJsForTest = fs.readFileSync('src/player/ui/ViewportKeyboardAdapter.js', 'utf8');
 assert.ok(
-    updatedUiManagerJs.includes('this.surfaceMachine?.isFocusLocked') &&
-    updatedUiManagerJs.includes('this.collapseKeyboardLayout = () =>'),
-    'UIManager 必须严格响应 surfaceMachine.isFocusLocked，在焦点转移期间绝对锁死键盘布局不弹跳'
+    latestViewportKeyboardJsForTest.includes('ui.surfaceMachine?.isFocusLocked') &&
+    latestViewportKeyboardJsForTest.includes('this._collapseFn = () =>'),
+    'ViewportKeyboardAdapter 必须严格响应 surfaceMachine.isFocusLocked，在焦点转移期间绝对锁死键盘布局不弹跳'
 );
 
 // 17.5 验证底层 UI 树系统级物理冻结 (Systemic Inert Tree Isolation)
@@ -483,6 +484,7 @@ console.log('✅ 17. 系统级全局事件黑洞、底层树物理冻结与焦�
 console.log('▶ 18. 验证菜单栏上滑手势锁定与 iOS 虚拟键盘发评栏物理高度避让...');
 const singleHandJsCode = fs.readFileSync('src/player/managers/SingleHandManager.js', 'utf8');
 const latestUiManagerJs = fs.readFileSync('src/player/ui/UIManager.js', 'utf8');
+const latestViewportKeyboardJs = fs.readFileSync('src/player/ui/ViewportKeyboardAdapter.js', 'utf8');
 const latestPlayerCss = fs.readFileSync('src/player/ui/styles/01_core/_layout.css', 'utf8');
 const latestSurfaceMachine = fs.readFileSync('src/player/state/UISurfaceMachine.js', 'utf8');
 const latestEventManager = fs.readFileSync('src/player/managers/EventManager.js', 'utf8');
@@ -512,10 +514,10 @@ assert.ok(
 
 // 18.4 验证 UIManager 在 keyboardHeight > 60 时无阻碍设置发评底栏与抽屉物理 bottom
 assert.ok(
-    latestUiManagerJs.includes("commentSubmitBar.style.bottom = `${keyboardHeight}px`;") &&
-    latestUiManagerJs.includes("sheetPanel.style.bottom = `${keyboardHeight}px`;") &&
-    !latestUiManagerJs.includes('if (this.surfaceMachine?.isFocusLocked) {\n                    if (keyboardHeight > 60)'),
-    'UIManager 必须在 keyboardHeight > 60 时无阻碍直接设置 commentSubmitBar 与 sheetPanel 行内物理 bottom'
+    latestViewportKeyboardJs.includes("commentSubmitBar.style.bottom = `${keyboardHeight}px`;") &&
+    latestViewportKeyboardJs.includes("sheetPanel.style.bottom = `${keyboardHeight}px`;") &&
+    !latestViewportKeyboardJs.includes('if (this.surfaceMachine?.isFocusLocked) {\n                    if (keyboardHeight > 60)'),
+    'ViewportKeyboardAdapter 必须在 keyboardHeight > 60 时无阻碍直接设置 commentSubmitBar 与 sheetPanel 行内物理 bottom'
 );
 
 // 18.5 验证视频区域阻止纵向滑动穿透

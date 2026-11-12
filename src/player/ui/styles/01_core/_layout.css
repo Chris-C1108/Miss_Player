@@ -150,9 +150,9 @@
 
 .tm-video-wrapper video > *:not(track):not(source) {
     display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 /* 确保视频元素随容器高度变化 (支持标准 video 与 Web Components 媒体容器) */
@@ -727,5 +727,5 @@ body.controls-hidden .tm-player-container > .tm-player-title,
 
 html.tm-player-active,
 body.tm-player-active {
-    overscroll-behavior: none !important;
+    overscroll-behavior: none;
 }

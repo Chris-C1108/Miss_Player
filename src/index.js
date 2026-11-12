@@ -21,19 +21,45 @@ import { CommentCacheManager } from './player/comments/CommentCacheManager.js';
 import { PeachWebBridge } from './player/bridge/PeachWebBridge.js';
 import { initIosInlinePlaybackGuard } from './utils/iosInline.js';
 
-// 0. 最早启动 iOS Safari 行内播放守卫 (在宿主脚本加载前注入 playsinline/webkit-playsinline，彻底阻断 AVPlayerViewController 系统全屏劫持)
-initIosInlinePlaybackGuard();
+// 早期帧环境与协议快速短路守卫 (避免在 about:blank、第三方广告/追踪 iframe 或 JAVLibrary 代理页注入无关 hook)
+const _earlyProtocolOk = typeof window !== 'undefined' &&
+    window.location &&
+    (window.location.protocol === 'http:' || window.location.protocol === 'https:');
+let _earlyInIframe = false;
+try {
+    _earlyInIframe = (window.self !== window.top);
+} catch (_) {
+    _earlyInIframe = true;
+}
+const _earlyIsPlayerIframe = _earlyInIframe && (
+    window.location.pathname.includes('/player/') ||
+    window.location.pathname.includes('/embed/') ||
+    window.location.search.includes('payload=') ||
+    window.location.search.includes('video=') ||
+    window.location.href.includes('avking') ||
+    window.location.href.includes('videocdn') ||
+    window.location.href.includes('plyr')
+);
+const _earlyIsJavLib = _earlyProtocolOk && isSiteDomain('JAVLIBRARY');
+const _shouldInitMediaHooks = _earlyProtocolOk && !_earlyIsJavLib && (!_earlyInIframe || _earlyIsPlayerIframe);
 
-// 1. 最早执行广告与弹窗拦截 (确保在宿主脚本加载前劫持 window.open 与广告请求)
-const earlyAdBlocker = new AdBlocker();
-earlyAdBlocker.init();
-performance.mark('mp:adblock-done');
+if (_shouldInitMediaHooks) {
+    // 0. 最早启动 iOS Safari 行内播放守卫 (在宿主脚本加载前注入 playsinline/webkit-playsinline，彻底阻断 AVPlayerViewController 系统全屏劫持)
+    initIosInlinePlaybackGuard();
 
-// 2. 尽早启动底层网络媒体嗅探器 (拦截 .m3u8 与高清源地址)
-mediaSniffer.init();
+    // 1. 最早执行广告与弹窗拦截 (确保在宿主脚本加载前劫持 window.open 与广告请求)
+    const earlyAdBlocker = new AdBlocker();
+    earlyAdBlocker.init();
+    performance.mark('mp:adblock-done');
 
-// 2. 确保最早执行URL重定向检查
-earlyUrlRedirector.checkAndRedirect();
+    // 2. 尽早启动底层网络媒体嗅探器 (拦截 .m3u8 与高清源地址)
+    mediaSniffer.init();
+
+    // 3. 确保最早执行URL重定向检查
+    earlyUrlRedirector.checkAndRedirect();
+} else {
+    performance.mark('mp:adblock-done');
+}
 
 performance.mark('mp:early-init-done');
 performance.measure('mp:early-init', 'mp:module-loaded', 'mp:early-init-done');

@@ -2,9 +2,9 @@
 
 .tm-video-wrapper > *:not(video):not(hlsjs-video):not(dash-video):not(.tm-speed-indicator):not(.tm-video-minimap):not(.tm-inline-remark-popover) {
     display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 /* 循环区间连接效果 */
@@ -147,7 +147,7 @@
     position: relative;
     z-index: 3;
     gap: 6px;
-    overflow: visible !important;
+    overflow: visible;
 }
 
 /* 新建/修改高光打点备注弹窗 (靠下吸附于控制栏与虚拟键盘上方，彻底杜绝顶部天际线割裂) */
