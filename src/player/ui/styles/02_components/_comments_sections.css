@@ -216,6 +216,114 @@
 }
 
 /* =====================================================================
+   现代水平分段导航栏与高能过滤微胶囊 (Direction B: Linear Minimalist)
+   ===================================================================== */
+.tm-comment-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(13, 15, 19, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-sizing: border-box;
+    width: 100%;
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    z-index: 5;
+    gap: 8px;
+}
+
+.tm-comment-tab-strip {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+.tm-comment-tab-strip::-webkit-scrollbar { display: none; }
+
+.tm-comment-tab-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 9px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: var(--font-mono, monospace);
+    background: transparent;
+    border: 1px solid transparent;
+    color: #666e80;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    outline: none;
+    white-space: nowrap;
+}
+
+.tm-comment-tab-item:hover {
+    color: #cdd3e0;
+}
+
+.tm-comment-tab-item.is-active {
+    background: #171a21;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #f0f2f5;
+    font-weight: 600;
+}
+
+.tm-tab-count {
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+/* 临时高能时间戳过滤胶囊 */
+.tm-comment-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #14171e;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-family: var(--font-mono, monospace);
+    font-size: 10.5px;
+    color: #798296;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tm-comment-filter-pill .tm-filter-dot {
+    font-size: 8px;
+    color: #555d70;
+    transition: color 0.18s ease;
+}
+
+.tm-comment-filter-pill.is-active {
+    background: rgba(0, 210, 211, 0.12);
+    border-color: rgba(0, 210, 211, 0.4);
+    color: #00d2d3;
+}
+
+.tm-comment-filter-pill.is-active .tm-filter-dot {
+    color: #00d2d3;
+}
+
+.tm-comment-filter-pill .tm-filter-count {
+    background: rgba(0, 210, 211, 0.2);
+    color: #00d2d3;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 9.5px;
+}
+
+.tm-comment-filter-pill .tm-filter-count.is-hidden {
+    display: none !important;
+}
+
+/* =====================================================================
    分区评论与状态徽章样式 (手风琴自然流式排布，外层统一承载滚动)
    ===================================================================== */
 .tm-comment-section {
@@ -229,6 +337,10 @@
     min-height: 38px;
     overflow-x: hidden;
     touch-action: pan-y;
+}
+
+.tm-comment-section.is-hidden-source {
+    display: none !important;
 }
 
 .tm-comment-section:not(.is-collapsed) {
@@ -255,6 +367,133 @@
     box-sizing: border-box;
     padding-right: 4px;
     padding-bottom: 24px;
+}
+
+/* Linear Minimalist 无框流式条目与垂直导轨 */
+.jc-stream-row {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: transparent;
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.jc-guide-line {
+    width: 2px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 1px;
+    margin: 4px 0;
+    transition: background-color 0.2s ease;
+}
+
+.jc-guide-line.is-highlight {
+    background: #00d2d3;
+    box-shadow: 0 0 6px rgba(0, 210, 211, 0.4);
+}
+
+.jc-row-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.jc-row-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.jc-user-group {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.jc-badge-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* 开发者调试微轨 (仅在 debugMode 开启时显示在底边) */
+.jc-debug-rail {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding: 3px 6px;
+    background: #11141b;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    font-family: var(--font-mono, monospace);
+    font-size: 10px;
+    color: #636b80;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.jc-debug-meta {
+    color: #636b80;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.jc-debug-report-btn {
+    background: rgba(0, 210, 211, 0.1);
+    border: 1px solid rgba(0, 210, 211, 0.3);
+    color: #00d2d3;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    cursor: pointer;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.jc-debug-report-btn:hover {
+    background: rgba(0, 210, 211, 0.25);
+    color: #ffffff;
+}
+
+/* 高能评论空状态 */
+.tm-comment-status-box.is-highlight-empty {
+    padding: 28px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.tm-comment-reset-filter-btn {
+    background: #171a21;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #00d2d3;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--font-mono, monospace);
+    outline: none;
+    transition: all 0.15s ease;
+}
+
+.tm-comment-reset-filter-btn:hover {
+    background: rgba(0, 210, 211, 0.15);
+    border-color: rgba(0, 210, 211, 0.4);
 }
 
 #tm-comment-section-jable {

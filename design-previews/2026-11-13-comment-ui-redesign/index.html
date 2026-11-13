@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miss Player 评论区 UI 重设计 (无框流式 / 水平滑签 / 高能开关 / 调试收拢)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================================================
+           0. 全局重置与排版设定 (P-1: 禁用斜体)
+           ========================================================================= */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-style: normal !important;
+        }
+
+        :root {
+            --bg-canvas: #08090c;
+            --bg-surface: #0f1116;
+            --bg-card: #141720;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(255, 255, 255, 0.22);
+            --text-primary: #f2f3f5;
+            --text-secondary: #8e92a0;
+            --text-muted: #555966;
+            --accent-blue: #0a84ff;
+            --accent-amber: #f5a623;
+            --accent-cyan: #00d2d3;
+            --accent-purple: #bf5af2;
+            --radius-outer: 16px;
+            --radius-card: 12px;
+            --radius-inner: 8px;
+            --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Segoe UI", Roboto, sans-serif;
+            --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            padding: 24px 20px 80px;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* =========================================================================
+           1. 顶部控制栏与奥卡姆剃刀总控 (P-10, P-19, P-26)
+           ========================================================================= */
+        .qmdp-shell-header {
+            max-width: 1440px;
+            margin: 0 auto 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .qmdp-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            background: rgba(15, 17, 22, 0.8);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-card);
+            backdrop-filter: blur(20px);
+        }
+
+        .qmdp-brand-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .qmdp-badge-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: linear-gradient(135deg, #0a84ff, #5e5ce6);
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .qmdp-title-wrap h1 {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+            color: var(--text-primary);
+        }
+
+        .qmdp-global-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* 调试模式全局模拟开关 */
+        .qmdp-debug-toggle-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            user-select: none;
+        }
+
+        .qmdp-debug-toggle-label input {
+            accent-color: var(--accent-amber);
+            cursor: pointer;
+        }
+
+        .qmdp-status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 11px;
+        }
+
+        .qmdp-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #30d158;
+            box-shadow: 0 0 8px rgba(48, 209, 88, 0.6);
+        }
+
+        .qmdp-notice-banner {
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid var(--border-subtle);
+            padding: 10px 16px;
+            border-radius: var(--radius-inner);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .qmdp-notice-banner strong {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .qmdp-kbd {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-primary);
+        }
+
+        /* =========================================================================
+           2. 风格试衣间 2×2 响应式网格 (P-6, P-28, P-35)
+           ========================================================================= */
+        .qmdp-grid-2x2 {
+            max-width: 1440px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 1080px) {
+            .qmdp-grid-2x2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .qmdp-card-direction {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-outer);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+
+        .qmdp-card-direction:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .qmdp-card-direction.is-selected {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 1px var(--accent-blue), 0 12px 36px rgba(10, 132, 255, 0.15);
+        }
+
+        /* 顶部方向说明区与设计宣言 (P-22: 分区展示) */
+        .qmdp-direction-brief {
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .qmdp-brief-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .qmdp-dir-title-wrap {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .qmdp-dir-letter {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 5px;
+        }
+
+        .qmdp-dir-name {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+            color: var(--text-primary);
+        }
+
+        .qmdp-dir-tagline {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        .qmdp-dir-traits {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .qmdp-trait-pill {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+        }
+
+        /* 核心 Mini Mockup 展示舞台 (P-28: 填满/居中, 无框化流式) */
+        .qmdp-mockup-stage {
+            flex: 1;
+            padding: 20px;
+            background: #050608;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 540px;
+            position: relative;
+        }
+
+        /* 模拟手机竖屏内胆 (无框化设计：内壁即视口，无多余外框) */
+        .mockup-viewport {
+            width: 100%;
+            max-width: 440px;
+            height: 500px;
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7);
+        }
+
+        /* 底部操作与回传区 (P-10, P-18, P-27, P-36) */
+        .qmdp-card-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-subtle);
+            background: rgba(15, 17, 22, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .qmdp-footer-meta {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .qmdp-dials-summary {
+            display: flex;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .qmdp-pick-button {
+            width: 100%;
+            height: 42px;
+            border-radius: var(--radius-inner);
+            background: var(--accent-blue);
+            color: #ffffff;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.18s ease;
+        }
+
+        .qmdp-pick-button:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        .qmdp-pick-button:active {
+            transform: translateY(0);
+        }
+
+        /* =========================================================================
+           3. 方向 A：Apple Fluid Stream (无框原生流 · 极致人本主义)
+           ========================================================================= */
+        .viewport-a {
+            background: #0a0a0d;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-family: var(--font-sans);
+        }
+
+        /* A: 水平滑动标签栏 + 高能过滤微胶囊 (无边框嵌套) */
+        .a-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(16, 17, 22, 0.85);
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            user-select: none;
+        }
+
+        .a-tab-strip {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .a-tab-strip::-webkit-scrollbar { display: none; }
+
+        .a-tab-item {
+            padding: 5px 10px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #8e8e93;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.18s ease;
+            white-space: nowrap;
+        }
+
+        .a-tab-item.is-active {
+            background: #24252c;
+            color: #ffffff;
+        }
+
+        .a-tab-badge {
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            opacity: 0.7;
+        }
+
+        /* A: 高能时间戳临时过滤微胶囊 */
+        .a-filter-capsule {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
+            color: #98989d;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .a-filter-capsule.is-active {
+            background: rgba(245, 166, 35, 0.15);
+            border-color: rgba(245, 166, 35, 0.5);
+            color: #ff9f0a;
+        }
+
+        /* A: 无框流式评论列表 (De-Carded Flow: 零卡片外壳，纯净发丝线) */
+        .a-stream-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .a-stream-item {
+            padding: 14px 0;
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .a-stream-item:last-child {
+            border-bottom: none;
+        }
+
+        .a-author-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .a-author-left {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .a-author-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #f2f2f7;
+        }
+
+        .a-post-time {
+            font-size: 11px;
+            color: #636366;
+        }
+
+        .a-comment-text {
+            font-size: 13px;
+            line-height: 1.55;
+            color: #d1d1d6;
+        }
+
+        /* 苹果等宽时间码胶囊 */
+        .a-time-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(10, 132, 255, 0.08);
+            border: 0.5px solid rgba(10, 132, 255, 0.3);
+            padding: 1px 7px;
+            border-radius: 5px;
+            color: #2997ff;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            margin: 0 3px;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+
+        .a-time-pill.is-favorited {
+            background: rgba(245, 166, 35, 0.12);
+            border-color: rgba(245, 166, 35, 0.45);
+            color: #ff9f0a;
+        }
+
+        /* A: 交互底栏 (极简点赞与更多) */
+        .a-item-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 14px;
+            font-size: 11px;
+            color: #636366;
+            margin-top: 2px;
+        }
+
+        .a-action-link {
+            background: transparent;
+            border: none;
+            color: #8e8e93;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        /* A: Debug 调试模式收拢微轨 (在普通模式下完全隐藏，开启后平滑滑出) */
+        .a-debug-rail {
+            display: none;
+            margin-top: 6px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: #7c8292;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .is-debug-on .a-debug-rail {
+            display: flex;
+        }
+
+        .a-debug-meta {
+            display: flex;
+            gap: 8px;
+        }
+
+        .a-debug-btn {
+            background: rgba(245, 166, 35, 0.12);
+            border: 0.5px solid rgba(245, 166, 35, 0.3);
+            color: #f5a623;
+            padding: 1px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        /* =========================================================================
+           4. 方向 B：Linear Minimalist Thread (现代流体微线条 · 理性呼吸)
+           ========================================================================= */
+        .viewport-b {
+            background: #08090b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: "Plus Jakarta Sans", var(--font-sans);
+        }
+
+        .b-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #0d0f13;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .b-tabs-wrap {
+            display: flex;
+            gap: 2px;
+        }
+
+        .b-tab-btn {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            background: transparent;
+            border: 1px solid transparent;
+            color: #666e80;
+            cursor: pointer;
+        }
+
+        .b-tab-btn.is-active {
+            background: #171a21;
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #f0f2f5;
+        }
+
+        .b-filter-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 7px;
+            border-radius: 4px;
+            background: #14171e;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            color: #798296;
+            cursor: pointer;
+        }
+
+        .b-filter-toggle.is-active {
+            background: rgba(0, 210, 211, 0.1);
+            border-color: rgba(0, 210, 211, 0.35);
+            color: #00d2d3;
+        }
+
+        .b-stream-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 14px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .b-stream-row {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 10px;
+        }
+
+        .b-guide-line {
+            width: 2px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 1px;
+            margin: 4px 0;
+        }
+
+        .b-row-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .b-row-hdr {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: #555d70;
+        }
+
+        .b-user-name {
+            color: #cdd3e0;
+            font-weight: 600;
+        }
+
+        .b-body-text {
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: #bdc4d4;
+        }
+
+        /* 机械双段刻度时间戳 */
+        .b-time-tag {
+            display: inline-flex;
+            border: 1px solid rgba(0, 210, 211, 0.28);
+            background: rgba(0, 210, 211, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            vertical-align: middle;
+            margin: 0 3px;
+        }
+
+        .b-time-num { padding: 1px 5px; color: #00d2d3; }
+        .b-time-star { padding: 1px 4px; background: rgba(0, 210, 211, 0.15); color: #00d2d3; cursor: pointer; }
+
+        .b-time-tag.is-favorited {
+            border-color: rgba(245, 166, 35, 0.45);
+            background: rgba(245, 166, 35, 0.08);
+        }
+        .b-time-tag.is-favorited .b-time-num,
+        .b-time-tag.is-favorited .b-time-star { color: #f5a623; }
+        .b-time-tag.is-favorited .b-time-star { background: rgba(245, 166, 35, 0.22); }
+
+        .b-debug-rail {
+            display: none;
+            margin-top: 5px;
+            padding: 3px 6px;
+            background: #11141b;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 9.5px;
+            color: #636b80;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .is-debug-on .b-debug-rail { display: flex; }
+
+        /* =========================================================================
+           5. 方向 C：Mono Cyber Reel (无界深空胶卷 · 沉浸胶片流)
+           ========================================================================= */
+        .viewport-c {
+            background: #000000;
+            border: 1px solid #292215;
+            font-family: var(--font-mono);
+        }
+
+        .c-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #060503;
+            border-bottom: 1px solid #241a0d;
+        }
+
+        .c-band-selector {
+            display: flex;
+            gap: 6px;
+            font-size: 11px;
+        }
+
+        .c-band-btn {
+            background: transparent;
+            border: none;
+            color: #6e5734;
+            cursor: pointer;
+        }
+
+        .c-band-btn.is-active {
+            color: #ffb020;
+            font-weight: 700;
+        }
+
+        .c-filter-toggle {
+            font-size: 10px;
+            color: #6e5734;
+            border: 1px solid #3d2c14;
+            padding: 2px 6px;
+            background: #0f0a04;
+            cursor: pointer;
+        }
+
+        .c-filter-toggle.is-active {
+            color: #ffb020;
+            border-color: #ffb020;
+            background: #241604;
+        }
+
+        .c-stream-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 14px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .c-stream-entry {
+            padding: 12px 0;
+            border-bottom: 1px solid #1a140a;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .c-entry-hdr {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10.5px;
+            color: #735a34;
+        }
+
+        .c-user-code { color: #f0c375; }
+
+        .c-entry-text {
+            font-size: 12px;
+            line-height: 1.5;
+            color: #d1c1ab;
+        }
+
+        .c-time-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid #543f1d;
+            background: #171004;
+            padding: 1px 5px;
+            color: #ffb020;
+            font-size: 10.5px;
+            cursor: pointer;
+            margin: 0 2px;
+        }
+
+        .c-time-pill.is-favorited {
+            border-color: #ffb020;
+            background: #2e1c03;
+            box-shadow: 0 0 5px rgba(255, 176, 32, 0.3);
+        }
+
+        .c-debug-rail {
+            display: none;
+            margin-top: 4px;
+            padding: 2px 4px;
+            background: #0d0903;
+            border: 1px dashed #3d2b12;
+            font-size: 9.5px;
+            color: #8a6c3c;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .is-debug-on .c-debug-rail { display: flex; }
+
+        /* =========================================================================
+           6. 方向 D：Substack Editorial Feed (人文杂志流式叙事 · 温润呼吸)
+           ========================================================================= */
+        .viewport-d {
+            background: #0f1014;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-family: var(--font-sans);
+        }
+
+        .d-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .d-tabs-slider {
+            display: flex;
+            gap: 14px;
+        }
+
+        .d-tab-link {
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #7b8092;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            padding-bottom: 4px;
+        }
+
+        .d-tab-link.is-active {
+            color: #ffffff;
+        }
+
+        .d-tab-link.is-active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #bf5af2;
+            border-radius: 1px;
+        }
+
+        .d-filter-toggle {
+            font-size: 11px;
+            color: #8b90a4;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+        }
+
+        .d-filter-toggle.is-active {
+            background: rgba(191, 90, 242, 0.15);
+            border-color: rgba(191, 90, 242, 0.4);
+            color: #bf5af2;
+        }
+
+        .d-stream-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .d-stream-item {
+            padding: 14px 0;
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .d-item-hdr {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #636878;
+        }
+
+        .d-author-tag {
+            font-weight: 600;
+            color: #f2f3f7;
+        }
+
+        .d-text-body {
+            font-size: 13px;
+            line-height: 1.55;
+            color: #c8ccd8;
+        }
+
+        .d-time-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 9999px;
+            padding: 1px 7px;
+            font-size: 11px;
+            color: #ffffff;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            margin: 0 3px;
+        }
+
+        .d-time-tag.is-favorited {
+            background: rgba(245, 166, 35, 0.15);
+            color: #ff9f0a;
+            border: 0.5px solid rgba(245, 166, 35, 0.4);
+        }
+
+        .d-debug-rail {
+            display: none;
+            margin-top: 6px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+            font-size: 10px;
+            color: #797f94;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .is-debug-on .d-debug-rail { display: flex; }
+
+        /* =========================================================================
+           7. 确认回传弹层与三拨盘滑块 (P-33)
+           ========================================================================= */
+        .qmdp-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(14px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .qmdp-modal-backdrop.is-active { display: flex; }
+
+        .qmdp-modal-card {
+            background: #141720;
+            border: 1px solid var(--border-focus);
+            border-radius: var(--radius-outer);
+            width: 100%;
+            max-width: 520px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
+        }
+
+        .qmdp-modal-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .qmdp-modal-title h2 { font-size: 17px; font-weight: 600; color: #fff; }
+
+        .qmdp-modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .qmdp-dials-group {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 14px 16px;
+            border-radius: var(--radius-inner);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .qmdp-dial-item { display: flex; flex-direction: column; gap: 6px; }
+
+        .qmdp-dial-hdr {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .qmdp-dial-slider { width: 100%; accent-color: var(--accent-blue); }
+
+        .qmdp-feedback-input {
+            width: 100%;
+            height: 72px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-inner);
+            padding: 10px 12px;
+            color: #fff;
+            font-size: 13px;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .qmdp-feedback-input:focus { outline: none; border-color: var(--accent-blue); }
+
+        .qmdp-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+        .qmdp-btn-secondary {
+            padding: 8px 16px;
+            border-radius: var(--radius-inner);
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .qmdp-btn-primary {
+            padding: 8px 20px;
+            border-radius: var(--radius-inner);
+            background: var(--accent-blue);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        /* 底部 Toast */
+        .qmdp-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #30d158;
+            color: #000;
+            font-weight: 600;
+            padding: 10px 22px;
+            border-radius: 9999px;
+            font-size: 13px;
+            box-shadow: 0 8px 24px rgba(48, 209, 88, 0.4);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10000;
+        }
+
+        .qmdp-toast.is-shown { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部控制与调试模式开关栏 -->
+    <header class="qmdp-shell-header">
+        <div class="qmdp-toolbar">
+            <div class="qmdp-brand-group">
+                <div class="qmdp-badge-logo">MP</div>
+                <div class="qmdp-title-wrap">
+                    <h1>Miss Player 评论区无框流式重设计样机</h1>
+                </div>
+            </div>
+            <div class="qmdp-global-controls">
+                <!-- 调试模式模拟开关 -->
+                <label class="qmdp-debug-toggle-label" title="开启后查看卡片底部的优雅收拢调试条">
+                    <input type="checkbox" id="globalDebugToggle" onchange="toggleDebugMode(this.checked)">
+                    <span>⚙️ 开发者调试视图</span>
+                </label>
+                <span class="qmdp-status-tag"><span class="qmdp-status-dot"></span><span>服务运行中</span></span>
+                <div style="font-size: 12px; color: var(--text-secondary);">
+                    快捷键 <span class="qmdp-kbd">1</span> <span class="qmdp-kbd">2</span> <span class="qmdp-kbd">3</span> <span class="qmdp-kbd">4</span>
+                </div>
+            </div>
+        </div>
+        <div class="qmdp-notice-banner">
+            <span><strong>无框流式设计 (De-Cardification)</strong>：彻底消灭多层卡片框嵌套，释放最大阅读宽度；顶部多源水平滑动；右侧一键高能时间戳过滤。</span>
+            <span style="font-size: 12px; color: #787c88;">勾选上方“⚙️ 开发者调试视图”可预览调试按钮的收拢效果</span>
+        </div>
+    </header>
+
+    <!-- 2×2 风格试衣间网格 -->
+    <main class="qmdp-grid-2x2">
+
+        <!-- ================= 方向 A ================= -->
+        <article class="qmdp-card-direction" data-option="A" data-title="Apple Fluid Stream (无框原生流 · 极致人本主义)">
+            <div class="qmdp-direction-brief">
+                <div class="qmdp-brief-header">
+                    <div class="qmdp-dir-title-wrap">
+                        <span class="qmdp-dir-letter" style="color: var(--accent-blue); background: rgba(10, 132, 255, 0.12);">A</span>
+                        <h2 class="qmdp-dir-name">Apple Fluid Stream</h2>
+                    </div>
+                    <span style="font-size: 11px; color: var(--accent-blue); font-weight: 500;">推荐首选</span>
+                </div>
+                <p class="qmdp-dir-tagline">无框原生流 · 极简发丝线分割 · 顶部水平滑动胶囊 · 琥珀高能微过滤</p>
+                <div class="qmdp-dir-traits">
+                    <span class="qmdp-trait-pill">零卡片框嵌套</span>
+                    <span class="qmdp-trait-pill">0.5px 发丝分割线</span>
+                    <span class="qmdp-trait-pill">左右滑动手势切源</span>
+                    <span class="qmdp-trait-pill">高能时间戳临时过滤</span>
+                    <span class="qmdp-trait-pill">收拢式微调试轨</span>
+                </div>
+            </div>
+
+            <!-- Mini Mockup A -->
+            <div class="qmdp-mockup-stage">
+                <div class="mockup-viewport viewport-a">
+                    <!-- 顶部水平滑动标签栏 + 高能过滤开关 -->
+                    <div class="a-nav-bar">
+                        <div class="a-tab-strip">
+                            <button class="a-tab-item is-active">Jable <span class="a-tab-badge">42</span></button>
+                            <button class="a-tab-item">JavDB <span class="a-tab-badge">128</span></button>
+                            <button class="a-tab-item">JavLibrary <span class="a-tab-badge">9</span></button>
+                        </div>
+                        <button class="a-filter-capsule" onclick="this.classList.toggle('is-active')">
+                            <span>⏱ 只看时间戳</span>
+                        </button>
+                    </div>
+
+                    <!-- 无框无缝流式列表 -->
+                    <div class="a-stream-list">
+                        <!-- 评论 1 -->
+                        <div class="a-stream-item">
+                            <div class="a-author-line">
+                                <div class="a-author-left">
+                                    <span class="a-author-name">Kenji_Tokyo</span>
+                                    <span class="a-post-time">· 12分钟前</span>
+                                </div>
+                                <span style="font-size: 11px; color: #ff9f0a; font-weight: 500;">★ 8.5</span>
+                            </div>
+                            <div class="a-comment-text">
+                                开头这套特写运镜太丝滑了！特别注意 <span class="a-time-pill is-favorited">▶ 04:28 ★</span> 这里的眼神变化，绝对是全片演技巅峰。
+                            </div>
+                            <div class="a-item-actions">
+                                <button class="a-action-link">▲ 38</button>
+                                <button class="a-action-link">回复</button>
+                            </div>
+                            <!-- 收拢式 Debug 微轨 (只在勾选全局调试模式时显示) -->
+                            <div class="a-debug-rail">
+                                <div class="a-debug-meta">
+                                    <span>SRC: jable</span>
+                                    <span>ID: 39402</span>
+                                    <span>OFF: 0s</span>
+                                </div>
+                                <button class="a-debug-btn" onclick="alert('触发评论上报诊断模态框')">🐛 诊断上报</button>
+                            </div>
+                        </div>
+
+                        <!-- 评论 2 -->
+                        <div class="a-stream-item">
+                            <div class="a-author-line">
+                                <div class="a-author-left">
+                                    <span class="a-author-name">ShadowWalker</span>
+                                    <span class="a-post-time">· 1小时前</span>
+                                </div>
+                            </div>
+                            <div class="a-comment-text">
+                                中段浴室场景从 <span class="a-time-pill">▶ 23:15 ☆</span> 开始节奏极佳，建议直接跳这里看。
+                            </div>
+                            <div class="a-item-actions">
+                                <button class="a-action-link">▲ 14</button>
+                                <button class="a-action-link">回复</button>
+                            </div>
+                            <!-- 收拢式 Debug 微轨 -->
+                            <div class="a-debug-rail">
+                                <div class="a-debug-meta">
+                                    <span>SRC: jable</span>
+                                    <span>ID: 39415</span>
+                                    <span>OFF: 0s</span>
+                                </div>
+                                <button class="a-debug-btn">🐛 诊断上报</button>
+                            </div>
+                        </div>
+
+                        <!-- 评论 3 (普通闲聊，无时间戳) -->
+                        <div class="a-stream-item">
+                            <div class="a-author-line">
+                                <div class="a-author-left">
+                                    <span class="a-author-name">CinemaFan2026</span>
+                                    <span class="a-post-time">· 2小时前</span>
+                                </div>
+                            </div>
+                            <div class="a-comment-text">
+                                女主演技一如既往在线，推荐戴耳机看，收音细节很丰富。
+                            </div>
+                            <div class="a-item-actions">
+                                <button class="a-action-link">▲ 5</button>
+                                <button class="a-action-link">回复</button>
+                            </div>
+                            <div class="a-debug-rail">
+                                <div class="a-debug-meta">
+                                    <span>SRC: jable</span>
+                                    <span>ID: 39420</span>
+                                </div>
+                                <button class="a-debug-btn">🐛 诊断上报</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qmdp-card-footer">
+                <div class="qmdp-footer-meta">
+                    <span>设计拨盘预设</span>
+                    <div class="qmdp-dials-summary">
+                        <span>冒险 25%</span>
+                        <span>动效 45%</span>
+                        <span>密度 85%</span>
+                    </div>
+                </div>
+                <button class="qmdp-pick-button" onclick="openConfirmModal('A', 'Apple Fluid Stream (无框原生流 · 极致人本主义)', 25, 45, 85)">
+                    选择 A · Apple Fluid Stream
+                </button>
+            </div>
+        </article>
+
+        <!-- ================= 方向 B ================= -->
+        <article class="qmdp-card-direction" data-option="B" data-title="Linear Minimalist Thread (现代流体微线条 · 理性呼吸)">
+            <div class="qmdp-direction-brief">
+                <div class="qmdp-brief-header">
+                    <div class="qmdp-dir-title-wrap">
+                        <span class="qmdp-dir-letter" style="color: var(--accent-cyan); background: rgba(0, 210, 211, 0.12);">B</span>
+                        <h2 class="qmdp-dir-name">Linear Minimalist Thread</h2>
+                    </div>
+                    <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 500;">理性工程感</span>
+                </div>
+                <p class="qmdp-dir-tagline">微线条导轨 · 无框轻量行 · 顶部等宽分段栏 · 双段机械时间戳</p>
+                <div class="qmdp-dir-traits">
+                    <span class="qmdp-trait-pill">极细垂直引导线</span>
+                    <span class="qmdp-trait-pill">双段机械刻度</span>
+                    <span class="qmdp-trait-pill">单色等宽切换栏</span>
+                    <span class="qmdp-trait-pill">极简开关药丸</span>
+                </div>
+            </div>
+
+            <!-- Mini Mockup B -->
+            <div class="qmdp-mockup-stage">
+                <div class="mockup-viewport viewport-b">
+                    <div class="b-nav-bar">
+                        <div class="b-tabs-wrap">
+                            <button class="b-tab-btn is-active">JABLE [42]</button>
+                            <button class="b-tab-btn">JAVDB [128]</button>
+                            <button class="b-tab-btn">JAVLIB [9]</button>
+                        </div>
+                        <button class="b-filter-toggle" onclick="this.classList.toggle('is-active')">
+                            <span>● ⏱ HIGHLIGHTS</span>
+                        </button>
+                    </div>
+
+                    <div class="b-stream-list">
+                        <!-- 行 1 -->
+                        <div class="b-stream-row">
+                            <div class="b-guide-line" style="background: var(--accent-cyan);"></div>
+                            <div class="b-row-content">
+                                <div class="b-row-hdr">
+                                    <span class="b-user-name">@Kenji_Tokyo</span>
+                                    <span>12M AGO</span>
+                                </div>
+                                <div class="b-body-text">
+                                    特写运镜太丝滑！注意 <span class="b-time-tag is-favorited"><span class="b-time-num">04:28</span><span class="b-time-star">★</span></span> 眼神戏绝佳。
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:10px; color:#555d70; font-family:var(--font-mono);">
+                                    <span>+38 VOTES</span>
+                                    <span>REPLY</span>
+                                </div>
+                                <div class="b-debug-rail">
+                                    <span>// dev: id=39402 | offset=0s</span>
+                                    <span style="color:#00d2d3; cursor:pointer;">[REPORT]</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 行 2 -->
+                        <div class="b-stream-row">
+                            <div class="b-guide-line"></div>
+                            <div class="b-row-content">
+                                <div class="b-row-hdr">
+                                    <span class="b-user-name">@ShadowWalker</span>
+                                    <span>1H AGO</span>
+                                </div>
+                                <div class="b-body-text">
+                                    浴室场景从 <span class="b-time-tag"><span class="b-time-num">23:15</span><span class="b-time-star">☆</span></span> 节奏极佳。
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:10px; color:#555d70; font-family:var(--font-mono);">
+                                    <span>+14 VOTES</span>
+                                    <span>REPLY</span>
+                                </div>
+                                <div class="b-debug-rail">
+                                    <span>// dev: id=39415 | offset=0s</span>
+                                    <span style="color:#00d2d3; cursor:pointer;">[REPORT]</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qmdp-card-footer">
+                <div class="qmdp-footer-meta">
+                    <span>设计拨盘预设</span>
+                    <div class="qmdp-dials-summary">
+                        <span>冒险 50%</span>
+                        <span>动效 45%</span>
+                        <span>密度 90%</span>
+                    </div>
+                </div>
+                <button class="qmdp-pick-button" style="background: #00b4b5;" onclick="openConfirmModal('B', 'Linear Minimalist Thread (现代流体微线条 · 理性呼吸)', 50, 45, 90)">
+                    选择 B · Linear Minimalist
+                </button>
+            </div>
+        </article>
+
+        <!-- ================= 方向 C ================= -->
+        <article class="qmdp-card-direction" data-option="C" data-title="Mono Cyber Reel (无界深空胶卷 · 沉浸胶片流)">
+            <div class="qmdp-direction-brief">
+                <div class="qmdp-brief-header">
+                    <div class="qmdp-dir-title-wrap">
+                        <span class="qmdp-dir-letter" style="color: var(--accent-amber); background: rgba(245, 166, 35, 0.12);">C</span>
+                        <h2 class="qmdp-dir-name">Mono Cyber Reel</h2>
+                    </div>
+                    <span style="font-size: 11px; color: var(--accent-amber); font-weight: 500;">沉浸胶卷</span>
+                </div>
+                <p class="qmdp-dir-tagline">OLED 纯黑无界 · 模拟胶卷齿轮 · 复古琥珀单色光 · 极简点阵波段</p>
+                <div class="qmdp-dir-traits">
+                    <span class="qmdp-trait-pill">OLED 墨黑纯底</span>
+                    <span class="qmdp-trait-pill">胶片帧时间码</span>
+                    <span class="qmdp-trait-pill">数字波段开关</span>
+                    <span class="qmdp-trait-pill">硬件终端质感</span>
+                </div>
+            </div>
+
+            <!-- Mini Mockup C -->
+            <div class="qmdp-mockup-stage">
+                <div class="mockup-viewport viewport-c">
+                    <div class="c-nav-bar">
+                        <div class="c-band-selector">
+                            <button class="c-band-btn is-active">01/JABLE</button>
+                            <button class="c-band-btn">02/JAVDB</button>
+                            <button class="c-band-btn">03/JAVLIB</button>
+                        </div>
+                        <button class="c-filter-toggle" onclick="this.classList.toggle('is-active')">
+                            <span>⚡ TIMECODE ONLY</span>
+                        </button>
+                    </div>
+
+                    <div class="c-stream-list">
+                        <!-- 条目 1 -->
+                        <div class="c-stream-entry">
+                            <div class="c-entry-hdr">
+                                <span class="c-user-code">KENJI_T</span>
+                                <span>T-12M</span>
+                            </div>
+                            <div class="c-entry-text">
+                                特写运镜锁定关键帧 <span class="c-time-pill is-favorited">[04:28:00 ★]</span> 情绪转折点。
+                            </div>
+                            <div style="font-size:10px; color:#543f1d;">DELTA: +38</div>
+                            <div class="c-debug-rail">
+                                <span>#39402 [RAW_STREAM]</span>
+                                <span style="color:#ffb020; cursor:pointer;">[BUG_REP]</span>
+                            </div>
+                        </div>
+
+                        <!-- 条目 2 -->
+                        <div class="c-stream-entry">
+                            <div class="c-entry-hdr">
+                                <span class="c-user-code">SHADOW_W</span>
+                                <span>T-1H</span>
+                            </div>
+                            <div class="c-entry-text">
+                                核心切片点 <span class="c-time-pill">[23:15:00 ☆]</span> 数据已同步入库。
+                            </div>
+                            <div style="font-size:10px; color:#543f1d;">DELTA: +14</div>
+                            <div class="c-debug-rail">
+                                <span>#39415 [RAW_STREAM]</span>
+                                <span style="color:#ffb020; cursor:pointer;">[BUG_REP]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qmdp-card-footer">
+                <div class="qmdp-footer-meta">
+                    <span>设计拨盘预设</span>
+                    <div class="qmdp-dials-summary">
+                        <span>冒险 80%</span>
+                        <span>动效 30%</span>
+                        <span>密度 85%</span>
+                    </div>
+                </div>
+                <button class="qmdp-pick-button" style="background: #e69500;" onclick="openConfirmModal('C', 'Mono Cyber Reel (无界深空胶卷 · 沉浸胶片流)', 80, 30, 85)">
+                    选择 C · Mono Cyber Reel
+                </button>
+            </div>
+        </article>
+
+        <!-- ================= 方向 D ================= -->
+        <article class="qmdp-card-direction" data-option="D" data-title="Substack Editorial Feed (人文杂志流式叙事 · 温润呼吸)">
+            <div class="qmdp-direction-brief">
+                <div class="qmdp-brief-header">
+                    <div class="qmdp-dir-title-wrap">
+                        <span class="qmdp-dir-letter" style="color: var(--accent-purple); background: rgba(191, 90, 242, 0.12);">D</span>
+                        <h2 class="qmdp-dir-name">Substack Editorial Feed</h2>
+                    </div>
+                    <span style="font-size: 11px; color: var(--accent-purple); font-weight: 500;">温润阅读感</span>
+                </div>
+                <p class="qmdp-dir-tagline">人文杂志流 · 优雅下划线滑动栏 · 旁注书签时间戳 · 抽屉式收拢调试</p>
+                <div class="qmdp-dir-traits">
+                    <span class="qmdp-trait-pill">下划线游标标签</span>
+                    <span class="qmdp-trait-pill">书签式时间戳</span>
+                    <span class="qmdp-trait-pill">自然长文呼吸感</span>
+                    <span class="qmdp-trait-pill">优雅齿轮微抽屉</span>
+                </div>
+            </div>
+
+            <!-- Mini Mockup D -->
+            <div class="qmdp-mockup-stage">
+                <div class="mockup-viewport viewport-d">
+                    <div class="d-nav-bar">
+                        <div class="d-tabs-slider">
+                            <button class="d-tab-link is-active">Jable 42</button>
+                            <button class="d-tab-link">JavDB 128</button>
+                            <button class="d-tab-link">JavLibrary</button>
+                        </div>
+                        <button class="d-filter-toggle" onclick="this.classList.toggle('is-active')">
+                            <span>🔖 高光 8</span>
+                        </button>
+                    </div>
+
+                    <div class="d-stream-list">
+                        <!-- 项 1 -->
+                        <div class="d-stream-item">
+                            <div class="d-item-hdr">
+                                <span class="d-author-tag">Kenji Tokyo</span>
+                                <span>12分钟前</span>
+                            </div>
+                            <div class="d-text-body">
+                                开头这套特写运镜太丝滑了！特别注意 <span class="d-time-tag is-favorited">04:28 ★</span> 这里的眼神变化，绝对是全片演技巅峰。
+                            </div>
+                            <div style="font-size:11px; color:#797f94; display:flex; gap:12px;">
+                                <span>赞同 38</span>
+                                <span>回应 4</span>
+                            </div>
+                            <div class="d-debug-rail">
+                                <span>来源: jable · 偏移: 0s</span>
+                                <span style="color:#bf5af2; cursor:pointer;">诊断</span>
+                            </div>
+                        </div>
+
+                        <!-- 项 2 -->
+                        <div class="d-stream-item">
+                            <div class="d-item-hdr">
+                                <span class="d-author-tag">Shadow Walker</span>
+                                <span>1小时前</span>
+                            </div>
+                            <div class="d-text-body">
+                                中段浴室场景从 <span class="d-time-tag">23:15 ☆</span> 开始节奏极佳，建议直接跳这里看。
+                            </div>
+                            <div style="font-size:11px; color:#797f94; display:flex; gap:12px;">
+                                <span>赞同 14</span>
+                                <span>回应</span>
+                            </div>
+                            <div class="d-debug-rail">
+                                <span>来源: jable · 偏移: 0s</span>
+                                <span style="color:#bf5af2; cursor:pointer;">诊断</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qmdp-card-footer">
+                <div class="qmdp-footer-meta">
+                    <span>设计拨盘预设</span>
+                    <div class="qmdp-dials-summary">
+                        <span>冒险 40%</span>
+                        <span>动效 65%</span>
+                        <span>密度 70%</span>
+                    </div>
+                </div>
+                <button class="qmdp-pick-button" style="background: #9f44db;" onclick="openConfirmModal('D', 'Substack Editorial Feed (人文杂志流式叙事 · 温润呼吸)', 40, 65, 70)">
+                    选择 D · Substack Editorial
+                </button>
+            </div>
+        </article>
+
+    </main>
+
+    <!-- =========================================================================
+         二次确认弹层与三拨盘微调 (P-33)
+         ========================================================================= -->
+    <div id="qmdpModal" class="qmdp-modal-backdrop">
+        <div class="qmdp-modal-card">
+            <div class="qmdp-modal-title">
+                <h2>确认设计方向与微调</h2>
+                <button class="qmdp-modal-close" onclick="closeModal()">×</button>
+            </div>
+
+            <div>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;">选中方向：</p>
+                <p id="modalOptionName" style="font-size: 15px; font-weight: 600; color: var(--text-primary);"></p>
+            </div>
+
+            <div class="qmdp-dials-group">
+                <div class="qmdp-dial-item">
+                    <div class="qmdp-dial-hdr">
+                        <span>视觉冒险度 (VARIANCE)</span>
+                        <span id="varianceVal" style="font-family: var(--font-mono);">50%</span>
+                    </div>
+                    <input type="range" id="varianceSlider" class="qmdp-dial-slider" min="0" max="100" value="50" oninput="updateDial('variance', this.value)">
+                </div>
+
+                <div class="qmdp-dial-item">
+                    <div class="qmdp-dial-hdr">
+                        <span>动效强度 (MOTION)</span>
+                        <span id="motionVal" style="font-family: var(--font-mono);">50%</span>
+                    </div>
+                    <input type="range" id="motionSlider" class="qmdp-dial-slider" min="0" max="100" value="50" oninput="updateDial('motion', this.value)">
+                </div>
+
+                <div class="qmdp-dial-item">
+                    <div class="qmdp-dial-hdr">
+                        <span>信息密度 (DENSITY)</span>
+                        <span id="densityVal" style="font-family: var(--font-mono);">80%</span>
+                    </div>
+                    <input type="range" id="densitySlider" class="qmdp-dial-slider" min="0" max="100" value="80" oninput="updateDial('density', this.value)">
+                </div>
+            </div>
+
+            <div>
+                <label for="feedbackInput" style="display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">调整建议或特殊偏好 (可选)：</label>
+                <textarea id="feedbackInput" class="qmdp-feedback-input" placeholder="例如：希望在水平滑签右侧增加刷新按钮，或者时间戳胶囊更细一些..."></textarea>
+            </div>
+
+            <div class="qmdp-modal-actions">
+                <button class="qmdp-btn-secondary" onclick="closeModal()">返回修改</button>
+                <button class="qmdp-btn-primary" onclick="submitSelection()">确认并回传选择</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部 Toast -->
+    <div id="qmdpToast" class="qmdp-toast">已成功回传设计方向选择！</div>
+
+    <!-- 交互脚本 -->
+    <script>
+        let currentOption = null;
+        let currentTitle = '';
+        let currentDials = { variance: 50, motion: 50, density: 80 };
+
+        function toggleDebugMode(isOn) {
+            document.body.classList.toggle('is-debug-on', isOn);
+        }
+
+        function openConfirmModal(opt, title, v, m, d) {
+            currentOption = opt;
+            currentTitle = title;
+            currentDials = { variance: v, motion: m, density: d };
+
+            document.getElementById('modalOptionName').textContent = `[${opt}] ${title}`;
+            document.getElementById('varianceSlider').value = v;
+            document.getElementById('varianceVal').textContent = `${v}%`;
+            document.getElementById('motionSlider').value = m;
+            document.getElementById('motionVal').textContent = `${m}%`;
+            document.getElementById('densitySlider').value = d;
+            document.getElementById('densityVal').textContent = `${d}%`;
+
+            document.getElementById('qmdpModal').classList.add('is-active');
+        }
+
+        function closeModal() {
+            document.getElementById('qmdpModal').classList.remove('is-active');
+        }
+
+        function updateDial(key, val) {
+            currentDials[key] = parseInt(val, 10);
+            document.getElementById(`${key}Val`).textContent = `${val}%`;
+        }
+
+        async function submitSelection() {
+            const feedback = document.getElementById('feedbackInput').value.trim();
+            const payload = {
+                taskId: "2026-11-13-comment-ui-redesign",
+                status: "selected",
+                selectedOption: currentOption,
+                selectedTitle: currentTitle,
+                dials: currentDials,
+                feedback: feedback,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                await fetch('/api/selection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) {
+                console.log('[QMDP] Local fetch fallback');
+            }
+
+            closeModal();
+
+            document.querySelectorAll('.qmdp-card-direction').forEach(card => {
+                if (card.getAttribute('data-option') === currentOption) {
+                    card.classList.add('is-selected');
+                } else {
+                    card.classList.remove('is-selected');
+                }
+            });
+
+            const toast = document.getElementById('qmdpToast');
+            toast.textContent = `已回传选择：[${currentOption}] ${currentTitle}`;
+            toast.classList.add('is-shown');
+            setTimeout(() => toast.classList.remove('is-shown'), 4000);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === '1') openConfirmModal('A', 'Apple Fluid Stream (无框原生流 · 极致人本主义)', 25, 45, 85);
+            if (e.key === '2') openConfirmModal('B', 'Linear Minimalist Thread (现代流体微线条 · 理性呼吸)', 50, 45, 90);
+            if (e.key === '3') openConfirmModal('C', 'Mono Cyber Reel (无界深空胶卷 · 沉浸胶片流)', 80, 30, 85);
+            if (e.key === '4') openConfirmModal('D', 'Substack Editorial Feed (人文杂志流式叙事 · 温润呼吸)', 40, 65, 70);
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

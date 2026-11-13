@@ -175,6 +175,11 @@ runStep('执行评论区分区手风琴折叠展开与视口流式排布单元�
     execSync('node tests/comments-accordion-viewport.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.21 Direction B: Linear Minimalist Thread (现代流体微线条与水平标签栏) 单元测试
+runStep('执行 Linear Minimalist 无框流式评论与水平多源分段栏单元测试', () => {
+    execSync('node tests/comments-linear-minimalist.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

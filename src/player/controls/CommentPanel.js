@@ -342,6 +342,13 @@ export class CommentPanel {
 
         this.composer = new CommentComposer(this);
 
+        // 现代无框流式分段与高能过滤状态 (Direction B: Linear Minimalist Thread)
+        this.activeCommentSource = localStorage.getItem('mp_active_comment_source') || 'jable';
+        this.isHighlightFilterActive = false;
+        this.commentNavBar = null;
+        this.commentTabStrip = null;
+        this.commentFilterPill = null;
+
         // 延迟后台域名探测，避免在 UI 挂载的关键帧争抢网络和主线程微任务
         if (typeof window.requestIdleCallback === 'function') {
             window.requestIdleCallback(() => this.detectReachability(), { timeout: 4000 });
@@ -1569,6 +1576,27 @@ export class CommentPanel {
         this.commentsPanel.className = 'tm-comments-panel';
 
         this.commentsPanel.innerHTML = `
+            <div class="tm-comment-nav-bar">
+                <div class="tm-comment-tab-strip">
+                    <button type="button" class="tm-comment-tab-item is-active" data-site="jable">
+                        <span class="tm-tab-name">JABLE</span>
+                        <span class="tm-tab-count">0</span>
+                    </button>
+                    <button type="button" class="tm-comment-tab-item" data-site="javdb">
+                        <span class="tm-tab-name">JAVDB</span>
+                        <span class="tm-tab-count">0</span>
+                    </button>
+                    <button type="button" class="tm-comment-tab-item" data-site="javlib">
+                        <span class="tm-tab-name">JAVLIB</span>
+                        <span class="tm-tab-count">0</span>
+                    </button>
+                </div>
+                <button type="button" class="tm-comment-filter-pill" title="临时只看带有时间戳的高能评论">
+                    <span class="tm-filter-dot">●</span>
+                    <span class="tm-filter-text">⏱ HIGHLIGHTS</span>
+                    <span class="tm-filter-count is-hidden">0</span>
+                </button>
+            </div>
             <div class="tm-comments-list tm-comments-panel-list"></div>
             <div class="tm-comment-loading tm-comments-panel-loading is-hidden"></div>
             <div class="tm-comment-error tm-comments-panel-error is-hidden"></div>
@@ -1602,6 +1630,29 @@ export class CommentPanel {
         this.commentsList = this.commentsPanel.querySelector('.tm-comments-list');
         this.loadingElement = this.commentsPanel.querySelector('.tm-comment-loading');
         this.errorElement = this.commentsPanel.querySelector('.tm-comment-error');
+
+        // 现代无框流式分段导航栏元素与事件绑定
+        this.commentNavBar = this.commentsPanel.querySelector('.tm-comment-nav-bar');
+        this.commentTabStrip = this.commentsPanel.querySelector('.tm-comment-tab-strip');
+        this.commentFilterPill = this.commentsPanel.querySelector('.tm-comment-filter-pill');
+
+        if (this.commentTabStrip) {
+            this.commentTabStrip.addEventListener('click', (e) => {
+                const tabBtn = e.target.closest('.tm-comment-tab-item');
+                if (tabBtn) {
+                    const site = tabBtn.getAttribute('data-site');
+                    if (site) {
+                        this.setActiveSource(site);
+                    }
+                }
+            });
+        }
+
+        if (this.commentFilterPill) {
+            this.commentFilterPill.addEventListener('click', () => {
+                this.toggleHighlightFilter();
+            });
+        }
 
         // 初始化评论提交栏及其事件
         this.initCommentSubmitBar();
@@ -1674,8 +1725,37 @@ export class CommentPanel {
         this.commentsList.addEventListener('scroll', handleScrollLoadMore, { capture: true, passive: true });
 
         let startY = 0;
+        let touchStartX = 0;
+        let touchStartY = 0;
         this.commentsList.addEventListener('touchstart', (e) => {
-            startY = e.touches[0].clientY;
+            if (e.touches && e.touches[0]) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                startY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        this.commentsList.addEventListener('touchend', (e) => {
+            if (!e.changedTouches || !e.changedTouches[0]) return;
+            const deltaX = e.changedTouches[0].clientX - touchStartX;
+            const deltaY = e.changedTouches[0].clientY - touchStartY;
+
+            // 水平滑动切源判定：水平位移 > 50px 且明显大于垂直位移 (1.5x)
+            if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+                const sources = ['jable', 'javdb', 'javlib'];
+                const curIdx = sources.indexOf(this.activeCommentSource);
+                if (curIdx !== -1) {
+                    if (deltaX < 0) {
+                        // 向左滑：切换至下一个源
+                        const nextIdx = (curIdx + 1) % sources.length;
+                        this.setActiveSource(sources[nextIdx]);
+                    } else {
+                        // 向右滑：切换至上一个源
+                        const prevIdx = (curIdx - 1 + sources.length) % sources.length;
+                        this.setActiveSource(sources[prevIdx]);
+                    }
+                }
+            }
         }, { passive: true });
 
         this.commentsList.addEventListener('touchmove', (e) => {
@@ -2259,6 +2339,7 @@ export class CommentPanel {
             javlibFailedDomain: this.javlibFailedDomain,
             renderedCommentIds: this.renderedCommentIds,
             expandedCommentIds: this.expandedCommentIds,
+            highlightOnly: this.isHighlightFilterActive,
             renderLoginBadge: (loginSiteKey) => this.renderLoginBadgeHtml(loginSiteKey)
         });
     }
@@ -2478,10 +2559,141 @@ export class CommentPanel {
             (this.filteredJavlibComments || []).forEach(c => this.renderedCommentIds.add(c.id));
             (this.filteredJavdbComments || []).forEach(c => this.renderedCommentIds.add(c.id));
 
+            // 同步当前激活源与水平标签栏状态 (Direction B: Linear Minimalist)
+            this.syncActiveSourceView();
+            this.updateTabBar();
+
             // 当分区没有被评论填满（没有出现滚动条）且仍有更多评论可加载时，自动触发加载下一页
             this.updateFavoriteBadges();
             setTimeout(() => this.checkViewportFill(), 150);
             setTimeout(() => this.updateFavoriteBadges(), 50);
+        }
+    }
+
+    /**
+     * 切换当前激活的数据源标签 (Direction B: Linear Minimalist)
+     * @param {string} siteKey 'jable' | 'javdb' | 'javlib'
+     */
+    setActiveSource(siteKey) {
+        if (!siteKey || !['jable', 'javdb', 'javlib'].includes(siteKey)) return;
+        this.activeCommentSource = siteKey;
+        try {
+            localStorage.setItem('mp_active_comment_source', siteKey);
+        } catch (_) {}
+
+        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+            try { navigator.vibrate(10); } catch (_) {}
+        }
+
+        this.syncActiveSourceView();
+        this.updateTabBar();
+
+        // 切换后若视口未填满，检查自动触发分页加载
+        setTimeout(() => this.checkViewportFill(), 100);
+    }
+
+    /**
+     * 切换时间戳高能评论过滤状态 (Direction B: Linear Minimalist)
+     * @param {boolean} [forceState] 可选强制指定开启/关闭
+     */
+    toggleHighlightFilter(forceState) {
+        if (typeof forceState === 'boolean') {
+            this.isHighlightFilterActive = forceState;
+        } else {
+            this.isHighlightFilterActive = !this.isHighlightFilterActive;
+        }
+
+        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+            try { navigator.vibrate([10, 20, 10]); } catch (_) {}
+        }
+
+        if (this.commentFilterPill) {
+            this.commentFilterPill.classList.toggle('is-active', Boolean(this.isHighlightFilterActive));
+        }
+
+        this.renderCommentsList();
+
+        if (this.isHighlightFilterActive) {
+            Toast('已开启高能时间戳过滤', 1600, 'info');
+        } else {
+            Toast('已恢复全量评论', 1400, 'info');
+        }
+    }
+
+    /**
+     * 同步当前激活源视图（仅展示激活源，隐藏非激活源）
+     */
+    syncActiveSourceView() {
+        if (!this.commentsList) return;
+
+        const validSources = ['jable', 'javdb', 'javlib'];
+        if (!validSources.includes(this.activeCommentSource)) {
+            this.activeCommentSource = 'jable';
+        }
+
+        // 如果当前激活源完全无内容但有其他源有内容，且当前源不是 loading 态，自动友好引导至首个有内容的源
+        const curSite = this.sites[this.activeCommentSource];
+        const curHasContent = curSite && (curSite.status === 'loading' || (curSite.filteredComments && curSite.filteredComments.length > 0));
+        if (!curHasContent) {
+            const alternativeSource = validSources.find(k => {
+                const s = this.sites[k];
+                return s && ((s.filteredComments && s.filteredComments.length > 0) || s.status === 'loading');
+            });
+            if (alternativeSource) {
+                this.activeCommentSource = alternativeSource;
+            }
+        }
+
+        const sections = this.commentsList.querySelectorAll('.tm-comment-section');
+        sections.forEach(sec => {
+            const siteKey = sec.getAttribute('data-site');
+            if (siteKey === this.activeCommentSource) {
+                sec.classList.add('is-active-source');
+                sec.classList.remove('is-hidden-source');
+                sec.classList.remove('is-collapsed');
+            } else {
+                sec.classList.remove('is-active-source');
+                sec.classList.add('is-hidden-source');
+            }
+        });
+    }
+
+    /**
+     * 更新顶部水平标签栏各平台计数与高能筛选统计
+     */
+    updateTabBar() {
+        if (!this.commentsPanel) return;
+
+        const tabItems = this.commentsPanel.querySelectorAll('.tm-comment-tab-item');
+        tabItems.forEach(item => {
+            const siteKey = item.getAttribute('data-site');
+            const isActive = siteKey === this.activeCommentSource;
+            item.classList.toggle('is-active', isActive);
+
+            const countEl = item.querySelector('.tm-tab-count');
+            if (countEl && this.sites[siteKey]) {
+                const site = this.sites[siteKey];
+                if (site.status === 'loading') {
+                    countEl.textContent = '...';
+                } else if (site.status === 'loaded') {
+                    const count = site.filteredComments ? site.filteredComments.length : 0;
+                    countEl.textContent = `${count}${site.hasMore ? '+' : ''}`;
+                } else {
+                    countEl.textContent = '0';
+                }
+            }
+        });
+
+        if (this.commentFilterPill) {
+            this.commentFilterPill.classList.toggle('is-active', Boolean(this.isHighlightFilterActive));
+            const filterCountEl = this.commentFilterPill.querySelector('.tm-filter-count');
+            if (filterCountEl) {
+                const curSite = this.sites[this.activeCommentSource];
+                const comments = curSite?.filteredComments || [];
+                const highlightCount = comments.filter(c => Array.isArray(c.timestamps) && c.timestamps.length > 0).length;
+                filterCountEl.textContent = highlightCount;
+                filterCountEl.classList.toggle('is-hidden', highlightCount === 0);
+            }
         }
     }
 

@@ -49,9 +49,10 @@ export function renderCommentCardHtml(c, options = {}) {
     const isExpanded = expandedCommentIds ? (expandedCommentIds.has(c.id) || Boolean(c.isExpanded)) : false;
     const textClass = isLongText ? 'jc-body-text jc-body-text--collapsible' : 'jc-body-text';
     const expandBtnText = isExpanded ? (__('commentsCollapse') || '收起') : (__('commentsExpand') || '展开');
+    const rawTextHtml = c.textHtml || c.text || '';
     const expandBtn = isLongText
-        ? `<div class="jc-body-text-content">${c.textHtml}</div><button class="jc-toggle-expand-btn">${expandBtnText}</button>`
-        : c.textHtml;
+        ? `<div class="jc-body-text-content">${rawTextHtml}</div><button class="jc-toggle-expand-btn">${expandBtnText}</button>`
+        : rawTextHtml;
 
     const safeUserUrl = c.userUrl ? sanitizeCommentUrl(c.userUrl) : '';
     const safeUser = esc(c.user || '');
@@ -77,27 +78,37 @@ export function renderCommentCardHtml(c, options = {}) {
         : '';
     const safeCommentId = esc(c.id || '');
     const safeTime = (c.time && !c.time.includes('Invalid')) ? esc(c.time) : '';
-    const showDebugReport = playerCore?.options?.playerState?.settings?.debugMode || Boolean(getValue('debugMode', false));
+    const playerState = playerCore?.playerState || playerCore?.options?.playerState;
+    const showDebugReport = Boolean(
+        playerState?.settings?.debugMode ||
+        playerState?.settings?.showDebugReport ||
+        getValue('debugMode', false)
+    );
 
     return `
-        <div class="jc-card ${isNew ? 'jc-card--new' : ''}" data-id="${safeCommentId}">
-            <div class="jc-bd">
-                <div class="jc-hdr">
-                    <div class="jc-hdr-left">
-                        <span class="jc-t">${safeTime}</span>
-                    </div>
-                    <div class="jc-hdr-right">
-                        ${countdownBtn}
-                        ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${esc(__('saveAllHighlights') || '转存高光')}" data-comment-id="${safeCommentId}">📌 转存</button>` : ""}
-                        <button class="jc-action-btn jc-report-btn" title="上报该评论" data-comment-id="${safeCommentId}" ${showDebugReport ? '' : 'hidden'}>🐛 上报</button>
+        <div class="jc-card jc-stream-row ${isNew ? 'jc-card--new' : ''} ${hasTimestamps ? 'has-timestamps' : ''}" data-id="${safeCommentId}">
+            <div class="jc-guide-line ${hasTimestamps ? 'is-highlight' : ''}"></div>
+            <div class="jc-row-content">
+                <div class="jc-hdr jc-row-hdr">
+                    <div class="jc-hdr-left jc-user-group">
                         ${userHtml}
+                        ${safeTime ? `<span class="jc-t">${safeTime}</span>` : ''}
+                    </div>
+                    <div class="jc-hdr-right jc-badge-group">
                         ${scoreHtml}
                         ${spamHtml}
+                        ${countdownBtn}
+                        ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${esc(__('saveAllHighlights') || '转存高光')}" data-comment-id="${safeCommentId}">📌 转存</button>` : ""}
                     </div>
                 </div>
                 <div class="${textClass}" ${isLongText ? `data-collapsed="${isExpanded ? 'false' : 'true'}"` : ''}>
                     ${expandBtn}
                 </div>
+                ${showDebugReport ? `
+                <div class="jc-debug-rail">
+                    <span class="jc-debug-meta">// dev: id=${safeCommentId}${c.source ? ` | src=${esc(c.source)}` : ''}</span>
+                    <button class="jc-action-btn jc-report-btn jc-debug-report-btn" title="上报该评论" data-comment-id="${safeCommentId}">[🐛 上报]</button>
+                </div>` : ''}
             </div>
         </div>
     `;
@@ -112,7 +123,8 @@ export function renderCommentSectionHtml(siteKey, ctx) {
         javlibFailedDomain,
         renderedCommentIds,
         expandedCommentIds,
-        renderLoginBadge
+        renderLoginBadge,
+        highlightOnly = false
     } = ctx;
 
     const site = sites[siteKey];
@@ -193,23 +205,37 @@ export function renderCommentSectionHtml(siteKey, ctx) {
             `;
         }
     } else if (site.status === 'loaded') {
-        contentHtml = site.filteredComments.map(c => {
-            const isNew = renderedCommentIds.size > 0 && !renderedCommentIds.has(c.id);
-            return renderCommentCardHtml(c, { isNew, expandedCommentIds, playerCore });
-        }).join('');
+        let commentsToRender = site.filteredComments;
+        if (highlightOnly) {
+            commentsToRender = commentsToRender.filter(c => Array.isArray(c.timestamps) && c.timestamps.length > 0);
+        }
 
-        if (site.loading) {
-            contentHtml += `
-                <div class="tm-comment-bottom-loader tm-comment-loader-graphic">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
+        if (highlightOnly && commentsToRender.length === 0) {
+            contentHtml = `
+                <div class="tm-comment-status-box is-highlight-empty">
+                    <p class="tm-comment-status-title">该板块暂无带时间戳的高能评论</p>
+                    <button class="tm-comment-reset-filter-btn" type="button">点击查看全部评论</button>
                 </div>
             `;
-        } else if (!site.hasMore) {
-            contentHtml += `
-                <div class="tm-comment-end-marker">-end-</div>
-            `;
+        } else {
+            contentHtml = commentsToRender.map(c => {
+                const isNew = renderedCommentIds.size > 0 && !renderedCommentIds.has(c.id);
+                return renderCommentCardHtml(c, { isNew, expandedCommentIds, playerCore });
+            }).join('');
+
+            if (site.loading) {
+                contentHtml += `
+                    <div class="tm-comment-bottom-loader tm-comment-loader-graphic">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                `;
+            } else if (!site.hasMore && !highlightOnly) {
+                contentHtml += `
+                    <div class="tm-comment-end-marker">-end-</div>
+                `;
+            }
         }
     }
 
@@ -220,7 +246,7 @@ export function renderCommentSectionHtml(siteKey, ctx) {
     const titleMap = { jable: '■ Jable.tv', javlib: '■ JAVLibrary', javdb: '■ JavDB' };
 
     return `
-        <div class="tm-comment-section${isCollapsed ? ' is-collapsed' : ''}" id="tm-comment-section-${siteKey}">
+        <div class="tm-comment-section${isCollapsed ? ' is-collapsed' : ''}" id="tm-comment-section-${siteKey}" data-site="${siteKey}">
             <div class="tm-comment-section-hdr" title="点击展开/折叠">
                 <span class="tm-comment-section-title">${titleMap[siteKey]}</span>
                 <div class="tm-comment-hdr-right">
