@@ -85,9 +85,13 @@ export function renderCommentCardHtml(c, options = {}) {
         getValue('debugMode', false)
     );
 
+    // 调试模式下的极简上报入口 (收拢至右上角低调图标，绝不在下方横插大代码黑框破坏视觉)
+    const debugReportBtn = showDebugReport
+        ? `<button class="jc-action-btn jc-report-btn jc-debug-report-btn" title="上报该评论 (dev: id=${safeCommentId})" data-comment-id="${safeCommentId}">🐛</button>`
+        : '';
+
     return `
         <div class="jc-card jc-stream-row ${isNew ? 'jc-card--new' : ''} ${hasTimestamps ? 'has-timestamps' : ''}" data-id="${safeCommentId}">
-            <div class="jc-guide-line ${hasTimestamps ? 'is-highlight' : ''}"></div>
             <div class="jc-row-content">
                 <div class="jc-hdr jc-row-hdr">
                     <div class="jc-hdr-left jc-user-group">
@@ -99,16 +103,12 @@ export function renderCommentCardHtml(c, options = {}) {
                         ${spamHtml}
                         ${countdownBtn}
                         ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${esc(__('saveAllHighlights') || '转存高光')}" data-comment-id="${safeCommentId}">📌 转存</button>` : ""}
+                        ${debugReportBtn}
                     </div>
                 </div>
                 <div class="${textClass}" ${isLongText ? `data-collapsed="${isExpanded ? 'false' : 'true'}"` : ''}>
                     ${expandBtn}
                 </div>
-                ${showDebugReport ? `
-                <div class="jc-debug-rail">
-                    <span class="jc-debug-meta">// dev: id=${safeCommentId}${c.source ? ` | src=${esc(c.source)}` : ''}</span>
-                    <button class="jc-action-btn jc-report-btn jc-debug-report-btn" title="上报该评论" data-comment-id="${safeCommentId}">[🐛 上报]</button>
-                </div>` : ''}
             </div>
         </div>
     `;

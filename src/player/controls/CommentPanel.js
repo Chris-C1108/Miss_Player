@@ -1579,21 +1579,20 @@ export class CommentPanel {
             <div class="tm-comment-nav-bar">
                 <div class="tm-comment-tab-strip">
                     <button type="button" class="tm-comment-tab-item is-active" data-site="jable">
-                        <span class="tm-tab-name">JABLE</span>
+                        <span class="tm-tab-name">Jable</span>
                         <span class="tm-tab-count">0</span>
                     </button>
                     <button type="button" class="tm-comment-tab-item" data-site="javdb">
-                        <span class="tm-tab-name">JAVDB</span>
+                        <span class="tm-tab-name">JavDB</span>
                         <span class="tm-tab-count">0</span>
                     </button>
                     <button type="button" class="tm-comment-tab-item" data-site="javlib">
-                        <span class="tm-tab-name">JAVLIB</span>
+                        <span class="tm-tab-name">JAVLib</span>
                         <span class="tm-tab-count">0</span>
                     </button>
                 </div>
-                <button type="button" class="tm-comment-filter-pill" title="临时只看带有时间戳的高能评论">
-                    <span class="tm-filter-dot">●</span>
-                    <span class="tm-filter-text">⏱ HIGHLIGHTS</span>
+                <button type="button" class="tm-comment-filter-pill" title="只看带时间戳的高能评论">
+                    <span class="tm-filter-text">⏱ 高能</span>
                     <span class="tm-filter-count is-hidden">0</span>
                 </button>
             </div>

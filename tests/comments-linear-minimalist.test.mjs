@@ -21,7 +21,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
-test('1. CommentCardRenderer Linear Minimalist 无框流式结构断言', () => {
+test('1. CommentCardRenderer 极简流式结构与调试按钮收拢断言', () => {
     const normalComment = {
         id: 'c_001',
         site: 'jable',
@@ -46,16 +46,15 @@ test('1. CommentCardRenderer Linear Minimalist 无框流式结构断言', () => 
     // 1.1 普通评论渲染断言
     const normalHtml = renderCommentCardHtml(normalComment);
     assert.ok(normalHtml.includes('jc-stream-row'), '普通评论必须输出 .jc-stream-row 无框流式结构');
-    assert.ok(normalHtml.includes('jc-guide-line'), '普通评论必须包含垂直呼吸微导轨 .jc-guide-line');
-    assert.ok(!normalHtml.includes('jc-guide-line is-highlight'), '无时间戳评论导轨不得包含 is-highlight');
-    assert.ok(!normalHtml.includes('jc-debug-rail'), '常规状态下严禁输出底部调试微轨 .jc-debug-rail');
+    assert.ok(!normalHtml.includes('jc-guide-line'), '严禁渲染突兀机械的左侧垂直导轨 .jc-guide-line');
+    assert.ok(!normalHtml.includes('jc-debug-rail'), '严禁输出底部大代码黑框 .jc-debug-rail');
 
     // 1.2 高能时间戳评论渲染断言
     const highlightHtml = renderCommentCardHtml(highlightComment);
-    assert.ok(highlightHtml.includes('jc-guide-line is-highlight'), '高能时间戳评论导轨必须点亮 is-highlight');
     assert.ok(highlightHtml.includes('jc-time-link'), '时间戳文本必须被正确解析为 .jc-time-link');
+    assert.ok(highlightHtml.includes('jc-save-all-btn'), '带时间戳评论右上角必须包含转存操作');
 
-    // 1.3 调试模式 (showDebugReport) 渲染断言
+    // 1.3 调试模式 (showDebugReport) 渲染断言 (仅在 debugMode 开启时右上角提供小图标，绝不输出黑框)
     const debugHtml = renderCommentCardHtml(highlightComment, {
         playerCore: {
             playerState: {
@@ -65,8 +64,8 @@ test('1. CommentCardRenderer Linear Minimalist 无框流式结构断言', () => 
             }
         }
     });
-    assert.ok(debugHtml.includes('jc-debug-rail'), 'showDebugReport 开启时必须在底部渲染 .jc-debug-rail');
-    assert.ok(debugHtml.includes('jc-debug-report-btn'), '上报按钮必须被精准收拢到底部调试微轨中');
+    assert.ok(debugHtml.includes('jc-debug-report-btn'), 'showDebugReport 开启时右上角必须提供低调的调试上报按键');
+    assert.ok(!debugHtml.includes('jc-debug-rail'), '即便在 debugMode 下也严禁在评论下方渲染丑陋的代码黑框');
     assert.ok(debugHtml.includes('jc-user-group'), '顶部必须保留纯净的用户信息分组');
 });
 
@@ -120,7 +119,7 @@ test('2. 多源 Section 高能时间戳过滤 (highlightOnly) 断言', () => {
     assert.ok(emptyHtml.includes('tm-comment-reset-filter-btn'), '必须提供一键重置过滤按钮');
 });
 
-test('3. CSS Linear Minimalist 与水平标签栏样式规范断言', () => {
+test('3. CSS 极简排版与分段导航栏样式规范断言', () => {
     const cssPath = path.resolve(rootDir, 'src/player/ui/styles/02_components/_comments_sections.css');
     const cssContent = fs.readFileSync(cssPath, 'utf-8');
 
@@ -129,7 +128,6 @@ test('3. CSS Linear Minimalist 与水平标签栏样式规范断言', () => {
     assert.ok(cssContent.includes('.tm-comment-tab-item'), 'CSS 必须包含 .tm-comment-tab-item');
     assert.ok(cssContent.includes('.tm-comment-filter-pill'), 'CSS 必须包含 .tm-comment-filter-pill 临时高能过滤胶囊');
     assert.ok(cssContent.includes('.jc-stream-row'), 'CSS 必须包含 .jc-stream-row 流式无框条目规则');
-    assert.ok(cssContent.includes('.jc-guide-line'), 'CSS 必须包含 .jc-guide-line 垂直呼吸微导轨规则');
-    assert.ok(cssContent.includes('.jc-debug-rail'), 'CSS 必须包含 .jc-debug-rail 底部开发者调试微轨规则');
+    assert.ok(cssContent.includes('.tm-comment-section-hdr'), 'CSS 必须包含 .tm-comment-section-hdr 隐藏规则');
     assert.ok(cssContent.includes('.tm-comment-section.is-hidden-source'), 'CSS 必须包含非激活源的 is-hidden-source 隐藏规则');
 });
