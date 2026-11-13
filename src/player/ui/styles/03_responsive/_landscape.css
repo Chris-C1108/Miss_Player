@@ -776,12 +776,10 @@
         width: min(520px, calc(100vw - env(safe-area-inset-left, 16px) - env(safe-area-inset-right, 16px) - 32px));
         max-width: min(520px, calc(100vw - env(safe-area-inset-left, 16px) - env(safe-area-inset-right, 16px) - 32px));
         min-width: 280px;
-        padding: 10px 14px 20px 14px;
-        z-index: var(--z-drawer);
-        overflow-y: auto;
-        overflow-y: overlay;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
+        border-radius: 14px;
+        padding: 0;
+        z-index: var(--z-modal);
+        overflow: hidden;
     }
 
     .tm-player-container .tm-settings-panel.active,

@@ -715,6 +715,31 @@ assert.match(
 
 console.log('✅ 22. PC 横屏标题栏与顶栏对称间距验证通过');
 
-console.log('\n🎉 全部 22 大核心修复与人机工程验证单元测试 100% 通过！\n');
+const settingsPanelsCssV23 = fs.readFileSync('src/player/ui/styles/02_components/_settings_panels.css', 'utf8');
+const settingsAppleCssV23 = fs.readFileSync('src/player/ui/styles/02_components/_settings_apple.css', 'utf8');
+const settingsMgrCodeV23 = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
+const settingsSchedCodeV23 = fs.readFileSync('src/player/managers/settings/SettingsStreamScheduler.js', 'utf8');
+
+assert.ok(
+    settingsPanelsCssV23.includes('.tm-settings-scroll-body') &&
+    settingsMgrCodeV23.includes('tm-settings-scroll-body') &&
+    settingsSchedCodeV23.includes('.tm-settings-scroll-body, .tm-settings-panel'),
+    '设置面板必须采用 Header/ScrollBody/Footer 分层结构，防止滚动时标题与关闭键滚出视野或条目半截截断'
+);
+assert.match(
+    settingsPanelsCssV23,
+    /@media screen and \(max-width: 1023px\), screen and \(orientation: portrait\)\s*\{[\s\S]*?\.tm-settings-panel\s*\{[^}]*top:\s*env\(safe-area-inset-top,\s*0px\);[^}]*right:\s*0;[^}]*left:\s*0;[^}]*bottom:\s*0;/,
+    '移动端设置面板必须贴紧顶部安全区并全宽延展到底部，消除顶部多余模糊空白与侧边窄缝'
+);
+assert.ok(
+    settingsAppleCssV23.includes('.tm-settings-apple-footer') &&
+    settingsAppleCssV23.includes('.tm-settings-apple-done-btn') &&
+    settingsMgrCodeV23.includes('_bindSheetDismissGesture'),
+    '设置面板必须具备移动端底部拇指热区完成按钮与下拉手势退出能力'
+);
+
+console.log('✅ 23. 移动端/PC 设置面板吸顶结构与便捷退出设计验证通过');
+
+console.log('\n🎉 全部 23 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 

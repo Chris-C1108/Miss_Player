@@ -35,15 +35,30 @@
     position: absolute;
     top: calc(env(safe-area-inset-top, 8px) + 52px);
     right: 16px;
-    background-color: rgba(22, 22, 28, 0.78);
+    background-color: rgba(22, 22, 28, 0.84);
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    padding: 14px 16px 20px 16px;
+    padding: 0;
     z-index: var(--z-modal);
     min-width: 275px;
     max-width: 330px;
     max-height: calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 64px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(-10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform var(--anim-smooth), opacity var(--anim-smooth);
+    box-sizing: border-box;
+    contain: paint layout;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+}
+
+.tm-settings-scroll-body {
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     overflow-y: overlay;
     overflow-x: hidden;
@@ -52,19 +67,15 @@
     touch-action: pan-y; /* 允许纵向丝滑滚动 */
     scrollbar-width: thin;
     scrollbar-color: hsla(var(--shadcn-muted-foreground) / 0.3) transparent;
-    transform: translateY(-10px);
-    opacity: 0;
-    pointer-events: none;
-    transition: transform var(--anim-smooth), opacity var(--anim-smooth);
+    padding: 12px 16px 20px 16px;
     box-sizing: border-box;
-    contain: paint layout;
 }
 
-.tm-settings-panel::-webkit-scrollbar {
+.tm-settings-scroll-body::-webkit-scrollbar {
     width: 4px;
 }
 
-.tm-settings-panel::-webkit-scrollbar-thumb {
+.tm-settings-scroll-body::-webkit-scrollbar-thumb {
     background: hsla(var(--shadcn-muted-foreground) / 0.3);
     border-radius: 4px;
 }
@@ -89,14 +100,28 @@ body.tm-settings-active .tm-comments-panel .tm-comments-list {
     transition: opacity var(--anim-smooth), filter var(--anim-smooth);
 }
 
-/* 竖屏与窄屏视口下设置面板全宽自适应 */
+/* 竖屏与移动端视口：零顶部死留白原生 Sheet，紧贴安全区顶边并延展至底部 */
 
 @media screen and (max-width: 1023px), screen and (orientation: portrait) {
     .tm-settings-panel {
-        right: 12px;
-        left: 12px;
-        width: calc(100% - 24px);
-        max-width: calc(100% - 24px);
+        top: env(safe-area-inset-top, 0px);
+        right: 0;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        max-height: none;
+        border-radius: 18px 18px 0 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        background-color: rgba(18, 18, 24, 0.94);
+        transform: translate3d(0, 28px, 0);
+    }
+
+    .tm-settings-panel.active {
+        transform: translate3d(0, 0, 0);
     }
 }
 

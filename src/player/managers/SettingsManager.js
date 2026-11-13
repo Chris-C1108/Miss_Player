@@ -263,28 +263,22 @@ export class SettingsManager {
         if (!this.settingsPanel) return;
 
         // 记忆当前的滚动条位置
+        const prevScroller = this.settingsScrollBody || this.settingsPanel;
         const previousScrollTop = (options && options.scrollTop !== undefined)
             ? options.scrollTop
-            : (this.settingsPanel ? this.settingsPanel.scrollTop : 0);
+            : (prevScroller ? prevScroller.scrollTop : 0);
 
         this.syncState();
         this.settingsPanel.innerHTML = "";
+        this.settingsPanel.style.transform = "";
+        this.settingsPanel.style.transition = "";
 
         if (this._scheduler) {
             this._scheduler.destroy();
             this._scheduler = null;
         }
 
-        const container = document.createElement("div");
-        container.className = "tm-settings-apple-container";
-
-        // 阻止按键事件冒泡至视频宿主
         const stopProp = (e) => e.stopPropagation();
-        container.addEventListener("click", stopProp);
-        container.addEventListener("mousedown", stopProp);
-        container.addEventListener("touchstart", stopProp);
-        container.addEventListener("pointerdown", stopProp);
-
         const stopContextMenu = (e) => {
             const tag = e.target?.tagName?.toLowerCase();
             if (tag === 'input' || tag === 'textarea' || Boolean(e.target?.isContentEditable)) {
@@ -293,16 +287,24 @@ export class SettingsManager {
             e.preventDefault();
             e.stopPropagation();
         };
-        container.addEventListener("contextmenu", stopContextMenu, true);
-        if (this.settingsPanel && !this.settingsPanel._contextMenuSuppressed) {
-            this.settingsPanel._contextMenuSuppressed = true;
-            this.settingsPanel.addEventListener("contextmenu", stopContextMenu, true);
+        if (!this.settingsPanel._panelGuardsBound) {
+            this.settingsPanel._panelGuardsBound = true;
+            this.settingsPanel.addEventListener("click", stopProp);
+            this.settingsPanel.addEventListener("mousedown", stopProp);
+            this.settingsPanel.addEventListener("touchstart", stopProp);
             this.settingsPanel.addEventListener("pointerdown", stopProp);
+            this.settingsPanel.addEventListener("contextmenu", stopContextMenu, true);
         }
 
-        // 顶部 Header 栏 (标题 + 快捷关闭按钮)
+        // 1. 固定吸顶 Header（不随列表滚动消失，避免内容截断及关闭按钮滚出视野）
         const headerRow = document.createElement("div");
         headerRow.className = "tm-settings-apple-header";
+
+        const grabber = document.createElement("div");
+        grabber.className = "tm-settings-sheet-grabber";
+
+        const headerBar = document.createElement("div");
+        headerBar.className = "tm-settings-apple-header-bar";
 
         const titleWrap = document.createElement("div");
         titleWrap.className = "tm-settings-apple-title-wrap";
@@ -311,6 +313,7 @@ export class SettingsManager {
         const closeBtn = document.createElement("button");
         closeBtn.type = "button";
         closeBtn.className = "tm-settings-apple-close-btn";
+        closeBtn.setAttribute("aria-label", __("done") || "关闭");
         closeBtn.title = "关闭设置面板 (ESC)";
         closeBtn.innerHTML = "✕";
         closeBtn.addEventListener("click", (e) => {
@@ -318,9 +321,32 @@ export class SettingsManager {
             this.closeSettingsPanel();
         });
 
-        headerRow.appendChild(titleWrap);
-        headerRow.appendChild(closeBtn);
-        container.appendChild(headerRow);
+        headerBar.appendChild(titleWrap);
+        headerBar.appendChild(closeBtn);
+        headerRow.appendChild(grabber);
+        headerRow.appendChild(headerBar);
+
+        // 2. 独立滚动视口
+        const scrollBody = document.createElement("div");
+        scrollBody.className = "tm-settings-scroll-body";
+        this.settingsScrollBody = scrollBody;
+
+        const container = document.createElement("div");
+        container.className = "tm-settings-apple-container";
+        scrollBody.appendChild(container);
+
+        // 3. 移动端拇指热区底部固定关闭栏（PC 端通过 CSS 隐藏）
+        const footerRow = document.createElement("div");
+        footerRow.className = "tm-settings-apple-footer";
+        const doneBtn = document.createElement("button");
+        doneBtn.type = "button";
+        doneBtn.className = "tm-settings-apple-done-btn";
+        doneBtn.textContent = __("done") || "完成";
+        doneBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.closeSettingsPanel();
+        });
+        footerRow.appendChild(doneBtn);
 
         // 建立 5 大固定顺序的分段插槽，物理锁定渲染顺序，彻底杜绝任何同步/异步混用导致的错位漂移
         const slotPlayback = document.createElement("div");
@@ -387,7 +413,11 @@ export class SettingsManager {
             }, { defer: "viewport", targetSlot: slotAbout });
         }
 
-        this.settingsPanel.appendChild(container);
+        this.settingsPanel.appendChild(headerRow);
+        this.settingsPanel.appendChild(scrollBody);
+        this.settingsPanel.appendChild(footerRow);
+
+        this._bindSheetDismissGesture(headerRow, scrollBody);
 
         // 启动流式异步装配流水线
         this._scheduler.start();
@@ -395,14 +425,85 @@ export class SettingsManager {
         // 恢复滚动条位置
         if (previousScrollTop > 0) {
             const restoreScroll = () => {
-                if (this.settingsPanel) {
-                    this.settingsPanel.scrollTop = previousScrollTop;
+                if (this.settingsScrollBody) {
+                    this.settingsScrollBody.scrollTop = previousScrollTop;
                 }
             };
             requestAnimationFrame(restoreScroll);
             setTimeout(restoreScroll, 50);
             setTimeout(restoreScroll, 180);
         }
+    }
+
+    /**
+     * 绑定移动端原生下拉退出手势（顶部抓手条区域下拉 / 列表滚至最顶后继续下拉）
+     */
+    _bindSheetDismissGesture(headerRow, scrollBody) {
+        const panel = this.settingsPanel;
+        if (!panel) return;
+
+        let startY = 0;
+        let startTime = 0;
+        let currentDy = 0;
+        let tracking = false;
+        let fromHeader = false;
+
+        const onStart = (e, isHeader) => {
+            if (e.touches.length !== 1) return;
+            if (e.target && e.target.closest('button, input, select, textarea, a')) return;
+            if (!isHeader && scrollBody && scrollBody.scrollTop > 2) return;
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+            currentDy = 0;
+            tracking = true;
+            fromHeader = isHeader;
+        };
+
+        const onMove = (e) => {
+            if (!tracking || e.touches.length !== 1) return;
+            const dy = e.touches[0].clientY - startY;
+            if (dy <= 0) {
+                if (currentDy > 0) {
+                    currentDy = 0;
+                    panel.style.transform = '';
+                }
+                if (!fromHeader) tracking = false;
+                return;
+            }
+            if (!fromHeader && scrollBody && scrollBody.scrollTop > 2) {
+                tracking = false;
+                return;
+            }
+            if (dy > 8 || fromHeader) {
+                currentDy = dy;
+                panel.style.transition = 'none';
+                panel.style.transform = `translate3d(0, ${Math.round(dy)}px, 0)`;
+                if (e.cancelable) e.preventDefault();
+            }
+        };
+
+        const onEnd = () => {
+            if (!tracking) return;
+            tracking = false;
+            const elapsed = Math.max(1, Date.now() - startTime);
+            const velocity = currentDy / elapsed;
+            panel.style.transition = '';
+            panel.style.transform = '';
+            if (currentDy > 76 || (currentDy > 32 && velocity > 0.45)) {
+                this.closeSettingsPanel();
+            }
+            currentDy = 0;
+        };
+
+        headerRow.addEventListener('touchstart', (e) => onStart(e, true), { passive: true });
+        headerRow.addEventListener('touchmove', onMove, { passive: false });
+        headerRow.addEventListener('touchend', onEnd, { passive: true });
+        headerRow.addEventListener('touchcancel', onEnd, { passive: true });
+
+        scrollBody.addEventListener('touchstart', (e) => onStart(e, false), { passive: true });
+        scrollBody.addEventListener('touchmove', onMove, { passive: false });
+        scrollBody.addEventListener('touchend', onEnd, { passive: true });
+        scrollBody.addEventListener('touchcancel', onEnd, { passive: true });
     }
 
     /**
@@ -1249,6 +1350,8 @@ export class SettingsManager {
      */
     closeSettingsPanel() {
         if (!this.settingsPanel) return;
+        this.settingsPanel.style.transition = '';
+        this.settingsPanel.style.transform = '';
         this.settingsPanel.classList.remove('active');
         document.body.classList.remove('tm-settings-active');
         this.uiElements?.playerContainer?.classList.remove('tm-settings-active');

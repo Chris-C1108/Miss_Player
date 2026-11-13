@@ -11,18 +11,37 @@
     gap: 12px;
     width: 100%;
     box-sizing: border-box;
-    padding-bottom: 24px;
+    padding-bottom: 8px;
 }
 
-/* 顶部 Header：标题与关闭按钮快捷栏 */
+/* 顶部固定 Header：抓手条 + 标题与关闭按钮（不随列表滚动消失） */
 
 .tm-settings-apple-header {
     display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 16px 10px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(24, 24, 30, 0.92);
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.tm-settings-sheet-grabber {
+    display: none;
+    width: 36px;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.28);
+    margin: 0 auto 2px auto;
+}
+
+.tm-settings-apple-header-bar {
+    display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 2px 4px 6px 4px;
-    border-bottom: 1px solid var(--mp-settings-divider);
-    margin-bottom: 2px;
+    width: 100%;
 }
 
 .tm-settings-apple-title-wrap {
@@ -32,34 +51,87 @@
 }
 
 .tm-settings-apple-title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     letter-spacing: -0.2px;
     color: var(--mp-settings-text-primary);
 }
 
 .tm-settings-apple-close-btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--mp-settings-text-secondary);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
     border: none;
     cursor: pointer;
     padding: 0;
-    transition: background 0.15s ease, color 0.15s ease;
+    font-size: 13px;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.tm-settings-apple-close-btn::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
 }
 
 .tm-settings-apple-close-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: var(--mp-settings-text-primary);
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
 }
 
 .tm-settings-apple-close-btn:active {
     transform: scale(0.92);
+}
+
+/* 移动端底部拇指热区关闭栏（PC 端默认隐藏） */
+
+.tm-settings-apple-footer {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)) 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(20, 20, 26, 0.94);
+}
+
+.tm-settings-apple-done-btn {
+    width: 100%;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.tm-settings-apple-done-btn:active {
+    background: rgba(255, 255, 255, 0.18);
+    transform: scale(0.985);
+}
+
+@media screen and (max-width: 1023px), screen and (orientation: portrait) {
+    .tm-settings-apple-header {
+        padding-top: 8px;
+    }
+
+    .tm-settings-sheet-grabber {
+        display: block;
+    }
+
+    .tm-settings-apple-footer {
+        display: flex;
+    }
 }
 
 /* Section 分组容器 */
@@ -558,19 +630,9 @@
     100% { background-position: -200% 0; }
 }
 
-/* 设置面板全局滚动边界与弹性高度保护 */
+/* 移动端软键盘弹起时，为设置滚动视口底部预留足够的键盘避让留白，确保长列表项完全可滚出 */
 
-.tm-settings-panel {
-    max-height: calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 60px);
-    overflow-y: auto;
-    overflow-y: overlay;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-}
-
-/* 移动端软键盘弹起时，为设置面板底部预留足够的键盘避让留白，确保长列表项完全可滚出 */
-
-.tm-ios-keyboard-open .tm-settings-panel {
+.tm-ios-keyboard-open .tm-settings-scroll-body {
     padding-bottom: calc(var(--keyboard-height, 0px) + 32px);
 }
 

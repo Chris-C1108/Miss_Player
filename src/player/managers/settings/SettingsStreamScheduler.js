@@ -30,7 +30,7 @@ export class SettingsStreamScheduler {
                 skeleton.style.margin = '4px 0';
                 mountParent.appendChild(skeleton);
 
-                const scrollRoot = this.container.closest('.tm-settings-panel') || null;
+                const scrollRoot = this.container.closest('.tm-settings-scroll-body, .tm-settings-panel') || null;
                 const obs = new IntersectionObserver((entries) => {
                     entries.forEach((entry) => {
                         if (entry.isIntersecting) {
