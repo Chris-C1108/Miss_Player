@@ -99,11 +99,15 @@ export function renderCommentCardHtml(c, options = {}) {
                         ${safeTime ? `<span class="jc-t">${safeTime}</span>` : ''}
                     </div>
                     <div class="jc-hdr-right jc-badge-group">
-                        ${scoreHtml}
-                        ${spamHtml}
-                        ${countdownBtn}
-                        ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${esc(__('saveAllHighlights') || '转存高光')}" data-comment-id="${safeCommentId}">转存</button>` : ""}
-                        ${debugReportBtn}
+                        <div class="jc-row-actions">
+                            ${countdownBtn}
+                            ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${esc(__('saveAllHighlights') || '转存高光')}" data-comment-id="${safeCommentId}">转存</button>` : ""}
+                            ${debugReportBtn}
+                        </div>
+                        <div class="jc-row-meta">
+                            ${spamHtml}
+                            ${scoreHtml}
+                        </div>
                     </div>
                 </div>
                 <div class="${textClass}" ${isLongText ? `data-collapsed="${isExpanded ? 'false' : 'true'}"` : ''}>

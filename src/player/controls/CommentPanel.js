@@ -1360,6 +1360,7 @@ export class CommentPanel {
                 this.renderCommentsList();
             }
             this.updateCommentsCount();
+            this.updateTabBar(); // 同步更新顶部各平台计数与高能现场统计
             this.hideBottomLoader(siteKey);
         }
     }
@@ -1720,6 +1721,11 @@ export class CommentPanel {
             requestAnimationFrame(() => {
                 isCheckingScroll = false;
                 if (!this.commentsList) return;
+                // 列表滚动时静默取消移动端聚焦行的操作按钮，保持纯净阅读体验
+                const activeRow = this.commentsList.querySelector('.jc-stream-row.is-active-row');
+                if (activeRow) {
+                    activeRow.classList.remove('is-active-row');
+                }
                 const container = this.commentsList;
                 const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
                 if (distanceToBottom < 600) {
@@ -1968,6 +1974,22 @@ export class CommentPanel {
             if (interactive) {
                 // 如果是可交互元素，允许其正常进行相应的事件处理
                 return;
+            }
+
+            // 移动端轻触评论行激活/切换操作按钮微胶囊，点击行外取消所有激活态
+            const clickedRow = e.target.closest('.jc-stream-row');
+            if (clickedRow) {
+                const wasActive = clickedRow.classList.contains('is-active-row');
+                if (this.commentsList) {
+                    this.commentsList.querySelectorAll('.jc-stream-row.is-active-row').forEach(r => {
+                        if (r !== clickedRow) r.classList.remove('is-active-row');
+                    });
+                }
+                clickedRow.classList.toggle('is-active-row', !wasActive);
+            } else if (this.commentsList) {
+                this.commentsList.querySelectorAll('.jc-stream-row.is-active-row').forEach(r => {
+                    r.classList.remove('is-active-row');
+                });
             }
 
             e.stopPropagation();
@@ -2410,6 +2432,7 @@ export class CommentPanel {
 
                 // 记录新渲染卡片 ID
                 newComments.forEach(c => this.renderedCommentIds.add(c.id));
+                this.updateTabBar(); // 增量追加卡片后同步更新高能现场数字与计数
                 setTimeout(() => this.updateFavoriteBadges(), 50);
                 return true;
             } else if (existingCards.length > 0 && newComments.length === 0) {
@@ -2827,9 +2850,12 @@ export class CommentPanel {
             const filterCountEl = this.commentFilterPill.querySelector('.tm-filter-count');
             if (filterCountEl) {
                 const curSite = this.sites[this.activeCommentSource];
-                const comments = curSite?.filteredComments || [];
+                // 优先取 filteredComments，为空时回退至 comments，保证只要有数据就同步高能条数
+                const comments = (curSite?.filteredComments && curSite.filteredComments.length > 0)
+                    ? curSite.filteredComments
+                    : (curSite?.comments || []);
                 const highlightCount = comments.filter(c => Array.isArray(c.timestamps) && c.timestamps.length > 0).length;
-                filterCountEl.textContent = highlightCount;
+                filterCountEl.textContent = String(highlightCount);
                 filterCountEl.classList.toggle('is-hidden', highlightCount === 0);
             }
         }

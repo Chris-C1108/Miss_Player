@@ -165,18 +165,24 @@
     }
 }
 
-/* 评分角标 (Score Badge) */
+/* 评分角标 (Score Badge - JavDB 专有，固定保持在卡片头部最右侧) */
 .jc-score-badge {
-    display: inline-block;
-    font-size: 10px;
-    color: hsl(var(--shadcn-blue));
-    background-color: hsla(var(--shadcn-blue) / 0.1);
-    border: 1px solid hsla(var(--shadcn-blue) / 0.3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    line-height: 1;
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.28);
     border-radius: 4px;
-    padding: 0 4px;
-    margin-left: 6px;
+    padding: 2px 5px;
+    margin-left: 0;
     font-weight: 600;
-    vertical-align: middle;
+    letter-spacing: -0.2px;
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 /* 评论展开/折叠样式 */
@@ -430,10 +436,46 @@
 }
 
 .jc-badge-group {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
+    margin-left: auto;
+}
+
+.jc-row-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* 操作微胶囊组 (默认隐藏，鼠标悬浮或移动端轻触评论行才优雅滑入显示) */
+.jc-row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate3d(4px, 0, 0);
+    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* PC 端：鼠标悬浮该行或获取焦点时展示 */
+@media (hover: hover) {
+    .jc-stream-row:hover .jc-row-actions,
+    .jc-stream-row:focus-within .jc-row-actions {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+/* 移动端触屏：轻触激活该行时展示 */
+.jc-stream-row.is-active-row .jc-row-actions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate3d(0, 0, 0);
 }
 
 /* 操作胶囊与调试入口 (统一 Apple 纯净微胶囊体系，无 emoji，触控弹性反馈) */
@@ -441,63 +483,52 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 22px;
-    padding: 0 8px;
-    font-size: 11px;
+    height: 20px;
+    padding: 0 7px;
+    font-size: 10.5px;
     font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.2px;
     border-radius: 9999px;
     cursor: pointer;
     outline: none;
-    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
     text-decoration: none;
     user-select: none;
     -webkit-user-select: none;
     box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.72);
 }
 
 .jc-action-btn:active {
-    transform: scale(0.95);
-}
-
-.jc-save-all-btn {
-    background: rgba(10, 132, 255, 0.12);
-    border: 1px solid rgba(10, 132, 255, 0.28);
-    color: #0a84ff;
+    transform: scale(0.94);
 }
 
 .jc-save-all-btn:hover {
-    background: rgba(10, 132, 255, 0.22);
-    border-color: rgba(10, 132, 255, 0.45);
-    color: #409cff;
-}
-
-.jc-countdown-btn {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.72);
+    background: rgba(59, 130, 246, 0.16);
+    border-color: rgba(59, 130, 246, 0.32);
+    color: #60a5fa;
 }
 
 .jc-countdown-btn:hover {
     background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
     color: #ffffff;
 }
 
 .jc-countdown-btn.jc-countdown-btn--active {
-    background: rgba(245, 166, 35, 0.14);
-    border-color: rgba(245, 166, 35, 0.35);
-    color: #f5a623;
-}
-
-.jc-debug-report-btn {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.45);
+    background: rgba(245, 158, 11, 0.14);
+    border-color: rgba(245, 158, 11, 0.32);
+    color: #fbbf24;
 }
 
 .jc-debug-report-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #f1f5f9;
 }
 
 /* 高能评论空状态 */

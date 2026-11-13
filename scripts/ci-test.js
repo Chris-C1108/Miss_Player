@@ -185,6 +185,11 @@ runStep('执行增量 Patch DOM、切源防空白与边距对齐单元测试', (
     execSync('node tests/comments-patch-stream-scroll.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.23 高能现场计数同步更新、JavDB 评分居右与操作按钮悬浮/触屏显隐单元测试
+runStep('执行高能现场计数同步、JavDB 评分居右与操作胶囊悬浮显隐单元测试', () => {
+    execSync('node tests/comments-action-hover-rating.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');
