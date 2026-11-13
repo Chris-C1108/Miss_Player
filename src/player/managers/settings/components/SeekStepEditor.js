@@ -1,4 +1,5 @@
 import { Toast } from '../../../../utils/index.js';
+import { createPillSelector } from './SettingsPrimitives.js';
 
 export class SeekStepEditor {
     constructor({
@@ -18,99 +19,71 @@ export class SeekStepEditor {
 
         this.element = document.createElement('div');
         this.element.className = 'tm-settings-seek-steps-subpanel';
+        this._pillSelector = null;
         this._render();
     }
 
-    _render() {
-        this.element.innerHTML = '';
-
-        this.element.addEventListener('wheel', (e) => {
-            if (e.deltaY !== 0 && this.element.scrollWidth > this.element.clientWidth) {
-                const atLeft = this.element.scrollLeft <= 0 && e.deltaY < 0;
-                const atRight = this.element.scrollLeft + this.element.clientWidth >= this.element.scrollWidth - 1 && e.deltaY > 0;
-                if (!atLeft && !atRight) {
-                    e.preventDefault();
-                    this.element.scrollLeft += e.deltaY;
-                }
-            }
-        }, { passive: false });
-
+    _buildItems() {
         const allDisplaySteps = [...this.defaultSteps];
-        this.customSteps.forEach(step => {
+        this.customSteps.forEach((step) => {
             if (!allDisplaySteps.includes(step)) {
                 allDisplaySteps.push(step);
             }
         });
 
-        allDisplaySteps.forEach(stepKey => {
+        return allDisplaySteps.map((stepKey) => {
             const isDefault = this.defaultSteps.includes(stepKey);
             const isEnabled = this.enabledSteps.includes(stepKey);
-
-            const badge = document.createElement('button');
-            badge.type = 'button';
-            badge.className = `tm-seek-step-badge${isEnabled ? ' enabled' : ' disabled'}`;
-            badge.textContent = stepKey;
-
-            let isLongPressTriggered = false;
-            let longPressTimer = null;
-
-            const startLongPress = () => {
-                isLongPressTriggered = false;
-                longPressTimer = setTimeout(() => {
-                    isLongPressTriggered = true;
-                    if (isDefault) {
-                        Toast('默认 6 个预设步进不支持删除', 2000, 'warning');
-                    } else if (typeof this.onDeleteStep === 'function') {
-                        this.onDeleteStep(stepKey);
-                    }
-                }, 600);
+            return {
+                id: stepKey,
+                label: stepKey,
+                active: isEnabled,
+                removable: !isDefault,
+                title: isDefault ? `切换 ${stepKey}` : `自定义步长 ${stepKey}`
             };
+        });
+    }
 
-            const cancelLongPress = () => {
-                if (longPressTimer) {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = null;
-                }
-            };
+    _render() {
+        this.element.innerHTML = '';
 
-            badge.addEventListener('mousedown', startLongPress);
-            badge.addEventListener('touchstart', startLongPress, { passive: true });
-            badge.addEventListener('mouseup', cancelLongPress);
-            badge.addEventListener('mouseleave', cancelLongPress);
-            badge.addEventListener('touchend', cancelLongPress);
-            badge.addEventListener('touchcancel', cancelLongPress);
-
-            badge.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (isLongPressTriggered) return;
+        this._pillSelector = createPillSelector({
+            items: this._buildItems(),
+            allowAdd: true,
+            onToggle: (stepKey) => {
                 if (typeof this.onToggleStep === 'function') {
                     this.onToggleStep(stepKey);
                 }
-            });
-
-            this.element.appendChild(badge);
-        });
-
-        const addBtn = document.createElement('button');
-        addBtn.type = 'button';
-        addBtn.className = 'tm-seek-step-badge tm-seek-step-add-badge';
-        addBtn.title = '添加自定义跳转秒数/分钟 (如: 15s, 2m)';
-        addBtn.innerHTML = '+ 自定义';
-        addBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const input = prompt('请输入自定义跳转时长 (如 15s 或 2m):', '15s');
-            if (input && typeof this.onAddStep === 'function') {
-                this.onAddStep(input.trim());
+            },
+            onDelete: (stepKey) => {
+                if (typeof this.onDeleteStep === 'function') {
+                    this.onDeleteStep(stepKey);
+                }
+            },
+            onAdd: (val) => {
+                const cleaned = val.trim().toLowerCase();
+                if (!/^\d+[sm]$/i.test(cleaned)) {
+                    Toast('格式无效！请使用数字+单位，如 45s 或 2m', 2500, 'warning');
+                    return false;
+                }
+                if (typeof this.onAddStep === 'function') {
+                    this.onAddStep(cleaned);
+                }
+                return true;
             }
         });
 
-        this.element.appendChild(addBtn);
+        this.element.appendChild(this._pillSelector);
     }
 
     updateSteps({ customSteps, enabledSteps }) {
-        if (customSteps) this.customSteps = customSteps;
-        if (enabledSteps) this.enabledSteps = enabledSteps;
-        this._render();
+        if (customSteps !== undefined) this.customSteps = customSteps;
+        if (enabledSteps !== undefined) this.enabledSteps = enabledSteps;
+        if (this._pillSelector && typeof this._pillSelector._update === 'function') {
+            this._pillSelector._update(this._buildItems());
+        } else {
+            this._render();
+        }
     }
 
     getElement() {

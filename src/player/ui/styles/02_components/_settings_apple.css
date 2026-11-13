@@ -42,6 +42,40 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    gap: 8px;
+}
+
+.tm-settings-apple-header-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 1;
+}
+
+.tm-settings-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 8px 4px 2px;
+    margin-left: -4px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--mp-settings-accent);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.tm-settings-back-btn:hover {
+    background: rgba(10, 132, 255, 0.12);
+}
+
+.tm-settings-back-btn:active {
+    opacity: 0.7;
 }
 
 .tm-settings-apple-title-wrap {
@@ -55,6 +89,9 @@
     font-weight: 600;
     letter-spacing: -0.2px;
     color: var(--mp-settings-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .tm-settings-apple-close-btn {
@@ -501,117 +538,471 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* 数据模式 (Data Mode) 紧凑排版 */
+/* 二级页面与统一原语样式体系 (NavRow / ActionRow / ValueRow / FieldRow / Banner / Pill) */
 
-.tm-data-mode-row {
-    padding-top: 12px;
+.tm-settings-subpage-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
     padding-bottom: 12px;
 }
 
-.tm-data-mode-header {
+.tm-apple-row.tm-apple-row--column {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.tm-apple-row.tm-apple-row--split,
+.tm-apple-row-split {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     width: 100%;
-    gap: 12px;
+    gap: 10px;
 }
 
-.tm-data-mode-desc {
-    font-size: 11.5px;
-    line-height: 1.45;
-    color: var(--mp-settings-text-secondary);
-    margin-top: 6px;
-    user-select: none;
+.tm-settings-nav-row {
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-family: inherit;
+    color: var(--mp-settings-text-primary);
 }
 
-/* 关于页面轻量状态与通道排版 */
+.tm-settings-nav-row:hover {
+    background: var(--mp-settings-row-hover);
+}
 
-.tm-about-channel-row {
+.tm-settings-nav-row:active {
+    background: rgba(255, 255, 255, 0.09);
+}
+
+.tm-settings-nav-row.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.tm-settings-nav-left {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin: 8px 0;
-    gap: 8px;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
 }
 
-.tm-about-channel-label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--mp-settings-text-secondary);
+.tm-settings-nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--mp-settings-text-primary);
+    flex-shrink: 0;
 }
 
-.tm-about-status-line {
+.tm-settings-nav-right {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 11.5px;
+    flex-shrink: 0;
+}
+
+.tm-settings-nav-chevron {
+    display: inline-flex;
+    align-items: center;
+    color: var(--mp-settings-text-muted);
+}
+
+.tm-settings-status-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--mp-settings-text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tm-settings-status-pill.is-success {
+    background: rgba(48, 209, 88, 0.16);
     color: #30d158;
-    padding: 6px 2px;
-    margin: 4px 0;
 }
 
-.tm-about-check-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.tm-about-btn--stay {
+.tm-settings-status-pill.is-accent {
     background: rgba(10, 132, 255, 0.16);
-    border: 1px solid rgba(10, 132, 255, 0.45);
-    color: #0a84ff;
-    font-size: 11.5px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-weight: 600;
-    transition: background 0.15s ease;
+    color: #409cff;
 }
 
-.tm-about-btn--stay:hover {
+.tm-settings-status-pill.is-warn {
+    background: rgba(255, 159, 10, 0.16);
+    color: #ff9f0a;
+}
+
+.tm-settings-status-pill.is-error {
+    background: rgba(255, 69, 58, 0.16);
+    color: #ff6961;
+}
+
+.tm-settings-inline-input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.tm-settings-num-input {
+    width: 58px;
+    height: 30px;
+    padding: 4px 6px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 7px;
+    color: #ffffff;
+    font-size: 12.5px;
+    text-align: center;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.tm-settings-num-input:focus {
+    border-color: var(--mp-settings-accent);
+    background: rgba(10, 132, 255, 0.12);
+}
+
+.tm-settings-unit-text {
+    font-size: 11.5px;
+    color: var(--mp-settings-text-muted);
+    user-select: none;
+}
+
+.tm-apple-row-title.is-danger {
+    color: #ff6961;
+}
+
+.tm-settings-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--mp-settings-text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.tm-settings-action-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+.tm-settings-action-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.tm-settings-action-btn:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+.tm-settings-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.tm-settings-action-btn.is-accent {
+    background: rgba(10, 132, 255, 0.16);
+    border-color: rgba(10, 132, 255, 0.4);
+    color: #409cff;
+}
+
+.tm-settings-action-btn.is-accent:hover:not(:disabled) {
     background: rgba(10, 132, 255, 0.25);
 }
 
-.tm-about-btn--tampermonkey {
+.tm-settings-action-btn.is-danger {
+    background: rgba(255, 69, 58, 0.15);
+    border-color: rgba(255, 69, 58, 0.35);
+    color: #ff6961;
+}
+
+.tm-settings-action-btn.is-danger:hover:not(:disabled) {
+    background: rgba(255, 69, 58, 0.25);
+}
+
+.tm-settings-action-btn.is-armed {
+    background: #ff453a;
+    border-color: #ff453a;
+    color: #ffffff;
+}
+
+.tm-settings-field-row {
+    gap: 6px;
+}
+
+.tm-settings-field-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tm-settings-field-shell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.tm-settings-field-input {
+    flex: 1;
+    min-width: 0;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 12.5px;
+    padding: 6px 10px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.tm-settings-field-input:focus {
+    border-color: var(--mp-settings-accent);
+    background: rgba(10, 132, 255, 0.1);
+}
+
+.tm-settings-field-icon-btn,
+.tm-settings-field-clear-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--mp-settings-text-secondary);
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tm-settings-field-icon-btn:hover,
+.tm-settings-field-clear-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--mp-settings-text-primary);
+}
+
+.tm-settings-status-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--mp-settings-card-radius);
+    background: var(--mp-settings-card-bg);
+    border: 1px solid var(--mp-settings-card-border);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tm-settings-status-banner.is-inline-card-banner {
+    padding: 2px 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+}
+
+.tm-settings-status-banner-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--mp-settings-text-primary);
+    flex-shrink: 0;
+}
+
+.tm-settings-status-banner.is-success .tm-settings-status-banner-icon {
     background: rgba(48, 209, 88, 0.16);
-    border: 1px solid rgba(48, 209, 88, 0.45);
     color: #30d158;
-    font-size: 11.5px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-weight: 600;
-    transition: background 0.15s ease;
 }
 
-.tm-about-btn--tampermonkey:hover {
-    background: rgba(48, 209, 88, 0.25);
+.tm-settings-status-banner.is-accent .tm-settings-status-banner-icon {
+    background: rgba(10, 132, 255, 0.16);
+    color: #409cff;
 }
 
-.tm-about-btn--scriptcat {
+.tm-settings-status-banner.is-warn .tm-settings-status-banner-icon {
     background: rgba(255, 159, 10, 0.16);
-    border: 1px solid rgba(255, 159, 10, 0.45);
     color: #ff9f0a;
-    font-size: 11.5px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-weight: 600;
-    transition: background 0.15s ease;
 }
 
-.tm-about-btn--scriptcat:hover {
-    background: rgba(255, 159, 10, 0.25);
+.tm-settings-status-banner.is-error .tm-settings-status-banner-icon {
+    background: rgba(255, 69, 58, 0.16);
+    color: #ff6961;
+}
+
+.tm-settings-status-banner-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.tm-settings-status-banner-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--mp-settings-text-primary);
+}
+
+.tm-settings-status-banner-detail {
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--mp-settings-text-secondary);
+    word-break: break-word;
+}
+
+/* 统一 Pill 胶囊选择组（替代评论来源与步长编辑器两套散落样式） */
+
+.tm-settings-pill-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    margin-top: 2px;
+}
+
+.tm-settings-pill-item {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.tm-settings-pill-item.is-active {
+    background: rgba(10, 132, 255, 0.18);
+    border-color: rgba(10, 132, 255, 0.5);
+}
+
+.tm-settings-pill-btn {
+    border: none;
+    background: transparent;
+    padding: 5px 11px;
+    color: var(--mp-settings-text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.tm-settings-pill-item.is-active .tm-settings-pill-btn {
+    color: #ffffff;
+}
+
+.tm-settings-pill-del {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+    border: none;
+    border-radius: 50%;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.65);
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    padding: 0;
+}
+
+.tm-settings-pill-del:hover {
+    background: rgba(255, 69, 58, 0.85);
+    color: #ffffff;
+}
+
+.tm-settings-pill-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 9999px;
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    background: transparent;
+    color: var(--mp-settings-accent);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.tm-settings-pill-add-btn:hover {
+    background: rgba(10, 132, 255, 0.14);
+    border-color: var(--mp-settings-accent);
+}
+
+.tm-settings-pill-inline-form {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.tm-settings-pill-inline-input {
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    padding: 4px 10px;
+}
+
+.tm-settings-pill-inline-submit,
+.tm-settings-pill-inline-cancel {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.tm-settings-pill-inline-submit {
+    border: 1px solid rgba(10, 132, 255, 0.45);
+    background: rgba(10, 132, 255, 0.2);
+    color: #409cff;
+}
+
+.tm-settings-pill-inline-cancel {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--mp-settings-text-secondary);
 }
 
 /* 骨架占位屏 (Skeleton Screen) */

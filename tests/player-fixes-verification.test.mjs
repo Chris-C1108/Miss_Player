@@ -577,18 +577,18 @@ const segmentedControlCode = fs.readFileSync('src/player/managers/settings/compo
 const settingsAppleCss = fs.readFileSync('src/player/ui/styles/02_components/_settings_apple.css', 'utf8');
 const i18nCode = fs.readFileSync('src/constants/i18n.js', 'utf8');
 
-// 20.1 验证版本信息展开时即触发更新检查
+// 20.1 验证版本板块初始化即静默触发更新检查
 assert.ok(
-    aboutSectionCode.includes("this.sm.checkUpdate(true, false);") &&
-    settingsManagerCodeV20.includes("async checkUpdate(force = true, notify = true) {"),
-    'AboutSection 展开时必须立即调用 checkUpdate(true, false) 执行静默更新检查，且 SettingsManager 必须提供统一 checkUpdate 方法'
+    aboutSectionCode.includes("this.sm.checkUpdate(false, true)") &&
+    settingsManagerCodeV20.includes("async checkUpdate(notify = false, forceRefresh = false"),
+    'AboutSection 渲染时必须调用 checkUpdate(false, true) 静默强制检查更新，且 SettingsManager 提供统一 checkUpdate 方法'
 );
 
 // 20.2 验证外链跳转：正式版跳转 SleazyFork，测试版跳转 GitHub
 assert.ok(
-    settingsManagerCodeV20.includes("platformLink.href = isBeta\n            ? 'https://github.com/Chris-C1108/Miss_Player'\n            : 'https://sleazyfork.org/scripts/453300';") &&
-    settingsManagerCodeV20.includes("platformLink.title = isBeta ? '前往 GitHub 项目页' : '前往 SleazyFork 脚本页';"),
-    '版本信息卡片中的主链接必须双轨硬分流：测试版指向 GitHub 项目页，正式版指向 SleazyFork 脚本页'
+    aboutSectionCode.includes('https://github.com/Chris-C1108/Miss_Player') &&
+    aboutSectionCode.includes('https://sleazyfork.org/scripts/${OFFICIAL_SCRIPT_ID}'),
+    'AboutSection 中的外链必须双轨硬分流：测试版指向 GitHub 项目页，正式版指向 SleazyFork 脚本页'
 );
 
 // 20.3 验证 SegmentedControl 零行内样式，采用纯 CSS 类驱动
@@ -599,17 +599,16 @@ assert.ok(
     'SegmentedControl 必须彻底移除 inline cssText，采用标准化 .tm-segmented-* CSS 类'
 );
 
-// 20.4 验证设置项标准化类与 ADHD 高信噪比文案
+// 20.4 验证设置菜单统一原语类与 ADHD 高信噪比文案
 assert.ok(
-    settingsAppleCss.includes('.tm-about-channel-row {') &&
-    settingsAppleCss.includes('.tm-about-channel-label {') &&
-    settingsAppleCss.includes('.tm-about-status-line {') &&
-    settingsAppleCss.includes('.tm-about-btn--stay {') &&
-    settingsAppleCss.includes('.tm-about-btn--tampermonkey {') &&
-    settingsAppleCss.includes('.tm-about-btn--scriptcat {') &&
+    settingsAppleCss.includes('.tm-settings-nav-row {') &&
+    settingsAppleCss.includes('.tm-settings-action-btn {') &&
+    settingsAppleCss.includes('.tm-settings-status-banner {') &&
+    settingsAppleCss.includes('.tm-settings-pill-btn {') &&
+    settingsAppleCss.includes('.tm-settings-back-btn {') &&
     i18nCode.includes("aboutGroupTitle: '版本信息'") &&
     i18nCode.includes("webdavAutoSyncDesc: '数据变动时后台静默同步'"),
-    '设置菜单样式与文案必须符合 Grice 准则与 ADHD 规范，具备标准化类且去除冗余技术黑话'
+    '设置菜单样式与文案必须统一采用 Apple 原语类与 Grice 准则，去除冗余样式孤岛'
 );
 
 console.log('✅ 20. 设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与双轨外链跳转验证通过');
@@ -768,6 +767,49 @@ assert.ok(
 
 console.log('✅ 24. PC 端 Shadow DOM 输入框键盘隔离盾验证通过');
 
-console.log('\n🎉 全部 24 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 25. 验证设置菜单治理重构：统一原语组件、二级推入导航、零旧式卡片孤岛
+// ---------------------------------------------------------
+console.log('▶ 25. 验证设置菜单治理重构...');
+const primitivesCode = fs.readFileSync('src/player/managers/settings/components/SettingsPrimitives.js', 'utf8');
+const cloudSyncCodeV25 = fs.readFileSync('src/player/managers/settings/sections/CloudSyncSection.js', 'utf8');
+const betaCodeV25 = fs.readFileSync('src/player/managers/settings/sections/BetaSection.js', 'utf8');
+const playbackCodeV25 = fs.readFileSync('src/player/managers/settings/sections/PlaybackSection.js', 'utf8');
+const commentsCodeV25 = fs.readFileSync('src/player/managers/settings/sections/CommentsSection.js', 'utf8');
+const cardsCssV25 = fs.readFileSync('src/player/ui/styles/02_components/_settings_cards.css', 'utf8');
+const panelsCssV25 = fs.readFileSync('src/player/ui/styles/02_components/_settings_panels.css', 'utf8');
+
+assert.ok(
+    primitivesCode.includes('export function createNavRow(') &&
+    primitivesCode.includes('export function createActionRow(') &&
+    primitivesCode.includes('export function createFieldRow(') &&
+    primitivesCode.includes('export function createStatusBanner(') &&
+    primitivesCode.includes('export function createPillSelector(') &&
+    primitivesCode.includes("el.closest('.tm-settings-scroll-body, .tm-settings-panel')"),
+    'SettingsPrimitives 必须提供完整统一原语并将焦点滚动对齐至 .tm-settings-scroll-body'
+);
+
+assert.ok(
+    settingsManagerCodeV20.includes('pushSubpage(id, title, renderFn)') &&
+    settingsManagerCodeV20.includes('popSubpage()') &&
+    settingsManagerCodeV20.includes('tm-settings-viewport') &&
+    panelsCssV25.includes('.tm-settings-viewport.is-subpage-active .tm-settings-page--sub'),
+    'SettingsManager 必须提供二级推入导航与返回栈（pushSubpage / popSubpage），且使用 GPU translate3d 滑动切换'
+);
+
+assert.ok(
+    !settingsManagerCodeV20.includes('_createWebDavSyncCard') &&
+    !settingsManagerCodeV20.includes('_createAboutCard') &&
+    !cardsCssV25.includes('.tm-webdav-input') &&
+    !cloudSyncCodeV25.includes('window.confirm') &&
+    !betaCodeV25.includes('window.confirm') &&
+    playbackCodeV25.includes('_openSeekStepsSubpage') &&
+    commentsCodeV25.includes('createPillSelector'),
+    '设置板块必须清除旧式孤岛卡片、window.confirm 与散落样式，全量收敛至统一原语体系'
+);
+
+console.log('✅ 25. 设置菜单治理重构验证通过');
+
+console.log('\n🎉 全部 25 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 
