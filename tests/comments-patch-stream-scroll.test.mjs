@@ -173,11 +173,11 @@ test('3. 评论区外层左右 padding 归零与文字 16px 对齐规范测试',
     const landscapeCss = fs.readFileSync(path.join(rootDir, 'src/player/ui/styles/03_responsive/_landscape.css'), 'utf-8');
     const sectionsCss = fs.readFileSync(path.join(rootDir, 'src/player/ui/styles/02_components/_comments_sections.css'), 'utf-8');
 
-    // 1. _comments.css 中 .tm-comments-panel-list.tm-comments-list 左右 padding 为 0
+    // 1. _comments.css 中 .tm-comments-panel-list.tm-comments-list padding 归零（无多余底部与左右边距）
     assert.match(
         commentsCss,
-        /\.tm-comments-panel-list\.tm-comments-list\s*\{[^}]*padding:\s*0\s+0\s+24px\s+0/s,
-        '_comments.css 中外层滚动列表左右 padding 必须为 0，防止叠加产生 32px 边距'
+        /\.tm-comments-panel-list\.tm-comments-list\s*\{[^}]*padding:\s*0;/s,
+        '_comments.css 中外层滚动列表 padding 必须归零，防止产生多余底边距与左右边距叠加'
     );
 
     // 2. _landscape.css 中 .tm-comments-panel-list.tm-comments-list 左右 padding 也为 0

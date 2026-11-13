@@ -377,7 +377,7 @@
     overscroll-behavior-y: contain;
     overscroll-behavior-x: none;
     box-sizing: border-box;
-    padding-bottom: 24px;
+    padding-bottom: 0;
 }
 
 /* 纯净流式评论条目 (Pure Minimalist Stream Row) */

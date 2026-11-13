@@ -117,7 +117,7 @@
     overflow-x: hidden;
     touch-action: pan-y;
     box-sizing: border-box;
-    padding: 0 0 24px 0;
+    padding: 0;
     mask-image: linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);
     -webkit-mask-image: linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);
     display: flex;
