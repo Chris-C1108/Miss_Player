@@ -988,11 +988,8 @@ export class CommentPanel {
             this.currentPage = 1;
             this.renderedCommentIds.clear(); // 刷新/首次加载时清空，防止第一页评论全部闪烁
 
-            // 默认展开一个：如果三者都是展开状态，折叠 JAVLibrary 与 JavDB
-            if (!this.jableCollapsed && !this.javlibCollapsed && !this.javdbCollapsed) {
-                this.javlibCollapsed = true;
-                this.javdbCollapsed = true;
-            }
+            // 兜底保障：杜绝全折叠死锁，确保至少一个可用分区展开
+            this.ensureAtLeastOneSectionExpanded();
 
             // 根据设置中的 enabledCommentSources 并发触发启用源的加载
             const state = this.playerCore?.options?.playerState;
@@ -1048,6 +1045,7 @@ export class CommentPanel {
                     this.javlibCollapsed = false;
                 }
             }
+            this.ensureAtLeastOneSectionExpanded();
             this.renderCommentsList();
         } else {
             // 加载更多
@@ -1640,38 +1638,40 @@ export class CommentPanel {
             hideControlsOnScroll();
 
             // 向上滚动且处于列表顶部时，重新对齐评论区位置（防止用户调大视频画面后遮挡评论）
-            const scrollTarget = e.target.closest('.tm-comment-section-body');
-            const isAtTop = !scrollTarget || scrollTarget.scrollTop <= 5;
+            const scrollContainer = this.commentsList;
+            const isAtTop = !scrollContainer || scrollContainer.scrollTop <= 5;
             if (e.deltaY < 0 && isAtTop) {
                 this.updatePosition();
             }
         }, { passive: true });
 
-        // 当用户显示区域内剩余未浏览评论不足时自动采集更多评论 (抓取 scroll 事件捕获 phase，并加入 requestAnimationFrame 节流)
+        // 当用户显示区域内剩余未浏览评论不足时自动采集更多评论 (统一监听外层列表滚动，并加入 requestAnimationFrame 节流)
         let isCheckingScroll = false;
-        this.commentsList.addEventListener('scroll', (e) => {
-            const scrollTarget = e.target;
-            if (!scrollTarget || !scrollTarget.classList.contains('tm-comment-section-body')) return;
-
+        const handleScrollLoadMore = () => {
             if (isCheckingScroll) return;
             isCheckingScroll = true;
 
             requestAnimationFrame(() => {
                 isCheckingScroll = false;
-                const section = scrollTarget.closest('.tm-comment-section');
-                if (section) {
-                    if (scrollTarget.scrollHeight - scrollTarget.scrollTop - scrollTarget.clientHeight < 500) {
-                        if (section.id === 'tm-comment-section-jable') {
+                if (!this.commentsList) return;
+                const container = this.commentsList;
+                const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+                if (distanceToBottom < 500) {
+                    const activeSection = this.commentsList.querySelector('.tm-comment-section:not(.is-collapsed)');
+                    if (activeSection) {
+                        if (activeSection.id === 'tm-comment-section-jable') {
                             this.triggerLoadMoreJable();
-                        } else if (section.id === 'tm-comment-section-javlib') {
+                        } else if (activeSection.id === 'tm-comment-section-javlib') {
                             this.triggerLoadMoreJavlib();
-                        } else if (section.id === 'tm-comment-section-javdb') {
+                        } else if (activeSection.id === 'tm-comment-section-javdb') {
                             this.triggerLoadMoreJavdb();
                         }
                     }
                 }
             });
-        }, { capture: true, passive: true });
+        };
+
+        this.commentsList.addEventListener('scroll', handleScrollLoadMore, { capture: true, passive: true });
 
         let startY = 0;
         this.commentsList.addEventListener('touchstart', (e) => {
@@ -1682,19 +1682,19 @@ export class CommentPanel {
             const endY = e.touches[0].clientY;
             const diffY = startY - endY;
 
-            const scrollTarget = e.target.closest('.tm-comment-section-body');
-            const isAtBottom = scrollTarget ? (scrollTarget.scrollHeight - scrollTarget.scrollTop - scrollTarget.clientHeight < 500) : false;
-            const isAtTop = scrollTarget ? (scrollTarget.scrollTop <= 5) : true;
+            const container = this.commentsList;
+            const isAtBottom = container ? (container.scrollHeight - container.scrollTop - container.clientHeight < 500) : false;
+            const isAtTop = container ? (container.scrollTop <= 5) : true;
 
             // 向上滑动触底加载更多 (阈值设置为 500px 缓冲区，分源触发)
-            if (diffY > 15 && isAtBottom && scrollTarget) {
-                const section = scrollTarget.closest('.tm-comment-section');
-                if (section) {
-                    if (section.id === 'tm-comment-section-jable') {
+            if (diffY > 15 && isAtBottom) {
+                const activeSection = this.commentsList.querySelector('.tm-comment-section:not(.is-collapsed)');
+                if (activeSection) {
+                    if (activeSection.id === 'tm-comment-section-jable') {
                         this.triggerLoadMoreJable();
-                    } else if (section.id === 'tm-comment-section-javlib') {
+                    } else if (activeSection.id === 'tm-comment-section-javlib') {
                         this.triggerLoadMoreJavlib();
-                    } else if (section.id === 'tm-comment-section-javdb') {
+                    } else if (activeSection.id === 'tm-comment-section-javdb') {
                         this.triggerLoadMoreJavdb();
                     }
                 }
@@ -2457,85 +2457,20 @@ export class CommentPanel {
                 });
             });
 
-            // 绑定分区头部的点击事件以实现折叠/展开交替
+            // 绑定分区头部的点击事件以实现手风琴折叠/展开交替
             const jableHdr = this.commentsList.querySelector('#tm-comment-section-jable .tm-comment-section-hdr');
             if (jableHdr) {
-                jableHdr.addEventListener('click', () => {
-                    const section = this.commentsList.querySelector('#tm-comment-section-jable');
-                    if (section) {
-                        this.jableCollapsed = !this.jableCollapsed;
-                        section.classList.toggle('is-collapsed', this.jableCollapsed);
-                        localStorage.setItem('tm-comment-jable-collapsed', this.jableCollapsed);
-
-                        // 展开一个，折叠另一个
-                        if (!this.jableCollapsed) {
-                            this.javlibCollapsed = true;
-                            this.javdbCollapsed = true;
-                            localStorage.setItem('tm-comment-javlib-collapsed', 'true');
-                            localStorage.setItem('tm-comment-javdb-collapsed', 'true');
-                            this.renderCommentsList();
-
-                            if (this.jableComments.length === 0 && this.jableStatus === 'loading' && !this.jableLoading) {
-                                this.loadJableComments(1);
-                            } else {
-                                this.triggerLoadMoreJable();
-                            }
-                        }
-                    }
-                });
+                jableHdr.addEventListener('click', () => this.toggleSectionCollapse('jable'));
             }
 
             const javlibHdr = this.commentsList.querySelector('#tm-comment-section-javlib .tm-comment-section-hdr');
             if (javlibHdr) {
-                javlibHdr.addEventListener('click', () => {
-                    const section = this.commentsList.querySelector('#tm-comment-section-javlib');
-                    if (section) {
-                        this.javlibCollapsed = !this.javlibCollapsed;
-                        section.classList.toggle('is-collapsed', this.javlibCollapsed);
-                        localStorage.setItem('tm-comment-javlib-collapsed', this.javlibCollapsed);
-
-                        // 展开一个，折叠另一个
-                        if (!this.javlibCollapsed) {
-                            this.jableCollapsed = true;
-                            this.javdbCollapsed = true;
-                            localStorage.setItem('tm-comment-jable-collapsed', 'true');
-                            localStorage.setItem('tm-comment-javdb-collapsed', 'true');
-                            this.renderCommentsList();
-
-                            if (this.javlibComments.length === 0 && this.javlibStatus === 'loading' && !this.javlibLoading) {
-                                this.loadJavlibComments(1);
-                            } else {
-                                this.triggerLoadMoreJavlib();
-                            }
-                        }
-                    }
-                });
+                javlibHdr.addEventListener('click', () => this.toggleSectionCollapse('javlib'));
             }
 
             const javdbHdr = this.commentsList.querySelector('#tm-comment-section-javdb .tm-comment-section-hdr');
             if (javdbHdr) {
-                javdbHdr.addEventListener('click', () => {
-                    const section = this.commentsList.querySelector('#tm-comment-section-javdb');
-                    if (section) {
-                        this.javdbCollapsed = !this.javdbCollapsed;
-                        section.classList.toggle('is-collapsed', this.javdbCollapsed);
-                        localStorage.setItem('tm-comment-javdb-collapsed', this.javdbCollapsed);
-
-                        if (!this.javdbCollapsed) {
-                            this.jableCollapsed = true;
-                            this.javlibCollapsed = true;
-                            localStorage.setItem('tm-comment-jable-collapsed', 'true');
-                            localStorage.setItem('tm-comment-javlib-collapsed', 'true');
-                            this.renderCommentsList();
-
-                            if (this.javdbComments.length === 0 && this.javdbStatus === 'loading' && !this.javdbLoading) {
-                                this.loadJavdbComments(1);
-                            } else {
-                                this.triggerLoadMoreJavdb();
-                            }
-                        }
-                    }
-                });
+                javdbHdr.addEventListener('click', () => this.toggleSectionCollapse('javdb'));
             }
 
             // 记录当前已渲染的评论ID，以便下一页追加时能够识别出新评论
@@ -2588,26 +2523,116 @@ export class CommentPanel {
         });
     }
 
-        checkViewportFill() {
+    /**
+     * 确保至少有一个可用的评论分区处于展开状态（杜绝全折叠死锁）
+     */
+    ensureAtLeastOneSectionExpanded() {
+        const isAllCollapsed = !!this.jableCollapsed && !!this.javdbCollapsed && !!this.javlibCollapsed;
+        if (!isAllCollapsed) return;
+
+        // 首选有内容的板块，若均无或尚未加载，优先 Jable
+        if (this.filteredJableComments && this.filteredJableComments.length > 0) {
+            this.jableCollapsed = false;
+        } else if (this.filteredJavdbComments && this.filteredJavdbComments.length > 0) {
+            this.javdbCollapsed = false;
+        } else if (this.filteredJavlibComments && this.filteredJavlibComments.length > 0) {
+            this.javlibCollapsed = false;
+        } else if (this.jableStatus !== 'unreachable' && this.jableStatus !== 'mobile_unsupported') {
+            this.jableCollapsed = false;
+        } else if (this.javdbStatus !== 'unreachable') {
+            this.javdbCollapsed = false;
+        } else {
+            this.jableCollapsed = false;
+        }
+
+        try {
+            localStorage.setItem('tm-comment-jable-collapsed', this.jableCollapsed ? 'true' : 'false');
+            localStorage.setItem('tm-comment-javdb-collapsed', this.javdbCollapsed ? 'true' : 'false');
+            localStorage.setItem('tm-comment-javlib-collapsed', this.javlibCollapsed ? 'true' : 'false');
+        } catch (_) {}
+    }
+
+    /**
+     * 切换分区的展开/折叠状态（手风琴互斥展开）
+     * @param {'jable'|'javdb'|'javlib'} siteKey 
+     */
+    toggleSectionCollapse(siteKey) {
+        const currentCollapsed = !!this[`${siteKey}Collapsed`];
+        const nextCollapsed = !currentCollapsed;
+
+        if (!nextCollapsed) {
+            // 用户想要展开 siteKey：手风琴互斥展开当前源，折叠其他源
+            ['jable', 'javdb', 'javlib'].forEach(k => {
+                const shouldCollapse = (k !== siteKey);
+                this[`${k}Collapsed`] = shouldCollapse;
+                try {
+                    localStorage.setItem(`tm-comment-${k}-collapsed`, shouldCollapse ? 'true' : 'false');
+                } catch (_) {}
+                const sec = this.commentsList?.querySelector(`#tm-comment-section-${k}`);
+                if (sec) {
+                    sec.classList.toggle('is-collapsed', shouldCollapse);
+                }
+            });
+
+            // 触发按需懒加载
+            if (siteKey === 'jable') {
+                if (this.jableComments.length === 0 && this.jableStatus === 'loading' && !this.jableLoading) {
+                    this.loadJableComments(1);
+                } else {
+                    this.triggerLoadMoreJable();
+                }
+            } else if (siteKey === 'javdb') {
+                if (this.javdbComments.length === 0 && this.javdbStatus === 'loading' && !this.javdbLoading) {
+                    this.loadJavdbComments(1);
+                } else {
+                    this.triggerLoadMoreJavdb();
+                }
+            } else if (siteKey === 'javlib') {
+                if (this.javlibComments.length === 0 && this.javlibStatus === 'loading' && !this.javlibLoading) {
+                    this.loadJavlibComments(1);
+                } else {
+                    this.triggerLoadMoreJavlib();
+                }
+            }
+        } else {
+            // 用户想要折叠当前已展开的源：允许折叠，直接添加 is-collapsed
+            this[`${siteKey}Collapsed`] = true;
+            try {
+                localStorage.setItem(`tm-comment-${siteKey}-collapsed`, 'true');
+            } catch (_) {}
+            const sec = this.commentsList?.querySelector(`#tm-comment-section-${siteKey}`);
+            if (sec) {
+                sec.classList.add('is-collapsed');
+            }
+        }
+
+        this.updateFavoriteBadges();
+        setTimeout(() => this.checkViewportFill(), 100);
+    }
+
+    checkViewportFill() {
         if (!this.commentsList) return;
         requestAnimationFrame(() => {
             if (!this.commentsList) return;
-            const activeBodies = Array.from(this.commentsList.querySelectorAll('.tm-comment-section:not(.is-collapsed) .tm-comment-section-body'));
-            for (const body of activeBodies) {
-                if (body.clientHeight > 0 && body.scrollHeight > 0 && body.scrollHeight <= body.clientHeight + 10) {
-                    const section = body.closest('.tm-comment-section');
-                    const sectionId = section ? section.id : '';
-                    if (sectionId === 'tm-comment-section-jable' && this.jableHasMore && !this.jableLoading) {
-                        logger.log('[CommentPanel] Jable section viewport not filled. Auto-loading next page...');
-                        this.triggerLoadMoreJable();
-                    } else if (sectionId === 'tm-comment-section-javlib' && this.javlibHasMore && !this.javlibLoading) {
-                        logger.log('[CommentPanel] JAVLibrary section viewport not filled. Auto-loading next page...');
-                        this.triggerLoadMoreJavlib();
-                    } else if (sectionId === 'tm-comment-section-javdb' && this.javdbHasMore && !this.javdbLoading) {
-                        logger.log('[CommentPanel] JavDB section viewport not filled. Auto-loading next page...');
-                        this.triggerLoadMoreJavdb();
-                    }
-                }
+            const container = this.commentsList;
+            if (container.clientHeight < 100) return; // 容器尚未完成渲染或视口过小
+
+            // 如果外层列表已经被内容填满（出现滚动条），无需自动预拉取下一页
+            if (container.scrollHeight > container.clientHeight + 20) return;
+
+            const activeSection = this.commentsList.querySelector('.tm-comment-section:not(.is-collapsed)');
+            if (!activeSection) return;
+
+            const sectionId = activeSection.id || '';
+            if (sectionId === 'tm-comment-section-jable' && this.jableHasMore && !this.jableLoading) {
+                logger.log('[CommentPanel] Jable section viewport not filled. Auto-loading next page...');
+                this.triggerLoadMoreJable();
+            } else if (sectionId === 'tm-comment-section-javlib' && this.javlibHasMore && !this.javlibLoading) {
+                logger.log('[CommentPanel] JAVLibrary section viewport not filled. Auto-loading next page...');
+                this.triggerLoadMoreJavlib();
+            } else if (sectionId === 'tm-comment-section-javdb' && this.javdbHasMore && !this.javdbLoading) {
+                logger.log('[CommentPanel] JavDB section viewport not filled. Auto-loading next page...');
+                this.triggerLoadMoreJavdb();
             }
         });
     }

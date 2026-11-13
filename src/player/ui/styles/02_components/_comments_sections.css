@@ -216,19 +216,19 @@
 }
 
 /* =====================================================================
-   分区评论与状态徽章样式
+   分区评论与状态徽章样式 (手风琴自然流式排布，外层统一承载滚动)
    ===================================================================== */
 .tm-comment-section {
     display: flex;
     flex-direction: column;
     width: 100%;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     box-sizing: border-box;
-    min-height: 0;
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    min-height: 38px;
     overflow-x: hidden;
     touch-action: pan-y;
-    flex: 0 0 auto; /* 折叠状态下采用自适应高度，不强行伸展 */
-    transition: flex 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .tm-comment-section:not(.is-collapsed) {
@@ -237,11 +237,14 @@
 }
 
 .tm-comment-section.is-collapsed .tm-comment-section-body {
-    display: none;
+    display: none !important;
 }
 
 .tm-comment-section-body {
-    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
@@ -250,19 +253,8 @@
     overscroll-behavior-y: contain;
     overscroll-behavior-x: none;
     box-sizing: border-box;
-    width: 100%;
     padding-right: 4px;
-    padding-bottom: 56px; /* 预留高度，防止底部的“发表”悬浮按钮遮挡最下方的评论 */
-}
-
-/* 隐藏外层但为板块内部显示精细滚动条 */
-.tm-comment-section-body::-webkit-scrollbar {
-    width: 4px;
-}
-
-.tm-comment-section-body::-webkit-scrollbar-thumb {
-    background: hsla(var(--shadcn-muted-foreground) / 0.25);
-    border-radius: 2px;
+    padding-bottom: 24px;
 }
 
 #tm-comment-section-jable {
@@ -309,18 +301,44 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    padding: 1px 0;
+    min-height: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    padding: 0 6px;
     margin-bottom: 4px;
     border-bottom: 1px solid hsla(var(--shadcn-border) / 0.1);
     box-sizing: border-box;
     cursor: pointer;
     user-select: none;
+    border-radius: 4px;
+    transition: background-color 0.18s ease;
+}
+
+.tm-comment-section-hdr:hover {
+    background-color: hsla(var(--shadcn-foreground) / 0.05);
 }
 
 .tm-comment-hdr-right {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+}
+
+.tm-comment-hdr-right::after {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-right: 2px solid hsl(var(--shadcn-muted-foreground));
+    border-bottom: 2px solid hsl(var(--shadcn-muted-foreground));
+    transform: rotate(45deg);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.tm-comment-section.is-collapsed .tm-comment-hdr-right::after {
+    transform: rotate(-45deg);
 }
 
 .tm-comment-section-title {

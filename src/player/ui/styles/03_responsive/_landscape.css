@@ -229,30 +229,6 @@
         pointer-events: auto;
     }
 
-    .tm-comment-section {
-        min-height: 0;
-        flex-shrink: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
-
-    .tm-comment-section:not(.is-collapsed) {
-        flex: 1 1 0%;
-        height: 0;
-        min-height: 0;
-        overflow: hidden;
-    }
-
-    /* 板块内部留白与滚动约束 */
-    .tm-comment-section-body {
-        flex: 1 1 0%;
-        height: 0;
-        min-height: 0;
-        overflow-y: auto;
-        padding-bottom: 4px;
-    }
-
     /* 桌面端发表栏浮动贴合在评论区边栏最底部，严格限制在侧栏宽度内 */
     .tm-player-container .tm-comment-submit-bar-wrapper {
         position: fixed;
