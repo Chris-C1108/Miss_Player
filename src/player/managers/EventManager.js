@@ -1,5 +1,6 @@
 import { BlurPlaybackManager } from './BlurPlaybackManager.js';
 import { enforceInlinePlayback } from '../../utils/iosInline.js';
+import { UISurfaceMachine } from '../state/UISurfaceMachine.js';
 
 /**
  * 事件管理器类 - 负责事件监听和处理
@@ -57,10 +58,10 @@ export class EventManager {
             }
         };
 
-        // 阻止右键/长按菜单（输入框除外，捕获阶段全局拦截，彻底阻断 Stay App / 原生浏览器长按劫持视频）
+        // 阻止右键/长按菜单（输入框除外，使用 composedPath 穿透 Shadow DOM 放行原生复制粘贴菜单）
         this.handleContextMenuBound = (e) => {
-            const tag = e.target?.tagName?.toLowerCase();
-            if (tag === 'input' || tag === 'textarea' || Boolean(e.target?.isContentEditable)) {
+            const realTarget = (typeof e.composedPath === 'function' ? e.composedPath()[0] : null) || e.target;
+            if (UISurfaceMachine.isEditableElement(realTarget) || UISurfaceMachine.isEditableEvent(e)) {
                 return;
             }
             e.preventDefault();

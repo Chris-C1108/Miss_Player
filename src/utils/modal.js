@@ -77,15 +77,15 @@ export function createModal(contentHTML, options = {}) {
         }
     });
 
-    // 阻止输入框内按键冒泡触发播放器快捷键，并支持 Escape 关闭当前模态框
+    // 阻止输入框内按键冒泡触发宿主/播放器快捷键，并支持 Escape 关闭当前模态框（输入法组词中放行 Escape）
     modal.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+        if (e.key === 'Escape' && !e.isComposing && e.keyCode !== 229) {
             e.preventDefault();
             e.stopPropagation();
             close();
             return;
         }
-        if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'TEXTAREA') {
+        if (UISurfaceMachine.isEditableEvent(e)) {
             e.stopPropagation();
         }
     });

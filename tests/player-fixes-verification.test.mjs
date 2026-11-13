@@ -740,6 +740,34 @@ assert.ok(
 
 console.log('✅ 23. 移动端/PC 设置面板吸顶结构与便捷退出设计验证通过');
 
-console.log('\n🎉 全部 23 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 24. 验证 PC 端 Shadow DOM 输入框键盘隔离盾与输入法组词 Escape 放行
+// ---------------------------------------------------------
+console.log('▶ 24. 验证 PC 端 Shadow DOM 输入框键盘隔离盾与输入法组词 Escape 放行...');
+const surfaceMachineCodeV24 = fs.readFileSync('src/player/state/UISurfaceMachine.js', 'utf8');
+const modalUtilCodeV24 = fs.readFileSync('src/utils/modal.js', 'utf8');
+const eventMgrCodeV24 = fs.readFileSync('src/player/managers/EventManager.js', 'utf8');
+
+assert.ok(
+    surfaceMachineCodeV24.includes('static isEditableElement(el)') &&
+    surfaceMachineCodeV24.includes('static isEditableEvent(e)') &&
+    surfaceMachineCodeV24.includes('_handleContainerKeyBubble') &&
+    surfaceMachineCodeV24.includes('e.isComposing || e.keyCode === 229'),
+    'UISurfaceMachine 必须具备穿透 Shadow DOM 的可编辑控件识别、容器/ShadowRoot 键盘冒泡隔离盾与输入法 Escape 放行'
+);
+assert.ok(
+    modalUtilCodeV24.includes('UISurfaceMachine.isEditableEvent(e)') &&
+    modalUtilCodeV24.includes('!e.isComposing && e.keyCode !== 229'),
+    'modal.js 必须通过 UISurfaceMachine.isEditableEvent 隔离所有可编辑控件的键盘冒泡且放行输入法 Escape'
+);
+assert.ok(
+    eventMgrCodeV24.includes('UISurfaceMachine.isEditableElement(realTarget)') &&
+    eventMgrCodeV24.includes('e.composedPath'),
+    'EventManager 右键菜单拦截必须通过 composedPath() 放行 Shadow DOM 内部输入框的原生复制粘贴菜单'
+);
+
+console.log('✅ 24. PC 端 Shadow DOM 输入框键盘隔离盾验证通过');
+
+console.log('\n🎉 全部 24 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 

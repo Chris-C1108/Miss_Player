@@ -24,6 +24,10 @@ const SURFACE_CLASS_MAP = Object.freeze({
     [SURFACE_TYPES.SETTINGS]: 'tm-settings-active'
 });
 
+const NON_TYPING_INPUT_TYPES = new Set([
+    'checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'image', 'color', 'range'
+]);
+
 const _activeSurfaceMachines = new Set();
 
 export class UISurfaceMachine {
@@ -53,6 +57,49 @@ export class UISurfaceMachine {
     }
 
     /**
+     * 判定 DOM 节点是否为可打字编辑控件（覆盖 INPUT 文本/数字类、TEXTAREA、SELECT 与 contenteditable）
+     * @param {EventTarget|null} el
+     * @returns {boolean}
+     */
+    static isEditableElement(el) {
+        if (!el || el.nodeType !== 1) return false;
+        if (el.isContentEditable) return true;
+        const tag = el.tagName?.toLowerCase?.();
+        if (tag === 'textarea' || tag === 'select') return true;
+        if (tag === 'input') {
+            const type = (el.getAttribute?.('type') || el.type || 'text').toLowerCase();
+            return !NON_TYPING_INPUT_TYPES.has(type);
+        }
+        return false;
+    }
+
+    /**
+     * 穿透 Shadow DOM 边界判定键盘/上下文事件是否源自内部可编辑控件
+     * @param {Event|null} e
+     * @returns {boolean}
+     */
+    static isEditableEvent(e) {
+        if (!e) return false;
+        const path = typeof e.composedPath === 'function' ? e.composedPath() : null;
+        if (Array.isArray(path) && path.length > 0) {
+            for (const node of path) {
+                if (!node || node === document || node === window) break;
+                if (node.nodeType === 1 && node.tagName?.toLowerCase?.() === 'miss-player-root') break;
+                if (UISurfaceMachine.isEditableElement(node)) return true;
+            }
+        }
+        if (UISurfaceMachine.isEditableElement(e.target)) return true;
+        if (typeof document !== 'undefined') {
+            let active = document.activeElement;
+            while (active?.shadowRoot?.activeElement) {
+                active = active.shadowRoot.activeElement;
+            }
+            if (UISurfaceMachine.isEditableElement(active)) return true;
+        }
+        return false;
+    }
+
+    /**
      * 为任意浮层/弹窗容器绑定统一防穿透事件隔离守卫
      * @param {HTMLElement} el
      * @param {{ stopMove?: boolean, stopWheel?: boolean }} [options]
@@ -66,6 +113,11 @@ export class UISurfaceMachine {
         const stopBubble = (e) => {
             e.stopPropagation();
         };
+        const stopEditableKeyBubble = (e) => {
+            if (UISurfaceMachine.isEditableEvent(e)) {
+                e.stopPropagation();
+            }
+        };
 
         const activeEvents = [
             'click', 'dblclick',
@@ -74,6 +126,10 @@ export class UISurfaceMachine {
             'contextmenu'
         ];
         activeEvents.forEach((evt) => el.addEventListener(evt, stopBubble));
+
+        ['keydown', 'keyup', 'keypress'].forEach((evt) => {
+            el.addEventListener(evt, stopEditableKeyBubble);
+        });
 
         ['touchstart', 'touchend', 'touchcancel'].forEach((evt) => {
             el.addEventListener(evt, stopBubble, { passive: true });
@@ -106,8 +162,10 @@ export class UISurfaceMachine {
         this._eventSinkEl = null;
 
         this._handleContainerCaptureTouch = this._handleContainerCaptureTouch.bind(this);
+        this._handleContainerKeyBubble = this._handleContainerKeyBubble.bind(this);
         this._handleFocusIn = this._handleFocusIn.bind(this);
         this._handleFocusOut = this._handleFocusOut.bind(this);
+        this._keyGuardRoot = null;
     }
 
     init() {
@@ -125,6 +183,18 @@ export class UISurfaceMachine {
             container.addEventListener('contextmenu', this._handleContainerCaptureTouch, true);
             container.addEventListener('focusin', this._handleFocusIn, true);
             container.addEventListener('focusout', this._handleFocusOut, true);
+            // 全局 Shadow DOM 键盘隔离盾：任何内部输入框的按键事件严禁冒泡越过 <miss-player-root> 触发宿主快捷键
+            container.addEventListener('keydown', this._handleContainerKeyBubble);
+            container.addEventListener('keyup', this._handleContainerKeyBubble);
+            container.addEventListener('keypress', this._handleContainerKeyBubble);
+
+            const rootNode = typeof container.getRootNode === 'function' ? container.getRootNode() : null;
+            if (rootNode && rootNode !== document && rootNode !== container && typeof rootNode.addEventListener === 'function') {
+                this._keyGuardRoot = rootNode;
+                rootNode.addEventListener('keydown', this._handleContainerKeyBubble);
+                rootNode.addEventListener('keyup', this._handleContainerKeyBubble);
+                rootNode.addEventListener('keypress', this._handleContainerKeyBubble);
+            }
             this._ensureEventSink();
         }
     }
@@ -143,10 +213,11 @@ export class UISurfaceMachine {
      */
     getActiveEditableElement() {
         const root = this.playerContainer?.getRootNode?.() || document;
-        const active = (root && root.activeElement) ? root.activeElement : document.activeElement;
-        if (!active) return null;
-        const tag = active.tagName?.toLowerCase();
-        return (tag === 'input' || tag === 'textarea' || Boolean(active.isContentEditable)) ? active : null;
+        let active = (root && root.activeElement) ? root.activeElement : document.activeElement;
+        while (active?.shadowRoot?.activeElement) {
+            active = active.shadowRoot.activeElement;
+        }
+        return UISurfaceMachine.isEditableElement(active) ? active : null;
     }
 
     /**
@@ -185,8 +256,7 @@ export class UISurfaceMachine {
         if (!this.hasAnySurfaceOpen()) return;
 
         const target = e.target;
-        const tag = target?.tagName?.toLowerCase();
-        const isEditable = tag === 'input' || tag === 'textarea' || Boolean(target?.isContentEditable);
+        const isEditable = UISurfaceMachine.isEditableElement(target) || UISurfaceMachine.isEditableEvent(e);
         if (isEditable) {
             this.acquireFocusLock();
         }
@@ -211,9 +281,7 @@ export class UISurfaceMachine {
     }
 
     _handleFocusIn(e) {
-        const target = e.target;
-        const tag = target?.tagName?.toLowerCase();
-        if (tag === 'input' || tag === 'textarea' || Boolean(target?.isContentEditable)) {
+        if (UISurfaceMachine.isEditableElement(e.target) || UISurfaceMachine.isEditableEvent(e)) {
             this.acquireFocusLock();
         }
     }
@@ -432,8 +500,15 @@ export class UISurfaceMachine {
         return false;
     }
 
+    _handleContainerKeyBubble(e) {
+        if (UISurfaceMachine.isEditableEvent(e)) {
+            e.stopPropagation();
+        }
+    }
+
     _handleGlobalKeyDown(e) {
         if (e.key !== 'Escape') return;
+        if (e.isComposing || e.keyCode === 229) return;
         if (!document.body?.classList.contains('tm-player-active')) return;
         if (this._modalStack.length > 0 || this.activeSurface !== SURFACE_TYPES.NONE) {
             e.preventDefault();
@@ -486,10 +561,19 @@ export class UISurfaceMachine {
             container.removeEventListener('contextmenu', this._handleContainerCaptureTouch, true);
             container.removeEventListener('focusin', this._handleFocusIn, true);
             container.removeEventListener('focusout', this._handleFocusOut, true);
+            container.removeEventListener('keydown', this._handleContainerKeyBubble);
+            container.removeEventListener('keyup', this._handleContainerKeyBubble);
+            container.removeEventListener('keypress', this._handleContainerKeyBubble);
             container.classList.remove('is-overlay-cooldown');
             if (container.__mpSurfaceMachine === this) {
                 delete container.__mpSurfaceMachine;
             }
+        }
+        if (this._keyGuardRoot) {
+            this._keyGuardRoot.removeEventListener('keydown', this._handleContainerKeyBubble);
+            this._keyGuardRoot.removeEventListener('keyup', this._handleContainerKeyBubble);
+            this._keyGuardRoot.removeEventListener('keypress', this._handleContainerKeyBubble);
+            this._keyGuardRoot = null;
         }
         if (this._focusLockTimer) {
             clearTimeout(this._focusLockTimer);

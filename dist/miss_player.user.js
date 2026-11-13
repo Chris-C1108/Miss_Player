@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.041
+// @version            5.7.118-beta.042
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1325,6 +1325,17 @@
 		[SURFACE_TYPES.CODE_PREVIEW]: "has-code-preview-open",
 		[SURFACE_TYPES.SETTINGS]: "tm-settings-active"
 	});
+	var NON_TYPING_INPUT_TYPES = new Set([
+		"checkbox",
+		"radio",
+		"button",
+		"submit",
+		"reset",
+		"file",
+		"image",
+		"color",
+		"range"
+	]);
 	var _activeSurfaceMachines = new Set();
 	var UISurfaceMachine = class UISurfaceMachine {
 		static registerInstance(instance) {
@@ -1342,6 +1353,33 @@
 			if (container && container.__mpSurfaceMachine) return container.__mpSurfaceMachine;
 			return UISurfaceMachine.getActiveInstance();
 		}
+		static isEditableElement(el) {
+			if (!el || el.nodeType !== 1) return false;
+			if (el.isContentEditable) return true;
+			const tag = el.tagName?.toLowerCase?.();
+			if (tag === "textarea" || tag === "select") return true;
+			if (tag === "input") {
+				const type = (el.getAttribute?.("type") || el.type || "text").toLowerCase();
+				return !NON_TYPING_INPUT_TYPES.has(type);
+			}
+			return false;
+		}
+		static isEditableEvent(e) {
+			if (!e) return false;
+			const path = typeof e.composedPath === "function" ? e.composedPath() : null;
+			if (Array.isArray(path) && path.length > 0) for (const node of path) {
+				if (!node || node === document || node === window) break;
+				if (node.nodeType === 1 && node.tagName?.toLowerCase?.() === "miss-player-root") break;
+				if (UISurfaceMachine.isEditableElement(node)) return true;
+			}
+			if (UISurfaceMachine.isEditableElement(e.target)) return true;
+			if (typeof document !== "undefined") {
+				let active = document.activeElement;
+				while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+				if (UISurfaceMachine.isEditableElement(active)) return true;
+			}
+			return false;
+		}
 		static bindOverlayGuard(el, options = {}) {
 			if (!el || typeof el.addEventListener !== "function") return;
 			if (el.dataset && el.dataset.mpOverlayGuarded === "1") return;
@@ -1349,6 +1387,9 @@
 			const { stopMove = false, stopWheel = true } = options;
 			const stopBubble = (e) => {
 				e.stopPropagation();
+			};
+			const stopEditableKeyBubble = (e) => {
+				if (UISurfaceMachine.isEditableEvent(e)) e.stopPropagation();
 			};
 			[
 				"click",
@@ -1360,6 +1401,13 @@
 				"pointercancel",
 				"contextmenu"
 			].forEach((evt) => el.addEventListener(evt, stopBubble));
+			[
+				"keydown",
+				"keyup",
+				"keypress"
+			].forEach((evt) => {
+				el.addEventListener(evt, stopEditableKeyBubble);
+			});
 			[
 				"touchstart",
 				"touchend",
@@ -1388,8 +1436,10 @@
 			this._cooldownTimer = null;
 			this._eventSinkEl = null;
 			this._handleContainerCaptureTouch = this._handleContainerCaptureTouch.bind(this);
+			this._handleContainerKeyBubble = this._handleContainerKeyBubble.bind(this);
 			this._handleFocusIn = this._handleFocusIn.bind(this);
 			this._handleFocusOut = this._handleFocusOut.bind(this);
+			this._keyGuardRoot = null;
 		}
 		init() {
 			if (this._initialized || typeof document === "undefined") return;
@@ -1404,6 +1454,16 @@
 				container.addEventListener("contextmenu", this._handleContainerCaptureTouch, true);
 				container.addEventListener("focusin", this._handleFocusIn, true);
 				container.addEventListener("focusout", this._handleFocusOut, true);
+				container.addEventListener("keydown", this._handleContainerKeyBubble);
+				container.addEventListener("keyup", this._handleContainerKeyBubble);
+				container.addEventListener("keypress", this._handleContainerKeyBubble);
+				const rootNode = typeof container.getRootNode === "function" ? container.getRootNode() : null;
+				if (rootNode && rootNode !== document && rootNode !== container && typeof rootNode.addEventListener === "function") {
+					this._keyGuardRoot = rootNode;
+					rootNode.addEventListener("keydown", this._handleContainerKeyBubble);
+					rootNode.addEventListener("keyup", this._handleContainerKeyBubble);
+					rootNode.addEventListener("keypress", this._handleContainerKeyBubble);
+				}
 				this._ensureEventSink();
 			}
 		}
@@ -1412,10 +1472,9 @@
 		}
 		getActiveEditableElement() {
 			const root = this.playerContainer?.getRootNode?.() || document;
-			const active = root && root.activeElement ? root.activeElement : document.activeElement;
-			if (!active) return null;
-			const tag = active.tagName?.toLowerCase();
-			return tag === "input" || tag === "textarea" || Boolean(active.isContentEditable) ? active : null;
+			let active = root && root.activeElement ? root.activeElement : document.activeElement;
+			while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+			return UISurfaceMachine.isEditableElement(active) ? active : null;
 		}
 		acquireFocusLock() {
 			this.isFocusLocked = true;
@@ -1438,8 +1497,7 @@
 		_handleContainerCaptureTouch(e) {
 			if (!this.hasAnySurfaceOpen()) return;
 			const target = e.target;
-			const tag = target?.tagName?.toLowerCase();
-			const isEditable = tag === "input" || tag === "textarea" || Boolean(target?.isContentEditable);
+			const isEditable = UISurfaceMachine.isEditableElement(target) || UISurfaceMachine.isEditableEvent(e);
 			if (isEditable) this.acquireFocusLock();
 			if (Boolean(target?.closest?.(".tm-comment-submit-bar-wrapper, .tm-bottom-sheet-panel, .tm-settings-panel, .tm-custom-modal-overlay, .tm-custom-modal-dialog, .tm-report-modal-dialog, .tm-custom-modal-content, .tm-inline-remark-popover, .tm-tag-select-modal, .jc-code-preview-popover")) || isEditable) {
 				if (!isEditable && e.type === "contextmenu") e.preventDefault();
@@ -1449,9 +1507,7 @@
 			if (e.type === "contextmenu") e.preventDefault();
 		}
 		_handleFocusIn(e) {
-			const target = e.target;
-			const tag = target?.tagName?.toLowerCase();
-			if (tag === "input" || tag === "textarea" || Boolean(target?.isContentEditable)) this.acquireFocusLock();
+			if (UISurfaceMachine.isEditableElement(e.target) || UISurfaceMachine.isEditableEvent(e)) this.acquireFocusLock();
 		}
 		_handleFocusOut() {
 			this.releaseFocusLock(350);
@@ -1590,8 +1646,12 @@
 			if (this.activeSurface !== SURFACE_TYPES.NONE) return this.closeActiveSurface();
 			return false;
 		}
+		_handleContainerKeyBubble(e) {
+			if (UISurfaceMachine.isEditableEvent(e)) e.stopPropagation();
+		}
 		_handleGlobalKeyDown(e) {
 			if (e.key !== "Escape") return;
+			if (e.isComposing || e.keyCode === 229) return;
 			if (!document.body?.classList.contains("tm-player-active")) return;
 			if (this._modalStack.length > 0 || this.activeSurface !== SURFACE_TYPES.NONE) {
 				e.preventDefault();
@@ -1633,8 +1693,17 @@
 				container.removeEventListener("contextmenu", this._handleContainerCaptureTouch, true);
 				container.removeEventListener("focusin", this._handleFocusIn, true);
 				container.removeEventListener("focusout", this._handleFocusOut, true);
+				container.removeEventListener("keydown", this._handleContainerKeyBubble);
+				container.removeEventListener("keyup", this._handleContainerKeyBubble);
+				container.removeEventListener("keypress", this._handleContainerKeyBubble);
 				container.classList.remove("is-overlay-cooldown");
 				if (container.__mpSurfaceMachine === this) delete container.__mpSurfaceMachine;
+			}
+			if (this._keyGuardRoot) {
+				this._keyGuardRoot.removeEventListener("keydown", this._handleContainerKeyBubble);
+				this._keyGuardRoot.removeEventListener("keyup", this._handleContainerKeyBubble);
+				this._keyGuardRoot.removeEventListener("keypress", this._handleContainerKeyBubble);
+				this._keyGuardRoot = null;
 			}
 			if (this._focusLockTimer) {
 				clearTimeout(this._focusLockTimer);
@@ -1781,13 +1850,13 @@
 			if (btn && modal.contains(btn) && e.cancelable) e.preventDefault();
 		});
 		modal.addEventListener("keydown", (e) => {
-			if (e.key === "Escape") {
+			if (e.key === "Escape" && !e.isComposing && e.keyCode !== 229) {
 				e.preventDefault();
 				e.stopPropagation();
 				close();
 				return;
 			}
-			if (e.target?.tagName === "INPUT" || e.target?.tagName === "TEXTAREA") e.stopPropagation();
+			if (UISurfaceMachine.isEditableEvent(e)) e.stopPropagation();
 		});
 		(playerContainer || shadowHost?.shadowRoot || document.body).appendChild(modal);
 		if (surfaceMachine && typeof surfaceMachine.pushModal === "function") surfaceMachine.pushModal(modal, close);
@@ -1803,7 +1872,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.041";
+		return "5.7.118-beta.042";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3897,7 +3966,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.041";
+		return "5.7.118-beta.042";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6004,7 +6073,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.041";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.042";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -21843,8 +21912,8 @@
 				}
 			};
 			this.handleContextMenuBound = (e) => {
-				const tag = e.target?.tagName?.toLowerCase();
-				if (tag === "input" || tag === "textarea" || Boolean(e.target?.isContentEditable)) return;
+				const realTarget = (typeof e.composedPath === "function" ? e.composedPath()[0] : null) || e.target;
+				if (UISurfaceMachine.isEditableElement(realTarget) || UISurfaceMachine.isEditableEvent(e)) return;
 				e.preventDefault();
 				e.stopPropagation();
 			};
