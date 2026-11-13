@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.031
+// @version            5.7.118-beta.032
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1361,7 +1361,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.031";
+		return "5.7.118-beta.032";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -3405,7 +3405,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.031";
+		return "5.7.118-beta.032";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -5509,7 +5509,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.031";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.032";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -10319,7 +10319,6 @@
 				"大概",
 				"大约",
 				"大約",
-				"只有",
 				"仅有",
 				"僅有",
 				"不足",
@@ -10826,7 +10825,7 @@
 		const hasJableEmoji = CFG.FILTER.JABLE_EMOJI_REGEX.test(rawComment);
 		const hasUnicodeEmoji = CFG.FILTER.UNICODE_EMOJI_REGEX.test(rawComment);
 		const hasEmoji = hasJableEmoji || hasUnicodeEmoji;
-		if (!/(?:\d{1,3}):(?:\d{2})/.test(normalized) && !hasEmoji) {
+		if (!/(?:\d{1,3}):(?:\d{2})|^\s*\d{1,3}\s*(?:min|mins|m|h)\s*$/i.test(normalized) && !hasEmoji) {
 			if (cleanedForLength.length === 0) return {
 				label: "SPAM",
 				category: "LOW_QUALITY",
@@ -10904,6 +10903,10 @@
 		},
 		{
 			regex: /(?:本来|原本|原版|完整版|加长版|加長版|删减版|刪減版|阉割版|閹割版|未删减|未刪減|片长|片長)\s*(?:有|是|为|為|约|約|大概)?\s*\d{2,3}\s*(?:min|mins|分钟|分鐘|分)/gi,
+			replace: padSpaceMask
+		},
+		{
+			regex: /(?:这|這|那)\s*\d{1,2}\s*秒(?![钟鐘])/g,
 			replace: padSpaceMask
 		},
 		{
@@ -11103,7 +11106,7 @@
 	var RE_L3_H_SHORT_M = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:小时|小時|时|時|h|H)\s*(?:[零又]\s*)?([0-5]\d)(?![a-zA-Z\d:：.分秒])/g;
 	var RE_L3_M_SHORT_S = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分)\s*([0-5]\d)(?!\d|[秒])/g;
 	var RE_L3_MS = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分)\s*(\d{1,2})\s*(?:秒钟|秒鐘|秒)(?!\d)/g;
-	var RE_L3_M = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分|mins?)(?![a-zA-Z\d])/gi;
+	var RE_L3_M = /(?<![.\da-zA-Z])(\d{1,3})\s*(?:分钟|分鐘|分|mins?|m(?![a-zA-Z\d/]))(?![a-zA-Z\d/])/gi;
 	var RE_L3_S = /(?<!\d)(\d{1,2})\s*(?:秒钟|秒鐘|秒)(?!\d)/g;
 	var RE_L5_SLASH = /(?<![\d:./])(\d{1,3})(?:\s*\/\s*(\d{1,3}))+(?![\d:./])/g;
 	var RE_L5_ISOLATED = /(?<![\d:.\-/])\b(\d{1,3})\b(?![\d:.\-/])/g;
@@ -11238,7 +11241,8 @@
 				end: match.index + raw.length,
 				level: "L3",
 				seconds: parseHourToken(match[1]) * 3600,
-				isNegative: false
+				isNegative: false,
+				isSingleHour: true
 			});
 		}
 		RE_L3_HMS.lastIndex = 0;
@@ -11448,6 +11452,10 @@
 				const postNext = normalizedText.slice(next.end, Math.min(normalizedText.length, next.end + 3));
 				const isTrailingEndWord = next.isIsolated && /^(?:尾|结束|結束|底)/.test(postNext);
 				if (rangeSeps.includes(between) && !isTrailingEndWord) {
+					if (current.seconds >= 3600 && /(?:h|小时|小時|时|時)/i.test(current.raw) && next.level === "L3" && /^\d{1,2}\s*(?:分钟|分鐘|分|min|mins|m)$/i.test(next.raw)) {
+						const nextMin = Math.floor(next.seconds / 60);
+						if (nextMin > Math.floor(current.seconds % 3600 / 60) && nextMin < 60) next.seconds = Math.floor(current.seconds / 3600) * 3600 + nextMin * 60;
+					}
 					merged.push({
 						raw: normalizedText.slice(current.index, next.end),
 						index: current.index,
@@ -11474,11 +11482,33 @@
 				isValid: false,
 				reason: "检测到持续时长语义"
 			};
+			if (match.isSingleHour && !inRange) {
+				const preHourCtx = normalizedText.slice(Math.max(0, match.index - 20), match.index);
+				const postHourCtx = normalizedText.slice(match.end, Math.min(normalizedText.length, match.end + 12));
+				if (/(?:全片|整片|整部|这片|這片|这部|這部|本片|共|总共|總共|一共|长达|長達|长约|長約|近|将近|將近|接近|差不多|足足|整整|至少|超过|超過|不足|不到|看了|看|持续|持續|连续|連續|抽查|抽插|冲击|衝擊|上演|循环|循環|扛|硬了|只需|最後|最后|前一|后一|後一)\s*$/.test(preHourCtx) || /^\s*(?:前[!！]|前出|前发|前發|的性爱|的性愛|的剧情|的劇情|基本|全都是|全是|不间断|不間斷|就膩|就腻|片子|影片|的片)/.test(postHourCtx)) return {
+					isValid: false,
+					reason: "孤立小时为片长或耗时描述"
+				};
+				const hasSeekAnchor = /(?:第|到|至|约|約|大概|大约|大約|在|从|從|撑到|撐到)\s*$/.test(preHourCtx) || /^\s*(?:左右|前后|前後|附近|的时候|的時候|时|時|处|處|开始|開始|之后|之後|以后|以後|往后|往後|那段|这段|這段|起|到|后(?:的|面|边|邊|段|期|$))/.test(postHourCtx);
+				const hasOtherValidTs = allResolvedMatches.some((o) => o !== match && !o.isIsolated && !o.isSingleHour);
+				if (!hasSeekAnchor && !hasOtherValidTs) return {
+					isValid: false,
+					reason: "孤立小时缺少跳转定位锚点"
+				};
+			}
 			if (match.level === "L3" && /^\d+(?:分钟|分鐘|分|秒钟|秒鐘|秒|min|mins|m|s)$/i.test(match.raw)) {
 				if (CFG.TIMESTAMPS.DURATION_KEYWORDS.some((kw) => preText.includes(kw))) return {
 					isValid: false,
 					reason: "检测到动作或过程耗时描述"
 				};
+				if (/^\d+\s*m$/i.test(match.raw)) {
+					const mVal = parseInt(match.raw, 10);
+					const hasOtherTs = allResolvedMatches.some((o) => o !== match && !o.isIsolated);
+					if (mVal < 5 && !inRange && !hasOtherTs) return {
+						isValid: false,
+						reason: "过小裸 m 单位可能是长度而非分钟"
+					};
+				}
 				const clauseWin = normalizedText.slice(Math.max(0, match.index - 24), Math.min(normalizedText.length, match.end + 24));
 				if (/(?:本来|原本|原版|删减|刪減|阉割|閹割|剪掉|完整版|加长版|加長版|片长|片長)/.test(clauseWin) && /(?:现在|現在|变成|變成|只有|剩|缩短|縮短|砍成|剪成|才)/.test(clauseWin)) return {
 					isValid: false,
@@ -12145,7 +12175,7 @@
 				const rawNum = code.slice(hyphenIdx + 1);
 				const strippedNum = rawNum.replace(/^0+(?=\d{2})/, "");
 				const escapedAlts = (rawNum === strippedNum ? [rawNum] : [rawNum, strippedNum]).map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
-				const safeScanRegex = new RegExp(`(<[^>]+>|___(?:TS|AV)_\\d+___|&#?\\w+;)|(?<![a-zA-Z0-9_\\uFF10-\\uFF19\\-:：./\\\\])(${escapedAlts})(?![a-zA-Z0-9_\\uFF10-\\uFF19\\-:：./\\\\])`, "g");
+				const safeScanRegex = new RegExp(`(<[^>]+>|___(?:TS|AV)_\\d+___|&#?\\w+;|https?:\\/\\/\\S+)|(?<![a-zA-Z0-9_\\uFF10-\\uFF19\\-:：.\\\\])(${escapedAlts})(?![a-zA-Z0-9_\\uFF10-\\uFF19\\-:：.\\\\])`, "g");
 				html = html.replace(safeScanRegex, (full, ignored, numHit) => {
 					if (ignored) return ignored;
 					const tokenId = `___AV_${idCounter++}___`;

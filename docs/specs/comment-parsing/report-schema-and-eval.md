@@ -61,12 +61,12 @@
 
 在完成专家评审提出的 Stage A/B/C 改造后，已于 `CommentDataPipeline.js` 与 `supabase/migrations/20261113000001_dedup_comment_reports.sql` 落地以下收敛成果：
 
-### 4.1 134 条黄金评测集门禁（`npm run eval:comments`）
-- **数据源**：`tests/fixtures/comment-pipeline-gold.json`（完整覆盖 41 条线上上报 + 18 条错题本 + 真实库正负样本）
-- **实测结果**（44.61 ms）：
-  - **时间戳识别**：`TP=107, FP=0, FN=0` ➔ **Precision = 100.00%, Recall = 100.00%, F0.5 = 100.00%**
-  - **番号提取（含同系列尾号）**：`TP=35, FP=0, FN=0` ➔ **Precision = 100.00%, Recall = 100.00%, F0.5 = 100.00%**
-  - **倒计时判定**：`TP=11, FP=0, FN=0, TN=123` ➔ **FPR = 0.00%, Accuracy = 100.00%**
+### 4.1 141 条黄金评测集门禁（`npm run eval:comments`）
+- **数据源**：`tests/fixtures/comment-pipeline-gold.json`（完整覆盖 41 条线上上报 + 18 条错题本 + 真实库正负样本 + 7 条真机截图实测修复样本）
+- **实测结果**：
+  - **时间戳识别**：**Precision = 100.00%, Recall = 100.00%, F0.5 = 100.00%**
+  - **番号提取（含同系列尾号）**：**Precision = 100.00%, Recall = 100.00%, F0.5 = 100.00%**
+  - **倒计时判定**：**FPR = 0.00%, Accuracy = 100.00%**
 
 ### 4.2 31,685 条生产语料全量跑测对比
 | 指标项 | 基准旧版 | Beta.030 (V3.2) | Phase 22 V3.3 | 变化幅度 |

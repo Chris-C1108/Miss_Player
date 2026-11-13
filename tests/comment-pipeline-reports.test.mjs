@@ -245,6 +245,27 @@ console.log('🧪 开始执行评论识别引擎优化、同系列番号与上�
     const r02 = processComment('145/232/256好像就这三部流出', 'STARS-145', 7200);
     assert.deepStrictEqual(r02.avcodes, ['STARS-145', 'STARS-232', 'STARS-256'], 'R-02: 同系列斜杠列表应整体识别为番号');
     assert.strictEqual(r02.timestamps.length, 0, 'R-02: 同系列斜杠列表不得被 L5 斜杠吞并');
+    assert.ok(r02.textHtml.includes('data-code="STARS-145"') && r02.textHtml.includes('data-code="STARS-232"') && r02.textHtml.includes('data-code="STARS-256"'), '145/232/256 必须全部渲染为可点击番号胶囊');
+
+    // 真机截图实测修复：裸 27m、全片/冲击近两小时防误报、两小时后的强度、1h47m到50m 小时继承、就只有一小时五十一分
+    const scr2 = processComment('27m姿势封面回收，对这种不好好读书出来援交的小母狗就要用这种姿势干。1h13m四人轮流冲击小母狗', 'STARS-256', 7200);
+    assert.deepStrictEqual(scr2.timestamps.map(t => t.seconds), [1620, 4380], '27m 与 1h13m 均应识别为时间戳');
+
+    const scr3 = processComment('这么猛烈冲击近两小时，感觉神经早已经迟钝了', 'STARS-256', 7200);
+    assert.strictEqual(scr3.timestamps.length, 0, '猛烈冲击近两小时为持续时长，不得误标时间戳');
+
+    const scr4 = processComment('全片两小时基本上95都是这个姿势', 'STARS-256', 7200);
+    assert.strictEqual(scr4.timestamps.length, 0, '全片两小时为片长描述，不得误标时间戳');
+
+    const scr5 = processComment('两小时后的强度不错，值得收藏', 'XRW-813', 7200);
+    assert.deepStrictEqual(scr5.timestamps.map(t => t.seconds), [7200], '两小时后含定位锚点，应识别为 7200s');
+
+    const scr6 = processComment('1h17m这个姿势表情绝了，还有1h30m和1h47m到50m', 'SONE-016', 7200);
+    assert.strictEqual(scr6.isCountdownComment, false, '1h47m到50m 不得误判为倒计时');
+    assert.deepStrictEqual(scr6.timestamps.map(t => t.seconds), [4620, 5400, [6420, 6600]], '50m 应继承 1h 变为 1h50m (6600s)');
+
+    const scr7 = processComment('就只有一小时五十一分有点看头', 'MIDE-849', 7200);
+    assert.deepStrictEqual(scr7.timestamps.map(t => t.seconds), [6660], '就只有一小时五十一分应识别为 6660s');
 
     // R-03 & R-15 & R-17: 多连写分钟、中文零分钟、小时链继承
     const r03 = processComment('95、104、114、118分钟连续4发中出', 'MIAA-710', 10800);
