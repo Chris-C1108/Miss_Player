@@ -270,33 +270,100 @@ export class SupabaseService {
         const config = this.getConfig();
         if (!config.isEnabled) return false;
 
-        const { videoCode, commentId, userName, commentText, reason, userNote } = reportData;
+        const {
+            videoCode,
+            commentId,
+            userName,
+            commentText,
+            reason,
+            reasonCode,
+            userNote,
+            scriptVersion,
+            sourceSite,
+            videoDuration,
+            parserSnapshot,
+            expectedHint
+        } = reportData;
         if (!videoCode || !reason) return false;
 
         const code = String(videoCode).trim().toUpperCase();
+        const safeDuration = (typeof videoDuration === 'number' && Number.isFinite(videoDuration) && videoDuration > 0)
+            ? Math.round(videoDuration)
+            : null;
+        const safeSnapshot = parserSnapshot && typeof parserSnapshot === 'object' ? parserSnapshot : null;
 
-        // 1. 优先调用服务端 RPC submit_comment_report
+        const baseRpcPayload = {
+            p_avcode: code,
+            p_comment_id: String(commentId || ''),
+            p_user_name: String(userName || '匿名'),
+            p_comment_text: String(commentText || ''),
+            p_reason: String(reason),
+            p_user_note: userNote ? String(userNote) : null
+        };
+
+        const extendedRpcPayload = {
+            ...baseRpcPayload,
+            p_reason_code: reasonCode ? String(reasonCode) : null,
+            p_script_version: scriptVersion ? String(scriptVersion) : null,
+            p_source_site: sourceSite ? String(sourceSite) : null,
+            p_video_duration: safeDuration,
+            p_parser_snapshot: safeSnapshot,
+            p_expected_hint: expectedHint ? String(expectedHint) : null
+        };
+
+        const rpcUrl = config.baseUrl + '/rpc/submit_comment_report';
+        const jsonHeaders = {
+            'apikey': config.apiKey,
+            'Authorization': 'Bearer ' + config.apiKey,
+            'Content-Type': 'application/json'
+        };
+
+        // 1. 优先调用升级版 12 参数 RPC；若生产库尚未执行 migration 则自动降级为 6 参数 + 摘要附注
         try {
-            const rpcUrl = config.baseUrl + '/rpc/submit_comment_report';
             const rpcRes = await this.request({
                 method: 'POST',
                 url: rpcUrl,
-                headers: {
-                    'apikey': config.apiKey,
-                    'Authorization': 'Bearer ' + config.apiKey,
-                    'Content-Type': 'application/json'
-                },
-                data: JSON.stringify({
-                    p_avcode: code,
-                    p_comment_id: String(commentId || ''),
-                    p_user_name: String(userName || '匿名'),
-                    p_comment_text: String(commentText || ''),
-                    p_reason: String(reason),
-                    p_user_note: userNote ? String(userNote) : null
-                })
+                headers: jsonHeaders,
+                data: JSON.stringify(extendedRpcPayload)
             });
             if (rpcRes.status >= 200 && rpcRes.status < 300) {
-                addDebugLog('[Supabase] 评论问题上报成功 (RPC: ' + code + ')', 'success');
+                addDebugLog('[Supabase] 评论问题诊断上报成功 (RPC v2: ' + code + ')', 'success');
+                return true;
+            }
+        } catch (_) {}
+
+        const diagTagParts = [];
+        if (reasonCode) diagTagParts.push(`type=${reasonCode}`);
+        if (scriptVersion) diagTagParts.push(`v=${scriptVersion}`);
+        if (sourceSite) diagTagParts.push(`site=${sourceSite}`);
+        if (safeDuration) diagTagParts.push(`dur=${safeDuration}s`);
+        if (expectedHint) diagTagParts.push(`expect=${expectedHint}`);
+        if (safeSnapshot) {
+            const tsSummary = (safeSnapshot.timestamps || []).slice(0, 8).map(t => `${t.raw}->${Array.isArray(t.seconds) ? t.seconds.join('~') : t.seconds}(${t.level || '?'})`).join(',');
+            const avSummary = (safeSnapshot.avcodes || []).slice(0, 8).join(',');
+            if (tsSummary) diagTagParts.push(`ts=[${tsSummary}]`);
+            if (avSummary) diagTagParts.push(`av=[${avSummary}]`);
+            if (safeSnapshot.isCountdown) diagTagParts.push(`cd=${safeSnapshot.countdownApplied ? 'applied' : 'detected'}`);
+            if (Array.isArray(safeSnapshot.flaggedItems) && safeSnapshot.flaggedItems.length > 0) {
+                diagTagParts.push(`flagged=[${safeSnapshot.flaggedItems.join(',')}]`);
+            }
+        }
+        const fallbackNote = [userNote ? String(userNote).trim() : '', diagTagParts.length ? `[diag: ${diagTagParts.join(' | ')}]` : '']
+            .filter(Boolean)
+            .join('\n') || null;
+
+        try {
+            const legacyRpcRes = await this.request({
+                method: 'POST',
+                url: rpcUrl,
+                headers: jsonHeaders,
+                data: JSON.stringify({
+                    ...baseRpcPayload,
+                    p_user_note: fallbackNote
+                })
+            });
+            if (legacyRpcRes.status >= 200 && legacyRpcRes.status < 300) {
+                addDebugLog('[Supabase] 评论问题兼容上报成功 (RPC v1: ' + code + ')', 'success');
                 return true;
             }
         } catch (_) {}
@@ -308,9 +375,7 @@ export class SupabaseService {
                 method: 'POST',
                 url: tableUrl,
                 headers: {
-                    'apikey': config.apiKey,
-                    'Authorization': 'Bearer ' + config.apiKey,
-                    'Content-Type': 'application/json',
+                    ...jsonHeaders,
                     'Prefer': 'return=minimal'
                 },
                 data: JSON.stringify({
@@ -319,7 +384,7 @@ export class SupabaseService {
                     user_name: String(userName || '匿名'),
                     comment_text: String(commentText || ''),
                     reason: String(reason),
-                    user_note: userNote ? String(userNote) : null
+                    user_note: fallbackNote
                 })
             });
             if (tableRes.status >= 200 && tableRes.status < 300) {

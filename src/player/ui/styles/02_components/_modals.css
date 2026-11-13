@@ -642,16 +642,68 @@
     background: rgba(255, 255, 255, 0.06);
     padding: 8px 10px;
     border-radius: 8px;
-    margin-bottom: 12px;
-    max-height: 80px;
+    margin-bottom: 10px;
+    max-height: 76px;
     overflow-y: auto;
+    line-height: 1.45;
+}
+
+.tm-report-diag-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 7px 9px;
+    margin-bottom: 10px;
+}
+
+.tm-report-diag-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+    margin-bottom: 6px;
+}
+
+.tm-report-diag-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-height: 64px;
+    overflow-y: auto;
+}
+
+.tm-report-diag-empty {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.tm-report-diag-pill {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.tm-report-diag-pill.is-av {
+    border-color: rgba(10, 132, 255, 0.35);
+    color: #70b7ff;
+}
+
+.tm-report-diag-pill.is-flagged {
+    background: rgba(255, 69, 58, 0.24);
+    border-color: rgba(255, 69, 58, 0.85);
+    color: #ff9c96;
+    text-decoration: line-through;
 }
 
 .tm-report-chip-group {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .tm-report-chip {
@@ -669,6 +721,19 @@
     color: #fff;
 }
 
+.tm-report-expect-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    padding: 7px 10px;
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 8px;
+    outline: none;
+}
+
 .tm-report-note {
     width: 100%;
     box-sizing: border-box;
@@ -678,8 +743,8 @@
     padding: 8px 10px;
     color: #fff;
     font-size: 16px;
-    height: 68px;
-    margin-bottom: 14px;
+    height: 58px;
+    margin-bottom: 12px;
     outline: none;
     resize: none;
 }

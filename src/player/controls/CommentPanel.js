@@ -929,7 +929,7 @@ export class CommentPanel {
         comment.timestamps = applyCommentCountdown(comment.timestamps, duration, comment.countdownApplied);
 
         // 重新生成高亮 HTML
-        comment.textHtml = highlightCommentText(comment.rawText || comment.text, comment.timestamps, comment.avcodes || []);
+        comment.textHtml = highlightCommentText(comment.rawText || comment.text, comment.timestamps, comment.avcodes || [], { contextPrefix: this.videoCode });
 
         // 局部更新卡片 DOM 文本内容
         const bodyContent = card.querySelector('.jc-body-text-content');
@@ -3208,12 +3208,19 @@ export class CommentPanel {
     }
 
     _showCommentReportModal(comment) {
-        showCommentReportModal({ comment, videoCode: this.videoCode });
+        const rawDur = this.targetVideo?.duration || this.playerCore?.targetVideo?.duration;
+        const videoDuration = (rawDur && !isNaN(rawDur)) ? Math.round(rawDur) : null;
+        showCommentReportModal({
+            comment,
+            videoCode: this.videoCode,
+            videoDuration,
+            sourceSite: comment?.source_site || comment?.source || this.activeSite || null
+        });
     }
 
     _mergeRemoteComments(remoteList) {
         if (!Array.isArray(remoteList) || remoteList.length === 0) return;
-        const duration = this.playerCore?.targetVideo?.duration || 10800;
+        const duration = this.playerCore?.targetVideo?.duration || this.targetVideo?.duration || 10800;
 
         for (const item of remoteList) {
             const sKey = (item.source_site || 'jable').toLowerCase();
@@ -3222,12 +3229,13 @@ export class CommentPanel {
 
             const exists = targetSite.comments.some(c => String(c.id) === String(item.site_comment_id) || (c.text && c.text === item.content_raw));
             if (!exists) {
-                const processed = processComment(item.content_raw, duration, item.published_at);
+                const processed = processComment(item.content_raw, this.videoCode, duration);
                 processed.id = item.site_comment_id;
                 processed.user = item.user_name;
                 processed.userUrl = item.user_url;
                 processed.time = item.published_at;
                 processed.score = item.score;
+                processed.source_site = sKey;
                 targetSite.comments.push(processed);
             }
         }
@@ -3237,7 +3245,7 @@ export class CommentPanel {
 
     _mergeWebdavComments(commentList) {
         if (!Array.isArray(commentList) || commentList.length === 0) return;
-        const duration = this.playerCore?.targetVideo?.duration || 10800;
+        const duration = this.playerCore?.targetVideo?.duration || this.targetVideo?.duration || 10800;
         for (const item of commentList) {
             const sKey = (item.source || 'jable').toLowerCase();
             const targetSite = this.sites[sKey] || this.sites.jable;
@@ -3245,10 +3253,11 @@ export class CommentPanel {
 
             const exists = targetSite.comments.some(c => String(c.id) === String(item.id) || (c.text && c.text === item.text));
             if (!exists) {
-                const processed = processComment(item.text, duration, item.time);
+                const processed = processComment(item.text, this.videoCode, duration);
                 processed.id = item.id;
                 processed.user = item.user;
                 processed.time = item.time;
+                processed.source_site = sKey;
                 targetSite.comments.push(processed);
             }
         }

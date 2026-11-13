@@ -190,6 +190,11 @@ runStep('执行高能现场计数同步、JavDB 评分居右与操作胶囊悬�
     execSync('node tests/comments-action-hover-rating.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.24 评论识别引擎优化、同系列番号补全与上报机制单元测试
+runStep('执行评论识别引擎优化、同系列番号补全与上报机制单元测试', () => {
+    execSync('node tests/comment-pipeline-reports.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');
