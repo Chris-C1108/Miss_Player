@@ -673,8 +673,25 @@ assert.ok(
 assert.ok(
     landscapeCssCodeV22.includes('top: 12px;') &&
     landscapeCssCodeV22.includes('height: var(--button-md);') &&
-    landscapeCssCodeV22.includes('min-height: 28px;'),
-    'PC 横屏顶栏必须使用对称 12px 顶距与 var(--button-md) 高度，且标题保持 28px 最小高度'
+    landscapeCssCodeV22.includes('min-height: 28px;') &&
+    landscapeCssCodeV22.includes('.tm-player-container.controls-hidden .tm-comments-panel') &&
+    landscapeCssCodeV22.includes('padding-top: 0;'),
+    'PC 横屏顶栏必须使用对称 12px 顶距与 var(--button-md) 高度，标题保持 28px 最小高度，且顶栏隐藏时收起评论区顶部 56px 空白'
+);
+
+const hostCssCodeV22 = fs.readFileSync('src/player/ui/styles/01_core/_host.css', 'utf8');
+assert.ok(
+    !/body\.controls-hidden\s*\{[^}]*cursor\s*:\s*none/.test(hostCssCodeV22),
+    '禁止在 _host.css 的 body.controls-hidden 上全局设置 cursor: none（会导致双栏与评论区鼠标隐藏及闪烁）'
+);
+assert.ok(
+    latestPlayerCssV19.includes('.tm-player-container.controls-hidden.tm-sidebar-hidden:not([data-has-overlay="true"]):not(.tm-settings-active) .tm-video-wrapper'),
+    'cursor: none 必须严格限定在无边栏纯观影模式下的视频容器内'
+);
+const uiManagerCodeV22 = fs.readFileSync('src/player/ui/UIManager.js', 'utf8');
+assert.ok(
+    uiManagerCodeV22.includes('samePoint') && uiManagerCodeV22.includes('_lastHideAt'),
+    'UIManager mousemove 必须过滤同坐标合成事件与隐藏瞬间的微抖动，防止控制栏与鼠标闪烁'
 );
 
 console.log('✅ 22. PC 横屏标题栏与顶栏对称间距验证通过');

@@ -1320,12 +1320,32 @@ export class UIManager {
         const nonControlOverlaySelector = '.tm-comments-panel, .tm-comment-submit-bar-wrapper, .tm-comment-backdrop, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-custom-modal-overlay, .tm-report-modal-dialog, .tm-settings-panel, .tm-inline-remark-popover, .jc-code-preview-popover, .tm-surface-event-sink';
 
         // 使用事件委托处理鼠标移动和触摸移动，绑定到整个 playerContainer 以支持隐藏侧栏或竖屏模式下的控制恢复
+        this._lastMouseX = null;
+        this._lastMouseY = null;
+        this._lastHideAt = 0;
+
         this.playerContainer.addEventListener('mousemove', (e) => {
             if (this.surfaceMachine && this.surfaceMachine.isInteractionBlocked()) {
                 return;
             }
             if (e && e.target && e.target.closest && e.target.closest(nonControlOverlaySelector)) {
                 return;
+            }
+            // 过滤浏览器因布局变化/光标切换触发的同坐标合成 mousemove 及隐藏后 160ms 内微抖动，防止控制栏与鼠标闪烁
+            const cx = typeof e.clientX === 'number' ? e.clientX : null;
+            const cy = typeof e.clientY === 'number' ? e.clientY : null;
+            if (cx !== null && cy !== null) {
+                const samePoint = cx === this._lastMouseX && cy === this._lastMouseY;
+                const dx = this._lastMouseX !== null ? Math.abs(cx - this._lastMouseX) : 999;
+                const dy = this._lastMouseY !== null ? Math.abs(cy - this._lastMouseY) : 999;
+                this._lastMouseX = cx;
+                this._lastMouseY = cy;
+                if (samePoint) {
+                    return;
+                }
+                if (!this.controlsVisible && Date.now() - (this._lastHideAt || 0) < 160 && dx < 3 && dy < 3) {
+                    return;
+                }
             }
             this.showControls();
             if (this.isLandscape) {
@@ -1619,6 +1639,7 @@ export class UIManager {
             return;
         }
 
+        this._lastHideAt = Date.now();
         this.overlay.classList.add('controls-hidden');
         if (this.playerContainer) this.playerContainer.classList.add('controls-hidden');
         if (this.rootHost) this.rootHost.classList.add('controls-hidden');

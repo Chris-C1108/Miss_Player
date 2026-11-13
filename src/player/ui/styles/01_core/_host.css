@@ -58,9 +58,6 @@ body.tm-player-active #peach-jav-action,
 body.tm-player-active [id*="peach-jav"] {
   display: none !important;
 }
-body.controls-hidden {
-  cursor: none !important;
-}
 body.tm-swiping-down {
   user-select: none !important;
   -webkit-user-select: none !important;

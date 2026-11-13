@@ -217,6 +217,14 @@
         visibility: visible;
         opacity: 1;
         padding-top: 56px; /* 顶部避让悬浮操作栏，避免物理遮挡 */
+        transition: padding-top 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* 顶栏自动隐藏时平滑收起顶部避让空白，消除死黑留白 */
+    .tm-player-container.controls-hidden .tm-comments-panel,
+    body.controls-hidden .tm-player-container .tm-comments-panel,
+    :host(.controls-hidden) .tm-player-container .tm-comments-panel {
+        padding-top: 0;
     }
 
     /* 覆盖底部的半透明暗化遮罩，PC端双栏时不需要暗化整个评论区 */

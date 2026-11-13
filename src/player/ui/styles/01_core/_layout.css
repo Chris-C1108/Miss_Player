@@ -405,6 +405,12 @@ body.controls-hidden .tm-player-container .tm-button-container, .tm-player-conta
     pointer-events: none;
 }
 
+/* 仅在纯观影无边栏模式下隐藏视频区光标，严禁全局隐藏 body 光标导致评论区/界面闪烁 */
+.tm-player-container.controls-hidden.tm-sidebar-hidden:not([data-has-overlay="true"]):not(.tm-settings-active) .tm-video-wrapper,
+.tm-player-container.controls-hidden.tm-sidebar-hidden:not([data-has-overlay="true"]):not(.tm-settings-active) .tm-video-wrapper video {
+    cursor: none;
+}
+
 /* 控制界面显示时的动画效果 - 更新选择器 */
 
 body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player-container:not(.controls-hidden) .tm-button-container, :host(:not(.controls-hidden)) .tm-button-container {
