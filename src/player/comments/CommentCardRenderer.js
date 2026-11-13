@@ -71,7 +71,7 @@ export function renderCommentCardHtml(c, options = {}) {
         : '若评论内容为剩余倒数时间，点击换算为实际播放时间';
 
     const countdownBtn = hasTimestamps
-        ? `<button class="jc-countdown-btn${isConverted ? ' jc-countdown-btn--active' : ''}" title="${esc(btnTitle)}">${esc(btnText)}</button>`
+        ? `<button class="jc-action-btn jc-countdown-btn${isConverted ? ' jc-countdown-btn--active' : ''}" title="${esc(btnTitle)}">${esc(btnText)}</button>`
         : '';
     const spamHtml = (c.spam && c.spam.label === 'SPAM')
         ? `<span class="jc-spam-badge" title="${esc(c.spam.reason || '')}">灌水: ${esc(c.spam.category || '')}</span>`
@@ -85,9 +85,9 @@ export function renderCommentCardHtml(c, options = {}) {
         getValue('debugMode', false)
     );
 
-    // 调试模式下的极简上报入口 (收拢至右上角低调图标，绝不在下方横插大代码黑框破坏视觉)
+    // 调试模式下的极简上报入口 (纯文本无 emoji，Apple 极简微胶囊)
     const debugReportBtn = showDebugReport
-        ? `<button class="jc-action-btn jc-report-btn jc-debug-report-btn" title="上报该评论 (dev: id=${safeCommentId})" data-comment-id="${safeCommentId}">🐛</button>`
+        ? `<button class="jc-action-btn jc-report-btn jc-debug-report-btn" title="上报该评论 (dev: id=${safeCommentId})" data-comment-id="${safeCommentId}">上报</button>`
         : '';
 
     return `
@@ -102,7 +102,7 @@ export function renderCommentCardHtml(c, options = {}) {
                         ${scoreHtml}
                         ${spamHtml}
                         ${countdownBtn}
-                        ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${esc(__('saveAllHighlights') || '转存高光')}" data-comment-id="${safeCommentId}">📌 转存</button>` : ""}
+                        ${hasTimestamps ? `<button class="jc-action-btn jc-save-all-btn" title="${esc(__('saveAllHighlights') || '转存高光')}" data-comment-id="${safeCommentId}">转存</button>` : ""}
                         ${debugReportBtn}
                     </div>
                 </div>

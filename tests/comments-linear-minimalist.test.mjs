@@ -49,12 +49,14 @@ test('1. CommentCardRenderer 极简流式结构与调试按钮收拢断言', () 
     assert.ok(!normalHtml.includes('jc-guide-line'), '严禁渲染突兀机械的左侧垂直导轨 .jc-guide-line');
     assert.ok(!normalHtml.includes('jc-debug-rail'), '严禁输出底部大代码黑框 .jc-debug-rail');
 
-    // 1.2 高能时间戳评论渲染断言
+    // 1.2 高能时间戳评论渲染断言 (无 emoji / 图标纯文本微胶囊规范)
     const highlightHtml = renderCommentCardHtml(highlightComment);
     assert.ok(highlightHtml.includes('jc-time-link'), '时间戳文本必须被正确解析为 .jc-time-link');
     assert.ok(highlightHtml.includes('jc-save-all-btn'), '带时间戳评论右上角必须包含转存操作');
+    assert.ok(highlightHtml.includes('转存'), '转存按钮文案必须为纯文本转存');
+    assert.ok(!highlightHtml.includes('📌'), '转存按钮严禁包含 emoji 📌 图标');
 
-    // 1.3 调试模式 (showDebugReport) 渲染断言 (仅在 debugMode 开启时右上角提供小图标，绝不输出黑框)
+    // 1.3 调试模式 (showDebugReport) 渲染断言 (纯文本上报，严禁 emoji 与黑框)
     const debugHtml = renderCommentCardHtml(highlightComment, {
         playerCore: {
             playerState: {
@@ -64,7 +66,9 @@ test('1. CommentCardRenderer 极简流式结构与调试按钮收拢断言', () 
             }
         }
     });
-    assert.ok(debugHtml.includes('jc-debug-report-btn'), 'showDebugReport 开启时右上角必须提供低调的调试上报按键');
+    assert.ok(debugHtml.includes('jc-debug-report-btn'), 'showDebugReport 开启时右上角必须提供调试上报按键');
+    assert.ok(debugHtml.includes('上报'), '上报按钮文案必须为纯文本上报');
+    assert.ok(!debugHtml.includes('🐛'), '上报按钮严禁包含 emoji 🐛 图标');
     assert.ok(!debugHtml.includes('jc-debug-rail'), '即便在 debugMode 下也严禁在评论下方渲染丑陋的代码黑框');
     assert.ok(debugHtml.includes('jc-user-group'), '顶部必须保留纯净的用户信息分组');
 });
@@ -130,4 +134,28 @@ test('3. CSS 极简排版与分段导航栏样式规范断言', () => {
     assert.ok(cssContent.includes('.jc-stream-row'), 'CSS 必须包含 .jc-stream-row 流式无框条目规则');
     assert.ok(cssContent.includes('.tm-comment-section-hdr'), 'CSS 必须包含 .tm-comment-section-hdr 隐藏规则');
     assert.ok(cssContent.includes('.tm-comment-section.is-hidden-source'), 'CSS 必须包含非激活源的 is-hidden-source 隐藏规则');
+
+    // 验证去除 AI-Slop 彩色左边框
+    assert.ok(cssContent.includes('border-left: none;'), 'CSS 必须显式声明 border-left: none 拔除左侧彩色边框');
+    assert.ok(!cssContent.includes('border-left: 3px solid'), '严禁遗留 border-left: 3px solid 彩色边框');
+
+    // 验证操作微胶囊规范
+    assert.ok(cssContent.includes('.jc-action-btn'), 'CSS 必须包含 .jc-action-btn 纯净微胶囊规范');
+});
+
+test('4. CommentPanel 5 项极简新交互与跟手滑动状态机断言', () => {
+    const panelPath = path.resolve(rootDir, 'src/player/controls/CommentPanel.js');
+    const panelContent = fs.readFileSync(panelPath, 'utf-8');
+
+    // 4.1 高能现场纯文本
+    assert.ok(panelContent.includes('高能现场'), '面板必须包含 高能现场 纯文本');
+    assert.ok(!panelContent.includes('⏱ 高能'), '严禁遗留 ⏱ 高能 图标文案');
+
+    // 4.2 设置源联动
+    assert.ok(panelContent.includes('getEnabledCommentSources'), '必须实现 getEnabledCommentSources 联动设置');
+
+    // 4.3 移动端跟手滑动位移
+    assert.ok(panelContent.includes('translate3d('), '必须使用 translate3d 实现真跟手滑动位移');
+    assert.ok(panelContent.includes('dragStartX'), '必须维护拖拽起始坐标');
+    assert.ok(panelContent.includes('isHorizontalDrag'), '必须包含轴向锁定判定');
 });

@@ -477,20 +477,46 @@ export class CommentPanel {
     }
 
     /**
+     * 获取当前系统或设置中启用的评论源列表
+     * @returns {Array<{key: string, label: string}>}
+     */
+    getEnabledCommentSources() {
+        const state = this.playerCore?.options?.playerState || this.playerCore?.playerState;
+        const enabledSources = state?.settings?.enabledCommentSources || { jable: true, javdb: true, javlibrary: false };
+        const allSources = [
+            { key: 'jable', label: 'Jable' },
+            { key: 'javdb', label: 'JavDB' },
+            { key: 'javlib', label: 'JAVLib' }
+        ];
+
+        const enabled = allSources.filter(src => {
+            if (src.key === 'javlib') {
+                return enabledSources.javlib !== false && enabledSources.javlibrary !== false;
+            }
+            return enabledSources[src.key] !== false;
+        });
+
+        return enabled.length > 0 ? enabled : [{ key: 'jable', label: 'Jable' }];
+    }
+
+    /**
      * 根据设置中的 enabledCommentSources 动态控制各个站点 section 的显隐与自动抓取
      */
     updateCommentSources() {
-        const state = this.playerCore?.options?.playerState;
-        const enabledSources = state?.settings?.enabledCommentSources || { jable: true, javdb: true, javlibrary: false };
+        const enabledSourcesList = this.getEnabledCommentSources();
+        const enabledKeys = new Set(enabledSourcesList.map(s => s.key));
 
         ['jable', 'javlib', 'javdb'].forEach(siteKey => {
-            const isEnabled = (siteKey === 'javlib')
-                ? (enabledSources.javlib !== false && enabledSources.javlibrary !== false)
-                : (enabledSources[siteKey] !== false);
+            const isEnabled = enabledKeys.has(siteKey);
 
             const sectionEl = this.commentsList?.querySelector(`#tm-comment-section-${siteKey}`);
             if (sectionEl) {
-                sectionEl.style.display = isEnabled ? 'block' : 'none';
+                if (!isEnabled) {
+                    sectionEl.style.display = 'none';
+                    sectionEl.classList.add('is-hidden-source');
+                } else {
+                    sectionEl.style.display = '';
+                }
             }
 
             // 如果该站点被开启且尚未抓取过评论，自动触发抓取
@@ -499,6 +525,9 @@ export class CommentPanel {
             }
         });
 
+        // 动态同步 Tab 栏与激活视图
+        this.updateTabBar();
+        this.syncActiveSourceView();
         this.updateCommentsCount();
     }
 
@@ -1577,22 +1606,9 @@ export class CommentPanel {
 
         this.commentsPanel.innerHTML = `
             <div class="tm-comment-nav-bar">
-                <div class="tm-comment-tab-strip">
-                    <button type="button" class="tm-comment-tab-item is-active" data-site="jable">
-                        <span class="tm-tab-name">Jable</span>
-                        <span class="tm-tab-count">0</span>
-                    </button>
-                    <button type="button" class="tm-comment-tab-item" data-site="javdb">
-                        <span class="tm-tab-name">JavDB</span>
-                        <span class="tm-tab-count">0</span>
-                    </button>
-                    <button type="button" class="tm-comment-tab-item" data-site="javlib">
-                        <span class="tm-tab-name">JAVLib</span>
-                        <span class="tm-tab-count">0</span>
-                    </button>
-                </div>
+                <div class="tm-comment-tab-strip"></div>
                 <button type="button" class="tm-comment-filter-pill" title="只看带时间戳的高能评论">
-                    <span class="tm-filter-text">⏱ 高能</span>
+                    <span class="tm-filter-text">高能现场</span>
                     <span class="tm-filter-count is-hidden">0</span>
                 </button>
             </div>
@@ -1723,39 +1739,142 @@ export class CommentPanel {
 
         this.commentsList.addEventListener('scroll', handleScrollLoadMore, { capture: true, passive: true });
 
-        let startY = 0;
-        let touchStartX = 0;
-        let touchStartY = 0;
+        // 移动端多源跟手滑动切源管理器 (Touch Drag & Snap with Live Follow-Finger Feedback)
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let isDragging = false;
+        let axisLocked = false;
+        let isHorizontalDrag = false;
+        let currentDeltaX = 0;
+        let activeSection = null;
+        let availableSources = [];
+        let currentIndex = -1;
+
         this.commentsList.addEventListener('touchstart', (e) => {
-            if (e.touches && e.touches[0]) {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-                startY = e.touches[0].clientY;
+            if (!e.touches || !e.touches[0]) return;
+            dragStartX = e.touches[0].clientX;
+            dragStartY = e.touches[0].clientY;
+            isDragging = true;
+            axisLocked = false;
+            isHorizontalDrag = false;
+            currentDeltaX = 0;
+
+            availableSources = this.getEnabledCommentSources().map(s => s.key);
+            currentIndex = availableSources.indexOf(this.activeCommentSource);
+            activeSection = this.commentsList.querySelector('.tm-comment-section.is-active-source')
+                || this.commentsList.querySelector(`#tm-comment-section-${this.activeCommentSource}`);
+
+            if (activeSection) {
+                activeSection.style.transition = 'none';
             }
         }, { passive: true });
 
-        this.commentsList.addEventListener('touchend', (e) => {
-            if (!e.changedTouches || !e.changedTouches[0]) return;
-            const deltaX = e.changedTouches[0].clientX - touchStartX;
-            const deltaY = e.changedTouches[0].clientY - touchStartY;
+        this.commentsList.addEventListener('touchmove', (e) => {
+            if (!isDragging || !e.touches || !e.touches[0]) return;
 
-            // 水平滑动切源判定：水平位移 > 50px 且明显大于垂直位移 (1.5x)
-            if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
-                const sources = ['jable', 'javdb', 'javlib'];
-                const curIdx = sources.indexOf(this.activeCommentSource);
-                if (curIdx !== -1) {
-                    if (deltaX < 0) {
-                        // 向左滑：切换至下一个源
-                        const nextIdx = (curIdx + 1) % sources.length;
-                        this.setActiveSource(sources[nextIdx]);
-                    } else {
-                        // 向右滑：切换至上一个源
-                        const prevIdx = (curIdx - 1 + sources.length) % sources.length;
-                        this.setActiveSource(sources[prevIdx]);
-                    }
+            const touch = e.touches[0];
+            const diffX = touch.clientX - dragStartX;
+            const diffY = touch.clientY - dragStartY;
+
+            // 轴向锁定检测 (前 8px 判定方向)
+            if (!axisLocked && Math.hypot(diffX, diffY) > 8) {
+                axisLocked = true;
+                // 若横向位移大于纵向位移的 1.2 倍，锁定为横向跟手切源
+                if (Math.abs(diffX) > Math.abs(diffY) * 1.2 && availableSources.length > 1) {
+                    isHorizontalDrag = true;
+                } else {
+                    isHorizontalDrag = false;
                 }
             }
-        }, { passive: true });
+
+            if (isHorizontalDrag && activeSection) {
+                // 阻断外部或纵向滚动
+                if (e.cancelable) {
+                    e.preventDefault();
+                }
+
+                // 边界弹性阻尼检测：最左端右拉或最右端左拉
+                let effectiveDiffX = diffX;
+                const isLeftBoundary = currentIndex <= 0 && diffX > 0;
+                const isRightBoundary = currentIndex >= availableSources.length - 1 && diffX < 0;
+                if (isLeftBoundary || isRightBoundary) {
+                    effectiveDiffX = diffX * 0.28;
+                }
+
+                currentDeltaX = effectiveDiffX;
+                activeSection.style.transform = `translate3d(${effectiveDiffX}px, 0, 0)`;
+            }
+        }, { passive: false });
+
+        const finishDrag = () => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            if (isHorizontalDrag && activeSection && availableSources.length > 1) {
+                const threshold = Math.min(window.innerWidth * 0.18, 60);
+                const isLeftBoundary = currentIndex <= 0 && currentDeltaX > 0;
+                const isRightBoundary = currentIndex >= availableSources.length - 1 && currentDeltaX < 0;
+
+                if (Math.abs(currentDeltaX) > threshold && !isLeftBoundary && !isRightBoundary) {
+                    if (currentDeltaX < 0 && currentIndex < availableSources.length - 1) {
+                        // 左滑：滑向下一源
+                        const nextSource = availableSources[currentIndex + 1];
+                        activeSection.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+                        activeSection.style.transform = 'translate3d(-100%, 0, 0)';
+                        setTimeout(() => {
+                            if (activeSection) {
+                                activeSection.style.transform = '';
+                                activeSection.style.transition = '';
+                            }
+                            this.setActiveSource(nextSource);
+                        }, 200);
+                    } else if (currentDeltaX > 0 && currentIndex > 0) {
+                        // 右滑：滑向上一个源
+                        const prevSource = availableSources[currentIndex - 1];
+                        activeSection.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+                        activeSection.style.transform = 'translate3d(100%, 0, 0)';
+                        setTimeout(() => {
+                            if (activeSection) {
+                                activeSection.style.transform = '';
+                                activeSection.style.transition = '';
+                            }
+                            this.setActiveSource(prevSource);
+                        }, 200);
+                    } else {
+                        // 回弹归位
+                        activeSection.style.transition = 'transform 0.24s cubic-bezier(0.16, 1, 0.3, 1)';
+                        activeSection.style.transform = 'translate3d(0, 0, 0)';
+                        setTimeout(() => {
+                            if (activeSection) {
+                                activeSection.style.transform = '';
+                                activeSection.style.transition = '';
+                            }
+                        }, 240);
+                    }
+                } else {
+                    // 未达阈值回弹归位
+                    activeSection.style.transition = 'transform 0.24s cubic-bezier(0.16, 1, 0.3, 1)';
+                    activeSection.style.transform = 'translate3d(0, 0, 0)';
+                    setTimeout(() => {
+                        if (activeSection) {
+                            activeSection.style.transform = '';
+                            activeSection.style.transition = '';
+                        }
+                    }, 240);
+                }
+            } else if (activeSection) {
+                activeSection.style.transform = '';
+                activeSection.style.transition = '';
+            }
+
+            isHorizontalDrag = false;
+            axisLocked = false;
+            currentDeltaX = 0;
+            activeSection = null;
+        };
+
+        this.commentsList.addEventListener('touchend', finishDrag, { passive: true });
+        this.commentsList.addEventListener('touchcancel', finishDrag, { passive: true });
 
         this.commentsList.addEventListener('touchmove', (e) => {
             const endY = e.touches[0].clientY;
@@ -2643,9 +2762,23 @@ export class CommentPanel {
             }
         }
 
+        const enabledSources = this.getEnabledCommentSources().map(s => s.key);
+        if (enabledSources.length > 0 && !enabledSources.includes(this.activeCommentSource)) {
+            this.activeCommentSource = enabledSources[0];
+        }
+
         const sections = this.commentsList.querySelectorAll('.tm-comment-section');
         sections.forEach(sec => {
             const siteKey = sec.getAttribute('data-site');
+            const isEnabled = enabledSources.includes(siteKey);
+            if (!isEnabled) {
+                sec.classList.remove('is-active-source');
+                sec.classList.add('is-hidden-source');
+                sec.style.display = 'none';
+                return;
+            }
+
+            sec.style.display = '';
             if (siteKey === this.activeCommentSource) {
                 sec.classList.add('is-active-source');
                 sec.classList.remove('is-hidden-source');
@@ -2658,30 +2791,42 @@ export class CommentPanel {
     }
 
     /**
-     * 更新顶部水平标签栏各平台计数与高能筛选统计
+     * 更新顶部水平标签栏各平台计数与高能筛选统计 (严格按设置中启用的评论源过滤)
      */
     updateTabBar() {
         if (!this.commentsPanel) return;
 
-        const tabItems = this.commentsPanel.querySelectorAll('.tm-comment-tab-item');
-        tabItems.forEach(item => {
-            const siteKey = item.getAttribute('data-site');
-            const isActive = siteKey === this.activeCommentSource;
-            item.classList.toggle('is-active', isActive);
+        const enabledSources = this.getEnabledCommentSources();
+        const tabStrip = this.commentsPanel.querySelector('.tm-comment-tab-strip');
 
-            const countEl = item.querySelector('.tm-tab-count');
-            if (countEl && this.sites[siteKey]) {
-                const site = this.sites[siteKey];
-                if (site.status === 'loading') {
-                    countEl.textContent = '...';
-                } else if (site.status === 'loaded') {
-                    const count = site.filteredComments ? site.filteredComments.length : 0;
-                    countEl.textContent = `${count}${site.hasMore ? '+' : ''}`;
-                } else {
-                    countEl.textContent = '0';
+        // 检查当前 activeCommentSource 是否在启用的列表中，若不在则自动切换到第一个启用的源
+        const isCurrentActiveEnabled = enabledSources.some(s => s.key === this.activeCommentSource);
+        if (!isCurrentActiveEnabled && enabledSources.length > 0) {
+            this.activeCommentSource = enabledSources[0].key;
+            this.syncActiveSourceView();
+        }
+
+        if (tabStrip) {
+            tabStrip.innerHTML = enabledSources.map(s => {
+                const isActive = s.key === this.activeCommentSource;
+                const site = this.sites[s.key];
+                let countText = '0';
+                if (site) {
+                    if (site.status === 'loading') {
+                        countText = '...';
+                    } else if (site.status === 'loaded') {
+                        const count = site.filteredComments ? site.filteredComments.length : 0;
+                        countText = `${count}${site.hasMore ? '+' : ''}`;
+                    }
                 }
-            }
-        });
+                return `
+                    <button type="button" class="tm-comment-tab-item ${isActive ? 'is-active' : ''}" data-site="${s.key}">
+                        <span class="tm-tab-name">${s.label}</span>
+                        <span class="tm-tab-count">${countText}</span>
+                    </button>
+                `;
+            }).join('');
+        }
 
         if (this.commentFilterPill) {
             this.commentFilterPill.classList.toggle('is-active', Boolean(this.isHighlightFilterActive));

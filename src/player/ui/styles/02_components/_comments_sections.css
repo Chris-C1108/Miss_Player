@@ -436,31 +436,46 @@
     flex-shrink: 0;
 }
 
-/* 操作胶囊与调试入口 */
-.jc-save-all-btn {
-    background: rgba(10, 132, 255, 0.12);
-    border: 1px solid rgba(10, 132, 255, 0.25);
-    color: #0a84ff;
+/* 操作胶囊与调试入口 (统一 Apple 纯净微胶囊体系，无 emoji，触控弹性反馈) */
+.jc-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 8px;
     font-size: 11px;
-    padding: 2px 8px;
+    font-weight: 500;
     border-radius: 9999px;
     cursor: pointer;
-    transition: all 0.15s ease;
+    outline: none;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    box-sizing: border-box;
+}
+
+.jc-action-btn:active {
+    transform: scale(0.95);
+}
+
+.jc-save-all-btn {
+    background: rgba(10, 132, 255, 0.12);
+    border: 1px solid rgba(10, 132, 255, 0.28);
+    color: #0a84ff;
 }
 
 .jc-save-all-btn:hover {
-    background: rgba(10, 132, 255, 0.25);
+    background: rgba(10, 132, 255, 0.22);
+    border-color: rgba(10, 132, 255, 0.45);
+    color: #409cff;
 }
 
 .jc-countdown-btn {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    cursor: pointer;
-    transition: all 0.15s ease;
+    color: rgba(255, 255, 255, 0.72);
 }
 
 .jc-countdown-btn:hover {
@@ -468,20 +483,21 @@
     color: #ffffff;
 }
 
+.jc-countdown-btn.jc-countdown-btn--active {
+    background: rgba(245, 166, 35, 0.14);
+    border-color: rgba(245, 166, 35, 0.35);
+    color: #f5a623;
+}
+
 .jc-debug-report-btn {
-    background: transparent;
-    border: none;
-    font-size: 12px;
-    padding: 2px 4px;
-    cursor: pointer;
-    opacity: 0.5;
-    transition: opacity 0.15s ease;
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.45);
 }
 
 .jc-debug-report-btn:hover {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 /* 高能评论空状态 */
@@ -511,43 +527,12 @@
     border-color: rgba(10, 132, 255, 0.35);
 }
 
-#tm-comment-section-jable {
-    border-left: 3px solid hsl(var(--shadcn-red));
-    background: linear-gradient(to right, hsla(var(--shadcn-red) / 0.05), transparent);
-    padding-left: 6px;
-    padding-right: 4px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    border-radius: var(--shadcn-radius-sm);
-}
-#tm-comment-section-jable .tm-comment-section-title {
-    color: hsl(var(--shadcn-red));
-}
-
-#tm-comment-section-javlib {
-    border-left: 3px solid hsl(var(--shadcn-purple));
-    background: linear-gradient(to right, hsla(var(--shadcn-purple) / 0.05), transparent);
-    padding-left: 6px;
-    padding-right: 4px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    border-radius: var(--shadcn-radius-sm);
-}
-#tm-comment-section-javlib .tm-comment-section-title {
-    color: hsl(var(--shadcn-purple));
-}
-
+#tm-comment-section-jable,
+#tm-comment-section-javlib,
 #tm-comment-section-javdb {
-    border-left: 3px solid hsl(var(--shadcn-blue));
-    background: linear-gradient(to right, hsla(var(--shadcn-blue) / 0.05), transparent);
-    padding-left: 6px;
-    padding-right: 4px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    border-radius: var(--shadcn-radius-sm);
-}
-#tm-comment-section-javdb .tm-comment-section-title {
-    color: hsl(var(--shadcn-blue));
+    border-left: none;
+    background: transparent;
+    padding: 0;
 }
 
 .tm-comment-section-hdr {
