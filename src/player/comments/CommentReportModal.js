@@ -245,8 +245,7 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
 
     modal.querySelector('.tm-custom-modal-cancel-btn').addEventListener('click', close);
     const submitBtn = modal.querySelector('.tm-custom-modal-submit-btn');
-    const initialSubmitLabel = submitBtn.textContent;
-    submitBtn.addEventListener('click', async () => {
+    submitBtn.addEventListener('click', () => {
         if (submitBtn.disabled) return;
         const dedupKey = `${videoCode || ''}::${comment.id || ''}::${selectedReasonCode}`;
         if (_submittedReportKeys.has(dedupKey)) {
@@ -254,9 +253,9 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
             return;
         }
 
-        submitBtn.textContent = __('reportSubmitting');
         submitBtn.disabled = true;
 
+        let reportPayload;
         try {
             const rawInput = smartInput.value.trim();
             const reasonMeta = REPORT_REASONS.find(r => r.code === selectedReasonCode) || REPORT_REASONS[0];
@@ -272,7 +271,7 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
             const scriptVersion = getCurrentVersion();
             const parserSnapshot = buildParserSnapshot(comment, flaggedItems);
 
-            const reportPayload = {
+            reportPayload = {
                 videoCode,
                 commentId: comment.id,
                 userName: comment.user || '匿名',
@@ -288,39 +287,53 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
                 timestamps: comment.timestamps || null,
                 reportedAt: new Date().toISOString()
             };
+        } catch (err) {
+            logger.warn('[Report] 构建上报载荷失败:', err);
+            submitBtn.disabled = false;
+            Toast(__('reportSavedLocal'), 2000, 'info');
+            return;
+        }
 
-            DebugLogPanel.addLog(`[REPORT] 评论上报: [${selectedReasonCode}:${selectedReasonLabel}] id=${comment.id} (${videoCode})`, 'warn');
+        // 乐观立即关闭弹窗并释放 UI，实际网络上报完全在后台异步执行（不阻塞用户浏览/看片）
+        _submittedReportKeys.add(dedupKey);
+        DebugLogPanel.addLog(`[REPORT] 评论上报: [${selectedReasonCode}:${selectedReasonLabel}] id=${comment.id} (${videoCode})`, 'warn');
+        close();
+        Toast(__('reportSubmitting'), 1200, 'info');
 
+        void (async () => {
             let reportedToDb = false;
-            try {
-                reportedToDb = await SupabaseService.submitCommentReport(reportPayload);
-            } catch (err) {
-                logger.warn('[Report] Supabase 上报异常:', err);
-            }
+            const tasks = [];
+
+            tasks.push((async () => {
+                try {
+                    reportedToDb = await SupabaseService.submitCommentReport(reportPayload);
+                } catch (err) {
+                    logger.warn('[Report] Supabase 后台上报异常:', err);
+                }
+            })());
 
             const webdavConfig = SyncManager.getWebDavConfig();
             if (WebDavClient.hasValidEndpoint(webdavConfig)) {
-                try {
-                    const now = new Date();
-                    const pad = (n) => String(n).padStart(2, '0');
-                    const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-                    const subPath = `logs/comment_report/${videoCode}_${ts}.json`;
-                    await WebDavClient.uploadFile(webdavConfig, subPath, reportPayload, 'application/json; charset=utf-8');
-                } catch (_) {}
+                tasks.push((async () => {
+                    try {
+                        const now = new Date();
+                        const pad = (n) => String(n).padStart(2, '0');
+                        const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+                        const subPath = `logs/comment_report/${videoCode}_${ts}.json`;
+                        await WebDavClient.uploadFile(webdavConfig, subPath, reportPayload, 'application/json; charset=utf-8');
+                    } catch (err) {
+                        logger.warn('[Report] WebDAV 后台归档异常:', err);
+                    }
+                })());
             }
 
-            _submittedReportKeys.add(dedupKey);
+            await Promise.allSettled(tasks);
+
             if (reportedToDb) {
                 Toast(__('reportSuccess'), 2200, 'success');
             } else {
                 Toast(__('reportSavedLocal'), 2000, 'info');
             }
-            close();
-        } catch (err) {
-            logger.warn('[Report] 评论上报处理失败:', err);
-            submitBtn.disabled = false;
-            submitBtn.textContent = initialSubmitLabel;
-            Toast(__('reportSavedLocal'), 2000, 'info');
-        }
+        })();
     });
 }

@@ -416,12 +416,13 @@ console.log('🧪 开始执行评论识别引擎优化、同系列番号与上�
             removeEventListener: () => {}
         };
 
-        // 为 modal.innerHTML 提供真实结构化子控件映射，验证完整点击提交链路
+        // 为 modal.innerHTML 提供真实结构化子控件映射，验证非阻塞即时关窗 + 后台异步提交链路
         let submittedPayload = null;
-        SupabaseService.submitCommentReport = async (payload) => {
+        let resolveRpc = null;
+        SupabaseService.submitCommentReport = (payload) => new Promise((resolve) => {
             submittedPayload = payload;
-            return true;
-        };
+            resolveRpc = resolve;
+        });
 
         const origCreateEl = globalThis.document.createElement;
         let reportModalEl = null;
@@ -482,14 +483,20 @@ console.log('🧪 开始执行评论识别引擎优化、同系列番号与上�
         });
 
         assert.ok(reportModalEl, 'showCommentReportModal 应成功创建弹窗容器');
+        assert.strictEqual(reportModalEl.classList.contains('active'), true, '打开后弹窗应处于激活态');
         await reasonBtns[1].dispatch('click');
         smartInput.value = '27:00';
         await submitBtn.dispatch('click');
 
-        assert.ok(submittedPayload, '点击提交按钮必须实际触发 SupabaseService.submitCommentReport');
+        // 核心非阻塞断言：网络请求尚未 resolve 前，弹窗必须已立即关闭释放 UI
+        assert.strictEqual(reportModalEl.classList.contains('active'), false, '点击提交后弹窗必须立即异步关闭，绝不阻塞 UI');
+        assert.ok(submittedPayload, '点击提交按钮必须立即在后台发起 SupabaseService.submitCommentReport');
         assert.strictEqual(submittedPayload.reasonCode, 'missed_or_wrong_time', '提交 payload 必须包含当前选中的 reasonCode');
         assert.strictEqual(submittedPayload.expectedHint, '27:00', '漏标/不准输入框内容必须映射到 expectedHint');
         assert.strictEqual(submittedPayload.scriptVersion, getCurrentVersion(), '提交 payload 必须携带正确 scriptVersion');
+
+        resolveRpc(true);
+        await new Promise((r) => setTimeout(r, 15));
     } finally {
         globalThis.document = prevDoc;
         globalThis.window = prevWin;
