@@ -696,6 +696,10 @@ export class CommentPanel {
                     return;
                 }
                 e.stopPropagation();
+                if (this._codePreviewHoverTimer) {
+                    clearTimeout(this._codePreviewHoverTimer);
+                    this._codePreviewHoverTimer = null;
+                }
                 const code = codeLink.getAttribute('data-code');
                 if (code) {
                     this.handleCodeClick(code, codeLink);
@@ -728,7 +732,7 @@ export class CommentPanel {
                     isLongPressTriggered = true;
                     const code = codeLink.getAttribute('data-code');
                     if (code) {
-                        this.showCodePreview(code, codeLink);
+                        this.showCodePreview(code, codeLink, { pinned: true });
                         if (window.navigator && typeof window.navigator.vibrate === 'function') {
                             window.navigator.vibrate(15);
                         }
@@ -1393,8 +1397,8 @@ export class CommentPanel {
         this.codePreview.handleCodeClick(code, targetEl);
     }
 
-    showCodePreview(code, targetEl) {
-        this.codePreview.show(code, targetEl);
+    showCodePreview(code, targetEl, options = {}) {
+        this.codePreview.show(code, targetEl, options);
     }
 
     hideCodePreview() {

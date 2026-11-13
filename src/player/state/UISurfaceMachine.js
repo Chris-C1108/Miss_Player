@@ -12,6 +12,7 @@ export const SURFACE_TYPES = Object.freeze({
     COMMENT_COMPOSER: 'comment-composer',
     MARKER_SHEET: 'marker-sheet',
     INLINE_REMARK: 'inline-remark',
+    CODE_PREVIEW: 'code-preview',
     SETTINGS: 'settings'
 });
 
@@ -19,10 +20,38 @@ const SURFACE_CLASS_MAP = Object.freeze({
     [SURFACE_TYPES.COMMENT_COMPOSER]: 'has-composer-active',
     [SURFACE_TYPES.MARKER_SHEET]: 'has-sheet-open',
     [SURFACE_TYPES.INLINE_REMARK]: 'has-inline-remark-open',
+    [SURFACE_TYPES.CODE_PREVIEW]: 'has-code-preview-open',
     [SURFACE_TYPES.SETTINGS]: 'tm-settings-active'
 });
 
+const _activeSurfaceMachines = new Set();
+
 export class UISurfaceMachine {
+    static registerInstance(instance) {
+        if (instance) _activeSurfaceMachines.add(instance);
+    }
+
+    static unregisterInstance(instance) {
+        if (instance) _activeSurfaceMachines.delete(instance);
+    }
+
+    static getActiveInstance() {
+        let latest = null;
+        for (const inst of _activeSurfaceMachines) {
+            if (inst?.playerContainer?.isConnected) {
+                latest = inst;
+            }
+        }
+        return latest || (_activeSurfaceMachines.size > 0 ? Array.from(_activeSurfaceMachines).pop() : null);
+    }
+
+    static getForContainer(container) {
+        if (container && container.__mpSurfaceMachine) {
+            return container.__mpSurfaceMachine;
+        }
+        return UISurfaceMachine.getActiveInstance();
+    }
+
     constructor(uiManager = null) {
         this.uiManager = uiManager;
         this.activeSurface = SURFACE_TYPES.NONE;
@@ -35,6 +64,8 @@ export class UISurfaceMachine {
         this.isFocusLocked = false;
         this._focusLockTimer = null;
         this._lastInputInteractionTime = 0;
+        this._dismissCooldownUntil = 0;
+        this._cooldownTimer = null;
         this._eventSinkEl = null;
 
         this._handleContainerCaptureTouch = this._handleContainerCaptureTouch.bind(this);
@@ -45,11 +76,13 @@ export class UISurfaceMachine {
     init() {
         if (this._initialized || typeof document === 'undefined') return;
         this._initialized = true;
+        UISurfaceMachine.registerInstance(this);
         document.addEventListener('keydown', this._keyDownHandler, true);
 
         // 系统级挂载全局事件黑洞与手势阻断壁垒
         const container = this.playerContainer;
         if (container) {
+            container.__mpSurfaceMachine = this;
             container.addEventListener('touchstart', this._handleContainerCaptureTouch, true);
             container.addEventListener('pointerdown', this._handleContainerCaptureTouch, true);
             container.addEventListener('contextmenu', this._handleContainerCaptureTouch, true);
@@ -121,10 +154,10 @@ export class UISurfaceMachine {
             this.acquireFocusLock();
         }
 
-        // 核心防护：针对当前活动面板内部元素（发评抽屉、底栏、标签抽屉、设置面板、模态框）的交互放行
+        // 核心防护：针对当前活动面板内部元素（发评抽屉、底栏、标签抽屉、设置面板、模态框、番号预览浮窗）的交互放行
         // 确保子元素正常接收 touchstart/pointerdown 以触发 iOS Safari 原生触摸聚焦与软键盘唤起
         const isInsideActiveSurface = Boolean(
-            target?.closest?.('.tm-comment-submit-bar-wrapper, .tm-bottom-sheet-panel, .tm-settings-panel, .tm-custom-modal-dialog, .tm-custom-modal-content, .tm-inline-remark-popover, .tm-tag-select-modal')
+            target?.closest?.('.tm-comment-submit-bar-wrapper, .tm-bottom-sheet-panel, .tm-settings-panel, .tm-custom-modal-overlay, .tm-custom-modal-dialog, .tm-report-modal-dialog, .tm-custom-modal-content, .tm-inline-remark-popover, .tm-tag-select-modal, .jc-code-preview-popover')
         );
         if (isInsideActiveSurface || isEditable) {
             if (!isEditable && e.type === 'contextmenu') {
@@ -188,7 +221,7 @@ export class UISurfaceMachine {
                 this.dismissTopmost();
             }, true);
 
-            const firstPanel = container.querySelector('.tm-settings-panel, .tm-bottom-sheet-panel, .tm-comment-submit-bar-wrapper, .tm-custom-modal-overlay');
+            const firstPanel = container.querySelector('.tm-settings-panel, .tm-bottom-sheet-panel, .tm-comment-submit-bar-wrapper, .tm-custom-modal-overlay, .jc-code-preview-popover');
             if (firstPanel) {
                 container.insertBefore(sink, firstPanel);
             } else {
@@ -242,8 +275,10 @@ export class UISurfaceMachine {
      * @param {string} surfaceId
      */
     deactivate(surfaceId) {
-        if (this.activeSurface === surfaceId) {
+        const hadSurface = this.activeSurface === surfaceId;
+        if (hadSurface) {
             this.activeSurface = SURFACE_TYPES.NONE;
+            this.markDismissCooldown(380);
         }
         this._syncContainerState();
     }
@@ -256,6 +291,7 @@ export class UISurfaceMachine {
         const current = this.activeSurface;
         const closer = this._surfaceClosers.get(current);
         this.activeSurface = SURFACE_TYPES.NONE;
+        this.markDismissCooldown(380);
         this._syncContainerState();
         if (typeof closer === 'function') {
             try {
@@ -281,8 +317,48 @@ export class UISurfaceMachine {
      * @param {HTMLElement} modalEl
      */
     popModal(modalEl) {
+        const prevLen = this._modalStack.length;
         this._modalStack = this._modalStack.filter(item => item.modalEl !== modalEl);
+        if (this._modalStack.length < prevLen) {
+            this.markDismissCooldown(380);
+        }
         this._syncContainerState();
+    }
+
+    /**
+     * 标记浮层/弹窗刚刚关闭后的防穿透余波冷却期 (覆盖 iOS Safari 300ms 触摸-点击合成周期)
+     * @param {number} [durationMs=380]
+     */
+    markDismissCooldown(durationMs = 380) {
+        const until = Date.now() + Math.max(0, durationMs);
+        if (until > this._dismissCooldownUntil) {
+            this._dismissCooldownUntil = until;
+        }
+        const container = this.playerContainer;
+        if (container) {
+            container.classList.add('is-overlay-cooldown');
+        }
+        if (this._cooldownTimer) {
+            clearTimeout(this._cooldownTimer);
+        }
+        const delay = Math.max(0, this._dismissCooldownUntil - Date.now()) + 16;
+        this._cooldownTimer = setTimeout(() => {
+            this._cooldownTimer = null;
+            if (Date.now() >= this._dismissCooldownUntil) {
+                const currentContainer = this.playerContainer;
+                if (currentContainer) {
+                    currentContainer.classList.remove('is-overlay-cooldown');
+                }
+            }
+        }, delay);
+    }
+
+    isWithinDismissCooldown() {
+        return Date.now() < (this._dismissCooldownUntil || 0);
+    }
+
+    isInteractionBlocked() {
+        return this.hasAnySurfaceOpen() || this.isWithinDismissCooldown();
     }
 
     /**
@@ -294,6 +370,7 @@ export class UISurfaceMachine {
         while (this._modalStack.length > 0) {
             const top = this._modalStack.pop();
             if (top && top.modalEl && top.modalEl.isConnected) {
+                this.markDismissCooldown(380);
                 if (typeof top.closeFn === 'function') {
                     top.closeFn();
                     return true;
@@ -372,16 +449,26 @@ export class UISurfaceMachine {
             container.removeEventListener('contextmenu', this._handleContainerCaptureTouch, true);
             container.removeEventListener('focusin', this._handleFocusIn, true);
             container.removeEventListener('focusout', this._handleFocusOut, true);
+            container.classList.remove('is-overlay-cooldown');
+            if (container.__mpSurfaceMachine === this) {
+                delete container.__mpSurfaceMachine;
+            }
         }
         if (this._focusLockTimer) {
             clearTimeout(this._focusLockTimer);
             this._focusLockTimer = null;
         }
+        if (this._cooldownTimer) {
+            clearTimeout(this._cooldownTimer);
+            this._cooldownTimer = null;
+        }
+        this._dismissCooldownUntil = 0;
         this.isFocusLocked = false;
         this._modalStack = [];
         this._surfaceClosers.clear();
         this.activeSurface = SURFACE_TYPES.NONE;
         this._initialized = false;
+        UISurfaceMachine.unregisterInstance(this);
     }
 }
 

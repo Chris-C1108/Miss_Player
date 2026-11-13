@@ -360,13 +360,13 @@ export class UIManager {
         
         // 鼠标/触摸按下事件 - 开始检测长按
         const handlePointerDown = (e) => {
-            // 1. 若当前存在任何打开的互斥浮层面板或模态框，严禁触发长按 3 倍速！
-            if (this.surfaceMachine && (this.surfaceMachine.activeSurface !== SURFACE_TYPES.NONE || (Array.isArray(this.surfaceMachine._modalStack) && this.surfaceMachine._modalStack.length > 0))) {
+            // 1. 若当前存在任何打开的互斥浮层/模态框或刚关闭后的冷却窗口，严禁触发长按 3 倍速！
+            if (this.surfaceMachine && this.surfaceMachine.isInteractionBlocked()) {
                 return;
             }
 
             // 2. 确保点击事件不是从控制按钮、浮层面板或模态框冒泡上来的
-            const nonVideoOverlaySelector = '.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay, .tm-custom-modal, .jc-code-preview-popover';
+            const nonVideoOverlaySelector = '.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-surface-event-sink';
             if (e.target.closest(nonVideoOverlaySelector)) {
                 return;
             }
@@ -531,12 +531,17 @@ export class UIManager {
             }
             
             // 确保点击事件不是从控制按钮、浮层或预览弹窗冒泡上来的
-            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-inline-remark-popover, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-custom-modal-overlay, .tm-custom-modal, .jc-code-preview-popover')) {
+            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-inline-remark-popover, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-surface-event-sink')) {
+                return;
+            }
+
+            // 若刚关闭模态框或浮层（处于 380ms 余波冷却期），直接吞噬幽灵点击，绝不误触发视频暂停/播放！
+            if (this.surfaceMachine && this.surfaceMachine.isWithinDismissCooldown()) {
                 return;
             }
 
             // 若当前存在打开的浮层面板或模态框（如设置面板、评论发表栏、高光列表抽屉、打点备注框），点击视频画面优先干净收起浮层，绝不误触发视频暂停/播放！
-            if (this.surfaceMachine && (this.surfaceMachine.activeSurface !== SURFACE_TYPES.NONE || (Array.isArray(this.surfaceMachine._modalStack) && this.surfaceMachine._modalStack.length > 0))) {
+            if (this.surfaceMachine && this.surfaceMachine.hasAnySurfaceOpen()) {
                 this.surfaceMachine.dismissTopmost();
                 return;
             }
@@ -1312,10 +1317,13 @@ export class UIManager {
         // 确保overlay已创建
         if (!this.overlay) return;
         
-        const nonControlOverlaySelector = '.tm-comments-panel, .tm-comment-submit-bar-wrapper, .tm-comment-backdrop, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-custom-modal-overlay, .tm-settings-panel, .tm-inline-remark-popover, .jc-code-preview-popover';
+        const nonControlOverlaySelector = '.tm-comments-panel, .tm-comment-submit-bar-wrapper, .tm-comment-backdrop, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-custom-modal-overlay, .tm-report-modal-dialog, .tm-settings-panel, .tm-inline-remark-popover, .jc-code-preview-popover, .tm-surface-event-sink';
 
         // 使用事件委托处理鼠标移动和触摸移动，绑定到整个 playerContainer 以支持隐藏侧栏或竖屏模式下的控制恢复
         this.playerContainer.addEventListener('mousemove', (e) => {
+            if (this.surfaceMachine && this.surfaceMachine.isInteractionBlocked()) {
+                return;
+            }
             if (e && e.target && e.target.closest && e.target.closest(nonControlOverlaySelector)) {
                 return;
             }
@@ -1324,8 +1332,11 @@ export class UIManager {
                 this.autoHideControls();
             }
         });
-        
+
         this.playerContainer.addEventListener('touchmove', (e) => {
+            if (this.surfaceMachine && this.surfaceMachine.isInteractionBlocked()) {
+                return;
+            }
             if (e && e.target && e.target.closest && e.target.closest(nonControlOverlaySelector)) {
                 return;
             }

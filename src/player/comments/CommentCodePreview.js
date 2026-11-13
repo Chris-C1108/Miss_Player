@@ -5,6 +5,7 @@
 
 import { __ } from '../../constants/i18n.js';
 import { Toast, copyToClipboard } from '../../utils/index.js';
+import { SURFACE_TYPES, UISurfaceMachine } from '../state/UISurfaceMachine.js';
 import { esc } from './CommentDataPipeline.js';
 
 export class CommentCodePreview {
@@ -15,6 +16,25 @@ export class CommentCodePreview {
         this._currentReqId = 0;
         this._currentBlobUrl = null;
         this._onDocumentClick = null;
+        this._isPinned = false;
+    }
+
+    _getPlayerContainer() {
+        return (
+            this.panel?.playerCore?.uiElements?.playerContainer ||
+            this.panel?.uiElements?.playerContainer ||
+            this.panel?.commentsPanel?.closest?.('.tm-player-container') ||
+            document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container') ||
+            document.querySelector('.tm-player-container')
+        );
+    }
+
+    _getSurfaceMachine() {
+        return (
+            this.panel?.playerCore?.surfaceMachine ||
+            this.panel?.uiManager?.surfaceMachine ||
+            UISurfaceMachine.getForContainer(this._getPlayerContainer())
+        );
     }
 
     handleCodeClick(code, targetEl) {
@@ -23,7 +43,7 @@ export class CommentCodePreview {
 
         this.copyCode(cleanCode);
         if (targetEl) {
-            this.show(cleanCode, targetEl);
+            this.show(cleanCode, targetEl, { pinned: true });
         }
     }
 
@@ -47,57 +67,73 @@ export class CommentCodePreview {
         });
     }
 
-    show(code, targetEl) {
+    show(code, targetEl, options = {}) {
         if (!code || !targetEl) return;
         const cleanCode = code.toUpperCase().trim();
         const lowCode = code.toLowerCase().trim();
+        const isCoarsePointer = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+        const shouldPin = Boolean(options?.pinned) || isCoarsePointer || (this._isPinned && this._popover?.getAttribute('data-current-code') === cleanCode && this._popover?.classList.contains('active'));
+        this._isPinned = shouldPin;
 
         if (!this._popover) {
             this._popover = document.createElement('div');
             this._popover.className = 'jc-code-preview-popover';
 
-            // 严禁预览浮层内部交互冒泡给视频层或控制层
+            // 严禁预览浮层内部任何手势/点击/松手/滚轮冒泡给视频层或控制层
             const stopPop = (e) => e.stopPropagation();
-            this._popover.addEventListener('pointerdown', stopPop);
-            this._popover.addEventListener('mousedown', stopPop);
-            this._popover.addEventListener('touchstart', stopPop, { passive: true });
-            this._popover.addEventListener('touchmove', stopPop, { passive: true });
-            this._popover.addEventListener('mousemove', stopPop);
-            this._popover.addEventListener('click', stopPop);
+            [
+                'pointerdown', 'pointermove', 'pointerup', 'pointercancel',
+                'mousedown', 'mousemove', 'mouseup',
+                'touchstart', 'touchmove', 'touchend', 'touchcancel',
+                'click', 'dblclick', 'wheel', 'contextmenu'
+            ].forEach(evt => {
+                this._popover.addEventListener(evt, stopPop);
+            });
 
             this._popover.addEventListener('mouseenter', () => {
-                if (this._leaveTimer) {
-                    clearTimeout(this._leaveTimer);
-                    this._leaveTimer = null;
-                }
+                this.cancelLeave();
             });
             this._popover.addEventListener('mouseleave', () => {
-                this.hide();
+                if (!this._isPinned) {
+                    this.scheduleLeave(250);
+                }
             });
 
-            // 兼容 Shadow DOM 事件穿透路径 composedPath
+            // 兼容 Shadow DOM 事件穿透路径 composedPath，在 click 阶段关闭防止按下瞬时销毁导致松手 click 裸奔穿透视频区
             this._onDocumentClick = (e) => {
                 if (!this._popover || !this._popover.classList.contains('active')) return;
-                const path = e.composedPath ? e.composedPath() : [];
+                const path = e.composedPath ? e.composedPath() : [e.target];
                 const isInside = path.some(el => el && el.classList && (
                     el.classList.contains('jc-code-preview-popover') ||
                     el.classList.contains('jc-code-link')
                 ));
                 if (!isInside) {
-                    this.hide();
+                    const hitVideoArea = path.some(el => el && el.classList && (
+                        el.classList.contains('tm-video-wrapper') ||
+                        el.classList.contains('tm-video-container')
+                    ));
+                    if (hitVideoArea) {
+                        e.stopPropagation();
+                        if (e.cancelable) e.preventDefault();
+                    }
+                    this.hide({ cooldown: true });
                 }
             };
-            document.addEventListener('pointerdown', this._onDocumentClick, true);
+            document.addEventListener('click', this._onDocumentClick, true);
         }
 
-        const targetParent = this.panel?.commentsPanel ||
-            this.panel?.commentsPanel?.closest('.tm-player-container') ||
-            this.panel?.uiElements?.playerContainer ||
-            document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-player-container') ||
-            document.body;
+        // 必须挂载在顶级 .tm-player-container 层叠上下文内，严禁挂在 .tm-comments-panel (z-index: 10 + overflow: hidden) 下导致被视频/控制层反盖穿透
+        const targetParent = this._getPlayerContainer() || this.panel?.commentsPanel || document.body;
 
         if (this._popover.parentNode !== targetParent) {
             targetParent.appendChild(this._popover);
+        }
+
+        if (shouldPin) {
+            const surfaceMachine = this._getSurfaceMachine();
+            if (surfaceMachine && typeof surfaceMachine.activate === 'function') {
+                surfaceMachine.activate(SURFACE_TYPES.CODE_PREVIEW, () => this.hide({ fromSurfaceMachine: true, cooldown: true }));
+            }
         }
 
         const pop = this._popover;
@@ -140,7 +176,7 @@ export class CommentCodePreview {
                 } else {
                     window.open(targetUrl, '_blank');
                 }
-                this.hide();
+                this.hide({ cooldown: true });
             });
         }
 
@@ -266,11 +302,13 @@ export class CommentCodePreview {
         }, delay);
     }
 
-    hide() {
+    hide(options = {}) {
+        const { fromSurfaceMachine = false, cooldown = true } = options;
         if (this._leaveTimer) {
             clearTimeout(this._leaveTimer);
             this._leaveTimer = null;
         }
+        this._isPinned = false;
         this._currentReqId = (this._currentReqId || 0) + 1;
         if (this._currentBlobUrl && this._currentBlobUrl.startsWith('blob:')) {
             URL.revokeObjectURL(this._currentBlobUrl);
@@ -285,12 +323,21 @@ export class CommentCodePreview {
                 videoEl.load();
             }
         }
+        const surfaceMachine = this._getSurfaceMachine();
+        if (surfaceMachine) {
+            if (cooldown && typeof surfaceMachine.markDismissCooldown === 'function') {
+                surfaceMachine.markDismissCooldown(380);
+            }
+            if (!fromSurfaceMachine && surfaceMachine.activeSurface === SURFACE_TYPES.CODE_PREVIEW && typeof surfaceMachine.deactivate === 'function') {
+                surfaceMachine.deactivate(SURFACE_TYPES.CODE_PREVIEW);
+            }
+        }
     }
 
     cleanup() {
-        this.hide();
+        this.hide({ cooldown: false });
         if (this._onDocumentClick) {
-            document.removeEventListener('pointerdown', this._onDocumentClick, true);
+            document.removeEventListener('click', this._onDocumentClick, true);
             this._onDocumentClick = null;
         }
         if (this._popover && this._popover.parentNode) {

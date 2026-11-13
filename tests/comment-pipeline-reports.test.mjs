@@ -506,4 +506,214 @@ console.log('🧪 开始执行评论识别引擎优化、同系列番号与上�
     }
 }
 
-console.log('🎉 全部评论识别优化、同系列番号补全与上报机制回归测试通过！');
+// =====================================================================
+// 测试 15: UISurfaceMachine 全局防穿透状态机 + 模态框/番号预览防穿透验证
+// =====================================================================
+{
+    const { SURFACE_TYPES, UISurfaceMachine } = await import('../src/player/state/UISurfaceMachine.js');
+    const { createModal } = await import('../src/utils/modal.js');
+    const { CommentCodePreview } = await import('../src/player/comments/CommentCodePreview.js');
+
+    const prevDoc = globalThis.document;
+    const prevWin = globalThis.window;
+    const prevRaf = globalThis.requestAnimationFrame;
+
+    try {
+        globalThis.requestAnimationFrame = (fn) => { fn(); return 0; };
+
+        const makeMockEl = (tag, initialClass = '') => {
+            const attrs = new Map();
+            const classes = new Set(String(initialClass).split(/\s+/).filter(Boolean));
+            const listenerMap = new Map();
+            const queryCache = new Map();
+            const el = {
+                tagName: tag.toUpperCase(),
+                nodeType: 1,
+                children: [],
+                style: {},
+                dataset: {},
+                innerHTML: '',
+                parentNode: null,
+                focus() {},
+                blur() {},
+                select() {},
+                pause() {},
+                load() {},
+                remove() { if (el.parentNode) el.parentNode.removeChild(el); },
+                classList: {
+                    add: (...c) => c.forEach(x => classes.add(x)),
+                    remove: (...c) => c.forEach(x => classes.delete(x)),
+                    toggle: (c, f) => (f === undefined ? (classes.has(c) ? (classes.delete(c), false) : (classes.add(c), true)) : (f ? (classes.add(c), true) : (classes.delete(c), false))),
+                    contains: (c) => classes.has(c)
+                },
+                get className() { return Array.from(classes).join(' '); },
+                set className(v) { classes.clear(); String(v || '').split(/\s+/).filter(Boolean).forEach(x => classes.add(x)); },
+                setAttribute(k, v) { attrs.set(k, String(v)); },
+                getAttribute(k) {
+                    if (k === 'data-has-overlay' && el.dataset.hasOverlay !== undefined) return el.dataset.hasOverlay;
+                    return attrs.get(k) ?? null;
+                },
+                removeAttribute(k) { attrs.delete(k); },
+                appendChild(c) { c.parentNode = el; el.children.push(c); return c; },
+                removeChild(c) { const i = el.children.indexOf(c); if (i >= 0) el.children.splice(i, 1); c.parentNode = null; return c; },
+                contains(node) {
+                    let cur = node;
+                    while (cur) {
+                        if (cur === el) return true;
+                        cur = cur.parentNode;
+                    }
+                    return false;
+                },
+                closest(sel) {
+                    const names = String(sel).split(',').map(s => s.trim().replace(/^\./, ''));
+                    let cur = el;
+                    while (cur) {
+                        if (names.some(n => cur.classList?.contains(n))) return cur;
+                        cur = cur.parentNode;
+                    }
+                    return null;
+                },
+                querySelector(sel) {
+                    const cls = String(sel).replace(/^\./, '');
+                    for (const ch of el.children) {
+                        if (ch.classList?.contains(cls)) return ch;
+                        const nested = ch.querySelector?.(sel);
+                        if (nested) return nested;
+                    }
+                    if (!queryCache.has(sel)) {
+                        const stub = makeMockEl(sel === 'video' || sel.includes('video') ? 'video' : 'div', cls);
+                        queryCache.set(sel, stub);
+                    }
+                    return queryCache.get(sel);
+                },
+                querySelectorAll() { return []; },
+                getBoundingClientRect() { return { left: 100, top: 300, width: 80, height: 24, bottom: 324 }; },
+                addEventListener(type, fn) {
+                    if (!listenerMap.has(type)) listenerMap.set(type, []);
+                    listenerMap.get(type).push(fn);
+                },
+                removeEventListener(type, fn) {
+                    const list = listenerMap.get(type);
+                    if (!list) return;
+                    const idx = list.indexOf(fn);
+                    if (idx >= 0) list.splice(idx, 1);
+                },
+                hasListener(type) { return (listenerMap.get(type) || []).length > 0; },
+                dispatch(type, evt = {}) {
+                    const fullEvt = {
+                        type,
+                        target: evt.target || el,
+                        cancelable: true,
+                        defaultPrevented: false,
+                        propagationStopped: false,
+                        preventDefault() { this.defaultPrevented = true; },
+                        stopPropagation() { this.propagationStopped = true; },
+                        composedPath() { return [this.target, el]; },
+                        ...evt
+                    };
+                    for (const fn of (listenerMap.get(type) || [])) {
+                        fn(fullEvt);
+                    }
+                    return fullEvt;
+                }
+            };
+            return el;
+        };
+
+        const playerContainer = makeMockEl('div', 'tm-player-container');
+        const commentsPanel = makeMockEl('div', 'tm-comments-panel');
+        playerContainer.appendChild(commentsPanel);
+        const shadowRoot = {
+            querySelector: (sel) => (sel === '.tm-player-container' ? playerContainer : null),
+            appendChild: (c) => playerContainer.appendChild(c)
+        };
+        const shadowHost = { shadowRoot };
+
+        globalThis.window = {
+            innerWidth: 390,
+            innerHeight: 844,
+            matchMedia: () => ({ matches: true }),
+            navigator: { clipboard: { writeText: async () => {} } }
+        };
+        globalThis.document = {
+            body: makeMockEl('body'),
+            createElement: (tag) => makeMockEl(tag),
+            querySelector: (sel) => {
+                if (sel === 'miss-player-root') return shadowHost;
+                if (sel === '.tm-player-container') return playerContainer;
+                return null;
+            },
+            addEventListener() {},
+            removeEventListener() {}
+        };
+
+        const machine = new UISurfaceMachine({
+            uiElements: { playerContainer },
+            isLandscape: false,
+            isFloatingControlPanel: false
+        });
+        machine.init();
+
+        assert.strictEqual(UISurfaceMachine.getForContainer(playerContainer), machine, 'UISurfaceMachine.getForContainer 应通过容器精准找回实例');
+
+        // 1) 测试 createModal 自动接入 UISurfaceMachine + 全事件防冒泡 + 关闭余波冷却窗
+        const { modal, close } = createModal('<div class="tm-custom-modal">测试</div>');
+        const innerNode = makeMockEl('div', 'tm-custom-modal');
+        modal.appendChild(innerNode);
+        assert.strictEqual(modal.parentNode, playerContainer, 'createModal 应挂载于 playerContainer');
+        assert.strictEqual(playerContainer.classList.contains('has-modal-open'), true, 'createModal 打开时应自动同步 has-modal-open');
+        assert.strictEqual(playerContainer.getAttribute('data-has-overlay'), 'true', 'createModal 打开时应同步 data-has-overlay="true"');
+        assert.strictEqual(machine.isInteractionBlocked(), true, '模态框打开期间视频交互必须处于阻断态');
+
+        for (const evtType of ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'click']) {
+            const ev = modal.dispatch(evtType, { target: innerNode });
+            assert.strictEqual(ev.propagationStopped, true, `createModal 必须阻断 ${evtType} 事件向底层视频冒泡`);
+        }
+
+        // 模拟对话框内部拖拽抬起落在遮罩空白处：因 startedOnBackdrop=false 绝不误关
+        modal.dispatch('pointerdown', { target: innerNode });
+        modal.dispatch('click', { target: modal });
+        assert.strictEqual(modal.classList.contains('active'), true, '起点在弹窗内部时的点击抬起不应误关模态框');
+
+        // 模拟起点与抬起均落在遮罩空白处：正常关闭并激活余波冷却窗
+        modal.dispatch('pointerdown', { target: modal });
+        const backdropClick = modal.dispatch('click', { target: modal });
+        assert.strictEqual(backdropClick.propagationStopped, true, '点击遮罩空白处也必须阻断冒泡');
+        assert.strictEqual(modal.classList.contains('active'), false, '起点在遮罩空白处的点击应正常关闭模态框');
+        close(); // 幂等守卫验证
+        assert.strictEqual(playerContainer.classList.contains('has-modal-open'), false, 'close() 后应立即移除 has-modal-open');
+        assert.strictEqual(machine.isWithinDismissCooldown(), true, 'close() 后应立即进入防穿透余波冷却窗');
+        assert.strictEqual(machine.isInteractionBlocked(), true, '冷却窗期内视频层点击必须仍被拦截');
+
+        // 2) 测试 CommentCodePreview 脱离 commentsPanel 挂载于 playerContainer + 接入 CODE_PREVIEW 互斥状态机 + 防穿透
+        const preview = new CommentCodePreview({
+            commentsPanel,
+            playerCore: { uiElements: { playerContainer }, surfaceMachine: machine }
+        });
+        const codeLink = makeMockEl('span', 'jc-code-link');
+        preview.handleCodeClick('SSIS-001', codeLink);
+
+        assert.ok(preview._popover, '点击番号应创建预览浮窗');
+        assert.strictEqual(preview._popover.parentNode, playerContainer, '预览浮窗必须直接挂载于 playerContainer，脱离 commentsPanel 层叠上下文陷阱');
+        assert.strictEqual(machine.activeSurface, SURFACE_TYPES.CODE_PREVIEW, '点击番号展开预览时必须激活 CODE_PREVIEW 浮层状态');
+        assert.strictEqual(playerContainer.classList.contains('has-code-preview-open'), true, '应添加 has-code-preview-open 类');
+        assert.strictEqual(playerContainer.getAttribute('data-has-overlay'), 'true', '番号预览激活时应设置 data-has-overlay="true"');
+
+        for (const evtType of ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'click']) {
+            const ev = preview._popover.dispatch(evtType, { target: preview._popover });
+            assert.strictEqual(ev.propagationStopped, true, `CommentCodePreview 必须阻断 ${evtType} 事件穿透至视频区`);
+        }
+
+        machine.dismissTopmost();
+        assert.strictEqual(preview._popover.classList.contains('active'), false, 'dismissTopmost 应干净收起番号预览浮窗');
+        assert.strictEqual(machine.isWithinDismissCooldown(), true, '收起番号预览后应激活防穿透余波冷却窗');
+
+        machine.cleanup();
+    } finally {
+        globalThis.document = prevDoc;
+        globalThis.window = prevWin;
+        globalThis.requestAnimationFrame = prevRaf;
+    }
+}
+
+console.log('🎉 全部评论识别优化、同系列番号补全、上报与防穿透回归测试通过！');

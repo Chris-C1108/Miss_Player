@@ -208,6 +208,7 @@
 .tm-player-container.has-composer-active .tm-video-wrapper video,
 .tm-player-container.has-sheet-open .tm-video-wrapper video,
 .tm-player-container.has-inline-remark-open .tm-video-wrapper video,
+.tm-player-container.has-code-preview-open .tm-video-wrapper video,
 .tm-player-container.tm-settings-active .tm-video-wrapper video,
 .tm-player-container.has-modal-open .tm-video-wrapper video,
 .tm-player-container[data-has-overlay="true"] .tm-video-wrapper,
@@ -217,7 +218,15 @@
 .tm-player-container[data-has-overlay="true"] .tm-control-buttons,
 .tm-player-container[data-has-overlay="true"] .tm-handle-container,
 .tm-player-container[data-has-overlay="true"] .tm-comment-fab-btn,
-.tm-player-container[data-has-overlay="true"] .tm-show-controls-float-btn {
+.tm-player-container[data-has-overlay="true"] .tm-show-controls-float-btn,
+.tm-player-container.is-overlay-cooldown .tm-video-wrapper,
+.tm-player-container.is-overlay-cooldown .tm-video-wrapper video,
+.tm-player-container.is-overlay-cooldown .tm-video-container,
+.tm-player-container.is-overlay-cooldown .tm-control-panel,
+.tm-player-container.is-overlay-cooldown .tm-control-buttons,
+.tm-player-container.is-overlay-cooldown .tm-handle-container,
+.tm-player-container.is-overlay-cooldown .tm-comment-fab-btn,
+.tm-player-container.is-overlay-cooldown .tm-show-controls-float-btn {
     pointer-events: none;
     user-select: none;
     -webkit-user-select: none;
@@ -261,9 +270,15 @@
     pointer-events: auto;
 }
 
-/* 评论发表时不需要模糊遮罩层，保持全透明且不失事件拦截保护 */
+/* 评论发表 / 番号轻量预览时不需要模糊遮罩层，保持全透明且不失事件拦截保护 */
 
 .tm-player-container.has-composer-active .tm-surface-event-sink.visible {
+    background-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.tm-player-container.has-code-preview-open .tm-surface-event-sink.visible {
     background-color: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
