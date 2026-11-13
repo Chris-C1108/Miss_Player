@@ -12,7 +12,7 @@
     width: 100vw;
     height: 100vh;
     height: 100dvh;
-    background-color: #0b0b0e;
+    background-color: #030305;
     z-index: var(--z-host-overlay, 2147483645);
     display: flex;
     flex-direction: column;
@@ -103,10 +103,14 @@
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    background-color: hsl(var(--shadcn-card));
+    background-color: #000000;
     border-radius: var(--shadcn-radius-lg);
-    box-shadow: var(--shadow-lg);
-    z-index: var(--z-base);
+    box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.94),
+        0 6px 16px rgba(0, 0, 0, 0.8),
+        0 1px 0 rgba(255, 255, 255, 0.065),
+        0 0 0 0.5px rgba(255, 255, 255, 0.05);
+    z-index: calc(var(--z-base) + 2);
     touch-action: none; /* 播放器视频区域绝对禁止整体纵向位移 */
     flex-shrink: 1;
     transition: height 0.28s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
@@ -289,14 +293,14 @@
     left: 50%;
     top: 50%;
     transform: translate3d(-50%, -50%, 0);
-    height: 4px;
-    width: 134px;
-    max-width: 134px;
-    background-color: hsla(var(--shadcn-foreground) / 0.6);
-    border-radius: 2px;
+    height: 3.5px;
+    width: 52px;
+    max-width: 52px;
+    background-color: hsla(var(--shadcn-foreground) / 0.52);
+    border-radius: 9999px;
     cursor: row-resize;
     touch-action: none;
-    opacity: 0.5;
+    opacity: 0.38;
     will-change: transform;
     transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
     box-shadow: none;
@@ -306,8 +310,8 @@
 .tm-resize-handle-hitarea {
     content: '';
     position: absolute;
-    left: -10px;
-    right: -10px;
+    left: -42px;
+    right: -42px;
     top: -10px;
     bottom: -10px;
     background: transparent;

@@ -675,8 +675,9 @@ assert.ok(
     landscapeCssCodeV22.includes('height: var(--button-md);') &&
     landscapeCssCodeV22.includes('min-height: 28px;') &&
     landscapeCssCodeV22.includes('.tm-player-container.controls-hidden .tm-comments-panel') &&
-    landscapeCssCodeV22.includes('padding-top: 0;'),
-    'PC 横屏顶栏必须使用对称 12px 顶距与 var(--button-md) 高度，标题保持 28px 最小高度，且顶栏隐藏时收起评论区顶部 56px 空白'
+    landscapeCssCodeV22.includes('padding-top: 0;') &&
+    landscapeCssCodeV22.includes('.tm-player-container.controls-hidden .tm-button-container'),
+    'PC 横屏顶栏必须使用对称 12px 顶距与 var(--button-md) 高度，标题保持 28px 最小高度，且顶栏隐藏时收起评论区顶部空白并同步隐藏顶栏'
 );
 
 const hostCssCodeV22 = fs.readFileSync('src/player/ui/styles/01_core/_host.css', 'utf8');
@@ -692,6 +693,24 @@ const uiManagerCodeV22 = fs.readFileSync('src/player/ui/UIManager.js', 'utf8');
 assert.ok(
     uiManagerCodeV22.includes('samePoint') && uiManagerCodeV22.includes('_lastHideAt'),
     'UIManager mousemove 必须过滤同坐标合成事件与隐藏瞬间的微抖动，防止控制栏与鼠标闪烁'
+);
+
+const commentsCssV22 = fs.readFileSync('src/player/ui/styles/02_components/_comments.css', 'utf8');
+const sectionsCssV22 = fs.readFileSync('src/player/ui/styles/02_components/_comments_sections.css', 'utf8');
+assert.ok(
+    commentsCssV22.includes('linear-gradient(') &&
+    commentsCssV22.includes('inset 0 18px 30px -12px rgba(0, 0, 0, 0.96)'),
+    '.tm-comments-panel 必须具备自上而下立体渐变与顶部投影咬合阴影'
+);
+assert.match(
+    sectionsCssV22,
+    /\.tm-comment-nav-bar\s*\{[^}]*background:\s*transparent;/s,
+    '.tm-comment-nav-bar 必须取消生硬灰块底色，自然融入评论区顶部暗影'
+);
+assert.match(
+    latestPlayerCssV19,
+    /\.tm-video-container\s*\{[^}]*z-index:\s*calc\(var\(--z-base\)\s*\+\s*2\)/s,
+    '.tm-video-container 层级必须高于评论区以强化 Z 轴悬浮立体感'
 );
 
 console.log('✅ 22. PC 横屏标题栏与顶栏对称间距验证通过');
