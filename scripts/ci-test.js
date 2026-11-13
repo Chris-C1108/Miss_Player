@@ -180,6 +180,11 @@ runStep('执行 Linear Minimalist 无框流式评论与水平多源分段栏单�
     execSync('node tests/comments-linear-minimalist.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.22 增量 Patch DOM、切源防空白与边距对齐单元测试
+runStep('执行增量 Patch DOM、切源防空白与边距对齐单元测试', () => {
+    execSync('node tests/comments-patch-stream-scroll.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

@@ -117,13 +117,13 @@
     overflow-x: hidden;
     touch-action: pan-y;
     box-sizing: border-box;
-    padding: 8px 16px 0px 16px;
+    padding: 0 0 24px 0;
     mask-image: linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);
     -webkit-mask-image: linear-gradient(to bottom, transparent 0px, rgba(0, 0, 0, 0.05) 4px, black 16px);
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: 0;
     -webkit-overflow-scrolling: touch;
     pointer-events: auto;
     background-color: #0b0b0e;

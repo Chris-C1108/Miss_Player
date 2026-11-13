@@ -237,6 +237,15 @@ export function renderCommentSectionHtml(siteKey, ctx) {
                 `;
             }
         }
+    } else {
+        // 初始未加载或空闲态，展示优雅的三点加载动画，杜绝切源时空白
+        contentHtml = `
+            <div class="tm-comment-loader-graphic">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        `;
     }
 
     const badgeText = getCommentSectionBadgeText(site);

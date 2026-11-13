@@ -603,7 +603,7 @@ export class CommentPanel {
             if (reportBtn) {
                 e.stopPropagation();
                 const commentId = reportBtn.getAttribute('data-comment-id');
-                const card = reportBtn.closest('.jc-card');
+                const card = reportBtn.closest('.jc-stream-row, .jc-card');
                 const cardId = card ? card.getAttribute('data-id') : null;
                 let comment = this.findCommentById(commentId) || (cardId ? this.findCommentById(cardId) : null);
                 if (!comment && card) {
@@ -657,7 +657,7 @@ export class CommentPanel {
             if (countdownBtn) {
                 e.stopPropagation();
                 e.preventDefault();
-                const card = countdownBtn.closest('.jc-card');
+                const card = countdownBtn.closest('.jc-stream-row, .jc-card');
                 const commentId = card ? card.getAttribute('data-id') : null;
                 if (commentId) {
                     this.toggleCommentCountdown(commentId, card, countdownBtn);
@@ -877,7 +877,7 @@ export class CommentPanel {
         }
 
         // 5. 未收藏：提取卡片评论文本作为高光备注，优先正式入库落盘
-        const card = link ? link.closest('.jc-card') : null;
+        const card = link ? link.closest('.jc-stream-row, .jc-card') : null;
         let commentExcerpt = '';
         if (card) {
             const bodyContent = card.querySelector('.jc-body-text-content') || card.querySelector('.jc-body-text');
@@ -1722,16 +1722,11 @@ export class CommentPanel {
                 if (!this.commentsList) return;
                 const container = this.commentsList;
                 const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-                if (distanceToBottom < 500) {
-                    const activeSection = this.commentsList.querySelector('.tm-comment-section:not(.is-collapsed)');
-                    if (activeSection) {
-                        if (activeSection.id === 'tm-comment-section-jable') {
-                            this.triggerLoadMoreJable();
-                        } else if (activeSection.id === 'tm-comment-section-javlib') {
-                            this.triggerLoadMoreJavlib();
-                        } else if (activeSection.id === 'tm-comment-section-javdb') {
-                            this.triggerLoadMoreJavdb();
-                        }
+                if (distanceToBottom < 600) {
+                    const siteKey = this.activeCommentSource;
+                    const site = this.sites[siteKey];
+                    if (site && site.hasMore && !site.loading && site.status === 'loaded') {
+                        this.triggerLoadMore(siteKey);
                     }
                 }
             });
@@ -1817,31 +1812,19 @@ export class CommentPanel {
 
                 if (Math.abs(currentDeltaX) > threshold && !isLeftBoundary && !isRightBoundary) {
                     if (currentDeltaX < 0 && currentIndex < availableSources.length - 1) {
-                        // 左滑：滑向下一源
+                        // 左滑：滑向下一源 (直接切换，避免延时空白)
                         const nextSource = availableSources[currentIndex + 1];
-                        activeSection.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
-                        activeSection.style.transform = 'translate3d(-100%, 0, 0)';
-                        setTimeout(() => {
-                            if (activeSection) {
-                                activeSection.style.transform = '';
-                                activeSection.style.transition = '';
-                            }
-                            this.setActiveSource(nextSource);
-                        }, 200);
+                        activeSection.style.transform = '';
+                        activeSection.style.transition = '';
+                        this.setActiveSource(nextSource);
                     } else if (currentDeltaX > 0 && currentIndex > 0) {
-                        // 右滑：滑向上一个源
+                        // 右滑：滑向上一个源 (直接切换，避免延时空白)
                         const prevSource = availableSources[currentIndex - 1];
-                        activeSection.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
-                        activeSection.style.transform = 'translate3d(100%, 0, 0)';
-                        setTimeout(() => {
-                            if (activeSection) {
-                                activeSection.style.transform = '';
-                                activeSection.style.transition = '';
-                            }
-                            this.setActiveSource(prevSource);
-                        }, 200);
+                        activeSection.style.transform = '';
+                        activeSection.style.transition = '';
+                        this.setActiveSource(prevSource);
                     } else {
-                        // 回弹归位
+                        // 边界弹性阻尼回弹归位
                         activeSection.style.transition = 'transform 0.24s cubic-bezier(0.16, 1, 0.3, 1)';
                         activeSection.style.transform = 'translate3d(0, 0, 0)';
                         setTimeout(() => {
@@ -1923,7 +1906,7 @@ export class CommentPanel {
                 console.log('[CommentPanel] 点击上报按钮触发:', reportBtn);
                 DebugLogPanel.addLog('[CommentPanel] 点击上报按钮触发', 'info');
                 const commentId = reportBtn.getAttribute('data-comment-id');
-                const card = reportBtn.closest('.jc-card');
+                const card = reportBtn.closest('.jc-stream-row, .jc-card');
                 const cardId = card ? card.getAttribute('data-id') : null;
                 let comment = this.findCommentById(commentId) || (cardId ? this.findCommentById(cardId) : null);
                 if (!comment && card) {
@@ -1952,7 +1935,7 @@ export class CommentPanel {
                 collapsible.setAttribute('data-collapsed', nextCollapsed ? 'true' : 'false');
                 toggleExpandBtn.textContent = nextCollapsed ? (__('commentsExpand') || '展开') : (__('commentsCollapse') || '收起');
 
-                const card = collapsible.closest('.jc-card');
+                const card = collapsible.closest('.jc-stream-row, .jc-card');
                 const cid = card ? card.getAttribute('data-id') : null;
                 if (cid) {
                     if (!nextCollapsed) {
@@ -1973,7 +1956,7 @@ export class CommentPanel {
                     if (btn) {
                         btn.textContent = __('commentsCollapse') || '收起';
                     }
-                    const card = collapsible.closest('.jc-card');
+                    const card = collapsible.closest('.jc-stream-row, .jc-card');
                     const cid = card ? card.getAttribute('data-id') : null;
                     if (cid) {
                         this.expandedCommentIds.add(cid);
@@ -2346,9 +2329,9 @@ export class CommentPanel {
      */
     triggerLoadMore(siteKey) {
         const site = this.sites[siteKey];
-        if (!site || site.loading || !site.hasMore || site.collapsed) return;
+        if (!site || site.loading || !site.hasMore) return;
         logger.log(`[CommentPanel] 触发加载更多 ${site.name} 评论...`);
-        this.loadSiteComments(siteKey, site.currentPage + 1);
+        this.loadSiteComments(siteKey, (site.currentPage || 1) + 1);
     }
 
     triggerLoadMoreJable() { return this.triggerLoadMore('jable'); }
@@ -2387,7 +2370,7 @@ export class CommentPanel {
         }
 
         if (site.status === 'loaded') {
-            const existingCards = bodyEl.querySelectorAll('.jc-card[data-id]');
+            const existingCards = bodyEl.querySelectorAll('.jc-stream-row[data-id], .jc-card[data-id]');
             const existingIdSet = new Set();
             existingCards.forEach(card => {
                 const id = card.getAttribute('data-id');
@@ -2703,11 +2686,22 @@ export class CommentPanel {
             try { navigator.vibrate(10); } catch (_) {}
         }
 
+        // 切换源时复位滚动条至顶部，避免旧源的滚动距离导致新源内容滚出视口
+        if (this.commentsList) {
+            this.commentsList.scrollTop = 0;
+        }
+
         this.syncActiveSourceView();
         this.updateTabBar();
 
+        // 关键自愈：如果目标源尚未发起加载或处于空闲态，立即触发其首次采集
+        const targetSite = this.sites[siteKey];
+        if (targetSite && targetSite.status === 'idle') {
+            this.loadSiteComments(siteKey, 1);
+        }
+
         // 切换后若视口未填满，检查自动触发分页加载
-        setTimeout(() => this.checkViewportFill(), 100);
+        setTimeout(() => this.checkViewportFill(), 50);
     }
 
     /**
@@ -2974,21 +2968,13 @@ export class CommentPanel {
             if (container.clientHeight < 100) return; // 容器尚未完成渲染或视口过小
 
             // 如果外层列表已经被内容填满（出现滚动条），无需自动预拉取下一页
-            if (container.scrollHeight > container.clientHeight + 20) return;
+            if (container.scrollHeight > container.clientHeight + 60) return;
 
-            const activeSection = this.commentsList.querySelector('.tm-comment-section:not(.is-collapsed)');
-            if (!activeSection) return;
-
-            const sectionId = activeSection.id || '';
-            if (sectionId === 'tm-comment-section-jable' && this.jableHasMore && !this.jableLoading) {
-                logger.log('[CommentPanel] Jable section viewport not filled. Auto-loading next page...');
-                this.triggerLoadMoreJable();
-            } else if (sectionId === 'tm-comment-section-javlib' && this.javlibHasMore && !this.javlibLoading) {
-                logger.log('[CommentPanel] JAVLibrary section viewport not filled. Auto-loading next page...');
-                this.triggerLoadMoreJavlib();
-            } else if (sectionId === 'tm-comment-section-javdb' && this.javdbHasMore && !this.javdbLoading) {
-                logger.log('[CommentPanel] JavDB section viewport not filled. Auto-loading next page...');
-                this.triggerLoadMoreJavdb();
+            const siteKey = this.activeCommentSource;
+            const site = this.sites[siteKey];
+            if (site && site.hasMore && !site.loading && site.status === 'loaded') {
+                logger.log(`[CommentPanel] ${site.name} section viewport not filled. Auto-loading next page...`);
+                this.triggerLoadMore(siteKey);
             }
         });
     }

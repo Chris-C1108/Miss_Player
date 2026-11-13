@@ -214,7 +214,7 @@
         display: none;
     }
 
-    /* 评论列表区域：在 PC 端作为 Flex 容器独立滚动，确保底部 JAVLibrary 不被遮盖 */
+    /* 评论列表区域：在 PC 端作为 Flex 容器独立滚动，左右 padding 保持为 0 与条目 16px 对齐 */
     .tm-comments-panel-list.tm-comments-list {
         flex: 1 1 0%;
         height: 0;
@@ -225,7 +225,7 @@
         flex-direction: column;
         overflow-y: auto;
         box-sizing: border-box;
-        padding: 8px 16px 0px 16px;
+        padding: 8px 0px 0px 0px;
         pointer-events: auto;
     }
 
