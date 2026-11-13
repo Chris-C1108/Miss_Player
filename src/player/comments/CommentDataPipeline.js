@@ -1089,7 +1089,79 @@ export function parseBBCode(text) {
     return html;
 }
 
-export function highlightCommentText(text, timestamps, avcodes) {
+
+/**
+ * 校验目标时间戳与用户已有片段列表 (tabs) 是否存在 ±threshold 秒内的重合/相近
+ * 支持 [单点 vs 单点]、[单点 vs 区间]、[区间 vs 单点]、[区间 vs 区间] 全几何重叠判断
+ * 
+ * @param {number|number[]} targetSecs - 评论中的时间点或 [start, end]
+ * @param {Array} tabs - 用户收藏的片段列表
+ * @param {number} threshold - 容差秒数，默认 5 秒
+ * @returns {{ isFavorited: boolean, matchedTab: Object|null }}
+ */
+export function checkIsTimestampFavorited(targetSecs, tabs, threshold = 5) {
+    if (!Array.isArray(tabs) || tabs.length === 0) {
+        return { isFavorited: false, matchedTab: null };
+    }
+    if (targetSecs === null || targetSecs === undefined) {
+        return { isFavorited: false, matchedTab: null };
+    }
+
+    const isTargetRange = Array.isArray(targetSecs) && targetSecs.length >= 2;
+    const s1 = isTargetRange ? Math.min(targetSecs[0], targetSecs[1]) : (Array.isArray(targetSecs) ? targetSecs[0] : targetSecs);
+    const s2 = isTargetRange ? Math.max(targetSecs[0], targetSecs[1]) : s1;
+
+    if (isNaN(s1) || isNaN(s2)) {
+        return { isFavorited: false, matchedTab: null };
+    }
+
+    for (const tab of tabs) {
+        if (!tab || typeof tab !== 'object') continue;
+
+        const isTabRange = tab.type === 'interval' && tab.startTime !== null && tab.endTime !== null && tab.startTime !== tab.endTime;
+        const t1 = isTabRange ? Math.min(tab.startTime, tab.endTime) : (tab.startTime !== null && tab.startTime !== undefined ? tab.startTime : (tab.time || 0));
+        const t2 = isTabRange ? Math.max(tab.startTime, tab.endTime) : t1;
+
+        if (isNaN(t1) || isNaN(t2)) continue;
+
+        // 场景 1: 评论中是单点时间戳 (s1 === s2)
+        if (!isTargetRange) {
+            // 1.1 若 tab 是单点高光：两点相差 <= threshold
+            if (!isTabRange) {
+                if (Math.abs(t1 - s1) <= threshold) {
+                    return { isFavorited: true, matchedTab: tab };
+                }
+            }
+            // 1.2 若 tab 是区间：点落在区间内部，或两端外延 threshold 秒内
+            else {
+                if (s1 >= (t1 - threshold) && s1 <= (t2 + threshold)) {
+                    return { isFavorited: true, matchedTab: tab };
+                }
+            }
+        }
+        // 场景 2: 评论中是区间高光 ([s1, s2])
+        else {
+            // 2.1 若 tab 是单点高光：该单点落在评论区间的宽容边界内
+            if (!isTabRange) {
+                if (t1 >= (s1 - threshold) && t1 <= (s2 + threshold)) {
+                    return { isFavorited: true, matchedTab: tab };
+                }
+            }
+            // 2.2 若 tab 是区间：两段区间发生交集重叠，或两端边界相距在 threshold 之内
+            else {
+                const overlapStart = Math.max(s1, t1);
+                const overlapEnd = Math.min(s2, t2);
+                if ((overlapEnd - overlapStart) >= -threshold) {
+                    return { isFavorited: true, matchedTab: tab };
+                }
+            }
+        }
+    }
+
+    return { isFavorited: false, matchedTab: null };
+}
+
+export function highlightCommentText(text, timestamps, avcodes, options = {}) {
     let html = esc(text);
     
     // Parse BBCode safely after escaping
@@ -1097,6 +1169,7 @@ export function highlightCommentText(text, timestamps, avcodes) {
     
     const replacements = {};
     let idCounter = 0;
+    const userTabs = Array.isArray(options) ? options : (options?.tabs || []);
 
     const sortedTimestamps = [...timestamps].sort((a, b) => b.raw.length - a.raw.length);
     sortedTimestamps.forEach(ts => {
@@ -1119,7 +1192,14 @@ export function highlightCommentText(text, timestamps, avcodes) {
             } else {
                 tooltip = `跳转至 ${formatSeconds(ts.seconds)}`;
             }
-            replacements[tokenId] = `<span class="jc-time-link" data-secs='${secsAttr}' title="${esc(tooltip)}"><span class="jc-time-text">${displayText}</span><span class="jc-time-star-btn" role="button" title="添加至控制栏草稿"><svg class="jc-star-icon jc-star-outline" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg class="jc-star-icon jc-star-filled" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span></span>`;
+
+            const { isFavorited } = checkIsTimestampFavorited(roundedSecs, userTabs, 5);
+            const favoritedClass = isFavorited ? ' is-favorited' : '';
+            const starTitle = isFavorited
+                ? '此时间已在片段列表中 (误差 ≤ 5s)'
+                : '收藏为高光片段并跳转播放';
+
+            replacements[tokenId] = `<span class="jc-time-link${favoritedClass}" data-secs='${secsAttr}' title="${esc(tooltip)}"><span class="jc-time-text">${displayText}</span><span class="jc-time-star-btn" role="button" title="${esc(starTitle)}"><svg class="jc-star-icon jc-star-outline" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg class="jc-star-icon jc-star-filled" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span></span>`;
             return tokenId;
         });
     });
@@ -1199,7 +1279,7 @@ export function applyCommentCountdown(timestamps, videoDuration = 10800, enable 
     });
 }
 
-export function processComment(commentText, contextPrefix, videoDuration = 10800) {
+export function processComment(commentText, contextPrefix, videoDuration = 10800, options = {}) {
     // 1. 净化引用回复类：移除 BBCode 的 [quote] 引用块
     let cleanedText = commentText;
     if (commentText.includes('[quote') || commentText.includes('[/quote]')) {
@@ -1261,7 +1341,7 @@ export function processComment(commentText, contextPrefix, videoDuration = 10800
         timestamps = applyCommentCountdown(timestamps, videoDuration, true);
     }
 
-    const textHtml = highlightCommentText(cleanedText, timestamps, avcodes);
+    const textHtml = highlightCommentText(cleanedText, timestamps, avcodes, options);
 
     return {
         spam,

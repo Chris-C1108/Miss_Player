@@ -165,6 +165,11 @@ runStep('执行 XSS 净化与 Safari IME 输入守卫单元测试', () => {
     execSync('node tests/xss-sanitization.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.19 移动端时间戳收藏免长按与 ±5秒几何判重点亮单元测试
+runStep('执行移动端时间戳收藏免长按与 ±5秒几何判重点亮单元测试', () => {
+    execSync('node tests/mobile-timestamp-favorite.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');
