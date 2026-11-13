@@ -410,7 +410,7 @@ body.controls-hidden .tm-player-container .tm-button-container, .tm-player-conta
 body:not(.controls-hidden) .tm-player-container .tm-button-container, .tm-player-container:not(.controls-hidden) .tm-button-container, :host(:not(.controls-hidden)) .tm-button-container {
     opacity: 1;
     transform: translateY(0);
-    pointer-events: auto;
+    pointer-events: none;
 }
 
 /* 控制按钮 */
@@ -709,7 +709,8 @@ body.controls-hidden .tm-player-container > .tm-player-title,
         box-shadow: none;
         border-radius: 0;
         width: auto;
-        height: auto;
+        height: 28px;
+        min-height: 28px;
         pointer-events: none;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
     }

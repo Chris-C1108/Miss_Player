@@ -657,6 +657,28 @@ assert.ok(
 
 console.log('✅ 21. Peach 虚拟入库板块重构验证通过');
 
-console.log('\n🎉 全部 21 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// ---------------------------------------------------------
+// 22. 验证 PC 横屏及全屏状态下播放器标题栏不坍缩与顶栏对称间距
+// ---------------------------------------------------------
+console.log('▶ 22. 验证 PC 横屏及全屏状态下播放器标题栏不坍缩与顶栏对称间距...');
+const landscapeCssCodeV22 = fs.readFileSync('src/player/ui/styles/03_responsive/_landscape.css', 'utf8');
+const titleAutoHeightPattern = /\.tm-player-title\s*\{[^}]*\bheight:\s*auto\b/;
+
+assert.ok(
+    !titleAutoHeightPattern.test(latestPlayerCssV19) &&
+    !titleAutoHeightPattern.test(landscapeCssCodeV22),
+    '禁止在 .tm-player-title 上覆盖 height: auto（内部 .tm-title-slot 为 position: absolute，会导致标题坍缩为 0px）'
+);
+
+assert.ok(
+    landscapeCssCodeV22.includes('top: 12px;') &&
+    landscapeCssCodeV22.includes('height: var(--button-md);') &&
+    landscapeCssCodeV22.includes('min-height: 28px;'),
+    'PC 横屏顶栏必须使用对称 12px 顶距与 var(--button-md) 高度，且标题保持 28px 最小高度'
+);
+
+console.log('✅ 22. PC 横屏标题栏与顶栏对称间距验证通过');
+
+console.log('\n🎉 全部 22 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 

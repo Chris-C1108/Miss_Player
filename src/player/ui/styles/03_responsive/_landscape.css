@@ -57,11 +57,11 @@
     /* PC 大屏横屏统合顶栏样式 (顶栏作为主容器稳固子项，无论侧栏显示或隐藏均零抖动、零拔插) */
     .tm-player-container .tm-button-container {
         position: fixed;
-        top: 16px;
+        top: 12px;
         left: 16px;
         right: 16px;
         width: calc(100% - 32px);
-        height: 44px;
+        height: var(--button-md);
         padding: 0;
         display: flex;
         align-items: center;
@@ -111,16 +111,26 @@
         pointer-events: auto;
     }
 
-    /* 标题保持居中、自适应宽度、透明背景与纯净文字阴影，彻底消除黑色畸变条 */
+    /* 标题保持自适应宽度、固定槽位高度（.tm-title-slot 为绝对定位，height: auto 会坍缩为 0）、透明背景与纯净文字阴影 */
     .tm-player-container .tm-button-container .tm-player-title {
         background: transparent;
         border: none;
         box-shadow: none;
         border-radius: 0;
         width: auto;
-        height: auto;
+        height: 28px;
+        min-height: 28px;
         pointer-events: none;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 保持标题局限在视频画幅区域内，避免跨越边栏分割线 */
+    .tm-player-container:not(.tm-sidebar-hidden):not(.tm-sidebar-left) .tm-button-container .tm-player-title {
+        margin-right: max(8px, calc(var(--sidebar-width) - 156px));
+    }
+
+    .tm-player-container.tm-sidebar-left:not(.tm-sidebar-hidden) .tm-button-container .tm-player-title {
+        margin-left: max(8px, calc(var(--sidebar-width) - 156px));
     }
 
     /* 评论区居左时对调退出与操作区按钮布局顺序 */
@@ -490,7 +500,7 @@
         max-width: calc(100% - 200px);
     }
 
-    /* 统合在 Flex 顶栏内的标题保持流体弹性并居中对齐，杜绝与侧栏/功能按键发生物理重叠 */
+    /* 统合在 Flex 顶栏内的标题保持流体弹性并左对齐（与 peekScroll 平滑滚动兼容），杜绝与侧栏/功能按键发生物理重叠 */
     .tm-button-container .tm-player-title {
         position: relative;
         top: auto;
@@ -499,9 +509,10 @@
         flex: 1 1 auto;
         min-width: 0;
         max-width: none;
-        text-align: center;
+        height: 28px;
+        min-height: 28px;
+        text-align: left;
         overflow: hidden;
-        text-overflow: ellipsis;
         white-space: nowrap;
     }
 }

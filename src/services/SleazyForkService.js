@@ -33,7 +33,7 @@ export function getCurrentVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.7.118-beta.037';
+    return '5.7.118-beta.038';
 }
 
 export function compareVersions(v1, v2) {
