@@ -33,7 +33,7 @@ export function getCurrentVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.7.118-beta.033';
+    return '5.7.118-beta.034';
 }
 
 export function compareVersions(v1, v2) {
@@ -210,6 +210,10 @@ export function dispatchScriptInstall(handler, scriptUrl, options = {}) {
 }
 
 export class SleazyForkService {
+    static getCurrentVersion() {
+        return getCurrentVersion();
+    }
+
     static async fetchScriptMeta(scriptId = OFFICIAL_SCRIPT_ID) {
         const endpoints = [
             'https://sleazyfork.org/scripts/' + scriptId + '.json',

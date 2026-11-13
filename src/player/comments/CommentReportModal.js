@@ -1,7 +1,7 @@
 import { SupabaseService } from '../../services/SupabaseService.js';
 import { SyncManager } from '../../sync/index.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
-import { SleazyForkService } from '../../services/SleazyForkService.js';
+import { getCurrentVersion } from '../../services/SleazyForkService.js';
 import { Toast, createModal } from '../../utils/index.js';
 import { logger } from '../../utils/logger.js';
 import { DebugLogPanel } from '../ui/DebugLogPanel.js';
@@ -245,72 +245,82 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
 
     modal.querySelector('.tm-custom-modal-cancel-btn').addEventListener('click', close);
     const submitBtn = modal.querySelector('.tm-custom-modal-submit-btn');
+    const initialSubmitLabel = submitBtn.textContent;
     submitBtn.addEventListener('click', async () => {
+        if (submitBtn.disabled) return;
         const dedupKey = `${videoCode || ''}::${comment.id || ''}::${selectedReasonCode}`;
         if (_submittedReportKeys.has(dedupKey)) {
             Toast(__('reportDuplicate'), 1800, 'info');
             return;
         }
 
-        const rawInput = smartInput.value.trim();
-        const reasonMeta = REPORT_REASONS.find(r => r.code === selectedReasonCode) || REPORT_REASONS[0];
-        const presetText = Array.from(selectedPresets).join('；');
-
-        // 将单输入框内容按当前问题类型精准映射回 expectedHint / userNote
-        const expectedHint = (reasonMeta.expectLike && rawInput) ? rawInput : null;
-        const noteParts = [];
-        if (presetText) noteParts.push(presetText);
-        if (!reasonMeta.expectLike && rawInput) noteParts.push(rawInput);
-        const note = noteParts.join(' | ');
-
-        const scriptVersion = SleazyForkService.getCurrentVersion();
-        const parserSnapshot = buildParserSnapshot(comment, flaggedItems);
-
-        const reportPayload = {
-            videoCode,
-            commentId: comment.id,
-            userName: comment.user || '匿名',
-            commentText: comment.rawText || comment.text || '',
-            reason: selectedReasonLabel,
-            reasonCode: selectedReasonCode,
-            userNote: note || null,
-            expectedHint,
-            scriptVersion,
-            sourceSite: sourceSite || comment.source_site || comment.source || null,
-            videoDuration: (typeof videoDuration === 'number' && !isNaN(videoDuration) && videoDuration > 0) ? Math.round(videoDuration) : null,
-            parserSnapshot,
-            timestamps: comment.timestamps || null,
-            reportedAt: new Date().toISOString()
-        };
-
-        DebugLogPanel.addLog(`[REPORT] 评论上报: [${selectedReasonCode}:${selectedReasonLabel}] id=${comment.id} (${videoCode})`, 'warn');
         submitBtn.textContent = __('reportSubmitting');
         submitBtn.disabled = true;
 
-        let reportedToDb = false;
         try {
-            reportedToDb = await SupabaseService.submitCommentReport(reportPayload);
-        } catch (err) {
-            logger.warn('[Report] Supabase 上报异常:', err);
-        }
+            const rawInput = smartInput.value.trim();
+            const reasonMeta = REPORT_REASONS.find(r => r.code === selectedReasonCode) || REPORT_REASONS[0];
+            const presetText = Array.from(selectedPresets).join('；');
 
-        const webdavConfig = SyncManager.getWebDavConfig();
-        if (WebDavClient.hasValidEndpoint(webdavConfig)) {
+            // 将单输入框内容按当前问题类型精准映射回 expectedHint / userNote
+            const expectedHint = (reasonMeta.expectLike && rawInput) ? rawInput : null;
+            const noteParts = [];
+            if (presetText) noteParts.push(presetText);
+            if (!reasonMeta.expectLike && rawInput) noteParts.push(rawInput);
+            const note = noteParts.join(' | ');
+
+            const scriptVersion = getCurrentVersion();
+            const parserSnapshot = buildParserSnapshot(comment, flaggedItems);
+
+            const reportPayload = {
+                videoCode,
+                commentId: comment.id,
+                userName: comment.user || '匿名',
+                commentText: comment.rawText || comment.text || '',
+                reason: selectedReasonLabel,
+                reasonCode: selectedReasonCode,
+                userNote: note || null,
+                expectedHint,
+                scriptVersion,
+                sourceSite: sourceSite || comment.source_site || comment.source || null,
+                videoDuration: (typeof videoDuration === 'number' && !isNaN(videoDuration) && videoDuration > 0) ? Math.round(videoDuration) : null,
+                parserSnapshot,
+                timestamps: comment.timestamps || null,
+                reportedAt: new Date().toISOString()
+            };
+
+            DebugLogPanel.addLog(`[REPORT] 评论上报: [${selectedReasonCode}:${selectedReasonLabel}] id=${comment.id} (${videoCode})`, 'warn');
+
+            let reportedToDb = false;
             try {
-                const now = new Date();
-                const pad = (n) => String(n).padStart(2, '0');
-                const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-                const subPath = `logs/comment_report/${videoCode}_${ts}.json`;
-                await WebDavClient.uploadFile(webdavConfig, subPath, reportPayload, 'application/json; charset=utf-8');
-            } catch (_) {}
-        }
+                reportedToDb = await SupabaseService.submitCommentReport(reportPayload);
+            } catch (err) {
+                logger.warn('[Report] Supabase 上报异常:', err);
+            }
 
-        _submittedReportKeys.add(dedupKey);
-        if (reportedToDb) {
-            Toast(__('reportSuccess'), 2200, 'success');
-        } else {
+            const webdavConfig = SyncManager.getWebDavConfig();
+            if (WebDavClient.hasValidEndpoint(webdavConfig)) {
+                try {
+                    const now = new Date();
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+                    const subPath = `logs/comment_report/${videoCode}_${ts}.json`;
+                    await WebDavClient.uploadFile(webdavConfig, subPath, reportPayload, 'application/json; charset=utf-8');
+                } catch (_) {}
+            }
+
+            _submittedReportKeys.add(dedupKey);
+            if (reportedToDb) {
+                Toast(__('reportSuccess'), 2200, 'success');
+            } else {
+                Toast(__('reportSavedLocal'), 2000, 'info');
+            }
+            close();
+        } catch (err) {
+            logger.warn('[Report] 评论上报处理失败:', err);
+            submitBtn.disabled = false;
+            submitBtn.textContent = initialSubmitLabel;
             Toast(__('reportSavedLocal'), 2000, 'info');
         }
-        close();
     });
 }

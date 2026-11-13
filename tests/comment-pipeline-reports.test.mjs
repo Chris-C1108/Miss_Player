@@ -1,5 +1,6 @@
 import assert from 'assert';
 import fs from 'fs';
+import { registerHooks } from 'node:module';
 import {
     processComment,
     parseTimestamps,
@@ -8,6 +9,18 @@ import {
     applyCommentCountdown
 } from '../src/player/comments/CommentDataPipeline.js';
 import { SupabaseService } from '../src/services/SupabaseService.js';
+import { SleazyForkService, getCurrentVersion } from '../src/services/SleazyForkService.js';
+
+registerHooks({
+    load(url, context, nextLoad) {
+        if (url.split('?')[0].endsWith('.css')) {
+            return { format: 'module', shortCircuit: true, source: 'export default "";' };
+        }
+        return nextLoad(url, context);
+    }
+});
+
+const { showCommentReportModal } = await import('../src/player/comments/CommentReportModal.js');
 
 console.log('🧪 开始执行评论识别引擎优化、同系列番号与上报机制单元测试...');
 
@@ -319,6 +332,171 @@ console.log('🧪 开始执行评论识别引擎优化、同系列番号与上�
     assert.ok(dedupSql.includes('report_fingerprint') && dedupSql.includes('report_count'), 'Report 去重迁移必须定义指纹与计数列');
     const modalSrc = fs.readFileSync('src/player/comments/CommentReportModal.js', 'utf8');
     assert.ok(modalSrc.includes('pipelineVersion') && modalSrc.includes('commentHash'), 'ReportModal 必须携带 pipelineVersion 与 commentHash 快照');
+
+    // ReportModal 版本获取与真实 DOM 点击提交链路回归（防止 SleazyForkService.getCurrentVersion 缺失导致提交无响应）
+    assert.strictEqual(typeof getCurrentVersion(), 'string', 'getCurrentVersion() 必须返回有效版本字符串');
+    assert.strictEqual(SleazyForkService.getCurrentVersion(), getCurrentVersion(), 'SleazyForkService.getCurrentVersion() 静态代理必须可用');
+
+    // 轻量 DOM 仿真执行 showCommentReportModal -> 点击问题类型 -> 点击提交
+    const prevDoc = globalThis.document;
+    const prevWin = globalThis.window;
+    const prevRaf = globalThis.requestAnimationFrame;
+    const prevSubmit = SupabaseService.submitCommentReport;
+    const prevFetch = globalThis.fetch;
+    try {
+        globalThis.requestAnimationFrame = (fn) => { fn(); return 0; };
+        const listeners = new WeakMap();
+        const makeEl = (tag) => {
+            const attrs = new Map();
+            const classes = new Set();
+            const el = {
+                tagName: tag.toUpperCase(),
+                children: [],
+                style: {},
+                value: '',
+                disabled: false,
+                textContent: '',
+                dataset: {},
+                parentNode: null,
+                classList: {
+                    add: (...c) => c.forEach(x => classes.add(x)),
+                    remove: (...c) => c.forEach(x => classes.delete(x)),
+                    toggle: (c, f) => (f === undefined ? (classes.has(c) ? (classes.delete(c), false) : (classes.add(c), true)) : (f ? (classes.add(c), true) : (classes.delete(c), false))),
+                    contains: (c) => classes.has(c)
+                },
+                get className() { return Array.from(classes).join(' '); },
+                set className(v) { classes.clear(); String(v || '').split(/\s+/).filter(Boolean).forEach(x => classes.add(x)); },
+                setAttribute(k, v) { attrs.set(k, String(v)); },
+                getAttribute(k) { return attrs.get(k) ?? null; },
+                appendChild(c) { c.parentNode = el; el.children.push(c); return c; },
+                removeChild(c) { const i = el.children.indexOf(c); if (i >= 0) el.children.splice(i, 1); c.parentNode = null; return c; },
+                addEventListener(type, fn) {
+                    if (!listeners.has(el)) listeners.set(el, {});
+                    const map = listeners.get(el);
+                    if (!map[type]) map[type] = [];
+                    map[type].push(fn);
+                },
+                removeEventListener() {},
+                async dispatch(type, evt = {}) {
+                    const map = listeners.get(el) || {};
+                    for (const fn of (map[type] || [])) {
+                        await fn({ target: el, currentTarget: el, preventDefault() {}, stopPropagation() {}, cancelable: true, ...evt });
+                    }
+                },
+                focus() {},
+                blur() {},
+                select() {},
+                closest() { return null; },
+                contains(x) { return x === el || el.children.some(c => c.contains?.(x)); },
+                querySelector() { return null; },
+                querySelectorAll() { return []; },
+                set innerHTML(html) {
+                    el._html = String(html || '');
+                },
+                get innerHTML() { return el._html || ''; }
+            };
+            return el;
+        };
+
+        const body = makeEl('body');
+        const createdNodes = [];
+        globalThis.document = {
+            body,
+            documentElement: makeEl('html'),
+            createElement: (t) => { const n = makeEl(t); createdNodes.push(n); return n; },
+            querySelector: () => null,
+            addEventListener: () => {},
+            removeEventListener: () => {}
+        };
+        globalThis.window = {
+            innerWidth: 390,
+            innerHeight: 844,
+            location: { href: 'https://jable.tv/videos/ipx-811/', hostname: 'jable.tv' },
+            addEventListener: () => {},
+            removeEventListener: () => {}
+        };
+
+        // 为 modal.innerHTML 提供真实结构化子控件映射，验证完整点击提交链路
+        let submittedPayload = null;
+        SupabaseService.submitCommentReport = async (payload) => {
+            submittedPayload = payload;
+            return true;
+        };
+
+        const origCreateEl = globalThis.document.createElement;
+        let reportModalEl = null;
+        const reasonBtns = [makeEl('button'), makeEl('button')];
+        reasonBtns[0].dataset.reasonCode = 'false_timestamp';
+        reasonBtns[0].dataset.reasonLabel = '错标';
+        reasonBtns[0].classList.add('active');
+        reasonBtns[1].dataset.reasonCode = 'missed_or_wrong_time';
+        reasonBtns[1].dataset.reasonLabel = '漏标/不准';
+        const presetsEl = makeEl('div');
+        const smartInput = makeEl('input');
+        const expandNoteBtn = makeEl('button');
+        const cancelBtn = makeEl('button');
+        const submitBtn = makeEl('button');
+        submitBtn.className = 'tm-custom-modal-submit-btn';
+        submitBtn.textContent = '提交';
+
+        globalThis.document.createElement = (tag) => {
+            const node = origCreateEl(tag);
+            const origDesc = Object.getOwnPropertyDescriptor(node, 'innerHTML');
+            Object.defineProperty(node, 'innerHTML', {
+                set(v) {
+                    origDesc.set.call(this, v);
+                    if (String(v).includes('tm-report-modal-dialog')) {
+                        reportModalEl = node;
+                        node.querySelector = (sel) => {
+                            if (sel === '.tm-report-quick-presets') return presetsEl;
+                            if (sel === '.tm-report-smart-input') return smartInput;
+                            if (sel === '.tm-report-expand-note-btn') return expandNoteBtn;
+                            if (sel === '.tm-custom-modal-cancel-btn') return cancelBtn;
+                            if (sel === '.tm-custom-modal-submit-btn') return submitBtn;
+                            return makeEl('div');
+                        };
+                        node.querySelectorAll = (sel) => {
+                            if (sel === '.tm-report-chip') return reasonBtns;
+                            if (sel === '.tm-report-diag-pill') return [];
+                            return [];
+                        };
+                    }
+                },
+                get() { return origDesc.get.call(this); }
+            });
+            return node;
+        };
+
+        showCommentReportModal({
+            comment: {
+                id: 'c-submit-test',
+                user: 'Tester',
+                rawText: '这段挺好 27m 开始',
+                text: '这段挺好 27m 开始',
+                timestamps: [{ raw: '27m', seconds: 1620, level: 'L3', confidence: 'high', isCountdown: false }],
+                avcodes: []
+            },
+            videoCode: 'STARS-256',
+            videoDuration: 7200,
+            sourceSite: 'Jable'
+        });
+
+        assert.ok(reportModalEl, 'showCommentReportModal 应成功创建弹窗容器');
+        await reasonBtns[1].dispatch('click');
+        smartInput.value = '27:00';
+        await submitBtn.dispatch('click');
+
+        assert.ok(submittedPayload, '点击提交按钮必须实际触发 SupabaseService.submitCommentReport');
+        assert.strictEqual(submittedPayload.reasonCode, 'missed_or_wrong_time', '提交 payload 必须包含当前选中的 reasonCode');
+        assert.strictEqual(submittedPayload.expectedHint, '27:00', '漏标/不准输入框内容必须映射到 expectedHint');
+        assert.strictEqual(submittedPayload.scriptVersion, getCurrentVersion(), '提交 payload 必须携带正确 scriptVersion');
+    } finally {
+        globalThis.document = prevDoc;
+        globalThis.window = prevWin;
+        globalThis.requestAnimationFrame = prevRaf;
+        SupabaseService.submitCommentReport = prevSubmit;
+        globalThis.fetch = prevFetch;
+    }
 }
 
 console.log('🎉 全部评论识别优化、同系列番号补全与上报机制回归测试通过！');
