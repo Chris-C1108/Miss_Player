@@ -473,21 +473,28 @@
 }
 .tm-custom-modal-overlay.tm-report-modal-overlay {
     z-index: var(--z-modal);
+    padding: 14px;
+    box-sizing: border-box;
 }
 .tm-report-modal-dialog {
-    background: rgba(28, 28, 30, 0.95);
-    backdrop-filter: blur(25px) saturate(180%);
-    -webkit-backdrop-filter: blur(25px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 16px;
-    padding: 20px;
-    width: 90%;
-    max-width: 360px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    background: rgba(28, 28, 30, 0.94);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 18px;
+    padding: 16px;
+    width: min(92vw, 372px);
+    max-height: calc(var(--visual-viewport-height, 100dvh) - 32px);
+    overflow: hidden;
+    box-sizing: border-box;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.65);
     color: #fff;
     text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     transform: scale(0.95);
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tm-custom-modal-overlay.active .tm-report-modal-dialog {
     transform: scale(1);
@@ -630,65 +637,115 @@
     transform: translateY(0);
 }
 
-/* 评论上报弹窗组件 */
-.tm-report-modal-hint {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.65);
-    margin-bottom: 10px;
+/* 评论上报弹窗组件 (ADHD 极简低负荷三段式布局) */
+.tm-report-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.tm-report-modal-header .tm-custom-modal-title {
+    margin-bottom: 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.tm-report-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    min-height: 0;
+    padding-right: 1px;
 }
 
 .tm-report-modal-preview {
     font-size: 12px;
-    background: rgba(255, 255, 255, 0.06);
-    padding: 8px 10px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    max-height: 76px;
+    color: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 2px solid rgba(10, 132, 255, 0.7);
+    padding: 7px 10px;
+    border-radius: 0 8px 8px 0;
+    max-height: 54px;
     overflow-y: auto;
     line-height: 1.45;
+    word-break: break-word;
+}
+
+.tm-report-chip-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tm-report-chip {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 34px;
+    padding: 0 11px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
+}
+
+.tm-report-chip:active {
+    transform: scale(0.96);
+}
+
+.tm-report-chip.active {
+    background: #0a84ff;
+    border-color: #0a84ff;
+    color: #ffffff;
+    font-weight: 600;
 }
 
 .tm-report-diag-box {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    padding: 7px 9px;
-    margin-bottom: 10px;
+    border-radius: 10px;
+    padding: 8px 10px;
 }
 
 .tm-report-diag-label {
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.55);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.52);
     margin-bottom: 6px;
 }
 
 .tm-report-diag-pills {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
-    max-height: 64px;
+    gap: 6px;
+    max-height: 68px;
     overflow-y: auto;
-}
-
-.tm-report-diag-empty {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.45);
 }
 
 .tm-report-diag-pill {
     appearance: none;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     background: rgba(255, 255, 255, 0.07);
-    color: rgba(255, 255, 255, 0.88);
-    font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    min-height: 28px;
+    padding: 2px 9px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .tm-report-diag-pill.is-av {
-    border-color: rgba(10, 132, 255, 0.35);
+    border-color: rgba(10, 132, 255, 0.4);
     color: #70b7ff;
 }
 
@@ -699,60 +756,79 @@
     text-decoration: line-through;
 }
 
-.tm-report-chip-group {
+.tm-report-context-zone {
     display: flex;
-    gap: 6px;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tm-report-quick-presets {
+    display: flex;
     flex-wrap: wrap;
-    margin-bottom: 10px;
+    gap: 6px;
 }
 
-.tm-report-chip {
+.tm-report-preset-btn {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.78);
     font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.8);
-    cursor: pointer;
-    transition: background-color 0.15s, color 0.15s;
-}
-
-.tm-report-chip.active {
-    background: #0a84ff;
-    color: #fff;
-}
-
-.tm-report-expect-input {
-    width: 100%;
-    box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    min-height: 30px;
+    padding: 0 10px;
     border-radius: 8px;
-    padding: 7px 10px;
-    color: #fff;
-    font-size: 16px;
-    margin-bottom: 8px;
-    outline: none;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.tm-report-note {
+.tm-report-preset-btn.active {
+    background: rgba(10, 132, 255, 0.22);
+    border-color: rgba(10, 132, 255, 0.75);
+    color: #82c4ff;
+}
+
+.tm-report-smart-input {
     width: 100%;
     box-sizing: border-box;
     background: rgba(255, 255, 255, 0.07);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 10px;
-    padding: 8px 10px;
+    padding: 9px 11px;
     color: #fff;
     font-size: 16px;
-    height: 58px;
-    margin-bottom: 12px;
     outline: none;
-    resize: none;
+    transition: border-color 0.15s;
+}
+
+.tm-report-smart-input:focus {
+    border-color: rgba(10, 132, 255, 0.8);
+}
+
+.tm-report-expand-note-btn {
+    appearance: none;
+    align-self: flex-start;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.56);
+    font-size: 12px;
+    padding: 2px 0;
+    cursor: pointer;
 }
 
 .tm-report-modal-buttons {
     display: flex;
     gap: 10px;
-    justify-content: flex-end;
+    padding-top: 2px;
+}
+
+.tm-report-modal-buttons .tm-custom-modal-cancel-btn {
+    flex: 1;
+    height: 42px;
+}
+
+.tm-report-modal-buttons .tm-custom-modal-submit-btn {
+    flex: 2;
+    height: 42px;
 }
 
 /* ===== Share Modal ===== */

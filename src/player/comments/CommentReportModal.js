@@ -9,11 +9,41 @@ import { __ } from '../../constants/i18n.js';
 import { esc, formatSeconds } from './CommentDataPipeline.js';
 
 const REPORT_REASONS = [
-    { code: 'false_timestamp', labelKey: 'reportReasonFalseTs' },
-    { code: 'missed_or_wrong_time', labelKey: 'reportReasonMissedTs' },
-    { code: 'countdown_error', labelKey: 'reportReasonCountdown' },
-    { code: 'avcode_error', labelKey: 'reportReasonAvcode' },
-    { code: 'spam_missed', labelKey: 'reportReasonSpam' }
+    {
+        code: 'false_timestamp',
+        labelKey: 'reportReasonFalseTs',
+        placeholderKey: 'reportPlaceholderFalseTs',
+        presets: ['reportPresetScore', 'reportPresetDuration'],
+        expectLike: false
+    },
+    {
+        code: 'missed_or_wrong_time',
+        labelKey: 'reportReasonMissedTs',
+        placeholderKey: 'reportPlaceholderMissedTs',
+        presets: ['reportPresetMissedTime', 'reportPresetWrongCalc'],
+        expectLike: true
+    },
+    {
+        code: 'countdown_error',
+        labelKey: 'reportReasonCountdown',
+        placeholderKey: 'reportPlaceholderCountdown',
+        presets: ['reportPresetNotCd', 'reportPresetIsCd'],
+        expectLike: true
+    },
+    {
+        code: 'avcode_error',
+        labelKey: 'reportReasonAvcode',
+        placeholderKey: 'reportPlaceholderAvcode',
+        presets: ['reportPresetFalseCode', 'reportPresetMissedCode'],
+        expectLike: true
+    },
+    {
+        code: 'spam_missed',
+        labelKey: 'reportReasonSpam',
+        placeholderKey: 'reportPlaceholderFalseTs',
+        presets: [],
+        expectLike: false
+    }
 ];
 
 const _submittedReportKeys = new Set();
@@ -47,13 +77,23 @@ function formatTsBadge(ts) {
     return `${ts.raw || secStr} → ${secStr}`;
 }
 
+function pickDefaultReasonCode(comment, previewText) {
+    const tsList = Array.isArray(comment.timestamps) ? comment.timestamps : [];
+    const avList = Array.isArray(comment.avcodes) ? comment.avcodes : [];
+    if (comment.isCountdownComment) return 'countdown_error';
+    if (tsList.length > 0) return 'false_timestamp';
+    if (/\d/.test(previewText)) return 'missed_or_wrong_time';
+    if (avList.length > 0) return 'avcode_error';
+    return 'spam_missed';
+}
+
 /**
- * 评论纠错与问题上报弹窗（含实时解析诊断条、结构化错误分类与期望答案提示）
+ * 评论纠错弹窗（ADHD 低负荷三段式 + 格莱斯高相关性布局）
  */
 export function showCommentReportModal({ comment, videoCode, videoDuration = null, sourceSite = null }) {
     if (!comment) return;
 
-    const previewText = (comment.rawText || comment.text || '').slice(0, 220);
+    const previewText = comment.rawText || comment.text || '';
     const tsList = Array.isArray(comment.timestamps) ? comment.timestamps : [];
     const avList = Array.isArray(comment.avcodes) ? comment.avcodes : [];
 
@@ -72,56 +112,115 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
         });
     }
 
-    const defaultReasonCode = (tsList.length === 0 && /\d/.test(previewText))
-        ? 'missed_or_wrong_time'
-        : (comment.isCountdownComment ? 'countdown_error' : REPORT_REASONS[0].code);
+    const defaultReasonCode = pickDefaultReasonCode(comment, previewText);
 
     const chipsHTML = REPORT_REASONS
-        .map((r) => `<span class="tm-report-chip${r.code === defaultReasonCode ? ' active' : ''}" data-reason-code="${r.code}">${esc(__(r.labelKey))}</span>`)
+        .map((r) => `<button type="button" class="tm-report-chip${r.code === defaultReasonCode ? ' active' : ''}" data-reason-code="${r.code}">${esc(__(r.labelKey))}</button>`)
         .join('');
 
-    const diagHTML = diagItems.length > 0
-        ? diagItems.map(item => `<button type="button" class="tm-report-diag-pill is-${item.kind}" data-diag-key="${esc(item.key)}">${esc(item.label)}</button>`).join('')
-        : `<span class="tm-report-diag-empty">${esc(__('reportParsedNone'))}</span>`;
+    const diagSectionHTML = diagItems.length > 0
+        ? `<div class="tm-report-diag-box">
+                <div class="tm-report-diag-label">${esc(__('reportParsedTitle'))}</div>
+                <div class="tm-report-diag-pills">
+                    ${diagItems.map(item => `<button type="button" class="tm-report-diag-pill is-${item.kind}" data-diag-key="${esc(item.key)}">${esc(item.label)}</button>`).join('')}
+                </div>
+           </div>`
+        : '';
 
     const html = `
-        <div class="tm-custom-modal-title">${esc(__('reportTitle'))}</div>
-        <div class="tm-report-modal-hint">${esc(__('reportHint'))}</div>
-        <div class="tm-report-modal-preview">${esc(previewText)}</div>
-        <div class="tm-report-diag-box">
-            <div class="tm-report-diag-label">${esc(__('reportParsedTitle'))}</div>
-            <div class="tm-report-diag-pills">${diagHTML}</div>
-        </div>
-        <div class="tm-report-chip-group">${chipsHTML}</div>
-        <input type="text" class="tm-report-expect-input" placeholder="${esc(__('reportExpectPlaceholder'))}" maxlength="160" />
-        <textarea class="tm-report-note" placeholder="${esc(__('reportNotePlaceholder'))}" maxlength="500"></textarea>
-        <div class="tm-custom-modal-buttons tm-report-modal-buttons">
-            <button type="button" class="tm-custom-modal-btn tm-custom-modal-cancel-btn">${esc(__('cancel') || '取消')}</button>
-            <button type="button" class="tm-custom-modal-btn tm-custom-modal-submit-btn">${esc(__('confirm') || '提交')}</button>
+        <div class="tm-report-modal-dialog">
+            <div class="tm-report-modal-header">
+                <div class="tm-custom-modal-title">${esc(__('reportTitle'))}</div>
+            </div>
+            <div class="tm-report-modal-body">
+                <div class="tm-report-modal-preview">${esc(previewText)}</div>
+                <div class="tm-report-chip-group">${chipsHTML}</div>
+                ${diagSectionHTML}
+                <div class="tm-report-context-zone">
+                    <div class="tm-report-quick-presets"></div>
+                    <input type="text" class="tm-report-smart-input" maxlength="160" />
+                    <button type="button" class="tm-report-expand-note-btn is-hidden">${esc(__('reportAddNoteBtn'))}</button>
+                </div>
+            </div>
+            <div class="tm-report-modal-buttons">
+                <button type="button" class="tm-custom-modal-cancel-btn">${esc(__('cancel') || '取消')}</button>
+                <button type="button" class="tm-custom-modal-submit-btn">${esc(__('confirm') || '提交')}</button>
+            </div>
         </div>
     `;
 
-    const { modal, close } = createModal(html, { customClass: 'tm-report-modal-overlay', dialogClass: 'tm-report-modal-dialog' });
+    const { modal, close } = createModal(html, { extraClass: 'tm-report-modal-overlay' });
 
-    const defaultReasonObj = REPORT_REASONS.find(r => r.code === defaultReasonCode) || REPORT_REASONS[0];
-    let selectedReasonCode = defaultReasonObj.code;
-    let selectedReasonLabel = __(defaultReasonObj.labelKey);
+    let selectedReasonCode = defaultReasonCode;
+    let selectedReasonLabel = __(REPORT_REASONS.find(r => r.code === defaultReasonCode)?.labelKey || REPORT_REASONS[0].labelKey);
     const flaggedItems = new Set();
+    const selectedPresets = new Set();
+    let forceShowSpamInput = false;
 
     const chips = modal.querySelectorAll('.tm-report-chip');
+    const presetsEl = modal.querySelector('.tm-report-quick-presets');
+    const smartInput = modal.querySelector('.tm-report-smart-input');
+    const expandNoteBtn = modal.querySelector('.tm-report-expand-note-btn');
+
+    const syncContextZone = () => {
+        const reasonMeta = REPORT_REASONS.find(r => r.code === selectedReasonCode) || REPORT_REASONS[0];
+        smartInput.placeholder = __(reasonMeta.placeholderKey);
+
+        // 根据类型渲染一键免打字快捷胶囊
+        presetsEl.innerHTML = '';
+        if (reasonMeta.presets.length > 0) {
+            presetsEl.classList.remove('is-hidden');
+            for (const presetKey of reasonMeta.presets) {
+                const label = __(presetKey);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `tm-report-preset-btn${selectedPresets.has(label) ? ' active' : ''}`;
+                btn.textContent = label;
+                btn.addEventListener('click', () => {
+                    if (selectedPresets.has(label)) {
+                        selectedPresets.delete(label);
+                        btn.classList.remove('active');
+                    } else {
+                        selectedPresets.add(label);
+                        btn.classList.add('active');
+                    }
+                });
+                presetsEl.appendChild(btn);
+            }
+        } else {
+            presetsEl.classList.add('is-hidden');
+        }
+
+        // 水贴举报默认隐藏输入框实现 1-Tap 提交；其余场景仅保留 1 个直觉输入框
+        const isSpamWithoutInput = selectedReasonCode === 'spam_missed' && !forceShowSpamInput && !smartInput.value.trim();
+        smartInput.classList.toggle('is-hidden', isSpamWithoutInput);
+        expandNoteBtn.classList.toggle('is-hidden', !isSpamWithoutInput);
+    };
+
     const selectReasonByCode = (code) => {
         const target = Array.from(chips).find(c => c.dataset.reasonCode === code);
         if (!target) return;
         chips.forEach(c => c.classList.remove('active'));
         target.classList.add('active');
+        if (selectedReasonCode !== code) {
+            selectedPresets.clear();
+            forceShowSpamInput = false;
+        }
         selectedReasonCode = target.dataset.reasonCode || 'other';
         selectedReasonLabel = target.textContent.trim();
+        syncContextZone();
     };
 
     chips.forEach(chip => {
         chip.addEventListener('click', () => {
             selectReasonByCode(chip.dataset.reasonCode || 'other');
         });
+    });
+
+    expandNoteBtn.addEventListener('click', () => {
+        forceShowSpamInput = true;
+        syncContextZone();
+        smartInput.focus();
     });
 
     const diagPills = modal.querySelectorAll('.tm-report-diag-pill');
@@ -142,6 +241,8 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
         });
     });
 
+    syncContextZone();
+
     modal.querySelector('.tm-custom-modal-cancel-btn').addEventListener('click', close);
     const submitBtn = modal.querySelector('.tm-custom-modal-submit-btn');
     submitBtn.addEventListener('click', async () => {
@@ -151,8 +252,17 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
             return;
         }
 
-        const expectedHint = modal.querySelector('.tm-report-expect-input').value.trim();
-        const note = modal.querySelector('.tm-report-note').value.trim();
+        const rawInput = smartInput.value.trim();
+        const reasonMeta = REPORT_REASONS.find(r => r.code === selectedReasonCode) || REPORT_REASONS[0];
+        const presetText = Array.from(selectedPresets).join('；');
+
+        // 将单输入框内容按当前问题类型精准映射回 expectedHint / userNote
+        const expectedHint = (reasonMeta.expectLike && rawInput) ? rawInput : null;
+        const noteParts = [];
+        if (presetText) noteParts.push(presetText);
+        if (!reasonMeta.expectLike && rawInput) noteParts.push(rawInput);
+        const note = noteParts.join(' | ');
+
         const scriptVersion = SleazyForkService.getCurrentVersion();
         const parserSnapshot = buildParserSnapshot(comment, flaggedItems);
 
@@ -164,7 +274,7 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
             reason: selectedReasonLabel,
             reasonCode: selectedReasonCode,
             userNote: note || null,
-            expectedHint: expectedHint || null,
+            expectedHint,
             scriptVersion,
             sourceSite: sourceSite || comment.source_site || comment.source || null,
             videoDuration: (typeof videoDuration === 'number' && !isNaN(videoDuration) && videoDuration > 0) ? Math.round(videoDuration) : null,

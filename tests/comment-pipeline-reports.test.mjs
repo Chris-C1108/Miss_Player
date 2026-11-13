@@ -184,6 +184,13 @@ console.log('🧪 开始执行评论识别引擎优化、同系列番号与上�
     const migSrc = fs.readFileSync('supabase/migrations/20261113000000_upgrade_comment_reports.sql', 'utf8');
     assert.ok(migSrc.includes('parser_snapshot jsonb') && migSrc.includes('reason_code text'), 'migration 应包含结构化诊断列');
 
+    const reportModalSrc = fs.readFileSync('src/player/comments/CommentReportModal.js', 'utf8');
+    assert.ok(
+        reportModalSrc.includes('<div class="tm-report-modal-dialog">') &&
+        reportModalSrc.includes("extraClass: 'tm-report-modal-overlay'"),
+        'CommentReportModal 必须用 tm-report-modal-dialog 包裹并传入 extraClass，避免 Flex 遮罩横向排布坍塌'
+    );
+
     // 模拟 v2 RPC 尚未部署 (返回 404) 时自动降级至 v1 6参数 RPC 并附带 [diag: ...]
     const origIsShared = SupabaseService.isSharedMode;
     const origGetConfig = SupabaseService.getConfig;
