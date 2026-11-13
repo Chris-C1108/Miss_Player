@@ -469,6 +469,15 @@ export class VideoSwipeManager {
     _handlePointerDown(e) {
         // 只处理主指针
         if (!e.isPrimary) return;
+
+        // 若存在活动浮层/模态框或关闭余波冷却，严禁视频层开始滑动拖拽
+        const uiManager = this.uiManager || (this.playerCore && this.playerCore.uiManager);
+        if (uiManager?.surfaceMachine?.isInteractionBlocked?.()) {
+            return;
+        }
+        if (e.target?.closest?.('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-surface-event-sink')) {
+            return;
+        }
         
         // 停止可能正在进行的动画
         if (this.animation.active) {
