@@ -80,15 +80,7 @@ export class CommentCodePreview {
             this._popover.className = 'jc-code-preview-popover';
 
             // 严禁预览浮层内部任何手势/点击/松手/滚轮冒泡给视频层或控制层
-            const stopPop = (e) => e.stopPropagation();
-            [
-                'pointerdown', 'pointermove', 'pointerup', 'pointercancel',
-                'mousedown', 'mousemove', 'mouseup',
-                'touchstart', 'touchmove', 'touchend', 'touchcancel',
-                'click', 'dblclick', 'wheel', 'contextmenu'
-            ].forEach(evt => {
-                this._popover.addEventListener(evt, stopPop);
-            });
+            UISurfaceMachine.bindOverlayGuard(this._popover, { stopMove: true, stopWheel: true });
 
             this._popover.addEventListener('mouseenter', () => {
                 this.cancelLeave();

@@ -988,39 +988,71 @@ export class CommentPanel {
     }
 
 
+    _restoreSitesFromCache(cached) {
+        if (!cached || !cached.sites) return 0;
+        let restoredCount = 0;
+        for (const siteKey of Object.keys(this.sites)) {
+            const cachedSite = cached.sites[siteKey];
+            const targetSite = this.sites[siteKey];
+            if (cachedSite && Array.isArray(cachedSite.comments) && cachedSite.comments.length > 0) {
+                targetSite.comments = [...cachedSite.comments];
+                targetSite.totalCount = cachedSite.totalCount || cachedSite.comments.length;
+                targetSite.hasMore = cachedSite.hasMore;
+                targetSite.currentPage = cachedSite.currentPage || 1;
+                targetSite.collectedPages = new Set(cachedSite.collectedPages || [1]);
+                targetSite.status = cachedSite.status || 'loaded';
+                if (cachedSite.workingDomain) targetSite.workingDomain = cachedSite.workingDomain;
+                if (cachedSite.videoId) targetSite.videoId = cachedSite.videoId;
+                if (cachedSite.movieId) targetSite.movieId = cachedSite.movieId;
+                restoredCount += cachedSite.comments.length;
+            }
+        }
+        return restoredCount;
+    }
+
+    _autoExpandBestSection() {
+        if (this.filteredJableComments.length === 0) {
+            if (this.filteredJavdbComments.length > 0) {
+                this.jableCollapsed = true;
+                this.javdbCollapsed = false;
+                this.javlibCollapsed = true;
+            } else if (this.filteredJavlibComments.length > 0) {
+                this.jableCollapsed = true;
+                this.javdbCollapsed = true;
+                this.javlibCollapsed = false;
+            }
+        }
+        this.ensureAtLeastOneSectionExpanded();
+    }
+
     async loadComments(page = 1, forceRefresh = false) {
         if (!this.videoCode) return;
+        const requestVideoCode = this.videoCode;
         this.isLoading = true;
 
-        if (page === 1 && !forceRefresh && CommentCacheManager.hasValidCache(this.videoCode)) {
-            const cached = CommentCacheManager.get(this.videoCode);
-            if (cached && cached.sites) {
-                let restoredCount = 0;
-                for (const siteKey of Object.keys(this.sites)) {
-                    const cachedSite = cached.sites[siteKey];
-                    const targetSite = this.sites[siteKey];
-                    if (cachedSite && Array.isArray(cachedSite.comments) && cachedSite.comments.length > 0) {
-                        targetSite.comments = [...cachedSite.comments];
-                        targetSite.totalCount = cachedSite.totalCount || cachedSite.comments.length;
-                        targetSite.hasMore = cachedSite.hasMore;
-                        targetSite.currentPage = cachedSite.currentPage || 1;
-                        targetSite.collectedPages = new Set(cachedSite.collectedPages || [1]);
-                        targetSite.status = cachedSite.status || 'loaded';
-                        if (cachedSite.workingDomain) targetSite.workingDomain = cachedSite.workingDomain;
-                        if (cachedSite.videoId) targetSite.videoId = cachedSite.videoId;
-                        if (cachedSite.movieId) targetSite.movieId = cachedSite.movieId;
-                        restoredCount += cachedSite.comments.length;
-                    }
-                }
-                if (restoredCount > 0) {
-                    logger.log(`[CommentPanel] 命中本地评论缓存 (${this.videoCode})，直接恢复 ${restoredCount} 条评论展示，跳过重复网络请求。`);
-                    DebugLogPanel.addLog(`[本地缓存] ${this.videoCode}: 瞬时恢复 ${restoredCount} 条评论 (零网络请求)`, 'success');
-                    this.isLoading = false;
-                    this.applyFilter();
-                    this.renderCommentsList();
-                    this.updateCommentsCount();
-                    return;
-                }
+        if (page === 1 && !forceRefresh) {
+            // 第 1 优先级：同步 L1 内存缓存 0ms 命中
+            let cached = CommentCacheManager.hasValidCache(requestVideoCode)
+                ? CommentCacheManager.get(requestVideoCode)
+                : null;
+            // 第 2 优先级：冷启动异步读取 IndexedDB 本地持久化缓存 (1~5ms，避免重复全量抓取)
+            if (!cached) {
+                try {
+                    cached = await CommentCacheManager.getAsync(requestVideoCode);
+                } catch (_) {}
+                if (this.videoCode !== requestVideoCode) return;
+            }
+            const restoredCount = this._restoreSitesFromCache(cached);
+            if (restoredCount > 0) {
+                logger.log(`[CommentPanel] 命中本地评论缓存 (${requestVideoCode})，直接恢复 ${restoredCount} 条评论展示，跳过重复网络请求。`);
+                DebugLogPanel.addLog(`[本地缓存] ${requestVideoCode}: 瞬时恢复 ${restoredCount} 条评论 (零网络请求)`, 'success');
+                this.isLoading = false;
+                this.applyFilter();
+                this._autoExpandBestSection();
+                this.renderCommentsList();
+                this.updateCommentsCount();
+                this.updateTabBar();
+                return;
             }
         }
 
@@ -1028,45 +1060,71 @@ export class CommentPanel {
             this.currentPage = 1;
             this.renderedCommentIds.clear(); // 刷新/首次加载时清空，防止第一页评论全部闪烁
 
-            // 兜底保障：杜绝全折叠死锁，确保至少一个可用分区展开
-            this.ensureAtLeastOneSectionExpanded();
+            if (forceRefresh) {
+                for (const siteKey of Object.keys(this.sites)) {
+                    const site = this.sites[siteKey];
+                    site.comments = [];
+                    site.filteredComments = [];
+                    site.totalCount = 0;
+                    site.hasMore = false;
+                    site.collectedPages = new Set();
+                    site.status = 'loading';
+                }
+            }
 
-            // 根据设置中的 enabledCommentSources 并发触发启用源的加载
+            // 立即初始化渲染各分区的 Header 与骨架状态，绝不阻塞等待任何远端请求
+            this.ensureAtLeastOneSectionExpanded();
+            this.renderCommentsList();
+
+            // 根据设置中的 enabledCommentSources 三路并发竞速：Supabase 云端 + WebDAV 独立文件 + 源站实时采集
             const state = this.playerCore?.options?.playerState;
             const enabledSources = state?.settings?.enabledCommentSources || { jable: true, javdb: true, javlibrary: false };
 
             const promises = [];
-            // 优先检查 Supabase 自建分析数据库
-        try {
-            const remoteComments = await SupabaseService.fetchComments(this.videoCode);
-            if (remoteComments && remoteComments.length > 0) {
-                this._mergeRemoteComments(remoteComments);
-                this.renderCommentsList();
-                this.updateCommentsCount();
-            }
-        } catch (_) {}
 
-        // 检查 WebDAV 独立评论文件 (/MissPlayer/comments/[AVCODE].json)
-        try {
-            const webdavConfig = SyncManager.getWebDavConfig();
-            if (WebDavClient.hasValidEndpoint(webdavConfig)) {
-                const subPath = 'comments/' + this.videoCode.toUpperCase() + '.json';
-                const wdData = await WebDavClient.downloadBackup(webdavConfig, subPath);
-                if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
-                    this._mergeWebdavComments(wdData.comments);
-                    this.renderCommentsList();
-                    this.updateCommentsCount();
-                    DebugLogPanel.addLog('已从 WebDAV 独立文件加载 ' + wdData.comments.length + ' 条评论 (' + this.videoCode + ')', 'success');
-                }
-            }
-        } catch (_) {}
+            // 渠道 A：Supabase 云端聚合仓储 (非阻塞，先到先上屏)
+            promises.push((async () => {
+                try {
+                    const remoteComments = await SupabaseService.fetchComments(requestVideoCode);
+                    if (this.videoCode !== requestVideoCode) return;
+                    if (remoteComments && remoteComments.length > 0) {
+                        const added = this._mergeRemoteComments(remoteComments);
+                        if (added > 0) {
+                            this._autoExpandBestSection();
+                            this.renderCommentsList();
+                            this.updateCommentsCount();
+                            this.updateTabBar();
+                        }
+                    }
+                } catch (_) {}
+            })());
 
-        if (enabledSources.jable !== false) promises.push(this.loadJableComments(1));
-            if (enabledSources.javlib !== false && enabledSources.javlibrary !== false) promises.push(this.loadJavlibComments(1));
-            if (enabledSources.javdb !== false) promises.push(this.loadJavdbComments(1));
+            // 渠道 B：WebDAV 独立评论文件 (/MissPlayer/comments/[AVCODE].json，非阻塞，先到先上屏)
+            promises.push((async () => {
+                try {
+                    const webdavConfig = SyncManager.getWebDavConfig();
+                    if (WebDavClient.hasValidEndpoint(webdavConfig)) {
+                        const subPath = 'comments/' + requestVideoCode.toUpperCase() + '.json';
+                        const wdData = await WebDavClient.downloadBackup(webdavConfig, subPath);
+                        if (this.videoCode !== requestVideoCode) return;
+                        if (wdData && Array.isArray(wdData.comments) && wdData.comments.length > 0) {
+                            const added = this._mergeWebdavComments(wdData.comments);
+                            if (added > 0) {
+                                this._autoExpandBestSection();
+                                this.renderCommentsList();
+                                this.updateCommentsCount();
+                                this.updateTabBar();
+                                DebugLogPanel.addLog('已从 WebDAV 独立文件提前加载 ' + wdData.comments.length + ' 条评论 (' + requestVideoCode + ')', 'success');
+                            }
+                        }
+                    }
+                } catch (_) {}
+            })());
 
-            // 立即初始化渲染各分区的 Header 以及包含在内的加载动画
-            this.renderCommentsList();
+            // 渠道 C：启用的源站实时采集（不清空已有云端/WebDAV 预加载内容）
+            if (enabledSources.jable !== false) promises.push(this.loadJableComments(1, forceRefresh));
+            if (enabledSources.javlib !== false && enabledSources.javlibrary !== false) promises.push(this.loadJavlibComments(1, forceRefresh));
+            if (enabledSources.javdb !== false) promises.push(this.loadJavdbComments(1, forceRefresh));
 
             // 避开评论抓取并发连接高峰，1.5s 后静默发起后台登录态复核
             setTimeout(() => this.updateAllSiteLoginStatuses(), 1500);
@@ -1074,18 +1132,7 @@ export class CommentPanel {
             await Promise.allSettled(promises);
 
             // 自动联动展开：若排序第1位的 Jable 无评论，而排在后面的 JavDB / JAVLibrary 有评论，自动展开首个有评论的板块
-            if (this.filteredJableComments.length === 0) {
-                if (this.filteredJavdbComments.length > 0) {
-                    this.jableCollapsed = true;
-                    this.javdbCollapsed = false;
-                    this.javlibCollapsed = true;
-                } else if (this.filteredJavlibComments.length > 0) {
-                    this.jableCollapsed = true;
-                    this.javdbCollapsed = true;
-                    this.javlibCollapsed = false;
-                }
-            }
-            this.ensureAtLeastOneSectionExpanded();
+            this._autoExpandBestSection();
             this.renderCommentsList();
         } else {
             // 加载更多
@@ -1134,9 +1181,13 @@ export class CommentPanel {
 
         if (siteKey === 'javlib' && isMobile()) {
             site.loading = false;
-            site.status = 'mobile_unsupported';
-            site.comments = [];
-            site.filteredComments = [];
+            if (!site.comments || site.comments.length === 0) {
+                site.status = 'mobile_unsupported';
+                site.comments = [];
+                site.filteredComments = [];
+            } else {
+                site.status = 'loaded';
+            }
             this.applyFilter();
             this.renderCommentsList();
             this.updateCommentsCount();
@@ -1145,11 +1196,16 @@ export class CommentPanel {
 
         site.loading = true;
         if (page === 1) {
-            site.status = 'loading';
-            site.comments = [];
-            site.filteredComments = [];
-            site.totalCount = 0;
-            site.hasMore = false;
+            if (forceRefresh || !site.comments || site.comments.length === 0) {
+                site.status = 'loading';
+                site.comments = [];
+                site.filteredComments = [];
+                site.totalCount = 0;
+                site.hasMore = false;
+            } else {
+                // 已有 Supabase / WebDAV 提前展示的评论：保持加载态为已展示，绝不清空闪退
+                site.status = 'loaded';
+            }
             if (siteKey === 'javlib') {
                 this.javlibCfShield = false;
                 this.javlibFailedDomain = '';
@@ -1306,8 +1362,9 @@ export class CommentPanel {
             if (page === 1 && forceRefresh) {
                 site.comments = processed;
             } else {
-                const existingIds = new Set(site.comments.map(c => c.id));
-                const uniqueNew = processed.filter(c => !existingIds.has(c.id));
+                const existingIds = new Set(site.comments.map(c => String(c.id)));
+                const existingTexts = new Set(site.comments.map(c => c.text).filter(Boolean));
+                const uniqueNew = processed.filter(c => !existingIds.has(String(c.id)) && (!c.text || !existingTexts.has(c.text)));
                 site.comments = [...site.comments, ...uniqueNew];
             }
 
@@ -1315,7 +1372,7 @@ export class CommentPanel {
                 site.comments.sort((a, b) => (parseInt(b.id, 10) || 0) - (parseInt(a.id, 10) || 0));
             }
 
-            site.totalCount = res.totalCount || site.comments.length;
+            site.totalCount = Math.max(res.totalCount || 0, site.comments.length);
             site.hasMore = res.hasMore;
             site.status = site.comments.length === 0 ? 'empty' : 'loaded';
             site.currentPage = Math.max(site.currentPage || 1, page);
@@ -1335,25 +1392,35 @@ export class CommentPanel {
 
         } catch (err) {
             logger.warn(`[CommentPanel] 获取 ${site.name} 评论失败:`, err);
-            if (siteKey === 'javlib') {
-                this.handleJavlibError(err);
-            } else {
-                const msg = err.message || '';
-                if (msg.includes('404') || msg.includes('not found')) {
-                    if (siteKey === 'jable') this.jableVideoExists = false;
-                    site.status = 'not_found';
-                } else if (msg.includes('人机验证') || msg.startsWith('CF_SHIELD_ON_') || msg.includes('cf-challenge') || msg.includes('Cloudflare') || msg.includes('cloudflare')) {
-                    site.status = 'cf_shield';
-                    if (siteKey === 'jable') {
-                        this.jableFailedDomain = err.domain || site.workingDomain || JABLE_DOMAINS[0];
-                    }
-                } else {
-                    site.status = 'unreachable';
+            const hasPreloadedComments = Array.isArray(site.comments) && site.comments.length > 0;
+            if (hasPreloadedComments) {
+                // 若云端 Supabase / WebDAV 已提前恢复出有效评论，采集失败绝不覆盖或清空已展示评论
+                site.status = 'loaded';
+                site.totalCount = Math.max(site.totalCount || 0, site.comments.length);
+                if (siteKey === 'javlib' && String(err?.message || '').startsWith('CF_SHIELD_ON_')) {
+                    this.javlibFailedDomain = err.domain || JAVLIB_DOMAINS[0];
                 }
-            }
-            if (page === 1) {
-                site.comments = [];
-                site.filteredComments = [];
+            } else {
+                if (siteKey === 'javlib') {
+                    this.handleJavlibError(err);
+                } else {
+                    const msg = err.message || '';
+                    if (msg.includes('404') || msg.includes('not found')) {
+                        if (siteKey === 'jable') this.jableVideoExists = false;
+                        site.status = 'not_found';
+                    } else if (msg.includes('人机验证') || msg.startsWith('CF_SHIELD_ON_') || msg.includes('cf-challenge') || msg.includes('Cloudflare') || msg.includes('cloudflare')) {
+                        site.status = 'cf_shield';
+                        if (siteKey === 'jable') {
+                            this.jableFailedDomain = err.domain || site.workingDomain || JABLE_DOMAINS[0];
+                        }
+                    } else {
+                        site.status = 'unreachable';
+                    }
+                }
+                if (page === 1) {
+                    site.comments = [];
+                    site.filteredComments = [];
+                }
             }
         } finally {
             site.loading = false;
@@ -1369,9 +1436,9 @@ export class CommentPanel {
         }
     }
 
-    loadJableComments(page = 1) { return this.loadSiteComments('jable', page); }
-    loadJavlibComments(page = 1) { return this.loadSiteComments('javlib', page); }
-    loadJavdbComments(page = 1) { return this.loadSiteComments('javdb', page); }
+    loadJableComments(page = 1, forceRefresh = false) { return this.loadSiteComments('jable', page, forceRefresh); }
+    loadJavlibComments(page = 1, forceRefresh = false) { return this.loadSiteComments('javlib', page, forceRefresh); }
+    loadJavdbComments(page = 1, forceRefresh = false) { return this.loadSiteComments('javdb', page, forceRefresh); }
 
     handleJavlibError(err) {
         console.warn('[CommentPanel] JAVLibrary 发生错误:', err);
@@ -3222,13 +3289,35 @@ export class CommentPanel {
         });
     }
 
+    _resolveMergeSiteKey(rawSource) {
+        const sKey = String(rawSource || 'jable').toLowerCase();
+        if (sKey === 'javlibrary' || sKey === 'javlib-review') return 'javlib';
+        return this.sites[sKey] ? sKey : 'jable';
+    }
+
+    _finalizeMergedSites(touchedKeys) {
+        for (const sKey of touchedKeys) {
+            const targetSite = this.sites[sKey];
+            if (!targetSite || targetSite.comments.length === 0) continue;
+            if (sKey === 'jable') {
+                targetSite.comments.sort((a, b) => (parseInt(b.id, 10) || 0) - (parseInt(a.id, 10) || 0));
+            }
+            targetSite.status = 'loaded';
+            targetSite.totalCount = Math.max(targetSite.totalCount || 0, targetSite.comments.length);
+            CommentCacheManager.saveSiteCache(this.videoCode, sKey, targetSite);
+        }
+        this.applyFilter();
+    }
+
     _mergeRemoteComments(remoteList) {
-        if (!Array.isArray(remoteList) || remoteList.length === 0) return;
+        if (!Array.isArray(remoteList) || remoteList.length === 0) return 0;
         const duration = this.playerCore?.targetVideo?.duration || this.targetVideo?.duration || 10800;
+        const touchedKeys = new Set();
+        let added = 0;
 
         for (const item of remoteList) {
-            const sKey = (item.source_site || 'jable').toLowerCase();
-            const targetSite = this.sites[sKey] || this.sites.jable;
+            const sKey = this._resolveMergeSiteKey(item.source_site);
+            const targetSite = this.sites[sKey];
             if (!targetSite) continue;
 
             const exists = targetSite.comments.some(c => String(c.id) === String(item.site_comment_id) || (c.text && c.text === item.content_raw));
@@ -3241,18 +3330,25 @@ export class CommentPanel {
                 processed.score = item.score;
                 processed.source_site = sKey;
                 targetSite.comments.push(processed);
+                touchedKeys.add(sKey);
+                added++;
             }
         }
-        this.applyFilter();
+        if (touchedKeys.size > 0) {
+            this._finalizeMergedSites(touchedKeys);
+        }
+        return added;
     }
 
-
     _mergeWebdavComments(commentList) {
-        if (!Array.isArray(commentList) || commentList.length === 0) return;
+        if (!Array.isArray(commentList) || commentList.length === 0) return 0;
         const duration = this.playerCore?.targetVideo?.duration || this.targetVideo?.duration || 10800;
+        const touchedKeys = new Set();
+        let added = 0;
+
         for (const item of commentList) {
-            const sKey = (item.source || 'jable').toLowerCase();
-            const targetSite = this.sites[sKey] || this.sites.jable;
+            const sKey = this._resolveMergeSiteKey(item.source || item.source_site);
+            const targetSite = this.sites[sKey];
             if (!targetSite) continue;
 
             const exists = targetSite.comments.some(c => String(c.id) === String(item.id) || (c.text && c.text === item.text));
@@ -3263,9 +3359,14 @@ export class CommentPanel {
                 processed.time = item.time;
                 processed.source_site = sKey;
                 targetSite.comments.push(processed);
+                touchedKeys.add(sKey);
+                added++;
             }
         }
-        this.applyFilter();
+        if (touchedKeys.size > 0) {
+            this._finalizeMergedSites(touchedKeys);
+        }
+        return added;
     }
 
 }

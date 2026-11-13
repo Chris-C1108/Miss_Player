@@ -6,7 +6,7 @@ import { LOOP_INTERVAL } from '../../constants/icons.js';
 import { telemetry } from '../../telemetry/index.js';
 import { MarkerBottomSheet } from './MarkerBottomSheet.js';
 import { SyncManager } from '../../sync/index.js';
-import { SURFACE_TYPES, bindActionWithoutBlurShift } from '../state/UISurfaceMachine.js';
+import { UISurfaceMachine, SURFACE_TYPES, bindActionWithoutBlurShift } from '../state/UISurfaceMachine.js';
 
 /**
  * LoopManager — Tab-Style Marker & AB Loop controller
@@ -1067,6 +1067,8 @@ export class LoopManager {
         }
         input.select();
 
+        UISurfaceMachine.bindOverlayGuard(popover, { stopMove: true, stopWheel: true });
+
         requestAnimationFrame(() => {
             popover.classList.add('visible');
         });
@@ -1077,8 +1079,7 @@ export class LoopManager {
             isClosed = true;
             this._activeRemarkClose = null;
             this.playerCore?.surfaceMachine?.deactivate(SURFACE_TYPES.INLINE_REMARK);
-            document.removeEventListener('pointerdown', handleOutsideClick, true);
-            document.removeEventListener('touchstart', handleOutsideClick, true);
+            document.removeEventListener('click', handleOutsideClick, true);
             try {
                 input.blur();
             } catch (_) {}
@@ -1127,8 +1128,7 @@ export class LoopManager {
         };
         setTimeout(() => {
             if (!isClosed) {
-                document.addEventListener('pointerdown', handleOutsideClick, true);
-                document.addEventListener('touchstart', handleOutsideClick, true);
+                document.addEventListener('click', handleOutsideClick, true);
             }
         }, 150);
 

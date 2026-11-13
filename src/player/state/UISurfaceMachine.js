@@ -52,6 +52,43 @@ export class UISurfaceMachine {
         return UISurfaceMachine.getActiveInstance();
     }
 
+    /**
+     * 为任意浮层/弹窗容器绑定统一防穿透事件隔离守卫
+     * @param {HTMLElement} el
+     * @param {{ stopMove?: boolean, stopWheel?: boolean }} [options]
+     */
+    static bindOverlayGuard(el, options = {}) {
+        if (!el || typeof el.addEventListener !== 'function') return;
+        if (el.dataset && el.dataset.mpOverlayGuarded === '1') return;
+        if (el.dataset) el.dataset.mpOverlayGuarded = '1';
+
+        const { stopMove = false, stopWheel = true } = options;
+        const stopBubble = (e) => {
+            e.stopPropagation();
+        };
+
+        const activeEvents = [
+            'click', 'dblclick',
+            'mousedown', 'mouseup',
+            'pointerdown', 'pointerup', 'pointercancel',
+            'contextmenu'
+        ];
+        activeEvents.forEach((evt) => el.addEventListener(evt, stopBubble));
+
+        ['touchstart', 'touchend', 'touchcancel'].forEach((evt) => {
+            el.addEventListener(evt, stopBubble, { passive: true });
+        });
+
+        if (stopWheel) {
+            el.addEventListener('wheel', stopBubble, { passive: true });
+        }
+        if (stopMove) {
+            el.addEventListener('touchmove', stopBubble, { passive: true });
+            el.addEventListener('pointermove', stopBubble, { passive: true });
+            el.addEventListener('mousemove', stopBubble);
+        }
+    }
+
     constructor(uiManager = null) {
         this.uiManager = uiManager;
         this.activeSurface = SURFACE_TYPES.NONE;

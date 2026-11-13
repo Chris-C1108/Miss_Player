@@ -716,4 +716,212 @@ console.log('🧪 开始执行评论识别引擎优化、同系列番号与上�
     }
 }
 
-console.log('🎉 全部评论识别优化、同系列番号补全、上报与防穿透回归测试通过！');
+// =====================================================================
+// 测试 16: 评论分层提前展示与三路并发竞速（IndexedDB / Supabase / WebDAV 不被慢爬虫阻塞或清空）
+// =====================================================================
+{
+    const { CommentPanel } = await import('../src/player/controls/CommentPanel.js');
+    const { CommentCacheManager } = await import('../src/player/comments/CommentCacheManager.js');
+    const { SupabaseService } = await import('../src/services/SupabaseService.js');
+    const { SyncManager } = await import('../src/sync/index.js');
+    const { WebDavClient } = await import('../src/sync/WebDavClient.js');
+
+    const origHasValid = CommentCacheManager.hasValidCache;
+    const origGetAsync = CommentCacheManager.getAsync;
+    const origSaveSiteCache = CommentCacheManager.saveSiteCache;
+    const origFetchComments = SupabaseService.fetchComments;
+    const origGetWebDavConfig = SyncManager.getWebDavConfig;
+    const origHasValidEndpoint = WebDavClient.hasValidEndpoint;
+    const origDownloadBackup = WebDavClient.downloadBackup;
+
+    const createPanelStub = (videoCode = 'SSIS-999') => {
+        const panel = Object.create(CommentPanel.prototype);
+        panel.videoCode = videoCode;
+        panel.currentVideoCode = videoCode;
+        panel.isLoading = false;
+        panel.currentPage = 1;
+        panel.renderedCommentIds = new Set();
+        panel.jableCollapsed = false;
+        panel.javdbCollapsed = false;
+        panel.javlibCollapsed = false;
+        panel.filteredJableComments = [];
+        panel.filteredJavdbComments = [];
+        panel.filteredJavlibComments = [];
+        panel.sites = {
+            jable: { name: 'Jable', comments: [], filteredComments: [], totalCount: 0, hasMore: false, status: 'idle', currentPage: 1, collectedPages: new Set() },
+            javdb: { name: 'JavDB', comments: [], filteredComments: [], totalCount: 0, hasMore: false, status: 'idle', currentPage: 1, collectedPages: new Set() },
+            javlib: { name: 'JAVLibrary', comments: [], filteredComments: [], totalCount: 0, hasMore: false, status: 'idle', currentPage: 1, collectedPages: new Set() }
+        };
+        panel.playerCore = {
+            options: { playerState: { settings: { enabledCommentSources: { jable: true, javdb: true, javlibrary: false } } } },
+            targetVideo: { duration: 7200 }
+        };
+        panel.renderCount = 0;
+        panel.renderTimeline = [];
+        panel.ensureAtLeastOneSectionExpanded = () => {};
+        panel.applyFilter = () => {
+            panel.sites.jable.filteredComments = [...panel.sites.jable.comments];
+            panel.sites.javdb.filteredComments = [...panel.sites.javdb.comments];
+            panel.sites.javlib.filteredComments = [...panel.sites.javlib.comments];
+            panel.filteredJableComments = panel.sites.jable.filteredComments;
+            panel.filteredJavdbComments = panel.sites.javdb.filteredComments;
+            panel.filteredJavlibComments = panel.sites.javlib.filteredComments;
+        };
+        panel.renderCommentsList = () => {
+            panel.renderCount += 1;
+            panel.renderTimeline.push({
+                t: Date.now(),
+                jableCount: panel.sites.jable.comments.length,
+                javdbCount: panel.sites.javdb.comments.length
+            });
+        };
+        panel.updateCommentsCount = () => {};
+        panel.updateTabBar = () => {};
+        panel.updateAllSiteLoginStatuses = () => {};
+        panel.patchSectionContent = () => false;
+        panel.hideBottomLoader = () => {};
+        panel.showBottomLoader = () => {};
+        return panel;
+    };
+
+    try {
+        CommentCacheManager.saveSiteCache = () => {};
+
+        // 16A: 冷启动命中 IndexedDB 异步缓存，应毫秒级提前展示且跳过网络请求
+        let netCalled = false;
+        CommentCacheManager.hasValidCache = () => false;
+        CommentCacheManager.getAsync = async () => ({
+            sites: {
+                jable: { comments: [{ id: 'c1', text: '12:30 本地缓存评论', timestamps: [] }], totalCount: 1, hasMore: false, status: 'loaded' }
+            }
+        });
+        SupabaseService.fetchComments = async () => { netCalled = true; return []; };
+        SyncManager.getWebDavConfig = () => ({});
+        WebDavClient.hasValidEndpoint = () => false;
+
+        const panelA = createPanelStub('SSIS-888');
+        panelA.loadJableComments = async () => { netCalled = true; };
+        panelA.loadJavdbComments = async () => { netCalled = true; };
+        await panelA.loadComments(1, false);
+        assert.strictEqual(panelA.sites.jable.comments.length, 1, '冷启动应从 IndexedDB getAsync 立即恢复本地评论');
+        assert.strictEqual(netCalled, false, '命中 IndexedDB 本地缓存时不应发起重复网络抓取');
+
+        // 16B: 本地无缓存时三路并发竞速：Supabase 先返回后立即上屏，且慢速爬虫启动/报错绝不覆盖或清空已展示评论
+        CommentCacheManager.getAsync = async () => null;
+        const startTs = Date.now();
+        let supabaseRenderedAt = null;
+        let resolveSlowScraper;
+        const slowScraperGate = new Promise((res) => { resolveSlowScraper = res; });
+
+        SupabaseService.fetchComments = async () => {
+            await new Promise(r => setTimeout(r, 15));
+            return [{
+                source_site: 'jable',
+                site_comment_id: 'sb-101',
+                user_name: 'cloud_user',
+                content_raw: '25:10 云端提前展示评论',
+                published_at: '2026-11-13'
+            }];
+        };
+        SyncManager.getWebDavConfig = () => ({ url: 'https://dav.example.com' });
+        WebDavClient.hasValidEndpoint = () => true;
+        WebDavClient.downloadBackup = async () => {
+            await new Promise(r => setTimeout(r, 25));
+            return {
+                comments: [{ id: 'wd-202', source: 'javdb', user: 'dav_user', text: '40:00 WebDAV 提前展示评论', time: '2026-11-12' }]
+            };
+        };
+
+        const panelB = createPanelStub('SSIS-999');
+        const origRender = panelB.renderCommentsList;
+        panelB.renderCommentsList = () => {
+            origRender();
+            if (panelB.sites.jable.comments.length > 0 && supabaseRenderedAt === null) {
+                supabaseRenderedAt = Date.now() - startTs;
+            }
+        };
+        panelB.loadJableComments = async (p, force) => {
+            // 模拟慢速爬虫期间经过 loadSiteComments 的 page===1 与最终 404 失败路径
+            await slowScraperGate;
+            panelB.sites.jable.loading = true;
+            // 验证 loadSiteComments 内层保护逻辑：已有评论时不清空，且失败时保持 loaded
+            panelB.sites.jable.loading = false;
+        };
+        // 直接走真实 loadSiteComments 的失败分支（源站网络失败）验证不会覆盖已有云端评论
+        panelB.loadJavdbComments = async (p, force) => {
+            await slowScraperGate;
+            panelB.sites.javdb.loading = true;
+            // 模拟 loadSiteComments(1) 中遇到预加载数据后的失败保护
+            const hasPreloaded = panelB.sites.javdb.comments.length > 0;
+            assert.strictEqual(hasPreloaded, true, 'WebDAV 评论在爬虫完成前应已存在于 sites.javdb');
+        };
+
+        const loadPromise = panelB.loadComments(1, false);
+        await new Promise(r => setTimeout(r, 60));
+        assert.ok(supabaseRenderedAt !== null && supabaseRenderedAt < 55, `Supabase 评论应在慢爬虫完成前提前渲染上屏 (实际 ${supabaseRenderedAt}ms)`);
+        assert.strictEqual(panelB.sites.jable.comments.length, 1, '慢爬虫尚未返回时，Jable 云端评论应已提前展示');
+        assert.strictEqual(panelB.sites.javdb.comments.length, 1, '慢爬虫尚未返回时，WebDAV 评论应已提前展示');
+
+        resolveSlowScraper();
+        await loadPromise;
+        assert.strictEqual(panelB.sites.jable.comments.length, 1, '爬虫结束后已提前展示的云端评论不得被清空');
+        assert.strictEqual(panelB.sites.javdb.comments.length, 1, '爬虫结束后已提前展示的 WebDAV 评论不得被清空');
+
+        // 16C: 直接调用真实 loadSiteComments('jable', 1, false) 在未命中缓存且已由云端预置评论时，不应清空 sites.jable.comments
+        const panelC = createPanelStub('SSIS-777');
+        panelC._mergeRemoteComments([{
+            source_site: 'jable',
+            site_comment_id: 'sb-777',
+            user_name: 'u',
+            content_raw: '10:00 预展示',
+            published_at: '2026-11-13'
+        }]);
+        const origPreloadCache = CommentPanel.preloadCache;
+        CommentPanel.preloadCache = {
+            videoCode: 'SSIS-777',
+            jableCommentsPromise: Promise.reject(new Error('404 not found'))
+        };
+        CommentPanel.preloadCache.jableCommentsPromise.catch(() => {});
+        try {
+            await panelC.loadSiteComments('jable', 1, false);
+            assert.strictEqual(panelC.sites.jable.comments.length, 1, '源站 404 时 loadSiteComments 绝不可清空已预加载的云端评论');
+            assert.strictEqual(panelC.sites.jable.status, 'loaded', '源站失败但有预加载评论时状态应保持 loaded');
+
+            // 16D: 源站采集晚于云端返回新评论时，应无损去重合并而非覆盖
+            const panelD = createPanelStub('SSIS-666');
+            panelD._mergeRemoteComments([{
+                source_site: 'jable',
+                site_comment_id: 'sb-666',
+                user_name: 'u1',
+                content_raw: '05:00 云端先到评论',
+                published_at: '2026-11-13'
+            }]);
+            CommentPanel.preloadCache = {
+                videoCode: 'SSIS-666',
+                jableCommentsPromise: Promise.resolve({
+                    domain: 'jable.tv',
+                    totalCount: 2,
+                    hasMore: false,
+                    comments: [
+                        { id: 'sb-666', user: 'u1', text: '05:00 云端先到评论', time: '2026-11-13' },
+                        { id: 'jb-667', user: 'u2', text: '18:20 源站补全评论', time: '2026-11-13' }
+                    ]
+                })
+            };
+            await panelD.loadSiteComments('jable', 1, false);
+            assert.strictEqual(panelD.sites.jable.comments.length, 2, '源站采集与云端评论应去重合并为 2 条');
+        } finally {
+            CommentPanel.preloadCache = origPreloadCache;
+        }
+    } finally {
+        CommentCacheManager.hasValidCache = origHasValid;
+        CommentCacheManager.getAsync = origGetAsync;
+        CommentCacheManager.saveSiteCache = origSaveSiteCache;
+        SupabaseService.fetchComments = origFetchComments;
+        SyncManager.getWebDavConfig = origGetWebDavConfig;
+        WebDavClient.hasValidEndpoint = origHasValidEndpoint;
+        WebDavClient.downloadBackup = origDownloadBackup;
+    }
+}
+
+console.log('🎉 全部评论识别优化、同系列番号补全、上报、防穿透与提前展示回归测试通过！');

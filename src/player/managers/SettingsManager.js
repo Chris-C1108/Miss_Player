@@ -1239,7 +1239,6 @@ export class SettingsManager {
             setTimeout(() => {
                 if (this.overlayClickHandler && this.settingsPanel?.classList.contains('active')) {
                     document.addEventListener('click', this.overlayClickHandler, true);
-                    document.addEventListener('touchstart', this.overlayClickHandler, { capture: true, passive: true });
                 }
             }, 50);
         }
@@ -1256,7 +1255,6 @@ export class SettingsManager {
         
         if (this.overlayClickHandler) {
             document.removeEventListener('click', this.overlayClickHandler, true);
-            document.removeEventListener('touchstart', this.overlayClickHandler, true);
             this.overlayClickHandler = null;
         }
         const surfaceMachine = this.uiManager?.surfaceMachine || this.playerCore?.surfaceMachine;

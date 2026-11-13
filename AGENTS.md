@@ -238,8 +238,10 @@ Miss Player 运行于复杂的多域名第三方宿主环境（Jable、MissAV、
   - 凡在组件样式中声明 `width: 100%` 并带有 `padding` 或 `border` 时，必须强制声明 `box-sizing: border-box; max-width: 100%;`，严禁依赖默认 `content-box` 导致实际物理宽度（`100% + padding*2`）撑爆父容器产生横向溢出与左右晃动。
 * **纵向滚动容器手势硬约束与防击穿 (Touch Action Pan-Y & Overflow-X Lock)**：
   - 所有垂直滚动区域（如评论列表、骨架屏、状态盒）必须显式声明 `touch-action: pan-y; overflow-x: hidden; overscroll-behavior-x: none;`；Loading 骨架屏必须具备 `pointer-events: auto`，严禁触控穿透至底层宿主页面引发横向位移与橡皮筋晃动。
-* **浮层组件事件全生命周期硬隔离 (Overlay Event Boundary Guard)**：
-  - 所有绝对/固定定位的浮层组件（如预览浮窗、气泡提示、模态框）必须在根节点上彻底阻断所有指针事件冒泡（`pointerdown`, `touchstart`, `click`），且外部视频与控制层监听必须将其加入排除白名单，严禁点击被底层机制消费导致误唤醒控制栏。
+* **浮层组件事件全生命周期硬隔离与防穿透铁律 (Overlay Event Boundary & SurfaceMachine Guard)**：
+  - **严禁脱机孤立浮层**：任何新建弹窗、预览浮窗或抽屉（如 `createModal`、`CommentCodePreview`）必须接入 `UISurfaceMachine`（`pushModal`/`popModal` 或 `SURFACE_TYPES.*`），挂载在 `.tm-player-container` 顶层层级，严禁挂在带有 `overflow: hidden` 或低 `z-index` 的子容器（如 `.tm-comments-panel`）内部；
+  - **统一防穿透守卫**：所有浮层容器必须调用 `UISurfaceMachine.bindOverlayGuard(el, options)` 阻断全部触摸/指针/鼠标/滚轮冒泡，且外部交互白名单（`UIManager.js`）必须包含其选择器；
+  - **外部关闭严禁用 `pointerdown`/`touchstart` capture**：点击浮层外关闭时一律使用 `click` capture，并在关闭后自动激活 380ms 全局冷却（`.is-overlay-cooldown`），彻底消灭“pointerdown 关闭浮层 → 300ms 后松手 click 穿透点中视频”的时序陷阱（由 `npm run ci:check` 静态门禁 `[6/6]` 强制核验）。
 * **手风琴折叠列表展开分区自适应收缩规范 (Hugs Content vs Full Stretch)**：
   - 手风琴或多源折叠列表（如评论列表、文件树等）的展开分区，严禁使用 `flex: 1` 强行索取父容器所有剩余可用空间，防止子项内容较少（如仅 2~3 条评论）时容器被拉大至全屏高度并产生数百像素的巨大死留白；
   - 必须声明 `flex: 0 1 auto; max-height: 100%;`：内容少时尺寸随内容精准包裹（Hugs Content），使后续折叠卡片自然紧贴；内容多时由内部 `overflow-y: auto` 滚动承载。

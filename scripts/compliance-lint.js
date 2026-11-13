@@ -260,6 +260,54 @@ function runCheck() {
         console.log(`   ✅ JS 模板行内样式受控 (当前 ${totalInlineStyles} 处 / 豁免上限 ${MAX_ALLOWED_INLINE_STYLES} 处)`);
     }
 
+    // 6. 浮层防穿透架构静态门禁 (Overlay Anti-Penetration Guard)
+    console.log('\n🛡️  [6/6] 浮层防穿透架构静态门禁:');
+    const modalJsPath = path.resolve(__dirname, '../src/utils/modal.js');
+    const modalJsCode = fs.readFileSync(modalJsPath, 'utf8');
+    if (!modalJsCode.includes('pushModal') || !modalJsCode.includes('popModal') || !modalJsCode.includes('bindOverlayGuard')) {
+        console.error('   ❌ src/utils/modal.js 必须接入 UISurfaceMachine.pushModal/popModal 与 bindOverlayGuard！');
+        hasErrors = true;
+    }
+
+    const codePreviewPath = path.resolve(__dirname, '../src/player/comments/CommentCodePreview.js');
+    const codePreviewCode = fs.readFileSync(codePreviewPath, 'utf8');
+    if (!codePreviewCode.includes('SURFACE_TYPES.CODE_PREVIEW') || !codePreviewCode.includes('bindOverlayGuard')) {
+        console.error('   ❌ CommentCodePreview.js 必须接入 SURFACE_TYPES.CODE_PREVIEW 与 bindOverlayGuard！');
+        hasErrors = true;
+    }
+
+    const uiManagerPath = path.resolve(__dirname, '../src/player/ui/UIManager.js');
+    const uiManagerCode = fs.readFileSync(uiManagerPath, 'utf8');
+    const requiredOverlaySelectors = [
+        '.tm-custom-modal-overlay',
+        '.jc-code-preview-popover',
+        '.tm-inline-remark-popover',
+        '.tm-bottom-sheet-overlay',
+        '.tm-settings-panel'
+    ];
+    const missingOverlaySelectors = requiredOverlaySelectors.filter(sel => !uiManagerCode.includes(sel));
+    if (missingOverlaySelectors.length > 0) {
+        console.error(`   ❌ UIManager.js 缺少浮层防穿透白名单选择器: ${missingOverlaySelectors.join(', ')}`);
+        hasErrors = true;
+    }
+
+    // 扫描 src/player/ 是否存在裸用 pointerdown/touchstart capture 做外部点击关闭的反模式
+    const forbiddenOutsideDismissFiles = [];
+    getJsFiles(path.resolve(__dirname, '../src/player')).forEach(f => {
+        const rel = path.relative(path.resolve(__dirname, '..'), f);
+        if (rel === 'src/player/state/UISurfaceMachine.js') return;
+        const src = fs.readFileSync(f, 'utf8');
+        if (/addEventListener\s*\(\s*['"](?:pointerdown|touchstart)['"]\s*,\s*[^,)]*(?:outside|Outside|DocumentClick|overlayClick)[^,)]*,\s*(?:true|\{\s*capture\s*:\s*true)/i.test(src)) {
+            forbiddenOutsideDismissFiles.push(rel);
+        }
+    });
+    if (forbiddenOutsideDismissFiles.length > 0) {
+        console.error(`   ❌ 严禁在 UISurfaceMachine 之外使用 pointerdown/touchstart capture 关闭外部浮层 (易致松手/click穿透底层视频): ${forbiddenOutsideDismissFiles.join(', ')}`);
+        hasErrors = true;
+    } else {
+        console.log('   ✅ 浮层防穿透门禁通过: 所有弹窗/浮层均已接入 UISurfaceMachine 栈管理与 click 冷却守卫。');
+    }
+
     console.log('\n====================================================');
     if (hasErrors) {
         console.error('🛑 门禁审查失败: 发现违规或致命错误，发布流程已强制阻断！');

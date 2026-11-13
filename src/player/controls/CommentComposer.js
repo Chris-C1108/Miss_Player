@@ -4,6 +4,7 @@ import { isSiteDomain, getSiteUrls } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { formatSeconds } from '../comments/index.js';
 import { UIManager } from '../ui/UIManager.js';
+import { UISurfaceMachine } from '../state/UISurfaceMachine.js';
 
 const JABLE_DOMAINS = getSiteUrls('JABLE');
 
@@ -170,8 +171,12 @@ export class CommentComposer {
             this.commentInput.disabled = true;
         }
 
-        // 阻断高光标签列表纵向触控滑动冒泡至外层播放器视口容器，确保丝滑 60fps 原生滚动
+        // 阻断高光标签列表及评论发表底栏触控/点击冒泡至外层播放器视口容器
+        if (submitBarWrapper) {
+            UISurfaceMachine.bindOverlayGuard(submitBarWrapper, { stopMove: false, stopWheel: true });
+        }
         if (tagSelectModal) {
+            UISurfaceMachine.bindOverlayGuard(tagSelectModal, { stopMove: false, stopWheel: true });
             tagSelectModal.addEventListener('touchmove', (e) => {
                 e.stopPropagation();
             }, { passive: true });
@@ -465,7 +470,7 @@ export class CommentComposer {
             };
         }
         setTimeout(() => {
-            window.addEventListener('pointerdown', this._outsideComposerHandler, { capture: true });
+            window.addEventListener('click', this._outsideComposerHandler, { capture: true });
         }, 40);
     }
 
@@ -495,7 +500,7 @@ export class CommentComposer {
             surfaceMachine.deactivate('comment-composer');
         }
         if (this._outsideComposerHandler) {
-            window.removeEventListener('pointerdown', this._outsideComposerHandler, { capture: true });
+            window.removeEventListener('click', this._outsideComposerHandler, { capture: true });
         }
     }
 
@@ -579,7 +584,7 @@ export class CommentComposer {
             };
         }
         setTimeout(() => {
-            window.addEventListener('pointerdown', this._outsideTagModalHandler, { capture: true });
+            window.addEventListener('click', this._outsideTagModalHandler, { capture: true });
         }, 30);
     }
 
@@ -590,7 +595,7 @@ export class CommentComposer {
         this.realignCaret();
 
         if (this._outsideTagModalHandler) {
-            window.removeEventListener('pointerdown', this._outsideTagModalHandler, { capture: true });
+            window.removeEventListener('click', this._outsideTagModalHandler, { capture: true });
         }
     }
 

@@ -67,17 +67,7 @@ export function createModal(contentHTML, options = {}) {
     });
 
     // 全局冒泡防穿透护盾：严禁模态框及遮罩内的任何触控/指针/点击/滚轮事件冒泡至 playerContainer 或视频层
-    const stopOverlayLeak = (e) => {
-        e.stopPropagation();
-    };
-    [
-        'touchstart', 'touchmove', 'touchend', 'touchcancel',
-        'pointerdown', 'pointermove', 'pointerup', 'pointercancel',
-        'mousedown', 'mousemove', 'mouseup', 'click', 'dblclick',
-        'wheel', 'contextmenu'
-    ].forEach(evt => {
-        modal.addEventListener(evt, stopOverlayLeak, false);
-    });
+    UISurfaceMachine.bindOverlayGuard(modal, { stopMove: true, stopWheel: true });
 
     // 防止 iOS Safari 虚拟键盘打开时点击模态框内按钮在 mousedown 阶段提前触发 input blur 导致弹窗瞬移丢失点击
     modal.addEventListener('mousedown', (e) => {
