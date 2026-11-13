@@ -57,16 +57,35 @@
 
 ---
 
-## 4. 专家评审后续演进建议（Roadmap Proposal）
+## 4. Phase 22 V3.3 实测指标与服务端去重升级
 
-结合 `error-book.md` Part B 实测残余，建议下一轮架构演进重点评估以下 4 项：
+在完成专家评审提出的 Stage A/B/C 改造后，已于 `CommentDataPipeline.js` 与 `supabase/migrations/20261113000001_dedup_comment_reports.sql` 落地以下收敛成果：
 
-1. **消除 `R-01 ~ R-03` 抢占冲突（Pipeline 重排序）**：
-   - 将解析管线拆为：`L1~L4` 高置信度时间提取 ➔ `extractAVCodes`（显式 + 同系列补全） ➔ `L5` 兜底孤立数字；从根源解决 `"398是梦开始的地方"` 被 `L5` 抢占。
-2. **修复 `R-18` `H:MM` vs `MM:SS` 尺度断裂 Bug (`2:28, 3:03`)**：
-   - `parseTwoPartTime` 目前硬编码 `a < hourLimit (3)` 即判定为 `H:MM`，导致 `"2:28, 3:03"` 被拆成 `2h28m (8880s)` 与 `3m03s (183s)` 并误触发倒计时！
-   - **解法**：当同条评论内存在多组 `X:XX` 且部分 `a >= hourLimit`（或全局最大数 `< 60` 且无 `H:MM:SS` 三段式存在、且上下文连续跨度合理）时，执行**同量纲序列一致性检验**，统一按 `MM:SS` 解析为 `148s, 183s`。
-3. **补全 `R-15` 中文带“零”复合时间（`一小时零四分40秒`）与 `R-16` 三围掩码**：
-   - 扩展 `l3hmsRegex` / `l3hmRegex` 允许小时与分钟间出现可选 `零|又`；`maskBlacklist` 屏蔽 `三圍/三围[:：]?\s*\d{2,3}\s*[-/]\s*\d{2,3}\s*[-/]\s*\d{2,3}`。
-4. **基于 Report v2 数据飞轮构建自动化回归集**：
-   - 生产库收集到带 `parser_snapshot` + `expected_hint` 的新上报后，定期导出自动追加至 `tests/comment-pipeline-reports.test.mjs`。
+### 4.1 134 条黄金评测集门禁（`npm run eval:comments`）
+- **数据源**：`tests/fixtures/comment-pipeline-gold.json`（完整覆盖 41 条线上上报 + 18 条错题本 + 真实库正负样本）
+- **实测结果**（44.61 ms）：
+  - **时间戳识别**：`TP=107, FP=0, FN=0` ➔ **Precision = 100.00%, Recall = 100.00%, F0.5 = 100.00%**
+  - **番号提取（含同系列尾号）**：`TP=35, FP=0, FN=0` ➔ **Precision = 100.00%, Recall = 100.00%, F0.5 = 100.00%**
+  - **倒计时判定**：`TP=11, FP=0, FN=0, TN=123` ➔ **FPR = 0.00%, Accuracy = 100.00%**
+
+### 4.2 31,685 条生产语料全量跑测对比
+| 指标项 | 基准旧版 | Beta.030 (V3.2) | Phase 22 V3.3 | 变化幅度 |
+| :--- | :---: | :---: | :---: | :---: |
+| `L5` 孤立/斜杠兜底命中 | 235 | 56 | **41** | **-82.6%** |
+| 同系列尾号上下文推导 (`ctxAv`) | 224 | 94 | **86** | **-61.6%** |
+| 31,685 条全量解析总耗时 | — | — | **768 ms** (~24 µs/条) | 模块级正则预编译 |
+
+### 4.3 Report v2 去重与计数聚合 (`20261113000001_dedup_comment_reports.sql`)
+- 新增 `report_fingerprint`（`md5(upper(avcode)|md5(comment_text)|reason_code)` 唯一索引）与 `report_count`；
+- 重复点击或不同用户针对同一评论提交的同类上报自动合并计数（`report_count = report_count + 1`）并刷新最新诊断快照，消除 `CAWD-796` 式重复脏数据。
+
+---
+
+## 5. 专家评审历史建议与落地状态
+
+结合 `error-book.md` Part B 实测残余，专家评审提出的核心演进项已落地状态如下：
+
+1. **[已落地] 消除 `R-01 ~ R-03` 抢占冲突（Pipeline 四层重排序）**：`L1~L4` ➔ `extractAVCodes` ➔ `L5`；
+2. **[已落地] 修复 `R-18` `H:MM` vs `MM:SS` 尺度断裂 (`2:28, 3:03`)**：新增 `calibrateTwoPartCandidates()` 序列同量纲一致性校准；
+3. **[已落地] 补全 `R-15` 中文带“零”复合时间与 `R-16` 三围掩码**：已支持 `一小时零四分40秒` 与 `84-58-85`；
+4. **[已落地] 基于 Report v2 与 41 条线上上报建立 134 条黄金集门禁**：已接入 `npm run ci:check` 4.24 阻断门禁。

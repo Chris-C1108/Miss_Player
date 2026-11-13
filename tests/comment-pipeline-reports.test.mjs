@@ -233,4 +233,64 @@ console.log('🧪 开始执行评论识别引擎优化、同系列番号与上�
     }
 }
 
+// -------------------------------------------------------------
+// 5. Phase 22 V3 跨层消歧、动态校准与等长掩码回归验证 (R-01 ~ R-18)
+// -------------------------------------------------------------
+{
+    // R-01 & R-02: 4层交叉消歧（孤立番号尾号与同系列斜杠列表不再被 L5 抢占）
+    const r01 = processComment('398是梦开始的地方', 'IPX-451', 7200);
+    assert.deepStrictEqual(r01.avcodes, ['IPX-398'], 'R-01: 句首 398 应优先识别为 IPX-398');
+    assert.strictEqual(r01.timestamps.length, 0, 'R-01: IPX-398 不得残余 L5 时间戳');
+
+    const r02 = processComment('145/232/256好像就这三部流出', 'STARS-145', 7200);
+    assert.deepStrictEqual(r02.avcodes, ['STARS-145', 'STARS-232', 'STARS-256'], 'R-02: 同系列斜杠列表应整体识别为番号');
+    assert.strictEqual(r02.timestamps.length, 0, 'R-02: 同系列斜杠列表不得被 L5 斜杠吞并');
+
+    // R-03 & R-15 & R-17: 多连写分钟、中文零分钟、小时链继承
+    const r03 = processComment('95、104、114、118分钟连续4发中出', 'MIAA-710', 10800);
+    assert.deepStrictEqual(r03.timestamps.map(t => t.seconds), [5700, 6240, 6840, 7080], 'R-03: 顿号分隔多分钟均应独立提取');
+
+    const r15 = processComment('一小时零四分40秒开始', 'ABW-118', 7200);
+    assert.deepStrictEqual(r15.timestamps.map(t => t.seconds), [3880], 'R-15: 一小时零四分40秒应准确识别为 3880s');
+
+    const r17 = processComment('2h13，18，30舔脚', 'PRED-772', 10800);
+    assert.deepStrictEqual(r17.timestamps.map(t => t.seconds), [7980, 8280, 9000], 'R-17: 2h13 后紧跟 18、30 应继承 2h 量纲');
+
+    // R-18: 两段式边界跨 hourLimit 序列统一降维
+    const r18 = processComment('2:28, 3:03太顶了', 'IPZZ-243', 7200);
+    assert.deepStrictEqual(r18.timestamps.map(t => t.seconds), [148, 183], 'R-18: 2:28 与 3:03 应统一校准为 MM:SS');
+    assert.strictEqual(r18.isCountdownComment, false, 'R-18: 不得因量纲跳变误判为倒计时');
+
+    // R-04 / R-14 / R-16 / 日期 & 三围屏蔽
+    const r04 = processComment('11月7号上映...我日117快点来啊！', 'PRED-193', 7200);
+    assert.deepStrictEqual(r04.avcodes, [], 'R-04: 日期衍生数字 117 不得误推导为 PRED-117');
+
+    const r14 = processComment('这部片子居然长达150min，前120min节奏不错', 'IPZZ-046', 10800);
+    assert.strictEqual(r14.timestamps.length, 0, 'R-14: 片长描述 150min / 120min 不得误标为跳转时间点');
+
+    const r16 = processComment('身高160 三围84-58-85 身材真好', 'ABF-132', 7200);
+    assert.strictEqual(r16.timestamps.length, 0, 'R-16: 三围 84-58-85 不得误识别为 H-MM-SS');
+
+    // 混合正序区间的局部非负倒序归正 & 发售月日屏蔽
+    const royd = processComment('1:45:50~1:15:15 1:23:45~1:24:20 2:04:25~2:05:25', 'ROYD-112', 10800);
+    assert.strictEqual(royd.isCountdownComment, false, '含正序区间的评论不应误判为倒计时');
+    assert.deepStrictEqual(royd.timestamps[0].seconds, [4515, 6350], '非倒计时评论的局部逆序区间应归正为 [min, max]');
+
+    const predDate = processComment('新作预告 PRED-515 11.21', 'PRED-505', 7200);
+    assert.deepStrictEqual(predDate.avcodes, ['PRED-515']);
+    assert.strictEqual(predDate.timestamps.length, 0, '番号后的发售月日 11.21 不得误抓为时间戳');
+
+    // B-3: 位置精确高亮（避免误把 "打10分" 的 10 高亮）与 L5 轻量视觉降噪类
+    const dupProc = processComment('打10分，后面10分钟和2h13，18都超神', 'ABW-196', 10800);
+    assert.ok(!dupProc.textHtml.includes('打<span class="jc-time-link'), '打10分 中的 10 不得被高亮');
+    assert.ok(dupProc.textHtml.includes('后面<span class="jc-time-link'), '10分钟 应在正确位置被高亮');
+    assert.ok(dupProc.textHtml.includes('is-low-confidence'), 'L5 胶囊应附带 .is-low-confidence 轻量降噪类名');
+
+    // Report v2 去重迁移与智能默认弹窗检查
+    const dedupSql = fs.readFileSync('supabase/migrations/20261113000001_dedup_comment_reports.sql', 'utf8');
+    assert.ok(dedupSql.includes('report_fingerprint') && dedupSql.includes('report_count'), 'Report 去重迁移必须定义指纹与计数列');
+    const modalSrc = fs.readFileSync('src/player/comments/CommentReportModal.js', 'utf8');
+    assert.ok(modalSrc.includes('pipelineVersion') && modalSrc.includes('commentHash'), 'ReportModal 必须携带 pipelineVersion 与 commentHash 快照');
+}
+
 console.log('🎉 全部评论识别优化、同系列番号补全与上报机制回归测试通过！');

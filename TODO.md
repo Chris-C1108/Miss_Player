@@ -30,6 +30,7 @@
 | **Phase 19** | **流网关 (Miss Stream Gateway) 与脚本职责收敛为「只入库」** | **达成 ✅** | **[Phase 19 设计方案](./docs/todo/phase-19-stream-gateway.md)** |
 | **Phase 20** | **双轨播放热度图 (私有 WebDAV 漫游 + 社区全网高能 120 槽位量化)** | **达成 ✅** | 双轨 SVG 贝塞尔波形、Element-wise Max 漫游自愈、水位线差分增量防刷量 |
 | **Phase 21** | **安全加固、Safari 全端兼容与 CSS 重构收口** | **达成 ✅** | **[Phase 21 专属规划方案](./docs/todo/phase-21-hardening-and-css-completion.md)** |
+| **Phase 22** | **评论解析管线 V3 校准、等长掩码与黄金评测闭环** | **进行中 🚧** | **[Phase 22 专属规划方案](./docs/todo/phase-22-comment-parsing-v3.md)** |
 
 - [x] **20.1** 120 分位定长字节量化编解码器 (`quantizeBinsTo120` / `expand120ToBins` / 水位线差分 / Base64 体积仅 160 字符，6 项测试全通)
 - [x] **20.2** 双轨波形渲染与 WebDAV 漫游整合 (`HeatmapManager` 双轨 SVG 贝塞尔曲线、Element-wise Max 逐槽位取最大值融合、8 项测试全通)

@@ -1,6 +1,6 @@
 {
   "name": "miss-player",
-  "version": "5.7.118-beta.030",
+  "version": "5.7.118-beta.031",
   "main": "dist/miss_player.user.js",
   "scripts": {
     "bump": "node scripts/bump-version.js",
@@ -10,6 +10,7 @@
     "build:webpack": "webpack --mode production",
     "dev:webpack": "webpack --mode development --watch",
     "lint:compliance": "node scripts/compliance-lint.js",
+    "eval:comments": "node scripts/eval-comment-pipeline.mjs --strict",
     "ci:check": "node scripts/ci-test.js",
     "test:ui": "node tests/ui/run.js",
     "test:perf": "node tests/perf/run-perf.js",

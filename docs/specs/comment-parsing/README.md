@@ -1,8 +1,8 @@
 # Miss Player 评论解析与纠错上报体系 · 专家评审资料总览
 
-> **适用版本**：`v5.7.118-beta.030`（Commit `fb27094`，`dev` 分支）  
-> **核心源码**：`src/player/comments/CommentDataPipeline.js`、`src/player/controls/CommentPanel.js`、`src/player/comments/CommentReportModal.js`、`src/services/SupabaseService.js`  
-> **回归测试**：`tests/comment-pipeline-reports.test.mjs`（已接入 `npm run ci:check` 步骤 4.24）
+> **适用版本**：`v5.7.118-beta.031+`（Phase 22 V3.3 升级，`dev` 分支）
+> **核心源码**：`src/player/comments/CommentDataPipeline.js`、`src/player/controls/CommentPanel.js`、`src/player/comments/CommentReportModal.js`、`src/services/SupabaseService.js`
+> **回归与门禁**：`tests/comment-pipeline-reports.test.mjs` + `npm run eval:comments`（134 条黄金集门禁，已接入 `npm run ci:check` 步骤 4.24）
 
 ---
 
@@ -28,20 +28,21 @@
 [Stage 1] classifyComment() — 垃圾与水贴拦截 (SPAM / HAM)
    │  AD_CONTACT / HARASSMENT_DOXXING / FRIEND_TAG_MEME / COPYPASTA / TECHNICAL_NOISE / LOW_QUALITY
    ▼ (HAM 继续解析)
-[Stage 2] parseTimestamps() — 5 级时间戳解析流水线
-   │  1) maskBlacklist()            边界守卫屏蔽评分/日期/量词/成语 + 中文小时数字映射
-   │  2) extractCandidates()        L1(冒号) -> L2(点分) -> L3(中文/单位) -> L5(斜杠/孤立)
-   │  3) resolveOverlaps()          高置信度优先贪心去重
-   │  4) mergeRanges()              区间连接 (~ - — 到 至) 合并为 L4
-   │  5) validateMatch()            播放速度/动作时长/评分/L5锚点校验 & 倒计时正负号保留
+[Stage 2] parseTimestamps({ includeL5: false }) — 高置信度 L1~L4 骨架解析
+   │  1) maskBlacklist()            等长空白掩码 (padSpaceMask) 保持原文坐标不变
+   │  2) extractCandidates()        L1(冒号) -> L2(点分) -> L3(中文/单位)
+   │  3) calibrateTwoPartCandidates() 动态降维与跨 hourLimit 序列同量纲一致性校准
+   │  4) resolveOverlaps() -> mergeRanges() -> validateMatch()
    ▼
-[Stage 3] extractAVCodes() — 显式番号 + 同系列残缺尾号补全
+[Stage 3] extractAVCodes() — 显式番号 + 同系列残缺尾号补全（仅避开 L1~L4 与日期）
    │  1) parseSeriesContext()       从 "IPX-811" 规范拆出 seriesPrefix="IPX", digitLen=3
    │  2) maskForAvCodeScan()        屏蔽 URL / 磁力链 / {{PERSON_*}} / BBCode
-   │  3) 显式提取 (oRegExp*)        有码 / 无码 / 串联("DDSC-031、036" / "SSIS-465與437")
-   │  4) 同系列残缺尾号补全         排除显式占用区间 & 时间戳区间 -> 同位数 + 语义守卫
+   │  3) 显式提取 + 同系列补全     命中区间合并入 excludeSpans，防止被 L5 抢占
    ▼
-[Stage 4] isCountdownComment & applyCommentCountdown()
+[Stage 4] parseTimestamps({ includeL5: true, excludeSpans }) — 剩余空间 L5 兜底
+   │  仅在未被 L1~L4 与番号占用的残余空间提取孤立数字/斜杠，附带 .is-low-confidence 轻量降噪样式
+   ▼
+[Stage 5] 倒计时判定与高亮渲染 (processComment & highlightCommentText) isCountdownComment & applyCommentCountdown()
    │  识别 -HH:MM:SS 或严格降序区间/序列(span>=30s且无正序区间反证) -> T_actual = D - T_raw
    ▼
 [Stage 5] highlightCommentText() & CommentReportModal v2

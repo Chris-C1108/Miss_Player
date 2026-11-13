@@ -193,6 +193,7 @@ runStep('执行高能现场计数同步、JavDB 评分居右与操作胶囊悬�
 // 4.24 评论识别引擎优化、同系列番号补全与上报机制单元测试
 runStep('执行评论识别引擎优化、同系列番号补全与上报机制单元测试', () => {
     execSync('node tests/comment-pipeline-reports.test.mjs', { stdio: 'inherit' });
+    execSync('node scripts/eval-comment-pipeline.mjs --strict', { stdio: 'inherit' });
 });
 
 // 5. 沙箱无报错启动验证

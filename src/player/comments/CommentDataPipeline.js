@@ -388,58 +388,75 @@ export function classifyComment(rawComment) {
 // =====================================================================
 //  3. TIMESTAMPS PARSING
 // =====================================================================
+const padSpaceMask = (m) => ' '.repeat(m.length);
+
+const BLACKLIST_RULES = [
+    // 完整年月日与推特/发售日期必须在 \d{4,} 与小数规则之前屏蔽 (如 2026.8.11, 24/9/27, 2.6发推)
+    { regex: /\b(?:19|20)\d{2}\s*[./\-年]\s*\d{1,2}(?:\s*[./\-月]\s*\d{1,2}[日号號]?)?/g, replace: padSpaceMask },
+    { regex: /\b(?:1[89]|2[0-9])\/(?:0?[1-9]|1[0-2])\/(?:0?[1-9]|[12]\d|3[01])\b/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])\d{1,2}[./]\d{1,2}\s*(?:推特|發推|发推|微博|更新|发售|發售|上映|流出|发布|發佈|号|號|日|月)/g, replace: padSpaceMask },
+    { regex: /(?<=[A-Za-z]{2,6}-?\d{2,5}\s{1,3})(?:1[0-2]|[1-9])\.(?:0[1-9]|[12]\d|3[01])(?![:：.\d])/g, replace: padSpaceMask },
+    { regex: /(?:推特|發推|发推|微博|在|于|於)\s*\d{1,2}[./]\d{1,2}(?!\d)/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])\d{1,2}\s*月\s*\d{1,2}\s*[日号號]?/g, replace: padSpaceMask },
+    // R-05: 年份简写 (如 在23开始, 于22年出道)
+    { regex: /(?:在|从|從|于|於)\s*(?:1\d|2[0-6])\s*(?:年\s*)?(?:开始|開始|出道|拍|拍的|拍摄|拍攝|年)/g, replace: padSpaceMask },
+    // R-16: 三围格式屏蔽 (如 三圍：84 - 58 - 85 cm 与裸体三围 84-58-85)
+    { regex: /(?:三围|三圍|胸围|胸圍|腰围|腰圍|臀围|臀圍)\s*[:：]?\s*\d{2,3}\s*[-/]\s*\d{2,3}\s*[-/]\s*\d{2,3}/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d-])\b(?:7\d|8\d|9\d|10\d|11\d)\s*[-/]\s*(?:5\d|6\d|7\d)\s*[-/]\s*(?:7\d|8\d|9\d|10\d|11\d)\b(?![:：.\d-])/g, replace: padSpaceMask },
+    // R-14: 片长版本对比描述 (如 本来150min，现在120min)
+    { regex: /(?:本来|原本|原版|完整版|加长版|加長版|删减版|刪減版|阉割版|閹割版|未删减|未刪減|片长|片長)\s*(?:有|是|为|為|约|約|大概)?\s*\d{2,3}\s*(?:min|mins|分钟|分鐘|分)/gi, replace: padSpaceMask },
+    // R-06: 排名与第N名/部/集 (不误伤 第25分钟)
+    { regex: /(?<![:：.\d])(?:排名前|Top|TOP|top|前)\s*\d{1,3}(?![:：.\d分分钟分鐘秒hH时時])/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])第\s*\d{1,3}\s*(?:名|位|部|集|幕|季|弾|彈|弹|名女优|名女優|套|发|發|次|个|個|人)/g, replace: padSpaceMask },
+    // 带 am/pm 的现实钟表时间 (如 2:23am) 与生活作息时间 (如 早上5点半, 凌晨1点)
+    { regex: /(?<![:\d])\d{1,2}:\d{2}(?::\d{2})?\s*(?:am|pm)\b/gi, replace: padSpaceMask },
+    { regex: /(?:早上|凌晨|半夜|晚上|下午|中午|上午)\s*\d{1,2}\s*[点點](?:半|\d{1,2}分?)?/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])\b(\d+)\s*[pP]\b/g, replace: padSpaceMask },
+    { regex: /([a-zA-Z]{2,6}-\d{2,5})/gi, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])(\d+)\s*[班级級度次坪穴幕]/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])(\d+)\s*年/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])(\d+)\s*[号號]/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])(\d+)\s*[万萬]播放/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])(\d+)\s*[万萬]/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])(\d+)\s*梯/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])(\d+(?:\.\d+)?)\s*(?:mm|cm|kg|厘米|毫米|公分|公尺|米|斤|%|％|pts?)/gi, replace: padSpaceMask },
+    { regex: /百分之\s*\d+(?:\.\d+)?/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])(?:00|90|80|70|10)\s*后/g, replace: padSpaceMask },
+    { regex: /q\s*加\s*\w+/gi, replace: padSpaceMask },
+    // 计算机容量与硬件单位 (如 1.5g, 500mb, 60fps, 20多g)
+    { regex: /(?<![:：.\d])\b\d+(?:\.\d+)?\s*(?:多\s*)?(?:[gG][bB]?|[mM][bB]|[kK][bB]|[fF][pP][sS])\b/g, replace: padSpaceMask },
+    // 多维评分卡与评分/打分屏蔽 (如 颜值17（满分20），胸11，总分86；注意 (?<![:：.\d]) 防止误吞 28:10 本片)
+    { regex: /(?:总分|總分|满分|滿分|平均分|得分|综合分|綜合分|打分|评分|評分)\s*[:：]?\s*\d{1,3}(?:\.\d+)?/g, replace: padSpaceMask },
+    { regex: /(?:颜值|顏值|颜|顏|胸|臀|腰|腿|腰腿|皮肤|皮膚|演技|服装|服裝|剧情|劇情|场景|場景|剧情场景|画面|畫面|身材|表情|声音|聲音)\s*[:：]?\s*\d{1,2}(?:\.\d+)?(?:\s*[（(]满分\d+[)）])?/g, replace: padSpaceMask },
+    { regex: /(?:打|给|給|给个|給個|评|評|评分|評分|打分|综合|綜合|总体|總體|整体|整體|个人|個人|颜值|顏值|颜|顏|身材|演技|外观|外觀|外表|剧情|劇情|题材|題材|画面|畫面|声音|聲音|表现|表現|实用度|實用度|推荐度|推薦度|破解|泡芙|值|满分|滿分|给到|給到)\s*\d{1,2}(?:\.\d+)?\s*分/g, replace: padSpaceMask },
+    { regex: /[【\[]\s*\d{1,2}(?:\.\d+)?\s*分\s*[】\]]/g, replace: padSpaceMask },
+    { regex: /(?<![时小時分秒hmsHM:：.\d])\d{1,2}\.\d+\s*分/g, replace: padSpaceMask },
+    { regex: /(?<![时小時分秒hmsHM:：.\d])\b\d{1,2}\s*分[！!]+(?:\s*\d{1,2}\s*分[！!]*)*/g, replace: padSpaceMask },
+    { regex: /(?<![时小時分秒hmsHM:：.\d])\b\d{1,2}\s*分(?:半|左右(?!开始|開始|处|處|往后|往後|以后|以後)|制|吧|标准|標準|好评|好評|满分|滿分|封神|水平|水准|水準|起步|打底|没毛病|沒毛病|给爆|給爆)/g, replace: padSpaceMask },
+    // R-07: 无单位句尾评价数字 (如 很棒80, 不错90)
+    { regex: /(?:很棒|不错|不錯|还可以|還可以|挺好|蛮好|蠻好|极品|極品|满分|滿分|给力|給力|顶|頂|赞|讚)\s*\d{2,3}(?=\s*(?:分|[，。！!？?,.\n]|$))/g, replace: padSpaceMask },
+    // 分数/评价比值 (如 1/1, 0/1, 9/10, 10/10, 4/5)
+    { regex: /(?<![\d:./])(?:0\/1|1\/1|\d{1,2}\s*\/\s*(?:5|10|100))(?![\d:./])/g, replace: padSpaceMask },
+    // 星级与 Emoji 打分 (如 5星, 4⭐, 5★, 5颗星)
+    { regex: /(?<![:：.\d])\d+(?:\.\d+)?\s*(?:星|⭐|★|颗星|顆星)/gu, replace: padSpaceMask },
+    // 动作量词、性爱招式与计数单位 (如 2发, 5.6发, 2个人, 1000多部, 69式, 34觀看, 20多个, 40多根, 40多分钟)
+    { regex: /(?<![:：.\d])\d{1,3}\s*多\s*(?:分钟|分鐘|分|秒)/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])\d{1,2}\s*秒(?:\s*\d{1,2}\s*秒)+\s*(?:快进|快進|快退)/g, replace: padSpaceMask },
+    // R-09: 69 体位词前后缀
+    { regex: /(?<![:：.\d])(?:69)(?=\s*(?:到|了|啊|式|姿势|姿勢|体位|體位|太|也|挺|很|插|舔|口|做|戏|戲|吃鸡|吃雞|互舔|互口))/g, replace: padSpaceMask },
+    { regex: /(?:口交|口爆|深喉|后入|後入|骑乘|騎乘|传教士|傳教士|足交|乳交|颜射|顏射)[，,、\s]+69(?![:：.\d])/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])\b\d{2}\s*新法/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])\d+(?:[.\-~～到]\d+)?\s*(?:多\s*)?(?:发|發|发炮|個人|个人|个|個|根|部|本|套|式|招|岁|歲|楼|樓|层|層|集|话|話|回|章|节|節|天|周|週|月|名|位|遍|趟|倍|元|块|塊|刀|美元|日元|円|觀看|观看|收藏|赞|贊)/g, replace: padSpaceMask },
+    // 网络数字黑话与修辞成语屏蔽 (如 666, 2333, 2486, 1秒不落)
+    { regex: /(?<![:：.\d])(?:666+|888+|999+|233+|2486)(?![:：.\d])/g, replace: padSpaceMask },
+    { regex: /(?<![:：.\d])[1一]\s*秒(?:不落|都不|没差|不差)/g, replace: padSpaceMask },
+    { regex: /(?<![-:.])\b\d{4,}\b(?![-:.])/g, replace: padSpaceMask }
+];
+
 function maskBlacklist(normalizedText) {
     let text = normalizedText;
-    const blacklistRules = [
-        // 完整年月日与推特/发售日期必须在 \d{4,} 与小数规则之前屏蔽 (如 2026.8.11, 24/9/27, 2.6发推)
-        { regex: /\b(?:19|20)\d{2}\s*[./\-年]\s*\d{1,2}(?:\s*[./\-月]\s*\d{1,2}[日号號]?)?/g, placeholder: '_DATE_' },
-        { regex: /\b(?:1[89]|2[0-9])\/(?:0?[1-9]|1[0-2])\/(?:0?[1-9]|[12]\d|3[01])\b/g, placeholder: '_DATE_' },
-        { regex: /(?<![:：.\d])\d{1,2}[./]\d{1,2}\s*(?:推特|發推|发推|微博|更新|发售|發售|上映|流出|发布|發佈|号|號|日|月)/g, placeholder: '_TWEET_DATE_' },
-        { regex: /(?:推特|發推|发推|微博|在|于|於)\s*\d{1,2}[./]\d{1,2}(?!\d)/g, placeholder: '_TWEET_DATE_' },
-        { regex: /(?<![:：.\d])\d{1,2}\s*月\s*\d{1,2}\s*[日号號]?/g, placeholder: '_DATE_' },
-        // 带 am/pm 的现实钟表时间 (如 2:23am) 与生活作息时间 (如 早上5点半, 凌晨1点)
-        { regex: /(?<![:\d])\d{1,2}:\d{2}(?::\d{2})?\s*(?:am|pm)\b/gi, placeholder: '_REAL_TIME_' },
-        { regex: /(?:早上|凌晨|半夜|晚上|下午|中午|上午)\s*\d{1,2}\s*[点點](?:半|\d{1,2}分?)?/g, placeholder: '_REAL_TIME_' },
-        { regex: /(?<![:：.\d])\b(\d+)\s*[pP]\b/g, placeholder: '_PEOPLE_' },
-        { regex: /([a-zA-Z]{2,5}-\d{3,4})/gi, placeholder: '_AVCODE_' },
-        { regex: /(?<![:：.\d])(\d+)\s*[班级級度次坪穴幕]/g, placeholder: '_CLASS_' },
-        { regex: /(?<![:：.\d])(\d+)\s*年/g, placeholder: '_YEAR_' },
-        { regex: /(?<![:：.\d])(\d+)\s*[号號]/g, placeholder: '_NUMBER_' },
-        { regex: /(?<![:：.\d])(\d+)\s*[万萬]播放/g, placeholder: '_VIEWS_' },
-        { regex: /(?<![:：.\d])(\d+)\s*[万萬]/g, placeholder: '_LARGE_NUM_' },
-        { regex: /(?<![:：.\d])(\d+)\s*梯/g, placeholder: '_MILITARY_' },
-        { regex: /(?<![:：.\d])(\d+(?:\.\d+)?)\s*(?:mm|cm|kg|厘米|毫米|公分|公尺|米|斤|%|％|pts?)/gi, placeholder: '_MEASURE_' },
-        { regex: /百分之\s*\d+(?:\.\d+)?/g, placeholder: '_PERCENT_' },
-        { regex: /(?<![:：.\d])(?:00|90|80|70|10)\s*后/g, placeholder: '_GENERATION_' },
-        { regex: /q\s*加\s*\w+/gi, placeholder: '_SPAM_' },
-        // 计算机容量与硬件单位 (如 1.5g, 500mb, 60fps, 20多g)
-        { regex: /(?<![:：.\d])\b\d+(?:\.\d+)?\s*(?:多\s*)?(?:[gG][bB]?|[mM][bB]|[kK][bB]|[fF][pP][sS])\b/g, placeholder: '_CAPACITY_' },
-        // 多维评分卡与评分/打分屏蔽 (如 颜值17（满分20），胸11，总分86；注意 (?<![:：.\d]) 防止误吞 28:10 本片)
-        { regex: /(?:总分|總分|满分|滿分|平均分|得分|综合分|綜合分|打分|评分|評分)\s*[:：]?\s*\d{1,3}(?:\.\d+)?/g, placeholder: '_SCORECARD_' },
-        { regex: /(?:颜值|顏值|颜|顏|胸|臀|腰|腿|腰腿|皮肤|皮膚|演技|服装|服裝|剧情|劇情|场景|場景|剧情场景|画面|畫面|身材|表情|声音|聲音)\s*[:：]?\s*\d{1,2}(?:\.\d+)?(?:\s*[（(]满分\d+[)）])?/g, placeholder: '_SCORECARD_' },
-        { regex: /(?:打|给|給|给个|給個|评|評|评分|評分|打分|综合|綜合|总体|總體|整体|整體|个人|個人|颜值|顏值|颜|顏|身材|演技|外观|外觀|外表|剧情|劇情|题材|題材|画面|畫面|声音|聲音|表现|表現|实用度|實用度|推荐度|推薦度|破解|泡芙|值|满分|滿分|给到|給到)\s*\d{1,2}(?:\.\d+)?\s*分/g, placeholder: '_RATING_' },
-        { regex: /[【\[]\s*\d{1,2}(?:\.\d+)?\s*分\s*[】\]]/g, placeholder: '_RATING_' },
-        { regex: /(?<![时小時分秒hmsHM:：.\d])\d{1,2}\.\d+\s*分/g, placeholder: '_RATING_' },
-        { regex: /(?<![时小時分秒hmsHM:：.\d])\b\d{1,2}\s*分[！!]+(?:\s*\d{1,2}\s*分[！!]*)*/g, placeholder: '_RATING_' },
-        { regex: /(?<![时小時分秒hmsHM:：.\d])\b\d{1,2}\s*分(?:半|左右(?!开始|開始|处|處|往后|往後|以后|以後)|制|吧|标准|標準|好评|好評|满分|滿分|封神|水平|水准|水準|起步|打底|没毛病|沒毛病|给爆|給爆)/g, placeholder: '_RATING_' },
-        // 分数/评价比值 (如 1/1, 0/1, 9/10, 10/10, 4/5)
-        { regex: /(?<![\d:./])(?:0\/1|1\/1|\d{1,2}\s*\/\s*(?:5|10|100))(?![\d:./])/g, placeholder: '_RATING_' },
-        // 星级与 Emoji 打分 (如 5星, 4⭐, 5★, 5颗星)
-        { regex: /(?<![:：.\d])\d+(?:\.\d+)?\s*(?:星|⭐|★|颗星|顆星)/gu, placeholder: '_STAR_RATING_' },
-        // 动作量词、性爱招式与计数单位 (如 2发, 5.6发, 2个人, 1000多部, 69式, 34觀看, 20多个, 40多根, 40多分钟)
-        { regex: /(?<![:：.\d])\d{1,3}\s*多\s*(?:分钟|分鐘|分|秒)/g, placeholder: '_DURATION_' },
-        { regex: /(?<![:：.\d])\d{1,2}\s*秒(?:\s*\d{1,2}\s*秒)+\s*(?:快进|快進|快退)/g, placeholder: '_STEP_SKIP_' },
-        { regex: /(?<![:：.\d])(?:69)(?=\s*(?:到|了|啊|式|姿势|姿勢|太|也|挺|很|插|舔|口|做|戏|戲))/g, placeholder: '_POSITION_' },
-        { regex: /(?<![:：.\d])\b\d{2}\s*新法/g, placeholder: '_YEAR_POLICY_' },
-        { regex: /(?<![:：.\d])\d+(?:[.\-~～到]\d+)?\s*(?:多\s*)?(?:发|發|发炮|個人|个人|个|個|根|部|本|套|式|招|岁|歲|楼|樓|层|層|集|话|話|回|章|节|節|天|周|週|月|名|位|遍|趟|倍|元|块|塊|刀|美元|日元|円|觀看|观看|收藏|赞|贊)/g, placeholder: '_QUANTITY_' },
-        // 网络数字黑话与修辞成语屏蔽 (如 666, 2333, 2486, 1秒不落)
-        { regex: /(?<![:：.\d])(?:666+|888+|999+|233+|2486)(?![:：.\d])/g, placeholder: '_SLANG_' },
-        { regex: /(?<![:：.\d])[1一]\s*秒(?:不落|都不|没差|不差)/g, placeholder: '_IDIOM_' },
-        { regex: /(?<![-:.])\b\d{4,}\b(?![-:.])/g, placeholder: '_LONG_NUM_' }
-    ];
-
-    for (const rule of blacklistRules) {
-        text = text.replace(rule.regex, rule.placeholder);
+    for (const rule of BLACKLIST_RULES) {
+        text = text.replace(rule.regex, rule.replace);
     }
     return text;
 }
@@ -451,6 +468,18 @@ const CN_HOUR_DIGIT_MAP = {
 
 function parseHourToken(token) {
     if (CN_HOUR_DIGIT_MAP[token] !== undefined) return CN_HOUR_DIGIT_MAP[token];
+    return parseInt(token, 10);
+}
+
+function parseMinuteToken(token) {
+    if (/^\d+$/.test(token)) return parseInt(token, 10);
+    if (CN_HOUR_DIGIT_MAP[token] !== undefined) return CN_HOUR_DIGIT_MAP[token];
+    if (token.includes('十')) {
+        const [tensPart, onesPart] = token.split('十');
+        const tens = tensPart ? (CN_HOUR_DIGIT_MAP[tensPart] ?? 1) : 1;
+        const ones = onesPart ? (CN_HOUR_DIGIT_MAP[onesPart] ?? 0) : 0;
+        return tens * 10 + ones;
+    }
     return parseInt(token, 10);
 }
 
@@ -467,14 +496,33 @@ function parseTwoPartTime(a, bStr, isDot = false, hourLimit = 3) {
     }
 }
 
-function extractCandidates(normalizedText, hourLimit = 3) {
-    const candidates = [];
+const RE_L1_HMS = /(?<!\d)(-?\d{1,2}):(\d{1,2}):(\d{2})(?!\d)/g;
+const RE_L1_TWO_PART = /(?<!\d|:)(-?\d{1,3}):(\d{2})(?![:\d]|(?<=:\d{2})\d)/g;
+const RE_L2_DOT = /(?<![a-zA-Z\d.])(-?\d{1,3})\.([0-5]\d)(?:\.([0-5]\d))?(?![\d.])/g;
+const RE_L1_DASH_HMS = /(?<![a-zA-Z\d-])(\d{1,2})-([0-5]\d)-([0-5]\d)(?!-\d|\d)/g;
+const RE_L1_COLON_DOT = /(?<!\d)(\d{1,2}):([0-5]\d)\.([0-5]\d)(?!\d)/g;
+const CN_MINUTE_TOKEN_PATTERN = '(?:[一二两兩三四五六七八九]|十[一二三四五六七八九]?|[二三四五]十[一二三四五六七八九]?|\\d{1,2})';
+const RE_L3_SINGLE_H = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:小时|小時|h|H)(?![a-zA-Z\d:：.分秒零又])(?!\s*(?:片子|影片|的片|长片|長片|时长|時長|全片|整片|总长|總長|合集|总集|總集))/g;
+const RE_L3_HMS = new RegExp(`(?<![a-zA-Z\\d])([一二两兩三四五六七八九]|\\d{1,2})\\s*(?:小时|小時|时|時|h|H)\\s*(?:[零又]\\s*)?(${CN_MINUTE_TOKEN_PATTERN})\\s*(?:分钟|分鐘|分|min|m|M)\\s*(\\d{1,2})\\s*(?:秒钟|秒鐘|秒|s|S)?(?![a-zA-Z\\d])`, 'g');
+const RE_L3_HM = new RegExp(`(?<![a-zA-Z\\d])([一二两兩三四五六七八九]|\\d{1,2})\\s*(?:小时|小時|时|時|h|H)\\s*(?:[零又]\\s*)?(${CN_MINUTE_TOKEN_PATTERN})\\s*(?:分钟|分鐘|分|min|m|M)(?![a-zA-Z\\d])`, 'g');
+const RE_L3_H_SHORT_M = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:小时|小時|时|時|h|H)\s*(?:[零又]\s*)?([0-5]\d)(?![a-zA-Z\d:：.分秒])/g;
+const RE_L3_M_SHORT_S = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分)\s*([0-5]\d)(?!\d|[秒])/g;
+const RE_L3_MS = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分)\s*(\d{1,2})\s*(?:秒钟|秒鐘|秒)(?!\d)/g;
+const RE_L3_M = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分|mins?)(?![a-zA-Z\d])/gi;
+const RE_L3_S = /(?<!\d)(\d{1,2})\s*(?:秒钟|秒鐘|秒)(?!\d)/g;
+const RE_L5_SLASH = /(?<![\d:./])(\d{1,3})(?:\s*\/\s*(\d{1,3}))+(?![\d:./])/g;
+const RE_L5_ISOLATED = /(?<![\d:.\-/])\b(\d{1,3})\b(?![\d:.\-/])/g;
 
-    // L1: Colon H:M:S or M:S
+function extractCandidates(normalizedText, hourLimit = 3, options = {}) {
+    const candidates = [];
+    const includeL5 = options.includeL5 !== false;
+    const excludeSpans = Array.isArray(options.excludeSpans) ? options.excludeSpans : null;
+    const overlapsExcluded = (s, e) => excludeSpans ? excludeSpans.some(([es, ee]) => Math.max(s, es) < Math.min(e, ee)) : false;
+
     // L1: Colon H:M:S (支持 1:1:12 与 -1:53:40) & MM:SS (禁止匹配粘连的 15:5315:53 局部或非法后缀)
-    const l1HmsRegex = /(?<!\d)(-?\d{1,2}):(\d{1,2}):(\d{2})(?!\d)/g;
+    RE_L1_HMS.lastIndex = 0;
     let match;
-    while ((match = l1HmsRegex.exec(normalizedText)) !== null) {
+    while ((match = RE_L1_HMS.exec(normalizedText)) !== null) {
         const raw = match[0];
         const isNegative = raw.startsWith('-');
         const h = Math.abs(parseInt(match[1], 10));
@@ -492,8 +540,8 @@ function extractCandidates(normalizedText, hourLimit = 3) {
         });
     }
 
-    const l1Regex = /(?<!\d|:)(-?\d{1,3}):(\d{2})(?![:\d]|(?<=:\d{2})\d)/g;
-    while ((match = l1Regex.exec(normalizedText)) !== null) {
+    RE_L1_TWO_PART.lastIndex = 0;
+    while ((match = RE_L1_TWO_PART.exec(normalizedText)) !== null) {
         const raw = match[0];
         const isNegative = raw.startsWith('-');
         const part0 = Math.abs(parseInt(match[1], 10));
@@ -506,13 +554,19 @@ function extractCandidates(normalizedText, hourLimit = 3) {
             end: match.index + raw.length,
             level: 'L1',
             seconds: isNegative ? -seconds : seconds,
-            isNegative
+            isNegative,
+            twoPartMeta: isNegative ? null : {
+                a: part0,
+                b: part1,
+                isDot: false,
+                parsedAsHours: part0 <= hourLimit
+            }
         });
     }
 
     // L2: Dot separator — 强制小数点后必须为两位 [0-5]\d (彻底消除 9.7 / 3.5 / 2.6 等一位小数评分与日期误报)
-    const l2Regex = /(?<![a-zA-Z\d.])(-?\d{1,3})\.([0-5]\d)(?:\.([0-5]\d))?(?![\d.])/g;
-    while ((match = l2Regex.exec(normalizedText)) !== null) {
+    RE_L2_DOT.lastIndex = 0;
+    while ((match = RE_L2_DOT.exec(normalizedText)) !== null) {
         const raw = match[0];
         const isNegative = raw.startsWith('-');
         const parts = [
@@ -525,6 +579,7 @@ function extractCandidates(normalizedText, hourLimit = 3) {
             continue;
         }
         let seconds = 0;
+        let parsedAsHours = false;
         const absPart0 = Math.abs(parts[0]);
         if (parts[2] !== null) {
             seconds = absPart0 * 3600 + part1Val * 60 + parts[2];
@@ -537,6 +592,7 @@ function extractCandidates(normalizedText, hourLimit = 3) {
                 seconds = absPart0 * 60 + part1Val;
             } else {
                 seconds = parseTwoPartTime(absPart0, parts[1], true, hourLimit);
+                parsedAsHours = absPart0 <= hourLimit;
             }
         }
         candidates.push({
@@ -545,13 +601,19 @@ function extractCandidates(normalizedText, hourLimit = 3) {
             end: match.index + raw.length,
             level: 'L2',
             seconds: isNegative ? -seconds : seconds,
-            isNegative
+            isNegative,
+            twoPartMeta: (!isNegative && parts[2] === null) ? {
+                a: absPart0,
+                b: part1Val,
+                isDot: true,
+                parsedAsHours
+            } : null
         });
     }
 
     // L1: Dash-separated H-M-S (如 0-44-59；校验 H <= hourLimit 防止三围 84-58-85 / 日期 26-08-11 误匹配)
-    const l1DashHmsRegex = /(?<![a-zA-Z\d-])(\d{1,2})-([0-5]\d)-([0-5]\d)(?!-\d|\d)/g;
-    while ((match = l1DashHmsRegex.exec(normalizedText)) !== null) {
+    RE_L1_DASH_HMS.lastIndex = 0;
+    while ((match = RE_L1_DASH_HMS.exec(normalizedText)) !== null) {
         const raw = match[0];
         const parts = [parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10)];
         if (parts[0] <= hourLimit && parts[1] < 60 && parts[2] < 60) {
@@ -564,8 +626,8 @@ function extractCandidates(normalizedText, hourLimit = 3) {
     }
 
     // L1: Dot-separated with Colon mixed (如 2:02.34)
-    const l1ColonDotRegex = /(?<!\d)(\d{1,2}):([0-5]\d)\.([0-5]\d)(?!\d)/g;
-    while ((match = l1ColonDotRegex.exec(normalizedText)) !== null) {
+    RE_L1_COLON_DOT.lastIndex = 0;
+    while ((match = RE_L1_COLON_DOT.exec(normalizedText)) !== null) {
         const raw = match[0];
         const parts = [parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10)];
         if (parts[1] < 60 && parts[2] < 60) {
@@ -578,8 +640,8 @@ function extractCandidates(normalizedText, hourLimit = 3) {
     }
 
     // L3: Standalone hour (如 2h, 1h, 1小时, 一小时；排除 "四小时片子/全片" 等总片长描述)
-    const l3SingleHRegex = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:小时|小時|h|H)(?![a-zA-Z\d:：.分秒])(?!\s*(?:片子|影片|的片|长片|長片|时长|時長|全片|整片|总长|總長|合集|总集|總集))/g;
-    while ((match = l3SingleHRegex.exec(normalizedText)) !== null) {
+    RE_L3_SINGLE_H.lastIndex = 0;
+    while ((match = RE_L3_SINGLE_H.exec(normalizedText)) !== null) {
         const raw = match[0];
         candidates.push({
             raw, index: match.index, end: match.index + raw.length, level: 'L3',
@@ -588,30 +650,30 @@ function extractCandidates(normalizedText, hourLimit = 3) {
         });
     }
 
-    // L3: Chinese semantics & English mix (支持 小时/小時/时/時/h/H 与中文数字小时如 一小时40分钟)
-    const l3hmsRegex = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:小时|小時|时|時|h|H)\s*(\d{1,2})\s*(?:分钟|分鐘|分|min|m|M)\s*(\d{1,2})\s*(?:秒钟|秒鐘|秒|s|S)?(?![a-zA-Z\d])/g;
-    while ((match = l3hmsRegex.exec(normalizedText)) !== null) {
+    // L3: Chinese semantics & English mix (支持 小时/小時/时/時/h/H、零/又连接与中文数字小时/分钟如 一小时零四分40秒)
+    RE_L3_HMS.lastIndex = 0;
+    while ((match = RE_L3_HMS.exec(normalizedText)) !== null) {
         const raw = match[0];
         candidates.push({
             raw, index: match.index, end: match.index + raw.length, level: 'L3',
-            seconds: parseHourToken(match[1]) * 3600 + parseInt(match[2], 10) * 60 + parseInt(match[3], 10),
+            seconds: parseHourToken(match[1]) * 3600 + parseMinuteToken(match[2]) * 60 + parseInt(match[3], 10),
             isNegative: false
         });
     }
 
-    const l3hmRegex = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:小时|小時|时|時|h|H)\s*(\d{1,2})\s*(?:分钟|分鐘|分|min|m|M)(?![a-zA-Z\d])/g;
-    while ((match = l3hmRegex.exec(normalizedText)) !== null) {
+    RE_L3_HM.lastIndex = 0;
+    while ((match = RE_L3_HM.exec(normalizedText)) !== null) {
         const raw = match[0];
         candidates.push({
             raw, index: match.index, end: match.index + raw.length, level: 'L3',
-            seconds: parseHourToken(match[1]) * 3600 + parseInt(match[2], 10) * 60,
+            seconds: parseHourToken(match[1]) * 3600 + parseMinuteToken(match[2]) * 60,
             isNegative: false
         });
     }
 
     // 口语省略分 (如 1小时06, 2时30)
-    const l3hShortMRegex = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:小时|小時|时|時|h|H)\s*([0-5]\d)(?![a-zA-Z\d:：.分秒])/g;
-    while ((match = l3hShortMRegex.exec(normalizedText)) !== null) {
+    RE_L3_H_SHORT_M.lastIndex = 0;
+    while ((match = RE_L3_H_SHORT_M.exec(normalizedText)) !== null) {
         const raw = match[0];
         candidates.push({
             raw, index: match.index, end: match.index + raw.length, level: 'L3',
@@ -621,8 +683,8 @@ function extractCandidates(normalizedText, hourLimit = 3) {
     }
 
     // 紧凑分秒 (如 19分50)
-    const l3mShortSRegex = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分)\s*([0-5]\d)(?!\d|[秒])/g;
-    while ((match = l3mShortSRegex.exec(normalizedText)) !== null) {
+    RE_L3_M_SHORT_S.lastIndex = 0;
+    while ((match = RE_L3_M_SHORT_S.exec(normalizedText)) !== null) {
         const raw = match[0];
         candidates.push({
             raw, index: match.index, end: match.index + raw.length, level: 'L3',
@@ -631,8 +693,8 @@ function extractCandidates(normalizedText, hourLimit = 3) {
         });
     }
 
-    const l3msRegex = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分)\s*(\d{1,2})\s*(?:秒钟|秒鐘|秒)(?!\d)/g;
-    while ((match = l3msRegex.exec(normalizedText)) !== null) {
+    RE_L3_MS.lastIndex = 0;
+    while ((match = RE_L3_MS.exec(normalizedText)) !== null) {
         const raw = match[0];
         candidates.push({
             raw, index: match.index, end: match.index + raw.length, level: 'L3',
@@ -641,8 +703,29 @@ function extractCandidates(normalizedText, hourLimit = 3) {
         });
     }
 
-    const l3mRegex = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分|mins?)(?![a-zA-Z\d])/gi;
-    while ((match = l3mRegex.exec(normalizedText)) !== null) {
+const RE_L3_M_LIST = /(?<!\d)(\d{1,3}(?:\s*[、,，]\s*\d{1,3})+)\s*(?:分钟|分鐘|分|mins?)(?![a-zA-Z\d])/gi;
+
+    RE_L3_M_LIST.lastIndex = 0;
+    while ((match = RE_L3_M_LIST.exec(normalizedText)) !== null) {
+        const listPart = match[1];
+        const itemRe = /\d{1,3}/g;
+        let itemMatch;
+        while ((itemMatch = itemRe.exec(listPart)) !== null) {
+            const raw = itemMatch[0];
+            const start = match.index + itemMatch.index;
+            candidates.push({
+                raw,
+                index: start,
+                end: start + raw.length,
+                level: 'L3',
+                seconds: parseInt(raw, 10) * 60,
+                isNegative: false
+            });
+        }
+    }
+
+    RE_L3_M.lastIndex = 0;
+    while ((match = RE_L3_M.exec(normalizedText)) !== null) {
         const raw = match[0];
         candidates.push({
             raw, index: match.index, end: match.index + raw.length, level: 'L3',
@@ -651,8 +734,8 @@ function extractCandidates(normalizedText, hourLimit = 3) {
         });
     }
 
-    const l3sRegex = /(?<!\d)(\d{1,2})\s*(?:秒钟|秒鐘|秒)(?!\d)/g;
-    while ((match = l3sRegex.exec(normalizedText)) !== null) {
+    RE_L3_S.lastIndex = 0;
+    while ((match = RE_L3_S.exec(normalizedText)) !== null) {
         const raw = match[0];
         candidates.push({
             raw, index: match.index, end: match.index + raw.length, level: 'L3',
@@ -661,31 +744,92 @@ function extractCandidates(normalizedText, hourLimit = 3) {
         });
     }
 
-    // L5: Slash lists (禁止匹配 ..1/8 等引导符或 0/2/4/6 等<=10低值评分序列)
-    const l5SlashRegex = /(?<![\d:./])(\d{1,3})(?:\s*\/\s*(\d{1,3}))+(?![\d:./])/g;
-    while ((match = l5SlashRegex.exec(normalizedText)) !== null) {
-        const raw = match[0];
-        const numbers = raw.split('/').map(n => parseInt(n.trim(), 10));
-        if (numbers.every(n => n <= 10)) continue;
-        candidates.push({
-            raw, index: match.index, end: match.index + raw.length, level: 'L5',
-            seconds: numbers.map(n => n * 60),
-            isSlashList: true
-        });
-    }
+    if (includeL5) {
+        // L5: Slash lists (禁止匹配 ..1/8 等引导符或 0/2/4/6 等<=10低值评分序列，且跳过已命中番号区间)
+        RE_L5_SLASH.lastIndex = 0;
+        while ((match = RE_L5_SLASH.exec(normalizedText)) !== null) {
+            const raw = match[0];
+            const start = match.index;
+            const end = start + raw.length;
+            if (overlapsExcluded(start, end)) continue;
+            const numbers = raw.split('/').map(n => parseInt(n.trim(), 10));
+            if (numbers.every(n => n <= 10)) continue;
+            candidates.push({
+                raw, index: start, end, level: 'L5',
+                seconds: numbers.map(n => n * 60),
+                isSlashList: true
+            });
+        }
 
-    // L5: Isolated single numbers (禁止紧邻 : . - / 避免切碎 15:5315:53 或 ..8 或 28:10)
-    const l5IsolatedRegex = /(?<![\d:.\-/])\b(\d{1,3})\b(?![\d:.\-/])/g;
-    while ((match = l5IsolatedRegex.exec(normalizedText)) !== null) {
-        const raw = match[0];
-        candidates.push({
-            raw, index: match.index, end: match.index + raw.length, level: 'L5',
-            seconds: parseInt(raw, 10),
-            isIsolated: true
-        });
+        // L5: Isolated single numbers (禁止紧邻 : . - / 避免切碎 15:5315:53 或 ..8 或 28:10，且跳过已命中番号区间)
+        RE_L5_ISOLATED.lastIndex = 0;
+        while ((match = RE_L5_ISOLATED.exec(normalizedText)) !== null) {
+            const raw = match[0];
+            const start = match.index;
+            const end = start + raw.length;
+            if (overlapsExcluded(start, end)) continue;
+            candidates.push({
+                raw, index: start, end, level: 'L5',
+                seconds: parseInt(raw, 10),
+                isIsolated: true
+            });
+        }
     }
 
     return candidates;
+}
+
+function getValidationDuration(videoDuration, level) {
+    const isKnownDuration = Number.isFinite(videoDuration) && videoDuration > 600 && videoDuration !== 10800;
+    if (isKnownDuration) return Math.ceil(videoDuration * 1.05);
+    return level === 'L5' ? 10800 : 14400;
+}
+
+function calibrateTwoPartCandidates(resolvedMatches, videoDuration, hourLimit) {
+    const maxAllowed = getValidationDuration(videoDuration, 'L1');
+    // 1. 单点超片长自动降维 (如已知 2h 影片中 2:28 -> 8880s > 7560s，回退为 2m28s = 148s)
+    for (const m of resolvedMatches) {
+        if (m.twoPartMeta?.parsedAsHours && m.seconds > maxAllowed) {
+            const mmss = m.twoPartMeta.a * 60 + m.twoPartMeta.b;
+            if (mmss <= maxAllowed) {
+                m.seconds = mmss;
+                m.twoPartMeta.parsedAsHours = false;
+            }
+        }
+    }
+
+    // 2. 序列同量纲一致性校准 (防止 2:28, 3:03 在 hourLimit 边界发生量纲跳变导致的伪倒序)
+    const hasExplicitHourAnchor = resolvedMatches.some(
+        m => (m.level === 'L1' && !m.twoPartMeta && m.seconds >= 3600) || (m.level === 'L3' && m.seconds >= 3600)
+    );
+    if (hasExplicitHourAnchor) return;
+
+    const twoParts = resolvedMatches.filter(m => m.twoPartMeta);
+    if (twoParts.length < 2) return;
+
+    let crossesBoundaryAscending = false;
+    for (let i = 0; i < twoParts.length - 1; i++) {
+        const cur = twoParts[i];
+        const nxt = twoParts[i + 1];
+        if (
+            cur.twoPartMeta.parsedAsHours &&
+            !nxt.twoPartMeta.parsedAsHours &&
+            nxt.twoPartMeta.a > hourLimit &&
+            nxt.twoPartMeta.a <= 9 &&
+            cur.twoPartMeta.a < nxt.twoPartMeta.a
+        ) {
+            crossesBoundaryAscending = true;
+            break;
+        }
+    }
+    if (crossesBoundaryAscending) {
+        for (const m of twoParts) {
+            if (m.twoPartMeta.parsedAsHours) {
+                m.seconds = m.twoPartMeta.a * 60 + m.twoPartMeta.b;
+                m.twoPartMeta.parsedAsHours = false;
+            }
+        }
+    }
 }
 
 function resolveOverlaps(candidates) {
@@ -752,6 +896,12 @@ function validateMatch(match, allResolvedMatches, normalizedText, videoDuration,
             if (isActionDuration) {
                 return { isValid: false, reason: '检测到动作或过程耗时描述' };
             }
+            // R-14: 片长版本对比描述 (如 本来150min，现在120min)
+            const clauseWin = normalizedText.slice(Math.max(0, match.index - 24), Math.min(normalizedText.length, match.end + 24));
+            if (/(?:本来|原本|原版|删减|刪減|阉割|閹割|剪掉|完整版|加长版|加長版|片长|片長)/.test(clauseWin) &&
+                /(?:现在|現在|变成|變成|只有|剩|缩短|縮短|砍成|剪成|才)/.test(clauseWin)) {
+                return { isValid: false, reason: '检测到片长版本对比描述' };
+            }
             // 10分及以下无小时/无秒的孤立 "N分" / "N分钟"：强防评分误报（如 5分/6分/8分/9分/0分）
             const minOnlyMatch = match.raw.match(/^(\d+)\s*(?:分钟|分鐘|分)$/);
             if (minOnlyMatch) {
@@ -801,6 +951,17 @@ function validateMatch(match, allResolvedMatches, normalizedText, videoDuration,
         let isCountdown = false;
         const hasNegativeBound = Boolean(startVal.isCountdown || endVal.isCountdown);
         if (startSecs > endSecs) {
+            // R-17: 逆序差值 < 30s 且无负号时视为口语笔误 (如 1:04:20到1:04:08)，自动纠偏为正序区间
+            if ((startSecs - endSecs) < 30 && !hasNegativeBound) {
+                return {
+                    isValid: true,
+                    seconds: [endSecs, startSecs],
+                    level: 'L4',
+                    confidence: 'High',
+                    isCountdown: false,
+                    countdownOffsets: null
+                };
+            }
             isCountdown = true;
             const startOffset = startSecs;
             const endOffset = endSecs;
@@ -822,7 +983,7 @@ function validateMatch(match, allResolvedMatches, normalizedText, videoDuration,
         };
     }
 
-    const validationDuration = Math.max(videoDuration, 28800);
+    const validationDuration = getValidationDuration(videoDuration, match.level);
 
     if (match.isSlashList) {
         const validSeconds = [];
@@ -839,7 +1000,6 @@ function validateMatch(match, allResolvedMatches, normalizedText, videoDuration,
             return { isValid: false, reason: '无效零值或数字黑话' };
         }
         const postImmediate = normalizedText.slice(match.end, Math.min(normalizedText.length, match.end + 4));
-        const preImmediate = normalizedText.slice(Math.max(0, match.index - 4), match.index);
         // 阻断序号列表 (如 1、... 2、...) 与语气助词 (如 高潮6啊, 69到射)
         if (/^\s*[、.．)）]/.test(postImmediate) && !inRange) {
             return { isValid: false, reason: '序号列表项而非时间戳' };
@@ -849,14 +1009,37 @@ function validateMatch(match, allResolvedMatches, normalizedText, videoDuration,
         }
 
         let isAdjacentToValid = false;
+        let inheritedHourSecs = null;
         for (const other of allResolvedMatches) {
             if (other === match || other.isIsolated) continue;
             const earlier = match.index < other.index ? match : other;
             const later = match.index < other.index ? other : match;
             const between = normalizedText.slice(earlier.end, later.index);
-            if (/^[\s,，、/]+$/.test(between) && between.length < 10) {
+            const hasPunctuationSep = /[,，、/]/.test(between);
+            const isValidDirectGap = /^[\s,，、/]+$/.test(between) && between.length < 10 && (hasPunctuationSep || val >= 10);
+            const isValidNumericChainGap = other.index < match.index && /^[\d\s,，、]+$/.test(between) && between.length <= 14 && hasPunctuationSep;
+            if (isValidDirectGap || isValidNumericChainGap) {
                 isAdjacentToValid = true;
+                // 若紧接在 2h13 后出现 ", 18, 30"（且小于60），继承同一小时基数 (2h18 / 2h30)
+                if (other.index < match.index && other.seconds >= 3600 && /(?:h|小时|小時|时|時)/i.test(other.raw) && val < 60) {
+                    const otherMin = Math.floor((other.seconds % 3600) / 60);
+                    if (val > otherMin) {
+                        inheritedHourSecs = Math.floor(other.seconds / 3600) * 3600 + val * 60;
+                    }
+                }
                 break;
+            }
+        }
+        if (inheritedHourSecs === null && isAdjacentToValid) {
+            // 同行向前回溯更早的小时锚点 (如 2h13, 18, 30 中的 30 跨过 18 继承 2h)
+            const prevHourAnchor = [...allResolvedMatches]
+                .filter(o => o !== match && !o.isIsolated && o.index < match.index && o.seconds >= 3600 && /(?:h|小时|小時|时|時)/i.test(o.raw))
+                .pop();
+            if (prevHourAnchor && match.index - prevHourAnchor.end <= 18 && val < 60) {
+                const gapText = normalizedText.slice(prevHourAnchor.end, match.index);
+                if (/^[\d\s,，、]+$/.test(gapText) && val > Math.floor((prevHourAnchor.seconds % 3600) / 60)) {
+                    inheritedHourSecs = Math.floor(prevHourAnchor.seconds / 3600) * 3600 + val * 60;
+                }
             }
         }
         const startWin = Math.max(0, match.index - 5);
@@ -883,7 +1066,7 @@ function validateMatch(match, allResolvedMatches, normalizedText, videoDuration,
 
         if (!hasStrongAnchor) return { isValid: false, reason: '孤立数字缺少有效时间锚点' };
 
-        const seconds = hasStrictSecond ? val : val * 60;
+        const seconds = inheritedHourSecs !== null ? inheritedHourSecs : (hasStrictSecond ? val : val * 60);
         if (seconds > validationDuration) return { isValid: false, reason: `数值超出限制 (${seconds}秒 > ${validationDuration}秒)` };
 
         return { isValid: true, seconds, level: 'L5', confidence: 'Medium' };
@@ -910,7 +1093,10 @@ function validateMatch(match, allResolvedMatches, normalizedText, videoDuration,
     };
 }
 
-export function parseTimestamps(rawComment, videoDuration = 10800) {
+export function parseTimestamps(rawComment, videoDuration = 10800, options = {}) {
+    if (!rawComment || (!/\d/.test(rawComment) && !/[一二两兩三四五六七八九十]/.test(rawComment))) {
+        return { isValid: false, validTimestamps: [], invalidTimestamps: [], confidence: 'None' };
+    }
     const normalized = normalizeText(rawComment);
     const masked = maskBlacklist(normalized);
 
@@ -921,8 +1107,9 @@ export function parseTimestamps(rawComment, videoDuration = 10800) {
         if (hourLimit > 8) hourLimit = 8;
     }
 
-    const rawCandidates = extractCandidates(masked, hourLimit);
+    const rawCandidates = extractCandidates(masked, hourLimit, options);
     const resolved = resolveOverlaps(rawCandidates);
+    calibrateTwoPartCandidates(resolved, videoDuration, hourLimit);
     const finalMatches = mergeRanges(resolved, masked);
 
     const valid = [];
@@ -932,6 +1119,8 @@ export function parseTimestamps(rawComment, videoDuration = 10800) {
         if (valResult.isValid) {
             valid.push({
                 raw: match.raw,
+                index: match.index,
+                end: match.end,
                 seconds: valResult.seconds,
                 level: match.level,
                 confidence: valResult.confidence,
@@ -1054,6 +1243,9 @@ function maskForAvCodeScan(normalizedText) {
         .replace(/https?:\/\/\S+/gi, padSpace)
         .replace(/\{\{[A-Z0-9_]+\}\}/g, padSpace)
         .replace(/\[[^\]]{1,40}\]/g, padSpace)
+        .replace(/(?:三围|三圍|胸围|胸圍|腰围|腰圍|臀围|臀圍)\s*[:：]?\s*\d{2,3}\s*[-/]\s*\d{2,3}\s*[-/]\s*\d{2,3}/g, padSpace)
+        .replace(/(?<![:：.\d-])\b(?:7\d|8\d|9\d|10\d|11\d)\s*[-/]\s*(?:5\d|6\d|7\d)\s*[-/]\s*(?:7\d|8\d|9\d|10\d|11\d)\b(?![:：.\d-])/g, padSpace)
+        .replace(/(?:在|从|從|于|於)\s*(?:1\d|2[0-6])\s*(?:年\s*)?(?:开始|開始|出道|拍|拍的|拍摄|拍攝|年)/g, padSpace)
         .replace(/(?<![:：.\d])\d{1,2}\s*月\s*\d{1,2}\s*[日号號]?/g, padSpace);
 }
 
@@ -1064,23 +1256,34 @@ const STANDALONE_HEIGHT_PRE = /(?:身高|高|矮|长腿|大长腿|腿|妹子|女
 const STANDALONE_HEIGHT_POST = /^\s*(?:的身高|身高|矮男|矮女|高|厘米|公分|cm|这样的|這樣的|矮|瘦|[，,]\s*(?:腹肌|体重|體重|大长腿|大長腿|这样的|這樣的|矮|高))/i;
 const STANDALONE_TOP_PRE = /(?:top|Top|TOP|前|第|排名|榜|排行|稳进|穩進|冲|衝)\s*$/;
 const STANDALONE_FLOOR_PRE = /(?:楼上|樓上|楼下|樓下|上面那位|下面那位|那位|哥们|哥們|兄弟|层|層|#)\s*$/;
-const STANDALONE_SLANG_POST = /^\s*(?:小时|小時|分|分钟|分鐘|秒|岁|歲|年|月|日|号|號|天|万|萬|播放|次|倍|位|个|個|人|根|只|隻|条|條|张|張|段|幕|元|块|塊|包|发|發|部|本|套|行|集|话|話|回|楼|樓|层|層|名|观看|觀看|收藏|赞|贊|cm|mm|kg|厘米|毫米|g|gb|mb|kb|px|p|fps|hz|%|％|大长腿|大長腿|哥们|哥們|这哥们|這哥們|排名|榜|班|格式|怀中抱妹杀|懷中抱妹殺|报警|報警|火警|多\s*(?:个|個|根|g|G|发|發|部|次|年|岁|歲|天|月))/i;
+const STANDALONE_SLANG_POST = /^\s*(?:小时|小時|分|分钟|分鐘|秒|岁|歲|年|月|日|号|號|天|万|萬|播放|次|倍|位|个|個|人|根|只|隻|条|條|张|張|段|幕|元|块|塊|包|发|發|部|本|套|行|集|话|話|回|楼|樓|层|層|名|观看|觀看|收藏|赞|贊|cm|mm|kg|厘米|毫米|g|gb|mb|kb|px|p|fps|hz|%|％|大长腿|大長腿|哥们|哥們|这哥们|這哥們|排名|榜|班|格式|怀中抱妹杀|懷中抱妹殺|报警|報警|火警|爆|口|射|插|舔|吸|夹|夾|喷|噴|多\s*(?:个|個|根|g|G|发|發|部|次|年|岁|歲|天|月))/i;
 
 export function extractAVCodes(comment, contextPrefix, options = {}) {
+    if (!comment || !/\d/.test(comment)) {
+        return options?.returnSpans ? { codes: [], spans: [] } : [];
+    }
     const codes = new Set();
     const normalized = normalizeText(comment);
     const scanText = maskForAvCodeScan(normalized);
     const occupiedSpans = [];
-    const addSpan = (start, end) => occupiedSpans.push([start, end]);
+    const matchedCodeSpans = [];
+    const addSpan = (start, end, isCode = false) => {
+        occupiedSpans.push([start, end]);
+        if (isCode) matchedCodeSpans.push([start, end]);
+    };
     const overlapsOccupied = (start, end) => occupiedSpans.some(([s, e]) => Math.max(start, s) < Math.min(end, e));
 
+    const explicitPrefixPositions = [];
     let match;
     oRegExp.lastIndex = 0;
     while ((match = oRegExp.exec(scanText)) !== null) {
         const matchedStr = match[0].trim();
         if (!IDcheck(matchedStr)) {
-            codes.add(formatAVID(matchedStr));
-            addSpan(match.index, match.index + match[0].length);
+            const formatted = formatAVID(matchedStr);
+            codes.add(formatted);
+            addSpan(match.index, match.index + match[0].length, true);
+            const pMatch = formatted.match(/^([A-Z0-9]+)-/);
+            if (pMatch) explicitPrefixPositions.push({ prefix: pMatch[1], index: match.index });
         }
     }
 
@@ -1093,7 +1296,7 @@ export function extractAVCodes(comment, contextPrefix, options = {}) {
                 avID = formatAVID(avID.slice(3));
             }
             codes.add(avID);
-            addSpan(match.index, match.index + match[0].length);
+            addSpan(match.index, match.index + match[0].length, true);
         }
     }
 
@@ -1103,7 +1306,7 @@ export function extractAVCodes(comment, contextPrefix, options = {}) {
             const avID = match[1] + " " + match[0];
             if (!IDcheck(avID)) {
                 codes.add(formatAVID(avID));
-                addSpan(match.index, match.index + match[0].length);
+                addSpan(match.index, match.index + match[0].length, true);
             }
         }
     }
@@ -1114,7 +1317,7 @@ export function extractAVCodes(comment, contextPrefix, options = {}) {
             const avID = match[1] + match[0];
             if (!IDcheckWuma(avID)) {
                 codes.add(formatAVID(avID));
-                addSpan(match.index, match.index + match[0].length);
+                addSpan(match.index, match.index + match[0].length, true);
             }
         }
     }
@@ -1122,16 +1325,46 @@ export function extractAVCodes(comment, contextPrefix, options = {}) {
     // 把时间戳字符区间也标记为已占用，避免 0.57 / 1:20 / 120分钟 漏网成为同系列番号
     if (Array.isArray(options.timestampSpans)) {
         for (const [s, e] of options.timestampSpans) {
-            addSpan(s, e);
+            addSpan(s, e, false);
         }
     }
 
     const parsedContext = parseSeriesContext(contextPrefix);
     if (parsedContext && parsedContext.seriesPrefix) {
+        const mentionedDateNums = new Set();
+        const dateMdRe = /(?<![:：.\d])(\d{1,2})\s*月\s*(\d{1,2})\s*[日号號]?/g;
+        let mdMatch;
+        while ((mdMatch = dateMdRe.exec(normalized)) !== null) {
+            mentionedDateNums.add(`${parseInt(mdMatch[1], 10)}${parseInt(mdMatch[2], 10)}`);
+        }
+
         const strippedForSemantics = scanText.replace(/[\d\s.,，、。!！?？~～\-—_:：;；()（）【】\[\]]+/g, '').trim();
         const isPureNumericMultiOrLong = strippedForSemantics.length === 0 && !/^0\d{2}$/.test(scanText.trim());
 
         if (!isPureNumericMultiOrLong) {
+            // R-02: 同系列斜杠列表 (如 145/232/256好像就这三部流出)，当含当前番号尾号或携带部/流出/系列等语义尾词时整体识别为同系列番号
+            const slashAvRegex = /(?<![a-zA-Z0-9_\-:：./])(\d{3,4}(?:\s*\/\s*\d{3,4})+)(?![a-zA-Z0-9_\-:：./])/g;
+            let slashMatch;
+            while ((slashMatch = slashAvRegex.exec(scanText)) !== null) {
+                const sStart = slashMatch.index;
+                const sEnd = sStart + slashMatch[0].length;
+                if (overlapsOccupied(sStart, sEnd)) continue;
+                const nums = slashMatch[1].split('/').map(n => n.trim());
+                if (!nums.every(n => n.length === parsedContext.digitLen)) continue;
+                const preSlash = scanText.slice(Math.max(0, sStart - 12), sStart);
+                const postSlash = scanText.slice(sEnd, Math.min(scanText.length, sEnd + 16));
+                const containsCurrent = parsedContext.currentNumStr && nums.includes(parsedContext.currentNumStr);
+                const hasSeriesCue = containsCurrent ||
+                    STANDALONE_AV_CUE_PRE.test(preSlash) ||
+                    /^\s*(?:好像)?(?:就)?这?[几三两二四五1-9]?部|流出|系列|推荐|推薦|都有|都看过|都看過/.test(postSlash);
+                if (!hasSeriesCue) continue;
+                for (const n of nums) {
+                    const fullCode = `${parsedContext.seriesPrefix}-${n}`;
+                    if (!IDcheck(fullCode)) codes.add(fullCode.toUpperCase());
+                }
+                addSpan(sStart, sEnd, true);
+            }
+
             const standaloneNumRegex = /(?<![a-zA-Z0-9_\uFF10-\uFF19\-:：./\\#@=])(\d{2,4})(?![a-zA-Z0-9_\uFF10-\uFF19\-:：./\\])/g;
             let numMatch;
             while ((numMatch = standaloneNumRegex.exec(scanText)) !== null) {
@@ -1141,6 +1374,7 @@ export function extractAVCodes(comment, contextPrefix, options = {}) {
                 const end = start + numStr.length;
 
                 if (overlapsOccupied(start, end)) continue;
+                if (mentionedDateNums.has(numStr) && numStr !== parsedContext.currentNumStr) continue;
                 if (STANDALONE_NOISE_SLANG.has(numStr) && numStr !== parsedContext.currentNumStr) continue;
                 if (numStr.match(oRegExp_Special_num)) continue;
 
@@ -1155,19 +1389,40 @@ export function extractAVCodes(comment, contextPrefix, options = {}) {
                 if (/^(?:720|1080|2160|480|360)$/.test(numStr) && /(?:画质|清晰度|分辨率|码率)/.test(scanText)) continue;
                 if (/^\s*(?:、\d{1,2}\s*(?:模样|模樣|岁|歲|出头|出頭)|岁|歲)/.test(postCtx)) continue;
 
+                // R-10: 若两位数紧随时间表达之后 (如 2h13，18，30舔脚)，禁止被误抓为同系列两位尾号
+                if (numStr.length === 2 && Array.isArray(options.timestampSpans) &&
+                    options.timestampSpans.some(([, te]) => start >= te && start - te <= 10)) {
+                    continue;
+                }
+
+                // R-13: 若前文已明确提及其它系列番号 (如 ABP-583 ... 024 那部)，且无"同系列/本系列"强锚词，则归属该显式前序系列而非当前页面系列
+                let targetSeries = parsedContext.seriesPrefix;
+                if (explicitPrefixPositions.length > 0 && !/(?:同系列|本系列|同厂|同廠)/.test(preCtx)) {
+                    const prevExplicit = [...explicitPrefixPositions].reverse().find(p => p.index < start);
+                    if (prevExplicit && prevExplicit.prefix !== parsedContext.seriesPrefix &&
+                        !explicitPrefixPositions.some(p => p.prefix === parsedContext.seriesPrefix)) {
+                        targetSeries = prevExplicit.prefix;
+                    }
+                }
+
                 const hasCue = STANDALONE_AV_CUE_PRE.test(preCtx) || STANDALONE_AV_CUE_POST.test(postCtx);
                 const sameDigitLen = numStr.length === parsedContext.digitLen;
                 const validOverflow3to4 = parsedContext.digitLen === 3 && numStr.length === 4 && parsedContext.currentNum >= 700 && numVal <= 1299 && hasCue;
-                const validShort2 = parsedContext.digitLen === 3 && numStr.length === 2 && STANDALONE_AV_CUE_PRE.test(preCtx);
+                const validShort2 = parsedContext.digitLen === 3 && numStr.length === 2 &&
+                    /(?:推荐|推|那部|这部|這部|系列|还是|還是|不如|比肩|前作|新作|第一部|第二部|第三部)\s*$/.test(preCtx);
                 if (!sameDigitLen && !validOverflow3to4 && !validShort2) continue;
 
                 const padded = numStr.length < parsedContext.digitLen ? numStr.padStart(parsedContext.digitLen, '0') : numStr;
-                const fullCode = `${parsedContext.seriesPrefix}-${padded}`;
-                if (!IDcheck(fullCode)) codes.add(fullCode.toUpperCase());
+                const fullCode = `${targetSeries}-${padded}`;
+                if (!IDcheck(fullCode)) {
+                    codes.add(fullCode.toUpperCase());
+                    addSpan(start, end, true);
+                }
             }
         }
     }
-    return Array.from(codes);
+    const result = Array.from(codes);
+    return options?.returnSpans ? { codes: result, spans: matchedCodeSpans } : result;
 }
 
 // =====================================================================
@@ -1350,37 +1605,65 @@ export function highlightCommentText(text, timestamps, avcodes, options = {}) {
     const sortedTimestamps = [...timestamps].sort((a, b) => b.raw.length - a.raw.length);
     sortedTimestamps.forEach(ts => {
         const regex = makeHighlightRegex(ts.raw);
-        html = html.replace(regex, (match) => {
-            const tokenId = `___TS_${idCounter++}___`;
-            const roundedSecs = Array.isArray(ts.seconds) ? ts.seconds.map(Math.round) : Math.round(ts.seconds);
-            const secsAttr = Array.isArray(roundedSecs) ? JSON.stringify(roundedSecs) : roundedSecs;
-            let tooltip = '跳转至此时间';
-            let displayText = match;
-            if (ts.isCountdown) {
-                displayText = formatSeconds(ts.seconds);
-                if (Array.isArray(ts.countdownOffsets)) {
-                    tooltip = `原倒计时: -${formatSeconds(ts.countdownOffsets[0])} ~ -${formatSeconds(ts.countdownOffsets[1])} (已转换为绝对时间)`;
-                } else {
-                    tooltip = `原倒计时: -${formatSeconds(ts.countdownOffsets)} (已转换为绝对时间)`;
-                }
-            } else if (Array.isArray(ts.seconds)) {
-                tooltip = `跳转至区间 ${formatSeconds(ts.seconds)}`;
+        const tokenId = `___TS_${idCounter++}___`;
+        const roundedSecs = Array.isArray(ts.seconds) ? ts.seconds.map(Math.round) : Math.round(ts.seconds);
+        const secsAttr = Array.isArray(roundedSecs) ? JSON.stringify(roundedSecs) : roundedSecs;
+        let tooltip = '跳转至此时间';
+        if (ts.isCountdown) {
+            if (Array.isArray(ts.countdownOffsets)) {
+                tooltip = `原倒计时: -${formatSeconds(ts.countdownOffsets[0])} ~ -${formatSeconds(ts.countdownOffsets[1])} (已转换为绝对时间)`;
             } else {
-                tooltip = `跳转至 ${formatSeconds(ts.seconds)}`;
+                tooltip = `原倒计时: -${formatSeconds(ts.countdownOffsets)} (已转换为绝对时间)`;
             }
+        } else if (Array.isArray(ts.seconds)) {
+            tooltip = `跳转至区间 ${formatSeconds(ts.seconds)}`;
+        } else {
+            tooltip = `跳转至 ${formatSeconds(ts.seconds)}`;
+        }
 
-            const { isFavorited } = checkIsTimestampFavorited(roundedSecs, userTabs, 5);
-            const favoritedClass = isFavorited ? ' is-favorited' : '';
-            const starTitle = isFavorited
-                ? '此时间已在片段列表中 (误差 ≤ 5s)'
-                : '收藏为高光片段并跳转播放';
+        const { isFavorited } = checkIsTimestampFavorited(roundedSecs, userTabs, 5);
+        const favoritedClass = isFavorited ? ' is-favorited' : '';
+        const lowConfidenceClass = ts.level === 'L5' ? ' is-low-confidence' : '';
+        const starTitle = isFavorited
+            ? '此时间已在片段列表中 (误差 ≤ 5s)'
+            : '收藏为高光片段并跳转播放';
 
-            replacements[tokenId] = `<span class="jc-time-link${favoritedClass}" data-secs='${secsAttr}' title="${esc(tooltip)}"><span class="jc-time-text">${displayText}</span><span class="jc-time-star-btn" role="button" title="${esc(starTitle)}"><svg class="jc-star-icon jc-star-outline" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg class="jc-star-icon jc-star-filled" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span></span>`;
-            return tokenId;
-        });
+        const buildSpan = (match) => {
+            const displayText = ts.isCountdown ? formatSeconds(ts.seconds) : match;
+            return `<span class="jc-time-link${favoritedClass}${lowConfidenceClass}" data-secs='${secsAttr}' title="${esc(tooltip)}"><span class="jc-time-text">${displayText}</span><span class="jc-time-star-btn" role="button" title="${esc(starTitle)}"><svg class="jc-star-icon jc-star-outline" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg class="jc-star-icon jc-star-filled" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span></span>`;
+        };
+
+        // 跳过 HTML 标签 / 已替换占位符，并在多次出现时优先对齐 ts.index (防止 "打10分，10开始" 错位)
+        const safeRegex = new RegExp(`(<[^>]+>|___(?:TS|AV)_\\d+___|&#?\\w+;)|(${regex.source})`, 'g');
+        const hits = [];
+        let m;
+        while ((m = safeRegex.exec(html)) !== null) {
+            if (m[2] !== undefined) hits.push({ index: m.index, text: m[2] });
+        }
+        if (hits.length === 1) {
+            const h = hits[0];
+            replacements[tokenId] = buildSpan(h.text);
+            html = html.slice(0, h.index) + tokenId + html.slice(h.index + h.text.length);
+        } else if (hits.length > 1) {
+            const targetOffset = typeof ts.index === 'number'
+                ? (ts.index / Math.max(1, text.length)) * html.length
+                : 0;
+            let bestHit = hits[0];
+            if (typeof ts.index === 'number') {
+                bestHit = hits.reduce((best, cur) =>
+                    Math.abs(cur.index - targetOffset) < Math.abs(best.index - targetOffset) ? cur : best, hits[0]);
+            }
+            replacements[tokenId] = buildSpan(bestHit.text);
+            html = html.slice(0, bestHit.index) + tokenId + html.slice(bestHit.index + bestHit.text.length);
+        }
     });
 
     const parsedContext = parseSeriesContext(options?.contextPrefix);
+    const knownSeriesPrefixes = new Set(parsedContext?.seriesPrefix ? [parsedContext.seriesPrefix] : []);
+    avcodes.forEach(c => {
+        const pm = String(c).match(/^([A-Z0-9]+)-/);
+        if (pm) knownSeriesPrefixes.add(pm[1]);
+    });
     avcodes.forEach(code => {
         const regex = buildAvcodeRegex(code);
         let replaced = false;
@@ -1390,8 +1673,10 @@ export function highlightCommentText(text, timestamps, avcodes, options = {}) {
             replacements[tokenId] = `<span class="jc-code-link" data-code="${esc(code)}" title="复制并搜索番号">${match}</span>`;
             return tokenId;
         });
-        if (!replaced && parsedContext?.seriesPrefix && code.startsWith(`${parsedContext.seriesPrefix}-`)) {
-            const rawNum = code.slice(parsedContext.seriesPrefix.length + 1);
+        const hyphenIdx = code.indexOf('-');
+        const codePrefix = hyphenIdx > 0 ? code.slice(0, hyphenIdx) : '';
+        if (!replaced && codePrefix && knownSeriesPrefixes.has(codePrefix)) {
+            const rawNum = code.slice(hyphenIdx + 1);
             const strippedNum = rawNum.replace(/^0+(?=\d{2})/, '');
             const candidates = rawNum === strippedNum ? [rawNum] : [rawNum, strippedNum];
             const escapedAlts = candidates.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
@@ -1483,22 +1768,37 @@ export function processComment(commentText, contextPrefix, videoDuration = 10800
     let avcodes = [];
 
     if (spam.label !== 'SPAM') {
-        const tsResult = parseTimestamps(cleanedText, videoDuration);
-        if (tsResult.isValid) {
-            timestamps = tsResult.validTimestamps;
-        }
-        const timestampSpans = [];
-        for (const ts of timestamps) {
-            if (ts.raw) {
-                let searchFrom = 0;
-                let idx;
-                while ((idx = cleanedText.indexOf(ts.raw, searchFrom)) !== -1) {
-                    timestampSpans.push([idx, idx + ts.raw.length]);
-                    searchFrom = idx + ts.raw.length;
+        // 管线四层重排序 (A-1): L1~L4 高置信时间 ➔ extractAVCodes ➔ 联合占位于 L5 兜底
+        const strongTsRes = parseTimestamps(cleanedText, videoDuration, { includeL5: false });
+        const strongTsSpans = [];
+        if (strongTsRes.isValid) {
+            for (const ts of strongTsRes.validTimestamps) {
+                if (typeof ts.index === 'number' && typeof ts.end === 'number') {
+                    strongTsSpans.push([ts.index, ts.end]);
+                } else if (ts.raw) {
+                    let searchFrom = 0;
+                    let idx;
+                    while ((idx = cleanedText.indexOf(ts.raw, searchFrom)) !== -1) {
+                        strongTsSpans.push([idx, idx + ts.raw.length]);
+                        searchFrom = idx + ts.raw.length;
+                    }
                 }
             }
         }
-        avcodes = extractAVCodes(cleanedText, contextPrefix, { timestampSpans });
+
+        const avExtract = extractAVCodes(cleanedText, contextPrefix, {
+            timestampSpans: strongTsSpans,
+            returnSpans: true
+        });
+        avcodes = avExtract.codes;
+
+        const tsResult = parseTimestamps(cleanedText, videoDuration, {
+            includeL5: true,
+            excludeSpans: avExtract.spans
+        });
+        if (tsResult.isValid) {
+            timestamps = tsResult.validTimestamps;
+        }
 
         // 若某孤立 L5 数字已被识别为本评论中的番号后缀或与当前番号尾号相同 (>=100)，则剔除误报 L5 时间戳
         const currentSeriesCtx = parseSeriesContext(contextPrefix);
@@ -1566,6 +1866,14 @@ export function processComment(commentText, contextPrefix, videoDuration = 10800
 
         if (hasNegativePrefix || (!hasAscendingRange && (hasDescendingRange || hasDescendingSequence))) {
             isCountdownComment = true;
+        } else {
+            // 非倒计时评论中若混有局部非负号倒序区间 (如 1:45:50~1:15:15)，按正序 [min, max] 归正
+            for (const ts of timestamps) {
+                if (ts.isCountdown && !(typeof ts.raw === 'string' && ts.raw.trim().startsWith('-')) && Array.isArray(ts.rawSeconds) && ts.rawSeconds.length === 2) {
+                    ts.seconds = [Math.min(ts.rawSeconds[0], ts.rawSeconds[1]), Math.max(ts.rawSeconds[0], ts.rawSeconds[1])];
+                    ts.isCountdown = false;
+                }
+            }
         }
     }
 

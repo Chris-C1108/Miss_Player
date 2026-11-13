@@ -498,6 +498,14 @@
     transform: scale(0.96);
 }
 
+/* L5 孤立数字低置信度视觉降噪 (零 !important) */
+.jc-time-link.is-low-confidence {
+    background-color: hsla(142.1 40% 45% / 0.08);
+    border-style: dashed;
+    border-color: hsla(142.1 50% 45% / 0.35);
+    opacity: 0.85;
+}
+
 /* 胶囊内部文字 */
 
 .jc-time-text {

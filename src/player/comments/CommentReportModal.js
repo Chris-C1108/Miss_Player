@@ -29,6 +29,8 @@ function buildParserSnapshot(comment, flaggedItems) {
     }));
     const avcodes = (comment.avcodes || []).slice(0, 16);
     return {
+        pipelineVersion: 'v3',
+        commentHash: comment.hash_fingerprint || null,
         timestamps,
         avcodes,
         isCountdown: Boolean(comment.isCountdownComment),
@@ -70,8 +72,12 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
         });
     }
 
+    const defaultReasonCode = (tsList.length === 0 && /\d/.test(previewText))
+        ? 'missed_or_wrong_time'
+        : (comment.isCountdownComment ? 'countdown_error' : REPORT_REASONS[0].code);
+
     const chipsHTML = REPORT_REASONS
-        .map((r, i) => `<span class="tm-report-chip${i === 0 ? ' active' : ''}" data-reason-code="${r.code}">${esc(__(r.labelKey))}</span>`)
+        .map((r) => `<span class="tm-report-chip${r.code === defaultReasonCode ? ' active' : ''}" data-reason-code="${r.code}">${esc(__(r.labelKey))}</span>`)
         .join('');
 
     const diagHTML = diagItems.length > 0
@@ -97,17 +103,24 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
 
     const { modal, close } = createModal(html, { customClass: 'tm-report-modal-overlay', dialogClass: 'tm-report-modal-dialog' });
 
-    let selectedReasonCode = REPORT_REASONS[0].code;
-    let selectedReasonLabel = __(REPORT_REASONS[0].labelKey);
+    const defaultReasonObj = REPORT_REASONS.find(r => r.code === defaultReasonCode) || REPORT_REASONS[0];
+    let selectedReasonCode = defaultReasonObj.code;
+    let selectedReasonLabel = __(defaultReasonObj.labelKey);
     const flaggedItems = new Set();
 
     const chips = modal.querySelectorAll('.tm-report-chip');
+    const selectReasonByCode = (code) => {
+        const target = Array.from(chips).find(c => c.dataset.reasonCode === code);
+        if (!target) return;
+        chips.forEach(c => c.classList.remove('active'));
+        target.classList.add('active');
+        selectedReasonCode = target.dataset.reasonCode || 'other';
+        selectedReasonLabel = target.textContent.trim();
+    };
+
     chips.forEach(chip => {
         chip.addEventListener('click', () => {
-            chips.forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            selectedReasonCode = chip.dataset.reasonCode || 'other';
-            selectedReasonLabel = chip.textContent.trim();
+            selectReasonByCode(chip.dataset.reasonCode || 'other');
         });
     });
 
@@ -122,6 +135,9 @@ export function showCommentReportModal({ comment, videoCode, videoDuration = nul
             } else {
                 flaggedItems.add(key);
                 pill.classList.add('is-flagged');
+                if (key.startsWith('av:')) selectReasonByCode('avcode_error');
+                else if (key === 'meta:countdown') selectReasonByCode('countdown_error');
+                else if (key.startsWith('ts:')) selectReasonByCode('false_timestamp');
             }
         });
     });
