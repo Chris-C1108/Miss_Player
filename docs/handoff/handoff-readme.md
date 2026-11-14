@@ -2,6 +2,7 @@
 
 | 日期时间 (Timestamp) | 规则提炼 / 主题 (Lesson / Topic) | 频次 (Seen Count) | 状态 (Status) | 交接 (Handoff) | 教训 (Lesson) | 核心标签 (Tags) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-11-14 18:16:45 | Settings v2 Apple HIG 统一重构、双设置入口并存互切与 Peach 移出实验功能 | Seen 1× (2026-11-14) | 观察中 | [2026-11-14-181645-handoff.md](2026-11-14-181645-handoff.md) | [2026-11-14-181645-lesson.md](2026-11-14-181645-lesson.md) | `SettingsV2Manager`, `S2Primitives`, `双入口并存`, `互切冷却豁免`, `Peach移出Beta`, `零important`, `v5.7.118-beta.044` |
 | 2026-11-13 20:42:03 | 全局浮层防穿透统一守卫与 CI 静态门禁 `[6/6]`、评论 IndexedDB/Supabase/WebDAV 三路并发提前展示 | Seen 1× (2026-11-13) | 观察中 | [2026-11-13-204203-handoff.md](2026-11-13-204203-handoff.md) | [2026-11-13-204203-lesson.md](2026-11-13-204203-lesson.md) | `UISurfaceMachine`, `bindOverlayGuard`, `防穿透CI门禁`, `CommentCodePreview`, `createModal`, `评论提前展示`, `IndexedDB异步缓存`, `三路并发`, `v5.7.118-beta.037` |
 | 2026-11-13 19:50:00 | 修复评论纠错弹窗 Flex 横向坍塌 Bug (`IMG_4763.png`) 并按 ADHD 友好与格莱斯准则重设计 | Seen 1× (2026-11-13) | 观察中 | [2026-11-13-195000-handoff.md](2026-11-13-195000-handoff.md) | [2026-11-13-195000-lesson.md](2026-11-13-195000-lesson.md) | `createModal`, `extraClass`, `ADHD友好`, `格莱斯准则`, `v5.7.118-beta.033` |
 | 2026-11-13 19:17:00 | 真机截图 4 项遗漏与误报根治：`145/232/256` 高亮、`27m` 裸 m、`全片/冲击近两小时` 门控与 `1h47m到50m` 继承 | Seen 1× (2026-11-13) | 观察中 | [2026-11-13-191700-handoff.md](2026-11-13-191700-handoff.md) | [2026-11-13-191700-lesson.md](2026-11-13-191700-lesson.md) | `textHtml端到端断言`, `斜杠高亮`, `裸m单位`, `单小时门控`, `141条黄金集`, `v5.7.118-beta.032` |

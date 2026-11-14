@@ -152,6 +152,11 @@ export class EventManager {
         if (this.uiElements.settingsBtn) {
             this.uiElements.settingsBtn.addEventListener('click', this.handleSettingsButtonClickBound);
         }
+
+        this.handleSettingsV2ButtonClickBound = this.handleSettingsV2ButtonClick.bind(this);
+        if (this.uiElements.settingsV2Btn) {
+            this.uiElements.settingsV2Btn.addEventListener('click', this.handleSettingsV2ButtonClickBound);
+        }
         
         // 添加窗口大小变化事件
         window.addEventListener('resize', this.handleWindowResizeBound);
@@ -318,6 +323,16 @@ export class EventManager {
             this.managers.settingsManager.toggleSettingsPanel();
         }
     }
+
+    /**
+     * 处理新版设置按钮点击事件
+     */
+    handleSettingsV2ButtonClick(e) {
+        if (e) e.stopPropagation();
+        if (this.managers.settingsV2Manager) {
+            this.managers.settingsV2Manager.toggle();
+        }
+    }
     
     /**
      * 处理窗口大小变化
@@ -396,6 +411,9 @@ export class EventManager {
         // 移除设置按钮事件
         if (this.uiElements.settingsBtn) {
             this.uiElements.settingsBtn.removeEventListener('click', this.handleSettingsButtonClickBound);
+        }
+        if (this.uiElements.settingsV2Btn) {
+            this.uiElements.settingsV2Btn.removeEventListener('click', this.handleSettingsV2ButtonClickBound);
         }
         
         // 移除视频事件监听器

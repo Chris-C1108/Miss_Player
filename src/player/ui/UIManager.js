@@ -22,10 +22,12 @@ import {
     createResizeHandleElement,
     createCloseButtonElement,
     createSettingsButtonElement,
+    createSettingsV2ButtonElement,
     createPeachIngestButtonElement,
     createSidebarControlButtons,
     createButtonContainerElement,
     createSettingsPanelElement,
+    createSettingsV2PanelElement,
     createSpeedIndicatorElement,
     getVideoTitle
 } from './_uiFactories.js';
@@ -266,7 +268,9 @@ export class UIManager {
             sidebarPosBtn: this.sidebarPosBtn,
             sidebarToggleBtn: this.sidebarToggleBtn,
             settingsBtn: this.settingsBtn,
+            settingsV2Btn: this.settingsV2Btn,
             settingsPanel: this.settingsPanel,
+            settingsV2Panel: this.settingsV2Panel,
             buttonContainer: this.buttonContainer
         };
     }
@@ -366,7 +370,7 @@ export class UIManager {
             }
 
             // 2. 确保点击事件不是从控制按钮、浮层面板或模态框冒泡上来的
-            const nonVideoOverlaySelector = '.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-surface-event-sink';
+            const nonVideoOverlaySelector = '.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-v2-button, .tm-settings-panel, .mp-s2-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-surface-event-sink';
             if (e.target.closest(nonVideoOverlaySelector)) {
                 return;
             }
@@ -531,7 +535,7 @@ export class UIManager {
             }
             
             // 确保点击事件不是从控制按钮、浮层或预览弹窗冒泡上来的
-            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-inline-remark-popover, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-surface-event-sink')) {
+            if (e.target.closest('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-v2-button, .tm-settings-panel, .mp-s2-panel, .tm-inline-remark-popover, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-surface-event-sink')) {
                 return;
             }
 
@@ -637,6 +641,7 @@ export class UIManager {
      */
     createSettingsButton() {
         this.settingsBtn = createSettingsButtonElement();
+        this.settingsV2Btn = createSettingsV2ButtonElement();
     }
 
     /**
@@ -1170,6 +1175,7 @@ export class UIManager {
      */
     createSettingsPanel() {
         this.settingsPanel = createSettingsPanelElement();
+        this.settingsV2Panel = createSettingsV2PanelElement();
     }
     
     /**
@@ -1809,6 +1815,9 @@ export class UIManager {
             this.updatePeachButtonVisibility();
             this.topActionsContainer.appendChild(this.peachIngestBtn);
         }
+        if (this.settingsV2Btn) {
+            this.topActionsContainer.appendChild(this.settingsV2Btn);
+        }
         this.topActionsContainer.appendChild(this.settingsBtn);
 
         // 将控制/侧栏按钮与居中标题组装到统合 Flex 顶栏容器 (.tm-button-container)
@@ -1845,8 +1854,11 @@ export class UIManager {
         }
         this.updateButtonContainerParent();
         
-        // 5. 添加设置面板到播放器容器
+        // 5. 添加设置面板到播放器容器 (旧版与新版并存)
         this.playerContainer.appendChild(this.settingsPanel);
+        if (this.settingsV2Panel) {
+            this.playerContainer.appendChild(this.settingsV2Panel);
+        }
         
         // 6. 挂载控制面板：优先挂载外层总组件 tm-control-panel (包含 tm-single-hand-gutter 与 tm-control-buttons)，兼容降级至 controlButtonsContainer
         const controlPanelEl = this.controlManager?.controlPanel || this.controlManager?.controlButtonsContainer;

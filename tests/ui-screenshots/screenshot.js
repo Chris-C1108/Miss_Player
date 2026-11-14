@@ -303,20 +303,20 @@ async function captureDevice(browser, baseUrl, deviceKey, deviceConfig, timestam
 
         // 寻找设置容器并滚动至底部触发视口水合
         // 寻找设置容器并滚动至底部触发视口水合
-        const panel = sr.querySelector('.tm-settings-page--root') || sr.querySelector('.tm-settings-panel');
+        const panel = sr.querySelector('.tm-settings-panel');
         if (panel) {
           panel.scrollTop = panel.scrollHeight;
         }
 
-        // 轮询等待 WebDAV 导航入口水合完成 (最多等待 2000ms)
+        // 轮询等待 WebDAV 手风琴水合完成 (最多等待 2000ms)
         let targetHeader = null;
         for (let i = 0; i < 20; i++) {
           if (panel) panel.scrollTop = panel.scrollHeight;
           await new Promise((r) => setTimeout(r, 100));
-          const headers = sr.querySelectorAll('.tm-settings-nav-row, .tm-apple-accordion-header');
+          const headers = sr.querySelectorAll('.tm-apple-accordion-header');
           for (const h of headers) {
             if (
-              h.textContent.includes('云同步') ||
+              h.textContent.includes('云端同步') ||
               h.textContent.includes('WebDAV') ||
               h.textContent.includes('Cloud Sync') ||
               h.textContent.includes('Sync')
@@ -330,10 +330,10 @@ async function captureDevice(browser, baseUrl, deviceKey, deviceConfig, timestam
 
         if (targetHeader) {
           targetHeader.click();
+          // 手风琴点击展开后再次滚动到底部，将整个 WebDAV 表单及操作按钮完整展示出来
           await new Promise((r) => setTimeout(r, 400));
-          const subPage = sr.querySelector('.tm-settings-page--sub');
-          if (subPage) {
-            subPage.scrollTop = subPage.scrollHeight;
+          if (panel) {
+            panel.scrollTop = panel.scrollHeight;
           }
           return true;
         }

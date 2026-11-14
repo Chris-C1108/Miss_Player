@@ -92,8 +92,6 @@
     --mp-settings-text-primary: #ffffff;
     --mp-settings-text-secondary: rgba(255, 255, 255, 0.55);
     --mp-settings-text-muted: rgba(255, 255, 255, 0.38);
-    --mp-settings-accent: #0a84ff;
-    --mp-settings-row-hover: rgba(255, 255, 255, 0.045);
     --mp-settings-switch-active: #0a84ff; /* Apple System Blue */
     --mp-settings-switch-track: rgba(255, 255, 255, 0.16);
     --mp-settings-switch-thumb: #ffffff;

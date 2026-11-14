@@ -1,8 +1,6 @@
 import { AppleCard } from '../components/AppleCard.js';
 import { ToggleRow } from '../components/ToggleRow.js';
-import { createGroupHeader, createPillSelector } from '../components/SettingsPrimitives.js';
 import { __ } from '../../../../constants/i18n.js';
-import { Toast } from '../../../../utils/index.js';
 
 export class CommentsSection {
     constructor(settingsManager) {
@@ -13,96 +11,21 @@ export class CommentsSection {
         this._render();
     }
 
-    _buildSourceItems(sourcesConfig) {
-        const sourceLabels = {
-            jable: 'Jable',
-            javdb: 'JavDB',
-            javlibrary: 'JavLibrary'
-        };
-        return Object.keys(sourceLabels).map((key) => {
-            const isEnabled = sourcesConfig[key] !== false;
-            return {
-                id: key,
-                label: isEnabled ? `✓ ${sourceLabels[key]}` : sourceLabels[key],
-                active: isEnabled,
-                title: isEnabled ? `已启用 ${sourceLabels[key]}` : `点击启用 ${sourceLabels[key]}`
-            };
-        });
-    }
-
     _render() {
         this.element.innerHTML = '';
-        this.element.appendChild(createGroupHeader(__('commentsGroupTitle') || '影片评论'));
+
+        const header = document.createElement('div');
+        header.className = 'tm-settings-group-header';
+        header.textContent = __('commentsGroupTitle') || '影片评论';
+        this.element.appendChild(header);
 
         const card = new AppleCard();
 
-        const sourcesConfig = {
-            jable: true,
-            javdb: true,
-            javlibrary: false,
-            ...(this.settings.enabledCommentSources || {})
-        };
+        const subpanelWrapper = document.createElement('div');
+        subpanelWrapper.className = 'tm-settings-subpanel-wrap';
+        subpanelWrapper.style.display = this.settings.showCommentsSection ? 'block' : 'none';
 
-        const sourcesRow = document.createElement('div');
-        sourcesRow.className = 'tm-apple-row tm-apple-row--column';
-
-        const sourcesTitle = document.createElement('div');
-        sourcesTitle.className = 'tm-apple-row-title';
-        sourcesTitle.textContent = __('commentSources') || '评论来源';
-        sourcesRow.appendChild(sourcesTitle);
-
-        const subtext = __('commentSourcesDesc') || '';
-        if (subtext) {
-            const sourcesSub = document.createElement('div');
-            sourcesSub.className = 'tm-apple-row-subtext';
-            sourcesSub.textContent = subtext;
-            sourcesRow.appendChild(sourcesSub);
-        }
-
-        const pillSelector = createPillSelector({
-            items: this._buildSourceItems(sourcesConfig),
-            allowAdd: false,
-            onToggle: (key) => {
-                const currentlyEnabled = sourcesConfig[key] !== false;
-                if (currentlyEnabled) {
-                    const activeCount = ['jable', 'javdb', 'javlibrary'].filter((k) => sourcesConfig[k] !== false).length;
-                    if (activeCount <= 1) {
-                        Toast('至少需要保留 1 个开启的评论来源', 2000, 'warning');
-                        return;
-                    }
-                }
-                sourcesConfig[key] = !currentlyEnabled;
-                const nextSources = { ...sourcesConfig };
-                this.sm.updateSetting('enabledCommentSources', nextSources);
-                pillSelector._update(this._buildSourceItems(nextSources));
-
-                if (this.sm.controlManager?.commentPanel && typeof this.sm.controlManager.commentPanel.updateCommentSources === 'function') {
-                    this.sm.controlManager.commentPanel.updateCommentSources(nextSources);
-                }
-            }
-        });
-
-        sourcesRow.appendChild(pillSelector);
-
-        const numFilterRow = new ToggleRow({
-            title: __('filterTimeOnly') || '只看时间',
-            subtext: __('filterTimeOnlyDesc') || '仅显示含时间标记的评论',
-            checked: Boolean(this.settings.debugFilterHasNumbers),
-            onChange: (checked) => {
-                this.sm.updateSetting('debugFilterHasNumbers', checked);
-                if (this.sm.controlManager?.commentPanel && typeof this.sm.controlManager.commentPanel.updateDebugFilterHasNumbers === 'function') {
-                    this.sm.controlManager.commentPanel.updateDebugFilterHasNumbers(checked);
-                }
-            }
-        }).getElement();
-
-        const syncVisibility = (show) => {
-            sourcesRow.classList.toggle('is-hidden', !show);
-            numFilterRow.classList.toggle('is-hidden', !show);
-        };
-        syncVisibility(Boolean(this.settings.showCommentsSection));
-
-        card.appendChild(new ToggleRow({
+        const commentsToggle = new ToggleRow({
             title: __('showComments') || '显示评论',
             subtext: __('showCommentsDesc') || '',
             checked: this.settings.showCommentsSection,
@@ -118,13 +41,75 @@ export class CommentsSection {
                 if (this.sm.controlManager?.commentPanel) {
                     this.sm.controlManager.commentPanel.updateCommentsVisibility(checked);
                 }
-                syncVisibility(checked);
+                subpanelWrapper.style.display = checked ? 'block' : 'none';
             }
-        }).getElement());
+        });
+        card.appendChild(commentsToggle.getElement());
 
-        card.appendChild(sourcesRow);
-        card.appendChild(numFilterRow);
+        const sourcesRow = document.createElement('div');
+        sourcesRow.className = 'tm-apple-row tm-apple-row--column';
 
+        const sourcesTop = document.createElement('div');
+        sourcesTop.className = 'tm-apple-row-title';
+        sourcesTop.textContent = __('commentSources') || '评论来源';
+        sourcesRow.appendChild(sourcesTop);
+
+        const subtext = __('commentSourcesDesc') || '';
+        if (subtext) {
+            const sourcesSub = document.createElement('div');
+            sourcesSub.className = 'tm-apple-row-subtext';
+            sourcesSub.textContent = subtext;
+            sourcesRow.appendChild(sourcesSub);
+        }
+
+        const badgesContainer = document.createElement('div');
+        badgesContainer.className = 'tm-settings-sources-subpanel';
+
+        const sources = [
+            { key: 'jable', label: 'Jable' },
+            { key: 'javdb', label: 'JavDB' },
+            { key: 'javlibrary', label: 'JavLibrary' }
+        ];
+
+        sources.forEach(src => {
+            const badge = document.createElement('button');
+            badge.type = 'button';
+            const isEnabled = this.settings.enabledCommentSources?.[src.key] !== false;
+            badge.className = `tm-comment-source-badge ${isEnabled ? 'enabled' : 'disabled'}`;
+            badge.textContent = src.label;
+            badge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const nextState = !badge.classList.contains('enabled');
+                badge.classList.toggle('enabled', nextState);
+                badge.classList.toggle('disabled', !nextState);
+                
+                const current = { ...(this.settings.enabledCommentSources || {}) };
+                current[src.key] = nextState;
+                this.sm.updateSetting('enabledCommentSources', current);
+                if (this.sm.controlManager?.commentPanel) {
+                    this.sm.controlManager.commentPanel.updateCommentSources(current);
+                }
+            });
+            badgesContainer.appendChild(badge);
+        });
+
+        sourcesRow.appendChild(badgesContainer);
+        subpanelWrapper.appendChild(sourcesRow);
+
+        const numFilterToggle = new ToggleRow({
+            title: __('filterTimeOnly') || '只看时间',
+            subtext: __('filterTimeOnlyDesc') || '仅显示含时间标记的评论',
+            checked: Boolean(this.settings.debugFilterHasNumbers),
+            onChange: (checked) => {
+                this.sm.updateSetting('debugFilterHasNumbers', checked);
+                if (this.sm.controlManager?.commentPanel) {
+                    this.sm.controlManager.commentPanel.updateDebugFilterHasNumbers(checked);
+                }
+            }
+        });
+        subpanelWrapper.appendChild(numFilterToggle.getElement());
+
+        card.appendChild(subpanelWrapper);
         this.element.appendChild(card.getElement());
     }
 

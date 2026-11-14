@@ -1,4 +1,4 @@
-import { LAYOUT_LEFT, LAYOUT_RIGHT, COMMENTS_SHOW, COMMENTS_HIDE, ICON_PEACH } from '../../constants/icons.js';
+import { LAYOUT_LEFT, LAYOUT_RIGHT, COMMENTS_SHOW, COMMENTS_HIDE, ICON_PEACH, ICON_SLIDERS_V2 } from '../../constants/icons.js';
 
 /**
  * _uiFactories.js — UIManager 的纯 DOM 构建工厂函数集合
@@ -151,6 +151,20 @@ export function createButtonContainerElement() {
 }
 
 /**
+ * 创建新版设置入口按钮（与旧版并存以便对照体验）
+ * @returns {HTMLButtonElement}
+ */
+export function createSettingsV2ButtonElement() {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tm-settings-v2-button tm-control-button-base';
+    btn.innerHTML = `${ICON_SLIDERS_V2}<span class="mp-s2-btn-tag">2</span>`;
+    btn.title = '新版设置 (Beta UI)';
+    btn.setAttribute('aria-label', '新版设置');
+    return btn;
+}
+
+/**
  * 创建设置面板元素
  * @returns {HTMLDivElement}
  */
@@ -158,6 +172,18 @@ export function createSettingsPanelElement() {
     const settingsPanel = document.createElement('div');
     settingsPanel.className = 'tm-settings-panel';
     return settingsPanel;
+}
+
+/**
+ * 创建新版设置面板元素
+ * @returns {HTMLDivElement}
+ */
+export function createSettingsV2PanelElement() {
+    const panel = document.createElement('div');
+    panel.className = 'mp-s2-panel';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-label', '设置');
+    return panel;
 }
 
 /**

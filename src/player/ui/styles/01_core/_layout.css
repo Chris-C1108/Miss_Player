@@ -240,6 +240,7 @@
 
 .tm-close-button::after,
 .tm-settings-button::after,
+.tm-settings-v2-button::after,
 .tm-sidebar-pos-button::after,
 .tm-sidebar-toggle-button::after {
     content: '';

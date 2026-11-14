@@ -1,0 +1,896 @@
+/* =========================================================================
+   Miss Player Settings v2 — Unified Apple HIG Inset-Grouped Design System
+   零 !important · 选择器深度 ≤ 3 · 全量统一 Tokens / 间距 / 圆角 / 状态徽章
+   ========================================================================= */
+
+/* 顶栏新版设置入口按钮（与旧版并存以便对照验证） */
+.tm-settings-v2-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.72);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid rgba(10, 132, 255, 0.36);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-controls);
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-sm);
+}
+
+.tm-settings-v2-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.92);
+    border-color: rgba(10, 132, 255, 0.68);
+    transform: scale(1.08);
+    box-shadow: var(--shadow-md);
+}
+
+.tm-settings-v2-button:active {
+    transform: scale(0.95);
+}
+
+.mp-s2-btn-tag {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: #0a84ff;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 14px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------
+   主面板容器 (Desktop / Landscape 悬浮毛玻璃卡片)
+   ------------------------------------------------------------------------- */
+.mp-s2-panel {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 8px) + 52px);
+    right: 16px;
+    width: 344px;
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 68px);
+    z-index: var(--z-modal);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 16px;
+    background: rgba(24, 24, 29, 0.90);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.52), 0 0 0 0.5px rgba(255, 255, 255, 0.05) inset;
+    color: #ffffff;
+    font-family: var(--font-sans);
+    box-sizing: border-box;
+    contain: paint layout;
+    opacity: 0;
+    transform: translate3d(0, -10px, 0) scale(0.985);
+    pointer-events: none;
+    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mp-s2-panel.is-open {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    pointer-events: auto;
+}
+
+/* 顶部吸顶 Header */
+.mp-s2-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px 11px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(28, 28, 34, 0.92);
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.mp-s2-grabber {
+    display: none;
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.28);
+    margin: 0 auto;
+}
+
+.mp-s2-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.mp-s2-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.mp-s2-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.25px;
+    color: #ffffff;
+}
+
+.mp-s2-close {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.mp-s2-close::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+}
+
+.mp-s2-close:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+
+.mp-s2-close:active {
+    transform: scale(0.92);
+}
+
+/* 可滚动正文区域 */
+.mp-s2-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    padding: 14px 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.mp-s2-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+
+.mp-s2-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+}
+
+/* 移动端底部吸底操作栏（桌面端隐藏） */
+.mp-s2-footer {
+    display: none;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(26, 26, 32, 0.94);
+    flex-shrink: 0;
+}
+
+.mp-s2-done-btn {
+    width: 100%;
+    height: 40px;
+    border: none;
+    border-radius: 11px;
+    background: rgba(10, 132, 255, 0.22);
+    color: #409cff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.mp-s2-done-btn:active {
+    transform: scale(0.985);
+    background: rgba(10, 132, 255, 0.34);
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+    .mp-s2-panel {
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-width: 100%;
+        max-height: 84dvh;
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+        transform: translate3d(0, 100%, 0);
+        transition: opacity 0.22s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .mp-s2-panel.is-open {
+        transform: translate3d(0, 0, 0);
+    }
+
+    .mp-s2-panel.is-dragging {
+        transition: none;
+    }
+
+    .mp-s2-grabber {
+        display: block;
+    }
+
+    .mp-s2-footer {
+        display: block;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   分组与卡片容器 (Inset-Grouped Cards)
+   ------------------------------------------------------------------------- */
+.mp-s2-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mp-s2-group-label {
+    padding: 0 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.45px;
+    color: rgba(255, 255, 255, 0.48);
+    text-transform: uppercase;
+    user-select: none;
+}
+
+.mp-s2-card {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.065);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 13px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* -------------------------------------------------------------------------
+   标准行与分隔线 (Unified Rows)
+   ------------------------------------------------------------------------- */
+.mp-s2-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    padding: 10px 14px;
+    box-sizing: border-box;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background-color 0.15s ease;
+}
+
+.mp-s2-row:last-child {
+    border-bottom: none;
+}
+
+.mp-s2-row--clickable {
+    cursor: pointer;
+}
+
+.mp-s2-row--clickable:hover {
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.mp-s2-row--stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+}
+
+.mp-s2-row-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.mp-s2-row-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: #ffffff;
+}
+
+.mp-s2-row-sub {
+    font-size: 11.5px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.52);
+}
+
+.mp-s2-row-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* -------------------------------------------------------------------------
+   统一原子控件：Switch / Segmented / Stepper / Chips / Pill
+   ------------------------------------------------------------------------- */
+.mp-s2-switch {
+    position: relative;
+    width: 44px;
+    height: 26px;
+    border-radius: 999px;
+    border: none;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.18);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mp-s2-switch.is-checked {
+    background: #0a84ff;
+}
+
+.mp-s2-switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.28);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+
+.mp-s2-switch.is-checked .mp-s2-switch-thumb {
+    transform: translate3d(18px, 0, 0);
+}
+
+.mp-s2-segment {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.mp-s2-segment--full {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.mp-s2-segment-btn {
+    flex: 1 1 0;
+    height: 26px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.mp-s2-segment-btn:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.mp-s2-segment-btn.is-active {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* 状态徽章 Pill */
+.mp-s2-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.10);
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.mp-s2-pill--ok {
+    background: rgba(48, 209, 88, 0.16);
+    color: #30d158;
+}
+
+.mp-s2-pill--warn {
+    background: rgba(255, 159, 10, 0.18);
+    color: #ff9f0a;
+}
+
+.mp-s2-pill--err {
+    background: rgba(255, 69, 58, 0.18);
+    color: #ff453a;
+}
+
+.mp-s2-pill--info {
+    background: rgba(10, 132, 255, 0.20);
+    color: #409cff;
+}
+
+.mp-s2-pill--muted {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.50);
+}
+
+/* 数值步进与内联输入 */
+.mp-s2-stepper-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.mp-s2-stepper-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 9px;
+    background: rgba(0, 0, 0, 0.24);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mp-s2-stepper-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.68);
+    white-space: nowrap;
+}
+
+.mp-s2-stepper-box {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.mp-s2-num-input {
+    width: 44px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    padding: 0 4px;
+}
+
+.mp-s2-num-input:focus {
+    background: rgba(10, 132, 255, 0.22);
+    box-shadow: 0 0 0 1.5px #0a84ff;
+}
+
+.mp-s2-unit {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* 内联子抽屉 / 步进编辑器 / 芯片选择器 */
+.mp-s2-subbox {
+    padding: 10px 14px 12px;
+    background: rgba(0, 0, 0, 0.16);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mp-s2-subbox.is-hidden {
+    display: none;
+}
+
+.mp-s2-subbox-hint {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.48);
+}
+
+.mp-s2-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.mp-s2-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.mp-s2-chip:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.mp-s2-chip.is-active {
+    background: rgba(10, 132, 255, 0.22);
+    border-color: rgba(10, 132, 255, 0.58);
+    color: #64b5ff;
+    font-weight: 600;
+}
+
+.mp-s2-chip--add {
+    border-style: dashed;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.mp-s2-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 10px;
+    line-height: 1;
+}
+
+.mp-s2-chip-remove:hover {
+    background: rgba(255, 69, 58, 0.75);
+    color: #ffffff;
+}
+
+.mp-s2-chip-input-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mp-s2-chip-input-wrap.is-hidden {
+    display: none;
+}
+
+.mp-s2-chip-input {
+    width: 66px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border: 1px solid #0a84ff;
+    background: rgba(0, 0, 0, 0.42);
+    color: #ffffff;
+    font-size: 12px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+/* -------------------------------------------------------------------------
+   平级手风琴卡片 (Flat Sibling Accordions - Option B)
+   ------------------------------------------------------------------------- */
+.mp-s2-accordion-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: #ffffff;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease;
+}
+
+.mp-s2-accordion-trigger:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.mp-s2-accordion-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.mp-s2-accordion-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.09);
+    color: rgba(255, 255, 255, 0.88);
+    flex-shrink: 0;
+}
+
+.mp-s2-accordion-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mp-s2-accordion-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.mp-s2-chevron {
+    display: inline-flex;
+    color: rgba(255, 255, 255, 0.42);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mp-s2-accordion.is-expanded .mp-s2-chevron {
+    transform: rotate(90deg);
+}
+
+.mp-s2-accordion-body {
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    display: flex;
+    flex-direction: column;
+}
+
+.mp-s2-accordion-body.is-hidden {
+    display: none;
+}
+
+/* -------------------------------------------------------------------------
+   表单字段与操作按钮 (Unified Forms & Buttons)
+   ------------------------------------------------------------------------- */
+.mp-s2-form {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mp-s2-conditional {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mp-s2-conditional.is-hidden {
+    display: none;
+}
+
+.mp-s2-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.mp-s2-field-label {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.mp-s2-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mp-s2-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 11px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.28);
+    color: #ffffff;
+    font-size: 13px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.mp-s2-input::placeholder {
+    color: rgba(255, 255, 255, 0.32);
+}
+
+.mp-s2-input:focus {
+    border-color: #0a84ff;
+    background: rgba(0, 0, 0, 0.42);
+    box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.24);
+}
+
+.mp-s2-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.78);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mp-s2-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+.mp-s2-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.mp-s2-actions--single {
+    grid-template-columns: 1fr;
+}
+
+.mp-s2-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+
+.mp-s2-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.mp-s2-btn:active {
+    transform: scale(0.98);
+}
+
+.mp-s2-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.mp-s2-btn--primary {
+    background: rgba(10, 132, 255, 0.24);
+    border-color: rgba(10, 132, 255, 0.45);
+    color: #64b5ff;
+    font-weight: 600;
+}
+
+.mp-s2-btn--primary:hover {
+    background: rgba(10, 132, 255, 0.34);
+}
+
+.mp-s2-btn--danger {
+    background: rgba(255, 69, 58, 0.16);
+    border-color: rgba(255, 69, 58, 0.35);
+    color: #ff6961;
+}
+
+.mp-s2-btn--danger:hover {
+    background: rgba(255, 69, 58, 0.26);
+}
+
+.mp-s2-btn--confirming {
+    background: #ff453a;
+    border-color: #ff453a;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.mp-s2-btn--sm {
+    height: 36px;
+    padding: 0 10px;
+    flex-shrink: 0;
+}
+
+.mp-s2-btn.is-hidden {
+    display: none;
+}
+
+.mp-s2-meta-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.52);
+}
+
+.mp-s2-status-box {
+    padding: 8px 10px;
+    border-radius: 9px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 12px;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.72);
+    word-break: break-word;
+}
+
+.mp-s2-status-box.is-hidden {
+    display: none;
+}
+
+.mp-s2-status-box.is-ok {
+    border-color: rgba(48, 209, 88, 0.32);
+    color: #6ee78e;
+}
+
+.mp-s2-status-box.is-err {
+    border-color: rgba(255, 69, 58, 0.32);
+    color: #ff8078;
+}
+
+.mp-s2-status-box.is-running {
+    border-color: rgba(10, 132, 255, 0.32);
+    color: #64b5ff;
+}

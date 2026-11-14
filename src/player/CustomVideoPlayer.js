@@ -6,6 +6,7 @@ import { LoopManager } from './managers/LoopManager.js';
 import { ProgressManager } from './managers/ProgressManager.js';
 import { EventManager } from './managers/EventManager.js';
 import { SettingsManager } from './managers/SettingsManager.js';
+import { SettingsV2Manager } from './managers/settings_v2/SettingsV2Manager.js';
 import { HeatmapManager } from './managers/HeatmapManager.js';
 import { VideoSwipeManager } from './managers/videoSwipeManager.js';
 import { updateSafariThemeColor, Toast } from '../utils/index.js';
@@ -202,6 +203,12 @@ export class CustomVideoPlayer {
         const settingsManager = new SettingsManager(this.playerCore, uiElements, uiManager, controlManager);
         settingsManager.init();
         this.managers.settingsManager = settingsManager;
+
+        // 创建新版统一设置面板管理器 (与旧版并存，供对比验收)
+        const settingsV2Manager = new SettingsV2Manager(this.playerCore, settingsManager);
+        settingsV2Manager.setPanel(uiElements.settingsV2Panel);
+        settingsManager.settingsV2Manager = settingsV2Manager;
+        this.managers.settingsV2Manager = settingsV2Manager;
         
         // 创建进度管理器
         const progressManager = new ProgressManager(this.playerCore, uiElements);

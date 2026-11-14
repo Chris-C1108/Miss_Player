@@ -432,7 +432,8 @@ src/player/ui/styles/
 1. **新功能准入原则 (Default Off in Beta)**：
    - 任何新增功能模块、实验性交互、多级网络抓取、外部数据库对接等能力，在初始开发与测试阶段，**必须挂载在设置菜单的「Beta 实验室」独立分段内**；
    - 所有 Beta 新功能默认必须保持为**关闭状态（Default OFF）**，由用户主动选择开启；
-   - 核心代码执行逻辑中必须先行校验 Beta 开关（如 `playerState.settings.betaMode && playerState.settings.betaFeatureX`），未开启时完全走原有稳定链路。
+   - 核心代码执行逻辑中必须先行校验 Beta 开关（如 `playerState.settings.betaMode && playerState.settings.betaFeatureX`），未开启时完全走原有稳定链路；
+   - **已从实验功能独立出的连接能力**：`Peach 入库` 已移出「实验功能 (`betaMode`)」，在新版设置（Settings v2）中与「云端同步」平级收拢在「连接与同步」分组下，默认仍保持关闭并由其自身 `enabled` 开关控制。
 
 2. **特性转正与剥离标准 (Promote to Stable)**：
    - 只有在 Beta 模式下经过至少 1 个完整版本周期的真机验证、异常与边界问题彻底闭环、且未收到任何致命缺陷反馈后，经评估方可从 Beta 实验室中“转正”；

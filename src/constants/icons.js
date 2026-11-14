@@ -324,38 +324,50 @@ export const ICON_PLUS = `
     </svg>
 `;
 
-export const ICON_CHEVRON_LEFT = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="15 18 9 12 15 6"/>
+export const ICON_SLIDERS_V2 = `
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="4" y1="7" x2="20" y2="7"/>
+        <circle cx="9" cy="7" r="2.2" fill="currentColor"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
+        <circle cx="15" cy="12" r="2.2" fill="currentColor"/>
+        <line x1="4" y1="17" x2="20" y2="17"/>
+        <circle cx="10" cy="17" r="2.2" fill="currentColor"/>
     </svg>
 `;
 
-export const ICON_CHEVRON_RIGHT = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="9 18 15 12 9 6"/>
+export const ICON_FLASK = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 3h6"/>
+        <path d="M10 3v6l-5.2 8.4A2 2 0 0 0 6.5 20h11a2 2 0 0 0 1.7-2.6L14 9V3"/>
+        <path d="M7.5 14h9"/>
     </svg>
 `;
 
-export const ICON_PEACH_MEDIA = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="4" width="20" height="16" rx="3"/>
-        <polygon points="10 9 16 12 10 15 10 9" fill="currentColor" stroke="none"/>
+export const ICON_TERMINAL = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="4 17 10 11 4 5"/>
+        <line x1="12" y1="19" x2="20" y2="19"/>
     </svg>
 `;
 
-export const ICON_ABOUT_INFO = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+export const ICON_INFO_CIRCLE = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/>
         <line x1="12" y1="16" x2="12" y2="12"/>
         <line x1="12" y1="8" x2="12.01" y2="8"/>
     </svg>
 `;
 
-export const ICON_TERMINAL = `
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="4 17 10 11 4 5"/>
-        <line x1="12" y1="19" x2="20" y2="19"/>
+export const ICON_CHEVRON_RIGHT = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
     </svg>
 `;
 
+export const ICON_X_CLOSE = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+`;
 
