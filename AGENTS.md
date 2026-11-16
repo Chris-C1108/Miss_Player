@@ -124,7 +124,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **MarkerBottomSheet**：胶囊标签管理面板、60秒软删除撤销、多维语义标签选择、批量分享导出
 * **DragManager**：Minimap 缩略图平移拖拽与跟手手势
 * **EventManager**：集中式事件委托、快捷键绑定与全屏监听
-* **SettingsManager**：Apple 风格设置面板、遥控器运行模式控制、Beta 实验室、WebDAV 配置
+* **SettingsManager & SettingsV2Manager**：`SettingsManager` 负责设置状态持久化、控制行可见性与更新检测；`src/player/managers/settings_v2/` 承载统一单入口设置抽屉（4 组平级卡片：播放控制、影片评论、连接与同步、高级与关于；无旧版设置面板，有更新时仅“更新/安装”按钮呼吸发光提示）
 * **SingleHandManager**：竖屏单手操控模式管理器、侧边辅助条 (Utility Gutter) 挂载、左右手镜像与全宽还原状态机
 * **HeatmapManager**：视频观看热度与足迹探索管理器、双轨架构（私有足迹白光顶轨 + 社区高能珊瑚金底轨）、5秒物理自适应分桶、120分位定长量化编解码 (`heatmapCodec.js`)、水位线差分增量防滚雪球上报、WebDAV 跨域漫游合并 (Element-wise Max) 与双层 SVG 贝塞尔波形渲染
 
@@ -290,7 +290,7 @@ src/player/ui/styles/
 │   ├── _debug.css       # 调试面板与悬浮日志
 │   ├── _marker_sheet.css / _modals.css         # A-B 高光底栏与通用弹窗
 │   ├── _peach.css       # Peach 入库联动胶囊与巡检卡片
-│   └── _settings_apple.css / _settings_cards.css / _settings_panels.css # 设置系统
+│   └── _settings_v2.css # 统一设置抽屉与呼吸更新引导样式
 └── 03_responsive/       # 响应式与模式适配层
     ├── _landscape.css   # PC 桌面端与移动端横屏适配
     └── _single_hand.css # 竖屏单手模式辅助条与左右手镜像布局

@@ -303,7 +303,7 @@ async function captureDevice(browser, baseUrl, deviceKey, deviceConfig, timestam
 
         // 寻找设置容器并滚动至底部触发视口水合
         // 寻找设置容器并滚动至底部触发视口水合
-        const panel = sr.querySelector('.tm-settings-panel');
+        const panel = sr.querySelector('.mp-s2-scroll') || sr.querySelector('.mp-s2-panel');
         if (panel) {
           panel.scrollTop = panel.scrollHeight;
         }
@@ -313,7 +313,7 @@ async function captureDevice(browser, baseUrl, deviceKey, deviceConfig, timestam
         for (let i = 0; i < 20; i++) {
           if (panel) panel.scrollTop = panel.scrollHeight;
           await new Promise((r) => setTimeout(r, 100));
-          const headers = sr.querySelectorAll('.tm-apple-accordion-header');
+          const headers = sr.querySelectorAll('.mp-s2-accordion-head');
           for (const h of headers) {
             if (
               h.textContent.includes('云端同步') ||

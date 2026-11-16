@@ -3,10 +3,11 @@ import fs from 'fs';
 
 console.log('🧪 开始执行单手手势随时触发与设置项清理单元测试...');
 
-// 1. 验证 BetaSection.js 已彻底移除单手模式开关及选择器
-const betaSectionCode = fs.readFileSync('src/player/managers/settings/sections/BetaSection.js', 'utf8');
-assert.ok(!betaSectionCode.includes('singleHandToggle'), 'BetaSection 必须彻底移除 singleHandToggle 开关');
-assert.ok(!betaSectionCode.includes('singleHandPrefWrap'), 'BetaSection 必须彻底移除 singleHandPrefWrap 惯用手选择器');
+// 1. 验证设置面板已彻底移除单手模式开关及选择器
+const s2AdvancedCode = fs.readFileSync('src/player/managers/settings_v2/sections/S2AdvancedSection.js', 'utf8');
+const s2PlaybackCode = fs.readFileSync('src/player/managers/settings_v2/sections/S2PlaybackSection.js', 'utf8');
+assert.ok(!s2AdvancedCode.includes('singleHandToggle') && !s2PlaybackCode.includes('singleHandToggle'), '设置面板必须彻底移除 singleHandToggle 开关');
+assert.ok(!s2AdvancedCode.includes('singleHandPrefWrap') && !s2PlaybackCode.includes('singleHandPrefWrap'), '设置面板必须彻底移除 singleHandPrefWrap 惯用手选择器');
 console.log('✅ 1. 设置菜单已成功移除单手模式开关');
 
 // 2. 模拟 SingleHandManager 手势无阻断触发逻辑

@@ -52,8 +52,9 @@ class SelectorOracle {
                 updatedAt: Date.now()
             },
             settingsPanel: {
-                current: '.tm-settings-panel',
+                current: '.mp-s2-panel',
                 candidates: [
+                    '.mp-s2-panel',
                     '.tm-settings-panel',
                     '#tm-settings-modal',
                     '.tm-settings-modal'

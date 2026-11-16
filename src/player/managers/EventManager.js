@@ -122,7 +122,7 @@ export class EventManager {
             }
             
             // 允许设置菜单面板、快进滑动条、评论区、高光选择抽屉及弹窗内部滚动容器正常在组件内自由滚动，配合 overscroll-behavior: contain 防止边界穿透
-            const scrollableSelector = '.tm-settings-panel, .tm-settings-menu-container, .tm-settings-apple-container, .tm-settings-seek-steps-subpanel, .tm-settings-webdav-card, .mp-s2-panel, .mp-s2-scroll, .tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list, .tm-tag-select-list, .tm-comment-submit-bar-wrapper, .tm-custom-modal-content';
+            const scrollableSelector = '.mp-s2-panel, .mp-s2-scroll, .tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list, .tm-tag-select-list, .tm-comment-submit-bar-wrapper, .tm-custom-modal-content';
             const inScrollable = typeof findInPath === 'function' ? findInPath(scrollableSelector) : e.target.closest(scrollableSelector);
             if (inScrollable) {
                 return;
@@ -151,11 +151,6 @@ export class EventManager {
         this.handleSettingsButtonClickBound = this.handleSettingsButtonClick.bind(this);
         if (this.uiElements.settingsBtn) {
             this.uiElements.settingsBtn.addEventListener('click', this.handleSettingsButtonClickBound);
-        }
-
-        this.handleSettingsV2ButtonClickBound = this.handleSettingsV2ButtonClick.bind(this);
-        if (this.uiElements.settingsV2Btn) {
-            this.uiElements.settingsV2Btn.addEventListener('click', this.handleSettingsV2ButtonClickBound);
         }
         
         // 添加窗口大小变化事件
@@ -318,19 +313,12 @@ export class EventManager {
     /**
      * 处理设置按钮点击事件
      */
-    handleSettingsButtonClick() {
-        if (this.managers.settingsManager) {
-            this.managers.settingsManager.toggleSettingsPanel();
-        }
-    }
-
-    /**
-     * 处理新版设置按钮点击事件
-     */
-    handleSettingsV2ButtonClick(e) {
+    handleSettingsButtonClick(e) {
         if (e) e.stopPropagation();
         if (this.managers.settingsV2Manager) {
             this.managers.settingsV2Manager.toggle();
+        } else if (this.managers.settingsManager) {
+            this.managers.settingsManager.toggleSettingsPanel();
         }
     }
     
@@ -411,9 +399,6 @@ export class EventManager {
         // 移除设置按钮事件
         if (this.uiElements.settingsBtn) {
             this.uiElements.settingsBtn.removeEventListener('click', this.handleSettingsButtonClickBound);
-        }
-        if (this.uiElements.settingsV2Btn) {
-            this.uiElements.settingsV2Btn.removeEventListener('click', this.handleSettingsV2ButtonClickBound);
         }
         
         // 移除视频事件监听器

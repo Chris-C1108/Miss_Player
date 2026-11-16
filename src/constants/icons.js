@@ -324,17 +324,6 @@ export const ICON_PLUS = `
     </svg>
 `;
 
-export const ICON_SLIDERS_V2 = `
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="4" y1="7" x2="20" y2="7"/>
-        <circle cx="9" cy="7" r="2.2" fill="currentColor"/>
-        <line x1="4" y1="12" x2="20" y2="12"/>
-        <circle cx="15" cy="12" r="2.2" fill="currentColor"/>
-        <line x1="4" y1="17" x2="20" y2="17"/>
-        <circle cx="10" cy="17" r="2.2" fill="currentColor"/>
-    </svg>
-`;
-
 export const ICON_FLASK = `
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M9 3h6"/>

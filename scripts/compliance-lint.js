@@ -283,7 +283,7 @@ function runCheck() {
         '.jc-code-preview-popover',
         '.tm-inline-remark-popover',
         '.tm-bottom-sheet-overlay',
-        '.tm-settings-panel'
+        '.mp-s2-panel'
     ];
     const missingOverlaySelectors = requiredOverlaySelectors.filter(sel => !uiManagerCode.includes(sel));
     if (missingOverlaySelectors.length > 0) {

@@ -1,77 +1,41 @@
-import { SettingsStreamScheduler } from "./settings/SettingsStreamScheduler.js";
-import { PlaybackSection } from "./settings/sections/PlaybackSection.js";
-import { CommentsSection } from "./settings/sections/CommentsSection.js";
-import { BetaSection } from "./settings/sections/BetaSection.js";
-import { CloudSyncSection } from "./settings/sections/CloudSyncSection.js";
-import { AboutSection } from "./settings/sections/AboutSection.js";
-import { SegmentedControl } from "./settings/components/SegmentedControl.js";
-function sanitizeSeekStepList(arr, isCustom = false) {
-    if (!Array.isArray(arr)) return isCustom ? [] : ['5s', '10s', '30s', '1m', '5m', '10m'];
-    const valid = arr.filter(s => typeof s === 'string' && /^\d+[sm]$/i.test(s.trim())).map(s => s.trim().toLowerCase());
-    const unique = Array.from(new Set(valid));
-    return isCustom ? unique.slice(0, 30) : (unique.length > 0 ? unique : ['5s', '10s', '30s', '1m', '5m', '10m']);
-}
-
-import { getValue, setValue, Toast, playTapSound, isImeConfirmEnter } from '../../utils/index.js';
-import { telemetry } from '../../telemetry';
-import { __ } from '../../constants/i18n.js';
-import { SyncManager, WebDavClient, getOrCreateClientId, getDeviceName } from '../../sync/index.js';
-import { DebugLogPanel } from '../ui/DebugLogPanel.js';
-import { CrazyScraper } from '../comments/CrazyScraper.js';
-import { SURFACE_TYPES } from '../state/UISurfaceMachine.js';
-import {
-    SleazyForkService,
-    getCurrentVersion,
-    detectScriptHandler,
-    getCleanScriptUrl,
-    dispatchScriptInstall,
-    GITHUB_COMMITS_URL
-} from '../../services/SleazyForkService.js';
-import {
-    ICON_CLOUD_SYNC,
-    ICON_CLOUD_UPLOAD,
-    ICON_CLOUD_DOWNLOAD,
-    ICON_EYE,
-    ICON_EYE_OFF,
-    ICON_CHECK,
-    ICON_SERVER,
-    ICON_REFRESH,
-    ICON_EXTERNAL_LINK,
-    ICON_DOWNLOAD,
-    ICON_SPARKLES
-} from '../../constants/icons.js';
+import { getValue, setValue, Toast } from "../../utils/index.js";
+import { __ } from "../../constants/i18n.js";
+import { telemetry } from "../../telemetry/index.js";
+import { SleazyForkService } from "../../services/SleazyForkService.js";
+import { sanitizeSeekStepList } from "../state/PlayerState.js";
+import { playTapSound } from "../../utils/sound.js";
+import { DebugLogPanel } from "../ui/DebugLogPanel.js";
+import { CrazyScraper } from "../comments/CrazyScraper.js";
 
 /**
- * 设置管理器类 - 负责播放器设置面板及其交互功能
+ * SettingsManager — 设置状态、持久化和检查更新控制器
+ * 所有设置 UI 渲染已统一收敛至 SettingsV2Manager；本类专注底层状态同步、控制行可见性与更新检测。
  */
 export class SettingsManager {
-    constructor(playerCore, uiElements, uiManager = null, controlManager = null) {
-        // 核心引用
+    constructor(playerCore, uiElements = {}, uiManager = null, controlManager = null) {
         this.playerCore = playerCore;
         this.uiManager = uiManager || (playerCore ? playerCore.uiManager : null);
         this.controlManager = controlManager || (playerCore ? playerCore.controlManager : null);
-        this.targetVideo = playerCore?.targetVideo;
-        
-        // UI元素引用
-        this.uiElements = uiElements;
-        this.settingsPanel = uiElements.settingsPanel;
-        
-        // 事件处理器
-        this.overlayClickHandler = null;
-        
-        // 用户设置
+        this.settingsV2Manager = null;
+        this.uiElements = uiElements || {};
+        this.settingsPanel = this.uiElements.settingsPanel || null;
+
+        this._latestUpdateInfo = null;
+        this._isCheckingUpdate = false;
+        this._sectionExpandedStates = {
+            cloudSync: false,
+            about: false
+        };
+
         this.settings = {
             showProgressBar: true,
             showSeekControlRow: true,
             showLoopControlRow: true,
             showPlaybackControlRow: true,
             enabledSeekSteps: ['5s', '10s', '30s', '1m', '5m', '10m'],
+            customUserSeekSteps: [],
             showCommentsSection: true,
-            enabledCommentSources: {
-                jable: true,
-                javdb: true,
-                javlibrary: false
-            },
+            enabledCommentSources: { jable: true, javdb: true, javlibrary: false },
             telemetryEnabled: false,
             debugMode: false,
             debugFilterHasNumbers: false,
@@ -80,167 +44,125 @@ export class SettingsManager {
             buttonSoundEnabled: true,
             defaultMuted: true,
             muteResetMinutes: 5,
-            autoCheckUpdate: true,
-            updateChannel: 'stable',
-            viewportDebugEnabled: false,
-            betaMode: false,
-            betaFirstCapsulePlay: false,
             betaPlayMode: 'normal',
             previewDurationSeconds: 5,
             climaxDurationSeconds: 60,
+            betaMode: false,
+            betaFirstCapsulePlay: false,
             betaColorPlayMode: 'preview',
             betaCapsuleUndo: true,
             betaDeepLinking: true,
             betaDbEndpoint: '',
-            betaDbApiKey: ''
+            betaDbApiKey: '',
+            viewportDebugEnabled: false,
+            autoCheckUpdate: true,
+            updateChannel: 'stable'
         };
 
-        // 快进快退步进自定义展开状态
-        this.showCustomSeekStepsPanel = false;
-        this.isAboutExpanded = true;
-        this._latestUpdateInfo = null;
-        this._isCheckingUpdate = false;
-
-        // 维护手风琴分段的展开状态（在页面生命周期及重绘中持久保持）
-        this._sectionExpandedStates = {
-            cloudSync: false,
-            about: false
-        };
-        this.aboutSection = null;
-        this.cloudSyncSection = null;
-    }
-
-    isSectionExpanded(sectionId, defaultVal = false) {
-        if (!this._sectionExpandedStates) {
-            this._sectionExpandedStates = { cloudSync: false, about: false };
-        }
-        return this._sectionExpandedStates[sectionId] !== undefined
-            ? this._sectionExpandedStates[sectionId]
-            : defaultVal;
-    }
-
-    setSectionExpanded(sectionId, isExpanded) {
-        if (!this._sectionExpandedStates) {
-            this._sectionExpandedStates = { cloudSync: false, about: false };
-        }
-        this._sectionExpandedStates[sectionId] = Boolean(isExpanded);
-    }
-
-    refreshAboutSection() {
-        if (this.settingsV2Manager && typeof this.settingsV2Manager.refreshAdvancedSection === 'function') {
-            this.settingsV2Manager.refreshAdvancedSection();
-        }
-        if (this.aboutSection && typeof this.aboutSection.refresh === 'function') {
-            this.aboutSection.refresh();
-            return true;
-        }
-        this.createSettingsPanel();
-        return false;
+        this.loadSettings();
     }
 
     /**
-     * 统一更新检查方法 (支持折叠展开即查与手动点击)
-     * @param {boolean} force - 是否强制跳过缓存
-     * @param {boolean} notify - 是否弹出 Toast 提示
+     * 读取或写入区块折叠状态
      */
-    async checkUpdate(force = true, notify = true) {
-        if (this._isCheckingUpdate) return this._latestUpdateInfo;
+    isSectionExpanded(sectionId, defaultVal = false) {
+        try {
+            const stored = localStorage.getItem(`mp_sec_exp_${sectionId}`);
+            if (stored !== null) return stored === 'true';
+        } catch (e) { /* ignore */ }
+        return defaultVal;
+    }
+
+    setSectionExpanded(sectionId, isExpanded) {
+        try {
+            localStorage.setItem(`mp_sec_exp_${sectionId}`, isExpanded ? 'true' : 'false');
+        } catch (e) { /* ignore */ }
+    }
+
+    /**
+     * 刷新“版本与更新”区块（单一设置面板）
+     */
+    refreshAboutSection() {
+        if (this.settingsV2Manager) {
+            this.settingsV2Manager.refreshAdvancedSection();
+        }
+    }
+
+    /**
+     * 刷新“云端同步”区块
+     */
+    refreshCloudSyncSection() {
+        if (this.settingsV2Manager?.refreshConnectionsSection) {
+            this.settingsV2Manager.refreshConnectionsSection();
+        }
+    }
+
+    /**
+     * 执行检查更新（自动与手动共用；有更新时仅通过“更新/安装”按钮呼吸灯发光提示）
+     * @param {boolean} isManual - 是否由用户主动点击触发
+     * @param {boolean} bypassCache - 是否穿透本地缓存
+     */
+    async checkUpdate(isManual = false, bypassCache = false) {
+        if (this._isCheckingUpdate) return null;
         this._isCheckingUpdate = true;
         this.refreshAboutSection();
-        const currentVersion = getCurrentVersion();
-        const channel = this.settings.updateChannel || 'stable';
 
         try {
-            const res = await SleazyForkService.checkUpdate(force, channel);
+            const channel = this.settings.updateChannel || 'stable';
+            const res = await SleazyForkService.checkUpdate(bypassCache, channel);
             this._latestUpdateInfo = res;
-            const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
-            const btnV2 = this.uiElements?.settingsV2Btn || this.uiManager?.settingsV2Btn;
-            [btn, btnV2].forEach((b) => {
-                if (!b) return;
-                b.classList.toggle('has-update-badge', Boolean(res && res.hasUpdate));
-                if (res && res.hasUpdate) {
-                    b.setAttribute('title', `${__('updateFound') || '发现新版本'}: v${res.latestVersion}`);
-                } else if (b === btn) {
-                    b.removeAttribute('title');
+            this._isCheckingUpdate = false;
+
+            if (res && res.success) {
+                if (!res.hasUpdate && isManual) {
+                    Toast.show(__('alreadyLatest') || '当前已是最新版本', 2500, 'success');
                 }
-            });
-            if (notify) {
-                if (res && res.success) {
-                    if (res.hasUpdate) {
-                        Toast.show(`${__('updateFound') || '发现新版本'}: v${res.latestVersion}`, 3500, 'success');
-                    } else {
-                        Toast.show(`${__('alreadyLatest') || '当前已是最新版本'} (v${currentVersion})`, 3000, 'info');
-                    }
-                } else {
-                    Toast.show(res?.error || __('fetchFailed') || '检查更新失败', 3000, 'error');
-                }
+            } else if (isManual) {
+                Toast.show(__('checkUpdateError') || '检查更新失败，请稍后重试', 3000, 'error');
             }
+
+            this.refreshAboutSection();
             return res;
         } catch (err) {
-            if (notify) {
-                Toast.show(err.message || __('fetchFailed') || '检查更新失败', 3000, 'error');
-            }
-            return null;
-        } finally {
             this._isCheckingUpdate = false;
+            if (isManual) {
+                Toast.show(__('checkUpdateError') || '检查更新失败，请稍后重试', 3000, 'error');
+            }
             this.refreshAboutSection();
+            return null;
         }
     }
 
-    refreshCloudSyncSection() {
-        if (this.cloudSyncSection && typeof this.cloudSyncSection.refresh === 'function') {
-            this.cloudSyncSection.refresh();
-            return true;
+    /**
+     * 设置关联的管理器与 UI 元素引用
+     */
+    setManagers(uiManager, controlManager, uiElements) {
+        this.uiManager = uiManager;
+        this.controlManager = controlManager;
+        this.uiElements = uiElements;
+
+        if (this.settingsV2Manager && uiManager?.settingsPanel) {
+            this.settingsV2Manager.setPanel(uiManager.settingsPanel);
         }
-        this.createSettingsPanel();
-        return false;
+
+        return this;
     }
 
-    setManagers(managers = {}) {
-        if (managers.uiManager) this.uiManager = managers.uiManager;
-        if (managers.controlManager) this.controlManager = managers.controlManager;
-    }
-    
     /**
      * 初始化设置管理器
      */
     init() {
-        // 加载保存的设置
-        this.loadSettings();
+        this.syncState();
         DebugLogPanel.updateDebugState(this.settings.debugMode);
         if (CrazyScraper.isEnabled()) {
             setTimeout(() => CrazyScraper.start(this.controlManager?.commentPanel?.videoCode || ''), 2500);
         }
-
-        // 初始应用设置到控制组件
         this.updateControlRowsVisibility();
 
-        // 自动静默检查更新 (默认始终开启，后台闲时执行，杜绝卡顿)
-        const runSilentCheck = async () => {
-            try {
-                const channel = this.settings.updateChannel || 'stable';
-                const res = await SleazyForkService.checkUpdate(false, channel);
-                if (res && res.success) {
-                    this._latestUpdateInfo = res;
-                    const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
-                    const btnV2 = this.uiElements?.settingsV2Btn || this.uiManager?.settingsV2Btn;
-                    [btn, btnV2].forEach((b) => {
-                        if (!b) return;
-                        b.classList.toggle('has-update-badge', Boolean(res.hasUpdate));
-                        if (res.hasUpdate) {
-                            b.setAttribute('title', `${__('updateFound') || '发现新版本'}: v${res.latestVersion}`);
-                        } else if (b === btn) {
-                            b.removeAttribute('title');
-                        }
-                    });
-                    if (this.settingsV2Manager) {
-                        this.settingsV2Manager.refreshAdvancedSection();
-                    }
-                    if (res.hasUpdate && this.settingsPanel && this.settingsPanel.children.length) {
-                        this.createSettingsPanel();
-                    }
-                }
-            } catch (_) {}
+        // 播放器初始化 3 秒后静默检查一次更新（仅内部刷新状态与呼吸灯）
+        const runSilentCheck = () => {
+            if (this._latestUpdateInfo) return;
+            this.checkUpdate(false, false);
         };
 
         if (typeof window.requestIdleCallback === 'function') {
@@ -263,1017 +185,6 @@ export class SettingsManager {
             this.loadSettings();
         }
     }
-    
-    /**
-     * 创建设置面板内容（根据截图分区设计）
-     */
-    createSettingsPanel(options = {}) {
-        if (!this.settingsPanel) return;
-
-        // 记忆当前的滚动条位置
-        const prevScroller = this.settingsScrollBody || this.settingsPanel;
-        const previousScrollTop = (options && options.scrollTop !== undefined)
-            ? options.scrollTop
-            : (prevScroller ? prevScroller.scrollTop : 0);
-
-        this.syncState();
-        this.settingsPanel.innerHTML = "";
-        this.settingsPanel.style.transform = "";
-        this.settingsPanel.style.transition = "";
-
-        if (this._scheduler) {
-            this._scheduler.destroy();
-            this._scheduler = null;
-        }
-
-        const stopProp = (e) => e.stopPropagation();
-        const stopContextMenu = (e) => {
-            const tag = e.target?.tagName?.toLowerCase();
-            if (tag === 'input' || tag === 'textarea' || Boolean(e.target?.isContentEditable)) {
-                return;
-            }
-            e.preventDefault();
-            e.stopPropagation();
-        };
-        if (!this.settingsPanel._panelGuardsBound) {
-            this.settingsPanel._panelGuardsBound = true;
-            this.settingsPanel.addEventListener("click", stopProp);
-            this.settingsPanel.addEventListener("mousedown", stopProp);
-            this.settingsPanel.addEventListener("touchstart", stopProp);
-            this.settingsPanel.addEventListener("pointerdown", stopProp);
-            this.settingsPanel.addEventListener("contextmenu", stopContextMenu, true);
-        }
-
-        // 1. 固定吸顶 Header（不随列表滚动消失，避免内容截断及关闭按钮滚出视野）
-        const headerRow = document.createElement("div");
-        headerRow.className = "tm-settings-apple-header";
-
-        const grabber = document.createElement("div");
-        grabber.className = "tm-settings-sheet-grabber";
-
-        const headerBar = document.createElement("div");
-        headerBar.className = "tm-settings-apple-header-bar";
-
-        const titleWrap = document.createElement("div");
-        titleWrap.className = "tm-settings-apple-title-wrap";
-        titleWrap.innerHTML = `<span class="tm-settings-apple-title">${__("settings") || "设置"}</span>`;
-
-        const closeBtn = document.createElement("button");
-        closeBtn.type = "button";
-        closeBtn.className = "tm-settings-apple-close-btn";
-        closeBtn.setAttribute("aria-label", __("done") || "关闭");
-        closeBtn.title = "关闭设置面板 (ESC)";
-        closeBtn.innerHTML = "✕";
-        closeBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.closeSettingsPanel();
-        });
-
-        headerBar.appendChild(titleWrap);
-        headerBar.appendChild(closeBtn);
-        headerRow.appendChild(grabber);
-        headerRow.appendChild(headerBar);
-
-        // 2. 独立滚动视口
-        const scrollBody = document.createElement("div");
-        scrollBody.className = "tm-settings-scroll-body";
-        this.settingsScrollBody = scrollBody;
-
-        const container = document.createElement("div");
-        container.className = "tm-settings-apple-container";
-        scrollBody.appendChild(container);
-
-        // 3. 移动端拇指热区底部固定关闭栏（PC 端通过 CSS 隐藏）
-        const footerRow = document.createElement("div");
-        footerRow.className = "tm-settings-apple-footer";
-        const doneBtn = document.createElement("button");
-        doneBtn.type = "button";
-        doneBtn.className = "tm-settings-apple-done-btn";
-        doneBtn.textContent = __("done") || "完成";
-        doneBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.closeSettingsPanel();
-        });
-        footerRow.appendChild(doneBtn);
-
-        // 建立 5 大固定顺序的分段插槽，物理锁定渲染顺序，彻底杜绝任何同步/异步混用导致的错位漂移
-        const slotPlayback = document.createElement("div");
-        slotPlayback.className = "tm-settings-slot tm-slot-playback";
-
-        const slotComments = document.createElement("div");
-        slotComments.className = "tm-settings-slot tm-slot-comments";
-
-        const slotBeta = document.createElement("div");
-        slotBeta.className = "tm-settings-slot tm-slot-beta";
-
-        const slotCloudSync = document.createElement("div");
-        slotCloudSync.className = "tm-settings-slot tm-slot-cloud-sync";
-
-        const slotAbout = document.createElement("div");
-        slotAbout.className = "tm-settings-slot tm-slot-about";
-
-        container.appendChild(slotPlayback);
-        container.appendChild(slotComments);
-        container.appendChild(slotBeta);
-        container.appendChild(slotCloudSync);
-        container.appendChild(slotAbout);
-
-        // 1. 同步挂载第一分段 (控制与手势) —— 首屏极其快速 (<= 3ms / < 30 个 DOM 节点)
-        const playbackSection = new PlaybackSection(this);
-        slotPlayback.appendChild(playbackSection.getElement());
-
-        // 2. 初始化流式异步装配调度器
-        this._scheduler = new SettingsStreamScheduler(container, this);
-
-        // 分段 2: 评论与数据源 (挂载至专属插槽 slotComments)
-        this._scheduler.register("comments", () => new CommentsSection(this).getElement(), {
-            defer: "idle",
-            targetSlot: slotComments
-        });
-
-        // 分段 3: 实验特性与高级排错 (挂载至专属插槽 slotBeta)
-        this._scheduler.register("beta", () => {
-            this.betaSection = new BetaSection(this);
-            return this.betaSection.getElement();
-        }, {
-            defer: "idle",
-            targetSlot: slotBeta
-        });
-
-        // 分段 4: 云端同步 WebDAV (挂载至专属插槽 slotCloudSync，无论同步或异步顺序绝对锁定)
-        const isCloudSyncExpanded = this.isSectionExpanded('cloudSync', false);
-        if (isCloudSyncExpanded) {
-            this.cloudSyncSection = new CloudSyncSection(this);
-            slotCloudSync.appendChild(this.cloudSyncSection.getElement());
-        } else {
-            this._scheduler.register("cloudSync", () => {
-                this.cloudSyncSection = new CloudSyncSection(this);
-                return this.cloudSyncSection.getElement();
-            }, { defer: "viewport", targetSlot: slotCloudSync });
-        }
-
-        // 分段 5: 关于与更新 (挂载至专属插槽 slotAbout)
-        const isAboutExpanded = this.isSectionExpanded('about', false);
-        if (isAboutExpanded) {
-            this.aboutSection = new AboutSection(this);
-            slotAbout.appendChild(this.aboutSection.getElement());
-        } else {
-            this._scheduler.register("about", () => {
-                this.aboutSection = new AboutSection(this);
-                return this.aboutSection.getElement();
-            }, { defer: "viewport", targetSlot: slotAbout });
-        }
-
-        this.settingsPanel.appendChild(headerRow);
-        this.settingsPanel.appendChild(scrollBody);
-        this.settingsPanel.appendChild(footerRow);
-
-        this._bindSheetDismissGesture(headerRow, scrollBody);
-
-        // 启动流式异步装配流水线
-        this._scheduler.start();
-
-        // 恢复滚动条位置
-        if (previousScrollTop > 0) {
-            const restoreScroll = () => {
-                if (this.settingsScrollBody) {
-                    this.settingsScrollBody.scrollTop = previousScrollTop;
-                }
-            };
-            requestAnimationFrame(restoreScroll);
-            setTimeout(restoreScroll, 50);
-            setTimeout(restoreScroll, 180);
-        }
-    }
-
-    /**
-     * 绑定移动端原生下拉退出手势（顶部抓手条区域下拉 / 列表滚至最顶后继续下拉）
-     */
-    _bindSheetDismissGesture(headerRow, scrollBody) {
-        const panel = this.settingsPanel;
-        if (!panel) return;
-
-        let startY = 0;
-        let startTime = 0;
-        let currentDy = 0;
-        let tracking = false;
-        let fromHeader = false;
-
-        const onStart = (e, isHeader) => {
-            if (e.touches.length !== 1) return;
-            if (e.target && e.target.closest('button, input, select, textarea, a')) return;
-            if (!isHeader && scrollBody && scrollBody.scrollTop > 2) return;
-            startY = e.touches[0].clientY;
-            startTime = Date.now();
-            currentDy = 0;
-            tracking = true;
-            fromHeader = isHeader;
-        };
-
-        const onMove = (e) => {
-            if (!tracking || e.touches.length !== 1) return;
-            const dy = e.touches[0].clientY - startY;
-            if (dy <= 0) {
-                if (currentDy > 0) {
-                    currentDy = 0;
-                    panel.style.transform = '';
-                }
-                if (!fromHeader) tracking = false;
-                return;
-            }
-            if (!fromHeader && scrollBody && scrollBody.scrollTop > 2) {
-                tracking = false;
-                return;
-            }
-            if (dy > 8 || fromHeader) {
-                currentDy = dy;
-                panel.style.transition = 'none';
-                panel.style.transform = `translate3d(0, ${Math.round(dy)}px, 0)`;
-                if (e.cancelable) e.preventDefault();
-            }
-        };
-
-        const onEnd = () => {
-            if (!tracking) return;
-            tracking = false;
-            const elapsed = Math.max(1, Date.now() - startTime);
-            const velocity = currentDy / elapsed;
-            panel.style.transition = '';
-            panel.style.transform = '';
-            if (currentDy > 76 || (currentDy > 32 && velocity > 0.45)) {
-                this.closeSettingsPanel();
-            }
-            currentDy = 0;
-        };
-
-        headerRow.addEventListener('touchstart', (e) => onStart(e, true), { passive: true });
-        headerRow.addEventListener('touchmove', onMove, { passive: false });
-        headerRow.addEventListener('touchend', onEnd, { passive: true });
-        headerRow.addEventListener('touchcancel', onEnd, { passive: true });
-
-        scrollBody.addEventListener('touchstart', (e) => onStart(e, false), { passive: true });
-        scrollBody.addEventListener('touchmove', onMove, { passive: false });
-        scrollBody.addEventListener('touchend', onEnd, { passive: true });
-        scrollBody.addEventListener('touchcancel', onEnd, { passive: true });
-    }
-
-    /**
-     * 创建 WebDAV 云同步卡片与控制表单
-     */
-    _createWebDavSyncCard() {
-        const card = document.createElement('div');
-        card.className = 'tm-settings-webdav-card';
-
-        const config = SyncManager.getWebDavConfig();
-        const clientId = getOrCreateClientId();
-        const deviceName = getDeviceName();
-
-        // 1. 服务器地址 (URL)
-        const urlRow = document.createElement('div');
-        urlRow.className = 'tm-webdav-form-row';
-        const urlLabel = document.createElement('label');
-        urlLabel.className = 'tm-webdav-label';
-        urlLabel.textContent = __('webdavServerUrl') || '服务器地址';
-        const urlInput = document.createElement('input');
-        urlInput.className = 'tm-webdav-input';
-        urlInput.type = 'text';
-        urlInput.placeholder = 'https://dav.jianguoyun.com/dav/';
-        urlInput.value = config.url || '';
-        urlInput.addEventListener('change', () => {
-            config.url = urlInput.value.trim();
-            SyncManager.saveWebDavConfig(config);
-            this.refreshCrazyScrapeAvailability();
-        });
-        urlRow.appendChild(urlLabel);
-        urlRow.appendChild(urlInput);
-
-        // 1.2 备用 / 局域网地址 (Fallback / LAN URL)
-        const lanUrlRow = document.createElement('div');
-        lanUrlRow.className = 'tm-webdav-form-row';
-        const lanUrlLabel = document.createElement('label');
-        lanUrlLabel.className = 'tm-webdav-label';
-        lanUrlLabel.textContent = __('webdavLanUrl') || '备用地址';
-        const lanUrlInput = document.createElement('input');
-        lanUrlInput.className = 'tm-webdav-input';
-        lanUrlInput.type = 'text';
-        lanUrlInput.placeholder = __('webdavLanUrlPlaceholder') || '选填，如 http://192.168.1.x:8080';
-        lanUrlInput.value = config.lanUrl || '';
-        lanUrlInput.addEventListener('change', () => {
-            config.lanUrl = lanUrlInput.value.trim();
-            SyncManager.saveWebDavConfig(config);
-            this.refreshCrazyScrapeAvailability();
-        });
-        lanUrlRow.appendChild(lanUrlLabel);
-        lanUrlRow.appendChild(lanUrlInput);
-
-        // 2. 用户名 (Username)
-        const userRow = document.createElement('div');
-        userRow.className = 'tm-webdav-form-row';
-        const userLabel = document.createElement('label');
-        userLabel.className = 'tm-webdav-label';
-        userLabel.textContent = __('webdavUsername') || '用户名';
-        const userInput = document.createElement('input');
-        userInput.className = 'tm-webdav-input';
-        userInput.type = 'text';
-        userInput.placeholder = 'username@example.com';
-        userInput.value = config.user || '';
-        userInput.addEventListener('change', () => {
-            config.user = userInput.value.trim();
-            SyncManager.saveWebDavConfig(config);
-        });
-        userRow.appendChild(userLabel);
-        userRow.appendChild(userInput);
-
-        // 3. 密码 / 应用授权码 (Password) 带明文切换眼睛
-        const passRow = document.createElement('div');
-        passRow.className = 'tm-webdav-form-row';
-        const passLabel = document.createElement('label');
-        passLabel.className = 'tm-webdav-label';
-        passLabel.textContent = __('webdavPassword') || '密码 / 应用授权码';
-        
-        const passInputGroup = document.createElement('div');
-        passInputGroup.className = 'tm-webdav-input-group';
-        
-        const passInput = document.createElement('input');
-        passInput.className = 'tm-webdav-input has-eye';
-        passInput.type = 'password';
-        passInput.placeholder = '••••••••••••';
-        passInput.value = config.pass || '';
-        passInput.addEventListener('change', () => {
-            config.pass = passInput.value;
-            SyncManager.saveWebDavConfig(config);
-        });
-
-        const eyeBtn = document.createElement('button');
-        eyeBtn.className = 'tm-webdav-eye-btn';
-        eyeBtn.type = 'button';
-        eyeBtn.innerHTML = ICON_EYE;
-        eyeBtn.title = '切换密码可见性';
-        eyeBtn.addEventListener('click', () => {
-            if (passInput.type === 'password') {
-                passInput.type = 'text';
-                eyeBtn.innerHTML = ICON_EYE_OFF;
-            } else {
-                passInput.type = 'password';
-                eyeBtn.innerHTML = ICON_EYE;
-            }
-        });
-
-        passInputGroup.appendChild(passInput);
-        passInputGroup.appendChild(eyeBtn);
-        passRow.appendChild(passLabel);
-        passRow.appendChild(passInputGroup);
-
-        // 4. 备份目录路径 (Path)
-        const pathRow = document.createElement('div');
-        pathRow.className = 'tm-webdav-form-row';
-        const pathLabel = document.createElement('label');
-        pathLabel.className = 'tm-webdav-label';
-        pathLabel.textContent = __('webdavBackupPath') || '备份目录路径';
-        const pathInput = document.createElement('input');
-        pathInput.className = 'tm-webdav-input';
-        pathInput.type = 'text';
-        pathInput.placeholder = '/MissPlayer/';
-        pathInput.value = config.path || '/MissPlayer/';
-        pathInput.addEventListener('change', () => {
-            config.path = pathInput.value.trim() || '/MissPlayer/';
-            SyncManager.saveWebDavConfig(config);
-        });
-        pathRow.appendChild(pathLabel);
-        pathRow.appendChild(pathInput);
-
-        const bindSettingsFocus = (el) => {
-            if (!el) return;
-            const h = () => {
-                const panel = el.closest('.tm-settings-panel');
-                if (panel) {
-                    setTimeout(() => {
-                        const elRect = el.getBoundingClientRect();
-                        const panelRect = panel.getBoundingClientRect();
-                        const targetScrollTop = panel.scrollTop + (elRect.top - panelRect.top) - 70;
-                        panel.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
-                    }, 120);
-                }
-            };
-            el.addEventListener('focus', h);
-        };
-        bindSettingsFocus(urlInput);
-        bindSettingsFocus(lanUrlInput);
-        bindSettingsFocus(userInput);
-        bindSettingsFocus(passInput);
-        bindSettingsFocus(pathInput);
-
-        // 5. 自动同步开关行 (Auto Sync Switch with title + subtitle)
-        const autoSyncRow = document.createElement('div');
-        autoSyncRow.className = 'tm-webdav-switch-row';
-        
-        const autoSyncInfo = document.createElement('div');
-        autoSyncInfo.className = 'tm-webdav-switch-info';
-        
-        const autoSyncTitle = document.createElement('span');
-        autoSyncTitle.className = 'tm-webdav-switch-title';
-        autoSyncTitle.textContent = __('webdavAutoSync') || '自动同步';
-        
-        const autoSyncDesc = document.createElement('span');
-        autoSyncDesc.className = 'tm-webdav-switch-desc';
-        autoSyncDesc.textContent = __('webdavAutoSyncDesc') || '数据变动时后台静默同步';
-
-        autoSyncInfo.appendChild(autoSyncTitle);
-        autoSyncInfo.appendChild(autoSyncDesc);
-
-        const autoSyncSwitch = document.createElement('label');
-        autoSyncSwitch.className = 'tm-switch';
-        const autoSyncCheckbox = document.createElement('input');
-        autoSyncCheckbox.type = 'checkbox';
-        autoSyncCheckbox.checked = config.autoSync !== false;
-        autoSyncCheckbox.addEventListener('change', () => {
-            config.autoSync = autoSyncCheckbox.checked;
-            SyncManager.saveWebDavConfig(config);
-            if (config.autoSync && WebDavClient.hasValidEndpoint(config)) {
-                SyncManager.triggerAutoSync(this.playerCore?.options?.playerState, 'startup');
-            }
-        });
-        const autoSyncSlider = document.createElement('span');
-        autoSyncSlider.className = 'tm-slider round';
-        autoSyncSwitch.appendChild(autoSyncCheckbox);
-        autoSyncSwitch.appendChild(autoSyncSlider);
-
-        autoSyncRow.appendChild(autoSyncInfo);
-        autoSyncRow.appendChild(autoSyncSwitch);
-
-        // 6. 当前设备标识
-        const deviceBadge = document.createElement('div');
-        deviceBadge.className = 'tm-webdav-device-badge';
-        deviceBadge.innerHTML = `${ICON_SERVER} <span>${__('webdavCurrentDevice') || '当前设备'}: ${deviceName} (${clientId.slice(-6)})</span>`;
-
-        // 7. 操作按钮容器
-        const actionsContainer = document.createElement('div');
-        actionsContainer.className = 'tm-webdav-actions-container';
-
-        // 智能合并同步 (Primary Hero Button)
-        const syncMergeBtn = document.createElement('button');
-        syncMergeBtn.className = 'tm-webdav-btn tm-webdav-btn-primary';
-        syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__('webdavSyncMerge') || '智能合并同步'}</span>`;
-
-        // 次级操作三列等宽网格 (Sub-Actions Row)
-        const subActions = document.createElement('div');
-        subActions.className = 'tm-webdav-sub-actions';
-
-        // 测试连接 (Secondary)
-        const testBtn = document.createElement('button');
-        testBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
-        testBtn.title = '测试 WebDAV 服务器连通性并创建目录';
-        testBtn.innerHTML = `${ICON_CHECK} <span>${__('webdavTestConnection') || '测试连接'}</span>`;
-
-        // 向上覆盖 (Upload Overwrite)
-        const uploadBtn = document.createElement('button');
-        uploadBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
-        uploadBtn.title = __('webdavUploadOverwrite') || '上传本地配置覆盖云端';
-        uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '上传备份'}</span>`;
-
-        // 向下覆盖 (Download Overwrite)
-        const downloadBtn = document.createElement('button');
-        downloadBtn.className = 'tm-webdav-btn tm-webdav-btn-secondary';
-        downloadBtn.title = __('webdavDownloadOverwrite') || '从云端下载覆盖本地配置';
-        downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '恢复备份'}</span>`;
-
-        subActions.appendChild(testBtn);
-        subActions.appendChild(uploadBtn);
-        subActions.appendChild(downloadBtn);
-
-        actionsContainer.appendChild(syncMergeBtn);
-        actionsContainer.appendChild(subActions);
-
-        // 7. 状态栏 (上次同步时间 & 状态)
-        const statusBar = document.createElement('div');
-        statusBar.className = 'tm-webdav-status-bar';
-
-        const timeSpan = document.createElement('span');
-        const renderTimeText = () => {
-            const lastSyncTime = SyncManager.getLastSyncTime();
-            const timeText = lastSyncTime > 0
-                ? new Date(lastSyncTime).toLocaleString()
-                : (__('webdavNeverSynced') || '尚未同步');
-            timeSpan.textContent = `${__('webdavLastSync') || '上次同步'}: ${timeText}`;
-        };
-        renderTimeText();
-
-        const statusBadge = document.createElement('span');
-        statusBadge.className = 'tm-webdav-status-badge is-hidden';
-
-        statusBar.appendChild(timeSpan);
-        statusBar.appendChild(statusBadge);
-
-        // 保存即时配置辅助函数
-        const persistCurrentInputs = () => {
-            config.url = urlInput.value.trim();
-            config.lanUrl = lanUrlInput.value.trim();
-            config.user = userInput.value.trim();
-            config.pass = passInput.value;
-            config.path = pathInput.value.trim() || '/MissPlayer/';
-            SyncManager.saveWebDavConfig(config);
-            this.refreshCrazyScrapeAvailability();
-            return config;
-        };
-
-        const updateStatus = (text, type = 'success') => {
-            this._lastWebDavStatus = { text, type, time: Date.now() };
-            statusBadge.className = `tm-webdav-status-badge ${type}`;
-            const iconSpan = document.createElement('span');
-            const textSpan = document.createElement('span');
-            textSpan.textContent = text;
-            if (type === 'running') {
-                iconSpan.className = 'tm-spinner-sm';
-                statusBadge.replaceChildren(iconSpan, document.createTextNode(' '), textSpan);
-            } else if (type === 'success') {
-                iconSpan.textContent = '✓';
-                statusBadge.replaceChildren(iconSpan, document.createTextNode(' '), textSpan);
-            } else if (type === 'error') {
-                iconSpan.textContent = '✕';
-                statusBadge.replaceChildren(iconSpan, document.createTextNode(' '), textSpan);
-            } else {
-                statusBadge.textContent = text;
-            }
-        };
-
-        // 若近期有状态更新，重新创建面板时自动恢复展示
-        if (this._lastWebDavStatus && Date.now() - this._lastWebDavStatus.time < 5 * 60 * 1000) {
-            updateStatus(this._lastWebDavStatus.text, this._lastWebDavStatus.type);
-        }
-
-        const setButtonsDisabled = (disabled) => {
-            [syncMergeBtn, testBtn, uploadBtn, downloadBtn].forEach(b => {
-                b.disabled = disabled;
-            });
-        };
-
-        // --- 事件绑定 ---
-
-        // 1. 测试连接
-        testBtn.addEventListener('click', async () => {
-            const currentCfg = persistCurrentInputs();
-            if (!WebDavClient.hasValidEndpoint(currentCfg)) {
-                Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
-                updateStatus('请输入服务器地址', 'error');
-                return;
-            }
-            setButtonsDisabled(true);
-            testBtn.innerHTML = `<span>${__('webdavTesting') || '正在测试...'}</span>`;
-            updateStatus('正在测试连接...', 'running');
-            try {
-                const res = await WebDavClient.testConnection(currentCfg);
-                Toast(res.message || '连接成功！', 3000);
-                const isLan = res.message && res.message.includes('局域网');
-                updateStatus(isLan ? '局域网直连成功' : '连接正常', 'success');
-            } catch (err) {
-                Toast((__('webdavTestFailed') || '连接失败: ') + err.message, 4000);
-                updateStatus(err.message ? `连接失败: ${err.message}` : '连接失败', 'error');
-            } finally {
-                testBtn.innerHTML = `${ICON_CHECK} <span>${__('webdavTestConnection') || '测试连接'}</span>`;
-                setButtonsDisabled(false);
-            }
-        });
-
-        // 2. 智能合并同步
-        syncMergeBtn.addEventListener('click', async () => {
-            const currentCfg = persistCurrentInputs();
-            if (!WebDavClient.hasValidEndpoint(currentCfg)) {
-                Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
-                updateStatus('请输入服务器地址', 'error');
-                return;
-            }
-            setButtonsDisabled(true);
-            syncMergeBtn.innerHTML = `<span>${__('webdavSyncing') || '正在同步...'}</span>`;
-            updateStatus('正在智能合并同步...', 'running');
-            try {
-                const res = await SyncManager.executeSync({
-                    mode: 'merge',
-                    config: currentCfg,
-                    playerState: this.playerCore?.options?.playerState
-                });
-                Toast(res.message || '云端多端合并同步成功！', 3000);
-                updateStatus('同步成功', 'success');
-                renderTimeText();
-                this.syncState();
-                this.createSettingsPanel();
-            } catch (err) {
-                Toast((__('webdavSyncFailed') || '同步失败: ') + err.message, 4500);
-                updateStatus(err.message ? `同步失败: ${err.message}` : '同步失败', 'error');
-            } finally {
-                syncMergeBtn.innerHTML = `${ICON_CLOUD_SYNC} <span>${__('webdavSyncMerge') || '智能合并同步'}</span>`;
-                setButtonsDisabled(false);
-            }
-        });
-
-        // 3. 向上覆盖 (Upload Overwrite)
-        uploadBtn.addEventListener('click', async () => {
-            const currentCfg = persistCurrentInputs();
-            if (!WebDavClient.hasValidEndpoint(currentCfg)) {
-                Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
-                updateStatus('请输入服务器地址', 'error');
-                return;
-            }
-            if (!window.confirm(__('webdavConfirmUpload') || '确定要将当前本地配置强制覆盖到云端吗？')) {
-                return;
-            }
-            setButtonsDisabled(true);
-            uploadBtn.innerHTML = `<span>${__('webdavSyncing') || '正在上传...'}</span>`;
-            updateStatus('正在上传覆盖云端...', 'running');
-            try {
-                const res = await SyncManager.executeSync({
-                    mode: 'upload',
-                    config: currentCfg,
-                    playerState: this.playerCore?.options?.playerState
-                });
-                Toast(res.message || '已成功覆盖云端备份！', 3000);
-                updateStatus('已上传覆盖', 'success');
-                renderTimeText();
-            } catch (err) {
-                Toast((__('webdavSyncFailed') || '上传失败: ') + err.message, 4500);
-                updateStatus(err.message ? `上传失败: ${err.message}` : '上传失败', 'error');
-            } finally {
-                uploadBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>${__('webdavUploadOverwrite') || '上传备份'}</span>`;
-                setButtonsDisabled(false);
-            }
-        });
-
-        // 4. 向下覆盖 (Download Overwrite)
-        downloadBtn.addEventListener('click', async () => {
-            const currentCfg = persistCurrentInputs();
-            if (!WebDavClient.hasValidEndpoint(currentCfg)) {
-                Toast(__('webdavTestFailed') || '请输入 WebDAV 服务器地址', 2500);
-                updateStatus('请输入服务器地址', 'error');
-                return;
-            }
-            if (!window.confirm(__('webdavConfirmDownload') || '确定要从云端拉取配置并覆盖本地吗？')) {
-                return;
-            }
-            setButtonsDisabled(true);
-            downloadBtn.innerHTML = `<span>${__('webdavSyncing') || '正在下载...'}</span>`;
-            updateStatus('正在从云端拉取覆盖...', 'running');
-            try {
-                const res = await SyncManager.executeSync({
-                    mode: 'download',
-                    config: currentCfg,
-                    playerState: this.playerCore?.options?.playerState
-                });
-                Toast(res.message || '已成功从云端覆盖本地！', 3000);
-                updateStatus('已下载覆盖', 'success');
-                renderTimeText();
-                this.syncState();
-                this.createSettingsPanel();
-            } catch (err) {
-                Toast((__('webdavSyncFailed') || '下载失败: ') + err.message, 4500);
-                updateStatus(err.message ? `下载失败: ${err.message}` : '下载失败', 'error');
-            } finally {
-                downloadBtn.innerHTML = `${ICON_CLOUD_DOWNLOAD} <span>${__('webdavDownloadOverwrite') || '恢复备份'}</span>`;
-                setButtonsDisabled(false);
-            }
-        });
-
-        // 组装卡片
-        card.appendChild(urlRow);
-        card.appendChild(lanUrlRow);
-        card.appendChild(userRow);
-        card.appendChild(passRow);
-        card.appendChild(pathRow);
-        card.appendChild(autoSyncRow);
-        card.appendChild(deviceBadge);
-        card.appendChild(actionsContainer);
-        card.appendChild(statusBar);
-
-        return card;
-    }
-
-    /**
-     * 创建“关于与更新”卡片 (基于 SleazyFork 官方 JSON API)
-     */
-    _createAboutCard() {
-        const card = document.createElement('div');
-        card.className = 'tm-settings-about-card';
-
-        const currentVersion = getCurrentVersion();
-        const currentChannel = this.settings.updateChannel || 'stable';
-        const isBeta = currentChannel === 'beta';
-        const updateInfo = this._latestUpdateInfo;
-        const meta = updateInfo?.meta;
-        const hasUpdate = Boolean(updateInfo?.hasUpdate);
-        const latestVer = updateInfo?.latestVersion || currentVersion;
-
-        // 1. 顶部 Header (品牌名 + 版本徽章 + SleazyFork / GitHub 快捷跳转)
-        const headerRow = document.createElement('div');
-        headerRow.className = 'tm-about-header-row';
-
-        const brandWrap = document.createElement('div');
-        brandWrap.className = 'tm-about-brand-wrap';
-
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'tm-about-brand-title';
-        titleSpan.textContent = 'Miss Player';
-
-        const versionBadge = document.createElement('span');
-        versionBadge.className = `tm-about-version-badge ${hasUpdate ? 'is-update' : ''}`;
-        versionBadge.innerHTML = hasUpdate
-            ? `${ICON_SPARKLES} NEW v${latestVer}`
-            : `v${currentVersion}`;
-        versionBadge.title = hasUpdate ? `可升级至 v${latestVer}` : `当前运行版本 v${currentVersion}`;
-
-        brandWrap.appendChild(titleSpan);
-        brandWrap.appendChild(versionBadge);
-
-        const platformLink = document.createElement('a');
-        platformLink.className = 'tm-about-link-btn';
-        platformLink.href = isBeta
-            ? 'https://github.com/Chris-C1108/Miss_Player'
-            : 'https://sleazyfork.org/scripts/453300';
-        platformLink.target = '_blank';
-        platformLink.rel = 'noopener noreferrer';
-        platformLink.title = isBeta ? '前往 GitHub 项目页' : '前往 SleazyFork 脚本页';
-        platformLink.innerHTML = `<span>${isBeta ? 'GitHub' : 'SleazyFork'}</span> ${ICON_EXTERNAL_LINK}`;
-
-        headerRow.appendChild(brandWrap);
-        headerRow.appendChild(platformLink);
-        card.appendChild(headerRow);
-
-        // 2. 更新通道切换分段选择器 (Apple 极简风格)
-        const channelRow = document.createElement('div');
-        channelRow.className = 'tm-about-channel-row';
-
-        const channelLabel = document.createElement('span');
-        channelLabel.className = 'tm-about-channel-label';
-        channelLabel.textContent = __('updateChannel') || '更新通道';
-
-        const segControl = new SegmentedControl({
-            options: [
-                { label: __('channelStable') || '正式版', value: 'stable' },
-                { label: __('channelBeta') || '测试版', value: 'beta' }
-            ],
-            value: currentChannel,
-            onChange: async (nextVal) => {
-                if (nextVal === this.settings.updateChannel) return;
-                this.updateSetting('updateChannel', nextVal);
-                await this.checkUpdate(true, true);
-            }
-        });
-
-        channelRow.appendChild(channelLabel);
-        channelRow.appendChild(segControl.element);
-        card.appendChild(channelRow);
-
-        // 3. 统计与通道信息指标 Grid
-        const statsGrid = document.createElement('div');
-        statsGrid.className = 'tm-about-stats-grid';
-
-        const formatNumber = (num) => {
-            if (num === null || num === undefined) return '--';
-            const n = Number(num);
-            return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
-        };
-
-        const totalInstalls = meta?.total_installs !== undefined ? formatNumber(meta.total_installs) : (updateInfo ? '5.6k+' : '--');
-        const fanScore = meta?.fan_score !== undefined ? `${meta.fan_score}` : '--';
-        const updatedDate = meta?.code_updated_at ? meta.code_updated_at.split('T')[0] : '--';
-
-        const createStatBox = (val, label) => {
-            const box = document.createElement('div');
-            box.className = 'tm-about-stat-box';
-            const valEl = document.createElement('span');
-            valEl.className = 'tm-about-stat-val';
-            valEl.textContent = val;
-            const lblEl = document.createElement('span');
-            lblEl.className = 'tm-about-stat-lbl';
-            lblEl.textContent = label;
-            box.appendChild(valEl);
-            box.appendChild(lblEl);
-            return box;
-        };
-
-        if (isBeta) {
-            statsGrid.appendChild(createStatBox('main', '测试分支'));
-            statsGrid.appendChild(createStatBox('GitHub', '更新渠道'));
-            statsGrid.appendChild(createStatBox(updatedDate, __('statsUpdated') || '代码更新'));
-        } else {
-            statsGrid.appendChild(createStatBox(totalInstalls, __('statsInstalls') || '总安装量'));
-            statsGrid.appendChild(createStatBox(fanScore, __('statsRating') || '好评评分'));
-            statsGrid.appendChild(createStatBox(updatedDate, __('statsUpdated') || '代码更新'));
-        }
-        card.appendChild(statsGrid);
-
-        // 4. 若检测到新版本，渲染高亮提醒与立即升级区域
-        if (hasUpdate) {
-            const updateBanner = document.createElement('div');
-            updateBanner.className = 'tm-about-update-banner';
-
-            const bannerTitle = document.createElement('div');
-            bannerTitle.className = 'tm-about-update-title';
-            bannerTitle.innerHTML = `${ICON_SPARKLES} <strong>${__('updateFound') || '发现新版本'} v${latestVer}</strong>`;
-
-            const bannerDesc = document.createElement('div');
-            bannerDesc.className = 'tm-about-update-desc';
-            bannerDesc.textContent = `当前安装为 v${currentVersion}，新版本已在 ${isBeta ? 'GitHub (main)' : 'SleazyFork'} 发布 (${updatedDate})。`;
-
-            const bannerActions = document.createElement('div');
-            bannerActions.className = 'tm-about-update-actions';
-
-            const detectedHandler = detectScriptHandler();
-
-            const updateNowBtn = document.createElement('button');
-            updateNowBtn.className = 'tm-about-btn tm-about-btn--primary';
-            updateNowBtn.innerHTML = `${ICON_DOWNLOAD} <span>${__('updateNow') || '立即更新'}</span>`;
-            updateNowBtn.addEventListener('click', () => {
-                const targetChannel = this.settings.updateChannel || (isBeta ? 'beta' : 'stable');
-                const cleanCodeUrl = getCleanScriptUrl(targetChannel, meta);
-                dispatchScriptInstall(detectedHandler, cleanCodeUrl, {
-                    isUpdate: true,
-                    onToast: (msg, type) => Toast.show(msg, 2500, type)
-                });
-            });
-
-            const changelogBtn = document.createElement('button');
-            changelogBtn.className = 'tm-about-btn tm-about-btn--secondary';
-            changelogBtn.innerHTML = `${ICON_EXTERNAL_LINK} <span>${__('updateChangelog') || '版本日志'}</span>`;
-            changelogBtn.addEventListener('click', () => {
-                const logUrl = isBeta
-                    ? GITHUB_COMMITS_URL
-                    : 'https://sleazyfork.org/scripts/453300/versions';
-                if (typeof GM_openInTab === 'function') {
-                    GM_openInTab(logUrl, { active: true });
-                } else {
-                    window.open(logUrl, '_blank');
-                }
-            });
-
-            bannerActions.appendChild(updateNowBtn);
-            bannerActions.appendChild(changelogBtn);
-            updateBanner.appendChild(bannerTitle);
-            updateBanner.appendChild(bannerDesc);
-            updateBanner.appendChild(bannerActions);
-            card.appendChild(updateBanner);
-        }
-
-        // 5. 若已是最新且不在检查中，展示轻量状态指示
-        if (!hasUpdate && !this._isCheckingUpdate) {
-            const statusLine = document.createElement('div');
-            statusLine.className = 'tm-about-status-line';
-            statusLine.innerHTML = `<span>●</span> <span>${__('alreadyLatest') || '当前已是最新版本'}</span>`;
-            card.appendChild(statusLine);
-        }
-
-        // 6. 手动检查更新与一键安装操作行
-        const checkRow = document.createElement('div');
-        checkRow.className = 'tm-about-check-row';
-
-        const checkBtn = document.createElement('button');
-        checkBtn.className = 'tm-about-btn tm-about-btn--check';
-        checkBtn.innerHTML = `${ICON_REFRESH} <span>${this._isCheckingUpdate ? (__('checkingUpdate') || '正在检查...') : (__('checkUpdate') || '检查更新')}</span>`;
-        if (this._isCheckingUpdate) {
-            checkBtn.disabled = true;
-            checkBtn.classList.add('is-loading');
-        }
-
-        checkBtn.addEventListener('click', async () => {
-            await this.checkUpdate(true, true);
-        });
-
-        checkRow.appendChild(checkBtn);
-
-        const currentHandler = detectScriptHandler();
-        const targetChannel = this.settings.updateChannel || (isBeta ? 'beta' : 'stable');
-        const cleanInstallUrl = getCleanScriptUrl(targetChannel, this._latestUpdateInfo?.meta || meta);
-
-        const createStayBtn = () => {
-            const btn = document.createElement('button');
-            btn.className = 'tm-about-btn tm-about-btn--stay';
-            btn.innerHTML = `<span>🚀 Stay 一键${hasUpdate ? '更新' : '安装'} (${isBeta ? '测试版' : '正式版'})</span>`;
-            btn.title = '通过 Stay URL Scheme 一键导入或更新脚本';
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dispatchScriptInstall('stay', cleanInstallUrl, {
-                    isUpdate: hasUpdate,
-                    onToast: (msg, type) => Toast.show(msg, 2500, type)
-                });
-            });
-            return btn;
-        };
-
-        const createTmBtn = () => {
-            const btn = document.createElement('button');
-            btn.className = 'tm-about-btn tm-about-btn--tampermonkey';
-            btn.innerHTML = `<span>🐒 Tampermonkey 一键${hasUpdate ? '更新' : '安装'} (${isBeta ? '测试版' : '正式版'})</span>`;
-            btn.title = '通过 Tampermonkey 官方入口一键安装或更新脚本';
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dispatchScriptInstall('tampermonkey', cleanInstallUrl, {
-                    isUpdate: hasUpdate,
-                    onToast: (msg, type) => Toast.show(msg, 2500, type)
-                });
-            });
-            return btn;
-        };
-
-        const createScBtn = () => {
-            const btn = document.createElement('button');
-            btn.className = 'tm-about-btn tm-about-btn--scriptcat';
-            btn.innerHTML = `<span>🐱 脚本猫一键${hasUpdate ? '更新' : '安装'} (${isBeta ? '测试版' : '正式版'})</span>`;
-            btn.title = '通过脚本猫官方入口一键安装或更新脚本';
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dispatchScriptInstall('scriptcat', cleanInstallUrl, {
-                    isUpdate: hasUpdate,
-                    onToast: (msg, type) => Toast.show(msg, 2500, type)
-                });
-            });
-            return btn;
-        };
-
-        if (currentHandler === 'stay') {
-            checkRow.appendChild(createStayBtn());
-        } else if (currentHandler === 'tampermonkey') {
-            checkRow.appendChild(createTmBtn());
-        } else if (currentHandler === 'scriptcat') {
-            checkRow.appendChild(createScBtn());
-        } else {
-            // 未识别或多环境支持：同时展示 Stay 与 Tampermonkey
-            checkRow.appendChild(createStayBtn());
-            checkRow.appendChild(createTmBtn());
-        }
-
-        card.appendChild(checkRow);
-
-        return card;
-    }
-
-    /**
-     * 创建标准开关选项行
-     */
-    _createToggleOption(labelText, settingKey, initialValue, onChange, extraElement = null, subText = null) {
-        const row = document.createElement('div');
-        row.className = 'tm-settings-option-row';
-        row.id = `tm-setting-${settingKey}`;
-
-        const labelWrapper = document.createElement('div');
-        labelWrapper.className = 'tm-settings-label-wrapper';
-
-        const textWrapper = document.createElement('div');
-        textWrapper.className = 'tm-settings-text-wrapper';
-
-        const label = document.createElement('span');
-        label.className = 'tm-settings-label';
-        label.textContent = labelText;
-        textWrapper.appendChild(label);
-
-        if (subText) {
-            const sub = document.createElement('span');
-            sub.className = 'tm-settings-subtext';
-            sub.textContent = subText;
-            textWrapper.appendChild(sub);
-        }
-
-        labelWrapper.appendChild(textWrapper);
-
-        if (extraElement) {
-            labelWrapper.appendChild(extraElement);
-        }
-
-        // 开关组件
-        const toggleContainer = document.createElement('div');
-        toggleContainer.className = 'tm-toggle-switch';
-        toggleContainer.style.pointerEvents = 'none'; // 避免子元素事件拦截或与行点击冲突
-
-        const isChecked = Boolean(initialValue);
-        const toggleInput = document.createElement('input');
-        toggleInput.type = 'checkbox';
-        toggleInput.checked = isChecked;
-        toggleInput.className = 'tm-toggle-input';
-
-        const toggleSlider = document.createElement('span');
-        toggleSlider.className = isChecked ? 'tm-toggle-slider checked' : 'tm-toggle-slider';
-
-        toggleContainer.appendChild(toggleInput);
-        toggleContainer.appendChild(toggleSlider);
-
-        const toggleSwitch = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const nextChecked = !toggleInput.checked;
-            toggleInput.checked = nextChecked;
-            toggleSlider.className = nextChecked ? 'tm-toggle-slider checked' : 'tm-toggle-slider';
-            
-            if (typeof onChange === 'function') {
-                onChange(nextChecked);
-            }
-        };
-
-        row.addEventListener('click', toggleSwitch);
-
-        row.appendChild(labelWrapper);
-        row.appendChild(toggleContainer);
-
-        return row;
-    }
-
-
 
     /**
      * 重新创建控制面板中的快进快退按钮行
@@ -1292,93 +203,27 @@ export class SettingsManager {
     }
 
     /**
-     * 切换设置面板显示状态
+     * 切换并更新设置面板的可见状态（统一委托给 SettingsV2Manager）
      */
     toggleSettingsPanel() {
-        if (!this.settingsPanel) return;
-        const isVisible = this.settingsPanel.classList.contains('active');
-        if (isVisible) {
-            this.closeSettingsPanel();
-        } else {
-            const surfaceMachine = this.uiManager?.surfaceMachine || this.playerCore?.surfaceMachine;
-            if (surfaceMachine) {
-                surfaceMachine.activate(SURFACE_TYPES.SETTINGS, () => this.closeSettingsPanel());
-            }
-            this.syncState();
-            this.createSettingsPanel();
-            this.settingsPanel.classList.add('active');
-            document.body.classList.add('tm-settings-active');
-            this.uiElements?.playerContainer?.classList.add('tm-settings-active');
-            
-            if (this.overlayClickHandler) {
-                document.removeEventListener('click', this.overlayClickHandler, true);
-                document.removeEventListener('touchstart', this.overlayClickHandler, true);
-            }
-
-            // 捕获阶段 + composedPath 穿透 Shadow DOM 检测外部点击，确保点击评论区/视频区也能关闭设置，且滚动设置面板或操作弹窗绝不误关
-            this.overlayClickHandler = (e) => {
-                const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
-                if (path.length > 0) {
-                    const isInsideSettingsOrModal = path.some(el => {
-                        if (!(el instanceof HTMLElement)) return false;
-                        if (el === this.settingsPanel || el === this.uiElements?.settingsBtn) return true;
-                        const cls = typeof el.className === 'string' ? el.className : '';
-                        return cls.includes('tm-settings-panel') ||
-                               cls.includes('tm-settings-button') ||
-                               cls.includes('tm-settings-v2-button') ||
-                               cls.includes('tm-custom-modal-overlay');
-                    });
-                    if (isInsideSettingsOrModal) return;
-                } else if (
-                    this.settingsPanel.contains(e.target) ||
-                    this.uiElements?.settingsBtn?.contains(e.target) ||
-                    e.target === this.uiElements?.settingsBtn
-                ) {
-                    return;
-                }
-                this.closeSettingsPanel();
-            };
-            
-            setTimeout(() => {
-                if (this.overlayClickHandler && this.settingsPanel?.classList.contains('active')) {
-                    document.addEventListener('click', this.overlayClickHandler, true);
-                }
-            }, 50);
-        }
+        playTapSound();
+        this.settingsV2Manager?.toggle();
     }
-    
+
     /**
      * 关闭设置面板
      */
     closeSettingsPanel() {
-        if (!this.settingsPanel) return;
-        this.settingsPanel.style.transition = '';
-        this.settingsPanel.style.transform = '';
-        this.settingsPanel.classList.remove('active');
-        document.body.classList.remove('tm-settings-active');
-        this.uiElements?.playerContainer?.classList.remove('tm-settings-active');
-        
-        if (this.overlayClickHandler) {
-            document.removeEventListener('click', this.overlayClickHandler, true);
-            this.overlayClickHandler = null;
-        }
-        const surfaceMachine = this.uiManager?.surfaceMachine || this.playerCore?.surfaceMachine;
-        if (surfaceMachine) {
-            surfaceMachine.deactivate(SURFACE_TYPES.SETTINGS);
-        }
+        this.settingsV2Manager?.close();
     }
 
     /**
-     * 清理设置管理器资源与全局事件监听
+     * 清理设置管理器资源
      */
     cleanup() {
         this.closeSettingsPanel();
-        if (this._scheduler) {
-            this._scheduler.destroy();
-            this._scheduler = null;
-        }
     }
-    
+
     /**
      * 加载设置
      */
@@ -1397,7 +242,7 @@ export class SettingsManager {
             this.settings.showSeekControlRow = getBool('showSeekControlRow', true);
             this.settings.showLoopControlRow = getBool('showLoopControlRow', true);
             this.settings.showPlaybackControlRow = getBool('showPlaybackControlRow', true);
-            
+
             const rawSeekSteps = getValue('enabledSeekSteps', null);
             this.settings.enabledSeekSteps = sanitizeSeekStepList(rawSeekSteps, false);
 
@@ -1422,6 +267,7 @@ export class SettingsManager {
             this.settings.defaultMuted = getBool('defaultMuted', true);
             this.settings.muteResetMinutes = parseInt(getValue('muteResetMinutes', 5), 10) || 5;
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
+            this.settings.updateChannel = getValue('updateChannel', 'stable') === 'beta' ? 'beta' : 'stable';
             const rawPm = getValue('betaPlayMode', 'normal');
             this.settings.betaPlayMode = (rawPm === 'preview' || rawPm === 'climax') ? rawPm : 'normal';
             this.settings.previewDurationSeconds = parseInt(getValue('previewDurationSeconds', 5), 10) || 5;
@@ -1437,7 +283,7 @@ export class SettingsManager {
             this.settings.viewportDebugEnabled = getBool('viewportDebugEnabled', false);
         }
     }
-    
+
     /**
      * 保存设置
      */
@@ -1462,6 +308,7 @@ export class SettingsManager {
             setValue('defaultMuted', Boolean(this.settings.defaultMuted));
             setValue('muteResetMinutes', this.settings.muteResetMinutes || 5);
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
+            setValue('updateChannel', this.settings.updateChannel || 'stable');
             setValue('betaPlayMode', this.settings.betaPlayMode || 'normal');
             setValue('previewDurationSeconds', this.settings.previewDurationSeconds || 5);
             setValue('climaxDurationSeconds', this.settings.climaxDurationSeconds || 60);
@@ -1475,7 +322,7 @@ export class SettingsManager {
             setValue('viewportDebugEnabled', Boolean(this.settings.viewportDebugEnabled));
         }
     }
-    
+
     /**
      * 更新控制行的可见性
      */
@@ -1491,7 +338,7 @@ export class SettingsManager {
         if (progressRow) {
             progressRow.classList.toggle('is-hidden', !this.settings.showProgressBar);
         }
-        
+
         if (seekControlRow) {
             seekControlRow.classList.remove('is-hidden');
         }
@@ -1504,7 +351,7 @@ export class SettingsManager {
             playbackControlRow.classList.toggle('is-hidden', !this.settings.showPlaybackControlRow);
         }
     }
-    
+
     /**
      * 更新指定设置项
      */
@@ -1521,7 +368,7 @@ export class SettingsManager {
         if (key === 'debugMode') {
             telemetry.track('setting_debug_mode', { debug_mode: !!value });
         }
-        
+
         if (key.startsWith('show') && key.endsWith('Row')) {
             this.updateControlRowsVisibility();
         }
@@ -1538,10 +385,17 @@ export class SettingsManager {
     }
 
     /**
+     * 销毁与清理设置管理器资源
+     */
+    cleanup() {
+        this.settingsV2Manager?.cleanup?.();
+        this.settingsPanel = null;
+    }
+
+    /**
      * 刷新疯狂采集模式前置条件可用状态（需开启实验功能社区共享 或 配置 WebDAV）
      */
     refreshCrazyScrapeAvailability() {
-        this.betaSection?.refreshCrazyAvailability?.();
         this.settingsV2Manager?.refreshCrazyAvailability?.();
     }
 }

@@ -1,55 +1,36 @@
 /* =========================================================================
-   Miss Player Settings v2 — Unified Apple HIG Inset-Grouped Design System
+   Miss Player Settings — Unified Apple HIG Inset-Grouped Design System
    零 !important · 选择器深度 ≤ 3 · 全量统一 Tokens / 间距 / 圆角 / 状态徽章
    ========================================================================= */
 
-/* 顶栏新版设置入口按钮（与旧版并存以便对照验证） */
-.tm-settings-v2-button {
+/* 顶栏设置入口按钮 */
+.tm-settings-button {
     position: relative;
     width: var(--button-md);
     height: var(--button-md);
     border-radius: calc(var(--button-md) / 2);
-    background-color: hsla(var(--shadcn-secondary) / 0.72);
+    background-color: hsla(var(--shadcn-secondary) / 0.7);
     color: hsl(var(--shadcn-secondary-foreground));
-    border: 1px solid rgba(10, 132, 255, 0.36);
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: var(--z-controls);
     cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     box-shadow: var(--shadow-sm);
 }
 
-.tm-settings-v2-button:hover {
-    background-color: hsla(var(--shadcn-accent) / 0.92);
-    border-color: rgba(10, 132, 255, 0.68);
-    transform: scale(1.08);
+.tm-settings-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.9);
+    transform: scale(1.08) rotate(30deg);
     box-shadow: var(--shadow-md);
 }
 
-.tm-settings-v2-button:active {
-    transform: scale(0.95);
-}
-
-.mp-s2-btn-tag {
-    position: absolute;
-    top: -3px;
-    right: -3px;
-    min-width: 14px;
-    height: 14px;
-    padding: 0 3px;
-    border-radius: 999px;
-    background: #0a84ff;
-    color: #ffffff;
-    font-size: 9px;
-    font-weight: 700;
-    line-height: 14px;
-    text-align: center;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
-    pointer-events: none;
+.tm-settings-button:active {
+    transform: scale(0.96);
 }
 
 /* -------------------------------------------------------------------------
@@ -57,11 +38,11 @@
    ------------------------------------------------------------------------- */
 .mp-s2-panel {
     position: absolute;
-    top: calc(env(safe-area-inset-top, 8px) + 52px);
-    right: 16px;
+    top: max(10px, env(safe-area-inset-top, 10px));
+    right: 12px;
     width: 344px;
     max-width: calc(100vw - 24px);
-    max-height: min(calc(100% - 68px), calc(100dvh - env(safe-area-inset-top, 8px) - env(safe-area-inset-bottom, 8px) - 68px));
+    max-height: min(calc(100% - 20px), calc(100dvh - env(safe-area-inset-top, 10px) - env(safe-area-inset-bottom, 10px) - 20px));
     z-index: var(--z-modal);
     display: flex;
     flex-direction: column;
@@ -92,22 +73,12 @@
 .mp-s2-header {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 12px 16px 11px;
+    padding: 10px 14px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(28, 28, 34, 0.92);
     flex-shrink: 0;
     user-select: none;
     -webkit-user-select: none;
-}
-
-.mp-s2-grabber {
-    display: none;
-    width: 36px;
-    height: 4px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.28);
-    margin: 0 auto;
 }
 
 .mp-s2-header-bar {
@@ -172,10 +143,10 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     touch-action: pan-y;
-    padding: 14px 14px 20px;
+    padding: 12px 14px calc(20px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 16px;
     box-sizing: border-box;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
@@ -190,43 +161,18 @@
     border-radius: 999px;
 }
 
-/* 移动端底部吸底操作栏（桌面端隐藏） */
-.mp-s2-footer {
-    display: none;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(26, 26, 32, 0.94);
-    flex-shrink: 0;
-}
-
-.mp-s2-done-btn {
-    width: 100%;
-    height: 40px;
-    border: none;
-    border-radius: 11px;
-    background: rgba(10, 132, 255, 0.22);
-    color: #409cff;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.15s ease, transform 0.15s ease;
-}
-
-.mp-s2-done-btn:active {
-    transform: scale(0.985);
-    background: rgba(10, 132, 255, 0.34);
-}
-
 @media (max-width: 767px) and (orientation: portrait) {
     .mp-s2-panel {
-        top: auto;
+        top: env(safe-area-inset-top, 0px);
         right: 0;
         bottom: 0;
         left: 0;
         width: 100%;
         max-width: 100%;
-        max-height: min(84dvh, calc(100% - 12px));
-        border-radius: 20px 20px 0 0;
+        max-height: none;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
         border-bottom: none;
         transform: translate3d(0, 100%, 0);
         transition: opacity 0.22s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -239,20 +185,12 @@
     .mp-s2-panel.is-dragging {
         transition: none;
     }
-
-    .mp-s2-grabber {
-        display: block;
-    }
-
-    .mp-s2-footer {
-        display: block;
-    }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
     .mp-s2-panel {
-        top: calc(env(safe-area-inset-top, 4px) + 44px);
-        max-height: min(calc(100% - 52px), calc(100dvh - env(safe-area-inset-top, 4px) - env(safe-area-inset-bottom, 4px) - 52px));
+        top: max(6px, env(safe-area-inset-top, 6px));
+        max-height: min(calc(100% - 12px), calc(100dvh - env(safe-area-inset-top, 6px) - env(safe-area-inset-bottom, 6px) - 12px));
     }
 }
 
@@ -884,13 +822,34 @@
     display: none;
 }
 
-.mp-s2-meta-line {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    font-size: 11.5px;
-    color: rgba(255, 255, 255, 0.52);
+.mp-s2-btn.is-update-available {
+    background: rgba(10, 132, 255, 0.28);
+    border-color: rgba(64, 156, 255, 0.85);
+    color: #ffffff;
+    font-weight: 600;
+    animation: mp-s2-update-breathe 2.2s ease-in-out infinite;
+}
+
+.mp-s2-btn.is-update-available:hover {
+    background: rgba(10, 132, 255, 0.42);
+}
+
+@keyframes mp-s2-update-breathe {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(10, 132, 255, 0.55), 0 0 10px rgba(10, 132, 255, 0.36);
+        border-color: rgba(64, 156, 255, 0.72);
+    }
+    50% {
+        box-shadow: 0 0 0 5px rgba(10, 132, 255, 0), 0 0 20px rgba(64, 156, 255, 0.82);
+        border-color: rgba(110, 185, 255, 1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-s2-btn.is-update-available {
+        animation: none;
+        box-shadow: 0 0 12px rgba(64, 156, 255, 0.65);
+    }
 }
 
 .mp-s2-status-box {

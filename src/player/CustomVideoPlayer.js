@@ -204,9 +204,9 @@ export class CustomVideoPlayer {
         settingsManager.init();
         this.managers.settingsManager = settingsManager;
 
-        // 创建新版统一设置面板管理器 (与旧版并存，供对比验收)
+        // 创建统一设置面板管理器
         const settingsV2Manager = new SettingsV2Manager(this.playerCore, settingsManager);
-        settingsV2Manager.setPanel(uiElements.settingsV2Panel);
+        settingsV2Manager.setPanel(uiElements.settingsPanel);
         settingsManager.settingsV2Manager = settingsV2Manager;
         this.managers.settingsV2Manager = settingsV2Manager;
         

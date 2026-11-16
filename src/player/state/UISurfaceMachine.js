@@ -13,8 +13,7 @@ export const SURFACE_TYPES = Object.freeze({
     MARKER_SHEET: 'marker-sheet',
     INLINE_REMARK: 'inline-remark',
     CODE_PREVIEW: 'code-preview',
-    SETTINGS: 'settings',
-    SETTINGS_V2: 'settings-v2'
+    SETTINGS: 'settings'
 });
 
 const SURFACE_CLASS_MAP = Object.freeze({
@@ -22,8 +21,7 @@ const SURFACE_CLASS_MAP = Object.freeze({
     [SURFACE_TYPES.MARKER_SHEET]: 'has-sheet-open',
     [SURFACE_TYPES.INLINE_REMARK]: 'has-inline-remark-open',
     [SURFACE_TYPES.CODE_PREVIEW]: 'has-code-preview-open',
-    [SURFACE_TYPES.SETTINGS]: 'tm-settings-active',
-    [SURFACE_TYPES.SETTINGS_V2]: 'tm-settings-v2-active'
+    [SURFACE_TYPES.SETTINGS]: 'tm-settings-active'
 });
 
 const NON_TYPING_INPUT_TYPES = new Set([
@@ -266,7 +264,7 @@ export class UISurfaceMachine {
         // 核心防护：针对当前活动面板内部元素（发评抽屉、底栏、标签抽屉、设置面板、模态框、番号预览浮窗）的交互放行
         // 确保子元素正常接收 touchstart/pointerdown 以触发 iOS Safari 原生触摸聚焦与软键盘唤起
         const isInsideActiveSurface = Boolean(
-            target?.closest?.('.tm-comment-submit-bar-wrapper, .tm-bottom-sheet-panel, .tm-settings-panel, .tm-custom-modal-overlay, .tm-custom-modal-dialog, .tm-report-modal-dialog, .tm-custom-modal-content, .tm-inline-remark-popover, .tm-tag-select-modal, .jc-code-preview-popover')
+            target?.closest?.('.tm-comment-submit-bar-wrapper, .tm-bottom-sheet-panel, .mp-s2-panel, .tm-custom-modal-overlay, .tm-custom-modal-dialog, .tm-report-modal-dialog, .tm-custom-modal-content, .tm-inline-remark-popover, .tm-tag-select-modal, .jc-code-preview-popover')
         );
         if (isInsideActiveSurface || isEditable) {
             if (!isEditable && e.type === 'contextmenu') {
@@ -328,7 +326,7 @@ export class UISurfaceMachine {
                 this.dismissTopmost();
             }, true);
 
-            const firstPanel = container.querySelector('.tm-settings-panel, .mp-s2-panel, .tm-bottom-sheet-panel, .tm-comment-submit-bar-wrapper, .tm-custom-modal-overlay, .jc-code-preview-popover');
+            const firstPanel = container.querySelector('.mp-s2-panel, .tm-bottom-sheet-panel, .tm-comment-submit-bar-wrapper, .tm-custom-modal-overlay, .jc-code-preview-popover');
             if (firstPanel) {
                 container.insertBefore(sink, firstPanel);
             } else {

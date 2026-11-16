@@ -315,7 +315,7 @@ console.log('✅ 13. 手柄栏层级、评论栏与控制面板互斥关系、�
 // ---------------------------------------------------------
 console.log('▶ 14. 验证显式 UISurfaceMachine 状态机与全项目隐式状态机收口治理...');
 const surfaceMachineJs = fs.readFileSync('src/player/state/UISurfaceMachine.js', 'utf8');
-const settingsManagerJs = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
+const settingsV2ManagerJs = fs.readFileSync('src/player/managers/settings_v2/SettingsV2Manager.js', 'utf8');
 const loopManagerJs = fs.readFileSync('src/player/managers/LoopManager.js', 'utf8');
 const commentPanelJs = fs.readFileSync('src/player/controls/CommentPanel.js', 'utf8');
 const playerStateJs = fs.readFileSync('src/player/state/PlayerState.js', 'utf8');
@@ -328,13 +328,13 @@ assert.ok(
     'UISurfaceMachine 必须提供显式浮层互斥状态机、焦点保持绑定与防失焦位移绑定，并同步更新 data-active-surface'
 );
 assert.ok(
-    settingsManagerJs.includes('SURFACE_TYPES.SETTINGS') &&
-    settingsManagerJs.includes("document.addEventListener('click', this.overlayClickHandler, true)") &&
+    settingsV2ManagerJs.includes('SURFACE_TYPES.SETTINGS') &&
+    settingsV2ManagerJs.includes("document.addEventListener('click', this.overlayClickHandler, true)") &&
     loopManagerJs.includes('SURFACE_TYPES.INLINE_REMARK') &&
     loopManagerJs.includes('bindActionWithoutBlurShift(saveBtn') &&
     markerSheetJs.includes('SURFACE_TYPES.MARKER_SHEET') &&
     markerSheetJs.includes('bindKeepFocusAction(tagToggleBtn'),
-    'SettingsManager、LoopManager、MarkerBottomSheet 必须统一接入 UISurfaceMachine 与 iOS 防失焦辅助函数，并使用捕获阶段 composedPath 处理外部点击'
+    'SettingsV2Manager、LoopManager、MarkerBottomSheet 必须统一接入 UISurfaceMachine 与 iOS 防失焦辅助函数，并使用捕获阶段 composedPath 处理外部点击'
 );
 assert.ok(
     uiManagerJs.includes('this.playerCore.userPauseIntent = false;') &&
@@ -568,85 +568,79 @@ assert.ok(
 console.log('✅ 19. 评论栏底部向上弹出抽屉式、附加片段抽屉默认收起与无模糊遮罩验证通过');
 
 // ---------------------------------------------------------
-// 20. 验证设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与双轨外链跳转
+// 20. 验证设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与单一呼吸发光引导
 // ---------------------------------------------------------
-console.log('▶ 20. 验证设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与双轨外链跳转...');
-const aboutSectionCode = fs.readFileSync('src/player/managers/settings/sections/AboutSection.js', 'utf8');
+console.log('▶ 20. 验证设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与单一呼吸发光引导...');
+const s2AdvancedCodeV20 = fs.readFileSync('src/player/managers/settings_v2/sections/S2AdvancedSection.js', 'utf8');
+const s2CssCodeV20 = fs.readFileSync('src/player/ui/styles/02_components/_settings_v2.css', 'utf8');
 const settingsManagerCodeV20 = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
-const segmentedControlCode = fs.readFileSync('src/player/managers/settings/components/SegmentedControl.js', 'utf8');
-const settingsAppleCss = fs.readFileSync('src/player/ui/styles/02_components/_settings_apple.css', 'utf8');
 const i18nCode = fs.readFileSync('src/constants/i18n.js', 'utf8');
 
-// 20.1 验证版本信息展开时即触发更新检查
+// 20.1 验证版本信息展开时即触发静默更新检查，且安装入口作为唯一呼吸发光提示
 assert.ok(
-    aboutSectionCode.includes("this.sm.checkUpdate(true, false);") &&
-    settingsManagerCodeV20.includes("async checkUpdate(force = true, notify = true) {"),
-    'AboutSection 展开时必须立即调用 checkUpdate(true, false) 执行静默更新检查，且 SettingsManager 必须提供统一 checkUpdate 方法'
+    s2AdvancedCodeV20.includes('this.sm.checkUpdate(false, false)') &&
+    settingsManagerCodeV20.includes('async checkUpdate(isManual = false, bypassCache = false) {') &&
+    s2CssCodeV20.includes('.mp-s2-btn.is-update-available') &&
+    s2CssCodeV20.includes('@keyframes mp-s2-update-breathe') &&
+    !s2CssCodeV20.includes('.has-update-badge') &&
+    !settingsManagerCodeV20.includes('has-update-badge'),
+    '版本信息展开时应静默检查更新，且发现新版本时仅允许更新/安装按钮呈现呼吸发光提示，禁止多处重复徽标/版本显示'
 );
 
-// 20.2 验证外链跳转：正式版跳转 SleazyFork，测试版跳转 GitHub
+// 20.2 验证外链跳转与更新通道：正式版跳转 SleazyFork，测试版跳转 GitHub
 assert.ok(
-    settingsManagerCodeV20.includes("platformLink.href = isBeta\n            ? 'https://github.com/Chris-C1108/Miss_Player'\n            : 'https://sleazyfork.org/scripts/453300';") &&
-    settingsManagerCodeV20.includes("platformLink.title = isBeta ? '前往 GitHub 项目页' : '前往 SleazyFork 脚本页';"),
-    '版本信息卡片中的主链接必须双轨硬分流：测试版指向 GitHub 项目页，正式版指向 SleazyFork 脚本页'
+    s2AdvancedCodeV20.includes('GITHUB_COMMITS_URL') &&
+    s2AdvancedCodeV20.includes('https://sleazyfork.org/scripts/453300/versions') &&
+    s2AdvancedCodeV20.includes('dispatchScriptInstall'),
+    '版本信息卡片中的日志与安装链接必须双轨分流：测试版指向 GitHub，正式版指向 SleazyFork'
 );
 
-// 20.3 验证 SegmentedControl 零行内样式，采用纯 CSS 类驱动
+// 20.3 验证新版统一分段器与 ADHD 高信噪比文案
 assert.ok(
-    !segmentedControlCode.includes('style.cssText') &&
-    settingsAppleCss.includes('.tm-segmented-control {') &&
-    settingsAppleCss.includes('.tm-segmented-btn {'),
-    'SegmentedControl 必须彻底移除 inline cssText，采用标准化 .tm-segmented-* CSS 类'
-);
-
-// 20.4 验证设置项标准化类与 ADHD 高信噪比文案
-assert.ok(
-    settingsAppleCss.includes('.tm-about-channel-row {') &&
-    settingsAppleCss.includes('.tm-about-channel-label {') &&
-    settingsAppleCss.includes('.tm-about-status-line {') &&
-    settingsAppleCss.includes('.tm-about-btn--stay {') &&
-    settingsAppleCss.includes('.tm-about-btn--tampermonkey {') &&
-    settingsAppleCss.includes('.tm-about-btn--scriptcat {') &&
+    s2CssCodeV20.includes('.mp-s2-segment') &&
+    s2CssCodeV20.includes('.mp-s2-segment-btn') &&
     i18nCode.includes("aboutGroupTitle: '版本信息'") &&
     i18nCode.includes("webdavAutoSyncDesc: '数据变动时后台静默同步'"),
-    '设置菜单样式与文案必须符合 Grice 准则与 ADHD 规范，具备标准化类且去除冗余技术黑话'
+    '设置菜单样式与文案必须符合 Grice 准则与 ADHD 规范，采用统一 .mp-s2-segment CSS 类'
 );
 
-console.log('✅ 20. 设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与双轨外链跳转验证通过');
+console.log('✅ 20. 设置菜单标准化样式、ADHD高信噪比文案、版本展开即查更与单一呼吸发光引导验证通过');
 
 // ---------------------------------------------------------
 // 21. 验证 Peach 虚拟入库板块重构（操作按键精简自动测试、域名删除、边界切割与网关提示）
 // ---------------------------------------------------------
 console.log('▶ 21. 验证 Peach 虚拟入库板块重构...');
-const peachSectionCode = fs.readFileSync('src/player/managers/settings/sections/PeachSection.js', 'utf8');
+const s2ConnCodeV21 = fs.readFileSync('src/player/managers/settings_v2/sections/S2ConnectionsSection.js', 'utf8');
 const peachServiceCode = fs.readFileSync('src/services/PeachService.js', 'utf8');
 const todoMdCode = fs.readFileSync('TODO.md', 'utf8');
 
 // 21.1 验证废弃功能彻底清除（无 JAVVerse、无 HUD 探针、无手动测试/扫描按键、无手动 Token 框）
 assert.ok(
-    !peachSectionCode.includes('javverse.com') &&
-    !peachSectionCode.includes('PeachStreamHUD') &&
-    !peachSectionCode.includes('tm-peach-hud-btn') &&
-    !peachSectionCode.includes('通知 Peach 扫描') &&
-    !peachSectionCode.includes('测试 Peach 连接') &&
-    !peachSectionCode.includes('tm-peach-token-input'),
-    'PeachSection 必须彻底清除 JAVVerse 登录、流诊断探针、手动测试/扫描按键及手动 Token 输入框'
+    !s2ConnCodeV21.includes('javverse.com') &&
+    !s2ConnCodeV21.includes('PeachStreamHUD') &&
+    !s2ConnCodeV21.includes('tm-peach-hud-btn') &&
+    !s2ConnCodeV21.includes('通知 Peach 扫描') &&
+    !s2ConnCodeV21.includes('测试 Peach 连接') &&
+    !s2ConnCodeV21.includes('tm-peach-token-input'),
+    'S2ConnectionsSection 必须彻底清除 JAVVerse 登录、流诊断探针、手动测试/扫描按键及手动 Token 输入框'
 );
 
 // 21.2 验证 Peach 服务地址具备删除按钮与配对解析
 assert.ok(
-    peachSectionCode.includes('tm-peach-delete-btn') &&
-    peachSectionCode.includes('PeachService.clearBase()') &&
+    s2ConnCodeV21.includes('PeachService.clearBase()') &&
+    s2ConnCodeV21.includes('PeachService.removeOrigin(') &&
     peachServiceCode.includes('static clearBase()') &&
     peachServiceCode.includes('static removeOrigin(rawUrl)'),
-    'Peach 服务地址必须支持删除按钮以清除记录域名，且 PeachService 必须提供 clearBase 与 removeOrigin'
+    'Peach 服务地址必须支持删除操作以清除记录域名，且 PeachService 必须提供 clearBase 与 removeOrigin'
 );
 
-// 21.3 验证流网关配置说明规范（局域网地址与环境变量默认 dev）
+// 21.3 验证流网关配置与自动连通性巡检
 assert.ok(
-    peachSectionCode.includes('Peach 服务端可访问的网关地址（支持局域网 IP / host.docker.internal）。播放 Token 需在部署网关时环境变量配置（默认 dev）') &&
-    peachSectionCode.includes('_autoCheckStatus'),
-    '流网关必须清晰注明 Peach 可访问的地址与环境变量配置提示，且连通性测试必须改为自动进行'
+    s2ConnCodeV21.includes('gwBaseField') &&
+    s2ConnCodeV21.includes('gwTokenField') &&
+    s2ConnCodeV21.includes('http://host.docker.internal:8765') &&
+    s2ConnCodeV21.includes('scheduleStatusCheck'),
+    '流网关必须配置流网关地址与播放 Token（默认 dev），且连通性检测必须自动进行'
 );
 
 // 21.4 验证 TODO.md 包含专用令牌自动获取待办 19.12
@@ -715,30 +709,29 @@ assert.match(
 
 console.log('✅ 22. PC 横屏标题栏与顶栏对称间距验证通过');
 
-const settingsPanelsCssV23 = fs.readFileSync('src/player/ui/styles/02_components/_settings_panels.css', 'utf8');
-const settingsAppleCssV23 = fs.readFileSync('src/player/ui/styles/02_components/_settings_apple.css', 'utf8');
-const settingsMgrCodeV23 = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
-const settingsSchedCodeV23 = fs.readFileSync('src/player/managers/settings/SettingsStreamScheduler.js', 'utf8');
+const s2CssV23 = fs.readFileSync('src/player/ui/styles/02_components/_settings_v2.css', 'utf8');
+const s2MgrCodeV23 = fs.readFileSync('src/player/managers/settings_v2/SettingsV2Manager.js', 'utf8');
 
 assert.ok(
-    settingsPanelsCssV23.includes('.tm-settings-scroll-body') &&
-    settingsMgrCodeV23.includes('tm-settings-scroll-body') &&
-    settingsSchedCodeV23.includes('.tm-settings-scroll-body, .tm-settings-panel'),
-    '设置面板必须采用 Header/ScrollBody/Footer 分层结构，防止滚动时标题与关闭键滚出视野或条目半截截断'
+    s2CssV23.includes('.mp-s2-header') &&
+    s2CssV23.includes('.mp-s2-scroll') &&
+    s2MgrCodeV23.includes('mp-s2-scroll') &&
+    !s2MgrCodeV23.includes('mp-s2-footer') &&
+    !s2MgrCodeV23.includes('mp-s2-done-btn'),
+    '设置面板必须采用紧凑吸顶 Header + ScrollBody 分层结构，并已移除底部完成按钮节省空间'
 );
 assert.match(
-    settingsPanelsCssV23,
-    /@media screen and \(max-width: 1023px\), screen and \(orientation: portrait\)\s*\{[\s\S]*?\.tm-settings-panel\s*\{[^}]*top:\s*env\(safe-area-inset-top,\s*0px\);[^}]*right:\s*0;[^}]*left:\s*0;[^}]*bottom:\s*0;/,
-    '移动端设置面板必须贴紧顶部安全区并全宽延展到底部，消除顶部多余模糊空白与侧边窄缝'
+    s2CssV23,
+    /@media \(max-width: 767px\) and \(orientation: portrait\)\s*\{[\s\S]*?\.mp-s2-panel\s*\{[^}]*top:\s*env\(safe-area-inset-top,\s*0px\);[^}]*right:\s*0;[^}]*bottom:\s*0;[^}]*left:\s*0;/,
+    '移动端竖屏设置面板必须贴紧顶部安全区并全宽延展到底部，消除顶部多余空白'
 );
 assert.ok(
-    settingsAppleCssV23.includes('.tm-settings-apple-footer') &&
-    settingsAppleCssV23.includes('.tm-settings-apple-done-btn') &&
-    settingsMgrCodeV23.includes('_bindSheetDismissGesture'),
-    '设置面板必须具备移动端底部拇指热区完成按钮与下拉手势退出能力'
+    s2MgrCodeV23.includes('_bindHeaderDismissGesture') &&
+    s2MgrCodeV23.includes('mp-s2-close'),
+    '设置面板必须支持右上角关闭按钮与 Header 下拉手势退出'
 );
 
-console.log('✅ 23. 移动端/PC 设置面板吸顶结构与便捷退出设计验证通过');
+console.log('✅ 23. 移动端/PC 设置面板吸顶结构、空间利用率与便捷退出设计验证通过');
 
 // ---------------------------------------------------------
 // 24. 验证 PC 端 Shadow DOM 输入框键盘隔离盾与输入法组词 Escape 放行
@@ -769,9 +762,9 @@ assert.ok(
 console.log('✅ 24. PC 端 Shadow DOM 输入框键盘隔离盾验证通过');
 
 // ---------------------------------------------------------
-// 25. 验证新版 Settings v2 统一布局、并存入口与 Peach 移出实验功能
+// 25. 验证统一设置面板架构、旧版清理与 Peach 移出实验功能
 // ---------------------------------------------------------
-console.log('▶ 25. 验证新版 Settings v2 统一布局、并存入口与 Peach 移出实验功能...');
+console.log('▶ 25. 验证统一设置面板架构、旧版清理与 Peach 移出实验功能...');
 const s2Css = fs.readFileSync('src/player/ui/styles/02_components/_settings_v2.css', 'utf8');
 const s2CssNoComments = s2Css.replace(/\/\*[\s\S]*?\*\//g, '');
 const s2MgrCode = fs.readFileSync('src/player/managers/settings_v2/SettingsV2Manager.js', 'utf8');
@@ -785,14 +778,20 @@ const surfaceCodeV25 = fs.readFileSync('src/player/state/UISurfaceMachine.js', '
 
 assert.ok(
     !s2CssNoComments.includes('!important'),
-    'Settings v2 CSS 严禁引入任何 !important'
+    '设置面板 CSS 严禁引入任何 !important'
 );
 assert.ok(
-    s2MgrCode.includes('SURFACE_TYPES.SETTINGS_V2') &&
-    surfaceCodeV25.includes("SETTINGS_V2: 'settings-v2'") &&
-    uiMgrCodeV25.includes('tm-settings-v2-button') &&
-    uiMgrCodeV25.includes('tm-settings-button'),
-    'Settings v2 必须与旧版设置入口及面板完整并存并受 UISurfaceMachine 互斥管理'
+    s2MgrCode.includes('SURFACE_TYPES.SETTINGS') &&
+    !surfaceCodeV25.includes('SETTINGS_V2') &&
+    !uiMgrCodeV25.includes('tm-settings-v2-button') &&
+    !uiMgrCodeV25.includes('tm-settings-panel') &&
+    uiMgrCodeV25.includes('tm-settings-button') &&
+    uiMgrCodeV25.includes('mp-s2-panel') &&
+    !fs.existsSync('src/player/managers/settings') &&
+    !fs.existsSync('src/player/ui/styles/02_components/_settings_panels.css') &&
+    !fs.existsSync('src/player/ui/styles/02_components/_settings_cards.css') &&
+    !fs.existsSync('src/player/ui/styles/02_components/_settings_apple.css'),
+    '旧版设置面板文件、样式与双入口必须彻底清理，仅保留唯一统一设置入口与新版面板'
 );
 assert.ok(
     !s2PlaybackCode.includes('showProgressBar') &&
@@ -859,24 +858,20 @@ assert.ok(
     eventMgrCodeV25.includes('.mp-s2-panel') &&
     eventMgrCodeV25.includes('.mp-s2-scroll') &&
     uiMgrCodeV25.includes('.mp-s2-panel') &&
-    uiMgrCodeV25.includes('.tm-settings-v2-button') &&
+    uiMgrCodeV25.includes('.tm-settings-button') &&
     s2MgrCode.includes("target.closest('.mp-s2-header')") &&
     s2CssNoComments.includes('min(calc(100% -') &&
     s2CssNoComments.includes('overflow-y: auto'),
-    'Settings v2 必须接入 EventManager 触摸滚动白名单、UIManager 悬浮白名单、Header 限定下拉关闭及容器高度兜底'
+    '设置面板必须接入 EventManager 触摸滚动白名单、UIManager 悬浮白名单、Header 限定下拉关闭及容器高度兜底'
 );
 
-console.log('✅ 25. 新版 Settings v2 统一布局、并存入口、1:1 真实契约与可滚动守卫验证通过');
+console.log('✅ 25. 统一设置面板架构、旧版清理、1:1 真实契约与可滚动守卫验证通过');
 
 // =========================================================================
 // 26. 设置体系精简、功能转正默认开启与疯狂采集门控对齐验证
 // =========================================================================
 const singleHandMgrCode = fs.readFileSync('src/player/managers/SingleHandManager.js', 'utf8');
 const crazyScraperCode = fs.readFileSync('src/player/comments/CrazyScraper.js', 'utf8');
-const legacyBetaCode = fs.readFileSync('src/player/managers/settings/sections/BetaSection.js', 'utf8');
-const legacyPlaybackCode = fs.readFileSync('src/player/managers/settings/sections/PlaybackSection.js', 'utf8');
-const legacyCommentsCode = fs.readFileSync('src/player/managers/settings/sections/CommentsSection.js', 'utf8');
-const legacyAboutCode = fs.readFileSync('src/player/managers/settings/sections/AboutSection.js', 'utf8');
 const legacySmCode = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
 
 assert.ok(
@@ -888,11 +883,7 @@ assert.ok(
 for (const [label, src] of [
     ['S2PlaybackSection', s2PlaybackCode],
     ['S2CommentsSection', s2CommentsCode],
-    ['S2AdvancedSection', s2AdvancedCode],
-    ['PlaybackSection', legacyPlaybackCode],
-    ['CommentsSection', legacyCommentsCode],
-    ['BetaSection', legacyBetaCode],
-    ['AboutSection', legacyAboutCode]
+    ['S2AdvancedSection', s2AdvancedCode]
 ]) {
     for (const removedKey of [
         'showSeekControlRow',
@@ -930,10 +921,8 @@ assert.ok(
 );
 assert.ok(
     s2AdvancedCode.includes('refreshCrazyAvailability') &&
-    s2AdvancedCode.includes('subWrap.appendChild(dataModeRow.element)') &&
-    legacyBetaCode.includes('refreshCrazyAvailability') &&
-    legacyBetaCode.includes('betaSubWrap.appendChild(dataModeRow)'),
-    '新旧设置面板均应将 dataMode 独立于热度开关并实时同步疯狂采集可用状态'
+    s2AdvancedCode.includes('subWrap.appendChild(dataModeRow.element)'),
+    'S2AdvancedSection 应将 dataMode 独立于热度开关并实时同步疯狂采集可用状态'
 );
 
 console.log('✅ 26. 设置体系精简、功能转正默认开启与疯狂采集门控对齐验证通过');

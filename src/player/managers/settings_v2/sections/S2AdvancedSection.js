@@ -264,28 +264,22 @@ export class S2AdvancedSection {
         const currentVersion = getCurrentVersion();
         const updateInfo = this.sm?._latestUpdateInfo;
         const hasUpdate = Boolean(updateInfo?.hasUpdate);
-        const latestVer = updateInfo?.latestVersion || currentVersion;
         const isChecking = Boolean(this.sm?._isCheckingUpdate);
-        const isExpanded = this.sm ? this.sm.isSectionExpanded('s2_about', false) : false;
-
-        let statusText = `v${currentVersion}`;
-        let statusTone = 'muted';
-        if (isChecking) {
-            statusText = '检查中…';
-            statusTone = 'info';
-        } else if (hasUpdate) {
-            statusText = `新版 v${latestVer}`;
-            statusTone = 'warn';
-        }
+        const isExpanded = hasUpdate || (this.sm ? this.sm.isSectionExpanded('s2_about', false) : false);
 
         this.aboutAccordion = createAccordionCard({
             iconSvg: ICON_INFO_CIRCLE,
             title: __('s2About') || '版本与更新',
-            statusText,
-            statusTone,
+            statusText: `v${currentVersion}`,
+            statusTone: 'muted',
             expanded: isExpanded,
             onToggle: (open) => {
-                if (this.sm) this.sm.setSectionExpanded('s2_about', open);
+                if (this.sm) {
+                    this.sm.setSectionExpanded('s2_about', open);
+                    if (open && !this.sm._latestUpdateInfo && !this.sm._isCheckingUpdate) {
+                        this.sm.checkUpdate(false, false);
+                    }
+                }
             },
             buildBody: (body) => {
                 const currentChannel = this.settings.updateChannel || 'stable';
@@ -294,8 +288,7 @@ export class S2AdvancedSection {
 
                 // 1. 更新通道
                 const channelRow = createSegmentedRow({
-                    title: __('updateChannelTitle') || '更新通道',
-                    subtext: isBetaChannel ? 'GitHub dev 分支即时测试版' : 'SleazyFork 稳定正式版',
+                    title: __('updateChannel') || '更新通道',
                     options: [
                         { label: __('channelStable') || '正式版', value: 'stable' },
                         { label: __('channelBeta') || '测试版', value: 'beta' }
@@ -304,42 +297,25 @@ export class S2AdvancedSection {
                     onChange: (val) => {
                         this.sm.updateSetting('updateChannel', val);
                         this.sm._latestUpdateInfo = null;
-                        this.sm.checkUpdate(false, false).finally(() => {
+                        this.sm.checkUpdate(false, true).finally(() => {
                             this.refresh();
                         });
                     }
                 });
                 body.appendChild(channelRow.element);
 
-                // 2. 版本信息与操作按钮区
+                // 2. 操作按钮区
                 const form = document.createElement('div');
                 form.className = 'mp-s2-form';
-
-                const metaLine = document.createElement('div');
-                metaLine.className = 'mp-s2-meta-line';
-                const verSpan = document.createElement('span');
-                verSpan.textContent = `当前版本: v${currentVersion}`;
-                const dateSpan = document.createElement('span');
-                dateSpan.textContent = meta?.code_updated_at ? `发布: ${meta.code_updated_at.split('T')[0]}` : 'Miss Player';
-                metaLine.appendChild(verSpan);
-                metaLine.appendChild(dateSpan);
-                form.appendChild(metaLine);
-
-                if (hasUpdate) {
-                    const notice = document.createElement('div');
-                    notice.className = 'mp-s2-status-box is-ok';
-                    notice.textContent = `发现新版本 v${latestVer} (${isBetaChannel ? 'GitHub dev' : 'SleazyFork'})`;
-                    form.appendChild(notice);
-                }
 
                 const actions = document.createElement('div');
                 actions.className = 'mp-s2-actions';
 
                 const checkBtn = document.createElement('button');
                 checkBtn.type = 'button';
-                checkBtn.className = 'mp-s2-btn mp-s2-btn--primary';
+                checkBtn.className = hasUpdate ? 'mp-s2-btn' : 'mp-s2-btn mp-s2-btn--primary';
                 checkBtn.disabled = isChecking;
-                checkBtn.innerHTML = `${ICON_REFRESH} <span>${isChecking ? '检查中…' : (__('checkUpdateNow') || '检查更新')}</span>`;
+                checkBtn.innerHTML = `${ICON_REFRESH} <span>${isChecking ? '检查中…' : (__('checkUpdate') || '检查更新')}</span>`;
                 checkBtn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     await this.sm.checkUpdate(true, true);
@@ -349,14 +325,11 @@ export class S2AdvancedSection {
 
                 const handler = detectScriptHandler();
                 const cleanUrl = getCleanScriptUrl(currentChannel, meta);
-                const installLabel = handler === 'stay'
-                    ? 'Stay 更新/安装'
-                    : (handler === 'scriptcat' ? '脚本猫更新/安装' : '一键更新/安装');
 
                 const installBtn = document.createElement('button');
                 installBtn.type = 'button';
-                installBtn.className = 'mp-s2-btn';
-                installBtn.innerHTML = `${ICON_DOWNLOAD} <span>${installLabel}</span>`;
+                installBtn.className = hasUpdate ? 'mp-s2-btn is-update-available' : 'mp-s2-btn';
+                installBtn.innerHTML = `${ICON_DOWNLOAD} <span>${__('s2UpdateInstall') || '更新/安装'}</span>`;
                 installBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const targetHandler = handler === 'unknown' ? 'tampermonkey' : handler;

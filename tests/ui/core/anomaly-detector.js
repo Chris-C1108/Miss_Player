@@ -55,7 +55,7 @@ class AnomalyDetector {
                 }
 
                 // 2. 侧边栏与设置面板侧溢/遮挡缺陷检测 (Background text leakage)
-                const settingsPanel = document.querySelector('.tm-settings-panel.active');
+                const settingsPanel = document.querySelector('.mp-s2-panel.is-open');
                 const commentsPanel = document.querySelector('.tm-comments-panel');
                 if (settingsPanel && commentsPanel) {
                     const sRect = settingsPanel.getBoundingClientRect();
@@ -91,7 +91,7 @@ class AnomalyDetector {
                 });
 
                 // 4. 容器意外横向滚动溢出检测 (Horizontal scroll overflow)
-                const scrollContainers = Array.from(document.querySelectorAll('.tm-comments-panel, .tm-settings-panel, .tm-comments-list'));
+                const scrollContainers = Array.from(document.querySelectorAll('.tm-comments-panel, .mp-s2-scroll, .tm-comments-list'));
                 scrollContainers.forEach(el => {
                     if (el.scrollWidth > el.clientWidth + 2) {
                         anomalies.push({

@@ -1,4 +1,4 @@
-function sanitizeSeekStepList(arr, isCustom = false) {
+export function sanitizeSeekStepList(arr, isCustom = false) {
     if (!Array.isArray(arr)) return isCustom ? [] : ['5s', '10s', '30s', '1m', '5m', '10m'];
     const valid = arr.filter(s => typeof s === 'string' && /^\d+[sm]$/i.test(s.trim())).map(s => s.trim().toLowerCase());
     const unique = Array.from(new Set(valid));

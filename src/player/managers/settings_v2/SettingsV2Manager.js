@@ -33,13 +33,9 @@ export class SettingsV2Manager {
         const prevScrollTop = this.scrollBody ? this.scrollBody.scrollTop : 0;
         this.panel.innerHTML = '';
 
-        // 1. 吸顶 Header
+        // 1. 紧凑吸顶 Header（无多余 grabber / 新版徽标）
         const header = document.createElement('div');
         header.className = 'mp-s2-header';
-
-        const grabber = document.createElement('div');
-        grabber.className = 'mp-s2-grabber';
-        header.appendChild(grabber);
 
         const bar = document.createElement('div');
         bar.className = 'mp-s2-header-bar';
@@ -51,12 +47,7 @@ export class SettingsV2Manager {
         titleEl.className = 'mp-s2-title';
         titleEl.textContent = __('settings') || '设置';
 
-        const badge = document.createElement('span');
-        badge.className = 'mp-s2-pill mp-s2-pill--info';
-        badge.textContent = __('s2NewBadge') || '新版';
-
         titleWrap.appendChild(titleEl);
-        titleWrap.appendChild(badge);
 
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
@@ -91,21 +82,6 @@ export class SettingsV2Manager {
         scrollBody.appendChild(advancedSec.getElement());
         this.panel.appendChild(scrollBody);
 
-        // 3. 移动端底部完成栏
-        const footer = document.createElement('div');
-        footer.className = 'mp-s2-footer';
-
-        const doneBtn = document.createElement('button');
-        doneBtn.type = 'button';
-        doneBtn.className = 'mp-s2-done-btn';
-        doneBtn.textContent = __('done') || '完成';
-        doneBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.close();
-        });
-        footer.appendChild(doneBtn);
-        this.panel.appendChild(footer);
-
         if (prevScrollTop > 0) {
             scrollBody.scrollTop = prevScrollTop;
         }
@@ -133,9 +109,9 @@ export class SettingsV2Manager {
         const uiManager = this.sm.uiManager || this.playerCore?.uiManager;
         const surfaceMachine = uiManager?.surfaceMachine;
         if (surfaceMachine) {
-            surfaceMachine.activate(SURFACE_TYPES.SETTINGS_V2, () => this.close());
+            surfaceMachine.activate(SURFACE_TYPES.SETTINGS, () => this.close());
         } else if (uiManager?.playerContainer) {
-            uiManager.playerContainer.classList.add('tm-settings-v2-active');
+            uiManager.playerContainer.classList.add('tm-settings-active');
         }
 
         if (this.overlayClickHandler) {
@@ -146,10 +122,8 @@ export class SettingsV2Manager {
             if (!this.isVisible || !this.panel) return;
             const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
             const inPanel = path.includes(this.panel) || this.panel.contains(e.target);
-            const btn = uiManager?.settingsV2Btn;
-            const oldBtn = uiManager?.settingsBtn;
-            const inBtn = (btn && (path.includes(btn) || btn.contains(e.target))) ||
-                          (oldBtn && (path.includes(oldBtn) || oldBtn.contains(e.target)));
+            const btn = uiManager?.settingsBtn;
+            const inBtn = btn && (path.includes(btn) || btn.contains(e.target));
             if (!inPanel && !inBtn) {
                 this.close();
             }
@@ -173,9 +147,9 @@ export class SettingsV2Manager {
         const uiManager = this.sm?.uiManager || this.playerCore?.uiManager;
         const surfaceMachine = uiManager?.surfaceMachine;
         if (surfaceMachine) {
-            surfaceMachine.deactivate(SURFACE_TYPES.SETTINGS_V2);
+            surfaceMachine.deactivate(SURFACE_TYPES.SETTINGS);
         } else if (uiManager?.playerContainer) {
-            uiManager.playerContainer.classList.remove('tm-settings-v2-active');
+            uiManager.playerContainer.classList.remove('tm-settings-active');
         }
 
         if (this.overlayClickHandler) {

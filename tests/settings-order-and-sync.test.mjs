@@ -186,17 +186,17 @@ console.log('✅ 4. 5 大固定分段插槽顺序不可动摇性校验通过');
 }
 console.log('✅ 5. dataMode / hidePrivateData 多设备 WebDAV 同步与防默认覆盖保护校验通过');
 
-// 6. 验证 BetaSection 分段器左保守默认 ('local') 右开启共享 ('shared') 顺序
+// 6. 验证 S2AdvancedSection 分段器左保守默认 ('local') 右开启共享 ('shared') 顺序
 {
     const betaSectionSrc = fs.readFileSync(
-        path.resolve(process.cwd(), 'src/player/managers/settings/sections/BetaSection.js'),
+        path.resolve(process.cwd(), 'src/player/managers/settings_v2/sections/S2AdvancedSection.js'),
         'utf8'
     );
     const localIdx = betaSectionSrc.indexOf("value: 'local'");
     const sharedIdx = betaSectionSrc.indexOf("value: 'shared'");
-    assert.ok(localIdx > 0 && sharedIdx > 0, 'BetaSection 必须同时声明 local 与 shared 选项');
+    assert.ok(localIdx > 0 && sharedIdx > 0, 'S2AdvancedSection 必须同时声明 local 与 shared 选项');
     assert.ok(localIdx < sharedIdx, '分段器必须满足左侧「本地私有」右侧「社区共享」的人机顺序');
 }
-console.log('✅ 6. BetaSection 分段器左关右开顺序校验通过');
+console.log('✅ 6. S2AdvancedSection 分段器左关右开顺序校验通过');
 
 console.log('\n🎉 全部 6 项设置菜单防丢失、多设备同步与固定插槽测试 100% 通过！\n');

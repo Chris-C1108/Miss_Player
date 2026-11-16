@@ -393,19 +393,6 @@
         -webkit-backdrop-filter: blur(10px);
     }
 
-    /* 设置面板与评论栏层级及宽度适配：对称填满侧边栏，杜绝底层评论侧漏 */
-    .tm-player-container .tm-settings-panel {
-        z-index: var(--z-modal);
-        width: calc(var(--sidebar-width) - 24px);
-        max-width: calc(var(--sidebar-width) - 24px);
-        right: 12px;
-    }
-
-    .tm-player-container.tm-sidebar-left .tm-settings-panel {
-        left: 12px;
-        right: auto;
-    }
-
     /* 控制栏吸附在评论区角落（TR/BR/TL/BL）时的防遮挡双容器排版 (采用 padding 规避 Grid stretch 计算缺陷) */
     .tm-comments-panel {
         transition: padding-top 0.25s cubic-bezier(0.25, 1, 0.5, 1), padding-bottom 0.25s cubic-bezier(0.25, 1, 0.5, 1);
@@ -481,11 +468,6 @@
         border-right: 1px solid rgba(255, 255, 255, 0.05);
         box-shadow: inset -18px 0 28px -14px rgba(0, 0, 0, 0.88), inset 0 18px 28px -12px rgba(0, 0, 0, 0.65);
     }
-    .tm-player-container.tm-sidebar-left .tm-settings-panel {
-        right: auto;
-        left: 16px;
-    }
-
     /* 侧边栏隐藏 */
     .tm-player-container.tm-sidebar-hidden {
         grid-template-columns: 1fr;
@@ -510,11 +492,6 @@
     .tm-sidebar-pos-button,
     .tm-sidebar-toggle-button {
         display: flex;
-    }
-
-    /* 控制栏吸附后，临时置设置面板 padding 为 0px */
-    .tm-player-container[class*="tm-controls-docked-"] .tm-settings-panel {
-        padding: 0px;
     }
 
     /* 横屏分栏模式下，调整独立标题位置与宽度以居中在视频区并防止遮挡侧边栏 */
@@ -758,34 +735,6 @@
     .tm-control-buttons .tm-tab-pill {
         padding: 3px 8px;
         font-size: 0.75rem;
-    }
-}
-
-/* 针对矮屏幕横屏视口 (如 iPhone/Android 横屏观影，高度 <= 500px) 设置面板自适应居中与全高平滑滚动 */
-
-@media screen and (orientation: landscape) and (max-height: 500px) {
-    .tm-player-container .tm-settings-panel,
-    .tm-player-container.tm-sidebar-left .tm-settings-panel,
-    .tm-settings-panel {
-        top: 12px;
-        bottom: 12px;
-        max-height: calc(100dvh - 24px);
-        left: 50%;
-        right: auto;
-        transform: translate(-50%, -10px);
-        width: min(520px, calc(100vw - env(safe-area-inset-left, 16px) - env(safe-area-inset-right, 16px) - 32px));
-        max-width: min(520px, calc(100vw - env(safe-area-inset-left, 16px) - env(safe-area-inset-right, 16px) - 32px));
-        min-width: 280px;
-        border-radius: 14px;
-        padding: 0;
-        z-index: var(--z-modal);
-        overflow: hidden;
-    }
-
-    .tm-player-container .tm-settings-panel.active,
-    .tm-player-container.tm-sidebar-left .tm-settings-panel.active,
-    .tm-settings-panel.active {
-        transform: translate(-50%, 0);
     }
 }
 
