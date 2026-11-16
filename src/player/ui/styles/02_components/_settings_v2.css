@@ -424,25 +424,35 @@
 }
 
 /* 数值步进与内联输入 */
-.mp-s2-stepper-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+.mp-s2-row--durations {
     gap: 8px;
+}
+
+.mp-s2-row--durations .mp-s2-row-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.mp-s2-inline-durations {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
 }
 
 .mp-s2-stepper-cell {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
-    padding: 6px 10px;
-    border-radius: 9px;
+    gap: 3px;
+    padding: 4px 5px;
+    border-radius: 8px;
     background: rgba(0, 0, 0, 0.24);
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .mp-s2-stepper-label {
-    font-size: 12px;
+    font-size: 11.5px;
     color: rgba(255, 255, 255, 0.68);
     white-space: nowrap;
 }
@@ -450,22 +460,22 @@
 .mp-s2-stepper-box {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     flex-shrink: 0;
 }
 
 .mp-s2-num-input {
-    width: 44px;
-    height: 24px;
+    width: 32px;
+    height: 22px;
     border: none;
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 600;
     text-align: center;
     outline: none;
-    padding: 0 4px;
+    padding: 0 2px;
 }
 
 .mp-s2-num-input:focus {

@@ -1,7 +1,6 @@
 import {
     createGroup,
-    createCard,
-    createToggleRow
+    createCard
 } from '../components/S2Primitives.js';
 import { Toast } from '../../../../utils/index.js';
 import { __ } from '../../../../constants/i18n.js';
@@ -24,33 +23,8 @@ export class S2CommentsSection {
         if (oldLabel) this.element.appendChild(oldLabel);
 
         const card = createCard();
-        const showComments = this.settings.showCommentsSection !== false;
 
-        const subWrap = document.createElement('div');
-        subWrap.className = `mp-s2-conditional ${showComments ? '' : 'is-hidden'}`.trim();
-
-        // 1. 显示评论开关
-        const commentsToggleRow = createToggleRow({
-            title: __('showComments') || '显示评论',
-            checked: showComments,
-            onChange: (checked) => {
-                this.sm.updateSetting('showCommentsSection', checked);
-                if (checked) {
-                    this.sm.updateSetting('sidebarHidden', false);
-                    if (this.sm.uiManager) {
-                        this.sm.uiManager.isSidebarHidden = false;
-                        this.sm.uiManager.updateSidebarToggleButtonIcon();
-                    }
-                }
-                if (this.sm.controlManager?.commentPanel) {
-                    this.sm.controlManager.commentPanel.updateCommentsVisibility(checked);
-                }
-                subWrap.classList.toggle('is-hidden', !checked);
-            }
-        });
-        card.appendChild(commentsToggleRow.element);
-
-        // 2. 评论数据源多选芯片 (对象映射 { jable, javdb, javlibrary })
+        // 评论数据源多选芯片 (对象映射 { jable, javdb, javlibrary })
         const sourcesRow = document.createElement('div');
         sourcesRow.className = 'mp-s2-row mp-s2-row--stacked';
 
@@ -113,9 +87,8 @@ export class S2CommentsSection {
         renderSourceChips();
         sourcesRow.appendChild(textCol);
         sourcesRow.appendChild(chipsWrap);
-        subWrap.appendChild(sourcesRow);
+        card.appendChild(sourcesRow);
 
-        card.appendChild(subWrap);
         this.element.appendChild(card);
     }
 }

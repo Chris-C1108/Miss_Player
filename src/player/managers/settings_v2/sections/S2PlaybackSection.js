@@ -174,7 +174,7 @@ export class S2PlaybackSection {
 
     _buildDurationStepperRow() {
         const row = document.createElement('div');
-        row.className = 'mp-s2-row mp-s2-row--stacked';
+        row.className = 'mp-s2-row mp-s2-row--durations';
 
         const textCol = document.createElement('div');
         textCol.className = 'mp-s2-row-text';
@@ -184,8 +184,8 @@ export class S2PlaybackSection {
         titleEl.textContent = __('s2ClipDurations') || '快览与连播时长';
         textCol.appendChild(titleEl);
 
-        const grid = document.createElement('div');
-        grid.className = 'mp-s2-stepper-grid';
+        const inlineGroup = document.createElement('div');
+        inlineGroup.className = 'mp-s2-inline-durations';
 
         const createCell = (label, settingKey, fallbackVal) => {
             const cell = document.createElement('div');
@@ -205,6 +205,7 @@ export class S2PlaybackSection {
             input.className = 'mp-s2-num-input';
             input.value = String(this.settings[settingKey] ?? fallbackVal);
 
+            input.addEventListener('click', (e) => e.stopPropagation());
             input.addEventListener('change', () => {
                 let val = parseInt(input.value, 10);
                 if (Number.isNaN(val) || val < 3) val = 3;
@@ -225,11 +226,11 @@ export class S2PlaybackSection {
             return cell;
         };
 
-        grid.appendChild(createCell(__('modePreviewShort') || '快览', 'previewDurationSeconds', 5));
-        grid.appendChild(createCell(__('modeReplayShort') || '连播', 'climaxDurationSeconds', 60));
+        inlineGroup.appendChild(createCell(__('modePreviewShort') || '快览', 'previewDurationSeconds', 5));
+        inlineGroup.appendChild(createCell(__('modeReplayShort') || '连播', 'climaxDurationSeconds', 60));
 
         row.appendChild(textCol);
-        row.appendChild(grid);
+        row.appendChild(inlineGroup);
         return row;
     }
 

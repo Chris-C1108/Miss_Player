@@ -91,7 +91,7 @@ export class PlayerState {
                 setValue('customUserSeekSteps', this.settings.customUserSeekSteps);
             }
 
-            this.settings.showCommentsSection = getBool('showCommentsSection', true);
+            this.settings.showCommentsSection = true;
 
             const rawSources = getValue('enabledCommentSources', null);
             this.settings.enabledCommentSources = Object.assign({

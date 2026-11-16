@@ -827,18 +827,20 @@ const allS2Code = [s2PlaybackCode, s2CommentsCode, s2ConnectionsCode, s2Advanced
 
 assert.ok(
     s2PlaybackCode.includes('customUserSeekSteps') &&
+    s2PlaybackCode.includes('mp-s2-inline-durations') &&
+    !s2PlaybackCode.includes('mp-s2-stepper-grid') &&
     s2PlaybackCode.includes('pauseOnBlur') &&
     s2PlaybackCode.includes('defaultMuted') &&
     s2PlaybackCode.includes('muteResetMinutes'),
-    'S2PlaybackSection 必须完整同步 customUserSeekSteps / pauseOnBlur / defaultMuted / muteResetMinutes'
+    'S2PlaybackSection 必须完整同步 customUserSeekSteps / 内联快览与连播时长 / pauseOnBlur / defaultMuted / muteResetMinutes'
 );
 assert.ok(
-    s2CommentsCode.includes('showCommentsSection') &&
+    !s2CommentsCode.includes('showCommentsSection') &&
     !s2CommentsCode.includes('debugFilterHasNumbers') &&
     s2CommentsCode.includes('updateCommentSources') &&
     !s2CommentsCode.includes('updateFilterHasNumbers') &&
     !s2CommentsCode.includes('Array.isArray(this.settings.enabledCommentSources) ?'),
-    'S2CommentsSection 必须使用对象映射 enabledCommentSources、保留显示评论开关并移除设置内只看时间开关'
+    'S2CommentsSection 必须仅展示评论数据源芯片、使用对象映射 enabledCommentSources 并移除显示评论与只看时间开关'
 );
 assert.ok(
     s2ConnectionsCode.includes('config.user') &&

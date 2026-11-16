@@ -249,7 +249,7 @@ export class SettingsManager {
             const rawCustomSteps = getValue('customUserSeekSteps', null);
             this.settings.customUserSeekSteps = sanitizeSeekStepList(rawCustomSteps, true);
 
-            this.settings.showCommentsSection = getBool('showCommentsSection', true);
+            this.settings.showCommentsSection = true;
 
             const rawSources = getValue('enabledCommentSources', null);
             this.settings.enabledCommentSources = Object.assign({
