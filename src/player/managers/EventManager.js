@@ -122,7 +122,7 @@ export class EventManager {
             }
             
             // 允许设置菜单面板、快进滑动条、评论区、高光选择抽屉及弹窗内部滚动容器正常在组件内自由滚动，配合 overscroll-behavior: contain 防止边界穿透
-            const scrollableSelector = '.tm-settings-panel, .tm-settings-menu-container, .tm-settings-apple-container, .tm-settings-seek-steps-subpanel, .tm-settings-webdav-card, .tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list, .tm-tag-select-list, .tm-comment-submit-bar-wrapper, .tm-custom-modal-content';
+            const scrollableSelector = '.tm-settings-panel, .tm-settings-menu-container, .tm-settings-apple-container, .tm-settings-seek-steps-subpanel, .tm-settings-webdav-card, .mp-s2-panel, .mp-s2-scroll, .tm-comment-section-body, .tm-bottom-sheet-panel, .tm-bottom-sheet-list, .tm-tag-select-list, .tm-comment-submit-bar-wrapper, .tm-custom-modal-content';
             const inScrollable = typeof findInPath === 'function' ? findInPath(scrollableSelector) : e.target.closest(scrollableSelector);
             if (inScrollable) {
                 return;

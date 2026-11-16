@@ -776,9 +776,11 @@ const s2Css = fs.readFileSync('src/player/ui/styles/02_components/_settings_v2.c
 const s2CssNoComments = s2Css.replace(/\/\*[\s\S]*?\*\//g, '');
 const s2MgrCode = fs.readFileSync('src/player/managers/settings_v2/SettingsV2Manager.js', 'utf8');
 const s2PlaybackCode = fs.readFileSync('src/player/managers/settings_v2/sections/S2PlaybackSection.js', 'utf8');
+const s2CommentsCode = fs.readFileSync('src/player/managers/settings_v2/sections/S2CommentsSection.js', 'utf8');
 const s2ConnectionsCode = fs.readFileSync('src/player/managers/settings_v2/sections/S2ConnectionsSection.js', 'utf8');
 const s2AdvancedCode = fs.readFileSync('src/player/managers/settings_v2/sections/S2AdvancedSection.js', 'utf8');
 const uiMgrCodeV25 = fs.readFileSync('src/player/ui/UIManager.js', 'utf8');
+const eventMgrCodeV25 = fs.readFileSync('src/player/managers/EventManager.js', 'utf8');
 const surfaceCodeV25 = fs.readFileSync('src/player/state/UISurfaceMachine.js', 'utf8');
 
 assert.ok(
@@ -804,7 +806,68 @@ assert.ok(
     'Settings v2 必须将 Peach 入库移出实验功能并独立收拢于连接与同步分组'
 );
 
-console.log('✅ 25. 新版 Settings v2 统一布局、并存入口与 Peach 移出实验功能验证通过');
+// 25b. 反幻觉与旧版契约 1:1 强校验 + 滚动放行守卫
+const allS2Code = [s2PlaybackCode, s2CommentsCode, s2ConnectionsCode, s2AdvancedCode].join('\n');
+[
+    'remoteControlMode',
+    'showModeControlRow',
+    'betaColorPlayMode',
+    'customSeekSteps',
+    'commentSortOrder',
+    'refreshVisibility',
+    'refreshBetaState',
+    'updateRemoteModeUI',
+    'updateBetaPlayModeUI',
+    'updateSortButtonsUI'
+].forEach((forbiddenSymbol) => {
+    assert.ok(
+        !allS2Code.includes(forbiddenSymbol),
+        `Settings v2 严禁出现不存在或幻觉字段/方法: ${forbiddenSymbol}`
+    );
+});
+
+assert.ok(
+    s2PlaybackCode.includes('customUserSeekSteps') &&
+    s2PlaybackCode.includes('pauseOnBlur') &&
+    s2PlaybackCode.includes('defaultMuted') &&
+    s2PlaybackCode.includes('muteResetMinutes'),
+    'S2PlaybackSection 必须完整同步 customUserSeekSteps / pauseOnBlur / defaultMuted / muteResetMinutes'
+);
+assert.ok(
+    s2CommentsCode.includes('showCommentsSection') &&
+    s2CommentsCode.includes('debugFilterHasNumbers') &&
+    s2CommentsCode.includes('updateCommentSources') &&
+    s2CommentsCode.includes('updateFilterHasNumbers') &&
+    !s2CommentsCode.includes('Array.isArray(this.settings.enabledCommentSources) ?'),
+    'S2CommentsSection 必须使用对象映射 enabledCommentSources 并完整保留显示评论与只看时间开关'
+);
+assert.ok(
+    s2ConnectionsCode.includes('config.user') &&
+    s2ConnectionsCode.includes('config.pass') &&
+    !s2ConnectionsCode.includes('config.username') &&
+    !s2ConnectionsCode.includes('config.password'),
+    'S2ConnectionsSection WebDAV 读写字段必须与 SyncManager 对齐为 config.user / config.pass'
+);
+assert.ok(
+    s2AdvancedCode.includes('shMgr.updateState') &&
+    s2AdvancedCode.includes('hm.setEnabled') &&
+    s2AdvancedCode.includes('hm.setCrowdEnabled') &&
+    s2AdvancedCode.includes('updateDebugMode') &&
+    s2AdvancedCode.includes('CrazyScraper'),
+    'S2AdvancedSection 必须调用真实的 updateState / setEnabled / setCrowdEnabled / updateDebugMode / CrazyScraper 接口'
+);
+assert.ok(
+    eventMgrCodeV25.includes('.mp-s2-panel') &&
+    eventMgrCodeV25.includes('.mp-s2-scroll') &&
+    uiMgrCodeV25.includes('.mp-s2-panel') &&
+    uiMgrCodeV25.includes('.tm-settings-v2-button') &&
+    s2MgrCode.includes("target.closest('.mp-s2-header')") &&
+    s2CssNoComments.includes('min(calc(100% -') &&
+    s2CssNoComments.includes('overflow-y: auto'),
+    'Settings v2 必须接入 EventManager 触摸滚动白名单、UIManager 悬浮白名单、Header 限定下拉关闭及容器高度兜底'
+);
+
+console.log('✅ 25. 新版 Settings v2 统一布局、并存入口、1:1 真实契约与可滚动守卫验证通过');
 
 console.log('\n🎉 全部 25 大核心修复与人机工程验证单元测试 100% 通过！\n');
 

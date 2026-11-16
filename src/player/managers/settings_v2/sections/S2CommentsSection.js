@@ -1,7 +1,7 @@
 import {
     createGroup,
     createCard,
-    createSegmentedRow
+    createToggleRow
 } from '../components/S2Primitives.js';
 import { Toast } from '../../../../utils/index.js';
 import { __ } from '../../../../constants/i18n.js';
@@ -10,7 +10,7 @@ export class S2CommentsSection {
     constructor(settingsManager) {
         this.sm = settingsManager;
         this.settings = settingsManager.settings;
-        this.element = createGroup(__('commentsGroupTitle') || '评论');
+        this.element = createGroup(__('commentsGroupTitle') || '影片评论');
         this._render();
     }
 
@@ -24,28 +24,33 @@ export class S2CommentsSection {
         if (oldLabel) this.element.appendChild(oldLabel);
 
         const card = createCard();
+        const showComments = this.settings.showCommentsSection !== false;
 
-        // 1. 时间排序
-        const sortRow = createSegmentedRow({
-            title: __('s2SortOrder') || '评论时间排序',
-            options: [
-                { label: __('s2SortAsc') || '正序', value: 'asc' },
-                { label: __('s2SortDesc') || '倒序', value: 'desc' }
-            ],
-            value: this.settings.commentSortOrder || 'asc',
-            onChange: (val) => {
-                this.sm.updateSetting('commentSortOrder', val);
-                const commentPanel = this.sm.controlManager?.commentPanel;
-                if (commentPanel) {
-                    commentPanel.sortOrder = val;
-                    commentPanel.updateSortButtonsUI();
-                    commentPanel.renderComments();
+        const subWrap = document.createElement('div');
+        subWrap.className = `mp-s2-conditional ${showComments ? '' : 'is-hidden'}`.trim();
+
+        // 1. 显示评论开关
+        const commentsToggleRow = createToggleRow({
+            title: __('showComments') || '显示评论',
+            checked: showComments,
+            onChange: (checked) => {
+                this.sm.updateSetting('showCommentsSection', checked);
+                if (checked) {
+                    this.sm.updateSetting('sidebarHidden', false);
+                    if (this.sm.uiManager) {
+                        this.sm.uiManager.isSidebarHidden = false;
+                        this.sm.uiManager.updateSidebarToggleButtonIcon();
+                    }
                 }
+                if (this.sm.controlManager?.commentPanel) {
+                    this.sm.controlManager.commentPanel.updateCommentsVisibility(checked);
+                }
+                subWrap.classList.toggle('is-hidden', !checked);
             }
         });
-        card.appendChild(sortRow.element);
+        card.appendChild(commentsToggleRow.element);
 
-        // 2. 评论数据源多选芯片
+        // 2. 评论数据源多选芯片 (对象映射 { jable, javdb, javlibrary })
         const sourcesRow = document.createElement('div');
         sourcesRow.className = 'mp-s2-row mp-s2-row--stacked';
 
@@ -54,7 +59,7 @@ export class S2CommentsSection {
 
         const titleEl = document.createElement('div');
         titleEl.className = 'mp-s2-row-title';
-        titleEl.textContent = __('s2CommentSources') || '启用的评论源';
+        titleEl.textContent = __('commentSources') || '评论来源';
 
         textCol.appendChild(titleEl);
 
@@ -69,12 +74,12 @@ export class S2CommentsSection {
 
         const renderSourceChips = () => {
             chipsWrap.innerHTML = '';
-            const enabledList = Array.isArray(this.settings.enabledCommentSources)
-                ? [...this.settings.enabledCommentSources]
-                : ['jable', 'javdb', 'javlibrary'];
+            const currentMap = this.settings.enabledCommentSources && typeof this.settings.enabledCommentSources === 'object' && !Array.isArray(this.settings.enabledCommentSources)
+                ? this.settings.enabledCommentSources
+                : { jable: true, javdb: true, javlibrary: true };
 
             sources.forEach(src => {
-                const isActive = enabledList.includes(src.id);
+                const isActive = currentMap[src.id] !== false;
                 const chip = document.createElement('button');
                 chip.type = 'button';
                 chip.className = `mp-s2-chip ${isActive ? 'is-active' : ''}`.trim();
@@ -82,20 +87,21 @@ export class S2CommentsSection {
 
                 chip.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    let next = [...enabledList];
-                    if (isActive) {
-                        if (next.length <= 1) {
-                            Toast(__('atLeastOneSource') || '请至少保留一个评论源', 2000, 'warning');
-                            return;
-                        }
-                        next = next.filter(id => id !== src.id);
-                    } else {
-                        next.push(src.id);
+                    const nextMap = {
+                        jable: currentMap.jable !== false,
+                        javdb: currentMap.javdb !== false,
+                        javlibrary: currentMap.javlibrary !== false,
+                        [src.id]: !isActive
+                    };
+                    const activeCount = Object.values(nextMap).filter(Boolean).length;
+                    if (activeCount === 0) {
+                        Toast(__('atLeastOneSource') || '请至少保留一个评论源', 2000, 'warning');
+                        return;
                     }
-                    this.sm.updateSetting('enabledCommentSources', next);
+                    this.sm.updateSetting('enabledCommentSources', nextMap);
                     const commentPanel = this.sm.controlManager?.commentPanel;
-                    if (commentPanel) {
-                        commentPanel.loadComments(1);
+                    if (commentPanel && typeof commentPanel.updateCommentSources === 'function') {
+                        commentPanel.updateCommentSources(nextMap);
                     }
                     renderSourceChips();
                 });
@@ -107,8 +113,23 @@ export class S2CommentsSection {
         renderSourceChips();
         sourcesRow.appendChild(textCol);
         sourcesRow.appendChild(chipsWrap);
-        card.appendChild(sourcesRow);
+        subWrap.appendChild(sourcesRow);
 
+        // 3. 只看时间评论
+        const filterNumRow = createToggleRow({
+            title: __('filterTimeOnly') || '只看时间',
+            checked: Boolean(this.settings.debugFilterHasNumbers),
+            onChange: (checked) => {
+                this.sm.updateSetting('debugFilterHasNumbers', checked);
+                const commentPanel = this.sm.controlManager?.commentPanel;
+                if (commentPanel && typeof commentPanel.updateFilterHasNumbers === 'function') {
+                    commentPanel.updateFilterHasNumbers(checked);
+                }
+            }
+        });
+        subWrap.appendChild(filterNumRow.element);
+
+        card.appendChild(subWrap);
         this.element.appendChild(card);
     }
 }

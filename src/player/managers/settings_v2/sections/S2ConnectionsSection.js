@@ -116,10 +116,10 @@ export class S2ConnectionsSection {
 
                 const userField = createField({
                     label: __('webdavUsername') || '用户名',
-                    value: config.username || '',
+                    value: config.user || '',
                     placeholder: 'account@example.com',
                     onChange: (val) => {
-                        config.username = val.trim();
+                        config.user = val.trim();
                         SyncManager.saveWebDavConfig(config);
                     }
                 });
@@ -134,11 +134,11 @@ export class S2ConnectionsSection {
                 const passField = createField({
                     label: __('webdavPassword') || '密码 / 应用专用密码',
                     type: 'password',
-                    value: config.password || '',
+                    value: config.pass || '',
                     placeholder: '••••••••',
                     trailingEl: eyeBtn,
                     onChange: (val) => {
-                        config.password = val;
+                        config.pass = val;
                         SyncManager.saveWebDavConfig(config);
                     }
                 });
@@ -163,8 +163,8 @@ export class S2ConnectionsSection {
                 const persistInputs = () => {
                     config.url = urlField.input.value.trim();
                     config.lanUrl = lanField.input.value.trim();
-                    config.username = userField.input.value.trim();
-                    config.password = passField.input.value;
+                    config.user = userField.input.value.trim();
+                    config.pass = passField.input.value;
                     config.path = pathField.input.value.trim() || '/MissPlayer/';
                     SyncManager.saveWebDavConfig(config);
                     const valid = WebDavClient.hasValidEndpoint(config);

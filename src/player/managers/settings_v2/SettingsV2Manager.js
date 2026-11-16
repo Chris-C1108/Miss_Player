@@ -200,8 +200,7 @@ export class SettingsV2Manager {
         const onTouchStart = (e) => {
             if (!this.isVisible || window.innerWidth > 767) return;
             const headerEl = e.target.closest('.mp-s2-header');
-            const atScrollTop = this.scrollBody && this.scrollBody.scrollTop <= 1;
-            if (!headerEl && !atScrollTop) return;
+            if (!headerEl) return;
             startY = e.touches[0].clientY;
             currentDeltaY = 0;
             isDragging = true;

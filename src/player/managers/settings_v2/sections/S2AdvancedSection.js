@@ -70,12 +70,17 @@ export class S2AdvancedSection {
                         setStatus(checked ? (__('s2Enabled') || '已开启') : (__('s2Disabled') || '已关闭'), checked ? 'info' : 'muted');
 
                         const shMgr = this.sm.controlManager?.singleHandManager || this.sm.playerCore?.singleHandManager;
-                        if (shMgr && typeof shMgr.refreshVisibility === 'function') {
-                            shMgr.refreshVisibility();
+                        if (shMgr && typeof shMgr.updateState === 'function') {
+                            shMgr.updateState();
                         }
                         const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
-                        if (hm && typeof hm.refreshBetaState === 'function') {
-                            hm.refreshBetaState();
+                        if (hm) {
+                            if (typeof hm.setEnabled === 'function') {
+                                hm.setEnabled(Boolean(checked && this.settings.betaHeatmap));
+                            }
+                            if (typeof hm.setCrowdEnabled === 'function') {
+                                hm.setCrowdEnabled(Boolean(checked && this.settings.dataMode === 'shared'));
+                            }
                         }
                     }
                 });
@@ -88,8 +93,8 @@ export class S2AdvancedSection {
                     onChange: (checked) => {
                         this.sm.updateSetting('betaSingleHandMode', checked);
                         const shMgr = this.sm.controlManager?.singleHandManager || this.sm.playerCore?.singleHandManager;
-                        if (shMgr && typeof shMgr.refreshVisibility === 'function') {
-                            shMgr.refreshVisibility();
+                        if (shMgr && typeof shMgr.updateState === 'function') {
+                            shMgr.updateState();
                         }
                     }
                 });
@@ -137,8 +142,8 @@ export class S2AdvancedSection {
                         this.sm.updateSetting('betaHeatmap', checked);
                         hmSubWrap.classList.toggle('is-hidden', !checked);
                         const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
-                        if (hm && typeof hm.refreshBetaState === 'function') {
-                            hm.refreshBetaState();
+                        if (hm && typeof hm.setEnabled === 'function') {
+                            hm.setEnabled(checked);
                         }
                     }
                 });
@@ -154,8 +159,8 @@ export class S2AdvancedSection {
                     onChange: (val) => {
                         this.sm.updateSetting('dataMode', val);
                         const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
-                        if (hm && typeof hm.refreshBetaState === 'function') {
-                            hm.refreshBetaState();
+                        if (hm && typeof hm.setCrowdEnabled === 'function') {
+                            hm.setCrowdEnabled(Boolean(this.settings.betaMode) && val === 'shared');
                         }
                     }
                 });
@@ -200,6 +205,15 @@ export class S2AdvancedSection {
                     onChange: (checked) => {
                         this.sm.updateSetting('debugMode', checked);
                         DebugLogPanel.updateDebugState(checked);
+                        const commentPanel = this.sm.controlManager?.commentPanel;
+                        if (commentPanel && typeof commentPanel.updateDebugMode === 'function') {
+                            commentPanel.updateDebugMode(checked);
+                        }
+                        if (!checked) {
+                            CrazyScraper.stop();
+                        } else if (this.settings.crazyScrapeMode) {
+                            CrazyScraper.start(commentPanel?.videoCode || '');
+                        }
                         setStatus(checked ? (__('s2DebugActive') || '调试开启') : (__('s2NormalState') || '正常'), checked ? 'warn' : 'muted');
                     }
                 });

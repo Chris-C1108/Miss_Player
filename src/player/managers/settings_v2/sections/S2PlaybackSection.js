@@ -36,7 +36,7 @@ export class S2PlaybackSection {
         chipsWrap.className = 'mp-s2-chips';
 
         const defaultSteps = ['5s', '10s', '30s', '1m', '5m', '10m'];
-        const customSteps = Array.isArray(this.settings.customSeekSteps) ? this.settings.customSeekSteps : [];
+        const customSteps = Array.isArray(this.settings.customUserSeekSteps) ? [...this.settings.customUserSeekSteps] : [];
         const enabledSteps = Array.isArray(this.settings.enabledSeekSteps) ? [...this.settings.enabledSeekSteps] : [...defaultSteps];
 
         const renderChips = () => {
@@ -69,7 +69,7 @@ export class S2PlaybackSection {
                         if (cIdx !== -1) customSteps.splice(cIdx, 1);
                         const eIdx = enabledSteps.indexOf(stepKey);
                         if (eIdx !== -1) enabledSteps.splice(eIdx, 1);
-                        this.sm.updateSetting('customSeekSteps', [...customSteps]);
+                        this.sm.updateSetting('customUserSeekSteps', [...customSteps]);
                         this.sm.updateSetting('enabledSeekSteps', [...enabledSteps]);
                         this.sm.rebuildControlPanelSeekRow();
                         renderChips();
@@ -126,7 +126,7 @@ export class S2PlaybackSection {
                 }
                 if (!defaultSteps.includes(parsed) && !customSteps.includes(parsed)) {
                     customSteps.push(parsed);
-                    this.sm.updateSetting('customSeekSteps', [...customSteps]);
+                    this.sm.updateSetting('customUserSeekSteps', [...customSteps]);
                 }
                 if (!enabledSteps.includes(parsed)) {
                     enabledSteps.push(parsed);
@@ -211,9 +211,6 @@ export class S2PlaybackSection {
                 if (val > 300) val = 300;
                 input.value = String(val);
                 this.sm.updateSetting(settingKey, val);
-                if (this.sm.controlManager && typeof this.sm.controlManager.updateBetaPlayModeUI === 'function') {
-                    this.sm.controlManager.updateBetaPlayModeUI();
-                }
                 Toast(`${label}已设为 ${val} 秒`, 1200, 'info');
             });
 
@@ -243,27 +240,10 @@ export class S2PlaybackSection {
 
         const card = createCard();
 
-        // 1. 遥控器运行模式
-        const remoteRow = createSegmentedRow({
-            title: __('s2RemoteMode') || '遥控器模式',
-            options: [
-                { label: __('s2RemotePrecise') || '精准', value: 'precise' },
-                { label: __('s2RemoteStandard') || '标准', value: 'standard' }
-            ],
-            value: this.settings.remoteControlMode || 'precise',
-            onChange: (val) => {
-                this.sm.updateSetting('remoteControlMode', val);
-                if (this.sm.controlManager && typeof this.sm.controlManager.updateRemoteModeUI === 'function') {
-                    this.sm.controlManager.updateRemoteModeUI();
-                }
-            }
-        });
-        card.appendChild(remoteRow.element);
-
-        // 2. 快速跳转行 + 内联步进编辑抽屉
+        // 1. 快速跳转行 + 内联步进编辑抽屉
         const seekSubbox = this._buildSeekStepsSubbox();
         const seekRow = createToggleRow({
-            title: __('showSeekControlRow') || '快速跳转行',
+            title: __('showSeekControlRow') || '快捷跳转',
             checked: this.settings.showSeekControlRow !== false,
             onChange: (checked) => {
                 this.sm.updateSetting('showSeekControlRow', checked);
@@ -274,38 +254,69 @@ export class S2PlaybackSection {
         card.appendChild(seekRow.element);
         card.appendChild(seekSubbox);
 
-        // 3. 底部模式切换行 (不含进度条与高亮切片开关)
-        const modeRow = createToggleRow({
-            title: __('s2ModeRow') || '底部模式切换',
-            checked: this.settings.showModeControlRow !== false,
-            onChange: (checked) => {
-                this.sm.updateSetting('showModeControlRow', checked);
-                this.sm.updateControlRowsVisibility();
-            }
-        });
-        card.appendChild(modeRow.element);
-
-        // 4. 点选色彩行播放模式
-        const colorModeRow = createSegmentedRow({
-            title: __('s2CapsuleClickMode') || '点选胶囊模式',
-            options: [
-                { label: __('s2PreviewLabel') || '快览', value: 'preview' },
-                { label: __('s2ReviewLabel') || '回味', value: 'review' }
-            ],
-            value: this.settings.betaColorPlayMode || 'preview',
-            onChange: (val) => {
-                this.sm.updateSetting('betaColorPlayMode', val);
-                if (this.sm.controlManager && typeof this.sm.controlManager.updateBetaPlayModeUI === 'function') {
-                    this.sm.controlManager.updateBetaPlayModeUI();
-                }
-            }
-        });
-        card.appendChild(colorModeRow.element);
-
-        // 5. 快览 / 连播时长步进
+        // 2. 快览 / 连播时长步进
         card.appendChild(this._buildDurationStepperRow());
 
-        // 6. 按键音效
+        // 3. 离开暂停
+        const pauseBlurRow = createToggleRow({
+            title: __('pauseOnBlur') || '离开暂停',
+            checked: this.settings.pauseOnBlur !== false,
+            onChange: (checked) => {
+                this.sm.updateSetting('pauseOnBlur', checked);
+            }
+        });
+        card.appendChild(pauseBlurRow.element);
+
+        // 4. 默认静音 + 静音租约超时重置
+        const isDefaultMuted = this.settings.defaultMuted !== false;
+        const muteResetSubbox = document.createElement('div');
+        muteResetSubbox.className = `mp-s2-subbox ${isDefaultMuted ? '' : 'is-hidden'}`.trim();
+
+        const muteRow = document.createElement('div');
+        muteRow.className = 'mp-s2-row mp-s2-row--compact';
+
+        const muteTextCol = document.createElement('div');
+        muteTextCol.className = 'mp-s2-row-text';
+        const muteTitle = document.createElement('div');
+        muteTitle.className = 'mp-s2-row-title';
+        muteTitle.textContent = __('muteResetMinutes') || '静音租约';
+        muteTextCol.appendChild(muteTitle);
+
+        const muteBox = document.createElement('div');
+        muteBox.className = 'mp-s2-stepper-box';
+        const muteInput = document.createElement('input');
+        muteInput.type = 'number';
+        muteInput.min = '1';
+        muteInput.max = '120';
+        muteInput.className = 'mp-s2-num-input';
+        muteInput.value = String(this.settings.muteResetMinutes || 5);
+        muteInput.addEventListener('change', () => {
+            const val = Math.max(1, Math.min(120, parseInt(muteInput.value, 10) || 5));
+            muteInput.value = String(val);
+            this.sm.updateSetting('muteResetMinutes', val);
+            Toast(`${__('muteResetMinutes') || '静音租约'}已设为: ${val} ${__('minutesUnit') || '分钟'}`, 1500, 'info');
+        });
+        const muteUnit = document.createElement('span');
+        muteUnit.className = 'mp-s2-unit';
+        muteUnit.textContent = __('minutesUnit') || '分钟';
+        muteBox.appendChild(muteInput);
+        muteBox.appendChild(muteUnit);
+        muteRow.appendChild(muteTextCol);
+        muteRow.appendChild(muteBox);
+        muteResetSubbox.appendChild(muteRow);
+
+        const defaultMutedRow = createToggleRow({
+            title: __('defaultMuted') || '默认静音',
+            checked: isDefaultMuted,
+            onChange: (checked) => {
+                this.sm.updateSetting('defaultMuted', checked);
+                muteResetSubbox.classList.toggle('is-hidden', !checked);
+            }
+        });
+        card.appendChild(defaultMutedRow.element);
+        card.appendChild(muteResetSubbox);
+
+        // 5. 按键音效
         const soundRow = createToggleRow({
             title: __('buttonSound') || '按键音效',
             checked: this.settings.buttonSoundEnabled !== false,

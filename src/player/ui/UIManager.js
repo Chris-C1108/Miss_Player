@@ -1323,7 +1323,7 @@ export class UIManager {
         // 确保overlay已创建
         if (!this.overlay) return;
         
-        const nonControlOverlaySelector = '.tm-comments-panel, .tm-comment-submit-bar-wrapper, .tm-comment-backdrop, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-custom-modal-overlay, .tm-report-modal-dialog, .tm-settings-panel, .tm-inline-remark-popover, .jc-code-preview-popover, .tm-surface-event-sink';
+        const nonControlOverlaySelector = '.tm-comments-panel, .tm-comment-submit-bar-wrapper, .tm-comment-backdrop, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-custom-modal-overlay, .tm-report-modal-dialog, .tm-settings-panel, .mp-s2-panel, .tm-inline-remark-popover, .jc-code-preview-popover, .tm-surface-event-sink';
 
         // 使用事件委托处理鼠标移动和触摸移动，绑定到整个 playerContainer 以支持隐藏侧栏或竖屏模式下的控制恢复
         this._lastMouseX = null;
@@ -1385,7 +1385,7 @@ export class UIManager {
         }, { passive: false });
         
         // 使用事件委托处理mouseenter事件
-        delegateEvent(this.playerContainer, 'mouseenter', '.tm-control-panel, .tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
+        delegateEvent(this.playerContainer, 'mouseenter', '.tm-control-panel, .tm-control-buttons, .tm-settings-button, .tm-settings-v2-button, .tm-button-container, .tm-settings-panel, .mp-s2-panel', () => {
             this.isMouseOverControls = true;
             if (this.controlsHideTimerId) {
                 clearTimeout(this.controlsHideTimerId);
@@ -1394,7 +1394,7 @@ export class UIManager {
         });
         
         // 使用事件委托处理mouseleave事件
-        delegateEvent(this.playerContainer, 'mouseleave', '.tm-control-panel, .tm-control-buttons, .tm-settings-button, .tm-button-container, .tm-settings-panel', () => {
+        delegateEvent(this.playerContainer, 'mouseleave', '.tm-control-panel, .tm-control-buttons, .tm-settings-button, .tm-settings-v2-button, .tm-button-container, .tm-settings-panel, .mp-s2-panel', () => {
             this.isMouseOverControls = false;
             if (this.isLandscape) {
                 this.autoHideControls();
