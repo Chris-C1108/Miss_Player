@@ -345,6 +345,11 @@ export class CommentPanel {
 
         // 现代无框流式分段与高能过滤状态 (Direction B: Linear Minimalist Thread)
         this.activeCommentSource = localStorage.getItem('mp_active_comment_source') || 'jable';
+        this._userSelectedCommentSource = null;
+        this._isCardSwipeDragging = false;
+        this._isCardSwipeAnimating = false;
+        this._pendingRenderAfterSwipe = false;
+        this._cardSwipeAnimTimer = null;
         this.isHighlightFilterActive = false;
         this.commentNavBar = null;
         this.commentTabStrip = null;
@@ -1820,22 +1825,51 @@ export class CommentPanel {
         let isHorizontalDrag = false;
         let currentDeltaX = 0;
         let activeSection = null;
+        let prevSection = null;
+        let nextSection = null;
+        let stageWidth = 360;
+        let stageScrollTop = 0;
+        let dragPrepared = false;
+        let lastMoveX = 0;
+        let lastMoveTime = 0;
+        let velocityX = 0;
         let availableSources = [];
         let currentIndex = -1;
+        const cardGap = 12;
 
         this.commentsList.addEventListener('touchstart', (e) => {
             if (!e.touches || !e.touches[0]) return;
+            if (this._isCardSwipeAnimating) {
+                this._cleanupCardSwipeState();
+                this.syncActiveSourceView();
+                if (this._pendingRenderAfterSwipe) {
+                    this._pendingRenderAfterSwipe = false;
+                    this.renderCommentsList();
+                }
+            }
             dragStartX = e.touches[0].clientX;
             dragStartY = e.touches[0].clientY;
+            lastMoveX = dragStartX;
+            lastMoveTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+            velocityX = 0;
             isDragging = true;
             axisLocked = false;
             isHorizontalDrag = false;
+            dragPrepared = false;
             currentDeltaX = 0;
 
             availableSources = this.getEnabledCommentSources().map(s => s.key);
             currentIndex = availableSources.indexOf(this.activeCommentSource);
             activeSection = this.commentsList.querySelector('.tm-comment-section.is-active-source')
                 || this.commentsList.querySelector(`#tm-comment-section-${this.activeCommentSource}`);
+            prevSection = (currentIndex > 0)
+                ? this.commentsList.querySelector(`#tm-comment-section-${availableSources[currentIndex - 1]}`)
+                : null;
+            nextSection = (currentIndex >= 0 && currentIndex < availableSources.length - 1)
+                ? this.commentsList.querySelector(`#tm-comment-section-${availableSources[currentIndex + 1]}`)
+                : null;
+            stageWidth = this.commentsList.clientWidth || (typeof window !== 'undefined' ? window.innerWidth : 360) || 360;
+            stageScrollTop = this.commentsList.scrollTop || 0;
 
             if (activeSection) {
                 activeSection.style.transition = 'none';
@@ -1852,9 +1886,10 @@ export class CommentPanel {
             // 轴向锁定检测 (前 8px 判定方向)
             if (!axisLocked && Math.hypot(diffX, diffY) > 8) {
                 axisLocked = true;
-                // 若横向位移大于纵向位移的 1.2 倍，锁定为横向跟手切源
-                if (Math.abs(diffX) > Math.abs(diffY) * 1.2 && availableSources.length > 1) {
+                // 若横向位移大于纵向位移的 1.15 倍，锁定为横向跟手卡片滑动
+                if (Math.abs(diffX) > Math.abs(diffY) * 1.15 && availableSources.length > 1) {
                     isHorizontalDrag = true;
+                    this._isCardSwipeDragging = true;
                 } else {
                     isHorizontalDrag = false;
                 }
@@ -1866,78 +1901,203 @@ export class CommentPanel {
                     e.preventDefault();
                 }
 
+                if (!dragPrepared) {
+                    dragPrepared = true;
+                    this.commentsList.classList.add('is-swiping-cards');
+                    activeSection.classList.add('is-swipe-active');
+                    activeSection.style.transition = 'none';
+                    if (prevSection) {
+                        prevSection.classList.remove('is-hidden-source', 'is-collapsed');
+                        prevSection.classList.add('is-swipe-adjacent');
+                        prevSection.style.transition = 'none';
+                        prevSection.style.top = `${stageScrollTop}px`;
+                    }
+                    if (nextSection) {
+                        nextSection.classList.remove('is-hidden-source', 'is-collapsed');
+                        nextSection.classList.add('is-swipe-adjacent');
+                        nextSection.style.transition = 'none';
+                        nextSection.style.top = `${stageScrollTop}px`;
+                    }
+                }
+
+                const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+                const dt = Math.max(now - lastMoveTime, 1);
+                velocityX = (touch.clientX - lastMoveX) / dt;
+                lastMoveX = touch.clientX;
+                lastMoveTime = now;
+
                 // 边界弹性阻尼检测：最左端右拉或最右端左拉
                 let effectiveDiffX = diffX;
                 const isLeftBoundary = currentIndex <= 0 && diffX > 0;
                 const isRightBoundary = currentIndex >= availableSources.length - 1 && diffX < 0;
                 if (isLeftBoundary || isRightBoundary) {
                     effectiveDiffX = diffX * 0.28;
+                } else {
+                    effectiveDiffX = Math.max(-stageWidth, Math.min(stageWidth, diffX));
                 }
 
                 currentDeltaX = effectiveDiffX;
+                const step = stageWidth + cardGap;
                 activeSection.style.transform = `translate3d(${effectiveDiffX}px, 0, 0)`;
+                if (prevSection) {
+                    prevSection.style.transform = `translate3d(${-step + effectiveDiffX}px, 0, 0)`;
+                }
+                if (nextSection) {
+                    nextSection.style.transform = `translate3d(${step + effectiveDiffX}px, 0, 0)`;
+                }
             }
         }, { passive: false });
 
         const finishDrag = () => {
             if (!isDragging) return;
             isDragging = false;
+            this._isCardSwipeDragging = false;
 
-            if (isHorizontalDrag && activeSection && availableSources.length > 1) {
-                const threshold = Math.min(window.innerWidth * 0.18, 60);
-                const isLeftBoundary = currentIndex <= 0 && currentDeltaX > 0;
-                const isRightBoundary = currentIndex >= availableSources.length - 1 && currentDeltaX < 0;
+            const draggedActive = activeSection;
+            const draggedPrev = prevSection;
+            const draggedNext = nextSection;
+            const delta = currentDeltaX;
+            const flickVelocity = velocityX;
+            const step = stageWidth + cardGap;
 
-                if (Math.abs(currentDeltaX) > threshold && !isLeftBoundary && !isRightBoundary) {
-                    if (currentDeltaX < 0 && currentIndex < availableSources.length - 1) {
-                        // 左滑：滑向下一源 (直接切换，避免延时空白)
-                        const nextSource = availableSources[currentIndex + 1];
-                        activeSection.style.transform = '';
-                        activeSection.style.transition = '';
-                        this.setActiveSource(nextSource);
-                    } else if (currentDeltaX > 0 && currentIndex > 0) {
-                        // 右滑：滑向上一个源 (直接切换，避免延时空白)
-                        const prevSource = availableSources[currentIndex - 1];
-                        activeSection.style.transform = '';
-                        activeSection.style.transition = '';
-                        this.setActiveSource(prevSource);
-                    } else {
-                        // 边界弹性阻尼回弹归位
-                        activeSection.style.transition = 'transform 0.24s cubic-bezier(0.16, 1, 0.3, 1)';
-                        activeSection.style.transform = 'translate3d(0, 0, 0)';
-                        setTimeout(() => {
-                            if (activeSection) {
-                                activeSection.style.transform = '';
-                                activeSection.style.transition = '';
-                            }
-                        }, 240);
+            if (isHorizontalDrag && draggedActive && availableSources.length > 1) {
+                const distThreshold = Math.min(stageWidth * 0.22, 72);
+                const isQuickFlick = Math.abs(flickVelocity) > 0.32 && Math.abs(delta) > 20;
+                const isLeftBoundary = currentIndex <= 0 && delta > 0;
+                const isRightBoundary = currentIndex >= availableSources.length - 1 && delta < 0;
+                const shouldCommit = !isLeftBoundary && !isRightBoundary && (Math.abs(delta) > distThreshold || isQuickFlick);
+
+                if (shouldCommit && delta < 0 && currentIndex < availableSources.length - 1 && draggedNext) {
+                    // 左滑：双卡同步滑向下一源
+                    const targetSource = availableSources[currentIndex + 1];
+                    if (draggedPrev) {
+                        draggedPrev.classList.add('is-hidden-source');
+                        draggedPrev.classList.remove('is-swipe-adjacent');
+                        draggedPrev.style.transform = '';
+                        draggedPrev.style.transition = '';
+                        draggedPrev.style.top = '';
                     }
-                } else {
-                    // 未达阈值回弹归位
-                    activeSection.style.transition = 'transform 0.24s cubic-bezier(0.16, 1, 0.3, 1)';
-                    activeSection.style.transform = 'translate3d(0, 0, 0)';
-                    setTimeout(() => {
-                        if (activeSection) {
-                            activeSection.style.transform = '';
-                            activeSection.style.transition = '';
+                    this._isCardSwipeAnimating = true;
+                    this.activeCommentSource = targetSource;
+                    this._userSelectedCommentSource = targetSource;
+                    try {
+                        localStorage.setItem('mp_active_comment_source', targetSource);
+                    } catch (_) {}
+                    this.updateTabBar();
+
+                    const runCommitSlide = () => {
+                        if (!this._isCardSwipeAnimating) return;
+                        const slideTransition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)';
+                        draggedActive.style.transition = slideTransition;
+                        draggedNext.style.transition = slideTransition;
+                        draggedActive.style.transform = `translate3d(${-step}px, 0, 0)`;
+                        draggedNext.style.transform = 'translate3d(0, 0, 0)';
+                    };
+                    if (typeof requestAnimationFrame === 'function') {
+                        requestAnimationFrame(runCommitSlide);
+                    } else {
+                        runCommitSlide();
+                    }
+
+                    this._cardSwipeAnimTimer = setTimeout(() => {
+                        this._cleanupCardSwipeState();
+                        this.setActiveSource(targetSource, { animate: false });
+                        if (this._pendingRenderAfterSwipe) {
+                            this._pendingRenderAfterSwipe = false;
+                            this.renderCommentsList();
                         }
-                    }, 240);
+                    }, 300);
+                } else if (shouldCommit && delta > 0 && currentIndex > 0 && draggedPrev) {
+                    // 右滑：双卡同步滑向上一源
+                    const targetSource = availableSources[currentIndex - 1];
+                    if (draggedNext) {
+                        draggedNext.classList.add('is-hidden-source');
+                        draggedNext.classList.remove('is-swipe-adjacent');
+                        draggedNext.style.transform = '';
+                        draggedNext.style.transition = '';
+                        draggedNext.style.top = '';
+                    }
+                    this._isCardSwipeAnimating = true;
+                    this.activeCommentSource = targetSource;
+                    this._userSelectedCommentSource = targetSource;
+                    try {
+                        localStorage.setItem('mp_active_comment_source', targetSource);
+                    } catch (_) {}
+                    this.updateTabBar();
+
+                    const runCommitSlide = () => {
+                        if (!this._isCardSwipeAnimating) return;
+                        const slideTransition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)';
+                        draggedActive.style.transition = slideTransition;
+                        draggedPrev.style.transition = slideTransition;
+                        draggedActive.style.transform = `translate3d(${step}px, 0, 0)`;
+                        draggedPrev.style.transform = 'translate3d(0, 0, 0)';
+                    };
+                    if (typeof requestAnimationFrame === 'function') {
+                        requestAnimationFrame(runCommitSlide);
+                    } else {
+                        runCommitSlide();
+                    }
+
+                    this._cardSwipeAnimTimer = setTimeout(() => {
+                        this._cleanupCardSwipeState();
+                        this.setActiveSource(targetSource, { animate: false });
+                        if (this._pendingRenderAfterSwipe) {
+                            this._pendingRenderAfterSwipe = false;
+                            this.renderCommentsList();
+                        }
+                    }, 300);
+                } else {
+                    // 未达阈值或边界弹性阻尼回弹归位
+                    this._isCardSwipeAnimating = true;
+                    const runResetSlide = () => {
+                        if (!this._isCardSwipeAnimating) return;
+                        const resetTransition = 'transform 0.24s cubic-bezier(0.22, 1, 0.36, 1)';
+                        draggedActive.style.transition = resetTransition;
+                        draggedActive.style.transform = 'translate3d(0, 0, 0)';
+                        if (draggedPrev) {
+                            draggedPrev.style.transition = resetTransition;
+                            draggedPrev.style.transform = `translate3d(${-step}px, 0, 0)`;
+                        }
+                        if (draggedNext) {
+                            draggedNext.style.transition = resetTransition;
+                            draggedNext.style.transform = `translate3d(${step}px, 0, 0)`;
+                        }
+                    };
+                    if (typeof requestAnimationFrame === 'function') {
+                        requestAnimationFrame(runResetSlide);
+                    } else {
+                        runResetSlide();
+                    }
+                    this._cardSwipeAnimTimer = setTimeout(() => {
+                        this._cleanupCardSwipeState();
+                        this.syncActiveSourceView();
+                        if (this._pendingRenderAfterSwipe) {
+                            this._pendingRenderAfterSwipe = false;
+                            this.renderCommentsList();
+                        }
+                    }, 250);
                 }
-            } else if (activeSection) {
-                activeSection.style.transform = '';
-                activeSection.style.transition = '';
+            } else {
+                this._cleanupCardSwipeState();
+                this.syncActiveSourceView();
             }
 
             isHorizontalDrag = false;
             axisLocked = false;
+            dragPrepared = false;
             currentDeltaX = 0;
+            velocityX = 0;
             activeSection = null;
+            prevSection = null;
+            nextSection = null;
         };
 
         this.commentsList.addEventListener('touchend', finishDrag, { passive: true });
         this.commentsList.addEventListener('touchcancel', finishDrag, { passive: true });
 
         this.commentsList.addEventListener('touchmove', (e) => {
+            if (this._isCardSwipeDragging || this._isCardSwipeAnimating) return;
             const endY = e.touches[0].clientY;
             const diffY = startY - endY;
 
@@ -1947,7 +2107,7 @@ export class CommentPanel {
 
             // 向上滑动触底加载更多 (阈值设置为 500px 缓冲区，分源触发)
             if (diffY > 15 && isAtBottom) {
-                const activeSection = this.commentsList.querySelector('.tm-comment-section:not(.is-collapsed)');
+                const activeSection = this.commentsList.querySelector('.tm-comment-section.is-active-source:not(.is-collapsed)');
                 if (activeSection) {
                     if (activeSection.id === 'tm-comment-section-jable') {
                         this.triggerLoadMoreJable();
@@ -2471,8 +2631,12 @@ export class CommentPanel {
                 if (id) existingIdSet.add(id);
             });
 
-            // 检查新增的评论卡片
-            const newComments = site.filteredComments.filter(c => !existingIdSet.has(c.id));
+            // 检查新增的评论卡片（若高能现场过滤激活，新加载评论同步仅保留含时间戳的高能评论）
+            const isHighlightOnly = Boolean(this.isHighlightFilterActive);
+            const allNewComments = site.filteredComments.filter(c => !existingIdSet.has(c.id));
+            const newComments = isHighlightOnly
+                ? allNewComments.filter(c => Array.isArray(c.timestamps) && c.timestamps.length > 0)
+                : allNewComments;
             if (existingCards.length > 0 && newComments.length > 0) {
                 // 清理旧的 end-marker 与 loader
                 const endMarker = bodyEl.querySelector('.tm-comment-end-marker');
@@ -2495,7 +2659,7 @@ export class CommentPanel {
                     loader.className = 'tm-comment-bottom-loader tm-comment-loader-graphic';
                     loader.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
                     bodyEl.appendChild(loader);
-                } else if (!site.hasMore) {
+                } else if (!site.hasMore && !isHighlightOnly) {
                     const endDiv = document.createElement('div');
                     endDiv.className = 'tm-comment-end-marker';
                     endDiv.textContent = '-end-';
@@ -2506,6 +2670,9 @@ export class CommentPanel {
                 newComments.forEach(c => this.renderedCommentIds.add(c.id));
                 this.updateTabBar(); // 增量追加卡片后同步更新高能现场数字与计数
                 setTimeout(() => this.updateFavoriteBadges(), 50);
+                if (isHighlightOnly && site.hasMore && !site.loading) {
+                    setTimeout(() => this.checkViewportFill(), 50);
+                }
                 return true;
             } else if (existingCards.length > 0 && newComments.length === 0) {
                 // 内容无新卡片，仅更新加载器与 end-marker 状态
@@ -2513,11 +2680,15 @@ export class CommentPanel {
                 if (!site.loading && existingBottomLoader) {
                     existingBottomLoader.remove();
                 }
-                if (!site.hasMore && !bodyEl.querySelector('.tm-comment-end-marker')) {
+                if (!site.hasMore && !isHighlightOnly && !bodyEl.querySelector('.tm-comment-end-marker')) {
                     const endDiv = document.createElement('div');
                     endDiv.className = 'tm-comment-end-marker';
                     endDiv.textContent = '-end-';
                     bodyEl.appendChild(endDiv);
+                }
+                this.updateTabBar();
+                if (isHighlightOnly && site.hasMore && allNewComments.length > 0 && !site.loading) {
+                    setTimeout(() => this.checkViewportFill(), 50);
                 }
                 return true;
             }
@@ -2593,6 +2764,10 @@ export class CommentPanel {
     }
 
     renderCommentsList() {
+        if (this._isCardSwipeAnimating) {
+            this._pendingRenderAfterSwipe = true;
+            return;
+        }
         if (this.loadingElement) this.loadingElement.classList.add('is-hidden');
         if (this.errorElement) this.errorElement.classList.add('is-hidden');
         if (this.commentsList) this.commentsList.classList.remove('is-hidden');
@@ -2766,13 +2941,34 @@ export class CommentPanel {
         }
     }
 
+    _cleanupCardSwipeState() {
+        if (this._cardSwipeAnimTimer) {
+            clearTimeout(this._cardSwipeAnimTimer);
+            this._cardSwipeAnimTimer = null;
+        }
+        this._isCardSwipeAnimating = false;
+        this._isCardSwipeDragging = false;
+        if (!this.commentsList) return;
+        this.commentsList.classList.remove('is-swiping-cards');
+        const sections = this.commentsList.querySelectorAll('.tm-comment-section');
+        sections.forEach(sec => {
+            sec.classList.remove('is-swipe-active', 'is-swipe-adjacent');
+            sec.style.transform = '';
+            sec.style.transition = '';
+            sec.style.top = '';
+        });
+    }
+
     /**
      * 切换当前激活的数据源标签 (Direction B: Linear Minimalist)
      * @param {string} siteKey 'jable' | 'javdb' | 'javlib'
+     * @param {Object} [options] { animate?: boolean }
      */
-    setActiveSource(siteKey) {
+    setActiveSource(siteKey, options = {}) {
         if (!siteKey || !['jable', 'javdb', 'javlib'].includes(siteKey)) return;
+        const prevSource = this.activeCommentSource;
         this.activeCommentSource = siteKey;
+        this._userSelectedCommentSource = siteKey;
         try {
             localStorage.setItem('mp_active_comment_source', siteKey);
         } catch (_) {}
@@ -2781,19 +2977,83 @@ export class CommentPanel {
             try { navigator.vibrate(10); } catch (_) {}
         }
 
+        const shouldAnimate = options.animate !== false
+            && prevSource !== siteKey
+            && this.commentsList
+            && typeof requestAnimationFrame === 'function';
+
+        if (shouldAnimate) {
+            const enabledKeys = this.getEnabledCommentSources().map(s => s.key);
+            const oldIndex = enabledKeys.indexOf(prevSource);
+            const newIndex = enabledKeys.indexOf(siteKey);
+            const outgoing = this.commentsList.querySelector(`#tm-comment-section-${prevSource}`);
+            const incoming = this.commentsList.querySelector(`#tm-comment-section-${siteKey}`);
+
+            if (outgoing && incoming && oldIndex !== -1 && newIndex !== -1 && outgoing !== incoming) {
+                this._cleanupCardSwipeState();
+                this._isCardSwipeAnimating = true;
+                const direction = newIndex > oldIndex ? 1 : -1;
+                const stageWidth = this.commentsList.clientWidth || (typeof window !== 'undefined' ? window.innerWidth : 360) || 360;
+                const step = stageWidth + 12;
+                const scrollTopOffset = this.commentsList.scrollTop || 0;
+
+                this.commentsList.classList.add('is-swiping-cards');
+                outgoing.classList.add('is-active-source', 'is-swipe-active');
+                outgoing.classList.remove('is-hidden-source');
+                outgoing.style.transition = 'none';
+                outgoing.style.transform = 'translate3d(0, 0, 0)';
+
+                incoming.classList.remove('is-hidden-source', 'is-collapsed');
+                incoming.classList.add('is-swipe-adjacent');
+                incoming.style.top = `${scrollTopOffset}px`;
+                incoming.style.transition = 'none';
+                incoming.style.transform = `translate3d(${direction * step}px, 0, 0)`;
+
+                this.updateTabBar();
+
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        if (!this._isCardSwipeAnimating) return;
+                        const slideTransition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)';
+                        outgoing.style.transition = slideTransition;
+                        incoming.style.transition = slideTransition;
+                        outgoing.style.transform = `translate3d(${-direction * step}px, 0, 0)`;
+                        incoming.style.transform = 'translate3d(0, 0, 0)';
+                    });
+                });
+
+                this._cardSwipeAnimTimer = setTimeout(() => {
+                    this._cleanupCardSwipeState();
+                    if (this.commentsList) this.commentsList.scrollTop = 0;
+                    const targetSite = this.sites[siteKey];
+                    if (targetSite && targetSite.status === 'idle') {
+                        this.loadSiteComments(siteKey, 1);
+                    }
+                    this.syncActiveSourceView();
+                    this.updateTabBar();
+                    if (this._pendingRenderAfterSwipe) {
+                        this._pendingRenderAfterSwipe = false;
+                        this.renderCommentsList();
+                    }
+                    setTimeout(() => this.checkViewportFill(), 50);
+                }, 310);
+                return;
+            }
+        }
+
         // 切换源时复位滚动条至顶部，避免旧源的滚动距离导致新源内容滚出视口
         if (this.commentsList) {
             this.commentsList.scrollTop = 0;
         }
 
-        this.syncActiveSourceView();
-        this.updateTabBar();
-
-        // 关键自愈：如果目标源尚未发起加载或处于空闲态，立即触发其首次采集
+        // 关键自愈：如果目标源尚未发起加载或处于空闲态，先触发首次采集再同步视图，避免被兜底跳回默认源
         const targetSite = this.sites[siteKey];
         if (targetSite && targetSite.status === 'idle') {
             this.loadSiteComments(siteKey, 1);
         }
+
+        this.syncActiveSourceView();
+        this.updateTabBar();
 
         // 切换后若视口未填满，检查自动触发分页加载
         setTimeout(() => this.checkViewportFill(), 50);
@@ -2838,10 +3098,11 @@ export class CommentPanel {
             this.activeCommentSource = 'jable';
         }
 
-        // 如果当前激活源完全无内容但有其他源有内容，且当前源不是 loading 态，自动友好引导至首个有内容的源
+        // 如果当前激活源完全无内容但有其他源有内容，且非用户主动选中的源，自动友好引导至首个有内容的源
         const curSite = this.sites[this.activeCommentSource];
         const curHasContent = curSite && (curSite.status === 'loading' || (curSite.filteredComments && curSite.filteredComments.length > 0));
-        if (!curHasContent) {
+        const isExplicitUserChoice = this._userSelectedCommentSource === this.activeCommentSource;
+        if (!curHasContent && !isExplicitUserChoice) {
             const alternativeSource = validSources.find(k => {
                 const s = this.sites[k];
                 return s && ((s.filteredComments && s.filteredComments.length > 0) || s.status === 'loading');
@@ -3264,6 +3525,7 @@ export class CommentPanel {
     }
 
     cleanup() {
+        this._cleanupCardSwipeState();
         if (this.commentsPanelResizeObserver && this.commentsPanel) {
             this.commentsPanelResizeObserver.unobserve(this.commentsPanel);
             this.commentsPanelResizeObserver = null;

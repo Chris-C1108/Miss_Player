@@ -154,8 +154,34 @@ test('4. CommentPanel 5 项极简新交互与跟手滑动状态机断言', () =>
     // 4.2 设置源联动
     assert.ok(panelContent.includes('getEnabledCommentSources'), '必须实现 getEnabledCommentSources 联动设置');
 
-    // 4.3 移动端跟手滑动位移
+    // 4.3 移动端跟手滑动位移与双卡并排滑轨
     assert.ok(panelContent.includes('translate3d('), '必须使用 translate3d 实现真跟手滑动位移');
     assert.ok(panelContent.includes('dragStartX'), '必须维护拖拽起始坐标');
     assert.ok(panelContent.includes('isHorizontalDrag'), '必须包含轴向锁定判定');
+    assert.ok(panelContent.includes('is-swiping-cards'), '横向滑动时必须在列表容器启用 .is-swiping-cards');
+    assert.ok(panelContent.includes('is-swipe-adjacent'), '横向滑动时必须将邻近站点卡片同步显示为 .is-swipe-adjacent');
+    assert.ok(panelContent.includes('_cleanupCardSwipeState'), '必须实现 _cleanupCardSwipeState 清理滑动动效状态');
+
+    // 4.4 高能现场激活时新加载增量评论自动过滤
+    const patchIdx = panelContent.indexOf('patchSectionContent(siteKey) {');
+    const patchEndIdx = panelContent.indexOf('renderSectionHtml(siteKey)', patchIdx);
+    const patchSlice = panelContent.slice(patchIdx, patchEndIdx);
+    assert.ok(patchSlice.includes('this.isHighlightFilterActive'), 'patchSectionContent 必须校验 isHighlightFilterActive');
+    assert.ok(
+        patchSlice.includes('allNewComments.filter(c => Array.isArray(c.timestamps) && c.timestamps.length > 0)'),
+        '高能现场激活时，增量追加的新评论必须仅保留包含时间戳的高能评论'
+    );
+    assert.ok(
+        patchSlice.includes('checkViewportFill()'),
+        '高能现场过滤导致新页无高能评论或数量较少时，应继续触发 checkViewportFill() 补齐视口'
+    );
+});
+
+test('5. 多站点评论卡片滑动 CSS 双卡定位契约', () => {
+    const cssPath = path.resolve(rootDir, 'src/player/ui/styles/02_components/_comments_sections.css');
+    const cssContent = fs.readFileSync(cssPath, 'utf-8');
+
+    assert.ok(cssContent.includes('.tm-comments-panel-list.is-swiping-cards'), 'CSS 必须包含 .tm-comments-panel-list.is-swiping-cards');
+    assert.ok(cssContent.includes('.tm-comment-section.is-swipe-adjacent'), 'CSS 必须包含 .tm-comment-section.is-swipe-adjacent');
+    assert.ok(cssContent.includes('will-change: transform;'), '卡片滑动层必须声明 will-change: transform 保障 GPU 合成流畅度');
 });
