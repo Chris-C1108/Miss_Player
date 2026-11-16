@@ -318,16 +318,21 @@ export function createAccordionCard({
         left.appendChild(iconSpan);
     }
 
+    const heading = document.createElement('div');
+    heading.className = 'mp-s2-accordion-heading';
+
     const titleSpan = document.createElement('span');
     titleSpan.className = 'mp-s2-accordion-title';
     titleSpan.textContent = title;
-    left.appendChild(titleSpan);
+    heading.appendChild(titleSpan);
+
+    const pill = statusText ? createPill(statusText, statusTone) : null;
+    if (pill) heading.appendChild(pill);
+
+    left.appendChild(heading);
 
     const right = document.createElement('div');
     right.className = 'mp-s2-accordion-right';
-
-    const pill = statusText ? createPill(statusText, statusTone) : null;
-    if (pill) right.appendChild(pill);
 
     const chevron = document.createElement('span');
     chevron.className = 'mp-s2-chevron';

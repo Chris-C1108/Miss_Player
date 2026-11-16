@@ -579,12 +579,14 @@ const i18nCode = fs.readFileSync('src/constants/i18n.js', 'utf8');
 // 20.1 验证版本信息展开时即触发静默更新检查，且安装入口作为唯一呼吸发光提示
 assert.ok(
     s2AdvancedCodeV20.includes('this.sm.checkUpdate(false, false)') &&
+    s2AdvancedCodeV20.includes('-> v${latestVersion}') &&
+    s2AdvancedCodeV20.includes("hasUpdate ? 'warn' : 'muted'") &&
     settingsManagerCodeV20.includes('async checkUpdate(isManual = false, bypassCache = false) {') &&
     s2CssCodeV20.includes('.mp-s2-btn.is-update-available') &&
     s2CssCodeV20.includes('@keyframes mp-s2-update-breathe') &&
     !s2CssCodeV20.includes('.has-update-badge') &&
     !settingsManagerCodeV20.includes('has-update-badge'),
-    '版本信息展开时应静默检查更新，且发现新版本时仅允许更新/安装按钮呈现呼吸发光提示，禁止多处重复徽标/版本显示'
+    '版本信息展开时应静默检查更新，版本号位置在有更新时显示 v当前 -> v新版 且仅由更新/安装按钮呼吸发光引导'
 );
 
 // 20.2 验证外链跳转与更新通道：正式版跳转 SleazyFork，测试版跳转 GitHub

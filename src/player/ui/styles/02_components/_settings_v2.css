@@ -634,13 +634,26 @@
     flex-shrink: 0;
 }
 
+.mp-s2-accordion-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .mp-s2-accordion-title {
     font-size: 13.5px;
     font-weight: 500;
     color: #ffffff;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+}
+
+.mp-s2-accordion-heading .mp-s2-pill {
+    max-width: 100%;
+    font-variant-numeric: tabular-nums;
 }
 
 .mp-s2-accordion-right {

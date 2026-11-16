@@ -260,14 +260,19 @@ export class S2AdvancedSection {
         const currentVersion = getCurrentVersion();
         const updateInfo = this.sm?._latestUpdateInfo;
         const hasUpdate = Boolean(updateInfo?.hasUpdate);
+        const latestVersion = updateInfo?.latestVersion || updateInfo?.meta?.version || '';
         const isChecking = Boolean(this.sm?._isCheckingUpdate);
         const isExpanded = hasUpdate || (this.sm ? this.sm.isSectionExpanded('s2_about', false) : false);
+
+        const statusText = hasUpdate && latestVersion
+            ? `v${currentVersion} -> v${latestVersion}`
+            : `v${currentVersion}`;
 
         this.aboutAccordion = createAccordionCard({
             iconSvg: ICON_INFO_CIRCLE,
             title: __('s2About') || '版本与更新',
-            statusText: `v${currentVersion}`,
-            statusTone: 'muted',
+            statusText,
+            statusTone: hasUpdate ? 'warn' : 'muted',
             expanded: isExpanded,
             onToggle: (open) => {
                 if (this.sm) {
