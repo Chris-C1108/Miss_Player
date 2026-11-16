@@ -6,7 +6,6 @@ import { Toast } from '../../../../utils/index.js';
 import { CrazyScraper } from '../../../comments/CrazyScraper.js';
 import { CommentCacheManager } from "../../../comments/CommentCacheManager.js";
 import { DebugLogPanel } from '../../../ui/DebugLogPanel.js';
-import { ViewportDebugHUD } from '../../../ui/ViewportDebugHUD.js';
 import { PeachSection } from './PeachSection.js';
 
 export class BetaSection {
@@ -15,7 +14,24 @@ export class BetaSection {
         this.settings = settingsManager.settings;
         this.element = document.createElement('div');
         this.element.className = 'tm-settings-group';
+        this._crazyToggle = null;
         this._render();
+    }
+
+    refreshCrazyAvailability() {
+        if (!this._crazyToggle) return;
+        const canEnable = CrazyScraper.canEnable();
+        const desc = canEnable
+            ? (__('crazyScrapeDesc') || '浏览列表时在后台自动抓取关联影片评论')
+            : (__('crazyScrapeDisabledDesc') || '需开启「实验功能 → 社区共享」或配置 WebDAV 后方可启用');
+        this._crazyToggle.setDisabled(!canEnable, desc);
+        if (!canEnable) {
+            this._crazyToggle.setChecked(false);
+            if (this.settings.crazyScrapeMode) {
+                this.sm.updateSetting('crazyScrapeMode', false);
+            }
+            CrazyScraper.stop();
+        }
     }
 
     _render() {
@@ -60,7 +76,7 @@ export class BetaSection {
         betaSubWrap.appendChild(firstCapToggle.getElement());
 
         const heatmapToggle = new ToggleRow({
-            title: __('betaHeatmap') || '播放热度',
+            title: __('betaHeatmap') || '显示播放热度',
             subtext: __('betaHeatmapDesc') || '进度条显示观看波形',
             checked: Boolean(this.settings.betaHeatmap),
             onChange: (checked) => {
@@ -92,9 +108,9 @@ export class BetaSection {
 
         const updateDataModeDesc = (val) => {
             if (val === 'shared') {
-                dataModeDesc.textContent = __('dataModeSharedDesc') || '呈现全网观众高能波峰与热评，你的足迹亦将匿名共享。';
+                dataModeDesc.textContent = __('dataModeSharedDesc') || '共享全网观看热度波形，并同步支持社区评论采集共享与解析错误上报。';
             } else {
-                dataModeDesc.textContent = __('dataModeLocalDesc') || '断开公共网络通信，所有足迹与标记仅留存于本机与私有云盘。';
+                dataModeDesc.textContent = __('dataModeLocalDesc') || '断开公共网络通信，足迹、评论缓存及标记仅留存于本机与私有 WebDAV。';
             }
         };
         updateDataModeDesc(currentDataMode);
@@ -112,6 +128,7 @@ export class BetaSection {
                 if (hm) {
                     hm.setCrowdEnabled(Boolean(this.settings.betaMode) && val === 'shared');
                 }
+                this.refreshCrazyAvailability();
                 Toast(val === 'shared' ? '已切换至社区共享模式' : '已切换至本地私有模式', 1200, 'info');
             }
         });
@@ -135,30 +152,34 @@ export class BetaSection {
         });
         betaSubWrap.appendChild(hidePrivateDataToggle.getElement());
 
-        const undoToggle = new ToggleRow({
-            title: __('betaCapsuleUndo') || '防误删除',
-            subtext: __('betaCapsuleUndoDesc') || '删除保留 60 秒撤销',
-            checked: this.settings.betaCapsuleUndo !== false,
-            onChange: (checked) => {
-                this.sm.updateSetting('betaCapsuleUndo', checked);
-            }
-        });
-        betaSubWrap.appendChild(undoToggle.getElement());
-
-        const deepLinkToggle = new ToggleRow({
-            title: __('betaDeepLinking') || '链接还原',
-            subtext: __('betaDeepLinkingDesc') || '打开分享链接载入高光',
-            checked: this.settings.betaDeepLinking !== false,
-            onChange: (checked) => {
-                this.sm.updateSetting('betaDeepLinking', checked);
-            }
-        });
-        betaSubWrap.appendChild(deepLinkToggle.getElement());
-
         const peachSection = new PeachSection(this.sm);
         betaSubWrap.appendChild(peachSection.getElement());
 
         card.appendChild(betaSubWrap);
+
+        // 疯狂采集模式：前置条件为「数据模式-社区共享」或已配置 WebDAV
+        const canEnableCrazy = CrazyScraper.canEnable();
+        this._crazyToggle = new ToggleRow({
+            title: __('crazyScrapeTitle') || '疯狂采集模式',
+            subtext: canEnableCrazy
+                ? (__('crazyScrapeDesc') || '浏览列表时在后台自动抓取关联影片评论')
+                : (__('crazyScrapeDisabledDesc') || '需开启「实验功能 → 社区共享」或配置 WebDAV 后方可启用'),
+            checked: canEnableCrazy && Boolean(this.settings.crazyScrapeMode),
+            disabled: !canEnableCrazy,
+            onChange: (checked) => {
+                if (!CrazyScraper.canEnable()) {
+                    this.refreshCrazyAvailability();
+                    return;
+                }
+                this.sm.updateSetting('crazyScrapeMode', checked);
+                if (checked) {
+                    CrazyScraper.start(this.sm.controlManager?.commentPanel?.videoCode || '');
+                } else {
+                    CrazyScraper.stop();
+                }
+            }
+        });
+        card.appendChild(this._crazyToggle.getElement());
 
         const debugSubWrap = document.createElement('div');
         debugSubWrap.className = 'tm-settings-subpanel-wrap';
@@ -175,47 +196,9 @@ export class BetaSection {
                     this.sm.controlManager.commentPanel.updateDebugMode(checked);
                 }
                 debugSubWrap.style.display = checked ? 'block' : 'none';
-                if (!checked) {
-                    CrazyScraper.stop();
-                } else if (this.settings.crazyScrapeMode) {
-                    CrazyScraper.start(this.sm.controlManager?.commentPanel?.videoCode || '');
-                }
             }
         });
         card.appendChild(debugToggle.getElement());
-
-        const crazyToggle = new ToggleRow({
-            title: __('betaPreloadComments') || '预载评论',
-            subtext: __('betaPreloadCommentsDesc') || '提前抓取关联影片评论',
-            checked: Boolean(this.settings.crazyScrapeMode),
-            onChange: (checked) => {
-                this.sm.updateSetting('crazyScrapeMode', checked);
-                if (checked) {
-                    CrazyScraper.start(this.sm.controlManager?.commentPanel?.videoCode || '');
-                } else {
-                    CrazyScraper.stop();
-                }
-            }
-        });
-        debugSubWrap.appendChild(crazyToggle.getElement());
-
-        const viewportHudToggle = new ToggleRow({
-            title: '视口探针',
-            subtext: '屏幕与触摸实时调试 HUD',
-            checked: Boolean(this.settings.viewportDebugEnabled),
-            onChange: (checked) => {
-                this.sm.updateSetting('viewportDebugEnabled', checked);
-                if (checked) {
-                    const uiManager = this.sm.uiManager || this.sm.playerCore?.uiManager;
-                    if (uiManager && uiManager.playerContainer && uiManager.shadowRoot) {
-                        ViewportDebugHUD.init(uiManager.playerContainer, uiManager.shadowRoot);
-                    }
-                } else {
-                    ViewportDebugHUD.destroy();
-                }
-            }
-        });
-        debugSubWrap.appendChild(viewportHudToggle.getElement());
 
         const clearRow = document.createElement('div');
         clearRow.className = 'tm-apple-row';

@@ -14,6 +14,7 @@ import { telemetry } from '../../telemetry/index.js';
 import { CommentComposer } from './CommentComposer.js';
 import { CommentDebugCollector } from '../comments/CommentDebugCollector.js';
 import { CommentCacheManager } from '../comments/CommentCacheManager.js';
+import { CrazyScraper } from '../comments/CrazyScraper.js';
 import { CommentCodePreview } from '../comments/CommentCodePreview.js';
 import { showCommentReportModal } from '../comments/CommentReportModal.js';
 import { renderCommentCardHtml, renderCommentSectionHtml, renderLoginBadgeHtml as renderLoginBadgeHtmlHelper } from '../comments/CommentCardRenderer.js';
@@ -1381,7 +1382,7 @@ export class CommentPanel {
             CommentCacheManager.saveSiteCache(this.videoCode, siteKey, site);
 
             // 疯狂采集模式：普通评论采集也自动采集更多页，直到结束 (全量采集)
-            const isCrazy = Boolean(getValue('crazyScrapeMode', false));
+            const isCrazy = CrazyScraper.isEnabled();
             if (isCrazy && site.hasMore && page < 20) {
                 setTimeout(() => {
                     if (this.videoCode === this.currentVideoCode || !this.currentVideoCode) {

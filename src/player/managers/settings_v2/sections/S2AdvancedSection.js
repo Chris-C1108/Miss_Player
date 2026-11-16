@@ -6,7 +6,6 @@ import {
     bindTwoStepConfirm
 } from '../components/S2Primitives.js';
 import { DebugLogPanel } from '../../../ui/DebugLogPanel.js';
-import { ViewportDebugHUD } from '../../../ui/ViewportDebugHUD.js';
 import { CrazyScraper } from '../../../comments/CrazyScraper.js';
 import { CommentCacheManager } from '../../../comments/CommentCacheManager.js';
 import {
@@ -33,6 +32,7 @@ export class S2AdvancedSection {
         this.settings = settingsManager.settings;
         this.element = createGroup(__('s2AdvancedGroup') || '高级与关于');
         this.aboutAccordion = null;
+        this._crazyRow = null;
         this._render();
     }
 
@@ -42,6 +42,22 @@ export class S2AdvancedSection {
 
     refresh() {
         this._render();
+    }
+
+    refreshCrazyAvailability() {
+        if (!this._crazyRow) return;
+        const canEnable = CrazyScraper.canEnable();
+        const desc = canEnable
+            ? (__('crazyScrapeDesc') || '浏览列表时在后台自动抓取关联影片评论')
+            : (__('crazyScrapeDisabledDesc') || '需开启「实验功能 → 社区共享」或配置 WebDAV 后方可启用');
+        this._crazyRow.setDisabled(!canEnable, desc);
+        if (!canEnable) {
+            this._crazyRow.setChecked(false);
+            if (this.settings.crazyScrapeMode) {
+                this.sm.updateSetting('crazyScrapeMode', false);
+            }
+            CrazyScraper.stop();
+        }
     }
 
     _buildBetaAccordion() {
@@ -69,10 +85,6 @@ export class S2AdvancedSection {
                         subWrap.classList.toggle('is-hidden', !checked);
                         setStatus(checked ? (__('s2Enabled') || '已开启') : (__('s2Disabled') || '已关闭'), checked ? 'info' : 'muted');
 
-                        const shMgr = this.sm.controlManager?.singleHandManager || this.sm.playerCore?.singleHandManager;
-                        if (shMgr && typeof shMgr.updateState === 'function') {
-                            shMgr.updateState();
-                        }
                         const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
                         if (hm) {
                             if (typeof hm.setEnabled === 'function') {
@@ -82,25 +94,12 @@ export class S2AdvancedSection {
                                 hm.setCrowdEnabled(Boolean(checked && this.settings.dataMode === 'shared'));
                             }
                         }
+                        this.refreshCrazyAvailability();
                     }
                 });
                 body.appendChild(masterRow.element);
 
-                // 1. 竖屏单手模式
-                const singleHandRow = createToggleRow({
-                    title: __('betaSingleHandMode') || '竖屏单手模式',
-                    checked: this.settings.betaSingleHandMode !== false,
-                    onChange: (checked) => {
-                        this.sm.updateSetting('betaSingleHandMode', checked);
-                        const shMgr = this.sm.controlManager?.singleHandManager || this.sm.playerCore?.singleHandManager;
-                        if (shMgr && typeof shMgr.updateState === 'function') {
-                            shMgr.updateState();
-                        }
-                    }
-                });
-                subWrap.appendChild(singleHandRow.element);
-
-                // 2. 开播定位首个片段
+                // 1. 开播定位首个片段
                 const firstCapRow = createToggleRow({
                     title: __('betaFirstCapsulePlay') || '开播定位首个高光',
                     checked: Boolean(this.settings.betaFirstCapsulePlay),
@@ -110,33 +109,12 @@ export class S2AdvancedSection {
                 });
                 subWrap.appendChild(firstCapRow.element);
 
-                // 3. 防误删除撤销
-                const undoRow = createToggleRow({
-                    title: __('betaCapsuleUndo') || '片段删除撤销',
-                    subtext: __('betaCapsuleUndoDesc') || '删除后保留 60 秒可撤销',
-                    checked: this.settings.betaCapsuleUndo !== false,
-                    onChange: (checked) => {
-                        this.sm.updateSetting('betaCapsuleUndo', checked);
-                    }
-                });
-                subWrap.appendChild(undoRow.element);
-
-                // 4. 深链分享还原
-                const deepLinkRow = createToggleRow({
-                    title: __('betaDeepLinking') || '高光链接还原',
-                    checked: this.settings.betaDeepLinking !== false,
-                    onChange: (checked) => {
-                        this.sm.updateSetting('betaDeepLinking', checked);
-                    }
-                });
-                subWrap.appendChild(deepLinkRow.element);
-
-                // 5. 播放热度曲线 + 数据模式子区块
+                // 2. 显示播放热度 + 仅观察全网波形子开关
                 const hmSubWrap = document.createElement('div');
                 hmSubWrap.className = `mp-s2-conditional ${this.settings.betaHeatmap ? '' : 'is-hidden'}`.trim();
 
                 const heatmapRow = createToggleRow({
-                    title: __('betaHeatmap') || '播放热度曲线',
+                    title: __('betaHeatmap') || '显示播放热度',
                     checked: Boolean(this.settings.betaHeatmap),
                     onChange: (checked) => {
                         this.sm.updateSetting('betaHeatmap', checked);
@@ -148,23 +126,6 @@ export class S2AdvancedSection {
                     }
                 });
                 subWrap.appendChild(heatmapRow.element);
-
-                const dataModeRow = createSegmentedRow({
-                    title: __('dataModeTitle') || '热度数据模式',
-                    options: [
-                        { label: __('dataModeLocal') || '本地私有', value: 'local' },
-                        { label: __('dataModeShared') || '社区共享', value: 'shared' }
-                    ],
-                    value: this.settings.dataMode === 'shared' ? 'shared' : 'local',
-                    onChange: (val) => {
-                        this.sm.updateSetting('dataMode', val);
-                        const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
-                        if (hm && typeof hm.setCrowdEnabled === 'function') {
-                            hm.setCrowdEnabled(Boolean(this.settings.betaMode) && val === 'shared');
-                        }
-                    }
-                });
-                hmSubWrap.appendChild(dataModeRow.element);
 
                 const hidePrivateRow = createToggleRow({
                     title: __('hidePrivateData') || '仅观察全网波形',
@@ -178,8 +139,38 @@ export class S2AdvancedSection {
                     }
                 });
                 hmSubWrap.appendChild(hidePrivateRow.element);
-
                 subWrap.appendChild(hmSubWrap);
+
+                // 3. 数据模式（独立于播放热度开关：控制热度波形、评论采集共享与解析错误上报）
+                const initDataMode = this.settings.dataMode === 'shared' ? 'shared' : 'local';
+                const dataModeRow = createSegmentedRow({
+                    title: __('dataMode') || '数据模式',
+                    subtext: initDataMode === 'shared'
+                        ? (__('dataModeSharedDesc') || '共享全网观看热度波形，并同步支持社区评论采集共享与解析错误上报。')
+                        : (__('dataModeLocalDesc') || '断开公共网络通信，足迹、评论缓存及标记仅留存于本机与私有 WebDAV。'),
+                    options: [
+                        { label: __('dataModeLocal') || '本地私有', value: 'local' },
+                        { label: __('dataModeShared') || '社区共享', value: 'shared' }
+                    ],
+                    value: initDataMode,
+                    stacked: true,
+                    onChange: (val) => {
+                        this.sm.updateSetting('dataMode', val);
+                        const subEl = dataModeRow.element.querySelector('.mp-s2-row-sub');
+                        if (subEl) {
+                            subEl.textContent = val === 'shared'
+                                ? (__('dataModeSharedDesc') || '共享全网观看热度波形，并同步支持社区评论采集共享与解析错误上报。')
+                                : (__('dataModeLocalDesc') || '断开公共网络通信，足迹、评论缓存及标记仅留存于本机与私有 WebDAV。');
+                        }
+                        const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
+                        if (hm && typeof hm.setCrowdEnabled === 'function') {
+                            hm.setCrowdEnabled(Boolean(this.settings.betaMode) && val === 'shared');
+                        }
+                        this.refreshCrazyAvailability();
+                    }
+                });
+                subWrap.appendChild(dataModeRow.element);
+
                 body.appendChild(subWrap);
             }
         }).element;
@@ -209,20 +200,24 @@ export class S2AdvancedSection {
                         if (commentPanel && typeof commentPanel.updateDebugMode === 'function') {
                             commentPanel.updateDebugMode(checked);
                         }
-                        if (!checked) {
-                            CrazyScraper.stop();
-                        } else if (this.settings.crazyScrapeMode) {
-                            CrazyScraper.start(commentPanel?.videoCode || '');
-                        }
                         setStatus(checked ? (__('s2DebugActive') || '调试开启') : (__('s2NormalState') || '正常'), checked ? 'warn' : 'muted');
                     }
                 });
                 body.appendChild(debugRow.element);
 
+                const canEnableCrazy = CrazyScraper.canEnable();
                 const preloadRow = createToggleRow({
-                    title: __('crazyScrapeTitle') || '后台静默预载评论',
-                    checked: Boolean(this.settings.crazyScrapeMode),
+                    title: __('crazyScrapeTitle') || '疯狂采集模式',
+                    subtext: canEnableCrazy
+                        ? (__('crazyScrapeDesc') || '浏览列表时在后台自动抓取关联影片评论')
+                        : (__('crazyScrapeDisabledDesc') || '需开启「实验功能 → 社区共享」或配置 WebDAV 后方可启用'),
+                    checked: canEnableCrazy && Boolean(this.settings.crazyScrapeMode),
+                    disabled: !canEnableCrazy,
                     onChange: (checked) => {
+                        if (!CrazyScraper.canEnable()) {
+                            this.refreshCrazyAvailability();
+                            return;
+                        }
                         this.sm.updateSetting('crazyScrapeMode', checked);
                         if (checked) {
                             CrazyScraper.start(this.sm.controlManager?.commentPanel?.videoCode || '');
@@ -231,22 +226,8 @@ export class S2AdvancedSection {
                         }
                     }
                 });
+                this._crazyRow = preloadRow;
                 body.appendChild(preloadRow.element);
-
-                const hudRow = createToggleRow({
-                    title: '视口物理探针 (HUD)',
-                    checked: Boolean(this.settings.viewportDebugEnabled),
-                    onChange: (checked) => {
-                        this.sm.updateSetting('viewportDebugEnabled', checked);
-                        const uiMgr = this.sm.uiManager || this.sm.playerCore?.uiManager;
-                        if (checked) {
-                            ViewportDebugHUD.init(uiMgr?.playerContainer, uiMgr?.shadowRoot);
-                        } else {
-                            ViewportDebugHUD.destroy();
-                        }
-                    }
-                });
-                body.appendChild(hudRow.element);
 
                 const actionForm = document.createElement('div');
                 actionForm.className = 'mp-s2-form';
@@ -330,17 +311,7 @@ export class S2AdvancedSection {
                 });
                 body.appendChild(channelRow.element);
 
-                // 2. 自动检查更新
-                const autoCheckRow = createToggleRow({
-                    title: __('autoCheckUpdateTitle') || '启动时自动检查更新',
-                    checked: this.settings.autoCheckUpdate !== false,
-                    onChange: (checked) => {
-                        this.sm.updateSetting('autoCheckUpdate', checked);
-                    }
-                });
-                body.appendChild(autoCheckRow.element);
-
-                // 3. 版本信息与操作按钮区
+                // 2. 版本信息与操作按钮区
                 const form = document.createElement('div');
                 form.className = 'mp-s2-form';
 

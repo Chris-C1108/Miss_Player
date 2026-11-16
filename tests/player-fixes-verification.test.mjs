@@ -835,11 +835,11 @@ assert.ok(
 );
 assert.ok(
     s2CommentsCode.includes('showCommentsSection') &&
-    s2CommentsCode.includes('debugFilterHasNumbers') &&
+    !s2CommentsCode.includes('debugFilterHasNumbers') &&
     s2CommentsCode.includes('updateCommentSources') &&
-    s2CommentsCode.includes('updateFilterHasNumbers') &&
+    !s2CommentsCode.includes('updateFilterHasNumbers') &&
     !s2CommentsCode.includes('Array.isArray(this.settings.enabledCommentSources) ?'),
-    'S2CommentsSection 必须使用对象映射 enabledCommentSources 并完整保留显示评论与只看时间开关'
+    'S2CommentsSection 必须使用对象映射 enabledCommentSources、保留显示评论开关并移除设置内只看时间开关'
 );
 assert.ok(
     s2ConnectionsCode.includes('config.user') &&
@@ -849,12 +849,11 @@ assert.ok(
     'S2ConnectionsSection WebDAV 读写字段必须与 SyncManager 对齐为 config.user / config.pass'
 );
 assert.ok(
-    s2AdvancedCode.includes('shMgr.updateState') &&
     s2AdvancedCode.includes('hm.setEnabled') &&
     s2AdvancedCode.includes('hm.setCrowdEnabled') &&
     s2AdvancedCode.includes('updateDebugMode') &&
-    s2AdvancedCode.includes('CrazyScraper'),
-    'S2AdvancedSection 必须调用真实的 updateState / setEnabled / setCrowdEnabled / updateDebugMode / CrazyScraper 接口'
+    s2AdvancedCode.includes('CrazyScraper.canEnable'),
+    'S2AdvancedSection 必须调用真实的 setEnabled / setCrowdEnabled / updateDebugMode / CrazyScraper.canEnable 接口'
 );
 assert.ok(
     eventMgrCodeV25.includes('.mp-s2-panel') &&
@@ -869,6 +868,76 @@ assert.ok(
 
 console.log('✅ 25. 新版 Settings v2 统一布局、并存入口、1:1 真实契约与可滚动守卫验证通过');
 
-console.log('\n🎉 全部 25 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// =========================================================================
+// 26. 设置体系精简、功能转正默认开启与疯狂采集门控对齐验证
+// =========================================================================
+const singleHandMgrCode = fs.readFileSync('src/player/managers/SingleHandManager.js', 'utf8');
+const crazyScraperCode = fs.readFileSync('src/player/comments/CrazyScraper.js', 'utf8');
+const legacyBetaCode = fs.readFileSync('src/player/managers/settings/sections/BetaSection.js', 'utf8');
+const legacyPlaybackCode = fs.readFileSync('src/player/managers/settings/sections/PlaybackSection.js', 'utf8');
+const legacyCommentsCode = fs.readFileSync('src/player/managers/settings/sections/CommentsSection.js', 'utf8');
+const legacyAboutCode = fs.readFileSync('src/player/managers/settings/sections/AboutSection.js', 'utf8');
+const legacySmCode = fs.readFileSync('src/player/managers/SettingsManager.js', 'utf8');
+
+assert.ok(
+    singleHandMgrCode.includes("getValue('singleHandCollapsed', false)") &&
+    !singleHandMgrCode.includes('betaSingleHandMode'),
+    'SingleHandManager 应已转正默认开启右手模式（singleHandCollapsed 默认 false）且不再校验 betaSingleHandMode'
+);
+
+for (const [label, src] of [
+    ['S2PlaybackSection', s2PlaybackCode],
+    ['S2CommentsSection', s2CommentsCode],
+    ['S2AdvancedSection', s2AdvancedCode],
+    ['PlaybackSection', legacyPlaybackCode],
+    ['CommentsSection', legacyCommentsCode],
+    ['BetaSection', legacyBetaCode],
+    ['AboutSection', legacyAboutCode]
+]) {
+    for (const removedKey of [
+        'showSeekControlRow',
+        'autoCheckUpdate',
+        'betaSingleHandMode',
+        'betaCapsuleUndo',
+        'betaDeepLinking',
+        'debugFilterHasNumbers',
+        'ViewportDebugHUD'
+    ]) {
+        assert.ok(
+            !src.includes(removedKey),
+            `${label} 不应再包含已转正/移除的设置项 ${removedKey}`
+        );
+    }
+}
+
+assert.ok(
+    !legacySmCode.includes('ViewportDebugHUD') &&
+    legacySmCode.includes('CrazyScraper.isEnabled()') &&
+    !legacySmCode.includes('if (this.settings.autoCheckUpdate !== false)'),
+    'SettingsManager 应移除 ViewportDebugHUD、自动查更条件门控并使用 CrazyScraper.isEnabled()'
+);
+
+assert.ok(
+    crazyScraperCode.includes('static canEnable()') &&
+    !crazyScraperCode.includes('const isDebug = Boolean(settings.debugMode)'),
+    'CrazyScraper.isEnabled 不应耦合 debugMode，且应提供 canEnable() 门控'
+);
+assert.ok(
+    s2PlaybackCode.includes('mp-s2-inline-stepper') &&
+    s2PlaybackCode.includes("__('pauseOnBlurDesc')") &&
+    !s2PlaybackCode.includes('muteResetSubbox'),
+    'S2PlaybackSection 应内联 muteResetMinutes 到 defaultMuted 行并为 pauseOnBlur 提供说明文案'
+);
+assert.ok(
+    s2AdvancedCode.includes('refreshCrazyAvailability') &&
+    s2AdvancedCode.includes('subWrap.appendChild(dataModeRow.element)') &&
+    legacyBetaCode.includes('refreshCrazyAvailability') &&
+    legacyBetaCode.includes('betaSubWrap.appendChild(dataModeRow)'),
+    '新旧设置面板均应将 dataMode 独立于热度开关并实时同步疯狂采集可用状态'
+);
+
+console.log('✅ 26. 设置体系精简、功能转正默认开启与疯狂采集门控对齐验证通过');
+
+console.log('\n🎉 全部 26 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 

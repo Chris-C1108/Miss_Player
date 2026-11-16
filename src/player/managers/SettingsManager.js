@@ -208,47 +208,45 @@ export class SettingsManager {
         // 加载保存的设置
         this.loadSettings();
         DebugLogPanel.updateDebugState(this.settings.debugMode);
-        if (this.settings.debugMode && this.settings.crazyScrapeMode) {
+        if (CrazyScraper.isEnabled()) {
             setTimeout(() => CrazyScraper.start(this.controlManager?.commentPanel?.videoCode || ''), 2500);
         }
-        
+
         // 初始应用设置到控制组件
         this.updateControlRowsVisibility();
 
-        // 自动静默检查更新 (后台闲时执行，杜绝卡顿)
-        if (this.settings.autoCheckUpdate !== false) {
-            const runSilentCheck = async () => {
-                try {
-                    const channel = this.settings.updateChannel || 'stable';
-                    const res = await SleazyForkService.checkUpdate(false, channel);
-                    if (res && res.success) {
-                        this._latestUpdateInfo = res;
-                        const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
-                        const btnV2 = this.uiElements?.settingsV2Btn || this.uiManager?.settingsV2Btn;
-                        [btn, btnV2].forEach((b) => {
-                            if (!b) return;
-                            b.classList.toggle('has-update-badge', Boolean(res.hasUpdate));
-                            if (res.hasUpdate) {
-                                b.setAttribute('title', `${__('updateFound') || '发现新版本'}: v${res.latestVersion}`);
-                            } else if (b === btn) {
-                                b.removeAttribute('title');
-                            }
-                        });
-                        if (this.settingsV2Manager) {
-                            this.settingsV2Manager.refreshAdvancedSection();
+        // 自动静默检查更新 (默认始终开启，后台闲时执行，杜绝卡顿)
+        const runSilentCheck = async () => {
+            try {
+                const channel = this.settings.updateChannel || 'stable';
+                const res = await SleazyForkService.checkUpdate(false, channel);
+                if (res && res.success) {
+                    this._latestUpdateInfo = res;
+                    const btn = this.uiElements?.settingsBtn || this.uiManager?.settingsBtn;
+                    const btnV2 = this.uiElements?.settingsV2Btn || this.uiManager?.settingsV2Btn;
+                    [btn, btnV2].forEach((b) => {
+                        if (!b) return;
+                        b.classList.toggle('has-update-badge', Boolean(res.hasUpdate));
+                        if (res.hasUpdate) {
+                            b.setAttribute('title', `${__('updateFound') || '发现新版本'}: v${res.latestVersion}`);
+                        } else if (b === btn) {
+                            b.removeAttribute('title');
                         }
-                        if (res.hasUpdate && this.settingsPanel && this.settingsPanel.children.length) {
-                            this.createSettingsPanel();
-                        }
+                    });
+                    if (this.settingsV2Manager) {
+                        this.settingsV2Manager.refreshAdvancedSection();
                     }
-                } catch (_) {}
-            };
+                    if (res.hasUpdate && this.settingsPanel && this.settingsPanel.children.length) {
+                        this.createSettingsPanel();
+                    }
+                }
+            } catch (_) {}
+        };
 
-            if (typeof window.requestIdleCallback === 'function') {
-                window.requestIdleCallback(() => setTimeout(runSilentCheck, 2500));
-            } else {
-                setTimeout(runSilentCheck, 3000);
-            }
+        if (typeof window.requestIdleCallback === 'function') {
+            window.requestIdleCallback(() => setTimeout(runSilentCheck, 2500));
+        } else {
+            setTimeout(runSilentCheck, 3000);
         }
 
         return this;
@@ -394,7 +392,10 @@ export class SettingsManager {
         });
 
         // 分段 3: 实验特性与高级排错 (挂载至专属插槽 slotBeta)
-        this._scheduler.register("beta", () => new BetaSection(this).getElement(), {
+        this._scheduler.register("beta", () => {
+            this.betaSection = new BetaSection(this);
+            return this.betaSection.getElement();
+        }, {
             defer: "idle",
             targetSlot: slotBeta
         });
@@ -541,6 +542,7 @@ export class SettingsManager {
         urlInput.addEventListener('change', () => {
             config.url = urlInput.value.trim();
             SyncManager.saveWebDavConfig(config);
+            this.refreshCrazyScrapeAvailability();
         });
         urlRow.appendChild(urlLabel);
         urlRow.appendChild(urlInput);
@@ -559,6 +561,7 @@ export class SettingsManager {
         lanUrlInput.addEventListener('change', () => {
             config.lanUrl = lanUrlInput.value.trim();
             SyncManager.saveWebDavConfig(config);
+            this.refreshCrazyScrapeAvailability();
         });
         lanUrlRow.appendChild(lanUrlLabel);
         lanUrlRow.appendChild(lanUrlInput);
@@ -769,6 +772,7 @@ export class SettingsManager {
             config.pass = passInput.value;
             config.path = pathInput.value.trim() || '/MissPlayer/';
             SyncManager.saveWebDavConfig(config);
+            this.refreshCrazyScrapeAvailability();
             return config;
         };
 
@@ -1196,19 +1200,6 @@ export class SettingsManager {
 
         card.appendChild(checkRow);
 
-        // 6. 自动检查更新开关行
-        const autoCheckOption = this._createToggleOption(
-            __('autoCheckUpdate') || '自动检查更新',
-            'autoCheckUpdate',
-            this.settings.autoCheckUpdate !== false,
-            (checked) => {
-                this.updateSetting('autoCheckUpdate', checked);
-            },
-            null,
-            __('autoCheckUpdateDesc') || '启动时定期静默检查并在设置按钮提示新版本'
-        );
-        card.appendChild(autoCheckOption);
-
         return card;
     }
 
@@ -1502,7 +1493,7 @@ export class SettingsManager {
         }
         
         if (seekControlRow) {
-            seekControlRow.classList.toggle('is-hidden', !this.settings.showSeekControlRow);
+            seekControlRow.classList.remove('is-hidden');
         }
 
         if (loopControlRow) {
@@ -1540,5 +1531,17 @@ export class SettingsManager {
                 this.controlManager.volumeController.onSettingsChanged();
             }
         }
+
+        if (key === 'betaMode' || key === 'dataMode') {
+            this.refreshCrazyScrapeAvailability();
+        }
+    }
+
+    /**
+     * 刷新疯狂采集模式前置条件可用状态（需开启实验功能社区共享 或 配置 WebDAV）
+     */
+    refreshCrazyScrapeAvailability() {
+        this.betaSection?.refreshCrazyAvailability?.();
+        this.settingsV2Manager?.refreshCrazyAvailability?.();
     }
 }

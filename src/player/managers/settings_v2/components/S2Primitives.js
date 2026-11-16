@@ -42,11 +42,16 @@ export function createToggleRow({
     title = '',
     subtext = '',
     checked = false,
+    disabled = false,
+    rightAddon = null,
     onChange = null,
     className = ''
 } = {}) {
+    const defaultSubtext = subtext || '';
+    let isDisabled = Boolean(disabled);
+
     const row = document.createElement('div');
-    row.className = `mp-s2-row mp-s2-row--clickable ${className}`.trim();
+    row.className = `mp-s2-row mp-s2-row--clickable ${isDisabled ? 'is-disabled' : ''} ${className}`.trim();
 
     const textCol = document.createElement('div');
     textCol.className = 'mp-s2-row-text';
@@ -56,18 +61,18 @@ export function createToggleRow({
     titleEl.textContent = title;
     textCol.appendChild(titleEl);
 
-    if (subtext) {
-        const subEl = document.createElement('div');
-        subEl.className = 'mp-s2-row-sub';
-        subEl.textContent = subtext;
-        textCol.appendChild(subEl);
-    }
+    const subEl = document.createElement('div');
+    subEl.className = `mp-s2-row-sub ${defaultSubtext ? '' : 'is-hidden'}`.trim();
+    subEl.textContent = defaultSubtext;
+    textCol.appendChild(subEl);
 
     const switchBtn = document.createElement('button');
     switchBtn.type = 'button';
     switchBtn.className = `mp-s2-switch ${checked ? 'is-checked' : ''}`.trim();
     switchBtn.setAttribute('role', 'switch');
     switchBtn.setAttribute('aria-checked', String(Boolean(checked)));
+    switchBtn.disabled = isDisabled;
+    if (isDisabled) switchBtn.setAttribute('aria-disabled', 'true');
     switchBtn.innerHTML = '<span class="mp-s2-switch-thumb"></span>';
 
     let current = Boolean(checked);
@@ -82,8 +87,23 @@ export function createToggleRow({
         }
     };
 
+    const setDisabled = (nextDisabled, nextSubtext = null) => {
+        isDisabled = Boolean(nextDisabled);
+        row.classList.toggle('is-disabled', isDisabled);
+        switchBtn.disabled = isDisabled;
+        if (isDisabled) {
+            switchBtn.setAttribute('aria-disabled', 'true');
+        } else {
+            switchBtn.removeAttribute('aria-disabled');
+        }
+        const resolvedSub = nextSubtext !== null ? nextSubtext : defaultSubtext;
+        subEl.textContent = resolvedSub || '';
+        subEl.classList.toggle('is-hidden', !resolvedSub);
+    };
+
     const handleToggle = (e) => {
         e.stopPropagation();
+        if (isDisabled) return;
         setChecked(!current, true);
     };
 
@@ -94,12 +114,22 @@ export function createToggleRow({
     });
 
     row.appendChild(textCol);
-    row.appendChild(switchBtn);
+    if (rightAddon) {
+        const rightWrap = document.createElement('div');
+        rightWrap.className = 'mp-s2-row-right';
+        rightWrap.appendChild(rightAddon);
+        rightWrap.appendChild(switchBtn);
+        row.appendChild(rightWrap);
+    } else {
+        row.appendChild(switchBtn);
+    }
 
     return {
         element: row,
         setChecked,
-        getChecked: () => current
+        setDisabled,
+        getChecked: () => current,
+        isDisabled: () => isDisabled
     };
 }
 

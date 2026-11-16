@@ -115,20 +115,6 @@ export class S2CommentsSection {
         sourcesRow.appendChild(chipsWrap);
         subWrap.appendChild(sourcesRow);
 
-        // 3. 只看时间评论
-        const filterNumRow = createToggleRow({
-            title: __('filterTimeOnly') || '只看时间',
-            checked: Boolean(this.settings.debugFilterHasNumbers),
-            onChange: (checked) => {
-                this.sm.updateSetting('debugFilterHasNumbers', checked);
-                const commentPanel = this.sm.controlManager?.commentPanel;
-                if (commentPanel && typeof commentPanel.updateFilterHasNumbers === 'function') {
-                    commentPanel.updateFilterHasNumbers(checked);
-                }
-            }
-        });
-        subWrap.appendChild(filterNumRow.element);
-
         card.appendChild(subWrap);
         this.element.appendChild(card);
     }

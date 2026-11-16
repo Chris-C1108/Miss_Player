@@ -96,19 +96,6 @@ export class CommentsSection {
         sourcesRow.appendChild(badgesContainer);
         subpanelWrapper.appendChild(sourcesRow);
 
-        const numFilterToggle = new ToggleRow({
-            title: __('filterTimeOnly') || '只看时间',
-            subtext: __('filterTimeOnlyDesc') || '仅显示含时间标记的评论',
-            checked: Boolean(this.settings.debugFilterHasNumbers),
-            onChange: (checked) => {
-                this.sm.updateSetting('debugFilterHasNumbers', checked);
-                if (this.sm.controlManager?.commentPanel) {
-                    this.sm.controlManager.commentPanel.updateDebugFilterHasNumbers(checked);
-                }
-            }
-        });
-        subpanelWrapper.appendChild(numFilterToggle.getElement());
-
         card.appendChild(subpanelWrapper);
         this.element.appendChild(card.getElement());
     }

@@ -30,7 +30,7 @@ export class S2PlaybackSection {
 
     _buildSeekStepsSubbox() {
         const subbox = document.createElement('div');
-        subbox.className = `mp-s2-subbox ${this.settings.showSeekControlRow !== false ? '' : 'is-hidden'}`.trim();
+        subbox.className = 'mp-s2-subbox';
 
         const chipsWrap = document.createElement('div');
         chipsWrap.className = 'mp-s2-chips';
@@ -242,17 +242,8 @@ export class S2PlaybackSection {
 
         // 1. 快速跳转行 + 内联步进编辑抽屉
         const seekSubbox = this._buildSeekStepsSubbox();
-        const seekRow = createToggleRow({
-            title: __('showSeekControlRow') || '快捷跳转',
-            checked: this.settings.showSeekControlRow !== false,
-            onChange: (checked) => {
-                this.sm.updateSetting('showSeekControlRow', checked);
-                seekSubbox.classList.toggle('is-hidden', !checked);
-                this.sm.updateControlRowsVisibility();
-            }
-        });
-        card.appendChild(seekRow.element);
-        card.appendChild(seekSubbox);
+        // 1. 快速跳转步进（常驻展开）
+        card.appendChild(this._buildSeekStepsSubbox());
 
         // 2. 快览 / 连播时长步进
         card.appendChild(this._buildDurationStepperRow());
@@ -260,6 +251,7 @@ export class S2PlaybackSection {
         // 3. 离开暂停
         const pauseBlurRow = createToggleRow({
             title: __('pauseOnBlur') || '离开暂停',
+            subtext: __('pauseOnBlurDesc') || '切页面或后台时暂停',
             checked: this.settings.pauseOnBlur !== false,
             onChange: (checked) => {
                 this.sm.updateSetting('pauseOnBlur', checked);
@@ -267,29 +259,17 @@ export class S2PlaybackSection {
         });
         card.appendChild(pauseBlurRow.element);
 
-        // 4. 默认静音 + 静音租约超时重置
+        // 4. 默认静音 + 内联静音租约超时时长
         const isDefaultMuted = this.settings.defaultMuted !== false;
-        const muteResetSubbox = document.createElement('div');
-        muteResetSubbox.className = `mp-s2-subbox ${isDefaultMuted ? '' : 'is-hidden'}`.trim();
-
-        const muteRow = document.createElement('div');
-        muteRow.className = 'mp-s2-row mp-s2-row--compact';
-
-        const muteTextCol = document.createElement('div');
-        muteTextCol.className = 'mp-s2-row-text';
-        const muteTitle = document.createElement('div');
-        muteTitle.className = 'mp-s2-row-title';
-        muteTitle.textContent = __('muteResetMinutes') || '静音租约';
-        muteTextCol.appendChild(muteTitle);
-
         const muteBox = document.createElement('div');
-        muteBox.className = 'mp-s2-stepper-box';
+        muteBox.className = `mp-s2-stepper-box mp-s2-inline-stepper ${isDefaultMuted ? '' : 'is-hidden'}`.trim();
         const muteInput = document.createElement('input');
         muteInput.type = 'number';
         muteInput.min = '1';
         muteInput.max = '120';
         muteInput.className = 'mp-s2-num-input';
         muteInput.value = String(this.settings.muteResetMinutes || 5);
+        muteInput.addEventListener('click', (e) => e.stopPropagation());
         muteInput.addEventListener('change', () => {
             const val = Math.max(1, Math.min(120, parseInt(muteInput.value, 10) || 5));
             muteInput.value = String(val);
@@ -301,20 +281,18 @@ export class S2PlaybackSection {
         muteUnit.textContent = __('minutesUnit') || '分钟';
         muteBox.appendChild(muteInput);
         muteBox.appendChild(muteUnit);
-        muteRow.appendChild(muteTextCol);
-        muteRow.appendChild(muteBox);
-        muteResetSubbox.appendChild(muteRow);
 
         const defaultMutedRow = createToggleRow({
             title: __('defaultMuted') || '默认静音',
+            subtext: __('defaultMutedDesc') || '进入时静音，离开超时恢复静音',
             checked: isDefaultMuted,
+            rightAddon: muteBox,
             onChange: (checked) => {
                 this.sm.updateSetting('defaultMuted', checked);
-                muteResetSubbox.classList.toggle('is-hidden', !checked);
+                muteBox.classList.toggle('is-hidden', !checked);
             }
         });
         card.appendChild(defaultMutedRow.element);
-        card.appendChild(muteResetSubbox);
 
         // 5. 按键音效
         const soundRow = createToggleRow({

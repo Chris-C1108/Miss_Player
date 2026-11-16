@@ -117,6 +117,12 @@ export class SettingsV2Manager {
         }
     }
 
+    refreshCrazyAvailability() {
+        if (this._sections?.advancedSec) {
+            this._sections.advancedSec.refreshCrazyAvailability();
+        }
+    }
+
     open() {
         if (!this.panel) return;
         this.sm.syncState();

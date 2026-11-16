@@ -31,7 +31,7 @@ export class CloudSyncSection {
         const titleDiv = document.createElement('div');
         titleDiv.className = 'tm-apple-accordion-title';
         titleDiv.innerHTML = `
-            <span>☁️ ${__('webdavTitle') || '云端同步'}</span>
+            <span>☁️ ${__('webdavTitle') || 'Webdav 备份与同步'}</span>
         `;
 
         const metaDiv = document.createElement('div');

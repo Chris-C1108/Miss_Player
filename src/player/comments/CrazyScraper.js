@@ -33,13 +33,21 @@ export class CrazyScraper {
     static _avcodeDurations = new Map();
 
     /**
+     * 判断当前是否满足开启疯狂采集模式的前置条件（开启实验社区共享 或 已配置有效 WebDAV）
+     * @returns {boolean}
+     */
+    static canEnable() {
+        const isShared = Boolean(getValue('betaMode', false)) && getValue('dataMode', 'local') === 'shared';
+        return isShared || CommentDebugCollector.isEnabled();
+    }
+
+    /**
      * 判断当前是否允许运行疯狂采集
      * @returns {boolean}
      */
     static isEnabled() {
-        const isDebug = Boolean(getValue('debugMode', false));
         const isCrazy = Boolean(getValue('crazyScrapeMode', false));
-        return isDebug && isCrazy && CommentDebugCollector.isEnabled();
+        return isCrazy && this.canEnable();
     }
 
     /**

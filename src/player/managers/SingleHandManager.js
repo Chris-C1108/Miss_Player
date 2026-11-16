@@ -9,8 +9,8 @@ import { Toast, playTapSound, getValue, setValue } from '../../utils/index.js';
  * 1. 负责大屏竖屏下控制面板的单手收拢、左右手镜像与全宽还原
  * 2. 侧边辅助立柱 (Utility Gutter)：上部“还原”按键 + 下部“切换左右”超大触控靶心按钮
  * 3. 动态高度同步 (ResizeObserver) 确保立柱与主控制面板严丝合缝
- * 4. 手势交互：在 tm-seek-control-row 区域向左或向右滑动开启左手/右手模式
- * 5. 遵从 Beta 实验室开关治理，Default OFF，安全无副作用
+ * 4. 手势交互：在 tm-seek-control-row 区域向左或向右滑动开启/切换单手模式
+ * 5. 正式默认功能：大屏竖屏默认开启右手单手模式，点击还原按钮或再次手势切换
  */
 export class SingleHandManager {
     constructor(playerCore, controlManager, uiManager = null) {
@@ -19,8 +19,8 @@ export class SingleHandManager {
         this.uiManager = uiManager;
         this.playerState = playerCore?.options?.playerState;
 
-        // 运行时状态 (默认处于全宽模式，通过在控制面板任意区域左滑/右滑即可随时随地触发单手模式)
-        this.isCollapsed = getValue('singleHandCollapsed', true);
+        // 运行时状态 (竖屏默认开启单手模式，可通过还原按键切换回全宽模式，或在控制栏左右滑动切换)
+        this.isCollapsed = getValue('singleHandCollapsed', false);
         this.gutterElement = null;
         this.btnRestore = null;
         this.btnSwitchHand = null;
@@ -50,11 +50,6 @@ export class SingleHandManager {
 
     setUiManager(uiManager) {
         this.uiManager = uiManager;
-    }
-
-    get isBetaEnabled() {
-        const state = this.playerState || this.playerCore?.options?.playerState;
-        return Boolean(state?.settings?.betaMode && state?.settings?.betaSingleHandMode);
     }
 
     get handPosition() {

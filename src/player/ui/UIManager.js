@@ -8,7 +8,6 @@ function getCachedShadowStyleSheet() {
     cachedShadowStyleSheet = sheet;
     return cachedShadowStyleSheet;
 }
-import { ViewportDebugHUD } from './ViewportDebugHUD.js';
 import { ViewportKeyboardAdapter, mountRootHostToTopLayer } from './ViewportKeyboardAdapter.js';
 /**
  * UI管理器类 - 负责创建和管理播放器UI元素
@@ -1309,9 +1308,6 @@ export class UIManager {
             document.documentElement?.style.removeProperty('--keyboard-height');
             document.documentElement?.style.removeProperty('--visual-viewport-height');
         }
-
-        // 清理视口调试探针
-        ViewportDebugHUD.destroy();
     }
     
     /**
@@ -1544,12 +1540,11 @@ export class UIManager {
         // 统一尊重用户设置状态，彻底消灭伪动态行内样式覆盖
         const settings = this.playerCore?.options?.playerState?.settings;
         const showProgressBar = settings?.showProgressBar ?? true;
-        const showSeekControlRow = settings?.showSeekControlRow ?? true;
         const showLoopControlRow = settings?.showLoopControlRow ?? true;
         const showPlaybackControlRow = settings?.showPlaybackControlRow ?? true;
 
         if (progressRow) progressRow.classList.toggle('is-hidden', !showProgressBar);
-        if (seekControlRow) seekControlRow.classList.toggle('is-hidden', !showSeekControlRow);
+        if (seekControlRow) seekControlRow.classList.remove('is-hidden');
         if (loopControlRow) loopControlRow.classList.toggle('is-hidden', !showLoopControlRow);
         if (playbackControlRow) playbackControlRow.classList.toggle('is-hidden', !showPlaybackControlRow);
 
@@ -1883,11 +1878,6 @@ export class UIManager {
         
         // 立即更新容器最小高度
         this.updateContainerMinHeight();
-        
-        // 挂载移动端视口物理探针 HUD (默认受控于设置菜单 Debug 区域开关，默认关闭)
-        if (this.playerCore?.options?.playerState?.settings?.viewportDebugEnabled) {
-            ViewportDebugHUD.init(this.playerContainer, this.shadowRoot);
-        }
 
         // 在DOM组装完成后设置交互监听器
         this.setupInteractionListeners();

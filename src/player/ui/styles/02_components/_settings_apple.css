@@ -203,6 +203,15 @@
     background: rgba(255, 255, 255, 0.03);
 }
 
+.tm-apple-row.is-disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
+
+.tm-apple-row.is-disabled .tm-apple-switch {
+    pointer-events: none;
+}
+
 /* 文本与标签包装器 */
 
 .tm-apple-row-left {

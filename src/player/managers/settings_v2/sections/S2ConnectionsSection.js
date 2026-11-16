@@ -67,7 +67,7 @@ export class S2ConnectionsSection {
 
         this.cloudAccordion = createAccordionCard({
             iconSvg: ICON_CLOUD_SYNC,
-            title: __('webdavTitle') || '云端同步 (WebDAV)',
+            title: __('webdavTitle') || 'Webdav 备份与同步',
             statusText: initialText,
             statusTone: initialTone,
             expanded: isExpanded,
@@ -101,6 +101,7 @@ export class S2ConnectionsSection {
                     onChange: (val) => {
                         config.url = val.trim();
                         SyncManager.saveWebDavConfig(config);
+                        this.sm?.refreshCrazyScrapeAvailability?.();
                     }
                 });
 
@@ -111,6 +112,7 @@ export class S2ConnectionsSection {
                     onChange: (val) => {
                         config.lanUrl = val.trim();
                         SyncManager.saveWebDavConfig(config);
+                        this.sm?.refreshCrazyScrapeAvailability?.();
                     }
                 });
 
@@ -167,6 +169,7 @@ export class S2ConnectionsSection {
                     config.pass = passField.input.value;
                     config.path = pathField.input.value.trim() || '/MissPlayer/';
                     SyncManager.saveWebDavConfig(config);
+                    this.sm?.refreshCrazyScrapeAvailability?.();
                     const valid = WebDavClient.hasValidEndpoint(config);
                     setStatus(valid ? (config.autoSync ? '自动同步' : '已配置') : '未配置', valid ? 'ok' : 'muted');
                     return config;

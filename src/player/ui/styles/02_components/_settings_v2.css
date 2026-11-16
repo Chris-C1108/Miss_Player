@@ -340,6 +340,24 @@
     color: rgba(255, 255, 255, 0.52);
 }
 
+.mp-s2-row.is-disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
+
+.mp-s2-row.is-disabled .mp-s2-switch {
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.mp-s2-inline-stepper {
+    flex-shrink: 0;
+}
+
+.mp-s2-inline-stepper.is-hidden {
+    display: none;
+}
+
 .mp-s2-row-right {
     display: flex;
     align-items: center;

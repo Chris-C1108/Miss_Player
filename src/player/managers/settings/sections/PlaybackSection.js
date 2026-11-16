@@ -35,25 +35,12 @@ export class PlaybackSection {
         });
         card.appendChild(progressToggle.getElement());
 
-        // 2. 快捷跳转
+        // 2. 快捷跳转（常驻开启，仅管理自定义步进标签）
         const seekContainer = document.createElement('div');
         seekContainer.className = 'tm-settings-seek-group-wrap';
 
         const stepPanelWrapper = document.createElement('div');
         stepPanelWrapper.className = 'tm-settings-subpanel-wrap';
-        stepPanelWrapper.style.display = this.settings.showSeekControlRow ? 'block' : 'none';
-
-        const seekToggle = new ToggleRow({
-            title: __('showSeekControlRow') || '快捷跳转',
-            subtext: __('showSeekControlRowDesc') || '',
-            checked: this.settings.showSeekControlRow,
-            onChange: (checked) => {
-                this.sm.updateSetting('showSeekControlRow', checked);
-                this.sm.updateControlRowsVisibility();
-                stepPanelWrapper.style.display = checked ? 'block' : 'none';
-            }
-        });
-        seekContainer.appendChild(seekToggle.getElement());
 
         this.stepEditor = new SeekStepEditor({
             defaultSteps: ['5s', '10s', '30s', '1m', '5m', '10m'],
