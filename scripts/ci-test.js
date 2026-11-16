@@ -196,6 +196,11 @@ runStep('执行评论识别引擎优化、同系列番号补全与上报机制�
     execSync('node scripts/eval-comment-pipeline.mjs --strict', { stdio: 'inherit' });
 });
 
+// 4.25 收藏片段胶囊完整状态机与邻近高亮引擎单元测试
+runStep('执行收藏片段胶囊完整状态机与邻近高亮单元测试', () => {
+    execSync('node tests/capsule-proximity-fsm.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

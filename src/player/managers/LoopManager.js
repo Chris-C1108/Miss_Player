@@ -7,6 +7,13 @@ import { telemetry } from '../../telemetry/index.js';
 import { MarkerBottomSheet } from './MarkerBottomSheet.js';
 import { SyncManager } from '../../sync/index.js';
 import { UISurfaceMachine, SURFACE_TYPES, bindActionWithoutBlurShift } from '../state/UISurfaceMachine.js';
+import {
+    CAPSULE_STATES,
+    evaluateCapsuleStates,
+    evaluateDraftCapsuleState,
+    applyCapsuleStateClasses,
+    isHighlightTabWithinWindow
+} from './capsuleStateMachine.js';
 
 /**
  * LoopManager — Tab-Style Marker & AB Loop controller
@@ -49,6 +56,14 @@ export class LoopManager {
         this.editingTabId = null;   // ID of the tab currently being edited inline
         this.editingTabCopy = null; // Copy of the tab data being edited inline
         this._durationFallbackBound = null;
+        this._capsuleStates = new Map();
+        this._primaryProximityTabId = null;
+        this._lastAutoCenteredTabId = null;
+        this._isSeekingHighlightTab = false;
+        this._seekHighlightReleaseTimer = null;
+        this._onVideoSeekedBound = null;
+        this._onDurationChangeBound = null;
+        this._onLoadedMetaBound = null;
 
         this.tabColors = [
             '200, 100%, 55%', // Sky Blue
@@ -258,10 +273,20 @@ export class LoopManager {
             }, true);
         }
 
-        // 监听视频进度：检测进度附近 ±5s 胶囊高亮与自动居中滚动
+        // 监听视频进度：胶囊完整状态机评估、邻近高亮与按主焦点切换自动居中
         if (this.targetVideo) {
             this._onVideoTimeUpdateBound = () => this._handleVideoTimeUpdate();
             this.targetVideo.addEventListener('timeupdate', this._onVideoTimeUpdateBound);
+
+            this._onVideoSeekedBound = () => {
+                this._isSeekingHighlightTab = false;
+                if (this._seekHighlightReleaseTimer) {
+                    clearTimeout(this._seekHighlightReleaseTimer);
+                    this._seekHighlightReleaseTimer = null;
+                }
+                this.syncProximityState({ forceCenter: false });
+            };
+            this.targetVideo.addEventListener('seeked', this._onVideoSeekedBound);
         }
 
         // Bind swipe-up gesture on tab row
@@ -269,8 +294,16 @@ export class LoopManager {
 
         // Listen for metadata or duration change to render markers
         if (this.targetVideo) {
-            this.targetVideo.addEventListener('durationchange', () => this.renderProgressMarkers());
-            this.targetVideo.addEventListener('loadedmetadata', () => this.renderProgressMarkers());
+            this._onDurationChangeBound = () => {
+                this.renderProgressMarkers();
+                this.syncProximityState({ skipAutoCenter: true });
+            };
+            this._onLoadedMetaBound = () => {
+                this.renderProgressMarkers();
+                this.syncProximityState({ skipAutoCenter: true });
+            };
+            this.targetVideo.addEventListener('durationchange', this._onDurationChangeBound);
+            this.targetVideo.addEventListener('loadedmetadata', this._onLoadedMetaBound);
         }
 
         // 监听多端云同步落盘事件，实时无感刷新当前视频的打点与高光片段
@@ -332,7 +365,8 @@ export class LoopManager {
             this.tabScrollContainer.appendChild(draftPill);
         }
 
-        this._updateActiveTabProgress();
+        // 同步胶囊完整状态机（高亮、进度填充、主焦点及进度条锚点），避免重建清空态
+        this.syncProximityState({ skipAutoCenter: true });
     }
 
     _createTabPill(tab) {
@@ -345,31 +379,34 @@ export class LoopManager {
         pill.dataset.tabId = tab.id || '';
         pill.style.setProperty('--tab-color', color);
 
+        if (tab.type === 'interval') {
+            const progressFill = document.createElement('span');
+            progressFill.className = 'tm-tab-progress-fill';
+            progressFill.setAttribute('aria-hidden', 'true');
+            pill.appendChild(progressFill);
+        }
+
         if (tab.type === 'highlight') {
             const timeSpan = document.createElement('span');
             timeSpan.className = 'tm-tab-time-text';
             timeSpan.textContent = formatTimeWithHours(tab.startTime);
             pill.appendChild(timeSpan);
         } else {
+            if (this.activeTabId === tab.id && this.loopActive) {
+                const badge = document.createElement('span');
+                badge.className = 'tm-tab-loop-badge';
+                badge.setAttribute('aria-hidden', 'true');
+                badge.innerHTML = LOOP_INTERVAL;
+                pill.appendChild(badge);
+            }
             const timeSpan = document.createElement('span');
             timeSpan.className = 'tm-tab-time-text';
             timeSpan.textContent = `${formatTimeWithHours(tab.startTime)} ~ ${formatTimeWithHours(tab.endTime)}`;
             pill.appendChild(timeSpan);
-
-            // 如果当前时间片段正在循环播放，叠加循环图标
-            if (this.activeTabId === tab.id && this.loopActive) {
-                pill.classList.add('looping');
-                const overlay = document.createElement('div');
-                overlay.className = 'tm-tab-loop-overlay';
-                overlay.innerHTML = LOOP_INTERVAL;
-                pill.appendChild(overlay);
-            }
         }
 
-        // Active state
-        if (this.activeTabId === tab.id) {
-            pill.classList.add('active');
-        }
+        const existingEntry = this._capsuleStates?.get(tab.id) || null;
+        applyCapsuleStateClasses(pill, existingEntry, { syncProgressVar: tab.type === 'interval' });
 
         // Click handler
         pill.addEventListener('click', (e) => {
@@ -489,6 +526,7 @@ export class LoopManager {
         if (isPlaceholder) {
             pill.classList.add('placeholder');
         }
+        pill.dataset.draftState = evaluateDraftCapsuleState(this.draftTab, { isEditing: false });
         pill.style.setProperty('--tab-color', color);
         pill.style.gap = '5px';
 
@@ -777,6 +815,13 @@ export class LoopManager {
             if (this.controlManager && typeof this.controlManager.showJumpHint === 'function') {
                 this.controlManager.showJumpHint(tab.startTime);
             }
+            // 防异步 seeking 时序闪退选中态
+            this._isSeekingHighlightTab = true;
+            if (this._seekHighlightReleaseTimer) clearTimeout(this._seekHighlightReleaseTimer);
+            this._seekHighlightReleaseTimer = setTimeout(() => {
+                this._isSeekingHighlightTab = false;
+            }, 500);
+
             // Jump to timestamp
             this.targetVideo.currentTime = tab.startTime;
             if (this.targetVideo.paused) {
@@ -788,6 +833,7 @@ export class LoopManager {
             this.disableLoop();
             this.activeTabId = tab.id;
             this.renderTabs();
+            this.syncProximityState({ targetTime: tab.startTime, forceCenter: true });
         } else {
             // Interval tab: toggle / switch loop
             if (this.activeTabId === tab.id && this.loopActive) {
@@ -795,6 +841,7 @@ export class LoopManager {
                 this.disableLoop();
                 this.activeTabId = null;
                 this.renderTabs();
+                this.syncProximityState({ skipAutoCenter: true });
             } else {
                 // 1. 若有其他片段正在循环播放，终止那个循环，切换到当前tab循环
                 this.disableLoop(); // 清除之前的循环状态
@@ -825,6 +872,7 @@ export class LoopManager {
                     this.targetVideo.play().catch(() => {});
                 }
                 this.renderTabs();
+                this.syncProximityState({ targetTime: isInRange ? ct : tab.startTime, forceCenter: true });
             }
         }
     }
@@ -1261,7 +1309,19 @@ export class LoopManager {
             return false;
         }
 
+        const duration = this.targetVideo && !Number.isNaN(this.targetVideo.duration) ? this.targetVideo.duration : 0;
+
+        // 1. 若存在单点高光选中态且已跳转到邻近窗口外，释放陈旧选中态
+        if (!this.loopActive && this.activeTabId && typeof targetTime === 'number' && !Number.isNaN(targetTime)) {
+            const activeTab = this.tabs.find(t => t && t.id === this.activeTabId);
+            if (activeTab && activeTab.type === 'highlight' && !isHighlightTabWithinWindow(activeTab, targetTime, duration)) {
+                this.activeTabId = null;
+            }
+        }
+
         if (!this.loopActive || this.loopStartTime === null || this.loopEndTime === null) {
+            // 非循环态手动 Seek（含暂停拖动进度条/评论时间戳跳转）也要即时更新邻近高亮并居中焦点胶囊
+            this.syncProximityState({ targetTime, forceCenter: true });
             return false;
         }
 
@@ -1271,11 +1331,13 @@ export class LoopManager {
             this.disableLoop();
             this.activeTabId = null;
             this.renderTabs();
+            this.syncProximityState({ targetTime, forceCenter: true });
             if (this.bottomSheet && typeof this.bottomSheet.updateBottomSheet === 'function') {
                 this.bottomSheet.updateBottomSheet();
             }
             return true;
         }
+        this.syncProximityState({ targetTime, forceCenter: true });
         return false;
     }
 
@@ -1290,61 +1352,116 @@ export class LoopManager {
         this._updateActiveTabProgress();
     }
 
-/**
-     * 监听视频播放进度：
-     * 1. 判断是否在时间胶囊附近 ±5s，赋予 .near 样式（文字高亮与颜色边框）
-     * 2. 在进入新胶囊附近时，平滑将胶囊滚动到居中位置
+    /**
+     * 监听视频播放进度：触发状态机评估、邻近高亮与主焦点居中
      * @private
      */
     _handleVideoTimeUpdate() {
         if (!this.targetVideo || !this.tabScrollContainer) return;
+        if (this.targetVideo.seeking || this._isSeekingHighlightTab) return;
+
         const now = Date.now();
-        if (this._lastNearCheckTime && now - this._lastNearCheckTime < 150) return;
+        if (this._lastNearCheckTime && now - this._lastNearCheckTime < 120) return;
         this._lastNearCheckTime = now;
 
-        const curTime = this.targetVideo.currentTime;
-        if (isNaN(curTime)) return;
-
-        const NEAR_THRESHOLD = 5; // 时间附近判断标准：前后 5s
-        let currentNearTab = null;
-
-        for (const tab of this.tabs) {
-            if (!tab) continue;
-            let isNear = false;
-            if (tab.type === 'highlight' && tab.startTime !== null) {
-                isNear = (curTime >= tab.startTime - NEAR_THRESHOLD && curTime <= tab.startTime + NEAR_THRESHOLD);
-            } else if (tab.type === 'interval' && tab.startTime !== null && tab.endTime !== null) {
-                const minT = Math.min(tab.startTime, tab.endTime);
-                const maxT = Math.max(tab.startTime, tab.endTime);
-                isNear = (curTime >= minT - NEAR_THRESHOLD && curTime <= maxT + NEAR_THRESHOLD);
-            }
-
-            const pill = this.tabScrollContainer.querySelector(`.tm-tab-pill[data-tab-id="${tab.id}"]`);
-            if (pill) {
-                if (isNear) {
-                    pill.classList.add('near');
-                    if (!currentNearTab) currentNearTab = { tab, pill };
-                } else {
-                    pill.classList.remove('near');
-                }
-            }
-        }
-
-        // 自动居中滚动：新进入某个胶囊范围且用户当前未手动触摸/滚动时执行
-        if (currentNearTab) {
-            if (this._currentNearTabId !== currentNearTab.tab.id) {
-                this._currentNearTabId = currentNearTab.tab.id;
-                this._scrollToCenterPill(currentNearTab.pill);
-            }
-        } else {
-            this._currentNearTabId = null;
-        }
+        this.syncProximityState({ forceCenter: false });
     }
 
     /**
-     * 将目标胶囊平滑滚动到容器的水平居中位置
-     * @param {HTMLElement} pill 
-     * @private
+     * 统一胶囊状态机同步：
+     * 1. 评估全部胶囊互斥主状态 (editing > looping > inside > near > idle) 与唯一主焦点 (isPrimary)
+     * 2. 自动清理离开邻近窗口的单点高光粘滞 activeTabId
+     * 3. 原子同步胶囊栏、进度条锚点 (.tm-progress-marker-*) 与 BottomSheet 列表行
+     * 4. 仅在主焦点切换或 forceCenter=true 时平滑居中目标胶囊，避免连续滚动抖动
+     */
+    syncProximityState({ targetTime = null, forceCenter = false, skipAutoCenter = false } = {}) {
+        if (!this.targetVideo) return null;
+        const curTime = (typeof targetTime === 'number' && !Number.isNaN(targetTime))
+            ? targetTime
+            : this.targetVideo.currentTime;
+        if (typeof curTime !== 'number' || Number.isNaN(curTime)) return null;
+
+        const duration = !Number.isNaN(this.targetVideo.duration) ? this.targetVideo.duration : 0;
+
+        // 若单点高光选中态已经远离当前进度且非 seek 过渡态，自动释放
+        if (!this.loopActive && this.activeTabId && !this._isSeekingHighlightTab && !this.editingTabId) {
+            const activeTab = this.tabs.find(t => t && t.id === this.activeTabId);
+            if (activeTab && activeTab.type === 'highlight' && !isHighlightTabWithinWindow(activeTab, curTime, duration)) {
+                this.activeTabId = null;
+            }
+        }
+
+        const evalResult = evaluateCapsuleStates({
+            tabs: this.tabs,
+            curTime,
+            duration,
+            activeTabId: this.activeTabId,
+            loopActive: this.loopActive,
+            editingTabId: this.editingTabId,
+            prevStates: this._capsuleStates,
+            prevPrimaryTabId: this._primaryProximityTabId
+        });
+
+        this._capsuleStates = evalResult.byId;
+        const prevPrimaryId = this._primaryProximityTabId;
+        this._primaryProximityTabId = evalResult.primaryTabId;
+
+        // 1. 同步胶囊滚动条 DOM
+        if (this.tabScrollContainer) {
+            const pills = this.tabScrollContainer.querySelectorAll('.tm-tab-pill[data-tab-id]');
+            pills.forEach((pill) => {
+                const id = pill.dataset.tabId;
+                const entry = evalResult.byId.get(id) || null;
+                applyCapsuleStateClasses(pill, entry, {
+                    includeCompatActive: true,
+                    syncProgressVar: entry?.type === 'interval'
+                });
+            });
+        }
+
+        // 2. 同步进度条锚点 DOM (tick / range)
+        if (this.progressMarkersContainer) {
+            const markers = this.progressMarkersContainer.querySelectorAll('[data-tab-id]');
+            markers.forEach((marker) => {
+                const id = marker.dataset.tabId;
+                const entry = evalResult.byId.get(id) || null;
+                applyCapsuleStateClasses(marker, entry, {
+                    includeCompatActive: false,
+                    syncProgressVar: false
+                });
+            });
+        }
+
+        // 3. 同步 BottomSheet 列表行（若已展开或渲染）
+        if (this.bottomSheet && this.bottomSheet._sheetList) {
+            const rows = this.bottomSheet._sheetList.querySelectorAll('.tm-sheet-item[data-tab-id]');
+            rows.forEach((row) => {
+                const id = row.dataset.tabId;
+                const entry = evalResult.byId.get(id) || null;
+                applyCapsuleStateClasses(row, entry, {
+                    includeCompatActive: true,
+                    syncProgressVar: false
+                });
+            });
+        }
+
+        // 4. 仅在主焦点切换或强制居中时触发纯横向居中滚动
+        if (!skipAutoCenter && this.tabScrollContainer && evalResult.primaryTabId) {
+            const primaryChanged = evalResult.primaryTabId !== prevPrimaryId || evalResult.primaryTabId !== this._lastAutoCenteredTabId;
+            if (forceCenter || (primaryChanged && !this._isUserInteractingWithTabs)) {
+                const primaryPill = this.tabScrollContainer.querySelector(`.tm-tab-pill[data-tab-id="${evalResult.primaryTabId}"]`);
+                if (primaryPill) {
+                    this._scrollToCenterPill(primaryPill, forceCenter);
+                    this._lastAutoCenteredTabId = evalResult.primaryTabId;
+                }
+            }
+        } else if (!evalResult.primaryTabId) {
+            this._lastAutoCenteredTabId = null;
+        }
+
+        return evalResult;
+    }
+
     /**
      * 将指定胶囊居中滚动到视口中央 (纯横向动力学计算，绝对不触碰纵向轴与祖先容器，杜绝 Safari 视口错位)
      */
@@ -1366,33 +1483,35 @@ export class LoopManager {
     _clearAllTabProgress() {
         if (!this.tabScrollContainer) return;
         const pills = this.tabScrollContainer.querySelectorAll('.tm-tab-pill');
-        pills.forEach(p => p.style.background = '');
+        pills.forEach(p => p.style.setProperty('--tab-progress', '0'));
     }
 
     _updateActiveTabProgress() {
         if (!this.targetVideo || !this.tabScrollContainer) return;
-        
-        if (!this.loopActive || !this.activeTabId) {
-            this._clearAllTabProgress();
-            return;
-        }
-
-        const activeTab = this.tabs.find(t => t.id === this.activeTabId);
-        if (!activeTab || activeTab.type !== 'interval') {
-            this._clearAllTabProgress();
-            return;
-        }
-
-        const pill = this.tabScrollContainer.querySelector(`.tm-tab-pill[data-tab-id="${this.activeTabId}"]`);
-        if (!pill) return;
-
-        const duration = activeTab.endTime - activeTab.startTime;
-        if (duration <= 0) return;
-
         const ct = this.targetVideo.currentTime;
-        const pct = Math.max(0, Math.min(100, ((ct - activeTab.startTime) / duration) * 100));
+        if (typeof ct !== 'number' || Number.isNaN(ct)) return;
 
-        pill.style.background = `linear-gradient(to right, hsla(var(--tab-color), 0.38) ${pct}%, hsla(var(--tab-color), 0.15) ${pct}%)`;
+        const pills = this.tabScrollContainer.querySelectorAll('.tm-tab-pill[data-tab-id]');
+        pills.forEach((pill) => {
+            const id = pill.dataset.tabId;
+            const tab = this.tabs.find(t => t && t.id === id);
+            if (!tab || tab.type !== 'interval') return;
+
+            const entry = this._capsuleStates?.get(id);
+            const isActiveInterval = (this.loopActive && this.activeTabId === id)
+                || entry?.state === CAPSULE_STATES.LOOPING
+                || entry?.state === CAPSULE_STATES.INSIDE;
+
+            if (isActiveInterval) {
+                const minT = Math.min(tab.startTime, tab.endTime);
+                const maxT = Math.max(tab.startTime, tab.endTime);
+                const span = maxT - minT;
+                const ratio = span > 0 ? Math.max(0, Math.min(1, (ct - minT) / span)) : 0;
+                pill.style.setProperty('--tab-progress', ratio.toFixed(4));
+            } else {
+                pill.style.setProperty('--tab-progress', '0');
+            }
+        });
     }
 
 
@@ -1707,8 +1826,10 @@ export class LoopManager {
                 // Highlight point: little vertical tick directly inside the progress bar
                 const tick = document.createElement('div');
                 tick.className = 'tm-progress-marker-tick';
+                tick.dataset.tabId = tab.id || '';
                 tick.style.left = `${startPct}%`;
                 tick.style.setProperty('--tab-color', color);
+                applyCapsuleStateClasses(tick, this._capsuleStates?.get(tab.id) || null, { includeCompatActive: false });
                 tick.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (this.editingTabId) {
@@ -1761,9 +1882,11 @@ export class LoopManager {
                     // Inactive loop range: thin translucent bar below bottom edge
                     const range = document.createElement('div');
                     range.className = 'tm-progress-marker-range';
+                    range.dataset.tabId = tab.id || '';
                     range.style.left = `${startPct}%`;
                     range.style.width = `${widthPct}%`;
                     range.style.setProperty('--tab-color', color);
+                    applyCapsuleStateClasses(range, this._capsuleStates?.get(tab.id) || null, { includeCompatActive: false });
                     range.addEventListener('click', (e) => {
                         e.stopPropagation();
                         if (this.editingTabId) {
@@ -1873,12 +1996,32 @@ export class LoopManager {
             this.targetVideo.removeEventListener('timeupdate', this._onVideoTimeUpdateBound);
             this._onVideoTimeUpdateBound = null;
         }
+        if (this.targetVideo && this._onVideoSeekedBound) {
+            this.targetVideo.removeEventListener('seeked', this._onVideoSeekedBound);
+            this._onVideoSeekedBound = null;
+        }
+        if (this.targetVideo && this._onDurationChangeBound) {
+            this.targetVideo.removeEventListener('durationchange', this._onDurationChangeBound);
+            this._onDurationChangeBound = null;
+        }
+        if (this.targetVideo && this._onLoadedMetaBound) {
+            this.targetVideo.removeEventListener('loadedmetadata', this._onLoadedMetaBound);
+            this._onLoadedMetaBound = null;
+        }
         if (this.targetVideo && this._durationFallbackBound) {
             this.targetVideo.removeEventListener('timeupdate', this._durationFallbackBound);
             this._durationFallbackBound = null;
         }
         if (this.bottomSheet) {
             this.bottomSheet.cleanup();
+        }
+        if (this._userScrollTimer) {
+            clearTimeout(this._userScrollTimer);
+            this._userScrollTimer = null;
+        }
+        if (this._seekHighlightReleaseTimer) {
+            clearTimeout(this._seekHighlightReleaseTimer);
+            this._seekHighlightReleaseTimer = null;
         }
         if (this._longPressTimer) {
             clearTimeout(this._longPressTimer);

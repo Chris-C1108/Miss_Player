@@ -670,6 +670,24 @@
     transform: translateX(-50%) scale(1.1);
 }
 
+.tm-progress-marker-tick.is-near {
+    height: 5px;
+    bottom: -5px;
+    background-color: hsla(var(--tab-color), 0.92);
+    transform: translateX(-50%) scale(1.15);
+    box-shadow: 0 0 6px hsla(var(--tab-color), 0.55);
+}
+
+.tm-progress-marker-tick.is-inside,
+.tm-progress-marker-tick.is-primary {
+    height: 6px;
+    bottom: -5px;
+    background-color: hsl(var(--tab-color));
+    border-color: #ffffff;
+    transform: translateX(-50%) scale(1.3);
+    box-shadow: 0 0 8px hsla(var(--tab-color), 0.85);
+}
+
 .tm-progress-marker-range {
     position: absolute;
     height: 4px;
@@ -680,13 +698,28 @@
     cursor: pointer;
     z-index: 9;
     pointer-events: auto;
-    transition: background-color 0.15s, height 0.15s, bottom 0.15s;
+    transition: background-color 0.15s, height 0.15s, bottom 0.15s, box-shadow 0.15s;
 }
 
 .tm-progress-marker-range:hover {
     height: 4px;
     bottom: -5px;
     background-color: hsla(var(--tab-color), 0.45);
+}
+
+.tm-progress-marker-range.is-near {
+    height: 5px;
+    bottom: -5px;
+    background-color: hsla(var(--tab-color), 0.8);
+    box-shadow: 0 0 6px hsla(var(--tab-color), 0.45);
+}
+
+.tm-progress-marker-range.is-inside,
+.tm-progress-marker-range.is-primary {
+    height: 6px;
+    bottom: -5px;
+    background-color: hsl(var(--tab-color));
+    box-shadow: 0 0 8px hsla(var(--tab-color), 0.78);
 }
 
 .tm-active-loop-played {

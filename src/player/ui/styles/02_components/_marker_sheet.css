@@ -19,71 +19,106 @@
 }
 .tm-tab-scroll-container::-webkit-scrollbar { display: none; }
 
-/* ===== Tab Pill ===== */
+/* ===== Tab Pill (5-State Capsule FSM: idle -> near -> inside -> looping -> editing, + .is-primary focus) ===== */
 .tm-tab-pill {
     position: relative;
-    overflow: visible;
+    overflow: hidden;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     height: 38px;
     padding: 0 12px;
     box-sizing: border-box;
     border-radius: 9999px;
-    background-color: hsla(0, 0%, 15%, 0.12);
-    border: 1px solid hsla(0, 0%, 20%, 0.35);
-    color: hsl(var(--shadcn-foreground));
+    background-color: hsla(var(--tab-color), 0.1);
+    border: 1px solid hsla(var(--tab-color), 0.24);
+    color: rgba(255, 255, 255, 0.74);
     font-size: 0.8rem;
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
     cursor: pointer;
     flex-shrink: 0;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s, border-color 0.15s, color 0.15s;
+    box-shadow: none;
+    transition: background-color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
     pointer-events: auto;
 }
-/* 状态 1：默认状态（半透明背景色、无边框、无高亮） */
-.tm-tab-pill {
-    background-color: hsla(var(--tab-color), 0.12);
-    border: 1px solid transparent;
-    color: hsla(var(--tab-color), 0.82);
-    box-shadow: none;
-    transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+
+.tm-tab-pill:hover {
+    background-color: hsla(var(--tab-color), 0.16);
+    border-color: hsla(var(--tab-color), 0.44);
+    color: rgba(255, 255, 255, 0.92);
 }
 
-.tm-tab-pill:active {
+.tm-tab-pill.is-primary {
+    transform: translate3d(0, -1px, 0);
+}
+
+.tm-tab-pill:active,
+.tm-tab-pill.is-primary:active {
     transform: scale(0.96);
 }
 
-/* 状态 2：当前视频进度附近 ±5s 时（半透明背景色、颜色边框、文字高亮） */
-.tm-tab-pill.near {
-    background-color: hsla(var(--tab-color), 0.22);
-    border-color: hsla(var(--tab-color), 0.75);
-    color: #ffffff;
-    font-weight: 600;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
+/* GPU 硬件加速的区间进度填充层 */
+.tm-tab-progress-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, hsla(var(--tab-color), 0.22), hsla(var(--tab-color), 0.42));
+    transform-origin: left center;
+    transform: scaleX(var(--tab-progress, 0));
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
 }
 
-/* 状态 3：区间循环播放时（半透明背景色、颜色边框、文字高亮、Apple 级聚焦光晕呼吸灯） */
+/* 状态 2：进度预告/离开邻近区 (near: -6s ~ +4s) */
+.tm-tab-pill.is-near,
+.tm-tab-pill.near {
+    background-color: hsla(var(--tab-color), 0.17);
+    border-color: hsla(var(--tab-color), 0.6);
+    color: rgba(255, 255, 255, 0.94);
+    font-weight: 600;
+    box-shadow: 0 0 0 1px hsla(var(--tab-color), 0.14);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+
+/* 状态 3：当前正在命中高光时刻或处于区间片段内部 (inside) */
+.tm-tab-pill.is-inside {
+    background-color: hsla(var(--tab-color), 0.28);
+    border-color: hsla(var(--tab-color), 0.92);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 0 0 1px hsla(var(--tab-color), 0.34), 0 2px 10px hsla(var(--tab-color), 0.28);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.72);
+}
+
+.tm-tab-pill.is-inside.is-primary {
+    box-shadow: 0 0 0 1.5px hsla(var(--tab-color), 0.55), 0 4px 12px hsla(var(--tab-color), 0.36);
+}
+
+/* 状态 4：区间循环播放时（半透明背景色、颜色边框、文字高亮、Apple 级聚焦光晕呼吸灯） */
 @keyframes tm-tab-loop-pulse {
     0%, 100% {
-        box-shadow: 0 0 0 1px hsla(var(--tab-color), 0.7), 0 0 5px hsla(var(--tab-color), 0.35);
-        border-color: hsla(var(--tab-color), 0.85);
+        box-shadow: 0 0 0 1px hsla(var(--tab-color), 0.7), 0 0 6px hsla(var(--tab-color), 0.35);
+        border-color: hsla(var(--tab-color), 0.88);
     }
     50% {
-        box-shadow: 0 0 0 1.5px hsla(var(--tab-color), 0.95), 0 0 8px hsla(var(--tab-color), 0.55);
+        box-shadow: 0 0 0 1.5px hsla(var(--tab-color), 0.95), 0 0 10px hsla(var(--tab-color), 0.55);
         border-color: hsl(var(--tab-color));
     }
 }
 
+.tm-tab-pill.is-looping,
 .tm-tab-pill.looping {
-    background-color: hsla(var(--tab-color), 0.32);
+    background-color: hsla(var(--tab-color), 0.3);
     border-color: hsl(var(--tab-color));
     color: #ffffff;
     font-weight: 700;
@@ -91,11 +126,31 @@
     animation: tm-tab-loop-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* 激活态兜底 */
-.tm-tab-pill.active:not(.looping):not(.near) {
+/* 选中兜底（如兼容外部标记） */
+.tm-tab-pill.active:not(.looping):not(.is-looping):not(.near):not(.is-near):not(.is-inside) {
     background-color: hsla(var(--tab-color), 0.2);
     border-color: hsla(var(--tab-color), 0.55);
     color: #ffffff;
+}
+
+/* 行内前置循环徽章（不遮挡时间文本） */
+.tm-tab-loop-badge {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    color: #ffffff;
+}
+
+.tm-tab-loop-badge svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
 }
 
 .tm-tab-time-text {
@@ -106,33 +161,15 @@
     white-space: nowrap;
 }
 
-.tm-tab-loop-overlay {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 60%;
-    z-index: 2;
-    pointer-events: none;
-    border: none;
-    background: none;
-    box-shadow: none;
-    padding: 0;
-}
-
-.tm-tab-loop-overlay svg {
-    display: block;
-    height: 100%;
-    width: auto;
-    color: #ffffff;
-    fill: #ffffff;
-    stroke: #ffffff;
-    stroke-width: 0.8px;
-    stroke-linejoin: round;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+@media (prefers-reduced-motion: reduce) {
+    .tm-tab-pill,
+    .tm-tab-progress-fill {
+        transition: none;
+    }
+    .tm-tab-pill.is-looping,
+    .tm-tab-pill.looping {
+        animation: none;
+    }
 }
 
 /* Draft tab (dashed border, dynamic tint) */
@@ -528,13 +565,26 @@
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding: 5px 0;
+    padding: 5px 4px;
     background: transparent;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
     height: auto;
     min-height: 40px;
     box-sizing: border-box;
     touch-action: pan-y;
+    transition: background-color 0.2s ease;
+}
+
+.tm-sheet-item.is-near,
+.tm-sheet-item.is-inside,
+.tm-sheet-item.is-looping {
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.tm-sheet-item.is-primary .tm-sheet-time-pill {
+    border-color: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 .tm-sheet-item:last-child {

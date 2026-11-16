@@ -6,6 +6,7 @@ import { __ } from '../../constants/i18n.js';
 import { LOOP_INTERVAL, CLOSE_LINE, ICON_TAG, ICON_TRASH, ICON_SHARE_LINK, ICON_UNDO } from '../../constants/icons.js';
 import { UIManager } from '../ui/UIManager.js';
 import { SURFACE_TYPES, bindKeepFocusAction, bindActionWithoutBlurShift } from '../state/UISurfaceMachine.js';
+import { applyCapsuleStateClasses } from './capsuleStateMachine.js';
 
 /**
  * MarkerBottomSheet — 循环片段与时间戳标签管理底部浮层面板
@@ -373,8 +374,12 @@ export class MarkerBottomSheet {
             const color = tab.color || this.tabColors[index % this.tabColors.length];
             const row = document.createElement('div');
             row.className = 'tm-sheet-item';
-            if (this.activeTabId === tab.id) {
-                row.classList.add('active');
+            row.dataset.tabId = tab.id || '';
+            const stateEntry = this.loopManager?._capsuleStates?.get(tab.id) || null;
+            if (stateEntry) {
+                applyCapsuleStateClasses(row, stateEntry, { includeCompatActive: true });
+            } else if (this.activeTabId === tab.id) {
+                row.classList.add('active', 'is-active');
             }
 
             const mainRow = document.createElement('div');
@@ -450,10 +455,11 @@ export class MarkerBottomSheet {
 
                 if (this.loopManager.activeTabId === tab.id && this.loopManager.loopActive) {
                     pill.classList.add('looping');
-                    const overlay = document.createElement('div');
-                    overlay.className = 'tm-tab-loop-overlay';
-                    overlay.innerHTML = LOOP_INTERVAL;
-                    pill.appendChild(overlay);
+                    const badge = document.createElement('span');
+                    badge.className = 'tm-tab-loop-badge';
+                    badge.setAttribute('aria-hidden', 'true');
+                    badge.innerHTML = LOOP_INTERVAL;
+                    pill.insertBefore(badge, startSpan);
                 }
 
                 pill.addEventListener('click', () => {
