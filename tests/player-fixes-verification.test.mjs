@@ -852,9 +852,11 @@ assert.ok(
 assert.ok(
     s2AdvancedCode.includes('hm.setEnabled') &&
     s2AdvancedCode.includes('hm.setCrowdEnabled') &&
+    s2AdvancedCode.includes('hm.setPrivateDataHidden') &&
     s2AdvancedCode.includes('updateDebugMode') &&
-    s2AdvancedCode.includes('CrazyScraper.canEnable'),
-    'S2AdvancedSection 必须调用真实的 setEnabled / setCrowdEnabled / updateDebugMode / CrazyScraper.canEnable 接口'
+    s2AdvancedCode.includes('CrazyScraper.canEnable') &&
+    s2AdvancedCode.indexOf('_buildDebugAccordion') < s2AdvancedCode.indexOf("__('hidePrivateData')"),
+    'S2AdvancedSection 必须将不显示私有数据置于调试与缓存分组并调用真实的 setEnabled / setCrowdEnabled / setPrivateDataHidden / updateDebugMode / CrazyScraper.canEnable 接口'
 );
 assert.ok(
     eventMgrCodeV25.includes('.mp-s2-panel') &&

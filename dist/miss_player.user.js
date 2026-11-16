@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.048
+// @version            5.7.118-beta.049
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1872,7 +1872,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.048";
+		return "5.7.118-beta.049";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2472,7 +2472,7 @@
 			betaSkipIntroDesc: "Jump to 1st highlight",
 			betaHeatmap: "Show Playback Heatmap",
 			betaHeatmapDesc: "Show viewer heatmap on seekbar",
-			dataMode: "Data Mode",
+			dataMode: "Privacy & Data",
 			dataModeShared: "Shared",
 			dataModeLocal: "Local",
 			dataModeSharedDesc: "Share crowd heatmaps, community comment collection, and parse-error reporting.",
@@ -2718,7 +2718,7 @@
 			betaSkipIntroDesc: "开播直达首个高光",
 			betaHeatmap: "显示播放热度",
 			betaHeatmapDesc: "进度条显示观看波形",
-			dataMode: "数据模式",
+			dataMode: "隐私·数据模式",
 			dataModeShared: "社区共享",
 			dataModeLocal: "本地私有",
 			dataModeSharedDesc: "共享全网观看热度波形，并同步支持社区评论采集共享与解析错误上报。",
@@ -2964,7 +2964,7 @@
 			betaSkipIntroDesc: "開播直達首個高光",
 			betaHeatmap: "顯示播放熱度",
 			betaHeatmapDesc: "進度條顯示觀看波形",
-			dataMode: "資料模式",
+			dataMode: "隱私·資料模式",
 			dataModeShared: "社區共享",
 			dataModeLocal: "本地私有",
 			dataModeSharedDesc: "共享全網觀看熱度波形，並同步支持社區評論採集共享與解析錯誤上報。",
@@ -3198,7 +3198,7 @@
 			betaSkipIntroDesc: "最初のハイライトへ直行",
 			betaHeatmap: "再生ヒートマップを表示",
 			betaHeatmapDesc: "シークバーにリプレイ波形を表示",
-			dataMode: "データモード",
+			dataMode: "プライバシー・データ",
 			dataModeShared: "コミュニティ共有",
 			dataModeLocal: "ローカルプライベート",
 			dataModeSharedDesc: "みんなの再生ヒートマップ、コメント収集共有、解析エラー報告を共有します。",
@@ -3431,7 +3431,7 @@
 			betaSkipIntroDesc: "Bắt đầu phát ngay từ điểm đầu",
 			betaHeatmap: "Hiển thị bản đồ nhiệt",
 			betaHeatmapDesc: "Hiển thị dạng sóng xem lại trên thanh trượt",
-			dataMode: "Chế độ dữ liệu",
+			dataMode: "Riêng tư & Dữ liệu",
 			dataModeShared: "Cộng đồng",
 			dataModeLocal: "Cục bộ",
 			dataModeSharedDesc: "Chia sẻ bản đồ nhiệt, thu thập bình luận cộng đồng và báo lỗi phân tích.",
@@ -4031,7 +4031,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.048";
+		return "5.7.118-beta.049";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6140,7 +6140,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.048";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.049";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -24299,33 +24299,19 @@
 						}
 					});
 					subWrap.appendChild(firstCapRow.element);
-					const hmSubWrap = document.createElement("div");
-					hmSubWrap.className = `mp-s2-conditional ${this.settings.betaHeatmap ? "" : "is-hidden"}`.trim();
 					const heatmapRow = createToggleRow({
 						title: __$1("betaHeatmap") || "显示播放热度",
 						checked: Boolean(this.settings.betaHeatmap),
 						onChange: (checked) => {
 							this.sm.updateSetting("betaHeatmap", checked);
-							hmSubWrap.classList.toggle("is-hidden", !checked);
 							const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
 							if (hm && typeof hm.setEnabled === "function") hm.setEnabled(checked);
 						}
 					});
 					subWrap.appendChild(heatmapRow.element);
-					const hidePrivateRow = createToggleRow({
-						title: __$1("hidePrivateData") || "仅观察全网波形",
-						checked: Boolean(this.settings.hidePrivateData),
-						onChange: (checked) => {
-							this.sm.updateSetting("hidePrivateData", checked);
-							const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
-							if (hm && typeof hm.setPrivateDataHidden === "function") hm.setPrivateDataHidden(checked);
-						}
-					});
-					hmSubWrap.appendChild(hidePrivateRow.element);
-					subWrap.appendChild(hmSubWrap);
 					const initDataMode = this.settings.dataMode === "shared" ? "shared" : "local";
 					const dataModeRow = createSegmentedRow({
-						title: __$1("dataMode") || "数据模式",
+						title: __$1("dataMode") || "隐私·数据模式",
 						subtext: initDataMode === "shared" ? __$1("dataModeSharedDesc") || "共享全网观看热度波形，并同步支持社区评论采集共享与解析错误上报。" : __$1("dataModeLocalDesc") || "断开公共网络通信，足迹、评论缓存及标记仅留存于本机与私有 WebDAV。",
 						options: [{
 							label: __$1("dataModeLocal") || "本地私有",
@@ -24393,6 +24379,17 @@
 					});
 					this._crazyRow = preloadRow;
 					body.appendChild(preloadRow.element);
+					const hidePrivateRow = createToggleRow({
+						title: __$1("hidePrivateData") || "不显示私有数据",
+						subtext: __$1("hidePrivateDataDesc") || "隐藏本机与云盘足迹，仅观察全网波形",
+						checked: Boolean(this.settings.hidePrivateData),
+						onChange: (checked) => {
+							this.sm.updateSetting("hidePrivateData", checked);
+							const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
+							if (hm && typeof hm.setPrivateDataHidden === "function") hm.setPrivateDataHidden(checked);
+						}
+					});
+					body.appendChild(hidePrivateRow.element);
 					const actionForm = document.createElement("div");
 					actionForm.className = "mp-s2-form";
 					const clearBtn = document.createElement("button");

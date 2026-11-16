@@ -109,16 +109,12 @@ export class S2AdvancedSection {
                 });
                 subWrap.appendChild(firstCapRow.element);
 
-                // 2. 显示播放热度 + 仅观察全网波形子开关
-                const hmSubWrap = document.createElement('div');
-                hmSubWrap.className = `mp-s2-conditional ${this.settings.betaHeatmap ? '' : 'is-hidden'}`.trim();
-
+                // 2. 显示播放热度
                 const heatmapRow = createToggleRow({
                     title: __('betaHeatmap') || '显示播放热度',
                     checked: Boolean(this.settings.betaHeatmap),
                     onChange: (checked) => {
                         this.sm.updateSetting('betaHeatmap', checked);
-                        hmSubWrap.classList.toggle('is-hidden', !checked);
                         const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
                         if (hm && typeof hm.setEnabled === 'function') {
                             hm.setEnabled(checked);
@@ -127,24 +123,10 @@ export class S2AdvancedSection {
                 });
                 subWrap.appendChild(heatmapRow.element);
 
-                const hidePrivateRow = createToggleRow({
-                    title: __('hidePrivateData') || '仅观察全网波形',
-                    checked: Boolean(this.settings.hidePrivateData),
-                    onChange: (checked) => {
-                        this.sm.updateSetting('hidePrivateData', checked);
-                        const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
-                        if (hm && typeof hm.setPrivateDataHidden === 'function') {
-                            hm.setPrivateDataHidden(checked);
-                        }
-                    }
-                });
-                hmSubWrap.appendChild(hidePrivateRow.element);
-                subWrap.appendChild(hmSubWrap);
-
-                // 3. 数据模式（独立于播放热度开关：控制热度波形、评论采集共享与解析错误上报）
+                // 3. 隐私·数据模式（独立于播放热度开关：控制热度波形、评论采集共享与解析错误上报）
                 const initDataMode = this.settings.dataMode === 'shared' ? 'shared' : 'local';
                 const dataModeRow = createSegmentedRow({
-                    title: __('dataMode') || '数据模式',
+                    title: __('dataMode') || '隐私·数据模式',
                     subtext: initDataMode === 'shared'
                         ? (__('dataModeSharedDesc') || '共享全网观看热度波形，并同步支持社区评论采集共享与解析错误上报。')
                         : (__('dataModeLocalDesc') || '断开公共网络通信，足迹、评论缓存及标记仅留存于本机与私有 WebDAV。'),
@@ -228,6 +210,20 @@ export class S2AdvancedSection {
                 });
                 this._crazyRow = preloadRow;
                 body.appendChild(preloadRow.element);
+
+                const hidePrivateRow = createToggleRow({
+                    title: __('hidePrivateData') || '不显示私有数据',
+                    subtext: __('hidePrivateDataDesc') || '隐藏本机与云盘足迹，仅观察全网波形',
+                    checked: Boolean(this.settings.hidePrivateData),
+                    onChange: (checked) => {
+                        this.sm.updateSetting('hidePrivateData', checked);
+                        const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
+                        if (hm && typeof hm.setPrivateDataHidden === 'function') {
+                            hm.setPrivateDataHidden(checked);
+                        }
+                    }
+                });
+                body.appendChild(hidePrivateRow.element);
 
                 const actionForm = document.createElement('div');
                 actionForm.className = 'mp-s2-form';
