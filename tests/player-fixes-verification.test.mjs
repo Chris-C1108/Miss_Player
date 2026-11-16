@@ -581,12 +581,13 @@ assert.ok(
     s2AdvancedCodeV20.includes('this.sm.checkUpdate(false, false)') &&
     s2AdvancedCodeV20.includes('-> v${latestVersion}') &&
     s2AdvancedCodeV20.includes("hasUpdate ? 'warn' : 'muted'") &&
+    s2AdvancedCodeV20.includes("__('s2AlreadyLatest')") &&
     settingsManagerCodeV20.includes('async checkUpdate(isManual = false, bypassCache = false) {') &&
     s2CssCodeV20.includes('.mp-s2-btn.is-update-available') &&
     s2CssCodeV20.includes('@keyframes mp-s2-update-breathe') &&
     !s2CssCodeV20.includes('.has-update-badge') &&
     !settingsManagerCodeV20.includes('has-update-badge'),
-    '版本信息展开时应静默检查更新，版本号位置在有更新时显示 v当前 -> v新版 且仅由更新/安装按钮呼吸发光引导'
+    '版本信息展开时应静默检查更新，版本号位置在有更新时显示 v当前 -> v新版 且已是最新时按钮显示已是最新版本，仅由更新/安装按钮呼吸发光引导'
 );
 
 // 20.2 验证外链跳转与更新通道：正式版跳转 SleazyFork，测试版跳转 GitHub

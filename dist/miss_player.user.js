@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.050
+// @version            5.7.118-beta.051
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1872,7 +1872,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.050";
+		return "5.7.118-beta.051";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2502,6 +2502,7 @@
 			checkUpdate: "Check Updates",
 			checkingUpdate: "Checking updates...",
 			alreadyLatest: "Already the latest version",
+			s2AlreadyLatest: "Up to Date",
 			updateFound: "New Version Available",
 			updateNow: "Update Now",
 			viewRelease: "SleazyFork Page",
@@ -2748,6 +2749,7 @@
 			checkUpdate: "检查更新",
 			checkingUpdate: "正在检查更新...",
 			alreadyLatest: "当前已是最新版本",
+			s2AlreadyLatest: "已是最新版本",
 			updateFound: "发现新版本",
 			updateNow: "立即更新",
 			viewRelease: "SleazyFork 主页",
@@ -2994,6 +2996,7 @@
 			checkUpdate: "檢查更新",
 			checkingUpdate: "正在檢查更新...",
 			alreadyLatest: "當前已是最新版本",
+			s2AlreadyLatest: "已是最新版本",
 			updateFound: "發現新版本",
 			updateNow: "立即更新",
 			viewRelease: "SleazyFork 主頁",
@@ -3228,6 +3231,7 @@
 			checkUpdate: "更新を確認",
 			checkingUpdate: "更新を確認中...",
 			alreadyLatest: "最新バージョンです",
+			s2AlreadyLatest: "最新です",
 			updateFound: "新しいバージョンがあります",
 			updateNow: "今すぐ更新",
 			viewRelease: "SleazyFork ページ",
@@ -3461,6 +3465,7 @@
 			checkUpdate: "Kiểm tra cập nhật",
 			checkingUpdate: "Đang kiểm tra...",
 			alreadyLatest: "Đã là phiên bản mới nhất",
+			s2AlreadyLatest: "Đã mới nhất",
 			updateFound: "Có phiên bản mới",
 			updateNow: "Cập nhật ngay",
 			viewRelease: "Trang SleazyFork",
@@ -4031,7 +4036,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.050";
+		return "5.7.118-beta.051";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6140,7 +6145,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.050";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.051";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -24467,11 +24472,12 @@
 					form.className = "mp-s2-form";
 					const actions = document.createElement("div");
 					actions.className = "mp-s2-actions";
+					const isUpToDate = Boolean(updateInfo?.success && !hasUpdate);
 					const checkBtn = document.createElement("button");
 					checkBtn.type = "button";
-					checkBtn.className = hasUpdate ? "mp-s2-btn" : "mp-s2-btn mp-s2-btn--primary";
+					checkBtn.className = hasUpdate || isUpToDate ? "mp-s2-btn" : "mp-s2-btn mp-s2-btn--primary";
 					checkBtn.disabled = isChecking;
-					checkBtn.innerHTML = `${ICON_REFRESH} <span>${isChecking ? "检查中…" : __$1("checkUpdate") || "检查更新"}</span>`;
+					checkBtn.innerHTML = `${ICON_REFRESH} <span>${isChecking ? "检查中…" : isUpToDate ? __$1("s2AlreadyLatest") || "已是最新版本" : __$1("checkUpdate") || "检查更新"}</span>`;
 					checkBtn.addEventListener("click", async (e) => {
 						e.stopPropagation();
 						await this.sm.checkUpdate(true, true);

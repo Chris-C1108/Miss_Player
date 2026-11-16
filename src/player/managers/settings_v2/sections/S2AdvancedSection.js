@@ -312,11 +312,15 @@ export class S2AdvancedSection {
                 const actions = document.createElement('div');
                 actions.className = 'mp-s2-actions';
 
+                const isUpToDate = Boolean(updateInfo?.success && !hasUpdate);
                 const checkBtn = document.createElement('button');
                 checkBtn.type = 'button';
-                checkBtn.className = hasUpdate ? 'mp-s2-btn' : 'mp-s2-btn mp-s2-btn--primary';
+                checkBtn.className = (hasUpdate || isUpToDate) ? 'mp-s2-btn' : 'mp-s2-btn mp-s2-btn--primary';
                 checkBtn.disabled = isChecking;
-                checkBtn.innerHTML = `${ICON_REFRESH} <span>${isChecking ? '检查中…' : (__('checkUpdate') || '检查更新')}</span>`;
+                const checkLabel = isChecking
+                    ? '检查中…'
+                    : (isUpToDate ? (__('s2AlreadyLatest') || '已是最新版本') : (__('checkUpdate') || '检查更新'));
+                checkBtn.innerHTML = `${ICON_REFRESH} <span>${checkLabel}</span>`;
                 checkBtn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     await this.sm.checkUpdate(true, true);
