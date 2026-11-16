@@ -16,7 +16,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.118-beta.053';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.118-beta.054';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -268,13 +268,13 @@ export class SyncManager {
 
         // 1. 收集 Settings 配置 (完备支持 Beta 实验室与自建库端点凭据)
         const baseSettings = {
-            showProgressBar: getValue('showProgressBar', true),
-            showSeekControlRow: getValue('showSeekControlRow', true),
-            showLoopControlRow: getValue('showLoopControlRow', true),
-            showPlaybackControlRow: getValue('showPlaybackControlRow', true),
+            showProgressBar: true,
+            showSeekControlRow: true,
+            showLoopControlRow: true,
+            showPlaybackControlRow: true,
             enabledSeekSteps: sanitizeSeekStepList(getValue('enabledSeekSteps', ['5s', '10s', '30s', '1m', '5m', '10m']), false),
             customUserSeekSteps: sanitizeSeekStepList(getValue('customUserSeekSteps', []), true),
-            showCommentsSection: getValue('showCommentsSection', true),
+            showCommentsSection: true,
             enabledCommentSources: getValue('enabledCommentSources', { jable: true, javdb: true, javlibrary: false }),
             sidebarPosition: getValue('sidebarPosition', 'right'),
             sidebarHidden: getValue('sidebarHidden', false),
@@ -486,6 +486,19 @@ export class SyncManager {
                 continue;
             }
 
+            // 已取消隐藏开关的核心控制行与评论区永久自愈为 true，防止旧版备份覆盖导致进度条等控件消失
+            if (
+                key === 'showProgressBar' ||
+                key === 'showSeekControlRow' ||
+                key === 'showLoopControlRow' ||
+                key === 'showPlaybackControlRow' ||
+                key === 'showCommentsSection'
+            ) {
+                mergedSettings[key] = true;
+                mergedSettingTimestamps[key] = Math.max(localTimestamps[key] || 0, remoteTimestamps[key] || 0, now);
+                continue;
+            }
+
             // 自建端点与凭据防抹杀保护：若本地已有配置而远端为空，优先保留本地已有凭据
             if ((key === 'betaDbEndpoint' || key === 'betaDbApiKey') && localSettings[key] && !remoteSettings[key]) {
                 mergedSettings[key] = localSettings[key];
@@ -645,6 +658,16 @@ export class SyncManager {
                 if (k === 'betaMode' && v === false) {
                     const localBeta = getBool('betaMode', false);
                     if (localBeta) continue;
+                }
+                if (
+                    k === 'showProgressBar' ||
+                    k === 'showSeekControlRow' ||
+                    k === 'showLoopControlRow' ||
+                    k === 'showPlaybackControlRow' ||
+                    k === 'showCommentsSection'
+                ) {
+                    setValue(k, true);
+                    continue;
                 }
                 if (k === 'dataMode') {
                     setValue(k, v === 'shared' ? 'shared' : 'local');

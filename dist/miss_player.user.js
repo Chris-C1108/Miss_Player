@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.053
+// @version            5.7.118-beta.054
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1872,7 +1872,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.053";
+		return "5.7.118-beta.054";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4036,7 +4036,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.053";
+		return "5.7.118-beta.054";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6145,7 +6145,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.053";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.054";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -6286,10 +6286,10 @@
 			const tombstones = this.getLocalTombstones();
 			const settingTimestamps = this.getLocalSettingTimestamps();
 			const baseSettings = {
-				showProgressBar: getValue("showProgressBar", true),
-				showSeekControlRow: getValue("showSeekControlRow", true),
-				showLoopControlRow: getValue("showLoopControlRow", true),
-				showPlaybackControlRow: getValue("showPlaybackControlRow", true),
+				showProgressBar: true,
+				showSeekControlRow: true,
+				showLoopControlRow: true,
+				showPlaybackControlRow: true,
 				enabledSeekSteps: sanitizeSeekStepList$1(getValue("enabledSeekSteps", [
 					"5s",
 					"10s",
@@ -6299,7 +6299,7 @@
 					"10m"
 				]), false),
 				customUserSeekSteps: sanitizeSeekStepList$1(getValue("customUserSeekSteps", []), true),
-				showCommentsSection: getValue("showCommentsSection", true),
+				showCommentsSection: true,
 				enabledCommentSources: getValue("enabledCommentSources", {
 					jable: true,
 					javdb: true,
@@ -6454,6 +6454,11 @@
 			const allSettingKeys = Array.from(new Set([...Object.keys(localSettings), ...Object.keys(remoteSettings)]));
 			for (const key of allSettingKeys) {
 				if (key === "customUserSeekSteps" || key === "enabledSeekSteps" || key === "enabledCommentSources") continue;
+				if (key === "showProgressBar" || key === "showSeekControlRow" || key === "showLoopControlRow" || key === "showPlaybackControlRow" || key === "showCommentsSection") {
+					mergedSettings[key] = true;
+					mergedSettingTimestamps[key] = Math.max(localTimestamps[key] || 0, remoteTimestamps[key] || 0, now);
+					continue;
+				}
 				if ((key === "betaDbEndpoint" || key === "betaDbApiKey") && localSettings[key] && !remoteSettings[key]) {
 					mergedSettings[key] = localSettings[key];
 					mergedSettingTimestamps[key] = localTimestamps[key] || now;
@@ -6559,6 +6564,10 @@
 				}
 				if (k === "betaMode" && v === false) {
 					if (getBool("betaMode", false)) continue;
+				}
+				if (k === "showProgressBar" || k === "showSeekControlRow" || k === "showLoopControlRow" || k === "showPlaybackControlRow" || k === "showCommentsSection") {
+					setValue(k, true);
+					continue;
 				}
 				if (k === "dataMode") {
 					setValue(k, v === "shared" ? "shared" : "local");
@@ -8429,14 +8438,10 @@
 			const seekControlRow = controlButtons.querySelector(".tm-seek-control-row");
 			const loopControlRow = controlButtons.querySelector(".tm-loop-control-row");
 			const playbackControlRow = controlButtons.querySelector(".tm-playback-control-row");
-			const settings = this.playerCore?.options?.playerState?.settings;
-			const showProgressBar = settings?.showProgressBar ?? true;
-			const showLoopControlRow = settings?.showLoopControlRow ?? true;
-			const showPlaybackControlRow = settings?.showPlaybackControlRow ?? true;
-			if (progressRow) progressRow.classList.toggle("is-hidden", !showProgressBar);
+			if (progressRow) progressRow.classList.remove("is-hidden");
 			if (seekControlRow) seekControlRow.classList.remove("is-hidden");
-			if (loopControlRow) loopControlRow.classList.toggle("is-hidden", !showLoopControlRow);
-			if (playbackControlRow) playbackControlRow.classList.toggle("is-hidden", !showPlaybackControlRow);
+			if (loopControlRow) loopControlRow.classList.remove("is-hidden");
+			if (playbackControlRow) playbackControlRow.classList.remove("is-hidden");
 			if (this.settingsBtn) {
 				this.settingsBtn.classList.remove("is-hidden");
 				this.settingsBtn.style.backgroundColor = "";
@@ -23123,10 +23128,15 @@
 					const v = getValue(key, def);
 					return typeof v === "boolean" ? v : v === "true" ? true : v === "false" ? false : def;
 				};
-				this.settings.showProgressBar = getBool("showProgressBar", true);
-				this.settings.showSeekControlRow = getBool("showSeekControlRow", true);
-				this.settings.showLoopControlRow = getBool("showLoopControlRow", true);
-				this.settings.showPlaybackControlRow = getBool("showPlaybackControlRow", true);
+				for (const rowKey of [
+					"showProgressBar",
+					"showSeekControlRow",
+					"showLoopControlRow",
+					"showPlaybackControlRow"
+				]) {
+					if (getValue(rowKey, true) !== true) setValue(rowKey, true);
+					this.settings[rowKey] = true;
+				}
 				const rawSeekSteps = getValue("enabledSeekSteps", null);
 				this.settings.enabledSeekSteps = sanitizeSeekStepList(rawSeekSteps, false);
 				if (Array.isArray(rawSeekSteps) && (rawSeekSteps.length !== this.settings.enabledSeekSteps.length || rawSeekSteps.some((s) => typeof s !== "string"))) setValue("enabledSeekSteps", this.settings.enabledSeekSteps);
@@ -23232,10 +23242,10 @@
 		}
 		saveSettings() {
 			try {
-				setValue("showProgressBar", this.settings.showProgressBar);
-				setValue("showSeekControlRow", this.settings.showSeekControlRow);
-				setValue("showLoopControlRow", this.settings.showLoopControlRow);
-				setValue("showPlaybackControlRow", this.settings.showPlaybackControlRow);
+				setValue("showProgressBar", true);
+				setValue("showSeekControlRow", true);
+				setValue("showLoopControlRow", true);
+				setValue("showPlaybackControlRow", true);
 				setValue("enabledSeekSteps", this.settings.enabledSeekSteps);
 				setValue("customUserSeekSteps", this.settings.customUserSeekSteps);
 				setValue("showCommentsSection", this.settings.showCommentsSection);
@@ -23436,10 +23446,15 @@
 					const v = getValue(key, def);
 					return typeof v === "boolean" ? v : v === "true" ? true : v === "false" ? false : def;
 				};
-				this.settings.showProgressBar = getBool("showProgressBar", true);
-				this.settings.showSeekControlRow = getBool("showSeekControlRow", true);
-				this.settings.showLoopControlRow = getBool("showLoopControlRow", true);
-				this.settings.showPlaybackControlRow = getBool("showPlaybackControlRow", true);
+				for (const rowKey of [
+					"showProgressBar",
+					"showSeekControlRow",
+					"showLoopControlRow",
+					"showPlaybackControlRow"
+				]) {
+					if (getValue(rowKey, true) !== true) setValue(rowKey, true);
+					this.settings[rowKey] = true;
+				}
 				const rawSeekSteps = getValue("enabledSeekSteps", null);
 				this.settings.enabledSeekSteps = sanitizeSeekStepList(rawSeekSteps, false);
 				const rawCustomSteps = getValue("customUserSeekSteps", null);
@@ -23480,10 +23495,10 @@
 			const state = this.playerCore?.options?.playerState;
 			if (state) state.saveSettings();
 			else {
-				setValue("showProgressBar", this.settings.showProgressBar);
-				setValue("showSeekControlRow", this.settings.showSeekControlRow);
-				setValue("showLoopControlRow", this.settings.showLoopControlRow);
-				setValue("showPlaybackControlRow", this.settings.showPlaybackControlRow);
+				setValue("showProgressBar", true);
+				setValue("showSeekControlRow", true);
+				setValue("showLoopControlRow", true);
+				setValue("showPlaybackControlRow", true);
 				setValue("enabledSeekSteps", this.settings.enabledSeekSteps);
 				setValue("showCommentsSection", this.settings.showCommentsSection);
 				setValue("enabledCommentSources", this.settings.enabledCommentSources);
@@ -23517,10 +23532,10 @@
 			const loopControlRow = controlButtonsContainer.querySelector(".tm-loop-control-row");
 			const playbackControlRow = controlButtonsContainer.querySelector(".tm-playback-control-row");
 			const progressRow = controlButtonsContainer.querySelector(".tm-progress-row");
-			if (progressRow) progressRow.classList.toggle("is-hidden", !this.settings.showProgressBar);
+			if (progressRow) progressRow.classList.remove("is-hidden");
 			if (seekControlRow) seekControlRow.classList.remove("is-hidden");
-			if (loopControlRow) loopControlRow.classList.toggle("is-hidden", !this.settings.showLoopControlRow);
-			if (playbackControlRow) playbackControlRow.classList.toggle("is-hidden", !this.settings.showPlaybackControlRow);
+			if (loopControlRow) loopControlRow.classList.remove("is-hidden");
+			if (playbackControlRow) playbackControlRow.classList.remove("is-hidden");
 		}
 		updateSetting(key, value) {
 			this.settings[key] = value;

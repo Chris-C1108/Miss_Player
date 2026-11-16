@@ -1531,16 +1531,11 @@ export class UIManager {
         const loopControlRow = controlButtons.querySelector('.tm-loop-control-row');
         const playbackControlRow = controlButtons.querySelector('.tm-playback-control-row');
 
-        // 统一尊重用户设置状态，彻底消灭伪动态行内样式覆盖
-        const settings = this.playerCore?.options?.playerState?.settings;
-        const showProgressBar = settings?.showProgressBar ?? true;
-        const showLoopControlRow = settings?.showLoopControlRow ?? true;
-        const showPlaybackControlRow = settings?.showPlaybackControlRow ?? true;
-
-        if (progressRow) progressRow.classList.toggle('is-hidden', !showProgressBar);
+        // 控制面板核心四行（进度条 / 快进退 / 高光片段 / 播放控制）已取消隐藏开关，始终常驻显示
+        if (progressRow) progressRow.classList.remove('is-hidden');
         if (seekControlRow) seekControlRow.classList.remove('is-hidden');
-        if (loopControlRow) loopControlRow.classList.toggle('is-hidden', !showLoopControlRow);
-        if (playbackControlRow) playbackControlRow.classList.toggle('is-hidden', !showPlaybackControlRow);
+        if (loopControlRow) loopControlRow.classList.remove('is-hidden');
+        if (playbackControlRow) playbackControlRow.classList.remove('is-hidden');
 
         // 恢复设置按钮样式（纯由 CSS 掌控）
         if (this.settingsBtn) {

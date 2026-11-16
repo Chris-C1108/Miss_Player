@@ -74,10 +74,14 @@ export class PlayerState {
                 return typeof v === 'boolean' ? v : (v === 'true' ? true : (v === 'false' ? false : def));
             };
 
-            this.settings.showProgressBar = getBool('showProgressBar', true);
-            this.settings.showSeekControlRow = getBool('showSeekControlRow', true);
-            this.settings.showLoopControlRow = getBool('showLoopControlRow', true);
-            this.settings.showPlaybackControlRow = getBool('showPlaybackControlRow', true);
+            // 核心四行（进度条 / 快进退 / 高光片段 / 播放控制）已取消显隐开关，历史 false 自动自愈为常驻显示
+            const permanentRowKeys = ['showProgressBar', 'showSeekControlRow', 'showLoopControlRow', 'showPlaybackControlRow'];
+            for (const rowKey of permanentRowKeys) {
+                if (getValue(rowKey, true) !== true) {
+                    setValue(rowKey, true);
+                }
+                this.settings[rowKey] = true;
+            }
             
             const rawSeekSteps = getValue('enabledSeekSteps', null);
             this.settings.enabledSeekSteps = sanitizeSeekStepList(rawSeekSteps, false);
@@ -209,10 +213,10 @@ export class PlayerState {
 
     saveSettings() {
         try {
-            setValue('showProgressBar', this.settings.showProgressBar);
-            setValue('showSeekControlRow', this.settings.showSeekControlRow);
-            setValue('showLoopControlRow', this.settings.showLoopControlRow);
-            setValue('showPlaybackControlRow', this.settings.showPlaybackControlRow);
+            setValue('showProgressBar', true);
+            setValue('showSeekControlRow', true);
+            setValue('showLoopControlRow', true);
+            setValue('showPlaybackControlRow', true);
             setValue('enabledSeekSteps', this.settings.enabledSeekSteps);
             setValue('customUserSeekSteps', this.settings.customUserSeekSteps);
             setValue('showCommentsSection', this.settings.showCommentsSection);

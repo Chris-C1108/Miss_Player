@@ -238,10 +238,13 @@ export class SettingsManager {
                 return typeof v === 'boolean' ? v : (v === 'true' ? true : (v === 'false' ? false : def));
             };
 
-            this.settings.showProgressBar = getBool('showProgressBar', true);
-            this.settings.showSeekControlRow = getBool('showSeekControlRow', true);
-            this.settings.showLoopControlRow = getBool('showLoopControlRow', true);
-            this.settings.showPlaybackControlRow = getBool('showPlaybackControlRow', true);
+            const permanentRowKeys = ['showProgressBar', 'showSeekControlRow', 'showLoopControlRow', 'showPlaybackControlRow'];
+            for (const rowKey of permanentRowKeys) {
+                if (getValue(rowKey, true) !== true) {
+                    setValue(rowKey, true);
+                }
+                this.settings[rowKey] = true;
+            }
 
             const rawSeekSteps = getValue('enabledSeekSteps', null);
             this.settings.enabledSeekSteps = sanitizeSeekStepList(rawSeekSteps, false);
@@ -292,10 +295,10 @@ export class SettingsManager {
         if (state) {
             state.saveSettings();
         } else {
-            setValue('showProgressBar', this.settings.showProgressBar);
-            setValue('showSeekControlRow', this.settings.showSeekControlRow);
-            setValue('showLoopControlRow', this.settings.showLoopControlRow);
-            setValue('showPlaybackControlRow', this.settings.showPlaybackControlRow);
+            setValue('showProgressBar', true);
+            setValue('showSeekControlRow', true);
+            setValue('showLoopControlRow', true);
+            setValue('showPlaybackControlRow', true);
             setValue('enabledSeekSteps', this.settings.enabledSeekSteps);
             setValue('showCommentsSection', this.settings.showCommentsSection);
             setValue('enabledCommentSources', this.settings.enabledCommentSources);
@@ -336,7 +339,7 @@ export class SettingsManager {
         const progressRow = controlButtonsContainer.querySelector('.tm-progress-row');
 
         if (progressRow) {
-            progressRow.classList.toggle('is-hidden', !this.settings.showProgressBar);
+            progressRow.classList.remove('is-hidden');
         }
 
         if (seekControlRow) {
@@ -344,11 +347,11 @@ export class SettingsManager {
         }
 
         if (loopControlRow) {
-            loopControlRow.classList.toggle('is-hidden', !this.settings.showLoopControlRow);
+            loopControlRow.classList.remove('is-hidden');
         }
 
         if (playbackControlRow) {
-            playbackControlRow.classList.toggle('is-hidden', !this.settings.showPlaybackControlRow);
+            playbackControlRow.classList.remove('is-hidden');
         }
     }
 

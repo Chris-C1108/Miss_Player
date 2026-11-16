@@ -934,6 +934,39 @@ assert.ok(
 
 console.log('✅ 26. 设置体系精简、功能转正默认开启与疯狂采集门控对齐验证通过');
 
-console.log('\n🎉 全部 26 大核心修复与人机工程验证单元测试 100% 通过！\n');
+// =========================================================================
+// 测试 27：核心控制行（进度条 / 快进退 / 高光片段 / 播放控制）永久常驻自愈防消失
+// =========================================================================
+const psVisibilityCode = fs.readFileSync('src/player/state/PlayerState.js', 'utf8');
+const syncMgrCode = fs.readFileSync('src/sync/SyncManager.js', 'utf8');
+
+assert.ok(
+    psVisibilityCode.includes("const permanentRowKeys = ['showProgressBar', 'showSeekControlRow', 'showLoopControlRow', 'showPlaybackControlRow'];") &&
+    psVisibilityCode.includes('if (getValue(rowKey, true) !== true)'),
+    'PlayerState 应对历史遗留 showProgressBar 等 false 值执行自动自愈归真'
+);
+assert.ok(
+    uiMgrCodeV25.includes("if (progressRow) progressRow.classList.remove('is-hidden');") &&
+    uiMgrCodeV25.includes("if (loopControlRow) loopControlRow.classList.remove('is-hidden');") &&
+    uiMgrCodeV25.includes("if (playbackControlRow) playbackControlRow.classList.remove('is-hidden');") &&
+    !uiMgrCodeV25.includes('!showProgressBar'),
+    'UIManager.updateControlPanelVisibility 不得再使用 !showProgressBar 等遗留配置隐藏核心控制行'
+);
+assert.ok(
+    legacySmCode.includes("progressRow.classList.remove('is-hidden');") &&
+    legacySmCode.includes("loopControlRow.classList.remove('is-hidden');") &&
+    legacySmCode.includes("playbackControlRow.classList.remove('is-hidden');") &&
+    !legacySmCode.includes('!this.settings.showProgressBar'),
+    'SettingsManager.updateControlRowsVisibility 不得再隐藏进度条/片段/播放控制行'
+);
+assert.ok(
+    syncMgrCode.includes("key === 'showProgressBar'") &&
+    syncMgrCode.includes("k === 'showProgressBar'"),
+    'SyncManager 在云端合并与本地落盘时必须保护 showProgressBar 等核心控制行不被旧备份覆盖为 false'
+);
+
+console.log('✅ 27. 控制面板核心四行（含进度条）遗留配置自愈与防隐藏契约验证通过');
+
+console.log('\n🎉 全部 27 大核心修复与人机工程验证单元测试 100% 通过！\n');
 
 
