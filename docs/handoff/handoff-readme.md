@@ -2,6 +2,7 @@
 
 | 日期时间 (Timestamp) | 规则提炼 / 主题 (Lesson / Topic) | 频次 (Seen Count) | 状态 (Status) | 交接 (Handoff) | 教训 (Lesson) | 核心标签 (Tags) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-11-17 18:00:06 | 评论多站点跨站串源根治：字段命名契约漂移 + 指纹未归一导致的错标双写 | Seen 1× (2026-11-17) | 观察中 | [2026-11-17-180006-handoff.md](2026-11-17-180006-handoff.md) | [2026-11-17-180006-lesson.md](2026-11-17-180006-lesson.md) | `跨站串源`, `inferSiteKey`, `_normalizeSiteBuckets`, `source_site归一`, `hash_fingerprint`, `CommentDebugCollector`, `normalize_bundle_comment_sources`, `v5.7.118-beta.055` |
 | 2026-11-17 01:07:00 | 废弃 UI 开关四端收敛自愈：修复控制面板进度条等核心行因历史 false 配置消失 | Seen 1× (2026-11-17) | 观察中 | [2026-11-17-010700-handoff.md](2026-11-17-010700-handoff.md) | [2026-11-17-010700-lesson.md](2026-11-17-010700-lesson.md) | `showProgressBar`, `进度条消失`, `核心四行常驻`, `旧配置自愈`, `SyncManager防覆盖`, `Test27`, `v5.7.118-beta.054` |
 | 2026-11-16 20:54:30 | 收藏片段胶囊五态状态机、非对称邻近滞回高亮、GPU 进度推进与三端同步 | Seen 1× (2026-11-16) | 观察中 | [2026-11-16-205430-handoff.md](2026-11-16-205430-handoff.md) | [2026-11-16-205430-lesson.md](2026-11-16-205430-lesson.md) | `capsuleStateMachine`, `五态状态机`, `邻近滞回高亮`, `GPU进度条`, `LoopBadge`, `v5.7.118-beta.053` |
 | 2026-11-16 19:35:00 | 高能现场增量翻页自动过滤与多站点双卡并排滑动切源动效 | Seen 1× (2026-11-16) | 观察中 | [2026-11-16-193500-handoff.md](2026-11-16-193500-handoff.md) | [2026-11-16-193500-lesson.md](2026-11-16-193500-lesson.md) | `高能现场增量过滤`, `patchSectionContent`, `双卡并排滑轨`, `is-swipe-adjacent`, `translate3d`, `v5.7.118-beta.052` |

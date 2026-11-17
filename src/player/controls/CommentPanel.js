@@ -1013,6 +1013,12 @@ export class CommentPanel {
                 restoredCount += cachedSite.comments.length;
             }
         }
+        if (restoredCount > 0) {
+            const movedCount = this._normalizeSiteBuckets();
+            if (movedCount > 0) {
+                logger.log(`[CommentPanel] 本地缓存跨站点串源自愈：已归位 ${movedCount} 条评论`);
+            }
+        }
         return restoredCount;
     }
 
@@ -1336,10 +1342,11 @@ export class CommentPanel {
 
             const duration = this.targetVideo ? this.targetVideo.duration : 10800;
             const processed = (res.comments || []).map((c, idx) => {
-                const proc = processComment(c.text, this.videoCode, duration);
+                const proc = processComment(c.text || c.rawText || '', this.videoCode, duration);
                 return {
                     ...c,
                     ...proc,
+                    source_site: siteKey,
                     _timestamp: parseCommentDate(c.time),
                     _originalIndex: (page - 1) * 50 + idx
                 };
@@ -3491,7 +3498,10 @@ export class CommentPanel {
 
         const reprocess = (comments) => {
             return comments.map(c => {
-                const proc = processComment(c.text, this.videoCode, duration);
+                // 远端 / WebDAV 合并的评论可能只有 rawText 或既有 text；统一容错，防上 undefined 抛错
+                const srcText = c.rawText || c.text || c.content_raw || '';
+                if (!srcText || typeof srcText !== 'string') return c;
+                const proc = processComment(srcText, this.videoCode, duration);
                 return { ...c, ...proc };
             });
         };
@@ -3511,12 +3521,21 @@ export class CommentPanel {
             CommentDebugCollector.collectComments(this.videoCode, this.javdbComments, duration);
         }
 
+        // 站点分桶归一化：修复历史脏数据 (source_site 错标) 造成的跨站点串源
+        const movedCount = this._normalizeSiteBuckets();
+        if (movedCount > 0) {
+            logger.log(`[CommentPanel] 评论站点串源自愈：已归位 ${movedCount} 条评论`);
+        }
+
         // 更新各站点缓存中的解析数据
         for (const sKey of Object.keys(this.sites)) {
             if (this.sites[sKey].comments.length > 0) {
                 CommentCacheManager.saveSiteCache(this.videoCode, sKey, this.sites[sKey]);
-                // 同步将真实总时长更新至 Supabase
-                SupabaseService.uploadComments(this.videoCode, sKey, this.sites[sKey].comments, Math.round(duration));
+                // 同步将真实总时长更新至 Supabase（仅上传真实归属本站点的评论，杜绝跨站点串源回写）
+                const ownComments = this.sites[sKey].comments.filter(c => this._inferCommentSite(c) === sKey);
+                if (ownComments.length > 0) {
+                    SupabaseService.uploadComments(this.videoCode, sKey, ownComments, Math.round(duration));
+                }
             }
         }
 
@@ -3552,10 +3571,91 @@ export class CommentPanel {
         });
     }
 
-    _resolveMergeSiteKey(rawSource) {
-        const sKey = String(rawSource || 'jable').toLowerCase();
-        if (sKey === 'javlibrary' || sKey === 'javlib-review') return 'javlib';
+    /**
+     * 从「来源字段 + 评论 ID 特征」推断评论真实归属站点（跨站点串源归一化的唯一权威）
+     * 优先级：显式来源字符串 > site_comment_id 前缀 > 纯数字 ID 视为 Jable > 兜底 jable
+     * @param {string} rawSource - source_site / source / site 任意来源字段
+     * @param {string} [commentId] - 评论 ID (Supabase: site_comment_id, 本地: id)
+     * @returns {'jable'|'javlib'|'javdb'}
+     */
+    static inferSiteKey(rawSource, commentId) {
+        // 优先级 1：带命名空间的评论 ID 前缀是唯一不可伪造的硬证据
+        // (历史脏数据存在 source_site='jable' 但 ID 为 javdb-api-* 的错标，必须以此为准)
+        const id = String(commentId || '').toLowerCase().trim();
+        if (id.startsWith('javdb')) return 'javdb';
+        if (id.startsWith('javlib')) return 'javlib';
+
+        // 优先级 2：显式来源字段
+        const raw = String(rawSource || '').toLowerCase().trim();
+        if (raw.startsWith('javlibrary') || raw.startsWith('javlib')) return 'javlib';
+        if (raw.startsWith('javdb')) return 'javdb';
+        if (raw.startsWith('jable')) return 'jable';
+
+        // 优先级 3：纯数字 ID 只可能属于 Jable
+        if (id && /^\d+$/.test(id)) return 'jable';
+
+        return 'jable';
+    }
+
+    _inferCommentSite(comment) {
+        if (!comment) return 'jable';
+        return CommentPanel.inferSiteKey(
+            comment.source_site || comment.source || comment.site,
+            comment.site_comment_id || comment.id
+        );
+    }
+
+    _resolveMergeSiteKey(rawSource, commentId) {
+        const sKey = CommentPanel.inferSiteKey(rawSource, commentId);
         return this.sites[sKey] ? sKey : 'jable';
+    }
+
+    /**
+     * 站点分桶归一化：把被历史版本错误标记进其他站点桶的评论搬回真实站点并去重。
+     * 修复历史脏数据 (source_site='jable' 但 site_comment_id 形如 javdb-api-*) 造成的
+     * “不同站点 section 内容相同”串源问题。
+     * @returns {number} 被搬运的评论条数
+     */
+    _normalizeSiteBuckets() {
+        let moved = 0;
+        const spillover = {};
+
+        for (const siteKey of Object.keys(this.sites)) {
+            const site = this.sites[siteKey];
+            if (!site || !Array.isArray(site.comments) || site.comments.length === 0) continue;
+            const keep = [];
+            for (const c of site.comments) {
+                const inferred = this._inferCommentSite(c);
+                if (inferred !== siteKey && this.sites[inferred]) {
+                    if (!spillover[inferred]) spillover[inferred] = [];
+                    spillover[inferred].push(c);
+                    moved++;
+                } else {
+                    keep.push(c);
+                }
+            }
+            site.comments = keep;
+        }
+
+        for (const sKey of Object.keys(spillover)) {
+            const targetSite = this.sites[sKey];
+            for (const c of spillover[sKey]) {
+                const dup = targetSite.comments.some(x =>
+                    (x.id && c.id && String(x.id) === String(c.id)) ||
+                    (x.text && c.text && x.text === c.text)
+                );
+                if (!dup) {
+                    c.source_site = sKey;
+                    targetSite.comments.push(c);
+                }
+            }
+            if (targetSite.comments.length > 0) {
+                targetSite.status = 'loaded';
+                targetSite.totalCount = Math.max(targetSite.totalCount || 0, targetSite.comments.length);
+            }
+        }
+
+        return moved;
     }
 
     _finalizeMergedSites(touchedKeys) {
@@ -3579,19 +3679,21 @@ export class CommentPanel {
         let added = 0;
 
         for (const item of remoteList) {
-            const sKey = this._resolveMergeSiteKey(item.source_site);
+            const sKey = this._resolveMergeSiteKey(item.source_site || item.source || item.site, item.site_comment_id || item.id);
             const targetSite = this.sites[sKey];
             if (!targetSite) continue;
 
             const exists = targetSite.comments.some(c => String(c.id) === String(item.site_comment_id) || (c.text && c.text === item.content_raw));
             if (!exists) {
-                const processed = processComment(item.content_raw, this.videoCode, duration);
+                const processed = processComment(item.content_raw || item.text || '', this.videoCode, duration);
                 processed.id = item.site_comment_id;
                 processed.user = item.user_name;
                 processed.userUrl = item.user_url;
                 processed.time = item.published_at;
                 processed.score = item.score;
                 processed.source_site = sKey;
+                // processComment 不回填 text，补齐以防下游 (reprocess / 上报) 读到 undefined
+                if (!processed.text) processed.text = processed.rawText || '';
                 targetSite.comments.push(processed);
                 touchedKeys.add(sKey);
                 added++;
@@ -3610,17 +3712,18 @@ export class CommentPanel {
         let added = 0;
 
         for (const item of commentList) {
-            const sKey = this._resolveMergeSiteKey(item.source || item.source_site);
+            const sKey = this._resolveMergeSiteKey(item.source_site || item.source || item.site, item.site_comment_id || item.id);
             const targetSite = this.sites[sKey];
             if (!targetSite) continue;
 
             const exists = targetSite.comments.some(c => String(c.id) === String(item.id) || (c.text && c.text === item.text));
             if (!exists) {
-                const processed = processComment(item.text, this.videoCode, duration);
+                const processed = processComment(item.text || item.content_raw || '', this.videoCode, duration);
                 processed.id = item.id;
                 processed.user = item.user;
                 processed.time = item.time;
                 processed.source_site = sKey;
+                if (!processed.text) processed.text = processed.rawText || '';
                 targetSite.comments.push(processed);
                 touchedKeys.add(sKey);
                 added++;

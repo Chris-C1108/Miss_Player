@@ -158,17 +158,31 @@ export class SupabaseService {
         if (!config.isEnabled) return;
 
         const code = videoCode.toUpperCase();
+        const rawSite = String(sourceSite || 'jable').toLowerCase();
+        const normalizedSite = (rawSite.startsWith('javlibrary') || rawSite.startsWith('javlib'))
+            ? 'javlib'
+            : (rawSite.startsWith('javdb') ? 'javdb' : 'jable');
+
         const rows = [];
         for (const c of comments) {
             if (!c) continue;
             const siteId = c.id || (c.user + '_' + (c.time || ''));
             const content = c.rawText || c.text || '';
             if (!content.trim()) continue;
-            const fingerprint = md5(sourceSite + '_' + siteId + '_' + content);
+
+            // 跨站点串源守卫：评论 ID 前缀已明确指向其他站点时，绝不冒充本站点入库
+            // (历史 BUG: JavDB 评论被标为 jable 写入，导致各站点 section 内容雷同)
+            const idLower = String(siteId).toLowerCase();
+            const idSite = idLower.startsWith('javdb')
+                ? 'javdb'
+                : (idLower.startsWith('javlib') ? 'javlib' : (/^\d+$/.test(idLower) ? 'jable' : ''));
+            if (idSite && idSite !== normalizedSite) continue;
+
+            const fingerprint = md5(normalizedSite + '_' + siteId + '_' + content);
 
             rows.push({
                 avcode: code,
-                source_site: sourceSite,
+                source_site: normalizedSite,
                 site_comment_id: String(siteId),
                 user_name: c.user || '匿名',
                 user_url: c.userUrl || null,
@@ -198,7 +212,7 @@ export class SupabaseService {
                 data: JSON.stringify({
                     p_avcode: code,
                     p_new_comments: rows,
-                    p_source: sourceSite,
+                    p_source: normalizedSite,
                     p_duration_seconds: Math.round(durationSeconds || 0)
                 })
             });
@@ -228,7 +242,7 @@ export class SupabaseService {
                     total_count: rows.length,
                     has_timestamps_count: rows.filter(r => r.has_timestamps).length,
                     duration_seconds: Math.round(durationSeconds || 0),
-                    last_source: sourceSite,
+                    last_source: normalizedSite,
                     updated_at: new Date().toISOString()
                 })
             });

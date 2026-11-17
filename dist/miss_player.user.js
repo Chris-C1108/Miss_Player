@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.118-beta.054
+// @version            5.7.118-beta.055
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1872,7 +1872,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.054";
+		return "5.7.118-beta.055";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4036,7 +4036,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.118-beta.054";
+		return "5.7.118-beta.055";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6145,7 +6145,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.054";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.118-beta.055";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -8946,16 +8946,21 @@
 			const config = this.getConfig();
 			if (!config.isEnabled) return;
 			const code = videoCode.toUpperCase();
+			const rawSite = String(sourceSite || "jable").toLowerCase();
+			const normalizedSite = rawSite.startsWith("javlibrary") || rawSite.startsWith("javlib") ? "javlib" : rawSite.startsWith("javdb") ? "javdb" : "jable";
 			const rows = [];
 			for (const c of comments) {
 				if (!c) continue;
 				const siteId = c.id || c.user + "_" + (c.time || "");
 				const content = c.rawText || c.text || "";
 				if (!content.trim()) continue;
-				const fingerprint = md5(sourceSite + "_" + siteId + "_" + content);
+				const idLower = String(siteId).toLowerCase();
+				const idSite = idLower.startsWith("javdb") ? "javdb" : idLower.startsWith("javlib") ? "javlib" : /^\d+$/.test(idLower) ? "jable" : "";
+				if (idSite && idSite !== normalizedSite) continue;
+				const fingerprint = md5(normalizedSite + "_" + siteId + "_" + content);
 				rows.push({
 					avcode: code,
-					source_site: sourceSite,
+					source_site: normalizedSite,
 					site_comment_id: String(siteId),
 					user_name: c.user || "匿名",
 					user_url: c.userUrl || null,
@@ -8982,7 +8987,7 @@
 					data: JSON.stringify({
 						p_avcode: code,
 						p_new_comments: rows,
-						p_source: sourceSite,
+						p_source: normalizedSite,
 						p_duration_seconds: Math.round(durationSeconds || 0)
 					})
 				});
@@ -9009,7 +9014,7 @@
 						total_count: rows.length,
 						has_timestamps_count: rows.filter((r) => r.has_timestamps).length,
 						duration_seconds: Math.round(durationSeconds || 0),
-						last_source: sourceSite,
+						last_source: normalizedSite,
 						updated_at: new Date().toISOString()
 					})
 				});
@@ -13938,12 +13943,15 @@
 			if (platformStats && typeof platformStats === "object") batch.platformStats = Object.assign({}, batch.platformStats || {}, platformStats);
 			let newCount = 0;
 			for (const c of candidateComments) {
-				const key = `${c.source || "unknown"}_${c.id}`;
+				const rawSite = String(c.source_site || c.site || c.source || "").toLowerCase();
+				const siteKey = rawSite.startsWith("javlibrary") || rawSite.startsWith("javlib") ? "javlib" : rawSite.startsWith("javdb") ? "javdb" : "jable";
+				const key = `${siteKey}_${c.id}`;
 				if (!this._processedCommentKeys.has(key) || c.timestamps && c.timestamps.length > 0) {
 					this._processedCommentKeys.add(key);
 					const item = {
 						id: String(c.id || ""),
-						source: c.source || "jable",
+						source_site: siteKey,
+						source: siteKey,
 						user: c.user || "",
 						text: c.rawText || c.text || "",
 						time: c.time || "",
@@ -16072,6 +16080,10 @@
 					restoredCount += cachedSite.comments.length;
 				}
 			}
+			if (restoredCount > 0) {
+				const movedCount = this._normalizeSiteBuckets();
+				if (movedCount > 0) logger.log(`[CommentPanel] 本地缓存跨站点串源自愈：已归位 ${movedCount} 条评论`);
+			}
 			return restoredCount;
 		}
 		_autoExpandBestSection() {
@@ -16334,10 +16346,11 @@
 				}
 				const duration = this.targetVideo ? this.targetVideo.duration : 10800;
 				const processed = (res.comments || []).map((c, idx) => {
-					const proc = processComment(c.text, this.videoCode, duration);
+					const proc = processComment(c.text || c.rawText || "", this.videoCode, duration);
 					return {
 						...c,
 						...proc,
+						source_site: siteKey,
 						_timestamp: parseCommentDate(c.time),
 						_originalIndex: (page - 1) * 50 + idx
 					};
@@ -17853,7 +17866,9 @@
 			logger.log(`[CommentPanel] 视频元数据已加载，时长: ${duration}s。重新解析所有评论...`);
 			const reprocess = (comments) => {
 				return comments.map((c) => {
-					const proc = processComment(c.text, this.videoCode, duration);
+					const srcText = c.rawText || c.text || c.content_raw || "";
+					if (!srcText || typeof srcText !== "string") return c;
+					const proc = processComment(srcText, this.videoCode, duration);
 					return {
 						...c,
 						...proc
@@ -17872,9 +17887,12 @@
 				this.javdbComments = reprocess(this.javdbComments);
 				CommentDebugCollector.collectComments(this.videoCode, this.javdbComments, duration);
 			}
+			const movedCount = this._normalizeSiteBuckets();
+			if (movedCount > 0) logger.log(`[CommentPanel] 评论站点串源自愈：已归位 ${movedCount} 条评论`);
 			for (const sKey of Object.keys(this.sites)) if (this.sites[sKey].comments.length > 0) {
 				CommentCacheManager.saveSiteCache(this.videoCode, sKey, this.sites[sKey]);
-				SupabaseService.uploadComments(this.videoCode, sKey, this.sites[sKey].comments, Math.round(duration));
+				const ownComments = this.sites[sKey].comments.filter((c) => this._inferCommentSite(c) === sKey);
+				if (ownComments.length > 0) SupabaseService.uploadComments(this.videoCode, sKey, ownComments, Math.round(duration));
 			}
 			this.applyFilter();
 			this.renderCommentsList();
@@ -17903,10 +17921,54 @@
 				sourceSite: comment?.source_site || comment?.source || this.activeSite || null
 			});
 		}
-		_resolveMergeSiteKey(rawSource) {
-			const sKey = String(rawSource || "jable").toLowerCase();
-			if (sKey === "javlibrary" || sKey === "javlib-review") return "javlib";
+		static inferSiteKey(rawSource, commentId) {
+			const id = String(commentId || "").toLowerCase().trim();
+			if (id.startsWith("javdb")) return "javdb";
+			if (id.startsWith("javlib")) return "javlib";
+			const raw = String(rawSource || "").toLowerCase().trim();
+			if (raw.startsWith("javlibrary") || raw.startsWith("javlib")) return "javlib";
+			if (raw.startsWith("javdb")) return "javdb";
+			if (raw.startsWith("jable")) return "jable";
+			if (id && /^\d+$/.test(id)) return "jable";
+			return "jable";
+		}
+		_inferCommentSite(comment) {
+			if (!comment) return "jable";
+			return CommentPanel.inferSiteKey(comment.source_site || comment.source || comment.site, comment.site_comment_id || comment.id);
+		}
+		_resolveMergeSiteKey(rawSource, commentId) {
+			const sKey = CommentPanel.inferSiteKey(rawSource, commentId);
 			return this.sites[sKey] ? sKey : "jable";
+		}
+		_normalizeSiteBuckets() {
+			let moved = 0;
+			const spillover = {};
+			for (const siteKey of Object.keys(this.sites)) {
+				const site = this.sites[siteKey];
+				if (!site || !Array.isArray(site.comments) || site.comments.length === 0) continue;
+				const keep = [];
+				for (const c of site.comments) {
+					const inferred = this._inferCommentSite(c);
+					if (inferred !== siteKey && this.sites[inferred]) {
+						if (!spillover[inferred]) spillover[inferred] = [];
+						spillover[inferred].push(c);
+						moved++;
+					} else keep.push(c);
+				}
+				site.comments = keep;
+			}
+			for (const sKey of Object.keys(spillover)) {
+				const targetSite = this.sites[sKey];
+				for (const c of spillover[sKey]) if (!targetSite.comments.some((x) => x.id && c.id && String(x.id) === String(c.id) || x.text && c.text && x.text === c.text)) {
+					c.source_site = sKey;
+					targetSite.comments.push(c);
+				}
+				if (targetSite.comments.length > 0) {
+					targetSite.status = "loaded";
+					targetSite.totalCount = Math.max(targetSite.totalCount || 0, targetSite.comments.length);
+				}
+			}
+			return moved;
 		}
 		_finalizeMergedSites(touchedKeys) {
 			for (const sKey of touchedKeys) {
@@ -17925,17 +17987,18 @@
 			const touchedKeys = new Set();
 			let added = 0;
 			for (const item of remoteList) {
-				const sKey = this._resolveMergeSiteKey(item.source_site);
+				const sKey = this._resolveMergeSiteKey(item.source_site || item.source || item.site, item.site_comment_id || item.id);
 				const targetSite = this.sites[sKey];
 				if (!targetSite) continue;
 				if (!targetSite.comments.some((c) => String(c.id) === String(item.site_comment_id) || c.text && c.text === item.content_raw)) {
-					const processed = processComment(item.content_raw, this.videoCode, duration);
+					const processed = processComment(item.content_raw || item.text || "", this.videoCode, duration);
 					processed.id = item.site_comment_id;
 					processed.user = item.user_name;
 					processed.userUrl = item.user_url;
 					processed.time = item.published_at;
 					processed.score = item.score;
 					processed.source_site = sKey;
+					if (!processed.text) processed.text = processed.rawText || "";
 					targetSite.comments.push(processed);
 					touchedKeys.add(sKey);
 					added++;
@@ -17950,15 +18013,16 @@
 			const touchedKeys = new Set();
 			let added = 0;
 			for (const item of commentList) {
-				const sKey = this._resolveMergeSiteKey(item.source || item.source_site);
+				const sKey = this._resolveMergeSiteKey(item.source_site || item.source || item.site, item.site_comment_id || item.id);
 				const targetSite = this.sites[sKey];
 				if (!targetSite) continue;
 				if (!targetSite.comments.some((c) => String(c.id) === String(item.id) || c.text && c.text === item.text)) {
-					const processed = processComment(item.text, this.videoCode, duration);
+					const processed = processComment(item.text || item.content_raw || "", this.videoCode, duration);
 					processed.id = item.id;
 					processed.user = item.user;
 					processed.time = item.time;
 					processed.source_site = sKey;
+					if (!processed.text) processed.text = processed.rawText || "";
 					targetSite.comments.push(processed);
 					touchedKeys.add(sKey);
 					added++;

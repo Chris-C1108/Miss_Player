@@ -93,14 +93,21 @@ export class CommentDebugCollector {
 
         let newCount = 0;
         for (const c of candidateComments) {
-            const key = `${c.source || 'unknown'}_${c.id}`;
+            // 站点键归一化：兼容 source_site / site / source 三种字段命名
+            // (Provider 写入的是 site，Supabase 写入的是 source_site，旧字段为 source)
+            const rawSite = String(c.source_site || c.site || c.source || '').toLowerCase();
+            const siteKey = rawSite.startsWith('javlibrary') || rawSite.startsWith('javlib')
+                ? 'javlib'
+                : (rawSite.startsWith('javdb') ? 'javdb' : 'jable');
+            const key = `${siteKey}_${c.id}`;
             // 如果内存中从未记录，或数据携带时间戳变动，则压入写回队列
             if (!this._processedCommentKeys.has(key) || (c.timestamps && c.timestamps.length > 0)) {
                 this._processedCommentKeys.add(key);
 
                 const item = {
                     id: String(c.id || ''),
-                    source: c.source || 'jable',
+                    source_site: siteKey,
+                    source: siteKey,
                     user: c.user || '',
                     text: c.rawText || c.text || '',
                     time: c.time || '',
