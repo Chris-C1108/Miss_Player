@@ -8,13 +8,14 @@
  */
 
 const DB_NAME = 'MissPlayerDB';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 export const STORES = {
     MARKERS: 'markers',
     COMMENTS: 'comments_cache',
     MEDIA: 'media_streams',
-    HEATMAP: 'heatmap'
+    HEATMAP: 'heatmap',
+    SUBTITLES: 'subtitles'
 };
 
 let dbPromise = null;
@@ -42,6 +43,9 @@ function getDB() {
             }
             if (!db.objectStoreNames.contains(STORES.HEATMAP)) {
                 db.createObjectStore(STORES.HEATMAP, { keyPath: 'key' });
+            }
+            if (!db.objectStoreNames.contains(STORES.SUBTITLES)) {
+                db.createObjectStore(STORES.SUBTITLES, { keyPath: 'key' });
             }
         };
 

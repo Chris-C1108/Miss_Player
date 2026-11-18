@@ -360,3 +360,12 @@ export const ICON_X_CLOSE = `
     </svg>
 `;
 
+
+/** 字幕 (CC 风格圆角矩形 + 双横线，20×20，与顶栏功能键同尺寸) */
+export const ICON_SUBTITLE = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2.5" y="5" width="19" height="14" rx="4"/>
+        <path d="M9.5 10.6a2.4 2.4 0 1 0 0 2.8"/>
+        <path d="M16.5 10.6a2.4 2.4 0 1 0 0 2.8"/>
+    </svg>
+`;

@@ -365,7 +365,7 @@ export class UIManager {
             }
 
             // 2. 确保点击事件不是从控制按钮、浮层面板或模态框冒泡上来的
-            const nonVideoOverlaySelector = '.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .mp-s2-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-surface-event-sink';
+            const nonVideoOverlaySelector = '.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .mp-s2-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-subtitle-sheet, .tm-subtitle-panel, .tm-subtitle-button, .tm-surface-event-sink';
             if (e.target.closest(nonVideoOverlaySelector)) {
                 return;
             }

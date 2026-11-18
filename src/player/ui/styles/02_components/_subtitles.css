@@ -1,0 +1,389 @@
+/* =========================================================================
+   Miss Player 字幕系统 (Subtitle System)
+   视频内嵌渲染层 + 顶栏入口 + 轨切换底部浮层
+   遵循 Apple HIG：纯黑底、毛玻璃、GPU 位移、零优先级强压
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   1. 视频内嵌字幕渲染层
+   ------------------------------------------------------------------------- */
+.tm-subtitle-layer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 8%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 0 7%;
+    pointer-events: none;
+    z-index: calc(var(--z-base) + 3);
+    transition: opacity 0.18s ease;
+    contain: layout style;
+}
+
+.tm-subtitle-layer.is-empty {
+    opacity: 0;
+}
+
+.tm-subtitle-text {
+    max-width: 100%;
+    text-align: center;
+    white-space: pre-line;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", sans-serif;
+    font-size: clamp(15px, 4.2vw, 21px);
+    font-weight: 600;
+    line-height: 1.42;
+    letter-spacing: -0.2px;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), 0 0 14px rgba(0, 0, 0, 0.55);
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.tm-subtitle-size-small .tm-subtitle-text {
+    font-size: clamp(13px, 3.5vw, 17px);
+    font-weight: 500;
+}
+
+.tm-subtitle-size-large .tm-subtitle-text {
+    font-size: clamp(17px, 5vw, 26px);
+}
+
+/* -------------------------------------------------------------------------
+   2. 顶栏字幕入口按钮
+   ------------------------------------------------------------------------- */
+.tm-subtitle-button {
+    position: relative;
+    width: var(--button-md);
+    height: var(--button-md);
+    border-radius: calc(var(--button-md) / 2);
+    background-color: hsla(var(--shadcn-secondary) / 0.7);
+    color: hsl(var(--shadcn-secondary-foreground));
+    border: 1px solid hsla(var(--shadcn-border) / 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-controls);
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, color 0.2s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-sm);
+}
+
+.tm-subtitle-button:hover {
+    background-color: hsla(var(--shadcn-accent) / 0.9);
+    transform: scale(1.08);
+}
+
+.tm-subtitle-button:active {
+    transform: scale(0.96);
+}
+
+/* 已挂载字幕轨：品牌粉呼吸指示点 */
+.tm-subtitle-button.has-active::after {
+    content: "";
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background-color: var(--brand-pink);
+    box-shadow: 0 0 6px rgba(var(--brand-pink-rgb), 0.85);
+}
+
+.tm-subtitle-button.is-open {
+    background-color: hsla(var(--shadcn-accent) / 0.95);
+    color: hsl(var(--shadcn-foreground));
+}
+
+/* -------------------------------------------------------------------------
+   3. 轨切换浮层 (Bottom Sheet)
+   ------------------------------------------------------------------------- */
+.tm-subtitle-sheet {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.tm-subtitle-scrim {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.tm-subtitle-panel {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    max-height: 68%;
+    margin: 0 12px calc(env(safe-area-inset-bottom, 0px) + 12px);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    border-radius: 20px;
+    background-color: rgba(20, 20, 22, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    transform: translateZ(0);
+    animation: tm-subtitle-rise 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    contain: paint layout;
+}
+
+@keyframes tm-subtitle-rise {
+    from {
+        transform: translate3d(0, 18px, 0);
+        opacity: 0;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
+    }
+}
+
+.tm-subtitle-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 14px 16px 10px;
+    flex-shrink: 0;
+}
+
+.tm-subtitle-head-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: #ffffff;
+}
+
+.tm-subtitle-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.75);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tm-subtitle-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+}
+
+.tm-subtitle-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 10px 12px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    overflow-x: hidden;
+}
+
+/* 工具行 */
+.tm-subtitle-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 4px 6px;
+    flex-wrap: wrap;
+}
+
+.tm-subtitle-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.tm-subtitle-action-btn:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+.tm-subtitle-action-btn:active {
+    transform: scale(0.96);
+}
+
+.tm-subtitle-size-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+    padding: 2px;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.tm-subtitle-size-btn {
+    min-width: 30px;
+    height: 26px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 9999px;
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tm-subtitle-size-btn.is-active {
+    background-color: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+.tm-subtitle-file-input {
+    display: none;
+}
+
+/* 列表 */
+.tm-subtitle-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tm-subtitle-section-label {
+    padding: 10px 12px 2px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.38);
+}
+
+.tm-subtitle-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.tm-subtitle-item:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.tm-subtitle-item:active {
+    transform: scale(0.995);
+}
+
+.tm-subtitle-item.is-active {
+    background-color: rgba(255, 255, 255, 0.09);
+    box-shadow: inset 2.5px 0 0 var(--brand-pink);
+}
+
+.tm-subtitle-item.is-busy {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+.tm-subtitle-item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+}
+
+.tm-subtitle-item-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: rgba(255, 255, 255, 0.94);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tm-subtitle-item-meta {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.42);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tm-subtitle-item-badge {
+    flex-shrink: 0;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    background-color: hsla(var(--shadcn-accent) / 0.6);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.tm-subtitle-item-del {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 9999px;
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tm-subtitle-item-del:hover {
+    background-color: rgba(255, 80, 80, 0.16);
+    color: #ff6b6b;
+}
+
+.tm-subtitle-hint {
+    padding: 16px 12px;
+    text-align: center;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.42);
+}
+
+/* -------------------------------------------------------------------------
+   4. 移动端竖屏适配
+   ------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+    .tm-subtitle-panel {
+        max-width: none;
+        max-height: 62%;
+        margin: 0 0 env(safe-area-inset-bottom, 0px);
+        border-radius: 20px 20px 0 0;
+    }
+
+    .tm-subtitle-layer {
+        bottom: 10%;
+        padding: 0 6%;
+    }
+}

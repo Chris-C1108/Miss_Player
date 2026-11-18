@@ -125,3 +125,47 @@ export async function fetchWithDomainRotation(domainList, pathBuilder, options =
     }
     throw lastError || new Error('ALL_DOMAINS_FAILED');
 }
+
+/**
+ * 统一二进制请求（字幕等大体量文本资源专用）
+ * 强制以 arraybuffer 取回原始字节，交由字幕解码器做 BOM / 区位编码嗅探，
+ * 彻底规避 responseText 默认按 UTF-8 解码导致 GBK / UTF-16 字幕乱码。
+ * @param {string} url - 请求 URL
+ * @param {Object} options - 请求选项
+ * @returns {Promise<{status: number, buffer: ArrayBuffer, finalUrl: string}>}
+ */
+export function fetchBinaryWithTransport(url, options = {}) {
+    const { method = 'GET', headers = {}, timeout = 15000 } = options;
+
+    if (typeof GM_xmlhttpRequest === 'function') {
+        return new Promise((resolve, reject) => {
+            let completed = false;
+            const req = GM_xmlhttpRequest({
+                method,
+                url,
+                headers,
+                timeout,
+                responseType: 'arraybuffer',
+                onload: (res) => {
+                    if (completed) return;
+                    completed = true;
+                    resolve({ status: res.status, buffer: res.response, finalUrl: res.finalUrl || url });
+                },
+                onerror: () => {
+                    if (completed) return;
+                    completed = true;
+                    reject(new Error('NETWORK_ERROR'));
+                },
+                ontimeout: () => {
+                    if (completed) return;
+                    completed = true;
+                    if (req && req.abort) req.abort();
+                    reject(new Error('NETWORK_TIMEOUT'));
+                }
+            });
+        });
+    }
+
+    return fetch(url, { method, headers, credentials: 'omit' })
+        .then(async (res) => ({ status: res.status, buffer: await res.arrayBuffer(), finalUrl: res.url }));
+}

@@ -36,6 +36,8 @@ export class PlayerState {
             sidebarPosition: 'right',       // 评论侧边栏位置 ('left' | 'right')
             sidebarHidden: false,           // 评论侧边栏是否隐藏 (true | false)
             preferredPlaybackRate: 1.0,     // 默认/首选播放速度
+            subtitleEnabled: false,         // 字幕总开关 (默认关闭，由用户主动挂载字幕轨)
+            subtitleFontSize: 'medium',     // 字幕字号 ('small' | 'medium' | 'large')
             pauseOnBlur: true,              // 页面离开/失焦后停止播放 (默认为开)
             buttonSoundEnabled: true,       // 控制面板按钮点击音效 (默认为开)
             defaultMuted: true,             // 默认静音播放 (带超时重置记忆)
@@ -113,6 +115,9 @@ export class PlayerState {
             this.settings.sidebarHidden = getBool('sidebarHidden', false);
             const rawSpeed = parseFloat(getValue('preferredPlaybackRate', 1.0));
             this.settings.preferredPlaybackRate = (!isNaN(rawSpeed) && rawSpeed >= 0.5 && rawSpeed <= 4.0) ? rawSpeed : 1.0;
+            this.settings.subtitleEnabled = getBool('subtitleEnabled', false);
+            const rawSubtitleSize = getValue('subtitleFontSize', 'medium');
+            this.settings.subtitleFontSize = ['small', 'medium', 'large'].includes(rawSubtitleSize) ? rawSubtitleSize : 'medium';
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
@@ -252,6 +257,8 @@ export class PlayerState {
             setValue('betaSingleHandMode', Boolean(this.settings.betaSingleHandMode));
             setValue('singleHandPosition', this.settings.singleHandPosition || 'right');
             setValue('viewportDebugEnabled', Boolean(this.settings.viewportDebugEnabled));
+            setValue('subtitleEnabled', Boolean(this.settings.subtitleEnabled));
+            setValue('subtitleFontSize', this.settings.subtitleFontSize || 'medium');
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }

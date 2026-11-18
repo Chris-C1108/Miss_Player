@@ -131,6 +131,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 ### 3. 增强业务功能
 * **评论系统**：`src/player/controls/CommentPanel.js`、`CommentScraper.js` 与模块化视图/辅助组件（`src/player/comments/`：`CommentCardRenderer.js` 安全渲染、`CommentCodePreview.js` 番号预览、`CommentReportModal.js` 问题上报；多源异步抓取 Jable / JavDB / JavLibrary、时间戳解析、逆向倒数时间校准）
 * **疯狂采集引擎**：`src/player/comments/CrazyScraper.js`（宿主页面全量番号多页循环爬取、四级防重跳过）
+* **字幕系统**：`src/player/subtitles/`（`SubtitleEngine.js` 多源并发采集 + 置信度排序、`providers/` 迅雷 Oracle 与 SubtitleCat 适配器、`SubtitleDecoder.js` BOM/GB18030/BIG5 编码嗅探、`SubtitleFormat.js` SRT/ASS/VTT 解析与 WebVTT 标准化、`SubtitleRepository.js` IndexedDB + WebDAV 番号独立文件仓储、`SubtitleManager.js` 视频内嵌渲染层与字幕轨切换面板）。在线采集受「实验功能 (`betaMode`)」总开关约束
 * **多维语义标签库**：`src/player/managers/tagTaxonomy.js`（体位姿势、相貌身材、行为特征等系统化标签矩阵）
 * **自动登录**：`src/autologin/`（多站点凭据管理、跨域 iframe 签名桥接）
 * **广告拦截**：`src/adblock/`（DOM 净化与弹窗拦截）
@@ -145,9 +146,10 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **版本检测与更新**：`src/services/SleazyForkService.js` — 官方只读 JSON API 握手与语义化 Semver 版本比对
 * **WebDAV 客户端**：`src/sync/WebDavClient.js` — 跨域原子文件落盘、PROPFIND 嗅探与目录逐级自愈
 * **同步协调器**：`src/sync/SyncManager.js` — 分布式双向增量合并与墓碑垃圾回收 (GC)
+* **字幕存储通道**：字幕包按番号独立落盘 `/MissPlayer/subtitles/[AVCODE].json`（IndexedDB `subtitles` store 为本地极速层，WebDAV 文件为跨设备漫游层，按 `id` 并集合并、`addedAt` 新者胜）
 
 ### 5. 共享基础设施 (`src/utils/` & `src/constants/`)
-* **工具库**：`src/utils/`（`storage.js`, `reactiveStore.js`, `indexedDB.js`, `videoCode.js`, `dom.js`, `md5.js`, `modal.js`, `clipboard.js`）
+* **工具库**：`src/utils/`（`storage.js`, `reactiveStore.js`, `indexedDB.js`, `videoCode.js`, `dom.js`, `md5.js`, `modal.js`, `clipboard.js`, `http.js`）
 * **常量与字典**：`src/constants/domains.js`（站点活跃域名矩阵）、`i18n.js`（五国语言国际化字典）、`icons.js`（矢量 SVG 图标）
 
 ---

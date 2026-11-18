@@ -44,6 +44,8 @@ export class SettingsManager {
             buttonSoundEnabled: true,
             defaultMuted: true,
             muteResetMinutes: 5,
+            subtitleEnabled: false,
+            subtitleFontSize: 'medium',
             betaPlayMode: 'normal',
             previewDurationSeconds: 5,
             climaxDurationSeconds: 60,
@@ -265,6 +267,9 @@ export class SettingsManager {
             this.settings.debugMode = getBool('debugMode', false);
             this.settings.debugFilterHasNumbers = getBool('debugFilterHasNumbers', false);
             this.settings.crazyScrapeMode = getBool('crazyScrapeMode', false);
+            this.settings.subtitleEnabled = getBool('subtitleEnabled', false);
+            const rawSubtitleSize = getValue('subtitleFontSize', 'medium');
+            this.settings.subtitleFontSize = ['small', 'medium', 'large'].includes(rawSubtitleSize) ? rawSubtitleSize : 'medium';
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
             this.settings.defaultMuted = getBool('defaultMuted', true);
@@ -307,6 +312,8 @@ export class SettingsManager {
             setValue('debugFilterHasNumbers', this.settings.debugFilterHasNumbers);
             setValue('crazyScrapeMode', Boolean(this.settings.crazyScrapeMode));
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
+            setValue('subtitleEnabled', Boolean(this.settings.subtitleEnabled));
+            setValue('subtitleFontSize', this.settings.subtitleFontSize || 'medium');
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
             setValue('defaultMuted', Boolean(this.settings.defaultMuted));
             setValue('muteResetMinutes', this.settings.muteResetMinutes || 5);
