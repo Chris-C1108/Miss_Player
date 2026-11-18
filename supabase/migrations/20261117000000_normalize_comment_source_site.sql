@@ -89,3 +89,13 @@ comment on function public.normalize_bundle_comment_sources() is
 -- 允许匿名只读执行计划外无需授权：此修复函数仅由管理员在迁移后手动执行一次
 revoke all on function public.normalize_bundle_comment_sources() from public;
 grant execute on function public.normalize_bundle_comment_sources() to service_role;
+
+-- 迁移部署时立即执行一次修复（幂等），使 main 分支自动部署即可完成数据自愈，无需人工介入
+do $$
+declare
+    v_result jsonb;
+begin
+    v_result := public.normalize_bundle_comment_sources();
+    raise notice 'comment source_site normalized: %', v_result;
+end;
+$$;
