@@ -95,6 +95,7 @@ export class SubtitleManager {
         this._lyricsFollow = true;
         this._lyricsAutoScrollUntil = 0;
         this._lyricIndex = -1;
+        this._anchorIndex = -1;
         this._visitedCues = new Set();
         this._suppressRowClickUntil = 0;
 
@@ -968,8 +969,11 @@ export class SubtitleManager {
         followBtn.textContent = text('subtitleFollow', '回到当前');
         followBtn.addEventListener('click', () => {
             this._lyricsFollow = true;
+            this._anchorIndex = -1;
             followBtn.classList.add('is-hidden');
+            // 静音间隙同样回位到最近的字幕行，而不是纹丝不动
             this._syncLyricHighlight({ force: true });
+            this._centerLyricRow(this._anchorIndex);
         });
 
         view.append(head, scroll, followBtn);
@@ -1030,6 +1034,7 @@ export class SubtitleManager {
         this.adjustBtn?.classList.remove('is-active');
         this._lyricsFollow = true;
         this._lyricIndex = -1;
+        this._anchorIndex = -1;
         this._visitedCues = new Set();
         this._renderLyrics();
         this.listEl?.classList.add('is-hidden');
@@ -1113,37 +1118,64 @@ export class SubtitleManager {
         this.lyricsFollowBtn?.classList.remove('is-hidden');
     }
 
-    _syncLyricHighlight({ force = false } = {}) {
-        if (!this.lyricsView || this.lyricsView.classList.contains('is-hidden') || !this.cues.length) return;
-        const offsetSec = (Number(this.activeItem?.timeOffsetMs) || 0) / 1000;
-        const time = (Number(this.targetVideo?.currentTime) || 0) - offsetSec;
-
+    /**
+     * 在当前时刻附近寻找「锚点行」：优先当前激活行；
+     * 处于静音间隙时取前后两条字幕中距离更近的一条（典型歌词播放器行为）。
+     */
+    _resolveAnchorIndex(time) {
+        if (!this.cues.length) return -1;
         let lo = 0;
         let hi = this.cues.length - 1;
-        let idx = -1;
+        let prev = -1;
         while (lo <= hi) {
             const mid = (lo + hi) >> 1;
             if (this.cues[mid].start <= time) {
-                idx = mid;
+                prev = mid;
                 lo = mid + 1;
             } else {
                 hi = mid - 1;
             }
         }
-        // 关键：命中 start 不等于处于该行区间，静音间隙必须清除活动态（否则底色长期残留）
-        if (idx >= 0 && time > this.cues[idx].end + CUE_TAIL_TOLERANCE) idx = -1;
+        if (prev < 0) return 0;
+        const prevCue = this.cues[prev];
+        const nextCue = this.cues[prev + 1];
+        if (!nextCue) return prev;
+        if (time <= prevCue.end + CUE_TAIL_TOLERANCE) return prev;
+        const gapAfterPrev = time - prevCue.end;
+        const gapBeforeNext = nextCue.start - time;
+        return gapBeforeNext < gapAfterPrev ? prev + 1 : prev;
+    }
+
+    _syncLyricHighlight({ force = false } = {}) {
+        if (!this.lyricsView || this.lyricsView.classList.contains('is-hidden') || !this.cues.length) return;
+        const offsetSec = (Number(this.activeItem?.timeOffsetMs) || 0) / 1000;
+        const time = (Number(this.targetVideo?.currentTime) || 0) - offsetSec;
+
+        const anchorIndex = this._resolveAnchorIndex(time);
+
+        // 跟随态：即便此刻没有字幕（静音间隙），也滚动到最近的字幕行，保持「回到当前」始终有意义
+        if (this._lyricsFollow && (force || anchorIndex !== this._anchorIndex)) {
+            this._anchorIndex = anchorIndex;
+            this._centerLyricRow(anchorIndex);
+        }
+
+        let idx = anchorIndex;
+        // 命中 start 不等于处于该行区间：间隙内不点亮活动态，避免底色长期残留
+        if (idx >= 0 && (time < this.cues[idx].start - CUE_LEAD_TOLERANCE || time > this.cues[idx].end + CUE_TAIL_TOLERANCE)) {
+            idx = -1;
+        }
 
         if (!force && idx === this._lyricIndex) return;
 
         this.lyricsRows[this._lyricIndex]?.classList.remove('is-current');
         this._lyricIndex = idx;
         if (idx < 0) return;
+        this.lyricsRows[idx]?.classList.add('is-current');
+    }
 
-        const rowEl = this.lyricsRows[idx];
+    _centerLyricRow(index) {
+        const rowEl = this.lyricsRows[index];
         if (!rowEl) return;
-        rowEl.classList.add('is-current');
-        if (!this._lyricsFollow) return;
-
         this._lyricsAutoScrollUntil = Date.now() + 480;
         if (typeof rowEl.scrollIntoView === 'function') {
             rowEl.scrollIntoView({ block: 'center', behavior: 'smooth' });

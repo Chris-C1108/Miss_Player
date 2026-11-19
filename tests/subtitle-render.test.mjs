@@ -263,7 +263,25 @@ test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
             assert.equal(manager.lyricsRows[1].classList.contains('is-current'), false, '无字幕区间应清除高亮');
         });
 
-        t.test('7. 几何对齐：按 object-fit contain 求画面矩形', () => {
+        t.test('7. 静音间隙锚点：始终能定位到最近的字幕行', () => {
+            manager._setEnabled(true);
+            manager._lyricsFollow = true;
+
+            env.video.currentTime = 20; // 最后一条 cue 之后
+            manager._syncLyricHighlight({ force: true });
+            assert.equal(manager._anchorIndex, 1, '间隙内应锚定最近的上一行');
+            assert.equal(manager.lyricsRows[1].classList.contains('is-current'), false, '间隙内不应点亮活动态');
+
+            env.video.currentTime = 4.6; // 两句之间，更靠近第 1 行
+            manager._syncLyricHighlight({ force: true });
+            assert.equal(manager._anchorIndex, 0, '应选择距离更近的前一行');
+
+            env.video.currentTime = 5.6; // 更靠近第 2 行
+            manager._syncLyricHighlight({ force: true });
+            assert.equal(manager._anchorIndex, 1, '应选择距离更近的后一行');
+        });
+
+        t.test('8. 几何对齐：按 object-fit contain 求画面矩形', () => {
             manager._setEnabled(true);
             manager._syncOverlayGeometry();
             // 720x405 容器 + 16:9 视频 → 无黑边，尺寸应等于容器

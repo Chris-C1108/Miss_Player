@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.119-beta.012
+// @version            5.7.119-beta.013
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1920,7 +1920,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.119-beta.012";
+		return "5.7.119-beta.013";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4315,7 +4315,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.119-beta.012";
+		return "5.7.119-beta.013";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6442,7 +6442,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.119-beta.012";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.119-beta.013";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -27783,6 +27783,7 @@
 			this._lyricsFollow = true;
 			this._lyricsAutoScrollUntil = 0;
 			this._lyricIndex = -1;
+			this._anchorIndex = -1;
 			this._visitedCues = new Set();
 			this._suppressRowClickUntil = 0;
 			this._lastRenderedText = "";
@@ -28476,8 +28477,10 @@
 			followBtn.textContent = text("subtitleFollow", "回到当前");
 			followBtn.addEventListener("click", () => {
 				this._lyricsFollow = true;
+				this._anchorIndex = -1;
 				followBtn.classList.add("is-hidden");
 				this._syncLyricHighlight({ force: true });
+				this._centerLyricRow(this._anchorIndex);
 			});
 			view.append(head, scroll, followBtn);
 			this.lyricsView = view;
@@ -28533,6 +28536,7 @@
 			this.adjustBtn?.classList.remove("is-active");
 			this._lyricsFollow = true;
 			this._lyricIndex = -1;
+			this._anchorIndex = -1;
 			this._visitedCues = new Set();
 			this._renderLyrics();
 			this.listEl?.classList.add("is-hidden");
@@ -28601,29 +28605,46 @@
 			this._lyricsFollow = false;
 			this.lyricsFollowBtn?.classList.remove("is-hidden");
 		}
+		_resolveAnchorIndex(time) {
+			if (!this.cues.length) return -1;
+			let lo = 0;
+			let hi = this.cues.length - 1;
+			let prev = -1;
+			while (lo <= hi) {
+				const mid = lo + hi >> 1;
+				if (this.cues[mid].start <= time) {
+					prev = mid;
+					lo = mid + 1;
+				} else hi = mid - 1;
+			}
+			if (prev < 0) return 0;
+			const prevCue = this.cues[prev];
+			const nextCue = this.cues[prev + 1];
+			if (!nextCue) return prev;
+			if (time <= prevCue.end + CUE_TAIL_TOLERANCE) return prev;
+			const gapAfterPrev = time - prevCue.end;
+			return nextCue.start - time < gapAfterPrev ? prev + 1 : prev;
+		}
 		_syncLyricHighlight({ force = false } = {}) {
 			if (!this.lyricsView || this.lyricsView.classList.contains("is-hidden") || !this.cues.length) return;
 			const offsetSec = (Number(this.activeItem?.timeOffsetMs) || 0) / 1e3;
 			const time = (Number(this.targetVideo?.currentTime) || 0) - offsetSec;
-			let lo = 0;
-			let hi = this.cues.length - 1;
-			let idx = -1;
-			while (lo <= hi) {
-				const mid = lo + hi >> 1;
-				if (this.cues[mid].start <= time) {
-					idx = mid;
-					lo = mid + 1;
-				} else hi = mid - 1;
+			const anchorIndex = this._resolveAnchorIndex(time);
+			if (this._lyricsFollow && (force || anchorIndex !== this._anchorIndex)) {
+				this._anchorIndex = anchorIndex;
+				this._centerLyricRow(anchorIndex);
 			}
-			if (idx >= 0 && time > this.cues[idx].end + CUE_TAIL_TOLERANCE) idx = -1;
+			let idx = anchorIndex;
+			if (idx >= 0 && (time < this.cues[idx].start - CUE_LEAD_TOLERANCE || time > this.cues[idx].end + CUE_TAIL_TOLERANCE)) idx = -1;
 			if (!force && idx === this._lyricIndex) return;
 			this.lyricsRows[this._lyricIndex]?.classList.remove("is-current");
 			this._lyricIndex = idx;
 			if (idx < 0) return;
-			const rowEl = this.lyricsRows[idx];
+			this.lyricsRows[idx]?.classList.add("is-current");
+		}
+		_centerLyricRow(index) {
+			const rowEl = this.lyricsRows[index];
 			if (!rowEl) return;
-			rowEl.classList.add("is-current");
-			if (!this._lyricsFollow) return;
 			this._lyricsAutoScrollUntil = Date.now() + 480;
 			if (typeof rowEl.scrollIntoView === "function") rowEl.scrollIntoView({
 				block: "center",
