@@ -46,6 +46,7 @@ export class SettingsManager {
             muteResetMinutes: 5,
             subtitleEnabled: true,
             subtitleFontSize: 'medium',
+            subtitleVerticalOffset: 0,
             betaPlayMode: 'normal',
             previewDurationSeconds: 5,
             climaxDurationSeconds: 60,
@@ -270,6 +271,7 @@ export class SettingsManager {
             this.settings.subtitleEnabled = getBool('subtitleEnabled', false);
             const rawSubtitleSize = getValue('subtitleFontSize', 'medium');
             this.settings.subtitleFontSize = ['small', 'medium', 'large'].includes(rawSubtitleSize) ? rawSubtitleSize : 'medium';
+            this.settings.subtitleVerticalOffset = Math.max(-20, Math.min(60, parseInt(getValue('subtitleVerticalOffset', 0), 10) || 0));
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
             this.settings.defaultMuted = getBool('defaultMuted', true);
@@ -314,6 +316,7 @@ export class SettingsManager {
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
             setValue('subtitleEnabled', Boolean(this.settings.subtitleEnabled));
             setValue('subtitleFontSize', this.settings.subtitleFontSize || 'medium');
+            setValue('subtitleVerticalOffset', this.settings.subtitleVerticalOffset || 0);
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
             setValue('defaultMuted', Boolean(this.settings.defaultMuted));
             setValue('muteResetMinutes', this.settings.muteResetMinutes || 5);

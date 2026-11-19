@@ -312,7 +312,6 @@
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    margin-left: auto;
     padding: 2px;
     border-radius: 9999px;
     background-color: rgba(255, 255, 255, 0.06);
@@ -339,6 +338,94 @@
 
 .tm-subtitle-file-input {
     display: none;
+}
+
+/* 调节入口激活态 */
+.tm-subtitle-action-btn.is-active {
+    background-color: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+/* 字幕调节面板（字号 / 上下偏移 / 时间轴偏移） */
+.tm-subtitle-adjust {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0 4px 6px;
+    padding: 6px 8px;
+    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.tm-subtitle-adjust-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 4px;
+}
+
+.tm-subtitle-adjust-label {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.15px;
+    color: rgba(255, 255, 255, 0.86);
+    white-space: nowrap;
+}
+
+.tm-subtitle-adjust-hint {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.34);
+}
+
+/* 步进器 */
+.tm-subtitle-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.tm-subtitle-stepper-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 26px;
+    border: none;
+    border-radius: 9999px;
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.tm-subtitle-stepper-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.tm-subtitle-stepper-btn:active {
+    transform: scale(0.9);
+}
+
+.tm-subtitle-stepper-value {
+    min-width: 52px;
+    text-align: center;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.2px;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 /* 列表 */

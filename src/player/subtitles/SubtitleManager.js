@@ -16,7 +16,8 @@ import {
     ICON_DOWNLOAD,
     ICON_REFRESH,
     ICON_STAR,
-    ICON_STAR_FILLED
+    ICON_STAR_FILLED,
+    ICON_SLIDERS
 } from '../../constants/icons.js';
 import { UISurfaceMachine, SURFACE_TYPES } from '../state/UISurfaceMachine.js';
 import { SubtitleEngine } from './SubtitleEngine.js';
@@ -345,6 +346,8 @@ export class SubtitleManager {
         layer.style.top = `${Math.round(top)}px`;
         layer.style.width = `${Math.round(width)}px`;
         layer.style.height = `${Math.round(height)}px`;
+        this._layerHeight = height;
+        this._applyVerticalOffset();
     }
 
     _applyFontSize(size, { persist = true } = {}) {
@@ -404,7 +407,8 @@ export class SubtitleManager {
             this._setOverlayText('');
             return;
         }
-        const time = Number(currentTime) || 0;
+        const offsetSec = (Number(this.activeItem?.timeOffsetMs) || 0) / 1000;
+        const time = (Number(currentTime) || 0) - offsetSec;
         let lo = 0;
         let hi = this.cues.length - 1;
         let idx = -1;
@@ -462,6 +466,7 @@ export class SubtitleManager {
 
         prepared.format = format;
         if (this.overlayText) this.overlayText.lang = prepared.lang || '';
+        this.timeStepper?.setValue((Number(prepared.timeOffsetMs) || 0) / 1000);
         this.cues = cues;
         this.activeItem = prepared;
         this.bundle.activeId = prepared.id;
@@ -605,7 +610,7 @@ export class SubtitleManager {
     _buildBody() {
         const body = document.createElement('div');
         body.className = 'tm-subtitle-body';
-        body.append(this._buildToolbar());
+        body.append(this._buildToolbar(), this._buildAdjustPanel());
 
         const list = document.createElement('div');
         list.className = 'tm-subtitle-list';
@@ -631,6 +636,16 @@ export class SubtitleManager {
         importBtn.dataset.action = 'import';
         importBtn.innerHTML = `${ICON_DOWNLOAD}<span>${text('subtitleImport', '导入')}</span>`;
 
+        const adjustBtn = document.createElement('button');
+        adjustBtn.type = 'button';
+        adjustBtn.className = 'tm-subtitle-action-btn';
+        adjustBtn.dataset.action = 'adjust';
+        adjustBtn.innerHTML = `${ICON_SLIDERS}<span>${text('subtitleAdjust', '调节')}</span>`;
+        adjustBtn.addEventListener('click', () => {
+            const hidden = this.adjustPanel?.classList.toggle('is-hidden');
+            adjustBtn.classList.toggle('is-active', !hidden);
+        });
+
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = '.srt,.ass,.ssa,.vtt';
@@ -639,6 +654,72 @@ export class SubtitleManager {
         importBtn.addEventListener('click', () => fileInput.click());
         this.fileInput = fileInput;
 
+        bar.append(searchBtn, importBtn, adjustBtn, fileInput);
+        return bar;
+    }
+
+    /** 字幕调节面板：字号 / 上下偏移（全局） + 时间轴偏移（仅当前字幕） */
+    _buildAdjustPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'tm-subtitle-adjust is-hidden';
+        this.adjustPanel = panel;
+
+        panel.append(this._buildAdjustRow(text('subtitleFontSize', '字号'), this._buildFontSizeControl()));
+
+        const offsetPct = Number(this.settings.subtitleVerticalOffset) || 0;
+        const offsetStepper = this._buildStepper({
+            value: offsetPct,
+            min: -20,
+            max: 60,
+            step: 5,
+            format: (v) => `${v > 0 ? '+' : ''}${v}%`,
+            onChange: (v) => {
+                this._updateSetting('subtitleVerticalOffset', v);
+                this._applyVerticalOffset();
+            }
+        });
+        panel.append(this._buildAdjustRow(text('subtitleVerticalOffset', '上下偏移'), offsetStepper.el));
+
+        const timeSec = (Number(this.activeItem?.timeOffsetMs) || 0) / 1000;
+        const timeStepper = this._buildStepper({
+            value: timeSec,
+            min: -10,
+            max: 10,
+            step: 0.2,
+            format: (v) => `${v > 0 ? '+' : ''}${v.toFixed(1)}s`,
+            onChange: (v) => this._applyTimelineOffset(v)
+        });
+        this.timeStepper = timeStepper;
+        panel.append(
+            this._buildAdjustRow(
+                text('subtitleTimelineOffset', '时间轴偏移'),
+                timeStepper.el,
+                text('subtitleTimelineHint', '仅当前字幕')
+            )
+        );
+
+        return panel;
+    }
+
+    _buildAdjustRow(labelText, controlEl, hintText = '') {
+        const row = document.createElement('div');
+        row.className = 'tm-subtitle-adjust-row';
+
+        const label = document.createElement('div');
+        label.className = 'tm-subtitle-adjust-label';
+        label.textContent = labelText;
+        if (hintText) {
+            const hint = document.createElement('span');
+            hint.className = 'tm-subtitle-adjust-hint';
+            hint.textContent = hintText;
+            label.append(hint);
+        }
+
+        row.append(label, controlEl);
+        return row;
+    }
+
+    _buildFontSizeControl() {
         const sizeGroup = document.createElement('div');
         sizeGroup.className = 'tm-subtitle-size-group';
         const labels = {
@@ -657,9 +738,74 @@ export class SubtitleManager {
         });
         this.sizeGroupEl = sizeGroup;
         this._applyFontSize(this.settings.subtitleFontSize, { persist: false });
+        return sizeGroup;
+    }
 
-        bar.append(searchBtn, importBtn, fileInput, sizeGroup);
-        return bar;
+    /**
+     * 数值步进器（−/＋ 各一档，避免滑块在薄抽屉里难以精确操作）
+     * @returns {{el: HTMLElement, setValue: Function}}
+     */
+    _buildStepper({ value, min, max, step, format, onChange }) {
+        const wrap = document.createElement('div');
+        wrap.className = 'tm-subtitle-stepper';
+
+        const decBtn = document.createElement('button');
+        decBtn.type = 'button';
+        decBtn.className = 'tm-subtitle-stepper-btn';
+        decBtn.setAttribute('aria-label', 'decrease');
+        decBtn.textContent = '−';
+
+        const valueEl = document.createElement('span');
+        valueEl.className = 'tm-subtitle-stepper-value';
+
+        const incBtn = document.createElement('button');
+        incBtn.type = 'button';
+        incBtn.className = 'tm-subtitle-stepper-btn';
+        incBtn.setAttribute('aria-label', 'increase');
+        incBtn.textContent = '+';
+
+        let current = Number(value) || 0;
+        const render = () => {
+            valueEl.textContent = format(current);
+        };
+        const set = (next, { silent = false } = {}) => {
+            const clamped = Math.min(max, Math.max(min, Math.round(next / step) * step));
+            const normalized = Math.round(clamped * 100) / 100;
+            if (normalized === current) return;
+            current = normalized;
+            render();
+            if (!silent) onChange(current);
+        };
+
+        decBtn.addEventListener('click', () => set(current - step));
+        incBtn.addEventListener('click', () => set(current + step));
+        render();
+        wrap.append(decBtn, valueEl, incBtn);
+
+        return { el: wrap, setValue: (next) => set(next, { silent: true }) };
+    }
+
+    /** 上下偏移：按「画面高度百分比」上移，正值抬高 */
+    _applyVerticalOffset() {
+        if (!this.overlayText) return;
+        const pct = Number(this.settings.subtitleVerticalOffset) || 0;
+        const layerHeight = this._layerHeight || this.overlayLayer?.getBoundingClientRect?.().height || 0;
+        const lift = Math.round((layerHeight * pct) / 100);
+        this.overlayText.style.transform = lift ? `translateY(${-lift}px)` : '';
+    }
+
+    /** 时间轴偏移：仅作用当前字幕轨，随条目持久化 */
+    _applyTimelineOffset(seconds) {
+        if (!this.activeItem) {
+            Toast(text('subtitleEmptyHint', '搜索或导入字幕后即可显示'), 2000, 'info');
+            return;
+        }
+        this.activeItem.timeOffsetMs = Math.round((Number(seconds) || 0) * 1000);
+        this._lastRenderedText = '__dirty__';
+        this.renderAt(this.targetVideo?.currentTime || 0);
+        if (this.activeItem.favorite && this._findItem(this.activeItem.id)) {
+            this._persist();
+        }
     }
 
     /** 全量候选：已收藏 + 在线结果 + 当前播放轨（番号不符一律屏蔽） */

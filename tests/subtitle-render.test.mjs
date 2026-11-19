@@ -207,7 +207,34 @@ test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
             assert.equal(manager.overlayText.textContent, '', '关闭开关后不应有字幕');
         });
 
-        t.test('4. 几何对齐：按 object-fit contain 求画面矩形', () => {
+        t.test('4. 时间轴偏移仅作用于当前字幕', () => {
+            manager._setEnabled(true);
+            manager.renderAt(2);
+            assert.equal(manager.overlayText.textContent, '第一句字幕');
+
+            manager._applyTimelineOffset(1.0);   // 字幕整体延后 1 秒
+            manager.renderAt(1);
+            assert.equal(manager.overlayText.textContent, '', '延后 1 秒后 1s 处应无字幕');
+            manager.renderAt(2);
+            assert.equal(manager.overlayText.textContent, '第一句字幕', '2s 处应显示原 1s 的 cue');
+            assert.equal(manager.activeItem.timeOffsetMs, 1000);
+
+            manager._applyTimelineOffset(0);
+            manager.renderAt(1.2);
+            assert.equal(manager.overlayText.textContent, '第一句字幕', '复位后恢复原有时间轴');
+        });
+
+        t.test('5. 上下偏移按画面高度百分比上移', () => {
+            env.settings.subtitleVerticalOffset = 10;
+            manager._syncOverlayGeometry();
+            assert.equal(manager.overlayText.style.transform, 'translateY(-41px)');
+
+            env.settings.subtitleVerticalOffset = 0;
+            manager._applyVerticalOffset();
+            assert.equal(manager.overlayText.style.transform, '');
+        });
+
+        t.test('6. 几何对齐：按 object-fit contain 求画面矩形', () => {
             manager._setEnabled(true);
             manager._syncOverlayGeometry();
             // 720x405 容器 + 16:9 视频 → 无黑边，尺寸应等于容器

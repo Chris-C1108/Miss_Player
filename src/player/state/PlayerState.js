@@ -36,8 +36,9 @@ export class PlayerState {
             sidebarPosition: 'right',       // 评论侧边栏位置 ('left' | 'right')
             sidebarHidden: false,           // 评论侧边栏是否隐藏 (true | false)
             preferredPlaybackRate: 1.0,     // 默认/首选播放速度
-            subtitleEnabled: true,         // 字幕总开关 (默认关闭，由用户主动挂载字幕轨)
+            subtitleEnabled: true,          // 字幕总开关 (默认显示已挂载的字幕轨)
             subtitleFontSize: 'medium',     // 字幕字号 ('small' | 'medium' | 'large')
+            subtitleVerticalOffset: 0,      // 字幕上下偏移 (百分比，正值上移)
             pauseOnBlur: true,              // 页面离开/失焦后停止播放 (默认为开)
             buttonSoundEnabled: true,       // 控制面板按钮点击音效 (默认为开)
             defaultMuted: true,             // 默认静音播放 (带超时重置记忆)
@@ -118,6 +119,7 @@ export class PlayerState {
             this.settings.subtitleEnabled = getBool('subtitleEnabled', false);
             const rawSubtitleSize = getValue('subtitleFontSize', 'medium');
             this.settings.subtitleFontSize = ['small', 'medium', 'large'].includes(rawSubtitleSize) ? rawSubtitleSize : 'medium';
+            this.settings.subtitleVerticalOffset = Math.max(-20, Math.min(60, parseInt(getValue('subtitleVerticalOffset', 0), 10) || 0));
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
@@ -259,6 +261,7 @@ export class PlayerState {
             setValue('viewportDebugEnabled', Boolean(this.settings.viewportDebugEnabled));
             setValue('subtitleEnabled', Boolean(this.settings.subtitleEnabled));
             setValue('subtitleFontSize', this.settings.subtitleFontSize || 'medium');
+            setValue('subtitleVerticalOffset', this.settings.subtitleVerticalOffset || 0);
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }

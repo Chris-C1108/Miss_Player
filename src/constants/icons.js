@@ -383,3 +383,15 @@ export const ICON_STAR_FILLED = `
         <path d="M12 3.6l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.8l5.9-.9z"/>
     </svg>
 `;
+
+/** 参数调节（三段滑杆，用于字幕样式设置入口） */
+export const ICON_SLIDERS = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+        <line x1="4" y1="7" x2="20" y2="7"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
+        <line x1="4" y1="17" x2="20" y2="17"/>
+        <circle cx="9" cy="7" r="2.2" fill="currentColor" stroke="none"/>
+        <circle cx="15" cy="12" r="2.2" fill="currentColor" stroke="none"/>
+        <circle cx="8" cy="17" r="2.2" fill="currentColor" stroke="none"/>
+    </svg>
+`;
