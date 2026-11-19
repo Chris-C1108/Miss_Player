@@ -246,6 +246,21 @@ test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
 
             manager._syncLyricHighlight({ force: true });
             assert.equal(manager.lyricsRows[1].classList.contains('is-current'), true, '当前行应高亮');
+            assert.equal(
+                manager.lyricsRows[1].children[2].classList.contains('is-visible'),
+                true,
+                '跳转过的行应出现「已跳转」标记'
+            );
+            assert.equal(
+                manager.lyricsRows[0].children[2].classList.contains('is-visible'),
+                false,
+                '未跳转的行不应出现标记'
+            );
+
+            // 静音区间必须清掉活动行底色，避免「跳过的行长期留色」
+            env.video.currentTime = 20;
+            manager.renderAt(20);
+            assert.equal(manager.lyricsRows[1].classList.contains('is-current'), false, '无字幕区间应清除高亮');
         });
 
         t.test('7. 几何对齐：按 object-fit contain 求画面矩形', () => {

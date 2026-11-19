@@ -382,6 +382,27 @@
     transition: color 0.15s ease, font-weight 0.15s ease;
 }
 
+/* 已跳转标记：仅在点击过的行右侧出现，与「当前播放行」的背景高亮严格区分 */
+.tm-subtitle-lyric-mark {
+    flex-shrink: 0;
+    margin-left: 8px;
+    padding: 1px 6px;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+    visibility: hidden;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.tm-subtitle-lyric-mark.is-visible {
+    color: rgba(255, 255, 255, 0.5);
+    visibility: visible;
+}
+
 .tm-subtitle-lyric-row.is-current .tm-subtitle-lyric-ts {
     color: rgba(255, 255, 255, 0.6);
 }

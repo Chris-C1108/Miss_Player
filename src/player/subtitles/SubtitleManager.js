@@ -95,6 +95,7 @@ export class SubtitleManager {
         this._lyricsFollow = true;
         this._lyricsAutoScrollUntil = 0;
         this._lyricIndex = -1;
+        this._visitedCues = new Set();
         this._suppressRowClickUntil = 0;
 
         this._lastRenderedText = '';
@@ -422,6 +423,8 @@ export class SubtitleManager {
      * @param {number} currentTime
      */
     renderAt(currentTime) {
+        // 先同步歌词高亮：即使当前时刻无字幕（静音区间），也要清掉上一行的活动态
+        this._syncLyricHighlight();
         if (!this.cues.length || !this.isEnabled) {
             this._setOverlayText('');
             return;
@@ -454,7 +457,6 @@ export class SubtitleManager {
         }
         collected.sort((a, b) => a.start - b.start);
         this._setOverlayText(collected.map((cue) => cue.text).join('\n'));
-        this._syncLyricHighlight();
     }
 
     _setOverlayText(value) {
@@ -1028,6 +1030,7 @@ export class SubtitleManager {
         this.adjustBtn?.classList.remove('is-active');
         this._lyricsFollow = true;
         this._lyricIndex = -1;
+        this._visitedCues = new Set();
         this._renderLyrics();
         this.listEl?.classList.add('is-hidden');
         this.lyricsView.classList.remove('is-hidden');
@@ -1064,7 +1067,12 @@ export class SubtitleManager {
             txt.className = 'tm-subtitle-lyric-text';
             txt.textContent = cue.text.replace(/\n/g, ' ');
 
-            rowEl.append(stamp, txt);
+            const mark = document.createElement('span');
+            mark.className = 'tm-subtitle-lyric-mark';
+            mark.textContent = text('subtitleVisited', '已跳转');
+            if (this._visitedCues.has(index)) mark.classList.add('is-visible');
+
+            rowEl.append(stamp, txt, mark);
             rowEl.addEventListener('click', () => this._seekToCue(index));
             rows.push(rowEl);
         });
@@ -1081,10 +1089,21 @@ export class SubtitleManager {
         const target = Math.max(0, cue.start + offsetSec + 0.02);
         if (this.targetVideo) this.targetVideo.currentTime = target;
         window.navigator?.vibrate?.(8);
+        this._markCueVisited(index);
         this._lyricsFollow = true;
         this.lyricsFollowBtn?.classList.add('is-hidden');
         this._lyricIndex = -1;
         this._syncLyricHighlight({ force: true });
+    }
+
+    /** 标记该行已被点击跳转过（会话级，不落盘） */
+    _markCueVisited(index) {
+        if (index < 0) return;
+        this._visitedCues.add(index);
+        const rowEl = this.lyricsRows[index];
+        rowEl?.querySelector?.('.tm-subtitle-lyric-mark')?.classList.add('is-visible');
+        const mark = rowEl?.children?.[2];
+        if (mark && mark.classList) mark.classList.add('is-visible');
     }
 
     _onLyricsScroll() {
@@ -1111,6 +1130,9 @@ export class SubtitleManager {
                 hi = mid - 1;
             }
         }
+        // 关键：命中 start 不等于处于该行区间，静音间隙必须清除活动态（否则底色长期残留）
+        if (idx >= 0 && time > this.cues[idx].end + CUE_TAIL_TOLERANCE) idx = -1;
+
         if (!force && idx === this._lyricIndex) return;
 
         this.lyricsRows[this._lyricIndex]?.classList.remove('is-current');
