@@ -234,7 +234,21 @@ test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
             assert.equal(manager.overlayText.style.transform, '');
         });
 
-        t.test('6. 几何对齐：按 object-fit contain 求画面矩形', () => {
+        t.test('6. 歌词时间轴：渲染全量行并支持点击跳转', () => {
+            manager._ensurePanel();
+            manager._setEnabled(true);
+            manager._renderLyrics();
+            manager.lyricsView.classList.remove('is-hidden');
+            assert.equal(manager.lyricsRows.length, 2, '应按 cue 数量渲染歌词行');
+
+            manager._seekToCue(1);
+            assert.equal(env.video.currentTime, 6.02, '点击第 2 行应跳到 6.0s（含 20ms 缓冲）');
+
+            manager._syncLyricHighlight({ force: true });
+            assert.equal(manager.lyricsRows[1].classList.contains('is-current'), true, '当前行应高亮');
+        });
+
+        t.test('7. 几何对齐：按 object-fit contain 求画面矩形', () => {
             manager._setEnabled(true);
             manager._syncOverlayGeometry();
             // 720x405 容器 + 16:9 视频 → 无黑边，尺寸应等于容器

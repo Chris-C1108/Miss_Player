@@ -17,7 +17,8 @@ import {
     ICON_REFRESH,
     ICON_STAR,
     ICON_STAR_FILLED,
-    ICON_SLIDERS
+    ICON_SLIDERS,
+    ICON_LYRICS
 } from '../../constants/icons.js';
 import { UISurfaceMachine, SURFACE_TYPES } from '../state/UISurfaceMachine.js';
 import { SubtitleEngine } from './SubtitleEngine.js';
@@ -42,6 +43,13 @@ const LANG_NAMES = {
 
 function text(key, fallback) {
     return __(key) || fallback;
+}
+
+function formatStamp(seconds) {
+    const total = Math.max(0, Math.floor(Number(seconds) || 0));
+    const mm = String(Math.floor(total / 60)).padStart(2, '0');
+    const ss = String(total % 60).padStart(2, '0');
+    return `${mm}:${ss}`;
 }
 
 function langName(row) {
@@ -77,6 +85,17 @@ export class SubtitleManager {
         this.sizeGroupEl = null;
         this.switchEl = null;
         this.fileInput = null;
+        this.adjustBtn = null;
+        this.lyricsView = null;
+        this.lyricsScroll = null;
+        this.lyricsRows = [];
+        this.lyricsFollowBtn = null;
+        this.lyricsTitleEl = null;
+        this.lyricsCountEl = null;
+        this._lyricsFollow = true;
+        this._lyricsAutoScrollUntil = 0;
+        this._lyricIndex = -1;
+        this._suppressRowClickUntil = 0;
 
         this._lastRenderedText = '';
         this._rafId = 0;
@@ -435,6 +454,7 @@ export class SubtitleManager {
         }
         collected.sort((a, b) => a.start - b.start);
         this._setOverlayText(collected.map((cue) => cue.text).join('\n'));
+        this._syncLyricHighlight();
     }
 
     _setOverlayText(value) {
@@ -615,7 +635,7 @@ export class SubtitleManager {
         const list = document.createElement('div');
         list.className = 'tm-subtitle-list';
         this.listEl = list;
-        body.append(list);
+        body.append(list, this._buildLyricsView());
         return body;
     }
 
@@ -641,6 +661,7 @@ export class SubtitleManager {
         adjustBtn.className = 'tm-subtitle-action-btn';
         adjustBtn.dataset.action = 'adjust';
         adjustBtn.innerHTML = `${ICON_SLIDERS}<span>${text('subtitleAdjust', '调节')}</span>`;
+        this.adjustBtn = adjustBtn;
         adjustBtn.addEventListener('click', () => {
             const collapsed = this.adjustPanel?.classList.toggle('is-hidden');
             const adjusting = !collapsed;
@@ -893,12 +914,218 @@ export class SubtitleManager {
             this._toggleFavorite(row);
         });
 
-        el.append(lang, main, star);
+        const timelineBtn = document.createElement('button');
+        timelineBtn.type = 'button';
+        timelineBtn.className = 'tm-subtitle-star tm-subtitle-timeline-btn';
+        timelineBtn.title = text('subtitleLyrics', '时间轴');
+        timelineBtn.setAttribute('aria-label', text('subtitleLyrics', '时间轴'));
+        timelineBtn.innerHTML = ICON_LYRICS;
+        timelineBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._openLyrics(row);
+        });
+
+        el.append(lang, main, star, timelineBtn);
         el.addEventListener('click', () => {
             if (el.classList.contains('is-busy')) return;
+            if (Date.now() < this._suppressRowClickUntil) return;
             this._activateRow(row);
         });
+        this._bindSwipeToLyrics(el, row);
         return el;
+    }
+
+    /** 歌词/时间轴视图：逐条字幕 + 时间戳，点击跳转，滚动自动跟随 */
+    _buildLyricsView() {
+        const view = document.createElement('div');
+        view.className = 'tm-subtitle-lyrics is-hidden';
+
+        const head = document.createElement('div');
+        head.className = 'tm-subtitle-lyrics-head';
+
+        const backBtn = document.createElement('button');
+        backBtn.type = 'button';
+        backBtn.className = 'tm-subtitle-lyrics-back';
+        backBtn.textContent = `‹ ${text('subtitleBack', '返回')}`;
+        backBtn.addEventListener('click', () => this._closeLyrics());
+
+        const title = document.createElement('span');
+        title.className = 'tm-subtitle-lyrics-title';
+        const count = document.createElement('span');
+        count.className = 'tm-subtitle-lyrics-count';
+
+        head.append(backBtn, title, count);
+
+        const scroll = document.createElement('div');
+        scroll.className = 'tm-subtitle-lyrics-scroll';
+        scroll.addEventListener('scroll', () => this._onLyricsScroll(), { passive: true });
+
+        const followBtn = document.createElement('button');
+        followBtn.type = 'button';
+        followBtn.className = 'tm-subtitle-lyrics-follow is-hidden';
+        followBtn.textContent = text('subtitleFollow', '回到当前');
+        followBtn.addEventListener('click', () => {
+            this._lyricsFollow = true;
+            followBtn.classList.add('is-hidden');
+            this._syncLyricHighlight({ force: true });
+        });
+
+        view.append(head, scroll, followBtn);
+        this.lyricsView = view;
+        this.lyricsScroll = scroll;
+        this.lyricsFollowBtn = followBtn;
+        this.lyricsTitleEl = title;
+        this.lyricsCountEl = count;
+        return view;
+    }
+
+    /** 列表行左滑进入时间轴（不拦截原生纵向滚动） */
+    _bindSwipeToLyrics(el, row) {
+        let startX = 0;
+        let startY = 0;
+        let tracking = false;
+        el.addEventListener('touchstart', (e) => {
+            const touch = e.touches?.[0];
+            if (!touch) return;
+            startX = touch.clientX;
+            startY = touch.clientY;
+            tracking = true;
+        }, { passive: true });
+        el.addEventListener('touchend', (e) => {
+            if (!tracking) return;
+            tracking = false;
+            const touch = e.changedTouches?.[0];
+            if (!touch) return;
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            if (dx < -56 && Math.abs(dy) < 36) {
+                this._suppressRowClickUntil = Date.now() + 400;
+                this._openLyrics(row);
+            }
+        }, { passive: true });
+    }
+
+    async _openLyrics(row) {
+        if (!row || this._busyId) return;
+        if (row.id !== this.activeItem?.id) {
+            this._busyId = row.id;
+            this._renderList();
+            try {
+                const stored = this._findItem(row.id);
+                const item = stored || (await this._downloadCandidate(row));
+                if (!item) return;
+                await this._applyItem(item, { silent: true });
+            } finally {
+                this._busyId = '';
+                this._renderList();
+            }
+        }
+        if (!this.cues.length) {
+            Toast(text('subtitleEmptyHint', '搜索或导入字幕后即可显示'), 2200, 'info');
+            return;
+        }
+        this.adjustPanel?.classList.add('is-hidden');
+        this.adjustBtn?.classList.remove('is-active');
+        this._lyricsFollow = true;
+        this._lyricIndex = -1;
+        this._renderLyrics();
+        this.listEl?.classList.add('is-hidden');
+        this.lyricsView.classList.remove('is-hidden');
+        this._syncLyricHighlight({ force: true });
+    }
+
+    _closeLyrics() {
+        this.lyricsView?.classList.add('is-hidden');
+        this.listEl?.classList.remove('is-hidden');
+        this._lyricsFollow = false;
+        this._lyricIndex = -1;
+    }
+
+    _renderLyrics() {
+        if (!this.lyricsScroll) return;
+        const item = this.activeItem;
+        if (this.lyricsTitleEl) {
+            this.lyricsTitleEl.textContent = `${langName(item || {})} · ${item?.providerLabel || ''}`.trim();
+        }
+        if (this.lyricsCountEl) this.lyricsCountEl.textContent = String(this.cues.length);
+
+        const rows = [];
+        this.cues.forEach((cue, index) => {
+            const rowEl = document.createElement('button');
+            rowEl.type = 'button';
+            rowEl.className = 'tm-subtitle-lyric-row';
+            rowEl.dataset.index = String(index);
+
+            const stamp = document.createElement('span');
+            stamp.className = 'tm-subtitle-lyric-ts';
+            stamp.textContent = formatStamp(cue.start);
+
+            const txt = document.createElement('span');
+            txt.className = 'tm-subtitle-lyric-text';
+            txt.textContent = cue.text.replace(/\n/g, ' ');
+
+            rowEl.append(stamp, txt);
+            rowEl.addEventListener('click', () => this._seekToCue(index));
+            rows.push(rowEl);
+        });
+        this.lyricsRows = rows;
+        this.lyricsScroll.replaceChildren(...rows);
+        this.lyricsScroll.scrollTop = 0;
+    }
+
+    /** 点击歌词行跳转到对应播放进度（补偿当前字幕的时间轴偏移） */
+    _seekToCue(index) {
+        const cue = this.cues[index];
+        if (!cue) return;
+        const offsetSec = (Number(this.activeItem?.timeOffsetMs) || 0) / 1000;
+        const target = Math.max(0, cue.start + offsetSec + 0.02);
+        if (this.targetVideo) this.targetVideo.currentTime = target;
+        window.navigator?.vibrate?.(8);
+        this._lyricsFollow = true;
+        this.lyricsFollowBtn?.classList.add('is-hidden');
+        this._lyricIndex = -1;
+        this._syncLyricHighlight({ force: true });
+    }
+
+    _onLyricsScroll() {
+        if (Date.now() < this._lyricsAutoScrollUntil) return;
+        if (!this._lyricsFollow) return;
+        this._lyricsFollow = false;
+        this.lyricsFollowBtn?.classList.remove('is-hidden');
+    }
+
+    _syncLyricHighlight({ force = false } = {}) {
+        if (!this.lyricsView || this.lyricsView.classList.contains('is-hidden') || !this.cues.length) return;
+        const offsetSec = (Number(this.activeItem?.timeOffsetMs) || 0) / 1000;
+        const time = (Number(this.targetVideo?.currentTime) || 0) - offsetSec;
+
+        let lo = 0;
+        let hi = this.cues.length - 1;
+        let idx = -1;
+        while (lo <= hi) {
+            const mid = (lo + hi) >> 1;
+            if (this.cues[mid].start <= time) {
+                idx = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        if (!force && idx === this._lyricIndex) return;
+
+        this.lyricsRows[this._lyricIndex]?.classList.remove('is-current');
+        this._lyricIndex = idx;
+        if (idx < 0) return;
+
+        const rowEl = this.lyricsRows[idx];
+        if (!rowEl) return;
+        rowEl.classList.add('is-current');
+        if (!this._lyricsFollow) return;
+
+        this._lyricsAutoScrollUntil = Date.now() + 480;
+        if (typeof rowEl.scrollIntoView === 'function') {
+            rowEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
     }
 
     async _activateRow(row) {
