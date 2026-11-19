@@ -13,11 +13,12 @@ export class VideoSwipeManager {
         this.onClose = onClose;
         this.uiManager = uiManager;
         this._touchPreventDefault = (e) => {
-            // 垂直拖拽时始终阻止浏览器默认滚动行为 (横屏上滑放行穿透以驱动 Safari 原生全屏)
+            // 垂直拖拽下拉关闭时阻止浏览器默认滚动行为；上滑手势（移动端横/竖屏）一律放行穿透，驱动宿主滚动触发 Safari 自动全屏
             if (this.isDragging && e.touches && e.touches.length > 0) {
-                const isLandscape = (typeof window !== 'undefined' && window.innerWidth > window.innerHeight) || (this.uiManager && this.uiManager.isLandscape);
-                // 横屏模式下，上滑手势放行穿透，杜绝 preventDefault，促使 Safari 感知滚动并折叠工具栏进入全屏模式
-                if (isLandscape && this.dragDirection === 'vertical' && this.deltaY < 0) {
+                const dy = e.touches[0].clientY - this.startY;
+                const dx = e.touches[0].clientX - this.startX;
+                if ((this.dragDirection === 'vertical' && this.deltaY < 0) ||
+                    (this.dragDirection === null && dy <= 0 && Math.abs(dy) >= Math.abs(dx))) {
                     return;
                 }
                 if (this.dragDirection === 'vertical' && this.deltaY > 0) {
@@ -493,6 +494,7 @@ export class VideoSwipeManager {
         this.deltaY = 0;          // 重置垂直位移
         this.startOffset = this.offset;
         this.dragDistance = 0;  // 重置拖动距离
+        this._startWindowScrollY = typeof window !== 'undefined' ? (window.scrollY || 0) : 0;
         
         // 重置速度追踪器
         this.velocityTracker.positions = [];
@@ -623,9 +625,8 @@ export class VideoSwipeManager {
                     this.uiElements.overlay.style.transition = 'none';
                 }
 
-                // 横屏模式下上滑穿透：主动驱动宿主窗口产生垂直位移，触发 Safari 原生全屏模式 (隐藏顶部地址栏与底部工具栏)
-                const isLandscape = (typeof window !== 'undefined' && window.innerWidth > window.innerHeight) || (uiManager && uiManager.isLandscape);
-                if (isLandscape) {
+                // 移动端上滑穿透（横竖屏通用）：若原生触摸滚动未产生位移且为触摸指针，兜底轻微滚动宿主窗口以触发 Safari 工具栏折叠
+                if (e.pointerType === 'touch' && typeof window !== 'undefined' && (window.scrollY || 0) === (this._startWindowScrollY || 0)) {
                     const scrollStep = Math.min(25, Math.round(Math.abs(deltaY - (this._lastScrollDeltaY || 0))));
                     this._lastScrollDeltaY = deltaY;
                     if (scrollStep > 0) {
@@ -636,11 +637,11 @@ export class VideoSwipeManager {
                 }
             }
         }
-        
+
         // 阻止默认行为，如页面滚动 (仅在非上滑穿透时阻止，以允许原生向上滚动冒泡)
         const isUpwardSwipe = this.dragDirection === 'vertical' && deltaY < 0;
-        const isUndeterminedUpward = this.dragDirection === null && deltaY < -2;
-        
+        const isUndeterminedUpward = this.dragDirection === null && deltaY <= 0 && Math.abs(deltaX) <= 5;
+
         if (!isUpwardSwipe && !isUndeterminedUpward) {
             if (e.cancelable) {
                 e.preventDefault();
@@ -669,13 +670,14 @@ export class VideoSwipeManager {
                 });
             }
 
-            // 横屏上滑结束时平滑滚动微调，巩固 Safari 工具栏折叠态
-            const isLandscape = (typeof window !== 'undefined' && window.innerWidth > window.innerHeight) || (this.uiManager && this.uiManager.isLandscape);
-            if (isLandscape && this.dragDirection === 'vertical' && this.deltaY < -20) {
-                try {
-                    window.scrollBy({ top: 50, behavior: 'smooth' });
-                } catch (_) {
-                    try { window.scrollBy(0, 50); } catch (_) {}
+            // 移动端上滑结束时若原生未接管滚动，平滑滚动微调巩固 Safari 工具栏折叠态
+            if (e.type !== 'pointercancel' && e.pointerType === 'touch' && this.dragDirection === 'vertical' && this.deltaY < -20) {
+                if (typeof window !== 'undefined' && (window.scrollY || 0) === (this._startWindowScrollY || 0)) {
+                    try {
+                        window.scrollBy({ top: 50, behavior: 'smooth' });
+                    } catch (_) {
+                        try { window.scrollBy(0, 50); } catch (_) {}
+                    }
                 }
             }
         } else {
@@ -708,7 +710,7 @@ export class VideoSwipeManager {
         window.removeEventListener('pointermove', this._pointerMoveHandler);
         window.removeEventListener('pointerup', this._pointerUpHandler);
         window.removeEventListener('pointercancel', this._pointerUpHandler);
-        
+
         // 移除 touchmove 阻止默认事件的监听器
         dragTarget.removeEventListener('touchmove', this._touchPreventDefault);
 
@@ -772,10 +774,13 @@ export class VideoSwipeManager {
             }
         }
         
+        const wasUpwardSwipe = this.dragDirection === 'vertical' && this.deltaY < 0;
         this.dragDirection = null; // 重置方向
-        
-        // 阻止默认行为
-        e.preventDefault();
+
+        // 阻止默认行为 (上滑穿透与 cancel 事件不阻止)
+        if (e.cancelable && !wasUpwardSwipe) {
+            e.preventDefault();
+        }
     }
 
     /**

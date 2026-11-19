@@ -22,8 +22,8 @@
     -webkit-backdrop-filter: blur(30px);
     padding: 0;
     
-    /* 全局触摸、滚动、选择隔离 */
-    touch-action: none;
+    /* 纵向手势允许上滑穿透驱动 Safari 自动全屏，其余区域由 EventManager 精确拦截 */
+    touch-action: pan-y;
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -48,9 +48,9 @@
     z-index: var(--z-host-player, 2147483646);
     overflow: hidden;
     pointer-events: auto;
-    
-    /* 全局触摸、滚动、选择隔离 (固定视口禁止整体纵向位移) */
-    touch-action: none;
+
+    /* 放行 pan-y 避免祖先链截断视频区上滑穿透，非视频区由 EventManager 拦截 touchmove */
+    touch-action: pan-y;
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -111,7 +111,7 @@
         0 1px 0 rgba(255, 255, 255, 0.065),
         0 0 0 0.5px rgba(255, 255, 255, 0.05);
     z-index: calc(var(--z-base) + 2);
-    touch-action: none; /* 播放器视频区域绝对禁止整体纵向位移 */
+    touch-action: pan-y; /* 允许视频区域纵向原生上滑穿透宿主滚动，触发 Safari 自动全屏 */
     flex-shrink: 1;
     transition: height 0.28s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }

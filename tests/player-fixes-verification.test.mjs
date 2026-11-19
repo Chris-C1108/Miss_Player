@@ -497,11 +497,14 @@ assert.ok(
     'SingleHandManager 必须拦截控制面板任意纵向滑动手势 (Math.abs(dy) > 5)，坚决杜绝面板上滑产生底部空白'
 );
 
-// 18.2 验证全屏播放器容器与视频层锁定 touch-action: none
+// 18.2 验证播放器容器与视频层放行 pan-y 以支持移动端上滑触发 Safari 自动全屏，控制与手柄区锁定 touch-action: none
 assert.ok(
-    latestPlayerCss.includes('.tm-player-container {\n    position: fixed;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n    width: 100%;\n    height: 100%;\n    background-color: transparent;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: flex-start;\n    z-index: var(--z-host-player, 2147483646);\n    overflow: hidden;\n    pointer-events: auto;\n    \n    /* 全局触摸、滚动、选择隔离 (固定视口禁止整体纵向位移) */\n    touch-action: none;') &&
-    latestPlayerCss.includes('touch-action: none; /* 播放器视频区域绝对禁止整体纵向位移 */'),
-    '_player.css 必须为 tm-player-container 与 tm-video-container 锁定 touch-action: none'
+    latestPlayerCss.includes('.tm-player-container {') &&
+    latestPlayerCss.includes('touch-action: pan-y;') &&
+    latestPlayerCss.includes('touch-action: pan-y; /* 允许视频区域纵向原生上滑穿透宿主滚动，触发 Safari 自动全屏 */') &&
+    latestPlayerCss.includes('touch-action: none; /* 按钮区域隔离触摸 */') &&
+    latestPlayerCss.includes('touch-action: none; /* 手指在手柄区滑动不产生背景滚动 */'),
+    '_layout.css 必须为 tm-player-container 与 tm-video-container 放行 pan-y（支持视频区上滑穿透），同时按钮与手柄区锁定 touch-action: none'
 );
 
 // 18.3 验证 UISurfaceMachine 捕获阶段放行活动面板内部元素与输入框
@@ -520,11 +523,13 @@ assert.ok(
     'ViewportKeyboardAdapter 必须在 keyboardHeight > 60 时无阻碍直接设置 commentSubmitBar 与 sheetPanel 行内物理 bottom'
 );
 
-// 18.5 验证视频区域阻止纵向滑动穿透
+// 18.5 验证视频区域精准区分方向：仅放行上滑穿透宿主滚动，严防下拉与非视频区穿透
 assert.ok(
-    !latestEventManager.includes('diffY < -5') &&
-    latestVideoSwipe.includes('垂直拖拽时始终阻止浏览器默认滚动行为'),
-    'EventManager 与 videoSwipeManager 必须彻底移除允许上滑穿透滚动宿主的陈旧代码，杜绝视口错位'
+    latestEventManager.includes("this._touchScrollGestureDecided = 'allow-up'") &&
+    latestEventManager.includes('findNodeInEventPath') &&
+    latestVideoSwipe.includes('上滑手势（移动端横/竖屏）一律放行穿透') &&
+    latestVideoSwipe.includes('if (this.dragDirection === \'vertical\' && this.deltaY > 0)'),
+    'EventManager 与 videoSwipeManager 必须精准放行视频区上滑穿透（含 composedPath 穿透 Shadow DOM），同时严格拦截下拉与非视频区滚动'
 );
 
 console.log('✅ 18. 菜单栏上滑手势锁定与 iOS 虚拟键盘发评栏物理高度避让验证通过');

@@ -55,24 +55,37 @@ export class CustomVideoPlayer {
         document.body.classList.add('tm-player-active');
         document.documentElement.classList.add('tm-player-active');
 
-        // 核心滚动劫持守卫：在播放器激活期间，绝对禁止 Safari WebKit 或外部代码将 window 滚离 (0, 0)
+        // 仅在 iOS 虚拟键盘弹起或输入法聚焦时锁定宿主滚动至 (0, 0)，
+        // 正常观影期间放行原生 window 滚动，确保移动端视频区上滑可穿透触发 Safari 自动全屏
+        const shouldLockHostScrollForKeyboard = () => {
+            if (!document.body || !document.body.classList.contains('tm-player-active')) return false;
+            const shadow = this.uiManager?.shadowRoot || document.querySelector('miss-player-root')?.shadowRoot;
+            const container = shadow?.querySelector('.tm-player-container');
+            if (container?.classList.contains('tm-ios-keyboard-open')) return true;
+            const active = shadow?.activeElement || document.activeElement;
+            const tag = active?.tagName?.toLowerCase();
+            return tag === 'input' || tag === 'textarea' || Boolean(active?.isContentEditable);
+        };
+
         if (!this._originalScrollTo) {
             this._originalScrollTo = window.scrollTo;
             const self = this;
             window.scrollTo = function(x, y) {
-                if (document.body && document.body.classList.contains('tm-player-active')) {
+                if (shouldLockHostScrollForKeyboard()) {
                     return self._originalScrollTo.call(window, 0, 0);
                 }
                 return self._originalScrollTo.apply(window, arguments);
             };
         }
-        
-        // 宿主与播放器容器绝对锁定守卫：杜绝 iOS Safari 虚拟键盘弹起时原生滚动破坏播放器视口
+
+        // 宿主与播放器容器锁定守卫：键盘弹起时归零 window，始终保持固定播放器容器自身不发生内滚动
         this._windowScrollLock = () => {
             if (document.body && document.body.classList.contains('tm-player-active')) {
-                if (window.scrollY > 0 || window.scrollX > 0) {
+                if (shouldLockHostScrollForKeyboard() && (window.scrollY > 0 || window.scrollX > 0)) {
                     requestAnimationFrame(() => {
-                        window.scrollTo(0, 0);
+                        if (shouldLockHostScrollForKeyboard()) {
+                            window.scrollTo(0, 0);
+                        }
                     });
                 }
                 const shadow = this.uiManager?.shadowRoot || document.querySelector('miss-player-root')?.shadowRoot;
@@ -84,8 +97,8 @@ export class CustomVideoPlayer {
             }
         };
         window.addEventListener('scroll', this._windowScrollLock, { passive: true });
-        
-        // 保存并隐藏网页浏览器滚动条，同时禁用默认的橡皮筋弹性滚动效果
+
+        // 隐藏网页浏览器滚动条（宿主滚动布局由 01_core/_host.css 统一分端控制，此处严禁覆盖 position/overflow）
         this._scrollbarStyle = document.createElement('style');
         this._scrollbarStyle.id = 'tm-hide-scrollbar-style';
         this._scrollbarStyle.innerHTML = `
@@ -93,18 +106,9 @@ export class CustomVideoPlayer {
                 display: none !important;
             }
             html.tm-player-active, body.tm-player-active {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                overflow: hidden !important;
                 scrollbar-width: none !important;
                 -ms-overflow-style: none !important;
                 overscroll-behavior: none !important;
-                overscroll-behavior-y: none !important;
             }
         `;
         document.head.appendChild(this._scrollbarStyle);

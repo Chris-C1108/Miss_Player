@@ -116,14 +116,90 @@ assert.ok(sleazyCode.includes('ghfast.top'), '必须包含 ghfast.top 镜像加�
 assert.ok(sleazyCode.includes('gh-proxy.com'), '必须包含 gh-proxy.com 镜像加速节点');
 console.log('✅ 10. GitHub 镜像加速节点全量集成验证通过');
 
-// 11. 验证横屏模式视频区域上滑穿透与宿主滚动驱动 Safari 原生全屏
+// 11. 验证移动端（横屏与竖屏）视频区域上滑穿透与宿主滚动驱动 Safari 自动全屏
 const swipeManagerCode = fs.readFileSync('src/player/managers/videoSwipeManager.js', 'utf8');
-assert.ok(swipeManagerCode.includes('isLandscape && this.dragDirection === \'vertical\' && this.deltaY < 0'), '横屏上滑必须放行默认事件穿透');
-assert.ok(swipeManagerCode.includes('window.scrollBy'), '横屏上滑必须驱动宿主窗口滚动以折叠 Safari 工具栏');
+assert.ok(
+    swipeManagerCode.includes("this.dragDirection === 'vertical' && this.deltaY < 0") &&
+    !swipeManagerCode.includes("isLandscape && this.dragDirection === 'vertical' && this.deltaY < 0"),
+    '移动端横屏与竖屏上滑均须放行默认事件穿透（不应仅限横屏）'
+);
+assert.ok(swipeManagerCode.includes('window.scrollBy'), '上滑穿透需保留宿主滚动兼容兜底以折叠 Safari 工具栏');
+
 const hostCss = fs.readFileSync('src/player/ui/styles/01_core/_host.css', 'utf8');
-assert.ok(hostCss.includes('@media screen and (orientation: landscape)'), '宿主轨必须为横屏提供微量滚动余量');
-assert.ok(hostCss.includes('min-height: calc(100vh + 80px)'), '横屏必须包含可滚动高度余量供 Safari 感知折叠');
-console.log('✅ 11. 横屏视频区域上滑穿透驱动 Safari 原生全屏验证通过');
+assert.ok(hostCss.includes('min-height: calc(100vh + 240px)'), '宿主轨必须为移动端（含竖屏与横屏）提供充足纵向滚动余量供 Safari 自动全屏');
+assert.ok(hostCss.includes('overflow-y: auto;') && hostCss.includes('@media (hover: hover) and (pointer: fine) and (min-width: 1024px)'), '宿主轨仅在桌面端大屏锁定视口，移动端横竖屏均允许宿主自然纵向滚动');
+
+const customPlayerCodeV19 = fs.readFileSync('src/player/CustomVideoPlayer.js', 'utf8');
+assert.ok(
+    customPlayerCodeV19.includes('shouldLockHostScrollForKeyboard') &&
+    !customPlayerCodeV19.includes('overflow: hidden !important;\n                scrollbar-width: none !important;'),
+    'CustomVideoPlayer 运行时样式严禁覆写 html/body 为 position:fixed/overflow:hidden，且仅在键盘弹起时锁定 window.scrollTo'
+);
+
+// 行为级验证：EventManager 跨 Shadow DOM (composedPath) 放行视频区上滑、拦截下拉与非视频区
+const { registerHooks } = await import('node:module');
+if (typeof registerHooks === 'function') {
+    registerHooks({
+        load(url, context, nextLoad) {
+            if (url.split('?')[0].endsWith('.css')) {
+                return { format: 'module', source: 'export default "";', shortCircuit: true };
+            }
+            return nextLoad(url, context);
+        }
+    });
+}
+const { EventManager } = await import('../src/player/managers/EventManager.js');
+{
+    const listeners = new Map();
+    const makeTarget = (id) => ({
+        addEventListener: (type, fn) => {
+            if (!listeners.has(id)) listeners.set(id, {});
+            listeners.get(id)[type] = fn;
+        },
+        removeEventListener: () => {}
+    });
+    const playerContainer = makeTarget('playerContainer');
+    const rootHost = makeTarget('rootHost');
+    const overlay = makeTarget('overlay');
+    const videoContainerNode = { nodeType: 1, matches: (sel) => sel === '.tm-video-container', closest: (sel) => (sel === '.tm-video-container' ? videoContainerNode : null) };
+    const emRaw = new EventManager({ targetVideo: null }, { playerContainer, rootHost, overlay }, {});
+    emRaw.initVideoEventListeners = () => {};
+    globalThis.window = globalThis.window || { scrollY: 0, addEventListener: () => {}, removeEventListener: () => {} };
+    globalThis.document = globalThis.document || { addEventListener: () => {}, removeEventListener: () => {} };
+    emRaw.init();
+
+    const dispatchTouch = (startY, moveY, path, target) => {
+        let prevented = false;
+        const startEvt = { touches: [{ clientX: 100, clientY: startY }], target, composedPath: () => path };
+        listeners.get('playerContainer').touchstart(startEvt);
+        listeners.get('rootHost').touchstart(startEvt);
+
+        const moveEvt = {
+            type: 'touchmove',
+            cancelable: true,
+            touches: [{ clientX: 100, clientY: moveY }],
+            target,
+            composedPath: () => path,
+            preventDefault: () => { prevented = true; }
+        };
+        listeners.get('playerContainer').touchmove(moveEvt);
+        // 模拟 Shadow DOM retargeting：rootHost 上 e.target 被重定向为 rootHost 本身
+        const retargetedMoveEvt = { ...moveEvt, target: { closest: () => null } };
+        listeners.get('rootHost').touchmove(retargetedMoveEvt);
+        return prevented;
+    };
+
+    const upPrevented = dispatchTouch(300, 260, [videoContainerNode, playerContainer, rootHost], videoContainerNode);
+    assert.strictEqual(upPrevented, false, '视频区上滑（含 Shadow DOM retargeting 到 rootHost）严禁调用 preventDefault()');
+
+    const downPrevented = dispatchTouch(300, 340, [videoContainerNode, playerContainer, rootHost], videoContainerNode);
+    assert.strictEqual(downPrevented, true, '视频区下拉关闭必须调用 preventDefault() 阻断浏览器下拉刷新');
+
+    const otherNode = { nodeType: 1, matches: () => false, closest: () => null };
+    const nonVideoPrevented = dispatchTouch(300, 260, [otherNode, playerContainer, rootHost], otherNode);
+    assert.strictEqual(nonVideoPrevented, true, '非视频区（非滚动容器）上滑必须调用 preventDefault() 防止误滚宿主');
+}
+console.log('✅ 11. 移动端（横竖屏）视频区域上滑穿透驱动 Safari 自动全屏验证通过');
 
 // 12. 验证标题栏左对齐、进入巡航跑马灯、控制面板功能Toast与科学时长算法
 import { calculateToastDuration, stripEmojis } from '../src/utils/ui-feedback.js';

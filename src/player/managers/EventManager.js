@@ -43,17 +43,41 @@ export class EventManager {
         // 调试窗口滚动事件 (已关闭，不绑定以优化滚动性能)
         this.handleWindowScrollDebugBound = null;
 
-        // 追踪触碰起始坐标
+        // 追踪触碰起始坐标与视频区上滑穿透手势决策
         this._touchStartX = 0;
         this._touchStartY = 0;
+        this._touchStartInVideo = false;
+        this._touchScrollGestureDecided = null; // 'allow-up' | 'block' | null
+        const findNodeInEventPath = (e, selector) => {
+            const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+            const targetEl = path[0] || e.target;
+            if (targetEl && typeof targetEl.closest === 'function') {
+                const match = targetEl.closest(selector);
+                if (match) return match;
+            }
+            for (const node of path) {
+                if (node && node.nodeType === 1 && typeof node.matches === 'function' && node.matches(selector)) {
+                    return node;
+                }
+            }
+            return null;
+        };
+
         this.handleTouchStartBound = (e) => {
             if (e.touches && e.touches.length > 0) {
                 this._touchStartX = e.touches[0].clientX;
                 this._touchStartY = e.touches[0].clientY;
-                if (e.target.closest('.tm-video-container')) {
-                    if (window.tmDebugLogger) {
-                        window.tmDebugLogger.log(`touchStart video. Y: ${this._touchStartY}, scrollY: ${window.scrollY}`);
-                    }
+                this._touchScrollGestureDecided = null;
+                const inVideo = Boolean(findNodeInEventPath(e, '.tm-video-container'));
+                const inNonScrollVideoChild = Boolean(findNodeInEventPath(
+                    e,
+                    '.tm-control-button, .tm-button-container, .tm-control-buttons, .tm-control-panel, .tm-video-minimap, .tm-subtitle-overlay'
+                ));
+                const uiMgr = this.managers?.uiManager;
+                const blockedByOverlay = Boolean(uiMgr?.surfaceMachine?.isInteractionBlocked?.());
+                this._touchStartInVideo = inVideo && !inNonScrollVideoChild && !blockedByOverlay;
+                if (inVideo && window.tmDebugLogger) {
+                    window.tmDebugLogger.log(`touchStart video. Y: ${this._touchStartY}, scrollY: ${window.scrollY}`);
                 }
             }
         };
@@ -68,31 +92,51 @@ export class EventManager {
             e.stopPropagation();
         };
 
-        // 阻止穿透滚动逻辑：全屏播放器模式下，视频区域任何纵向手势均阻止默认滚动，杜绝视口位移
+        // 阻止穿透滚动逻辑：视频区仅放行上滑手势穿透驱动宿主滚动（触发 Safari 自动全屏），其余手势与组件精确拦截
         this.handleScrollPreventionBound = (e) => {
-            if (e.target.closest('.tm-video-container')) {
+            const findInPath = (selector) => findNodeInEventPath(e, selector);
+
+            const inVideoContainer = findInPath('.tm-video-container');
+            if (inVideoContainer) {
+                if (e.type === 'touchmove' && this._touchStartInVideo && e.touches && e.touches.length > 0) {
+                    const uiMgr = this.managers?.uiManager;
+                    if (uiMgr?.isLongPress || uiMgr?.surfaceMachine?.isInteractionBlocked?.()) {
+                        this._touchScrollGestureDecided = 'block';
+                    }
+
+                    if (this._touchScrollGestureDecided === 'allow-up') {
+                        // 上滑手势已锁定穿透，禁止调用 preventDefault()，让 iOS Safari 原生滚动折叠工具栏
+                        return;
+                    }
+                    if (this._touchScrollGestureDecided !== 'block') {
+                        const dx = e.touches[0].clientX - this._touchStartX;
+                        const dy = e.touches[0].clientY - this._touchStartY;
+                        const absX = Math.abs(dx);
+                        const absY = Math.abs(dy);
+
+                        if (dy < 0 && absY >= absX) {
+                            if (absY > 2) {
+                                this._touchScrollGestureDecided = 'allow-up';
+                            }
+                            return;
+                        }
+                        if (dy === 0 && absX <= 4) {
+                            return;
+                        }
+                        // 明显向下或横向拖拽时锁定拦截，保留下拉关闭与横向平移手势
+                        if (dy > 3 || (absX > absY && absX > 4)) {
+                            this._touchScrollGestureDecided = 'block';
+                        } else {
+                            return;
+                        }
+                    }
+                }
+
                 if (e.cancelable) {
                     e.preventDefault();
                 }
                 return;
             }
-
-            // 跨 Shadow DOM 边界解析真实交互目标 (通过 composedPath 穿透 retargeting)
-            const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
-            const targetEl = path[0] || e.target;
-            const findInPath = (selector) => {
-                if (!targetEl) return null;
-                if (typeof targetEl.closest === 'function') {
-                    const match = targetEl.closest(selector);
-                    if (match) return match;
-                }
-                for (const node of path) {
-                    if (node && node.nodeType === 1 && typeof node.matches === 'function' && node.matches(selector)) {
-                        return node;
-                    }
-                }
-                return null;
-            };
 
             // 针对水平滚动容器（标签页栏与评论源选项卡），只允许水平滑动，阻止垂直滑动以防穿透
             const horizontalScrollContainer = findInPath('.tm-tab-scroll-container');

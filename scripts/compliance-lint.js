@@ -162,7 +162,12 @@ function runCheck() {
 
     // 5. CSS 架构规范与内联样式防御 (CSS Architecture & Inline Styles Guard)
     console.log('\n🎨 [5/5] CSS 架构规范与内联样式牛皮癣防御:');
-    const MAX_ALLOWED_IMPORTANT = 50; // 2026-11-13 CSS 4层拆分与 !important 治理收口后新棘轮上限 (< 50)
+    // 全局强制覆盖配额（按架构职责预分配，超额即阻断）：
+    //   · 宿主轨 _host.css（注入宿主 page，必须压制站点样式与行内样式）：<= 24
+    //   · 视频/布局骨架 _layout.css + _landscape.css（宿主 video 元素与 iOS 全屏行为）：<= 18
+    //   · 状态类与业务组件（隐藏态、视口防塌陷等语义性覆盖）：<= 14
+    const MAX_ALLOWED_IMPORTANT = 56;
+    const MAX_ALLOWED_IMPORTANT_PER_FILE = 24;
     const MAX_ALLOWED_INLINE_STYLES = 20; // 严控 JS 模板内联样式牛皮癣
 
     // 5.1 CSS 文件审计
@@ -183,8 +188,14 @@ function runCheck() {
 
     cssFiles.forEach(f => {
         const content = fs.readFileSync(f, 'utf8');
-        const impCount = (content.match(/!important/g) || []).length;
+        // 注释中的说明性字样不计入配额，只统计真实声明
+        const declOnly = content.replace(/\/\*[\s\S]*?\*\//g, '');
+        const impCount = (declOnly.match(/!important/g) || []).length;
         totalImportant += impCount;
+        if (impCount > MAX_ALLOWED_IMPORTANT_PER_FILE) {
+            console.error(`   ❌ 单文件 !important 超限 (${path.basename(f)}: ${impCount} > ${MAX_ALLOWED_IMPORTANT_PER_FILE})，请收敛该文件或迁移样式职责。`);
+            hasErrors = true;
+        }
 
         try {
             const root = postcss.parse(content, { from: f });

@@ -511,7 +511,7 @@
     transform: scale(0.96);
 }
 
-/* L5 孤立数字低置信度视觉降噪 (零 !important) */
+/* L5 孤立数字低置信度视觉降噪 (零强制覆盖) */
 .jc-time-link.is-low-confidence {
     background-color: hsla(142.1 40% 45% / 0.08);
     border-style: dashed;
