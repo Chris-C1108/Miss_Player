@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.119-beta.013
+// @version            5.7.119-beta.014
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1920,7 +1920,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.119-beta.013";
+		return "5.7.119-beta.014";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2433,6 +2433,7 @@
 			subtitleOff: "Turn Off",
 			subtitleShow: "Show subtitles",
 			subtitleAdjust: "Adjust",
+			jumpedTo: "Jumped to",
 			subtitleVisited: "Jumped",
 			subtitleLyrics: "Timeline",
 			subtitleBack: "Back",
@@ -2719,6 +2720,7 @@
 			subtitleOff: "关闭字幕",
 			subtitleShow: "显示字幕",
 			subtitleAdjust: "调节",
+			jumpedTo: "已跳转至",
 			subtitleVisited: "已跳转",
 			subtitleLyrics: "时间轴",
 			subtitleBack: "返回",
@@ -2728,6 +2730,7 @@
 			subtitleTimelineHint: "仅当前字幕",
 			subtitleShow: "顯示字幕",
 			subtitleAdjust: "調節",
+			jumpedTo: "已跳轉至",
 			subtitleVisited: "已跳轉",
 			subtitleLyrics: "時間軸",
 			subtitleBack: "返回",
@@ -3279,6 +3282,7 @@
 			subtitleOff: "字幕オフ",
 			subtitleShow: "字幕を表示",
 			subtitleAdjust: "調整",
+			jumpedTo: "ジャンプしました",
 			subtitleVisited: "ジャンプ済",
 			subtitleLyrics: "タイムライン",
 			subtitleBack: "戻る",
@@ -3552,6 +3556,7 @@
 			subtitleOff: "Tắt phụ đề",
 			subtitleShow: "Hiện phụ đề",
 			subtitleAdjust: "Điều chỉnh",
+			jumpedTo: "Đã nhảy đến",
 			subtitleVisited: "Đã nhảy",
 			subtitleLyrics: "Dòng thời gian",
 			subtitleBack: "Quay lại",
@@ -4315,7 +4320,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.119-beta.013";
+		return "5.7.119-beta.014";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6442,7 +6447,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.119-beta.013";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.119-beta.014";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -28803,6 +28808,54 @@
 			this.uiManager?.surfaceMachine?.deactivate?.(SURFACE_TYPES.SUBTITLE_PANEL);
 		}
 	};
+	var MIN_DELTA_SECONDS = 3;
+	var DEDUPE_MS = 700;
+	var WARMUP_MS = 2e3;
+	var SeekFeedbackManager = class {
+		constructor(playerCore, controlManager = null, progressManager = null) {
+			this.playerCore = playerCore;
+			this.controlManager = controlManager;
+			this.progressManager = progressManager;
+			this._from = 0;
+			this._startedAt = 0;
+			this._lastAnnouncedAt = 0;
+			this._onSeeking = () => {
+				this._from = Number(this.targetVideo?.currentTime) || 0;
+			};
+			this._onSeeked = () => this._announce();
+		}
+		get targetVideo() {
+			return this.playerCore?.targetVideo || null;
+		}
+		init() {
+			const video = this.targetVideo;
+			if (!video) return;
+			this._startedAt = Date.now();
+			video.addEventListener("seeking", this._onSeeking);
+			video.addEventListener("seeked", this._onSeeked);
+		}
+		cleanup() {
+			const video = this.targetVideo;
+			if (!video) return;
+			video.removeEventListener("seeking", this._onSeeking);
+			video.removeEventListener("seeked", this._onSeeked);
+		}
+		_announce() {
+			const video = this.targetVideo;
+			if (!video) return;
+			const to = Number(video.currentTime) || 0;
+			const delta = Math.abs(to - this._from);
+			if (Date.now() - this._startedAt < WARMUP_MS) return;
+			if (delta < MIN_DELTA_SECONDS) return;
+			if (this.progressManager?.isDraggingProgress) return;
+			if (this.controlManager?.loopManager?._isSeekingCapsule) return;
+			const now = Date.now();
+			if (now - this._lastAnnouncedAt < DEDUPE_MS) return;
+			this._lastAnnouncedAt = now;
+			this.controlManager?.showJumpHint?.(to);
+			Toast$1(`${__$1("jumpedTo") || "已跳转至"} ${formatTime(to)}`, 1200, "info");
+		}
+	};
 	var CustomVideoPlayer$1 = class {
 		constructor(options = {}) {
 			console.log("[CustomVideoPlayer] 初始化...");
@@ -28991,6 +29044,9 @@
 				eventManager.init();
 				this.managers.eventManager = eventManager;
 				uiManager.assembleDOM();
+				const seekFeedbackManager = new SeekFeedbackManager(this.playerCore, controlManager, progressManager);
+				seekFeedbackManager.init();
+				this.managers.seekFeedbackManager = seekFeedbackManager;
 				const subtitleManager = new SubtitleManager(this.playerCore, uiManager, controlManager);
 				subtitleManager.init();
 				this.managers.subtitleManager = subtitleManager;

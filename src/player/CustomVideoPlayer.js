@@ -10,6 +10,7 @@ import { SettingsV2Manager } from './managers/settings_v2/SettingsV2Manager.js';
 import { HeatmapManager } from './managers/HeatmapManager.js';
 import { VideoSwipeManager } from './managers/videoSwipeManager.js';
 import { SubtitleManager } from './subtitles/SubtitleManager.js';
+import { SeekFeedbackManager } from './managers/SeekFeedbackManager.js';
 import { updateSafariThemeColor, Toast } from '../utils/index.js';
 import { __ } from '../constants/i18n.js';
 import { telemetry } from '../telemetry/index.js';
@@ -309,6 +310,11 @@ export class CustomVideoPlayer {
         
         // 组装DOM - 移到所有管理器初始化之后
         uiManager.assembleDOM();
+
+        // 全局跳转反馈统一出口（监听 seeked，覆盖所有跳转来源）
+        const seekFeedbackManager = new SeekFeedbackManager(this.playerCore, controlManager, progressManager);
+        seekFeedbackManager.init();
+        this.managers.seekFeedbackManager = seekFeedbackManager;
 
         // 字幕管理器 (视频内嵌渲染 + 采集/存储)，依赖组装完成的顶栏与视频容器
         const subtitleManager = new SubtitleManager(this.playerCore, uiManager, controlManager);

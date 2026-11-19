@@ -340,6 +340,12 @@ src/player/ui/styles/
 
 ---
 
+9. **跳转反馈统一出口 (Unified Seek Feedback)**：
+   - 跳转反馈属于「视频元素级事件」，不属于调用点级逻辑。任何来源的跳转（进度条拖动、快进快退、高光胶囊、字幕行、快捷键、深链还原、断点续播）都必须由 `src/player/managers/SeekFeedbackManager.js` 监听 `video` 的 `seeking/seeked` 统一播报；
+   - FORBIDDEN: 在各跳转点位零散调用 `Toast(...)` 或自行拼提示文案；
+   - USE: 跳转点只负责设置 `video.currentTime`，反馈由管理器统一裁决（位移 ≥ 3 秒才播报、700ms 去重、开场 2 秒还原期静默、拖动进度条与片段循环自动跳转不打扰）；
+   - 新增跳转来源时，只需保证走 `currentTime` 赋值即可自动获得反馈，无需改动提示逻辑。
+
 ## 🛰️ 流网关与 STRM 入库架构准则 (Phase 19)
 
 > 事实依据来自 Peach 容器源码实测（`strm.py`、`strm_stream.py`、`follow_stream.py`、`ledger.db`），详见设计方案 §0。
