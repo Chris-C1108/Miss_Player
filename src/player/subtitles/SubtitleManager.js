@@ -9,7 +9,7 @@
 
 import { Toast } from '../../utils/index.js';
 import { __ } from '../../constants/i18n.js';
-import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
+import { getVideoCodeFromUrl, cleanAvCode } from '../../utils/videoCode.js';
 import {
     ICON_SUBTITLE,
     ICON_X_CLOSE,
@@ -23,7 +23,7 @@ import { SubtitleEngine } from './SubtitleEngine.js';
 import { SubtitleRepository } from './SubtitleRepository.js';
 import { decodeSubtitleBuffer } from './SubtitleDecoder.js';
 import { parseSubtitles } from './SubtitleFormat.js';
-import { canonicalizeSubtitleCode, codeMatchesText } from './SubtitleCode.js';
+import { codeMatchesText } from './SubtitleCode.js';
 
 const FONT_SIZES = ['small', 'medium', 'large'];
 const CUE_TAIL_TOLERANCE = 0.35;
@@ -154,13 +154,18 @@ export class SubtitleManager {
 
     // ---------------------------------------------------------------- 数据层
 
+    /**
+     * 统一番号漏斗：优先复用播放器与评论面板已解析的权威值，
+     * 缺失时才回落到全局 getVideoCodeFromUrl，最后经 cleanAvCode 归一化。
+     * 严禁在本模块另造番号解析逻辑。
+     */
     _resolveAvcode() {
-        const code =
-            getVideoCodeFromUrl(this.targetVideo) ||
-            this.controlManager?.commentPanel?.videoCode ||
+        const raw =
             this.playerCore?.options?.videoCode ||
-            '';
-        return canonicalizeSubtitleCode(code) || String(code || '').toUpperCase();
+            this.controlManager?.commentPanel?.videoCode ||
+            getVideoCodeFromUrl(this.targetVideo) ||
+            getVideoCodeFromUrl();
+        return cleanAvCode(raw) || '';
     }
 
     /** 候选是否属于当前番号（本地导入不受番号约束） */
@@ -506,17 +511,13 @@ export class SubtitleManager {
         sheet.className = 'tm-subtitle-sheet is-hidden';
         UISurfaceMachine.bindOverlayGuard(sheet, { stopMove: true });
 
-        const scrim = document.createElement('div');
-        scrim.className = 'tm-subtitle-scrim';
-        scrim.addEventListener('click', () => this._closePanel());
-
         const panel = document.createElement('div');
         panel.className = 'tm-subtitle-panel';
         panel.setAttribute('role', 'dialog');
         panel.setAttribute('aria-label', text('subtitleTitle', '字幕'));
 
         panel.append(this._buildHeader(), this._buildBody());
-        sheet.append(scrim, panel);
+        sheet.append(panel);
         host.appendChild(sheet);
 
         this.sheet = sheet;

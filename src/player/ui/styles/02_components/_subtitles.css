@@ -114,12 +114,6 @@
     justify-content: center;
 }
 
-.tm-subtitle-scrim {
-    position: absolute;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.45);
-}
-
 .tm-subtitle-panel {
     position: relative;
     width: 100%;
@@ -130,11 +124,9 @@
     flex-direction: column;
     box-sizing: border-box;
     border-radius: 20px;
-    background-color: rgba(20, 20, 22, 0.94);
+    background-color: #131315;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
     transform: translateZ(0);
     animation: tm-subtitle-rise 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     contain: paint layout;
@@ -454,6 +446,13 @@
     text-align: center;
     font-size: 12.5px;
     color: rgba(255, 255, 255, 0.42);
+}
+
+/* 字幕抽屉打开时，仅保留事件拦截能力，不做任何压暗与模糊 */
+.tm-player-container.has-subtitle-panel-open .tm-surface-event-sink {
+    background-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 /* -------------------------------------------------------------------------

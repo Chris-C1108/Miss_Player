@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 
 import { parseSubtitles, cuesToVtt, detectSubtitleFormat, sanitizeCueText } from '../src/player/subtitles/SubtitleFormat.js';
 import { decodeSubtitleBuffer } from '../src/player/subtitles/SubtitleDecoder.js';
-import { canonicalizeSubtitleCode, codeMatchesText, buildSearchVariants } from '../src/player/subtitles/SubtitleCode.js';
+import { codeMatchesText } from '../src/player/subtitles/SubtitleCode.js';
+import { matchAvCodeFromText, cleanAvCode } from '../src/utils/videoCode.js';
 import { SubtitleEngine } from '../src/player/subtitles/SubtitleEngine.js';
 
 test('SubtitlePipeline 字幕采集与解析单元测试', async (t) => {
@@ -85,16 +86,18 @@ test('SubtitlePipeline 字幕采集与解析单元测试', async (t) => {
         assert.equal(bomResult.encoding, 'utf-8-bom');
     });
 
-    await t.test('7. 番号清洗：域名水印、扩展名与版本后缀', () => {
-        assert.equal(canonicalizeSubtitleCode('www.example.com@IPX-343-C.mp4'), 'IPX-343');
-        assert.equal(canonicalizeSubtitleCode('IPX-343.1080p.srt'), 'IPX-343');
-        assert.equal(canonicalizeSubtitleCode('259LUXU-1234'), '259LUXU-1234');
+    await t.test('7. 番号识别统一走全局解析引擎', () => {
+        assert.equal(matchAvCodeFromText('www.example.com@IPX-343-C.mp4'), 'IPX-343');
+        assert.equal(matchAvCodeFromText('IPX-343.1080p.srt'), 'IPX-343');
+        assert.equal(matchAvCodeFromText('259LUXU-1234'), '259LUXU-1234');
+        assert.equal(cleanAvCode('ipx-343'), 'IPX-343');
     });
 
     await t.test('8. 番号比对可抹平前导零差异', () => {
         assert.equal(codeMatchesText('IPX-00343 中文字幕', 'IPX-343'), true);
         assert.equal(codeMatchesText('IPX-3431', 'IPX-343'), false);
-        assert.ok(buildSearchVariants('IPX-343').includes('IPX343'));
+        assert.equal(codeMatchesText('IPX-343.zh DS-zh-CN', 'IPX-343'), true);
+        assert.equal(codeMatchesText('简体[SRT]IPX-343', 'IPX-343'), true);
     });
 
     await t.test('9. 排序引擎：同源重复项去重且按质量降序', () => {
