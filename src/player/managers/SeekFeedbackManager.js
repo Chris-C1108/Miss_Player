@@ -11,7 +11,7 @@ import { formatTime } from '../../utils/time.js';
 import { Toast } from '../../utils/index.js';
 import { __ } from '../../constants/i18n.js';
 
-const MIN_DELTA_SECONDS = 3;      // 小于 3 秒视为微调，不打扰
+const MIN_DELTA_SECONDS = 1;      // 小于 1 秒视为微调，不打扰
 const DEDUPE_MS = 700;            // 连续跳转合并播报
 const WARMUP_MS = 2000;           // 开场还原断点不播报
 
@@ -30,33 +30,65 @@ export class SeekFeedbackManager {
         this._startedAt = 0;
         this._lastAnnouncedAt = 0;
 
-        this._onSeeking = () => {
-            this._from = Number(this.targetVideo?.currentTime) || 0;
+        this._onSeeking = (event) => {
+            const video = this._resolveTarget(event?.target);
+            if (!video) return;
+            this._from = Number(video.currentTime) || 0;
+            this._activeVideo = video;
         };
-        this._onSeeked = () => this._announce();
+        this._onSeeked = (event) => {
+            const video = this._resolveTarget(event?.target);
+            if (!video) return;
+            this._activeVideo = video;
+            this._announce(video);
+        };
+    }
+
+    /**
+     * 事件目标校验：捕获阶段收到的 seeked 必须来自播放器视频。
+     * 播放器尚未接管视频时（targetVideo 为空）允许先认领事件目标，
+     * 避免因绑定时视频元素缺失而永久失聪。
+     */
+    _resolveTarget(el) {
+        if (!el || el.tagName !== 'VIDEO') return null;
+        const owned = this.playerCore?.targetVideo;
+        if (!owned) {
+            if (this._claimedVideo && this._claimedVideo !== el) return null;
+            this._claimedVideo = el;
+            return el;
+        }
+        return owned === el ? el : null;
     }
 
     get targetVideo() {
         return this.playerCore?.targetVideo || null;
     }
 
+    /**
+     * 绑定在 document 捕获阶段：媒体事件不冒泡，但捕获阶段会流经祖先，
+     * 因此无论视频元素何时被播放器接管都能稳定收到，杜绝「绑定时还没有 video」的失聪。
+     */
     init() {
-        const video = this.targetVideo;
-        if (!video) return;
+        if (this._bound) return;
+        this._bound = true;
         this._startedAt = Date.now();
-        video.addEventListener('seeking', this._onSeeking);
-        video.addEventListener('seeked', this._onSeeked);
+        const root = typeof document !== 'undefined' ? document : null;
+        if (!root) return;
+        root.addEventListener('seeking', this._onSeeking, true);
+        root.addEventListener('seeked', this._onSeeked, true);
     }
 
     cleanup() {
-        const video = this.targetVideo;
-        if (!video) return;
-        video.removeEventListener('seeking', this._onSeeking);
-        video.removeEventListener('seeked', this._onSeeked);
+        if (!this._bound) return;
+        this._bound = false;
+        const root = typeof document !== 'undefined' ? document : null;
+        if (!root) return;
+        root.removeEventListener('seeking', this._onSeeking, true);
+        root.removeEventListener('seeked', this._onSeeked, true);
     }
 
-    _announce() {
-        const video = this.targetVideo;
+    _announce(eventVideo) {
+        const video = eventVideo || this._activeVideo || this.targetVideo;
         if (!video) return;
         const to = Number(video.currentTime) || 0;
         const delta = Math.abs(to - this._from);
@@ -71,7 +103,11 @@ export class SeekFeedbackManager {
         if (now - this._lastAnnouncedAt < DEDUPE_MS) return;
         this._lastAnnouncedAt = now;
 
-        this.controlManager?.showJumpHint?.(to);
-        Toast(`${__('jumpedTo') || '已跳转至'} ${formatTime(to)}`, 1200, 'info');
+        try {
+            this.controlManager?.showJumpHint?.(to);
+        } catch (_) { /* 指示器失败不影响播报 */ }
+        if (typeof Toast === 'function') {
+            Toast(`${__('jumpedTo') || '已跳转至'} ${formatTime(to)}`, 1200, 'info');
+        }
     }
 }

@@ -216,6 +216,11 @@ runStep('执行字幕层挂载层级与时间轴渲染集成测试', () => {
     execSync('node tests/subtitle-render.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.29 跳转反馈统一出口测试
+runStep('执行跳转反馈统一出口测试', () => {
+    execSync('node tests/seek-feedback.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');
