@@ -149,6 +149,18 @@ export class SubtitleRepository {
         }
     }
 
+    /**
+     * 删除远端字幕正文（取消收藏时调用，避免目录里堆积孤儿文件）
+     * @param {Object} item
+     * @param {string} avcode
+     * @returns {Promise<boolean>}
+     */
+    static async deleteRemoteItem(item, avcode) {
+        const target = SubtitleRepository.resolveRemoteTarget(avcode);
+        if (!target || !item?.file) return false;
+        return WebDavClient.deleteFile(target.config, `${target.dir}${item.file}`);
+    }
+
     static _merge(localBundle, remoteIndex) {
         const map = new Map(localBundle.items.map((item) => [item.id, item]));
         let changed = false;

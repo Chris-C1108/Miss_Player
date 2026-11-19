@@ -1335,4 +1335,30 @@ export class WebDavClient {
         }
     }
 
+    /**
+     * 删除 WebDAV 上的指定文件 (带双地址故障转移与协议守卫)
+     * @param {Object} config - { url, lanUrl, user, pass }
+     * @param {string} fullOrRelativePath - 文件路径
+     * @param {number} [timeout=8000] - 单次请求超时
+     * @returns {Promise<boolean>}
+     */
+    static async deleteFile(config, fullOrRelativePath, timeout = 8000) {
+        try {
+            return await this.executeWithFailover(config, async (activeCfg) => {
+                const reqTimeout = activeCfg._failoverTimeout || timeout;
+                const fileUrl = this.normalizeUrl(activeCfg.url, fullOrRelativePath, activeCfg.user);
+                const res = await this._davRequest({
+                    method: 'DELETE',
+                    url: fileUrl,
+                    user: activeCfg.user,
+                    pass: activeCfg.pass,
+                    timeout: reqTimeout
+                });
+                return res.status === 200 || res.status === 204 || res.status === 404;
+            });
+        } catch (_) {
+            return false;
+        }
+    }
+
 }

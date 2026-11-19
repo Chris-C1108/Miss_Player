@@ -1,10 +1,10 @@
 /**
  * SubtitleManager — 字幕渲染与管理中枢
  *
- * 职责：
- * 1. 在视频区域内渲染字幕浮层（绝对定位 + GPU 合成层，绝不触发 Reflow）
- * 2. 字幕面板：总开关、全量字幕列表（本地已存 + 在线结果同列表）、收藏、字号
- * 3. 与 SubtitleRepository 协作完成 IndexedDB + WebDAV 多级存储
+ * 模型：
+ * 1. 字幕层挂在播放器顶层容器，按画面矩形几何对齐（杜绝 iOS 视频合成面遮挡）
+ * 2. 列表 = 全量候选（在线检索结果 + 已收藏），番号不符的候选一律屏蔽
+ * 3. 「收藏」是唯一的持久化动作：收藏即优先展示 + 落盘 IndexedDB + 写入 WebDAV；取消收藏即删除
  */
 
 import { Toast } from '../../utils/index.js';
@@ -13,10 +13,8 @@ import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
 import {
     ICON_SUBTITLE,
     ICON_X_CLOSE,
-    ICON_TRASH,
     ICON_DOWNLOAD,
     ICON_REFRESH,
-    ICON_CHECK,
     ICON_STAR,
     ICON_STAR_FILLED
 } from '../../constants/icons.js';
@@ -25,14 +23,30 @@ import { SubtitleEngine } from './SubtitleEngine.js';
 import { SubtitleRepository } from './SubtitleRepository.js';
 import { decodeSubtitleBuffer } from './SubtitleDecoder.js';
 import { parseSubtitles } from './SubtitleFormat.js';
-import { canonicalizeSubtitleCode } from './SubtitleCode.js';
+import { canonicalizeSubtitleCode, codeMatchesText } from './SubtitleCode.js';
 
 const FONT_SIZES = ['small', 'medium', 'large'];
 const CUE_TAIL_TOLERANCE = 0.35;
 const CUE_LEAD_TOLERANCE = 0.25;
 
+const LANG_NAMES = {
+    'zh': '中文',
+    'zh-CN': '中文',
+    'zh-TW': '繁體',
+    'en': 'English',
+    'ja': '日本語',
+    'ko': '한국어',
+    'vi': 'Tiếng Việt'
+};
+
 function text(key, fallback) {
     return __(key) || fallback;
+}
+
+function langName(row) {
+    const label = String(row?.langLabel || '').trim();
+    if (label) return label;
+    return LANG_NAMES[row?.lang] || String(row?.lang || '').toUpperCase() || text('subtitleTitle', '字幕');
 }
 
 export class SubtitleManager {
@@ -149,12 +163,33 @@ export class SubtitleManager {
         return canonicalizeSubtitleCode(code) || String(code || '').toUpperCase();
     }
 
+    /** 候选是否属于当前番号（本地导入不受番号约束） */
+    _isRelevant(item) {
+        if (!item) return false;
+        if (item.provider === 'local') return true;
+        const title = String(item.title || '').trim();
+        if (!title) return true;
+        return !this.avcode || codeMatchesText(title, this.avcode);
+    }
+
     async _loadBundle() {
         if (!this.avcode) return;
         try {
             this.bundle = await SubtitleRepository.load(this.avcode);
         } catch (err) {
             console.warn('[SubtitleManager] 字幕包加载失败:', err?.message);
+            return;
+        }
+
+        // 历史遗留的串号字幕（其它番号的结果）随加载一并清理
+        const kept = this.bundle.items.filter((item) => this._isRelevant(item));
+        if (kept.length !== this.bundle.items.length) {
+            this.bundle.items = kept;
+            if (this.bundle.favoriteId && !kept.some((item) => item.id === this.bundle.favoriteId)) {
+                this.bundle.favoriteId = '';
+            }
+            await this._persist();
+            window.DebugLogPanel?.addLog?.('[字幕] 已清理当前番号无关的历史字幕', 'info');
         }
     }
 
@@ -203,7 +238,8 @@ export class SubtitleManager {
         const favorite =
             items.find((item) => item.id === this.bundle.favoriteId) || items.find((item) => item.favorite);
         const best = favorite || items.slice().sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))[0];
-        if (!best || best.id === this.bundle.activeId) return;
+        if (!best) return;
+        if (best.id === this.activeItem?.id) return;
         await this._applyItem(best, { silent });
     }
 
@@ -239,7 +275,8 @@ export class SubtitleManager {
     /** 监听容器与视频尺寸变化，保持字幕层与画面矩形严格对齐 */
     _observeGeometry(host) {
         if (this._resizeObserver || typeof ResizeObserver === 'undefined') {
-            window.addEventListener('resize', this._onWindowResize = () => this._syncOverlayGeometry());
+            this._onWindowResize = () => this._syncOverlayGeometry();
+            window.addEventListener('resize', this._onWindowResize);
             window.addEventListener('orientationchange', this._onWindowResize);
             return;
         }
@@ -302,10 +339,10 @@ export class SubtitleManager {
         video.addEventListener('seeked', this._onSeeked);
         video.addEventListener('play', this._onPlay);
         video.addEventListener('pause', this._onPause);
-        if (!video.paused) this._startRenderLoop();
         this._onVideoMeta = () => this._syncOverlayGeometry();
         video.addEventListener('loadedmetadata', this._onVideoMeta);
         video.addEventListener('emptied', this._onVideoMeta);
+        if (!video.paused) this._startRenderLoop();
     }
 
     _startRenderLoop() {
@@ -395,7 +432,6 @@ export class SubtitleManager {
         }
 
         prepared.format = format;
-        this._upsertItem(prepared);
         this.cues = cues;
         this.activeItem = prepared;
         this.bundle.activeId = prepared.id;
@@ -404,7 +440,6 @@ export class SubtitleManager {
         this._syncSwitchState();
         this._updateButtonState();
         this._renderList();
-        this._persist({ dirtyItem: prepared });
         this._ensureOverlay();
         this.renderAt(this.targetVideo?.currentTime || 0);
         if (this.targetVideo && !this.targetVideo.paused) this._startRenderLoop();
@@ -412,13 +447,6 @@ export class SubtitleManager {
         if (!silent) {
             Toast(`${text('subtitleApplied', '已应用字幕')} · ${prepared.title || format.toUpperCase()}`, 2000, 'success');
         }
-    }
-
-    _upsertItem(item) {
-        const index = this.bundle.items.findIndex((entry) => entry.id === item.id);
-        if (index >= 0) this.bundle.items[index] = { ...this.bundle.items[index], ...item };
-        else this.bundle.items = [item, ...this.bundle.items];
-        return this.bundle.items.find((entry) => entry.id === item.id);
     }
 
     _setEnabled(enabled) {
@@ -429,15 +457,10 @@ export class SubtitleManager {
             this._stopRenderLoop();
             return;
         }
-        const active = this._findItem(this.bundle.activeId);
-        if (active) {
-            this._applyItem(active, { silent: true });
+        if (this.activeItem) {
+            this._applyItem(this.activeItem, { silent: true });
         } else {
-            this._autoApplyBest({ silent: true }).then(() => {
-                if (!this.cues.length && !this.bundle.items.length) {
-                    Toast(text('subtitleEmptyHint', '搜索或导入字幕后即可显示'), 2200, 'info');
-                }
-            });
+            this._autoApplyBest({ silent: true });
         }
     }
 
@@ -511,14 +534,45 @@ export class SubtitleManager {
         const title = document.createElement('span');
         title.className = 'tm-subtitle-head-title';
         title.textContent = text('subtitleTitle', '字幕');
-        const code = document.createElement('span');
-        code.className = 'tm-subtitle-head-code';
-        code.textContent = this.avcode || '';
         titleWrap.append(title);
-        if (this.avcode) titleWrap.append(code);
+        if (this.avcode) {
+            const code = document.createElement('span');
+            code.className = 'tm-subtitle-head-code';
+            code.textContent = this.avcode;
+            titleWrap.append(code);
+        }
 
-        const actions = document.createElement('div');
-        actions.className = 'tm-subtitle-head-actions';
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'tm-subtitle-close-btn';
+        closeBtn.setAttribute('aria-label', text('subtitleClose', '关闭'));
+        closeBtn.innerHTML = ICON_X_CLOSE;
+        closeBtn.addEventListener('click', () => this._closePanel());
+
+        head.append(titleWrap, closeBtn);
+        return head;
+    }
+
+    _buildBody() {
+        const body = document.createElement('div');
+        body.className = 'tm-subtitle-body';
+        body.append(this._buildShowRow(), this._buildToolbar());
+
+        const list = document.createElement('div');
+        list.className = 'tm-subtitle-list';
+        this.listEl = list;
+        body.append(list);
+        return body;
+    }
+
+    /** 明示「显示字幕」开关，杜绝裸开关语义不明 */
+    _buildShowRow() {
+        const row = document.createElement('div');
+        row.className = 'tm-subtitle-show-row';
+
+        const label = document.createElement('span');
+        label.className = 'tm-subtitle-show-label';
+        label.textContent = text('subtitleShow', '显示字幕');
 
         const switchBtn = document.createElement('button');
         switchBtn.type = 'button';
@@ -529,28 +583,8 @@ export class SubtitleManager {
         switchBtn.addEventListener('click', () => this._setEnabled(!this.isEnabled));
         this.switchEl = switchBtn;
 
-        const closeBtn = document.createElement('button');
-        closeBtn.type = 'button';
-        closeBtn.className = 'tm-subtitle-close-btn';
-        closeBtn.setAttribute('aria-label', text('subtitleClose', '关闭'));
-        closeBtn.innerHTML = ICON_X_CLOSE;
-        closeBtn.addEventListener('click', () => this._closePanel());
-
-        actions.append(switchBtn, closeBtn);
-        head.append(titleWrap, actions);
-        return head;
-    }
-
-    _buildBody() {
-        const body = document.createElement('div');
-        body.className = 'tm-subtitle-body';
-        body.append(this._buildToolbar());
-
-        const list = document.createElement('div');
-        list.className = 'tm-subtitle-list';
-        this.listEl = list;
-        body.append(list);
-        return body;
+        row.append(label, switchBtn);
+        return row;
     }
 
     _buildToolbar() {
@@ -601,12 +635,18 @@ export class SubtitleManager {
         return bar;
     }
 
-    /** 本地已存 + 在线结果合并为单一全量列表 */
+    /** 全量候选：已收藏 + 在线结果 + 当前播放轨（番号不符一律屏蔽） */
     _visibleRows() {
         const map = new Map();
-        for (const item of this.bundle.items) map.set(item.id, item);
+        for (const item of this.bundle.items) {
+            if (this._isRelevant(item)) map.set(item.id, item);
+        }
         for (const candidate of this.onlineResults) {
+            if (!this._isRelevant(candidate)) continue;
             if (!map.has(candidate.id)) map.set(candidate.id, candidate);
+        }
+        if (this.activeItem && !map.has(this.activeItem.id) && this._isRelevant(this.activeItem)) {
+            map.set(this.activeItem.id, this.activeItem);
         }
         return Array.from(map.values()).sort((a, b) => {
             const favDiff = (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0);
@@ -631,7 +671,7 @@ export class SubtitleManager {
 
         const nodes = rows.map((row) =>
             this._buildRow(row, {
-                active: row.id === this.bundle.activeId,
+                active: row.id === this.activeItem?.id,
                 favorite: Boolean(row.favorite),
                 downloaded: Boolean(row.content),
                 busy: this._busyId === row.id
@@ -646,6 +686,11 @@ export class SubtitleManager {
         if (active) el.classList.add('is-active');
         if (favorite) el.classList.add('is-favorite');
         if (busy) el.classList.add('is-busy');
+        if (!downloaded) el.classList.add('is-remote');
+
+        const lang = document.createElement('span');
+        lang.className = 'tm-subtitle-lang';
+        lang.textContent = langName(row);
 
         const main = document.createElement('div');
         main.className = 'tm-subtitle-item-main';
@@ -654,20 +699,11 @@ export class SubtitleManager {
         title.className = 'tm-subtitle-item-title';
         title.textContent = row.title || row.langLabel || '';
 
-        const metaBits = [
-            row.providerLabel || text('subtitleFromLocal', '本地'),
-            row.langLabel || row.lang,
-            row.rating ? String(row.rating) : ''
-        ].filter(Boolean);
         const meta = document.createElement('div');
         meta.className = 'tm-subtitle-item-meta';
-        meta.textContent = metaBits.join(' · ');
+        meta.textContent = row.providerLabel || text('subtitleFromLocal', '本地');
 
         main.append(title, meta);
-        el.append(main);
-
-        const actions = document.createElement('div');
-        actions.className = 'tm-subtitle-item-actions';
 
         const star = document.createElement('button');
         star.type = 'button';
@@ -681,27 +717,7 @@ export class SubtitleManager {
             this._toggleFavorite(row);
         });
 
-        const state = document.createElement('span');
-        state.className = 'tm-subtitle-state';
-        state.innerHTML = downloaded ? ICON_CHECK : ICON_DOWNLOAD;
-
-        actions.append(star, state);
-
-        if (downloaded) {
-            const del = document.createElement('button');
-            del.type = 'button';
-            del.className = 'tm-subtitle-item-del';
-            del.title = text('subtitleDelete', '删除字幕');
-            del.setAttribute('aria-label', text('subtitleDelete', '删除字幕'));
-            del.innerHTML = ICON_TRASH;
-            del.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this._removeItem(row);
-            });
-            actions.append(del);
-        }
-
-        el.append(actions);
+        el.append(lang, main, star);
         el.addEventListener('click', () => {
             if (el.classList.contains('is-busy')) return;
             this._activateRow(row);
@@ -711,8 +727,9 @@ export class SubtitleManager {
 
     async _activateRow(row) {
         if (this._busyId) return;
-        if (this._findItem(row.id)) {
-            await this._applyItem(this._findItem(row.id));
+        const stored = this._findItem(row.id);
+        if (stored) {
+            await this._applyItem(stored);
             return;
         }
         this._busyId = row.id;
@@ -726,49 +743,55 @@ export class SubtitleManager {
         }
     }
 
+    /**
+     * 收藏即持久化：收藏 → 下载正文 + 优先展示 + 落盘 + 写入 WebDAV
+     * 取消收藏 → 删除本地与远端副本
+     */
     async _toggleFavorite(row) {
         if (this._busyId) return;
         this._busyId = row.id;
         this._renderList();
         try {
+            if (row.favorite) {
+                await this._unfavorite(row);
+                return;
+            }
+
             let item = this._findItem(row.id);
             if (!item) item = await this._downloadCandidate(row);
             else if (!item.content) item = await this._ensureContent(item);
             if (!item) throw new Error('SUBTITLE_UNAVAILABLE');
 
-            const next = !item.favorite;
-            item.favorite = next;
-            if (next) {
-                this.bundle.favoriteId = item.id;
-                this.bundle.items = [item, ...this.bundle.items.filter((entry) => entry.id !== item.id)];
-                await this._persist({ dirtyItem: item });
-                Toast(text('subtitleSaved', '已收藏并同步'), 1800, 'success');
-            } else {
-                if (this.bundle.favoriteId === item.id) this.bundle.favoriteId = '';
-                await this._persist();
-            }
+            item.favorite = true;
+            this.bundle.favoriteId = item.id;
+            this.bundle.items = [item, ...this.bundle.items.filter((entry) => entry.id !== item.id)];
+            await this._persist({ dirtyItem: item });
+            Toast(text('subtitleSaved', '已收藏并同步'), 1800, 'success');
+
+            if (!this.activeItem) await this._applyItem(item, { silent: true });
         } catch (err) {
             console.warn('[SubtitleManager] 收藏失败:', err?.message);
             Toast(text('subtitleSaveFailed', '同步失败，已存至本地'), 2400, 'error');
         } finally {
             this._busyId = '';
             this._renderList();
+            this._updateButtonState();
         }
     }
 
-    async _removeItem(row) {
+    async _unfavorite(row) {
+        const item = this._findItem(row.id);
         this.bundle.items = this.bundle.items.filter((entry) => entry.id !== row.id);
-        if (this.bundle.activeId === row.id) {
-            this.bundle.activeId = '';
+        if (this.bundle.favoriteId === row.id) this.bundle.favoriteId = '';
+        if (this.activeItem?.id === row.id) {
             this.activeItem = null;
             this.cues = [];
+            this.bundle.activeId = '';
             this._stopRenderLoop();
             this._setOverlayText('');
-            this._updateButtonState();
         }
-        if (this.bundle.favoriteId === row.id) this.bundle.favoriteId = '';
         await this._persist();
-        this._renderList();
+        if (item?.file) await SubtitleRepository.deleteRemoteItem(item, this.avcode);
         Toast(text('subtitleDeleted', '已删除字幕'), 1800, 'info');
     }
 
@@ -792,7 +815,6 @@ export class SubtitleManager {
                 addedAt: Date.now(),
                 rating: 100
             };
-            this._upsertItem(item);
             await this._applyItem(item);
         } catch (err) {
             console.warn('[SubtitleManager] 导入失败:', err?.message);
@@ -819,7 +841,9 @@ export class SubtitleManager {
         try {
             const { candidates, errors } = await this.engine.search(this.avcode);
             const known = new Set(this.bundle.items.map((item) => item.id));
-            this.onlineResults = candidates.filter((candidate) => !known.has(candidate.id));
+            this.onlineResults = candidates.filter(
+                (candidate) => !known.has(candidate.id) && this._isRelevant(candidate)
+            );
             if (!this.onlineResults.length) {
                 Toast(
                     errors.length
@@ -849,7 +873,7 @@ export class SubtitleManager {
                 favorite: Boolean(candidate.favorite)
             };
             this.onlineResults = this.onlineResults.filter((entry) => entry.id !== item.id);
-            return this._upsertItem(item);
+            return item;
         } catch (err) {
             console.warn('[SubtitleManager] 下载失败:', err?.message);
             Toast(text('subtitleDownloadFailed', '下载失败，请换个来源试试'), 2600, 'error');
@@ -873,8 +897,7 @@ export class SubtitleManager {
         this.buttonEl?.classList.add('is-open');
         this.uiManager?.surfaceMachine?.activate?.(SURFACE_TYPES.SUBTITLE_PANEL, () => this._closePanel());
 
-        // 首次打开且无任何字幕时自动检索一次，默认给到最优字幕
-        if (!this.bundle.items.length && !this.onlineResults.length && !this._searching && this.settings.betaMode) {
+        if (!this.onlineResults.length && !this._searching && this.settings.betaMode) {
             this._searchOnline();
         }
     }

@@ -223,6 +223,25 @@
     overflow-x: hidden;
 }
 
+/* 显示字幕开关行 */
+.tm-subtitle-show-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 4px 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.tm-subtitle-show-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: rgba(255, 255, 255, 0.92);
+}
+
 /* 工具行 */
 .tm-subtitle-toolbar {
     display: flex;
@@ -326,13 +345,30 @@
 }
 
 .tm-subtitle-item.is-active {
-    background-color: rgba(255, 255, 255, 0.09);
-    box-shadow: inset 2.5px 0 0 var(--brand-pink);
+    background-color: rgba(255, 255, 255, 0.07);
 }
 
 .tm-subtitle-item.is-busy {
     opacity: 0.6;
     cursor: progress;
+}
+
+.tm-subtitle-item.is-remote .tm-subtitle-item-title {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.tm-subtitle-lang {
+    flex-shrink: 0;
+    min-width: 42px;
+    padding: 4px 8px;
+    border-radius: 7px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .tm-subtitle-item-main {
@@ -362,13 +398,6 @@
     white-space: nowrap;
 }
 
-.tm-subtitle-item-actions {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
-}
-
 .tm-subtitle-star {
     display: flex;
     align-items: center;
@@ -394,19 +423,6 @@
 
 .tm-subtitle-star:active {
     transform: scale(0.9);
-}
-
-.tm-subtitle-state {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    color: rgba(255, 255, 255, 0.3);
-}
-
-.tm-subtitle-item.is-active .tm-subtitle-state {
-    color: var(--brand-pink);
 }
 
 .tm-subtitle-item.is-favorite .tm-subtitle-item-title {
