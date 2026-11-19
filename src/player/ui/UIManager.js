@@ -1754,7 +1754,9 @@ export class UIManager {
             this.playerContainer && (
                 this.playerContainer.classList.contains('tm-ios-keyboard-open') ||
                 this.playerContainer.classList.contains('has-composer-active') ||
-                this.playerContainer.classList.contains('has-sheet-open')
+                this.playerContainer.classList.contains('has-sheet-open') ||
+                // 字幕抽屉与评论区共用同一套竖屏双态视口机：展开时视频收缩至自然比例，释放阅读空间
+                this.playerContainer.classList.contains('has-subtitle-panel-open')
             )
         );
 
