@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.119-beta.005
+// @version            5.7.119-beta.006
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1920,7 +1920,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.119-beta.005";
+		return "5.7.119-beta.006";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4256,7 +4256,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.119-beta.005";
+		return "5.7.119-beta.006";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6383,7 +6383,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.119-beta.005";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.119-beta.006";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -27737,7 +27737,28 @@
 			this.activeItem = null;
 		}
 		_resolveAvcode() {
-			return cleanAvCode(this.playerCore?.options?.videoCode || this.controlManager?.commentPanel?.videoCode || getVideoCodeFromUrl$1(this.targetVideo) || getVideoCodeFromUrl$1()) || "";
+			return cleanAvCode(this.controlManager?.commentPanel?.videoCode || this.playerCore?.options?.videoCode || getVideoCodeFromUrl$1() || getVideoCodeFromUrl$1(this.targetVideo)) || "";
+		}
+		async _syncAvcode() {
+			const next = this._resolveAvcode();
+			if (!next || next === this.avcode) return false;
+			this.avcode = next;
+			this.cues = [];
+			this.activeItem = null;
+			this.onlineResults = [];
+			this.bundle = {
+				code: next,
+				activeId: "",
+				favoriteId: "",
+				items: [],
+				updatedAt: 0
+			};
+			this._setOverlayText("");
+			await this._loadBundle();
+			this._renderList();
+			this._syncSwitchState();
+			if (this.isEnabled) await this._autoApplyBest({ silent: true });
+			return true;
 		}
 		_isRelevant(item) {
 			if (!item) return false;
@@ -27875,7 +27896,10 @@
 			video.addEventListener("seeked", this._onSeeked);
 			video.addEventListener("play", this._onPlay);
 			video.addEventListener("pause", this._onPause);
-			this._onVideoMeta = () => this._syncOverlayGeometry();
+			this._onVideoMeta = () => {
+				this._syncOverlayGeometry();
+				this._syncAvcode();
+			};
 			video.addEventListener("loadedmetadata", this._onVideoMeta);
 			video.addEventListener("emptied", this._onVideoMeta);
 			if (!video.paused) this._startRenderLoop();
@@ -28013,6 +28037,10 @@
 			panel.setAttribute("role", "dialog");
 			panel.setAttribute("aria-label", text("subtitleTitle", "字幕"));
 			panel.append(this._buildHeader(), this._buildBody());
+			sheet.addEventListener("click", (e) => {
+				if (panel.contains(e.target)) return;
+				this._closePanel();
+			});
 			sheet.append(panel);
 			host.appendChild(sheet);
 			this.sheet = sheet;
@@ -28319,6 +28347,7 @@
 		_openPanel() {
 			this._ensurePanel();
 			if (!this.sheet) return;
+			this._syncAvcode();
 			this._renderList();
 			this._syncSwitchState();
 			this.sheet.classList.remove("is-hidden");

@@ -160,12 +160,33 @@ export class SubtitleManager {
      * 严禁在本模块另造番号解析逻辑。
      */
     _resolveAvcode() {
+        // 权威来源：评论采集使用的番号（页面级漏斗解析，与评论/热度全站一致）
         const raw =
-            this.playerCore?.options?.videoCode ||
             this.controlManager?.commentPanel?.videoCode ||
-            getVideoCodeFromUrl(this.targetVideo) ||
-            getVideoCodeFromUrl();
+            this.playerCore?.options?.videoCode ||
+            getVideoCodeFromUrl() ||
+            getVideoCodeFromUrl(this.targetVideo);
         return cleanAvCode(raw) || '';
+    }
+
+    /**
+     * 番号可能在评论面板异步解析后到位，这里做一次收敛同步；
+     * 变更时重载该番号的字幕包，避免字幕写到错误番号名下。
+     */
+    async _syncAvcode() {
+        const next = this._resolveAvcode();
+        if (!next || next === this.avcode) return false;
+        this.avcode = next;
+        this.cues = [];
+        this.activeItem = null;
+        this.onlineResults = [];
+        this.bundle = { code: next, activeId: '', favoriteId: '', items: [], updatedAt: 0 };
+        this._setOverlayText('');
+        await this._loadBundle();
+        this._renderList();
+        this._syncSwitchState();
+        if (this.isEnabled) await this._autoApplyBest({ silent: true });
+        return true;
     }
 
     /** 候选是否属于当前番号（本地导入不受番号约束） */
@@ -344,7 +365,10 @@ export class SubtitleManager {
         video.addEventListener('seeked', this._onSeeked);
         video.addEventListener('play', this._onPlay);
         video.addEventListener('pause', this._onPause);
-        this._onVideoMeta = () => this._syncOverlayGeometry();
+        this._onVideoMeta = () => {
+            this._syncOverlayGeometry();
+            this._syncAvcode();
+        };
         video.addEventListener('loadedmetadata', this._onVideoMeta);
         video.addEventListener('emptied', this._onVideoMeta);
         if (!video.paused) this._startRenderLoop();
@@ -517,6 +541,12 @@ export class SubtitleManager {
         panel.setAttribute('aria-label', text('subtitleTitle', '字幕'));
 
         panel.append(this._buildHeader(), this._buildBody());
+        // 点击抽屉内面板以外的任意区域关闭（不依赖遮罩层，保持画面通透）
+        sheet.addEventListener('click', (e) => {
+            if (panel.contains(e.target)) return;
+            this._closePanel();
+        });
+
         sheet.append(panel);
         host.appendChild(sheet);
 
@@ -892,6 +922,7 @@ export class SubtitleManager {
     _openPanel() {
         this._ensurePanel();
         if (!this.sheet) return;
+        this._syncAvcode();
         this._renderList();
         this._syncSwitchState();
         this.sheet.classList.remove('is-hidden');
