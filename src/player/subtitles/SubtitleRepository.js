@@ -1,57 +1,95 @@
 /**
  * SubtitleRepository — 字幕多级存储仓库
  *
- * 读取优先级：IndexedDB 本地极速 -> WebDAV 番号独立文件 -> 空
- * 写入策略：本地 IndexedDB 立即落盘 + WebDAV 节流增量漫游（跨设备共享）
- * 文件拓扑：`{WebDAV根}/subtitles/{番号}.json`，与热度足迹 heatmaps/ 完全解耦
+ * 本地层：IndexedDB `subtitles` store（含字幕正文，离线极速读取）
+ * 远端层：WebDAV 番号独立目录
+ *   · 若已配置 Peach STRM 目录 → 直接写入该目录（与 .strm 同源，Peach 侧可直接使用）
+ *   · 否则在同步目录下创建 `media/{番号}/`
+ *
+ * 远端目录内容：
+ *   `_index.json`  轻量索引（标题/语言/评分/收藏/file 映射）
+ *   `{番号}.{lang}.{hash}.{ext}`  可直接被播放器/播放盒读取的字幕正文
  */
 
 import { idbGet, idbSet, STORES } from '../../utils/indexedDB.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
 import { SyncManager } from '../../sync/SyncManager.js';
+import { PeachService } from '../../services/PeachService.js';
 
-const SUBTITLE_DIR = 'subtitles';
-const UPLOAD_THROTTLE_MS = 5000;
+const INDEX_FILE = '_index.json';
+const UPLOAD_THROTTLE_MS = 1200;
+const REMOTE_DIR_PREFIX = 'media';
 
 function normalizeKey(avcode) {
     return String(avcode || '').trim().toUpperCase();
 }
 
-function mergeItems(localItems = [], remoteItems = []) {
-    const map = new Map();
-    for (const item of localItems) {
-        if (item && item.id) map.set(item.id, item);
+function shortHash(text) {
+    let hash = 0;
+    const str = String(text || '');
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
     }
-    let changed = false;
-    for (const item of remoteItems) {
-        if (!item || !item.id) continue;
-        const existing = map.get(item.id);
-        if (!existing || (Number(item.addedAt) || 0) > (Number(existing.addedAt) || 0)) {
-            map.set(item.id, item);
-            changed = true;
-        }
-    }
-    return { items: Array.from(map.values()), changed };
+    return hash.toString(36).slice(-5);
+}
+
+function safeSegment(text, fallback = 'sub') {
+    const cleaned = String(text || '')
+        .replace(/[\\/:*?"<>|\s]+/g, '')
+        .slice(0, 24);
+    return cleaned || fallback;
+}
+
+function buildFileName(avcode, item) {
+    const lang = safeSegment(item.lang || item.langLabel || 'sub', 'sub');
+    const ext = String(item.format || 'srt').toLowerCase().replace(/[^a-z]/g, '') || 'srt';
+    return `${normalizeKey(avcode)}.${lang}.${shortHash(item.id)}.${ext}`;
 }
 
 export class SubtitleRepository {
     /**
-     * 读取番号字幕包（本地优先，远端增量合并回写）
+     * 解析远端存储目标
      * @param {string} avcode
-     * @returns {Promise<{code:string, activeId:string, items:Array<Object>, updatedAt:number}>}
+     * @returns {{config: Object, dir: string}|null}
+     */
+    static resolveRemoteTarget(avcode) {
+        const syncConfig = SyncManager.getWebDavConfig();
+        if (!WebDavClient.hasValidEndpoint(syncConfig) || !syncConfig.user) return null;
+
+        try {
+            const peach = PeachService.getConfig();
+            if (peach && peach.enabled) {
+                const effective = PeachService.getEffectiveWebDavConfig();
+                if (effective?.targetDir && effective?.config) {
+                    // Peach 目录即字幕落盘目录，直接从该目录取文件名
+                    return { config: { ...effective.config, path: effective.targetDir }, dir: '' };
+                }
+            }
+        } catch (_) {
+            /* Peach 未启用或读取失败时回落同步目录 */
+        }
+
+        return { config: syncConfig, dir: `${REMOTE_DIR_PREFIX}/${normalizeKey(avcode)}/` };
+    }
+
+    /**
+     * 读取番号字幕包（本地优先，远端索引合并）
+     * @param {string} avcode
+     * @returns {Promise<{code:string, activeId:string, favoriteId:string, items:Array<Object>, updatedAt:number}>}
      */
     static async load(avcode) {
-        const key = normalizeKey(avcode);
-        const empty = { code: key, activeId: '', items: [], updatedAt: 0 };
-        if (!key) return empty;
+        const code = normalizeKey(avcode);
+        const empty = { code, activeId: '', favoriteId: '', items: [], updatedAt: 0 };
+        if (!code) return empty;
 
         let bundle = empty;
         try {
-            const local = await idbGet(STORES.SUBTITLES, key);
+            const local = await idbGet(STORES.SUBTITLES, code);
             if (local && Array.isArray(local.items)) {
                 bundle = {
-                    code: key,
+                    code,
                     activeId: local.activeId || '',
+                    favoriteId: local.favoriteId || '',
                     items: local.items,
                     updatedAt: Number(local.updatedAt) || 0
                 };
@@ -60,86 +98,155 @@ export class SubtitleRepository {
             console.warn('[SubtitleRepository] 本地读取失败:', err?.message);
         }
 
-        const remoteItems = await SubtitleRepository._download(avcode);
-        if (remoteItems.length) {
-            const merged = mergeItems(bundle.items, remoteItems);
+        const remote = await SubtitleRepository._downloadIndex(code);
+        if (remote && Array.isArray(remote.items) && remote.items.length) {
+            const merged = SubtitleRepository._merge(bundle, remote);
             if (merged.changed) {
-                bundle = { ...bundle, items: merged.items, updatedAt: Date.now() };
-                await SubtitleRepository.save(bundle, { sync: false });
+                bundle = merged.bundle;
+                idbSet(STORES.SUBTITLES, code, bundle);
             }
         }
         return bundle;
     }
 
     /**
-     * 写入字幕包（本地立即落盘 + WebDAV 节流上传）
-     * @param {{code:string, activeId:string, items:Array<Object>}} bundle
-     * @param {{sync?: boolean}} [options]
+     * 写入字幕包（本地立即落盘 + 远端节流同步）
+     * @param {{code:string, activeId:string, favoriteId:string, items:Array<Object>}} bundle
+     * @param {{sync?: boolean, dirtyItem?: Object|null}} [options]
      */
     static async save(bundle, options = {}) {
-        const { sync = true } = options;
-        const key = normalizeKey(bundle?.code);
-        if (!key) return false;
+        const { sync = true, dirtyItem = null } = options;
+        const code = normalizeKey(bundle?.code);
+        if (!code) return false;
+
         const payload = {
-            code: key,
+            code,
             activeId: bundle.activeId || '',
+            favoriteId: bundle.favoriteId || '',
             items: Array.isArray(bundle.items) ? bundle.items : [],
             updatedAt: Date.now()
         };
-        const localOk = await idbSet(STORES.SUBTITLES, key, payload);
-        if (sync) SubtitleRepository._upload(payload);
+        const localOk = await idbSet(STORES.SUBTITLES, code, payload);
+        if (sync) SubtitleRepository._scheduleRemoteSync(payload, dirtyItem);
         return localOk;
     }
 
     /**
-     * 远端数据下载（无有效 WebDAV 配置时静默跳过）
+     * 拉取远端字幕正文（跨设备漫游时本地缺失内容的补全通道）
+     * @param {Object} item
      * @param {string} avcode
-     * @returns {Promise<Array<Object>>}
+     * @returns {Promise<string>}
      */
-    static async _download(avcode) {
+    static async downloadItem(item, avcode) {
+        const target = SubtitleRepository.resolveRemoteTarget(avcode);
+        if (!target || !item?.file) return '';
         try {
-            const config = SyncManager.getWebDavConfig();
-            if (!WebDavClient.hasValidEndpoint(config) || !config.user) return [];
-            const remote = await WebDavClient.downloadFile(config, `${SUBTITLE_DIR}/${normalizeKey(avcode)}.json`);
-            const parsed = typeof remote === 'string' ? JSON.parse(remote) : remote;
-            return Array.isArray(parsed?.items) ? parsed.items : [];
+            const raw = await WebDavClient.downloadFile(target.config, `${target.dir}${item.file}`);
+            return typeof raw === 'string' ? raw : '';
         } catch (err) {
-            console.warn('[SubtitleRepository] WebDAV 读取跳过:', err?.message);
-            return [];
+            console.warn('[SubtitleRepository] 远端字幕下载失败:', err?.message);
+            return '';
         }
     }
 
-    /**
-     * 远端上传（带 5 秒防重叠节流，失败静默降级，不影响本地体验）
-     * @param {Object} payload
-     */
-    static async _upload(payload) {
-        const now = Date.now();
-        if (now - SubtitleRepository._lastUploadAt < UPLOAD_THROTTLE_MS) {
-            clearTimeout(SubtitleRepository._pendingUploadTimer);
-            SubtitleRepository._pendingUploadTimer = setTimeout(() => {
-                SubtitleRepository._upload(payload);
-            }, UPLOAD_THROTTLE_MS);
-            return;
+    static _merge(localBundle, remoteIndex) {
+        const map = new Map(localBundle.items.map((item) => [item.id, item]));
+        let changed = false;
+        for (const remoteItem of remoteIndex.items) {
+            if (!remoteItem?.id) continue;
+            const existing = map.get(remoteItem.id);
+            if (!existing) {
+                map.set(remoteItem.id, { ...remoteItem, content: '' });
+                changed = true;
+                continue;
+            }
+            const remoteNewer = (Number(remoteItem.addedAt) || 0) > (Number(existing.addedAt) || 0);
+            if (remoteNewer || (remoteItem.favorite && !existing.favorite)) {
+                map.set(remoteItem.id, {
+                    ...existing,
+                    ...remoteItem,
+                    content: existing.content || '',
+                    favorite: Boolean(remoteItem.favorite || existing.favorite)
+                });
+                changed = true;
+            }
         }
-        SubtitleRepository._lastUploadAt = now;
+        const favoriteId = localBundle.favoriteId || remoteIndex.favoriteId || '';
+        if (favoriteId !== localBundle.favoriteId) changed = true;
+        return { changed, bundle: { ...localBundle, favoriteId, items: Array.from(map.values()) } };
+    }
+
+    static async _downloadIndex(avcode) {
+        const target = SubtitleRepository.resolveRemoteTarget(avcode);
+        if (!target) return null;
         try {
-            const config = SyncManager.getWebDavConfig();
-            if (!WebDavClient.hasValidEndpoint(config) || !config.user) return;
+            const raw = await WebDavClient.downloadFile(target.config, `${target.dir}${INDEX_FILE}`);
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            return parsed && typeof parsed === 'object' ? parsed : null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    static _scheduleRemoteSync(payload, dirtyItem) {
+        const now = Date.now();
+        const elapsed = now - SubtitleRepository._lastSyncAt;
+        clearTimeout(SubtitleRepository._pendingTimer);
+        const run = () => {
+            SubtitleRepository._lastSyncAt = Date.now();
+            SubtitleRepository._syncRemote(payload, dirtyItem);
+        };
+        if (elapsed >= UPLOAD_THROTTLE_MS) run();
+        else SubtitleRepository._pendingTimer = setTimeout(run, UPLOAD_THROTTLE_MS - elapsed);
+    }
+
+    static async _syncRemote(payload, dirtyItem) {
+        const target = SubtitleRepository.resolveRemoteTarget(payload.code);
+        if (!target) return;
+        const { config, dir } = target;
+
+        try {
+            // 1. 先落盘字幕正文，保证索引引用的文件一定存在
+            const items = payload.items.map((item) => {
+                const file = item.file || buildFileName(payload.code, item);
+                return { ...item, file };
+            });
+
+            const uploadList = dirtyItem
+                ? items.filter((item) => item.id === dirtyItem.id && item.content)
+                : [];
+
+            for (const item of uploadList) {
+                await WebDavClient.uploadFile(
+                    config,
+                    `${dir}${item.file}`,
+                    item.content,
+                    'text/plain; charset=utf-8'
+                );
+            }
+
+            // 2. 索引只保留元数据，杜绝每次同步回传全部字幕正文
+            const index = {
+                code: payload.code,
+                activeId: payload.activeId,
+                favoriteId: payload.favoriteId,
+                updatedAt: payload.updatedAt,
+                items: items.map(({ content, ...meta }) => meta)
+            };
             const res = await WebDavClient.uploadFile(
                 config,
-                `${SUBTITLE_DIR}/${payload.code}.json`,
-                JSON.stringify(payload),
+                `${dir}${INDEX_FILE}`,
+                JSON.stringify(index),
                 'application/json; charset=utf-8'
             );
             if (res && [200, 201, 204].includes(res.status)) {
-                window.DebugLogPanel?.addLog?.(`[字幕] 已同步 WebDAV: subtitles/${payload.code}.json`, 'info');
+                window.DebugLogPanel?.addLog?.(`[字幕] 已同步 WebDAV: ${dir}${INDEX_FILE}`, 'info');
             }
         } catch (err) {
-            console.warn('[SubtitleRepository] WebDAV 上传跳过:', err?.message);
+            console.warn('[SubtitleRepository] WebDAV 同步跳过:', err?.message);
         }
     }
 }
 
-SubtitleRepository._lastUploadAt = 0;
-SubtitleRepository._pendingUploadTimer = null;
+SubtitleRepository._lastSyncAt = 0;
+SubtitleRepository._pendingTimer = null;

@@ -68,6 +68,12 @@ export class SubtitleEngine {
         const ranked = [];
         for (const candidate of list) {
             if (!candidate?.downloadUrl) continue;
+            // 硬性番号守卫：标题不含目标番号的一律丢弃（杜绝无关影片混入列表）
+            const titleText = String(candidate.title || '');
+            if (titleText && !codeMatchesText(titleText, code)) {
+                byUrl.add(candidate.downloadUrl.split('?')[0]);
+                continue;
+            }
             const urlKey = candidate.downloadUrl.split('?')[0];
             if (byUrl.has(urlKey)) continue;
             // 同名同格式同语言视为同一份字幕的不同哈希副本，只保留排序靠前一条

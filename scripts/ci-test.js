@@ -211,6 +211,11 @@ runStep('执行字幕采集、编码嗅探与解析管道单元测试', () => {
     execSync('node tests/subtitle-pipeline.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.28 字幕层挂载层级与时间轴渲染集成测试
+runStep('执行字幕层挂载层级与时间轴渲染集成测试', () => {
+    execSync('node tests/subtitle-render.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

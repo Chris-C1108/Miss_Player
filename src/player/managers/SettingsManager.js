@@ -44,7 +44,7 @@ export class SettingsManager {
             buttonSoundEnabled: true,
             defaultMuted: true,
             muteResetMinutes: 5,
-            subtitleEnabled: false,
+            subtitleEnabled: true,
             subtitleFontSize: 'medium',
             betaPlayMode: 'normal',
             previewDurationSeconds: 5,

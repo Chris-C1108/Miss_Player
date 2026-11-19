@@ -369,3 +369,17 @@ export const ICON_SUBTITLE = `
         <path d="M16.5 10.6a2.4 2.4 0 1 0 0 2.8"/>
     </svg>
 `;
+
+/** 收藏星标（描边态） */
+export const ICON_STAR = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3.6l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.8l5.9-.9z"/>
+    </svg>
+`;
+
+/** 收藏星标（实心态） */
+export const ICON_STAR_FILLED = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round">
+        <path d="M12 3.6l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.8l5.9-.9z"/>
+    </svg>
+`;

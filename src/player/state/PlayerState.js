@@ -36,7 +36,7 @@ export class PlayerState {
             sidebarPosition: 'right',       // 评论侧边栏位置 ('left' | 'right')
             sidebarHidden: false,           // 评论侧边栏是否隐藏 (true | false)
             preferredPlaybackRate: 1.0,     // 默认/首选播放速度
-            subtitleEnabled: false,         // 字幕总开关 (默认关闭，由用户主动挂载字幕轨)
+            subtitleEnabled: true,         // 字幕总开关 (默认关闭，由用户主动挂载字幕轨)
             subtitleFontSize: 'medium',     // 字幕字号 ('small' | 'medium' | 'large')
             pauseOnBlur: true,              // 页面离开/失焦后停止播放 (默认为开)
             buttonSoundEnabled: true,       // 控制面板按钮点击音效 (默认为开)

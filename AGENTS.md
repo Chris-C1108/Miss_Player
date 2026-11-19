@@ -146,7 +146,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **版本检测与更新**：`src/services/SleazyForkService.js` — 官方只读 JSON API 握手与语义化 Semver 版本比对
 * **WebDAV 客户端**：`src/sync/WebDavClient.js` — 跨域原子文件落盘、PROPFIND 嗅探与目录逐级自愈
 * **同步协调器**：`src/sync/SyncManager.js` — 分布式双向增量合并与墓碑垃圾回收 (GC)
-* **字幕存储通道**：字幕包按番号独立落盘 `/MissPlayer/subtitles/[AVCODE].json`（IndexedDB `subtitles` store 为本地极速层，WebDAV 文件为跨设备漫游层，按 `id` 并集合并、`addedAt` 新者胜）
+* **字幕存储通道**：本地以 IndexedDB `subtitles` store 承载字幕正文；WebDAV 端优先复用已配置的 Peach STRM 目录，未配置时落盘 `media/[AVCODE]/`，目录内 `_index.json` 为轻量索引（标题/语言/评分/收藏/file 映射），字幕正文按 `[AVCODE].[lang].[hash].[ext]` 独立成文件，按 `id` 并集合并、`addedAt` 新者胜
 
 ### 5. 共享基础设施 (`src/utils/` & `src/constants/`)
 * **工具库**：`src/utils/`（`storage.js`, `reactiveStore.js`, `indexedDB.js`, `videoCode.js`, `dom.js`, `md5.js`, `modal.js`, `clipboard.js`, `http.js`）

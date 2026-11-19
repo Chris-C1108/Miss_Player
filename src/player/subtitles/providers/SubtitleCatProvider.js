@@ -114,17 +114,14 @@ export class SubtitleCatProvider {
                 downloads
             });
         }
-        if (!entries.length) return [];
+        // 严格番号守卫：SubtitleCat 检索是模糊匹配，必须剔除无关影片结果
+        const matched = entries.filter((entry) => codeMatchesText(`${entry.title} ${entry.rowText}`, code));
+        if (!matched.length) return [];
 
         // 相关性优先：严格命中番号的条目前置
-        entries.sort((a, b) => {
-            const aHit = codeMatchesText(`${a.title} ${a.rowText}`, code) ? 1 : 0;
-            const bHit = codeMatchesText(`${b.title} ${b.rowText}`, code) ? 1 : 0;
-            if (aHit !== bHit) return bHit - aHit;
-            return b.downloads - a.downloads;
-        });
+        matched.sort((a, b) => b.downloads - a.downloads);
 
-        const targets = entries.slice(0, MAX_DETAILS);
+        const targets = matched.slice(0, MAX_DETAILS);
         const details = await runWithConcurrency(
             targets.map((entry) => () => this._resolveDetail(entry, signal)),
             DETAIL_CONCURRENCY
