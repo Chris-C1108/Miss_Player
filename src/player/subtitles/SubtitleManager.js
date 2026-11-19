@@ -461,6 +461,7 @@ export class SubtitleManager {
         }
 
         prepared.format = format;
+        if (this.overlayText) this.overlayText.lang = prepared.lang || '';
         this.cues = cues;
         this.activeItem = prepared;
         this.bundle.activeId = prepared.id;
@@ -573,37 +574,12 @@ export class SubtitleManager {
             titleWrap.append(code);
         }
 
-        const closeBtn = document.createElement('button');
-        closeBtn.type = 'button';
-        closeBtn.className = 'tm-subtitle-close-btn';
-        closeBtn.setAttribute('aria-label', text('subtitleClose', '关闭'));
-        closeBtn.innerHTML = ICON_X_CLOSE;
-        closeBtn.addEventListener('click', () => this._closePanel());
+        const actions = document.createElement('div');
+        actions.className = 'tm-subtitle-head-actions';
 
-        head.append(titleWrap, closeBtn);
-        return head;
-    }
-
-    _buildBody() {
-        const body = document.createElement('div');
-        body.className = 'tm-subtitle-body';
-        body.append(this._buildShowRow(), this._buildToolbar());
-
-        const list = document.createElement('div');
-        list.className = 'tm-subtitle-list';
-        this.listEl = list;
-        body.append(list);
-        return body;
-    }
-
-    /** 明示「显示字幕」开关，杜绝裸开关语义不明 */
-    _buildShowRow() {
-        const row = document.createElement('div');
-        row.className = 'tm-subtitle-show-row';
-
-        const label = document.createElement('span');
-        label.className = 'tm-subtitle-show-label';
-        label.textContent = text('subtitleShow', '显示字幕');
+        const switchLabel = document.createElement('span');
+        switchLabel.className = 'tm-subtitle-show-label';
+        switchLabel.textContent = text('subtitleShow', '显示字幕');
 
         const switchBtn = document.createElement('button');
         switchBtn.type = 'button';
@@ -614,8 +590,28 @@ export class SubtitleManager {
         switchBtn.addEventListener('click', () => this._setEnabled(!this.isEnabled));
         this.switchEl = switchBtn;
 
-        row.append(label, switchBtn);
-        return row;
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'tm-subtitle-close-btn';
+        closeBtn.setAttribute('aria-label', text('subtitleClose', '关闭'));
+        closeBtn.innerHTML = ICON_X_CLOSE;
+        closeBtn.addEventListener('click', () => this._closePanel());
+
+        actions.append(switchLabel, switchBtn, closeBtn);
+        head.append(titleWrap, actions);
+        return head;
+    }
+
+    _buildBody() {
+        const body = document.createElement('div');
+        body.className = 'tm-subtitle-body';
+        body.append(this._buildToolbar());
+
+        const list = document.createElement('div');
+        list.className = 'tm-subtitle-list';
+        this.listEl = list;
+        body.append(list);
+        return body;
     }
 
     _buildToolbar() {
