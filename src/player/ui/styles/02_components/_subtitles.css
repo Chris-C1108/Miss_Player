@@ -581,6 +581,15 @@
     -webkit-backdrop-filter: none;
 }
 
+/* 抽屉展开时隐藏底层控制面板，避免与抽屉抢层级（与高光底栏同一策略） */
+@media (max-width: 1024px), (pointer: coarse) {
+    .tm-player-container.has-subtitle-panel-open .tm-control-panel {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s ease;
+    }
+}
+
 /* -------------------------------------------------------------------------
    4. 移动端竖屏适配
    ------------------------------------------------------------------------- */

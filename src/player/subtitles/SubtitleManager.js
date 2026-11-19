@@ -642,8 +642,11 @@ export class SubtitleManager {
         adjustBtn.dataset.action = 'adjust';
         adjustBtn.innerHTML = `${ICON_SLIDERS}<span>${text('subtitleAdjust', '调节')}</span>`;
         adjustBtn.addEventListener('click', () => {
-            const hidden = this.adjustPanel?.classList.toggle('is-hidden');
-            adjustBtn.classList.toggle('is-active', !hidden);
+            const collapsed = this.adjustPanel?.classList.toggle('is-hidden');
+            const adjusting = !collapsed;
+            adjustBtn.classList.toggle('is-active', adjusting);
+            // 调节时让出空间给参数行，隐藏字幕列表避免双层滚动干扰
+            this.listEl?.classList.toggle('is-hidden', adjusting);
         });
 
         const fileInput = document.createElement('input');
