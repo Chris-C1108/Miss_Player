@@ -29,6 +29,7 @@ test('SeekFeedback 跳转反馈统一出口', async (t) => {
     await t.test('大幅跳转播报一次', () => {
         calls.length = 0;
         mgr._lastAnnouncedAt = 0;
+        mgr._seekStamps = [];
         seekTo(5, 60);
         assert.deepEqual(calls, [60]);
     });
@@ -36,31 +37,35 @@ test('SeekFeedback 跳转反馈统一出口', async (t) => {
     await t.test('微调不播报', () => {
         calls.length = 0;
         mgr._lastAnnouncedAt = 0;
+        mgr._seekStamps = [];
         seekTo(60, 60.4);
         assert.deepEqual(calls, []);
     });
 
-    await t.test('拖动进度条不播报', () => {
+    await t.test('连续位移（拖动/循环装填）只提示首次，不被外部标志卡死', () => {
         calls.length = 0;
         mgr._lastAnnouncedAt = 0;
-        progressManager.isDraggingProgress = true;
-        seekTo(60, 120);
-        assert.deepEqual(calls, []);
-        progressManager.isDraggingProgress = false;
-    });
+        mgr._seekStamps = [];
+        // 模拟拖动：短时间内连续多次位移
+        seekTo(60, 90);
+        seekTo(90, 120);
+        seekTo(120, 150);
+        assert.equal(calls.length, 1, '连续位移只播报一次');
 
-    await t.test('片段循环自动装填不播报', () => {
+        // 外部标志即使泄漏为 true 也不应影响后续主动跳转
+        progressManager.isDraggingProgress = true;
         calls.length = 0;
         mgr._lastAnnouncedAt = 0;
-        controlManager.loopManager = { _isSeekingCapsule: true };
-        seekTo(120, 200);
-        assert.deepEqual(calls, []);
-        controlManager.loopManager._isSeekingCapsule = false;
+        mgr._seekStamps = [];
+        seekTo(200, 260);
+        assert.deepEqual(calls, [260], '标志泄漏不得阻断播报');
+        progressManager.isDraggingProgress = false;
     });
 
     await t.test('连续跳转 700ms 内合并', () => {
         calls.length = 0;
         mgr._lastAnnouncedAt = 0;
+        mgr._seekStamps = [];
         seekTo(200, 260);
         seekTo(260, 320);
         assert.deepEqual(calls, [260], '第二次应被去重');

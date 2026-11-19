@@ -14,6 +14,8 @@ import { __ } from '../../constants/i18n.js';
 const MIN_DELTA_SECONDS = 1;      // 小于 1 秒视为微调，不打扰
 const DEDUPE_MS = 700;            // 连续跳转合并播报
 const WARMUP_MS = 2000;           // 开场还原断点不播报
+const RAPID_WINDOW_MS = 1200;     // 连续位移判定窗口
+const RAPID_LIMIT = 2;            // 窗口内第 2 次起视为拖动/循环装填
 
 export class SeekFeedbackManager {
     /**
@@ -30,11 +32,16 @@ export class SeekFeedbackManager {
         this._startedAt = 0;
         this._lastAnnouncedAt = 0;
 
+        this._seekStamps = [];
         this._onSeeking = (event) => {
             const video = this._resolveTarget(event?.target) || this._boundVideo;
             if (!video) return;
             this._from = Number(video.currentTime) || 0;
             this._activeVideo = video;
+
+            const now = Date.now();
+            this._seekStamps = this._seekStamps.filter((t) => now - t < RAPID_WINDOW_MS);
+            this._seekStamps.push(now);
         };
         this._onSeeked = (event) => {
             const video = this._resolveTarget(event?.target) || this._boundVideo;
@@ -133,9 +140,9 @@ export class SeekFeedbackManager {
 
         if (Date.now() - this._startedAt < WARMUP_MS) return;
         if (delta < MIN_DELTA_SECONDS) return;
-        // 拖动进度条由进度条自身反馈；片段循环为自动装填，不打扰
-        if (this.progressManager?.isDraggingProgress) return;
-        if (this.controlManager?.loopManager?._isSeekingCapsule) return;
+        // 连续位移（进度条拖动、片段循环自动装填）只在首次提示一次，
+        // 不依赖 isDraggingProgress 等外部可变标志，杜绝标志泄漏导致永久静默
+        if (this._seekStamps.length >= RAPID_LIMIT) return;
 
         const now = Date.now();
         if (now - this._lastAnnouncedAt < DEDUPE_MS) return;
