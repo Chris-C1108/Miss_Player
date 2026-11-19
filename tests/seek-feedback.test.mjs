@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 
 import { SeekFeedbackManager } from '../src/player/managers/SeekFeedbackManager.js';
 
-const makeVideo = (time = 0) => ({ tagName: 'VIDEO', currentTime: time });
+const makeVideo = (time = 0) => ({
+    tagName: 'VIDEO',
+    currentTime: time,
+    addEventListener() {},
+    removeEventListener() {}
+});
 
 test('SeekFeedback 跳转反馈统一出口', async (t) => {
     const calls = [];

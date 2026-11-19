@@ -116,3 +116,22 @@ test('SubtitlePipeline 字幕采集与解析单元测试', async (t) => {
         assert.equal(ranked[2].machineTranslated, true);
     });
 });
+
+test('SubtitlePunctuation 字幕行末尾标点剔除', async (t) => {
+    await t.test('中文句末标点剔除，句中保留', () => {
+        assert.equal(sanitizeCueText('你好，世界。'), '你好，世界');
+        assert.equal(sanitizeCueText('第一句！\n第二句？'), '第一句\n第二句');
+        assert.equal(sanitizeCueText('真的吗…'), '真的吗');
+    });
+
+    await t.test('英文句号与数字小数点区分', () => {
+        assert.equal(sanitizeCueText('Hello world.'), 'Hello world');
+        assert.equal(sanitizeCueText('编号 12.5 的值'), '编号 12.5 的值');
+    });
+
+    await t.test('收尾引号括号一并剔除', () => {
+        assert.equal(sanitizeCueText('她说完了。”'), '她说完了');
+        assert.equal(sanitizeCueText('（旁白）'), '（旁白');
+    });
+});
+

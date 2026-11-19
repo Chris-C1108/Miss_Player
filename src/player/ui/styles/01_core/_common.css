@@ -101,26 +101,26 @@ input, textarea, select {
 
 .tm-toast--top {
     top: 10%;
-    transform: translateX(-50%) translateY(-10px);
+    transform: translateX(-50%) translateY(-10px) translateZ(0);
 }
 .tm-toast--top.visible {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) translateZ(0);
 }
 
 .tm-toast--bottom {
     bottom: 10%;
-    transform: translateX(-50%) translateY(10px);
+    transform: translateX(-50%) translateY(10px) translateZ(0);
 }
 .tm-toast--bottom.visible {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) translateZ(0);
 }
 
 .tm-toast--center {
     top: 50%;
-    transform: translate(-50%, -40%);
+    transform: translate(-50%, -40%) translateZ(0);
 }
 .tm-toast--center.visible {
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) translateZ(0);
 }
 
 .tm-toast--error {

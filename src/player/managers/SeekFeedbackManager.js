@@ -31,13 +31,13 @@ export class SeekFeedbackManager {
         this._lastAnnouncedAt = 0;
 
         this._onSeeking = (event) => {
-            const video = this._resolveTarget(event?.target);
+            const video = this._resolveTarget(event?.target) || this._boundVideo;
             if (!video) return;
             this._from = Number(video.currentTime) || 0;
             this._activeVideo = video;
         };
         this._onSeeked = (event) => {
-            const video = this._resolveTarget(event?.target);
+            const video = this._resolveTarget(event?.target) || this._boundVideo;
             if (!video) return;
             this._activeVideo = video;
             this._announce(video);
@@ -65,26 +65,64 @@ export class SeekFeedbackManager {
     }
 
     /**
-     * 绑定在 document 捕获阶段：媒体事件不冒泡，但捕获阶段会流经祖先，
-     * 因此无论视频元素何时被播放器接管都能稳定收到，杜绝「绑定时还没有 video」的失聪。
+     * 双通道绑定（缺一不可）：
+     * 1) 直接绑定播放器 video —— 播放器运行在 Shadow DOM 内，原生媒体事件
+     *    （seeking / seeked / timeupdate）非 composed，永远不会冒泡到 document，
+     *    只有直接绑在元素上才可靠；
+     * 2) document 捕获阶段兜底 —— 覆盖浅层 DOM 中由宿主直接接管的视频；
+     * 3) 视频元素可能晚于管理器出现，故以重试方式等待接管，避免一次性失聪。
      */
     init() {
-        if (this._bound) return;
-        this._bound = true;
+        if (this._startedAt) return;
         this._startedAt = Date.now();
+
         const root = typeof document !== 'undefined' ? document : null;
-        if (!root) return;
-        root.addEventListener('seeking', this._onSeeking, true);
-        root.addEventListener('seeked', this._onSeeked, true);
+        if (root) {
+            this._boundDocument = root;
+            root.addEventListener('seeking', this._onSeeking, true);
+            root.addEventListener('seeked', this._onSeeked, true);
+        }
+
+        this._attach();
+        if (!this._boundVideo && typeof setInterval === 'function') {
+            this._retryTimer = setInterval(() => this._attach(), 800);
+        }
+    }
+
+    /** 等待并绑定真正的播放器视频元素 */
+    _attach() {
+        const video = this.playerCore?.targetVideo;
+        if (!video || video === this._boundVideo) return;
+        if (typeof video.addEventListener !== 'function') return;
+        this._detachVideo();
+        video.addEventListener('seeking', this._onSeeking);
+        video.addEventListener('seeked', this._onSeeked);
+        this._boundVideo = video;
+        if (this._retryTimer) {
+            clearInterval(this._retryTimer);
+            this._retryTimer = null;
+        }
+    }
+
+    _detachVideo() {
+        if (!this._boundVideo) return;
+        this._boundVideo.removeEventListener('seeking', this._onSeeking);
+        this._boundVideo.removeEventListener('seeked', this._onSeeked);
+        this._boundVideo = null;
     }
 
     cleanup() {
-        if (!this._bound) return;
-        this._bound = false;
-        const root = typeof document !== 'undefined' ? document : null;
-        if (!root) return;
-        root.removeEventListener('seeking', this._onSeeking, true);
-        root.removeEventListener('seeked', this._onSeeked, true);
+        this._startedAt = 0;
+        if (this._retryTimer) {
+            clearInterval(this._retryTimer);
+            this._retryTimer = null;
+        }
+        this._detachVideo();
+        if (this._boundDocument) {
+            this._boundDocument.removeEventListener('seeking', this._onSeeking, true);
+            this._boundDocument.removeEventListener('seeked', this._onSeeked, true);
+            this._boundDocument = null;
+        }
     }
 
     _announce(eventVideo) {

@@ -20,6 +20,17 @@ const HTML_ENTITIES = {
  * @param {string} raw
  * @returns {string}
  */
+/** 每条字幕行末尾的标点（句读与收尾引号括号），统一剔除 */
+const TRAILING_PUNCTUATION = /[。．.，,、；;：:！!？?…⋯~～·\-—"'“”‘’）)】」』》〉\]]+$/;
+
+export function stripTrailingPunctuation(text) {
+    return String(text || '')
+        .split('\n')
+        .map((line) => line.replace(TRAILING_PUNCTUATION, '').trimEnd())
+        .filter((line) => line.length > 0)
+        .join('\n');
+}
+
 export function sanitizeCueText(raw) {
     let text = String(raw || '');
     text = text.replace(/\{[^}]*\}/g, '');          // ASS 覆写标签 {\pos(...)} {\fad(...)}
@@ -31,7 +42,7 @@ export function sanitizeCueText(raw) {
     text = text.replace(/\r/g, '');
     text = text
         .split('\n')
-        .map((line) => line.replace(/[ \t]+/g, ' ').trim())
+        .map((line) => line.replace(/[ \t]+/g, ' ').trim().replace(TRAILING_PUNCTUATION, '').trimEnd())
         .filter((line) => line.length > 0)
         .join('\n');
     return text.trim();
