@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.120-beta.002
+// @version            5.7.120-beta.003
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -75,6 +75,7 @@
 // @grant              GM_setValue
 // @grant              GM_xmlhttpRequest
 // @grant              unsafeWindow
+// @inject-into        auto
 // @run-at             document-start
 // ==/UserScript==
 
@@ -180,7 +181,7 @@
 			const targets = [];
 			if (typeof window !== "undefined" && window.fetch) targets.push(window);
 			if (typeof unsafeWindow !== "undefined" && unsafeWindow && unsafeWindow.fetch && unsafeWindow !== window) targets.push(unsafeWindow);
-			for (const ctx of targets) {
+			for (const ctx of targets) try {
 				const originalFetch = ctx.fetch;
 				const sniffer = this;
 				ctx.fetch = new Proxy(originalFetch, { apply(target, thisArg, args) {
@@ -189,15 +190,15 @@
 						const url = typeof req === "string" ? req : req && req.url ? req.url : "";
 						if (sniffer._isMediaUrl(url)) sniffer.recordStream(url, "fetch");
 					} catch (_) {}
-					return Reflect.apply(target, thisArg, args);
+					return Reflect.apply(target, thisArg || ctx, args);
 				} });
-			}
+			} catch (_) {}
 		}
 		_hookXHR() {
 			const targets = [];
 			if (typeof window !== "undefined" && window.XMLHttpRequest) targets.push(window.XMLHttpRequest);
 			if (typeof unsafeWindow !== "undefined" && unsafeWindow && unsafeWindow.XMLHttpRequest && unsafeWindow !== window) targets.push(unsafeWindow.XMLHttpRequest);
-			for (const XHR of targets) {
+			for (const XHR of targets) try {
 				const originalOpen = XHR.prototype.open;
 				const sniffer = this;
 				XHR.prototype.open = function(method, url, ...rest) {
@@ -206,7 +207,7 @@
 					} catch (_) {}
 					return originalOpen.call(this, method, url, ...rest);
 				};
-			}
+			} catch (_) {}
 		}
 	};
 	var mediaSniffer = new MediaSniffer();
@@ -1925,7 +1926,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.120-beta.002";
+		return "5.7.120-beta.003";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4325,7 +4326,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.120-beta.002";
+		return "5.7.120-beta.003";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6452,7 +6453,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.120-beta.002";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.120-beta.003";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -30643,24 +30644,69 @@
 			this.init();
 			return true;
 		}
+		static ensureStyles() {
+			if (typeof document === "undefined") return;
+			const probeId = "mp-ltx-fallback-style";
+			if (document.getElementById(probeId)) return;
+			let alreadyStyled = false;
+			try {
+				const testBtn = document.querySelector(".mp-ltx-play-btn");
+				if (testBtn && typeof getComputedStyle === "function") {
+					const cs = getComputedStyle(testBtn);
+					alreadyStyled = cs.position === "absolute" && cs.borderRadius === "50%";
+				}
+			} catch (_) {}
+			if (alreadyStyled) return;
+			const cssText = `
+.mp-ltx-play-btn{position:absolute;left:8px;bottom:8px;z-index:3;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(15,16,19,.76);backdrop-filter:blur(12px) saturate(180%);backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);color:#fe628e;display:grid;place-items:center;padding:0;cursor:pointer}
+.mp-ltx-play-btn::after{content:"";position:absolute;inset:-6px}
+.mp-ltx-play-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;transform:translateX(1px)}
+.mp-ltx-play-icon svg{width:14px;height:14px}
+@media (max-width:760px){.mp-ltx-play-btn{width:34px;height:34px}}
+`;
+			try {
+				if (typeof GM_addStyle === "function") GM_addStyle(cssText);
+				const styleEl = document.createElement("style");
+				styleEl.id = probeId;
+				styleEl.textContent = cssText;
+				(document.head || document.documentElement)?.appendChild(styleEl);
+			} catch (_) {}
+		}
 		static init() {
 			if (this.initialized) return;
 			this.initialized = true;
 			this.scanAndInject(document);
-			const root = document.getElementById("app") || document.body || document.documentElement;
-			if (root && typeof MutationObserver === "function") {
-				this._observer = new MutationObserver(() => {
-					if (this._rafScheduled) return;
-					this._rafScheduled = true;
-					(typeof requestAnimationFrame === "function" ? requestAnimationFrame : (fn) => setTimeout(fn, 16))(() => {
-						this._rafScheduled = false;
-						this.scanAndInject(document);
-					});
+			this.ensureStyles();
+			const scheduleScan = () => {
+				if (this._rafScheduled) return;
+				this._rafScheduled = true;
+				(typeof requestAnimationFrame === "function" ? requestAnimationFrame : (fn) => setTimeout(fn, 16))(() => {
+					this._rafScheduled = false;
+					this.scanAndInject(document);
+					this.ensureStyles();
 				});
+			};
+			const root = document.documentElement || document.body;
+			if (root && typeof MutationObserver === "function") {
+				this._observer = new MutationObserver(scheduleScan);
 				this._observer.observe(root, {
 					childList: true,
-					subtree: true
+					subtree: true,
+					attributes: true,
+					attributeFilter: ["data-code", "open"]
 				});
+			}
+			if (!this._scanTimer && typeof setInterval === "function") this._scanTimer = setInterval(() => {
+				const cards = document.querySelectorAll("article.card[data-code]");
+				if (cards.length > 0 && document.querySelectorAll("[data-mp-ltx-btn]").length < cards.length) {
+					this.scanAndInject(document);
+					this.ensureStyles();
+				}
+			}, 1200);
+			if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+				window.addEventListener("load", scheduleScan, { once: true });
+				window.addEventListener("popstate", scheduleScan);
+				window.addEventListener("hashchange", scheduleScan);
 			}
 		}
 		static scanAndInject(root = document) {
@@ -30893,6 +30939,7 @@
 	_defineProperty(LtxLibAdapter, "initialized", false);
 	_defineProperty(LtxLibAdapter, "_observer", null);
 	_defineProperty(LtxLibAdapter, "_rafScheduled", false);
+	_defineProperty(LtxLibAdapter, "_scanTimer", null);
 	_defineProperty(LtxLibAdapter, "_popoverEl", null);
 	_defineProperty(LtxLibAdapter, "_outsideHandler", null);
 	_defineProperty(LtxLibAdapter, "_escHandler", null);
@@ -30907,7 +30954,8 @@
 	}
 	var _earlyIsPlayerIframe = _earlyInIframe && (window.location.pathname.includes("/player/") || window.location.pathname.includes("/embed/") || window.location.pathname.startsWith("/e/") || window.location.search.includes("payload=") || window.location.search.includes("video=") || window.location.href.includes("avking") || window.location.href.includes("videocdn") || window.location.href.includes("plyr"));
 	var _earlyIsJavLib = _earlyProtocolOk && isSiteDomain("JAVLIBRARY");
-	if (_earlyProtocolOk && !_earlyIsJavLib && (!_earlyInIframe || _earlyIsPlayerIframe)) {
+	var _earlyIsLtxLib = _earlyProtocolOk && /(^|\.)ltxlib\.dpdns\.org$/i.test(window.location.hostname || "");
+	if (_earlyProtocolOk && !_earlyIsJavLib && !_earlyIsLtxLib && (!_earlyInIframe || _earlyIsPlayerIframe)) {
 		initIosInlinePlaybackGuard();
 		new AdBlocker().init();
 		performance.mark("mp:adblock-done");

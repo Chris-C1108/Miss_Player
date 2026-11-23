@@ -44,7 +44,8 @@ const _earlyIsPlayerIframe = _earlyInIframe && (
     window.location.href.includes('plyr')
 );
 const _earlyIsJavLib = _earlyProtocolOk && isSiteDomain('JAVLIBRARY');
-const _shouldInitMediaHooks = _earlyProtocolOk && !_earlyIsJavLib && (!_earlyInIframe || _earlyIsPlayerIframe);
+const _earlyIsLtxLib = _earlyProtocolOk && /(^|\.)ltxlib\.dpdns\.org$/i.test(window.location.hostname || '');
+const _shouldInitMediaHooks = _earlyProtocolOk && !_earlyIsJavLib && !_earlyIsLtxLib && (!_earlyInIframe || _earlyIsPlayerIframe);
 
 if (_shouldInitMediaHooks) {
     // 0. 最早启动 iOS Safari 行内播放守卫 (在宿主脚本加载前注入 playsinline/webkit-playsinline，彻底阻断 AVPlayerViewController 系统全屏劫持)

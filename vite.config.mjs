@@ -103,6 +103,7 @@ export default defineConfig({
           'fastly.jsdelivr.net'
         ],
         'run-at': 'document-start',
+        'inject-into': 'auto',
         license: pkg.license,
         downloadURL: `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/${gitBranch}/dist/miss_player.user.js`,
         updateURL: `https://raw.githubusercontent.com/Chris-C1108/Miss_Player/${gitBranch}/dist/miss_player.meta.js`

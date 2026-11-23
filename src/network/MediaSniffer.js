@@ -108,21 +108,23 @@ class MediaSniffer {
         }
 
         for (const ctx of targets) {
-            const originalFetch = ctx.fetch;
-            const sniffer = this;
+            try {
+                const originalFetch = ctx.fetch;
+                const sniffer = this;
 
-            ctx.fetch = new Proxy(originalFetch, {
-                apply(target, thisArg, args) {
-                    try {
-                        const req = args[0];
-                        const url = typeof req === 'string' ? req : (req && req.url ? req.url : '');
-                        if (sniffer._isMediaUrl(url)) {
-                            sniffer.recordStream(url, 'fetch');
-                        }
-                    } catch (_) {}
-                    return Reflect.apply(target, thisArg, args);
-                }
-            });
+                ctx.fetch = new Proxy(originalFetch, {
+                    apply(target, thisArg, args) {
+                        try {
+                            const req = args[0];
+                            const url = typeof req === 'string' ? req : (req && req.url ? req.url : '');
+                            if (sniffer._isMediaUrl(url)) {
+                                sniffer.recordStream(url, 'fetch');
+                            }
+                        } catch (_) {}
+                        return Reflect.apply(target, thisArg || ctx, args);
+                    }
+                });
+            } catch (_) {}
         }
     }
 
@@ -134,17 +136,19 @@ class MediaSniffer {
         }
 
         for (const XHR of targets) {
-            const originalOpen = XHR.prototype.open;
-            const sniffer = this;
+            try {
+                const originalOpen = XHR.prototype.open;
+                const sniffer = this;
 
-            XHR.prototype.open = function(method, url, ...rest) {
-                try {
-                    if (typeof url === 'string' && sniffer._isMediaUrl(url)) {
-                        sniffer.recordStream(url, 'xhr');
-                    }
-                } catch (_) {}
-                return originalOpen.call(this, method, url, ...rest);
-            };
+                XHR.prototype.open = function(method, url, ...rest) {
+                    try {
+                        if (typeof url === 'string' && sniffer._isMediaUrl(url)) {
+                            sniffer.recordStream(url, 'xhr');
+                        }
+                    } catch (_) {}
+                    return originalOpen.call(this, method, url, ...rest);
+                };
+            } catch (_) {}
         }
     }
 }

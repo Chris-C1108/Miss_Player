@@ -22,6 +22,7 @@ export class LtxLibAdapter {
     static initialized = false;
     static _observer = null;
     static _rafScheduled = false;
+    static _scanTimer = null;
     static _popoverEl = null;
     static _outsideHandler = null;
     static _escHandler = null;
@@ -40,26 +41,89 @@ export class LtxLibAdapter {
         return true;
     }
 
+    /**
+     * 兜底确认按钮样式已注入（防止部分移动端油猴管理器在 document-start 阶段丢失 GM_addStyle）
+     */
+    static ensureStyles() {
+        if (typeof document === 'undefined') return;
+        const probeId = 'mp-ltx-fallback-style';
+        if (document.getElementById(probeId)) return;
+
+        // 探测 _host.css 是否已成功生效
+        let alreadyStyled = false;
+        try {
+            const testBtn = document.querySelector('.mp-ltx-play-btn');
+            if (testBtn && typeof getComputedStyle === 'function') {
+                const cs = getComputedStyle(testBtn);
+                alreadyStyled = cs.position === 'absolute' && cs.borderRadius === '50%';
+            }
+        } catch (_) {}
+        if (alreadyStyled) return;
+
+        const cssText = `
+.mp-ltx-play-btn{position:absolute;left:8px;bottom:8px;z-index:3;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(15,16,19,.76);backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);color:#fe628e;display:grid;place-items:center;padding:0;cursor:pointer}
+.mp-ltx-play-btn::after{content:"";position:absolute;inset:-6px}
+.mp-ltx-play-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;transform:translateX(1px)}
+.mp-ltx-play-icon svg{width:14px;height:14px}
+@media (max-width:760px){.mp-ltx-play-btn{width:34px;height:34px}}
+`;
+        try {
+            if (typeof GM_addStyle === 'function') {
+                GM_addStyle(cssText);
+            }
+            const styleEl = document.createElement('style');
+            styleEl.id = probeId;
+            styleEl.textContent = cssText;
+            (document.head || document.documentElement)?.appendChild(styleEl);
+        } catch (_) {}
+    }
+
     static init() {
         if (this.initialized) return;
         this.initialized = true;
 
         this.scanAndInject(document);
+        this.ensureStyles();
 
-        const root = document.getElementById('app') || document.body || document.documentElement;
-        if (root && typeof MutationObserver === 'function') {
-            this._observer = new MutationObserver(() => {
-                if (this._rafScheduled) return;
-                this._rafScheduled = true;
-                const schedule = typeof requestAnimationFrame === 'function'
-                    ? requestAnimationFrame
-                    : (fn) => setTimeout(fn, 16);
-                schedule(() => {
-                    this._rafScheduled = false;
-                    this.scanAndInject(document);
-                });
+        const scheduleScan = () => {
+            if (this._rafScheduled) return;
+            this._rafScheduled = true;
+            const schedule = typeof requestAnimationFrame === 'function'
+                ? requestAnimationFrame
+                : (fn) => setTimeout(fn, 16);
+            schedule(() => {
+                this._rafScheduled = false;
+                this.scanAndInject(document);
+                this.ensureStyles();
             });
-            this._observer.observe(root, { childList: true, subtree: true });
+        };
+
+        const root = document.documentElement || document.body;
+        if (root && typeof MutationObserver === 'function') {
+            this._observer = new MutationObserver(scheduleScan);
+            this._observer.observe(root, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['data-code', 'open']
+            });
+        }
+
+        // 兜底对账心跳：应对异步分页/懒加载/后台标签页 rAF 节流
+        if (!this._scanTimer && typeof setInterval === 'function') {
+            this._scanTimer = setInterval(() => {
+                const cards = document.querySelectorAll('article.card[data-code]');
+                if (cards.length > 0 && document.querySelectorAll('[data-mp-ltx-btn]').length < cards.length) {
+                    this.scanAndInject(document);
+                    this.ensureStyles();
+                }
+            }, 1200);
+        }
+
+        if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+            window.addEventListener('load', scheduleScan, { once: true });
+            window.addEventListener('popstate', scheduleScan);
+            window.addEventListener('hashchange', scheduleScan);
         }
     }
 
