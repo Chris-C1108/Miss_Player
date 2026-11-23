@@ -13,6 +13,8 @@ export class FloatingButton {
         this.videoPlayer = null;
         this.resizeTimeout = null;
         this.playerState = options.playerState || null;
+        this.autoTriggerTheater = Boolean(options.autoTriggerTheater);
+        this._autoTriggered = false;
         this.videoCheckInterval = null;
         this.mutationObserver = null;
         this._listenersAttached = false;
@@ -419,6 +421,16 @@ export class FloatingButton {
         // 初始挂载至正确层级与动态防遮挡位置更新
         this.ensureTopLayerMount();
         this.updateButtonPosition();
+
+        // 若命中跨站接力租约或网关影院承接页，自动拉起 Miss Player 影院模式（仅触发一次）
+        if (this.autoTriggerTheater && !this._autoTriggered) {
+            this._autoTriggered = true;
+            setTimeout(() => {
+                if (!this.isPlayerActive() && this.button) {
+                    this.handleButtonClick();
+                }
+            }, 120);
+        }
 
         return this.button;
     }

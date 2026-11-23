@@ -185,3 +185,203 @@ dialog#stage .tm-floating-button {
   opacity: 1;
   visibility: visible;
 }
+
+/* 宿主轨：ltxlib 卡片左下角跨站播放按钮 & 长按/右键菜单（零 !important，选择器深度 <= 2） */
+.mp-ltx-play-btn {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(15, 16, 19, 0.76);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  color: rgb(254, 98, 142);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.mp-ltx-play-btn::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+
+.mp-ltx-play-btn:hover {
+  transform: scale(1.08);
+  background: rgba(254, 98, 142, 0.22);
+  border-color: rgba(254, 98, 142, 0.72);
+  color: #ffffff;
+}
+
+.mp-ltx-play-btn:active {
+  transform: scale(0.94);
+}
+
+.mp-ltx-play-btn.is-loading {
+  cursor: progress;
+  pointer-events: none;
+  border-color: rgb(254, 98, 142);
+  animation: mp-ltx-pulse 0.9s ease-in-out infinite;
+}
+
+.mp-ltx-play-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  transform: translateX(1px);
+}
+
+.mp-ltx-play-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.card.selectable .mp-ltx-play-btn {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  .mp-ltx-play-btn {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@keyframes mp-ltx-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(254, 98, 142, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(254, 98, 142, 0); }
+}
+
+.mp-ltx-modal-play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(254, 98, 142, 0.45);
+  background: rgba(254, 98, 142, 0.16);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.mp-ltx-popover {
+  position: fixed;
+  z-index: 2147483647;
+  width: 224px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(23, 24, 29, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+  color: #e8e8ec;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mp-ltx-popover-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mp-ltx-popover-code {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgb(254, 98, 142);
+  letter-spacing: 0.03em;
+}
+
+.mp-ltx-popover-mode {
+  font-size: 11px;
+  color: #8c8f9a;
+  margin-left: auto;
+}
+
+.mp-ltx-popover-close {
+  border: 0;
+  background: transparent;
+  color: #8c8f9a;
+  cursor: pointer;
+  padding: 2px;
+  display: grid;
+  place-items: center;
+}
+
+.mp-ltx-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e8e8ec;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mp-ltx-popover-item.is-primary {
+  background: rgba(254, 98, 142, 0.18);
+  border-color: rgba(254, 98, 142, 0.45);
+  color: #ffffff;
+}
+
+.mp-ltx-popover-ico {
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-ltx-popover-ico img {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+}
+
+.mp-ltx-popover-sources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.mp-ltx-popover-chip {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cfd2dc;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mp-ltx-popover-chip:hover {
+  background: rgba(122, 167, 255, 0.2);
+  border-color: rgba(122, 167, 255, 0.5);
+  color: #ffffff;
+}

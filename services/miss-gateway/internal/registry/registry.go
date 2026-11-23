@@ -17,8 +17,11 @@ type VariantSession struct {
 }
 
 type StreamSession struct {
+	Key          string // 注册表键：默认等于 Code，指定源时为 "CODE::source"
 	Code         string
 	SourceID     string
+	SourceName   string
+	Variant      string
 	UpstreamM3U8 string
 	Referer      string
 	Origin       string
@@ -77,7 +80,24 @@ func (r *Registry) Set(s *StreamSession) {
 	if s.Variants == nil {
 		s.Variants = make(map[string]*VariantSession)
 	}
-	r.sessions[s.Code] = s
+	key := s.Key
+	if key == "" {
+		key = s.Code
+		s.Key = key
+	}
+	r.sessions[key] = s
+}
+
+func (r *Registry) DeletePrefix(code string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	delete(r.sessions, code)
+	prefix := code + "::"
+	for k := range r.sessions {
+		if len(k) > len(prefix) && k[:len(prefix)] == prefix {
+			delete(r.sessions, k)
+		}
+	}
 }
 
 func (r *Registry) Get(code string) (*StreamSession, bool) {

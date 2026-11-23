@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -84,20 +85,32 @@ func (s *Server) setupRoutes() {
 	s.mux.HandleFunc("GET /resolve", s.handleResolve)
 	s.mux.HandleFunc("OPTIONS /resolve", s.handleResolve)
 
-	// Phase 19 播放面核心路由 (包含路径鉴权 token)
+	// Phase 19 播放面核心路由 (包含路径鉴权 token 与 CORS 预检)
+	s.mux.HandleFunc("GET /v1/{token}/watch/{code}", s.handleWatch)
+	s.mux.HandleFunc("HEAD /v1/{token}/watch/{code}", s.handleWatch)
+	s.mux.HandleFunc("OPTIONS /v1/{token}/watch/{code}", s.handleCORSOptions)
+
+	s.mux.HandleFunc("GET /v1/{token}/sources/{code}", s.handleSources)
+	s.mux.HandleFunc("OPTIONS /v1/{token}/sources/{code}", s.handleCORSOptions)
+
 	s.mux.HandleFunc("GET /v1/{token}/play/{code}", s.handlePlay)
 	s.mux.HandleFunc("HEAD /v1/{token}/play/{code}", s.handlePlay)
+	s.mux.HandleFunc("OPTIONS /v1/{token}/play/{code}", s.handleCORSOptions)
 
 	s.mux.HandleFunc("GET /v1/{token}/pl/{code}/{src}/{var}", s.handlePlaylist)
 	s.mux.HandleFunc("HEAD /v1/{token}/pl/{code}/{src}/{var}", s.handlePlaylist)
+	s.mux.HandleFunc("OPTIONS /v1/{token}/pl/{code}/{src}/{var}", s.handleCORSOptions)
 
 	s.mux.HandleFunc("GET /v1/{token}/seg/{code}/{src}/{var}/{file}", s.handleSegment)
 	s.mux.HandleFunc("HEAD /v1/{token}/seg/{code}/{src}/{var}/{file}", s.handleSegment)
+	s.mux.HandleFunc("OPTIONS /v1/{token}/seg/{code}/{src}/{var}/{file}", s.handleCORSOptions)
 
 	s.mux.HandleFunc("GET /v1/{token}/key/{code}/{src}/{var}/{file}", s.handleKey)
+	s.mux.HandleFunc("OPTIONS /v1/{token}/key/{code}/{src}/{var}/{file}", s.handleCORSOptions)
 
 	s.mux.HandleFunc("GET /v1/{token}/map/{code}/{src}/{var}/{file}", s.handleMap)
 	s.mux.HandleFunc("HEAD /v1/{token}/map/{code}/{src}/{var}/{file}", s.handleMap)
+	s.mux.HandleFunc("OPTIONS /v1/{token}/map/{code}/{src}/{var}/{file}", s.handleCORSOptions)
 
 	// Phase 19 管理面与监控度量路由
 	s.mux.HandleFunc("GET /metrics", s.handleMetrics)
@@ -225,11 +238,7 @@ func (s *Server) handleAdminPurge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	code := strings.ToUpper(r.PathValue("code"))
-	// 标记过期以清空注册表
-	s.registry.Set(&registry.StreamSession{
-		Code:      code,
-		ExpiresAt: time.Now().Add(-1 * time.Hour),
-	})
+	s.registry.DeletePrefix(code)
 	s.registry.CleanExpired()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -257,7 +266,116 @@ func (s *Server) validateToken(token string) bool {
 func (s *Server) enableCORS(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, HEAD, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Range, X-Requested-With")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Range, If-Range, X-Requested-With")
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Range, Accept-Ranges, X-Miss-Source, X-Miss-Variant")
+}
+
+func (s *Server) handleCORSOptions(w http.ResponseWriter, r *http.Request) {
+	s.enableCORS(w)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func sessionKey(code, sourceFilter string) string {
+	sf := strings.ToLower(strings.TrimSpace(sourceFilter))
+	if sf == "" {
+		return code
+	}
+	return code + "::" + sf
+}
+
+func deriveOrigin(referer string) string {
+	if referer == "" {
+		return ""
+	}
+	u, err := url.Parse(referer)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return ""
+	}
+	return u.Scheme + "://" + u.Host
+}
+
+func setUpstreamHeaders(req *http.Request, upstreamURL, referer string) {
+	if referer == "" && strings.Contains(upstreamURL, "surrit.com") {
+		referer = "https://missav.ws/"
+	}
+	if referer != "" {
+		req.Header.Set("Referer", referer)
+		if origin := deriveOrigin(referer); origin != "" {
+			req.Header.Set("Origin", origin)
+		}
+	}
+	req.Header.Set("User-Agent", source.DefaultUserAgent)
+}
+
+// handleSources 查询指定番号的当前活跃片源与所有适配器健康指标 (/v1/{token}/sources/{code})
+func (s *Server) handleSources(w http.ResponseWriter, r *http.Request) {
+	s.enableCORS(w)
+	token := r.PathValue("token")
+	if !s.validateToken(token) {
+		http.Error(w, "Unauthorized: invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	code := strings.ToUpper(strings.TrimSuffix(strings.TrimSpace(r.PathValue("code")), ".json"))
+	if code == "" {
+		http.Error(w, "Invalid code", http.StatusBadRequest)
+		return
+	}
+
+	session, cached := s.registry.Get(code)
+	activeSource := ""
+	activeSourceID := ""
+	activeVariant := ""
+	if cached && session != nil {
+		activeSource = session.SourceName
+		if activeSource == "" {
+			activeSource = session.SourceID
+		}
+		activeSourceID = session.SourceID
+		activeVariant = session.Variant
+	}
+
+	type sourceInfo struct {
+		ID            string  `json:"id"`
+		Name          string  `json:"name"`
+		Weight        int     `json:"weight"`
+		CircuitState  string  `json:"circuitState"`
+		EwmaLatencyMs float64 `json:"ewmaLatencyMs"`
+	}
+
+	trackerMap := make(map[string]source.SourceStats)
+	for _, st := range s.manager.Tracker().Snapshot() {
+		trackerMap[st.Name] = st
+	}
+
+	sourcesList := make([]sourceInfo, 0, len(s.manager.Sources()))
+	for _, src := range s.manager.Sources() {
+		slug := strings.ToLower(strings.Split(src.Name(), " ")[0])
+		st := trackerMap[src.Name()]
+		state := st.CircuitState
+		if state == "" {
+			state = "closed"
+		}
+		sourcesList = append(sourcesList, sourceInfo{
+			ID:            slug,
+			Name:          src.Name(),
+			Weight:        src.Weight(),
+			CircuitState:  state,
+			EwmaLatencyMs: st.EwmaLatencyMs,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":        true,
+		"code":           code,
+		"cached":         cached,
+		"activeSource":   activeSource,
+		"activeSourceId": activeSourceID,
+		"variant":        activeVariant,
+		"sources":        sourcesList,
+	})
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -288,18 +406,27 @@ func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. 检查负缓存，如果在冷却期内直接 404
-	if s.catalog.IsNegative(cleanCode) {
+	srcFilter := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("src")))
+	regKey := sessionKey(cleanCode, srcFilter)
+
+	// 1. 检查负缓存（仅在自动竞速模式下启用，显式指定片源时穿透负缓存）
+	if srcFilter == "" && s.catalog.IsNegative(cleanCode) {
 		http.Error(w, "Stream not found (negative cache cooling)", http.StatusNotFound)
 		return
 	}
 
 	// 2. 检查注册表已就绪缓存
-	session, exists := s.registry.Get(cleanCode)
+	session, exists := s.registry.Get(regKey)
 	if exists && session != nil {
 		if v, ok := session.Variants["0"]; ok && len(v.RewrittenM3U8) > 0 {
 			w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
 			w.Header().Set("Cache-Control", "no-store")
+			if session.SourceName != "" {
+				w.Header().Set("X-Miss-Source", session.SourceName)
+			}
+			if session.Variant != "" {
+				w.Header().Set("X-Miss-Variant", session.Variant)
+			}
 			if r.Method != http.MethodHead {
 				_, _ = w.Write(v.RewrittenM3U8)
 			}
@@ -308,13 +435,21 @@ func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. 缓存未命中，使用 Singleflight 合并并发寻源请求
-	val, err := s.singleflight.Do("play:"+cleanCode, func() (interface{}, error) {
+	val, err := s.singleflight.Do("play:"+regKey, func() (interface{}, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.cfg.Timeout)
 		defer cancel()
 
-		res, err := s.manager.ResolveWeighted(ctx, cleanCode, s.cfg.WaitWindow)
-		if err != nil || res == nil || res.URL == "" {
-			s.catalog.MarkNegative(cleanCode, 30*time.Minute)
+		var res *source.StreamResult
+		var resolveErr error
+		if srcFilter != "" {
+			res, resolveErr = s.manager.ResolveBySource(ctx, cleanCode, srcFilter)
+		} else {
+			res, resolveErr = s.manager.ResolveWeighted(ctx, cleanCode, s.cfg.WaitWindow)
+		}
+		if resolveErr != nil || res == nil || res.URL == "" {
+			if srcFilter == "" {
+				s.catalog.MarkNegative(cleanCode, 30*time.Minute)
+			}
 			return nil, fmt.Errorf("stream not found")
 		}
 
@@ -323,14 +458,7 @@ func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return nil, err
 		}
-		referer := res.Referer
-		if referer == "" && strings.Contains(res.URL, "surrit.com") {
-			referer = "https://missav.ws/"
-		}
-		if referer != "" {
-			mReq.Header.Set("Referer", referer)
-		}
-		mReq.Header.Set("User-Agent", source.DefaultUserAgent)
+		setUpstreamHeaders(mReq, res.URL, res.Referer)
 
 		mResp, err := s.client.Do(mReq)
 		if err != nil || mResp.StatusCode >= 400 {
@@ -357,12 +485,16 @@ func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
 			return nil, err
 		}
 
-		// 存入注册表
+		// 存入注册表（自动模式写主槽位；指定源模式同时写指定槽位并更新主槽位以便 /sources 展示）
 		newSession := &registry.StreamSession{
+			Key:          regKey,
 			Code:         cleanCode,
 			SourceID:     sourceSlug,
+			SourceName:   res.Source,
+			Variant:      res.Variant,
 			UpstreamM3U8: res.URL,
 			Referer:      res.Referer,
+			Origin:       deriveOrigin(res.Referer),
 			Variants: map[string]*registry.VariantSession{
 				"0": {
 					VariantID:     "0",
@@ -376,6 +508,12 @@ func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 		s.registry.Set(newSession)
+		// 同时按 code::sourceSlug 登记，确保 /pl /seg /key /map 无论是否带 ?src= 均能精准路由到对应源会话
+		if sourceSlug != "" && regKey != sessionKey(cleanCode, sourceSlug) {
+			clone := *newSession
+			clone.Key = sessionKey(cleanCode, sourceSlug)
+			s.registry.Set(&clone)
+		}
 
 		// 记录至持久化 Catalog
 		s.catalog.Set(cache.CatalogEntry{
@@ -385,43 +523,62 @@ func (s *Server) handlePlay(w http.ResponseWriter, r *http.Request) {
 		})
 		_ = s.catalog.Save()
 
-		return rewritten.Rewritten, nil
+		return newSession, nil
 	})
 
 	if err != nil {
-		log.Printf("[Play] %s 寻源失败: %v", cleanCode, err)
+		log.Printf("[Play] %s (src=%s) 寻源失败: %v", cleanCode, srcFilter, err)
 		http.Error(w, "Stream not found", http.StatusNotFound)
 		return
 	}
 
-	rewrittenBytes := val.([]byte)
+	resolvedSession := val.(*registry.StreamSession)
+	rewrittenBytes := resolvedSession.Variants["0"].RewrittenM3U8
 	w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
 	w.Header().Set("Cache-Control", "no-store")
+	if resolvedSession.SourceName != "" {
+		w.Header().Set("X-Miss-Source", resolvedSession.SourceName)
+	}
+	if resolvedSession.Variant != "" {
+		w.Header().Set("X-Miss-Variant", resolvedSession.Variant)
+	}
 	if r.Method != http.MethodHead {
 		_, _ = w.Write(rewrittenBytes)
 	}
 }
 
-// refreshStreamSession 上游 403 过期自愈刷新
-func (s *Server) refreshStreamSession(ctx context.Context, code string) (*registry.StreamSession, error) {
-	val, err := s.singleflight.Do("refresh:"+code, func() (interface{}, error) {
-		res, err := s.manager.ResolveWeighted(ctx, code, s.cfg.WaitWindow)
-		if err != nil || res == nil || res.URL == "" {
-			return nil, fmt.Errorf("re-resolve failed: %w", err)
+// resolveRegistryKey 按 (code, sourceID) 优先定位精确源会话，回退主会话
+func (s *Server) resolveRegistryKey(code, sourceID string) string {
+	if sourceID != "" {
+		k := sessionKey(code, sourceID)
+		if _, ok := s.registry.Get(k); ok {
+			return k
+		}
+	}
+	return code
+}
+
+// refreshStreamSession 上游 403 过期自愈刷新（保留真实 caller token 与多清晰度 variant 子清单）
+func (s *Server) refreshStreamSession(ctx context.Context, code, token, activeVariant, sourceID string) (*registry.StreamSession, error) {
+	regKey := sessionKey(code, sourceID)
+	val, err := s.singleflight.Do("refresh:"+regKey+":"+activeVariant, func() (interface{}, error) {
+		var res *source.StreamResult
+		var resolveErr error
+		if sourceID != "" {
+			res, resolveErr = s.manager.ResolveBySource(ctx, code, sourceID)
+		}
+		if resolveErr != nil || res == nil || res.URL == "" {
+			res, resolveErr = s.manager.ResolveWeighted(ctx, code, s.cfg.WaitWindow)
+		}
+		if resolveErr != nil || res == nil || res.URL == "" {
+			return nil, fmt.Errorf("re-resolve failed: %w", resolveErr)
 		}
 
 		mReq, err := http.NewRequestWithContext(ctx, "GET", res.URL, nil)
 		if err != nil {
 			return nil, err
 		}
-		referer := res.Referer
-		if referer == "" && strings.Contains(res.URL, "surrit.com") {
-			referer = "https://missav.ws/"
-		}
-		if referer != "" {
-			mReq.Header.Set("Referer", referer)
-		}
-		mReq.Header.Set("User-Agent", source.DefaultUserAgent)
+		setUpstreamHeaders(mReq, res.URL, res.Referer)
 
 		mResp, err := s.client.Do(mReq)
 		if err != nil || mResp.StatusCode >= 400 {
@@ -439,7 +596,7 @@ func (s *Server) refreshStreamSession(ctx context.Context, code string) (*regist
 
 		sourceSlug := strings.ToLower(strings.Split(res.Source, " ")[0])
 		rewritten, err := hls.RewriteM3U8(mBytes, res.URL, hls.RewriteOptions{
-			Token:    "refreshed",
+			Token:    token,
 			Code:     code,
 			SourceID: sourceSlug,
 			Variant:  "0",
@@ -448,26 +605,69 @@ func (s *Server) refreshStreamSession(ctx context.Context, code string) (*regist
 			return nil, err
 		}
 
-		newSession := &registry.StreamSession{
-			Code:         code,
-			SourceID:     sourceSlug,
-			UpstreamM3U8: res.URL,
-			Referer:      res.Referer,
-			Variants: map[string]*registry.VariantSession{
-				"0": {
-					VariantID:     "0",
-					M3U8URL:       res.URL,
-					Sublists:      rewritten.Sublists,
-					Segments:      rewritten.Segments,
-					Keys:          rewritten.Keys,
-					Maps:          rewritten.Maps,
-					RewrittenM3U8: rewritten.Rewritten,
-				},
+		variants := map[string]*registry.VariantSession{
+			"0": {
+				VariantID:     "0",
+				M3U8URL:       res.URL,
+				Sublists:      rewritten.Sublists,
+				Segments:      rewritten.Segments,
+				Keys:          rewritten.Keys,
+				Maps:          rewritten.Maps,
+				RewrittenM3U8: rewritten.Rewritten,
 			},
 		}
 
+		// 若触发 403 的分片来自多清晰度子清单 (variant != "0")，同步刷新该子清单映射表
+		if activeVariant != "" && activeVariant != "0" && len(rewritten.Sublists) > 0 {
+			if idx, convErr := strconv.Atoi(strings.TrimPrefix(activeVariant, "a")); convErr == nil && idx >= 0 && idx < len(rewritten.Sublists) {
+				subURL := rewritten.Sublists[idx]
+				subReq, sErr := http.NewRequestWithContext(ctx, "GET", subURL, nil)
+				if sErr == nil {
+					setUpstreamHeaders(subReq, subURL, res.Referer)
+					if subResp, doErr := s.client.Do(subReq); doErr == nil && subResp.StatusCode < 400 {
+						subBytes, _ := io.ReadAll(subResp.Body)
+						subResp.Body.Close()
+						if subRewritten, rwErr := hls.RewriteM3U8(subBytes, subURL, hls.RewriteOptions{
+							Token:    token,
+							Code:     code,
+							SourceID: sourceSlug,
+							Variant:  activeVariant,
+						}); rwErr == nil {
+							variants[activeVariant] = &registry.VariantSession{
+								VariantID:     activeVariant,
+								M3U8URL:       subURL,
+								Segments:      subRewritten.Segments,
+								Keys:          subRewritten.Keys,
+								Maps:          subRewritten.Maps,
+								RewrittenM3U8: subRewritten.Rewritten,
+							}
+						}
+					} else if subResp != nil {
+						subResp.Body.Close()
+					}
+				}
+			}
+		}
+
+		newSession := &registry.StreamSession{
+			Key:          code,
+			Code:         code,
+			SourceID:     sourceSlug,
+			SourceName:   res.Source,
+			Variant:      res.Variant,
+			UpstreamM3U8: res.URL,
+			Referer:      res.Referer,
+			Origin:       deriveOrigin(res.Referer),
+			Variants:     variants,
+		}
+
 		s.registry.Set(newSession)
-		log.Printf("✨ [Self-Healing] 成功自愈刷新番号 %s 的流列表 (分片数: %d)", code, len(rewritten.Segments))
+		if sourceSlug != "" {
+			clone := *newSession
+			clone.Key = sessionKey(code, sourceSlug)
+			s.registry.Set(&clone)
+		}
+		log.Printf("✨ [Self-Healing] 成功自愈刷新番号 %s (src=%s, variant=%s, 分片数: %d)", code, sourceSlug, activeVariant, len(rewritten.Segments))
 		return newSession, nil
 	})
 
@@ -487,16 +687,17 @@ func (s *Server) handlePlaylist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	code := strings.ToUpper(r.PathValue("code"))
-	sourceID := r.PathValue("src")
+	sourceID := strings.ToLower(strings.TrimSpace(r.PathValue("src")))
 	varParam := strings.TrimSuffix(r.PathValue("var"), ".m3u8")
 
-	idx, err := strconv.Atoi(varParam)
+	idx, err := strconv.Atoi(strings.TrimPrefix(varParam, "a"))
 	if err != nil {
 		http.Error(w, "Invalid variant index", http.StatusBadRequest)
 		return
 	}
 
-	upstreamSublist, referer, ok := s.registry.GetSublist(code, idx)
+	regKey := s.resolveRegistryKey(code, sourceID)
+	upstreamSublist, referer, ok := s.registry.GetSublist(regKey, idx)
 	if !ok || upstreamSublist == "" {
 		http.Error(w, "Sublist not found", http.StatusNotFound)
 		return
@@ -510,13 +711,7 @@ func (s *Server) handlePlaylist(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Request error", http.StatusInternalServerError)
 		return
 	}
-	if referer == "" && strings.Contains(upstreamSublist, "surrit.com") {
-		referer = "https://missav.ws/"
-	}
-	if referer != "" {
-		pReq.Header.Set("Referer", referer)
-	}
-	pReq.Header.Set("User-Agent", source.DefaultUserAgent)
+	setUpstreamHeaders(pReq, upstreamSublist, referer)
 
 	pResp, err := s.client.Do(pReq)
 	if err != nil || pResp.StatusCode >= 400 {
@@ -541,7 +736,7 @@ func (s *Server) handlePlaylist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = s.registry.SetVariant(code, &registry.VariantSession{
+	_ = s.registry.SetVariant(regKey, &registry.VariantSession{
 		VariantID:     varParam,
 		M3U8URL:       upstreamSublist,
 		Segments:      rewritten.Segments,
@@ -567,6 +762,7 @@ func (s *Server) handleSegment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	code := strings.ToUpper(r.PathValue("code"))
+	sourceID := strings.ToLower(strings.TrimSpace(r.PathValue("src")))
 	variant := r.PathValue("var")
 	file := r.PathValue("file")
 
@@ -577,7 +773,8 @@ func (s *Server) handleSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	upstreamURL, referer, ok := s.registry.GetSegment(code, variant, idx)
+	regKey := s.resolveRegistryKey(code, sourceID)
+	upstreamURL, referer, ok := s.registry.GetSegment(regKey, variant, idx)
 	if !ok || upstreamURL == "" {
 		http.Error(w, "Segment not found", http.StatusNotFound)
 		return
@@ -588,12 +785,13 @@ func (s *Server) handleSegment(w http.ResponseWriter, r *http.Request) {
 
 	// 若遭遇上游 403 或 410 (Token 过期)，启动弹性自愈刷新并重试一次
 	if status == http.StatusForbidden || status == http.StatusGone {
-		log.Printf("⚠️ [Segment 403] %s 上游 Token 过期，尝试现场自愈...", code)
+		log.Printf("⚠️ [Segment 403] %s (src=%s, var=%s) 上游 Token 过期，尝试现场自愈...", code, sourceID, variant)
 		ctx, cancel := context.WithTimeout(r.Context(), s.cfg.Timeout)
 		defer cancel()
 
-		if _, rErr := s.refreshStreamSession(ctx, code); rErr == nil {
-			if freshURL, freshRef, freshOk := s.registry.GetSegment(code, variant, idx); freshOk && freshURL != "" {
+		if _, rErr := s.refreshStreamSession(ctx, code, token, variant, sourceID); rErr == nil {
+			healedKey := s.resolveRegistryKey(code, sourceID)
+			if freshURL, freshRef, freshOk := s.registry.GetSegment(healedKey, variant, idx); freshOk && freshURL != "" {
 				s.proxyUpstreamResource(w, r, freshURL, freshRef, "video/mp2t")
 			}
 		}
@@ -610,6 +808,7 @@ func (s *Server) handleKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	code := strings.ToUpper(r.PathValue("code"))
+	sourceID := strings.ToLower(strings.TrimSpace(r.PathValue("src")))
 	variant := r.PathValue("var")
 	file := r.PathValue("file")
 
@@ -620,7 +819,8 @@ func (s *Server) handleKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	upstreamURL, referer, ok := s.registry.GetKey(code, variant, idx)
+	regKey := s.resolveRegistryKey(code, sourceID)
+	upstreamURL, referer, ok := s.registry.GetKey(regKey, variant, idx)
 	if !ok || upstreamURL == "" {
 		http.Error(w, "Key not found", http.StatusNotFound)
 		return
@@ -639,6 +839,7 @@ func (s *Server) handleMap(w http.ResponseWriter, r *http.Request) {
 	}
 
 	code := strings.ToUpper(r.PathValue("code"))
+	sourceID := strings.ToLower(strings.TrimSpace(r.PathValue("src")))
 	variant := r.PathValue("var")
 	file := r.PathValue("file")
 
@@ -649,7 +850,8 @@ func (s *Server) handleMap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	upstreamURL, referer, ok := s.registry.GetMap(code, variant, idx)
+	regKey := s.resolveRegistryKey(code, sourceID)
+	upstreamURL, referer, ok := s.registry.GetMap(regKey, variant, idx)
 	if !ok || upstreamURL == "" {
 		http.Error(w, "Map not found", http.StatusNotFound)
 		return
@@ -666,13 +868,7 @@ func (s *Server) proxyUpstreamResource(w http.ResponseWriter, r *http.Request, u
 		return http.StatusInternalServerError
 	}
 
-	if referer == "" && strings.Contains(upstreamURL, "surrit.com") {
-		referer = "https://missav.ws/"
-	}
-	if referer != "" {
-		uReq.Header.Set("Referer", referer)
-	}
-	uReq.Header.Set("User-Agent", source.DefaultUserAgent)
+	setUpstreamHeaders(uReq, upstreamURL, referer)
 
 	if rangeHeader := r.Header.Get("Range"); rangeHeader != "" {
 		uReq.Header.Set("Range", rangeHeader)

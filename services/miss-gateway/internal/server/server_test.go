@@ -319,3 +319,112 @@ func TestPrometheusMetricsAndAdminEndpoints(t *testing.T) {
 		t.Fatalf("expected 200 OK for admin purge, got %d", pRec.Code)
 	}
 }
+
+func TestWatchPageAndSourcesAndCORS(t *testing.T) {
+	cdnServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/master.m3u8" {
+			if r.Header.Get("Origin") != "https://123av.com" {
+				http.Error(w, "missing Origin", http.StatusForbidden)
+				return
+			}
+			_, _ = w.Write([]byte("#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1000000\n720p/index.m3u8\n"))
+			return
+		}
+		if r.URL.Path == "/720p/index.m3u8" {
+			_, _ = w.Write([]byte("#EXTM3U\n#EXT-X-TARGETDURATION:4\n#EXTINF:4.0,\nseg0.ts\n"))
+			return
+		}
+		if r.URL.Path == "/720p/seg0.ts" {
+			_, _ = w.Write([]byte("OK-720P"))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer cdnServer.Close()
+
+	src123 := &mockSource{
+		name:   "123AV (无码流出)",
+		weight: 100,
+		result: &source.StreamResult{
+			Success: true,
+			Code:    "IPX-811",
+			Source:  "123AV (无码流出)",
+			Variant: "无码流出",
+			URL:     cdnServer.URL + "/master.m3u8",
+			Referer: "https://123av.com/e/abc",
+		},
+	}
+	srcJable := &mockSource{
+		name:   "Jable",
+		weight: 50,
+		result: &source.StreamResult{
+			Success: true,
+			Code:    "IPX-811",
+			Source:  "Jable",
+			Variant: "普通版",
+			URL:     cdnServer.URL + "/master.m3u8",
+			Referer: "https://123av.com/e/jable",
+		},
+	}
+
+	mgr := source.NewManager(cdnServer.Client(), src123, srcJable)
+	s := NewServer(Config{
+		Port:        "8765",
+		Tokens:      []string{"secret-t1"},
+		CatalogPath: filepath.Join(t.TempDir(), "catalog.json"),
+	}, mgr)
+
+	// 1. CORS OPTIONS preflight
+	optReq := httptest.NewRequest("OPTIONS", "/v1/secret-t1/play/IPX-811.m3u8", nil)
+	optRec := httptest.NewRecorder()
+	s.Routes().ServeHTTP(optRec, optReq)
+	if optRec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 for OPTIONS, got %d", optRec.Code)
+	}
+	if !strings.Contains(optRec.Header().Get("Access-Control-Expose-Headers"), "Content-Range") {
+		t.Errorf("missing Access-Control-Expose-Headers: %s", optRec.Header().Get("Access-Control-Expose-Headers"))
+	}
+
+	// 2. /watch/{code} 校验 token 与影院标识
+	wBad := httptest.NewRecorder()
+	s.Routes().ServeHTTP(wBad, httptest.NewRequest("GET", "/v1/bad-tok/watch/IPX-811", nil))
+	if wBad.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 for bad watch token, got %d", wBad.Code)
+	}
+
+	wGood := httptest.NewRecorder()
+	s.Routes().ServeHTTP(wGood, httptest.NewRequest("GET", "/v1/secret-t1/watch/IPX-811?src=123av", nil))
+	if wGood.Code != http.StatusOK {
+		t.Fatalf("expected 200 for /watch, got %d", wGood.Code)
+	}
+	watchBody := wGood.Body.String()
+	if !strings.Contains(watchBody, `name="miss-player-auto-theater"`) || !strings.Contains(watchBody, `data-code="IPX-811"`) {
+		t.Errorf("watch html missing auto-theater meta or data-code")
+	}
+
+	// 3. ?src=jable 定向选源 + /sources 查询
+	pReq := httptest.NewRequest("GET", "/v1/secret-t1/play/IPX-811.m3u8?src=jable", nil)
+	pRec := httptest.NewRecorder()
+	s.Routes().ServeHTTP(pRec, pReq)
+	if pRec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for ?src=jable, got %d", pRec.Code)
+	}
+	if gotSrc := pRec.Header().Get("X-Miss-Source"); gotSrc != "Jable" {
+		t.Errorf("expected X-Miss-Source Jable, got %q", gotSrc)
+	}
+
+	// 4. 多清晰度子清单 /pl/... 与分片代理
+	plReq := httptest.NewRequest("GET", "/v1/secret-t1/pl/IPX-811/jable/0.m3u8", nil)
+	plRec := httptest.NewRecorder()
+	s.Routes().ServeHTTP(plRec, plReq)
+	if plRec.Code != http.StatusOK || !strings.Contains(plRec.Body.String(), "/v1/secret-t1/seg/IPX-811/jable/0/0.ts") {
+		t.Fatalf("unexpected playlist response: %d %s", plRec.Code, plRec.Body.String())
+	}
+
+	srcReq := httptest.NewRequest("GET", "/v1/secret-t1/sources/IPX-811", nil)
+	srcRec := httptest.NewRecorder()
+	s.Routes().ServeHTTP(srcRec, srcReq)
+	if srcRec.Code != http.StatusOK || !strings.Contains(srcRec.Body.String(), `"id":"123av"`) {
+		t.Fatalf("unexpected sources response: %d %s", srcRec.Code, srcRec.Body.String())
+	}
+}

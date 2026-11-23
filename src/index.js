@@ -19,6 +19,8 @@ import { telemetry } from './telemetry';
 import { SyncManager } from './sync/index.js';
 import { CommentCacheManager } from './player/comments/CommentCacheManager.js';
 import { PeachWebBridge } from './player/bridge/PeachWebBridge.js';
+import { LtxLibAdapter } from './adapters/LtxLibAdapter.js';
+import { CrossSitePlayRouter } from './services/CrossSitePlayRouter.js';
 import { initIosInlinePlaybackGuard } from './utils/iosInline.js';
 
 // 早期帧环境与协议快速短路守卫 (避免在 about:blank、第三方广告/追踪 iframe 或 JAVLibrary 代理页注入无关 hook)
@@ -34,6 +36,7 @@ try {
 const _earlyIsPlayerIframe = _earlyInIframe && (
     window.location.pathname.includes('/player/') ||
     window.location.pathname.includes('/embed/') ||
+    window.location.pathname.startsWith('/e/') ||
     window.location.search.includes('payload=') ||
     window.location.search.includes('video=') ||
     window.location.href.includes('avking') ||
@@ -151,6 +154,7 @@ function setupViewport() {
     const isPlayerIframe = isInIframe && (
         window.location.pathname.includes('/player/') ||
         window.location.pathname.includes('/embed/') ||
+        window.location.pathname.startsWith('/e/') ||
         window.location.search.includes('payload=') ||
         window.location.search.includes('video=') ||
         window.location.href.includes('avking') ||
@@ -195,6 +199,9 @@ function setupViewport() {
 
             // 检查并启动 Peach Web 实例自动化管线 (自动配对、多入口纳管与媒体库巡检)
             PeachWebBridge.detectAndStart();
+
+            // 检查并启动 ltxlib.dpdns.org 卡片跨站播放适配器
+            LtxLibAdapter.detectAndStart();
 
             // 首先注入样式
             injectStyles();
@@ -268,9 +275,15 @@ function setupViewport() {
             });
 
 
+            // 检测是否由跨站接力租约或网关 /watch 承接页打开，满足条件则自动拉起影院模式
+            const isGatewayWatchPage = Boolean(document.querySelector('meta[name="miss-player-auto-theater"][content="1"]'));
+            const crossSiteLease = !isInIframe ? CrossSitePlayRouter.consumeHandoffLease() : null;
+            const autoTriggerTheater = Boolean(isGatewayWatchPage || crossSiteLease);
+
             // 创建浮动按钮实例并初始化
             const floatingButton = new FloatingButton({
-                playerState
+                playerState,
+                autoTriggerTheater
             });
             
             // 初始化浮动按钮

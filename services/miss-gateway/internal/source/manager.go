@@ -184,3 +184,31 @@ func (m *Manager) ResolveWeighted(ctx context.Context, code string, waitWindow t
 
 	return nil, fmt.Errorf("所有外部源均未能解析到有效流")
 }
+
+// ResolveBySource 针对指定片源 ID 单独寻源（用于浏览器影院页手动换源）
+func (m *Manager) ResolveBySource(ctx context.Context, code, sourceFilter string) (*StreamResult, error) {
+	target := strings.ToLower(strings.TrimSpace(sourceFilter))
+	if target == "" {
+		return m.ResolveWeighted(ctx, code, 3500*time.Millisecond)
+	}
+
+	for _, src := range m.sources {
+		slug := strings.ToLower(strings.Split(src.Name(), " ")[0])
+		if slug == target || strings.ToLower(src.Name()) == target {
+			tStart := time.Now()
+			res, err := src.Resolve(ctx, m.client, code)
+			elapsed := time.Since(tStart)
+			if err == nil && res != nil && res.URL != "" {
+				m.tracker.RecordSuccess(src.Name(), elapsed)
+				return res, nil
+			}
+			m.tracker.RecordFailure(src.Name(), err)
+			if err != nil {
+				return nil, err
+			}
+			return nil, fmt.Errorf("source %s returned empty url", src.Name())
+		}
+	}
+
+	return nil, fmt.Errorf("unknown source: %s", sourceFilter)
+}

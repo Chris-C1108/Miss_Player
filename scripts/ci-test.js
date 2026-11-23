@@ -221,6 +221,11 @@ runStep('执行跳转反馈统一出口测试', () => {
     execSync('node tests/seek-feedback.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.30 ltxlib 跨站播放双轨路由与卡片适配器测试
+runStep('执行 ltxlib 跨站播放双轨路由与卡片适配器测试', () => {
+    execSync('node tests/ltxlib-cross-site.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

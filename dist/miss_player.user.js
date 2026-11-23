@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.120-beta.001
+// @version            5.7.120-beta.002
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -44,6 +44,10 @@
 // @connect            c97k.com
 // @connect            www.c97k.com
 // @connect            fourhoi.com
+// @connect            123av.com
+// @connect            www.123av.com
+// @connect            javverse.com
+// @connect            www.javverse.com
 // @connect            api-shoulei-ssl.xunlei.com
 // @connect            subtitle.v.geilijiasu.com
 // @connect            subtitlecat.com
@@ -206,7 +210,7 @@
 		}
 	};
 	var mediaSniffer = new MediaSniffer();
-	_css(":root{--brand-pink:#fe628e;--brand-pink-rgb:254, 98, 142}miss-player-root{display:contents!important}html.tm-player-active,body.tm-player-active{overscroll-behavior:none;scrollbar-width:none;-ms-overflow-style:none;width:100%}html.tm-player-active{-webkit-overflow-scrolling:touch;height:auto;min-height:100%;position:static;overflow:hidden auto}body.tm-player-active{-webkit-overflow-scrolling:touch;height:auto;min-height:calc(100vh + 240px);position:static;overflow:hidden visible}@media (hover:hover) and (pointer:fine) and (min-width:1024px){html.tm-player-active,body.tm-player-active{height:100%;min-height:100%;top:0;bottom:0;left:0;right:0;position:fixed!important;overflow:hidden!important}}html.tm-player-active .tm-floating-button,body.tm-player-active .tm-floating-button{display:none!important}html.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active header,body.tm-player-active .header,body.tm-player-active navbar,body.tm-player-active .navbar,body.tm-player-active #header-top,body.tm-player-active .top-nav,body.tm-player-active [class*=header--sticky],body.tm-player-active [class*=navbar-fixed],body.tm-player-active aside[aria-label*=Peach],body.tm-player-active aside[data-panel-mode]{pointer-events:none!important}body.tm-player-active #peach-jav-action,body.tm-player-active [id*=peach-jav]{display:none!important}body.tm-swiping-down{-webkit-user-select:none!important;user-select:none!important;touch-action:none!important}body.tm-settings-active{touch-action:pan-y!important}.tm-floating-button{left:calc(50% + var(--mp-fab-offset-x,0px));right:auto;bottom:calc(max(20px, env(safe-area-inset-bottom,20px)) + var(--mp-fab-offset-y,0px));width:56px;height:56px;color:var(--brand-pink,#fe628e);box-shadow:none;box-sizing:border-box;z-index:2147483647;cursor:pointer;-webkit-appearance:none;appearance:none;pointer-events:auto;touch-action:manipulation;border-radius:50%;justify-content:center;align-items:center;margin:0;padding:0;transition:transform .25s cubic-bezier(.16,1,.3,1),filter .25s cubic-bezier(.16,1,.3,1),bottom .25s cubic-bezier(.16,1,.3,1),right .25s cubic-bezier(.16,1,.3,1),left .25s cubic-bezier(.16,1,.3,1);display:flex;overflow:visible;transform:translate(-50%);background:0 0!important;border:none!important;outline:none!important;position:fixed!important}.tm-floating-button svg{width:48px;height:48px;filter:drop-shadow(0 0 10px rgba(var(--brand-pink-rgb,254, 98, 142), .9));transition:filter .25s cubic-bezier(.16,1,.3,1);animation:3s ease-in-out infinite breathing-glow}.tm-floating-button:hover{transform:translate(-50%)scale(1.08)}.tm-floating-button:hover svg{filter:drop-shadow(0 0 20px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}.tm-floating-button:active{transform:translate(-50%)scale(.96)}@keyframes breathing-glow{0%,to{filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb,254, 98, 142), .7))}50%{filter:drop-shadow(0 0 22px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}}@media screen and (min-width:600px) and (min-height:600px),(pointer:fine){.tm-floating-button{left:auto;right:calc(max(24px, env(safe-area-inset-right,24px)) + var(--mp-fab-offset-x,0px));bottom:calc(max(24px, env(safe-area-inset-bottom,24px)) + var(--mp-fab-offset-y,0px));transform:none}.tm-floating-button:hover{transform:scale(1.08)}.tm-floating-button:active{transform:scale(.96)}}@media screen and (max-width:1024px),(pointer:coarse){body.tm-player-active .tm-custom-modal-overlay input,body.tm-player-active .tm-custom-modal-overlay textarea{font-size:16px!important}}body.tm-player-active dialog[open]{filter:none;backdrop-filter:none;-webkit-backdrop-filter:none;backdrop-filter:none;contain:none;border:none;width:100vw;max-width:100vw;height:100vh;max-height:100vh;margin:0;padding:0;overflow:hidden;transform:none}body.tm-player-active dialog[open]>:not(miss-player-root):not(.tm-floating-button){pointer-events:none!important}dialog[open]:has(.tm-floating-button){contain:none!important}dialog#stage:has(.tm-floating-button){contain:none!important}dialog[open] .tm-floating-button,dialog#stage .tm-floating-button{z-index:2147483647;pointer-events:auto;opacity:1;visibility:visible}");
+	_css(":root{--brand-pink:#fe628e;--brand-pink-rgb:254, 98, 142}miss-player-root{display:contents!important}html.tm-player-active,body.tm-player-active{overscroll-behavior:none;scrollbar-width:none;-ms-overflow-style:none;width:100%}html.tm-player-active{-webkit-overflow-scrolling:touch;height:auto;min-height:100%;position:static;overflow:hidden auto}body.tm-player-active{-webkit-overflow-scrolling:touch;height:auto;min-height:calc(100vh + 240px);position:static;overflow:hidden visible}@media (hover:hover) and (pointer:fine) and (min-width:1024px){html.tm-player-active,body.tm-player-active{height:100%;min-height:100%;top:0;bottom:0;left:0;right:0;position:fixed!important;overflow:hidden!important}}html.tm-player-active .tm-floating-button,body.tm-player-active .tm-floating-button{display:none!important}html.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active header,body.tm-player-active .header,body.tm-player-active navbar,body.tm-player-active .navbar,body.tm-player-active #header-top,body.tm-player-active .top-nav,body.tm-player-active [class*=header--sticky],body.tm-player-active [class*=navbar-fixed],body.tm-player-active aside[aria-label*=Peach],body.tm-player-active aside[data-panel-mode]{pointer-events:none!important}body.tm-player-active #peach-jav-action,body.tm-player-active [id*=peach-jav]{display:none!important}body.tm-swiping-down{-webkit-user-select:none!important;user-select:none!important;touch-action:none!important}body.tm-settings-active{touch-action:pan-y!important}.tm-floating-button{left:calc(50% + var(--mp-fab-offset-x,0px));right:auto;bottom:calc(max(20px, env(safe-area-inset-bottom,20px)) + var(--mp-fab-offset-y,0px));width:56px;height:56px;color:var(--brand-pink,#fe628e);box-shadow:none;box-sizing:border-box;z-index:2147483647;cursor:pointer;-webkit-appearance:none;appearance:none;pointer-events:auto;touch-action:manipulation;border-radius:50%;justify-content:center;align-items:center;margin:0;padding:0;transition:transform .25s cubic-bezier(.16,1,.3,1),filter .25s cubic-bezier(.16,1,.3,1),bottom .25s cubic-bezier(.16,1,.3,1),right .25s cubic-bezier(.16,1,.3,1),left .25s cubic-bezier(.16,1,.3,1);display:flex;overflow:visible;transform:translate(-50%);background:0 0!important;border:none!important;outline:none!important;position:fixed!important}.tm-floating-button svg{width:48px;height:48px;filter:drop-shadow(0 0 10px rgba(var(--brand-pink-rgb,254, 98, 142), .9));transition:filter .25s cubic-bezier(.16,1,.3,1);animation:3s ease-in-out infinite breathing-glow}.tm-floating-button:hover{transform:translate(-50%)scale(1.08)}.tm-floating-button:hover svg{filter:drop-shadow(0 0 20px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}.tm-floating-button:active{transform:translate(-50%)scale(.96)}@keyframes breathing-glow{0%,to{filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb,254, 98, 142), .7))}50%{filter:drop-shadow(0 0 22px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}}@media screen and (min-width:600px) and (min-height:600px),(pointer:fine){.tm-floating-button{left:auto;right:calc(max(24px, env(safe-area-inset-right,24px)) + var(--mp-fab-offset-x,0px));bottom:calc(max(24px, env(safe-area-inset-bottom,24px)) + var(--mp-fab-offset-y,0px));transform:none}.tm-floating-button:hover{transform:scale(1.08)}.tm-floating-button:active{transform:scale(.96)}}@media screen and (max-width:1024px),(pointer:coarse){body.tm-player-active .tm-custom-modal-overlay input,body.tm-player-active .tm-custom-modal-overlay textarea{font-size:16px!important}}body.tm-player-active dialog[open]{filter:none;backdrop-filter:none;-webkit-backdrop-filter:none;backdrop-filter:none;contain:none;border:none;width:100vw;max-width:100vw;height:100vh;max-height:100vh;margin:0;padding:0;overflow:hidden;transform:none}body.tm-player-active dialog[open]>:not(miss-player-root):not(.tm-floating-button){pointer-events:none!important}dialog[open]:has(.tm-floating-button){contain:none!important}dialog#stage:has(.tm-floating-button){contain:none!important}dialog[open] .tm-floating-button,dialog#stage .tm-floating-button{z-index:2147483647;pointer-events:auto;opacity:1;visibility:visible}.mp-ltx-play-btn{z-index:2;backdrop-filter:blur(12px)saturate(180%);-webkit-backdrop-filter:blur(12px)saturate(180%);color:#fe628e;cursor:pointer;background:#0f1013c2;border:1px solid #ffffff29;border-radius:50%;place-items:center;width:30px;height:30px;padding:0;transition:transform .15s,background-color .15s,border-color .15s;display:grid;position:absolute;bottom:8px;left:8px}.mp-ltx-play-btn:after{content:\"\";position:absolute;top:-6px;bottom:-6px;left:-6px;right:-6px}.mp-ltx-play-btn:hover{color:#fff;background:#fe628e38;border-color:#fe628eb8;transform:scale(1.08)}.mp-ltx-play-btn:active{transform:scale(.94)}.mp-ltx-play-btn.is-loading{cursor:progress;pointer-events:none;border-color:#fe628e;animation:.9s ease-in-out infinite mp-ltx-pulse}.mp-ltx-play-icon{justify-content:center;align-items:center;width:14px;height:14px;display:inline-flex;transform:translate(1px)}.mp-ltx-play-icon svg{width:14px;height:14px}.card.selectable .mp-ltx-play-btn{opacity:.2;pointer-events:none}@media (max-width:760px){.mp-ltx-play-btn{width:34px;height:34px}}@keyframes mp-ltx-pulse{0%,to{box-shadow:0 0 #fe628e80}50%{box-shadow:0 0 0 6px #fe628e00}}.mp-ltx-modal-play-btn{color:#fff;cursor:pointer;background:#fe628e29;border:1px solid #fe628e73;border-radius:999px;align-items:center;gap:5px;height:28px;margin-left:auto;padding:0 10px;font-size:12px;font-weight:600;display:inline-flex}.mp-ltx-popover{z-index:2147483647;backdrop-filter:blur(20px)saturate(180%);-webkit-backdrop-filter:blur(20px)saturate(180%);color:#e8e8ec;background:#17181deb;border:1px solid #ffffff24;border-radius:14px;flex-direction:column;gap:8px;width:224px;padding:10px;font-family:-apple-system,BlinkMacSystemFont,SF Pro Text,sans-serif;display:flex;position:fixed;box-shadow:0 14px 36px #0000008c}.mp-ltx-popover-head{border-bottom:1px solid #ffffff14;align-items:center;gap:6px;padding-bottom:6px;display:flex}.mp-ltx-popover-code{color:#fe628e;letter-spacing:.03em;font-size:12px;font-weight:700}.mp-ltx-popover-mode{color:#8c8f9a;margin-left:auto;font-size:11px}.mp-ltx-popover-close{color:#8c8f9a;cursor:pointer;background:0 0;border:0;place-items:center;padding:2px;display:grid}.mp-ltx-popover-item{color:#e8e8ec;cursor:pointer;text-align:left;background:#ffffff0a;border:1px solid #ffffff14;border-radius:9px;align-items:center;gap:8px;width:100%;padding:8px 10px;font-size:12px;font-weight:600;display:flex}.mp-ltx-popover-item.is-primary{color:#fff;background:#fe628e2e;border-color:#fe628e73}.mp-ltx-popover-ico{justify-content:center;align-items:center;width:15px;height:15px;display:inline-flex}.mp-ltx-popover-ico img{border-radius:4px;width:15px;height:15px}.mp-ltx-popover-sources{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;display:grid}.mp-ltx-popover-chip{color:#cfd2dc;cursor:pointer;background:#ffffff0d;border:1px solid #ffffff14;border-radius:8px;padding:6px 8px;font-size:11px;font-weight:600}.mp-ltx-popover-chip:hover{color:#fff;background:#7aa7ff33;border-color:#7aa7ff80}");
 	function formatTime(seconds) {
 		if (isNaN(seconds) || seconds < 0) return "0:00";
 		const hours = Math.floor(seconds / 3600);
@@ -296,6 +300,7 @@
 			"iframe[src*=\"/player/\"]",
 			"iframe[src*=\"payload=\"]",
 			"iframe[src*=\"/embed/\"]",
+			"iframe[src*=\"/e/\"]",
 			"iframe[src*=\"video\"]",
 			"iframe[src*=\"plyr\"]",
 			".player iframe",
@@ -309,7 +314,7 @@
 		const allIframes = Array.from(document.querySelectorAll("iframe"));
 		for (const ifr of allIframes) {
 			const src = (ifr.getAttribute("src") || "").toLowerCase();
-			if (src.includes("player") || src.includes("embed") || src.includes("video") || src.includes("payload=") || src.includes("plyr")) return ifr;
+			if (src.includes("player") || src.includes("embed") || src.includes("/e/") || src.includes("video") || src.includes("payload=") || src.includes("plyr")) return ifr;
 		}
 		return null;
 	}
@@ -1920,7 +1925,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.120-beta.001";
+		return "5.7.120-beta.002";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4320,7 +4325,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.120-beta.001";
+		return "5.7.120-beta.002";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6447,7 +6452,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.120-beta.001";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.120-beta.002";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -29207,6 +29212,8 @@
 			this.videoPlayer = null;
 			this.resizeTimeout = null;
 			this.playerState = options.playerState || null;
+			this.autoTriggerTheater = Boolean(options.autoTriggerTheater);
+			this._autoTriggered = false;
 			this.videoCheckInterval = null;
 			this.mutationObserver = null;
 			this._listenersAttached = false;
@@ -29447,6 +29454,12 @@
 			this.button._floatingButtonInstance = this;
 			this.ensureTopLayerMount();
 			this.updateButtonPosition();
+			if (this.autoTriggerTheater && !this._autoTriggered) {
+				this._autoTriggered = true;
+				setTimeout(() => {
+					if (!this.isPlayerActive() && this.button) this.handleButtonClick();
+				}, 120);
+			}
 			return this.button;
 		}
 		updateButtonPosition() {
@@ -30141,6 +30154,749 @@
 		return enhancer;
 	}
 	init_domains();
+	var CROSS_SITE_HANDOFF_KEY = "mp_cross_site_handoff";
+	var RESOLVE_CACHE_TTL_MS = 18e5;
+	var CF_COOLDOWN_MS = 9e5;
+	var GATEWAY_HEALTH_TTL_MS = 15e3;
+	var KNOWN_SUFFIX_RE = /(?:[-_](?:uncensored(?:[-_]leaked|[-_]leak)?|leaked|leak|chinese|sub|ch|c|4k|hd|fhd|reduced[-_]mosaic))+$/i;
+	var STANDARD_CODE_RE = /^([a-z]{2,8}|\d{3}[a-z]{2,6})[-_ ]*0*(\d+)$/i;
+	var FC2_CODE_RE = /^(?:fc2[-_ ]*)?(?:ppv[-_ ]*)?(\d{5,8})$/i;
+	var DATE_CODE_RE = /^(\d{6})[-_ ](\d{3})$/;
+	var TOKYO_HOT_RE = /^(cz|n|k)(\d{4})$/i;
+	var CROSS_SITE_SOURCES = [
+		{
+			id: "123av",
+			label: "123AV",
+			weight: 100,
+			delayMs: 0
+		},
+		{
+			id: "javverse",
+			label: "JAVVerse",
+			weight: 90,
+			delayMs: 0
+		},
+		{
+			id: "missav",
+			label: "MissAV",
+			weight: 80,
+			delayMs: 250
+		},
+		{
+			id: "jable",
+			label: "Jable",
+			weight: 50,
+			delayMs: 350
+		}
+	];
+	function extractSlug(raw) {
+		let s = String(raw || "").trim();
+		if (s.includes("/")) {
+			try {
+				if (/^https?:\/\//i.test(s)) s = new URL(s).pathname || s;
+			} catch (_) {}
+			s = s.replace(/\/+$/, "");
+			const parts = s.split("/");
+			if (parts.length > 0) s = parts[parts.length - 1];
+		}
+		const dotIdx = s.lastIndexOf(".");
+		if (dotIdx !== -1 && dotIdx > s.length - 6) s = s.slice(0, dotIdx);
+		return s.trim();
+	}
+	function extractCodeCore(raw) {
+		let clean = extractSlug(raw).replace(KNOWN_SUFFIX_RE, "").trim();
+		if (!clean) return null;
+		let m = clean.match(FC2_CODE_RE);
+		if (m) return {
+			prefix: "FC2",
+			number: m[1],
+			type: "FC2"
+		};
+		m = clean.match(DATE_CODE_RE);
+		if (m) return {
+			prefix: m[1],
+			number: m[2],
+			type: "DATE"
+		};
+		m = clean.match(TOKYO_HOT_RE);
+		if (m) return {
+			prefix: m[1].toUpperCase(),
+			number: m[2],
+			type: "TOKYO_HOT"
+		};
+		m = clean.match(STANDARD_CODE_RE);
+		if (m) return {
+			prefix: m[1].toUpperCase(),
+			number: m[2] || "0",
+			type: "STANDARD"
+		};
+		return null;
+	}
+	function isEquivalentAvCode(targetCode, candidate) {
+		const coreT = extractCodeCore(targetCode);
+		const coreC = extractCodeCore(candidate);
+		if (coreT && coreC) return coreT.prefix === coreC.prefix && coreT.number === coreC.number && coreT.type === coreC.type;
+		const norm = (v) => extractSlug(v).replace(KNOWN_SUFFIX_RE, "").replace(/[-_\s]/g, "").toUpperCase();
+		const nt = norm(targetCode);
+		const nc = norm(candidate);
+		return Boolean(nt && nt === nc);
+	}
+	function normalizeCode(rawCode) {
+		const upper = String(rawCode || "").trim().toUpperCase();
+		return cleanAvCode(upper) || upper;
+	}
+	function sleep(ms) {
+		return new Promise((resolve) => setTimeout(resolve, ms));
+	}
+	function getGatewayEndpoint() {
+		const cfg = PeachService.getConfig();
+		let base = cfg.gatewayBase || cfg.remoteScraper || "";
+		if (!base) return null;
+		base = base.replace(/\/api\/resolve\/?.*$/, "").replace(/\/+$/, "");
+		if (!/^https?:\/\//i.test(base)) return null;
+		return {
+			base,
+			token: cfg.gatewayToken || "dev"
+		};
+	}
+	var CrossSitePlayRouter = class {
+		static async probeGatewayHealth(force = false, transport = fetchWithTransport) {
+			const gw = getGatewayEndpoint();
+			if (!gw) return {
+				reachable: false,
+				gateway: null
+			};
+			const now = Date.now();
+			if (!force && this._gatewayProbeCache.base === gw.base && now - this._gatewayProbeCache.checkedAt < GATEWAY_HEALTH_TTL_MS) return {
+				reachable: this._gatewayProbeCache.ok,
+				gateway: gw
+			};
+			let ok = false;
+			try {
+				const res = await transport(`${gw.base}/health`, {
+					preferGM: true,
+					timeout: 900
+				});
+				ok = res && res.status >= 200 && res.status < 400;
+			} catch (_) {
+				ok = false;
+			}
+			this._gatewayProbeCache = {
+				base: gw.base,
+				ok,
+				checkedAt: now
+			};
+			return {
+				reachable: ok,
+				gateway: gw
+			};
+		}
+		static isGatewayConfigured() {
+			return Boolean(getGatewayEndpoint());
+		}
+		static buildGatewayWatchUrl(gateway, code, { sourceId = "", title = "", poster = "" } = {}) {
+			const cleanCode = normalizeCode(code);
+			const query = sourceId ? `?src=${encodeURIComponent(sourceId)}` : "";
+			const hashParams = new URLSearchParams();
+			if (title) hashParams.set("title", String(title).slice(0, 120));
+			if (poster && /^https?:\/\//i.test(poster)) hashParams.set("poster", poster);
+			const hash = hashParams.toString();
+			return `${gateway.base}/v1/${encodeURIComponent(gateway.token)}/watch/${encodeURIComponent(cleanCode)}${query}${hash ? "#" + hash : ""}`;
+		}
+		static writeHandoffLease({ code, source, targetUrl, title = "", poster = "" }) {
+			setValue(CROSS_SITE_HANDOFF_KEY, {
+				code: normalizeCode(code),
+				source: source || "",
+				targetUrl: targetUrl || "",
+				title: String(title || "").slice(0, 120),
+				poster: poster || "",
+				createdAt: Date.now()
+			});
+		}
+		static consumeHandoffLease(hostname = typeof window !== "undefined" ? window.location.hostname : "") {
+			try {
+				const raw = getValue(CROSS_SITE_HANDOFF_KEY, null);
+				if (!raw || typeof raw !== "object") return null;
+				const age = Date.now() - Number(raw.createdAt || 0);
+				if (age < 0 || age > 6e4) {
+					setValue(CROSS_SITE_HANDOFF_KEY, null);
+					return null;
+				}
+				const host = String(hostname || "").toLowerCase();
+				if (!host) return null;
+				let matchesTarget = false;
+				try {
+					if (raw.targetUrl) {
+						const targetHost = new URL(raw.targetUrl).hostname.toLowerCase();
+						if (host === targetHost || host.endsWith("." + targetHost) || targetHost.endsWith("." + host)) matchesTarget = true;
+					}
+				} catch (_) {}
+				if (!matchesTarget) matchesTarget = [
+					"123av.com",
+					"javverse.com",
+					...getSiteDomains("MISSAV"),
+					...getSiteDomains("JABLE")
+				].some((d) => host === d || host.endsWith("." + d));
+				if (!matchesTarget) return null;
+				setValue(CROSS_SITE_HANDOFF_KEY, null);
+				return raw;
+			} catch (_) {
+				return null;
+			}
+		}
+		static async probe123Av(code, transport = fetchWithTransport) {
+			const lower = normalizeCode(code).toLowerCase();
+			const candidates = [{
+				url: `https://123av.com/cn/v/${lower}-uncensored-leaked`,
+				variant: "无码流出"
+			}, {
+				url: `https://123av.com/cn/v/${lower}`,
+				variant: "普通版"
+			}];
+			const hasEmbed = (html) => /https?:\/\/[a-zA-Z0-9_.\-:]+\/e\/[a-zA-Z0-9_\-]+/.test(String(html || "").replace(/\\/g, ""));
+			for (const item of candidates) try {
+				const res = await transport(item.url, {
+					preferGM: true,
+					timeout: 4500,
+					headers: { Referer: "https://123av.com/" }
+				});
+				if (res && res.status === 200 && hasEmbed(res.html)) return {
+					sourceId: "123av",
+					sourceName: `123AV (${item.variant})`,
+					url: res.finalUrl || item.url,
+					weight: 100
+				};
+			} catch (_) {}
+			try {
+				const searchUrl = `https://123av.com/cn/search?keyword=${encodeURIComponent(lower)}`;
+				const sRes = await transport(searchUrl, {
+					preferGM: true,
+					timeout: 4500,
+					headers: { Referer: "https://123av.com/" }
+				});
+				if (sRes && sRes.status === 200 && sRes.html) {
+					const slugs = [...sRes.html.matchAll(/\/cn\/v\/([a-zA-Z0-9_\-]+)/g)].map((m) => m[1]);
+					const unique = [...new Set(slugs)].filter((slug) => isEquivalentAvCode(code, slug));
+					unique.sort((a, b) => Number(b.includes("uncensored")) - Number(a.includes("uncensored")));
+					for (const slug of unique.slice(0, 3)) {
+						const detailUrl = `https://123av.com/cn/v/${slug}`;
+						const dRes = await transport(detailUrl, {
+							preferGM: true,
+							timeout: 4500,
+							headers: { Referer: searchUrl }
+						});
+						if (dRes && dRes.status === 200 && hasEmbed(dRes.html)) return {
+							sourceId: "123av",
+							sourceName: `123AV (${slug.includes("uncensored") ? "无码流出" : "普通版"})`,
+							url: dRes.finalUrl || detailUrl,
+							weight: 100
+						};
+					}
+				}
+			} catch (_) {}
+			return null;
+		}
+		static async probeJavVerse(code, transport = fetchWithTransport) {
+			const upper = normalizeCode(code);
+			const core = extractCodeCore(upper);
+			const searchUrl = `https://javverse.com/en/search?q=${encodeURIComponent(upper)}`;
+			const matchesCode = (snippet) => {
+				const txt = String(snippet || "").toUpperCase();
+				if (txt.includes(upper)) return true;
+				if (core) return txt.includes(`${core.prefix}-${core.number}`) || txt.includes(`${core.prefix}${core.number}`);
+				return false;
+			};
+			try {
+				const res = await transport(searchUrl, {
+					preferGM: true,
+					timeout: 4500,
+					headers: { Referer: "https://javverse.com/" }
+				});
+				if (!res || res.status >= 400 || !res.html) return null;
+				for (const m of res.html.matchAll(/<a[^>]+href="[^"]*\/(?:[a-z]{2}\/)?work\/(\d+)"[^>]*>([\s\S]*?)<\/a>/gi)) if (matchesCode(m[2])) return {
+					sourceId: "javverse",
+					sourceName: "JAVVerse",
+					url: `https://javverse.com/work/${m[1]}`,
+					weight: 90
+				};
+				for (const m of res.html.matchAll(/<(?:div|article|li)[^>]*>[\s\S]*?<\/(?:div|article|li)>/gi)) if (matchesCode(m[0])) {
+					const wm = m[0].match(/\/(?:[a-z]{2}\/)?work\/(\d+)/i);
+					if (wm) return {
+						sourceId: "javverse",
+						sourceName: "JAVVerse",
+						url: `https://javverse.com/work/${wm[1]}`,
+						weight: 90
+					};
+				}
+			} catch (_) {}
+			return null;
+		}
+		static async probeMissAv(code, transport = fetchWithTransport, { allowDirectFallback = false } = {}) {
+			const lower = normalizeCode(code).toLowerCase();
+			const domains = getSiteDomains("MISSAV");
+			const primaryUrl = `https://${domains[0] || "missav.ai"}/cn/${lower}`;
+			const blockedUntil = this._cfBlockedUntil.get("missav") || 0;
+			if (Date.now() < blockedUntil) return allowDirectFallback ? {
+				sourceId: "missav",
+				sourceName: "MissAV (需过盾)",
+				url: primaryUrl,
+				weight: 10,
+				challenged: true
+			} : null;
+			for (const domain of domains) {
+				const url = `https://${domain}/cn/${lower}`;
+				try {
+					const res = await transport(url, {
+						preferGM: true,
+						timeout: 4500,
+						headers: { Referer: `https://${domain}/` }
+					});
+					if (detectCloudflare(res.status, res.html)) {
+						this._cfBlockedUntil.set("missav", Date.now() + CF_COOLDOWN_MS);
+						break;
+					}
+					if (res.status >= 200 && res.status < 400 && /playlist\.m3u8|m3u8|surrit\.com/i.test(res.html || "")) return {
+						sourceId: "missav",
+						sourceName: "MissAV",
+						url: res.finalUrl || url,
+						weight: 80
+					};
+				} catch (_) {}
+			}
+			return allowDirectFallback ? {
+				sourceId: "missav",
+				sourceName: "MissAV (直达)",
+				url: primaryUrl,
+				weight: 10,
+				challenged: true
+			} : null;
+		}
+		static async probeJable(code, transport = fetchWithTransport) {
+			const lower = normalizeCode(code).toLowerCase();
+			const core = extractCodeCore(code);
+			const slugs = [lower];
+			if (core) {
+				const normSlug = `${core.prefix.toLowerCase()}-${core.number}`;
+				if (normSlug !== lower) slugs.push(normSlug);
+			}
+			const domains = getSiteDomains("JABLE");
+			for (const domain of domains) for (const slug of slugs) {
+				const url = `https://${domain}/videos/${slug}/`;
+				try {
+					const res = await transport(url, {
+						preferGM: true,
+						timeout: 4500,
+						headers: { Referer: `https://${domain}/` }
+					});
+					if (res && res.status >= 200 && res.status < 400 && /hlsUrl\s*=/.test(res.html || "")) return {
+						sourceId: "jable",
+						sourceName: "Jable",
+						url: res.finalUrl || url,
+						weight: 50
+					};
+				} catch (_) {}
+			}
+			return null;
+		}
+		static async resolveClientSource(code, { sourceId = "", transport = fetchWithTransport } = {}) {
+			const cleanCode = normalizeCode(code);
+			const cacheKey = `${cleanCode}::${sourceId || "auto"}`;
+			const cached = this._resolveCache.get(cacheKey);
+			if (cached && Date.now() < cached.expiresAt) return cached.result;
+			const runSingle = (id) => {
+				switch (id) {
+					case "123av": return this.probe123Av(cleanCode, transport);
+					case "javverse": return this.probeJavVerse(cleanCode, transport);
+					case "missav": return this.probeMissAv(cleanCode, transport, { allowDirectFallback: true });
+					case "jable": return this.probeJable(cleanCode, transport);
+					default: return Promise.resolve(null);
+				}
+			};
+			let picked = null;
+			if (sourceId) picked = await runSingle(sourceId);
+			else {
+				const tasks = [
+					this.probe123Av(cleanCode, transport),
+					this.probeJavVerse(cleanCode, transport),
+					sleep(250).then(() => this.probeMissAv(cleanCode, transport, { allowDirectFallback: false })),
+					sleep(350).then(() => this.probeJable(cleanCode, transport))
+				];
+				picked = await new Promise((resolve) => {
+					let pending = tasks.length;
+					let best = null;
+					let settled = false;
+					tasks.forEach((p) => {
+						Promise.resolve(p).then((res) => {
+							if (settled) return;
+							if (res && res.url) {
+								if (!best || res.weight > best.weight) best = res;
+								if (res.weight >= 90) {
+									settled = true;
+									resolve(best);
+									return;
+								}
+							}
+						}).finally(() => {
+							pending -= 1;
+							if (!settled && pending <= 0) {
+								settled = true;
+								resolve(best);
+							}
+						});
+					});
+				});
+				if (!picked) picked = {
+					sourceId: "missav",
+					sourceName: "MissAV (兜底直达)",
+					url: `https://${getSiteDomains("MISSAV")[0] || "missav.ai"}/cn/${cleanCode.toLowerCase()}`,
+					weight: 10,
+					challenged: true
+				};
+			}
+			if (picked && !picked.challenged) this._resolveCache.set(cacheKey, {
+				result: picked,
+				expiresAt: Date.now() + RESOLVE_CACHE_TTL_MS
+			});
+			return picked;
+		}
+		static openTab(url) {
+			if (typeof GM_openInTab === "function") {
+				GM_openInTab(url, {
+					active: true,
+					insert: true,
+					setParent: true
+				});
+				return;
+			}
+			if (typeof window !== "undefined" && typeof window.open === "function") window.open(url, "_blank", "noopener");
+		}
+		static async play({ code, sourceId = "", title = "", poster = "", forceClient = false } = {}) {
+			const cleanCode = normalizeCode(code);
+			if (!cleanCode) {
+				Toast$1("未识别到有效影片番号", 2500, "warning");
+				return {
+					track: "none",
+					ok: false
+				};
+			}
+			if (!forceClient) {
+				const { reachable, gateway } = await this.probeGatewayHealth();
+				if (reachable && gateway) {
+					const watchUrl = this.buildGatewayWatchUrl(gateway, cleanCode, {
+						sourceId,
+						title,
+						poster
+					});
+					this.openTab(watchUrl);
+					return {
+						track: "gateway",
+						ok: true,
+						url: watchUrl,
+						code: cleanCode
+					};
+				}
+			}
+			Toast$1(`正在跨站搜寻 ${cleanCode} 片源…`, 2e3, "info");
+			const resolved = await this.resolveClientSource(cleanCode, { sourceId });
+			if (!resolved || !resolved.url) {
+				Toast$1(`未在外部片源找到 ${cleanCode}`, 2800, "warning");
+				return {
+					track: "client",
+					ok: false,
+					code: cleanCode
+				};
+			}
+			this.writeHandoffLease({
+				code: cleanCode,
+				source: resolved.sourceName,
+				targetUrl: resolved.url,
+				title,
+				poster
+			});
+			this.openTab(resolved.url);
+			return {
+				track: "client",
+				ok: true,
+				...resolved,
+				code: cleanCode
+			};
+		}
+	};
+	_defineProperty(CrossSitePlayRouter, "_resolveCache", new Map());
+	_defineProperty(CrossSitePlayRouter, "_cfBlockedUntil", new Map());
+	_defineProperty(CrossSitePlayRouter, "_gatewayProbeCache", {
+		base: "",
+		ok: false,
+		checkedAt: 0
+	});
+	var LONG_PRESS_MS = 450;
+	var LtxLibAdapter = class {
+		static isLtxLibSite() {
+			if (typeof document === "undefined" || typeof window === "undefined") return false;
+			if (document.querySelector("meta[name=\"ltx-app\"]")) return true;
+			const host = String(window.location?.hostname || "").toLowerCase();
+			return host === "ltxlib.dpdns.org" || host.endsWith(".ltxlib.dpdns.org");
+		}
+		static detectAndStart() {
+			if (this.initialized) return true;
+			if (!this.isLtxLibSite()) return false;
+			this.init();
+			return true;
+		}
+		static init() {
+			if (this.initialized) return;
+			this.initialized = true;
+			this.scanAndInject(document);
+			const root = document.getElementById("app") || document.body || document.documentElement;
+			if (root && typeof MutationObserver === "function") {
+				this._observer = new MutationObserver(() => {
+					if (this._rafScheduled) return;
+					this._rafScheduled = true;
+					(typeof requestAnimationFrame === "function" ? requestAnimationFrame : (fn) => setTimeout(fn, 16))(() => {
+						this._rafScheduled = false;
+						this.scanAndInject(document);
+					});
+				});
+				this._observer.observe(root, {
+					childList: true,
+					subtree: true
+				});
+			}
+		}
+		static scanAndInject(root = document) {
+			if (!root || typeof root.querySelectorAll !== "function") return;
+			const cards = root.querySelectorAll("article.card[data-code]");
+			for (let i = 0; i < cards.length; i++) this.injectCardButton(cards[i]);
+			const dialogs = root.querySelectorAll("dialog.dialog[open]");
+			for (let i = 0; i < dialogs.length; i++) this.injectModalButton(dialogs[i]);
+		}
+		static extractCardMeta(card) {
+			if (!card) return {
+				code: "",
+				title: "",
+				poster: ""
+			};
+			const code = String(card.getAttribute("data-code") || card.dataset?.code || "").trim().toUpperCase();
+			const titleEl = card.querySelector(".title-btn, h3.title");
+			const imgEl = card.querySelector(".cover-btn img, .cover img");
+			return {
+				code,
+				title: titleEl ? String(titleEl.textContent || "").trim() : "",
+				poster: imgEl ? String(imgEl.getAttribute("src") || imgEl.src || "").trim() : ""
+			};
+		}
+		static injectCardButton(card) {
+			if (!card) return;
+			const cover = card.querySelector(".cover");
+			if (!cover || cover.querySelector("[data-mp-ltx-btn]")) return;
+			const btn = document.createElement("button");
+			btn.type = "button";
+			btn.className = "mp-ltx-play-btn";
+			btn.setAttribute("data-mp-ltx-btn", "1");
+			btn.title = "Miss Player 跨站播放（右键 / 长按选源或入库）";
+			btn.setAttribute("aria-label", "Miss Player 跨站播放");
+			btn.innerHTML = `<span class="mp-ltx-play-icon">${PLAY}</span>`;
+			this._bindPlayButtonEvents(btn, () => {
+				const ownerCard = btn.closest("article.card");
+				return this.extractCardMeta(ownerCard);
+			});
+			cover.appendChild(btn);
+		}
+		static injectModalButton(dialog) {
+			if (!dialog || dialog.querySelector("[data-mp-ltx-modal-btn]")) return;
+			const header = dialog.querySelector("header, .head, .dialog-head, .dlg-head");
+			if (!header) return;
+			const code = matchAvCodeFromText(dialog.textContent || "");
+			if (!code) return;
+			const btn = document.createElement("button");
+			btn.type = "button";
+			btn.className = "mp-ltx-modal-play-btn";
+			btn.setAttribute("data-mp-ltx-modal-btn", "1");
+			btn.innerHTML = `<span class="mp-ltx-play-icon">${PLAY}</span><span>跨站播放</span>`;
+			this._bindPlayButtonEvents(btn, () => ({
+				code: matchAvCodeFromText(dialog.textContent || "") || code,
+				title: String(header.textContent || "").trim().slice(0, 100),
+				poster: ""
+			}));
+			header.appendChild(btn);
+		}
+		static _bindPlayButtonEvents(btn, getMeta) {
+			let pressTimer = null;
+			let longPressed = false;
+			let startX = 0;
+			let startY = 0;
+			const clearPress = () => {
+				if (pressTimer) {
+					clearTimeout(pressTimer);
+					pressTimer = null;
+				}
+			};
+			const stopOnly = (e) => {
+				e.stopPropagation();
+			};
+			btn.addEventListener("pointerdown", (e) => {
+				e.stopPropagation();
+				if (e.button === 2) return;
+				longPressed = false;
+				startX = e.clientX || 0;
+				startY = e.clientY || 0;
+				clearPress();
+				pressTimer = setTimeout(() => {
+					longPressed = true;
+					this.openActionPopover(btn, getMeta());
+				}, LONG_PRESS_MS);
+			});
+			btn.addEventListener("pointermove", (e) => {
+				if (!pressTimer) return;
+				const dx = Math.abs((e.clientX || 0) - startX);
+				const dy = Math.abs((e.clientY || 0) - startY);
+				if (dx > 8 || dy > 8) clearPress();
+			});
+			btn.addEventListener("pointerup", clearPress);
+			btn.addEventListener("pointercancel", clearPress);
+			btn.addEventListener("touchstart", stopOnly, { passive: true });
+			btn.addEventListener("contextmenu", (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				clearPress();
+				this.openActionPopover(btn, getMeta());
+			});
+			btn.addEventListener("click", async (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				clearPress();
+				if (longPressed) {
+					longPressed = false;
+					return;
+				}
+				if (btn.classList.contains("is-loading")) return;
+				const meta = getMeta();
+				if (!meta.code) return;
+				btn.classList.add("is-loading");
+				try {
+					await CrossSitePlayRouter.play(meta);
+				} finally {
+					btn.classList.remove("is-loading");
+				}
+			});
+		}
+		static closePopover() {
+			if (this._popoverEl && this._popoverEl.parentNode) this._popoverEl.parentNode.removeChild(this._popoverEl);
+			this._popoverEl = null;
+			if (this._outsideHandler) {
+				document.removeEventListener("click", this._outsideHandler, true);
+				this._outsideHandler = null;
+			}
+			if (this._escHandler) {
+				document.removeEventListener("keydown", this._escHandler, true);
+				this._escHandler = null;
+			}
+		}
+		static async openActionPopover(anchorEl, meta) {
+			this.closePopover();
+			if (!meta || !meta.code) return;
+			const pop = document.createElement("div");
+			pop.className = "mp-ltx-popover";
+			pop.setAttribute("role", "dialog");
+			pop.setAttribute("aria-label", `${meta.code} 播放选项`);
+			const gwHint = CrossSitePlayRouter.isGatewayConfigured() ? "优先网关影院" : "纯脚本跨站直达";
+			const head = document.createElement("div");
+			head.className = "mp-ltx-popover-head";
+			const titleSpan = document.createElement("span");
+			titleSpan.className = "mp-ltx-popover-code";
+			titleSpan.textContent = meta.code;
+			const subSpan = document.createElement("span");
+			subSpan.className = "mp-ltx-popover-mode";
+			subSpan.textContent = gwHint;
+			const closeBtn = document.createElement("button");
+			closeBtn.type = "button";
+			closeBtn.className = "mp-ltx-popover-close";
+			closeBtn.innerHTML = ICON_X_CLOSE;
+			closeBtn.addEventListener("click", (e) => {
+				e.stopPropagation();
+				this.closePopover();
+			});
+			head.append(titleSpan, subSpan, closeBtn);
+			pop.appendChild(head);
+			const autoBtn = document.createElement("button");
+			autoBtn.type = "button";
+			autoBtn.className = "mp-ltx-popover-item is-primary";
+			autoBtn.innerHTML = `<span class="mp-ltx-popover-ico">${PLAY}</span><span>自动最优源播放</span>`;
+			autoBtn.addEventListener("click", async (e) => {
+				e.stopPropagation();
+				this.closePopover();
+				await CrossSitePlayRouter.play(meta);
+			});
+			pop.appendChild(autoBtn);
+			const srcGrid = document.createElement("div");
+			srcGrid.className = "mp-ltx-popover-sources";
+			CROSS_SITE_SOURCES.forEach((src) => {
+				const chip = document.createElement("button");
+				chip.type = "button";
+				chip.className = "mp-ltx-popover-chip";
+				chip.textContent = src.label;
+				chip.addEventListener("click", async (e) => {
+					e.stopPropagation();
+					this.closePopover();
+					await CrossSitePlayRouter.play({
+						...meta,
+						sourceId: src.id
+					});
+				});
+				srcGrid.appendChild(chip);
+			});
+			pop.appendChild(srcGrid);
+			const peachBtn = document.createElement("button");
+			peachBtn.type = "button";
+			peachBtn.className = "mp-ltx-popover-item";
+			peachBtn.innerHTML = `<span class="mp-ltx-popover-ico">${ICON_PEACH}</span><span>一键入库 Peach (.strm)</span>`;
+			peachBtn.addEventListener("click", async (e) => {
+				e.stopPropagation();
+				this.closePopover();
+				if (!PeachService.buildGatewayPlayUrl(meta.code)) {
+					Toast$1("请先在 Miss Player 设置中配置流网关地址后再入库", 3e3, "warning");
+					return;
+				}
+				try {
+					Toast$1((await StrmIngestPipeline.ingest({ avcode: meta.code })).message || `${meta.code} 已入库 Peach`, 2500, "success");
+				} catch (err) {
+					Toast$1(`入库失败: ${err.message || err}`, 3e3, "error");
+				}
+			});
+			pop.appendChild(peachBtn);
+			document.body.appendChild(pop);
+			this._popoverEl = pop;
+			const rect = anchorEl.getBoundingClientRect();
+			const popRect = pop.getBoundingClientRect();
+			const vw = window.innerWidth || 1280;
+			const vh = window.innerHeight || 800;
+			const left = Math.max(12, Math.min(rect.left, vw - popRect.width - 12));
+			const top = rect.bottom + 8 + popRect.height <= vh - 12 ? rect.bottom + 8 : Math.max(12, rect.top - popRect.height - 8);
+			pop.style.left = `${Math.round(left)}px`;
+			pop.style.top = `${Math.round(top)}px`;
+			setTimeout(() => {
+				if (this._popoverEl !== pop) return;
+				this._outsideHandler = (ev) => {
+					if (this._popoverEl && !this._popoverEl.contains(ev.target) && !anchorEl.contains(ev.target)) this.closePopover();
+				};
+				this._escHandler = (ev) => {
+					if (ev.key === "Escape") this.closePopover();
+				};
+				document.addEventListener("click", this._outsideHandler, true);
+				document.addEventListener("keydown", this._escHandler, true);
+			}, 0);
+			CrossSitePlayRouter.probeGatewayHealth().then(({ reachable }) => {
+				if (this._popoverEl === pop) subSpan.textContent = reachable ? "网关已就绪" : "纯脚本直连";
+			}).catch(() => {});
+		}
+	};
+	_defineProperty(LtxLibAdapter, "initialized", false);
+	_defineProperty(LtxLibAdapter, "_observer", null);
+	_defineProperty(LtxLibAdapter, "_rafScheduled", false);
+	_defineProperty(LtxLibAdapter, "_popoverEl", null);
+	_defineProperty(LtxLibAdapter, "_outsideHandler", null);
+	_defineProperty(LtxLibAdapter, "_escHandler", null);
+	init_domains();
 	performance.mark("mp:module-loaded");
 	var _earlyProtocolOk = typeof window !== "undefined" && window.location && (window.location.protocol === "http:" || window.location.protocol === "https:");
 	var _earlyInIframe = false;
@@ -30149,7 +30905,7 @@
 	} catch (_) {
 		_earlyInIframe = true;
 	}
-	var _earlyIsPlayerIframe = _earlyInIframe && (window.location.pathname.includes("/player/") || window.location.pathname.includes("/embed/") || window.location.search.includes("payload=") || window.location.search.includes("video=") || window.location.href.includes("avking") || window.location.href.includes("videocdn") || window.location.href.includes("plyr"));
+	var _earlyIsPlayerIframe = _earlyInIframe && (window.location.pathname.includes("/player/") || window.location.pathname.includes("/embed/") || window.location.pathname.startsWith("/e/") || window.location.search.includes("payload=") || window.location.search.includes("video=") || window.location.href.includes("avking") || window.location.href.includes("videocdn") || window.location.href.includes("plyr"));
 	var _earlyIsJavLib = _earlyProtocolOk && isSiteDomain("JAVLIBRARY");
 	if (_earlyProtocolOk && !_earlyIsJavLib && (!_earlyInIframe || _earlyIsPlayerIframe)) {
 		initIosInlinePlaybackGuard();
@@ -30215,7 +30971,7 @@
 		} catch (_) {
 			isInIframe = true;
 		}
-		const isPlayerIframe = isInIframe && (window.location.pathname.includes("/player/") || window.location.pathname.includes("/embed/") || window.location.search.includes("payload=") || window.location.search.includes("video=") || window.location.href.includes("avking") || window.location.href.includes("videocdn") || window.location.href.includes("plyr"));
+		const isPlayerIframe = isInIframe && (window.location.pathname.includes("/player/") || window.location.pathname.includes("/embed/") || window.location.pathname.startsWith("/e/") || window.location.search.includes("payload=") || window.location.search.includes("video=") || window.location.href.includes("avking") || window.location.href.includes("videocdn") || window.location.href.includes("plyr"));
 		if (isInIframe && !isSiteDomain("JAVLIBRARY") && !isPlayerIframe) return;
 		let playerState = null;
 		function injectStyles() {
@@ -30230,6 +30986,7 @@
 					return;
 				}
 				PeachWebBridge.detectAndStart();
+				LtxLibAdapter.detectAndStart();
 				injectStyles();
 				initUserExperienceEnhancer(true);
 				console.log(`[${__$1("scriptName")}] ${__$1("enhancerInitialized")}`);
@@ -30270,7 +31027,12 @@
 						else ifr.classList.remove("tm-iframe-expanded");
 					}
 				});
-				new FloatingButton({ playerState }).init();
+				const isGatewayWatchPage = Boolean(document.querySelector("meta[name=\"miss-player-auto-theater\"][content=\"1\"]"));
+				const crossSiteLease = !isInIframe ? CrossSitePlayRouter.consumeHandoffLease() : null;
+				new FloatingButton({
+					playerState,
+					autoTriggerTheater: Boolean(isGatewayWatchPage || crossSiteLease)
+				}).init();
 				performance.mark("mp:ui-ready");
 				performance.measure("mp:startup", "mp:module-loaded", "mp:ui-ready");
 				initAutoLogin().then((loginManager) => {
