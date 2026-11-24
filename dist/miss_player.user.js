@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.122-beta.005
+// @version            5.7.122-beta.006
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1989,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.005";
+		return "5.7.122-beta.006";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4629,7 +4629,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.005";
+		return "5.7.122-beta.006";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6772,7 +6772,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.005";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.006";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -24905,53 +24905,174 @@
 		if (!lowerHtml.includes(avCode.toLowerCase()) && !lowerHtml.includes(avCode.replace(/-/g, "").toLowerCase())) return false;
 		return true;
 	}
-	async function probeUncensoredCandidate(candidateUrl, avCode, fetchFn) {
-		if (typeof fetchFn !== "function") return null;
-		try {
-			const res = await fetchFn(candidateUrl, {
+	function probeViaGM(candidateUrl, gmRequestFn, timeoutMs = 4500) {
+		if (typeof gmRequestFn !== "function") return Promise.resolve(null);
+		return new Promise((resolve) => {
+			let settled = false;
+			let req = null;
+			const finish = (val) => {
+				if (settled) return;
+				settled = true;
+				clearTimeout(timer);
+				resolve(val);
+			};
+			const timer = setTimeout(() => {
+				try {
+					req?.abort?.();
+				} catch (_) {}
+				finish(null);
+			}, timeoutMs);
+			try {
+				req = gmRequestFn({
+					method: "GET",
+					url: candidateUrl,
+					timeout: timeoutMs,
+					onload: (res) => {
+						const status = Number(res?.status) || 0;
+						const body = typeof res?.responseText === "string" ? res.responseText : "";
+						finish({
+							ok: status >= 200 && status < 300,
+							status,
+							url: res?.finalUrl || candidateUrl,
+							text: async () => body
+						});
+					},
+					onerror: () => finish(null),
+					ontimeout: () => finish(null)
+				});
+			} catch (_) {
+				finish(null);
+			}
+		});
+	}
+	async function fetchCandidateResponse(candidateUrl, customFetchFn, gmRequestFn) {
+		if (typeof customFetchFn === "function") return {
+			res: await customFetchFn(candidateUrl, {
 				method: "GET",
 				credentials: "include",
 				redirect: "follow"
-			});
+			}),
+			transportFailed: false
+		};
+		const tryNativeFetch = async (fn, thisObj) => {
+			const ctrl = typeof AbortController === "function" ? new AbortController() : null;
+			const timer = ctrl ? setTimeout(() => {
+				try {
+					ctrl.abort();
+				} catch (_) {}
+			}, 4500) : null;
+			try {
+				const opts = {
+					method: "GET",
+					credentials: "include",
+					redirect: "follow"
+				};
+				if (ctrl) opts.signal = ctrl.signal;
+				return thisObj ? await fn.call(thisObj, candidateUrl, opts) : await fn(candidateUrl, opts);
+			} finally {
+				if (timer) clearTimeout(timer);
+			}
+		};
+		let sawHttpResult = false;
+		if (typeof fetch === "function") try {
+			const res = await tryNativeFetch(fetch, null);
+			if (res && res.status > 0) {
+				sawHttpResult = true;
+				if (res.ok || res.status === 404) return {
+					res,
+					transportFailed: false
+				};
+			}
+		} catch (_) {}
+		if (typeof unsafeWindow !== "undefined" && unsafeWindow && typeof unsafeWindow.fetch === "function") try {
+			const res = await tryNativeFetch(unsafeWindow.fetch, unsafeWindow);
+			if (res && res.status > 0) {
+				sawHttpResult = true;
+				if (res.ok || res.status === 404) return {
+					res,
+					transportFailed: false
+				};
+			}
+		} catch (_) {}
+		const gmFn = gmRequestFn || (typeof GM_xmlhttpRequest === "function" ? GM_xmlhttpRequest : null);
+		if (gmFn) {
+			const gmRes = await probeViaGM(candidateUrl, gmFn);
+			if (gmRes && gmRes.status > 0) return {
+				res: gmRes,
+				transportFailed: false
+			};
+		}
+		return {
+			res: null,
+			transportFailed: !sawHttpResult
+		};
+	}
+	async function probeUncensoredCandidate(candidateUrl, avCode, fetchFn, gmRequestFn = null) {
+		try {
+			const { res, transportFailed } = await fetchCandidateResponse(candidateUrl, fetchFn, gmRequestFn);
 			if (!res || !res.ok || res.status < 200 || res.status >= 300) {
 				try {
 					res?.body?.cancel?.();
 				} catch (_) {}
-				return null;
+				return {
+					url: null,
+					transportFailed
+				};
 			}
 			const finalUrl = res.url || candidateUrl;
 			if (!/uncensored/i.test(finalUrl)) {
 				try {
 					res?.body?.cancel?.();
 				} catch (_) {}
-				return null;
+				return {
+					url: null,
+					transportFailed: false
+				};
 			}
 			if (extractAvCodeFromUrlOnly(finalUrl) !== avCode) {
 				try {
 					res?.body?.cancel?.();
 				} catch (_) {}
-				return null;
+				return {
+					url: null,
+					transportFailed: false
+				};
 			}
 			if (typeof res.text === "function") {
-				if (!isValidUncensoredHtml(await res.text(), avCode)) return null;
+				if (!isValidUncensoredHtml(await res.text(), avCode)) return {
+					url: null,
+					transportFailed: false
+				};
 			} else try {
 				res?.body?.cancel?.();
 			} catch (_) {}
-			return finalUrl;
+			return {
+				url: finalUrl,
+				transportFailed: false
+			};
 		} catch (_) {
-			return null;
+			return {
+				url: null,
+				transportFailed: true
+			};
 		}
 	}
-	function getDefaultFetchFn() {
-		if (typeof unsafeWindow !== "undefined" && unsafeWindow && typeof unsafeWindow.fetch === "function") return unsafeWindow.fetch.bind(unsafeWindow);
-		if (typeof fetch === "function") return fetch.bind(globalThis);
-		return null;
+	function navigateToUncensoredUrl(win, targetUrl) {
+		if (!win?.location || !targetUrl) return;
+		try {
+			if (typeof win.location.replace === "function") {
+				win.location.replace(targetUrl);
+				return;
+			}
+		} catch (_) {}
+		win.location.href = targetUrl;
 	}
 	var UncensoredSwitcher = class {
 		constructor() {
 			this._isChecking = false;
+			this._syncBound = false;
 		}
-		async checkAndSwitch({ force = false, allowInTheater = false, navigate = true, win = typeof window !== "undefined" ? window : null, doc = typeof document !== "undefined" ? document : null, fetchFn = getDefaultFetchFn(), storage = typeof sessionStorage !== "undefined" ? sessionStorage : null } = {}) {
+		async checkAndSwitch({ force = false, allowInTheater = false, navigate = true, win = typeof window !== "undefined" ? window : null, doc = typeof document !== "undefined" ? document : null, fetchFn = null, gmRequestFn = null, storage = typeof sessionStorage !== "undefined" ? sessionStorage : null } = {}) {
 			if (this._isChecking || !win?.location?.href) return {
 				found: false,
 				url: null,
@@ -24980,12 +25101,15 @@
 			this._isChecking = true;
 			try {
 				let targetUrl = findUncensoredLinkInDocument(doc, currentUrl, pageInfo.avCode);
+				let allTransportsFailed = false;
 				if (!targetUrl) {
 					const candidates = buildUncensoredCandidateUrls(currentUrl).slice(0, 4);
+					allTransportsFailed = candidates.length > 0;
 					for (const candidate of candidates) {
-						const matched = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn);
-						if (matched) {
-							targetUrl = matched;
+						const probe = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn, gmRequestFn);
+						if (!probe.transportFailed) allTransportsFailed = false;
+						if (probe.url) {
+							targetUrl = probe.url;
 							break;
 						}
 					}
@@ -25000,38 +25124,47 @@
 							url: targetUrl,
 							reason: "theater_active_deferred"
 						};
-						if (typeof win.location.replace === "function") win.location.replace(targetUrl);
-						else win.location.href = targetUrl;
+						navigateToUncensoredUrl(win, targetUrl);
 					}
 					return {
 						found: true,
 						url: targetUrl
 					};
 				}
-				try {
+				if (!allTransportsFailed) try {
 					storage?.setItem?.(sessionKey, "none");
 				} catch (_) {}
 				return {
 					found: false,
 					url: null,
-					reason: "not_found"
+					reason: allTransportsFailed ? "network_error" : "not_found"
 				};
 			} finally {
 				this._isChecking = false;
 			}
 		}
 		setupAutoSwitch() {
-			const enabled = getValue("autoUncensored", false);
-			if (enabled !== true && enabled !== "true") return;
 			if (typeof window === "undefined" || window.self !== window.top) return;
-			if (!parseMissavVideoPage(window.location?.href)) return;
-			setTimeout(() => {
+			const triggerIfEnabled = () => {
+				const enabled = getValue("autoUncensored", false);
+				if (enabled !== true && enabled !== "true") return;
+				if (!parseMissavVideoPage(window.location?.href)) return;
 				this.checkAndSwitch({
 					force: false,
 					allowInTheater: false,
 					navigate: true
 				}).catch(() => {});
-			}, 80);
+			};
+			if (!this._syncBound) {
+				this._syncBound = true;
+				window.addEventListener("mp_sync_applied", () => {
+					triggerIfEnabled();
+				});
+			}
+			const enabled = getValue("autoUncensored", false);
+			if (enabled !== true && enabled !== "true") return;
+			if (!parseMissavVideoPage(window.location?.href)) return;
+			setTimeout(triggerIfEnabled, 80);
 		}
 	};
 	var S2PlaybackSection = class {
@@ -25322,9 +25455,12 @@
 								if (subEl) subEl.textContent = msg;
 								Toast$1(msg, 1500, "info");
 								setTimeout(() => {
-									if (typeof window.location.replace === "function") window.location.replace(res.url);
-									else window.location.href = res.url;
-								}, 450);
+									navigateToUncensoredUrl(window, res.url);
+								}, 350);
+							} else if (res?.reason === "network_error") {
+								const msg = "网络探测受阻，刷新页面后将自动重试";
+								if (subEl) subEl.textContent = msg;
+								Toast$1(msg, 2e3, "info");
 							} else {
 								const msg = __$1("autoUncensoredNotFound") || "当前影片暂无无码版";
 								if (subEl) subEl.textContent = msg;

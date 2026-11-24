@@ -179,64 +179,182 @@ function isValidUncensoredHtml(html, avCode) {
 }
 
 /**
- * Tier 2: 同源轻量探活候选无码版 URL（使用同源 GET，避免 Cloudflare/Nginx 拦截 HEAD）
+ * 通过 GM_xmlhttpRequest 执行兜底探活（兼容 iOS Safari Stay App 隔离沙箱与防挂死硬熔断）
  * @param {string} candidateUrl
- * @param {string} avCode
- * @param {Function} fetchFn
- * @returns {Promise<string | null>}
+ * @param {Function|null} gmRequestFn
+ * @param {number} [timeoutMs=4500]
+ * @returns {Promise<{ ok: boolean, status: number, url: string, text?: () => Promise<string> } | null>}
  */
-export async function probeUncensoredCandidate(candidateUrl, avCode, fetchFn) {
-    if (typeof fetchFn !== 'function') return null;
+function probeViaGM(candidateUrl, gmRequestFn, timeoutMs = 4500) {
+    if (typeof gmRequestFn !== 'function') return Promise.resolve(null);
+    return new Promise((resolve) => {
+        let settled = false;
+        let req = null;
+        const finish = (val) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            resolve(val);
+        };
+        const timer = setTimeout(() => {
+            try { req?.abort?.(); } catch (_) {}
+            finish(null);
+        }, timeoutMs);
 
-    try {
-        const res = await fetchFn(candidateUrl, {
+        try {
+            req = gmRequestFn({
+                method: 'GET',
+                url: candidateUrl,
+                timeout: timeoutMs,
+                onload: (res) => {
+                    const status = Number(res?.status) || 0;
+                    const body = typeof res?.responseText === 'string' ? res.responseText : '';
+                    finish({
+                        ok: status >= 200 && status < 300,
+                        status,
+                        url: res?.finalUrl || candidateUrl,
+                        text: async () => body
+                    });
+                },
+                onerror: () => finish(null),
+                ontimeout: () => finish(null)
+            });
+        } catch (_) {
+            finish(null);
+        }
+    });
+}
+
+/**
+ * 解析当前环境可用的多通道 Fetch 函数（规避 iOS Stay unsafeWindow.fetch 绑定代理抛出 TypeError）
+ * @param {Function|null} customFetchFn
+ * @param {Function|null} gmRequestFn
+ */
+async function fetchCandidateResponse(candidateUrl, customFetchFn, gmRequestFn) {
+    if (typeof customFetchFn === 'function') {
+        const res = await customFetchFn(candidateUrl, {
             method: 'GET',
             credentials: 'include',
             redirect: 'follow'
         });
+        return { res, transportFailed: false };
+    }
+
+    const tryNativeFetch = async (fn, thisObj) => {
+        const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+        const timer = ctrl ? setTimeout(() => {
+            try { ctrl.abort(); } catch (_) {}
+        }, 4500) : null;
+        try {
+            const opts = {
+                method: 'GET',
+                credentials: 'include',
+                redirect: 'follow'
+            };
+            if (ctrl) opts.signal = ctrl.signal;
+            const res = thisObj ? await fn.call(thisObj, candidateUrl, opts) : await fn(candidateUrl, opts);
+            return res;
+        } finally {
+            if (timer) clearTimeout(timer);
+        }
+    };
+
+    let sawHttpResult = false;
+
+    // 通道 1: 当前上下文原生 fetch（在 iOS Safari Stay content script 中安全有效，不触发跨世界代理 receiver 异常）
+    if (typeof fetch === 'function') {
+        try {
+            const res = await tryNativeFetch(fetch, null);
+            if (res && res.status > 0) {
+                sawHttpResult = true;
+                if (res.ok || res.status === 404) {
+                    return { res, transportFailed: false };
+                }
+            }
+        } catch (_) {}
+    }
+
+    // 通道 2: 页面 unsafeWindow.fetch（仅当存在且与沙箱 fetch 不同时尝试）
+    if (typeof unsafeWindow !== 'undefined' && unsafeWindow && typeof unsafeWindow.fetch === 'function') {
+        try {
+            const res = await tryNativeFetch(unsafeWindow.fetch, unsafeWindow);
+            if (res && res.status > 0) {
+                sawHttpResult = true;
+                if (res.ok || res.status === 404) {
+                    return { res, transportFailed: false };
+                }
+            }
+        } catch (_) {}
+    }
+
+    // 通道 3: GM_xmlhttpRequest 兜底（由 Stay / Tampermonkey 原生网络栈携带 Cookie 发起请求）
+    const gmFn = gmRequestFn || (typeof GM_xmlhttpRequest === 'function' ? GM_xmlhttpRequest : null);
+    if (gmFn) {
+        const gmRes = await probeViaGM(candidateUrl, gmFn);
+        if (gmRes && gmRes.status > 0) {
+            return { res: gmRes, transportFailed: false };
+        }
+    }
+
+    return { res: null, transportFailed: !sawHttpResult };
+}
+
+/**
+ * Tier 2: 同源轻量探活候选无码版 URL
+ * @param {string} candidateUrl
+ * @param {string} avCode
+ * @param {Function|null} fetchFn
+ * @param {Function|null} [gmRequestFn=null]
+ * @returns {Promise<{ url: string | null, transportFailed: boolean }>}
+ */
+export async function probeUncensoredCandidate(candidateUrl, avCode, fetchFn, gmRequestFn = null) {
+    try {
+        const { res, transportFailed } = await fetchCandidateResponse(candidateUrl, fetchFn, gmRequestFn);
         if (!res || !res.ok || res.status < 200 || res.status >= 300) {
             try { res?.body?.cancel?.(); } catch (_) {}
-            return null;
+            return { url: null, transportFailed };
         }
 
         const finalUrl = res.url || candidateUrl;
         if (!/uncensored/i.test(finalUrl)) {
             try { res?.body?.cancel?.(); } catch (_) {}
-            return null;
+            return { url: null, transportFailed: false };
         }
         if (extractAvCodeFromUrlOnly(finalUrl) !== avCode) {
             try { res?.body?.cancel?.(); } catch (_) {}
-            return null;
+            return { url: null, transportFailed: false };
         }
 
         if (typeof res.text === 'function') {
             const html = await res.text();
             if (!isValidUncensoredHtml(html, avCode)) {
-                return null;
+                return { url: null, transportFailed: false };
             }
         } else {
             try { res?.body?.cancel?.(); } catch (_) {}
         }
 
-        return finalUrl;
+        return { url: finalUrl, transportFailed: false };
     } catch (_) {
-        return null;
+        return { url: null, transportFailed: true };
     }
 }
 
-function getDefaultFetchFn() {
-    if (typeof unsafeWindow !== 'undefined' && unsafeWindow && typeof unsafeWindow.fetch === 'function') {
-        return unsafeWindow.fetch.bind(unsafeWindow);
-    }
-    if (typeof fetch === 'function') {
-        return fetch.bind(globalThis);
-    }
-    return null;
+export function navigateToUncensoredUrl(win, targetUrl) {
+    if (!win?.location || !targetUrl) return;
+    try {
+        if (typeof win.location.replace === 'function') {
+            win.location.replace(targetUrl);
+            return;
+        }
+    } catch (_) {}
+    win.location.href = targetUrl;
 }
 
 export class UncensoredSwitcher {
     constructor() {
         this._isChecking = false;
+        this._syncBound = false;
     }
 
     /**
@@ -247,7 +365,8 @@ export class UncensoredSwitcher {
      * @param {boolean} [options.navigate=true] 找到后是否立即执行页面跳转
      * @param {Window} [options.win]
      * @param {Document} [options.doc]
-     * @param {Function} [options.fetchFn]
+     * @param {Function|null} [options.fetchFn]
+     * @param {Function|null} [options.gmRequestFn]
      * @param {Storage} [options.storage]
      * @returns {Promise<{ found: boolean, url: string | null, reason?: string }>}
      */
@@ -257,7 +376,8 @@ export class UncensoredSwitcher {
         navigate = true,
         win = typeof window !== 'undefined' ? window : null,
         doc = typeof document !== 'undefined' ? document : null,
-        fetchFn = getDefaultFetchFn(),
+        fetchFn = null,
+        gmRequestFn = null,
         storage = typeof sessionStorage !== 'undefined' ? sessionStorage : null
     } = {}) {
         if (this._isChecking || !win?.location?.href) {
@@ -285,14 +405,19 @@ export class UncensoredSwitcher {
         try {
             // 1. 优先从页面 DOM 零请求探测同番号无码版链接
             let targetUrl = findUncensoredLinkInDocument(doc, currentUrl, pageInfo.avCode);
+            let allTransportsFailed = false;
 
             // 2. 回退至同源轻量候选 URL 探测（限制最多探测前 4 个最高概率候选）
             if (!targetUrl) {
                 const candidates = buildUncensoredCandidateUrls(currentUrl).slice(0, 4);
+                allTransportsFailed = candidates.length > 0;
                 for (const candidate of candidates) {
-                    const matched = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn);
-                    if (matched) {
-                        targetUrl = matched;
+                    const probe = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn, gmRequestFn);
+                    if (!probe.transportFailed) {
+                        allTransportsFailed = false;
+                    }
+                    if (probe.url) {
+                        targetUrl = probe.url;
                         break;
                     }
                 }
@@ -304,30 +429,43 @@ export class UncensoredSwitcher {
                     if (!allowInTheater && doc?.body?.classList?.contains?.('tm-player-active')) {
                         return { found: true, url: targetUrl, reason: 'theater_active_deferred' };
                     }
-                    if (typeof win.location.replace === 'function') {
-                        win.location.replace(targetUrl);
-                    } else {
-                        win.location.href = targetUrl;
-                    }
+                    navigateToUncensoredUrl(win, targetUrl);
                 }
                 return { found: true, url: targetUrl };
             }
 
-            try { storage?.setItem?.(sessionKey, 'none'); } catch (_) {}
-            return { found: false, url: null, reason: 'not_found' };
+            // 仅在得到确定 HTTP 响应时缓存 none，传输层异常时不毒化当前会话缓存
+            if (!allTransportsFailed) {
+                try { storage?.setItem?.(sessionKey, 'none'); } catch (_) {}
+            }
+            return { found: false, url: null, reason: allTransportsFailed ? 'network_error' : 'not_found' };
         } finally {
             this._isChecking = false;
         }
     }
 
     setupAutoSwitch() {
+        if (typeof window === 'undefined' || window.self !== window.top) return;
+
+        const triggerIfEnabled = () => {
+            const enabled = getValue('autoUncensored', false);
+            if (enabled !== true && enabled !== 'true') return;
+            if (!parseMissavVideoPage(window.location?.href)) return;
+            this.checkAndSwitch({ force: false, allowInTheater: false, navigate: true }).catch(() => {});
+        };
+
+        // 监听云同步落盘事件（若手机端通过 WebDAV 自动同步刚拉取到开启状态，立即补检一次）
+        if (!this._syncBound) {
+            this._syncBound = true;
+            window.addEventListener('mp_sync_applied', () => {
+                triggerIfEnabled();
+            });
+        }
+
         const enabled = getValue('autoUncensored', false);
         if (enabled !== true && enabled !== 'true') return;
-        if (typeof window === 'undefined' || window.self !== window.top) return;
         if (!parseMissavVideoPage(window.location?.href)) return;
 
-        setTimeout(() => {
-            this.checkAndSwitch({ force: false, allowInTheater: false, navigate: true }).catch(() => {});
-        }, 80);
+        setTimeout(triggerIfEnabled, 80);
     }
 }

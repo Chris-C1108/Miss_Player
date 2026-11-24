@@ -209,6 +209,60 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
         storage: sess4
     });
     assert.strictEqual(resSoft404.found, false, '软 404 HTML 页面不得误判为存在无码版');
+
+    // Stay iOS 场景模拟：unsafeWindow.fetch 绑定抛错时自动降级到 GM_xmlhttpRequest，且传输失败时不毒化 sessionStorage
+    const prevUnsafe = globalThis.unsafeWindow;
+    const prevFetch = globalThis.fetch;
+    globalThis.unsafeWindow = {
+        fetch() {
+            throw new TypeError('Can only call Window.fetch on instances of Window');
+        }
+    };
+    globalThis.fetch = async () => {
+        throw new TypeError('Load failed');
+    };
+    const sessStay = makeStorage();
+    let stayReplaced = null;
+    const stayWin = {
+        location: {
+            href: 'https://missav.ai/cn/ipx-999',
+            replace: (u) => { stayReplaced = u; }
+        }
+    };
+    const mockGm = ({ url, onload }) => {
+        if (url.includes('ipx-999-uncensored-leak')) {
+            onload({
+                status: 200,
+                finalUrl: url,
+                responseText: '<html><head><title>IPX-999 无码流出</title></head><body>ipx-999</body></html>'
+            });
+        } else {
+            onload({ status: 404, finalUrl: url, responseText: 'Not Found' });
+        }
+    };
+    const resStay = await switcher.checkAndSwitch({
+        win: stayWin,
+        doc: emptyDoc,
+        gmRequestFn: mockGm,
+        storage: sessStay
+    });
+    assert.strictEqual(resStay.found, true, 'iOS Stay 在 fetch 抛错时必须经 GM_xmlhttpRequest 兜底命中无码版');
+    assert.strictEqual(stayReplaced, 'https://missav.ai/cn/ipx-999-uncensored-leak');
+
+    // 当全部通道均网络异常时，不得写入 none 毒化后续刷新
+    const sessNetErr = makeStorage();
+    const resNetErr = await switcher.checkAndSwitch({
+        win: { location: { href: 'https://missav.ai/cn/ipx-998', replace: () => {} } },
+        doc: emptyDoc,
+        gmRequestFn: ({ onerror }) => onerror(new Error('offline')),
+        storage: sessNetErr
+    });
+    assert.strictEqual(resNetErr.found, false);
+    assert.strictEqual(resNetErr.reason, 'network_error');
+    assert.strictEqual(sessNetErr.getItem('mp_uncensored_checked_IPX-998'), null, '网络异常时不得写入 none 缓存');
+
+    globalThis.unsafeWindow = prevUnsafe;
+    globalThis.fetch = prevFetch;
     console.log('✅ 3. UncensoredSwitcher DOM 匹配、探活降级与防死循环验证通过');
 }
 

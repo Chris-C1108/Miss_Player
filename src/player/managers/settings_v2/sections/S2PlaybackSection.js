@@ -7,7 +7,7 @@ import {
 import { Toast, isImeConfirmEnter } from '../../../../utils/index.js';
 import { __ } from '../../../../constants/i18n.js';
 import { QualityManager } from '../../../../userExperienceEnhancer/QualityManager.js';
-import { UncensoredSwitcher, parseMissavVideoPage } from '../../../../userExperienceEnhancer/UncensoredSwitcher.js';
+import { UncensoredSwitcher, parseMissavVideoPage, navigateToUncensoredUrl } from '../../../../userExperienceEnhancer/UncensoredSwitcher.js';
 
 export class S2PlaybackSection {
     constructor(settingsManager, refreshFn = null) {
@@ -346,12 +346,12 @@ export class S2PlaybackSection {
                             if (subEl) subEl.textContent = msg;
                             Toast(msg, 1500, 'info');
                             setTimeout(() => {
-                                if (typeof window.location.replace === 'function') {
-                                    window.location.replace(res.url);
-                                } else {
-                                    window.location.href = res.url;
-                                }
-                            }, 450);
+                                navigateToUncensoredUrl(window, res.url);
+                            }, 350);
+                        } else if (res?.reason === 'network_error') {
+                            const msg = '网络探测受阻，刷新页面后将自动重试';
+                            if (subEl) subEl.textContent = msg;
+                            Toast(msg, 2000, 'info');
                         } else {
                             const msg = __('autoUncensoredNotFound') || '当前影片暂无无码版';
                             if (subEl) subEl.textContent = msg;
