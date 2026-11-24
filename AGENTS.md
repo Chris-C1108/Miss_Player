@@ -495,6 +495,7 @@ Miss Player 严格执行性能棘轮与零长任务守卫。完整测试方法�
 > - `Review docs/handoff/handoff-readme.md before major refactors, complex bug fixes, or session start.`
 > - `FORBIDDEN: Repeating documented past mistakes -> USE: Consult docs/handoff/*-lesson.md or run handoff2docs.`
 > - `FORBIDDEN: Ad-hoc getVideoCodeFromUrl() per manager or early return in dual-write deleteValue -> USE: PlayerCore.getVideoCode() single-source resolver + symmetric dual-store delete & WebDAV relative-path normalization.`
+> - `FORBIDDEN: Unbound unsafeWindow.fetch in Stay sandbox or permanent sessionStorage short-circuit locks -> USE: unsafeWindow.fetch.bind(unsafeWindow) + GM_xmlhttpRequest fallback + per-node dataset & bounded TTL guard.`
 
 当会话结束、阶段性里程碑达成或需要跨 Agent 交接工作时，**必须执行以下标准化沉淀工作流**，严禁仅将信息停留在会话对话中：
 
