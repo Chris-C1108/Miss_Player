@@ -40,6 +40,10 @@ function safeSegment(text, fallback = 'sub') {
     return cleaned || fallback;
 }
 
+function isManualFavoriteItem(item) {
+    return Boolean(item?.favorite && !item?.autoSaved && item?.favoriteSource !== 'auto');
+}
+
 function buildFileName(avcode, item) {
     const lang = safeSegment(item.lang || item.langLabel || 'sub', 'sub');
     const ext = String(item.format || 'srt').toLowerCase().replace(/[^a-z]/g, '') || 'srt';
@@ -172,18 +176,33 @@ export class SubtitleRepository {
                 changed = true;
                 continue;
             }
+            const existingManual = isManualFavoriteItem(existing);
+            const remoteManual = isManualFavoriteItem(remoteItem);
             const remoteNewer = (Number(remoteItem.addedAt) || 0) > (Number(existing.addedAt) || 0);
-            if (remoteNewer || (remoteItem.favorite && !existing.favorite)) {
+            if (remoteNewer || (remoteItem.favorite && !existing.favorite) || (remoteManual && !existingManual)) {
+                const manualWins = existingManual || remoteManual;
                 map.set(remoteItem.id, {
                     ...existing,
                     ...remoteItem,
                     content: existing.content || '',
-                    favorite: Boolean(remoteItem.favorite || existing.favorite)
+                    favorite: Boolean(remoteItem.favorite || existing.favorite),
+                    autoSaved: manualWins ? false : Boolean(remoteItem.autoSaved ?? existing.autoSaved),
+                    favoriteSource: manualWins
+                        ? 'manual'
+                        : (remoteItem.favoriteSource || existing.favoriteSource || (remoteItem.autoSaved ? 'auto' : undefined))
                 });
                 changed = true;
             }
         }
-        const favoriteId = localBundle.favoriteId || remoteIndex.favoriteId || '';
+        const localFav = localBundle.favoriteId ? map.get(localBundle.favoriteId) : null;
+        const remoteFav = remoteIndex.favoriteId ? map.get(remoteIndex.favoriteId) : null;
+        let favoriteId = localBundle.favoriteId || remoteIndex.favoriteId || '';
+        if (isManualFavoriteItem(remoteFav) && !isManualFavoriteItem(localFav)) {
+            favoriteId = remoteFav.id;
+        } else if (!isManualFavoriteItem(localFav)) {
+            const anyManual = Array.from(map.values()).find((item) => isManualFavoriteItem(item));
+            if (anyManual) favoriteId = anyManual.id;
+        }
         if (favoriteId !== localBundle.favoriteId) changed = true;
         return { changed, bundle: { ...localBundle, favoriteId, items: Array.from(map.values()) } };
     }

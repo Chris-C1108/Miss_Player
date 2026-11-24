@@ -70,6 +70,30 @@ export function resolvePreferredSubtitleLang(settingValue, browserLang = I18n.us
     return normalizeSubtitleLang(browserLang) || 'zh';
 }
 
+export function isManualFavoriteSubtitle(item) {
+    return Boolean(item?.favorite && !item?.autoSaved && item?.favoriteSource !== 'auto');
+}
+
+export function getSubtitleFavoriteTier(item) {
+    if (!item?.favorite) return 0;
+    return isManualFavoriteSubtitle(item) ? 2 : 1;
+}
+
+export function selectBestBundleItem(bundle) {
+    const items = bundle?.items || [];
+    if (!items.length) return null;
+    const favoriteId = bundle?.favoriteId || '';
+    return items
+        .slice()
+        .sort((a, b) => {
+            const tierDiff = getSubtitleFavoriteTier(b) - getSubtitleFavoriteTier(a);
+            if (tierDiff) return tierDiff;
+            const idDiff = (b.id === favoriteId ? 1 : 0) - (a.id === favoriteId ? 1 : 0);
+            if (idDiff) return idDiff;
+            return (Number(b.rating) || 0) - (Number(a.rating) || 0);
+        })[0];
+}
+
 export function rankPreferredCandidates(candidates, preferredLang) {
     const target = normalizeSubtitleLang(preferredLang);
     if (!target || !Array.isArray(candidates)) return [];
@@ -335,13 +359,9 @@ export class SubtitleManager {
         return null;
     }
 
-    /** 默认展示最优字幕：收藏优先，其次评分最高 */
+    /** 默认展示最优字幕：手动收藏 > 自动收藏 > 评分最高 */
     async _autoApplyBest({ silent = false } = {}) {
-        const items = this.bundle.items || [];
-        if (!items.length) return;
-        const favorite =
-            items.find((item) => item.id === this.bundle.favoriteId) || items.find((item) => item.favorite);
-        const best = favorite || items.slice().sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))[0];
+        const best = selectBestBundleItem(this.bundle);
         if (!best) return;
         if (best.id === this.activeItem?.id) return;
         await this._applyItem(best, { silent });
@@ -984,8 +1004,10 @@ export class SubtitleManager {
             map.set(this.activeItem.id, this.activeItem);
         }
         return Array.from(map.values()).sort((a, b) => {
-            const favDiff = (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0);
-            if (favDiff) return favDiff;
+            const tierDiff = getSubtitleFavoriteTier(b) - getSubtitleFavoriteTier(a);
+            if (tierDiff) return tierDiff;
+            const idDiff = (b.id === this.bundle.favoriteId ? 1 : 0) - (a.id === this.bundle.favoriteId ? 1 : 0);
+            if (idDiff) return idDiff;
             return (Number(b.rating) || 0) - (Number(a.rating) || 0);
         });
     }
@@ -1355,12 +1377,16 @@ export class SubtitleManager {
             if (!item) throw new Error('SUBTITLE_UNAVAILABLE');
 
             item.favorite = true;
+            item.autoSaved = false;
+            item.favoriteSource = 'manual';
             this.bundle.favoriteId = item.id;
             this.bundle.items = [item, ...this.bundle.items.filter((entry) => entry.id !== item.id)];
             await this._persist({ dirtyItem: item });
             Toast(text('subtitleSaved', '已收藏并同步'), 1800, 'success');
 
-            if (!this.activeItem) await this._applyItem(item, { silent: true });
+            if (!this.activeItem || (this.isEnabled && this.activeItem.autoSaved)) {
+                await this._applyItem(item, { silent: true });
+            }
         } catch (err) {
             console.warn('[SubtitleManager] 收藏失败:', err?.message);
             Toast(text('subtitleSaveFailed', '同步失败，已存至本地'), 2400, 'error');
@@ -1531,12 +1557,14 @@ export class SubtitleManager {
 
             item.format = parsed.format;
             item.favorite = true;
+            item.autoSaved = true;
+            item.favoriteSource = 'auto';
             this.bundle.favoriteId = item.id;
             this.bundle.items = [item, ...this.bundle.items.filter((entry) => entry.id !== item.id)];
             await this._persist({ dirtyItem: item });
             if (this.avcode !== targetCode) return false;
 
-            if (this.isEnabled) {
+            if (this.isEnabled && (!this.activeItem || this.activeItem.autoSaved)) {
                 await this._applyItem(item, { silent: true });
             } else {
                 this._renderList();

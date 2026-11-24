@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.121-beta.004
+// @version            5.7.121
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -16,8 +16,8 @@
 // @description:vi     MissAV không quảng cáo|chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|MissAV tự động đăng nhập|trình phát tùy chỉnh|hỗ trợ đa ngôn ngữ cho jable po*nhub v.v.
 // @license            MIT
 // @icon               https://missav.ws/img/favicon.ico
-// @downloadURL        https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.user.js
-// @updateURL          https://raw.githubusercontent.com/Chris-C1108/Miss_Player/dev/dist/miss_player.meta.js
+// @downloadURL        https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.user.js
+// @updateURL          https://raw.githubusercontent.com/Chris-C1108/Miss_Player/main/dist/miss_player.meta.js
 // @include            *
 // @include            http://*/*
 // @include            https://*/*
@@ -1989,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.121-beta.004";
+		return "5.7.121";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4450,7 +4450,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.121-beta.004";
+		return "5.7.121";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6593,7 +6593,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.121-beta.004";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.121";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -27789,6 +27789,9 @@
 	function safeSegment(text, fallback = "sub") {
 		return String(text || "").replace(/[\\/:*?"<>|\s]+/g, "").slice(0, 24) || fallback;
 	}
+	function isManualFavoriteItem(item) {
+		return Boolean(item?.favorite && !item?.autoSaved && item?.favoriteSource !== "auto");
+	}
 	function buildFileName(avcode, item) {
 		const lang = safeSegment(item.lang || item.langLabel || "sub", "sub");
 		const ext = String(item.format || "srt").toLowerCase().replace(/[^a-z]/g, "") || "srt";
@@ -27894,17 +27897,29 @@
 					changed = true;
 					continue;
 				}
-				if ((Number(remoteItem.addedAt) || 0) > (Number(existing.addedAt) || 0) || remoteItem.favorite && !existing.favorite) {
+				const existingManual = isManualFavoriteItem(existing);
+				const remoteManual = isManualFavoriteItem(remoteItem);
+				if ((Number(remoteItem.addedAt) || 0) > (Number(existing.addedAt) || 0) || remoteItem.favorite && !existing.favorite || remoteManual && !existingManual) {
+					const manualWins = existingManual || remoteManual;
 					map.set(remoteItem.id, {
 						...existing,
 						...remoteItem,
 						content: existing.content || "",
-						favorite: Boolean(remoteItem.favorite || existing.favorite)
+						favorite: Boolean(remoteItem.favorite || existing.favorite),
+						autoSaved: manualWins ? false : Boolean(remoteItem.autoSaved ?? existing.autoSaved),
+						favoriteSource: manualWins ? "manual" : remoteItem.favoriteSource || existing.favoriteSource || (remoteItem.autoSaved ? "auto" : void 0)
 					});
 					changed = true;
 				}
 			}
-			const favoriteId = localBundle.favoriteId || remoteIndex.favoriteId || "";
+			const localFav = localBundle.favoriteId ? map.get(localBundle.favoriteId) : null;
+			const remoteFav = remoteIndex.favoriteId ? map.get(remoteIndex.favoriteId) : null;
+			let favoriteId = localBundle.favoriteId || remoteIndex.favoriteId || "";
+			if (isManualFavoriteItem(remoteFav) && !isManualFavoriteItem(localFav)) favoriteId = remoteFav.id;
+			else if (!isManualFavoriteItem(localFav)) {
+				const anyManual = Array.from(map.values()).find((item) => isManualFavoriteItem(item));
+				if (anyManual) favoriteId = anyManual.id;
+			}
 			if (favoriteId !== localBundle.favoriteId) changed = true;
 			return {
 				changed,
@@ -28002,6 +28017,25 @@
 			if (explicit) return explicit;
 		}
 		return normalizeSubtitleLang(browserLang) || "zh";
+	}
+	function isManualFavoriteSubtitle(item) {
+		return Boolean(item?.favorite && !item?.autoSaved && item?.favoriteSource !== "auto");
+	}
+	function getSubtitleFavoriteTier(item) {
+		if (!item?.favorite) return 0;
+		return isManualFavoriteSubtitle(item) ? 2 : 1;
+	}
+	function selectBestBundleItem(bundle) {
+		const items = bundle?.items || [];
+		if (!items.length) return null;
+		const favoriteId = bundle?.favoriteId || "";
+		return items.slice().sort((a, b) => {
+			const tierDiff = getSubtitleFavoriteTier(b) - getSubtitleFavoriteTier(a);
+			if (tierDiff) return tierDiff;
+			const idDiff = (b.id === favoriteId ? 1 : 0) - (a.id === favoriteId ? 1 : 0);
+			if (idDiff) return idDiff;
+			return (Number(b.rating) || 0) - (Number(a.rating) || 0);
+		})[0];
 	}
 	function rankPreferredCandidates(candidates, preferredLang) {
 		const target = normalizeSubtitleLang(preferredLang);
@@ -28220,9 +28254,7 @@
 			return null;
 		}
 		async _autoApplyBest({ silent = false } = {}) {
-			const items = this.bundle.items || [];
-			if (!items.length) return;
-			const best = items.find((item) => item.id === this.bundle.favoriteId) || items.find((item) => item.favorite) || items.slice().sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))[0];
+			const best = selectBestBundleItem(this.bundle);
 			if (!best) return;
 			if (best.id === this.activeItem?.id) return;
 			await this._applyItem(best, { silent });
@@ -28728,8 +28760,10 @@
 			}
 			if (this.activeItem && !map.has(this.activeItem.id) && this._isRelevant(this.activeItem)) map.set(this.activeItem.id, this.activeItem);
 			return Array.from(map.values()).sort((a, b) => {
-				const favDiff = (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0);
-				if (favDiff) return favDiff;
+				const tierDiff = getSubtitleFavoriteTier(b) - getSubtitleFavoriteTier(a);
+				if (tierDiff) return tierDiff;
+				const idDiff = (b.id === this.bundle.favoriteId ? 1 : 0) - (a.id === this.bundle.favoriteId ? 1 : 0);
+				if (idDiff) return idDiff;
 				return (Number(b.rating) || 0) - (Number(a.rating) || 0);
 			});
 		}
@@ -29029,11 +29063,13 @@
 				else if (!item.content) item = await this._ensureContent(item);
 				if (!item) throw new Error("SUBTITLE_UNAVAILABLE");
 				item.favorite = true;
+				item.autoSaved = false;
+				item.favoriteSource = "manual";
 				this.bundle.favoriteId = item.id;
 				this.bundle.items = [item, ...this.bundle.items.filter((entry) => entry.id !== item.id)];
 				await this._persist({ dirtyItem: item });
 				Toast$1(text("subtitleSaved", "已收藏并同步"), 1800, "success");
-				if (!this.activeItem) await this._applyItem(item, { silent: true });
+				if (!this.activeItem || this.isEnabled && this.activeItem.autoSaved) await this._applyItem(item, { silent: true });
 			} catch (err) {
 				console.warn("[SubtitleManager] 收藏失败:", err?.message);
 				Toast$1(text("subtitleSaveFailed", "同步失败，已存至本地"), 2400, "error");
@@ -29166,11 +29202,13 @@
 				}
 				item.format = parsed.format;
 				item.favorite = true;
+				item.autoSaved = true;
+				item.favoriteSource = "auto";
 				this.bundle.favoriteId = item.id;
 				this.bundle.items = [item, ...this.bundle.items.filter((entry) => entry.id !== item.id)];
 				await this._persist({ dirtyItem: item });
 				if (this.avcode !== targetCode) return false;
-				if (this.isEnabled) await this._applyItem(item, { silent: true });
+				if (this.isEnabled && (!this.activeItem || this.activeItem.autoSaved)) await this._applyItem(item, { silent: true });
 				else {
 					this._renderList();
 					this._updateButtonState();

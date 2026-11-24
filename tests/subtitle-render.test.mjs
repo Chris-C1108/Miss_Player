@@ -165,8 +165,14 @@ function setupGlobals() {
 
 test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
     const env = setupGlobals();
-    const { SubtitleManager, normalizeSubtitleLang, resolvePreferredSubtitleLang, rankPreferredCandidates } =
-        await import('../src/player/subtitles/SubtitleManager.js');
+    const {
+        SubtitleManager,
+        normalizeSubtitleLang,
+        resolvePreferredSubtitleLang,
+        rankPreferredCandidates,
+        selectBestBundleItem
+    } = await import('../src/player/subtitles/SubtitleManager.js');
+    const { SubtitleRepository } = await import('../src/player/subtitles/SubtitleRepository.js');
 
     await t.test('1. 字幕层挂载在播放器顶层容器而非视频内部', async () => {
         const manager = new SubtitleManager(env.playerCore, env.uiManager, null);
@@ -406,5 +412,111 @@ test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
         const skipped = await manager._maybeAutoPickPreferred();
         assert.equal(skipped, false);
         assert.equal(secondSearchCalled, false);
+    });
+
+    await t.test('11. 手动收藏优先级严格高于自动收藏（本地选中、列表排序与跨端合并）', async () => {
+        const autoItem = {
+            id: 'auto-1',
+            provider: 'xunlei',
+            title: 'IPX-343 Auto',
+            lang: 'zh',
+            rating: 99,
+            format: 'srt',
+            content: SRT,
+            favorite: true,
+            autoSaved: true,
+            favoriteSource: 'auto',
+            addedAt: 100
+        };
+        const manualItem = {
+            id: 'manual-1',
+            provider: 'subtitlecat',
+            title: 'IPX-343 Manual',
+            lang: 'zh',
+            rating: 65,
+            format: 'srt',
+            content: SRT,
+            favorite: true,
+            autoSaved: false,
+            favoriteSource: 'manual',
+            addedAt: 200
+        };
+
+        // 即便 bundle.favoriteId 仍指向 autoItem 且 autoItem 评分更高，selectBestBundleItem 也必须优先 manualItem
+        const chosen = selectBestBundleItem({
+            favoriteId: 'auto-1',
+            items: [autoItem, manualItem]
+        });
+        assert.equal(chosen?.id, 'manual-1', '手动收藏应严格优先于自动收藏');
+
+        // 列表渲染排序：手动收藏排在自动收藏之前
+        const manager = new SubtitleManager(env.playerCore, env.uiManager, null);
+        manager.avcode = 'IPX-343';
+        manager._persist = async () => {};
+        manager.bundle = {
+            code: 'IPX-343',
+            favoriteId: 'auto-1',
+            activeId: 'auto-1',
+            items: [{ ...autoItem }]
+        };
+        await manager._applyItem(manager.bundle.items[0], { silent: true });
+        assert.equal(manager.activeItem?.id, 'auto-1');
+
+        // 用户手动收藏另一个候选，应标记 manual 并立即接管当前展示且排在首位
+        const manualCandidate = {
+            id: 'manual-2',
+            provider: 'subtitlecat',
+            title: 'IPX-343 Manual Pick',
+            lang: 'zh',
+            rating: 60,
+            format: 'srt'
+        };
+        manager.onlineResults = [manualCandidate];
+        manager.engine = {
+            async download() {
+                return { content: SRT, format: 'srt' };
+            }
+        };
+        await manager._toggleFavorite(manualCandidate);
+        assert.equal(manager.bundle.favoriteId, 'manual-2');
+        assert.equal(manager.bundle.items[0].autoSaved, false);
+        assert.equal(manager.bundle.items[0].favoriteSource, 'manual');
+        assert.equal(manager.activeItem?.id, 'manual-2', '手动收藏应接管原本由自动收藏激活的字幕');
+        assert.deepEqual(
+            manager._visibleRows().map((r) => r.id),
+            ['manual-2', 'auto-1'],
+            '手动收藏在列表中应始终置顶高于自动收藏'
+        );
+
+        // 跨端合并：远端手动收藏必须胜过本地自动收藏（包括 favoriteId）
+        const merged = SubtitleRepository._merge(
+            {
+                code: 'IPX-343',
+                favoriteId: 'auto-1',
+                items: [{ ...autoItem, addedAt: 500 }]
+            },
+            {
+                code: 'IPX-343',
+                favoriteId: 'manual-1',
+                items: [{ ...manualItem, addedAt: 200 }]
+            }
+        );
+        assert.equal(merged.bundle.favoriteId, 'manual-1', 'WebDAV 合并时远端手动收藏应覆盖本地自动收藏');
+
+        // 同条 ID 在一端为手动、另一端为自动时，合并后保持手动属性
+        const mergedSameId = SubtitleRepository._merge(
+            {
+                code: 'IPX-343',
+                favoriteId: 'item-1',
+                items: [{ ...manualItem, id: 'item-1', addedAt: 100 }]
+            },
+            {
+                code: 'IPX-343',
+                favoriteId: 'item-1',
+                items: [{ ...autoItem, id: 'item-1', addedAt: 999 }]
+            }
+        );
+        assert.equal(mergedSameId.bundle.items[0].autoSaved, false);
+        assert.equal(mergedSameId.bundle.items[0].favoriteSource, 'manual');
     });
 });
