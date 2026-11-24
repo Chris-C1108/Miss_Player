@@ -21,6 +21,7 @@ import { CommentCacheManager } from './player/comments/CommentCacheManager.js';
 import { PeachWebBridge } from './player/bridge/PeachWebBridge.js';
 import { LtxLibAdapter } from './adapters/LtxLibAdapter.js';
 import { CrossSitePlayRouter } from './services/CrossSitePlayRouter.js';
+import { AvCodeMigrationService } from './services/AvCodeMigrationService.js';
 import { initIosInlinePlaybackGuard } from './utils/iosInline.js';
 
 // 早期帧环境与协议快速短路守卫 (避免在 about:blank、第三方广告/追踪 iframe 或 JAVLibrary 代理页注入无关 hook)
@@ -221,6 +222,9 @@ function setupViewport() {
 
             // 异步检测并迁移油猴 storage 中的旧评论缓存至原生 IndexedDB，彻底释放油猴存储
             CommentCacheManager.migrateFromLegacyStorage().catch(() => {});
+
+            // 异步归一化历史变体与错位番号本地存储 (时间胶囊/字幕/热度/评论缓存)
+            AvCodeMigrationService.runStartupLocalCanonicalization().catch(() => {});
 
             // 触发自动智能合并云同步 (若开启 WebDAV 自动同步)
             SyncManager.triggerAutoSync(playerState, 'startup');

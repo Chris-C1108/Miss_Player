@@ -31,19 +31,33 @@ export const TECHNICAL_BLACKLIST = new Set([
     'BOTTOM', 'NORMAL', 'DIALOG', 'DRAWER', 'HOT', 'TOP', 'BEST', 'NEW', 'ASIAN'
 ]);
 
-// 2. 非番号的通用路由与功能页面路径黑名单
-export const NON_AV_SLUGS = new Set([
-    'search', 's', 'zh-cn', 'cn', 'en', 'tw', 'ja', 'vi', 'ko', 'th', 'ru',
-    'forum', 'forum.php', 'index.html', 'index.php', 'warmup.html', 'watch',
+// 2. 语言路由分段 (合法的本地化前缀，不可阻塞末尾番号提取)
+export const LANGUAGE_SLUGS = new Set([
+    'zh-cn', 'zh-tw', 'cn', 'en', 'tw', 'ja', 'jp', 'vi', 'ko', 'th', 'ru'
+]);
+
+// 3. 非番号的通用路由与功能页面路径黑名单 (出现这些分段则判定为列表/功能页而非单部影片页)
+export const NON_AV_ROUTE_SLUGS = new Set([
+    'search', 's', 'forum', 'forum.php', 'index.html', 'index.php', 'warmup.html',
     'login', 'register', 'signin', 'signup', 'home', 'tags', 'genres', 'actors',
     'actresses', 'makers', 'directors', 'series', 'categories', 'channels',
     'playlists', 'dmca', 'terms', 'privacy', 'about', 'help', 'contact',
     'v1_star.php', 'preview', 'member', 'vip', 'download', 'upload', 'news',
     'rank', 'ranking', 'popular', 'latest', 'release', 'recent', 'favorite',
-    'history', 'videos', 'video', 'movie', 'movies', 'new', 'top', 'trending'
+    'history', 'new', 'top', 'trending'
 ]);
 
-// 3. 优先级分层识别规则集 (越严苛、越具唯一特征的规则置于越前)
+const NON_AV_LEAF_SLUGS = new Set([
+    ...NON_AV_ROUTE_SLUGS,
+    ...LANGUAGE_SLUGS,
+    'watch', 'videos', 'video', 'movie', 'movies'
+]);
+
+export const NON_AV_SLUGS = new Set([
+    ...NON_AV_LEAF_SLUGS
+]);
+
+// 4. 优先级分层识别规则集 (越严苛、越具唯一特征的规则置于越前)
 export const PARSER_RULES = [
     // 梯队 1: FC2 素人系列 (如 FC2-PPV-2849102, FC2_2849102, PPV-1234567)
     {
@@ -75,19 +89,14 @@ export const PARSER_RULES = [
         regex: /\bHEYZO[_s-]?(\d{4})\b/i,
         format: (m) => `HEYZO-${m[1]}`
     },
-    // 梯队 6: DM 体系 (如 DM-339, dm339)
-    {
-        type: 'DM',
-        regex: /\bDM[_s-]?([1-9]\d{1,4})\b/i,
-        format: (m) => `DM-${m[1]}`
-    },
-    // 梯队 7: 标准日系有码 (带横杠/下划线/空格分隔，如 SSIS-888, MIAA-598, ABP-123, SIVR-012)
+    // 梯队 6: 标准日系有码 (带横杠/下划线/空格分隔，如 SSIS-888, MIAA-598, DM-339, ABP-123)
+    // 置于紧凑 DM 规则之前，避免 /dm84/cn/miaa-490 中的路由分片 dm84 抢占真实番号 miaa-490
     {
         type: 'STANDARD_HYPHEN',
         regex: /\b([A-Z]{2,6})[\s_\-](\d{2,5})\b/i,
         format: (m) => `${m[1].toUpperCase()}-${m[2]}`
     },
-    // 梯队 8: DMM CID 逆向对齐 (如 ssis00123 -> SSIS-123, miaa00598 -> MIAA-598)
+    // 梯队 7: DMM CID 逆向对齐 (如 ssis00123 -> SSIS-123, miaa00598 -> MIAA-598)
     {
         type: 'DMM_CID',
         regex: /\b([A-Z]{2,6})(?:00|0)(\d{2,5})\b/i,
@@ -97,6 +106,12 @@ export const PARSER_RULES = [
             if (num.length === 1) num = '0' + num;
             return `${prefix}-${num}`;
         }
+    },
+    // 梯队 8: 紧凑 DM 体系 (如 dm339 -> DM-339；仅在未命中标准带分隔符/CID 番号时兜底)
+    {
+        type: 'DM',
+        regex: /\bDM[_s-]?([1-9]\d{1,4})\b/i,
+        format: (m) => `DM-${m[1]}`
     },
     // 梯队 9: 紧凑无分隔符格式 (如 IPX123 -> IPX-123, SSIS888 -> SSIS-888)
     {
@@ -113,7 +128,7 @@ export const PARSER_RULES = [
 
 /**
  * 字符串预降噪清洗管道 (Sanitizer Pipeline)
- * 全角转半角、剔除中英括注内容、剥离常见画质/字幕后缀
+ * 全角转半角、剔除中英括注内容、剥离 MissAV 路由分片 (/dm84/...) 及常见画质/字幕后缀
  * @param {string} str
  * @returns {string}
  */
@@ -125,8 +140,10 @@ export function sanitizeInput(str) {
         .replace(/\u3000/g, ' ')
         // 2. 剥离中英文括注内容 (如 [中文字幕], 【4K无码】, (1080p), [x264 AAC])
         .replace(/\[[^\]]*\]|【[^】]*】|\([^\)]*\)/g, ' ')
-        // 3. 剥离常见的干扰后缀词与版本标识
-        .replace(/[-_ ](?:c|ch|uc|hd|fhd|4k|leak|uncensored|wuma|youma|subtitle)\b/gi, ' ')
+        // 3. 剥离 MissAV 等站点 URL 中的非末尾路由分片 (/dm84/cn/miaa-490 -> /cn/miaa-490)
+        .replace(/\/dm\d+(?=\/[^/?#]+)/gi, '')
+        // 4. 剥离常见的干扰后缀词与版本标识 (包含 -uncensored-leak / -uncensored-leaked / -reduced-mosaic 等)
+        .replace(/[-_ ](?:c|ch|uc|hd|fhd|4k|leaked|leak|uncensored|chinese|wuma|youma|subtitle|sub|reduced[-_]mosaic)\b/gi, ' ')
         .trim();
 }
 
@@ -204,6 +221,58 @@ export function cleanAvCode(code) {
  * @returns {string} 提取到的标准番号
  */
 /**
+ * 从 URL 路径分段中提取视频番号 (自动忽略语言前缀与 MissAV /dm84/ 路由分片，拦截非视频列表路由)
+ * @param {string} pathname
+ * @returns {{ blocked: boolean, code: string }}
+ */
+function extractCodeFromPathSegments(pathname) {
+    const segments = String(pathname || '').split('/').filter(Boolean);
+    if (segments.length === 0) return { blocked: false, code: '' };
+
+    // 若路径中包含明确的非视频列表路由分段 (如 genres, tags, actresses, search)，直接拦截
+    if (segments.some(seg => NON_AV_ROUTE_SLUGS.has(seg.toLowerCase()))) {
+        return { blocked: true, code: '' };
+    }
+
+    // 剥离前置路由分片 (/dm84/cn/miaa-490 -> miaa-490) 与语言前缀 (/cn/, /en/, /ja/)
+    const meaningful = segments.filter((seg, idx) => {
+        const lower = seg.toLowerCase();
+        if (LANGUAGE_SLUGS.has(lower)) return false;
+        if (idx < segments.length - 1 && /^dm\d+$/i.test(seg)) return false;
+        return true;
+    });
+
+    if (meaningful.length === 0) return { blocked: false, code: '' };
+
+    const last = meaningful[meaningful.length - 1];
+    if (!NON_AV_LEAF_SLUGS.has(last.toLowerCase())) {
+        const code = matchAvCodeFromText(last);
+        if (code) return { blocked: false, code };
+    }
+
+    return { blocked: false, code: '' };
+}
+
+/**
+ * 探测 URL 中是否存在 MissAV 路由分片 (如 https://missav.ai/dm84/cn/miaa-490 -> 'DM-84')
+ * 仅在 /dm\d+/ 作为非末尾路径分段时返回对应误判前缀，供历史错位数据迁移使用
+ * @param {string} [url]
+ * @returns {string}
+ */
+export function extractMissavShardCode(url = (typeof window !== 'undefined' ? window.location.href : '')) {
+    if (!url || typeof url !== 'string') return '';
+    try {
+        const urlObj = new URL(url);
+        const segments = decodeURIComponent(urlObj.pathname || '').split('/').filter(Boolean);
+        for (let i = 0; i < segments.length - 1; i++) {
+            const m = segments[i].match(/^dm([1-9]\d{1,4})$/i);
+            if (m) return `DM-${m[1]}`;
+        }
+    } catch (_) {}
+    return '';
+}
+
+/**
  * 从当前播放视频元素、URL、页面 DOM 及标题中精准提取视频番号
  * @param {string|HTMLVideoElement} [urlOrElement] - 目标 URL 或当前激活播放的视频元素 <video>
  * @returns {string} 提取到的标准番号
@@ -212,37 +281,34 @@ export function getVideoCodeFromUrl(urlOrElement = (typeof window !== 'undefined
     let url = typeof urlOrElement === 'string' ? urlOrElement : '';
     let targetVideo = (urlOrElement && typeof urlOrElement === 'object' && urlOrElement.tagName === 'VIDEO') ? urlOrElement : null;
 
-    // 若未显式传入视频元素，自动在 DOM 中寻找当前正在播放或已初始化的目标视频
+    // 若未显式传入视频元素，优先穿透 Shadow DOM 寻找播放器内视频，其次回退到宿主 DOM
     if (!targetVideo && typeof document !== 'undefined') {
-        targetVideo = document.querySelector('.tm-video-wrapper video') || document.querySelector('video[preload]:not([muted])') || document.querySelector('video');
+        targetVideo =
+            document.querySelector('miss-player-root')?.shadowRoot?.querySelector('.tm-video-wrapper video, video') ||
+            document.querySelector('.tm-video-wrapper video') ||
+            document.querySelector('video[preload]:not([muted])') ||
+            document.querySelector('video');
+    }
+
+    if (!url && typeof window !== 'undefined') {
+        url = window.location.href;
     }
 
     // =========================================================================
-    //  阶段 0: 优先从当前播放的 <video> 元素自身及直属容器特征提取 (最精准，直指当前播放目标)
+    //  阶段 0: 显式绑定属性优先 (Peach Web / 自定义组件 data-code 等)
     // =========================================================================
     if (targetVideo) {
-        const videoCandidates = [
+        const explicitCandidates = [
             targetVideo.getAttribute('data-code'),
             targetVideo.getAttribute('data-avcode'),
             targetVideo.getAttribute('data-id'),
-            targetVideo.getAttribute('data-video-id'),
-            targetVideo.title,
-            targetVideo.poster,
-            targetVideo.getAttribute('poster'),
-            targetVideo.currentSrc,
-            targetVideo.src
+            targetVideo.getAttribute('data-video-id')
         ];
-        // 检查子 <source> 标签
-        const childSources = targetVideo.querySelectorAll('source');
-        for (const s of childSources) {
-            if (s.src) videoCandidates.push(s.src);
-        }
-        // 检查邻近父容器 (支持向上穿透 ShadowRoot)
         let parent = targetVideo.parentElement;
         let depth = 0;
         while (parent && depth < 6) {
             const pCode = parent.getAttribute('data-code') || parent.getAttribute('data-avcode') || parent.getAttribute('data-id');
-            if (pCode) videoCandidates.push(pCode);
+            if (pCode) explicitCandidates.push(pCode);
             if (!parent.parentElement && parent.parentNode && parent.parentNode.host) {
                 parent = parent.parentNode.host;
             } else {
@@ -250,7 +316,7 @@ export function getVideoCodeFromUrl(urlOrElement = (typeof window !== 'undefined
             }
             depth++;
         }
-        for (const candidate of videoCandidates) {
+        for (const candidate of explicitCandidates) {
             if (candidate) {
                 const code = matchAvCodeFromText(candidate);
                 if (code) return code;
@@ -258,89 +324,104 @@ export function getVideoCodeFromUrl(urlOrElement = (typeof window !== 'undefined
         }
     }
 
-    if (!url && typeof window !== 'undefined') {
-        url = window.location.href;
+    // =========================================================================
+    //  阶段 1: 专用站点 URL 特征提取 (Jable / JavDB / JavLibrary / MissAV)
+    // =========================================================================
+    let isBlockedNonVideoRoute = false;
+    if (url) {
+        try {
+            const urlObj = new URL(url);
+            const path = decodeURIComponent(urlObj.pathname || '');
+
+            // 1. Jable.tv: /videos/miaa-598/
+            if (isSiteDomain('JABLE', urlObj.hostname)) {
+                const match = path.match(/\/videos\/([^/?#]+)/i);
+                if (match) {
+                    const code = matchAvCodeFromText(match[1]);
+                    if (code) return code;
+                }
+            }
+
+            // 2. JavDB: /v/xxx or /videos/xxx
+            if (isSiteDomain('JAVDB', urlObj.hostname)) {
+                const match = path.match(/\/(?:v|videos)\/([^/?#]+)/i);
+                if (match) {
+                    const code = matchAvCodeFromText(match[1]);
+                    if (code) return code;
+                }
+            }
+
+            // 3. JavLibrary: ?v=javli... or ?v=...
+            if (isSiteDomain('JAVLIBRARY', urlObj.hostname)) {
+                const vParam = urlObj.searchParams.get('v');
+                if (vParam) {
+                    const code = matchAvCodeFromText(vParam);
+                    if (code) return code;
+                }
+            }
+
+            // 4. MissAV: /dm84/cn/miaa-490 or /cn/miaa-598 or /miaa-598 or /dm-339
+            if (isSiteDomain('MISSAV', urlObj.hostname)) {
+                const res = extractCodeFromPathSegments(path);
+                if (res.blocked) isBlockedNonVideoRoute = true;
+                else if (res.code) return res.code;
+            }
+
+            // 5. 检查常见查询参数 (例如 ?code=MIAB-592, ?v=..., ?av=..., ?id=...)
+            if (urlObj.searchParams) {
+                for (const param of ['code', 'v', 'id', 'av', 'vid', 'movie']) {
+                    const val = urlObj.searchParams.get(param);
+                    if (val) {
+                        const code = matchAvCodeFromText(val);
+                        if (code) return code;
+                    }
+                }
+            }
+
+            // 6. 通用 URL 路径末尾分段提取 (含 /v1/{token}/watch/{CODE} 网关页)
+            if (!isBlockedNonVideoRoute) {
+                const res = extractCodeFromPathSegments(path);
+                if (res.blocked) isBlockedNonVideoRoute = true;
+                else if (res.code) return res.code;
+            }
+        } catch (e) {
+            console.error('[VideoCode] 番号解析管道发生异常:', e);
+        }
     }
+
+    // =========================================================================
+    //  阶段 2: 从 <video> 媒体资源字段 (title / poster / src / source) 提取
+    // =========================================================================
+    if (targetVideo && !isBlockedNonVideoRoute) {
+        const mediaCandidates = [
+            targetVideo.title,
+            targetVideo.poster,
+            targetVideo.getAttribute('poster'),
+            targetVideo.currentSrc,
+            targetVideo.src
+        ];
+        const childSources = targetVideo.querySelectorAll('source');
+        for (const s of childSources) {
+            if (s.src) mediaCandidates.push(s.src);
+        }
+        for (const candidate of mediaCandidates) {
+            if (candidate) {
+                const code = matchAvCodeFromText(candidate);
+                if (code) return code;
+            }
+        }
+    }
+
     if (!url) return '';
     try {
         const urlObj = new URL(url);
         const path = decodeURIComponent(urlObj.pathname || '');
-        const search = decodeURIComponent(urlObj.search || '');
 
-        // =========================================================================
-        //  阶段 1: 专用站点特征提取 (Jable / JavDB / JavLibrary / MissAV)
-        // =========================================================================
-
-        // 1. Jable.tv: /videos/miaa-598/
-        if (isSiteDomain('JABLE', urlObj.hostname)) {
-            const match = path.match(/\/videos\/([^/?#]+)/i);
-            if (match) {
-                const code = matchAvCodeFromText(match[1]);
-                if (code) return code;
-            }
+        // 7. 对整个 URL Path 进行兜底分层扫描 (仅在非列表/分类路由下允许)
+        if (!isBlockedNonVideoRoute) {
+            const pathCode = matchAvCodeFromText(path);
+            if (pathCode) return pathCode;
         }
-
-        // 2. JavDB: /v/xxx or /videos/xxx
-        if (isSiteDomain('JAVDB', urlObj.hostname)) {
-            const match = path.match(/\/(?:v|videos)\/([^/?#]+)/i);
-            if (match) {
-                const code = matchAvCodeFromText(match[1]);
-                if (code) return code;
-            }
-        }
-
-        // 3. JavLibrary: ?v=javli... or ?v=...
-        if (isSiteDomain('JAVLIBRARY', urlObj.hostname)) {
-            const vParam = urlObj.searchParams.get('v');
-            if (vParam) {
-                const code = matchAvCodeFromText(vParam);
-                if (code) return code;
-            }
-        }
-
-        // 4. MissAV: /cn/miaa-598 or /miaa-598 or /dm-339
-        if (isSiteDomain('MISSAV', urlObj.hostname)) {
-            const segments = path.split('/').filter(Boolean);
-            if (segments.length > 0) {
-                // 若路径中任一分段属于分类/标签/非视频路由 (如 genres, tags, actresses)，则绝非视频播放页面
-                const hasNonAvSegment = segments.some(seg => NON_AV_SLUGS.has(seg.toLowerCase()));
-                if (!hasNonAvSegment) {
-                    const last = segments[segments.length - 1];
-                    const code = matchAvCodeFromText(last);
-                    if (code) return code;
-                }
-            }
-        }
-
-        // =========================================================================
-        //  阶段 2: 通用 URL 路径与查询参数解析
-        // =========================================================================
-
-        // 5. 检查常见查询参数 (例如 ?code=MIAB-592, ?v=..., ?av=..., ?id=...)
-        if (urlObj.searchParams) {
-            for (const param of ['code', 'v', 'id', 'av', 'vid', 'movie']) {
-                const val = urlObj.searchParams.get(param);
-                if (val) {
-                    const code = matchAvCodeFromText(val);
-                    if (code) return code;
-                }
-            }
-        }
-
-        // 6. 从通用 URL 路径的末尾分段提取
-        const segments = path.split('/').filter(Boolean);
-        if (segments.length > 0) {
-            const hasNonAvSegment = segments.some(seg => NON_AV_SLUGS.has(seg.toLowerCase()));
-            if (!hasNonAvSegment) {
-                const last = segments[segments.length - 1];
-                const code = matchAvCodeFromText(last);
-                if (code) return code;
-            }
-        }
-
-        // 7. 对整个 URL Path 进行分层扫描
-        const pathCode = matchAvCodeFromText(path);
-        if (pathCode) return pathCode;
 
         // =========================================================================
         //  阶段 3: DOM 元数据与页面标题兜底解析

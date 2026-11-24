@@ -647,10 +647,11 @@ export class UIManager {
             e.stopPropagation();
             if (this.peachIngestBtn.classList.contains('is-busy')) return;
 
-            // 统一收敛权威番号获取漏斗：video元素 -> commentPanel -> URL/页面DOM
-            const avcode = getVideoCodeFromUrl(this.targetVideo) ||
+            // 统一收敛权威番号获取漏斗：PlayerCore -> commentPanel -> URL/video元素
+            const avcode = this.playerCore?.getVideoCode?.() ||
                 this.controlManager?.commentPanel?.videoCode ||
                 this.playerCore?.options?.videoCode ||
+                getVideoCodeFromUrl(this.targetVideo) ||
                 '';
 
             // 1. 场景 A: 运行在用户自托管的 Peach Web 实例页面内部
@@ -704,7 +705,7 @@ export class UIManager {
         });
 
         // 异步检查当前番号在 WebDAV 或 Peach 馆藏状态
-        const avcode = getVideoCodeFromUrl(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || '';
+        const avcode = this.playerCore?.getVideoCode?.() || this.controlManager?.commentPanel?.videoCode || getVideoCodeFromUrl(this.targetVideo) || '';
         if (avcode) {
             setTimeout(() => this.checkPeachStatus(avcode), 1000);
         }
@@ -732,7 +733,7 @@ export class UIManager {
      */
     async checkPeachStatus(avcodeParam = '') {
         if (!this.peachIngestBtn) return;
-        const avcode = avcodeParam || getVideoCodeFromUrl(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || '';
+        const avcode = avcodeParam || this.playerCore?.getVideoCode?.() || this.controlManager?.commentPanel?.videoCode || getVideoCodeFromUrl(this.targetVideo) || '';
         if (!avcode) return;
 
         const badge = this.peachIngestBtn.querySelector('.tm-peach-badge');

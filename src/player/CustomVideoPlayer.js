@@ -14,7 +14,8 @@ import { SeekFeedbackManager } from './managers/SeekFeedbackManager.js';
 import { updateSafariThemeColor, Toast } from '../utils/index.js';
 import { __ } from '../constants/i18n.js';
 import { telemetry } from '../telemetry/index.js';
-import { getVideoCodeFromUrl } from '../utils/videoCode.js';
+import { getVideoCodeFromUrl, extractMissavShardCode } from '../utils/videoCode.js';
+import { AvCodeMigrationService } from '../services/AvCodeMigrationService.js';
 
 /**
  * 自定义视频播放器控制器 - 模块化重构版本
@@ -195,6 +196,14 @@ export class CustomVideoPlayer {
         videoElem.addEventListener('ended', this._onPauseOrEnded);
         videoElem.addEventListener('timeupdate', this._onTimeUpdate);
         
+        // 在构建任何依赖番号的管理器之前，先同步迁移当前页错位分片/变体键的本地时间胶囊与草稿
+        const authoritativeCode = this.playerCore.getVideoCode();
+        const currentUrl = typeof window !== 'undefined' ? (window.location?.href || '') : '';
+        const shardWrong = extractMissavShardCode(currentUrl);
+        if (authoritativeCode) {
+            AvCodeMigrationService.migrateLocalTabsAndDraftSync(shardWrong || authoritativeCode, authoritativeCode);
+        }
+
         // 创建UI管理器
         const uiManager = new UIManager(this.playerCore);
         const uiElements = uiManager.createUI();
@@ -321,6 +330,26 @@ export class CustomVideoPlayer {
         subtitleManager.init();
         this.managers.subtitleManager = subtitleManager;
 
+        // 异步迁移 IndexedDB / WebDAV / STRM 历史错位数据，完成后无感刷新字幕/热度/胶囊
+        if (authoritativeCode) {
+            AvCodeMigrationService.migrateCurrentPageIfNeeded(currentUrl, authoritativeCode, {
+                duration: videoElem.duration || 0,
+                playerState: this.playerCore?.options?.playerState
+            }).then((migrated) => {
+                if (!migrated) return;
+                subtitleManager._loadBundle().then(() => {
+                    subtitleManager._renderList();
+                    subtitleManager._syncSwitchState();
+                    if (subtitleManager.isEnabled && !subtitleManager.activeItem) {
+                        subtitleManager._autoApplyBest({ silent: true });
+                    }
+                }).catch(() => {});
+                if (heatmapManager && videoElem.duration > 0) {
+                    heatmapManager.onLoadedMetadata().catch(() => {});
+                }
+            }).catch(() => {});
+        }
+
         // 应用设置
         settingsManager.updateControlRowsVisibility();
         
@@ -399,7 +428,7 @@ export class CustomVideoPlayer {
             if (this._onTimeUpdate) videoElem.removeEventListener('timeupdate', this._onTimeUpdate);
         }
 
-        const avcode = getVideoCodeFromUrl() || '';
+        const avcode = this.playerCore?.getVideoCode?.() || getVideoCodeFromUrl(this.playerCore?.targetVideo) || '';
         const playSec = Math.round(this._activePlayDurationSec);
         const loopManager = this.managers?.loopManager;
         const loopSec = loopManager ? Math.round(loopManager.totalLoopDurationSec || 0) : 0;

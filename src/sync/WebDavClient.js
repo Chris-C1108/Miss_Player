@@ -1346,7 +1346,19 @@ export class WebDavClient {
         try {
             return await this.executeWithFailover(config, async (activeCfg) => {
                 const reqTimeout = activeCfg._failoverTimeout || timeout;
-                const fileUrl = this.normalizeUrl(activeCfg.url, fullOrRelativePath, activeCfg.user);
+                let resolvedPath = String(fullOrRelativePath || '').trim();
+                if (resolvedPath && !resolvedPath.startsWith('/')) {
+                    let dirPath = (activeCfg.path || '/MissPlayer/').trim();
+                    if (!dirPath.startsWith('/')) dirPath = '/' + dirPath;
+                    if (!dirPath.endsWith('/')) dirPath = dirPath + '/';
+                    const normDirNoSlash = dirPath.replace(/^\/+|\/+$/g, '');
+                    if (normDirNoSlash && resolvedPath.startsWith(normDirNoSlash + '/')) {
+                        resolvedPath = '/' + resolvedPath;
+                    } else {
+                        resolvedPath = dirPath + resolvedPath;
+                    }
+                }
+                const fileUrl = this.normalizeUrl(activeCfg.url, resolvedPath, activeCfg.user);
                 const res = await this._davRequest({
                     method: 'DELETE',
                     url: fileUrl,

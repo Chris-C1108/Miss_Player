@@ -117,11 +117,14 @@ export function setValue(key, value, useGM = true) {
 export function deleteValue(key, useGM = true) {
     try {
         if (useGM && typeof GM_deleteValue === 'function') {
-            GM_deleteValue(key);
-            return;
+            try {
+                GM_deleteValue(key);
+            } catch (_) {}
         }
-        localStorage.removeItem(LOCAL_STORAGE_PREFIX + key);
-        localStorage.removeItem(LEGACY_STORAGE_PREFIX + key);
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem(LOCAL_STORAGE_PREFIX + key);
+            localStorage.removeItem(LEGACY_STORAGE_PREFIX + key);
+        }
     } catch (e) {
         console.error(`[Storage] 删除存储键 ${key} 失败:`, e);
     }

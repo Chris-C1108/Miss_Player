@@ -2349,8 +2349,8 @@ export class CommentPanel {
         this.updatePosition();
         setTimeout(() => this.updatePosition(), 300);
 
-        // 提取番号并加载评论
-        this.videoCode = getVideoCodeFromUrl();
+        // 提取番号并加载评论（统一走 PlayerCore 全局权威番号解析入口）
+        this.videoCode = this.playerCore?.getVideoCode?.() || getVideoCodeFromUrl(this.targetVideo || this.playerCore?.targetVideo);
         if (this.videoCode) {
             logger.log(`[CommentPanel] 提取到当前视频番号: ${this.videoCode}，开始采集...`);
             this.loadComments(1);

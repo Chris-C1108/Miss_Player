@@ -6,7 +6,20 @@ function sanitizeSeekStepList(arr, isCustom = false) {
 }
 
 import { getValue, setValue, deleteValue, hasGMApi, getBool } from '../utils/storage.js';
+import { cleanAvCode } from '../utils/videoCode.js';
 import { WebDavClient } from './WebDavClient.js';
+
+const AV_CODE_ALIASES_KEY = 'mp_avcode_migrated_aliases';
+
+function resolveCanonicalMarkerKey(rawKey, aliasMap = null) {
+    if (!rawKey || typeof rawKey !== 'string' || !rawKey.startsWith('tabs_')) return rawKey;
+    if (aliasMap && typeof aliasMap === 'object' && aliasMap[rawKey]) {
+        return aliasMap[rawKey];
+    }
+    const suffix = rawKey.slice(5);
+    const canonical = cleanAvCode(suffix);
+    return canonical ? `tabs_${canonical}` : rawKey;
+}
 
 const CLIENT_ID_KEY = 'mp_client_id';
 const WEBDAV_CONFIG_KEY = 'mp_webdav_config';
@@ -16,7 +29,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.120-beta.003';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.120-beta.004';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -310,12 +323,14 @@ export class SyncManager {
         };
         const settings = Object.assign({}, baseSettings, playerState?.settings || {});
 
-        // 2. 收集所有视频打点数据 (tabs_*)，规范化补全 id / createdAt / updatedAt
+        // 2. 收集所有视频打点数据 (tabs_*)，规范化补全 id / createdAt / updatedAt 并归一变体键
         const markers = {};
+        const aliasMap = getValue(AV_CODE_ALIASES_KEY, {});
         try {
-            const processList = (cleanKey, val) => {
+            const processList = (rawKey, val) => {
+                const cleanKey = resolveCanonicalMarkerKey(rawKey, aliasMap);
                 if (Array.isArray(val) && val.length > 0) {
-                    markers[cleanKey] = val.map(item => {
+                    const normalized = val.map(item => {
                         const m = { ...item };
                         if (!m.id) {
                             const start = Math.round((m.startTime || m.tabTime || 0) * 10);
@@ -326,6 +341,16 @@ export class SyncManager {
                         if (!m.updatedAt) m.updatedAt = m.createdAt;
                         return m;
                     });
+                    if (Array.isArray(markers[cleanKey]) && markers[cleanKey].length > 0) {
+                        const byId = new Map(markers[cleanKey].map(t => [t.id, t]));
+                        for (const t of normalized) {
+                            const ex = byId.get(t.id);
+                            if (!ex || (t.updatedAt || 0) > (ex.updatedAt || 0)) byId.set(t.id, t);
+                        }
+                        markers[cleanKey] = Array.from(byId.values());
+                    } else {
+                        markers[cleanKey] = normalized;
+                    }
                 }
             };
 
@@ -568,20 +593,23 @@ export class SyncManager {
             localSettings.enabledCommentSources || {}
         );
 
-        // 4. 核心：CRDT / Tombstone 视频打点合并 (Markers: tabs_*)
+        // 4. 核心：CRDT / Tombstone 视频打点合并 (Markers: tabs_*)，自动归一变体与历史错位别名键
         const localMarkers = localData.markers || {};
         const remoteMarkers = remoteMigrated.markers || {};
-        const allVideoKeys = Array.from(new Set([
-            ...Object.keys(localMarkers),
-            ...Object.keys(remoteMarkers)
-        ]));
+        const aliasMap = getValue(AV_CODE_ALIASES_KEY, {});
+        const bucketMap = new Map();
+        const pushBucket = (rawKey, list) => {
+            if (!Array.isArray(list)) return;
+            const canonKey = resolveCanonicalMarkerKey(rawKey, aliasMap);
+            if (!bucketMap.has(canonKey)) bucketMap.set(canonKey, []);
+            bucketMap.get(canonKey).push(...list);
+        };
+        for (const [k, list] of Object.entries(remoteMarkers)) pushBucket(k, list);
+        for (const [k, list] of Object.entries(localMarkers)) pushBucket(k, list);
 
         const mergedMarkers = {};
 
-        for (const vKey of allVideoKeys) {
-            const lList = Array.isArray(localMarkers[vKey]) ? localMarkers[vKey] : [];
-            const rList = Array.isArray(remoteMarkers[vKey]) ? remoteMarkers[vKey] : [];
-
+        for (const [vKey, combinedList] of bucketMap.entries()) {
             const markerMap = new Map();
 
             // 辅助处理打点候选
@@ -609,8 +637,7 @@ export class SyncManager {
                 }
             };
 
-            for (const m of rList) processCandidate(m);
-            for (const m of lList) processCandidate(m);
+            for (const m of combinedList) processCandidate(m);
 
             const mergedList = Array.from(markerMap.values()).sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
             if (mergedList.length > 0) {
@@ -618,6 +645,15 @@ export class SyncManager {
             } else {
                 mergedMarkers[vKey] = [];
             }
+        }
+        // 确保被别名映射替换掉的旧键在本地应用时被彻底删除
+        for (const rawKey of Object.keys(localMarkers)) {
+            const canonKey = resolveCanonicalMarkerKey(rawKey, aliasMap);
+            if (canonKey !== rawKey) mergedMarkers[rawKey] = [];
+        }
+        for (const rawKey of Object.keys(remoteMarkers)) {
+            const canonKey = resolveCanonicalMarkerKey(rawKey, aliasMap);
+            if (canonKey !== rawKey) mergedMarkers[rawKey] = [];
         }
 
         // 5. 合并设备形态特异布局 (Desktop / Mobile / Tablet)

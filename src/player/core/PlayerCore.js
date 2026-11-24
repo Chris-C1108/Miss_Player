@@ -1,6 +1,7 @@
 import { restoreSafariThemeColor, findVideoElement, getValue, setValue } from '../../utils/index.js';
 import { enforceInlinePlayback, isIosDevice } from '../../utils/iosInline.js';
 import { checkShouldDefaultMute } from '../controls/VolumeController.js';
+import { getVideoCodeFromUrl, cleanAvCode } from '../../utils/videoCode.js';
 
 /**
  * 播放器核心类 - 负责播放器的基本功能和状态管理
@@ -14,6 +15,7 @@ export class PlayerCore {
         
         // 状态变量
         this.targetVideo = null;         // 目标视频元素
+        this.videoCode = '';             // 全局唯一权威番号缓存
         this.videoState = {
             currentTime: 0,
             isPlaying: false,
@@ -37,6 +39,29 @@ export class PlayerCore {
     }
 
     /**
+     * 全播放器唯一权威番号解析入口
+     * 必须在 targetVideo 被迁移进 Shadow DOM 之前完成首轮解析，并由所有子系统共享复用
+     * @param {{ refresh?: boolean }} [opts]
+     * @returns {string}
+     */
+    resolveVideoCode({ refresh = false } = {}) {
+        if (!refresh && this.videoCode) {
+            return this.videoCode;
+        }
+        const explicit = this.options?.videoCode ? cleanAvCode(this.options.videoCode) : '';
+        const resolved = explicit || getVideoCodeFromUrl(this.targetVideo) || getVideoCodeFromUrl() || '';
+        const normalized = cleanAvCode(resolved) || '';
+        if (normalized) {
+            this.videoCode = normalized;
+        }
+        return this.videoCode || '';
+    }
+
+    getVideoCode({ refresh = false } = {}) {
+        return this.resolveVideoCode({ refresh });
+    }
+
+    /**
      * 初始化播放器
      */
     init() {
@@ -57,6 +82,9 @@ export class PlayerCore {
             }
             return;
         }
+
+        // 在视频节点移入 Shadow DOM 前锁定权威番号
+        this.resolveVideoCode({ refresh: true });
         
         // 保存视频状态
         this.saveVideoState();

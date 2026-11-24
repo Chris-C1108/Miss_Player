@@ -119,3 +119,24 @@ export async function idbDelete(storeName, key) {
         return false;
     }
 }
+
+/**
+ * 读取指定 Store 全量记录 (用于历史错误键扫描与数据迁移)
+ * @param {string} storeName 表名
+ * @returns {Promise<Array<{key: string, data: any, updatedAt: number}>>}
+ */
+export async function idbGetAll(storeName) {
+    try {
+        const db = await getDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+            const req = store.getAll();
+            req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+            req.onerror = () => reject(req.error);
+        });
+    } catch (err) {
+        console.warn(`[IndexedDB] 全量读取失败 (${storeName}):`, err.message);
+        return [];
+    }
+}

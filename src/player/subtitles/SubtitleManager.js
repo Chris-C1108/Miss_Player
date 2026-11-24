@@ -177,17 +177,16 @@ export class SubtitleManager {
     // ---------------------------------------------------------------- 数据层
 
     /**
-     * 统一番号漏斗：优先复用播放器与评论面板已解析的权威值，
-     * 缺失时才回落到全局 getVideoCodeFromUrl，最后经 cleanAvCode 归一化。
-     * 严禁在本模块另造番号解析逻辑。
+     * 统一番号漏斗：复用 PlayerCore / 评论面板的权威番号解析入口，
+     * 缺失时回落到全局 getVideoCodeFromUrl(this.targetVideo)，最后经 cleanAvCode 归一化。
      */
     _resolveAvcode() {
-        // 权威来源：评论采集使用的番号（页面级漏斗解析，与评论/热度全站一致）
         const raw =
+            this.playerCore?.getVideoCode?.() ||
             this.controlManager?.commentPanel?.videoCode ||
             this.playerCore?.options?.videoCode ||
-            getVideoCodeFromUrl() ||
-            getVideoCodeFromUrl(this.targetVideo);
+            getVideoCodeFromUrl(this.targetVideo) ||
+            getVideoCodeFromUrl();
         return cleanAvCode(raw) || '';
     }
 

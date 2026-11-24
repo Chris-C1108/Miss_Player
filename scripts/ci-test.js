@@ -226,6 +226,11 @@ runStep('执行 ltxlib 跨站播放双轨路由与卡片适配器测试', () => 
     execSync('node tests/ltxlib-cross-site.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.31 番号统一入口与历史错位数据全链路迁移测试
+runStep('执行番号统一入口与历史错位数据全链路迁移测试', () => {
+    execSync('node tests/avcode-unification-migration.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

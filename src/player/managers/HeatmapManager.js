@@ -271,10 +271,14 @@ export class HeatmapManager {
 
     _resolveStorageKey() {
         let code = '';
-        // 1. 优先读取上层播放器或评论面板已规整解析的权威番号
-        if (this.playerCore?.options?.videoCode) {
+        // 1. 优先读取 PlayerCore / 评论面板已规整解析的权威番号
+        if (this.playerCore?.getVideoCode) {
+            code = this.playerCore.getVideoCode();
+        }
+        if (!code && this.playerCore?.options?.videoCode) {
             code = this.playerCore.options.videoCode;
-        } else if (this.controlManager?.commentPanel?.videoCode) {
+        }
+        if (!code && this.controlManager?.commentPanel?.videoCode) {
             code = this.controlManager.commentPanel.videoCode;
         }
 

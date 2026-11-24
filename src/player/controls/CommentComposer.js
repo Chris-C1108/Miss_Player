@@ -1,5 +1,6 @@
 import { __ } from '../../constants/i18n.js';
 import { Toast, createModal, isImeConfirmEnter } from '../../utils/index.js';
+import { getVideoCodeFromUrl, cleanAvCode } from '../../utils/videoCode.js';
 import { isSiteDomain, getSiteUrls } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { formatSeconds } from '../comments/index.js';
@@ -508,7 +509,13 @@ export class CommentComposer {
      * 获取评论暂存的 Storage Key (基于当前影片番号独立隔离)
      */
     getDraftStorageKey() {
-        const avcode = this.panel?.videoCode || this.videoCode || (typeof getVideoCodeFromUrl === 'function' ? getVideoCodeFromUrl() : '') || 'default';
+        const rawCode =
+            this.panel?.videoCode ||
+            this.panel?.playerCore?.getVideoCode?.() ||
+            this.videoCode ||
+            getVideoCodeFromUrl(this.panel?.targetVideo || this.panel?.playerCore?.targetVideo) ||
+            'default';
+        const avcode = rawCode === 'default' ? 'default' : (cleanAvCode(rawCode) || rawCode);
         return 'mp_comment_draft_' + String(avcode).toLowerCase().trim();
     }
 

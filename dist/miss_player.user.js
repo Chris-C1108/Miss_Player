@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.120-beta.003
+// @version            5.7.120-beta.004
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -526,12 +526,13 @@
 	}
 	function deleteValue(key, useGM = true) {
 		try {
-			if (useGM && typeof GM_deleteValue === "function") {
+			if (useGM && typeof GM_deleteValue === "function") try {
 				GM_deleteValue(key);
-				return;
+			} catch (_) {}
+			if (typeof localStorage !== "undefined") {
+				localStorage.removeItem(LOCAL_STORAGE_PREFIX + key);
+				localStorage.removeItem(LEGACY_STORAGE_PREFIX + key);
 			}
-			localStorage.removeItem(LOCAL_STORAGE_PREFIX + key);
-			localStorage.removeItem(LEGACY_STORAGE_PREFIX + key);
 		} catch (e) {
 			console.error(`[Storage] 删除存储键 ${key} 失败:`, e);
 		}
@@ -936,24 +937,27 @@
 		"NEW",
 		"ASIAN"
 	]);
-	var NON_AV_SLUGS = new Set([
-		"search",
-		"s",
+	var LANGUAGE_SLUGS = new Set([
 		"zh-cn",
+		"zh-tw",
 		"cn",
 		"en",
 		"tw",
 		"ja",
+		"jp",
 		"vi",
 		"ko",
 		"th",
-		"ru",
+		"ru"
+	]);
+	var NON_AV_ROUTE_SLUGS = new Set([
+		"search",
+		"s",
 		"forum",
 		"forum.php",
 		"index.html",
 		"index.php",
 		"warmup.html",
-		"watch",
 		"login",
 		"register",
 		"signin",
@@ -990,14 +994,20 @@
 		"recent",
 		"favorite",
 		"history",
-		"videos",
-		"video",
-		"movie",
-		"movies",
 		"new",
 		"top",
 		"trending"
 	]);
+	var NON_AV_LEAF_SLUGS = new Set([
+		...NON_AV_ROUTE_SLUGS,
+		...LANGUAGE_SLUGS,
+		"watch",
+		"videos",
+		"video",
+		"movie",
+		"movies"
+	]);
+	var NON_AV_SLUGS = new Set([...NON_AV_LEAF_SLUGS]);
 	var PARSER_RULES = [
 		{
 			type: "FC2",
@@ -1025,11 +1035,6 @@
 			format: (m) => `HEYZO-${m[1]}`
 		},
 		{
-			type: "DM",
-			regex: /\bDM[_s-]?([1-9]\d{1,4})\b/i,
-			format: (m) => `DM-${m[1]}`
-		},
-		{
 			type: "STANDARD_HYPHEN",
 			regex: /\b([A-Z]{2,6})[\s_\-](\d{2,5})\b/i,
 			format: (m) => `${m[1].toUpperCase()}-${m[2]}`
@@ -1045,6 +1050,11 @@
 			}
 		},
 		{
+			type: "DM",
+			regex: /\bDM[_s-]?([1-9]\d{1,4})\b/i,
+			format: (m) => `DM-${m[1]}`
+		},
+		{
 			type: "COMPACT",
 			regex: /\b([A-Z]{2,6})(\d{2,5})\b/i,
 			format: (m) => {
@@ -1057,7 +1067,7 @@
 	];
 	function sanitizeInput(str) {
 		if (!str || typeof str !== "string") return "";
-		return str.replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 65248)).replace(/\u3000/g, " ").replace(/\[[^\]]*\]|【[^】]*】|\([^\)]*\)/g, " ").replace(/[-_ ](?:c|ch|uc|hd|fhd|4k|leak|uncensored|wuma|youma|subtitle)\b/gi, " ").trim();
+		return str.replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 65248)).replace(/\u3000/g, " ").replace(/\[[^\]]*\]|【[^】]*】|\([^\)]*\)/g, " ").replace(/\/dm\d+(?=\/[^/?#]+)/gi, "").replace(/[-_ ](?:c|ch|uc|hd|fhd|4k|leaked|leak|uncensored|chinese|wuma|youma|subtitle|sub|reduced[-_]mosaic)\b/gi, " ").trim();
 	}
 	function isValidAvCode(code) {
 		if (!code || typeof code !== "string") return false;
@@ -1102,44 +1112,81 @@
 		if (!code) return "";
 		return matchAvCodeFromText(code) || code.trim().toUpperCase();
 	}
-	function getVideoCodeFromUrl$1(urlOrElement = typeof window !== "undefined" ? window.location.href : "") {
+	function extractCodeFromPathSegments(pathname) {
+		const segments = String(pathname || "").split("/").filter(Boolean);
+		if (segments.length === 0) return {
+			blocked: false,
+			code: ""
+		};
+		if (segments.some((seg) => NON_AV_ROUTE_SLUGS.has(seg.toLowerCase()))) return {
+			blocked: true,
+			code: ""
+		};
+		const meaningful = segments.filter((seg, idx) => {
+			const lower = seg.toLowerCase();
+			if (LANGUAGE_SLUGS.has(lower)) return false;
+			if (idx < segments.length - 1 && /^dm\d+$/i.test(seg)) return false;
+			return true;
+		});
+		if (meaningful.length === 0) return {
+			blocked: false,
+			code: ""
+		};
+		const last = meaningful[meaningful.length - 1];
+		if (!NON_AV_LEAF_SLUGS.has(last.toLowerCase())) {
+			const code = matchAvCodeFromText(last);
+			if (code) return {
+				blocked: false,
+				code
+			};
+		}
+		return {
+			blocked: false,
+			code: ""
+		};
+	}
+	function extractMissavShardCode(url = typeof window !== "undefined" ? window.location.href : "") {
+		if (!url || typeof url !== "string") return "";
+		try {
+			const urlObj = new URL(url);
+			const segments = decodeURIComponent(urlObj.pathname || "").split("/").filter(Boolean);
+			for (let i = 0; i < segments.length - 1; i++) {
+				const m = segments[i].match(/^dm([1-9]\d{1,4})$/i);
+				if (m) return `DM-${m[1]}`;
+			}
+		} catch (_) {}
+		return "";
+	}
+	function getVideoCodeFromUrl(urlOrElement = typeof window !== "undefined" ? window.location.href : "") {
 		let url = typeof urlOrElement === "string" ? urlOrElement : "";
 		let targetVideo = urlOrElement && typeof urlOrElement === "object" && urlOrElement.tagName === "VIDEO" ? urlOrElement : null;
-		if (!targetVideo && typeof document !== "undefined") targetVideo = document.querySelector(".tm-video-wrapper video") || document.querySelector("video[preload]:not([muted])") || document.querySelector("video");
+		if (!targetVideo && typeof document !== "undefined") targetVideo = document.querySelector("miss-player-root")?.shadowRoot?.querySelector(".tm-video-wrapper video, video") || document.querySelector(".tm-video-wrapper video") || document.querySelector("video[preload]:not([muted])") || document.querySelector("video");
+		if (!url && typeof window !== "undefined") url = window.location.href;
 		if (targetVideo) {
-			const videoCandidates = [
+			const explicitCandidates = [
 				targetVideo.getAttribute("data-code"),
 				targetVideo.getAttribute("data-avcode"),
 				targetVideo.getAttribute("data-id"),
-				targetVideo.getAttribute("data-video-id"),
-				targetVideo.title,
-				targetVideo.poster,
-				targetVideo.getAttribute("poster"),
-				targetVideo.currentSrc,
-				targetVideo.src
+				targetVideo.getAttribute("data-video-id")
 			];
-			const childSources = targetVideo.querySelectorAll("source");
-			for (const s of childSources) if (s.src) videoCandidates.push(s.src);
 			let parent = targetVideo.parentElement;
 			let depth = 0;
 			while (parent && depth < 6) {
 				const pCode = parent.getAttribute("data-code") || parent.getAttribute("data-avcode") || parent.getAttribute("data-id");
-				if (pCode) videoCandidates.push(pCode);
+				if (pCode) explicitCandidates.push(pCode);
 				if (!parent.parentElement && parent.parentNode && parent.parentNode.host) parent = parent.parentNode.host;
 				else parent = parent.parentElement;
 				depth++;
 			}
-			for (const candidate of videoCandidates) if (candidate) {
+			for (const candidate of explicitCandidates) if (candidate) {
 				const code = matchAvCodeFromText(candidate);
 				if (code) return code;
 			}
 		}
-		if (!url && typeof window !== "undefined") url = window.location.href;
-		if (!url) return "";
-		try {
+		let isBlockedNonVideoRoute = false;
+		if (url) try {
 			const urlObj = new URL(url);
 			const path = decodeURIComponent(urlObj.pathname || "");
-			decodeURIComponent(urlObj.search || "");
 			if (isSiteDomain("JABLE", urlObj.hostname)) {
 				const match = path.match(/\/videos\/([^/?#]+)/i);
 				if (match) {
@@ -1162,14 +1209,9 @@
 				}
 			}
 			if (isSiteDomain("MISSAV", urlObj.hostname)) {
-				const segments = path.split("/").filter(Boolean);
-				if (segments.length > 0) {
-					if (!segments.some((seg) => NON_AV_SLUGS.has(seg.toLowerCase()))) {
-						const last = segments[segments.length - 1];
-						const code = matchAvCodeFromText(last);
-						if (code) return code;
-					}
-				}
+				const res = extractCodeFromPathSegments(path);
+				if (res.blocked) isBlockedNonVideoRoute = true;
+				else if (res.code) return res.code;
 			}
 			if (urlObj.searchParams) for (const param of [
 				"code",
@@ -1185,16 +1227,37 @@
 					if (code) return code;
 				}
 			}
-			const segments = path.split("/").filter(Boolean);
-			if (segments.length > 0) {
-				if (!segments.some((seg) => NON_AV_SLUGS.has(seg.toLowerCase()))) {
-					const last = segments[segments.length - 1];
-					const code = matchAvCodeFromText(last);
-					if (code) return code;
-				}
+			if (!isBlockedNonVideoRoute) {
+				const res = extractCodeFromPathSegments(path);
+				if (res.blocked) isBlockedNonVideoRoute = true;
+				else if (res.code) return res.code;
 			}
-			const pathCode = matchAvCodeFromText(path);
-			if (pathCode) return pathCode;
+		} catch (e) {
+			console.error("[VideoCode] 番号解析管道发生异常:", e);
+		}
+		if (targetVideo && !isBlockedNonVideoRoute) {
+			const mediaCandidates = [
+				targetVideo.title,
+				targetVideo.poster,
+				targetVideo.getAttribute("poster"),
+				targetVideo.currentSrc,
+				targetVideo.src
+			];
+			const childSources = targetVideo.querySelectorAll("source");
+			for (const s of childSources) if (s.src) mediaCandidates.push(s.src);
+			for (const candidate of mediaCandidates) if (candidate) {
+				const code = matchAvCodeFromText(candidate);
+				if (code) return code;
+			}
+		}
+		if (!url) return "";
+		try {
+			const urlObj = new URL(url);
+			const path = decodeURIComponent(urlObj.pathname || "");
+			if (!isBlockedNonVideoRoute) {
+				const pathCode = matchAvCodeFromText(path);
+				if (pathCode) return pathCode;
+			}
 			if (typeof document !== "undefined") {
 				const ogTitle = document.querySelector("meta[property=\"og:title\"]")?.getAttribute("content") || document.querySelector("meta[name=\"twitter:title\"]")?.getAttribute("content") || "";
 				if (ogTitle) {
@@ -1926,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.120-beta.003";
+		return "5.7.120-beta.004";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4057,6 +4120,7 @@
 			console.log("[PlayerCore] 初始化...");
 			this.defaultPlaybackRate = 1;
 			this.targetVideo = null;
+			this.videoCode = "";
 			this.videoState = {
 				currentTime: 0,
 				isPlaying: false,
@@ -4067,6 +4131,15 @@
 			this.callingButton = this.options.callingButton || null;
 			this.userPauseIntent = false;
 			this.initialized = false;
+		}
+		resolveVideoCode({ refresh = false } = {}) {
+			if (!refresh && this.videoCode) return this.videoCode;
+			const normalized = cleanAvCode((this.options?.videoCode ? cleanAvCode(this.options.videoCode) : "") || getVideoCodeFromUrl(this.targetVideo) || getVideoCodeFromUrl() || "") || "";
+			if (normalized) this.videoCode = normalized;
+			return this.videoCode || "";
+		}
+		getVideoCode({ refresh = false } = {}) {
+			return this.resolveVideoCode({ refresh });
 		}
 		init() {
 			if (this.initialized) return;
@@ -4080,6 +4153,7 @@
 				}
 				return;
 			}
+			this.resolveVideoCode({ refresh: true });
 			this.saveVideoState();
 			this.initialized = true;
 			console.log("[PlayerCore] 核心初始化完成");
@@ -4326,7 +4400,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.120-beta.003";
+		return "5.7.120-beta.004";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6408,7 +6482,16 @@
 			try {
 				return await this.executeWithFailover(config, async (activeCfg) => {
 					const reqTimeout = activeCfg._failoverTimeout || timeout;
-					const fileUrl = this.normalizeUrl(activeCfg.url, fullOrRelativePath, activeCfg.user);
+					let resolvedPath = String(fullOrRelativePath || "").trim();
+					if (resolvedPath && !resolvedPath.startsWith("/")) {
+						let dirPath = (activeCfg.path || "/MissPlayer/").trim();
+						if (!dirPath.startsWith("/")) dirPath = "/" + dirPath;
+						if (!dirPath.endsWith("/")) dirPath = dirPath + "/";
+						const normDirNoSlash = dirPath.replace(/^\/+|\/+$/g, "");
+						if (normDirNoSlash && resolvedPath.startsWith(normDirNoSlash + "/")) resolvedPath = "/" + resolvedPath;
+						else resolvedPath = dirPath + resolvedPath;
+					}
+					const fileUrl = this.normalizeUrl(activeCfg.url, resolvedPath, activeCfg.user);
 					const res = await this._davRequest({
 						method: "DELETE",
 						url: fileUrl,
@@ -6446,6 +6529,13 @@
 			"10m"
 		];
 	}
+	var AV_CODE_ALIASES_KEY = "mp_avcode_migrated_aliases";
+	function resolveCanonicalMarkerKey(rawKey, aliasMap = null) {
+		if (!rawKey || typeof rawKey !== "string" || !rawKey.startsWith("tabs_")) return rawKey;
+		if (aliasMap && typeof aliasMap === "object" && aliasMap[rawKey]) return aliasMap[rawKey];
+		const canonical = cleanAvCode(rawKey.slice(5));
+		return canonical ? `tabs_${canonical}` : rawKey;
+	}
 	var CLIENT_ID_KEY = "mp_client_id";
 	var WEBDAV_CONFIG_KEY = "mp_webdav_config";
 	var LAST_SYNC_TIME_KEY = "mp_webdav_last_sync_time";
@@ -6453,7 +6543,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.120-beta.003";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.120-beta.004";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -6647,15 +6737,27 @@
 			};
 			const settings = Object.assign({}, baseSettings, playerState?.settings || {});
 			const markers = {};
+			const aliasMap = getValue(AV_CODE_ALIASES_KEY, {});
 			try {
-				const processList = (cleanKey, val) => {
-					if (Array.isArray(val) && val.length > 0) markers[cleanKey] = val.map((item) => {
-						const m = { ...item };
-						if (!m.id) m.id = `tab_${Math.round((m.startTime || m.tabTime || 0) * 10)}_${Math.round((m.endTime || m.tabEnd || 0) * 10)}_${Math.random().toString(36).slice(2, 6)}`;
-						if (!m.createdAt) m.createdAt = now;
-						if (!m.updatedAt) m.updatedAt = m.createdAt;
-						return m;
-					});
+				const processList = (rawKey, val) => {
+					const cleanKey = resolveCanonicalMarkerKey(rawKey, aliasMap);
+					if (Array.isArray(val) && val.length > 0) {
+						const normalized = val.map((item) => {
+							const m = { ...item };
+							if (!m.id) m.id = `tab_${Math.round((m.startTime || m.tabTime || 0) * 10)}_${Math.round((m.endTime || m.tabEnd || 0) * 10)}_${Math.random().toString(36).slice(2, 6)}`;
+							if (!m.createdAt) m.createdAt = now;
+							if (!m.updatedAt) m.updatedAt = m.createdAt;
+							return m;
+						});
+						if (Array.isArray(markers[cleanKey]) && markers[cleanKey].length > 0) {
+							const byId = new Map(markers[cleanKey].map((t) => [t.id, t]));
+							for (const t of normalized) {
+								const ex = byId.get(t.id);
+								if (!ex || (t.updatedAt || 0) > (ex.updatedAt || 0)) byId.set(t.id, t);
+							}
+							markers[cleanKey] = Array.from(byId.values());
+						} else markers[cleanKey] = normalized;
+					}
 				};
 				if (typeof GM_listValues === "function") {
 					const keys = GM_listValues();
@@ -6815,11 +6917,18 @@
 			}, remoteSettings.enabledCommentSources || {}, localSettings.enabledCommentSources || {});
 			const localMarkers = localData.markers || {};
 			const remoteMarkers = remoteMigrated.markers || {};
-			const allVideoKeys = Array.from(new Set([...Object.keys(localMarkers), ...Object.keys(remoteMarkers)]));
+			const aliasMap = getValue(AV_CODE_ALIASES_KEY, {});
+			const bucketMap = new Map();
+			const pushBucket = (rawKey, list) => {
+				if (!Array.isArray(list)) return;
+				const canonKey = resolveCanonicalMarkerKey(rawKey, aliasMap);
+				if (!bucketMap.has(canonKey)) bucketMap.set(canonKey, []);
+				bucketMap.get(canonKey).push(...list);
+			};
+			for (const [k, list] of Object.entries(remoteMarkers)) pushBucket(k, list);
+			for (const [k, list] of Object.entries(localMarkers)) pushBucket(k, list);
 			const mergedMarkers = {};
-			for (const vKey of allVideoKeys) {
-				const lList = Array.isArray(localMarkers[vKey]) ? localMarkers[vKey] : [];
-				const rList = Array.isArray(remoteMarkers[vKey]) ? remoteMarkers[vKey] : [];
+			for (const [vKey, combinedList] of bucketMap.entries()) {
 				const markerMap = new Map();
 				const processCandidate = (m) => {
 					if (!m) return;
@@ -6847,12 +6956,13 @@
 						});
 					}
 				};
-				for (const m of rList) processCandidate(m);
-				for (const m of lList) processCandidate(m);
+				for (const m of combinedList) processCandidate(m);
 				const mergedList = Array.from(markerMap.values()).sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
 				if (mergedList.length > 0) mergedMarkers[vKey] = mergedList;
 				else mergedMarkers[vKey] = [];
 			}
+			for (const rawKey of Object.keys(localMarkers)) if (resolveCanonicalMarkerKey(rawKey, aliasMap) !== rawKey) mergedMarkers[rawKey] = [];
+			for (const rawKey of Object.keys(remoteMarkers)) if (resolveCanonicalMarkerKey(rawKey, aliasMap) !== rawKey) mergedMarkers[rawKey] = [];
 			return {
 				schemaVersion: CURRENT_SCHEMA_VERSION,
 				scriptVersion: SCRIPT_VERSION,
@@ -8222,7 +8332,7 @@
 			this.peachIngestBtn.addEventListener("click", async (e) => {
 				e.stopPropagation();
 				if (this.peachIngestBtn.classList.contains("is-busy")) return;
-				const avcode = getVideoCodeFromUrl$1(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || this.playerCore?.options?.videoCode || "";
+				const avcode = this.playerCore?.getVideoCode?.() || this.controlManager?.commentPanel?.videoCode || this.playerCore?.options?.videoCode || getVideoCodeFromUrl(this.targetVideo) || "";
 				if (typeof PeachWebBridge !== "undefined" && PeachWebBridge.isPeachInstance()) {
 					const badge = this.peachIngestBtn.querySelector(".tm-peach-badge");
 					this.peachIngestBtn.classList.add("is-ingested");
@@ -8263,7 +8373,7 @@
 					Toast$1(err.message || "入库失败，请在设置中检查配置", 2500, "error");
 				}
 			});
-			const avcode = getVideoCodeFromUrl$1(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || "";
+			const avcode = this.playerCore?.getVideoCode?.() || this.controlManager?.commentPanel?.videoCode || getVideoCodeFromUrl(this.targetVideo) || "";
 			if (avcode) setTimeout(() => this.checkPeachStatus(avcode), 1e3);
 			this.updatePeachButtonVisibility();
 		}
@@ -8275,7 +8385,7 @@
 		}
 		async checkPeachStatus(avcodeParam = "") {
 			if (!this.peachIngestBtn) return;
-			const avcode = avcodeParam || getVideoCodeFromUrl$1(this.targetVideo) || this.controlManager?.commentPanel?.videoCode || "";
+			const avcode = avcodeParam || this.playerCore?.getVideoCode?.() || this.controlManager?.commentPanel?.videoCode || getVideoCodeFromUrl(this.targetVideo) || "";
 			if (!avcode) return;
 			const badge = this.peachIngestBtn.querySelector(".tm-peach-badge");
 			if (typeof PeachWebBridge !== "undefined" && PeachWebBridge.isPeachInstance()) {
@@ -9141,6 +9251,11 @@
 		}
 	};
 	var logger = new Logger("[Miss Player]");
+	function normalizeAvCodeKey(videoCode) {
+		const raw = String(videoCode || "").trim();
+		if (!raw) return "";
+		return cleanAvCode(raw) || raw.toUpperCase();
+	}
 	function addDebugLog(text, level = "info") {
 		try {
 			if (typeof window !== "undefined" && window.DebugLogPanel?.addLog) window.DebugLogPanel.addLog(text, level);
@@ -9209,7 +9324,7 @@
 			if (!this.isSharedMode() || !videoCode) return [];
 			const config = this.getConfig();
 			if (!config.isEnabled) return [];
-			const code = videoCode.toUpperCase();
+			const code = normalizeAvCodeKey(videoCode);
 			try {
 				const bundleUrl = config.baseUrl + "/video_comments_bundle?avcode=eq." + encodeURIComponent(code) + "&select=comments,total_count";
 				const bundleRes = await this.request({
@@ -9256,7 +9371,7 @@
 			if (!this.isSharedMode() || !videoCode || !Array.isArray(comments) || comments.length === 0) return;
 			const config = this.getConfig();
 			if (!config.isEnabled) return;
-			const code = videoCode.toUpperCase();
+			const code = normalizeAvCodeKey(videoCode);
 			const rawSite = String(sourceSite || "jable").toLowerCase();
 			const normalizedSite = rawSite.startsWith("javlibrary") || rawSite.startsWith("javlib") ? "javlib" : rawSite.startsWith("javdb") ? "javdb" : "jable";
 			const rows = [];
@@ -9358,7 +9473,7 @@
 			if (!config.isEnabled) return false;
 			const { videoCode, commentId, userName, commentText, reason, reasonCode, userNote, scriptVersion, sourceSite, videoDuration, parserSnapshot, expectedHint } = reportData;
 			if (!videoCode || !reason) return false;
-			const code = String(videoCode).trim().toUpperCase();
+			const code = normalizeAvCodeKey(videoCode);
 			const safeDuration = typeof videoDuration === "number" && Number.isFinite(videoDuration) && videoDuration > 0 ? Math.round(videoDuration) : null;
 			const safeSnapshot = parserSnapshot && typeof parserSnapshot === "object" ? parserSnapshot : null;
 			const baseRpcPayload = {
@@ -9455,7 +9570,7 @@
 		}
 		static async fetchCrowdHeatmap(videoCode) {
 			if (!this.isSharedMode() || !videoCode) return null;
-			const code = videoCode.toUpperCase();
+			const code = normalizeAvCodeKey(videoCode);
 			const edgeUrl = getValue("betaCrowdHeatmapEdgeUrl", this.DEFAULT_EDGE_CACHE_URL).trim().replace(/\/+$/, "");
 			if (edgeUrl) try {
 				const edgeRes = await this.request({
@@ -9523,7 +9638,7 @@
 			if (!this.isSharedMode() || !videoCode || !deltaBase64) return false;
 			const config = this.getConfig();
 			if (!config.isEnabled) return false;
-			const code = videoCode.toUpperCase();
+			const code = normalizeAvCodeKey(videoCode);
 			try {
 				const rpcUrl = config.baseUrl + "/rpc/upsert_crowd_heatmap";
 				const rpcRes = await this.request({
@@ -13328,7 +13443,8 @@
 			if (this._outsideComposerHandler) window.removeEventListener("click", this._outsideComposerHandler, { capture: true });
 		}
 		getDraftStorageKey() {
-			const avcode = this.panel?.videoCode || this.videoCode || (typeof getVideoCodeFromUrl === "function" ? getVideoCodeFromUrl() : "") || "default";
+			const rawCode = this.panel?.videoCode || this.panel?.playerCore?.getVideoCode?.() || this.videoCode || getVideoCodeFromUrl(this.panel?.targetVideo || this.panel?.playerCore?.targetVideo) || "default";
+			const avcode = rawCode === "default" ? "default" : cleanAvCode(rawCode) || rawCode;
 			return "mp_comment_draft_" + String(avcode).toLowerCase().trim();
 		}
 		saveCommentDraft() {
@@ -17382,7 +17498,7 @@
 			});
 			this.updatePosition();
 			setTimeout(() => this.updatePosition(), 300);
-			this.videoCode = getVideoCodeFromUrl$1();
+			this.videoCode = this.playerCore?.getVideoCode?.() || getVideoCodeFromUrl(this.targetVideo || this.playerCore?.targetVideo);
 			if (this.videoCode) {
 				logger.log(`[CommentPanel] 提取到当前视频番号: ${this.videoCode}，开始采集...`);
 				this.loadComments(1);
@@ -21119,6 +21235,7 @@
 			this.loopEndTime = null;
 			this._longPressTimer = null;
 			this._longPressTriggered = false;
+			this.videoCode = "";
 			this.storageKey = null;
 			this.bottomSheet = new MarkerBottomSheet(this);
 			this.editingTabId = null;
@@ -21170,6 +21287,9 @@
 		setControlManager(controlManager) {
 			this.controlManager = controlManager;
 		}
+		_resolveVideoCode() {
+			return cleanAvCode(this.playerCore?.getVideoCode?.() || this.controlManager?.commentPanel?.videoCode || this.playerCore?.options?.videoCode || getVideoCodeFromUrl(this.targetVideo) || getVideoCodeFromUrl()) || "";
+		}
 		init(elements) {
 			this.loopStartMarker = elements.loopStartMarker;
 			this.loopEndMarker = elements.loopEndMarker;
@@ -21177,7 +21297,8 @@
 			this.progressMarkersContainer = elements.progressMarkersContainer;
 			this.tabScrollContainer = elements.tabScrollContainer;
 			this.tabAddBtn = elements.tabAddBtn;
-			const videoCode = getVideoCodeFromUrl$1();
+			const videoCode = this._resolveVideoCode();
+			this.videoCode = videoCode;
 			this.storageKey = videoCode ? `tabs_${videoCode}` : null;
 			this._loadTabs();
 			this.checkAndLoadDeepLinkCapsules();
@@ -21311,6 +21432,15 @@
 					this.syncProximityState({ skipAutoCenter: true });
 				};
 				this._onLoadedMetaBound = () => {
+					if (!this.storageKey) {
+						const refreshed = this._resolveVideoCode();
+						if (refreshed) {
+							this.videoCode = refreshed;
+							this.storageKey = `tabs_${refreshed}`;
+							this._loadTabs();
+							this.renderTabs();
+						}
+					}
 					this.renderProgressMarkers();
 					this.syncProximityState({ skipAutoCenter: true });
 				};
@@ -21323,6 +21453,7 @@
 				if (this.bottomSheet) this.bottomSheet.updateBottomSheet();
 			};
 			window.addEventListener("mp_sync_applied", this._onSyncAppliedBound);
+			window.addEventListener("mp_avcode_migrated", this._onSyncAppliedBound);
 			this._parseUrlHashParams();
 			return this;
 		}
@@ -22505,6 +22636,7 @@
 			document.removeEventListener("click", this._handleOutsideClickForEdit);
 			if (this._onSyncAppliedBound) {
 				window.removeEventListener("mp_sync_applied", this._onSyncAppliedBound);
+				window.removeEventListener("mp_avcode_migrated", this._onSyncAppliedBound);
 				this._onSyncAppliedBound = null;
 			}
 			if (this._onWindowMouseMoveBound) {
@@ -25772,6 +25904,32 @@
 			return null;
 		}
 	}
+	async function idbDelete(storeName, key) {
+		try {
+			const db = await getDB();
+			return new Promise((resolve, reject) => {
+				const req = db.transaction(storeName, "readwrite").objectStore(storeName).delete(key);
+				req.onsuccess = () => resolve(true);
+				req.onerror = () => reject(req.error);
+			});
+		} catch (err) {
+			console.warn(`[IndexedDB] 删除失败 (${storeName}/${key}):`, err.message);
+			return false;
+		}
+	}
+	async function idbGetAll(storeName) {
+		try {
+			const db = await getDB();
+			return new Promise((resolve, reject) => {
+				const req = db.transaction(storeName, "readonly").objectStore(storeName).getAll();
+				req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+				req.onerror = () => reject(req.error);
+			});
+		} catch (err) {
+			console.warn(`[IndexedDB] 全量读取失败 (${storeName}):`, err.message);
+			return [];
+		}
+	}
 	var CODEC_CONSTANTS = {
 		QUANTIZE_SLOTS: 120,
 		MIN_ENGAGEMENT_SECONDS: 45
@@ -26023,13 +26181,14 @@
 		}
 		_resolveStorageKey() {
 			let code = "";
-			if (this.playerCore?.options?.videoCode) code = this.playerCore.options.videoCode;
-			else if (this.controlManager?.commentPanel?.videoCode) code = this.controlManager.commentPanel.videoCode;
+			if (this.playerCore?.getVideoCode) code = this.playerCore.getVideoCode();
+			if (!code && this.playerCore?.options?.videoCode) code = this.playerCore.options.videoCode;
+			if (!code && this.controlManager?.commentPanel?.videoCode) code = this.controlManager.commentPanel.videoCode;
 			if (!code && this.targetVideo) try {
-				if (typeof this.targetVideo.getAttribute === "function") code = getVideoCodeFromUrl$1(this.targetVideo) || "";
+				if (typeof this.targetVideo.getAttribute === "function") code = getVideoCodeFromUrl(this.targetVideo) || "";
 			} catch (_) {}
 			if (!code) try {
-				code = getVideoCodeFromUrl$1() || "";
+				code = getVideoCodeFromUrl() || "";
 			} catch (_) {}
 			if (!code && typeof window !== "undefined") {
 				try {
@@ -27864,7 +28023,7 @@
 			this.activeItem = null;
 		}
 		_resolveAvcode() {
-			return cleanAvCode(this.controlManager?.commentPanel?.videoCode || this.playerCore?.options?.videoCode || getVideoCodeFromUrl$1() || getVideoCodeFromUrl$1(this.targetVideo)) || "";
+			return cleanAvCode(this.playerCore?.getVideoCode?.() || this.controlManager?.commentPanel?.videoCode || this.playerCore?.options?.videoCode || getVideoCodeFromUrl(this.targetVideo) || getVideoCodeFromUrl()) || "";
 		}
 		async _syncAvcode() {
 			const next = this._resolveAvcode();
@@ -28919,6 +29078,511 @@
 			if (typeof Toast$1 === "function") Toast$1(`${__$1("jumpedTo") || "已跳转至"} ${formatTime(to)}`, 1200, "info");
 		}
 	};
+	var ALIAS_MAP_KEY = "mp_avcode_migrated_aliases";
+	var LOCAL_CANON_FLAG_KEY = "mp_avcode_local_canon_v1";
+	var REMOTE_MIGRATED_PAIR_PREFIX = "mp_avcode_remote_migrated_";
+	var COMMENT_CACHE_DB_NAME = "MissPlayerCommentCache";
+	var COMMENT_CACHE_STORE = "video_comments";
+	function normalizeUpper(code) {
+		return String(code || "").trim().toUpperCase();
+	}
+	function listAllTabStorageKeys() {
+		const keys = new Set();
+		try {
+			if (typeof GM_listValues === "function") {
+				for (const k of GM_listValues() || []) if (typeof k === "string" && k.startsWith("tabs_")) keys.add(k);
+			}
+		} catch (_) {}
+		try {
+			if (typeof localStorage !== "undefined") for (let i = 0; i < localStorage.length; i++) {
+				const raw = localStorage.key(i);
+				if (!raw) continue;
+				const clean = raw.replace(/^(?:mp_|missNoAD_)/, "");
+				if (clean.startsWith("tabs_")) keys.add(clean);
+			}
+		} catch (_) {}
+		return Array.from(keys);
+	}
+	function mergeCapsuleLists(baseList = [], extraList = []) {
+		const map = new Map();
+		const put = (item) => {
+			if (!item || typeof item !== "object") return;
+			const start = Math.round(Number(item.startTime ?? item.tabTime ?? 0) * 10);
+			const end = Math.round(Number(item.endTime ?? item.tabEnd ?? 0) * 10);
+			const key = item.id || `tab_${start}_${end}`;
+			const updated = Number(item.updatedAt || item.createdAt || 0);
+			const existing = map.get(key);
+			if (!existing) {
+				map.set(key, {
+					...item,
+					id: item.id || key
+				});
+				return;
+			}
+			const exUpdated = Number(existing.updatedAt || existing.createdAt || 0);
+			if (updated > exUpdated || updated === exUpdated && !existing.comment && item.comment) map.set(key, {
+				...existing,
+				...item,
+				id: existing.id || item.id || key
+			});
+		};
+		for (const t of Array.isArray(baseList) ? baseList : []) put(t);
+		for (const t of Array.isArray(extraList) ? extraList : []) put(t);
+		return Array.from(map.values()).sort((a, b) => Number(a.startTime || 0) - Number(b.startTime || 0));
+	}
+	function mergeHeatmapBins(baseBins = [], extraBins = []) {
+		const len = Math.max(Array.isArray(baseBins) ? baseBins.length : 0, Array.isArray(extraBins) ? extraBins.length : 0);
+		const out = new Array(len);
+		for (let i = 0; i < len; i++) out[i] = Math.max(Number(baseBins[i]) || 0, Number(extraBins[i]) || 0);
+		return out;
+	}
+	function updateTombstoneVideoKeys(wrongKey, rightKey) {
+		try {
+			const tombstones = SyncManager.getLocalTombstones();
+			if (!tombstones || !tombstones.markers) return false;
+			let changed = false;
+			for (const meta of Object.values(tombstones.markers)) if (meta && typeof meta === "object" && meta.videoKey === wrongKey) {
+				meta.videoKey = rightKey;
+				changed = true;
+			}
+			if (changed) SyncManager.saveLocalTombstones(tombstones);
+			return changed;
+		} catch (_) {
+			return false;
+		}
+	}
+	async function migrateCommentCacheKey(wrongCode, rightCode) {
+		if (typeof indexedDB === "undefined" || !wrongCode || !rightCode || wrongCode === rightCode) return false;
+		try {
+			const db = await new Promise((resolve) => {
+				const req = indexedDB.open(COMMENT_CACHE_DB_NAME, 1);
+				req.onupgradeneeded = (e) => {
+					const d = e.target.result;
+					if (!d.objectStoreNames.contains(COMMENT_CACHE_STORE)) d.createObjectStore(COMMENT_CACHE_STORE, { keyPath: "videoCode" });
+				};
+				req.onsuccess = (e) => resolve(e.target.result);
+				req.onerror = () => resolve(null);
+			});
+			if (!db) return false;
+			const wrongRec = await new Promise((resolve) => {
+				try {
+					const req = db.transaction(COMMENT_CACHE_STORE, "readonly").objectStore(COMMENT_CACHE_STORE).get(wrongCode);
+					req.onsuccess = () => resolve(req.result || null);
+					req.onerror = () => resolve(null);
+				} catch (_) {
+					resolve(null);
+				}
+			});
+			if (!wrongRec) return false;
+			if (!/^DM-\d+$/i.test(wrongCode)) {
+				if (!await new Promise((resolve) => {
+					try {
+						const req = db.transaction(COMMENT_CACHE_STORE, "readonly").objectStore(COMMENT_CACHE_STORE).get(rightCode);
+						req.onsuccess = () => resolve(req.result || null);
+						req.onerror = () => resolve(null);
+					} catch (_) {
+						resolve(null);
+					}
+				})) await new Promise((resolve) => {
+					try {
+						const tx = db.transaction(COMMENT_CACHE_STORE, "readwrite");
+						tx.objectStore(COMMENT_CACHE_STORE).put({
+							...wrongRec,
+							videoCode: rightCode
+						});
+						tx.oncomplete = () => resolve(true);
+						tx.onerror = () => resolve(false);
+					} catch (_) {
+						resolve(false);
+					}
+				});
+			}
+			await new Promise((resolve) => {
+				try {
+					const tx = db.transaction(COMMENT_CACHE_STORE, "readwrite");
+					tx.objectStore(COMMENT_CACHE_STORE).delete(wrongCode);
+					tx.oncomplete = () => resolve(true);
+					tx.onerror = () => resolve(false);
+				} catch (_) {
+					resolve(false);
+				}
+			});
+			return true;
+		} catch (_) {
+			return false;
+		}
+	}
+	var AvCodeMigrationService = class {
+		static getAliasMap() {
+			const raw = getValue(ALIAS_MAP_KEY, {});
+			return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+		}
+		static recordAlias(wrongCode, rightCode) {
+			const w = normalizeUpper(wrongCode);
+			const r = cleanAvCode(rightCode);
+			if (!w || !r || w === r) return;
+			const map = this.getAliasMap();
+			if (map[`tabs_${w}`] === `tabs_${r}`) return;
+			map[`tabs_${w}`] = `tabs_${r}`;
+			setValue(ALIAS_MAP_KEY, map);
+		}
+		static migrateLocalTabsAndDraftSync(wrongCode, rightCode) {
+			const wrongNorm = normalizeUpper(wrongCode);
+			const rightNorm = cleanAvCode(rightCode) || normalizeUpper(rightCode);
+			if (!wrongNorm || !rightNorm || wrongNorm === rightNorm) return false;
+			let migrated = false;
+			const wrongKey = `tabs_${wrongNorm}`;
+			const rightKey = `tabs_${rightNorm}`;
+			const candidateWrongKeys = new Set([wrongKey]);
+			for (const k of listAllTabStorageKeys()) {
+				const suffix = k.slice(5);
+				if (suffix && (normalizeUpper(suffix) === wrongNorm || cleanAvCode(suffix) === rightNorm) && k !== rightKey) candidateWrongKeys.add(k);
+			}
+			let targetTabs = getValue(rightKey, []);
+			if (!Array.isArray(targetTabs)) targetTabs = [];
+			for (const wk of candidateWrongKeys) {
+				const oldTabs = getValue(wk, []);
+				if (Array.isArray(oldTabs) && oldTabs.length > 0) {
+					targetTabs = mergeCapsuleLists(targetTabs, oldTabs);
+					migrated = true;
+				}
+				if (Array.isArray(oldTabs)) {
+					const existsInGm = hasGMApi() && typeof GM_listValues === "function" && (GM_listValues() || []).includes(wk);
+					const existsInLs = typeof localStorage !== "undefined" && (localStorage.getItem(`mp_${wk}`) !== null || localStorage.getItem(`missNoAD_${wk}`) !== null);
+					if (existsInGm || existsInLs) {
+						deleteValue(wk);
+						updateTombstoneVideoKeys(wk, rightKey);
+						migrated = true;
+					}
+				}
+			}
+			if (migrated) {
+				if (targetTabs.length > 0) setValue(rightKey, targetTabs);
+				this.recordAlias(wrongNorm, rightNorm);
+			}
+			const wrongDraftKey = `mp_comment_draft_${wrongNorm.toLowerCase()}`;
+			const rightDraftKey = `mp_comment_draft_${rightNorm.toLowerCase()}`;
+			const wrongDraft = getValue(wrongDraftKey, "");
+			if (wrongDraft) {
+				if (!getValue(rightDraftKey, "")) setValue(rightDraftKey, wrongDraft);
+				deleteValue(wrongDraftKey);
+				migrated = true;
+			}
+			return migrated;
+		}
+		static async runStartupLocalCanonicalization() {
+			let changedCount = 0;
+			for (const key of listAllTabStorageKeys()) {
+				const canonical = cleanAvCode(key.slice(5));
+				if (!canonical || key === `tabs_${canonical}`) continue;
+				const oldTabs = getValue(key, []);
+				const targetKey = `tabs_${canonical}`;
+				if (Array.isArray(oldTabs) && oldTabs.length > 0) setValue(targetKey, mergeCapsuleLists(getValue(targetKey, []), oldTabs));
+				deleteValue(key);
+				updateTombstoneVideoKeys(key, targetKey);
+				changedCount++;
+			}
+			if (getValue(LOCAL_CANON_FLAG_KEY, false)) return changedCount;
+			try {
+				const subRows = await idbGetAll(STORES$1.SUBTITLES);
+				for (const row of subRows) {
+					const key = String(row?.key || "");
+					const bundle = row?.data;
+					if (!key || !bundle || !Array.isArray(bundle.items)) continue;
+					const canonical = cleanAvCode(key);
+					if (canonical && canonical !== key) {
+						const target = await idbGet(STORES$1.SUBTITLES, canonical) || {
+							code: canonical,
+							activeId: "",
+							favoriteId: "",
+							items: [],
+							updatedAt: 0
+						};
+						const merged = SubtitleRepository._merge(target, {
+							...bundle,
+							code: canonical
+						});
+						const mergedMap = new Map(merged.bundle.items.map((it) => [it.id, it]));
+						for (const it of bundle.items) {
+							if (!it?.id) continue;
+							const cur = mergedMap.get(it.id);
+							if (!cur || !cur.content && it.content) mergedMap.set(it.id, {
+								...cur,
+								...it
+							});
+						}
+						await idbSet(STORES$1.SUBTITLES, canonical, {
+							...merged.bundle,
+							code: canonical,
+							items: Array.from(mergedMap.values()),
+							updatedAt: Date.now()
+						});
+						await idbDelete(STORES$1.SUBTITLES, key);
+						changedCount++;
+						continue;
+					}
+					if (/^DM-\d+$/i.test(key) && bundle.items.length > 0) {
+						if (!bundle.items.some((it) => it.provider !== "local" && codeMatchesText(it.title || "", key))) {
+							const detectedCodes = new Set();
+							for (const it of bundle.items) {
+								const matched = matchAvCodeFromText(it?.title || "");
+								if (matched && matched !== key) detectedCodes.add(matched);
+							}
+							if (detectedCodes.size === 1) {
+								const [realCode] = Array.from(detectedCodes);
+								await this._migrateSubtitleBundleLocal(key, realCode);
+								changedCount++;
+							}
+						}
+					}
+				}
+			} catch (_) {}
+			try {
+				const hmRows = await idbGetAll(STORES$1.HEATMAP);
+				for (const row of hmRows) {
+					const key = String(row?.key || "");
+					if (!key.startsWith("HEATMAP_")) continue;
+					const canonical = cleanAvCode(key.slice(8));
+					if (!canonical || key === `HEATMAP_${canonical}`) continue;
+					const oldData = row?.data;
+					if (oldData && Array.isArray(oldData.bins)) {
+						const targetKey = `HEATMAP_${canonical}`;
+						const targetData = await idbGet(STORES$1.HEATMAP, targetKey);
+						const mergedBins = mergeHeatmapBins(targetData?.bins || [], oldData.bins);
+						await idbSet(STORES$1.HEATMAP, targetKey, {
+							avcode: canonical,
+							duration: targetData?.duration || oldData.duration || 0,
+							binSeconds: targetData?.binSeconds || oldData.binSeconds || 5,
+							bins: mergedBins,
+							updatedAt: Date.now()
+						});
+					}
+					await idbDelete(STORES$1.HEATMAP, key);
+					changedCount++;
+				}
+			} catch (_) {}
+			setValue(LOCAL_CANON_FLAG_KEY, true);
+			return changedCount;
+		}
+		static async migrateCurrentPageIfNeeded(url = typeof window !== "undefined" ? window.location.href : "", rightCodeParam = "", options = {}) {
+			const rightCode = cleanAvCode(rightCodeParam || getVideoCodeFromUrl(url));
+			const shardWrong = extractMissavShardCode(url);
+			if (!rightCode) return false;
+			const localChanged = this.migrateLocalTabsAndDraftSync(shardWrong || rightCode, rightCode);
+			if (!shardWrong || shardWrong === rightCode) return localChanged;
+			const pairKey = `${shardWrong}->${rightCode}`;
+			if (this._runningPairs.has(pairKey)) return localChanged;
+			this._runningPairs.add(pairKey);
+			try {
+				let anyMigrated = localChanged;
+				if (await this._migrateSubtitleBundleLocal(shardWrong, rightCode)) anyMigrated = true;
+				if (await this._migrateHeatmapLocal(shardWrong, rightCode, options.duration || 0)) anyMigrated = true;
+				if (await migrateCommentCacheKey(shardWrong, rightCode)) anyMigrated = true;
+				const remoteFlagKey = `${REMOTE_MIGRATED_PAIR_PREFIX}${shardWrong}_${rightCode}`;
+				if (!getValue(remoteFlagKey, false)) {
+					if (await this._migrateRemoteWebDavAndStrm(shardWrong, rightCode, options.duration || 0)) anyMigrated = true;
+					setValue(remoteFlagKey, true);
+				}
+				if (anyMigrated) {
+					this.recordAlias(shardWrong, rightCode);
+					try {
+						window.dispatchEvent(new CustomEvent("mp_avcode_migrated", { detail: {
+							wrongCode: shardWrong,
+							rightCode
+						} }));
+					} catch (_) {}
+					if (localChanged) try {
+						SyncManager.triggerAutoSync(options.playerState || null, "change");
+					} catch (_) {}
+				}
+				return anyMigrated;
+			} finally {
+				this._runningPairs.delete(pairKey);
+			}
+		}
+		static async _migrateSubtitleBundleLocal(wrongCode, rightCode) {
+			try {
+				const oldBundle = await idbGet(STORES$1.SUBTITLES, wrongCode);
+				if (!oldBundle || !Array.isArray(oldBundle.items)) return false;
+				const transferable = oldBundle.items.filter((it) => {
+					if (!it) return false;
+					if (it.provider === "local") return true;
+					return codeMatchesText(it.title || "", rightCode);
+				});
+				if (transferable.length > 0) {
+					const target = await idbGet(STORES$1.SUBTITLES, rightCode) || {
+						code: rightCode,
+						activeId: "",
+						favoriteId: "",
+						items: [],
+						updatedAt: 0
+					};
+					const map = new Map((target.items || []).map((it) => [it.id, it]));
+					for (const item of transferable) {
+						const prev = map.get(item.id);
+						if (!prev || !prev.content && item.content || item.favorite && !prev.favorite) map.set(item.id, {
+							...prev,
+							...item,
+							content: item.content || prev?.content || ""
+						});
+					}
+					const nextBundle = {
+						code: rightCode,
+						activeId: target.activeId || (transferable.some((i) => i.id === oldBundle.activeId) ? oldBundle.activeId : ""),
+						favoriteId: target.favoriteId || (transferable.some((i) => i.id === oldBundle.favoriteId) ? oldBundle.favoriteId : ""),
+						items: Array.from(map.values()),
+						updatedAt: Date.now()
+					};
+					await idbSet(STORES$1.SUBTITLES, rightCode, nextBundle);
+				}
+				const hasRealWrong = oldBundle.items.some((it) => it && it.provider !== "local" && codeMatchesText(it.title || "", wrongCode));
+				if (!hasRealWrong) await idbDelete(STORES$1.SUBTITLES, wrongCode);
+				return transferable.length > 0 || !hasRealWrong;
+			} catch (_) {
+				return false;
+			}
+		}
+		static async _migrateHeatmapLocal(wrongCode, rightCode, expectedDuration = 0) {
+			try {
+				const wrongKey = `HEATMAP_${wrongCode}`;
+				const rightKey = `HEATMAP_${rightCode}`;
+				const oldData = await idbGet(STORES$1.HEATMAP, wrongKey);
+				if (!oldData || !Array.isArray(oldData.bins) || oldData.bins.length === 0) return false;
+				const targetData = await idbGet(STORES$1.HEATMAP, rightKey);
+				const refDur = Number(expectedDuration) || Number(targetData?.duration) || 0;
+				const oldDur = Number(oldData.duration) || 0;
+				if (refDur > 0 && oldDur > 0 && Math.abs(refDur - oldDur) > 20) return false;
+				const mergedBins = mergeHeatmapBins(targetData?.bins || [], oldData.bins);
+				await idbSet(STORES$1.HEATMAP, rightKey, {
+					avcode: rightCode,
+					duration: targetData?.duration || oldDur,
+					binSeconds: targetData?.binSeconds || oldData.binSeconds || 5,
+					bins: mergedBins,
+					updatedAt: Date.now()
+				});
+				await idbDelete(STORES$1.HEATMAP, wrongKey);
+				return true;
+			} catch (_) {
+				return false;
+			}
+		}
+		static async _migrateRemoteWebDavAndStrm(wrongCode, rightCode, expectedDuration = 0) {
+			let changed = false;
+			const syncConfig = SyncManager.getWebDavConfig();
+			const hasSyncDav = WebDavClient.hasValidEndpoint(syncConfig) && Boolean(syncConfig.user);
+			const subtitleTargets = [];
+			if (hasSyncDav) subtitleTargets.push({
+				config: syncConfig,
+				dir: `media/${wrongCode}/`
+			});
+			const peachTarget = SubtitleRepository.resolveRemoteTarget(wrongCode);
+			if (peachTarget && (peachTarget.dir !== `media/${wrongCode}/` || !hasSyncDav)) subtitleTargets.push(peachTarget);
+			for (const wrongTarget of subtitleTargets) try {
+				const indexPath = `${wrongTarget.dir}_index.json`;
+				const rawIdx = await WebDavClient.downloadFile(wrongTarget.config, indexPath);
+				const remoteIdx = typeof rawIdx === "string" ? JSON.parse(rawIdx) : rawIdx;
+				if (!remoteIdx || !Array.isArray(remoteIdx.items)) continue;
+				if (!wrongTarget.dir && normalizeUpper(remoteIdx.code) !== wrongCode) continue;
+				const relevant = remoteIdx.items.filter((it) => it && (it.provider === "local" || codeMatchesText(it.title || "", rightCode)));
+				if (relevant.length > 0) {
+					const rightBundle = await SubtitleRepository.load(rightCode);
+					const map = new Map((rightBundle.items || []).map((it) => [it.id, it]));
+					let dirtyItem = null;
+					for (const item of relevant) {
+						let content = "";
+						if (item.file) {
+							const dl = await WebDavClient.downloadFile(wrongTarget.config, `${wrongTarget.dir}${item.file}`);
+							if (typeof dl === "string") content = dl;
+						}
+						const prev = map.get(item.id);
+						const mergedItem = {
+							...prev,
+							...item,
+							file: "",
+							content: content || prev?.content || ""
+						};
+						map.set(item.id, mergedItem);
+						if (mergedItem.content && !dirtyItem) dirtyItem = mergedItem;
+					}
+					await SubtitleRepository.save({
+						code: rightCode,
+						activeId: rightBundle.activeId,
+						favoriteId: rightBundle.favoriteId || remoteIdx.favoriteId || "",
+						items: Array.from(map.values())
+					}, {
+						sync: true,
+						dirtyItem
+					});
+					changed = true;
+				}
+				if (!remoteIdx.items.some((it) => it && it.provider !== "local" && codeMatchesText(it.title || "", wrongCode))) {
+					for (const it of remoteIdx.items) if (it?.file && (wrongTarget.dir || String(it.file).toUpperCase().startsWith(`${wrongCode}.`))) await WebDavClient.deleteFile(wrongTarget.config, `${wrongTarget.dir}${it.file}`).catch(() => {});
+					if (wrongTarget.dir) await WebDavClient.deleteFile(wrongTarget.config, indexPath).catch(() => {});
+					changed = true;
+				}
+			} catch (_) {}
+			if (hasSyncDav) {
+				try {
+					const wrongHm = await WebDavClient.downloadFile(syncConfig, `heatmaps/${wrongCode}.json`);
+					if (wrongHm && Array.isArray(wrongHm.bins) && wrongHm.bins.length > 0) {
+						const rightHm = await WebDavClient.downloadFile(syncConfig, `heatmaps/${rightCode}.json`);
+						const refDur = Number(expectedDuration) || Number(rightHm?.duration) || 0;
+						const oldDur = Number(wrongHm.duration) || 0;
+						if (!(refDur > 0 && oldDur > 0 && Math.abs(refDur - oldDur) > 20)) {
+							const mergedBins = mergeHeatmapBins(rightHm?.bins || [], wrongHm.bins);
+							await WebDavClient.uploadFile(syncConfig, `heatmaps/${rightCode}.json`, {
+								avcode: rightCode,
+								duration: rightHm?.duration || oldDur,
+								binSeconds: rightHm?.binSeconds || wrongHm.binSeconds || 5,
+								bins: mergedBins,
+								updatedAt: Date.now()
+							}, "application/json; charset=utf-8");
+							await WebDavClient.deleteFile(syncConfig, `heatmaps/${wrongCode}.json`);
+							changed = true;
+						}
+					}
+				} catch (_) {}
+				try {
+					const wrongCm = await WebDavClient.downloadFile(syncConfig, `comments/${wrongCode}.json`);
+					if (wrongCm && typeof wrongCm === "object" && Array.isArray(wrongCm.comments) && wrongCm.comments.length === 0) {
+						await WebDavClient.deleteFile(syncConfig, `comments/${wrongCode}.json`);
+						changed = true;
+					}
+				} catch (_) {}
+			}
+			try {
+				const effectiveWebDav = PeachService.getEffectiveWebDavConfig();
+				const davCfg = effectiveWebDav?.config;
+				if (effectiveWebDav?.targetDir && WebDavClient.hasValidEndpoint(davCfg) && davCfg.user) {
+					const strmCfg = {
+						...davCfg,
+						path: effectiveWebDav.targetDir
+					};
+					const wrongFileName = `${wrongCode}.strm`;
+					const wrongStrmPath = `${effectiveWebDav.targetDir}${wrongFileName}`;
+					const rawStrm = await WebDavClient.downloadFile(strmCfg, wrongFileName);
+					if (typeof rawStrm === "string" && rawStrm.trim()) {
+						const sourceMatch = rawStrm.match(/^#\s*source:\s*(.+)$/im);
+						const sourceUrl = sourceMatch ? sourceMatch[1].trim() : "";
+						if ((sourceUrl ? cleanAvCode(getVideoCodeFromUrl(sourceUrl)) : "") === rightCode) {
+							const rightFileName = `${rightCode}.strm`;
+							const rightStrmPath = `${effectiveWebDav.targetDir}${rightFileName}`;
+							if (!await WebDavClient.checkFileExists(strmCfg, rightStrmPath, 3500)) {
+								const updatedStrm = rawStrm.replace(new RegExp(`(#\\s*avcode:\\s*)${wrongCode}\\b`, "i"), `$1${rightCode}`).replace(new RegExp(`(/)${wrongCode}(?=[/?#\\r\\n]|$)`, "gi"), `$1${rightCode}`);
+								await WebDavClient.uploadFile(strmCfg, rightFileName, updatedStrm, "text/plain; charset=utf-8");
+							}
+							await WebDavClient.deleteFile(strmCfg, wrongStrmPath);
+							const peachCfg = PeachService.getConfig();
+							if (peachCfg.enabled && peachCfg.base && peachCfg.token) PeachService.triggerScan().catch(() => {});
+							changed = true;
+						}
+					}
+				}
+			} catch (_) {}
+			return changed;
+		}
+	};
+	_defineProperty(AvCodeMigrationService, "_runningPairs", new Set());
 	var CustomVideoPlayer$1 = class {
 		constructor(options = {}) {
 			console.log("[CustomVideoPlayer] 初始化...");
@@ -29035,6 +29699,10 @@
 				videoElem.addEventListener("pause", this._onPauseOrEnded);
 				videoElem.addEventListener("ended", this._onPauseOrEnded);
 				videoElem.addEventListener("timeupdate", this._onTimeUpdate);
+				const authoritativeCode = this.playerCore.getVideoCode();
+				const currentUrl = typeof window !== "undefined" ? window.location?.href || "" : "";
+				const shardWrong = extractMissavShardCode(currentUrl);
+				if (authoritativeCode) AvCodeMigrationService.migrateLocalTabsAndDraftSync(shardWrong || authoritativeCode, authoritativeCode);
 				const uiManager = new UIManager$1(this.playerCore);
 				const uiElements = uiManager.createUI();
 				this.managers.uiManager = uiManager;
@@ -29113,6 +29781,18 @@
 				const subtitleManager = new SubtitleManager(this.playerCore, uiManager, controlManager);
 				subtitleManager.init();
 				this.managers.subtitleManager = subtitleManager;
+				if (authoritativeCode) AvCodeMigrationService.migrateCurrentPageIfNeeded(currentUrl, authoritativeCode, {
+					duration: videoElem.duration || 0,
+					playerState: this.playerCore?.options?.playerState
+				}).then((migrated) => {
+					if (!migrated) return;
+					subtitleManager._loadBundle().then(() => {
+						subtitleManager._renderList();
+						subtitleManager._syncSwitchState();
+						if (subtitleManager.isEnabled && !subtitleManager.activeItem) subtitleManager._autoApplyBest({ silent: true });
+					}).catch(() => {});
+					if (heatmapManager && videoElem.duration > 0) heatmapManager.onLoadedMetadata().catch(() => {});
+				}).catch(() => {});
 				settingsManager.updateControlRowsVisibility();
 				this.playerCore.restoreVideoState();
 				progressManager.updateProgressBar();
@@ -29161,7 +29841,7 @@
 				}
 				if (this._onTimeUpdate) videoElem.removeEventListener("timeupdate", this._onTimeUpdate);
 			}
-			const avcode = getVideoCodeFromUrl$1() || "";
+			const avcode = this.playerCore?.getVideoCode?.() || getVideoCodeFromUrl(this.playerCore?.targetVideo) || "";
 			const playSec = Math.round(this._activePlayDurationSec);
 			const loopManager = this.managers?.loopManager;
 			const loopSec = loopManager ? Math.round(loopManager.totalLoopDurationSec || 0) : 0;
@@ -31042,6 +31722,7 @@
 				performance.mark("mp:state-created");
 				playerState.loadSettings();
 				CommentCacheManager.migrateFromLegacyStorage().catch(() => {});
+				AvCodeMigrationService.runStartupLocalCanonicalization().catch(() => {});
 				SyncManager.triggerAutoSync(playerState, "startup");
 				document.addEventListener("visibilitychange", () => {
 					if (document.visibilityState === "visible") SyncManager.triggerAutoSync(playerState, "resume");

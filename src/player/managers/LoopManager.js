@@ -1,6 +1,6 @@
 import { getRandomCapsuleColor } from './tagTaxonomy.js';
 import { formatTimeWithHours, getValue, setValue, Toast, playTapSound, isImeConfirmEnter } from '../../utils/index.js';
-import { getVideoCodeFromUrl } from '../../utils/videoCode.js';
+import { getVideoCodeFromUrl, cleanAvCode } from '../../utils/videoCode.js';
 import { __ } from '../../constants/i18n.js';
 import { LOOP_INTERVAL } from '../../constants/icons.js';
 import { telemetry } from '../../telemetry/index.js';
@@ -48,6 +48,7 @@ export class LoopManager {
         this._longPressTriggered = false;
 
         // Storage
+        this.videoCode = '';
         this.storageKey = null;
 
         // Bottom sheet component
@@ -108,6 +109,16 @@ export class LoopManager {
         this.controlManager = controlManager;
     }
 
+    _resolveVideoCode() {
+        const raw =
+            this.playerCore?.getVideoCode?.() ||
+            this.controlManager?.commentPanel?.videoCode ||
+            this.playerCore?.options?.videoCode ||
+            getVideoCodeFromUrl(this.targetVideo) ||
+            getVideoCodeFromUrl();
+        return cleanAvCode(raw) || '';
+    }
+
     /**
      * Initialize with DOM refs from ControlManager
      */
@@ -119,8 +130,9 @@ export class LoopManager {
         this.tabScrollContainer = elements.tabScrollContainer;
         this.tabAddBtn = elements.tabAddBtn;
 
-        // Resolve storage key from video code
-        const videoCode = getVideoCodeFromUrl();
+        // Resolve storage key from unified video code resolver
+        const videoCode = this._resolveVideoCode();
+        this.videoCode = videoCode;
         this.storageKey = videoCode ? `tabs_${videoCode}` : null;
 
         // Load saved tabs
@@ -299,6 +311,15 @@ export class LoopManager {
                 this.syncProximityState({ skipAutoCenter: true });
             };
             this._onLoadedMetaBound = () => {
+                if (!this.storageKey) {
+                    const refreshed = this._resolveVideoCode();
+                    if (refreshed) {
+                        this.videoCode = refreshed;
+                        this.storageKey = `tabs_${refreshed}`;
+                        this._loadTabs();
+                        this.renderTabs();
+                    }
+                }
                 this.renderProgressMarkers();
                 this.syncProximityState({ skipAutoCenter: true });
             };
@@ -306,7 +327,7 @@ export class LoopManager {
             this.targetVideo.addEventListener('loadedmetadata', this._onLoadedMetaBound);
         }
 
-        // 监听多端云同步落盘事件，实时无感刷新当前视频的打点与高光片段
+        // 监听多端云同步落盘与错位番号迁移事件，实时无感刷新当前视频的打点与高光片段
         this._onSyncAppliedBound = () => {
             this._loadTabs();
             this.renderTabs();
@@ -315,6 +336,7 @@ export class LoopManager {
             }
         };
         window.addEventListener('mp_sync_applied', this._onSyncAppliedBound);
+        window.addEventListener('mp_avcode_migrated', this._onSyncAppliedBound);
 
         // Parse URL hash for backward compatibility and multi-tabs support
         this._parseUrlHashParams();
@@ -1982,6 +2004,7 @@ export class LoopManager {
         document.removeEventListener('click', this._handleOutsideClickForEdit);
         if (this._onSyncAppliedBound) {
             window.removeEventListener('mp_sync_applied', this._onSyncAppliedBound);
+            window.removeEventListener('mp_avcode_migrated', this._onSyncAppliedBound);
             this._onSyncAppliedBound = null;
         }
         if (this._onWindowMouseMoveBound) {

@@ -1,6 +1,13 @@
 import { getValue } from '../utils/index.js';
+import { cleanAvCode } from '../utils/videoCode.js';
 import { md5 } from '../utils/md5.js';
 import { logger } from '../utils/logger.js';
+
+function normalizeAvCodeKey(videoCode) {
+    const raw = String(videoCode || '').trim();
+    if (!raw) return '';
+    return cleanAvCode(raw) || raw.toUpperCase();
+}
 
 function addDebugLog(text, level = 'info') {
     try {
@@ -97,7 +104,7 @@ export class SupabaseService {
         const config = this.getConfig();
         if (!config.isEnabled) return [];
 
-        const code = videoCode.toUpperCase();
+        const code = normalizeAvCodeKey(videoCode);
         // 1. 优先查询方案 1: video_comments_bundle (单行返回压缩后的全部评论)
         try {
             const bundleUrl = config.baseUrl + '/video_comments_bundle?avcode=eq.' + encodeURIComponent(code) + '&select=comments,total_count';
@@ -157,7 +164,7 @@ export class SupabaseService {
         const config = this.getConfig();
         if (!config.isEnabled) return;
 
-        const code = videoCode.toUpperCase();
+        const code = normalizeAvCodeKey(videoCode);
         const rawSite = String(sourceSite || 'jable').toLowerCase();
         const normalizedSite = (rawSite.startsWith('javlibrary') || rawSite.startsWith('javlib'))
             ? 'javlib'
@@ -300,7 +307,7 @@ export class SupabaseService {
         } = reportData;
         if (!videoCode || !reason) return false;
 
-        const code = String(videoCode).trim().toUpperCase();
+        const code = normalizeAvCodeKey(videoCode);
         const safeDuration = (typeof videoDuration === 'number' && Number.isFinite(videoDuration) && videoDuration > 0)
             ? Math.round(videoDuration)
             : null;
@@ -419,7 +426,7 @@ export class SupabaseService {
      */
     static async fetchCrowdHeatmap(videoCode) {
         if (!this.isSharedMode() || !videoCode) return null;
-        const code = videoCode.toUpperCase();
+        const code = normalizeAvCodeKey(videoCode);
 
         // 1. 优先尝试 Cloudflare Worker 边缘 24h 缓存 (0 消耗 Supabase Egress 配额)
         const edgeUrl = getValue('betaCrowdHeatmapEdgeUrl', this.DEFAULT_EDGE_CACHE_URL).trim().replace(/\/+$/, '');
@@ -505,7 +512,7 @@ export class SupabaseService {
         const config = this.getConfig();
         if (!config.isEnabled) return false;
 
-        const code = videoCode.toUpperCase();
+        const code = normalizeAvCodeKey(videoCode);
         try {
             const rpcUrl = config.baseUrl + '/rpc/upsert_crowd_heatmap';
             const rpcRes = await this.request({
