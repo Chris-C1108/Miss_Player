@@ -80,11 +80,22 @@ export class PlayerCore {
         if (initialTarget <= 0) return;
 
         const tolerance = Math.min(2.5, Math.max(0.4, initialTarget * 0.25));
-        const maxAttempts = 8;
+        const maxAttempts = 12;
         let attempts = 0;
         let lastSeekStamp = 0;
         let disarmed = false;
+        let isApplyingSeek = false;
+        let firstStablePlayTime = null;
         let timeoutId = null;
+
+        const getRequiredStableAdvance = () => {
+            const dur = video.duration;
+            const target = resolveTargetTime();
+            if (Number.isFinite(dur) && dur > 0) {
+                return Math.min(2.5, Math.max(0.4, (dur - target) - 0.5));
+            }
+            return 2.5;
+        };
 
         const syncUiTo = (t) => {
             try {
@@ -105,6 +116,7 @@ export class PlayerCore {
             video.removeEventListener('loadeddata', onReadyEvent);
             video.removeEventListener('canplay', onReadyEvent);
             video.removeEventListener('playing', onReadyEvent);
+            video.removeEventListener('seeking', onSeeking);
             video.removeEventListener('seeked', onSeeked);
             video.removeEventListener('timeupdate', onTimeUpdate);
             if (this._initialSeekGuardCancel === disarm) {
@@ -112,8 +124,14 @@ export class PlayerCore {
             }
         };
 
+        const isOutOfBounds = (cur, target) => {
+            if (cur < target - tolerance) return true;
+            if (firstStablePlayTime === null && cur > target + Math.max(10, tolerance)) return true;
+            return false;
+        };
+
         const applySeek = (force = false) => {
-            if (disarmed || !this.targetVideo) return;
+            if (disarmed || !this.targetVideo || isApplyingSeek) return;
             if (video.readyState < 1) return;
 
             const target = resolveTargetTime();
@@ -123,15 +141,19 @@ export class PlayerCore {
             }
 
             const cur = Number(video.currentTime) || 0;
-            if (Math.abs(cur - target) <= tolerance) {
+            if (!isOutOfBounds(cur, target)) {
                 syncUiTo(cur);
-                if (video.readyState >= 2 && !video.seeking && (!video.paused || this.userPauseIntent)) {
-                    disarm();
+                if (video.readyState >= 2 && !video.seeking && !video.paused) {
+                    if (firstStablePlayTime === null) {
+                        firstStablePlayTime = cur;
+                    } else if ((cur - firstStablePlayTime) >= getRequiredStableAdvance()) {
+                        disarm();
+                    }
                 }
                 return;
             }
 
-            if (!force && video.seeking && (Date.now() - lastSeekStamp < 250)) {
+            if (!force && video.seeking && (Date.now() - lastSeekStamp < 200)) {
                 return;
             }
 
@@ -141,24 +163,48 @@ export class PlayerCore {
             }
 
             attempts += 1;
+            firstStablePlayTime = null;
             lastSeekStamp = Date.now();
+            isApplyingSeek = true;
             try {
                 video.currentTime = target;
             } catch (_) {}
+            finally {
+                isApplyingSeek = false;
+            }
+
+            if (video.paused && !this.userPauseIntent && typeof video.play === 'function') {
+                try {
+                    const p = video.play();
+                    if (p && typeof p.catch === 'function') p.catch(() => {});
+                } catch (_) {}
+            }
             syncUiTo(target);
         };
 
         const onReadyEvent = () => applySeek(false);
 
+        const onSeeking = () => {
+            if (disarmed || isApplyingSeek) return;
+            if (video.readyState < 1) return;
+            const target = resolveTargetTime();
+            const cur = Number(video.currentTime) || 0;
+            if (isOutOfBounds(cur, target)) {
+                applySeek(true);
+            }
+        };
+
         const onSeeked = () => {
             if (disarmed) return;
             const target = resolveTargetTime();
             const cur = Number(video.currentTime) || 0;
-            if (Math.abs(cur - target) > tolerance) {
+            if (isOutOfBounds(cur, target)) {
                 applySeek(true);
-            } else if (video.readyState >= 2 && (!video.paused || this.userPauseIntent)) {
+            } else {
                 syncUiTo(cur);
-                disarm();
+                if (video.readyState >= 2 && !video.paused && firstStablePlayTime === null) {
+                    firstStablePlayTime = cur;
+                }
             }
         };
 
@@ -166,13 +212,18 @@ export class PlayerCore {
             if (disarmed) return;
             const target = resolveTargetTime();
             const cur = Number(video.currentTime) || 0;
-            if (Math.abs(cur - target) > tolerance) {
-                if (!video.seeking) {
-                    applySeek(false);
-                }
+            if (isOutOfBounds(cur, target)) {
+                // 若在稳定播放期前 1 秒内意外跌回视频开头，即使浏览器仍处于 seeking 也强制拉回
+                applySeek(cur < target - tolerance);
             } else if (video.readyState >= 2 && !video.seeking) {
                 syncUiTo(cur);
-                disarm();
+                if (!video.paused) {
+                    if (firstStablePlayTime === null) {
+                        firstStablePlayTime = cur;
+                    } else if ((cur - firstStablePlayTime) >= getRequiredStableAdvance()) {
+                        disarm();
+                    }
+                }
             }
         };
 
@@ -180,10 +231,11 @@ export class PlayerCore {
         video.addEventListener('loadeddata', onReadyEvent);
         video.addEventListener('canplay', onReadyEvent);
         video.addEventListener('playing', onReadyEvent);
+        video.addEventListener('seeking', onSeeking);
         video.addEventListener('seeked', onSeeked);
         video.addEventListener('timeupdate', onTimeUpdate);
 
-        timeoutId = setTimeout(disarm, 6000);
+        timeoutId = setTimeout(disarm, 8000);
         this._initialSeekGuardCancel = disarm;
 
         if (video.readyState >= 1) {

@@ -136,14 +136,31 @@ function createMockVideo({ readyState = 1, duration = 3600, currentTime = 0, pau
     assert.strictEqual(video.currentTime, 650, '起播时被重置回 0 后，守卫必须立即拉回 650s');
     assert.ok(proximityTargets.includes(650), '应同步胶囊邻近态到 650s');
 
-    // 模拟到达目标位置并稳定播放
+    // 模拟到达目标位置并短暂播放 (< 1s)
     video.seeking = false;
-    video.currentTime = 650.2;
+    video.currentTime = 650.0;
     video.emit('seeked');
+    video.currentTime = 650.5;
+    video.emit('timeupdate');
 
-    assert.strictEqual(core._initialSeekGuardCancel, null, '稳定后守卫应自动解除');
+    // 关键断言：播放不到 1 秒时守卫仍必须处于激活态，不能过早撤防！
+    assert.strictEqual(typeof core._initialSeekGuardCancel, 'function', '播放不到 1 秒时守卫不得提前撤防');
+
+    // 模拟播放 0.5 秒后被宿主脚本/HLS/Safari 强行跳回视频开头 (0s)
+    video.currentTime = 0;
+    video.emit('seeking');
+    assert.strictEqual(video.currentTime, 650, '播放不到 1 秒跳回 0 时，守卫必须立即拉回 650s');
+
+    // 模拟拉回后继续稳定播放超过 2.5 秒
+    video.currentTime = 650.1;
+    video.emit('timeupdate');
+    assert.strictEqual(typeof core._initialSeekGuardCancel, 'function', '刚拉回仍需继续观察稳定窗口');
+    video.currentTime = 652.8;
+    video.emit('timeupdate');
+
+    assert.strictEqual(core._initialSeekGuardCancel, null, '连续稳定播放 >= 2.5s 后守卫应自动解除');
     assert.strictEqual(video.listenerCount('timeupdate'), 0, '撤防后必须清理 timeupdate 监听');
-    console.log('✅ 2. readyState=1 定位后被起播重置回 0 的场景已成功拉回并自动撤防');
+    console.log('✅ 2. readyState=1 定位并播放 < 1s 后被跳回 0 的场景已成功拉回并稳定后撤防');
 }
 
 // 3. 验证 readyState=0 时延后到 loadedmetadata 才定位，且抗住后续 canplay 重置
@@ -170,10 +187,13 @@ function createMockVideo({ readyState = 1, duration = 3600, currentTime = 0, pau
     video.emit('canplay');
     assert.strictEqual(video.currentTime, 320, 'canplay 重置回 0 时守卫必须再次拉回 320s');
 
-    // timeupdate 在目标附近正常推进后撤防
+    // timeupdate 在目标附近连续推进 >= 2.5s 后撤防
     video.currentTime = 320.4;
     video.emit('timeupdate');
-    assert.strictEqual(core._initialSeekGuardCancel, null, '确认稳定播放后应撤防');
+    assert.strictEqual(typeof core._initialSeekGuardCancel, 'function', '仅推进 0.4s 时不得提前撤防');
+    video.currentTime = 323.0;
+    video.emit('timeupdate');
+    assert.strictEqual(core._initialSeekGuardCancel, null, '确认连续稳定播放 >= 2.5s 后应撤防');
     console.log('✅ 3. readyState=0 延迟定位与 canplay 防重置验证通过');
 }
 

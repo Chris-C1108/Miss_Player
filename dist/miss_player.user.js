@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.122-beta.002
+// @version            5.7.122-beta.003
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1989,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.002";
+		return "5.7.122-beta.003";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4206,11 +4206,19 @@
 			const initialTarget = resolveTargetTime();
 			if (initialTarget <= 0) return;
 			const tolerance = Math.min(2.5, Math.max(.4, initialTarget * .25));
-			const maxAttempts = 8;
+			const maxAttempts = 12;
 			let attempts = 0;
 			let lastSeekStamp = 0;
 			let disarmed = false;
+			let isApplyingSeek = false;
+			let firstStablePlayTime = null;
 			let timeoutId = null;
+			const getRequiredStableAdvance = () => {
+				const dur = video.duration;
+				const target = resolveTargetTime();
+				if (Number.isFinite(dur) && dur > 0) return Math.min(2.5, Math.max(.4, dur - target - .5));
+				return 2.5;
+			};
 			const syncUiTo = (t) => {
 				try {
 					progressManager?.updateProgressBar?.();
@@ -4232,12 +4240,18 @@
 				video.removeEventListener("loadeddata", onReadyEvent);
 				video.removeEventListener("canplay", onReadyEvent);
 				video.removeEventListener("playing", onReadyEvent);
+				video.removeEventListener("seeking", onSeeking);
 				video.removeEventListener("seeked", onSeeked);
 				video.removeEventListener("timeupdate", onTimeUpdate);
 				if (this._initialSeekGuardCancel === disarm) this._initialSeekGuardCancel = null;
 			};
+			const isOutOfBounds = (cur, target) => {
+				if (cur < target - tolerance) return true;
+				if (firstStablePlayTime === null && cur > target + Math.max(10, tolerance)) return true;
+				return false;
+			};
 			const applySeek = (force = false) => {
-				if (disarmed || !this.targetVideo) return;
+				if (disarmed || !this.targetVideo || isApplyingSeek) return;
 				if (video.readyState < 1) return;
 				const target = resolveTargetTime();
 				if (target <= 0) {
@@ -4245,52 +4259,73 @@
 					return;
 				}
 				const cur = Number(video.currentTime) || 0;
-				if (Math.abs(cur - target) <= tolerance) {
+				if (!isOutOfBounds(cur, target)) {
 					syncUiTo(cur);
-					if (video.readyState >= 2 && !video.seeking && (!video.paused || this.userPauseIntent)) disarm();
+					if (video.readyState >= 2 && !video.seeking && !video.paused) {
+						if (firstStablePlayTime === null) firstStablePlayTime = cur;
+						else if (cur - firstStablePlayTime >= getRequiredStableAdvance()) disarm();
+					}
 					return;
 				}
-				if (!force && video.seeking && Date.now() - lastSeekStamp < 250) return;
+				if (!force && video.seeking && Date.now() - lastSeekStamp < 200) return;
 				if (attempts >= maxAttempts) {
 					disarm();
 					return;
 				}
 				attempts += 1;
+				firstStablePlayTime = null;
 				lastSeekStamp = Date.now();
+				isApplyingSeek = true;
 				try {
 					video.currentTime = target;
+				} catch (_) {} finally {
+					isApplyingSeek = false;
+				}
+				if (video.paused && !this.userPauseIntent && typeof video.play === "function") try {
+					const p = video.play();
+					if (p && typeof p.catch === "function") p.catch(() => {});
 				} catch (_) {}
 				syncUiTo(target);
 			};
 			const onReadyEvent = () => applySeek(false);
+			const onSeeking = () => {
+				if (disarmed || isApplyingSeek) return;
+				if (video.readyState < 1) return;
+				const target = resolveTargetTime();
+				const cur = Number(video.currentTime) || 0;
+				if (isOutOfBounds(cur, target)) applySeek(true);
+			};
 			const onSeeked = () => {
 				if (disarmed) return;
 				const target = resolveTargetTime();
 				const cur = Number(video.currentTime) || 0;
-				if (Math.abs(cur - target) > tolerance) applySeek(true);
-				else if (video.readyState >= 2 && (!video.paused || this.userPauseIntent)) {
+				if (isOutOfBounds(cur, target)) applySeek(true);
+				else {
 					syncUiTo(cur);
-					disarm();
+					if (video.readyState >= 2 && !video.paused && firstStablePlayTime === null) firstStablePlayTime = cur;
 				}
 			};
 			const onTimeUpdate = () => {
 				if (disarmed) return;
 				const target = resolveTargetTime();
 				const cur = Number(video.currentTime) || 0;
-				if (Math.abs(cur - target) > tolerance) {
-					if (!video.seeking) applySeek(false);
-				} else if (video.readyState >= 2 && !video.seeking) {
+				if (isOutOfBounds(cur, target)) applySeek(cur < target - tolerance);
+				else if (video.readyState >= 2 && !video.seeking) {
 					syncUiTo(cur);
-					disarm();
+					if (!video.paused) {
+						if (firstStablePlayTime === null) firstStablePlayTime = cur;
+						else if (cur - firstStablePlayTime >= getRequiredStableAdvance()) disarm();
+					}
 				}
 			};
 			video.addEventListener("loadedmetadata", onReadyEvent);
 			video.addEventListener("loadeddata", onReadyEvent);
 			video.addEventListener("canplay", onReadyEvent);
 			video.addEventListener("playing", onReadyEvent);
+			video.addEventListener("seeking", onSeeking);
 			video.addEventListener("seeked", onSeeked);
 			video.addEventListener("timeupdate", onTimeUpdate);
-			timeoutId = setTimeout(disarm, 6e3);
+			timeoutId = setTimeout(disarm, 8e3);
 			this._initialSeekGuardCancel = disarm;
 			if (video.readyState >= 1) applySeek(true);
 		}
@@ -4564,7 +4599,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.002";
+		return "5.7.122-beta.003";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6707,7 +6742,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.002";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.003";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -31168,9 +31203,11 @@
 		}
 		setHighestQualitySingle() {
 			try {
+				if (typeof document !== "undefined" && document.body?.classList?.contains("tm-player-active")) return true;
 				const player = window.player || (typeof unsafeWindow !== "undefined" ? unsafeWindow.player : null);
 				if (!player || !player.config || !player.config.quality || !player.config.quality.options || !player.config.quality.options.length) return false;
 				const maxQuality = Math.max(...player.config.quality.options);
+				if ((typeof player.quality === "number" ? player.quality : player.config.quality.selected) === maxQuality) return true;
 				player.quality = maxQuality;
 				player.config.quality.selected = maxQuality;
 				if (typeof player.quality === "function") player.quality(maxQuality);

@@ -42,6 +42,11 @@ export class QualityManager {
      */
     setHighestQualitySingle() {
         try {
+            // 若 Miss Player 影院模式已接管播放，避免后台延迟画质切换重装载流并重置播放进度
+            if (typeof document !== 'undefined' && document.body?.classList?.contains('tm-player-active')) {
+                return true;
+            }
+
             const player = window.player || (typeof unsafeWindow !== 'undefined' ? unsafeWindow.player : null);
             
             if (!player || !player.config || !player.config.quality || !player.config.quality.options || !player.config.quality.options.length) {
@@ -49,6 +54,12 @@ export class QualityManager {
             }
             
             const maxQuality = Math.max(...player.config.quality.options);
+            const currentQuality = typeof player.quality === 'number'
+                ? player.quality
+                : player.config.quality.selected;
+            if (currentQuality === maxQuality) {
+                return true;
+            }
             
             // 同时设置属性和方法
             player.quality = maxQuality;
