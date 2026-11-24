@@ -11,18 +11,19 @@
  *     写入 60s 一次性跨站租约后新标签打开目标站，并由 Miss Player 自动拉起影院模式。
  */
 
-import { PeachService } from './PeachService.js';
 import { getSiteDomains } from '../constants/domains.js';
-import { fetchWithTransport, detectCloudflare } from '../utils/http.js';
 import { getValue, setValue } from '../utils/storage.js';
 import { cleanAvCode } from '../utils/videoCode.js';
-import { Toast } from '../utils/index.js';
 
 export const CROSS_SITE_HANDOFF_KEY = 'mp_cross_site_handoff';
 export const CROSS_SITE_HANDOFF_TTL_MS = 60 * 1000;
 const RESOLVE_CACHE_TTL_MS = 30 * 60 * 1000;
 const CF_COOLDOWN_MS = 15 * 60 * 1000;
 const GATEWAY_HEALTH_TTL_MS = 15 * 1000;
+const THEATER_HASH_PARAM = 'mp_theater';
+const PEACH_KEY_GATEWAY_BASE = 'mp_peach_gateway_base';
+const PEACH_KEY_REMOTE_SCRAPER = 'mp_peach_remote_scraper';
+const PEACH_KEY_GATEWAY_TOKEN = 'mp_peach_gateway_token';
 
 const KNOWN_SUFFIX_RE = /(?:[-_](?:uncensored(?:[-_]leaked|[-_]leak)?|leaked|leak|chinese|sub|ch|c|4k|hd|fhd|reduced[-_]mosaic))+$/i;
 const STANDARD_CODE_RE = /^([a-z]{2,8}|\d{3}[a-z]{2,6})[-_ ]*0*(\d+)$/i;
@@ -106,27 +107,136 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isCloudflareBlocked(status, html = '') {
+    if (status === 403 || status === 503) return true;
+    if (!html) return false;
+    const lower = String(html).toLowerCase();
+    return lower.includes('cf-challenge') ||
+        lower.includes('turnstile') ||
+        lower.includes('checking your browser') ||
+        lower.includes('cloudflare');
+}
+
+function defaultTransport(url, options = {}) {
+    const { method = 'GET', headers = {}, timeout = 8000, body = null, preferGM = false } = options;
+    const isSameOrigin = (() => {
+        try {
+            const targetHost = new URL(url).hostname;
+            return typeof location !== 'undefined' && location.hostname === targetHost;
+        } catch {
+            return false;
+        }
+    })();
+
+    const doGMRequest = () => {
+        if (typeof GM_xmlhttpRequest === 'function') {
+            return new Promise((resolve, reject) => {
+                let completed = false;
+                let req = null;
+                const timer = setTimeout(() => {
+                    if (!completed) {
+                        completed = true;
+                        if (req && req.abort) req.abort();
+                        reject(new Error('NETWORK_TIMEOUT'));
+                    }
+                }, timeout);
+
+                req = GM_xmlhttpRequest({
+                    method,
+                    url,
+                    headers,
+                    data: body,
+                    timeout,
+                    onload: (res) => {
+                        if (completed) return;
+                        completed = true;
+                        clearTimeout(timer);
+                        resolve({ status: res.status, html: res.responseText || '', finalUrl: res.finalUrl || url });
+                    },
+                    onerror: (err) => {
+                        if (completed) return;
+                        completed = true;
+                        clearTimeout(timer);
+                        reject(new Error((err && err.statusText) || 'NETWORK_ERROR'));
+                    },
+                    ontimeout: () => {
+                        if (completed) return;
+                        completed = true;
+                        clearTimeout(timer);
+                        reject(new Error('NETWORK_TIMEOUT'));
+                    }
+                });
+            });
+        }
+        return Promise.reject(new Error('NO_TRANSPORT_AVAILABLE'));
+    };
+
+    if (!preferGM && isSameOrigin && typeof fetch === 'function') {
+        return fetch(url, { method, headers, body })
+            .then(async (res) => ({ status: res.status, html: await res.text(), finalUrl: res.url }))
+            .catch(() => doGMRequest());
+    }
+    return doGMRequest();
+}
+
+function extractHost(url) {
+    try {
+        return new URL(url).hostname.replace(/^www\./i, '');
+    } catch {
+        return '';
+    }
+}
+
+function isKnownPlayDomain(hostname) {
+    const host = String(hostname || '').toLowerCase();
+    if (!host) return false;
+    const knownHosts = [
+        '123av.com',
+        'javverse.com',
+        ...getSiteDomains('MISSAV'),
+        ...getSiteDomains('JABLE')
+    ];
+    return knownHosts.some((d) => host === d || host.endsWith('.' + d));
+}
+
 function getGatewayEndpoint() {
-    const cfg = PeachService.getConfig();
-    let base = cfg.gatewayBase || cfg.remoteScraper || '';
+    let base = String(getValue(PEACH_KEY_GATEWAY_BASE, '') || getValue(PEACH_KEY_REMOTE_SCRAPER, '') || '').trim();
     if (!base) return null;
     base = base.replace(/\/api\/resolve\/?.*$/, '').replace(/\/+$/, '');
     if (!/^https?:\/\//i.test(base)) return null;
-    return {
-        base,
-        token: cfg.gatewayToken || 'dev'
-    };
+    const token = String(getValue(PEACH_KEY_GATEWAY_TOKEN, 'dev') || 'dev').trim() || 'dev';
+    return { base, token };
 }
 
 export class CrossSitePlayRouter {
     static _resolveCache = new Map();
+    static _inflightPreviews = new Map();
     static _cfBlockedUntil = new Map();
     static _gatewayProbeCache = { base: '', ok: false, checkedAt: 0 };
+    static _notifier = null;
+
+    static setNotifier(fn) {
+        this._notifier = typeof fn === 'function' ? fn : null;
+    }
+
+    static notify(msg, duration = 2400, type = 'info') {
+        if (this._notifier) {
+            this._notifier(msg, duration, type);
+        }
+    }
+
+    static setGatewayConfig({ base = '', token = 'dev' } = {}) {
+        const cleanBase = String(base || '').trim().replace(/\/+$/, '');
+        const cleanToken = String(token || 'dev').trim() || 'dev';
+        setValue(PEACH_KEY_GATEWAY_BASE, cleanBase);
+        setValue(PEACH_KEY_GATEWAY_TOKEN, cleanToken);
+        this._gatewayProbeCache = { base: '', ok: false, checkedAt: 0 };
+    }
 
     /**
      * 轻量探活 miss-gateway /health（15s 内复用结果）
      */
-    static async probeGatewayHealth(force = false, transport = fetchWithTransport) {
+    static async probeGatewayHealth(force = false, transport = defaultTransport) {
         const gw = getGatewayEndpoint();
         if (!gw) return { reachable: false, gateway: null };
 
@@ -181,9 +291,49 @@ export class CrossSitePlayRouter {
     }
 
     /**
+     * 为跨站直达链接附加 #mp_theater=1 接力标记，支持不同脚本沙箱间无共享存储自动拉起影院模式
+     */
+    static appendTheaterHash(url) {
+        const raw = String(url || '').trim();
+        if (!raw) return raw;
+        const hashIdx = raw.indexOf('#');
+        if (hashIdx === -1) {
+            return `${raw}#${THEATER_HASH_PARAM}=1`;
+        }
+        const existingHash = raw.slice(hashIdx + 1);
+        if (existingHash.includes(`${THEATER_HASH_PARAM}=`)) return raw;
+        return existingHash
+            ? `${raw}&${THEATER_HASH_PARAM}=1`
+            : `${raw}${THEATER_HASH_PARAM}=1`;
+    }
+
+    /**
+     * 在目标播放站消费 URL hash 中的 #mp_theater=1 接力标记并清理地址栏
+     */
+    static consumeTheaterHash(loc = (typeof location !== 'undefined' ? location : null)) {
+        try {
+            if (!loc || !isKnownPlayDomain(loc.hostname)) return false;
+            const hash = String(loc.hash || '');
+            if (!hash || !hash.includes(`${THEATER_HASH_PARAM}=1`)) return false;
+
+            const rawParams = hash.replace(/^#/, '');
+            const kept = rawParams
+                .split('&')
+                .filter((part) => part && part !== `${THEATER_HASH_PARAM}=1`);
+            const nextHash = kept.length > 0 ? `#${kept.join('&')}` : '';
+            if (typeof history !== 'undefined' && typeof history.replaceState === 'function') {
+                history.replaceState(null, '', `${loc.pathname || '/'}${loc.search || ''}${nextHash}`);
+            }
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    /**
      * 在目标站点消费跨站接力租约，决定是否自动拉起 Miss Player 影院模式
      */
-    static consumeHandoffLease(hostname = (typeof window !== 'undefined' ? window.location.hostname : '')) {
+    static consumeHandoffLease(hostname = (typeof location !== 'undefined' ? location.hostname : '')) {
         try {
             const raw = getValue(CROSS_SITE_HANDOFF_KEY, null);
             if (!raw || typeof raw !== 'object') return null;
@@ -208,13 +358,7 @@ export class CrossSitePlayRouter {
             } catch (_) {}
 
             if (!matchesTarget) {
-                const knownHosts = [
-                    '123av.com',
-                    'javverse.com',
-                    ...getSiteDomains('MISSAV'),
-                    ...getSiteDomains('JABLE')
-                ];
-                matchesTarget = knownHosts.some((d) => host === d || host.endsWith('.' + d));
+                matchesTarget = isKnownPlayDomain(host);
             }
 
             if (!matchesTarget) return null;
@@ -230,7 +374,7 @@ export class CrossSitePlayRouter {
     /**
      * 123AV 轻量探活（优先无码流出）
      */
-    static async probe123Av(code, transport = fetchWithTransport) {
+    static async probe123Av(code, transport = defaultTransport) {
         const lower = normalizeCode(code).toLowerCase();
         const candidates = [
             { url: `https://123av.com/cn/v/${lower}-uncensored-leaked`, variant: '无码流出' },
@@ -284,7 +428,7 @@ export class CrossSitePlayRouter {
     /**
      * JAVVerse 轻量探活（解析搜索页 workId，严格防跨卡片串号）
      */
-    static async probeJavVerse(code, transport = fetchWithTransport) {
+    static async probeJavVerse(code, transport = defaultTransport) {
         const upper = normalizeCode(code);
         const core = extractCodeCore(upper);
         const searchUrl = `https://javverse.com/en/search?q=${encodeURIComponent(upper)}`;
@@ -328,7 +472,7 @@ export class CrossSitePlayRouter {
     /**
      * MissAV 轻量探活（带 15min Cloudflare 熔断保护）
      */
-    static async probeMissAv(code, transport = fetchWithTransport, { allowDirectFallback = false } = {}) {
+    static async probeMissAv(code, transport = defaultTransport, { allowDirectFallback = false } = {}) {
         const lower = normalizeCode(code).toLowerCase();
         const domains = getSiteDomains('MISSAV');
         const primaryUrl = `https://${domains[0] || 'missav.ai'}/cn/${lower}`;
@@ -348,7 +492,7 @@ export class CrossSitePlayRouter {
                     timeout: 4500,
                     headers: { Referer: `https://${domain}/` }
                 });
-                if (detectCloudflare(res.status, res.html)) {
+                if (isCloudflareBlocked(res.status, res.html)) {
                     this._cfBlockedUntil.set('missav', Date.now() + CF_COOLDOWN_MS);
                     break;
                 }
@@ -366,7 +510,7 @@ export class CrossSitePlayRouter {
     /**
      * Jable 轻量探活
      */
-    static async probeJable(code, transport = fetchWithTransport) {
+    static async probeJable(code, transport = defaultTransport) {
         const lower = normalizeCode(code).toLowerCase();
         const core = extractCodeCore(code);
         const slugs = [lower];
@@ -397,7 +541,7 @@ export class CrossSitePlayRouter {
     /**
      * 轨道 B 并发错峰探活（命中 123AV 高权源即提前返回，30min 缓存）
      */
-    static async resolveClientSource(code, { sourceId = '', transport = fetchWithTransport } = {}) {
+    static async resolveClientSource(code, { sourceId = '', transport = defaultTransport } = {}) {
         const cleanCode = normalizeCode(code);
         const cacheKey = `${cleanCode}::${sourceId || 'auto'}`;
         const cached = this._resolveCache.get(cacheKey);
@@ -481,9 +625,103 @@ export class CrossSitePlayRouter {
             GM_openInTab(url, { active: true, insert: true, setParent: true });
             return;
         }
-        if (typeof window !== 'undefined' && typeof window.open === 'function') {
-            window.open(url, '_blank', 'noopener');
+        if (typeof open === 'function') {
+            open(url, '_blank', 'noopener');
         }
+    }
+
+    /**
+     * 同步读取已缓存的跳转站点信息（用于 PC 端悬浮 0ms 即时提示）
+     */
+    static getCachedDestination(code) {
+        const cleanCode = normalizeCode(code);
+        if (!cleanCode) return { ready: false, track: 'none', sourceName: '', host: '' };
+
+        const gw = getGatewayEndpoint();
+        const now = Date.now();
+        if (gw &&
+            this._gatewayProbeCache.base === gw.base &&
+            this._gatewayProbeCache.ok &&
+            now - this._gatewayProbeCache.checkedAt < GATEWAY_HEALTH_TTL_MS) {
+            return {
+                ready: true,
+                track: 'gateway',
+                sourceId: 'gateway',
+                sourceName: '网关影院',
+                host: extractHost(gw.base),
+                url: this.buildGatewayWatchUrl(gw, cleanCode)
+            };
+        }
+
+        const cached = this._resolveCache.get(`${cleanCode}::auto`);
+        if (cached && now < cached.expiresAt && cached.result?.url) {
+            return {
+                ready: true,
+                track: 'client',
+                sourceId: cached.result.sourceId || '',
+                sourceName: cached.result.sourceName || '外部片源',
+                host: extractHost(cached.result.url),
+                url: cached.result.url,
+                challenged: Boolean(cached.result.challenged)
+            };
+        }
+
+        return {
+            ready: false,
+            track: gw ? 'gateway' : 'client',
+            sourceName: '',
+            host: gw ? extractHost(gw.base) : ''
+        };
+    }
+
+    /**
+     * PC 端鼠标悬浮轻量预探测最终跳转站点（并发去重 + 自动写入 30min 缓存供点击 0ms 复用）
+     */
+    static async previewDestination(code, { transport = defaultTransport } = {}) {
+        const cleanCode = normalizeCode(code);
+        if (!cleanCode) return { ready: false, track: 'none', sourceName: '', host: '' };
+
+        const cached = this.getCachedDestination(cleanCode);
+        if (cached.ready) return cached;
+
+        if (this._inflightPreviews.has(cleanCode)) {
+            return this._inflightPreviews.get(cleanCode);
+        }
+
+        const task = (async () => {
+            try {
+                const { reachable, gateway } = await this.probeGatewayHealth(false, transport);
+                if (reachable && gateway) {
+                    return {
+                        ready: true,
+                        track: 'gateway',
+                        sourceId: 'gateway',
+                        sourceName: '网关影院',
+                        host: extractHost(gateway.base),
+                        url: this.buildGatewayWatchUrl(gateway, cleanCode)
+                    };
+                }
+
+                const resolved = await this.resolveClientSource(cleanCode, { transport });
+                if (!resolved || !resolved.url) {
+                    return { ready: false, track: 'client', sourceName: '', host: '' };
+                }
+                return {
+                    ready: true,
+                    track: 'client',
+                    sourceId: resolved.sourceId || '',
+                    sourceName: resolved.sourceName || '外部片源',
+                    host: extractHost(resolved.url),
+                    url: resolved.url,
+                    challenged: Boolean(resolved.challenged)
+                };
+            } finally {
+                this._inflightPreviews.delete(cleanCode);
+            }
+        })();
+
+        this._inflightPreviews.set(cleanCode, task);
+        return task;
     }
 
     /**
@@ -492,7 +730,7 @@ export class CrossSitePlayRouter {
     static async play({ code, sourceId = '', title = '', poster = '', forceClient = false } = {}) {
         const cleanCode = normalizeCode(code);
         if (!cleanCode) {
-            Toast('未识别到有效影片番号', 2500, 'warning');
+            this.notify('未识别到有效影片番号', 2500, 'warning');
             return { track: 'none', ok: false };
         }
 
@@ -506,11 +744,11 @@ export class CrossSitePlayRouter {
             }
         }
 
-        // 2. 轨道 B：纯脚本轻量寻源 + 60s 跨站影院租约
-        Toast(`正在跨站搜寻 ${cleanCode} 片源…`, 2000, 'info');
+        // 2. 轨道 B：纯脚本轻量寻源 + 60s 跨站影院租约 + URL hash 跨脚本接力
+        this.notify(`正在跨站搜寻 ${cleanCode} 片源…`, 2000, 'info');
         const resolved = await this.resolveClientSource(cleanCode, { sourceId });
         if (!resolved || !resolved.url) {
-            Toast(`未在外部片源找到 ${cleanCode}`, 2800, 'warning');
+            this.notify(`未在外部片源找到 ${cleanCode}`, 2800, 'warning');
             return { track: 'client', ok: false, code: cleanCode };
         }
 
@@ -521,7 +759,7 @@ export class CrossSitePlayRouter {
             title,
             poster
         });
-        this.openTab(resolved.url);
+        this.openTab(this.appendTheaterHash(resolved.url));
         return { track: 'client', ok: true, ...resolved, code: cleanCode };
     }
 }

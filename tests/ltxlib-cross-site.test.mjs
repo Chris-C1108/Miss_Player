@@ -118,4 +118,54 @@ assert.strictEqual(metaAfterReuse.code, 'ABW-087');
 assert.strictEqual(metaAfterReuse.title, 'Second Title');
 console.log('✅ 5. LtxLibAdapter Vue 3 节点原地复用实时读取测试通过');
 
-console.log('🎉 全部 5 项 ltxlib 跨站播放测试 100% 通过！');
+// 6. PC 端悬浮提示跳转站点预览 & 缓存复用测试
+CrossSitePlayRouter.setGatewayConfig({ base: '', token: 'dev' });
+let probeHits = 0;
+const previewTransport = async (url) => {
+    probeHits += 1;
+    if (url.includes('123av.com/cn/v/ssis-002-uncensored-leaked')) {
+        return { status: 200, html: '<iframe src="https://javplayer.me/e/abc123"></iframe>', finalUrl: url };
+    }
+    return { status: 404, html: '', finalUrl: url };
+};
+const initialCached = CrossSitePlayRouter.getCachedDestination('SSIS-002');
+assert.strictEqual(initialCached.ready, false);
+
+const [p1, p2] = await Promise.all([
+    CrossSitePlayRouter.previewDestination('SSIS-002', { transport: previewTransport }),
+    CrossSitePlayRouter.previewDestination('SSIS-002', { transport: previewTransport })
+]);
+assert.strictEqual(p1.ready, true);
+assert.strictEqual(p1.sourceId, '123av');
+assert.strictEqual(p1.host, '123av.com');
+assert.strictEqual(p2.url, p1.url);
+
+const hitsAfterFirst = probeHits;
+const afterCached = CrossSitePlayRouter.getCachedDestination('SSIS-002');
+assert.strictEqual(afterCached.ready, true);
+assert.strictEqual(afterCached.sourceName, p1.sourceName);
+const p3 = await CrossSitePlayRouter.previewDestination('SSIS-002', { transport: previewTransport });
+assert.strictEqual(p3.url, p1.url);
+assert.strictEqual(probeHits, hitsAfterFirst, '命中 30min 缓存后不应重复发探活请求');
+
+const hoverLoading = LtxLibAdapter.formatHoverSummary('SSIS-002', null);
+assert.ok(hoverLoading.siteLabel.includes('探测'));
+const hoverReady = LtxLibAdapter.formatHoverSummary('SSIS-002', afterCached);
+assert.strictEqual(hoverReady.prefix, '跳转站点：');
+assert.ok(hoverReady.siteLabel.includes('123AV'));
+assert.ok(hoverReady.subText.includes('123av.com'));
+console.log('✅ 6. PC 端悬浮提示跳转站点预探测与 30min 缓存复用测试通过');
+
+// 7. 跨脚本 #mp_theater=1 hash 接力与地址栏清理测试
+const hashedUrl = CrossSitePlayRouter.appendTheaterHash('https://123av.com/cn/v/ssis-002');
+assert.strictEqual(hashedUrl, 'https://123av.com/cn/v/ssis-002#mp_theater=1');
+assert.strictEqual(CrossSitePlayRouter.appendTheaterHash(hashedUrl), hashedUrl);
+
+let replacedUrl = '';
+globalThis.history = { replaceState: (_s, _t, u) => { replacedUrl = u; } };
+assert.strictEqual(CrossSitePlayRouter.consumeTheaterHash({ hostname: 'example.com', pathname: '/', search: '', hash: '#mp_theater=1' }), false);
+assert.strictEqual(CrossSitePlayRouter.consumeTheaterHash({ hostname: '123av.com', pathname: '/cn/v/ssis-002', search: '', hash: '#mp_theater=1' }), true);
+assert.strictEqual(replacedUrl, '/cn/v/ssis-002');
+console.log('✅ 7. 跨脚本 #mp_theater=1 hash 接力与地址栏清理测试通过');
+
+console.log('🎉 全部 7 项 ltxlib 跨站播放测试 100% 通过！');

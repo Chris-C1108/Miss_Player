@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, build as viteBuild } from 'vite';
 import monkey from 'vite-plugin-monkey';
 import fs from 'fs';
 import { execSync } from 'child_process';
@@ -115,7 +115,7 @@ export default defineConfig({
     }),
     {
       name: 'post-build-fixes',
-      closeBundle() {
+      async closeBundle() {
         try {
           if (fs.existsSync('dist/miss_player.meta.js')) {
             const meta = fs.readFileSync('dist/miss_player.meta.js', 'utf8');
@@ -159,7 +159,72 @@ export default defineConfig({
             code = code.replace(/-webkit-backdrop-filter:([^;}]+)/g, 'backdrop-filter:$1;-webkit-backdrop-filter:$1');
             fs.writeFileSync('dist/miss_player.user.js', code, 'utf8');
           }
-        } catch (_) {}
+
+          // 构建 iOS Safari Stay / 严格 CSP 专用伴侣脚本（零 unsafeWindow、零非白名单 window.*，强制 Stay content 沙箱执行）
+          if (fs.existsSync('src/entries/ltxlibCompanion.js')) {
+            const companionMeta = [
+              '// ==UserScript==',
+              '// @name               Miss Player | LTXLib 跨站伴侣 (iOS Stay / CSP 兼容)',
+              '// @namespace          loadingi.local',
+              `// @version            ${pkg.version}`,
+              '// @author             Chris_C',
+              '// @description        为 ltxlib.dpdns.org 卡片注入跨站播放入口，兼容 iOS Safari Stay 隔离沙箱与严格 CSP',
+              '// @license            MIT',
+              '// @icon               https://missav.ws/img/favicon.ico',
+              `// @downloadURL        https://raw.githubusercontent.com/Chris-C1108/Miss_Player/${gitBranch}/dist/miss_player.ltxlib.user.js`,
+              `// @updateURL          https://raw.githubusercontent.com/Chris-C1108/Miss_Player/${gitBranch}/dist/miss_player.ltxlib.meta.js`,
+              '// @match              *://ltxlib.dpdns.org/*',
+              '// @match              *://*.ltxlib.dpdns.org/*',
+              '// @connect            *',
+              '// @connect            123av.com',
+              '// @connect            www.123av.com',
+              '// @connect            javverse.com',
+              '// @connect            www.javverse.com',
+              '// @connect            missav.ai',
+              '// @connect            www.missav.ai',
+              '// @connect            missav.ws',
+              '// @connect            www.missav.ws',
+              '// @connect            jable.tv',
+              '// @connect            www.jable.tv',
+              '// @grant              GM_xmlhttpRequest',
+              '// @grant              GM_getValue',
+              '// @grant              GM_setValue',
+              '// @grant              GM_openInTab',
+              '// @grant              GM_addStyle',
+              '// @inject-into        content',
+              '// @run-at             document-end',
+              '// @noframes',
+              '// ==/UserScript==',
+              ''
+            ].join('\n');
+
+            await viteBuild({
+              configFile: false,
+              logLevel: 'silent',
+              build: {
+                outDir: 'dist',
+                emptyOutDir: false,
+                minify: false,
+                target: 'es2020',
+                lib: {
+                  entry: 'src/entries/ltxlibCompanion.js',
+                  name: 'MissPlayerLtxLibCompanion',
+                  formats: ['iife'],
+                  fileName: () => 'miss_player.ltxlib.user.js'
+                }
+              }
+            });
+
+            const companionPath = 'dist/miss_player.ltxlib.user.js';
+            if (fs.existsSync(companionPath)) {
+              const body = fs.readFileSync(companionPath, 'utf8');
+              fs.writeFileSync(companionPath, companionMeta + '\n' + body, 'utf8');
+              fs.writeFileSync('dist/miss_player.ltxlib.meta.js', companionMeta, 'utf8');
+            }
+          }
+        } catch (err) {
+          console.error('[post-build-fixes] error:', err);
+        }
       }
     }
   ],

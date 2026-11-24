@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.121-beta.001
+// @version            5.7.121-beta.002
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -211,7 +211,7 @@
 		}
 	};
 	var mediaSniffer = new MediaSniffer();
-	_css(":root{--brand-pink:#fe628e;--brand-pink-rgb:254, 98, 142}miss-player-root{display:contents!important}html.tm-player-active,body.tm-player-active{overscroll-behavior:none;scrollbar-width:none;-ms-overflow-style:none;width:100%}html.tm-player-active{-webkit-overflow-scrolling:touch;height:auto;min-height:100%;position:static;overflow:hidden auto}body.tm-player-active{-webkit-overflow-scrolling:touch;height:auto;min-height:calc(100vh + 240px);position:static;overflow:hidden visible}@media (hover:hover) and (pointer:fine) and (min-width:1024px){html.tm-player-active,body.tm-player-active{height:100%;min-height:100%;top:0;bottom:0;left:0;right:0;position:fixed!important;overflow:hidden!important}}html.tm-player-active .tm-floating-button,body.tm-player-active .tm-floating-button{display:none!important}html.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active header,body.tm-player-active .header,body.tm-player-active navbar,body.tm-player-active .navbar,body.tm-player-active #header-top,body.tm-player-active .top-nav,body.tm-player-active [class*=header--sticky],body.tm-player-active [class*=navbar-fixed],body.tm-player-active aside[aria-label*=Peach],body.tm-player-active aside[data-panel-mode]{pointer-events:none!important}body.tm-player-active #peach-jav-action,body.tm-player-active [id*=peach-jav]{display:none!important}body.tm-swiping-down{-webkit-user-select:none!important;user-select:none!important;touch-action:none!important}body.tm-settings-active{touch-action:pan-y!important}.tm-floating-button{left:calc(50% + var(--mp-fab-offset-x,0px));right:auto;bottom:calc(max(20px, env(safe-area-inset-bottom,20px)) + var(--mp-fab-offset-y,0px));width:56px;height:56px;color:var(--brand-pink,#fe628e);box-shadow:none;box-sizing:border-box;z-index:2147483647;cursor:pointer;-webkit-appearance:none;appearance:none;pointer-events:auto;touch-action:manipulation;border-radius:50%;justify-content:center;align-items:center;margin:0;padding:0;transition:transform .25s cubic-bezier(.16,1,.3,1),filter .25s cubic-bezier(.16,1,.3,1),bottom .25s cubic-bezier(.16,1,.3,1),right .25s cubic-bezier(.16,1,.3,1),left .25s cubic-bezier(.16,1,.3,1);display:flex;overflow:visible;transform:translate(-50%);background:0 0!important;border:none!important;outline:none!important;position:fixed!important}.tm-floating-button svg{width:48px;height:48px;filter:drop-shadow(0 0 10px rgba(var(--brand-pink-rgb,254, 98, 142), .9));transition:filter .25s cubic-bezier(.16,1,.3,1);animation:3s ease-in-out infinite breathing-glow}.tm-floating-button:hover{transform:translate(-50%)scale(1.08)}.tm-floating-button:hover svg{filter:drop-shadow(0 0 20px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}.tm-floating-button:active{transform:translate(-50%)scale(.96)}@keyframes breathing-glow{0%,to{filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb,254, 98, 142), .7))}50%{filter:drop-shadow(0 0 22px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}}@media screen and (min-width:600px) and (min-height:600px),(pointer:fine){.tm-floating-button{left:auto;right:calc(max(24px, env(safe-area-inset-right,24px)) + var(--mp-fab-offset-x,0px));bottom:calc(max(24px, env(safe-area-inset-bottom,24px)) + var(--mp-fab-offset-y,0px));transform:none}.tm-floating-button:hover{transform:scale(1.08)}.tm-floating-button:active{transform:scale(.96)}}@media screen and (max-width:1024px),(pointer:coarse){body.tm-player-active .tm-custom-modal-overlay input,body.tm-player-active .tm-custom-modal-overlay textarea{font-size:16px!important}}body.tm-player-active dialog[open]{filter:none;backdrop-filter:none;-webkit-backdrop-filter:none;backdrop-filter:none;contain:none;border:none;width:100vw;max-width:100vw;height:100vh;max-height:100vh;margin:0;padding:0;overflow:hidden;transform:none}body.tm-player-active dialog[open]>:not(miss-player-root):not(.tm-floating-button){pointer-events:none!important}dialog[open]:has(.tm-floating-button){contain:none!important}dialog#stage:has(.tm-floating-button){contain:none!important}dialog[open] .tm-floating-button,dialog#stage .tm-floating-button{z-index:2147483647;pointer-events:auto;opacity:1;visibility:visible}.mp-ltx-play-btn{z-index:2;backdrop-filter:blur(12px)saturate(180%);-webkit-backdrop-filter:blur(12px)saturate(180%);color:#fe628e;cursor:pointer;background:#0f1013c2;border:1px solid #ffffff29;border-radius:50%;place-items:center;width:30px;height:30px;padding:0;transition:transform .15s,background-color .15s,border-color .15s;display:grid;position:absolute;bottom:8px;left:8px}.mp-ltx-play-btn:after{content:\"\";position:absolute;top:-6px;bottom:-6px;left:-6px;right:-6px}.mp-ltx-play-btn:hover{color:#fff;background:#fe628e38;border-color:#fe628eb8;transform:scale(1.08)}.mp-ltx-play-btn:active{transform:scale(.94)}.mp-ltx-play-btn.is-loading{cursor:progress;pointer-events:none;border-color:#fe628e;animation:.9s ease-in-out infinite mp-ltx-pulse}.mp-ltx-play-icon{justify-content:center;align-items:center;width:14px;height:14px;display:inline-flex;transform:translate(1px)}.mp-ltx-play-icon svg{width:14px;height:14px}.card.selectable .mp-ltx-play-btn{opacity:.2;pointer-events:none}@media (max-width:760px){.mp-ltx-play-btn{width:34px;height:34px}}@keyframes mp-ltx-pulse{0%,to{box-shadow:0 0 #fe628e80}50%{box-shadow:0 0 0 6px #fe628e00}}.mp-ltx-modal-play-btn{color:#fff;cursor:pointer;background:#fe628e29;border:1px solid #fe628e73;border-radius:999px;align-items:center;gap:5px;height:28px;margin-left:auto;padding:0 10px;font-size:12px;font-weight:600;display:inline-flex}.mp-ltx-popover{z-index:2147483647;backdrop-filter:blur(20px)saturate(180%);-webkit-backdrop-filter:blur(20px)saturate(180%);color:#e8e8ec;background:#17181deb;border:1px solid #ffffff24;border-radius:14px;flex-direction:column;gap:8px;width:224px;padding:10px;font-family:-apple-system,BlinkMacSystemFont,SF Pro Text,sans-serif;display:flex;position:fixed;box-shadow:0 14px 36px #0000008c}.mp-ltx-popover-head{border-bottom:1px solid #ffffff14;align-items:center;gap:6px;padding-bottom:6px;display:flex}.mp-ltx-popover-code{color:#fe628e;letter-spacing:.03em;font-size:12px;font-weight:700}.mp-ltx-popover-mode{color:#8c8f9a;margin-left:auto;font-size:11px}.mp-ltx-popover-close{color:#8c8f9a;cursor:pointer;background:0 0;border:0;place-items:center;padding:2px;display:grid}.mp-ltx-popover-item{color:#e8e8ec;cursor:pointer;text-align:left;background:#ffffff0a;border:1px solid #ffffff14;border-radius:9px;align-items:center;gap:8px;width:100%;padding:8px 10px;font-size:12px;font-weight:600;display:flex}.mp-ltx-popover-item.is-primary{color:#fff;background:#fe628e2e;border-color:#fe628e73}.mp-ltx-popover-ico{justify-content:center;align-items:center;width:15px;height:15px;display:inline-flex}.mp-ltx-popover-ico img{border-radius:4px;width:15px;height:15px}.mp-ltx-popover-sources{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;display:grid}.mp-ltx-popover-chip{color:#cfd2dc;cursor:pointer;background:#ffffff0d;border:1px solid #ffffff14;border-radius:8px;padding:6px 8px;font-size:11px;font-weight:600}.mp-ltx-popover-chip:hover{color:#fff;background:#7aa7ff33;border-color:#7aa7ff80}");
+	_css(":root{--brand-pink:#fe628e;--brand-pink-rgb:254, 98, 142}miss-player-root{display:contents!important}html.tm-player-active,body.tm-player-active{overscroll-behavior:none;scrollbar-width:none;-ms-overflow-style:none;width:100%}html.tm-player-active{-webkit-overflow-scrolling:touch;height:auto;min-height:100%;position:static;overflow:hidden auto}body.tm-player-active{-webkit-overflow-scrolling:touch;height:auto;min-height:calc(100vh + 240px);position:static;overflow:hidden visible}@media (hover:hover) and (pointer:fine) and (min-width:1024px){html.tm-player-active,body.tm-player-active{height:100%;min-height:100%;top:0;bottom:0;left:0;right:0;position:fixed!important;overflow:hidden!important}}html.tm-player-active .tm-floating-button,body.tm-player-active .tm-floating-button{display:none!important}html.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active::-webkit-scrollbar{display:none!important}body.tm-player-active header,body.tm-player-active .header,body.tm-player-active navbar,body.tm-player-active .navbar,body.tm-player-active #header-top,body.tm-player-active .top-nav,body.tm-player-active [class*=header--sticky],body.tm-player-active [class*=navbar-fixed],body.tm-player-active aside[aria-label*=Peach],body.tm-player-active aside[data-panel-mode]{pointer-events:none!important}body.tm-player-active #peach-jav-action,body.tm-player-active [id*=peach-jav]{display:none!important}body.tm-swiping-down{-webkit-user-select:none!important;user-select:none!important;touch-action:none!important}body.tm-settings-active{touch-action:pan-y!important}.tm-floating-button{left:calc(50% + var(--mp-fab-offset-x,0px));right:auto;bottom:calc(max(20px, env(safe-area-inset-bottom,20px)) + var(--mp-fab-offset-y,0px));width:56px;height:56px;color:var(--brand-pink,#fe628e);box-shadow:none;box-sizing:border-box;z-index:2147483647;cursor:pointer;-webkit-appearance:none;appearance:none;pointer-events:auto;touch-action:manipulation;border-radius:50%;justify-content:center;align-items:center;margin:0;padding:0;transition:transform .25s cubic-bezier(.16,1,.3,1),filter .25s cubic-bezier(.16,1,.3,1),bottom .25s cubic-bezier(.16,1,.3,1),right .25s cubic-bezier(.16,1,.3,1),left .25s cubic-bezier(.16,1,.3,1);display:flex;overflow:visible;transform:translate(-50%);background:0 0!important;border:none!important;outline:none!important;position:fixed!important}.tm-floating-button svg{width:48px;height:48px;filter:drop-shadow(0 0 10px rgba(var(--brand-pink-rgb,254, 98, 142), .9));transition:filter .25s cubic-bezier(.16,1,.3,1);animation:3s ease-in-out infinite breathing-glow}.tm-floating-button:hover{transform:translate(-50%)scale(1.08)}.tm-floating-button:hover svg{filter:drop-shadow(0 0 20px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}.tm-floating-button:active{transform:translate(-50%)scale(.96)}@keyframes breathing-glow{0%,to{filter:drop-shadow(0 0 8px rgba(var(--brand-pink-rgb,254, 98, 142), .7))}50%{filter:drop-shadow(0 0 22px rgba(var(--brand-pink-rgb,254, 98, 142), 1))}}@media screen and (min-width:600px) and (min-height:600px),(pointer:fine){.tm-floating-button{left:auto;right:calc(max(24px, env(safe-area-inset-right,24px)) + var(--mp-fab-offset-x,0px));bottom:calc(max(24px, env(safe-area-inset-bottom,24px)) + var(--mp-fab-offset-y,0px));transform:none}.tm-floating-button:hover{transform:scale(1.08)}.tm-floating-button:active{transform:scale(.96)}}@media screen and (max-width:1024px),(pointer:coarse){body.tm-player-active .tm-custom-modal-overlay input,body.tm-player-active .tm-custom-modal-overlay textarea{font-size:16px!important}}body.tm-player-active dialog[open]{filter:none;backdrop-filter:none;-webkit-backdrop-filter:none;backdrop-filter:none;contain:none;border:none;width:100vw;max-width:100vw;height:100vh;max-height:100vh;margin:0;padding:0;overflow:hidden;transform:none}body.tm-player-active dialog[open]>:not(miss-player-root):not(.tm-floating-button){pointer-events:none!important}dialog[open]:has(.tm-floating-button){contain:none!important}dialog#stage:has(.tm-floating-button){contain:none!important}dialog[open] .tm-floating-button,dialog#stage .tm-floating-button{z-index:2147483647;pointer-events:auto;opacity:1;visibility:visible}.mp-ltx-play-btn{z-index:2;backdrop-filter:blur(12px)saturate(180%);-webkit-backdrop-filter:blur(12px)saturate(180%);color:#fe628e;cursor:pointer;background:#0f1013c2;border:1px solid #ffffff29;border-radius:50%;place-items:center;width:30px;height:30px;padding:0;transition:transform .15s,background-color .15s,border-color .15s;display:grid;position:absolute;bottom:8px;left:8px}.mp-ltx-play-btn:after{content:\"\";position:absolute;top:-6px;bottom:-6px;left:-6px;right:-6px}.mp-ltx-play-btn:hover{color:#fff;background:#fe628e38;border-color:#fe628eb8;transform:scale(1.08)}.mp-ltx-play-btn:active{transform:scale(.94)}.mp-ltx-play-btn.is-loading{cursor:progress;pointer-events:none;border-color:#fe628e;animation:.9s ease-in-out infinite mp-ltx-pulse}.mp-ltx-play-icon{justify-content:center;align-items:center;width:14px;height:14px;display:inline-flex;transform:translate(1px)}.mp-ltx-play-icon svg{width:14px;height:14px}.card.selectable .mp-ltx-play-btn{opacity:.2;pointer-events:none}@media (max-width:760px){.mp-ltx-play-btn{width:34px;height:34px}}@keyframes mp-ltx-pulse{0%,to{box-shadow:0 0 #fe628e80}50%{box-shadow:0 0 0 6px #fe628e00}}.mp-ltx-modal-play-btn{color:#fff;cursor:pointer;background:#fe628e29;border:1px solid #fe628e73;border-radius:999px;align-items:center;gap:5px;height:28px;margin-left:auto;padding:0 10px;font-size:12px;font-weight:600;display:inline-flex}.mp-ltx-popover{z-index:2147483647;backdrop-filter:blur(20px)saturate(180%);-webkit-backdrop-filter:blur(20px)saturate(180%);color:#e8e8ec;background:#17181deb;border:1px solid #ffffff24;border-radius:14px;flex-direction:column;gap:8px;width:224px;padding:10px;font-family:-apple-system,BlinkMacSystemFont,SF Pro Text,sans-serif;display:flex;position:fixed;box-shadow:0 14px 36px #0000008c}.mp-ltx-popover-head{border-bottom:1px solid #ffffff14;align-items:center;gap:6px;padding-bottom:6px;display:flex}.mp-ltx-popover-code{color:#fe628e;letter-spacing:.03em;font-size:12px;font-weight:700}.mp-ltx-popover-mode{color:#8c8f9a;margin-left:auto;font-size:11px}.mp-ltx-popover-close{color:#8c8f9a;cursor:pointer;background:0 0;border:0;place-items:center;padding:2px;display:grid}.mp-ltx-popover-item{color:#e8e8ec;cursor:pointer;text-align:left;background:#ffffff0a;border:1px solid #ffffff14;border-radius:9px;align-items:center;gap:8px;width:100%;padding:8px 10px;font-size:12px;font-weight:600;display:flex}.mp-ltx-popover-item.is-primary{color:#fff;background:#fe628e2e;border-color:#fe628e73}.mp-ltx-popover-ico{justify-content:center;align-items:center;width:15px;height:15px;display:inline-flex}.mp-ltx-popover-ico img{border-radius:4px;width:15px;height:15px}.mp-ltx-popover-sources{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;display:grid}.mp-ltx-popover-chip{color:#cfd2dc;cursor:pointer;background:#ffffff0d;border:1px solid #ffffff14;border-radius:8px;padding:6px 8px;font-size:11px;font-weight:600}.mp-ltx-popover-chip:hover{color:#fff;background:#7aa7ff33;border-color:#7aa7ff80}.mp-ltx-hover-tip{z-index:2147483646;pointer-events:none;backdrop-filter:blur(16px)saturate(180%);-webkit-backdrop-filter:blur(16px)saturate(180%);color:#e8e8ec;background:#121318f0;border:1px solid #ffffff24;border-radius:10px;flex-direction:column;gap:2px;max-width:240px;padding:7px 10px;font-family:-apple-system,BlinkMacSystemFont,SF Pro Text,sans-serif;display:flex;position:fixed;box-shadow:0 10px 28px #00000080}.mp-ltx-hover-title{color:#fff;white-space:nowrap;text-overflow:ellipsis;font-size:12px;font-weight:600;line-height:1.35;overflow:hidden}.mp-ltx-hover-site{color:#fe628e;font-weight:700}.mp-ltx-hover-sub{color:#9a9da8;white-space:nowrap;text-overflow:ellipsis;font-size:11px;line-height:1.3;overflow:hidden}.mp-ltx-toast{z-index:2147483647;pointer-events:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#f3f4f8;background:#14151aeb;border:1px solid #ffffff24;border-radius:999px;padding:8px 14px;font-family:-apple-system,BlinkMacSystemFont,SF Pro Text,sans-serif;font-size:12px;font-weight:600;position:fixed;top:16px;left:50%;transform:translate(-50%);box-shadow:0 8px 24px #00000073}");
 	function formatTime(seconds) {
 		if (isNaN(seconds) || seconds < 0) return "0:00";
 		const hours = Math.floor(seconds / 3600);
@@ -1989,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.121-beta.001";
+		return "5.7.121-beta.002";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4400,7 +4400,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.121-beta.001";
+		return "5.7.121-beta.002";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6543,7 +6543,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.121-beta.001";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.121-beta.002";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -7163,9 +7163,9 @@
 	var PEACH_KEY_ORIGINS = "mp_peach_origins";
 	var PEACH_KEY_TOKEN = "mp_peach_token";
 	var PEACH_KEY_STRM_DIR = "mp_peach_strm_dir";
-	var PEACH_KEY_REMOTE_SCRAPER = "mp_peach_remote_scraper";
-	var PEACH_KEY_GATEWAY_BASE = "mp_peach_gateway_base";
-	var PEACH_KEY_GATEWAY_TOKEN = "mp_peach_gateway_token";
+	var PEACH_KEY_REMOTE_SCRAPER$1 = "mp_peach_remote_scraper";
+	var PEACH_KEY_GATEWAY_BASE$1 = "mp_peach_gateway_base";
+	var PEACH_KEY_GATEWAY_TOKEN$1 = "mp_peach_gateway_token";
 	var PEACH_KEY_ENABLED = "mp_peach_enabled";
 	var PEACH_KEY_DISMISSED_LIB_ADVICE = "mp_peach_dismissed_lib_advice";
 	var PEACH_DEFAULT_STRM_DIR = "/Media/STRM/";
@@ -7260,9 +7260,9 @@
 			const base = getValue(PEACH_KEY_BASE, "");
 			const token = getValue(PEACH_KEY_TOKEN, "");
 			const strmDir = getValue(PEACH_KEY_STRM_DIR, PEACH_DEFAULT_STRM_DIR);
-			const remoteScraper = getValue(PEACH_KEY_REMOTE_SCRAPER, "");
+			const remoteScraper = getValue(PEACH_KEY_REMOTE_SCRAPER$1, "");
 			const gatewayBase = getValue("mp_peach_gateway_base", "") || remoteScraper || "";
-			const gatewayToken = getValue(PEACH_KEY_GATEWAY_TOKEN, "dev");
+			const gatewayToken = getValue(PEACH_KEY_GATEWAY_TOKEN$1, "dev");
 			const enabled = Boolean(getValue(PEACH_KEY_ENABLED, false));
 			const origins = this.getOrigins();
 			const webdavMode = getValue(PEACH_KEY_WEBDAV_MODE, PEACH_WEBDAV_MODE_SYNC_DEFAULT);
@@ -7297,9 +7297,9 @@
 				if (clean) this.addOrigin(clean);
 			}
 			if (typeof token === "string") setValue(PEACH_KEY_TOKEN, token.trim());
-			if (typeof remoteScraper === "string") setValue(PEACH_KEY_REMOTE_SCRAPER, remoteScraper.trim());
-			if (typeof gatewayBase === "string") setValue(PEACH_KEY_GATEWAY_BASE, gatewayBase.trim());
-			if (typeof gatewayToken === "string") setValue(PEACH_KEY_GATEWAY_TOKEN, gatewayToken.trim());
+			if (typeof remoteScraper === "string") setValue(PEACH_KEY_REMOTE_SCRAPER$1, remoteScraper.trim());
+			if (typeof gatewayBase === "string") setValue(PEACH_KEY_GATEWAY_BASE$1, gatewayBase.trim());
+			if (typeof gatewayToken === "string") setValue(PEACH_KEY_GATEWAY_TOKEN$1, gatewayToken.trim());
 			if (typeof strmDir === "string") {
 				let normalized = strmDir.trim();
 				if (!normalized.startsWith("/")) normalized = "/" + normalized;
@@ -30839,6 +30839,10 @@
 	var RESOLVE_CACHE_TTL_MS = 18e5;
 	var CF_COOLDOWN_MS = 9e5;
 	var GATEWAY_HEALTH_TTL_MS = 15e3;
+	var THEATER_HASH_PARAM = "mp_theater";
+	var PEACH_KEY_GATEWAY_BASE = "mp_peach_gateway_base";
+	var PEACH_KEY_REMOTE_SCRAPER = "mp_peach_remote_scraper";
+	var PEACH_KEY_GATEWAY_TOKEN = "mp_peach_gateway_token";
 	var KNOWN_SUFFIX_RE = /(?:[-_](?:uncensored(?:[-_]leaked|[-_]leak)?|leaked|leak|chinese|sub|ch|c|4k|hd|fhd|reduced[-_]mosaic))+$/i;
 	var STANDARD_CODE_RE = /^([a-z]{2,8}|\d{3}[a-z]{2,6})[-_ ]*0*(\d+)$/i;
 	var FC2_CODE_RE = /^(?:fc2[-_ ]*)?(?:ppv[-_ ]*)?(\d{5,8})$/i;
@@ -30929,19 +30933,123 @@
 	function sleep(ms) {
 		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
+	function isCloudflareBlocked(status, html = "") {
+		if (status === 403 || status === 503) return true;
+		if (!html) return false;
+		const lower = String(html).toLowerCase();
+		return lower.includes("cf-challenge") || lower.includes("turnstile") || lower.includes("checking your browser") || lower.includes("cloudflare");
+	}
+	function defaultTransport(url, options = {}) {
+		const { method = "GET", headers = {}, timeout = 8e3, body = null, preferGM = false } = options;
+		const isSameOrigin = (() => {
+			try {
+				const targetHost = new URL(url).hostname;
+				return typeof location !== "undefined" && location.hostname === targetHost;
+			} catch {
+				return false;
+			}
+		})();
+		const doGMRequest = () => {
+			if (typeof GM_xmlhttpRequest === "function") return new Promise((resolve, reject) => {
+				let completed = false;
+				let req = null;
+				const timer = setTimeout(() => {
+					if (!completed) {
+						completed = true;
+						if (req && req.abort) req.abort();
+						reject(new Error("NETWORK_TIMEOUT"));
+					}
+				}, timeout);
+				req = GM_xmlhttpRequest({
+					method,
+					url,
+					headers,
+					data: body,
+					timeout,
+					onload: (res) => {
+						if (completed) return;
+						completed = true;
+						clearTimeout(timer);
+						resolve({
+							status: res.status,
+							html: res.responseText || "",
+							finalUrl: res.finalUrl || url
+						});
+					},
+					onerror: (err) => {
+						if (completed) return;
+						completed = true;
+						clearTimeout(timer);
+						reject(new Error(err && err.statusText || "NETWORK_ERROR"));
+					},
+					ontimeout: () => {
+						if (completed) return;
+						completed = true;
+						clearTimeout(timer);
+						reject(new Error("NETWORK_TIMEOUT"));
+					}
+				});
+			});
+			return Promise.reject(new Error("NO_TRANSPORT_AVAILABLE"));
+		};
+		if (!preferGM && isSameOrigin && typeof fetch === "function") return fetch(url, {
+			method,
+			headers,
+			body
+		}).then(async (res) => ({
+			status: res.status,
+			html: await res.text(),
+			finalUrl: res.url
+		})).catch(() => doGMRequest());
+		return doGMRequest();
+	}
+	function extractHost(url) {
+		try {
+			return new URL(url).hostname.replace(/^www\./i, "");
+		} catch {
+			return "";
+		}
+	}
+	function isKnownPlayDomain(hostname) {
+		const host = String(hostname || "").toLowerCase();
+		if (!host) return false;
+		return [
+			"123av.com",
+			"javverse.com",
+			...getSiteDomains("MISSAV"),
+			...getSiteDomains("JABLE")
+		].some((d) => host === d || host.endsWith("." + d));
+	}
 	function getGatewayEndpoint() {
-		const cfg = PeachService.getConfig();
-		let base = cfg.gatewayBase || cfg.remoteScraper || "";
+		let base = String(getValue(PEACH_KEY_GATEWAY_BASE, "") || getValue(PEACH_KEY_REMOTE_SCRAPER, "") || "").trim();
 		if (!base) return null;
 		base = base.replace(/\/api\/resolve\/?.*$/, "").replace(/\/+$/, "");
 		if (!/^https?:\/\//i.test(base)) return null;
+		const token = String(getValue(PEACH_KEY_GATEWAY_TOKEN, "dev") || "dev").trim() || "dev";
 		return {
 			base,
-			token: cfg.gatewayToken || "dev"
+			token
 		};
 	}
 	var CrossSitePlayRouter = class {
-		static async probeGatewayHealth(force = false, transport = fetchWithTransport) {
+		static setNotifier(fn) {
+			this._notifier = typeof fn === "function" ? fn : null;
+		}
+		static notify(msg, duration = 2400, type = "info") {
+			if (this._notifier) this._notifier(msg, duration, type);
+		}
+		static setGatewayConfig({ base = "", token = "dev" } = {}) {
+			const cleanBase = String(base || "").trim().replace(/\/+$/, "");
+			const cleanToken = String(token || "dev").trim() || "dev";
+			setValue(PEACH_KEY_GATEWAY_BASE, cleanBase);
+			setValue(PEACH_KEY_GATEWAY_TOKEN, cleanToken);
+			this._gatewayProbeCache = {
+				base: "",
+				ok: false,
+				checkedAt: 0
+			};
+		}
+		static async probeGatewayHealth(force = false, transport = defaultTransport) {
 			const gw = getGatewayEndpoint();
 			if (!gw) return {
 				reachable: false,
@@ -30994,7 +31102,29 @@
 				createdAt: Date.now()
 			});
 		}
-		static consumeHandoffLease(hostname = typeof window !== "undefined" ? window.location.hostname : "") {
+		static appendTheaterHash(url) {
+			const raw = String(url || "").trim();
+			if (!raw) return raw;
+			const hashIdx = raw.indexOf("#");
+			if (hashIdx === -1) return `${raw}#${THEATER_HASH_PARAM}=1`;
+			const existingHash = raw.slice(hashIdx + 1);
+			if (existingHash.includes(`${THEATER_HASH_PARAM}=`)) return raw;
+			return existingHash ? `${raw}&${THEATER_HASH_PARAM}=1` : `${raw}${THEATER_HASH_PARAM}=1`;
+		}
+		static consumeTheaterHash(loc = typeof location !== "undefined" ? location : null) {
+			try {
+				if (!loc || !isKnownPlayDomain(loc.hostname)) return false;
+				const hash = String(loc.hash || "");
+				if (!hash || !hash.includes(`${THEATER_HASH_PARAM}=1`)) return false;
+				const kept = hash.replace(/^#/, "").split("&").filter((part) => part && part !== `${THEATER_HASH_PARAM}=1`);
+				const nextHash = kept.length > 0 ? `#${kept.join("&")}` : "";
+				if (typeof history !== "undefined" && typeof history.replaceState === "function") history.replaceState(null, "", `${loc.pathname || "/"}${loc.search || ""}${nextHash}`);
+				return true;
+			} catch (_) {
+				return false;
+			}
+		}
+		static consumeHandoffLease(hostname = typeof location !== "undefined" ? location.hostname : "") {
 			try {
 				const raw = getValue(CROSS_SITE_HANDOFF_KEY, null);
 				if (!raw || typeof raw !== "object") return null;
@@ -31012,12 +31142,7 @@
 						if (host === targetHost || host.endsWith("." + targetHost) || targetHost.endsWith("." + host)) matchesTarget = true;
 					}
 				} catch (_) {}
-				if (!matchesTarget) matchesTarget = [
-					"123av.com",
-					"javverse.com",
-					...getSiteDomains("MISSAV"),
-					...getSiteDomains("JABLE")
-				].some((d) => host === d || host.endsWith("." + d));
+				if (!matchesTarget) matchesTarget = isKnownPlayDomain(host);
 				if (!matchesTarget) return null;
 				setValue(CROSS_SITE_HANDOFF_KEY, null);
 				return raw;
@@ -31025,7 +31150,7 @@
 				return null;
 			}
 		}
-		static async probe123Av(code, transport = fetchWithTransport) {
+		static async probe123Av(code, transport = defaultTransport) {
 			const lower = normalizeCode(code).toLowerCase();
 			const candidates = [{
 				url: `https://123av.com/cn/v/${lower}-uncensored-leaked`,
@@ -31077,7 +31202,7 @@
 			} catch (_) {}
 			return null;
 		}
-		static async probeJavVerse(code, transport = fetchWithTransport) {
+		static async probeJavVerse(code, transport = defaultTransport) {
 			const upper = normalizeCode(code);
 			const core = extractCodeCore(upper);
 			const searchUrl = `https://javverse.com/en/search?q=${encodeURIComponent(upper)}`;
@@ -31112,7 +31237,7 @@
 			} catch (_) {}
 			return null;
 		}
-		static async probeMissAv(code, transport = fetchWithTransport, { allowDirectFallback = false } = {}) {
+		static async probeMissAv(code, transport = defaultTransport, { allowDirectFallback = false } = {}) {
 			const lower = normalizeCode(code).toLowerCase();
 			const domains = getSiteDomains("MISSAV");
 			const primaryUrl = `https://${domains[0] || "missav.ai"}/cn/${lower}`;
@@ -31132,7 +31257,7 @@
 						timeout: 4500,
 						headers: { Referer: `https://${domain}/` }
 					});
-					if (detectCloudflare(res.status, res.html)) {
+					if (isCloudflareBlocked(res.status, res.html)) {
 						this._cfBlockedUntil.set("missav", Date.now() + CF_COOLDOWN_MS);
 						break;
 					}
@@ -31152,7 +31277,7 @@
 				challenged: true
 			} : null;
 		}
-		static async probeJable(code, transport = fetchWithTransport) {
+		static async probeJable(code, transport = defaultTransport) {
 			const lower = normalizeCode(code).toLowerCase();
 			const core = extractCodeCore(code);
 			const slugs = [lower];
@@ -31179,7 +31304,7 @@
 			}
 			return null;
 		}
-		static async resolveClientSource(code, { sourceId = "", transport = fetchWithTransport } = {}) {
+		static async resolveClientSource(code, { sourceId = "", transport = defaultTransport } = {}) {
 			const cleanCode = normalizeCode(code);
 			const cacheKey = `${cleanCode}::${sourceId || "auto"}`;
 			const cached = this._resolveCache.get(cacheKey);
@@ -31249,12 +31374,92 @@
 				});
 				return;
 			}
-			if (typeof window !== "undefined" && typeof window.open === "function") window.open(url, "_blank", "noopener");
+			if (typeof open === "function") open(url, "_blank", "noopener");
+		}
+		static getCachedDestination(code) {
+			const cleanCode = normalizeCode(code);
+			if (!cleanCode) return {
+				ready: false,
+				track: "none",
+				sourceName: "",
+				host: ""
+			};
+			const gw = getGatewayEndpoint();
+			const now = Date.now();
+			if (gw && this._gatewayProbeCache.base === gw.base && this._gatewayProbeCache.ok && now - this._gatewayProbeCache.checkedAt < GATEWAY_HEALTH_TTL_MS) return {
+				ready: true,
+				track: "gateway",
+				sourceId: "gateway",
+				sourceName: "网关影院",
+				host: extractHost(gw.base),
+				url: this.buildGatewayWatchUrl(gw, cleanCode)
+			};
+			const cached = this._resolveCache.get(`${cleanCode}::auto`);
+			if (cached && now < cached.expiresAt && cached.result?.url) return {
+				ready: true,
+				track: "client",
+				sourceId: cached.result.sourceId || "",
+				sourceName: cached.result.sourceName || "外部片源",
+				host: extractHost(cached.result.url),
+				url: cached.result.url,
+				challenged: Boolean(cached.result.challenged)
+			};
+			return {
+				ready: false,
+				track: gw ? "gateway" : "client",
+				sourceName: "",
+				host: gw ? extractHost(gw.base) : ""
+			};
+		}
+		static async previewDestination(code, { transport = defaultTransport } = {}) {
+			const cleanCode = normalizeCode(code);
+			if (!cleanCode) return {
+				ready: false,
+				track: "none",
+				sourceName: "",
+				host: ""
+			};
+			const cached = this.getCachedDestination(cleanCode);
+			if (cached.ready) return cached;
+			if (this._inflightPreviews.has(cleanCode)) return this._inflightPreviews.get(cleanCode);
+			const task = (async () => {
+				try {
+					const { reachable, gateway } = await this.probeGatewayHealth(false, transport);
+					if (reachable && gateway) return {
+						ready: true,
+						track: "gateway",
+						sourceId: "gateway",
+						sourceName: "网关影院",
+						host: extractHost(gateway.base),
+						url: this.buildGatewayWatchUrl(gateway, cleanCode)
+					};
+					const resolved = await this.resolveClientSource(cleanCode, { transport });
+					if (!resolved || !resolved.url) return {
+						ready: false,
+						track: "client",
+						sourceName: "",
+						host: ""
+					};
+					return {
+						ready: true,
+						track: "client",
+						sourceId: resolved.sourceId || "",
+						sourceName: resolved.sourceName || "外部片源",
+						host: extractHost(resolved.url),
+						url: resolved.url,
+						challenged: Boolean(resolved.challenged)
+					};
+				} finally {
+					this._inflightPreviews.delete(cleanCode);
+				}
+			})();
+			this._inflightPreviews.set(cleanCode, task);
+			return task;
 		}
 		static async play({ code, sourceId = "", title = "", poster = "", forceClient = false } = {}) {
 			const cleanCode = normalizeCode(code);
 			if (!cleanCode) {
-				Toast$1("未识别到有效影片番号", 2500, "warning");
+				this.notify("未识别到有效影片番号", 2500, "warning");
 				return {
 					track: "none",
 					ok: false
@@ -31277,10 +31482,10 @@
 					};
 				}
 			}
-			Toast$1(`正在跨站搜寻 ${cleanCode} 片源…`, 2e3, "info");
+			this.notify(`正在跨站搜寻 ${cleanCode} 片源…`, 2e3, "info");
 			const resolved = await this.resolveClientSource(cleanCode, { sourceId });
 			if (!resolved || !resolved.url) {
-				Toast$1(`未在外部片源找到 ${cleanCode}`, 2800, "warning");
+				this.notify(`未在外部片源找到 ${cleanCode}`, 2800, "warning");
 				return {
 					track: "client",
 					ok: false,
@@ -31294,7 +31499,7 @@
 				title,
 				poster
 			});
-			this.openTab(resolved.url);
+			this.openTab(this.appendTheaterHash(resolved.url));
 			return {
 				track: "client",
 				ok: true,
@@ -31304,25 +31509,88 @@
 		}
 	};
 	_defineProperty(CrossSitePlayRouter, "_resolveCache", new Map());
+	_defineProperty(CrossSitePlayRouter, "_inflightPreviews", new Map());
 	_defineProperty(CrossSitePlayRouter, "_cfBlockedUntil", new Map());
 	_defineProperty(CrossSitePlayRouter, "_gatewayProbeCache", {
 		base: "",
 		ok: false,
 		checkedAt: 0
 	});
+	_defineProperty(CrossSitePlayRouter, "_notifier", null);
 	var LONG_PRESS_MS = 450;
+	var HOVER_INTENT_MS = 120;
+	var LTX_FALLBACK_CSS = `
+.mp-ltx-play-btn{position:absolute;left:8px;bottom:8px;z-index:3;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(15,16,19,.76);backdrop-filter:blur(12px) saturate(180%);backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);color:#fe628e;display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .15s ease,background-color .15s ease,border-color .15s ease}
+.mp-ltx-play-btn::after{content:"";position:absolute;inset:-6px}
+.mp-ltx-play-btn:hover{transform:scale(1.08);background:rgba(254,98,142,.22);border-color:rgba(254,98,142,.72);color:#fff}
+.mp-ltx-play-btn:active{transform:scale(.94)}
+.mp-ltx-play-btn.is-loading{cursor:progress;pointer-events:none;border-color:#fe628e;animation:mp-ltx-pulse .9s ease-in-out infinite}
+.mp-ltx-play-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;transform:translateX(1px)}
+.mp-ltx-play-icon svg{width:14px;height:14px}
+.card.selectable .mp-ltx-play-btn{opacity:.2;pointer-events:none}
+@media (max-width:760px){.mp-ltx-play-btn{width:34px;height:34px}}
+@keyframes mp-ltx-pulse{0%,100%{box-shadow:0 0 0 0 rgba(254,98,142,.5)}50%{box-shadow:0 0 0 6px rgba(254,98,142,0)}}
+.mp-ltx-modal-play-btn{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:999px;border:1px solid rgba(254,98,142,.45);background:rgba(254,98,142,.16);color:#fff;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto}
+.mp-ltx-popover{position:fixed;z-index:2147483647;width:224px;padding:10px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(23,24,29,.92);backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 14px 36px rgba(0,0,0,.55);color:#e8e8ec;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;display:flex;flex-direction:column;gap:8px}
+.mp-ltx-popover-head{display:flex;align-items:center;gap:6px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08)}
+.mp-ltx-popover-code{font-size:12px;font-weight:700;color:#fe628e;letter-spacing:.03em}
+.mp-ltx-popover-mode{font-size:11px;color:#8c8f9a;margin-left:auto}
+.mp-ltx-popover-close{border:0;background:transparent;color:#8c8f9a;cursor:pointer;padding:2px;display:grid;place-items:center}
+.mp-ltx-popover-item{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#e8e8ec;font-size:12px;font-weight:600;cursor:pointer;text-align:left}
+.mp-ltx-popover-item.is-primary{background:rgba(254,98,142,.18);border-color:rgba(254,98,142,.45);color:#fff}
+.mp-ltx-popover-ico{width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center}
+.mp-ltx-popover-sources{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.mp-ltx-popover-chip{padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);color:#cfd2dc;font-size:11px;font-weight:600;cursor:pointer}
+.mp-ltx-popover-chip:hover{background:rgba(122,167,255,.2);border-color:rgba(122,167,255,.5);color:#fff}
+.mp-ltx-hover-tip{position:fixed;z-index:2147483646;pointer-events:none;max-width:240px;padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(18,19,24,.94);backdrop-filter:blur(16px) saturate(180%);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);box-shadow:0 10px 28px rgba(0,0,0,.5);color:#e8e8ec;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;display:flex;flex-direction:column;gap:2px}
+.mp-ltx-hover-title{font-size:12px;font-weight:600;line-height:1.35;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-ltx-hover-site{color:#fe628e;font-weight:700}
+.mp-ltx-hover-sub{font-size:11px;line-height:1.3;color:#9a9da8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-ltx-toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:2147483647;pointer-events:none;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(20,21,26,.92);backdrop-filter:blur(14px);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#f3f4f8;font-size:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.45);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif}
+`;
 	var LtxLibAdapter = class {
 		static isLtxLibSite() {
-			if (typeof document === "undefined" || typeof window === "undefined") return false;
+			if (typeof document === "undefined" || typeof location === "undefined") return false;
 			if (document.querySelector("meta[name=\"ltx-app\"]")) return true;
-			const host = String(window.location?.hostname || "").toLowerCase();
+			const host = String(location.hostname || "").toLowerCase();
 			return host === "ltxlib.dpdns.org" || host.endsWith(".ltxlib.dpdns.org");
 		}
-		static detectAndStart() {
+		static configure(options = {}) {
+			if (typeof options.canIngest === "function") this._canIngest = options.canIngest;
+			if (typeof options.onIngest === "function") this._onIngest = options.onIngest;
+			if (typeof options.onNotify === "function") this._onNotify = options.onNotify;
+		}
+		static detectAndStart(options = {}) {
+			this.configure(options);
 			if (this.initialized) return true;
 			if (!this.isLtxLibSite()) return false;
-			this.init();
+			if (typeof document !== "undefined" && document.documentElement?.dataset?.mpLtxActive === "1") return true;
+			if (typeof document !== "undefined" && document.documentElement?.dataset) document.documentElement.dataset.mpLtxActive = "1";
+			this.init(options);
 			return true;
+		}
+		static _notify(msg, duration = 2400, type = "info") {
+			if (this._onNotify) {
+				this._onNotify(msg, duration, type);
+				return;
+			}
+			if (typeof document === "undefined" || !document.body) return;
+			this.ensureStyles();
+			if (this._toastTimer) {
+				clearTimeout(this._toastTimer);
+				this._toastTimer = null;
+			}
+			if (!this._toastEl) {
+				const el = document.createElement("div");
+				el.className = "mp-ltx-toast";
+				el.setAttribute("role", "status");
+				this._toastEl = el;
+			}
+			this._toastEl.textContent = String(msg || "");
+			if (!this._toastEl.parentNode) document.body.appendChild(this._toastEl);
+			this._toastTimer = setTimeout(() => {
+				if (this._toastEl && this._toastEl.parentNode) this._toastEl.parentNode.removeChild(this._toastEl);
+			}, Math.max(1200, Number(duration) || 2400));
 		}
 		static ensureStyles() {
 			if (typeof document === "undefined") return;
@@ -31333,37 +31601,35 @@
 				const testBtn = document.querySelector(".mp-ltx-play-btn");
 				if (testBtn && typeof getComputedStyle === "function") {
 					const cs = getComputedStyle(testBtn);
-					alreadyStyled = cs.position === "absolute" && cs.borderRadius === "50%";
+					const radius = parseFloat(cs.borderTopLeftRadius || "0");
+					alreadyStyled = cs.position === "absolute" && radius >= 12;
 				}
 			} catch (_) {}
 			if (alreadyStyled) return;
-			const cssText = `
-.mp-ltx-play-btn{position:absolute;left:8px;bottom:8px;z-index:3;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(15,16,19,.76);backdrop-filter:blur(12px) saturate(180%);backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);color:#fe628e;display:grid;place-items:center;padding:0;cursor:pointer}
-.mp-ltx-play-btn::after{content:"";position:absolute;inset:-6px}
-.mp-ltx-play-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;transform:translateX(1px)}
-.mp-ltx-play-icon svg{width:14px;height:14px}
-@media (max-width:760px){.mp-ltx-play-btn{width:34px;height:34px}}
-`;
 			try {
-				if (typeof GM_addStyle === "function") GM_addStyle(cssText);
 				const styleEl = document.createElement("style");
 				styleEl.id = probeId;
-				styleEl.textContent = cssText;
+				styleEl.textContent = LTX_FALLBACK_CSS;
 				(document.head || document.documentElement)?.appendChild(styleEl);
-			} catch (_) {}
+			} catch (_) {
+				if (typeof GM_addStyle === "function") try {
+					GM_addStyle(LTX_FALLBACK_CSS);
+				} catch (_) {}
+			}
 		}
-		static init() {
+		static init(options = {}) {
+			this.configure(options);
 			if (this.initialized) return;
 			this.initialized = true;
-			this.scanAndInject(document);
 			this.ensureStyles();
+			this.scanAndInject(document);
 			const scheduleScan = () => {
 				if (this._rafScheduled) return;
 				this._rafScheduled = true;
 				(typeof requestAnimationFrame === "function" ? requestAnimationFrame : (fn) => setTimeout(fn, 16))(() => {
 					this._rafScheduled = false;
-					this.scanAndInject(document);
 					this.ensureStyles();
+					this.scanAndInject(document);
 				});
 			};
 			const root = document.documentElement || document.body;
@@ -31379,14 +31645,18 @@
 			if (!this._scanTimer && typeof setInterval === "function") this._scanTimer = setInterval(() => {
 				const cards = document.querySelectorAll("article.card[data-code]");
 				if (cards.length > 0 && document.querySelectorAll("[data-mp-ltx-btn]").length < cards.length) {
-					this.scanAndInject(document);
 					this.ensureStyles();
+					this.scanAndInject(document);
 				}
 			}, 1200);
-			if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
-				window.addEventListener("load", scheduleScan, { once: true });
-				window.addEventListener("popstate", scheduleScan);
-				window.addEventListener("hashchange", scheduleScan);
+			if (typeof addEventListener === "function") {
+				addEventListener("load", scheduleScan, { once: true });
+				addEventListener("popstate", scheduleScan);
+				addEventListener("hashchange", scheduleScan);
+				addEventListener("scroll", () => this.hideHoverTip(), {
+					capture: true,
+					passive: true
+				});
 			}
 		}
 		static scanAndInject(root = document) {
@@ -31419,8 +31689,7 @@
 			btn.type = "button";
 			btn.className = "mp-ltx-play-btn";
 			btn.setAttribute("data-mp-ltx-btn", "1");
-			btn.title = "Miss Player 跨站播放（右键 / 长按选源或入库）";
-			btn.setAttribute("aria-label", "Miss Player 跨站播放");
+			btn.setAttribute("aria-label", "Miss Player 跨站播放（右键 / 长按选源或入库）");
 			btn.innerHTML = `<span class="mp-ltx-play-icon">${PLAY}</span>`;
 			this._bindPlayButtonEvents(btn, () => {
 				const ownerCard = btn.closest("article.card");
@@ -31438,6 +31707,7 @@
 			btn.type = "button";
 			btn.className = "mp-ltx-modal-play-btn";
 			btn.setAttribute("data-mp-ltx-modal-btn", "1");
+			btn.setAttribute("aria-label", `${code} Miss Player 跨站播放`);
 			btn.innerHTML = `<span class="mp-ltx-play-icon">${PLAY}</span><span>跨站播放</span>`;
 			this._bindPlayButtonEvents(btn, () => ({
 				code: matchAvCodeFromText(dialog.textContent || "") || code,
@@ -31445,6 +31715,75 @@
 				poster: ""
 			}));
 			header.appendChild(btn);
+		}
+		static _isDesktopHoverCapable(e) {
+			if (e && e.pointerType) return e.pointerType === "mouse";
+			if (typeof matchMedia === "function") return matchMedia("(hover: hover) and (pointer: fine)").matches;
+			return false;
+		}
+		static formatHoverSummary(code, dest) {
+			if (!dest) return {
+				siteLabel: "正在探测跳转站点…",
+				subText: `${code} · 123AV / JAVVerse / MissAV / Jable`
+			};
+			if (dest.ready && dest.sourceName) {
+				const hostPart = dest.host ? `${dest.host} · ` : "";
+				return {
+					siteLabel: dest.sourceName,
+					subText: `${hostPart}右键选源`,
+					prefix: "跳转站点："
+				};
+			}
+			return {
+				siteLabel: "暂未匹配外部片源",
+				subText: `${code} · 右键可手动选源`
+			};
+		}
+		static _positionHoverTip(anchorEl, tipEl) {
+			if (!anchorEl || !tipEl || typeof anchorEl.getBoundingClientRect !== "function") return;
+			const rect = anchorEl.getBoundingClientRect();
+			const tipRect = tipEl.getBoundingClientRect();
+			const vw = typeof innerWidth === "number" ? innerWidth : 1280;
+			const left = Math.max(8, Math.min(rect.left, vw - tipRect.width - 8));
+			const top = rect.top - tipRect.height - 8 >= 8 ? rect.top - tipRect.height - 8 : rect.bottom + 8;
+			tipEl.style.left = `${Math.round(left)}px`;
+			tipEl.style.top = `${Math.round(top)}px`;
+		}
+		static showHoverTip(anchorEl, code, dest = null) {
+			if (typeof document === "undefined" || !document.body || !code) return;
+			this.ensureStyles();
+			let tip = this._hoverTipEl;
+			if (!tip) {
+				tip = document.createElement("div");
+				tip.className = "mp-ltx-hover-tip";
+				tip.setAttribute("role", "tooltip");
+				const titleLine = document.createElement("div");
+				titleLine.className = "mp-ltx-hover-title";
+				const prefixSpan = document.createElement("span");
+				prefixSpan.className = "mp-ltx-hover-prefix";
+				const siteSpan = document.createElement("span");
+				siteSpan.className = "mp-ltx-hover-site";
+				titleLine.append(prefixSpan, siteSpan);
+				const subLine = document.createElement("div");
+				subLine.className = "mp-ltx-hover-sub";
+				tip.append(titleLine, subLine);
+				this._hoverTipEl = tip;
+			}
+			const { prefix = "", siteLabel, subText } = this.formatHoverSummary(code, dest);
+			tip.querySelector(".mp-ltx-hover-prefix").textContent = prefix;
+			tip.querySelector(".mp-ltx-hover-site").textContent = siteLabel;
+			tip.querySelector(".mp-ltx-hover-sub").textContent = subText;
+			if (!tip.parentNode) document.body.appendChild(tip);
+			this._positionHoverTip(anchorEl, tip);
+			anchorEl.setAttribute("aria-label", `${code} ${prefix}${siteLabel}`.trim());
+		}
+		static hideHoverTip() {
+			if (this._hoverTimer) {
+				clearTimeout(this._hoverTimer);
+				this._hoverTimer = null;
+			}
+			this._hoveredBtn = null;
+			if (this._hoverTipEl && this._hoverTipEl.parentNode) this._hoverTipEl.parentNode.removeChild(this._hoverTipEl);
 		}
 		static _bindPlayButtonEvents(btn, getMeta) {
 			let pressTimer = null;
@@ -31460,8 +31799,35 @@
 			const stopOnly = (e) => {
 				e.stopPropagation();
 			};
+			btn.addEventListener("pointerenter", (e) => {
+				if (!this._isDesktopHoverCapable(e)) return;
+				const meta = getMeta();
+				if (!meta.code) return;
+				this.hideHoverTip();
+				this._hoveredBtn = btn;
+				const cached = CrossSitePlayRouter.getCachedDestination(meta.code);
+				if (cached.ready) {
+					this.showHoverTip(btn, meta.code, cached);
+					return;
+				}
+				this.showHoverTip(btn, meta.code, null);
+				this._hoverTimer = setTimeout(() => {
+					this._hoverTimer = null;
+					if (this._hoveredBtn !== btn) return;
+					CrossSitePlayRouter.previewDestination(meta.code).then((dest) => {
+						if (this._hoveredBtn !== btn) return;
+						const latestMeta = getMeta();
+						if (!latestMeta || latestMeta.code !== meta.code) return;
+						this.showHoverTip(btn, meta.code, dest);
+					}).catch(() => {});
+				}, HOVER_INTENT_MS);
+			});
+			btn.addEventListener("pointerleave", () => {
+				if (this._hoveredBtn === btn) this.hideHoverTip();
+			});
 			btn.addEventListener("pointerdown", (e) => {
 				e.stopPropagation();
+				if (this._hoveredBtn === btn) this.hideHoverTip();
 				if (e.button === 2) return;
 				longPressed = false;
 				startX = e.clientX || 0;
@@ -31485,12 +31851,14 @@
 				e.preventDefault();
 				e.stopPropagation();
 				clearPress();
+				this.hideHoverTip();
 				this.openActionPopover(btn, getMeta());
 			});
 			btn.addEventListener("click", async (e) => {
 				e.preventDefault();
 				e.stopPropagation();
 				clearPress();
+				this.hideHoverTip();
 				if (longPressed) {
 					longPressed = false;
 					return;
@@ -31520,7 +31888,9 @@
 		}
 		static async openActionPopover(anchorEl, meta) {
 			this.closePopover();
+			this.hideHoverTip();
 			if (!meta || !meta.code) return;
+			this.ensureStyles();
 			const pop = document.createElement("div");
 			pop.className = "mp-ltx-popover";
 			pop.setAttribute("role", "dialog");
@@ -31572,30 +31942,52 @@
 				srcGrid.appendChild(chip);
 			});
 			pop.appendChild(srcGrid);
-			const peachBtn = document.createElement("button");
-			peachBtn.type = "button";
-			peachBtn.className = "mp-ltx-popover-item";
-			peachBtn.innerHTML = `<span class="mp-ltx-popover-ico">${ICON_PEACH}</span><span>一键入库 Peach (.strm)</span>`;
-			peachBtn.addEventListener("click", async (e) => {
-				e.stopPropagation();
-				this.closePopover();
-				if (!PeachService.buildGatewayPlayUrl(meta.code)) {
-					Toast$1("请先在 Miss Player 设置中配置流网关地址后再入库", 3e3, "warning");
-					return;
-				}
-				try {
-					Toast$1((await StrmIngestPipeline.ingest({ avcode: meta.code })).message || `${meta.code} 已入库 Peach`, 2500, "success");
-				} catch (err) {
-					Toast$1(`入库失败: ${err.message || err}`, 3e3, "error");
-				}
-			});
-			pop.appendChild(peachBtn);
+			if (this._onIngest) {
+				const peachBtn = document.createElement("button");
+				peachBtn.type = "button";
+				peachBtn.className = "mp-ltx-popover-item";
+				peachBtn.innerHTML = `<span class="mp-ltx-popover-ico">${ICON_PEACH}</span><span>一键入库 Peach (.strm)</span>`;
+				peachBtn.addEventListener("click", async (e) => {
+					e.stopPropagation();
+					this.closePopover();
+					if (this._canIngest && !this._canIngest()) {
+						this._notify("请先在 Miss Player 设置中配置流网关地址后再入库", 3e3, "warning");
+						return;
+					}
+					try {
+						const res = await this._onIngest(meta.code);
+						this._notify(res?.message || `${meta.code} 已入库 Peach`, 2500, "success");
+					} catch (err) {
+						this._notify(`入库失败: ${err.message || err}`, 3e3, "error");
+					}
+				});
+				pop.appendChild(peachBtn);
+			} else {
+				const gwBtn = document.createElement("button");
+				gwBtn.type = "button";
+				gwBtn.className = "mp-ltx-popover-item";
+				gwBtn.innerHTML = `<span class="mp-ltx-popover-ico">${ICON_PEACH}</span><span>配置流网关地址</span>`;
+				gwBtn.addEventListener("click", (e) => {
+					e.stopPropagation();
+					this.closePopover();
+					if (typeof prompt !== "function") return;
+					const nextBase = prompt("请输入 miss-gateway 地址（留空清除，例如 http://192.168.2.250:8765）：", "");
+					if (nextBase === null) return;
+					const nextToken = nextBase.trim() ? prompt("请输入网关 Token（默认 dev）：", "dev") ?? "dev" : "";
+					CrossSitePlayRouter.setGatewayConfig({
+						base: nextBase,
+						token: nextToken
+					});
+					this._notify(nextBase.trim() ? "流网关配置已保存" : "已切换为纯脚本跨站直达", 2400, "success");
+				});
+				pop.appendChild(gwBtn);
+			}
 			document.body.appendChild(pop);
 			this._popoverEl = pop;
 			const rect = anchorEl.getBoundingClientRect();
 			const popRect = pop.getBoundingClientRect();
-			const vw = window.innerWidth || 1280;
-			const vh = window.innerHeight || 800;
+			const vw = typeof innerWidth === "number" ? innerWidth : 1280;
+			const vh = typeof innerHeight === "number" ? innerHeight : 800;
 			const left = Math.max(12, Math.min(rect.left, vw - popRect.width - 12));
 			const top = rect.bottom + 8 + popRect.height <= vh - 12 ? rect.bottom + 8 : Math.max(12, rect.top - popRect.height - 8);
 			pop.style.left = `${Math.round(left)}px`;
@@ -31623,6 +32015,14 @@
 	_defineProperty(LtxLibAdapter, "_popoverEl", null);
 	_defineProperty(LtxLibAdapter, "_outsideHandler", null);
 	_defineProperty(LtxLibAdapter, "_escHandler", null);
+	_defineProperty(LtxLibAdapter, "_hoverTipEl", null);
+	_defineProperty(LtxLibAdapter, "_hoveredBtn", null);
+	_defineProperty(LtxLibAdapter, "_hoverTimer", null);
+	_defineProperty(LtxLibAdapter, "_toastEl", null);
+	_defineProperty(LtxLibAdapter, "_toastTimer", null);
+	_defineProperty(LtxLibAdapter, "_canIngest", null);
+	_defineProperty(LtxLibAdapter, "_onIngest", null);
+	_defineProperty(LtxLibAdapter, "_onNotify", null);
 	init_domains();
 	performance.mark("mp:module-loaded");
 	var _earlyProtocolOk = typeof window !== "undefined" && window.location && (window.location.protocol === "http:" || window.location.protocol === "https:");
@@ -31714,7 +32114,12 @@
 					return;
 				}
 				PeachWebBridge.detectAndStart();
-				LtxLibAdapter.detectAndStart();
+				CrossSitePlayRouter.setNotifier(Toast$1);
+				LtxLibAdapter.detectAndStart({
+					canIngest: () => Boolean(PeachService.buildGatewayPlayUrl("TEST-001")),
+					onIngest: (code) => StrmIngestPipeline.ingest({ avcode: code }),
+					onNotify: Toast$1
+				});
 				injectStyles();
 				initUserExperienceEnhancer(true);
 				console.log(`[${__$1("scriptName")}] ${__$1("enhancerInitialized")}`);
@@ -31758,9 +32163,10 @@
 				});
 				const isGatewayWatchPage = Boolean(document.querySelector("meta[name=\"miss-player-auto-theater\"][content=\"1\"]"));
 				const crossSiteLease = !isInIframe ? CrossSitePlayRouter.consumeHandoffLease() : null;
+				const crossSiteHash = !isInIframe ? CrossSitePlayRouter.consumeTheaterHash() : false;
 				new FloatingButton({
 					playerState,
-					autoTriggerTheater: Boolean(isGatewayWatchPage || crossSiteLease)
+					autoTriggerTheater: Boolean(isGatewayWatchPage || crossSiteLease || crossSiteHash)
 				}).init();
 				performance.mark("mp:ui-ready");
 				performance.measure("mp:startup", "mp:module-loaded", "mp:ui-ready");

@@ -19,8 +19,11 @@ import { telemetry } from './telemetry';
 import { SyncManager } from './sync/index.js';
 import { CommentCacheManager } from './player/comments/CommentCacheManager.js';
 import { PeachWebBridge } from './player/bridge/PeachWebBridge.js';
+import { PeachService } from './services/PeachService.js';
+import { StrmIngestPipeline } from './services/StrmIngestPipeline.js';
 import { LtxLibAdapter } from './adapters/LtxLibAdapter.js';
 import { CrossSitePlayRouter } from './services/CrossSitePlayRouter.js';
+import { Toast } from './utils/index.js';
 import { AvCodeMigrationService } from './services/AvCodeMigrationService.js';
 import { initIosInlinePlaybackGuard } from './utils/iosInline.js';
 
@@ -203,7 +206,12 @@ function setupViewport() {
             PeachWebBridge.detectAndStart();
 
             // 检查并启动 ltxlib.dpdns.org 卡片跨站播放适配器
-            LtxLibAdapter.detectAndStart();
+            CrossSitePlayRouter.setNotifier(Toast);
+            LtxLibAdapter.detectAndStart({
+                canIngest: () => Boolean(PeachService.buildGatewayPlayUrl('TEST-001')),
+                onIngest: (code) => StrmIngestPipeline.ingest({ avcode: code }),
+                onNotify: Toast
+            });
 
             // 首先注入样式
             injectStyles();
@@ -280,10 +288,11 @@ function setupViewport() {
             });
 
 
-            // 检测是否由跨站接力租约或网关 /watch 承接页打开，满足条件则自动拉起影院模式
+            // 检测是否由跨站接力租约、URL hash 标记或网关 /watch 承接页打开，满足条件则自动拉起影院模式
             const isGatewayWatchPage = Boolean(document.querySelector('meta[name="miss-player-auto-theater"][content="1"]'));
             const crossSiteLease = !isInIframe ? CrossSitePlayRouter.consumeHandoffLease() : null;
-            const autoTriggerTheater = Boolean(isGatewayWatchPage || crossSiteLease);
+            const crossSiteHash = !isInIframe ? CrossSitePlayRouter.consumeTheaterHash() : false;
+            const autoTriggerTheater = Boolean(isGatewayWatchPage || crossSiteLease || crossSiteHash);
 
             // 创建浮动按钮实例并初始化
             const floatingButton = new FloatingButton({
