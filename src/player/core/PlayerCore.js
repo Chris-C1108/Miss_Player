@@ -33,9 +33,162 @@ export class PlayerCore {
         
         // 用户主动临时暂停意图锁 (若用户在开播/缓冲期点击暂停，坚决阻断任何后续自动起播与宿主偷跑)
         this.userPauseIntent = false;
+        this._initialSeekGuardCancel = null;
 
         // 状态标记
         this.initialized = false;
+    }
+
+    /**
+     * 取消开播首帧/首个高光定位的防回跳守卫（由用户主动拖拽/跳转触发）
+     */
+    cancelInitialSeekGuard() {
+        if (typeof this._initialSeekGuardCancel === 'function') {
+            const cancelFn = this._initialSeekGuardCancel;
+            this._initialSeekGuardCancel = null;
+            try { cancelFn(); } catch (_) {}
+        }
+    }
+
+    /**
+     * 为「开播定位首个高光」安装防回跳守卫：
+     * 1. 若初始化时 readyState < 1，在 loadedmetadata 到来时自动执行首次定位；
+     * 2. 若在 readyState === 1 时设置了 currentTime（进度条已显示高光位），但随后浏览器/HLS.js/iOS WebKit
+     *    在 play()、loadeddata、canplay 或 playing 时将播放头重置回 0，则立即重新定位并同步进度条，
+     *    直到视频在 readyState >= 2 下确认稳定在目标高光附近后自动解除；
+     * 3. 任何用户主动跳转或播放器关闭均立即撤防，绝不干扰用户操作。
+     * @param {number} rawTargetTime
+     * @param {{ progressManager?: any, loopManager?: any }} [deps]
+     */
+    armInitialHighlightSeek(rawTargetTime, { progressManager = null, loopManager = null } = {}) {
+        const video = this.targetVideo;
+        if (!video) return;
+        const baseTarget = Number(rawTargetTime);
+        if (!Number.isFinite(baseTarget) || baseTarget <= 0) return;
+
+        this.cancelInitialSeekGuard();
+
+        const resolveTargetTime = () => {
+            const dur = video.duration;
+            if (Number.isFinite(dur) && dur > 0) {
+                return Math.max(0, Math.min(baseTarget, Math.max(0, dur - 0.5)));
+            }
+            return Math.max(0, baseTarget);
+        };
+
+        const initialTarget = resolveTargetTime();
+        if (initialTarget <= 0) return;
+
+        const tolerance = Math.min(2.5, Math.max(0.4, initialTarget * 0.25));
+        const maxAttempts = 8;
+        let attempts = 0;
+        let lastSeekStamp = 0;
+        let disarmed = false;
+        let timeoutId = null;
+
+        const syncUiTo = (t) => {
+            try {
+                progressManager?.updateProgressBar?.();
+                progressManager?.updateCurrentTimeDisplay?.();
+                loopManager?.syncProximityState?.({ targetTime: t, forceCenter: true });
+            } catch (_) {}
+        };
+
+        const disarm = () => {
+            if (disarmed) return;
+            disarmed = true;
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+            video.removeEventListener('loadedmetadata', onReadyEvent);
+            video.removeEventListener('loadeddata', onReadyEvent);
+            video.removeEventListener('canplay', onReadyEvent);
+            video.removeEventListener('playing', onReadyEvent);
+            video.removeEventListener('seeked', onSeeked);
+            video.removeEventListener('timeupdate', onTimeUpdate);
+            if (this._initialSeekGuardCancel === disarm) {
+                this._initialSeekGuardCancel = null;
+            }
+        };
+
+        const applySeek = (force = false) => {
+            if (disarmed || !this.targetVideo) return;
+            if (video.readyState < 1) return;
+
+            const target = resolveTargetTime();
+            if (target <= 0) {
+                disarm();
+                return;
+            }
+
+            const cur = Number(video.currentTime) || 0;
+            if (Math.abs(cur - target) <= tolerance) {
+                syncUiTo(cur);
+                if (video.readyState >= 2 && !video.seeking && (!video.paused || this.userPauseIntent)) {
+                    disarm();
+                }
+                return;
+            }
+
+            if (!force && video.seeking && (Date.now() - lastSeekStamp < 250)) {
+                return;
+            }
+
+            if (attempts >= maxAttempts) {
+                disarm();
+                return;
+            }
+
+            attempts += 1;
+            lastSeekStamp = Date.now();
+            try {
+                video.currentTime = target;
+            } catch (_) {}
+            syncUiTo(target);
+        };
+
+        const onReadyEvent = () => applySeek(false);
+
+        const onSeeked = () => {
+            if (disarmed) return;
+            const target = resolveTargetTime();
+            const cur = Number(video.currentTime) || 0;
+            if (Math.abs(cur - target) > tolerance) {
+                applySeek(true);
+            } else if (video.readyState >= 2 && (!video.paused || this.userPauseIntent)) {
+                syncUiTo(cur);
+                disarm();
+            }
+        };
+
+        const onTimeUpdate = () => {
+            if (disarmed) return;
+            const target = resolveTargetTime();
+            const cur = Number(video.currentTime) || 0;
+            if (Math.abs(cur - target) > tolerance) {
+                if (!video.seeking) {
+                    applySeek(false);
+                }
+            } else if (video.readyState >= 2 && !video.seeking) {
+                syncUiTo(cur);
+                disarm();
+            }
+        };
+
+        video.addEventListener('loadedmetadata', onReadyEvent);
+        video.addEventListener('loadeddata', onReadyEvent);
+        video.addEventListener('canplay', onReadyEvent);
+        video.addEventListener('playing', onReadyEvent);
+        video.addEventListener('seeked', onSeeked);
+        video.addEventListener('timeupdate', onTimeUpdate);
+
+        timeoutId = setTimeout(disarm, 6000);
+        this._initialSeekGuardCancel = disarm;
+
+        if (video.readyState >= 1) {
+            applySeek(true);
+        }
     }
 
     /**
@@ -183,8 +336,10 @@ export class PlayerCore {
     
     /**
      * 恢复视频状态并执行自动起播 (包含静音降级容错与手势唤醒)
+     * @param {{ skipTimeRestore?: boolean }} [options]
      */
-    restoreVideoState() {
+    restoreVideoState(options = {}) {
+        const { skipTimeRestore = false } = options || {};
         try {
             // 加载持久化的用户首选播放速度
             const savedSpeed = parseFloat(getValue('preferredPlaybackRate', 1.0));
@@ -200,8 +355,8 @@ export class PlayerCore {
             this.targetVideo.addEventListener('loadedmetadata', restoreSpeedOnReady, { once: true });
             this.targetVideo.addEventListener('canplay', restoreSpeedOnReady, { once: true });
             
-            // 仅在已有实际进度时安全恢复播放位置，避免未就绪时抛出异常或打断流加载
-            if (this.videoState && this.videoState.currentTime > 0) {
+            // 仅在已有实际进度且未被开播高光/深链跳转接管时安全恢复播放位置，避免未就绪时抛出异常或覆盖目标跳转进度
+            if (!skipTimeRestore && this.videoState && this.videoState.currentTime > 0) {
                 if (this.targetVideo.readyState >= 1) {
                     try {
                         this.targetVideo.currentTime = this.videoState.currentTime;
@@ -383,6 +538,7 @@ export class PlayerCore {
      * 关闭播放器并恢复原始视频
      */
     close(overlay, container, playerContainer, rootHost) {
+        this.cancelInitialSeekGuard();
         if (!overlay) return;
 
         // 执行幂等媒体节点归位与样式净化

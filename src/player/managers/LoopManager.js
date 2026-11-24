@@ -65,6 +65,7 @@ export class LoopManager {
         this._onVideoSeekedBound = null;
         this._onDurationChangeBound = null;
         this._onLoadedMetaBound = null;
+        this._hasUrlDeepLink = false;
 
         this.tabColors = [
             '200, 100%, 55%', // Sky Blue
@@ -821,6 +822,7 @@ export class LoopManager {
     //  Tab Interactions
     // =====================================================================
     _handleTabClick(tab) {
+        this.playerCore?.cancelInitialSeekGuard?.();
         playTapSound();
         telemetry.track('tag_jump', {
             type: tab.type,
@@ -1326,6 +1328,7 @@ export class LoopManager {
      * @returns {boolean} 是否跳出了循环播放
      */
     checkAndExitLoopIfOutside(targetTime) {
+        this.playerCore?.cancelInitialSeekGuard?.();
         // 关键守卫：若当前正处于胶囊编辑状态，严禁因时间跳转超出区间而打断或退出编辑！
         if (this.editingTabId) {
             return false;
@@ -1642,6 +1645,7 @@ export class LoopManager {
         }
 
         if (paramsToParse.length === 0) return;
+        this._hasUrlDeepLink = true;
 
         // 3. 清理 URL 中的时间戳/参数，避免 missav 站自带的循环播放与脚本冲突
         try {
@@ -2031,6 +2035,7 @@ export class LoopManager {
             this.targetVideo.removeEventListener('loadedmetadata', this._onLoadedMetaBound);
             this._onLoadedMetaBound = null;
         }
+        this._hasUrlDeepLink = false;
         if (this.targetVideo && this._durationFallbackBound) {
             this.targetVideo.removeEventListener('timeupdate', this._durationFallbackBound);
             this._durationFallbackBound = null;

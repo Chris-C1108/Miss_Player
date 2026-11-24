@@ -397,6 +397,7 @@ export class PlaybackController {
     }
 
     startCapsulePlayback(startIndex = 0) {
+        this.playerCore?.cancelInitialSeekGuard?.();
         const loopManager = this.controlManager?.loopManager;
         const tabs = loopManager?.tabs || [];
         if (tabs.length === 0) return;

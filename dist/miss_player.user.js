@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.122-beta.001
+// @version            5.7.122-beta.002
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1989,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.001";
+		return "5.7.122-beta.002";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4180,7 +4180,119 @@
 			this.options = Object.assign({ containerId: "tm-video-container" }, options);
 			this.callingButton = this.options.callingButton || null;
 			this.userPauseIntent = false;
+			this._initialSeekGuardCancel = null;
 			this.initialized = false;
+		}
+		cancelInitialSeekGuard() {
+			if (typeof this._initialSeekGuardCancel === "function") {
+				const cancelFn = this._initialSeekGuardCancel;
+				this._initialSeekGuardCancel = null;
+				try {
+					cancelFn();
+				} catch (_) {}
+			}
+		}
+		armInitialHighlightSeek(rawTargetTime, { progressManager = null, loopManager = null } = {}) {
+			const video = this.targetVideo;
+			if (!video) return;
+			const baseTarget = Number(rawTargetTime);
+			if (!Number.isFinite(baseTarget) || baseTarget <= 0) return;
+			this.cancelInitialSeekGuard();
+			const resolveTargetTime = () => {
+				const dur = video.duration;
+				if (Number.isFinite(dur) && dur > 0) return Math.max(0, Math.min(baseTarget, Math.max(0, dur - .5)));
+				return Math.max(0, baseTarget);
+			};
+			const initialTarget = resolveTargetTime();
+			if (initialTarget <= 0) return;
+			const tolerance = Math.min(2.5, Math.max(.4, initialTarget * .25));
+			const maxAttempts = 8;
+			let attempts = 0;
+			let lastSeekStamp = 0;
+			let disarmed = false;
+			let timeoutId = null;
+			const syncUiTo = (t) => {
+				try {
+					progressManager?.updateProgressBar?.();
+					progressManager?.updateCurrentTimeDisplay?.();
+					loopManager?.syncProximityState?.({
+						targetTime: t,
+						forceCenter: true
+					});
+				} catch (_) {}
+			};
+			const disarm = () => {
+				if (disarmed) return;
+				disarmed = true;
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+					timeoutId = null;
+				}
+				video.removeEventListener("loadedmetadata", onReadyEvent);
+				video.removeEventListener("loadeddata", onReadyEvent);
+				video.removeEventListener("canplay", onReadyEvent);
+				video.removeEventListener("playing", onReadyEvent);
+				video.removeEventListener("seeked", onSeeked);
+				video.removeEventListener("timeupdate", onTimeUpdate);
+				if (this._initialSeekGuardCancel === disarm) this._initialSeekGuardCancel = null;
+			};
+			const applySeek = (force = false) => {
+				if (disarmed || !this.targetVideo) return;
+				if (video.readyState < 1) return;
+				const target = resolveTargetTime();
+				if (target <= 0) {
+					disarm();
+					return;
+				}
+				const cur = Number(video.currentTime) || 0;
+				if (Math.abs(cur - target) <= tolerance) {
+					syncUiTo(cur);
+					if (video.readyState >= 2 && !video.seeking && (!video.paused || this.userPauseIntent)) disarm();
+					return;
+				}
+				if (!force && video.seeking && Date.now() - lastSeekStamp < 250) return;
+				if (attempts >= maxAttempts) {
+					disarm();
+					return;
+				}
+				attempts += 1;
+				lastSeekStamp = Date.now();
+				try {
+					video.currentTime = target;
+				} catch (_) {}
+				syncUiTo(target);
+			};
+			const onReadyEvent = () => applySeek(false);
+			const onSeeked = () => {
+				if (disarmed) return;
+				const target = resolveTargetTime();
+				const cur = Number(video.currentTime) || 0;
+				if (Math.abs(cur - target) > tolerance) applySeek(true);
+				else if (video.readyState >= 2 && (!video.paused || this.userPauseIntent)) {
+					syncUiTo(cur);
+					disarm();
+				}
+			};
+			const onTimeUpdate = () => {
+				if (disarmed) return;
+				const target = resolveTargetTime();
+				const cur = Number(video.currentTime) || 0;
+				if (Math.abs(cur - target) > tolerance) {
+					if (!video.seeking) applySeek(false);
+				} else if (video.readyState >= 2 && !video.seeking) {
+					syncUiTo(cur);
+					disarm();
+				}
+			};
+			video.addEventListener("loadedmetadata", onReadyEvent);
+			video.addEventListener("loadeddata", onReadyEvent);
+			video.addEventListener("canplay", onReadyEvent);
+			video.addEventListener("playing", onReadyEvent);
+			video.addEventListener("seeked", onSeeked);
+			video.addEventListener("timeupdate", onTimeUpdate);
+			timeoutId = setTimeout(disarm, 6e3);
+			this._initialSeekGuardCancel = disarm;
+			if (video.readyState >= 1) applySeek(true);
 		}
 		resolveVideoCode({ refresh = false } = {}) {
 			if (!refresh && this.videoCode) return this.videoCode;
@@ -4262,7 +4374,8 @@
 				x5Playsinline: this.targetVideo.getAttribute("x5-playsinline")
 			};
 		}
-		restoreVideoState() {
+		restoreVideoState(options = {}) {
+			const { skipTimeRestore = false } = options || {};
 			try {
 				const savedSpeed = parseFloat(getValue("preferredPlaybackRate", 1));
 				const validSpeed = !isNaN(savedSpeed) && savedSpeed >= .5 && savedSpeed <= 4 ? savedSpeed : this.defaultPlaybackRate;
@@ -4272,7 +4385,7 @@
 				};
 				this.targetVideo.addEventListener("loadedmetadata", restoreSpeedOnReady, { once: true });
 				this.targetVideo.addEventListener("canplay", restoreSpeedOnReady, { once: true });
-				if (this.videoState && this.videoState.currentTime > 0) {
+				if (!skipTimeRestore && this.videoState && this.videoState.currentTime > 0) {
 					if (this.targetVideo.readyState >= 1) try {
 						this.targetVideo.currentTime = this.videoState.currentTime;
 					} catch (_) {}
@@ -4401,6 +4514,7 @@
 			} catch (_) {}
 		}
 		close(overlay, container, playerContainer, rootHost) {
+			this.cancelInitialSeekGuard();
 			if (!overlay) return;
 			this.restoreMediaToHost();
 			if (rootHost && rootHost.parentNode) rootHost.parentNode.removeChild(rootHost);
@@ -4450,7 +4564,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.001";
+		return "5.7.122-beta.002";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6593,7 +6707,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.001";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.002";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -16451,6 +16565,7 @@
 				});
 			} catch (_) {}
 			if (this.targetVideo) {
+				this.playerCore?.cancelInitialSeekGuard?.();
 				if (this.playerCore) this.playerCore.userPauseIntent = false;
 				if (this.controlManager?.playbackController) this.controlManager.playbackController._userPauseIntent = false;
 				this.targetVideo.currentTime = targetSecs;
@@ -16473,6 +16588,7 @@
 				10
 			] : 15);
 			if (this.targetVideo && typeof targetSecs === "number" && !isNaN(targetSecs)) {
+				this.playerCore?.cancelInitialSeekGuard?.();
 				if (this.playerCore) this.playerCore.userPauseIntent = false;
 				if (this.controlManager?.playbackController) this.controlManager.playbackController._userPauseIntent = false;
 				this.targetVideo.currentTime = targetSecs;
@@ -19277,6 +19393,7 @@
 			this.startCapsulePlayback(targetIndex);
 		}
 		startCapsulePlayback(startIndex = 0) {
+			this.playerCore?.cancelInitialSeekGuard?.();
 			const tabs = (this.controlManager?.loopManager)?.tabs || [];
 			if (tabs.length === 0) return;
 			this._isTourEnded = false;
@@ -21301,6 +21418,7 @@
 			this._onVideoSeekedBound = null;
 			this._onDurationChangeBound = null;
 			this._onLoadedMetaBound = null;
+			this._hasUrlDeepLink = false;
 			this.tabColors = [
 				"200, 100%, 55%",
 				"145, 80%, 48%",
@@ -21847,6 +21965,7 @@
 			this._exitEditMode();
 		}
 		_handleTabClick(tab) {
+			this.playerCore?.cancelInitialSeekGuard?.();
 			playTapSound();
 			telemetry.track("tag_jump", {
 				type: tab.type,
@@ -22208,6 +22327,7 @@
 			Toast$1("已退出循环播放", "info");
 		}
 		checkAndExitLoopIfOutside(targetTime) {
+			this.playerCore?.cancelInitialSeekGuard?.();
 			if (this.editingTabId) return false;
 			const duration = this.targetVideo && !Number.isNaN(this.targetVideo.duration) ? this.targetVideo.duration : 0;
 			if (!this.loopActive && this.activeTabId && typeof targetTime === "number" && !Number.isNaN(targetTime)) {
@@ -22415,6 +22535,7 @@
 				}
 			}
 			if (paramsToParse.length === 0) return;
+			this._hasUrlDeepLink = true;
 			try {
 				const url = new URL(window.location.href);
 				let urlChanged = false;
@@ -22715,6 +22836,7 @@
 				this.targetVideo.removeEventListener("loadedmetadata", this._onLoadedMetaBound);
 				this._onLoadedMetaBound = null;
 			}
+			this._hasUrlDeepLink = false;
 			if (this.targetVideo && this._durationFallbackBound) {
 				this.targetVideo.removeEventListener("timeupdate", this._durationFallbackBound);
 				this._durationFallbackBound = null;
@@ -28962,6 +29084,7 @@
 		_seekToCue(index) {
 			const cue = this.cues[index];
 			if (!cue) return;
+			this.playerCore?.cancelInitialSeekGuard?.();
 			const offsetSec = (Number(this.activeItem?.timeOffsetMs) || 0) / 1e3;
 			const target = Math.max(0, cue.start + offsetSec + .02);
 			if (this.targetVideo) this.targetVideo.currentTime = target;
@@ -30027,18 +30150,6 @@
 				controlManager.setLoopManager(loopManager);
 				progressManager.setLoopManager(loopManager);
 				this.playerCore.loopManager = loopManager;
-				const playerSettings = this.playerCore.options?.playerState?.settings;
-				if (playerSettings && playerSettings.betaMode && playerSettings.betaFirstCapsulePlay && loopManager.tabs.length > 0) {
-					const firstTab = loopManager.tabs[0];
-					const targetTime = firstTab.startTime !== void 0 && firstTab.startTime !== null ? firstTab.startTime : firstTab.time || 0;
-					const prevTime = this.playerCore.videoState?.currentTime || 0;
-					if (this.playerCore.targetVideo) {
-						this.playerCore.targetVideo.currentTime = targetTime;
-						if (prevTime > 0 && Math.abs(prevTime - targetTime) > 3) Toast$1("已从第 1 个高光开播，点击恢复上次断点", 5e3, "info", () => {
-							if (this.playerCore.targetVideo) this.playerCore.targetVideo.currentTime = prevTime;
-						});
-					}
-				}
 				const dragManager = new DragManager(this.playerCore, uiElements, uiManager, controlManager);
 				dragManager.init();
 				this.managers.dragManager = dragManager;
@@ -30078,7 +30189,30 @@
 					if (heatmapManager && videoElem.duration > 0) heatmapManager.onLoadedMetadata().catch(() => {});
 				}).catch(() => {});
 				settingsManager.updateControlRowsVisibility();
-				this.playerCore.restoreVideoState();
+				const playerSettings = this.playerCore.options?.playerState?.settings;
+				const hasUrlDeepLink = Boolean(loopManager._hasUrlDeepLink);
+				const shouldFirstCapsulePlay = Boolean(playerSettings && playerSettings.betaMode && playerSettings.betaFirstCapsulePlay && loopManager.tabs.length > 0 && !hasUrlDeepLink);
+				if (shouldFirstCapsulePlay && this.playerCore.targetVideo) {
+					const firstTab = loopManager.tabs[0];
+					const targetTime = firstTab.startTime !== void 0 && firstTab.startTime !== null ? firstTab.startTime : firstTab.time || 0;
+					const prevTime = this.playerCore.videoState?.currentTime || 0;
+					this.playerCore.armInitialHighlightSeek(targetTime, {
+						progressManager,
+						loopManager
+					});
+					if (prevTime > 0 && Math.abs(prevTime - targetTime) > 3) Toast$1("已从第 1 个高光开播，点击恢复上次断点", 5e3, "info", () => {
+						this.playerCore?.cancelInitialSeekGuard?.();
+						if (this.playerCore?.targetVideo) {
+							this.playerCore.targetVideo.currentTime = prevTime;
+							progressManager.updateProgressBar();
+							loopManager.syncProximityState({
+								targetTime: prevTime,
+								forceCenter: true
+							});
+						}
+					});
+				}
+				this.playerCore.restoreVideoState({ skipTimeRestore: shouldFirstCapsulePlay || hasUrlDeepLink });
 				progressManager.updateProgressBar();
 				progressManager.updateCurrentTimeDisplay();
 				updateSafariThemeColor("#000000", true);
@@ -30148,6 +30282,7 @@
 				if (typeof this._originScrollY === "number") this._originalScrollTo.call(window, this._originScrollX || 0, this._originScrollY);
 				this._originalScrollTo = null;
 			}
+			this.playerCore?.cancelInitialSeekGuard?.();
 			this.playerCore.close(this.managers.uiManager.overlay, this.managers.uiManager.container, this.managers.uiManager.playerContainer, this.managers.uiManager.rootHost);
 			if (this.managers.eventManager) this.managers.eventManager.cleanup();
 			if (this.swipeManager) {

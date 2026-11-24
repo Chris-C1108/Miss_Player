@@ -1247,6 +1247,7 @@ export class SubtitleManager {
     _seekToCue(index) {
         const cue = this.cues[index];
         if (!cue) return;
+        this.playerCore?.cancelInitialSeekGuard?.();
         const offsetSec = (Number(this.activeItem?.timeOffsetMs) || 0) / 1000;
         const target = Math.max(0, cue.start + offsetSec + 0.02);
         if (this.targetVideo) this.targetVideo.currentTime = target;

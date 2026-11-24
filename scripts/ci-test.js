@@ -231,6 +231,11 @@ runStep('执行番号统一入口与历史错位数据全链路迁移测试', ()
     execSync('node tests/avcode-unification-migration.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.32 开播定位首个高光防回跳与状态仲裁测试
+runStep('执行开播定位首个高光防回跳与状态仲裁测试', () => {
+    execSync('node tests/first-highlight-seek.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

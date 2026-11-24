@@ -817,6 +817,7 @@ export class CommentPanel {
         } catch (_) {}
 
         if (this.targetVideo) {
+            this.playerCore?.cancelInitialSeekGuard?.();
             if (this.playerCore) this.playerCore.userPauseIntent = false;
             if (this.controlManager?.playbackController) this.controlManager.playbackController._userPauseIntent = false;
             this.targetVideo.currentTime = targetSecs;
@@ -866,6 +867,7 @@ export class CommentPanel {
 
         // 2. 同时跳转播放进度
         if (this.targetVideo && typeof targetSecs === 'number' && !isNaN(targetSecs)) {
+            this.playerCore?.cancelInitialSeekGuard?.();
             if (this.playerCore) this.playerCore.userPauseIntent = false;
             if (this.controlManager?.playbackController) this.controlManager.playbackController._userPauseIntent = false;
             this.targetVideo.currentTime = targetSecs;

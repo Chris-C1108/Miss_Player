@@ -259,24 +259,6 @@ export class CustomVideoPlayer {
         controlManager.setLoopManager(loopManager);
         progressManager.setLoopManager(loopManager);
         this.playerCore.loopManager = loopManager;
-
-        // Phase 7.4: 首个胶囊开播与断点续播仲裁 (Beta 受控)
-        const playerSettings = this.playerCore.options?.playerState?.settings;
-        if (playerSettings && playerSettings.betaMode && playerSettings.betaFirstCapsulePlay && loopManager.tabs.length > 0) {
-            const firstTab = loopManager.tabs[0];
-            const targetTime = (firstTab.startTime !== undefined && firstTab.startTime !== null) ? firstTab.startTime : (firstTab.time || 0);
-            const prevTime = this.playerCore.videoState?.currentTime || 0;
-            if (this.playerCore.targetVideo) {
-                this.playerCore.targetVideo.currentTime = targetTime;
-                if (prevTime > 0 && Math.abs(prevTime - targetTime) > 3) {
-                    Toast('已从第 1 个高光开播，点击恢复上次断点', 5000, 'info', () => {
-                        if (this.playerCore.targetVideo) {
-                            this.playerCore.targetVideo.currentTime = prevTime;
-                        }
-                    });
-                }
-            }
-        }
         
         // 创建拖动管理器 (注入 uiManager, controlManager)
         const dragManager = new DragManager(this.playerCore, uiElements, uiManager, controlManager);
@@ -352,9 +334,42 @@ export class CustomVideoPlayer {
 
         // 应用设置
         settingsManager.updateControlRowsVisibility();
+
+        // Phase 7.4: 首个高光开播与断点续播仲裁 (须在 DOM 挂载后、restoreVideoState 之前执行，防止被 videoState.currentTime 覆盖或在 readyState < 2 / 起播时被 HLS/Safari 重置回 0)
+        const playerSettings = this.playerCore.options?.playerState?.settings;
+        const hasUrlDeepLink = Boolean(loopManager._hasUrlDeepLink);
+        const shouldFirstCapsulePlay = Boolean(
+            playerSettings &&
+            playerSettings.betaMode &&
+            playerSettings.betaFirstCapsulePlay &&
+            loopManager.tabs.length > 0 &&
+            !hasUrlDeepLink
+        );
+
+        if (shouldFirstCapsulePlay && this.playerCore.targetVideo) {
+            const firstTab = loopManager.tabs[0];
+            const targetTime = (firstTab.startTime !== undefined && firstTab.startTime !== null) ? firstTab.startTime : (firstTab.time || 0);
+            const prevTime = this.playerCore.videoState?.currentTime || 0;
+            this.playerCore.armInitialHighlightSeek(targetTime, {
+                progressManager,
+                loopManager
+            });
+            if (prevTime > 0 && Math.abs(prevTime - targetTime) > 3) {
+                Toast('已从第 1 个高光开播，点击恢复上次断点', 5000, 'info', () => {
+                    this.playerCore?.cancelInitialSeekGuard?.();
+                    if (this.playerCore?.targetVideo) {
+                        this.playerCore.targetVideo.currentTime = prevTime;
+                        progressManager.updateProgressBar();
+                        loopManager.syncProximityState({ targetTime: prevTime, forceCenter: true });
+                    }
+                });
+            }
+        }
         
-        // 恢复视频状态
-        this.playerCore.restoreVideoState();
+        // 恢复视频状态并执行自动起播（若首个高光或 URL 深链已接管起始进度，禁止旧断点覆写 currentTime）
+        this.playerCore.restoreVideoState({
+            skipTimeRestore: shouldFirstCapsulePlay || hasUrlDeepLink
+        });
         
         // 更新进度条
         progressManager.updateProgressBar();
@@ -465,6 +480,7 @@ export class CustomVideoPlayer {
         }
 
         // 调用PlayerCore的close方法
+        this.playerCore?.cancelInitialSeekGuard?.();
         this.playerCore.close(
             this.managers.uiManager.overlay, 
             this.managers.uiManager.container,
