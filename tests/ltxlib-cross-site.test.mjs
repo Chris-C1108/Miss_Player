@@ -156,7 +156,7 @@ assert.ok(hoverReady.siteLabel.includes('123AV'));
 assert.ok(hoverReady.subText.includes('123av.com'));
 console.log('✅ 6. PC 端悬浮提示跳转站点预探测与 30min 缓存复用测试通过');
 
-// 7. 跨脚本 #mp_theater=1 hash 接力与地址栏清理测试
+// 7. #mp_theater=1 hash 兜底接力与地址栏清理测试
 const hashedUrl = CrossSitePlayRouter.appendTheaterHash('https://123av.com/cn/v/ssis-002');
 assert.strictEqual(hashedUrl, 'https://123av.com/cn/v/ssis-002#mp_theater=1');
 assert.strictEqual(CrossSitePlayRouter.appendTheaterHash(hashedUrl), hashedUrl);
@@ -166,6 +166,6 @@ globalThis.history = { replaceState: (_s, _t, u) => { replacedUrl = u; } };
 assert.strictEqual(CrossSitePlayRouter.consumeTheaterHash({ hostname: 'example.com', pathname: '/', search: '', hash: '#mp_theater=1' }), false);
 assert.strictEqual(CrossSitePlayRouter.consumeTheaterHash({ hostname: '123av.com', pathname: '/cn/v/ssis-002', search: '', hash: '#mp_theater=1' }), true);
 assert.strictEqual(replacedUrl, '/cn/v/ssis-002');
-console.log('✅ 7. 跨脚本 #mp_theater=1 hash 接力与地址栏清理测试通过');
+console.log('✅ 7. #mp_theater=1 hash 兜底接力与地址栏清理测试通过');
 
 console.log('🎉 全部 7 项 ltxlib 跨站播放测试 100% 通过！');

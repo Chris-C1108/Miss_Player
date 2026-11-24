@@ -291,7 +291,7 @@ export class CrossSitePlayRouter {
     }
 
     /**
-     * 为跨站直达链接附加 #mp_theater=1 接力标记，支持不同脚本沙箱间无共享存储自动拉起影院模式
+     * 为跨站直达链接附加 #mp_theater=1 接力标记，作为无共享存储或跨分片上下文时的自动拉起影院模式兜底
      */
     static appendTheaterHash(url) {
         const raw = String(url || '').trim();
@@ -744,7 +744,7 @@ export class CrossSitePlayRouter {
             }
         }
 
-        // 2. 轨道 B：纯脚本轻量寻源 + 60s 跨站影院租约 + URL hash 跨脚本接力
+        // 2. 轨道 B：纯脚本轻量寻源 + 60s 跨站影院租约 + URL hash 兜底接力
         this.notify(`正在跨站搜寻 ${cleanCode} 片源…`, 2000, 'info');
         const resolved = await this.resolveClientSource(cleanCode, { sourceId });
         if (!resolved || !resolved.url) {

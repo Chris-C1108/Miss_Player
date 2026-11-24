@@ -136,7 +136,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **自动登录**：`src/autologin/`（多站点凭据管理、跨域 iframe 签名桥接）
 * **广告拦截**：`src/adblock/`（DOM 净化与弹窗拦截）
 * **Peach 入库 (Beta)**：`src/services/PeachService.js`（配对、在库状态、触发扫描）与 `src/services/StrmIngestPipeline.js`（拼接网关地址 → WebDAV 写入 `.strm`）。`src/player/bridge/PeachWebBridge.js` 中的寻源/接力/GMHlsLoader 为过渡代码，Phase 19.9 下线
-* **跨站播放路由与索引站适配 (Dual-Track Cross-Site Play)**：`src/services/CrossSitePlayRouter.js`、`src/adapters/LtxLibAdapter.js` 与 iOS Safari Stay 兼容伴侣入口 `src/entries/ltxlibCompanion.js`（产物 `dist/miss_player.ltxlib.user.js` + `.meta.js`，零 `unsafeWindow` 与非白名单 `window.*` 以强制 Stay `content` 沙箱执行穿透 `ltxlib.dpdns.org` 严格 `script-src` CSP；针对 `ltxlib.dpdns.org` 等强 CSP 索引站：卡片封面左下角注入单手双层播放入口，PC 端鼠标悬浮预探测并展示最终跳转站点，优先打开 `miss-gateway` 同源影院页 `/v1/{token}/watch/{code}`（轨道 A）；无网关或不可达时允许脚本做轻量四源页面探活并写入 60s 一次性跨站租约 + `#mp_theater=1` 跨脚本 hash 接力直达源站自动拉起影院模式（轨道 B），仍不做客户端 HLS 切片代理）
+* **跨站播放路由与索引站适配 (Dual-Track Cross-Site Play)**：`src/services/CrossSitePlayRouter.js` 与 `src/adapters/LtxLibAdapter.js`（单脚本分发，仅保证 PC Chrome 等支持隔离执行上下文的管理器可用，不额外维护 iOS Stay 双脚本伴侣以换取 `ltxlib.dpdns.org` 强 CSP 穿透；针对 `ltxlib.dpdns.org` 索引站：卡片封面左下角注入单手双层播放入口，PC 端鼠标悬浮预探测并展示最终跳转站点，优先打开 `miss-gateway` 同源影院页 `/v1/{token}/watch/{code}`（轨道 A）；无网关或不可达时允许脚本做轻量四源页面探活并写入 60s 一次性跨站租约 + `#mp_theater=1` 兜底接力直达源站自动拉起影院模式（轨道 B），仍不做客户端 HLS 切片代理）
 
 ### 3.5 自托管服务端组件 (`services/`，不打包进脚本)
 * **流网关**：`services/miss-gateway/`（由 `services/miss-resolver/` 升级，Go 单静态二进制）— 按番号寻源（123AV / JAVVerse / Jable / MissAV）、注入 Referer/Origin、改写 m3u8、代理分片与 key，并提供 `/v1/{token}/watch/{code}` 同源影院承接页与 `/v1/{token}/sources/{code}` 换源接口。设计与契约见 [docs/todo/phase-19-stream-gateway.md](./docs/todo/phase-19-stream-gateway.md)

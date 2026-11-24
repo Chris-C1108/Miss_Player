@@ -1,13 +1,12 @@
 /**
  * Jasna-LTX Library (https://ltxlib.dpdns.org/) 卡片跨站播放适配器
  *
- * 设计约束（基于对 ltxlib 实机 DOM/CSS/CSP 与 iOS Safari Stay 源码实测）：
+ * 设计约束（基于对 ltxlib 实机 DOM/CSS/CSP 实测，单脚本仅面向 PC Chrome 等支持隔离执行上下文的管理器）：
  * 1. 页面 CSP 锁死 default-src 'none' / script-src 'sha256-...' / media-src / worker-src / frame-ancestors，
  *    绝对禁止向宿主页面注入 <video>、hls.js 或 <iframe>，所有播放均经 CrossSitePlayRouter 跨 Origin 承接。
- * 2. 严禁在本模块及跨站伴侣构建链中引用页级沙箱句柄或非白名单全局属性，确保 Stay App 归类为 content 沙箱执行。
- * 3. Vue 3 列表筛选/排序/翻页会原地复用 article.card 节点并仅变更 data-code 属性，
+ * 2. Vue 3 列表筛选/排序/翻页会原地复用 article.card 节点并仅变更 data-code 属性，
  *    因此点击与悬浮预探测严禁闭包固化初始 code，必须实时从 btn.closest('article.card') 读取。
- * 4. PC 端鼠标悬浮提示最终跳转站点，并提前预热 30min 缓存实现点击 0ms 跳转；触控端长按弹出选源/入库菜单。
+ * 3. PC 端鼠标悬浮提示最终跳转站点，并提前预热 30min 缓存实现点击 0ms 跳转；右键/长按弹出选源/入库菜单。
  */
 
 import { CrossSitePlayRouter, CROSS_SITE_SOURCES } from '../services/CrossSitePlayRouter.js';
@@ -81,13 +80,6 @@ export class LtxLibAdapter {
         this.configure(options);
         if (this.initialized) return true;
         if (!this.isLtxLibSite()) return false;
-        // 避免主脚本与伴侣脚本同时运行时重复启动（使用 DOM dataset 跨脚本沙箱互斥）
-        if (typeof document !== 'undefined' && document.documentElement?.dataset?.mpLtxActive === '1') {
-            return true;
-        }
-        if (typeof document !== 'undefined' && document.documentElement?.dataset) {
-            document.documentElement.dataset.mpLtxActive = '1';
-        }
         this.init(options);
         return true;
     }
