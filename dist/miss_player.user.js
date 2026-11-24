@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.122-beta.003
+// @version            5.7.122-beta.004
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1989,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.003";
+		return "5.7.122-beta.004";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2778,6 +2778,12 @@
 			tabJavlibReview: "JAVLib Reviews",
 			tabComments: "Comments",
 			autoQuality: "Auto Quality",
+			autoQualityDesc: "Switch to highest available stream quality",
+			autoQualityApplied: "Switched to highest quality",
+			autoUncensored: "Auto Uncensored",
+			autoUncensoredDesc: "Auto switch when MissAV has uncensored leak",
+			autoUncensoredFound: "Uncensored version found, switching...",
+			autoUncensoredNotFound: "No uncensored version available",
 			helpImprove: "Help improve",
 			helpImproveDesc: "Collect necessary data to improve features",
 			loadingError: "Failed to load video",
@@ -3085,6 +3091,12 @@
 			tabJavlibReview: "JAVLib 文章",
 			tabComments: "评论",
 			autoQuality: "自动画质",
+			autoQualityDesc: "自动切换至当前最高画质流",
+			autoQualityApplied: "已切换为最高可用画质",
+			autoUncensored: "自动无码",
+			autoUncensoredDesc: "MissAV 存在无码版时自动切换",
+			autoUncensoredFound: "已找到无码版，即将切换...",
+			autoUncensoredNotFound: "当前影片暂无无码版",
 			helpImprove: "帮助改进",
 			helpImproveDesc: "收集必要数据用于改进功能",
 			loadingError: "视频加载失败",
@@ -3360,6 +3372,12 @@
 			tabJavlibReview: "JAVLib 文章",
 			tabComments: "評論",
 			autoQuality: "自動畫質",
+			autoQualityDesc: "自動切換至目前最高畫質串流",
+			autoQualityApplied: "已切換為最高可用畫質",
+			autoUncensored: "自動無碼",
+			autoUncensoredDesc: "MissAV 存在無碼版時自動切換",
+			autoUncensoredFound: "已找到無碼版，即將切換...",
+			autoUncensoredNotFound: "目前影片暫無無碼版",
 			helpImprove: "幫助改進",
 			helpImproveDesc: "收集必要數據用於改進功能",
 			loadingError: "視頻加載失敗",
@@ -3643,7 +3661,13 @@
 			tabJavlibComment: "JAVLib コメント",
 			tabJavlibReview: "JAVLib レビュー",
 			tabComments: "コメント",
-			autoQuality: "自動画质",
+			autoQuality: "自動画質",
+			autoQualityDesc: "利用可能な最高画質へ自動切替",
+			autoQualityApplied: "最高画質に切り替えました",
+			autoUncensored: "自動無修正",
+			autoUncensoredDesc: "MissAV で無修正版があれば自動切替",
+			autoUncensoredFound: "無修正版が見つかりました。切り替えます...",
+			autoUncensoredNotFound: "無修正版が見つかりませんでした",
 			helpImprove: "改善に協力",
 			helpImproveDesc: "機能改善のために必要なデータを収集します",
 			loadingError: "動画の読み込みに失敗しました",
@@ -3928,6 +3952,12 @@
 			tabJavlibReview: "Bài viết JAVLib",
 			tabComments: "Bình luận",
 			autoQuality: "Chất lượng tự động",
+			autoQualityDesc: "Tự động chuyển sang chất lượng cao nhất",
+			autoQualityApplied: "Đã chuyển sang chất lượng cao nhất",
+			autoUncensored: "Tự động không che",
+			autoUncensoredDesc: "Tự động chuyển khi MissAV có bản không che",
+			autoUncensoredFound: "Đã tìm thấy bản không che, đang chuyển...",
+			autoUncensoredNotFound: "Hiện chưa có bản không che",
 			helpImprove: "Giúp cải thiện",
 			helpImproveDesc: "Thu thập dữ liệu cần thiết để cải thiện tính năng",
 			loadingError: "Không thể tải video",
@@ -4599,7 +4629,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.003";
+		return "5.7.122-beta.004";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6742,7 +6772,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.003";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.004";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -6914,6 +6944,8 @@
 				buttonSoundEnabled: getValue("buttonSoundEnabled", true),
 				defaultMuted: getValue("defaultMuted", true),
 				muteResetMinutes: parseInt(getValue("muteResetMinutes", 5), 10) || 5,
+				autoHighestQuality: getValue("autoHighestQuality", true),
+				autoUncensored: getValue("autoUncensored", false),
 				autoCheckUpdate: getValue("autoCheckUpdate", true),
 				updateChannel: getValue("updateChannel", "stable"),
 				telemetryEnabled: false,
@@ -23845,6 +23877,8 @@
 				buttonSoundEnabled: true,
 				defaultMuted: true,
 				muteResetMinutes: 5,
+				autoHighestQuality: true,
+				autoUncensored: false,
 				betaSingleHandMode: false,
 				singleHandPosition: "right",
 				autoCheckUpdate: true,
@@ -23929,6 +23963,8 @@
 				this.settings.updateChannel = rawChannel === "beta" ? "beta" : "stable";
 				this.settings.defaultMuted = getBool("defaultMuted", true);
 				this.settings.muteResetMinutes = Math.max(1, Math.min(120, parseInt(getValue("muteResetMinutes", 5), 10) || 5));
+				this.settings.autoHighestQuality = getBool("autoHighestQuality", true);
+				this.settings.autoUncensored = getBool("autoUncensored", false);
 				this.settings.betaMode = getBool("betaMode", false);
 				const rawDataMode = getValue("dataMode", null);
 				if (rawDataMode === "shared" || rawDataMode === "local") this.settings.dataMode = rawDataMode;
@@ -23976,6 +24012,8 @@
 				"buttonSoundEnabled",
 				"defaultMuted",
 				"muteResetMinutes",
+				"autoHighestQuality",
+				"autoUncensored",
 				"autoCheckUpdate",
 				"updateChannel",
 				"betaMode",
@@ -24025,6 +24063,8 @@
 				setValue("buttonSoundEnabled", this.settings.buttonSoundEnabled);
 				setValue("defaultMuted", Boolean(this.settings.defaultMuted));
 				setValue("muteResetMinutes", this.settings.muteResetMinutes || 5);
+				setValue("autoHighestQuality", this.settings.autoHighestQuality !== false);
+				setValue("autoUncensored", Boolean(this.settings.autoUncensored));
 				setValue("autoCheckUpdate", this.settings.autoCheckUpdate !== false);
 				setValue("updateChannel", this.settings.updateChannel === "beta" ? "beta" : "stable");
 				setValue("betaMode", Boolean(this.settings.betaMode));
@@ -24106,6 +24146,8 @@
 				buttonSoundEnabled: true,
 				defaultMuted: true,
 				muteResetMinutes: 5,
+				autoHighestQuality: true,
+				autoUncensored: false,
 				subtitleEnabled: true,
 				subtitleFontSize: "medium",
 				subtitleVerticalOffset: 0,
@@ -24265,6 +24307,8 @@
 				this.settings.buttonSoundEnabled = getBool("buttonSoundEnabled", true);
 				this.settings.defaultMuted = getBool("defaultMuted", true);
 				this.settings.muteResetMinutes = parseInt(getValue("muteResetMinutes", 5), 10) || 5;
+				this.settings.autoHighestQuality = getBool("autoHighestQuality", true);
+				this.settings.autoUncensored = getBool("autoUncensored", false);
 				this.settings.autoCheckUpdate = getBool("autoCheckUpdate", true);
 				this.settings.updateChannel = getValue("updateChannel", "stable") === "beta" ? "beta" : "stable";
 				const rawPm = getValue("betaPlayMode", "normal");
@@ -24306,6 +24350,8 @@
 				setValue("buttonSoundEnabled", this.settings.buttonSoundEnabled);
 				setValue("defaultMuted", Boolean(this.settings.defaultMuted));
 				setValue("muteResetMinutes", this.settings.muteResetMinutes || 5);
+				setValue("autoHighestQuality", this.settings.autoHighestQuality !== false);
+				setValue("autoUncensored", Boolean(this.settings.autoUncensored));
 				setValue("autoCheckUpdate", this.settings.autoCheckUpdate !== false);
 				setValue("updateChannel", this.settings.updateChannel || "stable");
 				setValue("betaPlayMode", this.settings.betaPlayMode || "normal");
@@ -24654,6 +24700,293 @@
 		});
 		return { reset };
 	}
+	var QualityManager = class {
+		constructor() {
+			this.maxAttempts = 8;
+			this.attemptInterval = 1e3;
+		}
+		isAutoQualityEnabled() {
+			const val = getValue("autoHighestQuality", true);
+			return val !== false && val !== "false";
+		}
+		setupAutoHighestQuality() {
+			if (!this.isAutoQualityEnabled()) return;
+			const executeQualitySetup = () => {
+				if (!this.isAutoQualityEnabled()) return;
+				if (this.setHighestQualitySingle()) return;
+				let attempts = 0;
+				const checkInterval = setInterval(() => {
+					if (!this.isAutoQualityEnabled() || this.setHighestQualitySingle() || ++attempts >= this.maxAttempts) clearInterval(checkInterval);
+				}, this.attemptInterval);
+			};
+			if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(executeQualitySetup, { timeout: 4e3 });
+			else setTimeout(executeQualitySetup, 1500);
+		}
+		applyNow() {
+			return this.setHighestQualitySingle({ allowInTheater: true });
+		}
+		_collectHlsInstances(win, player) {
+			const candidates = [
+				win?.hls,
+				typeof window !== "undefined" ? window.hls : null,
+				player?.hls
+			];
+			if (typeof document !== "undefined" && typeof document.querySelectorAll === "function") try {
+				document.querySelectorAll("hlsjs-video, video").forEach((el) => {
+					if (el && el.hls) candidates.push(el.hls);
+				});
+			} catch (_) {}
+			const unique = [];
+			for (const inst of candidates) if (inst && Array.isArray(inst.levels) && inst.levels.length > 1 && !unique.includes(inst)) unique.push(inst);
+			return unique;
+		}
+		_upgradeHlsLevel(hls, { isTheaterActive = false } = {}) {
+			const levels = hls?.levels;
+			if (!Array.isArray(levels) || levels.length <= 1) return false;
+			let bestIdx = 0;
+			let bestScore = -1;
+			for (let i = 0; i < levels.length; i++) {
+				const lvl = levels[i] || {};
+				const height = Number(lvl.height) || 0;
+				const width = Number(lvl.width) || 0;
+				const bitrate = Number(lvl.bitrate) || 0;
+				const score = height * 1e9 + width * 1e5 + bitrate;
+				if (score > bestScore) {
+					bestScore = score;
+					bestIdx = i;
+				}
+			}
+			if (hls.autoLevelCapping !== void 0 && hls.autoLevelCapping !== -1) hls.autoLevelCapping = -1;
+			if (hls.nextLevel !== bestIdx) hls.nextLevel = bestIdx;
+			const mediaPaused = Boolean(hls.media?.paused);
+			if (!isTheaterActive || mediaPaused) {
+				if (hls.loadLevel !== void 0 && hls.loadLevel !== bestIdx) hls.loadLevel = bestIdx;
+				if (hls.currentLevel !== bestIdx) hls.currentLevel = bestIdx;
+			}
+			return true;
+		}
+		setHighestQualitySingle(options = {}) {
+			const { allowInTheater = false } = options || {};
+			try {
+				const isTheaterActive = typeof document !== "undefined" && Boolean(document.body?.classList?.contains("tm-player-active"));
+				if (isTheaterActive && !allowInTheater) return true;
+				const win = typeof unsafeWindow !== "undefined" ? unsafeWindow : typeof window !== "undefined" ? window : null;
+				const player = win?.player || (typeof window !== "undefined" ? window.player : null);
+				let upgraded = false;
+				const hlsList = this._collectHlsInstances(win, player);
+				for (const hls of hlsList) if (this._upgradeHlsLevel(hls, { isTheaterActive })) upgraded = true;
+				if (!isTheaterActive && player && player.config && player.config.quality && Array.isArray(player.config.quality.options) && player.config.quality.options.length > 0) {
+					const rawOptions = player.config.quality.options;
+					const numericOptions = rawOptions.map((o) => Number(o)).filter((n) => Number.isFinite(n));
+					const maxQuality = numericOptions.length > 0 ? Math.max(...numericOptions) : rawOptions[0];
+					if ((typeof player.quality === "number" ? player.quality : player.config.quality.selected) !== maxQuality) {
+						player.quality = maxQuality;
+						player.config.quality.selected = maxQuality;
+						if (typeof player.quality === "function") player.quality(maxQuality);
+					}
+					upgraded = true;
+				}
+				return upgraded;
+			} catch (error) {
+				console.error("[QualityManager] 设置最高画质时出错:", error);
+				return false;
+			}
+		}
+	};
+	init_domains();
+	var STRIP_SUFFIX_RE = /(?:[-_](?:chinese[-_]?subtitles?|chinese[-_]?sub|subtitles?|sub|ch|c|4k|fhd|hd|reduced[-_]mosaic))+$/i;
+	var SESSION_KEY_PREFIX = "mp_uncensored_checked_";
+	function parseMissavVideoPage(rawUrl) {
+		if (!rawUrl || typeof rawUrl !== "string") return null;
+		let parsed;
+		try {
+			parsed = new URL(rawUrl);
+		} catch (_) {
+			return null;
+		}
+		if (!isSiteDomain("MISSAV", parsed.hostname)) return null;
+		const segments = parsed.pathname.split("/").filter(Boolean);
+		if (segments.length === 0) return null;
+		const slug = segments[segments.length - 1];
+		const lowerSlug = slug.toLowerCase();
+		if (LANGUAGE_SLUGS.has(lowerSlug) || NON_AV_ROUTE_SLUGS.has(lowerSlug)) return null;
+		if (/uncensored/i.test(lowerSlug)) return null;
+		for (let i = 0; i < segments.length - 1; i++) {
+			const seg = segments[i].toLowerCase();
+			if (NON_AV_ROUTE_SLUGS.has(seg)) return null;
+		}
+		const avCode = getVideoCodeFromUrl(rawUrl);
+		if (!avCode) return null;
+		const prefixSegments = segments.slice(0, -1);
+		const prefixPath = prefixSegments.length ? `/${prefixSegments.join("/")}` : "";
+		return {
+			url: parsed,
+			avCode,
+			slug,
+			prefixPath
+		};
+	}
+	function buildUncensoredCandidateUrls(rawUrl) {
+		const info = parseMissavVideoPage(rawUrl);
+		if (!info) return [];
+		const { url, avCode, slug, prefixPath } = info;
+		const baseSlug = slug.replace(STRIP_SUFFIX_RE, "") || avCode.toLowerCase();
+		const codeSlug = avCode.toLowerCase();
+		const slugBases = Array.from(new Set([baseSlug, codeSlug].filter(Boolean)));
+		const suffixes = ["-uncensored-leak", "-uncensored-leaked"];
+		const candidates = [];
+		for (const base of slugBases) for (const suffix of suffixes) {
+			const candidate = `${url.origin}${prefixPath}/${base}${suffix}${url.search || ""}`;
+			if (candidate !== rawUrl && !candidates.includes(candidate)) candidates.push(candidate);
+		}
+		return candidates;
+	}
+	function findUncensoredLinkInDocument(doc, currentUrl, avCode) {
+		if (!doc || typeof doc.querySelectorAll !== "function" || !avCode) return null;
+		let currentOrigin = "";
+		try {
+			currentOrigin = new URL(currentUrl).origin;
+		} catch (_) {
+			return null;
+		}
+		const links = Array.from(doc.querySelectorAll("a[href*=\"uncensored\"]"));
+		let fallbackMatch = null;
+		for (const link of links) {
+			const rawHref = link?.getAttribute?.("href") || link?.href;
+			if (!rawHref) continue;
+			let resolved;
+			try {
+				resolved = new URL(rawHref, currentUrl);
+			} catch (_) {
+				continue;
+			}
+			if (resolved.origin !== currentOrigin) continue;
+			if (!/uncensored/i.test(resolved.pathname)) continue;
+			const segments = resolved.pathname.split("/").filter(Boolean);
+			if (segments.length === 0) continue;
+			const leaf = segments[segments.length - 1].toLowerCase();
+			if (!leaf.includes("-uncensored")) continue;
+			if (NON_AV_ROUTE_SLUGS.has(leaf)) continue;
+			if (getVideoCodeFromUrl(resolved.href) !== avCode) continue;
+			if (leaf.includes("uncensored-leak")) return resolved.href;
+			if (!fallbackMatch) fallbackMatch = resolved.href;
+		}
+		return fallbackMatch;
+	}
+	async function probeUncensoredCandidate(candidateUrl, avCode, fetchFn) {
+		if (typeof fetchFn !== "function") return null;
+		const tryProbe = async (method) => {
+			const res = await fetchFn(candidateUrl, {
+				method,
+				credentials: "include",
+				redirect: "follow"
+			});
+			try {
+				res?.body?.cancel?.();
+			} catch (_) {}
+			return res;
+		};
+		try {
+			let res = await tryProbe("HEAD");
+			if (res && res.status === 405) res = await tryProbe("GET");
+			if (!res || !res.ok || res.status < 200 || res.status >= 300) return null;
+			const finalUrl = res.url || candidateUrl;
+			if (!/uncensored/i.test(finalUrl)) return null;
+			if (getVideoCodeFromUrl(finalUrl) !== avCode) return null;
+			return finalUrl;
+		} catch (_) {
+			return null;
+		}
+	}
+	var UncensoredSwitcher = class {
+		constructor() {
+			this._isChecking = false;
+		}
+		async checkAndSwitch({ force = false, allowInTheater = false, navigate = true, win = typeof window !== "undefined" ? window : null, doc = typeof document !== "undefined" ? document : null, fetchFn = typeof fetch === "function" ? fetch.bind(globalThis) : null, storage = typeof sessionStorage !== "undefined" ? sessionStorage : null } = {}) {
+			if (this._isChecking || !win?.location?.href) return {
+				found: false,
+				url: null,
+				reason: "busy_or_no_window"
+			};
+			const currentUrl = win.location.href;
+			const pageInfo = parseMissavVideoPage(currentUrl);
+			if (!pageInfo) return {
+				found: false,
+				url: null,
+				reason: "ineligible_page"
+			};
+			if (!allowInTheater && doc?.body?.classList?.contains?.("tm-player-active")) return {
+				found: false,
+				url: null,
+				reason: "theater_active"
+			};
+			const sessionKey = `${SESSION_KEY_PREFIX}${pageInfo.avCode}`;
+			try {
+				if (!force && storage?.getItem?.(sessionKey)) return {
+					found: false,
+					url: null,
+					reason: "already_checked"
+				};
+			} catch (_) {}
+			this._isChecking = true;
+			try {
+				let targetUrl = findUncensoredLinkInDocument(doc, currentUrl, pageInfo.avCode);
+				if (!targetUrl) {
+					const candidates = buildUncensoredCandidateUrls(currentUrl);
+					for (const candidate of candidates) {
+						const matched = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn);
+						if (matched) {
+							targetUrl = matched;
+							break;
+						}
+					}
+				}
+				if (targetUrl && targetUrl !== currentUrl) {
+					try {
+						storage?.setItem?.(sessionKey, "redirected");
+					} catch (_) {}
+					if (navigate) {
+						if (!allowInTheater && doc?.body?.classList?.contains?.("tm-player-active")) return {
+							found: true,
+							url: targetUrl,
+							reason: "theater_active_deferred"
+						};
+						if (typeof win.location.replace === "function") win.location.replace(targetUrl);
+						else win.location.href = targetUrl;
+					}
+					return {
+						found: true,
+						url: targetUrl
+					};
+				}
+				try {
+					storage?.setItem?.(sessionKey, "none");
+				} catch (_) {}
+				return {
+					found: false,
+					url: null,
+					reason: "not_found"
+				};
+			} finally {
+				this._isChecking = false;
+			}
+		}
+		setupAutoSwitch() {
+			const enabled = getValue("autoUncensored", false);
+			if (enabled !== true && enabled !== "true") return;
+			if (typeof window === "undefined" || window.self !== window.top) return;
+			if (!parseMissavVideoPage(window.location?.href)) return;
+			const run = () => {
+				this.checkAndSwitch({
+					force: false,
+					allowInTheater: false,
+					navigate: true
+				}).catch(() => {});
+			};
+			if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(run, { timeout: 1500 });
+			else setTimeout(run, 250);
+		}
+	};
 	var S2PlaybackSection = class {
 		constructor(settingsManager, refreshFn = null) {
 			this.sm = settingsManager;
@@ -24906,6 +25239,40 @@
 				}
 			});
 			card.appendChild(soundRow.element);
+			const qualityRow = createToggleRow({
+				title: __$1("autoQuality") || "自动画质",
+				subtext: __$1("autoQualityDesc") || "自动切换至当前最高画质流",
+				checked: this.settings.autoHighestQuality !== false,
+				onChange: (checked) => {
+					this.sm.updateSetting("autoHighestQuality", checked);
+					if (checked) {
+						if (new QualityManager().applyNow()) Toast$1(__$1("autoQualityApplied") || "已切换为最高可用画质", 1500, "info");
+					}
+				}
+			});
+			card.appendChild(qualityRow.element);
+			const uncensoredRow = createToggleRow({
+				title: __$1("autoUncensored") || "自动无码",
+				subtext: __$1("autoUncensoredDesc") || "MissAV 存在无码版时自动切换",
+				checked: Boolean(this.settings.autoUncensored),
+				onChange: (checked) => {
+					this.sm.updateSetting("autoUncensored", checked);
+					if (checked && typeof window !== "undefined" && parseMissavVideoPage(window.location?.href)) new UncensoredSwitcher().checkAndSwitch({
+						force: true,
+						allowInTheater: true,
+						navigate: false
+					}).then((res) => {
+						if (res?.found && res.url) {
+							Toast$1(__$1("autoUncensoredFound") || "已找到无码版，即将切换...", 1500, "info");
+							setTimeout(() => {
+								if (typeof window.location.replace === "function") window.location.replace(res.url);
+								else window.location.href = res.url;
+							}, 550);
+						} else Toast$1(__$1("autoUncensoredNotFound") || "当前影片暂无无码版", 1800, "info");
+					}).catch(() => {});
+				}
+			});
+			card.appendChild(uncensoredRow.element);
 			this.element.appendChild(card);
 		}
 	};
@@ -31185,39 +31552,6 @@
 			return false;
 		}
 	};
-	var QualityManager = class {
-		constructor() {
-			this.maxAttempts = 6;
-			this.attemptInterval = 1e3;
-		}
-		setupAutoHighestQuality() {
-			const executeQualitySetup = () => {
-				if (this.setHighestQualitySingle()) return;
-				let attempts = 0;
-				const checkInterval = setInterval(() => {
-					if (this.setHighestQualitySingle() || ++attempts >= this.maxAttempts) clearInterval(checkInterval);
-				}, this.attemptInterval);
-			};
-			if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(executeQualitySetup, { timeout: 4e3 });
-			else setTimeout(executeQualitySetup, 1500);
-		}
-		setHighestQualitySingle() {
-			try {
-				if (typeof document !== "undefined" && document.body?.classList?.contains("tm-player-active")) return true;
-				const player = window.player || (typeof unsafeWindow !== "undefined" ? unsafeWindow.player : null);
-				if (!player || !player.config || !player.config.quality || !player.config.quality.options || !player.config.quality.options.length) return false;
-				const maxQuality = Math.max(...player.config.quality.options);
-				if ((typeof player.quality === "number" ? player.quality : player.config.quality.selected) === maxQuality) return true;
-				player.quality = maxQuality;
-				player.config.quality.selected = maxQuality;
-				if (typeof player.quality === "function") player.quality(maxQuality);
-				return true;
-			} catch (error) {
-				console.error("[QualityManager] 设置最高画质时出错:", error);
-				return false;
-			}
-		}
-	};
 	init_domains();
 	var UrlRedirector = class {
 		constructor() {
@@ -31265,6 +31599,7 @@
 			this.detailExpander = new DetailExpander();
 			this.qualityManager = new QualityManager();
 			this.urlRedirector = earlyUrlRedirector;
+			this.uncensoredSwitcher = new UncensoredSwitcher();
 		}
 		init(skipRedirectCheck = false) {
 			console.log("[UserExperienceEnhancer] 初始化用户体验增强功能");
@@ -31278,6 +31613,7 @@
 		}
 		initFeatures() {
 			try {
+				this.uncensoredSwitcher.setupAutoSwitch();
 				this.detailExpander.autoExpandDetails();
 				this.qualityManager.setupAutoHighestQuality();
 			} catch (error) {

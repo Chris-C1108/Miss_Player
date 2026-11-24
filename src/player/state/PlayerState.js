@@ -45,6 +45,8 @@ export class PlayerState {
             buttonSoundEnabled: true,       // 控制面板按钮点击音效 (默认为开)
             defaultMuted: true,             // 默认静音播放 (带超时重置记忆)
             muteResetMinutes: 5,            // 取消静音后重置超时的分钟数 (默认 5 分钟)
+            autoHighestQuality: true,       // 自动切换最高可用画质流
+            autoUncensored: false,          // MissAV 检测到无码版时自动切换
             betaSingleHandMode: false,      // 竖屏单手模式 (Beta 默认关闭)
             singleHandPosition: 'right',    // 单手握持偏好 ('right' | 'left')
             autoCheckUpdate: true,          // 自动检查新版本 (默认为开)
@@ -132,6 +134,8 @@ export class PlayerState {
             this.settings.updateChannel = (rawChannel === 'beta') ? 'beta' : 'stable';
             this.settings.defaultMuted = getBool('defaultMuted', true);
             this.settings.muteResetMinutes = Math.max(1, Math.min(120, parseInt(getValue('muteResetMinutes', 5), 10) || 5));
+            this.settings.autoHighestQuality = getBool('autoHighestQuality', true);
+            this.settings.autoUncensored = getBool('autoUncensored', false);
             this.settings.betaMode = getBool('betaMode', false);
             const rawDataMode = getValue('dataMode', null);
             if (rawDataMode === 'shared' || rawDataMode === 'local') {
@@ -189,6 +193,8 @@ export class PlayerState {
             'buttonSoundEnabled',
             'defaultMuted',
             'muteResetMinutes',
+            'autoHighestQuality',
+            'autoUncensored',
             'autoCheckUpdate',
             'updateChannel',
             'betaMode',
@@ -245,6 +251,8 @@ export class PlayerState {
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
             setValue('defaultMuted', Boolean(this.settings.defaultMuted));
             setValue('muteResetMinutes', this.settings.muteResetMinutes || 5);
+            setValue('autoHighestQuality', this.settings.autoHighestQuality !== false);
+            setValue('autoUncensored', Boolean(this.settings.autoUncensored));
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
             setValue('updateChannel', this.settings.updateChannel === 'beta' ? 'beta' : 'stable');
             setValue('betaMode', Boolean(this.settings.betaMode));

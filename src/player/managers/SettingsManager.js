@@ -44,6 +44,8 @@ export class SettingsManager {
             buttonSoundEnabled: true,
             defaultMuted: true,
             muteResetMinutes: 5,
+            autoHighestQuality: true,
+            autoUncensored: false,
             subtitleEnabled: true,
             subtitleFontSize: 'medium',
             subtitleVerticalOffset: 0,
@@ -281,6 +283,8 @@ export class SettingsManager {
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
             this.settings.defaultMuted = getBool('defaultMuted', true);
             this.settings.muteResetMinutes = parseInt(getValue('muteResetMinutes', 5), 10) || 5;
+            this.settings.autoHighestQuality = getBool('autoHighestQuality', true);
+            this.settings.autoUncensored = getBool('autoUncensored', false);
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
             this.settings.updateChannel = getValue('updateChannel', 'stable') === 'beta' ? 'beta' : 'stable';
             const rawPm = getValue('betaPlayMode', 'normal');
@@ -327,6 +331,8 @@ export class SettingsManager {
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
             setValue('defaultMuted', Boolean(this.settings.defaultMuted));
             setValue('muteResetMinutes', this.settings.muteResetMinutes || 5);
+            setValue('autoHighestQuality', this.settings.autoHighestQuality !== false);
+            setValue('autoUncensored', Boolean(this.settings.autoUncensored));
             setValue('autoCheckUpdate', this.settings.autoCheckUpdate !== false);
             setValue('updateChannel', this.settings.updateChannel || 'stable');
             setValue('betaPlayMode', this.settings.betaPlayMode || 'normal');

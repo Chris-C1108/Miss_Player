@@ -135,6 +135,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **多维语义标签库**：`src/player/managers/tagTaxonomy.js`（体位姿势、相貌身材、行为特征等系统化标签矩阵）
 * **自动登录**：`src/autologin/`（多站点凭据管理、跨域 iframe 签名桥接）
 * **广告拦截**：`src/adblock/`（DOM 净化与弹窗拦截）
+* **体验增强器 (`src/userExperienceEnhancer/`)**：`QualityManager.js`（受「播放与控制 → 自动画质 (`autoHighestQuality`, 默认开)」控制，兼容 Plyr 与 HLS.js 多分辨率流最高画质自动切换，且在影院模式活跃期间不重装流防止进度重置）、`UncensoredSwitcher.js`（受「播放与控制 → 自动无码 (`autoUncensored`, 默认关)」控制，支持 MissAV 影片详情页通过 DOM 同番号链接与同源轻量探活自动切换无码版并带会话级防死循环守卫）、`DetailExpander.js`、`UrlRedirector.js`
 * **Peach 入库 (Beta)**：`src/services/PeachService.js`（配对、在库状态、触发扫描）与 `src/services/StrmIngestPipeline.js`（拼接网关地址 → WebDAV 写入 `.strm`）。`src/player/bridge/PeachWebBridge.js` 中的寻源/接力/GMHlsLoader 为过渡代码，Phase 19.9 下线
 * **跨站播放路由与索引站适配 (Dual-Track Cross-Site Play)**：`src/services/CrossSitePlayRouter.js` 与 `src/adapters/LtxLibAdapter.js`（单脚本分发，仅保证 PC Chrome 等支持隔离执行上下文的管理器可用，不额外维护 iOS Stay 双脚本伴侣以换取 `ltxlib.dpdns.org` 强 CSP 穿透；针对 `ltxlib.dpdns.org` 索引站：卡片封面左下角注入单手双层播放入口，PC 端鼠标悬浮预探测并展示最终跳转站点，优先打开 `miss-gateway` 同源影院页 `/v1/{token}/watch/{code}`（轨道 A）；无网关或不可达时允许脚本做轻量四源页面探活并写入 60s 一次性跨站租约 + `#mp_theater=1` 兜底接力直达源站自动拉起影院模式（轨道 B），仍不做客户端 HLS 切片代理）
 

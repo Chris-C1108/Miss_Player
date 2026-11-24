@@ -236,6 +236,11 @@ runStep('执行开播定位首个高光防回跳与状态仲裁测试', () => {
     execSync('node tests/first-highlight-seek.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.33 自动最高画质与 MissAV 自动切换无码版测试
+runStep('执行自动最高画质与 MissAV 自动切换无码版测试', () => {
+    execSync('node tests/quality-and-uncensored.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

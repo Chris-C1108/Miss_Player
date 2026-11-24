@@ -6,6 +6,7 @@
 import { DetailExpander } from './DetailExpander.js';
 import { QualityManager } from './QualityManager.js';
 import { UrlRedirector } from './UrlRedirector.js';
+import { UncensoredSwitcher } from './UncensoredSwitcher.js';
 
 
 // 立即创建并执行URL重定向检查，确保在页面加载最早阶段执行
@@ -13,13 +14,14 @@ const earlyUrlRedirector = new UrlRedirector();
 
 /**
  * 用户体验增强器类
- * 整合了自动展开详情、自动高画质、URL重定向等功能
+ * 整合了自动展开详情、自动高画质、URL重定向、MissAV 自动切换无码版等功能
  */
 export class UserExperienceEnhancer {
     constructor() {
         this.detailExpander = new DetailExpander();
         this.qualityManager = new QualityManager();
         this.urlRedirector = earlyUrlRedirector; // 使用提前创建的重定向器实例
+        this.uncensoredSwitcher = new UncensoredSwitcher();
     }
 
     /**
@@ -52,6 +54,7 @@ export class UserExperienceEnhancer {
      */
     initFeatures() {
         try {
+            this.uncensoredSwitcher.setupAutoSwitch();
             this.detailExpander.autoExpandDetails();
             this.qualityManager.setupAutoHighestQuality();
         } catch (error) {
@@ -64,6 +67,7 @@ export class UserExperienceEnhancer {
 export { DetailExpander } from './DetailExpander.js';
 export { QualityManager } from './QualityManager.js';
 export { UrlRedirector } from './UrlRedirector.js';
+export { UncensoredSwitcher } from './UncensoredSwitcher.js';
 export { earlyUrlRedirector }; // 导出提前初始化的实例
 
 /**

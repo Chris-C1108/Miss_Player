@@ -6,6 +6,8 @@ import {
 } from '../components/S2Primitives.js';
 import { Toast, isImeConfirmEnter } from '../../../../utils/index.js';
 import { __ } from '../../../../constants/i18n.js';
+import { QualityManager } from '../../../../userExperienceEnhancer/QualityManager.js';
+import { UncensoredSwitcher, parseMissavVideoPage } from '../../../../userExperienceEnhancer/UncensoredSwitcher.js';
 
 export class S2PlaybackSection {
     constructor(settingsManager, refreshFn = null) {
@@ -304,6 +306,51 @@ export class S2PlaybackSection {
             }
         });
         card.appendChild(soundRow.element);
+
+        // 6. 自动画质（支持 Plyr 与 HLS.js 多清晰度流）
+        const qualityRow = createToggleRow({
+            title: __('autoQuality') || '自动画质',
+            subtext: __('autoQualityDesc') || '自动切换至当前最高画质流',
+            checked: this.settings.autoHighestQuality !== false,
+            onChange: (checked) => {
+                this.sm.updateSetting('autoHighestQuality', checked);
+                if (checked) {
+                    const upgraded = new QualityManager().applyNow();
+                    if (upgraded) {
+                        Toast(__('autoQualityApplied') || '已切换为最高可用画质', 1500, 'info');
+                    }
+                }
+            }
+        });
+        card.appendChild(qualityRow.element);
+
+        // 7. 自动无码（MissAV 存在无码版时自动切换）
+        const uncensoredRow = createToggleRow({
+            title: __('autoUncensored') || '自动无码',
+            subtext: __('autoUncensoredDesc') || 'MissAV 存在无码版时自动切换',
+            checked: Boolean(this.settings.autoUncensored),
+            onChange: (checked) => {
+                this.sm.updateSetting('autoUncensored', checked);
+                if (checked && typeof window !== 'undefined' && parseMissavVideoPage(window.location?.href)) {
+                    const switcher = new UncensoredSwitcher();
+                    switcher.checkAndSwitch({ force: true, allowInTheater: true, navigate: false }).then((res) => {
+                        if (res?.found && res.url) {
+                            Toast(__('autoUncensoredFound') || '已找到无码版，即将切换...', 1500, 'info');
+                            setTimeout(() => {
+                                if (typeof window.location.replace === 'function') {
+                                    window.location.replace(res.url);
+                                } else {
+                                    window.location.href = res.url;
+                                }
+                            }, 550);
+                        } else {
+                            Toast(__('autoUncensoredNotFound') || '当前影片暂无无码版', 1800, 'info');
+                        }
+                    }).catch(() => {});
+                }
+            }
+        });
+        card.appendChild(uncensoredRow.element);
 
         this.element.appendChild(card);
     }
