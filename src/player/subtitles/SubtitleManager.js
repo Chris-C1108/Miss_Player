@@ -8,7 +8,7 @@
  */
 
 import { Toast } from '../../utils/index.js';
-import { __ } from '../../constants/i18n.js';
+import { __, I18n } from '../../constants/i18n.js';
 import { getVideoCodeFromUrl, cleanAvCode } from '../../utils/videoCode.js';
 import {
     ICON_SUBTITLE,
@@ -28,8 +28,56 @@ import { parseSubtitles } from './SubtitleFormat.js';
 import { codeMatchesText } from './SubtitleCode.js';
 
 const FONT_SIZES = ['small', 'medium', 'large'];
+const PREFERRED_LANG_OPTIONS = ['auto', 'zh', 'zh-TW', 'ja', 'en', 'ko'];
 const CUE_TAIL_TOLERANCE = 0.35;
 const CUE_LEAD_TOLERANCE = 0.25;
+
+export function normalizeSubtitleLang(raw) {
+    const code = String(raw || '').trim().toLowerCase().replace(/_/g, '-');
+    if (!code) return '';
+    if (
+        code === 'zh' ||
+        code === 'zh-cn' ||
+        code === 'zh-sg' ||
+        code === 'zh-hans' ||
+        code === 'chi' ||
+        code === 'zho' ||
+        code === 'chs'
+    ) {
+        return 'zh';
+    }
+    if (
+        code === 'zh-tw' ||
+        code === 'zh-hk' ||
+        code === 'zh-mo' ||
+        code === 'zh-hant' ||
+        code === 'cht'
+    ) {
+        return 'zh-TW';
+    }
+    if (code === 'ja' || code.startsWith('ja-') || code === 'jp' || code === 'jpn') return 'ja';
+    if (code === 'en' || code.startsWith('en-') || code === 'eng') return 'en';
+    if (code === 'ko' || code.startsWith('ko-') || code === 'kor') return 'ko';
+    if (code === 'vi' || code.startsWith('vi-') || code === 'vie') return 'vi';
+    return code.split('-')[0];
+}
+
+export function resolvePreferredSubtitleLang(settingValue, browserLang = I18n.userLang) {
+    if (settingValue && settingValue !== 'auto') {
+        const explicit = normalizeSubtitleLang(settingValue);
+        if (explicit) return explicit;
+    }
+    return normalizeSubtitleLang(browserLang) || 'zh';
+}
+
+export function rankPreferredCandidates(candidates, preferredLang) {
+    const target = normalizeSubtitleLang(preferredLang);
+    if (!target || !Array.isArray(candidates)) return [];
+    return candidates
+        .filter((candidate) => candidate && normalizeSubtitleLang(candidate.lang) === target)
+        .slice()
+        .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+}
 
 const LANG_NAMES = {
     'zh': '中文',
@@ -84,6 +132,8 @@ export class SubtitleManager {
         this.listEl = null;
         this.sizeGroupEl = null;
         this.switchEl = null;
+        this.autoBestSwitchEl = null;
+        this.langGroupEl = null;
         this.fileInput = null;
         this.adjustBtn = null;
         this.lyricsView = null;
@@ -103,6 +153,9 @@ export class SubtitleManager {
         this._rafId = 0;
         this._searching = false;
         this._busyId = '';
+        this._autoSearchedCodes = new Set();
+        this._autoFailedIds = new Set();
+        this._autoPickPromise = null;
 
         this._onTimeUpdate = () => this.renderAt(this.targetVideo?.currentTime || 0);
         this._onSeeked = () => this.renderAt(this.targetVideo?.currentTime || 0);
@@ -130,10 +183,11 @@ export class SubtitleManager {
         this._ensureOverlay();
         this._ensureButton();
         this._bindVideoEvents();
-        this._loadBundle().then(() => {
+        this._loadBundle().then(async () => {
             this._renderList();
             this._syncSwitchState();
-            if (this.isEnabled) this._autoApplyBest({ silent: true });
+            await this._maybeAutoPickPreferred();
+            if (this.isEnabled) await this._autoApplyBest({ silent: true });
         });
     }
 
@@ -170,6 +224,8 @@ export class SubtitleManager {
         this.panel = null;
         this.listEl = null;
         this.switchEl = null;
+        this.autoBestSwitchEl = null;
+        this.langGroupEl = null;
         this.cues = [];
         this.activeItem = null;
     }
@@ -206,6 +262,7 @@ export class SubtitleManager {
         await this._loadBundle();
         this._renderList();
         this._syncSwitchState();
+        await this._maybeAutoPickPreferred();
         if (this.isEnabled) await this._autoApplyBest({ silent: true });
         return true;
     }
@@ -524,6 +581,10 @@ export class SubtitleManager {
     _syncSwitchState() {
         this.switchEl?.classList.toggle('is-checked', this.isEnabled);
         this.switchEl?.setAttribute('aria-checked', String(this.isEnabled));
+        const autoBest = Boolean(this.settings.subtitleAutoBest);
+        this.autoBestSwitchEl?.classList.toggle('is-checked', autoBest);
+        this.autoBestSwitchEl?.setAttribute('aria-checked', String(autoBest));
+        this._applyPreferredLang(this.settings.subtitlePreferredLang, { persist: false });
     }
 
     _updateButtonState() {
@@ -724,12 +785,40 @@ export class SubtitleManager {
             )
         );
 
+        const autoBestSwitch = document.createElement('button');
+        autoBestSwitch.type = 'button';
+        autoBestSwitch.className = 'mp-s2-switch tm-subtitle-switch';
+        autoBestSwitch.setAttribute('role', 'switch');
+        autoBestSwitch.setAttribute('aria-checked', String(Boolean(this.settings.subtitleAutoBest)));
+        autoBestSwitch.innerHTML = '<span class="mp-s2-switch-thumb"></span>';
+        autoBestSwitch.addEventListener('click', () => this._toggleAutoBest());
+        this.autoBestSwitchEl = autoBestSwitch;
+        panel.append(
+            this._buildAdjustRow(
+                text('subtitleAutoBest', '自动选优'),
+                autoBestSwitch,
+                text('subtitleAutoBestHint', '自动加载并收藏'),
+                { divider: true }
+            )
+        );
+
+        panel.append(
+            this._buildAdjustRow(
+                text('subtitlePreferredLang', '偏好语言'),
+                this._buildPreferredLangControl(),
+                '',
+                { stacked: true }
+            )
+        );
+
         return panel;
     }
 
-    _buildAdjustRow(labelText, controlEl, hintText = '') {
+    _buildAdjustRow(labelText, controlEl, hintText = '', { divider = false, stacked = false } = {}) {
         const row = document.createElement('div');
         row.className = 'tm-subtitle-adjust-row';
+        if (divider) row.classList.add('is-divider');
+        if (stacked) row.classList.add('is-stacked');
 
         const label = document.createElement('div');
         label.className = 'tm-subtitle-adjust-label';
@@ -743,6 +832,53 @@ export class SubtitleManager {
 
         row.append(label, controlEl);
         return row;
+    }
+
+    _buildPreferredLangControl() {
+        const langGroup = document.createElement('div');
+        langGroup.className = 'tm-subtitle-size-group tm-subtitle-lang-group';
+        const labels = {
+            auto: text('subtitleLangAuto', '自动'),
+            zh: text('subtitleLangZh', '简中'),
+            'zh-TW': text('subtitleLangZhTw', '繁中'),
+            ja: text('subtitleLangJa', '日语'),
+            en: text('subtitleLangEn', '英语'),
+            ko: text('subtitleLangKo', '韩语')
+        };
+        PREFERRED_LANG_OPTIONS.forEach((lang) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tm-subtitle-size-btn';
+            btn.dataset.lang = lang;
+            btn.textContent = labels[lang];
+            btn.addEventListener('click', () => this._applyPreferredLang(lang));
+            langGroup.appendChild(btn);
+        });
+        this.langGroupEl = langGroup;
+        this._applyPreferredLang(this.settings.subtitlePreferredLang, { persist: false });
+        return langGroup;
+    }
+
+    _applyPreferredLang(lang, { persist = true } = {}) {
+        const next = PREFERRED_LANG_OPTIONS.includes(lang) ? lang : 'auto';
+        this.langGroupEl?.querySelectorAll('[data-lang]').forEach((btn) => {
+            btn.classList.toggle('is-active', btn.dataset.lang === next);
+        });
+        if (persist) {
+            this._updateSetting('subtitlePreferredLang', next);
+            if (this.settings.subtitleAutoBest) {
+                this._maybeAutoPickPreferred({ userAction: true });
+            }
+        }
+    }
+
+    _toggleAutoBest() {
+        const next = !this.settings.subtitleAutoBest;
+        this._updateSetting('subtitleAutoBest', next);
+        this._syncSwitchState();
+        if (next) {
+            this._maybeAutoPickPreferred({ userAction: true });
+        }
     }
 
     _buildFontSizeControl() {
@@ -1316,9 +1452,104 @@ export class SubtitleManager {
             this._searching = false;
             this._renderList();
         }
+        await this._maybeAutoPickPreferred({ fromSearch: true });
     }
 
-    async _downloadCandidate(candidate) {
+    _hasSavedFavorite() {
+        const items = this.bundle.items || [];
+        if (this.bundle.favoriteId && items.some((item) => item.id === this.bundle.favoriteId)) {
+            return true;
+        }
+        return items.some((item) => Boolean(item.favorite));
+    }
+
+    _maybeAutoPickPreferred(options = {}) {
+        if (this._autoPickPromise) return this._autoPickPromise;
+        const promise = this._runAutoPickPreferred(options).finally(() => {
+            if (this._autoPickPromise === promise) this._autoPickPromise = null;
+        });
+        this._autoPickPromise = promise;
+        return promise;
+    }
+
+    async _runAutoPickPreferred({ userAction = false, fromSearch = false } = {}) {
+        if (!this.settings.subtitleAutoBest || !this.avcode) return false;
+        if (this._hasSavedFavorite()) return false;
+
+        const targetCode = this.avcode;
+        const preferredLang = resolvePreferredSubtitleLang(this.settings.subtitlePreferredLang, I18n.userLang);
+        const collectRanked = () => {
+            const pool = [...this.bundle.items, ...this.onlineResults].filter(
+                (entry) => this._isRelevant(entry) && !this._autoFailedIds.has(entry.id)
+            );
+            const deduped = Array.from(new Map(pool.map((entry) => [entry.id, entry])).values());
+            return rankPreferredCandidates(deduped, preferredLang);
+        };
+
+        let ranked = collectRanked();
+        if (!ranked.length && !fromSearch && !this._searching && !this._autoSearchedCodes.has(targetCode)) {
+            if (this.settings.betaMode) {
+                this._autoSearchedCodes.add(targetCode);
+                try {
+                    const { candidates } = await this.engine.search(targetCode);
+                    if (this.avcode !== targetCode) return false;
+                    const known = new Set(this.bundle.items.map((item) => item.id));
+                    this.onlineResults = candidates.filter(
+                        (candidate) => !known.has(candidate.id) && this._isRelevant(candidate)
+                    );
+                    this._renderList();
+                    ranked = collectRanked();
+                } catch (err) {
+                    console.warn('[SubtitleManager] 自动选优搜索失败:', err?.message);
+                }
+            } else if (userAction && !this.bundle.items.length && !this.onlineResults.length) {
+                Toast(text('subtitleNeedBeta', '开启实验功能后可在线搜索字幕'), 2800, 'info');
+            }
+        }
+
+        if (!ranked.length) return false;
+
+        for (const candidate of ranked) {
+            if (this.avcode !== targetCode || !this.settings.subtitleAutoBest || this._hasSavedFavorite()) {
+                return false;
+            }
+            const stored = this._findItem(candidate.id);
+            const item = stored
+                ? await this._ensureContent(stored)
+                : await this._downloadCandidate(candidate, { silent: true });
+
+            if (this.avcode !== targetCode) return false;
+            if (!item?.content) {
+                this._autoFailedIds.add(candidate.id);
+                continue;
+            }
+            const parsed = parseSubtitles(item.content, item.format || '');
+            if (!parsed?.cues?.length) {
+                this._autoFailedIds.add(candidate.id);
+                continue;
+            }
+
+            item.format = parsed.format;
+            item.favorite = true;
+            this.bundle.favoriteId = item.id;
+            this.bundle.items = [item, ...this.bundle.items.filter((entry) => entry.id !== item.id)];
+            await this._persist({ dirtyItem: item });
+            if (this.avcode !== targetCode) return false;
+
+            if (this.isEnabled) {
+                await this._applyItem(item, { silent: true });
+            } else {
+                this._renderList();
+                this._updateButtonState();
+            }
+            Toast(text('subtitleAutoSaved', '已自动加载并收藏偏好字幕'), 2000, 'success');
+            return true;
+        }
+
+        return false;
+    }
+
+    async _downloadCandidate(candidate, { silent = false } = {}) {
         try {
             const { content, format } = await this.engine.download(candidate);
             const item = {
@@ -1332,7 +1563,7 @@ export class SubtitleManager {
             return item;
         } catch (err) {
             console.warn('[SubtitleManager] 下载失败:', err?.message);
-            Toast(text('subtitleDownloadFailed', '下载失败，请换个来源试试'), 2600, 'error');
+            if (!silent) Toast(text('subtitleDownloadFailed', '下载失败，请换个来源试试'), 2600, 'error');
             return null;
         }
     }

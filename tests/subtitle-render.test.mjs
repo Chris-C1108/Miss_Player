@@ -89,8 +89,17 @@ class FakeElement {
     removeEventListener(type, fn) {
         this._listeners[type] = (this._listeners[type] || []).filter((f) => f !== fn);
     }
-    querySelectorAll() {
-        return [];
+    querySelectorAll(selector = '') {
+        const out = [];
+        const walk = (node) => {
+            for (const child of node.children || []) {
+                if (selector === '[data-lang]' && child.dataset?.lang !== undefined) out.push(child);
+                else if (selector === '[data-size]' && child.dataset?.size !== undefined) out.push(child);
+                walk(child);
+            }
+        };
+        walk(this);
+        return out;
     }
     querySelector() {
         return null;
@@ -110,7 +119,12 @@ function setupGlobals() {
     video.videoHeight = 1080;
     video.getBoundingClientRect = () => ({ left: 0, top: 0, width: 720, height: 405, right: 720, bottom: 405 });
 
-    globalThis.document = { createElement: (tag) => new FakeElement(tag) };
+    globalThis.document = {
+        createElement: (tag) => new FakeElement(tag),
+        body: new FakeElement('body'),
+        head: new FakeElement('head'),
+        querySelector: () => null
+    };
     globalThis.window = {
         addEventListener() {},
         removeEventListener() {},
@@ -151,7 +165,8 @@ function setupGlobals() {
 
 test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
     const env = setupGlobals();
-    const { SubtitleManager } = await import('../src/player/subtitles/SubtitleManager.js');
+    const { SubtitleManager, normalizeSubtitleLang, resolvePreferredSubtitleLang, rankPreferredCandidates } =
+        await import('../src/player/subtitles/SubtitleManager.js');
 
     await t.test('1. 字幕层挂载在播放器顶层容器而非视频内部', async () => {
         const manager = new SubtitleManager(env.playerCore, env.uiManager, null);
@@ -290,5 +305,106 @@ test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
             assert.equal(manager.overlayLayer.style.left, '0px');
             assert.equal(manager.overlayLayer.style.top, '0px');
         });
+    });
+
+    await t.test('9. 偏好语言归一化、解析与最优筛选排序', () => {
+        assert.equal(normalizeSubtitleLang('zh-CN'), 'zh');
+        assert.equal(normalizeSubtitleLang('zh_Hans'), 'zh');
+        assert.equal(normalizeSubtitleLang('zh-Hant'), 'zh-TW');
+        assert.equal(normalizeSubtitleLang('ja-JP'), 'ja');
+        assert.equal(normalizeSubtitleLang('ko_KR'), 'ko');
+
+        assert.equal(resolvePreferredSubtitleLang('auto', 'zh-CN'), 'zh');
+        assert.equal(resolvePreferredSubtitleLang('auto', 'zh-TW'), 'zh-TW');
+        assert.equal(resolvePreferredSubtitleLang('ja', 'zh-CN'), 'ja');
+
+        const ranked = rankPreferredCandidates(
+            [
+                { id: '1', lang: 'en', rating: 99 },
+                { id: '2', lang: 'ja', rating: 70 },
+                { id: '3', lang: 'ja-JP', rating: 92 },
+                { id: '4', lang: 'zh', rating: 88 }
+            ],
+            'ja'
+        );
+        assert.deepEqual(
+            ranked.map((c) => c.id),
+            ['3', '2']
+        );
+    });
+
+    await t.test('10. 字幕抽屉调节面板设置与自动优选加载收藏', async () => {
+        const savedPayloads = [];
+        env.settings.betaMode = true;
+        env.settings.subtitleEnabled = true;
+        env.settings.subtitleAutoBest = false;
+        env.settings.subtitlePreferredLang = 'auto';
+
+        const manager = new SubtitleManager(env.playerCore, env.uiManager, null);
+        manager.avcode = 'IPX-343';
+        manager._persist = async (opts) => {
+            savedPayloads.push({
+                favoriteId: manager.bundle.favoriteId,
+                items: manager.bundle.items.slice(),
+                opts
+            });
+        };
+        manager._ensurePanel();
+
+        // 验证调节面板包含自动选优开关与偏好语言按钮组
+        assert.ok(manager.autoBestSwitchEl, '应渲染自动选优开关');
+        assert.ok(manager.langGroupEl, '应渲染偏好语言选择器');
+        const langBtns = manager.langGroupEl.querySelectorAll('[data-lang]');
+        assert.equal(langBtns.length, 6);
+        assert.equal(langBtns[0].classList.contains('is-active'), true, '默认选中 auto');
+
+        // 切换到日语偏好并模拟在线检索（最高分英文、最高分日文损坏、次高分日文有效）
+        manager._applyPreferredLang('ja');
+        assert.equal(env.settings.subtitlePreferredLang, 'ja');
+        assert.equal(langBtns.find((b) => b.dataset.lang === 'ja').classList.contains('is-active'), true);
+
+        const downloaded = [];
+        manager.engine = {
+            async search(code) {
+                assert.equal(code, 'IPX-343');
+                return {
+                    candidates: [
+                        { id: 'en-top', provider: 'xunlei', title: 'IPX-343 EN', lang: 'en', rating: 98, format: 'srt' },
+                        { id: 'ja-bad', provider: 'xunlei', title: 'IPX-343 JA BAD', lang: 'ja', rating: 95, format: 'srt' },
+                        { id: 'ja-good', provider: 'subtitlecat', title: 'IPX-343 JA GOOD', lang: 'ja', rating: 80, format: 'srt' }
+                    ],
+                    errors: []
+                };
+            },
+            async download(candidate) {
+                downloaded.push(candidate.id);
+                if (candidate.id === 'ja-bad') throw new Error('network error');
+                return {
+                    content: SRT,
+                    format: 'srt'
+                };
+            }
+        };
+
+        manager._toggleAutoBest();
+        assert.equal(env.settings.subtitleAutoBest, true);
+        assert.equal(manager.autoBestSwitchEl.classList.contains('is-checked'), true);
+        await manager._autoPickPromise;
+
+        assert.deepEqual(downloaded, ['ja-bad', 'ja-good'], '只应下载匹配日语的候选并在失败时回落次优');
+        assert.equal(manager.bundle.favoriteId, 'ja-good', '应自动收藏首个可用的最优匹配字幕');
+        assert.equal(manager.bundle.items[0].favorite, true);
+        assert.equal(manager.activeItem?.id, 'ja-good', '开启显示字幕时应同步加载渲染');
+        assert.equal(savedPayloads.length, 1, '应持久化并触发增量同步');
+
+        // 已有收藏字幕时不再重复抓取覆盖
+        let secondSearchCalled = false;
+        manager.engine.search = async () => {
+            secondSearchCalled = true;
+            return { candidates: [], errors: [] };
+        };
+        const skipped = await manager._maybeAutoPickPreferred();
+        assert.equal(skipped, false);
+        assert.equal(secondSearchCalled, false);
     });
 });

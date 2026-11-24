@@ -39,6 +39,8 @@ export class PlayerState {
             subtitleEnabled: true,          // 字幕总开关 (默认显示已挂载的字幕轨)
             subtitleFontSize: 'medium',     // 字幕字号 ('small' | 'medium' | 'large')
             subtitleVerticalOffset: 0,      // 字幕上下偏移 (百分比，正值上移)
+            subtitleAutoBest: false,        // 自动挑选并收藏偏好语言的最优字幕
+            subtitlePreferredLang: 'auto',  // 字幕偏好语言 ('auto' | 'zh' | 'zh-TW' | 'ja' | 'en' | 'ko')
             pauseOnBlur: true,              // 页面离开/失焦后停止播放 (默认为开)
             buttonSoundEnabled: true,       // 控制面板按钮点击音效 (默认为开)
             defaultMuted: true,             // 默认静音播放 (带超时重置记忆)
@@ -120,6 +122,9 @@ export class PlayerState {
             const rawSubtitleSize = getValue('subtitleFontSize', 'medium');
             this.settings.subtitleFontSize = ['small', 'medium', 'large'].includes(rawSubtitleSize) ? rawSubtitleSize : 'medium';
             this.settings.subtitleVerticalOffset = Math.max(-20, Math.min(60, parseInt(getValue('subtitleVerticalOffset', 0), 10) || 0));
+            this.settings.subtitleAutoBest = getBool('subtitleAutoBest', false);
+            const rawSubtitleLang = getValue('subtitlePreferredLang', 'auto');
+            this.settings.subtitlePreferredLang = ['auto', 'zh', 'zh-TW', 'ja', 'en', 'ko'].includes(rawSubtitleLang) ? rawSubtitleLang : 'auto';
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
@@ -262,6 +267,8 @@ export class PlayerState {
             setValue('subtitleEnabled', Boolean(this.settings.subtitleEnabled));
             setValue('subtitleFontSize', this.settings.subtitleFontSize || 'medium');
             setValue('subtitleVerticalOffset', this.settings.subtitleVerticalOffset || 0);
+            setValue('subtitleAutoBest', Boolean(this.settings.subtitleAutoBest));
+            setValue('subtitlePreferredLang', this.settings.subtitlePreferredLang || 'auto');
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }
