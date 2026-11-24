@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.122-beta.006
+// @version            5.7.122-beta.007
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1989,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.006";
+		return "5.7.122-beta.007";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2783,6 +2783,7 @@
 			autoUncensored: "Auto Uncensored",
 			autoUncensoredDesc: "Auto switch when MissAV has uncensored leak",
 			autoUncensoredFound: "Uncensored version found, switching...",
+			autoUncensoredStreamSwitched: "Switched to uncensored stream",
 			autoUncensoredNotFound: "No uncensored version available",
 			helpImprove: "Help improve",
 			helpImproveDesc: "Collect necessary data to improve features",
@@ -3096,6 +3097,7 @@
 			autoUncensored: "自动无码",
 			autoUncensoredDesc: "MissAV 存在无码版时自动切换",
 			autoUncensoredFound: "已找到无码版，即将切换...",
+			autoUncensoredStreamSwitched: "已切换为无码版视频流",
 			autoUncensoredNotFound: "当前影片暂无无码版",
 			helpImprove: "帮助改进",
 			helpImproveDesc: "收集必要数据用于改进功能",
@@ -3377,6 +3379,7 @@
 			autoUncensored: "自動無碼",
 			autoUncensoredDesc: "MissAV 存在無碼版時自動切換",
 			autoUncensoredFound: "已找到無碼版，即將切換...",
+			autoUncensoredStreamSwitched: "已切換為無碼版視訊串流",
 			autoUncensoredNotFound: "目前影片暫無無碼版",
 			helpImprove: "幫助改進",
 			helpImproveDesc: "收集必要數據用於改進功能",
@@ -3667,6 +3670,7 @@
 			autoUncensored: "自動無修正",
 			autoUncensoredDesc: "MissAV で無修正版があれば自動切替",
 			autoUncensoredFound: "無修正版が見つかりました。切り替えます...",
+			autoUncensoredStreamSwitched: "無修正版ストリームに切り替えました",
 			autoUncensoredNotFound: "無修正版が見つかりませんでした",
 			helpImprove: "改善に協力",
 			helpImproveDesc: "機能改善のために必要なデータを収集します",
@@ -3957,6 +3961,7 @@
 			autoUncensored: "Tự động không che",
 			autoUncensoredDesc: "Tự động chuyển khi MissAV có bản không che",
 			autoUncensoredFound: "Đã tìm thấy bản không che, đang chuyển...",
+			autoUncensoredStreamSwitched: "Đã chuyển sang luồng không che",
 			autoUncensoredNotFound: "Hiện chưa có bản không che",
 			helpImprove: "Giúp cải thiện",
 			helpImproveDesc: "Thu thập dữ liệu cần thiết để cải thiện tính năng",
@@ -4629,7 +4634,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.006";
+		return "5.7.122-beta.007";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6772,7 +6777,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.006";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.007";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -24795,7 +24800,66 @@
 	};
 	init_domains();
 	var STRIP_SUFFIX_RE = /(?:[-_](?:chinese[-_]?subtitles?|chinese[-_]?sub|subtitles?|sub|ch|c|4k|fhd|hd|reduced[-_]mosaic))+$/i;
-	var SESSION_KEY_PREFIX = "mp_uncensored_checked_";
+	var REDIRECT_LOOP_KEY_PREFIX = "mp_uncensored_nav_ts_";
+	var BASE62_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	function intToBase(num, base) {
+		if (num === 0) return "0";
+		const b = Math.min(base, 62);
+		let n = num;
+		let out = "";
+		while (n > 0) {
+			out = BASE62_CHARS[n % b] + out;
+			n = Math.floor(n / b);
+		}
+		return out;
+	}
+	function unpackPackerJs(packed) {
+		if (!packed || typeof packed !== "string") return "";
+		const rePacker = /\}\s*\(\s*'((?:[^'\\]|\\.)*)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*'((?:[^'\\]|\\.)*)'\.split\('\|'\)/g;
+		let result = packed;
+		let match;
+		while ((match = rePacker.exec(packed)) !== null) {
+			const payload = match[1];
+			const radix = parseInt(match[2], 10);
+			const rawCount = parseInt(match[3], 10);
+			const rawKeywords = match[4];
+			if (!radix || radix <= 0 || radix > 62 || Number.isNaN(rawCount)) continue;
+			const keywords = rawKeywords.split("|");
+			const count = Math.min(rawCount, keywords.length);
+			const lookup = new Map();
+			for (let i = 0; i < count; i++) {
+				const word = keywords[i];
+				if (word) lookup.set(intToBase(i, radix), word);
+			}
+			const unpacked = payload.replace(/\b\w+\b/g, (token) => lookup.has(token) ? lookup.get(token) : token).replace(/\\"/g, "\"").replace(/\\'/g, "'").replace(/\\\\/g, "\\");
+			result = result.replace(match[0], unpacked);
+		}
+		return result;
+	}
+	function extractMissavPlaylistUrl(html) {
+		if (!html || typeof html !== "string") return "";
+		const tryExtract = (text) => {
+			const mSurrit = text.match(/(https?:\/\/(?:[a-zA-Z0-9_\-.]+\.)?surrit\.com\/[a-f0-9-]+\/playlist\.m3u8)/i);
+			if (mSurrit) return mSurrit[1];
+			const mUrls = text.match(/urls\s*:\s*\[\s*['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i);
+			if (mUrls) return mUrls[1];
+			const mSource = text.match(/(?:source|src|playlist)\s*[:=]\s*['"](https?:\/\/[^'"]+playlist\.m3u8[^'"]*)['"]/i);
+			if (mSource) return mSource[1];
+			const mM3u8 = text.match(/(https?:\/\/[^'"\s<>]+playlist\.m3u8[^'"\s<>]*)/i);
+			if (mM3u8) return mM3u8[1];
+			return "";
+		};
+		const direct = tryExtract(html);
+		if (direct) return direct;
+		const unpacked = unpackPackerJs(html);
+		const fromUnpacked = tryExtract(unpacked);
+		if (fromUnpacked) return fromUnpacked;
+		if (unpacked !== html) {
+			const mUuid = unpacked.match(/['"]([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})['"]/i);
+			if (mUuid) return `https://surrit.com/${mUuid[1]}/playlist.m3u8`;
+		}
+		return "";
+	}
 	function isMissavHost(hostname) {
 		if (!hostname || typeof hostname !== "string") return false;
 		return isSiteDomain("MISSAV", hostname) || /(?:^|\.)(?:missav[^.]*|thisav[^.]*)\./i.test(hostname);
@@ -24901,6 +24965,7 @@
 		const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
 		const title = titleMatch ? titleMatch[1] : "";
 		if (/(?:404\s*not\s*found|page\s*not\s*found|error\s*404|找不到页面|頁面不存在)/i.test(title)) return false;
+		if (/Just a moment|cf-chl|Attention Required/i.test(html) && !html.toLowerCase().includes(avCode.toLowerCase())) return false;
 		const lowerHtml = html.toLowerCase();
 		if (!lowerHtml.includes(avCode.toLowerCase()) && !lowerHtml.includes(avCode.replace(/-/g, "").toLowerCase())) return false;
 		return true;
@@ -25016,6 +25081,7 @@
 				} catch (_) {}
 				return {
 					url: null,
+					streamUrl: "",
 					transportFailed
 				};
 			}
@@ -25026,6 +25092,7 @@
 				} catch (_) {}
 				return {
 					url: null,
+					streamUrl: "",
 					transportFailed: false
 				};
 			}
@@ -25035,26 +25102,120 @@
 				} catch (_) {}
 				return {
 					url: null,
+					streamUrl: "",
 					transportFailed: false
 				};
 			}
+			let streamUrl = "";
 			if (typeof res.text === "function") {
-				if (!isValidUncensoredHtml(await res.text(), avCode)) return {
+				const html = await res.text();
+				if (!isValidUncensoredHtml(html, avCode)) return {
 					url: null,
+					streamUrl: "",
 					transportFailed: false
 				};
+				streamUrl = extractMissavPlaylistUrl(html);
 			} else try {
 				res?.body?.cancel?.();
 			} catch (_) {}
 			return {
 				url: finalUrl,
+				streamUrl,
 				transportFailed: false
 			};
 		} catch (_) {
 			return {
 				url: null,
+				streamUrl: "",
 				transportFailed: true
 			};
+		}
+	}
+	function findHlsInstanceForVideo(video, win) {
+		const candidates = [
+			video?.hls,
+			win?.hls,
+			typeof window !== "undefined" ? window.hls : null,
+			win?.player?.hls,
+			typeof window !== "undefined" ? window.player?.hls : null
+		];
+		if (typeof unsafeWindow !== "undefined" && unsafeWindow) try {
+			candidates.push(unsafeWindow.hls, unsafeWindow.player?.hls);
+		} catch (_) {}
+		try {
+			const alpineHost = video?.closest?.("[x-data]");
+			if (alpineHost?._x_dataStack) {
+				for (const ctx of alpineHost._x_dataStack) if (ctx?.hls) candidates.push(ctx.hls);
+			}
+			if (alpineHost?.__x?.$data?.hls) candidates.push(alpineHost.__x.$data.hls);
+		} catch (_) {}
+		for (const inst of candidates) if (inst && typeof inst.loadSource === "function") return inst;
+		return null;
+	}
+	function replaceVideoStreamInPlace(streamUrl, { video = null, win = typeof window !== "undefined" ? window : null } = {}) {
+		if (!streamUrl) return false;
+		const targetVideo = video || findVideoElement(false);
+		if (!targetVideo) return false;
+		if (targetVideo.dataset?.mpUncensoredUrl === streamUrl) return true;
+		const wasPlaying = !targetVideo.paused;
+		const prevTime = Number(targetVideo.currentTime) || 0;
+		const prevRate = Number(targetVideo.playbackRate) || 1;
+		const prevMuted = Boolean(targetVideo.muted);
+		const hls = findHlsInstanceForVideo(targetVideo, win);
+		if (hls) try {
+			hls.loadSource(streamUrl);
+			if (hls.media !== targetVideo && typeof hls.attachMedia === "function") hls.attachMedia(targetVideo);
+			if (targetVideo.dataset) {
+				targetVideo.dataset.mpUncensoredApplied = "1";
+				targetVideo.dataset.mpUncensoredUrl = streamUrl;
+			}
+			if (prevTime > 3 && typeof targetVideo.addEventListener === "function") {
+				const restoreTime = () => {
+					try {
+						if (Math.abs((targetVideo.currentTime || 0) - prevTime) > 3) targetVideo.currentTime = prevTime;
+						targetVideo.playbackRate = prevRate;
+					} catch (_) {}
+				};
+				targetVideo.addEventListener("loadedmetadata", restoreTime, { once: true });
+			}
+			if (wasPlaying && typeof targetVideo.play === "function") targetVideo.play().catch(() => {});
+			if (typeof targetVideo.addEventListener === "function") targetVideo.addEventListener("loadedmetadata", () => {
+				try {
+					const qm = new QualityManager();
+					if (qm.isAutoQualityEnabled()) qm.applyNow();
+				} catch (_) {}
+			}, { once: true });
+			return true;
+		} catch (_) {}
+		if (!(typeof targetVideo.canPlayType === "function" && (Boolean(targetVideo.canPlayType("application/vnd.apple.mpegurl")) || Boolean(targetVideo.canPlayType("application/x-mpegURL"))))) return false;
+		try {
+			if (typeof targetVideo.querySelectorAll === "function") targetVideo.querySelectorAll("source").forEach((s) => {
+				try {
+					s.remove();
+				} catch (_) {}
+			});
+			targetVideo.src = streamUrl;
+			if (typeof targetVideo.load === "function") targetVideo.load();
+			targetVideo.muted = prevMuted;
+			targetVideo.playbackRate = prevRate;
+			if (targetVideo.dataset) {
+				targetVideo.dataset.mpUncensoredApplied = "1";
+				targetVideo.dataset.mpUncensoredUrl = streamUrl;
+			}
+			if (typeof targetVideo.addEventListener === "function") {
+				const onReady = () => {
+					try {
+						targetVideo.playbackRate = prevRate;
+						if (prevTime > 3 && Math.abs((targetVideo.currentTime || 0) - prevTime) > 3) targetVideo.currentTime = prevTime;
+						if (wasPlaying && targetVideo.paused && typeof targetVideo.play === "function") targetVideo.play().catch(() => {});
+					} catch (_) {}
+				};
+				targetVideo.addEventListener("loadedmetadata", onReady, { once: true });
+			}
+			if (wasPlaying && typeof targetVideo.play === "function") targetVideo.play().catch(() => {});
+			return true;
+		} catch (_) {
+			return false;
 		}
 	}
 	function navigateToUncensoredUrl(win, targetUrl) {
@@ -25067,12 +25228,21 @@
 		} catch (_) {}
 		win.location.href = targetUrl;
 	}
+	async function waitForVideoReady(doc, maxWaitMs = 2500) {
+		const start = Date.now();
+		while (Date.now() - start <= maxWaitMs) {
+			const video = findVideoElement(false);
+			if (video && (video.currentSrc || video.src || video.querySelector?.("source"))) return video;
+			await new Promise((r) => setTimeout(r, 150));
+		}
+		return findVideoElement(false);
+	}
 	var UncensoredSwitcher = class {
 		constructor() {
 			this._isChecking = false;
 			this._syncBound = false;
 		}
-		async checkAndSwitch({ force = false, allowInTheater = false, navigate = true, win = typeof window !== "undefined" ? window : null, doc = typeof document !== "undefined" ? document : null, fetchFn = null, gmRequestFn = null, storage = typeof sessionStorage !== "undefined" ? sessionStorage : null } = {}) {
+		async checkAndSwitch({ force = false, allowInTheater = false, navigate = true, preferInPlace = true, win = typeof window !== "undefined" ? window : null, doc = typeof document !== "undefined" ? document : null, fetchFn = null, gmRequestFn = null, storage = typeof sessionStorage !== "undefined" ? sessionStorage : null, video = null } = {}) {
 			if (this._isChecking || !win?.location?.href) return {
 				found: false,
 				url: null,
@@ -25085,55 +25255,78 @@
 				url: null,
 				reason: "ineligible_page"
 			};
+			const targetVideo = video || (typeof document !== "undefined" ? findVideoElement(false) : null);
+			if (!force && targetVideo?.dataset?.mpUncensoredApplied === "1") return {
+				found: true,
+				mode: "stream",
+				url: currentUrl,
+				streamUrl: targetVideo.dataset.mpUncensoredUrl || "",
+				reason: "already_applied"
+			};
 			if (!allowInTheater && doc?.body?.classList?.contains?.("tm-player-active")) return {
 				found: false,
 				url: null,
 				reason: "theater_active"
 			};
-			const sessionKey = `${SESSION_KEY_PREFIX}${pageInfo.avCode}`;
-			try {
-				if (!force && storage?.getItem?.(sessionKey)) return {
-					found: false,
-					url: null,
-					reason: "already_checked"
-				};
-			} catch (_) {}
 			this._isChecking = true;
 			try {
-				let targetUrl = findUncensoredLinkInDocument(doc, currentUrl, pageInfo.avCode);
-				let allTransportsFailed = false;
-				if (!targetUrl) {
-					const candidates = buildUncensoredCandidateUrls(currentUrl).slice(0, 4);
-					allTransportsFailed = candidates.length > 0;
-					for (const candidate of candidates) {
-						const probe = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn, gmRequestFn);
-						if (!probe.transportFailed) allTransportsFailed = false;
-						if (probe.url) {
-							targetUrl = probe.url;
-							break;
-						}
+				const domMatch = findUncensoredLinkInDocument(doc, currentUrl, pageInfo.avCode);
+				const candidates = domMatch ? [domMatch, ...buildUncensoredCandidateUrls(currentUrl).filter((u) => u !== domMatch)].slice(0, 4) : buildUncensoredCandidateUrls(currentUrl).slice(0, 4);
+				let targetUrl = null;
+				let streamUrl = "";
+				let allTransportsFailed = candidates.length > 0;
+				for (const candidate of candidates) {
+					const probe = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn, gmRequestFn);
+					if (!probe.transportFailed) allTransportsFailed = false;
+					if (probe.url) {
+						targetUrl = probe.url;
+						streamUrl = probe.streamUrl || "";
+						break;
 					}
 				}
+				if (!targetUrl && domMatch) targetUrl = domMatch;
 				if (targetUrl && targetUrl !== currentUrl) {
+					if (preferInPlace && streamUrl) {
+						const readyVideo = video || (typeof document !== "undefined" ? await waitForVideoReady(doc) : null);
+						if (readyVideo && replaceVideoStreamInPlace(streamUrl, {
+							video: readyVideo,
+							win
+						})) return {
+							found: true,
+							mode: "stream",
+							url: targetUrl,
+							streamUrl
+						};
+					}
+					const navKey = `${REDIRECT_LOOP_KEY_PREFIX}${pageInfo.avCode}`;
 					try {
-						storage?.setItem?.(sessionKey, "redirected");
+						const lastNav = Number(storage?.getItem?.(navKey) || 0);
+						if (!force && lastNav && Date.now() - lastNav < 1e4) return {
+							found: false,
+							url: targetUrl,
+							reason: "recent_redirect_guard"
+						};
 					} catch (_) {}
 					if (navigate) {
 						if (!allowInTheater && doc?.body?.classList?.contains?.("tm-player-active")) return {
 							found: true,
+							mode: "navigate",
 							url: targetUrl,
+							streamUrl,
 							reason: "theater_active_deferred"
 						};
+						try {
+							storage?.setItem?.(navKey, String(Date.now()));
+						} catch (_) {}
 						navigateToUncensoredUrl(win, targetUrl);
 					}
 					return {
 						found: true,
-						url: targetUrl
+						mode: "navigate",
+						url: targetUrl,
+						streamUrl
 					};
 				}
-				if (!allTransportsFailed) try {
-					storage?.setItem?.(sessionKey, "none");
-				} catch (_) {}
 				return {
 					found: false,
 					url: null,
@@ -25152,7 +25345,10 @@
 				this.checkAndSwitch({
 					force: false,
 					allowInTheater: false,
-					navigate: true
+					navigate: true,
+					preferInPlace: true
+				}).then((res) => {
+					if (res?.found && res.mode === "stream" && res.reason !== "already_applied") Toast$1("已自动切换至无码版视频流", 2200, "success");
 				}).catch(() => {});
 			};
 			if (!this._syncBound) {
@@ -25448,9 +25644,14 @@
 						new UncensoredSwitcher().checkAndSwitch({
 							force: true,
 							allowInTheater: true,
-							navigate: false
+							navigate: false,
+							preferInPlace: true
 						}).then((res) => {
-							if (res?.found && res.url) {
+							if (res?.found && res.mode === "stream") {
+								const msg = __$1("autoUncensoredStreamSwitched") || "已切换为无码版视频流";
+								if (subEl) subEl.textContent = msg;
+								Toast$1(msg, 2e3, "success");
+							} else if (res?.found && res.url) {
 								const msg = __$1("autoUncensoredFound") || "已找到无码版，即将切换...";
 								if (subEl) subEl.textContent = msg;
 								Toast$1(msg, 1500, "info");

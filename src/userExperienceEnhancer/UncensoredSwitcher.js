@@ -1,9 +1,98 @@
 import { isSiteDomain } from '../constants/domains.js';
 import { getVideoCodeFromUrl, matchAvCodeFromText, NON_AV_ROUTE_SLUGS, LANGUAGE_SLUGS } from '../utils/videoCode.js';
 import { getValue } from '../utils/storage.js';
+import { findVideoElement } from '../utils/dom.js';
+import { Toast } from '../utils/ui-feedback.js';
+import { QualityManager } from './QualityManager.js';
 
 const STRIP_SUFFIX_RE = /(?:[-_](?:chinese[-_]?subtitles?|chinese[-_]?sub|subtitles?|sub|ch|c|4k|fhd|hd|reduced[-_]mosaic))+$/i;
-const SESSION_KEY_PREFIX = 'mp_uncensored_checked_';
+const REDIRECT_LOOP_KEY_PREFIX = 'mp_uncensored_nav_ts_';
+const BASE62_CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+function intToBase(num, base) {
+    if (num === 0) return '0';
+    const b = Math.min(base, BASE62_CHARS.length);
+    let n = num;
+    let out = '';
+    while (n > 0) {
+        out = BASE62_CHARS[n % b] + out;
+        n = Math.floor(n / b);
+    }
+    return out;
+}
+
+/**
+ * 解包 Dean Edwards P.A.C.K.E.R. 混淆脚本（提取 MissAV 页面内嵌流地址）
+ * @param {string} packed
+ * @returns {string}
+ */
+export function unpackPackerJs(packed) {
+    if (!packed || typeof packed !== 'string') return '';
+    const rePacker = /\}\s*\(\s*'((?:[^'\\]|\\.)*)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*'((?:[^'\\]|\\.)*)'\.split\('\|'\)/g;
+    let result = packed;
+    let match;
+    while ((match = rePacker.exec(packed)) !== null) {
+        const payload = match[1];
+        const radix = parseInt(match[2], 10);
+        const rawCount = parseInt(match[3], 10);
+        const rawKeywords = match[4];
+        if (!radix || radix <= 0 || radix > 62 || Number.isNaN(rawCount)) continue;
+
+        const keywords = rawKeywords.split('|');
+        const count = Math.min(rawCount, keywords.length);
+        const lookup = new Map();
+        for (let i = 0; i < count; i++) {
+            const word = keywords[i];
+            if (word) {
+                lookup.set(intToBase(i, radix), word);
+            }
+        }
+
+        const unpacked = payload
+            .replace(/\b\w+\b/g, (token) => (lookup.has(token) ? lookup.get(token) : token))
+            .replace(/\\"/g, '"')
+            .replace(/\\'/g, "'")
+            .replace(/\\\\/g, '\\');
+        result = result.replace(match[0], unpacked);
+    }
+    return result;
+}
+
+/**
+ * 从 MissAV 视频详情页 HTML 中提取主 m3u8 播放列表地址
+ * @param {string} html
+ * @returns {string}
+ */
+export function extractMissavPlaylistUrl(html) {
+    if (!html || typeof html !== 'string') return '';
+    const tryExtract = (text) => {
+        const mSurrit = text.match(/(https?:\/\/(?:[a-zA-Z0-9_\-.]+\.)?surrit\.com\/[a-f0-9-]+\/playlist\.m3u8)/i);
+        if (mSurrit) return mSurrit[1];
+        const mUrls = text.match(/urls\s*:\s*\[\s*['"](https?:\/\/[^'"]+\.m3u8[^'"]*)['"]/i);
+        if (mUrls) return mUrls[1];
+        const mSource = text.match(/(?:source|src|playlist)\s*[:=]\s*['"](https?:\/\/[^'"]+playlist\.m3u8[^'"]*)['"]/i);
+        if (mSource) return mSource[1];
+        const mM3u8 = text.match(/(https?:\/\/[^'"\s<>]+playlist\.m3u8[^'"\s<>]*)/i);
+        if (mM3u8) return mM3u8[1];
+        return '';
+    };
+
+    const direct = tryExtract(html);
+    if (direct) return direct;
+
+    const unpacked = unpackPackerJs(html);
+    const fromUnpacked = tryExtract(unpacked);
+    if (fromUnpacked) return fromUnpacked;
+
+    // 仅当存在解包出的视频脚本上下文时，使用 UUID 拼装 surrit 标准流地址
+    if (unpacked !== html) {
+        const mUuid = unpacked.match(/['"]([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})['"]/i);
+        if (mUuid) {
+            return `https://surrit.com/${mUuid[1]}/playlist.m3u8`;
+        }
+    }
+    return '';
+}
 
 /**
  * 判断主机名是否属于 MissAV（包含官方与常见镜像域名）
@@ -15,11 +104,6 @@ export function isMissavHost(hostname) {
     return isSiteDomain('MISSAV', hostname) || /(?:^|\.)(?:missav[^.]*|thisav[^.]*)\./i.test(hostname);
 }
 
-/**
- * 仅从 URL 路径本身提取番号（不读取宿主 DOM <video data-code>，防止链接比对串号）
- * @param {URL|string} urlInput
- * @returns {string}
- */
 function extractAvCodeFromUrlOnly(urlInput) {
     try {
         const parsed = typeof urlInput === 'string' ? new URL(urlInput) : urlInput;
@@ -158,17 +242,14 @@ export function findUncensoredLinkInDocument(doc, currentUrl, avCode) {
     return fallbackMatch;
 }
 
-/**
- * 判断返回 HTML 是否为软 404 或非目标视频页
- * @param {string} html
- * @param {string} avCode
- * @returns {boolean}
- */
 function isValidUncensoredHtml(html, avCode) {
     if (!html || typeof html !== 'string') return true;
     const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const title = titleMatch ? titleMatch[1] : '';
     if (/(?:404\s*not\s*found|page\s*not\s*found|error\s*404|找不到页面|頁面不存在)/i.test(title)) {
+        return false;
+    }
+    if (/Just a moment|cf-chl|Attention Required/i.test(html) && !html.toLowerCase().includes(avCode.toLowerCase())) {
         return false;
     }
     const lowerHtml = html.toLowerCase();
@@ -178,13 +259,6 @@ function isValidUncensoredHtml(html, avCode) {
     return true;
 }
 
-/**
- * 通过 GM_xmlhttpRequest 执行兜底探活（兼容 iOS Safari Stay App 隔离沙箱与防挂死硬熔断）
- * @param {string} candidateUrl
- * @param {Function|null} gmRequestFn
- * @param {number} [timeoutMs=4500]
- * @returns {Promise<{ ok: boolean, status: number, url: string, text?: () => Promise<string> } | null>}
- */
 function probeViaGM(candidateUrl, gmRequestFn, timeoutMs = 4500) {
     if (typeof gmRequestFn !== 'function') return Promise.resolve(null);
     return new Promise((resolve) => {
@@ -225,11 +299,6 @@ function probeViaGM(candidateUrl, gmRequestFn, timeoutMs = 4500) {
     });
 }
 
-/**
- * 解析当前环境可用的多通道 Fetch 函数（规避 iOS Stay unsafeWindow.fetch 绑定代理抛出 TypeError）
- * @param {Function|null} customFetchFn
- * @param {Function|null} gmRequestFn
- */
 async function fetchCandidateResponse(candidateUrl, customFetchFn, gmRequestFn) {
     if (typeof customFetchFn === 'function') {
         const res = await customFetchFn(candidateUrl, {
@@ -252,8 +321,7 @@ async function fetchCandidateResponse(candidateUrl, customFetchFn, gmRequestFn) 
                 redirect: 'follow'
             };
             if (ctrl) opts.signal = ctrl.signal;
-            const res = thisObj ? await fn.call(thisObj, candidateUrl, opts) : await fn(candidateUrl, opts);
-            return res;
+            return thisObj ? await fn.call(thisObj, candidateUrl, opts) : await fn(candidateUrl, opts);
         } finally {
             if (timer) clearTimeout(timer);
         }
@@ -261,7 +329,6 @@ async function fetchCandidateResponse(candidateUrl, customFetchFn, gmRequestFn) 
 
     let sawHttpResult = false;
 
-    // 通道 1: 当前上下文原生 fetch（在 iOS Safari Stay content script 中安全有效，不触发跨世界代理 receiver 异常）
     if (typeof fetch === 'function') {
         try {
             const res = await tryNativeFetch(fetch, null);
@@ -274,7 +341,6 @@ async function fetchCandidateResponse(candidateUrl, customFetchFn, gmRequestFn) 
         } catch (_) {}
     }
 
-    // 通道 2: 页面 unsafeWindow.fetch（仅当存在且与沙箱 fetch 不同时尝试）
     if (typeof unsafeWindow !== 'undefined' && unsafeWindow && typeof unsafeWindow.fetch === 'function') {
         try {
             const res = await tryNativeFetch(unsafeWindow.fetch, unsafeWindow);
@@ -287,7 +353,6 @@ async function fetchCandidateResponse(candidateUrl, customFetchFn, gmRequestFn) 
         } catch (_) {}
     }
 
-    // 通道 3: GM_xmlhttpRequest 兜底（由 Stay / Tampermonkey 原生网络栈携带 Cookie 发起请求）
     const gmFn = gmRequestFn || (typeof GM_xmlhttpRequest === 'function' ? GM_xmlhttpRequest : null);
     if (gmFn) {
         const gmRes = await probeViaGM(candidateUrl, gmFn);
@@ -300,43 +365,191 @@ async function fetchCandidateResponse(candidateUrl, customFetchFn, gmRequestFn) 
 }
 
 /**
- * Tier 2: 同源轻量探活候选无码版 URL
+ * 探测并抓取候选无码版页面（同时提取内嵌 m3u8 流地址）
  * @param {string} candidateUrl
  * @param {string} avCode
  * @param {Function|null} fetchFn
  * @param {Function|null} [gmRequestFn=null]
- * @returns {Promise<{ url: string | null, transportFailed: boolean }>}
+ * @returns {Promise<{ url: string | null, streamUrl: string, transportFailed: boolean }>}
  */
 export async function probeUncensoredCandidate(candidateUrl, avCode, fetchFn, gmRequestFn = null) {
     try {
         const { res, transportFailed } = await fetchCandidateResponse(candidateUrl, fetchFn, gmRequestFn);
         if (!res || !res.ok || res.status < 200 || res.status >= 300) {
             try { res?.body?.cancel?.(); } catch (_) {}
-            return { url: null, transportFailed };
+            return { url: null, streamUrl: '', transportFailed };
         }
 
         const finalUrl = res.url || candidateUrl;
         if (!/uncensored/i.test(finalUrl)) {
             try { res?.body?.cancel?.(); } catch (_) {}
-            return { url: null, transportFailed: false };
+            return { url: null, streamUrl: '', transportFailed: false };
         }
         if (extractAvCodeFromUrlOnly(finalUrl) !== avCode) {
             try { res?.body?.cancel?.(); } catch (_) {}
-            return { url: null, transportFailed: false };
+            return { url: null, streamUrl: '', transportFailed: false };
         }
 
+        let streamUrl = '';
         if (typeof res.text === 'function') {
             const html = await res.text();
             if (!isValidUncensoredHtml(html, avCode)) {
-                return { url: null, transportFailed: false };
+                return { url: null, streamUrl: '', transportFailed: false };
             }
+            streamUrl = extractMissavPlaylistUrl(html);
         } else {
             try { res?.body?.cancel?.(); } catch (_) {}
         }
 
-        return { url: finalUrl, transportFailed: false };
+        return { url: finalUrl, streamUrl, transportFailed: false };
     } catch (_) {
-        return { url: null, transportFailed: true };
+        return { url: null, streamUrl: '', transportFailed: true };
+    }
+}
+
+/**
+ * 收集页面上关联的 Hls.js 实例
+ */
+function findHlsInstanceForVideo(video, win) {
+    const candidates = [
+        video?.hls,
+        win?.hls,
+        typeof window !== 'undefined' ? window.hls : null,
+        win?.player?.hls,
+        typeof window !== 'undefined' ? window.player?.hls : null
+    ];
+    if (typeof unsafeWindow !== 'undefined' && unsafeWindow) {
+        try {
+            candidates.push(unsafeWindow.hls, unsafeWindow.player?.hls);
+        } catch (_) {}
+    }
+    try {
+        const alpineHost = video?.closest?.('[x-data]');
+        if (alpineHost?._x_dataStack) {
+            for (const ctx of alpineHost._x_dataStack) {
+                if (ctx?.hls) candidates.push(ctx.hls);
+            }
+        }
+        if (alpineHost?.__x?.$data?.hls) {
+            candidates.push(alpineHost.__x.$data.hls);
+        }
+    } catch (_) {}
+
+    for (const inst of candidates) {
+        if (inst && typeof inst.loadSource === 'function') {
+            return inst;
+        }
+    }
+    return null;
+}
+
+/**
+ * 原地替换当前页视频流（无需刷新跳转，优先适配 iOS Safari 原生 HLS 与可访问 Hls.js 实例）
+ * @param {string} streamUrl
+ * @param {{ video?: HTMLVideoElement, win?: any }} [opts]
+ * @returns {boolean}
+ */
+export function replaceVideoStreamInPlace(streamUrl, { video = null, win = typeof window !== 'undefined' ? window : null } = {}) {
+    if (!streamUrl) return false;
+    const targetVideo = video || findVideoElement(false);
+    if (!targetVideo) return false;
+
+    if (targetVideo.dataset?.mpUncensoredUrl === streamUrl) {
+        return true;
+    }
+
+    const wasPlaying = !targetVideo.paused;
+    const prevTime = Number(targetVideo.currentTime) || 0;
+    const prevRate = Number(targetVideo.playbackRate) || 1;
+    const prevMuted = Boolean(targetVideo.muted);
+
+    const hls = findHlsInstanceForVideo(targetVideo, win);
+    if (hls) {
+        try {
+            hls.loadSource(streamUrl);
+            if (hls.media !== targetVideo && typeof hls.attachMedia === 'function') {
+                hls.attachMedia(targetVideo);
+            }
+            if (targetVideo.dataset) {
+                targetVideo.dataset.mpUncensoredApplied = '1';
+                targetVideo.dataset.mpUncensoredUrl = streamUrl;
+            }
+            if (prevTime > 3 && typeof targetVideo.addEventListener === 'function') {
+                const restoreTime = () => {
+                    try {
+                        if (Math.abs((targetVideo.currentTime || 0) - prevTime) > 3) {
+                            targetVideo.currentTime = prevTime;
+                        }
+                        targetVideo.playbackRate = prevRate;
+                    } catch (_) {}
+                };
+                targetVideo.addEventListener('loadedmetadata', restoreTime, { once: true });
+            }
+            if (wasPlaying && typeof targetVideo.play === 'function') {
+                targetVideo.play().catch(() => {});
+            }
+            if (typeof targetVideo.addEventListener === 'function') {
+                targetVideo.addEventListener('loadedmetadata', () => {
+                    try {
+                        const qm = new QualityManager();
+                        if (qm.isAutoQualityEnabled()) {
+                            qm.applyNow();
+                        }
+                    } catch (_) {}
+                }, { once: true });
+            }
+            return true;
+        } catch (_) {}
+    }
+
+    // iOS / macOS Safari 原生 HLS：直接替换 <video>.src 并重载
+    const canNativeHls = typeof targetVideo.canPlayType === 'function' && (
+        Boolean(targetVideo.canPlayType('application/vnd.apple.mpegurl')) ||
+        Boolean(targetVideo.canPlayType('application/x-mpegURL'))
+    );
+    if (!canNativeHls) {
+        return false;
+    }
+
+    try {
+        if (typeof targetVideo.querySelectorAll === 'function') {
+            targetVideo.querySelectorAll('source').forEach((s) => {
+                try { s.remove(); } catch (_) {}
+            });
+        }
+        targetVideo.src = streamUrl;
+        if (typeof targetVideo.load === 'function') {
+            targetVideo.load();
+        }
+        targetVideo.muted = prevMuted;
+        targetVideo.playbackRate = prevRate;
+
+        if (targetVideo.dataset) {
+            targetVideo.dataset.mpUncensoredApplied = '1';
+            targetVideo.dataset.mpUncensoredUrl = streamUrl;
+        }
+
+        if (typeof targetVideo.addEventListener === 'function') {
+            const onReady = () => {
+                try {
+                    targetVideo.playbackRate = prevRate;
+                    if (prevTime > 3 && Math.abs((targetVideo.currentTime || 0) - prevTime) > 3) {
+                        targetVideo.currentTime = prevTime;
+                    }
+                    if (wasPlaying && targetVideo.paused && typeof targetVideo.play === 'function') {
+                        targetVideo.play().catch(() => {});
+                    }
+                } catch (_) {}
+            };
+            targetVideo.addEventListener('loadedmetadata', onReady, { once: true });
+        }
+
+        if (wasPlaying && typeof targetVideo.play === 'function') {
+            targetVideo.play().catch(() => {});
+        }
+        return true;
+    } catch (_) {
+        return false;
     }
 }
 
@@ -351,6 +564,18 @@ export function navigateToUncensoredUrl(win, targetUrl) {
     win.location.href = targetUrl;
 }
 
+async function waitForVideoReady(doc, maxWaitMs = 2500) {
+    const start = Date.now();
+    while (Date.now() - start <= maxWaitMs) {
+        const video = findVideoElement(false);
+        if (video && (video.currentSrc || video.src || video.querySelector?.('source'))) {
+            return video;
+        }
+        await new Promise((r) => setTimeout(r, 150));
+    }
+    return findVideoElement(false);
+}
+
 export class UncensoredSwitcher {
     constructor() {
         this._isChecking = false;
@@ -358,27 +583,31 @@ export class UncensoredSwitcher {
     }
 
     /**
-     * 查找当前 MissAV 影片对应的无码版页面地址
+     * 检测无码版并优先原地替换当前视频流；无法原地替换时回退至跳转到无码页
      * @param {Object} [options]
-     * @param {boolean} [options.force=false] 是否忽略当前会话已探测缓存
-     * @param {boolean} [options.allowInTheater=false] 是否允许在影院激活态下探测
-     * @param {boolean} [options.navigate=true] 找到后是否立即执行页面跳转
+     * @param {boolean} [options.force=false]
+     * @param {boolean} [options.allowInTheater=false]
+     * @param {boolean} [options.navigate=true] 当原地替换不可用时是否回退到整页跳转
+     * @param {boolean} [options.preferInPlace=true] 是否优先原地替换视频流
      * @param {Window} [options.win]
      * @param {Document} [options.doc]
      * @param {Function|null} [options.fetchFn]
      * @param {Function|null} [options.gmRequestFn]
      * @param {Storage} [options.storage]
-     * @returns {Promise<{ found: boolean, url: string | null, reason?: string }>}
+     * @param {HTMLVideoElement|null} [options.video]
+     * @returns {Promise<{ found: boolean, mode?: 'stream'|'navigate', url: string | null, streamUrl?: string, reason?: string }>}
      */
     async checkAndSwitch({
         force = false,
         allowInTheater = false,
         navigate = true,
+        preferInPlace = true,
         win = typeof window !== 'undefined' ? window : null,
         doc = typeof document !== 'undefined' ? document : null,
         fetchFn = null,
         gmRequestFn = null,
-        storage = typeof sessionStorage !== 'undefined' ? sessionStorage : null
+        storage = typeof sessionStorage !== 'undefined' ? sessionStorage : null,
+        video = null
     } = {}) {
         if (this._isChecking || !win?.location?.href) {
             return { found: false, url: null, reason: 'busy_or_no_window' };
@@ -390,54 +619,71 @@ export class UncensoredSwitcher {
             return { found: false, url: null, reason: 'ineligible_page' };
         }
 
+        const targetVideo = video || (typeof document !== 'undefined' ? findVideoElement(false) : null);
+        if (!force && targetVideo?.dataset?.mpUncensoredApplied === '1') {
+            return { found: true, mode: 'stream', url: currentUrl, streamUrl: targetVideo.dataset.mpUncensoredUrl || '', reason: 'already_applied' };
+        }
+
         if (!allowInTheater && doc?.body?.classList?.contains?.('tm-player-active')) {
             return { found: false, url: null, reason: 'theater_active' };
         }
 
-        const sessionKey = `${SESSION_KEY_PREFIX}${pageInfo.avCode}`;
-        try {
-            if (!force && storage?.getItem?.(sessionKey)) {
-                return { found: false, url: null, reason: 'already_checked' };
-            }
-        } catch (_) {}
-
         this._isChecking = true;
         try {
-            // 1. 优先从页面 DOM 零请求探测同番号无码版链接
-            let targetUrl = findUncensoredLinkInDocument(doc, currentUrl, pageInfo.avCode);
-            let allTransportsFailed = false;
+            const domMatch = findUncensoredLinkInDocument(doc, currentUrl, pageInfo.avCode);
+            const candidates = domMatch
+                ? [domMatch, ...buildUncensoredCandidateUrls(currentUrl).filter((u) => u !== domMatch)].slice(0, 4)
+                : buildUncensoredCandidateUrls(currentUrl).slice(0, 4);
 
-            // 2. 回退至同源轻量候选 URL 探测（限制最多探测前 4 个最高概率候选）
-            if (!targetUrl) {
-                const candidates = buildUncensoredCandidateUrls(currentUrl).slice(0, 4);
-                allTransportsFailed = candidates.length > 0;
-                for (const candidate of candidates) {
-                    const probe = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn, gmRequestFn);
-                    if (!probe.transportFailed) {
-                        allTransportsFailed = false;
-                    }
-                    if (probe.url) {
-                        targetUrl = probe.url;
-                        break;
-                    }
+            let targetUrl = null;
+            let streamUrl = '';
+            let allTransportsFailed = candidates.length > 0;
+
+            for (const candidate of candidates) {
+                const probe = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn, gmRequestFn);
+                if (!probe.transportFailed) {
+                    allTransportsFailed = false;
                 }
+                if (probe.url) {
+                    targetUrl = probe.url;
+                    streamUrl = probe.streamUrl || '';
+                    break;
+                }
+            }
+
+            // 即使探活仅靠 DOM 命中且未知 streamUrl，如果 DOM 命中但所有 fetch 异常，仍允许跳转兜底
+            if (!targetUrl && domMatch) {
+                targetUrl = domMatch;
             }
 
             if (targetUrl && targetUrl !== currentUrl) {
-                try { storage?.setItem?.(sessionKey, 'redirected'); } catch (_) {}
+                // 1. 优先原地替换视频流（iOS Safari 原生 HLS / 可访问 Hls.js 实例）
+                if (preferInPlace && streamUrl) {
+                    const readyVideo = video || (typeof document !== 'undefined' ? await waitForVideoReady(doc) : null);
+                    if (readyVideo && replaceVideoStreamInPlace(streamUrl, { video: readyVideo, win })) {
+                        return { found: true, mode: 'stream', url: targetUrl, streamUrl };
+                    }
+                }
+
+                // 2. 无法原地替换时（如 Chrome 闭包 Hls.js），回退至整页跳转（带 10 秒防连续回跳保护，不永久封锁同会话）
+                const navKey = `${REDIRECT_LOOP_KEY_PREFIX}${pageInfo.avCode}`;
+                try {
+                    const lastNav = Number(storage?.getItem?.(navKey) || 0);
+                    if (!force && lastNav && (Date.now() - lastNav) < 10000) {
+                        return { found: false, url: targetUrl, reason: 'recent_redirect_guard' };
+                    }
+                } catch (_) {}
+
                 if (navigate) {
                     if (!allowInTheater && doc?.body?.classList?.contains?.('tm-player-active')) {
-                        return { found: true, url: targetUrl, reason: 'theater_active_deferred' };
+                        return { found: true, mode: 'navigate', url: targetUrl, streamUrl, reason: 'theater_active_deferred' };
                     }
+                    try { storage?.setItem?.(navKey, String(Date.now())); } catch (_) {}
                     navigateToUncensoredUrl(win, targetUrl);
                 }
-                return { found: true, url: targetUrl };
+                return { found: true, mode: 'navigate', url: targetUrl, streamUrl };
             }
 
-            // 仅在得到确定 HTTP 响应时缓存 none，传输层异常时不毒化当前会话缓存
-            if (!allTransportsFailed) {
-                try { storage?.setItem?.(sessionKey, 'none'); } catch (_) {}
-            }
             return { found: false, url: null, reason: allTransportsFailed ? 'network_error' : 'not_found' };
         } finally {
             this._isChecking = false;
@@ -451,10 +697,13 @@ export class UncensoredSwitcher {
             const enabled = getValue('autoUncensored', false);
             if (enabled !== true && enabled !== 'true') return;
             if (!parseMissavVideoPage(window.location?.href)) return;
-            this.checkAndSwitch({ force: false, allowInTheater: false, navigate: true }).catch(() => {});
+            this.checkAndSwitch({ force: false, allowInTheater: false, navigate: true, preferInPlace: true }).then((res) => {
+                if (res?.found && res.mode === 'stream' && res.reason !== 'already_applied') {
+                    Toast('已自动切换至无码版视频流', 2200, 'success');
+                }
+            }).catch(() => {});
         };
 
-        // 监听云同步落盘事件（若手机端通过 WebDAV 自动同步刚拉取到开启状态，立即补检一次）
         if (!this._syncBound) {
             this._syncBound = true;
             window.addEventListener('mp_sync_applied', () => {

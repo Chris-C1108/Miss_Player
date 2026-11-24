@@ -15,7 +15,10 @@ const {
     UncensoredSwitcher,
     parseMissavVideoPage,
     buildUncensoredCandidateUrls,
-    findUncensoredLinkInDocument
+    findUncensoredLinkInDocument,
+    unpackPackerJs,
+    extractMissavPlaylistUrl,
+    replaceVideoStreamInPlace
 } = await import('../src/userExperienceEnhancer/UncensoredSwitcher.js');
 const { PlayerState } = await import('../src/player/state/PlayerState.js');
 const { SyncManager } = await import('../src/sync/SyncManager.js');
@@ -130,7 +133,7 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
     const foundDom = findUncensoredLinkInDocument(mockDoc, 'https://missav.ai/cn/miaa-490', 'MIAA-490');
     assert.strictEqual(foundDom, 'https://missav.ai/cn/miaa-490-uncensored-leak', '应精准命中同番号无码链接');
 
-    // checkAndSwitch 执行跳转并写入 sessionStorage 防回跳死循环
+    // checkAndSwitch 无法原地替换时（无流地址或非 Safari 且无 Hls 实例）回退至整页跳转
     let replacedUrl = null;
     const sess = makeStorage();
     const mockWin = {
@@ -142,17 +145,99 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
     const switcher = new UncensoredSwitcher();
     const res1 = await switcher.checkAndSwitch({ win: mockWin, doc: mockDoc, storage: sess });
     assert.strictEqual(res1.found, true);
+    assert.strictEqual(res1.mode, 'navigate');
     assert.strictEqual(replacedUrl, 'https://missav.ai/cn/miaa-490-uncensored-leak');
 
-    // 同会话再次访问原页不应死循环跳转
+    // 10 秒防回跳保护：极短时间内重复触发不死循环，过窗后仍允许再次检测
     replacedUrl = null;
     const resAgain = await switcher.checkAndSwitch({ win: mockWin, doc: mockDoc, storage: sess });
     assert.strictEqual(resAgain.found, false);
-    assert.strictEqual(resAgain.reason, 'already_checked');
+    assert.strictEqual(resAgain.reason, 'recent_redirect_guard');
     assert.strictEqual(replacedUrl, null);
 
-    // Tier 2: 同源 GET 探活，拒绝软跳转到首页或软 404 HTML
+    // 3b. P.A.C.K.E.R. 解包与 MissAV 流地址提取 + 原地无刷换流（Safari 原生 HLS 与 Hls.js）
+    const packedHtml = `<script>eval(function(p,a,c,k,e,d){return p}('0 1=\\'2://3.4/5-6-7-8-9/a.b\\';',12,12,'const|source|https|surrit|com|11111111|2222|3333|4444|555555555555|playlist|m3u8'.split('|'),0,{}))</script>`;
+    const unpacked = unpackPackerJs(packedHtml);
+    assert.ok(unpacked.includes('https://surrit.com/11111111-2222-3333-4444-555555555555/playlist.m3u8'), '应正确解包 P.A.C.K.E.R. 脚本');
+    assert.strictEqual(
+        extractMissavPlaylistUrl(packedHtml),
+        'https://surrit.com/11111111-2222-3333-4444-555555555555/playlist.m3u8',
+        '应从解包后的脚本提取 surrit m3u8 地址'
+    );
+
+    // iOS Safari 原生 HLS 原地换流（不刷新页面、不跳转）
     const emptyDoc = { body: { classList: { contains: () => false } }, querySelectorAll: () => [] };
+    let loadCalled = false;
+    let playCalled = false;
+    let safariReplacedUrl = null;
+    const safariVideo = {
+        src: 'https://surrit.com/old-uuid/playlist.m3u8',
+        currentSrc: 'https://surrit.com/old-uuid/playlist.m3u8',
+        paused: false,
+        currentTime: 0,
+        playbackRate: 1.5,
+        muted: true,
+        dataset: {},
+        canPlayType: (mime) => (mime === 'application/vnd.apple.mpegurl' ? 'maybe' : ''),
+        querySelectorAll: () => [],
+        load: () => { loadCalled = true; },
+        play: () => { playCalled = true; return Promise.resolve(); },
+        addEventListener: () => {}
+    };
+    const resSafariStream = await switcher.checkAndSwitch({
+        win: {
+            location: {
+                href: 'https://missav.ai/cn/ipx-777',
+                replace: (u) => { safariReplacedUrl = u; }
+            }
+        },
+        doc: emptyDoc,
+        video: safariVideo,
+        fetchFn: async (url) => ({
+            ok: true,
+            status: 200,
+            url,
+            text: async () => `<html><title>IPX-777</title>${packedHtml}</html>`
+        })
+    });
+    assert.strictEqual(resSafariStream.found, true);
+    assert.strictEqual(resSafariStream.mode, 'stream', 'iOS Safari 原生 HLS 应走原地换流模式');
+    assert.strictEqual(safariReplacedUrl, null, '原地换流模式不得整页刷新跳转');
+    assert.strictEqual(safariVideo.src, 'https://surrit.com/11111111-2222-3333-4444-555555555555/playlist.m3u8');
+    assert.strictEqual(loadCalled, true);
+    assert.strictEqual(playCalled, true);
+    assert.strictEqual(safariVideo.dataset.mpUncensoredApplied, '1');
+
+    // 同一视频再次触发返回 already_applied；换到新视频节点（如刷新后重新测试）不受历史会话锁阻挡
+    const resSafariRepeat = await switcher.checkAndSwitch({
+        win: { location: { href: 'https://missav.ai/cn/ipx-777', replace: () => {} } },
+        doc: emptyDoc,
+        video: safariVideo,
+        fetchFn: async () => { throw new Error('should not refetch'); }
+    });
+    assert.strictEqual(resSafariRepeat.reason, 'already_applied');
+
+    // Hls.js 实例原地换流
+    let loadedHlsSrc = null;
+    const hlsVideo = {
+        paused: true,
+        currentTime: 0,
+        playbackRate: 1.0,
+        muted: false,
+        dataset: {},
+        hls: {
+            media: null,
+            loadSource: (u) => { loadedHlsSrc = u; },
+            attachMedia: () => {}
+        },
+        canPlayType: () => '',
+        addEventListener: () => {}
+    };
+    const swappedHls = replaceVideoStreamInPlace('https://surrit.com/new-uuid/playlist.m3u8', { video: hlsVideo });
+    assert.strictEqual(swappedHls, true);
+    assert.strictEqual(loadedHlsSrc, 'https://surrit.com/new-uuid/playlist.m3u8');
+
+    // Tier 2: 同源 GET 探活，拒绝软跳转到首页或软 404 HTML
     const sess2 = makeStorage();
     const mockWin2 = {
         location: {
@@ -249,7 +334,7 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
     assert.strictEqual(resStay.found, true, 'iOS Stay 在 fetch 抛错时必须经 GM_xmlhttpRequest 兜底命中无码版');
     assert.strictEqual(stayReplaced, 'https://missav.ai/cn/ipx-999-uncensored-leak');
 
-    // 当全部通道均网络异常时，不得写入 none 毒化后续刷新
+    // 当全部通道均网络异常时，不得写入任何缓存阻塞后续重试
     const sessNetErr = makeStorage();
     const resNetErr = await switcher.checkAndSwitch({
         win: { location: { href: 'https://missav.ai/cn/ipx-998', replace: () => {} } },
@@ -259,7 +344,7 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
     });
     assert.strictEqual(resNetErr.found, false);
     assert.strictEqual(resNetErr.reason, 'network_error');
-    assert.strictEqual(sessNetErr.getItem('mp_uncensored_checked_IPX-998'), null, '网络异常时不得写入 none 缓存');
+    assert.strictEqual(sessNetErr.getItem('mp_uncensored_nav_ts_IPX-998'), null, '网络异常时不得写入跳转冷却缓存');
 
     globalThis.unsafeWindow = prevUnsafe;
     globalThis.fetch = prevFetch;

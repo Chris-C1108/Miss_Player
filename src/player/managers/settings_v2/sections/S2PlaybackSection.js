@@ -340,8 +340,12 @@ export class S2PlaybackSection {
                 if (typeof window !== 'undefined' && parseMissavVideoPage(window.location?.href)) {
                     if (subEl) subEl.textContent = '正在检查无码版...';
                     const switcher = new UncensoredSwitcher();
-                    switcher.checkAndSwitch({ force: true, allowInTheater: true, navigate: false }).then((res) => {
-                        if (res?.found && res.url) {
+                    switcher.checkAndSwitch({ force: true, allowInTheater: true, navigate: false, preferInPlace: true }).then((res) => {
+                        if (res?.found && res.mode === 'stream') {
+                            const msg = __('autoUncensoredStreamSwitched') || '已切换为无码版视频流';
+                            if (subEl) subEl.textContent = msg;
+                            Toast(msg, 2000, 'success');
+                        } else if (res?.found && res.url) {
                             const msg = __('autoUncensoredFound') || '已找到无码版，即将切换...';
                             if (subEl) subEl.textContent = msg;
                             Toast(msg, 1500, 'info');
