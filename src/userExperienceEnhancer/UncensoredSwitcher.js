@@ -1,14 +1,41 @@
 import { isSiteDomain } from '../constants/domains.js';
-import { getVideoCodeFromUrl, NON_AV_ROUTE_SLUGS, LANGUAGE_SLUGS } from '../utils/videoCode.js';
+import { getVideoCodeFromUrl, matchAvCodeFromText, NON_AV_ROUTE_SLUGS, LANGUAGE_SLUGS } from '../utils/videoCode.js';
 import { getValue } from '../utils/storage.js';
 
 const STRIP_SUFFIX_RE = /(?:[-_](?:chinese[-_]?subtitles?|chinese[-_]?sub|subtitles?|sub|ch|c|4k|fhd|hd|reduced[-_]mosaic))+$/i;
 const SESSION_KEY_PREFIX = 'mp_uncensored_checked_';
 
 /**
+ * 判断主机名是否属于 MissAV（包含官方与常见镜像域名）
+ * @param {string} hostname
+ * @returns {boolean}
+ */
+export function isMissavHost(hostname) {
+    if (!hostname || typeof hostname !== 'string') return false;
+    return isSiteDomain('MISSAV', hostname) || /(?:^|\.)(?:missav[^.]*|thisav[^.]*)\./i.test(hostname);
+}
+
+/**
+ * 仅从 URL 路径本身提取番号（不读取宿主 DOM <video data-code>，防止链接比对串号）
+ * @param {URL|string} urlInput
+ * @returns {string}
+ */
+function extractAvCodeFromUrlOnly(urlInput) {
+    try {
+        const parsed = typeof urlInput === 'string' ? new URL(urlInput) : urlInput;
+        const segments = decodeURIComponent(parsed.pathname || '').split('/').filter(Boolean);
+        if (segments.length === 0) return '';
+        const leaf = segments[segments.length - 1];
+        return matchAvCodeFromText(leaf) || getVideoCodeFromUrl(parsed.href) || '';
+    } catch (_) {
+        return '';
+    }
+}
+
+/**
  * 解析并校验当前 URL 是否为可切换无码版的 MissAV 影片详情页
  * @param {string} rawUrl
- * @returns {{ url: URL, avCode: string, slug: string, prefixPath: string } | null}
+ * @returns {{ url: URL, avCode: string, slug: string, prefixPath: string, cleanPrefixPath: string } | null}
  */
 export function parseMissavVideoPage(rawUrl) {
     if (!rawUrl || typeof rawUrl !== 'string') return null;
@@ -19,7 +46,7 @@ export function parseMissavVideoPage(rawUrl) {
         return null;
     }
 
-    if (!isSiteDomain('MISSAV', parsed.hostname)) return null;
+    if (!isMissavHost(parsed.hostname)) return null;
 
     const segments = parsed.pathname.split('/').filter(Boolean);
     if (segments.length === 0) return null;
@@ -35,16 +62,19 @@ export function parseMissavVideoPage(rawUrl) {
         if (NON_AV_ROUTE_SLUGS.has(seg)) return null;
     }
 
-    const avCode = getVideoCodeFromUrl(rawUrl);
+    const avCode = extractAvCodeFromUrlOnly(parsed);
     if (!avCode) return null;
 
     const prefixSegments = segments.slice(0, -1);
     const prefixPath = prefixSegments.length ? `/${prefixSegments.join('/')}` : '';
-    return { url: parsed, avCode, slug, prefixPath };
+    const cleanPrefixSegments = prefixSegments.filter((seg, idx) => !(idx === 0 && /^dm\d+$/i.test(seg)));
+    const cleanPrefixPath = cleanPrefixSegments.length ? `/${cleanPrefixSegments.join('/')}` : '';
+
+    return { url: parsed, avCode, slug, prefixPath, cleanPrefixPath };
 }
 
 /**
- * 生成 MissAV 无码版候选 URL 列表（按命中优先级排序）
+ * 生成 MissAV 无码版候选 URL 列表（按命中优先级排序，同时兼容去 /dmXX/ 分片路由）
  * @param {string} rawUrl
  * @returns {string[]}
  */
@@ -52,19 +82,22 @@ export function buildUncensoredCandidateUrls(rawUrl) {
     const info = parseMissavVideoPage(rawUrl);
     if (!info) return [];
 
-    const { url, avCode, slug, prefixPath } = info;
+    const { url, avCode, slug, prefixPath, cleanPrefixPath } = info;
     const baseSlug = slug.replace(STRIP_SUFFIX_RE, '') || avCode.toLowerCase();
     const codeSlug = avCode.toLowerCase();
 
     const slugBases = Array.from(new Set([baseSlug, codeSlug].filter(Boolean)));
-    const suffixes = ['-uncensored-leak', '-uncensored-leaked'];
+    const prefixes = Array.from(new Set([prefixPath, cleanPrefixPath].filter((p) => p !== undefined)));
+    const suffixes = ['-uncensored-leak', '-uncensored-leaked', '-uncensored'];
     const candidates = [];
 
-    for (const base of slugBases) {
-        for (const suffix of suffixes) {
-            const candidate = `${url.origin}${prefixPath}/${base}${suffix}${url.search || ''}`;
-            if (candidate !== rawUrl && !candidates.includes(candidate)) {
-                candidates.push(candidate);
+    for (const prefix of prefixes) {
+        for (const base of slugBases) {
+            for (const suffix of suffixes) {
+                const candidate = `${url.origin}${prefix}/${base}${suffix}${url.search || ''}`;
+                if (candidate !== rawUrl && !candidates.includes(candidate)) {
+                    candidates.push(candidate);
+                }
             }
         }
     }
@@ -111,7 +144,7 @@ export function findUncensoredLinkInDocument(doc, currentUrl, avCode) {
         if (!leaf.includes('-uncensored')) continue;
         if (NON_AV_ROUTE_SLUGS.has(leaf)) continue;
 
-        const linkCode = getVideoCodeFromUrl(resolved.href);
+        const linkCode = extractAvCodeFromUrlOnly(resolved);
         if (linkCode !== avCode) continue;
 
         if (leaf.includes('uncensored-leak')) {
@@ -126,7 +159,27 @@ export function findUncensoredLinkInDocument(doc, currentUrl, avCode) {
 }
 
 /**
- * Tier 2: 同源轻量探活候选无码版 URL
+ * 判断返回 HTML 是否为软 404 或非目标视频页
+ * @param {string} html
+ * @param {string} avCode
+ * @returns {boolean}
+ */
+function isValidUncensoredHtml(html, avCode) {
+    if (!html || typeof html !== 'string') return true;
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch ? titleMatch[1] : '';
+    if (/(?:404\s*not\s*found|page\s*not\s*found|error\s*404|找不到页面|頁面不存在)/i.test(title)) {
+        return false;
+    }
+    const lowerHtml = html.toLowerCase();
+    if (!lowerHtml.includes(avCode.toLowerCase()) && !lowerHtml.includes(avCode.replace(/-/g, '').toLowerCase())) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Tier 2: 同源轻量探活候选无码版 URL（使用同源 GET，避免 Cloudflare/Nginx 拦截 HEAD）
  * @param {string} candidateUrl
  * @param {string} avCode
  * @param {Function} fetchFn
@@ -135,32 +188,50 @@ export function findUncensoredLinkInDocument(doc, currentUrl, avCode) {
 export async function probeUncensoredCandidate(candidateUrl, avCode, fetchFn) {
     if (typeof fetchFn !== 'function') return null;
 
-    const tryProbe = async (method) => {
+    try {
         const res = await fetchFn(candidateUrl, {
-            method,
+            method: 'GET',
             credentials: 'include',
             redirect: 'follow'
         });
-        try { res?.body?.cancel?.(); } catch (_) {}
-        return res;
-    };
-
-    try {
-        let res = await tryProbe('HEAD');
-        if (res && res.status === 405) {
-            res = await tryProbe('GET');
-        }
         if (!res || !res.ok || res.status < 200 || res.status >= 300) {
+            try { res?.body?.cancel?.(); } catch (_) {}
             return null;
         }
 
         const finalUrl = res.url || candidateUrl;
-        if (!/uncensored/i.test(finalUrl)) return null;
-        if (getVideoCodeFromUrl(finalUrl) !== avCode) return null;
+        if (!/uncensored/i.test(finalUrl)) {
+            try { res?.body?.cancel?.(); } catch (_) {}
+            return null;
+        }
+        if (extractAvCodeFromUrlOnly(finalUrl) !== avCode) {
+            try { res?.body?.cancel?.(); } catch (_) {}
+            return null;
+        }
+
+        if (typeof res.text === 'function') {
+            const html = await res.text();
+            if (!isValidUncensoredHtml(html, avCode)) {
+                return null;
+            }
+        } else {
+            try { res?.body?.cancel?.(); } catch (_) {}
+        }
+
         return finalUrl;
     } catch (_) {
         return null;
     }
+}
+
+function getDefaultFetchFn() {
+    if (typeof unsafeWindow !== 'undefined' && unsafeWindow && typeof unsafeWindow.fetch === 'function') {
+        return unsafeWindow.fetch.bind(unsafeWindow);
+    }
+    if (typeof fetch === 'function') {
+        return fetch.bind(globalThis);
+    }
+    return null;
 }
 
 export class UncensoredSwitcher {
@@ -186,7 +257,7 @@ export class UncensoredSwitcher {
         navigate = true,
         win = typeof window !== 'undefined' ? window : null,
         doc = typeof document !== 'undefined' ? document : null,
-        fetchFn = typeof fetch === 'function' ? fetch.bind(globalThis) : null,
+        fetchFn = getDefaultFetchFn(),
         storage = typeof sessionStorage !== 'undefined' ? sessionStorage : null
     } = {}) {
         if (this._isChecking || !win?.location?.href) {
@@ -215,9 +286,9 @@ export class UncensoredSwitcher {
             // 1. 优先从页面 DOM 零请求探测同番号无码版链接
             let targetUrl = findUncensoredLinkInDocument(doc, currentUrl, pageInfo.avCode);
 
-            // 2. 回退至同源轻量候选 URL 探测
+            // 2. 回退至同源轻量候选 URL 探测（限制最多探测前 4 个最高概率候选）
             if (!targetUrl) {
-                const candidates = buildUncensoredCandidateUrls(currentUrl);
+                const candidates = buildUncensoredCandidateUrls(currentUrl).slice(0, 4);
                 for (const candidate of candidates) {
                     const matched = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn);
                     if (matched) {
@@ -255,14 +326,8 @@ export class UncensoredSwitcher {
         if (typeof window === 'undefined' || window.self !== window.top) return;
         if (!parseMissavVideoPage(window.location?.href)) return;
 
-        const run = () => {
+        setTimeout(() => {
             this.checkAndSwitch({ force: false, allowInTheater: false, navigate: true }).catch(() => {});
-        };
-
-        if (typeof window.requestIdleCallback === 'function') {
-            window.requestIdleCallback(run, { timeout: 1500 });
-        } else {
-            setTimeout(run, 250);
-        }
+        }, 80);
     }
 }

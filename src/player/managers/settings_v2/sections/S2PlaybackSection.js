@@ -325,28 +325,41 @@ export class S2PlaybackSection {
         card.appendChild(qualityRow.element);
 
         // 7. 自动无码（MissAV 存在无码版时自动切换）
+        const defaultUncensoredDesc = __('autoUncensoredDesc') || 'MissAV 存在无码版时自动切换';
         const uncensoredRow = createToggleRow({
             title: __('autoUncensored') || '自动无码',
-            subtext: __('autoUncensoredDesc') || 'MissAV 存在无码版时自动切换',
+            subtext: defaultUncensoredDesc,
             checked: Boolean(this.settings.autoUncensored),
             onChange: (checked) => {
                 this.sm.updateSetting('autoUncensored', checked);
-                if (checked && typeof window !== 'undefined' && parseMissavVideoPage(window.location?.href)) {
+                const subEl = uncensoredRow.element.querySelector('.mp-s2-row-sub');
+                if (!checked) {
+                    if (subEl) subEl.textContent = defaultUncensoredDesc;
+                    return;
+                }
+                if (typeof window !== 'undefined' && parseMissavVideoPage(window.location?.href)) {
+                    if (subEl) subEl.textContent = '正在检查无码版...';
                     const switcher = new UncensoredSwitcher();
                     switcher.checkAndSwitch({ force: true, allowInTheater: true, navigate: false }).then((res) => {
                         if (res?.found && res.url) {
-                            Toast(__('autoUncensoredFound') || '已找到无码版，即将切换...', 1500, 'info');
+                            const msg = __('autoUncensoredFound') || '已找到无码版，即将切换...';
+                            if (subEl) subEl.textContent = msg;
+                            Toast(msg, 1500, 'info');
                             setTimeout(() => {
                                 if (typeof window.location.replace === 'function') {
                                     window.location.replace(res.url);
                                 } else {
                                     window.location.href = res.url;
                                 }
-                            }, 550);
+                            }, 450);
                         } else {
-                            Toast(__('autoUncensoredNotFound') || '当前影片暂无无码版', 1800, 'info');
+                            const msg = __('autoUncensoredNotFound') || '当前影片暂无无码版';
+                            if (subEl) subEl.textContent = msg;
+                            Toast(msg, 1800, 'info');
                         }
-                    }).catch(() => {});
+                    }).catch(() => {
+                        if (subEl) subEl.textContent = defaultUncensoredDesc;
+                    });
                 }
             }
         });

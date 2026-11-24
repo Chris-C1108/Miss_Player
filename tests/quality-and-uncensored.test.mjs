@@ -89,6 +89,7 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
 {
     assert.ok(parseMissavVideoPage('https://missav.ai/dm84/cn/miaa-490'), '应识别 MissAV 标准详情页');
     assert.ok(parseMissavVideoPage('https://missav.ws/cn/ssis-888-chinese-subtitle'), '应识别 MissAV 备用域名与字幕后缀页');
+    assert.ok(parseMissavVideoPage('https://missav.live/cn/abp-123'), '应识别 MissAV 镜像域名');
     assert.strictEqual(parseMissavVideoPage('https://missav.ai/cn/miaa-490-uncensored-leak'), null, '已是无码版页面不得再触发');
     assert.strictEqual(parseMissavVideoPage('https://missav.ai/cn'), null, '语言首页不得触发');
     assert.strictEqual(parseMissavVideoPage('https://missav.ai/search/miaa-490'), null, '搜索页不得触发');
@@ -99,6 +100,10 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
         cands[0],
         'https://missav.ai/dm84/cn/miaa-490-uncensored-leak?ref=1',
         '应保留 /dm84/cn/ 与 query，并剥离 -chinese-subtitle 生成无码候选'
+    );
+    assert.ok(
+        cands.includes('https://missav.ai/cn/miaa-490-uncensored-leak?ref=1'),
+        '还应包含剥离 /dm84/ 分片后的标准无码候选 URL'
     );
     console.log('✅ 2. UncensoredSwitcher MissAV 路由判定与候选生成验证通过');
 }
@@ -146,7 +151,7 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
     assert.strictEqual(resAgain.reason, 'already_checked');
     assert.strictEqual(replacedUrl, null);
 
-    // Tier 2: HEAD 405 回退 GET，拒绝软跳转到首页的假 200
+    // Tier 2: 同源 GET 探活，拒绝软跳转到首页或软 404 HTML
     const emptyDoc = { body: { classList: { contains: () => false } }, querySelectorAll: () => [] };
     const sess2 = makeStorage();
     const mockWin2 = {
@@ -158,9 +163,13 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
     const methodsCalled = [];
     const mockFetch = async (url, opts) => {
         methodsCalled.push(opts.method);
-        if (opts.method === 'HEAD') return { ok: false, status: 405 };
         if (url.includes('ipx-811-uncensored-leak')) {
-            return { ok: true, status: 200, url };
+            return {
+                ok: true,
+                status: 200,
+                url,
+                text: async () => '<html><head><title>IPX-811 无码流出</title></head><body>ipx-811</body></html>'
+            };
         }
         return { ok: false, status: 404 };
     };
@@ -170,7 +179,7 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
         fetchFn: mockFetch,
         storage: sess2
     });
-    assert.deepStrictEqual(methodsCalled, ['HEAD', 'GET']);
+    assert.deepStrictEqual(methodsCalled, ['GET']);
     assert.strictEqual(res2.found, true);
     assert.strictEqual(replacedUrl, 'https://missav.ai/cn/ipx-811-uncensored-leak');
 
@@ -184,6 +193,22 @@ console.log('🧪 开始执行「自动高画质与 MissAV 自动无码切换」
         storage: sess3
     });
     assert.strictEqual(resSoft.found, false, '软跳转回首页不得误判为存在无码版');
+
+    // 软 404 HTML 页面必须拒绝
+    const sess4 = makeStorage();
+    const soft404Fetch = async (url) => ({
+        ok: true,
+        status: 200,
+        url,
+        text: async () => '<html><head><title>404 Not Found</title></head><body>找不到页面</body></html>'
+    });
+    const resSoft404 = await switcher.checkAndSwitch({
+        win: { location: { href: 'https://missav.ai/cn/ssis-101', replace: () => {} } },
+        doc: emptyDoc,
+        fetchFn: soft404Fetch,
+        storage: sess4
+    });
+    assert.strictEqual(resSoft404.found, false, '软 404 HTML 页面不得误判为存在无码版');
     console.log('✅ 3. UncensoredSwitcher DOM 匹配、探活降级与防死循环验证通过');
 }
 

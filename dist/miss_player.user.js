@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.122-beta.004
+// @version            5.7.122-beta.005
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1989,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.004";
+		return "5.7.122-beta.005";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4629,7 +4629,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.122-beta.004";
+		return "5.7.122-beta.005";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6772,7 +6772,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.004";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.122-beta.005";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -24796,6 +24796,21 @@
 	init_domains();
 	var STRIP_SUFFIX_RE = /(?:[-_](?:chinese[-_]?subtitles?|chinese[-_]?sub|subtitles?|sub|ch|c|4k|fhd|hd|reduced[-_]mosaic))+$/i;
 	var SESSION_KEY_PREFIX = "mp_uncensored_checked_";
+	function isMissavHost(hostname) {
+		if (!hostname || typeof hostname !== "string") return false;
+		return isSiteDomain("MISSAV", hostname) || /(?:^|\.)(?:missav[^.]*|thisav[^.]*)\./i.test(hostname);
+	}
+	function extractAvCodeFromUrlOnly(urlInput) {
+		try {
+			const parsed = typeof urlInput === "string" ? new URL(urlInput) : urlInput;
+			const segments = decodeURIComponent(parsed.pathname || "").split("/").filter(Boolean);
+			if (segments.length === 0) return "";
+			const leaf = segments[segments.length - 1];
+			return matchAvCodeFromText(leaf) || getVideoCodeFromUrl(parsed.href) || "";
+		} catch (_) {
+			return "";
+		}
+	}
 	function parseMissavVideoPage(rawUrl) {
 		if (!rawUrl || typeof rawUrl !== "string") return null;
 		let parsed;
@@ -24804,7 +24819,7 @@
 		} catch (_) {
 			return null;
 		}
-		if (!isSiteDomain("MISSAV", parsed.hostname)) return null;
+		if (!isMissavHost(parsed.hostname)) return null;
 		const segments = parsed.pathname.split("/").filter(Boolean);
 		if (segments.length === 0) return null;
 		const slug = segments[segments.length - 1];
@@ -24815,28 +24830,36 @@
 			const seg = segments[i].toLowerCase();
 			if (NON_AV_ROUTE_SLUGS.has(seg)) return null;
 		}
-		const avCode = getVideoCodeFromUrl(rawUrl);
+		const avCode = extractAvCodeFromUrlOnly(parsed);
 		if (!avCode) return null;
 		const prefixSegments = segments.slice(0, -1);
 		const prefixPath = prefixSegments.length ? `/${prefixSegments.join("/")}` : "";
+		const cleanPrefixSegments = prefixSegments.filter((seg, idx) => !(idx === 0 && /^dm\d+$/i.test(seg)));
+		const cleanPrefixPath = cleanPrefixSegments.length ? `/${cleanPrefixSegments.join("/")}` : "";
 		return {
 			url: parsed,
 			avCode,
 			slug,
-			prefixPath
+			prefixPath,
+			cleanPrefixPath
 		};
 	}
 	function buildUncensoredCandidateUrls(rawUrl) {
 		const info = parseMissavVideoPage(rawUrl);
 		if (!info) return [];
-		const { url, avCode, slug, prefixPath } = info;
+		const { url, avCode, slug, prefixPath, cleanPrefixPath } = info;
 		const baseSlug = slug.replace(STRIP_SUFFIX_RE, "") || avCode.toLowerCase();
 		const codeSlug = avCode.toLowerCase();
 		const slugBases = Array.from(new Set([baseSlug, codeSlug].filter(Boolean)));
-		const suffixes = ["-uncensored-leak", "-uncensored-leaked"];
+		const prefixes = Array.from(new Set([prefixPath, cleanPrefixPath].filter((p) => p !== void 0)));
+		const suffixes = [
+			"-uncensored-leak",
+			"-uncensored-leaked",
+			"-uncensored"
+		];
 		const candidates = [];
-		for (const base of slugBases) for (const suffix of suffixes) {
-			const candidate = `${url.origin}${prefixPath}/${base}${suffix}${url.search || ""}`;
+		for (const prefix of prefixes) for (const base of slugBases) for (const suffix of suffixes) {
+			const candidate = `${url.origin}${prefix}/${base}${suffix}${url.search || ""}`;
 			if (candidate !== rawUrl && !candidates.includes(candidate)) candidates.push(candidate);
 		}
 		return candidates;
@@ -24867,42 +24890,68 @@
 			const leaf = segments[segments.length - 1].toLowerCase();
 			if (!leaf.includes("-uncensored")) continue;
 			if (NON_AV_ROUTE_SLUGS.has(leaf)) continue;
-			if (getVideoCodeFromUrl(resolved.href) !== avCode) continue;
+			if (extractAvCodeFromUrlOnly(resolved) !== avCode) continue;
 			if (leaf.includes("uncensored-leak")) return resolved.href;
 			if (!fallbackMatch) fallbackMatch = resolved.href;
 		}
 		return fallbackMatch;
 	}
+	function isValidUncensoredHtml(html, avCode) {
+		if (!html || typeof html !== "string") return true;
+		const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+		const title = titleMatch ? titleMatch[1] : "";
+		if (/(?:404\s*not\s*found|page\s*not\s*found|error\s*404|找不到页面|頁面不存在)/i.test(title)) return false;
+		const lowerHtml = html.toLowerCase();
+		if (!lowerHtml.includes(avCode.toLowerCase()) && !lowerHtml.includes(avCode.replace(/-/g, "").toLowerCase())) return false;
+		return true;
+	}
 	async function probeUncensoredCandidate(candidateUrl, avCode, fetchFn) {
 		if (typeof fetchFn !== "function") return null;
-		const tryProbe = async (method) => {
+		try {
 			const res = await fetchFn(candidateUrl, {
-				method,
+				method: "GET",
 				credentials: "include",
 				redirect: "follow"
 			});
-			try {
+			if (!res || !res.ok || res.status < 200 || res.status >= 300) {
+				try {
+					res?.body?.cancel?.();
+				} catch (_) {}
+				return null;
+			}
+			const finalUrl = res.url || candidateUrl;
+			if (!/uncensored/i.test(finalUrl)) {
+				try {
+					res?.body?.cancel?.();
+				} catch (_) {}
+				return null;
+			}
+			if (extractAvCodeFromUrlOnly(finalUrl) !== avCode) {
+				try {
+					res?.body?.cancel?.();
+				} catch (_) {}
+				return null;
+			}
+			if (typeof res.text === "function") {
+				if (!isValidUncensoredHtml(await res.text(), avCode)) return null;
+			} else try {
 				res?.body?.cancel?.();
 			} catch (_) {}
-			return res;
-		};
-		try {
-			let res = await tryProbe("HEAD");
-			if (res && res.status === 405) res = await tryProbe("GET");
-			if (!res || !res.ok || res.status < 200 || res.status >= 300) return null;
-			const finalUrl = res.url || candidateUrl;
-			if (!/uncensored/i.test(finalUrl)) return null;
-			if (getVideoCodeFromUrl(finalUrl) !== avCode) return null;
 			return finalUrl;
 		} catch (_) {
 			return null;
 		}
 	}
+	function getDefaultFetchFn() {
+		if (typeof unsafeWindow !== "undefined" && unsafeWindow && typeof unsafeWindow.fetch === "function") return unsafeWindow.fetch.bind(unsafeWindow);
+		if (typeof fetch === "function") return fetch.bind(globalThis);
+		return null;
+	}
 	var UncensoredSwitcher = class {
 		constructor() {
 			this._isChecking = false;
 		}
-		async checkAndSwitch({ force = false, allowInTheater = false, navigate = true, win = typeof window !== "undefined" ? window : null, doc = typeof document !== "undefined" ? document : null, fetchFn = typeof fetch === "function" ? fetch.bind(globalThis) : null, storage = typeof sessionStorage !== "undefined" ? sessionStorage : null } = {}) {
+		async checkAndSwitch({ force = false, allowInTheater = false, navigate = true, win = typeof window !== "undefined" ? window : null, doc = typeof document !== "undefined" ? document : null, fetchFn = getDefaultFetchFn(), storage = typeof sessionStorage !== "undefined" ? sessionStorage : null } = {}) {
 			if (this._isChecking || !win?.location?.href) return {
 				found: false,
 				url: null,
@@ -24932,7 +24981,7 @@
 			try {
 				let targetUrl = findUncensoredLinkInDocument(doc, currentUrl, pageInfo.avCode);
 				if (!targetUrl) {
-					const candidates = buildUncensoredCandidateUrls(currentUrl);
+					const candidates = buildUncensoredCandidateUrls(currentUrl).slice(0, 4);
 					for (const candidate of candidates) {
 						const matched = await probeUncensoredCandidate(candidate, pageInfo.avCode, fetchFn);
 						if (matched) {
@@ -24976,15 +25025,13 @@
 			if (enabled !== true && enabled !== "true") return;
 			if (typeof window === "undefined" || window.self !== window.top) return;
 			if (!parseMissavVideoPage(window.location?.href)) return;
-			const run = () => {
+			setTimeout(() => {
 				this.checkAndSwitch({
 					force: false,
 					allowInTheater: false,
 					navigate: true
 				}).catch(() => {});
-			};
-			if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(run, { timeout: 1500 });
-			else setTimeout(run, 250);
+			}, 80);
 		}
 	};
 	var S2PlaybackSection = class {
@@ -25251,25 +25298,42 @@
 				}
 			});
 			card.appendChild(qualityRow.element);
+			const defaultUncensoredDesc = __$1("autoUncensoredDesc") || "MissAV 存在无码版时自动切换";
 			const uncensoredRow = createToggleRow({
 				title: __$1("autoUncensored") || "自动无码",
-				subtext: __$1("autoUncensoredDesc") || "MissAV 存在无码版时自动切换",
+				subtext: defaultUncensoredDesc,
 				checked: Boolean(this.settings.autoUncensored),
 				onChange: (checked) => {
 					this.sm.updateSetting("autoUncensored", checked);
-					if (checked && typeof window !== "undefined" && parseMissavVideoPage(window.location?.href)) new UncensoredSwitcher().checkAndSwitch({
-						force: true,
-						allowInTheater: true,
-						navigate: false
-					}).then((res) => {
-						if (res?.found && res.url) {
-							Toast$1(__$1("autoUncensoredFound") || "已找到无码版，即将切换...", 1500, "info");
-							setTimeout(() => {
-								if (typeof window.location.replace === "function") window.location.replace(res.url);
-								else window.location.href = res.url;
-							}, 550);
-						} else Toast$1(__$1("autoUncensoredNotFound") || "当前影片暂无无码版", 1800, "info");
-					}).catch(() => {});
+					const subEl = uncensoredRow.element.querySelector(".mp-s2-row-sub");
+					if (!checked) {
+						if (subEl) subEl.textContent = defaultUncensoredDesc;
+						return;
+					}
+					if (typeof window !== "undefined" && parseMissavVideoPage(window.location?.href)) {
+						if (subEl) subEl.textContent = "正在检查无码版...";
+						new UncensoredSwitcher().checkAndSwitch({
+							force: true,
+							allowInTheater: true,
+							navigate: false
+						}).then((res) => {
+							if (res?.found && res.url) {
+								const msg = __$1("autoUncensoredFound") || "已找到无码版，即将切换...";
+								if (subEl) subEl.textContent = msg;
+								Toast$1(msg, 1500, "info");
+								setTimeout(() => {
+									if (typeof window.location.replace === "function") window.location.replace(res.url);
+									else window.location.href = res.url;
+								}, 450);
+							} else {
+								const msg = __$1("autoUncensoredNotFound") || "当前影片暂无无码版";
+								if (subEl) subEl.textContent = msg;
+								Toast$1(msg, 1800, "info");
+							}
+						}).catch(() => {
+							if (subEl) subEl.textContent = defaultUncensoredDesc;
+						});
+					}
 				}
 			});
 			card.appendChild(uncensoredRow.element);
