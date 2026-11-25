@@ -224,6 +224,8 @@ export class ProgressManager {
         
         const targetTime = duration * relativePos;
         
+        this.playerCore?.cancelInitialSeekGuard?.();
+
         // 循环播放状态：若调整到循环区间外的时间则自动跳出循环播放
         if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === 'function') {
             this.loopManager.checkAndExitLoopIfOutside(targetTime);
@@ -244,6 +246,8 @@ export class ProgressManager {
         
         const newTime = Math.max(0, Math.min(this.targetVideo.duration, this.targetVideo.currentTime + seconds));
         
+        this.playerCore?.cancelInitialSeekGuard?.();
+
         // 循环播放状态：若调整到循环区间外的时间则自动跳出循环播放
         if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === 'function') {
             this.loopManager.checkAndExitLoopIfOutside(newTime);
@@ -268,6 +272,7 @@ export class ProgressManager {
         
         // 设置拖动状态
         this.isDraggingProgress = true;
+        this.playerCore?.cancelInitialSeekGuard?.();
         
         // 保存初始点击位置
         this.lastDragX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;

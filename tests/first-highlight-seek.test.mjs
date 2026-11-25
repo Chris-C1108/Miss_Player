@@ -8,7 +8,7 @@ globalThis.document = {
     removeEventListener() {}
 };
 
-const { PlayerCore } = await import('../src/player/core/PlayerCore.js');
+const { PlayerCore, getTheaterSessionKey, shouldTriggerInitialHighlight } = await import('../src/player/core/PlayerCore.js');
 
 console.log('🧪 开始执行「开播定位首个高光」防回跳与状态仲裁单元测试...');
 
@@ -233,12 +233,93 @@ function createMockVideo({ readyState = 1, duration = 3600, currentTime = 0, pau
 // 6. 验证 CustomVideoPlayer 初始化源码时序：assembleDOM 在 armInitialHighlightSeek 与 restoreVideoState 之前
 {
     const cvpSrc = fs.readFileSync('src/player/CustomVideoPlayer.js', 'utf8');
+    const pmSrc = fs.readFileSync('src/player/managers/ProgressManager.js', 'utf8');
     const assembleIdx = cvpSrc.indexOf('uiManager.assembleDOM();');
     const armIdx = cvpSrc.indexOf('this.playerCore.armInitialHighlightSeek(');
     const restoreIdx = cvpSrc.indexOf('this.playerCore.restoreVideoState({');
     assert.ok(assembleIdx !== -1 && armIdx !== -1 && restoreIdx !== -1, '关键调用点必须存在');
     assert.ok(assembleIdx < armIdx && armIdx < restoreIdx, '必须先 assembleDOM()，再安装首个高光守卫，最后调用 restoreVideoState({ skipTimeRestore })');
-    console.log('✅ 6. CustomVideoPlayer 启动初始化时序验证通过');
+    assert.ok(
+        cvpSrc.includes('this.playerCore.hasEnteredTheaterBefore(') &&
+        cvpSrc.includes('this.playerCore.markTheaterEntered(') &&
+        cvpSrc.includes('shouldTriggerInitialHighlight('),
+        'CustomVideoPlayer 必须记录并校验退出重入状态'
+    );
+    assert.ok(
+        pmSrc.includes('this.playerCore?.cancelInitialSeekGuard?.()'),
+        'ProgressManager 手动点击/拖拽进度条时必须立即撤防开播定位守卫'
+    );
+    console.log('✅ 6. CustomVideoPlayer 启动初始化时序与退出重入接线验证通过');
+}
+
+// 7. 验证「中途退出播放器后再次点击浮动按钮重入」不再跳回首个高光，而是继续当前视频播放进度
+{
+    const video = createMockVideo({ readyState: 2, duration: 3600, currentTime: 0, paused: true });
+    video.dataset = {};
+    const callingButton = {
+        _floatingButtonInstance: {}
+    };
+    const playerSettings = { betaMode: true, betaFirstCapsulePlay: true };
+    const sessionKey = getTheaterSessionKey(video, 'IPX-777', { pathname: '/cn/ipx-777' });
+    assert.strictEqual(sessionKey, 'code:IPX-777');
+
+    // 首次进入播放器：允许从首个高光开播，并打上已进入标记
+    const core1 = new PlayerCore({ callingButton });
+    core1.targetVideo = video;
+    assert.strictEqual(core1.hasEnteredTheaterBefore(sessionKey), false);
+    assert.strictEqual(
+        shouldTriggerInitialHighlight({
+            playerSettings,
+            hasTabs: true,
+            hasUrlDeepLink: false,
+            hasEnteredBefore: core1.hasEnteredTheaterBefore(sessionKey)
+        }),
+        true,
+        '首次打开播放器应触发开播定位首个高光'
+    );
+    core1.markTheaterEntered(sessionKey);
+
+    // 模拟播放到 1234 秒后中途退出播放器（新建/关闭实例）
+    video.currentTime = 1234;
+    core1.cancelInitialSeekGuard();
+
+    // 再次点击浮动按钮重入同一视频：新建 PlayerCore，继续 1234s 播放，绝不跳回首个高光
+    const core2 = new PlayerCore({ callingButton });
+    core2.targetVideo = video;
+    core2.videoState = { currentTime: video.currentTime, playbackRate: 1.0 };
+    const enteredBefore = core2.hasEnteredTheaterBefore(sessionKey);
+    assert.strictEqual(enteredBefore, true, '同一视频节点重入必须识别为已进入过播放器');
+    assert.strictEqual(
+        shouldTriggerInitialHighlight({
+            playerSettings,
+            hasTabs: true,
+            hasUrlDeepLink: false,
+            hasEnteredBefore: enteredBefore
+        }),
+        false,
+        '退出重入后不得再从首个高光位置播放'
+    );
+
+    // 模拟移动 Shadow DOM 导致重入瞬间 currentTime 被重置回 0：restoreVideoState 应恢复至 1234s
+    video.currentTime = 0;
+    core2.restoreVideoState({ skipTimeRestore: false });
+    assert.strictEqual(video.currentTime, 1234, '重入后必须继续当前视频播放进度 1234s');
+
+    // 即使宿主框架在退出后替换了新的 <video> 节点，只要是同一浮动按钮与同一视频 Key，也识别为重入
+    const recreatedVideo = createMockVideo({ readyState: 2, duration: 3600, currentTime: 980, paused: true });
+    recreatedVideo.dataset = {};
+    const core3 = new PlayerCore({ callingButton });
+    core3.targetVideo = recreatedVideo;
+    assert.strictEqual(
+        core3.hasEnteredTheaterBefore(sessionKey),
+        true,
+        '宿主重建 video 节点时应通过 FloatingButton 会话记录识别为重入'
+    );
+
+    // SPA 切换到另一部番号 SSIS-001 时，视为新视频首次开播，仍允许触发首个高光
+    const nextKey = getTheaterSessionKey(recreatedVideo, 'SSIS-001', { pathname: '/cn/ssis-001' });
+    assert.strictEqual(core3.hasEnteredTheaterBefore(nextKey), false, '切换到新番号时应重新允许首次高光开播');
+    console.log('✅ 7. 退出后点击浮动按钮重入续播（含宿主重建 video 与 SPA 换片隔离）验证通过');
 }
 
 console.log('🎉 「开播定位首个高光」所有单元测试全部通过！');

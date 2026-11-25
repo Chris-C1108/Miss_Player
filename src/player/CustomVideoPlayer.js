@@ -1,4 +1,4 @@
-import { PlayerCore } from './core/PlayerCore.js';
+import { PlayerCore, getTheaterSessionKey, shouldTriggerInitialHighlight } from './core/PlayerCore.js';
 import { UIManager } from './ui/UIManager.js';
 import { ControlManager } from './managers/ControlManager.js';
 import { DragManager } from './managers/DragManager.js';
@@ -336,15 +336,20 @@ export class CustomVideoPlayer {
         settingsManager.updateControlRowsVisibility();
 
         // Phase 7.4: 首个高光开播与断点续播仲裁 (须在 DOM 挂载后、restoreVideoState 之前执行，防止被 videoState.currentTime 覆盖或在 readyState < 2 / 起播时被 HLS/Safari 重置回 0)
+        // 若用户在本页已进入过播放器并中途退出，再次点击浮动按钮重入时不再跳回首个高光，而是继续当前视频播放进度
         const playerSettings = this.playerCore.options?.playerState?.settings;
         const hasUrlDeepLink = Boolean(loopManager._hasUrlDeepLink);
-        const shouldFirstCapsulePlay = Boolean(
-            playerSettings &&
-            playerSettings.betaMode &&
-            playerSettings.betaFirstCapsulePlay &&
-            loopManager.tabs.length > 0 &&
-            !hasUrlDeepLink
-        );
+        const sessionVideoKey = getTheaterSessionKey(this.playerCore.targetVideo, authoritativeCode);
+        this._sessionVideoKey = sessionVideoKey;
+        const hasEnteredBefore = this.playerCore.hasEnteredTheaterBefore(sessionVideoKey, this.callingButton);
+        this.playerCore.markTheaterEntered(sessionVideoKey, this.callingButton);
+
+        const shouldFirstCapsulePlay = shouldTriggerInitialHighlight({
+            playerSettings,
+            hasTabs: loopManager.tabs.length > 0,
+            hasUrlDeepLink,
+            hasEnteredBefore
+        });
 
         if (shouldFirstCapsulePlay && this.playerCore.targetVideo) {
             const firstTab = loopManager.tabs[0];
@@ -370,6 +375,15 @@ export class CustomVideoPlayer {
         this.playerCore.restoreVideoState({
             skipTimeRestore: shouldFirstCapsulePlay || hasUrlDeepLink
         });
+
+        // 退出重入且当前视频已有播放进度时，防护移动 Shadow DOM / Safari 起播瞬间把进度洗回 0
+        const resumeProgressTime = this.playerCore.videoState?.currentTime || 0;
+        if (hasEnteredBefore && !hasUrlDeepLink && resumeProgressTime > 1 && this.playerCore.targetVideo) {
+            this.playerCore.armInitialHighlightSeek(resumeProgressTime, {
+                progressManager,
+                loopManager
+            });
+        }
         
         // 更新进度条
         progressManager.updateProgressBar();
@@ -480,6 +494,9 @@ export class CustomVideoPlayer {
         }
 
         // 调用PlayerCore的close方法
+        if (this._sessionVideoKey) {
+            this.playerCore?.markTheaterEntered?.(this._sessionVideoKey, this.callingButton);
+        }
         this.playerCore?.cancelInitialSeekGuard?.();
         this.playerCore.close(
             this.managers.uiManager.overlay, 

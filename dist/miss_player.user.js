@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.123-beta.001
+// @version            5.7.123-beta.002
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1989,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.123-beta.001";
+		return "5.7.123-beta.002";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4200,6 +4200,18 @@
 			this.volumeButton = null;
 		}
 	};
+	function getTheaterSessionKey(video, avCode = "", loc = typeof window !== "undefined" ? window.location : null) {
+		const cleanCode = avCode ? cleanAvCode(avCode) : "";
+		if (cleanCode) return `code:${cleanCode}`;
+		const pathname = loc && typeof loc.pathname === "string" ? loc.pathname : "";
+		if (pathname) return `path:${pathname}`;
+		const src = video?.currentSrc || video?.src || "";
+		if (src) return `src:${src}`;
+		return "default";
+	}
+	function shouldTriggerInitialHighlight({ playerSettings = null, hasTabs = false, hasUrlDeepLink = false, hasEnteredBefore = false } = {}) {
+		return Boolean(playerSettings && playerSettings.betaMode && playerSettings.betaFirstCapsulePlay && hasTabs && !hasUrlDeepLink && !hasEnteredBefore);
+	}
 	var PlayerCore = class {
 		constructor(options = {}) {
 			console.log("[PlayerCore] 初始化...");
@@ -4373,6 +4385,24 @@
 		getVideoCode({ refresh = false } = {}) {
 			return this.resolveVideoCode({ refresh });
 		}
+		hasEnteredTheaterBefore(sessionKey, callingButton = this.callingButton) {
+			if (!sessionKey) return false;
+			if (this.targetVideo?.dataset?.mpTheaterEnteredKey === sessionKey) return true;
+			const fb = callingButton?._floatingButtonInstance;
+			return Boolean(fb?._enteredTheaterKeys?.has?.(sessionKey));
+		}
+		markTheaterEntered(sessionKey, callingButton = this.callingButton) {
+			if (!sessionKey) return;
+			if (this.targetVideo) {
+				if (!this.targetVideo.dataset) this.targetVideo.dataset = {};
+				this.targetVideo.dataset.mpTheaterEnteredKey = sessionKey;
+			}
+			const fb = callingButton?._floatingButtonInstance;
+			if (fb) {
+				if (!fb._enteredTheaterKeys) fb._enteredTheaterKeys = new Set();
+				fb._enteredTheaterKeys.add(sessionKey);
+			}
+		}
 		init() {
 			if (this.initialized) return;
 			this.cleanupExistingOverlays();
@@ -4456,17 +4486,16 @@
 				this.targetVideo.addEventListener("loadedmetadata", restoreSpeedOnReady, { once: true });
 				this.targetVideo.addEventListener("canplay", restoreSpeedOnReady, { once: true });
 				if (!skipTimeRestore && this.videoState && this.videoState.currentTime > 0) {
-					if (this.targetVideo.readyState >= 1) try {
-						this.targetVideo.currentTime = this.videoState.currentTime;
-					} catch (_) {}
-					else {
-						const restoreTimeOnReady = () => {
-							if (this.targetVideo && this.videoState && this.videoState.currentTime > 0) try {
-								this.targetVideo.currentTime = this.videoState.currentTime;
-							} catch (_) {}
-						};
-						this.targetVideo.addEventListener("loadedmetadata", restoreTimeOnReady, { once: true });
-					}
+					const targetResumeTime = this.videoState.currentTime;
+					const syncResumeTimeIfNeeded = () => {
+						if (!this.targetVideo) return;
+						const current = Number(this.targetVideo.currentTime) || 0;
+						if (Math.abs(current - targetResumeTime) > .5) try {
+							this.targetVideo.currentTime = targetResumeTime;
+						} catch (_) {}
+					};
+					if (this.targetVideo.readyState >= 1) syncResumeTimeIfNeeded();
+					else this.targetVideo.addEventListener("loadedmetadata", syncResumeTimeIfNeeded, { once: true });
 				}
 				const attemptPlay = () => {
 					if (!this.targetVideo) return;
@@ -4634,7 +4663,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.123-beta.001";
+		return "5.7.123-beta.002";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6777,7 +6806,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.123-beta.001";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.123-beta.002";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -23086,6 +23115,7 @@
 			const duration = this.targetVideo.duration;
 			if (isNaN(duration)) return;
 			const targetTime = duration * relativePos;
+			this.playerCore?.cancelInitialSeekGuard?.();
 			if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === "function") this.loopManager.checkAndExitLoopIfOutside(targetTime);
 			this.targetVideo.currentTime = targetTime;
 			this.updateProgressBar();
@@ -23093,6 +23123,7 @@
 		seekRelative(seconds) {
 			if (!this.targetVideo) return;
 			const newTime = Math.max(0, Math.min(this.targetVideo.duration, this.targetVideo.currentTime + seconds));
+			this.playerCore?.cancelInitialSeekGuard?.();
 			if (this.loopManager && typeof this.loopManager.checkAndExitLoopIfOutside === "function") this.loopManager.checkAndExitLoopIfOutside(newTime);
 			this.targetVideo.currentTime = newTime;
 		}
@@ -23104,6 +23135,7 @@
 			e.preventDefault();
 			e.stopPropagation();
 			this.isDraggingProgress = true;
+			this.playerCore?.cancelInitialSeekGuard?.();
 			this.lastDragX = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
 			this.progressBarElement.classList.add("tm-progress-bar-expanded");
 			this.progressBarElement.classList.remove("tm-progress-bar-normal");
@@ -30994,7 +31026,16 @@
 				settingsManager.updateControlRowsVisibility();
 				const playerSettings = this.playerCore.options?.playerState?.settings;
 				const hasUrlDeepLink = Boolean(loopManager._hasUrlDeepLink);
-				const shouldFirstCapsulePlay = Boolean(playerSettings && playerSettings.betaMode && playerSettings.betaFirstCapsulePlay && loopManager.tabs.length > 0 && !hasUrlDeepLink);
+				const sessionVideoKey = getTheaterSessionKey(this.playerCore.targetVideo, authoritativeCode);
+				this._sessionVideoKey = sessionVideoKey;
+				const hasEnteredBefore = this.playerCore.hasEnteredTheaterBefore(sessionVideoKey, this.callingButton);
+				this.playerCore.markTheaterEntered(sessionVideoKey, this.callingButton);
+				const shouldFirstCapsulePlay = shouldTriggerInitialHighlight({
+					playerSettings,
+					hasTabs: loopManager.tabs.length > 0,
+					hasUrlDeepLink,
+					hasEnteredBefore
+				});
 				if (shouldFirstCapsulePlay && this.playerCore.targetVideo) {
 					const firstTab = loopManager.tabs[0];
 					const targetTime = firstTab.startTime !== void 0 && firstTab.startTime !== null ? firstTab.startTime : firstTab.time || 0;
@@ -31016,6 +31057,11 @@
 					});
 				}
 				this.playerCore.restoreVideoState({ skipTimeRestore: shouldFirstCapsulePlay || hasUrlDeepLink });
+				const resumeProgressTime = this.playerCore.videoState?.currentTime || 0;
+				if (hasEnteredBefore && !hasUrlDeepLink && resumeProgressTime > 1 && this.playerCore.targetVideo) this.playerCore.armInitialHighlightSeek(resumeProgressTime, {
+					progressManager,
+					loopManager
+				});
 				progressManager.updateProgressBar();
 				progressManager.updateCurrentTimeDisplay();
 				updateSafariThemeColor("#000000", true);
@@ -31085,6 +31131,7 @@
 				if (typeof this._originScrollY === "number") this._originalScrollTo.call(window, this._originScrollX || 0, this._originScrollY);
 				this._originalScrollTo = null;
 			}
+			if (this._sessionVideoKey) this.playerCore?.markTheaterEntered?.(this._sessionVideoKey, this.callingButton);
 			this.playerCore?.cancelInitialSeekGuard?.();
 			this.playerCore.close(this.managers.uiManager.overlay, this.managers.uiManager.container, this.managers.uiManager.playerContainer, this.managers.uiManager.rootHost);
 			if (this.managers.eventManager) this.managers.eventManager.cleanup();

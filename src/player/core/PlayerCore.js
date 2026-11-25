@@ -4,6 +4,45 @@ import { checkShouldDefaultMute } from '../controls/VolumeController.js';
 import { getVideoCodeFromUrl, cleanAvCode } from '../../utils/videoCode.js';
 
 /**
+ * 生成当前视频在页面会话内的唯一识别键，用于区分「首次开播」与「退出后重入」
+ * @param {HTMLVideoElement | null} video
+ * @param {string} [avCode]
+ * @param {Location | { pathname?: string } | null} [loc]
+ * @returns {string}
+ */
+export function getTheaterSessionKey(video, avCode = '', loc = (typeof window !== 'undefined' ? window.location : null)) {
+    const cleanCode = avCode ? cleanAvCode(avCode) : '';
+    if (cleanCode) return `code:${cleanCode}`;
+    const pathname = loc && typeof loc.pathname === 'string' ? loc.pathname : '';
+    if (pathname) return `path:${pathname}`;
+    const src = video?.currentSrc || video?.src || '';
+    if (src) return `src:${src}`;
+    return 'default';
+}
+
+/**
+ * 仲裁是否允许在进入播放器时自动定位到首个高光
+ * 仅在首次打开当前视频时生效；中途退出后再点浮动按钮重入时必须继续当前视频进度
+ * @param {{ playerSettings?: any, hasTabs?: boolean, hasUrlDeepLink?: boolean, hasEnteredBefore?: boolean }} [params]
+ * @returns {boolean}
+ */
+export function shouldTriggerInitialHighlight({
+    playerSettings = null,
+    hasTabs = false,
+    hasUrlDeepLink = false,
+    hasEnteredBefore = false
+} = {}) {
+    return Boolean(
+        playerSettings &&
+        playerSettings.betaMode &&
+        playerSettings.betaFirstCapsulePlay &&
+        hasTabs &&
+        !hasUrlDeepLink &&
+        !hasEnteredBefore
+    );
+}
+
+/**
  * 播放器核心类 - 负责播放器的基本功能和状态管理
  */
 export class PlayerCore {
@@ -267,6 +306,43 @@ export class PlayerCore {
     }
 
     /**
+     * 判断当前视频在本页会话中是否已经进入/退出过播放器
+     * @param {string} sessionKey
+     * @param {HTMLElement | null} [callingButton]
+     * @returns {boolean}
+     */
+    hasEnteredTheaterBefore(sessionKey, callingButton = this.callingButton) {
+        if (!sessionKey) return false;
+        if (this.targetVideo?.dataset?.mpTheaterEnteredKey === sessionKey) {
+            return true;
+        }
+        const fb = callingButton?._floatingButtonInstance;
+        return Boolean(fb?._enteredTheaterKeys?.has?.(sessionKey));
+    }
+
+    /**
+     * 记录当前视频已进入过播放器，防止中途退出后再次点击浮动按钮时重复从首个高光开播
+     * @param {string} sessionKey
+     * @param {HTMLElement | null} [callingButton]
+     */
+    markTheaterEntered(sessionKey, callingButton = this.callingButton) {
+        if (!sessionKey) return;
+        if (this.targetVideo) {
+            if (!this.targetVideo.dataset) {
+                this.targetVideo.dataset = {};
+            }
+            this.targetVideo.dataset.mpTheaterEnteredKey = sessionKey;
+        }
+        const fb = callingButton?._floatingButtonInstance;
+        if (fb) {
+            if (!fb._enteredTheaterKeys) {
+                fb._enteredTheaterKeys = new Set();
+            }
+            fb._enteredTheaterKeys.add(sessionKey);
+        }
+    }
+
+    /**
      * 初始化播放器
      */
     init() {
@@ -409,19 +485,20 @@ export class PlayerCore {
             
             // 仅在已有实际进度且未被开播高光/深链跳转接管时安全恢复播放位置，避免未就绪时抛出异常或覆盖目标跳转进度
             if (!skipTimeRestore && this.videoState && this.videoState.currentTime > 0) {
+                const targetResumeTime = this.videoState.currentTime;
+                const syncResumeTimeIfNeeded = () => {
+                    if (!this.targetVideo) return;
+                    const current = Number(this.targetVideo.currentTime) || 0;
+                    if (Math.abs(current - targetResumeTime) > 0.5) {
+                        try {
+                            this.targetVideo.currentTime = targetResumeTime;
+                        } catch (_) {}
+                    }
+                };
                 if (this.targetVideo.readyState >= 1) {
-                    try {
-                        this.targetVideo.currentTime = this.videoState.currentTime;
-                    } catch (_) {}
+                    syncResumeTimeIfNeeded();
                 } else {
-                    const restoreTimeOnReady = () => {
-                        if (this.targetVideo && this.videoState && this.videoState.currentTime > 0) {
-                            try {
-                                this.targetVideo.currentTime = this.videoState.currentTime;
-                            } catch (_) {}
-                        }
-                    };
-                    this.targetVideo.addEventListener('loadedmetadata', restoreTimeOnReady, { once: true });
+                    this.targetVideo.addEventListener('loadedmetadata', syncResumeTimeIfNeeded, { once: true });
                 }
             }
 
