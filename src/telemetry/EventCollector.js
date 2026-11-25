@@ -13,7 +13,7 @@ function getScriptVersion() {
             return GM_info.script.version;
         }
     } catch (_) {}
-    return '5.7.123-beta.003';
+    return '5.7.123';
 }
 
 export class EventCollector {
