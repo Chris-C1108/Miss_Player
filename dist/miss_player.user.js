@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.123-beta.002
+// @version            5.7.123-beta.003
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1989,7 +1989,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.123-beta.002";
+		return "5.7.123-beta.003";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2540,10 +2540,13 @@
 			subtitleLangAuto: "Auto",
 			subtitleLangZh: "ZH",
 			subtitleLangZhTw: "TW",
+			subtitleLangZhFromTw: "ZH (Conv)",
+			subtitleLangZhTwFromZh: "TW (Conv)",
 			subtitleLangJa: "JA",
 			subtitleLangEn: "EN",
 			subtitleLangKo: "KO",
 			subtitleAutoSaved: "Auto-loaded & saved subtitle",
+			subtitleAutoSavedConverted: "Auto-loaded & converted Chinese subtitle",
 			modeNormal: "Normal Play",
 			modeNormalShort: "Normal",
 			modeNormalDesc: "Play full video continuously.",
@@ -2854,10 +2857,13 @@
 			subtitleLangAuto: "自动",
 			subtitleLangZh: "简中",
 			subtitleLangZhTw: "繁中",
+			subtitleLangZhFromTw: "简中(繁转)",
+			subtitleLangZhTwFromZh: "繁中(简转)",
 			subtitleLangJa: "日语",
 			subtitleLangEn: "英语",
 			subtitleLangKo: "韩语",
 			subtitleAutoSaved: "已自动加载并收藏偏好字幕",
+			subtitleAutoSavedConverted: "已自动加载并完成繁简转换",
 			modeNormal: "正常播放",
 			modeNormalShort: "正常",
 			modeNormalDesc: "连续播放完整视频。",
@@ -3148,10 +3154,13 @@
 			subtitleLangAuto: "自動",
 			subtitleLangZh: "簡中",
 			subtitleLangZhTw: "繁中",
+			subtitleLangZhFromTw: "簡中(繁轉)",
+			subtitleLangZhTwFromZh: "繁中(簡轉)",
 			subtitleLangJa: "日語",
 			subtitleLangEn: "英語",
 			subtitleLangKo: "韓語",
 			subtitleAutoSaved: "已自動載入並收藏偏好字幕",
+			subtitleAutoSavedConverted: "已自動載入並完成簡繁轉換",
 			modeNormal: "正常播放",
 			modeNormalShort: "正常",
 			modeNormalDesc: "連續播放完整影片。",
@@ -3440,10 +3449,13 @@
 			subtitleLangAuto: "自動",
 			subtitleLangZh: "簡体",
 			subtitleLangZhTw: "繁体",
+			subtitleLangZhFromTw: "簡体(変換)",
+			subtitleLangZhTwFromZh: "繁体(変換)",
 			subtitleLangJa: "日本語",
 			subtitleLangEn: "英語",
 			subtitleLangKo: "韓国語",
 			subtitleAutoSaved: "優先字幕を自動保存しました",
+			subtitleAutoSavedConverted: "優先字幕を簡繁変換して保存しました",
 			modeNormal: "通常再生",
 			modeNormalShort: "通常",
 			modeNormalDesc: "動画全体を連続再生。",
@@ -3731,10 +3743,13 @@
 			subtitleLangAuto: "Tự động",
 			subtitleLangZh: "ZH",
 			subtitleLangZhTw: "TW",
+			subtitleLangZhFromTw: "ZH (Chuyển)",
+			subtitleLangZhTwFromZh: "TW (Chuyển)",
 			subtitleLangJa: "JA",
 			subtitleLangEn: "EN",
 			subtitleLangKo: "KO",
 			subtitleAutoSaved: "Đã tự tải & lưu phụ đề ưu tiên",
+			subtitleAutoSavedConverted: "Đã tự tải & chuyển đổi giản-phồn",
 			modeNormal: "Phát bình thường",
 			modeNormalShort: "Chuẩn",
 			modeNormalDesc: "Phát liên tục toàn bộ video.",
@@ -4663,7 +4678,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.123-beta.002";
+		return "5.7.123-beta.003";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6806,7 +6821,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.123-beta.002";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.123-beta.003";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -28381,6 +28396,9 @@
 			cues: normalizeCues(cues)
 		};
 	}
+	function cuesToPlainText(cues) {
+		return (cues || []).map((cue) => cue.text).join("\n");
+	}
 	function normalizeCodeKey(code) {
 		return String(code || "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/\d+/g, (digits) => digits.replace(/^0+(?=\d)/, ""));
 	}
@@ -28942,6 +28960,355 @@
 	};
 	SubtitleRepository._lastSyncAt = 0;
 	SubtitleRepository._pendingTimer = null;
+	var S2T_FROM = "万与丑专业丛东丝丢两严丧个丰临为丽举么义乌乐乔习乡书买乱争于亏云亘亚产亩亲亵亸亿仅仆从仑仓仪们价众优会伛伞伟传伣伤伥伦伧伪伫体佣佥侠侣侥侦侧侨侩侪侬俣俦俨俩俪俫俭债倾偬偻偾偿傥傧储傩儿兑兖党兰关兴兹养兽冁内冈册写军农冯冲决况冻净凄凉减凑凛几凤凫凭凯击凿刍刘则刚创删别刬刭刹刽刿剀剂剐剑剥剧劝办务劢动励劲劳势勋勚匀匦匮区医华协单卖占卢卤卧卫却厂厅历厉压厌厍厐厕厘厢厣厦厨厩厮县叁参叆叇双发变叙叠叶号叹叽后吓吕吗吣吨听启吴呐呒呓呕呖呗员呙呛呜咏咙咛咝咤响哑哒哓哔哕哗哙哜哝哟唛唝唠唡唢唤啧啬啭啮啰啴啸喂喷喽喾嗫嗳嘘嘤嘱噜嚣团园囱围囵国图圆圣圹场坂坏块坚坛坜坝坞坟坠垄垅垆垒垦垩垫垭垯垱垲垴埘埙埚埯堑堕塆墙壮声壳壶壸处备复够头夸夹夺奁奂奋奖奥妆妇妈妩妪妫姗姹娄娅娆娇娈娱娲娴婳婴婵婶媪媭嫒嫔嫱嬷孙学孪宁宝实宠审宪宫宽宾寝对寻导寿将尔尘尝尧尴尸尽层屃屉届属屡屦屿岁岂岖岗岘岙岚岛岭岽岿峃峄峡峣峤峥峦崂崃崄崭嵘嵚嵝巅巩巯币帅师帏帐帘帜带帧帮帱帻帼幂干并广庄庆庐庑库应庙庞废庼廪开异弃弑张弥弪弯弹强归当录彟彦彷彻征径徕忆忏忧忾怀态怂怃怄怅怆怜总怼怿恋恒恳恶恸恹恺恻恼恽悦悫悬悭悮悯惊惧惨惩惫惬惭惮惯愠愤愦愿慑慭懑懒懔戆戋戏戗战戬戯户扑执扩扪扫扬扰抚抛抟抠抡抢护报担拟拢拣拥拦拧拨择挂挚挛挜挝挞挟挠挡挢挣挤挥挦挽捝捞损捡换捣据掳掴掷掸掺掼揽揾揿搀搁搂搅携摄摅摆摇摈摊撄撑撵撷撸撺擞攒敌敛敩数斋斓斗斩断无旧时旷旸昙昵昼昽显晋晒晓晔晕晖暂暧术朴机杀杂权杆杠条来杨杩杰极构枞枢枣枥枧枨枪枫枭柜柠柽栀栅标栈栉栊栋栌栎栏树栖样栾桠桡桢档桤桥桦桧桨桩梦梼梾梿检棁棂棱椁椟椠椤椭楼榄榅榇榈榉槚槛槟槠横樯樱橥橱橹橼檩欢欤欧歼殁殇残殒殓殚殡殴毁毂毕毙毡毵氇气氢氩氲汇汉汤汹沉沟没沣沤沥沦沧沨沩沪泄泞泪泶泷泸泺泻泼泽泾洁洒洼浃浅浆浇浈浉浊测浍济浏浐浑浒浓浔浕涂涌涛涝涞涟涠涡涢涣涤润涧涨涩淀渊渌渍渎渐渑渔渖渗温湾湿溁溃溅溆溇滗滚滞滟滠满滢滤滥滦滨滩滪漓漤潆潇潋潍潜潴澛澜濑濒灏灭灯灵灾灿炀炉炖炜炝点炼炽烁烂烃烛烟烦烧烨烩烫烬热焕焖焘煴爱爷牍牦牵牺犊状犷犸犹狈狝狞独狭狮狯狰狱狲猃猎猕猡猪猫猬献獭玑玙玚玛玮环现玱玺珐珑珰珲琎琏琐琼瑶瑷璎瓒瓮瓯电画畅畴疖疗疟疠疡疬疭疮疯疱疴痈痉痒痖痨痪痫瘅瘆瘗瘘瘪瘫瘾瘿癞癣癫皑皱皲盏盐监盖盗盘眍眦眬着睁睐睑睾瞆瞒瞩矫矶矾矿砀码砖砗砚砜砺砻砾础硁硕硖硗硙硚确硷碍碛碜碱礴礼祃祎祢祯祷祸禀禄禅离秃秆种积称秽秾稆税稣稳穑穷窃窍窎窑窜窝窥窦窭竖竞笃笋笔笕笺笼笾筑筚筛筜筝筹筼签简箓箦箧箨箩箪箫篑篓篮篯篱簖籁籴类籼粜粝粤粪粮糁糇紧絷纟纠纡红纣纤纥约级纨纩纪纫纬纭纮纯纰纱纲纳纴纵纶纷纸纹纺纻纼纽纾线绀绁绂练组绅细织终绉绊绋绌绍绎经绐绑绒结绔绕绖绗绘给绚绛络绝绞统绠绡绢绣绤绥绦继绨绩绪绫绬续绮绯绰绱绲绳维绵绶绷绸绹绺绻综绽绾绿缀缁缂缃缄缅缆缇缈缉缊缋缌缍缎缏缐缑缒缓缔缕编缗缘缙缚缛缜缝缞缟缠缡缢缣缤缥缦缧缨缩缪缫缬缭缮缯缰缱缲缳缴缵罂网罗罚罢罴羁羟羡翘翙翚耢耧耸耻聂聋职聍联聩聪肃肠肤肮肾肿胀胁胆胜胧胨胪胫胶脉脍脏脐脑脓脔脚脱脶脸腊腌腘腭腻腽腾膑膻臜舆舍舣舰舱舻艰艳艺节芈芗芜芦苁苇苈苋苌苍苎苏苧苹范茎茏茑茔茕茧荆荐荙荚荛荜荞荟荠荡荣荤荥荦荧荨荩荪荫荬荭荮药莅莱莲莳莴莶获莸莹莺莼萚萝萤营萦萧萨葱蒇蒉蒋蒌蓝蓟蓠蓣蓥蓦蔂蔷蔹蔺蔼蕰蕲蕴薮藓蘖虏虑虚虫虬虮虱虽虾虿蚀蚁蚂蚕蚝蚬蛊蛎蛏蛮蛰蛱蛲蛳蛴蜕蜗蜡蝇蝈蝉蝎蝼蝾螀螨蟏衅衔补衬衮袄袅袆袜袭袯装裆裈裢裣裤裥褛褴襕见观觃规觅视觇览觉觊觋觌觍觎觏觐觑觞触觯訚詟誉誊讠计订讣认讥讦讧讨让讪讫讬训议讯记讱讲讳讴讵讶讷许讹论讻讼讽设访诀证诂诃评诅识诇诈诉诊诋诌词诎诏诐译诒诓诔试诖诗诘诙诚诛诜话诞诟诠诡询诣诤该详诧诨诩诪诫诬语诮误诰诱诲诳说诵诶请诸诹诺读诼诽课诿谀谁谂调谄谅谆谇谈谊谋谌谍谎谏谐谑谒谓谔谕谖谗谘谙谚谛谜谝谞谟谠谡谢谣谤谥谦谧谨谩谪谫谬谭谮谯谰谱谲谳谴谵谶豮贝贞负贠贡财责贤败账货质贩贪贫贬购贮贯贰贱贲贳贴贵贶贷贸费贺贻贼贽贾贿赀赁赂赃资赅赆赇赈赉赊赋赌赍赎赏赐赑赒赓赔赕赖赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵赶趋趱趸跃跄跞践跶跷跸跹跻踊踌踪踬踯蹑蹒蹰蹿躏躜躯车轧轨轩轪轫转轭轮软轰轱轲轳轴轵轶轷轸轹轺轻轼载轾轿辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒输辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选逊递逦逻遗遥邓邝邬邮邹邺邻郏郐郑郓郦郧郸酂酝酦酱酽酾酿采释鉴銮錾钅钆钇针钉钊钋钌钍钎钏钐钑钒钓钔钕钖钗钘钙钚钛钜钝钞钟钠钡钢钣钤钥钦钧钨钩钪钫钬钭钮钯钰钱钲钳钴钵钶钷钸钹钺钻钼钽钾钿铀铁铂铃铄铅铆铇铈铉铊铋铌铍铎铏铐铑铒铓铔铕铖铗铘铙铚铛铜铝铞铟铠铡铢铣铤铥铦铧铨铩铪铫铬铭铮铯铰铱铲铳铴铵银铷铸铹铺铻铼铽链铿销锁锂锃锄锅锆锇锈锉锊锋锌锍锎锏锐锑锒锓锔锕锖锗锘错锚锛锜锝锞锟锠锡锢锣锤锥锦锧锨锩锪锫锬锭键锯锰锱锲锳锴锵锶锷锸锹锺锻锼锽锾锿镀镁镂镃镄镅镆镇镈镉镊镋镌镍镎镏镐镑镒镓镔镕镖镗镘镙镚镛镜镝镞镟镠镡镢镣镤镥镦镧镨镩镪镫镬镭镮镯镰镱镲镳镴镵镶长门闩闪闫闬闭问闯闰闱闲闳间闵闶闷闸闹闺闻闼闽闾闿阀阁阂阃阄阅阆阇阈阉阊阋阌阍阎阏阐阑阒阓阔阕阖阗阘阙阚阛队阳阴阵阶际陆陇陈陉陕陧陨险随隐隶隽难雏雠雳雾霁霡霭靓静靥鞑鞒鞯韦韧韨韩韪韫韬韵页顶顷顸项顺须顼顽顾顿颀颁颂颃预颅领颇颈颉颊颋颌颍颎颏颐频颒颓颔颕颖颗题颙颚颛颜额颞颟颠颡颢颤颥颦颧风飏飐飑飒飓飔飕飖飗飘飙飚飞飨餍饣饤饥饦饧饨饩饪饫饬饭饮饯饰饱饲饳饴饵饶饷饸饹饺饻饼饽饾饿馀馁馂馃馄馅馆馇馈馉馊馋馌馍馎馏馐馑馒馓馔馕马驭驮驯驰驱驲驳驴驵驶驷驸驹驺驻驼驽驾驿骀骁骂骃骄骅骆骇骈骉骊骋验骍骎骏骐骑骒骓骔骕骖骗骘骙骚骛骜骝骞骟骠骡骢骣骤骥骦骧髅髋髌鬓鬶魇魉鱼鱽鱾鱿鲀鲁鲂鲃鲄鲅鲆鲇鲈鲉鲊鲋鲌鲍鲎鲏鲐鲑鲒鲓鲔鲕鲖鲗鲘鲙鲚鲛鲜鲝鲞鲟鲠鲡鲢鲣鲤鲥鲦鲧鲨鲩鲪鲫鲬鲭鲮鲯鲰鲱鲲鲳鲴鲵鲶鲷鲸鲹鲺鲻鲼鲽鲾鲿鳀鳁鳂鳃鳄鳅鳆鳇鳈鳉鳊鳋鳌鳍鳎鳏鳐鳑鳒鳓鳔鳕鳖鳗鳘鳙鳚鳛鳜鳝鳞鳟鳠鳡鳢鳣鳤鸟鸠鸡鸢鸣鸤鸥鸦鸧鸨鸩鸪鸫鸬鸭鸮鸯鸰鸱鸲鸳鸴鸵鸶鸷鸸鸹鸺鸻鸼鸽鸾鸿鹀鹁鹂鹃鹄鹅鹆鹇鹈鹉鹊鹋鹌鹍鹎鹏鹐鹑鹒鹓鹔鹕鹖鹗鹘鹙鹚鹛鹜鹝鹞鹟鹠鹡鹢鹣鹤鹥鹦鹧鹨鹩鹪鹫鹬鹭鹮鹯鹰鹱鹲鹳鹴鹾麦麸麹黄黉黡黩黪黾鼋鼍鼗鼹齐齑齿龀龁龂龃龄龅龆龇龈龉龊龋龌龙龚龛龟鿎鿏鿔鿭";
+	var S2T_TO = "萬與醜專業叢東絲丟兩嚴喪個豐臨為麗舉麼義烏樂喬習鄉書買亂爭於虧雲亙亞產畝親褻嚲億僅僕從侖倉儀們價眾優會傴傘偉傳俔傷倀倫傖偽佇體傭僉俠侶僥偵側僑儈儕儂俁儔儼倆儷倈儉債傾傯僂僨償儻儐儲儺兒兌兗黨蘭關興茲養獸囅內岡冊寫軍農馮衝決況凍淨淒涼減湊凜幾鳳鳧憑凱擊鑿芻劉則剛創刪別剗剄剎劊劌剴劑剮劍剝劇勸辦務勱動勵勁勞勢勳勩勻匭匱區醫華協單賣佔盧鹵臥衛卻廠廳歷厲壓厭厙龎廁釐廂厴廈廚廄廝縣叄參靉靆雙發變敘疊葉號嘆嘰後嚇呂嗎唚噸聽啓吳吶嘸囈嘔嚦唄員咼嗆嗚詠嚨嚀噝吒響啞噠嘵嗶噦嘩噲嚌噥喲嘜嗊嘮啢嗩喚嘖嗇囀嚙囉嘽嘯餵噴嘍嚳囁噯噓嚶囑嚕囂團園囪圍圇國圖圓聖壙場阪壞塊堅壇壢壩塢墳墜壟壠壚壘墾堊墊埡墶壋塏堖塒塤堝垵塹墮壪牆壯聲殼壺壼處備復夠頭誇夾奪奩奐奮獎奧妝婦媽嫵嫗媯姍奼婁婭嬈嬌孌娛媧嫻嫿嬰嬋嬸媼嬃嬡嬪嬙嬤孫學孿寧寶實寵審憲宮寬賓寢對尋導壽將爾塵嘗堯尷屍盡層屓屜屆屬屢屨嶼歲豈嶇崗峴嶴嵐島嶺崬巋嶨嶧峽嶢嶠崢巒嶗崍嶮嶄嶸嶔嶁巔鞏巰幣帥師幃帳簾幟帶幀幫幬幘幗冪乾並廣莊慶廬廡庫應廟龐廢廎廩開異棄弒張彌弳彎彈強歸當錄彠彥徬徹徵徑徠憶懺憂愾懷態慫憮慪悵愴憐總懟懌戀恆懇惡慟懨愷惻惱惲悅愨懸慳悞憫驚懼慘懲憊愜慚憚慣慍憤憒願懾憖懣懶懍戇戔戲戧戰戩戱戶撲執擴捫掃揚擾撫拋摶摳掄搶護報擔擬攏揀擁攔擰撥擇掛摯攣掗撾撻挾撓擋撟掙擠揮撏輓挩撈損撿換搗據擄摑擲撣摻摜攬搵撳攙擱摟攪攜攝攄擺搖擯攤攖撐攆擷擼攛擻攢敵斂斆數齋斕鬥斬斷無舊時曠暘曇暱晝曨顯晉曬曉曄暈暉暫曖術樸機殺雜權桿槓條來楊榪傑極構樅樞棗櫪梘棖槍楓梟櫃檸檉梔柵標棧櫛櫳棟櫨櫟欄樹棲樣欒椏橈楨檔榿橋樺檜槳樁夢檮棶槤檢梲櫺稜槨櫝槧欏橢樓欖榲櫬櫚櫸檟檻檳櫧橫檣櫻櫫櫥櫓櫞檁歡歟歐殲歿殤殘殞殮殫殯毆毀轂畢斃氈毿氌氣氫氬氳匯漢湯洶沈溝沒灃漚瀝淪滄渢溈滬洩濘淚澩瀧瀘濼瀉潑澤涇潔灑窪浹淺漿澆湞溮濁測澮濟瀏滻渾滸濃潯濜塗湧濤澇淶漣潿渦溳渙滌潤澗漲澀澱淵淥漬瀆漸澠漁瀋滲溫灣濕濚潰濺漵漊潷滾滯灧灄滿瀅濾濫灤濱灘澦灕灠瀠瀟瀲濰潛瀦瀂瀾瀨瀕灝滅燈靈災燦煬爐燉煒熗點煉熾爍爛烴燭煙煩燒燁燴燙燼熱煥燜燾熅愛爺牘氂牽犧犢狀獷獁猶狽獮獰獨狹獅獪猙獄猻獫獵獼玀豬貓蝟獻獺璣璵瑒瑪瑋環現瑲璽琺瓏璫琿璡璉瑣瓊瑤璦瓔瓚甕甌電畫暢疇癤療瘧癘瘍癧瘲瘡瘋皰痾癰痙癢瘂癆瘓癇癉瘮瘞瘻癟癱癮癭癩癬癲皚皺皸盞鹽監蓋盜盤瞘眥矓著睜睞瞼睪瞶瞞矚矯磯礬礦碭碼磚硨硯碸礪礱礫礎硜碩硤磽磑礄確礆礙磧磣鹼礡禮禡禕禰禎禱禍稟祿禪離禿稈種積稱穢穠穭稅穌穩穡窮竊竅窵窯竄窩窺竇窶竪競篤筍筆筧箋籠籩築篳篩簹箏籌篔簽簡籙簀篋籜籮簞簫簣簍籃籛籬籪籟糴類秈糶糲粵糞糧糝餱緊縶糹糾紆紅紂纖紇約級紈纊紀紉緯紜紘純紕紗綱納紝縱綸紛紙紋紡紵紖紐紓線紺紲紱練組紳細織終縐絆紼絀紹繹經紿綁絨結絝繞絰絎繪給絢絳絡絕絞統綆綃絹繡綌綏縧繼綈績緒綾緓續綺緋綽緔緄繩維綿綬繃綢綯綹綣綜綻綰綠綴緇緙緗緘緬纜緹緲緝縕繢緦綞緞緶線緱縋緩締縷編緡緣縉縛縟縝縫縗縞纏縭縊縑繽縹縵縲纓縮繆繅纈繚繕繒繮繾繰繯繳纘罌網羅罰罷羆羈羥羨翹翽翬耮耬聳恥聶聾職聹聯聵聰肅腸膚骯腎腫脹脅膽勝朧腖臚脛膠脈膾髒臍腦膿臠腳脫腡臉臘醃膕齶膩膃騰臏羶臢輿捨艤艦艙艫艱艷藝節羋薌蕪蘆蓯葦藶莧萇蒼苧蘇薴蘋範莖蘢蔦塋煢繭荊薦薘莢蕘蓽蕎薈薺蕩榮葷滎犖熒蕁藎蓀蔭蕒葒葤藥蒞萊蓮蒔萵薟獲蕕瑩鶯蒓蘀蘿螢營縈蕭薩蔥蕆蕢蔣蔞藍薊蘺蕷鎣驀虆薔蘞藺藹薀蘄蘊藪蘚櫱虜慮虛蟲虯蟣蝨雖蝦蠆蝕蟻螞蠶蠔蜆蠱蠣蟶蠻蟄蛺蟯螄蠐蛻蝸蠟蠅蟈蟬蠍螻蠑螿蟎蠨釁銜補襯袞襖裊褘襪襲襏裝襠褌褳襝褲襇褸襤襴見觀覎規覓視覘覽覺覬覡覿覥覦覯覲覷觴觸觶誾讋譽謄訁計訂訃認譏訐訌討讓訕訖託訓議訊記訒講諱謳詎訝訥許訛論訩訟諷設訪訣證詁訶評詛識詗詐訴診詆謅詞詘詔詖譯詒誆誄試詿詩詰詼誠誅詵話誕詬詮詭詢詣諍該詳詫諢詡譸誡誣語誚誤誥誘誨誑說誦誒請諸諏諾讀諑誹課諉諛誰諗調諂諒諄誶談誼謀諶諜謊諫諧謔謁謂諤諭諼讒諮諳諺諦謎諞諝謨讜謖謝謠謗謚謙謐謹謾謫謭謬譚譖譙讕譜譎讞譴譫讖豶貝貞負貟貢財責賢敗賬貨質販貪貧貶購貯貫貳賤賁貰貼貴貺貸貿費賀貽賊贄賈賄貲賃賂贓資賅贐賕賑賚賒賦賭賫贖賞賜贔賙賡賠賧賴賵贅賻賺賽賾贋贊贇贈贍贏贛赬趙趕趨趲躉躍蹌躒踐躂蹺蹕躚躋踴躊蹤躓躑躡蹣躕躥躪躦軀車軋軌軒軑軔轉軛輪軟轟軲軻轤軸軹軼軤軫轢軺輕軾載輊轎輈輇輅較輒輔輛輦輩輝輥輞輬輟輜輳輻輯轀輸轡轅轄輾轆轍轔辭辯辮邊遼達遷過邁運還這進遠違連遲邇逕跡適選遜遞邐邏遺遙鄧鄺鄔郵鄒鄴鄰郟鄶鄭鄆酈鄖鄲酇醖醱醬釅釃釀採釋鑒鑾鏨釒釓釔針釘釗釙釕釷釺釧釤鈒釩釣鍆釹鍚釵鈃鈣鈈鈦鉅鈍鈔鐘鈉鋇鋼鈑鈐鑰欽鈞鎢鈎鈧鈁鈥鈄鈕鈀鈺錢鉦鉗鈷鉢鈳鉕鈽鈸鉞鑽鉬鉭鉀鈿鈾鐵鉑鈴鑠鉛鉚鉋鈰鉉鉈鉍鈮鈹鐸鉶銬銠鉺鋩錏銪鋮鋏鋣鐃銍鐺銅鋁銱銦鎧鍘銖銑鋌銩銛鏵銓鎩鉿銚鉻銘錚銫鉸銥鏟銃鐋銨銀銣鑄鐒鋪鋙錸鋱鏈鏗銷鎖鋰鋥鋤鍋鋯鋨鏽銼鋝鋒鋅鋶鐦鐧銳銻鋃鋟鋦錒錆鍺鍩錯錨錛錡鍀錁錕錩錫錮鑼錘錐錦鑕鍁錈鍃錇錟錠鍵鋸錳錙鍥鍈鍇鏘鍶鍔鍤鍬鍾鍛鎪鍠鍰鎄鍍鎂鏤鎡鐨鎇鏌鎮鎛鎘鑷鎲鐫鎳鎿鎦鎬鎊鎰鎵鑌鎔鏢鏜鏝鏍鏰鏞鏡鏑鏃鏇鏐鐔鐝鐐鏷鑥鐓鑭鐠鑹鏹鐙鑊鐳鐶鐲鐮鐿鑔鑣鑞鑱鑲長門閂閃閆閈閉問闖閏闈閒閎間閔閌悶閘鬧閨聞闥閩閭闓閥閣閡閫鬮閱閬闍閾閹閶鬩閿閽閻閼闡闌闃闠闊闋闔闐闒闕闞闤隊陽陰陣階際陸隴陳陘陝隉隕險隨隱隸雋難雛讎靂霧霽霢靄靚靜靨韃鞽韉韋韌韍韓韙韞韜韻頁頂頃頇項順須頊頑顧頓頎頒頌頏預顱領頗頸頡頰頲頜潁熲頦頤頻頮頹頷頴穎顆題顒顎顓顏額顳顢顛顙顥顫顬顰顴風颺颭颮颯颶颸颼颻飀飄飆飈飛饗饜飠飣飢飥餳飩餼飪飫飭飯飲餞飾飽飼飿飴餌饒餉餄餎餃餏餅餑餖餓餘餒餕餜餛餡館餷饋餶餿饞饁饃餺餾饈饉饅饊饌饢馬馭馱馴馳驅馹駁驢駔駛駟駙駒騶駐駝駑駕驛駘驍罵駰驕驊駱駭駢驫驪騁驗騂駸駿騏騎騍騅騌驌驂騙騭騤騷騖驁騮騫騸驃騾驄驏驟驥驦驤髏髖髕鬢鬹魘魎魚魛魢魷魨魯魴䰾魺鮁鮃鮎鱸鮋鮓鮒鮊鮑鱟鮍鮐鮭鮚鮳鮪鮞鮦鰂鮜鱠鱭鮫鮮鮺鮝鱘鯁鱺鰱鰹鯉鰣鰷鯀鯊鯇鮶鯽鯒鯖鯪鯕鯫鯡鯤鯧鯝鯢鯰鯛鯨鰺鯴鯔鱝鰈鰏鱨鯷鰮鰃鰓鰐鰍鰒鰉鰁鱂鯿鰠鰲鰭鰨鰥鰩鰟鰜鰳鰾鱈鱉鰻鰵鱅䲁鰼鱖鱔鱗鱒鱯鱤鱧鱣䲘鳥鳩雞鳶鳴鳲鷗鴉鶬鴇鴆鴣鶇鸕鴨鴞鴦鴒鴟鴝鴛鷽鴕鷥鷙鴯鴰鵂鴴鵃鴿鸞鴻鵐鵓鸝鵑鵠鵝鵒鷳鵜鵡鵲鶓鵪鵾鵯鵬鵮鶉鶊鵷鷫鶘鶡鶚鶻鶖鷀鶥鶩鷊鷂鶲鶹鶺鷁鶼鶴鷖鸚鷓鷚鷯鷦鷲鷸鷺䴉鸇鷹鸌鸏鸛鸘鹺麥麩麴黃黌黶黷黲黽黿鼉鞀鼴齊齏齒齔齕齗齟齡齙齠齜齦齬齪齲齷龍龔龕龜䃮䥑鎶鉨";
+	var T2S_FROM = "丟並乾亂亙亞佇佈佔併來侖侶侷俁係俔俠俬俱倀倆倈倉個們倖倣倫偉側偵偽傑傖傘備傢傭傯傳傴債傷傾僂僅僇僉僑僕僞僤僥僨僱價儀儂億儈儉儐儔儕儘償優儲儷儸儺儻儼兇兌兒兗內兩冊冪凈凍凜凱別刪剄則剋剎剗剛剝剮剴創剷劃劇劉劊劌劍劏劑劚勁動勗務勛勝勞勢勣勩勱勳勵勸勻匭匯匱區協卹卻厙厠厭厲厴參叄叢吒吢吳吶呂咷咼員唄唚唸問啓啞啟啢喎喚喨喪喫喬單喲嗆嗇嗊嗎嗚嗩嗶嘆嘍嘔嘖嘗嘜嘩嘮嘯嘰嘵嘸嘽噁噓噚噝噠噥噦噯噲噴噸噹嚀嚇嚌嚐嚕嚙嚥嚦嚨嚮嚲嚳嚴嚶囀囁囂囅囈囉囍囑囓囪圇國圍園圓圖團垵埡埨埰執堅堊堖堝堯報場塊塋塏塒塗塚塢塤塵塸塹塿墊墜墠墮墳墶墻墾壇壋壎壓壘壙壚壜壞壟壠壢壩壪壯壺壼壽夠夢夥夾奐奧奩奪奬奮奼妝姊姍姦姪娙娛婁婦婭媧媯媼媽嫋嫗嫵嫻嫿嬀嬃嬈嬋嬌嬙嬝嬡嬤嬪嬰嬸孃孌孫學孿宮寢實寧審寫寬寵寶尅將專尋對導尷屆屍屓屜屢層屨屬岡峴島峽崍崑崗崙崢崬嵐嵽嶁嶄嶇嶔嶗嶠嶢嶧嶨嶮嶴嶸嶺嶼巋巒巔巖巘巰帥師帳帶幀幃幗幘幟幣幫幬幹幾庫廁廂廄廈廎廚廝廞廟廠廡廢廣廩廬廳廻弒弔弳張強彄彆彈彌彎彙彞彠彥彿後徑從徠復徬徵徹恆恥悅悞悳悵悶悽惡惱惲惻愛愜愨愴愷愾慄慇態慍慘慚慟慣慤慪慫慮慳慶慼慾憂憊憐憑憒憖憚憤憫憮憲憶懃懇應懌懍懞懟懣懨懮懲懶懷懸懺懼懾戀戇戔戧戩戰戱戲戶拋挩挾捨捫捲掃掄掗掙掛採揀揚換揮搆損搖搗搥搧搨搵搶搾摀摑摜摟摯摳摶摺摻撈撏撐撓撚撝撟撢撣撥撫撲撳撻撾撿擁擄擇擊擋擓擔據擠擣擬擯擰擱擲擴擷擺擻擼擾攄攆攏攔攖攙攛攜攝攢攣攤攪攬敗敘敵數斂斃斆斕斬斷於昇時晉晛晝暈暉暐暘暢暫暱曄曆曇曉曏曖曠曨曬書會朧東枒柵桿梔梘梜條梟梲棄棖棗棟棡棧棲棶椏楊楓楨業極榖榪榮榲榿構槍槓槖槤槧槨槳樁樂樅樑樓標樞樣樸樹樺橈橋機橢橫檁檉檔檜檝檟檢檣檮檯檳檸檻櫃櫍櫓櫚櫛櫝櫞櫟櫥櫧櫨櫪櫫櫬櫱櫳櫸櫺櫻欄權欏欒欓欖欞欵欽歎歐歛歟歡歲歷歸歿殘殞殤殨殫殮殯殰殲殺殼毀毆毬毿氂氈氌氣氫氬氳氹氾汎汙決沍沒沖況洩洶浹浿涇涼淒淚淥淨淪淵淶淺渙減渢渦測渾湊湋湞湧湯溈準溝溫溮溳溼滄滅滌滎滬滯滲滷滸滻滾滿漁漊漍漚漢漣漬漲漵漸漿潁潑潔潕潙潛潤潯潰潷潿澀澆澇澐澗澠澤澦澩澫澮澱濁濃濆濕濘濚濜濟濤濫濬濰濱濺濼濾瀂瀅瀆瀇瀉瀋瀏瀕瀘瀝瀟瀠瀦瀧瀨瀰瀲瀾灃灄灑灕灘灝灠灣灤灧災為烏烴無煉煒煙煢煥煩煬煱熅熒熗熰熱熲熾燀燁燄燈燉燐燒燖燙燜營燦燬燭燴燶燻燼燾燿爍爐爛爭爲爺爾牀牆牋牘牽犖犢犧狀狹狽猙猶猻獁獃獄獅獎獨獪獫獮獰獱獲獵獷獸獺獻獼玀現琺琿瑋瑒瑣瑤瑩瑪瑯瑲璉璊璕璗璡璣璦璫環璵璽瓅瓊瓏瓔瓚瓛甌甕產産畝畢畫異當疇疊痀痙痠痾瘂瘋瘍瘓瘞瘡瘧瘮瘲瘺瘻療癆癇癉癒癘癟癡癢癤癥癧癩癬癭癮癰癱癲發皁皚皰皸皺盃盜盞盡監盤盧盪眞眥眾睍睏睜睞睪瞇瞘瞜瞞瞭瞶瞼矓矚矯砲硏硜硤硨硯碩碭碸確碼磑磚磣磧磯磽磾礄礆礎礐礙礡礦礪礫礬礮礱祕祿禍禎禕禡禦禪禮禰禱禿秈稅稈稏稜稟種稱穀穇穌積穎穠穡穢穩穫穭窩窪窮窯窵窶窺竄竅竇竈竊竪競筆筍筧筴箇箋箎箏箝節範築篋篔篢篤篩篳簀簆簍簞簡簣簫簷簹簽簾籃籌籐籙籛籜籟籠籤籩籪籬籮籲粧粵糝糞糧糰糲糴糶糹糾紀紂紃約紅紆紇紈紉紋納紐紓純紕紖紗紘紙級紛紜紝紞紡紬紮細紱紲紳紵紹紺紼紿絀終絃組絅絆絎結絕絛絝絞絡絢給絨絪絰統絲絳絶絹絺綁綃綄綆綈綉綌綎綏綐綑經綖綜綝綞綠綡綢綣綧綪綫綬維綯綰綱網綳綴綵綸綹綺綻綽綾綿緄緇緊緋緑緒緓緔緗緘緙線緝緞締緡緣緦編緩緬緯緱緲練緶緹緻縈縉縊縋縐縑縕縗縛縝縞縟縣縧縫縭縮縯縱縲縳縴縵縶縷縹總績繃繅繆繒織繕繚繞繡繢繩繪繫繭繮繯繰繳繶繸繹繻繼繽繾繿纁纆纈纊續纍纏纓纔纕纖纘纜缽罃罈罌罎罣罰罵罷羅羆羈羋羣羥羨義羶習翫翬翹翺翽耬耮聖聞聯聰聲聳聵聶職聹聽聾肅脅脈脛脣脫脹腎腖腡腦腫腳腸膃膕膚膞膠膢膩膽膾膿臉臍臏臘臚臟臠臢臥臨臺與興舉舊舖艙艤艦艫艱艷芻苎苧茲荊荳莊莖莢莧菓華菸萇萊萬萵葉葒著葤葦葯葷蒍蒐蒓蒔蒞蒼蓀蓆蓋蓮蓯蓽蔄蔔蔞蔣蔥蔦蔭蔴蔿蕁蕆蕎蕒蕓蕕蕘蕢蕩蕪蕭蕷薀薈薊薌薑薔薘薟薦薩薳薴薺藉藍藎藝藥藪藭藴藶藷藹藺蘀蘄蘆蘇蘊蘋蘚蘞蘢蘭蘺蘿虆虉處虛虜號虧虯蛺蛻蜆蝀蝕蝟蝦蝨蝸螄螞螢螮螻螿蟄蟈蟎蟣蟬蟯蟲蟶蟻蠅蠆蠍蠐蠑蠔蠟蠣蠧蠨蠱蠶蠻衆衊術衚衛衝袞袴裊裏補裝裡製複褌褘褲褳褸褻襀襇襏襖襝襠襤襪襬襯襲襴覈見覎規覓視覘覡覥覦親覬覯覲覷覺覽覿觀觴觶觸訁訂訃計訊訌討訏訐訒訓訕訖託記訛訝訟訢訣訥訩訪設許訴訶診註証詁詆詎詐詒詔評詖詗詘詛詝詞詠詡詢詣試詩詪詫詬詭詮詰話該詳詵詷詼詿誄誅誆誇誌認誑誒誕誘誚語誠誡誣誤誥誦誨說説誰課誶誹誼誾調諂諄談諉請諍諏諑諒諓論諗諛諜諝諞諟諡諢諤諦諧諫諭諮諱諲諳諴諶諷諸諺諼諾謀謁謂謄謅謊謎謏謐謔謖謗謙謚講謝謠謡謨謫謬謭謳謹謾譁譅證譎譏譓譖識譙譚譜譞譟譫譯議譴護譸譽譾讀變讋讌讎讒讓讕讖讚讜讞豈豎豐豔豬豶貍貓貙貝貞貟負財貢貧貨販貪貫責貯貰貲貳貴貶買貸貺費貼貽貿賀賁賂賃賄賅資賈賊賑賒賓賕賙賚賜賞賠賡賢賣賤賦賧質賫賬賭賰賴賵賸賺賻購賽賾贄贅贇贈贊贋贍贏贐贓贔贖贗贛贜赬趕趙趨趲跡跤跼踐踡踰踴蹌蹕蹟蹣蹤蹧蹺躂躉躊躋躍躑躒躓躕躚躡躥躦躪軀車軋軌軍軏軑軒軔軛軝軟軤軫軲軸軹軺軻軼軾較輄輅輇輈載輊輋輒輓輔輕輗輛輜輝輞輟輥輦輩輪輬輮輯輳輶輸輻輾輿轀轂轄轅轆轉轍轎轔轝轟轡轢轤辦辭辮辯農迴逕這連週進遊運過達違遙遜遞遠適遯遲遷選遺遼邁還邇邊邏邐郟郵鄆鄉鄒鄔鄖鄧鄩鄭鄰鄲鄳鄴鄶鄺酇酈醃醖醜醞醫醬醱醲醼釀釁釃釅釋釐釒釓釔釕釗釘釙針釣釤釦釧釩釴釵釷釹釺釿鈀鈁鈃鈄鈇鈈鈉鈍鈎鈐鈑鈒鈔鈕鈞鈣鈥鈦鈧鈮鈰鈳鈴鈷鈸鈹鈺鈽鈾鈿鉀鉅鉈鉉鉊鉋鉍鉑鉕鉗鉚鉛鉝鉞鉢鉤鉥鉦鉧鉨鉬鉭鉮鉶鉷鉸鉺鉻鉿銀銃銅銈銍銑銓銖銘銚銛銜銠銣銥銦銨銩銪銫銬銱銲銳銶銷銹銻銼鋁鋃鋅鋇鋌鋏鋐鋒鋗鋙鋝鋟鋣鋤鋥鋦鋨鋩鋪鋭鋮鋯鋰鋱鋶鋸鋹鋼錀錁錄錆錇錈錏錐錒錕錘錙錚錛錞錟錠錡錢錤錦錨錩錫錮錯録錳錶錸鍀鍁鍃鍆鍇鍈鍊鍋鍍鍔鍘鍚鍛鍠鍤鍥鍩鍬鍭鍰鍵鍶鍺鍾鎂鎄鎇鎊鎓鎔鎖鎗鎘鎚鎛鎝鎡鎢鎣鎦鎧鎩鎪鎬鎮鎰鎲鎳鎵鎶鎸鎿鏃鏇鏈鏌鏍鏏鏐鏑鏗鏘鏜鏝鏞鏟鏡鏢鏤鏨鏰鏵鏷鏹鏺鏻鏽鐃鐄鐇鐋鐍鐏鐐鐒鐓鐔鐘鐙鐝鐠鐦鐧鐨鐩鐫鐮鐯鐲鐳鐵鐶鐸鐺鐽鐿鑄鑈鑊鑌鑑鑒鑔鑕鑞鑠鑣鑥鑪鑭鑰鑱鑲鑷鑹鑼鑽鑾鑿钁長門閂閃閆閈閉開閌閎閏閑閒間閔閘閡関閣閥閧閨閩閫閬閭閱閲閶閹閻閼閽閾閿闃闆闇闈闉闊闋闌闍闐闑闒闓闔闕闖闘關闞闠闡闢闤闥阨阪陘陝陞陣陰陳陸陽隄隉隊階隑隕際隤隨險隮隱隴隸隻雋雖雙雛雜雞離難雲電霑霢霧霽靂靄靆靈靉靚靜靦靨靷鞀鞏鞝鞽韁韃韉韋韌韍韓韙韜韞韡韮韻響頁頂頃項順頇須頊頌頍頎頏預頑頒頓頔頗領頜頠頡頤頦頫頭頮頰頲頴頵頷頸頹頻頽顆題額顎顏顒顓顔顗願顙顛類顢顥顧顫顬顯顰顱顳顴風颭颮颯颱颳颶颸颺颻颼飀飄飆飈飛飠飢飣飥飩飪飫飭飯飲飴飼飽飾飿餃餄餅餉養餌餎餏餑餒餓餕餖餗餘餚餛餜餞餡館餬餱餳餵餶餷餺餼餽餾餿饁饃饅饈饉饊饋饌饑饒饗饘饜饞饢馬馭馮馱馳馴馹馼駁駃駉駐駑駒駓駔駕駘駙駛駝駟駡駢駪駭駰駱駸駼駿騁騂騄騅騊騌騍騎騏騑騖騙騞騠騤騧騫騭騮騰騱騵騶騷騸騾驀驁驂驃驄驅驊驌驍驎驏驕驗驚驛驟驢驤驥驦驪驫骯髏髒體髕髖髮鬀鬆鬍鬚鬢鬥鬧鬨鬩鬭鬮鬱鬹魎魘魚魛魢魨魯魴魷魺鮀鮁鮃鮆鮈鮊鮋鮍鮎鮐鮑鮒鮓鮚鮜鮝鮞鮟鮠鮡鮣鮦鮪鮫鮭鮮鮳鮶鮸鮺鯀鯁鯇鯉鯊鯒鯔鯕鯖鯛鯝鯡鯢鯤鯧鯨鯪鯫鯰鯴鯷鯻鯽鯿鰁鰂鰃鰆鰈鰉鰊鰍鰏鰐鰒鰓鰜鰟鰠鰣鰤鰥鰧鰨鰩鰭鰮鰱鰲鰳鰵鰶鰷鰹鰺鰻鰼鰾鱀鱂鱅鱇鱈鱉鱒鱔鱖鱗鱘鱚鱝鱟鱠鱣鱤鱧鱨鱭鱯鱲鱷鱸鱺鳥鳧鳩鳬鳲鳳鳴鳶鳾鴆鴇鴉鴒鴕鴛鴝鴞鴟鴣鴦鴨鴯鴰鴴鴷鴻鴿鵁鵂鵃鵏鵐鵑鵒鵓鵜鵝鵟鵠鵡鵪鵬鵮鵯鵲鵷鵾鶄鶇鶉鶊鶓鶖鶘鶚鶠鶡鶥鶩鶪鶬鶯鶱鶲鶴鶹鶺鶻鶼鷀鷁鷂鷄鷈鷊鷓鷖鷗鷙鷚鷟鷥鷦鷫鷭鷯鷲鷳鷸鷹鷺鷽鷿鸂鸇鸌鸏鸑鸕鸘鸚鸛鸝鸞鹵鹹鹺鹼鹽麗麤麥麩麯麴麵麼麽黃黌點黨黲黴黶黷黽黿鼇鼈鼉鼕鼴齊齋齎齏齒齔齕齗齘齙齜齟齠齡齣齦齧齩齪齬齮齯齲齶齷齼龍龎龐龑龔龕龜";
+	var T2S_TO = "丢并干乱亘亚伫布占并来仑侣局俣系伣侠私具伥俩俫仓个们幸仿伦伟侧侦伪杰伧伞备家佣偬传伛债伤倾偻仅戮佥侨仆伪𫢸侥偾雇价仪侬亿侩俭傧俦侪尽偿优储俪㑩傩傥俨凶兑儿兖内两册幂净冻凛凯别删刭则克刹刬刚剥剐剀创铲划剧刘刽刿剑㓥剂㔉劲动勖务勋胜劳势𪟝勚劢勋励劝匀匦汇匮区协恤却厍厕厌厉厣参叁丛咤吣吴呐吕啕呙员呗吣念问启哑启唡㖞唤亮丧吃乔单哟呛啬唝吗呜唢哔叹喽呕啧尝唛哗唠啸叽哓呒啴𫫇嘘㖊咝哒哝哕嗳哙喷吨当咛吓哜尝噜啮咽呖咙向亸喾严嘤啭嗫嚣冁呓啰禧嘱啮囱囵国围园圆图团埯垭𫭢采执坚垩垴埚尧报场块茔垲埘涂冢坞埙尘𫭟堑𪣻垫坠𫮃堕坟垯墙垦坛垱埙压垒圹垆坛坏垄垅坜坝塆壮壶壸寿够梦伙夹奂奥奁夺奖奋姹妆姐姗奸侄𫰛娱娄妇娅娲妫媪妈袅妪妩娴婳妫媭娆婵娇嫱袅嫒嬷嫔婴婶娘娈孙学孪宫寝实宁审写宽宠宝克将专寻对导尴届尸屃屉屡层屦属冈岘岛峡崃昆岗仑峥岽岚𫶇嵝崭岖嵚崂峤峣峄峃崄岙嵘岭屿岿峦巅岩𪩘巯帅师帐带帧帏帼帻帜币帮帱干几库厕厢厩厦庼厨厮𫷷庙厂庑废广廪庐厅回弑吊弪张强𫸩别弹弥弯汇彝彟彦佛后径从徕复彷征彻恒耻悦悮德怅闷凄恶恼恽恻爱惬悫怆恺忾栗殷态愠惨惭恸惯悫怄怂虑悭庆戚欲忧惫怜凭愦慭惮愤悯怃宪忆勤恳应怿懔蒙怼懑恹忧惩懒怀悬忏惧慑恋戆戋戗戬战戯戏户抛捝挟舍扪卷扫抡挜挣挂采拣扬换挥构损摇捣捶扇拓揾抢榨捂掴掼搂挚抠抟折掺捞挦撑挠捻㧑挢掸掸拨抚扑揿挞挝捡拥掳择击挡㧟担据挤捣拟摈拧搁掷扩撷摆擞撸扰摅撵拢拦撄搀撺携摄攒挛摊搅揽败叙敌数敛毙敩斓斩断于升时晋𬀪昼晕晖𬀩旸畅暂昵晔历昙晓向暧旷昽晒书会胧东丫栅杆栀枧𬂩条枭棁弃枨枣栋㭎栈栖梾桠杨枫桢业极谷杩荣榅桤构枪杠橐梿椠椁桨桩乐枞梁楼标枢样朴树桦桡桥机椭横檩柽档桧楫槚检樯梼台槟柠槛柜𬃊橹榈栉椟橼栎橱槠栌枥橥榇蘖栊榉棂樱栏权椤栾𣗋榄棂款钦叹欧敛欤欢岁历归殁残殒殇㱮殚殓殡㱩歼杀壳毁殴球毵牦毡氇气氢氩氲凼泛泛污决冱没冲况泄汹浃𬇙泾凉凄泪渌净沦渊涞浅涣减沨涡测浑凑𣲗浈涌汤沩准沟温浉涢湿沧灭涤荥沪滞渗卤浒浐滚满渔溇𬇹沤汉涟渍涨溆渐浆颍泼洁𣲘沩潜润浔溃滗涠涩浇涝沄涧渑泽滪泶𬇕浍淀浊浓𣸣湿泞溁浕济涛滥浚潍滨溅泺滤澛滢渎㲿泻沈浏濒泸沥潇潆潴泷濑弥潋澜沣滠洒漓滩灏漤湾滦滟灾为乌烃无炼炜烟茕焕烦炀㶽煴荧炝𬉼热颎炽𬊤烨焰灯炖磷烧𬊈烫焖营灿毁烛烩㶶熏烬焘耀烁炉烂争为爷尔床墙笺牍牵荦犊牺状狭狈狰犹狲犸呆狱狮奖独狯猃狝狞㺍获猎犷兽獭献猕猡现珐珲玮玚琐瑶莹玛琅玱琏𫞩𬍤𬍡琎玑瑷珰环玙玺𬍛琼珑璎瓒𤩽瓯瓮产产亩毕画异当畴叠佝痉酸疴痖疯疡痪瘗疮疟瘆疭瘘瘘疗痨痫瘅愈疠瘪痴痒疖症疬癞癣瘿瘾痈瘫癫发皂皑疱皲皱杯盗盏尽监盘卢荡真眦众𪾢困睁睐睾眯眍䁖瞒了瞆睑眬瞩矫炮研硁硖砗砚硕砀砜确码硙砖碜碛矶硗䃅硚硷础𬒈碍礴矿砺砾矾炮砻秘禄祸祯祎祃御禅礼祢祷秃籼税秆䅉棱禀种称谷䅟稣积颖秾穑秽稳获稆窝洼穷窑窎窭窥窜窍窦灶窃竖竞笔笋笕䇲个笺篪筝钳节范筑箧筼𬕂笃筛筚箦筘篓箪简篑箫檐筜签帘篮筹藤箓篯箨籁笼签笾簖篱箩吁妆粤糁粪粮团粝籴粜纟纠纪纣𬘓约红纡纥纨纫纹纳纽纾纯纰纼纱纮纸级纷纭纴𬘘纺䌷扎细绂绁绅纻绍绀绋绐绌终弦组䌹绊绗结绝绦绔绞络绚给绒𬘡绖统丝绛绝绢𫄨绑绡𬘫绠绨绣绤𬘩绥䌼捆经𫄧综𬘭缍绿𫟅绸绻𬘯𬘬线绶维绹绾纲网绷缀彩纶绺绮绽绰绫绵绲缁紧绯绿绪绬绱缃缄缂线缉缎缔缗缘缌编缓缅纬缑缈练缏缇致萦缙缢缒绉缣缊缞缚缜缟缛县绦缝缡缩𬙂纵缧䌸纤缦絷缕缥总绩绷缫缪缯织缮缭绕绣缋绳绘系茧缰缳缲缴𫄷䍁绎𦈡继缤缱䍀𫄸𬙊缬纩续累缠缨才𬙋纤缵缆钵䓨坛罂坛挂罚骂罢罗罴羁芈群羟羡义膻习玩翚翘翱翙耧耢圣闻联聪声耸聩聂职聍听聋肃胁脉胫唇脱胀肾胨脶脑肿脚肠腽腘肤䏝胶𦝼腻胆脍脓脸脐膑腊胪脏脔臜卧临台与兴举旧铺舱舣舰舻艰艳刍苧苎兹荆豆庄茎荚苋果华烟苌莱万莴叶荭着荮苇药荤𫇭搜莼莳莅苍荪席盖莲苁荜𬜬卜蒌蒋葱茑荫麻𫇭荨蒇荞荬芸莸荛蒉荡芜萧蓣蕰荟蓟芗姜蔷荙莶荐萨䓕苧荠借蓝荩艺药薮䓖蕴苈薯蔼蔺萚蕲芦苏蕴苹藓蔹茏兰蓠萝蔂𬟁处虚虏号亏虬蛱蜕蚬𬟽蚀猬虾虱蜗蛳蚂萤䗖蝼螀蛰蝈螨虮蝉蛲虫蛏蚁蝇虿蝎蛴蝾蚝蜡蛎蠹蟏蛊蚕蛮众蔑术胡卫冲衮绔袅里补装里制复裈袆裤裢褛亵𫌀裥袯袄裣裆褴袜䙓衬袭襕核见觃规觅视觇觋觍觎亲觊觏觐觑觉览觌观觞觯触讠订讣计讯讧讨𬣙讦讱训讪讫托记讹讶讼䜣诀讷讻访设许诉诃诊注证诂诋讵诈诒诏评诐诇诎诅𬣞词咏诩询诣试诗𬣳诧诟诡诠诘话该详诜𫍣诙诖诔诛诓夸志认诳诶诞诱诮语诚诫诬误诰诵诲说说谁课谇诽谊訚调谄谆谈诿请诤诹诼谅𬣡论谂谀谍谞谝𬤊谥诨谔谛谐谏谕谘讳𬤇谙𫍯谌讽诸谚谖诺谋谒谓誊诌谎谜𫍲谧谑谡谤谦谥讲谢谣谣谟谪谬谫讴谨谩哗䜧证谲讥𬤝谮识谯谭谱𫍽噪谵译议谴护诪誉谫读变詟䜩雠谗让谰谶赞谠谳岂竖丰艳猪豮狸猫䝙贝贞贠负财贡贫货贩贪贯责贮贳赀贰贵贬买贷贶费贴贻贸贺贲赂赁贿赅资贾贼赈赊宾赇赒赉赐赏赔赓贤卖贱赋赕质赍账赌䞐赖赗剩赚赙购赛赜贽赘赟赠赞赝赡赢赆赃赑赎赝赣赃赪赶赵趋趱迹交局践蜷逾踊跄跸迹蹒踪糟跷跶趸踌跻跃踯跞踬蹰跹蹑蹿躜躏躯车轧轨军𫐄轪轩轫轭𬨂软轷轸轱轴轵轺轲轶轼较𨐈辂辁辀载轾𪨶辄挽辅轻𫐐辆辎辉辋辍辊辇辈轮辌𫐓辑辏𬨎输辐辗舆辒毂辖辕辘转辙轿辚舆轰辔轹轳办辞辫辩农回迳这连周进游运过达违遥逊递远适遁迟迁选遗辽迈还迩边逻逦郏邮郓乡邹邬郧邓𬩽郑邻郸𫑡邺郐邝酂郦腌酝丑酝医酱酦𬪩宴酿衅酾酽释厘钅钆钇钌钊钉钋针钓钐扣钏钒𬬩钗钍钕钎𬬱钯钫钘钭𫓧钚钠钝钩钤钣钑钞钮钧钙钬钛钪铌铈钶铃钴钹铍钰钸铀钿钾钜铊铉𬬿铇铋铂钷钳铆铅𫟷钺钵钩𬬸钲𬭁鿭钼钽𬬹铏𫟹铰铒铬铪银铳铜𫓯铚铣铨铢铭铫铦衔铑铷铱铟铵铥铕铯铐铞焊锐𨱇销锈锑锉铝锒锌钡铤铗𬭎锋𫓶铻锊锓铘锄锃锔锇铓铺锐铖锆锂铽锍锯𬬮钢𬬭锞录锖锫锩铔锥锕锟锤锱铮锛𬭚锬锭锜钱𫓹锦锚锠锡锢错录锰表铼锝锨锪钔锴锳炼锅镀锷铡钖锻锽锸锲锘锹𬭤锾键锶锗钟镁锿镅镑𬭩镕锁枪镉锤镈𨱏镃钨蓥镏铠铩锼镐镇镒镋镍镓鿔镌镎镞镟链镆镙𬭬镠镝铿锵镗镘镛铲镜镖镂錾镚铧镤镪䥽𬭸锈铙𨱑𫔍铴𫔎𨱔镣铹镦镡钟镫镢镨锎锏镄𬭼镌镰䦃镯镭铁镮铎铛𫟼镱铸鿭镬镔鉴鉴镲锧镴铄镳镥𬬻镧钥镵镶镊镩锣钻銮凿䦆长门闩闪闫闬闭开闶闳闰闲闲间闵闸阂关阁阀哄闺闽阃阆闾阅阅阊阉阎阏阍阈阌阒板暗闱𬮱阔阕阑阇阗𫔶阘闿阖阙闯斗关阚阓阐辟阛闼厄坂陉陕升阵阴陈陆阳堤陧队阶𬮿陨际𬯎随险𬯀隐陇隶只隽虽双雏杂鸡离难云电沾霡雾霁雳霭叇灵叆靓静腼靥纼鼗巩绱鞒缰鞑鞯韦韧韨韩韪韬韫𮧵韭韵响页顶顷项顺顸须顼颂𫠆颀颃预顽颁顿𬱖颇领颌𬱟颉颐颏𫖯头颒颊颋颕𫖳颔颈颓频颓颗题额颚颜颙颛颜𫖮愿颡颠类颟颢顾颤颥显颦颅颞颧风飐飑飒台刮飓飔飏飖飕飗飘飙飚飞饣饥饤饦饨饪饫饬饭饮饴饲饱饰饳饺饸饼饷养饵饹饻饽馁饿馂饾𫗧余肴馄馃饯馅馆糊糇饧喂馉馇馎饩馈馏馊馌馍馒馐馑馓馈馔饥饶飨𫗴餍馋馕马驭冯驮驰驯驲𫘜驳𫘝𬳶驻驽驹𬳵驵驾骀驸驶驼驷骂骈𬳽骇骃骆骎𬳿骏骋骍𫘧骓𫘦骔骒骑骐𬴂骛骗𬴃𫘨骙䯄骞骘骝腾𫘬𫘪驺骚骟骡蓦骜骖骠骢驱骅骕骁𬴊骣骄验惊驿骤驴骧骥骦骊骉肮髅脏体髌髋发剃松胡须鬓斗闹哄阋斗阄郁鬶魉魇鱼鱽鱾鲀鲁鲂鱿鲄𬶍鲅鲆𫚖𬶋鲌鲉鲏鲇鲐鲍鲋鲊鲒鲘鲞鲕𩽾𬶏𬶐䲟鲖鲔鲛鲑鲜鲓鲪𩾃鲝鲧鲠鲩鲤鲨鲬鲻鲯鲭鲷鲴鲱鲵鲲鲳鲸鲮鲰鲶鲺鳀𬶟鲫鳊鳈鲗鳂䲠鲽鳇𬶠鳅鲾鳄鳆鳃鳒鳑鳋鲥𫚕鳏䲢鳎鳐鳍鳁鲢鳌鳓鳘𬶭鲦鲣鲹鳗鳛鳔𬶨鳉鳙𩾌鳕鳖鳟鳝鳜鳞鲟𬶮鲼鲎鲙鳣鳡鳢鲿鲚鳠𫚭鳄鲈鲡鸟凫鸠凫鸤凤鸣鸢䴓鸩鸨鸦鸰鸵鸳鸲鸮鸱鸪鸯鸭鸸鸹鸻䴕鸿鸽䴔鸺鸼𬷕鹀鹃鹆鹁鹈鹅𫛭鹄鹉鹌鹏鹐鹎鹊鹓鹍䴖鸫鹑鹒鹋鹙鹕鹗𬸘鹖鹛鹜䴗鸧莺𬸣鹟鹤鹠鹡鹘鹣鹚鹢鹞鸡䴘鹝鹧鹥鸥鸷鹨𬸦鸶鹪鹔𬸪鹩鹫鹇鹬鹰鹭鸴䴙㶉鹯鹱鹲𬸚鸬鹴鹦鹳鹂鸾卤咸鹾碱盐丽粗麦麸曲麹面么么黄黉点党黪霉黡黩黾鼋鳌鳖鼍冬鼹齐斋赍齑齿龀龁龂𬹼龅龇龃龆龄出龈啮咬龊龉𬺈𫠜龋腭龌𬺓龙厐庞䶮龚龛龟";
+	var S2T_PHRASE_PAIRS = [
+		["为什么", "為什麼"],
+		["干什么", "幹什麼"],
+		["方便面", "方便麵"],
+		["松一口气", "鬆一口氣"],
+		["什么", "什麼"],
+		["怎么", "怎麼"],
+		["这么", "這麼"],
+		["那么", "那麼"],
+		["多么", "多麼"],
+		["干嘛", "幹嘛"],
+		["干啥", "幹啥"],
+		["干活", "幹活"],
+		["能干", "能幹"],
+		["才干", "才幹"],
+		["骨干", "骨幹"],
+		["干部", "幹部"],
+		["干脆", "乾脆"],
+		["头发", "頭髮"],
+		["短发", "短髮"],
+		["长发", "長髮"],
+		["白发", "白髮"],
+		["黑发", "黑髮"],
+		["金发", "金髮"],
+		["假发", "假髮"],
+		["理发", "理髮"],
+		["染发", "染髮"],
+		["脱发", "脫髮"],
+		["毛发", "毛髮"],
+		["发型", "髮型"],
+		["发卡", "髮卡"],
+		["发夹", "髮夾"],
+		["皇后", "皇后"],
+		["王后", "王后"],
+		["太后", "太后"],
+		["天后", "天后"],
+		["里面", "裡面"],
+		["里边", "裡邊"],
+		["这里", "這裡"],
+		["那里", "那裡"],
+		["哪里", "哪裡"],
+		["心里", "心裡"],
+		["家里", "家裡"],
+		["夜里", "夜裡"],
+		["嘴里", "嘴裡"],
+		["怀里", "懷裡"],
+		["眼里", "眼裡"],
+		["手里", "手裡"],
+		["屋里", "屋裡"],
+		["水里", "水裡"],
+		["村里", "村裡"],
+		["店里", "店裡"],
+		["车里", "車裡"],
+		["梦里", "夢裡"],
+		["暗里", "暗裡"],
+		["私里", "私裡"],
+		["公里", "公里"],
+		["英里", "英里"],
+		["海里", "海里"],
+		["里程", "里程"],
+		["一面", "一面"],
+		["下面", "下面"],
+		["上面", "上面"],
+		["前面", "前面"],
+		["后面", "後面"],
+		["方面", "方面"],
+		["表面", "表面"],
+		["面部", "面部"],
+		["画面", "畫面"],
+		["面子", "面子"],
+		["面对", "面對"],
+		["面条", "麵條"],
+		["泡面", "泡麵"],
+		["拉面", "拉麵"],
+		["面包", "麵包"],
+		["面粉", "麵粉"],
+		["炒面", "炒麵"],
+		["汤面", "湯麵"],
+		["只身", "隻身"],
+		["一只", "一隻"],
+		["两只", "兩隻"],
+		["几只", "幾隻"],
+		["单只", "單隻"],
+		["只是", "只是"],
+		["只要", "只要"],
+		["只有", "只有"],
+		["只好", "只好"],
+		["只能", "只能"],
+		["不过", "不過"],
+		["台风", "颱風"],
+		["台湾", "台灣"],
+		["舞台", "舞台"],
+		["平台", "平台"],
+		["后台", "後台"],
+		["轻松", "輕鬆"],
+		["放松", "放鬆"],
+		["松开", "鬆開"],
+		["松手", "鬆手"],
+		["松懈", "鬆懈"],
+		["蓬松", "蓬鬆"],
+		["胡子", "鬍子"],
+		["胡须", "鬍鬚"],
+		["刮胡", "刮鬍"],
+		["分钟", "分鐘"],
+		["钟头", "鐘頭"],
+		["钟表", "鐘錶"],
+		["手表", "手錶"],
+		["闹钟", "鬧鐘"],
+		["复杂", "複雜"],
+		["重复", "重複"],
+		["反复", "反覆"],
+		["恢复", "恢復"],
+		["报复", "報復"],
+		["关系", "關係"],
+		["联系", "聯繫"],
+		["系列", "系列"],
+		["系统", "系統"],
+		["制作", "製作"],
+		["制造", "製造"],
+		["复制", "複製"],
+		["控制", "控制"],
+		["制服", "制服"],
+		["注意", "注意"],
+		["关注", "關注"],
+		["注册", "註冊"],
+		["注释", "註釋"],
+		["游戏", "遊戲"],
+		["旅游", "旅遊"],
+		["游泳", "游泳"],
+		["准备", "準備"],
+		["标准", "標準"],
+		["准确", "準確"],
+		["计划", "計劃"],
+		["划算", "划算"],
+		["脏话", "髒話"],
+		["肮脏", "骯髒"],
+		["弄脏", "弄髒"],
+		["心脏", "心臟"],
+		["内脏", "內臟"],
+		["云朵", "雲朵"],
+		["风云", "風雲"],
+		["云端", "雲端"],
+		["斗嘴", "鬥嘴"],
+		["战斗", "戰鬥"],
+		["斗争", "鬥爭"],
+		["丑陋", "醜陋"],
+		["小丑", "小醜"],
+		["出丑", "出醜"],
+		["家伙", "傢伙"],
+		["伙伴", "夥伴"],
+		["多余", "多餘"],
+		["剩余", "剩餘"],
+		["其余", "其餘"],
+		["余地", "餘地"],
+		["历来", "歷來"],
+		["历史", "歷史"],
+		["经历", "經歷"],
+		["日历", "日曆"],
+		["农历", "農曆"],
+		["采集", "採集"],
+		["采用", "採用"],
+		["采访", "採訪"],
+		["合适", "合適"],
+		["合作", "合作"],
+		["著名", "著名"],
+		["著作", "著作"],
+		["显著", "顯著"],
+		["看着", "看著"],
+		["听着", "聽著"],
+		["笑着", "笑著"],
+		["哭着", "哭著"],
+		["等着", "等著"],
+		["拿着", "拿著"],
+		["穿着", "穿著"],
+		["躺着", "躺著"],
+		["坐着", "坐著"],
+		["站着", "站著"],
+		["走着", "走著"],
+		["睡着", "睡著"]
+	];
+	var T2S_PHRASE_PAIRS = [
+		["為什麼", "为什么"],
+		["幹什麼", "干什么"],
+		["什麼", "什么"],
+		["甚麼", "什么"],
+		["怎麼", "怎么"],
+		["這麼", "这么"],
+		["那麼", "那么"],
+		["多麼", "多么"],
+		["著名", "著名"],
+		["著作", "著作"],
+		["顯著", "显著"],
+		["著稱", "著称"],
+		["執著", "执着"]
+	];
+	var cachedRuntime = null;
+	function buildMap(fromStr, toStr) {
+		const map = new Map();
+		const fromChars = Array.from(fromStr);
+		const toChars = Array.from(toStr);
+		const len = Math.min(fromChars.length, toChars.length);
+		for (let i = 0; i < len; i++) map.set(fromChars[i], toChars[i]);
+		return map;
+	}
+	function compilePhraseEngine(pairs) {
+		const sorted = pairs.slice().sort((a, b) => b[0].length - a[0].length);
+		const dict = new Map(sorted);
+		const escaped = sorted.map(([key]) => key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+		return {
+			dict,
+			regex: escaped.length ? new RegExp(escaped.join("|"), "g") : null
+		};
+	}
+	function getRuntime() {
+		if (cachedRuntime) return cachedRuntime;
+		const s2tMap = buildMap(S2T_FROM, S2T_TO);
+		const t2sMap = buildMap(T2S_FROM, T2S_TO);
+		const simpDistinct = new Set();
+		const tradDistinct = new Set();
+		for (const ch of s2tMap.keys()) if (!t2sMap.has(ch)) simpDistinct.add(ch);
+		for (const ch of t2sMap.keys()) if (!s2tMap.has(ch)) tradDistinct.add(ch);
+		cachedRuntime = {
+			s2tMap,
+			t2sMap,
+			simpDistinct,
+			tradDistinct,
+			s2tPhrases: compilePhraseEngine(S2T_PHRASE_PAIRS),
+			t2sPhrases: compilePhraseEngine(T2S_PHRASE_PAIRS)
+		};
+		return cachedRuntime;
+	}
+	function mapChars(segment, charMap) {
+		let out = "";
+		for (const ch of segment) out += charMap.get(ch) || ch;
+		return out;
+	}
+	function detectChineseScript(text) {
+		const sample = String(text || "");
+		if (!sample) return "";
+		const { simpDistinct, tradDistinct } = getRuntime();
+		let simpCount = 0;
+		let tradCount = 0;
+		let seen = 0;
+		for (const ch of sample) {
+			if (++seen > 6e3) break;
+			if (simpDistinct.has(ch)) simpCount++;
+			else if (tradDistinct.has(ch)) tradCount++;
+		}
+		if (!simpCount && !tradCount) return "";
+		if (tradCount > simpCount) return "zh-TW";
+		if (simpCount > tradCount) return "zh";
+		return "";
+	}
+	function convertChineseText(text, targetLang) {
+		const input = String(text || "");
+		if (!input || targetLang !== "zh" && targetLang !== "zh-TW") return input;
+		const runtime = getRuntime();
+		const charMap = targetLang === "zh" ? runtime.t2sMap : runtime.s2tMap;
+		const { dict, regex } = targetLang === "zh" ? runtime.t2sPhrases : runtime.s2tPhrases;
+		if (!regex) return mapChars(input, charMap);
+		let out = "";
+		let lastIndex = 0;
+		regex.lastIndex = 0;
+		let match;
+		while ((match = regex.exec(input)) !== null) {
+			if (match.index > lastIndex) out += mapChars(input.slice(lastIndex, match.index), charMap);
+			out += dict.get(match[0]) || match[0];
+			lastIndex = match.index + match[0].length;
+		}
+		if (lastIndex < input.length) out += mapChars(input.slice(lastIndex), charMap);
+		return out;
+	}
+	function convertTaggedDialogueLine(line, targetLang, { assMode = false } = {}) {
+		if (!line) return line;
+		const tokenRe = assMode ? /(\{[^}]*\}|\\[Nnh])/g : /(<[^>]+>)/g;
+		let out = "";
+		let lastIndex = 0;
+		let match;
+		while ((match = tokenRe.exec(line)) !== null) {
+			if (match.index > lastIndex) out += convertChineseText(line.slice(lastIndex, match.index), targetLang);
+			out += match[0];
+			lastIndex = match.index + match[0].length;
+		}
+		if (lastIndex < line.length) out += convertChineseText(line.slice(lastIndex), targetLang);
+		return out;
+	}
+	function convertAssContent(raw, targetLang) {
+		const lines = raw.split(/\r\n|\r|\n/);
+		let inEvents = false;
+		let textFieldIndex = 9;
+		const eol = raw.includes("\r\n") ? "\r\n" : "\n";
+		return lines.map((line) => {
+			const trimmed = line.trim();
+			if (/^\[.*\]$/.test(trimmed)) {
+				inEvents = /^\[events\]$/i.test(trimmed);
+				return line;
+			}
+			if (!inEvents) return line;
+			if (/^format\s*:/i.test(trimmed)) {
+				const idx = trimmed.slice(trimmed.indexOf(":") + 1).split(",").map((f) => f.trim().toLowerCase()).indexOf("text");
+				if (idx >= 0) textFieldIndex = idx;
+				return line;
+			}
+			if (!/^dialogue\s*:/i.test(trimmed)) return line;
+			const colonIdx = line.indexOf(":");
+			const prefix = line.slice(0, colonIdx + 1);
+			const parts = line.slice(colonIdx + 1).split(",");
+			if (parts.length <= textFieldIndex) return line;
+			return `${prefix}${parts.slice(0, textFieldIndex).join(",")},${convertTaggedDialogueLine(parts.slice(textFieldIndex).join(","), targetLang, { assMode: true })}`;
+		}).join(eol);
+	}
+	function convertSrtOrVttContent(raw, targetLang, format) {
+		const eol = raw.includes("\r\n") ? "\r\n" : "\n";
+		const lines = raw.split(/\r\n|\r|\n/);
+		let skipMetadataBlock = false;
+		return lines.map((line, index) => {
+			const trimmed = line.trim();
+			if (!trimmed) {
+				skipMetadataBlock = false;
+				return line;
+			}
+			if (index === 0 && format === "vtt" && /^WEBVTT\b/i.test(trimmed.replace(/^\uFEFF/, ""))) return line;
+			if (format === "vtt" && /^(NOTE|STYLE|REGION)\b/i.test(trimmed)) {
+				skipMetadataBlock = true;
+				return line;
+			}
+			if (skipMetadataBlock) return line;
+			if (trimmed.includes("-->")) return line;
+			if (/^\d+$/.test(trimmed)) return line;
+			return convertTaggedDialogueLine(line, targetLang, { assMode: false });
+		}).join(eol);
+	}
+	function convertSubtitleContent(rawContent, formatHint, targetLang) {
+		const raw = String(rawContent || "");
+		if (!raw || targetLang !== "zh" && targetLang !== "zh-TW") return {
+			content: raw,
+			converted: false
+		};
+		const format = detectSubtitleFormat(raw, formatHint);
+		const content = format === "ass" ? convertAssContent(raw, targetLang) : convertSrtOrVttContent(raw, targetLang, format);
+		return {
+			content,
+			converted: content !== raw
+		};
+	}
 	var FONT_SIZES = [
 		"small",
 		"medium",
@@ -28994,10 +29361,108 @@
 			return (Number(b.rating) || 0) - (Number(a.rating) || 0);
 		})[0];
 	}
+	function getChineseFallbackLang(lang) {
+		const norm = normalizeSubtitleLang(lang);
+		if (norm === "zh") return "zh-TW";
+		if (norm === "zh-TW") return "zh";
+		return "";
+	}
 	function rankPreferredCandidates(candidates, preferredLang) {
 		const target = normalizeSubtitleLang(preferredLang);
 		if (!target || !Array.isArray(candidates)) return [];
-		return candidates.filter((candidate) => candidate && normalizeSubtitleLang(candidate.lang) === target).slice().sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+		const fallback = getChineseFallbackLang(target);
+		return candidates.map((candidate) => {
+			if (!candidate) return null;
+			const lang = normalizeSubtitleLang(candidate.lang);
+			if (lang === target) return {
+				candidate,
+				tier: 0
+			};
+			if (fallback && lang === fallback) return {
+				candidate,
+				tier: 1
+			};
+			return null;
+		}).filter(Boolean).sort((a, b) => {
+			if (a.tier !== b.tier) return a.tier - b.tier;
+			return (Number(b.candidate.rating) || 0) - (Number(a.candidate.rating) || 0);
+		}).map((entry) => entry.candidate);
+	}
+	function applyPreferredChineseConversion(item, parsed, preferredLang) {
+		const target = normalizeSubtitleLang(preferredLang);
+		if (!item || target !== "zh" && target !== "zh-TW") return {
+			item,
+			parsed,
+			converted: false
+		};
+		const itemLang = normalizeSubtitleLang(item.lang);
+		if (itemLang !== "zh" && itemLang !== "zh-TW") return {
+			item,
+			parsed,
+			converted: false
+		};
+		const detected = detectChineseScript(cuesToPlainText(parsed?.cues || []));
+		if (target === "zh") {
+			if (!(itemLang === "zh-TW" || detected === "zh-TW")) return {
+				item,
+				parsed,
+				converted: false
+			};
+			const { content, converted } = convertSubtitleContent(item.content, item.format || parsed?.format, "zh");
+			const nextParsed = converted ? parseSubtitles(content, item.format || parsed?.format || "") : parsed;
+			if (nextParsed?.cues?.length) {
+				item.content = content;
+				item.lang = "zh";
+				if (converted) {
+					item.convertedFrom = "zh-TW";
+					item.langLabel = text("subtitleLangZhFromTw", "简中(繁转)");
+				} else item.langLabel = text("subtitleLangZh", "简中");
+				return {
+					item,
+					parsed: nextParsed,
+					converted
+				};
+			}
+			return {
+				item,
+				parsed,
+				converted: false
+			};
+		}
+		if (itemLang === "zh" && detected === "zh-TW") {
+			item.lang = "zh-TW";
+			item.langLabel = text("subtitleLangZhTw", "繁中");
+			return {
+				item,
+				parsed,
+				converted: false
+			};
+		}
+		if (!(itemLang === "zh" || detected === "zh")) return {
+			item,
+			parsed,
+			converted: false
+		};
+		const { content, converted } = convertSubtitleContent(item.content, item.format || parsed?.format, "zh-TW");
+		const nextParsed = converted ? parseSubtitles(content, item.format || parsed?.format || "") : parsed;
+		if (nextParsed?.cues?.length) {
+			item.content = content;
+			item.lang = "zh-TW";
+			if (converted) {
+				item.convertedFrom = "zh";
+				item.langLabel = text("subtitleLangZhTwFromZh", "繁中(简转)");
+			} else item.langLabel = text("subtitleLangZhTw", "繁中");
+			return {
+				item,
+				parsed: nextParsed,
+				converted
+			};
+		}
+		return {
+			item,
+			parsed,
+			converted: false
+		};
 	}
 	var LANG_NAMES = {
 		"zh": "中文",
@@ -30147,17 +30612,18 @@
 			for (const candidate of ranked) {
 				if (this.avcode !== targetCode || !this.settings.subtitleAutoBest || this._hasSavedFavorite()) return false;
 				const stored = this._findItem(candidate.id);
-				const item = stored ? await this._ensureContent(stored) : await this._downloadCandidate(candidate, { silent: true });
+				const rawItem = stored ? { ...await this._ensureContent(stored) } : await this._downloadCandidate(candidate, { silent: true });
 				if (this.avcode !== targetCode) return false;
-				if (!item?.content) {
+				if (!rawItem?.content) {
 					this._autoFailedIds.add(candidate.id);
 					continue;
 				}
-				const parsed = parseSubtitles(item.content, item.format || "");
-				if (!parsed?.cues?.length) {
+				const rawParsed = parseSubtitles(rawItem.content, rawItem.format || "");
+				if (!rawParsed?.cues?.length) {
 					this._autoFailedIds.add(candidate.id);
 					continue;
 				}
+				const { item, parsed, converted } = applyPreferredChineseConversion(rawItem, rawParsed, preferredLang);
 				item.format = parsed.format;
 				item.favorite = true;
 				item.autoSaved = true;
@@ -30171,7 +30637,7 @@
 					this._renderList();
 					this._updateButtonState();
 				}
-				Toast$1(text("subtitleAutoSaved", "已自动加载并收藏偏好字幕"), 2e3, "success");
+				Toast$1(converted ? text("subtitleAutoSavedConverted", "已自动加载并完成繁简转换") : text("subtitleAutoSaved", "已自动加载并收藏偏好字幕"), 2e3, "success");
 				return true;
 			}
 			return false;

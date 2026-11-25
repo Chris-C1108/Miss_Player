@@ -24,7 +24,8 @@ import { UISurfaceMachine, SURFACE_TYPES } from '../state/UISurfaceMachine.js';
 import { SubtitleEngine } from './SubtitleEngine.js';
 import { SubtitleRepository } from './SubtitleRepository.js';
 import { decodeSubtitleBuffer } from './SubtitleDecoder.js';
-import { parseSubtitles } from './SubtitleFormat.js';
+import { parseSubtitles, cuesToPlainText } from './SubtitleFormat.js';
+import { convertSubtitleContent, detectChineseScript } from './SubtitleChineseConverter.js';
 import { codeMatchesText } from './SubtitleCode.js';
 
 const FONT_SIZES = ['small', 'medium', 'large'];
@@ -94,13 +95,96 @@ export function selectBestBundleItem(bundle) {
         })[0];
 }
 
+export function getChineseFallbackLang(lang) {
+    const norm = normalizeSubtitleLang(lang);
+    if (norm === 'zh') return 'zh-TW';
+    if (norm === 'zh-TW') return 'zh';
+    return '';
+}
+
 export function rankPreferredCandidates(candidates, preferredLang) {
     const target = normalizeSubtitleLang(preferredLang);
     if (!target || !Array.isArray(candidates)) return [];
+    const fallback = getChineseFallbackLang(target);
     return candidates
-        .filter((candidate) => candidate && normalizeSubtitleLang(candidate.lang) === target)
-        .slice()
-        .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+        .map((candidate) => {
+            if (!candidate) return null;
+            const lang = normalizeSubtitleLang(candidate.lang);
+            if (lang === target) return { candidate, tier: 0 };
+            if (fallback && lang === fallback) return { candidate, tier: 1 };
+            return null;
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+            if (a.tier !== b.tier) return a.tier - b.tier;
+            return (Number(b.candidate.rating) || 0) - (Number(a.candidate.rating) || 0);
+        })
+        .map((entry) => entry.candidate);
+}
+
+/**
+ * 若偏好中文变体与实际字幕文本脚本不一致（或经繁简互为备选命中），自动执行繁简转换
+ * @param {Object} item
+ * @param {{ format: string, cues: Array<Object> }} parsed
+ * @param {string} preferredLang
+ * @returns {{ item: Object, parsed: { format: string, cues: Array<Object> }, converted: boolean }}
+ */
+export function applyPreferredChineseConversion(item, parsed, preferredLang) {
+    const target = normalizeSubtitleLang(preferredLang);
+    if (!item || (target !== 'zh' && target !== 'zh-TW')) {
+        return { item, parsed, converted: false };
+    }
+    const itemLang = normalizeSubtitleLang(item.lang);
+    if (itemLang !== 'zh' && itemLang !== 'zh-TW') {
+        return { item, parsed, converted: false };
+    }
+
+    const sample = cuesToPlainText(parsed?.cues || []);
+    const detected = detectChineseScript(sample);
+
+    if (target === 'zh') {
+        const needsConvert = itemLang === 'zh-TW' || detected === 'zh-TW';
+        if (!needsConvert) return { item, parsed, converted: false };
+        const { content, converted } = convertSubtitleContent(item.content, item.format || parsed?.format, 'zh');
+        const nextParsed = converted ? parseSubtitles(content, item.format || parsed?.format || '') : parsed;
+        if (nextParsed?.cues?.length) {
+            item.content = content;
+            item.lang = 'zh';
+            if (converted) {
+                item.convertedFrom = 'zh-TW';
+                item.langLabel = text('subtitleLangZhFromTw', '简中(繁转)');
+            } else {
+                item.langLabel = text('subtitleLangZh', '简中');
+            }
+            return { item, parsed: nextParsed, converted };
+        }
+        return { item, parsed, converted: false };
+    }
+
+    // target === 'zh-TW'
+    if (itemLang === 'zh' && detected === 'zh-TW') {
+        // 部分字幕源未区分简繁统一标记为 zh，正文已为繁体时仅修正语言标签，不做二次改写
+        item.lang = 'zh-TW';
+        item.langLabel = text('subtitleLangZhTw', '繁中');
+        return { item, parsed, converted: false };
+    }
+
+    const needsConvert = itemLang === 'zh' || detected === 'zh';
+    if (!needsConvert) return { item, parsed, converted: false };
+    const { content, converted } = convertSubtitleContent(item.content, item.format || parsed?.format, 'zh-TW');
+    const nextParsed = converted ? parseSubtitles(content, item.format || parsed?.format || '') : parsed;
+    if (nextParsed?.cues?.length) {
+        item.content = content;
+        item.lang = 'zh-TW';
+        if (converted) {
+            item.convertedFrom = 'zh';
+            item.langLabel = text('subtitleLangZhTwFromZh', '繁中(简转)');
+        } else {
+            item.langLabel = text('subtitleLangZhTw', '繁中');
+        }
+        return { item, parsed: nextParsed, converted };
+    }
+    return { item, parsed, converted: false };
 }
 
 const LANG_NAMES = {
@@ -1541,21 +1625,22 @@ export class SubtitleManager {
                 return false;
             }
             const stored = this._findItem(candidate.id);
-            const item = stored
-                ? await this._ensureContent(stored)
+            const rawItem = stored
+                ? { ...(await this._ensureContent(stored)) }
                 : await this._downloadCandidate(candidate, { silent: true });
 
             if (this.avcode !== targetCode) return false;
-            if (!item?.content) {
+            if (!rawItem?.content) {
                 this._autoFailedIds.add(candidate.id);
                 continue;
             }
-            const parsed = parseSubtitles(item.content, item.format || '');
-            if (!parsed?.cues?.length) {
+            const rawParsed = parseSubtitles(rawItem.content, rawItem.format || '');
+            if (!rawParsed?.cues?.length) {
                 this._autoFailedIds.add(candidate.id);
                 continue;
             }
 
+            const { item, parsed, converted } = applyPreferredChineseConversion(rawItem, rawParsed, preferredLang);
             item.format = parsed.format;
             item.favorite = true;
             item.autoSaved = true;
@@ -1571,7 +1656,13 @@ export class SubtitleManager {
                 this._renderList();
                 this._updateButtonState();
             }
-            Toast(text('subtitleAutoSaved', '已自动加载并收藏偏好字幕'), 2000, 'success');
+            Toast(
+                converted
+                    ? text('subtitleAutoSavedConverted', '已自动加载并完成繁简转换')
+                    : text('subtitleAutoSaved', '已自动加载并收藏偏好字幕'),
+                2000,
+                'success'
+            );
             return true;
         }
 

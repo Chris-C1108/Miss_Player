@@ -519,4 +519,137 @@ test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
         assert.equal(mergedSameId.bundle.items[0].autoSaved, false);
         assert.equal(mergedSameId.bundle.items[0].favoriteSource, 'manual');
     });
+
+    await t.test('12. 简繁中文互为备选与格式保真繁简转换（设置简中命中繁中->转简，反之亦然）', async () => {
+        const {
+            convertChineseText,
+            convertSubtitleContent,
+            detectChineseScript
+        } = await import('../src/player/subtitles/SubtitleChineseConverter.js');
+
+        // 12a. 词组消歧与双向转换准确性
+        assert.equal(
+            convertChineseText('为什么头发和眼睛里面都有发现，以后还要去台湾', 'zh-TW'),
+            '為什麼頭髮和眼睛裡面都有發現，以後還要去台灣'
+        );
+        assert.equal(
+            convertChineseText('為什麼頭髮和眼睛裡面都有發現，以後還要去台灣，他非常著名並看著我們', 'zh'),
+            '为什么头发和眼睛里面都有发现，以后还要去台湾，他非常著名并看着我们'
+        );
+        assert.equal(detectChineseScript('這是一段繁體中文字幕，請開始播放影片'), 'zh-TW');
+        assert.equal(detectChineseScript('这是一段简体中文字幕，请开始播放视频'), 'zh');
+
+        // 12b. ASS / SRT 保真转换：不改写时间戳、样式区与 {\pos(...)} 标签
+        const assRaw = [
+            '[Script Info]',
+            'Title: 影片字幕',
+            '',
+            '[Events]',
+            'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
+            'Dialogue: 0,0:00:01.00,0:00:04.00,Default,,0,0,0,,{\\pos(320,240)}請開始檢查這段話，別發呆\\N第二行裡面也有發現',
+            ''
+        ].join('\n');
+        const convAss = convertSubtitleContent(assRaw, 'ass', 'zh');
+        assert.equal(convAss.converted, true);
+        assert.ok(convAss.content.includes('Dialogue: 0,0:00:01.00,0:00:04.00,Default,,0,0,0,,{\\pos(320,240)}请开始检查这段话，别发呆\\N第二行里面也有发现'));
+
+        // 12c. 候选排序：严格优先当前设置变体，缺失时以简/繁互为备选
+        const rankedForZh = rankPreferredCandidates(
+            [
+                { id: 'en-1', lang: 'en', rating: 99 },
+                { id: 'tw-high', lang: 'zh-TW', rating: 95 },
+                { id: 'zh-low', lang: 'zh', rating: 70 },
+                { id: 'tw-low', lang: 'zh-TW', rating: 60 }
+            ],
+            'zh'
+        );
+        assert.deepEqual(
+            rankedForZh.map((c) => c.id),
+            ['zh-low', 'tw-high', 'tw-low'],
+            '设简中时，简中应排在最前，繁中紧随其后作为备选'
+        );
+
+        const rankedForTwFallbackOnly = rankPreferredCandidates(
+            [
+                { id: 'ja-1', lang: 'ja', rating: 99 },
+                { id: 'zh-1', lang: 'zh', rating: 82 },
+                { id: 'zh-2', lang: 'zh', rating: 90 }
+            ],
+            'zh-TW'
+        );
+        assert.deepEqual(
+            rankedForTwFallbackOnly.map((c) => c.id),
+            ['zh-2', 'zh-1'],
+            '设繁中且仅有简中时，按评分降序备选简中'
+        );
+
+        // 12d. 端到端自动选优：设简体但仅搜到繁体 -> 选繁体并繁转简；设繁体但仅搜到简体 -> 选简体并简转繁
+        const tradSrt = [
+            '1',
+            '00:00:01,000 --> 00:00:04,000',
+            '請開始檢查這段話，頭髮裡面有發現',
+            ''
+        ].join('\n');
+        const simpSrt = [
+            '1',
+            '00:00:01,000 --> 00:00:04,000',
+            '请开始检查这段话，头发里面有发现',
+            ''
+        ].join('\n');
+
+        // 场景 A：用户设简中，影片仅有繁中
+        env.settings.betaMode = true;
+        env.settings.subtitleEnabled = true;
+        env.settings.subtitleAutoBest = true;
+        env.settings.subtitlePreferredLang = 'zh';
+        const managerA = new SubtitleManager(env.playerCore, env.uiManager, null);
+        managerA.avcode = 'IPX-555';
+        managerA._persist = async () => {};
+        managerA.engine = {
+            async search() {
+                return {
+                    candidates: [
+                        { id: 'en-only', provider: 'xunlei', title: 'IPX-555 EN', lang: 'en', rating: 98, format: 'srt' },
+                        { id: 'tw-only', provider: 'xunlei', title: 'IPX-555 繁體', lang: 'zh-TW', rating: 88, format: 'srt' }
+                    ],
+                    errors: []
+                };
+            },
+            async download() {
+                return { content: tradSrt, format: 'srt' };
+            }
+        };
+        const okA = await managerA._maybeAutoPickPreferred({ userAction: true });
+        assert.equal(okA, true);
+        assert.equal(managerA.bundle.favoriteId, 'tw-only');
+        assert.equal(managerA.activeItem?.lang, 'zh');
+        assert.equal(managerA.activeItem?.convertedFrom, 'zh-TW');
+        assert.equal(managerA.cues[0].text, '请开始检查这段话，头发里面有发现');
+
+        // 场景 B：用户设繁中，影片仅有简中
+        env.settings.subtitlePreferredLang = 'zh-TW';
+        const managerB = new SubtitleManager(env.playerCore, env.uiManager, null);
+        managerB.avcode = 'IPX-556';
+        managerB._persist = async () => {};
+        managerB.engine = {
+            async search() {
+                return {
+                    candidates: [
+                        { id: 'ja-only', provider: 'xunlei', title: 'IPX-556 JA', lang: 'ja', rating: 96, format: 'srt' },
+                        { id: 'zh-only', provider: 'xunlei', title: 'IPX-556 简体', lang: 'zh', rating: 86, format: 'srt' }
+                    ],
+                    errors: []
+                };
+            },
+            async download() {
+                return { content: simpSrt, format: 'srt' };
+            }
+        };
+        const okB = await managerB._maybeAutoPickPreferred({ userAction: true });
+        assert.equal(okB, true);
+        assert.equal(managerB.bundle.favoriteId, 'zh-only');
+        assert.equal(managerB.activeItem?.lang, 'zh-TW');
+        assert.equal(managerB.activeItem?.convertedFrom, 'zh');
+        assert.equal(managerB.cues[0].text, '請開始檢查這段話，頭髮裡面有發現');
+    });
 });
