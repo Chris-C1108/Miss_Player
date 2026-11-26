@@ -168,11 +168,13 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
             let keyField = null;
             let subChaptersRow = null;
             let commentBriefRow = null;
+            let highlightFusionRow = null;
             let autoTagRow = null;
             let autoTagOnMarkRow = null;
             let featuresBox = null;
             let autoTagMarkWrap = null;
             let fetchedModels = [];
+            let activeVibeTags = Array.isArray(cfg.vibeTags) ? [...cfg.vibeTags] : [];
 
             const syncHeaderPill = (text, tone) => {
                 const pillEl = body.parentElement?.querySelector?.('.mp-s2-pill');
@@ -201,8 +203,10 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
                     apiKey: keyField ? keyField.input.value : '',
                     featureSubChapters: subChaptersRow ? subChaptersRow.getChecked() : prev.featureSubChapters,
                     featureCommentBrief: commentBriefRow ? commentBriefRow.getChecked() : prev.featureCommentBrief,
+                    featureHighlightFusion: highlightFusionRow ? highlightFusionRow.getChecked() : prev.featureHighlightFusion,
                     featureAutoTag: autoTagRow ? autoTagRow.getChecked() : prev.featureAutoTag,
-                    autoTagOnMark: autoTagOnMarkRow ? autoTagOnMarkRow.getChecked() : prev.autoTagOnMark
+                    autoTagOnMark: autoTagOnMarkRow ? autoTagOnMarkRow.getChecked() : prev.autoTagOnMark,
+                    vibeTags: activeVibeTags
                 });
                 syncFeatureVisibility(saved.enabled, saved.featureAutoTag);
                 const meta = resolveStatusMeta(saved);
@@ -471,6 +475,13 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
                 onChange: () => persistConfig()
             });
 
+            highlightFusionRow = createToggleRow({
+                title: 'AI 高能融合',
+                subtext: '联合字幕、评论极性与热度推算高光及避坑区间',
+                checked: Boolean(cfg.featureHighlightFusion),
+                onChange: () => persistConfig()
+            });
+
             autoTagRow = createToggleRow({
                 title: 'AI 高光打标',
                 subtext: '片段列表提供依据台词的智能填标按钮',
@@ -488,10 +499,45 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
             });
             autoTagMarkWrap.appendChild(autoTagOnMarkRow.element);
 
+            const vibeSection = document.createElement('div');
+            vibeSection.className = 'mp-s2-field';
+            const vibeLabel = document.createElement('span');
+            vibeLabel.className = 'mp-s2-field-label';
+            vibeLabel.textContent = '高能偏好（本地权重参考）';
+            const vibeChipsWrap = document.createElement('div');
+            vibeChipsWrap.className = 'mp-s2-chips mp-s2-ai-vibes';
+            const PRESET_VIBES = ['剧情反转', '黑丝制服', '极致反差', '紧凑高潮', '对白张力'];
+            const renderVibeChips = () => {
+                vibeChipsWrap.innerHTML = '';
+                PRESET_VIBES.forEach((tag) => {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    const isOn = activeVibeTags.includes(tag);
+                    chip.className = `mp-s2-chip ${isOn ? 'is-active' : ''}`.trim();
+                    chip.textContent = tag;
+                    chip.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (activeVibeTags.includes(tag)) {
+                            activeVibeTags = activeVibeTags.filter((x) => x !== tag);
+                        } else if (activeVibeTags.length < 4) {
+                            activeVibeTags = [...activeVibeTags, tag];
+                        }
+                        renderVibeChips();
+                        persistConfig();
+                    });
+                    vibeChipsWrap.appendChild(chip);
+                });
+            };
+            renderVibeChips();
+            vibeSection.appendChild(vibeLabel);
+            vibeSection.appendChild(vibeChipsWrap);
+
             featuresBox.appendChild(subChaptersRow.element);
             featuresBox.appendChild(commentBriefRow.element);
+            featuresBox.appendChild(highlightFusionRow.element);
             featuresBox.appendChild(autoTagRow.element);
             featuresBox.appendChild(autoTagMarkWrap);
+            featuresBox.appendChild(vibeSection);
 
             updatePresetHighlight();
             renderModelChips();

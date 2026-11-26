@@ -401,6 +401,7 @@ export class LoopManager {
 
         const pill = document.createElement('div');
         pill.className = 'tm-tab-pill';
+        if (tab.isAiSuggestion) pill.classList.add('is-ai-suggested');
         pill.dataset.tabId = tab.id || '';
         pill.style.setProperty('--tab-color', color);
 
@@ -1062,6 +1063,48 @@ export class LoopManager {
         }
 
         return newTab;
+    }
+
+    /**
+     * 载入 AI 融合推荐片单作为轻量临时胶囊，直接配合「快览 / 连播」播放；不会污染持久化收藏，用户可转存
+     * @param {Array<{ seconds: number, endSeconds?: number|null, tag?: string, reason?: string }>} highlights
+     * @returns {number} 实际注入数量
+     */
+    loadAiVirtualPlaylist(highlights = []) {
+        if (!Array.isArray(highlights) || highlights.length === 0) return 0;
+        if (!this.tabs) this.tabs = [];
+
+        this.tabs = this.tabs.filter((t) => !t?.isAiSuggestion);
+        const now = Date.now();
+        let added = 0;
+
+        for (const h of highlights) {
+            const sec = Number(h?.seconds);
+            if (!Number.isFinite(sec) || sec < 0) continue;
+            if (this.tabs.some((t) => !t.isAiSuggestion && Math.abs(t.startTime - sec) <= 15)) continue;
+            const endSec = Number(h?.endSeconds);
+            const hasInterval = Number.isFinite(endSec) && endSec > sec + 3;
+            const comment = `${h.tag ? `#${h.tag} ` : ''}${h.reason || ''}`.trim();
+            this.tabs.push({
+                id: `ai_${sec}_${added}_${now.toString(36)}`,
+                type: hasInterval ? 'interval' : 'highlight',
+                startTime: sec,
+                ...(hasInterval ? { endTime: endSec } : {}),
+                color: '#ff9f0a',
+                comment,
+                isAiSuggestion: true,
+                createdAt: now,
+                updatedAt: now
+            });
+            added += 1;
+        }
+
+        if (added > 0) {
+            this._sortTabs();
+            this.renderTabs();
+            this._updateBottomSheet();
+        }
+        return added;
     }
 
     async _maybeAutoTagNewTab(tab) {
@@ -1883,6 +1926,7 @@ export class LoopManager {
                 // Highlight point: little vertical tick directly inside the progress bar
                 const tick = document.createElement('div');
                 tick.className = 'tm-progress-marker-tick';
+                if (tab.isAiSuggestion) tick.classList.add('is-ai-suggested');
                 tick.dataset.tabId = tab.id || '';
                 tick.style.left = `${startPct}%`;
                 tick.style.setProperty('--tab-color', color);
@@ -1968,14 +2012,16 @@ export class LoopManager {
     _saveTabs() {
         if (!this.storageKey) return;
         const now = Date.now();
-        this.tabs = this.tabs.map(t => {
-            const copy = { ...t };
-            if (!copy.createdAt) copy.createdAt = now;
-            if (!copy.updatedAt) copy.updatedAt = now;
-            return copy;
-        });
+        const persistable = this.tabs
+            .filter((t) => t && !t.isAiSuggestion)
+            .map(t => {
+                const copy = { ...t };
+                if (!copy.createdAt) copy.createdAt = now;
+                if (!copy.updatedAt) copy.updatedAt = now;
+                return copy;
+            });
         this._sortTabs();
-        setValue(this.storageKey, this.tabs);
+        setValue(this.storageKey, persistable);
 
         // 广播标签更新事件，通知评论区同步更新已收藏角标 (✓)
         try {

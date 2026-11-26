@@ -523,3 +523,302 @@ export function mergeAutoTagsIntoComment(existingComment = '', tags = [], aiComm
 
     return parts.join(' ').trim();
 }
+
+/**
+ * 从 120 槽位社区全网热度数据中提取波峰时间戳（局部极大值 + 25s 邻峰合并）
+ * @param {Uint8Array|number[]} crowd120
+ * @param {number} durationSec
+ * @param {number} [topK]
+ * @returns {Array<{ seconds: number, intensity: number }>}
+ */
+export function extractCrowdPeaks(crowd120, durationSec, topK = 6) {
+    const len = crowd120?.length || 0;
+    const dur = Number(durationSec) || 0;
+    if (!len || dur <= 10) return [];
+
+    let sum = 0;
+    let maxVal = 0;
+    for (let i = 0; i < len; i++) {
+        const v = Number(crowd120[i]) || 0;
+        sum += v;
+        if (v > maxVal) maxVal = v;
+    }
+    if (maxVal <= 0) return [];
+
+    const mean = sum / len;
+    let varSum = 0;
+    for (let i = 0; i < len; i++) {
+        const d = (Number(crowd120[i]) || 0) - mean;
+        varSum += d * d;
+    }
+    const std = Math.sqrt(varSum / len);
+    const threshold = Math.max(mean + 0.35 * std, maxVal * 0.25);
+
+    const rawPeaks = [];
+    for (let i = 0; i < len; i++) {
+        const cur = Number(crowd120[i]) || 0;
+        if (cur < threshold) continue;
+        const left = i > 0 ? (Number(crowd120[i - 1]) || 0) : 0;
+        const right = i + 1 < len ? (Number(crowd120[i + 1]) || 0) : 0;
+        if (cur >= left && cur >= right) {
+            const seconds = Math.max(1, Math.min(Math.floor(dur - 1), Math.round(((i + 0.5) / len) * dur)));
+            rawPeaks.push({ seconds, intensity: Number((cur / maxVal).toFixed(2)) });
+        }
+    }
+
+    rawPeaks.sort((a, b) => b.intensity - a.intensity);
+    const merged = [];
+    for (const peak of rawPeaks) {
+        if (merged.some((m) => Math.abs(m.seconds - peak.seconds) < 25)) continue;
+        merged.push(peak);
+        if (merged.length >= topK) break;
+    }
+    return merged.sort((a, b) => a.seconds - b.seconds);
+}
+
+const COUNTDOWN_TEXT_RE = /倒数|倒計時|倒计时|还剩|還剩|还有\s*\d+|countdown|remaining/i;
+
+/**
+ * 启发式识别“剩余时间倒数型”评论 ID（单条多点严格递减或含显式倒数语义）
+ * @param {Array} comments
+ * @param {number} [videoDuration]
+ * @returns {Set<string>}
+ */
+export function detectCountdownComments(comments = [], videoDuration = 0) {
+    const hits = new Set();
+    const dur = Number(videoDuration) || 0;
+    for (const c of Array.isArray(comments) ? comments : []) {
+        if (!c || c.countdownApplied || !Array.isArray(c.timestamps) || c.timestamps.length === 0) continue;
+        const raw = String(c.rawText || c.text || '');
+        const hasKeyword = COUNTDOWN_TEXT_RE.test(raw);
+        const points = c.timestamps
+            .map((t) => Number(Array.isArray(t.rawSeconds ?? t.seconds) ? (t.rawSeconds ?? t.seconds)[0] : (t.rawSeconds ?? t.seconds)))
+            .filter((n) => Number.isFinite(n) && n >= 0 && (!dur || n <= dur));
+
+        let isStrictDescending = false;
+        if (points.length >= 2) {
+            isStrictDescending = points.every((val, idx) => idx === 0 || (points[idx - 1] - val) >= 15);
+        }
+        if (hasKeyword || isStrictDescending) {
+            if (c.id !== undefined && c.id !== null) hits.add(String(c.id));
+        }
+    }
+    return hits;
+}
+
+function buildFusionInputs({ cues = [], comments = [], crowdPeaks = [], vibeTags = [] }) {
+    const compressedSub = Array.isArray(cues) && cues.length > 0
+        ? compressCuesForLlm(cues, { maxChars: 6500 })
+        : '';
+
+    const seen = new Set();
+    const indexedComments = [];
+    const rawList = Array.isArray(comments) ? comments : [];
+    for (const c of rawList) {
+        if (!c || (typeof c === 'object' && c.spam?.label === 'SPAM')) continue;
+        const text = normalizeInlineText(typeof c === 'string' ? c : (c.rawText || c.text || c.content || ''));
+        if (text.length < 3) continue;
+        const dedup = text.toLowerCase().slice(0, 120);
+        if (seen.has(dedup)) continue;
+        seen.add(dedup);
+        const hasTs = Boolean(
+            (Array.isArray(c.timestamps) && c.timestamps.length > 0) ||
+            /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(text)
+        );
+        indexedComments.push({
+            id: c.id !== undefined && c.id !== null ? String(c.id) : '',
+            text,
+            hasTs,
+            score: (hasTs ? 100 : 0) + Math.min(text.length, 180)
+        });
+    }
+    indexedComments.sort((a, b) => b.score - a.score);
+    const topComments = indexedComments.slice(0, 45);
+    const commentLines = topComments.map((item, idx) => `[C${idx}] ${item.text.slice(0, 180)}`);
+
+    const crowdSig = (Array.isArray(crowdPeaks) ? crowdPeaks : [])
+        .map((p) => `${Math.round(Number(p.seconds) || 0)}:${p.intensity ?? ''}`)
+        .join(',');
+    const vibeKey = (Array.isArray(vibeTags) ? vibeTags : []).join(',');
+    const contentHash = LlmCache.hashContent(`${compressedSub}\n---\n${commentLines.join('\n')}\n---\n${crowdSig}\n---\n${vibeKey}`);
+
+    return {
+        compressedSub,
+        topComments,
+        commentLines,
+        crowdSig,
+        vibeKey,
+        contentHash
+    };
+}
+
+/**
+ * 静默读取缓存的高能融合图谱（0 请求消耗）
+ * @param {Object} params
+ * @returns {Promise<{ hit: boolean, graph?: Object }>}
+ */
+export async function getCachedHighlightGraph({ avcode, cues = [], comments = [], crowdPeaks = [], vibeTags = [] } = {}) {
+    const code = normalizeInlineText(avcode).toUpperCase();
+    const { topComments, compressedSub, crowdSig, contentHash } = buildFusionInputs({ cues, comments, crowdPeaks, vibeTags });
+    if (!code || (!compressedSub && topComments.length === 0 && !crowdSig)) {
+        return { hit: false };
+    }
+    const cached = await LlmCache.getCached(code, 'highlight_graph', contentHash);
+    if (cached.hit && cached.data) {
+        return { hit: true, graph: cached.data };
+    }
+    return { hit: false };
+}
+
+/**
+ * 单请求多模态联合融合引擎（高能现场 2.0）
+ * 一次性融合：社区回放波峰 + 压缩字幕骨架 + 评论区文本（含无时间戳语义锚定、极性去噪、倒数消歧）+ 用户偏好标签
+ * @param {Object} params
+ * @returns {Promise<{ ok: boolean, fromCache?: boolean, graph?: Object, refused?: boolean, error?: string }>}
+ */
+export async function buildHighlightGraphWithLlm({
+    avcode,
+    cues = [],
+    comments = [],
+    crowdPeaks = [],
+    videoDuration = 0,
+    vibeTags = [],
+    forceRefresh = false
+} = {}) {
+    const built = buildFusionInputs({ cues, comments, crowdPeaks, vibeTags });
+    if (!built.compressedSub && built.topComments.length === 0 && !built.crowdSig) {
+        return { ok: false, refused: false, error: '暂无可用于联合分析的评论、字幕或热度数据' };
+    }
+
+    const safeCode = normalizeInlineText(avcode).toUpperCase();
+    if (!forceRefresh && safeCode) {
+        const cached = await LlmCache.getCached(safeCode, 'highlight_graph', built.contentHash);
+        if (cached.hit && cached.data) {
+            return { ok: true, fromCache: true, graph: cached.data };
+        }
+    }
+
+    const dur = Math.max(0, Number(videoDuration) || 0);
+    const crowdPromptText = (Array.isArray(crowdPeaks) && crowdPeaks.length > 0)
+        ? crowdPeaks.map((p) => `${formatMmSs(p.seconds)}(强度${Math.round((Number(p.intensity) || 0) * 100)}%)`).join(', ')
+        : '(暂无社区热度数据)';
+    const vibePromptText = (Array.isArray(vibeTags) && vibeTags.length > 0)
+        ? `用户偏好要素（排序可适当靠前）: ${vibeTags.join('、')}`
+        : '';
+
+    const messages = [
+        {
+            role: 'system',
+            content: [
+                '你是影片多模态高光分析引擎。请结合社区回放波峰、字幕对白骨架与观众评论（标记为 [C0], [C1]...），在单次回复中输出融合高光图谱：',
+                '1. highlights: 最多 8 个核心高能片段，优先融合多源共鸣与用户偏好；',
+                '2. skipZones: 最多 4 个避坑/拖沓/吐槽区间（如片头拖沓、马赛克或假水戏）；',
+                '3. commentTags: 仅输出值得标注的评论项，识别 sentiment(hype高能/warn避坑/neutral)、是否为剩余时间倒数(isCountdown)、以及对“无时间点好评”结合字幕和波峰反推的时间 seconds；',
+                '4. brief: 1句话看点/避坑/共识总结；',
+                '仅输出严格合法 JSON，禁止 Markdown 围栏与多余解释：',
+                '{ "highlights": [{ "seconds": 120, "endSeconds": 180, "tag": "2-4字标签", "reason": "16字内理由", "sources": ["crowd","comment","sub"], "score": 92 }], "skipZones": [{ "seconds": 0, "endSeconds": 90, "reason": "14字内避坑说明" }], "commentTags": [{ "idx": 0, "sentiment": "hype", "isCountdown": false, "inferredSeconds": 420, "note": "10字内标签" }], "brief": { "highlights": "看点", "warnings": "避坑(无则写暂无明显雷点)", "consensus": "共识" } }'
+            ].join('\n')
+        },
+        {
+            role: 'user',
+            content: [
+                safeCode ? `作品编号: ${safeCode}` : '',
+                dur > 0 ? `总时长: ${Math.round(dur)}秒 (${formatMmSs(dur)})` : '',
+                vibePromptText,
+                `社区回放波峰: ${crowdPromptText}`,
+                built.compressedSub ? `字幕对白:\n${built.compressedSub}` : '字幕对白: (暂无字幕)',
+                built.commentLines.length > 0 ? `观众评论:\n${built.commentLines.join('\n')}` : '观众评论: (暂无评论)'
+            ].filter(Boolean).join('\n\n')
+        }
+    ];
+
+    try {
+        const res = await LlmService.chatCompletion({
+            messages,
+            temperature: 0.2,
+            maxTokens: 1200
+        });
+        const parsed = LlmService.parseJsonFromLlm(res.content);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return { ok: false, refused: false, error: '模型返回的高能图谱格式异常' };
+        }
+
+        const clampSec = (val) => {
+            if (val === null || val === undefined || val === '') return null;
+            const n = Math.round(Number(val));
+            if (!Number.isFinite(n) || n < 0) return null;
+            return dur > 0 ? Math.min(Math.floor(dur), n) : n;
+        };
+
+        const highlights = [];
+        for (const item of Array.isArray(parsed.highlights) ? parsed.highlights : []) {
+            const sec = clampSec(item?.seconds);
+            if (sec === null) continue;
+            const endSecRaw = clampSec(item?.endSeconds);
+            const endSeconds = endSecRaw !== null && endSecRaw > sec ? endSecRaw : null;
+            const tag = normalizeInlineText(item?.tag || '').slice(0, 6) || '高能';
+            const reason = normalizeInlineText(item?.reason || '').slice(0, 24);
+            const sources = Array.isArray(item?.sources)
+                ? item.sources.map((s) => String(s || '').trim()).filter((s) => ['crowd', 'comment', 'sub'].includes(s))
+                : [];
+            const score = Math.max(1, Math.min(100, Math.round(Number(item?.score) || 80)));
+            highlights.push({ seconds: sec, endSeconds, tag, reason, sources, score });
+            if (highlights.length >= 8) break;
+        }
+        highlights.sort((a, b) => a.seconds - b.seconds);
+
+        const skipZones = [];
+        for (const z of Array.isArray(parsed.skipZones) ? parsed.skipZones : []) {
+            const sec = clampSec(z?.seconds);
+            if (sec === null) continue;
+            const endRaw = clampSec(z?.endSeconds);
+            const endSeconds = endRaw !== null && endRaw > sec ? endRaw : sec + 30;
+            const reason = normalizeInlineText(z?.reason || '').slice(0, 22) || '节奏偏慢';
+            skipZones.push({ seconds: sec, endSeconds, reason });
+            if (skipZones.length >= 4) break;
+        }
+
+        const commentInsights = {};
+        for (const ct of Array.isArray(parsed.commentTags) ? parsed.commentTags : []) {
+            const idx = Number(ct?.idx);
+            const target = Number.isInteger(idx) ? built.topComments[idx] : null;
+            if (!target?.id) continue;
+            const sentiment = ['hype', 'warn', 'neutral'].includes(ct?.sentiment) ? ct.sentiment : 'neutral';
+            const inferredSeconds = clampSec(ct?.inferredSeconds);
+            const note = normalizeInlineText(ct?.note || '').slice(0, 14);
+            commentInsights[target.id] = {
+                sentiment,
+                isCountdown: Boolean(ct?.isCountdown),
+                inferredSeconds,
+                note
+            };
+        }
+
+        const rawBrief = parsed.brief && typeof parsed.brief === 'object' ? parsed.brief : {};
+        const graph = {
+            highlights,
+            skipZones,
+            commentInsights,
+            brief: {
+                highlights: normalizeInlineText(rawBrief.highlights || '') || '已融合多模态信号识别核心高能片段',
+                warnings: normalizeInlineText(rawBrief.warnings || '') || '暂无明显雷点',
+                consensus: normalizeInlineText(rawBrief.consensus || '') || '可配合进度条推荐节点快速跳转',
+                timestamps: highlights.map((h) => ({ seconds: h.seconds, note: `${h.tag}${h.reason ? ' · ' + h.reason : ''}` }))
+            }
+        };
+
+        if (safeCode) {
+            await LlmCache.setCached(safeCode, 'highlight_graph', built.contentHash, graph);
+        }
+        return { ok: true, fromCache: false, graph };
+    } catch (err) {
+        if (err?.refused || err?.message === 'LLM_REFUSED') {
+            return { ok: false, refused: true, error: '模型安全策略拒绝解析' };
+        }
+        return {
+            ok: false,
+            refused: false,
+            error: LlmService.redactSecrets(err?.message || '高能融合分析失败')
+        };
+    }
+}

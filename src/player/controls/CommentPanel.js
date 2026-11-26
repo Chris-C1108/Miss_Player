@@ -6,7 +6,13 @@ import { __ } from '../../constants/i18n.js';
 import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT_WRITE, ICON_PLUS, ICON_SPARKLES } from '../../constants/icons.js';
 import { Toast, isMobile, getValue } from '../../utils/index.js';
 import { LlmService } from '../../services/LlmService.js';
-import { summarizeCommentsWithLlm, getCachedCommentBrief } from '../../services/LlmTasks.js';
+import {
+    summarizeCommentsWithLlm,
+    getCachedCommentBrief,
+    buildHighlightGraphWithLlm,
+    getCachedHighlightGraph,
+    detectCountdownComments
+} from '../../services/LlmTasks.js';
 import { isSiteDomain, SITE_DOMAINS, checkSiteReachability } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { CrossDomainBridge } from '../../autologin/CrossDomainBridge.js';
@@ -19,7 +25,7 @@ import { CommentCacheManager } from '../comments/CommentCacheManager.js';
 import { CrazyScraper } from '../comments/CrazyScraper.js';
 import { CommentCodePreview } from '../comments/CommentCodePreview.js';
 import { showCommentReportModal } from '../comments/CommentReportModal.js';
-import { renderCommentCardHtml, renderCommentSectionHtml, renderLoginBadgeHtml as renderLoginBadgeHtmlHelper } from '../comments/CommentCardRenderer.js';
+import { renderCommentCardHtml, renderCommentSectionHtml, renderLoginBadgeHtml as renderLoginBadgeHtmlHelper, isHighEnergyComment } from '../comments/CommentCardRenderer.js';
 import { DebugLogPanel } from '../ui/DebugLogPanel.js';
 import {
     esc,
@@ -939,7 +945,8 @@ export class CommentPanel {
             ? this.targetVideo.duration
             : 10800;
 
-        // 切换倒数应用状态
+        // 切换倒数应用状态（记录手动干预，防止自动识别反复覆盖）
+        comment._userToggledCountdown = true;
         comment.countdownApplied = !comment.countdownApplied;
 
         // 重新计算并换算时间戳
@@ -2666,7 +2673,7 @@ export class CommentPanel {
             const isHighlightOnly = Boolean(this.isHighlightFilterActive);
             const allNewComments = site.filteredComments.filter(c => !existingIdSet.has(c.id));
             const newComments = isHighlightOnly
-                ? allNewComments.filter(c => Array.isArray(c.timestamps) && c.timestamps.length > 0)
+                ? allNewComments.filter((c) => isHighEnergyComment(c))
                 : allNewComments;
             if (existingCards.length > 0 && newComments.length > 0) {
                 // 清理旧的 end-marker 与 loader
@@ -3218,7 +3225,7 @@ export class CommentPanel {
                 const comments = (curSite?.filteredComments && curSite.filteredComments.length > 0)
                     ? curSite.filteredComments
                     : (curSite?.comments || []);
-                const highlightCount = comments.filter(c => Array.isArray(c.timestamps) && c.timestamps.length > 0).length;
+                const highlightCount = comments.filter((c) => isHighEnergyComment(c)).length;
                 filterCountEl.textContent = String(highlightCount);
                 filterCountEl.classList.toggle('is-hidden', highlightCount === 0);
             }
@@ -3239,6 +3246,58 @@ export class CommentPanel {
             });
         });
         return merged;
+    }
+
+    _collectHighlightFusionContext() {
+        const subMgr = this.controlManager?.subtitleManager || this.playerCore?.controlManager?.subtitleManager || null;
+        const heatmapMgr = this.controlManager?.heatmapManager || this.playerCore?.heatmapManager || null;
+        const dur = this.targetVideo ? getVideoDurationSeconds(this.targetVideo) : 0;
+        const cfg = LlmService.getConfig();
+        return {
+            cues: Array.isArray(subMgr?.cues) ? subMgr.cues : [],
+            crowdPeaks: heatmapMgr?.getCrowdPeaks?.(6) || [],
+            videoDuration: dur || 0,
+            vibeTags: Array.isArray(cfg?.vibeTags) ? cfg.vibeTags : [],
+            heatmapMgr
+        };
+    }
+
+    _applyHighlightGraphToComments(graph) {
+        if (!graph) return;
+        this._activeHighlightGraph = graph;
+        const comments = this._collectAllLoadedComments();
+        const dur = this.targetVideo ? getVideoDurationSeconds(this.targetVideo) : 0;
+        const heuristicCountdowns = detectCountdownComments(comments, dur || 0);
+        const insightsMap = graph.commentInsights || {};
+        let touched = false;
+
+        comments.forEach((c) => {
+            if (!c) return;
+            const cid = c.id !== undefined && c.id !== null ? String(c.id) : '';
+            const insight = cid ? insightsMap[cid] : null;
+            if (insight) {
+                c._aiInsight = insight;
+                touched = true;
+            }
+            const shouldConvertCountdown = !c._userToggledCountdown && !c.countdownApplied && Array.isArray(c.timestamps) && c.timestamps.length > 0 && (
+                Boolean(insight?.isCountdown) || heuristicCountdowns.has(cid)
+            );
+            if (shouldConvertCountdown && dur > 0) {
+                c.countdownApplied = true;
+                c.countdownAutoDetected = true;
+                c.timestamps = applyCommentCountdown(c.timestamps, dur, true);
+                c.textHtml = highlightCommentText(c.rawText || c.text, c.timestamps, c.avcodes || [], { contextPrefix: this.videoCode });
+                touched = true;
+            }
+        });
+
+        const heatmapMgr = this.controlManager?.heatmapManager || this.playerCore?.heatmapManager || null;
+        if (heatmapMgr && Array.isArray(graph.highlights)) {
+            heatmapMgr.setHighlightAnchors(graph.highlights);
+        }
+        if (touched) {
+            this.renderCommentsList();
+        }
     }
 
     refreshAiBriefVisibility() {
@@ -3263,6 +3322,21 @@ export class CommentPanel {
         const targetCode = this.videoCode || '';
         if (!targetCode || !Array.isArray(comments) || !comments.length) return;
         try {
+            if (LlmService.isFeatureEnabled('featureHighlightFusion')) {
+                const ctx = this._collectHighlightFusionContext();
+                const fusionHit = await getCachedHighlightGraph({
+                    avcode: targetCode,
+                    cues: ctx.cues,
+                    comments,
+                    crowdPeaks: ctx.crowdPeaks,
+                    vibeTags: ctx.vibeTags
+                });
+                if (this.videoCode === targetCode && fusionHit?.hit && fusionHit.graph) {
+                    this._applyHighlightGraphToComments(fusionHit.graph);
+                    this._renderAiBriefCard(fusionHit.graph.brief, fusionHit.graph);
+                    return;
+                }
+            }
             const res = await getCachedCommentBrief({ avcode: targetCode, comments });
             if (
                 this.videoCode !== targetCode ||
@@ -3272,7 +3346,7 @@ export class CommentPanel {
             ) {
                 return;
             }
-            this._renderAiBriefCard(res.brief);
+            this._renderAiBriefCard(res.brief, null);
         } catch (_) {}
     }
 
@@ -3290,6 +3364,27 @@ export class CommentPanel {
         this._aiBriefLoading = true;
         this.aiBriefBtn?.classList.add('is-loading');
         try {
+            if (LlmService.isFeatureEnabled('featureHighlightFusion')) {
+                const ctx = this._collectHighlightFusionContext();
+                const fusionRes = await buildHighlightGraphWithLlm({
+                    avcode: this.videoCode || '',
+                    cues: ctx.cues,
+                    comments,
+                    crowdPeaks: ctx.crowdPeaks,
+                    videoDuration: ctx.videoDuration,
+                    vibeTags: ctx.vibeTags
+                });
+                if (fusionRes?.ok && fusionRes.graph) {
+                    this._applyHighlightGraphToComments(fusionRes.graph);
+                    this._renderAiBriefCard(fusionRes.graph.brief, fusionRes.graph);
+                    return;
+                }
+                if (fusionRes?.refused) {
+                    Toast(fusionRes.error || '模型拒绝解析', 2400, 'info');
+                    return;
+                }
+            }
+
             const dur = this.targetVideo ? getVideoDurationSeconds(this.targetVideo) : 0;
             const res = await summarizeCommentsWithLlm({
                 avcode: this.videoCode || '',
@@ -3300,7 +3395,7 @@ export class CommentPanel {
                 Toast(res?.error || '生成评论简报失败', 2400, 'info');
                 return;
             }
-            this._renderAiBriefCard(res.brief);
+            this._renderAiBriefCard(res.brief, null);
         } catch (err) {
             Toast(LlmService.redactSecrets(err?.message || '生成评论简报失败'), 2400, 'error');
         } finally {
@@ -3309,7 +3404,7 @@ export class CommentPanel {
         }
     }
 
-    _renderAiBriefCard(brief) {
+    _renderAiBriefCard(brief, graph = null) {
         const card = this.aiBriefCard;
         if (!card || !brief) return;
 
@@ -3318,7 +3413,25 @@ export class CommentPanel {
 
         const title = document.createElement('span');
         title.className = 'mp-ai-brief-title';
-        title.textContent = __('commentAiBrief') || 'AI 简报';
+        title.textContent = graph?.highlights?.length
+            ? 'AI 高能融合简报'
+            : (__('commentAiBrief') || 'AI 简报');
+
+        const headActions = document.createElement('div');
+        headActions.className = 'mp-ai-brief-head-actions';
+
+        if (Array.isArray(graph?.highlights) && graph.highlights.length > 0 && this.getLoopManager()) {
+            const importBtn = document.createElement('button');
+            importBtn.type = 'button';
+            importBtn.className = 'mp-ai-brief-playlist-btn';
+            importBtn.textContent = `导入快览 (${graph.highlights.length})`;
+            importBtn.title = '作为推荐锚点导入进度条与快览/连播列表';
+            importBtn.addEventListener('click', () => {
+                const count = this.getLoopManager()?.loadAiVirtualPlaylist?.(graph.highlights) || 0;
+                Toast(count > 0 ? `已载入 ${count} 个 AI 推荐点至快览列表` : '推荐时间点已在高光列表中', 2200, 'success');
+            });
+            headActions.appendChild(importBtn);
+        }
 
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
@@ -3328,7 +3441,8 @@ export class CommentPanel {
         closeBtn.addEventListener('click', () => {
             card.classList.add('is-hidden');
         });
-        head.append(title, closeBtn);
+        headActions.appendChild(closeBtn);
+        head.append(title, headActions);
 
         const rowsWrap = document.createElement('div');
         rowsWrap.className = 'mp-ai-brief-rows';
@@ -3366,6 +3480,22 @@ export class CommentPanel {
                 tsRow.appendChild(chip);
             });
             if (tsRow.children.length > 0) children.push(tsRow);
+        }
+
+        if (Array.isArray(graph?.skipZones) && graph.skipZones.length > 0) {
+            const skipRow = document.createElement('div');
+            skipRow.className = 'mp-ai-brief-skip-row';
+            graph.skipZones.forEach((zone) => {
+                const jumpTo = Number(zone?.endSeconds);
+                if (!Number.isFinite(jumpTo) || jumpTo <= 0) return;
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'mp-ai-brief-skip-chip';
+                chip.textContent = `避坑跳至 ${formatSeconds(jumpTo)}${zone.reason ? ' · ' + zone.reason : ''}`;
+                chip.addEventListener('click', () => this.handleTimeClick(jumpTo, chip));
+                skipRow.appendChild(chip);
+            });
+            if (skipRow.children.length > 0) children.push(skipRow);
         }
 
         card.replaceChildren(...children);

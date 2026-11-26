@@ -138,6 +138,29 @@ export function rankPreferredCandidates(candidates, preferredLang) {
 }
 
 /**
+ * 当精确语种命中为空时，筛出具备潜在中文线索或疑似上游误标的可探测候选（上限 2 条）
+ * @param {Array<Object>} pool
+ * @param {string} preferredLang
+ * @returns {Array<Object>}
+ */
+export function collectAmbiguousFallbackCandidates(pool = [], preferredLang = 'zh') {
+    const target = normalizeSubtitleLang(preferredLang);
+    if (target !== 'zh' && target !== 'zh-TW') return [];
+    return (Array.isArray(pool) ? pool : [])
+        .filter((c) => {
+            if (!c) return false;
+            const url = String(c.downloadUrl || '');
+            const lang = normalizeSubtitleLang(c.lang);
+            if (!lang || lang === 'unknown') return true;
+            if (/[-_.]zh[-_.]?(?:cn|tw|hk|hans|hant)|[-_.](?:chs|cht)\./i.test(url)) return true;
+            if (c.provider === 'subtitlecat' && /whisper|translated/i.test(c.title || '')) return true;
+            return false;
+        })
+        .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
+        .slice(0, 2);
+}
+
+/**
  * 若偏好中文变体与实际字幕文本脚本不一致（或经繁简互为备选命中），自动执行繁简转换
  * @param {Object} item
  * @param {{ format: string, cues: Array<Object> }} parsed
@@ -1281,6 +1304,13 @@ export class SubtitleManager {
             qBadge.className = `mp-sub-badge ${toneClass}`;
             qBadge.textContent = row.quality.label;
             meta.append(' ', qBadge);
+        } else if (row.machineTranslated) {
+            const mtBadge = document.createElement('span');
+            mtBadge.className = 'mp-sub-badge mp-sub-badge--warn';
+            mtBadge.textContent = row.originLang === 'en' && (row.lang === 'zh' || row.lang === 'zh-TW')
+                ? '英转中'
+                : '机翻';
+            meta.append(' ', mtBadge);
         }
 
         main.append(title, meta);
@@ -1932,13 +1962,13 @@ export class SubtitleManager {
 
         const targetCode = this.avcode;
         const preferredLang = resolvePreferredSubtitleLang(this.settings.subtitlePreferredLang, I18n.userLang);
-        const collectRanked = () => {
+        const collectPool = () => {
             const pool = [...this.bundle.items, ...this.onlineResults].filter(
                 (entry) => this._isRelevant(entry) && !this._autoFailedIds.has(entry.id)
             );
-            const deduped = Array.from(new Map(pool.map((entry) => [entry.id, entry])).values());
-            return rankPreferredCandidates(deduped, preferredLang);
+            return Array.from(new Map(pool.map((entry) => [entry.id, entry])).values());
         };
+        const collectRanked = () => rankPreferredCandidates(collectPool(), preferredLang);
 
         let ranked = collectRanked();
         if (!ranked.length && !fromSearch && !this._searching && !this._autoSearchedCodes.has(targetCode)) {
@@ -1961,6 +1991,11 @@ export class SubtitleManager {
             }
         }
 
+        let usingAmbiguousProbe = false;
+        if (!ranked.length) {
+            ranked = collectAmbiguousFallbackCandidates(collectPool(), preferredLang);
+            usingAmbiguousProbe = ranked.length > 0;
+        }
         if (!ranked.length) return false;
 
         const MAX_EVAL = 3;
@@ -1987,6 +2022,14 @@ export class SubtitleManager {
             }
 
             const { langInfo, quality } = this._inspectTrackMetadata(rawItem, rawParsed);
+            if (usingAmbiguousProbe) {
+                const actualLang = normalizeSubtitleLang(langInfo?.lang || rawItem.lang);
+                const matchesZh = actualLang === 'zh' || actualLang === 'zh-TW' || langInfo?.trackLayout === 'bilingual';
+                if (!matchesZh) {
+                    this._autoFailedIds.add(candidate.id);
+                    continue;
+                }
+            }
             evaluated.push({ candidate, item: rawItem, parsed: rawParsed, langInfo, quality });
             if (!langInfo?.isCorrupted && (quality?.sqi || 0) >= 70) {
                 break;

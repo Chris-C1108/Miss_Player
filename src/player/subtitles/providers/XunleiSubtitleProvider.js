@@ -45,14 +45,31 @@ function extFromUrl(url, fallback = 'srt') {
     return match ? match[1].toLowerCase() : fallback;
 }
 
-function langLabelOf(item) {
+export function langLabelOf(item = {}) {
     const languages = Array.isArray(item.languages) ? item.languages.join(' ') : '';
-    const raw = `${languages} ${item.language || ''} ${item.lang || ''} ${item.extra_name || ''} ${item.caption || ''}`;
-    if (/双[语語]|bilingual|中英/i.test(raw)) return { code: 'zh', label: '双语' };
-    if (/繁[体體]|繁中|cht|zh-tw|traditional/i.test(raw)) return { code: 'zh-TW', label: '繁体' };
-    if (/简[体體]|简中|chs|zh-cn|简体/i.test(raw)) return { code: 'zh', label: '简体' };
-    if (/日|jp|japanese/i.test(raw)) return { code: 'ja', label: '日语' };
-    if (/英|en|english/i.test(raw)) return { code: 'en', label: '英语' };
+    const structured = `${languages} ${item.language || ''} ${item.lang || ''}`.trim();
+    const titleProbe = `${item.simple_name || ''} ${item.name || ''} ${item.file_name || ''} ${item.caption || ''}`.trim();
+    const urlProbe = String(item.url || item.download_url || '').trim();
+    const combined = `${structured} ${titleProbe} ${urlProbe}`;
+
+    if (/(?:双[语語]|bilingual|中[日英]|[.\-_](?:chs|cht)[.\-_]?eng)/i.test(combined)) {
+        return { code: 'zh', label: '双语' };
+    }
+    if (/(?:繁[体體]|繁中|zh[-_]?tw|zh[-_]?hk|zh[-_]?hant|\bcht\b|traditional)/i.test(combined)) {
+        return { code: 'zh-TW', label: '繁体' };
+    }
+    if (/(?:简[体體]|简中|zh[-_]?cn|zh[-_]?hans|\bchs\b|中[文文字]|国[语語]|\bchinese\b|\bzh\b)/i.test(combined)) {
+        return { code: 'zh', label: '简体' };
+    }
+
+    // 仅在未命中显式中文标记时检查日/英（使用词边界且排除 uploader 昵称噪音）
+    const nonZhProbe = `${structured} ${titleProbe}`;
+    if (/(?:\b(?:ja|jp|jpn|japanese)\b|日[语語文本])|[.\-_]jp\.(?:srt|ass|ssa|vtt)/i.test(nonZhProbe)) {
+        return { code: 'ja', label: '日语' };
+    }
+    if (/(?:\b(?:en|eng|english)\b|英[语語文])|[.\-_]en\.(?:srt|ass|ssa|vtt)/i.test(nonZhProbe)) {
+        return { code: 'en', label: '英语' };
+    }
     return { code: 'zh', label: '中文' };
 }
 

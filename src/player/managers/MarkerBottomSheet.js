@@ -516,12 +516,14 @@ export class MarkerBottomSheet {
 
             input.addEventListener('input', (e) => {
                 tab.comment = e.target.value;
+                tab.isAiSuggestion = false;
                 this.loopManager._saveTabs();
                 this.loopManager.renderTabs();
             });
 
             input.addEventListener('change', () => {
                 tab.comment = input.value.trim();
+                tab.isAiSuggestion = false;
                 this.loopManager._saveTabs();
                 this.loopManager.renderTabs();
                 flashSaved();

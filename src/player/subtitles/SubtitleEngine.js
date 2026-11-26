@@ -27,6 +27,24 @@ function withTimeout(promise, ms, tag = 'TIMEOUT') {
     return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
+/**
+ * 基于下载直链文件名纠正上游候选的真实目标语言（不覆盖 -orig 原始底本）
+ * @param {Object} candidate
+ * @returns {string}
+ */
+export function inferCandidateTargetLang(candidate) {
+    const url = String(candidate?.downloadUrl || '').split('?')[0].toLowerCase();
+    if (url && !/-orig\.(?:srt|ass|ssa|vtt)$/i.test(url)) {
+        if (/[-_.]zh[-_.]?(?:tw|hk|hant)\.(?:srt|ass|ssa|vtt)$|[-_.]cht\.(?:srt|ass|ssa|vtt)$/i.test(url)) {
+            return 'zh-TW';
+        }
+        if (/[-_.]zh(?:[-_.]?(?:cn|hans))?\.(?:srt|ass|ssa|vtt)$|[-_.]chs\.(?:srt|ass|ssa|vtt)$/i.test(url)) {
+            return 'zh';
+        }
+    }
+    return candidate?.lang || '';
+}
+
 export class SubtitleEngine {
     constructor() {
         this.providers = [new XunleiSubtitleProvider(), new SubtitleCatProvider()];
@@ -76,10 +94,15 @@ export class SubtitleEngine {
                 byUrl.add(candidate.downloadUrl.split('?')[0]);
                 continue;
             }
+            const resolvedLang = inferCandidateTargetLang(candidate);
+            const resolvedLangLabel = resolvedLang === 'zh-TW'
+                ? '繁體'
+                : (resolvedLang === 'zh' ? (candidate.langLabel && /双语|简体|中文/.test(candidate.langLabel) ? candidate.langLabel : '中文') : candidate.langLabel);
+
             const urlKey = candidate.downloadUrl.split('?')[0];
             if (byUrl.has(urlKey)) continue;
             // 同名同格式同语言视为同一份字幕的不同哈希副本，只保留排序靠前一条
-            const titleKey = `${candidate.provider}|${String(candidate.title || '').toLowerCase().replace(/\s+/g, '')}|${candidate.format}|${candidate.lang}`;
+            const titleKey = `${candidate.provider}|${String(candidate.title || '').toLowerCase().replace(/\s+/g, '')}|${candidate.format}|${resolvedLang}`;
             if (byTitle.has(titleKey)) continue;
             byUrl.add(urlKey);
             byTitle.add(titleKey);
@@ -88,9 +111,18 @@ export class SubtitleEngine {
             if (candidate.format === 'ass') score += 6;
             if (codeMatchesText(`${candidate.title || ''}`, code)) score += 4;
             if (candidate.machineTranslated) score -= 8;
-            if (candidate.lang === 'zh' || candidate.lang === 'zh-TW') score += 3;
+            // 二道英转中净网机翻语义失真明显（ja -> en -> zh），显著低于日转中直译（ja -> zh）
+            if (candidate.machineTranslated && candidate.originLang === 'en' && (resolvedLang === 'zh' || resolvedLang === 'zh-TW')) {
+                score -= 14;
+            }
+            if (resolvedLang === 'zh' || resolvedLang === 'zh-TW') score += 3;
 
-            ranked.push({ ...candidate, rating: Math.max(1, Math.min(99, Math.round(score))) });
+            ranked.push({
+                ...candidate,
+                lang: resolvedLang || candidate.lang,
+                langLabel: resolvedLangLabel || candidate.langLabel,
+                rating: Math.max(1, Math.min(99, Math.round(score)))
+            });
         }
         return ranked.sort((a, b) => b.rating - a.rating);
     }

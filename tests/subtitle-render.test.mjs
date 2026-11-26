@@ -170,8 +170,16 @@ test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
         normalizeSubtitleLang,
         resolvePreferredSubtitleLang,
         rankPreferredCandidates,
+        collectAmbiguousFallbackCandidates,
         selectBestBundleItem
     } = await import('../src/player/subtitles/SubtitleManager.js');
+    const {
+        guessOriginLang,
+        resolveStaticSubtitleAnchorLang,
+        resolveSubtitleCatDetailHtml
+    } = await import('../src/player/subtitles/providers/SubtitleCatProvider.js');
+    const { langLabelOf } = await import('../src/player/subtitles/providers/XunleiSubtitleProvider.js');
+    const { SubtitleEngine, inferCandidateTargetLang } = await import('../src/player/subtitles/SubtitleEngine.js');
     const { SubtitleRepository } = await import('../src/player/subtitles/SubtitleRepository.js');
 
     await t.test('1. 字幕层挂载在播放器顶层容器而非视频内部', async () => {
@@ -651,5 +659,131 @@ test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
         assert.equal(managerB.activeItem?.lang, 'zh-TW');
         assert.equal(managerB.activeItem?.convertedFrom, 'zh');
         assert.equal(managerB.cues[0].text, '請開始檢查這段話，頭髮裡面有發現');
+    });
+
+    await t.test('13. FOCS-264 等 SubtitleCat/迅雷语种误标修复、二跳机翻降权与模糊探测救援', async () => {
+        // 13a. originLang 与静态下载目标语言解耦
+        assert.equal(guessOriginLang('FOCS-264.ja.whisperjav (translated from Japanese)').code, 'ja');
+        assert.equal(guessOriginLang('FOCS-264-RM.en (translated from English)').code, 'en');
+        assert.equal(resolveStaticSubtitleAnchorLang('download_zh-CN', '/subs/1372/FOCS-264.ja.whisperjav-zh-CN.srt').code, 'zh');
+        assert.equal(resolveStaticSubtitleAnchorLang('download_zh-TW', '/subs/1522/FOCS-264.ja.whisperjav-zh-TW.srt').code, 'zh-TW');
+
+        // 13b. Mock DOMParser 验证 FOCS-264 SubtitleCat 详情页拆出 zh-CN 与 zh-TW 且保留 originLang
+        const prevDomParser = globalThis.DOMParser;
+        globalThis.DOMParser = class {
+            parseFromString(html) {
+                const links = [];
+                for (const m of String(html).matchAll(/<a[^>]*id="(download_zh[^"]*)"[^>]*href="([^"]+)"[^>]*>/gi)) {
+                    links.push({
+                        getAttribute: (k) => (k === 'id' ? m[1] : k === 'href' ? m[2] : '')
+                    });
+                }
+                return {
+                    querySelectorAll(sel) {
+                        if (sel.includes('download_zh-CN')) return links;
+                        return [];
+                    }
+                };
+            }
+        };
+        try {
+            const jaOriginDetail = resolveSubtitleCatDetailHtml(
+                {
+                    detailUrl: 'https://www.subtitlecat.com/subs/1305/FOCS-264.ja.whisperjav.html',
+                    title: 'FOCS-264.ja.whisperjav',
+                    rowText: 'FOCS-264.ja.whisperjav (translated from Japanese) 10 downloads',
+                    downloads: 10
+                },
+                `<a id="download_zh-CN" href="/subs/1372/FOCS-264.ja.whisperjav-zh-CN.srt"></a>
+                 <a id="download_zh-TW" href="/subs/1522/FOCS-264.ja.whisperjav-zh-TW.srt"></a>`
+            );
+            assert.equal(jaOriginDetail.length, 2);
+            assert.equal(jaOriginDetail[0].lang, 'zh');
+            assert.equal(jaOriginDetail[0].originLang, 'ja');
+            assert.equal(jaOriginDetail[0].machineTranslated, true);
+            assert.equal(jaOriginDetail[1].lang, 'zh-TW');
+
+            const enOriginDetail = resolveSubtitleCatDetailHtml(
+                {
+                    detailUrl: 'https://www.subtitlecat.com/subs/1161/FOCS-264-RM.en.html',
+                    title: 'FOCS-264-RM.en',
+                    rowText: 'FOCS-264-RM.en (translated from English) 13 downloads',
+                    downloads: 13
+                },
+                `<a id="download_zh-CN" href="/subs/1171/FOCS-264-RM.en-zh-CN.srt"></a>`
+            );
+            assert.equal(enOriginDetail.length, 1);
+            assert.equal(enOriginDetail[0].lang, 'zh');
+            assert.equal(enOriginDetail[0].originLang, 'en');
+
+            // 13c. SubtitleEngine._rank 对二跳英转中显著降权，日转中直译胜出，并纠正误标链接
+            const engine = new SubtitleEngine();
+            const rankedFocs = engine._rank([
+                ...enOriginDetail,
+                ...jaOriginDetail,
+                {
+                    id: 'sc:mislabeled',
+                    provider: 'subtitlecat',
+                    providerLabel: 'SubtitleCat',
+                    title: 'FOCS-264 (translated from Japanese)',
+                    lang: 'ja',
+                    langLabel: '日语',
+                    format: 'srt',
+                    downloadUrl: 'https://www.subtitlecat.com/subs/1158/FOCS-264-zh-CN.srt',
+                    originLang: 'ja',
+                    machineTranslated: true,
+                    baseScore: 78
+                }
+            ], 'FOCS-264');
+            assert.equal(inferCandidateTargetLang({ downloadUrl: 'https://www.subtitlecat.com/subs/1158/FOCS-264-zh-CN.srt', lang: 'ja' }), 'zh');
+            assert.equal(rankedFocs[0].originLang, 'ja');
+            assert.equal(rankedFocs[0].lang, 'zh');
+            assert.ok(rankedFocs[0].rating > rankedFocs.find((c) => c.originLang === 'en').rating);
+        } finally {
+            globalThis.DOMParser = prevDomParser;
+        }
+
+        // 13d. 迅雷适配器上传者昵称含 "en"/"jp" 子串时不污染中文语种判定
+        assert.equal(langLabelOf({ simple_name: 'FOCS-264.srt', extra_name: 'Stephen_JpFansub' }).code, 'zh');
+        assert.equal(langLabelOf({ simple_name: 'FOCS-264.en.srt', languages: ['English'] }).code, 'en');
+
+        // 13e. 当上游候选误标为 ja 但直链/标题含线索时，自动选优兜底探测实际正文后成功救援
+        const rescueCandidates = collectAmbiguousFallbackCandidates(
+            [
+                { id: 'c1', provider: 'subtitlecat', title: 'FOCS-264 whisper', lang: 'ja', rating: 82, downloadUrl: 'https://www.subtitlecat.com/subs/1158/FOCS-264-zh-CN.srt' }
+            ],
+            'zh'
+        );
+        assert.equal(rescueCandidates.length, 1);
+
+        env.settings.subtitlePreferredLang = 'zh';
+        env.settings.subtitleAutoBest = true;
+        env.settings.betaMode = true;
+        const managerRescue = new SubtitleManager(env.playerCore, env.uiManager, null);
+        managerRescue.avcode = 'FOCS-264';
+        managerRescue._persist = async () => {};
+        const sampleZhSrt = [
+            '1',
+            '00:00:01,000 --> 00:00:04,000',
+            '与奶奶共度时光，妈妈正在午睡。',
+            ''
+        ].join('\n');
+        managerRescue.engine = {
+            async search() {
+                return {
+                    candidates: [
+                        { id: 'mis-ja', provider: 'subtitlecat', title: 'FOCS-264 (translated from Japanese)', lang: 'ja', rating: 80, format: 'srt', downloadUrl: 'https://www.subtitlecat.com/subs/1158/FOCS-264-zh-CN.srt' }
+                    ],
+                    errors: []
+                };
+            },
+            async download() {
+                return { content: sampleZhSrt, format: 'srt' };
+            }
+        };
+        const rescued = await managerRescue._maybeAutoPickPreferred({ userAction: true });
+        assert.equal(rescued, true);
+        assert.equal(managerRescue.bundle.favoriteId, 'mis-ja');
+        assert.equal(managerRescue.activeItem?.lang, 'zh');
     });
 });

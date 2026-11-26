@@ -311,6 +311,50 @@
     color: #ffffff;
 }
 
+.mp-ai-brief-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mp-ai-brief-playlist-btn {
+    padding: 3px 9px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 159, 10, 0.45);
+    background: rgba(255, 159, 10, 0.16);
+    color: #ffb340;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mp-ai-brief-playlist-btn:hover {
+    background: rgba(255, 159, 10, 0.28);
+    color: #ffffff;
+}
+
+.mp-ai-brief-skip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.mp-ai-brief-skip-chip {
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 69, 58, 0.35);
+    background: rgba(255, 69, 58, 0.12);
+    color: #ff8a80;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.mp-ai-brief-skip-chip:hover {
+    background: rgba(255, 69, 58, 0.24);
+    color: #ffffff;
+}
+
 .mp-ai-brief-rows {
     display: flex;
     flex-direction: column;

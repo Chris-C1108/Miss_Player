@@ -11,6 +11,7 @@ import {
     base64ToUint8Array,
     CODEC_CONSTANTS
 } from '../../utils/heatmapCodec.js';
+import { extractCrowdPeaks } from '../../services/LlmTasks.js';
 
 export const HEATMAP_CONSTANTS = {
     BIN_SECONDS: 5,        // 物理采样精度：每 5 秒为一个独立 bucket
@@ -351,9 +352,48 @@ export class HeatmapManager {
         this.svgElement = svg;
         this.pathElement = path;
         this.pathCrowdElement = crowdPath;
+        this.aiAnchors = [];
 
         // 插入在 progressBarContainer 的起始位置（位于进度条下方，背景上方）
         container.insertBefore(svg, container.firstChild);
+    }
+
+    /**
+     * 提取全网高能热度波峰秒数列表，供 BYOK 多模态融合引擎联合推理
+     * @param {number} [topK=6]
+     * @returns {Array<{ seconds: number, intensity: number }>}
+     */
+    getCrowdPeaks(topK = 6) {
+        return extractCrowdPeaks(this.crowd120, this.duration, topK);
+    }
+
+    /**
+     * 在进度条热度 SVG 图层上渲染 AI 融合高能锚点微光圆点
+     * @param {Array<{ seconds: number, tag?: string }>} [anchors]
+     */
+    setHighlightAnchors(anchors = []) {
+        this.aiAnchors = Array.isArray(anchors) ? anchors.filter((a) => Number.isFinite(Number(a?.seconds))) : [];
+        this.renderAiAnchorsSvg();
+    }
+
+    renderAiAnchorsSvg() {
+        if (!this.svgElement || typeof document === 'undefined') return;
+        const oldDots = this.svgElement.querySelectorAll('.mp-heatmap-ai-dot');
+        oldDots.forEach((node) => node.remove());
+
+        const dur = Number(this.duration) || Number(this.targetVideo?.duration) || 0;
+        if (dur <= 0 || !this.aiAnchors?.length) return;
+
+        const svgNs = 'http://www.w3.org/2000/svg';
+        this.aiAnchors.forEach((anchor) => {
+            const pct = Math.max(0.5, Math.min(99.5, (Number(anchor.seconds) / dur) * 100));
+            const dot = document.createElementNS(svgNs, 'circle');
+            dot.setAttribute('class', 'mp-heatmap-ai-dot');
+            dot.setAttribute('cx', pct.toFixed(2));
+            dot.setAttribute('cy', '34');
+            dot.setAttribute('r', '1.35');
+            this.svgElement.appendChild(dot);
+        });
     }
 
     async onLoadedMetadata() {

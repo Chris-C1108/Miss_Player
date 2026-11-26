@@ -688,6 +688,11 @@
     box-shadow: 0 0 8px hsla(var(--tab-color), 0.85);
 }
 
+.tm-progress-marker-tick.is-ai-suggested {
+    border-style: dashed;
+    background-color: rgba(255, 159, 10, 0.82);
+}
+
 .tm-progress-marker-range {
     position: absolute;
     height: 4px;

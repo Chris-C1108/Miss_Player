@@ -68,7 +68,11 @@ const {
     summarizeCommentsWithLlm,
     getCachedCommentBrief,
     autoTagMarkerWithLlm,
-    mergeAutoTagsIntoComment
+    mergeAutoTagsIntoComment,
+    extractCrowdPeaks,
+    detectCountdownComments,
+    buildHighlightGraphWithLlm,
+    getCachedHighlightGraph
 } = await import('../src/services/LlmTasks.js');
 
 const { SEMANTIC_TAG_TAXONOMY } = await import('../src/player/managers/tagTaxonomy.js');
@@ -853,6 +857,100 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             comments: [{ text: '05:20 高能起点很精彩，强烈推荐这一段！', hasTimestamps: true }]
         });
         assert.equal(typeof briefCacheHit.hit, 'boolean');
+
+        // Phase B High-Energy 2.0 tests: extractCrowdPeaks, detectCountdownComments, buildHighlightGraphWithLlm, vibeTags
+        const arr120 = new Uint8Array(120);
+        arr120[20] = 180;
+        arr120[21] = 240;
+        arr120[22] = 190;
+        arr120[80] = 210;
+        const peaks = extractCrowdPeaks(arr120, 3600, 4);
+        assert.ok(peaks.length >= 2);
+        assert.ok(peaks.some((p) => p.seconds > 550 && p.seconds < 720));
+        assert.ok(peaks.some((p) => p.seconds > 2350 && p.seconds < 2480));
+
+        const countdownHits = detectCountdownComments([
+            { id: 'cd-1', rawText: '58:10 开头 41:20 切换 12:05 结束', timestamps: [{ rawSeconds: 3490 }, { rawSeconds: 2480 }, { rawSeconds: 725 }] },
+            { id: 'cd-2', rawText: '还剩 15:00 超神', timestamps: [{ rawSeconds: 900 }] },
+            { id: 'fwd-1', rawText: '10:00 20:00 都不错', timestamps: [{ rawSeconds: 600 }, { rawSeconds: 1200 }] }
+        ], 3600);
+        assert.equal(countdownHits.has('cd-1'), true);
+        assert.equal(countdownHits.has('cd-2'), true);
+        assert.equal(countdownHits.has('fwd-1'), false);
+
+        LlmService.saveConfig({
+            enabled: true,
+            baseUrl: 'https://apihub.agnes-ai.com/v1',
+            model: 'agnes-3.0-flash',
+            apiKey: 'sk-test',
+            vibeTags: ['剧情反转', '黑丝制服']
+        });
+        assert.deepEqual(LlmService.getConfig().vibeTags, ['剧情反转', '黑丝制服']);
+
+        let fusionCalls = 0;
+        mockGmResponder = (opts) => {
+            fusionCalls += 1;
+            opts.onload({
+                status: 200,
+                finalUrl: opts.url,
+                responseText: JSON.stringify({
+                    choices: [{
+                        message: {
+                            content: JSON.stringify({
+                                highlights: [
+                                    { seconds: 640, endSeconds: 700, tag: '黑丝反差', reason: '办公室对白张力爆棚', sources: ['crowd', 'comment', 'sub'], score: 96 },
+                                    { seconds: 99999, tag: '越界忽略', reason: '超长截断测试', sources: ['sub'], score: 60 }
+                                ],
+                                skipZones: [
+                                    { seconds: 0, endSeconds: 85, reason: '片头铺垫过长' }
+                                ],
+                                commentTags: [
+                                    { idx: 0, sentiment: 'warn', isCountdown: false, inferredSeconds: null, note: '糊码劝退' },
+                                    { idx: 1, sentiment: 'hype', isCountdown: false, inferredSeconds: 640, note: '神回场景' }
+                                ],
+                                brief: {
+                                    highlights: '10分钟起进入核心对手戏',
+                                    warnings: '片头较慢且部分特写偏糊',
+                                    consensus: '后半段高光值得反复二刷'
+                                }
+                            })
+                        }
+                    }]
+                })
+            });
+        };
+
+        const fusionRes = await buildHighlightGraphWithLlm({
+            avcode: 'FOCS-264',
+            cues: [{ start: 635, end: 642, text: '社长不要这样，会被发现的' }],
+            comments: [
+                { id: 'cm-hype', text: '黑丝社长办公室那段真是神作' },
+                { id: 'cm-warn', text: '01:00 全程马赛克看个寂寞' }
+            ],
+            crowdPeaks: peaks,
+            videoDuration: 3600,
+            vibeTags: ['黑丝制服']
+        });
+        assert.equal(fusionRes.ok, true);
+        assert.equal(fusionRes.graph.highlights.length, 2);
+        assert.equal(fusionRes.graph.highlights[1].seconds, 3600);
+        assert.equal(fusionRes.graph.skipZones[0].endSeconds, 85);
+        assert.equal(fusionRes.graph.commentInsights['cm-hype'].inferredSeconds, 640);
+        assert.equal(fusionRes.graph.commentInsights['cm-warn'].sentiment, 'warn');
+        assert.equal(fusionRes.graph.commentInsights['cm-warn'].inferredSeconds, null);
+
+        const cachedGraph = await getCachedHighlightGraph({
+            avcode: 'FOCS-264',
+            cues: [{ start: 635, end: 642, text: '社长不要这样，会被发现的' }],
+            comments: [
+                { id: 'cm-hype', text: '黑丝社长办公室那段真是神作' },
+                { id: 'cm-warn', text: '01:00 全程马赛克看个寂寞' }
+            ],
+            crowdPeaks: peaks,
+            vibeTags: ['黑丝制服']
+        });
+        assert.equal(cachedGraph.hit, true);
+        assert.equal(fusionCalls, 1);
 
         // Static compliance check across all 3 AI core/UI files
         const sourceFiles = [

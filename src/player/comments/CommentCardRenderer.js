@@ -6,7 +6,19 @@
 import { __ } from '../../constants/i18n.js';
 import { SITE_DOMAINS } from '../../constants/domains.js';
 import { getValue } from '../../utils/index.js';
-import { esc, sanitizeCommentUrl } from './CommentDataPipeline.js';
+import { esc, sanitizeCommentUrl, formatSeconds } from './CommentDataPipeline.js';
+
+/**
+ * 统一判定一条评论是否属于“高能现场”集合（自动剔除 AI 判定的纯吐槽避坑评论，同时纳入 AI 语义推算时间戳的无数字好评）
+ * @param {Object} c
+ * @returns {boolean}
+ */
+export function isHighEnergyComment(c) {
+    if (!c) return false;
+    if (c._aiInsight?.sentiment === 'warn') return false;
+    if (Array.isArray(c.timestamps) && c.timestamps.length > 0) return true;
+    return Number.isFinite(c._aiInsight?.inferredSeconds) && c._aiInsight.inferredSeconds >= 0;
+}
 
 export const COMMENT_BADGE_TEXT_MAP = {
     'loading': '采集中...',
@@ -76,6 +88,19 @@ export function renderCommentCardHtml(c, options = {}) {
     const spamHtml = (c.spam && c.spam.label === 'SPAM')
         ? `<span class="jc-spam-badge" title="${esc(c.spam.reason || '')}">灌水: ${esc(c.spam.category || '')}</span>`
         : '';
+    const aiInsight = c._aiInsight || null;
+    const aiBadgeHtml = aiInsight?.sentiment === 'hype'
+        ? `<span class="jc-ai-badge jc-ai-badge--hype">${esc(aiInsight.note || '高能')}</span>`
+        : (aiInsight?.sentiment === 'warn'
+            ? `<span class="jc-ai-badge jc-ai-badge--warn">${esc(aiInsight.note || '避坑')}</span>`
+            : '');
+    const inferredTsSec = (!hasTimestamps && Number.isFinite(aiInsight?.inferredSeconds) && aiInsight.inferredSeconds >= 0)
+        ? Math.round(aiInsight.inferredSeconds)
+        : null;
+    const inferredTsHtml = inferredTsSec !== null
+        ? `<div class="jc-inferred-ts-row"><button type="button" class="jc-time-link jc-time-link--inferred" data-secs="${inferredTsSec}" title="AI 结合字幕与热度波峰推算的参考时间">~${esc(formatSeconds(inferredTsSec))} 推断</button></div>`
+        : '';
+
     const safeCommentId = esc(c.id || '');
     const safeTime = (c.time && !c.time.includes('Invalid')) ? esc(c.time) : '';
     const playerState = playerCore?.playerState || playerCore?.options?.playerState;
@@ -105,6 +130,7 @@ export function renderCommentCardHtml(c, options = {}) {
                             ${debugReportBtn}
                         </div>
                         <div class="jc-row-meta">
+                            ${aiBadgeHtml}
                             ${spamHtml}
                             ${scoreHtml}
                         </div>
@@ -112,6 +138,7 @@ export function renderCommentCardHtml(c, options = {}) {
                 </div>
                 <div class="${textClass}" ${isLongText ? `data-collapsed="${isExpanded ? 'false' : 'true'}"` : ''}>
                     ${expandBtn}
+                    ${inferredTsHtml}
                 </div>
             </div>
         </div>
@@ -211,7 +238,7 @@ export function renderCommentSectionHtml(siteKey, ctx) {
     } else if (site.status === 'loaded') {
         let commentsToRender = site.filteredComments;
         if (highlightOnly) {
-            commentsToRender = commentsToRender.filter(c => Array.isArray(c.timestamps) && c.timestamps.length > 0);
+            commentsToRender = commentsToRender.filter((c) => isHighEnergyComment(c));
         }
 
         if (highlightOnly && commentsToRender.length === 0) {

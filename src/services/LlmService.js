@@ -24,6 +24,32 @@ export const LLM_KEY_FEAT_SUB_CHAPTERS = 'mp_llm_feat_sub_chapters';
 export const LLM_KEY_FEAT_COMMENT_BRIEF = 'mp_llm_feat_comment_brief';
 export const LLM_KEY_FEAT_AUTO_TAG = 'mp_llm_feat_auto_tag';
 export const LLM_KEY_AUTO_TAG_ON_MARK = 'mp_llm_auto_tag_on_mark';
+export const LLM_KEY_FEAT_HIGHLIGHT_FUSION = 'mp_llm_feat_highlight_fusion';
+export const LLM_KEY_VIBE_TAGS = 'mp_llm_vibe_tags';
+
+function normalizeVibeTags(raw) {
+    let arr = [];
+    if (Array.isArray(raw)) {
+        arr = raw;
+    } else if (typeof raw === 'string' && raw.trim()) {
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) arr = parsed;
+        } catch (_) {
+            arr = raw.split(/[,\s]+/);
+        }
+    }
+    const seen = new Set();
+    const out = [];
+    for (const item of arr) {
+        const clean = String(item || '').replace(/^#+/, '').trim().slice(0, 12);
+        if (!clean || seen.has(clean)) continue;
+        seen.add(clean);
+        out.push(clean);
+        if (out.length >= 6) break;
+    }
+    return out;
+}
 
 const NON_CHAT_MODEL_RE = /(?:imagen|sora|veo|kling|runway|seedance|midjourney|flux|stable-diffusion|dall-e|embedding|whisper|tts|audio|speech|realtime|sys1|-image$|\/image)/i;
 
@@ -295,6 +321,8 @@ export class LlmService {
         const featureCommentBrief = parseBooleanValue(getValue(LLM_KEY_FEAT_COMMENT_BRIEF, true), true);
         const featureAutoTag = parseBooleanValue(getValue(LLM_KEY_FEAT_AUTO_TAG, true), true);
         const autoTagOnMark = parseBooleanValue(getValue(LLM_KEY_AUTO_TAG_ON_MARK, false), false);
+        const featureHighlightFusion = parseBooleanValue(getValue(LLM_KEY_FEAT_HIGHLIGHT_FUSION, true), true);
+        const vibeTags = normalizeVibeTags(getValue(LLM_KEY_VIBE_TAGS, []));
         return {
             enabled,
             baseUrl,
@@ -304,7 +332,9 @@ export class LlmService {
             featureSubChapters,
             featureCommentBrief,
             featureAutoTag,
-            autoTagOnMark
+            autoTagOnMark,
+            featureHighlightFusion,
+            vibeTags
         };
     }
 
@@ -344,6 +374,12 @@ export class LlmService {
         if ('autoTagOnMark' in patch) {
             next.autoTagOnMark = parseBooleanValue(patch.autoTagOnMark, false);
         }
+        if ('featureHighlightFusion' in patch) {
+            next.featureHighlightFusion = parseBooleanValue(patch.featureHighlightFusion, true);
+        }
+        if ('vibeTags' in patch) {
+            next.vibeTags = normalizeVibeTags(patch.vibeTags);
+        }
 
         setValue(LLM_KEY_ENABLED, next.enabled);
         setValue(LLM_KEY_BASE_URL, next.baseUrl);
@@ -354,6 +390,8 @@ export class LlmService {
         setValue(LLM_KEY_FEAT_COMMENT_BRIEF, next.featureCommentBrief);
         setValue(LLM_KEY_FEAT_AUTO_TAG, next.featureAutoTag);
         setValue(LLM_KEY_AUTO_TAG_ON_MARK, next.autoTagOnMark);
+        setValue(LLM_KEY_FEAT_HIGHLIGHT_FUSION, next.featureHighlightFusion);
+        setValue(LLM_KEY_VIBE_TAGS, next.vibeTags);
 
         return next;
     }

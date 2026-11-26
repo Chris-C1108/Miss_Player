@@ -168,8 +168,9 @@ test('4. CommentPanel 5 项极简新交互与跟手滑动状态机断言', () =>
     const patchSlice = panelContent.slice(patchIdx, patchEndIdx);
     assert.ok(patchSlice.includes('this.isHighlightFilterActive'), 'patchSectionContent 必须校验 isHighlightFilterActive');
     assert.ok(
+        patchSlice.includes('allNewComments.filter((c) => isHighEnergyComment(c))') ||
         patchSlice.includes('allNewComments.filter(c => Array.isArray(c.timestamps) && c.timestamps.length > 0)'),
-        '高能现场激活时，增量追加的新评论必须仅保留包含时间戳的高能评论'
+        '高能现场激活时，增量追加的新评论必须通过高能判据过滤'
     );
     assert.ok(
         patchSlice.includes('checkViewportFill()'),
