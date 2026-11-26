@@ -20,6 +20,40 @@ export const LLM_KEY_BASE_URL = 'mp_llm_base_url';
 export const LLM_KEY_API_KEY = 'mp_llm_api_key';
 export const LLM_KEY_MODEL = 'mp_llm_model';
 export const LLM_KEY_TIMEOUT_MS = 'mp_llm_timeout_ms';
+export const LLM_KEY_FEAT_SUB_CHAPTERS = 'mp_llm_feat_sub_chapters';
+export const LLM_KEY_FEAT_COMMENT_BRIEF = 'mp_llm_feat_comment_brief';
+export const LLM_KEY_FEAT_AUTO_TAG = 'mp_llm_feat_auto_tag';
+export const LLM_KEY_AUTO_TAG_ON_MARK = 'mp_llm_auto_tag_on_mark';
+
+const NON_CHAT_MODEL_RE = /(?:imagen|sora|veo|kling|runway|seedance|midjourney|flux|stable-diffusion|dall-e|embedding|whisper|tts|audio|speech|realtime|sys1|-image$|\/image)/i;
+
+/**
+ * 过滤并排序文本对话模型列表，将推荐/最新模型置前
+ * @param {string[]} rawModels
+ * @param {string[]} [preferredModels]
+ * @returns {string[]}
+ */
+export function filterAndSortTextModels(rawModels = [], preferredModels = []) {
+    const seen = new Set();
+    const cleaned = [];
+    for (const item of Array.isArray(rawModels) ? rawModels : []) {
+        const id = String(item || '').trim();
+        if (!id || seen.has(id) || NON_CHAT_MODEL_RE.test(id)) continue;
+        seen.add(id);
+        cleaned.push(id);
+    }
+    const rankMap = new Map();
+    (Array.isArray(preferredModels) ? preferredModels : []).forEach((id, idx) => {
+        const clean = String(id || '').trim();
+        if (clean && !rankMap.has(clean)) rankMap.set(clean, idx);
+    });
+    return cleaned.sort((a, b) => {
+        const ra = rankMap.has(a) ? rankMap.get(a) : Number.MAX_SAFE_INTEGER;
+        const rb = rankMap.has(b) ? rankMap.get(b) : Number.MAX_SAFE_INTEGER;
+        if (ra !== rb) return ra - rb;
+        return 0;
+    });
+}
 
 const DEFAULT_TIMEOUT_MS = 45000;
 const MIN_TIMEOUT_MS = 5000;
@@ -239,7 +273,17 @@ export class LlmService {
 
     /**
      * 读取当前本地 AI 配置
-     * @returns {{ enabled: boolean, baseUrl: string, apiKey: string, model: string, timeoutMs: number }}
+     * @returns {{
+     *   enabled: boolean,
+     *   baseUrl: string,
+     *   apiKey: string,
+     *   model: string,
+     *   timeoutMs: number,
+     *   featureSubChapters: boolean,
+     *   featureCommentBrief: boolean,
+     *   featureAutoTag: boolean,
+     *   autoTagOnMark: boolean
+     * }}
      */
     static getConfig() {
         const enabled = parseBooleanValue(getValue(LLM_KEY_ENABLED, false), false);
@@ -247,13 +291,26 @@ export class LlmService {
         const apiKey = String(getValue(LLM_KEY_API_KEY, '') || '').trim();
         const model = String(getValue(LLM_KEY_MODEL, '') || '').trim();
         const timeoutMs = clampTimeout(getValue(LLM_KEY_TIMEOUT_MS, DEFAULT_TIMEOUT_MS), DEFAULT_TIMEOUT_MS);
-        return { enabled, baseUrl, apiKey, model, timeoutMs };
+        const featureSubChapters = parseBooleanValue(getValue(LLM_KEY_FEAT_SUB_CHAPTERS, true), true);
+        const featureCommentBrief = parseBooleanValue(getValue(LLM_KEY_FEAT_COMMENT_BRIEF, true), true);
+        const featureAutoTag = parseBooleanValue(getValue(LLM_KEY_FEAT_AUTO_TAG, true), true);
+        const autoTagOnMark = parseBooleanValue(getValue(LLM_KEY_AUTO_TAG_ON_MARK, false), false);
+        return {
+            enabled,
+            baseUrl,
+            apiKey,
+            model,
+            timeoutMs,
+            featureSubChapters,
+            featureCommentBrief,
+            featureAutoTag,
+            autoTagOnMark
+        };
     }
 
     /**
      * 保存局部 AI 配置并自动校验清洗
      * @param {Object} patch
-     * @returns {{ enabled: boolean, baseUrl: string, apiKey: string, model: string, timeoutMs: number }}
      */
     static saveConfig(patch = {}) {
         const prev = this.getConfig();
@@ -275,12 +332,28 @@ export class LlmService {
         if ('timeoutMs' in patch) {
             next.timeoutMs = clampTimeout(patch.timeoutMs, prev.timeoutMs);
         }
+        if ('featureSubChapters' in patch) {
+            next.featureSubChapters = parseBooleanValue(patch.featureSubChapters, true);
+        }
+        if ('featureCommentBrief' in patch) {
+            next.featureCommentBrief = parseBooleanValue(patch.featureCommentBrief, true);
+        }
+        if ('featureAutoTag' in patch) {
+            next.featureAutoTag = parseBooleanValue(patch.featureAutoTag, true);
+        }
+        if ('autoTagOnMark' in patch) {
+            next.autoTagOnMark = parseBooleanValue(patch.autoTagOnMark, false);
+        }
 
         setValue(LLM_KEY_ENABLED, next.enabled);
         setValue(LLM_KEY_BASE_URL, next.baseUrl);
         setValue(LLM_KEY_API_KEY, next.apiKey);
         setValue(LLM_KEY_MODEL, next.model);
         setValue(LLM_KEY_TIMEOUT_MS, next.timeoutMs);
+        setValue(LLM_KEY_FEAT_SUB_CHAPTERS, next.featureSubChapters);
+        setValue(LLM_KEY_FEAT_COMMENT_BRIEF, next.featureCommentBrief);
+        setValue(LLM_KEY_FEAT_AUTO_TAG, next.featureAutoTag);
+        setValue(LLM_KEY_AUTO_TAG_ON_MARK, next.autoTagOnMark);
 
         return next;
     }
@@ -293,6 +366,18 @@ export class LlmService {
     static isEnabled() {
         const cfg = this.getConfig();
         return Boolean(cfg.enabled && cfg.baseUrl && cfg.model);
+    }
+
+    /**
+     * 判断特定 AI 子功能是否开启（同时依赖 AI 总开关及端点+模型就绪）
+     * @param {'featureSubChapters'|'featureCommentBrief'|'featureAutoTag'|'autoTagOnMark'} [featureKey]
+     * @returns {boolean}
+     */
+    static isFeatureEnabled(featureKey = '') {
+        const cfg = this.getConfig();
+        if (!cfg.enabled || !cfg.baseUrl || !cfg.model) return false;
+        if (!featureKey) return true;
+        return Boolean(cfg[featureKey]);
     }
 
     /**

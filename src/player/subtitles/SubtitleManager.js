@@ -1524,7 +1524,7 @@ export class SubtitleManager {
     }
 
     async _loadCachedAiChapters() {
-        if (!this.avcode || !this.cues.length || !LlmService.isEnabled()) return;
+        if (!this.avcode || !this.cues.length || !LlmService.isFeatureEnabled('featureSubChapters')) return;
         const targetCode = this.avcode;
         try {
             const compressed = compressCuesForLlm(this.cues);
@@ -1539,8 +1539,8 @@ export class SubtitleManager {
 
     async _runAiChapters() {
         if (this._aiAnalyzing || !this.cues.length) return;
-        if (!LlmService.isEnabled()) {
-            Toast('请先在设置中启用并配置 AI 服务', 2400, 'info');
+        if (!LlmService.isFeatureEnabled('featureSubChapters')) {
+            Toast('请先在设置中启用 AI 服务与字幕分幕', 2400, 'info');
             return;
         }
         this._aiAnalyzing = true;
@@ -1564,6 +1564,14 @@ export class SubtitleManager {
         } finally {
             this._aiAnalyzing = false;
             this.lyricsAiBtn?.classList.remove('is-loading');
+        }
+    }
+
+    refreshAiAvailability() {
+        const enabled = LlmService.isFeatureEnabled('featureSubChapters');
+        this.lyricsAiBtn?.classList.toggle('is-hidden', !enabled);
+        if (enabled && this.cues.length && !this._aiChapters?.length) {
+            this._loadCachedAiChapters();
         }
     }
 
@@ -1613,7 +1621,7 @@ export class SubtitleManager {
 
         this.lyricsFilterBtn?.classList.toggle('is-hidden', !hasHighlights);
         this.lyricsFilterBtn?.classList.toggle('is-active', Boolean(this._lyricsOnlyHighlights && hasHighlights));
-        this.lyricsAiBtn?.classList.toggle('is-hidden', !LlmService.isEnabled());
+        this.lyricsAiBtn?.classList.toggle('is-hidden', !LlmService.isFeatureEnabled('featureSubChapters'));
 
         const displayMode = this.settings.subtitleDisplayMode || 'primary';
         const anchorIndices = new Set(

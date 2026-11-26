@@ -228,14 +228,12 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '',
 }
 
 /**
- * 提炼跨站评论口碑简报与高能时刻时间戳
- * @param {{ avcode: string, comments: Array, videoDuration?: number, forceRefresh?: boolean }} params
- * @returns {Promise<{ ok: boolean, fromCache?: boolean, brief?: Object, refused?: boolean, error?: string }>}
+ * 构建评论去重采样文本及确定性缓存哈希
+ * @param {Array} comments
+ * @returns {{ digest: string, contentHash: string } | null}
  */
-export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration = 0, forceRefresh = false } = {}) {
-    if (!Array.isArray(comments) || comments.length === 0) {
-        return { ok: false, refused: false, error: '暂无可用于提炼的评论内容' };
-    }
+function buildCommentsDigest(comments = []) {
+    if (!Array.isArray(comments) || comments.length === 0) return null;
 
     const seen = new Set();
     const candidates = [];
@@ -258,15 +256,14 @@ export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration
         const hasTs = Boolean(
             typeof comment === 'object' && (
                 comment.hasTimestamps ||
-                (Array.isArray(comment.timestamps) && comment.timestamps.length > 0)
+                (Array.isArray(comment.timestamps) && comment.timestamps.length > 0) ||
+                /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(text)
             )
         );
         candidates.push({ text, hasTs });
     }
 
-    if (candidates.length === 0) {
-        return { ok: false, refused: false, error: '暂无可用于提炼的评论内容' };
-    }
+    if (candidates.length === 0) return null;
 
     candidates.sort((a, b) => {
         if (a.hasTs !== b.hasTs) return a.hasTs ? -1 : 1;
@@ -293,7 +290,40 @@ export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration
     }
 
     const digest = selectedLines.join('\n');
-    const contentHash = LlmCache.hashContent(digest);
+    return {
+        digest,
+        contentHash: LlmCache.hashContent(digest)
+    };
+}
+
+/**
+ * 静默读取已缓存的评论简报（不触发模型调用）
+ * @param {{ avcode: string, comments: Array }} params
+ * @returns {Promise<{ hit: boolean, brief?: Object }>}
+ */
+export async function getCachedCommentBrief({ avcode, comments } = {}) {
+    const code = normalizeInlineText(avcode).toUpperCase();
+    const built = buildCommentsDigest(comments);
+    if (!code || !built?.contentHash) return { hit: false };
+    const cached = await LlmCache.getCached(code, 'comment_brief', built.contentHash);
+    if (cached.hit && cached.data) {
+        return { hit: true, brief: cached.data };
+    }
+    return { hit: false };
+}
+
+/**
+ * 提炼跨站评论口碑简报与高能时刻时间戳
+ * @param {{ avcode: string, comments: Array, videoDuration?: number, forceRefresh?: boolean }} params
+ * @returns {Promise<{ ok: boolean, fromCache?: boolean, brief?: Object, refused?: boolean, error?: string }>}
+ */
+export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration = 0, forceRefresh = false } = {}) {
+    const built = buildCommentsDigest(comments);
+    if (!built) {
+        return { ok: false, refused: false, error: '暂无可用于提炼的评论内容' };
+    }
+
+    const { digest, contentHash } = built;
 
     if (!forceRefresh) {
         const cached = await LlmCache.getCached(avcode, 'comment_brief', contentHash);
@@ -464,4 +494,32 @@ export async function autoTagMarkerWithLlm({ avcode, startTime, cues, title = ''
             comment: ''
         };
     }
+}
+
+/**
+ * 将 AI 返回的语义标签与短评无损合并进现有高光备注中
+ * @param {string} existingComment
+ * @param {string[]} [tags]
+ * @param {string} [aiComment]
+ * @returns {string}
+ */
+export function mergeAutoTagsIntoComment(existingComment = '', tags = [], aiComment = '') {
+    const base = String(existingComment || '').trim();
+    const parts = base ? [base] : [];
+    const existingSet = new Set(base.split(/\s+/).filter(Boolean));
+
+    for (const tag of Array.isArray(tags) ? tags : []) {
+        const cleanTag = normalizeInlineText(tag);
+        if (cleanTag && !existingSet.has(cleanTag)) {
+            existingSet.add(cleanTag);
+            parts.push(cleanTag);
+        }
+    }
+
+    const cleanComment = normalizeInlineText(aiComment);
+    if (cleanComment && !base.includes(cleanComment)) {
+        parts.push(cleanComment);
+    }
+
+    return parts.join(' ').trim();
 }

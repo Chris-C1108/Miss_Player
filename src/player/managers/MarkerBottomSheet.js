@@ -3,10 +3,12 @@ import { copyToClipboard, Toast, createModal, isImeConfirmEnter } from '../../ut
 import { formatTimeWithHours } from '../../utils/index.js';
 import { SyncManager } from '../../sync/index.js';
 import { __ } from '../../constants/i18n.js';
-import { LOOP_INTERVAL, CLOSE_LINE, ICON_TAG, ICON_TRASH, ICON_SHARE_LINK, ICON_UNDO } from '../../constants/icons.js';
+import { LOOP_INTERVAL, CLOSE_LINE, ICON_TAG, ICON_TRASH, ICON_SHARE_LINK, ICON_UNDO, ICON_SPARKLES } from '../../constants/icons.js';
 import { UIManager } from '../ui/UIManager.js';
 import { SURFACE_TYPES, bindKeepFocusAction, bindActionWithoutBlurShift } from '../state/UISurfaceMachine.js';
 import { applyCapsuleStateClasses } from './capsuleStateMachine.js';
+import { LlmService } from '../../services/LlmService.js';
+import { autoTagMarkerWithLlm, mergeAutoTagsIntoComment } from '../../services/LlmTasks.js';
 
 /**
  * MarkerBottomSheet — 循环片段与时间戳标签管理底部浮层面板
@@ -524,6 +526,57 @@ export class MarkerBottomSheet {
                 this.loopManager.renderTabs();
                 flashSaved();
             });
+
+            const aiEnabled = LlmService.isFeatureEnabled('featureAutoTag');
+            if (aiEnabled) {
+                inputRow.classList.add('has-ai');
+                const aiTagBtn = document.createElement('button');
+                aiTagBtn.type = 'button';
+                aiTagBtn.className = 'mp-sheet-ai-tag-btn';
+                aiTagBtn.innerHTML = ICON_SPARKLES;
+                aiTagBtn.title = 'AI 智能填标';
+                bindKeepFocusAction(aiTagBtn, async () => {
+                    if (aiTagBtn.disabled) return;
+                    const subMgr = this.loopManager?.controlManager?.subtitleManager;
+                    const cues = subMgr?.cues || [];
+                    if (!cues.length) {
+                        Toast('请先加载字幕后使用 AI 打标', 2000, 'info');
+                        return;
+                    }
+                    aiTagBtn.disabled = true;
+                    aiTagBtn.classList.add('is-loading');
+                    try {
+                        const res = await autoTagMarkerWithLlm({
+                            avcode: this.loopManager?._resolveVideoCode?.() || '',
+                            startTime: tab.startTime,
+                            cues,
+                            title: subMgr?.activeItem?.title || ''
+                        });
+                        if (res && res.ok && (res.tags?.length || res.comment)) {
+                            const merged = mergeAutoTagsIntoComment(tab.comment, res.tags, res.comment);
+                            if (merged && merged !== tab.comment) {
+                                tab.comment = merged;
+                                tab.updatedAt = Date.now();
+                                input.value = merged;
+                                this.loopManager._saveTabs();
+                                this.loopManager.renderTabs();
+                                flashSaved();
+                                Toast('已写入 AI 标签', 1800, 'success');
+                            } else {
+                                Toast('当前片段已有完整标签', 1800, 'info');
+                            }
+                        } else {
+                            Toast(res?.error || '未识别到匹配标签', 2200, 'info');
+                        }
+                    } catch (err) {
+                        Toast(LlmService.redactSecrets(err?.message || 'AI 打标失败'), 2200, 'error');
+                    } finally {
+                        aiTagBtn.disabled = false;
+                        aiTagBtn.classList.remove('is-loading');
+                    }
+                }, (t) => { this._lastInputTouchTime = t; });
+                inputRow.appendChild(aiTagBtn);
+            }
 
             // 语义标签展开按钮（内嵌于输入框右侧）
             const tagToggleBtn = document.createElement('button');

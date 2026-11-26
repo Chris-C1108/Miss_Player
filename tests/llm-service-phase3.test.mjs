@@ -56,7 +56,8 @@ const {
     LLM_KEY_BASE_URL,
     LLM_KEY_API_KEY,
     LLM_KEY_MODEL,
-    LLM_KEY_TIMEOUT_MS
+    LLM_KEY_TIMEOUT_MS,
+    filterAndSortTextModels
 } = await import('../src/services/LlmService.js');
 
 const { SyncManager } = await import('../src/sync/SyncManager.js');
@@ -65,7 +66,9 @@ const {
     compressCuesForLlm,
     analyzeSubtitleChaptersWithLlm,
     summarizeCommentsWithLlm,
-    autoTagMarkerWithLlm
+    getCachedCommentBrief,
+    autoTagMarkerWithLlm,
+    mergeAutoTagsIntoComment
 } = await import('../src/services/LlmTasks.js');
 
 const { SEMANTIC_TAG_TAXONOMY } = await import('../src/player/managers/tagTaxonomy.js');
@@ -657,7 +660,12 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             get textContent() { return this._textContent; }
             set textContent(v) { this._textContent = String(v ?? ''); }
             get innerHTML() { return this._innerHTML; }
-            set innerHTML(v) { this._innerHTML = String(v ?? ''); }
+            set innerHTML(v) {
+                this._innerHTML = String(v ?? '');
+                if (this._innerHTML === '') {
+                    this.children = [];
+                }
+            }
             setAttribute(k, v) { this.attributes[k] = String(v); }
             removeAttribute(k) { delete this.attributes[k]; }
             appendChild(child) {
@@ -733,7 +741,14 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             assert.equal(sm.expanded.s2_ai, true);
 
             const presets = card.querySelectorAll('.mp-s2-ai-presets .mp-s2-chip');
-            assert.equal(presets.length, 3);
+            assert.equal(presets.length, 5);
+
+            const consoleLinks = card.querySelectorAll('.mp-s2-ai-links .mp-s2-ai-link-btn');
+            assert.equal(consoleLinks.length, 2);
+            assert.equal(consoleLinks[0].href, 'https://platform.agnes-ai.cn');
+            assert.equal(consoleLinks[0].target, '_blank');
+            assert.equal(consoleLinks[1].href, 'https://platform.agnes-ai.com');
+            assert.equal(consoleLinks[1].target, '_blank');
 
             const inputs = card.querySelectorAll('.mp-s2-input');
             assert.equal(inputs.length, 3);
@@ -744,12 +759,26 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             presets[1].click();
             assert.equal(baseInput.value, 'https://openrouter.ai/api/v1');
             assert.equal(modelInput.placeholder, 'deepseek/deepseek-chat');
+            assert.equal(modelInput.value, 'deepseek/deepseek-chat');
             assert.ok(changeCount >= 1);
+
+            // Click Agnes China preset -> switches to China Base URL and latest flash model
+            presets[2].click();
+            assert.equal(baseInput.value, 'https://api.agnes-ai.cn/v1');
+            assert.equal(modelInput.value, 'agnes-3.0-flash');
+            assert.ok(consoleLinks[0].classList.contains('is-active'));
+
+            // Click Agnes Global preset -> switches to Global Base URL
+            presets[3].click();
+            assert.equal(baseInput.value, 'https://apihub.agnes-ai.com/v1');
+            assert.equal(modelInput.value, 'agnes-3.0-flash');
+            assert.ok(consoleLinks[1].classList.contains('is-active'));
 
             // Click Ollama preset -> overwrites preset default URL
             presets[0].click();
             assert.equal(baseInput.value, 'http://192.168.1.x:11434/v1');
             assert.equal(modelInput.placeholder, 'qwen2.5:7b');
+            assert.equal(modelInput.value, 'qwen2.5:7b');
 
             // Eye button toggles key visibility
             const eyeBtn = card.querySelector('.mp-s2-btn--icon');
@@ -758,13 +787,20 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             assert.equal(keyInput.type, 'text');
             assert.equal(eyeBtn.innerHTML, ICON_EYE_OFF);
 
-            // Set valid config and click test button
-            baseInput.value = 'http://192.168.2.250:11434/v1';
-            modelInput.value = 'qwen2.5:7b';
+            // Set valid config and click test button -> dynamically populates fetched text model chips
+            baseInput.value = 'https://apihub.agnes-ai.com/v1';
+            modelInput.value = 'agnes-3.0-flash';
             mockGmResponder = (opts) => {
                 opts.onload({
                     status: 200,
-                    responseText: JSON.stringify({ data: [{ id: 'qwen2.5:7b' }] }),
+                    responseText: JSON.stringify({
+                        data: [
+                            { id: 'agnes-imagen' },
+                            { id: 'agnes-3.0-pro' },
+                            { id: 'agnes-3.0-flash' },
+                            { id: 'agnes-3.5-preview' }
+                        ]
+                    }),
                     finalUrl: opts.url
                 });
             };
@@ -774,6 +810,17 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             assert.equal(pill.textContent, '已连通');
             assert.equal(toastLog.at(-1)?.msg, '接口连通正常');
             assert.equal(toastLog.at(-1)?.type, 'success');
+
+            const dynamicModelChips = card.querySelectorAll('.mp-s2-ai-models .mp-s2-chip').map((el) => el.textContent);
+            assert.ok(dynamicModelChips.includes('agnes-3.5-preview'));
+            assert.ok(dynamicModelChips.includes('agnes-3.0-flash'));
+            assert.equal(dynamicModelChips.includes('agnes-imagen'), false);
+
+            // Toggle feature switches & verify LlmService.isFeatureEnabled
+            LlmService.saveConfig({ enabled: true, baseUrl: 'https://apihub.agnes-ai.com/v1', model: 'agnes-3.0-flash', featureSubChapters: false });
+            assert.equal(LlmService.isFeatureEnabled('featureSubChapters'), false);
+            assert.equal(LlmService.isFeatureEnabled('featureCommentBrief'), true);
+            LlmService.saveConfig({ featureSubChapters: true });
 
             // Failure test updates pill to err and shows error toast
             mockGmResponder = (opts) => {
@@ -789,7 +836,25 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             globalThis.window.__missPlayerUIManager = prevUiManager;
         }
 
-        // Static compliance check across all 3 new source files
+        // Verify mergeAutoTagsIntoComment, getCachedCommentBrief, and filterAndSortTextModels
+        const filtered = filterAndSortTextModels(
+            ['agnes-imagen', 'agnes-2.5-pro-theta', 'agnes-3.0-flash', 'tts-1'],
+            ['agnes-3.0-flash', 'agnes-3.0-pro']
+        );
+        assert.deepEqual(filtered, ['agnes-3.0-flash', 'agnes-2.5-pro-theta']);
+
+        const merged1 = mergeAutoTagsIntoComment('', ['#剧情神回', '#演技逼真'], '张力拉满');
+        assert.equal(merged1, '#剧情神回 #演技逼真 张力拉满');
+        const merged2 = mergeAutoTagsIntoComment('#剧情神回 原笔记', ['#剧情神回', '#名场面'], '原笔记');
+        assert.equal(merged2, '#剧情神回 原笔记 #名场面');
+
+        const briefCacheHit = await getCachedCommentBrief({
+            avcode: 'SSIS-002',
+            comments: [{ text: '05:20 高能起点很精彩，强烈推荐这一段！', hasTimestamps: true }]
+        });
+        assert.equal(typeof briefCacheHit.hit, 'boolean');
+
+        // Static compliance check across all 3 AI core/UI files
         const sourceFiles = [
             'src/services/LlmService.js',
             'src/services/LlmTasks.js',

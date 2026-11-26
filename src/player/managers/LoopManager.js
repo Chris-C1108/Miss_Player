@@ -6,6 +6,8 @@ import { LOOP_INTERVAL } from '../../constants/icons.js';
 import { telemetry } from '../../telemetry/index.js';
 import { MarkerBottomSheet } from './MarkerBottomSheet.js';
 import { SyncManager } from '../../sync/index.js';
+import { LlmService } from '../../services/LlmService.js';
+import { autoTagMarkerWithLlm, mergeAutoTagsIntoComment } from '../../services/LlmTasks.js';
 import { UISurfaceMachine, SURFACE_TYPES, bindActionWithoutBlurShift } from '../state/UISurfaceMachine.js';
 import {
     CAPSULE_STATES,
@@ -1047,6 +1049,7 @@ export class LoopManager {
         this._saveTabs();
         this._sortTabs();
         this.renderTabs();
+        this._maybeAutoTagNewTab(newTab);
 
         if (this.tabScrollContainer) {
             setTimeout(() => {
@@ -1059,6 +1062,33 @@ export class LoopManager {
         }
 
         return newTab;
+    }
+
+    async _maybeAutoTagNewTab(tab) {
+        if (!tab || String(tab.comment || '').trim()) return;
+        const cfg = LlmService.getConfig();
+        if (!cfg.enabled || !cfg.baseUrl || !cfg.model || !cfg.featureAutoTag || !cfg.autoTagOnMark) return;
+        const subMgr = this.controlManager?.subtitleManager;
+        const cues = subMgr?.cues || [];
+        if (!cues.length) return;
+        try {
+            const res = await autoTagMarkerWithLlm({
+                avcode: this._resolveVideoCode(),
+                startTime: tab.startTime,
+                cues,
+                title: subMgr?.activeItem?.title || ''
+            });
+            if (!res || !res.ok || (!res.tags?.length && !res.comment)) return;
+            const liveTab = (this.tabs || []).find((t) => t.id === tab.id);
+            if (!liveTab || String(liveTab.comment || '').trim()) return;
+            const merged = mergeAutoTagsIntoComment('', res.tags, res.comment);
+            if (!merged) return;
+            liveTab.comment = merged;
+            liveTab.updatedAt = Date.now();
+            this._saveTabs();
+            this.renderTabs();
+            this._updateBottomSheet();
+        } catch (_) {}
     }
 
     // =====================================================================
@@ -1235,6 +1265,7 @@ export class LoopManager {
                 this._saveTabs();
                 this._sortTabs();
                 this.renderTabs();
+                this._maybeAutoTagNewTab(newTab);
                 Toast('已保存片段标记', 1500, 'success');
                 if (this.tabScrollContainer) {
                     setTimeout(() => {

@@ -750,6 +750,10 @@ export class S2ConnectionsSection {
                 onConfigChange: () => {
                     this.sm?.playerCore?.controlManager?.commentPanel?.refreshAiBriefVisibility?.();
                     this.sm?.controlManager?.commentPanel?.refreshAiBriefVisibility?.();
+                    this.sm?.playerCore?.controlManager?.subtitleManager?.refreshAiAvailability?.();
+                    this.sm?.controlManager?.subtitleManager?.refreshAiAvailability?.();
+                    this.sm?.playerCore?.loopManager?.bottomSheet?.updateBottomSheet?.();
+                    this.sm?.controlManager?.loopManager?.bottomSheet?.updateBottomSheet?.();
                 }
             })
         );

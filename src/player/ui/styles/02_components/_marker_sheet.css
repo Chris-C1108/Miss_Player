@@ -702,6 +702,42 @@
     color: rgba(255, 255, 255, 0.32);
 }
 
+.mp-sheet-input-row.has-ai .tm-sheet-item-comment-input {
+    padding-right: 54px;
+}
+
+.mp-sheet-ai-tag-btn {
+    position: absolute;
+    right: 29px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: rgba(100, 181, 255, 0.78);
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.mp-sheet-ai-tag-btn:hover {
+    color: #82c6ff;
+    background: rgba(10, 132, 255, 0.18);
+}
+
+.mp-sheet-ai-tag-btn.is-loading {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.mp-sheet-ai-tag-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
 .mp-sheet-tag-toggle-btn {
     position: absolute;
     right: 4px;

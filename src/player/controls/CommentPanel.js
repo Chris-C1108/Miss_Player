@@ -6,7 +6,7 @@ import { __ } from '../../constants/i18n.js';
 import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT_WRITE, ICON_PLUS, ICON_SPARKLES } from '../../constants/icons.js';
 import { Toast, isMobile, getValue } from '../../utils/index.js';
 import { LlmService } from '../../services/LlmService.js';
-import { summarizeCommentsWithLlm } from '../../services/LlmTasks.js';
+import { summarizeCommentsWithLlm, getCachedCommentBrief } from '../../services/LlmTasks.js';
 import { isSiteDomain, SITE_DOMAINS, checkSiteReachability } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { CrossDomainBridge } from '../../autologin/CrossDomainBridge.js';
@@ -3243,15 +3243,43 @@ export class CommentPanel {
 
     refreshAiBriefVisibility() {
         if (!this.aiBriefBtn) return;
-        const enabled = LlmService.isEnabled();
-        const totalComments = this._collectAllLoadedComments().length;
-        this.aiBriefBtn.classList.toggle('is-hidden', !enabled || totalComments === 0);
+        const enabled = LlmService.isFeatureEnabled('featureCommentBrief');
+        const comments = this._collectAllLoadedComments();
+        this.aiBriefBtn.classList.toggle('is-hidden', !enabled || comments.length === 0);
+        if (!enabled) {
+            this.aiBriefCard?.classList.add('is-hidden');
+            return;
+        }
+        if (comments.length > 0 && this.videoCode) {
+            const cacheProbeKey = `${this.videoCode}:${comments.length}`;
+            if (this._aiBriefCheckedKey !== cacheProbeKey) {
+                this._aiBriefCheckedKey = cacheProbeKey;
+                this._loadCachedAiBrief(comments);
+            }
+        }
+    }
+
+    async _loadCachedAiBrief(comments) {
+        const targetCode = this.videoCode || '';
+        if (!targetCode || !Array.isArray(comments) || !comments.length) return;
+        try {
+            const res = await getCachedCommentBrief({ avcode: targetCode, comments });
+            if (
+                this.videoCode !== targetCode ||
+                !LlmService.isFeatureEnabled('featureCommentBrief') ||
+                !res?.hit ||
+                !res.brief
+            ) {
+                return;
+            }
+            this._renderAiBriefCard(res.brief);
+        } catch (_) {}
     }
 
     async generateAiBrief() {
         if (this._aiBriefLoading || !this.aiBriefCard) return;
-        if (!LlmService.isEnabled()) {
-            Toast('请先在设置中启用并配置 AI 服务', 2400, 'info');
+        if (!LlmService.isFeatureEnabled('featureCommentBrief')) {
+            Toast('请先在设置中启用 AI 服务与评论简报', 2400, 'info');
             return;
         }
         const comments = this._collectAllLoadedComments();

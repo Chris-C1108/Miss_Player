@@ -311,6 +311,7 @@ export class CustomVideoPlayer {
         const subtitleManager = new SubtitleManager(this.playerCore, uiManager, controlManager);
         subtitleManager.init();
         this.managers.subtitleManager = subtitleManager;
+        if (controlManager) controlManager.subtitleManager = subtitleManager;
 
         // 异步迁移 IndexedDB / WebDAV / STRM 历史错位数据，完成后无感刷新字幕/热度/胶囊
         if (authoritativeCode) {

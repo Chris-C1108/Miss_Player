@@ -392,6 +392,52 @@
     }
 }
 
+.mp-s2-ai-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.mp-s2-ai-link-btn {
+    flex: 1 1 0;
+    min-width: 120px;
+    height: 30px;
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.mp-s2-ai-link-btn.is-active {
+    border-color: rgba(10, 132, 255, 0.55);
+    background: rgba(10, 132, 255, 0.16);
+    color: #82c6ff;
+}
+
+.mp-s2-ai-link-btn svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+.mp-s2-ai-models {
+    margin-top: 4px;
+}
+
+.mp-s2-ai-models.is-hidden {
+    display: none;
+}
+
+.mp-s2-ai-features {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 8px;
+    margin-top: 4px;
+}
+
+.mp-s2-ai-features.is-hidden {
+    display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .mp-sub-ai-btn.is-loading,
     .mp-ai-brief-btn.is-loading {
