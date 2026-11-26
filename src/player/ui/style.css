@@ -12,6 +12,7 @@
 @import "./styles/02_components/_peach.css";
 @import "./styles/02_components/_marker_sheet.css";
 @import "./styles/02_components/_subtitles.css";
+@import "./styles/02_components/_subtitle_insights.css";
 @import "./styles/02_components/_debug.css";
 @import "./styles/02_components/_composer.css";
 @import "./styles/03_responsive/_landscape.css";

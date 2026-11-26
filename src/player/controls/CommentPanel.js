@@ -3,8 +3,10 @@ import { SupabaseService } from '../../services/SupabaseService.js';
 import { SyncManager } from '../../sync/index.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
 import { __ } from '../../constants/i18n.js';
-import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT_WRITE, ICON_PLUS } from '../../constants/icons.js';
+import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT_WRITE, ICON_PLUS, ICON_SPARKLES } from '../../constants/icons.js';
 import { Toast, isMobile, getValue } from '../../utils/index.js';
+import { LlmService } from '../../services/LlmService.js';
+import { summarizeCommentsWithLlm } from '../../services/LlmTasks.js';
 import { isSiteDomain, SITE_DOMAINS, checkSiteReachability } from '../../constants/domains.js';
 import { logger } from '../../utils/logger.js';
 import { CrossDomainBridge } from '../../autologin/CrossDomainBridge.js';
@@ -354,6 +356,9 @@ export class CommentPanel {
         this.commentNavBar = null;
         this.commentTabStrip = null;
         this.commentFilterPill = null;
+        this.aiBriefBtn = null;
+        this.aiBriefCard = null;
+        this._aiBriefLoading = false;
 
         // 延迟后台域名探测，避免在 UI 挂载的关键帧争抢网络和主线程微任务
         if (typeof window.requestIdleCallback === 'function') {
@@ -1073,6 +1078,10 @@ export class CommentPanel {
         if (page === 1) {
             this.currentPage = 1;
             this.renderedCommentIds.clear(); // 刷新/首次加载时清空，防止第一页评论全部闪烁
+            if (this.aiBriefCard) {
+                this.aiBriefCard.classList.add('is-hidden');
+                this.aiBriefCard.replaceChildren();
+            }
 
             if (forceRefresh) {
                 for (const siteKey of Object.keys(this.sites)) {
@@ -1698,7 +1707,12 @@ export class CommentPanel {
                     <span class="tm-filter-text">高能现场</span>
                     <span class="tm-filter-count is-hidden">0</span>
                 </button>
+                <button type="button" class="mp-ai-brief-btn is-hidden" title="${__('commentAiBrief') || 'AI 简报'}">
+                    ${ICON_SPARKLES}
+                    <span>${__('commentAiBrief') || 'AI 简报'}</span>
+                </button>
             </div>
+            <div class="mp-ai-brief-card is-hidden"></div>
             <div class="tm-comments-list tm-comments-panel-list"></div>
             <div class="tm-comment-loading tm-comments-panel-loading is-hidden"></div>
             <div class="tm-comment-error tm-comments-panel-error is-hidden"></div>
@@ -1737,6 +1751,8 @@ export class CommentPanel {
         this.commentNavBar = this.commentsPanel.querySelector('.tm-comment-nav-bar');
         this.commentTabStrip = this.commentsPanel.querySelector('.tm-comment-tab-strip');
         this.commentFilterPill = this.commentsPanel.querySelector('.tm-comment-filter-pill');
+        this.aiBriefBtn = this.commentsPanel.querySelector('.mp-ai-brief-btn');
+        this.aiBriefCard = this.commentsPanel.querySelector('.mp-ai-brief-card');
 
         if (this.commentTabStrip) {
             this.commentTabStrip.addEventListener('click', (e) => {
@@ -1753,6 +1769,12 @@ export class CommentPanel {
         if (this.commentFilterPill) {
             this.commentFilterPill.addEventListener('click', () => {
                 this.toggleHighlightFilter();
+            });
+        }
+
+        if (this.aiBriefBtn) {
+            this.aiBriefBtn.addEventListener('click', () => {
+                this.generateAiBrief();
             });
         }
 
@@ -3201,6 +3223,125 @@ export class CommentPanel {
                 filterCountEl.classList.toggle('is-hidden', highlightCount === 0);
             }
         }
+        this.refreshAiBriefVisibility();
+    }
+
+    _collectAllLoadedComments() {
+        const merged = [];
+        const seen = new Set();
+        Object.values(this.sites || {}).forEach((site) => {
+            (site?.comments || []).forEach((item) => {
+                if (!item) return;
+                const key = item.id || item.site_comment_id || `${item.user || ''}:${item.rawText || item.text || ''}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                merged.push(item);
+            });
+        });
+        return merged;
+    }
+
+    refreshAiBriefVisibility() {
+        if (!this.aiBriefBtn) return;
+        const enabled = LlmService.isEnabled();
+        const totalComments = this._collectAllLoadedComments().length;
+        this.aiBriefBtn.classList.toggle('is-hidden', !enabled || totalComments === 0);
+    }
+
+    async generateAiBrief() {
+        if (this._aiBriefLoading || !this.aiBriefCard) return;
+        if (!LlmService.isEnabled()) {
+            Toast('请先在设置中启用并配置 AI 服务', 2400, 'info');
+            return;
+        }
+        const comments = this._collectAllLoadedComments();
+        if (!comments.length) {
+            Toast('暂无可供提炼的评论内容', 2000, 'info');
+            return;
+        }
+        this._aiBriefLoading = true;
+        this.aiBriefBtn?.classList.add('is-loading');
+        try {
+            const dur = this.targetVideo ? getVideoDurationSeconds(this.targetVideo) : 0;
+            const res = await summarizeCommentsWithLlm({
+                avcode: this.videoCode || '',
+                comments,
+                videoDuration: dur || 0
+            });
+            if (!res || !res.ok || !res.brief) {
+                Toast(res?.error || '生成评论简报失败', 2400, 'info');
+                return;
+            }
+            this._renderAiBriefCard(res.brief);
+        } catch (err) {
+            Toast(LlmService.redactSecrets(err?.message || '生成评论简报失败'), 2400, 'error');
+        } finally {
+            this._aiBriefLoading = false;
+            this.aiBriefBtn?.classList.remove('is-loading');
+        }
+    }
+
+    _renderAiBriefCard(brief) {
+        const card = this.aiBriefCard;
+        if (!card || !brief) return;
+
+        const head = document.createElement('div');
+        head.className = 'mp-ai-brief-head';
+
+        const title = document.createElement('span');
+        title.className = 'mp-ai-brief-title';
+        title.textContent = __('commentAiBrief') || 'AI 简报';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'mp-ai-brief-close';
+        closeBtn.innerHTML = CLOSE_LINE;
+        closeBtn.setAttribute('aria-label', __('cancel') || '关闭');
+        closeBtn.addEventListener('click', () => {
+            card.classList.add('is-hidden');
+        });
+        head.append(title, closeBtn);
+
+        const rowsWrap = document.createElement('div');
+        rowsWrap.className = 'mp-ai-brief-rows';
+        const entries = [
+            [__('commentAiHighlights') || '看点', brief.highlights],
+            [__('commentAiWarnings') || '避坑', brief.warnings],
+            [__('commentAiConsensus') || '共识', brief.consensus]
+        ];
+        entries.forEach(([labelText, contentText]) => {
+            if (!contentText) return;
+            const row = document.createElement('div');
+            row.className = 'mp-ai-brief-row';
+            const labelEl = document.createElement('span');
+            labelEl.className = 'mp-ai-brief-label';
+            labelEl.textContent = labelText;
+            const textEl = document.createElement('span');
+            textEl.className = 'mp-ai-brief-text';
+            textEl.textContent = contentText;
+            row.append(labelEl, textEl);
+            rowsWrap.appendChild(row);
+        });
+
+        const children = [head, rowsWrap];
+        if (Array.isArray(brief.timestamps) && brief.timestamps.length > 0) {
+            const tsRow = document.createElement('div');
+            tsRow.className = 'mp-ai-brief-ts-row';
+            brief.timestamps.forEach((item) => {
+                const sec = Number(item?.seconds);
+                if (!Number.isFinite(sec) || sec < 0) return;
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'mp-ai-brief-ts-chip';
+                chip.textContent = `${formatSeconds(sec)}${item.note ? ' · ' + item.note : ''}`;
+                chip.addEventListener('click', () => this.handleTimeClick(sec, chip));
+                tsRow.appendChild(chip);
+            });
+            if (tsRow.children.length > 0) children.push(tsRow);
+        }
+
+        card.replaceChildren(...children);
+        card.classList.remove('is-hidden');
     }
 
     /**

@@ -18,7 +18,8 @@ import {
     ICON_STAR,
     ICON_STAR_FILLED,
     ICON_SLIDERS,
-    ICON_LYRICS
+    ICON_LYRICS,
+    ICON_SPARKLES
 } from '../../constants/icons.js';
 import { UISurfaceMachine, SURFACE_TYPES } from '../state/UISurfaceMachine.js';
 import { SubtitleEngine } from './SubtitleEngine.js';
@@ -27,9 +28,23 @@ import { decodeSubtitleBuffer } from './SubtitleDecoder.js';
 import { parseSubtitles, cuesToPlainText } from './SubtitleFormat.js';
 import { convertSubtitleContent, detectChineseScript } from './SubtitleChineseConverter.js';
 import { codeMatchesText } from './SubtitleCode.js';
+import {
+    detectSubtitleLanguage,
+    enrichCuesWithTracks,
+    formatCueForDisplayMode
+} from './SubtitleLanguageDetector.js';
+import { scoreSubtitleQuality, selectBestQualityCandidate } from './SubtitleQualityScorer.js';
+import {
+    analyzeSubtitlePlot,
+    buildHighlightedCueFragment,
+    findHighlightRanges
+} from './SubtitlePlotAnalyzer.js';
+import { LlmService, LlmCache } from '../../services/LlmService.js';
+import { analyzeSubtitleChaptersWithLlm, compressCuesForLlm } from '../../services/LlmTasks.js';
 
 const FONT_SIZES = ['small', 'medium', 'large'];
 const PREFERRED_LANG_OPTIONS = ['auto', 'zh', 'zh-TW', 'ja', 'en', 'ko'];
+const DISPLAY_MODE_OPTIONS = ['primary', 'bilingual', 'secondary'];
 const CUE_TAIL_TOLERANCE = 0.35;
 const CUE_LEAD_TOLERANCE = 0.25;
 
@@ -242,6 +257,7 @@ export class SubtitleManager {
         this.switchEl = null;
         this.autoBestSwitchEl = null;
         this.langGroupEl = null;
+        this.displayModeGroupEl = null;
         this.fileInput = null;
         this.adjustBtn = null;
         this.lyricsView = null;
@@ -250,12 +266,19 @@ export class SubtitleManager {
         this.lyricsFollowBtn = null;
         this.lyricsTitleEl = null;
         this.lyricsCountEl = null;
+        this.lyricsAnchorsBar = null;
+        this.lyricsFilterBtn = null;
+        this.lyricsAiBtn = null;
         this._lyricsFollow = true;
         this._lyricsAutoScrollUntil = 0;
         this._lyricIndex = -1;
         this._anchorIndex = -1;
         this._visitedCues = new Set();
         this._suppressRowClickUntil = 0;
+        this._plotAnalysis = null;
+        this._aiChapters = [];
+        this._aiAnalyzing = false;
+        this._lyricsOnlyHighlights = false;
 
         this._lastRenderedText = '';
         this._rafId = 0;
@@ -365,6 +388,9 @@ export class SubtitleManager {
         this.cues = [];
         this.activeItem = null;
         this.onlineResults = [];
+        this._plotAnalysis = null;
+        this._aiChapters = [];
+        this._lyricsOnlyHighlights = false;
         this.bundle = { code: next, activeId: '', favoriteId: '', items: [], updatedAt: 0 };
         this._setOverlayText('');
         await this._loadBundle();
@@ -617,17 +643,60 @@ export class SubtitleManager {
             }
         }
         collected.sort((a, b) => a.start - b.start);
-        this._setOverlayText(collected.map((cue) => cue.text).join('\n'));
+        const displayMode = this.settings.subtitleDisplayMode || 'primary';
+        const formatted = collected.map((cue) => formatCueForDisplayMode(cue, displayMode));
+        const primaryText = formatted.map((f) => f.primary).filter(Boolean).join('\n');
+        const secondaryText = displayMode === 'bilingual'
+            ? formatted.map((f) => f.secondary).filter(Boolean).join('\n')
+            : '';
+        this._setOverlayText(primaryText, secondaryText);
     }
 
-    _setOverlayText(value) {
+    _setOverlayText(value, secondaryValue = '') {
         const next = String(value || '');
-        if (next === this._lastRenderedText) return;
-        this._lastRenderedText = next;
+        const nextSec = String(secondaryValue || '');
+        const cacheKey = nextSec ? `${next}\u0000${nextSec}` : next;
+        if (cacheKey === this._lastRenderedText) return;
+        this._lastRenderedText = cacheKey;
         this._ensureOverlay();
         if (!this.overlayLayer || !this.overlayText) return;
-        this.overlayText.textContent = next;
-        this.overlayLayer.classList.toggle('is-empty', next.length === 0);
+        if (nextSec) {
+            const primaryEl = document.createElement('span');
+            primaryEl.className = 'mp-sub-overlay-primary';
+            primaryEl.textContent = next;
+            const secondaryEl = document.createElement('span');
+            secondaryEl.className = 'mp-sub-overlay-secondary';
+            secondaryEl.textContent = nextSec;
+            this.overlayText.replaceChildren(primaryEl, secondaryEl);
+        } else {
+            this.overlayText.textContent = next;
+        }
+        this.overlayLayer.classList.toggle('is-empty', next.length === 0 && nextSec.length === 0);
+    }
+
+    /** 内容优先校正真实语言、双语轨道布局与字幕质量分 (SQI) */
+    _inspectTrackMetadata(item, parsed) {
+        const cues = parsed?.cues || [];
+        if (!item || !cues.length) return { langInfo: null, quality: null };
+        const hintLang = item.sourceLangHint || item.lang || '';
+        const langInfo = detectSubtitleLanguage(cues, hintLang);
+        const videoDurationSec = Number(this.targetVideo?.duration) || 0;
+        const quality = scoreSubtitleQuality(cues, { videoDurationSec, langInfo });
+
+        if (langInfo.detectedLang && langInfo.detectedLang !== 'unknown' && langInfo.confidence >= 0.7) {
+            if (!item.sourceLangHint && item.lang && item.lang !== langInfo.detectedLang) {
+                item.sourceLangHint = item.lang;
+            }
+            const prevNorm = normalizeSubtitleLang(item.lang);
+            if (!prevNorm || prevNorm !== langInfo.detectedLang || langInfo.isCorrupted) {
+                item.lang = langInfo.detectedLang;
+                if (!item.convertedFrom) item.langLabel = '';
+            }
+        }
+        item.trackLayout = langInfo.trackLayout;
+        item.langInfo = langInfo;
+        item.quality = quality;
+        return { langInfo, quality };
     }
 
     // ---------------------------------------------------------------- 轨切换
@@ -640,24 +709,32 @@ export class SubtitleManager {
             if (!silent) Toast(text('subtitleDownloadFailed', '下载失败，请换个来源试试'), 2600, 'error');
             return;
         }
-        const { cues, format } = parseSubtitles(prepared.content || '', prepared.format || '');
+        const parsed = parseSubtitles(prepared.content || '', prepared.format || '');
+        const { cues, format } = parsed;
         if (!cues.length) {
             if (!silent) Toast(text('subtitleParseFailed', '字幕内容无法解析'), 2500, 'error');
             window.DebugLogPanel?.addLog?.(`[字幕] 解析失败: ${prepared.title} (${prepared.content?.length || 0} 字符)`, 'warn');
             return;
         }
 
+        const { langInfo } = this._inspectTrackMetadata(prepared, parsed);
         prepared.format = format;
         if (this.overlayText) this.overlayText.lang = prepared.lang || '';
         this.timeStepper?.setValue((Number(prepared.timeOffsetMs) || 0) / 1000);
-        this.cues = cues;
+        this.cues = enrichCuesWithTracks(cues, langInfo);
         this.activeItem = prepared;
         this.bundle.activeId = prepared.id;
+        this._plotAnalysis = null;
+        this._aiChapters = [];
+        this._lyricsOnlyHighlights = false;
         this._lastRenderedText = '__dirty__';
         this._updateSetting('subtitleEnabled', true);
         this._syncSwitchState();
         this._updateButtonState();
         this._renderList();
+        if (this.lyricsView && !this.lyricsView.classList.contains('is-hidden')) {
+            this._renderLyrics();
+        }
         this._ensureOverlay();
         this.renderAt(this.targetVideo?.currentTime || 0);
         if (this.targetVideo && !this.targetVideo.paused) this._startRenderLoop();
@@ -689,6 +766,7 @@ export class SubtitleManager {
         this.autoBestSwitchEl?.classList.toggle('is-checked', autoBest);
         this.autoBestSwitchEl?.setAttribute('aria-checked', String(autoBest));
         this._applyPreferredLang(this.settings.subtitlePreferredLang, { persist: false });
+        this._applyDisplayMode(this.settings.subtitleDisplayMode || 'primary', { persist: false });
     }
 
     _updateButtonState() {
@@ -915,6 +993,15 @@ export class SubtitleManager {
             )
         );
 
+        panel.append(
+            this._buildAdjustRow(
+                text('subtitleDisplayMode', '双语显示'),
+                this._buildDisplayModeControl(),
+                '',
+                { stacked: true }
+            )
+        );
+
         return panel;
     }
 
@@ -936,6 +1023,43 @@ export class SubtitleManager {
 
         row.append(label, controlEl);
         return row;
+    }
+
+    _buildDisplayModeControl() {
+        const group = document.createElement('div');
+        group.className = 'tm-subtitle-size-group tm-subtitle-lang-group';
+        const labels = {
+            primary: text('subtitleDisplayPrimary', '仅中文'),
+            bilingual: text('subtitleDisplayBilingual', '双语'),
+            secondary: text('subtitleDisplaySecondary', '原语')
+        };
+        DISPLAY_MODE_OPTIONS.forEach((mode) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tm-subtitle-size-btn';
+            btn.dataset.displayMode = mode;
+            btn.textContent = labels[mode];
+            btn.addEventListener('click', () => this._applyDisplayMode(mode));
+            group.appendChild(btn);
+        });
+        this.displayModeGroupEl = group;
+        this._applyDisplayMode(this.settings.subtitleDisplayMode || 'primary', { persist: false });
+        return group;
+    }
+
+    _applyDisplayMode(mode, { persist = true } = {}) {
+        const next = DISPLAY_MODE_OPTIONS.includes(mode) ? mode : 'primary';
+        this.displayModeGroupEl?.querySelectorAll('[data-display-mode]')?.forEach((btn) => {
+            btn.classList.toggle('is-active', btn.dataset.displayMode === next);
+        });
+        if (persist) {
+            this._updateSetting('subtitleDisplayMode', next);
+            this._lastRenderedText = '__dirty__';
+            this.renderAt(this.targetVideo?.currentTime || 0);
+            if (this.lyricsView && !this.lyricsView.classList.contains('is-hidden')) {
+                this._renderLyrics();
+            }
+        }
     }
 
     _buildPreferredLangControl() {
@@ -1143,6 +1267,21 @@ export class SubtitleManager {
         const meta = document.createElement('div');
         meta.className = 'tm-subtitle-item-meta';
         meta.textContent = row.providerLabel || text('subtitleFromLocal', '本地');
+        if (row.trackLayout === 'bilingual') {
+            const biBadge = document.createElement('span');
+            biBadge.className = 'mp-sub-badge mp-sub-badge--bi';
+            biBadge.textContent = text('subtitleBilingualTag', '双语');
+            meta.append(' ', biBadge);
+        }
+        if (row.quality?.label) {
+            const qBadge = document.createElement('span');
+            const toneClass = row.quality.grade === 'high'
+                ? 'mp-sub-badge--high'
+                : (row.quality.grade === 'broken' ? 'mp-sub-badge--bad' : 'mp-sub-badge--warn');
+            qBadge.className = `mp-sub-badge ${toneClass}`;
+            qBadge.textContent = row.quality.label;
+            meta.append(' ', qBadge);
+        }
 
         main.append(title, meta);
 
@@ -1179,7 +1318,7 @@ export class SubtitleManager {
         return el;
     }
 
-    /** 歌词/时间轴视图：逐条字幕 + 时间戳，点击跳转，滚动自动跟随 */
+    /** 歌词/时间轴视图：剧情看点锚点 + 逐条字幕微高亮 + 点击跳转 */
     _buildLyricsView() {
         const view = document.createElement('div');
         view.className = 'tm-subtitle-lyrics is-hidden';
@@ -1195,10 +1334,26 @@ export class SubtitleManager {
 
         const title = document.createElement('span');
         title.className = 'tm-subtitle-lyrics-title';
+
+        const filterBtn = document.createElement('button');
+        filterBtn.type = 'button';
+        filterBtn.className = 'mp-sub-filter-btn is-hidden';
+        filterBtn.textContent = text('subtitlePlotFilter', '看点');
+        filterBtn.addEventListener('click', () => this._toggleLyricsHighlightFilter());
+
+        const aiBtn = document.createElement('button');
+        aiBtn.type = 'button';
+        aiBtn.className = 'mp-sub-ai-btn is-hidden';
+        aiBtn.innerHTML = `${ICON_SPARKLES}<span>${text('subtitleAiChapters', 'AI 分幕')}</span>`;
+        aiBtn.addEventListener('click', () => this._runAiChapters());
+
         const count = document.createElement('span');
         count.className = 'tm-subtitle-lyrics-count';
 
-        head.append(backBtn, title, count);
+        head.append(backBtn, title, filterBtn, aiBtn, count);
+
+        const anchorsBar = document.createElement('div');
+        anchorsBar.className = 'mp-sub-anchors-bar is-hidden';
 
         const scroll = document.createElement('div');
         scroll.className = 'tm-subtitle-lyrics-scroll';
@@ -1217,12 +1372,15 @@ export class SubtitleManager {
             this._centerLyricRow(this._anchorIndex);
         });
 
-        view.append(head, scroll, followBtn);
+        view.append(head, anchorsBar, scroll, followBtn);
         this.lyricsView = view;
         this.lyricsScroll = scroll;
         this.lyricsFollowBtn = followBtn;
         this.lyricsTitleEl = title;
         this.lyricsCountEl = count;
+        this.lyricsAnchorsBar = anchorsBar;
+        this.lyricsFilterBtn = filterBtn;
+        this.lyricsAiBtn = aiBtn;
         return view;
     }
 
@@ -1277,7 +1435,9 @@ export class SubtitleManager {
         this._lyricIndex = -1;
         this._anchorIndex = -1;
         this._visitedCues = new Set();
+        this._lyricsOnlyHighlights = false;
         this._renderLyrics();
+        this._loadCachedAiChapters();
         this.listEl?.classList.add('is-hidden');
         this.lyricsView.classList.remove('is-hidden');
         this._syncLyricHighlight({ force: true });
@@ -1290,6 +1450,152 @@ export class SubtitleManager {
         this._lyricIndex = -1;
     }
 
+    _toggleLyricsHighlightFilter() {
+        this._lyricsOnlyHighlights = !this._lyricsOnlyHighlights;
+        this.lyricsFilterBtn?.classList.toggle('is-active', this._lyricsOnlyHighlights);
+        const highlights = this._plotAnalysis?.highlightCueIndices;
+        const anchorIndices = new Set(
+            (this._aiChapters?.length ? this._aiChapters : this._plotAnalysis?.anchors || [])
+                .map((a) => a.cueIndex)
+                .filter((i) => Number.isInteger(i) && i >= 0)
+        );
+        this.lyricsRows.forEach((rowEl, idx) => {
+            if (!this._lyricsOnlyHighlights) {
+                rowEl.classList.remove('is-hidden');
+                return;
+            }
+            const keep = Boolean(highlights?.has(idx) || anchorIndices.has(idx));
+            rowEl.classList.toggle('is-hidden', !keep);
+        });
+    }
+
+    _renderAnchorsBar() {
+        const bar = this.lyricsAnchorsBar;
+        if (!bar) return;
+        const aiList = Array.isArray(this._aiChapters) ? this._aiChapters : [];
+        const localList = this._plotAnalysis?.available ? this._plotAnalysis.anchors : [];
+        const activeList = aiList.length
+            ? aiList.map((ch) => ({
+                  start: Number(ch.seconds) || 0,
+                  cueIndex: this._resolveAnchorIndex(Number(ch.seconds) || 0),
+                  tag: ch.tag || '看点',
+                  preview: ch.headline || '',
+                  source: 'ai'
+              }))
+            : localList;
+
+        if (!activeList.length) {
+            bar.classList.add('is-hidden');
+            bar.replaceChildren();
+            return;
+        }
+
+        const pills = activeList.map((anchor) => {
+            const pill = document.createElement('button');
+            pill.type = 'button';
+            pill.className = `mp-sub-anchor-pill${anchor.source === 'ai' ? ' is-ai' : ''}`;
+            if (anchor.preview) pill.title = anchor.preview;
+
+            const ts = document.createElement('span');
+            ts.className = 'mp-sub-anchor-ts';
+            ts.textContent = formatStamp(anchor.start);
+
+            const tag = document.createElement('span');
+            tag.className = 'mp-sub-anchor-tag';
+            tag.textContent = anchor.tag || text('subtitlePlotFilter', '看点');
+
+            pill.append(ts, tag);
+            pill.addEventListener('click', () => {
+                const idx = Number.isInteger(anchor.cueIndex) && anchor.cueIndex >= 0
+                    ? anchor.cueIndex
+                    : this._resolveAnchorIndex(anchor.start);
+                if (idx >= 0 && this.cues[idx]) {
+                    this._seekToCue(idx);
+                } else if (this.targetVideo) {
+                    this.playerCore?.cancelInitialSeekGuard?.();
+                    this.targetVideo.currentTime = Math.max(0, anchor.start);
+                }
+            });
+            return pill;
+        });
+
+        bar.replaceChildren(...pills);
+        bar.classList.remove('is-hidden');
+    }
+
+    async _loadCachedAiChapters() {
+        if (!this.avcode || !this.cues.length || !LlmService.isEnabled()) return;
+        const targetCode = this.avcode;
+        try {
+            const compressed = compressCuesForLlm(this.cues);
+            const hash = LlmCache.hashContent(compressed);
+            const cached = await LlmCache.getCached(targetCode, 'sub_chapters', hash);
+            if (this.avcode !== targetCode || !cached?.hit || !Array.isArray(cached.data?.chapters)) return;
+            this._aiChapters = cached.data.chapters;
+            this._renderAnchorsBar();
+            this._syncAnchorCueRows();
+        } catch (_) {}
+    }
+
+    async _runAiChapters() {
+        if (this._aiAnalyzing || !this.cues.length) return;
+        if (!LlmService.isEnabled()) {
+            Toast('请先在设置中启用并配置 AI 服务', 2400, 'info');
+            return;
+        }
+        this._aiAnalyzing = true;
+        this.lyricsAiBtn?.classList.add('is-loading');
+        try {
+            const res = await analyzeSubtitleChaptersWithLlm({
+                avcode: this.avcode,
+                cues: this.cues,
+                title: this.activeItem?.title || ''
+            });
+            if (res && res.ok && Array.isArray(res.chapters) && res.chapters.length) {
+                this._aiChapters = res.chapters;
+                this._renderAnchorsBar();
+                this._syncAnchorCueRows();
+                Toast(res.fromCache ? '已读取 AI 分幕缓存' : `已提炼 ${res.chapters.length} 个剧情分幕`, 2000, 'success');
+            } else {
+                Toast(res?.error || 'AI 分幕未返回结果，已保留本地看点', 2400, 'info');
+            }
+        } catch (err) {
+            Toast(LlmService.redactSecrets(err?.message || 'AI 分析失败'), 2400, 'error');
+        } finally {
+            this._aiAnalyzing = false;
+            this.lyricsAiBtn?.classList.remove('is-loading');
+        }
+    }
+
+    _syncAnchorCueRows() {
+        const anchorIndices = new Set(
+            (this._aiChapters?.length ? this._aiChapters : this._plotAnalysis?.anchors || [])
+                .map((a) => (Number.isInteger(a.cueIndex) ? a.cueIndex : this._resolveAnchorIndex(Number(a.seconds) || 0)))
+                .filter((i) => Number.isInteger(i) && i >= 0)
+        );
+        this.lyricsRows.forEach((rowEl, idx) => {
+            rowEl.classList.toggle('is-anchor-cue', anchorIndices.has(idx));
+        });
+    }
+
+    _renderLyricRowText(txtEl, displayText, rawRanges) {
+        if (!rawRanges?.length || typeof document.createTextNode !== 'function') {
+            txtEl.textContent = displayText;
+            return;
+        }
+        const cueRaw = String(this.cues[Number(txtEl?.dataset?.cueIndex)]?.text || '');
+        const ranges = displayText === cueRaw
+            ? rawRanges
+            : findHighlightRanges(displayText, rawRanges.map((r) => ({ term: r.term, kind: r.kind })));
+        if (!ranges.length) {
+            txtEl.textContent = displayText;
+            return;
+        }
+        const frag = buildHighlightedCueFragment(displayText, ranges, document);
+        if (Array.isArray(frag)) txtEl.replaceChildren(...frag);
+        else txtEl.replaceChildren(frag);
+    }
+
     _renderLyrics() {
         if (!this.lyricsScroll) return;
         const item = this.activeItem;
@@ -1298,12 +1604,31 @@ export class SubtitleManager {
         }
         if (this.lyricsCountEl) this.lyricsCountEl.textContent = String(this.cues.length);
 
+        const plotAnalysis = analyzeSubtitlePlot(this.cues, {
+            langInfo: item?.langInfo,
+            quality: item?.quality
+        });
+        this._plotAnalysis = plotAnalysis;
+        const hasHighlights = Boolean(plotAnalysis.available && plotAnalysis.highlightCueIndices?.size);
+
+        this.lyricsFilterBtn?.classList.toggle('is-hidden', !hasHighlights);
+        this.lyricsFilterBtn?.classList.toggle('is-active', Boolean(this._lyricsOnlyHighlights && hasHighlights));
+        this.lyricsAiBtn?.classList.toggle('is-hidden', !LlmService.isEnabled());
+
+        const displayMode = this.settings.subtitleDisplayMode || 'primary';
+        const anchorIndices = new Set(
+            (this._aiChapters?.length ? this._aiChapters : plotAnalysis.anchors || [])
+                .map((a) => (Number.isInteger(a.cueIndex) ? a.cueIndex : this._resolveAnchorIndex(Number(a.seconds) || 0)))
+                .filter((i) => Number.isInteger(i) && i >= 0)
+        );
+
         const rows = [];
         this.cues.forEach((cue, index) => {
             const rowEl = document.createElement('button');
             rowEl.type = 'button';
             rowEl.className = 'tm-subtitle-lyric-row';
             rowEl.dataset.index = String(index);
+            if (anchorIndices.has(index)) rowEl.classList.add('is-anchor-cue');
 
             const stamp = document.createElement('span');
             stamp.className = 'tm-subtitle-lyric-ts';
@@ -1311,12 +1636,20 @@ export class SubtitleManager {
 
             const txt = document.createElement('span');
             txt.className = 'tm-subtitle-lyric-text';
-            txt.textContent = cue.text.replace(/\n/g, ' ');
+            txt.dataset.cueIndex = String(index);
+            const displayRaw = formatCueForDisplayMode(cue, displayMode).primary || cue.text;
+            const displayText = displayRaw.replace(/\n/g, ' ');
+            const rawRanges = plotAnalysis.available ? plotAnalysis.cueHighlights.get(index) : null;
+            this._renderLyricRowText(txt, displayText, rawRanges);
 
             const mark = document.createElement('span');
             mark.className = 'tm-subtitle-lyric-mark';
             mark.textContent = text('subtitleVisited', '已跳转');
             if (this._visitedCues.has(index)) mark.classList.add('is-visible');
+
+            if (this._lyricsOnlyHighlights && hasHighlights && !plotAnalysis.highlightCueIndices.has(index) && !anchorIndices.has(index)) {
+                rowEl.classList.add('is-hidden');
+            }
 
             rowEl.append(stamp, txt, mark);
             rowEl.addEventListener('click', () => this._seekToCue(index));
@@ -1325,6 +1658,7 @@ export class SubtitleManager {
         this.lyricsRows = rows;
         this.lyricsScroll.replaceChildren(...rows);
         this.lyricsScroll.scrollTop = 0;
+        this._renderAnchorsBar();
     }
 
     /** 点击歌词行跳转到对应播放进度（补偿当前字幕的时间轴偏移） */
@@ -1504,8 +1838,8 @@ export class SubtitleManager {
         try {
             const buffer = await file.arrayBuffer();
             const { text: content } = decodeSubtitleBuffer(buffer);
-            const { format, cues } = parseSubtitles(content, file.name);
-            if (!cues.length) throw new Error('EMPTY');
+            const parsed = parseSubtitles(content, file.name);
+            if (!parsed.cues.length) throw new Error('EMPTY');
             const item = {
                 id: `local:${file.name}:${Date.now()}`,
                 provider: 'local',
@@ -1513,11 +1847,12 @@ export class SubtitleManager {
                 title: file.name.replace(/\.(srt|ass|ssa|vtt)$/i, ''),
                 lang: 'zh',
                 langLabel: '',
-                format,
+                format: parsed.format,
                 content,
                 addedAt: Date.now(),
                 rating: 100
             };
+            this._inspectTrackMetadata(item, parsed);
             await this._applyItem(item);
         } catch (err) {
             console.warn('[SubtitleManager] 导入失败:', err?.message);
@@ -1620,6 +1955,9 @@ export class SubtitleManager {
 
         if (!ranked.length) return false;
 
+        const MAX_EVAL = 3;
+        const evaluated = [];
+
         for (const candidate of ranked) {
             if (this.avcode !== targetCode || !this.settings.subtitleAutoBest || this._hasSavedFavorite()) {
                 return false;
@@ -1640,38 +1978,47 @@ export class SubtitleManager {
                 continue;
             }
 
-            const { item, parsed, converted } = applyPreferredChineseConversion(rawItem, rawParsed, preferredLang);
-            item.format = parsed.format;
-            item.favorite = true;
-            item.autoSaved = true;
-            item.favoriteSource = 'auto';
-            this.bundle.favoriteId = item.id;
-            this.bundle.items = [item, ...this.bundle.items.filter((entry) => entry.id !== item.id)];
-            await this._persist({ dirtyItem: item });
-            if (this.avcode !== targetCode) return false;
-
-            if (this.isEnabled && (!this.activeItem || this.activeItem.autoSaved)) {
-                await this._applyItem(item, { silent: true });
-            } else {
-                this._renderList();
-                this._updateButtonState();
+            const { langInfo, quality } = this._inspectTrackMetadata(rawItem, rawParsed);
+            evaluated.push({ candidate, item: rawItem, parsed: rawParsed, langInfo, quality });
+            if (!langInfo?.isCorrupted && (quality?.sqi || 0) >= 70) {
+                break;
             }
-            Toast(
-                converted
-                    ? text('subtitleAutoSavedConverted', '已自动加载并完成繁简转换')
-                    : text('subtitleAutoSaved', '已自动加载并收藏偏好字幕'),
-                2000,
-                'success'
-            );
-            return true;
+            if (evaluated.length >= MAX_EVAL) break;
         }
 
-        return false;
+        const picked = selectBestQualityCandidate(evaluated) || evaluated[0] || null;
+        if (!picked || this.avcode !== targetCode) return false;
+
+        const { item, parsed, converted } = applyPreferredChineseConversion(picked.item, picked.parsed, preferredLang);
+        item.format = parsed.format;
+        item.favorite = true;
+        item.autoSaved = true;
+        item.favoriteSource = 'auto';
+        this.bundle.favoriteId = item.id;
+        this.bundle.items = [item, ...this.bundle.items.filter((entry) => entry.id !== item.id)];
+        await this._persist({ dirtyItem: item });
+        if (this.avcode !== targetCode) return false;
+
+        if (this.isEnabled && (!this.activeItem || this.activeItem.autoSaved)) {
+            await this._applyItem(item, { silent: true });
+        } else {
+            this._renderList();
+            this._updateButtonState();
+        }
+        Toast(
+            converted
+                ? text('subtitleAutoSavedConverted', '已自动加载并完成繁简转换')
+                : text('subtitleAutoSaved', '已自动加载并收藏偏好字幕'),
+            2000,
+            'success'
+        );
+        return true;
     }
 
     async _downloadCandidate(candidate, { silent = false } = {}) {
         try {
-            const { content, format } = await this.engine.download(candidate);
+            const downloaded = await this.engine.download(candidate);
+            const { content, format } = downloaded;
             const item = {
                 ...candidate,
                 content,
@@ -1679,6 +2026,9 @@ export class SubtitleManager {
                 addedAt: Date.now(),
                 favorite: Boolean(candidate.favorite)
             };
+            if (downloaded.cues?.length) {
+                this._inspectTrackMetadata(item, { format, cues: downloaded.cues });
+            }
             this.onlineResults = this.onlineResults.filter((entry) => entry.id !== item.id);
             return item;
         } catch (err) {

@@ -15,11 +15,6 @@ const HTML_ENTITIES = {
     '&#39;': "'"
 };
 
-/**
- * 剥离特效标签与控制符，保留可读纯文本
- * @param {string} raw
- * @returns {string}
- */
 /** 每条字幕行末尾的标点（句读与收尾引号括号），统一剔除 */
 const TRAILING_PUNCTUATION = /[。．.，,、；;：:！!？?…⋯~～·\-—"'“”‘’）)】」』》〉\]]+$/;
 
@@ -31,8 +26,14 @@ export function stripTrailingPunctuation(text) {
         .join('\n');
 }
 
+/**
+ * 剥离特效标签、BOM 与控制符，保留可读纯文本
+ * @param {string} raw
+ * @returns {string}
+ */
 export function sanitizeCueText(raw) {
     let text = String(raw || '');
+    text = text.replace(/\uFEFF/g, '');            // 清除文件头与 OCR 混入行中的零宽 BOM
     text = text.replace(/\{[^}]*\}/g, '');          // ASS 覆写标签 {\pos(...)} {\fad(...)}
     text = text.replace(/<[^>]+>/g, '');            // SRT/VTT 内联样式 <i> <font>
     text = text.replace(/\\[Nn]/g, '\n');           // ASS 强制换行
@@ -60,7 +61,7 @@ export function detectSubtitleFormat(text, hint = '') {
     if (/\.(ass|ssa)\b/.test(hinted)) return 'ass';
     if (/\.srt\b/.test(hinted)) return 'srt';
 
-    const head = String(text || '').slice(0, 800);
+    const head = String(text || '').replace(/\uFEFF/g, '').slice(0, 800);
     if (/^\s*WEBVTT/.test(head)) return 'vtt';
     if (/\[Script Info\]/i.test(head) || /\[Events\]/i.test(head) || /^\s*Dialogue\s*:/im.test(head)) return 'ass';
     return 'srt';
@@ -83,6 +84,15 @@ function parseTimestamp(raw, { allowShort = false } = {}) {
     return NaN;
 }
 
+function parseTimeRangeLine(line, allowShortTime) {
+    if (!line || !line.includes('-->')) return null;
+    const [startRaw, endRaw] = line.split('-->');
+    const start = parseTimestamp(startRaw, { allowShort: allowShortTime });
+    if (!Number.isFinite(start)) return null;
+    const end = parseTimestamp(String(endRaw || '').trim().split(/\s+/)[0], { allowShort: allowShortTime });
+    return { start, end };
+}
+
 function normalizeCues(cues) {
     const clean = cues
         .filter((cue) => Number.isFinite(cue.start) && cue.text)
@@ -94,26 +104,61 @@ function normalizeCues(cues) {
     return clean.filter((cue, idx) => idx === 0 || Math.abs(cue.start - clean[idx - 1].start) > 0.001 || cue.text !== clean[idx - 1].text);
 }
 
+/**
+ * 基于 `-->` 时间轴行锚定的状态机解析器：
+ * 兼容缺失块间空行的 SRT（如 KIRM-014 等压制源）与 WebVTT NOTE/STYLE/REGION 元数据块。
+ */
 function parseSrtLike(text, allowShortTime = false) {
-    const normalized = String(text || '').replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '');
-    const blocks = normalized.split(/\n{2,}/);
+    const normalized = String(text || '').replace(/\r\n?/g, '\n').replace(/\uFEFF/g, '');
+    const lines = normalized.split('\n').map((line) => line.trim());
     const cues = [];
-    for (const block of blocks) {
-        const lines = block.split('\n').map((line) => line.trim());
-        const timeLineIdx = lines.findIndex((line) => line.includes('-->'));
-        if (timeLineIdx < 0) continue;
-        const [startRaw, endRaw] = lines[timeLineIdx].split('-->');
-        const start = parseTimestamp(startRaw, { allowShort: allowShortTime });
-        const end = parseTimestamp(String(endRaw || '').trim().split(/\s+/)[0], { allowShort: allowShortTime });
-        const body = sanitizeCueText(lines.slice(timeLineIdx + 1).join('\n'));
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (!line) continue;
+
+        if (/^(NOTE|STYLE|REGION)(?:\s|$)/i.test(line)) {
+            while (i + 1 < lines.length && lines[i + 1] !== '') {
+                i++;
+            }
+            continue;
+        }
+
+        if (!line.includes('-->')) continue;
+        const range = parseTimeRangeLine(line, allowShortTime);
+        if (!range) continue;
+
+        const bodyLines = [];
+        let j = i + 1;
+        let hitNextTimestamp = false;
+        while (j < lines.length) {
+            const nextLine = lines[j];
+            if (nextLine === '') {
+                j++;
+                break;
+            }
+            if (nextLine.includes('-->') && parseTimeRangeLine(nextLine, allowShortTime)) {
+                hitNextTimestamp = true;
+                break;
+            }
+            bodyLines.push(nextLine);
+            j++;
+        }
+
+        if (hitNextTimestamp && bodyLines.length && /^\d+$/.test(bodyLines[bodyLines.length - 1])) {
+            bodyLines.pop();
+        }
+        i = j - 1;
+
+        const body = sanitizeCueText(bodyLines.join('\n'));
         if (!body) continue;
-        cues.push({ start, end, text: body });
+        cues.push({ start: range.start, end: range.end, text: body });
     }
     return cues;
 }
 
 function parseAss(text) {
-    const lines = String(text || '').replace(/\r\n?/g, '\n').split('\n');
+    const lines = String(text || '').replace(/\uFEFF/g, '').replace(/\r\n?/g, '\n').split('\n');
     const cues = [];
     let inEvents = false;
     let fields = ['layer', 'start', 'end', 'style', 'name', 'marginl', 'marginr', 'marginv', 'effect', 'text'];
@@ -159,14 +204,15 @@ function parseAss(text) {
  * @returns {{format: 'srt'|'ass'|'vtt', cues: Array<{start:number,end:number,text:string}>}}
  */
 export function parseSubtitles(text, hint = '') {
-    const format = detectSubtitleFormat(text, hint);
+    const cleanText = String(text || '').replace(/\uFEFF/g, '');
+    const format = detectSubtitleFormat(cleanText, hint);
     let cues = [];
     if (format === 'ass') {
-        cues = parseAss(text);
+        cues = parseAss(cleanText);
     } else if (format === 'vtt') {
-        cues = parseSrtLike(String(text || '').replace(/^\s*WEBVTT[^\n]*\n/i, ''), true);
+        cues = parseSrtLike(cleanText.replace(/^\s*WEBVTT[^\n]*(\n|$)/i, ''), true);
     } else {
-        cues = parseSrtLike(text);
+        cues = parseSrtLike(cleanText);
     }
     return { format, cues: normalizeCues(cues) };
 }

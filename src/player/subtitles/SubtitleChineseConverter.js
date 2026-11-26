@@ -317,23 +317,149 @@ export function convertChineseText(text, targetLang) {
     return out;
 }
 
-function convertTaggedDialogueLine(line, targetLang, { assMode = false } = {}) {
-    if (!line) return line;
-    const tokenRe = assMode ? /(\{[^}]*\}|\\[Nnh])/g : /(<[^>]+>)/g;
-    let out = '';
+/**
+ * 判断字符串是否包含日文平假名、片假名或长音符
+ * @param {string} str
+ * @returns {boolean}
+ */
+export function hasJapaneseKana(str) {
+    return /[ぁ-んァ-ヶー]/.test(String(str || ''));
+}
+
+function tokenizeLineWithTags(subLine, assMode) {
+    const tagRe = assMode ? /(\{[^}]*\}|\\h)/g : /(<[^>]+>)/g;
+    const rawTokens = [];
     let lastIndex = 0;
     let match;
-    while ((match = tokenRe.exec(line)) !== null) {
+
+    while ((match = tagRe.exec(subLine)) !== null) {
         if (match.index > lastIndex) {
-            out += convertChineseText(line.slice(lastIndex, match.index), targetLang);
+            rawTokens.push({ isTag: false, text: subLine.slice(lastIndex, match.index) });
         }
-        out += match[0];
+        rawTokens.push({ isTag: true, isHardSpace: match[0] === '\\h', text: match[0] });
         lastIndex = match.index + match[0].length;
     }
-    if (lastIndex < line.length) {
-        out += convertChineseText(line.slice(lastIndex), targetLang);
+    if (lastIndex < subLine.length) {
+        rawTokens.push({ isTag: false, text: subLine.slice(lastIndex) });
     }
-    return out;
+    return rawTokens;
+}
+
+function splitTokensIntoSpaceAndWords(rawTokens) {
+    const pieces = [];
+    for (const tok of rawTokens) {
+        if (tok.isTag) {
+            if (tok.isHardSpace) {
+                pieces.push({ isTag: true, isSpace: true, text: tok.text });
+            } else {
+                pieces.push({ isTag: true, isSpace: false, text: tok.text });
+            }
+            continue;
+        }
+        const parts = tok.text.split(/(\s+)/);
+        for (const part of parts) {
+            if (!part) continue;
+            pieces.push({ isTag: false, isSpace: /^\s+$/.test(part), text: part });
+        }
+    }
+
+    const items = [];
+    let currentWord = null;
+    for (const piece of pieces) {
+        if (piece.isSpace) {
+            if (currentWord) {
+                items.push(currentWord);
+                currentWord = null;
+            }
+            items.push({ type: 'space', text: piece.text });
+        } else {
+            if (!currentWord) {
+                currentWord = { type: 'word', pieces: [] };
+            }
+            currentWord.pieces.push(piece);
+        }
+    }
+    if (currentWord) items.push(currentWord);
+
+    return items.map((item) => {
+        if (item.type !== 'word') return item;
+        const plain = item.pieces.filter((p) => !p.isTag).map((p) => p.text).join('');
+        return {
+            ...item,
+            plain,
+            hasKana: hasJapaneseKana(plain),
+            hasHan: /[\u4e00-\u9fff]/.test(plain)
+        };
+    });
+}
+
+function convertVisualLine(subLine, targetLang, assMode) {
+    if (!subLine) return subLine;
+    const rawTokens = tokenizeLineWithTags(subLine, assMode);
+    const plainLine = rawTokens
+        .map((t) => (t.isTag ? (t.isHardSpace ? ' ' : '') : t.text))
+        .join('');
+
+    if (!hasJapaneseKana(plainLine)) {
+        return rawTokens
+            .map((t) => (t.isTag ? t.text : convertChineseText(t.text, targetLang)))
+            .join('');
+    }
+
+    const items = splitTokensIntoSpaceAndWords(rawTokens);
+    const wordPositions = [];
+    items.forEach((item, idx) => {
+        if (item.type === 'word' && item.plain.length > 0) {
+            wordPositions.push(idx);
+        }
+    });
+
+    if (wordPositions.length < 2) return subLine;
+
+    let firstKanaPos = -1;
+    let lastKanaPos = -1;
+    for (let p = 0; p < wordPositions.length; p++) {
+        if (items[wordPositions[p]].hasKana) {
+            if (firstKanaPos < 0) firstKanaPos = p;
+            lastKanaPos = p;
+        }
+    }
+    if (firstKanaPos < 0) return subLine;
+
+    let convertRange = null;
+    if (firstKanaPos > 0 && lastKanaPos === wordPositions.length - 1) {
+        const prefixHasHan = wordPositions.slice(0, firstKanaPos).some((idx) => items[idx].hasHan);
+        if (prefixHasHan) convertRange = [0, firstKanaPos];
+    } else if (firstKanaPos === 0 && lastKanaPos < wordPositions.length - 1) {
+        const suffixHasHan = wordPositions.slice(lastKanaPos + 1).some((idx) => items[idx].hasHan);
+        if (suffixHasHan) convertRange = [lastKanaPos + 1, wordPositions.length];
+    }
+
+    if (!convertRange) return subLine;
+
+    const convertItemIndices = new Set(wordPositions.slice(convertRange[0], convertRange[1]));
+    return items
+        .map((item, idx) => {
+            if (item.type === 'space') return item.text;
+            if (!convertItemIndices.has(idx)) {
+                return item.pieces.map((p) => p.text).join('');
+            }
+            return item.pieces
+                .map((p) => (p.isTag ? p.text : convertChineseText(p.text, targetLang)))
+                .join('');
+        })
+        .join('');
+}
+
+export function convertTaggedDialogueLine(line, targetLang, { assMode = false } = {}) {
+    if (!line) return line;
+    if (assMode) {
+        const parts = line.split(/(\\[Nn])/);
+        return parts
+            .map((part, idx) => (idx % 2 === 1 ? part : convertVisualLine(part, targetLang, true)))
+            .join('');
+    }
+    return convertVisualLine(line, targetLang, false);
 }
 
 function convertAssContent(raw, targetLang) {
@@ -384,7 +510,7 @@ function convertSrtOrVttContent(raw, targetLang, format) {
                 skipMetadataBlock = false;
                 return line;
             }
-            if (index === 0 && format === 'vtt' && /^WEBVTT\b/i.test(trimmed.replace(/^\uFEFF/, ''))) {
+            if (index === 0 && format === 'vtt' && /^WEBVTT\b/i.test(trimmed.replace(/\uFEFF/g, ''))) {
                 return line;
             }
             if (format === 'vtt' && /^(NOTE|STYLE|REGION)\b/i.test(trimmed)) {

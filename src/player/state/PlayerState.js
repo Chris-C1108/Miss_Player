@@ -41,6 +41,7 @@ export class PlayerState {
             subtitleVerticalOffset: 0,      // 字幕上下偏移 (百分比，正值上移)
             subtitleAutoBest: false,        // 自动挑选并收藏偏好语言的最优字幕
             subtitlePreferredLang: 'auto',  // 字幕偏好语言 ('auto' | 'zh' | 'zh-TW' | 'ja' | 'en' | 'ko')
+            subtitleDisplayMode: 'primary', // 双语字幕显示模式 ('primary' | 'bilingual' | 'secondary')
             pauseOnBlur: true,              // 页面离开/失焦后停止播放 (默认为开)
             buttonSoundEnabled: true,       // 控制面板按钮点击音效 (默认为开)
             defaultMuted: true,             // 默认静音播放 (带超时重置记忆)
@@ -127,6 +128,8 @@ export class PlayerState {
             this.settings.subtitleAutoBest = getBool('subtitleAutoBest', false);
             const rawSubtitleLang = getValue('subtitlePreferredLang', 'auto');
             this.settings.subtitlePreferredLang = ['auto', 'zh', 'zh-TW', 'ja', 'en', 'ko'].includes(rawSubtitleLang) ? rawSubtitleLang : 'auto';
+            const rawSubtitleDisplayMode = getValue('subtitleDisplayMode', 'primary');
+            this.settings.subtitleDisplayMode = ['primary', 'bilingual', 'secondary'].includes(rawSubtitleDisplayMode) ? rawSubtitleDisplayMode : 'primary';
             this.settings.pauseOnBlur = getBool('pauseOnBlur', true);
             this.settings.buttonSoundEnabled = getBool('buttonSoundEnabled', true);
             this.settings.autoCheckUpdate = getBool('autoCheckUpdate', true);
@@ -277,6 +280,7 @@ export class PlayerState {
             setValue('subtitleVerticalOffset', this.settings.subtitleVerticalOffset || 0);
             setValue('subtitleAutoBest', Boolean(this.settings.subtitleAutoBest));
             setValue('subtitlePreferredLang', this.settings.subtitlePreferredLang || 'auto');
+            setValue('subtitleDisplayMode', this.settings.subtitleDisplayMode || 'primary');
         } catch (error) {
             console.error('[PlayerState] 保存设置失败:', error);
         }

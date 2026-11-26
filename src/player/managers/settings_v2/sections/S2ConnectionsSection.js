@@ -26,8 +26,10 @@ import {
     ICON_CHECK,
     ICON_SERVER,
     ICON_REFRESH,
-    ICON_PEACH
+    ICON_PEACH,
+    ICON_SPARKLES
 } from '../../../../constants/icons.js';
+import { buildAiConnectionAccordion } from './S2AiSectionBuilder.js';
 
 export class S2ConnectionsSection {
     constructor(settingsManager) {
@@ -741,5 +743,15 @@ export class S2ConnectionsSection {
 
         this.element.appendChild(this._buildCloudSyncAccordion());
         this.element.appendChild(this._buildPeachAccordion());
+        this.element.appendChild(
+            buildAiConnectionAccordion({
+                sm: this.sm,
+                iconSvg: ICON_SPARKLES,
+                onConfigChange: () => {
+                    this.sm?.playerCore?.controlManager?.commentPanel?.refreshAiBriefVisibility?.();
+                    this.sm?.controlManager?.commentPanel?.refreshAiBriefVisibility?.();
+                }
+            })
+        );
     }
 }

@@ -12,6 +12,8 @@ import { fetchBinaryWithTransport } from '../../utils/http.js';
 import { decodeSubtitleBuffer } from './SubtitleDecoder.js';
 import { parseSubtitles } from './SubtitleFormat.js';
 import { codeMatchesText } from './SubtitleCode.js';
+import { detectSubtitleLanguage } from './SubtitleLanguageDetector.js';
+import { scoreSubtitleQuality } from './SubtitleQualityScorer.js';
 import { XunleiSubtitleProvider } from './providers/XunleiSubtitleProvider.js';
 import { SubtitleCatProvider } from './providers/SubtitleCatProvider.js';
 
@@ -109,6 +111,8 @@ export class SubtitleEngine {
         const { text, encoding } = decodeSubtitleBuffer(res.buffer);
         const { format, cues } = parseSubtitles(text, candidate.format || candidate.downloadUrl);
         if (!cues.length) throw new Error('SUBTITLE_EMPTY');
-        return { content: text, format, cues, encoding };
+        const langInfo = detectSubtitleLanguage(cues, candidate.lang || '');
+        const quality = scoreSubtitleQuality(cues, { langInfo });
+        return { content: text, format, cues, encoding, langInfo, quality };
     }
 }

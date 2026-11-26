@@ -1,0 +1,400 @@
+/* =========================================================================
+   Miss Player 字幕智能洞察与双语渲染 (Subtitle Insights & AI Brief)
+   遵循 Apple HIG 深色毛玻璃视觉规范与现代 CSS 扁平化治理标准
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   1. 双语视频内嵌渲染层
+   ------------------------------------------------------------------------- */
+.mp-sub-overlay-primary {
+    display: block;
+    color: #ffffff;
+}
+
+.mp-sub-overlay-secondary {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.82em;
+    font-weight: 500;
+    line-height: 1.38;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+/* -------------------------------------------------------------------------
+   2. 字幕质量与双语徽章
+   ------------------------------------------------------------------------- */
+.mp-sub-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 6px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: -0.1px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.mp-sub-badge--high {
+    background-color: rgba(48, 209, 88, 0.14);
+    border-color: rgba(48, 209, 88, 0.34);
+    color: #6ee78e;
+}
+
+.mp-sub-badge--warn {
+    background-color: rgba(255, 159, 10, 0.14);
+    border-color: rgba(255, 159, 10, 0.34);
+    color: #ffb340;
+}
+
+.mp-sub-badge--bad {
+    background-color: rgba(255, 69, 58, 0.14);
+    border-color: rgba(255, 69, 58, 0.34);
+    color: #ff6961;
+}
+
+.mp-sub-badge--bi {
+    background-color: rgba(10, 132, 255, 0.14);
+    border-color: rgba(10, 132, 255, 0.34);
+    color: #64b5ff;
+}
+
+/* -------------------------------------------------------------------------
+   3. 时间轴高能筛选与智能提炼触发器
+   ------------------------------------------------------------------------- */
+.mp-sub-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.mp-sub-filter-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.mp-sub-filter-btn:active {
+    transform: scale(0.96);
+}
+
+.mp-sub-filter-btn.is-active {
+    background-color: rgba(var(--brand-pink-rgb), 0.18);
+    border-color: rgba(var(--brand-pink-rgb), 0.48);
+    color: var(--brand-pink);
+}
+
+.mp-sub-ai-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    border: 1px solid rgba(10, 132, 255, 0.34);
+    background-color: rgba(10, 132, 255, 0.14);
+    color: #64b5ff;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.mp-sub-ai-btn:hover {
+    background-color: rgba(10, 132, 255, 0.24);
+    color: #ffffff;
+}
+
+.mp-sub-ai-btn:active {
+    transform: scale(0.96);
+}
+
+.mp-sub-ai-btn.is-loading {
+    opacity: 0.72;
+    pointer-events: none;
+    animation: mp-sub-insights-pulse 1.4s ease-in-out infinite;
+}
+
+/* -------------------------------------------------------------------------
+   4. 横向高能剧情锚点胶囊条
+   ------------------------------------------------------------------------- */
+.mp-sub-anchors-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 2px 4px 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 0;
+}
+
+.mp-sub-anchors-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.mp-sub-anchor-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    padding: 0 9px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+
+.mp-sub-anchor-pill:hover {
+    background-color: rgba(255, 255, 255, 0.13);
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+.mp-sub-anchor-pill:active {
+    transform: scale(0.96);
+}
+
+.mp-sub-anchor-pill.is-ai {
+    background-color: rgba(10, 132, 255, 0.14);
+    border-color: rgba(10, 132, 255, 0.36);
+}
+
+.mp-sub-anchor-ts {
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.mp-sub-anchor-tag {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: -0.1px;
+}
+
+/* -------------------------------------------------------------------------
+   5. 歌词行词条高亮与锚点行指示
+   ------------------------------------------------------------------------- */
+.mp-sub-hl {
+    padding: 0 2px;
+    border-radius: 4px;
+    background-color: transparent;
+    color: inherit;
+    font-weight: 600;
+}
+
+.mp-sub-hl--plot {
+    background-color: rgba(255, 159, 10, 0.18);
+    color: #ffd188;
+}
+
+.mp-sub-hl--act {
+    background-color: rgba(var(--brand-pink-rgb), 0.2);
+    color: #ff9ebc;
+}
+
+.tm-subtitle-lyric-row.is-anchor-cue {
+    background-color: rgba(var(--brand-pink-rgb), 0.06);
+    box-shadow: inset 2px 0 0 var(--brand-pink);
+}
+
+/* -------------------------------------------------------------------------
+   6. 评论区智能剧情速览卡片 (AI Brief)
+   ------------------------------------------------------------------------- */
+.mp-ai-brief-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 11px;
+    border-radius: 9999px;
+    border: 1px solid rgba(10, 132, 255, 0.32);
+    background-color: rgba(10, 132, 255, 0.14);
+    color: #64b5ff;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.mp-ai-brief-btn:hover {
+    background-color: rgba(10, 132, 255, 0.24);
+    color: #ffffff;
+}
+
+.mp-ai-brief-btn.is-loading {
+    opacity: 0.72;
+    pointer-events: none;
+    animation: mp-sub-insights-pulse 1.4s ease-in-out infinite;
+}
+
+.mp-ai-brief-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: var(--mp-blur-glass);
+    -webkit-backdrop-filter: var(--mp-blur-glass);
+}
+
+.mp-ai-brief-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.mp-ai-brief-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: #ffffff;
+}
+
+.mp-ai-brief-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.72);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mp-ai-brief-close:hover {
+    background-color: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+.mp-ai-brief-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mp-ai-brief-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.mp-ai-brief-label {
+    flex-shrink: 0;
+    min-width: 44px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.48);
+}
+
+.mp-ai-brief-text {
+    flex: 1;
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.88);
+    overflow-wrap: break-word;
+}
+
+.mp-ai-brief-ts-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding-top: 2px;
+}
+
+.mp-ai-brief-ts-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 9999px;
+    border: 1px solid rgba(10, 132, 255, 0.34);
+    background-color: rgba(10, 132, 255, 0.14);
+    color: #64b5ff;
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.mp-ai-brief-ts-chip:hover {
+    background-color: rgba(10, 132, 255, 0.24);
+    color: #ffffff;
+}
+
+/* -------------------------------------------------------------------------
+   7. Settings V2 模型预设芯片行
+   ------------------------------------------------------------------------- */
+.mp-s2-ai-presets {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+@keyframes mp-sub-insights-pulse {
+    0%, 100% {
+        opacity: 0.72;
+    }
+    50% {
+        opacity: 0.42;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-sub-ai-btn.is-loading,
+    .mp-ai-brief-btn.is-loading {
+        animation: none;
+    }
+}

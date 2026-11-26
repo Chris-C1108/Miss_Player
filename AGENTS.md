@@ -131,7 +131,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 ### 3. 增强业务功能
 * **评论系统**：`src/player/controls/CommentPanel.js`、`CommentScraper.js` 与模块化视图/辅助组件（`src/player/comments/`：`CommentCardRenderer.js` 安全渲染、`CommentCodePreview.js` 番号预览、`CommentReportModal.js` 问题上报；多源异步抓取 Jable / JavDB / JavLibrary、时间戳解析、逆向倒数时间校准）
 * **疯狂采集引擎**：`src/player/comments/CrazyScraper.js`（宿主页面全量番号多页循环爬取、四级防重跳过）
-* **字幕系统**：`src/player/subtitles/`（`SubtitleEngine.js` 多源并发采集 + 置信度排序、`providers/` 迅雷 Oracle 与 SubtitleCat 适配器、`SubtitleDecoder.js` BOM/GB18030/BIG5 编码嗅探、`SubtitleFormat.js` SRT/ASS/VTT 解析与 WebVTT 标准化、`SubtitleChineseConverter.js` / `SubtitleChineseMaps.js` 零依赖简繁互备选与格式保真双向转换、`SubtitleRepository.js` IndexedDB + WebDAV 番号独立文件仓储、`SubtitleManager.js` 视频内嵌渲染层与字幕轨切换面板）。在线采集受「实验功能 (`betaMode`)」总开关约束
+* **字幕系统**：`src/player/subtitles/`（`SubtitleEngine.js` 多源并发采集 + 置信度排序、`providers/` 迅雷 Oracle 与 SubtitleCat 适配器、`SubtitleDecoder.js` 常用字频加权编码嗅探、`SubtitleFormat.js` SRT/ASS/VTT 容错解析与 WebVTT 标准化、`SubtitleLanguageDetector.js` 内容优先语种纠偏与中日/中英双语拆轨、`SubtitleQualityScorer.js` SQI 质量体检与自动优选回退、`SubtitlePlotAnalyzer.js` 剧情锚点聚类与 30s 去重安全高亮、`SubtitleChineseConverter.js` / `SubtitleChineseMaps.js` 零依赖简繁互备选与格式保真双向转换、`SubtitleRepository.js` IndexedDB + WebDAV 番号独立文件仓储、`SubtitleManager.js` 视频内嵌渲染层、双语切换与时间轴看点导航）。在线采集受「实验功能 (`betaMode`)」总开关约束
 * **多维语义标签库**：`src/player/managers/tagTaxonomy.js`（体位姿势、相貌身材、行为特征等系统化标签矩阵）
 * **自动登录**：`src/autologin/`（多站点凭据管理、跨域 iframe 签名桥接）
 * **广告拦截**：`src/adblock/`（DOM 净化与弹窗拦截）
@@ -144,6 +144,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **社区高能边缘缓存**：`services/cf-heatmap-cache/`（Cloudflare Worker）— 社区高能进度条边缘 24h 缓存只读网关，单番号恒定 160 字符 Base64，免费层 10 万次/天充沛覆盖。
 
 ### 4. 服务与数据通道 (`src/services/` & `src/sync/`)
+* **BYOK AI 服务 (可选)**：`src/services/LlmService.js`、`src/services/LlmTasks.js` 与 `src/player/managers/settings_v2/sections/S2AiSectionBuilder.js` — OpenAI 兼容接口（支持本地 Ollama / OpenRouter / 中转，经 `GM_xmlhttpRequest` 穿透 CORS）、密钥仅存本机、拒答检测与降级、IndexedDB + WebDAV (`ai-cache/`) 跨端缓存，按需驱动字幕分幕、评论简报与高光打标
 * **Supabase 服务**：`src/services/SupabaseService.js` — 方案 1 高密度 JSONB 聚合仓储读取与服务端 RPC 原子合并
 * **版本检测与更新**：`src/services/SleazyForkService.js` — 官方只读 JSON API 握手与语义化 Semver 版本比对
 * **WebDAV 客户端**：`src/sync/WebDavClient.js` — 跨域原子文件落盘、PROPFIND 嗅探与目录逐级自愈

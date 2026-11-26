@@ -241,6 +241,21 @@ runStep('执行自动最高画质与 MissAV 自动切换无码版测试', () => 
     execSync('node tests/quality-and-uncensored.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.34 Phase 1 字幕编码嗅探、容错解析、语种真值与双语拆轨测试
+runStep('执行字幕编码、容错解析与双语拆轨单元测试', () => {
+    execSync('node tests/subtitle-core-phase1.test.mjs', { stdio: 'inherit' });
+});
+
+// 4.35 Phase 2 字幕质量体检 (SQI) 与剧情锚点聚合测试
+runStep('执行字幕质量体检与剧情锚点聚类单元测试', () => {
+    execSync('node tests/subtitle-insights-phase2.test.mjs', { stdio: 'inherit' });
+});
+
+// 4.36 Phase 3 BYOK LLM 通用服务与多任务缓存单元测试
+runStep('执行 BYOK LLM 服务与多任务缓存单元测试', () => {
+    execSync('node tests/llm-service-phase3.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');
