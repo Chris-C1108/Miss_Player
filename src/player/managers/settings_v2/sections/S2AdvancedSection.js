@@ -9,6 +9,8 @@ import { DebugLogPanel } from '../../../ui/DebugLogPanel.js';
 import { CrazyScraper } from '../../../comments/CrazyScraper.js';
 import { CommentCacheManager } from '../../../comments/CommentCacheManager.js';
 import { SubtitleRepository } from '../../../subtitles/SubtitleRepository.js';
+import { LlmCache } from '../../../../services/LlmService.js';
+import { AvMetadataService } from '../../../../services/AvMetadataService.js';
 import {
     getCurrentVersion,
     detectScriptHandler,
@@ -24,7 +26,8 @@ import {
     ICON_INFO_CIRCLE,
     ICON_REFRESH,
     ICON_DOWNLOAD,
-    ICON_EXTERNAL_LINK
+    ICON_EXTERNAL_LINK,
+    ICON_TRASH
 } from '../../../../constants/icons.js';
 
 export class S2AdvancedSection {
@@ -229,48 +232,127 @@ export class S2AdvancedSection {
                 const actionForm = document.createElement('div');
                 actionForm.className = 'mp-s2-form';
 
-                const clearBtn = document.createElement('button');
-                clearBtn.type = 'button';
-                clearBtn.className = 'mp-s2-btn mp-s2-btn--danger';
-                const normalHtml = `<span>${__('betaClearCache') || '清空本地离线评论缓存'}</span>`;
-                clearBtn.innerHTML = normalHtml;
+                const cacheLabel = document.createElement('div');
+                cacheLabel.className = 'mp-s2-field-label';
+                cacheLabel.textContent = '本机临时缓存管理';
+                actionForm.appendChild(cacheLabel);
 
-                bindTwoStepConfirm(clearBtn, {
-                    normalHtml,
-                    confirmText: '确认彻底清空本地缓存?',
+                const cacheGrid = document.createElement('div');
+                cacheGrid.className = 'mp-s2-actions';
+
+                const statusLine = document.createElement('div');
+                statusLine.className = 'mp-s2-meta-line';
+                statusLine.textContent = '仅清理本机临时缓存，不删除 A-B 标记、观看热度、账号配置与 WebDAV 云端数据';
+
+                const clearCommentsCache = async () => {
+                    await CommentCacheManager.clearAll();
+                    CrazyScraper._completedCodes.clear();
+                    CrazyScraper._scannedCodes.clear();
+                    CrazyScraper._avcodeDurations.clear();
+                };
+
+                const clearItems = [
+                    {
+                        id: 'comments',
+                        label: '清空评论缓存',
+                        confirmText: '确认清空评论缓存?',
+                        run: async () => {
+                            await clearCommentsCache();
+                            return '已清空本地评论缓存';
+                        }
+                    },
+                    {
+                        id: 'subtitles',
+                        label: '清空字幕缓存',
+                        confirmText: '确认清空字幕缓存?',
+                        run: async () => {
+                            const res = await SubtitleRepository.clearLocal({
+                                subtitleManager: this.sm?.controlManager?.subtitleManager
+                            });
+                            return `已清理 ${res.clearedCount} 部字幕缓存`;
+                        }
+                    },
+                    {
+                        id: 'ai',
+                        label: '清空 AI 缓存',
+                        confirmText: '确认清空 AI 缓存?',
+                        run: async () => {
+                            const res = await LlmCache.clearAll();
+                            return `已清空 ${res.clearedLocal} 项 AI 缓存（已更新失效纪元）`;
+                        }
+                    },
+                    {
+                        id: 'metadata',
+                        label: '清空元数据缓存',
+                        confirmText: '确认清空元数据缓存?',
+                        run: async () => {
+                            const res = await AvMetadataService.clearLocalCache();
+                            return `已清理 ${res.clearedCount} 部影片元数据缓存`;
+                        }
+                    }
+                ];
+
+                clearItems.forEach((item) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'mp-s2-btn';
+                    btn.dataset.cacheType = item.id;
+                    const normalHtml = `${ICON_TRASH} <span>${item.label}</span>`;
+                    btn.innerHTML = normalHtml;
+                    bindTwoStepConfirm(btn, {
+                        normalHtml,
+                        confirmText: item.confirmText,
+                        onConfirm: async () => {
+                            btn.disabled = true;
+                            try {
+                                const msg = await item.run();
+                                statusLine.textContent = msg;
+                                Toast(msg, 2200, 'success');
+                            } finally {
+                                btn.disabled = false;
+                                btn.innerHTML = normalHtml;
+                            }
+                        }
+                    });
+                    cacheGrid.appendChild(btn);
+                });
+
+                const clearAllRow = document.createElement('div');
+                clearAllRow.className = 'mp-s2-actions mp-s2-actions--single';
+
+                const clearAllBtn = document.createElement('button');
+                clearAllBtn.type = 'button';
+                clearAllBtn.className = 'mp-s2-btn mp-s2-btn--danger';
+                clearAllBtn.dataset.cacheType = 'all';
+                const normalAllHtml = `${ICON_TRASH} <span>一键清理全部本地缓存</span>`;
+                clearAllBtn.innerHTML = normalAllHtml;
+
+                bindTwoStepConfirm(clearAllBtn, {
+                    normalHtml: normalAllHtml,
+                    confirmText: '确认清理全部 4 类临时缓存?',
                     onConfirm: async () => {
-                        clearBtn.disabled = true;
-                        clearBtn.textContent = '清理中…';
-                        await CommentCacheManager.clearAll();
-                        CrazyScraper._completedCodes.clear();
-                        CrazyScraper._scannedCodes.clear();
-                        CrazyScraper._avcodeDurations.clear();
-                        clearBtn.disabled = false;
-                        clearBtn.innerHTML = normalHtml;
-                        Toast('已彻底清空本地评论缓存', 2000, 'success');
+                        clearAllBtn.disabled = true;
+                        try {
+                            const [, subRes, aiRes, metaRes] = await Promise.all([
+                                clearCommentsCache(),
+                                SubtitleRepository.clearLocal({ subtitleManager: this.sm?.controlManager?.subtitleManager }),
+                                LlmCache.clearAll(),
+                                AvMetadataService.clearLocalCache()
+                            ]);
+                            const summary = `已清理全部缓存：字幕 ${subRes.clearedCount} 部 · AI ${aiRes.clearedLocal} 项 · 元数据 ${metaRes.clearedCount} 部 · 评论已重置`;
+                            statusLine.textContent = summary;
+                            Toast('已清理全部本地临时缓存', 2200, 'success');
+                        } finally {
+                            clearAllBtn.disabled = false;
+                            clearAllBtn.innerHTML = normalAllHtml;
+                        }
                     }
                 });
 
-                const clearSubBtn = document.createElement('button');
-                clearSubBtn.type = 'button';
-                clearSubBtn.className = 'mp-s2-btn mp-s2-btn--danger';
-                const normalSubHtml = `<span>清理本地字幕缓存</span>`;
-                clearSubBtn.innerHTML = normalSubHtml;
-
-                bindTwoStepConfirm(clearSubBtn, {
-                    normalHtml: normalSubHtml,
-                    confirmText: '确认清空?',
-                    onConfirm: async () => {
-                        clearSubBtn.disabled = true;
-                        const res = await SubtitleRepository.clearLocal({ subtitleManager: this.sm?.controlManager?.subtitleManager });
-                        clearSubBtn.disabled = false;
-                        clearSubBtn.innerHTML = normalSubHtml;
-                        Toast(`已清理 ${res.clearedCount} 部字幕缓存`, 2000, 'success');
-                    }
-                });
-
-                actionForm.appendChild(clearBtn);
-                actionForm.appendChild(clearSubBtn);
+                clearAllRow.appendChild(clearAllBtn);
+                actionForm.appendChild(cacheGrid);
+                actionForm.appendChild(clearAllRow);
+                actionForm.appendChild(statusLine);
                 body.appendChild(actionForm);
             }
         }).element;

@@ -10,7 +10,7 @@
 
 import { fetchWithTransport } from '../utils/http.js';
 import { getValue, setValue } from '../utils/storage.js';
-import { idbGet, idbSet, STORES } from '../utils/indexedDB.js';
+import { idbGet, idbSet, idbGetAll, idbDelete, STORES } from '../utils/indexedDB.js';
 import { cleanAvCode } from '../utils/videoCode.js';
 import { jbBuildSignature, jbApiGetOnce, JAVDB_DOMAINS } from '../player/comments/providers/JavDbCommentProvider.js';
 import { AiDebugLogger } from './AiDebugLogger.js';
@@ -612,6 +612,25 @@ function isMetadataFresh(record) {
 export class AvMetadataService {
     static clearMemoryCache() {
         memoryCache.clear();
+        inflightMap.clear();
+    }
+
+    /**
+     * 清理本地 IndexedDB + 内存中的影片元数据缓存 (`av_meta:*`)
+     * @returns {Promise<{ clearedCount: number }>}
+     */
+    static async clearLocalCache() {
+        this.clearMemoryCache();
+        let clearedCount = 0;
+        try {
+            const all = await idbGetAll(STORES.MEDIA);
+            for (const rec of Array.isArray(all) ? all : []) {
+                if (typeof rec?.key === 'string' && rec.key.startsWith('av_meta:')) {
+                    if (await idbDelete(STORES.MEDIA, rec.key)) clearedCount += 1;
+                }
+            }
+        } catch (_) {}
+        return { clearedCount };
     }
 
     /**

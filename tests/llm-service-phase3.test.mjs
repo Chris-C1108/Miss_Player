@@ -2,6 +2,16 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { registerHooks } from 'node:module';
+
+registerHooks({
+    load(url, context, nextLoad) {
+        if (url.split('?')[0].endsWith('.css')) {
+            return { format: 'module', shortCircuit: true, source: 'export default "";' };
+        }
+        return nextLoad(url, context);
+    }
+});
 
 // 1. Cleanly mock global browser/userscript primitives before importing source modules
 const storageMap = new Map();
@@ -77,6 +87,8 @@ const {
 
 const { SEMANTIC_TAG_TAXONOMY } = await import('../src/player/managers/tagTaxonomy.js');
 const { buildAiConnectionAccordion } = await import('../src/player/managers/settings_v2/sections/S2AiSectionBuilder.js');
+const { S2AdvancedSection } = await import('../src/player/managers/settings_v2/sections/S2AdvancedSection.js');
+const { AvMetadataService } = await import('../src/services/AvMetadataService.js');
 const { ICON_EYE, ICON_EYE_OFF } = await import('../src/constants/icons.js');
 
 function resetState() {
@@ -862,9 +874,9 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             assert.equal(keyGetLink.href, 'https://platform.agnes-ai.cn');
             assert.equal(keyGetLink.classList.contains('is-hidden'), false);
 
-            // No debug dir input & no manual "立即上传当前 AI 诊断" button
+            // No debug dir input, no manual flush button, and no cache clear buttons in AI card (moved to Debug & Cache)
             assert.equal(card.querySelector('.mp-s2-debug-input'), null);
-            assert.equal(card.querySelectorAll('.mp-s2-btn').some((b) => (b.textContent || b.innerHTML).includes('立即上传')), false);
+            assert.equal(card.querySelectorAll('.mp-s2-btn').some((b) => /立即上传|清空 AI 缓存|清理本地字幕缓存/.test(b.textContent || b.innerHTML)), false);
 
             const inputs = card.querySelectorAll('.mp-s2-input');
             assert.equal(inputs.length, 3);
@@ -1096,7 +1108,8 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
         const sourceFiles = [
             'src/services/LlmService.js',
             'src/services/LlmTasks.js',
-            'src/player/managers/settings_v2/sections/S2AiSectionBuilder.js'
+            'src/player/managers/settings_v2/sections/S2AiSectionBuilder.js',
+            'src/player/managers/settings_v2/sections/S2AdvancedSection.js'
         ];
         const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/u;
         for (const rel of sourceFiles) {
@@ -1104,6 +1117,119 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             assert.equal(/style\s*=\s*["'`][^"'`]*["'`]/i.test(content), false, `${rel} 不得包含内联 style 属性`);
             assert.equal(content.includes('!important'), false, `${rel} 不得包含 !important`);
             assert.equal(emojiRegex.test(content), false, `${rel} 不得包含 Emoji`);
+        }
+    });
+
+    it('S2AdvancedSection debug & cache group consolidates comments, subtitles, AI, metadata, and one-click clear all', async () => {
+        class MockEl {
+            constructor(tag) {
+                this.tagName = tag.toUpperCase();
+                this.children = [];
+                this.parentElement = null;
+                this.parentNode = null;
+                this.className = '';
+                this.dataset = {};
+                this.attributes = {};
+                this.listeners = {};
+                this._textContent = '';
+                this._innerHTML = '';
+                this.disabled = false;
+                this.classList = {
+                    add: (...cls) => {
+                        const set = new Set(this.className.split(/\s+/).filter(Boolean));
+                        cls.forEach((c) => set.add(c));
+                        this.className = Array.from(set).join(' ');
+                    },
+                    remove: (...cls) => {
+                        const set = new Set(this.className.split(/\s+/).filter(Boolean));
+                        cls.forEach((c) => set.delete(c));
+                        this.className = Array.from(set).join(' ');
+                    },
+                    toggle: (c, force) => {
+                        const has = this.classList.contains(c);
+                        const next = force !== undefined ? Boolean(force) : !has;
+                        if (next) this.classList.add(c);
+                        else this.classList.remove(c);
+                        return next;
+                    },
+                    contains: (c) => this.className.split(/\s+/).filter(Boolean).includes(c)
+                };
+            }
+            get textContent() { return this._textContent; }
+            set textContent(v) { this._textContent = String(v ?? ''); }
+            get innerHTML() { return this._innerHTML; }
+            set innerHTML(v) {
+                this._innerHTML = String(v ?? '');
+                if (this._innerHTML === '') this.children = [];
+            }
+            setAttribute(k, v) { this.attributes[k] = String(v); }
+            appendChild(child) {
+                child.parentElement = this;
+                child.parentNode = this;
+                this.children.push(child);
+                return child;
+            }
+            addEventListener(evt, fn) {
+                if (!this.listeners[evt]) this.listeners[evt] = [];
+                this.listeners[evt].push(fn);
+            }
+            dispatch(evt) {
+                const ev = { type: evt, target: this, stopPropagation() {}, preventDefault() {} };
+                (this.listeners[evt] || []).forEach((fn) => fn(ev));
+            }
+            click() { this.dispatch('click'); }
+            querySelector(sel) { return this.querySelectorAll(sel)[0] || null; }
+            querySelectorAll(sel) {
+                const groups = sel.trim().split(/\s+/).filter(Boolean);
+                const matchGroup = (node, grp) => grp.split('.').filter(Boolean).every((c) => node.classList.contains(c));
+                let scope = [this];
+                for (const grp of groups) {
+                    const nextScope = [];
+                    const walk = (node) => {
+                        for (const ch of node.children) {
+                            if (matchGroup(ch, grp)) nextScope.push(ch);
+                            walk(ch);
+                        }
+                    };
+                    scope.forEach(walk);
+                    scope = nextScope;
+                }
+                return scope;
+            }
+        }
+
+        const prevDocument = globalThis.document;
+        const prevUiManager = globalThis.window.__missPlayerUIManager;
+        globalThis.window.__missPlayerUIManager = { showRollingToast: () => {} };
+        globalThis.document = { body: new MockEl('body'), createElement: (t) => new MockEl(t), querySelector: () => null };
+        try {
+            const sm = {
+                settings: { betaMode: false, debugMode: false, crazyScrapeMode: false, hidePrivateData: false, updateChannel: 'beta' },
+                isSectionExpanded: () => true,
+                setSectionExpanded: () => {},
+                updateSetting: () => {}
+            };
+            const sec = new S2AdvancedSection(sm);
+            const root = sec.getElement();
+            const cacheBtns = root.querySelectorAll('.mp-s2-btn').filter((b) => Boolean(b.dataset.cacheType));
+            assert.deepEqual(
+                cacheBtns.map((b) => b.dataset.cacheType),
+                ['comments', 'subtitles', 'ai', 'metadata', 'all']
+            );
+
+            // Two-step click on AI cache button advances cacheEpoch cleanly
+            const prevEpoch = LlmCache.getCacheEpoch();
+            const aiClearBtn = cacheBtns.find((b) => b.dataset.cacheType === 'ai');
+            aiClearBtn.click();
+            aiClearBtn.click();
+            await new Promise((r) => setTimeout(r, 10));
+            assert.ok(LlmCache.getCacheEpoch() > prevEpoch);
+
+            const metaRes = await AvMetadataService.clearLocalCache();
+            assert.equal(metaRes.clearedCount, 0);
+        } finally {
+            globalThis.document = prevDocument;
+            globalThis.window.__missPlayerUIManager = prevUiManager;
         }
     });
 });

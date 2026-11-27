@@ -3,17 +3,16 @@
  */
 import {
     createAccordionCard, createToggleRow, createField,
-    updatePill, bindTwoStepConfirm, bindFocusScroll
+    updatePill, bindFocusScroll
 } from '../components/S2Primitives.js';
 import {
-    LlmService, LlmCache, AI_PROVIDER_PRESETS, detectProviderPresetId,
+    LlmService, AI_PROVIDER_PRESETS, detectProviderPresetId,
     getPresetMeta, parseApiKeys, maskApiKey, filterAndSortTextModels
 } from '../../../../services/LlmService.js';
 import { parseBatchCodes, loadSavedBatchText } from '../../../../services/AiBatchTestRunner.js';
 import { BatchTestFloatModal } from '../../../ui/BatchTestFloatModal.js';
-import { SubtitleRepository } from '../../../subtitles/SubtitleRepository.js';
 import { Toast } from '../../../../utils/index.js';
-import { ICON_EYE, ICON_EYE_OFF, ICON_SERVER, ICON_TRASH, ICON_PLUS, ICON_CHEVRON_RIGHT } from '../../../../constants/icons.js';
+import { ICON_EYE, ICON_EYE_OFF, ICON_SERVER, ICON_PLUS, ICON_CHEVRON_RIGHT } from '../../../../constants/icons.js';
 
 const PRESET_VIBES = ['剧情对白', '情绪推进', '足控丝袜', '口交深喉', '姿势体位', '语言羞辱'];
 
@@ -398,7 +397,7 @@ function buildAiSectionBody(body, setStatus, onConfigChange, sm) {
     };
 
     const statusBox = el('div', 'mp-s2-status-box is-hidden');
-    const actionsRow = el('div', 'mp-s2-actions');
+    const actionsRow = el('div', 'mp-s2-actions mp-s2-actions--single');
     const testBtn = el('button', 'mp-s2-btn mp-s2-btn--primary', '', async () => {
         const saved = persistConfig();
         const target = saved.providers?.find((p) => p.id === activeProviderId) || saved;
@@ -441,22 +440,7 @@ function buildAiSectionBody(body, setStatus, onConfigChange, sm) {
         }
     });
     testBtn.innerHTML = `${ICON_SERVER} <span>测试 AI 连通性</span>`;
-
-    const clearCacheBtn = el('button', 'mp-s2-btn mp-s2-btn--danger');
-    clearCacheBtn.innerHTML = `${ICON_TRASH} <span>清空 AI 缓存</span>`;
-    bindTwoStepConfirm(clearCacheBtn, {
-        idleHtml: `${ICON_TRASH} <span>清空 AI 缓存</span>`,
-        confirmHtml: '<span>确认清空全部缓存？</span>',
-        onConfirm: async () => {
-            const res = await LlmCache.clearAll();
-            statusBox.className = 'mp-s2-status-box is-ok';
-            statusBox.textContent = `已清空本地 AI 缓存（${res.clearedLocal} 项）并忽略云端历史版本`;
-            Toast('AI 缓存已清空，下次将强制重算', 2200, 'success');
-            onConfigChange?.(LlmService.getConfig());
-        }
-    });
     actionsRow.appendChild(testBtn);
-    actionsRow.appendChild(clearCacheBtn);
 
     const featuresBox = el('div', 'mp-s2-conditional');
     const subChaptersRow = createToggleRow({ title: 'AI 智能分幕与总结', subtext: '对长字幕进行结构化分幕与剧情高光提炼', checked: cfg.featureSubChapters !== false, onChange: persistConfig });
@@ -497,7 +481,7 @@ function buildAiSectionBody(body, setStatus, onConfigChange, sm) {
         onChange: persistConfig
     });
     const aiDebugWrap = el('div', 'mp-s2-conditional mp-s2-ai-debug-box');
-    const debugActions = el('div', 'mp-s2-actions');
+    const debugActions = el('div', 'mp-s2-actions mp-s2-actions--single');
     const openFloatBtn = el('button', 'mp-s2-btn mp-s2-btn--primary', '', () => {
         persistConfig();
         if (sm?.settingsV2Manager?.close) sm.settingsV2Manager.close();
@@ -506,25 +490,7 @@ function buildAiSectionBody(body, setStatus, onConfigChange, sm) {
     });
     const savedCount = parseBatchCodes(loadSavedBatchText()).length;
     openFloatBtn.innerHTML = `${ICON_SERVER} <span>${savedCount > 0 ? `全局实测悬浮窗 (${savedCount})` : '打开全局实测悬浮窗'}</span>`;
-
-    const clearSubHtml = `${ICON_TRASH} <span>清理本地字幕缓存</span>`;
-    const clearSubCacheBtn = el('button', 'mp-s2-btn mp-s2-btn--danger');
-    clearSubCacheBtn.innerHTML = clearSubHtml;
-    bindTwoStepConfirm(clearSubCacheBtn, {
-        normalHtml: clearSubHtml,
-        confirmText: '确认清空?',
-        onConfirm: async () => {
-            clearSubCacheBtn.disabled = true;
-            const res = await SubtitleRepository.clearLocal({ subtitleManager: sm?.controlManager?.subtitleManager });
-            clearSubCacheBtn.disabled = false;
-            clearSubCacheBtn.innerHTML = clearSubHtml;
-            statusBox.className = 'mp-s2-status-box is-ok';
-            statusBox.textContent = `已清理 ${res.clearedCount} 部字幕缓存`;
-            Toast(`已清理 ${res.clearedCount} 部字幕缓存`, 2000, 'success');
-        }
-    });
     debugActions.appendChild(openFloatBtn);
-    debugActions.appendChild(clearSubCacheBtn);
     aiDebugWrap.appendChild(debugActions);
 
     updatePresetHighlight();

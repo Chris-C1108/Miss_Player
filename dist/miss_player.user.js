@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.025
+// @version            5.7.124-beta.026
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -2002,7 +2002,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.025";
+		return "5.7.124-beta.026";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -5509,7 +5509,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.025";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.026";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -10859,6 +10859,18 @@
 	var AvMetadataService = class {
 		static clearMemoryCache() {
 			memoryCache.clear();
+			inflightMap.clear();
+		}
+		static async clearLocalCache() {
+			this.clearMemoryCache();
+			let clearedCount = 0;
+			try {
+				const all = await idbGetAll(STORES$1.MEDIA);
+				for (const rec of Array.isArray(all) ? all : []) if (typeof rec?.key === "string" && rec.key.startsWith("av_meta:")) {
+					if (await idbDelete(STORES$1.MEDIA, rec.key)) clearedCount += 1;
+				}
+			} catch (_) {}
+			return { clearedCount };
 		}
 		static getCachedOrDom(avcode) {
 			const code = normalizeCode$1(avcode);
@@ -19378,7 +19390,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.025";
+		return "5.7.124-beta.026";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -34472,7 +34484,7 @@
 			});
 		};
 		const statusBox = el("div", "mp-s2-status-box is-hidden");
-		const actionsRow = el("div", "mp-s2-actions");
+		const actionsRow = el("div", "mp-s2-actions mp-s2-actions--single");
 		const testBtn = el("button", "mp-s2-btn mp-s2-btn--primary", "", async () => {
 			const saved = persistConfig();
 			const target = saved.providers?.find((p) => p.id === activeProviderId) || saved;
@@ -34515,21 +34527,7 @@
 			}
 		});
 		testBtn.innerHTML = `${ICON_SERVER} <span>测试 AI 连通性</span>`;
-		const clearCacheBtn = el("button", "mp-s2-btn mp-s2-btn--danger");
-		clearCacheBtn.innerHTML = `${ICON_TRASH} <span>清空 AI 缓存</span>`;
-		bindTwoStepConfirm(clearCacheBtn, {
-			idleHtml: `${ICON_TRASH} <span>清空 AI 缓存</span>`,
-			confirmHtml: "<span>确认清空全部缓存？</span>",
-			onConfirm: async () => {
-				const res = await LlmCache.clearAll();
-				statusBox.className = "mp-s2-status-box is-ok";
-				statusBox.textContent = `已清空本地 AI 缓存（${res.clearedLocal} 项）并忽略云端历史版本`;
-				Toast$1("AI 缓存已清空，下次将强制重算", 2200, "success");
-				onConfigChange?.(LlmService.getConfig());
-			}
-		});
 		actionsRow.appendChild(testBtn);
-		actionsRow.appendChild(clearCacheBtn);
 		const featuresBox = el("div", "mp-s2-conditional");
 		const subChaptersRow = createToggleRow({
 			title: "AI 智能分幕与总结",
@@ -34597,7 +34595,7 @@
 			onChange: persistConfig
 		});
 		const aiDebugWrap = el("div", "mp-s2-conditional mp-s2-ai-debug-box");
-		const debugActions = el("div", "mp-s2-actions");
+		const debugActions = el("div", "mp-s2-actions mp-s2-actions--single");
 		const openFloatBtn = el("button", "mp-s2-btn mp-s2-btn--primary", "", () => {
 			persistConfig();
 			if (sm?.settingsV2Manager?.close) sm.settingsV2Manager.close();
@@ -34606,24 +34604,7 @@
 		});
 		const savedCount = parseBatchCodes(loadSavedBatchText()).length;
 		openFloatBtn.innerHTML = `${ICON_SERVER} <span>${savedCount > 0 ? `全局实测悬浮窗 (${savedCount})` : "打开全局实测悬浮窗"}</span>`;
-		const clearSubHtml = `${ICON_TRASH} <span>清理本地字幕缓存</span>`;
-		const clearSubCacheBtn = el("button", "mp-s2-btn mp-s2-btn--danger");
-		clearSubCacheBtn.innerHTML = clearSubHtml;
-		bindTwoStepConfirm(clearSubCacheBtn, {
-			normalHtml: clearSubHtml,
-			confirmText: "确认清空?",
-			onConfirm: async () => {
-				clearSubCacheBtn.disabled = true;
-				const res = await SubtitleRepository.clearLocal({ subtitleManager: sm?.controlManager?.subtitleManager });
-				clearSubCacheBtn.disabled = false;
-				clearSubCacheBtn.innerHTML = clearSubHtml;
-				statusBox.className = "mp-s2-status-box is-ok";
-				statusBox.textContent = `已清理 ${res.clearedCount} 部字幕缓存`;
-				Toast$1(`已清理 ${res.clearedCount} 部字幕缓存`, 2e3, "success");
-			}
-		});
 		debugActions.appendChild(openFloatBtn);
-		debugActions.appendChild(clearSubCacheBtn);
 		aiDebugWrap.appendChild(debugActions);
 		updatePresetHighlight();
 		renderKeyChips();
@@ -35469,44 +35450,112 @@
 					body.appendChild(hidePrivateRow.element);
 					const actionForm = document.createElement("div");
 					actionForm.className = "mp-s2-form";
-					const clearBtn = document.createElement("button");
-					clearBtn.type = "button";
-					clearBtn.className = "mp-s2-btn mp-s2-btn--danger";
-					const normalHtml = `<span>${__$1("betaClearCache") || "清空本地离线评论缓存"}</span>`;
-					clearBtn.innerHTML = normalHtml;
-					bindTwoStepConfirm(clearBtn, {
-						normalHtml,
-						confirmText: "确认彻底清空本地缓存?",
+					const cacheLabel = document.createElement("div");
+					cacheLabel.className = "mp-s2-field-label";
+					cacheLabel.textContent = "本机临时缓存管理";
+					actionForm.appendChild(cacheLabel);
+					const cacheGrid = document.createElement("div");
+					cacheGrid.className = "mp-s2-actions";
+					const statusLine = document.createElement("div");
+					statusLine.className = "mp-s2-meta-line";
+					statusLine.textContent = "仅清理本机临时缓存，不删除 A-B 标记、观看热度、账号配置与 WebDAV 云端数据";
+					const clearCommentsCache = async () => {
+						await CommentCacheManager.clearAll();
+						CrazyScraper._completedCodes.clear();
+						CrazyScraper._scannedCodes.clear();
+						CrazyScraper._avcodeDurations.clear();
+					};
+					[
+						{
+							id: "comments",
+							label: "清空评论缓存",
+							confirmText: "确认清空评论缓存?",
+							run: async () => {
+								await clearCommentsCache();
+								return "已清空本地评论缓存";
+							}
+						},
+						{
+							id: "subtitles",
+							label: "清空字幕缓存",
+							confirmText: "确认清空字幕缓存?",
+							run: async () => {
+								return `已清理 ${(await SubtitleRepository.clearLocal({ subtitleManager: this.sm?.controlManager?.subtitleManager })).clearedCount} 部字幕缓存`;
+							}
+						},
+						{
+							id: "ai",
+							label: "清空 AI 缓存",
+							confirmText: "确认清空 AI 缓存?",
+							run: async () => {
+								return `已清空 ${(await LlmCache.clearAll()).clearedLocal} 项 AI 缓存（已更新失效纪元）`;
+							}
+						},
+						{
+							id: "metadata",
+							label: "清空元数据缓存",
+							confirmText: "确认清空元数据缓存?",
+							run: async () => {
+								return `已清理 ${(await AvMetadataService.clearLocalCache()).clearedCount} 部影片元数据缓存`;
+							}
+						}
+					].forEach((item) => {
+						const btn = document.createElement("button");
+						btn.type = "button";
+						btn.className = "mp-s2-btn";
+						btn.dataset.cacheType = item.id;
+						const normalHtml = `${ICON_TRASH} <span>${item.label}</span>`;
+						btn.innerHTML = normalHtml;
+						bindTwoStepConfirm(btn, {
+							normalHtml,
+							confirmText: item.confirmText,
+							onConfirm: async () => {
+								btn.disabled = true;
+								try {
+									const msg = await item.run();
+									statusLine.textContent = msg;
+									Toast$1(msg, 2200, "success");
+								} finally {
+									btn.disabled = false;
+									btn.innerHTML = normalHtml;
+								}
+							}
+						});
+						cacheGrid.appendChild(btn);
+					});
+					const clearAllRow = document.createElement("div");
+					clearAllRow.className = "mp-s2-actions mp-s2-actions--single";
+					const clearAllBtn = document.createElement("button");
+					clearAllBtn.type = "button";
+					clearAllBtn.className = "mp-s2-btn mp-s2-btn--danger";
+					clearAllBtn.dataset.cacheType = "all";
+					const normalAllHtml = `${ICON_TRASH} <span>一键清理全部本地缓存</span>`;
+					clearAllBtn.innerHTML = normalAllHtml;
+					bindTwoStepConfirm(clearAllBtn, {
+						normalHtml: normalAllHtml,
+						confirmText: "确认清理全部 4 类临时缓存?",
 						onConfirm: async () => {
-							clearBtn.disabled = true;
-							clearBtn.textContent = "清理中…";
-							await CommentCacheManager.clearAll();
-							CrazyScraper._completedCodes.clear();
-							CrazyScraper._scannedCodes.clear();
-							CrazyScraper._avcodeDurations.clear();
-							clearBtn.disabled = false;
-							clearBtn.innerHTML = normalHtml;
-							Toast$1("已彻底清空本地评论缓存", 2e3, "success");
+							clearAllBtn.disabled = true;
+							try {
+								const [, subRes, aiRes, metaRes] = await Promise.all([
+									clearCommentsCache(),
+									SubtitleRepository.clearLocal({ subtitleManager: this.sm?.controlManager?.subtitleManager }),
+									LlmCache.clearAll(),
+									AvMetadataService.clearLocalCache()
+								]);
+								const summary = `已清理全部缓存：字幕 ${subRes.clearedCount} 部 · AI ${aiRes.clearedLocal} 项 · 元数据 ${metaRes.clearedCount} 部 · 评论已重置`;
+								statusLine.textContent = summary;
+								Toast$1("已清理全部本地临时缓存", 2200, "success");
+							} finally {
+								clearAllBtn.disabled = false;
+								clearAllBtn.innerHTML = normalAllHtml;
+							}
 						}
 					});
-					const clearSubBtn = document.createElement("button");
-					clearSubBtn.type = "button";
-					clearSubBtn.className = "mp-s2-btn mp-s2-btn--danger";
-					const normalSubHtml = `<span>清理本地字幕缓存</span>`;
-					clearSubBtn.innerHTML = normalSubHtml;
-					bindTwoStepConfirm(clearSubBtn, {
-						normalHtml: normalSubHtml,
-						confirmText: "确认清空?",
-						onConfirm: async () => {
-							clearSubBtn.disabled = true;
-							const res = await SubtitleRepository.clearLocal({ subtitleManager: this.sm?.controlManager?.subtitleManager });
-							clearSubBtn.disabled = false;
-							clearSubBtn.innerHTML = normalSubHtml;
-							Toast$1(`已清理 ${res.clearedCount} 部字幕缓存`, 2e3, "success");
-						}
-					});
-					actionForm.appendChild(clearBtn);
-					actionForm.appendChild(clearSubBtn);
+					clearAllRow.appendChild(clearAllBtn);
+					actionForm.appendChild(cacheGrid);
+					actionForm.appendChild(clearAllRow);
+					actionForm.appendChild(statusLine);
 					body.appendChild(actionForm);
 				}
 			}).element;
