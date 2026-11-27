@@ -1583,4 +1583,47 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         assert.ok(batchFloatSrc.includes('UISurfaceMachine.bindOverlayGuard(root'), 'BatchTestFloatModal 必须绑定防穿透守卫');
         assert.ok(surfaceSrc.includes('videoWrapper.inert = hasAny'), '激活弹窗或设置时必须物理锁定底层视频 wrapper.inert');
     });
+
+    it('exempts >=1000 unique-dialogue tracks from high_repetition and <=2-char short runs under 10 (JUQ-584 & MIDA-115)', async () => {
+        const { scoreSubtitleQuality } = await import('../src/player/subtitles/SubtitleQualityScorer.js');
+        const { assessAiContextValue, buildHighlightGraphWithLlm } = await import('../src/services/LlmTasks.js');
+        const { LlmService } = await import('../src/services/LlmService.js');
+
+        const dense2k = Array.from({ length: 2013 }, (_, i) => ({
+            start: i * 3.5,
+            end: i * 3.5 + 2.5,
+            text: i < 988 ? (i % 10 === 0 ? '好舒服啊' : `重复感叹句 ${(i % 50)}`) : `完整独特剧情对白句子 ${i}`
+        }));
+        const q2k = scoreSubtitleQuality(dense2k, { videoDurationSec: 7402 });
+        assert.ok(!q2k.reasons.includes('high_repetition'), `2013句且含上千条独特对白不应误标 high_repetition: ${q2k.reasons}`);
+        assert.equal(assessAiContextValue({ cues: dense2k, subtitleQuality: q2k, comments: [], videoDuration: 7402 }).isSubTrustworthy, true);
+
+        const shortAffirm = Array.from({ length: 808 }, (_, i) => ({
+            start: i * 10,
+            end: i * 10 + 3,
+            text: (i >= 250 && i <= 257) ? '是的' : `正常剧情对话内容第 ${i} 句`
+        }));
+        const qShort = scoreSubtitleQuality(shortAffirm, { videoDurationSec: 8854 });
+        assert.ok(!qShort.reasons.includes('consecutive_repetition'), `2字短应答8连不应触发 consecutive_repetition: ${qShort.reasons}`);
+        assert.equal(assessAiContextValue({ cues: shortAffirm, subtitleQuality: qShort, comments: [], videoDuration: 8854 }).isSubTrustworthy, true);
+
+        LlmService.saveConfig({ enabled: true, featureHighlightFusion: true, baseUrl: 'https://api.example.com/v1', model: 'gpt-test', apiKey: 'sk-test-123456', vibeTags: ['深喉口交', '剧情对白'] });
+        let capturedSystem = '';
+        const prevGm = gmResponder;
+        gmResponder = (opts) => {
+            const body = JSON.parse(opts.data || '{}');
+            capturedSystem = body.messages?.[0]?.content || '';
+            opts.onload?.({
+                status: 200,
+                responseText: JSON.stringify({ choices: [{ message: { content: '{"brief":{"highlights":"平淡","warnings":"看点少","consensus":""},"highlights":[],"skipZones":[],"commentTags":[]}' } }] })
+            });
+        };
+        try {
+            await buildHighlightGraphWithLlm({ avcode: 'FLAT-001', cues: shortAffirm, comments: [{ id: 'c1', text: '普通', likes: 1 }], videoDuration: 7200, forceRefresh: true });
+            assert.ok(capturedSystem.includes('0-8条') && capturedSystem.includes('严禁'), 'Prompt 不得硬凑数量且应允许平淡片返回 0-2 条或 []');
+            assert.ok(capturedSystem.includes('深喉口交') && capturedSystem.includes('剧情对白'), 'Prompt 必须注入用户关注维度加权');
+        } finally {
+            gmResponder = prevGm;
+        }
+    });
 });

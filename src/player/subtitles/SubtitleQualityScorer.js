@@ -126,6 +126,7 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
     let currentRun = 0;
     let maxRun = 0;
     let semanticMaxRun = 0;
+    let shortMaxRun = 0;
     let hallucinationHits = 0;
     let politeNoiseHits = 0;
     let mtHits = 0;
@@ -141,7 +142,11 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
         }
         if (currentRun > maxRun) maxRun = currentRun;
         if (currentRun > semanticMaxRun && !PURE_MOAN_CUE_RE.test(norm)) {
-            semanticMaxRun = currentRun;
+            if (norm.length <= 2) {
+                if (currentRun > shortMaxRun) shortMaxRun = currentRun;
+            } else {
+                semanticMaxRun = currentRun;
+            }
         }
 
         const simplified = norm ? convertChineseText(norm, 'zh') : '';
@@ -199,13 +204,13 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
         if (dupRate > 0.6) {
             sqi -= 32;
             reasons.push('high_repetition');
-        } else if (dupRate > 0.48) {
+        } else if (dupRate > 0.48 && (cueCount < 1000 || uniqueTexts.size < 450 || dupRate > 0.56)) {
             sqi -= 20;
             reasons.push('high_repetition');
         }
 
-        // 单字纯拟声词连发（如深喉喘息“啊”8连）容忍至 <20，真实对白/幻觉整句仍按 >=8 拦截
-        if (semanticMaxRun >= 8 || maxRun >= 20) {
+        // 单字纯拟声词容忍至 <20，超短 <=2 字应答（如“是的”8连）容忍至 <10，完整短语 >=8 即拦截
+        if (semanticMaxRun >= 8 || shortMaxRun >= 10 || maxRun >= 20) {
             sqi -= 15;
             reasons.push('consecutive_repetition');
         }

@@ -1238,7 +1238,7 @@ export async function buildHighlightGraphWithLlm({
     comments = [],
     crowdPeaks = [],
     videoDuration = 0,
-    vibeTags = [],
+    vibeTags = null,
     metadata = null,
     forceRefresh = false
 } = {}) {
@@ -1272,7 +1272,10 @@ export async function buildHighlightGraphWithLlm({
 
     const effectiveCues = ctxValue.isSubTrustworthy ? cues : [];
     const effectiveAltCues = ctxValue.isSubTrustworthy ? altCues : null;
-    const built = buildFusionInputs({ cues: effectiveCues, comments, crowdPeaks, videoDuration: dur, vibeTags, metadata });
+    const effectiveVibes = Array.isArray(vibeTags)
+        ? vibeTags
+        : (Array.isArray(LlmService.getConfig().vibeTags) ? LlmService.getConfig().vibeTags : []);
+    const built = buildFusionInputs({ cues: effectiveCues, comments, crowdPeaks, videoDuration: dur, vibeTags: effectiveVibes, metadata });
     const altCompressed = Array.isArray(effectiveAltCues) && effectiveAltCues.length > 0
         ? selectCompressedEntries(effectiveAltCues, { maxChars: 2000, indexed: false }).text
         : '';
@@ -1291,7 +1294,7 @@ export async function buildHighlightGraphWithLlm({
         commentsDigestPreview: built.commentLines.join('\n'),
         crowdPeaksCount: Array.isArray(crowdPeaks) ? crowdPeaks.length : 0,
         crowdPeaks: Array.isArray(crowdPeaks) ? crowdPeaks : [],
-        vibeTags: Array.isArray(vibeTags) ? vibeTags : [],
+        vibeTags: effectiveVibes,
         videoDurationSec: Math.round(dur)
     };
 
@@ -1315,9 +1318,9 @@ export async function buildHighlightGraphWithLlm({
     const crowdPromptText = (Array.isArray(crowdPeaks) && crowdPeaks.length > 0)
         ? crowdPeaks.map((p) => `t=${Math.round(Number(p.seconds) || 0)}s(${formatMmSs(p.seconds)},强度${Math.round((Number(p.intensity) || 0) * 100)}%)`).join(', ')
         : '(暂无社区热度数据)';
-    const vibePromptText = (Array.isArray(vibeTags) && vibeTags.length > 0)
-        ? `用户偏好要素（排序可适当靠前）: ${vibeTags.join('、')}`
-        : '';
+    const vibePromptText = effectiveVibes.length > 0
+        ? `用户高能关注维度（请优先围绕这些维度筛选并评估强度）: 【${effectiveVibes.join('、')}】`
+        : '用户关注维度: 均衡关注具体体位/深喉/口爆/高潮射精强度与高张力剧情转折';
 
     const hasSub = Boolean(built.compressedSub);
     const hasCrowd = Array.isArray(crowdPeaks) && crowdPeaks.length > 0;
@@ -1340,13 +1343,16 @@ export async function buildHighlightGraphWithLlm({
         {
             role: 'system',
             content: [
-                '你是严谨的 AV 场景定位分析引擎，只做准确定位高能与转折（宁缺毋滥，严禁猜测）。',
+                '你是严谨的 AV 场景定位分析引擎，只做按信号真实强度帮用户找出最值得看的高能节点（宁缺毋滥，严禁硬编凑数）。',
                 `必须全程使用「${aiLang.promptName}」输出 brief、tag、reason、skipZones.reason 与 commentTags.note。`,
                 groundingRule,
-                '反幻觉硬约束(台词≠画面)：1) 结合片名/标签定基调——纯口交无插入前情禁脑补内射，孤立词禁脑补肛交/双穴；2) 挑逗/夸张/否定词禁当已发生；3) 禁把许愿抱怨嫁接无关时刻；4) 凡有字幕/评论/波峰依据时尽量覆盖全片各主要做爱/高潮/体位切换段(4-8条实锤高光，不确定写 low；仅毫无依据时留空 [])。',
+                effectiveVibes.length > 0
+                    ? `维度加权：优先围绕用户关注的【${effectiveVibes.join('、')}】筛选，详细点明相关体位/深喉/高潮强度或剧情转折；不符合核心高能的平淡对白直接舍弃。`
+                    : '强度标尺：按信号真实高能强度(score 0-100)打分，优先识别深喉口交、激烈插入、体位切换、高潮内射/潮吹或强冲突剧情点。',
+                '动态数量与反幻觉硬约束：1) 结合片名/标签定基调——纯口交无插入禁脑补内射，孤立词禁脑补肛交/双穴；2) 挑逗/否定词禁当已发生；3) 不设固定数量配额（0-8条按真实高能密度自然浮动）：平平无奇、节奏流水账或乏善可陈的影片可只报 0-2 条甚至 []，并在 brief.warnings 如实说明看点不足；仅高能强度真实突出(score>=75)才收入 highlights，严禁拿前戏铺垫或普通对白硬凑满 8 条！',
                 '输出顺序：',
-                '1. brief: 1句话看点/避坑/共识；',
-                '2. highlights: 4-8条实锤高能（按全片前中后进展分布，禁片尾独白，tag用2-4字勿带/）；',
+                '1. brief: 1句话直白看点/避坑/共识（平淡片直接说明）;',
+                '2. highlights: 0-8条实锤高能（仅保留高强度节点，禁片尾独白，tag用2-4字具体动作或剧情点勿带/）;',
                 '3. skipZones: 最多3个拖沓区间（勿重highlights，禁写字幕/行号/推测，无则[]）；',
                 '4. commentTags: 最多8条；note须写具体看点/槽点(禁写“高潮时刻/背景故事/结构评价”等空词)；无时间戳或具体动作的泛评 inferredSeconds 填 null；',
                 '仅输出合法 JSON：',

@@ -356,6 +356,7 @@ export class AiBatchTestRunner {
                         altTitle,
                         comments,
                         videoDuration: estDuration,
+                        vibeTags: LlmService.getConfig().vibeTags || [],
                         title: metaRes?.title || '',
                         metadata: metaRes,
                         forceRefresh: forceFresh

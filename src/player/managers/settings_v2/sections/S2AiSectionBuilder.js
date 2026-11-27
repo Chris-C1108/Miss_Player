@@ -559,10 +559,10 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
             vibeSection.className = 'mp-s2-field';
             const vibeLabel = document.createElement('span');
             vibeLabel.className = 'mp-s2-field-label';
-            vibeLabel.textContent = '高能偏好（本地权重参考）';
+            vibeLabel.textContent = '关注焦点与高能维度（影响 AI 筛选侧重，可选 6 项）';
             const vibeChipsWrap = document.createElement('div');
             vibeChipsWrap.className = 'mp-s2-chips mp-s2-ai-vibes';
-            const PRESET_VIBES = ['剧情反转', '黑丝制服', '极致反差', '紧凑高潮', '对白张力'];
+            const PRESET_VIBES = ['剧情对白', '深喉口交', '激烈插入', '后入骑乘', '内射颜射', '潮吹高潮', '丝袜制服', '强制调教'];
             const renderVibeChips = () => {
                 vibeChipsWrap.innerHTML = '';
                 PRESET_VIBES.forEach((tag) => {
@@ -575,7 +575,7 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
                         e.stopPropagation();
                         if (activeVibeTags.includes(tag)) {
                             activeVibeTags = activeVibeTags.filter((x) => x !== tag);
-                        } else if (activeVibeTags.length < 4) {
+                        } else if (activeVibeTags.length < 6) {
                             activeVibeTags = [...activeVibeTags, tag];
                         }
                         renderVibeChips();

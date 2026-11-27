@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.023
+// @version            5.7.124-beta.024
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -2002,7 +2002,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.023";
+		return "5.7.124-beta.024";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4378,7 +4378,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.023";
+		return "5.7.124-beta.024";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6521,7 +6521,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.023";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.024";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -13228,6 +13228,7 @@
 		let currentRun = 0;
 		let maxRun = 0;
 		let semanticMaxRun = 0;
+		let shortMaxRun = 0;
 		let hallucinationHits = 0;
 		let politeNoiseHits = 0;
 		let mtHits = 0;
@@ -13240,7 +13241,11 @@
 				prevText = norm;
 			}
 			if (currentRun > maxRun) maxRun = currentRun;
-			if (currentRun > semanticMaxRun && !PURE_MOAN_CUE_RE.test(norm)) semanticMaxRun = currentRun;
+			if (currentRun > semanticMaxRun && !PURE_MOAN_CUE_RE.test(norm)) {
+				if (norm.length <= 2) {
+					if (currentRun > shortMaxRun) shortMaxRun = currentRun;
+				} else semanticMaxRun = currentRun;
+			}
 			const simplified = norm ? convertChineseText(norm, "zh") : "";
 			if (WHISPER_HALLUCINATION_RE.test(norm) || simplified && WHISPER_HALLUCINATION_RE.test(simplified)) hallucinationHits += 1;
 			const checkTarget = simplified || norm;
@@ -13282,11 +13287,11 @@
 			if (dupRate > .6) {
 				sqi -= 32;
 				reasons.push("high_repetition");
-			} else if (dupRate > .48) {
+			} else if (dupRate > .48 && (cueCount < 1e3 || uniqueTexts.size < 450 || dupRate > .56)) {
 				sqi -= 20;
 				reasons.push("high_repetition");
 			}
-			if (semanticMaxRun >= 8 || maxRun >= 20) {
+			if (semanticMaxRun >= 8 || shortMaxRun >= 10 || maxRun >= 20) {
 				sqi -= 15;
 				reasons.push("consecutive_repetition");
 			}
@@ -14484,7 +14489,7 @@
 		};
 		return { hit: false };
 	}
-	async function buildHighlightGraphWithLlm({ avcode, cues = [], subtitleQuality = null, altCues = null, altTitle = "", comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null, forceRefresh = false } = {}) {
+	async function buildHighlightGraphWithLlm({ avcode, cues = [], subtitleQuality = null, altCues = null, altTitle = "", comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = null, metadata = null, forceRefresh = false } = {}) {
 		const startedAt = Date.now();
 		const safeCode = normalizeInlineText(avcode).toUpperCase();
 		const dur = Math.max(0, Number(videoDuration) || 0);
@@ -14522,12 +14527,13 @@
 		}
 		const effectiveCues = ctxValue.isSubTrustworthy ? cues : [];
 		const effectiveAltCues = ctxValue.isSubTrustworthy ? altCues : null;
+		const effectiveVibes = Array.isArray(vibeTags) ? vibeTags : Array.isArray(LlmService.getConfig().vibeTags) ? LlmService.getConfig().vibeTags : [];
 		const built = buildFusionInputs({
 			cues: effectiveCues,
 			comments,
 			crowdPeaks,
 			videoDuration: dur,
-			vibeTags,
+			vibeTags: effectiveVibes,
 			metadata
 		});
 		const altCompressed = Array.isArray(effectiveAltCues) && effectiveAltCues.length > 0 ? selectCompressedEntries(effectiveAltCues, {
@@ -14552,7 +14558,7 @@
 			commentsDigestPreview: built.commentLines.join("\n"),
 			crowdPeaksCount: Array.isArray(crowdPeaks) ? crowdPeaks.length : 0,
 			crowdPeaks: Array.isArray(crowdPeaks) ? crowdPeaks : [],
-			vibeTags: Array.isArray(vibeTags) ? vibeTags : [],
+			vibeTags: effectiveVibes,
 			videoDurationSec: Math.round(dur)
 		};
 		if (!forceRefresh && safeCode) {
@@ -14580,7 +14586,7 @@
 			}
 		}
 		const crowdPromptText = Array.isArray(crowdPeaks) && crowdPeaks.length > 0 ? crowdPeaks.map((p) => `t=${Math.round(Number(p.seconds) || 0)}s(${formatMmSs(p.seconds)},强度${Math.round((Number(p.intensity) || 0) * 100)}%)`).join(", ") : "(暂无社区热度数据)";
-		const vibePromptText = Array.isArray(vibeTags) && vibeTags.length > 0 ? `用户偏好要素（排序可适当靠前）: ${vibeTags.join("、")}` : "";
+		const vibePromptText = effectiveVibes.length > 0 ? `用户高能关注维度（请优先围绕这些维度筛选并评估强度）: 【${effectiveVibes.join("、")}】` : "用户关注维度: 均衡关注具体体位/深喉/口爆/高潮射精强度与高张力剧情转折";
 		const hasSub = Boolean(built.compressedSub);
 		const hasCrowd = Array.isArray(crowdPeaks) && crowdPeaks.length > 0;
 		const commentTsSet = new Set();
@@ -14591,13 +14597,14 @@
 		const messages = [{
 			role: "system",
 			content: [
-				"你是严谨的 AV 场景定位分析引擎，只做准确定位高能与转折（宁缺毋滥，严禁猜测）。",
+				"你是严谨的 AV 场景定位分析引擎，只做按信号真实强度帮用户找出最值得看的高能节点（宁缺毋滥，严禁硬编凑数）。",
 				`必须全程使用「${aiLang.promptName}」输出 brief、tag、reason、skipZones.reason 与 commentTags.note。`,
 				groundingRule,
-				"反幻觉硬约束(台词≠画面)：1) 结合片名/标签定基调——纯口交无插入前情禁脑补内射，孤立词禁脑补肛交/双穴；2) 挑逗/夸张/否定词禁当已发生；3) 禁把许愿抱怨嫁接无关时刻；4) 凡有字幕/评论/波峰依据时尽量覆盖全片各主要做爱/高潮/体位切换段(4-8条实锤高光，不确定写 low；仅毫无依据时留空 [])。",
+				effectiveVibes.length > 0 ? `维度加权：优先围绕用户关注的【${effectiveVibes.join("、")}】筛选，详细点明相关体位/深喉/高潮强度或剧情转折；不符合核心高能的平淡对白直接舍弃。` : "强度标尺：按信号真实高能强度(score 0-100)打分，优先识别深喉口交、激烈插入、体位切换、高潮内射/潮吹或强冲突剧情点。",
+				"动态数量与反幻觉硬约束：1) 结合片名/标签定基调——纯口交无插入禁脑补内射，孤立词禁脑补肛交/双穴；2) 挑逗/否定词禁当已发生；3) 不设固定数量配额（0-8条按真实高能密度自然浮动）：平平无奇、节奏流水账或乏善可陈的影片可只报 0-2 条甚至 []，并在 brief.warnings 如实说明看点不足；仅高能强度真实突出(score>=75)才收入 highlights，严禁拿前戏铺垫或普通对白硬凑满 8 条！",
 				"输出顺序：",
-				"1. brief: 1句话看点/避坑/共识；",
-				"2. highlights: 4-8条实锤高能（按全片前中后进展分布，禁片尾独白，tag用2-4字勿带/）；",
+				"1. brief: 1句话直白看点/避坑/共识（平淡片直接说明）;",
+				"2. highlights: 0-8条实锤高能（仅保留高强度节点，禁片尾独白，tag用2-4字具体动作或剧情点勿带/）;",
 				"3. skipZones: 最多3个拖沓区间（勿重highlights，禁写字幕/行号/推测，无则[]）；",
 				"4. commentTags: 最多8条；note须写具体看点/槽点(禁写“高潮时刻/背景故事/结构评价”等空词)；无时间戳或具体动作的泛评 inferredSeconds 填 null；",
 				"仅输出合法 JSON：",
@@ -34153,6 +34160,7 @@
 							altTitle,
 							comments,
 							videoDuration: estDuration,
+							vibeTags: LlmService.getConfig().vibeTags || [],
 							title: metaRes?.title || "",
 							metadata: metaRes,
 							forceRefresh: forceFresh
@@ -34937,15 +34945,18 @@
 				vibeSection.className = "mp-s2-field";
 				const vibeLabel = document.createElement("span");
 				vibeLabel.className = "mp-s2-field-label";
-				vibeLabel.textContent = "高能偏好（本地权重参考）";
+				vibeLabel.textContent = "关注焦点与高能维度（影响 AI 筛选侧重，可选 6 项）";
 				const vibeChipsWrap = document.createElement("div");
 				vibeChipsWrap.className = "mp-s2-chips mp-s2-ai-vibes";
 				const PRESET_VIBES = [
-					"剧情反转",
-					"黑丝制服",
-					"极致反差",
-					"紧凑高潮",
-					"对白张力"
+					"剧情对白",
+					"深喉口交",
+					"激烈插入",
+					"后入骑乘",
+					"内射颜射",
+					"潮吹高潮",
+					"丝袜制服",
+					"强制调教"
 				];
 				const renderVibeChips = () => {
 					vibeChipsWrap.innerHTML = "";
@@ -34957,7 +34968,7 @@
 						chip.addEventListener("click", (e) => {
 							e.stopPropagation();
 							if (activeVibeTags.includes(tag)) activeVibeTags = activeVibeTags.filter((x) => x !== tag);
-							else if (activeVibeTags.length < 4) activeVibeTags = [...activeVibeTags, tag];
+							else if (activeVibeTags.length < 6) activeVibeTags = [...activeVibeTags, tag];
 							renderVibeChips();
 							persistConfig();
 						});
