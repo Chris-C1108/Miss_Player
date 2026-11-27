@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.020
+// @version            5.7.124-beta.021
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.020";
+		return "5.7.124-beta.021";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4748,7 +4748,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.020";
+		return "5.7.124-beta.021";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6891,7 +6891,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.020";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.021";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -12204,6 +12204,11 @@
 			end: parseTimestamp(m[2], { allowShort: allowShortTime })
 		};
 	}
+	function stripTrailingSentinelCues(sorted) {
+		const startCheck = Math.max(1, sorted.length - 3);
+		for (let i = sorted.length - 1; i >= startCheck; i--) if (sorted[i].start >= 36e3 && sorted[i].start - sorted[i - 1].end >= 7200) return sorted.slice(0, i);
+		return sorted;
+	}
 	function normalizeCues(cues) {
 		const clean = cues.filter((cue) => Number.isFinite(cue.start) && cue.text).map((cue) => {
 			const end = Number.isFinite(cue.end) && cue.end > cue.start ? cue.end : cue.start + 2;
@@ -12213,7 +12218,7 @@
 				text: cue.text
 			};
 		}).sort((a, b) => a.start - b.start);
-		return clean.filter((cue, idx) => idx === 0 || Math.abs(cue.start - clean[idx - 1].start) > .001 || cue.text !== clean[idx - 1].text);
+		return stripTrailingSentinelCues(clean.filter((cue, idx) => idx === 0 || Math.abs(cue.start - clean[idx - 1].start) > .001 || cue.text !== clean[idx - 1].text));
 	}
 	function parseSrtLike(text, allowShortTime = false) {
 		const lines = String(text || "").replace(/\r\n?/g, "\n").replace(/\uFEFF/g, "").split("\n").map((line) => line.trim());
@@ -13652,7 +13657,7 @@
 				sqi -= 15;
 				reasons.push("consecutive_repetition");
 			}
-			if (hallucinationHits >= 2) {
+			if (hallucinationHits / cueCount >= .015 || hallucinationHits >= 6) {
 				sqi -= 15;
 				reasons.push("whisper_hallucination");
 			}

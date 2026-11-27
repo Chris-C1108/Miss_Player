@@ -1453,4 +1453,44 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
             I18n.setGlobalLang('auto');
         }
     });
+
+    it('strips trailing 24h WhisperJAV sentinel cues during parsing (EKDV-796 regression)', async () => {
+        const { parseSubtitles } = await import('../src/player/subtitles/SubtitleFormat.js');
+        const { scoreSubtitleQuality } = await import('../src/player/subtitles/SubtitleQualityScorer.js');
+
+        const lines = Array.from({ length: 120 }, (_, i) => {
+            const t0 = 60 + i * 60;
+            const t1 = t0 + 4;
+            const fmt = (sec) => {
+                const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+                const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+                const s = String(sec % 60).padStart(2, '0');
+                return `${h}:${m}:${s},000`;
+            };
+            return `${i + 1}\n${fmt(t0)} --> ${fmt(t1)}\n正常剧情对白第 ${i + 1} 句\n`;
+        });
+        lines.push('121\n23:59:58,000 --> 23:59:59,000\nWhisperJAV Colab 的潜艇\n');
+        const parsed = parseSubtitles(lines.join('\n'), 'ekdv-796.srt');
+        assert.equal(parsed.cues.length, 120, '必须剥离 23:59:58 末尾孤立水印句');
+        const lastEnd = parsed.cues[parsed.cues.length - 1].end;
+        assert.ok(lastEnd < 7300, `剥离后末尾结束时间应恢复正常影片跨度，实际=${lastEnd}`);
+        const q = scoreSubtitleQuality(parsed.cues, { videoDurationSec: Math.ceil(lastEnd) });
+        assert.ok(!q.reasons.includes('giant_gap_or_sparse'), `不得因 23:59 水印误触发 giant_gap_or_sparse: ${q.reasons}`);
+    });
+
+    it('uses proportional hallucination gating so rare 2-hit long tracks stay trustworthy (MIDV-264 regression)', async () => {
+        const { scoreSubtitleQuality } = await import('../src/player/subtitles/SubtitleQualityScorer.js');
+        const { assessAiContextValue } = await import('../src/services/LlmTasks.js');
+
+        const longCues = Array.from({ length: 1679 }, (_, idx) => ({
+            start: 30 + idx * 4.2,
+            end: 30 + idx * 4.2 + 3.2,
+            text: (idx === 900 || idx === 1100) ? '感谢您的观看' : `完整连续对白第 ${idx} 句今天发生了什么事`
+        }));
+        const longQ = scoreSubtitleQuality(longCues, { videoDurationSec: 7100 });
+        assert.ok(!longQ.reasons.includes('whisper_hallucination'), `1679 句仅 2 句水印(0.12%)不应一票否决: ${longQ.reasons}`);
+        assert.ok(longQ.sqi >= 85, `正常长轨 SQI 应保持高位，实际=${longQ.sqi}`);
+        const ctx = assessAiContextValue({ cues: longCues, quality: longQ, comments: [], videoDuration: 7100 });
+        assert.equal(ctx.isSubTrustworthy, true, '长字幕稀疏偶发 2 句片尾词应可安全放行 AI 分幕');
+    });
 });

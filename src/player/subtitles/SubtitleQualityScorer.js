@@ -203,7 +203,8 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
             reasons.push('consecutive_repetition');
         }
 
-        if (hallucinationHits >= 2) {
+        const hallRate = hallucinationHits / cueCount;
+        if (hallRate >= 0.015 || hallucinationHits >= 6) {
             sqi -= 15;
             reasons.push('whisper_hallucination');
         }

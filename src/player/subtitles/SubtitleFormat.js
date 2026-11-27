@@ -99,6 +99,17 @@ function parseTimeRangeLine(line, allowShortTime) {
     return { start, end };
 }
 
+function stripTrailingSentinelCues(sorted) {
+    // 剥离片尾孤立 10h+ 占位水印（如 WhisperJAV 23:59:58 署名），避免拉爆跨度与时长统计
+    const startCheck = Math.max(1, sorted.length - 3);
+    for (let i = sorted.length - 1; i >= startCheck; i--) {
+        if (sorted[i].start >= 36000 && (sorted[i].start - sorted[i - 1].end) >= 7200) {
+            return sorted.slice(0, i);
+        }
+    }
+    return sorted;
+}
+
 function normalizeCues(cues) {
     const clean = cues
         .filter((cue) => Number.isFinite(cue.start) && cue.text)
@@ -107,7 +118,8 @@ function normalizeCues(cues) {
             return { start: Math.max(0, cue.start), end, text: cue.text };
         })
         .sort((a, b) => a.start - b.start);
-    return clean.filter((cue, idx) => idx === 0 || Math.abs(cue.start - clean[idx - 1].start) > 0.001 || cue.text !== clean[idx - 1].text);
+    const deduped = clean.filter((cue, idx) => idx === 0 || Math.abs(cue.start - clean[idx - 1].start) > 0.001 || cue.text !== clean[idx - 1].text);
+    return stripTrailingSentinelCues(deduped);
 }
 
 /**
