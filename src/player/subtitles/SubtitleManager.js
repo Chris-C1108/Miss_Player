@@ -1665,6 +1665,7 @@ export class SubtitleManager {
             const cached = await getCachedSubtitleChapters({
                 avcode: targetCode,
                 cues: this.cues,
+                subtitleQuality: this.getSubtitleQuality(),
                 metadata
             });
             if (this.avcode !== targetCode || !cached?.hit || !Array.isArray(cached.chapters)) return;
@@ -1672,6 +1673,16 @@ export class SubtitleManager {
             this._renderAnchorsBar();
             this._syncAnchorCueRows();
         } catch (_) {}
+    }
+
+    /** 获取当前已挂载字幕的质量评估结果 */
+    getSubtitleQuality() {
+        if (!this.cues.length) return null;
+        if (this.activeItem?.quality) return this.activeItem.quality;
+        const dur = Number(this.targetVideo?.duration) || 0;
+        const quality = scoreSubtitleQuality(this.cues, { videoDurationSec: dur, langInfo: this.activeItem?.langInfo || null });
+        if (this.activeItem) this.activeItem.quality = quality;
+        return quality;
     }
 
     async _runAiChapters({ forceRefresh = false } = {}) {
@@ -1689,6 +1700,7 @@ export class SubtitleManager {
             const res = await analyzeSubtitleChaptersWithLlm({
                 avcode: this.avcode,
                 cues: this.cues,
+                subtitleQuality: this.getSubtitleQuality(),
                 altCues: altTrack?.cues || null,
                 altTitle: altTrack?.title || '',
                 title: this.activeItem?.title || '',
@@ -1701,7 +1713,7 @@ export class SubtitleManager {
                 this._syncAnchorCueRows();
                 Toast(res.fromCache ? '已读取 AI 分幕缓存' : `已提炼 ${res.chapters.length} 个剧情分幕`, 2000, 'success');
             } else {
-                Toast(res?.error || 'AI 分幕未返回结果，已保留本地看点', 2400, 'info');
+                Toast(res?.error || 'AI 分幕未返回结果，已保留本地看点', 2600, 'info');
             }
         } catch (err) {
             Toast(LlmService.redactSecrets(err?.message || 'AI 分析失败'), 2400, 'error');

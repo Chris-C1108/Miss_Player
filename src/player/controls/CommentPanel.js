@@ -3342,6 +3342,7 @@ export class CommentPanel {
         const altTrack = subMgr?.getAltTrackForLlm?.() || null;
         return {
             cues: Array.isArray(subMgr?.cues) ? subMgr.cues : [],
+            subtitleQuality: subMgr?.getSubtitleQuality?.() || null,
             altCues: Array.isArray(altTrack?.cues) ? altTrack.cues : null,
             altTitle: altTrack?.title || '',
             crowdPeaks: heatmapMgr?.getCrowdPeaks?.(6) || [],
@@ -3534,6 +3535,7 @@ export class CommentPanel {
                 const fusionHit = await getCachedHighlightGraph({
                     avcode: targetCode,
                     cues: ctx.cues,
+                    subtitleQuality: ctx.subtitleQuality,
                     comments: comments || [],
                     crowdPeaks: ctx.crowdPeaks,
                     videoDuration: dur || ctx.videoDuration || 0,
@@ -3595,6 +3597,7 @@ export class CommentPanel {
                 const fusionRes = await buildHighlightGraphWithLlm({
                     avcode: targetCode,
                     cues: ctx.cues,
+                    subtitleQuality: ctx.subtitleQuality,
                     altCues: ctx.altCues,
                     altTitle: ctx.altTitle,
                     comments,
@@ -3607,6 +3610,10 @@ export class CommentPanel {
                 if (fusionRes?.ok && fusionRes.graph) {
                     this._applyHighlightGraphToComments(fusionRes.graph);
                     this._renderAiBriefCard(fusionRes.graph.brief, fusionRes.graph, { subtitlePendingUpgrade });
+                    return;
+                }
+                if (fusionRes?.skipped) {
+                    this._aiBriefError = fusionRes.error || '可用定位线索不足，已跳过 AI 分析以避免幻觉';
                     return;
                 }
                 if (fusionRes?.refused) {

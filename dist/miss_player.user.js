@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.011
+// @version            5.7.124-beta.012
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.011";
+		return "5.7.124-beta.012";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4771,7 +4771,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.011";
+		return "5.7.124-beta.012";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6914,7 +6914,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.011";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.012";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -13507,7 +13507,230 @@
 		}
 		return nodes;
 	}
-	var AI_PROMPT_VERSION = "v3.3";
+	var WHISPER_HALLUCINATION_RE = /谢谢观看|感谢(?:您|大家)?的?(?:观看|收看|收听|支持)|请订阅|欢迎订阅|请点赞|优优独播|WhisperJAV|字幕由/i;
+	var WHISPER_POLITE_NOISE_RE = /(?:^|[\s，,。.!！?？])(?:你好|谢谢|非常感谢|不客气|早上好|晚上好|你太棒了|干得好|女士[，,]?\s*你好吗|我很好|很高兴见到你|我来开门)(?:$|[\s，,。.!！?？])|\bChico\b|奇科/gi;
+	var SANITIZED_MT_RE = /努力工作|这是正确的|感觉真好|非常深|你可以吃它|我明白了|你做得很好|这是一只鸭子|停止努力工作|我觉得很好|对不起[，,]\s*我|请住手/;
+	function normalizeCueText(raw) {
+		return String(raw || "").trim().replace(/\s+/g, " ");
+	}
+	function hasHeavyMojibake(cues) {
+		let replacementCount = 0;
+		let nonSpaceCount = 0;
+		let affectedCues = 0;
+		for (const cue of cues) {
+			const text = String(cue?.text || "");
+			if (!text) continue;
+			let cueHits = 0;
+			for (let i = 0; i < text.length; i++) {
+				const code = text.charCodeAt(i);
+				if (code === 65533) {
+					replacementCount += 1;
+					cueHits += 1;
+				}
+				if (code > 32) nonSpaceCount += 1;
+			}
+			if (cueHits > 0) affectedCues += 1;
+		}
+		if (nonSpaceCount === 0) return true;
+		if (replacementCount / nonSpaceCount >= .15) return true;
+		if (cues.length >= 5 && affectedCues / cues.length >= .25) return true;
+		return false;
+	}
+	function resolveGradeAndLabel(sqi, cueCount, reasons) {
+		if (reasons.includes("corrupted_or_empty") || sqi < 30) return {
+			grade: "broken",
+			label: reasons.includes("truncated") ? "残缺" : "异常"
+		};
+		if ((reasons.includes("truncated") || reasons.includes("low_coverage")) && sqi < 55) return {
+			grade: "low",
+			label: "残缺"
+		};
+		if (sqi < 55) return {
+			grade: "low",
+			label: reasons.includes("sanitized_mt") ? "机翻" : "异常"
+		};
+		if (sqi < 75) return {
+			grade: "medium",
+			label: reasons.includes("sanitized_mt") ? "机翻" : ""
+		};
+		return {
+			grade: "high",
+			label: cueCount >= 40 ? "优质" : ""
+		};
+	}
+	function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = null } = {}) {
+		const cueCount = Array.isArray(cues) ? cues.length : 0;
+		if (!Array.isArray(cues) || cueCount === 0 || langInfo?.isCorrupted || langInfo?.trackLayout === "corrupted" || hasHeavyMojibake(cues)) return {
+			sqi: 5,
+			grade: "broken",
+			label: "异常",
+			reasons: ["corrupted_or_empty"],
+			metrics: {
+				cueCount,
+				coverage: 0,
+				dupRate: 0,
+				maxRun: 0,
+				mtRate: 0,
+				hallucinationHits: 0
+			}
+		};
+		const firstStart = Number(cues[0]?.start) || 0;
+		const lastEnd = Number(cues[cueCount - 1]?.end) || 0;
+		const span = Math.max(0, lastEnd - firstStart);
+		const duration = Number(videoDurationSec) || 0;
+		const coverage = duration > 0 ? Math.max(0, span / duration) : 0;
+		const uniqueTexts = new Set();
+		let prevText = null;
+		let currentRun = 0;
+		let maxRun = 0;
+		let hallucinationHits = 0;
+		let politeNoiseHits = 0;
+		let mtHits = 0;
+		for (const cue of cues) {
+			const norm = normalizeCueText(cue?.text);
+			uniqueTexts.add(norm);
+			if (norm && norm === prevText) currentRun += 1;
+			else {
+				currentRun = norm ? 1 : 0;
+				prevText = norm;
+			}
+			if (currentRun > maxRun) maxRun = currentRun;
+			const simplified = norm ? convertChineseText(norm, "zh") : "";
+			if (WHISPER_HALLUCINATION_RE.test(norm) || simplified && WHISPER_HALLUCINATION_RE.test(simplified)) hallucinationHits += 1;
+			const checkTarget = simplified || norm;
+			if (checkTarget) {
+				const matches = checkTarget.match(WHISPER_POLITE_NOISE_RE);
+				if (matches && matches.length > 0) politeNoiseHits += matches.length;
+			}
+			if (SANITIZED_MT_RE.test(norm) || simplified && SANITIZED_MT_RE.test(simplified)) mtHits += 1;
+		}
+		const dupRate = 1 - uniqueTexts.size / cueCount;
+		const mtRate = mtHits / cueCount;
+		let sqi = 100;
+		const reasons = [];
+		if (duration >= 300) {
+			if (cueCount < 20 || coverage < .25) {
+				sqi -= 55;
+				reasons.push("truncated");
+			} else if (coverage < .5) {
+				sqi -= 25;
+				reasons.push("low_coverage");
+			}
+		}
+		if (cueCount >= 40) {
+			if (dupRate > .6) {
+				sqi -= 32;
+				reasons.push("high_repetition");
+			} else if (dupRate > .48) {
+				sqi -= 20;
+				reasons.push("high_repetition");
+			}
+			if (maxRun >= 8) {
+				sqi -= 15;
+				reasons.push("consecutive_repetition");
+			}
+			if (hallucinationHits >= 2) {
+				sqi -= 15;
+				reasons.push("whisper_hallucination");
+			}
+			if (politeNoiseHits >= 6 || politeNoiseHits / cueCount >= .03) {
+				sqi -= Math.min(34, politeNoiseHits * 2 + 12);
+				reasons.push("whisper_polite_noise");
+			}
+			if (mtHits >= 6 || mtRate >= .015) {
+				sqi -= Math.min(35, mtHits * 2 + 12);
+				reasons.push("sanitized_mt");
+			}
+		}
+		const clampedSqi = Math.max(0, Math.min(100, Math.round(sqi)));
+		const { grade, label } = resolveGradeAndLabel(clampedSqi, cueCount, reasons);
+		return {
+			sqi: clampedSqi,
+			grade,
+			label,
+			reasons,
+			metrics: {
+				cueCount,
+				coverage,
+				dupRate,
+				maxRun,
+				mtRate,
+				hallucinationHits,
+				politeNoiseHits
+			}
+		};
+	}
+	function computeTrackContentFingerprint(cues) {
+		if (!Array.isArray(cues) || cues.length === 0) return "empty";
+		const sampleSize = Math.min(12, cues.length);
+		const parts = [];
+		for (let i = 0; i < sampleSize; i++) {
+			const c = cues[sampleSize === 1 ? 0 : Math.round(i * (cues.length - 1) / (sampleSize - 1))];
+			parts.push(`${Math.round(Number(c?.start) || 0)}:${normalizeCueText(c?.text).slice(0, 24)}`);
+		}
+		return `${cues.length}|${parts.join("|")}`;
+	}
+	function measureTimeOverlapRatio(cuesA, cuesB) {
+		if (!Array.isArray(cuesA) || !Array.isArray(cuesB) || !cuesA.length || !cuesB.length) return 0;
+		const bStarts = cuesB.map((c) => Number(c?.start) || 0).sort((a, b) => a - b);
+		const step = Math.max(1, Math.floor(cuesA.length / 40));
+		let sampled = 0;
+		let matched = 0;
+		for (let i = 0; i < cuesA.length && sampled < 40; i += step) {
+			sampled += 1;
+			const t = Number(cuesA[i]?.start) || 0;
+			let lo = 0;
+			let hi = bStarts.length - 1;
+			let ok = false;
+			while (lo <= hi) {
+				const mid = lo + hi >> 1;
+				const diff = bStarts[mid] - t;
+				if (Math.abs(diff) <= 5) {
+					ok = true;
+					break;
+				}
+				if (diff < 0) lo = mid + 1;
+				else hi = mid - 1;
+			}
+			if (ok) matched += 1;
+		}
+		return sampled > 0 ? matched / sampled : 0;
+	}
+	function selectBestQualityCandidate(evaluatedList) {
+		if (!Array.isArray(evaluatedList) || evaluatedList.length === 0) return null;
+		const valid = evaluatedList.filter((entry) => entry && Array.isArray(entry.parsed?.cues) && entry.parsed.cues.length > 0 && !entry.quality?.reasons?.includes("corrupted_or_empty"));
+		if (valid.length === 0) return null;
+		const nonBroken = valid.filter((entry) => entry.quality?.grade !== "broken");
+		const pool = nonBroken.length > 0 ? nonBroken : valid;
+		const peerMaxCues = pool.reduce((m, e) => Math.max(m, e.parsed.cues.length), 0);
+		const scoreEntry = (entry, selfIdx) => {
+			let score = Number(entry?.quality?.sqi) || 0;
+			if (!entry?.item?.machineTranslated) score += 8;
+			else if (entry?.item?.originLang === "en") score -= 14;
+			const cues = entry.parsed.cues;
+			if (peerMaxCues >= 300 && cues.length < peerMaxCues * .45) score -= 22;
+			if (pool.length >= 2) {
+				let bestOverlap = 0;
+				for (let j = 0; j < pool.length; j++) {
+					if (j === selfIdx) continue;
+					const ratio = measureTimeOverlapRatio(cues, pool[j].parsed.cues);
+					if (ratio > bestOverlap) bestOverlap = ratio;
+				}
+				if (bestOverlap >= .35) score += 6;
+				else if (pool.length >= 3 && bestOverlap < .1) score -= 10;
+			}
+			return score;
+		};
+		return pool.map((entry, idx) => ({
+			entry,
+			idx,
+			effective: scoreEntry(entry, idx)
+		})).sort((a, b) => {
+			const diff = b.effective - a.effective;
+			return diff !== 0 ? diff : a.idx - b.idx;
+		})[0].entry;
+	}
+	var AI_PROMPT_VERSION = "v3.4";
 	function buildVersionedTaskHash(taskType, payloadStr) {
 		const model = LlmService.getConfig().model || "";
 		return LlmCache.hashContent(`${AI_PROMPT_VERSION}|${model}|${taskType}|${payloadStr}`);
@@ -13719,7 +13942,40 @@
 			contentHash: buildVersionedTaskHash("sub_chapters", `${compressed}\n---\n${metaText}`)
 		};
 	}
-	async function getCachedSubtitleChapters({ avcode, cues, metadata = null } = {}) {
+	var BAD_SUB_TRUST_REASONS = new Set([
+		"corrupted_or_empty",
+		"truncated",
+		"whisper_polite_noise",
+		"sanitized_mt",
+		"high_repetition"
+	]);
+	function assessAiContextValue({ cues = [], subtitleQuality = null, comments = [], crowdPeaks = [], videoDuration = 0 } = {}) {
+		const cueCount = Array.isArray(cues) ? cues.length : 0;
+		const quality = subtitleQuality || (cueCount >= 40 ? scoreSubtitleQuality(cues, { videoDurationSec: videoDuration }) : null);
+		const subSqi = quality ? Number(quality.sqi) || 0 : cueCount > 0 ? 85 : 0;
+		const subReasons = Array.isArray(quality?.reasons) ? quality.reasons : [];
+		const hasBadSubFlag = subReasons.some((r) => BAD_SUB_TRUST_REASONS.has(r));
+		const isSubTrustworthy = cueCount > 0 && (!quality || subSqi >= 75 && !hasBadSubFlag);
+		const balanced = selectBalancedComments(comments, 45, videoDuration);
+		const tsCommentCount = balanced.filter((c) => Array.isArray(c.resolvedTs) && c.resolvedTs.length > 0).length;
+		const crowdPeakCount = Array.isArray(crowdPeaks) ? crowdPeaks.length : 0;
+		return {
+			cueCount,
+			subSqi,
+			subReasons,
+			isSubTrustworthy,
+			tsCommentCount,
+			crowdPeakCount,
+			commentsCount: balanced.length,
+			worthSubChapters: isSubTrustworthy,
+			worthHighlightGraph: isSubTrustworthy || tsCommentCount >= 1 || crowdPeakCount >= 1
+		};
+	}
+	async function getCachedSubtitleChapters({ avcode, cues, subtitleQuality = null, metadata = null } = {}) {
+		if (!assessAiContextValue({
+			cues,
+			subtitleQuality
+		}).worthSubChapters) return { hit: false };
 		const { text: compressed } = selectCompressedEntries(cues, {
 			maxChars: 13e3,
 			indexed: true
@@ -13734,14 +13990,47 @@
 		};
 		return { hit: false };
 	}
-	async function analyzeSubtitleChaptersWithLlm({ avcode, cues, altCues = null, altTitle = "", title = "", metadata = null, forceRefresh = false } = {}) {
+	async function analyzeSubtitleChaptersWithLlm({ avcode, cues, subtitleQuality = null, altCues = null, altTitle = "", title = "", metadata = null, forceRefresh = false } = {}) {
 		const startedAt = Date.now();
+		const ctxValue = assessAiContextValue({
+			cues,
+			subtitleQuality
+		});
+		if (!ctxValue.cueCount) return {
+			ok: false,
+			skipped: true,
+			refused: false,
+			error: "无可用字幕内容"
+		};
+		if (!ctxValue.worthSubChapters) {
+			const skipMsg = `当前字幕可信度过低 (SQI ${ctxValue.subSqi})，已跳过 AI 分幕以避免幻觉`;
+			AiDebugLogger.recordAiExecution(avcode, {
+				taskType: "sub_chapters",
+				promptVersion: AI_PROMPT_VERSION,
+				forceRefresh,
+				durationMs: Date.now() - startedAt,
+				outcome: "skipped_low_signal",
+				error: "SUBTITLE_UNTRUSTWORTHY",
+				inputContext: {
+					cueCount: ctxValue.cueCount,
+					subSqi: ctxValue.subSqi,
+					subReasons: ctxValue.subReasons
+				}
+			});
+			return {
+				ok: false,
+				skipped: true,
+				refused: false,
+				error: skipMsg
+			};
+		}
 		const { text: compressed, lineSeconds } = selectCompressedEntries(cues, {
 			maxChars: 13e3,
 			indexed: true
 		});
 		if (!compressed) return {
 			ok: false,
+			skipped: true,
 			refused: false,
 			error: "无可用字幕内容"
 		};
@@ -14497,17 +14786,25 @@
 			contentHash
 		};
 	}
-	async function getCachedHighlightGraph({ avcode, cues = [], comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null } = {}) {
+	async function getCachedHighlightGraph({ avcode, cues = [], subtitleQuality = null, comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null } = {}) {
 		const code = normalizeInlineText(avcode).toUpperCase();
-		const { topComments, compressedSub, crowdSig, contentHash } = buildFusionInputs({
+		const ctxValue = assessAiContextValue({
 			cues,
+			subtitleQuality,
+			comments,
+			crowdPeaks,
+			videoDuration
+		});
+		if (!code || !ctxValue.worthHighlightGraph) return { hit: false };
+		const { topComments, compressedSub, crowdSig, contentHash } = buildFusionInputs({
+			cues: ctxValue.isSubTrustworthy ? cues : [],
 			comments,
 			crowdPeaks,
 			videoDuration,
 			vibeTags,
 			metadata
 		});
-		if (!code || !compressedSub && topComments.length === 0 && !crowdSig) return { hit: false };
+		if (!compressedSub && topComments.length === 0 && !crowdSig) return { hit: false };
 		const cached = await LlmCache.getCached(code, "highlight_graph", contentHash);
 		if (cached.hit && cached.data) return {
 			hit: true,
@@ -14515,31 +14812,66 @@
 		};
 		return { hit: false };
 	}
-	async function buildHighlightGraphWithLlm({ avcode, cues = [], altCues = null, altTitle = "", comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null, forceRefresh = false } = {}) {
+	async function buildHighlightGraphWithLlm({ avcode, cues = [], subtitleQuality = null, altCues = null, altTitle = "", comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null, forceRefresh = false } = {}) {
 		const startedAt = Date.now();
-		const built = buildFusionInputs({
+		const safeCode = normalizeInlineText(avcode).toUpperCase();
+		const dur = Math.max(0, Number(videoDuration) || 0);
+		const ctxValue = assessAiContextValue({
 			cues,
+			subtitleQuality,
 			comments,
 			crowdPeaks,
-			videoDuration,
+			videoDuration: dur
+		});
+		if (!ctxValue.worthHighlightGraph) {
+			const skipReason = ctxValue.cueCount > 0 && !ctxValue.isSubTrustworthy ? `字幕噪声过高 (SQI ${ctxValue.subSqi}) 且暂无时间点评论或热度波峰，已跳过 AI 定位以避免幻觉` : "暂无高可信字幕、带时间点评论或热度波峰，已跳过 AI 定位";
+			AiDebugLogger.recordAiExecution(safeCode, {
+				taskType: "highlight_graph",
+				promptVersion: AI_PROMPT_VERSION,
+				forceRefresh,
+				durationMs: Date.now() - startedAt,
+				outcome: "skipped_low_signal",
+				error: "LOW_SIGNAL_NO_ANCHOR",
+				inputContext: {
+					cueCount: ctxValue.cueCount,
+					subSqi: ctxValue.subSqi,
+					subReasons: ctxValue.subReasons,
+					commentsTotal: ctxValue.commentsCount,
+					tsCommentCount: ctxValue.tsCommentCount,
+					crowdPeaksCount: ctxValue.crowdPeakCount
+				}
+			});
+			return {
+				ok: false,
+				skipped: true,
+				refused: false,
+				error: skipReason
+			};
+		}
+		const effectiveCues = ctxValue.isSubTrustworthy ? cues : [];
+		const effectiveAltCues = ctxValue.isSubTrustworthy ? altCues : null;
+		const built = buildFusionInputs({
+			cues: effectiveCues,
+			comments,
+			crowdPeaks,
+			videoDuration: dur,
 			vibeTags,
 			metadata
 		});
-		const altCompressed = Array.isArray(altCues) && altCues.length > 0 ? selectCompressedEntries(altCues, {
+		const altCompressed = Array.isArray(effectiveAltCues) && effectiveAltCues.length > 0 ? selectCompressedEntries(effectiveAltCues, {
 			maxChars: 2e3,
 			indexed: false
 		}).text : "";
 		if (!built.compressedSub && built.topComments.length === 0 && !built.crowdSig) return {
 			ok: false,
+			skipped: true,
 			refused: false,
 			error: "暂无可用于联合分析的评论、字幕或热度数据"
 		};
-		const safeCode = normalizeInlineText(avcode).toUpperCase();
-		const dur = Math.max(0, Number(videoDuration) || 0);
 		const inputContext = {
 			hasMetadata: Boolean(built.metaText),
 			metaText: built.metaText,
-			cueCount: Array.isArray(cues) ? cues.length : 0,
+			cueCount: Array.isArray(effectiveCues) ? effectiveCues.length : 0,
 			compressedSubLength: built.compressedSub.length,
 			compressedSubPreview: built.compressedSub,
 			commentsTotal: Array.isArray(comments) ? comments.length : 0,
@@ -14585,16 +14917,16 @@
 		const messages = [{
 			role: "system",
 			content: [
-				"你是客观克制的影片多模态高光分析引擎。请结合元数据、回放波峰、字幕对白（如有 `[L行号|t=秒数s|时分秒]`）与评论 `[C编号]` 输出融合高光图谱：",
+				"你是严谨克制的 AV 场景定位分析引擎。目标只做一件事：帮用户准确定位真实发生的高能玩法与剧情转折（宁缺毋滥，严禁猜测）。",
 				!hasSub && !hasCrowd ? "当前无字幕且无热度波峰，缺乏全片时间定位依据：`highlights` 严禁引用 \"sub\" 或凭记忆编造，只能提取评论已出现 `[t=...s]` 的时刻（无则返回空数组 `[]`）；`commentTags` 的 `inferredSeconds` 一律填 null！" : !hasSub ? "当前无字幕对白，严禁使用 `\"sub\"` 来源或输出 `\"subLine\"`，仅可结合评论 `[t=...s]` 与热度波峰定位！" : "所有时间点必须直接复用字幕 `t=...s`（或 `subLine`）、波峰 `t=...s` 或评论 `[t=...s]`，严禁心算或编造不存在的时间！",
-				"反幻觉硬约束（台词≠画面）：1) 将“好像也想要无套/要射了/顶到子宫/整根吞/无法吞咽”区分开——欲望试探、夸张比喻或否定词（无法吞咽≠极限吞咽，“要射了”常为口头刺激）严禁脑补成已发生的双穴插入、深喉灌精或吞精；2) 禁止把片名标签或评论里的许愿/抱怨（如“希望喉射”“没看见吞精”）强行嫁接到无关时间点，未明确证实具体体位或射精去向时必须保守概括（如“深度刺激/张力高潮”）；3) 若字幕出现成串“你好/谢谢/你太棒了/Chico/奇科”等语音误听噪声，切勿误判为口交，可参考副字幕核对。",
+				"反幻觉硬约束（台词≠画面）：1) 必须先结合片名/简介/标签/评论确认全片核心体裁基调——纯深喉口交片出现“射了/舔净”若无下体插入前情绝不可脑补成「内射」，单凭孤立1~2词（如“屁眼”“要射了”“想要”“好舒服”）绝不可脑补成「肛交/双穴/灌精」；2) 欲望挑逗、夸张比喻或否定词（好像想要插入/顶到子宫/无法吞咽）不得写成已发生；3) 禁止把评论许愿或抱怨（希望喉射/没吞精）嫁接到无关时刻；4) 仅输出明确实锤的高光（0~5条，无把握宁可空缺 [] 绝不凑数），每条必须标注 confidence (\"high\"|\"medium\"|\"low\")，未证实具体动作只可写 low 或留空。",
 				"字段输出顺序与上限：",
 				"1. brief: 1句话看点/避坑/共识总结；",
-				"2. highlights: 最多 6 个核心高能片段（不重复同一时刻，若无可返回 `[]`）；",
-				"3. skipZones: 最多 3 个明显拖沓/避坑区间（无明显区间请返回 `[]`，严禁写片尾总时长凑数）；",
-				"4. commentTags: 最多 8 条，优先选【无时间点】的纯评价评论归类情绪 (`hype`/`warn`/`neutral`)；仅在存在字幕或波峰定位依据时才推断 `inferredSeconds`，否则必须为 `null`；",
+				"2. highlights: 0至5个有实锤依据的高能片段；",
+				"3. skipZones: 最多 3 个明显拖沓/避坑区间（无明显区间返回 `[]`，严禁写片尾凑数）；",
+				"4. commentTags: 最多 8 条纯评价归类 (`hype`/`warn`/`neutral`)；无字幕或波峰依据时 `inferredSeconds` 必须为 `null`；",
 				"仅输出严格合法 JSON，禁止 Markdown 围栏与多余解释：",
-				hasSub ? "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑(无则写暂无明显雷点)\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"subLine\": 12, \"tag\": \"2-4字标签\", \"reason\": \"16字内理由\", \"sources\": [\"crowd\",\"comment\",\"sub\"], \"score\": 92 }], \"skipZones\": [{ \"seconds\": 0, \"endSeconds\": 90, \"reason\": \"14字内避坑说明\" }], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"isCountdown\": false, \"inferredSeconds\": 420, \"note\": \"10字内标签\" }] }" : "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑(无则写暂无明显雷点)\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"tag\": \"2-4字标签\", \"reason\": \"16字内理由\", \"sources\": [\"comment\"], \"score\": 92 }], \"skipZones\": [], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"isCountdown\": false, \"inferredSeconds\": null, \"note\": \"10字内标签\" }] }"
+				hasSub ? "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑(无则写暂无明显雷点)\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"subLine\": 12, \"confidence\": \"high\", \"tag\": \"2-4字标签\", \"reason\": \"16字内实锤依据\", \"sources\": [\"crowd\",\"comment\",\"sub\"], \"score\": 92 }], \"skipZones\": [{ \"seconds\": 0, \"endSeconds\": 90, \"reason\": \"14字内避坑说明\" }], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"isCountdown\": false, \"inferredSeconds\": 420, \"note\": \"10字内标签\" }] }" : "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑(无则写暂无明显雷点)\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"confidence\": \"high\", \"tag\": \"2-4字标签\", \"reason\": \"16字内实锤依据\", \"sources\": [\"comment\"], \"score\": 92 }], \"skipZones\": [], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"isCountdown\": false, \"inferredSeconds\": null, \"note\": \"10字内标签\" }] }"
 			].join("\n")
 		}, {
 			role: "user",
@@ -14650,6 +14982,7 @@
 			};
 			const rawHighlights = [];
 			for (const item of Array.isArray(parsed.highlights) ? parsed.highlights : []) {
+				if (String(item?.confidence || "").trim().toLowerCase() === "low") continue;
 				const rawSources = Array.isArray(item?.sources) ? item.sources.map((s) => String(s || "").trim()).filter((s) => [
 					"crowd",
 					"comment",
@@ -14676,6 +15009,7 @@
 				const tag = normalizeInlineText(item?.tag || "").slice(0, 6) || "高能";
 				const reason = normalizeInlineText(item?.reason || "").slice(0, 24);
 				const score = Math.max(1, Math.min(100, Math.round(Number(item?.score) || 80)));
+				if (score < 50) continue;
 				rawHighlights.push({
 					seconds: sec,
 					endSeconds,
@@ -14690,7 +15024,7 @@
 			for (const h of rawHighlights) {
 				if (highlights.some((kept) => Math.abs(kept.seconds - h.seconds) < 45)) continue;
 				highlights.push(h);
-				if (highlights.length >= 6) break;
+				if (highlights.length >= 5) break;
 			}
 			highlights.sort((a, b) => a.seconds - b.seconds);
 			const skipZones = [];
@@ -22937,6 +23271,7 @@
 			const altTrack = subMgr?.getAltTrackForLlm?.() || null;
 			return {
 				cues: Array.isArray(subMgr?.cues) ? subMgr.cues : [],
+				subtitleQuality: subMgr?.getSubtitleQuality?.() || null,
 				altCues: Array.isArray(altTrack?.cues) ? altTrack.cues : null,
 				altTitle: altTrack?.title || "",
 				crowdPeaks: heatmapMgr?.getCrowdPeaks?.(6) || [],
@@ -23080,6 +23415,7 @@
 					const fusionHit = await getCachedHighlightGraph({
 						avcode: targetCode,
 						cues: ctx.cues,
+						subtitleQuality: ctx.subtitleQuality,
 						comments: comments || [],
 						crowdPeaks: ctx.crowdPeaks,
 						videoDuration: dur || ctx.videoDuration || 0,
@@ -23134,6 +23470,7 @@
 					const fusionRes = await buildHighlightGraphWithLlm({
 						avcode: targetCode,
 						cues: ctx.cues,
+						subtitleQuality: ctx.subtitleQuality,
 						altCues: ctx.altCues,
 						altTitle: ctx.altTitle,
 						comments,
@@ -23146,6 +23483,10 @@
 					if (fusionRes?.ok && fusionRes.graph) {
 						this._applyHighlightGraphToComments(fusionRes.graph);
 						this._renderAiBriefCard(fusionRes.graph.brief, fusionRes.graph, { subtitlePendingUpgrade });
+						return;
+					}
+					if (fusionRes?.skipped) {
+						this._aiBriefError = fusionRes.error || "可用定位线索不足，已跳过 AI 分析以避免幻觉";
 						return;
 					}
 					if (fusionRes?.refused) {
@@ -34145,229 +34486,6 @@
 			text: primaryBase
 		};
 	}
-	var WHISPER_HALLUCINATION_RE = /谢谢观看|感谢(?:您|大家)?的?(?:观看|收看|收听|支持)|请订阅|欢迎订阅|请点赞|优优独播|WhisperJAV|字幕由/i;
-	var WHISPER_POLITE_NOISE_RE = /(?:^|[\s，,。.!！?？])(?:你好|谢谢|非常感谢|不客气|早上好|晚上好|你太棒了|干得好|女士[，,]?\s*你好吗|我很好|很高兴见到你|我来开门)(?:$|[\s，,。.!！?？])|\bChico\b|奇科/gi;
-	var SANITIZED_MT_RE = /努力工作|这是正确的|感觉真好|非常深|你可以吃它|我明白了|你做得很好|这是一只鸭子|停止努力工作|我觉得很好|对不起[，,]\s*我|请住手/;
-	function normalizeCueText(raw) {
-		return String(raw || "").trim().replace(/\s+/g, " ");
-	}
-	function hasHeavyMojibake(cues) {
-		let replacementCount = 0;
-		let nonSpaceCount = 0;
-		let affectedCues = 0;
-		for (const cue of cues) {
-			const text = String(cue?.text || "");
-			if (!text) continue;
-			let cueHits = 0;
-			for (let i = 0; i < text.length; i++) {
-				const code = text.charCodeAt(i);
-				if (code === 65533) {
-					replacementCount += 1;
-					cueHits += 1;
-				}
-				if (code > 32) nonSpaceCount += 1;
-			}
-			if (cueHits > 0) affectedCues += 1;
-		}
-		if (nonSpaceCount === 0) return true;
-		if (replacementCount / nonSpaceCount >= .15) return true;
-		if (cues.length >= 5 && affectedCues / cues.length >= .25) return true;
-		return false;
-	}
-	function resolveGradeAndLabel(sqi, cueCount, reasons) {
-		if (reasons.includes("corrupted_or_empty") || sqi < 30) return {
-			grade: "broken",
-			label: reasons.includes("truncated") ? "残缺" : "异常"
-		};
-		if ((reasons.includes("truncated") || reasons.includes("low_coverage")) && sqi < 55) return {
-			grade: "low",
-			label: "残缺"
-		};
-		if (sqi < 55) return {
-			grade: "low",
-			label: reasons.includes("sanitized_mt") ? "机翻" : "异常"
-		};
-		if (sqi < 75) return {
-			grade: "medium",
-			label: reasons.includes("sanitized_mt") ? "机翻" : ""
-		};
-		return {
-			grade: "high",
-			label: cueCount >= 40 ? "优质" : ""
-		};
-	}
-	function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = null } = {}) {
-		const cueCount = Array.isArray(cues) ? cues.length : 0;
-		if (!Array.isArray(cues) || cueCount === 0 || langInfo?.isCorrupted || langInfo?.trackLayout === "corrupted" || hasHeavyMojibake(cues)) return {
-			sqi: 5,
-			grade: "broken",
-			label: "异常",
-			reasons: ["corrupted_or_empty"],
-			metrics: {
-				cueCount,
-				coverage: 0,
-				dupRate: 0,
-				maxRun: 0,
-				mtRate: 0,
-				hallucinationHits: 0
-			}
-		};
-		const firstStart = Number(cues[0]?.start) || 0;
-		const lastEnd = Number(cues[cueCount - 1]?.end) || 0;
-		const span = Math.max(0, lastEnd - firstStart);
-		const duration = Number(videoDurationSec) || 0;
-		const coverage = duration > 0 ? Math.max(0, span / duration) : 0;
-		const uniqueTexts = new Set();
-		let prevText = null;
-		let currentRun = 0;
-		let maxRun = 0;
-		let hallucinationHits = 0;
-		let politeNoiseHits = 0;
-		let mtHits = 0;
-		for (const cue of cues) {
-			const norm = normalizeCueText(cue?.text);
-			uniqueTexts.add(norm);
-			if (norm && norm === prevText) currentRun += 1;
-			else {
-				currentRun = norm ? 1 : 0;
-				prevText = norm;
-			}
-			if (currentRun > maxRun) maxRun = currentRun;
-			const simplified = norm ? convertChineseText(norm, "zh") : "";
-			if (WHISPER_HALLUCINATION_RE.test(norm) || simplified && WHISPER_HALLUCINATION_RE.test(simplified)) hallucinationHits += 1;
-			const checkTarget = simplified || norm;
-			if (checkTarget) {
-				const matches = checkTarget.match(WHISPER_POLITE_NOISE_RE);
-				if (matches && matches.length > 0) politeNoiseHits += matches.length;
-			}
-			if (SANITIZED_MT_RE.test(norm) || simplified && SANITIZED_MT_RE.test(simplified)) mtHits += 1;
-		}
-		const dupRate = 1 - uniqueTexts.size / cueCount;
-		const mtRate = mtHits / cueCount;
-		let sqi = 100;
-		const reasons = [];
-		if (duration >= 300) {
-			if (cueCount < 20 || coverage < .25) {
-				sqi -= 55;
-				reasons.push("truncated");
-			} else if (coverage < .5) {
-				sqi -= 25;
-				reasons.push("low_coverage");
-			}
-		}
-		if (cueCount >= 40) {
-			if (dupRate > .6) {
-				sqi -= 32;
-				reasons.push("high_repetition");
-			} else if (dupRate > .48) {
-				sqi -= 20;
-				reasons.push("high_repetition");
-			}
-			if (maxRun >= 8) {
-				sqi -= 15;
-				reasons.push("consecutive_repetition");
-			}
-			if (hallucinationHits >= 2) {
-				sqi -= 15;
-				reasons.push("whisper_hallucination");
-			}
-			if (politeNoiseHits >= 6 || politeNoiseHits / cueCount >= .03) {
-				sqi -= Math.min(34, politeNoiseHits * 2 + 12);
-				reasons.push("whisper_polite_noise");
-			}
-			if (mtHits >= 6 || mtRate >= .015) {
-				sqi -= Math.min(35, mtHits * 2 + 12);
-				reasons.push("sanitized_mt");
-			}
-		}
-		const clampedSqi = Math.max(0, Math.min(100, Math.round(sqi)));
-		const { grade, label } = resolveGradeAndLabel(clampedSqi, cueCount, reasons);
-		return {
-			sqi: clampedSqi,
-			grade,
-			label,
-			reasons,
-			metrics: {
-				cueCount,
-				coverage,
-				dupRate,
-				maxRun,
-				mtRate,
-				hallucinationHits,
-				politeNoiseHits
-			}
-		};
-	}
-	function computeTrackContentFingerprint(cues) {
-		if (!Array.isArray(cues) || cues.length === 0) return "empty";
-		const sampleSize = Math.min(12, cues.length);
-		const parts = [];
-		for (let i = 0; i < sampleSize; i++) {
-			const c = cues[sampleSize === 1 ? 0 : Math.round(i * (cues.length - 1) / (sampleSize - 1))];
-			parts.push(`${Math.round(Number(c?.start) || 0)}:${normalizeCueText(c?.text).slice(0, 24)}`);
-		}
-		return `${cues.length}|${parts.join("|")}`;
-	}
-	function measureTimeOverlapRatio(cuesA, cuesB) {
-		if (!Array.isArray(cuesA) || !Array.isArray(cuesB) || !cuesA.length || !cuesB.length) return 0;
-		const bStarts = cuesB.map((c) => Number(c?.start) || 0).sort((a, b) => a - b);
-		const step = Math.max(1, Math.floor(cuesA.length / 40));
-		let sampled = 0;
-		let matched = 0;
-		for (let i = 0; i < cuesA.length && sampled < 40; i += step) {
-			sampled += 1;
-			const t = Number(cuesA[i]?.start) || 0;
-			let lo = 0;
-			let hi = bStarts.length - 1;
-			let ok = false;
-			while (lo <= hi) {
-				const mid = lo + hi >> 1;
-				const diff = bStarts[mid] - t;
-				if (Math.abs(diff) <= 5) {
-					ok = true;
-					break;
-				}
-				if (diff < 0) lo = mid + 1;
-				else hi = mid - 1;
-			}
-			if (ok) matched += 1;
-		}
-		return sampled > 0 ? matched / sampled : 0;
-	}
-	function selectBestQualityCandidate(evaluatedList) {
-		if (!Array.isArray(evaluatedList) || evaluatedList.length === 0) return null;
-		const valid = evaluatedList.filter((entry) => entry && Array.isArray(entry.parsed?.cues) && entry.parsed.cues.length > 0 && !entry.quality?.reasons?.includes("corrupted_or_empty"));
-		if (valid.length === 0) return null;
-		const nonBroken = valid.filter((entry) => entry.quality?.grade !== "broken");
-		const pool = nonBroken.length > 0 ? nonBroken : valid;
-		const peerMaxCues = pool.reduce((m, e) => Math.max(m, e.parsed.cues.length), 0);
-		const scoreEntry = (entry, selfIdx) => {
-			let score = Number(entry?.quality?.sqi) || 0;
-			if (!entry?.item?.machineTranslated) score += 8;
-			else if (entry?.item?.originLang === "en") score -= 14;
-			const cues = entry.parsed.cues;
-			if (peerMaxCues >= 300 && cues.length < peerMaxCues * .45) score -= 22;
-			if (pool.length >= 2) {
-				let bestOverlap = 0;
-				for (let j = 0; j < pool.length; j++) {
-					if (j === selfIdx) continue;
-					const ratio = measureTimeOverlapRatio(cues, pool[j].parsed.cues);
-					if (ratio > bestOverlap) bestOverlap = ratio;
-				}
-				if (bestOverlap >= .35) score += 6;
-				else if (pool.length >= 3 && bestOverlap < .1) score -= 10;
-			}
-			return score;
-		};
-		return pool.map((entry, idx) => ({
-			entry,
-			idx,
-			effective: scoreEntry(entry, idx)
-		})).sort((a, b) => {
-			const diff = b.effective - a.effective;
-			return diff !== 0 ? diff : a.idx - b.idx;
-		})[0].entry;
-	}
 	var ORACLE_ENDPOINT = "https://api-shoulei-ssl.xunlei.com/oracle/subtitle";
 	var CDN_HOST_REWRITE = /^http:\/\/(subtitle[^/]*\.(?:geilijiasu|xunlei)\.com)/i;
 	function pickArray(payload) {
@@ -36306,6 +36424,7 @@
 				const cached = await getCachedSubtitleChapters({
 					avcode: targetCode,
 					cues: this.cues,
+					subtitleQuality: this.getSubtitleQuality(),
 					metadata
 				});
 				if (this.avcode !== targetCode || !cached?.hit || !Array.isArray(cached.chapters)) return;
@@ -36313,6 +36432,17 @@
 				this._renderAnchorsBar();
 				this._syncAnchorCueRows();
 			} catch (_) {}
+		}
+		getSubtitleQuality() {
+			if (!this.cues.length) return null;
+			if (this.activeItem?.quality) return this.activeItem.quality;
+			const dur = Number(this.targetVideo?.duration) || 0;
+			const quality = scoreSubtitleQuality(this.cues, {
+				videoDurationSec: dur,
+				langInfo: this.activeItem?.langInfo || null
+			});
+			if (this.activeItem) this.activeItem.quality = quality;
+			return quality;
 		}
 		async _runAiChapters({ forceRefresh = false } = {}) {
 			if (this._aiAnalyzing || !this.cues.length) return;
@@ -36329,6 +36459,7 @@
 				const res = await analyzeSubtitleChaptersWithLlm({
 					avcode: this.avcode,
 					cues: this.cues,
+					subtitleQuality: this.getSubtitleQuality(),
 					altCues: altTrack?.cues || null,
 					altTitle: altTrack?.title || "",
 					title: this.activeItem?.title || "",
@@ -36340,7 +36471,7 @@
 					this._renderAnchorsBar();
 					this._syncAnchorCueRows();
 					Toast$1(res.fromCache ? "已读取 AI 分幕缓存" : `已提炼 ${res.chapters.length} 个剧情分幕`, 2e3, "success");
-				} else Toast$1(res?.error || "AI 分幕未返回结果，已保留本地看点", 2400, "info");
+				} else Toast$1(res?.error || "AI 分幕未返回结果，已保留本地看点", 2600, "info");
 			} catch (err) {
 				Toast$1(LlmService.redactSecrets(err?.message || "AI 分析失败"), 2400, "error");
 			} finally {

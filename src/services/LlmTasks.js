@@ -13,8 +13,9 @@ import { SEMANTIC_TAG_TAXONOMY } from '../player/managers/tagTaxonomy.js';
 import { analyzeSubtitlePlot } from '../player/subtitles/SubtitlePlotAnalyzer.js';
 import { formatMetadataForLlm } from './AvMetadataService.js';
 import { AiDebugLogger } from './AiDebugLogger.js';
+import { scoreSubtitleQuality } from '../player/subtitles/SubtitleQualityScorer.js';
 
-export const AI_PROMPT_VERSION = 'v3.3';
+export const AI_PROMPT_VERSION = 'v3.4';
 
 /**
  * 计算带 Prompt 版本与当前模型 ID 的确定性缓存摘要，保证调优或切换模型后旧缓存自动失效
@@ -275,10 +276,49 @@ function buildSubtitleChapterPayload(avcode, compressed, metadata) {
     return { metaText, safeCode, contentHash };
 }
 
+const BAD_SUB_TRUST_REASONS = new Set([
+    'corrupted_or_empty',
+    'truncated',
+    'whisper_polite_noise',
+    'sanitized_mt',
+    'high_repetition'
+]);
+
+/**
+ * 第一性原理上下文可信度与信息价值评估门禁：
+ * 判断字幕是否可信、是否存在带时间戳评论或社区波峰，决定是否值得调用 LLM（宁缺毋滥）
+ */
+export function assessAiContextValue({ cues = [], subtitleQuality = null, comments = [], crowdPeaks = [], videoDuration = 0 } = {}) {
+    const cueCount = Array.isArray(cues) ? cues.length : 0;
+    const quality = subtitleQuality || (cueCount >= 40 ? scoreSubtitleQuality(cues, { videoDurationSec: videoDuration }) : null);
+    const subSqi = quality ? (Number(quality.sqi) || 0) : (cueCount > 0 ? 85 : 0);
+    const subReasons = Array.isArray(quality?.reasons) ? quality.reasons : [];
+    const hasBadSubFlag = subReasons.some((r) => BAD_SUB_TRUST_REASONS.has(r));
+    const isSubTrustworthy = cueCount > 0 && (!quality || (subSqi >= 75 && !hasBadSubFlag));
+
+    const balanced = selectBalancedComments(comments, 45, videoDuration);
+    const tsCommentCount = balanced.filter((c) => Array.isArray(c.resolvedTs) && c.resolvedTs.length > 0).length;
+    const crowdPeakCount = Array.isArray(crowdPeaks) ? crowdPeaks.length : 0;
+
+    return {
+        cueCount,
+        subSqi,
+        subReasons,
+        isSubTrustworthy,
+        tsCommentCount,
+        crowdPeakCount,
+        commentsCount: balanced.length,
+        worthSubChapters: isSubTrustworthy,
+        worthHighlightGraph: isSubTrustworthy || tsCommentCount >= 1 || crowdPeakCount >= 1
+    };
+}
+
 /**
  * 静默读取版本化后的字幕分幕缓存（不触发模型调用）
  */
-export async function getCachedSubtitleChapters({ avcode, cues, metadata = null } = {}) {
+export async function getCachedSubtitleChapters({ avcode, cues, subtitleQuality = null, metadata = null } = {}) {
+    const ctxValue = assessAiContextValue({ cues, subtitleQuality });
+    if (!ctxValue.worthSubChapters) return { hit: false };
     const { text: compressed } = selectCompressedEntries(cues, { maxChars: 13000, indexed: true });
     if (!compressed || !avcode) return { hit: false };
     const { contentHash } = buildSubtitleChapterPayload(avcode, compressed, metadata);
@@ -295,14 +335,35 @@ export async function getCachedSubtitleChapters({ avcode, cues, metadata = null 
 
 /**
  * 基于字幕时间轴进行影视剧作结构与情绪转折节点分析
- * @param {{ avcode: string, cues: Array, title?: string, metadata?: Object|null, forceRefresh?: boolean }} params
- * @returns {Promise<{ ok: boolean, fromCache?: boolean, summary?: string, chapters?: Array, refused?: boolean, error?: string }>}
+ * @param {{ avcode: string, cues: Array, subtitleQuality?: Object|null, altCues?: Array|null, altTitle?: string, title?: string, metadata?: Object|null, forceRefresh?: boolean }} params
+ * @returns {Promise<{ ok: boolean, skipped?: boolean, fromCache?: boolean, summary?: string, chapters?: Array, refused?: boolean, error?: string }>}
  */
-export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, altCues = null, altTitle = '', title = '', metadata = null, forceRefresh = false } = {}) {
+export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, subtitleQuality = null, altCues = null, altTitle = '', title = '', metadata = null, forceRefresh = false } = {}) {
     const startedAt = Date.now();
+    const ctxValue = assessAiContextValue({ cues, subtitleQuality });
+    if (!ctxValue.cueCount) {
+        return { ok: false, skipped: true, refused: false, error: '无可用字幕内容' };
+    }
+    if (!ctxValue.worthSubChapters) {
+        const skipMsg = `当前字幕可信度过低 (SQI ${ctxValue.subSqi})，已跳过 AI 分幕以避免幻觉`;
+        AiDebugLogger.recordAiExecution(avcode, {
+            taskType: 'sub_chapters',
+            promptVersion: AI_PROMPT_VERSION,
+            forceRefresh,
+            durationMs: Date.now() - startedAt,
+            outcome: 'skipped_low_signal',
+            error: 'SUBTITLE_UNTRUSTWORTHY',
+            inputContext: {
+                cueCount: ctxValue.cueCount,
+                subSqi: ctxValue.subSqi,
+                subReasons: ctxValue.subReasons
+            }
+        });
+        return { ok: false, skipped: true, refused: false, error: skipMsg };
+    }
     const { text: compressed, lineSeconds } = selectCompressedEntries(cues, { maxChars: 13000, indexed: true });
     if (!compressed) {
-        return { ok: false, refused: false, error: '无可用字幕内容' };
+        return { ok: false, skipped: true, refused: false, error: '无可用字幕内容' };
     }
     const altCompressed = Array.isArray(altCues) && altCues.length > 0
         ? selectCompressedEntries(altCues, { maxChars: 2200, indexed: false }).text
@@ -1131,10 +1192,15 @@ function buildFusionInputs({ cues = [], comments = [], crowdPeaks = [], videoDur
  * @param {Object} params
  * @returns {Promise<{ hit: boolean, graph?: Object }>}
  */
-export async function getCachedHighlightGraph({ avcode, cues = [], comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null } = {}) {
+export async function getCachedHighlightGraph({ avcode, cues = [], subtitleQuality = null, comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null } = {}) {
     const code = normalizeInlineText(avcode).toUpperCase();
-    const { topComments, compressedSub, crowdSig, contentHash } = buildFusionInputs({ cues, comments, crowdPeaks, videoDuration, vibeTags, metadata });
-    if (!code || (!compressedSub && topComments.length === 0 && !crowdSig)) {
+    const ctxValue = assessAiContextValue({ cues, subtitleQuality, comments, crowdPeaks, videoDuration });
+    if (!code || !ctxValue.worthHighlightGraph) {
+        return { hit: false };
+    }
+    const effectiveCues = ctxValue.isSubTrustworthy ? cues : [];
+    const { topComments, compressedSub, crowdSig, contentHash } = buildFusionInputs({ cues: effectiveCues, comments, crowdPeaks, videoDuration, vibeTags, metadata });
+    if (!compressedSub && topComments.length === 0 && !crowdSig) {
         return { hit: false };
     }
     const cached = await LlmCache.getCached(code, 'highlight_graph', contentHash);
@@ -1148,11 +1214,12 @@ export async function getCachedHighlightGraph({ avcode, cues = [], comments = []
  * 单请求多模态联合融合引擎（高能现场 2.0）
  * 一次性融合：影片元数据 + 社区回放波峰 + 高密度字幕骨架 + 双池平衡评论文本(预解析秒数) + 用户偏好标签
  * @param {Object} params
- * @returns {Promise<{ ok: boolean, fromCache?: boolean, graph?: Object, refused?: boolean, error?: string }>}
+ * @returns {Promise<{ ok: boolean, skipped?: boolean, fromCache?: boolean, graph?: Object, refused?: boolean, error?: string }>}
  */
 export async function buildHighlightGraphWithLlm({
     avcode,
     cues = [],
+    subtitleQuality = null,
     altCues = null,
     altTitle = '',
     comments = [],
@@ -1163,20 +1230,46 @@ export async function buildHighlightGraphWithLlm({
     forceRefresh = false
 } = {}) {
     const startedAt = Date.now();
-    const built = buildFusionInputs({ cues, comments, crowdPeaks, videoDuration, vibeTags, metadata });
-    const altCompressed = Array.isArray(altCues) && altCues.length > 0
-        ? selectCompressedEntries(altCues, { maxChars: 2000, indexed: false }).text
-        : '';
-    if (!built.compressedSub && built.topComments.length === 0 && !built.crowdSig) {
-        return { ok: false, refused: false, error: '暂无可用于联合分析的评论、字幕或热度数据' };
-    }
-
     const safeCode = normalizeInlineText(avcode).toUpperCase();
     const dur = Math.max(0, Number(videoDuration) || 0);
+    const ctxValue = assessAiContextValue({ cues, subtitleQuality, comments, crowdPeaks, videoDuration: dur });
+
+    if (!ctxValue.worthHighlightGraph) {
+        const skipReason = ctxValue.cueCount > 0 && !ctxValue.isSubTrustworthy
+            ? `字幕噪声过高 (SQI ${ctxValue.subSqi}) 且暂无时间点评论或热度波峰，已跳过 AI 定位以避免幻觉`
+            : '暂无高可信字幕、带时间点评论或热度波峰，已跳过 AI 定位';
+        AiDebugLogger.recordAiExecution(safeCode, {
+            taskType: 'highlight_graph',
+            promptVersion: AI_PROMPT_VERSION,
+            forceRefresh,
+            durationMs: Date.now() - startedAt,
+            outcome: 'skipped_low_signal',
+            error: 'LOW_SIGNAL_NO_ANCHOR',
+            inputContext: {
+                cueCount: ctxValue.cueCount,
+                subSqi: ctxValue.subSqi,
+                subReasons: ctxValue.subReasons,
+                commentsTotal: ctxValue.commentsCount,
+                tsCommentCount: ctxValue.tsCommentCount,
+                crowdPeaksCount: ctxValue.crowdPeakCount
+            }
+        });
+        return { ok: false, skipped: true, refused: false, error: skipReason };
+    }
+
+    const effectiveCues = ctxValue.isSubTrustworthy ? cues : [];
+    const effectiveAltCues = ctxValue.isSubTrustworthy ? altCues : null;
+    const built = buildFusionInputs({ cues: effectiveCues, comments, crowdPeaks, videoDuration: dur, vibeTags, metadata });
+    const altCompressed = Array.isArray(effectiveAltCues) && effectiveAltCues.length > 0
+        ? selectCompressedEntries(effectiveAltCues, { maxChars: 2000, indexed: false }).text
+        : '';
+    if (!built.compressedSub && built.topComments.length === 0 && !built.crowdSig) {
+        return { ok: false, skipped: true, refused: false, error: '暂无可用于联合分析的评论、字幕或热度数据' };
+    }
     const inputContext = {
         hasMetadata: Boolean(built.metaText),
         metaText: built.metaText,
-        cueCount: Array.isArray(cues) ? cues.length : 0,
+        cueCount: Array.isArray(effectiveCues) ? effectiveCues.length : 0,
         compressedSubLength: built.compressedSub.length,
         compressedSubPreview: built.compressedSub,
         commentsTotal: Array.isArray(comments) ? comments.length : 0,
@@ -1233,18 +1326,18 @@ export async function buildHighlightGraphWithLlm({
         {
             role: 'system',
             content: [
-                '你是客观克制的影片多模态高光分析引擎。请结合元数据、回放波峰、字幕对白（如有 `[L行号|t=秒数s|时分秒]`）与评论 `[C编号]` 输出融合高光图谱：',
+                '你是严谨克制的 AV 场景定位分析引擎。目标只做一件事：帮用户准确定位真实发生的高能玩法与剧情转折（宁缺毋滥，严禁猜测）。',
                 groundingRule,
-                '反幻觉硬约束（台词≠画面）：1) 将“好像也想要无套/要射了/顶到子宫/整根吞/无法吞咽”区分开——欲望试探、夸张比喻或否定词（无法吞咽≠极限吞咽，“要射了”常为口头刺激）严禁脑补成已发生的双穴插入、深喉灌精或吞精；2) 禁止把片名标签或评论里的许愿/抱怨（如“希望喉射”“没看见吞精”）强行嫁接到无关时间点，未明确证实具体体位或射精去向时必须保守概括（如“深度刺激/张力高潮”）；3) 若字幕出现成串“你好/谢谢/你太棒了/Chico/奇科”等语音误听噪声，切勿误判为口交，可参考副字幕核对。',
+                '反幻觉硬约束（台词≠画面）：1) 必须先结合片名/简介/标签/评论确认全片核心体裁基调——纯深喉口交片出现“射了/舔净”若无下体插入前情绝不可脑补成「内射」，单凭孤立1~2词（如“屁眼”“要射了”“想要”“好舒服”）绝不可脑补成「肛交/双穴/灌精」；2) 欲望挑逗、夸张比喻或否定词（好像想要插入/顶到子宫/无法吞咽）不得写成已发生；3) 禁止把评论许愿或抱怨（希望喉射/没吞精）嫁接到无关时刻；4) 仅输出明确实锤的高光（0~5条，无把握宁可空缺 [] 绝不凑数），每条必须标注 confidence ("high"|"medium"|"low")，未证实具体动作只可写 low 或留空。',
                 '字段输出顺序与上限：',
                 '1. brief: 1句话看点/避坑/共识总结；',
-                '2. highlights: 最多 6 个核心高能片段（不重复同一时刻，若无可返回 `[]`）；',
-                '3. skipZones: 最多 3 个明显拖沓/避坑区间（无明显区间请返回 `[]`，严禁写片尾总时长凑数）；',
-                '4. commentTags: 最多 8 条，优先选【无时间点】的纯评价评论归类情绪 (`hype`/`warn`/`neutral`)；仅在存在字幕或波峰定位依据时才推断 `inferredSeconds`，否则必须为 `null`；',
+                '2. highlights: 0至5个有实锤依据的高能片段；',
+                '3. skipZones: 最多 3 个明显拖沓/避坑区间（无明显区间返回 `[]`，严禁写片尾凑数）；',
+                '4. commentTags: 最多 8 条纯评价归类 (`hype`/`warn`/`neutral`)；无字幕或波峰依据时 `inferredSeconds` 必须为 `null`；',
                 '仅输出严格合法 JSON，禁止 Markdown 围栏与多余解释：',
                 hasSub
-                    ? '{ "brief": { "highlights": "看点", "warnings": "避坑(无则写暂无明显雷点)", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "subLine": 12, "tag": "2-4字标签", "reason": "16字内理由", "sources": ["crowd","comment","sub"], "score": 92 }], "skipZones": [{ "seconds": 0, "endSeconds": 90, "reason": "14字内避坑说明" }], "commentTags": [{ "idx": 0, "sentiment": "hype", "isCountdown": false, "inferredSeconds": 420, "note": "10字内标签" }] }'
-                    : '{ "brief": { "highlights": "看点", "warnings": "避坑(无则写暂无明显雷点)", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "tag": "2-4字标签", "reason": "16字内理由", "sources": ["comment"], "score": 92 }], "skipZones": [], "commentTags": [{ "idx": 0, "sentiment": "hype", "isCountdown": false, "inferredSeconds": null, "note": "10字内标签" }] }'
+                    ? '{ "brief": { "highlights": "看点", "warnings": "避坑(无则写暂无明显雷点)", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "subLine": 12, "confidence": "high", "tag": "2-4字标签", "reason": "16字内实锤依据", "sources": ["crowd","comment","sub"], "score": 92 }], "skipZones": [{ "seconds": 0, "endSeconds": 90, "reason": "14字内避坑说明" }], "commentTags": [{ "idx": 0, "sentiment": "hype", "isCountdown": false, "inferredSeconds": 420, "note": "10字内标签" }] }'
+                    : '{ "brief": { "highlights": "看点", "warnings": "避坑(无则写暂无明显雷点)", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "confidence": "high", "tag": "2-4字标签", "reason": "16字内实锤依据", "sources": ["comment"], "score": 92 }], "skipZones": [], "commentTags": [{ "idx": 0, "sentiment": "hype", "isCountdown": false, "inferredSeconds": null, "note": "10字内标签" }] }'
             ].join('\n')
         },
         {
@@ -1294,6 +1387,8 @@ export async function buildHighlightGraphWithLlm({
 
         const rawHighlights = [];
         for (const item of Array.isArray(parsed.highlights) ? parsed.highlights : []) {
+            const conf = String(item?.confidence || '').trim().toLowerCase();
+            if (conf === 'low') continue;
             const rawSources = Array.isArray(item?.sources)
                 ? item.sources.map((s) => String(s || '').trim()).filter((s) => ['crowd', 'comment', 'sub'].includes(s))
                 : [];
@@ -1331,15 +1426,16 @@ export async function buildHighlightGraphWithLlm({
             const tag = normalizeInlineText(item?.tag || '').slice(0, 6) || '高能';
             const reason = normalizeInlineText(item?.reason || '').slice(0, 24);
             const score = Math.max(1, Math.min(100, Math.round(Number(item?.score) || 80)));
+            if (score < 50) continue;
             rawHighlights.push({ seconds: sec, endSeconds, tag, reason, sources, score });
         }
-        // 邻近 45 秒内去重合并，保留高分高光
+        // 邻近 45 秒内去重合并，保留高分高光（宁缺毋滥，上限 5 条）
         rawHighlights.sort((a, b) => b.score - a.score);
         const highlights = [];
         for (const h of rawHighlights) {
             if (highlights.some((kept) => Math.abs(kept.seconds - h.seconds) < 45)) continue;
             highlights.push(h);
-            if (highlights.length >= 6) break;
+            if (highlights.length >= 5) break;
         }
         highlights.sort((a, b) => a.seconds - b.seconds);
 

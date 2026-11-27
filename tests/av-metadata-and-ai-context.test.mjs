@@ -886,4 +886,81 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         assert.ok(cpSrc.includes('onSubtitleApplied') && cpSrc.includes('_pendingAiSubtitleUpgrade'), '字幕延迟就绪后必须支持自动补全/升级 AI 简报');
         assert.ok(subCss.includes('.mp-ai-screen-body') && subCss.includes('.mp-ai-brief-notice'), '样式表必须包含 -1 屏与降级提示样式');
     });
+
+    it('skips LLM cleanly when subtitle is low-trust & no comment/crowd anchors exist, and filters untrusted subtitles when comments have timestamps', async () => {
+        LlmService.saveConfig({
+            enabled: true,
+            baseUrl: 'https://apihub.agnes-ai.com/v1',
+            model: 'agnes-3.0-flash',
+            apiKey: 'sk-test-gate'
+        });
+        let llmCalls = 0;
+        let lastUserPrompt = '';
+        gmResponder = (opts) => {
+            llmCalls += 1;
+            const body = JSON.parse(opts.data || '{}');
+            lastUserPrompt = body.messages?.[1]?.content || '';
+            opts.onload({
+                status: 200,
+                finalUrl: opts.url,
+                responseText: JSON.stringify({
+                    choices: [{
+                        message: {
+                            content: JSON.stringify({
+                                brief: { highlights: '仅基于评论定位', warnings: '暂无', consensus: '口碑良' },
+                                highlights: [
+                                    { seconds: 3853, confidence: 'high', tag: '口水高能', reason: '评论实锤', sources: ['comment'], score: 90 },
+                                    { seconds: 900, confidence: 'low', tag: '猜测跳过', reason: '把握不足', sources: ['comment'], score: 80 }
+                                ],
+                                skipZones: [],
+                                commentTags: []
+                            })
+                        }
+                    }]
+                })
+            });
+        };
+
+        const badQuality = { sqi: 31, reasons: ['whisper_polite_noise', 'sanitized_mt'] };
+        const fakeLongCues = Array.from({ length: 45 }, (_, i) => ({
+            start: i * 100,
+            end: i * 100 + 5,
+            text: `Structurer 先生你好谢谢 Chico ${i}`
+        }));
+
+        // 1. NKKD-297/NKKD-351 场景：低质字幕 + 无时间戳评论 + 无波峰 -> 两次调用都直接熔断跳过，0次请求模型
+        const skipCh = await analyzeSubtitleChaptersWithLlm({
+            avcode: 'NKKD-297',
+            cues: fakeLongCues,
+            subtitleQuality: badQuality,
+            forceRefresh: true
+        });
+        const skipFg = await buildHighlightGraphWithLlm({
+            avcode: 'NKKD-297',
+            cues: fakeLongCues,
+            subtitleQuality: badQuality,
+            comments: [{ id: 'c1', text: '这部看着挺不错的，可惜无时间点' }],
+            crowdPeaks: [],
+            forceRefresh: true
+        });
+        assert.equal(skipCh.skipped, true, '低可信字幕必须跳过 AI 分幕');
+        assert.equal(skipFg.skipped, true, '低可信字幕且无任何时间戳/波峰时必须跳过 AI 融合');
+        assert.equal(llmCalls, 0, '证据不足时严禁浪费 Token 强行请求模型');
+
+        // 2. MIAA-950 场景：低质字幕 + 有真实时间戳评论 -> 隔离坏字幕正文，仅喂真实评论，并过滤 confidence=low
+        const rescuedFg = await buildHighlightGraphWithLlm({
+            avcode: 'MIAA-950',
+            cues: fakeLongCues,
+            subtitleQuality: { sqi: 55, reasons: ['whisper_polite_noise'] },
+            comments: [{ id: 'c2', text: '1:04:13 想喝她的口水' }],
+            crowdPeaks: [],
+            videoDuration: 7200,
+            forceRefresh: true
+        });
+        assert.equal(rescuedFg.ok, true);
+        assert.equal(llmCalls, 1);
+        assert.ok(!lastUserPrompt.includes('Structurer 先生'), '劣质字幕正文绝不能传入 Prompt 污染判断');
+        assert.equal(rescuedFg.graph.highlights.length, 1, 'confidence=low 猜测条目必须被过滤');
+        assert.equal(rescuedFg.graph.highlights[0].seconds, 3853);
+    });
 });
