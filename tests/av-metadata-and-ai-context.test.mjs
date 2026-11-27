@@ -1341,10 +1341,11 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         const longWithMildMt = Array.from({ length: 480 }, (_, idx) => ({
             start: idx * 14 + 5,
             end: idx * 14 + 10,
-            text: idx < 8 ? '这是正确的，请继续' : `第 ${idx} 段自然剧情对话推动发展`
+            text: idx < 8 ? `这是正确的，请继续第${idx}句` : `第 ${idx} 段自然剧情对话推动发展`
         }));
         const mildMtCtx = assessAiContextValue({ cues: longWithMildMt, videoDuration: 6800 });
         assert.ok(!mildMtCtx.subReasons.includes('sanitized_mt'), '低于 2.5% 比率的偶发口癖不得一票否决整轨');
+        assert.equal(mildMtCtx.subSqi, 85, '偶发机翻口癖应适度区别于 100 分纯人工轨');
         assert.equal(mildMtCtx.isSubTrustworthy, true);
 
         const borderlineHighCtx = assessAiContextValue({
@@ -1352,6 +1353,32 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
             subtitleQuality: { sqi: 76, reasons: ['whisper_polite_noise'] }
         });
         assert.equal(borderlineHighCtx.isSubTrustworthy, true, 'SQI>=75 且无结构性损坏时不应仅因单一温和标签一票否决');
+
+        gmResponder = (opts) => opts.onload?.({
+            status: 200,
+            responseText: JSON.stringify({
+                choices: [{
+                    message: {
+                        content: JSON.stringify({
+                            brief: { highlights: '多人乱交', warnings: '时长较长', consensus: '纯口交无插入前情，注意区分' },
+                            highlights: [{ seconds: 112, confidence: 'high', tag: '乱交启动', reason: '字幕确认', sources: ['sub'], score: 85 }],
+                            skipZones: [],
+                            commentTags: []
+                        })
+                    }
+                }]
+            })
+        });
+        const echoRes = await buildHighlightGraphWithLlm({
+            avcode: 'SSNI-001',
+            cues: goodCues,
+            comments: [],
+            videoDuration: 7200,
+            forceRefresh: true
+        });
+        gmResponder = prevGm;
+        assert.equal(echoRes.ok, true);
+        assert.equal(echoRes.graph.brief.consensus, '暂无观众评论，以上仅基于对白梳理');
 
         let retryCalls = 0;
         gmResponder = (opts) => {

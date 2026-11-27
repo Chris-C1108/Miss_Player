@@ -1494,6 +1494,10 @@ export async function buildHighlightGraphWithLlm({
         }
 
         const rawBrief = parsed.brief && typeof parsed.brief === 'object' ? parsed.brief : {};
+        const rawConsensus = normalizeInlineText(rawBrief.consensus || '');
+        const consensus = (built.topComments.length === 0 && (!rawConsensus || /^(?:无|暂无)$/i.test(rawConsensus) || /纯口交无插入前情|肛交\/双穴/.test(rawConsensus)))
+            ? '暂无观众评论，以上仅基于对白梳理'
+            : (rawConsensus || '可配合进度条推荐节点快速跳转');
         const graph = {
             highlights,
             skipZones,
@@ -1501,7 +1505,7 @@ export async function buildHighlightGraphWithLlm({
             brief: {
                 highlights: normalizeInlineText(rawBrief.highlights || '') || '已融合多模态信号识别核心高能片段',
                 warnings: normalizeInlineText(rawBrief.warnings || '') || '暂无明显雷点',
-                consensus: normalizeInlineText(rawBrief.consensus || '') || '可配合进度条推荐节点快速跳转',
+                consensus,
                 timestamps: highlights.map((h) => ({ seconds: h.seconds, note: `${h.tag}${h.reason ? ' · ' + h.reason : ''}` }))
             }
         };

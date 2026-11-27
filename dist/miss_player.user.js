@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.018
+// @version            5.7.124-beta.019
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.018";
+		return "5.7.124-beta.019";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4771,7 +4771,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.018";
+		return "5.7.124-beta.019";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6914,7 +6914,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.018";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.019";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -13686,7 +13686,7 @@
 			if (mtRate >= .025 || mtHits >= 12 && mtRate >= .015) {
 				sqi -= Math.min(35, mtHits * 2 + 12);
 				reasons.push("sanitized_mt");
-			}
+			} else if (mtHits >= 3) sqi -= Math.min(15, mtHits * 2);
 		}
 		const clampedSqi = Math.max(0, Math.min(100, Math.round(sqi)));
 		const { grade, label } = resolveGradeAndLabel(clampedSqi, cueCount, reasons);
@@ -15125,6 +15125,8 @@
 				};
 			}
 			const rawBrief = parsed.brief && typeof parsed.brief === "object" ? parsed.brief : {};
+			const rawConsensus = normalizeInlineText(rawBrief.consensus || "");
+			const consensus = built.topComments.length === 0 && (!rawConsensus || /^(?:无|暂无)$/i.test(rawConsensus) || /纯口交无插入前情|肛交\/双穴/.test(rawConsensus)) ? "暂无观众评论，以上仅基于对白梳理" : rawConsensus || "可配合进度条推荐节点快速跳转";
 			const graph = {
 				highlights,
 				skipZones,
@@ -15132,7 +15134,7 @@
 				brief: {
 					highlights: normalizeInlineText(rawBrief.highlights || "") || "已融合多模态信号识别核心高能片段",
 					warnings: normalizeInlineText(rawBrief.warnings || "") || "暂无明显雷点",
-					consensus: normalizeInlineText(rawBrief.consensus || "") || "可配合进度条推荐节点快速跳转",
+					consensus,
 					timestamps: highlights.map((h) => ({
 						seconds: h.seconds,
 						note: `${h.tag}${h.reason ? " · " + h.reason : ""}`

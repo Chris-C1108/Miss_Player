@@ -217,6 +217,8 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
         if (mtRate >= 0.025 || (mtHits >= 12 && mtRate >= 0.015)) {
             sqi -= Math.min(35, mtHits * 2 + 12);
             reasons.push('sanitized_mt');
+        } else if (mtHits >= 3) {
+            sqi -= Math.min(15, mtHits * 2);
         }
     }
 
