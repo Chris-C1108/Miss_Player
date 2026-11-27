@@ -29,7 +29,7 @@ const SETTING_TIMESTAMPS_KEY = 'mp_setting_timestamps';
 
 const CURRENT_SCHEMA_VERSION = 2;
 const MAX_TOMBSTONE_AGE = 30 * 24 * 60 * 60 * 1000; // 30 天墓碑保留窗口 (GC 机制)
-const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.124-beta.019';
+const SCRIPT_VERSION = (typeof GM_info !== 'undefined' && GM_info?.script?.version) ? GM_info.script.version : '5.7.124-beta.020';
 
 /**
  * 获取或创建当前终端唯一 Client ID
@@ -289,6 +289,7 @@ export class SyncManager {
             customUserSeekSteps: sanitizeSeekStepList(getValue('customUserSeekSteps', []), true),
             showCommentsSection: true,
             enabledCommentSources: getValue('enabledCommentSources', { jable: true, javdb: true, javlibrary: false }),
+            globalLang: getValue('globalLang', 'auto'),
             subtitleEnabled: getValue('subtitleEnabled', true),
             subtitleFontSize: getValue('subtitleFontSize', 'medium'),
             subtitleVerticalOffset: parseInt(getValue('subtitleVerticalOffset', 0), 10) || 0,

@@ -243,8 +243,6 @@ export class S2PlaybackSection {
 
         const card = createCard();
 
-        // 1. 快速跳转行 + 内联步进编辑抽屉
-        const seekSubbox = this._buildSeekStepsSubbox();
         // 1. 快速跳转步进（常驻展开）
         card.appendChild(this._buildSeekStepsSubbox());
 
@@ -253,8 +251,8 @@ export class S2PlaybackSection {
 
         // 3. 离开暂停
         const pauseBlurRow = createToggleRow({
-            title: __('pauseOnBlur') || '离开暂停',
-            subtext: __('pauseOnBlurDesc') || '切页面或后台时暂停',
+            title: __('pauseOnBlur'),
+            subtext: __('pauseOnBlurDesc'),
             checked: this.settings.pauseOnBlur !== false,
             onChange: (checked) => {
                 this.sm.updateSetting('pauseOnBlur', checked);
@@ -286,8 +284,8 @@ export class S2PlaybackSection {
         muteBox.appendChild(muteUnit);
 
         const defaultMutedRow = createToggleRow({
-            title: __('defaultMuted') || '默认静音',
-            subtext: __('defaultMutedDesc') || '进入时静音，离开超时恢复静音',
+            title: __('defaultMuted'),
+            subtext: __('defaultMutedDesc'),
             checked: isDefaultMuted,
             rightAddon: muteBox,
             onChange: (checked) => {
@@ -309,8 +307,8 @@ export class S2PlaybackSection {
 
         // 6. 自动画质（支持 Plyr 与 HLS.js 多清晰度流）
         const qualityRow = createToggleRow({
-            title: __('autoQuality') || '自动画质',
-            subtext: __('autoQualityDesc') || '自动切换至当前最高画质流',
+            title: __('autoQuality'),
+            subtext: __('autoQualityDesc'),
             checked: this.settings.autoHighestQuality !== false,
             onChange: (checked) => {
                 this.sm.updateSetting('autoHighestQuality', checked);

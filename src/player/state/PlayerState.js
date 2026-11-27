@@ -8,6 +8,7 @@ export function sanitizeSeekStepList(arr, isCustom = false) {
 import { ReactiveStore } from '../../utils/reactiveStore.js';
 import { getValue, setValue } from '../../utils/index.js';
 import { SyncManager } from '../../sync/index.js';
+import { I18n } from '../../constants/i18n.js';
 
 /**
  * 播放器状态管理类
@@ -36,6 +37,7 @@ export class PlayerState {
             sidebarPosition: 'right',       // 评论侧边栏位置 ('left' | 'right')
             sidebarHidden: false,           // 评论侧边栏是否隐藏 (true | false)
             preferredPlaybackRate: 1.0,     // 默认/首选播放速度
+            globalLang: 'auto',             // 全局语言总控 ('auto' | 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'vi')
             subtitleEnabled: true,          // 字幕总开关 (默认显示已挂载的字幕轨)
             subtitleFontSize: 'medium',     // 字幕字号 ('small' | 'medium' | 'large')
             subtitleVerticalOffset: 0,      // 字幕上下偏移 (百分比，正值上移)
@@ -121,6 +123,7 @@ export class PlayerState {
             this.settings.sidebarHidden = getBool('sidebarHidden', false);
             const rawSpeed = parseFloat(getValue('preferredPlaybackRate', 1.0));
             this.settings.preferredPlaybackRate = (!isNaN(rawSpeed) && rawSpeed >= 0.5 && rawSpeed <= 4.0) ? rawSpeed : 1.0;
+            this.settings.globalLang = I18n.normalizeGlobalLang(getValue('globalLang', 'auto'));
             this.settings.subtitleEnabled = getBool('subtitleEnabled', false);
             const rawSubtitleSize = getValue('subtitleFontSize', 'medium');
             this.settings.subtitleFontSize = ['small', 'medium', 'large'].includes(rawSubtitleSize) ? rawSubtitleSize : 'medium';
@@ -250,6 +253,7 @@ export class PlayerState {
             setValue('sidebarPosition', this.settings.sidebarPosition);
             setValue('sidebarHidden', this.settings.sidebarHidden);
             setValue('preferredPlaybackRate', this.settings.preferredPlaybackRate);
+            setValue('globalLang', this.settings.globalLang || 'auto');
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
             setValue('buttonSoundEnabled', this.settings.buttonSoundEnabled);
             setValue('defaultMuted', Boolean(this.settings.defaultMuted));

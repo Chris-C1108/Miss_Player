@@ -124,7 +124,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **MarkerBottomSheet**：胶囊标签管理面板、60秒软删除撤销、多维语义标签选择、批量分享导出
 * **DragManager**：Minimap 缩略图平移拖拽与跟手手势
 * **EventManager**：集中式事件委托、快捷键绑定与全屏监听
-* **SettingsManager & SettingsV2Manager**：`SettingsManager` 负责设置状态持久化、控制行可见性与更新检测；`src/player/managers/settings_v2/` 承载统一单入口设置抽屉（4 组平级卡片：播放控制、影片评论、连接与同步、高级与关于；无旧版设置面板，有更新时仅“更新/安装”按钮呼吸发光提示）
+* **SettingsManager & SettingsV2Manager**：`SettingsManager` 负责设置状态持久化、全局语言联动、控制行可见性与更新检测；`src/player/managers/settings_v2/` 承载统一单入口设置抽屉（顶部全局语言总控 + 4 组平级卡片：播放控制、影片评论、连接与同步、高级与关于；无旧版设置面板，有更新时仅“更新/安装”按钮呼吸发光提示）
 * **SingleHandManager**：竖屏单手操控模式管理器、侧边辅助条 (Utility Gutter) 挂载、左右手镜像与全宽还原状态机
 * **HeatmapManager**：视频观看热度与足迹探索管理器、双轨架构（私有足迹白光顶轨 + 社区高能珊瑚金底轨）、5秒物理自适应分桶、120分位定长量化编解码 (`heatmapCodec.js`)、水位线差分增量防滚雪球上报、WebDAV 跨域漫游合并 (Element-wise Max) 与双层 SVG 贝塞尔波形渲染
 
@@ -153,7 +153,23 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 
 ### 5. 共享基础设施 (`src/utils/` & `src/constants/`)
 * **工具库**：`src/utils/`（`storage.js`, `reactiveStore.js`, `indexedDB.js`, `videoCode.js`, `dom.js`, `md5.js`, `modal.js`, `clipboard.js`, `http.js`）
-* **常量与字典**：`src/constants/domains.js`（站点活跃域名矩阵）、`i18n.js`（五国语言国际化字典）、`icons.js`（矢量 SVG 图标）
+* **常量与字典**：`src/constants/domains.js`（站点活跃域名矩阵）、`i18n.js`（全局语言总控中心 `globalLang` + 五国语言国际化字典 + AI 输出语种解析 `getAiLanguageSpec()`）、`icons.js`（矢量 SVG 图标）
+
+---
+
+## 🌐 全局语言总控架构规范 (Global Language Master Single Source of Truth)
+
+Miss Player 以设置菜单顶部的 **「全局语言 (`globalLang`)」** 作为全项目唯一语言权威源，覆盖 **用户界面文案、字幕自动优选与全部 AI 输出语种**。所有新老功能严禁各自为政：
+
+1. **单一总控取值红线 (Single Source of Truth)**：
+   - **FORBIDDEN**：任何业务模块（UI 组件、Toast、字幕系统、`AiBatchTestRunner`、爬虫提示或 AI 提示词）严禁私自读取裸 `navigator.language`、硬编码特定输出语种（如写死“用简体中文回答”）或私设独立互不联通的界面/AI 语言开关；
+   - **USE**：必须统一从 [src/constants/i18n.js](./src/constants/i18n.js) 读取总控状态：`__('key')`、`I18n.userLang`（自动在 `globalLang === 'auto'` 时回落浏览器语言）、`I18n.getGlobalLang()` 与 `I18n.getAiLanguageSpec()`；字幕优选仅在 `subtitlePreferredLang === 'auto'` 时自动跟随 `I18n.userLang`（由 `resolvePreferredSubtitleLang()` 统一解析）。
+2. **AI 提示词语言变量强制注入规范**：
+   - 所有大模型请求（`LlmTasks.js` 及任何新增 AI 任务）必须在系统提示词（System Prompt）中通过动态变量代入当前总控语言（如 `` `必须严格全程使用「${aiLang.promptName}」输出...` ``），强制锁定 AI 回复语种，防止因日语原片名或外语对白触发语种漂移（如 `MIDV-207` 漂移事故）；
+   - `buildVersionedTaskHash()` 必须将 `aiLang.code` 纳入缓存摘要计算，确保用户切换全局语言后自动隔离并重算对应语种的 AI 缓存，绝不返回旧语种缓存结果。
+3. **联动刷新与同步闭环**：
+   - `globalLang` 默认为 `'auto'`，允许取值 `['auto', 'zh-CN', 'zh-TW', 'en', 'ja', 'vi']`，纳入 `PlayerState` / `SettingsManager` 持久化与 `SyncManager` WebDAV 双向同步；
+   - 用户切换 `globalLang` 时，必须即时刷新设置面板、同步更新字幕偏好控件状态；新增面向用户的 UI 文案与 AI 降级固定兜底句式必须同步维护至 `i18n.js` 全部语种分支。
 
 ---
 

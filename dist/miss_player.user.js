@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.019
+// @version            5.7.124-beta.020
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.019";
+		return "5.7.124-beta.020";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -2491,9 +2491,51 @@
 			writable: !0
 		}) : e[r] = t, e;
 	}
+	var AI_LANG_MAP = {
+		"zh-TW": ["繁體中文", "暫無觀眾評論，以上僅基於對白梳理"],
+		ja: ["日本語", "視聴者コメントなし、字幕対話のみに基づく要約です"],
+		vi: ["Tiếng Việt", "Chưa có bình luận, chỉ tóm tắt theo hội thoại"],
+		"zh-CN": ["简体中文", "暂无观众评论，以上仅基于对白梳理"],
+		en: ["English", "No viewer comments yet; summary based on dialogue only"]
+	};
 	var I18n = class {
+		static normalizeGlobalLang(raw) {
+			const s = String(raw || "").trim().toLowerCase().replace(/_/g, "-");
+			if (!s || s === "auto") return "auto";
+			if (/^(?:zh-(?:tw|hk|mo|hant)|cht)$/.test(s)) return "zh-TW";
+			if (/^(?:zh(?:-(?:cn|sg|hans))?|chs)$/.test(s)) return "zh-CN";
+			if (s === "ja" || s.startsWith("ja-") || s === "jp") return "ja";
+			if (s === "vi" || s.startsWith("vi-")) return "vi";
+			if (s === "en" || s.startsWith("en-")) return "en";
+			return "auto";
+		}
+		static get browserLang() {
+			return typeof navigator !== "undefined" && (navigator.languages && navigator.languages[0] || navigator.language) || "en";
+		}
+		static getGlobalLang() {
+			return this.normalizeGlobalLang(getValue("globalLang", "auto"));
+		}
+		static setGlobalLang(lang) {
+			const norm = this.normalizeGlobalLang(lang);
+			setValue("globalLang", norm);
+			return norm;
+		}
+		static getEffectiveLang(override = "") {
+			const chosen = override ? this.normalizeGlobalLang(override) : this.getGlobalLang();
+			return chosen && chosen !== "auto" ? chosen : this.browserLang;
+		}
 		static get userLang() {
-			return navigator.languages && navigator.languages[0] || navigator.language || "en";
+			return this.getEffectiveLang();
+		}
+		static getAiLanguageSpec(override = "") {
+			const norm = this.normalizeGlobalLang(this.getEffectiveLang(override));
+			const code = AI_LANG_MAP[norm] ? norm : "en";
+			const [promptName, noCommentConsensus] = AI_LANG_MAP[code];
+			return {
+				code,
+				promptName,
+				noCommentConsensus
+			};
 		}
 		static translate(id, lang = "") {
 			const selectedLang = lang || this.userLang;
@@ -2685,22 +2727,6 @@
 			webdavLanUrl: "Backup URL",
 			webdavLanUrlPlaceholder: "Optional, e.g. http://192.168.1.x:8080",
 			webdavUsername: "Username",
-			webdavCurrentDevice: "Current Device",
-			webdavLastSync: "Last Sync",
-			webdavNeverSynced: "Never synced",
-			webdavTesting: "Testing connection...",
-			webdavTestSuccess: "WebDAV connection verified!",
-			webdavTestFailed: "Connection failed, check URL or credentials",
-			webdavSyncing: "Syncing data...",
-			webdavSyncSuccess: "Cloud sync completed!",
-			webdavSyncFailed: "Sync failed: ",
-			webdavConfirmUpload: "Force overwrite cloud backup with local config?",
-			webdavConfirmDownload: "Download and overwrite local config with cloud backup?",
-			betaGroupTitle: "Labs",
-			betaLabTitle: "Experimental Labs",
-			betaLabDesc: "Try preview features",
-			betaSkipIntro: "Skip Intro",
-			betaSkipIntroDesc: "Jump to 1st highlight",
 			betaHeatmap: "Show Playback Heatmap",
 			betaHeatmapDesc: "Show viewer heatmap on seekbar",
 			dataMode: "Privacy & Data",
@@ -2747,7 +2773,6 @@
 			statsUpdated: "Code Updated",
 			fetchFailed: "Failed to check updates, please try again later",
 			scriptName: "Miss Player | Cinema Mode (One-handed Player)",
-			scriptDescription: "MissAV ad-free|One-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|Custom player supporting jable po*nhub etc",
 			viewportConfigured: "Viewport configured to support safe area",
 			stylesInjected: "Styles injected",
 			enhancerInitialized: "User experience enhancer module initialized",
@@ -2760,6 +2785,10 @@
 			unmute: "Unmute",
 			fullscreen: "Fullscreen",
 			exitFullscreen: "Exit Fullscreen",
+			globalLangTitle: "Language",
+			globalLangDesc: "Controls UI, subtitles & AI output",
+			globalLangAuto: "Auto",
+			globalLangSaved: "Language updated",
 			settings: "Settings",
 			done: "Done",
 			s2UpdateInstall: "Update / Install",
@@ -3019,22 +3048,6 @@
 			webdavLanUrl: "备用地址",
 			webdavLanUrlPlaceholder: "选填，如 http://192.168.1.x:8080",
 			webdavUsername: "用户名",
-			webdavCurrentDevice: "当前设备",
-			webdavLastSync: "上次同步",
-			webdavNeverSynced: "尚未同步",
-			webdavTesting: "正在测试连接...",
-			webdavTestSuccess: "WebDAV 连接与目录创建成功！",
-			webdavTestFailed: "连接失败，请检查地址或账号密码",
-			webdavSyncing: "正在同步数据...",
-			webdavSyncSuccess: "云端同步成功完成！",
-			webdavSyncFailed: "同步失败: ",
-			webdavConfirmUpload: "确定要将当前本地配置强制覆盖到云端吗？这将替换 WebDAV 上的所有备份数据。",
-			webdavConfirmDownload: "确定要从云端拉取配置并覆盖本地吗？这将替换此设备上的当前设置与打点数据。",
-			betaGroupTitle: "实验特性",
-			betaLabTitle: "实验功能",
-			betaLabDesc: "探索预览中的新功能",
-			betaSkipIntro: "跳过片头",
-			betaSkipIntroDesc: "开播直达首个高光",
 			betaHeatmap: "显示播放热度",
 			betaHeatmapDesc: "进度条显示观看波形",
 			dataMode: "隐私·数据模式",
@@ -3081,7 +3094,6 @@
 			statsUpdated: "代码更新",
 			fetchFailed: "检查更新失败，请稍后重试",
 			scriptName: "Miss Player | 影院模式 (单手播放器)",
-			scriptDescription: "MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器 支持 jable po*nhub 等通用",
 			viewportConfigured: "已配置viewport以支持安全区域",
 			stylesInjected: "样式注入完成",
 			enhancerInitialized: "用户体验增强模块已初始化",
@@ -3094,6 +3106,10 @@
 			unmute: "取消静音",
 			fullscreen: "全屏",
 			exitFullscreen: "退出全屏",
+			globalLangTitle: "全局语言",
+			globalLangDesc: "统一控制界面、字幕优选与 AI 回复",
+			globalLangAuto: "自动",
+			globalLangSaved: "语言已切换",
 			settings: "设置",
 			done: "完成",
 			s2UpdateInstall: "更新/安装",
@@ -3333,22 +3349,6 @@
 			webdavLanUrl: "備用位址",
 			webdavLanUrlPlaceholder: "選填，如 http://192.168.1.x:8080",
 			webdavUsername: "用戶名",
-			webdavCurrentDevice: "當前設備",
-			webdavLastSync: "上次同步",
-			webdavNeverSynced: "尚未同步",
-			webdavTesting: "正在測試連線...",
-			webdavTestSuccess: "WebDAV 連線與目錄建立成功！",
-			webdavTestFailed: "連線失敗，請檢查位址或帳號密碼",
-			webdavSyncing: "正在同步資料...",
-			webdavSyncSuccess: "雲端同步成功完成！",
-			webdavSyncFailed: "同步失敗: ",
-			webdavConfirmUpload: "確定要將當前本地配置強制覆蓋到雲端嗎？這將替換 WebDAV 上的所有備份資料。",
-			webdavConfirmDownload: "確定要從雲端拉取配置並覆蓋本地嗎？這將替換此設備上的當前設置與打點資料。",
-			betaGroupTitle: "實驗特性",
-			betaLabTitle: "實驗功能",
-			betaLabDesc: "探索預覽中的新功能",
-			betaSkipIntro: "跳過片頭",
-			betaSkipIntroDesc: "開播直達首個高光",
 			betaHeatmap: "顯示播放熱度",
 			betaHeatmapDesc: "進度條顯示觀看波形",
 			dataMode: "隱私·資料模式",
@@ -3395,7 +3395,6 @@
 			statsUpdated: "代碼更新",
 			fetchFailed: "檢查更新失敗，請稍後重試",
 			scriptName: "Miss Player | 影院模式 (單手播放器)",
-			scriptDescription: "MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器 支持 jable po*nhub 等通用",
 			viewportConfigured: "已配置viewport以支持安全區域",
 			stylesInjected: "樣式注入完成",
 			enhancerInitialized: "用戶體驗增強模塊已初始化",
@@ -3408,6 +3407,10 @@
 			unmute: "取消靜音",
 			fullscreen: "全屏",
 			exitFullscreen: "退出全屏",
+			globalLangTitle: "全局語言",
+			globalLangDesc: "統一控制介面、字幕優選與 AI 回覆",
+			globalLangAuto: "自動",
+			globalLangSaved: "語言已切換",
 			settings: "設置",
 			done: "完成",
 			s2UpdateInstall: "更新/安裝",
@@ -3645,22 +3648,6 @@
 			webdavLanUrl: "予備アドレス",
 			webdavLanUrlPlaceholder: "任意、例: http://192.168.1.x:8080",
 			webdavUsername: "ユーザー名",
-			webdavCurrentDevice: "現在の端末",
-			webdavLastSync: "最終同期",
-			webdavNeverSynced: "未同期",
-			webdavTesting: "接続をテスト中...",
-			webdavTestSuccess: "WebDAV接続に成功しました！",
-			webdavTestFailed: "接続に失敗しました。URLまたは認証情報を確認してください",
-			webdavSyncing: "データを同期中...",
-			webdavSyncSuccess: "クラウド同期が完了しました！",
-			webdavSyncFailed: "同期に失敗しました: ",
-			webdavConfirmUpload: "現在のローカル設定をクラウドに強制上書きしますか？",
-			webdavConfirmDownload: "クラウドから設定をダウンロードしてローカルを上書きしますか？",
-			betaGroupTitle: "実験的機能",
-			betaLabTitle: "実験機能",
-			betaLabDesc: "開発中の新機能を試す",
-			betaSkipIntro: "OPスキップ",
-			betaSkipIntroDesc: "最初のハイライトへ直行",
 			betaHeatmap: "再生ヒートマップを表示",
 			betaHeatmapDesc: "シークバーにリプレイ波形を表示",
 			dataMode: "プライバシー・データ",
@@ -3707,7 +3694,6 @@
 			statsUpdated: "コード更新日",
 			fetchFailed: "更新確認に失敗しました。後でもう一度お試しください",
 			scriptName: "Miss Player | シネマモード (片手プレーヤー)",
-			scriptDescription: "MissAV広告なし|片手モード|MissAV自動詳細展開|MissAV自動高画質|MissAVリダイレクトサポート|MissAV自動ログイン|jable po*nhub などをサポートするカスタムプレーヤー",
 			viewportConfigured: "セーフエリアをサポートするためにビューポートを設定しました",
 			stylesInjected: "スタイルが注入されました",
 			enhancerInitialized: "ユーザー体験向上モジュールが初期化されました",
@@ -3720,6 +3706,10 @@
 			unmute: "ミュート解除",
 			fullscreen: "全画面",
 			exitFullscreen: "全画面解除",
+			globalLangTitle: "表示言語",
+			globalLangDesc: "UI・字幕優先・AI出力を一括制御",
+			globalLangAuto: "自動",
+			globalLangSaved: "言語を変更しました",
 			settings: "設定",
 			done: "完了",
 			s2UpdateInstall: "更新/インストール",
@@ -3956,22 +3946,6 @@
 			webdavLanUrl: "Địa chỉ dự phòng",
 			webdavLanUrlPlaceholder: "Tùy chọn, vd: http://192.168.1.x:8080",
 			webdavUsername: "Tên người dùng",
-			webdavCurrentDevice: "Thiết bị này",
-			webdavLastSync: "Lần đồng bộ trước",
-			webdavNeverSynced: "Chưa đồng bộ",
-			webdavTesting: "Đang kiểm tra kết nối...",
-			webdavTestSuccess: "Đã xác minh kết nối WebDAV!",
-			webdavTestFailed: "Kết nối thất bại, kiểm tra URL hoặc thông tin xác thực",
-			webdavSyncing: "Đang đồng bộ dữ liệu...",
-			webdavSyncSuccess: "Đồng bộ đám mây hoàn tất!",
-			webdavSyncFailed: "Đồng bộ thất bại: ",
-			webdavConfirmUpload: "Ghi đè cấu hình cục bộ lên đám mây?",
-			webdavConfirmDownload: "Tải xuống và ghi đè cấu hình cục bộ?",
-			betaGroupTitle: "Tính năng thử nghiệm",
-			betaLabTitle: "Chức năng thử nghiệm",
-			betaLabDesc: "Khám phá các tính năng xem trước",
-			betaSkipIntro: "Bỏ qua mở đầu",
-			betaSkipIntroDesc: "Bắt đầu phát ngay từ điểm đầu",
 			betaHeatmap: "Hiển thị bản đồ nhiệt",
 			betaHeatmapDesc: "Hiển thị dạng sóng xem lại trên thanh trượt",
 			dataMode: "Riêng tư & Dữ liệu",
@@ -4018,7 +3992,6 @@
 			statsUpdated: "Cập nhật mã",
 			fetchFailed: "Kiểm tra cập nhật thất bại, vui lòng thử lại sau",
 			scriptName: "Miss Player | Chế độ Rạp chiếu phim (Trình phát một tay)",
-			scriptDescription: "MissAV không quảng cáo|Chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|Đăng nhập tự động MissAV|Trình phát tùy chỉnh hỗ trợ jable po*nhub v.v.",
 			viewportConfigured: "Đã cấu hình viewport để hỗ trợ vùng an toàn",
 			stylesInjected: "Đã tiêm CSS",
 			enhancerInitialized: "Đã khởi tạo mô-đun nâng cao trải nghiệm người dùng",
@@ -4031,6 +4004,10 @@
 			unmute: "Bật tiếng",
 			fullscreen: "Toàn màn hình",
 			exitFullscreen: "Thoát toàn màn hình",
+			globalLangTitle: "Ngôn ngữ",
+			globalLangDesc: "Đồng bộ giao diện, phụ đề và AI",
+			globalLangAuto: "Tự động",
+			globalLangSaved: "Đã đổi ngôn ngữ",
 			settings: "Cài đặt",
 			done: "Xong",
 			s2UpdateInstall: "Cập nhật / Cài đặt",
@@ -4771,7 +4748,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.019";
+		return "5.7.124-beta.020";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6914,7 +6891,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.019";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.020";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -7074,6 +7051,7 @@
 					javdb: true,
 					javlibrary: false
 				}),
+				globalLang: getValue("globalLang", "auto"),
 				subtitleEnabled: getValue("subtitleEnabled", true),
 				subtitleFontSize: getValue("subtitleFontSize", "medium"),
 				subtitleVerticalOffset: parseInt(getValue("subtitleVerticalOffset", 0), 10) || 0,
@@ -13779,7 +13757,8 @@
 	var AI_PROMPT_VERSION = "v3.4";
 	function buildVersionedTaskHash(taskType, payloadStr) {
 		const model = LlmService.getConfig().model || "";
-		return LlmCache.hashContent(`${AI_PROMPT_VERSION}|${model}|${taskType}|${payloadStr}`);
+		const langCode = I18n.getAiLanguageSpec().code;
+		return LlmCache.hashContent(`${AI_PROMPT_VERSION}|${langCode}|${model}|${taskType}|${payloadStr}`);
 	}
 	var MOAN_FILLER_RE = /^[啊嗯哦哈呜唔呀呐噢唉呀啊哈\.…!！?？\s~～、，,]+$/;
 	var LOW_INFO_PLEA_RE = /^(?:[嗯啊哦哈呜唔呀呐嘿呃喂]+|[不别停等算]+(?:了吧|了|啊|呀|哦)?|等等|停下来|不要|别碰我|好舒服|我做不到|对不起|没关系|是的|我知道了)[,，.。!！?？\s…~～]*$/;
@@ -14133,6 +14112,7 @@
 			role: "system",
 			content: [
 				"严谨的剧情时间轴编辑。台词带 `[L行号|t=秒数s|时分秒]`。",
+				`必须全程使用「${I18n.getAiLanguageSpec().promptName}」输出 summary、tag 与 headline（忽略外语片名或对白语言干扰）。`,
 				"反幻觉硬约束(台词≠画面)：夸张比喻/欲求(如想要/要射了/全吞)按言语理解，禁脑补未实锤动作；遇敬语噪声或与副字幕矛盾则忽略。",
 				"只基于真实对白输出严格 JSON（禁 Markdown 围栏）：",
 				"{ \"summary\": \"20字内剧情概览\", \"chapters\": [{ \"line\": 12, \"seconds\": 123, \"tag\": \"2-4字\", \"headline\": \"16字内剧情\" }] }",
@@ -14480,6 +14460,7 @@
 			role: "system",
 			content: [
 				"你是一位客观严谨的影评整理助手，负责结合作品元数据与观众短评提炼核心看点、避坑提醒、口碑共识与高能时间戳。",
+				`必须严格使用「${I18n.getAiLanguageSpec().promptName}」输出所有文字字段。`,
 				"评论中 `[含时间点] [t=XXXs(...)]` 已由本地解析器精确换算为视频整数秒（倒数时间亦已校准），输出 `timestamps` 时请直接采用该 `t` 值；严禁自行心算时间格式或编造未提及的时间点。",
 				"仅返回严格合法的 JSON，不要输出额外解释或 Markdown 围栏：",
 				"{ \"highlights\": \"看点1句话\", \"warnings\": \"避坑/雷点1句话(无则写暂无明显雷点)\", \"consensus\": \"口碑共识1句话\", \"timestamps\": [{ \"seconds\": 123, \"note\": \"10字内说明\" }] }"
@@ -14629,7 +14610,7 @@
 		const messages = [{
 			role: "system",
 			content: [
-				"你是影片片段标签标注助手。请根据作品元数据及给定时间点前后的字幕语境，从下方允许标签列表中选择最贴切的 1 到 2 个标签，并附带一句 14 字以内短评。",
+				`你是影片片段标签标注助手。请根据作品元数据及给定时间点前后的字幕语境，从下方允许标签列表中选择最贴切的 1 到 2 个标签，并附带一句 14 字以内短评（comment 请使用「${I18n.getAiLanguageSpec().promptName}」输出）。`,
 				`允许标签列表（必须原样选用，禁止自造标签）：${ALL_SEMANTIC_TAGS.join(" ")}`,
 				"仅返回严格合法的 JSON：{ \"tags\": [\"#标签1\"], \"comment\": \"14字内短评\" }"
 			].join("\n")
@@ -14967,11 +14948,14 @@
 		const commentTsSet = new Set();
 		for (const c of built.topComments) for (const t of c.resolvedTs || []) if (Number.isFinite(t?.seconds)) commentTsSet.add(t.seconds);
 		const commentTsList = Array.from(commentTsSet);
+		const groundingRule = !hasSub && !hasCrowd ? "无字幕无波峰：highlights 禁引用 sub 或编造，仅取评论 `[t=...s]`（无则 []）；skipZones 禁臆测；commentTags.inferredSeconds 填 null！" : !hasSub ? "无字幕：禁填 sub 或 subLine，仅结合评论 `[t=...s]` 与波峰定位！" : "时间点直接复用字幕/波峰/评论 `t=...s`，禁心算编造！";
+		const aiLang = I18n.getAiLanguageSpec();
 		const messages = [{
 			role: "system",
 			content: [
 				"你是严谨的 AV 场景定位分析引擎，只做准确定位高能与转折（宁缺毋滥，严禁猜测）。",
-				!hasSub && !hasCrowd ? "无字幕无波峰：highlights 禁引用 sub 或编造，仅取评论 `[t=...s]`（无则 []）；skipZones 禁臆测；commentTags.inferredSeconds 填 null！" : !hasSub ? "无字幕：禁填 sub 或 subLine，仅结合评论 `[t=...s]` 与波峰定位！" : "时间点直接复用字幕/波峰/评论 `t=...s`，禁心算编造！",
+				`必须全程使用「${aiLang.promptName}」输出 brief、tag、reason、skipZones.reason 与 commentTags.note。`,
+				groundingRule,
 				"反幻觉硬约束(台词≠画面)：1) 结合片名/标签定基调——纯口交无插入前情禁脑补内射，孤立词禁脑补肛交/双穴；2) 挑逗/夸张/否定词禁当已发生；3) 禁把许愿抱怨嫁接无关时刻；4) 仅输出实锤高光(0-5条，不确定写 low 或留空 [])。",
 				"输出顺序：",
 				"1. brief: 1句话看点/避坑/共识；",
@@ -15126,7 +15110,7 @@
 			}
 			const rawBrief = parsed.brief && typeof parsed.brief === "object" ? parsed.brief : {};
 			const rawConsensus = normalizeInlineText(rawBrief.consensus || "");
-			const consensus = built.topComments.length === 0 && (!rawConsensus || /^(?:无|暂无)$/i.test(rawConsensus) || /纯口交无插入前情|肛交\/双穴/.test(rawConsensus)) ? "暂无观众评论，以上仅基于对白梳理" : rawConsensus || "可配合进度条推荐节点快速跳转";
+			const consensus = built.topComments.length === 0 && (!rawConsensus || /^(?:无|暂无)$/i.test(rawConsensus) || /纯口交无插入前情|肛交\/双穴/.test(rawConsensus)) ? aiLang.noCommentConsensus : rawConsensus || "可配合进度条推荐节点快速跳转";
 			const graph = {
 				highlights,
 				skipZones,
@@ -29306,6 +29290,7 @@
 				sidebarPosition: "right",
 				sidebarHidden: false,
 				preferredPlaybackRate: 1,
+				globalLang: "auto",
 				subtitleEnabled: true,
 				subtitleFontSize: "medium",
 				subtitleVerticalOffset: 0,
@@ -29377,6 +29362,7 @@
 				this.settings.sidebarHidden = getBool("sidebarHidden", false);
 				const rawSpeed = parseFloat(getValue("preferredPlaybackRate", 1));
 				this.settings.preferredPlaybackRate = !isNaN(rawSpeed) && rawSpeed >= .5 && rawSpeed <= 4 ? rawSpeed : 1;
+				this.settings.globalLang = I18n.normalizeGlobalLang(getValue("globalLang", "auto"));
 				this.settings.subtitleEnabled = getBool("subtitleEnabled", false);
 				const rawSubtitleSize = getValue("subtitleFontSize", "medium");
 				this.settings.subtitleFontSize = [
@@ -29504,6 +29490,7 @@
 				setValue("sidebarPosition", this.settings.sidebarPosition);
 				setValue("sidebarHidden", this.settings.sidebarHidden);
 				setValue("preferredPlaybackRate", this.settings.preferredPlaybackRate);
+				setValue("globalLang", this.settings.globalLang || "auto");
 				setValue("pauseOnBlur", this.settings.pauseOnBlur);
 				setValue("buttonSoundEnabled", this.settings.buttonSoundEnabled);
 				setValue("defaultMuted", Boolean(this.settings.defaultMuted));
@@ -29594,6 +29581,7 @@
 				muteResetMinutes: 5,
 				autoHighestQuality: true,
 				autoUncensored: false,
+				globalLang: "auto",
 				subtitleEnabled: true,
 				subtitleFontSize: "medium",
 				subtitleVerticalOffset: 0,
@@ -29731,6 +29719,7 @@
 				this.settings.debugMode = getBool("debugMode", false);
 				this.settings.debugFilterHasNumbers = getBool("debugFilterHasNumbers", false);
 				this.settings.crazyScrapeMode = getBool("crazyScrapeMode", false);
+				this.settings.globalLang = I18n.normalizeGlobalLang(getValue("globalLang", "auto"));
 				this.settings.subtitleEnabled = getBool("subtitleEnabled", false);
 				const rawSubtitleSize = getValue("subtitleFontSize", "medium");
 				this.settings.subtitleFontSize = [
@@ -29788,6 +29777,7 @@
 				setValue("debugFilterHasNumbers", this.settings.debugFilterHasNumbers);
 				setValue("crazyScrapeMode", Boolean(this.settings.crazyScrapeMode));
 				setValue("pauseOnBlur", this.settings.pauseOnBlur);
+				setValue("globalLang", this.settings.globalLang || "auto");
 				setValue("subtitleEnabled", Boolean(this.settings.subtitleEnabled));
 				setValue("subtitleFontSize", this.settings.subtitleFontSize || "medium");
 				setValue("subtitleVerticalOffset", this.settings.subtitleVerticalOffset || 0);
@@ -29826,10 +29816,16 @@
 			if (playbackControlRow) playbackControlRow.classList.remove("is-hidden");
 		}
 		updateSetting(key, value) {
+			if (key === "globalLang") value = I18n.setGlobalLang(value);
 			this.settings[key] = value;
 			const state = this.playerCore?.options?.playerState;
 			if (state) state.updateSetting(key, value);
 			else this.saveSettings();
+			if (key === "globalLang") {
+				const subMgr = this.controlManager?.subtitleManager;
+				if (subMgr && typeof subMgr._applyPreferredLang === "function") subMgr._applyPreferredLang(this.settings.subtitlePreferredLang, { persist: false });
+				if (this.settingsV2Manager?.isVisible) this.settingsV2Manager.render();
+			}
 			telemetry.track("setting_toggle_ui", {
 				key,
 				value
@@ -31004,12 +31000,11 @@
 			this.element.innerHTML = "";
 			if (oldLabel) this.element.appendChild(oldLabel);
 			const card = createCard();
-			this._buildSeekStepsSubbox();
 			card.appendChild(this._buildSeekStepsSubbox());
 			card.appendChild(this._buildDurationStepperRow());
 			const pauseBlurRow = createToggleRow({
-				title: __$1("pauseOnBlur") || "离开暂停",
-				subtext: __$1("pauseOnBlurDesc") || "切页面或后台时暂停",
+				title: __$1("pauseOnBlur"),
+				subtext: __$1("pauseOnBlurDesc"),
 				checked: this.settings.pauseOnBlur !== false,
 				onChange: (checked) => {
 					this.sm.updateSetting("pauseOnBlur", checked);
@@ -31038,8 +31033,8 @@
 			muteBox.appendChild(muteInput);
 			muteBox.appendChild(muteUnit);
 			const defaultMutedRow = createToggleRow({
-				title: __$1("defaultMuted") || "默认静音",
-				subtext: __$1("defaultMutedDesc") || "进入时静音，离开超时恢复静音",
+				title: __$1("defaultMuted"),
+				subtext: __$1("defaultMutedDesc"),
 				checked: isDefaultMuted,
 				rightAddon: muteBox,
 				onChange: (checked) => {
@@ -31057,8 +31052,8 @@
 			});
 			card.appendChild(soundRow.element);
 			const qualityRow = createToggleRow({
-				title: __$1("autoQuality") || "自动画质",
-				subtext: __$1("autoQualityDesc") || "自动切换至当前最高画质流",
+				title: __$1("autoQuality"),
+				subtext: __$1("autoQualityDesc"),
 				checked: this.settings.autoHighestQuality !== false,
 				onChange: (checked) => {
 					this.sm.updateSetting("autoHighestQuality", checked);
@@ -35919,13 +35914,13 @@
 					subWrap.appendChild(heatmapRow.element);
 					const initDataMode = this.settings.dataMode === "shared" ? "shared" : "local";
 					const dataModeRow = createSegmentedRow({
-						title: __$1("dataMode") || "隐私·数据模式",
-						subtext: initDataMode === "shared" ? __$1("dataModeSharedDesc") || "共享全网观看热度波形，并同步支持社区评论采集共享与解析错误上报。" : __$1("dataModeLocalDesc") || "断开公共网络通信，足迹、评论缓存及标记仅留存于本机与私有 WebDAV。",
+						title: __$1("dataMode"),
+						subtext: initDataMode === "shared" ? __$1("dataModeSharedDesc") : __$1("dataModeLocalDesc"),
 						options: [{
-							label: __$1("dataModeLocal") || "本地私有",
+							label: __$1("dataModeLocal"),
 							value: "local"
 						}, {
-							label: __$1("dataModeShared") || "社区共享",
+							label: __$1("dataModeShared"),
 							value: "shared"
 						}],
 						value: initDataMode,
@@ -35933,7 +35928,7 @@
 						onChange: (val) => {
 							this.sm.updateSetting("dataMode", val);
 							const subEl = dataModeRow.element.querySelector(".mp-s2-row-sub");
-							if (subEl) subEl.textContent = val === "shared" ? __$1("dataModeSharedDesc") || "共享全网观看热度波形，并同步支持社区评论采集共享与解析错误上报。" : __$1("dataModeLocalDesc") || "断开公共网络通信，足迹、评论缓存及标记仅留存于本机与私有 WebDAV。";
+							if (subEl) subEl.textContent = val === "shared" ? __$1("dataModeSharedDesc") : __$1("dataModeLocalDesc");
 							const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
 							if (hm && typeof hm.setCrowdEnabled === "function") hm.setCrowdEnabled(Boolean(this.settings.betaMode) && val === "shared");
 							this.refreshCrazyAvailability();
@@ -36196,12 +36191,67 @@
 				connectionsSec,
 				advancedSec
 			};
+			scrollBody.appendChild(this._buildGlobalLangGroup());
 			scrollBody.appendChild(playbackSec.getElement());
 			scrollBody.appendChild(commentsSec.getElement());
 			scrollBody.appendChild(connectionsSec.getElement());
 			scrollBody.appendChild(advancedSec.getElement());
 			this.panel.appendChild(scrollBody);
 			if (prevScrollTop > 0) scrollBody.scrollTop = prevScrollTop;
+		}
+		_buildGlobalLangGroup() {
+			const group = createGroup(__$1("globalLangTitle"));
+			const card = createCard();
+			const row = document.createElement("div");
+			row.className = "mp-s2-row mp-s2-row--stacked";
+			const sub = document.createElement("div");
+			sub.className = "mp-s2-row-sub";
+			sub.textContent = __$1("globalLangDesc");
+			row.appendChild(sub);
+			const chips = document.createElement("div");
+			chips.className = "mp-s2-chips";
+			const cur = I18n.normalizeGlobalLang(this.sm?.settings?.globalLang || I18n.getGlobalLang());
+			[
+				{
+					value: "auto",
+					label: __$1("globalLangAuto")
+				},
+				{
+					value: "zh-CN",
+					label: "简体中文"
+				},
+				{
+					value: "zh-TW",
+					label: "繁體中文"
+				},
+				{
+					value: "en",
+					label: "English"
+				},
+				{
+					value: "ja",
+					label: "日本語"
+				},
+				{
+					value: "vi",
+					label: "Tiếng Việt"
+				}
+			].forEach((opt) => {
+				const btn = document.createElement("button");
+				btn.type = "button";
+				btn.className = `mp-s2-chip ${cur === opt.value ? "is-active" : ""}`.trim();
+				btn.textContent = opt.label;
+				btn.addEventListener("click", (e) => {
+					e.stopPropagation();
+					this.sm.updateSetting("globalLang", opt.value);
+					Toast$1(__$1("globalLangSaved"), 1500, "info");
+				});
+				chips.appendChild(btn);
+			});
+			row.appendChild(chips);
+			card.appendChild(row);
+			group.appendChild(card);
+			return group;
 		}
 		refreshAdvancedSection() {
 			if (this._sections?.advancedSec && this.isVisible) this._sections.advancedSec.refresh();

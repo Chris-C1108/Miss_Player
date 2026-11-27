@@ -1,13 +1,58 @@
+import { getValue, setValue } from '../utils/storage.js';
+
+export const GLOBAL_LANG_OPTIONS = ['auto', 'zh-CN', 'zh-TW', 'en', 'ja', 'vi'];
+
+const AI_LANG_MAP = {
+    'zh-TW': ['繁體中文', '暫無觀眾評論，以上僅基於對白梳理'],
+    ja: ['日本語', '視聴者コメントなし、字幕対話のみに基づく要約です'],
+    vi: ['Tiếng Việt', 'Chưa có bình luận, chỉ tóm tắt theo hội thoại'],
+    'zh-CN': ['简体中文', '暂无观众评论，以上仅基于对白梳理'],
+    en: ['English', 'No viewer comments yet; summary based on dialogue only']
+};
+
 /**
- * 多语言系统 - 用于整个脚本的国际化支持
+ * 多语言系统 - 全项目唯一语言总控中心 (Single Source of Truth)
  */
 export class I18n {
-    /**
-     * 获取用户浏览器当前语言
-     * @returns {string} 用户当前语言代码
-     */
+    static normalizeGlobalLang(raw) {
+        const s = String(raw || '').trim().toLowerCase().replace(/_/g, '-');
+        if (!s || s === 'auto') return 'auto';
+        if (/^(?:zh-(?:tw|hk|mo|hant)|cht)$/.test(s)) return 'zh-TW';
+        if (/^(?:zh(?:-(?:cn|sg|hans))?|chs)$/.test(s)) return 'zh-CN';
+        if (s === 'ja' || s.startsWith('ja-') || s === 'jp') return 'ja';
+        if (s === 'vi' || s.startsWith('vi-')) return 'vi';
+        if (s === 'en' || s.startsWith('en-')) return 'en';
+        return 'auto';
+    }
+
+    static get browserLang() {
+        return (typeof navigator !== 'undefined' && ((navigator.languages && navigator.languages[0]) || navigator.language)) || 'en';
+    }
+
+    static getGlobalLang() {
+        return this.normalizeGlobalLang(getValue('globalLang', 'auto'));
+    }
+
+    static setGlobalLang(lang) {
+        const norm = this.normalizeGlobalLang(lang);
+        setValue('globalLang', norm);
+        return norm;
+    }
+
+    static getEffectiveLang(override = '') {
+        const chosen = override ? this.normalizeGlobalLang(override) : this.getGlobalLang();
+        return chosen && chosen !== 'auto' ? chosen : this.browserLang;
+    }
+
     static get userLang() {
-        return (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+        return this.getEffectiveLang();
+    }
+
+    static getAiLanguageSpec(override = '') {
+        const norm = this.normalizeGlobalLang(this.getEffectiveLang(override));
+        const code = AI_LANG_MAP[norm] ? norm : 'en';
+        const [promptName, noCommentConsensus] = AI_LANG_MAP[code];
+        return { code, promptName, noCommentConsensus };
     }
     
     /**
@@ -211,24 +256,6 @@ export class I18n {
         webdavLanUrl: 'Backup URL',
         webdavLanUrlPlaceholder: 'Optional, e.g. http://192.168.1.x:8080',
             webdavUsername: 'Username',
-            webdavCurrentDevice: 'Current Device',
-            webdavLastSync: 'Last Sync',
-            webdavNeverSynced: 'Never synced',
-            webdavTesting: 'Testing connection...',
-            webdavTestSuccess: 'WebDAV connection verified!',
-            webdavTestFailed: 'Connection failed, check URL or credentials',
-            webdavSyncing: 'Syncing data...',
-            webdavSyncSuccess: 'Cloud sync completed!',
-            webdavSyncFailed: 'Sync failed: ',
-            webdavConfirmUpload: 'Force overwrite cloud backup with local config?',
-            webdavConfirmDownload: 'Download and overwrite local config with cloud backup?',
-
-            // 七、设置面板 - 实验特性
-            betaGroupTitle: 'Labs',
-            betaLabTitle: 'Experimental Labs',
-            betaLabDesc: 'Try preview features',
-            betaSkipIntro: 'Skip Intro',
-            betaSkipIntroDesc: 'Jump to 1st highlight',
             betaHeatmap: 'Show Playback Heatmap',
             betaHeatmapDesc: 'Show viewer heatmap on seekbar',
             dataMode: 'Privacy & Data',
@@ -279,7 +306,6 @@ export class I18n {
 
             // 元数据与底层通用
             scriptName: 'Miss Player | Cinema Mode (One-handed Player)',
-            scriptDescription: 'MissAV ad-free|One-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|Custom player supporting jable po*nhub etc',
             viewportConfigured: 'Viewport configured to support safe area',
             stylesInjected: 'Styles injected',
             enhancerInitialized: 'User experience enhancer module initialized',
@@ -292,6 +318,10 @@ export class I18n {
             unmute: 'Unmute',
             fullscreen: 'Fullscreen',
             exitFullscreen: 'Exit Fullscreen',
+            globalLangTitle: 'Language',
+            globalLangDesc: 'Controls UI, subtitles & AI output',
+            globalLangAuto: 'Auto',
+            globalLangSaved: 'Language updated',
             settings: 'Settings',
             done: 'Done',
             s2UpdateInstall: 'Update / Install',
@@ -563,24 +593,6 @@ export class I18n {
         webdavLanUrl: '备用地址',
         webdavLanUrlPlaceholder: '选填，如 http://192.168.1.x:8080',
             webdavUsername: '用户名',
-            webdavCurrentDevice: '当前设备',
-            webdavLastSync: '上次同步',
-            webdavNeverSynced: '尚未同步',
-            webdavTesting: '正在测试连接...',
-            webdavTestSuccess: 'WebDAV 连接与目录创建成功！',
-            webdavTestFailed: '连接失败，请检查地址或账号密码',
-            webdavSyncing: '正在同步数据...',
-            webdavSyncSuccess: '云端同步成功完成！',
-            webdavSyncFailed: '同步失败: ',
-            webdavConfirmUpload: '确定要将当前本地配置强制覆盖到云端吗？这将替换 WebDAV 上的所有备份数据。',
-            webdavConfirmDownload: '确定要从云端拉取配置并覆盖本地吗？这将替换此设备上的当前设置与打点数据。',
-
-            // 七、设置面板 - 实验特性
-            betaGroupTitle: '实验特性',
-            betaLabTitle: '实验功能',
-            betaLabDesc: '探索预览中的新功能',
-            betaSkipIntro: '跳过片头',
-            betaSkipIntroDesc: '开播直达首个高光',
             betaHeatmap: '显示播放热度',
             betaHeatmapDesc: '进度条显示观看波形',
             dataMode: '隐私·数据模式',
@@ -631,7 +643,6 @@ export class I18n {
 
             // 元数据与底层通用
             scriptName: 'Miss Player | 影院模式 (单手播放器)',
-            scriptDescription: 'MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器 支持 jable po*nhub 等通用',
             viewportConfigured: '已配置viewport以支持安全区域',
             stylesInjected: '样式注入完成',
             enhancerInitialized: '用户体验增强模块已初始化',
@@ -644,6 +655,10 @@ export class I18n {
             unmute: '取消静音',
             fullscreen: '全屏',
             exitFullscreen: '退出全屏',
+            globalLangTitle: '全局语言',
+            globalLangDesc: '统一控制界面、字幕优选与 AI 回复',
+            globalLangAuto: '自动',
+            globalLangSaved: '语言已切换',
             settings: '设置',
             done: '完成',
             s2UpdateInstall: '更新/安装',
@@ -895,24 +910,6 @@ export class I18n {
         webdavLanUrl: '備用位址',
         webdavLanUrlPlaceholder: '選填，如 http://192.168.1.x:8080',
             webdavUsername: '用戶名',
-            webdavCurrentDevice: '當前設備',
-            webdavLastSync: '上次同步',
-            webdavNeverSynced: '尚未同步',
-            webdavTesting: '正在測試連線...',
-            webdavTestSuccess: 'WebDAV 連線與目錄建立成功！',
-            webdavTestFailed: '連線失敗，請檢查位址或帳號密碼',
-            webdavSyncing: '正在同步資料...',
-            webdavSyncSuccess: '雲端同步成功完成！',
-            webdavSyncFailed: '同步失敗: ',
-            webdavConfirmUpload: '確定要將當前本地配置強制覆蓋到雲端嗎？這將替換 WebDAV 上的所有備份資料。',
-            webdavConfirmDownload: '確定要從雲端拉取配置並覆蓋本地嗎？這將替換此設備上的當前設置與打點資料。',
-
-            // 七、设置面板 - 实验特性
-            betaGroupTitle: '實驗特性',
-            betaLabTitle: '實驗功能',
-            betaLabDesc: '探索預覽中的新功能',
-            betaSkipIntro: '跳過片頭',
-            betaSkipIntroDesc: '開播直達首個高光',
             betaHeatmap: '顯示播放熱度',
             betaHeatmapDesc: '進度條顯示觀看波形',
             dataMode: '隱私·資料模式',
@@ -963,7 +960,6 @@ export class I18n {
 
             // 元数据与底层通用
             scriptName: 'Miss Player | 影院模式 (單手播放器)',
-            scriptDescription: 'MissAV去廣告|單手模式|MissAV自動展開詳情|MissAV自動高畫質|MissAV重定向支持|MissAV自動登錄|定制播放器 支持 jable po*nhub 等通用',
             viewportConfigured: '已配置viewport以支持安全區域',
             stylesInjected: '樣式注入完成',
             enhancerInitialized: '用戶體驗增強模塊已初始化',
@@ -976,6 +972,10 @@ export class I18n {
             unmute: '取消靜音',
             fullscreen: '全屏',
             exitFullscreen: '退出全屏',
+            globalLangTitle: '全局語言',
+            globalLangDesc: '統一控制介面、字幕優選與 AI 回覆',
+            globalLangAuto: '自動',
+            globalLangSaved: '語言已切換',
             settings: '設置',
             done: '完成',
             s2UpdateInstall: '更新/安裝',
@@ -1225,24 +1225,6 @@ export class I18n {
         webdavLanUrl: '予備アドレス',
         webdavLanUrlPlaceholder: '任意、例: http://192.168.1.x:8080',
             webdavUsername: 'ユーザー名',
-            webdavCurrentDevice: '現在の端末',
-            webdavLastSync: '最終同期',
-            webdavNeverSynced: '未同期',
-            webdavTesting: '接続をテスト中...',
-            webdavTestSuccess: 'WebDAV接続に成功しました！',
-            webdavTestFailed: '接続に失敗しました。URLまたは認証情報を確認してください',
-            webdavSyncing: 'データを同期中...',
-            webdavSyncSuccess: 'クラウド同期が完了しました！',
-            webdavSyncFailed: '同期に失敗しました: ',
-            webdavConfirmUpload: '現在のローカル設定をクラウドに強制上書きしますか？',
-            webdavConfirmDownload: 'クラウドから設定をダウンロードしてローカルを上書きしますか？',
-
-            // 七、设置面板 - 实验特性
-            betaGroupTitle: '実験的機能',
-            betaLabTitle: '実験機能',
-            betaLabDesc: '開発中の新機能を試す',
-            betaSkipIntro: 'OPスキップ',
-            betaSkipIntroDesc: '最初のハイライトへ直行',
             betaHeatmap: '再生ヒートマップを表示',
             betaHeatmapDesc: 'シークバーにリプレイ波形を表示',
             dataMode: 'プライバシー・データ',
@@ -1293,7 +1275,6 @@ export class I18n {
 
             // 元数据与底层通用
             scriptName: 'Miss Player | シネマモード (片手プレーヤー)',
-            scriptDescription: 'MissAV広告なし|片手モード|MissAV自動詳細展開|MissAV自動高画質|MissAVリダイレクトサポート|MissAV自動ログイン|jable po*nhub などをサポートするカスタムプレーヤー',
             viewportConfigured: 'セーフエリアをサポートするためにビューポートを設定しました',
             stylesInjected: 'スタイルが注入されました',
             enhancerInitialized: 'ユーザー体験向上モジュールが初期化されました',
@@ -1306,6 +1287,10 @@ export class I18n {
             unmute: 'ミュート解除',
             fullscreen: '全画面',
             exitFullscreen: '全画面解除',
+            globalLangTitle: '表示言語',
+            globalLangDesc: 'UI・字幕優先・AI出力を一括制御',
+            globalLangAuto: '自動',
+            globalLangSaved: '言語を変更しました',
             settings: '設定',
             done: '完了',
             s2UpdateInstall: '更新/インストール',
@@ -1554,24 +1539,6 @@ export class I18n {
         webdavLanUrl: 'Địa chỉ dự phòng',
         webdavLanUrlPlaceholder: 'Tùy chọn, vd: http://192.168.1.x:8080',
             webdavUsername: 'Tên người dùng',
-            webdavCurrentDevice: 'Thiết bị này',
-            webdavLastSync: 'Lần đồng bộ trước',
-            webdavNeverSynced: 'Chưa đồng bộ',
-            webdavTesting: 'Đang kiểm tra kết nối...',
-            webdavTestSuccess: 'Đã xác minh kết nối WebDAV!',
-            webdavTestFailed: 'Kết nối thất bại, kiểm tra URL hoặc thông tin xác thực',
-            webdavSyncing: 'Đang đồng bộ dữ liệu...',
-            webdavSyncSuccess: 'Đồng bộ đám mây hoàn tất!',
-            webdavSyncFailed: 'Đồng bộ thất bại: ',
-            webdavConfirmUpload: 'Ghi đè cấu hình cục bộ lên đám mây?',
-            webdavConfirmDownload: 'Tải xuống và ghi đè cấu hình cục bộ?',
-
-            // 七、设置面板 - 实验特性
-            betaGroupTitle: 'Tính năng thử nghiệm',
-            betaLabTitle: 'Chức năng thử nghiệm',
-            betaLabDesc: 'Khám phá các tính năng xem trước',
-            betaSkipIntro: 'Bỏ qua mở đầu',
-            betaSkipIntroDesc: 'Bắt đầu phát ngay từ điểm đầu',
             betaHeatmap: 'Hiển thị bản đồ nhiệt',
             betaHeatmapDesc: 'Hiển thị dạng sóng xem lại trên thanh trượt',
             dataMode: 'Riêng tư & Dữ liệu',
@@ -1622,7 +1589,6 @@ export class I18n {
 
             // 元数据与底层通用
             scriptName: 'Miss Player | Chế độ Rạp chiếu phim (Trình phát một tay)',
-            scriptDescription: 'MissAV không quảng cáo|Chế độ một tay|MissAV tự động mở rộng chi tiết|MissAV tự động chất lượng cao|Hỗ trợ chuyển hướng MissAV|Đăng nhập tự động MissAV|Trình phát tùy chỉnh hỗ trợ jable po*nhub v.v.',
             viewportConfigured: 'Đã cấu hình viewport để hỗ trợ vùng an toàn',
             stylesInjected: 'Đã tiêm CSS',
             enhancerInitialized: 'Đã khởi tạo mô-đun nâng cao trải nghiệm người dùng',
@@ -1635,6 +1601,10 @@ export class I18n {
             unmute: 'Bật tiếng',
             fullscreen: 'Toàn màn hình',
             exitFullscreen: 'Thoát toàn màn hình',
+            globalLangTitle: 'Ngôn ngữ',
+            globalLangDesc: 'Đồng bộ giao diện, phụ đề và AI',
+            globalLangAuto: 'Tự động',
+            globalLangSaved: 'Đã đổi ngôn ngữ',
             settings: 'Cài đặt',
             done: 'Xong',
             s2UpdateInstall: 'Cập nhật / Cài đặt',

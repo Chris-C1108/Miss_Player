@@ -127,13 +127,13 @@ export class S2AdvancedSection {
                 // 3. 隐私·数据模式（独立于播放热度开关：控制热度波形、评论采集共享与解析错误上报）
                 const initDataMode = this.settings.dataMode === 'shared' ? 'shared' : 'local';
                 const dataModeRow = createSegmentedRow({
-                    title: __('dataMode') || '隐私·数据模式',
+                    title: __('dataMode'),
                     subtext: initDataMode === 'shared'
-                        ? (__('dataModeSharedDesc') || '共享全网观看热度波形，并同步支持社区评论采集共享与解析错误上报。')
-                        : (__('dataModeLocalDesc') || '断开公共网络通信，足迹、评论缓存及标记仅留存于本机与私有 WebDAV。'),
+                        ? __('dataModeSharedDesc')
+                        : __('dataModeLocalDesc'),
                     options: [
-                        { label: __('dataModeLocal') || '本地私有', value: 'local' },
-                        { label: __('dataModeShared') || '社区共享', value: 'shared' }
+                        { label: __('dataModeLocal'), value: 'local' },
+                        { label: __('dataModeShared'), value: 'shared' }
                     ],
                     value: initDataMode,
                     stacked: true,
@@ -142,8 +142,8 @@ export class S2AdvancedSection {
                         const subEl = dataModeRow.element.querySelector('.mp-s2-row-sub');
                         if (subEl) {
                             subEl.textContent = val === 'shared'
-                                ? (__('dataModeSharedDesc') || '共享全网观看热度波形，并同步支持社区评论采集共享与解析错误上报。')
-                                : (__('dataModeLocalDesc') || '断开公共网络通信，足迹、评论缓存及标记仅留存于本机与私有 WebDAV。');
+                                ? __('dataModeSharedDesc')
+                                : __('dataModeLocalDesc');
                         }
                         const hm = this.sm.playerCore?.heatmapManager || this.sm.controlManager?.heatmapManager;
                         if (hm && typeof hm.setCrowdEnabled === 'function') {

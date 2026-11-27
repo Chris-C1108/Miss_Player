@@ -1,10 +1,12 @@
+import { createGroup, createCard } from './components/S2Primitives.js';
 import { S2PlaybackSection } from './sections/S2PlaybackSection.js';
 import { S2CommentsSection } from './sections/S2CommentsSection.js';
 import { S2ConnectionsSection } from './sections/S2ConnectionsSection.js';
 import { S2AdvancedSection } from './sections/S2AdvancedSection.js';
 import { SURFACE_TYPES } from '../../state/UISurfaceMachine.js';
 import { ICON_X_CLOSE } from '../../../constants/icons.js';
-import { __ } from '../../../constants/i18n.js';
+import { __, I18n } from '../../../constants/i18n.js';
+import { Toast } from '../../../utils/index.js';
 
 /**
  * SettingsV2Manager — 新版统一 Apple HIG 设置面板管理器
@@ -76,6 +78,7 @@ export class SettingsV2Manager {
 
         this._sections = { playbackSec, commentsSec, connectionsSec, advancedSec };
 
+        scrollBody.appendChild(this._buildGlobalLangGroup());
         scrollBody.appendChild(playbackSec.getElement());
         scrollBody.appendChild(commentsSec.getElement());
         scrollBody.appendChild(connectionsSec.getElement());
@@ -85,6 +88,46 @@ export class SettingsV2Manager {
         if (prevScrollTop > 0) {
             scrollBody.scrollTop = prevScrollTop;
         }
+    }
+
+    _buildGlobalLangGroup() {
+        const group = createGroup(__('globalLangTitle'));
+        const card = createCard();
+        const row = document.createElement('div');
+        row.className = 'mp-s2-row mp-s2-row--stacked';
+
+        const sub = document.createElement('div');
+        sub.className = 'mp-s2-row-sub';
+        sub.textContent = __('globalLangDesc');
+        row.appendChild(sub);
+
+        const chips = document.createElement('div');
+        chips.className = 'mp-s2-chips';
+        const cur = I18n.normalizeGlobalLang(this.sm?.settings?.globalLang || I18n.getGlobalLang());
+        const opts = [
+            { value: 'auto', label: __('globalLangAuto') },
+            { value: 'zh-CN', label: '简体中文' },
+            { value: 'zh-TW', label: '繁體中文' },
+            { value: 'en', label: 'English' },
+            { value: 'ja', label: '日本語' },
+            { value: 'vi', label: 'Tiếng Việt' }
+        ];
+        opts.forEach((opt) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `mp-s2-chip ${cur === opt.value ? 'is-active' : ''}`.trim();
+            btn.textContent = opt.label;
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.sm.updateSetting('globalLang', opt.value);
+                Toast(__('globalLangSaved'), 1500, 'info');
+            });
+            chips.appendChild(btn);
+        });
+        row.appendChild(chips);
+        card.appendChild(row);
+        group.appendChild(card);
+        return group;
     }
 
     refreshAdvancedSection() {

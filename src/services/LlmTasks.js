@@ -14,18 +14,20 @@ import { analyzeSubtitlePlot } from '../player/subtitles/SubtitlePlotAnalyzer.js
 import { formatMetadataForLlm } from './AvMetadataService.js';
 import { AiDebugLogger } from './AiDebugLogger.js';
 import { scoreSubtitleQuality } from '../player/subtitles/SubtitleQualityScorer.js';
+import { I18n } from '../constants/i18n.js';
 
 export const AI_PROMPT_VERSION = 'v3.4';
 
 /**
- * 计算带 Prompt 版本与当前模型 ID 的确定性缓存摘要，保证调优或切换模型后旧缓存自动失效
+ * 计算带 Prompt 版本、全局语言总控与当前模型 ID 的确定性缓存摘要，保证调优或切换模型/语言后旧缓存自动失效
  * @param {string} taskType
  * @param {string} payloadStr
  * @returns {string}
  */
 export function buildVersionedTaskHash(taskType, payloadStr) {
     const model = LlmService.getConfig().model || '';
-    return LlmCache.hashContent(`${AI_PROMPT_VERSION}|${model}|${taskType}|${payloadStr}`);
+    const langCode = I18n.getAiLanguageSpec().code;
+    return LlmCache.hashContent(`${AI_PROMPT_VERSION}|${langCode}|${model}|${taskType}|${payloadStr}`);
 }
 
 const MOAN_FILLER_RE = /^[啊嗯哦哈呜唔呀呐噢唉呀啊哈\.…!！?？\s~～、，,]+$/;
@@ -409,12 +411,14 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, subtitleQua
     }
 
     const safeTitle = normalizeInlineText(title).slice(0, 120);
+    const aiLang = I18n.getAiLanguageSpec();
 
     const messages = [
         {
             role: 'system',
             content: [
                 '严谨的剧情时间轴编辑。台词带 `[L行号|t=秒数s|时分秒]`。',
+                `必须全程使用「${aiLang.promptName}」输出 summary、tag 与 headline（忽略外语片名或对白语言干扰）。`,
                 '反幻觉硬约束(台词≠画面)：夸张比喻/欲求(如想要/要射了/全吞)按言语理解，禁脑补未实锤动作；遇敬语噪声或与副字幕矛盾则忽略。',
                 '只基于真实对白输出严格 JSON（禁 Markdown 围栏）：',
                 '{ "summary": "20字内剧情概览", "chapters": [{ "line": 12, "seconds": 123, "tag": "2-4字", "headline": "16字内剧情" }] }',
@@ -803,11 +807,13 @@ export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration
 
     const safeCode = normalizeInlineText(avcode).toUpperCase();
 
+    const aiLang = I18n.getAiLanguageSpec();
     const messages = [
         {
             role: 'system',
             content: [
                 '你是一位客观严谨的影评整理助手，负责结合作品元数据与观众短评提炼核心看点、避坑提醒、口碑共识与高能时间戳。',
+                `必须严格使用「${aiLang.promptName}」输出所有文字字段。`,
                 '评论中 `[含时间点] [t=XXXs(...)]` 已由本地解析器精确换算为视频整数秒（倒数时间亦已校准），输出 `timestamps` 时请直接采用该 `t` 值；严禁自行心算时间格式或编造未提及的时间点。',
                 '仅返回严格合法的 JSON，不要输出额外解释或 Markdown 围栏：',
                 '{ "highlights": "看点1句话", "warnings": "避坑/雷点1句话(无则写暂无明显雷点)", "consensus": "口碑共识1句话", "timestamps": [{ "seconds": 123, "note": "10字内说明" }] }'
@@ -952,11 +958,12 @@ export async function autoTagMarkerWithLlm({ avcode, startTime, cues, title = ''
         windowText: windowText || ''
     };
 
+    const aiLang = I18n.getAiLanguageSpec();
     const messages = [
         {
             role: 'system',
             content: [
-                '你是影片片段标签标注助手。请根据作品元数据及给定时间点前后的字幕语境，从下方允许标签列表中选择最贴切的 1 到 2 个标签，并附带一句 14 字以内短评。',
+                `你是影片片段标签标注助手。请根据作品元数据及给定时间点前后的字幕语境，从下方允许标签列表中选择最贴切的 1 到 2 个标签，并附带一句 14 字以内短评（comment 请使用「${aiLang.promptName}」输出）。`,
                 `允许标签列表（必须原样选用，禁止自造标签）：${ALL_SEMANTIC_TAGS.join(' ')}`,
                 '仅返回严格合法的 JSON：{ "tags": ["#标签1"], "comment": "14字内短评" }'
             ].join('\n')
@@ -1328,11 +1335,13 @@ export async function buildHighlightGraphWithLlm({
             ? '无字幕：禁填 sub 或 subLine，仅结合评论 `[t=...s]` 与波峰定位！'
             : '时间点直接复用字幕/波峰/评论 `t=...s`，禁心算编造！');
 
+    const aiLang = I18n.getAiLanguageSpec();
     const messages = [
         {
             role: 'system',
             content: [
                 '你是严谨的 AV 场景定位分析引擎，只做准确定位高能与转折（宁缺毋滥，严禁猜测）。',
+                `必须全程使用「${aiLang.promptName}」输出 brief、tag、reason、skipZones.reason 与 commentTags.note。`,
                 groundingRule,
                 '反幻觉硬约束(台词≠画面)：1) 结合片名/标签定基调——纯口交无插入前情禁脑补内射，孤立词禁脑补肛交/双穴；2) 挑逗/夸张/否定词禁当已发生；3) 禁把许愿抱怨嫁接无关时刻；4) 仅输出实锤高光(0-5条，不确定写 low 或留空 [])。',
                 '输出顺序：',
@@ -1496,7 +1505,7 @@ export async function buildHighlightGraphWithLlm({
         const rawBrief = parsed.brief && typeof parsed.brief === 'object' ? parsed.brief : {};
         const rawConsensus = normalizeInlineText(rawBrief.consensus || '');
         const consensus = (built.topComments.length === 0 && (!rawConsensus || /^(?:无|暂无)$/i.test(rawConsensus) || /纯口交无插入前情|肛交\/双穴/.test(rawConsensus)))
-            ? '暂无观众评论，以上仅基于对白梳理'
+            ? aiLang.noCommentConsensus
             : (rawConsensus || '可配合进度条推荐节点快速跳转');
         const graph = {
             highlights,

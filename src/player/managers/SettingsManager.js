@@ -1,5 +1,5 @@
 import { getValue, setValue, Toast } from "../../utils/index.js";
-import { __ } from "../../constants/i18n.js";
+import { __, I18n } from "../../constants/i18n.js";
 import { telemetry } from "../../telemetry/index.js";
 import { SleazyForkService } from "../../services/SleazyForkService.js";
 import { sanitizeSeekStepList } from "../state/PlayerState.js";
@@ -46,6 +46,7 @@ export class SettingsManager {
             muteResetMinutes: 5,
             autoHighestQuality: true,
             autoUncensored: false,
+            globalLang: 'auto',
             subtitleEnabled: true,
             subtitleFontSize: 'medium',
             subtitleVerticalOffset: 0,
@@ -272,6 +273,7 @@ export class SettingsManager {
             this.settings.debugMode = getBool('debugMode', false);
             this.settings.debugFilterHasNumbers = getBool('debugFilterHasNumbers', false);
             this.settings.crazyScrapeMode = getBool('crazyScrapeMode', false);
+            this.settings.globalLang = I18n.normalizeGlobalLang(getValue('globalLang', 'auto'));
             this.settings.subtitleEnabled = getBool('subtitleEnabled', false);
             const rawSubtitleSize = getValue('subtitleFontSize', 'medium');
             this.settings.subtitleFontSize = ['small', 'medium', 'large'].includes(rawSubtitleSize) ? rawSubtitleSize : 'medium';
@@ -323,6 +325,7 @@ export class SettingsManager {
             setValue('debugFilterHasNumbers', this.settings.debugFilterHasNumbers);
             setValue('crazyScrapeMode', Boolean(this.settings.crazyScrapeMode));
             setValue('pauseOnBlur', this.settings.pauseOnBlur);
+            setValue('globalLang', this.settings.globalLang || 'auto');
             setValue('subtitleEnabled', Boolean(this.settings.subtitleEnabled));
             setValue('subtitleFontSize', this.settings.subtitleFontSize || 'medium');
             setValue('subtitleVerticalOffset', this.settings.subtitleVerticalOffset || 0);
@@ -382,12 +385,25 @@ export class SettingsManager {
      * 更新指定设置项
      */
     updateSetting(key, value) {
+        if (key === 'globalLang') {
+            value = I18n.setGlobalLang(value);
+        }
         this.settings[key] = value;
         const state = this.playerCore?.options?.playerState;
         if (state) {
             state.updateSetting(key, value);
         } else {
             this.saveSettings();
+        }
+
+        if (key === 'globalLang') {
+            const subMgr = this.controlManager?.subtitleManager;
+            if (subMgr && typeof subMgr._applyPreferredLang === 'function') {
+                subMgr._applyPreferredLang(this.settings.subtitlePreferredLang, { persist: false });
+            }
+            if (this.settingsV2Manager?.isVisible) {
+                this.settingsV2Manager.render();
+            }
         }
 
         telemetry.track('setting_toggle_ui', { key, value });

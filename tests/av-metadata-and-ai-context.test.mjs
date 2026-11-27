@@ -55,6 +55,8 @@ const {
 } = await import('../src/services/LlmTasks.js');
 const { selectBestQualityCandidate, scoreSubtitleQuality } = await import('../src/player/subtitles/SubtitleQualityScorer.js');
 const { parseSubtitles } = await import('../src/player/subtitles/SubtitleFormat.js');
+const { resolvePreferredSubtitleLang } = await import('../src/player/subtitles/SubtitleManager.js');
+const { I18n, __ } = await import('../src/constants/i18n.js');
 const { fetchJavdbMovieId, JAVDB_DOMAINS } = await import('../src/player/comments/providers/JavDbCommentProvider.js');
 const { SyncManager } = await import('../src/sync/SyncManager.js');
 const { SubtitleRepository } = await import('../src/player/subtitles/SubtitleRepository.js');
@@ -1378,7 +1380,7 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         });
         gmResponder = prevGm;
         assert.equal(echoRes.ok, true);
-        assert.equal(echoRes.graph.brief.consensus, '暂无观众评论，以上仅基于对白梳理');
+        assert.equal(echoRes.graph.brief.consensus, I18n.getAiLanguageSpec().noCommentConsensus);
 
         let retryCalls = 0;
         gmResponder = (opts) => {
@@ -1399,5 +1401,56 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         gmResponder = prevGm;
         assert.equal(retryCalls, 2, 'NETWORK_TIMEOUT 时应自动重试 1 次');
         assert.equal(retryRes.content, '{"ok":true}');
+
+        // 7. 全局语言总控 (globalLang) 统一驱动 UI / 字幕优选 / AI 变量提示词 & 缓存分桶
+        try {
+            I18n.setGlobalLang('en');
+            assert.equal(I18n.userLang, 'en');
+            assert.equal(__('settings'), 'Settings');
+            assert.equal(resolvePreferredSubtitleLang('auto', I18n.userLang), 'en');
+            assert.equal(I18n.getAiLanguageSpec().promptName, 'English');
+            const hashEn = buildVersionedTaskHash('sub_chapters', 'same');
+
+            I18n.setGlobalLang('ja');
+            assert.equal(I18n.userLang, 'ja');
+            assert.equal(__('settings'), '設定');
+            assert.equal(resolvePreferredSubtitleLang('auto', I18n.userLang), 'ja');
+            assert.equal(I18n.getAiLanguageSpec().promptName, '日本語');
+            const hashJa = buildVersionedTaskHash('sub_chapters', 'same');
+            assert.notEqual(hashEn, hashJa, '切换全局语言总控后缓存哈希必须自动隔离');
+
+            let chPrompt = '';
+            let fgPrompt = '';
+            gmResponder = (opts) => {
+                const payload = JSON.parse(opts.data || '{}');
+                const sys = payload.messages?.[0]?.content || '';
+                if (sys.includes('剧情时间轴编辑')) chPrompt = sys;
+                if (sys.includes('AV 场景定位分析引擎')) fgPrompt = sys;
+                opts.onload?.({
+                    status: 200,
+                    responseText: JSON.stringify({
+                        choices: [{
+                            message: {
+                                content: sys.includes('剧情时间轴编辑')
+                                    ? '{"summary":"Overview","chapters":[{"line":0,"seconds":10,"tag":"Tag","headline":"Head"}]}'
+                                    : '{"brief":{"highlights":"H","warnings":"W","consensus":""},"highlights":[],"skipZones":[],"commentTags":[]}'
+                            }
+                        }]
+                    })
+                });
+            };
+            I18n.setGlobalLang('zh-CN');
+            await analyzeSubtitleChaptersWithLlm({ avcode: 'MIDV-207', cues: goodCues, forceRefresh: true });
+            const fgJaSwitch = await (async () => {
+                I18n.setGlobalLang('ja');
+                return buildHighlightGraphWithLlm({ avcode: 'MIDV-207', cues: goodCues, comments: [], videoDuration: 7200, forceRefresh: true });
+            })();
+            gmResponder = prevGm;
+            assert.ok(chPrompt.includes('「简体中文」'), 'sub_chapters Prompt 必须动态代入全局语言变量');
+            assert.ok(fgPrompt.includes('「日本語」'), 'highlight_graph Prompt 必须动态代入全局语言变量');
+            assert.equal(fgJaSwitch.graph.brief.consensus, I18n.getAiLanguageSpec('ja').noCommentConsensus);
+        } finally {
+            I18n.setGlobalLang('auto');
+        }
     });
 });
