@@ -874,9 +874,18 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             assert.equal(keyGetLink.href, 'https://platform.agnes-ai.cn');
             assert.equal(keyGetLink.classList.contains('is-hidden'), false);
 
-            // No debug dir input, no manual flush button, and no cache clear buttons in AI card (moved to Debug & Cache)
+            // No debug dir input, no manual flush button, no standalone open-float button, and no cache clear buttons in AI card
             assert.equal(card.querySelector('.mp-s2-debug-input'), null);
-            assert.equal(card.querySelectorAll('.mp-s2-btn').some((b) => /立即上传|清空 AI 缓存|清理本地字幕缓存/.test(b.textContent || b.innerHTML)), false);
+            assert.equal(card.querySelectorAll('.mp-s2-btn').some((b) => /立即上传|打开全局实测悬浮窗|清空 AI 缓存|清理本地字幕缓存/.test(b.textContent || b.innerHTML)), false);
+
+            // Unified switch toggles aiDebugEnabled cleanly
+            const switches = card.querySelectorAll('.mp-s2-switch');
+            const aiDebugSwitch = switches[switches.length - 1];
+            assert.ok(aiDebugSwitch);
+            aiDebugSwitch.click();
+            assert.equal(LlmService.isAiDebugEnabled(), true);
+            aiDebugSwitch.click();
+            assert.equal(LlmService.isAiDebugEnabled(), false);
 
             const inputs = card.querySelectorAll('.mp-s2-input');
             assert.equal(inputs.length, 3);

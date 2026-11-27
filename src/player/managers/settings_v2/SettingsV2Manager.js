@@ -5,6 +5,7 @@ import { S2ConnectionsSection } from './sections/S2ConnectionsSection.js';
 import { S2AdvancedSection } from './sections/S2AdvancedSection.js';
 import { SURFACE_TYPES, UISurfaceMachine } from '../../state/UISurfaceMachine.js';
 import { BatchTestFloatModal } from '../../ui/BatchTestFloatModal.js';
+import { LlmService } from '../../../services/LlmService.js';
 import { ICON_X_CLOSE } from '../../../constants/icons.js';
 import { __, I18n } from '../../../constants/i18n.js';
 import { Toast } from '../../../utils/index.js';
@@ -29,6 +30,13 @@ export class SettingsV2Manager {
         this.panel = panelEl;
         if (panelEl) {
             UISurfaceMachine.bindOverlayGuard(panelEl, { stopMove: true, stopWheel: true });
+            if (LlmService.isAiDebugEnabled()) {
+                setTimeout(() => {
+                    if (this.panel && LlmService.isAiDebugEnabled()) {
+                        BatchTestFloatModal.open({ settingsManager: this.sm, minimized: true });
+                    }
+                }, 0);
+            }
         }
         this._bindHeaderDismissGesture();
     }

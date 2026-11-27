@@ -36,6 +36,9 @@ export class BatchTestFloatModal {
             activeModalInstance.sm = options.settingsManager;
         }
         activeModalInstance.show();
+        if (options.minimized !== undefined) {
+            activeModalInstance.setMinimized(Boolean(options.minimized));
+        }
         return activeModalInstance;
     }
 
@@ -115,7 +118,8 @@ export class BatchTestFloatModal {
                 Toast('测试正在后台运行，已收起为顶部胶囊', 2000, 'info');
                 return;
             }
-            this.hide();
+            LlmService.saveConfig({ aiDebugEnabled: false });
+            BatchTestFloatModal.destroyActive();
         });
 
         headBtns.append(minBtn, closeBtn);

@@ -9,7 +9,7 @@ import {
     LlmService, AI_PROVIDER_PRESETS, detectProviderPresetId,
     getPresetMeta, parseApiKeys, maskApiKey, filterAndSortTextModels
 } from '../../../../services/LlmService.js';
-import { parseBatchCodes, loadSavedBatchText } from '../../../../services/AiBatchTestRunner.js';
+import { AiBatchTestRunner } from '../../../../services/AiBatchTestRunner.js';
 import { BatchTestFloatModal } from '../../../ui/BatchTestFloatModal.js';
 import { Toast } from '../../../../utils/index.js';
 import { ICON_EYE, ICON_EYE_OFF, ICON_SERVER, ICON_PLUS, ICON_CHEVRON_RIGHT } from '../../../../constants/icons.js';
@@ -78,10 +78,9 @@ function buildAiSectionBody(body, setStatus, onConfigChange, sm) {
         else setStatus(text, tone);
     };
 
-    const syncVisibility = (en, autoTag, dbg) => {
+    const syncVisibility = (en, autoTag) => {
         featuresBox.classList.toggle('is-hidden', !en);
         autoTagMarkWrap.classList.toggle('is-hidden', !autoTag);
-        aiDebugWrap.classList.toggle('is-hidden', !dbg);
     };
 
     const persistConfig = () => {
@@ -116,7 +115,7 @@ function buildAiSectionBody(body, setStatus, onConfigChange, sm) {
             return { ...p, apiKeys: [...(p.apiKeys || [])], _pinnedKeys: old?._pinnedKeys ? [...old._pinnedKeys] : [...(p.apiKeys || [])], models: [...(p.models || [])] };
         });
         activeProviderId = saved.activeProviderId || activeProviderId;
-        syncVisibility(saved.enabled, saved.featureAutoTag, saved.aiDebugEnabled);
+        syncVisibility(saved.enabled, saved.featureAutoTag);
         const meta = resolveStatusMeta(saved);
         syncPill(meta.text, meta.tone);
         renderPoolList();
@@ -475,33 +474,33 @@ function buildAiSectionBody(body, setStatus, onConfigChange, sm) {
         .forEach((node) => featuresBox.appendChild(node));
 
     const aiDebugRow = createToggleRow({
-        title: 'AI 调试录制 (WebDAV)',
-        subtext: '自动继承下方 WebDAV 同步配置，开启后自动上传 AI 诊断日志',
+        title: 'AI 调试录制与实测悬浮窗',
+        subtext: '开启后自动上传 AI 诊断至 WebDAV，并显示全局实测悬浮窗',
         checked: Boolean(cfg.aiDebugEnabled),
-        onChange: persistConfig
+        onChange: (checked) => {
+            persistConfig();
+            if (checked) {
+                if (sm?.settingsV2Manager?.close) sm.settingsV2Manager.close();
+                else sm?.closeSettings?.();
+                if (!BatchTestFloatModal.open({ settingsManager: sm })) {
+                    Toast('已开启 AI 调试，进入播放器后自动显示实测悬浮窗', 2200, 'info');
+                }
+            } else {
+                if (AiBatchTestRunner.isRunning()) AiBatchTestRunner.cancel();
+                BatchTestFloatModal.destroyActive();
+            }
+        }
     });
-    const aiDebugWrap = el('div', 'mp-s2-conditional mp-s2-ai-debug-box');
-    const debugActions = el('div', 'mp-s2-actions mp-s2-actions--single');
-    const openFloatBtn = el('button', 'mp-s2-btn mp-s2-btn--primary', '', () => {
-        persistConfig();
-        if (sm?.settingsV2Manager?.close) sm.settingsV2Manager.close();
-        else sm?.closeSettings?.();
-        if (!BatchTestFloatModal.open({ settingsManager: sm })) Toast('请先进入播放器页面后再打开实测悬浮窗', 2200, 'info');
-    });
-    const savedCount = parseBatchCodes(loadSavedBatchText()).length;
-    openFloatBtn.innerHTML = `${ICON_SERVER} <span>${savedCount > 0 ? `全局实测悬浮窗 (${savedCount})` : '打开全局实测悬浮窗'}</span>`;
-    debugActions.appendChild(openFloatBtn);
-    aiDebugWrap.appendChild(debugActions);
 
     updatePresetHighlight();
     renderKeyChips();
     renderPoolList();
-    syncVisibility(Boolean(cfg.enabled), Boolean(cfg.featureAutoTag), Boolean(cfg.aiDebugEnabled));
+    syncVisibility(Boolean(cfg.enabled), Boolean(cfg.featureAutoTag));
 
     [
         presetsWrap, rotateRow.element, baseField.element, modelField.element,
         keyFieldWrap, poolWrap, el('div', 'mp-s2-meta-line', '密钥仅存本机，不同步至云端；多 Key 与已启用提供商自动轮询'),
-        actionsRow, statusBox, featuresBox, aiDebugRow.element, aiDebugWrap
+        actionsRow, statusBox, featuresBox, aiDebugRow.element
     ].forEach((node) => form.appendChild(node));
     body.appendChild(form);
 }

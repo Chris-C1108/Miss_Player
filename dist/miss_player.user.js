@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.026
+// @version            5.7.124-beta.027
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -2002,7 +2002,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.026";
+		return "5.7.124-beta.027";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -5509,7 +5509,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.026";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.027";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -19390,7 +19390,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.026";
+		return "5.7.124-beta.027";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -33806,6 +33806,7 @@
 				activeModalInstance = new BatchTestFloatModal(host, options);
 			} else if (options.settingsManager) activeModalInstance.sm = options.settingsManager;
 			activeModalInstance.show();
+			if (options.minimized !== void 0) activeModalInstance.setMinimized(Boolean(options.minimized));
 			return activeModalInstance;
 		}
 		static getInstance() {
@@ -33876,7 +33877,8 @@
 					Toast$1("测试正在后台运行，已收起为顶部胶囊", 2e3, "info");
 					return;
 				}
-				this.hide();
+				LlmService.saveConfig({ aiDebugEnabled: false });
+				BatchTestFloatModal.destroyActive();
 			});
 			headBtns.append(minBtn, closeBtn);
 			head.append(titleGroup, headBtns);
@@ -34175,10 +34177,9 @@
 			if (pillEl) updatePill(pillEl, text, tone);
 			else setStatus(text, tone);
 		};
-		const syncVisibility = (en, autoTag, dbg) => {
+		const syncVisibility = (en, autoTag) => {
 			featuresBox.classList.toggle("is-hidden", !en);
 			autoTagMarkWrap.classList.toggle("is-hidden", !autoTag);
-			aiDebugWrap.classList.toggle("is-hidden", !dbg);
 		};
 		const persistConfig = () => {
 			LlmService.getConfig();
@@ -34217,7 +34218,7 @@
 				};
 			});
 			activeProviderId = saved.activeProviderId || activeProviderId;
-			syncVisibility(saved.enabled, saved.featureAutoTag, saved.aiDebugEnabled);
+			syncVisibility(saved.enabled, saved.featureAutoTag);
 			const meta = resolveStatusMeta(saved);
 			syncPill(meta.text, meta.tone);
 			renderPoolList();
@@ -34589,27 +34590,25 @@
 			autoTagMarkWrap
 		].forEach((node) => featuresBox.appendChild(node));
 		const aiDebugRow = createToggleRow({
-			title: "AI 调试录制 (WebDAV)",
-			subtext: "自动继承下方 WebDAV 同步配置，开启后自动上传 AI 诊断日志",
+			title: "AI 调试录制与实测悬浮窗",
+			subtext: "开启后自动上传 AI 诊断至 WebDAV，并显示全局实测悬浮窗",
 			checked: Boolean(cfg.aiDebugEnabled),
-			onChange: persistConfig
+			onChange: (checked) => {
+				persistConfig();
+				if (checked) {
+					if (sm?.settingsV2Manager?.close) sm.settingsV2Manager.close();
+					else sm?.closeSettings?.();
+					if (!BatchTestFloatModal.open({ settingsManager: sm })) Toast$1("已开启 AI 调试，进入播放器后自动显示实测悬浮窗", 2200, "info");
+				} else {
+					if (AiBatchTestRunner.isRunning()) AiBatchTestRunner.cancel();
+					BatchTestFloatModal.destroyActive();
+				}
+			}
 		});
-		const aiDebugWrap = el("div", "mp-s2-conditional mp-s2-ai-debug-box");
-		const debugActions = el("div", "mp-s2-actions mp-s2-actions--single");
-		const openFloatBtn = el("button", "mp-s2-btn mp-s2-btn--primary", "", () => {
-			persistConfig();
-			if (sm?.settingsV2Manager?.close) sm.settingsV2Manager.close();
-			else sm?.closeSettings?.();
-			if (!BatchTestFloatModal.open({ settingsManager: sm })) Toast$1("请先进入播放器页面后再打开实测悬浮窗", 2200, "info");
-		});
-		const savedCount = parseBatchCodes(loadSavedBatchText()).length;
-		openFloatBtn.innerHTML = `${ICON_SERVER} <span>${savedCount > 0 ? `全局实测悬浮窗 (${savedCount})` : "打开全局实测悬浮窗"}</span>`;
-		debugActions.appendChild(openFloatBtn);
-		aiDebugWrap.appendChild(debugActions);
 		updatePresetHighlight();
 		renderKeyChips();
 		renderPoolList();
-		syncVisibility(Boolean(cfg.enabled), Boolean(cfg.featureAutoTag), Boolean(cfg.aiDebugEnabled));
+		syncVisibility(Boolean(cfg.enabled), Boolean(cfg.featureAutoTag));
 		[
 			presetsWrap,
 			rotateRow.element,
@@ -34621,8 +34620,7 @@
 			actionsRow,
 			statusBox,
 			featuresBox,
-			aiDebugRow.element,
-			aiDebugWrap
+			aiDebugRow.element
 		].forEach((node) => form.appendChild(node));
 		body.appendChild(form);
 	}
@@ -35672,10 +35670,18 @@
 		}
 		setPanel(panelEl) {
 			this.panel = panelEl;
-			if (panelEl) UISurfaceMachine.bindOverlayGuard(panelEl, {
-				stopMove: true,
-				stopWheel: true
-			});
+			if (panelEl) {
+				UISurfaceMachine.bindOverlayGuard(panelEl, {
+					stopMove: true,
+					stopWheel: true
+				});
+				if (LlmService.isAiDebugEnabled()) setTimeout(() => {
+					if (this.panel && LlmService.isAiDebugEnabled()) BatchTestFloatModal.open({
+						settingsManager: this.sm,
+						minimized: true
+					});
+				}, 0);
+			}
 			this._bindHeaderDismissGesture();
 		}
 		render() {
