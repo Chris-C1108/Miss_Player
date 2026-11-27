@@ -29,8 +29,79 @@ export const LLM_KEY_VIBE_TAGS = 'mp_llm_vibe_tags';
 export const LLM_KEY_CACHE_EPOCH = 'mp_llm_cache_epoch';
 export const LLM_KEY_AI_DEBUG_ENABLED = 'mp_llm_debug_enabled';
 export const LLM_KEY_AI_DEBUG_WEBDAV_DIR = 'mp_llm_debug_webdav_dir';
+export const LLM_KEY_PROVIDERS = 'mp_llm_providers';
+export const LLM_KEY_ACTIVE_PROVIDER_ID = 'mp_llm_active_provider_id';
 
 export const DEFAULT_AI_DEBUG_DIR = 'logs/ai-debug';
+
+export const AI_PROVIDER_PRESETS = [
+    {
+        id: 'agnes-cn',
+        label: 'Agnes 中国站',
+        baseUrl: 'https://api.agnes-ai.cn/v1',
+        basePlaceholder: 'https://api.agnes-ai.cn/v1',
+        modelPlaceholder: 'agnes-3.0-flash',
+        consoleUrl: 'https://platform.agnes-ai.cn'
+    },
+    {
+        id: 'agnes-global',
+        label: 'Agnes 国际站',
+        baseUrl: 'https://apihub.agnes-ai.com/v1',
+        basePlaceholder: 'https://apihub.agnes-ai.com/v1',
+        modelPlaceholder: 'agnes-3.0-flash',
+        consoleUrl: 'https://platform.agnes-ai.com'
+    },
+    {
+        id: 'gemini',
+        label: 'Gemini',
+        baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+        basePlaceholder: 'https://generativelanguage.googleapis.com/v1beta/openai',
+        modelPlaceholder: 'gemini-2.5-flash',
+        consoleUrl: 'https://aistudio.google.com/apikey'
+    },
+    {
+        id: 'openai-compat',
+        label: 'OpenAI 兼容',
+        baseUrl: '',
+        basePlaceholder: 'https://api.openai.com/v1',
+        modelPlaceholder: 'gpt-4o-mini',
+        consoleUrl: ''
+    }
+];
+
+export function detectProviderPresetId(baseUrl) {
+    const clean = String(baseUrl || '').toLowerCase();
+    if (clean.includes('agnes-ai.cn')) return 'agnes-cn';
+    if (clean.includes('agnes-ai.com')) return 'agnes-global';
+    if (clean.includes('generativelanguage.googleapis.com')) return 'gemini';
+    return 'openai-compat';
+}
+
+export function getPresetMeta(presetId) {
+    return AI_PROVIDER_PRESETS.find((p) => p.id === presetId) || AI_PROVIDER_PRESETS[3];
+}
+
+export function parseApiKeys(raw) {
+    const arr = Array.isArray(raw)
+        ? raw
+        : String(raw ?? '').split(/[\r\n,;]+/);
+    const seen = new Set();
+    const out = [];
+    for (const item of arr) {
+        const key = String(item || '').trim();
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        out.push(key);
+    }
+    return out;
+}
+
+export function maskApiKey(rawKey) {
+    const key = String(rawKey || '').trim();
+    if (!key) return '';
+    if (key.length <= 8) return `${key.slice(0, 2)}***`;
+    return `${key.slice(0, 4)}...${key.slice(-4)}`;
+}
 
 export function sanitizeDebugDir(rawDir) {
     const clean = String(rawDir ?? '')
@@ -240,6 +311,9 @@ function extractMessageContent(payload) {
     return '';
 }
 
+let rrProviderCursor = 0;
+const rrKeyCursors = new Map();
+
 export class LlmService {
     /**
      * 校验并规范化 LLM Base URL
@@ -313,125 +387,175 @@ export class LlmService {
         return `${clean}/v1/models`;
     }
 
-    /**
-     * 读取当前本地 AI 配置
-     * @returns {{
-     *   enabled: boolean,
-     *   baseUrl: string,
-     *   apiKey: string,
-     *   model: string,
-     *   timeoutMs: number,
-     *   featureSubChapters: boolean,
-     *   featureCommentBrief: boolean,
-     *   featureAutoTag: boolean,
-     *   autoTagOnMark: boolean
-     * }}
-     */
-    static getConfig() {
-        const enabled = parseBooleanValue(getValue(LLM_KEY_ENABLED, false), false);
-        const baseUrl = this.sanitizeBaseUrl(getValue(LLM_KEY_BASE_URL, ''));
-        const apiKey = String(getValue(LLM_KEY_API_KEY, '') || '').trim();
-        const model = String(getValue(LLM_KEY_MODEL, '') || '').trim();
-        const timeoutMs = clampTimeout(getValue(LLM_KEY_TIMEOUT_MS, DEFAULT_TIMEOUT_MS), DEFAULT_TIMEOUT_MS);
-        const featureSubChapters = parseBooleanValue(getValue(LLM_KEY_FEAT_SUB_CHAPTERS, true), true);
-        const featureCommentBrief = parseBooleanValue(getValue(LLM_KEY_FEAT_COMMENT_BRIEF, true), true);
-        const featureAutoTag = parseBooleanValue(getValue(LLM_KEY_FEAT_AUTO_TAG, true), true);
-        const autoTagOnMark = parseBooleanValue(getValue(LLM_KEY_AUTO_TAG_ON_MARK, false), false);
-        const featureHighlightFusion = parseBooleanValue(getValue(LLM_KEY_FEAT_HIGHLIGHT_FUSION, true), true);
-        const vibeTags = normalizeVibeTags(getValue(LLM_KEY_VIBE_TAGS, []));
-        const aiDebugEnabled = parseBooleanValue(getValue(LLM_KEY_AI_DEBUG_ENABLED, false), false);
-        const aiDebugDir = sanitizeDebugDir(getValue(LLM_KEY_AI_DEBUG_WEBDAV_DIR, DEFAULT_AI_DEBUG_DIR));
+    static sanitizeProvider(raw, fallbackIdx = 0) {
+        const src = raw && typeof raw === 'object' ? raw : {};
+        const cleanBase = 'baseUrl' in src ? this.sanitizeBaseUrl(src.baseUrl) : '';
+        const presetId = src.presetId && AI_PROVIDER_PRESETS.some((p) => p.id === src.presetId)
+            ? src.presetId : detectProviderPresetId(cleanBase);
+        const preset = getPresetMeta(presetId);
+        const id = String(src.id || presetId || `openai-compat-${fallbackIdx + 1}`).trim() || `provider-${fallbackIdx + 1}`;
+        const apiKeys = parseApiKeys(Array.isArray(src.apiKeys) && src.apiKeys.length > 0 ? src.apiKeys : (src.apiKey || ''));
         return {
-            enabled,
-            baseUrl,
-            apiKey,
-            model,
-            timeoutMs,
-            featureSubChapters,
-            featureCommentBrief,
-            featureAutoTag,
-            autoTagOnMark,
-            featureHighlightFusion,
-            vibeTags,
-            aiDebugEnabled,
-            aiDebugDir
+            id,
+            presetId,
+            name: String(src.name || preset.label || id).trim(),
+            baseUrl: cleanBase,
+            model: String(src.model || '').trim(),
+            apiKeys,
+            apiKey: apiKeys[0] || '',
+            enabled: parseBooleanValue(src.enabled, true),
+            models: Array.isArray(src.models) ? filterAndSortTextModels(src.models) : []
         };
     }
 
-    /**
-     * 保存局部 AI 配置并自动校验清洗
-     * @param {Object} patch
-     */
+    static getConfig() {
+        const enabled = parseBooleanValue(getValue(LLM_KEY_ENABLED, false), false);
+        const legacyBaseUrl = this.sanitizeBaseUrl(getValue(LLM_KEY_BASE_URL, ''));
+        const legacyApiKey = String(getValue(LLM_KEY_API_KEY, '') || '').trim();
+        const legacyModel = String(getValue(LLM_KEY_MODEL, '') || '').trim();
+
+        let rawProviders = getValue(LLM_KEY_PROVIDERS, []);
+        if (typeof rawProviders === 'string') {
+            try { rawProviders = JSON.parse(rawProviders); } catch (_) { rawProviders = []; }
+        }
+        const seenIds = new Set();
+        let providers = (Array.isArray(rawProviders) ? rawProviders : [])
+            .map((item, idx) => this.sanitizeProvider(item, idx))
+            .filter((p) => p.id && !seenIds.has(p.id) && seenIds.add(p.id));
+
+        if (providers.length === 0 && (legacyBaseUrl || legacyModel || legacyApiKey)) {
+            const pid = detectProviderPresetId(legacyBaseUrl);
+            providers = [this.sanitizeProvider({
+                id: pid, presetId: pid, name: getPresetMeta(pid).label,
+                baseUrl: legacyBaseUrl, model: legacyModel, apiKeys: parseApiKeys(legacyApiKey), enabled: true
+            })];
+        }
+
+        let activeProviderId = String(getValue(LLM_KEY_ACTIVE_PROVIDER_ID, '') || '').trim();
+        const active = providers.find((p) => p.id === activeProviderId) || providers[0] || null;
+        activeProviderId = active ? active.id : (activeProviderId || 'agnes-cn');
+        const apiKeys = active ? [...active.apiKeys] : parseApiKeys(legacyApiKey);
+
+        return {
+            enabled,
+            baseUrl: active ? active.baseUrl : legacyBaseUrl,
+            apiKey: apiKeys[0] || '',
+            apiKeys,
+            model: active ? active.model : legacyModel,
+            providers,
+            activeProviderId,
+            timeoutMs: clampTimeout(getValue(LLM_KEY_TIMEOUT_MS, DEFAULT_TIMEOUT_MS), DEFAULT_TIMEOUT_MS),
+            featureSubChapters: parseBooleanValue(getValue(LLM_KEY_FEAT_SUB_CHAPTERS, true), true),
+            featureCommentBrief: parseBooleanValue(getValue(LLM_KEY_FEAT_COMMENT_BRIEF, true), true),
+            featureAutoTag: parseBooleanValue(getValue(LLM_KEY_FEAT_AUTO_TAG, true), true),
+            autoTagOnMark: parseBooleanValue(getValue(LLM_KEY_AUTO_TAG_ON_MARK, false), false),
+            featureHighlightFusion: parseBooleanValue(getValue(LLM_KEY_FEAT_HIGHLIGHT_FUSION, true), true),
+            vibeTags: normalizeVibeTags(getValue(LLM_KEY_VIBE_TAGS, [])),
+            aiDebugEnabled: parseBooleanValue(getValue(LLM_KEY_AI_DEBUG_ENABLED, false), false),
+            aiDebugDir: sanitizeDebugDir(getValue(LLM_KEY_AI_DEBUG_WEBDAV_DIR, DEFAULT_AI_DEBUG_DIR))
+        };
+    }
+
     static saveConfig(patch = {}) {
         const prev = this.getConfig();
-        const next = { ...prev };
+        const next = {
+            ...prev,
+            providers: prev.providers.map((p) => ({ ...p, apiKeys: [...p.apiKeys], models: [...(p.models || [])] }))
+        };
 
-        if ('enabled' in patch) {
-            next.enabled = parseBooleanValue(patch.enabled, false);
+        for (const [k, def] of [
+            ['enabled', false], ['featureSubChapters', true], ['featureCommentBrief', true],
+            ['featureAutoTag', true], ['autoTagOnMark', false], ['featureHighlightFusion', true], ['aiDebugEnabled', false]
+        ]) {
+            if (k in patch) next[k] = parseBooleanValue(patch[k], def);
         }
-        if ('baseUrl' in patch) {
-            const raw = String(patch.baseUrl ?? '').trim();
-            next.baseUrl = raw === '' ? '' : this.sanitizeBaseUrl(raw);
+        if ('timeoutMs' in patch) next.timeoutMs = clampTimeout(patch.timeoutMs, prev.timeoutMs);
+        if ('vibeTags' in patch) next.vibeTags = normalizeVibeTags(patch.vibeTags);
+        if ('aiDebugDir' in patch) next.aiDebugDir = sanitizeDebugDir(patch.aiDebugDir);
+        if ('providers' in patch && Array.isArray(patch.providers)) {
+            const seenIds = new Set();
+            next.providers = patch.providers
+                .map((item, idx) => this.sanitizeProvider(item, idx))
+                .filter((p) => p.id && !seenIds.has(p.id) && seenIds.add(p.id));
         }
-        if ('apiKey' in patch) {
-            next.apiKey = String(patch.apiKey ?? '').trim();
-        }
-        if ('model' in patch) {
-            next.model = String(patch.model ?? '').trim();
-        }
-        if ('timeoutMs' in patch) {
-            next.timeoutMs = clampTimeout(patch.timeoutMs, prev.timeoutMs);
-        }
-        if ('featureSubChapters' in patch) {
-            next.featureSubChapters = parseBooleanValue(patch.featureSubChapters, true);
-        }
-        if ('featureCommentBrief' in patch) {
-            next.featureCommentBrief = parseBooleanValue(patch.featureCommentBrief, true);
-        }
-        if ('featureAutoTag' in patch) {
-            next.featureAutoTag = parseBooleanValue(patch.featureAutoTag, true);
-        }
-        if ('autoTagOnMark' in patch) {
-            next.autoTagOnMark = parseBooleanValue(patch.autoTagOnMark, false);
-        }
-        if ('featureHighlightFusion' in patch) {
-            next.featureHighlightFusion = parseBooleanValue(patch.featureHighlightFusion, true);
-        }
-        if ('vibeTags' in patch) {
-            next.vibeTags = normalizeVibeTags(patch.vibeTags);
-        }
-        if ('aiDebugEnabled' in patch) {
-            next.aiDebugEnabled = parseBooleanValue(patch.aiDebugEnabled, false);
-        }
-        if ('aiDebugDir' in patch) {
-            next.aiDebugDir = sanitizeDebugDir(patch.aiDebugDir);
+        if ('activeProviderId' in patch) {
+            next.activeProviderId = String(patch.activeProviderId || '').trim() || next.activeProviderId;
         }
 
-        setValue(LLM_KEY_ENABLED, next.enabled);
-        setValue(LLM_KEY_BASE_URL, next.baseUrl);
-        setValue(LLM_KEY_API_KEY, next.apiKey);
-        setValue(LLM_KEY_MODEL, next.model);
-        setValue(LLM_KEY_TIMEOUT_MS, next.timeoutMs);
-        setValue(LLM_KEY_FEAT_SUB_CHAPTERS, next.featureSubChapters);
-        setValue(LLM_KEY_FEAT_COMMENT_BRIEF, next.featureCommentBrief);
-        setValue(LLM_KEY_FEAT_AUTO_TAG, next.featureAutoTag);
-        setValue(LLM_KEY_AUTO_TAG_ON_MARK, next.autoTagOnMark);
-        setValue(LLM_KEY_FEAT_HIGHLIGHT_FUSION, next.featureHighlightFusion);
-        setValue(LLM_KEY_VIBE_TAGS, next.vibeTags);
-        setValue(LLM_KEY_AI_DEBUG_ENABLED, next.aiDebugEnabled);
-        setValue(LLM_KEY_AI_DEBUG_WEBDAV_DIR, next.aiDebugDir);
+        const hasScalar = 'baseUrl' in patch || 'model' in patch || 'apiKey' in patch || 'apiKeys' in patch;
+        if (hasScalar) {
+            const nextBase = 'baseUrl' in patch ? (String(patch.baseUrl ?? '').trim() === '' ? '' : this.sanitizeBaseUrl(patch.baseUrl)) : prev.baseUrl;
+            const nextModel = 'model' in patch ? String(patch.model ?? '').trim() : prev.model;
+            const nextKeys = 'apiKeys' in patch ? parseApiKeys(patch.apiKeys) : ('apiKey' in patch ? parseApiKeys(patch.apiKey) : [...prev.apiKeys]);
+            let idx = next.providers.findIndex((p) => p.id === next.activeProviderId);
+            if (idx < 0 && next.providers.length > 0 && !('activeProviderId' in patch)) idx = 0;
+            if (idx >= 0) {
+                next.providers[idx] = this.sanitizeProvider({ ...next.providers[idx], baseUrl: nextBase, model: nextModel, apiKeys: nextKeys }, idx);
+                next.activeProviderId = next.providers[idx].id;
+            } else if (nextBase || nextModel || nextKeys.length > 0) {
+                const pid = detectProviderPresetId(nextBase);
+                const created = this.sanitizeProvider({
+                    id: next.activeProviderId || pid, presetId: pid, name: getPresetMeta(pid).label,
+                    baseUrl: nextBase, model: nextModel, apiKeys: nextKeys, enabled: true
+                });
+                next.providers.push(created);
+                next.activeProviderId = created.id;
+            }
+        }
 
+        const active = next.providers.find((p) => p.id === next.activeProviderId) || next.providers[0] || null;
+        if (active) {
+            next.activeProviderId = active.id;
+            next.baseUrl = active.baseUrl;
+            next.model = active.model;
+            next.apiKeys = [...active.apiKeys];
+            next.apiKey = active.apiKeys[0] || '';
+        } else {
+            next.baseUrl = '';
+            next.model = '';
+            next.apiKeys = [];
+            next.apiKey = '';
+        }
+
+        for (const [storageKey, val] of [
+            [LLM_KEY_ENABLED, next.enabled], [LLM_KEY_BASE_URL, next.baseUrl], [LLM_KEY_API_KEY, next.apiKey],
+            [LLM_KEY_MODEL, next.model], [LLM_KEY_TIMEOUT_MS, next.timeoutMs],
+            [LLM_KEY_FEAT_SUB_CHAPTERS, next.featureSubChapters], [LLM_KEY_FEAT_COMMENT_BRIEF, next.featureCommentBrief],
+            [LLM_KEY_FEAT_AUTO_TAG, next.featureAutoTag], [LLM_KEY_AUTO_TAG_ON_MARK, next.autoTagOnMark],
+            [LLM_KEY_FEAT_HIGHLIGHT_FUSION, next.featureHighlightFusion], [LLM_KEY_VIBE_TAGS, next.vibeTags],
+            [LLM_KEY_AI_DEBUG_ENABLED, next.aiDebugEnabled], [LLM_KEY_AI_DEBUG_WEBDAV_DIR, next.aiDebugDir],
+            [LLM_KEY_PROVIDERS, next.providers], [LLM_KEY_ACTIVE_PROVIDER_ID, next.activeProviderId]
+        ]) {
+            setValue(storageKey, val);
+        }
         return next;
     }
 
+    static getRotationPool(cfg = null) {
+        const resolved = cfg || this.getConfig();
+        const ready = (Array.isArray(resolved.providers) ? resolved.providers : [])
+            .filter((p) => p && p.enabled !== false && p.baseUrl && p.model);
+        if (ready.length > 0) return ready;
+        if (resolved.baseUrl && resolved.model) {
+            const keys = parseApiKeys(resolved.apiKeys?.length ? resolved.apiKeys : resolved.apiKey);
+            return [{
+                id: resolved.activeProviderId || detectProviderPresetId(resolved.baseUrl),
+                baseUrl: resolved.baseUrl,
+                model: resolved.model,
+                apiKeys: keys,
+                enabled: true
+            }];
+        }
+        return [];
+    }
+
     static isConfigured() {
-        const cfg = this.getConfig();
-        return Boolean(cfg.baseUrl && cfg.model);
+        return this.getRotationPool().length > 0;
     }
 
     static isEnabled() {
         const cfg = this.getConfig();
-        return Boolean(cfg.enabled && cfg.baseUrl && cfg.model);
+        return Boolean(cfg.enabled && this.getRotationPool(cfg).length > 0);
     }
 
     static isAiDebugEnabled() {
@@ -439,28 +563,40 @@ export class LlmService {
     }
 
     /**
-     * 判断特定 AI 子功能是否开启（同时依赖 AI 总开关及端点+模型就绪）
-     * @param {'featureSubChapters'|'featureCommentBrief'|'featureAutoTag'|'autoTagOnMark'} [featureKey]
+     * 判断特定 AI 子功能是否开启（同时依赖 AI 总开关及至少一个有效提供商就绪）
+     * @param {'featureSubChapters'|'featureCommentBrief'|'featureAutoTag'|'autoTagOnMark'|'featureHighlightFusion'} [featureKey]
      * @returns {boolean}
      */
     static isFeatureEnabled(featureKey = '') {
         const cfg = this.getConfig();
-        if (!cfg.enabled || !cfg.baseUrl || !cfg.model) return false;
+        if (!cfg.enabled || this.getRotationPool(cfg).length === 0) return false;
         if (!featureKey) return true;
         return Boolean(cfg[featureKey]);
     }
 
     /**
-     * 脱敏错误日志或提示文本中的 API Key / Bearer Token
+     * 脱敏错误日志或提示文本中的全部 API Key / Bearer Token
      * @param {string} text
      * @returns {string}
      */
     static redactSecrets(text) {
         if (text === null || text === undefined) return '';
         let out = String(text);
-        const cfgKey = String(getValue(LLM_KEY_API_KEY, '') || '').trim();
-        if (cfgKey.length >= 4) {
-            const escaped = cfgKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const cfg = this.getConfig();
+        const secrets = new Set();
+        const scalarKey = String(getValue(LLM_KEY_API_KEY, '') || '').trim();
+        if (scalarKey.length >= 4) secrets.add(scalarKey);
+        for (const k of cfg.apiKeys || []) {
+            if (k && k.length >= 4) secrets.add(k);
+        }
+        for (const p of cfg.providers || []) {
+            for (const k of p.apiKeys || []) {
+                if (k && k.length >= 4) secrets.add(k);
+            }
+        }
+        const sorted = Array.from(secrets).sort((a, b) => b.length - a.length);
+        for (const secret of sorted) {
+            const escaped = secret.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             out = out.replace(new RegExp(escaped, 'g'), '[REDACTED]');
         }
         out = out.replace(/\bBearer\s+(?!\[REDACTED\])[^\s"';,]+/gi, 'Bearer [REDACTED]');
@@ -540,215 +676,254 @@ export class LlmService {
         throw new Error('LLM_INVALID_JSON: 无法从模型响应中提取有效 JSON');
     }
 
+    static resetRotationState() {
+        rrProviderCursor = 0;
+        rrKeyCursors.clear();
+    }
+
+    static _pushRotatedKeys(out, providerId, baseUrl, model, rawKeys, cursorKey) {
+        const keys = Array.isArray(rawKeys) && rawKeys.length > 0 ? rawKeys : [''];
+        const start = (rrKeyCursors.get(cursorKey) || 0) % keys.length;
+        rrKeyCursors.set(cursorKey, (start + 1) % 1000000);
+        for (let i = 0; i < keys.length; i++) {
+            out.push({ providerId, baseUrl, model, apiKey: keys[(start + i) % keys.length] });
+        }
+    }
+
+    static _buildRotationCandidates(override, cfg) {
+        const out = [];
+        if (override) {
+            const baseUrl = this.sanitizeBaseUrl(override.baseUrl);
+            const model = String(override.model || '').trim();
+            if (!baseUrl || !model) throw new Error('LLM_NOT_CONFIGURED: 请先配置接口地址与模型名称');
+            const keys = parseApiKeys(override.apiKeys?.length ? override.apiKeys : (override.apiKey || ''));
+            this._pushRotatedKeys(out, override.id || detectProviderPresetId(baseUrl), baseUrl, model, keys, `override:${baseUrl}`);
+            return out;
+        }
+        const pool = this.getRotationPool(cfg);
+        if (pool.length === 0) throw new Error('LLM_NOT_CONFIGURED: 请先配置接口地址与模型名称');
+        const pStart = rrProviderCursor % pool.length;
+        rrProviderCursor = (rrProviderCursor + 1) % 1000000;
+        for (let i = 0; i < pool.length; i++) {
+            const p = pool[(pStart + i) % pool.length];
+            this._pushRotatedKeys(out, p.id, p.baseUrl, p.model, p.apiKeys, p.id);
+        }
+        return out;
+    }
+
+    static async _dispatchSingleChat(cand, messages, { temperature, maxTokens, timeoutMs, allowTransientRetry }) {
+        const endpoint = this.resolveChatEndpoint(cand.baseUrl);
+        if (!endpoint) {
+            throw new Error('LLM_INVALID_BASE_URL');
+        }
+        const headers = { 'Content-Type': 'application/json' };
+        if (cand.apiKey) {
+            headers.Authorization = `Bearer ${cand.apiKey}`;
+        }
+        const bodyJson = JSON.stringify({
+            model: cand.model,
+            messages,
+            temperature,
+            max_tokens: maxTokens
+        });
+
+        let res = null;
+        const maxAttempts = allowTransientRetry ? 2 : 1;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            try {
+                res = await fetchWithTransport(endpoint, {
+                    method: 'POST',
+                    headers,
+                    body: bodyJson,
+                    timeout: timeoutMs,
+                    preferGM: true
+                });
+                if (attempt + 1 < maxAttempts && (res.status === 502 || res.status === 503 || res.status === 504)) continue;
+                break;
+            } catch (reqErr) {
+                const msg = String(reqErr?.message || '');
+                if (attempt + 1 < maxAttempts && /NETWORK_TIMEOUT|NETWORK_ERROR|TIMEOUT/i.test(msg)) continue;
+                throw reqErr;
+            }
+        }
+
+        if (res.status === 401 || res.status === 403) {
+            throw new Error(`LLM_AUTH_FAILED (${res.status}): 密钥鉴权失败`);
+        }
+        if (res.status < 200 || res.status >= 300) {
+            let errDetail = '';
+            try {
+                const errJson = JSON.parse(res.html || '{}');
+                errDetail = errJson?.error?.message || errJson?.message || '';
+            } catch (_) {
+                errDetail = String(res.html || '').slice(0, 160);
+            }
+            throw new Error(`LLM_HTTP_${res.status}${errDetail ? `: ${errDetail}` : ''}`);
+        }
+
+        let payload;
+        try {
+            payload = JSON.parse(res.html || '');
+        } catch (_) {
+            throw new Error('LLM_INVALID_RESPONSE: 服务端返回非 JSON 响应');
+        }
+
+        const content = extractMessageContent(payload);
+        if (!content || !content.trim()) {
+            throw new Error('LLM_EMPTY_RESPONSE: 模型返回内容为空');
+        }
+
+        if (this.detectLlmRefusal(content)) {
+            const refusedErr = new Error('LLM_REFUSED');
+            refusedErr.refused = true;
+            throw refusedErr;
+        }
+
+        return {
+            content,
+            model: payload?.model || cand.model,
+            usage: payload?.usage || null,
+            providerId: cand.providerId
+        };
+    }
+
     /**
-     * 发起 OpenAI-Compatible Chat Completions 请求
+     * 发起 OpenAI-Compatible Chat Completions 请求（支持多 Key / 多提供商轮询与自动故障转移）
      * @param {Object} params
      * @param {Object} [options]
-     * @returns {Promise<{ content: string, model: string, usage: Object|null }>}
+     * @returns {Promise<{ content: string, model: string, usage: Object|null, providerId?: string }>}
      */
     static async chatCompletion(
         { messages, temperature = 0.2, maxTokens = 900, timeoutMs = null, allowDisabled = false, bypassEnabled = false, configOverride = null } = {},
         options = {}
     ) {
         const override = options?.configOverride || configOverride;
-        const cfg = override || this.getConfig();
+        const cfg = this.getConfig();
         const canBypassEnabled = Boolean(options?.allowDisabled || options?.bypassEnabled || allowDisabled || bypassEnabled);
 
-        if (!cfg.baseUrl || !cfg.model) {
-            throw new Error('LLM_NOT_CONFIGURED: 请先配置接口地址与模型名称');
-        }
-        if (!cfg.enabled && !canBypassEnabled) {
+        if (!override && !cfg.enabled && !canBypassEnabled && this.getRotationPool(cfg).length > 0) {
             throw new Error('LLM_DISABLED');
         }
         if (!Array.isArray(messages) || messages.length === 0) {
             throw new Error('LLM_INVALID_MESSAGES');
         }
 
-        const endpoint = this.resolveChatEndpoint(cfg.baseUrl);
-        if (!endpoint) {
-            throw new Error('LLM_INVALID_BASE_URL');
-        }
-
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-        if (cfg.apiKey) {
-            headers.Authorization = `Bearer ${cfg.apiKey}`;
+        const candidates = this._buildRotationCandidates(override, cfg);
+        if (!override && !cfg.enabled && !canBypassEnabled) {
+            throw new Error('LLM_DISABLED');
         }
 
         const effectiveTimeout = clampTimeout(timeoutMs || cfg.timeoutMs, cfg.timeoutMs);
-        const bodyJson = JSON.stringify({
-            model: cfg.model,
-            messages,
-            temperature,
-            max_tokens: maxTokens
-        });
+        const allowTransientRetry = candidates.length === 1;
+        let lastErr = null;
 
-        try {
-            let res = null;
-            for (let attempt = 0; attempt < 2; attempt++) {
-                try {
-                    res = await fetchWithTransport(endpoint, {
-                        method: 'POST',
-                        headers,
-                        body: bodyJson,
-                        timeout: effectiveTimeout,
-                        preferGM: true
-                    });
-                    if (attempt === 0 && (res.status === 502 || res.status === 503 || res.status === 504)) continue;
-                    break;
-                } catch (reqErr) {
-                    const msg = String(reqErr?.message || '');
-                    if (attempt === 0 && /NETWORK_TIMEOUT|NETWORK_ERROR|TIMEOUT/i.test(msg)) continue;
-                    throw reqErr;
-                }
-            }
-
-            if (res.status === 401 || res.status === 403) {
-                throw new Error(`LLM_AUTH_FAILED (${res.status}): 密钥鉴权失败`);
-            }
-            if (res.status < 200 || res.status >= 300) {
-                let errDetail = '';
-                try {
-                    const errJson = JSON.parse(res.html || '{}');
-                    errDetail = errJson?.error?.message || errJson?.message || '';
-                } catch (_) {
-                    errDetail = String(res.html || '').slice(0, 160);
-                }
-                throw new Error(`LLM_HTTP_${res.status}${errDetail ? `: ${errDetail}` : ''}`);
-            }
-
-            let payload;
+        for (const cand of candidates) {
             try {
-                payload = JSON.parse(res.html || '');
-            } catch (_) {
-                throw new Error('LLM_INVALID_RESPONSE: 服务端返回非 JSON 响应');
+                return await this._dispatchSingleChat(cand, messages, {
+                    temperature,
+                    maxTokens,
+                    timeoutMs: effectiveTimeout,
+                    allowTransientRetry
+                });
+            } catch (err) {
+                lastErr = err;
             }
-
-            const content = extractMessageContent(payload);
-            if (!content || !content.trim()) {
-                throw new Error('LLM_EMPTY_RESPONSE: 模型返回内容为空');
-            }
-
-            if (this.detectLlmRefusal(content)) {
-                const refusedErr = new Error('LLM_REFUSED');
-                refusedErr.refused = true;
-                throw refusedErr;
-            }
-
-            return {
-                content,
-                model: payload?.model || cfg.model,
-                usage: payload?.usage || null
-            };
-        } catch (err) {
-            if (err?.refused || err?.message === 'LLM_REFUSED') {
-                throw err;
-            }
-            const safeMsg = this.redactSecrets(err?.message || String(err || 'LLM_REQUEST_FAILED'));
-            throw new Error(safeMsg);
         }
+
+        if (lastErr?.refused || lastErr?.message === 'LLM_REFUSED') {
+            throw lastErr;
+        }
+        const safeMsg = this.redactSecrets(lastErr?.message || String(lastErr || 'LLM_REQUEST_FAILED'));
+        throw new Error(safeMsg);
     }
 
-    /**
-     * 测试 AI 接口与模型连通性（优先 GET /models，不支持时降级为最小对话探测）
-     * @param {Object|null} [overrideConfig=null]
-     * @returns {Promise<{ ok: boolean, message: string, models: string[] }>}
-     */
-    static async testConnection(overrideConfig = null) {
+    static _resolveTargetConfig(overrideConfig) {
         const saved = this.getConfig();
-        const cfg = overrideConfig
-            ? {
-                enabled: overrideConfig.enabled ?? saved.enabled,
-                baseUrl: 'baseUrl' in overrideConfig ? this.sanitizeBaseUrl(overrideConfig.baseUrl) : saved.baseUrl,
-                apiKey: 'apiKey' in overrideConfig ? String(overrideConfig.apiKey ?? '').trim() : saved.apiKey,
-                model: 'model' in overrideConfig ? String(overrideConfig.model ?? '').trim() : saved.model,
-                timeoutMs: saved.timeoutMs
-            }
-            : saved;
+        if (!overrideConfig) return saved;
+        return {
+            enabled: overrideConfig.enabled ?? saved.enabled,
+            baseUrl: 'baseUrl' in overrideConfig ? this.sanitizeBaseUrl(overrideConfig.baseUrl) : saved.baseUrl,
+            apiKeys: parseApiKeys(
+                overrideConfig.apiKeys?.length ? overrideConfig.apiKeys
+                    : ('apiKey' in overrideConfig ? overrideConfig.apiKey : saved.apiKeys)
+            ),
+            model: 'model' in overrideConfig ? String(overrideConfig.model ?? '').trim() : saved.model,
+            timeoutMs: saved.timeoutMs
+        };
+    }
 
-        if (!cfg.baseUrl) {
-            return { ok: false, message: '请填写有效的接口地址', models: [] };
-        }
-        if (!cfg.model) {
-            return { ok: false, message: '请先填写模型名称', models: [] };
-        }
+    /** 从 /models 获取可用模型列表 */
+    static async fetchModels(overrideConfig = null) {
+        const cfg = this._resolveTargetConfig(overrideConfig);
+        if (!cfg.baseUrl) return { ok: false, message: '请填写有效的接口地址', models: [] };
+        const endpoint = this.resolveModelsEndpoint(cfg.baseUrl);
+        const keys = cfg.apiKeys?.length > 0 ? cfg.apiKeys : [''];
+        let sawAuthFail = false;
 
-        const headers = {};
-        if (cfg.apiKey) {
-            headers.Authorization = `Bearer ${cfg.apiKey}`;
-        }
-
-        const modelsEndpoint = this.resolveModelsEndpoint(cfg.baseUrl);
-        let needChatFallback = false;
-
-        try {
-            const res = await fetchWithTransport(modelsEndpoint, {
-                method: 'GET',
-                headers,
-                timeout: TEST_CONNECTION_TIMEOUT_MS,
-                preferGM: true
-            });
-
-            if (res.status === 401 || res.status === 403) {
-                return { ok: false, message: '密钥鉴权失败', models: [] };
-            }
-
-            if (res.status >= 200 && res.status < 300) {
-                try {
+        for (const key of keys) {
+            try {
+                const res = await fetchWithTransport(endpoint, {
+                    method: 'GET',
+                    headers: key ? { Authorization: `Bearer ${key}` } : {},
+                    timeout: TEST_CONNECTION_TIMEOUT_MS,
+                    preferGM: true
+                });
+                if (res.status === 401 || res.status === 403) { sawAuthFail = true; continue; }
+                if (res.status >= 200 && res.status < 300) {
                     const parsed = JSON.parse(res.html || '{}');
-                    if (Array.isArray(parsed?.data)) {
-                        const models = parsed.data
-                            .map((item) => (typeof item === 'string' ? item : (item?.id || item?.name || '')))
-                            .filter(Boolean);
-                        return { ok: true, message: '接口连通正常', models };
+                    const list = Array.isArray(parsed?.data) ? parsed.data : (Array.isArray(parsed?.models) ? parsed.models : null);
+                    if (list) {
+                        return { ok: true, message: '接口连通正常', models: list.map((x) => (typeof x === 'string' ? x : (x?.id || x?.name || ''))).filter(Boolean) };
                     }
-                } catch (_) {}
-                needChatFallback = true;
-            } else if (res.status === 404 || res.status === 405 || res.status === 501) {
-                needChatFallback = true;
-            } else {
+                    return { ok: false, message: '', models: [], unsupported: true };
+                }
+                if (res.status === 404 || res.status === 405 || res.status === 501) {
+                    return { ok: false, message: '', models: [], unsupported: true };
+                }
                 return { ok: false, message: this.redactSecrets(`服务端响应异常 (HTTP ${res.status})`), models: [] };
+            } catch (_) {
+                return { ok: false, message: '无法连接服务端', models: [] };
             }
-        } catch (_) {
-            return { ok: false, message: '无法连接服务端', models: [] };
         }
+        return sawAuthFail
+            ? { ok: false, message: '密钥鉴权失败', models: [], authFailed: true }
+            : { ok: false, message: '无法连接服务端', models: [] };
+    }
 
-        if (!needChatFallback) {
-            return { ok: false, message: '无法连接服务端', models: [] };
-        }
+    /** 测试 AI 接口与模型连通性 */
+    static async testConnection(overrideConfig = null) {
+        const cfg = this._resolveTargetConfig(overrideConfig);
+        if (!cfg.baseUrl) return { ok: false, message: '请填写有效的接口地址', models: [] };
+        if (!cfg.model) return { ok: false, message: '请先填写模型名称', models: [] };
 
-        const chatEndpoint = this.resolveChatEndpoint(cfg.baseUrl);
-        try {
-            const pingHeaders = { 'Content-Type': 'application/json', ...headers };
-            const pingRes = await fetchWithTransport(chatEndpoint, {
-                method: 'POST',
-                headers: pingHeaders,
-                body: JSON.stringify({
-                    model: cfg.model,
-                    messages: [{ role: 'user', content: 'ping' }],
-                    temperature: 0,
-                    max_tokens: 8
-                }),
-                timeout: TEST_CONNECTION_TIMEOUT_MS,
-                preferGM: true
-            });
+        const modelsRes = await this.fetchModels(cfg);
+        if (modelsRes.ok) return { ok: true, message: modelsRes.message, models: modelsRes.models };
+        if (!modelsRes.unsupported) return { ok: false, message: modelsRes.message || '无法连接服务端', models: [] };
 
-            if (pingRes.status === 401 || pingRes.status === 403) {
-                return { ok: false, message: '密钥鉴权失败', models: [] };
+        const endpoint = this.resolveChatEndpoint(cfg.baseUrl);
+        const keys = cfg.apiKeys?.length > 0 ? cfg.apiKeys : [''];
+        let sawAuthFail = false;
+
+        for (const key of keys) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (key) headers.Authorization = `Bearer ${key}`;
+            try {
+                const res = await fetchWithTransport(endpoint, {
+                    method: 'POST', headers,
+                    body: JSON.stringify({ model: cfg.model, messages: [{ role: 'user', content: 'ping' }], temperature: 0, max_tokens: 8 }),
+                    timeout: TEST_CONNECTION_TIMEOUT_MS, preferGM: true
+                });
+                if (res.status === 401 || res.status === 403) { sawAuthFail = true; continue; }
+                if (res.status >= 200 && res.status < 300) {
+                    const parsed = JSON.parse(res.html || '{}');
+                    if (Array.isArray(parsed?.choices)) return { ok: true, message: '对话接口连通正常', models: [] };
+                }
+                return { ok: false, message: this.redactSecrets(`对话接口异常 (HTTP ${res.status})`), models: [] };
+            } catch (_) {
+                return { ok: false, message: '无法连接服务端', models: [] };
             }
-            if (pingRes.status >= 200 && pingRes.status < 300) {
-                try {
-                    const parsed = JSON.parse(pingRes.html || '{}');
-                    if (Array.isArray(parsed?.choices)) {
-                        return { ok: true, message: '对话接口连通正常', models: [] };
-                    }
-                } catch (_) {}
-            }
-            return { ok: false, message: this.redactSecrets(`对话接口异常 (HTTP ${pingRes.status})`), models: [] };
-        } catch (_) {
-            return { ok: false, message: '无法连接服务端', models: [] };
         }
+        return { ok: false, message: sawAuthFail ? '密钥鉴权失败' : '无法连接服务端', models: [] };
     }
 }
 

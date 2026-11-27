@@ -3,8 +3,6 @@
  * 职责：处理 iOS Safari / 移动端 visualViewport 虚拟键盘物理避让，以及 <dialog open> Top Layer 继承挂载
  */
 
-import { ViewportDebugHUD } from './ViewportDebugHUD.js';
-
 export function mountRootHostToTopLayer(rootHost) {
     if (!rootHost) return;
     const activeTopDialog = document.querySelector('dialog[open], [data-stage-host] dialog');
@@ -44,10 +42,6 @@ export class ViewportKeyboardAdapter {
             const vvHeight = Math.round(vv.height || containerHeight);
             const vvOffsetTop = Math.max(0, Math.round(vv.offsetTop || 0));
             const keyboardHeight = Math.max(0, Math.round(containerHeight - vvHeight - vvOffsetTop));
-            const commentSubmitBar = ui.shadowRoot?.querySelector('.tm-comment-submit-bar-wrapper') || document.querySelector('.tm-comment-submit-bar-wrapper');
-            const hasSubmitBar = !!commentSubmitBar;
-            const isCollapsed = commentSubmitBar ? commentSubmitBar.classList.contains('is-collapsed') : null;
-            ViewportDebugHUD.recordEvent('UI_VV_UPDATE', `kbH=${keyboardHeight}, vvH=${vvHeight}, bar=${hasSubmitBar ? (isCollapsed ? 'col' : 'open') : 'none'}`);
             const activeModal = ui.shadowRoot?.querySelector('.tm-custom-modal-overlay') || document.querySelector('.tm-custom-modal-overlay');
 
             document.documentElement.style.setProperty('--visual-viewport-height', `${vvHeight}px`);

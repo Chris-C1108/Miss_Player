@@ -397,6 +397,108 @@ describe('Phase 3: Secret Redaction, Refusal Detection, JSON Parsing & Connectio
         assert.equal(netFail.message, '无法连接服务端');
         assert.equal(LlmService.getConfig().baseUrl, 'https://openrouter.ai/api/v1');
     });
+
+    it('rotates multiple API keys round-robin per provider and fails over on 429/401', async () => {
+        LlmService.resetRotationState();
+        LlmService.saveConfig({
+            enabled: true,
+            baseUrl: 'https://api.agnes-ai.cn/v1',
+            model: 'agnes-3.0-flash',
+            apiKeys: ['sk-key-one-1111', 'sk-key-two-2222', 'sk-key-three-3333']
+        });
+
+        mockGmResponder = (opts) => {
+            opts.onload({
+                status: 200,
+                responseText: JSON.stringify({ choices: [{ message: { content: '{"ok":true}' } }] }),
+                finalUrl: opts.url
+            });
+        };
+
+        await LlmService.chatCompletion({ messages: [{ role: 'user', content: '1' }] });
+        await LlmService.chatCompletion({ messages: [{ role: 'user', content: '2' }] });
+        await LlmService.chatCompletion({ messages: [{ role: 'user', content: '3' }] });
+        assert.equal(gmCallLog[0].headers.Authorization, 'Bearer sk-key-one-1111');
+        assert.equal(gmCallLog[1].headers.Authorization, 'Bearer sk-key-two-2222');
+        assert.equal(gmCallLog[2].headers.Authorization, 'Bearer sk-key-three-3333');
+
+        // Failover when current key returns 429
+        gmCallLog = [];
+        let reqCount = 0;
+        mockGmResponder = (opts) => {
+            reqCount += 1;
+            if (reqCount === 1) {
+                opts.onload({ status: 429, responseText: 'Rate limit', finalUrl: opts.url });
+                return;
+            }
+            opts.onload({
+                status: 200,
+                responseText: JSON.stringify({ choices: [{ message: { content: '{"recovered":true}' } }] }),
+                finalUrl: opts.url
+            });
+        };
+        const failoverRes = await LlmService.chatCompletion({ messages: [{ role: 'user', content: 'retry' }] });
+        assert.equal(failoverRes.content, '{"recovered":true}');
+        assert.equal(gmCallLog.length, 2);
+        assert.equal(gmCallLog[0].headers.Authorization, 'Bearer sk-key-one-1111');
+        assert.equal(gmCallLog[1].headers.Authorization, 'Bearer sk-key-two-2222');
+    });
+
+    it('rotates only participating providers round-robin, skips disabled providers, and redacts all provider secrets', async () => {
+        LlmService.resetRotationState();
+        LlmService.saveConfig({
+            enabled: true,
+            activeProviderId: 'agnes-cn',
+            providers: [
+                {
+                    id: 'agnes-cn',
+                    presetId: 'agnes-cn',
+                    name: 'Agnes 中国站',
+                    baseUrl: 'https://api.agnes-ai.cn/v1',
+                    model: 'agnes-3.0-flash',
+                    apiKeys: ['sk-cn-secret-aaa'],
+                    enabled: true
+                },
+                {
+                    id: 'gemini',
+                    presetId: 'gemini',
+                    name: 'Gemini',
+                    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+                    model: 'gemini-2.5-flash',
+                    apiKeys: ['AIza-gemini-secret-bbb'],
+                    enabled: true
+                },
+                {
+                    id: 'agnes-global',
+                    presetId: 'agnes-global',
+                    name: 'Agnes 国际站',
+                    baseUrl: 'https://apihub.agnes-ai.com/v1',
+                    model: 'agnes-3.0-pro',
+                    apiKeys: ['sk-global-disabled-ccc'],
+                    enabled: false
+                }
+            ]
+        });
+
+        const leaked = LlmService.redactSecrets('err sk-cn-secret-aaa AIza-gemini-secret-bbb sk-global-disabled-ccc');
+        assert.equal(leaked, 'err [REDACTED] [REDACTED] [REDACTED]');
+
+        mockGmResponder = (opts) => {
+            opts.onload({
+                status: 200,
+                responseText: JSON.stringify({ choices: [{ message: { content: '{"ok":true}' } }] }),
+                finalUrl: opts.url
+            });
+        };
+
+        await LlmService.chatCompletion({ messages: [{ role: 'user', content: 'p1' }] });
+        await LlmService.chatCompletion({ messages: [{ role: 'user', content: 'p2' }] });
+        await LlmService.chatCompletion({ messages: [{ role: 'user', content: 'p3' }] });
+        assert.equal(gmCallLog[0].url, 'https://api.agnes-ai.cn/v1/chat/completions');
+        assert.equal(gmCallLog[1].url, 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
+        assert.equal(gmCallLog[2].url, 'https://api.agnes-ai.cn/v1/chat/completions');
+        assert.equal(gmCallLog.some((c) => c.url.includes('agnes-ai.com')), false);
+    });
 });
 
 describe('Phase 3: LlmTasks Prompts, Compression, Caching & Validation', () => {
@@ -745,55 +847,69 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
             assert.equal(sm.expanded.s2_ai, true);
 
             const presets = card.querySelectorAll('.mp-s2-ai-presets .mp-s2-chip');
-            assert.equal(presets.length, 5);
+            const presetTexts = presets.map((el) => el.textContent);
+            assert.equal(presets.length, 5); // 4 built-in presets + "+新增接口"
+            assert.equal(presetTexts.some((t) => /ollama|openrouter/i.test(t)), false);
+            assert.ok(presetTexts.includes('Agnes 中国站'));
+            assert.ok(presetTexts.includes('Agnes 国际站'));
+            assert.ok(presetTexts.includes('Gemini'));
+            assert.ok(presetTexts.includes('OpenAI 兼容'));
 
-            const consoleLinks = card.querySelectorAll('.mp-s2-ai-links .mp-s2-ai-link-btn');
-            assert.equal(consoleLinks.length, 2);
-            assert.equal(consoleLinks[0].href, 'https://platform.agnes-ai.cn');
-            assert.equal(consoleLinks[0].target, '_blank');
-            assert.equal(consoleLinks[1].href, 'https://platform.agnes-ai.com');
-            assert.equal(consoleLinks[1].target, '_blank');
+            // Compact inline underlined "获取密钥" link beside 密钥 label (only visible for Agnes x2 & Gemini)
+            const keyGetLink = card.querySelector('.mp-s2-field-label-row .mp-s2-inline-link');
+            assert.ok(keyGetLink);
+            assert.equal(keyGetLink.textContent, '获取密钥');
+            assert.equal(keyGetLink.href, 'https://platform.agnes-ai.cn');
+            assert.equal(keyGetLink.classList.contains('is-hidden'), false);
+
+            // No debug dir input & no manual "立即上传当前 AI 诊断" button
+            assert.equal(card.querySelector('.mp-s2-debug-input'), null);
+            assert.equal(card.querySelectorAll('.mp-s2-btn').some((b) => (b.textContent || b.innerHTML).includes('立即上传')), false);
 
             const inputs = card.querySelectorAll('.mp-s2-input');
             assert.equal(inputs.length, 3);
             const [baseInput, modelInput, keyInput] = inputs;
             assert.equal(keyInput.type, 'password');
 
-            // Click OpenRouter preset -> fills OpenRouter URL and updates model placeholder
+            // Click Agnes Global preset
             presets[1].click();
-            assert.equal(baseInput.value, 'https://openrouter.ai/api/v1');
-            assert.equal(modelInput.placeholder, 'deepseek/deepseek-chat');
-            assert.equal(modelInput.value, 'deepseek/deepseek-chat');
-            assert.ok(changeCount >= 1);
-
-            // Click Agnes China preset -> switches to China Base URL and latest flash model
-            presets[2].click();
-            assert.equal(baseInput.value, 'https://api.agnes-ai.cn/v1');
-            assert.equal(modelInput.value, 'agnes-3.0-flash');
-            assert.ok(consoleLinks[0].classList.contains('is-active'));
-
-            // Click Agnes Global preset -> switches to Global Base URL
-            presets[3].click();
             assert.equal(baseInput.value, 'https://apihub.agnes-ai.com/v1');
-            assert.equal(modelInput.value, 'agnes-3.0-flash');
-            assert.ok(consoleLinks[1].classList.contains('is-active'));
+            assert.equal(keyGetLink.href, 'https://platform.agnes-ai.com');
+            assert.equal(keyGetLink.classList.contains('is-hidden'), false);
 
-            // Click Ollama preset -> overwrites preset default URL
+            // Click Gemini preset -> sets Google AI Studio link
+            presets[2].click();
+            assert.equal(baseInput.value, 'https://generativelanguage.googleapis.com/v1beta/openai');
+            assert.equal(keyGetLink.href, 'https://aistudio.google.com/apikey');
+            assert.equal(keyGetLink.classList.contains('is-hidden'), false);
+
+            // Click OpenAI 兼容 preset -> hides 获取密钥 link
+            presets[3].click();
+            assert.equal(keyGetLink.classList.contains('is-hidden'), true);
+
+            // Click Agnes China preset
             presets[0].click();
-            assert.equal(baseInput.value, 'http://192.168.1.x:11434/v1');
-            assert.equal(modelInput.placeholder, 'qwen2.5:7b');
-            assert.equal(modelInput.value, 'qwen2.5:7b');
+            assert.equal(baseInput.value, 'https://api.agnes-ai.cn/v1');
+            assert.equal(keyGetLink.classList.contains('is-hidden'), false);
+
+            // Multi-key add -> adds masked key chips and updates stored apiKeys
+            keyInput.value = 'sk-multi-alpha-1111';
+            const addKeyBtn = card.querySelector('.mp-s2-key-add-btn');
+            addKeyBtn.click();
+            keyInput.value = 'sk-multi-beta-2222';
+            addKeyBtn.click();
+            const keyChips = card.querySelectorAll('.mp-s2-key-chips .mp-s2-chip');
+            assert.equal(keyChips.length, 2);
+            assert.deepEqual(LlmService.getConfig().apiKeys, ['sk-multi-alpha-1111', 'sk-multi-beta-2222']);
 
             // Eye button toggles key visibility
-            const eyeBtn = card.querySelector('.mp-s2-btn--icon');
+            const eyeBtn = card.querySelectorAll('.mp-s2-btn--icon')[1];
             assert.equal(eyeBtn.innerHTML, ICON_EYE);
             eyeBtn.click();
             assert.equal(keyInput.type, 'text');
             assert.equal(eyeBtn.innerHTML, ICON_EYE_OFF);
 
-            // Set valid config and click test button -> dynamically populates fetched text model chips
-            baseInput.value = 'https://apihub.agnes-ai.com/v1';
-            modelInput.value = 'agnes-3.0-flash';
+            // Model combobox dropdown fetches models from API cleanly (zero hardcoded chips)
             mockGmResponder = (opts) => {
                 opts.onload({
                     status: 200,
@@ -808,17 +924,41 @@ describe('Phase 3: S2AiSectionBuilder UI & Compliance Guards', () => {
                     finalUrl: opts.url
                 });
             };
+            const comboboxToggle = card.querySelector('.mp-s2-combobox-toggle');
+            comboboxToggle.click();
+            await new Promise((r) => setTimeout(r, 20));
+            const dynamicOpts = card.querySelectorAll('.mp-s2-combobox-opt').map((el) => el.textContent);
+            assert.ok(dynamicOpts.includes('agnes-3.5-preview'));
+            assert.ok(dynamicOpts.includes('agnes-3.0-flash'));
+            assert.equal(dynamicOpts.includes('agnes-imagen'), false);
+
+            // Select fetched model option -> fills modelInput and closes dropdown
+            card.querySelectorAll('.mp-s2-combobox-opt').find((el) => el.textContent === 'agnes-3.0-pro').click();
+            assert.equal(modelInput.value, 'agnes-3.0-pro');
+            assert.equal(card.querySelector('.mp-s2-combobox-menu').classList.contains('is-hidden'), true);
+
+            // Multi-provider pool appears when configuring a second provider (Gemini)
+            presets[2].click();
+            keyInput.value = 'AIza-gemini-9999';
+            addKeyBtn.click();
+            modelInput.value = 'gemini-2.5-flash';
+            modelInput.dispatch('change');
+            const poolRows = card.querySelectorAll('.mp-s2-ai-pool .mp-s2-pool-row');
+            assert.equal(poolRows.length, 2);
+            const poolToggleBtns = card.querySelectorAll('.mp-s2-pool-toggle');
+            assert.equal(poolToggleBtns.length, 2);
+            poolToggleBtns[0].click(); // Toggle participation of first provider
+            assert.equal(LlmService.getRotationPool().length, 1);
+            card.querySelectorAll('.mp-s2-pool-toggle')[0].click();
+            assert.equal(LlmService.getRotationPool().length, 2);
+
+            // Click test button -> succeeds
             const testBtn = card.querySelector('.mp-s2-btn--primary');
             testBtn.click();
             await new Promise((r) => setTimeout(r, 20));
             assert.equal(pill.textContent, '已连通');
             assert.equal(toastLog.at(-1)?.msg, '接口连通正常');
             assert.equal(toastLog.at(-1)?.type, 'success');
-
-            const dynamicModelChips = card.querySelectorAll('.mp-s2-ai-models .mp-s2-chip').map((el) => el.textContent);
-            assert.ok(dynamicModelChips.includes('agnes-3.5-preview'));
-            assert.ok(dynamicModelChips.includes('agnes-3.0-flash'));
-            assert.equal(dynamicModelChips.includes('agnes-imagen'), false);
 
             // Toggle feature switches & verify LlmService.isFeatureEnabled
             LlmService.saveConfig({ enabled: true, baseUrl: 'https://apihub.agnes-ai.com/v1', model: 'agnes-3.0-flash', featureSubChapters: false });
