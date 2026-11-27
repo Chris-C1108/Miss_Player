@@ -281,7 +281,8 @@ const BAD_SUB_TRUST_REASONS = new Set([
     'truncated',
     'whisper_polite_noise',
     'sanitized_mt',
-    'high_repetition'
+    'high_repetition',
+    'giant_gap_or_sparse'
 ]);
 
 /**
@@ -459,7 +460,7 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, subtitleQua
 
         const summary = normalizeInlineText(parsed.summary || '').slice(0, 40);
         const rawChapters = Array.isArray(parsed.chapters) ? parsed.chapters : [];
-        const chapters = rawChapters
+        const chaptersRaw = rawChapters
             .map((item) => {
                 const lineNum = Number(item?.line ?? item?.cueLine ?? item?.idx);
                 const resolvedFromLine = Number.isInteger(lineNum) && lineSeconds.has(lineNum)
@@ -477,8 +478,14 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, subtitleQua
                 return { seconds, tag, headline };
             })
             .filter(Boolean)
-            .sort((a, b) => a.seconds - b.seconds)
-            .slice(0, 12);
+            .sort((a, b) => a.seconds - b.seconds);
+        const dedupedChapters = [];
+        for (const ch of chaptersRaw) {
+            if (dedupedChapters.some((kept) => (ch.seconds - kept.seconds) < 60)) continue;
+            dedupedChapters.push(ch);
+            if (dedupedChapters.length >= 12) break;
+        }
+        const chapters = dedupedChapters;
 
         const data = { summary, chapters };
         await LlmCache.setCached(avcode, 'sub_chapters', contentHash, data);
@@ -1331,13 +1338,13 @@ export async function buildHighlightGraphWithLlm({
                 '反幻觉硬约束（台词≠画面）：1) 必须先结合片名/简介/标签/评论确认全片核心体裁基调——纯深喉口交片出现“射了/舔净”若无下体插入前情绝不可脑补成「内射」，单凭孤立1~2词（如“屁眼”“要射了”“想要”“好舒服”）绝不可脑补成「肛交/双穴/灌精」；2) 欲望挑逗、夸张比喻或否定词（好像想要插入/顶到子宫/无法吞咽）不得写成已发生；3) 禁止把评论许愿或抱怨（希望喉射/没吞精）嫁接到无关时刻；4) 仅输出明确实锤的高光（0~5条，无把握宁可空缺 [] 绝不凑数），每条必须标注 confidence ("high"|"medium"|"low")，未证实具体动作只可写 low 或留空。',
                 '字段输出顺序与上限：',
                 '1. brief: 1句话看点/避坑/共识总结；',
-                '2. highlights: 0至5个有实锤依据的高能片段；',
-                '3. skipZones: 最多 3 个明显拖沓/避坑区间（无明显区间返回 `[]`，严禁写片尾凑数）；',
-                '4. commentTags: 最多 8 条纯评价归类 (`hype`/`warn`/`neutral`)；无字幕或波峰依据时 `inferredSeconds` 必须为 `null`；',
-                '仅输出严格合法 JSON，禁止 Markdown 围栏与多余解释：',
+                '2. highlights: 0-5条实锤高能（禁止选片尾独白，无把握留 []）；',
+                '3. skipZones: 最多3个明显拖沓/避坑区间（不得与 highlights 重叠，无则 []）；',
+                '4. commentTags: 最多8条评价归类；无字幕/波峰时 `inferredSeconds` 填 null；',
+                '仅输出严格合法 JSON：',
                 hasSub
-                    ? '{ "brief": { "highlights": "看点", "warnings": "避坑(无则写暂无明显雷点)", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "subLine": 12, "confidence": "high", "tag": "2-4字标签", "reason": "16字内实锤依据", "sources": ["crowd","comment","sub"], "score": 92 }], "skipZones": [{ "seconds": 0, "endSeconds": 90, "reason": "14字内避坑说明" }], "commentTags": [{ "idx": 0, "sentiment": "hype", "isCountdown": false, "inferredSeconds": 420, "note": "10字内标签" }] }'
-                    : '{ "brief": { "highlights": "看点", "warnings": "避坑(无则写暂无明显雷点)", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "confidence": "high", "tag": "2-4字标签", "reason": "16字内实锤依据", "sources": ["comment"], "score": 92 }], "skipZones": [], "commentTags": [{ "idx": 0, "sentiment": "hype", "isCountdown": false, "inferredSeconds": null, "note": "10字内标签" }] }'
+                    ? '{ "brief": { "highlights": "看点", "warnings": "避坑", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "subLine": 12, "confidence": "high", "tag": "标签", "reason": "依据", "sources": ["crowd","comment","sub"], "score": 92 }], "skipZones": [{ "seconds": 0, "endSeconds": 90, "reason": "避坑" }], "commentTags": [{ "idx": 0, "sentiment": "hype", "inferredSeconds": 420, "note": "标签" }] }'
+                    : '{ "brief": { "highlights": "看点", "warnings": "避坑", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "confidence": "high", "tag": "标签", "reason": "依据", "sources": ["comment"], "score": 92 }], "skipZones": [], "commentTags": [{ "idx": 0, "sentiment": "hype", "inferredSeconds": null, "note": "标签" }] }'
             ].join('\n')
         },
         {
@@ -1421,6 +1428,9 @@ export async function buildHighlightGraphWithLlm({
                 const backed = commentTsList.some((cts) => Math.abs(cts - sec) <= 120);
                 if (!backed) continue;
             }
+            if (dur >= 600 && sec >= dur - 90 && !sources.includes('comment') && !sources.includes('crowd') && /(?:结局|片尾|收尾|尾声|定格)/.test(`${item?.tag || ''}${item?.reason || ''}`)) {
+                continue;
+            }
             const endSecRaw = clampSec(item?.endSeconds);
             const endSeconds = (endSecRaw !== null && endSecRaw > sec && (endSecRaw - sec) <= 1800) ? endSecRaw : null;
             const tag = normalizeInlineText(item?.tag || '').slice(0, 6) || '高能';
@@ -1446,6 +1456,11 @@ export async function buildHighlightGraphWithLlm({
             const endRaw = clampSec(z?.endSeconds);
             if (endRaw === null || endRaw <= sec || (endRaw - sec) < 15) continue;
             if (dur > 0 && sec >= Math.floor(dur) - 15) continue;
+            const overlapsHighlight = highlights.some((h) => {
+                const hEnd = h.endSeconds || (h.seconds + 30);
+                return h.seconds <= endRaw + 20 && hEnd >= sec - 20;
+            });
+            if (overlapsHighlight) continue;
             const reason = normalizeInlineText(z?.reason || '').slice(0, 22) || '节奏偏慢';
             skipZones.push({ seconds: sec, endSeconds: endRaw, reason });
             if (skipZones.length >= 3) break;
@@ -1472,7 +1487,7 @@ export async function buildHighlightGraphWithLlm({
             const note = normalizeInlineText(ct?.note || '').slice(0, 14);
             commentInsights[target.id] = {
                 sentiment,
-                isCountdown: Boolean(ct?.isCountdown),
+                isCountdown: Boolean(target.countdownApplied),
                 inferredSeconds,
                 note
             };

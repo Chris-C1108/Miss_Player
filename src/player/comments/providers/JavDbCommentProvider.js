@@ -89,8 +89,6 @@ export function fetchJavdbMovieId(avcode, domainIndex = 0) {
     const activeDomain = JAVDB_DOMAINS[domainIndex] || JAVDB_DOMAINS[0] || 'https://javdb.com';
     const url = `${activeDomain}/search?q=${encodeURIComponent(cleanCode)}&f=all`;
 
-    logger.log(`[CommentScraper] 开始获取 JavDB 影片 ID，番号: ${cleanCode}, 域名: ${activeDomain}`);
-
     return new Promise((resolve, reject) => {
         if (typeof GM_xmlhttpRequest === 'undefined') {
             reject(new Error('GM_xmlhttpRequest unavailable'));
@@ -106,7 +104,8 @@ export function fetchJavdbMovieId(avcode, domainIndex = 0) {
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
             onload(r) {
-                if (r.status === 403 || r.status === 503 || (r.responseText && (r.responseText.includes('cf-challenge') || r.responseText.includes('Turnstile')))) {
+                const body = String(r.responseText || '');
+                if (r.status === 403 || r.status === 503 || body.includes('cf-challenge') || body.includes('Turnstile')) {
                     reject(new Error(`CF_SHIELD_ON_${activeDomain}`));
                     return;
                 }
@@ -118,8 +117,12 @@ export function fetchJavdbMovieId(avcode, domainIndex = 0) {
                             return;
                         }
                     }
+                    if (!body.includes('movie-list') && /請登錄|操作太頻繁|Too Many Requests/i.test(body)) {
+                        reject(new Error(`JAVDB_RATE_LIMIT_${activeDomain}`));
+                        return;
+                    }
                     try {
-                        const doc = new DOMParser().parseFromString(r.responseText, 'text/html');
+                        const doc = new DOMParser().parseFromString(body, 'text/html');
                         const items = doc.querySelectorAll('.movie-list .item a[href^="/v/"], .grid-item a[href^="/v/"], a[href^="/v/"]');
                         let foundId = '';
                         for (const a of items) {
@@ -150,7 +153,10 @@ export function fetchJavdbMovieId(avcode, domainIndex = 0) {
             }
         });
     }).catch(async (htmlErr) => {
-        logger.warn(`[CommentScraper] JavDB 主线搜索失败 (${htmlErr.message})，正在尝试第三方 API 备用线路...`);
+        if (domainIndex + 1 < JAVDB_DOMAINS.length) {
+            return fetchJavdbMovieId(cleanCode, domainIndex + 1);
+        }
+        logger.warn(`[CommentScraper] JavDB 主线搜索失败 (${htmlErr.message})，尝试备用 API...`);
         try {
             const sign = jbBuildSignature();
             const apiUrl = `${JB_API_BASE}/v2/search`;
@@ -171,7 +177,6 @@ export function fetchJavdbMovieId(avcode, domainIndex = 0) {
             });
             const movies = apiRes?.data?.movies || [];
             if (movies.length > 0 && movies[0].id) {
-                logger.log(`[CommentScraper] 备用线路获取 JavDB movieId 成功: ${movies[0].id}`);
                 return { movieId: movies[0].id, domain: activeDomain, source: 'api' };
             }
         } catch (apiErr) {
@@ -190,8 +195,6 @@ export function fetchJavdbData(movieId, page = 1, domain) {
     if (!movieId) return Promise.reject(new Error('Invalid MovieId'));
     const activeDomain = domain || JAVDB_DOMAINS[0] || 'https://javdb.com';
     const reviewUrl = `${activeDomain}/v/${movieId}/reviews?page=${page}`;
-
-    logger.log(`[CommentScraper] 尝试 JavDB 主线获取短评 (Page ${page}): ${reviewUrl}`);
 
     const fetchMainLine = () => new Promise((resolve, reject) => {
         if (typeof GM_xmlhttpRequest === 'undefined') {
@@ -283,7 +286,6 @@ export function fetchJavdbData(movieId, page = 1, domain) {
     });
 
     const fetchFallbackLine = async () => {
-        logger.log(`[CommentScraper] 自动无缝切换至 JavDB 备用 API (jdforrepam.com) 抓取短评...`);
         const sign = jbBuildSignature();
         const apiUrl = `${JB_API_BASE}/v1/movies/${movieId}/reviews`;
         const res = await jbApiGetOnce(apiUrl, { page: page, sort_by: 'hotly', limit: 20 }, {

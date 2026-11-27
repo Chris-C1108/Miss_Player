@@ -170,19 +170,20 @@ export class SubtitleRepository {
      * @param {{ codes?: string[]|null }} [options]
      * @returns {Promise<{ clearedCount: number }>}
      */
-    static async clearLocal({ codes = null } = {}) {
-        if (Array.isArray(codes) && codes.length > 0) {
-            const keys = Array.from(new Set(codes.map((c) => normalizeKey(c)).filter(Boolean)));
-            let clearedCount = 0;
-            for (const key of keys) {
-                if (await idbDelete(STORES.SUBTITLES, key)) clearedCount += 1;
-            }
-            return { clearedCount };
-        }
-        const rows = await idbGetAll(STORES.SUBTITLES);
+    static async clearLocal({ codes = null, subtitleManager = null } = {}) {
         let clearedCount = 0;
-        for (const row of rows) {
-            if (row?.key && await idbDelete(STORES.SUBTITLES, row.key)) clearedCount += 1;
+        const targets = (Array.isArray(codes) && codes.length > 0)
+            ? Array.from(new Set(codes.map((c) => normalizeKey(c)).filter(Boolean)))
+            : (await idbGetAll(STORES.SUBTITLES)).map((r) => r?.key).filter(Boolean);
+        for (const key of targets) {
+            if (await idbDelete(STORES.SUBTITLES, key)) clearedCount += 1;
+        }
+        if (subtitleManager) {
+            subtitleManager.onlineResults = [];
+            subtitleManager._autoSearchedCodes?.clear?.();
+            if (subtitleManager.bundle) {
+                subtitleManager.bundle = { code: subtitleManager.avcode || '', activeId: '', favoriteId: '', items: [], updatedAt: 0 };
+            }
         }
         return { clearedCount };
     }

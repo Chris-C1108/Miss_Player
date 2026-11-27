@@ -11,9 +11,7 @@ import { fetchJableComments } from '../player/comments/providers/JableCommentPro
 import { fetchJavdbMovieId, fetchJavdbData } from '../player/comments/providers/JavDbCommentProvider.js';
 import { processComment } from '../player/comments/CommentDataPipeline.js';
 import { SubtitleEngine } from '../player/subtitles/SubtitleEngine.js';
-import { parseSubtitles } from '../player/subtitles/SubtitleFormat.js';
-import { detectSubtitleLanguage } from '../player/subtitles/SubtitleLanguageDetector.js';
-import { scoreSubtitleQuality, selectBestQualityCandidate, computeTrackContentFingerprint } from '../player/subtitles/SubtitleQualityScorer.js';
+import { selectBestQualityCandidate, computeTrackContentFingerprint } from '../player/subtitles/SubtitleQualityScorer.js';
 import {
     rankPreferredCandidates,
     collectAmbiguousFallbackCandidates,
@@ -30,7 +28,7 @@ export const BATCH_CODES_STORAGE_KEY = 'mp_ai_batch_test_codes';
 
 const MAX_COMMENT_PAGES = 3;
 const MAX_SUB_EVAL_CANDIDATES = 5;
-const BETWEEN_ITEM_DELAY_MS = 350;
+const BETWEEN_ITEM_DELAY_MS = 1200;
 
 let runningState = false;
 let abortRequested = false;
@@ -182,28 +180,23 @@ async function evaluateSubtitlesForBatch(avcode, preferredLang) {
     const settled = await Promise.allSettled(
         ranked.slice(0, MAX_SUB_EVAL_CANDIDATES).map(async (candidate) => {
             const dl = await engine.download(candidate);
-            if (!dl?.cues?.length) return null;
-            const parsed = dl.format ? { format: dl.format, cues: dl.cues } : parseSubtitles(dl.content, candidate.format || '');
-            const cues = parsed?.cues?.length ? parsed.cues : dl.cues;
-            const langInfo = dl.langInfo || detectSubtitleLanguage(cues, candidate.lang || '');
-            const quality = dl.quality || scoreSubtitleQuality(cues, { langInfo });
-
+            const cues = dl?.cues;
+            if (!cues?.length) return null;
+            const { langInfo, quality, format, content, encoding } = dl;
             const item = {
                 ...candidate,
-                content: dl.content,
-                format: parsed.format || candidate.format || 'srt',
+                content,
+                format: format || candidate.format || 'srt',
                 lang: (langInfo?.detectedLang && langInfo.detectedLang !== 'unknown' && langInfo.confidence >= 0.7)
                     ? langInfo.detectedLang
                     : candidate.lang,
-                encoding: dl.encoding,
+                encoding,
                 langInfo,
                 quality
             };
-
             if (usingAmbiguousProbe) {
                 const actualLang = normalizeSubtitleLang(langInfo?.detectedLang || item.lang);
-                const matchesZh = actualLang === 'zh' || actualLang === 'zh-TW' || langInfo?.trackLayout === 'bilingual';
-                if (!matchesZh) return null;
+                if (actualLang !== 'zh' && actualLang !== 'zh-TW' && langInfo?.trackLayout !== 'bilingual') return null;
             }
             return { candidate, item, parsed: { format: item.format, cues }, langInfo, quality };
         })

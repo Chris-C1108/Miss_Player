@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.013
+// @version            5.7.124-beta.014
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.013";
+		return "5.7.124-beta.014";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4771,7 +4771,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.013";
+		return "5.7.124-beta.014";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6914,7 +6914,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.013";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.014";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -10912,7 +10912,6 @@
 		const cleanCode = avcode.trim();
 		const activeDomain = JAVDB_DOMAINS[domainIndex] || JAVDB_DOMAINS[0] || "https://javdb.com";
 		const url = `${activeDomain}/search?q=${encodeURIComponent(cleanCode)}&f=all`;
-		logger.log(`[CommentScraper] 开始获取 JavDB 影片 ID，番号: ${cleanCode}, 域名: ${activeDomain}`);
 		return new Promise((resolve, reject) => {
 			if (typeof GM_xmlhttpRequest === "undefined") {
 				reject(new Error("GM_xmlhttpRequest unavailable"));
@@ -10927,7 +10926,8 @@
 					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 				},
 				onload(r) {
-					if (r.status === 403 || r.status === 503 || r.responseText && (r.responseText.includes("cf-challenge") || r.responseText.includes("Turnstile"))) {
+					const body = String(r.responseText || "");
+					if (r.status === 403 || r.status === 503 || body.includes("cf-challenge") || body.includes("Turnstile")) {
 						reject(new Error(`CF_SHIELD_ON_${activeDomain}`));
 						return;
 					}
@@ -10943,8 +10943,12 @@
 								return;
 							}
 						}
+						if (!body.includes("movie-list") && /請登錄|操作太頻繁|Too Many Requests/i.test(body)) {
+							reject(new Error(`JAVDB_RATE_LIMIT_${activeDomain}`));
+							return;
+						}
 						try {
-							const items = new DOMParser().parseFromString(r.responseText, "text/html").querySelectorAll(".movie-list .item a[href^=\"/v/\"], .grid-item a[href^=\"/v/\"], a[href^=\"/v/\"]");
+							const items = new DOMParser().parseFromString(body, "text/html").querySelectorAll(".movie-list .item a[href^=\"/v/\"], .grid-item a[href^=\"/v/\"], a[href^=\"/v/\"]");
 							let foundId = "";
 							for (const a of items) {
 								const m = (a.getAttribute("href") || "").match(/\/v\/([a-zA-Z0-9]+)/);
@@ -10977,7 +10981,8 @@
 				}
 			});
 		}).catch(async (htmlErr) => {
-			logger.warn(`[CommentScraper] JavDB 主线搜索失败 (${htmlErr.message})，正在尝试第三方 API 备用线路...`);
+			if (domainIndex + 1 < JAVDB_DOMAINS.length) return fetchJavdbMovieId(cleanCode, domainIndex + 1);
+			logger.warn(`[CommentScraper] JavDB 主线搜索失败 (${htmlErr.message})，尝试备用 API...`);
 			try {
 				const sign = jbBuildSignature();
 				const movies = (await jbApiGetOnce(`${JB_API_BASE$1}/v2/search`, {
@@ -10995,14 +11000,11 @@
 					"host": "jdforrepam.com",
 					"jdsignature": sign
 				}))?.data?.movies || [];
-				if (movies.length > 0 && movies[0].id) {
-					logger.log(`[CommentScraper] 备用线路获取 JavDB movieId 成功: ${movies[0].id}`);
-					return {
-						movieId: movies[0].id,
-						domain: activeDomain,
-						source: "api"
-					};
-				}
+				if (movies.length > 0 && movies[0].id) return {
+					movieId: movies[0].id,
+					domain: activeDomain,
+					source: "api"
+				};
 			} catch (apiErr) {
 				logger.error(`[CommentScraper] JavDB 备用线路搜索亦失败:`, apiErr);
 			}
@@ -11013,7 +11015,6 @@
 		if (!movieId) return Promise.reject(new Error("Invalid MovieId"));
 		const activeDomain = domain || JAVDB_DOMAINS[0] || "https://javdb.com";
 		const reviewUrl = `${activeDomain}/v/${movieId}/reviews?page=${page}`;
-		logger.log(`[CommentScraper] 尝试 JavDB 主线获取短评 (Page ${page}): ${reviewUrl}`);
 		const fetchMainLine = () => new Promise((resolve, reject) => {
 			if (typeof GM_xmlhttpRequest === "undefined") {
 				reject(new Error("GM_xmlhttpRequest unavailable"));
@@ -11093,7 +11094,6 @@
 			});
 		});
 		const fetchFallbackLine = async () => {
-			logger.log(`[CommentScraper] 自动无缝切换至 JavDB 备用 API (jdforrepam.com) 抓取短评...`);
 			const sign = jbBuildSignature();
 			const reviews = (await jbApiGetOnce(`${JB_API_BASE$1}/v1/movies/${movieId}/reviews`, {
 				page,
@@ -12181,8 +12181,11 @@
 		if (/\[Script Info\]/i.test(head) || /\[Events\]/i.test(head) || /^\s*Dialogue\s*:/im.test(head)) return "ass";
 		return "srt";
 	}
+	function normalizeTimeToken(raw) {
+		return String(raw || "").replace(/：/g, ":").replace(/，/g, ",").replace(/．/g, ".").trim();
+	}
 	function parseTimestamp(raw, { allowShort = false } = {}) {
-		const str = String(raw || "").trim();
+		const str = normalizeTimeToken(raw);
 		const full = str.match(/^(\d{1,3}):(\d{1,2}):(\d{1,2})(?:[.,](\d{1,3}))?$/);
 		if (full) {
 			const ms = full[4] ? parseFloat(`0.${full[4]}`) : 0;
@@ -12197,14 +12200,15 @@
 		}
 		return NaN;
 	}
+	var TIME_RANGE_LINE_RE = /^\s*([\d:：.,，]+)\s*(?:-{1,2}>|—>|→)\s*([\d:：.,，]+)(?:\s+.*)?$/;
 	function parseTimeRangeLine(line, allowShortTime) {
-		if (!line || !line.includes("-->")) return null;
-		const [startRaw, endRaw] = line.split("-->");
-		const start = parseTimestamp(startRaw, { allowShort: allowShortTime });
+		const m = String(line || "").match(TIME_RANGE_LINE_RE);
+		if (!m) return null;
+		const start = parseTimestamp(m[1], { allowShort: allowShortTime });
 		if (!Number.isFinite(start)) return null;
 		return {
 			start,
-			end: parseTimestamp(String(endRaw || "").trim().split(/\s+/)[0], { allowShort: allowShortTime })
+			end: parseTimestamp(m[2], { allowShort: allowShortTime })
 		};
 	}
 	function normalizeCues(cues) {
@@ -12228,7 +12232,6 @@
 				while (i + 1 < lines.length && lines[i + 1] !== "") i++;
 				continue;
 			}
-			if (!line.includes("-->")) continue;
 			const range = parseTimeRangeLine(line, allowShortTime);
 			if (!range) continue;
 			const bodyLines = [];
@@ -12240,7 +12243,7 @@
 					j++;
 					break;
 				}
-				if (nextLine.includes("-->") && parseTimeRangeLine(nextLine, allowShortTime)) {
+				if (parseTimeRangeLine(nextLine, allowShortTime)) {
 					hitNextTimestamp = true;
 					break;
 				}
@@ -13618,6 +13621,13 @@
 		}
 		const dupRate = 1 - uniqueTexts.size / cueCount;
 		const mtRate = mtHits / cueCount;
+		const effectiveDur = duration >= 300 ? duration : span;
+		let maxGapSec = 0;
+		for (let i = 1; i < cueCount; i++) {
+			const prevEnd = Number(cues[i - 1]?.end ?? cues[i - 1]?.start) || 0;
+			const gap = Math.max(0, (Number(cues[i]?.start) || 0) - prevEnd);
+			if (gap > maxGapSec) maxGapSec = gap;
+		}
 		let sqi = 100;
 		const reasons = [];
 		if (duration >= 300) {
@@ -13627,6 +13637,14 @@
 			} else if (coverage < .5) {
 				sqi -= 25;
 				reasons.push("low_coverage");
+			}
+		}
+		if (effectiveDur >= 1800) {
+			const isExtremeSparse = cueCount / (effectiveDur / 60) < .75;
+			const hasGiantGap = maxGapSec >= 2400 && maxGapSec / effectiveDur >= .35;
+			if (isExtremeSparse || hasGiantGap) {
+				sqi -= isExtremeSparse && hasGiantGap ? 48 : 30;
+				reasons.push("giant_gap_or_sparse");
 			}
 		}
 		if (cueCount >= 40) {
@@ -13959,7 +13977,8 @@
 		"truncated",
 		"whisper_polite_noise",
 		"sanitized_mt",
-		"high_repetition"
+		"high_repetition",
+		"giant_gap_or_sparse"
 	]);
 	function assessAiContextValue({ cues = [], subtitleQuality = null, comments = [], crowdPeaks = [], videoDuration = 0 } = {}) {
 		const cueCount = Array.isArray(cues) ? cues.length : 0;
@@ -14150,7 +14169,7 @@
 			}
 			const summary = normalizeInlineText(parsed.summary || "").slice(0, 40);
 			const rawChapters = Array.isArray(parsed.chapters) ? parsed.chapters : [];
-			const chapters = rawChapters.map((item) => {
+			const chaptersRaw = rawChapters.map((item) => {
 				const lineNum = Number(item?.line ?? item?.cueLine ?? item?.idx);
 				const resolvedFromLine = Number.isInteger(lineNum) && lineSeconds.has(lineNum) ? lineSeconds.get(lineNum) : null;
 				const secRaw = resolvedFromLine !== null ? resolvedFromLine : Number(item?.seconds ?? item?.time ?? item?.start);
@@ -14164,7 +14183,14 @@
 					tag,
 					headline
 				};
-			}).filter(Boolean).sort((a, b) => a.seconds - b.seconds).slice(0, 12);
+			}).filter(Boolean).sort((a, b) => a.seconds - b.seconds);
+			const dedupedChapters = [];
+			for (const ch of chaptersRaw) {
+				if (dedupedChapters.some((kept) => ch.seconds - kept.seconds < 60)) continue;
+				dedupedChapters.push(ch);
+				if (dedupedChapters.length >= 12) break;
+			}
+			const chapters = dedupedChapters;
 			const data = {
 				summary,
 				chapters
@@ -14934,11 +14960,11 @@
 				"反幻觉硬约束（台词≠画面）：1) 必须先结合片名/简介/标签/评论确认全片核心体裁基调——纯深喉口交片出现“射了/舔净”若无下体插入前情绝不可脑补成「内射」，单凭孤立1~2词（如“屁眼”“要射了”“想要”“好舒服”）绝不可脑补成「肛交/双穴/灌精」；2) 欲望挑逗、夸张比喻或否定词（好像想要插入/顶到子宫/无法吞咽）不得写成已发生；3) 禁止把评论许愿或抱怨（希望喉射/没吞精）嫁接到无关时刻；4) 仅输出明确实锤的高光（0~5条，无把握宁可空缺 [] 绝不凑数），每条必须标注 confidence (\"high\"|\"medium\"|\"low\")，未证实具体动作只可写 low 或留空。",
 				"字段输出顺序与上限：",
 				"1. brief: 1句话看点/避坑/共识总结；",
-				"2. highlights: 0至5个有实锤依据的高能片段；",
-				"3. skipZones: 最多 3 个明显拖沓/避坑区间（无明显区间返回 `[]`，严禁写片尾凑数）；",
-				"4. commentTags: 最多 8 条纯评价归类 (`hype`/`warn`/`neutral`)；无字幕或波峰依据时 `inferredSeconds` 必须为 `null`；",
-				"仅输出严格合法 JSON，禁止 Markdown 围栏与多余解释：",
-				hasSub ? "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑(无则写暂无明显雷点)\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"subLine\": 12, \"confidence\": \"high\", \"tag\": \"2-4字标签\", \"reason\": \"16字内实锤依据\", \"sources\": [\"crowd\",\"comment\",\"sub\"], \"score\": 92 }], \"skipZones\": [{ \"seconds\": 0, \"endSeconds\": 90, \"reason\": \"14字内避坑说明\" }], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"isCountdown\": false, \"inferredSeconds\": 420, \"note\": \"10字内标签\" }] }" : "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑(无则写暂无明显雷点)\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"confidence\": \"high\", \"tag\": \"2-4字标签\", \"reason\": \"16字内实锤依据\", \"sources\": [\"comment\"], \"score\": 92 }], \"skipZones\": [], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"isCountdown\": false, \"inferredSeconds\": null, \"note\": \"10字内标签\" }] }"
+				"2. highlights: 0-5条实锤高能（禁止选片尾独白，无把握留 []）；",
+				"3. skipZones: 最多3个明显拖沓/避坑区间（不得与 highlights 重叠，无则 []）；",
+				"4. commentTags: 最多8条评价归类；无字幕/波峰时 `inferredSeconds` 填 null；",
+				"仅输出严格合法 JSON：",
+				hasSub ? "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"subLine\": 12, \"confidence\": \"high\", \"tag\": \"标签\", \"reason\": \"依据\", \"sources\": [\"crowd\",\"comment\",\"sub\"], \"score\": 92 }], \"skipZones\": [{ \"seconds\": 0, \"endSeconds\": 90, \"reason\": \"避坑\" }], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"inferredSeconds\": 420, \"note\": \"标签\" }] }" : "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"confidence\": \"high\", \"tag\": \"标签\", \"reason\": \"依据\", \"sources\": [\"comment\"], \"score\": 92 }], \"skipZones\": [], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"inferredSeconds\": null, \"note\": \"标签\" }] }"
 			].join("\n")
 		}, {
 			role: "user",
@@ -15016,6 +15042,7 @@
 					if (commentTsList.length === 0) continue;
 					if (!commentTsList.some((cts) => Math.abs(cts - sec) <= 120)) continue;
 				}
+				if (dur >= 600 && sec >= dur - 90 && !sources.includes("comment") && !sources.includes("crowd") && /(?:结局|片尾|收尾|尾声|定格)/.test(`${item?.tag || ""}${item?.reason || ""}`)) continue;
 				const endSecRaw = clampSec(item?.endSeconds);
 				const endSeconds = endSecRaw !== null && endSecRaw > sec && endSecRaw - sec <= 1800 ? endSecRaw : null;
 				const tag = normalizeInlineText(item?.tag || "").slice(0, 6) || "高能";
@@ -15046,6 +15073,10 @@
 				const endRaw = clampSec(z?.endSeconds);
 				if (endRaw === null || endRaw <= sec || endRaw - sec < 15) continue;
 				if (dur > 0 && sec >= Math.floor(dur) - 15) continue;
+				if (highlights.some((h) => {
+					const hEnd = h.endSeconds || h.seconds + 30;
+					return h.seconds <= endRaw + 20 && hEnd >= sec - 20;
+				})) continue;
 				const reason = normalizeInlineText(z?.reason || "").slice(0, 22) || "节奏偏慢";
 				skipZones.push({
 					seconds: sec,
@@ -15071,7 +15102,7 @@
 				const note = normalizeInlineText(ct?.note || "").slice(0, 14);
 				commentInsights[target.id] = {
 					sentiment,
-					isCountdown: Boolean(ct?.isCountdown),
+					isCountdown: Boolean(target.countdownApplied),
 					inferredSeconds,
 					note
 				};
@@ -32160,16 +32191,21 @@
 			if (!target || !item?.file) return false;
 			return WebDavClient.deleteFile(target.config, `${target.dir}${item.file}`);
 		}
-		static async clearLocal({ codes = null } = {}) {
-			if (Array.isArray(codes) && codes.length > 0) {
-				const keys = Array.from(new Set(codes.map((c) => normalizeKey(c)).filter(Boolean)));
-				let clearedCount = 0;
-				for (const key of keys) if (await idbDelete(STORES$1.SUBTITLES, key)) clearedCount += 1;
-				return { clearedCount };
-			}
-			const rows = await idbGetAll(STORES$1.SUBTITLES);
+		static async clearLocal({ codes = null, subtitleManager = null } = {}) {
 			let clearedCount = 0;
-			for (const row of rows) if (row?.key && await idbDelete(STORES$1.SUBTITLES, row.key)) clearedCount += 1;
+			const targets = Array.isArray(codes) && codes.length > 0 ? Array.from(new Set(codes.map((c) => normalizeKey(c)).filter(Boolean))) : (await idbGetAll(STORES$1.SUBTITLES)).map((r) => r?.key).filter(Boolean);
+			for (const key of targets) if (await idbDelete(STORES$1.SUBTITLES, key)) clearedCount += 1;
+			if (subtitleManager) {
+				subtitleManager.onlineResults = [];
+				subtitleManager._autoSearchedCodes?.clear?.();
+				if (subtitleManager.bundle) subtitleManager.bundle = {
+					code: subtitleManager.avcode || "",
+					activeId: "",
+					favoriteId: "",
+					items: [],
+					updatedAt: 0
+				};
+			}
 			return { clearedCount };
 		}
 		static _merge(localBundle, remoteIndex) {
@@ -34135,7 +34171,7 @@
 	var BATCH_CODES_STORAGE_KEY = "mp_ai_batch_test_codes";
 	var MAX_COMMENT_PAGES = 3;
 	var MAX_SUB_EVAL_CANDIDATES = 5;
-	var BETWEEN_ITEM_DELAY_MS = 350;
+	var BETWEEN_ITEM_DELAY_MS = 1200;
 	var runningState = false;
 	var abortRequested = false;
 	function parseBatchCodes(rawText) {
@@ -34267,26 +34303,21 @@
 		const pickStartedAt = Date.now();
 		const settled = await Promise.allSettled(ranked.slice(0, MAX_SUB_EVAL_CANDIDATES).map(async (candidate) => {
 			const dl = await engine.download(candidate);
-			if (!dl?.cues?.length) return null;
-			const parsed = dl.format ? {
-				format: dl.format,
-				cues: dl.cues
-			} : parseSubtitles(dl.content, candidate.format || "");
-			const cues = parsed?.cues?.length ? parsed.cues : dl.cues;
-			const langInfo = dl.langInfo || detectSubtitleLanguage(cues, candidate.lang || "");
-			const quality = dl.quality || scoreSubtitleQuality(cues, { langInfo });
+			const cues = dl?.cues;
+			if (!cues?.length) return null;
+			const { langInfo, quality, format, content, encoding } = dl;
 			const item = {
 				...candidate,
-				content: dl.content,
-				format: parsed.format || candidate.format || "srt",
+				content,
+				format: format || candidate.format || "srt",
 				lang: langInfo?.detectedLang && langInfo.detectedLang !== "unknown" && langInfo.confidence >= .7 ? langInfo.detectedLang : candidate.lang,
-				encoding: dl.encoding,
+				encoding,
 				langInfo,
 				quality
 			};
 			if (usingAmbiguousProbe) {
 				const actualLang = normalizeSubtitleLang(langInfo?.detectedLang || item.lang);
-				if (!(actualLang === "zh" || actualLang === "zh-TW" || langInfo?.trackLayout === "bilingual")) return null;
+				if (actualLang !== "zh" && actualLang !== "zh-TW" && langInfo?.trackLayout !== "bilingual") return null;
 			}
 			return {
 				candidate,
@@ -35045,27 +35076,15 @@
 				clearSubCacheBtn.innerHTML = clearSubHtml;
 				bindTwoStepConfirm(clearSubCacheBtn, {
 					normalHtml: clearSubHtml,
-					confirmText: "确认清空本地字幕缓存?",
+					confirmText: "确认清空?",
 					onConfirm: async () => {
 						clearSubCacheBtn.disabled = true;
-						const res = await SubtitleRepository.clearLocal();
-						const subMgr = sm?.controlManager?.subtitleManager;
-						if (subMgr) {
-							subMgr.onlineResults = [];
-							subMgr._autoSearchedCodes?.clear?.();
-							if (subMgr.bundle) subMgr.bundle = {
-								code: subMgr.avcode || "",
-								activeId: "",
-								favoriteId: "",
-								items: [],
-								updatedAt: 0
-							};
-						}
+						const res = await SubtitleRepository.clearLocal({ subtitleManager: sm?.controlManager?.subtitleManager });
 						clearSubCacheBtn.disabled = false;
 						clearSubCacheBtn.innerHTML = clearSubHtml;
 						statusBox.className = "mp-s2-status-box is-ok";
-						statusBox.textContent = `已清理本地 ${res.clearedCount} 部影片的缓存字幕`;
-						Toast$1(`已清理 ${res.clearedCount} 部本地字幕缓存`, 2e3, "success");
+						statusBox.textContent = `已清理 ${res.clearedCount} 部字幕缓存`;
+						Toast$1(`已清理 ${res.clearedCount} 部字幕缓存`, 2e3, "success");
 					}
 				});
 				batchRunBtn.addEventListener("click", async (e) => {
@@ -35989,26 +36008,13 @@
 					clearSubBtn.innerHTML = normalSubHtml;
 					bindTwoStepConfirm(clearSubBtn, {
 						normalHtml: normalSubHtml,
-						confirmText: "确认清空本地缓存字幕?",
+						confirmText: "确认清空?",
 						onConfirm: async () => {
 							clearSubBtn.disabled = true;
-							clearSubBtn.textContent = "清理中…";
-							const res = await SubtitleRepository.clearLocal();
-							const subMgr = this.sm?.controlManager?.subtitleManager;
-							if (subMgr) {
-								subMgr.onlineResults = [];
-								subMgr._autoSearchedCodes?.clear?.();
-								if (subMgr.bundle) subMgr.bundle = {
-									code: subMgr.avcode || "",
-									activeId: "",
-									favoriteId: "",
-									items: [],
-									updatedAt: 0
-								};
-							}
+							const res = await SubtitleRepository.clearLocal({ subtitleManager: this.sm?.controlManager?.subtitleManager });
 							clearSubBtn.disabled = false;
 							clearSubBtn.innerHTML = normalSubHtml;
-							Toast$1(`已清理本地 ${res.clearedCount} 部字幕缓存`, 2e3, "success");
+							Toast$1(`已清理 ${res.clearedCount} 部字幕缓存`, 2e3, "success");
 						}
 					});
 					actionForm.appendChild(clearBtn);

@@ -699,23 +699,15 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
 
             bindTwoStepConfirm(clearSubCacheBtn, {
                 normalHtml: clearSubHtml,
-                confirmText: '确认清空本地字幕缓存?',
+                confirmText: '确认清空?',
                 onConfirm: async () => {
                     clearSubCacheBtn.disabled = true;
-                    const res = await SubtitleRepository.clearLocal();
-                    const subMgr = sm?.controlManager?.subtitleManager;
-                    if (subMgr) {
-                        subMgr.onlineResults = [];
-                        subMgr._autoSearchedCodes?.clear?.();
-                        if (subMgr.bundle) {
-                            subMgr.bundle = { code: subMgr.avcode || '', activeId: '', favoriteId: '', items: [], updatedAt: 0 };
-                        }
-                    }
+                    const res = await SubtitleRepository.clearLocal({ subtitleManager: sm?.controlManager?.subtitleManager });
                     clearSubCacheBtn.disabled = false;
                     clearSubCacheBtn.innerHTML = clearSubHtml;
                     statusBox.className = 'mp-s2-status-box is-ok';
-                    statusBox.textContent = `已清理本地 ${res.clearedCount} 部影片的缓存字幕`;
-                    Toast(`已清理 ${res.clearedCount} 部本地字幕缓存`, 2000, 'success');
+                    statusBox.textContent = `已清理 ${res.clearedCount} 部字幕缓存`;
+                    Toast(`已清理 ${res.clearedCount} 部字幕缓存`, 2000, 'success');
                 }
             });
 

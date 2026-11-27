@@ -67,8 +67,12 @@ export function detectSubtitleFormat(text, hint = '') {
     return 'srt';
 }
 
+function normalizeTimeToken(raw) {
+    return String(raw || '').replace(/：/g, ':').replace(/，/g, ',').replace(/．/g, '.').trim();
+}
+
 function parseTimestamp(raw, { allowShort = false } = {}) {
-    const str = String(raw || '').trim();
+    const str = normalizeTimeToken(raw);
     const full = str.match(/^(\d{1,3}):(\d{1,2}):(\d{1,2})(?:[.,](\d{1,3}))?$/);
     if (full) {
         const ms = full[4] ? parseFloat(`0.${full[4]}`) : 0;
@@ -84,12 +88,14 @@ function parseTimestamp(raw, { allowShort = false } = {}) {
     return NaN;
 }
 
+const TIME_RANGE_LINE_RE = /^\s*([\d:：.,，]+)\s*(?:-{1,2}>|—>|→)\s*([\d:：.,，]+)(?:\s+.*)?$/;
+
 function parseTimeRangeLine(line, allowShortTime) {
-    if (!line || !line.includes('-->')) return null;
-    const [startRaw, endRaw] = line.split('-->');
-    const start = parseTimestamp(startRaw, { allowShort: allowShortTime });
+    const m = String(line || '').match(TIME_RANGE_LINE_RE);
+    if (!m) return null;
+    const start = parseTimestamp(m[1], { allowShort: allowShortTime });
     if (!Number.isFinite(start)) return null;
-    const end = parseTimestamp(String(endRaw || '').trim().split(/\s+/)[0], { allowShort: allowShortTime });
+    const end = parseTimestamp(m[2], { allowShort: allowShortTime });
     return { start, end };
 }
 
@@ -124,7 +130,6 @@ function parseSrtLike(text, allowShortTime = false) {
             continue;
         }
 
-        if (!line.includes('-->')) continue;
         const range = parseTimeRangeLine(line, allowShortTime);
         if (!range) continue;
 
@@ -137,7 +142,7 @@ function parseSrtLike(text, allowShortTime = false) {
                 j++;
                 break;
             }
-            if (nextLine.includes('-->') && parseTimeRangeLine(nextLine, allowShortTime)) {
+            if (parseTimeRangeLine(nextLine, allowShortTime)) {
                 hitNextTimestamp = true;
                 break;
             }

@@ -52,7 +52,9 @@ const {
     buildHighlightGraphWithLlm,
     autoTagMarkerWithLlm
 } = await import('../src/services/LlmTasks.js');
-const { selectBestQualityCandidate } = await import('../src/player/subtitles/SubtitleQualityScorer.js');
+const { selectBestQualityCandidate, scoreSubtitleQuality } = await import('../src/player/subtitles/SubtitleQualityScorer.js');
+const { parseSubtitles } = await import('../src/player/subtitles/SubtitleFormat.js');
+const { fetchJavdbMovieId, JAVDB_DOMAINS } = await import('../src/player/comments/providers/JavDbCommentProvider.js');
 const { SyncManager } = await import('../src/sync/SyncManager.js');
 const { SubtitleRepository } = await import('../src/player/subtitles/SubtitleRepository.js');
 const {
@@ -1127,5 +1129,140 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         assert.ok(payload.contextReadiness?.subtitles?.autoPick);
         assert.ok(payload.contextReadiness?.comments?.initialLoad);
         assert.equal(payload.aiExecutions.length, 2);
+    });
+
+    it('兼容 MIAB-357 全角单箭头时间戳、拦截 ABF-015 空洞稀疏轨、JavDB 域名轮换并剔除重叠/片尾冲突', async () => {
+        resetAll();
+        // 1. MIAB-357 畸形时间戳恢复
+        const weirdSrt = [
+            '0',
+            '00：00：00.000-> 00：00：03.000',
+            '  aisubs.app',
+            '',
+            '1',
+            '00:00:31.216 -> 00:01:00.528',
+            '  感谢您的辛勤工作。你应该休息一下。'
+        ].join('\n');
+        const parsed = parseSubtitles(weirdSrt, 'MIAB-357-zh-CN.srt');
+        assert.equal(parsed.cues.length, 2);
+        assert.equal(Math.round(parsed.cues[1].start), 31);
+
+        // 2. ABF-015 稀疏断层拦截（90 句跨 3.3 小时，中间 5800 秒空白断层）
+        const gappyCues = [
+            ...Array.from({ length: 45 }, (_, i) => ({ start: 70 + i * 90, end: 74 + i * 90, text: `前半段对话内容句子编号${i}` })),
+            ...Array.from({ length: 45 }, (_, i) => ({ start: 10095 + i * 35, end: 10099 + i * 35, text: `后半段结尾内容句子编号${i}` }))
+        ];
+        const gapQuality = scoreSubtitleQuality(gappyCues, {});
+        assert.ok(gapQuality.reasons.includes('giant_gap_or_sparse'));
+        assert.ok(gapQuality.sqi < 60, `预期高断层低密度轨被明显降权，实际 ${gapQuality.sqi}`);
+
+        // 3. JavDB 主站返回 HTTP 200 限流/登录页时自动轮换备用域名
+        const prevDomParser = globalThis.DOMParser;
+        globalThis.DOMParser = class {
+            parseFromString(html) {
+                return {
+                    querySelectorAll() {
+                        if (html.includes('/v/ok999')) {
+                            return [{ getAttribute: (k) => (k === 'href' ? '/v/ok999' : 'MIAA-950'), textContent: 'MIAA-950' }];
+                        }
+                        return [];
+                    }
+                };
+            }
+        };
+        try {
+            gmResponder = (opts) => {
+                if (opts.url.startsWith(JAVDB_DOMAINS[0])) {
+                    return opts.onload?.({ status: 200, responseText: '<html>請登錄帳號</html>', finalUrl: opts.url });
+                }
+                if (JAVDB_DOMAINS[1] && opts.url.startsWith(JAVDB_DOMAINS[1])) {
+                    return opts.onload?.({ status: 200, responseText: '<div class="movie-list"><a href="/v/ok999" title="MIAA-950"></a></div>', finalUrl: opts.url });
+                }
+                return opts.onload?.({ status: 404, responseText: '', finalUrl: opts.url });
+            };
+            if (JAVDB_DOMAINS.length >= 2) {
+                const jbRes = await fetchJavdbMovieId('MIAA-950');
+                assert.equal(jbRes.movieId, 'ok999');
+                assert.equal(jbRes.domain, JAVDB_DOMAINS[1]);
+            }
+        } finally {
+            globalThis.DOMParser = prevDomParser;
+        }
+
+        // 4. LlmTasks 后处理：skipZones 不得吞掉 highlights、片尾 90s 纯字幕独白过滤、分幕 <60s 合并、isCountdown 不受模型幻觉影响
+        LlmService.saveConfig({ enabled: true, baseUrl: 'https://llm.test/v1', model: 'gpt-4o-mini', apiKey: 'sk-test' });
+        const goodCues = Array.from({ length: 120 }, (_, i) => ({
+            start: i * 60,
+            end: i * 60 + 6,
+            text: `场景剧情对白片段内容${i}，继续推动故事发展。`
+        }));
+        gmResponder = (opts) => {
+            const body = JSON.parse(opts.data || '{}');
+            const sys = body.messages?.[0]?.content || '';
+            if (sys.includes('场景定位分析引擎')) {
+                return opts.onload?.({
+                    status: 200,
+                    responseText: JSON.stringify({
+                        choices: [{
+                            message: {
+                                content: JSON.stringify({
+                                    brief: { highlights: '中段爆发', warnings: '无', consensus: '好' },
+                                    highlights: [
+                                        { seconds: 3600, endSeconds: 3720, confidence: 'high', tag: '核心', reason: '中段强对白', sources: ['sub'], score: 90 },
+                                        { seconds: 7160, endSeconds: 7200, confidence: 'high', tag: '结局', reason: '片尾独白', sources: ['sub'], score: 88 }
+                                    ],
+                                    skipZones: [
+                                        { seconds: 3550, endSeconds: 3750, reason: '冲突避坑' },
+                                        { seconds: 0, endSeconds: 180, reason: '纯片头铺垫' }
+                                    ],
+                                    commentTags: [
+                                        { idx: 0, sentiment: 'hype', isCountdown: true, inferredSeconds: 3600, note: '正向评论' }
+                                    ]
+                                })
+                            }
+                        }]
+                    })
+                });
+            }
+            return opts.onload?.({
+                status: 200,
+                responseText: JSON.stringify({
+                    choices: [{
+                        message: {
+                            content: JSON.stringify({
+                                summary: '完整剧情线',
+                                chapters: [
+                                    { seconds: 454, tag: '指令', headline: '下达指令' },
+                                    { seconds: 476, tag: '重复', headline: '22秒后重复' },
+                                    { seconds: 1800, tag: '推进', headline: '中段展开' }
+                                ]
+                            })
+                        }
+                    }]
+                })
+            });
+        };
+
+        const fgRes = await buildHighlightGraphWithLlm({
+            avcode: 'MVSD-372',
+            cues: goodCues,
+            comments: [{ id: 'c1', text: '1:00:00 太强了', countdownApplied: false }],
+            videoDuration: 7200,
+            forceRefresh: true
+        });
+        assert.equal(fgRes.ok, true);
+        assert.equal(fgRes.graph.highlights.length, 1, '片尾 90s 纯 sub 高光必须过滤');
+        assert.equal(fgRes.graph.highlights[0].seconds, 3600);
+        assert.equal(fgRes.graph.skipZones.length, 1, '与 highlights 重叠的 skipZones 必须剔除');
+        assert.equal(fgRes.graph.skipZones[0].seconds, 0);
+        assert.equal(fgRes.graph.commentInsights.c1.isCountdown, false, 'commentInsights.isCountdown 必须跟随真实本地校准结果');
+
+        const chRes = await analyzeSubtitleChaptersWithLlm({
+            avcode: 'DASD-943',
+            cues: goodCues,
+            forceRefresh: true
+        });
+        assert.equal(chRes.ok, true);
+        assert.equal(chRes.chapters.length, 2, '相邻 < 60s 章节必须自动合并去重');
     });
 });

@@ -157,6 +157,14 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
     const dupRate = 1 - uniqueTexts.size / cueCount;
     const mtRate = mtHits / cueCount;
 
+    const effectiveDur = duration >= 300 ? duration : span;
+    let maxGapSec = 0;
+    for (let i = 1; i < cueCount; i++) {
+        const prevEnd = Number(cues[i - 1]?.end ?? cues[i - 1]?.start) || 0;
+        const gap = Math.max(0, (Number(cues[i]?.start) || 0) - prevEnd);
+        if (gap > maxGapSec) maxGapSec = gap;
+    }
+
     let sqi = 100;
     const reasons = [];
 
@@ -167,6 +175,17 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
         } else if (coverage < 0.5) {
             sqi -= 25;
             reasons.push('low_coverage');
+        }
+    }
+
+    // 针对无视频时长或两头分布造成的超长空洞/极低密度（如 3 小时仅 90 句且中段断层 97 分钟）降权拦截
+    if (effectiveDur >= 1800) {
+        const cuesPerMin = cueCount / (effectiveDur / 60);
+        const isExtremeSparse = cuesPerMin < 0.75;
+        const hasGiantGap = maxGapSec >= 2400 && (maxGapSec / effectiveDur) >= 0.35;
+        if (isExtremeSparse || hasGiantGap) {
+            sqi -= (isExtremeSparse && hasGiantGap) ? 48 : 30;
+            reasons.push('giant_gap_or_sparse');
         }
     }
 

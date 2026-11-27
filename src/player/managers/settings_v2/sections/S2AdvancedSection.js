@@ -259,22 +259,13 @@ export class S2AdvancedSection {
 
                 bindTwoStepConfirm(clearSubBtn, {
                     normalHtml: normalSubHtml,
-                    confirmText: '确认清空本地缓存字幕?',
+                    confirmText: '确认清空?',
                     onConfirm: async () => {
                         clearSubBtn.disabled = true;
-                        clearSubBtn.textContent = '清理中…';
-                        const res = await SubtitleRepository.clearLocal();
-                        const subMgr = this.sm?.controlManager?.subtitleManager;
-                        if (subMgr) {
-                            subMgr.onlineResults = [];
-                            subMgr._autoSearchedCodes?.clear?.();
-                            if (subMgr.bundle) {
-                                subMgr.bundle = { code: subMgr.avcode || '', activeId: '', favoriteId: '', items: [], updatedAt: 0 };
-                            }
-                        }
+                        const res = await SubtitleRepository.clearLocal({ subtitleManager: this.sm?.controlManager?.subtitleManager });
                         clearSubBtn.disabled = false;
                         clearSubBtn.innerHTML = normalSubHtml;
-                        Toast(`已清理本地 ${res.clearedCount} 部字幕缓存`, 2000, 'success');
+                        Toast(`已清理 ${res.clearedCount} 部字幕缓存`, 2000, 'success');
                     }
                 });
 
