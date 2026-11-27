@@ -97,7 +97,7 @@ export function filterAndSortTextModels(rawModels = [], preferredModels = []) {
     });
 }
 
-const DEFAULT_TIMEOUT_MS = 45000;
+const DEFAULT_TIMEOUT_MS = 60000;
 const MIN_TIMEOUT_MS = 5000;
 const MAX_TIMEOUT_MS = 120000;
 const TEST_CONNECTION_TIMEOUT_MS = 10000;
@@ -577,20 +577,32 @@ export class LlmService {
         }
 
         const effectiveTimeout = clampTimeout(timeoutMs || cfg.timeoutMs, cfg.timeoutMs);
+        const bodyJson = JSON.stringify({
+            model: cfg.model,
+            messages,
+            temperature,
+            max_tokens: maxTokens
+        });
 
         try {
-            const res = await fetchWithTransport(endpoint, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({
-                    model: cfg.model,
-                    messages,
-                    temperature,
-                    max_tokens: maxTokens
-                }),
-                timeout: effectiveTimeout,
-                preferGM: true
-            });
+            let res = null;
+            for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                    res = await fetchWithTransport(endpoint, {
+                        method: 'POST',
+                        headers,
+                        body: bodyJson,
+                        timeout: effectiveTimeout,
+                        preferGM: true
+                    });
+                    if (attempt === 0 && (res.status === 502 || res.status === 503 || res.status === 504)) continue;
+                    break;
+                } catch (reqErr) {
+                    const msg = String(reqErr?.message || '');
+                    if (attempt === 0 && /NETWORK_TIMEOUT|NETWORK_ERROR|TIMEOUT/i.test(msg)) continue;
+                    throw reqErr;
+                }
+            }
 
             if (res.status === 401 || res.status === 403) {
                 throw new Error(`LLM_AUTH_FAILED (${res.status}): 密钥鉴权失败`);

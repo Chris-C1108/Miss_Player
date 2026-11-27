@@ -50,7 +50,8 @@ const {
     analyzeSubtitleChaptersWithLlm,
     summarizeCommentsWithLlm,
     buildHighlightGraphWithLlm,
-    autoTagMarkerWithLlm
+    autoTagMarkerWithLlm,
+    assessAiContextValue
 } = await import('../src/services/LlmTasks.js');
 const { selectBestQualityCandidate, scoreSubtitleQuality } = await import('../src/player/subtitles/SubtitleQualityScorer.js');
 const { parseSubtitles } = await import('../src/player/subtitles/SubtitleFormat.js');
@@ -1326,5 +1327,50 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         });
         assert.equal(chRes.ok, true);
         assert.equal(chRes.chapters.length, 2, '相邻 < 60s 章节必须自动合并去重');
+
+        // 6. 长对白偶发礼貌/口癖词 (SSIS-456 / PRED-036 / SAME-157) 不应误杀，且 NETWORK_TIMEOUT 自动重试 1 次恢复
+        const longCleanWithPolite = Array.from({ length: 600 }, (_, idx) => ({
+            start: idx * 11 + 5,
+            end: idx * 11 + 10,
+            text: idx < 7 ? '早上好，非常感谢您的照顾' : `职场剧情对白第 ${idx} 句，今天加班到很晚`
+        }));
+        const longPoliteCtx = assessAiContextValue({ cues: longCleanWithPolite, videoDuration: 7200 });
+        assert.ok(!longPoliteCtx.subReasons.includes('whisper_polite_noise'), '长字幕 1% 正常寒暄不得误判为 Whisper 礼貌噪声');
+        assert.equal(longPoliteCtx.isSubTrustworthy, true);
+
+        const longWithMildMt = Array.from({ length: 480 }, (_, idx) => ({
+            start: idx * 14 + 5,
+            end: idx * 14 + 10,
+            text: idx < 8 ? '这是正确的，请继续' : `第 ${idx} 段自然剧情对话推动发展`
+        }));
+        const mildMtCtx = assessAiContextValue({ cues: longWithMildMt, videoDuration: 6800 });
+        assert.ok(!mildMtCtx.subReasons.includes('sanitized_mt'), '低于 2.5% 比率的偶发口癖不得一票否决整轨');
+        assert.equal(mildMtCtx.isSubTrustworthy, true);
+
+        const borderlineHighCtx = assessAiContextValue({
+            cues: goodCues,
+            subtitleQuality: { sqi: 76, reasons: ['whisper_polite_noise'] }
+        });
+        assert.equal(borderlineHighCtx.isSubTrustworthy, true, 'SQI>=75 且无结构性损坏时不应仅因单一温和标签一票否决');
+
+        let retryCalls = 0;
+        gmResponder = (opts) => {
+            retryCalls += 1;
+            if (retryCalls === 1) {
+                opts.ontimeout?.();
+                return;
+            }
+            opts.onload?.({
+                status: 200,
+                responseText: JSON.stringify({ choices: [{ message: { content: '{"ok":true}' } }] })
+            });
+        };
+        const retryRes = await LlmService.chatCompletion({
+            messages: [{ role: 'user', content: 'ping' }],
+            timeoutMs: 6000
+        });
+        gmResponder = prevGm;
+        assert.equal(retryCalls, 2, 'NETWORK_TIMEOUT 时应自动重试 1 次');
+        assert.equal(retryRes.content, '{"ok":true}');
     });
 });

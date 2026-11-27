@@ -208,12 +208,13 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
             reasons.push('whisper_hallucination');
         }
 
-        if (politeNoiseHits >= 6 || politeNoiseHits / cueCount >= 0.03) {
+        const politeRate = politeNoiseHits / cueCount;
+        if (politeRate >= 0.028 || (politeNoiseHits >= 12 && politeRate >= 0.015)) {
             sqi -= Math.min(34, politeNoiseHits * 2 + 12);
             reasons.push('whisper_polite_noise');
         }
 
-        if (mtHits >= 6 || mtRate >= 0.015) {
+        if (mtRate >= 0.025 || (mtHits >= 12 && mtRate >= 0.015)) {
             sqi -= Math.min(35, mtHits * 2 + 12);
             reasons.push('sanitized_mt');
         }

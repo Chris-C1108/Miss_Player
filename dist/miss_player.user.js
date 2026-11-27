@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.017
+// @version            5.7.124-beta.018
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.017";
+		return "5.7.124-beta.018";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4771,7 +4771,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.017";
+		return "5.7.124-beta.018";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6914,7 +6914,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.017";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.018";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -10187,7 +10187,7 @@
 			return 0;
 		});
 	}
-	var DEFAULT_TIMEOUT_MS = 45e3;
+	var DEFAULT_TIMEOUT_MS = 6e4;
 	var MIN_TIMEOUT_MS = 5e3;
 	var MAX_TIMEOUT_MS = 12e4;
 	var TEST_CONNECTION_TIMEOUT_MS = 1e4;
@@ -10440,19 +10440,29 @@
 			const headers = { "Content-Type": "application/json" };
 			if (cfg.apiKey) headers.Authorization = `Bearer ${cfg.apiKey}`;
 			const effectiveTimeout = clampTimeout(timeoutMs || cfg.timeoutMs, cfg.timeoutMs);
+			const bodyJson = JSON.stringify({
+				model: cfg.model,
+				messages,
+				temperature,
+				max_tokens: maxTokens
+			});
 			try {
-				const res = await fetchWithTransport(endpoint, {
-					method: "POST",
-					headers,
-					body: JSON.stringify({
-						model: cfg.model,
-						messages,
-						temperature,
-						max_tokens: maxTokens
-					}),
-					timeout: effectiveTimeout,
-					preferGM: true
-				});
+				let res = null;
+				for (let attempt = 0; attempt < 2; attempt++) try {
+					res = await fetchWithTransport(endpoint, {
+						method: "POST",
+						headers,
+						body: bodyJson,
+						timeout: effectiveTimeout,
+						preferGM: true
+					});
+					if (attempt === 0 && (res.status === 502 || res.status === 503 || res.status === 504)) continue;
+					break;
+				} catch (reqErr) {
+					const msg = String(reqErr?.message || "");
+					if (attempt === 0 && /NETWORK_TIMEOUT|NETWORK_ERROR|TIMEOUT/i.test(msg)) continue;
+					throw reqErr;
+				}
 				if (res.status === 401 || res.status === 403) throw new Error(`LLM_AUTH_FAILED (${res.status}): 密钥鉴权失败`);
 				if (res.status < 200 || res.status >= 300) {
 					let errDetail = "";
@@ -13668,11 +13678,12 @@
 				sqi -= 15;
 				reasons.push("whisper_hallucination");
 			}
-			if (politeNoiseHits >= 6 || politeNoiseHits / cueCount >= .03) {
+			const politeRate = politeNoiseHits / cueCount;
+			if (politeRate >= .028 || politeNoiseHits >= 12 && politeRate >= .015) {
 				sqi -= Math.min(34, politeNoiseHits * 2 + 12);
 				reasons.push("whisper_polite_noise");
 			}
-			if (mtHits >= 6 || mtRate >= .015) {
+			if (mtRate >= .025 || mtHits >= 12 && mtRate >= .015) {
 				sqi -= Math.min(35, mtHits * 2 + 12);
 				reasons.push("sanitized_mt");
 			}
@@ -13980,10 +13991,9 @@
 	var BAD_SUB_TRUST_REASONS = new Set([
 		"corrupted_or_empty",
 		"truncated",
-		"whisper_polite_noise",
-		"sanitized_mt",
 		"high_repetition",
-		"giant_gap_or_sparse"
+		"giant_gap_or_sparse",
+		"whisper_hallucination"
 	]);
 	function assessAiContextValue({ cues = [], subtitleQuality = null, comments = [], crowdPeaks = [], videoDuration = 0 } = {}) {
 		const cueCount = Array.isArray(cues) ? cues.length : 0;
@@ -14967,7 +14977,7 @@
 				"1. brief: 1句话看点/避坑/共识；",
 				"2. highlights: 0-5条实锤高能（禁片尾独白，tag用2-4字勿带/）；",
 				"3. skipZones: 最多3个拖沓区间（勿重highlights，禁写字幕/行号/推测，无则[]）；",
-				"4. commentTags: 最多8条归类；无依据时 inferredSeconds 填 null；",
+				"4. commentTags: 最多8条归类；无时间戳或具体动作的泛评(如颜值/男主/实用) inferredSeconds 填 null；",
 				"仅输出合法 JSON：",
 				hasSub ? "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"subLine\": 12, \"confidence\": \"high\", \"tag\": \"标签\", \"reason\": \"依据\", \"sources\": [\"crowd\",\"comment\",\"sub\"], \"score\": 92 }], \"skipZones\": [{ \"seconds\": 0, \"endSeconds\": 90, \"reason\": \"避坑\" }], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"inferredSeconds\": 420, \"note\": \"标签\" }] }" : "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"confidence\": \"high\", \"tag\": \"标签\", \"reason\": \"依据\", \"sources\": [\"comment\"], \"score\": 92 }], \"skipZones\": [], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"inferredSeconds\": null, \"note\": \"标签\" }] }"
 			].join("\n")
