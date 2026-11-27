@@ -12,6 +12,7 @@ import { LlmService, LlmCache } from './LlmService.js';
 import { SEMANTIC_TAG_TAXONOMY } from '../player/managers/tagTaxonomy.js';
 import { analyzeSubtitlePlot } from '../player/subtitles/SubtitlePlotAnalyzer.js';
 import { formatMetadataForLlm } from './AvMetadataService.js';
+import { AiDebugLogger } from './AiDebugLogger.js';
 
 export const AI_PROMPT_VERSION = 'v2.0';
 
@@ -248,29 +249,50 @@ export async function getCachedSubtitleChapters({ avcode, cues, metadata = null 
  * @returns {Promise<{ ok: boolean, fromCache?: boolean, summary?: string, chapters?: Array, refused?: boolean, error?: string }>}
  */
 export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '', metadata = null, forceRefresh = false } = {}) {
+    const startedAt = Date.now();
     const compressed = compressCuesForLlm(cues);
     if (!compressed) {
         return { ok: false, refused: false, error: '无可用字幕内容' };
     }
 
     const { metaText, safeCode, contentHash } = buildSubtitleChapterPayload(avcode, compressed, metadata);
-    if (!forceRefresh) {
-        const cached = await LlmCache.getCached(avcode, 'sub_chapters', contentHash);
-        if (cached.hit && cached.data) {
-            return {
-                ok: true,
-                fromCache: true,
-                summary: String(cached.data.summary || ''),
-                chapters: Array.isArray(cached.data.chapters) ? cached.data.chapters : []
-            };
-        }
-    }
-
     const maxCueEnd = (Array.isArray(cues) ? cues : []).reduce((max, cue) => {
         const s = Number(cue?.start) || 0;
         const e = Number(cue?.end) || 0;
         return Math.max(max, s, e);
     }, 0);
+    const inputContext = {
+        hasMetadata: Boolean(metaText),
+        metaText,
+        cueCount: Array.isArray(cues) ? cues.length : 0,
+        maxCueEndSec: Math.round(maxCueEnd),
+        compressedSubLength: compressed.length,
+        compressedSubPreview: compressed
+    };
+
+    if (!forceRefresh) {
+        const cached = await LlmCache.getCached(avcode, 'sub_chapters', contentHash);
+        if (cached.hit && cached.data) {
+            const summary = String(cached.data.summary || '');
+            const chapters = Array.isArray(cached.data.chapters) ? cached.data.chapters : [];
+            AiDebugLogger.recordAiExecution(avcode, {
+                taskType: 'sub_chapters',
+                promptVersion: AI_PROMPT_VERSION,
+                forceRefresh,
+                durationMs: Date.now() - startedAt,
+                outcome: 'success_cache',
+                cache: { status: 'hit', source: cached.source || 'local', contentHash },
+                inputContext,
+                llmResponse: { parsedOutput: { summary, chapters } }
+            });
+            return {
+                ok: true,
+                fromCache: true,
+                summary,
+                chapters
+            };
+        }
+    }
 
     const safeTitle = normalizeInlineText(title).slice(0, 120);
 
@@ -305,6 +327,18 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '',
         });
         const parsed = LlmService.parseJsonFromLlm(res.content);
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            AiDebugLogger.recordAiExecution(avcode, {
+                taskType: 'sub_chapters',
+                model: res?.model,
+                promptVersion: AI_PROMPT_VERSION,
+                forceRefresh,
+                durationMs: Date.now() - startedAt,
+                outcome: 'error',
+                error: 'INVALID_JSON_FORMAT',
+                cache: { status: forceRefresh ? 'bypassed' : 'miss', contentHash },
+                inputContext,
+                llmResponse: { responseModel: res?.model || '', usage: res?.usage || null, rawContent: res?.content || '' }
+            });
             return { ok: false, refused: false, error: '模型返回格式不符合分幕要求' };
         }
 
@@ -328,6 +362,24 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '',
         const data = { summary, chapters };
         await LlmCache.setCached(avcode, 'sub_chapters', contentHash, data);
 
+        AiDebugLogger.recordAiExecution(avcode, {
+            taskType: 'sub_chapters',
+            model: res?.model,
+            promptVersion: AI_PROMPT_VERSION,
+            forceRefresh,
+            durationMs: Date.now() - startedAt,
+            outcome: 'success_llm',
+            cache: { status: forceRefresh ? 'bypassed' : 'miss', contentHash },
+            inputContext,
+            llmResponse: {
+                responseModel: res?.model || '',
+                usage: res?.usage || null,
+                rawContent: res?.content || '',
+                parsedOutput: data,
+                validationStats: { rawChaptersCount: rawChapters.length, validChaptersCount: chapters.length }
+            }
+        });
+
         return {
             ok: true,
             fromCache: false,
@@ -335,13 +387,25 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '',
             chapters
         };
     } catch (err) {
-        if (err?.refused || err?.message === 'LLM_REFUSED') {
-            return { ok: false, refused: true, error: '模型安全策略拒绝解析' };
+        const isRefused = Boolean(err?.refused || err?.message === 'LLM_REFUSED');
+        const safeErr = isRefused ? '模型安全策略拒绝解析' : LlmService.redactSecrets(err?.message || '字幕分幕解析失败');
+        AiDebugLogger.recordAiExecution(avcode, {
+            taskType: 'sub_chapters',
+            promptVersion: AI_PROMPT_VERSION,
+            forceRefresh,
+            durationMs: Date.now() - startedAt,
+            outcome: isRefused ? 'refused' : 'error',
+            error: safeErr,
+            cache: { status: forceRefresh ? 'bypassed' : 'miss', contentHash },
+            inputContext
+        });
+        if (isRefused) {
+            return { ok: false, refused: true, error: safeErr };
         }
         return {
             ok: false,
             refused: false,
-            error: LlmService.redactSecrets(err?.message || '字幕分幕解析失败')
+            error: safeErr
         };
     }
 }
@@ -460,16 +524,36 @@ export async function getCachedCommentBrief({ avcode, comments, metadata = null 
  * @returns {Promise<{ ok: boolean, fromCache?: boolean, brief?: Object, refused?: boolean, error?: string }>}
  */
 export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration = 0, metadata = null, forceRefresh = false } = {}) {
+    const startedAt = Date.now();
     const built = buildCommentsDigest(comments, metadata);
     if (!built) {
         return { ok: false, refused: false, error: '暂无可用于提炼的评论内容' };
     }
 
     const { digest, metaText, contentHash } = built;
+    const durationNum = Math.max(0, Number(videoDuration) || 0);
+    const inputContext = {
+        hasMetadata: Boolean(metaText),
+        metaText,
+        commentsTotal: Array.isArray(comments) ? comments.length : 0,
+        commentsDigestLength: digest.length,
+        commentsDigestPreview: digest,
+        videoDurationSec: Math.round(durationNum)
+    };
 
     if (!forceRefresh) {
         const cached = await LlmCache.getCached(avcode, 'comment_brief', contentHash);
         if (cached.hit && cached.data) {
+            AiDebugLogger.recordAiExecution(avcode, {
+                taskType: 'comment_brief',
+                promptVersion: AI_PROMPT_VERSION,
+                forceRefresh,
+                durationMs: Date.now() - startedAt,
+                outcome: 'success_cache',
+                cache: { status: 'hit', source: cached.source || 'local', contentHash },
+                inputContext,
+                llmResponse: { parsedOutput: cached.data }
+            });
             return {
                 ok: true,
                 fromCache: true,
@@ -479,7 +563,6 @@ export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration
     }
 
     const safeCode = normalizeInlineText(avcode).toUpperCase();
-    const durationNum = Math.max(0, Number(videoDuration) || 0);
 
     const messages = [
         {
@@ -510,10 +593,23 @@ export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration
         });
         const parsed = LlmService.parseJsonFromLlm(res.content);
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            AiDebugLogger.recordAiExecution(avcode, {
+                taskType: 'comment_brief',
+                model: res?.model,
+                promptVersion: AI_PROMPT_VERSION,
+                forceRefresh,
+                durationMs: Date.now() - startedAt,
+                outcome: 'error',
+                error: 'INVALID_JSON_FORMAT',
+                cache: { status: forceRefresh ? 'bypassed' : 'miss', contentHash },
+                inputContext,
+                llmResponse: { responseModel: res?.model || '', usage: res?.usage || null, rawContent: res?.content || '' }
+            });
             return { ok: false, refused: false, error: '模型返回格式不符合简报要求' };
         }
 
-        const timestamps = (Array.isArray(parsed.timestamps) ? parsed.timestamps : [])
+        const rawTs = Array.isArray(parsed.timestamps) ? parsed.timestamps : [];
+        const timestamps = rawTs
             .map((ts) => {
                 const secRaw = Number(ts?.seconds ?? ts?.time);
                 if (!Number.isFinite(secRaw) || secRaw < 0) return null;
@@ -537,19 +633,49 @@ export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration
 
         await LlmCache.setCached(avcode, 'comment_brief', contentHash, brief);
 
+        AiDebugLogger.recordAiExecution(avcode, {
+            taskType: 'comment_brief',
+            model: res?.model,
+            promptVersion: AI_PROMPT_VERSION,
+            forceRefresh,
+            durationMs: Date.now() - startedAt,
+            outcome: 'success_llm',
+            cache: { status: forceRefresh ? 'bypassed' : 'miss', contentHash },
+            inputContext,
+            llmResponse: {
+                responseModel: res?.model || '',
+                usage: res?.usage || null,
+                rawContent: res?.content || '',
+                parsedOutput: brief,
+                validationStats: { rawTimestampsCount: rawTs.length, validTimestampsCount: timestamps.length }
+            }
+        });
+
         return {
             ok: true,
             fromCache: false,
             brief
         };
     } catch (err) {
-        if (err?.refused || err?.message === 'LLM_REFUSED') {
-            return { ok: false, refused: true, error: '模型安全策略拒绝解析' };
+        const isRefused = Boolean(err?.refused || err?.message === 'LLM_REFUSED');
+        const safeErr = isRefused ? '模型安全策略拒绝解析' : LlmService.redactSecrets(err?.message || '评论简报生成失败');
+        AiDebugLogger.recordAiExecution(avcode, {
+            taskType: 'comment_brief',
+            promptVersion: AI_PROMPT_VERSION,
+            forceRefresh,
+            durationMs: Date.now() - startedAt,
+            outcome: isRefused ? 'refused' : 'error',
+            error: safeErr,
+            cache: { status: forceRefresh ? 'bypassed' : 'miss', contentHash },
+            inputContext
+        });
+        if (isRefused) {
+            return { ok: false, refused: true, error: safeErr };
         }
         return {
             ok: false,
             refused: false,
-            error: LlmService.redactSecrets(err?.message || '评论简报生成失败')
+            error: safeErr
         };
     }
 }
@@ -560,6 +686,7 @@ export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration
  * @returns {Promise<{ ok: boolean, tags: string[], comment: string, refused?: boolean, error?: string }>}
  */
 export async function autoTagMarkerWithLlm({ avcode, startTime, cues, title = '', metadata = null } = {}) {
+    const startedAt = Date.now();
     const targetStart = Math.max(0, Number(startTime) || 0);
     const winStart = Math.max(0, targetStart - 60);
     const winEnd = targetStart + 30;
@@ -575,6 +702,15 @@ export async function autoTagMarkerWithLlm({ avcode, startTime, cues, title = ''
     const safeCode = normalizeInlineText(avcode).toUpperCase();
     const safeTitle = normalizeInlineText(title).slice(0, 100);
     const metaText = formatMetadataForLlm(metadata);
+    const inputContext = {
+        hasMetadata: Boolean(metaText),
+        metaText,
+        startTime: targetStart,
+        winStart,
+        winEnd,
+        windowCueCount: windowCues.length,
+        windowText: windowText || ''
+    };
 
     const messages = [
         {
@@ -605,6 +741,16 @@ export async function autoTagMarkerWithLlm({ avcode, startTime, cues, title = ''
         });
         const parsed = LlmService.parseJsonFromLlm(res.content);
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            AiDebugLogger.recordAiExecution(avcode, {
+                taskType: 'auto_tag',
+                model: res?.model,
+                promptVersion: AI_PROMPT_VERSION,
+                durationMs: Date.now() - startedAt,
+                outcome: 'error',
+                error: 'INVALID_JSON_FORMAT',
+                inputContext,
+                llmResponse: { responseModel: res?.model || '', usage: res?.usage || null, rawContent: res?.content || '' }
+            });
             return { ok: false, refused: false, error: '模型返回格式不符合打标要求', tags: [], comment: '' };
         }
 
@@ -621,19 +767,45 @@ export async function autoTagMarkerWithLlm({ avcode, startTime, cues, title = ''
         }
 
         const comment = normalizeInlineText(parsed.comment || '').slice(0, 20);
+        AiDebugLogger.recordAiExecution(avcode, {
+            taskType: 'auto_tag',
+            model: res?.model,
+            promptVersion: AI_PROMPT_VERSION,
+            durationMs: Date.now() - startedAt,
+            outcome: 'success_llm',
+            inputContext,
+            llmResponse: {
+                responseModel: res?.model || '',
+                usage: res?.usage || null,
+                rawContent: res?.content || '',
+                parsedOutput: { tags: validTags, comment },
+                validationStats: { rawTagsCount: rawTags.length, acceptedTagsCount: validTags.length }
+            }
+        });
+
         return {
             ok: true,
             tags: validTags,
             comment
         };
     } catch (err) {
-        if (err?.refused || err?.message === 'LLM_REFUSED') {
-            return { ok: false, refused: true, error: '模型安全策略拒绝解析', tags: [], comment: '' };
+        const isRefused = Boolean(err?.refused || err?.message === 'LLM_REFUSED');
+        const safeErr = isRefused ? '模型安全策略拒绝解析' : LlmService.redactSecrets(err?.message || '自动打标失败');
+        AiDebugLogger.recordAiExecution(avcode, {
+            taskType: 'auto_tag',
+            promptVersion: AI_PROMPT_VERSION,
+            durationMs: Date.now() - startedAt,
+            outcome: isRefused ? 'refused' : 'error',
+            error: safeErr,
+            inputContext
+        });
+        if (isRefused) {
+            return { ok: false, refused: true, error: safeErr, tags: [], comment: '' };
         }
         return {
             ok: false,
             refused: false,
-            error: LlmService.redactSecrets(err?.message || '自动打标失败'),
+            error: safeErr,
             tags: [],
             comment: ''
         };
@@ -813,20 +985,47 @@ export async function buildHighlightGraphWithLlm({
     metadata = null,
     forceRefresh = false
 } = {}) {
+    const startedAt = Date.now();
     const built = buildFusionInputs({ cues, comments, crowdPeaks, vibeTags, metadata });
     if (!built.compressedSub && built.topComments.length === 0 && !built.crowdSig) {
         return { ok: false, refused: false, error: '暂无可用于联合分析的评论、字幕或热度数据' };
     }
 
     const safeCode = normalizeInlineText(avcode).toUpperCase();
+    const dur = Math.max(0, Number(videoDuration) || 0);
+    const inputContext = {
+        hasMetadata: Boolean(built.metaText),
+        metaText: built.metaText,
+        cueCount: Array.isArray(cues) ? cues.length : 0,
+        compressedSubLength: built.compressedSub.length,
+        compressedSubPreview: built.compressedSub,
+        commentsTotal: Array.isArray(comments) ? comments.length : 0,
+        sampledCommentsCount: built.topComments.length,
+        commentsDigestLength: built.commentLines.join('\n').length,
+        commentsDigestPreview: built.commentLines.join('\n'),
+        crowdPeaksCount: Array.isArray(crowdPeaks) ? crowdPeaks.length : 0,
+        crowdPeaks: Array.isArray(crowdPeaks) ? crowdPeaks : [],
+        vibeTags: Array.isArray(vibeTags) ? vibeTags : [],
+        videoDurationSec: Math.round(dur)
+    };
+
     if (!forceRefresh && safeCode) {
         const cached = await LlmCache.getCached(safeCode, 'highlight_graph', built.contentHash);
         if (cached.hit && cached.data) {
+            AiDebugLogger.recordAiExecution(safeCode, {
+                taskType: 'highlight_graph',
+                promptVersion: AI_PROMPT_VERSION,
+                forceRefresh,
+                durationMs: Date.now() - startedAt,
+                outcome: 'success_cache',
+                cache: { status: 'hit', source: cached.source || 'local', contentHash: built.contentHash },
+                inputContext,
+                llmResponse: { parsedOutput: cached.data }
+            });
             return { ok: true, fromCache: true, graph: cached.data };
         }
     }
 
-    const dur = Math.max(0, Number(videoDuration) || 0);
     const crowdPromptText = (Array.isArray(crowdPeaks) && crowdPeaks.length > 0)
         ? crowdPeaks.map((p) => `${formatMmSs(p.seconds)}(强度${Math.round((Number(p.intensity) || 0) * 100)}%)`).join(', ')
         : '(暂无社区热度数据)';
@@ -869,6 +1068,18 @@ export async function buildHighlightGraphWithLlm({
         });
         const parsed = LlmService.parseJsonFromLlm(res.content);
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            AiDebugLogger.recordAiExecution(safeCode, {
+                taskType: 'highlight_graph',
+                model: res?.model,
+                promptVersion: AI_PROMPT_VERSION,
+                forceRefresh,
+                durationMs: Date.now() - startedAt,
+                outcome: 'error',
+                error: 'INVALID_JSON_FORMAT',
+                cache: { status: forceRefresh ? 'bypassed' : 'miss', contentHash: built.contentHash },
+                inputContext,
+                llmResponse: { responseModel: res?.model || '', usage: res?.usage || null, rawContent: res?.content || '' }
+            });
             return { ok: false, refused: false, error: '模型返回的高能图谱格式异常' };
         }
 
@@ -939,15 +1150,50 @@ export async function buildHighlightGraphWithLlm({
         if (safeCode) {
             await LlmCache.setCached(safeCode, 'highlight_graph', built.contentHash, graph);
         }
+
+        AiDebugLogger.recordAiExecution(safeCode, {
+            taskType: 'highlight_graph',
+            model: res?.model,
+            promptVersion: AI_PROMPT_VERSION,
+            forceRefresh,
+            durationMs: Date.now() - startedAt,
+            outcome: 'success_llm',
+            cache: { status: forceRefresh ? 'bypassed' : 'miss', contentHash: built.contentHash },
+            inputContext,
+            llmResponse: {
+                responseModel: res?.model || '',
+                usage: res?.usage || null,
+                rawContent: res?.content || '',
+                parsedOutput: graph,
+                validationStats: {
+                    highlightsCount: highlights.length,
+                    skipZonesCount: skipZones.length,
+                    commentInsightsCount: Object.keys(commentInsights).length
+                }
+            }
+        });
+
         return { ok: true, fromCache: false, graph };
     } catch (err) {
-        if (err?.refused || err?.message === 'LLM_REFUSED') {
-            return { ok: false, refused: true, error: '模型安全策略拒绝解析' };
+        const isRefused = Boolean(err?.refused || err?.message === 'LLM_REFUSED');
+        const safeErr = isRefused ? '模型安全策略拒绝解析' : LlmService.redactSecrets(err?.message || '高能融合分析失败');
+        AiDebugLogger.recordAiExecution(safeCode, {
+            taskType: 'highlight_graph',
+            promptVersion: AI_PROMPT_VERSION,
+            forceRefresh,
+            durationMs: Date.now() - startedAt,
+            outcome: isRefused ? 'refused' : 'error',
+            error: safeErr,
+            cache: { status: forceRefresh ? 'bypassed' : 'miss', contentHash: built.contentHash },
+            inputContext
+        });
+        if (isRefused) {
+            return { ok: false, refused: true, error: safeErr };
         }
         return {
             ok: false,
             refused: false,
-            error: LlmService.redactSecrets(err?.message || '高能融合分析失败')
+            error: safeErr
         };
     }
 }

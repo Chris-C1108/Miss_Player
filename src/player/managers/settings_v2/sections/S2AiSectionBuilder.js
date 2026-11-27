@@ -14,13 +14,16 @@ import {
     bindTwoStepConfirm
 } from '../components/S2Primitives.js';
 import { LlmService, LlmCache, filterAndSortTextModels } from '../../../../services/LlmService.js';
+import { AiDebugLogger } from '../../../../services/AiDebugLogger.js';
+import { SyncManager, WebDavClient } from '../../../../sync/index.js';
 import { Toast } from '../../../../utils/index.js';
 import {
     ICON_EYE,
     ICON_EYE_OFF,
     ICON_EXTERNAL_LINK,
     ICON_SERVER,
-    ICON_TRASH
+    ICON_TRASH,
+    ICON_CLOUD_UPLOAD
 } from '../../../../constants/icons.js';
 
 const PRESET_OLLAMA = {
@@ -175,6 +178,10 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
             let autoTagOnMarkRow = null;
             let featuresBox = null;
             let autoTagMarkWrap = null;
+            let aiDebugRow = null;
+            let aiDebugWrap = null;
+            let aiDebugDirInput = null;
+            let aiDebugHint = null;
             let fetchedModels = [];
             let activeVibeTags = Array.isArray(cfg.vibeTags) ? [...cfg.vibeTags] : [];
 
@@ -187,12 +194,30 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
                 }
             };
 
-            const syncFeatureVisibility = (enabledVal, autoTagVal) => {
+            const syncDebugHint = (debugDir) => {
+                if (!aiDebugHint) return;
+                const wdCfg = SyncManager.getWebDavConfig();
+                if (!WebDavClient.hasValidEndpoint(wdCfg)) {
+                    aiDebugHint.textContent = '提示：请先在下方「WebDAV 同步」配置服务器地址与凭据';
+                    return;
+                }
+                const root = String(wdCfg.path || '/MissPlayer/').replace(/\/+$/, '') || '/MissPlayer';
+                const summary = AiDebugLogger.getSummary();
+                const execInfo = summary.sessionCount > 0
+                    ? ` · 已记录 ${summary.sessionCount} 部 / ${summary.totalExecutions} 次调用`
+                    : '';
+                aiDebugHint.textContent = `存储路径: ${root}/${debugDir}/${execInfo}`;
+            };
+
+            const syncFeatureVisibility = (enabledVal, autoTagVal, aiDebugVal) => {
                 if (featuresBox) {
                     featuresBox.classList.toggle('is-hidden', !enabledVal);
                 }
                 if (autoTagMarkWrap) {
                     autoTagMarkWrap.classList.toggle('is-hidden', !autoTagVal);
+                }
+                if (aiDebugWrap) {
+                    aiDebugWrap.classList.toggle('is-hidden', !aiDebugVal);
                 }
             };
 
@@ -208,9 +233,15 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
                     featureHighlightFusion: highlightFusionRow ? highlightFusionRow.getChecked() : prev.featureHighlightFusion,
                     featureAutoTag: autoTagRow ? autoTagRow.getChecked() : prev.featureAutoTag,
                     autoTagOnMark: autoTagOnMarkRow ? autoTagOnMarkRow.getChecked() : prev.autoTagOnMark,
-                    vibeTags: activeVibeTags
+                    vibeTags: activeVibeTags,
+                    aiDebugEnabled: aiDebugRow ? aiDebugRow.getChecked() : prev.aiDebugEnabled,
+                    aiDebugDir: aiDebugDirInput ? aiDebugDirInput.value : prev.aiDebugDir
                 });
-                syncFeatureVisibility(saved.enabled, saved.featureAutoTag);
+                if (aiDebugDirInput && aiDebugDirInput.value !== saved.aiDebugDir) {
+                    aiDebugDirInput.value = saved.aiDebugDir;
+                }
+                syncFeatureVisibility(saved.enabled, saved.featureAutoTag, saved.aiDebugEnabled);
+                syncDebugHint(saved.aiDebugDir);
                 const meta = resolveStatusMeta(saved);
                 syncHeaderPill(meta.text, meta.tone);
                 if (typeof onConfigChange === 'function') {
@@ -560,9 +591,80 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
             featuresBox.appendChild(autoTagMarkWrap);
             featuresBox.appendChild(vibeSection);
 
+            // 2.5 AI 专项调试开关与 WebDAV 指定目录
+            aiDebugRow = createToggleRow({
+                title: 'AI 调试录制 (WebDAV)',
+                subtext: '保存字幕/评论/元数据就绪状态及 AI 输入输出至 WebDAV',
+                checked: Boolean(cfg.aiDebugEnabled),
+                onChange: () => persistConfig()
+            });
+
+            aiDebugWrap = document.createElement('div');
+            aiDebugWrap.className = 'mp-s2-conditional mp-s2-ai-debug-box';
+
+            const debugDirField = document.createElement('div');
+            debugDirField.className = 'mp-s2-field';
+            const debugDirLabel = document.createElement('label');
+            debugDirLabel.className = 'mp-s2-field-label';
+            debugDirLabel.textContent = 'WebDAV 保存子目录（相对同步根目录）';
+            aiDebugDirInput = document.createElement('input');
+            aiDebugDirInput.type = 'text';
+            aiDebugDirInput.className = 'mp-s2-debug-input';
+            aiDebugDirInput.placeholder = 'logs/ai-debug';
+            aiDebugDirInput.value = cfg.aiDebugDir || 'logs/ai-debug';
+            aiDebugDirInput.addEventListener('change', () => persistConfig());
+            debugDirField.appendChild(debugDirLabel);
+            debugDirField.appendChild(aiDebugDirInput);
+
+            aiDebugHint = document.createElement('div');
+            aiDebugHint.className = 'mp-s2-meta-line';
+
+            const flushDebugBtn = document.createElement('button');
+            flushDebugBtn.type = 'button';
+            flushDebugBtn.className = 'mp-s2-btn';
+            flushDebugBtn.innerHTML = `${ICON_CLOUD_UPLOAD} <span>立即上传当前 AI 诊断</span>`;
+            flushDebugBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                persistConfig();
+                if (!WebDavClient.hasValidEndpoint(SyncManager.getWebDavConfig())) {
+                    statusBox.className = 'mp-s2-status-box is-err';
+                    statusBox.textContent = '请先在下方「WebDAV 同步」配置服务器地址与凭据';
+                    Toast('请先配置 WebDAV 服务器', 2200, 'error');
+                    return;
+                }
+                flushDebugBtn.disabled = true;
+                try {
+                    const res = await AiDebugLogger.flushAll({ force: true });
+                    syncDebugHint(LlmService.getConfig().aiDebugDir);
+                    if (res.uploadedCount > 0) {
+                        const lastPath = res.paths[res.paths.length - 1];
+                        statusBox.className = 'mp-s2-status-box is-ok';
+                        statusBox.textContent = `已上传 ${res.uploadedCount} 份 AI 诊断报告至 WebDAV: ${lastPath}`;
+                        Toast(`已上传 AI 诊断 (${res.uploadedCount} 份)`, 2200, 'success');
+                    } else {
+                        const msg = res.errors?.[0] || '当前暂无待上传的 AI 会话记录';
+                        statusBox.className = 'mp-s2-status-box is-running';
+                        statusBox.textContent = msg;
+                        Toast(msg, 2200, 'info');
+                    }
+                } catch (err) {
+                    const errMsg = LlmService.redactSecrets(err?.message || '上传 AI 诊断失败');
+                    statusBox.className = 'mp-s2-status-box is-err';
+                    statusBox.textContent = errMsg;
+                    Toast(errMsg, 2400, 'error');
+                } finally {
+                    flushDebugBtn.disabled = false;
+                }
+            });
+
+            aiDebugWrap.appendChild(debugDirField);
+            aiDebugWrap.appendChild(aiDebugHint);
+            aiDebugWrap.appendChild(flushDebugBtn);
+
             updatePresetHighlight();
             renderModelChips();
-            syncFeatureVisibility(Boolean(cfg.enabled), Boolean(cfg.featureAutoTag));
+            syncFeatureVisibility(Boolean(cfg.enabled), Boolean(cfg.featureAutoTag), Boolean(cfg.aiDebugEnabled));
+            syncDebugHint(cfg.aiDebugDir || 'logs/ai-debug');
 
             form.appendChild(presetsWrap);
             form.appendChild(linksWrap);
@@ -573,6 +675,8 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
             form.appendChild(actionsRow);
             form.appendChild(statusBox);
             form.appendChild(featuresBox);
+            form.appendChild(aiDebugRow.element);
+            form.appendChild(aiDebugWrap);
             body.appendChild(form);
         }
     });

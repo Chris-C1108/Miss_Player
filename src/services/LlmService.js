@@ -27,6 +27,21 @@ export const LLM_KEY_AUTO_TAG_ON_MARK = 'mp_llm_auto_tag_on_mark';
 export const LLM_KEY_FEAT_HIGHLIGHT_FUSION = 'mp_llm_feat_highlight_fusion';
 export const LLM_KEY_VIBE_TAGS = 'mp_llm_vibe_tags';
 export const LLM_KEY_CACHE_EPOCH = 'mp_llm_cache_epoch';
+export const LLM_KEY_AI_DEBUG_ENABLED = 'mp_llm_debug_enabled';
+export const LLM_KEY_AI_DEBUG_WEBDAV_DIR = 'mp_llm_debug_webdav_dir';
+
+export const DEFAULT_AI_DEBUG_DIR = 'logs/ai-debug';
+
+export function sanitizeDebugDir(rawDir) {
+    const clean = String(rawDir ?? '')
+        .trim()
+        .replace(/\\/g, '/')
+        .split('/')
+        .map((seg) => seg.trim())
+        .filter((seg) => seg && seg !== '.' && seg !== '..')
+        .join('/');
+    return clean || DEFAULT_AI_DEBUG_DIR;
+}
 
 function normalizeVibeTags(raw) {
     let arr = [];
@@ -324,6 +339,8 @@ export class LlmService {
         const autoTagOnMark = parseBooleanValue(getValue(LLM_KEY_AUTO_TAG_ON_MARK, false), false);
         const featureHighlightFusion = parseBooleanValue(getValue(LLM_KEY_FEAT_HIGHLIGHT_FUSION, true), true);
         const vibeTags = normalizeVibeTags(getValue(LLM_KEY_VIBE_TAGS, []));
+        const aiDebugEnabled = parseBooleanValue(getValue(LLM_KEY_AI_DEBUG_ENABLED, false), false);
+        const aiDebugDir = sanitizeDebugDir(getValue(LLM_KEY_AI_DEBUG_WEBDAV_DIR, DEFAULT_AI_DEBUG_DIR));
         return {
             enabled,
             baseUrl,
@@ -335,7 +352,9 @@ export class LlmService {
             featureAutoTag,
             autoTagOnMark,
             featureHighlightFusion,
-            vibeTags
+            vibeTags,
+            aiDebugEnabled,
+            aiDebugDir
         };
     }
 
@@ -381,6 +400,12 @@ export class LlmService {
         if ('vibeTags' in patch) {
             next.vibeTags = normalizeVibeTags(patch.vibeTags);
         }
+        if ('aiDebugEnabled' in patch) {
+            next.aiDebugEnabled = parseBooleanValue(patch.aiDebugEnabled, false);
+        }
+        if ('aiDebugDir' in patch) {
+            next.aiDebugDir = sanitizeDebugDir(patch.aiDebugDir);
+        }
 
         setValue(LLM_KEY_ENABLED, next.enabled);
         setValue(LLM_KEY_BASE_URL, next.baseUrl);
@@ -393,6 +418,8 @@ export class LlmService {
         setValue(LLM_KEY_AUTO_TAG_ON_MARK, next.autoTagOnMark);
         setValue(LLM_KEY_FEAT_HIGHLIGHT_FUSION, next.featureHighlightFusion);
         setValue(LLM_KEY_VIBE_TAGS, next.vibeTags);
+        setValue(LLM_KEY_AI_DEBUG_ENABLED, next.aiDebugEnabled);
+        setValue(LLM_KEY_AI_DEBUG_WEBDAV_DIR, next.aiDebugDir);
 
         return next;
     }
@@ -405,6 +432,10 @@ export class LlmService {
     static isEnabled() {
         const cfg = this.getConfig();
         return Boolean(cfg.enabled && cfg.baseUrl && cfg.model);
+    }
+
+    static isAiDebugEnabled() {
+        return parseBooleanValue(getValue(LLM_KEY_AI_DEBUG_ENABLED, false), false);
     }
 
     /**

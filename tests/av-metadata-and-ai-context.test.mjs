@@ -41,7 +41,8 @@ const {
     isFc2OrUncensoredCode
 } = await import('../src/services/AvMetadataService.js');
 
-const { LlmService, LlmCache, LLM_KEY_CACHE_EPOCH } = await import('../src/services/LlmService.js');
+const { LlmService, LlmCache, LLM_KEY_CACHE_EPOCH, sanitizeDebugDir } = await import('../src/services/LlmService.js');
+const { AiDebugLogger } = await import('../src/services/AiDebugLogger.js');
 const {
     AI_PROMPT_VERSION,
     buildVersionedTaskHash,
@@ -60,6 +61,7 @@ function resetAll() {
     gmResponder = null;
     LlmCache.clearMemoryCache();
     AvMetadataService.clearMemoryCache();
+    AiDebugLogger.resetForTests();
 }
 
 describe('AvMetadataService: DOM Extraction, Multi-Site Routing & Rate Limit', () => {
@@ -423,7 +425,7 @@ describe('AI Cache Versioning, Epoch Clear, Dense Subtitle Sampling & MT Compari
         ]);
         assert.equal(picked.item.id, 'ja-direct');
 
-        const complianceFiles = ['src/services/AvMetadataService.js', 'src/services/LlmService.js', 'src/services/LlmTasks.js'];
+        const complianceFiles = ['src/services/AvMetadataService.js', 'src/services/LlmService.js', 'src/services/LlmTasks.js', 'src/services/AiDebugLogger.js'];
         const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/u;
         for (const rel of complianceFiles) {
             const content = fs.readFileSync(path.resolve(process.cwd(), rel), 'utf8');
@@ -431,5 +433,117 @@ describe('AI Cache Versioning, Epoch Clear, Dense Subtitle Sampling & MT Compari
             assert.equal(content.includes('!important'), false, `${rel} 不得含 !important`);
             assert.equal(emojiRegex.test(content), false, `${rel} 不得含 Emoji`);
         }
+    });
+});
+
+describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV Dir Upload', () => {
+    beforeEach(resetAll);
+
+    it('sanitizes WebDAV debug directory paths and prevents traversal', () => {
+        assert.equal(sanitizeDebugDir(''), 'logs/ai-debug');
+        assert.equal(sanitizeDebugDir('/ai/custom-dir/'), 'ai/custom-dir');
+        assert.equal(sanitizeDebugDir('../secrets/../ai-logs//run1/'), 'secrets/ai-logs/run1');
+    });
+
+    it('captures readiness + redacted AI inputs/outputs and uploads JSON to custom WebDAV dir', async () => {
+        LlmService.saveConfig({
+            enabled: true,
+            baseUrl: 'https://apihub.agnes-ai.com/v1',
+            model: 'agnes-3.0-flash',
+            apiKey: 'sk-super-secret-debug-key',
+            aiDebugEnabled: true,
+            aiDebugDir: '/ai-diag/round-1/'
+        });
+
+        SyncManager.saveWebDavConfig({
+            url: 'https://dav.example.com/dav/',
+            lanUrl: '',
+            user: 'tester',
+            pass: 'dav-pass',
+            path: '/MissPlayer/',
+            autoSync: true
+        });
+
+        const uploadedPayloads = [];
+        gmResponder = (opts) => {
+            if (opts.url.includes('/chat/completions')) {
+                opts.onload({
+                    status: 200,
+                    finalUrl: opts.url,
+                    responseText: JSON.stringify({
+                        model: 'agnes-3.0-flash',
+                        usage: { prompt_tokens: 120, completion_tokens: 45 },
+                        choices: [{
+                            message: {
+                                content: JSON.stringify({
+                                    summary: '办公室对白反转，密钥泄漏测试 sk-super-secret-debug-key',
+                                    chapters: [{ seconds: 42, tag: '反转', headline: '剧情展开' }]
+                                })
+                            }
+                        }]
+                    })
+                });
+                return;
+            }
+            if (opts.method === 'PROPFIND' || opts.method === 'MKCOL') {
+                opts.onload({ status: opts.method === 'PROPFIND' ? 207 : 201, responseText: '', finalUrl: opts.url });
+                return;
+            }
+            if (opts.method === 'PUT' && opts.url.includes('/MissPlayer/ai-diag/round-1/')) {
+                uploadedPayloads.push({
+                    url: opts.url,
+                    body: JSON.parse(opts.data)
+                });
+                opts.onload({ status: 201, responseText: '', finalUrl: opts.url });
+                return;
+            }
+            opts.onload({ status: 404, responseText: '', finalUrl: opts.url });
+        };
+
+        AiDebugLogger.recordMetadataState('FOCS-264', {
+            tier: 'l2_remote',
+            ok: true,
+            durationMs: 210,
+            actressesCount: 1,
+            tagsCount: 3
+        });
+        AiDebugLogger.recordSubtitleState('FOCS-264', 'autoPick', {
+            durationMs: 430,
+            pickedOk: true,
+            evaluated: [{ id: 'sub-1', lang: 'zh', sqi: 86 }]
+        });
+        AiDebugLogger.recordCommentsState('FOCS-264', 'waitGate', {
+            totalWaitMs: 320,
+            backfillTriggered: false,
+            afterCount: 18,
+            subCuesReadyCount: 24
+        });
+
+        await analyzeSubtitleChaptersWithLlm({
+            avcode: 'FOCS-264',
+            cues: [{ start: 40, end: 46, text: '欢迎来到分部办公室，先坐下来喝杯茶' }],
+            metadata: mergeAvMetadata({ avcode: 'FOCS-264', actresses: ['沙月恵奈'], tags: ['黑丝'] })
+        });
+
+        // Force flush to guarantee PUT completes cleanly
+        const flushRes = await AiDebugLogger.flushAll({ force: true });
+        assert.equal(flushRes.ok, true);
+        assert.ok(uploadedPayloads.length >= 1);
+
+        const latest = uploadedPayloads[uploadedPayloads.length - 1];
+        assert.ok(latest.url.includes('/MissPlayer/ai-diag/round-1/FOCS-264_'));
+        assert.ok(latest.url.endsWith('.json'));
+
+        const jsonStr = JSON.stringify(latest.body);
+        assert.equal(jsonStr.includes('sk-super-secret-debug-key'), false, 'WebDAV 日志绝对不得包含明文 API Key');
+        assert.equal(latest.body.avcode, 'FOCS-264');
+        assert.equal(latest.body.contextReadiness.metadata.tier, 'l2_remote');
+        assert.equal(latest.body.contextReadiness.subtitles.autoPick.pickedOk, true);
+        assert.equal(latest.body.contextReadiness.comments.waitGate.afterCount, 18);
+        assert.equal(latest.body.aiExecutions.length, 1);
+        assert.equal(latest.body.aiExecutions[0].taskType, 'sub_chapters');
+        assert.equal(latest.body.aiExecutions[0].outcome, 'success_llm');
+        assert.ok(latest.body.aiExecutions[0].inputContext.compressedSubPreview.includes('分部办公室'));
+        assert.equal(latest.body.aiExecutions[0].llmResponse.parsedOutput.chapters[0].seconds, 42);
     });
 });

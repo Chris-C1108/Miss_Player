@@ -42,6 +42,7 @@ import {
 import { LlmService } from '../../services/LlmService.js';
 import { analyzeSubtitleChaptersWithLlm, compressCuesForLlm, getCachedSubtitleChapters } from '../../services/LlmTasks.js';
 import { AvMetadataService } from '../../services/AvMetadataService.js';
+import { AiDebugLogger } from '../../services/AiDebugLogger.js';
 
 const FONT_SIZES = ['small', 'medium', 'large'];
 const PREFERRED_LANG_OPTIONS = ['auto', 'zh', 'zh-TW', 'ja', 'en', 'ko'];
@@ -741,7 +742,7 @@ export class SubtitleManager {
             return;
         }
 
-        const { langInfo } = this._inspectTrackMetadata(prepared, parsed);
+        const { langInfo, quality } = this._inspectTrackMetadata(prepared, parsed);
         prepared.format = format;
         if (this.overlayText) this.overlayText.lang = prepared.lang || '';
         this.timeStepper?.setValue((Number(prepared.timeOffsetMs) || 0) / 1000);
@@ -763,6 +764,23 @@ export class SubtitleManager {
         this.renderAt(this.targetVideo?.currentTime || 0);
         if (this.targetVideo && !this.targetVideo.paused) this._startRenderLoop();
         window.DebugLogPanel?.addLog?.(`[字幕] 已挂载 ${cues.length} 条字幕: ${prepared.title}`, 'info');
+        if (this.avcode && AiDebugLogger.isEnabled()) {
+            const lastCue = cues[cues.length - 1];
+            AiDebugLogger.recordSubtitleState(this.avcode, 'activeTrack', {
+                id: prepared.id || '',
+                source: prepared.source || '',
+                lang: langInfo?.lang || prepared.lang || '',
+                declaredLang: prepared.lang || '',
+                format,
+                machineTranslated: Boolean(prepared.machineTranslated),
+                mtDirection: langInfo?.mtDirection || prepared.mtDirection || '',
+                trackLayout: langInfo?.trackLayout || '',
+                cueCount: cues.length,
+                totalDurationSec: Math.round(Number(lastCue?.end || lastCue?.start || 0)),
+                sqi: quality?.sqi ?? null,
+                title: prepared.title || ''
+            });
+        }
         if (!silent) {
             Toast(`${text('subtitleApplied', '已应用字幕')} · ${prepared.title || format.toUpperCase()}`, 2000, 'success');
         }
@@ -1937,12 +1955,27 @@ export class SubtitleManager {
         }
         this._searching = true;
         this._renderList();
+        const searchStartedAt = Date.now();
         try {
             const { candidates, errors } = await this.engine.search(this.avcode);
             const known = new Set(this.bundle.items.map((item) => item.id));
             this.onlineResults = candidates.filter(
                 (candidate) => !known.has(candidate.id) && this._isRelevant(candidate)
             );
+            if (this.avcode && AiDebugLogger.isEnabled()) {
+                const langsSummary = {};
+                this.onlineResults.forEach((c) => {
+                    const k = c.lang || 'unknown';
+                    langsSummary[k] = (langsSummary[k] || 0) + 1;
+                });
+                AiDebugLogger.recordSubtitleState(this.avcode, 'searchOnline', {
+                    durationMs: Date.now() - searchStartedAt,
+                    rawCandidatesCount: candidates.length,
+                    relevantCount: this.onlineResults.length,
+                    langsSummary,
+                    errorsCount: Array.isArray(errors) ? errors.length : 0
+                });
+            }
             if (!this.onlineResults.length) {
                 Toast(
                     errors.length
@@ -1954,6 +1987,12 @@ export class SubtitleManager {
             }
         } catch (err) {
             console.warn('[SubtitleManager] 搜索失败:', err?.message);
+            if (this.avcode && AiDebugLogger.isEnabled()) {
+                AiDebugLogger.recordSubtitleState(this.avcode, 'searchOnline', {
+                    durationMs: Date.now() - searchStartedAt,
+                    error: err?.message || 'SEARCH_FAILED'
+                });
+            }
             Toast(text('subtitleSearchFailed', '搜索失败，请稍后重试'), 2600, 'error');
         } finally {
             this._searching = false;
@@ -2021,8 +2060,10 @@ export class SubtitleManager {
         }
         if (!ranked.length) return false;
 
+        const pickStartedAt = Date.now();
         const MAX_EVAL = 3;
         const evaluated = [];
+        let earlyBreak = false;
 
         for (const candidate of ranked) {
             if (this.avcode !== targetCode || !this.settings.subtitleAutoBest || this._hasSavedFavorite()) {
@@ -2055,12 +2096,35 @@ export class SubtitleManager {
             }
             evaluated.push({ candidate, item: rawItem, parsed: rawParsed, langInfo, quality });
             if (!rawItem.machineTranslated && !langInfo?.isCorrupted && (quality?.sqi || 0) >= 82) {
+                earlyBreak = true;
                 break;
             }
             if (evaluated.length >= MAX_EVAL) break;
         }
 
         const picked = selectBestQualityCandidate(evaluated) || evaluated[0] || null;
+        if (AiDebugLogger.isEnabled()) {
+            AiDebugLogger.recordSubtitleState(targetCode, 'autoPick', {
+                durationMs: Date.now() - pickStartedAt,
+                preferredLang,
+                usingAmbiguousProbe,
+                rankedCount: ranked.length,
+                earlyBreak,
+                pickedOk: Boolean(picked),
+                evaluated: evaluated.map((ev) => ({
+                    id: ev.item?.id || ev.candidate?.id || '',
+                    source: ev.item?.source || '',
+                    declaredLang: ev.candidate?.lang || '',
+                    detectedLang: ev.langInfo?.lang || '',
+                    machineTranslated: Boolean(ev.item?.machineTranslated),
+                    mtDirection: ev.langInfo?.mtDirection || ev.item?.mtDirection || '',
+                    isCorrupted: Boolean(ev.langInfo?.isCorrupted),
+                    sqi: ev.quality?.sqi ?? null,
+                    cueCount: ev.parsed?.cues?.length ?? 0
+                })),
+                chosenId: picked?.item?.id || ''
+            });
+        }
         if (!picked || this.avcode !== targetCode) return false;
 
         const { item, parsed, converted } = applyPreferredChineseConversion(picked.item, picked.parsed, preferredLang);

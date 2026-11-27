@@ -13,6 +13,7 @@ import { getValue, setValue } from '../utils/storage.js';
 import { idbGet, idbSet, STORES } from '../utils/indexedDB.js';
 import { cleanAvCode } from '../utils/videoCode.js';
 import { jbBuildSignature, jbApiGetOnce, JAVDB_DOMAINS } from '../player/comments/providers/JavDbCommentProvider.js';
+import { AiDebugLogger } from './AiDebugLogger.js';
 
 const META_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const L2_TOTAL_TIMEOUT_MS = 5500;
@@ -586,6 +587,28 @@ export class AvMetadataService {
         const code = normalizeCode(avcode);
         if (!code) return null;
 
+        const startedAt = Date.now();
+        const emitMetaDebug = (tier, meta, extra = {}) => {
+            if (!AiDebugLogger.isEnabled()) return;
+            AiDebugLogger.recordMetadataState(code, {
+                tier,
+                ok: Boolean(meta),
+                forceRefresh: Boolean(forceRefresh),
+                durationMs: Date.now() - startedAt,
+                title: meta?.title || '',
+                actressesCount: Array.isArray(meta?.actresses) ? meta.actresses.length : 0,
+                actresses: Array.isArray(meta?.actresses) ? meta.actresses : [],
+                tagsCount: Array.isArray(meta?.tags) ? meta.tags.length : 0,
+                tags: Array.isArray(meta?.tags) ? meta.tags : [],
+                studio: meta?.studio || '',
+                series: meta?.series || '',
+                releaseDate: meta?.releaseDate || '',
+                synopsisLength: meta?.synopsis ? meta.synopsis.length : 0,
+                sources: Array.isArray(meta?.sources) ? meta.sources : [],
+                ...extra
+            });
+        };
+
         const domMeta = typeof document !== 'undefined'
             ? extractMetadataFromDocument(document, code, typeof window !== 'undefined' ? window.location?.hostname : '')
             : null;
@@ -593,7 +616,9 @@ export class AvMetadataService {
         if (!forceRefresh) {
             const mem = memoryCache.get(code);
             if (mem && isMetadataFresh(mem) && (mem.actresses?.length || mem.tags?.length)) {
-                return domMeta ? mergeAvMetadata(mem, domMeta) : mem;
+                const res = domMeta ? mergeAvMetadata(mem, domMeta) : mem;
+                emitMetaDebug('l0_mem', res);
+                return res;
             }
             try {
                 const stored = await idbGet(STORES.MEDIA, `av_meta:${code}`);
@@ -601,6 +626,7 @@ export class AvMetadataService {
                     const combined = domMeta ? mergeAvMetadata(stored, domMeta) : stored;
                     memoryCache.set(code, combined);
                     if (combined.actresses?.length && combined.tags?.length) {
+                        emitMetaDebug('l0_idb', combined);
                         return combined;
                     }
                 }
@@ -609,6 +635,7 @@ export class AvMetadataService {
 
         if (domMeta && domMeta.title && domMeta.actresses.length > 0 && domMeta.tags.length > 0 && !forceRefresh) {
             memoryCache.set(code, domMeta);
+            emitMetaDebug('l1_dom', domMeta);
             return domMeta;
         }
 
@@ -618,6 +645,7 @@ export class AvMetadataService {
 
         const task = (async () => {
             let remoteMeta = null;
+            let remoteError = '';
             const fetchRemote = async () => {
                 if (isFc2OrUncensoredCode(code)) {
                     const apiMeta = await fetchFromJavDbApi(code);
@@ -640,10 +668,14 @@ export class AvMetadataService {
                 remoteMeta = await Promise.race([
                     fetchRemote(),
                     new Promise((resolve) => {
-                        timer = setTimeout(() => resolve(null), L2_TOTAL_TIMEOUT_MS);
+                        timer = setTimeout(() => {
+                            remoteError = 'L2_TIMEOUT';
+                            resolve(null);
+                        }, L2_TOTAL_TIMEOUT_MS);
                     })
                 ]);
-            } catch (_) {
+            } catch (err) {
+                remoteError = err?.message || 'L2_ERROR';
                 remoteMeta = null;
             } finally {
                 if (timer) clearTimeout(timer);
@@ -651,6 +683,7 @@ export class AvMetadataService {
 
             const merged = mergeAvMetadata(domMeta, remoteMeta);
             if (!merged.title && !merged.actresses.length && !merged.tags.length && !merged.synopsis) {
+                emitMetaDebug('miss', null, { hasDomFallback: Boolean(domMeta), error: remoteError || null });
                 return null;
             }
 
@@ -658,6 +691,7 @@ export class AvMetadataService {
             try {
                 await idbSet(STORES.MEDIA, `av_meta:${code}`, merged);
             } catch (_) {}
+            emitMetaDebug(remoteMeta ? 'l2_remote' : 'l1_dom_partial', merged, { error: remoteError || null });
             return merged;
         })().finally(() => {
             inflightMap.delete(code);

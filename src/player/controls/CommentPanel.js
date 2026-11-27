@@ -7,6 +7,7 @@ import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT
 import { Toast, isMobile, getValue } from '../../utils/index.js';
 import { LlmService } from '../../services/LlmService.js';
 import { AvMetadataService } from '../../services/AvMetadataService.js';
+import { AiDebugLogger } from '../../services/AiDebugLogger.js';
 import {
     summarizeCommentsWithLlm,
     getCachedCommentBrief,
@@ -1073,6 +1074,13 @@ export class CommentPanel {
             if (restoredCount > 0) {
                 logger.log(`[CommentPanel] 命中本地评论缓存 (${requestVideoCode})，直接恢复 ${restoredCount} 条评论展示，跳过重复网络请求。`);
                 DebugLogPanel.addLog(`[本地缓存] ${requestVideoCode}: 瞬时恢复 ${restoredCount} 条评论 (零网络请求)`, 'success');
+                if (AiDebugLogger.isEnabled()) {
+                    AiDebugLogger.recordCommentsState(requestVideoCode, 'initialLoad', {
+                        fromCache: true,
+                        restoredCount,
+                        totalLoaded: this._collectAllLoadedComments().length
+                    });
+                }
                 this.isLoading = false;
                 this.applyFilter();
                 this._autoExpandBestSection();
@@ -1082,6 +1090,8 @@ export class CommentPanel {
                 return;
             }
         }
+
+        const loadStartedAt = Date.now();
 
         if (page === 1) {
             this.currentPage = 1;
@@ -1165,6 +1175,23 @@ export class CommentPanel {
                 await this._initialCommentsPromise;
             } finally {
                 this._initialCommentsPromise = null;
+            }
+
+            if (AiDebugLogger.isEnabled()) {
+                const siteBreakdown = {};
+                for (const [k, s] of Object.entries(this.sites || {})) {
+                    siteBreakdown[k] = {
+                        status: s?.status || '',
+                        count: Array.isArray(s?.comments) ? s.comments.length : 0,
+                        hasMore: Boolean(s?.hasMore)
+                    };
+                }
+                AiDebugLogger.recordCommentsState(requestVideoCode, 'initialLoad', {
+                    fromCache: false,
+                    durationMs: Date.now() - loadStartedAt,
+                    totalLoaded: this._collectAllLoadedComments().length,
+                    siteBreakdown
+                });
             }
 
             // 自动联动展开：若排序第1位的 Jable 无评论，而排在后面的 JavDB / JAVLibrary 有评论，自动展开首个有评论的板块
@@ -3325,12 +3352,16 @@ export class CommentPanel {
     }
 
     async _waitForContextsReady() {
+        const waitStartedAt = Date.now();
         const subMgr = this.controlManager?.subtitleManager || this.playerCore?.controlManager?.subtitleManager || null;
         const enabledKeys = this.getEnabledCommentSources().map((s) => s.key);
         const anySiteLoading = enabledKeys.some((k) => this.sites[k]?.status === 'loading');
+        const waitedInitialComments = Boolean(this._initialCommentsPromise || anySiteLoading);
+        const waitedSubAutoPick = Boolean(subMgr?._autoPickPromise);
+        const beforeCount = this._collectAllLoadedComments().length;
         const waitTasks = [];
 
-        if (this._initialCommentsPromise || anySiteLoading) {
+        if (waitedInitialComments) {
             Toast('正在等待评论与字幕采集就绪…', 2000, 'info');
             if (this._initialCommentsPromise) {
                 waitTasks.push(
@@ -3356,11 +3387,28 @@ export class CommentPanel {
         // 若首轮全部完成但当前总评论不足 15 条且主站点仍有下一页，自动补充拉取第 2 页提升分析覆盖面
         const curComments = this._collectAllLoadedComments();
         const activeSite = this.sites[this.activeCommentSource];
+        let backfillTriggered = false;
         if (curComments.length < 15 && activeSite && activeSite.hasMore && !activeSite.loading && (activeSite.currentPage || 1) === 1) {
+            backfillTriggered = true;
             await Promise.race([
                 this.loadSiteComments(this.activeCommentSource, 2).catch(() => {}),
                 new Promise((r) => setTimeout(r, 3000))
             ]);
+        }
+
+        if (this.videoCode && AiDebugLogger.isEnabled()) {
+            const afterComments = this._collectAllLoadedComments();
+            AiDebugLogger.recordCommentsState(this.videoCode, 'waitGate', {
+                totalWaitMs: Date.now() - waitStartedAt,
+                waitedInitialComments,
+                waitedSubAutoPick,
+                backfillTriggered,
+                beforeCount,
+                midCount: curComments.length,
+                afterCount: afterComments.length,
+                subCuesReadyCount: Array.isArray(subMgr?.cues) ? subMgr.cues.length : 0,
+                subAutoPickStillPending: Boolean(subMgr?._autoPickPromise)
+            });
         }
     }
 
