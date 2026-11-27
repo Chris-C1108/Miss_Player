@@ -14,7 +14,7 @@ import { analyzeSubtitlePlot } from '../player/subtitles/SubtitlePlotAnalyzer.js
 import { formatMetadataForLlm } from './AvMetadataService.js';
 import { AiDebugLogger } from './AiDebugLogger.js';
 
-export const AI_PROMPT_VERSION = 'v3.0';
+export const AI_PROMPT_VERSION = 'v3.1';
 
 /**
  * 计算带 Prompt 版本与当前模型 ID 的确定性缓存摘要，保证调优或切换模型后旧缓存自动失效
@@ -512,10 +512,12 @@ function extractResolvedSecondsForComment(commentObj, rawText, videoDuration = 0
                 pushSec(total, false);
             }
         }
-        const hmsWordRe = /(?:(\d{1,2})\s*(?:h|小时))(?:\s*(\d{1,2})\s*(?:m|分))?(?:\s*(\d{1,2})\s*(?:s|秒)?)?|(?:(\d{1,3})\s*(?:m|分钟|分)\s*(\d{1,2})\s*(?:s|秒)?)/gi;
+        const cnDigitMap = { 一: 1, 二: 2, 两: 2, 兩: 2, 三: 3, 四: 4, 五: 5, 六: 6 };
+        const hmsWordRe = /(?:([一二两兩三四五六]|\d{1,2})\s*(?:个)?\s*(?:h|小時|小时))(?:\s*(\d{1,2})\s*(?:m|分鐘|分钟|分))?(?:\s*(\d{1,2})\s*(?:s|秒)?)?|(?:(\d{1,3})\s*(?:m|分鐘|分钟|分)\s*(\d{1,2})\s*(?:s|秒)?)/gi;
         while ((m = hmsWordRe.exec(text)) !== null) {
             if (m[1] !== undefined) {
-                pushSec(Number(m[1]) * 3600 + (Number(m[2]) || 0) * 60 + (Number(m[3]) || 0), false);
+                const hours = cnDigitMap[m[1]] !== undefined ? cnDigitMap[m[1]] : Number(m[1]);
+                pushSec(hours * 3600 + (Number(m[2]) || 0) * 60 + (Number(m[3]) || 0), false);
             } else if (m[4] !== undefined) {
                 pushSec(Number(m[4]) * 60 + (Number(m[5]) || 0), false);
             }
@@ -1177,19 +1179,37 @@ export async function buildHighlightGraphWithLlm({
         ? `用户偏好要素（排序可适当靠前）: ${vibeTags.join('、')}`
         : '';
 
+    const hasSub = Boolean(built.compressedSub);
+    const hasCrowd = Array.isArray(crowdPeaks) && crowdPeaks.length > 0;
+    const commentTsSet = new Set();
+    for (const c of built.topComments) {
+        for (const t of c.resolvedTs || []) {
+            if (Number.isFinite(t?.seconds)) commentTsSet.add(t.seconds);
+        }
+    }
+    const commentTsList = Array.from(commentTsSet);
+
+    const groundingRule = !hasSub && !hasCrowd
+        ? '当前无字幕且无热度波峰，缺乏全片时间定位依据：`highlights` 严禁引用 "sub" 或凭记忆编造，只能提取评论已出现 `[t=...s]` 的时刻（无则返回空数组 `[]`）；`commentTags` 的 `inferredSeconds` 一律填 null！'
+        : (!hasSub
+            ? '当前无字幕对白，严禁使用 `"sub"` 来源或输出 `"subLine"`，仅可结合评论 `[t=...s]` 与热度波峰定位！'
+            : '所有时间点必须直接复用字幕 `t=...s`（或 `subLine`）、波峰 `t=...s` 或评论 `[t=...s]`，严禁心算或编造不存在的时间！');
+
     const messages = [
         {
             role: 'system',
             content: [
-                '你是影片多模态高光分析引擎。请结合作品元数据、社区回放波峰、字幕对白 `[L行号|t=秒数s|时分秒]` 与观众评论 `[C编号] [含时间点] [t=秒数s]` 输出融合高光图谱：',
-                '关键铁律：所有时间点必须直接复用字幕 `t=...s`（或 `subLine`）、波峰 `t=...s` 或评论 `[t=...s]`，严禁自己对时分秒进行心算换算或编造不存在的时间！',
-                '字段输出顺序与上限（防止截断）：',
+                '你是影片多模态高光分析引擎。请结合作品元数据、社区回放波峰、字幕对白（如有 `[L行号|t=秒数s|时分秒]`）与观众评论 `[C编号]` 输出融合高光图谱：',
+                groundingRule,
+                '字段输出顺序与上限：',
                 '1. brief: 1句话看点/避坑/共识总结；',
-                '2. highlights: 最多 6 个核心高能片段，若基于字幕请填 `subLine`，基于评论/波峰请填 `t`；',
-                '3. skipZones: 最多 3 个避坑/拖沓区间；',
-                '4. commentTags: 最多 8 条，仅挑选【没有已解析时间点】但含剧情评价或吐槽的评论 `idx`，结合字幕/波峰反推其时间 `inferredSeconds`（已有时间点的评论勿重复放入此数组！）；',
+                '2. highlights: 最多 6 个核心高能片段（不重复同一时刻，若无可返回 `[]`）；',
+                '3. skipZones: 最多 3 个明显拖沓/避坑区间（无明显区间请返回 `[]`，严禁写片尾总时长凑数）；',
+                '4. commentTags: 最多 8 条，优先选【无时间点】的纯评价评论归类情绪 (`hype`/`warn`/`neutral`)；仅在存在字幕或波峰定位依据时才推断 `inferredSeconds`，否则必须为 `null`；',
                 '仅输出严格合法 JSON，禁止 Markdown 围栏与多余解释：',
-                '{ "brief": { "highlights": "看点", "warnings": "避坑(无则写暂无明显雷点)", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "subLine": 12, "tag": "2-4字标签", "reason": "16字内理由", "sources": ["crowd","comment","sub"], "score": 92 }], "skipZones": [{ "seconds": 0, "endSeconds": 90, "reason": "14字内避坑说明" }], "commentTags": [{ "idx": 0, "sentiment": "hype", "isCountdown": false, "inferredSeconds": 420, "note": "10字内标签" }] }'
+                hasSub
+                    ? '{ "brief": { "highlights": "看点", "warnings": "避坑(无则写暂无明显雷点)", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "subLine": 12, "tag": "2-4字标签", "reason": "16字内理由", "sources": ["crowd","comment","sub"], "score": 92 }], "skipZones": [{ "seconds": 0, "endSeconds": 90, "reason": "14字内避坑说明" }], "commentTags": [{ "idx": 0, "sentiment": "hype", "isCountdown": false, "inferredSeconds": 420, "note": "10字内标签" }] }'
+                    : '{ "brief": { "highlights": "看点", "warnings": "避坑(无则写暂无明显雷点)", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "tag": "2-4字标签", "reason": "16字内理由", "sources": ["comment"], "score": 92 }], "skipZones": [], "commentTags": [{ "idx": 0, "sentiment": "hype", "isCountdown": false, "inferredSeconds": null, "note": "10字内标签" }] }'
             ].join('\n')
         },
         {
@@ -1236,24 +1256,42 @@ export async function buildHighlightGraphWithLlm({
             return dur > 0 ? Math.min(Math.floor(dur), n) : n;
         };
 
-        const highlights = [];
+        const rawHighlights = [];
         for (const item of Array.isArray(parsed.highlights) ? parsed.highlights : []) {
             const subLineNum = Number(item?.subLine);
-            const fromSubLine = Number.isInteger(subLineNum) && built.lineSeconds?.has(subLineNum)
+            const fromSubLine = hasSub && Number.isInteger(subLineNum) && built.lineSeconds?.has(subLineNum)
                 ? built.lineSeconds.get(subLineNum)
                 : null;
             const sec = fromSubLine !== null ? clampSec(fromSubLine) : clampSec(item?.seconds);
             if (sec === null) continue;
+            const rawSources = Array.isArray(item?.sources)
+                ? item.sources.map((s) => String(s || '').trim()).filter((s) => ['crowd', 'comment', 'sub'].includes(s))
+                : [];
+            // 无字幕时禁止伪造 'sub' 来源高光
+            const sources = rawSources.filter((s) => (hasSub || s !== 'sub') && (hasCrowd || s !== 'crowd'));
+            if (!hasSub && rawSources.includes('sub') && sources.length === 0) {
+                continue;
+            }
+            // 无字幕且无波峰时，高光时间必须与真实评论中出现过的时间相近（<= 120s 容差）
+            if (!hasSub && !hasCrowd) {
+                if (commentTsList.length === 0) continue;
+                const backed = commentTsList.some((cts) => Math.abs(cts - sec) <= 120);
+                if (!backed) continue;
+            }
             const endSecRaw = clampSec(item?.endSeconds);
             const endSeconds = endSecRaw !== null && endSecRaw > sec ? endSecRaw : null;
             const tag = normalizeInlineText(item?.tag || '').slice(0, 6) || '高能';
             const reason = normalizeInlineText(item?.reason || '').slice(0, 24);
-            const sources = Array.isArray(item?.sources)
-                ? item.sources.map((s) => String(s || '').trim()).filter((s) => ['crowd', 'comment', 'sub'].includes(s))
-                : [];
             const score = Math.max(1, Math.min(100, Math.round(Number(item?.score) || 80)));
-            highlights.push({ seconds: sec, endSeconds, tag, reason, sources, score });
-            if (highlights.length >= 8) break;
+            rawHighlights.push({ seconds: sec, endSeconds, tag, reason, sources, score });
+        }
+        // 邻近 45 秒内去重合并，保留高分高光
+        rawHighlights.sort((a, b) => b.score - a.score);
+        const highlights = [];
+        for (const h of rawHighlights) {
+            if (highlights.some((kept) => Math.abs(kept.seconds - h.seconds) < 45)) continue;
+            highlights.push(h);
+            if (highlights.length >= 6) break;
         }
         highlights.sort((a, b) => a.seconds - b.seconds);
 
@@ -1262,19 +1300,31 @@ export async function buildHighlightGraphWithLlm({
             const sec = clampSec(z?.seconds);
             if (sec === null) continue;
             const endRaw = clampSec(z?.endSeconds);
-            const endSeconds = endRaw !== null && endRaw > sec ? endRaw : sec + 30;
+            if (endRaw === null || endRaw <= sec || (endRaw - sec) < 15) continue;
+            if (dur > 0 && sec >= Math.floor(dur) - 15) continue;
             const reason = normalizeInlineText(z?.reason || '').slice(0, 22) || '节奏偏慢';
-            skipZones.push({ seconds: sec, endSeconds, reason });
-            if (skipZones.length >= 4) break;
+            skipZones.push({ seconds: sec, endSeconds: endRaw, reason });
+            if (skipZones.length >= 3) break;
         }
+
+        const normalizeSentiment = (rawSent) => {
+            const s = String(rawSent || '').trim().toLowerCase();
+            if (s === 'hype' || s === 'positive') return 'hype';
+            if (s === 'warn' || s === 'critique' || s === 'negative' || s === 'dislike') return 'warn';
+            return 'neutral';
+        };
 
         const commentInsights = {};
         for (const ct of Array.isArray(parsed.commentTags) ? parsed.commentTags : []) {
             const idx = Number(ct?.idx);
             const target = Number.isInteger(idx) ? built.topComments[idx] : null;
             if (!target?.id) continue;
-            const sentiment = ['hype', 'warn', 'neutral'].includes(ct?.sentiment) ? ct.sentiment : 'neutral';
-            const inferredSeconds = clampSec(ct?.inferredSeconds);
+            const sentiment = normalizeSentiment(ct?.sentiment);
+            let inferredSeconds = clampSec(ct?.inferredSeconds);
+            // 无字幕且无波峰时，不允许对无时间点评论盲猜推断秒数
+            if (!hasSub && !hasCrowd && (!Array.isArray(target.resolvedTs) || target.resolvedTs.length === 0)) {
+                inferredSeconds = null;
+            }
             const note = normalizeInlineText(ct?.note || '').slice(0, 14);
             commentInsights[target.id] = {
                 sentiment,

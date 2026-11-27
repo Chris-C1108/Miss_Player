@@ -632,7 +632,8 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
             cues,
             comments: [
                 { id: 'c-cd', text: '-1:02:15 顶级' },
-                { id: 'c-six', text: '015215 嗦的好棒' }
+                { id: 'c-six', text: '015215 嗦的好棒' },
+                { id: 'c-cn', text: '两个小时34分钟开始的主观后入看一次冲一次' }
             ],
             videoDuration: 12965
         });
@@ -640,6 +641,65 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         assert.equal(lastMaxTokens, 2400);
         assert.ok(lastPrompt.includes('t=9230s'), '倒数时间 -1:02:15 必须被预先校准为正向 t=9230s');
         assert.ok(lastPrompt.includes('t=6735s'), '6位紧凑格式 015215 必须被预先解析为 t=6735s');
+        assert.ok(lastPrompt.includes('t=9240s'), '中文“两个小时34分钟”必须被解析为 t=9240s');
         assert.equal(fgRes.graph.highlights[0].seconds, 10343);
+    });
+
+    it('drops forged sub/inferred timestamps and zero-width skipZones when subtitles & crowdPeaks are absent', async () => {
+        LlmService.saveConfig({
+            enabled: true,
+            baseUrl: 'https://apihub.agnes-ai.com/v1',
+            model: 'agnes-3.0-flash',
+            apiKey: 'sk-test-nosub'
+        });
+
+        gmResponder = (opts) => {
+            opts.onload({
+                status: 200,
+                finalUrl: opts.url,
+                responseText: JSON.stringify({
+                    choices: [{
+                        message: {
+                            content: JSON.stringify({
+                                brief: { highlights: '两小时后高能', warnings: '前段略慢', consensus: '口碑好' },
+                                highlights: [
+                                    { seconds: 0, endSeconds: 7200, subLine: 0, tag: '伪造字幕', reason: '无字幕捏造', sources: ['sub'], score: 90 },
+                                    { seconds: 7200, endSeconds: 8400, tag: '强度峰值', reason: '2h后不错', sources: ['comment'], score: 95 },
+                                    { seconds: 7210, endSeconds: 14338, tag: '重复高光', reason: '两小时后精华', sources: ['comment'], score: 88 }
+                                ],
+                                skipZones: [
+                                    { seconds: 14338, endSeconds: 14338, reason: '结尾边界凑数' },
+                                    { seconds: 0, endSeconds: 3600, reason: '前段节奏慢' }
+                                ],
+                                commentTags: [
+                                    { idx: 0, sentiment: 'positive', isCountdown: false, inferredSeconds: 7200, note: '两小时好评' },
+                                    { idx: 1, sentiment: 'critique', isCountdown: false, inferredSeconds: 3600, note: '无时间纯感想' }
+                                ]
+                            })
+                        }
+                    }]
+                })
+            });
+        };
+
+        const res = await buildHighlightGraphWithLlm({
+            avcode: 'XRW-813',
+            cues: [],
+            crowdPeaks: [],
+            comments: [
+                { id: 'c-real', text: '两小时后的强度不错' },
+                { id: 'c-nots', text: '耐看漂亮高颜值' }
+            ],
+            videoDuration: 14338
+        });
+
+        assert.equal(res.ok, true);
+        assert.equal(res.graph.highlights.length, 1, '必须过滤掉伪造的 sub 高光与重复的 7210s 高光');
+        assert.equal(res.graph.highlights[0].seconds, 7200);
+        assert.equal(res.graph.skipZones.length, 1, '必须丢弃片尾零宽度 skipZone');
+        assert.equal(res.graph.skipZones[0].endSeconds, 3600);
+        assert.equal(res.graph.commentInsights['c-real'].sentiment, 'hype', 'positive 应归一化为 hype');
+        assert.equal(res.graph.commentInsights['c-nots'].sentiment, 'warn', 'critique 应归一化为 warn');
+        assert.equal(res.graph.commentInsights['c-nots'].inferredSeconds, null, '无字幕无波峰时严禁盲猜无时间评论秒数');
     });
 });
