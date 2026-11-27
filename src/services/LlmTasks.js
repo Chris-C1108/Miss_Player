@@ -1338,8 +1338,8 @@ export async function buildHighlightGraphWithLlm({
                 '反幻觉硬约束（台词≠画面）：1) 必须先结合片名/简介/标签/评论确认全片核心体裁基调——纯深喉口交片出现“射了/舔净”若无下体插入前情绝不可脑补成「内射」，单凭孤立1~2词（如“屁眼”“要射了”“想要”“好舒服”）绝不可脑补成「肛交/双穴/灌精」；2) 欲望挑逗、夸张比喻或否定词（好像想要插入/顶到子宫/无法吞咽）不得写成已发生；3) 禁止把评论许愿或抱怨（希望喉射/没吞精）嫁接到无关时刻；4) 仅输出明确实锤的高光（0~5条，无把握宁可空缺 [] 绝不凑数），每条必须标注 confidence ("high"|"medium"|"low")，未证实具体动作只可写 low 或留空。',
                 '字段输出顺序与上限：',
                 '1. brief: 1句话看点/避坑/共识总结；',
-                '2. highlights: 0-5条实锤高能（禁止选片尾独白，无把握留 []）；',
-                '3. skipZones: 最多3个明显拖沓/避坑区间（不得与 highlights 重叠，无则 []）；',
+                '2. highlights: 0-5条实锤高能（禁片尾独白，tag用2-4字且勿带斜杠）；',
+                '3. skipZones: 最多3个明显拖沓区间（勿重叠highlights，禁写字幕/行号/推测，无则[]）；',
                 '4. commentTags: 最多8条评价归类；无字幕/波峰时 `inferredSeconds` 填 null；',
                 '仅输出严格合法 JSON：',
                 hasSub
@@ -1433,7 +1433,7 @@ export async function buildHighlightGraphWithLlm({
             }
             const endSecRaw = clampSec(item?.endSeconds);
             const endSeconds = (endSecRaw !== null && endSecRaw > sec && (endSecRaw - sec) <= 1800) ? endSecRaw : null;
-            const tag = normalizeInlineText(item?.tag || '').slice(0, 6) || '高能';
+            const tag = normalizeInlineText(item?.tag || '').slice(0, 6).replace(/[/|、]+$/, '') || '高能';
             const reason = normalizeInlineText(item?.reason || '').slice(0, 36);
             const score = Math.max(1, Math.min(100, Math.round(Number(item?.score) || 80)));
             if (score < 50) continue;
@@ -1461,7 +1461,8 @@ export async function buildHighlightGraphWithLlm({
                 return h.seconds <= endRaw + 20 && hEnd >= sec - 20;
             });
             if (overlapsHighlight) continue;
-            const reason = normalizeInlineText(z?.reason || '').slice(0, 22) || '节奏偏慢';
+            const reason = normalizeInlineText(z?.reason || '').slice(0, 28);
+            if (!reason || /(?:字幕|L\d+|跳跃|推测|若无)/i.test(reason)) continue;
             skipZones.push({ seconds: sec, endSeconds: endRaw, reason });
             if (skipZones.length >= 3) break;
         }

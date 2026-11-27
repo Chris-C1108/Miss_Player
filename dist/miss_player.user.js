@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.015
+// @version            5.7.124-beta.016
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.015";
+		return "5.7.124-beta.016";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4771,7 +4771,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.015";
+		return "5.7.124-beta.016";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6914,7 +6914,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.015";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.016";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -14960,8 +14960,8 @@
 				"反幻觉硬约束（台词≠画面）：1) 必须先结合片名/简介/标签/评论确认全片核心体裁基调——纯深喉口交片出现“射了/舔净”若无下体插入前情绝不可脑补成「内射」，单凭孤立1~2词（如“屁眼”“要射了”“想要”“好舒服”）绝不可脑补成「肛交/双穴/灌精」；2) 欲望挑逗、夸张比喻或否定词（好像想要插入/顶到子宫/无法吞咽）不得写成已发生；3) 禁止把评论许愿或抱怨（希望喉射/没吞精）嫁接到无关时刻；4) 仅输出明确实锤的高光（0~5条，无把握宁可空缺 [] 绝不凑数），每条必须标注 confidence (\"high\"|\"medium\"|\"low\")，未证实具体动作只可写 low 或留空。",
 				"字段输出顺序与上限：",
 				"1. brief: 1句话看点/避坑/共识总结；",
-				"2. highlights: 0-5条实锤高能（禁止选片尾独白，无把握留 []）；",
-				"3. skipZones: 最多3个明显拖沓/避坑区间（不得与 highlights 重叠，无则 []）；",
+				"2. highlights: 0-5条实锤高能（禁片尾独白，tag用2-4字且勿带斜杠）；",
+				"3. skipZones: 最多3个明显拖沓区间（勿重叠highlights，禁写字幕/行号/推测，无则[]）；",
 				"4. commentTags: 最多8条评价归类；无字幕/波峰时 `inferredSeconds` 填 null；",
 				"仅输出严格合法 JSON：",
 				hasSub ? "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"subLine\": 12, \"confidence\": \"high\", \"tag\": \"标签\", \"reason\": \"依据\", \"sources\": [\"crowd\",\"comment\",\"sub\"], \"score\": 92 }], \"skipZones\": [{ \"seconds\": 0, \"endSeconds\": 90, \"reason\": \"避坑\" }], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"inferredSeconds\": 420, \"note\": \"标签\" }] }" : "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"confidence\": \"high\", \"tag\": \"标签\", \"reason\": \"依据\", \"sources\": [\"comment\"], \"score\": 92 }], \"skipZones\": [], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"inferredSeconds\": null, \"note\": \"标签\" }] }"
@@ -15045,7 +15045,7 @@
 				if (dur >= 600 && sec >= dur - 90 && !sources.includes("comment") && !sources.includes("crowd") && /(?:结局|片尾|收尾|尾声|定格)/.test(`${item?.tag || ""}${item?.reason || ""}`)) continue;
 				const endSecRaw = clampSec(item?.endSeconds);
 				const endSeconds = endSecRaw !== null && endSecRaw > sec && endSecRaw - sec <= 1800 ? endSecRaw : null;
-				const tag = normalizeInlineText(item?.tag || "").slice(0, 6) || "高能";
+				const tag = normalizeInlineText(item?.tag || "").slice(0, 6).replace(/[/|、]+$/, "") || "高能";
 				const reason = normalizeInlineText(item?.reason || "").slice(0, 36);
 				const score = Math.max(1, Math.min(100, Math.round(Number(item?.score) || 80)));
 				if (score < 50) continue;
@@ -15077,7 +15077,8 @@
 					const hEnd = h.endSeconds || h.seconds + 30;
 					return h.seconds <= endRaw + 20 && hEnd >= sec - 20;
 				})) continue;
-				const reason = normalizeInlineText(z?.reason || "").slice(0, 22) || "节奏偏慢";
+				const reason = normalizeInlineText(z?.reason || "").slice(0, 28);
+				if (!reason || /(?:字幕|L\d+|跳跃|推测|若无)/i.test(reason)) continue;
 				skipZones.push({
 					seconds: sec,
 					endSeconds: endRaw,

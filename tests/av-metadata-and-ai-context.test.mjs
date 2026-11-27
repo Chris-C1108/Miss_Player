@@ -1208,11 +1208,12 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
                                 content: JSON.stringify({
                                     brief: { highlights: '中段爆发', warnings: '无', consensus: '好' },
                                     highlights: [
-                                        { seconds: 3600, endSeconds: 3720, confidence: 'high', tag: '核心', reason: '中段强对白', sources: ['sub'], score: 90 },
+                                        { seconds: 3600, endSeconds: 3720, confidence: 'high', tag: '按摩致高潮/', reason: '中段强对白', sources: ['sub'], score: 90 },
                                         { seconds: 7160, endSeconds: 7200, confidence: 'high', tag: '结局', reason: '片尾独白', sources: ['sub'], score: 88 }
                                     ],
                                     skipZones: [
                                         { seconds: 3550, endSeconds: 3750, reason: '冲突避坑' },
+                                        { seconds: 1000, endSeconds: 1200, reason: '中后段字幕跳跃严重（L100）' },
                                         { seconds: 0, endSeconds: 180, reason: '纯片头铺垫' }
                                     ],
                                     commentTags: [
@@ -1253,9 +1254,38 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         assert.equal(fgRes.ok, true);
         assert.equal(fgRes.graph.highlights.length, 1, '片尾 90s 纯 sub 高光必须过滤');
         assert.equal(fgRes.graph.highlights[0].seconds, 3600);
-        assert.equal(fgRes.graph.skipZones.length, 1, '与 highlights 重叠的 skipZones 必须剔除');
+        assert.equal(fgRes.graph.highlights[0].tag, '按摩致高潮', 'tag 截断末尾斜杠必须清理');
+        assert.equal(fgRes.graph.skipZones.length, 1, '重叠或含字幕/L100元术语的 skipZones 必须剔除');
         assert.equal(fgRes.graph.skipZones[0].seconds, 0);
         assert.equal(fgRes.graph.commentInsights.c1.isCountdown, false, 'commentInsights.isCountdown 必须跟随真实本地校准结果');
+
+        // 无字幕无波峰时：含“推测/若无”臆测理由的 skipZones 必须剔除
+        const prevGm = gmResponder;
+        gmResponder = (opts) => opts.onload?.({
+            status: 200,
+            responseText: JSON.stringify({
+                choices: [{
+                    message: {
+                        content: JSON.stringify({
+                            brief: { highlights: '口爆', warnings: '无', consensus: '好' },
+                            highlights: [{ seconds: 3600, endSeconds: 3660, confidence: 'high', tag: '射精', reason: '评论实锤', sources: ['comment'], score: 88 }],
+                            skipZones: [{ seconds: 3600, endSeconds: 4200, reason: '推测中段铺垫若无高能可能较慢' }],
+                            commentTags: []
+                        })
+                    }
+                }]
+            })
+        });
+        const noSubFg = await buildHighlightGraphWithLlm({
+            avcode: 'ADN-384',
+            cues: [],
+            comments: [{ id: 'c1', text: '1:00:00 太强了' }],
+            videoDuration: 7200,
+            forceRefresh: true
+        });
+        gmResponder = prevGm;
+        assert.equal(noSubFg.ok, true);
+        assert.deepEqual(noSubFg.graph.skipZones, []);
 
         const chRes = await analyzeSubtitleChaptersWithLlm({
             avcode: 'DASD-943',
