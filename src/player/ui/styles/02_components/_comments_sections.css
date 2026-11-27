@@ -283,6 +283,18 @@
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
 
+.tm-comment-tab-ai svg {
+    width: 12px;
+    height: 12px;
+    color: #64b5ff;
+    flex-shrink: 0;
+}
+
+.tm-comment-filter-pill.is-ai-hidden,
+.tm-comment-fab-btn.is-ai-hidden {
+    display: none;
+}
+
 .tm-tab-count {
     font-size: 11px;
     opacity: 0.75;

@@ -850,4 +850,40 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         assert.ok(capturedPrompt.includes('副字幕交叉参考'), '存在噪声时应附加副字幕交叉参考文本');
         assert.ok(capturedPrompt.includes('反幻觉硬约束'), 'Prompt 必须包含反台词物理脑补硬约束');
     });
+
+    it('SubtitleManager waitUntilReady awaits pending init/autoPick and CommentPanel exposes -1 AI screen', async () => {
+        const { SubtitleManager } = await import('../src/player/subtitles/SubtitleManager.js');
+        const fakeMgr = Object.create(SubtitleManager.prototype);
+        fakeMgr.avcode = 'MIAA-950';
+        fakeMgr.cues = [];
+        fakeMgr.playerCore = { options: { playerState: { settings: { subtitleAutoBest: true } } } };
+        fakeMgr._autoSearchedCodes = new Set();
+        fakeMgr._hasSavedFavorite = () => false;
+        fakeMgr._initPromise = new Promise((r) => setTimeout(() => {
+            fakeMgr.cues = [{ start: 10, end: 14, text: '延迟就绪字幕' }];
+            r();
+        }, 25));
+        const gateRes = await fakeMgr.waitUntilReady({ timeoutMs: 800 });
+        assert.equal(gateRes.ready, true);
+        assert.equal(gateRes.cueCount, 1);
+
+        // 超时降级场景：超过超时窗后仍返回 pending=true 供 AI 先走评论兜底再升级
+        const slowMgr = Object.create(SubtitleManager.prototype);
+        slowMgr.avcode = 'MIAA-950';
+        slowMgr.cues = [];
+        slowMgr.playerCore = { options: { playerState: { settings: { subtitleAutoBest: false } } } };
+        slowMgr._autoSearchedCodes = new Set();
+        slowMgr._hasSavedFavorite = () => true;
+        slowMgr._initPromise = new Promise((r) => setTimeout(r, 1200));
+        const timedOutRes = await slowMgr.waitUntilReady({ timeoutMs: 500 });
+        assert.equal(timedOutRes.ready, false);
+        assert.equal(timedOutRes.pending, true);
+
+        const cpSrc = fs.readFileSync(path.resolve('src/player/controls/CommentPanel.js'), 'utf8');
+        const subCss = fs.readFileSync(path.resolve('src/player/ui/styles/02_components/_subtitle_insights.css'), 'utf8');
+        assert.ok(cpSrc.includes("key: 'ai'") && cpSrc.includes('getViewSources()'), 'CommentPanel 必须把 AI 简报作为首位 (-1 屏) 同级视图');
+        assert.ok(cpSrc.includes('id="tm-comment-section-ai"'), 'CommentPanel 必须渲染 #tm-comment-section-ai 以支持左右滑动切换');
+        assert.ok(cpSrc.includes('onSubtitleApplied') && cpSrc.includes('_pendingAiSubtitleUpgrade'), '字幕延迟就绪后必须支持自动补全/升级 AI 简报');
+        assert.ok(subCss.includes('.mp-ai-screen-body') && subCss.includes('.mp-ai-brief-notice'), '样式表必须包含 -1 屏与降级提示样式');
+    });
 });

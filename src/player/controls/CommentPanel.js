@@ -367,6 +367,10 @@ export class CommentPanel {
         this.aiBriefBtn = null;
         this.aiBriefCard = null;
         this._aiBriefLoading = false;
+        this._aiBriefData = null;
+        this._aiBriefError = '';
+        this._pendingAiSubtitleUpgrade = '';
+        this._autoAiAttemptedCodes = new Set();
 
         // 延迟后台域名探测，避免在 UI 挂载的关键帧争抢网络和主线程微任务
         if (typeof window.requestIdleCallback === 'function') {
@@ -516,6 +520,15 @@ export class CommentPanel {
         });
 
         return enabled.length > 0 ? enabled : [{ key: 'jable', label: 'Jable' }];
+    }
+
+    /** 获取包含 "-1 屏" AI 简报与多站点评论的同级视图顺序列表 */
+    getViewSources() {
+        const commentSources = this.getEnabledCommentSources();
+        if (LlmService.isFeatureEnabled('featureCommentBrief')) {
+            return [{ key: 'ai', label: __('commentAiBrief') || 'AI 简报', isAiScreen: true }, ...commentSources];
+        }
+        return commentSources;
     }
 
     /**
@@ -1087,6 +1100,17 @@ export class CommentPanel {
                 this.renderCommentsList();
                 this.updateCommentsCount();
                 this.updateTabBar();
+                // 缓存恢复但仍有 hasMore 的源站（如 JavDB 18+）后台补拉第 2~3 页
+                for (const sKey of ['javdb', 'jable']) {
+                    const st = this.sites[sKey];
+                    if (st && st.hasMore && (st.currentPage || 1) < 3 && !st.loading && !st.collectedPages?.has((st.currentPage || 1) + 1)) {
+                        setTimeout(() => {
+                            if (this.videoCode === requestVideoCode && !st.loading) {
+                                this.loadSiteComments(sKey, (st.currentPage || 1) + 1);
+                            }
+                        }, 450);
+                    }
+                }
                 return;
             }
         }
@@ -1096,9 +1120,11 @@ export class CommentPanel {
         if (page === 1) {
             this.currentPage = 1;
             this.renderedCommentIds.clear(); // 刷新/首次加载时清空，防止第一页评论全部闪烁
-            if (this.aiBriefCard) {
-                this.aiBriefCard.classList.add('is-hidden');
-                this.aiBriefCard.replaceChildren();
+            this._aiBriefData = null;
+            this._aiBriefError = '';
+            this._pendingAiSubtitleUpgrade = '';
+            if (this.activeCommentSource === 'ai') {
+                this.activeCommentSource = this.getEnabledCommentSources()[0]?.key || 'jable';
             }
 
             if (forceRefresh) {
@@ -1748,12 +1774,7 @@ export class CommentPanel {
                     <span class="tm-filter-text">高能现场</span>
                     <span class="tm-filter-count is-hidden">0</span>
                 </button>
-                <button type="button" class="mp-ai-brief-btn is-hidden" title="${__('commentAiBrief') || 'AI 简报'}">
-                    ${ICON_SPARKLES}
-                    <span>${__('commentAiBrief') || 'AI 简报'}</span>
-                </button>
             </div>
-            <div class="mp-ai-brief-card is-hidden"></div>
             <div class="tm-comments-list tm-comments-panel-list"></div>
             <div class="tm-comment-loading tm-comments-panel-loading is-hidden"></div>
             <div class="tm-comment-error tm-comments-panel-error is-hidden"></div>
@@ -1792,8 +1813,9 @@ export class CommentPanel {
         this.commentNavBar = this.commentsPanel.querySelector('.tm-comment-nav-bar');
         this.commentTabStrip = this.commentsPanel.querySelector('.tm-comment-tab-strip');
         this.commentFilterPill = this.commentsPanel.querySelector('.tm-comment-filter-pill');
-        this.aiBriefBtn = this.commentsPanel.querySelector('.mp-ai-brief-btn');
-        this.aiBriefCard = this.commentsPanel.querySelector('.mp-ai-brief-card');
+        this.commentFabBtn = this.commentsPanel.querySelector('.tm-comment-fab-btn');
+        this.aiBriefBtn = null;
+        this.aiBriefCard = null;
 
         if (this.commentTabStrip) {
             this.commentTabStrip.addEventListener('click', (e) => {
@@ -1810,12 +1832,6 @@ export class CommentPanel {
         if (this.commentFilterPill) {
             this.commentFilterPill.addEventListener('click', () => {
                 this.toggleHighlightFilter();
-            });
-        }
-
-        if (this.aiBriefBtn) {
-            this.aiBriefBtn.addEventListener('click', () => {
-                this.generateAiBrief();
             });
         }
 
@@ -1930,7 +1946,7 @@ export class CommentPanel {
             dragPrepared = false;
             currentDeltaX = 0;
 
-            availableSources = this.getEnabledCommentSources().map(s => s.key);
+            availableSources = this.getViewSources().map(s => s.key);
             currentIndex = availableSources.indexOf(this.activeCommentSource);
             activeSection = this.commentsList.querySelector('.tm-comment-section.is-active-source')
                 || this.commentsList.querySelector(`#tm-comment-section-${this.activeCommentSource}`);
@@ -2052,9 +2068,11 @@ export class CommentPanel {
                     this._isCardSwipeAnimating = true;
                     this.activeCommentSource = targetSource;
                     this._userSelectedCommentSource = targetSource;
-                    try {
-                        localStorage.setItem('mp_active_comment_source', targetSource);
-                    } catch (_) {}
+                    if (targetSource !== 'ai') {
+                        try {
+                            localStorage.setItem('mp_active_comment_source', targetSource);
+                        } catch (_) {}
+                    }
                     this.updateTabBar();
 
                     const runCommitSlide = () => {
@@ -2092,9 +2110,11 @@ export class CommentPanel {
                     this._isCardSwipeAnimating = true;
                     this.activeCommentSource = targetSource;
                     this._userSelectedCommentSource = targetSource;
-                    try {
-                        localStorage.setItem('mp_active_comment_source', targetSource);
-                    } catch (_) {}
+                    if (targetSource !== 'ai') {
+                        try {
+                            localStorage.setItem('mp_active_comment_source', targetSource);
+                        } catch (_) {}
+                    }
                     this.updateTabBar();
 
                     const runCommitSlide = () => {
@@ -2896,8 +2916,15 @@ export class CommentPanel {
                 return 0;
             });
 
-            // 渲染 HTML
-            this.commentsList.innerHTML = sections.map(s => s.html).join('');
+            // 渲染 "-1 屏" AI 简报容器 + 各平台评论区
+            const orderedSections = [];
+            if (LlmService.isFeatureEnabled('featureCommentBrief')) {
+                orderedSections.push({ key: 'ai', html: this.renderAiSectionHtml() });
+            }
+            orderedSections.push(...sections);
+
+            this.commentsList.innerHTML = orderedSections.map(s => s.html).join('');
+            this._hydrateAiSectionDom();
 
             // 绑定登录 Badge 点击事件
             this.bindAllLoginBadgeEvents();
@@ -3032,18 +3059,20 @@ export class CommentPanel {
     }
 
     /**
-     * 切换当前激活的数据源标签 (Direction B: Linear Minimalist)
-     * @param {string} siteKey 'jable' | 'javdb' | 'javlib'
+     * 切换当前激活的数据源标签或 "-1 屏" AI 简报 (Direction B: Linear Minimalist)
+     * @param {string} siteKey 'ai' | 'jable' | 'javdb' | 'javlib'
      * @param {Object} [options] { animate?: boolean }
      */
     setActiveSource(siteKey, options = {}) {
-        if (!siteKey || !['jable', 'javdb', 'javlib'].includes(siteKey)) return;
+        if (!siteKey || !['ai', 'jable', 'javdb', 'javlib'].includes(siteKey)) return;
         const prevSource = this.activeCommentSource;
         this.activeCommentSource = siteKey;
         this._userSelectedCommentSource = siteKey;
-        try {
-            localStorage.setItem('mp_active_comment_source', siteKey);
-        } catch (_) {}
+        if (siteKey !== 'ai') {
+            try {
+                localStorage.setItem('mp_active_comment_source', siteKey);
+            } catch (_) {}
+        }
 
         if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
             try { navigator.vibrate(10); } catch (_) {}
@@ -3055,7 +3084,7 @@ export class CommentPanel {
             && typeof requestAnimationFrame === 'function';
 
         if (shouldAnimate) {
-            const enabledKeys = this.getEnabledCommentSources().map(s => s.key);
+            const enabledKeys = this.getViewSources().map(s => s.key);
             const oldIndex = enabledKeys.indexOf(prevSource);
             const newIndex = enabledKeys.indexOf(siteKey);
             const outgoing = this.commentsList.querySelector(`#tm-comment-section-${prevSource}`);
@@ -3098,11 +3127,14 @@ export class CommentPanel {
                     this._cleanupCardSwipeState();
                     if (this.commentsList) this.commentsList.scrollTop = 0;
                     const targetSite = this.sites[siteKey];
-                    if (targetSite && targetSite.status === 'idle') {
+                    if (siteKey !== 'ai' && targetSite && targetSite.status === 'idle') {
                         this.loadSiteComments(siteKey, 1);
                     }
                     this.syncActiveSourceView();
                     this.updateTabBar();
+                    if (siteKey === 'ai') {
+                        this._maybeAutoGenerateOnEnterAiScreen();
+                    }
                     if (this._pendingRenderAfterSwipe) {
                         this._pendingRenderAfterSwipe = false;
                         this.renderCommentsList();
@@ -3120,12 +3152,15 @@ export class CommentPanel {
 
         // 关键自愈：如果目标源尚未发起加载或处于空闲态，先触发首次采集再同步视图，避免被兜底跳回默认源
         const targetSite = this.sites[siteKey];
-        if (targetSite && targetSite.status === 'idle') {
+        if (siteKey !== 'ai' && targetSite && targetSite.status === 'idle') {
             this.loadSiteComments(siteKey, 1);
         }
 
         this.syncActiveSourceView();
         this.updateTabBar();
+        if (siteKey === 'ai') {
+            this._maybeAutoGenerateOnEnterAiScreen();
+        }
 
         // 切换后若视口未填满，检查自动触发分页加载
         setTimeout(() => this.checkViewportFill(), 50);
@@ -3165,34 +3200,36 @@ export class CommentPanel {
     syncActiveSourceView() {
         if (!this.commentsList) return;
 
-        const validSources = ['jable', 'javdb', 'javlib'];
+        const validSources = this.getViewSources().map(s => s.key);
         if (!validSources.includes(this.activeCommentSource)) {
-            this.activeCommentSource = 'jable';
+            this.activeCommentSource = this.getEnabledCommentSources()[0]?.key || 'jable';
         }
 
-        // 如果当前激活源完全无内容但有其他源有内容，且非用户主动选中的源，自动友好引导至首个有内容的源
-        const curSite = this.sites[this.activeCommentSource];
-        const curHasContent = curSite && (curSite.status === 'loading' || (curSite.filteredComments && curSite.filteredComments.length > 0));
-        const isExplicitUserChoice = this._userSelectedCommentSource === this.activeCommentSource;
-        if (!curHasContent && !isExplicitUserChoice) {
-            const alternativeSource = validSources.find(k => {
-                const s = this.sites[k];
-                return s && ((s.filteredComments && s.filteredComments.length > 0) || s.status === 'loading');
-            });
-            if (alternativeSource) {
-                this.activeCommentSource = alternativeSource;
+        // 当用户停留在评论区且当前评论源无内容时，自动切换至首个有内容的评论源（永不误切走 "-1 屏" AI 视图）
+        if (this.activeCommentSource !== 'ai') {
+            const curSite = this.sites[this.activeCommentSource];
+            const curHasContent = curSite && (curSite.status === 'loading' || (curSite.filteredComments && curSite.filteredComments.length > 0));
+            const isExplicitUserChoice = this._userSelectedCommentSource === this.activeCommentSource;
+            if (!curHasContent && !isExplicitUserChoice) {
+                const alternativeSource = ['jable', 'javdb', 'javlib'].find(k => {
+                    const s = this.sites[k];
+                    return validSources.includes(k) && s && ((s.filteredComments && s.filteredComments.length > 0) || s.status === 'loading');
+                });
+                if (alternativeSource) {
+                    this.activeCommentSource = alternativeSource;
+                }
             }
         }
 
-        const enabledSources = this.getEnabledCommentSources().map(s => s.key);
-        if (enabledSources.length > 0 && !enabledSources.includes(this.activeCommentSource)) {
-            this.activeCommentSource = enabledSources[0];
-        }
+        const isAiView = this.activeCommentSource === 'ai';
+        this.commentFilterPill?.classList.toggle('is-ai-hidden', isAiView);
+        const fabEl = this.commentsPanel?.querySelector('.tm-comment-fab-btn');
+        fabEl?.classList.toggle('is-ai-hidden', isAiView);
 
         const sections = this.commentsList.querySelectorAll('.tm-comment-section');
         sections.forEach(sec => {
             const siteKey = sec.getAttribute('data-site');
-            const isEnabled = enabledSources.includes(siteKey);
+            const isEnabled = validSources.includes(siteKey);
             if (!isEnabled) {
                 sec.classList.remove('is-active-source');
                 sec.classList.add('is-hidden-source');
@@ -3213,24 +3250,40 @@ export class CommentPanel {
     }
 
     /**
-     * 更新顶部水平标签栏各平台计数与高能筛选统计 (严格按设置中启用的评论源过滤)
+     * 更新顶部水平标签栏各平台计数、"-1 屏" AI 简报入口与高能筛选统计
      */
     updateTabBar() {
         if (!this.commentsPanel) return;
 
-        const enabledSources = this.getEnabledCommentSources();
+        const viewSources = this.getViewSources();
+        const enabledKeys = viewSources.map(s => s.key);
         const tabStrip = this.commentsPanel.querySelector('.tm-comment-tab-strip');
 
-        // 检查当前 activeCommentSource 是否在启用的列表中，若不在则自动切换到第一个启用的源
-        const isCurrentActiveEnabled = enabledSources.some(s => s.key === this.activeCommentSource);
-        if (!isCurrentActiveEnabled && enabledSources.length > 0) {
-            this.activeCommentSource = enabledSources[0].key;
+        if (!enabledKeys.includes(this.activeCommentSource) && viewSources.length > 0) {
+            this.activeCommentSource = this.getEnabledCommentSources()[0]?.key || viewSources[0].key;
             this.syncActiveSourceView();
         }
 
+        const isAiView = this.activeCommentSource === 'ai';
+        this.commentFilterPill?.classList.toggle('is-ai-hidden', isAiView);
+        const fabEl = this.commentsPanel.querySelector('.tm-comment-fab-btn');
+        fabEl?.classList.toggle('is-ai-hidden', isAiView);
+
         if (tabStrip) {
-            tabStrip.innerHTML = enabledSources.map(s => {
+            tabStrip.innerHTML = viewSources.map(s => {
                 const isActive = s.key === this.activeCommentSource;
+                if (s.isAiScreen) {
+                    const hlCount = this._aiBriefData?.graph?.highlights?.length || this._aiBriefData?.brief?.timestamps?.length || 0;
+                    const badgeText = this._aiBriefLoading ? '...' : (hlCount > 0 ? String(hlCount) : '');
+                    const badgeHtml = badgeText ? `<span class="tm-tab-count">${badgeText}</span>` : '';
+                    return `
+                        <button type="button" class="tm-comment-tab-item tm-comment-tab-ai ${isActive ? 'is-active' : ''}" data-site="ai">
+                            ${ICON_SPARKLES}
+                            <span class="tm-tab-name">${s.label}</span>
+                            ${badgeHtml}
+                        </button>
+                    `;
+                }
                 const site = this.sites[s.key];
                 let countText = '0';
                 if (site) {
@@ -3255,7 +3308,6 @@ export class CommentPanel {
             const filterCountEl = this.commentFilterPill.querySelector('.tm-filter-count');
             if (filterCountEl) {
                 const curSite = this.sites[this.activeCommentSource];
-                // 优先取 filteredComments，为空时回退至 comments，保证只要有数据就同步高能条数
                 const comments = (curSite?.filteredComments && curSite.filteredComments.length > 0)
                     ? curSite.filteredComments
                     : (curSite?.comments || []);
@@ -3338,20 +3390,57 @@ export class CommentPanel {
     }
 
     refreshAiBriefVisibility() {
-        if (!this.aiBriefBtn) return;
         const enabled = LlmService.isFeatureEnabled('featureCommentBrief');
         const comments = this._collectAllLoadedComments();
-        this.aiBriefBtn.classList.toggle('is-hidden', !enabled || comments.length === 0);
         if (!enabled) {
-            this.aiBriefCard?.classList.add('is-hidden');
+            this._aiBriefData = null;
+            this._hydrateAiSectionDom();
             return;
         }
-        if (comments.length > 0 && this.videoCode) {
-            const cacheProbeKey = `${this.videoCode}:${comments.length}`;
+        if ((comments.length > 0 || this._collectHighlightFusionContext().cues.length > 0) && this.videoCode) {
+            const subLen = this._collectHighlightFusionContext().cues.length;
+            const cacheProbeKey = `${this.videoCode}:${comments.length}:${subLen}`;
             if (this._aiBriefCheckedKey !== cacheProbeKey) {
                 this._aiBriefCheckedKey = cacheProbeKey;
                 this._loadCachedAiBrief(comments);
             }
+        }
+    }
+
+    /** 构造 "-1 屏" AI 简报的 HTML 分区骨架 */
+    renderAiSectionHtml() {
+        const isActive = this.activeCommentSource === 'ai';
+        return `
+            <div id="tm-comment-section-ai" class="tm-comment-section ${isActive ? 'is-active-source' : 'is-hidden-source'}" data-site="ai">
+                <div class="tm-comment-section-hdr"><span class="tm-comment-section-title">AI 简报</span></div>
+                <div class="tm-comment-section-body mp-ai-screen-body"></div>
+            </div>
+        `;
+    }
+
+    /** 切换到 "-1 屏" AI 简报时若尚无结果或错误，静默自动触发一次分析 */
+    _maybeAutoGenerateOnEnterAiScreen() {
+        if (!LlmService.isFeatureEnabled('featureCommentBrief')) return;
+        if (this._aiBriefLoading || this._aiBriefData || this._aiBriefError) return;
+        const code = this.videoCode || '';
+        if (!code || this._autoAiAttemptedCodes.has(code)) return;
+        this._autoAiAttemptedCodes.add(code);
+        this.generateAiBrief();
+    }
+
+    /** 字幕稍后完成下载与挂载时自动刷新缓存匹配或补全之前降级运行的 AI 简报 */
+    async onSubtitleApplied(avcode) {
+        const code = String(avcode || '').trim().toUpperCase();
+        if (!code || code !== String(this.videoCode || '').trim().toUpperCase()) return;
+        const comments = this._collectAllLoadedComments();
+        this._aiBriefCheckedKey = '';
+        await this._loadCachedAiBrief(comments);
+        if (this._pendingAiSubtitleUpgrade === code && !this._aiBriefLoading) {
+            this._pendingAiSubtitleUpgrade = '';
+            this.generateAiBrief();
+        } else {
+            this._hydrateAiSectionDom();
+            this.updateTabBar();
         }
     }
 
@@ -3361,11 +3450,11 @@ export class CommentPanel {
         const enabledKeys = this.getEnabledCommentSources().map((s) => s.key);
         const anySiteLoading = enabledKeys.some((k) => this.sites[k]?.status === 'loading');
         const waitedInitialComments = Boolean(this._initialCommentsPromise || anySiteLoading);
-        const waitedSubSearch = Boolean(subMgr?._searchPromise || subMgr?._searching);
+        const waitedSubSearch = Boolean(subMgr?._searchPromise || subMgr?._searching || subMgr?._initPromise);
         const beforeCount = this._collectAllLoadedComments().length;
         const waitTasks = [];
 
-        if (waitedInitialComments || waitedSubSearch || subMgr?._autoPickPromise) {
+        if (waitedInitialComments || waitedSubSearch || subMgr?._autoPickPromise || subMgr?.waitUntilReady) {
             Toast('正在等待评论与字幕采集就绪…', 2000, 'info');
             if (this._initialCommentsPromise) {
                 waitTasks.push(
@@ -3375,36 +3464,22 @@ export class CommentPanel {
                     ])
                 );
             }
-            if (subMgr?._searchPromise) {
-                waitTasks.push(
-                    Promise.race([
-                        subMgr._searchPromise,
-                        new Promise((r) => setTimeout(r, 4500))
-                    ])
-                );
+            if (typeof subMgr?.waitUntilReady === 'function') {
+                waitTasks.push(subMgr.waitUntilReady({ timeoutMs: 8000 }));
+            } else {
+                if (subMgr?._searchPromise) {
+                    waitTasks.push(Promise.race([subMgr._searchPromise, new Promise((r) => setTimeout(r, 4500))]));
+                }
+                if (subMgr?._autoPickPromise) {
+                    waitTasks.push(Promise.race([subMgr._autoPickPromise, new Promise((r) => setTimeout(r, 4500))]));
+                }
             }
-        }
-        if (subMgr?._autoPickPromise) {
-            waitTasks.push(
-                Promise.race([
-                    subMgr._autoPickPromise,
-                    new Promise((r) => setTimeout(r, 3500))
-                ])
-            );
         }
         if (waitTasks.length > 0) {
             await Promise.allSettled(waitTasks);
         }
 
         const waitedSubAutoPick = Boolean(waitedSubSearch || subMgr?._autoPickPromise);
-        if (subMgr?._autoPickPromise) {
-            await Promise.race([
-                subMgr._autoPickPromise,
-                new Promise((r) => setTimeout(r, 3500))
-            ]);
-        }
-
-        // 若启用站点仍处于 hasMore 且当前页 < 3，自动补拉后续页面（解决 JavDB 18+ 截断导致 AI 漏掉高赞时间点评论）
         const curComments = this._collectAllLoadedComments();
         const pendingPages = [];
         for (const key of enabledKeys) {
@@ -3424,6 +3499,12 @@ export class CommentPanel {
             ]);
         }
 
+        const subCuesReadyCount = Array.isArray(subMgr?.cues) ? subMgr.cues.length : 0;
+        const subAutoPickStillPending = Boolean(
+            (subMgr?._initPromise || subMgr?._searching || subMgr?._searchPromise || subMgr?._autoPickPromise || subMgr?._busyId || subMgr?._applyPromise) &&
+            subCuesReadyCount === 0
+        );
+
         if (this.videoCode && AiDebugLogger.isEnabled()) {
             const afterComments = this._collectAllLoadedComments();
             AiDebugLogger.recordCommentsState(this.videoCode, 'waitGate', {
@@ -3435,24 +3516,25 @@ export class CommentPanel {
                 beforeCount,
                 midCount: curComments.length,
                 afterCount: afterComments.length,
-                subCuesReadyCount: Array.isArray(subMgr?.cues) ? subMgr.cues.length : 0,
-                subAutoPickStillPending: Boolean(subMgr?._autoPickPromise)
+                subCuesReadyCount,
+                subAutoPickStillPending
             });
         }
+        return { subStillPending: subAutoPickStillPending };
     }
 
     async _loadCachedAiBrief(comments) {
         const targetCode = this.videoCode || '';
-        if (!targetCode || !Array.isArray(comments) || !comments.length) return;
+        const ctx = this._collectHighlightFusionContext();
+        if (!targetCode || ((!Array.isArray(comments) || !comments.length) && !ctx.cues.length)) return;
         try {
             const metadata = AvMetadataService.getCachedOrDom(targetCode);
             const dur = this.targetVideo ? getVideoDurationSeconds(this.targetVideo) : 0;
             if (LlmService.isFeatureEnabled('featureHighlightFusion')) {
-                const ctx = this._collectHighlightFusionContext();
                 const fusionHit = await getCachedHighlightGraph({
                     avcode: targetCode,
                     cues: ctx.cues,
-                    comments,
+                    comments: comments || [],
                     crowdPeaks: ctx.crowdPeaks,
                     videoDuration: dur || ctx.videoDuration || 0,
                     vibeTags: ctx.vibeTags,
@@ -3464,7 +3546,7 @@ export class CommentPanel {
                     return;
                 }
             }
-            const res = await getCachedCommentBrief({ avcode: targetCode, comments, videoDuration: dur || 0, metadata });
+            const res = await getCachedCommentBrief({ avcode: targetCode, comments: comments || [], videoDuration: dur || 0, metadata });
             if (
                 this.videoCode !== targetCode ||
                 !LlmService.isFeatureEnabled('featureCommentBrief') ||
@@ -3478,27 +3560,40 @@ export class CommentPanel {
     }
 
     async generateAiBrief({ forceRefresh = false } = {}) {
-        if (this._aiBriefLoading || !this.aiBriefCard) return;
+        if (this._aiBriefLoading) return;
         if (!LlmService.isFeatureEnabled('featureCommentBrief')) {
             Toast('请先在设置中启用 AI 服务与评论简报', 2400, 'info');
             return;
         }
+        const targetCode = this.videoCode || '';
         this._aiBriefLoading = true;
-        this.aiBriefBtn?.classList.add('is-loading');
+        this._aiBriefError = '';
+        this._hydrateAiSectionDom();
+        this.updateTabBar();
         try {
+            let subStillPending = false;
             if (!forceRefresh) {
-                await this._waitForContextsReady();
+                const gate = await this._waitForContextsReady();
+                subStillPending = Boolean(gate?.subStillPending);
             }
             const comments = this._collectAllLoadedComments();
-            if (!comments.length) {
-                Toast('暂无可供提炼的评论内容', 2000, 'info');
+            const ctx = this._collectHighlightFusionContext();
+            if (!comments.length && !ctx.cues.length && !ctx.crowdPeaks.length) {
+                this._aiBriefError = '暂无可供分析的评论或字幕内容';
+                Toast(this._aiBriefError, 2000, 'info');
                 return;
             }
-            const metadata = await AvMetadataService.getMetadata(this.videoCode || '', { forceRefresh }).catch(() => null);
+            const metadata = await AvMetadataService.getMetadata(targetCode, { forceRefresh }).catch(() => null);
+            const subtitlePendingUpgrade = Boolean(!ctx.cues.length && subStillPending);
+            if (subtitlePendingUpgrade && targetCode) {
+                this._pendingAiSubtitleUpgrade = targetCode;
+            } else {
+                this._pendingAiSubtitleUpgrade = '';
+            }
+
             if (LlmService.isFeatureEnabled('featureHighlightFusion')) {
-                const ctx = this._collectHighlightFusionContext();
                 const fusionRes = await buildHighlightGraphWithLlm({
-                    avcode: this.videoCode || '',
+                    avcode: targetCode,
                     cues: ctx.cues,
                     altCues: ctx.altCues,
                     altTitle: ctx.altTitle,
@@ -3511,39 +3606,106 @@ export class CommentPanel {
                 });
                 if (fusionRes?.ok && fusionRes.graph) {
                     this._applyHighlightGraphToComments(fusionRes.graph);
-                    this._renderAiBriefCard(fusionRes.graph.brief, fusionRes.graph);
+                    this._renderAiBriefCard(fusionRes.graph.brief, fusionRes.graph, { subtitlePendingUpgrade });
                     return;
                 }
                 if (fusionRes?.refused) {
-                    Toast(fusionRes.error || '模型拒绝解析', 2400, 'info');
+                    this._aiBriefError = fusionRes.error || '模型拒绝解析';
+                    Toast(this._aiBriefError, 2400, 'info');
                     return;
                 }
             }
 
+            if (!comments.length) {
+                this._aiBriefError = '当前无评论且融合分析未返回结果';
+                return;
+            }
             const dur = this.targetVideo ? getVideoDurationSeconds(this.targetVideo) : 0;
             const res = await summarizeCommentsWithLlm({
-                avcode: this.videoCode || '',
+                avcode: targetCode,
                 comments,
                 videoDuration: dur || 0,
                 metadata,
                 forceRefresh
             });
             if (!res || !res.ok || !res.brief) {
-                Toast(res?.error || '生成评论简报失败', 2400, 'info');
+                this._aiBriefError = res?.error || '生成评论简报失败';
+                Toast(this._aiBriefError, 2400, 'info');
                 return;
             }
-            this._renderAiBriefCard(res.brief, null);
+            this._renderAiBriefCard(res.brief, null, { subtitlePendingUpgrade });
         } catch (err) {
-            Toast(LlmService.redactSecrets(err?.message || '生成评论简报失败'), 2400, 'error');
+            this._aiBriefError = LlmService.redactSecrets(err?.message || '生成评论简报失败');
+            Toast(this._aiBriefError, 2400, 'error');
         } finally {
             this._aiBriefLoading = false;
-            this.aiBriefBtn?.classList.remove('is-loading');
+            this._hydrateAiSectionDom();
+            this.updateTabBar();
         }
     }
 
-    _renderAiBriefCard(brief, graph = null) {
-        const card = this.aiBriefCard;
-        if (!card || !brief) return;
+    _renderAiBriefCard(brief, graph = null, { subtitlePendingUpgrade = false } = {}) {
+        if (!brief) return;
+        this._aiBriefData = { brief, graph, subtitlePendingUpgrade: Boolean(subtitlePendingUpgrade) };
+        this._aiBriefError = '';
+        this._hydrateAiSectionDom();
+        this.updateTabBar();
+    }
+
+    /** 将 "-1 屏" AI 简报状态渲染进 #tm-comment-section-ai .tm-comment-section-body */
+    _hydrateAiSectionDom() {
+        const bodyEl = this.commentsList?.querySelector('#tm-comment-section-ai .tm-comment-section-body');
+        if (!bodyEl) return;
+
+        const commentsCount = this._collectAllLoadedComments().length;
+        const subMgr = this.controlManager?.subtitleManager || this.playerCore?.controlManager?.subtitleManager || null;
+        const cueCount = Array.isArray(subMgr?.cues) ? subMgr.cues.length : 0;
+        const subInFlight = Boolean(subMgr?._initPromise || subMgr?._searching || subMgr?._searchPromise || subMgr?._autoPickPromise);
+
+        const statusBar = document.createElement('div');
+        statusBar.className = 'mp-ai-screen-status';
+        const makePill = (txt, ok = false) => {
+            const s = document.createElement('span');
+            s.className = `mp-ai-status-pill ${ok ? 'is-ready' : ''}`;
+            s.textContent = txt;
+            return s;
+        };
+        statusBar.append(
+            makePill(`评论 ${commentsCount}`, commentsCount > 0),
+            makePill(cueCount > 0 ? `字幕 ${cueCount} 句` : (subInFlight ? '字幕加载中' : '无字幕'), cueCount > 0)
+        );
+
+        if (this._aiBriefLoading) {
+            const loadingCard = document.createElement('div');
+            loadingCard.className = 'mp-ai-brief-card mp-ai-screen-empty';
+            const msg = document.createElement('div');
+            msg.className = 'mp-ai-screen-loading-text';
+            msg.textContent = '正在等待评论/字幕就绪并生成多模态 AI 简报…';
+            loadingCard.appendChild(msg);
+            bodyEl.replaceChildren(statusBar, loadingCard);
+            return;
+        }
+
+        const data = this._aiBriefData;
+        if (!data?.brief) {
+            const emptyCard = document.createElement('div');
+            emptyCard.className = 'mp-ai-brief-card mp-ai-screen-empty';
+            const desc = document.createElement('div');
+            desc.className = 'mp-ai-screen-empty-desc';
+            desc.textContent = this._aiBriefError || '向右滑出的 -1 屏：融合多站点评论、字幕对白与热度波峰，生成看点、避坑与可跳转时间轴。';
+            const genBtn = document.createElement('button');
+            genBtn.type = 'button';
+            genBtn.className = 'mp-ai-brief-generate-btn';
+            genBtn.textContent = this._aiBriefError ? '重新生成 AI 简报' : '生成 AI 简报';
+            genBtn.addEventListener('click', () => this.generateAiBrief({ forceRefresh: Boolean(this._aiBriefError) }));
+            emptyCard.append(desc, genBtn);
+            bodyEl.replaceChildren(statusBar, emptyCard);
+            return;
+        }
+
+        const { brief, graph, subtitlePendingUpgrade } = data;
+        const card = document.createElement('div');
+        card.className = 'mp-ai-brief-card';
 
         const head = document.createElement('div');
         head.className = 'mp-ai-brief-head';
@@ -3580,17 +3742,15 @@ export class CommentPanel {
             this.generateAiBrief({ forceRefresh: true });
         });
         headActions.appendChild(refreshBtn);
-
-        const closeBtn = document.createElement('button');
-        closeBtn.type = 'button';
-        closeBtn.className = 'mp-ai-brief-close';
-        closeBtn.innerHTML = CLOSE_LINE;
-        closeBtn.setAttribute('aria-label', __('cancel') || '关闭');
-        closeBtn.addEventListener('click', () => {
-            card.classList.add('is-hidden');
-        });
-        headActions.appendChild(closeBtn);
         head.append(title, headActions);
+
+        const children = [head];
+        if (subtitlePendingUpgrade) {
+            const notice = document.createElement('div');
+            notice.className = 'mp-ai-brief-notice';
+            notice.textContent = '字幕仍在加载，已先基于评论生成；字幕就绪后将自动补全剧情';
+            children.push(notice);
+        }
 
         const rowsWrap = document.createElement('div');
         rowsWrap.className = 'mp-ai-brief-rows';
@@ -3612,8 +3772,8 @@ export class CommentPanel {
             row.append(labelEl, textEl);
             rowsWrap.appendChild(row);
         });
+        children.push(rowsWrap);
 
-        const children = [head, rowsWrap];
         if (Array.isArray(brief.timestamps) && brief.timestamps.length > 0) {
             const tsRow = document.createElement('div');
             tsRow.className = 'mp-ai-brief-ts-row';
@@ -3647,7 +3807,7 @@ export class CommentPanel {
         }
 
         card.replaceChildren(...children);
-        card.classList.remove('is-hidden');
+        bodyEl.replaceChildren(statusBar, card);
     }
 
     /**

@@ -313,6 +313,8 @@ export class SubtitleManager {
         this._autoSearchedCodes = new Set();
         this._autoFailedIds = new Set();
         this._autoPickPromise = null;
+        this._initPromise = null;
+        this._applyPromise = null;
 
         this._onTimeUpdate = () => this.renderAt(this.targetVideo?.currentTime || 0);
         this._onSeeked = () => this.renderAt(this.targetVideo?.currentTime || 0);
@@ -340,12 +342,15 @@ export class SubtitleManager {
         this._ensureOverlay();
         this._ensureButton();
         this._bindVideoEvents();
-        this._loadBundle().then(async () => {
+        const run = this._loadBundle().then(async () => {
             this._renderList();
             this._syncSwitchState();
             await this._maybeAutoPickPreferred();
             if (this.isEnabled) await this._autoApplyBest({ silent: true });
+        }).finally(() => {
+            if (this._initPromise === run) this._initPromise = null;
         });
+        this._initPromise = run;
     }
 
     cleanup() {
@@ -420,12 +425,66 @@ export class SubtitleManager {
         this._lyricsOnlyHighlights = false;
         this.bundle = { code: next, activeId: '', favoriteId: '', items: [], updatedAt: 0 };
         this._setOverlayText('');
-        await this._loadBundle();
-        this._renderList();
-        this._syncSwitchState();
-        await this._maybeAutoPickPreferred();
-        if (this.isEnabled) await this._autoApplyBest({ silent: true });
+        const run = (async () => {
+            await this._loadBundle();
+            this._renderList();
+            this._syncSwitchState();
+            await this._maybeAutoPickPreferred();
+            if (this.isEnabled) await this._autoApplyBest({ silent: true });
+        })().finally(() => {
+            if (this._initPromise === run) this._initPromise = null;
+        });
+        this._initPromise = run;
+        await run;
         return true;
+    }
+
+    /**
+     * 供 AI 分析前统一等待字幕就绪（依次覆盖初始化载包、在线检索、多轨择优与应用）
+     * @param {{ timeoutMs?: number }} [options]
+     * @returns {Promise<{ ready: boolean, cueCount: number, timedOut: boolean, pending: boolean }>}
+     */
+    async waitUntilReady({ timeoutMs = 8000 } = {}) {
+        const deadline = Date.now() + Math.max(500, Number(timeoutMs) || 8000);
+        const raceBudget = async (promise) => {
+            const left = deadline - Date.now();
+            if (!promise || left <= 0) return;
+            await Promise.race([
+                Promise.resolve(promise).catch(() => {}),
+                new Promise((r) => setTimeout(r, left))
+            ]);
+        };
+
+        await raceBudget(this._initPromise);
+        if (
+            !this.cues.length &&
+            !this._searchPromise &&
+            !this._autoPickPromise &&
+            this.settings.subtitleAutoBest &&
+            !this._hasSavedFavorite() &&
+            this.avcode &&
+            !this._autoSearchedCodes.has(this.avcode)
+        ) {
+            this._maybeAutoPickPreferred();
+        }
+        await raceBudget(this._searchPromise);
+        await raceBudget(this._autoPickPromise);
+        await raceBudget(this._applyPromise);
+
+        const stillPending = Boolean(
+            this._initPromise ||
+            this._searching ||
+            this._searchPromise ||
+            this._autoPickPromise ||
+            this._busyId ||
+            this._applyPromise
+        );
+        return {
+            ready: this.cues.length > 0,
+            cueCount: this.cues.length,
+            timedOut: stillPending && Date.now() >= deadline,
+            pending: stillPending
+        };
     }
 
     /** 候选是否属于当前番号（本地导入不受番号约束） */
@@ -729,8 +788,16 @@ export class SubtitleManager {
     // ---------------------------------------------------------------- 轨切换
 
     async _applyItem(item, options = {}) {
-        const { silent = false } = options;
         if (!item) return;
+        const run = this._runApplyItem(item, options).finally(() => {
+            if (this._applyPromise === run) this._applyPromise = null;
+        });
+        this._applyPromise = run;
+        return run;
+    }
+
+    async _runApplyItem(item, options = {}) {
+        const { silent = false } = options;
         const prepared = await this._ensureContent(item);
         if (!prepared) {
             if (!silent) Toast(text('subtitleDownloadFailed', '下载失败，请换个来源试试'), 2600, 'error');
@@ -771,7 +838,7 @@ export class SubtitleManager {
             AiDebugLogger.recordSubtitleState(this.avcode, 'activeTrack', {
                 id: prepared.id || '',
                 source: prepared.source || '',
-                lang: langInfo?.lang || prepared.lang || '',
+                lang: langInfo?.detectedLang || langInfo?.lang || prepared.lang || '',
                 declaredLang: prepared.lang || '',
                 format,
                 machineTranslated: Boolean(prepared.machineTranslated),
@@ -783,6 +850,9 @@ export class SubtitleManager {
                 title: prepared.title || ''
             });
         }
+        try {
+            this.controlManager?.commentPanel?.onSubtitleApplied?.(this.avcode, this.cues);
+        } catch (_) {}
         if (!silent) {
             Toast(`${text('subtitleApplied', '已应用字幕')} · ${prepared.title || format.toUpperCase()}`, 2000, 'success');
         }

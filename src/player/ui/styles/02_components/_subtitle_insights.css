@@ -288,6 +288,72 @@
     animation: mp-sub-insights-pulse 1.4s ease-in-out infinite;
 }
 
+.mp-ai-screen-body {
+    padding: 12px 14px 20px;
+    gap: 10px;
+}
+
+.mp-ai-screen-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.mp-ai-status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.56);
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.mp-ai-status-pill.is-ready {
+    color: #7cd4a6;
+    background-color: rgba(48, 209, 88, 0.14);
+}
+
+.mp-ai-screen-empty {
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.mp-ai-screen-empty-desc,
+.mp-ai-screen-loading-text {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.mp-ai-brief-generate-btn {
+    padding: 7px 14px;
+    border-radius: 9999px;
+    border: 1px solid rgba(10, 132, 255, 0.42);
+    background-color: rgba(10, 132, 255, 0.22);
+    color: #82c6ff;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mp-ai-brief-generate-btn:hover {
+    background-color: rgba(10, 132, 255, 0.34);
+    color: #ffffff;
+}
+
+.mp-ai-brief-notice {
+    padding: 6px 10px;
+    border-radius: 8px;
+    background-color: rgba(255, 159, 10, 0.12);
+    border: 1px solid rgba(255, 159, 10, 0.28);
+    color: #ffc266;
+    font-size: 11.5px;
+    line-height: 1.4;
+}
+
 .mp-ai-brief-card {
     display: flex;
     flex-direction: column;
