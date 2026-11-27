@@ -54,6 +54,13 @@ const {
 } = await import('../src/services/LlmTasks.js');
 const { selectBestQualityCandidate } = await import('../src/player/subtitles/SubtitleQualityScorer.js');
 const { SyncManager } = await import('../src/sync/SyncManager.js');
+const { SubtitleRepository } = await import('../src/player/subtitles/SubtitleRepository.js');
+const {
+    AiBatchTestRunner,
+    parseBatchCodes,
+    loadSavedBatchText,
+    saveBatchText
+} = await import('../src/services/AiBatchTestRunner.js');
 
 function resetAll() {
     storageMap.clear();
@@ -962,5 +969,163 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         assert.ok(!lastUserPrompt.includes('Structurer 先生'), '劣质字幕正文绝不能传入 Prompt 污染判断');
         assert.equal(rescuedFg.graph.highlights.length, 1, 'confidence=low 猜测条目必须被过滤');
         assert.equal(rescuedFg.graph.highlights[0].seconds, 3853);
+    });
+
+    it('Debug 批量实测解析缓存与全链路 WebDAV 上传应完整闭环', async () => {
+        resetAll();
+        const raw = [
+            '# 测试清单',
+            'https://missav.ws/cn/miaa-950',
+            'NKKD-351, miaa-950',
+            '// 注释行忽略',
+            'not-a-code'
+        ].join('\n');
+        saveBatchText(raw);
+        assert.equal(loadSavedBatchText(), raw);
+        assert.deepEqual(parseBatchCodes(raw), ['MIAA-950', 'NKKD-351']);
+
+        const clearEmpty = await SubtitleRepository.clearLocal({ codes: ['MIAA-950'] });
+        assert.equal(clearEmpty.clearedCount, 0);
+
+        SyncManager.saveWebDavConfig({
+            url: 'http://192.168.1.10:5005/backup',
+            username: 'chen',
+            password: 'secret',
+            enabled: true
+        });
+        LlmService.saveConfig({
+            enabled: true,
+            baseUrl: 'https://llm.test/v1',
+            model: 'gpt-4o-mini',
+            apiKey: 'sk-test',
+            aiDebugEnabled: false,
+            aiDebugDir: 'logs/ai-debug'
+        });
+
+        const samplePhrases = [
+            '今天加班好累啊，我们先聊聊企划案进度吧。',
+            '部长说这次项目非常关键，需要全力配合。',
+            '外面的雨下得好大，今晚恐怕赶不上末班车了。',
+            '你刚才喝了那么多酒，现在头还晕吗？',
+            '别站在玄关吹风了，快进来喝杯热茶暖暖身子。',
+            '其实我一直有件事想找机会跟你说清楚。',
+            '手机怎么突然没电了，这里信号也不太好。',
+            '门锁好像坏了，今晚只能暂时在这里过夜。'
+        ];
+        const uploadedPayloads = [];
+        const srtContent = Array.from({ length: 48 }, (_, i) => {
+            const startSec = i * 40;
+            const mm1 = String(Math.floor(startSec / 60)).padStart(2, '0');
+            const ss1 = String(startSec % 60).padStart(2, '0');
+            const mm2 = String(Math.floor((startSec + 4) / 60)).padStart(2, '0');
+            const ss2 = String((startSec + 4) % 60).padStart(2, '0');
+            const lineA = samplePhrases[i % samplePhrases.length];
+            const lineB = samplePhrases[Math.floor(i / samplePhrases.length) % samplePhrases.length];
+            return `${i + 1}\n00:${mm1}:${ss1},000 --> 00:${mm2}:${ss2},000\n${lineA}${lineB}\n`;
+        }).join('\n');
+
+        gmResponder = (opts) => {
+            const url = String(opts.url || '');
+            const method = String(opts.method || 'GET').toUpperCase();
+            if (url.startsWith('http://192.168.1.10:5005')) {
+                if (method === 'PROPFIND') {
+                    return opts.onload?.({ status: 207, responseText: '<multistatus/>', finalUrl: url });
+                }
+                if (method === 'PUT') {
+                    uploadedPayloads.push({ url, data: JSON.parse(opts.data) });
+                    return opts.onload?.({ status: 201, responseText: '', finalUrl: url });
+                }
+                return opts.onload?.({ status: 200, responseText: '', finalUrl: url });
+            }
+            if (url.includes('api-shoulei-ssl.xunlei.com')) {
+                return opts.onload?.({
+                    status: 200,
+                    responseText: JSON.stringify({
+                        code: 0,
+                        data: [{ cid: 'cid1', name: 'MIAA-950.zh.srt', url: 'https://sub.test/miaa-950.srt', language: 'zh', ext: 'srt', rate: 95 }]
+                    }),
+                    finalUrl: url
+                });
+            }
+            if (url.includes('https://sub.test/miaa-950.srt')) {
+                const buf = new TextEncoder().encode(srtContent).buffer;
+                return opts.onload?.({ status: 200, response: buf, responseText: srtContent, finalUrl: url });
+            }
+            if (url.includes('jdforrepam.com/api/v2/search')) {
+                return opts.onload?.({ status: 200, responseText: JSON.stringify({ data: { movies: [{ id: 'mv1' }] } }), finalUrl: url });
+            }
+            if (url.includes('jdforrepam.com/api/v1/movies/mv1/reviews')) {
+                return opts.onload?.({
+                    status: 200,
+                    responseText: JSON.stringify({
+                        data: { reviews: [{ id: 'r1', content: '31:20 剧情转折高能', created_at: '2026-10-01', user: { name: 'u1' }, score: 5 }] }
+                    }),
+                    finalUrl: url
+                });
+            }
+            if (url.includes('/chat/completions')) {
+                const body = JSON.parse(opts.data || '{}');
+                const sys = body.messages?.[0]?.content || '';
+                if (sys.includes('场景定位分析引擎')) {
+                    return opts.onload?.({
+                        status: 200,
+                        responseText: JSON.stringify({
+                            choices: [{
+                                message: {
+                                    content: JSON.stringify({
+                                        brief: { highlights: '31分剧情转折', warnings: '暂无明显雷点', consensus: '口碑不错' },
+                                        highlights: [{ seconds: 1880, endSeconds: 1920, subLine: 47, confidence: 'high', tag: '转折', reason: '字幕与评论印证', sources: ['comment', 'sub'], score: 90 }],
+                                        skipZones: [],
+                                        commentTags: []
+                                    })
+                                }
+                            }]
+                        })
+                    });
+                }
+                return opts.onload?.({
+                    status: 200,
+                    responseText: JSON.stringify({
+                        choices: [{
+                            message: {
+                                content: JSON.stringify({
+                                    summary: '职场加班对白剧情',
+                                    chapters: [{ line: 2, seconds: 80, tag: '开场', headline: '谈论企划进度' }]
+                                })
+                            }
+                        }]
+                    })
+                });
+            }
+            return opts.onload?.({ status: 404, responseText: '', finalUrl: url });
+        };
+
+        const progressEvents = [];
+        const res = await AiBatchTestRunner.runBatch({
+            codes: ['MIAA-950'],
+            preferredLang: 'zh',
+            clearLocalSubs: true,
+            forceFresh: true,
+            delayMs: 0,
+            onProgress: (p) => progressEvents.push(p)
+        });
+
+        assert.equal(AiDebugLogger.isEnabled(), false, '批量实测结束后必须恢复原 aiDebugEnabled 状态');
+        assert.equal(res.ok, true);
+        assert.equal(res.completed, 1);
+        assert.equal(res.uploadedCount, 1);
+        assert.equal(res.results[0].commentsCount, 1);
+        assert.ok(res.results[0].subSqi >= 75);
+        assert.ok(res.results[0].hlOutcome.startsWith('ok('));
+        assert.ok(res.results[0].subChOutcome.startsWith('ok('));
+        assert.equal(progressEvents.length, 2);
+
+        const debugUploads = uploadedPayloads.filter((u) => u.url.includes('/logs/ai-debug/MIAA-950'));
+        assert.ok(debugUploads.length >= 1, '至少上传一份 MIAA-950 完整 AI Debug 报告');
+        const payload = debugUploads[debugUploads.length - 1].data;
+        assert.equal(payload.avcode, 'MIAA-950');
+        assert.ok(payload.contextReadiness?.subtitles?.autoPick);
+        assert.ok(payload.contextReadiness?.comments?.initialLoad);
+        assert.equal(payload.aiExecutions.length, 2);
     });
 });

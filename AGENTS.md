@@ -144,7 +144,7 @@ Miss Player 遵循高内聚、单一职责的微前端模块化设计：
 * **社区高能边缘缓存**：`services/cf-heatmap-cache/`（Cloudflare Worker）— 社区高能进度条边缘 24h 缓存只读网关，单番号恒定 160 字符 Base64，免费层 10 万次/天充沛覆盖。
 
 ### 4. 服务与数据通道 (`src/services/` & `src/sync/`)
-* **BYOK AI 服务 (可选)**：`src/services/LlmService.js`、`src/services/LlmTasks.js` 与 `src/player/managers/settings_v2/sections/S2AiSectionBuilder.js` — OpenAI 兼容接口（支持本地 Ollama / OpenRouter / 中转，经 `GM_xmlhttpRequest` 穿透 CORS）、密钥仅存本机、拒答检测与降级、IndexedDB + WebDAV (`ai-cache/`) 跨端缓存，按需驱动字幕分幕、评论简报与高光打标
+* **BYOK AI 服务 (可选)**：`src/services/LlmService.js`、`src/services/LlmTasks.js`、`src/services/AiDebugLogger.js`、`src/services/AiBatchTestRunner.js` 与 `src/player/managers/settings_v2/sections/S2AiSectionBuilder.js` — OpenAI 兼容接口（支持本地 Ollama / OpenRouter / 中转，经 `GM_xmlhttpRequest` 穿透 CORS）、密钥仅存本机、拒答检测与降级、IndexedDB + WebDAV (`ai-cache/`) 跨端缓存，按需驱动字幕分幕、评论简报与高光打标；Debug 面板内置批量番号实测队列与本地字幕缓存清理
 * **Supabase 服务**：`src/services/SupabaseService.js` — 方案 1 高密度 JSONB 聚合仓储读取与服务端 RPC 原子合并
 * **版本检测与更新**：`src/services/SleazyForkService.js` — 官方只读 JSON API 握手与语义化 Semver 版本比对
 * **WebDAV 客户端**：`src/sync/WebDavClient.js` — 跨域原子文件落盘、PROPFIND 嗅探与目录逐级自愈

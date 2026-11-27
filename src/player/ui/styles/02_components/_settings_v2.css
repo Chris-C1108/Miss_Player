@@ -907,3 +907,24 @@
     border-color: rgba(10, 132, 255, 0.32);
     color: #64b5ff;
 }
+
+.mp-s2-batch-textarea {
+    width: 100%;
+    min-height: 82px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.34);
+    color: #f5f5f7;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.45;
+    resize: vertical;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+.mp-s2-batch-textarea:focus {
+    outline: none;
+    border-color: #0a84ff;
+}

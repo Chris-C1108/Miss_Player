@@ -11,7 +11,7 @@
  *   `{番号}.{lang}.{hash}.{ext}`  可直接被播放器/播放盒读取的字幕正文
  */
 
-import { idbGet, idbSet, STORES } from '../../utils/indexedDB.js';
+import { idbGet, idbSet, idbDelete, idbGetAll, STORES } from '../../utils/indexedDB.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
 import { SyncManager } from '../../sync/SyncManager.js';
 import { PeachService } from '../../services/PeachService.js';
@@ -163,6 +163,28 @@ export class SubtitleRepository {
         const target = SubtitleRepository.resolveRemoteTarget(avcode);
         if (!target || !item?.file) return false;
         return WebDavClient.deleteFile(target.config, `${target.dir}${item.file}`);
+    }
+
+    /**
+     * 清理本地 IndexedDB 字幕缓存（支持按番号局部清理或全量清空）
+     * @param {{ codes?: string[]|null }} [options]
+     * @returns {Promise<{ clearedCount: number }>}
+     */
+    static async clearLocal({ codes = null } = {}) {
+        if (Array.isArray(codes) && codes.length > 0) {
+            const keys = Array.from(new Set(codes.map((c) => normalizeKey(c)).filter(Boolean)));
+            let clearedCount = 0;
+            for (const key of keys) {
+                if (await idbDelete(STORES.SUBTITLES, key)) clearedCount += 1;
+            }
+            return { clearedCount };
+        }
+        const rows = await idbGetAll(STORES.SUBTITLES);
+        let clearedCount = 0;
+        for (const row of rows) {
+            if (row?.key && await idbDelete(STORES.SUBTITLES, row.key)) clearedCount += 1;
+        }
+        return { clearedCount };
     }
 
     static _merge(localBundle, remoteIndex) {

@@ -8,6 +8,7 @@ import {
 import { DebugLogPanel } from '../../../ui/DebugLogPanel.js';
 import { CrazyScraper } from '../../../comments/CrazyScraper.js';
 import { CommentCacheManager } from '../../../comments/CommentCacheManager.js';
+import { SubtitleRepository } from '../../../subtitles/SubtitleRepository.js';
 import {
     getCurrentVersion,
     detectScriptHandler,
@@ -250,7 +251,35 @@ export class S2AdvancedSection {
                     }
                 });
 
+                const clearSubBtn = document.createElement('button');
+                clearSubBtn.type = 'button';
+                clearSubBtn.className = 'mp-s2-btn mp-s2-btn--danger';
+                const normalSubHtml = `<span>清理本地字幕缓存</span>`;
+                clearSubBtn.innerHTML = normalSubHtml;
+
+                bindTwoStepConfirm(clearSubBtn, {
+                    normalHtml: normalSubHtml,
+                    confirmText: '确认清空本地缓存字幕?',
+                    onConfirm: async () => {
+                        clearSubBtn.disabled = true;
+                        clearSubBtn.textContent = '清理中…';
+                        const res = await SubtitleRepository.clearLocal();
+                        const subMgr = this.sm?.controlManager?.subtitleManager;
+                        if (subMgr) {
+                            subMgr.onlineResults = [];
+                            subMgr._autoSearchedCodes?.clear?.();
+                            if (subMgr.bundle) {
+                                subMgr.bundle = { code: subMgr.avcode || '', activeId: '', favoriteId: '', items: [], updatedAt: 0 };
+                            }
+                        }
+                        clearSubBtn.disabled = false;
+                        clearSubBtn.innerHTML = normalSubHtml;
+                        Toast(`已清理本地 ${res.clearedCount} 部字幕缓存`, 2000, 'success');
+                    }
+                });
+
                 actionForm.appendChild(clearBtn);
+                actionForm.appendChild(clearSubBtn);
                 body.appendChild(actionForm);
             }
         }).element;

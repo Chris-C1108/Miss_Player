@@ -15,6 +15,8 @@ import {
 } from '../components/S2Primitives.js';
 import { LlmService, LlmCache, filterAndSortTextModels } from '../../../../services/LlmService.js';
 import { AiDebugLogger } from '../../../../services/AiDebugLogger.js';
+import { AiBatchTestRunner, parseBatchCodes, loadSavedBatchText, saveBatchText } from '../../../../services/AiBatchTestRunner.js';
+import { SubtitleRepository } from '../../../subtitles/SubtitleRepository.js';
 import { SyncManager, WebDavClient } from '../../../../sync/index.js';
 import { Toast } from '../../../../utils/index.js';
 import {
@@ -657,9 +659,135 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
                 }
             });
 
+            // 2.6 批量无头实测与本地字幕缓存清理
+            const batchField = document.createElement('div');
+            batchField.className = 'mp-s2-field';
+            const batchLabel = document.createElement('label');
+            batchLabel.className = 'mp-s2-field-label';
+            const batchTextarea = document.createElement('textarea');
+            batchTextarea.className = 'mp-s2-batch-textarea';
+            batchTextarea.placeholder = '每行一个番号或影片链接（自动缓存于浏览器），例如：\nMIAA-950\nNKKD-351';
+            batchTextarea.value = loadSavedBatchText();
+
+            const syncBatchLabel = () => {
+                const count = parseBatchCodes(batchTextarea.value).length;
+                batchLabel.textContent = count > 0
+                    ? `批量实测番号清单（已识别 ${count} 部，自动缓存）`
+                    : '批量实测番号清单（每行一部，自动缓存）';
+            };
+            syncBatchLabel();
+            batchTextarea.addEventListener('input', () => {
+                saveBatchText(batchTextarea.value);
+                syncBatchLabel();
+            });
+            batchField.appendChild(batchLabel);
+            batchField.appendChild(batchTextarea);
+
+            const debugActionsRow = document.createElement('div');
+            debugActionsRow.className = 'mp-s2-actions';
+
+            const batchRunBtn = document.createElement('button');
+            batchRunBtn.type = 'button';
+            batchRunBtn.className = 'mp-s2-btn mp-s2-btn--primary';
+            batchRunBtn.innerHTML = `${ICON_SERVER} <span>开始批量实测</span>`;
+
+            const clearSubCacheBtn = document.createElement('button');
+            clearSubCacheBtn.type = 'button';
+            clearSubCacheBtn.className = 'mp-s2-btn mp-s2-btn--danger';
+            const clearSubHtml = `${ICON_TRASH} <span>清理本地字幕缓存</span>`;
+            clearSubCacheBtn.innerHTML = clearSubHtml;
+
+            bindTwoStepConfirm(clearSubCacheBtn, {
+                normalHtml: clearSubHtml,
+                confirmText: '确认清空本地字幕缓存?',
+                onConfirm: async () => {
+                    clearSubCacheBtn.disabled = true;
+                    const res = await SubtitleRepository.clearLocal();
+                    const subMgr = sm?.controlManager?.subtitleManager;
+                    if (subMgr) {
+                        subMgr.onlineResults = [];
+                        subMgr._autoSearchedCodes?.clear?.();
+                        if (subMgr.bundle) {
+                            subMgr.bundle = { code: subMgr.avcode || '', activeId: '', favoriteId: '', items: [], updatedAt: 0 };
+                        }
+                    }
+                    clearSubCacheBtn.disabled = false;
+                    clearSubCacheBtn.innerHTML = clearSubHtml;
+                    statusBox.className = 'mp-s2-status-box is-ok';
+                    statusBox.textContent = `已清理本地 ${res.clearedCount} 部影片的缓存字幕`;
+                    Toast(`已清理 ${res.clearedCount} 部本地字幕缓存`, 2000, 'success');
+                }
+            });
+
+            batchRunBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (AiBatchTestRunner.isRunning()) {
+                    AiBatchTestRunner.cancel();
+                    batchRunBtn.disabled = true;
+                    batchRunBtn.textContent = '正在停止…';
+                    return;
+                }
+                persistConfig();
+                saveBatchText(batchTextarea.value);
+                const codes = parseBatchCodes(batchTextarea.value);
+                if (!codes.length) {
+                    statusBox.className = 'mp-s2-status-box is-err';
+                    statusBox.textContent = '请先在清单中输入有效番号';
+                    Toast('未识别到有效番号', 2000, 'error');
+                    return;
+                }
+                if (!WebDavClient.hasValidEndpoint(SyncManager.getWebDavConfig())) {
+                    statusBox.className = 'mp-s2-status-box is-err';
+                    statusBox.textContent = '请先配置 WebDAV 以保存每部影片的诊断结果';
+                    Toast('请先配置 WebDAV 服务器', 2200, 'error');
+                    return;
+                }
+
+                batchRunBtn.innerHTML = `${ICON_SERVER} <span>停止实测</span>`;
+                flushDebugBtn.disabled = true;
+                clearSubCacheBtn.disabled = true;
+                statusBox.className = 'mp-s2-status-box is-running';
+                statusBox.textContent = `批量实测启动：共 ${codes.length} 部（清缓存 + 评论 + 字幕优选 + AI）`;
+
+                try {
+                    const summary = await AiBatchTestRunner.runBatch({
+                        codes,
+                        clearLocalSubs: true,
+                        forceFresh: true,
+                        preferredLang: sm?.settings?.subtitlePreferredLang || 'auto',
+                        onProgress: (p) => {
+                            if (p.phase === 'start') {
+                                statusBox.textContent = `[${p.index}/${p.total}] 正在测试 ${p.code}…`;
+                            } else if (p.phase === 'done') {
+                                const sqiTag = p.subSqi !== null ? `SQI:${p.subSqi}` : '无字幕';
+                                statusBox.textContent = `[${p.index}/${p.total}] ${p.code} 完成 · ${sqiTag} · 评${p.commentsCount} · ${p.uploadedOk ? '已上传' : `未上传(${p.uploadError})`}`;
+                            }
+                        }
+                    });
+                    statusBox.className = 'mp-s2-status-box is-ok';
+                    statusBox.textContent = `${summary.aborted ? '已中止' : '批量实测完成'}：完成 ${summary.completed}/${summary.total} 部，成功上传 ${summary.uploadedCount} 份至 ${LlmService.getConfig().aiDebugDir}`;
+                    Toast(`批量实测结束 (${summary.uploadedCount}/${summary.total} 已上传)`, 2600, 'success');
+                } catch (err) {
+                    const errMsg = LlmService.redactSecrets(err?.message || '批量实测失败');
+                    statusBox.className = 'mp-s2-status-box is-err';
+                    statusBox.textContent = errMsg;
+                    Toast(errMsg, 2400, 'error');
+                } finally {
+                    batchRunBtn.disabled = false;
+                    batchRunBtn.innerHTML = `${ICON_SERVER} <span>开始批量实测</span>`;
+                    flushDebugBtn.disabled = false;
+                    clearSubCacheBtn.disabled = false;
+                }
+            });
+
+            debugActionsRow.appendChild(batchRunBtn);
+            debugActionsRow.appendChild(clearSubCacheBtn);
+
             aiDebugWrap.appendChild(debugDirField);
             aiDebugWrap.appendChild(aiDebugHint);
             aiDebugWrap.appendChild(flushDebugBtn);
+            aiDebugWrap.appendChild(batchField);
+            aiDebugWrap.appendChild(debugActionsRow);
 
             updatePresetHighlight();
             renderModelChips();

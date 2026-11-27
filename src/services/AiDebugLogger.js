@@ -22,6 +22,7 @@ const MAX_EXECUTIONS_PER_SESSION = 40;
 
 const sessions = new Map();
 let hooksBound = false;
+let batchRecordingActive = false;
 
 function normalizeCodeKey(avcode) {
     const raw = String(avcode || '').trim();
@@ -207,11 +208,19 @@ function scheduleUpload(session, immediate = false) {
 
 export class AiDebugLogger {
     /**
+     * 批量实测期间临时激活 AI 诊断录制（无需持久化开关）
+     * @param {boolean} active
+     */
+    static setBatchRecording(active) {
+        batchRecordingActive = Boolean(active);
+    }
+
+    /**
      * 判断 AI 专项调试开关是否开启
      * @returns {boolean}
      */
     static isEnabled() {
-        return LlmService.isAiDebugEnabled();
+        return batchRecordingActive || LlmService.isAiDebugEnabled();
     }
 
     /**
@@ -224,9 +233,22 @@ export class AiDebugLogger {
     }
 
     /**
+     * 清理指定番号的旧内存调试会话，供批量复测获得纯净初始态
+     * @param {string} avcode
+     */
+    static startFreshSession(avcode) {
+        const code = normalizeCodeKey(avcode);
+        if (!code) return;
+        const prev = sessions.get(code);
+        if (prev?.debounceTimer) clearTimeout(prev.debounceTimer);
+        sessions.delete(code);
+    }
+
+    /**
      * 重置内存态（供单元测试隔离）
      */
     static resetForTests() {
+        batchRecordingActive = false;
         for (const s of sessions.values()) {
             if (s.debounceTimer) clearTimeout(s.debounceTimer);
         }
