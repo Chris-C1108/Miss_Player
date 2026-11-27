@@ -10,15 +10,17 @@ import {
     createAccordionCard,
     createToggleRow,
     createField,
-    updatePill
+    updatePill,
+    bindTwoStepConfirm
 } from '../components/S2Primitives.js';
-import { LlmService, filterAndSortTextModels } from '../../../../services/LlmService.js';
+import { LlmService, LlmCache, filterAndSortTextModels } from '../../../../services/LlmService.js';
 import { Toast } from '../../../../utils/index.js';
 import {
     ICON_EYE,
     ICON_EYE_OFF,
     ICON_EXTERNAL_LINK,
-    ICON_SERVER
+    ICON_SERVER,
+    ICON_TRASH
 } from '../../../../constants/icons.js';
 
 const PRESET_OLLAMA = {
@@ -402,7 +404,7 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
             statusBox.className = 'mp-s2-status-box is-hidden';
 
             const actionsRow = document.createElement('div');
-            actionsRow.className = 'mp-s2-actions mp-s2-actions--single';
+            actionsRow.className = 'mp-s2-actions';
 
             const testBtn = document.createElement('button');
             testBtn.type = 'button';
@@ -455,7 +457,26 @@ export function buildAiConnectionAccordion({ sm = null, iconSvg = '', onConfigCh
                 }
             });
 
+            const clearCacheBtn = document.createElement('button');
+            clearCacheBtn.type = 'button';
+            clearCacheBtn.className = 'mp-s2-btn mp-s2-btn--danger';
+            clearCacheBtn.innerHTML = `${ICON_TRASH} <span>清空 AI 缓存</span>`;
+            bindTwoStepConfirm(clearCacheBtn, {
+                idleHtml: `${ICON_TRASH} <span>清空 AI 缓存</span>`,
+                confirmHtml: '<span>确认清空全部缓存？</span>',
+                onConfirm: async () => {
+                    const res = await LlmCache.clearAll();
+                    statusBox.className = 'mp-s2-status-box is-ok';
+                    statusBox.textContent = `已清空本地 AI 缓存（${res.clearedLocal} 项）并忽略云端历史版本`;
+                    Toast('AI 缓存已清空，下次将强制重算', 2200, 'success');
+                    if (typeof onConfigChange === 'function') {
+                        onConfigChange(LlmService.getConfig());
+                    }
+                }
+            });
+
             actionsRow.appendChild(testBtn);
+            actionsRow.appendChild(clearCacheBtn);
 
             // 2.4 AI 能力按需分项开关
             featuresBox = document.createElement('div');

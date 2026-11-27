@@ -8,6 +8,7 @@ import { MarkerBottomSheet } from './MarkerBottomSheet.js';
 import { SyncManager } from '../../sync/index.js';
 import { LlmService } from '../../services/LlmService.js';
 import { autoTagMarkerWithLlm, mergeAutoTagsIntoComment } from '../../services/LlmTasks.js';
+import { AvMetadataService } from '../../services/AvMetadataService.js';
 import { UISurfaceMachine, SURFACE_TYPES, bindActionWithoutBlurShift } from '../state/UISurfaceMachine.js';
 import {
     CAPSULE_STATES,
@@ -1115,11 +1116,13 @@ export class LoopManager {
         const cues = subMgr?.cues || [];
         if (!cues.length) return;
         try {
+            const code = this._resolveVideoCode();
             const res = await autoTagMarkerWithLlm({
-                avcode: this._resolveVideoCode(),
+                avcode: code,
                 startTime: tab.startTime,
                 cues,
-                title: subMgr?.activeItem?.title || ''
+                title: subMgr?.activeItem?.title || '',
+                metadata: AvMetadataService.getCachedOrDom(code)
             });
             if (!res || !res.ok || (!res.tags?.length && !res.comment)) return;
             const liveTab = (this.tabs || []).find((t) => t.id === tab.id);

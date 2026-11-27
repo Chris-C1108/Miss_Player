@@ -223,10 +223,17 @@ export function selectBestQualityCandidate(evaluatedList) {
     const nonBroken = valid.filter((entry) => entry.quality?.grade !== 'broken');
     const pool = nonBroken.length > 0 ? nonBroken : valid;
 
+    const scoreEntry = (entry) => {
+        const base = Number(entry?.quality?.sqi) || 0;
+        if (!entry?.item?.machineTranslated) return base + 4;
+        if (entry?.item?.originLang === 'en') return base - 10;
+        return base;
+    };
+
     return pool
-        .map((entry, idx) => ({ entry, idx }))
+        .map((entry, idx) => ({ entry, idx, effective: scoreEntry(entry) }))
         .sort((a, b) => {
-            const diff = (Number(b.entry.quality?.sqi) || 0) - (Number(a.entry.quality?.sqi) || 0);
+            const diff = b.effective - a.effective;
             return diff !== 0 ? diff : a.idx - b.idx;
         })[0].entry;
 }

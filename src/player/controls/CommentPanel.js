@@ -3,9 +3,10 @@ import { SupabaseService } from '../../services/SupabaseService.js';
 import { SyncManager } from '../../sync/index.js';
 import { WebDavClient } from '../../sync/WebDavClient.js';
 import { __ } from '../../constants/i18n.js';
-import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT_WRITE, ICON_PLUS, ICON_SPARKLES } from '../../constants/icons.js';
+import { CLOSE_LINE, SEND, KEYBOARD, ICON_COPY, ICON_EXTERNAL_LINK, ICON_COMMENT_WRITE, ICON_PLUS, ICON_SPARKLES, ICON_REFRESH } from '../../constants/icons.js';
 import { Toast, isMobile, getValue } from '../../utils/index.js';
 import { LlmService } from '../../services/LlmService.js';
+import { AvMetadataService } from '../../services/AvMetadataService.js';
 import {
     summarizeCommentsWithLlm,
     getCachedCommentBrief,
@@ -1159,7 +1160,12 @@ export class CommentPanel {
             // 避开评论抓取并发连接高峰，1.5s 后静默发起后台登录态复核
             setTimeout(() => this.updateAllSiteLoginStatuses(), 1500);
 
-            await Promise.allSettled(promises);
+            this._initialCommentsPromise = Promise.allSettled(promises);
+            try {
+                await this._initialCommentsPromise;
+            } finally {
+                this._initialCommentsPromise = null;
+            }
 
             // 自动联动展开：若排序第1位的 Jable 无评论，而排在后面的 JavDB / JAVLibrary 有评论，自动展开首个有评论的板块
             this._autoExpandBestSection();
@@ -3318,10 +3324,51 @@ export class CommentPanel {
         }
     }
 
+    async _waitForContextsReady() {
+        const subMgr = this.controlManager?.subtitleManager || this.playerCore?.controlManager?.subtitleManager || null;
+        const enabledKeys = this.getEnabledCommentSources().map((s) => s.key);
+        const anySiteLoading = enabledKeys.some((k) => this.sites[k]?.status === 'loading');
+        const waitTasks = [];
+
+        if (this._initialCommentsPromise || anySiteLoading) {
+            Toast('正在等待评论与字幕采集就绪…', 2000, 'info');
+            if (this._initialCommentsPromise) {
+                waitTasks.push(
+                    Promise.race([
+                        this._initialCommentsPromise,
+                        new Promise((r) => setTimeout(r, 4500))
+                    ])
+                );
+            }
+        }
+        if (subMgr?._autoPickPromise) {
+            waitTasks.push(
+                Promise.race([
+                    subMgr._autoPickPromise,
+                    new Promise((r) => setTimeout(r, 3500))
+                ])
+            );
+        }
+        if (waitTasks.length > 0) {
+            await Promise.allSettled(waitTasks);
+        }
+
+        // 若首轮全部完成但当前总评论不足 15 条且主站点仍有下一页，自动补充拉取第 2 页提升分析覆盖面
+        const curComments = this._collectAllLoadedComments();
+        const activeSite = this.sites[this.activeCommentSource];
+        if (curComments.length < 15 && activeSite && activeSite.hasMore && !activeSite.loading && (activeSite.currentPage || 1) === 1) {
+            await Promise.race([
+                this.loadSiteComments(this.activeCommentSource, 2).catch(() => {}),
+                new Promise((r) => setTimeout(r, 3000))
+            ]);
+        }
+    }
+
     async _loadCachedAiBrief(comments) {
         const targetCode = this.videoCode || '';
         if (!targetCode || !Array.isArray(comments) || !comments.length) return;
         try {
+            const metadata = AvMetadataService.getCachedOrDom(targetCode);
             if (LlmService.isFeatureEnabled('featureHighlightFusion')) {
                 const ctx = this._collectHighlightFusionContext();
                 const fusionHit = await getCachedHighlightGraph({
@@ -3329,7 +3376,8 @@ export class CommentPanel {
                     cues: ctx.cues,
                     comments,
                     crowdPeaks: ctx.crowdPeaks,
-                    vibeTags: ctx.vibeTags
+                    vibeTags: ctx.vibeTags,
+                    metadata
                 });
                 if (this.videoCode === targetCode && fusionHit?.hit && fusionHit.graph) {
                     this._applyHighlightGraphToComments(fusionHit.graph);
@@ -3337,7 +3385,7 @@ export class CommentPanel {
                     return;
                 }
             }
-            const res = await getCachedCommentBrief({ avcode: targetCode, comments });
+            const res = await getCachedCommentBrief({ avcode: targetCode, comments, metadata });
             if (
                 this.videoCode !== targetCode ||
                 !LlmService.isFeatureEnabled('featureCommentBrief') ||
@@ -3350,20 +3398,24 @@ export class CommentPanel {
         } catch (_) {}
     }
 
-    async generateAiBrief() {
+    async generateAiBrief({ forceRefresh = false } = {}) {
         if (this._aiBriefLoading || !this.aiBriefCard) return;
         if (!LlmService.isFeatureEnabled('featureCommentBrief')) {
             Toast('请先在设置中启用 AI 服务与评论简报', 2400, 'info');
             return;
         }
-        const comments = this._collectAllLoadedComments();
-        if (!comments.length) {
-            Toast('暂无可供提炼的评论内容', 2000, 'info');
-            return;
-        }
         this._aiBriefLoading = true;
         this.aiBriefBtn?.classList.add('is-loading');
         try {
+            if (!forceRefresh) {
+                await this._waitForContextsReady();
+            }
+            const comments = this._collectAllLoadedComments();
+            if (!comments.length) {
+                Toast('暂无可供提炼的评论内容', 2000, 'info');
+                return;
+            }
+            const metadata = await AvMetadataService.getMetadata(this.videoCode || '', { forceRefresh }).catch(() => null);
             if (LlmService.isFeatureEnabled('featureHighlightFusion')) {
                 const ctx = this._collectHighlightFusionContext();
                 const fusionRes = await buildHighlightGraphWithLlm({
@@ -3372,7 +3424,9 @@ export class CommentPanel {
                     comments,
                     crowdPeaks: ctx.crowdPeaks,
                     videoDuration: ctx.videoDuration,
-                    vibeTags: ctx.vibeTags
+                    vibeTags: ctx.vibeTags,
+                    metadata,
+                    forceRefresh
                 });
                 if (fusionRes?.ok && fusionRes.graph) {
                     this._applyHighlightGraphToComments(fusionRes.graph);
@@ -3389,7 +3443,9 @@ export class CommentPanel {
             const res = await summarizeCommentsWithLlm({
                 avcode: this.videoCode || '',
                 comments,
-                videoDuration: dur || 0
+                videoDuration: dur || 0,
+                metadata,
+                forceRefresh
             });
             if (!res || !res.ok || !res.brief) {
                 Toast(res?.error || '生成评论简报失败', 2400, 'info');
@@ -3432,6 +3488,17 @@ export class CommentPanel {
             });
             headActions.appendChild(importBtn);
         }
+
+        const refreshBtn = document.createElement('button');
+        refreshBtn.type = 'button';
+        refreshBtn.className = 'mp-ai-brief-refresh';
+        refreshBtn.innerHTML = ICON_REFRESH;
+        refreshBtn.title = '忽略缓存重新生成';
+        refreshBtn.setAttribute('aria-label', '重新生成 AI 简报');
+        refreshBtn.addEventListener('click', () => {
+            this.generateAiBrief({ forceRefresh: true });
+        });
+        headActions.appendChild(refreshBtn);
 
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';

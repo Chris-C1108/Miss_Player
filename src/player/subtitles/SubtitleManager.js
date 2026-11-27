@@ -39,8 +39,9 @@ import {
     buildHighlightedCueFragment,
     findHighlightRanges
 } from './SubtitlePlotAnalyzer.js';
-import { LlmService, LlmCache } from '../../services/LlmService.js';
-import { analyzeSubtitleChaptersWithLlm, compressCuesForLlm } from '../../services/LlmTasks.js';
+import { LlmService } from '../../services/LlmService.js';
+import { analyzeSubtitleChaptersWithLlm, compressCuesForLlm, getCachedSubtitleChapters } from '../../services/LlmTasks.js';
+import { AvMetadataService } from '../../services/AvMetadataService.js';
 
 const FONT_SIZES = ['small', 'medium', 'large'];
 const PREFERRED_LANG_OPTIONS = ['auto', 'zh', 'zh-TW', 'ja', 'en', 'ko'];
@@ -1377,10 +1378,18 @@ export class SubtitleManager {
         aiBtn.innerHTML = `${ICON_SPARKLES}<span>${text('subtitleAiChapters', 'AI 分幕')}</span>`;
         aiBtn.addEventListener('click', () => this._runAiChapters());
 
+        const aiRefreshBtn = document.createElement('button');
+        aiRefreshBtn.type = 'button';
+        aiRefreshBtn.className = 'mp-sub-ai-refresh-btn is-hidden';
+        aiRefreshBtn.innerHTML = ICON_REFRESH;
+        aiRefreshBtn.title = '强制重新分幕（忽略缓存）';
+        aiRefreshBtn.setAttribute('aria-label', '强制重新分幕');
+        aiRefreshBtn.addEventListener('click', () => this._runAiChapters({ forceRefresh: true }));
+
         const count = document.createElement('span');
         count.className = 'tm-subtitle-lyrics-count';
 
-        head.append(backBtn, title, filterBtn, aiBtn, count);
+        head.append(backBtn, title, filterBtn, aiBtn, aiRefreshBtn, count);
 
         const anchorsBar = document.createElement('div');
         anchorsBar.className = 'mp-sub-anchors-bar is-hidden';
@@ -1411,6 +1420,7 @@ export class SubtitleManager {
         this.lyricsAnchorsBar = anchorsBar;
         this.lyricsFilterBtn = filterBtn;
         this.lyricsAiBtn = aiBtn;
+        this.lyricsAiRefreshBtn = aiRefreshBtn;
         return view;
     }
 
@@ -1551,23 +1561,30 @@ export class SubtitleManager {
 
         bar.replaceChildren(...pills);
         bar.classList.remove('is-hidden');
+        this.lyricsAiRefreshBtn?.classList.toggle(
+            'is-hidden',
+            !(LlmService.isFeatureEnabled('featureSubChapters') && aiList.length > 0)
+        );
     }
 
     async _loadCachedAiChapters() {
         if (!this.avcode || !this.cues.length || !LlmService.isFeatureEnabled('featureSubChapters')) return;
         const targetCode = this.avcode;
         try {
-            const compressed = compressCuesForLlm(this.cues);
-            const hash = LlmCache.hashContent(compressed);
-            const cached = await LlmCache.getCached(targetCode, 'sub_chapters', hash);
-            if (this.avcode !== targetCode || !cached?.hit || !Array.isArray(cached.data?.chapters)) return;
-            this._aiChapters = cached.data.chapters;
+            const metadata = AvMetadataService.getCachedOrDom(targetCode);
+            const cached = await getCachedSubtitleChapters({
+                avcode: targetCode,
+                cues: this.cues,
+                metadata
+            });
+            if (this.avcode !== targetCode || !cached?.hit || !Array.isArray(cached.chapters)) return;
+            this._aiChapters = cached.chapters;
             this._renderAnchorsBar();
             this._syncAnchorCueRows();
         } catch (_) {}
     }
 
-    async _runAiChapters() {
+    async _runAiChapters({ forceRefresh = false } = {}) {
         if (this._aiAnalyzing || !this.cues.length) return;
         if (!LlmService.isFeatureEnabled('featureSubChapters')) {
             Toast('请先在设置中启用 AI 服务与字幕分幕', 2400, 'info');
@@ -1575,11 +1592,15 @@ export class SubtitleManager {
         }
         this._aiAnalyzing = true;
         this.lyricsAiBtn?.classList.add('is-loading');
+        if (this.lyricsAiRefreshBtn) this.lyricsAiRefreshBtn.disabled = true;
         try {
+            const metadata = await AvMetadataService.getMetadata(this.avcode).catch(() => null);
             const res = await analyzeSubtitleChaptersWithLlm({
                 avcode: this.avcode,
                 cues: this.cues,
-                title: this.activeItem?.title || ''
+                title: this.activeItem?.title || '',
+                metadata,
+                forceRefresh
             });
             if (res && res.ok && Array.isArray(res.chapters) && res.chapters.length) {
                 this._aiChapters = res.chapters;
@@ -1594,12 +1615,14 @@ export class SubtitleManager {
         } finally {
             this._aiAnalyzing = false;
             this.lyricsAiBtn?.classList.remove('is-loading');
+            if (this.lyricsAiRefreshBtn) this.lyricsAiRefreshBtn.disabled = false;
         }
     }
 
     refreshAiAvailability() {
         const enabled = LlmService.isFeatureEnabled('featureSubChapters');
         this.lyricsAiBtn?.classList.toggle('is-hidden', !enabled);
+        this.lyricsAiRefreshBtn?.classList.toggle('is-hidden', !(enabled && this._aiChapters?.length));
         if (enabled && this.cues.length && !this._aiChapters?.length) {
             this._loadCachedAiChapters();
         }
@@ -2031,7 +2054,7 @@ export class SubtitleManager {
                 }
             }
             evaluated.push({ candidate, item: rawItem, parsed: rawParsed, langInfo, quality });
-            if (!langInfo?.isCorrupted && (quality?.sqi || 0) >= 70) {
+            if (!rawItem.machineTranslated && !langInfo?.isCorrupted && (quality?.sqi || 0) >= 82) {
                 break;
             }
             if (evaluated.length >= MAX_EVAL) break;

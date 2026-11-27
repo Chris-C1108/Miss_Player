@@ -137,6 +137,31 @@
     animation: mp-sub-insights-pulse 1.4s ease-in-out infinite;
 }
 
+.mp-sub-ai-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.72);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mp-sub-ai-refresh-btn:hover {
+    background-color: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+.mp-sub-ai-refresh-btn svg {
+    width: 13px;
+    height: 13px;
+}
+
 /* -------------------------------------------------------------------------
    4. 横向高能剧情锚点胶囊条
    ------------------------------------------------------------------------- */
@@ -292,7 +317,8 @@
     color: #ffffff;
 }
 
-.mp-ai-brief-close {
+.mp-ai-brief-close,
+.mp-ai-brief-refresh {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -306,9 +332,15 @@
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.mp-ai-brief-close:hover {
+.mp-ai-brief-close:hover,
+.mp-ai-brief-refresh:hover {
     background-color: rgba(255, 255, 255, 0.16);
     color: #ffffff;
+}
+
+.mp-ai-brief-refresh svg {
+    width: 13px;
+    height: 13px;
 }
 
 .mp-ai-brief-head-actions {

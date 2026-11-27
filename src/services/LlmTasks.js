@@ -10,6 +10,23 @@
 
 import { LlmService, LlmCache } from './LlmService.js';
 import { SEMANTIC_TAG_TAXONOMY } from '../player/managers/tagTaxonomy.js';
+import { analyzeSubtitlePlot } from '../player/subtitles/SubtitlePlotAnalyzer.js';
+import { formatMetadataForLlm } from './AvMetadataService.js';
+
+export const AI_PROMPT_VERSION = 'v2.0';
+
+/**
+ * 计算带 Prompt 版本与当前模型 ID 的确定性缓存摘要，保证调优或切换模型后旧缓存自动失效
+ * @param {string} taskType
+ * @param {string} payloadStr
+ * @returns {string}
+ */
+export function buildVersionedTaskHash(taskType, payloadStr) {
+    const model = LlmService.getConfig().model || '';
+    return LlmCache.hashContent(`${AI_PROMPT_VERSION}|${model}|${taskType}|${payloadStr}`);
+}
+
+const MOAN_FILLER_RE = /^[啊嗯哦哈呜唔呀呐噢唉呀啊哈\.…!！?？\s~～、，,]+$/;
 
 const ALL_SEMANTIC_TAGS = SEMANTIC_TAG_TAXONOMY.flatMap((group) =>
     Array.isArray(group?.tags) ? group.tags : []
@@ -74,7 +91,8 @@ function sampleLinesToBudget(lines, maxChars) {
 }
 
 /**
- * 压缩字幕条目为紧凑时间轴文本，去重 Whisper 连续幻听重复并合并短句
+ * 压缩字幕条目为紧凑时间轴文本：
+ * 去重 Whisper 重复行 -> 合并短句 -> 超出预算时优先保留情绪/剧情关键词高密度对白 + 全片均匀时间骨架
  * @param {Array<{ start: number, end?: number, text?: string, primaryText?: string }>} cues
  * @param {{ maxChars?: number }} [options]
  * @returns {string}
@@ -119,21 +137,123 @@ export function compressCuesForLlm(cues, { maxChars = 13000 } = {}) {
     }
 
     const lines = merged.map((item) => `[${formatMmSs(item.start)}] ${item.text}`);
-    return sampleLinesToBudget(lines, maxChars);
+    const fullText = lines.join('\n');
+    if (fullText.length <= maxChars) return fullText;
+    if (lines.length <= 2) return sampleLinesToBudget(lines, maxChars);
+
+    // 信息密度分析：识别关键词高亮时刻与剧作锚点
+    let highlightStarts = [];
+    try {
+        const plot = analyzeSubtitlePlot(cues);
+        if (plot?.highlightCueIndices?.size) {
+            for (const cueIdx of plot.highlightCueIndices) {
+                const s = Number(cues[cueIdx]?.start);
+                if (Number.isFinite(s)) highlightStarts.push(s);
+            }
+        }
+        for (const anchor of plot?.anchors || []) {
+            const s = Number(anchor?.start);
+            if (Number.isFinite(s)) highlightStarts.push(s);
+        }
+    } catch (_) {}
+
+    const isNearHighlight = (sec) => highlightStarts.some((hs) => Math.abs(hs - sec) <= 10);
+    const totalSpan = Math.max(1, (merged[merged.length - 1]?.start || 0) - (merged[0]?.start || 0));
+    const bucketCount = 8;
+
+    const scored = merged.map((item, idx) => {
+        const isFiller = MOAN_FILLER_RE.test(item.text) && item.text.length <= 8;
+        let density = 1;
+        if (isFiller) {
+            density = 0.05;
+        } else {
+            if (isNearHighlight(item.start)) density += 3;
+            density += Math.min(item.text.length / 45, 1.5);
+        }
+        const rel = (item.start - (merged[0]?.start || 0)) / totalSpan;
+        const bucket = Math.min(bucketCount - 1, Math.max(0, Math.floor(rel * bucketCount)));
+        return { idx, line: lines[idx], density, bucket };
+    });
+
+    // ~65% 预算按时间桶均衡保留高密度关键词对白，~35% 预算保留全片均匀时间骨架
+    const denseBudget = Math.floor(maxChars * 0.65);
+    const selectedIdx = new Set();
+    let denseChars = 0;
+
+    const buckets = Array.from({ length: bucketCount }, (_, b) =>
+        scored.filter((s) => s.bucket === b && s.density >= 1.2).sort((a, b2) => b2.density - a.density)
+    );
+    let round = 0;
+    let progressed = true;
+    while (progressed && denseChars < denseBudget) {
+        progressed = false;
+        for (let b = 0; b < bucketCount; b++) {
+            const candidate = buckets[b][round];
+            if (!candidate) continue;
+            progressed = true;
+            const addLen = candidate.line.length + (selectedIdx.size > 0 ? 1 : 0);
+            if (denseChars + addLen > denseBudget) continue;
+            selectedIdx.add(candidate.idx);
+            denseChars += addLen;
+        }
+        round += 1;
+    }
+
+    const skeletonBudget = Math.max(0, maxChars - denseChars);
+    if (skeletonBudget >= 80) {
+        const skeletonText = sampleLinesToBudget(lines, skeletonBudget);
+        const skeletonSet = new Set(skeletonText.split('\n'));
+        scored.forEach((item) => {
+            if (skeletonSet.has(item.line)) {
+                selectedIdx.add(item.idx);
+            }
+        });
+    }
+
+    const orderedLines = Array.from(selectedIdx)
+        .sort((a, b) => a - b)
+        .map((idx) => lines[idx]);
+
+    return sampleLinesToBudget(orderedLines, maxChars);
+}
+
+function buildSubtitleChapterPayload(avcode, compressed, metadata) {
+    const metaText = formatMetadataForLlm(metadata);
+    const safeCode = normalizeInlineText(avcode).toUpperCase();
+    const contentHash = buildVersionedTaskHash('sub_chapters', `${compressed}\n---\n${metaText}`);
+    return { metaText, safeCode, contentHash };
+}
+
+/**
+ * 静默读取版本化后的字幕分幕缓存（不触发模型调用）
+ */
+export async function getCachedSubtitleChapters({ avcode, cues, metadata = null } = {}) {
+    const compressed = compressCuesForLlm(cues);
+    if (!compressed || !avcode) return { hit: false };
+    const { contentHash } = buildSubtitleChapterPayload(avcode, compressed, metadata);
+    const cached = await LlmCache.getCached(avcode, 'sub_chapters', contentHash);
+    if (cached.hit && Array.isArray(cached.data?.chapters)) {
+        return {
+            hit: true,
+            summary: String(cached.data.summary || ''),
+            chapters: cached.data.chapters
+        };
+    }
+    return { hit: false };
 }
 
 /**
  * 基于字幕时间轴进行影视剧作结构与情绪转折节点分析
- * @param {{ avcode: string, cues: Array, title?: string, forceRefresh?: boolean }} params
+ * @param {{ avcode: string, cues: Array, title?: string, metadata?: Object|null, forceRefresh?: boolean }} params
  * @returns {Promise<{ ok: boolean, fromCache?: boolean, summary?: string, chapters?: Array, refused?: boolean, error?: string }>}
  */
-export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '', forceRefresh = false } = {}) {
+export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '', metadata = null, forceRefresh = false } = {}) {
     const compressed = compressCuesForLlm(cues);
     if (!compressed) {
         return { ok: false, refused: false, error: '无可用字幕内容' };
     }
 
-    const contentHash = LlmCache.hashContent(compressed);
+    const { metaText, safeCode, contentHash } = buildSubtitleChapterPayload(avcode, compressed, metadata);
     if (!forceRefresh) {
         const cached = await LlmCache.getCached(avcode, 'sub_chapters', contentHash);
         if (cached.hit && cached.data) {
@@ -153,14 +273,13 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '',
     }, 0);
 
     const safeTitle = normalizeInlineText(title).slice(0, 120);
-    const safeCode = normalizeInlineText(avcode).toUpperCase();
 
     const messages = [
         {
             role: 'system',
             content: [
                 '你是一位专业的影视剧作结构与情绪转折时间轴标注编辑。',
-                '请客观分析提供的台词时间轴，梳理叙事推进与情绪转折节点，严禁输出任何多余解释或 Markdown 标记，仅返回严格合法的 JSON。',
+                '请结合作品元数据（女优/片商/题材标签/简介）与台词时间轴，准确梳理叙事推进与情绪转折节点，严禁输出多余解释或 Markdown 标记，仅返回严格合法 JSON。',
                 '输出 JSON 格式必须为：',
                 '{ "summary": "20字内剧情概览", "chapters": [{ "seconds": 123, "tag": "2-4字节点标签", "headline": "16字内该时段剧情看点" }] }',
                 '要求：chapters 返回 5 至 8 个按 seconds 升序排列的关键节点，seconds 必须是视频总时长范围内的整数秒。'
@@ -170,7 +289,7 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '',
             role: 'user',
             content: [
                 safeCode ? `作品编号: ${safeCode}` : '',
-                safeTitle ? `作品标题: ${safeTitle}` : '',
+                metaText || (safeTitle ? `作品标题: ${safeTitle}` : ''),
                 maxCueEnd > 0 ? `台词最大时间: ${Math.round(maxCueEnd)} 秒 (${formatMmSs(maxCueEnd)})` : '',
                 '台词时间轴:',
                 compressed
@@ -228,55 +347,76 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '',
 }
 
 /**
- * 构建评论去重采样文本及确定性缓存哈希
+ * 双池配额选取高信息量评论（带时间戳评论 <=30 条 + 无时间戳长评 >=12字 <=20 条）
  * @param {Array} comments
- * @returns {{ digest: string, contentHash: string } | null}
+ * @param {number} [maxItems=55]
+ * @returns {Array<{ id: string, text: string, hasTs: boolean }>}
  */
-function buildCommentsDigest(comments = []) {
-    if (!Array.isArray(comments) || comments.length === 0) return null;
-
+function selectBalancedComments(comments = [], maxItems = 55) {
+    if (!Array.isArray(comments) || comments.length === 0) return [];
     const seen = new Set();
-    const candidates = [];
+    const tsPool = [];
+    const longPool = [];
 
-    for (const comment of comments) {
-        if (!comment) continue;
-        if (typeof comment === 'object' && comment.spam?.label === 'SPAM') continue;
-
-        const text = normalizeInlineText(
-            typeof comment === 'string'
-                ? comment
-                : (comment.rawText || comment.text || comment.content || '')
-        );
-        if (!text) continue;
-
+    for (const c of comments) {
+        if (!c) continue;
+        if (typeof c === 'object' && c.spam?.label === 'SPAM') continue;
+        const text = normalizeInlineText(typeof c === 'string' ? c : (c.rawText || c.text || c.content || ''));
+        if (text.length < 3) continue;
         const dedupKey = text.toLowerCase().slice(0, 120);
         if (seen.has(dedupKey)) continue;
         seen.add(dedupKey);
 
         const hasTs = Boolean(
-            typeof comment === 'object' && (
-                comment.hasTimestamps ||
-                (Array.isArray(comment.timestamps) && comment.timestamps.length > 0) ||
+            typeof c === 'object' && (
+                c.hasTimestamps ||
+                (Array.isArray(c.timestamps) && c.timestamps.length > 0) ||
                 /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(text)
             )
         );
-        candidates.push({ text, hasTs });
+        const likesBonus = Number(c?.likes) > 0 ? 30 : 0;
+        const entry = {
+            id: typeof c === 'object' && c.id !== undefined && c.id !== null ? String(c.id) : '',
+            text,
+            hasTs,
+            rankScore: Math.min(text.length, 200) + likesBonus
+        };
+        if (hasTs) {
+            tsPool.push(entry);
+        } else if (text.length >= 12) {
+            longPool.push(entry);
+        } else {
+            longPool.push({ ...entry, rankScore: entry.rankScore - 20 });
+        }
     }
 
-    if (candidates.length === 0) return null;
+    tsPool.sort((a, b) => b.rankScore - a.rankScore);
+    longPool.sort((a, b) => b.rankScore - a.rankScore);
 
-    candidates.sort((a, b) => {
-        if (a.hasTs !== b.hasTs) return a.hasTs ? -1 : 1;
-        return b.text.length - a.text.length;
-    });
+    const tsCap = Math.min(30, maxItems);
+    const pickedTs = tsPool.slice(0, tsCap);
+    const remainingCap = Math.max(0, maxItems - pickedTs.length);
+    const longCap = Math.max(remainingCap, Math.min(20, maxItems));
+    const pickedLong = longPool.slice(0, longCap);
+
+    return [...pickedTs, ...pickedLong].slice(0, maxItems);
+}
+
+/**
+ * 构建评论去重采样文本及版本化缓存哈希
+ * @param {Array} comments
+ * @param {Object|null} [metadata]
+ * @returns {{ digest: string, metaText: string, contentHash: string } | null}
+ */
+function buildCommentsDigest(comments = [], metadata = null) {
+    const selected = selectBalancedComments(comments, 55);
+    if (selected.length === 0) return null;
 
     const selectedLines = [];
     let totalChars = 0;
-    const MAX_ITEMS = 55;
     const MAX_CHARS = 5500;
 
-    for (const item of candidates) {
-        if (selectedLines.length >= MAX_ITEMS) break;
+    for (const item of selected) {
         const line = `${item.hasTs ? '[含时间点] ' : ''}${item.text.slice(0, 220)}`;
         const addedLen = line.length + (selectedLines.length > 0 ? 1 : 0);
         if (totalChars + addedLen > MAX_CHARS) {
@@ -290,20 +430,22 @@ function buildCommentsDigest(comments = []) {
     }
 
     const digest = selectedLines.join('\n');
+    const metaText = formatMetadataForLlm(metadata);
     return {
         digest,
-        contentHash: LlmCache.hashContent(digest)
+        metaText,
+        contentHash: buildVersionedTaskHash('comment_brief', `${digest}\n---\n${metaText}`)
     };
 }
 
 /**
  * 静默读取已缓存的评论简报（不触发模型调用）
- * @param {{ avcode: string, comments: Array }} params
+ * @param {{ avcode: string, comments: Array, metadata?: Object|null }} params
  * @returns {Promise<{ hit: boolean, brief?: Object }>}
  */
-export async function getCachedCommentBrief({ avcode, comments } = {}) {
+export async function getCachedCommentBrief({ avcode, comments, metadata = null } = {}) {
     const code = normalizeInlineText(avcode).toUpperCase();
-    const built = buildCommentsDigest(comments);
+    const built = buildCommentsDigest(comments, metadata);
     if (!code || !built?.contentHash) return { hit: false };
     const cached = await LlmCache.getCached(code, 'comment_brief', built.contentHash);
     if (cached.hit && cached.data) {
@@ -314,16 +456,16 @@ export async function getCachedCommentBrief({ avcode, comments } = {}) {
 
 /**
  * 提炼跨站评论口碑简报与高能时刻时间戳
- * @param {{ avcode: string, comments: Array, videoDuration?: number, forceRefresh?: boolean }} params
+ * @param {{ avcode: string, comments: Array, videoDuration?: number, metadata?: Object|null, forceRefresh?: boolean }} params
  * @returns {Promise<{ ok: boolean, fromCache?: boolean, brief?: Object, refused?: boolean, error?: string }>}
  */
-export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration = 0, forceRefresh = false } = {}) {
-    const built = buildCommentsDigest(comments);
+export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration = 0, metadata = null, forceRefresh = false } = {}) {
+    const built = buildCommentsDigest(comments, metadata);
     if (!built) {
         return { ok: false, refused: false, error: '暂无可用于提炼的评论内容' };
     }
 
-    const { digest, contentHash } = built;
+    const { digest, metaText, contentHash } = built;
 
     if (!forceRefresh) {
         const cached = await LlmCache.getCached(avcode, 'comment_brief', contentHash);
@@ -343,7 +485,7 @@ export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration
         {
             role: 'system',
             content: [
-                '你是一位客观的影评整理助手，负责从观众短评中提炼核心看点、避坑提醒、口碑共识与高能时间戳。',
+                '你是一位客观的影评整理助手，负责结合作品元数据与观众短评提炼核心看点、避坑提醒、口碑共识与高能时间戳。',
                 '仅返回严格合法的 JSON，不要输出额外解释或 Markdown 围栏：',
                 '{ "highlights": "看点1句话", "warnings": "避坑/雷点1句话(无则写暂无明显雷点)", "consensus": "口碑共识1句话", "timestamps": [{ "seconds": 123, "note": "10字内说明" }] }'
             ].join('\n')
@@ -352,6 +494,7 @@ export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration
             role: 'user',
             content: [
                 safeCode ? `作品编号: ${safeCode}` : '',
+                metaText,
                 durationNum > 0 ? `影片时长: ${Math.round(durationNum)} 秒 (${formatMmSs(durationNum)})` : '',
                 '观众评论样本:',
                 digest
@@ -412,14 +555,14 @@ export async function summarizeCommentsWithLlm({ avcode, comments, videoDuration
 }
 
 /**
- * 基于高光起点前后时间窗字幕，从固定语义标签矩阵中自动推荐标签与短评
- * @param {{ avcode: string, startTime: number, cues: Array, title?: string }} params
+ * 基于高光起点前后时间窗字幕与元数据，从固定语义标签矩阵中自动推荐标签与短评
+ * @param {{ avcode: string, startTime: number, cues: Array, title?: string, metadata?: Object|null }} params
  * @returns {Promise<{ ok: boolean, tags: string[], comment: string, refused?: boolean, error?: string }>}
  */
-export async function autoTagMarkerWithLlm({ avcode, startTime, cues, title = '' } = {}) {
+export async function autoTagMarkerWithLlm({ avcode, startTime, cues, title = '', metadata = null } = {}) {
     const targetStart = Math.max(0, Number(startTime) || 0);
-    const winStart = Math.max(0, targetStart - 45);
-    const winEnd = targetStart + 15;
+    const winStart = Math.max(0, targetStart - 60);
+    const winEnd = targetStart + 30;
 
     const windowCues = (Array.isArray(cues) ? cues : []).filter((cue) => {
         const s = Number(cue?.start);
@@ -431,12 +574,13 @@ export async function autoTagMarkerWithLlm({ avcode, startTime, cues, title = ''
     const windowText = compressCuesForLlm(windowCues, { maxChars: 2400 });
     const safeCode = normalizeInlineText(avcode).toUpperCase();
     const safeTitle = normalizeInlineText(title).slice(0, 100);
+    const metaText = formatMetadataForLlm(metadata);
 
     const messages = [
         {
             role: 'system',
             content: [
-                '你是影片片段标签标注助手。请根据给定时间点前后的字幕语境，从下方允许标签列表中选择最贴切的 1 到 2 个标签，并附带一句 14 字以内短评。',
+                '你是影片片段标签标注助手。请根据作品元数据及给定时间点前后的字幕语境，从下方允许标签列表中选择最贴切的 1 到 2 个标签，并附带一句 14 字以内短评。',
                 `允许标签列表（必须原样选用，禁止自造标签）：${ALL_SEMANTIC_TAGS.join(' ')}`,
                 '仅返回严格合法的 JSON：{ "tags": ["#标签1"], "comment": "14字内短评" }'
             ].join('\n')
@@ -445,7 +589,7 @@ export async function autoTagMarkerWithLlm({ avcode, startTime, cues, title = ''
             role: 'user',
             content: [
                 safeCode ? `作品编号: ${safeCode}` : '',
-                safeTitle ? `作品标题: ${safeTitle}` : '',
+                metaText || (safeTitle ? `作品标题: ${safeTitle}` : ''),
                 `目标时间点: ${formatMmSs(targetStart)} (${Math.round(targetStart)}s)`,
                 `局部字幕语境 [${formatMmSs(winStart)} - ${formatMmSs(winEnd)}]:`,
                 windowText || '(该时间窗暂无字幕对话)'
@@ -606,41 +750,23 @@ export function detectCountdownComments(comments = [], videoDuration = 0) {
     return hits;
 }
 
-function buildFusionInputs({ cues = [], comments = [], crowdPeaks = [], vibeTags = [] }) {
+function buildFusionInputs({ cues = [], comments = [], crowdPeaks = [], vibeTags = [], metadata = null }) {
     const compressedSub = Array.isArray(cues) && cues.length > 0
-        ? compressCuesForLlm(cues, { maxChars: 6500 })
+        ? compressCuesForLlm(cues, { maxChars: 7500 })
         : '';
 
-    const seen = new Set();
-    const indexedComments = [];
-    const rawList = Array.isArray(comments) ? comments : [];
-    for (const c of rawList) {
-        if (!c || (typeof c === 'object' && c.spam?.label === 'SPAM')) continue;
-        const text = normalizeInlineText(typeof c === 'string' ? c : (c.rawText || c.text || c.content || ''));
-        if (text.length < 3) continue;
-        const dedup = text.toLowerCase().slice(0, 120);
-        if (seen.has(dedup)) continue;
-        seen.add(dedup);
-        const hasTs = Boolean(
-            (Array.isArray(c.timestamps) && c.timestamps.length > 0) ||
-            /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(text)
-        );
-        indexedComments.push({
-            id: c.id !== undefined && c.id !== null ? String(c.id) : '',
-            text,
-            hasTs,
-            score: (hasTs ? 100 : 0) + Math.min(text.length, 180)
-        });
-    }
-    indexedComments.sort((a, b) => b.score - a.score);
-    const topComments = indexedComments.slice(0, 45);
+    const topComments = selectBalancedComments(comments, 45);
     const commentLines = topComments.map((item, idx) => `[C${idx}] ${item.text.slice(0, 180)}`);
 
     const crowdSig = (Array.isArray(crowdPeaks) ? crowdPeaks : [])
         .map((p) => `${Math.round(Number(p.seconds) || 0)}:${p.intensity ?? ''}`)
         .join(',');
     const vibeKey = (Array.isArray(vibeTags) ? vibeTags : []).join(',');
-    const contentHash = LlmCache.hashContent(`${compressedSub}\n---\n${commentLines.join('\n')}\n---\n${crowdSig}\n---\n${vibeKey}`);
+    const metaText = formatMetadataForLlm(metadata);
+    const contentHash = buildVersionedTaskHash(
+        'highlight_graph',
+        `${compressedSub}\n---\n${commentLines.join('\n')}\n---\n${crowdSig}\n---\n${vibeKey}\n---\n${metaText}`
+    );
 
     return {
         compressedSub,
@@ -648,6 +774,7 @@ function buildFusionInputs({ cues = [], comments = [], crowdPeaks = [], vibeTags
         commentLines,
         crowdSig,
         vibeKey,
+        metaText,
         contentHash
     };
 }
@@ -657,9 +784,9 @@ function buildFusionInputs({ cues = [], comments = [], crowdPeaks = [], vibeTags
  * @param {Object} params
  * @returns {Promise<{ hit: boolean, graph?: Object }>}
  */
-export async function getCachedHighlightGraph({ avcode, cues = [], comments = [], crowdPeaks = [], vibeTags = [] } = {}) {
+export async function getCachedHighlightGraph({ avcode, cues = [], comments = [], crowdPeaks = [], vibeTags = [], metadata = null } = {}) {
     const code = normalizeInlineText(avcode).toUpperCase();
-    const { topComments, compressedSub, crowdSig, contentHash } = buildFusionInputs({ cues, comments, crowdPeaks, vibeTags });
+    const { topComments, compressedSub, crowdSig, contentHash } = buildFusionInputs({ cues, comments, crowdPeaks, vibeTags, metadata });
     if (!code || (!compressedSub && topComments.length === 0 && !crowdSig)) {
         return { hit: false };
     }
@@ -672,7 +799,7 @@ export async function getCachedHighlightGraph({ avcode, cues = [], comments = []
 
 /**
  * 单请求多模态联合融合引擎（高能现场 2.0）
- * 一次性融合：社区回放波峰 + 压缩字幕骨架 + 评论区文本（含无时间戳语义锚定、极性去噪、倒数消歧）+ 用户偏好标签
+ * 一次性融合：影片元数据 + 社区回放波峰 + 高密度字幕骨架 + 双池平衡评论文本 + 用户偏好标签
  * @param {Object} params
  * @returns {Promise<{ ok: boolean, fromCache?: boolean, graph?: Object, refused?: boolean, error?: string }>}
  */
@@ -683,9 +810,10 @@ export async function buildHighlightGraphWithLlm({
     crowdPeaks = [],
     videoDuration = 0,
     vibeTags = [],
+    metadata = null,
     forceRefresh = false
 } = {}) {
-    const built = buildFusionInputs({ cues, comments, crowdPeaks, vibeTags });
+    const built = buildFusionInputs({ cues, comments, crowdPeaks, vibeTags, metadata });
     if (!built.compressedSub && built.topComments.length === 0 && !built.crowdSig) {
         return { ok: false, refused: false, error: '暂无可用于联合分析的评论、字幕或热度数据' };
     }
@@ -710,7 +838,7 @@ export async function buildHighlightGraphWithLlm({
         {
             role: 'system',
             content: [
-                '你是影片多模态高光分析引擎。请结合社区回放波峰、字幕对白骨架与观众评论（标记为 [C0], [C1]...），在单次回复中输出融合高光图谱：',
+                '你是影片多模态高光分析引擎。请结合作品元数据（片名/女优/题材标签/简介）、社区回放波峰、字幕对白骨架与观众评论（标记为 [C0], [C1]...），在单次回复中输出融合高光图谱：',
                 '1. highlights: 最多 8 个核心高能片段，优先融合多源共鸣与用户偏好；',
                 '2. skipZones: 最多 4 个避坑/拖沓/吐槽区间（如片头拖沓、马赛克或假水戏）；',
                 '3. commentTags: 仅输出值得标注的评论项，识别 sentiment(hype高能/warn避坑/neutral)、是否为剩余时间倒数(isCountdown)、以及对“无时间点好评”结合字幕和波峰反推的时间 seconds；',
@@ -723,6 +851,7 @@ export async function buildHighlightGraphWithLlm({
             role: 'user',
             content: [
                 safeCode ? `作品编号: ${safeCode}` : '',
+                built.metaText,
                 dur > 0 ? `总时长: ${Math.round(dur)}秒 (${formatMmSs(dur)})` : '',
                 vibePromptText,
                 `社区回放波峰: ${crowdPromptText}`,

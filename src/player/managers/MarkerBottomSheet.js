@@ -9,6 +9,7 @@ import { SURFACE_TYPES, bindKeepFocusAction, bindActionWithoutBlurShift } from '
 import { applyCapsuleStateClasses } from './capsuleStateMachine.js';
 import { LlmService } from '../../services/LlmService.js';
 import { autoTagMarkerWithLlm, mergeAutoTagsIntoComment } from '../../services/LlmTasks.js';
+import { AvMetadataService } from '../../services/AvMetadataService.js';
 
 /**
  * MarkerBottomSheet — 循环片段与时间戳标签管理底部浮层面板
@@ -548,11 +549,13 @@ export class MarkerBottomSheet {
                     aiTagBtn.disabled = true;
                     aiTagBtn.classList.add('is-loading');
                     try {
+                        const code = this.loopManager?._resolveVideoCode?.() || '';
                         const res = await autoTagMarkerWithLlm({
-                            avcode: this.loopManager?._resolveVideoCode?.() || '',
+                            avcode: code,
                             startTime: tab.startTime,
                             cues,
-                            title: subMgr?.activeItem?.title || ''
+                            title: subMgr?.activeItem?.title || '',
+                            metadata: AvMetadataService.getCachedOrDom(code)
                         });
                         if (res && res.ok && (res.tags?.length || res.comment)) {
                             const merged = mergeAutoTagsIntoComment(tab.comment, res.tags, res.comment);

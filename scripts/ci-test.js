@@ -256,6 +256,11 @@ runStep('执行 BYOK LLM 服务与多任务缓存单元测试', () => {
     execSync('node tests/llm-service-phase3.test.mjs', { stdio: 'inherit' });
 });
 
+// 4.37 元数据采集、AI 版本化缓存与多字幕择优测试
+runStep('执行元数据采集、AI 版本化缓存与多字幕择优测试', () => {
+    execSync('node tests/av-metadata-and-ai-context.test.mjs', { stdio: 'inherit' });
+});
+
 // 5. 沙箱无报错启动验证
 runStep('无头浏览器沙箱安全启动测试', () => {
     const code = fs.readFileSync('dist/miss_player.user.js', 'utf8');

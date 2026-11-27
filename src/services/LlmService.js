@@ -11,7 +11,7 @@
 
 import { fetchWithTransport } from '../utils/http.js';
 import { getValue, setValue } from '../utils/storage.js';
-import { idbGet, idbSet, STORES } from '../utils/indexedDB.js';
+import { idbGet, idbSet, idbDelete, idbGetAll, STORES } from '../utils/indexedDB.js';
 import { WebDavClient } from '../sync/WebDavClient.js';
 import { SyncManager } from '../sync/SyncManager.js';
 
@@ -26,6 +26,7 @@ export const LLM_KEY_FEAT_AUTO_TAG = 'mp_llm_feat_auto_tag';
 export const LLM_KEY_AUTO_TAG_ON_MARK = 'mp_llm_auto_tag_on_mark';
 export const LLM_KEY_FEAT_HIGHLIGHT_FUSION = 'mp_llm_feat_highlight_fusion';
 export const LLM_KEY_VIBE_TAGS = 'mp_llm_vibe_tags';
+export const LLM_KEY_CACHE_EPOCH = 'mp_llm_cache_epoch';
 
 function normalizeVibeTags(raw) {
     let arr = [];
@@ -722,6 +723,37 @@ export class LlmCache {
     }
 
     /**
+     * 读取当前缓存纪元时间戳（清空缓存时刷新，用于使历史 IDB/WebDAV 旧结果自然失效）
+     * @returns {number}
+     */
+    static getCacheEpoch() {
+        return Number(getValue(LLM_KEY_CACHE_EPOCH, 0)) || 0;
+    }
+
+    /**
+     * 清空本地 AI 缓存并刷新纪元，阻断 WebDAV 历史旧版本回填
+     * @returns {Promise<{ clearedLocal: number, epoch: number }>}
+     */
+    static async clearAll() {
+        memoryCache.clear();
+        let clearedLocal = 0;
+        try {
+            const all = await idbGetAll(STORES.MEDIA);
+            for (const rec of Array.isArray(all) ? all : []) {
+                if (typeof rec?.key === 'string' && rec.key.startsWith('ai_cache:')) {
+                    const ok = await idbDelete(STORES.MEDIA, rec.key);
+                    if (ok) clearedLocal += 1;
+                }
+            }
+        } catch (_) {}
+
+        const prevEpoch = this.getCacheEpoch();
+        const epoch = Math.max(Date.now(), prevEpoch + 1);
+        setValue(LLM_KEY_CACHE_EPOCH, epoch);
+        return { clearedLocal, epoch };
+    }
+
+    /**
      * 清空进程内内存二级兜底缓存（主要供测试环境隔离使用）
      */
     static clearMemoryCache() {
@@ -729,7 +761,7 @@ export class LlmCache {
     }
 
     /**
-     * 读取 AI 任务缓存（IndexedDB 优先 -> 内存兜底 -> WebDAV 跨端回填）
+     * 读取 AI 任务缓存（IndexedDB 优先 -> 内存兜底 -> WebDAV 跨端回填，受 Cache Epoch 失效门控保护）
      * @param {string} avcode
      * @param {string} taskType
      * @param {string} contentHash
@@ -742,17 +774,19 @@ export class LlmCache {
         }
 
         const cacheKey = buildCacheKey(code, taskType);
+        const epoch = this.getCacheEpoch();
+        const isNotStale = (rec) => !(epoch > 0 && (Number(rec?.updatedAt) || 0) < epoch);
 
         try {
             const rec = await idbGet(STORES.MEDIA, cacheKey);
-            if (rec && rec.hash === contentHash && rec.data) {
+            if (rec && rec.hash === contentHash && rec.data && isNotStale(rec)) {
                 memoryCache.set(cacheKey, rec);
                 return { hit: true, source: 'idb', data: rec.data };
             }
         } catch (_) {}
 
         const memRec = memoryCache.get(cacheKey);
-        if (memRec && memRec.hash === contentHash && memRec.data) {
+        if (memRec && memRec.hash === contentHash && memRec.data && isNotStale(memRec)) {
             return { hit: true, source: 'memory', data: memRec.data };
         }
 
@@ -760,12 +794,13 @@ export class LlmCache {
         if (WebDavClient.hasValidEndpoint(cfg)) {
             try {
                 const remote = await WebDavClient.downloadFile(cfg, `ai-cache/${code}.json`);
-                if (remote && typeof remote === 'object' && remote[taskType]?.hash === contentHash && remote[taskType]?.data) {
-                    const data = remote[taskType].data;
+                const remoteEntry = remote && typeof remote === 'object' ? remote[taskType] : null;
+                if (remoteEntry && remoteEntry.hash === contentHash && remoteEntry.data && isNotStale(remoteEntry)) {
+                    const data = remoteEntry.data;
                     const rec = {
                         hash: contentHash,
                         data,
-                        updatedAt: Number(remote[taskType].updatedAt) || Date.now()
+                        updatedAt: Number(remoteEntry.updatedAt) || Date.now()
                     };
                     memoryCache.set(cacheKey, rec);
                     try {
