@@ -14,7 +14,7 @@ import { analyzeSubtitlePlot } from '../player/subtitles/SubtitlePlotAnalyzer.js
 import { formatMetadataForLlm } from './AvMetadataService.js';
 import { AiDebugLogger } from './AiDebugLogger.js';
 
-export const AI_PROMPT_VERSION = 'v3.1';
+export const AI_PROMPT_VERSION = 'v3.2';
 
 /**
  * 计算带 Prompt 版本与当前模型 ID 的确定性缓存摘要，保证调优或切换模型后旧缓存自动失效
@@ -478,6 +478,30 @@ function extractResolvedSecondsForComment(commentObj, rawText, videoDuration = 0
         : [];
     const appliedCountdown = Boolean(typeof commentObj === 'object' && commentObj?.countdownApplied);
 
+    const hmsReplacements = new Map();
+    const hmsWordMatches = [];
+    {
+        const text = String(rawText || '');
+        const cnDigitMap = { 一: 1, 二: 2, 两: 2, 兩: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+        const hmsWordRe = /(?:([一二两兩三四五六七八九]|\d{1,2})\s*(?:[个個]\s*)?(?:h|小時|小时))(?:\s*(?:[零又]\s*)?(\d{1,2})\s*(?:m|分鐘|分钟|分))?(?:\s*(\d{1,2})\s*(?:s|秒)?)?|(?:(\d{1,3})\s*(?:m|分鐘|分钟|分)\s*(\d{1,2})\s*(?:s|秒)?)/gi;
+        let hm;
+        while ((hm = hmsWordRe.exec(text)) !== null) {
+            if (hm[1] !== undefined) {
+                const hours = cnDigitMap[hm[1]] !== undefined ? cnDigitMap[hm[1]] : Number(hm[1]);
+                const mins = Number(hm[2]) || 0;
+                const secs = Number(hm[3]) || 0;
+                const total = hours * 3600 + mins * 60 + secs;
+                hmsWordMatches.push(total);
+                if (hours > 0 && mins > 0) {
+                    const partial = mins * 60 + secs;
+                    if (!dur || total <= dur) hmsReplacements.set(partial, total);
+                }
+            } else if (hm[4] !== undefined) {
+                hmsWordMatches.push(Number(hm[4]) * 60 + (Number(hm[5]) || 0));
+            }
+        }
+    }
+
     if (tsList.length > 0) {
         for (const t of tsList) {
             const rawStr = String(t?.raw || '');
@@ -490,7 +514,9 @@ function extractResolvedSecondsForComment(commentObj, rawText, videoDuration = 0
             } else if (isExplicitNeg && dur > 0 && Number.isFinite(Number(rawSec)) && rawSec > 0 && rawSec < dur) {
                 pushSec(dur - rawSec, true);
             } else if (Number.isFinite(Number(curSec))) {
-                pushSec(curSec, Boolean(t?.isCountdown));
+                const roundedCur = Math.round(Number(curSec));
+                const upgraded = !t?.isCountdown && hmsReplacements.has(roundedCur) ? hmsReplacements.get(roundedCur) : curSec;
+                pushSec(upgraded, Boolean(t?.isCountdown));
             }
         }
     } else {
@@ -512,15 +538,8 @@ function extractResolvedSecondsForComment(commentObj, rawText, videoDuration = 0
                 pushSec(total, false);
             }
         }
-        const cnDigitMap = { 一: 1, 二: 2, 两: 2, 兩: 2, 三: 3, 四: 4, 五: 5, 六: 6 };
-        const hmsWordRe = /(?:([一二两兩三四五六]|\d{1,2})\s*(?:个)?\s*(?:h|小時|小时))(?:\s*(\d{1,2})\s*(?:m|分鐘|分钟|分))?(?:\s*(\d{1,2})\s*(?:s|秒)?)?|(?:(\d{1,3})\s*(?:m|分鐘|分钟|分)\s*(\d{1,2})\s*(?:s|秒)?)/gi;
-        while ((m = hmsWordRe.exec(text)) !== null) {
-            if (m[1] !== undefined) {
-                const hours = cnDigitMap[m[1]] !== undefined ? cnDigitMap[m[1]] : Number(m[1]);
-                pushSec(hours * 3600 + (Number(m[2]) || 0) * 60 + (Number(m[3]) || 0), false);
-            } else if (m[4] !== undefined) {
-                pushSec(Number(m[4]) * 60 + (Number(m[5]) || 0), false);
-            }
+        for (const hmsSec of hmsWordMatches) {
+            pushSec(hmsSec, false);
         }
         const compactSixRe = /(?:^|[^\d])([0-4]\d)([0-5]\d)([0-5]\d)(?:$|[^\d])/g;
         while ((m = compactSixRe.exec(text)) !== null) {
@@ -1258,12 +1277,6 @@ export async function buildHighlightGraphWithLlm({
 
         const rawHighlights = [];
         for (const item of Array.isArray(parsed.highlights) ? parsed.highlights : []) {
-            const subLineNum = Number(item?.subLine);
-            const fromSubLine = hasSub && Number.isInteger(subLineNum) && built.lineSeconds?.has(subLineNum)
-                ? built.lineSeconds.get(subLineNum)
-                : null;
-            const sec = fromSubLine !== null ? clampSec(fromSubLine) : clampSec(item?.seconds);
-            if (sec === null) continue;
             const rawSources = Array.isArray(item?.sources)
                 ? item.sources.map((s) => String(s || '').trim()).filter((s) => ['crowd', 'comment', 'sub'].includes(s))
                 : [];
@@ -1272,6 +1285,24 @@ export async function buildHighlightGraphWithLlm({
             if (!hasSub && rawSources.includes('sub') && sources.length === 0) {
                 continue;
             }
+            const rawSubLine = item?.subLine;
+            const hasValidSubLineProp = rawSubLine !== null && rawSubLine !== undefined && rawSubLine !== '' && typeof rawSubLine !== 'boolean';
+            const subLineNum = hasValidSubLineProp ? Number(rawSubLine) : NaN;
+            const rawItemSec = clampSec(item?.seconds);
+            // 仅当来源明确包含 sub 且 subLine 为有效整数行号时才用字幕行时间反查（严防 Number(null)===0 覆写所有评论高光）
+            let fromSubLine = (hasSub && sources.includes('sub') && Number.isInteger(subLineNum) && built.lineSeconds?.has(subLineNum))
+                ? built.lineSeconds.get(subLineNum)
+                : null;
+            if (fromSubLine !== null && subLineNum === 0 && rawItemSec !== null && Math.abs(rawItemSec - fromSubLine) > 180) {
+                fromSubLine = null;
+            }
+            if (fromSubLine !== null && rawItemSec !== null && Math.abs(rawItemSec - fromSubLine) > 60 && (sources.includes('comment') || sources.includes('crowd'))) {
+                const anchored = commentTsList.some((cts) => Math.abs(cts - rawItemSec) <= 15)
+                    || (Array.isArray(crowdPeaks) && crowdPeaks.some((p) => Math.abs(Number(p?.seconds) - rawItemSec) <= 15));
+                if (anchored) fromSubLine = null;
+            }
+            const sec = fromSubLine !== null ? clampSec(fromSubLine) : rawItemSec;
+            if (sec === null) continue;
             // 无字幕且无波峰时，高光时间必须与真实评论中出现过的时间相近（<= 120s 容差）
             if (!hasSub && !hasCrowd) {
                 if (commentTsList.length === 0) continue;
@@ -1279,7 +1310,7 @@ export async function buildHighlightGraphWithLlm({
                 if (!backed) continue;
             }
             const endSecRaw = clampSec(item?.endSeconds);
-            const endSeconds = endSecRaw !== null && endSecRaw > sec ? endSecRaw : null;
+            const endSeconds = (endSecRaw !== null && endSecRaw > sec && (endSecRaw - sec) <= 1800) ? endSecRaw : null;
             const tag = normalizeInlineText(item?.tag || '').slice(0, 6) || '高能';
             const reason = normalizeInlineText(item?.reason || '').slice(0, 24);
             const score = Math.max(1, Math.min(100, Math.round(Number(item?.score) || 80)));

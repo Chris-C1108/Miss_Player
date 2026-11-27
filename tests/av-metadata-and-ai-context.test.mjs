@@ -702,4 +702,67 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         assert.equal(res.graph.commentInsights['c-nots'].sentiment, 'warn', 'critique 应归一化为 warn');
         assert.equal(res.graph.commentInsights['c-nots'].inferredSeconds, null, '无字幕无波峰时严禁盲猜无时间评论秒数');
     });
+
+    it('never coerces subLine=null or dummy subLine=0 on comment highlights to L0 and upgrades cached partial Chinese hour timestamps', async () => {
+        LlmService.saveConfig({
+            enabled: true,
+            baseUrl: 'https://apihub.agnes-ai.com/v1',
+            model: 'agnes-3.0-flash',
+            apiKey: 'sk-test-subline-null'
+        });
+
+        let lastPrompt = '';
+        gmResponder = (opts) => {
+            const payload = JSON.parse(opts.data || '{}');
+            lastPrompt = payload.messages?.map((m) => m.content).join('\n') || '';
+            opts.onload({
+                status: 200,
+                finalUrl: opts.url,
+                responseText: JSON.stringify({
+                    choices: [{
+                        message: {
+                            content: JSON.stringify({
+                                brief: { highlights: '多段真实高能与中字结合', warnings: '暂无明显雷点', consensus: '口碑不错' },
+                                highlights: [
+                                    { seconds: 9240, endSeconds: 9300, subLine: null, tag: '主观后入', reason: '两个小时34分高能', sources: ['comment'], score: 92 },
+                                    { seconds: 4260, endSeconds: 4320, subLine: null, tag: '经典片段', reason: '71分钟推荐', sources: ['comment'], score: 88 },
+                                    { seconds: 6735, endSeconds: 6868, subLine: 0, tag: '后半推荐', reason: '假零号subLine不覆盖', sources: ['comment'], score: 85 },
+                                    { seconds: 4930, endSeconds: 5089, subLine: 1, tag: '正片对齐', reason: '真字幕行仍对齐', sources: ['sub'], score: 95 }
+                                ],
+                                skipZones: [],
+                                commentTags: []
+                            })
+                        }
+                    }]
+                })
+            });
+        };
+
+        const res = await buildHighlightGraphWithLlm({
+            avcode: 'ABF-015',
+            forceRefresh: true,
+            cues: [
+                { start: 17, end: 21, text: '你好呀，今天真热啊' },
+                { start: 4942, end: 4948, text: '不要这样，已经不行了' }
+            ],
+            comments: [
+                {
+                    id: 'c-cached-partial',
+                    text: '两个小时34分钟开始的主观后入，好久没看到',
+                    timestamps: [{ raw: '34分钟', seconds: 2040 }]
+                }
+            ],
+            videoDuration: 12965
+        });
+
+        assert.equal(res.ok, true);
+        assert.ok(lastPrompt.includes('t=9240s'), '即使缓存评论预存了 34分钟=2040s，也必须升级为 t=9240s');
+        assert.ok(!lastPrompt.includes('t=2040s'), '不应保留被截断的假 2040s');
+        assert.equal(res.graph.highlights.length, 4, '4个不同时段高光绝不能因 subLine=null 合并成1个L0');
+        assert.deepEqual(
+            res.graph.highlights.map((h) => h.seconds),
+            [4260, 4942, 6735, 9240],
+            'comment 高光应保留真实 seconds，真 sub 来源仍对齐 L1(4942s)'
+        );
+    });
 });

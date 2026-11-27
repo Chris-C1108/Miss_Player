@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.008
+// @version            5.7.124-beta.009
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.008";
+		return "5.7.124-beta.009";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4771,7 +4771,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.008";
+		return "5.7.124-beta.009";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6914,7 +6914,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.008";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.009";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -13507,7 +13507,7 @@
 		}
 		return nodes;
 	}
-	var AI_PROMPT_VERSION = "v3.1";
+	var AI_PROMPT_VERSION = "v3.2";
 	function buildVersionedTaskHash(taskType, payloadStr) {
 		const model = LlmService.getConfig().model || "";
 		return LlmCache.hashContent(`${AI_PROMPT_VERSION}|${model}|${taskType}|${payloadStr}`);
@@ -13933,6 +13933,37 @@
 		};
 		const tsList = typeof commentObj === "object" && Array.isArray(commentObj?.timestamps) ? commentObj.timestamps : [];
 		const appliedCountdown = Boolean(typeof commentObj === "object" && commentObj?.countdownApplied);
+		const hmsReplacements = new Map();
+		const hmsWordMatches = [];
+		{
+			const text = String(rawText || "");
+			const cnDigitMap = {
+				一: 1,
+				二: 2,
+				两: 2,
+				兩: 2,
+				三: 3,
+				四: 4,
+				五: 5,
+				六: 6,
+				七: 7,
+				八: 8,
+				九: 9
+			};
+			const hmsWordRe = /(?:([一二两兩三四五六七八九]|\d{1,2})\s*(?:[个個]\s*)?(?:h|小時|小时))(?:\s*(?:[零又]\s*)?(\d{1,2})\s*(?:m|分鐘|分钟|分))?(?:\s*(\d{1,2})\s*(?:s|秒)?)?|(?:(\d{1,3})\s*(?:m|分鐘|分钟|分)\s*(\d{1,2})\s*(?:s|秒)?)/gi;
+			let hm;
+			while ((hm = hmsWordRe.exec(text)) !== null) if (hm[1] !== void 0) {
+				const hours = cnDigitMap[hm[1]] !== void 0 ? cnDigitMap[hm[1]] : Number(hm[1]);
+				const mins = Number(hm[2]) || 0;
+				const secs = Number(hm[3]) || 0;
+				const total = hours * 3600 + mins * 60 + secs;
+				hmsWordMatches.push(total);
+				if (hours > 0 && mins > 0) {
+					const partial = mins * 60 + secs;
+					if (!dur || total <= dur) hmsReplacements.set(partial, total);
+				}
+			} else if (hm[4] !== void 0) hmsWordMatches.push(Number(hm[4]) * 60 + (Number(hm[5]) || 0));
+		}
 		if (tsList.length > 0) for (const t of tsList) {
 			const rawStr = String(t?.raw || "");
 			const isExplicitNeg = /^\s*-\s*\d/.test(rawStr);
@@ -13940,7 +13971,10 @@
 			const curSec = Array.isArray(t?.seconds) ? t.seconds[0] : t?.seconds;
 			if (appliedCountdown && Number.isFinite(Number(curSec))) pushSec(curSec, true);
 			else if (isExplicitNeg && dur > 0 && Number.isFinite(Number(rawSec)) && rawSec > 0 && rawSec < dur) pushSec(dur - rawSec, true);
-			else if (Number.isFinite(Number(curSec))) pushSec(curSec, Boolean(t?.isCountdown));
+			else if (Number.isFinite(Number(curSec))) {
+				const roundedCur = Math.round(Number(curSec));
+				pushSec(!t?.isCountdown && hmsReplacements.has(roundedCur) ? hmsReplacements.get(roundedCur) : curSec, Boolean(t?.isCountdown));
+			}
 		}
 		else {
 			const text = String(rawText || "");
@@ -13957,19 +13991,7 @@
 				if (neg && dur > 0 && total < dur) pushSec(dur - total, true);
 				else pushSec(total, false);
 			}
-			const cnDigitMap = {
-				一: 1,
-				二: 2,
-				两: 2,
-				兩: 2,
-				三: 3,
-				四: 4,
-				五: 5,
-				六: 6
-			};
-			const hmsWordRe = /(?:([一二两兩三四五六]|\d{1,2})\s*(?:个)?\s*(?:h|小時|小时))(?:\s*(\d{1,2})\s*(?:m|分鐘|分钟|分))?(?:\s*(\d{1,2})\s*(?:s|秒)?)?|(?:(\d{1,3})\s*(?:m|分鐘|分钟|分)\s*(\d{1,2})\s*(?:s|秒)?)/gi;
-			while ((m = hmsWordRe.exec(text)) !== null) if (m[1] !== void 0) pushSec((cnDigitMap[m[1]] !== void 0 ? cnDigitMap[m[1]] : Number(m[1])) * 3600 + (Number(m[2]) || 0) * 60 + (Number(m[3]) || 0), false);
-			else if (m[4] !== void 0) pushSec(Number(m[4]) * 60 + (Number(m[5]) || 0), false);
+			for (const hmsSec of hmsWordMatches) pushSec(hmsSec, false);
 			const compactSixRe = /(?:^|[^\d])([0-4]\d)([0-5]\d)([0-5]\d)(?:$|[^\d])/g;
 			while ((m = compactSixRe.exec(text)) !== null) {
 				const total = Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]);
@@ -14612,10 +14634,6 @@
 			};
 			const rawHighlights = [];
 			for (const item of Array.isArray(parsed.highlights) ? parsed.highlights : []) {
-				const subLineNum = Number(item?.subLine);
-				const fromSubLine = hasSub && Number.isInteger(subLineNum) && built.lineSeconds?.has(subLineNum) ? built.lineSeconds.get(subLineNum) : null;
-				const sec = fromSubLine !== null ? clampSec(fromSubLine) : clampSec(item?.seconds);
-				if (sec === null) continue;
 				const rawSources = Array.isArray(item?.sources) ? item.sources.map((s) => String(s || "").trim()).filter((s) => [
 					"crowd",
 					"comment",
@@ -14623,12 +14641,22 @@
 				].includes(s)) : [];
 				const sources = rawSources.filter((s) => (hasSub || s !== "sub") && (hasCrowd || s !== "crowd"));
 				if (!hasSub && rawSources.includes("sub") && sources.length === 0) continue;
+				const rawSubLine = item?.subLine;
+				const subLineNum = rawSubLine !== null && rawSubLine !== void 0 && rawSubLine !== "" && typeof rawSubLine !== "boolean" ? Number(rawSubLine) : NaN;
+				const rawItemSec = clampSec(item?.seconds);
+				let fromSubLine = hasSub && sources.includes("sub") && Number.isInteger(subLineNum) && built.lineSeconds?.has(subLineNum) ? built.lineSeconds.get(subLineNum) : null;
+				if (fromSubLine !== null && subLineNum === 0 && rawItemSec !== null && Math.abs(rawItemSec - fromSubLine) > 180) fromSubLine = null;
+				if (fromSubLine !== null && rawItemSec !== null && Math.abs(rawItemSec - fromSubLine) > 60 && (sources.includes("comment") || sources.includes("crowd"))) {
+					if (commentTsList.some((cts) => Math.abs(cts - rawItemSec) <= 15) || Array.isArray(crowdPeaks) && crowdPeaks.some((p) => Math.abs(Number(p?.seconds) - rawItemSec) <= 15)) fromSubLine = null;
+				}
+				const sec = fromSubLine !== null ? clampSec(fromSubLine) : rawItemSec;
+				if (sec === null) continue;
 				if (!hasSub && !hasCrowd) {
 					if (commentTsList.length === 0) continue;
 					if (!commentTsList.some((cts) => Math.abs(cts - sec) <= 120)) continue;
 				}
 				const endSecRaw = clampSec(item?.endSeconds);
-				const endSeconds = endSecRaw !== null && endSecRaw > sec ? endSecRaw : null;
+				const endSeconds = endSecRaw !== null && endSecRaw > sec && endSecRaw - sec <= 1800 ? endSecRaw : null;
 				const tag = normalizeInlineText(item?.tag || "").slice(0, 6) || "高能";
 				const reason = normalizeInlineText(item?.reason || "").slice(0, 24);
 				const score = Math.max(1, Math.min(100, Math.round(Number(item?.score) || 80)));
@@ -16516,10 +16544,10 @@
 	var RE_L1_DASH_HMS = /(?<![a-zA-Z\d-])(\d{1,2})-([0-5]\d)-([0-5]\d)(?!-\d|\d)/g;
 	var RE_L1_COLON_DOT = /(?<!\d)(\d{1,2}):([0-5]\d)\.([0-5]\d)(?!\d)/g;
 	var CN_MINUTE_TOKEN_PATTERN = "(?:[一二两兩三四五六七八九]|十[一二三四五六七八九]?|[二三四五]十[一二三四五六七八九]?|\\d{1,2})";
-	var RE_L3_SINGLE_H = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:小时|小時|h|H)(?![a-zA-Z\d:：.分秒零又])(?!\s*(?:片子|影片|的片|长片|長片|时长|時長|全片|整片|总长|總長|合集|总集|總集))/g;
-	var RE_L3_HMS = new RegExp(`(?<![a-zA-Z\\d])([一二两兩三四五六七八九]|\\d{1,2})\\s*(?:小时|小時|时|時|h|H)\\s*(?:[零又]\\s*)?(${CN_MINUTE_TOKEN_PATTERN})\\s*(?:分钟|分鐘|分|min|m|M)\\s*(\\d{1,2})\\s*(?:秒钟|秒鐘|秒|s|S)?(?![a-zA-Z\\d])`, "g");
-	var RE_L3_HM = new RegExp(`(?<![a-zA-Z\\d])([一二两兩三四五六七八九]|\\d{1,2})\\s*(?:小时|小時|时|時|h|H)\\s*(?:[零又]\\s*)?(${CN_MINUTE_TOKEN_PATTERN})\\s*(?:分钟|分鐘|分|min|m|M)(?![a-zA-Z\\d])`, "g");
-	var RE_L3_H_SHORT_M = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:小时|小時|时|時|h|H)\s*(?:[零又]\s*)?([0-5]\d)(?![a-zA-Z\d:：.分秒])/g;
+	var RE_L3_SINGLE_H = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:(?:(?:个|個)\s*)?(?:小时|小時)|[hH])(?![a-zA-Z\d:：.分秒零又])(?!\s*(?:片子|影片|的片|长片|長片|时长|時長|全片|整片|总长|總長|合集|总集|總集))/g;
+	var RE_L3_HMS = new RegExp(`(?<![a-zA-Z\\d])([一二两兩三四五六七八九]|\\d{1,2})\\s*(?:(?:(?:个|個)\\s*)?(?:小时|小時)|[时時hH])\\s*(?:[零又]\\s*)?(${CN_MINUTE_TOKEN_PATTERN})\\s*(?:分钟|分鐘|分|min|m|M)\\s*(\\d{1,2})\\s*(?:秒钟|秒鐘|秒|s|S)?(?![a-zA-Z\\d])`, "g");
+	var RE_L3_HM = new RegExp(`(?<![a-zA-Z\\d])([一二两兩三四五六七八九]|\\d{1,2})\\s*(?:(?:(?:个|個)\\s*)?(?:小时|小時)|[时時hH])\\s*(?:[零又]\\s*)?(${CN_MINUTE_TOKEN_PATTERN})\\s*(?:分钟|分鐘|分|min|m|M)(?![a-zA-Z\\d])`, "g");
+	var RE_L3_H_SHORT_M = /(?<![a-zA-Z\d])([一二两兩三四五六七八九]|\d{1,2})\s*(?:(?:(?:个|個)\s*)?(?:小时|小時)|[时時hH])\s*(?:[零又]\s*)?([0-5]\d)(?![a-zA-Z\d:：.分秒])/g;
 	var RE_L3_M_SHORT_S = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分)\s*([0-5]\d)(?!\d|[秒])/g;
 	var RE_L3_MS = /(?<!\d)(\d{1,3})\s*(?:分钟|分鐘|分)\s*(\d{1,2})\s*(?:秒钟|秒鐘|秒)(?!\d)/g;
 	var RE_L3_M = /(?<![.\da-zA-Z])(\d{1,3})\s*(?:分钟|分鐘|分|mins?|m(?![a-zA-Z\d/]))(?![a-zA-Z\d/])/gi;
