@@ -522,13 +522,22 @@ export class LlmService {
             throw new Error('LLM_EMPTY_RESPONSE: 模型返回内容为空');
         }
 
-        const withoutThink = stripThinkBlocks(source);
-        const withoutFence = stripMarkdownFences(withoutThink);
-        const extracted = extractFirstBalancedJson(withoutFence);
-        if (!extracted) {
-            throw new Error('LLM_INVALID_JSON: 无法从模型响应中提取有效 JSON');
+        const trimmed = stripMarkdownFences(stripThinkBlocks(source));
+        const firstBrace = trimmed.search(/[{[]/);
+        const direct = extractFirstBalancedJson(trimmed);
+        if (direct && (firstBrace < 0 || trimmed.indexOf(direct.jsonText) === firstBrace)) {
+            return direct.parsed;
         }
-        return extracted.parsed;
+
+        // 兜底修复模型偶发漏左引号 ("key": 文本",) 或末尾多逗号导致的根节点解析跌落片段问题
+        const repaired = trimmed
+            .replace(/,\s*([}\]])/g, '$1')
+            .replace(/("(?:[^"\\]|\\.)+"\s*:\s*)([^"\s[{\d\-tfn][^\n"]*?)"(\s*(?:,|}|\]))/g, '$1"$2"$3');
+        const salvaged = extractFirstBalancedJson(repaired);
+        if (salvaged) return salvaged.parsed;
+        if (direct) return direct.parsed;
+
+        throw new Error('LLM_INVALID_JSON: 无法从模型响应中提取有效 JSON');
     }
 
     /**

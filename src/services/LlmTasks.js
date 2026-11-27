@@ -415,11 +415,11 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, subtitleQua
         {
             role: 'system',
             content: [
-                '你是一位严谨的影视剧作时间轴标注编辑。每条台词均已标注行号与精确秒数 `[L行号|t=秒数s|时分秒]`。',
-                '核心原则（台词≠画面，禁止脑补）：1) 将夸张比喻/欲求台词（如“顶到子宫/好像想要插入/要射了/全吞了/无法吞咽”）如实理解为言语或感受，严禁将其断言为实际发生了双穴、吞精、灌精等未实锤画面；2) 若字幕出现成串“你好/谢谢/你太棒了/Chico”等语音识别误听噪声，或与副字幕明显矛盾，忽略该噪声切勿编造情节。',
-                '请严格基于真实对话梳理场景与剧情节点，仅返回严格合法 JSON，禁止 Markdown 围栏：',
-                '{ "summary": "20字内剧情概览", "chapters": [{ "line": 12, "seconds": 123, "tag": "2-4字标签", "headline": "16字内该处真实剧情" }] }',
-                '要求：chapters 返回 3 至 8 个按时间升序排列的真实场景节点，必须准确填写引用台词的行号 `line`（即 [L数字|...] 中的数字）及对应 `seconds`。'
+                '严谨的剧情时间轴编辑。台词带 `[L行号|t=秒数s|时分秒]`。',
+                '反幻觉硬约束(台词≠画面)：夸张比喻/欲求(如想要/要射了/全吞)按言语理解，禁脑补未实锤动作；遇敬语噪声或与副字幕矛盾则忽略。',
+                '只基于真实对白输出严格 JSON（禁 Markdown 围栏）：',
+                '{ "summary": "20字内剧情概览", "chapters": [{ "line": 12, "seconds": 123, "tag": "2-4字", "headline": "16字内剧情" }] }',
+                '返回 3-8 个按时间升序的真实节点，准确填 `line` 与 `seconds`。'
             ].join('\n')
         },
         {
@@ -1324,24 +1324,24 @@ export async function buildHighlightGraphWithLlm({
     const commentTsList = Array.from(commentTsSet);
 
     const groundingRule = !hasSub && !hasCrowd
-        ? '当前无字幕且无热度波峰，缺乏全片时间定位依据：`highlights` 严禁引用 "sub" 或凭记忆编造，只能提取评论已出现 `[t=...s]` 的时刻（无则返回空数组 `[]`）；`commentTags` 的 `inferredSeconds` 一律填 null！'
+        ? '无字幕无波峰：highlights 禁引用 sub 或编造，仅取评论 `[t=...s]`（无则 []）；skipZones 禁臆测；commentTags.inferredSeconds 填 null！'
         : (!hasSub
-            ? '当前无字幕对白，严禁使用 `"sub"` 来源或输出 `"subLine"`，仅可结合评论 `[t=...s]` 与热度波峰定位！'
-            : '所有时间点必须直接复用字幕 `t=...s`（或 `subLine`）、波峰 `t=...s` 或评论 `[t=...s]`，严禁心算或编造不存在的时间！');
+            ? '无字幕：禁填 sub 或 subLine，仅结合评论 `[t=...s]` 与波峰定位！'
+            : '时间点直接复用字幕/波峰/评论 `t=...s`，禁心算编造！');
 
     const messages = [
         {
             role: 'system',
             content: [
-                '你是严谨克制的 AV 场景定位分析引擎。目标只做一件事：帮用户准确定位真实发生的高能玩法与剧情转折（宁缺毋滥，严禁猜测）。',
+                '你是严谨的 AV 场景定位分析引擎，只做准确定位高能与转折（宁缺毋滥，严禁猜测）。',
                 groundingRule,
-                '反幻觉硬约束（台词≠画面）：1) 必须先结合片名/简介/标签/评论确认全片核心体裁基调——纯深喉口交片出现“射了/舔净”若无下体插入前情绝不可脑补成「内射」，单凭孤立1~2词（如“屁眼”“要射了”“想要”“好舒服”）绝不可脑补成「肛交/双穴/灌精」；2) 欲望挑逗、夸张比喻或否定词（好像想要插入/顶到子宫/无法吞咽）不得写成已发生；3) 禁止把评论许愿或抱怨（希望喉射/没吞精）嫁接到无关时刻；4) 仅输出明确实锤的高光（0~5条，无把握宁可空缺 [] 绝不凑数），每条必须标注 confidence ("high"|"medium"|"low")，未证实具体动作只可写 low 或留空。',
-                '字段输出顺序与上限：',
-                '1. brief: 1句话看点/避坑/共识总结；',
-                '2. highlights: 0-5条实锤高能（禁片尾独白，tag用2-4字且勿带斜杠）；',
-                '3. skipZones: 最多3个明显拖沓区间（勿重叠highlights，禁写字幕/行号/推测，无则[]）；',
-                '4. commentTags: 最多8条评价归类；无字幕/波峰时 `inferredSeconds` 填 null；',
-                '仅输出严格合法 JSON：',
+                '反幻觉硬约束(台词≠画面)：1) 结合片名/标签定基调——纯口交无插入前情禁脑补内射，孤立词禁脑补肛交/双穴；2) 挑逗/夸张/否定词禁当已发生；3) 禁把许愿抱怨嫁接无关时刻；4) 仅输出实锤高光(0-5条，不确定写 low 或留空 [])。',
+                '输出顺序：',
+                '1. brief: 1句话看点/避坑/共识；',
+                '2. highlights: 0-5条实锤高能（禁片尾独白，tag用2-4字勿带/）；',
+                '3. skipZones: 最多3个拖沓区间（勿重highlights，禁写字幕/行号/推测，无则[]）；',
+                '4. commentTags: 最多8条归类；无依据时 inferredSeconds 填 null；',
+                '仅输出合法 JSON：',
                 hasSub
                     ? '{ "brief": { "highlights": "看点", "warnings": "避坑", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "subLine": 12, "confidence": "high", "tag": "标签", "reason": "依据", "sources": ["crowd","comment","sub"], "score": 92 }], "skipZones": [{ "seconds": 0, "endSeconds": 90, "reason": "避坑" }], "commentTags": [{ "idx": 0, "sentiment": "hype", "inferredSeconds": 420, "note": "标签" }] }'
                     : '{ "brief": { "highlights": "看点", "warnings": "避坑", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "confidence": "high", "tag": "标签", "reason": "依据", "sources": ["comment"], "score": 92 }], "skipZones": [], "commentTags": [{ "idx": 0, "sentiment": "hype", "inferredSeconds": null, "note": "标签" }] }'
@@ -1481,8 +1481,8 @@ export async function buildHighlightGraphWithLlm({
             if (!target?.id) continue;
             const sentiment = normalizeSentiment(ct?.sentiment);
             let inferredSeconds = clampSec(ct?.inferredSeconds);
-            // 无字幕且无波峰时，不允许对无时间点评论盲猜推断秒数
-            if (!hasSub && !hasCrowd && (!Array.isArray(target.resolvedTs) || target.resolvedTs.length === 0)) {
+            const hasExplicitTs = Array.isArray(target.resolvedTs) && target.resolvedTs.length > 0;
+            if ((!hasSub && !hasCrowd && !hasExplicitTs) || (inferredSeconds !== null && inferredSeconds <= 5 && !hasExplicitTs)) {
                 inferredSeconds = null;
             }
             const note = normalizeInlineText(ct?.note || '').slice(0, 14);

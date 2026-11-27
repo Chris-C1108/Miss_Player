@@ -1287,6 +1287,38 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         assert.equal(noSubFg.ok, true);
         assert.deepEqual(noSubFg.graph.skipZones, []);
 
+        // 5. CAWD-367 实测漏左引号容错恢复 + 无时间评论 inferredSeconds=0 归 null
+        const brokenSummaryJson = '{\n "summary": 女上司诱骗处男下属发生关系",\n "chapters": [{"seconds": 91, "tag": "起意", "headline": "占有欲"}]\n}';
+        const repairedObj = LlmService.parseJsonFromLlm(brokenSummaryJson);
+        assert.equal(repairedObj.summary, '女上司诱骗处男下属发生关系');
+        assert.equal(repairedObj.chapters.length, 1);
+
+        gmResponder = (opts) => opts.onload?.({
+            status: 200,
+            responseText: JSON.stringify({
+                choices: [{
+                    message: {
+                        content: JSON.stringify({
+                            brief: { highlights: '深吻', warnings: '无', consensus: '好' },
+                            highlights: [{ seconds: 2690, confidence: 'high', tag: '颜射', reason: '字幕确认', sources: ['sub'], score: 90 }],
+                            skipZones: [],
+                            commentTags: [{ idx: 0, sentiment: 'hype', inferredSeconds: 0, note: '榨干' }]
+                        })
+                    }
+                }]
+            })
+        });
+        const zeroTsRes = await buildHighlightGraphWithLlm({
+            avcode: 'IPZZ-004',
+            cues: goodCues,
+            comments: [{ id: 'c0', text: '榨干表现好评' }],
+            videoDuration: 7200,
+            forceRefresh: true
+        });
+        gmResponder = prevGm;
+        assert.equal(zeroTsRes.ok, true);
+        assert.equal(zeroTsRes.graph.commentInsights.c0.inferredSeconds, null);
+
         const chRes = await analyzeSubtitleChaptersWithLlm({
             avcode: 'DASD-943',
             cues: goodCues,
