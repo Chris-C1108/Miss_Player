@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.014
+// @version            5.7.124-beta.015
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.014";
+		return "5.7.124-beta.015";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4771,7 +4771,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.014";
+		return "5.7.124-beta.015";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6914,7 +6914,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.014";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.015";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -15046,7 +15046,7 @@
 				const endSecRaw = clampSec(item?.endSeconds);
 				const endSeconds = endSecRaw !== null && endSecRaw > sec && endSecRaw - sec <= 1800 ? endSecRaw : null;
 				const tag = normalizeInlineText(item?.tag || "").slice(0, 6) || "高能";
-				const reason = normalizeInlineText(item?.reason || "").slice(0, 24);
+				const reason = normalizeInlineText(item?.reason || "").slice(0, 36);
 				const score = Math.max(1, Math.min(100, Math.round(Number(item?.score) || 80)));
 				if (score < 50) continue;
 				rawHighlights.push({

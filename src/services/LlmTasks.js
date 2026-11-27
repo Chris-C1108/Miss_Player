@@ -1434,7 +1434,7 @@ export async function buildHighlightGraphWithLlm({
             const endSecRaw = clampSec(item?.endSeconds);
             const endSeconds = (endSecRaw !== null && endSecRaw > sec && (endSecRaw - sec) <= 1800) ? endSecRaw : null;
             const tag = normalizeInlineText(item?.tag || '').slice(0, 6) || '高能';
-            const reason = normalizeInlineText(item?.reason || '').slice(0, 24);
+            const reason = normalizeInlineText(item?.reason || '').slice(0, 36);
             const score = Math.max(1, Math.min(100, Math.round(Number(item?.score) || 80)));
             if (score < 50) continue;
             rawHighlights.push({ seconds: sec, endSeconds, tag, reason, sources, score });
