@@ -1493,4 +1493,25 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         const ctx = assessAiContextValue({ cues: longCues, quality: longQ, comments: [], videoDuration: 7100 });
         assert.equal(ctx.isSubTrustworthy, true, '长字幕稀疏偶发 2 句片尾词应可安全放行 AI 分幕');
     });
+
+    it('exempts short pure-moan runs under 20 from consecutive_repetition while still catching sentence loops (EKDV-796 vs CEKD-004)', async () => {
+        const { scoreSubtitleQuality } = await import('../src/player/subtitles/SubtitleQualityScorer.js');
+
+        const moanCues = Array.from({ length: 120 }, (_, i) => ({
+            start: 10 + i * 20,
+            end: 13 + i * 20,
+            text: (i >= 80 && i <= 87) ? '啊' : `正常剧情对白段落 ${i} 今天发生的事情`
+        }));
+        const moanQ = scoreSubtitleQuality(moanCues, { videoDurationSec: 2500 });
+        assert.ok(!moanQ.reasons.includes('consecutive_repetition'), `单字拟声 8 连不应触发 consecutive_repetition: ${moanQ.reasons}`);
+        assert.ok(moanQ.sqi >= 90, `豁免单字喘息连发后 SQI 应维持高分，实际=${moanQ.sqi}`);
+
+        const sentenceLoopCues = Array.from({ length: 120 }, (_, i) => ({
+            start: 10 + i * 20,
+            end: 13 + i * 20,
+            text: (i >= 80 && i <= 88) ? '我不知道' : `剧情对白 ${i} 对话内容`
+        }));
+        const loopQ = scoreSubtitleQuality(sentenceLoopCues, { videoDurationSec: 2500 });
+        assert.ok(loopQ.reasons.includes('consecutive_repetition'), '真实整句 9 连重复必须继续扣分拦截');
+    });
 });

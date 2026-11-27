@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.021
+// @version            5.7.124-beta.022
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.021";
+		return "5.7.124-beta.022";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4748,7 +4748,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.021";
+		return "5.7.124-beta.022";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6891,7 +6891,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.021";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.022";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -13523,6 +13523,7 @@
 	var WHISPER_HALLUCINATION_RE = /谢谢观看|感谢(?:您|大家)?的?(?:观看|收看|收听|支持)|请订阅|欢迎订阅|请点赞|优优独播|WhisperJAV|字幕由/i;
 	var WHISPER_POLITE_NOISE_RE = /(?:^|[\s，,。.!！?？])(?:你好|谢谢|非常感谢|不客气|早上好|晚上好|你太棒了|干得好|女士[，,]?\s*你好吗|我很好|很高兴见到你|我来开门)(?:$|[\s，,。.!！?？])|\bChico\b|奇科/gi;
 	var SANITIZED_MT_RE = /努力工作|这是正确的|感觉真好|非常深|你可以吃它|我明白了|你做得很好|这是一只鸭子|停止努力工作|我觉得很好|对不起[，,]\s*我|请住手/;
+	var PURE_MOAN_CUE_RE = /^[啊嗯唔哦呃哈噢呀唉哼呼嘶呵ー〜~～!！?？。.,，\s]+$/i;
 	function normalizeCueText(raw) {
 		return String(raw || "").trim().replace(/\s+/g, " ");
 	}
@@ -13596,6 +13597,7 @@
 		let prevText = null;
 		let currentRun = 0;
 		let maxRun = 0;
+		let semanticMaxRun = 0;
 		let hallucinationHits = 0;
 		let politeNoiseHits = 0;
 		let mtHits = 0;
@@ -13608,6 +13610,7 @@
 				prevText = norm;
 			}
 			if (currentRun > maxRun) maxRun = currentRun;
+			if (currentRun > semanticMaxRun && !PURE_MOAN_CUE_RE.test(norm)) semanticMaxRun = currentRun;
 			const simplified = norm ? convertChineseText(norm, "zh") : "";
 			if (WHISPER_HALLUCINATION_RE.test(norm) || simplified && WHISPER_HALLUCINATION_RE.test(simplified)) hallucinationHits += 1;
 			const checkTarget = simplified || norm;
@@ -13653,7 +13656,7 @@
 				sqi -= 20;
 				reasons.push("high_repetition");
 			}
-			if (maxRun >= 8) {
+			if (semanticMaxRun >= 8 || maxRun >= 20) {
 				sqi -= 15;
 				reasons.push("consecutive_repetition");
 			}
@@ -14966,7 +14969,7 @@
 				"1. brief: 1句话看点/避坑/共识；",
 				"2. highlights: 0-5条实锤高能（禁片尾独白，tag用2-4字勿带/）；",
 				"3. skipZones: 最多3个拖沓区间（勿重highlights，禁写字幕/行号/推测，无则[]）；",
-				"4. commentTags: 最多8条归类；无时间戳或具体动作的泛评(如颜值/男主/实用) inferredSeconds 填 null；",
+				"4. commentTags: 最多8条；note须写具体看点/槽点(禁写“高潮时刻/背景故事/结构评价”等空词)；无时间戳或具体动作的泛评 inferredSeconds 填 null；",
 				"仅输出合法 JSON：",
 				hasSub ? "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"subLine\": 12, \"confidence\": \"high\", \"tag\": \"标签\", \"reason\": \"依据\", \"sources\": [\"crowd\",\"comment\",\"sub\"], \"score\": 92 }], \"skipZones\": [{ \"seconds\": 0, \"endSeconds\": 90, \"reason\": \"避坑\" }], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"inferredSeconds\": 420, \"note\": \"标签\" }] }" : "{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"confidence\": \"high\", \"tag\": \"标签\", \"reason\": \"依据\", \"sources\": [\"comment\"], \"score\": 92 }], \"skipZones\": [], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"inferredSeconds\": null, \"note\": \"标签\" }] }"
 			].join("\n")

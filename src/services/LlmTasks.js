@@ -1348,7 +1348,7 @@ export async function buildHighlightGraphWithLlm({
                 '1. brief: 1句话看点/避坑/共识；',
                 '2. highlights: 0-5条实锤高能（禁片尾独白，tag用2-4字勿带/）；',
                 '3. skipZones: 最多3个拖沓区间（勿重highlights，禁写字幕/行号/推测，无则[]）；',
-                '4. commentTags: 最多8条归类；无时间戳或具体动作的泛评(如颜值/男主/实用) inferredSeconds 填 null；',
+                '4. commentTags: 最多8条；note须写具体看点/槽点(禁写“高潮时刻/背景故事/结构评价”等空词)；无时间戳或具体动作的泛评 inferredSeconds 填 null；',
                 '仅输出合法 JSON：',
                 hasSub
                     ? '{ "brief": { "highlights": "看点", "warnings": "避坑", "consensus": "共识" }, "highlights": [{ "seconds": 120, "endSeconds": 180, "subLine": 12, "confidence": "high", "tag": "标签", "reason": "依据", "sources": ["crowd","comment","sub"], "score": 92 }], "skipZones": [{ "seconds": 0, "endSeconds": 90, "reason": "避坑" }], "commentTags": [{ "idx": 0, "sentiment": "hype", "inferredSeconds": 420, "note": "标签" }] }'

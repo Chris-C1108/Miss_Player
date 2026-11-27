@@ -16,6 +16,8 @@ const WHISPER_POLITE_NOISE_RE = /(?:^|[\s，,。.!！?？])(?:你好|谢谢|非�
 
 const SANITIZED_MT_RE = /努力工作|这是正确的|感觉真好|非常深|你可以吃它|我明白了|你做得很好|这是一只鸭子|停止努力工作|我觉得很好|对不起[，,]\s*我|请住手/;
 
+const PURE_MOAN_CUE_RE = /^[啊嗯唔哦呃哈噢呀唉哼呼嘶呵ー〜~～!！?？。.,，\s]+$/i;
+
 function normalizeCueText(raw) {
     return String(raw || '').trim().replace(/\s+/g, ' ');
 }
@@ -123,6 +125,7 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
     let prevText = null;
     let currentRun = 0;
     let maxRun = 0;
+    let semanticMaxRun = 0;
     let hallucinationHits = 0;
     let politeNoiseHits = 0;
     let mtHits = 0;
@@ -137,6 +140,9 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
             prevText = norm;
         }
         if (currentRun > maxRun) maxRun = currentRun;
+        if (currentRun > semanticMaxRun && !PURE_MOAN_CUE_RE.test(norm)) {
+            semanticMaxRun = currentRun;
+        }
 
         const simplified = norm ? convertChineseText(norm, 'zh') : '';
         if (WHISPER_HALLUCINATION_RE.test(norm) || (simplified && WHISPER_HALLUCINATION_RE.test(simplified))) {
@@ -198,7 +204,8 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
             reasons.push('high_repetition');
         }
 
-        if (maxRun >= 8) {
+        // 单字纯拟声词连发（如深喉喘息“啊”8连）容忍至 <20，真实对白/幻觉整句仍按 >=8 拦截
+        if (semanticMaxRun >= 8 || maxRun >= 20) {
             sqi -= 15;
             reasons.push('consecutive_repetition');
         }
