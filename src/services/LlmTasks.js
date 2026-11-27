@@ -1343,10 +1343,10 @@ export async function buildHighlightGraphWithLlm({
                 '你是严谨的 AV 场景定位分析引擎，只做准确定位高能与转折（宁缺毋滥，严禁猜测）。',
                 `必须全程使用「${aiLang.promptName}」输出 brief、tag、reason、skipZones.reason 与 commentTags.note。`,
                 groundingRule,
-                '反幻觉硬约束(台词≠画面)：1) 结合片名/标签定基调——纯口交无插入前情禁脑补内射，孤立词禁脑补肛交/双穴；2) 挑逗/夸张/否定词禁当已发生；3) 禁把许愿抱怨嫁接无关时刻；4) 仅输出实锤高光(0-5条，不确定写 low 或留空 [])。',
+                '反幻觉硬约束(台词≠画面)：1) 结合片名/标签定基调——纯口交无插入前情禁脑补内射，孤立词禁脑补肛交/双穴；2) 挑逗/夸张/否定词禁当已发生；3) 禁把许愿抱怨嫁接无关时刻；4) 凡有字幕/评论/波峰依据时尽量覆盖全片各主要做爱/高潮/体位切换段(4-8条实锤高光，不确定写 low；仅毫无依据时留空 [])。',
                 '输出顺序：',
                 '1. brief: 1句话看点/避坑/共识；',
-                '2. highlights: 0-5条实锤高能（禁片尾独白，tag用2-4字勿带/）；',
+                '2. highlights: 4-8条实锤高能（按全片前中后进展分布，禁片尾独白，tag用2-4字勿带/）；',
                 '3. skipZones: 最多3个拖沓区间（勿重highlights，禁写字幕/行号/推测，无则[]）；',
                 '4. commentTags: 最多8条；note须写具体看点/槽点(禁写“高潮时刻/背景故事/结构评价”等空词)；无时间戳或具体动作的泛评 inferredSeconds 填 null；',
                 '仅输出合法 JSON：',
@@ -1447,13 +1447,13 @@ export async function buildHighlightGraphWithLlm({
             if (score < 50) continue;
             rawHighlights.push({ seconds: sec, endSeconds, tag, reason, sources, score });
         }
-        // 邻近 45 秒内去重合并，保留高分高光（宁缺毋滥，上限 5 条）
+        // 邻近 40 秒内去重合并，保留高分高光（按全片进度充分呈现，上限 8 条）
         rawHighlights.sort((a, b) => b.score - a.score);
         const highlights = [];
         for (const h of rawHighlights) {
-            if (highlights.some((kept) => Math.abs(kept.seconds - h.seconds) < 45)) continue;
+            if (highlights.some((kept) => Math.abs(kept.seconds - h.seconds) < 40)) continue;
             highlights.push(h);
-            if (highlights.length >= 5) break;
+            if (highlights.length >= 8) break;
         }
         highlights.sort((a, b) => a.seconds - b.seconds);
 

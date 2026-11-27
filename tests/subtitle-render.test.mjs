@@ -786,4 +786,48 @@ test('SubtitleRender 字幕挂载与时间轴渲染', async (t) => {
         assert.equal(managerRescue.bundle.favoriteId, 'mis-ja');
         assert.equal(managerRescue.activeItem?.lang, 'zh');
     });
+
+    await t.test('14. 收藏列表中本地缺失正文的字幕点击时可从在线直链自动兜底重载并修补缓存', async () => {
+        const manager = new SubtitleManager(env.playerCore, env.uiManager, null);
+        manager.avcode = 'MIDV-264';
+        const favRow = {
+            id: 'sc:subs/1424/MIDV-264.srt',
+            provider: 'subtitlecat',
+            providerLabel: 'SubtitleCat',
+            title: 'MIDV-264 中文',
+            lang: 'zh',
+            format: 'srt',
+            favorite: true,
+            favoriteSource: 'manual',
+            content: '',
+            downloadUrl: 'https://www.subtitlecat.com/subs/1424/MIDV-264.srt'
+        };
+        manager.bundle = {
+            code: 'MIDV-264',
+            activeId: '',
+            favoriteId: favRow.id,
+            items: [favRow],
+            updatedAt: Date.now()
+        };
+        let persistedDirtyId = '';
+        manager._persist = async (opts = {}) => {
+            if (opts?.dirtyItem?.id) persistedDirtyId = opts.dirtyItem.id;
+        };
+        manager.engine = {
+            async download(cand) {
+                assert.equal(cand.id, favRow.id);
+                return {
+                    content: '1\n00:00:05,000 --> 00:00:09,000\n兜底重下成功\n',
+                    format: 'srt',
+                    cues: [{ start: 5, end: 9, text: '兜底重下成功' }]
+                };
+            }
+        };
+
+        await manager._activateRow(favRow);
+        assert.equal(manager.activeItem?.id, favRow.id);
+        assert.equal(manager.cues.length, 1);
+        assert.equal(manager.cues[0].text, '兜底重下成功');
+        assert.equal(persistedDirtyId, favRow.id, '补全正文后应重新持久化并触发远端修复');
+    });
 });

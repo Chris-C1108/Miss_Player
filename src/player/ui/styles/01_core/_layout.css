@@ -236,6 +236,13 @@
     -webkit-user-select: none;
 }
 
+@media (max-width: 767px) and (orientation: portrait) {
+    .tm-player-container.tm-settings-active .tm-video-wrapper {
+        visibility: hidden;
+        pointer-events: none;
+    }
+}
+
 /* 扩充触控与移动端最小点击热区至 44x44px */
 
 .tm-close-button::after,

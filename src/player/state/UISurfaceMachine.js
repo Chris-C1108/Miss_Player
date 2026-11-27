@@ -125,7 +125,7 @@ export class UISurfaceMachine {
             'click', 'dblclick',
             'mousedown', 'mouseup',
             'pointerdown', 'pointerup', 'pointercancel',
-            'contextmenu'
+            'contextmenu', 'dragstart'
         ];
         activeEvents.forEach((evt) => el.addEventListener(evt, stopBubble));
 
@@ -133,7 +133,7 @@ export class UISurfaceMachine {
             el.addEventListener(evt, stopEditableKeyBubble);
         });
 
-        ['touchstart', 'touchend', 'touchcancel'].forEach((evt) => {
+        ['touchstart', 'touchend', 'touchcancel', 'gesturestart', 'gesturechange', 'gestureend'].forEach((evt) => {
             el.addEventListener(evt, stopBubble, { passive: true });
         });
 
@@ -535,6 +535,12 @@ export class UISurfaceMachine {
             if (sink) {
                 sink.classList.toggle('visible', hasAny);
             }
+        }
+        const videoWrapper = this.uiManager?.videoWrapper;
+        if (videoWrapper) {
+            videoWrapper.inert = hasAny;
+            if (hasAny) videoWrapper.setAttribute('aria-hidden', 'true');
+            else videoWrapper.removeAttribute('aria-hidden');
         }
         if (typeof document !== 'undefined' && document.body) {
             document.body.classList.toggle('tm-settings-active', this.activeSurface === SURFACE_TYPES.SETTINGS);

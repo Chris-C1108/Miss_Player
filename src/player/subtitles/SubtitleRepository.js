@@ -243,21 +243,31 @@ export class SubtitleRepository {
     }
 
     static _scheduleRemoteSync(payload, dirtyItem) {
+        if (dirtyItem?.id && dirtyItem?.content) {
+            SubtitleRepository._pendingDirtyItems.set(dirtyItem.id, dirtyItem);
+        }
         const now = Date.now();
         const elapsed = now - SubtitleRepository._lastSyncAt;
         clearTimeout(SubtitleRepository._pendingTimer);
         const run = () => {
+            const queued = Array.from(SubtitleRepository._pendingDirtyItems.values());
+            SubtitleRepository._pendingDirtyItems.clear();
             SubtitleRepository._lastSyncAt = Date.now();
-            SubtitleRepository._syncRemote(payload, dirtyItem);
+            SubtitleRepository._syncRemote(payload, queued);
         };
         if (elapsed >= UPLOAD_THROTTLE_MS) run();
         else SubtitleRepository._pendingTimer = setTimeout(run, UPLOAD_THROTTLE_MS - elapsed);
     }
 
-    static async _syncRemote(payload, dirtyItem) {
+    static async _syncRemote(payload, dirtyItems = []) {
         const target = SubtitleRepository.resolveRemoteTarget(payload.code);
         if (!target) return;
         const { config, dir } = target;
+        const dirtyMap = new Map(
+            (Array.isArray(dirtyItems) ? dirtyItems : [dirtyItems])
+                .filter((d) => d?.id && d?.content)
+                .map((d) => [d.id, d])
+        );
 
         try {
             // 1. 先落盘字幕正文，保证索引引用的文件一定存在
@@ -266,15 +276,15 @@ export class SubtitleRepository {
                 return { ...item, file };
             });
 
-            const uploadList = dirtyItem
-                ? items.filter((item) => item.id === dirtyItem.id && item.content)
-                : [];
+            const uploadList = items.filter((item) => dirtyMap.has(item.id) && (item.content || dirtyMap.get(item.id)?.content));
 
             for (const item of uploadList) {
+                const content = item.content || dirtyMap.get(item.id)?.content || '';
+                if (!content) continue;
                 await WebDavClient.uploadFile(
                     config,
                     `${dir}${item.file}`,
-                    item.content,
+                    content,
                     'text/plain; charset=utf-8'
                 );
             }
@@ -304,3 +314,4 @@ export class SubtitleRepository {
 
 SubtitleRepository._lastSyncAt = 0;
 SubtitleRepository._pendingTimer = null;
+SubtitleRepository._pendingDirtyItems = new Map();

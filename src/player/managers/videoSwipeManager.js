@@ -476,7 +476,7 @@ export class VideoSwipeManager {
         if (uiManager?.surfaceMachine?.isInteractionBlocked?.()) {
             return;
         }
-        if (e.target?.closest?.('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .tm-settings-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-surface-event-sink')) {
+        if (e.target?.closest?.('.tm-control-panel, .tm-control-buttons, .tm-button-container, .tm-control-button, .tm-close-button, .tm-settings-button, .mp-s2-panel, .mp-batch-float, .tm-settings-panel, .tm-bottom-sheet-panel, .tm-bottom-sheet-overlay, .tm-comment-submit-bar-wrapper, .tm-inline-remark-popover, .tm-custom-modal-overlay, .tm-custom-modal, .tm-report-modal-dialog, .jc-code-preview-popover, .tm-surface-event-sink')) {
             return;
         }
         

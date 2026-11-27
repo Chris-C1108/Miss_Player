@@ -543,16 +543,45 @@ export class SubtitleManager {
         return this.bundle.items.find((item) => item.id === id) || null;
     }
 
-    /** 保证字幕条目具备正文（本地缺失时从 WebDAV 补取） */
+    /** 保证字幕条目具备正文（本地缺失时依次从 WebDAV、在线缓存候选或重检直链补全） */
     async _ensureContent(item) {
         if (!item) return null;
         if (item.content) return item;
         const remote = await SubtitleRepository.downloadItem(item, this.avcode);
         if (remote) {
             item.content = remote;
+            await this._persist({ sync: false });
             return item;
         }
-        return null;
+        if (item.provider === 'local') return null;
+
+        let candidate = item.downloadUrl
+            ? item
+            : this.onlineResults.find((entry) => entry.id === item.id && entry.downloadUrl);
+        if (!candidate && this.avcode && item.id) {
+            try {
+                const { candidates } = await this.engine.search(this.avcode);
+                candidate = candidates.find((entry) => entry.id === item.id && entry.downloadUrl) || null;
+                if (candidate?.downloadUrl) item.downloadUrl = candidate.downloadUrl;
+            } catch (_) {}
+        }
+        if (!candidate?.downloadUrl) return null;
+
+        try {
+            const downloaded = await this.engine.download(candidate);
+            if (!downloaded?.content) return null;
+            item.content = downloaded.content;
+            item.format = downloaded.format || item.format;
+            if (!item.downloadUrl && candidate.downloadUrl) item.downloadUrl = candidate.downloadUrl;
+            if (downloaded.cues?.length) {
+                this._inspectTrackMetadata(item, downloaded);
+            }
+            await this._persist({ dirtyItem: item });
+            return item;
+        } catch (err) {
+            console.warn('[SubtitleManager] 在线兜底重载失败:', err?.message);
+            return null;
+        }
     }
 
     /** 默认展示最优字幕：手动收藏 > 自动收藏 > 评分最高 */
@@ -800,7 +829,12 @@ export class SubtitleManager {
         const { silent = false } = options;
         const prepared = await this._ensureContent(item);
         if (!prepared) {
-            if (!silent) Toast(text('subtitleDownloadFailed', '下载失败，请换个来源试试'), 2600, 'error');
+            if (!silent) {
+                const msg = item?.provider === 'local'
+                    ? '本地字幕缓存已失效，请重新导入'
+                    : text('subtitleDownloadFailed', '下载失败，请换个来源试试');
+                Toast(msg, 2600, 'error');
+            }
             return;
         }
         const parsed = parseSubtitles(prepared.content || '', prepared.format || '');
@@ -1927,13 +1961,17 @@ export class SubtitleManager {
     async _activateRow(row) {
         if (this._busyId) return;
         const stored = this._findItem(row.id);
-        if (stored) {
+        if (stored && stored.content) {
             await this._applyItem(stored);
             return;
         }
         this._busyId = row.id;
         this._renderList();
         try {
+            if (stored) {
+                await this._applyItem(stored);
+                return;
+            }
             const item = await this._downloadCandidate(row);
             if (item) await this._applyItem(item);
         } finally {
@@ -2047,9 +2085,18 @@ export class SubtitleManager {
             const searchStartedAt = Date.now();
             try {
                 const { candidates, errors } = await this.engine.search(this.avcode);
-                const known = new Set(this.bundle.items.map((item) => item.id));
+                const knownMap = new Map(this.bundle.items.map((item) => [item.id, item]));
+                let backfilledUrl = false;
+                for (const candidate of candidates) {
+                    const existing = knownMap.get(candidate.id);
+                    if (existing && !existing.downloadUrl && candidate.downloadUrl) {
+                        existing.downloadUrl = candidate.downloadUrl;
+                        backfilledUrl = true;
+                    }
+                }
+                if (backfilledUrl) this._persist({ sync: false });
                 this.onlineResults = candidates.filter(
-                    (candidate) => !known.has(candidate.id) && this._isRelevant(candidate)
+                    (candidate) => !knownMap.has(candidate.id) && this._isRelevant(candidate)
                 );
                 if (this.avcode && AiDebugLogger.isEnabled()) {
                     const langsSummary = {};

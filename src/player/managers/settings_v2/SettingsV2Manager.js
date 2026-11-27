@@ -3,7 +3,8 @@ import { S2PlaybackSection } from './sections/S2PlaybackSection.js';
 import { S2CommentsSection } from './sections/S2CommentsSection.js';
 import { S2ConnectionsSection } from './sections/S2ConnectionsSection.js';
 import { S2AdvancedSection } from './sections/S2AdvancedSection.js';
-import { SURFACE_TYPES } from '../../state/UISurfaceMachine.js';
+import { SURFACE_TYPES, UISurfaceMachine } from '../../state/UISurfaceMachine.js';
+import { BatchTestFloatModal } from '../../ui/BatchTestFloatModal.js';
 import { ICON_X_CLOSE } from '../../../constants/icons.js';
 import { __, I18n } from '../../../constants/i18n.js';
 import { Toast } from '../../../utils/index.js';
@@ -26,6 +27,9 @@ export class SettingsV2Manager {
 
     setPanel(panelEl) {
         this.panel = panelEl;
+        if (panelEl) {
+            UISurfaceMachine.bindOverlayGuard(panelEl, { stopMove: true, stopWheel: true });
+        }
         this._bindHeaderDismissGesture();
     }
 
@@ -273,6 +277,7 @@ export class SettingsV2Manager {
 
     cleanup() {
         this.close();
+        BatchTestFloatModal.destroyActive();
         if (this._gestureCleanup) {
             this._gestureCleanup();
             this._gestureCleanup = null;

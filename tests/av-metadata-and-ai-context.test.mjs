@@ -1514,4 +1514,73 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         const loopQ = scoreSubtitleQuality(sentenceLoopCues, { videoDurationSec: 2500 });
         assert.ok(loopQ.reasons.includes('consecutive_repetition'), '真实整句 9 连重复必须继续扣分拦截');
     });
+
+    it('supports up to 8 spaced highlights in highlight_graph and verifies SettingsV2/BatchFloat Stay passthrough guards', async () => {
+        const fs = await import('node:fs');
+        const { LlmService } = await import('../src/services/LlmService.js');
+        const { buildHighlightGraphWithLlm } = await import('../src/services/LlmTasks.js');
+
+        LlmService.saveConfig({
+            enabled: true,
+            featureHighlightFusion: true,
+            baseUrl: 'https://api.example.com/v1',
+            model: 'gpt-test',
+            apiKey: 'sk-test-123456'
+        });
+
+        const longDialogueCues = Array.from({ length: 180 }, (_, idx) => ({
+            start: 60 + idx * 45,
+            end: 64 + idx * 45,
+            text: `第 ${idx} 段完整高能对白节奏变化`
+        }));
+        const eightRawHighlights = Array.from({ length: 9 }, (_, i) => ({
+            seconds: 120 + i * 700,
+            endSeconds: 180 + i * 700,
+            subLine: Math.min(179, i * 15),
+            confidence: 'high',
+            tag: `高能${i + 1}`,
+            reason: `剧情第${i + 1}段高潮`,
+            sources: ['sub'],
+            score: 95 - i
+        }));
+
+        const prevGm = gmResponder;
+        gmResponder = (opts) => {
+            opts.onload?.({
+                status: 200,
+                responseText: JSON.stringify({
+                    choices: [{
+                        message: {
+                            content: JSON.stringify({
+                                brief: { highlights: '8段全程覆盖', warnings: '无', consensus: '' },
+                                highlights: eightRawHighlights,
+                                skipZones: [],
+                                commentTags: []
+                            })
+                        }
+                    }]
+                })
+            });
+        };
+        try {
+            const res = await buildHighlightGraphWithLlm({
+                avcode: 'HL8-TEST',
+                cues: longDialogueCues,
+                comments: [],
+                videoDuration: 8200,
+                forceRefresh: true
+            });
+            assert.equal(res.ok, true);
+            assert.equal(res.graph.highlights.length, 8, 'AI 高能节点上限应放宽至 8 条以充分覆盖全片');
+        } finally {
+            gmResponder = prevGm;
+        }
+
+        const settingsV2Src = fs.readFileSync('src/player/managers/settings_v2/SettingsV2Manager.js', 'utf8');
+        const batchFloatSrc = fs.readFileSync('src/player/ui/BatchTestFloatModal.js', 'utf8');
+        const surfaceSrc = fs.readFileSync('src/player/state/UISurfaceMachine.js', 'utf8');
+        assert.ok(settingsV2Src.includes('UISurfaceMachine.bindOverlayGuard(panelEl'), 'SettingsV2 必须绑定防穿透事件黑洞守卫');
+        assert.ok(batchFloatSrc.includes('UISurfaceMachine.bindOverlayGuard(root'), 'BatchTestFloatModal 必须绑定防穿透守卫');
+        assert.ok(surfaceSrc.includes('videoWrapper.inert = hasAny'), '激活弹窗或设置时必须物理锁定底层视频 wrapper.inert');
+    });
 });
