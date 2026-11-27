@@ -33,7 +33,7 @@ import {
     enrichCuesWithTracks,
     formatCueForDisplayMode
 } from './SubtitleLanguageDetector.js';
-import { scoreSubtitleQuality, selectBestQualityCandidate } from './SubtitleQualityScorer.js';
+import { scoreSubtitleQuality, selectBestQualityCandidate, computeTrackContentFingerprint } from './SubtitleQualityScorer.js';
 import {
     analyzeSubtitlePlot,
     buildHighlightedCueFragment,
@@ -416,6 +416,7 @@ export class SubtitleManager {
         this.onlineResults = [];
         this._plotAnalysis = null;
         this._aiChapters = [];
+        this._altTrackForLlm = null;
         this._lyricsOnlyHighlights = false;
         this.bundle = { code: next, activeId: '', favoriteId: '', items: [], updatedAt: 0 };
         this._setOverlayText('');
@@ -1614,9 +1615,12 @@ export class SubtitleManager {
         if (this.lyricsAiRefreshBtn) this.lyricsAiRefreshBtn.disabled = true;
         try {
             const metadata = await AvMetadataService.getMetadata(this.avcode).catch(() => null);
+            const altTrack = this.getAltTrackForLlm();
             const res = await analyzeSubtitleChaptersWithLlm({
                 avcode: this.avcode,
                 cues: this.cues,
+                altCues: altTrack?.cues || null,
+                altTitle: altTrack?.title || '',
                 title: this.activeItem?.title || '',
                 metadata,
                 forceRefresh
@@ -2010,12 +2014,28 @@ export class SubtitleManager {
         return run;
     }
 
+    /** 若当前主字幕含机翻或 Whisper 噪声且存在第二条不同内容候选轨，向 AI 暴露交叉参考副轨 */
+    getAltTrackForLlm() {
+        const alt = this._altTrackForLlm;
+        if (!alt?.cues?.length) return null;
+        const primaryQuality = this.activeItem?.quality || null;
+        const primaryNoisy = Boolean(
+            this.activeItem?.machineTranslated ||
+            (primaryQuality && (primaryQuality.sqi < 85 || primaryQuality.reasons?.length > 0))
+        );
+        return primaryNoisy ? alt : null;
+    }
+
     _hasSavedFavorite() {
         const items = this.bundle.items || [];
-        if (this.bundle.favoriteId && items.some((item) => item.id === this.bundle.favoriteId)) {
-            return true;
+        if (items.some((item) => isManualFavoriteSubtitle(item))) return true;
+        if (this.bundle.favoriteId) {
+            const favItem = items.find((item) => item.id === this.bundle.favoriteId);
+            if (favItem && (!favItem.autoSaved || (favItem.quality?.sqi ?? 100) >= 75)) {
+                return true;
+            }
         }
-        return items.some((item) => Boolean(item.favorite));
+        return items.some((item) => Boolean(item.favorite) && (!item.autoSaved || (item.quality?.sqi ?? 100) >= 75));
     }
 
     _maybeAutoPickPreferred(options = {}) {
@@ -2070,65 +2090,78 @@ export class SubtitleManager {
         if (!ranked.length) return false;
 
         const pickStartedAt = Date.now();
-        const MAX_EVAL = 3;
+        const MAX_EVAL = 5;
+        const candidatesToFetch = ranked.slice(0, MAX_EVAL);
         const evaluated = [];
-        let earlyBreak = false;
+        const seenFingerprints = new Set();
 
-        for (const candidate of ranked) {
+        const fetchOne = async (candidate) => {
             if (this.avcode !== targetCode || !this.settings.subtitleAutoBest || this._hasSavedFavorite()) {
-                return false;
+                return null;
             }
             const stored = this._findItem(candidate.id);
             const rawItem = stored
                 ? { ...(await this._ensureContent(stored)) }
                 : await this._downloadCandidate(candidate, { silent: true });
-
-            if (this.avcode !== targetCode) return false;
+            if (this.avcode !== targetCode) return null;
             if (!rawItem?.content) {
                 this._autoFailedIds.add(candidate.id);
-                continue;
+                return null;
             }
             const rawParsed = parseSubtitles(rawItem.content, rawItem.format || '');
             if (!rawParsed?.cues?.length) {
                 this._autoFailedIds.add(candidate.id);
-                continue;
+                return null;
             }
-
             const { langInfo, quality } = this._inspectTrackMetadata(rawItem, rawParsed);
             if (usingAmbiguousProbe) {
-                const actualLang = normalizeSubtitleLang(langInfo?.lang || rawItem.lang);
+                const actualLang = normalizeSubtitleLang(langInfo?.detectedLang || langInfo?.lang || rawItem.lang);
                 const matchesZh = actualLang === 'zh' || actualLang === 'zh-TW' || langInfo?.trackLayout === 'bilingual';
                 if (!matchesZh) {
                     this._autoFailedIds.add(candidate.id);
-                    continue;
+                    return null;
                 }
             }
-            evaluated.push({ candidate, item: rawItem, parsed: rawParsed, langInfo, quality });
-            if (!rawItem.machineTranslated && !langInfo?.isCorrupted && (quality?.sqi || 0) >= 82) {
-                earlyBreak = true;
-                break;
-            }
-            if (evaluated.length >= MAX_EVAL) break;
+            return { candidate, item: rawItem, parsed: rawParsed, langInfo, quality };
+        };
+
+        const settled = await Promise.allSettled(candidatesToFetch.map((c) => fetchOne(c)));
+        if (this.avcode !== targetCode || !this.settings.subtitleAutoBest || this._hasSavedFavorite()) {
+            return false;
+        }
+        for (const r of settled) {
+            if (r.status !== 'fulfilled' || !r.value) continue;
+            const fp = computeTrackContentFingerprint(r.value.parsed.cues);
+            if (seenFingerprints.has(fp)) continue;
+            seenFingerprints.add(fp);
+            evaluated.push(r.value);
         }
 
         const picked = selectBestQualityCandidate(evaluated) || evaluated[0] || null;
+        const altEntry = evaluated.find((ev) => ev !== picked && (ev.quality?.grade !== 'broken')) || null;
+        this._altTrackForLlm = altEntry
+            ? { id: altEntry.item?.id || '', title: altEntry.item?.title || '', sqi: altEntry.quality?.sqi ?? 0, cues: altEntry.parsed.cues }
+            : null;
+
         if (AiDebugLogger.isEnabled()) {
             AiDebugLogger.recordSubtitleState(targetCode, 'autoPick', {
                 durationMs: Date.now() - pickStartedAt,
                 preferredLang,
                 usingAmbiguousProbe,
                 rankedCount: ranked.length,
-                earlyBreak,
+                earlyBreak: false,
                 pickedOk: Boolean(picked),
+                altTrackId: this._altTrackForLlm?.id || '',
                 evaluated: evaluated.map((ev) => ({
                     id: ev.item?.id || ev.candidate?.id || '',
                     source: ev.item?.source || '',
                     declaredLang: ev.candidate?.lang || '',
-                    detectedLang: ev.langInfo?.lang || '',
+                    detectedLang: ev.langInfo?.detectedLang || ev.langInfo?.lang || '',
                     machineTranslated: Boolean(ev.item?.machineTranslated),
                     mtDirection: ev.langInfo?.mtDirection || ev.item?.mtDirection || '',
                     isCorrupted: Boolean(ev.langInfo?.isCorrupted),
                     sqi: ev.quality?.sqi ?? null,
+                    reasons: ev.quality?.reasons || [],
                     cueCount: ev.parsed?.cues?.length ?? 0
                 })),
                 chosenId: picked?.item?.id || ''

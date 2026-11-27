@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.009
+// @version            5.7.124-beta.010
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.009";
+		return "5.7.124-beta.010";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4771,7 +4771,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.009";
+		return "5.7.124-beta.010";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6914,7 +6914,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.009";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.010";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -13507,13 +13507,15 @@
 		}
 		return nodes;
 	}
-	var AI_PROMPT_VERSION = "v3.2";
+	var AI_PROMPT_VERSION = "v3.3";
 	function buildVersionedTaskHash(taskType, payloadStr) {
 		const model = LlmService.getConfig().model || "";
 		return LlmCache.hashContent(`${AI_PROMPT_VERSION}|${model}|${taskType}|${payloadStr}`);
 	}
 	var MOAN_FILLER_RE = /^[啊嗯哦哈呜唔呀呐噢唉呀啊哈\.…!！?？\s~～、，,]+$/;
 	var LOW_INFO_PLEA_RE = /^(?:[嗯啊哦哈呜唔呀呐嘿呃喂]+|[不别停等算]+(?:了吧|了|啊|呀|哦)?|等等|停下来|不要|别碰我|好舒服|我做不到|对不起|没关系|是的|我知道了)[,，.。!！?？\s…~～]*$/;
+	var WHISPER_NOISE_LINE_RE = /谢谢观看|感谢(?:您|大家)?的?(?:观看|收看|收听|支持)|请订阅|欢迎订阅|优优独播|WhisperJAV|字幕由/i;
+	var WHISPER_GREETING_TOKEN_RE = /(?:你好|谢谢|非常感谢|你太棒了|干得好|女士[，,]?\s*你好吗|我很好|Chico|奇科)/g;
 	var ALL_SEMANTIC_TAGS = SEMANTIC_TAG_TAXONOMY.flatMap((group) => Array.isArray(group?.tags) ? group.tags : []);
 	var ALLOWED_TAG_SET = new Set(ALL_SEMANTIC_TAGS);
 	function formatMmSs(totalSeconds) {
@@ -13578,7 +13580,7 @@
 		const deduped = [];
 		for (const cue of cues) {
 			const text = normalizeInlineText(cue?.primaryText || cue?.text || "");
-			if (!text) continue;
+			if (!text || WHISPER_NOISE_LINE_RE.test(text)) continue;
 			const start = Math.max(0, Number(cue?.start) || 0);
 			const rawEnd = Number(cue?.end);
 			const end = Number.isFinite(rawEnd) && rawEnd >= start ? rawEnd : start;
@@ -13648,8 +13650,10 @@
 		const scored = merged.map((item, idx) => {
 			const isMoan = MOAN_FILLER_RE.test(item.text) && item.text.length <= 10;
 			const isLowPlea = LOW_INFO_PLEA_RE.test(item.text) && item.text.length <= 16;
+			const greetingHits = (item.text.match(WHISPER_GREETING_TOKEN_RE) || []).length;
 			let density = 1;
 			if (isMoan) density = .05;
+			else if (greetingHits >= 2) density = .08;
 			else if (isLowPlea) density = .12;
 			else {
 				if (isNearHighlight(item.start)) density += 3;
@@ -13730,7 +13734,7 @@
 		};
 		return { hit: false };
 	}
-	async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = "", metadata = null, forceRefresh = false } = {}) {
+	async function analyzeSubtitleChaptersWithLlm({ avcode, cues, altCues = null, altTitle = "", title = "", metadata = null, forceRefresh = false } = {}) {
 		const startedAt = Date.now();
 		const { text: compressed, lineSeconds } = selectCompressedEntries(cues, {
 			maxChars: 13e3,
@@ -13741,6 +13745,10 @@
 			refused: false,
 			error: "无可用字幕内容"
 		};
+		const altCompressed = Array.isArray(altCues) && altCues.length > 0 ? selectCompressedEntries(altCues, {
+			maxChars: 2200,
+			indexed: false
+		}).text : "";
 		const { metaText, safeCode, contentHash } = buildSubtitleChapterPayload(avcode, compressed, metadata);
 		const maxCueEnd = (Array.isArray(cues) ? cues : []).reduce((max, cue) => {
 			const s = Number(cue?.start) || 0;
@@ -13790,7 +13798,8 @@
 			role: "system",
 			content: [
 				"你是一位严谨的影视剧作时间轴标注编辑。每条台词均已标注行号与精确秒数 `[L行号|t=秒数s|时分秒]`。",
-				"请严格基于真实出现的台词内容梳理场景切换与剧情转折，严禁凭空捏造台词中不存在的剧情或凑整百秒数！仅返回严格合法 JSON，禁止 Markdown 围栏：",
+				"核心原则（台词≠画面，禁止脑补）：1) 将夸张比喻/欲求台词（如“顶到子宫/好像想要插入/要射了/全吞了/无法吞咽”）如实理解为言语或感受，严禁将其断言为实际发生了双穴、吞精、灌精等未实锤画面；2) 若字幕出现成串“你好/谢谢/你太棒了/Chico”等语音识别误听噪声，或与副字幕明显矛盾，忽略该噪声切勿编造情节。",
+				"请严格基于真实对话梳理场景与剧情节点，仅返回严格合法 JSON，禁止 Markdown 围栏：",
 				"{ \"summary\": \"20字内剧情概览\", \"chapters\": [{ \"line\": 12, \"seconds\": 123, \"tag\": \"2-4字标签\", \"headline\": \"16字内该处真实剧情\" }] }",
 				"要求：chapters 返回 3 至 8 个按时间升序排列的真实场景节点，必须准确填写引用台词的行号 `line`（即 [L数字|...] 中的数字）及对应 `seconds`。"
 			].join("\n")
@@ -13801,7 +13810,8 @@
 				metaText || (safeTitle ? `作品标题: ${safeTitle}` : ""),
 				maxCueEnd > 0 ? `台词最大时间: ${Math.round(maxCueEnd)} 秒 (${formatMmSs(maxCueEnd)})` : "",
 				"台词时间轴:",
-				compressed
+				compressed,
+				altCompressed ? `副字幕交叉参考(${normalizeInlineText(altTitle).slice(0, 40) || "备选轨"}):\n${altCompressed}` : ""
 			].filter(Boolean).join("\n")
 		}];
 		try {
@@ -14505,7 +14515,7 @@
 		};
 		return { hit: false };
 	}
-	async function buildHighlightGraphWithLlm({ avcode, cues = [], comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null, forceRefresh = false } = {}) {
+	async function buildHighlightGraphWithLlm({ avcode, cues = [], altCues = null, altTitle = "", comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null, forceRefresh = false } = {}) {
 		const startedAt = Date.now();
 		const built = buildFusionInputs({
 			cues,
@@ -14515,6 +14525,10 @@
 			vibeTags,
 			metadata
 		});
+		const altCompressed = Array.isArray(altCues) && altCues.length > 0 ? selectCompressedEntries(altCues, {
+			maxChars: 2e3,
+			indexed: false
+		}).text : "";
 		if (!built.compressedSub && built.topComments.length === 0 && !built.crowdSig) return {
 			ok: false,
 			refused: false,
@@ -14571,8 +14585,9 @@
 		const messages = [{
 			role: "system",
 			content: [
-				"你是影片多模态高光分析引擎。请结合作品元数据、社区回放波峰、字幕对白（如有 `[L行号|t=秒数s|时分秒]`）与观众评论 `[C编号]` 输出融合高光图谱：",
+				"你是客观克制的影片多模态高光分析引擎。请结合元数据、回放波峰、字幕对白（如有 `[L行号|t=秒数s|时分秒]`）与评论 `[C编号]` 输出融合高光图谱：",
 				!hasSub && !hasCrowd ? "当前无字幕且无热度波峰，缺乏全片时间定位依据：`highlights` 严禁引用 \"sub\" 或凭记忆编造，只能提取评论已出现 `[t=...s]` 的时刻（无则返回空数组 `[]`）；`commentTags` 的 `inferredSeconds` 一律填 null！" : !hasSub ? "当前无字幕对白，严禁使用 `\"sub\"` 来源或输出 `\"subLine\"`，仅可结合评论 `[t=...s]` 与热度波峰定位！" : "所有时间点必须直接复用字幕 `t=...s`（或 `subLine`）、波峰 `t=...s` 或评论 `[t=...s]`，严禁心算或编造不存在的时间！",
+				"反幻觉硬约束（台词≠画面）：1) 将“好像也想要无套/要射了/顶到子宫/整根吞/无法吞咽”区分开——欲望试探、夸张比喻或否定词（无法吞咽≠极限吞咽，“要射了”常为口头刺激）严禁脑补成已发生的双穴插入、深喉灌精或吞精；2) 禁止把片名标签或评论里的许愿/抱怨（如“希望喉射”“没看见吞精”）强行嫁接到无关时间点，未明确证实具体体位或射精去向时必须保守概括（如“深度刺激/张力高潮”）；3) 若字幕出现成串“你好/谢谢/你太棒了/Chico/奇科”等语音误听噪声，切勿误判为口交，可参考副字幕核对。",
 				"字段输出顺序与上限：",
 				"1. brief: 1句话看点/避坑/共识总结；",
 				"2. highlights: 最多 6 个核心高能片段（不重复同一时刻，若无可返回 `[]`）；",
@@ -14590,6 +14605,7 @@
 				vibePromptText,
 				`社区回放波峰: ${crowdPromptText}`,
 				built.compressedSub ? `字幕对白:\n${built.compressedSub}` : "字幕对白: (暂无字幕)",
+				altCompressed ? `副字幕交叉参考(${normalizeInlineText(altTitle).slice(0, 40) || "备选轨"}):\n${altCompressed}` : "",
 				built.commentLines.length > 0 ? `观众评论:\n${built.commentLines.join("\n")}` : "观众评论: (暂无评论)"
 			].filter(Boolean).join("\n\n")
 		}];
@@ -21549,9 +21565,11 @@
 				site.status = site.comments.length === 0 ? "empty" : "loaded";
 				site.currentPage = Math.max(site.currentPage || 1, page);
 				CommentCacheManager.saveSiteCache(this.videoCode, siteKey, site);
-				if (CrazyScraper.isEnabled() && site.hasMore && page < 20) setTimeout(() => {
-					if (this.videoCode === this.currentVideoCode || !this.currentVideoCode) this.loadSiteComments(siteKey, page + 1);
-				}, 1e3 + Math.random() * 600);
+				const isCrazy = CrazyScraper.isEnabled();
+				const autoPageCap = isCrazy ? 20 : siteKey === "javdb" || siteKey === "jable" ? 3 : 1;
+				if (site.hasMore && page < autoPageCap) setTimeout(() => {
+					if (this.videoCode === requestVideoCode && !site.collectedPages?.has(page + 1) && !site.loading) this.loadSiteComments(siteKey, page + 1);
+				}, isCrazy ? 1e3 + Math.random() * 600 : 350);
 			} catch (err) {
 				logger.warn(`[CommentPanel] 获取 ${site.name} 评论失败:`, err);
 				if (Array.isArray(site.comments) && site.comments.length > 0) {
@@ -22875,8 +22893,11 @@
 			const heatmapMgr = this.controlManager?.heatmapManager || this.playerCore?.heatmapManager || null;
 			const dur = this.targetVideo ? getVideoDurationSeconds(this.targetVideo) : 0;
 			const cfg = LlmService.getConfig();
+			const altTrack = subMgr?.getAltTrackForLlm?.() || null;
 			return {
 				cues: Array.isArray(subMgr?.cues) ? subMgr.cues : [],
+				altCues: Array.isArray(altTrack?.cues) ? altTrack.cues : null,
+				altTitle: altTrack?.title || "",
 				crowdPeaks: heatmapMgr?.getCrowdPeaks?.(6) || [],
 				videoDuration: dur || 0,
 				vibeTags: Array.isArray(cfg?.vibeTags) ? cfg.vibeTags : [],
@@ -22931,7 +22952,8 @@
 		async _waitForContextsReady() {
 			const waitStartedAt = Date.now();
 			const subMgr = this.controlManager?.subtitleManager || this.playerCore?.controlManager?.subtitleManager || null;
-			const anySiteLoading = this.getEnabledCommentSources().map((s) => s.key).some((k) => this.sites[k]?.status === "loading");
+			const enabledKeys = this.getEnabledCommentSources().map((s) => s.key);
+			const anySiteLoading = enabledKeys.some((k) => this.sites[k]?.status === "loading");
 			const waitedInitialComments = Boolean(this._initialCommentsPromise || anySiteLoading);
 			const waitedSubSearch = Boolean(subMgr?._searchPromise || subMgr?._searching);
 			const beforeCount = this._collectAllLoadedComments().length;
@@ -22946,12 +22968,15 @@
 			const waitedSubAutoPick = Boolean(waitedSubSearch || subMgr?._autoPickPromise);
 			if (subMgr?._autoPickPromise) await Promise.race([subMgr._autoPickPromise, new Promise((r) => setTimeout(r, 3500))]);
 			const curComments = this._collectAllLoadedComments();
-			const activeSite = this.sites[this.activeCommentSource];
-			let backfillTriggered = false;
-			if (curComments.length < 15 && activeSite && activeSite.hasMore && !activeSite.loading && (activeSite.currentPage || 1) === 1) {
-				backfillTriggered = true;
-				await Promise.race([this.loadSiteComments(this.activeCommentSource, 2).catch(() => {}), new Promise((r) => setTimeout(r, 3e3))]);
+			const pendingPages = [];
+			for (const key of enabledKeys) {
+				const st = this.sites[key];
+				if (!st || !st.hasMore) continue;
+				const curPage = Number(st.currentPage) || 1;
+				if (curPage < (key === "javdb" || key === "jable" ? 3 : 2) && !st.loading && !st.collectedPages?.has(curPage + 1)) pendingPages.push(this.loadSiteComments(key, curPage + 1).catch(() => {}));
 			}
+			let backfillTriggered = pendingPages.length > 0;
+			if (backfillTriggered) await Promise.race([Promise.allSettled(pendingPages), new Promise((r) => setTimeout(r, 3800))]);
 			if (this.videoCode && AiDebugLogger.isEnabled()) {
 				const afterComments = this._collectAllLoadedComments();
 				AiDebugLogger.recordCommentsState(this.videoCode, "waitGate", {
@@ -23022,6 +23047,8 @@
 					const fusionRes = await buildHighlightGraphWithLlm({
 						avcode: this.videoCode || "",
 						cues: ctx.cues,
+						altCues: ctx.altCues,
+						altTitle: ctx.altTitle,
 						comments,
 						crowdPeaks: ctx.crowdPeaks,
 						videoDuration: ctx.videoDuration,
@@ -33973,7 +34000,8 @@
 			text: primaryBase
 		};
 	}
-	var WHISPER_HALLUCINATION_RE = /谢谢观看|请订阅|感谢您的收听|感谢收看|优优独播|WhisperJAV|字幕由/i;
+	var WHISPER_HALLUCINATION_RE = /谢谢观看|感谢(?:您|大家)?的?(?:观看|收看|收听|支持)|请订阅|欢迎订阅|请点赞|优优独播|WhisperJAV|字幕由/i;
+	var WHISPER_POLITE_NOISE_RE = /(?:^|[\s，,。.!！?？])(?:你好|谢谢|非常感谢|不客气|早上好|晚上好|你太棒了|干得好|女士[，,]?\s*你好吗|我很好|很高兴见到你|我来开门)(?:$|[\s，,。.!！?？])|\bChico\b|奇科/gi;
 	var SANITIZED_MT_RE = /努力工作|这是正确的|感觉真好|非常深|你可以吃它|我明白了|你做得很好|这是一只鸭子|停止努力工作|我觉得很好|对不起[，,]\s*我|请住手/;
 	function normalizeCueText(raw) {
 		return String(raw || "").trim().replace(/\s+/g, " ");
@@ -34049,6 +34077,7 @@
 		let currentRun = 0;
 		let maxRun = 0;
 		let hallucinationHits = 0;
+		let politeNoiseHits = 0;
 		let mtHits = 0;
 		for (const cue of cues) {
 			const norm = normalizeCueText(cue?.text);
@@ -34061,6 +34090,11 @@
 			if (currentRun > maxRun) maxRun = currentRun;
 			const simplified = norm ? convertChineseText(norm, "zh") : "";
 			if (WHISPER_HALLUCINATION_RE.test(norm) || simplified && WHISPER_HALLUCINATION_RE.test(simplified)) hallucinationHits += 1;
+			const checkTarget = simplified || norm;
+			if (checkTarget) {
+				const matches = checkTarget.match(WHISPER_POLITE_NOISE_RE);
+				if (matches && matches.length > 0) politeNoiseHits += matches.length;
+			}
 			if (SANITIZED_MT_RE.test(norm) || simplified && SANITIZED_MT_RE.test(simplified)) mtHits += 1;
 		}
 		const dupRate = 1 - uniqueTexts.size / cueCount;
@@ -34088,9 +34122,13 @@
 				sqi -= 15;
 				reasons.push("consecutive_repetition");
 			}
-			if (hallucinationHits >= 3) {
+			if (hallucinationHits >= 2) {
 				sqi -= 15;
 				reasons.push("whisper_hallucination");
+			}
+			if (politeNoiseHits >= 6 || politeNoiseHits / cueCount >= .03) {
+				sqi -= Math.min(34, politeNoiseHits * 2 + 12);
+				reasons.push("whisper_polite_noise");
 			}
 			if (mtHits >= 6 || mtRate >= .015) {
 				sqi -= Math.min(35, mtHits * 2 + 12);
@@ -34110,9 +34148,46 @@
 				dupRate,
 				maxRun,
 				mtRate,
-				hallucinationHits
+				hallucinationHits,
+				politeNoiseHits
 			}
 		};
+	}
+	function computeTrackContentFingerprint(cues) {
+		if (!Array.isArray(cues) || cues.length === 0) return "empty";
+		const sampleSize = Math.min(12, cues.length);
+		const parts = [];
+		for (let i = 0; i < sampleSize; i++) {
+			const c = cues[sampleSize === 1 ? 0 : Math.round(i * (cues.length - 1) / (sampleSize - 1))];
+			parts.push(`${Math.round(Number(c?.start) || 0)}:${normalizeCueText(c?.text).slice(0, 24)}`);
+		}
+		return `${cues.length}|${parts.join("|")}`;
+	}
+	function measureTimeOverlapRatio(cuesA, cuesB) {
+		if (!Array.isArray(cuesA) || !Array.isArray(cuesB) || !cuesA.length || !cuesB.length) return 0;
+		const bStarts = cuesB.map((c) => Number(c?.start) || 0).sort((a, b) => a - b);
+		const step = Math.max(1, Math.floor(cuesA.length / 40));
+		let sampled = 0;
+		let matched = 0;
+		for (let i = 0; i < cuesA.length && sampled < 40; i += step) {
+			sampled += 1;
+			const t = Number(cuesA[i]?.start) || 0;
+			let lo = 0;
+			let hi = bStarts.length - 1;
+			let ok = false;
+			while (lo <= hi) {
+				const mid = lo + hi >> 1;
+				const diff = bStarts[mid] - t;
+				if (Math.abs(diff) <= 5) {
+					ok = true;
+					break;
+				}
+				if (diff < 0) lo = mid + 1;
+				else hi = mid - 1;
+			}
+			if (ok) matched += 1;
+		}
+		return sampled > 0 ? matched / sampled : 0;
 	}
 	function selectBestQualityCandidate(evaluatedList) {
 		if (!Array.isArray(evaluatedList) || evaluatedList.length === 0) return null;
@@ -34120,16 +34195,29 @@
 		if (valid.length === 0) return null;
 		const nonBroken = valid.filter((entry) => entry.quality?.grade !== "broken");
 		const pool = nonBroken.length > 0 ? nonBroken : valid;
-		const scoreEntry = (entry) => {
-			const base = Number(entry?.quality?.sqi) || 0;
-			if (!entry?.item?.machineTranslated) return base + 4;
-			if (entry?.item?.originLang === "en") return base - 10;
-			return base;
+		const peerMaxCues = pool.reduce((m, e) => Math.max(m, e.parsed.cues.length), 0);
+		const scoreEntry = (entry, selfIdx) => {
+			let score = Number(entry?.quality?.sqi) || 0;
+			if (!entry?.item?.machineTranslated) score += 8;
+			else if (entry?.item?.originLang === "en") score -= 14;
+			const cues = entry.parsed.cues;
+			if (peerMaxCues >= 300 && cues.length < peerMaxCues * .45) score -= 22;
+			if (pool.length >= 2) {
+				let bestOverlap = 0;
+				for (let j = 0; j < pool.length; j++) {
+					if (j === selfIdx) continue;
+					const ratio = measureTimeOverlapRatio(cues, pool[j].parsed.cues);
+					if (ratio > bestOverlap) bestOverlap = ratio;
+				}
+				if (bestOverlap >= .35) score += 6;
+				else if (pool.length >= 3 && bestOverlap < .1) score -= 10;
+			}
+			return score;
 		};
 		return pool.map((entry, idx) => ({
 			entry,
 			idx,
-			effective: scoreEntry(entry)
+			effective: scoreEntry(entry, idx)
 		})).sort((a, b) => {
 			const diff = b.effective - a.effective;
 			return diff !== 0 ? diff : a.idx - b.idx;
@@ -35079,6 +35167,7 @@
 			this.onlineResults = [];
 			this._plotAnalysis = null;
 			this._aiChapters = [];
+			this._altTrackForLlm = null;
 			this._lyricsOnlyHighlights = false;
 			this.bundle = {
 				code: next,
@@ -36050,9 +36139,12 @@
 			if (this.lyricsAiRefreshBtn) this.lyricsAiRefreshBtn.disabled = true;
 			try {
 				const metadata = await AvMetadataService.getMetadata(this.avcode).catch(() => null);
+				const altTrack = this.getAltTrackForLlm();
 				const res = await analyzeSubtitleChaptersWithLlm({
 					avcode: this.avcode,
 					cues: this.cues,
+					altCues: altTrack?.cues || null,
+					altTitle: altTrack?.title || "",
 					title: this.activeItem?.title || "",
 					metadata,
 					forceRefresh
@@ -36361,10 +36453,20 @@
 			this._searchPromise = run;
 			return run;
 		}
+		getAltTrackForLlm() {
+			const alt = this._altTrackForLlm;
+			if (!alt?.cues?.length) return null;
+			const primaryQuality = this.activeItem?.quality || null;
+			return Boolean(this.activeItem?.machineTranslated || primaryQuality && (primaryQuality.sqi < 85 || primaryQuality.reasons?.length > 0)) ? alt : null;
+		}
 		_hasSavedFavorite() {
 			const items = this.bundle.items || [];
-			if (this.bundle.favoriteId && items.some((item) => item.id === this.bundle.favoriteId)) return true;
-			return items.some((item) => Boolean(item.favorite));
+			if (items.some((item) => isManualFavoriteSubtitle(item))) return true;
+			if (this.bundle.favoriteId) {
+				const favItem = items.find((item) => item.id === this.bundle.favoriteId);
+				if (favItem && (!favItem.autoSaved || (favItem.quality?.sqi ?? 100) >= 75)) return true;
+			}
+			return items.some((item) => Boolean(item.favorite) && (!item.autoSaved || (item.quality?.sqi ?? 100) >= 75));
 		}
 		_maybeAutoPickPreferred(options = {}) {
 			if (this._autoPickPromise) return this._autoPickPromise;
@@ -36407,61 +36509,74 @@
 			}
 			if (!ranked.length) return false;
 			const pickStartedAt = Date.now();
-			const MAX_EVAL = 3;
+			const candidatesToFetch = ranked.slice(0, 5);
 			const evaluated = [];
-			let earlyBreak = false;
-			for (const candidate of ranked) {
-				if (this.avcode !== targetCode || !this.settings.subtitleAutoBest || this._hasSavedFavorite()) return false;
+			const seenFingerprints = new Set();
+			const fetchOne = async (candidate) => {
+				if (this.avcode !== targetCode || !this.settings.subtitleAutoBest || this._hasSavedFavorite()) return null;
 				const stored = this._findItem(candidate.id);
 				const rawItem = stored ? { ...await this._ensureContent(stored) } : await this._downloadCandidate(candidate, { silent: true });
-				if (this.avcode !== targetCode) return false;
+				if (this.avcode !== targetCode) return null;
 				if (!rawItem?.content) {
 					this._autoFailedIds.add(candidate.id);
-					continue;
+					return null;
 				}
 				const rawParsed = parseSubtitles(rawItem.content, rawItem.format || "");
 				if (!rawParsed?.cues?.length) {
 					this._autoFailedIds.add(candidate.id);
-					continue;
+					return null;
 				}
 				const { langInfo, quality } = this._inspectTrackMetadata(rawItem, rawParsed);
 				if (usingAmbiguousProbe) {
-					const actualLang = normalizeSubtitleLang(langInfo?.lang || rawItem.lang);
+					const actualLang = normalizeSubtitleLang(langInfo?.detectedLang || langInfo?.lang || rawItem.lang);
 					if (!(actualLang === "zh" || actualLang === "zh-TW" || langInfo?.trackLayout === "bilingual")) {
 						this._autoFailedIds.add(candidate.id);
-						continue;
+						return null;
 					}
 				}
-				evaluated.push({
+				return {
 					candidate,
 					item: rawItem,
 					parsed: rawParsed,
 					langInfo,
 					quality
-				});
-				if (!rawItem.machineTranslated && !langInfo?.isCorrupted && (quality?.sqi || 0) >= 82) {
-					earlyBreak = true;
-					break;
-				}
-				if (evaluated.length >= MAX_EVAL) break;
+				};
+			};
+			const settled = await Promise.allSettled(candidatesToFetch.map((c) => fetchOne(c)));
+			if (this.avcode !== targetCode || !this.settings.subtitleAutoBest || this._hasSavedFavorite()) return false;
+			for (const r of settled) {
+				if (r.status !== "fulfilled" || !r.value) continue;
+				const fp = computeTrackContentFingerprint(r.value.parsed.cues);
+				if (seenFingerprints.has(fp)) continue;
+				seenFingerprints.add(fp);
+				evaluated.push(r.value);
 			}
 			const picked = selectBestQualityCandidate(evaluated) || evaluated[0] || null;
+			const altEntry = evaluated.find((ev) => ev !== picked && ev.quality?.grade !== "broken") || null;
+			this._altTrackForLlm = altEntry ? {
+				id: altEntry.item?.id || "",
+				title: altEntry.item?.title || "",
+				sqi: altEntry.quality?.sqi ?? 0,
+				cues: altEntry.parsed.cues
+			} : null;
 			if (AiDebugLogger.isEnabled()) AiDebugLogger.recordSubtitleState(targetCode, "autoPick", {
 				durationMs: Date.now() - pickStartedAt,
 				preferredLang,
 				usingAmbiguousProbe,
 				rankedCount: ranked.length,
-				earlyBreak,
+				earlyBreak: false,
 				pickedOk: Boolean(picked),
+				altTrackId: this._altTrackForLlm?.id || "",
 				evaluated: evaluated.map((ev) => ({
 					id: ev.item?.id || ev.candidate?.id || "",
 					source: ev.item?.source || "",
 					declaredLang: ev.candidate?.lang || "",
-					detectedLang: ev.langInfo?.lang || "",
+					detectedLang: ev.langInfo?.detectedLang || ev.langInfo?.lang || "",
 					machineTranslated: Boolean(ev.item?.machineTranslated),
 					mtDirection: ev.langInfo?.mtDirection || ev.item?.mtDirection || "",
 					isCorrupted: Boolean(ev.langInfo?.isCorrupted),
 					sqi: ev.quality?.sqi ?? null,
+					reasons: ev.quality?.reasons || [],
 					cueCount: ev.parsed?.cues?.length ?? 0
 				})),
 				chosenId: picked?.item?.id || ""

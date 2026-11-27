@@ -1444,14 +1444,15 @@ export class CommentPanel {
             // 同步保存至本地增量评论缓存
             CommentCacheManager.saveSiteCache(this.videoCode, siteKey, site);
 
-            // 疯狂采集模式：普通评论采集也自动采集更多页，直到结束 (全量采集)
+            // 疯狂采集至多20页；常规模式对 JavDB/Jable 自动补齐前3页，消除 "18+" 截断并补全 AI 分析评论库
             const isCrazy = CrazyScraper.isEnabled();
-            if (isCrazy && site.hasMore && page < 20) {
+            const autoPageCap = isCrazy ? 20 : ((siteKey === 'javdb' || siteKey === 'jable') ? 3 : 1);
+            if (site.hasMore && page < autoPageCap) {
                 setTimeout(() => {
-                    if (this.videoCode === this.currentVideoCode || !this.currentVideoCode) {
+                    if (this.videoCode === requestVideoCode && !site.collectedPages?.has(page + 1) && !site.loading) {
                         this.loadSiteComments(siteKey, page + 1);
                     }
-                }, 1000 + Math.random() * 600);
+                }, isCrazy ? (1000 + Math.random() * 600) : 350);
             }
 
         } catch (err) {
@@ -3286,8 +3287,11 @@ export class CommentPanel {
         const heatmapMgr = this.controlManager?.heatmapManager || this.playerCore?.heatmapManager || null;
         const dur = this.targetVideo ? getVideoDurationSeconds(this.targetVideo) : 0;
         const cfg = LlmService.getConfig();
+        const altTrack = subMgr?.getAltTrackForLlm?.() || null;
         return {
             cues: Array.isArray(subMgr?.cues) ? subMgr.cues : [],
+            altCues: Array.isArray(altTrack?.cues) ? altTrack.cues : null,
+            altTitle: altTrack?.title || '',
             crowdPeaks: heatmapMgr?.getCrowdPeaks?.(6) || [],
             videoDuration: dur || 0,
             vibeTags: Array.isArray(cfg?.vibeTags) ? cfg.vibeTags : [],
@@ -3400,15 +3404,23 @@ export class CommentPanel {
             ]);
         }
 
-        // 若首轮全部完成但当前总评论不足 15 条且主站点仍有下一页，自动补充拉取第 2 页提升分析覆盖面
+        // 若启用站点仍处于 hasMore 且当前页 < 3，自动补拉后续页面（解决 JavDB 18+ 截断导致 AI 漏掉高赞时间点评论）
         const curComments = this._collectAllLoadedComments();
-        const activeSite = this.sites[this.activeCommentSource];
-        let backfillTriggered = false;
-        if (curComments.length < 15 && activeSite && activeSite.hasMore && !activeSite.loading && (activeSite.currentPage || 1) === 1) {
-            backfillTriggered = true;
+        const pendingPages = [];
+        for (const key of enabledKeys) {
+            const st = this.sites[key];
+            if (!st || !st.hasMore) continue;
+            const curPage = Number(st.currentPage) || 1;
+            const cap = (key === 'javdb' || key === 'jable') ? 3 : 2;
+            if (curPage < cap && !st.loading && !st.collectedPages?.has(curPage + 1)) {
+                pendingPages.push(this.loadSiteComments(key, curPage + 1).catch(() => {}));
+            }
+        }
+        let backfillTriggered = pendingPages.length > 0;
+        if (backfillTriggered) {
             await Promise.race([
-                this.loadSiteComments(this.activeCommentSource, 2).catch(() => {}),
-                new Promise((r) => setTimeout(r, 3000))
+                Promise.allSettled(pendingPages),
+                new Promise((r) => setTimeout(r, 3800))
             ]);
         }
 
@@ -3488,6 +3500,8 @@ export class CommentPanel {
                 const fusionRes = await buildHighlightGraphWithLlm({
                     avcode: this.videoCode || '',
                     cues: ctx.cues,
+                    altCues: ctx.altCues,
+                    altTitle: ctx.altTitle,
                     comments,
                     crowdPeaks: ctx.crowdPeaks,
                     videoDuration: ctx.videoDuration,

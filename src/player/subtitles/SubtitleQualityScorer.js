@@ -10,7 +10,9 @@
 
 import { convertChineseText } from './SubtitleChineseConverter.js';
 
-const WHISPER_HALLUCINATION_RE = /谢谢观看|请订阅|感谢您的收听|感谢收看|优优独播|WhisperJAV|字幕由/i;
+const WHISPER_HALLUCINATION_RE = /谢谢观看|感谢(?:您|大家)?的?(?:观看|收看|收听|支持)|请订阅|欢迎订阅|请点赞|优优独播|WhisperJAV|字幕由/i;
+
+const WHISPER_POLITE_NOISE_RE = /(?:^|[\s，,。.!！?？])(?:你好|谢谢|非常感谢|不客气|早上好|晚上好|你太棒了|干得好|女士[，,]?\s*你好吗|我很好|很高兴见到你|我来开门)(?:$|[\s，,。.!！?？])|\bChico\b|奇科/gi;
 
 const SANITIZED_MT_RE = /努力工作|这是正确的|感觉真好|非常深|你可以吃它|我明白了|你做得很好|这是一只鸭子|停止努力工作|我觉得很好|对不起[，,]\s*我|请住手/;
 
@@ -122,6 +124,7 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
     let currentRun = 0;
     let maxRun = 0;
     let hallucinationHits = 0;
+    let politeNoiseHits = 0;
     let mtHits = 0;
 
     for (const cue of cues) {
@@ -138,6 +141,13 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
         const simplified = norm ? convertChineseText(norm, 'zh') : '';
         if (WHISPER_HALLUCINATION_RE.test(norm) || (simplified && WHISPER_HALLUCINATION_RE.test(simplified))) {
             hallucinationHits += 1;
+        }
+        const checkTarget = simplified || norm;
+        if (checkTarget) {
+            const matches = checkTarget.match(WHISPER_POLITE_NOISE_RE);
+            if (matches && matches.length > 0) {
+                politeNoiseHits += matches.length;
+            }
         }
         if (SANITIZED_MT_RE.test(norm) || (simplified && SANITIZED_MT_RE.test(simplified))) {
             mtHits += 1;
@@ -174,9 +184,14 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
             reasons.push('consecutive_repetition');
         }
 
-        if (hallucinationHits >= 3) {
+        if (hallucinationHits >= 2) {
             sqi -= 15;
             reasons.push('whisper_hallucination');
+        }
+
+        if (politeNoiseHits >= 6 || politeNoiseHits / cueCount >= 0.03) {
+            sqi -= Math.min(34, politeNoiseHits * 2 + 12);
+            reasons.push('whisper_polite_noise');
         }
 
         if (mtHits >= 6 || mtRate >= 0.015) {
@@ -199,13 +214,58 @@ export function scoreSubtitleQuality(cues, { videoDurationSec = 0, langInfo = nu
             dupRate,
             maxRun,
             mtRate,
-            hallucinationHits
+            hallucinationHits,
+            politeNoiseHits
         }
     };
 }
 
 /**
- * 从已完成 SQI 评估的候选字幕列表中择优选择最佳轨道
+ * 生成字幕轨道内容指纹，用于在多源下载时识别同一份字幕的重复哈希副本
+ * @param {Array<{start?:number,text?:string}>} cues
+ * @returns {string}
+ */
+export function computeTrackContentFingerprint(cues) {
+    if (!Array.isArray(cues) || cues.length === 0) return 'empty';
+    const sampleSize = Math.min(12, cues.length);
+    const parts = [];
+    for (let i = 0; i < sampleSize; i++) {
+        const idx = sampleSize === 1 ? 0 : Math.round((i * (cues.length - 1)) / (sampleSize - 1));
+        const c = cues[idx];
+        parts.push(`${Math.round(Number(c?.start) || 0)}:${normalizeCueText(c?.text).slice(0, 24)}`);
+    }
+    return `${cues.length}|${parts.join('|')}`;
+}
+
+function measureTimeOverlapRatio(cuesA, cuesB) {
+    if (!Array.isArray(cuesA) || !Array.isArray(cuesB) || !cuesA.length || !cuesB.length) return 0;
+    const bStarts = cuesB.map((c) => Number(c?.start) || 0).sort((a, b) => a - b);
+    const step = Math.max(1, Math.floor(cuesA.length / 40));
+    let sampled = 0;
+    let matched = 0;
+    for (let i = 0; i < cuesA.length && sampled < 40; i += step) {
+        sampled += 1;
+        const t = Number(cuesA[i]?.start) || 0;
+        let lo = 0;
+        let hi = bStarts.length - 1;
+        let ok = false;
+        while (lo <= hi) {
+            const mid = (lo + hi) >> 1;
+            const diff = bStarts[mid] - t;
+            if (Math.abs(diff) <= 5) {
+                ok = true;
+                break;
+            }
+            if (diff < 0) lo = mid + 1;
+            else hi = mid - 1;
+        }
+        if (ok) matched += 1;
+    }
+    return sampled > 0 ? matched / sampled : 0;
+}
+
+/**
+ * 从已完成 SQI 评估的候选字幕列表中择优选择最佳轨道（支持多轨道稀疏度对比与交叉时间轴共识加权）
  * @param {Array<{candidate?: Object, item?: Object, parsed?: {cues?: Array}, quality?: Object}>} evaluatedList
  * @returns {Object|null}
  */
@@ -222,16 +282,33 @@ export function selectBestQualityCandidate(evaluatedList) {
 
     const nonBroken = valid.filter((entry) => entry.quality?.grade !== 'broken');
     const pool = nonBroken.length > 0 ? nonBroken : valid;
+    const peerMaxCues = pool.reduce((m, e) => Math.max(m, e.parsed.cues.length), 0);
 
-    const scoreEntry = (entry) => {
-        const base = Number(entry?.quality?.sqi) || 0;
-        if (!entry?.item?.machineTranslated) return base + 4;
-        if (entry?.item?.originLang === 'en') return base - 10;
-        return base;
+    const scoreEntry = (entry, selfIdx) => {
+        let score = Number(entry?.quality?.sqi) || 0;
+        if (!entry?.item?.machineTranslated) score += 8;
+        else if (entry?.item?.originLang === 'en') score -= 14;
+
+        const cues = entry.parsed.cues;
+        if (peerMaxCues >= 300 && cues.length < peerMaxCues * 0.45) {
+            score -= 22;
+        }
+
+        if (pool.length >= 2) {
+            let bestOverlap = 0;
+            for (let j = 0; j < pool.length; j++) {
+                if (j === selfIdx) continue;
+                const ratio = measureTimeOverlapRatio(cues, pool[j].parsed.cues);
+                if (ratio > bestOverlap) bestOverlap = ratio;
+            }
+            if (bestOverlap >= 0.35) score += 6;
+            else if (pool.length >= 3 && bestOverlap < 0.1) score -= 10;
+        }
+        return score;
     };
 
     return pool
-        .map((entry, idx) => ({ entry, idx, effective: scoreEntry(entry) }))
+        .map((entry, idx) => ({ entry, idx, effective: scoreEntry(entry, idx) }))
         .sort((a, b) => {
             const diff = b.effective - a.effective;
             return diff !== 0 ? diff : a.idx - b.idx;

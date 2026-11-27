@@ -14,7 +14,7 @@ import { analyzeSubtitlePlot } from '../player/subtitles/SubtitlePlotAnalyzer.js
 import { formatMetadataForLlm } from './AvMetadataService.js';
 import { AiDebugLogger } from './AiDebugLogger.js';
 
-export const AI_PROMPT_VERSION = 'v3.2';
+export const AI_PROMPT_VERSION = 'v3.3';
 
 /**
  * 计算带 Prompt 版本与当前模型 ID 的确定性缓存摘要，保证调优或切换模型后旧缓存自动失效
@@ -29,6 +29,8 @@ export function buildVersionedTaskHash(taskType, payloadStr) {
 
 const MOAN_FILLER_RE = /^[啊嗯哦哈呜唔呀呐噢唉呀啊哈\.…!！?？\s~～、，,]+$/;
 const LOW_INFO_PLEA_RE = /^(?:[嗯啊哦哈呜唔呀呐嘿呃喂]+|[不别停等算]+(?:了吧|了|啊|呀|哦)?|等等|停下来|不要|别碰我|好舒服|我做不到|对不起|没关系|是的|我知道了)[,，.。!！?？\s…~～]*$/;
+const WHISPER_NOISE_LINE_RE = /谢谢观看|感谢(?:您|大家)?的?(?:观看|收看|收听|支持)|请订阅|欢迎订阅|优优独播|WhisperJAV|字幕由/i;
+const WHISPER_GREETING_TOKEN_RE = /(?:你好|谢谢|非常感谢|你太棒了|干得好|女士[，,]?\s*你好吗|我很好|Chico|奇科)/g;
 
 const ALL_SEMANTIC_TAGS = SEMANTIC_TAG_TAXONOMY.flatMap((group) =>
     Array.isArray(group?.tags) ? group.tags : []
@@ -113,7 +115,7 @@ function selectCompressedEntries(cues, { maxChars = 13000, indexed = false } = {
     const deduped = [];
     for (const cue of cues) {
         const text = normalizeInlineText(cue?.primaryText || cue?.text || '');
-        if (!text) continue;
+        if (!text || WHISPER_NOISE_LINE_RE.test(text)) continue;
 
         const start = Math.max(0, Number(cue?.start) || 0);
         const rawEnd = Number(cue?.end);
@@ -185,9 +187,12 @@ function selectCompressedEntries(cues, { maxChars = 13000, indexed = false } = {
     const scored = merged.map((item, idx) => {
         const isMoan = MOAN_FILLER_RE.test(item.text) && item.text.length <= 10;
         const isLowPlea = LOW_INFO_PLEA_RE.test(item.text) && item.text.length <= 16;
+        const greetingHits = (item.text.match(WHISPER_GREETING_TOKEN_RE) || []).length;
         let density = 1;
         if (isMoan) {
             density = 0.05;
+        } else if (greetingHits >= 2) {
+            density = 0.08;
         } else if (isLowPlea) {
             density = 0.12;
         } else {
@@ -293,12 +298,15 @@ export async function getCachedSubtitleChapters({ avcode, cues, metadata = null 
  * @param {{ avcode: string, cues: Array, title?: string, metadata?: Object|null, forceRefresh?: boolean }} params
  * @returns {Promise<{ ok: boolean, fromCache?: boolean, summary?: string, chapters?: Array, refused?: boolean, error?: string }>}
  */
-export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '', metadata = null, forceRefresh = false } = {}) {
+export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, altCues = null, altTitle = '', title = '', metadata = null, forceRefresh = false } = {}) {
     const startedAt = Date.now();
     const { text: compressed, lineSeconds } = selectCompressedEntries(cues, { maxChars: 13000, indexed: true });
     if (!compressed) {
         return { ok: false, refused: false, error: '无可用字幕内容' };
     }
+    const altCompressed = Array.isArray(altCues) && altCues.length > 0
+        ? selectCompressedEntries(altCues, { maxChars: 2200, indexed: false }).text
+        : '';
 
     const { metaText, safeCode, contentHash } = buildSubtitleChapterPayload(avcode, compressed, metadata);
     const maxCueEnd = (Array.isArray(cues) ? cues : []).reduce((max, cue) => {
@@ -346,7 +354,8 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '',
             role: 'system',
             content: [
                 '你是一位严谨的影视剧作时间轴标注编辑。每条台词均已标注行号与精确秒数 `[L行号|t=秒数s|时分秒]`。',
-                '请严格基于真实出现的台词内容梳理场景切换与剧情转折，严禁凭空捏造台词中不存在的剧情或凑整百秒数！仅返回严格合法 JSON，禁止 Markdown 围栏：',
+                '核心原则（台词≠画面，禁止脑补）：1) 将夸张比喻/欲求台词（如“顶到子宫/好像想要插入/要射了/全吞了/无法吞咽”）如实理解为言语或感受，严禁将其断言为实际发生了双穴、吞精、灌精等未实锤画面；2) 若字幕出现成串“你好/谢谢/你太棒了/Chico”等语音识别误听噪声，或与副字幕明显矛盾，忽略该噪声切勿编造情节。',
+                '请严格基于真实对话梳理场景与剧情节点，仅返回严格合法 JSON，禁止 Markdown 围栏：',
                 '{ "summary": "20字内剧情概览", "chapters": [{ "line": 12, "seconds": 123, "tag": "2-4字标签", "headline": "16字内该处真实剧情" }] }',
                 '要求：chapters 返回 3 至 8 个按时间升序排列的真实场景节点，必须准确填写引用台词的行号 `line`（即 [L数字|...] 中的数字）及对应 `seconds`。'
             ].join('\n')
@@ -358,7 +367,8 @@ export async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = '',
                 metaText || (safeTitle ? `作品标题: ${safeTitle}` : ''),
                 maxCueEnd > 0 ? `台词最大时间: ${Math.round(maxCueEnd)} 秒 (${formatMmSs(maxCueEnd)})` : '',
                 '台词时间轴:',
-                compressed
+                compressed,
+                altCompressed ? `副字幕交叉参考(${normalizeInlineText(altTitle).slice(0, 40) || '备选轨'}):\n${altCompressed}` : ''
             ].filter(Boolean).join('\n')
         }
     ];
@@ -1143,6 +1153,8 @@ export async function getCachedHighlightGraph({ avcode, cues = [], comments = []
 export async function buildHighlightGraphWithLlm({
     avcode,
     cues = [],
+    altCues = null,
+    altTitle = '',
     comments = [],
     crowdPeaks = [],
     videoDuration = 0,
@@ -1152,6 +1164,9 @@ export async function buildHighlightGraphWithLlm({
 } = {}) {
     const startedAt = Date.now();
     const built = buildFusionInputs({ cues, comments, crowdPeaks, videoDuration, vibeTags, metadata });
+    const altCompressed = Array.isArray(altCues) && altCues.length > 0
+        ? selectCompressedEntries(altCues, { maxChars: 2000, indexed: false }).text
+        : '';
     if (!built.compressedSub && built.topComments.length === 0 && !built.crowdSig) {
         return { ok: false, refused: false, error: '暂无可用于联合分析的评论、字幕或热度数据' };
     }
@@ -1218,8 +1233,9 @@ export async function buildHighlightGraphWithLlm({
         {
             role: 'system',
             content: [
-                '你是影片多模态高光分析引擎。请结合作品元数据、社区回放波峰、字幕对白（如有 `[L行号|t=秒数s|时分秒]`）与观众评论 `[C编号]` 输出融合高光图谱：',
+                '你是客观克制的影片多模态高光分析引擎。请结合元数据、回放波峰、字幕对白（如有 `[L行号|t=秒数s|时分秒]`）与评论 `[C编号]` 输出融合高光图谱：',
                 groundingRule,
+                '反幻觉硬约束（台词≠画面）：1) 将“好像也想要无套/要射了/顶到子宫/整根吞/无法吞咽”区分开——欲望试探、夸张比喻或否定词（无法吞咽≠极限吞咽，“要射了”常为口头刺激）严禁脑补成已发生的双穴插入、深喉灌精或吞精；2) 禁止把片名标签或评论里的许愿/抱怨（如“希望喉射”“没看见吞精”）强行嫁接到无关时间点，未明确证实具体体位或射精去向时必须保守概括（如“深度刺激/张力高潮”）；3) 若字幕出现成串“你好/谢谢/你太棒了/Chico/奇科”等语音误听噪声，切勿误判为口交，可参考副字幕核对。',
                 '字段输出顺序与上限：',
                 '1. brief: 1句话看点/避坑/共识总结；',
                 '2. highlights: 最多 6 个核心高能片段（不重复同一时刻，若无可返回 `[]`）；',
@@ -1240,6 +1256,7 @@ export async function buildHighlightGraphWithLlm({
                 vibePromptText,
                 `社区回放波峰: ${crowdPromptText}`,
                 built.compressedSub ? `字幕对白:\n${built.compressedSub}` : '字幕对白: (暂无字幕)',
+                altCompressed ? `副字幕交叉参考(${normalizeInlineText(altTitle).slice(0, 40) || '备选轨'}):\n${altCompressed}` : '',
                 built.commentLines.length > 0 ? `观众评论:\n${built.commentLines.join('\n')}` : '观众评论: (暂无评论)'
             ].filter(Boolean).join('\n\n')
         }

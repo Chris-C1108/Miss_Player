@@ -765,4 +765,89 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
             'comment 高光应保留真实 seconds，真 sub 来源仍对齐 L1(4942s)'
         );
     });
+
+    it('penalizes Whisper polite hallucination tracks & sparse MT peers, and passes altCues cross-check to LLM', async () => {
+        const { scoreSubtitleQuality, computeTrackContentFingerprint } = await import('../src/player/subtitles/SubtitleQualityScorer.js');
+
+        // 构造含大量 "你好/谢谢/你太棒了/Chico/感谢您的观看" 的 Whisper 劣质轨 (MIAA-950 实测模式)
+        const whisperBadCues = Array.from({ length: 60 }, (_, idx) => ({
+            start: idx * 100 + 5,
+            end: idx * 100 + 12,
+            text: idx % 3 === 0
+                ? '你好 谢谢 女士，你好吗 我很好 你太棒了 Chico 在等你'
+                : (idx === 16 || idx === 31 ? '感谢您的观看' : `对白段落 ${idx} 今天状态不错`)
+        }));
+        const normalFullCues = Array.from({ length: 180 }, (_, idx) => ({
+            start: idx * 35 + 5,
+            end: idx * 35 + 11,
+            text: `第 ${idx} 段完整对白，老板来到家里谈工作与生活细节`
+        }));
+        const sparseMtCues = Array.from({ length: 45 }, (_, idx) => ({
+            start: idx * 140 + 5,
+            end: idx * 140 + 12,
+            text: `稀疏机翻台词段落 ${idx}`
+        }));
+
+        const badQ = scoreSubtitleQuality(whisperBadCues, { videoDurationSec: 6500 });
+        assert.ok(badQ.reasons.includes('whisper_polite_noise'), '必须识别 Whisper 礼貌语/音译噪声簇');
+        assert.ok(badQ.reasons.includes('whisper_hallucination'), '必须识别 "感谢您的观看" 等幻觉水印');
+        assert.ok(badQ.sqi < 75, `Whisper 幻觉轨应显著降分，实际=${badQ.sqi}`);
+
+        const fullQ = scoreSubtitleQuality(normalFullCues, { videoDurationSec: 6500 });
+        const sparseQ = scoreSubtitleQuality(sparseMtCues, { videoDurationSec: 6500 });
+        const pickedSparseVsFull = selectBestQualityCandidate([
+            { item: { id: 'sparse-mt', machineTranslated: true }, parsed: { cues: sparseMtCues }, quality: sparseQ },
+            { item: { id: 'full-human', machineTranslated: false }, parsed: { cues: normalFullCues }, quality: fullQ }
+        ]);
+        assert.equal(pickedSparseVsFull?.item?.id, 'full-human', '完整非机翻轨应稳胜残缺/稀疏轨');
+        assert.equal(computeTrackContentFingerprint(whisperBadCues), computeTrackContentFingerprint([...whisperBadCues]));
+
+        LlmService.saveConfig({
+            enabled: true,
+            baseUrl: 'https://apihub.agnes-ai.com/v1',
+            model: 'agnes-3.0-flash',
+            apiKey: 'sk-test-alt-cues'
+        });
+        let capturedPrompt = '';
+        gmResponder = (opts) => {
+            const payload = JSON.parse(opts.data || '{}');
+            capturedPrompt = payload.messages?.map((m) => m.content).join('\n') || '';
+            opts.onload({
+                status: 200,
+                finalUrl: opts.url,
+                responseText: JSON.stringify({
+                    choices: [{
+                        message: {
+                            content: JSON.stringify({
+                                brief: { highlights: '克制客观总结', warnings: '无', consensus: '口碑良' },
+                                highlights: [],
+                                skipZones: [],
+                                commentTags: []
+                            })
+                        }
+                    }]
+                })
+            });
+        };
+
+        const fgRes = await buildHighlightGraphWithLlm({
+            avcode: 'MIAA-950',
+            forceRefresh: true,
+            cues: [
+                { start: 100, end: 110, text: '感谢您的观看' },
+                { start: 994, end: 1002, text: '你好 谢谢 你太棒了 Chico' },
+                { start: 2000, end: 2012, text: '老板要求加班并提出无理条件' }
+            ],
+            altCues: [
+                { start: 994, end: 1002, text: '不要碰我，老公还在出差' }
+            ],
+            altTitle: '备选人工轨',
+            comments: [{ id: 'c1', text: '节奏紧凑演技在线' }],
+            videoDuration: 7200
+        });
+        assert.equal(fgRes.ok, true);
+        assert.ok(!capturedPrompt.includes('感谢您的观看'), '压缩时间轴时应剔除 Whisper 水印行');
+        assert.ok(capturedPrompt.includes('副字幕交叉参考'), '存在噪声时应附加副字幕交叉参考文本');
+        assert.ok(capturedPrompt.includes('反幻觉硬约束'), 'Prompt 必须包含反台词物理脑补硬约束');
+    });
 });
