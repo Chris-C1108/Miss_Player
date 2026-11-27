@@ -3357,16 +3357,24 @@ export class CommentPanel {
         const enabledKeys = this.getEnabledCommentSources().map((s) => s.key);
         const anySiteLoading = enabledKeys.some((k) => this.sites[k]?.status === 'loading');
         const waitedInitialComments = Boolean(this._initialCommentsPromise || anySiteLoading);
-        const waitedSubAutoPick = Boolean(subMgr?._autoPickPromise);
+        const waitedSubSearch = Boolean(subMgr?._searchPromise || subMgr?._searching);
         const beforeCount = this._collectAllLoadedComments().length;
         const waitTasks = [];
 
-        if (waitedInitialComments) {
+        if (waitedInitialComments || waitedSubSearch || subMgr?._autoPickPromise) {
             Toast('正在等待评论与字幕采集就绪…', 2000, 'info');
             if (this._initialCommentsPromise) {
                 waitTasks.push(
                     Promise.race([
                         this._initialCommentsPromise,
+                        new Promise((r) => setTimeout(r, 4500))
+                    ])
+                );
+            }
+            if (subMgr?._searchPromise) {
+                waitTasks.push(
+                    Promise.race([
+                        subMgr._searchPromise,
                         new Promise((r) => setTimeout(r, 4500))
                     ])
                 );
@@ -3382,6 +3390,14 @@ export class CommentPanel {
         }
         if (waitTasks.length > 0) {
             await Promise.allSettled(waitTasks);
+        }
+
+        const waitedSubAutoPick = Boolean(waitedSubSearch || subMgr?._autoPickPromise);
+        if (subMgr?._autoPickPromise) {
+            await Promise.race([
+                subMgr._autoPickPromise,
+                new Promise((r) => setTimeout(r, 3500))
+            ]);
         }
 
         // 若首轮全部完成但当前总评论不足 15 条且主站点仍有下一页，自动补充拉取第 2 页提升分析覆盖面
@@ -3401,6 +3417,7 @@ export class CommentPanel {
             AiDebugLogger.recordCommentsState(this.videoCode, 'waitGate', {
                 totalWaitMs: Date.now() - waitStartedAt,
                 waitedInitialComments,
+                waitedSubSearch,
                 waitedSubAutoPick,
                 backfillTriggered,
                 beforeCount,
@@ -3417,6 +3434,7 @@ export class CommentPanel {
         if (!targetCode || !Array.isArray(comments) || !comments.length) return;
         try {
             const metadata = AvMetadataService.getCachedOrDom(targetCode);
+            const dur = this.targetVideo ? getVideoDurationSeconds(this.targetVideo) : 0;
             if (LlmService.isFeatureEnabled('featureHighlightFusion')) {
                 const ctx = this._collectHighlightFusionContext();
                 const fusionHit = await getCachedHighlightGraph({
@@ -3424,6 +3442,7 @@ export class CommentPanel {
                     cues: ctx.cues,
                     comments,
                     crowdPeaks: ctx.crowdPeaks,
+                    videoDuration: dur || ctx.videoDuration || 0,
                     vibeTags: ctx.vibeTags,
                     metadata
                 });
@@ -3433,7 +3452,7 @@ export class CommentPanel {
                     return;
                 }
             }
-            const res = await getCachedCommentBrief({ avcode: targetCode, comments, metadata });
+            const res = await getCachedCommentBrief({ avcode: targetCode, comments, videoDuration: dur || 0, metadata });
             if (
                 this.videoCode !== targetCode ||
                 !LlmService.isFeatureEnabled('featureCommentBrief') ||

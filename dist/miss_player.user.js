@@ -6,7 +6,7 @@
 // @name:ja            Miss Player | シアターモード (片手プレーヤー)
 // @name:vi            Miss Player | Chế Độ Rạp Hát (Trình Phát Một Tay)
 // @namespace          loadingi.local
-// @version            5.7.124-beta.006
+// @version            5.7.124-beta.007
 // @author             Chris_C
 // @description        MissAV去广告|单手模式|MissAV自动展开详情|MissAV自动高画质|MissAV重定向支持|MissAV自动登录|定制播放器|多语言支持 支持 jable po*nhub 等通用
 // @description:en     MissAV ad-free|one-handed mode|MissAV auto-expand details|MissAV auto high quality|MissAV redirect support|MissAV auto login|custom player|multilingual support for jable po*nhub etc.
@@ -1992,7 +1992,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.006";
+		return "5.7.124-beta.007";
 	}
 	var EventCollector = class {
 		constructor() {
@@ -4771,7 +4771,7 @@
 		try {
 			if (typeof GM_info !== "undefined" && GM_info?.script?.version) return GM_info.script.version;
 		} catch (_) {}
-		return "5.7.124-beta.006";
+		return "5.7.124-beta.007";
 	}
 	function compareVersions(v1, v2) {
 		if (!v1 && !v2) return 0;
@@ -6914,7 +6914,7 @@
 	var SETTING_TIMESTAMPS_KEY = "mp_setting_timestamps";
 	var CURRENT_SCHEMA_VERSION = 2;
 	var MAX_TOMBSTONE_AGE = 2592e6;
-	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.006";
+	var SCRIPT_VERSION = typeof GM_info !== "undefined" && GM_info?.script?.version ? GM_info.script.version : "5.7.124-beta.007";
 	function getOrCreateClientId() {
 		let storedId = getValue(CLIENT_ID_KEY, "");
 		if (storedId) return storedId;
@@ -11620,6 +11620,30 @@
 		result.sources = uniqueCleanList(sources, 8, 24);
 		return result;
 	}
+	var NAV_ACTRESS_JUNK_RE = /^(?:按女優|按女优|按主題|按主题|女優排行|女优排行|排行榜?|全部|更多|首頁|首页|Ranking|Top\s*\d*)$/i;
+	var DATE_NAV_RE = /\b(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+20\d{2}\b/i;
+	var LEADING_SYMBOL_JUNK_RE = /^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
+	var SEO_BOILERPLATE_RE = /(?:免費高清AV|免费高清AV|無需下載看到飽|无需下载看到饱|Watch\s+.*?\s+free\s+online)/i;
+	function isInChromeOrSidebar(el) {
+		try {
+			return Boolean(el?.closest?.("nav, header, footer, aside, .sidebar, .navbar, [role=\"navigation\"]"));
+		} catch (_) {
+			return false;
+		}
+	}
+	function isJunkLabel(val) {
+		if (!val) return true;
+		const clean = val.trim();
+		if (clean.length <= 1) return true;
+		if (NAV_ACTRESS_JUNK_RE.test(clean) || DATE_NAV_RE.test(clean) || LEADING_SYMBOL_JUNK_RE.test(clean)) return true;
+		return false;
+	}
+	function isPollutedSynopsis(rawDesc, code) {
+		if (!rawDesc) return true;
+		if (SEO_BOILERPLATE_RE.test(rawDesc)) return true;
+		if ((rawDesc.match(/\b([A-Z]{2,6}-\d{2,5})\b/gi) || []).length > 0 && !textMatchesCode(rawDesc, code)) return true;
+		return false;
+	}
 	function extractMetadataFromDocument(doc, avcode, hostname = "") {
 		const code = normalizeCode$1(avcode);
 		if (!doc || !code) return null;
@@ -11628,27 +11652,45 @@
 		const ogTitle = cleanText(doc.querySelector?.("meta[property=\"og:title\"]")?.getAttribute?.("content") || "", 200);
 		const docTitle = cleanText(doc.title || "", 200);
 		if (!(textMatchesCode(urlStr, code) || textMatchesCode(h1Text, code) || textMatchesCode(ogTitle, code) || textMatchesCode(docTitle, code))) return null;
-		const synopsis = cleanText(doc.querySelector?.("meta[name=\"description\"]")?.getAttribute?.("content") || doc.querySelector?.("meta[property=\"og:description\"]")?.getAttribute?.("content") || doc.querySelector?.(".text-secondary")?.textContent || doc.querySelector?.("div.mb-1")?.textContent || "", 320);
+		const rawDescCandidates = [
+			doc.querySelector?.("meta[name=\"description\"]")?.getAttribute?.("content") || "",
+			doc.querySelector?.("meta[property=\"og:description\"]")?.getAttribute?.("content") || "",
+			!isInChromeOrSidebar(doc.querySelector?.(".text-secondary")) ? doc.querySelector?.(".text-secondary")?.textContent || "" : "",
+			!isInChromeOrSidebar(doc.querySelector?.("div.mb-1")) ? doc.querySelector?.("div.mb-1")?.textContent || "" : ""
+		];
+		let synopsis = "";
+		for (const candidate of rawDescCandidates) {
+			const cleaned = cleanText(candidate, 320);
+			if (cleaned && !isPollutedSynopsis(cleaned, code)) {
+				synopsis = cleaned;
+				break;
+			}
+		}
 		const actresses = [];
 		const tags = [];
 		let studio = "";
 		let series = "";
 		let releaseDate = "";
 		const host = String(hostname || doc?.location?.hostname || "").toLowerCase();
+		const scopeEl = doc.querySelector?.(".video-info, .info-header, main, article, #site-content") || doc;
 		const selectorsActress = host.includes("jable") ? ".models a, a[href*=\"/models/\"]" : "a[href*=\"/actresses/\"], .models a, .star-name a";
 		const selectorsTags = host.includes("jable") ? ".tags a, .cat a, a[href*=\"/tags/\"], a[href*=\"/categories/\"]" : "a[href*=\"/genres/\"], a[href*=\"/tags/\"], .tags a";
-		doc.querySelectorAll?.(selectorsActress)?.forEach?.((a) => {
-			const val = cleanText(a.textContent, 24);
-			if (val) actresses.push(val);
+		(scopeEl.querySelectorAll?.(selectorsActress) || doc.querySelectorAll?.(selectorsActress) || []).forEach?.((a) => {
+			if (isInChromeOrSidebar(a)) return;
+			const altName = cleanText(a.querySelector?.("img")?.getAttribute?.("alt") || a.querySelector?.("img")?.getAttribute?.("title") || a.getAttribute?.("data-original-title") || a.getAttribute?.("title") || "", 24);
+			const textName = cleanText(a.textContent, 24);
+			const val = !isJunkLabel(altName) && altName.length >= textName.length ? altName : textName;
+			if (!isJunkLabel(val)) actresses.push(val);
 		});
-		doc.querySelectorAll?.(selectorsTags)?.forEach?.((a) => {
+		(scopeEl.querySelectorAll?.(selectorsTags) || doc.querySelectorAll?.(selectorsTags) || []).forEach?.((a) => {
+			if (isInChromeOrSidebar(a)) return;
 			const val = cleanText(a.textContent, 24);
-			if (val) tags.push(val);
+			if (!isJunkLabel(val)) tags.push(val);
 		});
 		const makerEl = doc.querySelector?.("a[href*=\"/makers/\"], a[href*=\"/studio/\"]");
-		if (makerEl) studio = cleanText(makerEl.textContent, 40);
+		if (makerEl && !isInChromeOrSidebar(makerEl)) studio = cleanText(makerEl.textContent, 40);
 		const seriesEl = doc.querySelector?.("a[href*=\"/series/\"]");
-		if (seriesEl) series = cleanText(seriesEl.textContent, 40);
+		if (seriesEl && !isInChromeOrSidebar(seriesEl)) series = cleanText(seriesEl.textContent, 40);
 		const timeEl = doc.querySelector?.("time[datetime], meta[property=\"video:release_date\"]");
 		if (timeEl) releaseDate = cleanText(timeEl.getAttribute?.("datetime") || timeEl.getAttribute?.("content") || timeEl.textContent || "", 20);
 		const title = sanitizeTitle(h1Text || ogTitle || docTitle, code);
@@ -13465,15 +13507,28 @@
 		}
 		return nodes;
 	}
-	var AI_PROMPT_VERSION = "v2.0";
+	var AI_PROMPT_VERSION = "v3.0";
 	function buildVersionedTaskHash(taskType, payloadStr) {
 		const model = LlmService.getConfig().model || "";
 		return LlmCache.hashContent(`${AI_PROMPT_VERSION}|${model}|${taskType}|${payloadStr}`);
 	}
 	var MOAN_FILLER_RE = /^[啊嗯哦哈呜唔呀呐噢唉呀啊哈\.…!！?？\s~～、，,]+$/;
+	var LOW_INFO_PLEA_RE = /^(?:[嗯啊哦哈呜唔呀呐嘿呃喂]+|[不别停等算]+(?:了吧|了|啊|呀|哦)?|等等|停下来|不要|别碰我|好舒服|我做不到|对不起|没关系|是的|我知道了)[,，.。!！?？\s…~～]*$/;
 	var ALL_SEMANTIC_TAGS = SEMANTIC_TAG_TAXONOMY.flatMap((group) => Array.isArray(group?.tags) ? group.tags : []);
 	var ALLOWED_TAG_SET = new Set(ALL_SEMANTIC_TAGS);
 	function formatMmSs(totalSeconds) {
+		const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+		if (s >= 3600) {
+			const h = Math.floor(s / 3600);
+			const m = Math.floor(s % 3600 / 60);
+			const rem = s % 60;
+			return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(rem).padStart(2, "0")}`;
+		}
+		const m = Math.floor(s / 60);
+		const rem = s % 60;
+		return `${String(m).padStart(2, "0")}:${String(rem).padStart(2, "0")}`;
+	}
+	function formatLegacyMmSs(totalSeconds) {
 		const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
 		const m = Math.floor(s / 60);
 		const rem = s % 60;
@@ -13515,8 +13570,11 @@
 		}
 		return best;
 	}
-	function compressCuesForLlm(cues, { maxChars = 13e3 } = {}) {
-		if (!Array.isArray(cues) || cues.length === 0 || maxChars <= 0) return "";
+	function selectCompressedEntries(cues, { maxChars = 13e3, indexed = false } = {}) {
+		if (!Array.isArray(cues) || cues.length === 0 || maxChars <= 0) return {
+			text: "",
+			lineSeconds: new Map()
+		};
 		const deduped = [];
 		for (const cue of cues) {
 			const text = normalizeInlineText(cue?.primaryText || cue?.text || "");
@@ -13529,13 +13587,19 @@
 				last.end = Math.max(last.end, end);
 				continue;
 			}
+			if (LOW_INFO_PLEA_RE.test(text) && text.length <= 16) {
+				if (deduped.slice(-4).some((prev) => prev.text === text && start - prev.start <= 45)) continue;
+			}
 			deduped.push({
 				start,
 				end,
 				text
 			});
 		}
-		if (deduped.length === 0) return "";
+		if (deduped.length === 0) return {
+			text: "",
+			lineSeconds: new Map()
+		};
 		const merged = [];
 		for (const item of deduped) {
 			const prev = merged[merged.length - 1];
@@ -13550,10 +13614,22 @@
 			}
 			merged.push({ ...item });
 		}
-		const lines = merged.map((item) => `[${formatMmSs(item.start)}] ${item.text}`);
+		const lineSeconds = new Map();
+		const lines = merged.map((item, idx) => {
+			const sec = Math.round(item.start);
+			lineSeconds.set(idx, sec);
+			if (indexed) return `[L${idx}|t=${sec}s|${formatMmSs(sec)}] ${item.text}`;
+			return `[${formatLegacyMmSs(sec)}] ${item.text}`;
+		});
 		const fullText = lines.join("\n");
-		if (fullText.length <= maxChars) return fullText;
-		if (lines.length <= 2) return sampleLinesToBudget(lines, maxChars);
+		if (fullText.length <= maxChars) return {
+			text: fullText,
+			lineSeconds
+		};
+		if (lines.length <= 2) return {
+			text: sampleLinesToBudget(lines, maxChars),
+			lineSeconds
+		};
 		let highlightStarts = [];
 		try {
 			const plot = analyzeSubtitlePlot(cues);
@@ -13568,17 +13644,20 @@
 		} catch (_) {}
 		const isNearHighlight = (sec) => highlightStarts.some((hs) => Math.abs(hs - sec) <= 10);
 		const totalSpan = Math.max(1, (merged[merged.length - 1]?.start || 0) - (merged[0]?.start || 0));
-		const bucketCount = 8;
+		const bucketCount = 10;
 		const scored = merged.map((item, idx) => {
-			const isFiller = MOAN_FILLER_RE.test(item.text) && item.text.length <= 8;
+			const isMoan = MOAN_FILLER_RE.test(item.text) && item.text.length <= 10;
+			const isLowPlea = LOW_INFO_PLEA_RE.test(item.text) && item.text.length <= 16;
 			let density = 1;
-			if (isFiller) density = .05;
+			if (isMoan) density = .05;
+			else if (isLowPlea) density = .12;
 			else {
 				if (isNearHighlight(item.start)) density += 3;
-				density += Math.min(item.text.length / 45, 1.5);
+				density += Math.min(item.text.length / 42, 1.8);
+				if ((idx > 0 ? item.start - merged[idx - 1].end : 0) >= 30 && item.text.length >= 6) density += 2.6;
 			}
 			const rel = (item.start - (merged[0]?.start || 0)) / totalSpan;
-			const bucket = Math.min(7, Math.max(0, Math.floor(rel * bucketCount)));
+			const bucket = Math.min(9, Math.max(0, Math.floor(rel * bucketCount)));
 			return {
 				idx,
 				line: lines[idx],
@@ -13586,17 +13665,21 @@
 				bucket
 			};
 		});
-		const denseBudget = Math.floor(maxChars * .65);
+		const denseBudget = Math.floor(maxChars * .68);
 		const selectedIdx = new Set();
 		let denseChars = 0;
-		const buckets = Array.from({ length: bucketCount }, (_, b) => scored.filter((s) => s.bucket === b && s.density >= 1.2).sort((a, b2) => b2.density - a.density));
+		const buckets = Array.from({ length: bucketCount }, (_, b) => scored.filter((s) => s.bucket === b && s.density >= 1.15).sort((a, b2) => b2.density - a.density));
 		let round = 0;
 		let progressed = true;
 		while (progressed && denseChars < denseBudget) {
 			progressed = false;
+			const roundCandidates = [];
 			for (let b = 0; b < bucketCount; b++) {
 				const candidate = buckets[b][round];
-				if (!candidate) continue;
+				if (candidate) roundCandidates.push(candidate);
+			}
+			roundCandidates.sort((a, b) => b.density - a.density);
+			for (const candidate of roundCandidates) {
 				progressed = true;
 				const addLen = candidate.line.length + (selectedIdx.size > 0 ? 1 : 0);
 				if (denseChars + addLen > denseBudget) continue;
@@ -13613,7 +13696,16 @@
 				if (skeletonSet.has(item.line)) selectedIdx.add(item.idx);
 			});
 		}
-		return sampleLinesToBudget(Array.from(selectedIdx).sort((a, b) => a - b).map((idx) => lines[idx]), maxChars);
+		return {
+			text: sampleLinesToBudget(Array.from(selectedIdx).sort((a, b) => a - b).map((idx) => lines[idx]), maxChars),
+			lineSeconds
+		};
+	}
+	function compressCuesForLlm(cues, { maxChars = 13e3 } = {}) {
+		return selectCompressedEntries(cues, {
+			maxChars,
+			indexed: false
+		}).text;
 	}
 	function buildSubtitleChapterPayload(avcode, compressed, metadata) {
 		const metaText = formatMetadataForLlm(metadata);
@@ -13624,7 +13716,10 @@
 		};
 	}
 	async function getCachedSubtitleChapters({ avcode, cues, metadata = null } = {}) {
-		const compressed = compressCuesForLlm(cues);
+		const { text: compressed } = selectCompressedEntries(cues, {
+			maxChars: 13e3,
+			indexed: true
+		});
 		if (!compressed || !avcode) return { hit: false };
 		const { contentHash } = buildSubtitleChapterPayload(avcode, compressed, metadata);
 		const cached = await LlmCache.getCached(avcode, "sub_chapters", contentHash);
@@ -13637,7 +13732,10 @@
 	}
 	async function analyzeSubtitleChaptersWithLlm({ avcode, cues, title = "", metadata = null, forceRefresh = false } = {}) {
 		const startedAt = Date.now();
-		const compressed = compressCuesForLlm(cues);
+		const { text: compressed, lineSeconds } = selectCompressedEntries(cues, {
+			maxChars: 13e3,
+			indexed: true
+		});
 		if (!compressed) return {
 			ok: false,
 			refused: false,
@@ -13691,11 +13789,10 @@
 		const messages = [{
 			role: "system",
 			content: [
-				"你是一位专业的影视剧作结构与情绪转折时间轴标注编辑。",
-				"请结合作品元数据（女优/片商/题材标签/简介）与台词时间轴，准确梳理叙事推进与情绪转折节点，严禁输出多余解释或 Markdown 标记，仅返回严格合法 JSON。",
-				"输出 JSON 格式必须为：",
-				"{ \"summary\": \"20字内剧情概览\", \"chapters\": [{ \"seconds\": 123, \"tag\": \"2-4字节点标签\", \"headline\": \"16字内该时段剧情看点\" }] }",
-				"要求：chapters 返回 5 至 8 个按 seconds 升序排列的关键节点，seconds 必须是视频总时长范围内的整数秒。"
+				"你是一位严谨的影视剧作时间轴标注编辑。每条台词均已标注行号与精确秒数 `[L行号|t=秒数s|时分秒]`。",
+				"请严格基于真实出现的台词内容梳理场景切换与剧情转折，严禁凭空捏造台词中不存在的剧情或凑整百秒数！仅返回严格合法 JSON，禁止 Markdown 围栏：",
+				"{ \"summary\": \"20字内剧情概览\", \"chapters\": [{ \"line\": 12, \"seconds\": 123, \"tag\": \"2-4字标签\", \"headline\": \"16字内该处真实剧情\" }] }",
+				"要求：chapters 返回 3 至 8 个按时间升序排列的真实场景节点，必须准确填写引用台词的行号 `line`（即 [L数字|...] 中的数字）及对应 `seconds`。"
 			].join("\n")
 		}, {
 			role: "user",
@@ -13710,8 +13807,8 @@
 		try {
 			const res = await LlmService.chatCompletion({
 				messages,
-				temperature: .2,
-				maxTokens: 900
+				temperature: .15,
+				maxTokens: 1100
 			});
 			const parsed = LlmService.parseJsonFromLlm(res.content);
 			if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -13743,7 +13840,9 @@
 			const summary = normalizeInlineText(parsed.summary || "").slice(0, 40);
 			const rawChapters = Array.isArray(parsed.chapters) ? parsed.chapters : [];
 			const chapters = rawChapters.map((item) => {
-				const secRaw = Number(item?.seconds ?? item?.time ?? item?.start);
+				const lineNum = Number(item?.line ?? item?.cueLine ?? item?.idx);
+				const resolvedFromLine = Number.isInteger(lineNum) && lineSeconds.has(lineNum) ? lineSeconds.get(lineNum) : null;
+				const secRaw = resolvedFromLine !== null ? resolvedFromLine : Number(item?.seconds ?? item?.time ?? item?.start);
 				if (!Number.isFinite(secRaw)) return null;
 				const seconds = Math.round(Math.max(0, Math.min(maxCueEnd > 0 ? maxCueEnd : Math.max(0, secRaw), secRaw)));
 				const tag = normalizeInlineText(item?.tag || "").slice(0, 6) || "节点";
@@ -13817,7 +13916,59 @@
 			};
 		}
 	}
-	function selectBalancedComments(comments = [], maxItems = 55) {
+	function extractResolvedSecondsForComment(commentObj, rawText, videoDuration = 0) {
+		const dur = Math.max(0, Number(videoDuration) || 0);
+		const out = [];
+		const seen = new Set();
+		const pushSec = (sec, isCountdown = false) => {
+			const rounded = Math.round(Number(sec));
+			if (!Number.isFinite(rounded) || rounded < 0) return;
+			if (dur > 0 && rounded > dur) return;
+			if (seen.has(rounded)) return;
+			seen.add(rounded);
+			out.push({
+				seconds: rounded,
+				isCountdown
+			});
+		};
+		const tsList = typeof commentObj === "object" && Array.isArray(commentObj?.timestamps) ? commentObj.timestamps : [];
+		const appliedCountdown = Boolean(typeof commentObj === "object" && commentObj?.countdownApplied);
+		if (tsList.length > 0) for (const t of tsList) {
+			const rawStr = String(t?.raw || "");
+			const isExplicitNeg = /^\s*-\s*\d/.test(rawStr);
+			const rawSec = Array.isArray(t?.rawSeconds) ? t.rawSeconds[0] : t?.rawSeconds ?? (Array.isArray(t?.seconds) ? t.seconds[0] : t?.seconds);
+			const curSec = Array.isArray(t?.seconds) ? t.seconds[0] : t?.seconds;
+			if (appliedCountdown && Number.isFinite(Number(curSec))) pushSec(curSec, true);
+			else if (isExplicitNeg && dur > 0 && Number.isFinite(Number(rawSec)) && rawSec > 0 && rawSec < dur) pushSec(dur - rawSec, true);
+			else if (Number.isFinite(Number(curSec))) pushSec(curSec, Boolean(t?.isCountdown));
+		}
+		else {
+			const text = String(rawText || "");
+			const colonRe = /(^|[^\d])(-\s*)?(?:(\d{1,2})[:.])?(\d{1,2})[:.](\d{2})(?!\d)/g;
+			let m;
+			while ((m = colonRe.exec(text)) !== null) {
+				const neg = Boolean(m[2]);
+				const a = Number(m[3]);
+				const b = Number(m[4]);
+				const c = Number(m[5]);
+				if (b >= 60 && m[3] === void 0 && a !== void 0) continue;
+				if (c >= 60) continue;
+				const total = m[3] !== void 0 ? a * 3600 + b * 60 + c : b * 60 + c;
+				if (neg && dur > 0 && total < dur) pushSec(dur - total, true);
+				else pushSec(total, false);
+			}
+			const hmsWordRe = /(?:(\d{1,2})\s*(?:h|小时))(?:\s*(\d{1,2})\s*(?:m|分))?(?:\s*(\d{1,2})\s*(?:s|秒)?)?|(?:(\d{1,3})\s*(?:m|分钟|分)\s*(\d{1,2})\s*(?:s|秒)?)/gi;
+			while ((m = hmsWordRe.exec(text)) !== null) if (m[1] !== void 0) pushSec(Number(m[1]) * 3600 + (Number(m[2]) || 0) * 60 + (Number(m[3]) || 0), false);
+			else if (m[4] !== void 0) pushSec(Number(m[4]) * 60 + (Number(m[5]) || 0), false);
+			const compactSixRe = /(?:^|[^\d])([0-4]\d)([0-5]\d)([0-5]\d)(?:$|[^\d])/g;
+			while ((m = compactSixRe.exec(text)) !== null) {
+				const total = Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]);
+				if (total > 0 && (!dur || total <= dur)) pushSec(total, false);
+			}
+		}
+		return out;
+	}
+	function selectBalancedComments(comments = [], maxItems = 55, videoDuration = 0) {
 		if (!Array.isArray(comments) || comments.length === 0) return [];
 		const seen = new Set();
 		const tsPool = [];
@@ -13830,13 +13981,15 @@
 			const dedupKey = text.toLowerCase().slice(0, 120);
 			if (seen.has(dedupKey)) continue;
 			seen.add(dedupKey);
-			const hasTs = Boolean(typeof c === "object" && (c.hasTimestamps || Array.isArray(c.timestamps) && c.timestamps.length > 0 || /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(text)));
+			const resolvedTs = extractResolvedSecondsForComment(c, text, videoDuration);
+			const hasTs = resolvedTs.length > 0 || Boolean(typeof c === "object" && (c.hasTimestamps || Array.isArray(c.timestamps) && c.timestamps.length > 0 || /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(text)));
 			const likesBonus = Number(c?.likes) > 0 ? 30 : 0;
 			const entry = {
 				id: typeof c === "object" && c.id !== void 0 && c.id !== null ? String(c.id) : "",
 				text,
 				hasTs,
-				rankScore: Math.min(text.length, 200) + likesBonus
+				resolvedTs,
+				rankScore: Math.min(text.length, 200) + likesBonus + (resolvedTs.length > 0 ? 15 : 0)
 			};
 			if (hasTs) tsPool.push(entry);
 			else if (text.length >= 12) longPool.push(entry);
@@ -13854,14 +14007,21 @@
 		const pickedLong = longPool.slice(0, longCap);
 		return [...pickedTs, ...pickedLong].slice(0, maxItems);
 	}
-	function buildCommentsDigest(comments = [], metadata = null) {
-		const selected = selectBalancedComments(comments, 55);
+	function formatCommentTsPrefix(entry, idxLabel = "") {
+		const tsTags = (entry.resolvedTs || []).slice(0, 4).map((t) => `t=${t.seconds}s(${formatMmSs(t.seconds)}${t.isCountdown ? ",倒数已转正" : ""})`);
+		const idxPart = idxLabel ? `[${idxLabel}] ` : "";
+		if (tsTags.length > 0) return `${idxPart}[含时间点] [${tsTags.join(", ")}] `;
+		if (entry.hasTs) return `${idxPart}[含时间点] `;
+		return idxPart;
+	}
+	function buildCommentsDigest(comments = [], metadata = null, videoDuration = 0) {
+		const selected = selectBalancedComments(comments, 55, videoDuration);
 		if (selected.length === 0) return null;
 		const selectedLines = [];
 		let totalChars = 0;
-		const MAX_CHARS = 5500;
+		const MAX_CHARS = 5800;
 		for (const item of selected) {
-			const line = `${item.hasTs ? "[含时间点] " : ""}${item.text.slice(0, 220)}`;
+			const line = `${formatCommentTsPrefix(item, "")}${item.text.slice(0, 220)}`;
 			const addedLen = line.length + (selectedLines.length > 0 ? 1 : 0);
 			if (totalChars + addedLen > MAX_CHARS) {
 				if (selectedLines.length === 0) selectedLines.push(line.slice(0, MAX_CHARS));
@@ -13878,9 +14038,9 @@
 			contentHash: buildVersionedTaskHash("comment_brief", `${digest}\n---\n${metaText}`)
 		};
 	}
-	async function getCachedCommentBrief({ avcode, comments, metadata = null } = {}) {
+	async function getCachedCommentBrief({ avcode, comments, videoDuration = 0, metadata = null } = {}) {
 		const code = normalizeInlineText(avcode).toUpperCase();
-		const built = buildCommentsDigest(comments, metadata);
+		const built = buildCommentsDigest(comments, metadata, videoDuration);
 		if (!code || !built?.contentHash) return { hit: false };
 		const cached = await LlmCache.getCached(code, "comment_brief", built.contentHash);
 		if (cached.hit && cached.data) return {
@@ -13891,7 +14051,7 @@
 	}
 	async function summarizeCommentsWithLlm({ avcode, comments, videoDuration = 0, metadata = null, forceRefresh = false } = {}) {
 		const startedAt = Date.now();
-		const built = buildCommentsDigest(comments, metadata);
+		const built = buildCommentsDigest(comments, metadata, videoDuration);
 		if (!built) return {
 			ok: false,
 			refused: false,
@@ -13935,7 +14095,8 @@
 		const messages = [{
 			role: "system",
 			content: [
-				"你是一位客观的影评整理助手，负责结合作品元数据与观众短评提炼核心看点、避坑提醒、口碑共识与高能时间戳。",
+				"你是一位客观严谨的影评整理助手，负责结合作品元数据与观众短评提炼核心看点、避坑提醒、口碑共识与高能时间戳。",
+				"评论中 `[含时间点] [t=XXXs(...)]` 已由本地解析器精确换算为视频整数秒（倒数时间亦已校准），输出 `timestamps` 时请直接采用该 `t` 值；严禁自行心算时间格式或编造未提及的时间点。",
 				"仅返回严格合法的 JSON，不要输出额外解释或 Markdown 围栏：",
 				"{ \"highlights\": \"看点1句话\", \"warnings\": \"避坑/雷点1句话(无则写暂无明显雷点)\", \"consensus\": \"口碑共识1句话\", \"timestamps\": [{ \"seconds\": 123, \"note\": \"10字内说明\" }] }"
 			].join("\n")
@@ -13953,7 +14114,7 @@
 			const res = await LlmService.chatCompletion({
 				messages,
 				temperature: .2,
-				maxTokens: 750
+				maxTokens: 1100
 			});
 			const parsed = LlmService.parseJsonFromLlm(res.content);
 			if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -14268,29 +14429,39 @@
 		}
 		return hits;
 	}
-	function buildFusionInputs({ cues = [], comments = [], crowdPeaks = [], vibeTags = [], metadata = null }) {
-		const compressedSub = Array.isArray(cues) && cues.length > 0 ? compressCuesForLlm(cues, { maxChars: 7500 }) : "";
-		const topComments = selectBalancedComments(comments, 45);
-		const commentLines = topComments.map((item, idx) => `[C${idx}] ${item.text.slice(0, 180)}`);
+	function buildFusionInputs({ cues = [], comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null }) {
+		const indexedSub = Array.isArray(cues) && cues.length > 0 ? selectCompressedEntries(cues, {
+			maxChars: 7500,
+			indexed: true
+		}) : {
+			text: "",
+			lineSeconds: new Map()
+		};
+		const compressedSub = indexedSub.text;
+		const topComments = selectBalancedComments(comments, 45, videoDuration);
+		const commentLines = topComments.map((item, idx) => `${formatCommentTsPrefix(item, `C${idx}`)}${item.text.slice(0, 180)}`);
 		const crowdSig = (Array.isArray(crowdPeaks) ? crowdPeaks : []).map((p) => `${Math.round(Number(p.seconds) || 0)}:${p.intensity ?? ""}`).join(",");
 		const vibeKey = (Array.isArray(vibeTags) ? vibeTags : []).join(",");
 		const metaText = formatMetadataForLlm(metadata);
+		const contentHash = buildVersionedTaskHash("highlight_graph", `${compressedSub}\n---\n${commentLines.join("\n")}\n---\n${crowdSig}\n---\n${vibeKey}\n---\n${metaText}`);
 		return {
 			compressedSub,
+			lineSeconds: indexedSub.lineSeconds,
 			topComments,
 			commentLines,
 			crowdSig,
 			vibeKey,
 			metaText,
-			contentHash: buildVersionedTaskHash("highlight_graph", `${compressedSub}\n---\n${commentLines.join("\n")}\n---\n${crowdSig}\n---\n${vibeKey}\n---\n${metaText}`)
+			contentHash
 		};
 	}
-	async function getCachedHighlightGraph({ avcode, cues = [], comments = [], crowdPeaks = [], vibeTags = [], metadata = null } = {}) {
+	async function getCachedHighlightGraph({ avcode, cues = [], comments = [], crowdPeaks = [], videoDuration = 0, vibeTags = [], metadata = null } = {}) {
 		const code = normalizeInlineText(avcode).toUpperCase();
 		const { topComments, compressedSub, crowdSig, contentHash } = buildFusionInputs({
 			cues,
 			comments,
 			crowdPeaks,
+			videoDuration,
 			vibeTags,
 			metadata
 		});
@@ -14308,6 +14479,7 @@
 			cues,
 			comments,
 			crowdPeaks,
+			videoDuration,
 			vibeTags,
 			metadata
 		});
@@ -14357,18 +14529,20 @@
 				};
 			}
 		}
-		const crowdPromptText = Array.isArray(crowdPeaks) && crowdPeaks.length > 0 ? crowdPeaks.map((p) => `${formatMmSs(p.seconds)}(强度${Math.round((Number(p.intensity) || 0) * 100)}%)`).join(", ") : "(暂无社区热度数据)";
+		const crowdPromptText = Array.isArray(crowdPeaks) && crowdPeaks.length > 0 ? crowdPeaks.map((p) => `t=${Math.round(Number(p.seconds) || 0)}s(${formatMmSs(p.seconds)},强度${Math.round((Number(p.intensity) || 0) * 100)}%)`).join(", ") : "(暂无社区热度数据)";
 		const vibePromptText = Array.isArray(vibeTags) && vibeTags.length > 0 ? `用户偏好要素（排序可适当靠前）: ${vibeTags.join("、")}` : "";
 		const messages = [{
 			role: "system",
 			content: [
-				"你是影片多模态高光分析引擎。请结合作品元数据（片名/女优/题材标签/简介）、社区回放波峰、字幕对白骨架与观众评论（标记为 [C0], [C1]...），在单次回复中输出融合高光图谱：",
-				"1. highlights: 最多 8 个核心高能片段，优先融合多源共鸣与用户偏好；",
-				"2. skipZones: 最多 4 个避坑/拖沓/吐槽区间（如片头拖沓、马赛克或假水戏）；",
-				"3. commentTags: 仅输出值得标注的评论项，识别 sentiment(hype高能/warn避坑/neutral)、是否为剩余时间倒数(isCountdown)、以及对“无时间点好评”结合字幕和波峰反推的时间 seconds；",
-				"4. brief: 1句话看点/避坑/共识总结；",
+				"你是影片多模态高光分析引擎。请结合作品元数据、社区回放波峰、字幕对白 `[L行号|t=秒数s|时分秒]` 与观众评论 `[C编号] [含时间点] [t=秒数s]` 输出融合高光图谱：",
+				"关键铁律：所有时间点必须直接复用字幕 `t=...s`（或 `subLine`）、波峰 `t=...s` 或评论 `[t=...s]`，严禁自己对时分秒进行心算换算或编造不存在的时间！",
+				"字段输出顺序与上限（防止截断）：",
+				"1. brief: 1句话看点/避坑/共识总结；",
+				"2. highlights: 最多 6 个核心高能片段，若基于字幕请填 `subLine`，基于评论/波峰请填 `t`；",
+				"3. skipZones: 最多 3 个避坑/拖沓区间；",
+				"4. commentTags: 最多 8 条，仅挑选【没有已解析时间点】但含剧情评价或吐槽的评论 `idx`，结合字幕/波峰反推其时间 `inferredSeconds`（已有时间点的评论勿重复放入此数组！）；",
 				"仅输出严格合法 JSON，禁止 Markdown 围栏与多余解释：",
-				"{ \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"tag\": \"2-4字标签\", \"reason\": \"16字内理由\", \"sources\": [\"crowd\",\"comment\",\"sub\"], \"score\": 92 }], \"skipZones\": [{ \"seconds\": 0, \"endSeconds\": 90, \"reason\": \"14字内避坑说明\" }], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"isCountdown\": false, \"inferredSeconds\": 420, \"note\": \"10字内标签\" }], \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑(无则写暂无明显雷点)\", \"consensus\": \"共识\" } }"
+				"{ \"brief\": { \"highlights\": \"看点\", \"warnings\": \"避坑(无则写暂无明显雷点)\", \"consensus\": \"共识\" }, \"highlights\": [{ \"seconds\": 120, \"endSeconds\": 180, \"subLine\": 12, \"tag\": \"2-4字标签\", \"reason\": \"16字内理由\", \"sources\": [\"crowd\",\"comment\",\"sub\"], \"score\": 92 }], \"skipZones\": [{ \"seconds\": 0, \"endSeconds\": 90, \"reason\": \"14字内避坑说明\" }], \"commentTags\": [{ \"idx\": 0, \"sentiment\": \"hype\", \"isCountdown\": false, \"inferredSeconds\": 420, \"note\": \"10字内标签\" }] }"
 			].join("\n")
 		}, {
 			role: "user",
@@ -14385,8 +14559,8 @@
 		try {
 			const res = await LlmService.chatCompletion({
 				messages,
-				temperature: .2,
-				maxTokens: 1200
+				temperature: .15,
+				maxTokens: 2400
 			});
 			const parsed = LlmService.parseJsonFromLlm(res.content);
 			if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -14423,7 +14597,9 @@
 			};
 			const highlights = [];
 			for (const item of Array.isArray(parsed.highlights) ? parsed.highlights : []) {
-				const sec = clampSec(item?.seconds);
+				const subLineNum = Number(item?.subLine);
+				const fromSubLine = Number.isInteger(subLineNum) && built.lineSeconds?.has(subLineNum) ? built.lineSeconds.get(subLineNum) : null;
+				const sec = fromSubLine !== null ? clampSec(fromSubLine) : clampSec(item?.seconds);
 				if (sec === null) continue;
 				const endSecRaw = clampSec(item?.endSeconds);
 				const endSeconds = endSecRaw !== null && endSecRaw > sec ? endSecRaw : null;
@@ -22698,15 +22874,18 @@
 			const subMgr = this.controlManager?.subtitleManager || this.playerCore?.controlManager?.subtitleManager || null;
 			const anySiteLoading = this.getEnabledCommentSources().map((s) => s.key).some((k) => this.sites[k]?.status === "loading");
 			const waitedInitialComments = Boolean(this._initialCommentsPromise || anySiteLoading);
-			const waitedSubAutoPick = Boolean(subMgr?._autoPickPromise);
+			const waitedSubSearch = Boolean(subMgr?._searchPromise || subMgr?._searching);
 			const beforeCount = this._collectAllLoadedComments().length;
 			const waitTasks = [];
-			if (waitedInitialComments) {
+			if (waitedInitialComments || waitedSubSearch || subMgr?._autoPickPromise) {
 				Toast$1("正在等待评论与字幕采集就绪…", 2e3, "info");
 				if (this._initialCommentsPromise) waitTasks.push(Promise.race([this._initialCommentsPromise, new Promise((r) => setTimeout(r, 4500))]));
+				if (subMgr?._searchPromise) waitTasks.push(Promise.race([subMgr._searchPromise, new Promise((r) => setTimeout(r, 4500))]));
 			}
 			if (subMgr?._autoPickPromise) waitTasks.push(Promise.race([subMgr._autoPickPromise, new Promise((r) => setTimeout(r, 3500))]));
 			if (waitTasks.length > 0) await Promise.allSettled(waitTasks);
+			const waitedSubAutoPick = Boolean(waitedSubSearch || subMgr?._autoPickPromise);
+			if (subMgr?._autoPickPromise) await Promise.race([subMgr._autoPickPromise, new Promise((r) => setTimeout(r, 3500))]);
 			const curComments = this._collectAllLoadedComments();
 			const activeSite = this.sites[this.activeCommentSource];
 			let backfillTriggered = false;
@@ -22719,6 +22898,7 @@
 				AiDebugLogger.recordCommentsState(this.videoCode, "waitGate", {
 					totalWaitMs: Date.now() - waitStartedAt,
 					waitedInitialComments,
+					waitedSubSearch,
 					waitedSubAutoPick,
 					backfillTriggered,
 					beforeCount,
@@ -22734,6 +22914,7 @@
 			if (!targetCode || !Array.isArray(comments) || !comments.length) return;
 			try {
 				const metadata = AvMetadataService.getCachedOrDom(targetCode);
+				const dur = this.targetVideo ? getVideoDurationSeconds(this.targetVideo) : 0;
 				if (LlmService.isFeatureEnabled("featureHighlightFusion")) {
 					const ctx = this._collectHighlightFusionContext();
 					const fusionHit = await getCachedHighlightGraph({
@@ -22741,6 +22922,7 @@
 						cues: ctx.cues,
 						comments,
 						crowdPeaks: ctx.crowdPeaks,
+						videoDuration: dur || ctx.videoDuration || 0,
 						vibeTags: ctx.vibeTags,
 						metadata
 					});
@@ -22753,6 +22935,7 @@
 				const res = await getCachedCommentBrief({
 					avcode: targetCode,
 					comments,
+					videoDuration: dur || 0,
 					metadata
 				});
 				if (this.videoCode !== targetCode || !LlmService.isFeatureEnabled("featureCommentBrief") || !res?.hit || !res.brief) return;
@@ -34756,6 +34939,7 @@
 			this._lastRenderedText = "";
 			this._rafId = 0;
 			this._searching = false;
+			this._searchPromise = null;
 			this._busyId = "";
 			this._autoSearchedCodes = new Set();
 			this._autoFailedIds = new Set();
@@ -36068,7 +36252,7 @@
 			}
 		}
 		async _searchOnline() {
-			if (this._searching) return;
+			if (this._searchPromise) return this._searchPromise;
 			if (!this.settings.betaMode) {
 				Toast$1(text("subtitleNeedBeta", "开启实验功能后可在线搜索字幕"), 2800, "info");
 				return;
@@ -36077,40 +36261,46 @@
 				Toast$1(text("subtitleNoCode", "未识别影片番号"), 2500, "error");
 				return;
 			}
-			this._searching = true;
-			this._renderList();
-			const searchStartedAt = Date.now();
-			try {
-				const { candidates, errors } = await this.engine.search(this.avcode);
-				const known = new Set(this.bundle.items.map((item) => item.id));
-				this.onlineResults = candidates.filter((candidate) => !known.has(candidate.id) && this._isRelevant(candidate));
-				if (this.avcode && AiDebugLogger.isEnabled()) {
-					const langsSummary = {};
-					this.onlineResults.forEach((c) => {
-						const k = c.lang || "unknown";
-						langsSummary[k] = (langsSummary[k] || 0) + 1;
-					});
-					AiDebugLogger.recordSubtitleState(this.avcode, "searchOnline", {
-						durationMs: Date.now() - searchStartedAt,
-						rawCandidatesCount: candidates.length,
-						relevantCount: this.onlineResults.length,
-						langsSummary,
-						errorsCount: Array.isArray(errors) ? errors.length : 0
-					});
-				}
-				if (!this.onlineResults.length) Toast$1(errors.length ? text("subtitleSearchFailed", "搜索失败，请稍后重试") : text("subtitleSearchEmpty", "未找到字幕，可导入本地文件"), 2600, "info");
-			} catch (err) {
-				console.warn("[SubtitleManager] 搜索失败:", err?.message);
-				if (this.avcode && AiDebugLogger.isEnabled()) AiDebugLogger.recordSubtitleState(this.avcode, "searchOnline", {
-					durationMs: Date.now() - searchStartedAt,
-					error: err?.message || "SEARCH_FAILED"
-				});
-				Toast$1(text("subtitleSearchFailed", "搜索失败，请稍后重试"), 2600, "error");
-			} finally {
-				this._searching = false;
+			const run = (async () => {
+				this._searching = true;
 				this._renderList();
-			}
-			await this._maybeAutoPickPreferred({ fromSearch: true });
+				const searchStartedAt = Date.now();
+				try {
+					const { candidates, errors } = await this.engine.search(this.avcode);
+					const known = new Set(this.bundle.items.map((item) => item.id));
+					this.onlineResults = candidates.filter((candidate) => !known.has(candidate.id) && this._isRelevant(candidate));
+					if (this.avcode && AiDebugLogger.isEnabled()) {
+						const langsSummary = {};
+						this.onlineResults.forEach((c) => {
+							const k = c.lang || "unknown";
+							langsSummary[k] = (langsSummary[k] || 0) + 1;
+						});
+						AiDebugLogger.recordSubtitleState(this.avcode, "searchOnline", {
+							durationMs: Date.now() - searchStartedAt,
+							rawCandidatesCount: candidates.length,
+							relevantCount: this.onlineResults.length,
+							langsSummary,
+							errorsCount: Array.isArray(errors) ? errors.length : 0
+						});
+					}
+					if (!this.onlineResults.length) Toast$1(errors.length ? text("subtitleSearchFailed", "搜索失败，请稍后重试") : text("subtitleSearchEmpty", "未找到字幕，可导入本地文件"), 2600, "info");
+				} catch (err) {
+					console.warn("[SubtitleManager] 搜索失败:", err?.message);
+					if (this.avcode && AiDebugLogger.isEnabled()) AiDebugLogger.recordSubtitleState(this.avcode, "searchOnline", {
+						durationMs: Date.now() - searchStartedAt,
+						error: err?.message || "SEARCH_FAILED"
+					});
+					Toast$1(text("subtitleSearchFailed", "搜索失败，请稍后重试"), 2600, "error");
+				} finally {
+					this._searching = false;
+					this._renderList();
+				}
+				await this._maybeAutoPickPreferred({ fromSearch: true });
+			})().finally(() => {
+				if (this._searchPromise === run) this._searchPromise = null;
+			});
+			this._searchPromise = run;
+			return run;
 		}
 		_hasSavedFavorite() {
 			const items = this.bundle.items || [];

@@ -142,6 +142,39 @@ export function mergeAvMetadata(...items) {
  * @param {string} [hostname]
  * @returns {Object|null}
  */
+const NAV_ACTRESS_JUNK_RE = /^(?:按女優|按女优|按主題|按主题|女優排行|女优排行|排行榜?|全部|更多|首頁|首页|Ranking|Top\s*\d*)$/i;
+const DATE_NAV_RE = /\b(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+20\d{2}\b/i;
+const LEADING_SYMBOL_JUNK_RE = /^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
+const SEO_BOILERPLATE_RE = /(?:免費高清AV|免费高清AV|無需下載看到飽|无需下载看到饱|Watch\s+.*?\s+free\s+online)/i;
+
+function isInChromeOrSidebar(el) {
+    try {
+        return Boolean(el?.closest?.('nav, header, footer, aside, .sidebar, .navbar, [role="navigation"]'));
+    } catch (_) {
+        return false;
+    }
+}
+
+function isJunkLabel(val) {
+    if (!val) return true;
+    const clean = val.trim();
+    if (clean.length <= 1) return true;
+    if (NAV_ACTRESS_JUNK_RE.test(clean) || DATE_NAV_RE.test(clean) || LEADING_SYMBOL_JUNK_RE.test(clean)) {
+        return true;
+    }
+    return false;
+}
+
+function isPollutedSynopsis(rawDesc, code) {
+    if (!rawDesc) return true;
+    if (SEO_BOILERPLATE_RE.test(rawDesc)) return true;
+    const otherCodes = rawDesc.match(/\b([A-Z]{2,6}-\d{2,5})\b/gi) || [];
+    if (otherCodes.length > 0 && !textMatchesCode(rawDesc, code)) {
+        return true;
+    }
+    return false;
+}
+
 export function extractMetadataFromDocument(doc, avcode, hostname = '') {
     const code = normalizeCode(avcode);
     if (!doc || !code) return null;
@@ -159,13 +192,20 @@ export function extractMetadataFromDocument(doc, avcode, hostname = '') {
         textMatchesCode(docTitle, code);
     if (!matchesCurrentPage) return null;
 
-    const rawDesc =
-        doc.querySelector?.('meta[name="description"]')?.getAttribute?.('content') ||
-        doc.querySelector?.('meta[property="og:description"]')?.getAttribute?.('content') ||
-        doc.querySelector?.('.text-secondary')?.textContent ||
-        doc.querySelector?.('div.mb-1')?.textContent ||
-        '';
-    const synopsis = cleanText(rawDesc, 320);
+    const rawDescCandidates = [
+        doc.querySelector?.('meta[name="description"]')?.getAttribute?.('content') || '',
+        doc.querySelector?.('meta[property="og:description"]')?.getAttribute?.('content') || '',
+        !isInChromeOrSidebar(doc.querySelector?.('.text-secondary')) ? (doc.querySelector?.('.text-secondary')?.textContent || '') : '',
+        !isInChromeOrSidebar(doc.querySelector?.('div.mb-1')) ? (doc.querySelector?.('div.mb-1')?.textContent || '') : ''
+    ];
+    let synopsis = '';
+    for (const candidate of rawDescCandidates) {
+        const cleaned = cleanText(candidate, 320);
+        if (cleaned && !isPollutedSynopsis(cleaned, code)) {
+            synopsis = cleaned;
+            break;
+        }
+    }
 
     const actresses = [];
     const tags = [];
@@ -174,6 +214,7 @@ export function extractMetadataFromDocument(doc, avcode, hostname = '') {
     let releaseDate = '';
 
     const host = String(hostname || doc?.location?.hostname || '').toLowerCase();
+    const scopeEl = doc.querySelector?.('.video-info, .info-header, main, article, #site-content') || doc;
     const selectorsActress = host.includes('jable')
         ? '.models a, a[href*="/models/"]'
         : 'a[href*="/actresses/"], .models a, .star-name a';
@@ -181,19 +222,33 @@ export function extractMetadataFromDocument(doc, avcode, hostname = '') {
         ? '.tags a, .cat a, a[href*="/tags/"], a[href*="/categories/"]'
         : 'a[href*="/genres/"], a[href*="/tags/"], .tags a';
 
-    doc.querySelectorAll?.(selectorsActress)?.forEach?.((a) => {
-        const val = cleanText(a.textContent, 24);
-        if (val) actresses.push(val);
+    const actressNodes = scopeEl.querySelectorAll?.(selectorsActress) || doc.querySelectorAll?.(selectorsActress) || [];
+    actressNodes.forEach?.((a) => {
+        if (isInChromeOrSidebar(a)) return;
+        const altName = cleanText(
+            a.querySelector?.('img')?.getAttribute?.('alt') ||
+            a.querySelector?.('img')?.getAttribute?.('title') ||
+            a.getAttribute?.('data-original-title') ||
+            a.getAttribute?.('title') ||
+            '',
+            24
+        );
+        const textName = cleanText(a.textContent, 24);
+        const val = (!isJunkLabel(altName) && altName.length >= textName.length) ? altName : textName;
+        if (!isJunkLabel(val)) actresses.push(val);
     });
-    doc.querySelectorAll?.(selectorsTags)?.forEach?.((a) => {
+
+    const tagNodes = scopeEl.querySelectorAll?.(selectorsTags) || doc.querySelectorAll?.(selectorsTags) || [];
+    tagNodes.forEach?.((a) => {
+        if (isInChromeOrSidebar(a)) return;
         const val = cleanText(a.textContent, 24);
-        if (val) tags.push(val);
+        if (!isJunkLabel(val)) tags.push(val);
     });
 
     const makerEl = doc.querySelector?.('a[href*="/makers/"], a[href*="/studio/"]');
-    if (makerEl) studio = cleanText(makerEl.textContent, 40);
+    if (makerEl && !isInChromeOrSidebar(makerEl)) studio = cleanText(makerEl.textContent, 40);
     const seriesEl = doc.querySelector?.('a[href*="/series/"]');
-    if (seriesEl) series = cleanText(seriesEl.textContent, 40);
+    if (seriesEl && !isInChromeOrSidebar(seriesEl)) series = cleanText(seriesEl.textContent, 40);
 
     const timeEl = doc.querySelector?.('time[datetime], meta[property="video:release_date"]');
     if (timeEl) {

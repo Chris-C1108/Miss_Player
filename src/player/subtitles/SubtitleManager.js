@@ -308,6 +308,7 @@ export class SubtitleManager {
         this._lastRenderedText = '';
         this._rafId = 0;
         this._searching = false;
+        this._searchPromise = null;
         this._busyId = '';
         this._autoSearchedCodes = new Set();
         this._autoFailedIds = new Set();
@@ -1944,7 +1945,7 @@ export class SubtitleManager {
     // ---------------------------------------------------------------- 在线检索
 
     async _searchOnline() {
-        if (this._searching) return;
+        if (this._searchPromise) return this._searchPromise;
         if (!this.settings.betaMode) {
             Toast(text('subtitleNeedBeta', '开启实验功能后可在线搜索字幕'), 2800, 'info');
             return;
@@ -1953,52 +1954,60 @@ export class SubtitleManager {
             Toast(text('subtitleNoCode', '未识别影片番号'), 2500, 'error');
             return;
         }
-        this._searching = true;
-        this._renderList();
-        const searchStartedAt = Date.now();
-        try {
-            const { candidates, errors } = await this.engine.search(this.avcode);
-            const known = new Set(this.bundle.items.map((item) => item.id));
-            this.onlineResults = candidates.filter(
-                (candidate) => !known.has(candidate.id) && this._isRelevant(candidate)
-            );
-            if (this.avcode && AiDebugLogger.isEnabled()) {
-                const langsSummary = {};
-                this.onlineResults.forEach((c) => {
-                    const k = c.lang || 'unknown';
-                    langsSummary[k] = (langsSummary[k] || 0) + 1;
-                });
-                AiDebugLogger.recordSubtitleState(this.avcode, 'searchOnline', {
-                    durationMs: Date.now() - searchStartedAt,
-                    rawCandidatesCount: candidates.length,
-                    relevantCount: this.onlineResults.length,
-                    langsSummary,
-                    errorsCount: Array.isArray(errors) ? errors.length : 0
-                });
-            }
-            if (!this.onlineResults.length) {
-                Toast(
-                    errors.length
-                        ? text('subtitleSearchFailed', '搜索失败，请稍后重试')
-                        : text('subtitleSearchEmpty', '未找到字幕，可导入本地文件'),
-                    2600,
-                    'info'
-                );
-            }
-        } catch (err) {
-            console.warn('[SubtitleManager] 搜索失败:', err?.message);
-            if (this.avcode && AiDebugLogger.isEnabled()) {
-                AiDebugLogger.recordSubtitleState(this.avcode, 'searchOnline', {
-                    durationMs: Date.now() - searchStartedAt,
-                    error: err?.message || 'SEARCH_FAILED'
-                });
-            }
-            Toast(text('subtitleSearchFailed', '搜索失败，请稍后重试'), 2600, 'error');
-        } finally {
-            this._searching = false;
+
+        const run = (async () => {
+            this._searching = true;
             this._renderList();
-        }
-        await this._maybeAutoPickPreferred({ fromSearch: true });
+            const searchStartedAt = Date.now();
+            try {
+                const { candidates, errors } = await this.engine.search(this.avcode);
+                const known = new Set(this.bundle.items.map((item) => item.id));
+                this.onlineResults = candidates.filter(
+                    (candidate) => !known.has(candidate.id) && this._isRelevant(candidate)
+                );
+                if (this.avcode && AiDebugLogger.isEnabled()) {
+                    const langsSummary = {};
+                    this.onlineResults.forEach((c) => {
+                        const k = c.lang || 'unknown';
+                        langsSummary[k] = (langsSummary[k] || 0) + 1;
+                    });
+                    AiDebugLogger.recordSubtitleState(this.avcode, 'searchOnline', {
+                        durationMs: Date.now() - searchStartedAt,
+                        rawCandidatesCount: candidates.length,
+                        relevantCount: this.onlineResults.length,
+                        langsSummary,
+                        errorsCount: Array.isArray(errors) ? errors.length : 0
+                    });
+                }
+                if (!this.onlineResults.length) {
+                    Toast(
+                        errors.length
+                            ? text('subtitleSearchFailed', '搜索失败，请稍后重试')
+                            : text('subtitleSearchEmpty', '未找到字幕，可导入本地文件'),
+                        2600,
+                        'info'
+                    );
+                }
+            } catch (err) {
+                console.warn('[SubtitleManager] 搜索失败:', err?.message);
+                if (this.avcode && AiDebugLogger.isEnabled()) {
+                    AiDebugLogger.recordSubtitleState(this.avcode, 'searchOnline', {
+                        durationMs: Date.now() - searchStartedAt,
+                        error: err?.message || 'SEARCH_FAILED'
+                    });
+                }
+                Toast(text('subtitleSearchFailed', '搜索失败，请稍后重试'), 2600, 'error');
+            } finally {
+                this._searching = false;
+                this._renderList();
+            }
+            await this._maybeAutoPickPreferred({ fromSearch: true });
+        })().finally(() => {
+            if (this._searchPromise === run) this._searchPromise = null;
+        });
+
+        this._searchPromise = run;
+        return run;
     }
 
     _hasSavedFavorite() {

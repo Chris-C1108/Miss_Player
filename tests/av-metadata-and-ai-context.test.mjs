@@ -339,7 +339,7 @@ describe('AI Cache Versioning, Epoch Clear, Dense Subtitle Sampling & MT Compari
         LlmService.saveConfig({ model: 'agnes-3.0-pro' });
         const proHash = buildVersionedTaskHash('sub_chapters', 'same-payload');
         assert.notEqual(flashHash, proHash);
-        assert.ok(AI_PROMPT_VERSION.startsWith('v2'));
+        assert.ok(AI_PROMPT_VERSION.startsWith('v3'));
 
         let apiCount = 0;
         let lastUserPrompt = '';
@@ -545,5 +545,101 @@ describe('AiDebugLogger: Context Readiness, AI I/O Capture, Redaction & WebDAV D
         assert.equal(latest.body.aiExecutions[0].outcome, 'success_llm');
         assert.ok(latest.body.aiExecutions[0].inputContext.compressedSubPreview.includes('分部办公室'));
         assert.equal(latest.body.aiExecutions[0].llmResponse.parsedOutput.chapters[0].seconds, 42);
+    });
+
+    it('blocks polluted nav actresses/tags and cross-code sidebar synopsis in extractMetadataFromDocument', () => {
+        const mkEl = (text, inNav = false, alt = '') => ({
+            textContent: text,
+            getAttribute: (k) => (k === 'content' ? text : ''),
+            closest: (sel) => (inNav && /nav|aside/i.test(sel) ? {} : null),
+            querySelector: (sel) => (sel === 'img' && alt ? { getAttribute: () => alt } : null)
+        });
+        const fakeDoc = {
+            location: { href: 'https://jable.tv/videos/abf-029/', hostname: 'jable.tv' },
+            title: 'ABF-029 完全主観×鬼イカせ 涼森玲夢',
+            querySelector(sel) {
+                if (sel === 'h1') return mkEl('ABF-029 完全主観×鬼イカせ 涼森玲夢');
+                if (sel.includes('meta[name="description"]')) return mkEl('免費高清AV在線看，無需下載看到飽。');
+                if (sel.includes('meta[property="og:description"]')) return mkEl('ABF-181 完全主觀 青野瑞希');
+                if (sel.includes('.video-info')) return fakeDoc;
+                return null;
+            },
+            querySelectorAll(sel) {
+                if (sel.includes('.models')) {
+                    return [
+                        mkEl('👩 按女優', true),
+                        mkEl('涼', false, '涼森玲夢'),
+                        mkEl('女優排行 NOV 2026', false)
+                    ];
+                }
+                if (sel.includes('.tags')) {
+                    return [mkEl('📚 按主題', true), mkEl('絲襪', false)];
+                }
+                return [];
+            }
+        };
+
+        const cleaned = extractMetadataFromDocument(fakeDoc, 'ABF-029', 'jable.tv');
+        assert.deepEqual(cleaned.actresses, ['涼森玲夢']);
+        assert.deepEqual(cleaned.tags, ['絲襪']);
+        assert.equal(cleaned.synopsis, '');
+    });
+
+    it('resolves exact seconds via cue line index & pre-computes resolved comment timestamps without LLM math', async () => {
+        LlmService.saveConfig({
+            enabled: true,
+            baseUrl: 'https://apihub.agnes-ai.com/v1',
+            model: 'agnes-3.0-flash',
+            apiKey: 'sk-test-v3'
+        });
+
+        let lastPrompt = '';
+        let lastMaxTokens = 0;
+        gmResponder = (opts) => {
+            const body = JSON.parse(opts.data);
+            lastPrompt = body.messages[1].content;
+            lastMaxTokens = body.max_tokens;
+            const isChapters = lastPrompt.includes('台词时间轴:');
+            opts.onload({
+                status: 200,
+                finalUrl: opts.url,
+                responseText: JSON.stringify({
+                    choices: [{
+                        message: {
+                            content: JSON.stringify(
+                                isChapters
+                                    ? { summary: '三幕完整', chapters: [{ line: 0, seconds: 999, tag: '开场', headline: '居家做饭' }, { line: 2, seconds: 9999, tag: '挟持', headline: '跟踪威胁' }] }
+                                    : { brief: { highlights: '看点', warnings: '暂无', consensus: '佳作' }, highlights: [{ subLine: 2, seconds: 9999, tag: '胁迫', reason: '真实台词锚点', sources: ['sub'], score: 95 }], skipZones: [], commentTags: [] }
+                            )
+                        }
+                    }]
+                })
+            });
+        };
+
+        const cues = [
+            { start: 91, end: 95, text: '我正在做晚饭' },
+            { start: 3050, end: 3060, text: '快点清理办公室桌面' },
+            { start: 10343, end: 10350, text: '留在这静静地出来，不要出声' }
+        ];
+        const chRes = await analyzeSubtitleChaptersWithLlm({ avcode: 'ABF-029', cues });
+        assert.equal(chRes.ok, true);
+        assert.equal(chRes.chapters[0].seconds, 91, '即使模型写了 seconds:999，也必须由 line:0 精确校准为 91s');
+        assert.equal(chRes.chapters[1].seconds, 10343, '大于100分钟的时间点通过 line:2 精确校准为 10343s');
+
+        const fgRes = await buildHighlightGraphWithLlm({
+            avcode: 'ABF-015',
+            cues,
+            comments: [
+                { id: 'c-cd', text: '-1:02:15 顶级' },
+                { id: 'c-six', text: '015215 嗦的好棒' }
+            ],
+            videoDuration: 12965
+        });
+        assert.equal(fgRes.ok, true);
+        assert.equal(lastMaxTokens, 2400);
+        assert.ok(lastPrompt.includes('t=9230s'), '倒数时间 -1:02:15 必须被预先校准为正向 t=9230s');
+        assert.ok(lastPrompt.includes('t=6735s'), '6位紧凑格式 015215 必须被预先解析为 t=6735s');
+        assert.equal(fgRes.graph.highlights[0].seconds, 10343);
     });
 });
